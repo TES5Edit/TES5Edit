@@ -1503,6 +1503,8 @@ type
 
     function CanMoveElement: Boolean; override;
 
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
     function GetAlignable: Boolean;
@@ -13432,6 +13434,9 @@ begin
     and (srsIsArray in srStates)
     and Assigned(srValueDef)
     and ((srValueDef as IwbArrayDef).ElementCount <= 0) and (Length(cntElements)>1);
+
+  if Result and (dfRemoveLastOnly in srValueDef.DefFlags) then
+    Result := cntElements[High(cntElements)].Equals(aElement);
 end;
 
 function TwbSubRecord.IsFlags: Boolean;
@@ -16447,6 +16452,14 @@ end;
 
 function TwbElement.GetIsRemoveable: Boolean;
 begin
+  var Def := GetDef;
+  if Assigned(Def) and not Def.IsRemoveable(Self) then
+    Exit(False);
+
+  var ValueDef := GetValueDef;
+  if Assigned(ValueDef) and (ValueDef <> Def) and not ValueDef.IsRemoveable(Self) then
+    Exit(False);
+
   Result := not Assigned(eContainer) or IwbContainer(eContainer).IsElementRemoveable(Self);
 end;
 
@@ -17652,6 +17665,9 @@ end;
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and (Length(cntElements) > 1);
+
+  if Result and (dfRemoveLastOnly in arcDef.DefFlags) then
+    Result := cntElements[High(cntElements)].Equals(aElement);
 end;
 
 procedure TwbSubRecordArray.SetModified(aValue: Boolean);
@@ -18340,6 +18356,11 @@ begin
   arrSortInvalid := arrSorted;
 end;
 
+function TwbArray.Add(const aName: string; aSilent: Boolean): IwbElement;
+begin
+  Result := Assign(StrToIntDef(aName, High(Integer)), nil, False);
+end;
+
 function TwbArray.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
   SelfRef   : IwbContainerElementRef;
@@ -18639,6 +18660,9 @@ end;
 function TwbArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and ((vbValueDef as IwbArrayDef).ElementCount <= 0) { and (Length(cntElements)>1)};
+
+  if Result and (dfRemoveLastOnly in vbValueDef.DefFlags) then
+    Result := cntElements[High(cntElements)].Equals(aElement);
 end;
 
 procedure TwbArray.NotifyChangedInternal(aContainer: Pointer);

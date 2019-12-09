@@ -283,7 +283,6 @@ const
   MODD : TwbSignature = 'MODD';
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
-  MODT : TwbSignature = 'MODT';
   MOSD : TwbSignature = 'MOSD';
   MSTT : TwbSignature = 'MSTT';
   MUSC : TwbSignature = 'MUSC';
@@ -581,7 +580,7 @@ begin
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName', 0, cpNormal, True),
       wbByteArray(MODB, 'Unknown', 4, cpIgnore),
-      wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore),
+      wbMODT,
       wbMODS,
       wbMODD
     ], [], cpNormal, aRequired, aDontShow, True)
@@ -596,7 +595,7 @@ begin
   Result :=
     wbRStruct(aSubRecordName, [
       wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True),
-      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore),
+      wbModelInfo(aSignatures[1]),
       aTextureSubRecords[0],
       aTextureSubRecords[1]
     ], [], cpNormal, False, nil, True)
@@ -4172,10 +4171,7 @@ begin
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName'),
-          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
-//          0, nil, nil, cpBenign)
+          wbDMDT
         ], [])
         .SetSummaryKey([0])
         .IncludeFlag(dfCollapsed, wbCollapseModels),
@@ -4211,10 +4207,7 @@ begin
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName'),
-          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
-//          0, nil, nil, cpBenign)
+          wbDMDT
         ], [])
         .SetSummaryKey([0])
         .IncludeFlag(dfCollapsed, wbCollapseModels),
@@ -5653,7 +5646,7 @@ begin
     wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
     wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
     wbArrayS(NIFZ, 'Model List', wbStringLC('Model'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbByteArray(NIFT, 'Texture Files Hashes', 0, cpIgnore, False, False, wbActorTemplateUseModelAnimation),
+    wbModelInfos(NIFT, 'Model List Textures', wbActorTemplateUseModelAnimation),
     wbStruct(ACBS, 'Configuration', [
       {00} wbInteger('Flags', itU32, wbFlags([
              {0x000001} 'Biped',
@@ -6522,7 +6515,7 @@ begin
     ], cpNormal, True),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
+      wbModelInfo(NAM2)
     ], [], cpNormal, True)
     .SetSummaryKey([0])
     .IncludeFlag(dfCollapsed, wbCollapseModels),
@@ -7023,7 +7016,7 @@ begin
 
   wbRecord(DEBR, 'Debris', [
     wbEDIDReq,
-    wbRArray('Models', wbDebrisModel(wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)), cpNormal, True)
+    wbRArray('Models', wbDebrisModel(wbMODT), cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -7403,7 +7396,7 @@ begin
       wbBPNDStruct,
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      wbModelInfo(NAM5)
     ], [], cpNormal, True),
     wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
   ]);
@@ -9740,14 +9733,14 @@ begin
     wbZNAM,
     wbRStruct('Shell Casing Model', [
       wbString(MOD2, 'Model FileName'),
-      wbByteArray(MO2T, 'Texture Files Hashes', 0, cpIgnore),
+      wbModelInfo(MO2T),
       wbMO2S
     ], [])
     .SetSummaryKey([0])
     .IncludeFlag(dfCollapsed, wbCollapseModels),
     wbRStruct('Scope Model', [
       wbString(MOD3, 'Model FileName'),
-      wbByteArray(MO3T, 'Texture Files Hashes', 0, cpIgnore),
+      wbModelInfo(MO3T),
       wbMO3S
     ], [])
     .SetSummaryKey([0])
@@ -9755,7 +9748,7 @@ begin
     wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
     wbRStruct('World Model', [
       wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore),
+      wbModelInfo(MO4T),
       wbMO4S
     ], [])
     .SetSummaryKey([0])

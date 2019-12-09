@@ -31,14 +31,36 @@ uses
   wbStreams,
   zlibEx,
   lz4io,
-  wbBSArchive;
+  wbBSArchive,
+  wbSort;
 
 type
+  PwbContainerCache = ^TwbContainerCache;
+  TwbContainerCache = record
+    ccAll             : TStringList;
+    ccFiles           : TStringList;
+    ccFolders         : TStringList;
+
+    ccFolderHashes    : TArray<UInt64>;
+    ccFileHashes      : TArray<UInt64>;
+
+    ccFolderHashIndex : TArray<Cardinal>;
+    ccFileHashIndex   : TArray<Cardinal>;
+
+    function ResolveFolderHash(const aHash: Int64): string;
+    function ResolveFileHash(const aHash: Int64): string;
+  end;
+
   TwbContainerHandler = class(TInterfacedObject, IwbContainerHandler)
   private
-    chContainers: array of IwbResourceContainer;
+    chContainers : array of IwbResourceContainer;
+    chCache      : TwbContainerCache;
   protected
     procedure AddContainer(aContainer: IwbResourceContainer);
+
+    procedure BuildCache;
+    procedure InvalidateCache;
+    procedure EnsureCache;
 
     {---IwbContainerHandler---}
     procedure AddFolder(const aPath: string);
@@ -47,14 +69,17 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function OpenResourceData(const aContainerName, aFileName: string): TBytes;
+
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
-    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
-      const aFolder: string = '');
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings; const aFolder: string = '');
+
     function ResourceExists(const aFileName: string): Boolean;
-    function ResolveHash(const aHash: Int64): TDynStrings;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
+
+    function ResolveFolderHash(const aHash: Int64): string;
+    function ResolveFileHash(const aHash: Int64): string;
   end;
 
   IwbBSAFileInternal = interface(IwbBSAFile)
@@ -72,7 +97,6 @@ type
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
     procedure ResourceList(const aList: TStrings; aFolder: string = '');
-    procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     {---IwbBSAFile---}
     function GetFileName: string;
@@ -158,18 +182,151 @@ procedure TwbContainerHandler.AddBSA(const aFileName: string);
 begin
   if not ContainerExists(aFileName) then
     AddContainer(TwbBSAFile.Create(aFileName));
+  InvalidateCache;
 end;
 
 procedure TwbContainerHandler.AddBA2(const aFileName: string);
 begin
   if not ContainerExists(aFileName) then
     AddContainer(TwbBSAFile.Create(aFileName));
+  InvalidateCache;
 end;
 
 procedure TwbContainerHandler.AddFolder(const aPath: string);
 begin
   if not ContainerExists(aPath) then
     AddContainer(TwbFolder.Create(aPath));
+  InvalidateCache;
+end;
+
+threadvar
+  _cc: PwbContainerCache;
+
+function CompareFolderHashIndex(Item1, Item2: Cardinal): Integer;
+begin
+  var cc := _cc;
+  with cc^ do
+    Result := CmpW64(ccFolderHashes[Item1], ccFolderHashes[Item2]);
+end;
+
+function CompareFileHashIndex(Item1, Item2: Cardinal): Integer;
+begin
+  var cc := _cc;
+  with cc^ do
+    Result := CmpW64(ccFileHashes[Item1], ccFileHashes[Item2]);
+end;
+
+{
+  TListSortComparePtr = TListSortCompare;
+  TListSortCompare32 = function(Item1, Item2: Cardinal): Integer;
+  TListSortCompare64 = function(const Item1, Item2: UInt64): Integer;
+
+procedure wbMergeSortPtr(aList: Pointer; aCount: Integer; aCompare: TListSortComparePtr);
+procedure wbMergeSort32(aList: Pointer; aCount: Integer; aCompare: TListSortCompare32);
+procedure wbMergeSort64(aList: Pointer; aCount: Integer; aCompare: TListSortCompare64);
+}
+
+procedure TwbContainerHandler.BuildCache;
+begin
+  InvalidateCache;
+  with chCache do begin
+    ccAll := TStringList.Create;
+    ContainerResourceList('', ccAll, '');
+
+    with ccAll do begin
+      Sorted := True;
+
+      var s := '';
+      for var i := Pred(Count) downto 0 do
+        if not SameText(Strings[i], s) then
+          s := Strings[i]
+        else
+          Delete(i);
+    end;
+
+    var lFiles := TStringList.Create;
+    try
+      ccFiles := TStringList.Create;
+      ccFolders := TStringList.Create;
+
+      var LastFolder := '';
+      var LastFile := '';
+      for var i := 0 to Pred(ccAll.Count) do begin
+        var ThisFolder := ExcludeTrailingBackslash(ExtractFilePath(ccAll[i])).ToLowerInvariant.Replace('/', '\');
+        if not SameText(ThisFolder, LastFolder) then begin
+          ccFolders.Add(ThisFolder);
+          LastFolder := ThisFolder;
+        end;
+
+        var ThisFile := ExtractFileName(ccAll[i]).ToLowerInvariant;
+        if wbGameMode >= gmTES5 then
+          ThisFile := ChangeFileExt(ThisFile, '');
+
+        if not SameText(ThisFile, LastFile) then begin
+          lFiles.Add(ThisFile);
+          LastFile := ThisFile;
+          if wbGameMode < gmTES5 then
+            if ExtractFileExt(ThisFile) = '.dds' then
+              ccFiles.Add(ChangeFileExt(ThisFile, '.ddx'));
+        end;
+      end;
+
+      with ccFolders do begin
+        Sorted := True;
+
+        var s := '';
+        for var i := Pred(Count) downto 0 do
+          if not SameText(Strings[i], s) then
+            s := Strings[i]
+          else
+            Delete(i);
+      end;
+
+      with lFiles do begin
+        Sorted := True;
+        var s := '';
+        for var i := 0 to Pred(Count) do
+          if not SameText(Strings[i], s) then begin
+            s := Strings[i];
+            ccFiles.Add(s);
+          end;
+      end;
+
+      ccFiles.Sorted := True;
+    finally
+      lFiles.Free;
+    end;
+
+    SetLength(ccFolderHashes, ccFolders.Count);
+    SetLength(ccFolderHashIndex, ccFolders.Count);
+    for var i := 0 to Pred(ccFolders.Count) do begin
+      ccFolderHashIndex[i] := i;
+      if wbGameMode >= gmTES5 then
+        ccFolderHashes[i] := CreateHashFO4(ccFolders[i])
+      else
+        ccFolderHashes[i] := CreateHashTES4(ccFolders[i]);
+    end;
+
+    SetLength(ccFileHashes, ccFiles.Count);
+    SetLength(ccFileHashIndex, ccFiles.Count);
+    for var i := 0 to Pred(ccFiles.Count) do begin
+      ccFileHashIndex[i] := i;
+      if wbGameMode >= gmTES5 then
+        ccFileHashes[i] := CreateHashFO4(ccFiles[i])
+      else
+        ccFileHashes[i] := CreateHashTES4(ccFiles[i]);
+    end;
+
+    _cc := @chCache;
+
+    var l := Length(ccFolderHashIndex);
+    if l > 0 then
+      wbMergeSort32(@ccFolderHashIndex[0], l, CompareFolderHashIndex);
+
+    l := Length(ccFileHashIndex);
+    if l > 0 then
+      wbMergeSort32(@ccFileHashIndex[0], l, CompareFileHashIndex);
+  end;
 end;
 
 function TwbContainerHandler.OpenResource(const aFileName: string): TDynResources;
@@ -214,17 +371,37 @@ begin
     aList.Add(chContainers[i].Name);
 end;
 
-procedure TwbContainerHandler.ContainerResourceList(const aContainerName: string; const aList: TStrings;
-  const aFolder: string = '');
-var
-  i: Integer;
+procedure TwbContainerHandler.ContainerResourceList(const aContainerName: string; const aList: TStrings; const aFolder: string = '');
 begin
-  for i := Low(chContainers) to High(chContainers) do
-    if (aContainerName = '') or SameText(chContainers[i].Name, aContainerName) then begin
-      chContainers[i].ResourceList(aList, aFolder);
-      if aContainerName <> '' then
-        Break;
-    end;
+  {if (aContainerName = '') and (aFolder = '') then begin
+    EnsureCache;
+    aList.AddStrings(chCache.ccAll);
+  end else}
+    for var i := Low(chContainers) to High(chContainers) do
+      if (aContainerName = '') or SameText(chContainers[i].Name, aContainerName) then begin
+        chContainers[i].ResourceList(aList, aFolder);
+        if aContainerName <> '' then
+          Break;
+      end;
+end;
+
+procedure TwbContainerHandler.EnsureCache;
+begin
+  if not Assigned(chCache.ccAll) then
+    BuildCache;
+end;
+
+procedure TwbContainerHandler.InvalidateCache;
+begin
+  with chCache do begin
+    FreeAndNil(ccAll);
+    FreeAndNil(ccFiles);
+    FreeAndNil(ccFolders);
+    SetLength(ccFolderHashes, 0);
+    SetLength(ccFileHashes, 0);
+    SetLength(ccFolderHashIndex, 0);
+    SetLength(ccFolderHashIndex, 0);
+  end;
 end;
 
 function TwbContainerHandler.ResourceExists(const aFileName: string): Boolean;
@@ -239,15 +416,6 @@ begin
     end;
 end;
 
-function TwbContainerHandler.ResolveHash(const aHash: Int64): TDynStrings;
-var
-  i: Integer;
-begin
-  Result := nil;
-  for i := Low(chContainers) to High(chContainers) do
-    chContainers[i].ResolveHash(aHash, Result);
-end;
-
 function TwbContainerHandler.ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
 var
   i: Integer;
@@ -259,6 +427,18 @@ begin
       if Assigned(aContainers) then
         aContainers.Add(chContainers[i].Name);
     end;
+end;
+
+function TwbContainerHandler.ResolveFileHash(const aHash: Int64): string;
+begin
+  EnsureCache;
+  Result := chCache.ResolveFileHash(aHash);
+end;
+
+function TwbContainerHandler.ResolveFolderHash(const aHash: Int64): string;
+begin
+  EnsureCache;
+  Result := chCache.ResolveFolderHash(aHash);
 end;
 
 procedure TwbContainerHandler.ResourceCopy(const aContainerName, aFileName, aPathOut: string);
@@ -365,11 +545,6 @@ begin
   bfArchive.ResourceList(aList, aFolder);
 end;
 
-procedure TwbBSAFile.ResolveHash(const aHash: Int64; var Results: TDynStrings);
-begin
-  bfArchive.ResolveHash(aHash, Results);
-end;
-
 { TwbBSAResource }
 
 constructor TwbBSAResource.Create(aFile: TwbBSAFile; aFileRecord: Pointer);
@@ -469,6 +644,44 @@ begin
       ReadBuffer(Result[0], Length(Result));
   finally
     Free;
+  end;
+end;
+
+{ TwbContainerCache }
+
+function TwbContainerCache.ResolveFileHash(const aHash: Int64): string;
+begin
+  Result := '';
+  var L := 0;
+  var H := Length(ccFileHashIndex);
+  while L <= H do begin
+    var I := (L + H) shr 1;
+    var C := CmpW64(ccFileHashes[ccFileHashIndex[I]], UInt64(aHash));
+    if C < 0 then
+      L := Succ(I)
+    else begin
+      if C = 0 then
+        Exit(ccFiles[ccFileHashIndex[I]]);
+      H := Pred(I);
+    end;
+  end;
+end;
+
+function TwbContainerCache.ResolveFolderHash(const aHash: Int64): string;
+begin
+  Result := '';
+  var L := 0;
+  var H := Length(ccFolderHashIndex);
+  while L <= H do begin
+    var I := (L + H) shr 1;
+    var C := CmpW64(ccFolderHashes[ccFolderHashIndex[I]], UInt64(aHash));
+    if C < 0 then
+      L := Succ(I)
+    else begin
+      if C = 0 then
+        Exit(ccFolders[ccFolderHashIndex[I]]);
+      H := Pred(I);
+    end;
   end;
 end;
 

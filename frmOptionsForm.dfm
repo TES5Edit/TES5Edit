@@ -66,7 +66,7 @@ object frmOptions: TfrmOptions
         Hint = 
           'Skip loading BSA and BA2 archives. Some functions like LOD gener' +
           'ation and localization may not work properly if disabled.'
-        Caption = 'Load BSAs'
+        Caption = 'Load BSAs (requires restart)'
         TabOrder = 3
       end
       object cbSimpleRecords: TCheckBox
@@ -202,14 +202,6 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Hide Manual Cleaning functions'
         TabOrder = 18
-      end
-      object cbDecodeTexture: TCheckBox
-        Left = 16
-        Top = 273
-        Width = 233
-        Height = 24
-        Caption = 'Decode Texture Hashes (requires restart)'
-        TabOrder = 19
       end
     end
     object tsViewSettings: TTabSheet
@@ -779,6 +771,14 @@ object frmOptions: TfrmOptions
         Height = 17
         Caption = 'Extended FormID space for ESL'
         TabOrder = 6
+      end
+      object cbDecodeTexture: TCheckBox
+        Left = 16
+        Top = 170
+        Width = 233
+        Height = 24
+        Caption = 'Decode Texture Hashes (requires restart)'
+        TabOrder = 7
       end
     end
   end

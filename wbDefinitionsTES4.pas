@@ -165,7 +165,6 @@ const
   MOD4 : TwbSignature = 'MOD4';
   MODB : TwbSignature = 'MODB';
   MODL : TwbSignature = 'MODL';
-  MODT : TwbSignature = 'MODT';
   NAM0 : TwbSignature = 'NAM0';
   NAM1 : TwbSignature = 'NAM1';
   NAM2 : TwbSignature = 'NAM2';
@@ -332,7 +331,7 @@ begin
     wbRStruct(aSubRecordName, [
       wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True),
       wbFloat(aSignatures[1], 'Bound Radius', cpBenign),
-      wbByteArray(aSignatures[2], 'Texture Files Hashes', 0, cpIgnore)
+      wbModelInfo(aSignatures[2])
     ], [], cpNormal, False, nil, True)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
@@ -2507,7 +2506,7 @@ begin
     wbCNTOs,
     wbSPLOs,
     wbArrayS(NIFZ, 'Models', wbStringLC('Model')),
-    wbByteArray(NIFT, 'Texture Files Hashes', 0, cpIgnore),
+    wbModelInfos(NIFT, 'Model List Textures'),
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
         {0x000001} 'Biped',

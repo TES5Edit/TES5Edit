@@ -117,7 +117,7 @@ var
   wbDisplayLoadOrderFormID : Boolean  = False;
   wbPrettyFormID           : Boolean  = False;
   wbSimpleRecords          : Boolean  = True;
-  wbDecodeTextureHashes    : Boolean  = False;
+  wbDecodeTextureHashes    : Boolean  = True;
   wbFixupPGRD              : Boolean  = False;
   wbIKnowWhatImDoing       : Boolean  = False;
   wbHideUnused             : Boolean  = True;
@@ -196,6 +196,13 @@ var
   wbCollapseScriptData     : Boolean  = True;
   wbCollapseHeadParts      : Boolean  = True;
   wbCollapseBodyParts      : Boolean  = True;
+  wbCollapseModelInfoTexture        : Boolean  = True;
+  wbCollapseModelInfoTextures       : Boolean  = True;
+  wbCollapseModelInfoAddons         : Boolean  = True;
+  wbCollapseModelInfoMaterial       : Boolean  = True;
+  wbCollapseModelInfoMaterials      : Boolean  = True;
+  wbCollapseModelInfo      : Boolean  = True;
+  wbCollapseModelInfoHeader : Boolean  = True;
   wbReportInjected         : Boolean  = True;
   wbNoFullInShortName      : Boolean  = True;
   wbNoIndexInAliasSummary  : Boolean  = True;
@@ -591,7 +598,8 @@ type
     dfSummaryNoSortKey,
     dfSummaryNoPassthrough,
     dfUnionStaticResolve,
-    dfHideText
+    dfHideText,
+    dfRemoveLastOnly
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -1847,7 +1855,7 @@ type
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
   TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-  TwbToStrCallback = procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+  TwbToStrCallback = reference to procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
   TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
   TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
@@ -1860,6 +1868,7 @@ type
   TwbGetChapterTypeNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   TwbGetChapterNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   TwbLinksToCallback = function(const aElement: IwbElement): IwbElement;
+  TwbIsRemoveableCallback = reference to function(const aElement: IwbElement): Boolean;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -1878,6 +1887,8 @@ type
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
     procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType);
+
+    function IsRemoveable(const aElement: IwbElement): Boolean;
 
     property Name: string
       read GetName;
@@ -2092,6 +2103,7 @@ type
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
     function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef;
+    function SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef;
 
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
@@ -2510,7 +2522,6 @@ type
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
     procedure ResourceList(const aList: TStrings; aFolder: string = '');
-    procedure ResolveHash(const aHash: Int64; var Results: TDynStrings);
 
     property Name: string
       read GetName;
@@ -2550,15 +2561,25 @@ type
 
     function OpenResource(const aFileName: string): TDynResources;
     function OpenResourceData(const aContainerName, aFileName: string): TBytes;
-    function ResolveHash(const aHash: Int64): TDynStrings;
+
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
-    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings;
-      const aFolder: string = '');
+    procedure ContainerResourceList(const aContainerName: string; const aList: TStrings; const aFolder: string = '');
+
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
     procedure ResourceCopy(const aContainerName, aFileName, aPathOut: string);
+
+    procedure EnsureCache;
+
+    function ResolveFolderHash(const aHash: Int64): string;
+    function ResolveFileHash(const aHash: Int64): string;
   end;
+
+const
+  arcU32 = -1;
+  arcU16 = -2;
+  arcU8  = -4;
 
 var
   SortedElementTypes : set of TwbElementType = [
@@ -3197,6 +3218,16 @@ function wbArray(const aSignature : TwbSignature;
 function wbArray(const aName     : string;
                  const aElement  : IwbValueDef;
                        aCount    : Integer = 0;
+                       aPriority : TwbConflictPriority = cpNormal;
+                       aRequired : Boolean = False;
+                       aDontShow : TwbDontShowCallback = nil;
+                       aGetCP    : TwbGetConflictPriority = nil)
+                                 : IwbArrayDef; overload;
+
+function wbArray(const aName     : string;
+                 const aElement  : IwbValueDef;
+                       aCount    : Integer;
+                 const aLabels   : array of string;
                        aPriority : TwbConflictPriority = cpNormal;
                        aRequired : Boolean = False;
                        aDontShow : TwbDontShowCallback = nil;
@@ -4893,16 +4924,17 @@ type
 
   TwbNamedDef = class(TwbDef, IwbNamedDef)
   private
-    ndName       : string;
-    ndSingularName: string;
-    ndAfterLoad  : TwbAfterLoadCallback;
-    ndAfterSet   : TwbAfterSetCallback;
-    ndToStr      : TwbToStrCallback;
-    ndDontShow   : TwbDontShowCallback;
-    ndTerminator : Boolean;
-    ndUnused     : Boolean;
-    ndTreeHead   : Boolean;
-    ndTreeBranch : Boolean;
+    ndName         : string;
+    ndSingularName : string;
+    ndAfterLoad    : TwbAfterLoadCallback;
+    ndAfterSet     : TwbAfterSetCallback;
+    ndToStr        : TwbToStrCallback;
+    ndDontShow     : TwbDontShowCallback;
+    ndIsRemoveable : TwbIsRemoveableCallback;
+    ndTerminator   : Boolean;
+    ndUnused       : Boolean;
+    ndTreeHead     : Boolean;
+    ndTreeBranch   : Boolean;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -4937,6 +4969,8 @@ type
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
     procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); reintroduce; virtual;
+
+    function IsRemoveable(const aElement: IwbElement): Boolean; virtual;
   end;
 
   TwbBaseSignatureDef = class(TwbNamedDef, IwbSignatureDef)
@@ -5434,6 +5468,7 @@ type
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; virtual;
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
     function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef; virtual;
+    function SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self}; virtual;
 
@@ -7412,6 +7447,19 @@ begin
   Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, [], False, nil, nil, aDontShow, aGetCP, True, False, False);
 end;
 
+function wbArray(const aName      : string;
+                 const aElement   : IwbValueDef;
+                       aCount     : Integer;
+                 const aLabels    : array of string;
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
+                                  : IwbArrayDef; overload;
+begin
+  Result := TwbArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, aLabels, False, nil, nil, aDontShow, aGetCP, True, False, False);
+end;
+
 
 function wbArray(const aName      : string;
                  const aElement   : IwbValueDef;
@@ -8746,6 +8794,7 @@ begin
   inherited AfterClone(aSource);
   with aSource as TwbNamedDef do begin
     Self.ndToStr := ndToStr;
+    Self.ndIsRemoveable := ndIsRemoveable;
   end;
 end;
 
@@ -8854,6 +8903,11 @@ end;
 function TwbNamedDef.GetTreeHead: Boolean;
 begin
   Result := ndTreeHead;
+end;
+
+function TwbNamedDef.IsRemoveable(const aElement: IwbElement): Boolean;
+begin
+  Result := not Assigned(ndIsRemoveable) or ndIsRemoveable(aElement);
 end;
 
 procedure TwbNamedDef.ParentSet;
@@ -16014,6 +16068,12 @@ begin
   Result := Self;
 end;
 
+function TwbValueDef.SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef;
+begin
+  Result := Self;
+  ndIsRemoveable := aCallback;
+end;
+
 procedure TwbValueDef.SetLinksTo(aBasePtr, aEndPtr: Pointer; const aElement, aValue: IwbElement);
 begin
   raise Exception.Create(GetName + ' is not editable.');
@@ -16601,16 +16661,18 @@ constructor TwbUnionDef.Create(aPriority : TwbConflictPriority;
                                aDontShow : TwbDontShowCallback;
                                aAfterSet : TwbAfterSetCallback;
                                aGetCP    : TwbGetConflictPriority);
-var
-  i: Integer;
 begin
   inherited Create(aPriority, aRequired, aName, nil, aAfterSet, aDontShow, aGetCP, False);
   udDecider := aDecider;
   SetLength(udMembers, Length(aMembers));
-  for I := Low(udMembers) to High(udMembers) do begin
-    udMembers[i] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
-    ubCanContainFormIDs := ubCanContainFormIDs or aMembers[i].CanContainFormIDs;
-  end;
+  var l := 0;
+  for var i := Low(udMembers) to High(udMembers) do
+    if Assigned(aMembers[i]) then begin
+      udMembers[l] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+      ubCanContainFormIDs := ubCanContainFormIDs or aMembers[i].CanContainFormIDs;
+      Inc(l);
+    end;
+  SetLength(udMembers, l);
 end;
 
 function TwbUnionDef.ResolveDef(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): IwbValueDef;

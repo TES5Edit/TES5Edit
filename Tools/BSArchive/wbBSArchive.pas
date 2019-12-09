@@ -349,7 +349,6 @@ type
     procedure IterateFiles(aProc: TBSFileIterationProc);
     function FileExists(const aFileName: string): Boolean;
     procedure ResourceList(const aList: TStrings; aFolder: string = '');
-    procedure ResolveHash(const aHash: UInt64; var Results: TArray<string>);
     //procedure IterateFolders(aProc: TBSFileIterationProc);
     procedure Close;
 
@@ -2329,52 +2328,5 @@ begin
   end;
 
 end;
-
-procedure TwbBSArchive.ResolveHash(const aHash: UInt64; var Results: TArray<string>);
-var
-  Len  : Integer;
-  i, j : Integer;
-begin
-  Len := 0;
-  case fType of
-    baTES3:
-      for i := Low(fFilesTES3) to High(fFilesTES3) do
-        with fFilesTES3[i] do
-          if aHash = Hash then begin
-            SetLength(Results, Succ(Len));
-            Results[Len] := Name;
-            Inc(Len);
-          end;
-    baTES4, baFO3, baSSE:
-      for i := Low(fFoldersTES4) to High(fFoldersTES4) do
-        with fFoldersTES4[i] do begin
-          if aHash = Hash then begin
-            SetLength(Results, Succ(Len));
-            Results[Len] := Name;
-            Inc(Len);
-          end;
-          for j := Low(Files) to High(Files) do
-            with Files[j] do
-              if aHash = Hash then begin
-                SetLength(Results, Succ(Len));
-                Results[Len] := Name;
-                Inc(Len);
-              end;
-        end;
-    {
-    baFO4, baFO4dds:
-      for i := Low(fFilesFO4) to High(fFilesFO4) do
-        with fFilesFO4[i] do begin
-          if aHash = NameHash then begin
-            SetLength(Results, Succ(Len));
-            Results[Len] := Name;
-            Inc(Len);
-          end;
-        end;
-    }
-  end;
-end;
-
-
 
 end.

@@ -360,7 +360,6 @@ const
   DMDC : TwbSignature = 'DMDC'; { New to Fallout 4 }
   DMDL : TwbSignature = 'DMDL';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
-  DMDT : TwbSignature = 'DMDT';
   DMGT : TwbSignature = 'DMGT'; { New to Fallout 4 }
   DMIN : TwbSignature = 'DMIN'; { New to Skyrim }
   DNAM : TwbSignature = 'DNAM';
@@ -1237,8 +1236,6 @@ var
   wbDMDS: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
   wbSPCT: IwbSubRecordDef;
-  wbMODT: IwbSubRecordDef;
-  wbDMDT: IwbSubRecordDef;
   wbXOWN: IwbSubRecordDef;
   wbXRNK: IwbSubRecordDef;
   wbPhonemeTargets: IwbSubRecordDef;
@@ -1321,9 +1318,6 @@ var
   wbVCRY: IwbSubRecordDef;
   wbQRCO: IwbSubRecordDef;
   wbPERKData: IwbSubRecordDef;
-
-  wbTextureFileHash: IwbStructDef;
-
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -8641,28 +8635,6 @@ begin
 
   wbMODD := wbUnknown(MODD);
 
-  if wbDecodeTextureHashes then
-    wbTextureFileHash := wbStruct('Texture Files Hashes', [
-      wbInteger('Number of headers', itU32),
-      wbInteger('Textures count', itU32),
-      wbByteArray('Unused', 4),
-      wbInteger('Unique textures count', itU32),
-      wbInteger('Materials count', itU32),
-      wbArray('Hashes', wbStruct('Hash', [
-        wbByteArray('Flags', 4),
-        wbString('Type', 4),
-        wbByteArray('Texture hash', 4)
-      ]))
-    ])
-  else
-    wbTextureFileHash := wbStruct('Texture Files Hashes', [
-      wbUnknown
-    ]);
-
-
-  wbMODT := wbStruct(MODT, '', [wbTextureFileHash]);
-  wbDMDT := wbStruct(DMDT, '', [wbTextureFileHash]);
-
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
@@ -10901,7 +10873,7 @@ begin
     ], cpNormal, True),
     wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
-    wbStruct(NAM2, '', [wbTextureFileHash])
+    wbModelInfo(NAM2)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object',
@@ -12577,7 +12549,7 @@ begin
     ]),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbStruct(NAM2, '', [wbTextureFileHash])
+      wbModelInfo(NAM2)
     ], [], cpNormal, True),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
@@ -13339,7 +13311,7 @@ begin
         ], cpNormal, True),
         wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
         wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-        wbStruct(NAM5, '', [wbTextureFileHash]),
+        wbModelInfo(NAM5),
         wbString(ENAM, 'Hit Reaction - Start'),
         wbString(FNAM, 'Hit Reaction - End'),
         wbFormIDCk(BNAM, 'Gore Effects - Dismember Blood Art', [ARTO]),
@@ -18295,7 +18267,7 @@ begin
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
-      wbStruct(MO4T, '', [wbTextureFileHash]),
+      wbModelInfo(MO4T),
       wbMO4S,
       wbMO4C,
       wbMO4F,

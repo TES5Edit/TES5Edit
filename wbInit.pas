@@ -230,7 +230,7 @@ begin
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
-      wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes', wbDecodeTextureHashes);
+      wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes); {changed name to enforce new default value}
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
