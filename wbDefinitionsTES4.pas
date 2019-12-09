@@ -1838,7 +1838,7 @@ begin
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbRecordFlags,
-    wbFormID('FormID', cpFormID),
+    wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
   ])
   .SetSummaryKey([3, 2])

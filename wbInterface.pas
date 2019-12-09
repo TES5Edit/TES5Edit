@@ -598,6 +598,9 @@ type
     dfSummaryNoName,
     dfSummaryNoSortKey,
     dfSummaryNoPassthrough,
+    dfSummarySelfAsShortName,
+    dfSummaryMembersShowIgnore,
+    dfSummaryShowIgnore,
     dfUnionStaticResolve,
     dfHideText,
     dfRemoveLastOnly
@@ -9459,6 +9462,7 @@ begin
     var CER: IwbContainerElementRef;
     if Supports(aElement, IwbContainerElementRef, CER) then begin
       var MembersNoName := (dfSummaryMembersNoName in CER.Def.DefFlags);
+      var MembersShowIgnore := (dfSummaryMembersShowIgnore in CER.Def.DefFlags);
       for var i := 0 to Pred(l) do begin
         var SortOrder := aKeys[i];
         if (SortOrder >= Low(aMembers)) and (SortOrder <= High(aMembers)) then begin
@@ -9469,7 +9473,7 @@ begin
             if not Supports(Member, IwbContainerElementRef, MemberCER) then
               MemberCER := nil;
             var RMD: IwbRecordMemberDef;
-            if Assigned(Member) and (Member.ConflictPriority > cpIgnore) and Supports(Member.Def, IwbRecordMemberDef, RMD) then begin
+            if Assigned(Member) and Supports(Member.Def, IwbRecordMemberDef, RMD) and (MembersShowIgnore or (dfSummaryShowIgnore in RMD.DefFlags) or not wbHideIgnored or (Member.ConflictPriority > cpIgnore)) then begin
               var s := RMD.ToSummary(Succ(aDepth), Member).Trim;
               if s <> '' then begin
                 var Prefix := TFromArray<string>.Get(aPrefix, SortOrder);
@@ -12246,10 +12250,11 @@ end;
 
 function TwbStructDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 var
-  CER         : IwbContainerElementRef;
-  MemberUsed  : array of Boolean;
-  DelayedName : string;
-  MembersNoName      : Boolean;
+  CER               : IwbContainerElementRef;
+  MemberUsed        : array of Boolean;
+  DelayedName       : string;
+  MembersNoName     : Boolean;
+  MembersShowIgnore : Boolean;
 
   procedure Process(const Keys: array of integer);
 
@@ -12268,7 +12273,7 @@ var
           var Element := CER.ElementBySortOrder[SortMember + CER.AdditionalElementCount];
           var DC: IwbDataContainer;
           var MemberCER: IwbContainerElementRef;
-          if Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) and (Element.ConflictPriority > cpIgnore) then begin
+          if Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) and (MembersShowIgnore or (dfSummaryShowIgnore in Element.Def.DefFlags) or not wbHideIgnored or (Element.ConflictPriority > cpIgnore)) then begin
             var MemberDef := stMembers[SortMember];
             if not MemberDef.Equals(DC.Def) then
               if MemberDef.DefType = dtUnion then
@@ -12321,6 +12326,7 @@ begin
     MemberUsed := nil;
     DelayedName := '';
     MembersNoName := dfSummaryMembersNoName in defFlags;
+    MembersShowIgnore := dfSummaryMembersShowIgnore in defFlags;
     if not (dfSummaryNoSortKey in defFlags) then begin
       Process(stSortKey);
       Process(stExSortKey);
@@ -15037,7 +15043,9 @@ begin
         end;
         if Assigned(MainRecord) then begin
           if aForSummary then begin
-            if Assigned(aElement) and MainRecord.Equals(aElement.ContainingMainRecord) then
+            if Assigned(aElement) and MainRecord.Equals(aElement.ContainingMainRecord)
+              and not (dfSummarySelfAsShortName in aElement.ValueDef.DefFlags)
+              and not (dfSummarySelfAsShortName in MainRecord.Def.DefFlags) then
               Result := 'Self'
             else
               Result := MainRecord.ShortName;
