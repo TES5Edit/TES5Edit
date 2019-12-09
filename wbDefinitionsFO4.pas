@@ -6570,7 +6570,13 @@ begin
     {16} wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4),
     {20} wbInteger('Form Version', itU16, nil, cpIgnore),
     {22} wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ]).SetToStr(wbRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+  ])
+  .SetSummaryKey([5, 3, 2])
+  .SetSummaryMemberPrefixSuffix(5, '[v', ']')
+  .SetSummaryMemberPrefixSuffix(2, '{', '}')
+  .SetSummaryDelimiter(' ')
+  .IncludeFlag(dfSummaryMembersNoName)
+  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;
 

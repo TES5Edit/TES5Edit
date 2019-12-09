@@ -1841,7 +1841,11 @@ begin
     wbRecordFlags,
     wbFormID('FormID', cpFormID),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
-  ]).SetToStr(wbRecordHeaderToStr).IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+  ])
+  .SetSummaryKey([3, 2])
+  .SetSummaryMemberPrefixSuffix(2, '{', '}')
+  .IncludeFlag(dfSummaryMembersNoName)
+  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 20;
 

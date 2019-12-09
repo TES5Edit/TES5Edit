@@ -155,8 +155,6 @@ procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr:
 
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
-procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -1620,33 +1618,6 @@ begin
     Exit;
 
   aValue := ItemString;
-end;
-
-procedure wbRecordHeaderToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-  RecordFlags, FormVersion: IwbElement;
-  MainRecord: IwbMainRecord;
-  RecordFlagsValue, DisplayValue: string;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  MainRecord := Container.ContainingMainRecord;
-  RecordFlags := Container.ElementByName['Record Flags'];
-  FormVersion := Container.ElementByName['Form Version'];
-
-  RecordFlagsValue := RecordFlags.Value;
-
-  DisplayValue := '[' + MainRecord.Signature + ':' + MainRecord.LoadOrderFormID.ToString(True) + ']';
-
-  aValue := DisplayValue;
-
-  if wbGameMode <> gmTES4 then
-    aValue := '[v' + FormVersion.Value + '] ' + aValue;
-
-  if Length(RecordFlagsValue) > 0 then
-    aValue := aValue + ' {' + RecordFlagsValue + '}';
 end;
 
 /// <summary>Fills PropertyType and PropertyValue from array assigned to property</summary>
