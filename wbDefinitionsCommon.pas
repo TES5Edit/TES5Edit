@@ -31,6 +31,7 @@ const
   MICO: TwbSignature = 'MICO';
   MODL: TwbSignature = 'MODL';
   MODT: TwbSignature = 'MODT';
+  DMDT: TwbSignature = 'DMDT';
   NAM0: TwbSignature = 'NAM0';
   NAM9: TwbSignature = 'NAM9';
   NULL: TwbSignature = 'NULL';
@@ -93,6 +94,8 @@ var
   wbWorldspaceOBND: IwbRecordMemberDef;
   wbXLOD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
+  wbMODT: IwbRecordMemberDef;
+  wbDMDT: IwbRecordMemberDef;
   wbUnused: IwbValueDef;
 
 procedure DefineCommon;
@@ -179,7 +182,8 @@ function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEleme
 
 function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbFolderHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbFileHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
 
@@ -228,6 +232,9 @@ function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef
 function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
 
 function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
+
+function wbModelInfo(aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
+function wbModelInfos(aSignature: TwbSignature; aName: string = ''; aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
 
 {>>> Common Functions <<<}
 
@@ -660,6 +667,9 @@ begin
     wbOFST := wbByteArray(OFST, 'Offset Data')
   else
     wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
+
+  wbMODT := wbModelInfo(MODT);
+  wbDMDT := wbModelInfo(DMDT);
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -909,21 +919,52 @@ begin
       Result := aInt.ToString;
 end;
 
-function wbMODTCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbFolderHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Strings: TDynStrings;
   i: Integer;
 begin
   Result := '';
-  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
-    Strings := wbContainerHandler.ResolveHash(aInt);
-    for i := Low(Strings) to High(Strings) do
-      Result := Result + Strings[i] + ', ';
-    SetLength(Result, Length(Result) -2 );
-  end;
+  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
+    Result := wbContainerHandler.ResolveFolderHash(aInt);
+
   if Result = '' then
-    Result := 'Unresolved: ' + IntToHex64(aInt, 16);
+    case aType of
+      ctToSortKey:
+        Result := IntToHex64(aInt, 16);
+      ctToStr, ctToSummary:
+        if (aInt > High(Cardinal)) or (aType = ctToStr) then
+          Result := '{' + IntToHex64(aInt, 16) + '}'
+        else
+          Result := '{' + IntToHex64(aInt, 8) + '}';
+      ctToEditValue:
+        Result := aInt.ToString;
+    end;
 end;
+
+function wbFileHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Strings: TDynStrings;
+  i: Integer;
+begin
+  Result := '';
+  if wbLoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
+    Result := wbContainerHandler.ResolveFileHash(aInt);
+
+  if Result = '' then
+    case aType of
+      ctToSortKey:
+        Result := IntToHex64(aInt, 16);
+      ctToStr, ctToSummary:
+        if (aInt > High(Cardinal)) or (aType = ctToStr) then
+          Result := '{' + IntToHex64(aInt, 16) + '}'
+        else
+          Result := '{' + IntToHex64(aInt, 8) + '}';
+      ctToEditValue:
+        Result := aInt.ToString;
+    end;
+end;
+
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
@@ -1808,6 +1849,331 @@ begin
   finally
     Free;
   end;
+end;
+
+function wbModelInfoDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  var MainRecord := aElement.GetContainingMainRecord;
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  var Version := MainRecord.Version;
+
+  if Version >= 40 then begin
+    if Assigned(aBasePtr) and (PCardinal(aBasePtr)^ > 8 {arbitary limit of 8 supported headers for now}) then
+      Exit(1); // most likely older version format in FormVersion 40+ record
+    Exit(3)
+  end else if Version >= 38 then begin
+    if Assigned(aBasePtr) and (PCardinal(aBasePtr)^ <= 8 {arbitary limit of 8 supported headers for now}) then
+      Exit(1); // most likely newer version format in FormVersion 38-39 record
+    Exit(2);
+  end;
+end;
+
+function wbModelInfoTextureFileCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbContainerElementRef;
+  Headers: IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Supports(GetContainerFromUnion(aElement), IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Elements[0], IwbContainerElementRef, Headers) then
+    Exit;
+
+  if Headers.ElementCount < 1 then
+    Exit;
+
+  Result := Headers.Elements[0].NativeValue;
+end;
+
+function wbModelInfoAddonCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container : IwbContainerElementRef;
+  Headers   : IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Supports(GetContainerFromUnion(aElement), IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Elements[0], IwbContainerElementRef, Headers) then
+    Exit;
+
+  if Headers.ElementCount < 2 then
+    Exit;
+
+  Result := Headers.Elements[1].NativeValue;
+end;
+
+function wbModelInfoMaterialFileCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container : IwbContainerElementRef;
+  Headers   : IwbContainerElementRef;
+begin
+  Result := 0;
+
+  if not Supports(GetContainerFromUnion(aElement), IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if not Supports(Container.Elements[0], IwbContainerElementRef, Headers) then
+    Exit;
+
+  if Headers.ElementCount < 4 then
+    Exit;
+
+  Result := Headers.Elements[3].NativeValue;
+end;
+
+
+function wbModelInfoHeaderIsRemoveable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement) and (aElement.NativeValue = 0);
+end;
+
+function wbModelInfoDontShow(const aElement: IwbElement): Boolean;
+begin
+  if wbGameMode < gmTES5 then
+    Exit(False);
+
+  Result := True;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  var MainRecord := aElement.GetContainingMainRecord;
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  Result := MainRecord.Version < 38;
+end;
+
+procedure wbModelInfoGetCP(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
+begin
+  aConflictPriority := cpNormal;
+
+  if wbGameMode < gmTES5 then
+    Exit;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  var MainRecord := aElement.GetContainingMainRecord;
+
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if MainRecord.Version < 38 then
+    aConflictPriority := cpIgnore;
+end;
+
+procedure wbModelInfoUnknownGetCP(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
+begin
+  aConflictPriority := cpNormal;
+  if aElement.EditValue = '' then
+    aConflictPriority := cpIgnore;
+end;
+
+procedure wbModelInfoAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container    : IwbContainerElementRef;
+
+  Headers   : IwbContainerElementRef;
+  Textures  : IwbContainerElementRef;
+  Addons    : IwbContainerElementRef;
+  Materials : IwbContainerElementRef;
+begin
+  if not Supports(aElement, IwbContainerElementRef, Container) then
+    Exit;
+
+  if Container.ElementCount < 4 then
+    Exit;
+
+  Container.BeginUpdate;
+  try
+    if not Supports(Container.Elements[0], IwbContainerElementRef, Headers) then
+      Exit;
+    if not Supports(Container.Elements[1], IwbContainerElementRef, Textures) then
+      Exit;
+    if not Supports(Container.Elements[2], IwbContainerElementRef, Addons) then
+      Exit;
+    if not Supports(Container.Elements[3], IwbContainerElementRef, Materials) then
+      Exit;
+
+    var MinHeaders := 0;
+    if Materials.ElementCount > 0 then
+      MinHeaders := 4
+    else if Addons.ElementCount > 0 then
+      MinHeaders := 2
+    else if Textures.ElementCount > 0 then
+      MinHeaders := 1;
+
+    while Headers.ElementCount < MinHeaders do
+      Headers.Add('');
+
+    if Headers.ElementCount > 0 then
+      if Headers.Elements[0].NativeValue <> Textures.ElementCount then
+        Headers.Elements[0].NativeValue := Textures.ElementCount;
+    if Headers.ElementCount > 1 then
+      if Headers.Elements[1].NativeValue <> Addons.ElementCount then
+        Headers.Elements[1].NativeValue := Addons.ElementCount;
+    if Headers.ElementCount > 3 then
+      if Headers.Elements[3].NativeValue <> Materials.ElementCount then
+        Headers.Elements[3].NativeValue := Materials.ElementCount;
+  finally
+    Container.EndUpdate;
+  end;
+end;
+
+function wbModelInfo(aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
+begin
+  if wbGameMode >= gmTES5 then begin
+    if aName = '' then
+      aName := 'Model Information';
+
+    if not wbDecodeTextureHashes then
+      Exit(wbByteArray(aSignature, aName, 0, cpIgnore, False, False, wbNeverShow));
+
+    var CreateFileEntry := function(const aName: string): IwbValueDef begin
+      Result := wbStruct(aName, [
+        wbInteger('File Hash', itU32, wbFileHashCallback),
+        wbString('Extension', 4),
+        wbInteger('Folder Hash', itU32, wbFolderHashCallback)
+      ])
+      .SetSummaryKey([2,0,1])
+      .SetSummaryDelimiter('')
+      .SetSummaryMemberPrefixSuffix(0, '', '')
+      .SetSummaryMemberPrefixSuffix(1, '.', '')
+      .SetSummaryMemberPrefixSuffix(2, '', '\')
+      .IncludeFlag(dfSummaryMembersNoName);
+    end;
+
+    var TextureFile := CreateFileEntry('Texture').IncludeFlag(dfCollapsed, wbCollapseModelInfoTexture);
+    var MaterialFile := CreateFileEntry('Material').IncludeFlag(dfCollapsed, wbCollapseModelInfoMaterial);
+
+    var NewModelInfo := wbStruct('', [
+      wbArray('Headers',
+        wbInteger('Header', itU32, nil, nil, cpIgnore).SetIsRemovable(wbModelInfoHeaderIsRemoveable)
+      , arcU32, ['Textures Count', 'Addons Count', 'TextureSets', 'Materials Count'], cpIgnore)
+        .IncludeFlag(dfNotAlignable)
+        .IncludeFlag(dfRemoveLastOnly)
+        .IncludeFlag(dfCollapsed, wbCollapseModelInfoHeader),
+
+      wbArray('Textures', TextureFile, wbModelInfoTextureFileCounter)
+        .SetSummaryPassthroughMaxLength(80)
+        .SetSummaryPassthroughMaxDepth(1)
+        .IncludeFlag(dfCollapsed, wbCollapseModelInfoTextures),
+
+      wbArray('Addons', wbInteger('Addon', itU32), wbModelInfoAddonCounter)
+        .SetSummaryPassthroughMaxLength(80)
+        .SetSummaryPassthroughMaxDepth(1)
+        .IncludeFlag(dfCollapsed, wbCollapseModelInfoAddons),
+
+      wbArray('Materials', MaterialFile, wbModelInfoMaterialFileCounter)
+        .SetSummaryPassthroughMaxLength(80)
+        .SetSummaryPassthroughMaxDepth(1)
+        .IncludeFlag(dfCollapsed, wbCollapseModelInfoMaterials),
+
+      wbByteArray('Unknown', 0, cpNormal, False, nil, wbModelInfoUnknownGetCP)
+    ])
+    .SetSummaryKey([1, 2, 3])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .SetAfterSet(wbModelInfoAfterSet);
+
+    Result := wbUnion(aSignature, aName, wbModelInfoDecider, [
+      wbStruct('', [
+        wbEmpty('Unused'),
+        wbByteArray('Unused'),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ], cpIgnore),
+      wbStruct('', [
+        wbEmpty('Unused'),
+        wbByteArray('ERROR').SetToStr(procedure(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType) begin
+          if aType = ctCheck then
+            aValue := 'SubRecord has invalid format for the Form Version of this record';
+        end),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ], cpCritical),
+      wbStruct('', [
+        wbEmpty('Unused'),
+        wbArray('Textures', TextureFile).IncludeFlag(dfCollapsed, wbCollapseModelInfoTextures),
+        wbEmpty('Unused'),
+        wbEmpty('Unused')
+      ]).SetSummaryKey([1]),
+      NewModelInfo
+    ], cpNormal, False, wbModelInfoDontShow, wbModelInfoGetCP).IncludeFlag(dfCollapsed, wbCollapseModelInfo);
+  end else begin
+    if aName = '' then
+      aName := 'Textures';
+
+    if not wbDecodeTextureHashes then
+      Exit(wbByteArray(aSignature, aName, 0, cpIgnore, False, False, wbNeverShow));
+
+    var TextureFile := wbStruct('Texture', [
+      wbInteger('File Hash (PC)', itU64, wbFileHashCallback),
+      wbInteger('File Hash (Console)', itU64, wbFileHashCallback),
+      wbInteger('Folder Hash', itU64, wbFolderHashCallback)
+    ])
+    .SetSummaryKey([2,0])
+    .SetSummaryDelimiter('')
+    .SetSummaryMemberPrefixSuffix(0, '', '')
+    .SetSummaryMemberPrefixSuffix(2, '', '\')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseModelInfoTexture);
+
+    Result := wbArray(aSignature, aName, TextureFile).IncludeFlag(dfCollapsed, wbCollapseModelInfoTextures);
+  end;
+
+end;
+
+function wbModelInfos(aSignature: TwbSignature; aName: string = ''; aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
+begin
+  if wbGameMode >= gmTES5 then
+    raise Exception.Create('Not Supported');
+
+  if aName = '' then
+    aName := 'Model List Textures';
+
+  if not wbDecodeTextureHashes then
+    Exit(wbByteArray(aSignature, aName, 0, cpIgnore, False, False, wbNeverShow));
+
+  var TextureFile := wbStruct('Texture', [
+    wbInteger('File Hash (PC)', itU64, wbFileHashCallback),
+    wbInteger('File Hash (Console)', itU64, wbFileHashCallback),
+    wbInteger('Folder Hash', itU64, wbFolderHashCallback)
+  ])
+  .SetSummaryKey([2,0])
+  .SetSummaryDelimiter('')
+  .SetSummaryMemberPrefixSuffix(0, '', '')
+  .SetSummaryMemberPrefixSuffix(2, '', '\')
+  .IncludeFlag(dfSummaryMembersNoName)
+  .IncludeFlag(dfCollapsed, wbCollapseModelInfoTexture);
+
+  Result := wbArray(aSignature, aName,
+    wbStruct('Model', [
+      wbArray('Textures', TextureFile, arcU8).IncludeFlag(dfCollapsed, wbCollapseModelInfoTextures)
+    ]).SetSummaryKey([0])
+  , arcU32, nil, nil, cpNormal, False, aDontShow).IncludeFlag(dfCollapsed, wbCollapseModelInfo);
 end;
 
 var

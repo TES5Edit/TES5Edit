@@ -13383,7 +13383,7 @@ begin
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
     Settings.WriteInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
-    Settings.WriteBool('Options', 'DecodeTextureHashes', wbDecodeTextureHashes);
+    Settings.WriteBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes);{changed name to enforce new default value}
     Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
     Settings.WriteBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
     Settings.WriteBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam or wbAlwaysSaveOnamForce);
@@ -20623,6 +20623,12 @@ begin
         end;
       end;
 
+      if wbDecodeTextureHashes then begin
+        LoaderProgress('Start building resources cache...');
+        wbContainerHandler.EnsureCache;
+        LoaderProgress('...resources cache finished building');
+      end;
+
     except
       on E: EAbort do
         wbForceTerminate := True;
@@ -21275,5 +21281,4 @@ finalization
   finally
     EndUnHooks;
   end;
-
 end.

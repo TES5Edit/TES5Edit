@@ -312,7 +312,6 @@ const
   DMDC : TwbSignature = 'DMDC'; { New to Fallout 4 }
   DMDL : TwbSignature = 'DMDL';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
-  DMDT : TwbSignature = 'DMDT';
   DMGT : TwbSignature = 'DMGT'; { New to Fallout 4 }
   DMIN : TwbSignature = 'DMIN'; { New to Skyrim }
   DNAM : TwbSignature = 'DNAM';
@@ -502,7 +501,6 @@ const
   MODF : TwbSignature = 'MODF'; { New to Fallout 4 }
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
-  MODT : TwbSignature = 'MODT';
   MODQ : TwbSignature = 'MODQ'; { New to Fallout 4 }
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
@@ -1001,8 +999,6 @@ var
   wbDMDS: IwbSubRecordDef;
   wbMO5S: IwbSubRecordDef;
   wbSPCT: IwbSubRecordDef;
-  wbMODT: IwbSubRecordDef;
-  wbDMDT: IwbSubRecordDef;
   wbXOWN: IwbSubRecordDef;
   wbXRNK: IwbSubRecordDef;
   wbPhonemeTargets: IwbSubRecordDef;
@@ -1061,7 +1057,7 @@ begin
   Result :=
     wbRStruct(aSubRecordName, [
       wbString(aSignatures[0], 'Model FileName'),
-      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbModelInfo(aSignatures[1]),
       aTextureSubRecords[0],
       aTextureSubRecords[1],
       aTextureSubRecords[2]
@@ -7398,24 +7394,6 @@ begin
   wbMO3C := wbFloat(MO3C, 'Color Remapping Index');
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
-
-	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
-
-  if wbDecodeTextureHashes then
-    wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
-      wbInteger('Number of headers', itU32),
-      wbInteger('Textures count', itU32),
-      wbByteArray('Unused', 4),
-      wbInteger('Unique textures count', itU32),
-      wbInteger('Materials count', itU32),
-      wbArray('Hashes', wbStruct('Hash', [
-        wbByteArray('Flags', 4),
-        wbString('Type', 4),
-        wbByteArray('Texture hash', 4)
-      ]))
-    ])
-  else
-    wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');

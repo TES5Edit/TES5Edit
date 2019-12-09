@@ -185,7 +185,6 @@ const
   DEST : TwbSignature = 'DEST';
   DIAL : TwbSignature = 'DIAL';
   DMDL : TwbSignature = 'DMDL';
-  DMDT : TwbSignature = 'DMDT';
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
   DODT : TwbSignature = 'DODT';
@@ -293,7 +292,6 @@ const
   MODD : TwbSignature = 'MODD';
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
-  MODT : TwbSignature = 'MODT';
   MOSD : TwbSignature = 'MOSD';
   MSTT : TwbSignature = 'MSTT';
   MUSC : TwbSignature = 'MUSC';
@@ -599,7 +597,6 @@ var
   wbXSCL: IwbSubRecordDef;
   wbMODD: IwbSubRecordDef;
   wbMOSD: IwbSubRecordDef;
-  wbMODT: IwbSubRecordDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
@@ -663,7 +660,7 @@ begin
   Result :=
     wbRStruct(aSubRecordName, [
       wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True),
-      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore),
+      wbModelInfo(aSignatures[1]),
       aTextureSubRecords[0],
       aTextureSubRecords[1]
     ], [], cpNormal, False, nil, True)
@@ -4374,16 +4371,6 @@ begin
       'Left Hand'
     ]));
 
-  wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore);
-
-  {wbMODT := wbStruct(MODT, 'Texture Files Hashes', [
-    wbArray('Textures', wbStruct('Texture', [
-      wbInteger('File', itU64, wbMODTCallback),
-      wbByteArray('Unknown', 8),
-      wbInteger('Folder', itU64, wbMODTCallback)
-    ]))]
-  );}
-
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
@@ -4411,10 +4398,7 @@ begin
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName'),
-          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
-//          0, nil, nil, cpBenign)
+          wbDMDT
         ], [])
         .SetSummaryKey([0])
         .IncludeFlag(dfCollapsed, wbCollapseModels),
@@ -4450,10 +4434,7 @@ begin
         ], cpNormal, True),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName'),
-          wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore)
-//          wbArray(DMDT, 'Unknown',
-//            wbByteArray('Unknown', 24, cpBenign),
-//          0, nil, nil, cpBenign)
+          wbDMDT
         ], [])
         .SetSummaryKey([0])
         .IncludeFlag(dfCollapsed, wbCollapseModels),
@@ -6036,7 +6017,7 @@ begin
     wbFormIDCk(EITM, 'Unarmed Attack Effect', [ENCH, SPEL], False, cpNormal, False, wbActorTemplateUseActorEffectList),
     wbInteger(EAMT, 'Unarmed Attack Animation', itU16, wbAttackAnimationEnum, cpNormal, True, False, wbActorTemplateUseActorEffectList),
     wbArrayS(NIFZ, 'Model List', wbStringLC('Model'), 0, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation),
-    wbByteArray(NIFT, 'Texture Files Hashes', 0, cpIgnore, False, False, wbActorTemplateUseModelAnimation),
+    wbModelInfos(NIFT, 'Model List Textures', wbActorTemplateUseModelAnimation),
     wbStruct(ACBS, 'Configuration', [
       {00} wbInteger('Flags', itU32, wbFlags([
              {0x000001} 'Biped',
@@ -6947,7 +6928,7 @@ begin
     ], cpNormal, True, nil, 18),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore)
+      wbModelInfo(NAM2)
     ], [], cpNormal, True)
     .SetSummaryKey([0])
     .IncludeFlag(dfCollapsed, wbCollapseModels),
@@ -7455,7 +7436,7 @@ begin
 
   wbRecord(DEBR, 'Debris', [
     wbEDIDReq,
-    wbRArray('Models', wbDebrisModel(wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore)), cpNormal, True)
+    wbRArray('Models', wbDebrisModel(wbMODT), cpNormal, True)
   ]);
 
   wbRecord(IMGS, 'Image Space', [
@@ -7883,7 +7864,7 @@ begin
       wbBPNDStruct,
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      wbModelInfo(NAM5)
     ], [], cpNormal, False),
     wbRStructS('Unnamed Body Parts', 'Body Part', [ // When the Part Name is not provided
       wbString(BPNN, 'Part Node', 0, cpNormal, True),
@@ -7892,7 +7873,7 @@ begin
       wbBPNDStruct,
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpIgnore)
+      wbModelInfo(NAM5)
     ], [], cpNormal, False),
     wbFormIDCk(RAGA, 'Ragdoll', [RGDL])
   ]);

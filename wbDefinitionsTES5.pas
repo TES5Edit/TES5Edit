@@ -268,7 +268,6 @@ const
   DMAX : TwbSignature = 'DMAX'; { New to Skyrim }
   DMDL : TwbSignature = 'DMDL';
   DMDS : TwbSignature = 'DMDS'; { New to Skyrim }
-  DMDT : TwbSignature = 'DMDT';
   DMIN : TwbSignature = 'DMIN'; { New to Skyrim }
   DNAM : TwbSignature = 'DNAM';
   DOBJ : TwbSignature = 'DOBJ';
@@ -414,7 +413,6 @@ const
   MODD : TwbSignature = 'MODD';
   MODL : TwbSignature = 'MODL';
   MODS : TwbSignature = 'MODS';
-  MODT : TwbSignature = 'MODT';
   MOVT : TwbSignature = 'MOVT';
   MPAI : TwbSignature = 'MPAI'; { New To Skyrim }
   MPAV : TwbSignature = 'MPAV'; { New To Skyrim }
@@ -787,8 +785,6 @@ var
   wbMO5S: IwbSubRecordDef;
   wbSPCT: IwbSubRecordDef;
   wbTints: IwbSubRecordArrayDef;
-  wbMODT: IwbSubRecordDef;
-  wbDMDT: IwbSubRecordDef;
   wbRACE_DATAFlags01: IwbIntegerDef;
   wbPhonemeTargets: IwbSubRecordDef;
   wbNoseMorphFlags: IwbIntegerDef;
@@ -812,6 +808,7 @@ var
   wbNAVIslandData: IwbStructDef;
   wbXOWN: IwbSubRecordDef;
 
+
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
   Result :=
@@ -831,7 +828,7 @@ begin
   Result :=
     wbRStruct(aSubRecordName, [
       wbString(aSignatures[0], 'Model FileName'),
-      wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbModelInfo(aSignatures[1]),
       aTextureSubRecord
     ], [])
     .SetSummaryKey([0, 2])
@@ -5753,9 +5750,6 @@ begin
       'Left Hand'
     ]));
 
-	wbMODT := wbByteArray(MODT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
-	wbDMDT := wbByteArray(DMDT, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow);
-
   wbDMDSs := wbArrayS(DMDS, 'Alternate Textures', wbAlternateTexture, -1);
 
   wbDEST := wbRStruct('Destructible', [
@@ -8227,7 +8221,7 @@ begin
     ], cpNormal, True, nil, 22),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
+      wbModelInfo(NAM2)
     ], [], cpNormal, True),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
@@ -8935,7 +8929,7 @@ begin
       ], cpNormal, True),
       wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
       wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-      wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal)
+      wbModelInfo(NAM5)
     ], [], cpNormal, True
   ).SetSummaryKey([1, 2]).IncludeFlag(dfSummaryMembersNoName);
 
