@@ -6571,11 +6571,11 @@ begin
     {20} wbInteger('Form Version', itU16, nil, cpIgnore),
     {22} wbByteArray('Version Control Info 2', 2, cpIgnore)
   ])
-  .SetSummaryKey([5, 3])
+  .SetSummaryKey([5, 3, 2])
   .SetSummaryMemberPrefixSuffix(5, '[v', ']')
+  .SetSummaryMemberPrefixSuffix(2, '{', '}')
   .SetSummaryDelimiter(' ')
   .IncludeFlag(dfSummaryMembersNoName)
-  .IncludeFlag(dfSummaryNoSortKey)
   .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 24;

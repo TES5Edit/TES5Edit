@@ -1842,7 +1842,8 @@ begin
     wbFormID('FormID', cpFormID),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
   ])
-  .SetSummaryKey([3])
+  .SetSummaryKey([3, 2])
+  .SetSummaryMemberPrefixSuffix(2, '{', '}')
   .IncludeFlag(dfSummaryMembersNoName)
   .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
