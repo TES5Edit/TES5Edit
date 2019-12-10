@@ -213,6 +213,8 @@ function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 
 {>>> Common Definitions <<<}
 
+function wbRecordHeader(aRecordFlags: IwbIntegerDef; aVCIToStrCallback: TwbToStrCallback): IwbValueDef;
+
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 
 function wbCNAM(aRequired: Boolean = False): IwbRecordMemberDef;
@@ -1075,6 +1077,25 @@ begin
 end;
 
 {>>> Common Definitions <<<}
+
+function wbRecordHeader(aRecordFlags: IwbIntegerDef; aVCIToStrCallback: TwbToStrCallback): IwbValueDef;
+begin
+  Result := wbStruct('Record Header', [
+    {00} wbString('Signature', 4, cpCritical),
+    {04} wbInteger('Data Size', itU32, nil, cpIgnore),
+    {08} aRecordFlags,
+    {12} wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
+    {16} wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(aVCIToStrCallback),
+    {20} wbInteger('Form Version', itU16, nil, cpIgnore).IncludeFlag(dfSummaryShowIgnore),
+    {22} wbByteArray('Version Control Info 2', 2, cpIgnore)
+  ])
+  .SetSummaryKey([5, 3, 2])
+  .SetSummaryMemberPrefixSuffix(5, '[v', ']')
+  .SetSummaryMemberPrefixSuffix(2, '{', '}')
+  .SetSummaryDelimiter(' ')
+  .IncludeFlag(dfSummaryMembersNoName)
+  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+end;
 
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 begin
