@@ -2193,9 +2193,11 @@ begin
 
     end else begin
 
-      var lFixedFormID := aRecord.FixedFormID;
-      if flSetContainsFixedFormID(lFixedFormID) then
-        raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + GetName);
+      if wbGameMode > gmTES3 then begin
+        var lFixedFormID := aRecord.FixedFormID;
+        if flSetContainsFixedFormID(lFixedFormID) then
+          raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + GetName);
+      end;
 
       if flRecordsCount >= Length(flRecords) then
         SetLength(flRecords, Succ(flRecordsCount));
@@ -3373,6 +3375,9 @@ end;
 
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
+  if wbGameMode <= gmTES3 then
+    Exit(False);
+
   var ID := aFormID.ToCardinal;
 
   var i1: Byte := (ID and $FF000000) shr 24;
@@ -4676,98 +4681,107 @@ begin
     Container := Self;
     Rec := nil;
 
-    EndPtr := flEndPtr;
-    GroupType := 0;
-    while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-      if wbGameMode = gmTES3 then begin
-        Signature := PwbSignature(CurrentPtr)^;
+    var WasEditAllowed := wbEditAllowed;
+    try
+      if wbGameMode = gmTES3 then
+        wbEditAllowed := True;
 
-        Container := nil;
+      EndPtr := flEndPtr;
+      GroupType := 0;
+      while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
+        if wbGameMode = gmTES3 then begin
+          Signature := PwbSignature(CurrentPtr)^;
 
-        if Signature = 'INFO' then begin
-          if Assigned(GroupRecord) then
-            if not Assigned(DialRecord) or (GroupRecord.GroupType <> 7) or not DialRecord.Equals(GroupRecord.ChildrenOf) then
-              GroupRecord := nil;
-          if not Assigned(GroupRecord) and Assigned(DialRecord) then
-            if wbBeginInternalEdit(True) then try
-              GroupRecord := DialRecord.EnsureChildGroup;
-            finally
-              wbEndInternalEdit;
-            end;
-          Container := GroupRecord;
-        end else
-          DialRecord := nil;
+          Container := nil;
 
-        if (Signature = 'LAND') or (Signature = 'PGRD') or (Signature = 'FRMR') or (Signature = 'NAM0') then begin
-          if (Signature = 'LAND') or (Signature = 'PGRD') then
-            GroupType := 9;
-          if Signature <> 'NAM0' then begin
+          if Signature = 'INFO' then begin
             if Assigned(GroupRecord) then
-              if not Assigned(CellRecord) or (GroupRecord.GroupType <> GroupType) or not CellRecord.Equals(GroupRecord.ChildrenOf) then
+              if not Assigned(DialRecord) or (GroupRecord.GroupType <> 7) or not DialRecord.Equals(GroupRecord.ChildrenOf) then
                 GroupRecord := nil;
-            if not Assigned(GroupRecord) and Assigned(CellRecord) then
+            if not Assigned(GroupRecord) and Assigned(DialRecord) then
               if wbBeginInternalEdit(True) then try
-                GroupRecord2 := CellRecord.EnsureChildGroup;
-                GroupRecord := GroupRecord2.FindChildGroup(GroupType, CellRecord);
-                if not Assigned(GroupRecord) then
-                  GroupRecord := TwbGroupRecord.Create(GroupRecord2, GroupType, CellRecord);
+                GroupRecord := DialRecord.EnsureChildGroup;
               finally
                 wbEndInternalEdit;
               end;
             Container := GroupRecord;
-          end;
-        end else
-          CellRecord := nil;
+          end else
+            DialRecord := nil;
 
-        if Signature <> 'NAM0' then begin
-          if not Assigned(Container) then begin
-            if Assigned(GroupRecord) then
-              if (GroupRecord.GroupType <> 0) or (GroupRecord.GroupLabelSignature <> Signature) then
-                GroupRecord := nil;
-
-            if not Assigned(GroupRecord) then
-              if Assigned(TopGroups) and TopGroups.Find(Signature, i) then
-                GroupRecord := IwbGroupRecord(Pointer(TopGroups.Objects[i]))
-              else
+          if (Signature = 'LAND') or (Signature = 'PGRD') or (Signature = 'FRMR') or (Signature = 'NAM0') then begin
+            if (Signature = 'LAND') or (Signature = 'PGRD') then
+              GroupType := 9;
+            if Signature <> 'NAM0' then begin
+              if Assigned(GroupRecord) then
+                if not Assigned(CellRecord) or (GroupRecord.GroupType <> GroupType) or not CellRecord.Equals(GroupRecord.ChildrenOf) then
+                  GroupRecord := nil;
+              if not Assigned(GroupRecord) and Assigned(CellRecord) then
                 if wbBeginInternalEdit(True) then try
-                  GroupRecord := TwbGroupRecord.Create(Self, Signature);
-                  if not Assigned(TopGroups) then begin
-                    TopGroups := TStringList.Create;
-                    TopGroups.Duplicates := dupError;
-                    TopGroups.Sorted := True;
-                  end;
-                  TopGroups.AddObject(Signature, Pointer(GroupRecord));
+                  GroupRecord2 := CellRecord.EnsureChildGroup;
+                  GroupRecord := GroupRecord2.FindChildGroup(GroupType, CellRecord);
+                  if not Assigned(GroupRecord) then
+                    GroupRecord := TwbGroupRecord.Create(GroupRecord2, GroupType, CellRecord);
                 finally
                   wbEndInternalEdit;
                 end;
+              Container := GroupRecord;
+            end;
+          end else
+            CellRecord := nil;
 
-            Container := GroupRecord;
-          end;
+          if Signature <> 'NAM0' then begin
+            if not Assigned(Container) then begin
+              if Assigned(GroupRecord) then
+                if (GroupRecord.GroupType <> 0) or (GroupRecord.GroupLabelSignature <> Signature) then
+                  GroupRecord := nil;
 
-          if not Assigned(Container) then
-            Container := Self;
-        end else
-          Container := nil;
+              if not Assigned(GroupRecord) then
+                if Assigned(TopGroups) and TopGroups.Find(Signature, i) then
+                  GroupRecord := IwbGroupRecord(Pointer(TopGroups.Objects[i]))
+                else
+                  if wbBeginInternalEdit(True) then try
+                    GroupRecord := TwbGroupRecord.Create(Self, Signature);
+                    if not Assigned(TopGroups) then begin
+                      TopGroups := TStringList.Create;
+                      TopGroups.Duplicates := dupError;
+                      TopGroups.Sorted := True;
+                    end;
+                    TopGroups.AddObject(Signature, Pointer(GroupRecord));
+                  finally
+                    wbEndInternalEdit;
+                  end;
+
+              Container := GroupRecord;
+            end;
+
+            if not Assigned(Container) then
+              Container := Self;
+          end else
+            Container := nil;
+        end;
+
+        Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
+
+        if Assigned(Rec) then
+          if wbGameMode = gmTES3 then begin
+            if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
+              EndPtr := flEndPtr;
+
+            if Supports(Rec, IwbMainRecord, MainRecord) then begin
+              if Signature = 'DIAL' then begin
+                DialRecord := MainRecord;
+              end else if Signature = 'CELL' then begin
+                CellRecord := MainRecord;
+                GroupType := 8;
+              end;
+            end else
+              if Rec.Signature = 'NAM0' then
+                GroupType := 9;
+          end else
+            flProgress(Rec.Name + ' processed');
       end;
-
-      Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
-
-      if wbGameMode = gmTES3 then begin
-        if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
-          EndPtr := flEndPtr;
-
-        if Supports(Rec, IwbMainRecord, MainRecord) then begin
-          if Signature = 'DIAL' then begin
-            DialRecord := MainRecord;
-          end else if Signature = 'CELL' then begin
-            CellRecord := MainRecord;
-            GroupType := 8;
-          end;
-        end else
-          if Rec.Signature = 'NAM0' then
-            GroupType := 9;
-      end else
-        flProgress(Rec.Name + ' processed');
+    finally
+      wbEditAllowed := WasEditAllowed;
     end;
 
     if flRecordsCount < Length(flRecords) then
