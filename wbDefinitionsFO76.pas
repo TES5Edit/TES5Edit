@@ -66,6 +66,7 @@ var
   wbWeaponPropertyEnum: IwbEnumDef;
   wbZTestFuncEnum: IwbEnumDef;
   wbQuestEventEnum: IwbEnumDef;
+  wbDialogueSubtypeEnum: IwbEnumDef;
   wbStatNameEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
@@ -3442,31 +3443,31 @@ begin
   	Exit;
 
   case Integer(ArchType) of
-     0: Result := 9;  //Value Modifier
-     1: Result := 0;
-     4: Result := 0;
-     5: Result := 0;
-     6: Result := 0;
-     7: Result := 0;
-     8: Result := 0;
-     9: Result := 0;
+    00: Result := 9;  //Value Modifier
+    01: Result := 0;
+    04: Result := 0;
+    05: Result := 0;
+    06: Result := 0;
+    07: Result := 0;
+    08: Result := 0;
+    09: Result := 0;
     11: Result := 0;
-  	12: Result := 1;  // Light
-	17: Result := 2;  // Bound Item
-	18: Result := 3;  // Summon Creature
+    12: Result := 1;  // Light
+    17: Result := 2;  // Bound Item
+    18: Result := 3;  // Summon Creature
     21: Result := 0;
-	25: Result := 4;  // Guide
+    25: Result := 4;  // Guide
     28: Result := 0;
     31: Result := 0;
     33: Result := 0;
-	34: Result := 8;  // Peak Mod
-	35: Result := 5;  // Cloak
-	36: Result := 6;  // Werewolf
+    34: Result := 8;  // Peak Mod
+    35: Result := 5;  // Cloak
+    36: Result := 6;  // Werewolf
     37: Result := 0;
-	39: Result := 7;  // Enhance Weapon
-	40: Result := 4;  // Spawn Hazard
+    39: Result := 7;  // Enhance Weapon
+    40: Result := 4;  // Spawn Hazard
     45: Result := 10; // Damage
-	46: Result := 6;  // Vampire Lord
+    46: Result := 6;  // Vampire Lord
     47: Result := 0;
     48: Result := 0;
     49: Result := 0;
@@ -6583,7 +6584,8 @@ begin
      (MainRecord.Signature = MISC) or
      (MainRecord.Signature = FURN) or
      (MainRecord.Signature = WEAP) or
-     (MainRecord.Signature = ALCH)
+     (MainRecord.Signature = ALCH) or
+     (MainRecord.Signature = LVLI)
   then
     Result := 7;
 end;
@@ -9612,6 +9614,134 @@ begin
     Int64($60A11697), 'Workshops Unlocked'
   ]);
 
+  wbDialogueSubtypeEnum := wbEnum([],[
+    Sig2Int('CUST'), 'Custom',
+    Sig2Int('PFGT'), 'Force Greet',
+    Sig2Int('RUMO'), 'Rumors',
+    Sig2Int('FVDL'), 'Custom',
+    Sig2Int('INTI'), 'Call',
+    Sig2Int('FLAT'), 'Follow',
+    Sig2Int('BRIB'), 'Move',
+    Sig2Int('ASKG'), 'Attack',
+    Sig2Int('GIFF'), 'Inspect',
+    Sig2Int('ASKF'), 'Retrieve',
+    Sig2Int('STAY'), 'Stay',
+    Sig2Int('RELE'), 'Release',
+    Sig2Int('SHRE'), 'Show Relationships',
+    Sig2Int('FRJT'), 'Reject',
+    Sig2Int('HEAL'), 'Heal',
+    Sig2Int('ASSI'), 'Assign',
+    Sig2Int('ENTE'), 'Enter',
+    Sig2Int('SCEN'), 'Custom',
+    Sig2Int('SHOW'), 'Show',
+    Sig2Int('AGRE'), 'Agree',
+    Sig2Int('REFU'), 'Refuse',
+    Sig2Int('FEXT'), 'Exit Favor State',
+    Sig2Int('MREF'), 'Moral Refusal',
+    Sig2Int('TRAD'), 'Trade',
+    Sig2Int('PRJT'), 'Pathing Refusal',
+    Sig2Int('ATCK'), 'Attack',
+    Sig2Int('POAT'), 'Power Attack',
+    Sig2Int('BASH'), 'Bash',
+    Sig2Int('HIT_'), 'Hit',
+    Sig2Int('FLEE'), 'Flee',
+    Sig2Int('BLED'), 'Bleed Out',
+    Sig2Int('AVTH'), 'Avoid Threat',
+    Sig2Int('DETH'), 'Death',
+    Sig2Int('BLOC'), 'Block',
+    Sig2Int('TAUT'), 'Taunt',
+    Sig2Int('THGR'), 'Throw Grenade',
+    Sig2Int('ALKL'), 'Ally Killed',
+    Sig2Int('ORFB'), 'Order Fallback',
+    Sig2Int('ORAV'), 'Order Move Up',
+    Sig2Int('ORFL'), 'Order Flank',
+    Sig2Int('ORTC'), 'Order Take Cover',
+    Sig2Int('FLBK'), 'Retreat',
+    Sig2Int('RQST'), 'Cover Me',
+    Sig2Int('BGST'), 'Suppressive Fire',
+    Sig2Int('CRIL'), 'Crippled Limb',
+    Sig2Int('PATT'), 'Paired Attack',
+    Sig2Int('STEA'), 'Steal',
+    Sig2Int('YIEL'), 'Yield',
+    Sig2Int('ACYI'), 'Accept Yield',
+    Sig2Int('PICC'), 'Pickpocket Combat',
+    Sig2Int('ASSA'), 'Assault',
+    Sig2Int('MURD'), 'Murder',
+    Sig2Int('ASNC'), 'Assault NC',
+    Sig2Int('MUNC'), 'Murder NC',
+    Sig2Int('PICN'), 'Pickpocket NC',
+    Sig2Int('STFN'), 'Steal From NC',
+    Sig2Int('TRAN'), 'Trespass Against NC',
+    Sig2Int('TRES'), 'Trespass',
+    Sig2Int('WTCR'), 'UNUSED01',
+    Sig2Int('VPSS'), 'Voice Power Start Short',
+    Sig2Int('VPSL'), 'Voice Power Start Long',
+    Sig2Int('VPES'), 'Voice Power End Short',
+    Sig2Int('VPEL'), 'Voice Power End Long',
+    Sig2Int('ALIL'), 'Alert Idle',
+    Sig2Int('LOIL'), 'Lost Idle',
+    Sig2Int('NOTA'), 'Normal To Alert',
+    Sig2Int('NOTC'), 'Normal To Combat',
+    Sig2Int('NOTL'), 'Normal To Lost',
+    Sig2Int('ALTN'), 'Alert To Normal',
+    Sig2Int('ALTC'), 'Alert To Combat',
+    Sig2Int('COTN'), 'Combat To Normal',
+    Sig2Int('COLO'), 'Combat To Lost',
+    Sig2Int('LOTN'), 'Lost To Normal',
+    Sig2Int('LOTC'), 'Lost To Combat',
+    Sig2Int('DFDA'), 'Detect Friend Die',
+    Sig2Int('SERU'), 'Service Refusal',
+    Sig2Int('REPA'), 'Repair',
+    Sig2Int('TRAV'), 'Travel',
+    Sig2Int('TRAI'), 'Training',
+    Sig2Int('BAEX'), 'Barter Exit',
+    Sig2Int('REEX'), 'Repair Exit',
+    Sig2Int('RECH'), 'Recharge',
+    Sig2Int('RCEX'), 'Recharge Exit',
+    Sig2Int('TREX'), 'Training Exit',
+    Sig2Int('OBCO'), 'Observe Combat',
+    Sig2Int('NOTI'), 'Notice Corpse',
+    Sig2Int('TITG'), 'Time To Go',
+    Sig2Int('GBYE'), 'Goodbye',
+    Sig2Int('HELO'), 'Hello',
+    Sig2Int('SWMW'), 'Swing Melee Weapon',
+    Sig2Int('FIWE'), 'Shoot Bow',
+    Sig2Int('ZKEY'), 'Z Key Object',
+    Sig2Int('JUMP'), 'Jump',
+    Sig2Int('KNOO'), 'Knock Over Object',
+    Sig2Int('DEOB'), 'Destroy Object',
+    Sig2Int('STOF'), 'Standon Furniture',
+    Sig2Int('LOOB'), 'Locked Object',
+    Sig2Int('PICT'), 'Pickpocket Topic',
+    Sig2Int('PURS'), 'Pursue Idle Topic',
+    Sig2Int('IDAT'), 'Shared Info',
+    Sig2Int('SCCH'), 'Scene Choice',
+    Sig2Int('PCPS'), 'Player Cast Projectile Spell',
+    Sig2Int('PCSS'), 'Player Cast Self Spell',
+    Sig2Int('PCSH'), 'Player Shout',
+    Sig2Int('IDLE'), 'Idle',
+    Sig2Int('BREA'), 'Enter Sprint Breath',
+    Sig2Int('ENBZ'), 'Enter Bow Zoom Breath',
+    Sig2Int('EXBZ'), 'Exit Bow Zoom Breath',
+    Sig2Int('ACAC'), 'Actor Collidewith Actor',
+    Sig2Int('PIRN'), 'Playerin Iron Sights',
+    Sig2Int('OUTB'), 'Outof Breath',
+    Sig2Int('GRNT'), 'Combat Grunt',
+    Sig2Int('LWBS'), 'Leave Water Breath',
+    Sig2Int('IMPT'), 'Impatient Positive',
+    Sig2Int('IMNG'), 'Impatient Negative',
+    Sig2Int('IMNU'), 'Impatient Neutral',
+    Sig2Int('IMQU'), 'Impatient Question',
+    Sig2Int('WFPI'), 'Waiting For Player Input',
+    Sig2Int('GREE'), 'Greeting',
+    Sig2Int('PADR'), 'Player Activate Door',
+    Sig2Int('PATR'), 'Player Activate Terminals',
+    Sig2Int('PAFU'), 'Player Activate Furniture',
+    Sig2Int('PAAC'), 'Player Activate Activators',
+    Sig2Int('PACO'), 'Player Activate Container',
+    Sig2Int('PAFI'), 'Player Aquire Featured Item'
+]);
+
   wbAdvanceActionEnum := wbEnum([
     'Normal Usage',
     'Power Attack',
@@ -11429,14 +11559,12 @@ begin
         {1} 'Command',
         {2} 'Scene',
         {3} 'Combat',
-        {4} 'Favor',
-        {5} 'Detection',
-        {6} 'Service',
-        {7} 'Miscellaneous'
+        {4} 'Detection',
+        {5} 'Miscellaneous'
       ])),
       wbInteger('Subtype', itU16, wbEnum([
         { 0} 'Custom',
-        { 1} 'ForceGreet',
+        { 1} 'Force Greet',
         { 2} 'Rumors',
         { 3} 'Custom',
         { 4} 'Call',
@@ -11447,7 +11575,7 @@ begin
         { 9} 'Retrieve',
         {10} 'Stay',
         {11} 'Release',
-        {12} 'ShowRelationships',
+        {12} 'Show Relationships',
         {13} 'Reject',
         {14} 'Heal',
         {15} 'Assign',
@@ -11456,113 +11584,113 @@ begin
         {18} 'Show',
         {19} 'Agree',
         {20} 'Refuse',
-        {21} 'ExitFavorState',
-        {22} 'MoralRefusal',
+        {21} 'Exit Favor State',
+        {22} 'Moral Refusal',
         {23} 'Trade',
-        {24} 'PathingRefusal',
+        {24} 'Pathing Refusal',
         {25} 'Attack',
-        {26} 'PowerAttack',
+        {26} 'Power Attack',
         {27} 'Bash',
         {28} 'Hit',
         {29} 'Flee',
-        {30} 'BleedOut',
-        {31} 'AvoidThreat',
+        {30} 'Bleed Out',
+        {31} 'Avoid Threat',
         {32} 'Death',
         {33} 'Block',
         {34} 'Taunt',
-        {35} 'ThrowGrenade',
-        {36} 'AllyKilled',
-        {37} 'OrderFallback',
-        {38} 'OrderMoveUp',
-        {39} 'OrderFlank',
-        {40} 'OrderTakeCover',
+        {35} 'Throw Grenade',
+        {36} 'Ally Killed',
+        {37} 'Order Fallback',
+        {38} 'Order Move Up',
+        {39} 'Order Flank',
+        {40} 'Order Take Cover',
         {41} 'Retreat',
-        {42} 'CoverMe',
-        {43} 'SuppressiveFire',
-        {44} 'CrippledLimb',
-        {45} 'PairedAttack',
+        {42} 'Cover Me',
+        {43} 'Suppressive Fire',
+        {44} 'Crippled Limb',
+        {45} 'Paired Attack',
         {46} 'Steal',
         {47} 'Yield',
-        {48} 'AcceptYield',
-        {49} 'PickpocketCombat',
+        {48} 'Accept Yield',
+        {49} 'Pickpocket Combat',
         {50} 'Assault',
         {51} 'Murder',
-        {52} 'AssaultNC',
-        {53} 'MurderNC',
-        {54} 'PickpocketNC',
-        {55} 'StealFromNC',
-        {56} 'TrespassAgainstNC',
+        {52} 'Assault NC',
+        {53} 'Murder NC',
+        {54} 'Pickpocket NC',
+        {55} 'Steal From NC',
+        {56} 'Trespass Against NC',
         {57} 'Trespass',
         {58} 'UNUSED01',
-        {59} 'VoicePowerStartShort',
-        {60} 'VoicePowerStartLong',
-        {61} 'VoicePowerEndShort',
-        {62} 'VoicePowerEndLong',
-        {63} 'AlertIdle',
-        {64} 'LostIdle',
-        {65} 'NormalToAlert',
-        {66} 'NormalToCombat',
-        {67} 'NormalToLost',
-        {68} 'AlertToNormal',
-        {69} 'AlertToCombat',
-        {70} 'CombatToNormal',
-        {71} 'CombatToLost',
-        {72} 'LostToNormal',
-        {73} 'LostToCombat',
-        {74} 'DetectFriendDie',
-        {75} 'ServiceRefusal',
+        {59} 'Voice Power Start Short',
+        {60} 'Voice Power Start Long',
+        {61} 'Voice Power End Short',
+        {62} 'Voice Power End Long',
+        {63} 'Alert Idle',
+        {64} 'Lost Idle',
+        {65} 'Normal To Alert',
+        {66} 'Normal To Combat',
+        {67} 'Normal To Lost',
+        {68} 'Alert To Normal',
+        {69} 'Alert To Combat',
+        {70} 'Combat To Normal',
+        {71} 'Combat To Lost',
+        {72} 'Lost To Normal',
+        {73} 'Lost To Combat',
+        {74} 'Detect Friend Die',
+        {75} 'Service Refusal',
         {76} 'Repair',
         {77} 'Travel',
         {78} 'Training',
-        {79} 'BarterExit',
-        {80} 'RepairExit',
+        {79} 'Barter Exit',
+        {80} 'Repair Exit',
         {81} 'Recharge',
-        {82} 'RechargeExit',
-        {83} 'TrainingExit',
-        {84} 'ObserveCombat',
-        {85} 'NoticeCorpse',
-        {86} 'TimeToGo',
+        {82} 'Recharge Exit',
+        {83} 'Training Exit',
+        {84} 'Observe Combat',
+        {85} 'Notice Corpse',
+        {86} 'Time To Go',
         {87} 'Goodbye',
         {88} 'Hello',
-        {89} 'SwingMeleeWeapon',
-        {90} 'ShootBow',
-        {91} 'ZKeyObject',
+        {89} 'Swing Melee Weapon',
+        {90} 'Shoot Bow',
+        {91} 'Z Key Object',
         {92} 'Jump',
-        {93} 'KnockOverObject',
-        {94} 'DestroyObject',
-        {95} 'StandonFurniture',
-        {96} 'LockedObject',
-        {97} 'PickpocketTopic',
-        {98} 'PursueIdleTopic',
-        {99} 'SharedInfo',
-       {100} 'SceneChoice',
-       {101} 'PlayerCastProjectileSpell',
-       {102} 'PlayerCastSelfSpell',
-       {103} 'PlayerShout',
+        {93} 'Knock Over Object',
+        {94} 'Destroy Object',
+        {95} 'Standon Furniture',
+        {96} 'Locked Object',
+        {97} 'Pickpocket Topic',
+        {98} 'Pursue Idle Topic',
+        {99} 'Shared Info',
+       {100} 'Scene Choice',
+       {101} 'Player Cast Projectile Spell',
+       {102} 'Player Cast Self Spell',
+       {103} 'Player Shout',
        {104} 'Idle',
-       {105} 'EnterSprintBreath',
-       {106} 'EnterBowZoomBreath',
-       {107} 'ExitBowZoomBreath',
-       {108} 'ActorCollidewithActor',
-       {109} 'PlayerinIronSights',
-       {110} 'OutofBreath',
-       {111} 'CombatGrunt',
-       {112} 'LeaveWaterBreath',
-       {113} 'ImpatientPositive',
-       {114} 'ImpatientNegative',
-       {115} 'ImpatientNeutral',
-       {116} 'ImpatientQuestion',
-       {117} 'WaitingForPlayerInput',
+       {105} 'Enter Sprint Breath',
+       {106} 'Enter Bow Zoom Breath',
+       {107} 'Exit Bow Zoom Breath',
+       {108} 'Actor Collidewith Actor',
+       {109} 'Playerin Iron Sights',
+       {110} 'Outof Breath',
+       {111} 'Combat Grunt',
+       {112} 'Leave Water Breath',
+       {113} 'Impatient Positive',
+       {114} 'Impatient Negative',
+       {115} 'Impatient Neutral',
+       {116} 'Impatient Question',
+       {117} 'Waiting For Player Input',
        {118} 'Greeting',
-       {119} 'PlayerActivateDoor',
-       {120} 'PlayerActivateTerminals',
-       {121} 'PlayerActivateFurniture',
-       {122} 'PlayerActivateActivators',
-       {123} 'PlayerActivateContainer',
-       {124} 'PlayerAquireFeaturedItem'
+       {119} 'Player Activate Door',
+       {120} 'Player Activate Terminals',
+       {121} 'Player Activate Furniture',
+       {122} 'Player Activate Activators',
+       {123} 'Player Activate Container',
+       {124} 'Player Aquire Featured Item'
       ]))
     ]),
-    wbString(SNAM, 'Subtype Name', 4),
+    wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
     wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign)
   ]);
 
@@ -12672,8 +12800,30 @@ begin
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray')
     ], cpNormal),
+    wbStruct(FNAM, 'HDR', [
+      wbFloat('Eye Adapt Speed'),
+      wbFloat('Tonemap E'),
+      wbFloat('Bloom Threshold'),
+      wbFloat('Bloom Scale'),
+      wbFloat('Auto Exposure Max'),
+      wbFloat('Auto Exposure Min'),
+      wbFloat('Sunlight Scale'),
+      wbFloat('Sky Scale'),
+      wbFloat('Middle Gray'),
+      wbFloat('Unknown')
+    ], cpNormal),
     wbArray(FNAM, 'Unknown', wbFloat('Unknown')),
-    wbArray(GNAM, 'Unknown', wbFloat('Unknown')),
+    wbStruct(GNAM, 'HDR', [
+      wbFloat('Eye Adapt Speed'),
+      wbFloat('Tonemap E'),
+      wbFloat('Bloom Threshold'),
+      wbFloat('Bloom Scale'),
+      wbFloat('Auto Exposure Max'),
+      wbFloat('Auto Exposure Min'),
+      wbFloat('Sunlight Scale'),
+      wbFloat('Sky Scale'),
+      wbFloat('Middle Gray')
+    ], cpNormal),
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
       wbFloat('Brightness'),
@@ -16393,22 +16543,38 @@ begin
     wbRUnion('General', [
       wbStruct(DATA, 'General', [  //0xE4
         wbInteger('Flags', itU32, wbFlags([
-          {0x0001} 'Start Game Enabled',
-          {0x0002} 'Unknown 2',
-          {0x0004} 'Add Idle Topic To Hello',
-          {0x0008} 'Allow repeated stages',
-          {0x0010} 'Unknown 5',
-          {0x0020} 'Unknown 6',
-          {0x0040} 'Unknown 7',
-          {0x0080} 'Unknown 8',
-          {0x0100} 'Run Once',
-          {0x0200} 'Exclude from dialogue export',
-          {0x0400} 'Warn on alias fill failure',
-          {0x0800} 'Unknown 12',
-          {0x1000} 'Unknown 13',
-          {0x2000} 'Unknown 14',
-          {0x4000} 'Unknown 15',
-          {0x8000} 'Unknown 16'
+          {0x00000001} 'Start Game Enabled',
+          {0x00000002} 'Unknown 2',
+          {0x00000004} 'Add Idle Topic To Hello',
+          {0x00000008} 'Allow repeated stages',
+          {0x00000010} 'Unknown 5',
+          {0x00000020} 'Unknown 6',
+          {0x00000040} 'Unknown 7',
+          {0x00000080} 'Unknown 8',
+          {0x00000100} 'Run Once',
+          {0x00000200} 'Exclude from dialogue export',
+          {0x00000400} 'Warn on alias fill failure',
+          {0x00000800} 'Unknown 12',
+          {0x00001000} 'Unknown 13',
+          {0x00002000} 'Unknown 14',
+          {0x00004000} 'Unknown 15',
+          {0x00008000} 'Unknown 16',
+          {0x00010000} 'Unknown 17',
+          {0x00020000} 'Unknown 18',
+          {0x00040000} 'Unknown 19',
+          {0x00080000} 'Unknown 20',
+          {0x00100000} 'Unknown 21',
+          {0x00200000} 'Unknown 22',
+          {0x00400000} 'Unknown 23',
+          {0x00800000} 'Unknown 24',
+          {0x01000000} 'Unknown 25',
+          {0x02000000} 'Unknown 26',
+          {0x04000000} 'Unknown 27',
+          {0x08000000} 'Unknown 28',
+          {0x10000000} 'Unknown 29',
+          {0x20000000} 'Unknown 30',
+          {0x40000000} 'Unknown 31',
+          {0x80000000} 'Unknown 32'
         ])),
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
@@ -19807,10 +19973,11 @@ begin
     wbString(SWFI, 'SWF Icon'),
     wbLString(NNAM, 'Display Name'),
     wbUnknown(BEVA),
-    wbString(ETIP, 'Entitlement Image Path'),
-    wbString(ETDI, 'Entitlement Image'),
-    wbRArray('Entitlement Confirm Image list', wbString(ECIL, 'Image')),
-    wbFormID(ETLG, 'Entitlement Container')
+    wbString(ETIP, 'Storefront Image Path'),
+    wbString(ETDI, 'Storefront Preview Image'),
+    wbFormID(ETLG, 'Entitlement Reference'),
+    wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
+
   ]);
 
   wbRecord(COEN, 'Consumable Entitlement', [
