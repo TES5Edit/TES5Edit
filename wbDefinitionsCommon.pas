@@ -1087,8 +1087,6 @@ end;
 
 function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
 begin
-  var wbVersionControlInfo1 := wbByteArray('Version Control Info 1', 4, cpIgnore);
-
   Result := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
@@ -1096,10 +1094,10 @@ begin
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     IfThen(wbGameMode in [gmTES5, gmSSE],
       wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
-        wbVersionControlInfo1.SetToStr(wbVCI1ToStrBeforeFO4),
-        wbVersionControlInfo1.SetToStr(wbVCI1ToStrAfterFO4)
+        wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
+        wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4)
       ]),
-      wbVersionControlInfo1.SetToStr(
+      wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(
         IfThen(wbGameMode in [gmFO3, gmFNV], wbVCI1ToStrBeforeFO4, wbVCI1ToStrAfterFO4)
       )
     ),
