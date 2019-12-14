@@ -1092,7 +1092,7 @@ begin
     wbInteger('Data Size', itU32, nil, cpIgnore),
     aRecordFlags,
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
-    IfThen(wbGameMode in [gmTES5, gmSSE],
+    IfThen(wbIsSkyrim,
       wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
         wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
         wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4)
