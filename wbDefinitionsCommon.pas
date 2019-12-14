@@ -213,6 +213,8 @@ function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 
 {>>> Common Definitions <<<}
 
+function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
+
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 
 function wbCNAM(aRequired: Boolean = False): IwbRecordMemberDef;
@@ -273,6 +275,13 @@ uses
   wbHelpers;
 
 function IfThen(aBoolean: Boolean; const aTrue: TwbSignature; const aFalse: TwbSignature): TwbSignature; overload;
+begin
+  Result := aFalse;
+  if aBoolean then
+    Result := aTrue;
+end;
+
+function IfThen(aBoolean: Boolean; const aTrue: TwbToStrCallback; const aFalse: TwbToStrCallback): TwbToStrCallback; overload;
 begin
   Result := aFalse;
   if aBoolean then
@@ -1075,6 +1084,33 @@ begin
 end;
 
 {>>> Common Definitions <<<}
+
+function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
+begin
+  Result := wbStruct('Record Header', [
+    wbString('Signature', 4, cpCritical),
+    wbInteger('Data Size', itU32, nil, cpIgnore),
+    aRecordFlags,
+    wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
+    IfThen(wbGameMode in [gmTES5, gmSSE],
+      wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
+        wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
+        wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4)
+      ]),
+      wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(
+        IfThen(wbGameMode in [gmFO3, gmFNV], wbVCI1ToStrBeforeFO4, wbVCI1ToStrAfterFO4)
+      )
+    ),
+    wbInteger('Form Version', itU16, nil, cpIgnore).IncludeFlag(dfSummaryShowIgnore),
+    wbByteArray('Version Control Info 2', 2, cpIgnore)
+  ])
+  .SetSummaryKey([5, 3, 2])
+  .SetSummaryMemberPrefixSuffix(5, '[v', ']')
+  .SetSummaryMemberPrefixSuffix(2, '{', '}')
+  .SetSummaryDelimiter(' ')
+  .IncludeFlag(dfSummaryMembersNoName)
+  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+end;
 
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 begin
