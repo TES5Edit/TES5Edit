@@ -4250,7 +4250,7 @@ begin
     {0x80000000}'Unknown 32'
   ]));                (**)
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags, wbVCI1ToStrBeforeFO4);
+  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
 
   wbSizeOfMainRecordStruct := 24;
 

@@ -7516,7 +7516,7 @@ begin
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags, wbVCI1ToStrAfterFO4);
+  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
 
   wbSizeOfMainRecordStruct := 24;
 

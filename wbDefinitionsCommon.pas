@@ -213,7 +213,7 @@ function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aEl
 
 {>>> Common Definitions <<<}
 
-function wbRecordHeader(aRecordFlags: IwbIntegerDef; aVCIToStrCallback: TwbToStrCallback = nil): IwbValueDef;
+function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
 
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
 
@@ -275,6 +275,13 @@ uses
   wbHelpers;
 
 function IfThen(aBoolean: Boolean; const aTrue: TwbSignature; const aFalse: TwbSignature): TwbSignature; overload;
+begin
+  Result := aFalse;
+  if aBoolean then
+    Result := aTrue;
+end;
+
+function IfThen(aBoolean: Boolean; const aTrue: TwbToStrCallback; const aFalse: TwbToStrCallback): TwbToStrCallback; overload;
 begin
   Result := aFalse;
   if aBoolean then
@@ -1078,10 +1085,9 @@ end;
 
 {>>> Common Definitions <<<}
 
-function wbRecordHeader(aRecordFlags: IwbIntegerDef; aVCIToStrCallback: TwbToStrCallback = nil): IwbValueDef;
+function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
 begin
-  if not Assigned(aVCIToStrCallback) and not (wbGameMode in [gmTES5, gmSSE]) then
-    raise Exception.Create('wbRecordHeader - aVCIToStrCallback not assigned');
+  var wbVersionControlInfo1 := wbByteArray('Version Control Info 1', 4, cpIgnore);
 
   Result := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
@@ -1090,10 +1096,12 @@ begin
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     IfThen(wbGameMode in [gmTES5, gmSSE],
       wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
-        wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
-        wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrAfterFO4)
+        wbVersionControlInfo1.SetToStr(wbVCI1ToStrBeforeFO4),
+        wbVersionControlInfo1.SetToStr(wbVCI1ToStrAfterFO4)
       ]),
-      wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(aVCIToStrCallback)
+      wbVersionControlInfo1.SetToStr(
+        IfThen(wbGameMode in [gmFO3, gmFNV], wbVCI1ToStrBeforeFO4, wbVCI1ToStrAfterFO4)
+      )
     ),
     wbInteger('Form Version', itU16, nil, cpIgnore).IncludeFlag(dfSummaryShowIgnore),
     wbByteArray('Version Control Info 2', 2, cpIgnore)
