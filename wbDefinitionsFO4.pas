@@ -8735,7 +8735,7 @@ begin
         'Unused 5',
         'Unused 6',
         'Unused 7'
-      ])),
+      ])).IncludeFlag(dfCollapsed),
       wbByteArray('Unknown', 3)
     ], cpNormal, False, nil, 4));
 
@@ -16662,7 +16662,12 @@ begin
       wbStruct(CNTO, 'Holotape', [
         wbFormIDCk('Item', [NULL, NOTE]),
         wbInteger('Count', itS32, nil, cpNormal, False, nil, nil, 1)
-      ]),
+      ])
+        .SetSummaryKeyOnValue([1, 0])
+        .SetSummaryPrefixSuffixOnValue(1, '', 'x')
+        .SetSummaryDelimiterOnValue(' ')
+        .IncludeFlagOnValue(dfSummaryMembersNoName)
+        .IncludeFlag(dfCollapsed),
       cpNormal, False, nil, wbTERMCNTOsAfterSet
     ),
     wbMNAMFurnitureMarker,
@@ -16674,7 +16679,12 @@ begin
       wbRStruct('Item', [
         wbLStringKC(BTXT, 'Text', 0, cpTranslate),
         wbCTDAs
-      ], []),
+      ], [])
+        .SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(1, '{', '}')
+        .SetSummaryDelimiter(' ')
+        .IncludeFlag(dfSummaryMembersNoName)
+        .IncludeFlag(dfCollapsed),
       cpNormal, False, nil, wbTERMDisplayItemsAfterSet
     ),
     wbInteger(ISIZ, 'Count', itU32, nil, cpBenign),
@@ -16706,7 +16716,14 @@ begin
         wbString(VNAM, 'Show Image'),
         wbFormIDCk(TNAM, 'Submenu', [TERM]),
         wbCTDAs
-      ], []),
+      ], [])
+        .SetSummaryKey([3, 2, 0, 7])
+        .SetSummaryMemberPrefixSuffix(3, '[', ']')
+        .SetSummaryMemberPrefixSuffix(2, '[', ']')
+        .SetSummaryMemberPrefixSuffix(7, '{', '}')
+        .SetSummaryDelimiter(' ')
+        .IncludeFlag(dfSummaryMembersNoName)
+        .IncludeFlag(dfCollapsed),
       cpNormal, False, nil, wbTERMMenuItemsAfterSet
     )
   ]);
