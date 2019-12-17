@@ -10,3 +10,9 @@
 	path = VirtualTrees
 	url = https://github.com/ElminsterAU/Virtual-TreeView.git
 	branch = master
+[submodule "jcl"]
+	path = jcl
+	url = ../../ElminsterAU/jcl.git
+[submodule "jvcl"]
+	path = jvcl
+	url = ../../ElminsterAU/jvcl.git
