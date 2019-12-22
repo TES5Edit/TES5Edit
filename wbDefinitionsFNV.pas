@@ -4250,21 +4250,7 @@ begin
     {0x80000000}'Unknown 32'
   ]));                (**)
 
-  wbMainRecordHeader := wbStruct('Record Header', [
-    wbString('Signature', 4, cpCritical),
-    wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
-    wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
-    wbByteArray('Version Control Info 1', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
-    wbInteger('Form Version', itU16, nil, cpIgnore).IncludeFlag(dfSummaryShowIgnore),
-    wbByteArray('Version Control Info 2', 2, cpIgnore)
-  ])
-  .SetSummaryKey([5, 3, 2])
-  .SetSummaryMemberPrefixSuffix(5, '[v', ']')
-  .SetSummaryMemberPrefixSuffix(2, '{', '}')
-  .SetSummaryDelimiter(' ')
-  .IncludeFlag(dfSummaryMembersNoName)
-  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
 
   wbSizeOfMainRecordStruct := 24;
 
