@@ -1177,7 +1177,7 @@ begin
             ReadString('Archive', 'sResourceArchiveList2', ''),
             ',', #10, [rfReplaceAll]
           )
-        else if wbIsFallout4 then
+        else if wbIsFallout4 or wbIsFallout76 then
           Text := StringReplace(
             ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
             ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +
