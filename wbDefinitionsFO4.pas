@@ -10802,13 +10802,10 @@ begin
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
       wbFloat('Force'),
       wbFloat('Damage'),
-      wbFloat('Inner Radius'),
+      wbFromVersion(97, wbFloat('Inner Radius')),
       wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
-      wbUnion('Vertical Offset Mult', wbFormVersionDecider(99), [
-        wbByteArray('Unknown', 4),
-        wbFloat('Vertical Offset Mult')
-      ]),
+      wbFloat('Vertical Offset Mult'),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Unknown 0',
         {0x00000002} 'Always Uses World Orientation',
@@ -10823,21 +10820,21 @@ begin
         {0x00000400} 'Skip Underwater Tests'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbFloat('Placed Object AutoFade Delay'),
-      wbInteger('Stagger', itU32, wbEnum([
+      wbFromVersion(70, wbFloat('Placed Object AutoFade Delay')),
+      wbFromVersion(91, wbInteger('Stagger', itU32, wbEnum([
         'None',
         'Small',
         'Medium',
         'Large',
         'Extra Large'
-      ])),
-      wbStruct('Spawn', [
+      ]))),
+      wbFromVersion(112, wbStruct('Spawn', [
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
         wbFloat('Spread Degrees'),
         wbInteger('Count', itU32)
-      ])
+      ]))
     ], cpNormal, True, nil, 13)
   ]);
 

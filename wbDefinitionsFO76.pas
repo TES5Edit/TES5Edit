@@ -10977,25 +10977,12 @@ begin
         wbInteger('Health', itU32)
       ], cpNormal, True)
     ]),
-    wbUnion(FNAM, '', wbFormVersionDecider([99,192]), [
-      wbStruct('', [
-        wbInteger('Armor Rating', itU16),
-        wbInteger('Base Addon Index', itU16),
-        wbEmpty('Stagger Rating'),
-        wbEmpty('Unknown')
-      ]),
-      wbStruct('', [
-        wbInteger('Armor Rating', itU16),
-        wbInteger('Base Addon Index', itU16),
-        wbInteger('Stagger Rating', itU8, wbStaggerEnum),
-        wbEmpty('Unknown')
-      ]),
-      wbStruct('', [
-        wbInteger('Armor Rating', itU16),
-        wbInteger('Base Addon Index', itU16),
-        wbInteger('Stagger Rating', itU8, wbStaggerEnum),
-        wbUnknown(cpIgnore, False, wbNeverShow, nil)
-      ])
+    wbStruct(FNAM, 'Rating Addon Data', [
+      wbInteger('Armor Rating', itU16),
+      wbInteger('Base Addon Index', itU16),
+      wbFromVersion(99, wbInteger('Stagger Rating', itU32, wbStaggerEnum)),
+      wbFromVersion(99, wbByteArray('Unknown', 3)),
+      wbFromVersion(192, wbByteArray('Unknown',4))
     ]),
     wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
@@ -12794,16 +12781,14 @@ begin
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormID('Placed Object'),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
-      wbUnion('Force', wbFormVersionDecider(150), [
-        wbFloat('Force'),
-        wbFormIDCk('Force Curve Table', [CURV, NULL])
-      ], cpNormal, True),
+      wbFromVersion(150, wbFormIDCk('Force Curve Table', [CURV, NULL])),
+      wbFloat('Force'),
       wbFloat('Damage'),
-      wbFloat('Inner Radius'),
+      wbFromVersion(97, wbFloat('Inner Radius')),
       wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
-      wbFromVersion(97, wbFloat('Vertical Offset Mult')),
-      wbInteger('Flags1', itU64, wbFlags([
+      wbFloat('Vertical Offset Mult'),
+      wbInteger('Flags1', itU32, wbFlags([
         {0x0000000000000001} 'Unknown 0',
         {0x0000000000000002} 'Always Uses World Orientation',
         {0x0000000000000004} 'Knock Down - Always',
@@ -12836,55 +12821,23 @@ begin
         {0x0000000010000000} 'Unknown 29',
         {0x0000000020000000} 'Unknown 30',
         {0x0000000040000000} 'Unknown 31',
-        {0x0000000080000000} 'Unknown 32',
-        {0x0000000100000000} 'Unknown 33',
-        {0x0000000200000000} 'Unknown 34',
-        {0x0000000400000000} 'Unknown 35',
-        {0x0000000800000000} 'Unknown 36',
-        {0x0000001000000000} 'Unknown 37',
-        {0x0000002000000000} 'Unknown 38',
-        {0x0000004000000000} 'Unknown 39',
-        {0x0000008000000000} 'Unknown 40',
-        {0x0000010000000000} 'Unknown 41',
-        {0x0000020000000000} 'Unknown 42',
-        {0x0000040000000000} 'Unknown 43',
-        {0x0000080000000000} 'Unknown 44',
-        {0x0000100000000000} 'Unknown 45',
-        {0x0000200000000000} 'Unknown 46',
-        {0x0000400000000000} 'Unknown 47',
-        {0x0000800000000000} 'Unknown 48',
-        {0x0001000000000000} 'Unknown 49',
-        {0x0002000000000000} 'Unknown 50',
-        {0x0004000000000000} 'Unknown 51',
-        {0x0008000000000000} 'Unknown 52',
-        {0x0010000000000000} 'Unknown 53',
-        {0x0020000000000000} 'Unknown 54',
-        {0x0040000000000000} 'Unknown 55',
-        {0x0080000000000000} 'Unknown 56',
-        {0x0100000000000000} 'Unknown 57',
-        {0x0200000000000000} 'Unknown 58',
-        {0x0400000000000000} 'Unknown 59',
-        {0x0800000000000000} 'Unknown 60',
-        {0x1000000000000000} 'Unknown 61',
-        {0x2000000000000000} 'Unknown 62',
-        {0x4000000000000000} 'Unknown 63',
-        {0x8000000000000000} 'Unknown 64'
+        {0x0000000080000000} 'Unknown 32'
       ])),
-      wbFromVersion(70, wbInteger('Sound Level', itU32, wbSoundLevelEnum)),
-      wbFromVersion(91, wbFloat('Placed Object AutoFade Delay')),
-      wbFromVersion(112, wbInteger('Stagger', itU32, wbEnum([
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+      wbFromVersion(70, wbFloat('Placed Object AutoFade Delay')),
+      wbFromVersion(91, wbInteger('Stagger', itU32, wbEnum([
         'None',
         'Small',
         'Medium',
         'Large',
         'Extra Large'
       ]))),
-      wbFromVersion(112, wbStruct('Unknown', [
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbByteArray('Unknown', 4)
+      wbFromVersion(112, wbStruct('Spawn', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z'),
+        wbFloat('Spread Degrees'),
+        wbInteger('Count', itU32)
       ])),
       wbFromVersion(173, wbFloat('Base Weapon Damage Mult'))
     ], cpNormal, True, nil, 13)
