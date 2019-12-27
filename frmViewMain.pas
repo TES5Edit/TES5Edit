@@ -11441,94 +11441,65 @@ begin
 end;
 
 function TfrmMain.GetFocusedElementSafely(Sender: TObject): IwbElement;
-var
-  NodeDatas                   : PViewNodeDatas;
-  Element                     : IwbElement;
-  FocusedColumn               : TColumnIndex;
 begin
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  Result := nil;
+
+  var NodeDatas: PViewNodeDatas := vstView.GetNodeData(vstView.FocusedNode);
   if not Assigned(NodeDatas) then
     Exit;
 
-  FocusedColumn := FocusedColumnOverride;
+  var FocusedColumn := FocusedColumnOverride;
   if FocusedColumn < 0 then
     FocusedColumn := vstView.FocusedColumn;
   if Length(ActiveRecords) = 1 then
     FocusedColumn := 1;
 
-  Element := nil;
+  Result := nil;
   if (FocusedColumn > 0) and (Pred(FocusedColumn) <= High(ActiveRecords)) then
-    Element := NodeDatas[Pred(FocusedColumn)].Element;
+    Result := NodeDatas[Pred(FocusedColumn)].Element;
 
-  if not Assigned(Element) then
-    Exit;
-
-  for var i := Low(ActiveRecords) to High(ActiveRecords) do
-  begin
-    Element := NodeDatas[i].Element;
-    if Assigned(Element) then
-      Break;
-  end;
-
-  if not Assigned(Element) then
-    Exit;
-
-  Result := Element;
+  if not Assigned(Result) then
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+    begin
+      Result := NodeDatas[i].Element;
+      if Assigned(Result) then
+        Break;
+    end;
 end;
 
 procedure TfrmMain.mniCopyDisplayNameToClipboardClick(Sender: TObject);
-var
-  Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely(Sender);
-  if not Assigned(Element) then
-    Exit;
-
-  Clipboard.AsText := Element.DisplayName[True];
+  var Element := GetFocusedElementSafely(Sender);
+  if Assigned(Element) then
+    Clipboard.AsText := Element.DisplayName[True];
 end;
 
 procedure TfrmMain.mniCopyFullPathToClipboardClick(Sender: TObject);
-var
-  Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely(Sender);
-  if not Assigned(Element) then
-    Exit;
-
-  Clipboard.AsText := Element.FullPath;
+  var Element := GetFocusedElementSafely(Sender);
+  if Assigned(Element) then
+    Clipboard.AsText := Element.FullPath;
 end;
 
 procedure TfrmMain.mniCopyNameToClipboardClick(Sender: TObject);
-var
-  Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely(Sender);
-  if not Assigned(Element) then
-    Exit;
-
-  Clipboard.AsText := Element.Name;
+  var Element := GetFocusedElementSafely(Sender);
+  if Assigned(Element) then
+    Clipboard.AsText := Element.Name;
 end;
 
 procedure TfrmMain.mniCopyPathToClipboardClick(Sender: TObject);
-var
-  Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely(Sender);
-  if not Assigned(Element) then
-    Exit;
-
-  Clipboard.AsText := Element.Path;
+  var Element := GetFocusedElementSafely(Sender);
+  if Assigned(Element) then
+    Clipboard.AsText := Element.Path;
 end;
 
 procedure TfrmMain.mniCopyShortNameToClipboardClick(Sender: TObject);
-var
-  Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely(Sender);
-  if not Assigned(Element) then
-    Exit;
-
-  Clipboard.AsText := Element.ShortName;
+  var Element := GetFocusedElementSafely(Sender);
+  if Assigned(Element) then
+    Clipboard.AsText := Element.ShortName;
 end;
 
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
