@@ -437,6 +437,14 @@ type
     pnlBtn: TPanel;
     pmuBtnMenu: TPopupMenu;
     mniBtnShrinkButtons: TMenuItem;
+    mniViewClipboard: TMenuItem;
+    mniViewClipboardSeparator: TMenuItem;
+    mniCopyPathToClipboard: TMenuItem;
+    mniCopyFullPathToClipboard: TMenuItem;
+    mniClipboardSeparator: TMenuItem;
+    mniCopyNameToClipboard: TMenuItem;
+    mniCopyDisplayNameToClipboard: TMenuItem;
+    mniCopyShortNameToClipboard: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -601,6 +609,8 @@ type
     procedure mniSpreadsheetRebuildClick(Sender: TObject);
 
     {--- actions ---}
+    function GetFocusedElementSafely(Sender: TObject): IwbElement;
+
     procedure acBackUpdate(Sender: TObject);
     procedure acBackExecute(Sender: TObject);
 
@@ -706,6 +716,13 @@ type
     procedure pmuNavHeaderPopupPopup(Sender: TObject);
     procedure pmuBtnMenuPopup(Sender: TObject);
     procedure mniBtnShrinkButtonsClick(Sender: TObject);
+    procedure mniViewClipboardClick(Sender: TObject);
+    procedure mniCopyPathToClipboardClick(Sender: TObject);
+    procedure mniCopyFullPathToClipboardClick(Sender: TObject);
+    procedure mniCopyNameToClipboardClick(Sender: TObject);
+    procedure mniCopyDisplayNameToClipboardClick(Sender: TObject);
+    procedure mniCopyShortNameToClipboardClick(Sender: TObject);
+
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -7455,6 +7472,30 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewClipboardClick(Sender: TObject);
+var
+  Element                     : IwbElement;
+begin
+  Element := GetFocusedElementSafely(Sender);
+  if not Assigned(Element) then
+    Exit;
+
+  mniCopyDisplayNameToClipboard.Visible := not (Element.DisplayName[True] = Element.Name);
+  mniCopyShortNameToClipboard.Visible := not (Element.ShortName = Element.Name);
+
+  if not (Element.Path = '') then
+    mniCopyPathToClipboard.Caption := 'Copy path <' + Element.Path + '>';
+
+  if not (Element.Name = '') then
+    mniCopyNameToClipboard.Caption := 'Copy name <' + Element.Name + '>';
+
+  if mniCopyDisplayNameToClipboard.Visible and not (Element.DisplayName[True] = '') then
+    mniCopyDisplayNameToClipboard.Caption := 'Copy display name <' + Element.DisplayName[True] + '>';
+
+  if mniCopyShortNameToClipboard.Visible and not (Element.ShortName = '') then
+    mniCopyShortNameToClipboard.Caption := 'Copy short name <' + Element.ShortName + '>';
+end;
+
 procedure TfrmMain.mniViewColumnWidthClick(Sender: TObject);
 var
   i: Integer;
@@ -11399,6 +11440,97 @@ begin
   if wbShrinkButtons then ShrinkButtons else ExpandButtons;
 end;
 
+function TfrmMain.GetFocusedElementSafely(Sender: TObject): IwbElement;
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+  FocusedColumn               : TColumnIndex;
+begin
+  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  if not Assigned(NodeDatas) then
+    Exit;
+
+  FocusedColumn := FocusedColumnOverride;
+  if FocusedColumn < 0 then
+    FocusedColumn := vstView.FocusedColumn;
+  if Length(ActiveRecords) = 1 then
+    FocusedColumn := 1;
+
+  Element := nil;
+  if (FocusedColumn > 0) and (Pred(FocusedColumn) <= High(ActiveRecords)) then
+    Element := NodeDatas[Pred(FocusedColumn)].Element;
+
+  if not Assigned(Element) then
+    Exit;
+
+  for var i := Low(ActiveRecords) to High(ActiveRecords) do
+  begin
+    Element := NodeDatas[i].Element;
+    if Assigned(Element) then
+      Break;
+  end;
+
+  if not Assigned(Element) then
+    Exit;
+
+  Result := Element;
+end;
+
+procedure TfrmMain.mniCopyDisplayNameToClipboardClick(Sender: TObject);
+var
+  Element                     : IwbElement;
+begin
+  Element := GetFocusedElementSafely(Sender);
+  if not Assigned(Element) then
+    Exit;
+
+  Clipboard.AsText := Element.DisplayName[True];
+end;
+
+procedure TfrmMain.mniCopyFullPathToClipboardClick(Sender: TObject);
+var
+  Element                     : IwbElement;
+begin
+  Element := GetFocusedElementSafely(Sender);
+  if not Assigned(Element) then
+    Exit;
+
+  Clipboard.AsText := Element.FullPath;
+end;
+
+procedure TfrmMain.mniCopyNameToClipboardClick(Sender: TObject);
+var
+  Element                     : IwbElement;
+begin
+  Element := GetFocusedElementSafely(Sender);
+  if not Assigned(Element) then
+    Exit;
+
+  Clipboard.AsText := Element.Name;
+end;
+
+procedure TfrmMain.mniCopyPathToClipboardClick(Sender: TObject);
+var
+  Element                     : IwbElement;
+begin
+  Element := GetFocusedElementSafely(Sender);
+  if not Assigned(Element) then
+    Exit;
+
+  Clipboard.AsText := Element.Path;
+end;
+
+procedure TfrmMain.mniCopyShortNameToClipboardClick(Sender: TObject);
+var
+  Element                     : IwbElement;
+begin
+  Element := GetFocusedElementSafely(Sender);
+  if not Assigned(Element) then
+    Exit;
+
+  Clipboard.AsText := Element.ShortName;
+end;
+
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
 begin
   if not Assigned(wbLocalizationHandler) then
@@ -14318,6 +14450,10 @@ var
   TargetElement : IwbElement;
   NodeLabel     : String;
 begin
+  Element := GetFocusedElementSafely(Sender);
+  mniViewClipboard.Visible := Assigned(Element);
+  mniViewClipboardSeparator.Visible := Assigned(Element);
+
   mniViewHideNoConflict.Visible := True;
   mniViewStick.Visible := False;
   mniViewEdit.Visible := False;
@@ -17569,9 +17705,48 @@ begin
           UnLockProcessMessages;
         end;
       end;
+      // Ctrl+C = Copy
       Ord('C'): begin
-        Clipboard.AsText := Element.EditValue;
+        if Element.EditValue = '' then
+          Clipboard.AsText := Element.Summary
+        else
+          Clipboard.AsText := Element.EditValue;
         Exit;
+      end;
+    end;
+
+    if not Element.IsEditable then
+      Exit;
+
+    case Key of
+      // Ctrl+X = Cut
+      Ord('X'): begin
+        LockProcessMessages;
+        try
+          if not (Element.EditValue = '') then
+          begin
+            Clipboard.AsText := Element.EditValue;
+            Element.EditValue := '';
+            ResetActiveTree;
+            Exit;
+          end;
+        finally
+          UnLockProcessMessages;
+        end;
+      end;
+      // Ctrl+V = Paste
+      Ord('V'): begin
+        LockProcessMessages;
+        try
+          if not (Clipboard.AsText = '') then
+          begin
+            Element.EditValue := Clipboard.AsText;
+            ResetActiveTree;
+            Exit;
+          end;
+        finally
+          UnLockProcessMessages;
+        end;
       end;
     else
       Exit;

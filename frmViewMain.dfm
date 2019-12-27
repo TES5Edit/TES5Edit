@@ -2615,6 +2615,36 @@ object frmMain: TfrmMain
     object N9: TMenuItem
       Caption = '-'
     end
+    object mniViewClipboard: TMenuItem
+      Caption = 'Clipboard'
+      OnClick = mniViewClipboardClick
+      object mniCopyPathToClipboard: TMenuItem
+        Caption = 'Copy path'
+        OnClick = mniCopyPathToClipboardClick
+      end
+      object mniCopyFullPathToClipboard: TMenuItem
+        Caption = 'Copy full path'
+        OnClick = mniCopyFullPathToClipboardClick
+      end
+      object mniClipboardSeparator: TMenuItem
+        Caption = '-'
+      end
+      object mniCopyNameToClipboard: TMenuItem
+        Caption = 'Copy name'
+        OnClick = mniCopyNameToClipboardClick
+      end
+      object mniCopyDisplayNameToClipboard: TMenuItem
+        Caption = 'Copy display name'
+        OnClick = mniCopyDisplayNameToClipboardClick
+      end
+      object mniCopyShortNameToClipboard: TMenuItem
+        Caption = 'Copy short name'
+        OnClick = mniCopyShortNameToClipboardClick
+      end
+    end
+    object mniViewClipboardSeparator: TMenuItem
+      Caption = '-'
+    end
     object mniViewHideNoConflict: TMenuItem
       Caption = 'Hide no conflict and empty rows'
       OnClick = mniViewHideNoConflictClick
