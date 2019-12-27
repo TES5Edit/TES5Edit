@@ -16427,7 +16427,7 @@ begin
     Result := IwbElement(eContainer).PathName
   else
     Result := '';
-  Result := Result + '\';
+  Result := Result + ' \ ';
   if Assigned(eContainer) then
     Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
   Result := Result + GetShortName;
