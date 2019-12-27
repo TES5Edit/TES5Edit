@@ -264,6 +264,16 @@ function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDe
 function wbBelowVersion(aVersion: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
 function wbBelowVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
 
+function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider; overload;
+function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
+function wbRecordSizeDecider(const aSizes: array of Integer): TwbUnionDecider; overload;
+
+function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+function wbFromSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
+
+function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+function wbBelowSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
+
 
 implementation
 
@@ -2324,6 +2334,120 @@ function wbBelowVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueD
 begin
   Result :=
     wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
+      aValue,
+      wbUnused
+    ]).IncludeFlag(dfUnionStaticResolve);
+end;
+
+var
+  _RecordSizeDeciders : array of TwbUnionDecider;
+
+function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider;
+begin
+  if aSize > High(_RecordSizeDeciders) then
+    SetLength(_RecordSizeDeciders, Succ(aSize));
+
+  if not Assigned(_RecordSizeDeciders[aSize]) then
+    _RecordSizeDeciders[aSize] :=
+      function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+      var
+        SubRecord : IwbSubRecord;
+      begin
+        if not Assigned(aElement) then
+          Exit(0);
+
+        if not Supports(aElement, IwbSubRecord, SubRecord) then
+          Exit(0);
+
+        if SubRecord.DataSize >= aSize then
+          Exit(1);
+
+        Exit(0);
+      end;
+
+  Result := _RecordSizeDeciders[aSize];
+end;
+
+function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
+begin
+  Result :=
+    function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+    var
+      SubRecord : IwbSubRecord;
+    begin
+      if not Assigned(aElement) then
+        Exit(0);
+
+      if not Supports(aElement, IwbSubRecord, SubRecord) then
+        Exit(0);
+
+      if (SubRecord.DataSize > aMaxSize) or (SubRecord.DataSize < aMinSize) then
+        Exit(1);
+
+      Exit(0);
+    end;
+end;
+
+function wbRecordSizeDecider(const aSizes: array of Integer): TwbUnionDecider; overload;
+var
+  Sizes : TArray<Integer>;
+begin
+  SetLength(Sizes, Length(aSizes));
+  for var i := Low(aSizes) to High(aSizes) do
+    Sizes[i] := aSizes[i];
+
+  Result :=
+    function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+    var
+      SubRecord : IwbSubRecord;
+    begin
+      if not Assigned(aElement) then
+        Exit(0);
+
+      if not Supports(aElement, IwbSubRecord, SubRecord) then
+        Exit(0);
+
+      var DataSize := SubRecord.DataSize;
+
+      for var i := Low(Sizes) to High(Sizes) do
+        if DataSize < Sizes[i] then
+          Exit(i);
+
+      Exit(Length(Sizes));
+    end;
+end;
+
+function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+begin
+  Result :=
+    wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
+      wbUnused,
+      aValue
+    ]).IncludeFlagOnValue(dfUnionStaticResolve);
+end;
+
+function wbFromSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef;
+begin
+  Result :=
+    wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
+      wbUnused,
+      aValue
+    ]).IncludeFlag(dfUnionStaticResolve);
+end;
+
+function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+begin
+  Result :=
+    wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
+      aValue,
+      wbUnused
+    ]).IncludeFlagOnValue(dfUnionStaticResolve);
+end;
+
+function wbBelowSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef;
+begin
+  Result :=
+    wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
       aValue,
       wbUnused
     ]).IncludeFlag(dfUnionStaticResolve);
