@@ -1336,6 +1336,9 @@ var
   wbVCRY: IwbSubRecordDef;
   wbQRCO: IwbSubRecordDef;
   wbXCHG: IwbSubRecordDef;
+  wbXLKR: IwbSubRecordArrayDef;
+  wbXATP: IwbSubRecordDef;
+  wbXWPK: IwbSubRecordStructDef;
   wbPERKData: IwbSubRecordDef;
   wbPerkEffect: IwbSubRecordStructDef;
 
@@ -3661,51 +3664,6 @@ begin
     Exit;
 
   if SubRecord.DataSize > 0 then
-    Result := 1;
-end;
-
-function wbSCOLONAMSizeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  SubRecord : IwbSubRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if not Supports(aElement, IwbSubRecord, SubRecord) then
-    Exit;
-
-  if SubRecord.DataSize < 8 then
-    Result := 1;
-end;
-
-function wbQUSTAliasFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  SubRecord : IwbSubRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if not Supports(aElement, IwbSubRecord, SubRecord) then
-    Exit;
-
-  if SubRecord.DataSize < 8 then
-    Result := 1;
-end;
-
-function wbXLKRDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  SubRecord : IwbSubRecord;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  if not Supports(aElement, IwbSubRecord, SubRecord) then
-    Exit;
-
-  if SubRecord.DataSize < 8 then
     Result := 1;
 end;
 
@@ -8072,6 +8030,20 @@ begin
 
   wbXCHG := wbByteArray(XCHG, 'Charge', 4);
 
+  wbXLKR := wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
+    wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+    wbFromSize(8, wbFormIDCk('Ref', sigReferences))
+  ], cpNormal, False, nil, 1));
+
+  wbXATP := wbEmpty(XATP, 'Activation Point');
+  wbXWPK := wbRStruct('Workshop Pack-in', [
+    wbEmpty(XWPK, 'Start Marker'),
+    wbFormID(GNAM, 'Pack-in'),
+    wbFormID(HNAM, 'Reference'),
+    wbInteger(INAM, 'Unknown Bool', itU8, wbBoolEnum),
+    wbEmpty(XWPK, 'End Marker')
+  ], []);
+
   wbNAM1LODP := wbRStruct('Unknown', [
     wbNAM1,
     wbLODP
@@ -8917,16 +8889,7 @@ begin
     wbFloat(XRDS, 'Radius'),
     wbInteger(XHLT, 'Health %', itU32),
 
-    wbRArrayS('Linked References', wbUnion(XLKR, 'Linked Reference', wbXLKRDecider, [
-      wbStructSK([0], 'Linked Reference', [
-        wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-        wbFormIDCk('Ref', sigReferences)
-      ], cpNormal, False, nil, 1),
-      wbStructSK([0], 'Linked Reference', [
-        wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-        wbEmpty('Ref')
-      ], cpNormal, False, nil, 1)
-    ])),
+    wbXLKR,
 
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
@@ -9831,7 +9794,7 @@ begin
 
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
-  wbEFIT :=
+  wbEFIT := //TODO ECK: Revisit decider logic.
     wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 184]), [
       wbStruct('', [
         wbUnused,
@@ -10811,66 +10774,35 @@ begin
     wbDEST,
     wbDESC,
     wbFloat(DATA, 'Weight', cpNormal, True),
-    wbUnion(ENIT, 'Effect Data', wbFormVersionDecider(176), [
-      wbStruct('Effect Data', [
-        wbInteger('Value', itS32),
-        wbInteger('Flags', itU32, wbFlags([
-          {0x00000001} 'No Auto-Calc',
-          {0x00000002} 'Food Item',
-          {0x00000004} 'Unknown 3',
-          {0x00000008} 'Unknown 4',
-          {0x00000010} 'Unknown 5',
-          {0x00000020} 'Unknown 6',
-          {0x00000040} 'Unknown 7',
-          {0x00000080} 'Unknown 8',
-          {0x00000100} 'Unknown 9',
-          {0x00000200} 'Unknown 10',
-          {0x00000400} 'Unknown 11',
-          {0x00000800} 'Unknown 12',
-          {0x00001000} 'Unknown 13',
-          {0x00002000} 'Unknown 14',
-          {0x00004000} 'Unknown 15',
-          {0x00008000} 'Unknown 16',
-          {0x00010000} 'Medicine',
-          {0x00020000} 'Poison',
-          {0x00040000} 'Unknown 19'
-        ])),
-        wbFormIDCk('Addiction', [SPEL, NULL]),
-        wbFloat('Addiction Chance'),
-        wbFormIDCk('Sound - Consume', [SNDR, NULL]),
-        wbFormIDCk('Health', [CURV, NULL]),
-        wbEmpty('Spoiled')
-      ], cpNormal, True),
-      wbStruct('Effect Data', [
-        wbInteger('Value', itS32),
-        wbInteger('Flags', itU32, wbFlags([
-          {0x00000001} 'No Auto-Calc',
-          {0x00000002} 'Food Item',
-          {0x00000004} 'Unknown 3',
-          {0x00000008} 'Unknown 4',
-          {0x00000010} 'Unknown 5',
-          {0x00000020} 'Unknown 6',
-          {0x00000040} 'Unknown 7',
-          {0x00000080} 'Unknown 8',
-          {0x00000100} 'Unknown 9',
-          {0x00000200} 'Unknown 10',
-          {0x00000400} 'Unknown 11',
-          {0x00000800} 'Unknown 12',
-          {0x00001000} 'Unknown 13',
-          {0x00002000} 'Unknown 14',
-          {0x00004000} 'Unknown 15',
-          {0x00008000} 'Unknown 16',
-          {0x00010000} 'Medicine',
-          {0x00020000} 'Poison',
-          {0x00040000} 'Unknown 19'
-        ])),
-        wbFormIDCk('Addiction', [SPEL, NULL]),
-        wbFloat('Addiction Chance'),
-        wbFormIDCk('Sound - Consume', [SNDR, NULL]),
-        wbFormIDCk('Health', [CURV, NULL]),
-        wbFormIDCk('Spoiled', [ALCH, NULL])
-      ], cpNormal, True)
-    ]),
+    wbStruct(ENIT, 'Effect Data', [
+      wbInteger('Value', itS32),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'No Auto-Calc',
+        {0x00000002} 'Food Item',
+        {0x00000004} 'Unknown 3',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Unknown 9',
+        {0x00000200} 'Unknown 10',
+        {0x00000400} 'Unknown 11',
+        {0x00000800} 'Unknown 12',
+        {0x00001000} 'Unknown 13',
+        {0x00002000} 'Unknown 14',
+        {0x00004000} 'Unknown 15',
+        {0x00008000} 'Unknown 16',
+        {0x00010000} 'Medicine',
+        {0x00020000} 'Poison',
+        {0x00040000} 'Unknown 19'
+      ])),
+      wbFormIDCk('Addiction', [SPEL, NULL]),
+      wbFloat('Addiction Chance'),
+      wbFormIDCk('Sound - Consume', [SNDR, NULL]),
+      wbFormIDCk('Health', [CURV, NULL]),
+      wbFromVersion(176, wbFormIDCk('Spoiled', [ALCH, NULL]))
+    ], cpNormal, True),
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
     wbEffectsReq,
     wbMIID
@@ -10965,18 +10897,11 @@ begin
         wbFormIDCk(MODL, 'Armor Addon', [ARMA])
       ], [])
     ),
-    wbUnion(DATA, '', wbFormVersionDecider(109), [
-      wbStruct('', [
-        wbInteger('Value', itS32),
-        wbFloat('Weight'),
-        wbEmpty('Health')
-      ], cpNormal, True),
-      wbStruct('', [
-        wbInteger('Value', itS32),
-        wbFloat('Weight'),
-        wbInteger('Health', itU32)
-      ], cpNormal, True)
-    ]),
+    wbStruct(DATA, 'Armor Data', [
+      wbInteger('Value', itS32),
+      wbFloat('Weight'),
+      wbFromVersion(109, wbInteger('Health', itU32))
+    ], cpNormal, True),
     wbStruct(FNAM, 'Rating Addon Data', [
       wbInteger('Armor Rating', itU16),
       wbInteger('Base Addon Index', itU16),
@@ -11115,10 +11040,7 @@ procedure DefineFO76c;
       wbRArrayS('Reflected/Refracted By',
         wbFormIDCk(XPWR, 'Reflector Reference', [REFR])
       ),
-      wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-        wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-        wbFormIDCk('Ref', sigReferences)
-      ], cpNormal, False, nil, 1)),
+      wbXLKR,
       wbRStruct('Activate Parents', [
         wbInteger(XAPD, 'Flags', itU8, wbFlags([
           'Parent Activate Only'
@@ -11132,7 +11054,7 @@ procedure DefineFO76c;
       ], []),
 
       wbFormIDCk(XASP, 'Acoustic Parent', [REFR]),
-      wbEmpty(XATP, 'Unknown'),
+      wbXATP,
       wbInteger(XAMC, 'Ammo Count', itU32),
       wbEmpty(XLKT, 'Linked Ref Transient'),
       wbXRGD,
@@ -11152,12 +11074,7 @@ procedure DefineFO76c;
       wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
       wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-      wbRArray('Workshop Pack-in', wbRStruct('Workshop Pack-in', [
-        wbEmpty(XWPK, 'Workshop Pack-in'),
-        wbFormID(GNAM, 'Pack-in'),
-        wbFormID(HNAM, 'Reference'),
-        wbInteger(INAM, 'Unknown Bool', itU8, wbBoolEnum)
-      ], [])),
+      wbXWPK,
       wbXPCK,
       wbXSCL,
       wbXLOD,
@@ -11365,11 +11282,7 @@ begin
         wbByteArray('Unknown', 4)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ]),
-    wbStruct(XCRP, 'Enable State Parents', [
-      wbInteger('Refrence Count', itU32),
-      wbArray('References', wbFormID('Reference'))
-    ]),
-
+    wbArray(XCRP, 'Enable State References', wbFormID('Enable State Reference'), -1),
     wbByteArray(XCPF, 'Combined Physics', 4)
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
@@ -13106,10 +13019,7 @@ begin
       wbStructSK(PRKE, [1, {2,} 0], 'Header', [
         wbPerkEffectType(wbPERKPRKETypeAfterSet),
         wbInteger('Rank', itU8),
-        wbUnion('Unknown',wbFormVersionDecider(181),[
-          wbUnknown(),
-          wbEmpty('Unused')
-        ])
+        wbBelowVersion(181, wbUnknown)
       ]),
       wbUnion(DATA, 'Effect Data', wbPerkEffectDataDecider, [
         wbStructSK([0, 1], 'Quest + Stage', [
@@ -15208,37 +15118,15 @@ begin
     wbString(IOVR, 'Override FileName'),
 
     wbRArray('Responses', wbRStruct('Response', [
-      wbUnion(TRDA, 'Response Data', wbFormVersionDecider([116,119]), [
-     {0}wbStruct('Response Data', [
-          wbFormIDCk('Emotion', [KYWD, FFFF]),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbFormIDCk('Sound File', [SNDR, NULL]),
-          wbByteArray('Unknown', 1),
-          wbInteger('Interrupt Percentage', itU16),
-          wbEmpty('Camera Target Alias'),
-          wbEmpty('Camera Location Alias')
-        ]),
-     {1}wbStruct('Response Data', [
-          wbFormIDCk('Emotion', [KYWD, FFFF]),
-          wbByteArray('Unused', 4),
-          wbInteger('Response number', itU8),
-          wbFormIDCk('Sound File', [SNDR, NULL]),
-          wbByteArray('Unknown', 1),
-          wbInteger('Interrupt Percentage', itU16),
-          wbInteger('Camera Target Alias', itS32),
-          wbInteger('Camera Location Alias', itS32)
-        ]),
-     {2}wbStruct('Response Data', [
-          wbFormIDCk('Emotion', [KYWD, FFFF]),
-          wbEmpty('Unused'),
-          wbInteger('Response number', itU8),
-          wbFormIDCk('Sound File', [SNDR, NULL]),
-          wbByteArray('Unknown', 1),
-          wbInteger('Interrupt Percentage', itU16),
-          wbInteger('Camera Target Alias', itS32),
-          wbInteger('Camera Location Alias', itS32)
-        ])
+     wbStruct(TRDA, 'Response Data', [
+        wbFormIDCk('Emotion', [KYWD, FFFF]),
+        wbBelowVersion(119, wbByteArray('Unused', 4)),
+        wbInteger('Response number', itU8),
+        wbFormIDCk('Sound File', [SNDR, NULL]),
+        wbByteArray('Unknown', 1),
+        wbInteger('Interrupt Percentage', itU16),
+        wbFromVersion(116, wbInteger('Camera Target Alias', itS32)),
+        wbFromVersion(116, wbInteger('Camera Location Alias', itS32))
       ]),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
@@ -15817,10 +15705,7 @@ begin
         {0x40000000}  'Unknown 31',
         {0x80000000}  'Unknown 32'
       ])),
-      wbUnion('',wbFormVersionDecider(164), [
-        wbEmpty('Unknown'),
-        wbByteArray('Unknown', 4).IncludeFlag(dfNoReport)
-      ]),
+      wbFromVersion(164, wbByteArray('Unknown', 4).IncludeFlag(dfNoReport)),
       wbFloat('Base Cost'),
       wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
         wbFormIDCk('Unused', [NULL], False, cpIgnore),
@@ -16633,9 +16518,9 @@ begin
   ]);
 
   wbQUSTAliasFlags :=
-    wbUnion(FNAM, 'Flags', wbQUSTAliasFlagsDecider, [
-      wbInteger('Flags', itU64, wbQUSTAliasFlagsActual),
-      wbInteger('Flags', itU32, wbQUSTAliasFlagsActual)
+    wbUnion(FNAM, 'Flags', wbRecordSizeDecider(8), [
+      wbInteger('Flags', itU32, wbQUSTAliasFlagsActual),
+      wbInteger('Flags', itU64, wbQUSTAliasFlagsActual)
     ], cpNormal, True);
 
   wbRecord(QUST, 'Quest',
@@ -17620,28 +17505,17 @@ begin
       ], True, True)))]),
     wbXFLG,
     wbByteArray(XKPD, 'Keypad Data', 5),
-    wbUnion(XBSD, 'Spline', wbFormVersionDecider(131) ,[
-      wbStruct('Spline', [
-        wbFloat('Slack'),
-        wbFloat('Thickness'),
-        wbFloat('Unknown'), // not shown in editor
-        wbFloat('Unknown'), // not shown in editor
-        wbFloat('Unknown'), // not shown in editor
-        wbFloat('Unknown'), // not shown in editor
-        wbFloat('Unknown'), // not shown in editor
-        wbInteger('Wind - Detached End', itU8, wbBoolEnum),
-        wbByteArray('Unused', 3) // junk data?
-      ], cpNormal, False, nil, 5),
-      wbStruct('Spline', [
-        wbFloat('Slack'),
-        wbFloat('Thickness'),
-        wbFloat('Unknown'), // not shown in editor
-        wbFloat('Unknown'), // not shown in editor
-        wbFloat('Unknown'), // not shown in editor
-        wbInteger('Wind - Detached End', itU8, wbBoolEnum),
-        wbByteArray('Unused', 3) // junk data?
-      ], cpNormal, False, nil, 5)
-    ]),
+    wbStruct(XBSD, 'Spline', [
+      wbFloat('Slack'),
+      wbFloat('Thickness'),
+      wbFloat('Unknown'), // not shown in editor
+      wbFloat('Unknown'), // not shown in editor
+      wbFloat('Unknown'), // not shown in editor
+      wbBelowVersion(131, wbFloat('Unknown')), // not shown in editor
+      wbBelowVersion(131, wbFloat('Unknown')), // not shown in editor
+      wbInteger('Wind - Detached End', itU8, wbBoolEnum),
+      wbByteArray('Unused', 3) // junk data?
+    ], cpNormal, False, nil, 5),
     wbStruct(XPDD, 'Projected Decal Data', [
       wbFloat('Width Scale'),
       wbFloat('Height Scale'),
@@ -17948,18 +17822,13 @@ begin
         wbBelowVersion(170, wbFloat('Unknown')),
         wbFloat('Unknown')
       ])),
-      wbFromVersion(161, wbUnion('Unknown',wbFormVersionDecider(170), [
+      wbUnion('Unknown',wbFormVersionDecider([161, 170]), [
+        wbEmpty('Unused'),
         wbInteger('Unknown',itU8),
         wbInteger('Unknown',itU32)
-      ]))
+      ])
     ]),
-    wbRStruct('Unknown', [
-      wbUnknown(XWPK),
-      wbUnknown(GNAM),
-      wbFormID(HNAM),
-      wbUnknown(INAM),
-      wbUnknown(XWPK)
-    ], []),
+    wbXWPK,
     wbArrayS(XPPS, 'Property Sheet', wbObjectProperty),
     wbRArray('Workshop Resource Capacities',
       wbStruct(XWRC, 'Resource', [
@@ -18807,7 +18676,7 @@ begin
     wbString(XWEM, 'Water Environment Map'),
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
-    wbUnknown(XCLW),
+    wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
     wbUnknown(WHGT),
     wbRStruct('World Default Level Data', [
       wbStruct(WLEV, 'Dimension', [
@@ -19556,15 +19425,9 @@ begin
 
   var wbStaticPart :=
     wbRStruct('Part', [
-      wbUnion(ONAM, 'Static', wbSCOLONAMSizeDecider, [
-        wbStruct('Static', [
-          wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-          wbFormIDCk('Material Swap', [MSWP, REFR, NULL])
-        ]),
-        wbStruct('Static', [
-          wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-          wbUnused
-        ])
+      wbStruct(ONAM, 'Static', [
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
+        wbBelowSize(8, wbFormIDCK('Material Swap', [MSWP, REFR, NULL]))
       ]),
       //wbUnknown(ONAM), { Replaced by above? }
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
