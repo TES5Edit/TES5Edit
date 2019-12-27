@@ -609,7 +609,7 @@ type
     procedure mniSpreadsheetRebuildClick(Sender: TObject);
 
     {--- actions ---}
-    function GetFocusedElementSafely(Sender: TObject): IwbElement;
+    function GetFocusedElementSafely: IwbElement;
 
     procedure acBackUpdate(Sender: TObject);
     procedure acBackExecute(Sender: TObject);
@@ -7476,7 +7476,7 @@ procedure TfrmMain.mniViewClipboardClick(Sender: TObject);
 var
   Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely(Sender);
+  Element := GetFocusedElementSafely;
   if not Assigned(Element) then
     Exit;
 
@@ -11440,7 +11440,7 @@ begin
   if wbShrinkButtons then ShrinkButtons else ExpandButtons;
 end;
 
-function TfrmMain.GetFocusedElementSafely(Sender: TObject): IwbElement;
+function TfrmMain.GetFocusedElementSafely: IwbElement;
 begin
   Result := nil;
 
@@ -11469,35 +11469,35 @@ end;
 
 procedure TfrmMain.mniCopyDisplayNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely(Sender);
+  var Element := GetFocusedElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.DisplayName[True];
 end;
 
 procedure TfrmMain.mniCopyFullPathToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely(Sender);
+  var Element := GetFocusedElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.FullPath;
 end;
 
 procedure TfrmMain.mniCopyNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely(Sender);
+  var Element := GetFocusedElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.Name;
 end;
 
 procedure TfrmMain.mniCopyPathToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely(Sender);
+  var Element := GetFocusedElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.Path;
 end;
 
 procedure TfrmMain.mniCopyShortNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely(Sender);
+  var Element := GetFocusedElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.ShortName;
 end;
@@ -14421,9 +14421,8 @@ var
   TargetElement : IwbElement;
   NodeLabel     : String;
 begin
-  Element := GetFocusedElementSafely(Sender);
+  Element := GetFocusedElementSafely;
   mniViewClipboard.Visible := Assigned(Element);
-  mniViewClipboardSeparator.Visible := Assigned(Element);
 
   mniViewHideNoConflict.Visible := True;
   mniViewStick.Visible := False;
