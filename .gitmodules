@@ -18,3 +18,7 @@
 	path = jvcl
 	url = ../../ElminsterAU/jvcl.git
 	branch = xEdit-4.1.x
+[submodule "DWScript"]
+	path = DWScript
+	url = ../../ElminsterAU/DWScript.git
+	branch = xEdit-4.1.x
