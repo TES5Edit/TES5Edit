@@ -4279,7 +4279,7 @@ procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Poi
 procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 /// <summary>Collapse and truncate the given text to fit in the given width.</summary>
-function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '...'): string;
+function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '…'): string;
 
 implementation
 
@@ -19712,7 +19712,7 @@ begin
   end;
 end;
 
-function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '...'): string;
+function ShortenText(const aText: string; const aWidth: Integer; const aPlaceholder: string): string;
 begin
   // collapse whitespace (all whitespace is replaced by single spaces)
   Result := TRegEx.Replace(aText, '\t\n\v\f\r', ' ');
