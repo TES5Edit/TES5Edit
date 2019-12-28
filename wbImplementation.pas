@@ -16253,6 +16253,11 @@ end;
 procedure TwbElement.FreeInstance;
 begin
   if (FRefCount and $7FFFFFFF) <> 1 then
+    // this can happen if during the execution of the constructor,
+    // counted interface references have been created to this object,
+    // and then the constructor failed with an exception,
+    // initiating destruction despite there being outstanding interface references
+    // this is an unrecoverable error really
     Assert(FRefCount = 1);
   Assert(eExternalRefs = 1);
   inherited;

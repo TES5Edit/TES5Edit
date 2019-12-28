@@ -1902,11 +1902,11 @@ begin
   var Version := MainRecord.Version;
 
   if Version >= 40 then begin
-    if Assigned(aBasePtr) and (PCardinal(aBasePtr)^ > 8 {arbitary limit of 8 supported headers for now}) then
+    if Assigned(aBasePtr) and Assigned(aEndPtr) and ((NativeUInt(aEndPtr)-NativeUInt(aBasePtr)) >= SizeOf(Cardinal)) and (PCardinal(aBasePtr)^ > 8 {arbitary limit of 8 supported headers for now}) then
       Exit(1); // most likely older version format in FormVersion 40+ record
     Exit(3)
   end else if Version >= 38 then begin
-    if Assigned(aBasePtr) and (PCardinal(aBasePtr)^ <= 8 {arbitary limit of 8 supported headers for now}) then
+    if Assigned(aBasePtr) and Assigned(aEndPtr) and ((NativeUInt(aEndPtr)-NativeUInt(aBasePtr)) >= SizeOf(Cardinal)) and (PCardinal(aBasePtr)^ <= 8 {arbitary limit of 8 supported headers for now}) then
       Exit(1); // most likely newer version format in FormVersion 38-39 record
     Exit(2);
   end;

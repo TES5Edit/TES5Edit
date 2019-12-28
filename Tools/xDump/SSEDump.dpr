@@ -52,16 +52,13 @@ uses
   wbDefinitionsTES5 in '..\..\wbDefinitionsTES5.pas',
   wbDefinitionsTES5Saves in '..\..\wbDefinitionsTES5Saves.pas';
 
+{$R *.res}
+{$MAXSTACKSIZE 2097152}
+
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
 
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
-
-var
-  dtArrays : set of TwbDefType = [
-    dtSubRecordArray,
-    dtArray
-  ];
 
 var
   StartTime       : TDateTime;
