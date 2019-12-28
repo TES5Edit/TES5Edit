@@ -1,18 +1,20 @@
 [submodule "delphi-detours-library"]
 	path = delphi-detours-library
-	url = https://github.com/ElminsterAU/delphi-detours-library.git
-	branch = master
+	url = ../../ElminsterAU/delphi-detours-library.git
+	branch = xEdit-4.0.x
 [submodule "vcl-styles-utils"]
 	path = vcl-styles-utils
-	url = https://github.com/ElminsterAU/vcl-styles-utils.git
-	branch = master
+	url = ../../ElminsterAU/vcl-styles-utils.git
+	branch = xEdit-4.0.x
 [submodule "VirtualTrees"]
 	path = VirtualTrees
-	url = https://github.com/ElminsterAU/Virtual-TreeView.git
-	branch = master
+	url = ../../ElminsterAU/Virtual-TreeView.git
+	branch = xEdit-4.0.x
 [submodule "jcl"]
 	path = jcl
 	url = ../../ElminsterAU/jcl.git
+	branch = xEdit-4.0.x
 [submodule "jvcl"]
 	path = jvcl
 	url = ../../ElminsterAU/jvcl.git
+	branch = xEdit-4.0.x
