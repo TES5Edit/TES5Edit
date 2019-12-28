@@ -1119,6 +1119,8 @@ type
       read GetMastersUpdated;
   end;
 
+  IwbElements = TArray<IwbElement>;
+
   IwbStringListTerminator = interface
     ['{0D8ED4AA-1AFE-4283-87D7-2B66C5496227}']
   end;

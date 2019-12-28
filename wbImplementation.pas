@@ -17947,12 +17947,14 @@ var
   CurrentRec    : IwbSubRecordInternal;
   CurrentDef    : IwbRecordMemberDef;
   Element       : IwbElementInternal;
+  FoundMembers  : IwbElements;
 begin
   srcDef := aDef as IwbRecordDef;
 
   if aPos = Low(Integer) then begin
     AddRequiredElements;
   end else begin
+    SetLength(FoundMembers, srcDef.MemberCount);
     CurrentDefPos := 0;
     while (aPos < aContainer.ElementCount) and (CurrentDefPos < srcDef.MemberCount) do begin
 
@@ -17994,6 +17996,11 @@ begin
         Assert(Assigned(CurrentDef));
       end;
 
+      if Assigned(FoundMembers[CurrentDefPos]) then begin
+        Beep;
+        Break; // don't allow duplicate members
+      end;
+
       case CurrentDef.DefType of
         dtSubRecord : begin
           aContainer.RemoveElement(aPos);
@@ -18009,10 +18016,16 @@ begin
 
       Element.SetSortOrder(CurrentDefPos);
       Element.SetMemoryOrder(CurrentDefPos);
+      FoundMembers[CurrentDefPos] := Element;
 
-      Inc(CurrentDefPos);
+      if srcDef.AllowUnordered then
+        CurrentDefPos := 0
+      else
+        Inc(CurrentDefPos);
     end;
   end;
+
+  FoundMembers := nil;
 
   srcDef.AfterLoad(Self);
 

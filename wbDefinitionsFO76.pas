@@ -1301,9 +1301,9 @@ var
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbENLM: IwbSubRecordDef;
-  wbENLT: IwbSubRecordDef;
+  wbENLT: IwbRecordMemberDef;
   wbENLS: IwbSubRecordDef;
-  wbAUUV: IwbSubRecordDef;
+  wbAUUV: IwbRecordMemberDef;
   wbSNTP: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
   wbXFLG: IwbRecordMemberDef;
@@ -1346,7 +1346,7 @@ function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallba
 begin
   Result :=
     wbRStructSK([0], 'Model', [
-      wbString(MODL, 'Model FileName', 0, cpNormal, True),
+      wbString(MODL, 'Model FileName'),
       wbMODT,
       wbMODC,
       wbMODS,
@@ -1357,7 +1357,7 @@ begin
       wbENLS,
       wbAUUV,
       wbMODD
-    ], [], cpNormal, aRequired, aDontShow, True)
+    ], [], cpNormal, aRequired, aDontShow)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfSummaryNoSortKey)
@@ -1365,18 +1365,18 @@ begin
     .IncludeFlag(dfAllowAnyMember);
 end;
 
-function wbTexturedModel(aSubRecordName: string; const aSignatures: TwbSignatures; const aTextureSubRecords: array of IwbSubRecordDef): IwbRecordMemberDef;
+function wbTexturedModel(aSubRecordName: string; const aSignatures: TwbSignatures; const aTextureSubRecords: array of IwbRecordMemberDef): IwbRecordMemberDef;
 var
   Members: array of IwbRecordMemberDef;
 begin
   SetLength(Members, Length(aTextureSubRecords) + 2);
-  Members[0] := wbString(aSignatures[0], 'Model FileName', 0, cpNormal, True);
-  Members[1] := wbByteArray(aSignatures[1], 'Texture Files Hashes', 0, cpIgnore, False, False, wbNeverShow);
+  Members[0] := wbString(aSignatures[0], 'Model FileName');
+  Members[1] := wbModelInfo(aSignatures[1]);
   for var i := Low(aTextureSubRecords) to High(aTextureSubRecords) do
     Members[2 + i] := aTextureSubRecords[i];
 
   Result :=
-    wbRStruct(aSubRecordName, Members, [], cpNormal, False, nil, True)
+    wbRStruct(aSubRecordName, Members, [])
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfSummaryNoSortKey)
@@ -6644,16 +6644,14 @@ begin
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
-function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbSubRecordDef; overload;
+function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 begin
   Result := wbStruct(aSignature, aName, [
-    wbStruct('Colors', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Alpha', itU8)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
-  ]);
+    wbInteger('Red', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Blue', itU8),
+    wbInteger('Alpha', itU8)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
 function wbWeatherColors(const aName: string): IwbStructDef;
@@ -7899,9 +7897,11 @@ begin
   wbNTWK := wbEmpty(NTWK, 'Network? Marker');
 
   wbENLM := wbUnknown(ENLM);
-  wbENLT := wbStruct(ENLT, '', [wbByteRGBA('Unknown Color')]);
+
+  wbENLT := wbByteRGBA(ENLT, 'Unknown');
 
   wbENLS := wbFloat(ENLS);
+
   wbAUUV := wbStruct(AUUV, 'Unknown (Ignored in EXE)', [
     { 0} wbByteArray('Unknown', 1).IncludeFlag(dfNoReport),
     { 1} wbByteArray('Padding?', 3, cpIgnore).IncludeFlag(dfNoReport),
@@ -7912,8 +7912,10 @@ begin
     {20} wbFloat('Unknown'),
     {24} wbByteArray('Unknown', 1).IncludeFlag(dfNoReport),
     {25} wbByteArray('Padding?', 3, cpIgnore).IncludeFlag(dfNoReport)
-  ]);  // Entirely unused or processed
+  ]).IncludeFlag(dfCollapsed);  // Entirely unused or processed, always collapsed
+
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
+
   wbXALGFlags := wbFlags([
     {0x00000001} 'Unknown 1',
     {0x00000002} 'Unknown 2',
@@ -10953,7 +10955,7 @@ begin
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
     wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbENLT, wbENLS, wbAUUV, wbENLT, wbENLS, wbAUUV, wbMO3F]),
+    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO3F]),
     wbTexturedModel('Male 1st person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbENLT, wbENLS, wbAUUV, wbMO4F]),
     wbTexturedModel('Female 1st person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbENLT, wbENLS, wbAUUV, wbMO5F]),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
