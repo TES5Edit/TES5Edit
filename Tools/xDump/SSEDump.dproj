@@ -5,7 +5,7 @@
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
         <MainSource>SSEDump.dpr</MainSource>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{8CD0A7C7-3B98-4D5D-892F-E91C7E50D144}</ProjectGuid>
         <ProjectVersion>18.4</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -23,11 +23,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
-        <Cfg_1>true</Cfg_1>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -36,56 +31,68 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>SSEDump</SanitizedProjectName>
         <DCC_BplOutput>.\exe</DCC_BplOutput>
-        <DCC_COMBINING_SIGNED_UNSIGNED>false</DCC_COMBINING_SIGNED_UNSIGNED>
-        <DCC_COMPARING_SIGNED_UNSIGNED>false</DCC_COMPARING_SIGNED_UNSIGNED>
+        <DCC_Define>EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
+        <DCC_Description>xDump by ElminsterAU</DCC_Description>
         <DCC_ExeOutput>.\exe</DCC_ExeOutput>
-        <DCC_IMPLICIT_STRING_CAST>false</DCC_IMPLICIT_STRING_CAST>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\lz4;..\..\Imaging;..\..\Imaging\ZLib;..\..\FileContainer;..\BSArchive;..\BSArchive\TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
         <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <VerInfo_Build>1</VerInfo_Build>
+        <VerInfo_Debug>true</VerInfo_Debug>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>FileDescription=xDump;FileVersion=4.0.3.1;ProductName=xDump;ProductVersion=4.0.3.1</VerInfo_Keys>
         <VerInfo_Locale>3081</VerInfo_Locale>
+        <VerInfo_MajorVer>4</VerInfo_MajorVer>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
+        <VerInfo_Release>3</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_DcpOutput>.\dcu\Win32</DCC_DcpOutput>
         <DCC_DcuOutput>.\dcu\Win32</DCC_DcuOutput>
-        <Manifest_File>(None)</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
         <DCC_DcpOutput>.\dcu\Win64</DCC_DcpOutput>
         <DCC_DcuOutput>.\dcu\Win64</DCC_DcuOutput>
-        <DCC_Namespace>Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
-        <Manifest_File>(None)</Manifest_File>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_DebugInformation>0</DCC_DebugInformation>
-        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
-        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\..\wbBSA.pas"/>
+        <DCCReference Include="..\..\wbSort.pas"/>
+        <DCCReference Include="..\..\wbInterface.pas"/>
+        <DCCReference Include="..\..\wbSaveInterface.pas"/>
+        <DCCReference Include="..\..\wbImplementation.pas"/>
+        <DCCReference Include="..\..\wbLocalization.pas"/>
+        <DCCReference Include="..\..\wbHelpers.pas"/>
+        <DCCReference Include="..\..\wbLoadOrder.pas"/>
+        <DCCReference Include="..\..\wbHardcoded.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFNV.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFNVSaves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO3.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO3Saves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO4.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsFO76.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES3.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES4.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES4Saves.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES5.pas"/>
+        <DCCReference Include="..\..\wbDefinitionsTES5Saves.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Release">
-            <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
@@ -103,7 +110,6 @@
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
-                <Platform value="Linux64">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">True</Platform>
             </Platforms>

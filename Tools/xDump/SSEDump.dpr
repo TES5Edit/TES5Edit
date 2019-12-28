@@ -12,9 +12,9 @@
 
 *******************************************************************************}
 
-// JCL_DEBUG_EXPERT_INSERTJDBG OFF
+// JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_GENERATEJDBG OFF
-// JCL_DEBUG_EXPERT_DELETEMAPFILE OFF
+// JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 
 program SSEDump;
 
@@ -29,27 +29,30 @@ uses
   IniFiles,
   Zlibex,
   lz4,
-  wbBSA,
-  wbSort,
-  wbInterface,
-  wbSaveInterface,
-  wbImplementation,
-  wbLocalization,
-  wbHelpers,
-  wbLoadOrder,
-  wbHardcoded,
-  wbDefinitionsFNV,
-  wbDefinitionsFNVSaves,
-  wbDefinitionsFO3,
-  wbDefinitionsFO3Saves,
-  wbDefinitionsFO4,
-  wbDefinitionsFO4Saves,
-  wbDefinitionsFO76,
-  wbDefinitionsTES3,
-  wbDefinitionsTES4,
-  wbDefinitionsTES4Saves,
-  wbDefinitionsTES5,
-  wbDefinitionsTES5Saves;
+  wbBSA in '..\..\wbBSA.pas',
+  wbSort in '..\..\wbSort.pas',
+  wbInterface in '..\..\wbInterface.pas',
+  wbSaveInterface in '..\..\wbSaveInterface.pas',
+  wbImplementation in '..\..\wbImplementation.pas',
+  wbLocalization in '..\..\wbLocalization.pas',
+  wbHelpers in '..\..\wbHelpers.pas',
+  wbLoadOrder in '..\..\wbLoadOrder.pas',
+  wbHardcoded in '..\..\wbHardcoded.pas',
+  wbDefinitionsFNV in '..\..\wbDefinitionsFNV.pas',
+  wbDefinitionsFNVSaves in '..\..\wbDefinitionsFNVSaves.pas',
+  wbDefinitionsFO3 in '..\..\wbDefinitionsFO3.pas',
+  wbDefinitionsFO3Saves in '..\..\wbDefinitionsFO3Saves.pas',
+  wbDefinitionsFO4 in '..\..\wbDefinitionsFO4.pas',
+  wbDefinitionsFO4Saves in '..\..\wbDefinitionsFO4Saves.pas',
+  wbDefinitionsFO76 in '..\..\wbDefinitionsFO76.pas',
+  wbDefinitionsTES3 in '..\..\wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in '..\..\wbDefinitionsTES4.pas',
+  wbDefinitionsTES4Saves in '..\..\wbDefinitionsTES4Saves.pas',
+  wbDefinitionsTES5 in '..\..\wbDefinitionsTES5.pas',
+  wbDefinitionsTES5Saves in '..\..\wbDefinitionsTES5Saves.pas';
+
+{$R *.res}
+{$MAXSTACKSIZE 2097152}
 
 const
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
