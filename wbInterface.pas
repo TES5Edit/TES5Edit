@@ -52,13 +52,13 @@ var
   VersionString : TwbVersion = (
     Major   : 4;
     Minor   : 1;
-    Release : 3;
+    Release : 4;
     Build   : '';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010300;
+  wbWhatsNewVersion : Integer = 04010400;
   wbDeveloperMessageVersion : Integer = 04000300;
   wbDevCRC32App : Cardinal = $FFFFFFE8;
 
@@ -554,6 +554,14 @@ type
   );
 
   TwbDefTypes = set of TwbDefType;
+
+const
+  dtArrays : TwbDefTypes = [
+    dtSubRecordArray,
+    dtArray
+  ];
+
+type
 
   TwbDefTypesHelper = record helper for TwbDefTypes
     function Count: Integer;
