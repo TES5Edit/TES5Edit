@@ -2626,8 +2626,16 @@ object frmMain: TfrmMain
         Caption = 'Copy full path'
         OnClick = mniCopyFullPathToClipboardClick
       end
+      object mniCopyPathNameToClipboard: TMenuItem
+        Caption = 'Copy full path (short names)'
+        OnClick = mniCopyPathNameToClipboardClick
+      end
       object mniClipboardSeparator: TMenuItem
         Caption = '-'
+      end
+      object mniCopySignatureToClipboard: TMenuItem
+        Caption = 'Copy signature'
+        OnClick = mniCopySignatureToClipboardClick
       end
       object mniCopyNameToClipboard: TMenuItem
         Caption = 'Copy name'

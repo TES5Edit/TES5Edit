@@ -23,7 +23,8 @@ uses
   Classes,
   SysUtils,
   UITypes,
-  Graphics;
+  Graphics,
+  RegularExpressions;
 
 type
   TwbVersion = record
@@ -4276,6 +4277,9 @@ function wbMBCSEncoding(s: string): TEncoding; overload;
 procedure wbVCI1ToStrBeforeFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbVCI1ToStrAfterFO4(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
+/// <summary>Collapse and truncate the given text to fit in the given width.</summary>
+function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '…'): string;
 
 implementation
 
@@ -16140,13 +16144,8 @@ begin
   Result := '';
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
-  if Result = '' then begin
-    Result := ToString(aBasePtr, aEndPtr, aElement);
-    if Length(Result) > 64 then begin
-      SetLength(Result, 61);
-      Result := Result + '...';
-    end;
-  end;
+  if Result = '' then
+    Result := ShortenText(ToString(aBasePtr, aEndPtr, aElement));
 end;
 
 { TwbSubRecordStructSKDef }
@@ -19710,6 +19709,18 @@ begin
       aValue := Format('%.4d-%.2d-%.2d', [Year, Month, Day]);
     end else
       aValue := 'None';
+  end;
+end;
+
+function ShortenText(const aText: string; const aWidth: Integer; const aPlaceholder: string): string;
+begin
+  // collapse whitespace (all whitespace is replaced by single spaces)
+  Result := TRegEx.Replace(aText, '\t\n\v\f\r', ' ');
+
+  if Length(Result) > aWidth then
+  begin
+    SetLength(Result, aWidth - Length(aPlaceholder));
+    Result := Result + aPlaceholder;
   end;
 end;
 

@@ -445,6 +445,8 @@ type
     mniCopyNameToClipboard: TMenuItem;
     mniCopyDisplayNameToClipboard: TMenuItem;
     mniCopyShortNameToClipboard: TMenuItem;
+    mniCopySignatureToClipboard: TMenuItem;
+    mniCopyPathNameToClipboard: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -722,6 +724,8 @@ type
     procedure mniCopyNameToClipboardClick(Sender: TObject);
     procedure mniCopyDisplayNameToClipboardClick(Sender: TObject);
     procedure mniCopyShortNameToClipboardClick(Sender: TObject);
+    procedure mniCopySignatureToClipboardClick(Sender: TObject);
+    procedure mniCopyPathNameToClipboardClick(Sender: TObject);
 
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -7480,11 +7484,23 @@ begin
   if not Assigned(Element) then
     Exit;
 
+  var SubRecord: IwbSubRecord := nil;
+
+  mniCopySignatureToClipboard.Visible := Supports(Element, IwbSubRecord, SubRecord);
   mniCopyDisplayNameToClipboard.Visible := not (Element.DisplayName[True] = Element.Name);
   mniCopyShortNameToClipboard.Visible := not (Element.ShortName = Element.Name);
 
   if not (Element.Path = '') then
-    mniCopyPathToClipboard.Caption := 'Copy path <' + Element.Path + '>';
+    mniCopyPathToClipboard.Caption := 'Copy path <' + ShortenText(Element.Path) + '>';
+
+  if not (Element.PathName = '') then
+    mniCopyPathNameToClipboard.Caption := 'Copy full path (short names) <' + ShortenText(Element.PathName) + '>';
+
+  if not (Element.FullPath = '') then
+    mniCopyFullPathToClipboard.Caption := 'Copy full path <' + ShortenText(Element.FullPath) + '>';
+
+  if mniCopySignatureToClipboard.Visible then
+    mniCopySignatureToClipboard.Caption := 'Copy signature <' + string(SubRecord.Signature) + '>';
 
   if not (Element.Name = '') then
     mniCopyNameToClipboard.Caption := 'Copy name <' + Element.Name + '>';
@@ -11488,6 +11504,13 @@ begin
     Clipboard.AsText := Element.Name;
 end;
 
+procedure TfrmMain.mniCopyPathNameToClipboardClick(Sender: TObject);
+begin
+  var Element := GetFocusedElementSafely;
+  if Assigned(Element) then
+    Clipboard.AsText := Element.PathName;
+end;
+
 procedure TfrmMain.mniCopyPathToClipboardClick(Sender: TObject);
 begin
   var Element := GetFocusedElementSafely;
@@ -11500,6 +11523,17 @@ begin
   var Element := GetFocusedElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.ShortName;
+end;
+
+procedure TfrmMain.mniCopySignatureToClipboardClick(Sender: TObject);
+begin
+  var Element := GetFocusedElementSafely;
+  if not Assigned(Element) then
+    Exit;
+
+  var SubRecord: IwbSubRecord := nil;
+  if Supports(Element, IwbSubRecord, SubRecord) then
+    Clipboard.AsText := string(SubRecord.Signature);
 end;
 
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
