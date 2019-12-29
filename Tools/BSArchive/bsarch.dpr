@@ -1,16 +1,14 @@
-{*******************************************************************************
+{******************************************************************************
 
-     The contents of this file are subject to the Mozilla Public License
-     Version 1.1 (the "License"); you may not use this file except in
-     compliance with the License. You may obtain a copy of the License at
-     http://www.mozilla.org/MPL/
-
-     Software distributed under the License is distributed on an "AS IS"
-     basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-     License for the specific language governing rights and limitations
-     under the License.
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
+  one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
+
+// JCL_DEBUG_EXPERT_GENERATEJDBG OFF
+// JCL_DEBUG_EXPERT_INSERTJDBG ON
+// JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 
 program bsarch;
 
@@ -23,7 +21,7 @@ uses
   IOUtils,
   Threading,
   Diagnostics,
-  wbBSArchive in 'wbBSArchive.pas',
+  wbBSArchive in '..\..\wbBSArchive.pas',
   wbStreams in '..\..\wbStreams.pas';
 
 const
@@ -504,6 +502,12 @@ begin
   WriteLn('');
   WriteLn('BSArch v' + sVersion + ' by zilav and ElminsterAU');
   WriteLn('Packer and unpacker for Bethesda Game Studios archive files');
+  WriteLn;
+  WriteLn('The Source Code Form is subject to the terms of the Mozilla Public License,');
+  WriteLn('v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain');
+  WriteLn('one at https://mozilla.org/MPL/2.0/.');
+  WriteLn;
+  WriteLn('The Source Code Form is available at https://github.com/TES5Edit/TES5Edit');
   WriteLn;
 
   if (ParamCount >= 3) and SameText(ParamStr(1), 'pack') then

@@ -59,7 +59,7 @@
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-        <DCC_UnitSearchPath>.\jcl\jcl\source\include\jedi;.\jcl\jcl\source\include;.\jcl\jcl\source\common;.\jcl\jcl\source\vcl;.\jcl\jcl\source\windows;.\jvcl\jvcl\common;.\jvcl\jvcl\resources;.\jvcl\jvcl\run;.\Imaging;.\Imaging\zlib;.\zlib;.\lz4;.\VirtualTrees\Source;.\delphi-detours-library\Source;.\vcl-styles-utils\Common;.\FileContainer;.\Tools\BSArchive;.\Tools\BSArchive\TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\jcl\jcl\source\include\jedi;.\jcl\jcl\source\include;.\jcl\jcl\source\common;.\jcl\jcl\source\vcl;.\jcl\jcl\source\windows;.\jvcl\jvcl\common;.\jvcl\jvcl\resources;.\jvcl\jvcl\run;.\ImagingLib\Source\;.\ImagingLib\Source\zlib;.\zlib;.\LZ4Delphi\lib\delphi;.\VirtualTrees\Source;.\delphi-detours-library\Source;.\vcl-styles-utils\Common;.\FileContainer;.\tforge\Source\Include;.\tforge\Source\Shared;.\tforge\Source\Engine\Forge;.\tforge\Source\Engine\Hashes;.\JsonDataObjects\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Build>1</VerInfo_Build>

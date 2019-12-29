@@ -23,6 +23,11 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -31,6 +36,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>SSEDump</SanitizedProjectName>
         <DCC_BplOutput>.\exe</DCC_BplOutput>
+        <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
         <DCC_Define>EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
         <DCC_Description>xDump by ElminsterAU</DCC_Description>
         <DCC_ExeOutput>.\exe</DCC_ExeOutput>
@@ -38,9 +44,8 @@
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-        <DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\lz4;..\..\Imaging;..\..\Imaging\ZLib;..\..\FileContainer;..\BSArchive;..\BSArchive\TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <Icon_MainIcon>..\..\TES5Edit_Icon.ico</Icon_MainIcon>
-        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <DCC_UnitSearchPath>..\..\;..\..\ImagingLib\Source\;..\..\ImagingLib\Source\zlib;..\..\zlib;..\..\LZ4Delphi\lib\delphi;..\..\FileContainer;..\..\tforge\Source\Include;..\..\tforge\Source\Shared;..\..\tforge\Source\Engine\Forge;..\..\tforge\Source\Engine\Hashes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <Manifest_File>(None)</Manifest_File>
         <VerInfo_Build>1</VerInfo_Build>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -58,6 +63,11 @@
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
         <DCC_DcpOutput>.\dcu\Win64</DCC_DcpOutput>
         <DCC_DcuOutput>.\dcu\Win64</DCC_DcuOutput>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_DebugDCUs>true</DCC_DebugDCUs>
@@ -95,6 +105,10 @@
         <DCCReference Include="..\..\wbDefinitionsTES5Saves.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
         </BuildConfiguration>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>

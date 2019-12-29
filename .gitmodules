@@ -22,3 +22,19 @@
 	path = DWScript
 	url = ../../ElminsterAU/DWScript.git
 	branch = xEdit-4.1.x
+[submodule "JsonDataObjects"]
+	path = JsonDataObjects
+	url = ../../ElminsterAU/JsonDataObjects.git
+	branch = xEdit-4.1.x
+[submodule "imaginglib"]
+	path = imaginglib
+	url = ../../ElminsterAU/imaginglib.git
+	branch = xEdit-4.1.x
+[submodule "LZ4Delphi"]
+	path = LZ4Delphi
+	url = ../../ElminsterAU/LZ4Delphi.git
+	branch = xEdit-4.1.x
+[submodule "tforge"]
+	path = tforge
+	url = ../../ElminsterAU/tforge.git
+branch = xEdit-4.1.x
