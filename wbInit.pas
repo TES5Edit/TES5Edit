@@ -51,6 +51,7 @@ function wbLoadMOHookFile: Boolean;
 procedure SwitchToCoSave;
 
 function wbDoInit: Boolean;
+procedure wbInitStyles;
 
 implementation
 
@@ -64,6 +65,8 @@ uses
   ShlObj,
   IOUtils,
   IniFiles,
+  Vcl.Themes,
+  Vcl.Styles,
   wbHelpers,
   wbInterface,
   wbImplementation,
@@ -1330,6 +1333,16 @@ begin
     gmEnderal:  SwitchToTES5CoSave;
     gmSSE:  SwitchToTES5CoSave;
   end;
+end;
+
+procedure wbInitStyles;
+begin
+    for var s in TDirectory.GetFiles(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'Themes', '*.vsf' ) do try
+      TStyleManager.LoadFromFile(s);
+    except
+      on E: Exception do
+        ShowMessage(Format('Error loading theme file "%s": %s', [s, E.Message]));
+    end;
 end;
 
 initialization
