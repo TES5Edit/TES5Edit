@@ -11284,7 +11284,10 @@ begin
         wbByteArray('Unknown', 4)
       ]), wbCELLCombinedRefsCounter, cpNormal, False, nil, wbCELLCombinedRefsAfterSet)
     ]),
-    wbArray(XCRP, 'Enable State References', wbFormID('Enable State Reference'), -1),
+    wbStruct(XCRP, 'Enable State Parents', [
+      wbInteger('Unknown Int', itU32),
+      wbArray('References', wbFormID('Reference'))
+    ]),
     wbByteArray(XCPF, 'Combined Physics', 4)
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
@@ -17513,15 +17516,15 @@ begin
       wbFloat('Unknown'), // not shown in editor
       wbFloat('Unknown'), // not shown in editor
       wbFloat('Unknown'), // not shown in editor
-      wbBelowVersion(131, wbFloat('Unknown')), // not shown in editor
-      wbBelowVersion(131, wbFloat('Unknown')), // not shown in editor
       wbInteger('Wind - Detached End', itU8, wbBoolEnum),
-      wbByteArray('Unused', 3) // junk data?
+      wbByteArray('Unused', 3), // junk data?
+      wbBelowVersion(131, wbFloat('Unknown')), // not shown in editor
+      wbBelowVersion(131, wbFloat('Unknown')) // not shown in editor
     ], cpNormal, False, nil, 5),
     wbStruct(XPDD, 'Projected Decal Data', [
       wbFloat('Width Scale'),
       wbFloat('Height Scale'),
-      wbUnknown
+      wbByteRGBA('Color')
       // "Uses Box Primitive" checkbox does the following:
       // 1. "Rounds" above floats (probably due to floating point precision)  [DIRTY EDITS?]
       // 2. "Rounds" DATA\Position floats (probably due to floating point precision)  [DIRTY EDITS?]
@@ -17606,7 +17609,7 @@ begin
     ], cpNormal, False, nil, 1)),
 
     wbRArray('Patrol', wbRStruct('Data', [
-      wbFloat(XPRD, 'Patrol Ref Data', cpNormal, True),
+      wbFloat(XPRD, 'Idle Time', cpNormal, True),
       wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
@@ -18438,92 +18441,98 @@ begin
       wbAUUV
     ], []).IncludeFlag(dfAllowAnyMember),
     wbStruct(DNAM, 'Data', [
-      {  0} wbFormIDCk('Ammo', [AMMO, NULL]),
-      {  4} wbFloat('Speed'),
-      {  8} wbFloat('Reload Speed'),
-      { 12} wbFromVersion(177, wbFloat('NPC Reload Delay')),
-      { 16} wbFloat('Reach'),
-      { 20} wbFromVersion(140,  wbFloat('Reach Engagement Mult')),
-      { 24} wbByteArray('Unknown', 4),
-      { 28} wbByteArray('Unknown', 4),
-      { 32} wbFromVersion(139, wbFloat('Unknown')),
-      { 36} wbByteArray('Unknown', 4),
-      { 40} wbFloat('Unused'),
-      { 44} wbByteArray('Unknown', 4),
-      { 48} wbInteger('On Hit', itU32, wbHitBehaviourEnum),
-      { 52} wbFormIDCk('Skill', [AVIF, NULL]),
-      { 56} wbFormIDCk('Resist', [AVIF, NULL]),
-      { 60} wbInteger('Flags', itU32, wbFlags([
-              {0x00000001} 'Player Only',
-              {0x00000002} 'NPCs Use Ammo',
-              {0x00000004} 'No Jam After Reload',
-              {0x00000008} 'Charging Reload',
-              {0x00000010} 'Minor Crime',
-              {0x00000020} 'Fixed Range',
-              {0x00000040} 'Not Used In Normal Combat',
-              {0x00000080} 'Unknown 8',
-              {0x00000100} 'Crit Effect - on Death',
-              {0x00000200} 'Charging Attack',
-              {0x00000400} 'Alternate Rumble',
-              {0x00000800} 'Hold Input To Power',
-              {0x00001000} 'Non Hostile',
-              {0x00002000} 'Bound Weapon',
-              {0x00004000} 'Ignores Normal Weapon Resistance',
-              {0x00008000} 'Automatic',
-              {0x00010000} 'Repeatable Single Fire',
-              {0x00020000} 'Can''t Drop',
-              {0x00040000} 'Hide Backpack',
-              {0x00080000} 'Embedded Weapon',
-              {0x00100000} 'Not Playable',
-              {0x00200000} 'Has Scope',
-              {0x00400000} 'Bolt Action',
-              {0x00800000} 'Secondary Weapon',
-              {0x01000000} 'Disable Shells',
-              {0x02000000} 'Unknown 26',
-              {0x04000000} 'Unknown 27',
-              {0x08000000} 'Unknown 28',
-              {0x10000000} 'Unknown 29',
-              {0x20000000} 'Unknown 30',
-              {0x40000000} 'Unknown 31',
-              {0x80000000} 'Unknown 32'
-            ])),
-      { 64} wbInteger('Capacity', itU16),
-      { 66} wbInteger('Weapon Type', itU8, wbEnum([
-              'HandToHandMelee',
-              'OneHandSword',
-              'OneHandDagger',
-              'OneHandAxe',
-              'OneHandMace',
-              'TwoHandSword',
-              'TwoHandAxe',
-              'Bow',
-              'Staff',
-              'Gun',
-              'Grenade',
-              'Mine'
-            ])),
-      { 67} wbFloat('Secondary Damage'),
-      { 71} wbFloat('Weight'),
-      { 75} wbInteger('Value', itU32),
-      { 79} wbInteger('Attack Damage', itU16),
-      { 81} wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      { 85} wbFormIDCk('Sound - Attack', [SNDR, NULL]),
-      { 89} wbFormIDCk('Sound - Throwable Primed', [SNDR, NULL]),
-      { 93} wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
-      { 97} wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
-      {101} wbFormIDCk('Sound - Idle', [SNDR, NULL]),
-      {105} wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
-      {109} wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
-      {113} wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]),
-      {117} wbInteger('Accuracy Bonus', itU8),
-      {118} wbFloat('Animation Attack Seconds'),
-      {122} wbInteger('Rank', itU16),
-      {124} wbFloat('Action Point Cost'),
-      {128} wbFloat('Full Power Seconds'),
-      {132} wbFloat('Min Power Per Shot'),
-      {136} wbInteger('Stagger', itU32, wbStaggerEnum),
-      {140} wbFloat('Color Remapping Index'),
-      {144} wbFromVersion(146, wbInteger('Health',itU32))
+      wbFormIDCk('Ammo', [AMMO, NULL]),
+      wbFloat('Speed'),
+      wbFromVersion(61, wbFloat('Reload Speed')),
+      wbFromVersion(177, wbFloat('NPC Reload Delay')),
+      wbFloat('Reach'),
+      wbFromVersion(140,  wbFloat('Reach Engagement Mult')),
+      wbFloat('Min Range'),
+      wbFloat('Max Range'),
+      wbFromVersion(139, wbFloat('Unknown')),
+      wbFloat('Attack Delay Seconds'),
+      wbFloat('Unused'),
+      wbFloat('Damage - OutOfRangeMult'),
+      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
+      wbFormIDCk('Skill', [AVIF, NULL]),
+      wbFormIDCk('Resist', [AVIF, NULL]),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Player Only',
+        {0x00000002} 'NPCs Use Ammo',
+        {0x00000004} 'No Jam After Reload',
+        {0x00000008} 'Charging Reload',
+        {0x00000010} 'Minor Crime',
+        {0x00000020} 'Fixed Range',
+        {0x00000040} 'Not Used In Normal Combat',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Crit Effect - on Death',
+        {0x00000200} 'Charging Attack',
+        {0x00000400} 'Alternate Rumble',
+        {0x00000800} 'Hold Input To Power',
+        {0x00001000} 'Non Hostile',
+        {0x00002000} 'Bound Weapon',
+        {0x00004000} 'Ignores Normal Weapon Resistance',
+        {0x00008000} 'Automatic',
+        {0x00010000} 'Repeatable Single Fire',
+        {0x00020000} 'Can''t Drop',
+        {0x00040000} 'Hide Backpack',
+        {0x00080000} 'Embedded Weapon',
+        {0x00100000} 'Not Playable',
+        {0x00200000} 'Has Scope',
+        {0x00400000} 'Bolt Action',
+        {0x00800000} 'Secondary Weapon',
+        {0x01000000} 'Disable Shells',
+        {0x02000000} 'Unknown 26',
+        {0x04000000} 'Unknown 27',
+        {0x08000000} 'Unknown 28',
+        {0x10000000} 'Unknown 29',
+        {0x20000000} 'Unknown 30',
+        {0x40000000} 'Unknown 31',
+        {0x80000000} 'Unknown 32'
+      ])),
+      wbInteger('Capacity', itU16),
+      wbInteger('Weapon Type', itU8, wbEnum([
+        'HandToHandMelee',
+        'OneHandSword',
+        'OneHandDagger',
+        'OneHandAxe',
+        'OneHandMace',
+        'TwoHandSword',
+        'TwoHandAxe',
+        'Bow',
+        'Staff',
+        'Gun',
+        'Grenade',
+        'Mine'
+      ])),
+      wbFloat('Secondary Damage'),
+      wbFromVersion(54, wbFloat('Weight')),
+      wbFromVersion(54, wbInteger('Value', itU32)),
+      wbFromVersion(54, wbInteger('Base Damage', itU16)),
+      wbFromVersion(55, wbStruct('Sound Data', [
+        wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+        wbFormIDCk('Sound - Attack', [SNDR, NULL]),
+        wbFormIDCk('Sound - Throwable Primed', [SNDR, NULL]),
+        wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
+        wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
+        wbFormIDCk('Sound - Idle', [SNDR, NULL]),
+        wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
+        wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
+        wbFromVersion(123, wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]))
+      ])),
+
+      wbFromVersion(67, wbUnion('AccuracyBonus', wbFormVersionDecider(108), [
+        wbInteger('Accuracy Bonus', itU8),
+        wbInteger('Accuracy Bonus', itU32)
+      ])),
+      wbFromVersion(74, wbFloat('Animation Attack Seconds')),
+      wbFromVersion(75, wbInteger('Rank', itU16)),
+      wbFromVersion(77, wbFloat('Action Point Cost')),
+      wbFromVersion(103, wbFloat('Full Power Seconds')),
+      wbFromVersion(105, wbFloat('Min Power Per Shot')),
+      wbFromVersion(87, wbInteger('Stagger', itU32, wbStaggerEnum)),
+      wbFromVersion(146, wbFloat('Color Remapping Index')),
+      wbFromVersion(146, wbInteger('Health',itU32))
     ]),
     wbStruct(FNAM, '', [
       wbFloat('Animation Fire Seconds'),
@@ -18531,17 +18540,17 @@ begin
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
       wbFloat('Animation Reload Seconds'),
-      wbByteArray('Unknown', 4),
-      wbFloat('Sighted Transition Seconds'),
+      wbFromVersion(55, wbFloat('Unknown')),
+      wbFromVersion(66, wbFloat('Sighted Transition Seconds')),
       wbInteger('# Projectiles', itU8),
-      wbFormIDCk('Override Projectile', [PROJ, NULL]),
-      wbInteger('Pattern', itU32, wbEnum([
+      wbFromVersion(80, wbFormIDCk('Override Projectile', [PROJ, NULL])),
+      wbFromVersion(126, wbInteger('Rumble Pattern', itU32, wbEnum([
         'Constant',
         'Square',
         'Triangle',
         'Sawtooth'
-      ])),
-      wbInteger('Rumble - Period (ms)', itU32)
+      ]))),
+      wbFromVersion(126, wbInteger('Rumble - Period (ms)', itU32))
     ]),
     wbStruct(RGW2, '', [
       wbFormIDCk('Override Projectile', [PROJ, NULL]),
@@ -18555,7 +18564,7 @@ begin
       wbFloat('Unsigned Transition Seconds'),
       wbFloat('Min Weapon Draw Time'),
       wbInteger('Rumble - Period (ms)', itU32),
-      wbInteger('Pattern', itU32, wbEnum([
+      wbInteger('Rumble Pattern', itU32, wbEnum([
         'Constant',
         'Square',
         'Triangle',
@@ -19429,7 +19438,7 @@ begin
     wbRStruct('Part', [
       wbStruct(ONAM, 'Static', [
         wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
-        wbBelowSize(8, wbFormIDCK('Material Swap', [MSWP, REFR, NULL]))
+        wbFromSize(8, wbFormIDCK('Material Swap', [MSWP, REFR, NULL]))
       ]),
       //wbUnknown(ONAM), { Replaced by above? }
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
