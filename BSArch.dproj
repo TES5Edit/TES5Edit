@@ -4,7 +4,7 @@
         <AppType>Console</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>bsarch.dpr</MainSource>
+        <MainSource>BSArch.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{CCA5AF23-C2C6-4AE2-8665-3649183AAE90}</ProjectGuid>
         <ProjectVersion>18.8</ProjectVersion>
@@ -34,15 +34,17 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>bsarch</SanitizedProjectName>
-        <DCC_BplOutput>.\exe</DCC_BplOutput>
+        <SanitizedProjectName>BSArch</SanitizedProjectName>
+        <DCC_BplOutput>.\Build</DCC_BplOutput>
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
+        <DCC_DcpOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_Define>EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
         <DCC_Description>BSArch by zilav</DCC_Description>
-        <DCC_ExeOutput>.\exe</DCC_ExeOutput>
+        <DCC_ExeOutput>.\Build</DCC_ExeOutput>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\..\;..\..\zlib;..\..\LZ4Delphi\lib\delphi;..\..\tforge\Source\Include;..\..\tforge\Source\Shared;..\..\tforge\Source\Engine\Forge;..\..\tforge\Source\Engine\Hashes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Core;.\BSArch;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Manifest_File>(None)</Manifest_File>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -51,16 +53,9 @@
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_MinorVer>7</VerInfo_MinorVer>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_DcpOutput>.\dcu\Win32</DCC_DcpOutput>
-        <DCC_DcuOutput>.\dcu\Win32</DCC_DcuOutput>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_DcpOutput>.\dcu\Win64</DCC_DcpOutput>
-        <DCC_DcuOutput>.\dcu\Win64</DCC_DcuOutput>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
         <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
@@ -76,8 +71,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\..\wbBSArchive.pas"/>
-        <DCCReference Include="..\..\wbStreams.pas"/>
+        <DCCReference Include="Core\wbBSArchive.pas"/>
+        <DCCReference Include="Core\wbStreams.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -96,7 +91,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">bsarch.dpr</Source>
+                    <Source Name="MainSource">BSArch.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

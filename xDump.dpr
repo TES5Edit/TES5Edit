@@ -12,6 +12,8 @@
 
 program xDump;
 
+{$I xdDefines.inc}
+
 {$APPTYPE CONSOLE}
 
 uses

@@ -6,9 +6,9 @@
 
 *******************************************************************************}
 
-unit FilterOptionsFrm;
+unit xeFilterOptionsForm;
 
-{$I wbDefines.inc}
+{$I xeDefines.inc}
 
 interface
 
@@ -113,7 +113,7 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain,
+  xeMainForm,
   TypInfo,
   wbInterface;
 

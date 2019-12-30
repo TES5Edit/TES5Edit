@@ -6,14 +6,16 @@
 
 *******************************************************************************}
 
-unit frmRichEditForm;
+unit xeRichEditForm;
+
+{$I xeDefines.inc}
 
 interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, JvExStdCtrls, JvRichEdit,
-  Vcl.ExtCtrls, Vcl.ComCtrls, VirtualTrees, JvExExtCtrls, JvSplitter, wbPushLikeButton;
+  Vcl.ExtCtrls, Vcl.ComCtrls, VirtualTrees, JvExExtCtrls, JvSplitter, xePushLikeButton;
 
 type
   TfrmRichEdit = class(TForm)
@@ -63,7 +65,7 @@ implementation
 uses
   wbInterface,
   TOM2,
-  frmViewMain,
+  xeMainForm,
   Vcl.Styles.Utils.SystemMenu;
 
 procedure TfrmRichEdit.btnTOCClick(Sender: TObject);

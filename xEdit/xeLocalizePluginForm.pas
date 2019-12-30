@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmLocalizePluginForm;
+unit xeLocalizePluginForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -40,7 +42,7 @@ var
 implementation
 
 uses
-  frmViewMain;
+  xeMainForm;
 
 {$R *.dfm}
 

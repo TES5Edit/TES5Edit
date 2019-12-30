@@ -6,13 +6,15 @@
 
 *******************************************************************************}
 
-unit EditWarningFrm;
+unit xeEditWarningForm;
+
+{$I xeDefines.inc}
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, ExtCtrls, StdCtrls, Buttons;
+  Dialogs, ExtCtrls, StdCtrls, Buttons, wbInterface;
 
 type
   TfrmEditWarning = class(TForm)
@@ -37,9 +39,6 @@ type
 implementation
 
 {$R *.dfm}
-
-uses
-  Colors;
 
 procedure TfrmEditWarning.FormCreate(Sender: TObject);
 begin

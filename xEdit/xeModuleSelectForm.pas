@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmModuleSelectForm;
+unit xeModuleSelectForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -116,7 +118,7 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain,
+  xeMainForm,
   StrUtils;
 
 procedure TfrmModuleSelect.mniInvertSelectionClick(Sender: TObject);

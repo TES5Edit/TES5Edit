@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit wbPushLikeButton;
+unit xePushLikeButton;
+
+{$I xeDefines.inc}
 
 interface
 

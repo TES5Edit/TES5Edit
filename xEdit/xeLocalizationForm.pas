@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmLocalizationForm;
+unit xeLocalizationForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -57,7 +59,7 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain,
+  xeMainForm,
   wbLocalization;
 
 type

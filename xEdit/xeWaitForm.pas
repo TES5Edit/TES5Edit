@@ -6,9 +6,9 @@
 
 *******************************************************************************}
 
-unit frmWaitForm;
+unit xeWaitForm;
 
-{$I wbDefines.inc}
+{$I xeDefines.inc}
 
 interface
 
@@ -90,7 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain;
+  xeMainForm;
 
 function _CreateWaitForm(const aCaption     : string;
                          const aMessage     : string;

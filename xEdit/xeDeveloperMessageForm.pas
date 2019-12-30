@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmDeveloperMessageForm;
+unit xeDeveloperMessageForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -59,7 +61,7 @@ implementation
 
 uses
   wbInterface,
-  frmViewMain,
+  xeMainForm,
   Vcl.Styles.Utils.SystemMenu;
 
 procedure TfrmDeveloperMessage.FixZoom;

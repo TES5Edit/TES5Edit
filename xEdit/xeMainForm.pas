@@ -6,9 +6,9 @@
 
 *******************************************************************************}
 
-unit frmViewMain;
+unit xeMainForm;
 
-{$I wbDefines.inc}
+{$I xeDefines.inc}
 
 interface
 
@@ -61,7 +61,7 @@ uses
   wbNifScanner,
   wbLOD,
   wbHelpers,
-  wbInit,
+  xeInit,
   wbLocalization,
   wbModGroups,
   wbHardcoded,
@@ -1217,25 +1217,25 @@ uses
   Diff,
   wbSort,
   wbStreams,
-  wbScriptAdapter,
+  xeScriptAdapter,
   wbBetterStringList,
-  FilterOptionsFrm,
-  FileSelectFrm,
-  ViewElementsFrm,
-  EditWarningFrm,
-  frmLocalizationForm,
-  frmLocalizePluginForm,
-  frmScriptForm,
-  frmLogAnalyzerForm,
-  frmLODGenForm,
-  frmOptionsForm,
-  frmTipForm,
-  frmModuleSelectForm,
-  frmModGroupSelectForm,
-  frmModGroupEditForm,
-  frmLegendForm,
-  frmRichEditForm,
-  frmDeveloperMessageForm,
+  xeFilterOptionsForm,
+  xeFileSelectForm,
+  xeViewElementsForm,
+  xeEditWarningForm,
+  xeLocalizationForm,
+  xeLocalizePluginForm,
+  xeScriptForm,
+  xeLogAnalyzerForm,
+  xeLODGenForm,
+  xeOptionsForm,
+  xeTipForm,
+  xeModuleSelectForm,
+  xeModGroupSelectForm,
+  xeModGroupEditForm,
+  xeLegendForm,
+  xeRichEditForm,
+  xeDeveloperMessageForm,
   WinInet;
 
 function GetUrlContent(const Url: string): UTF8String;

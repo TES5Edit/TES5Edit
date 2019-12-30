@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmLegendForm;
+unit xeLegendForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -39,7 +41,7 @@ implementation
 
 uses
   Math,
-  frmViewMain;
+  xeMainForm;
 
 procedure TfrmLegend.dgLegendDrawCell(Sender: TObject; ACol, ARow: Integer; Rect: TRect; State: TGridDrawState);
 var

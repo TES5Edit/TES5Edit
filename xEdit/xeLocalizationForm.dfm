@@ -41,6 +41,7 @@ object frmLocalization: TfrmLocalization
       Colors.SelectionRectangleBlendColor = clGray
       Colors.SelectionRectangleBorderColor = clBlack
       Colors.SelectionTextColor = clBlack
+      DefaultText = 'Node'
       Header.AutoSizeIndex = 1
       Header.Height = 21
       Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -61,13 +62,13 @@ object frmLocalization: TfrmLocalization
       Columns = <
         item
           Position = 0
+          Text = 'String ID'
           Width = 100
-          WideText = 'String ID'
         end
         item
           Position = 1
+          Text = 'Text'
           Width = 225
-          WideText = 'Text'
         end>
     end
   end

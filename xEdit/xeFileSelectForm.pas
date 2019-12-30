@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit FileSelectFrm;
+unit xeFileSelectForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -51,7 +53,7 @@ implementation
 
 uses
   wbInterface,
-  frmViewMain,
+  xeMainForm,
   StrUtils;
 
 procedure TCheckListBox.DrawItem(Index: Integer; Rect: TRect;

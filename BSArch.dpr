@@ -21,8 +21,8 @@ uses
   IOUtils,
   Threading,
   Diagnostics,
-  wbBSArchive in '..\..\wbBSArchive.pas',
-  wbStreams in '..\..\wbStreams.pas';
+  wbBSArchive in 'Core\wbBSArchive.pas',
+  wbStreams in 'Core\wbStreams.pas';
 
 const
   sVersion = '0.7';

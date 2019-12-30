@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmLogAnalyzerForm;
+unit xeLogAnalyzerForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -108,7 +110,7 @@ type
 implementation
 
 uses
-  frmViewMain;
+  xeMainForm;
 
 {$R *.dfm}
 

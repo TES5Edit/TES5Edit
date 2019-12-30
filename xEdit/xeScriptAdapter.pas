@@ -6,9 +6,9 @@
 
 *******************************************************************************}
 
-unit wbScriptAdapter;
+unit xeScriptAdapter;
 
-{$I wbDefines.inc}
+{$I xeDefines.inc}
 
 interface
 
@@ -48,8 +48,8 @@ uses
   JvInterpreter_Menus,
   JvInterpreter,
   JvInterpreterFm,
-  wbScriptAdapterMisc,
-  wbScriptAdapterDF;
+  xeScriptAdapterMisc,
+  xeScriptAdapterDF;
 
 const
   cUnit = 'Dummy';
@@ -2144,8 +2144,8 @@ begin
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Menus.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  wbScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  wbScriptAdapterDF.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  xeScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  xeScriptAdapterDF.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
 end;
 
 initialization

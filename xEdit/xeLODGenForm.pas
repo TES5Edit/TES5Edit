@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmLODGenForm;
+unit xeLODGenForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -92,7 +94,7 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain,
+  xeMainForm,
   wbLOD;
 
 procedure TfrmLODGen.btnSplitTreesLODClick(Sender: TObject);

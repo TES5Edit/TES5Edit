@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmOptionsForm;
+unit xeOptionsForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -132,8 +134,9 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain,
-  FileSelectFrm, TypInfo;
+  xeMainForm,
+  xeFileSelectForm,
+  TypInfo;
 
 var
   wbColorConflictAllDefault: TConflictAllColors;

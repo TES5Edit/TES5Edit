@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit ElementDetailFrm;
+unit xeElementDetailForm;
+
+{$I xeDefines.inc}
 
 interface
 

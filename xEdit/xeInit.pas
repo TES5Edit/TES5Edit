@@ -6,9 +6,9 @@
 
 *******************************************************************************}
 
-unit wbInit;
+unit xeInit;
 
-{$I wbDefines.inc}
+{$I xeDefines.inc}
 
 interface
 

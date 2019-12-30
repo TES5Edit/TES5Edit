@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmScriptForm;
+unit xeScriptForm;
+
+{$I xeDefines.inc}
 
 interface
 

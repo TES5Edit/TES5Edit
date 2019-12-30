@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmModGroupEditForm;
+unit xeModGroupEditForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -61,8 +63,8 @@ implementation
 uses
   Vcl.Clipbrd,
   wbHelpers,
-  frmModuleSelectForm,
-  frmViewMain,
+  xeModuleSelectForm,
+  xeMainForm,
   StrUtils;
 
 procedure TfrmModGroupEdit.FormClose(Sender: TObject; var Action: TCloseAction);

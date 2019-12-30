@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmWorldspaceCellDetailsForm;
+unit xeWorldspaceCellDetailsForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -37,7 +39,7 @@ implementation
 {$R *.dfm}
 
 uses
-  frmViewMain,
+  xeMainForm,
   wbInterface;
 
 procedure TfrmWorldspaceCellDetails.FormCreate(Sender: TObject);

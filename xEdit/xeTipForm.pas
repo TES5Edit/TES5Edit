@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit frmTipForm;
+unit xeTipForm;
+
+{$I xeDefines.inc}
 
 interface
 

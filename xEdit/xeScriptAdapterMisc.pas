@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit wbScriptAdapterMisc;
+unit xeScriptAdapterMisc;
+
+{$I xeDefines.inc}
 
 interface
 

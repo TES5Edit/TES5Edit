@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-unit ViewElementsFrm;
+unit xeViewElementsForm;
+
+{$I xeDefines.inc}
 
 interface
 
@@ -69,7 +71,7 @@ implementation
 
 uses
   wbHelpers, ShellApi,
-  frmViewMain;
+  xeMainForm;
 
 { TfrmViewElements }
 
