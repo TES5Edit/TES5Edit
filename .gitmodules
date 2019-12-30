@@ -37,4 +37,8 @@
 [submodule "tforge"]
 	path = External/TForge
 	url = ../../ElminsterAU/tforge.git
-branch = xEdit-4.1.x
+	branch = xEdit-4.1.x
+[submodule "External/FileContainer"]
+	path = External/FileContainer
+	url = ../../ElminsterAU/FileContainer.git
+	branch = xEdit-4.1.x
