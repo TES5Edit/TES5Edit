@@ -6,11 +6,13 @@
 
 *******************************************************************************}
 
+{$IFDEF DEBUG}
 // JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
+{$ENDIF}
 
-program bsarch;
+program BSArch;
 
 {$APPTYPE CONSOLE}
 

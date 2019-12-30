@@ -13,16 +13,6 @@
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
-        <Base_Win32>true</Base_Win32>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
-        <Base_Win64>true</Base_Win64>
-        <CfgParent>Base</CfgParent>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
@@ -37,8 +27,8 @@
         <SanitizedProjectName>BSArch</SanitizedProjectName>
         <DCC_BplOutput>.\Build</DCC_BplOutput>
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
-        <DCC_DcpOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcpOutput>
-        <DCC_DcuOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcpOutput>.\Temp\BSArch\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\Temp\BSArch\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_Define>EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
         <DCC_Description>BSArch by zilav</DCC_Description>
         <DCC_ExeOutput>.\Build</DCC_ExeOutput>
