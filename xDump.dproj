@@ -4,7 +4,7 @@
         <AppType>Console</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
-        <MainSource>SSEDump.dpr</MainSource>
+        <MainSource>xDump.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{8CD0A7C7-3B98-4D5D-892F-E91C7E50D144}</ProjectGuid>
         <ProjectVersion>18.8</ProjectVersion>
@@ -34,17 +34,17 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>SSEDump</SanitizedProjectName>
-        <DCC_BplOutput>.\exe</DCC_BplOutput>
+        <SanitizedProjectName>xDump</SanitizedProjectName>
+        <DCC_BplOutput>.\Build</DCC_BplOutput>
         <DCC_ConsoleTarget>true</DCC_ConsoleTarget>
         <DCC_Define>EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
         <DCC_Description>xDump by ElminsterAU</DCC_Description>
-        <DCC_ExeOutput>.\exe</DCC_ExeOutput>
+        <DCC_ExeOutput>.\Build</DCC_ExeOutput>
+        <DCC_DcpOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_SYMBOL_DEPRECATED>false</DCC_SYMBOL_DEPRECATED>
-        <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-        <DCC_UnitSearchPath>..\..\;..\..\ImagingLib\Source\;..\..\ImagingLib\Source\zlib;..\..\zlib;..\..\LZ4Delphi\lib\delphi;..\..\FileContainer;..\..\tforge\Source\Include;..\..\tforge\Source\Shared;..\..\tforge\Source\Engine\Forge;..\..\tforge\Source\Engine\Hashes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Core;.\xDump;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Manifest_File>(None)</Manifest_File>
         <VerInfo_Build>1</VerInfo_Build>
         <VerInfo_Debug>true</VerInfo_Debug>
@@ -55,14 +55,6 @@
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_Release>3</VerInfo_Release>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_DcpOutput>.\dcu\Win32</DCC_DcpOutput>
-        <DCC_DcuOutput>.\dcu\Win32</DCC_DcuOutput>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_DcpOutput>.\dcu\Win64</DCC_DcpOutput>
-        <DCC_DcuOutput>.\dcu\Win64</DCC_DcuOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
@@ -81,28 +73,28 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\..\wbBSA.pas"/>
-        <DCCReference Include="..\..\wbSort.pas"/>
-        <DCCReference Include="..\..\wbInterface.pas"/>
-        <DCCReference Include="..\..\wbSaveInterface.pas"/>
-        <DCCReference Include="..\..\wbImplementation.pas"/>
-        <DCCReference Include="..\..\wbLocalization.pas"/>
-        <DCCReference Include="..\..\wbHelpers.pas"/>
-        <DCCReference Include="..\..\wbLoadOrder.pas"/>
-        <DCCReference Include="..\..\wbHardcoded.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsCommon.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFNV.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFNVSaves.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFO3.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFO3Saves.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFO4.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFO4Saves.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsFO76.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsTES3.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsTES4.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsTES4Saves.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsTES5.pas"/>
-        <DCCReference Include="..\..\wbDefinitionsTES5Saves.pas"/>
+        <DCCReference Include="Core\wbBSA.pas"/>
+        <DCCReference Include="Core\wbSort.pas"/>
+        <DCCReference Include="Core\wbInterface.pas"/>
+        <DCCReference Include="Core\wbSaveInterface.pas"/>
+        <DCCReference Include="Core\wbImplementation.pas"/>
+        <DCCReference Include="Core\wbLocalization.pas"/>
+        <DCCReference Include="Core\wbHelpers.pas"/>
+        <DCCReference Include="Core\wbLoadOrder.pas"/>
+        <DCCReference Include="Core\wbHardcoded.pas"/>
+        <DCCReference Include="Core\wbDefinitionsCommon.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFNV.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFNVSaves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO3.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO3Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO4.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO76.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES3.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES4.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES4Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -121,7 +113,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">SSEDump.dpr</Source>
+                    <Source Name="MainSource">xDump.dpr</Source>
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>

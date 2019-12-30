@@ -10,7 +10,7 @@
 // JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 
-program SSEDump;
+program xDump;
 
 {$APPTYPE CONSOLE}
 
@@ -21,30 +21,30 @@ uses
   Windows,
   Registry,
   IniFiles,
-  Zlibex,
+  ZlibEx,
   lz4,
-  wbBSA in '..\..\wbBSA.pas',
-  wbSort in '..\..\wbSort.pas',
-  wbInterface in '..\..\wbInterface.pas',
-  wbSaveInterface in '..\..\wbSaveInterface.pas',
-  wbImplementation in '..\..\wbImplementation.pas',
-  wbLocalization in '..\..\wbLocalization.pas',
-  wbHelpers in '..\..\wbHelpers.pas',
-  wbLoadOrder in '..\..\wbLoadOrder.pas',
-  wbHardcoded in '..\..\wbHardcoded.pas',
-  wbDefinitionsCommon in '..\..\wbDefinitionsCommon.pas',
-  wbDefinitionsFNV in '..\..\wbDefinitionsFNV.pas',
-  wbDefinitionsFNVSaves in '..\..\wbDefinitionsFNVSaves.pas',
-  wbDefinitionsFO3 in '..\..\wbDefinitionsFO3.pas',
-  wbDefinitionsFO3Saves in '..\..\wbDefinitionsFO3Saves.pas',
-  wbDefinitionsFO4 in '..\..\wbDefinitionsFO4.pas',
-  wbDefinitionsFO4Saves in '..\..\wbDefinitionsFO4Saves.pas',
-  wbDefinitionsFO76 in '..\..\wbDefinitionsFO76.pas',
-  wbDefinitionsTES3 in '..\..\wbDefinitionsTES3.pas',
-  wbDefinitionsTES4 in '..\..\wbDefinitionsTES4.pas',
-  wbDefinitionsTES4Saves in '..\..\wbDefinitionsTES4Saves.pas',
-  wbDefinitionsTES5 in '..\..\wbDefinitionsTES5.pas',
-  wbDefinitionsTES5Saves in '..\..\wbDefinitionsTES5Saves.pas';
+  wbBSA in 'Core\wbBSA.pas',
+  wbSort in 'Core\wbSort.pas',
+  wbInterface in 'Core\wbInterface.pas',
+  wbSaveInterface in 'Core\wbSaveInterface.pas',
+  wbImplementation in 'Core\wbImplementation.pas',
+  wbLocalization in 'Core\wbLocalization.pas',
+  wbHelpers in 'Core\wbHelpers.pas',
+  wbLoadOrder in 'Core\wbLoadOrder.pas',
+  wbHardcoded in 'Core\wbHardcoded.pas',
+  wbDefinitionsCommon in 'Core\wbDefinitionsCommon.pas',
+  wbDefinitionsFNV in 'Core\wbDefinitionsFNV.pas',
+  wbDefinitionsFNVSaves in 'Core\wbDefinitionsFNVSaves.pas',
+  wbDefinitionsFO3 in 'Core\wbDefinitionsFO3.pas',
+  wbDefinitionsFO3Saves in 'Core\wbDefinitionsFO3Saves.pas',
+  wbDefinitionsFO4 in 'Core\wbDefinitionsFO4.pas',
+  wbDefinitionsFO4Saves in 'Core\wbDefinitionsFO4Saves.pas',
+  wbDefinitionsFO76 in 'Core\wbDefinitionsFO76.pas',
+  wbDefinitionsTES3 in 'Core\wbDefinitionsTES3.pas',
+  wbDefinitionsTES4 in 'Core\wbDefinitionsTES4.pas',
+  wbDefinitionsTES4Saves in 'Core\wbDefinitionsTES4Saves.pas',
+  wbDefinitionsTES5 in 'Core\wbDefinitionsTES5.pas',
+  wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
