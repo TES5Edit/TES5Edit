@@ -12,3 +12,9 @@
 {$WARN IMPLICIT_STRING_CAST OFF}
 {$WARN SYMBOL_PLATFORM OFF}
 
+{$IFDEF BUILD_BY_ELMINSTERAU} //exception logging requires non-opensource unit
+{$IFDEF DEBUG}                //exception logging requires debug information
+  {$DEFINE EXCEPTION_LOGGING_ENABLED}
+{$ENDIF}
+{$ENDIF}
+

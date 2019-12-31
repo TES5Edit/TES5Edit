@@ -16,7 +16,6 @@ uses
   Classes;
 
 var
-  wbApplicationTitle   : string;
   wbScriptToRun        : string;
   wbSettingsFileName   : string;
   wbPluginToUse        : string;  // Passed a specific plugin as parameter

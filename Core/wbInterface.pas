@@ -4075,28 +4075,75 @@ type
   TwbSetOfSource  = set of TwbToolSource;
 
 var
-  wbGameMode    : TwbGameMode;
-  wbToolMode    : TwbToolMode;
-  wbToolSource  : TwbToolSource;
-  wbSubMode     : string;
-  wbAppName     : string;
-  wbGameName    : string; //name of the exe, usually also name of the game master
-  wbGameExeName : string;
-  wbGameMasterEsm : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
-  wbGameName2   : string; // game title name used for AppData and MyGames folders
-  wbGameNameReg : string; // registry name
-  wbToolName    : string;
-  wbSourceName  : String;
-  wbLanguage    : string;
-  wbAutoModes   : TwbSetOfMode = [ tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, // Tool modes that run without user interaction until final status
-                    tmESMify, tmESPify, tmSortAndCleanMasters, tmScript,
-                    tmCheckForErrors, tmCheckForITM, tmCheckForDR ];
-  wbPluginModes : TwbSetOfMode = [ tmESMify, tmESPify, tmSortAndCleanMasters,
-                                   tmCheckForErrors, tmCheckForITM, tmCheckForDR ];  // Auto modes that require a specific plugin to be provided.
-  wbAlwaysMode  : TwbSetOfMode = [ tmView, tmEdit, tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
-                    tmLODgen, tmScript, tmCheckForITM, tmCheckForDR, tmCheckForErrors ]; // Modes available to all decoded games
-  wbSimplePluginsTxt : TwbGameModes = [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmEnderal]; //plugins.txt contains only the active plugins
-  wbOrderFromPluginsTxt : TwbGameModes = [gmTES5, gmTES5VR, gmSSE, gmEnderal, gmFO4, gmFO4VR, gmFO76]; //load order given by order in plugins.txt
+  wbGameMode         : TwbGameMode;
+  wbToolMode         : TwbToolMode;
+  wbToolSource       : TwbToolSource;
+  wbSubMode          : string;
+  wbAppName          : string;
+  wbApplicationTitle : string;
+  wbGameName         : string; //name of the exe, usually also name of the game master
+  wbGameExeName      : string;
+  wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
+  wbGameName2        : string; // game title name used for AppData and MyGames folders
+  wbGameNameReg      : string; // registry name
+  wbToolName         : string;
+  wbSourceName       : String;
+  wbLanguage         : string;
+
+  wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
+    tmOnamUpdate,
+    tmMasterUpdate,
+    tmMasterRestore,
+    tmLODgen,
+    tmESMify,
+    tmESPify,
+    tmSortAndCleanMasters,
+    tmScript,
+    tmCheckForErrors,
+    tmCheckForITM,
+    tmCheckForDR
+  ];
+
+  wbPluginModes: TwbSetOfMode = [ // Auto modes that require a specific plugin to be provided.
+    tmESMify,
+    tmESPify,
+    tmSortAndCleanMasters,
+    tmCheckForErrors,
+    tmCheckForITM,
+    tmCheckForDR
+  ];
+
+  wbAlwaysMode: TwbSetOfMode = [ // Modes available to all decoded games
+    tmView,
+    tmEdit,
+    tmTranslate,
+    tmESMify,
+    tmESPify,
+    tmSortAndCleanMasters,
+    tmLODgen,
+    tmScript,
+    tmCheckForITM,
+    tmCheckForDR,
+    tmCheckForErrors
+  ];
+
+  wbSimplePluginsTxt: TwbGameModes = [ //plugins.txt contains only the active plugins
+    gmTES3,
+    gmTES4,
+    gmFO3,
+    gmFNV,
+    gmTES5,
+    gmEnderal];
+
+  wbOrderFromPluginsTxt: TwbGameModes = [ //load order given by order in plugins.txt
+    gmTES5,
+    gmEnderal,
+    gmSSE,
+    gmTES5VR,
+    gmFO4,
+    gmFO4VR,
+    gmFO76
+  ];
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;

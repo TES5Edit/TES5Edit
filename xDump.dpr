@@ -6,7 +6,9 @@
 
 *******************************************************************************}
 
-{$IFDEF DEBUG}
+{$I xdDefines.inc}
+
+{$IFDEF EXCEPTION_LOGGING_ENABLED}
 // JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
@@ -14,11 +16,12 @@
 
 program xDump;
 
-{$I xdDefines.inc}
-
 {$APPTYPE CONSOLE}
 
 uses
+  {$IFDEF EXCEPTION_LOGGING_ENABLED}
+  nxExceptionHook,
+  {$ENDIF}
   TypInfo,
   Classes,
   SysUtils,
@@ -1199,8 +1202,23 @@ begin
       if wbReportMode then
         wbShowFlagEnumValue := True;
 
+     var SourceName := wbSourceName;
+     if SourceName = 'Plugins' then
+       SourceName := '';
+
+     wbApplicationTitle := wbAppName + wbToolName + SourceName +  ' ' + VersionString;
+     {$IFDEF WIN64}
+     wbApplicationTitle := wbApplicationTitle + ' x64';
+     {$ENDIF WIN64}
+     if wbSubMode <> '' then
+       wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
+
+     {$IFDEF EXCEPTION_LOGGING_ENABLED}
+     nxEHAppVersion := wbApplicationTitle;
+     {$ENDIF}
+
       if not FindCmdLineSwitch('q') and not wbReportMode then begin
-        WriteLn(ErrOutput, wbAppName, wbToolName,' ', VersionString.ToString);
+        WriteLn(ErrOutput, wbApplicationTitle);
         WriteLn(ErrOutput);
 
         WriteLn(ErrOutput, 'The Source Code Form is subject to the terms of the Mozilla Public License,');
@@ -1475,8 +1493,7 @@ begin
         wbContainerHandler := wbCreateContainerHandler;
 
       StartTime := Now;
-      ReportProgress('['+s+'] Application name : '+wbAppName+' - '+wbGamename+
-        ' Mode:'+wbToolName+' Source:'+wbSourceName);
+      ReportProgress('Application name : ' + wbApplicationTitle);
       if Assigned(Dumpgroups) then
         ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
       if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then

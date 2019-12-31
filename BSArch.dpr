@@ -6,17 +6,22 @@
 
 *******************************************************************************}
 
-{$IFDEF DEBUG}
+{$I baDefines.inc}
+
+{$IFDEF EXCEPTION_LOGGING_ENABLED}
 // JCL_DEBUG_EXPERT_GENERATEJDBG OFF
 // JCL_DEBUG_EXPERT_INSERTJDBG ON
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 {$ENDIF}
 
-program BSArch;
+program xDump;
 
 {$APPTYPE CONSOLE}
 
 uses
+  {$IFDEF EXCEPTION_LOGGING_ENABLED}
+  nxExceptionHook,
+  {$ENDIF}
   Classes,
   Types,
   SysUtils,
@@ -502,6 +507,9 @@ end;
 procedure Main;
 begin
   WriteLn('');
+  {$IFDEF EXCEPTION_LOGGING_ENABLED}
+  nxEHAppVersion := 'BSArch v' + sVersion;
+  {$ENDIF}
   WriteLn('BSArch v' + sVersion + ' by zilav and ElminsterAU');
   WriteLn('Packer and unpacker for Bethesda Game Studios archive files');
   WriteLn;
@@ -527,12 +535,12 @@ begin
 
   else begin
     WriteLn('ARCHIVE INFO');
-    WriteLn('  bsarch.exe <archive> [parameters]');
+    WriteLn('  BSArch.exe <archive> [parameters]');
     WriteLn('  <archive> - archive file name to view');
     WriteLn('  additional parametes: -list to show files list or -dump for extended dump');
     WriteLn('');
     WriteLn('UNPACKING ARCHIVES');
-    WriteLn('  bsarch.exe unpack <archive> <folder>');
+    WriteLn('  BSArch.exe unpack <archive> <folder>');
     WriteLn('  <archive> - archive file name to unpack');
     WriteLn('  <folder>  - path to the existing destination folder to unpack into');
     WriteLn('              When not set unpack into the folder where archive is located');
@@ -541,7 +549,7 @@ begin
     WriteLn('  -mt         Run multi-threaded');
     WriteLn('');
     WriteLn('CREATING ARCHIVES');
-    WriteLn('  bsarch.exe pack <folder> <archive> [parameters]');
+    WriteLn('  BSArch.exe pack <folder> <archive> [parameters]');
     WriteLn('  <folder>  - path to the source folder with files to pack');
     WriteLn('  <archive> - archive file name to create');
     WriteLn('  Parameters:');
@@ -571,19 +579,19 @@ begin
     WriteLn('    If <folder> or <archive> include spaces then embed them in quotes');
     WriteLn('');
     WriteLn('  * Show archive info including hex flags values to be used with -af and -ff');
-    WriteLn('      bsarch d:\somepath\somefile.bsa');
+    WriteLn('      BSArch d:\somepath\somefile.bsa');
     WriteLn('  * Dump extended files information from archive');
-    WriteLn('      bsarch "d:\game\mod - main.bsa" -dump');
+    WriteLn('      BSArch "d:\game\mod - main.bsa" -dump');
     WriteLn('  * Unpack archive into the same folder where archive is located');
-    WriteLn('      bsarch unpack d:\mymod\new.bsa');
+    WriteLn('      BSArch unpack d:\mymod\new.bsa');
     WriteLn('  * Unpack archive into the specified folder');
-    WriteLn('      bsarch unpack d:\mymod\new.bsa "d:\unpacked archive\data"');
+    WriteLn('      BSArch unpack d:\mymod\new.bsa "d:\unpacked archive\data"');
     WriteLn('  * Create Skyrim Special Edition compressed archive');
-    WriteLn('      bsarch pack "d:\my mod\data" "d:\my mod\data\new.bsa" -sse -z');
+    WriteLn('      BSArch pack "d:\my mod\data" "d:\my mod\data\new.bsa" -sse -z');
     WriteLn('  * Create Fallout New Vegas uncompressed archive with custom flags');
-    WriteLn('      bsarch pack "d:\my mod\data" "d:\my mod\new.bsa" -fnv -af:0x83 -ff:0x113');
+    WriteLn('      BSArch pack "d:\my mod\data" "d:\my mod\new.bsa" -fnv -af:0x83 -ff:0x113');
     WriteLn('  * Create Fallout 4 uncompressed textures archive');
-    WriteLn('      bsarch pack "d:\my mod\data" "d:\my mod\new.ba2" -fo4dds -share');
+    WriteLn('      BSArch pack "d:\my mod\data" "d:\my mod\new.ba2" -fo4dds -share');
 
   end;
 end;
