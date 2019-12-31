@@ -72,6 +72,9 @@ const
   csDotEsp   = '.esp';
   csDotEsu   = '.esu';
 
+  csDotFos   = '.fos';
+  csDotEss   = '.ess';
+
 type
   TwbProgressCallback = procedure(const aStatus: string);
 
@@ -1290,7 +1293,8 @@ type
   );
 
   TwbFileStates = set of TwbFileState;
-  TwbPluginExtensions = TDynStrings;
+  TwbModuleExtensions = TDynStrings;
+  TwbSaveExtensions = TDynStrings;
 
   TwbBuildOrLoadRefResult = (blrNone, blrBuilt, blrBuiltAndSaved, blrLoaded);
 
@@ -2599,7 +2603,8 @@ var
     etSubRecordArray,
     etArray
   ];
-  wbPluginExtensions : TwbPluginExtensions;
+  wbModuleExtensions : TwbModuleExtensions;
+  wbSaveExtensions : TwbSaveExtensions;
 
 const
   AllElementTypes = [Low(TwbElementType)..High(TwbElementType)];
@@ -3981,7 +3986,8 @@ function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 
-function wbIsPlugin(aFileName: string): Boolean;
+function wbIsModule(aFileName: string): Boolean;
+function wbIsSave(aFileName: string): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
 
@@ -18824,16 +18830,23 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
-function wbIsPlugin(aFileName: string): Boolean;
-var
-  i: Integer;
+function wbIsModule(aFileName: string): Boolean;
 begin
   Result := SameText(aFileName, wbGameExeName);
   if not Result then
-    for i := Low(wbPluginExtensions) to High(wbPluginExtensions) do
-      if aFileName.EndsWith(wbPluginExtensions[i], True) or aFileName.EndsWith(wbPluginExtensions[i] + csDotGhost, True) then
+    for var i := Low(wbModuleExtensions) to High(wbModuleExtensions) do
+      if aFileName.EndsWith(wbModuleExtensions[i], True) or aFileName.EndsWith(wbModuleExtensions[i] + csDotGhost, True) then
         Exit(True);
 end;
+
+function wbIsSave(aFileName: string): Boolean;
+begin
+  Result := False;
+  for var i := Low(wbSaveExtensions) to High(wbSaveExtensions) do
+    if aFileName.EndsWith(wbSaveExtensions[i], True) or aFileName.EndsWith(wbSaveExtensions[i] + csDotGhost, True) then
+      Exit(True);
+end;
+
 
 function wbStr4ToString(aInt: Int64): string;
 var
@@ -19835,11 +19848,15 @@ initialization
 
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
-  SetLength(wbPluginExtensions, 4);
-  wbPluginExtensions[0] := csDotEsp;
-  wbPluginExtensions[1] := csDotEsm;
-  wbPluginExtensions[2] := csDotEsl;
-  wbPluginExtensions[3] := csDotEsu;
+  SetLength(wbModuleExtensions, 4);
+  wbModuleExtensions[0] := csDotEsp;
+  wbModuleExtensions[1] := csDotEsm;
+  wbModuleExtensions[2] := csDotEsl;
+  wbModuleExtensions[3] := csDotEsu;
+
+  SetLength(wbSaveExtensions, 2);
+  wbSaveExtensions[0] := csDotFos;
+  wbSaveExtensions[1] := csDotEss;
 finalization
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);

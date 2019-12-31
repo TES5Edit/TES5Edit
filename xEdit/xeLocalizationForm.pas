@@ -71,7 +71,7 @@ type
 
 procedure TfrmLocalization.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   vetStrings.NodeDataSize := SizeOf(TTreeData);
   vetStrings.RootNodeCount := wbLocalizationHandler.Count;

@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -16,35 +16,36 @@ uses
   Classes;
 
 var
-  wbScriptToRun        : string;
-  wbSettingsFileName   : string;
-  wbPluginToUse        : string;  // Passed a specific plugin as parameter
-  wbLogFile            : string;  // Optional log file for this session
-  wbMyProfileName      : string;
+  xeScriptToRun            : string;
+  xeSettingsFileName       : string;
+  xePluginToUse            : string;  // Passed a specific plugin as parameter
+  xeLogFile                : string;  // Optional log file for this session
+  xeMyProfileName          : string;
 
-  wbMasterUpdateDone   : Boolean;
-  wbDontBackup         : Boolean = False;
-  wbRemoveTempPath     : Boolean = True;
-  wbQuickShowConflicts : Boolean;
-  wbVeryQuickShowConflicts : Boolean;
-  wbQuickClean         : Boolean;
-  wbQuickCleanAutoSave : Boolean;
-  wbAutoLoad           : Boolean;
-  wbAutoExit           : Boolean;
-  wbAutoGameLink       : Boolean;
+  xeMasterUpdateDone       : Boolean;
+  xeDontBackup             : Boolean = False;
+  xeRemoveTempPath         : Boolean = True;
+  xeQuickShowConflicts     : Boolean;
+  xeVeryQuickShowConflicts : Boolean;
+  xeQuickClean             : Boolean;
+  xeQuickCleanAutoSave     : Boolean;
+  xeAutoLoad               : Boolean;
+  xeAutoExit               : Boolean;
+  xeAutoGameLink           : Boolean;
 
-  wbParamIndex         : integer = 1;     // First unused parameter
-  wbPluginsToUse       : TStringList;
+  xeParamIndex             : Integer = 1;     // First unused parameter
+  xeModulesToUse           : TStringList;
 
-function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
-function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
-function wbFindCmdLineParam(const aSwitch : string; out aValue : string): Boolean; overload;
+function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
+                                      out aValue       : string;
+                                    const aDefaultPath : string)
+                                                       : Boolean;
 
-function wbLoadMOHookFile: Boolean;
-procedure SwitchToCoSave;
+function xeLoadMOHookFile: Boolean;
+procedure xeSwitchToCoSave;
 
-function wbDoInit: Boolean;
-procedure wbInitStyles;
+function xeDoInit: Boolean;
+procedure xeInitStyles;
 
 implementation
 
@@ -63,6 +64,7 @@ uses
   wbHelpers,
   wbInterface,
   wbImplementation,
+  wbCommandLine,
   wbLocalization,
   wbDefinitionsCommon,
   wbDefinitionsFNV,
@@ -78,109 +80,41 @@ uses
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves;
 
-function wbFindCmdLineParam(const aSwitch     : string;
-                            const aChars      : TSysCharSet;
-                                  aIgnoreCase : Boolean;
-                              out aValue      : string)
-                                              : Boolean; overload;
-var
-  i : Integer;
-  s : string;
+function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
-  Result := False;
-  aValue := '';
-  for i := 1 to ParamCount do begin
-    s := ParamStr(i);
-    if (aChars = []) or (s[1] in aChars) then begin
-      Delete(s, 1, 1);
-      if s.StartsWith(aSwitch + ':', aIgnoreCase) then begin
-        aValue := Copy(s, Length(aSwitch) + 2, High(Integer));
-        Exit(True);
-      end;
-      if aIgnoreCase then begin
-        if SameText(s, aSwitch) then
-          Exit(True)
-      end else
-        if s = aSwitch then
-          Exit(True);
-    end;
-  end;
+  Result := wbIsModule(aFilePath) or wbIsSave(aFilePath);
 end;
 
-function wbFindCmdLineParam(var   startingIndex : integer;
-                            const aChars        : TSysCharSet;
-                              out aValue        : string)
-                                                : Boolean; overload;
-var
-  i : integer;
-  s : string;
+function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
+                                        out aValue       : string;
+                                      const aDefaultPath : string = '')
+                                                         : Boolean;
 begin
-  Result := False;
-  aValue := '';
-  for i := startingIndex to ParamCount do begin
-    s := ParamStr(i);
-    if (aChars = []) or (s[1] in aChars) then // skipped
-      Inc(startingIndex)
-    else begin
-      aValue := ParamStr(i);
-      startingIndex := i+1;
-      Result := True;
-      break;
-    end
-  end;
-end;
-
-function wbFindCmdLineParam(const aSwitch : string;
-                              out aValue  : string)
-                                          : Boolean; overload;
-begin
-  Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
-end;
-
-function wbFindCmdLineParam(var startingIndex : integer; out aValue  : string) : Boolean; overload;
-begin
-  Result := wbFindCmdLineParam(startingIndex, SwitchChars, aValue);
-end;
-
-function wbCheckForValidExtension(aFilePath : string; const anExtension : string): Boolean; overload;
-begin
-  Result := aFilePath.EndsWith(anExtension, True);
-end;
-
-function wbCheckForPluginExtension(aFilePath : string): Boolean;
-begin
-  Result := wbIsPlugin(aFilePath);
-end;
-
-function wbCheckForValidExtension(aFilePath : string): Boolean; overload;
-begin
-  Result := wbCheckForPluginExtension(aFilePath) or
-            wbCheckForValidExtension(aFilePath, '.fos') or wbCheckForValidExtension(aFilePath, '.ess');
-end;
-
-function wbFindNextValidCmdLineFileName(var startingIndex : integer; out aValue  : string; defaultPath : string = '') : Boolean;
-begin
-  Result := wbFindCmdLineParam(startingIndex, SwitchChars, aValue);
+  Result := wbFindCmdLineParam(aStartIndex, SwitchChars, aValue);
   if Result and not FileExists(aValue) then
-    if (defaultPath<>'') then
-      if FileExists(defaultPath+'\'+aValue) then
-        aValue := ExpandFileName(defaultPath+'\'+aValue)
+    if (aDefaultPath<>'') then
+      if FileExists(aDefaultPath+'\'+aValue) then
+        aValue := ExpandFileName(aDefaultPath+'\'+aValue)
       else
         Result := False
     else
       Result := False;
 end;
 
-function wbFindNextValidCmdLinePlugin(var startingIndex : integer; out aValue  : string; defaultPath : string) : Boolean;
+function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
+                                      out aValue       : string;
+                                    const aDefaultPath : string)
+                                                       : Boolean;
 begin
   repeat
-    Result := wbFindNextValidCmdLineFileName(startingIndex, aValue, defaultPath);
-  until not Result or wbCheckForPluginExtension(aValue);
+    Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
+  until not Result or wbIsModule(aValue);
   if Result  then
-    if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(defaultPath)) = 0) then begin
+    if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
       aValue := ExtractFileName(aValue);
-      if not Assigned(wbPluginsToUse) then wbPluginsToUse := TStringList.Create;
-      wbPluginsToUse.Add(aValue);
+      if not Assigned(xeModulesToUse) then
+        xeModulesToUse := TStringList.Create;
+      xeModulesToUse.Add(aValue);
     end else
       Result := False;
 end;
@@ -199,7 +133,7 @@ var
 begin
   Result := True;
 
-  if FileExists(wbSettingsFileName) then begin
+  if FileExists(xeSettingsFileName) then begin
     ResetSettings := FindCmdLineSwitch('resetsettings');
     if not ResetSettings then begin
       Shift := GetAsyncKeyState(VK_SHIFT) < 0;
@@ -211,9 +145,9 @@ begin
     end;
 
     if ResetSettings then begin
-      s := wbSettingsFileName + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+      s := xeSettingsFileName + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
 
-      if not RenameFile(PChar(wbSettingsFileName), PChar(s)) then begin
+      if not RenameFile(PChar(xeSettingsFileName), PChar(s)) then begin
         ShowMessage(Format('Could not rename existing settings file to "%s".', [s]));
         Exit(False);
       end else
@@ -221,8 +155,8 @@ begin
     end;
   end;
 
-  if FileExists(wbSettingsFileName) then try
-    Settings := TMemIniFile.Create(wbSettingsFileName);
+  if FileExists(xeSettingsFileName) then try
+    Settings := TMemIniFile.Create(xeSettingsFileName);
     try
       wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
@@ -278,7 +212,7 @@ begin
   except end;
 end;
 
-function GetCSIDLShellFolder(CSIDLFolder: integer): string;
+function GetCSIDLShellFolder(CSIDLFolder: Integer): string;
 begin
   SetLength(Result, MAX_PATH);
   SHGetSpecialFolderPath(0, PChar(Result), CSIDLFolder, True);
@@ -373,7 +307,7 @@ end;
 {$ENDIF CPUX86}
 
 
-function wbLoadMOHookFile: Boolean;
+function xeLoadMOHookFile: Boolean;
 var
   HookDll : HMODULE;
   Init    : function(logLevel: Integer; profileName: LPCWSTR): BOOL; cdecl;
@@ -410,7 +344,7 @@ begin
   if not wbFindCmdLineParam('T', wbTempPath) then
     wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
   else
-    wbRemoveTempPath := not DirectoryExists(wbTempPath);
+    xeRemoveTempPath := not DirectoryExists(wbTempPath);
 
   if not wbFindCmdLineParam('D', wbDataPath) then begin
     wbDataPath := CheckAppPath;
@@ -479,8 +413,8 @@ begin
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
-    wbMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
-    if wbMyProfileName = '' then begin
+    xeMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
+    if xeMyProfileName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
       Exit;
     end;
@@ -489,9 +423,9 @@ begin
       gmTES3:
         wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
       gmFO76:
-        wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameNameReg + '\';
+        wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameNameReg + '\';
     else
-      wbMyGamesTheGamePath := wbMyProfileName + 'My Games\' + wbGameName2 + '\';
+      wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
     end;
 
     if wbGameMode in [gmFO3, gmFNV] then
@@ -521,12 +455,12 @@ begin
   end;
   wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
 
-  wbParamIndex := ParamIndex;
+  xeParamIndex := ParamIndex;
   if not wbFindCmdLineParam('P', wbPluginsFileName) then
-    if not (wbFindNextValidCmdLineFileName(wbParamIndex, wbPluginsFileName) and SameText(ExtractFileExt(wbPluginsFileName), '.txt'))
-       or wbCheckForValidExtension(wbPluginsFileName)
+    if not (xeFindNextValidCmdLineFileName(xeParamIndex, wbPluginsFileName) and SameText(ExtractFileExt(wbPluginsFileName), '.txt'))
+       or xeCheckForValidExtension(wbPluginsFileName)
     then begin
-      wbParamIndex := ParamIndex;
+      xeParamIndex := ParamIndex;
       wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
       if wbPluginsFileName = '' then begin
         ShowMessage('Fatal: Could not determine the local application data folder');
@@ -539,9 +473,9 @@ begin
     wbPluginsFileName := ExpandFileName(wbPluginsFileName);
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
-  wbSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
-  if not FileExists(wbSettingsFileName) then
-    wbSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+  xeSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
+  if not FileExists(xeSettingsFileName) then
+    xeSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
 
   wbBackupPath := '';
   if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
@@ -560,7 +494,7 @@ begin
   if wbDontCache then
     wbCachePath := '';
 
-  wbFindCmdLineParam('R', wbLogFile);
+  wbFindCmdLineParam('R', xeLogFile);
 end;
 
 var
@@ -640,14 +574,14 @@ end;
 function CheckForcedMode: Boolean;
 var
   s: string;
-  i: integer;
+  i: Integer;
 begin
   Result := False;
   // there is a game specific script provided to execute
   // go into 'script' tool mode and detect game mode by script's extension
   i := 1;
-  if wbFindCmdLineParam('script', s) or wbFindNextValidCmdLineFileName(i, s) then begin
-    wbScriptToRun := s;
+  if wbFindCmdLineParam('script', s) or xeFindNextValidCmdLineFileName(i, s) then begin
+    xeScriptToRun := s;
     s := ExtractFileExt(s);
     i := Pos(UpperCase('pas'), UpperCase(s));
     if (i > 0) and (i = Length(s) - 2) then begin
@@ -657,7 +591,7 @@ begin
   end;
 end;
 
-function wbDoInit: Boolean;
+function xeDoInit: Boolean;
 var
   s: string;
   ToolModes: TwbSetOfMode;
@@ -902,7 +836,7 @@ begin
   if wbDontCacheLoad and wbDontCacheSave then
     wbDontCache := True;
 
-  DoInitPath(wbParamIndex);
+  DoInitPath(xeParamIndex);
 
   // specific Game settings
   case wbGameMode of
@@ -1020,48 +954,48 @@ begin
   if wbToolMode = tmEdit then begin
     if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
       or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
-      wbQuickShowConflicts := True;
+      xeQuickShowConflicts := True;
 
     if   FindCmdLineSwitch('veryquickshowconflicts') or FindCmdLineSwitch('vqsc')
       or ExeName.Contains('veryquickshowconflicts') or ExeName.Contains('vqsc') then begin
-      wbQuickShowConflicts := True;
-      wbVeryQuickShowConflicts := True;
-      wbAutoLoad := True;
+      xeQuickShowConflicts := True;
+      xeVeryQuickShowConflicts := True;
+      xeAutoLoad := True;
     end;
 
     if FindCmdLineSwitch('autoload') then
-      wbAutoLoad := True;
+      xeAutoLoad := True;
 
     if FindCmdLineSwitch('autoexit') then
-      wbAutoExit := True;
+      xeAutoExit := True;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
       or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
-      wbAutoLoad := True;
-      wbAutoGameLink := True;
+      xeAutoLoad := True;
+      xeAutoGameLink := True;
     end;
 
-    if wbAutoLoad then
-      if wbQuickShowConflicts then
-        wbVeryQuickShowConflicts := True;
+    if xeAutoLoad then
+      if xeQuickShowConflicts then
+        xeVeryQuickShowConflicts := True;
 
     if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
       or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then
-      wbQuickClean := True;
+      xeQuickClean := True;
 
     if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
       or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
-      wbQuickClean := True;
-      wbQuickCleanAutoSave := wbQuickClean;
+      xeQuickClean := True;
+      xeQuickCleanAutoSave := xeQuickClean;
     end;
   end;
 
   i := 0;
-  if wbQuickShowConflicts then
+  if xeQuickShowConflicts then
     Inc(i);
-  if wbQuickClean then
+  if xeQuickClean then
     Inc(i);
-  if wbAutoGameLink then
+  if xeAutoGameLink then
     Inc(i);
 
   if i > 1 then begin
@@ -1069,7 +1003,7 @@ begin
     Exit(False);
   end;
 
-  if wbQuickClean then begin
+  if xeQuickClean then begin
     wbIKnowWhatImDoing := True;
   end;
 
@@ -1093,7 +1027,7 @@ begin
   else if FindCmdLineSwitch('hidefixup') then
     wbShowInternalEdit := False;
 
-  if wbQuickClean then begin
+  if xeQuickClean then begin
     wbFixupPGRD := True;
     wbAllowInternalEdit := True;
     wbSimpleRecords := False;
@@ -1202,7 +1136,7 @@ begin
     wbPrettyFormID := False;
 
   if wbToolMode in wbPluginModes then // look for the file name
-    if not wbFindNextValidCmdLinePlugin(wbParamIndex, wbPluginToUse, wbDataPath) then begin
+    if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, wbDataPath) then begin
       ShowMessage(wbToolName+' mode requires a valid plugin name!');
       Exit(False);
     end;
@@ -1274,15 +1208,15 @@ begin
     wbForceMarkModified := False;
 
 
-  if wbVeryQuickShowConflicts then
+  if xeVeryQuickShowConflicts then
     wbSubMode := 'Very Quick Show Conflicts'
-  else if wbQuickShowConflicts then
+  else if xeQuickShowConflicts then
     wbSubMode := 'Quick Show Conflicts'
-  else if wbQuickCleanAutoSave then
+  else if xeQuickCleanAutoSave then
     wbSubMode := 'Quick Auto Clean'
-  else if wbQuickClean then
+  else if xeQuickClean then
     wbSubMode := 'Quick Clean'
-  else if wbAutoGameLink then
+  else if xeAutoGameLink then
     wbSubMode := 'Auto Game Link';
 
   wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
@@ -1295,10 +1229,10 @@ begin
   if wbSubMode <> '' then
     wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
 
-  if wbAutoLoad then
+  if xeAutoLoad then
     wbApplicationTitle := wbApplicationTitle + ' [Auto Load]';
 
-  if wbAutoExit then
+  if xeAutoExit then
     wbApplicationTitle := wbApplicationTitle + ' [Auto Exit]';
 
   if FindCmdLineSwitch('nobuildrefs') then
@@ -1316,7 +1250,7 @@ begin
 
 end;
 
-procedure SwitchToCoSave;
+procedure xeSwitchToCoSave;
 begin
   case wbGameMode of
     gmFNV:  SwitchToFNVCoSave;
@@ -1328,7 +1262,7 @@ begin
   end;
 end;
 
-procedure wbInitStyles;
+procedure xeInitStyles;
 begin
     for var s in TDirectory.GetFiles(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'Themes', '*.vsf' ) do try
       TStyleManager.LoadFromFile(s);

@@ -102,6 +102,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Core\wbBSArchive.pas"/>
+        <DCCReference Include="Core\wbCommandLine.pas"/>
         <DCCReference Include="Core\wbStreams.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

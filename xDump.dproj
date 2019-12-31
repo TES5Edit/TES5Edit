@@ -105,6 +105,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="Core\wbBSA.pas"/>
+        <DCCReference Include="Core\wbCommandLine.pas"/>
         <DCCReference Include="Core\wbSort.pas"/>
         <DCCReference Include="Core\wbInterface.pas"/>
         <DCCReference Include="Core\wbSaveInterface.pas"/>

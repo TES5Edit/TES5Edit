@@ -153,7 +153,7 @@ procedure TfrmRichEdit.FormCreate(Sender: TObject);
 begin
   btnTOC.PushLike := True;
 
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   if wbThemesSupported then
     with TVclStylesSystemMenu.Create(Self) do begin

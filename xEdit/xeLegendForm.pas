@@ -109,7 +109,7 @@ var
 begin
   DoubleBuffered := True;
   dgLegend.DoubleBuffered := True;
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   Settings := frmMain.Settings;
 

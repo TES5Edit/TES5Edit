@@ -3757,7 +3757,7 @@ end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
 begin
-  Result := not wbIsPlugin(flFileName);
+  Result := not wbIsModule(flFileName);
 end;
 
 function TwbFile.GetIsRemoveable: Boolean;
@@ -19417,7 +19417,7 @@ begin
   if FilesMap.Find(FileName, i) then
     Result := IwbFile(Pointer(FilesMap.Objects[i]))
   else begin
-    if not wbIsPlugin(FileName) then
+    if not wbIsModule(FileName) then
       Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
     else
       Result := TwbFile.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
@@ -19443,7 +19443,7 @@ begin
     try
       if FilesMap.Find(FileName, i) then
         _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
-      else if not wbIsPlugin(FileName) then
+      else if not wbIsModule(FileName) then
         _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil)
       else
         _File := TwbFile.Create(FileName, -1, '', [fsOnlyHeader], nil);

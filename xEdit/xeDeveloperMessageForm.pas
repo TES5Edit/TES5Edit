@@ -118,7 +118,7 @@ procedure TfrmDeveloperMessage.FormCreate(Sender: TObject);
 var
   Stream: TStream;
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   Stream := fcImage.CreateReadStream;
   try

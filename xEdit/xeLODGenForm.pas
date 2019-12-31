@@ -176,7 +176,7 @@ var
   i: integer;
   v: double;
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   i := 1024;
   while i <= 8192 do begin

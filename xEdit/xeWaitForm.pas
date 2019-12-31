@@ -141,7 +141,7 @@ end;
 
 procedure TfrmWait.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 end;
 
 procedure TfrmWait.fwDoUpdate;

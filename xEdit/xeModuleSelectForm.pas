@@ -379,7 +379,7 @@ end;
 
 procedure TfrmModuleSelect.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
   //vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
 
   if wbThemesSupported then

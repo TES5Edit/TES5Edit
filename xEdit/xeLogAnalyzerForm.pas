@@ -713,7 +713,7 @@ end;
 
 procedure TfrmLogAnalyzer.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 end;
 
 procedure TfrmLogAnalyzer.FormShow(Sender: TObject);

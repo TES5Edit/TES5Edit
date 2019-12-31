@@ -42,6 +42,7 @@ uses
   xeInit in 'xEdit\xeInit.pas',
   wbBetterStringList in 'Core\wbBetterStringList.pas',
   wbBSA in 'Core\wbBSA.pas',
+  wbCommandLine in 'Core\wbCommandLine.pas',
   wbDataFormat in 'Core\wbDataFormat.pas',
   wbDataFormatMaterial in 'Core\wbDataFormatMaterial.pas',
   wbDataFormatMisc in 'Core\wbDataFormatMisc.pas',
@@ -114,9 +115,9 @@ begin
   Application.UpdateFormatSettings := False;
   Application.HintHidePause := 10000;
 
-  wbInitStyles;
+  xeInitStyles;
 
-  if not wbDoInit then
+  if not xeDoInit then
     Exit;
 
   {$IFDEF EXCEPTION_LOGGING_ENABLED}

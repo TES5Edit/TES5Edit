@@ -297,7 +297,7 @@ var
   lLeft, lTop, lWidth, lHeight : Integer;
   lRect: TRect;
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   Settings := frmMain.Settings;
 

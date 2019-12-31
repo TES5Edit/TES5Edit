@@ -77,7 +77,7 @@ end;
 
 procedure TfrmLocalizePlugin.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 end;
 
 end.

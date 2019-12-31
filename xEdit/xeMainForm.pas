@@ -1194,7 +1194,7 @@ function LockProcessMessages: Integer;
 function UnLockProcessMessages: Integer;
 procedure DoProcessMessages;
 
-procedure wbApplyFontAndScale(aForm: TForm);
+procedure xeApplyFontAndScale(aForm: TForm);
 
 implementation
 
@@ -1433,7 +1433,7 @@ begin
   if wbDontSave then
     Exit;
 
-  if not wbDontBackup and not DirectoryExists(wbBackupPath) then
+  if not xeDontBackup and not DirectoryExists(wbBackupPath) then
     if not ForceDirectories(wbBackupPath) then
       wbBackupPath := wbDataPath;
 
@@ -1465,7 +1465,7 @@ begin
       lBackup := s + '_' + i.ToString;
       Inc(i);
     end;
-    if not wbDontBackup then begin
+    if not xeDontBackup then begin
       // backup original file
       wbProgress('Renaming "' + lTo + '" to "' + lBackup + '".');
       if not RenameFile(lTo, lBackup) then begin
@@ -1500,7 +1500,7 @@ begin
 
   if not (wbGameMode in wbOrderFromPluginsTxt) then
     if OldDateTime <> 0 then
-      if wbIsPlugin(lTo) then try
+      if wbIsModule(lTo) then try
       TFile.SetLastWriteTime(lTo, OldDateTime);
     except
       s := 'Could not set last modified time of "' + lTo + '".';
@@ -1545,7 +1545,7 @@ begin
   if not Assigned(FilesToRename) then
     Exit;
 
-  if not wbDontBackup and not DirectoryExists(wbBackupPath) then
+  if not xeDontBackup and not DirectoryExists(wbBackupPath) then
     if not ForceDirectories(wbBackupPath) then
       wbBackupPath := wbDataPath;
 
@@ -2122,7 +2122,7 @@ begin
       NodeDatas[0].ConflictAll := caOnlyOne;
       NodeDatas[0].ConflictThis := ctOnlyOne;
     end else if Length(NodeDatas) = 2 then begin
-      if wbQuickShowConflicts then begin
+      if xeQuickShowConflicts then begin
         aConflictAll := caOverride;
         NodeDatas[0].ConflictAll := caOverride;
         NodeDatas[1].ConflictAll := caOverride;
@@ -2188,7 +2188,7 @@ begin
       aConflictAll := caOnlyOne;
       NodeDatas[0].ConflictAll := caOnlyOne;
       NodeDatas[0].ConflictThis := ctOnlyOne;
-    end else if wbQuickShowConflicts and (Length(NodeDatas) = 2) then begin
+    end else if xeQuickShowConflicts and (Length(NodeDatas) = 2) then begin
       aConflictAll := caOverride;
       NodeDatas[0].ConflictAll := caOverride;
       NodeDatas[1].ConflictAll := caOverride;
@@ -3207,7 +3207,7 @@ begin
     CompareFile := FileName;
     Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
-    if wbIsPlugin(CompareFile) then
+    if wbIsModule(CompareFile) then
       fPath := wbDataPath
     else
       fPath := wbSavePath;
@@ -3271,7 +3271,7 @@ begin
     Settings.WriteString('CreateDeltaPatch', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
 
-    if not wbIsPlugin(CompareFile) then begin
+    if not wbIsModule(CompareFile) then begin
       ShowMessage('Delta patch can only be created for modules');
       Exit;
     end;
@@ -4649,33 +4649,33 @@ procedure TfrmMain.DoRunScript;
   end;
 
 begin
-  if wbScriptToRun = '' then
-    wbScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
-  else if not TPath.IsPathRooted(ExtractFilePath(wbScriptToRun)) then
-    wbScriptToRun := wbScriptsPath + wbScriptToRun;
+  if xeScriptToRun = '' then
+    xeScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
+  else if not TPath.IsPathRooted(ExtractFilePath(xeScriptToRun)) then
+    xeScriptToRun := wbScriptsPath + xeScriptToRun;
 
-  if not FileExists(wbScriptToRun) then
+  if not FileExists(xeScriptToRun) then
     with TOpenDialog.Create(Self) do try
       Title := 'Select a script to execute';
       Filter := 'Script files (*.pas)|*.pas';
       InitialDir := wbProgramPath;
       if Execute then
-        wbScriptToRun := FileName;
+        xeScriptToRun := FileName;
     finally
       Free;
     end;
 
-  if FileExists(wbScriptToRun) then begin
-    wbScriptsPath := ExtractFilePath(wbScriptToRun);
+  if FileExists(xeScriptToRun) then begin
+    wbScriptsPath := ExtractFilePath(xeScriptToRun);
     with TStringList.Create do try
-      LoadFromFile(wbScriptToRun);
+      LoadFromFile(xeScriptToRun);
       SelectRootNodes(vstNav);
-      ApplyScript(ChangeFileExt(ExtractFileName(wbScriptToRun),''), Text);
+      ApplyScript(ChangeFileExt(ExtractFileName(xeScriptToRun),''), Text);
     finally
       Free;
     end;
   end else
-    PostAddMessage('Could not open script: ' + wbScriptToRun);
+    PostAddMessage('Could not open script: ' + xeScriptToRun);
 
   PostAddMessage('You can close this application now.');
 end;
@@ -4777,7 +4777,7 @@ begin
 
   if wbShouldLoadMOHookFile then begin
     AddMessage('Using Mod Organizer Profile: ' + wbMOProfile);
-    if not wbLoadMOHookFile then begin
+    if not xeLoadMOHookFile then begin
       AddMessage('Error: Failed to load Mod Organizer Profile');
       Exit;
     end;
@@ -4785,7 +4785,7 @@ begin
 
   AddMessage('Using '+wbGameName2+' Data Path: ' + wbDataPath);
 
-  if not (wbDontSave or wbDontBackup) then
+  if not (wbDontSave or xeDontBackup) then
     AddMessage('Using Backup Path: ' + wbBackupPath);
 
   AddMessage('Using Scripts Path: ' + wbScriptsPath);
@@ -4839,11 +4839,11 @@ begin
       AddMessage('Warning: Could not find plugin list');
   end;
 
-  AddMessage('Using settings file: ' + wbSettingsFileName);
+  AddMessage('Using settings file: ' + xeSettingsFileName);
 
-  if not Assigned(Settings) and (wbSettingsFileName <> '') then
-    if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
-      Settings := TMemIniFile.Create(wbSettingsFileName);
+  if not Assigned(Settings) and (xeSettingsFileName <> '') then
+    if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
+      Settings := TMemIniFile.Create(xeSettingsFileName);
 
   if not Assigned(Settings) then begin
     ShowMessage('Could not open or create the settings file.');
@@ -4901,7 +4901,7 @@ begin
         finally
           Stream.Free;
         end;
-        if (i < wbWhatsNewVersion) and not wbAutoLoad then begin
+        if (i < wbWhatsNewVersion) and not xeAutoLoad then begin
           ShowModal;
           if cbDontShowAgain.Checked then begin
             Settings.WriteInteger('WhatsNew', 'Version', wbWhatsNewVersion);
@@ -4921,7 +4921,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if not wbPatron or not wbAutoLoad then
+    if not wbPatron or not xeAutoLoad then
       ShowDeveloperMessage;
   end;
 
@@ -4985,28 +4985,28 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
+        if ((wbToolMode in wbPluginModes) or xeQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
           Modules.DeactivateAll;
 
-          if (wbPluginToUse <> '') or not wbQuickClean then
-            with wbModuleByName(wbPluginToUse)^ do
+          if (xePluginToUse <> '') or not xeQuickClean then
+            with wbModuleByName(xePluginToUse)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
-                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+                ShowMessage('Selected plugin "' + xePluginToUse + '" does not exist');  // which we checked previously anyway :(
                 frmMain.Close;
                 Exit;
               end;
 
           // More plugins requested ?
-          while wbFindNextValidCmdLinePlugin(wbParamIndex, s, wbDataPath) do begin
+          while xeFindNextValidCmdLineModule(xeParamIndex, s, wbDataPath) do begin
             with wbModuleByName(s)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
               end else begin
-                ShowMessage('Selected plugin "' + wbPluginToUse + '" does not exist');  // which we checked previously anyway :(
+                ShowMessage('Selected plugin "' + xePluginToUse + '" does not exist');  // which we checked previously anyway :(
                 frmMain.Close;
                 Exit;
               end;
@@ -5015,8 +5015,8 @@ begin
 
         sl.Clear;
         if wbToolSource in [tsPlugins] then begin
-          if (wbToolMode in wbPluginModes) or (wbAutoLoad and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
-            if wbQuickClean then
+          if (wbToolMode in wbPluginModes) or (xeAutoLoad and (GetAsyncKeyState(VK_CONTROL) >= 0)) then try
+            if xeQuickClean then
               if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
                 ShowMessage('Exactly one module must be selected for Quick Clean mode.');
                 frmMain.Close;
@@ -5028,7 +5028,7 @@ begin
 
           if sl.Count < 1 then
             with TfrmModuleSelect.Create(Self) do try
-              if wbQuickClean then begin
+              if xeQuickClean then begin
                 MinSelect := 1;
                 MaxSelect := 1;
                 HideFlag := mfIsGameMaster;
@@ -5066,7 +5066,7 @@ begin
         Exit;
       end;
 
-      if wbQuickClean then begin
+      if xeQuickClean then begin
         if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
           MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
           frmMain.Close;
@@ -5082,23 +5082,23 @@ begin
       if wbToolSource = tsSaves then begin
         s := sl[0];
         case wbGameMode of
-          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave
+          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
+          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave
+          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
+          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
-          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then SwitchToCoSave;
+          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
+          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
+          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
           frmMain.Close;
@@ -5171,7 +5171,7 @@ begin
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
 
-      if wbQuickClean or wbQuickShowConflicts then
+      if xeQuickClean or xeQuickShowConflicts then
         wbBuildRefs := False;
 
       CleanupRefCache;
@@ -5926,8 +5926,8 @@ end;
 procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
 begin
   SaveLog(wbProgramPath + wbAppName + wbToolName + '_log.txt', aAllowReplace);
-  if wbLogFile <> '' then
-    SaveLog(wbLogFile, aAllowReplace);
+  if xeLogFile <> '' then
+    SaveLog(xeLogFile, aAllowReplace);
 end;
 
 procedure TfrmMain.SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
@@ -6008,7 +6008,7 @@ begin
 
   SaveLogs(True);
 
-  if DirectoryExists(wbTempPath) and wbRemoveTempPath then
+  if DirectoryExists(wbTempPath) and xeRemoveTempPath then
     DeleteDirectory(wbTempPath); // remove temp folder unless it existed
 
   tmrCheckUnsaved.Enabled := False;
@@ -6037,7 +6037,7 @@ begin
   ExitCode := CheckResult;
 end;
 
-procedure wbApplyFontAndScale(aForm: TForm);
+procedure xeApplyFontAndScale(aForm: TForm);
 var
   OldSize : Integer;
   Font    : TFont;
@@ -6067,17 +6067,17 @@ end;
 type
   TWinControlHacker=class(TWinControl);
 
-procedure wbSetDoubleBuffered(aControl: TWinControl);
+procedure xeSetDoubleBuffered(aControl: TWinControl);
 var
   i: Integer;
 begin
   TWinControlHacker(aControl).DoubleBuffered := True;
   for i := 0 to Pred(aControl.ControlCount) do
     if aControl.Controls[i] is TWinControl then
-      wbSetDoubleBuffered(TWinControl(aControl.Controls[i]));
+      xeSetDoubleBuffered(TWinControl(aControl.Controls[i]));
 end;
 
-procedure wbLoadAndApplyFontAndScale(aIni: TMemIniFile; aSection, aName: string; aWinControl: TWinControl);
+procedure xeLoadAndApplyFontAndScale(aIni: TMemIniFile; aSection, aName: string; aWinControl: TWinControl);
 var
   OldSize : Integer;
   NewSize : Integer;
@@ -6116,14 +6116,14 @@ begin
   wbVarPointer := varPointer;
 
   if wbThemesSupported then try
-    if not Assigned(Settings) and (wbSettingsFileName <> '')  then
-      if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
-        Settings := TMemIniFile.Create(wbSettingsFileName);
+    if not Assigned(Settings) and (xeSettingsFileName <> '')  then
+      if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
+        Settings := TMemIniFile.Create(xeSettingsFileName);
     if Assigned(Settings) then
       TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
   except end;
 
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
   bnMainMenu.StyleElements := bnMainMenu.StyleElements - [seFont];
   bnMainMenu.Font.Style := bnMainMenu.Font.Style + [fsBold];
   bnMainMenu.Font.Size := Trunc(bnMainMenu.Font.Size * 1.5);
@@ -6146,18 +6146,18 @@ begin
     bnForward.Caption := Chr($E00F);
   end;
 
-  wbSetDoubleBuffered(Self);
+  xeSetDoubleBuffered(Self);
 
   //try to set the style and window position as early as possible to reduce flicker
   try
-    if not Assigned(Settings) and (wbSettingsFileName <> '')  then
-      if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
-        Settings := TMemIniFile.Create(wbSettingsFileName);
+    if not Assigned(Settings) and (xeSettingsFileName <> '')  then
+      if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
+        Settings := TMemIniFile.Create(xeSettingsFileName);
     if Assigned(Settings) then begin
-      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstNav);
-      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstView);
-      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', pnlTop);
-      wbLoadAndApplyFontAndScale(Settings, 'UI', 'FontMessages', mmoMessages);
+      xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstNav);
+      xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', vstView);
+      xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontRecords', pnlTop);
+      xeLoadAndApplyFontAndScale(Settings, 'UI', 'FontMessages', mmoMessages);
 
       // skip reading main form position if Shift is pressed
       if GetKeyState(VK_SHIFT) >= 0 then begin
@@ -6216,9 +6216,9 @@ begin
   Memo1.WordWrap := True;
 
   try
-    if not Assigned(Settings) and (wbSettingsFileName <> '')  then
-      if ForceDirectories(ExtractFilePath(wbSettingsFileName)) then
-        Settings := TMemIniFile.Create(wbSettingsFileName);
+    if not Assigned(Settings) and (xeSettingsFileName <> '')  then
+      if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
+        Settings := TMemIniFile.Create(xeSettingsFileName);
     if Assigned(Settings) then begin
       ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
       RowHeight := Settings.ReadInteger('Options', 'RowHeight', RowHeight);
@@ -10773,7 +10773,7 @@ begin
     AssignPersWrldChild or
     ModGroupsEnabled or
     OnlyShowMasterAndLeafs or
-    wbQuickShowConflicts or
+    xeQuickShowConflicts or
     not InheritConflictByParent then begin
 
     MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active and ModGroups, "Show Master and Leafs", and "Quick Show Conflict" mode disabled.', mtError, [mbOk], 0);
@@ -11066,7 +11066,7 @@ begin
     AssignPersWrldChild or
     ModGroupsEnabled or
     OnlyShowMasterAndLeafs or
-    wbQuickShowConflicts or
+    xeQuickShowConflicts or
     not InheritConflictByParent then begin
 
     MessageDlg('To use this function you need to apply a filter with *only* the option "Conflict status inherited by parent" active and ModGroups, "Show Master and Leafs", and "Quick Show Conflict" mode disabled.', mtError, [mbOk], 0);
@@ -13165,8 +13165,8 @@ begin
   InheritConflictByParent := True;
 
   FilterPreset := True;
-  FilterNoGameMaster := wbVeryQuickShowConflicts;
-  FilterConflictOnly := wbVeryQuickShowConflicts;
+  FilterNoGameMaster := xeVeryQuickShowConflicts;
+  FilterConflictOnly := xeVeryQuickShowConflicts;
   try
     mniNavFilterApplyClick(Sender);
   finally
@@ -13236,16 +13236,16 @@ begin
   AssignPersWrldChild := False;
   InheritConflictByParent := True;
 
-  if ModGroupsEnabled or OnlyShowMasterAndLeafs or wbQuickShowConflicts then begin
+  if ModGroupsEnabled or OnlyShowMasterAndLeafs or xeQuickShowConflicts then begin
     if ModGroupsEnabled then
       wbProgress('Disabling ModGroups');
     if OnlyShowMasterAndLeafs then
       wbProgress('Disabling "Only Show Master and Leafs"');
-    if wbQuickShowConflicts then
+    if xeQuickShowConflicts then
       wbProgress('Disabling "Quick Show Conflict" mode');
     ModGroupsEnabled := False;
     OnlyShowMasterAndLeafs := False;
-    wbQuickShowConflicts := False;
+    xeQuickShowConflicts := False;
     ResetAllConflict;
   end;
 
@@ -13317,16 +13317,16 @@ begin
   AssignPersWrldChild := False;
   InheritConflictByParent := True;
 
-  if ModGroupsEnabled or OnlyShowMasterAndLeafs or wbQuickShowConflicts then begin
+  if ModGroupsEnabled or OnlyShowMasterAndLeafs or xeQuickShowConflicts then begin
     if ModGroupsEnabled then
       wbProgress('Disabling ModGroups');
     if OnlyShowMasterAndLeafs then
       wbProgress('Disabling "Only Show Master and Leafs"');
-    if wbQuickShowConflicts then
+    if xeQuickShowConflicts then
       wbProgress('Disabling "Quick Show Conflict" mode');
     ModGroupsEnabled := False;
     OnlyShowMasterAndLeafs := False;
-    wbQuickShowConflicts := False;
+    xeQuickShowConflicts := False;
     ResetAllConflict;
   end;
 
@@ -14610,7 +14610,7 @@ var
   SelectedNodes               : TNodeArray;
   NodeData                    : PNavNodeData;
 begin
-  if wbQuickClean then begin
+  if xeQuickClean then begin
     aFiles := nil;
     wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
     begin
@@ -14905,9 +14905,9 @@ begin
           if not aSilent then
             if ShowModal <> mrOk then
               Exit(srAbort);
-          wbDontBackup := not cbBackup.Checked;
+          xeDontBackup := not cbBackup.Checked;
           if Assigned(Settings) then begin
-            Settings.WriteBool(frmMain.Name, 'DontBackup', wbDontBackup);
+            Settings.WriteBool(frmMain.Name, 'DontBackup', xeDontBackup);
             Settings.UpdateFile;
           end;
           wbStartTime := Now;
@@ -16485,7 +16485,7 @@ begin
   else if wbToolMode = tmScript then
     DoRunScript;
 
-  if wbAutoExit then
+  if xeAutoExit then
     tmrShutdown.Enabled := True;
 end;
 
@@ -16567,8 +16567,8 @@ begin
   end;
 
   if (wbToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
-        tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not wbMasterUpdateDone then begin
-    wbMasterUpdateDone := True;
+        tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not xeMasterUpdateDone then begin
+    xeMasterUpdateDone := True;
     ChangesMade := False;
     if wbLoaderError then begin
       wbDontSave := True;
@@ -16586,7 +16586,7 @@ begin
     end else try
       if (wbToolMode = tmSortAndCleanMasters) then begin
         for i := Low(Files) to High(Files) do
-          if wbPluginsToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
+          if xeModulesToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
             Files[i].SortMasters;
             Files[i].CleanMasters;
             ChangesMade := ChangesMade or Files[i].Modified;
@@ -19502,7 +19502,7 @@ begin
     Done := True;
   end
   else if (SameText(Identifier, 'wbSettingsFileName') and (Args.Count = 0)) then begin
-    Value := wbSettingsFileName;
+    Value := xeSettingsFileName;
     Done := True;
   end
   else if (SameText(Identifier, 'wbSettings') and (Args.Count = 0)) then begin
@@ -20160,8 +20160,8 @@ begin
 
         ModGroups := nil;
 
-        if not (wbQuickClean or (wbToolMode in wbAutoModes)) then
-          if wbQuickShowConflicts or wbAutoLoad then begin
+        if not (xeQuickClean or (wbToolMode in wbAutoModes)) then
+          if xeQuickShowConflicts or xeAutoLoad then begin
             ModGroups := wbModGroupsByName;
             wbModGroupsByName(False).ShowValidationMessages;
           end else
@@ -20186,10 +20186,10 @@ begin
         mniModGroupsEnabled.Checked := ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ModGroupsEnabled;
 
-        if wbQuickShowConflicts then
+        if xeQuickShowConflicts then
           mniNavFilterConflicts.Click;
 
-        if wbQuickClean then begin
+        if xeQuickClean then begin
           pnlNavContent.Visible := False;
           try
             with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
@@ -20220,7 +20220,7 @@ begin
                 WasUnsaved := True;
               end;
 
-            if wbQuickCleanAutoSave then begin
+            if xeQuickCleanAutoSave then begin
               if SaveChanged(True) >= srAbort then
                 Exit;
 
@@ -20250,7 +20250,7 @@ begin
                     WasUnsaved := True;
                   end;
 
-                if wbQuickCleanAutoSave then begin
+                if xeQuickCleanAutoSave then begin
                   if SaveChanged(True) >= srAbort then
                     Exit;
 
@@ -20272,14 +20272,14 @@ begin
           finally
             pnlNavContent.Visible := True;
             vstNav.Invalidate;
-            wbQuickClean := False;
+            xeQuickClean := False;
             wbProgress('Quick Clean mode finished.');
           end;
-          if wbAutoExit then
+          if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;
 
-        if wbAutoGameLink then begin
+        if xeAutoGameLink then begin
           pmuMainPopup(Self);
           if mniMainPluggyLinkReference.Visible then begin
             mniMainPluggyLinkReference.Checked := True;
@@ -20315,7 +20315,7 @@ begin
             MainRecord : IwbMainRecord;
           begin
             HideRemoveMessage := True;
-            wbQuickClean := True;
+            xeQuickClean := True;
 
             for i := High(Files) downto Low(Files) do
               Files[i].Hide;
@@ -20361,7 +20361,7 @@ begin
 
             wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-            wbQuickClean := True;
+            xeQuickClean := True;
             mniNavFilterForCleaning.Click;
             JumpTo(NewFile.Header, False);
             vstNav.ClearSelection;
@@ -20372,7 +20372,7 @@ begin
           end);
 
         finally
-          wbQuickClean := False;
+          xeQuickClean := False;
           HideRemoveMessage := False;
         end;
       end;
@@ -20697,7 +20697,7 @@ begin
             s := ltLoadList[i]
           else begin
             s := ltDataPath + ltLoadList[i];
-            if not wbIsPlugin(ltLoadList[i]) then
+            if not wbIsModule(ltLoadList[i]) then
               if wbToolSource in [tsSaves] then
                 if not FileExists(s) then // Assume its a save in the save path
                   s := wbSavePath + ltLoadList[i];

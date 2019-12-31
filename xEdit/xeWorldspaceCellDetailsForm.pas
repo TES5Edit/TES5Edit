@@ -44,7 +44,7 @@ uses
 
 procedure TfrmWorldspaceCellDetails.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 end;
 
 procedure TfrmWorldspaceCellDetails.rbTemporaryClick(Sender: TObject);
@@ -52,7 +52,7 @@ begin
   sedX.SetFocus;
 end;
 
-function wbGetCellDetailsForWorldspaceImplementation(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
+function xeGetCellDetailsForWorldspaceImplementation(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 begin
   with TfrmWorldspaceCellDetails.Create(frmMain) do try
     Result := ShowModal = mrOk;
@@ -65,5 +65,5 @@ begin
 end;
 
 initialization
-  wbGetCellDetailsForWorldspaceCallback := wbGetCellDetailsForWorldspaceImplementation;
+  wbGetCellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
 end.

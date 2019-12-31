@@ -185,7 +185,7 @@ var
   cb: TComboBox;
   rb: TRadioButton;
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   if wbThemesSupported then begin
     with TVclStylesSystemMenu.Create(Self) do begin

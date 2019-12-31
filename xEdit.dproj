@@ -164,6 +164,7 @@
         <DCCReference Include="xEdit\xeInit.pas"/>
         <DCCReference Include="Core\wbBetterStringList.pas"/>
         <DCCReference Include="Core\wbBSA.pas"/>
+        <DCCReference Include="Core\wbCommandLine.pas"/>
         <DCCReference Include="Core\wbDataFormat.pas"/>
         <DCCReference Include="Core\wbDataFormatMaterial.pas"/>
         <DCCReference Include="Core\wbDataFormatMisc.pas"/>

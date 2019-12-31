@@ -99,7 +99,7 @@ end;
 
 procedure TfrmFileSelect.FormCreate(Sender: TObject);
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   if wbThemesSupported then
     with TVclStylesSystemMenu.Create(Self) do begin

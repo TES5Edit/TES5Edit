@@ -29,6 +29,7 @@ uses
   Threading,
   Diagnostics,
   wbBSArchive in 'Core\wbBSArchive.pas',
+  wbCommandLine in 'Core\wbCommandLine.pas',
   wbStreams in 'Core\wbStreams.pas';
 
 const
@@ -39,48 +40,6 @@ const
 
 var
   bMultiThreaded: Boolean = False;
-
-//======================================================================
-function wbFindCmdLineParam(const aSwitch     : string;
-                            const aChars      : TSysCharSet;
-                                  aIgnoreCase : Boolean;
-                              out aValue      : string)
-                                              : Boolean; overload;
-var
-  i : Integer;
-  s : string;
-begin
-  Result := False;
-  aValue := '';
-  for i := 1 to ParamCount do begin
-    s := ParamStr(i);
-    if (aChars = []) or CharInSet(s[1], aChars) then
-      if aIgnoreCase then begin
-        if AnsiCompareText(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
-          if (length(s)>(length(aSwitch)+2)) and (s[Length(aSwitch) + 2] = ':') then begin
-            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
-            Result := True;
-          end;
-          Exit;
-        end;
-      end else
-        if AnsiCompareStr(Copy(s, 2, Length(aSwitch)), aSwitch) = 0 then begin
-          if s[Length(aSwitch) + 2] = ':' then begin
-            aValue := Copy(s, Length(aSwitch) + 3, MaxInt);
-            Result := True;
-          end;
-          Exit;
-        end;
-  end;
-end;
-
-//======================================================================
-function wbFindCmdLineParam(const aSwitch : string;
-                              out aValue  : string)
-                                          : Boolean; overload;
-begin
-  Result := wbFindCmdLineParam(aSwitch, SwitchChars, True, aValue);
-end;
 
 //======================================================================
 function HexToInt(s: string): Cardinal;
@@ -95,8 +54,6 @@ function IfThen(aCondition: Boolean; const aValue1, aValue2: string): string; in
 begin
   if aCondition then Result := aValue1 else Result := aValue2;
 end;
-
-
 
 //======================================================================
 // Info

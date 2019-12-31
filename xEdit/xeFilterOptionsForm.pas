@@ -122,7 +122,7 @@ var
   i : Integer;
   s : string;
 begin
-  wbApplyFontAndScale(Self);
+  xeApplyFontAndScale(Self);
 
   clbConflictAll.Items.Add('Single Record');
   clbConflictAll.Items.Add('Multiple but no conflict');
