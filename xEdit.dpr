@@ -89,14 +89,16 @@ uses
   xeModuleSelectForm in 'xEdit\xeModuleSelectForm.pas', {frmModuleSelect}
   xeOptionsForm in 'xEdit\xeOptionsForm.pas' {frmOptions},
   xeRichEditForm in 'xEdit\xeRichEditForm.pas' {frmRichEdit},
-  xeScriptAdapter in 'xEdit\xeScriptAdapter.pas',
-  xeScriptAdapterDF in 'xEdit\xeScriptAdapterDF.pas',
-  xeScriptAdapterMisc in 'xEdit\xeScriptAdapterMisc.pas',
+  xejviScriptAdapter in 'xEdit\JvI\xejviScriptAdapter.pas',
+  xejviScriptAdapterDF in 'xEdit\JvI\xejviScriptAdapterDF.pas',
+  xejviScriptAdapterMisc in 'xEdit\JvI\xejviScriptAdapterMisc.pas',
   xeScriptForm in 'xEdit\xeScriptForm.pas' {frmScript},
   xeTipForm in 'xEdit\xeTipForm.pas', {frmTip}
   xeViewElementsForm in 'xEdit\xeViewElementsForm.pas' {frmViewElements},
   xeWaitForm in 'xEdit\xeWaitForm.pas' {frmWait},
-  xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails};
+  xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
+  xeScriptHost in 'xEdit\xeScriptHost.pas',
+  xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

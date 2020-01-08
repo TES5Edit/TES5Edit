@@ -6,7 +6,7 @@
 
 *******************************************************************************}
 
-unit xeScriptAdapter;
+unit xejviScriptAdapter;
 
 {$I xeDefines.inc}
 
@@ -48,8 +48,8 @@ uses
   JvInterpreter_Menus,
   JvInterpreter,
   JvInterpreterFm,
-  xeScriptAdapterMisc,
-  xeScriptAdapterDF;
+  xejviScriptAdapterMisc,
+  xejviScriptAdapterDF;
 
 const
   cUnit = 'Dummy';
@@ -2144,8 +2144,8 @@ begin
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Menus.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  xeScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
-  xeScriptAdapterDF.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  xejviScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  xejviScriptAdapterDF.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
 end;
 
 initialization

@@ -6,7 +6,7 @@
 
 *******************************************************************************}
 
-unit xeScriptAdapterDF;
+unit xejviScriptAdapterDF;
 
 {$I xeDefines.inc}
 

@@ -78,7 +78,8 @@ uses
   wbDefinitionsTES4,
   wbDefinitionsTES4Saves,
   wbDefinitionsTES5,
-  wbDefinitionsTES5Saves;
+  wbDefinitionsTES5Saves,
+  xeScriptHost;
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
@@ -591,7 +592,7 @@ begin
   end;
 end;
 
-function xeDoInit: Boolean;
+function _DoInit: Boolean;
 var
   s: string;
   ToolModes: TwbSetOfMode;
@@ -1219,6 +1220,10 @@ begin
   else if xeAutoGameLink then
     wbSubMode := 'Auto Game Link';
 
+  if not wbFindCmdLineParam('scripthost', s) then
+    s := 'jvi';
+  TxeScriptHost.Init(s);
+
   wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
   {$IFDEF LiteVersion}
   wbApplicationTitle := wbApplicationTitle + ' Lite';
@@ -1247,7 +1252,19 @@ begin
     if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
       wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
   except end;
+end;
 
+function xeDoInit: Boolean;
+begin
+  try
+    Result := _DoInit;
+  except
+    on E: Exception do begin
+      Result := False;
+      if not (E is EAbort) then
+        ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
+    end;
+  end;
 end;
 
 procedure xeSwitchToCoSave;
@@ -1264,7 +1281,9 @@ end;
 
 procedure xeInitStyles;
 begin
-    for var s in TDirectory.GetFiles(IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'Themes', '*.vsf' ) do try
+  var Path := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+  if TDirectory.Exists(Path) then
+    for var s in TDirectory.GetFiles(Path + 'Themes', '*.vsf' ) do try
       TStyleManager.LoadFromFile(s);
     except
       on E: Exception do
