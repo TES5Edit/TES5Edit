@@ -42,3 +42,6 @@
 	path = External/FileContainer
 	url = ../../ElminsterAU/FileContainer.git
 	branch = xEdit-4.1.x
+[submodule "External/pascalscript"]
+	path = External/pascalscript
+	url = ../../ElminsterAU/pascalscript.git
