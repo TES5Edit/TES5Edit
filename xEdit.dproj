@@ -270,6 +270,7 @@
         </DCCReference>
         <DCCReference Include="xEdit\xeScriptHost.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptHost.pas"/>
+        <DCCReference Include="xEdit\DWS\xedwsScriptHost.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
