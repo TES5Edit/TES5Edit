@@ -614,7 +614,9 @@ type
 
   TwbDefFlags = set of TwbDefFlag;
 
-  IwbDef = interface
+  IwbInterface = IInvokable;
+
+  IwbDef = interface(IwbInterface)
     ['{C7739FBD-3B58-48A2-9DD0-8057D3496892}']
     function GetDefType: TwbDefType;
     function GetDefTypeName: string;
@@ -862,7 +864,7 @@ type
     tbTrue
   );
 
-  IwbElement = interface
+  IwbElement = interface(IwbInterface)
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
     function GetElementID: Pointer;
@@ -1118,7 +1120,7 @@ type
 
   IwbElements = TArray<IwbElement>;
 
-  IwbStringListTerminator = interface
+  IwbStringListTerminator = interface(IwbInterface)
     ['{0D8ED4AA-1AFE-4283-87D7-2B66C5496227}']
   end;
 
@@ -1250,7 +1252,7 @@ type
   TwbContainerElementRefs = TArray<IwbContainerElementRef>;
 
   PwbKeepAliveRoot = ^IwbKeepAliveRoot;
-  IwbKeepAliveRoot = interface(IInterface)
+  IwbKeepAliveRoot = interface(IwbInterface)
     ['{D1D2C080-CE73-428F-B88F-BF9503CB8619}']
     procedure Done;
     function IsRoot: Boolean;
@@ -1764,7 +1766,7 @@ type
       read GetFileMagic;
   end;
 
-  IwbChapter = interface
+  IwbChapter = interface(IwbInterface)
     ['{3E575648-EF6F-4e9f-956F-D2E184B670E4}']
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
@@ -2520,7 +2522,7 @@ type
 
   IwbResourceContainer = interface;
 
-  IwbResource = interface(IInterface)
+  IwbResource = interface(IwbInterface)
     ['{B626E8BF-D2E3-40D1-8F3A-E6001D76B97B}']
     function GetContainer: IwbResourceContainer;
     function GetData: TBytes;
@@ -2529,7 +2531,7 @@ type
       read GetContainer;
   end;
 
-  IwbResourceContainer = interface(IInterface)
+  IwbResourceContainer = interface(IwbInterface)
     ['{023EA9C4-19B5-4587-B298-559EEF8F224E}']
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
@@ -2566,7 +2568,7 @@ type
 
   TDynResources = array of IwbResource;
 
-  IwbContainerHandler = interface(IInterface)
+  IwbContainerHandler = interface(IwbInterface)
     ['{0CC80043-EADC-4C7D-8677-8719735582C7}']
     procedure AddFolder(const aPath: string);
     procedure AddBSA(const aFileName: string);

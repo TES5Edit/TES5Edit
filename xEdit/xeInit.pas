@@ -36,6 +36,9 @@ var
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
 
+const
+  xeDefaultScriptHost = 'JvI';
+
 function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
                                       out aValue       : string;
                                     const aDefaultPath : string)
@@ -1221,7 +1224,7 @@ begin
     wbSubMode := 'Auto Game Link';
 
   if not wbFindCmdLineParam('scripthost', s) then
-    s := 'jvi';
+    s := xeDefaultScriptHost;
   TxeScriptHost.Init(s);
 
   wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
