@@ -103,6 +103,7 @@ type
   end;
 
   TwbBSAResource = class(TInterfacedObject, IwbResource)
+  protected {private}
     brFile       : IwbBSAFileInternal;
     brFileRecord : Pointer;
   protected
@@ -136,6 +137,7 @@ type
   end;
 
   TwbFolderResource = class(TInterfacedObject, IwbResource)
+  protected {private}
     frFolder   : IwbFolderInternal;
     frFileName : string;
   protected

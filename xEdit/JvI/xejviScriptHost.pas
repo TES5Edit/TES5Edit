@@ -8,8 +8,9 @@
 
 unit xejviScriptHost;
 
-interface
+{$I xeDefines.inc}
 
+interface
 
 implementation
 

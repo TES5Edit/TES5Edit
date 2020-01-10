@@ -16,6 +16,8 @@
 
 program xEdit;
 
+{$RTTI EXPLICIT METHODS([vcPrivate, vcProtected, vcPublic, vcPublished]) PROPERTIES([vcPrivate, vcProtected, vcPublic, vcPublished]) FIELDS([vcPrivate, vcProtected, vcPublic, vcPublished])}
+
 uses
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxExceptionHook,

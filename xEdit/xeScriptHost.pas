@@ -8,6 +8,8 @@
 
 unit xeScriptHost;
 
+{$I xeDefines.inc}
+
 interface
 
 uses

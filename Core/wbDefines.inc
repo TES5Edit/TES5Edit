@@ -18,3 +18,6 @@
 {$ENDIF}
 {$ENDIF}
 
+{$TYPEINFO ON}
+{$METHODINFO ON}
+
