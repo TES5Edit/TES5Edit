@@ -6442,7 +6442,8 @@ begin
       {0x01} 'POM Shadows',
       {0x02} 'Alpha - Blending',
       {0x04} 'Alpha - Testing',
-      {0x08} 'No Subtextures'
+      {0x08} 'No Subtextures',
+      {0x10} 'Multiplicative Blending'
     ], True)),
     wbInteger('Alpha Threshold?', itU16),
     wbByteColors('Color')
@@ -11155,8 +11156,8 @@ begin
       wbInteger('Trait', itU8, wbBoolEnum),
       wbInteger('Level', itU8),
       wbInteger('Num Ranks', itU8),
-      wbInteger('Playable', itU8, wbBoolEnum),
-      wbInteger('Hidden', itU8, wbBoolEnum)
+      wbFromSize(4, wbInteger('Playable', itU8, wbBoolEnum)),
+      wbFromSize(5, wbInteger('Hidden', itU8, wbBoolEnum))
     ], cpNormal, True),
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
@@ -12201,7 +12202,10 @@ begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbInteger(TNAM, 'Unknown', itU32),
+    wbInteger(TNAM, 'Category', itU32, wbEnum([
+        {0} 'Player',
+        {1} 'Command'
+    ])),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Top-Level',
       {0x02} 'Blocking',
@@ -14175,18 +14179,21 @@ begin
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
-        {0x0002} 'Unknown 2',
-        {0x0004} 'Add Idle Topic To Hello',
+        {0x0002} 'Completed',
+        {0x0004} 'Add Idle topic to Hello',
         {0x0008} 'Allow repeated stages',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Unknown 6',
-        {0x0040} 'Unknown 7',
-        {0x0080} 'Unknown 8',
+        {0x0010} 'Starts Enabled',
+        {0x0020} 'Displayed In HUD',
+        {0x0040} 'Failed',
+        {0x0080} 'Stage Wait',
         {0x0100} 'Run Once',
         {0x0200} 'Exclude from dialogue export',
         {0x0400} 'Warn on alias fill failure',
-        {0x0800} 'Unknown 12',
-        {0x1000} 'Unknown 13'
+        {0x0800} 'Active',
+        {0x1000} 'Repeats Conditions',
+        {0x2000} 'Keep Instance',
+        {0x4000} 'Want Dormant',
+        {0x8000} 'Has Dialogue Data'
       ])),
       wbInteger('Priority', itU8),
       wbByteArray('Unused', 1),
@@ -15544,7 +15551,7 @@ begin
       wbArray('Unknown', wbFormID('Unknown'))
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
-    wbInteger(INCC, 'Unknown', itU32)                     // Size of some array of 12 bytes elements
+    wbInteger(INCC, 'Internal Cell Count', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(PLYR, 'Player Reference', [
@@ -15575,15 +15582,14 @@ begin
     wbStruct(CNAM, 'Tree Data', [
       wbFloat('Trunk Flexibility'),
       wbFloat('Branch Flexibility'),
-      //wbByteArray('Unknown', 32),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbFloat('Trunk Amplitude'),
+      wbFloat('Front Amplitude'),
+      wbFloat('Back Amplitude'),
+      wbFloat('Side Amplitude'),
+      wbFloat('Front Frequency'),
+      wbFloat('Back Frequency'),
+      wbFloat('Side Frequency'),
+      wbFloat('Leaf Flexibility'),
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True)
@@ -16476,7 +16482,8 @@ begin
         Sig2Int(WEAP), 'Weapon',
         Sig2Int(NONE), 'None'
       ])).SetDefaultEditValue('None'),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbInteger('Max Rank', itU8),
+      wbInteger('Level Tier Scaled Offset', itU8),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
       // no way to change these in CK, legacy data leftover?
