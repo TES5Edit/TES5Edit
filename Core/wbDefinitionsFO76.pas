@@ -7379,51 +7379,27 @@ begin
     wbFirstPersonFlagsU32
   ], cpNormal, False);
 
-  wbDODT := wbUnion(DODT, 'Decal Data', wbFormVersionDecider(136) , [
-    wbStruct('Decal Data', [
-      wbFloat('Min Width'),
-      wbFloat('Max Width'),
-      wbFloat('Min Height'),
-      wbFloat('Max Height'),
-      wbFloat('Depth'),
-      wbFloat('Shininess'),
-      wbStruct('Parallax', [
-        wbFloat('Scale'),
-        wbInteger('Passes', itU8) { >>> This can't be higher than 30 <<< }
-      ]),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'POM Shadows',
-        {0x02} 'Alpha - Blending',
-        {0x04} 'Alpha - Testing',
-        {0x08} 'No Subtextures',
-        {0x10} 'Multiplicative Blending',
-        {0x20} 'No G-Buffer Normals'
-        ], True)),
-      wbInteger('Alpha Threshold?', itU16),
-      wbByteColors('Color')
+  wbDODT := wbStruct(DODT, 'Decal Data', [
+    wbFloat('Min Width'),
+    wbFloat('Max Width'),
+    wbFloat('Min Height'),
+    wbFloat('Max Height'),
+    wbFloat('Depth'),
+    wbFloat('Shininess'),
+    wbStruct('Parallax', [
+      wbFloat('Scale'),
+      wbBelowVersion(137, wbInteger('Passes', itU8)) { >>> This can't be higher than 30 <<< }
     ]),
-    wbStruct('Decal Data', [
-      wbFloat('Min Width'),
-      wbFloat('Max Width'),
-      wbFloat('Min Height'),
-      wbFloat('Max Height'),
-      wbFloat('Depth'),
-      wbFloat('Shininess'),
-      wbStruct('Parallax', [
-        wbFloat('Scale'),
-        wbInteger('Passes', itU8) {>>> This can't be higher than 30 <<<}
-      ]),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'POM Shadows',
-        {0x02} 'Alpha - Blending',
-        {0x04} 'Alpha - Testing',
-        {0x08} 'No Subtextures',
-        {0x10} 'Multiplicative Blending',
-        {0x20} 'No G-Buffer Normals'
-        ], True)),
-      wbInteger('Alpha Threshold?', itU16),
-      wbByteColors('Color')
-    ])
+    wbBelowVersion(137, wbInteger('Flags', itU8, wbFlags([
+      {0x01} 'POM Shadows',
+      {0x02} 'Alpha - Blending',
+      {0x04} 'Alpha - Testing',
+      {0x08} 'No Subtextures',
+      {0x10} 'Multiplicative Blending',
+      {0x20} 'No G-Buffer Normals'
+      ], True))),
+    wbBelowVersion(137, wbInteger('Alpha Threshold?', itU16)),
+    wbBelowVersion(137, wbByteColors('Color'))
   ]);
 
 //  wbRecordFlagsFlags := wbFlags([
