@@ -1285,6 +1285,7 @@ var
   wbATTX: IwbSubRecordDef;
   wbMNAMFurnitureMarker: IwbSubRecordDef;
   wbSNAMMarkerParams: IwbSubRecordDef;
+  wbZNAMMarkerParams: IwbSubRecordDef;
   wbOBTSReq: IwbSubRecordDef;
   //wbTintTemplateGroups: IwbSubrecordArrayDef;
   //wbMorphGroups: IwbSubrecordArrayDef;
@@ -1330,6 +1331,7 @@ var
   wbVCRY: IwbSubRecordDef;
   wbQRCO: IwbSubRecordDef;
   wbXCHG: IwbSubRecordDef;
+  wbWTFG: IwbSubRecordDef;
   wbXLKR: IwbSubRecordArrayDef;
   wbXATP: IwbSubRecordDef;
   wbXWPK: IwbSubRecordStructDef;
@@ -7260,28 +7262,18 @@ begin
     wbFormIDCkNoReach('Actor Value', [AVIF, NULL])
   ]);
 
-  wbPERKData := wbUnion(DATA, '', wbPerkDATADecider, [
-      wbStruct('Data', [
-        wbInteger('Trait', itU8, wbBoolEnum),
-        wbInteger('Hidden', itU8, wbBoolEnum),
-        wbInteger('Playable', itU8, wbBoolEnum)
-      ], cpNormal, True),
-      wbStruct('Data', [
-        wbInteger('Trait', itU8, wbBoolEnum),
-        wbInteger('Level', itU8),
-        wbInteger('Num Ranks', itU8),
-        wbInteger('Playable', itU8, wbBoolEnum),
-        wbInteger('Hidden', itU8, wbBoolEnum)
-      ], cpNormal, True),
-      wbStruct('Data', [
-        wbInteger('Trait', itU8, wbBoolEnum),
-        wbInteger('Level', itU8),
-        wbInteger('Num Ranks', itU8),
+  wbPERKData := wbStruct(DATA, 'Data', [
+        wbFromSize(5,wbInteger('Trait', itU8, wbBoolEnum)),
+        wbFromSize(5,wbInteger('Level', itU8)),
+        wbFromSize(5,wbInteger('Num Ranks', itU8)),
         wbInteger('Playable', itU8, wbBoolEnum),
         wbInteger('Hidden', itU8, wbBoolEnum),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ]);
+        wbUnion('', wbRecordSizeDecider([3,5,6]), [
+          wbByteArray('Unknown',1),
+          wbEmpty('Unknown'),
+          wbByteArray('Unknown',1)
+        ])
+      ], cpNormal, True);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -7334,10 +7326,10 @@ begin
     '51 - Ring',
     '52 - Scalp',
     '53 - Decapitation',
-    '54 - Unnamed',
-    '55 - Unnamed',
+    '54 - Backpack',
+    '55 - EyeOfRa',
     '56 - Unnamed',
-    '57 - Unnamed',
+    '57 - Coverall',
     '58 - Unnamed',
     '59 - Shield',
     '60 - Pipboy',
@@ -7371,10 +7363,10 @@ begin
     {0x00200000} '51 - Ring',
     {0x00400000} '52 - Scalp',
     {0x00800000} '53 - Decapitation',
-    {0x01000000} '54 - Unnamed',
-    {0x02000000} '55 - Unnamed',
+    {0x01000000} '54 - Backpack',
+    {0x02000000} '55 - EyeOfRa',
     {0x04000000} '56 - Unnamed',
-    {0x08000000} '57 - Outfit',
+    {0x08000000} '57 - Coverall',
     {0x10000000} '58 - Unnamed',
     {0x20000000} '59 - Shield',
     {0x40000000} '60 - Pipboy',
@@ -7387,34 +7379,51 @@ begin
     wbFirstPersonFlagsU32
   ], cpNormal, False);
 
-  wbDODT := wbStruct(DODT, 'Decal Data', [
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbUnknown.IncludeFlag(dfNoReport)
-   (*
-    wbFloat('Min Width'),
-    wbFloat('Max Width'),
-    wbFloat('Min Height'),
-    wbFloat('Max Height'),
-    wbFloat('Depth'),
-    wbFloat('Shininess'),
-    wbStruct('Parallax', [
-      wbFloat('Scale'),
-      wbInteger('Passes', itU8) {>>> This can't be higher than 30 <<<}
+  wbDODT := wbUnion(DODT, 'Decal Data', wbFormVersionDecider(136) , [
+    wbStruct('Decal Data', [
+      wbFloat('Min Width'),
+      wbFloat('Max Width'),
+      wbFloat('Min Height'),
+      wbFloat('Max Height'),
+      wbFloat('Depth'),
+      wbFloat('Shininess'),
+      wbStruct('Parallax', [
+        wbFloat('Scale'),
+        wbInteger('Passes', itU8) { >>> This can't be higher than 30 <<< }
+      ]),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'POM Shadows',
+        {0x02} 'Alpha - Blending',
+        {0x04} 'Alpha - Testing',
+        {0x08} 'No Subtextures',
+        {0x10} 'Multiplicative Blending',
+        {0x20} 'No G-Buffer Normals'
+        ], True)),
+      wbInteger('Alpha Threshold?', itU16),
+      wbByteColors('Color')
     ]),
-    wbInteger('Flags', itU8, wbFlags([
-      {0x01} 'POM Shadows',
-      {0x02} 'Alpha - Blending',
-      {0x04} 'Alpha - Testing',
-      {0x08} 'No Subtextures'
-    ], True)),
-    wbInteger('Alpha Threshold?', itU16),
-    wbByteColors('Color')
-    *)
+    wbStruct('Decal Data', [
+      wbFloat('Min Width'),
+      wbFloat('Max Width'),
+      wbFloat('Min Height'),
+      wbFloat('Max Height'),
+      wbFloat('Depth'),
+      wbFloat('Shininess'),
+      wbStruct('Parallax', [
+        wbFloat('Scale'),
+        wbInteger('Passes', itU8) {>>> This can't be higher than 30 <<<}
+      ]),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'POM Shadows',
+        {0x02} 'Alpha - Blending',
+        {0x04} 'Alpha - Testing',
+        {0x08} 'No Subtextures',
+        {0x10} 'Multiplicative Blending',
+        {0x20} 'No G-Buffer Normals'
+        ], True)),
+      wbInteger('Alpha Threshold?', itU16),
+      wbByteColors('Color')
+    ])
   ]);
 
 //  wbRecordFlagsFlags := wbFlags([
@@ -7867,7 +7876,7 @@ begin
 
   wbDURL := wbString(DURL);
 
-  wbOPDS := wbStruct(OPDS, 'Unknown', [
+  wbOPDS := wbStruct(OPDS, 'Object Placement Default', [
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
@@ -7886,7 +7895,7 @@ begin
   wbBEVA := wbInteger(BEVA,'Boolean Value', itU8, wbBoolEnum);
   wbFEVA := wbFloat(FEVA, 'Float Value');
 
-  wbOPDSs:= wbRArray('Unknown', wbOPDS);
+  wbOPDSs:= wbRArray('Object Placement Defaults', wbOPDS);
 
   wbNTWK := wbEmpty(NTWK, 'Network? Marker');
 
@@ -8020,6 +8029,11 @@ begin
 
   wbNAM1 := wbUnknown(NAM1);
   wbLODP := wbUnknown(LODP);
+
+  wbWTFG := wbInteger(WTFG, 'World Type', itU32, wbEnum([], [
+      4,  'Survival',
+      24, 'Nuclear Winter'
+    ]));
 
   wbVCRY := wbFormIDCk(VCRY, 'Virtual Currency', [NULL, CNCY]);
   wbQRCO := wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]);
@@ -8490,26 +8504,20 @@ begin
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
-  wbMODD := wbUnknown(MODD);
+  wbMODD := wbByteArray(MODD, 'Unknown', 1);
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
-{      wbInteger('Health', itS32),
+      wbInteger('Health', itS32),
       wbInteger('DEST Count', itU8),
-      wbInteger('Flags', itU8, wbFlags([
+      wbByteArray('Unused',3),
+      wbInteger('Flags', itU32, wbFlags([
         'VATS Targetable',
         'Large Actor Destroys'
       ])),
-      wbByteArray('Unknown', 2),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown')         }
-      wbInteger('Health', itS32),
-      wbByteArray('Unknown',1),
-      wbByteArray('Unused',3),
-      wbByteArray('Unknown', 4),
       wbFloat('Unknown')
     ]),
     wbFormIDCk(HGLB, 'Health Global', [GLOB]),
@@ -9791,7 +9799,7 @@ begin
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   wbEFIT := //TODO ECK: Revisit decider logic.
-    wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 184]), [
+    wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 183]), [
       wbStruct('', [
         wbUnused,
         wbFloat('Magnitude'),
@@ -10288,10 +10296,10 @@ begin
 
   wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
 
-  wbCVPA := wbArrayS(CVPA, 'Unknown', wbStructSK([0], 'Unknown', [
+  wbCVPA := wbArrayS(CVPA, 'Junk Scrap Quantities', wbStructSK([0], 'Scrap Component Quantity', [
     wbFormIDCk('Scrap Count Keyword', [KYWD]),
     wbInteger('Scrap Component Count', itU32),
-      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
   ]));
 
   wbESCR := wbArrayS(ESCR, 'Scrap Recieved', wbStructSK([0], 'Scrap Recieved', [
@@ -10364,7 +10372,7 @@ begin
       wbFloat('Offset Z'),
       wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU8, wbFlags([
+      wbInteger('Entry Types', itU32, wbFlags([
         'Front',
         'Rear',
         'Right',
@@ -10373,8 +10381,25 @@ begin
         'Unused 5',
         'Unused 6',
         'Unused 7'
-      ])),
-      wbByteArray('Unknown', 3)
+      ]))
+    ], cpNormal, False, nil, 4));
+  wbZNAMMarkerParams :=
+    wbArray(ZNAM, 'Marker Parameters', wbStruct('Marker', [
+      wbFloat('Offset X'),
+      wbFloat('Offset Y'),
+      wbFloat('Offset Z'),
+      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFormIDCk('Keyword', [KYWD, NULL]),
+      wbInteger('Entry Types', itU32, wbFlags([
+        'Front',
+        'Rear',
+        'Right',
+        'Left',
+        'Other',
+        'Unused 5',
+        'Unused 6',
+        'Unused 7'
+      ]))
     ], cpNormal, False, nil, 4));
 
   wbArmorPropertyEnum := wbEnum([
@@ -10592,14 +10617,45 @@ begin
 
   var wbBoneDataItem :=
     wbRStruct('Data', [
-      wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
-      // should not be sorted!!!
-      wbRArray('Bones',
-        wbRStructSK([0], 'Bone', [
-          wbString(BSMB, 'Name'),
-          wbArray(BSMS, 'Values', wbFloat('Value')).IncludeFlag(dfNotAlignable),
-          wbUnknown(BMMP)
-        ], [])
+      wbRArray('Bone Datas',
+        wbRStruct('Bone Data', [
+          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
+          // should not be sorted!!!
+          wbRArray('Bone Weight Scales',
+            wbRStructSK([0], 'Bone Weight Scale', [
+              wbString(BSMB, 'Name'),
+              wbStruct(BSMS, 'Weight Scale Values', [
+                wbStruct('Thin', [
+                  wbFloat('X'),
+                  wbFloat('Y'),
+                  wbFloat('Z')
+                ]),
+                wbStruct('Muscular', [
+                  wbFloat('X'),
+                  wbFloat('Y'),
+                  wbFloat('Z')
+                ]),
+                wbStruct('Fat', [
+                  wbFloat('X'),
+                  wbFloat('Y'),
+                  wbFloat('Z')
+                ])
+              ])
+            ], [])
+          ),
+          wbInteger(BMMP, 'Bone MinMax Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArray('Bone MinMax',
+            wbRStructSK([0], 'Bone', [
+              wbString(BSMB, 'Name'),
+              wbStruct(BSMS, 'Value', [
+                wbFloat('Min X'),
+                wbFloat('Min Y'),
+                wbFloat('Max X'),
+                wbFloat('Max Y')
+              ])
+            ], [])
+          )
+        ],[])
       )
     ], []);
 
@@ -10683,30 +10739,25 @@ begin
     wbInteger(LAMX, 'Lookat Maximum', itU32),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
     wbStruct(RADR, 'Radio Receiver', [
-      wbFormIDCk('Sound Model', [SOPM, NULL]),
+      wbFromVersion(92, wbFormIDCk('Sound Model', [SOPM, NULL])),
       wbFloat('Frequency'),
       wbFloat('Volume'),
       wbInteger('Starts Active', itU8, wbBoolEnum),
-      wbInteger('No Signal Static', itU8, wbBoolEnum)
+      wbFromVersion(121, wbInteger('No Signal Static', itU8, wbBoolEnum))
     ], cpNormal, False, nil, 4),
     wbCNDCs,
-    wbFormIDCk(GCDA, 'Clobal Cooldown Timer', [GLOB]),
+    wbFormIDCk(GCDA, 'Global Cooldown Timer', [GLOB]),
     wbFloat(PAHD, 'Unknown Float'),
     wbUnknown(MNAM),
     wbNVNM,
-    wbArray(VEND, 'Vendable Items', wbUnion('Vendable Items', wbFormVersionDecider(192), [
-      wbStruct('Items Allowed', [
-        wbFormID('Item'),
-        wbInteger('Unknown', itU32),
-        wbInteger('Max Amount', itU32)
-      ]),
-      wbStruct('Items Allowed', [
+    wbArray(VEND, 'Vendable Item Datas',
+      wbStruct('Vemdable Item Data', [
         wbFormID('Allowed Item List'),
-        wbFormID('Excluded Item List'),
+        wbFromVersion(192, wbFormID('Excluded Item List')),
         wbInteger('Unknown', itU32),
         wbInteger('Max Amount', itU32)
       ])
-    ])),
+    ),
     wbFloat(PAHD, 'Unknown Float'),
     wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -11783,209 +11834,80 @@ begin
     wbString(NAM9, 'Particle Palette Texture'),
     wbUnknown(DATA),  // if form version < 62, ignored otherwise
     // format depends on Form Version (appear with form version 62, changed in form version 106), different for older records starting from the first field
-    wbUnion(DNAM, '', wbFormVersionDecider(106), [
-      wbStruct('Data (old format)', [
-        wbByteArray('Unknown', 1),
-        wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-        wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-        wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbByteColors('Fill/Texture Effect - Color Key 1'),
-        wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-        wbFloat('Fill/Texture Effect - Full Alpha Time'),
-        wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-        wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-        wbFloat('Edge Effect - Fall Off'),
-        wbByteColors('Edge Effect - Color'),
-        wbFloat('Edge Effect - Alpha Fade In Time'),
-        wbFloat('Edge Effect - Full Alpha Time'),
-        wbFloat('Edge Effect - Alpha Fade Out Time'),
-        wbFloat('Edge Effect - Persistent Alpha Ratio'),
-        wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-        wbFloat('Edge Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-        wbFloat('Edge Effect - Full Alpha Ratio'),
-        wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-        wbInteger('Particle Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-        wbInteger('Particle Shader - Blend Operation', itU32, wbBlendOpEnum),
-        wbInteger('Particle Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbInteger('Particle Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-        wbFloat('Particle Shader - Particle Birth Ramp Up Time'),
-        wbFloat('Particle Shader - Full Particle Birth Time'),
-        wbFloat('Particle Shader - Particle Birth Ramp Down Time'),
-        wbFloat('Particle Shader - Full Particle Birth Ratio'),
-        wbFloat('Particle Shader - Persistant Particle Count'),
-        wbFloat('Particle Shader - Particle Lifetime'),
-        wbFloat('Particle Shader - Particle Lifetime +/-'),
-        wbFloat('Particle Shader - Initial Speed Along Normal'),
-        wbFloat('Particle Shader - Acceleration Along Normal'),
-        wbFloat('Particle Shader - Initial Velocity #1'),
-        wbFloat('Particle Shader - Initial Velocity #2'),
-        wbFloat('Particle Shader - Initial Velocity #3'),
-        wbFloat('Particle Shader - Acceleration #1'),
-        wbFloat('Particle Shader - Acceleration #2'),
-        wbFloat('Particle Shader - Acceleration #3'),
-        wbFloat('Particle Shader - Scale Key 1'),
-        wbFloat('Particle Shader - Scale Key 2'),
-        wbFloat('Particle Shader - Scale Key 1 Time'),
-        wbFloat('Particle Shader - Scale Key 2 Time'),
-        wbByteColors('Color Key 1 - Color'),
-        wbByteColors('Color Key 2 - Color'),
-        wbByteColors('Color Key 3 - Color'),
-        wbFloat('Color Key 1 - Color Alpha'),
-        wbFloat('Color Key 2 - Color Alpha'),
-        wbFloat('Color Key 3 - Color Alpha'),
-        wbFloat('Color Key 1 - Color Key Time'),
-        wbFloat('Color Key 2 - Color Key Time'),
-        wbFloat('Color Key 3 - Color Key Time'),
-        wbFloat('Particle Shader - Initial Speed Along Normal +/-'),
-        wbFloat('Particle Shader - Initial Rotation (deg)'),
-        wbFloat('Particle Shader - Initial Rotation (deg) +/-'),
-        wbFloat('Particle Shader - Rotation Speed (deg/sec)'),
-        wbFloat('Particle Shader - Rotation Speed (deg/sec) +/-'),
-        wbFormIDCk('Addon Models', [DEBR, NULL]),
-        wbFloat('Holes - Start Time'),
-        wbFloat('Holes - End Time'),
-        wbFloat('Holes - Start Val'),
-        wbFloat('Holes - End Val'),
-        wbFloat('Edge Width (alpha units)'),
-        wbByteColors('Edge Color'),
-        wbFloat('Explosion Wind Speed'),
-        wbInteger('Texture Count U', itU32),
-        wbInteger('Texture Count V', itU32),
-        wbFloat('Addon Models - Fade In Time'),
-        wbFloat('Addon Models - Fade Out Time'),
-        wbFloat('Addon Models - Scale Start'),
-        wbFloat('Addon Models - Scale End'),
-        wbFloat('Addon Models - Scale In Time'),
-        wbFloat('Addon Models - Scale Out Time'),
-        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
-        wbByteColors('Fill/Texture Effect - Color Key 2'),
-        wbByteColors('Fill/Texture Effect - Color Key 3'),
-        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
-          wbFloat('Color Key 1 - Scale'),
-          wbFloat('Color Key 2 - Scale'),
-          wbFloat('Color Key 3 - Scale'),
-          wbFloat('Color Key 1 - Time'),
-          wbFloat('Color Key 2 - Time'),
-          wbFloat('Color Key 3 - Time')
-        ]),
-        wbFloat('Color Scale'),
-        wbFloat('Birth Position Offset'),
-        wbFloat('Birth Position Offset Range +/-'),
-        wbStruct('Particle Shader Animated', [
-          wbInteger('Start Frame', itU32),
-          wbInteger('Start Frame Variation', itU32),
-          wbInteger('End Frame', itU32),
-          wbInteger('Loop Start Frame', itU32),
-          wbInteger('Loop Start Variation', itU32),
-          wbInteger('Frame Count', itU32),
-          wbInteger('Frame Count Variation', itU32)
-        ]),
-        wbInteger('Flags', itU32, wbFlags([
-          'No Membrane Shader',
-          'Membrane Grayscale Color',
-          'Membrane Grayscale Alpha',
-          'No Particle Shader',
-          'Edge Effect Inverse',
-          'Affect Skin Only',
-          'Ignore Alpha',
-          'Project UVs',
-          'Ignore Base Geometry Alpha',
-          'Lighting',
-          'No Weapons',
-          'Unknown 11',
-          'Unknown 12',
-          'Unknown 13',
-          'Unknown 14',
-          'Particle Animated',
-          'Particle Grayscale Color',
-          'Particle Grayscale Alpha',
-          'Unknown 18',
-          'Unknown 19',
-          'Unknown 20',
-          'Unknown 21',
-          'Unknown 22',
-          'Unknown 23',
-          'Use Blood Geometry'
-        ])),
-        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
-        wbFloat('Fill/Texture Effect - Texture Scale (V)'),
-        wbInteger('Scene Graph Emit Depth Limit (unused)', itU16)
+    wbStruct(DNAM, 'Data', [
+      wbBelowVersion(107, wbByteArray('Unused', 1)),
+      wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
+      wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
+      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
+      wbByteColors('Fill/Texture Effect - Color Key 1'),
+      wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
+      wbFloat('Fill/Texture Effect - Full Alpha Time'),
+      wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
+      wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
+      wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
+      wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
+      wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
+      wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
+      wbFloat('Edge Effect - Fall Off'),
+      wbByteColors('Edge Effect - Color'),
+      wbFloat('Edge Effect - Alpha Fade In Time'),
+      wbFloat('Edge Effect - Full Alpha Time'),
+      wbFloat('Edge Effect - Alpha Fade Out Time'),
+      wbFloat('Edge Effect - Persistent Alpha Ratio'),
+      wbFloat('Edge Effect - Alpha Pulse Amplitude'),
+      wbFloat('Edge Effect - Alpha Pulse Frequency'),
+      wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
+      wbFloat('Edge Effect - Full Alpha Ratio'),
+      wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
+      wbBelowVersion(107, wbByteArray('Unused', 152)),
+      wbFloat('Holes Animation - Start Time'),
+      wbFloat('Holes Animation - End Time'),
+      wbFloat('Holes Animation - Start Value'),
+      wbFloat('Holes Animation - End Value'),
+      wbBelowVersion(107, wbByteArray('Unused', 44)),
+      wbFormIDCk('Ambient Sound', [SNDR, NULL]),
+      wbByteColors('Fill/Texture Effect - Color Key 2'),
+      wbByteColors('Fill/Texture Effect - Color Key 3'),
+      wbFromVersion(106, wbInteger('Bone Depth', itU8)),
+      wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
+        wbFloat('Color Key 1 - Scale'),
+        wbFloat('Color Key 2 - Scale'),
+        wbFloat('Color Key 3 - Scale'),
+        wbFloat('Color Key 1 - Time'),
+        wbFloat('Color Key 2 - Time'),
+        wbFloat('Color Key 3 - Time')
       ]),
-      wbStruct('Data', [
-        wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
-        wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-        wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-        wbByteColors('Fill/Texture Effect - Color Key 1'),
-        wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
-        wbFloat('Fill/Texture Effect - Full Alpha Time'),
-        wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
-        wbFloat('Fill/Texture Effect - Presistent Alpha Ratio'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Amplitude'),
-        wbFloat('Fill/Texture Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
-        wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
-        wbFloat('Edge Effect - Fall Off'),
-        wbByteColors('Edge Effect - Color'),
-        wbFloat('Edge Effect - Alpha Fade In Time'),
-        wbFloat('Edge Effect - Full Alpha Time'),
-        wbFloat('Edge Effect - Alpha Fade Out Time'),
-        wbFloat('Edge Effect - Persistent Alpha Ratio'),
-        wbFloat('Edge Effect - Alpha Pulse Amplitude'),
-        wbFloat('Edge Effect - Alpha Pulse Frequency'),
-        wbFloat('Fill/Texture Effect - Full Alpha Ratio'),
-        wbFloat('Edge Effect - Full Alpha Ratio'),
-        wbInteger('Membrane Shader - Dest Blend Mode', itU32, wbBlendModeEnum),
-        wbFloat('Holes Animation - Start Time'),
-        wbFloat('Holes Animation - End Time'),
-        wbFloat('Holes Animation - Start Value'),
-        wbFloat('Holes Animation - End Value'),
-        wbFormIDCk('Ambient Sound', [SNDR, NULL]),
-        wbByteColors('Fill/Texture Effect - Color Key 2'),
-        wbByteColors('Fill/Texture Effect - Color Key 3'),
-        wbInteger('Unknown', itU8),
-        wbStruct('Fill/Texture Effect - Color Key Scale/Time', [
-          wbFloat('Color Key 1 - Scale'),
-          wbFloat('Color Key 2 - Scale'),
-          wbFloat('Color Key 3 - Scale'),
-          wbFloat('Color Key 1 - Time'),
-          wbFloat('Color Key 2 - Time'),
-          wbFloat('Color Key 3 - Time')
-        ]),
-        wbInteger('Flags', itU32, wbFlags([
-          'No Membrane Shader',
-          'Membrane Grayscale Color',
-          'Membrane Grayscale Alpha',
-          'No Particle Shader',
-          'Edge Effect - Inverse',
-          'Affect Skin Only',
-          'Texture Effect - Ignore Alpha',
-          'Texture Effect - Project UVs',
-          'Ignore Base Geometry Alpha',
-          'Texture Effect - Lighting',
-          'Texture Effect - No Weapons',
-          'Use Alpha Sorting',
-          'Prefer Dismembered Limbs',
-          'Unknown 13',
-          'Unknown 14',
-          'Particle Animated',
-          'Particle Grayscale Color',
-          'Particle Grayscale Alpha',
-          'Unknown 18',
-          'Unknown 19',
-          'Unknown 20',
-          'Unknown 21',
-          'Unknown 22',
-          'Unknown 23',
-          'Use Blood Geometry (Weapons Only)'
-        ])),
-        wbFloat('Fill/Texture Effect - Texture Scale (U)'),
-        wbFloat('Fill/Texture Effect - Texture Scale (V)')
-      ])
+      wbBelowVersion(107, wbByteArray('Unused', 40)),
+      wbInteger('Flags', itU32, wbFlags([
+        'No Membrane Shader',
+        'Membrane Grayscale Color',
+        'Membrane Grayscale Alpha',
+        'No Particle Shader',
+        'Edge Effect - Inverse',
+        'Affect Skin Only',
+        'Texture Effect - Ignore Alpha',
+        'Texture Effect - Project UVs',
+        'Ignore Base Geometry Alpha',
+        'Texture Effect - Lighting',
+        'Texture Effect - No Weapons',
+        'Use Alpha Sorting',
+        'Prefer Dismembered Limbs',
+        'Unknown 13',
+        'Unknown 14',
+        'Particle Animated',
+        'Particle Grayscale Color',
+        'Particle Grayscale Alpha',
+        'Unknown 18',
+        'Unknown 19',
+        'Unknown 20',
+        'Unknown 21',
+        'Unknown 22',
+        'Unknown 23',
+        'Use Blood Geometry (Weapons Only)'
+      ])),
+      wbFloat('Fill/Texture Effect - Texture Scale (U)'),
+      wbFloat('Fill/Texture Effect - Texture Scale (V)'),
+      wbBelowVersion(107, wbByteArray('Unused', 2))
     ], cpNormal, True),
     wbGenericModel
   ]);
@@ -12205,7 +12127,7 @@ begin
     ]),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbZNAMArray,
+    wbZNAMMarkerParams,
     wbUnknown(CNAM),
     wbUnknown(LNAM),
     wbAPPR,
@@ -12420,9 +12342,9 @@ begin
     wbKeywords,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
-      'Unknown 1',
+      'Old Pick Conditions',
       'Do Once',
-      'Unknown 3',
+      'Loose Only',
       'Ignored by Sandbox',
       'Unknown 5'
     ]), cpNormal, False),
@@ -14240,7 +14162,10 @@ begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbInteger(TNAM, 'Unknown', itU32),
+    wbInteger(TNAM, 'Category', itU32, wbEnum([
+        {0} 'Player',
+        {1} 'Command'
+    ])),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Top-Level',
       {0x02} 'Blocking',
@@ -15094,7 +15019,7 @@ begin
         {0x0002} 'Random',
         {0x0004} 'Say Once',
         {0x0008} 'Requires Player Activation',
-        {0x0010} 'Unknown 4',
+        {0x0010} 'Info Refusal',
         {0x0020} 'Random End',
         {0x0040} 'End Running Scene',
         {0x0080} 'ForceGreet Hello',
@@ -16536,20 +16461,20 @@ begin
       wbStruct(DATA, 'General', [  //0xE4
         wbInteger('Flags', itU32, wbFlags([
           {0x00000001} 'Start Game Enabled',
-          {0x00000002} 'Unknown 2',
+          {0x00000002} 'Completed',
           {0x00000004} 'Add Idle Topic To Hello',
           {0x00000008} 'Allow repeated stages',
-          {0x00000010} 'Unknown 5',
-          {0x00000020} 'Unknown 6',
-          {0x00000040} 'Unknown 7',
-          {0x00000080} 'Unknown 8',
+          {0x00000010} 'Starts Enabled',
+          {0x00000020} 'Displayed In HUD',
+          {0x00000040} 'Failed',
+          {0x00000080} 'Stage Wait',
           {0x00000100} 'Run Once',
           {0x00000200} 'Exclude from dialogue export',
           {0x00000400} 'Warn on alias fill failure',
-          {0x00000800} 'Unknown 12',
-          {0x00001000} 'Unknown 13',
-          {0x00002000} 'Unknown 14',
-          {0x00004000} 'Unknown 15',
+          {0x00000800} 'Active',
+          {0x00001000} 'Repeats Conditions',
+          {0x00002000} 'Keep Instance',
+          {0x00004000} 'Want Dormant',
           {0x00008000} 'Unknown 16',
           {0x00010000} 'Unknown 17',
           {0x00020000} 'Unknown 18',
@@ -17098,15 +17023,17 @@ begin
       wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
       wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
       wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-      wbFloat('OnCripple - Debris Scale'),
-      wbInteger('OnCripple - Debris Count', itU8),
-      wbInteger('OnCripple - Decal Count', itU8),
-      wbFormIDCk('OnCripple - Explosion', [EXPL, NULL]),
-      wbFormIDCk('OnCripple - Debris', [DEBR, NULL]),
-      wbFormIDCk('OnCripple - Impact DataSet', [IPDS, NULL]),
-      wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL]),
-      wbFloat('Orientation Limits - Pitch'),
-      wbFloat('Orientation Limits - Roll'),
+      wbFromVersion(96, wbStruct('OnCripple', [
+        wbFloat('Debris Scale'),
+        wbInteger('Debris Count', itU8),
+        wbInteger('Decal Count', itU8),
+        wbFormIDCk('Explosion', [EXPL, NULL]),
+        wbFormIDCk('Debris', [DEBR, NULL]),
+        wbFormIDCk('Impact DataSet', [IPDS, NULL])
+      ])),
+      wbFromVersion(118, wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL])),
+      wbFromVersion(98, wbFloat('Orientation Limits - Pitch')),
+      wbFromVersion(101, wbFloat('Orientation Limits - Roll')),
       wbFromVersion(188, wbByteArray('Unknown', 4))
     ], cpNormal, True),
 
@@ -17173,7 +17100,7 @@ begin
     wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
     wbRArray('Equip Slots', wbEquipSlot),
     wbFormIDCk(UNWP, 'Unarmed Weapon', [WEAP]),
-    wbFormIDCk(RLBC, '? Loot Bag', [CONT]),
+    wbFormIDCk(RLBC, 'Loot Bag', [CONT]),
 
     wbRArray('Phoneme Target Names', wbString(PHTN, 'Name')),
     wbPHWT,
@@ -17218,8 +17145,7 @@ begin
     wbMorphGroups('Female Morph Groups'),
     wbFaceMorphs('Female Face Morphs'),
     wbString(WMAP, 'Female Wrinkle Map Path'),
-
-        wbFormIDCk(NAM8, 'Morph Race', [RACE]),
+    wbFormIDCk(NAM8, 'Morph Race', [RACE]),
     wbFormIDCk(RNAM, 'Armor Race', [RACE]),
     wbFormIDCk(CVT1, 'Curve Table?', [CURV]),
     wbFormIDCk(SRAC, 'Subgraph Template Race', [RACE]),
@@ -18210,7 +18136,7 @@ begin
       wbInteger('FormType', itU32, wbFormTypeEnum), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
       wbArray('References', wbFormIDCk('Reference', [DIAL, SCEN]))
     ])),          // Ignored by the runtime
-    wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
+    wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK   Possibly a version
     wbInteger(INCC, 'Internal Cell Count', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
@@ -18303,7 +18229,7 @@ begin
     wbFloat(FMAH, 'Max Harvest'),
     wbFloat(FMIH, 'Min Harvest'),
     wbFormIDCk(FMAG, 'Max Harvest Global', [GLOB]),
-    wbFormIDCk(FMIG, 'Max Harvest Global', [GLOB])
+    wbFormIDCk(FMIG, 'Min Harvest Global', [GLOB])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(WATR, 'Water', [
@@ -18516,8 +18442,8 @@ begin
       ])),
 
       wbFromVersion(67, wbUnion('AccuracyBonus', wbFormVersionDecider(108), [
-        wbInteger('Accuracy Bonus', itU8),
-        wbInteger('Accuracy Bonus', itU32)
+        wbInteger('Accuracy Bonus', itU32),
+        wbInteger('Accuracy Bonus', itU8)
       ])),
       wbFromVersion(74, wbFloat('Animation Attack Seconds')),
       wbFromVersion(75, wbInteger('Rank', itU16)),
@@ -18525,7 +18451,10 @@ begin
       wbFromVersion(103, wbFloat('Full Power Seconds')),
       wbFromVersion(105, wbFloat('Min Power Per Shot')),
       wbFromVersion(87, wbInteger('Stagger', itU32, wbStaggerEnum)),
-      wbFromVersion(146, wbFloat('Color Remapping Index')),
+      wbUnion('', wbFormVersionDecider(146), [
+        wbByteArray('Unused', 4),
+        wbFloat('Color Remapping Index')
+      ]),
       wbFromVersion(146, wbInteger('Health',itU32))
     ]),
     wbStruct(FNAM, '', [
@@ -18999,10 +18928,10 @@ begin
     wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
     wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB]),
     wbCVPA,
-    wbArray(ILAC, 'Unknown', wbStruct('Unknown', [
+    wbArray(ILAC, 'Item Scrap Quantities', wbStruct('Item Scrap Quantity', [
       wbInteger('Record Signature', itU32, wbEnum([], [
-        $4F4D5241, 'ARMO',
-        $50414557, 'WEAP'
+        Sig2Int(ARMO), 'ARMO',
+        Sig2Int(WEAP), 'WEAP'
       ])),
       wbFormIDCk('Curve Table', [CURV])
     ]))
@@ -19317,7 +19246,8 @@ begin
         Sig2Int(MSTT), 'Movable Static',
         Sig2Int(NONE), 'None'
       ])).SetDefaultEditValue('None'),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbInteger('Max Rank', itU8),
+      wbInteger('Level Tier Scaled Offset', itU8),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
       // no way to change these in CK, legacy data leftover?
@@ -19517,7 +19447,7 @@ begin
     wbOBND(True),
     wbOPDSs,
     wbPTRN,
-    wbUnknown(WTFG),
+    wbWTFG,
     wbSNTP,
     wbXALG,
     wbLStringKC(NAM0, 'Header Text'),
@@ -19552,7 +19482,7 @@ begin
     wbByteArray(WBDT, 'Workbench Data (unused)', 0),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbZNAMArray,
+    wbZNAMMarkerParams,
     wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
     wbRArray('Body Text',
       wbRStruct('Item', [
@@ -20083,43 +20013,15 @@ begin
 
   wbRecord(CHAL, 'Challenge', [
     wbEDID,
-    wbUnknown(WTFG),
+    wbWTFG,
     wbFULL,
     wbString(SNAM, 'Tracked Stat Used'),
     wbString(NNAM, 'Comment'),
-    wbInteger(FNAM, 'Unknown Flags', itU32, wbFlags([
-      {0x00000001} 'Unknown 0',
+    wbInteger(FNAM, 'Challenge Flags', itU32, wbFlags([
+      {0x00000001} 'Repeatable',
       {0x00000002} 'Unknown 1',
       {0x00000004} 'Unknown 2',
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7',
-      {0x00000100} 'Unknown 8',
-      {0x00000200} 'Unknown 9',
-      {0x00000400} 'Unknown 10',
-      {0x00000800} 'Unknown 11',
-      {0x00001000} 'Unknown 12',
-      {0x00002000} 'Unknown 13',
-      {0x00004000} 'Unknown 14',
-      {0x00008000} 'Unknown 15',
-      {0x00010000} 'Unknown 16',
-      {0x00020000} 'Unknown 17',
-      {0x00040000} 'Unknown 18',
-      {0x00080000} 'Unknown 19',
-      {0x00100000} 'Unknown 20',
-      {0x00200000} 'Unknown 21',
-      {0x00400000} 'Unknown 22',
-      {0x00800000} 'Unknown 23',
-      {0x01000000} 'Unknown 24',
-      {0x02000000} 'Unknown 25',
-      {0x04000000} 'Unknown 26',
-      {0x08000000} 'Unknown 27',
-      {0x10000000} 'Unknown 28',
-      {0x20000000} 'Unknown 29',
-      {0x40000000} 'Unknown 30',
-      {0x80000000} 'Unknown 31'
+      {0x00000008} 'Unknown 3'
     ])),
     wbXFLGLong, //Unused?
     wbFormIDCk(HNAM, 'Required Count', [GLOB]),
@@ -20128,39 +20030,16 @@ begin
       'Weekly',
       'Lifetime'
     ])),
-    wbInteger(ENAM, 'Unknown Flags', itU32, wbFlags([
-      {0x00000001} 'Unknown 0',
-      {0x00000002} 'Unknown 1',
-      {0x00000004} 'Unknown 2',
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7',
-      {0x00000100} 'Unknown 8',
-      {0x00000200} 'Unknown 9',
-      {0x00000400} 'Unknown 10',
-      {0x00000800} 'Unknown 11',
-      {0x00001000} 'Unknown 12',
-      {0x00002000} 'Unknown 13',
-      {0x00004000} 'Unknown 14',
-      {0x00008000} 'Unknown 15',
-      {0x00010000} 'Unknown 16',
-      {0x00020000} 'Unknown 17',
-      {0x00040000} 'Unknown 18',
-      {0x00080000} 'Unknown 19',
-      {0x00100000} 'Unknown 20',
-      {0x00200000} 'Unknown 21',
-      {0x00400000} 'Unknown 22',
-      {0x00800000} 'Unknown 23',
-      {0x01000000} 'Unknown 24',
-      {0x02000000} 'Unknown 25',
-      {0x04000000} 'Unknown 26',
-      {0x08000000} 'Unknown 27',
-      {0x10000000} 'Unknown 28',
-      {0x20000000} 'Unknown 29',
-      {0x40000000} 'Unknown 30',
-      {0x80000000} 'Unknown 31'
+    wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
+      'Character',
+      'Survival',
+      'Unknown 2',
+      'Unknown 3',
+      'Combat',
+      'Social',
+      'World',
+      'Unknown 7',
+      'Sub Challenge'
     ])),
     wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
     wbCTDAs,
