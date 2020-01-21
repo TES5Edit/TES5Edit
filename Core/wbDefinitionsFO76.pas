@@ -7380,16 +7380,16 @@ begin
   ], cpNormal, False);
 
   wbDODT := wbUnion(DODT, 'Decal Data', wbFormVersionDecider(136) , [
-    wbStruct('Decal Data', [
-      wbFloat('Min Width'),
-      wbFloat('Max Width'),
-      wbFloat('Min Height'),
-      wbFloat('Max Height'),
-      wbFloat('Depth'),
-      wbFloat('Shininess'),
-      wbFloat('Parallax - Scale'),
-      wbInteger('Parallax - Passes', itU8) { >>> This can't be higher than 30 <<< }
-      wbInteger('Flags', itU8, wbFlags([
+    wbStructSK([], 'Decal Data', [
+      { 0} wbFloat('Min Width'),
+      { 1} wbFloat('Max Width'),
+      { 2} wbFloat('Min Height'),
+      { 3} wbFloat('Max Height'),
+      { 4} wbFloat('Depth'),
+      { 5} wbFloat('Shininess'),
+      { 6} wbFloat('Parallax - Scale'),
+      { 7} wbInteger('Parallax - Passes', itU8), { >>> This can't be higher than 72 <<< }
+      { 8} wbInteger('Flags', itU8, wbFlags([
         {0x01} 'POM Shadows',
         {0x02} 'Alpha - Blending',
         {0x04} 'Alpha - Testing',
@@ -7397,17 +7397,18 @@ begin
         {0x10} 'Multiplicative Blending',
         {0x20} 'No G-Buffer Normals'
         ], True)),
-      wbInteger('Alpha Threshold?', itU16),
-      wbByteColors('Color')
+      { 9} wbInteger('Alpha Threshold?', itU16),
+      {10} wbByteColors('Color')
     ]),
-    wbStruct('Decal Data', [
-      wbFloat('Min Width'),
-      wbFloat('Max Width'),
-      wbFloat('Min Height'),
-      wbFloat('Max Height'),
-      wbFloat('Depth'),
-      wbFloat('Parallax - Scale'),
-      wbInteger('Flags', itU16, wbFlags([
+    wbStructSK([], 'Decal Data', [
+      { 0} wbFloat('Min Width'),
+      { 1} wbFloat('Max Width'),
+      { 2} wbFloat('Min Height'),
+      { 3} wbFloat('Max Height'),
+      { 4} wbFloat('Depth'),
+      { 5} wbEmpty('Unused'), //Shininess
+      { 6} wbFloat('Parallax - Scale'),
+      { 7} wbInteger('Flags', itU8, wbFlags([  //XOR by 0xF0
         {0x01} 'POM Shadows',
         {0x02} 'Alpha - Blending',
         {0x04} 'Alpha - Testing',
@@ -7415,8 +7416,12 @@ begin
         {0x10} 'Multiplicative Blending',
         {0x20} 'No G-Buffer Normals'
         ], True)),
-      wbInteger('Parallax - Passes', itU16) { >>> This can't be higher than 30 <<< }
-    ])
+      { 8} wbByteArray('Unknown', 1),
+      { 9} wbInteger('Parallax - Passes', itU8), { >>> This can't be higher than 72 <<< }
+      {10} wbByteArray('Unknown', 1),
+      {11} wbEmpty('Unused'), //Alpha Threshold?
+      {12} wbEmpty('Unused') //Color
+    ], [0, 1, 2, 3, 4, 5, 6, 9, 7, 11, 12, 8, 10])
   ]);
 
 //  wbRecordFlagsFlags := wbFlags([
@@ -9482,47 +9487,47 @@ begin
 ], []);
 
   wbQuestEventEnum := wbEnum( [], [
-    Int64($53455254), 'Trespass Actor Event',         //TRES
-    Int64($45454D54), 'Trigger Mine Explosion Event', //TMEE
-    Int64($4A495453), 'Served Time',                  //STIJ
-    Int64($54504353), 'Script Event',                 //SCPT
-    Int64($504D4552), 'Player Remove Item',           //REMP
-    Int64($52545351), 'Quest Start',                  //QSTR
-    Int64($544D5051), 'QuickPlay Match Event',        //QPMT
-    Int64($56465250), 'Player Recieves Favor',        //PRFV
-    Int64($4E494650), 'Pay Fine Event',               //PFIN
-    Int64($4E4F4350), 'Player Connect',               //PCON
-    Int64($5441414F), 'On Actor Attach',              //OAAT
-    Int64($4550564E), 'New Voice Power',              //NVPE
-    Int64($4B434F4C), 'Lock Pick',                    //LOCK
-    Int64($4C56454C), 'Increase Level',               //LEVL
-    Int64($4750434C), 'LCP Global Value Event',       //LCPG
-    Int64($444C434C), 'Location Loaded',              //LCLD
-    Int64($4C4C494B), 'Kill Actor Event',             //KILL
-    Int64($4C49414A), 'Jail Event',                   //JAIL
-    Int64($4E4F5249), 'Iron Sights',                  //IRON
-    Int64($4D544E49), 'Intimidate',                   //INTM
-    Int64($43464E49), 'Player Infected',              //INFC
-    Int64($434F4C49), 'Instanced Location Created Event', //ILOC
-    Int64($4B434148), 'Hack Computer',                //HACK
-    Int64($54414C46), 'Flatter',                      //FLAT
-    Int64($414A5345), 'Escape Jail',                  //ESJA
-    Int64($44414544), 'Dead Body',                    //DEAD
-    Int64($45525543), 'Player Cured',                 //CURE
-    Int64($54465243), 'Craft Item',                   //CRFT
-    Int64($4C524C43), 'Clear Location Event',         //CLRL
-    Int64($434F4C43), 'Change Location Event',        //CLOC
-    Int64($52524843), 'Change Relationship Rank',     //CHRR
-    Int64($54534143), 'Cast Magic Event',             //CAST
-    Int64($42495242), 'Bribe',                        //BRIB
-    Int64($55535341), 'Assault Actor Event',          //ASSU
-    Int64($54525241), 'Arrest Event',                 //ARRT
-    Int64($4A424F41), 'Attraction Object Event',      //AOBJ
-    Int64($4C504941), 'Player Add Item',              //AIPL
-    Int64($4C454841), 'Actor Hello Event',            //AHEL
-    Int64($56414641), 'Player Activate Actor',        //AFAV
-    Int64($41494441), 'Actor Dialogue Event',         //ADIA
-    Int64($4F424441), 'Bounty Event'                  //ADBO
+    Sig2Int('TRES'), 'Trespass Actor Event',
+    Sig2Int('TMEE'), 'Trigger Mine Explosion Event',
+    Sig2Int('STIJ'), 'Served Time',
+    Sig2Int('SCPT'), 'Script Event',
+    Sig2Int('REMP'), 'Player Remove Item',
+    Sig2Int('QSTR'), 'Quest Start',
+    Sig2Int('QPMT'), 'QuickPlay Match Event',
+    Sig2Int('PRFV'), 'Player Recieves Favor',
+    Sig2Int('PFIN'), 'Pay Fine Event',
+    Sig2Int('PCON'), 'Player Connect',
+    Sig2Int('OAAT'), 'On Actor Attach',
+    Sig2Int('NVPE'), 'New Voice Power',
+    Sig2Int('LOCK'), 'Lock Pick',
+    Sig2Int('LEVL'), 'Increase Level',
+    Sig2Int('LCPG'), 'LCP Global Value Event',
+    Sig2Int('LCLD'), 'Location Loaded',
+    Sig2Int('KILL'), 'Kill Actor Event',
+    Sig2Int('JAIL'), 'Jail Event',
+    Sig2Int('IRON'), 'Iron Sights',
+    Sig2Int('INTM'), 'Intimidate',
+    Sig2Int('INFC'), 'Player Infected',
+    Sig2Int('ILOC'), 'Instanced Location Created Event',
+    Sig2Int('HACK'), 'Hack Computer',
+    Sig2Int('FLAT'), 'Flatter',
+    Sig2Int('ESJA'), 'Escape Jail',
+    Sig2Int('DEAD'), 'Dead Body',
+    Sig2Int('CURE'), 'Player Cured',
+    Sig2Int('CRFT'), 'Craft Item',
+    Sig2Int('CLRL'), 'Clear Location Event',
+    Sig2Int('CLOC'), 'Change Location Event',
+    Sig2Int('CHRR'), 'Change Relationship Rank',
+    Sig2Int('CAST'), 'Cast Magic Event',
+    Sig2Int('BRIB'), 'Bribe',
+    Sig2Int('ASSU'), 'Assault Actor Event',
+    Sig2Int('ARRT'), 'Arrest Event',
+    Sig2Int('AOBJ'), 'Attraction Object Event',
+    Sig2Int('AIPL'), 'Player Add Item',
+    Sig2Int('AHEL'), 'Actor Hello Event',
+    Sig2Int('AFAV'), 'Player Activate Actor',
+    Sig2Int('ADIA'), 'Actor Dialogue Event',
+    Sig2Int('ADBO'), 'Bounty Event'
   ]);
 
   wbMiscStatEnum := wbEnum([], [
