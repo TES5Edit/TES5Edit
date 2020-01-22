@@ -8591,7 +8591,7 @@ begin
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
-      wbInteger('Flags', itU32, wbFlags(['Animatable'])),
+      wbInteger('Animatable', itU32, wbEnum(['False', 'True'])),
       wbFloat('Duration'),
       wbStruct('HDR', [
         wbInteger('Eye Adapt Speed Mult', itU32),
@@ -9891,7 +9891,10 @@ begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbInteger(TNAM, 'Unknown', itU32),
+    wbInteger(TNAM, 'Category', itU32, wbEnum([
+        {0} 'Player',
+        {1} 'Command'
+    ])),
     wbInteger(DNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Top-Level',
       {0x02} 'Blocking',
@@ -10447,8 +10450,8 @@ begin
         {0x0001} 'Goodbye',
         {0x0002} 'Random',
         {0x0004} 'Say once',
-        {0x0008} 'Unknown 4',
-        {0x0010} 'Unknown 5',
+        {0x0008} 'Requires Player Activation',
+        {0x0010} 'Info Refusal',
         {0x0020} 'Random end',
         {0x0040} 'Invisible continue',
         {0x0080} 'Walk Away',
@@ -11549,18 +11552,21 @@ begin
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
-        {0x0002} 'Unknown 2',
-        {0x0004} 'Unknown 3',
+        {0x0002} 'Completed',
+        {0x0004} 'Add Idle topic to Hello',
         {0x0008} 'Allow repeated stages',
-        {0x0010} 'Unknown 5',
-        {0x0020} 'Unknown 6',
-        {0x0040} 'Unknown 7',
-        {0x0080} 'Unknown 8',
+        {0x0010} 'Starts Enabled',
+        {0x0020} 'Displayed In HUD',
+        {0x0040} 'Failed',
+        {0x0080} 'Stage Wait',
         {0x0100} 'Run Once',
         {0x0200} 'Exclude from dialogue export',
         {0x0400} 'Warn on alias fill failure',
-        {0x0800} 'Unknown 12',
-        {0x1000} 'Unknown 13'
+        {0x0800} 'Active',
+        {0x1000} 'Repeats Conditions',
+        {0x2000} 'Keep Instance',
+        {0x4000} 'Want Dormant',
+        {0x8000} 'Has Dialogue Data'
       ])),
       wbInteger('Priority', itU8),
       wbInteger('Form Version', itU8, nil, cpIgnore),
@@ -12165,15 +12171,15 @@ begin
         {0x00000010} 'Allow Mounted Combat'
       ])),
       wbStruct('Mount Data', [
-        wbFloat('Offset X', cpNormal, False, 1, -1, nil, nil, -63.479000),
-        wbFloat('Offset Y'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, -50.0),
-        wbFloat('Unknown'),
-        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, 65.0),
-        wbFloat('Unknown'),
-        wbFloat('Unknown', cpNormal, False, 1, -1, nil, nil, -300.0),
-        wbFloat('Unknown')
+        wbFloat('Mount Offset X', cpNormal, False, 1, -1, nil, nil, -63.479000),
+        wbFloat('Mount Offset Y'),
+        wbFloat('Mount Offset Z'),
+        wbFloat('Dismount Offset X', cpNormal, False, 1, -1, nil, nil, -50.0),
+        wbFloat('Dismount Offset Y'),
+        wbFloat('Dismount Offset Z', cpNormal, False, 1, -1, nil, nil, 65.0),
+        wbFloat('Mount Camera Offset X'),
+        wbFloat('Mount Camera Offset Y', cpNormal, False, 1, -1, nil, nil, -300.0),
+        wbFloat('Mount Camera Offset Z')
       ])
       //wbByteArray('Unknown', 4*7)
     ], cpNormal, True, nil, 29),
@@ -12954,15 +12960,14 @@ begin
     wbStruct(CNAM, 'Tree Data', [
       wbFloat('Trunk Flexibility'),
       wbFloat('Branch Flexibility'),
-      //wbByteArray('Unknown', 32),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbFloat('Trunk Amplitude'),
+      wbFloat('Front Amplitude'),
+      wbFloat('Back Amplitude'),
+      wbFloat('Side Amplitude'),
+      wbFloat('Front Frequency'),
+      wbFloat('Back Frequency'),
+      wbFloat('Side Frequency'),
+      wbFloat('Leaf Flexibility'),
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True)

@@ -17991,7 +17991,7 @@ begin
       end;
 
       if Assigned(FoundMembers[CurrentDefPos]) then begin
-        Beep;
+        //Beep;
         Break; // don't allow duplicate members
       end;
 
