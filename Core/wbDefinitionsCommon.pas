@@ -168,6 +168,8 @@ procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
+procedure wbSMENTypeToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -1835,6 +1837,108 @@ begin
     aValue := 'RGBA(' + R + ', ' + G + ', ' + B + ', ' + A.Summary + ')'
   else
     aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
+end;
+
+procedure wbSMENTypeToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container: IwbContainerElementRef;
+begin
+  if not wbTrySetContainer(aElement, aType, Container) then
+    Exit;
+
+  var ENAM := Container.ElementBySignature['ENAM'].Value;
+
+  case IndexStr(ENAM, [
+    {0}  'ADBO',
+    {1}  'ADCR',
+    {2}  'ADIA',
+    {3}  'AFAV',
+    {4}  'AHEL',
+    {5}  'AIPL',
+    {6}  'AOBJ',
+    {7}  'ARRT',
+    {8}  'ASSU',
+    {9}  'BRIB',
+    {10} 'CAST',
+    {11} 'CHRR',
+    {12} 'CLOC',
+    {13} 'CLRL',
+    {14} 'CRFT',
+    {15} 'CURE',
+    {16} 'DEAD',
+    {17} 'ESJA',
+    {18} 'FLAT',
+    {19} 'HACK',
+    {20} 'ILOC',
+    {21} 'INFC',
+    {22} 'INTM',
+    {23} 'IRON',
+    {24} 'JAIL',
+    {25} 'KILL',
+    {26} 'LCLD',
+    {27} 'LCPG',
+    {28} 'LEVL',
+    {29} 'LOCK',
+    {30} 'NVPE',
+    {31} 'OAAT',
+    {32} 'PCON',
+    {33} 'PFIN',
+    {34} 'PRFV',
+    {35} 'QPMT',
+    {36} 'QSTR',
+    {37} 'REMP',
+    {38} 'SCPT',
+    {39} 'SKIL',
+    {40} 'STIJ',
+    {41} 'TMEE',
+    {42} 'TRES'
+  ]) of
+    0:  aValue := 'Bounty Event';
+    1:  aValue := 'Crime Gold Event';
+    2:  aValue := 'Actor Dialogue Event';
+    3:  aValue := 'Player Activate Actor';
+    4:  aValue := 'Actor Hello Event';
+    5:  aValue := 'Player Add Item';
+    6:  aValue := 'Attraction Object Event';
+    7:  aValue := 'Arrest Event';
+    8:  aValue := 'Assault Actor Event';
+    9:  aValue := 'Bribe';
+    10: aValue := 'Cast Magic Event';
+    11: aValue := 'Change Relationship Rank';
+    12: aValue := 'Change Location Event';
+    13: aValue := 'Clear Location Event';
+    14: aValue := 'Craft Item';
+    15: aValue := 'Player Cured';
+    16: aValue := 'Dead Body';
+    17: aValue := 'Escape Jail';
+    18: aValue := 'Flatter';
+    19: aValue := 'Hack Computer';
+    20: aValue := 'Instanced Location Created Event';
+    21: aValue := 'Player Infected';
+    22: aValue := 'Intimidate';
+    23: aValue := 'Iron Sights';
+    24: aValue := 'Jail Event';
+    25: aValue := 'Kill Actor Event';
+    26: aValue := 'Location Loaded';
+    27: aValue := 'LCP Global Value Event';
+    28: aValue := 'Increase Level';
+    29: aValue := 'Lock Pick';
+    30: aValue := 'New Voice Power';
+    31: aValue := 'On Actor Attach';
+    32: aValue := 'Player Connect';
+    33: aValue := 'Pay Fine Event';
+    34: aValue := 'Player Receives Favor';
+    35: aValue := 'QuickPlay Match Event';
+    36: aValue := 'Quest Start';
+    37: aValue := 'Player Remove Item';
+    38: aValue := 'Script Event';
+    39: aValue := 'Skill Increase';
+    40: aValue := 'Served Time';
+    41: aValue := 'Trigger Mine Explosion Event';
+    42: aValue := 'Trespass Actor Event';
+  else
+    aValue := ENAM;
+  end;
 end;
 
 // TODO: used in too many places to replace with summary callbacks

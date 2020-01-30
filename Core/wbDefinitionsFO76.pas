@@ -14152,7 +14152,8 @@ begin
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
     wbString(ENAM, 'Type', 4)
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
+    .SetToStr(wbSMENTypeToStr);
 end;
 
 procedure DefineFO76j;
