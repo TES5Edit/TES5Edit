@@ -110,7 +110,7 @@
         <DCC_ExeOutput>.\Build</DCC_ExeOutput>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;.\External\Diff;.\External\TOM2;.\External\DWScript\Source;.\Core;.\xEdit;.\xEdit\JvI;.\xEdit\DWS;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;.\External\Diff;.\External\TOM2;.\External\DWScript\Source;.\External\pascalscript\Source;.\External\pascalscript\Source\ThirdParty;.\Core;.\xEdit;.\xEdit\JvI;.\xEdit\DWS;.\xEdit\PS;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>.\xEdit\xEdit_TES_Icon.ico</Icon_MainIcon>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Build>1</VerInfo_Build>
@@ -270,6 +270,7 @@
         </DCCReference>
         <DCCReference Include="xEdit\xeScriptHost.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptHost.pas"/>
+        <DCCReference Include="xEdit\PS\xepsScriptHost.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -37,7 +37,7 @@ var
   xeModulesToUse           : TStringList;
 
 const
-  xeDefaultScriptHost = 'JvI';
+  xeDefaultScriptHost = 'PS';
 
 function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
                                       out aValue       : string;
