@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{01F9D619-609B-468F-9EC6-5649D7F92175}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="TES5Edit.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tools\xDump\SSEDump.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="TES5Edit">
+        <MSBuild Projects="TES5Edit.dproj"/>
+    </Target>
+    <Target Name="TES5Edit:Clean">
+        <MSBuild Projects="TES5Edit.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TES5Edit:Make">
+        <MSBuild Projects="TES5Edit.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SSEDump">
+        <MSBuild Projects="Tools\xDump\SSEDump.dproj"/>
+    </Target>
+    <Target Name="SSEDump:Clean">
+        <MSBuild Projects="Tools\xDump\SSEDump.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SSEDump:Make">
+        <MSBuild Projects="Tools\xDump\SSEDump.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="TES5Edit;SSEDump"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="TES5Edit:Clean;SSEDump:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="TES5Edit:Make;SSEDump:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
