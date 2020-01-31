@@ -4422,7 +4422,7 @@ var
     if flLoadOrder >= 0 then begin
       _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
       if wbIsEslSupported or wbPseudoESL then begin
-        if (fsPseudoESL in flStates) or (Header.IsESL and not wbIgnoreESL) then begin
+        if (fsPseudoESL in flStates) or ((Header.IsESL or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreESL) then begin
           if _NextLightSlot > $FFF then
             raise Exception.Create('Too many light modules');
           flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
