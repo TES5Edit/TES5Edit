@@ -9486,50 +9486,6 @@ begin
     'Event Quest Widget'
 ], []);
 
-  wbQuestEventEnum := wbEnum( [], [
-    Sig2Int('TRES'), 'Trespass Actor Event',
-    Sig2Int('TMEE'), 'Trigger Mine Explosion Event',
-    Sig2Int('STIJ'), 'Served Time',
-    Sig2Int('SCPT'), 'Script Event',
-    Sig2Int('REMP'), 'Player Remove Item',
-    Sig2Int('QSTR'), 'Quest Start',
-    Sig2Int('QPMT'), 'QuickPlay Match Event',
-    Sig2Int('PRFV'), 'Player Recieves Favor',
-    Sig2Int('PFIN'), 'Pay Fine Event',
-    Sig2Int('PCON'), 'Player Connect',
-    Sig2Int('OAAT'), 'On Actor Attach',
-    Sig2Int('NVPE'), 'New Voice Power',
-    Sig2Int('LOCK'), 'Lock Pick',
-    Sig2Int('LEVL'), 'Increase Level',
-    Sig2Int('LCPG'), 'LCP Global Value Event',
-    Sig2Int('LCLD'), 'Location Loaded',
-    Sig2Int('KILL'), 'Kill Actor Event',
-    Sig2Int('JAIL'), 'Jail Event',
-    Sig2Int('IRON'), 'Iron Sights',
-    Sig2Int('INTM'), 'Intimidate',
-    Sig2Int('INFC'), 'Player Infected',
-    Sig2Int('ILOC'), 'Instanced Location Created Event',
-    Sig2Int('HACK'), 'Hack Computer',
-    Sig2Int('FLAT'), 'Flatter',
-    Sig2Int('ESJA'), 'Escape Jail',
-    Sig2Int('DEAD'), 'Dead Body',
-    Sig2Int('CURE'), 'Player Cured',
-    Sig2Int('CRFT'), 'Craft Item',
-    Sig2Int('CLRL'), 'Clear Location Event',
-    Sig2Int('CLOC'), 'Change Location Event',
-    Sig2Int('CHRR'), 'Change Relationship Rank',
-    Sig2Int('CAST'), 'Cast Magic Event',
-    Sig2Int('BRIB'), 'Bribe',
-    Sig2Int('ASSU'), 'Assault Actor Event',
-    Sig2Int('ARRT'), 'Arrest Event',
-    Sig2Int('AOBJ'), 'Attraction Object Event',
-    Sig2Int('AIPL'), 'Player Add Item',
-    Sig2Int('AHEL'), 'Actor Hello Event',
-    Sig2Int('AFAV'), 'Player Activate Actor',
-    Sig2Int('ADIA'), 'Actor Dialogue Event',
-    Sig2Int('ADBO'), 'Bounty Event'
-  ]);
-
   wbMiscStatEnum := wbEnum([], [
     Int64($1EE71DBC), 'Animals Friended',
     Int64($FCDD5011), 'Animals Killed',
@@ -14151,9 +14107,9 @@ begin
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
-    wbString(ENAM, 'Type', 4)
+    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
-    .SetToStr(wbSMENTypeToStr);
+    .SetSummaryKey([7]);
 end;
 
 procedure DefineFO76j;

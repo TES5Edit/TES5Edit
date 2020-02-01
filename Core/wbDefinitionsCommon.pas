@@ -16,57 +16,100 @@ uses
   wbInterface;
 
 const
-  ANAM: TwbSignature = 'ANAM';
-  ATXT: TwbSignature = 'ATXT';
-  BTXT: TwbSignature = 'BTXT';
-  CNAM: TwbSignature = 'CNAM';
-  CS2D: TwbSignature = 'CS2D';
-  CS2K: TwbSignature = 'CS2K';
-  CSDC: TwbSignature = 'CSDC';
-  CSDI: TwbSignature = 'CSDI';
-  CTDA: TwbSignature = 'CTDA';
-  DATA: TwbSignature = 'DATA';
-  FACT: TwbSignature = 'FACT';
-  GLOB: TwbSignature = 'GLOB';
-  HDPT: TwbSignature = 'HDPT';
-  HEAD: TwbSignature = 'HEAD';
-  HEDR: TwbSignature = 'HEDR';
-  ICON: TwbSignature = 'ICON';
-  INDX: TwbSignature = 'INDX';
-  KYWD: TwbSignature = 'KYWD';
-  LTEX: TwbSignature = 'LTEX';
-  MDOB: TwbSignature = 'MDOB';
-  MICO: TwbSignature = 'MICO';
-  MODL: TwbSignature = 'MODL';
-  MODT: TwbSignature = 'MODT';
-  DMDT: TwbSignature = 'DMDT';
-  NAM0: TwbSignature = 'NAM0';
-  NAM9: TwbSignature = 'NAM9';
-  NULL: TwbSignature = 'NULL';
-  OBND: TwbSignature = 'OBND';
-  OFST: TwbSignature = 'OFST';
-  PFPC: TwbSignature = 'PFPC';
-  RACE: TwbSignature = 'RACE';
-  RDSA: TwbSignature = 'RDSA';
-  RDSD: TwbSignature = 'RDSD';
-  SCDA: TwbSignature = 'SCDA';
-  SCTX: TwbSignature = 'SCTX';
-  SNAM: TwbSignature = 'SNAM';
-  SNDD: TwbSignature = 'SNDD';
-  SNDR: TwbSignature = 'SNDR';
-  SOUN: TwbSignature = 'SOUN';
-  TNAM: TwbSignature = 'TNAM';
-  TXST: TwbSignature = 'TXST';
-  VCLR: TwbSignature = 'VCLR';
-  VHGT: TwbSignature = 'VHGT';
-  VNML: TwbSignature = 'VNML';
-  VTXT: TwbSignature = 'VTXT';
-  XACT: TwbSignature = 'XACT';
-  XCLC: TwbSignature = 'XCLC';
-  XGLB: TwbSignature = 'XGLB';
-  XLOD: TwbSignature = 'XLOD';
-  XNAM: TwbSignature = 'XNAM';
-  XRNK: TwbSignature = 'XRNK';
+	ADBO: TwbSignature = 'ADBO';
+	ADCR: TwbSignature = 'ADCR';
+	ADIA: TwbSignature = 'ADIA';
+	AFAV: TwbSignature = 'AFAV';
+	AHEL: TwbSignature = 'AHEL';
+	AIPL: TwbSignature = 'AIPL';
+	ANAM: TwbSignature = 'ANAM';
+	AOBJ: TwbSignature = 'AOBJ';
+	ARRT: TwbSignature = 'ARRT';
+	ASSU: TwbSignature = 'ASSU';
+	ATXT: TwbSignature = 'ATXT';
+	BRIB: TwbSignature = 'BRIB';
+	BTXT: TwbSignature = 'BTXT';
+	CAST: TwbSignature = 'CAST';
+	CHRR: TwbSignature = 'CHRR';
+	CLOC: TwbSignature = 'CLOC';
+	CLRL: TwbSignature = 'CLRL';
+	CNAM: TwbSignature = 'CNAM';
+	CRFT: TwbSignature = 'CRFT';
+	CS2D: TwbSignature = 'CS2D';
+	CS2K: TwbSignature = 'CS2K';
+	CSDC: TwbSignature = 'CSDC';
+	CSDI: TwbSignature = 'CSDI';
+	CTDA: TwbSignature = 'CTDA';
+	CURE: TwbSignature = 'CURE';
+	DATA: TwbSignature = 'DATA';
+	DEAD: TwbSignature = 'DEAD';
+	DMDT: TwbSignature = 'DMDT';
+	ESJA: TwbSignature = 'ESJA';
+	FACT: TwbSignature = 'FACT';
+	FLAT: TwbSignature = 'FLAT';
+	GLOB: TwbSignature = 'GLOB';
+	HACK: TwbSignature = 'HACK';
+	HDPT: TwbSignature = 'HDPT';
+	HEAD: TwbSignature = 'HEAD';
+	HEDR: TwbSignature = 'HEDR';
+	ICON: TwbSignature = 'ICON';
+	ILOC: TwbSignature = 'ILOC';
+	INDX: TwbSignature = 'INDX';
+	INFC: TwbSignature = 'INFC';
+	INTM: TwbSignature = 'INTM';
+	IRON: TwbSignature = 'IRON';
+	JAIL: TwbSignature = 'JAIL';
+	KILL: TwbSignature = 'KILL';
+	KYWD: TwbSignature = 'KYWD';
+	LCLD: TwbSignature = 'LCLD';
+	LCPG: TwbSignature = 'LCPG';
+	LEVL: TwbSignature = 'LEVL';
+	LOCK: TwbSignature = 'LOCK';
+	LTEX: TwbSignature = 'LTEX';
+	MDOB: TwbSignature = 'MDOB';
+	MICO: TwbSignature = 'MICO';
+	MODL: TwbSignature = 'MODL';
+	MODT: TwbSignature = 'MODT';
+	NAM0: TwbSignature = 'NAM0';
+	NAM9: TwbSignature = 'NAM9';
+	NULL: TwbSignature = 'NULL';
+	NVPE: TwbSignature = 'NVPE';
+	OAAT: TwbSignature = 'OAAT';
+	OBND: TwbSignature = 'OBND';
+	OFST: TwbSignature = 'OFST';
+	PCON: TwbSignature = 'PCON';
+	PFIN: TwbSignature = 'PFIN';
+	PFPC: TwbSignature = 'PFPC';
+	PRFV: TwbSignature = 'PRFV';
+	QPMT: TwbSignature = 'QPMT';
+	QSTR: TwbSignature = 'QSTR';
+	RACE: TwbSignature = 'RACE';
+	RDSA: TwbSignature = 'RDSA';
+	RDSD: TwbSignature = 'RDSD';
+	REMP: TwbSignature = 'REMP';
+	SCDA: TwbSignature = 'SCDA';
+	SCPT: TwbSignature = 'SCPT';
+	SCTX: TwbSignature = 'SCTX';
+	SKIL: TwbSignature = 'SKIL';
+	SNAM: TwbSignature = 'SNAM';
+	SNDD: TwbSignature = 'SNDD';
+	SNDR: TwbSignature = 'SNDR';
+	SOUN: TwbSignature = 'SOUN';
+	STIJ: TwbSignature = 'STIJ';
+	TMEE: TwbSignature = 'TMEE';
+	TNAM: TwbSignature = 'TNAM';
+	TRES: TwbSignature = 'TRES';
+	TXST: TwbSignature = 'TXST';
+	VCLR: TwbSignature = 'VCLR';
+	VHGT: TwbSignature = 'VHGT';
+	VNML: TwbSignature = 'VNML';
+	VTXT: TwbSignature = 'VTXT';
+	XACT: TwbSignature = 'XACT';
+	XCLC: TwbSignature = 'XCLC';
+	XGLB: TwbSignature = 'XGLB';
+	XLOD: TwbSignature = 'XLOD';
+	XNAM: TwbSignature = 'XNAM';
+	XRNK: TwbSignature = 'XRNK';
   _11_IAD: TwbSignature = #$11'IAD';
   _12_IAD: TwbSignature = #$12'IAD';
   _13_IAD: TwbSignature = #$13'IAD';
@@ -93,6 +136,7 @@ var
   wbSexEnum: IwbEnumDef;
   wbActorSounds: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
+  wbQuestEventEnum: IwbEnumDef;
   wbRegionSounds: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
@@ -167,8 +211,6 @@ procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr:
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-
-procedure wbSMENTypeToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
@@ -556,6 +598,52 @@ begin
       {2} 'Top Left',
       {3} 'Top Right'
     ]);
+
+  wbQuestEventEnum := wbEnum([], [
+    Sig2Int(ADBO), 'Bounty Event',
+    Sig2Int(ADCR), 'Crime Gold Event',
+    Sig2Int(ADIA), 'Actor Dialogue Event',
+    Sig2Int(AFAV), 'Player Activate Actor',
+    Sig2Int(AHEL), 'Actor Hello Event',
+    Sig2Int(AIPL), 'Player Add Item',
+    Sig2Int(AOBJ), 'Attraction Object Event',
+    Sig2Int(ARRT), 'Arrest Event',
+    Sig2Int(ASSU), 'Assault Actor Event',
+    Sig2Int(BRIB), 'Bribe',
+    Sig2Int(CAST), 'Cast Magic Event',
+    Sig2Int(CHRR), 'Change Relationship Rank',
+    Sig2Int(CLOC), 'Change Location Event',
+    Sig2Int(CLRL), 'Clear Location Event',
+    Sig2Int(CRFT), 'Craft Item',
+    Sig2Int(CURE), 'Player Cured',
+    Sig2Int(DEAD), 'Dead Body',
+    Sig2Int(ESJA), 'Escape Jail',
+    Sig2Int(FLAT), 'Flatter',
+    Sig2Int(HACK), 'Hack Computer',
+    Sig2Int(ILOC), 'Instanced Location Created Event',
+    Sig2Int(INFC), 'Player Infected',
+    Sig2Int(INTM), 'Intimidate',
+    Sig2Int(IRON), 'Iron Sights',
+    Sig2Int(JAIL), 'Jail Event',
+    Sig2Int(KILL), 'Kill Actor Event',
+    Sig2Int(LCLD), 'Location Loaded',
+    Sig2Int(LCPG), 'LCP Global Value Event',
+    Sig2Int(LEVL), 'Increase Level',
+    Sig2Int(LOCK), 'Lock Pick',
+    Sig2Int(NVPE), 'New Voice Power',
+    Sig2Int(OAAT), 'On Actor Attach',
+    Sig2Int(PCON), 'Player Connect',
+    Sig2Int(PFIN), 'Pay Fine Event',
+    Sig2Int(PRFV), 'Player Recieves Favor',
+    Sig2Int(QPMT), 'QuickPlay Match Event',
+    Sig2Int(QSTR), 'Quest Start',
+    Sig2Int(REMP), 'Player Remove Item',
+    Sig2Int(SCPT), 'Script Event',
+    Sig2Int(SKIL), 'Skill Increase',
+    Sig2Int(STIJ), 'Served Time',
+    Sig2Int(TMEE), 'Trigger Mine Explosion Event',
+    Sig2Int(TRES), 'Trespass Actor Event'
+  ]);
 
   wbSeasons :=
     wbStruct(PFPC, 'Seasonal ingredient production', [
@@ -1839,107 +1927,6 @@ begin
     aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
 end;
 
-procedure wbSMENTypeToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-var
-  Container: IwbContainerElementRef;
-begin
-  if not wbTrySetContainer(aElement, aType, Container) then
-    Exit;
-
-  var ENAM := Container.ElementBySignature['ENAM'].Value;
-
-  case IndexStr(ENAM, [
-    {0}  'ADBO',
-    {1}  'ADCR',
-    {2}  'ADIA',
-    {3}  'AFAV',
-    {4}  'AHEL',
-    {5}  'AIPL',
-    {6}  'AOBJ',
-    {7}  'ARRT',
-    {8}  'ASSU',
-    {9}  'BRIB',
-    {10} 'CAST',
-    {11} 'CHRR',
-    {12} 'CLOC',
-    {13} 'CLRL',
-    {14} 'CRFT',
-    {15} 'CURE',
-    {16} 'DEAD',
-    {17} 'ESJA',
-    {18} 'FLAT',
-    {19} 'HACK',
-    {20} 'ILOC',
-    {21} 'INFC',
-    {22} 'INTM',
-    {23} 'IRON',
-    {24} 'JAIL',
-    {25} 'KILL',
-    {26} 'LCLD',
-    {27} 'LCPG',
-    {28} 'LEVL',
-    {29} 'LOCK',
-    {30} 'NVPE',
-    {31} 'OAAT',
-    {32} 'PCON',
-    {33} 'PFIN',
-    {34} 'PRFV',
-    {35} 'QPMT',
-    {36} 'QSTR',
-    {37} 'REMP',
-    {38} 'SCPT',
-    {39} 'SKIL',
-    {40} 'STIJ',
-    {41} 'TMEE',
-    {42} 'TRES'
-  ]) of
-    0:  aValue := 'Bounty Event';
-    1:  aValue := 'Crime Gold Event';
-    2:  aValue := 'Actor Dialogue Event';
-    3:  aValue := 'Player Activate Actor';
-    4:  aValue := 'Actor Hello Event';
-    5:  aValue := 'Player Add Item';
-    6:  aValue := 'Attraction Object Event';
-    7:  aValue := 'Arrest Event';
-    8:  aValue := 'Assault Actor Event';
-    9:  aValue := 'Bribe';
-    10: aValue := 'Cast Magic Event';
-    11: aValue := 'Change Relationship Rank';
-    12: aValue := 'Change Location Event';
-    13: aValue := 'Clear Location Event';
-    14: aValue := 'Craft Item';
-    15: aValue := 'Player Cured';
-    16: aValue := 'Dead Body';
-    17: aValue := 'Escape Jail';
-    18: aValue := 'Flatter';
-    19: aValue := 'Hack Computer';
-    20: aValue := 'Instanced Location Created Event';
-    21: aValue := 'Player Infected';
-    22: aValue := 'Intimidate';
-    23: aValue := 'Iron Sights';
-    24: aValue := 'Jail Event';
-    25: aValue := 'Kill Actor Event';
-    26: aValue := 'Location Loaded';
-    27: aValue := 'LCP Global Value Event';
-    28: aValue := 'Increase Level';
-    29: aValue := 'Lock Pick';
-    30: aValue := 'New Voice Power';
-    31: aValue := 'On Actor Attach';
-    32: aValue := 'Player Connect';
-    33: aValue := 'Pay Fine Event';
-    34: aValue := 'Player Receives Favor';
-    35: aValue := 'QuickPlay Match Event';
-    36: aValue := 'Quest Start';
-    37: aValue := 'Player Remove Item';
-    38: aValue := 'Script Event';
-    39: aValue := 'Skill Increase';
-    40: aValue := 'Served Time';
-    41: aValue := 'Trigger Mine Explosion Event';
-    42: aValue := 'Trespass Actor Event';
-  else
-    aValue := ENAM;
-  end;
-end;
 
 // TODO: used in too many places to replace with summary callbacks
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
