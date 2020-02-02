@@ -1,12 +1,12 @@
 {
-	Purpose: To quickly set the ESL flag on selected files that support it.
+  Purpose: To quickly set the ESL flag on selected files that support it.
             Must be used with -PseudoESL.
     Usage:  Start xEdit with the -PseudoESL command line argument. Select the plugins
             you wish to check and flag for ESL. Click OK. Once loaded select the
             files and apply this script. It will skip any files xEdit deems unsafe
             to flag as ESL. Once done close xEdit and save plugins.
-	Games: Fallout 4 / Skyrim Special Edition
-	Author: Jonathan Ostrus
+  Games: Fallout 4 / Skyrim Special Edition
+  Author: Jonathan Ostrus
 }
 unit userscript;
 
@@ -65,8 +65,8 @@ begin
     AddMessage(fs + ' is now processed.');
   end
   else
-  	if ExtraSpammy then
-  	  AddMessage(fs + ' can be flagged ESL but is currently not editable.');
+    if ExtraSpammy then
+      AddMessage(fs + ' can be flagged ESL but is currently not editable.');
 end;
 
 end.

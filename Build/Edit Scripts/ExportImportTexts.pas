@@ -79,33 +79,33 @@ begin
     rb2.Caption := 'Import';
     rb2.Width := 75;
     
-		if wbGameMode < gmTES5 then begin
-			rg2 := TRadioGroup.Create(frm);
-			rg2.Parent := pnl;
-			rg2.Left := 16;
-			rg2.Height := 60;
-			rg2.Top := rg.Top + rg.Height + 1;
-			rg2.Width := rg.Width;
-			rg2.Caption := 'Selection ?';
-			rg2.ClientHeight := 45;
-			rg2.ClientWidth := rg2.Width;
-		end;
-		rb4 := TRadioButton.Create(rg);
-		if wbGameMode < gmTES5 then begin
-			rb4.Parent := rg2;
-			rb4.Left := rb1.left;
-			rb4.Top := rb1.Top;
-			rb4.Caption := 'All texts';
-			rb4.Width := rb1.Width;
-			
-			rb5 := TRadioButton.Create(rg);
-			rb5.Parent := rg2;
-			rb5.Left := rb4.Left + rb4.Width + 30;
-			rb5.Top := rb4.Top;
-			rb5.Caption := 'Only scripts';
-			rb5.Width := rb4.Width;
-		end;
-		rb4.Checked := True;
+    if wbGameMode < gmTES5 then begin
+      rg2 := TRadioGroup.Create(frm);
+      rg2.Parent := pnl;
+      rg2.Left := 16;
+      rg2.Height := 60;
+      rg2.Top := rg.Top + rg.Height + 1;
+      rg2.Width := rg.Width;
+      rg2.Caption := 'Selection ?';
+      rg2.ClientHeight := 45;
+      rg2.ClientWidth := rg2.Width;
+    end;
+    rb4 := TRadioButton.Create(rg);
+    if wbGameMode < gmTES5 then begin
+      rb4.Parent := rg2;
+      rb4.Left := rb1.left;
+      rb4.Top := rb1.Top;
+      rb4.Caption := 'All texts';
+      rb4.Width := rb1.Width;
+      
+      rb5 := TRadioButton.Create(rg);
+      rb5.Parent := rg2;
+      rb5.Left := rb4.Left + rb4.Width + 30;
+      rb5.Top := rb4.Top;
+      rb5.Caption := 'Only scripts';
+      rb5.Width := rb4.Width;
+    end;
+    rb4.Checked := True;
 
     btnOk := TButton.Create(frm);
     btnOk.Parent := pnl;
@@ -124,13 +124,13 @@ begin
     frm.ActiveControl := btnOk;
     
     if frm.ShowModal = mrOk then begin
-			if rb1.Checked then doImport := False else
-			if rb2.Checked then doImport := True;
-			if rb4.Checked then doScriptsOnly := False else
-			if rb5.Checked then doScriptsOnly := True;
-			doStop := False;
-		end else
-			doStop := True;
+      if rb1.Checked then doImport := False else
+      if rb2.Checked then doImport := True;
+      if rb4.Checked then doScriptsOnly := False else
+      if rb5.Checked then doScriptsOnly := True;
+      doStop := False;
+    end else
+      doStop := True;
   finally
     frm.Free;
   end;
@@ -255,13 +255,13 @@ begin
   slText := TStringList.Create;
   sl := TStringList.Create;
 
-	OptionsForm;
+  OptionsForm;
 
-	if doStop then Exit;
-	
-	if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
-	debug := False;
-	AddMessage('Using directory: "'+basePath+'" and extension: "'+extension+'"');
+  if doStop then Exit;
+  
+  if Pos('\\?\', basePath)=0 then basePath := '\\?\'+basePath;  // allows program to handle very long file names
+  debug := False;
+  AddMessage('Using directory: "'+basePath+'" and extension: "'+extension+'"');
 end;
 
 function Process(e: IInterface): integer;
@@ -269,15 +269,15 @@ var
   s, c, x: string;
   t: IInterface;
   i: integer;
-	doThisOne: boolean;
+  doThisOne: boolean;
 begin
-	if doStop then Exit;
-	
-	if doScriptsOnly then
-		doThisOne := (Signature(e) = 'SCTX')
-	else
-		doThisOne := ((DefType(e) = dtString) or (DefType(e) = dtLString) or (DefType(e) = dtLenString));
-		
+  if doStop then Exit;
+  
+  if doScriptsOnly then
+    doThisOne := (Signature(e) = 'SCTX')
+  else
+    doThisOne := ((DefType(e) = dtString) or (DefType(e) = dtLString) or (DefType(e) = dtLenString));
+    
   if doThisOne then begin
     x := PathName(e);
     x := FullPathToFilename(x);

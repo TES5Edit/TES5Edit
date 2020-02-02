@@ -2163,8 +2163,8 @@ begin
       with Vertex do try
         Result := Result + Format(' (%s, %s, %s)', [ElementEditValues['X'], ElementEditValues['Y'], ElementEditValues['Z']]);
       except
-	  	// TODO: yikes, suppressing exceptions?
-	  end;
+        // TODO: yikes, suppressing exceptions?
+      end;
     end;
     ctToSortKey: begin
       Result := IntToHex(aInt, 4);
@@ -2190,7 +2190,7 @@ begin
       with Vertex do try
         Result := SortKey[False];
       except
-	  	// TODO: yikes, suppressing exceptions?
+        // TODO: yikes, suppressing exceptions?
       end;
     end;
     ctCheck: Result := '';
@@ -3458,7 +3458,7 @@ begin
     end;
 
   if VarIsEmpty(ArchType) then
-  	Exit;
+    Exit;
 
   case Integer(ArchType) of
     00: Result := 9;  //Value Modifier
@@ -3492,8 +3492,8 @@ begin
     49: Result := 0;
     50: Result := 12; // Grow Flora
   else
-  	if wbReportMode then
-		wbProgress('Unknown ArchType: ' + Integer(ArchType).ToString);
+    if wbReportMode then
+      wbProgress('Unknown ArchType: ' + Integer(ArchType).ToString);
   end;
 end;
 
@@ -3924,7 +3924,7 @@ begin
     finally
       Free;
     end;
-	  Exit;
+    Exit;
   end;
 
   try
@@ -3974,11 +3974,11 @@ begin
 
   Container := Container.Container;
   if not Assigned(Container) then
-  	Exit;
+    Exit;
 
   rCNAM := Container.ElementBySignature['CNAM'];
   if not Assigned(rCNAM) then
-  	Exit;
+    Exit;
 
   if rCNAM.NativeValue = Int64($ED157AE3) then  // 'AutoWeapon'
     Result := 1;
@@ -4367,7 +4367,7 @@ const
     (Index:  10; Name: 'GetStartingPos'; ParamType1: ptAxis),
     (Index:  11; Name: 'GetStartingAngle'; ParamType1: ptAxis),
     (Index:  12; Name: 'GetSecondsPassed'),
-	  (Index:  14; Name: 'GetValue'; Desc: 'Get a reference''s value for the given property. [player.getvalue luck]'; ParamType1: ptActorValue{Enum}),
+    (Index:  14; Name: 'GetValue'; Desc: 'Get a reference''s value for the given property. [player.getvalue luck]'; ParamType1: ptActorValue{Enum}),
     (Index:  18; Name: 'GetCurrentTime'),
     (Index:  24; Name: 'GetScale'),
     (Index:  25; Name: 'IsMoving'; Desc: 'Is the actor moving?'),
@@ -4375,7 +4375,7 @@ const
     (Index:  27; Name: 'GetLineOfSight'; ParamType1: ptObjectReference),
     (Index:  32; Name: 'GetInSameCell'; ParamType1: ptObjectReference),
     (Index:  35; Name: 'GetDisabled'),
-	  (Index:  36; Name: 'MenuPaused'),
+    (Index:  36; Name: 'MenuPaused'),
     (Index:  39; Name: 'GetDisease'),
     (Index:  41; Name: 'GetClothingValue'),
     (Index:  42; Name: 'SameFaction'; ParamType1: ptActor),
@@ -4412,7 +4412,7 @@ const
     (Index:  81; Name: 'IsRotating'),
     (Index:  84; Name: 'GetDeadCount'; ParamType1: ptActorBase),
     (Index:  91; Name: 'GetIsAlerted'),
-	  (Index:  98; Name: 'GetPlayerControlsDisabled'; Desc: '10 optional (0/1) values. movement|fighting|pov|looking|sneaking|menu|activate|journal|vats'; ParamType1: ptInteger; Paramtype2: ptInteger; Paramtype3: ptInteger),
+    (Index:  98; Name: 'GetPlayerControlsDisabled'; Desc: '10 optional (0/1) values. movement|fighting|pov|looking|sneaking|menu|activate|journal|vats'; ParamType1: ptInteger; Paramtype2: ptInteger; Paramtype3: ptInteger),
     (Index:  99; Name: 'GetHeadingAngle'; ParamType1: ptObjectReference),
     (Index: 101; Name: 'IsWeaponMagicOut'),
     (Index: 102; Name: 'IsTorchOut'),
@@ -6024,7 +6024,7 @@ begin
     if not (IsMessageBox = HasTimeDelay) then
       Exit;
 
-	if IsMessageBox then
+    if IsMessageBox then
       Container.RemoveElement('TNAM')
     else begin
       if not Container.ElementExists['DNAM'] then
@@ -13240,7 +13240,7 @@ begin
       'Variable',
       'Resource',
       'Aggregate',
-	    'Unknown'
+      'Unknown'
     ])),
     wbInteger(NAM2, 'Unknown Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
       {0x00000001} 'Unknown 1',

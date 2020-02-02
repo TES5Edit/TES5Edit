@@ -16,22 +16,22 @@ uses
   wbInterface;
 
 var
-	wbPKDTFlags: IwbFlagsDef;
-	wbServiceFlags: IwbFlagsDef;
+  wbPKDTFlags: IwbFlagsDef;
+  wbServiceFlags: IwbFlagsDef;
 
-	wbBlendModeEnum: IwbEnumDef;
-	wbBlendOpEnum: IwbEnumDef;
-	wbCrimeTypeEnum: IwbEnumDef;
-	wbFormTypeEnum: IwbEnumDef;
-	wbFunctionsEnum: IwbEnumDef;
-	wbMagicSchoolEnum: IwbEnumDef;
-	wbMusicEnum: IwbEnumDef;
-	wbOBMEResolutionInfo: IwbEnumDef;
-	wbPKDTType: IwbEnumDef;
-	wbSkillEnum: IwbEnumDef;
-	wbSoulGemEnum: IwbEnumDef;
-	wbSpecializationEnum: IwbEnumDef;
-	wbZTestFuncEnum: IwbEnumDef;
+  wbBlendModeEnum: IwbEnumDef;
+  wbBlendOpEnum: IwbEnumDef;
+  wbCrimeTypeEnum: IwbEnumDef;
+  wbFormTypeEnum: IwbEnumDef;
+  wbFunctionsEnum: IwbEnumDef;
+  wbMagicSchoolEnum: IwbEnumDef;
+  wbMusicEnum: IwbEnumDef;
+  wbOBMEResolutionInfo: IwbEnumDef;
+  wbPKDTType: IwbEnumDef;
+  wbSkillEnum: IwbEnumDef;
+  wbSoulGemEnum: IwbEnumDef;
+  wbSpecializationEnum: IwbEnumDef;
+  wbZTestFuncEnum: IwbEnumDef;
 
 procedure DefineTES4;
 
@@ -4631,7 +4631,7 @@ begin
       wbByteArray(OFST, 'Offset Data')
     ], False, nil, cpNormal, False, wbRemoveOFST)
   else
-	wbRecord(WRLD, 'Worldspace', [
+  wbRecord(WRLD, 'Worldspace', [
       wbEDID,
       wbFULL,
       wbRStruct('Parent', [

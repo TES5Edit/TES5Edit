@@ -47,10 +47,10 @@ begin
     if NavMesh then s1 := 'Navigation Mesh';
     if Assigned(elEditorID) then Begin
       if SkipIt then elEditorID := RemoveElement(e, 'EDID');
-	  End;
+    End;
     if Not Assigned(elEditorID) then Begin
       if not SkipIt then elEditorID := Add(e, 'EDID', True);
-	  End;
+    End;
     if (not SkipIt) and Assigned(elEditorID) then Begin
       if NavMesh then SetEditValue(elEditorID, s1 + '_' + IntToStr(NavCount));
       if Not NavMesh then SetEditValue(elEditorID, Prefix + s1 + '_' + IntToStr(Count));

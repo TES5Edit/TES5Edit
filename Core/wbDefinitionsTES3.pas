@@ -173,9 +173,9 @@ const
 
 var
   wbSkillEnum: IwbEnumDef;
-	wbMagicSchoolEnum: IwbEnumDef;
-	wbSpecializationEnum: IwbEnumDef;
-	wbServiceFlags: IwbFlagsDef;
+  wbMagicSchoolEnum: IwbEnumDef;
+  wbSpecializationEnum: IwbEnumDef;
+  wbServiceFlags: IwbFlagsDef;
   wbAttributeEnum: IwbEnumDef;
 
 function wbGLOBFNAM(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -989,7 +989,7 @@ begin
   ]).SetFormIDBase($40);
 
 { What follows in the ESP/ESM are all the INFO records that belong to the
-	DIAL record.  One of the few cases where order is important
+  DIAL record.  One of the few cases where order is important
 }
 
   wbRecord(DIAL, 'Dialog Topic', [
@@ -1045,7 +1045,7 @@ begin
     wbString(MODL, 'Model Filename'),
     wbString(FNAM, 'Door Name'),
     wbString(SCRI, 'ScriptID'),
-	  {Needs verification, may not have an SCIP record}
+    {Needs verification, may not have an SCIP record}
     wbStringScript(SCIP, 'Script Source', 0),
     wbString(SNAM, 'Sound name open'),
     wbString(ANAM, 'Sound name close')
