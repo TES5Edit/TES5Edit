@@ -9882,8 +9882,9 @@ begin
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
-    wbString(ENAM, 'Type', 4)
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
+    .SetSummaryKey([7]);
 end;
 
 procedure DefineTES5j;
@@ -11543,7 +11544,10 @@ begin
         {0x0001}'Allow Cleared',
         {0x0002}'Clear Names When Removed'
       ]))
-    ], cpNormal, True, nil, 1);
+    ], cpNormal, True, nil, 1)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryDelimiterOnValue(', ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName);
 
   wbRecord(QUST, 'Quest', [
     wbEDID,
@@ -11684,7 +11688,14 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
+        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet)
+          .SetSummaryKey([1, 2])
+          .SetSummaryDelimiter(' ')
+          .SetSummaryMemberPrefixSuffix(0, 'Ref [', ']')
+          .SetSummaryMemberPrefixSuffix(1, '', '')
+          .SetSummaryMemberPrefixSuffix(2, '{', '}')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed),
 
         // Location Alias
         wbRStructSK([0], 'Alias', [
@@ -11747,6 +11758,13 @@ begin
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FLST, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet)
+          .SetSummaryKey([1, 2])
+          .SetSummaryDelimiter(' ')
+          .SetSummaryMemberPrefixSuffix(0, 'Loc [', ']')
+          .SetSummaryMemberPrefixSuffix(1, '', '')
+          .SetSummaryMemberPrefixSuffix(2, '{', '}')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed)
       ], [])
     ),
     wbString(NNAM, 'Description', 0, cpNormal, False),

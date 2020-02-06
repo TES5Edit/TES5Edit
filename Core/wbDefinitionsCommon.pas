@@ -16,46 +16,89 @@ uses
   wbInterface;
 
 const
+  ADBO: TwbSignature = 'ADBO';
+  ADCR: TwbSignature = 'ADCR';
+  ADIA: TwbSignature = 'ADIA';
+  AFAV: TwbSignature = 'AFAV';
+  AHEL: TwbSignature = 'AHEL';
+  AIPL: TwbSignature = 'AIPL';
   ANAM: TwbSignature = 'ANAM';
+  AOBJ: TwbSignature = 'AOBJ';
+  ARRT: TwbSignature = 'ARRT';
+  ASSU: TwbSignature = 'ASSU';
   ATXT: TwbSignature = 'ATXT';
+  BRIB: TwbSignature = 'BRIB';
   BTXT: TwbSignature = 'BTXT';
+  CAST: TwbSignature = 'CAST';
+  CHRR: TwbSignature = 'CHRR';
+  CLOC: TwbSignature = 'CLOC';
+  CLRL: TwbSignature = 'CLRL';
   CNAM: TwbSignature = 'CNAM';
+  CRFT: TwbSignature = 'CRFT';
   CS2D: TwbSignature = 'CS2D';
   CS2K: TwbSignature = 'CS2K';
   CSDC: TwbSignature = 'CSDC';
   CSDI: TwbSignature = 'CSDI';
   CTDA: TwbSignature = 'CTDA';
+  CURE: TwbSignature = 'CURE';
   DATA: TwbSignature = 'DATA';
+  DEAD: TwbSignature = 'DEAD';
+  DMDT: TwbSignature = 'DMDT';
+  ESJA: TwbSignature = 'ESJA';
   FACT: TwbSignature = 'FACT';
+  FLAT: TwbSignature = 'FLAT';
   GLOB: TwbSignature = 'GLOB';
+  HACK: TwbSignature = 'HACK';
   HDPT: TwbSignature = 'HDPT';
   HEAD: TwbSignature = 'HEAD';
   HEDR: TwbSignature = 'HEDR';
   ICON: TwbSignature = 'ICON';
+  ILOC: TwbSignature = 'ILOC';
   INDX: TwbSignature = 'INDX';
+  INFC: TwbSignature = 'INFC';
+  INTM: TwbSignature = 'INTM';
+  IRON: TwbSignature = 'IRON';
+  JAIL: TwbSignature = 'JAIL';
+  KILL: TwbSignature = 'KILL';
   KYWD: TwbSignature = 'KYWD';
+  LCLD: TwbSignature = 'LCLD';
+  LCPG: TwbSignature = 'LCPG';
+  LEVL: TwbSignature = 'LEVL';
+  LOCK: TwbSignature = 'LOCK';
   LTEX: TwbSignature = 'LTEX';
   MDOB: TwbSignature = 'MDOB';
   MICO: TwbSignature = 'MICO';
   MODL: TwbSignature = 'MODL';
   MODT: TwbSignature = 'MODT';
-  DMDT: TwbSignature = 'DMDT';
   NAM0: TwbSignature = 'NAM0';
   NAM9: TwbSignature = 'NAM9';
   NULL: TwbSignature = 'NULL';
+  NVPE: TwbSignature = 'NVPE';
+  OAAT: TwbSignature = 'OAAT';
   OBND: TwbSignature = 'OBND';
   OFST: TwbSignature = 'OFST';
+  PCON: TwbSignature = 'PCON';
+  PFIN: TwbSignature = 'PFIN';
   PFPC: TwbSignature = 'PFPC';
+  PRFV: TwbSignature = 'PRFV';
+  QPMT: TwbSignature = 'QPMT';
+  QSTR: TwbSignature = 'QSTR';
   RACE: TwbSignature = 'RACE';
   RDSA: TwbSignature = 'RDSA';
   RDSD: TwbSignature = 'RDSD';
+  REMP: TwbSignature = 'REMP';
   SCDA: TwbSignature = 'SCDA';
+  SCPT: TwbSignature = 'SCPT';
   SCTX: TwbSignature = 'SCTX';
+  SKIL: TwbSignature = 'SKIL';
   SNAM: TwbSignature = 'SNAM';
   SNDD: TwbSignature = 'SNDD';
   SNDR: TwbSignature = 'SNDR';
   SOUN: TwbSignature = 'SOUN';
+  STIJ: TwbSignature = 'STIJ';
+  TMEE: TwbSignature = 'TMEE';
   TNAM: TwbSignature = 'TNAM';
+  TRES: TwbSignature = 'TRES';
   TXST: TwbSignature = 'TXST';
   VCLR: TwbSignature = 'VCLR';
   VHGT: TwbSignature = 'VHGT';
@@ -93,6 +136,7 @@ var
   wbSexEnum: IwbEnumDef;
   wbActorSounds: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
+  wbQuestEventEnum: IwbEnumDef;
   wbRegionSounds: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
@@ -554,6 +598,52 @@ begin
       {2} 'Top Left',
       {3} 'Top Right'
     ]);
+
+  wbQuestEventEnum := wbEnum([], [
+    Sig2Int(ADBO), 'Bounty Event',
+    Sig2Int(ADCR), 'Crime Gold Event',
+    Sig2Int(ADIA), 'Actor Dialogue Event',
+    Sig2Int(AFAV), 'Player Activate Actor',
+    Sig2Int(AHEL), 'Actor Hello Event',
+    Sig2Int(AIPL), 'Player Add Item',
+    Sig2Int(AOBJ), 'Attraction Object Event',
+    Sig2Int(ARRT), 'Arrest Event',
+    Sig2Int(ASSU), 'Assault Actor Event',
+    Sig2Int(BRIB), 'Bribe',
+    Sig2Int(CAST), 'Cast Magic Event',
+    Sig2Int(CHRR), 'Change Relationship Rank',
+    Sig2Int(CLOC), 'Change Location Event',
+    Sig2Int(CLRL), 'Clear Location Event',
+    Sig2Int(CRFT), 'Craft Item',
+    Sig2Int(CURE), 'Player Cured',
+    Sig2Int(DEAD), 'Dead Body',
+    Sig2Int(ESJA), 'Escape Jail',
+    Sig2Int(FLAT), 'Flatter',
+    Sig2Int(HACK), 'Hack Computer',
+    Sig2Int(ILOC), 'Instanced Location Created Event',
+    Sig2Int(INFC), 'Player Infected',
+    Sig2Int(INTM), 'Intimidate',
+    Sig2Int(IRON), 'Iron Sights',
+    Sig2Int(JAIL), 'Jail Event',
+    Sig2Int(KILL), 'Kill Actor Event',
+    Sig2Int(LCLD), 'Location Loaded',
+    Sig2Int(LCPG), 'LCP Global Value Event',
+    Sig2Int(LEVL), 'Increase Level',
+    Sig2Int(LOCK), 'Lock Pick',
+    Sig2Int(NVPE), 'New Voice Power',
+    Sig2Int(OAAT), 'On Actor Attach',
+    Sig2Int(PCON), 'Player Connect',
+    Sig2Int(PFIN), 'Pay Fine Event',
+    Sig2Int(PRFV), 'Player Recieves Favor',
+    Sig2Int(QPMT), 'QuickPlay Match Event',
+    Sig2Int(QSTR), 'Quest Start',
+    Sig2Int(REMP), 'Player Remove Item',
+    Sig2Int(SCPT), 'Script Event',
+    Sig2Int(SKIL), 'Skill Increase',
+    Sig2Int(STIJ), 'Served Time',
+    Sig2Int(TMEE), 'Trigger Mine Explosion Event',
+    Sig2Int(TRES), 'Trespass Actor Event'
+  ]);
 
   wbSeasons :=
     wbStruct(PFPC, 'Seasonal ingredient production', [
@@ -1836,6 +1926,7 @@ begin
   else
     aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
 end;
+
 
 // TODO: used in too many places to replace with summary callbacks
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);

@@ -12193,8 +12193,9 @@ begin
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbUnknown(XNAM),
-    wbString(ENAM, 'Type', 4)
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
+  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
+    .SetSummaryKey([7]);
 end;
 
 procedure DefineFO4j;
