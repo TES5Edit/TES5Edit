@@ -600,27 +600,27 @@ end;
 procedure TfrmLogAnalyzer.BuildPluginsList;
 
   procedure QuickSort(var A: array of TLogEntry; iLo, iHi: Integer);
-	var
-	  Lo, Hi, Pivot: Integer;
-	  T: TLogEntry;
-	begin
-	  Lo := iLo;
-	  Hi := iHi;
-	  Pivot := A[(Lo + Hi) div 2].LoadOrder;
-	  repeat
-	    while A[Lo].LoadOrder < Pivot do Inc(Lo);
-	    while A[Hi].LoadOrder > Pivot do Dec(Hi);
-	    if Lo <= Hi then begin
-	      T := A[Lo];
-	      A[Lo] := A[Hi];
-	      A[Hi] := T;
-	      Inc(Lo);
-	      Dec(Hi);
-	    end;
-	  until Lo > Hi;
-	  if Hi > iLo then QuickSort(A, iLo, Hi);
-	  if Lo < iHi then QuickSort(A, Lo, iHi);
-	end;
+  var
+    Lo, Hi, Pivot: Integer;
+    T: TLogEntry;
+  begin
+    Lo := iLo;
+    Hi := iHi;
+    Pivot := A[(Lo + Hi) div 2].LoadOrder;
+    repeat
+      while A[Lo].LoadOrder < Pivot do Inc(Lo);
+      while A[Hi].LoadOrder > Pivot do Dec(Hi);
+      if Lo <= Hi then begin
+        T := A[Lo];
+        A[Lo] := A[Hi];
+        A[Hi] := T;
+        Inc(Lo);
+        Dec(Hi);
+      end;
+    until Lo > Hi;
+    if Hi > iLo then QuickSort(A, iLo, Hi);
+    if Lo < iHi then QuickSort(A, Lo, iHi);
+  end;
 
 var
   i, j: integer;
@@ -659,7 +659,7 @@ begin
   end;
   // sort plugins by load order
   if Length(LogPlugins) > 0 then
-  	QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
+    QuickSort(LogPlugins, Low(LogPlugins), High(LogPlugins));
 end;
 
 procedure TfrmLogAnalyzer.btnAnalyzeClick(Sender: TObject);

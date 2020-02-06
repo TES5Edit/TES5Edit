@@ -314,7 +314,7 @@ begin
       end;
       i := 1;
     end else
-	  i := 0;
+      i := 0;
     Value := caNone;
     if Length(NodeDatas) > 0 then
       if Assigned(NodeDatas[0].Container) then

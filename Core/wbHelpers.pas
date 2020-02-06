@@ -550,11 +550,11 @@ begin
       Delete(s, i+1, 1);
     end else if Copy(s, i, 2) = ' \' then begin
       Delete(s, i, 1);
-  	end else if s[i] = '"' then
+    end else if s[i] = '"' then
       s[i] := ''''
-  	else if s[i] = ':' then
+    else if s[i] = ':' then
       s[i] := '-'
-  	else if s[i] = '/' then
+    else if s[i] = '/' then
       s[i] := ' ';
   while (Length(s)>0) and (s[Length(s)]=' ') do
     Delete(s, Length(s), 1);

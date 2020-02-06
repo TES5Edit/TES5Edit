@@ -415,58 +415,58 @@ begin
         Response := ElementByIndex(Responses, r);
         ResponseNumber := GetElementNativeValues(Response, 'TRDT\Response number');
         if lstVoice.Count > 0 then
-					for v := 0 to Pred(lstVoice.Count) do begin
-						VoiceFileName := InfoFileName(EditorID(Quest), EditorID(Dialogue), GetLoadOrderFormID(Info), ResponseNumber);
-						VoiceFilePath := Format('Data\Sound\Voice\%s\%s\', [GetFileName(Quest), lstVoice[v]]);
-						slExport.Add(Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
-							GetFileName(Quest),
-							Name(Quest),
-							InfoNPCID,
-							InfoSPEAKER,
-							InfoRACEID,
-							lstVoice[v],
-							InfoCONDITION,
-							EditorID(LinksTo(ElementByName(Dialogue, 'BNAM - Branch'))),
-							GetElementEditValues(Dialogue, 'DATA\Category'),
-							GetElementEditValues(Dialogue, 'SNAM'),
-							GetElementEditValues(Dialogue, 'DATA\Subtype'),
-							Trim(EditorID(Info) + ' [INFO:' + IntToHex(FormID(Info), 8) + ']'),
-							IntToStr(ResponseNumber),
-							VoiceFileName,
-							VoiceFilePath + VoiceFileName + '.xwm',
-							GetElementEditValues(Dialogue, 'FULL'),
-							GetElementEditValues(INFO, 'RNAM - Prompt'),
-							GetElementEditValues(Response, 'NAM1 - Response Text'),
-							GetElementEditValues(Response, 'TRDT\Emotion Type') + ' ' + GetElementEditValues(Response, 'TRDT\Emotion Value'),
-							GetElementEditValues(Response, 'NAM2 - Script Notes')
-						]));
-					end
-				else begin
-					VoiceFileName := '"no voice"';
-					VoiceFilePath := '';
-					slExport.Add(Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
-						GetFileName(Quest),
-						Name(Quest),
-						InfoNPCID,
-						InfoSPEAKER,
-						InfoRACEID,
-						VoiceFileName,
-						InfoCONDITION,
-						EditorID(LinksTo(ElementByName(Dialogue, 'BNAM - Branch'))),
-						GetElementEditValues(Dialogue, 'DATA\Category'),
-						GetElementEditValues(Dialogue, 'SNAM'),
-						GetElementEditValues(Dialogue, 'DATA\Subtype'),
-						Trim(EditorID(Info) + ' [INFO:' + IntToHex(FormID(Info), 8) + ']'),
-						IntToStr(ResponseNumber),
-						VoiceFileName,
-						VoiceFilePath + VoiceFileName + '.xwm',
-						GetElementEditValues(Dialogue, 'FULL'),
-						GetElementEditValues(INFO, 'RNAM - Prompt'),
-						GetElementEditValues(Response, 'NAM1 - Response Text'),
-						GetElementEditValues(Response, 'TRDT\Emotion Type') + ' ' + GetElementEditValues(Response, 'TRDT\Emotion Value'),
-						GetElementEditValues(Response, 'NAM2 - Script Notes')
-					]));
-				end;
+          for v := 0 to Pred(lstVoice.Count) do begin
+            VoiceFileName := InfoFileName(EditorID(Quest), EditorID(Dialogue), GetLoadOrderFormID(Info), ResponseNumber);
+            VoiceFilePath := Format('Data\Sound\Voice\%s\%s\', [GetFileName(Quest), lstVoice[v]]);
+            slExport.Add(Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
+              GetFileName(Quest),
+              Name(Quest),
+              InfoNPCID,
+              InfoSPEAKER,
+              InfoRACEID,
+              lstVoice[v],
+              InfoCONDITION,
+              EditorID(LinksTo(ElementByName(Dialogue, 'BNAM - Branch'))),
+              GetElementEditValues(Dialogue, 'DATA\Category'),
+              GetElementEditValues(Dialogue, 'SNAM'),
+              GetElementEditValues(Dialogue, 'DATA\Subtype'),
+              Trim(EditorID(Info) + ' [INFO:' + IntToHex(FormID(Info), 8) + ']'),
+              IntToStr(ResponseNumber),
+              VoiceFileName,
+              VoiceFilePath + VoiceFileName + '.xwm',
+              GetElementEditValues(Dialogue, 'FULL'),
+              GetElementEditValues(INFO, 'RNAM - Prompt'),
+              GetElementEditValues(Response, 'NAM1 - Response Text'),
+              GetElementEditValues(Response, 'TRDT\Emotion Type') + ' ' + GetElementEditValues(Response, 'TRDT\Emotion Value'),
+              GetElementEditValues(Response, 'NAM2 - Script Notes')
+            ]));
+          end
+        else begin
+          VoiceFileName := '"no voice"';
+          VoiceFilePath := '';
+          slExport.Add(Format('%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s'#9'%s', [
+            GetFileName(Quest),
+            Name(Quest),
+            InfoNPCID,
+            InfoSPEAKER,
+            InfoRACEID,
+            VoiceFileName,
+            InfoCONDITION,
+            EditorID(LinksTo(ElementByName(Dialogue, 'BNAM - Branch'))),
+            GetElementEditValues(Dialogue, 'DATA\Category'),
+            GetElementEditValues(Dialogue, 'SNAM'),
+            GetElementEditValues(Dialogue, 'DATA\Subtype'),
+            Trim(EditorID(Info) + ' [INFO:' + IntToHex(FormID(Info), 8) + ']'),
+            IntToStr(ResponseNumber),
+            VoiceFileName,
+            VoiceFilePath + VoiceFileName + '.xwm',
+            GetElementEditValues(Dialogue, 'FULL'),
+            GetElementEditValues(INFO, 'RNAM - Prompt'),
+            GetElementEditValues(Response, 'NAM1 - Response Text'),
+            GetElementEditValues(Response, 'TRDT\Emotion Type') + ' ' + GetElementEditValues(Response, 'TRDT\Emotion Value'),
+            GetElementEditValues(Response, 'NAM2 - Script Notes')
+          ]));
+        end;
       end;
     end;
     

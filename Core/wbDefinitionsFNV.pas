@@ -16,45 +16,45 @@ uses
   wbInterface;
 
 var
-	wbAggroRadiusFlags: IwbFlagsDef;
-	wbPKDTFlags: IwbFlagsDef;
-	wbRecordFlagsFlags: IwbFlagsDef;
-	wbServiceFlags: IwbFlagsDef;
-	wbTemplateFlags: IwbFlagsDef;
+  wbAggroRadiusFlags: IwbFlagsDef;
+  wbPKDTFlags: IwbFlagsDef;
+  wbRecordFlagsFlags: IwbFlagsDef;
+  wbServiceFlags: IwbFlagsDef;
+  wbTemplateFlags: IwbFlagsDef;
 
-	wbAgressionEnum: IwbEnumDef;
-	wbAlignmentEnum: IwbEnumDef;
-	wbArchtypeEnum: IwbEnumDef;
-	wbAssistanceEnum: IwbEnumDef;
-	wbAttackAnimationEnum: IwbEnumDef;
-	wbBlendModeEnum: IwbEnumDef;
-	wbBlendOpEnum: IwbEnumDef;
-	wbBodyLocationEnum: IwbEnumDef;
-	wbBodyPartIndexEnum: IwbEnumDef;
-	wbConfidenceEnum: IwbEnumDef;
-	wbCreatureTypeEnum: IwbEnumDef;
-	wbCrimeTypeEnum: IwbEnumDef;
-	wbCriticalStageEnum: IwbEnumDef;
-	wbEquipTypeEnum: IwbEnumDef;
-	wbFormTypeEnum: IwbEnumDef;
-	wbFunctionsEnum: IwbEnumDef;
-	wbHeadPartIndexEnum: IwbEnumDef;
-	wbImpactMaterialTypeEnum: IwbEnumDef;
-	wbMenuModeEnum: IwbEnumDef;
-	wbMiscStatEnum: IwbEnumDef;
-	wbModEffectEnum: IwbEnumDef;
-	wbMoodEnum: IwbEnumDef;
-	wbMusicEnum: IwbEnumDef;
-	wbObjectTypeEnum: IwbEnumDef;
-	wbPKDTType: IwbEnumDef;
-	wbPlayerActionEnum: IwbEnumDef;
-	wbReloadAnimEnum: IwbEnumDef;
-	wbSkillEnum: IwbEnumDef;
-	wbSoundLevelEnum: IwbEnumDef;
-	wbSpecializationEnum: IwbEnumDef;
-	wbVatsValueFunctionEnum: IwbEnumDef;
-	wbWeaponAnimTypeEnum: IwbEnumDef;
-	wbZTestFuncEnum: IwbEnumDef;
+  wbAgressionEnum: IwbEnumDef;
+  wbAlignmentEnum: IwbEnumDef;
+  wbArchtypeEnum: IwbEnumDef;
+  wbAssistanceEnum: IwbEnumDef;
+  wbAttackAnimationEnum: IwbEnumDef;
+  wbBlendModeEnum: IwbEnumDef;
+  wbBlendOpEnum: IwbEnumDef;
+  wbBodyLocationEnum: IwbEnumDef;
+  wbBodyPartIndexEnum: IwbEnumDef;
+  wbConfidenceEnum: IwbEnumDef;
+  wbCreatureTypeEnum: IwbEnumDef;
+  wbCrimeTypeEnum: IwbEnumDef;
+  wbCriticalStageEnum: IwbEnumDef;
+  wbEquipTypeEnum: IwbEnumDef;
+  wbFormTypeEnum: IwbEnumDef;
+  wbFunctionsEnum: IwbEnumDef;
+  wbHeadPartIndexEnum: IwbEnumDef;
+  wbImpactMaterialTypeEnum: IwbEnumDef;
+  wbMenuModeEnum: IwbEnumDef;
+  wbMiscStatEnum: IwbEnumDef;
+  wbModEffectEnum: IwbEnumDef;
+  wbMoodEnum: IwbEnumDef;
+  wbMusicEnum: IwbEnumDef;
+  wbObjectTypeEnum: IwbEnumDef;
+  wbPKDTType: IwbEnumDef;
+  wbPlayerActionEnum: IwbEnumDef;
+  wbReloadAnimEnum: IwbEnumDef;
+  wbSkillEnum: IwbEnumDef;
+  wbSoundLevelEnum: IwbEnumDef;
+  wbSpecializationEnum: IwbEnumDef;
+  wbVatsValueFunctionEnum: IwbEnumDef;
+  wbWeaponAnimTypeEnum: IwbEnumDef;
+  wbZTestFuncEnum: IwbEnumDef;
 
 function wbCreaLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
@@ -2359,7 +2359,7 @@ const
     (Index: 436; Name: 'GetDialogueEmotionValue'),
     (Index: 438; Name: 'GetIsCreatureType'; ParamType1: ptCreatureType),
     (Index: 446; Name: 'GetInZone'; ParamType1: ptEncounterZone),
-    (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger {boolean Alt}),	// PlayerCharacter has 2 lists of perks
+    (Index: 449; Name: 'HasPerk'; ParamType1: ptPerk; ParamType2: ptInteger {boolean Alt}),  // PlayerCharacter has 2 lists of perks
     (Index: 450; Name: 'GetFactionRelation'; ParamType1: ptActor),
     (Index: 451; Name: 'IsLastIdlePlayed'; ParamType1: ptIdleForm),
     (Index: 454; Name: 'GetPlayerTeammate'),
@@ -2464,7 +2464,7 @@ const
     (Index: 4832; Name: 'GetDistance2D'; ParamType1: ptObjectReference; ),
     (Index: 4833; Name: 'GetDistance3D'; ParamType1: ptObjectReference; ),
     (Index: 4843; Name: 'PlayerHasKey'; ),
-	(Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
+    (Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
 
     // Added by JIP NVSE Plugin  - up to v48
     (Index: 5637; Name: 'GetIsPoisoned'; ),
@@ -2494,7 +2494,7 @@ const
     (Index: 6204; Name: 'IsFleeing'; ),
     (Index: 6217; Name: 'GetTargetUnreachable'; ),
     (Index: 6268; Name: 'IsInKillCam'; ),
-	// Added by nvse plugin
+    // Added by nvse plugin
     (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; )
 );
 
@@ -9545,7 +9545,7 @@ begin
       wbRStruct('Female FaceGen Data', [
         wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
         wbFaceGen,
-        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)	// will effectivly overwrite the SNAM from the male :)
+        wbInteger(SNAM, 'Unknown', itU16, nil, cpNormal, True)  // will effectivly overwrite the SNAM from the male :)
       ], [], cpNormal, True)
     ], [], cpNormal, True)
   ]);

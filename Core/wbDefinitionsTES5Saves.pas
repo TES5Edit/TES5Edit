@@ -5568,7 +5568,7 @@ begin
 //        ,wbUnionCHANGE_CELL_EXTERIOR_SHORT
 //        ,wbUnionCHANGE_CELL_EXTERIOR_CHAR
 //        ,wbUnionCHANGE_CELL_DETACHTIME
-	]);
+  ]);
 
   wbInitialDataType02 := wbStruct('Detached CELL CHANGE_CELL_EXTERIOR_SHORT', [
     wbInteger('Worldspace Index', itU16, wbSaveWorldspaceIndex),  // index into Worldspace table
@@ -5578,14 +5578,14 @@ begin
 //        ,wbUnionCHANGE_CELL_EXTERIOR_SHORT
 //        ,wbUnionCHANGE_CELL_EXTERIOR_CHAR
 //        ,wbUnionCHANGE_CELL_DETACHTIME
-	]);
+  ]);
 
   wbInitialDataType03 := wbStruct('Detached CELL', [
     wbInteger('detachTime', itU32)
 //        ,wbUnionCHANGE_CELL_EXTERIOR_SHORT
 //        ,wbUnionCHANGE_CELL_EXTERIOR_CHAR
 //        ,wbUnionCHANGE_CELL_DETACHTIME
-	]);
+  ]);
 
   wbInitialDataType04 := wbStruct('Reference moved', [
     wbRefID('Cell/Worldspace'),
@@ -5594,7 +5594,7 @@ begin
 // no actual data     wbUnionCHANGE_REFR_MOVE
     wbUnionCHANGE_REFR_HAVOK_MOVE
 // no actual data     wbUnionCHANGE_REFR_CELL_CHANGED
-	]);
+  ]);
 
   wbInitialDataType05 := wbStruct('Constructed Reference', [
     wbRefID('Cell/Worldspace'),
@@ -5605,7 +5605,7 @@ begin
 // no actual data     wbUnionCHANGE_REFR_MOVE
     wbUnionCHANGE_REFR_HAVOK_MOVE
 // no actual data     wbUnionCHANGE_REFR_CELL_CHANGED
-	]);
+  ]);
 
   wbInitialDataType06 := wbStruct('Reference Changed Cell or Promoted', [
     wbRefID('Cell/Worldspace'),
@@ -5617,7 +5617,7 @@ begin
 // no actual data     wbUnionCHANGE_REFR_MOVE
     wbUnionCHANGE_REFR_HAVOK_MOVE
 // no actual data     wbUnionCHANGE_REFR_CELL_CHANGED
-	]);
+  ]);
 
   wbInitialDataType := wbUnion('Initial Data Type', InitialDataTypeDecider, [
     wbNull,

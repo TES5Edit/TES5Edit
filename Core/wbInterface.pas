@@ -2440,7 +2440,7 @@ type
     ['{CF657B3A-E7A6-48FE-AC68-8DF15962A531}']
   end;
 
-  IwbStr4 = interface(IwbIntegerDefFormater)	// 4 bytes strings stored as itU32
+  IwbStr4 = interface(IwbIntegerDefFormater)  // 4 bytes strings stored as itU32
     ['{2DC5200E-C1F1-47e7-A927-3D110D59F55A}']
   end;  // The interface handles swaping the character in readable order
 
@@ -4371,102 +4371,102 @@ end;
 
 function RGBTripleToCol(aCol: TRGBTriple ): TColor;
 begin
-	Result := aCol.rgbtRed * 65536;
-	Result := Result + aCol.rgbtGreen * 256;
-	Result := Result + aCol.rgbtBlue;
+  Result := aCol.rgbtRed * 65536;
+  Result := Result + aCol.rgbtGreen * 256;
+  Result := Result + aCol.rgbtBlue;
 end;
 
 function ColToRGBTriple(aCol: TColor): TRGBTriple;
 begin
-	aCol := ColorToRGB(aCol);
-	Result.rgbtRed := (aCol shr 16) and $000000FF;
-	Result.rgbtGreen := (aCol shr 8) and $000000FF;
-	Result.rgbtBlue := aCol and $000000FF;
+  aCol := ColorToRGB(aCol);
+  Result.rgbtRed := (aCol shr 16) and $000000FF;
+  Result.rgbtGreen := (aCol shr 8) and $000000FF;
+  Result.rgbtBlue := aCol and $000000FF;
 end;
 
 procedure RGBtoHSL(rgb : TRGBTriple; var H, S, L : extended);
 var
-	delta, r, g, b, cmax, cmin: extended;
+  delta, r, g, b, cmax, cmin: extended;
 begin
-	r := rgb.rgbtRed / 255;
-	g := rgb.rgbtGreen / 255;
-	b := rgb.rgbtBlue / 255;
-	if (r > b) and (r > g) then
-		cmax := r
-	else if g > b then
-		cmax := g
-	else
-		cmax := b;
-	if (r < b) and (r < g) then
-		cmin := r
-	else if g < b then
-		cmin := g
-	else
-		cmin := b;
-	L := (cmax+cmin) / 2.0;
+  r := rgb.rgbtRed / 255;
+  g := rgb.rgbtGreen / 255;
+  b := rgb.rgbtBlue / 255;
+  if (r > b) and (r > g) then
+    cmax := r
+  else if g > b then
+    cmax := g
+  else
+    cmax := b;
+  if (r < b) and (r < g) then
+    cmin := r
+  else if g < b then
+    cmin := g
+  else
+    cmin := b;
+  L := (cmax+cmin) / 2.0;
 
-	if cmax=cmin then begin
-		S := 0;
-		H := 0; //sarebbe indefinita
+  if cmax=cmin then begin
+    S := 0;
+    H := 0; //sarebbe indefinita
   end else begin
-		delta := cmax - cmin;
-		if L <= 0.5 then
-			s := delta / (cmax + cmin)
-		else
-			s := delta / (2.0 - cmax - cmin);
-		if r = cmax then
-			H := (g - b) / delta
-		else if g = cmax then
-			H := 2.0 + (b - r) / delta
-		else
-			H := 4.0 + (r - g) / delta;
-		H := H / 6.0;
-		if H < 0 then
-			H := H + 1;
-		end;
+    delta := cmax - cmin;
+    if L <= 0.5 then
+      s := delta / (cmax + cmin)
+    else
+      s := delta / (2.0 - cmax - cmin);
+    if r = cmax then
+      H := (g - b) / delta
+    else if g = cmax then
+      H := 2.0 + (b - r) / delta
+    else
+      H := 4.0 + (r - g) / delta;
+    H := H / 6.0;
+    if H < 0 then
+      H := H + 1;
+    end;
 end;
 
 procedure HSLtoRGB(H, S, L : extended; var rgb : TRGBTriple);
 var
-	r, g, b, m1, m2 : double;
+  r, g, b, m1, m2 : double;
 
-	function HuetoRGB(m1,m2, h: double): double;
-		begin
-		if h < 0 then
-			h := h + 1.0
-		else if h > 1 then
-			h := h - 1.0;
-		if 6.0*h < 1 then
-			result := (m1+(m2-m1)*h*6.0)
-		else if 2.0*h < 1 then
-			result := m2
-		else if 3.0*h < 2.0 then
-			result := (m1+(m2-m1)*((2.0/3.0)-h)*6.0)
-		else
-			result := m1;
-		end;
+  function HuetoRGB(m1,m2, h: double): double;
+    begin
+    if h < 0 then
+      h := h + 1.0
+    else if h > 1 then
+      h := h - 1.0;
+    if 6.0*h < 1 then
+      result := (m1+(m2-m1)*h*6.0)
+    else if 2.0*h < 1 then
+      result := m2
+    else if 3.0*h < 2.0 then
+      result := (m1+(m2-m1)*((2.0/3.0)-h)*6.0)
+    else
+      result := m1;
+    end;
 
 begin
-	if S = 0 then
-		begin
-		r := L;
-		g := L;
-		b := L;
-		end
-	else
-		begin
-		if L <= 0.5 then
-			m2 := L*(1.0+S)
-		else
-			m2 := L+S-L*S;
-		m1 := 2.0*L-m2;
-		r := HuetoRGB(m1,m2,H+1.0/3.0);
-		g := HuetoRGB(m1,m2,H);
-		b := HuetoRGB(m1,m2,H-1.0/3.0);
-		end;
-	rgb.rgbtBlue := round(b * 255);
-	rgb.rgbtGreen := round(g * 255);
-	rgb.rgbtRed := round(r * 255);
+  if S = 0 then
+    begin
+    r := L;
+    g := L;
+    b := L;
+    end
+  else
+    begin
+    if L <= 0.5 then
+      m2 := L*(1.0+S)
+    else
+      m2 := L+S-L*S;
+    m1 := 2.0*L-m2;
+    r := HuetoRGB(m1,m2,H+1.0/3.0);
+    g := HuetoRGB(m1,m2,H);
+    b := HuetoRGB(m1,m2,H-1.0/3.0);
+    end;
+  rgb.rgbtBlue := round(b * 255);
+  rgb.rgbtGreen := round(g * 255);
+  rgb.rgbtRed := round(r * 255);
 end;
 
 function Lighter(Color: TColor; Amount: Double = 0.5): TColor;

@@ -16,47 +16,47 @@ uses
   wbInterface;
 
 var
-	wbBipedObjectFlags: IwbFlagsDef;
-	wbEquipType: IwbFlagsDef;
-	wbFurnitureEntryTypeFlags: IwbFlagsDef;
-	wbPKDTFlags: IwbFlagsDef;
-	wbPKDTInterruptFlags: IwbFlagsDef;
-	wbSMNodeFlags: IwbFlagsDef;
+  wbBipedObjectFlags: IwbFlagsDef;
+  wbEquipType: IwbFlagsDef;
+  wbFurnitureEntryTypeFlags: IwbFlagsDef;
+  wbPKDTFlags: IwbFlagsDef;
+  wbPKDTInterruptFlags: IwbFlagsDef;
+  wbSMNodeFlags: IwbFlagsDef;
 
-	wbAdvanceActionEnum: IwbEnumDef;
-	wbAlignmentEnum: IwbEnumDef;
-	wbArmorTypeEnum: IwbEnumDef;
-	wbAttackAnimationEnum: IwbEnumDef;
-	wbBipedObjectEnum: IwbEnumDef;
-	wbBlendModeEnum: IwbEnumDef;
-	wbBlendOpEnum: IwbEnumDef;
-	wbCastEnum: IwbEnumDef;
-	wbCastingSourceEnum: IwbEnumDef;
-	wbCrimeTypeEnum: IwbEnumDef;
-	wbCriticalStageEnum: IwbEnumDef;
-	wbEmotionTypeEnum: IwbEnumDef;
-	wbEntryPointsEnum: IwbEnumDef;
-	wbEventFunctionEnum: IwbEnumDef;
-	wbEventMemberEnum: IwbEnumDef;
-	wbFormTypeEnum: IwbEnumDef;
-	wbFunctionsEnum: IwbEnumDef;
-	wbFurnitureAnimTypeEnum: IwbEnumDef;
-	wbLocationEnum: IwbEnumDef;
-	wbMapMarkerEnum: IwbEnumDef;
-	wbMiscStatEnum: IwbEnumDef;
-	wbMusicEnum: IwbEnumDef;
-	wbObjectTypeEnum: IwbEnumDef;
-	wbPropTypeEnum: IwbEnumDef;
-	wbQuestTypeEnum: IwbEnumDef;
-	wbSkillEnum: IwbEnumDef;
-	wbSoulGemEnum: IwbEnumDef;
-	wbSoundLevelEnum: IwbEnumDef;
-	wbTargetEnum: IwbEnumDef;
-	wbTintMaskTypeEnum: IwbEnumDef;
-	wbVatsValueFunctionEnum: IwbEnumDef;
-	wbWardStateEnum: IwbEnumDef;
-	wbWeaponAnimTypeEnum: IwbEnumDef;
-	wbZTestFuncEnum: IwbEnumDef;
+  wbAdvanceActionEnum: IwbEnumDef;
+  wbAlignmentEnum: IwbEnumDef;
+  wbArmorTypeEnum: IwbEnumDef;
+  wbAttackAnimationEnum: IwbEnumDef;
+  wbBipedObjectEnum: IwbEnumDef;
+  wbBlendModeEnum: IwbEnumDef;
+  wbBlendOpEnum: IwbEnumDef;
+  wbCastEnum: IwbEnumDef;
+  wbCastingSourceEnum: IwbEnumDef;
+  wbCrimeTypeEnum: IwbEnumDef;
+  wbCriticalStageEnum: IwbEnumDef;
+  wbEmotionTypeEnum: IwbEnumDef;
+  wbEntryPointsEnum: IwbEnumDef;
+  wbEventFunctionEnum: IwbEnumDef;
+  wbEventMemberEnum: IwbEnumDef;
+  wbFormTypeEnum: IwbEnumDef;
+  wbFunctionsEnum: IwbEnumDef;
+  wbFurnitureAnimTypeEnum: IwbEnumDef;
+  wbLocationEnum: IwbEnumDef;
+  wbMapMarkerEnum: IwbEnumDef;
+  wbMiscStatEnum: IwbEnumDef;
+  wbMusicEnum: IwbEnumDef;
+  wbObjectTypeEnum: IwbEnumDef;
+  wbPropTypeEnum: IwbEnumDef;
+  wbQuestTypeEnum: IwbEnumDef;
+  wbSkillEnum: IwbEnumDef;
+  wbSoulGemEnum: IwbEnumDef;
+  wbSoundLevelEnum: IwbEnumDef;
+  wbTargetEnum: IwbEnumDef;
+  wbTintMaskTypeEnum: IwbEnumDef;
+  wbVatsValueFunctionEnum: IwbEnumDef;
+  wbWardStateEnum: IwbEnumDef;
+  wbWeaponAnimTypeEnum: IwbEnumDef;
+  wbZTestFuncEnum: IwbEnumDef;
 
 procedure DefineTES5;
 
@@ -747,7 +747,7 @@ var
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
   wbScriptProperty: IwbValueDef;
-	wbScriptProperties: IwbArrayDef;
+  wbScriptProperties: IwbArrayDef;
   wbScriptFragments: IwbValueDef;
   wbScriptFragmentsQuest: IwbValueDef;
   wbScriptFragmentsInfo: IwbValueDef;
@@ -1347,7 +1347,7 @@ begin
       with Vertex do try
         Result := Result + Format(' (%s, %s, %s)', [ElementEditValues['X'], ElementEditValues['Y'], ElementEditValues['Z']]);
       except
-	  	// TODO: yikes, suppressing exceptions?
+        // TODO: yikes, suppressing exceptions?
       end;
     end;
     ctToSortKey: begin
@@ -1377,7 +1377,7 @@ begin
       with Vertex do try
         Result := SortKey[False];
       except
-	  	// TODO: yikes, suppressing exceptions?
+        // TODO: yikes, suppressing exceptions?
       end;
     end;
     ctCheck: Result := '';
@@ -2305,7 +2305,7 @@ begin
     Exit;
 
   s := Trim(Container.Name);
-    if s <> '' then begin
+  if s <> '' then begin
     if Result <> '' then
       Result := Result + ' ';
 
@@ -2316,7 +2316,7 @@ begin
       Cell := IwbGroupRecord(Container).ChildrenOf;
 
     if Assigned(Cell) and Cell.IsPersistent and (Cell.Signature = 'CELL') then
-	  if aMainRecord.GetPosition(Position) then begin
+      if aMainRecord.GetPosition(Position) then begin
         Grid := wbPositionToGridCell(Position);
         Result := Result + ' at ' + IntToStr(Grid.x) + ',' + IntToStr(Grid.y);
       end;
@@ -4247,7 +4247,7 @@ begin
     if not (IsMessageBox = HasTimeDelay) then
       Exit;
     
-	if IsMessageBox then
+    if IsMessageBox then
       Container.RemoveElement('TNAM')
     else begin
       if not Container.ElementExists['DNAM'] then
@@ -5941,7 +5941,7 @@ begin
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-		wbFormIDCk(XHOR, 'Horse', [ACHR]),
+    wbFormIDCk(XHOR, 'Horse', [ACHR]),
     wbFloat(XHTW, 'Head-Tracking Weight'),
     wbFloat(XFVC, 'Favor Cost'),
 
@@ -6787,19 +6787,19 @@ begin
         {0x00000004} 'Unknown 3',
         {0x00000008} 'Unknown 4',
         {0x00000010} 'Unknown 5',
-				{0x00000020} 'Unknown 6',
-				{0x00000040} 'Unknown 7',
-				{0x00000080} 'Unknown 8',
-				{0x00000100} 'Unknown 9',
-				{0x00000200} 'Unknown 10',
-				{0x00000400} 'Unknown 11',
-				{0x00000800} 'Unknown 12',
-				{0x00001000} 'Unknown 13',
-				{0x00002000} 'Unknown 14',
-				{0x00004000} 'Unknown 15',
-				{0x00008000} 'Unknown 16',
-				{0x00010000} 'Medicine',
-				{0x00020000} 'Poison'
+        {0x00000020} 'Unknown 6',
+        {0x00000040} 'Unknown 7',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Unknown 9',
+        {0x00000200} 'Unknown 10',
+        {0x00000400} 'Unknown 11',
+        {0x00000800} 'Unknown 12',
+        {0x00001000} 'Unknown 13',
+        {0x00002000} 'Unknown 14',
+        {0x00004000} 'Unknown 15',
+        {0x00008000} 'Unknown 16',
+        {0x00010000} 'Medicine',
+        {0x00020000} 'Poison'
       ])),
       wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
@@ -7236,7 +7236,7 @@ begin
   wbRecord(RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
-			wbFormIDCK('Effect Art', [ARTO, NULL]),
+      wbFormIDCK('Effect Art', [ARTO, NULL]),
       wbFormIDCK('Shader', [EFSH, NULL]),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}'Rotate to Face Target',
@@ -10872,34 +10872,34 @@ begin
         {0x00000004}  'Detrimental',
         {0x00000008}  'Snap to Navmesh',
         {0x00000010}  'No Hit Event',
-				{0x00000020}  'Unknown 6',
-				{0x00000040}  'Unknown 7',
-				{0x00000080}  'Unknown 8',
-				{0x00000100}  'Dispel with Keywords',
-				{0x00000200}  'No Duration',
-				{0x00000400}  'No Magnitude',
-				{0x00000800}  'No Area',
-				{0x00001000}  'FX Persist',
-				{0x00002000}  'Unknown 14',
-				{0x00004000}  'Gory Visuals',
-				{0x00008000}  'Hide in UI',
-				{0x00010000}  'Unknown 17',
-				{0x00020000}  'No Recast',
-				{0x00040000}  'Unknown 19',
-				{0x00080000}  'Unknown 20',
-				{0x00100000}  'Unknown 21',
-				{0x00200000}  'Power Affects Magnitude',
-				{0x00400000}  'Power Affects Duration',
-				{0x00800000}  'Unknown 24',
-				{0x01000000}  'Unknown 25',
-				{0x02000000}  'Unknown 26',
-				{0x04000000}  'Painless',
-				{0x08000000}  'No Hit Effect',
-				{0x10000000}  'No Death Dispel',
-				{0x20000000}  'Unknown 30',
-				{0x40000000}  'Unknown 31',
-				{0x80000000}  'Unknown 32'
-			])),
+        {0x00000020}  'Unknown 6',
+        {0x00000040}  'Unknown 7',
+        {0x00000080}  'Unknown 8',
+        {0x00000100}  'Dispel with Keywords',
+        {0x00000200}  'No Duration',
+        {0x00000400}  'No Magnitude',
+        {0x00000800}  'No Area',
+        {0x00001000}  'FX Persist',
+        {0x00002000}  'Unknown 14',
+        {0x00004000}  'Gory Visuals',
+        {0x00008000}  'Hide in UI',
+        {0x00010000}  'Unknown 17',
+        {0x00020000}  'No Recast',
+        {0x00040000}  'Unknown 19',
+        {0x00080000}  'Unknown 20',
+        {0x00100000}  'Unknown 21',
+        {0x00200000}  'Power Affects Magnitude',
+        {0x00400000}  'Power Affects Duration',
+        {0x00800000}  'Unknown 24',
+        {0x01000000}  'Unknown 25',
+        {0x02000000}  'Unknown 26',
+        {0x04000000}  'Painless',
+        {0x08000000}  'No Hit Effect',
+        {0x10000000}  'No Death Dispel',
+        {0x20000000}  'Unknown 30',
+        {0x40000000}  'Unknown 31',
+        {0x80000000}  'Unknown 32'
+      ])),
       wbFloat('Base Cost'),
       wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
         wbFormID('Unused', cpIgnore),
@@ -11935,7 +11935,7 @@ begin
     ], [])),
     wbRArray('Presets', wbRStruct('Preset', [
       wbFormIDCk(TINC, 'Color', [CLFM, NULL]),
-			wbFloat(TINV, 'Default Value'),
+      wbFloat(TINV, 'Default Value'),
       wbInteger(TIRS, 'Index', itU16)
     ], []))
   ], []));
@@ -12213,8 +12213,8 @@ begin
     wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HDPT, NULL]), 0, cpNormal),
     wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES, NULL]),  0,  cpNormal),
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
-	  wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
-	  wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
+    wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
+    wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
     wbRStruct('Male Behavior Graph', [
       wbEmpty(MNAM, 'Male Data Marker'),
       wbGenericModel
@@ -12229,7 +12229,7 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseModels),
     wbFormIDCk(NAM4, 'Material Type', [MATT, NULL]),
     wbFormIDCk(NAM5, 'Impact Data Set', [IPDS, NULL]),
-		wbFormIDCk(NAM7, 'Decapitation FX', [ARTO, NULL]),
+    wbFormIDCk(NAM7, 'Decapitation FX', [ARTO, NULL]),
     wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
@@ -12479,14 +12479,14 @@ begin
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-		wbStruct(XLIG, 'Light Data', [
+    wbStruct(XLIG, 'Light Data', [
       wbFloat('FOV 90+/-'),
       wbFloat('Fade 1.35+/-'),
       wbFloat('End Distance Cap'),
       wbFloat('Shadow Depth Bias'),
       wbByteArray('Unknown', 4) // optional
     ], cpNormal, False, nil, 4),
-		wbStruct(XALP, 'Alpha', [
+    wbStruct(XALP, 'Alpha', [
       wbInteger('Cutoff', itU8),
       wbInteger('Base', itU8)
     ]),
@@ -12518,9 +12518,9 @@ begin
     ]),
 
     wbStruct(XCVL, 'Unknown', [
-			wbByteArray('Unknown', 4),
-			wbFloat('X Angle'),
-			wbByteArray('Unknown', 4)
+      wbByteArray('Unknown', 4),
+      wbFloat('X Angle'),
+      wbByteArray('Unknown', 4)
     ]),
     wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
     wbUnknown(XCZA),
@@ -12683,7 +12683,7 @@ begin
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbRegionSounds,
 
-			{--- Map ---}
+      {--- Map ---}
       wbLString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
 
       {followed by one of these: }

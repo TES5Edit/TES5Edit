@@ -236,23 +236,23 @@ end;
 
 procedure M33ToEuler(const m: TMatrix33; var x, y, z: Extended);
 begin
-	if m[0][2] < 1.0 then begin
-		if m[0][2] > -1.0 then begin
-			x := ArcTan2(-m[1][2], m[2][2]);
-			y := ArcSin(m[0][2]);
-			z := ArcTan2(-m[0][1], m[0][0]);
-		end
+  if m[0][2] < 1.0 then begin
+    if m[0][2] > -1.0 then begin
+      x := ArcTan2(-m[1][2], m[2][2]);
+      y := ArcSin(m[0][2]);
+      z := ArcTan2(-m[0][1], m[0][0]);
+    end
     else begin
-			x := -ArcTan2(-m[1][0], m[1][1]);
-			y := -System.PI / 2;
-			z := 0.0;
-		end
-	end
+      x := -ArcTan2(-m[1][0], m[1][1]);
+      y := -System.PI / 2;
+      z := 0.0;
+    end
+  end
   else begin
-		x := ArcTan2(m[1][0], m[1][1]);
-		y := System.PI / 2;
-		z := 0.0;
-	end
+    x := ArcTan2(m[1][0], m[1][1]);
+    y := System.PI / 2;
+    z := 0.0;
+  end
 end;
 
 procedure EulerToM33(const x, y, z: Extended; var m: TMatrix33);
@@ -264,22 +264,22 @@ begin
     Exit;
   end;
 
-	sinX := Sin( x );
-	cosX := Cos( x );
-	sinY := sin( y );
-	cosY := cos( y );
-	sinZ := sin( z );
-	cosZ := cos( z );
+  sinX := Sin( x );
+  cosX := Cos( x );
+  sinY := sin( y );
+  cosY := cos( y );
+  sinZ := sin( z );
+  cosZ := cos( z );
 
-	m[0][0] := cosY * cosZ;
-	m[0][1] := -cosY * sinZ;
-	m[0][2] := sinY;
-	m[1][0] := sinX * sinY * cosZ + sinZ * cosX;
-	m[1][1] := cosX * cosZ - sinX * sinY * sinZ;
-	m[1][2] := -sinX * cosY;
-	m[2][0] := sinX * sinZ - cosX * sinY * cosZ;
-	m[2][1] := cosX * sinY * sinZ + sinX * cosZ;
-	m[2][2] := cosX * cosY;
+  m[0][0] := cosY * cosZ;
+  m[0][1] := -cosY * sinZ;
+  m[0][2] := sinY;
+  m[1][0] := sinX * sinY * cosZ + sinZ * cosX;
+  m[1][1] := cosX * cosZ - sinX * sinY * sinZ;
+  m[1][2] := -sinX * cosY;
+  m[2][0] := sinX * sinZ - cosX * sinY * cosZ;
+  m[2][1] := cosX * sinY * sinZ + sinX * cosZ;
+  m[2][2] := cosX * cosY;
 end;
 
 procedure M33ToQuaternion(const m: TMatrix33; var Quat: TQuaternion);
@@ -289,32 +289,32 @@ var
   trace, root: Extended;
   i, j, k: Integer;
 begin
-	trace := m[0][0] + m[1][1] + m[2][2];
+  trace := m[0][0] + m[1][1] + m[2][2];
 
   with Quat do
-	if trace > 0.0 then begin
-		root := sqrt( trace + 1.0 );
-		q[0] := root / 2.0;
-		root := 0.5 / root;
-		q[1] := ( m[2][1] - m[1][2] ) * root;
-		q[2] := ( m[0][2] - m[2][0] ) * root;
-		q[3] := ( m[1][0] - m[0][1] ) * root;
-	end
+  if trace > 0.0 then begin
+    root := sqrt( trace + 1.0 );
+    q[0] := root / 2.0;
+    root := 0.5 / root;
+    q[1] := ( m[2][1] - m[1][2] ) * root;
+    q[2] := ( m[0][2] - m[2][0] ) * root;
+    q[3] := ( m[1][0] - m[0][1] ) * root;
+  end
   else begin
-		if m[1][1] > m[0][0] then i := 1 else i := 0;
-		if m[2][2] > m[i][i] then
-			i := 2;
+    if m[1][1] > m[0][0] then i := 1 else i := 0;
+    if m[2][2] > m[i][i] then
+      i := 2;
 
-		j := next[i];
-		k := next[j];
+    j := next[i];
+    k := next[j];
 
-		root := sqrt( m[i][i] - m[j][j] - m[k][k] + 1.0 );
-		q[i + 1] := root / 2;
-		root := 0.5 / root;
-		q[0] := ( m[k][j] - m[j][k] ) * root;
-		q[j + 1] := ( m[j][i] + m[i][j] ) * root;
-		q[k + 1] := ( m[k][i] + m[i][k] ) * root;
-	end;
+    root := sqrt( m[i][i] - m[j][j] - m[k][k] + 1.0 );
+    q[i + 1] := root / 2;
+    root := 0.5 / root;
+    q[0] := ( m[k][j] - m[j][k] ) * root;
+    q[j + 1] := ( m[j][i] + m[i][j] ) * root;
+    q[k + 1] := ( m[k][i] + m[i][k] ) * root;
+  end;
 end;
 
 procedure QuaternionToM33(const Quat: TQuaternion; var m: TMatrix33);
@@ -336,15 +336,15 @@ begin
     fTzz := fTz * q[3];
   end;
 
-	m[0][0] := 1.0 - (fTyy + fTzz);
-	m[0][1] := fTxy - fTwz;
-	m[0][2] := fTxz + fTwy;
-	m[1][0] := fTxy + fTwz;
-	m[1][1] := 1.0 - (fTxx + fTzz);
-	m[1][2] := fTyz - fTwx;
-	m[2][0] := fTxz - fTwy;
-	m[2][1] := fTyz + fTwx;
-	m[2][2] := 1.0 - (fTxx + fTyy);
+  m[0][0] := 1.0 - (fTyy + fTzz);
+  m[0][1] := fTxy - fTwz;
+  m[0][2] := fTxz + fTwy;
+  m[1][0] := fTxy + fTwz;
+  m[1][1] := 1.0 - (fTxx + fTzz);
+  m[1][2] := fTyz - fTwx;
+  m[2][0] := fTxz - fTwy;
+  m[2][1] := fTyz + fTwx;
+  m[2][2] := 1.0 - (fTxx + fTyy);
 end;
 
 procedure QuaternionToAxisAngle(const Quat: TQuaternion; var a, x, y, z: Extended);
@@ -371,8 +371,8 @@ procedure AxisAngleToQuaternion(a, x, y, z: Extended; var Quat: TQuaternion);
 var
   s: Extended;
 begin
-	Normalize(x, y, z);
-	s := Sin( a / 2 );
+  Normalize(x, y, z);
+  s := Sin( a / 2 );
   Quat.q[0] := Cos( a / 2 );
   Quat.q[1] := s * x;
   Quat.q[2] := s * y;
@@ -432,22 +432,22 @@ begin
   if Length(strip) < 3 then
     Exit;
 
-	b := strip[0];
-	c := strip[1];
-	flip := False;
+  b := strip[0];
+  c := strip[1];
+  flip := False;
 
-	for s := 2 to Pred(Length(strip)) do begin
-		a := b;
-		b := c;
-		c := strip[s];
+  for s := 2 to Pred(Length(strip)) do begin
+    a := b;
+    b := c;
+    c := strip[s];
 
-		if ( a <> b ) and ( b <> c ) and ( c <> a ) then begin
+    if ( a <> b ) and ( b <> c ) and ( c <> a ) then begin
       SetLength(Result, Succ(Length(Result)));
-			if not flip then begin
+      if not flip then begin
         Result[Pred(Length(Result))][0] := a;
         Result[Pred(Length(Result))][1] := b;
         Result[Pred(Length(Result))][2] := c;
-			end
+      end
       else begin
         Result[Pred(Length(Result))][0] := a;
         Result[Pred(Length(Result))][1] := c;
@@ -456,7 +456,7 @@ begin
     end;
 
     flip := not flip;
-	end;
+  end;
 end;
 
 function Triangulate(const strips: TStripArray): TTriangleArray;
@@ -492,19 +492,19 @@ begin
     zMin := MaxSingle; zMax := -MaxSingle;
 
     for i := Low(verts) to High(verts) do with verts[i] do begin
-			if v[0] < xMin then
+      if v[0] < xMin then
         xMin := v[0]
-			else if v[0] > xMax then
+      else if v[0] > xMax then
         xMax := v[0];
 
-			if v[1] < yMin then
+      if v[1] < yMin then
         yMin := v[1]
-			else if v[1] > yMax then
+      else if v[1] > yMax then
         yMax := v[1];
 
-			if v[2] < zMin then
+      if v[2] < zMin then
         zMin := v[2]
-			else if v[2] > zMax then
+      else if v[2] > zMax then
         zMax := v[2];
     end;
     center.x := (xMin + xMax) / 2;
@@ -561,7 +561,7 @@ var
   NdotT, NdotB, TdotB, magT, magB, dpXN, dpYN, dpZN: Extended;
   newTangent, newBinormal, axis1, axis2: TVector3;
 begin
-	// Try Gram-Schmidt orthonormalize.
+  // Try Gram-Schmidt orthonormalize.
   // This might fail in degenerate cases which we all handle seperately.
 
   NdotT := Vector3Dot(normal, tangent);
@@ -587,22 +587,22 @@ begin
 
     dpXN := Vector3Dot(xAxis, normal);
     if dpXN < 0 then dpXN := -dpXN;
-		dpYN := Vector3Dot(yAxis, normal);
+    dpYN := Vector3Dot(yAxis, normal);
     if dpYN < 0 then dpYN := -dpYN;
     dpZN := Vector3Dot(zAxis, normal);
     if dpZN < 0 then dpZN := -dpZN;
 
     if (dpXN <= dpYN) and (dpXN <= dpZN) then begin
-			axis1 := xAxis;
-			if dpYN <= dpZN then axis2 := yAxis else axis2 := zAxis;
+      axis1 := xAxis;
+      if dpYN <= dpZN then axis2 := yAxis else axis2 := zAxis;
     end
-		else if (dpYN <= dpXN) and (dpYN <= dpZN) then begin
+    else if (dpYN <= dpXN) and (dpYN <= dpZN) then begin
       axis1 := yAxis;
-			if dpXN <= dpZN then axis2 := xAxis else axis2 := zAxis;
-		end
-		else begin
+      if dpXN <= dpZN then axis2 := xAxis else axis2 := zAxis;
+    end
+    else begin
       axis1 := zAxis;
-			if dpXN <= dpYN then axis2 := xAxis else axis2 := yAxis;
+      if dpXN <= dpYN then axis2 := xAxis else axis2 := yAxis;
     end;
 
     newTangent := axis1 - normal * Vector3Dot(normal, axis1);
@@ -650,22 +650,22 @@ begin
     w2 := @texco[i2]; w2.ValidateNan;
     w3 := @texco[i3]; w3.ValidateNan;
 
-		v2v1 := v2^ - v1^;
-		v3v1 := v3^ - v1^;
+    v2v1 := v2^ - v1^;
+    v3v1 := v3^ - v1^;
 
-		w2w1 := w2^ - w1^;
-		w3w1 := w3^ - w1^;
+    w2w1 := w2^ - w1^;
+    w3w1 := w3^ - w1^;
 
     r := w2w1.v[0] * w3w1.v[1] - w3w1.v[0] * w2w1.v[1];
     if r >= 0 then r := 1 else r := -1;
 
     sdir.v[0] := ( w3w1.v[1] * v2v1.v[0] - w2w1.v[1] * v3v1.v[0] ) * r;
-		sdir.v[1] := ( w3w1.v[1] * v2v1.v[1] - w2w1.v[1] * v3v1.v[1] ) * r;
-		sdir.v[2] := ( w3w1.v[1] * v2v1.v[2] - w2w1.v[1] * v3v1.v[2] ) * r;
+    sdir.v[1] := ( w3w1.v[1] * v2v1.v[1] - w2w1.v[1] * v3v1.v[1] ) * r;
+    sdir.v[2] := ( w3w1.v[1] * v2v1.v[2] - w2w1.v[1] * v3v1.v[2] ) * r;
 
-		tdir.v[0] := ( w2w1.v[0] * v3v1.v[0] - w3w1.v[0] * v2v1.v[0] ) * r;
-		tdir.v[1] := ( w2w1.v[0] * v3v1.v[1] - w3w1.v[0] * v2v1.v[1] ) * r;
-		tdir.v[2] := ( w2w1.v[0] * v3v1.v[2] - w3w1.v[0] * v2v1.v[2] ) * r;
+    tdir.v[0] := ( w2w1.v[0] * v3v1.v[0] - w3w1.v[0] * v2v1.v[0] ) * r;
+    tdir.v[1] := ( w2w1.v[0] * v3v1.v[1] - w3w1.v[0] * v2v1.v[1] ) * r;
+    tdir.v[2] := ( w2w1.v[0] * v3v1.v[2] - w3w1.v[0] * v2v1.v[2] ) * r;
 
     sdir.Normalize;
     tdir.Normalize;
@@ -687,14 +687,14 @@ begin
       b^ := Vector3Cross( n^, t^ );
     end
     else begin
-			t.Normalize;
-			t^ := ( t^ - n^ * Vector3Dot( n^, t^ ) );
-			t.Normalize;
+      t.Normalize;
+      t^ := ( t^ - n^ * Vector3Dot( n^, t^ ) );
+      t.Normalize;
 
-			b.Normalize;
-			b^ := ( b^ - n^ * Vector3Dot( n^, b^ ) );
-			b^ := ( b^ - t^ * Vector3Dot( t^, b^ ) );
-			b.Normalize;
+      b.Normalize;
+      b^ := ( b^ - n^ * Vector3Dot( n^, b^ ) );
+      b^ := ( b^ - t^ * Vector3Dot( t^, b^ ) );
+      b.Normalize;
     end;
   end;
 
@@ -734,11 +734,11 @@ begin
     w2 := @texco[tri[1]]; w2.ValidateNan;
     w3 := @texco[tri[2]]; w3.ValidateNan;
 
-		v2v1 := triVertex[1]^ - triVertex[0]^;
-		v3v1 := triVertex[2]^ - triVertex[0]^;
+    v2v1 := triVertex[1]^ - triVertex[0]^;
+    v3v1 := triVertex[2]^ - triVertex[0]^;
 
-		w2w1 := w2^ - w1^;
-		w3w1 := w3^ - w1^;
+    w2w1 := w2^ - w1^;
+    w3w1 := w3^ - w1^;
 
     r := w2w1.v[0] * w3w1.v[1] - w3w1.v[0] * w2w1.v[1];
 
@@ -785,13 +785,13 @@ begin
         else if angle > 1.0 then angle := 1.0;
       w := ArcCos(angle);
 
-		  tan[tri[v]].x := tan[tri[v]].x + w * tangent.x;
-		  tan[tri[v]].y := tan[tri[v]].y + w * tangent.y;
-		  tan[tri[v]].z := tan[tri[v]].z + w * tangent.z;
+      tan[tri[v]].x := tan[tri[v]].x + w * tangent.x;
+      tan[tri[v]].y := tan[tri[v]].y + w * tangent.y;
+      tan[tri[v]].z := tan[tri[v]].z + w * tangent.z;
 
-		  bin[tri[v]].x := bin[tri[v]].x + w * binormal.x;
-		  bin[tri[v]].y := bin[tri[v]].y + w * binormal.y;
-		  bin[tri[v]].z := bin[tri[v]].z + w * binormal.z;
+      bin[tri[v]].x := bin[tri[v]].x + w * binormal.x;
+      bin[tri[v]].y := bin[tri[v]].y + w * binormal.y;
+      bin[tri[v]].z := bin[tri[v]].z + w * binormal.z;
     end;
   end;
 
@@ -880,13 +880,13 @@ begin
         else if angle > 1.0 then angle := 1.0;
       w := ArcCos(angle);
 
-		  tan[tri[v]].x := tan[tri[v]].x + w * tangent.x;
-		  tan[tri[v]].y := tan[tri[v]].y + w * tangent.y;
-		  tan[tri[v]].z := tan[tri[v]].z + w * tangent.z;
+      tan[tri[v]].x := tan[tri[v]].x + w * tangent.x;
+      tan[tri[v]].y := tan[tri[v]].y + w * tangent.y;
+      tan[tri[v]].z := tan[tri[v]].z + w * tangent.z;
 
-		  bin[tri[v]].x := bin[tri[v]].x + w * binormal.x;
-		  bin[tri[v]].y := bin[tri[v]].y + w * binormal.y;
-		  bin[tri[v]].z := bin[tri[v]].z + w * binormal.z;
+      bin[tri[v]].x := bin[tri[v]].x + w * binormal.x;
+      bin[tri[v]].y := bin[tri[v]].y + w * binormal.y;
+      bin[tri[v]].z := bin[tri[v]].z + w * binormal.z;
     end;
   end;
 

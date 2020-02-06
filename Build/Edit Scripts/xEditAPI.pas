@@ -129,13 +129,13 @@ type
 /// <summary>Provides the file path to the game's data folder as a String</summary>
 function DataPath: String;
 /// <summary>Provides the file path to Tes5edit's installation folder as a String</summary>
-function ProgramPath:	String;
+function ProgramPath:  String;
 /// <summary>Provides the file path to Tes5Edit's 'Edit Scripts' folder as a String.</summary>
 /// <remarks>NOTE If launching TES5Edit via a .tes5pas file, ScriptsPath will change to the directory where the .te5pas file is located. (therefore if your script has any .pas file it is grabbing functions from, they also need to be in the that same directory.)</remarks>
-function ScriptsPath:	String;
+function ScriptsPath:  String;
 /// <summary>Provides the number of loaded files in your current TES5Edit session</summary>
 /// <remarks>NOTE: "Skyrim.Hardcoded.keep.this..." (aka. Skyrim.exe) is considered a file and is reflected in this variable.</remarks>
-function FileCount:	Integer;
+function FileCount:  Integer;
 /// <summary>xEdit app name. Examples: 'TES5','TES4','FNV','FO3','FO4'</summary>
 function wbAppName: String;
 /// <summary>xEdit game name</summary>
@@ -143,7 +143,7 @@ function wbGameName: String;
 /// <summary>xEdit game master file name</summary>
 function wbGameMasterEsm: String;
 /// <summary>xEdit version number.</summary>
-function wbVersionNumber:	Integer;
+function wbVersionNumber:  Integer;
 
 // ********************************************************************
 // Global Functions
@@ -573,17 +573,17 @@ begin
   Result := '';
 end;
 
-function ProgramPath:	String;
+function ProgramPath:  String;
 begin
   Result := '';
 end;
 
-function ScriptsPath:	String;
+function ScriptsPath:  String;
 begin
   Result := '';
 end;
 
-function FileCount:	Integer;
+function FileCount:  Integer;
 begin
   Result := 0;
 end;
@@ -603,7 +603,7 @@ begin
   Result := '';
 end;
 
-function wbVersionNumber:	Integer;
+function wbVersionNumber:  Integer;
 begin
   Result := 0;
 end;
