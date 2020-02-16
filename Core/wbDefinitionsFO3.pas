@@ -7194,9 +7194,16 @@ begin
     wbUnknown(_4F_IAD),
     wbUnknown(_10_IAD),
     wbUnknown(_50_IAD),
-    wbCinematicIMAD,
-    wbUnknown(_14_IAD),
-    wbUnknown(_54_IAD)
+    wbRStruct('Cinematic', [
+      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
+      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
+      wbArray(_12_IAD, 'Contrast Mult', wbTimeInterpolator),
+      wbArray(_52_IAD, 'Contrast Add', wbTimeInterpolator),
+      wbArray(_13_IAD, 'Contrast Avg Mult', wbTimeInterpolator),
+      wbArray(_53_IAD, 'Contrast Avg Add', wbTimeInterpolator),
+      wbArray(_14_IAD, 'Brightness Mult', wbTimeInterpolator),
+      wbArray(_54_IAD, 'Brightness Add', wbTimeInterpolator)
+    ], [])
   ]);
 
   wbRecord(FLST, 'FormID List', [
