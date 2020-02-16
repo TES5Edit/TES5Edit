@@ -913,6 +913,7 @@ type
                        const aPrevMainRecord : IwbMainRecord); overload; override;
 
     function GetSignature: TwbSignature;
+    function GetDisplaySignature: string;
     procedure ScanData; virtual; abstract;
     procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); virtual;
   public
@@ -7322,6 +7323,15 @@ begin
   end;
 end;
 
+function TwbRecord.GetDisplaySignature: string;
+begin
+  var Sig := GetSignature;
+  if (Sig[1] = 'I') and (Sig[2] = 'A') and (Sig[3] = 'D') then
+    Result := '#$'+IntToHex(Ord(Sig[0]), 2)+'IAD'
+  else
+    Result := Sig;
+end;
+
 function TwbRecord.GetName: string;
 var
   Sig : TwbSignature;
@@ -8549,7 +8559,7 @@ begin
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
       {$IFDEF DBGSUBREC}
       if Supports(Element, IwbSubRecord, CurrentRec) then
-        s := s + CurrentRec.Signature + ' ';
+        s := s + CurrentRec.DisplaySignature + ' ';
       {$ENDIF}
     end;
   end;
@@ -8582,7 +8592,7 @@ begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
         if wbHasProgressCallback then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
         FoundError := True;
         Inc(CurrentRecPos);
         Continue;
@@ -8591,7 +8601,7 @@ begin
     end else begin
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
         if wbHasProgressCallback then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
         FoundError := True;
         Inc(CurrentRecPos);
         Continue;
@@ -8605,7 +8615,7 @@ begin
         end;
       end else begin
         if wbHasProgressCallback then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) );
+          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) );
         FoundError := True;
         Inc(CurrentRecPos);
         Continue;

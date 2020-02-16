@@ -1481,9 +1481,12 @@ type
   IwbRecord = interface(IwbDataContainer)
     ['{4FC53881-25E2-421D-8AF6-F589979767E6}']
     function GetSignature: TwbSignature;
+    function GetDisplaySignature: string;
 
     property Signature: TwbSignature
       read GetSignature;
+    property DisplaySignature: string
+      read GetDisplaySignature;
   end;
 
   IwbHasSignature = interface(IwbElement)
