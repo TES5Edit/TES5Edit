@@ -113,9 +113,11 @@ const
   _11_IAD: TwbSignature = #$11'IAD';
   _12_IAD: TwbSignature = #$12'IAD';
   _13_IAD: TwbSignature = #$13'IAD';
+  _14_IAD: TwbSignature = #$14'IAD';
   _51_IAD: TwbSignature = #$51'IAD';
   _52_IAD: TwbSignature = #$52'IAD';
   _53_IAD: TwbSignature = #$53'IAD';
+  _54_IAD: TwbSignature = #$54'IAD';
 
 var
   wbActionFlag: IwbSubRecordDef;
@@ -141,7 +143,7 @@ var
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
-  wbTimeInterpolator: IwbStructDef;
+  wbTimeInterpolator: IwbValueDef;
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
   wbXLOD: IwbSubRecordDef;
@@ -290,6 +292,12 @@ function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemb
 function wbModelInfo(aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
 function wbModelInfos(aSignature: TwbSignature; aName: string = ''; aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
 
+function wbTimeInterpolators(const aSignature: TwbSignature; const aName: string): IwbRecordMemberDef;
+function wbTimeInterpolatorsMultAdd(const aSignatureMult, aSignatureAdd: TwbSignature; const aName: string): IwbRecordMemberDef;
+
+function wbFloatColorRGBA(const aName: string): IwbValueDef;
+
+
 {>>> Common Functions <<<}
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -402,6 +410,36 @@ begin
     Result := Trunc(fResult) - Result + 1;
 end;
 
+function wbTimeInterpolators(const aSignature: TwbSignature; const aName: string): IwbRecordMemberDef;
+begin
+  Result :=
+    wbSubRecord(aSignature, aName,
+      wbArray('', wbTimeInterpolator)
+      .SetSummaryPassthroughMaxCount(10)
+      .SetSummaryPassthroughMaxLength(100)
+    )
+    .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolators);
+end;
+
+function wbTimeInterpolatorsMultAdd(const aSignatureMult, aSignatureAdd: TwbSignature; const aName: string): IwbRecordMemberDef;
+begin
+  var sMult := 'Mult';
+  var sAdd := 'Add';
+  if SameText(aName, 'Unused') then begin
+    sMult := aName;
+    sAdd := aName;
+  end;
+
+  Result :=
+    wbRStruct(aName, [
+      wbTimeInterpolators(aSignatureMult, sMult),
+      wbTimeInterpolators(aSignatureAdd, sAdd)
+    ], [])
+    .SetSummaryKey([0, 1])
+    .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolatorsMultAdd);
+end;
+
+
 procedure DefineCommon;
 begin
   wbUnused := wbEmpty('Unused');
@@ -416,17 +454,20 @@ begin
   wbColorInterpolator :=
     wbStructSK([0], 'Data', [
       wbFloat('Time'),
-      wbFloat('Red', cpNormal, False, 255, 0),
-      wbFloat('Green', cpNormal, False, 255, 0),
-      wbFloat('Blue', cpNormal, False, 255, 0),
-      wbFloat('Alpha', cpNormal, False, 255, 0)
+      wbFloatColorRGBA('Value')
     ]);
 
   wbTimeInterpolator :=
     wbStructSK([0], 'Data', [
       wbFloat('Time'),
       wbFloat('Value')
-    ]);
+    ])
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(0, '@', '')
+    .SetSummaryMemberPrefixSuffix(1, '=', '')
+    .SetSummaryDelimiter('')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolator);
 
   wbActionFlag :=
     wbInteger(XACT, 'Action Flag', itU32, wbFlags([
@@ -490,15 +531,22 @@ begin
     .IncludeFlagOnValue(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 
-  wbCinematicIMAD :=
-    wbRStruct('Cinematic', [
-      wbArray(_11_IAD, 'Saturation Mult', wbTimeInterpolator),
-      wbArray(_51_IAD, 'Saturation Add', wbTimeInterpolator),
-      wbArray(_12_IAD, 'Brightness Mult', wbTimeInterpolator),
-      wbArray(_52_IAD, 'Brightness Add', wbTimeInterpolator),
-      wbArray(_13_IAD, 'Contrast Mult', wbTimeInterpolator),
-      wbArray(_53_IAD, 'Contrast Add', wbTimeInterpolator)
-    ], []);
+  if wbGameMode <= gmFNV then
+    wbCinematicIMAD :=
+      wbRStruct('Cinematic', [
+        wbTimeInterpolatorsMultAdd(_11_IAD, _51_IAD, 'Saturation'),
+        wbTimeInterpolatorsMultAdd(_12_IAD, _52_IAD, 'Contrast'),
+        wbTimeInterpolatorsMultAdd(_13_IAD, _53_IAD, 'Contrast Avg Lum'),
+        wbTimeInterpolatorsMultAdd(_14_IAD, _54_IAD, 'Brightness')
+      ], [])
+  else
+    wbCinematicIMAD :=
+      wbRStruct('Cinematic', [
+        wbTimeInterpolatorsMultAdd(_11_IAD, _51_IAD, 'Saturation'),
+        wbTimeInterpolatorsMultAdd(_12_IAD, _52_IAD, 'Brightness'),
+        wbTimeInterpolatorsMultAdd(_13_IAD, _53_IAD, 'Contrast'),
+        wbTimeInterpolatorsMultAdd(_14_IAD, _54_IAD, 'Unused')
+      ], []);
 
   wbDATAPosRot :=
     wbStruct(DATA, 'Position/Rotation', [
@@ -1246,6 +1294,19 @@ begin
       wbInteger('Blue', itU8),
       wbInteger('Alpha', itU8)
     ], cpNormal, aRequired)
+    .SetToStr(wbRGBAToStr)
+    .IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbFloatColorRGBA(const aName: string): IwbValueDef;
+begin
+  Result :=
+    wbStruct(aName, [
+      wbFloat('Red', cpNormal, False, 255, 0),
+      wbFloat('Green', cpNormal, False, 255, 0),
+      wbFloat('Blue', cpNormal, False, 255, 0),
+      wbFloat('Alpha', cpNormal, False, 255, 0)
+    ])
     .SetToStr(wbRGBAToStr)
     .IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;

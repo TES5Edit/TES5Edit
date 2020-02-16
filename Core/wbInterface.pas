@@ -202,6 +202,9 @@ var
   wbCollapseModelInfoMaterials      : Boolean  = True;
   wbCollapseModelInfo      : Boolean  = True;
   wbCollapseModelInfoHeader : Boolean  = True;
+  wbCollapseTimeInterpolator : Boolean  = True;
+  wbCollapseTimeInterpolators : Boolean  = True;
+  wbCollapseTimeInterpolatorsMultAdd : Boolean  = True;
   wbReportInjected         : Boolean  = True;
   wbNoFullInShortName      : Boolean  = True;
   wbNoIndexInAliasSummary  : Boolean  = True;
