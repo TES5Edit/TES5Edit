@@ -885,6 +885,7 @@ type
     function GetDisplayName(aUseSuffix: Boolean): string;
     function GetShortName: string;
     function GetPath: string;
+    function GetIndexedPath: string;
     function GetFullPath: string;
     function GetPathName: string;
     function GetSkipped: Boolean;
@@ -1024,6 +1025,8 @@ type
       read GetShortName;
     property Path: string
       read GetPath;
+    property IndexedPath: string
+      read GetIndexedPath;
     property FullPath: string
       read GetFullPath;
     property PathName: string

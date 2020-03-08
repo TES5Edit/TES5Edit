@@ -336,6 +336,7 @@ type
     function GetDisplayName(aUseSuffix: Boolean): string; virtual;
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
+    function GetIndexedPath: string; virtual;
     function GetFullPath: string; virtual;
     function GetPathName: string; virtual;
     function GetSkipped: Boolean; virtual;
@@ -16446,6 +16447,18 @@ end;
 function TwbElement.GetFound: Boolean;
 begin
   Result := esFound in eStates;
+end;
+
+function TwbElement.GetIndexedPath: string;
+begin
+  if Assigned(eContainer) then
+    Result := IwbElement(eContainer).IndexedPath
+  else
+    Result := '';
+  if Length(Result) > 0 then
+    Result := Result + '\';
+  if Assigned(eContainer) then
+    Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+']';
 end;
 
 function TwbElement.GetFullPath: string;
