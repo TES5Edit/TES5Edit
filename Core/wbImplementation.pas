@@ -336,7 +336,7 @@ type
     function GetDisplayName(aUseSuffix: Boolean): string; virtual;
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
-    function GetIndexedPath: string; virtual;
+    function GetIndexedPath(aIndexFromFile: Boolean = True): string; virtual;
     function GetFullPath: string; virtual;
     function GetPathName: string; virtual;
     function GetSkipped: Boolean; virtual;
@@ -16449,12 +16449,16 @@ begin
   Result := esFound in eStates;
 end;
 
-function TwbElement.GetIndexedPath: string;
+function TwbElement.GetIndexedPath(aIndexFromFile: Boolean = True): string;
 begin
   if Assigned(eContainer) then
-    Result := IwbElement(eContainer).IndexedPath
+    Result := IwbElement(eContainer).IndexedPath[aIndexFromFile]
   else
     Result := '';
+
+  if not aIndexFromFile and Assigned(eContainer) and (IwbElement(eContainer).ElementType in [etFile, etGroupRecord]) then
+    Exit;
+
   if Length(Result) > 0 then
     Result := Result + '\';
   if Assigned(eContainer) then

@@ -340,7 +340,7 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    Value := Element.IndexedPath;
+    Value := Element.IndexedPath[Boolean(Args.Values[1])];
 end;
 
 procedure IwbElement_FullPath(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1943,7 +1943,7 @@ begin
     AddFunction(cUnit, 'BaseName', IwbElement_BaseName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'DisplayName', IwbElement_DisplayName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Path', IwbElement_Path, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'IndexedPath', IwbElement_IndexedPath, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'IndexedPath', IwbElement_IndexedPath, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
