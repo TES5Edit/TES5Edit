@@ -1576,9 +1576,9 @@ type
     procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
-    function GetReferences(aIndex: Integer): IwbMainRecord;
-    function GetReferencesCount: Integer;
-    function GetExternalReferencesCount: Integer;
+    function GetReferenceBy(aIndex: Integer): IwbMainRecord;
+    function GetReferenceCount: Integer;
+    function GetExternalReferenceCount: Integer;
     function GetIsWinningOverride: Boolean;
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
@@ -1726,12 +1726,12 @@ type
     property ReferencedByCount: Integer
       read GetReferencedByCount;
 
-    property Referenceds[aIndex: Integer]: IwbMainRecord
-      read GetReferences;
-    property ReferencedsCount: Integer
-      read GetReferencesCount;
-    property ExternalReferencedsCount: Integer
-      read GetExternalReferencesCount;
+    property ReferenceBy[aIndex: Integer]: IwbMainRecord
+      read GetReferenceBy;
+    property ReferenceCount: Integer
+      read GetReferenceCount;
+    property ExternalReferenceCount: Integer
+      read GetExternalReferenceCount;
 
     property IsESM: Boolean
       read GetIsESM
