@@ -157,6 +157,8 @@ object frmScript: TfrmScript
     TabOrder = 3
     WantTabs = True
     WordWrap = False
+    OnKeyDown = EditorKeyDown
+    OnKeyPress = EditorKeyPress
     OnKeyUp = EditorKeyUp
     OnMouseUp = EditorMouseUp
   end

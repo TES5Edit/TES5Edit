@@ -14,7 +14,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, IOUtils, Vcl.ComCtrls;
+  Dialogs, StdCtrls, ExtCtrls, IOUtils, StrUtils, Vcl.ComCtrls;
 
 const
   sNewScript = '<new script>';
@@ -67,6 +67,8 @@ type
     procedure cmbScriptsBeforeWheel(Sender: TObject);
     procedure cmbScriptsAfterWheel(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure EditorKeyPress(Sender: TObject; var Key: Char);
   private
     ScriptSelectionChanged : Boolean;
     LastCloseUp : Int64;
@@ -74,6 +76,8 @@ type
     ScriptSelectionChangedOnDropDown : Boolean;
     SelectionOnEnter: string;
     SaveOverride: string;
+    function Indent(aText: string; aPrefix: string): string;
+    function Dedent(aText: string; aPrefix: string): string;
     procedure DoScriptSelectionChange;
   public
     { Public declarations }
@@ -121,7 +125,7 @@ begin
     s := Path + s + sScriptExt;
 
   with TStringList.Create do try
-    Text := Editor.Lines.Text;
+    Text := Editor.Lines.Text.Replace(#9, #32#32);
     CopyFile(PChar(s), PChar(s + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now)), True);
     SaveToFile(s);
     lblPosition.Caption := Format('Saved: %s', [ExtractFileName(s)]);
@@ -265,6 +269,67 @@ procedure TfrmScript.EditorMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   UpdateCaretPos;
+end;
+
+function TfrmScript.Indent(aText: string; aPrefix: string): String;
+begin
+  var lines := TStringList.Create;
+  try
+    lines.Text := aText.TrimRight();
+
+    for var i := 0 to Pred(lines.Count) do
+      if lines[i].Trim().Length > 0 then
+        lines[i] := aPrefix + lines[i];
+
+    Result := lines.Text.TrimRight();
+  finally
+    lines.Free;
+  end;
+end;
+
+function TfrmScript.Dedent(aText: string; aPrefix: string): String;
+begin
+  var lines := TStringList.Create;
+  try
+    lines.Text := aText.TrimRight();
+
+    for var i := 0 to Pred(lines.Count) do
+      if lines[i].Trim().Length > 0 then
+        if lines[i].StartsWith(aPrefix) then
+          lines[i] := StringReplace(lines[i], aPrefix, '', []);
+
+    Result := lines.Text.TrimRight();
+  finally
+    lines.Free;
+  end;
+end;
+
+procedure TfrmScript.EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    VK_TAB: begin
+      Key := 0;
+      if Editor.SelLength > 0 then
+        if Shift = [ssShift] then
+          Editor.SelText := Dedent(Editor.SelText, '  ')
+        else
+          Editor.SelText := Indent(Editor.SelText, '  ')
+      else
+      begin
+        SendMessage(Editor.Handle, WM_CHAR, Ord(' '), 0);
+        SendMessage(Editor.Handle, WM_CHAR, Ord(' '), 0);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmScript.EditorKeyPress(Sender: TObject; var Key: Char);
+begin
+  case Key of
+    #9: begin
+      Key := #0;
+    end;
+  end;
 end;
 
 procedure TfrmScript.EditorKeyUp(Sender: TObject; var Key: Word;
