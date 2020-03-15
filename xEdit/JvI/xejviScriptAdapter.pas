@@ -361,6 +361,30 @@ begin
     Value := Element.ElementType;
 end;
 
+procedure IwbElement_ElementTypeAsText(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    case Element.ElementType of
+      etFile: Value := 'etFile';
+      etMainRecord: Value := 'etMainRecord';
+      etGroupRecord: Value := 'etGroupRecord';
+      etSubRecord: Value := 'etSubRecord';
+      etSubRecordStruct: Value := 'etSubRecordStruct';
+      etSubRecordArray: Value := 'etSubRecordArray';
+      etSubRecordUnion: Value := 'etSubRecordUnion';
+      etArray: Value := 'etArray';
+      etStruct: Value := 'etStruct';
+      etValue: Value := 'etValue';
+      etFlag: Value := 'etFlag';
+      etStringListTerminator: Value := 'etStringListTerminator';
+      etUnion: Value := 'etUnion';
+      etStructChapter: Value := 'etStructChapter';
+    end;
+end;
+
 procedure IwbElement_DefType(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -369,6 +393,37 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     if Assigned(Element.ValueDef) then
       Value := Element.ValueDef.DefType;
+end;
+
+procedure IwbElement_DefTypeAsText(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    if Assigned(Element.ValueDef) then
+      case Element.ValueDef.DefType of
+        dtRecord: Value := 'dtRecord';
+        dtSubRecord: Value := 'dtSubRecord';
+        dtSubRecordArray: Value := 'dtSubRecordArray';
+        dtSubRecordStruct: Value := 'dtSubRecordStruct';
+        dtSubRecordUnion: Value := 'dtSubRecordUnion';
+        dtString: Value := 'dtString';
+        dtLString: Value := 'dtLString';
+        dtLenString: Value := 'dtLenString';
+        dtByteArray: Value := 'dtByteArray';
+        dtInteger: Value := 'dtInteger';
+        dtIntegerFormater: Value := 'dtIntegerFormater';
+        dtIntegerFormaterUnion: Value := 'dtIntegerFormaterUnion';
+        dtFlag: Value := 'dtFlag';
+        dtFloat: Value := 'dtFloat';
+        dtArray: Value := 'dtArray';
+        dtStruct: Value := 'dtStruct';
+        dtUnion: Value := 'dtUnion';
+        dtResolvable: Value := 'dtResolvable';
+        dtEmpty: Value := 'dtEmpty';
+        dtStructChapter: Value := 'dtStructChapter';
+      end;
 end;
 
 procedure IwbElement_EnumValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1937,7 +1992,9 @@ begin
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ElementTypeAsText', IwbElement_ElementTypeAsText, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'DefType', IwbElement_DefType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'DefTypeAsText', IwbElement_DefTypeAsText, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnumValues', IwbElement_EnumValues, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FlagValues', IwbElement_FlagValues, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
