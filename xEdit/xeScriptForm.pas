@@ -275,13 +275,13 @@ function TfrmScript.Indent(aText: string; aPrefix: string): String;
 begin
   var lines := TStringList.Create;
   try
-    lines.Text := aText.TrimRight();
+    lines.Text := aText.TrimRight;
 
     for var i := 0 to Pred(lines.Count) do
-      if lines[i].Trim().Length > 0 then
+      if lines[i].Trim.Length > 0 then
         lines[i] := aPrefix + lines[i];
 
-    Result := lines.Text.TrimRight();
+    Result := lines.Text.TrimRight;
   finally
     lines.Free;
   end;
@@ -291,14 +291,16 @@ function TfrmScript.Dedent(aText: string; aPrefix: string): String;
 begin
   var lines := TStringList.Create;
   try
-    lines.Text := aText.TrimRight();
+    lines.Text := aText.TrimRight;
 
     for var i := 0 to Pred(lines.Count) do
-      if lines[i].Trim().Length > 0 then
+      if lines[i].Trim.Length > 0 then
         if lines[i].StartsWith(aPrefix) then
-          lines[i] := StringReplace(lines[i], aPrefix, '', []);
+          lines[i] := StringReplace(lines[i], aPrefix, '', [])
+        else
+          lines[i] := lines[i].TrimLeft;
 
-    Result := lines.Text.TrimRight();
+    Result := lines.Text.TrimRight;
   finally
     lines.Free;
   end;
