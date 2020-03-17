@@ -1576,7 +1576,7 @@ type
     procedure RemoveReferencedBy(const aMainRecord: IwbMainRecord);
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
-    function GetReferenceBy(aIndex: Integer): IwbMainRecord;
+    function GetReference(aIndex: Integer): IwbMainRecord;
     function GetReferenceCount: Integer;
     function GetExternalReferenceCount: Integer;
     function GetIsWinningOverride: Boolean;
@@ -1727,7 +1727,7 @@ type
       read GetReferencedByCount;
 
     property ReferenceBy[aIndex: Integer]: IwbMainRecord
-      read GetReferenceBy;
+      read GetReference;
     property ReferenceCount: Integer
       read GetReferenceCount;
     property ExternalReferenceCount: Integer
