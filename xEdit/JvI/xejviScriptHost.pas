@@ -197,7 +197,7 @@ begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       Value := '';
       for i := Low(Files) to High(Files) do
-        if string(Args.Values[0]) = Files[i].FileName then begin
+        if SameText(Args.Values[0], Files[i].FileName) then begin
           Value := Files[i];
           Break;
         end;
