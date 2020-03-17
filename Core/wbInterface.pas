@@ -1577,8 +1577,8 @@ type
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
     function GetReference(aIndex: Integer): IwbMainRecord;
-    function GetReferenceCount: Integer;
-    function GetExternalReferenceCount: Integer;
+    function GetReferencesCount: Integer;
+    function GetExternalReferencesCount: Integer;
     function GetIsWinningOverride: Boolean;
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
@@ -1726,12 +1726,12 @@ type
     property ReferencedByCount: Integer
       read GetReferencedByCount;
 
-    property ReferenceBy[aIndex: Integer]: IwbMainRecord
+    property References[aIndex: Integer]: IwbMainRecord
       read GetReference;
-    property ReferenceCount: Integer
-      read GetReferenceCount;
-    property ExternalReferenceCount: Integer
-      read GetExternalReferenceCount;
+    property ReferencesCount: Integer
+      read GetReferencesCount;
+    property ExternalReferencesCount: Integer
+      read GetExternalReferencesCount;
 
     property IsESM: Boolean
       read GetIsESM

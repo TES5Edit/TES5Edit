@@ -1182,8 +1182,8 @@ type
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
     function GetReference(aIndex: Integer): IwbMainRecord;
-    function GetReferenceCount: Integer;
-    function GetExternalReferenceCount: Integer;
+    function GetReferencesCount: Integer;
+    function GetExternalReferencesCount: Integer;
     function GetCheck: string; override;
     function GetIsWinningOverride: Boolean;
     function GetWinningOverride: IwbMainRecord;
@@ -9358,7 +9358,7 @@ begin
   Result := etMainRecord;
 end;
 
-function TwbMainRecord.GetExternalReferenceCount: Integer;
+function TwbMainRecord.GetExternalReferencesCount: Integer;
 begin
   Result := 0;
   var _File := GetFile;
@@ -10271,7 +10271,7 @@ begin
     Result := _File.RecordByFormID[mrReferences[aIndex], True, GetMastersUpdated];
 end;
 
-function TwbMainRecord.GetReferenceCount: Integer;
+function TwbMainRecord.GetReferencesCount: Integer;
 begin
   Result := Length(mrReferences);
 end;
