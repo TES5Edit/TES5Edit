@@ -230,7 +230,7 @@ begin
     try
       LoadFromFile(Path + s + sScriptExt);
     except end;
-    Editor.Lines.Text := Text;
+    Editor.Lines.Text := Text.Replace(#9, #32#32);
     Editor.Modified := False;
     if not edFilter.Focused then
       Editor.SetFocus;
