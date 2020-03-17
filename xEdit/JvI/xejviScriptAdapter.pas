@@ -377,8 +377,11 @@ var
 begin
   Value := -1;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Assigned(Element.ValueDef) then
-      Value := Element.ValueDef.DefType;
+  begin
+    var ValueDef: IwbValueDef := Element.ValueDef;
+    if Assigned(ValueDef) then
+      Value := ValueDef.DefType;
+  end;
 end;
 
 procedure IwbElement_DefTypeAsText(var Value: Variant; Args: TJvInterpreterArgs);
@@ -387,8 +390,11 @@ var
 begin
   Value := '';
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Assigned(Element.ValueDef) then
-      Value := GetEnumName(TypeInfo(TwbDefType), Ord(Element.ValueDef.DefType));
+  begin
+    var ValueDef: IwbValueDef := Element.ValueDef;
+    if Assigned(ValueDef) then
+      Value := GetEnumName(TypeInfo(TwbDefType), Ord(ValueDef.DefType));
+  end;
 end;
 
 procedure IwbElement_EnumValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1337,8 +1343,11 @@ begin
     Value := _File.FileName
   else
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Assigned(Element._File) then
-      Value := Element._File.FileName
+  begin
+    var ElementFile: IwbFile := Element._File;
+    if Assigned(ElementFile) then
+      Value := ElementFile.FileName;
+  end;
 end;
 
 procedure IwbFile_GetLoadOrder(var Value: Variant; Args: TJvInterpreterArgs);
