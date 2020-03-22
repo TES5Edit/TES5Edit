@@ -4125,7 +4125,8 @@ begin
       raise ERangeError.Create('File '+GetFileName+' has no more space for a new FormID');
   end;
 
-  Inc(NextObjectID);
+  if GetRecordCount > 0 then
+    Inc(NextObjectID);
   if NextObjectID > Mask then
     NextObjectID := $800;
 
