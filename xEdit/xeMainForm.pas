@@ -607,6 +607,8 @@ type
     {--- actions ---}
     function GetFocusedElementSafely: IwbElement;
 
+    procedure TryViewOrCompareSelectedRecords(aFocusedNode: PVirtualNode);
+
     procedure acBackUpdate(Sender: TObject);
     procedure acBackExecute(Sender: TObject);
 
@@ -713,6 +715,8 @@ type
     procedure mniCopyShortNameToClipboardClick(Sender: TObject);
     procedure mniCopySignatureToClipboardClick(Sender: TObject);
     procedure mniCopyPathNameToClipboardClick(Sender: TObject);
+    procedure vstNavNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+    procedure vstNavKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -17969,17 +17973,12 @@ begin
 end;
 
 procedure TfrmMain.vstNavChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+// WARN: vstNavChange is called three times in a row per nav action. --fireundubh
 var
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
   s, t, u                     : string;
 
-  SelectedNodes               : TNodeArray;
-  FirstNode                   : PVirtualNode;
-  MainRecords                 : TDynMainRecords;
-  _File                       : IwbFile;
-  MainRecord                  : IwbMainRecord;
-  i, j                        : Integer;
   HeaderType                  : TwbElementType;
 begin
   HeaderType := etValue;
@@ -18024,40 +18023,6 @@ begin
   else begin
     lblPath.Visible := False;
   end;
-
-  MainRecords := nil;
-  FirstNode := nil;
-  SelectedNodes := vstNav.GetSortedSelection(True);
-  if (Length(SelectedNodes) > 1) and (Length(SelectedNodes) <= wbAutoCompareSelectedLimit) then begin
-    SetLength(MainRecords, Length(SelectedNodes));
-    j := 0;
-    for i := Low(SelectedNodes) to High(SelectedNodes) do begin
-      NodeData := vstNav.GetNodeData(SelectedNodes[i]);
-      if Assigned(NodeData.Element) and (NodeData.Element.ElementType in [etMainRecord{, etFile}]) then begin
-        {if Supports(NodeData.Element, IwbFile, _File) then
-          MainRecords[j] := _File.Elements[0] as IwbMainRecord
-        else}
-          MainRecords[j] := NodeData.Element as IwbMainRecord;
-        if not Assigned(FirstNode) then begin
-          FirstNode := SelectedNodes[i];
-          Inc(j);
-        end else if FirstNode.Parent = SelectedNodes[i].Parent then
-          Inc(j);
-      end;
-    end;
-    SetLength(MainRecords, j);
-  end;
-
-  if Length(MainRecords) > 1 then
-    SetActiveRecord(MainRecords)
-  else if Supports(Element, IwbMainRecord, MainRecord) then
-    SetActiveRecord(MainRecord)
-  else if Supports(Element, IwbFile, _File) and (_File.ElementCount > 0) and Supports(_File.Elements[0], IwbMainRecord, MainRecord) then begin
-    SetActiveRecord(MainRecord)
-  end else if Supports(Element, IwbDataContainer) then
-    SetActiveContainer(Element as IwbDataContainer)
-  else
-    ClearActiveContainer;
 
   if not wbShowGroupRecordCount then
     if HeaderType = etGroupRecord then
@@ -18821,6 +18786,82 @@ begin
     Key := #0;
     edFileNameFilter.SetFocus;
   end;
+end;
+
+procedure TfrmMain.vstNavKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if wbLoaderDone then
+    case Key of
+      VK_UP: begin
+        TryViewOrCompareSelectedRecords(vstNav.FocusedNode);
+      end;
+      VK_DOWN: begin
+        TryViewOrCompareSelectedRecords(vstNav.FocusedNode);
+      end;
+    end;
+end;
+
+procedure TfrmMain.TryViewOrCompareSelectedRecords(aFocusedNode: PVirtualNode);
+var
+  _File                       : IwbFile;
+  MainRecord                  : IwbMainRecord;
+begin
+  var NodeData: PNavNodeData := vstNav.GetNodeData(aFocusedNode);
+  if not Assigned(NodeData) then
+    Exit;
+
+  var Element: IwbElement := NodeData.Element;
+  if Assigned(Element) and not (Element.ElementType in [etFile, etMainRecord, etStructChapter]) and not Element.TreeHead then
+    Element := nil;
+
+  var MainRecords: TDynMainRecords := nil;
+  var SelectedNodes: TNodeArray := vstNav.GetSortedSelection(True);
+
+  var SelectedNodesCount: Integer := Length(SelectedNodes);
+
+  var Ctrl: Boolean := GetAsyncKeyState(VK_CONTROL) < 0;
+
+  if InRange(SelectedNodesCount, 2, wbAutoCompareSelectedLimit) or (Ctrl and (SelectedNodesCount > wbAutoCompareSelectedLimit)) then
+  begin
+    SetLength(MainRecords, SelectedNodesCount);
+
+    var FirstNode: PVirtualNode := nil;
+    var j: Integer := 0;
+
+    for var i := Low(SelectedNodes) to High(SelectedNodes) do
+    begin
+      NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+
+      if not Assigned(NodeData.Element) or not (NodeData.Element.ElementType = etMainRecord) then
+        Continue;
+
+      MainRecords[j] := NodeData.Element as IwbMainRecord;
+
+      if not Assigned(FirstNode) then
+        FirstNode := SelectedNodes[i];
+
+      if not Assigned(FirstNode) or (FirstNode.Parent = SelectedNodes[i].Parent) then
+        Inc(j);
+    end;
+
+    SetLength(MainRecords, j);
+  end;
+
+  if Length(MainRecords) > 1 then
+    SetActiveRecord(MainRecords)
+  else if Supports(Element, IwbMainRecord, MainRecord) then
+    SetActiveRecord(MainRecord)
+  else if Supports(Element, IwbFile, _File) and (_File.ElementCount > 0) and Supports(_File.Elements[0], IwbMainRecord, MainRecord) then
+    SetActiveRecord(MainRecord)
+  else if Supports(Element, IwbDataContainer) then
+    SetActiveContainer(Element as IwbDataContainer)
+  else
+    ClearActiveContainer;
+end;
+
+procedure TfrmMain.vstNavNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
+begin
+  TryViewOrCompareSelectedRecords(Sender.FocusedNode);
 end;
 
 procedure TfrmMain.vstNavPaintText(Sender: TBaseVirtualTree;
