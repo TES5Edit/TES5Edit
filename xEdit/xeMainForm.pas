@@ -18028,7 +18028,7 @@ begin
   MainRecords := nil;
   FirstNode := nil;
   SelectedNodes := vstNav.GetSortedSelection(True);
-  if (Length(SelectedNodes) > 1) and (Length(SelectedNodes) < wbAutoCompareSelectedLimit) then begin
+  if (Length(SelectedNodes) > 1) and (Length(SelectedNodes) <= wbAutoCompareSelectedLimit) then begin
     SetLength(MainRecords, Length(SelectedNodes));
     j := 0;
     for i := Low(SelectedNodes) to High(SelectedNodes) do begin
