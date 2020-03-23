@@ -14438,6 +14438,8 @@ begin
   mniViewNextMember.Visible := False;
   mniViewPreviousMember.Visible := False;
   mniViewRemove.Visible := False;
+  mniViewMoveUp.Visible := False;
+  mniViewMoveDown.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
   mniViewSort.Visible := ComparingSiblings;
   mniViewCopyToSelectedRecords.Visible := False;
@@ -14478,8 +14480,10 @@ begin
       mniViewSetToDefault.Visible := not wbTranslationMode and Assigned(Element) and Element._File.IsEditable and
         (Supports(Element.ValueDef, IwbStructDef, StructDef) and (StructDef.OptionalFromElement <> -1));
       mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemoveable;
-      mniViewMoveUp.Visible := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
-      mniViewMoveDown.Visible := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
+      mniViewMoveUp.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
+      mniViewMoveDown.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
+      mniViewMoveUp.Visible := not wbTranslationMode and Assigned(Element) and (Element.CanMoveUp or Element.CanMoveDown);
+      mniViewMoveDown.Visible := not wbTranslationMode and Assigned(Element) and (Element.CanMoveUp or Element.CanMoveDown);
       mniViewRemoveFromSelected.Visible := not wbTranslationMode and mniViewRemove.Visible and ComparingSiblings;
       mniViewCopyMultipleToSelectedRecords.Visible := not wbTranslationMode and ComparingSiblings;
       mniViewCopyToSelectedRecords.Visible := mniViewCopyMultipleToSelectedRecords.Visible and Assigned(Element);
