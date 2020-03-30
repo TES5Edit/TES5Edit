@@ -532,9 +532,9 @@ type
     function GetAnyElement: IwbElement;
     function GetElementCount: Integer;
     function GetElementByName(const aName: string): IwbElement;
-    function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
+    function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord; virtual;
     function GetElementByMemoryOrder(aSortOrder: Integer): IwbElement;
-    function GetElementBySignature(const aSignature: TwbSignature): IwbElement;
+    function GetElementBySignature(const aSignature: TwbSignature): IwbElement; virtual;
     function GetElementBySortOrder(aSortOrder: Integer): IwbElement;
     function GetAdditionalElementCount: Integer; virtual;
     procedure ReverseElements;
@@ -720,6 +720,9 @@ type
     function NewFormID: TwbFormID;
 
     function GetHighestGenerationSelfAndMasters: Integer;
+
+    function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord; override;
+    function GetElementBySignature(const aSignature: TwbSignature): IwbElement; override;
 
     {---IwbFile---}
     function GetFileName: string;
@@ -3459,6 +3462,24 @@ begin
   end;
 end;
 
+function TwbFile.GetElementBySignature(const aSignature: TwbSignature): IwbElement;
+var
+  SelfRef     : IwbContainerElementRef;
+  i           : Integer;
+  GroupRecord : IwbGroupRecord;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  Result := inherited;
+  if not Assigned(Result) then
+  for i := Low(cntElements) to High(cntElements) do begin
+    if Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
+      if (GroupRecord.GroupType = 0) and (GroupRecord.GroupLabelSignature = aSignature) then begin
+        Result := GroupRecord;
+        Exit;
+      end;
+  end;
+end;
+
 function TwbFile.GetElementType: TwbElementType;
 begin
   Result := etFile;
@@ -3823,6 +3844,24 @@ begin
 
   if Assigned(Result) then
     Result := Result.HighestOverrideVisibleForFile[Self];
+end;
+
+function TwbFile.GetRecordBySignature(const aSignature: TwbSignature): IwbRecord;
+var
+  SelfRef     : IwbContainerElementRef;
+  i           : Integer;
+  GroupRecord : IwbGroupRecord;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+  Result := inherited;
+  if not Assigned(Result) then
+  for i := Low(cntElements) to High(cntElements) do begin
+    if Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
+      if (GroupRecord.GroupType = 0) and (GroupRecord.GroupLabelSignature = aSignature) then begin
+        Result := GroupRecord;
+        Exit;
+      end;
+  end;
 end;
 
 function TwbFile.GetRecordCount: Integer;
