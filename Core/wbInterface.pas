@@ -47,7 +47,7 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 3;
-    Build   : 'a';
+    Build   : 'b';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
