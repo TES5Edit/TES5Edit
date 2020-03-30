@@ -34,10 +34,6 @@ object frmOptions: TfrmOptions
     object tsGeneral: TTabSheet
       Caption = 'General'
       ImageIndex = 1
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object cbHideUnused: TCheckBox
         Left = 16
         Top = 15
@@ -210,10 +206,6 @@ object frmOptions: TfrmOptions
     end
     object tsViewSettings: TTabSheet
       Caption = 'View'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object lblFieldsToCollapse: TLabel
         Left = 16
         Top = 15
@@ -355,10 +347,6 @@ object frmOptions: TfrmOptions
     end
     object tsCleaning: TTabSheet
       Caption = 'Cleaning'
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label1: TLabel
         Left = 16
         Top = 9
@@ -426,10 +414,6 @@ object frmOptions: TfrmOptions
     object tsUISettings: TTabSheet
       Caption = 'UI Settings'
       ImageIndex = 2
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object Label3: TLabel
         Left = 16
         Top = 40
@@ -461,9 +445,9 @@ object frmOptions: TfrmOptions
       object Label7: TLabel
         Left = 16
         Top = 259
-        Width = 267
+        Width = 249
         Height = 13
-        Caption = 'Auto "Compare Selected" when multi-selecting less than'
+        Caption = 'Auto "Compare Selected" when multi-selecting up to'
       end
       object Label8: TLabel
         Left = 375
@@ -642,10 +626,6 @@ object frmOptions: TfrmOptions
     object tbsUITheme: TTabSheet
       Caption = 'UI Theme'
       ImageIndex = 3
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object pnlThemeTop: TPanel
         AlignWithMargins = True
         Left = 3
@@ -724,10 +704,6 @@ object frmOptions: TfrmOptions
     object tsExperts: TTabSheet
       Caption = 'Experts'
       ImageIndex = 4
-      ExplicitLeft = 0
-      ExplicitTop = 0
-      ExplicitWidth = 0
-      ExplicitHeight = 0
       object cbClampFormID: TCheckBox
         Left = 16
         Top = 101
