@@ -193,6 +193,18 @@ begin
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
+  else if SameText(Identifier, 'FileByName') then begin
+    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
+      Value := '';
+      for i := Low(Files) to High(Files) do
+        if SameText(Args.Values[0], Files[i].FileName) then begin
+          Value := Files[i];
+          Break;
+        end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
+  end
   else if SameText(Identifier, 'IsPositionChanged') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       Value := IsPositionChanged(MainRecord);
