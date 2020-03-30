@@ -1182,7 +1182,7 @@ type
     procedure SortReferencedBy;
     function GetReferencedBy(aIndex: Integer): IwbMainRecord;
     function GetReferencedByCount: Integer;
-    function GetReferences(aIndex: Integer): IwbMainRecord;
+    function GetReference(aIndex: Integer): IwbMainRecord;
     function GetReferencesCount: Integer;
     function GetExternalReferencesCount: Integer;
     function GetCheck: string; override;
@@ -10264,7 +10264,7 @@ begin
     Result := Result.Masters[FileID, GetMastersUpdated];
 end;
 
-function TwbMainRecord.GetReferences(aIndex: Integer): IwbMainRecord;
+function TwbMainRecord.GetReference(aIndex: Integer): IwbMainRecord;
 begin
   Result := nil;
   var _File := GetFile;

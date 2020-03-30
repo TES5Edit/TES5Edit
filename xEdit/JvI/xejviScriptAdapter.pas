@@ -1114,6 +1114,23 @@ begin
     Value := MainRecord.ReferencedBy[Args.Values[1]];
 end;
 
+procedure IwbMainRecord_ReferencesCount(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  Value := 0;
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.ReferencesCount;
+end;
+
+procedure IwbMainRecord_ReferencesByIndex(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
+    Value := MainRecord.References[Args.Values[1]];
+end;
+
 procedure IwbMainRecord_BaseRecord(var Value: Variant; Args: TJvInterpreterArgs);
 var
   MainRecord: IwbMainRecord;
@@ -2033,6 +2050,8 @@ begin
     AddFunction(cUnit, 'OverrideByIndex', IwbMainRecord_OverrideByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'ReferencedByCount', IwbMainRecord_ReferencedByCount, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ReferencedByIndex', IwbMainRecord_ReferencedByIndex, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'ReferencesCount', IwbMainRecord_ReferencesCount, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ReferencesByIndex', IwbMainRecord_ReferencesByIndex, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'Master', IwbMainRecord_Master, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MasterOrSelf', IwbMainRecord_MasterOrSelf, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'IsMaster', IwbMainRecord_IsMaster, 1, [varEmpty], varEmpty);
