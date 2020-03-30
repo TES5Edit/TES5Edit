@@ -19592,7 +19592,8 @@ begin
               BuildOrLoadRef(False);
               DoMarkModified :=
                     wbForceMarkModified
-                or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'));
+                or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'))
+                or (wbAutoMarkModified and SameText(FileName, 'Dragonborn.esm'));
             end;
 
             mniNavFilterForCleaning.Click;
@@ -19610,8 +19611,10 @@ begin
               if esUnsaved in ElementStates then begin
 
                 if DoMarkModified then begin
-                  wbProgress('Marking all groups and records as modified');
-                  MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                  wbProgress('Marking groups and records in Worldspaces as modified');
+                  var Worldspaces := ElementBySignature['WRLD'];
+                  if Assigned(Worldspaces) then
+                    Worldspaces.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
                 end;
                 WasUnsaved := True;
               end;
@@ -19640,8 +19643,10 @@ begin
                 with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
                   if esUnsaved in ElementStates then begin
                     if DoMarkModified then begin
-                      wbProgress('Marking all groups and records as modified');
-                      MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+                      wbProgress('Marking groups and records in Worldspaces as modified');
+                      var Worldspaces := ElementBySignature['WRLD'];
+                      if Assigned(Worldspaces) then
+                        Worldspaces.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
                     end;
                     WasUnsaved := True;
                   end;
