@@ -14,6 +14,7 @@ interface
 
 uses
   Classes,
+  System.TypInfo,
   SysUtils,
   Variants,
   Windows,
@@ -370,14 +371,39 @@ begin
     Value := Element.ElementType;
 end;
 
+procedure IwbElement_ElementTypeAsText(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := GetEnumName(TypeInfo(TwbElementType), Ord(Element.ElementType));
+end;
+
 procedure IwbElement_DefType(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
 begin
   Value := -1;
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Assigned(Element.ValueDef) then
-      Value := Element.ValueDef.DefType;
+  begin
+    var ValueDef: IwbValueDef := Element.ValueDef;
+    if Assigned(ValueDef) then
+      Value := ValueDef.DefType;
+  end;
+end;
+
+procedure IwbElement_DefTypeAsText(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  Value := '';
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  begin
+    var ValueDef: IwbValueDef := Element.ValueDef;
+    if Assigned(ValueDef) then
+      Value := GetEnumName(TypeInfo(TwbDefType), Ord(ValueDef.DefType));
+  end;
 end;
 
 procedure IwbElement_EnumValues(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1343,8 +1369,11 @@ begin
     Value := _File.FileName
   else
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    if Assigned(Element._File) then
-      Value := Element._File.FileName
+  begin
+    var ElementFile: IwbFile := Element._File;
+    if Assigned(ElementFile) then
+      Value := ElementFile.FileName;
+  end;
 end;
 
 procedure IwbFile_GetLoadOrder(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1964,7 +1993,9 @@ begin
     AddFunction(cUnit, 'FullPath', IwbElement_FullPath, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'PathName', IwbElement_PathName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementType', IwbElement_ElementType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'ElementTypeAsText', IwbElement_ElementTypeAsText, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'DefType', IwbElement_DefType, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'DefTypeAsText', IwbElement_DefTypeAsText, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EnumValues', IwbElement_EnumValues, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'FlagValues', IwbElement_FlagValues, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortKey', IwbElement_SortKey, 2, [varEmpty, varBoolean], varEmpty);
