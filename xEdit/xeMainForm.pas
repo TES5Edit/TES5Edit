@@ -14486,8 +14486,8 @@ begin
       mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemoveable;
       mniViewMoveUp.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
       mniViewMoveDown.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
-      mniViewMoveUp.Visible := not wbTranslationMode and Assigned(Element) and (Element.CanMoveUp or Element.CanMoveDown);
-      mniViewMoveDown.Visible := not wbTranslationMode and Assigned(Element) and (Element.CanMoveUp or Element.CanMoveDown);
+      mniViewMoveUp.Visible := mniViewMoveUp.Enabled or mniViewMoveDown.Enabled;
+      mniViewMoveDown.Visible := mniViewMoveUp.Visible;
       mniViewRemoveFromSelected.Visible := not wbTranslationMode and mniViewRemove.Visible and ComparingSiblings;
       mniViewCopyMultipleToSelectedRecords.Visible := not wbTranslationMode and ComparingSiblings;
       mniViewCopyToSelectedRecords.Visible := mniViewCopyMultipleToSelectedRecords.Visible and Assigned(Element);
