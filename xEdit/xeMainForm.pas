@@ -607,7 +607,7 @@ type
     {--- actions ---}
     function GetFocusedElementSafely: IwbElement;
 
-    procedure TryViewOrCompareSelectedRecords(aFocusedNode: PVirtualNode);
+    procedure TryViewOrCompareSelectedRecords(aElement: IwbElement);
 
     procedure acBackUpdate(Sender: TObject);
     procedure acBackExecute(Sender: TObject);
@@ -715,8 +715,6 @@ type
     procedure mniCopyShortNameToClipboardClick(Sender: TObject);
     procedure mniCopySignatureToClipboardClick(Sender: TObject);
     procedure mniCopyPathNameToClipboardClick(Sender: TObject);
-    procedure vstNavNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
-    procedure vstNavKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -15347,9 +15345,8 @@ begin
     lvReferencedBy.Items.EndUpdate;
   end;
 end;
+
 procedure TfrmMain.DoSetActiveRecord(const aMainRecords: TDynMainRecords);
-var
-  i                           : Integer;
 begin
   PendingContainer := nil;
   PendingMainRecords := nil;
@@ -15363,6 +15360,23 @@ begin
     else
       DoSetActiveRecord(IwbMainRecord(nil));
     Exit;
+  end;
+
+  if Length(aMainRecords) = Length(ActiveRecords) then
+  begin
+    var FoundDifferent: Boolean := False;
+
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      with ActiveRecords[i] do
+      begin
+        FoundDifferent := (Assigned(Element) <> Assigned(aMainRecords[i])) or
+                          (Assigned(Element) and not Element.Equals(aMainRecords[i]));
+        if FoundDifferent then
+          Break;
+      end;
+
+    if not FoundDifferent then
+      Exit;
   end;
 
   ComparingSiblings := True;
@@ -15380,7 +15394,7 @@ begin
       ActiveIndex := NoColumn;
 
       SetLength(ActiveRecords, Length(aMainRecords));
-      for i := Low(ActiveRecords) to High(ActiveRecords) do
+      for var i := Low(ActiveRecords) to High(ActiveRecords) do
         with ActiveRecords[i] do begin
           Element := aMainRecords[i];
           Container := aMainRecords[i] as IwbContainerElementRef;
@@ -15398,7 +15412,7 @@ begin
             Options := Options - [coDraggable, coShowDropMark];
             Options := Options + [coFixed];
           end;
-          for I := Low(ActiveRecords) to High(ActiveRecords) do
+          for var i := Low(ActiveRecords) to High(ActiveRecords) do
             with Add do begin
               Text := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
               Hint := (ActiveRecords[i].Element as IwbMainRecord).EditorID;
@@ -18028,6 +18042,8 @@ begin
     lblPath.Visible := False;
   end;
 
+  TryViewOrCompareSelectedRecords(Element);
+
   if not wbShowGroupRecordCount then
     if HeaderType = etGroupRecord then
       HeaderType := etValue;
@@ -18792,35 +18808,14 @@ begin
   end;
 end;
 
-procedure TfrmMain.vstNavKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  if wbLoaderDone then
-    case Key of
-      VK_UP: begin
-        TryViewOrCompareSelectedRecords(vstNav.FocusedNode);
-      end;
-      VK_DOWN: begin
-        TryViewOrCompareSelectedRecords(vstNav.FocusedNode);
-      end;
-    end;
-end;
-
-procedure TfrmMain.TryViewOrCompareSelectedRecords(aFocusedNode: PVirtualNode);
+procedure TfrmMain.TryViewOrCompareSelectedRecords(aElement: IwbElement);
 var
   _File                       : IwbFile;
   MainRecord                  : IwbMainRecord;
 begin
-  var NodeData: PNavNodeData := vstNav.GetNodeData(aFocusedNode);
-  if not Assigned(NodeData) then
-    Exit;
-
-  var Element: IwbElement := NodeData.Element;
-  if Assigned(Element) and not (Element.ElementType in [etFile, etMainRecord, etStructChapter]) and not Element.TreeHead then
-    Element := nil;
-
   var MainRecords: TDynMainRecords := nil;
-  var SelectedNodes: TNodeArray := vstNav.GetSortedSelection(True);
 
+  var SelectedNodes: TNodeArray := vstNav.GetSortedSelection(True);
   var SelectedNodesCount: Integer := Length(SelectedNodes);
 
   var Ctrl: Boolean := GetAsyncKeyState(VK_CONTROL) < 0;
@@ -18834,7 +18829,7 @@ begin
 
     for var i := Low(SelectedNodes) to High(SelectedNodes) do
     begin
-      NodeData := vstNav.GetNodeData(SelectedNodes[i]);
+      var NodeData: PNavNodeData := vstNav.GetNodeData(SelectedNodes[i]);
 
       if not Assigned(NodeData.Element) or not (NodeData.Element.ElementType = etMainRecord) then
         Continue;
@@ -18842,9 +18837,11 @@ begin
       MainRecords[j] := NodeData.Element as IwbMainRecord;
 
       if not Assigned(FirstNode) then
+      begin
         FirstNode := SelectedNodes[i];
-
-      if not Assigned(FirstNode) or (FirstNode.Parent = SelectedNodes[i].Parent) then
+        Inc(j);
+      end
+      else if FirstNode.Parent = SelectedNodes[i].Parent then
         Inc(j);
     end;
 
@@ -18853,19 +18850,14 @@ begin
 
   if Length(MainRecords) > 1 then
     SetActiveRecord(MainRecords)
-  else if Supports(Element, IwbMainRecord, MainRecord) then
+  else if Supports(aElement, IwbMainRecord, MainRecord) then
     SetActiveRecord(MainRecord)
-  else if Supports(Element, IwbFile, _File) and (_File.ElementCount > 0) and Supports(_File.Elements[0], IwbMainRecord, MainRecord) then
+  else if Supports(aElement, IwbFile, _File) and (_File.ElementCount > 0) and Supports(_File.Elements[0], IwbMainRecord, MainRecord) then
     SetActiveRecord(MainRecord)
-  else if Supports(Element, IwbDataContainer) then
-    SetActiveContainer(Element as IwbDataContainer)
+  else if Supports(aElement, IwbDataContainer) then
+    SetActiveContainer(aElement as IwbDataContainer)
   else
     ClearActiveContainer;
-end;
-
-procedure TfrmMain.vstNavNodeClick(Sender: TBaseVirtualTree; const HitInfo: THitInfo);
-begin
-  TryViewOrCompareSelectedRecords(Sender.FocusedNode);
 end;
 
 procedure TfrmMain.vstNavPaintText(Sender: TBaseVirtualTree;
