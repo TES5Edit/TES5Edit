@@ -11841,6 +11841,9 @@ var
   Master     : IwbMainRecord;
   FileFormID : TwbFormID;
 begin
+  if GetSignature = 'TES4' then
+    aFormID := TwbFormID.Null;
+
   if GetLoadOrderFormID = aFormID then
     Exit;
 

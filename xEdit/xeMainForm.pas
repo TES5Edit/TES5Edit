@@ -14063,6 +14063,7 @@ begin
     wbEditAllowed and
     Assigned(Element) and
     (Element.ElementType = etMainRecord) and
+    ((Element as IwbMainRecord).Signature <> 'TES4') and
     Element.IsEditable;
 //  if mniNavChangeFormID.Visible then
 //    with Element as IwbMainRecord do
