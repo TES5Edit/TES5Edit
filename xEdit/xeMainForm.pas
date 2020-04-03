@@ -18821,7 +18821,7 @@ begin
 
   var Ctrl: Boolean := GetAsyncKeyState(VK_CONTROL) < 0;
 
-  if InRange(SelectedNodesCount, 2, wbAutoCompareSelectedLimit) or (Ctrl and (SelectedNodesCount > wbAutoCompareSelectedLimit)) then
+  if InRange(SelectedNodesCount, 2, wbAutoCompareSelectedLimit) or (Ctrl and ComparingSiblings) then
   begin
     SetLength(MainRecords, SelectedNodesCount);
 
