@@ -2034,8 +2034,6 @@ object frmMain: TfrmMain
         OnInitNode = vstNavInitNode
         OnKeyDown = vstNavKeyDown
         OnKeyPress = vstNavKeyPress
-        OnKeyUp = vstNavKeyUp
-        OnNodeClick = vstNavNodeClick
         Columns = <
           item
             Position = 0
