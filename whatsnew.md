@@ -1,3 +1,10 @@
+# What's new in xEdit 4.0.4?
+
+## Bugfixes
+
+* #803 - after cleaning, some new worldspaces from DLCs may not load their temporary records correctly
+* (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
+
 # What's new in xEdit 4.0.3?
 
 ## Bugfixes

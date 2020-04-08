@@ -19835,7 +19835,6 @@ begin
           pnlNavContent.Visible := False;
           try
             with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
-              BuildOrLoadRef(False);
               DoMarkModified :=
                     wbForceMarkModified
                 or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'))
@@ -19871,9 +19870,6 @@ begin
 
               if WasUnsaved then begin
                 ResetAllConflict;
-
-                with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
-                  BuildOrLoadRef(False);
 
                 mniNavFilterForCleaning.Click;
                 JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
