@@ -6948,7 +6948,12 @@ begin
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
-    ]).SetToStr(wbScriptPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
+    ])
+    .SetSummaryKey([1, 3])
+    .SetSummaryMemberPrefixSuffix(0, '', ':')
+    .SetSummaryMemberPrefixSuffix(3, '= ', '')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseScriptProperties);
 
   wbScriptProperties :=
     wbArrayS('Properties', wbScriptProperty, -2, cpNormal, False, nil, nil, nil, wbCanAddScriptProperties)
@@ -11280,38 +11285,38 @@ begin
     wbLString(ANAM, 'Abbreviation', 0, cpTranslate),
     wbFloat(NAM0, 'Default Value'), // Prior to form version 81, it was either 0.0, 1.0 or 100.0, so scale or multiplier ?
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
-      'Unknown 1',
-      'Unknown 2',
-      'Unknown 3',
-      'Unknown 4',
-      'Unknown 5',
-      'Unknown 6',
-      'Unknown 7',
-      'Unknown 8',
-      'Unknown 9',
-      'Unknown 10',
-      'Unknown 11',
-      'Unknown 12',
-      'Unknown 13',
-      'Unknown 14',
-      'Unknown 15',
-      'Unknown 16',
-      'Unknown 17',
-      'Unknown 18',
-      'Unknown 19',
-      'Unknown 20',
-      'Minimum 1',
-      'Maximum 10',
-      'Maximum 100',
-      'Multiply By 100',
-      'Percentage',
-      'Unknown 26',
-      'Damage Is Positive',
-      'God Mode Immune',
-      'Unknown 29',
-      'Unknown 30',
-      'Unknown 31',
-      'Hardcoded'
+      {0x00000001} 'Unknown 0',
+      {0x00000002} 'Unknown 1',
+      {0x00000004} 'Unknown 2',
+      {0x00000008} 'Don''t allow Script edits',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Unknown 6',
+      {0x00000080} 'Unknown 7',
+      {0x00000100} 'Unknown 8',
+      {0x00000200} 'Unknown 9',
+      {0x00000400} 'Default to 0',
+      {0x00000800} 'Default to 1.0',
+      {0x00001000} 'Default to 100.0',
+      {0x00002000} 'Unknown 13',
+      {0x00004000} 'Unknown 14',
+      {0x00008000} 'Contains List',
+      {0x00010000} 'Unknown 16',
+      {0x00020000} 'Unknown 17',
+      {0x00040000} 'Unknown 18',
+      {0x00080000} 'Value less than 1',
+      {0x00100000} 'Minimum 1',
+      {0x00200000} 'Maximum 10',
+      {0x00400000} 'Maximum 100',
+      {0x00800000} 'Multiply By 100',
+      {0x01000000} 'Percentage',
+      {0x02000000} 'Unknown 25',
+      {0x04000000} 'Damage Is Positive',
+      {0x08000000} 'God Mode Immune',
+      {0x10000000} 'Unknown 28',
+      {0x20000000} 'Unknown 39',
+      {0x40000000} 'Unknown 30',
+      {0x80000000} 'Hardcoded'
     ])),
     wbInteger(NAM1, 'Type', itU32, wbEnum([
       'Derived Attribute',
@@ -11487,7 +11492,7 @@ begin
 
   wbRecord(LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000800} 11, 'Unknown 11',
+      {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
       {0x00004000} 14, 'Partial Form'
     ])), [
     wbEDID,
@@ -12851,7 +12856,7 @@ begin
         'Channel 2? (unused)'
       ])
     ]),
-    wbStruct(ATTN, 'Attenuation Values', [
+    wbStruct(ATTN, 'Dynamic Attenuation Values', [
       wbFloat('Fade In Distance - Start'),
       wbFloat('Fade In Distance - End'),
       wbFloat('Fade Out Distance - Start'),
@@ -13720,8 +13725,8 @@ begin
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('Unknown', itU16),
-      wbInteger('Unknown', itU16),
+      wbInteger('Base Health', itU16),
+      wbInteger('Base Action Points', itU16),
       wbInteger('Far Away Model Distance', itU16),
       wbInteger('Geared Up Weapons', itU16)
     ]),

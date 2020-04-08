@@ -9305,7 +9305,8 @@ begin
       {55} 'DLC02 - Beast Stone',
       {56} 'DLC02 - Tel Mithryn',
       {57} 'DLC02 - To Skyrim',
-      {58} 'DLC02 - To Solstheim'
+      {58} 'DLC02 - To Solstheim',
+      {59} 'DLC02 - Castle Karstaag'
     ]);
 
   // load quest types list from external file if present
@@ -12923,7 +12924,13 @@ begin
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
+      {0x00000002}  1, 'Altered',
+      {0x00000004}  2, 'Checked',
+      {0x00000008}  3, 'Active',
+      {0x00000010}  4, 'Optimized File',
+      {0x00000020}  5, 'Temp ID Owner',
       {0x00000080}  7, 'Localized',
+      {0x00000100}  8, 'Precalc Data Only',
       {0x00000200}  9, IsSSE('ESL', '')
     ], False), True), [
     wbHEDR,
