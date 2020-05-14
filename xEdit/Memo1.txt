@@ -74,7 +74,7 @@ Navagation treeview:
 - Alt + Click to fully expand a tree. This can take a lot of time when expanding large trees.
 - [Right Arrow] or + to expand current node
 - [Left Arrow] or - to collapse current node
-- * Expand treview (recursive)
+- * Expand treeview (recursive)
 - / Collapse treeview (recursive)
 
 View treeview:
