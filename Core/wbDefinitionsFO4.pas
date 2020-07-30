@@ -16101,7 +16101,7 @@ begin
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbFromVersion(119, wbInteger('Unknown', itU8).SetDefaultNativeValue(51))
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
     ], cpNormal, True),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbWeatherSounds,
