@@ -306,6 +306,7 @@ const
   COLL : TwbSignature = 'COLL';
   CONT : TwbSignature = 'CONT';
   CPTH : TwbSignature = 'CPTH';
+  CPRD : TwbSignature = 'CPRD'; { New to Fallout 76 }
   CRDT : TwbSignature = 'CRDT';
   CRGR : TwbSignature = 'CRGR'; { New to Skyrim }
   CRIF : TwbSignature = 'CRIF'; { New to Skyrim }
@@ -789,6 +790,7 @@ const
   QOBJ : TwbSignature = 'QOBJ';
   QOTM : TwbSignature = 'QOTM'; { New To Fallout 76 }
   QRCO : TwbSignature = 'QRCO'; { New To Fallout 76 }
+  QRCX : TwbSignature = 'QRCX'; { New To Fallout 76 }
   QRLI : TwbSignature = 'QRLI'; { New To Fallout 76 }
   QRLR : TwbSignature = 'QRLR'; { New To Fallout 76 }
   QRRI : TwbSignature = 'QRRI'; { New To Fallout 76 }
@@ -1437,6 +1439,69 @@ begin
   AsFloat := wbActorValueEnum.FromEditValue(aString, aElement);
   PSingle(@AsCardinal)^ := AsFloat;
   Result := AsCardinal;
+end;
+
+function wbAVIFValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainer;
+  rFNAM      : IwbElement;
+  i          : Integer;
+  s          : string;
+begin
+  i := 0;
+  Container := aElement.Container;
+  if Assigned(Container) then begin
+    rFNAM := Container.ElementBySignature['FNAM'];
+    if Assigned(rFNAM) then
+      i := rFNAM.NativeValue;
+  end;
+
+  if i and 2 <> 0 then
+    s := FloatToStrF(PSingle(@aInt)^, ffFixed, 99, wbFloatDigits)
+  else
+    s := 'rgba(' + IntToStr(aInt and $FF) + ', ' +
+                   IntToStr(aInt shr 8 and $FF) + ', ' +
+                   IntToStr(aInt shr 16 and $FF) + ', ' +
+                   IntToStr(aInt shr 24 and $FF) + ')';
+
+  case aType of
+    ctToStr, ctToSummary: Result := s;
+    ctToSortKey: Result := IntToHex(aInt, 8);
+    ctToEditValue: Result := s;
+  end;
+end;
+
+function wbAVIFValueToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+  value: Single;
+begin
+  if SameText(Copy(aString, 1, 5), 'rgba(') then begin
+    s := Copy(aString, 6, Pos(')', aString) - 6);
+    with TStringList.Create do try
+      Delimiter := ',';
+      StrictDelimiter := True;
+      DelimitedText := s;
+      Result := 0;
+      if Count = 4 then begin
+        PByte(@Result)[0] := StrToIntDef(Strings[0], 0);
+        PByte(@Result)[1] := StrToIntDef(Strings[1], 0);
+        PByte(@Result)[2] := StrToIntDef(Strings[2], 0);
+        PByte(@Result)[3] := StrToIntDef(Strings[3], 0);
+      end;
+    finally
+      Free;
+    end;
+    Exit;
+  end;
+
+  try
+    value := StrToFloat(aString)
+  except
+    value := 0.0
+  end;
+
+  Result := PInteger(@value)^;
 end;
 
 function wbCTDAParam2QuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -2330,6 +2395,7 @@ var
   LegendaryMod   : IwbContainerElementRef;
   BaseStarSlot   : Integer;
   ModIndex       : Integer;
+  ModBase        : IwbContainerElementRef;
 begin
   Result := nil;
   if not Assigned(aElement) then
@@ -2362,8 +2428,12 @@ begin
 
   if LegendaryIndex = -1 then
     Exit;
+    
+  if not Supports(LegendaryMods.Elements[LegendaryIndex], IwbContainerElementRef, ModBase) then
+    Exit;
+  
 
-  Result := LegendaryMods.Elements[LegendaryIndex];
+  Result := ModBase.Elements[1].LinksTo;
 end;
 
 function wbLGDIFiltersToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -4366,7 +4436,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..569] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..578] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -4936,7 +5006,16 @@ const
     (Index: 916; Name: 'IsServerOverEWSActorBudget'; Desc: 'Is the server over the actor budget used by the EWS?'),
     (Index: 917; Name: 'GetStageDonePlayerInstance'; Desc: 'Get if the stage is done on a player''s quest instance'; ParamType1: ptQuest; ParamType2: ptQuestStage),
     (Index: 918; Name: 'IsAuthoritativeOverMovement'; Desc: 'Returns true if the refr is authoritative over it''s movement'),
-    (Index: 919; Name: 'IsWeaponMinChargeTimeElapsed'; Desc: 'Returns true if the current weapon''s min charge time has elapsed')
+    (Index: 919; Name: 'IsWeaponMinChargeTimeElapsed'; Desc: 'Returns true if the current weapon''s min charge time has elapsed'),
+    (Index: 920; Name: 'IsOccupiedFurnitureRef'; ParamType1: ptObjectReference),
+    (Index: 921; Name: 'IsOccupiedFurnitureObj'; ParamType1: ptFurniture),
+    (Index: 922; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
+    (Index: 923; Name: 'IsChallengeTypeDaily'; Desc: 'Is the target challenge a Daily challenge?'),
+    (Index: 924; Name: 'IsChallengeTypeWeekly'; Desc: 'Is the target challenge a Weekly challenge?'),
+    (Index: 925; Name: 'IsChallengeTypeLifetime'; Desc: 'Is the target challenge a Lifetime challenge?'),
+    (Index: 926; Name: 'IsStealthed'),
+    (Index: 927; Name: 'GetTeammateBondScore'),
+    (Index: 928; Name: 'GetTeamType')
   );
 
 var
@@ -6674,21 +6753,35 @@ begin
   ], cpNormal, True, nil, 4);
 end;
 
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
+function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'; const bOnlyColors: Boolean = False): IwbSubRecordDef; overload;
 begin
-  Result := wbStruct(aSignature, aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale')
-    //wbUnknown
-  ])
+  if bOnlyColors then
+
+    Result := wbStruct(aSignature, aName, [
+      wbStruct('Directional', [
+        wbByteColors('X+'),
+        wbByteColors('X-'),
+        wbByteColors('Y+'),
+        wbByteColors('Y-'),
+        wbByteColors('Z+'),
+        wbByteColors('Z-')
+      ]),
+      wbByteArray('Unused',4),
+      wbByteArray('Unused',4)
+    ])
+  else
+    Result := wbStruct(aSignature, aName, [
+      wbStruct('Directional', [
+        wbByteColors('X+'),
+        wbByteColors('X-'),
+        wbByteColors('Y+'),
+        wbByteColors('Y-'),
+        wbByteColors('Z+'),
+        wbByteColors('Z-')
+      ]),
+      wbByteColors('Specular'),
+      wbFloat('Scale')
+    ])
 end;
 
 function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
@@ -7752,7 +7845,10 @@ begin
    {188} 'Set Damage on Consecutive Hits',
    {189} 'Mod Damage on Consecutive Hits',
    {190} 'Mod Max Consecutive Hits Allowed',
-   {191} 'Mod Crafted Item Bonus Health'
+   {191} 'Mod Crafted Item Bonus Health',
+   {192} 'Set Cheat Death',
+   {193} 'Apply Combat Hit Spell Taken',
+   {194} 'Apply On Death Spell'
   ]);
 
   wbEquipType := wbFlags([
@@ -9375,7 +9471,7 @@ begin
     'Ammunition',
     'Non-Player Character (Actor)',
     'Leveled NPC',
-    'Leveled Perk',
+    'Leveled Pack In',
     'Key',
     'Ingestible',
     'Utility',
@@ -10732,7 +10828,7 @@ begin
     wbArray(VEND, 'Vendable Item Datas',
       wbStruct('Vemdable Item Data', [
         wbFormID('Allowed Item List'),
-        wbFromVersion(192, wbFormID('Excluded Item List')),
+        wbFromVersion(191, wbFormID('Excluded Item List')),
         wbInteger('Unknown', itU32),
         wbInteger('Max Amount', itU32)
       ])
@@ -10806,23 +10902,23 @@ begin
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'No Auto-Calc',
         {0x00000002} 'Food Item',
-        {0x00000004} 'Unknown 3',
+        {0x00000004} 'Unknown 3',  //Unused
         {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} 'Unknown 6',
-        {0x00000040} 'Unknown 7',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Unknown 9',
-        {0x00000200} 'Unknown 10',
-        {0x00000400} 'Unknown 11',
-        {0x00000800} 'Unknown 12',
-        {0x00001000} 'Unknown 13',
-        {0x00002000} 'Unknown 14',
-        {0x00004000} 'Unknown 15',
-        {0x00008000} 'Unknown 16',
+        {0x00000010} 'Persists on World Change',
+        {0x00000020} 'Unknown 6',  //Unused
+        {0x00000040} 'Unknown 7',  //Unused
+        {0x00000080} 'Unknown 8',  //Unused
+        {0x00000100} 'Unknown 9',  //Unused
+        {0x00000200} 'Unknown 10', //Unused
+        {0x00000400} 'Unknown 11', //Unused
+        {0x00000800} 'Unknown 12', //Unused
+        {0x00001000} 'Unknown 13', //Unused
+        {0x00002000} 'Unknown 14', //Unused
+        {0x00004000} 'Unknown 15', //Unused
+        {0x00008000} 'Unknown 16', //Unused
         {0x00010000} 'Medicine',
         {0x00020000} 'Poison',
-        {0x00040000} 'Unknown 19'
+        {0x00040000} 'Unknown 19'  //Unused
       ])),
       wbFormIDCk('Addiction', [SPEL, NULL]),
       wbFloat('Addiction Chance'),
@@ -11175,9 +11271,9 @@ begin
       wbInteger('', itU32, wbCELLFlags)
     ], cpNormal, True).SetAfterSet(wbCELLDATAAfterSet),
 
-    wbByteArray(VISI, 'PreVis Files Timestamp'{, 2}),
+    wbByteArray(VISI, 'PreVis Files Timestamp', 4),//.SetToStr(wbTimeStampToString),
     wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
-    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2),
+    wbByteArray(PCMB, 'PreCombined Files Timestamp', 2).SetToStr(wbTimeStampToString),
 
     wbCellGrid,
 
@@ -12713,7 +12809,8 @@ begin
       wbFloat('Sunlight Scale'),
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray'),
-      wbFloat('Unknown')
+      wbFromVersion(155, wbFloat('Unknown')),
+      wbFromVersion(155, wbFloat('Unknown'))
     ], cpNormal),
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
@@ -12968,20 +13065,20 @@ begin
           {0} 'None',
           {1} 'Float',
           {2} 'Float/AV,Float',
-          {3} 'LVLI',
-          {4} 'SPEL,LString,Flags',
-          {5} 'SPEL',
-          {6} 'String',
-          {7} 'LString',
-          {8} 'AVIF, Float',
-          {9} 'Ingestible'
+          {3} 'Leveled List',
+          {4} 'Activate Choice',
+          {5} 'Spell Item',
+          {6} 'Boolean Graph Variable',
+          {7} 'Text',
+          {8} 'Actor Value and Value',
+          {9} 'Item'
         ])),
         // case(EPFT) of
         // 1: EPFD=float
         // 2: EPFD=float,float
         // 3: EPFD=LVLI
         // 4: EPFD=SPEL, EPF2=lstring, EPF3=int32 flags
-        // 5: EPFD=SPEL
+        // 5: EPFD=SPEL, EPF2=unknown int
         // 6: EPFD=string
         // 7: EPFD=lstring
         // 8: EPFD=AVIF,float || float EPF3=AVIF
@@ -13023,7 +13120,8 @@ begin
                 wbFloat('Float')
               ]),
           {9} wbFormIDCk('Ingestible', [ALCH,KYWD])
-        ], cpNormal, False{, wbEPFDDontShow})
+        ], cpNormal, False{, wbEPFDDontShow}),
+        wbInteger(EPF2, 'Unknown Spell Value', itU32)
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
     ], []);
@@ -13156,6 +13254,7 @@ begin
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBND(True),
+    wbXALG,
     wbOPDSs,
     wbGenericModel,
     wbRUnion('Node Index', [
@@ -13189,7 +13288,7 @@ begin
     wbFloat(NAM6, 'Maximum Value'),
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
       {0x00000001} 'Unknown 0',
-      {0x00000002} 'Unknown 1',
+      {0x00000002} 'Skill',
       {0x00000004} 'Unknown 2',
       {0x00000008} 'Don''t allow Script edits',
       {0x00000010} 'Unknown 4',
@@ -13201,7 +13300,7 @@ begin
       {0x00000400} 'Default to 0',
       {0x00000800} 'Default to 1.0',
       {0x00001000} 'Default to 100.0',
-      {0x00002000} 'Unknown 13',
+      {0x00002000} 'Unsigned Integer',
       {0x00004000} 'Unknown 14',
       {0x00008000} 'Contains List',
       {0x00010000} 'Unknown 16',
@@ -13213,10 +13312,10 @@ begin
       {0x00400000} 'Maximum 100',
       {0x00800000} 'Multiply By 100',
       {0x01000000} 'Percentage',
-      {0x02000000} 'Unknown 25',
+      {0x02000000} 'Condition',
       {0x04000000} 'Damage Is Positive',
       {0x08000000} 'God Mode Immune',
-      {0x10000000} 'Unknown 28',
+      {0x10000000} 'Applies to Armor',
       {0x20000000} 'Unknown 39',
       {0x40000000} 'Unknown 30',
       {0x80000000} 'Hardcoded'
@@ -13233,9 +13332,10 @@ begin
       'Variable',
       'Resource',
       'Aggregate',
+      'Reputation',
       'Unknown'
     ])),
-    wbInteger(NAM2, 'Unknown Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
+    wbInteger(NAM2, 'Unknown Flags', itU32, wbFlags([
       {0x00000001} 'Unknown 1',
       {0x00000002} 'Unknown 2',
       {0x00000004} 'Unknown 3',
@@ -13531,7 +13631,18 @@ begin
     wbFULL,
     wbKeywords,
     wbPRPS,
-    wbUnknown(DATA),
+    wbStruct(DATA, 'Location Data', [
+      wbInteger('Unknown Int', itU32),
+      wbInteger('Unknown Byte', itU8),
+      wbInteger('Min Location Level', itU8),
+      wbInteger('Location Type', itU8, wbEnum([],[
+        0, 'None',
+        1, 'Raid',
+        8, 'Power Plant',
+        9, 'Workshop'
+      ])),
+      wbInteger('Max Location Level', itU8)
+    ]),
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
     wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
@@ -14671,6 +14782,7 @@ begin
     wbOBND(True),
     wbOPDSs,
     wbPTRN,
+    wbXALG,
     wbKeywords,
     wbGenericModel,
     wbInteger(DNAM, 'Art Type', itU32, wbEnum([
@@ -15420,7 +15532,7 @@ begin
       {0x00000020} 'Unknown 5',
       {0x00000040} 'Use first object that matches all conditions',
       {0x00000080} 'Unknown 7',
-      {0x00000100} 'Unknown 8'
+      {0x00000100} 'Unknown 8' {Only workshop turrets}
     ]);
 
   wbLVLFFlags := wbFlags([
@@ -16313,37 +16425,43 @@ begin
       {096} 'WhitespringResort',
       {097} 'NukaColaQuantumPlant',
       {098} 'MysteriousGuidestoneMarker',
-      {099} 'PublicWorkshopMarker',
-      {100} 'DoorMarker',
-      {101} 'QuestMarker',
-      {102} 'DoorMarker',
-      {103} 'QuestMarker',
-      {104} 'PlayerSetMarker',
-      {105} 'PlayerLocMarker',
-      {106} 'PowerArmorLocMarker',
-      {107} 'TeammateMarker',
-      {108} 'LastCorpseMarker',
-      {109} 'YourCampMarker',
-      {110} 'InWorldEventMarker',
-      {111} 'MasterFissureMarker',
-      {112} 'NukedZoneMarker',
-      {113} 'WaypointMarker'
-      {114}
-      {115}
-      {116}
-      {117}
-      {118}
-      {119}
-      {120}
-      {121}
-      {122}
-      {123}
-      {124}
-      {125}
-      {126}
-      {127}
-      {128}
-      {129}
+      {099} 'SkullRingMarker',
+      {100} 'HammerWingMarker',
+      {101} 'CultistMarker',
+      {102} 'BloodEagleMarker',
+      {103} 'Vault79Marker',
+      {104} 'PublicWorkshopMarker', {ECKTODO: Look into when these changed and add checking for it. Used to be number 099}
+      {105} 'DoorMarker', {Used to be number 100}
+      {106} 'QuestMarker', {Used to be number 101}
+      {107} 'DoorMarker', {Used to be number 102}
+      {108} 'QuestMarker', {Used to be number 103}
+      {109} 'PlayerSetMarker', {Used to be number 104}
+      {110} 'PlayerLocMarker', {Used to be number 105}
+      {111} 'PowerArmorLocMarker', {Used to be number 106}
+      {112} 'TeammateMarker', {Used to be number 107}
+      {113} 'LastCorpseMarker', {Used to be number 108}
+      {114} 'YourCampMarker', {Used to be number 109}
+      {115} 'YourQuickCampMarker',
+      {116} 'InWorldEventMarker', {Used to be number 110}
+      {117} 'InWorldPublicEventMarker',
+      {118} 'MasterFissureMarker', {Used to be number 111}
+      {119} 'NukedZoneMarker', {Used to be number 112}
+      {120} 'WaypointMarker', {Used to be number 113}
+      {121} 'StrangerCorpseMarker',
+      {122} 'BabylonSpawnMarkerTeam',
+      {123} 'BabylonSpawnMarkerPlayer',
+      {124} 'BabylonTextMarker',
+      {125} 'StormZoneMarker',
+      {126} 'BabylonTerminalMarker',
+      {127} 'NuclearBriefcaseMarker',
+      {128} 'StormCenterMarker',
+      {129} 'WarningZoneMarker',
+      {130} 'EnemyPlayerMarker',
+      {131} 'BabylonAIMarker',
+      {132} 'TeamAliveMarker',
+      {133} 'TeamDeadMarker',
+      {134} 'TeammateDownMarker',
+      {135} 'TeammateLeaderMarker'
     ]);
 
   wbBlendOperationEnum := wbEnum([
@@ -16402,13 +16520,13 @@ begin
         44, 'Clear Power Armor Exit'
       ])).SetDefaultEditValue('Package'),
       wbInteger('Interrupt Override', itU8, wbEnum([
-        {0} 'None',
-        {1} 'Spectator',
-        {2} 'ObserveDead',
-        {3} 'GuardWarn',
-        {4} 'Combat',
-        {5} 'Command Travel',
-        {6} 'Command Activate',
+        {0} 'Spectator: Threat Ref',
+        {1} 'ObserveDead: Dead Ref',
+        {2} 'GuardWarn: Guarded Ref',
+        {3} 'GuardWarn: Trespasser Ref',
+        {4} 'Combat: Target Ref',
+        {5} 'Command Travel: Destination',
+        {6} 'Command Activate: Target Ref',
         {7} 'Leave Workstation'
       ])),
       wbInteger('Preferred Speed', itU8, wbEnum([
@@ -16616,11 +16734,11 @@ begin
           {0x00001000} 'Repeats Conditions',
           {0x00002000} 'Keep Instance',
           {0x00004000} 'Want Dormant',
-          {0x00008000} 'Unknown 16',
+          {0x00008000} 'Has Dialogue Data',
           {0x00010000} 'Unknown 17',
           {0x00020000} 'Unknown 18',
           {0x00040000} 'Unknown 19',
-          {0x00080000} 'Unknown 20',
+          {0x00080000} 'Holotape Container Quest',
           {0x00100000} 'Unknown 21',
           {0x00200000} 'Unknown 22',
           {0x00400000} 'Unknown 23',
@@ -16628,11 +16746,8 @@ begin
           {0x01000000} 'Unknown 25',
           {0x02000000} 'Uses Default Quest Expire Timer',
           {0x04000000} 'Unknown 27',
-          {0x08000000} 'Unknown 28',
-          {0x10000000} 'Unknown 29',
-          {0x20000000} 'Unknown 30',
-          {0x40000000} 'Unknown 31',
-          {0x80000000} 'Unknown 32'
+          {0x08000000} 'Event Quest',
+          {0x10000000} 'Raid Quest'
         ])),
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
@@ -18467,6 +18582,7 @@ begin
     wbOPDSs,
     wbSTCP,
     wbSNTP,
+    wbPHST,
     wbXALG,
     wbFULL,
     wbGenericModel,
@@ -18749,8 +18865,16 @@ begin
     wbString(XWEM, 'Water Environment Map'),
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
-    wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
-    wbUnknown(WHGT),
+    wbArray(XCLW,'Cell Water Height Locations',
+      wbStruct('Cell Water Height Location', [
+        wbInteger('Cell X',itS16),
+        wbInteger('Cell Y',itS16)
+      ])
+    ),
+    wbArray(WHGT, 'Water Heights',
+      wbFloat('Water Height')
+    ),
+    //wbUnknown(WHGT),
     wbRStruct('World Default Level Data', [
       wbStruct(WLEV, 'Dimension', [
         wbStruct('NW Cell', [
@@ -18896,7 +19020,7 @@ begin
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbInteger('Unknown', itU8)
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
     ], cpNormal, True, nil, 16),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbWeatherSounds,
@@ -18921,7 +19045,7 @@ begin
       wbFormIDCK('EarlySunset', [GDRY, NULL]),
       wbFormIDCK('LateSunset', [GDRY, NULL])
     ]),
-    wbStruct(HNAM, 'Unknown', [
+    wbStruct(HNAM, 'God Rays', [
       wbFormIDCK('Sunrise', [VOLI, NULL]),
       wbFormIDCK('Day', [VOLI, NULL]),
       wbFormIDCK('Sunset', [VOLI, NULL]),
@@ -18932,14 +19056,14 @@ begin
       wbFormIDCK('LateSunset', [VOLI, NULL])
     ]),
     wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrise'),
-      wbAmbientColors(DALC, 'LateSunrise'),
-      wbAmbientColors(DALC, 'EarlySunset'),
-      wbAmbientColors(DALC, 'LateSunset')
+      wbAmbientColors(DALC, 'Sunrise', True),
+      wbAmbientColors(DALC, 'Day', True),
+      wbAmbientColors(DALC, 'Sunset', True),
+      wbAmbientColors(DALC, 'Night', True),
+      wbAmbientColors(DALC, 'EarlySunrise', True),
+      wbAmbientColors(DALC, 'LateSunrise', True),
+      wbAmbientColors(DALC, 'EarlySunset', True),
+      wbAmbientColors(DALC, 'LateSunset', True)
     ], [], cpNormal, True),
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
@@ -18947,9 +19071,9 @@ begin
       wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
       wbFloat('On Lightning Strike - Threshold'),
       wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFloat('On Weather Activate - Threshold'),
-      wbByteArray('Unknown', 4), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFloat('Unknown')
+      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
+      wbFromVersion(130, wbByteArray('Unknown', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbFloat('Unknown'))
     ], cpNormal, False, nil, 3),
     wbFloat(VNAM, 'Volatility Mult'),
     wbFloat(WNAM, 'Visibility Mult'),
@@ -19124,6 +19248,7 @@ begin
       $2A, 'Furniture',
       $2B, 'Weapon'
     ])),
+    wbRArray('Ruleset Names', wbString(ZNAM, 'Ruleset Name')),
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
         wbInteger(VNAM, 'Count', itU32),
@@ -19318,7 +19443,8 @@ begin
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
       wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
-    ]))
+    ])),
+    wbFormID(ENAM, 'Legendary Template List')
   ]);
 
 end;
@@ -19877,7 +20003,10 @@ begin
     {7} 'Unknown'
   ]);
 
-  wbRecord(PCRD, 'Perk Card', [
+  wbRecord(PCRD, 'Perk Card',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable'
+    ])), [
     wbEDID,
     wbDESC,
     wbStruct(DATA, 'Unknown', [
@@ -19890,6 +20019,9 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbString(MNAM, 'Male Name'),
     wbString(FNAM, 'Female Name'),
+    wbInteger(ANAM, 'Perk Card Flags', itU32, wbFlags([
+      {0x1} 'Legendary Perk'
+    ])),
     wbRArray('Perks',
       wbRStruct('Perk', [
         wbEmpty(PRKE, 'Start Marker'),
@@ -20162,6 +20294,7 @@ begin
       {0x00000004} 'Unknown 2',
       {0x00000008} 'Unknown 3'
     ])),
+    wbInteger(TNAM,'Unknown', itU32),
     wbXFLGLong, //Unused?
     wbFormIDCk(HNAM, 'Required Count', [GLOB]),
     wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
@@ -20172,23 +20305,26 @@ begin
     wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
       'Character',
       'Survival',
-      'Unknown 2',
-      'Unknown 3',
+      'Exploration',
+      'Pets',
       'Combat',
       'Social',
       'World',
-      'Unknown 7',
-      'Sub Challenge'
+      'Tracker',
+      'Sub Challenge (Unsorted)'
     ])),
     wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
     wbCTDAs,
     wbRArray('Challenge Rewards', wbRStruct('Reward', [
-      wbUnknown(NAM7),
-      wbFormIDCk(NAM8, 'Reward Amount Global', [GLOB,NULL]),
-      wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
-      wbUnknown(NAM9),
-      wbUnknown(ESRE),
-      wbUnknown(QRLR),
+    wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
+      wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
+      wbQRCO,
+      wbFloat(NAM9, 'Currency Amount'),
+      wbFormID(QRLI, 'Legendary Item Reward List'),
+      wbFormID(QRCX, 'SCORE Reward Amount'),
+      wbFloat(ESRE, 'XP Amount'),
+      wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
+      wbUnknown(QRRI),
       wbStruct(QSRD, 'Completion Reward', [
         wbFormID('Item'),
         wbInteger('Count', itU32)
@@ -20230,6 +20366,20 @@ begin
 
   wbRecord(EQWG, 'Event Quest Widget', [
   ]);
+
+  wbRecord(CPRD, 'Challenge Pass Reward Data', [
+    wbEDID,
+    wbXALG,
+    wbDESC,
+    wbFULL,
+    wbString(ANAM, 'Icon'),
+    wbString(BNAM, 'Reward Rarity'),
+    wbString(CNAM, 'Storefront Image Path'),
+    wbString(DNAM, 'Storefront Preview Image'),
+    wbRArray('Item Storefront Images',
+      wbString(ENAM, 'Item Storefront Image')
+    )
+  ]);
 end;
 
 procedure DefineFO76Groups;
@@ -20243,6 +20393,7 @@ begin
   wbAddGroupOrder(ECAT); //new in Fallout 76
   wbAddGroupOrder(EMOT); //new in Fallout 76
   wbAddGroupOrder(AVTR); //new in Fallout 76
+  wbAddGroupOrder(CPRD); //new in Fallout 76
   wbAddGroupOrder(LCRT);
   wbAddGroupOrder(AACT);
   wbAddGroupOrder(TRNS);

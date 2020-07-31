@@ -12321,6 +12321,7 @@ begin
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00002000} 13, 'Sky Marker',
       {0x00008000} 15, 'Visible when distant',
       {0x00010000} 16, 'Is Full LOD',
       {0x04000000} 26, 'Filter (Collision Geometry)',
