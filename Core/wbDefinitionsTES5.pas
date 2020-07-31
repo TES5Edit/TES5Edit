@@ -4516,7 +4516,8 @@ begin
 
   if (MainRecord.Signature = ACTI) or
      (MainRecord.Signature = STAT) or
-     (MainRecord.Signature = TREE)
+     (MainRecord.Signature = TREE) or
+     (MainRecord.Signature = FLOR)
   then
     Result := 1
   else if MainRecord.Signature = CONT then
@@ -12317,7 +12318,7 @@ begin
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ACTI STAT TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ACTI STAT TREE FLOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
