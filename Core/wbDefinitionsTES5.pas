@@ -5399,7 +5399,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -5422,7 +5422,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsPack := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
@@ -5446,7 +5446,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('FragmentCount', itU16, nil, cpBenign),
     wbLenString('FileName', 2),
     wbArrayS('Fragments',
@@ -5472,7 +5472,7 @@ begin
   .SetAfterSet(wbScriptFragmentsQuestAfterSet);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -5516,7 +5516,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbLenString('FileName', 2),
     wbArrayS('Fragments',
       wbStructSK([0], 'Fragment', [
