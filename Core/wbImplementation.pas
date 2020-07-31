@@ -15782,7 +15782,7 @@ begin
             ElementRefs := nil;
         end;
       except
-        wbProgress('<Warning: could not sorting INFO for ["%s" in "%s"] because of previous error>', [GetName, GetFile.Name]);
+        wbProgress('<Warning: could not sort INFO for ["%s" in "%s"] because of previous error>', [GetName, GetFile.Name]);
         if ElementRefsCount > 0 then
           raise;
       end;

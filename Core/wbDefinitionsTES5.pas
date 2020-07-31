@@ -4516,7 +4516,8 @@ begin
 
   if (MainRecord.Signature = ACTI) or
      (MainRecord.Signature = STAT) or
-     (MainRecord.Signature = TREE)
+     (MainRecord.Signature = TREE) or
+     (MainRecord.Signature = FLOR)
   then
     Result := 1
   else if MainRecord.Signature = CONT then
@@ -5398,7 +5399,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -5421,7 +5422,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsPack := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
@@ -5445,7 +5446,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('FragmentCount', itU16, nil, cpBenign),
     wbLenString('FileName', 2),
     wbArrayS('Fragments',
@@ -5471,7 +5472,7 @@ begin
   .SetAfterSet(wbScriptFragmentsQuestAfterSet);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -5515,7 +5516,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(2),
     wbLenString('FileName', 2),
     wbArrayS('Fragments',
       wbStructSK([0], 'Fragment', [
@@ -12317,7 +12318,7 @@ begin
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ACTI STAT TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ACTI STAT TREE FLOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
