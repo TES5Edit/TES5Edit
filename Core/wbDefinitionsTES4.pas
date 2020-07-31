@@ -4143,7 +4143,7 @@ begin
       wbString(FULL, 'Unused')
     ], []),
     wbInteger(XLCM, 'Level Modifier', itS32),
-    wbFormIDCk(XRTM, 'Unknown', [REFR]),
+    wbFormIDCk(XRTM, 'Reference Teleport Marker', [REFR]),
     wbActionFlag,
     wbInteger(XCNT, 'Count', itS32),
     wbRStruct('Map Marker', [
