@@ -9133,7 +9133,7 @@ begin
     ], cpNormal, True),
     wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
-    wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
+    wbModelInfo(NAM2)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object',
@@ -10614,7 +10614,7 @@ begin
     ]),
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbByteArray(NAM2, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow)
+      wbModelInfo(NAM2)
     ], [], cpNormal, True),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
@@ -11244,7 +11244,7 @@ begin
         ], cpNormal, True),
         wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
         wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
-        wbByteArray(NAM5, 'Texture Files Hashes', 0, cpNormal),
+        wbModelInfo(NAM5),
         wbString(ENAM, 'Hit Reaction - Start'),
         wbString(FNAM, 'Hit Reaction - End'),
         wbFormIDCk(BNAM, 'Gore Effects - Dismember Blood Art', [ARTO]),
@@ -15744,7 +15744,7 @@ begin
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
-      wbByteArray(MO4T, 'Texture Files Hashes', 0, cpIgnore, false, false, wbNeverShow),
+      wbModelInfo(MO4T),
       wbMO4S,
       wbMO4C,
       wbMO4F
