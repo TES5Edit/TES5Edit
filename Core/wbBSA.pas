@@ -649,7 +649,7 @@ function TwbContainerCache.ResolveFileHash(const aHash: Int64): string;
 begin
   Result := '';
   var L := 0;
-  var H := Length(ccFileHashIndex);
+  var H := High(ccFileHashIndex);
   while L <= H do begin
     var I := (L + H) shr 1;
     var C := CmpW64(ccFileHashes[ccFileHashIndex[I]], UInt64(aHash));
@@ -667,7 +667,7 @@ function TwbContainerCache.ResolveFolderHash(const aHash: Int64): string;
 begin
   Result := '';
   var L := 0;
-  var H := Length(ccFolderHashIndex);
+  var H := High(ccFolderHashIndex);
   while L <= H do begin
     var I := (L + H) shr 1;
     var C := CmpW64(ccFolderHashes[ccFolderHashIndex[I]], UInt64(aHash));
