@@ -8720,7 +8720,7 @@ begin
     {0x10000000} 'Use Static Avoid Node',
     {0x20000000} 'Unknown 29',
     {0x40000000} 'Has Model?',
-    {0x80000000} 'Unknown 31'
+    {0x80000000} 'Is Sleep Furniture'
   ]));
 
   wbSNAMMarkerParams :=
@@ -13508,8 +13508,8 @@ begin
         wbFloat('Scale')
       ]),
       wbFormIDCk('Enchant Art', [ARTO, NULL]),
-      wbByteArray('Unknown', 4),
-      wbByteArray('Unknown', 4),
+      wbFormIDCk('Hit Visuals', [RFCT, NULL]),
+      wbFormIDCk('Enchant Visuals', [RFCT, NULL]),
       wbFormIDCk('Equip Ability', [SPEL, NULL]),
       wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
       wbFormIDCk('Perk to Apply', [PERK, NULL]),
