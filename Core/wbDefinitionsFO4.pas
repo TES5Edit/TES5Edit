@@ -14259,7 +14259,7 @@ begin
             {0x02} 'Hostile',
             {0x04} 'Use Straight Line Pathing'
           ])),
-          wbFormIDCk('Keyword', [KYWD, NULL])
+          wbFromVersion(82, wbFormIDCk('Keyword', [KYWD, NULL]))
         ]),
         wbCTDAs
       ], []))
@@ -14507,16 +14507,16 @@ begin
     wbStruct(DATA, 'Data', [
       wbFloat('Male Height'),
       wbFloat('Female Height'),
-      wbStruct('Male Default Weight', [
+      wbFromVersion(109, wbStruct('Male Default Weight', [
         wbFloat('Thin'),
         wbFloat('Muscular'),
         wbFloat('Fat')
-      ]),
-      wbStruct('Female Default Weight', [
+      ])),
+      wbFromVersion(109, wbStruct('Female Default Weight', [
         wbFloat('Thin'),
         wbFloat('Muscular'),
         wbFloat('Fat')
-      ]),
+      ])),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Playable',
         {0x00000002} 'FaceGen Head',
@@ -14559,10 +14559,11 @@ begin
         'Large',
         'Extra Large'
       ])),
-      wbByteArray('Unknown', 8),
+      wbByteArray('Unknown Bytes1', 4),
+      wbByteArray('Unknown Bytes2', 4),
       wbFloat('Injured Health Pct'),
       wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
-      wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum),
+      wbFromVersion(124, wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum)),
       wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
       wbFloat('Aim Angle Tolerance'),
       wbFloat('Flight Radius'),
@@ -14593,7 +14594,15 @@ begin
         {0x00200000} 'Low Priority Pushable',
         {0x00400000} 'Cannot Use Playable Items'
       ])),
-      wbByteArray('Unknown', 36),
+      wbFloat('Unknown Float1'),
+      wbFloat('Unknown Float2'),
+      wbByteArray('Unknown Bytes3',4),
+      wbByteArray('Unknown Bytes4',4),
+      wbByteArray('Unknown Bytes5',4),
+      wbByteArray('Unknown Bytes6',4),
+      wbByteArray('Unknown Bytes7',4),
+      wbFloat('Unknown Float3'),
+      wbByteArray('Unknown Bytes8',4),
       wbInteger('Pipboy Biped Object', itS32, wbBipedObjectEnum),
       wbInteger('XP Value', itS16),
       wbFloat('Severable - Debris Scale'),
@@ -14608,15 +14617,17 @@ begin
       wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
       wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
       wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-      wbFloat('OnCripple - Debris Scale'),
-      wbInteger('OnCripple - Debris Count', itU8),
-      wbInteger('OnCripple - Decal Count', itU8),
-      wbFormIDCk('OnCripple - Explosion', [EXPL, NULL]),
-      wbFormIDCk('OnCripple - Debris', [DEBR, NULL]),
-      wbFormIDCk('OnCripple - Impact DataSet', [IPDS, NULL]),
-      wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL]),
-      wbFloat('Orientation Limits - Pitch'),
-      wbFloat('Orientation Limits - Roll')
+      wbFromVersion(96, wbStruct('OnCripple', [
+        wbFloat('Debris Scale'),
+        wbInteger('Debris Count', itU8),
+        wbInteger('Decal Count', itU8),
+        wbFormIDCk('Explosion', [EXPL, NULL]),
+        wbFormIDCk('Debris', [DEBR, NULL]),
+        wbFormIDCk('Impact DataSet', [IPDS, NULL])
+      ])),
+      wbFromVersion(118, wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL])),
+      wbFromVersion(98, wbFloat('Orientation Limits - Pitch')),
+      wbFromVersion(101, wbFloat('Orientation Limits - Roll'))
     ], cpNormal, True),
 
     wbEmpty(MNAM, 'Male Marker'),
@@ -16472,7 +16483,8 @@ begin
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbInteger('Unknown Bool 1', itU8, wbBoolEnum),
+      wbInteger('Unknown Bool 2', itU8, wbBoolEnum),
       wbInteger('Form Type', itU32, wbEnum([], [
         Sig2Int(ARMO), 'Armor',
         Sig2Int(NPC_), 'Non-player character',
