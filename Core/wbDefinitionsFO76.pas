@@ -8167,33 +8167,33 @@ begin
     {0x00000004} 'Unknown 3 (Reference??)',
     {0x00000008} 'Unknown 4',
     {0x00000010} 'Unknown 5',
-    {0x00000020} 'Unknown 6',
+    {0x00000020} 'Unknown 6', //Unused
     {0x00000040} 'Unknown 7',
     {0x00000080} 'Unknown 8',
     {0x00000100} 'Atom Shop Item',
     {0x00000200} 'Unknown 10',
     {0x00000400} 'Unknown 11',
-    {0x00000800} 'Unknown 12',
+    {0x00000800} 'Fallout 1st',
     {0x00001000} 'Unknown 13',
     {0x00002000} 'Unknown 14',
-    {0x00004000} 'Unknown 15',
-    {0x00008000} 'Unknown 16',
-    {0x00010000} 'Unknown 17',
-    {0x00020000} 'Unknown 18',
-    {0x00040000} 'Unknown 19',
-    {0x00080000} 'Unknown 20',
-    {0x00100000} 'Unknown 21',
-    {0x00200000} 'Unknown 22',
-    {0x00400000} 'Unknown 23',
-    {0x00800000} 'Unknown 24',
-    {0x01000000} 'Unknown 25',
-    {0x02000000} 'Unknown 26',
-    {0x04000000} 'Unknown 27',
-    {0x08000000} 'Unknown 28',
-    {0x10000000} 'Unknown 29',
-    {0x20000000} 'Unknown 30',
-    {0x40000000} 'Unknown 31',
-    {0x80000000} 'Unknown 32'
+    {0x00004000} 'Unknown 15', //Unused
+    {0x00008000} 'Unknown 16', //Unused
+    {0x00010000} 'Unknown 17', //Unused
+    {0x00020000} 'Unknown 18', //Unused
+    {0x00040000} 'Unknown 19', //Unused
+    {0x00080000} 'Unknown 20', //Unused
+    {0x00100000} 'Unknown 21', //Unused
+    {0x00200000} 'Unknown 22', //Unused
+    {0x00400000} 'Unknown 23', //Unused
+    {0x00800000} 'Unknown 24', //Unused
+    {0x01000000} 'Unknown 25', //Unused
+    {0x02000000} 'Unknown 26', //Unused
+    {0x04000000} 'Unknown 27', //Unused
+    {0x08000000} 'Unknown 28', //Unused
+    {0x10000000} 'Unknown 29', //Unused
+    {0x20000000} 'Unknown 30', //Unused
+    {0x40000000} 'Unknown 31', //Unused
+    {0x80000000} 'Unknown 32'  //Unused
   ]);
 
   wbXFLGFlags := wbFlags([
@@ -9556,6 +9556,7 @@ begin
     'None',
     'Header',
     'Group',
+    'Game Setting',
     'Keyword',
     'Entitlement',
     'Consumable Entitlement',
@@ -10472,7 +10473,7 @@ begin
       wbFloat('Recovery Time'),
       wbFloat('Action Points Mult'),
       wbInteger('Stagger Offset', itS32),
-      wbFromVersion(188, wbFloat('Unknown')),
+      wbFromVersion(185, wbFloat('Unknown')),
       wbUnknown
     ]),
     wbString(ATKE, 'Attack Event'),
@@ -10859,15 +10860,15 @@ begin
               ])
             ], [])
           ),
-          wbInteger(BMMP, 'Bone MinMax Gender', itU32, wbEnum(['Male', 'Female'])),
-          wbRArray('Bone MinMax',
+          wbInteger(BMMP, 'Bone Modifiers Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArray('Bone Modifier',
             wbRStructSK([0], 'Bone', [
               wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Value', [
-                wbFloat('Min X'),
+              wbStruct(BSMS, 'Modifiers', [
                 wbFloat('Min Y'),
-                wbFloat('Max X'),
-                wbFloat('Max Y')
+                wbFloat('Min Z'),
+                wbFloat('Max Y'),
+                wbFloat('Max Z')
               ])
             ], [])
           )
@@ -11172,7 +11173,6 @@ begin
       wbInteger('Armor Rating', itU16),
       wbInteger('Base Addon Index', itU16),
       wbFromVersion(99, wbInteger('Stagger Rating', itU32, wbStaggerEnum)),
-      wbFromVersion(99, wbByteArray('Unknown', 3)),
       wbFromVersion(192, wbByteArray('Unknown',4))
     ]),
     wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
@@ -11743,7 +11743,8 @@ begin
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
           ]),
-          wbFromVersion(29, wbByteArray('Unknown', 4))
+          wbFromVersion(29, wbInteger('Unknown Bool', itU8, wbBoolEnum)),
+          wbFromVersion(29, wbByteArray('Unused', 3))
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbRecord(CSTY, 'Combat Style',
@@ -13439,7 +13440,7 @@ begin
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
       {0x00000001} 'Unknown 0',
       {0x00000002} 'Skill',
-      {0x00000004} 'Unknown 2',
+      {0x00000004} 'Uses Enum',
       {0x00000008} 'Don''t allow Script edits',
       {0x00000010} 'Unknown 4',
       {0x00000020} 'Unknown 5',
@@ -15821,13 +15822,13 @@ begin
     {17} 'Bound Weapon',
     {18} 'Summon Creature',
     {19} 'Detect Life',
-    {20} 'Telekinesis',
+    {20} 'Player Fear',
     {21} 'Paralysis',
     {22} 'Reanimate',
     {23} 'Soul Trap',
     {24} 'Turn Undead',
     {25} 'Guide',
-    {26} 'Unknown 26',
+    {26} 'Damage Item',
     {27} 'Cure Paralysis',
     {28} 'Cure Addiction',
     {29} 'Cure Poison',
@@ -16054,18 +16055,18 @@ begin
     wbFormIDCk(GNAM, 'Learn Recipe from', [ALCH,AMMO,ARMO,BOOK,MISC,WEAP]),
     wbFormIDCk(INAM, 'Camp Maximum', [GLOB]),
     wbFormIDCk(JNAM, 'Workshop Maximum', [GLOB]),
-    wbFormIDCk(CVT0, 'Curve Table', [CURV]),
+    wbFormIDCk(CVT0, 'Scrap Bonus', [CURV]),
     wbFormIDCk(LRNC, 'Learn Chance', [GLOB]),
-    wbUnknown(RCND),
+    wbFormIDCk(RCND, 'Repair Condition', [CNDF]),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
     wbLString(HNAM, 'Build Group Name'),
     wbStruct(DNAM, 'Data', [
       wbFloat('Unknown'),
       wbInteger('Created Object Count', itU16),
-      wbByteArray('Unknown', 2) // looks like 16-bit flags
+      wbInteger('Priority', itU16)
     ], cpNormal, False, nil, 1),
     wbFormIDCk(CIFK, 'Constructible Instantiation Filter Keyword', [KYWD]),
-    wbUnknown(RECF),
+    wbUnknown(RECF), // only cares about 0x1 and 0x2 and 0x3
     wbStruct(INTV, 'Data', [
       wbInteger('Created Object Count', itU16),
       wbInteger('Priority', itU16)
@@ -16099,7 +16100,7 @@ begin
         {0x00000020} 'Unique',
         {0x00000040} 'Doesn''t affect stealth meter',
         {0x00000080} 'PC Level Mult',
-        {0x00000100} 'Unknown 8',
+        {0x00000100} 'Has Actor Sounds',
         {0x00000200} 'Calc For Each Template',
         {0x00000400} 'Unknown 10',
         {0x00000800} 'Protected',
@@ -16116,7 +16117,7 @@ begin
         {0x00400000} 'Unknown 22',
         {0x00800000} 'No Activation/Hellos',
         {0x01000000} 'Diffuse Alpha Test',
-        {0x02000000} 'Unknown 25',
+        {0x02000000} 'Ghosted To Teammates',
         {0x04000000} 'Unknown 26',
         {0x08000000} 'Unknown 27',
         {0x10000000} 'Unknown 28',
@@ -16450,14 +16451,14 @@ var
             wbRStruct('Morph Preset', [
               wbInteger(MPPI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
               wbLString(MPPN, 'Name', 0, cpTranslate),
-              wbString(MPPM, 'Unknown'),
+              wbString(MPPM, 'Morph Type'),
               wbFormIDCk(MPPT, 'Texture', [TXST]),
-              wbUnknown(MPPF)
+              wbInteger(MPPF, 'Playable', itU8, wbBoolEnum)
             ], []),
             cpNormal, False, nil, wbMorphPresetsAfterSet
           ),
-          wbUnknown(MPPK),
-          wbArray(MPGS, 'Unknown', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
+          wbInteger(MPPK, 'Tint Layer Face Region Index', itU16),
+          wbArray(MPGS, 'Morph Value Indexs', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
         ], [])
       );
   end;
@@ -16693,7 +16694,7 @@ begin
       ])),
       wbByteArray('Unknown', 1),
       wbInteger('Interrupt Flags', itU16, wbPKDTInterruptFlags),
-      wbByteArray('Unknown', 2)
+      wbInteger('Package Specific Flags', itU16)
     ], cpNormal, True),
 
     wbStruct(PSDT, 'Schedule', [
@@ -16794,7 +16795,14 @@ begin
             wbByteArray('Unknown', 3)
           ])
         ),
-        wbRArray('Unknown', wbUnknown(PFOR), cpIgnore)
+        wbRArray('Flags Override',
+          wbStruct(PFOR, 'Data', [
+            wbInteger('Set General Flags', itU32, wbPKDTFlags),
+            wbInteger('Clear General Flags', itU32, wbPKDTFlags),
+            wbInteger('Set Interrupt Flags', itU16, wbPKDTInterruptFlags),
+            wbInteger('Clear Interrupt Flags', itU16, wbPKDTInterruptFlags)
+          ])
+        )
       ], [], cpNormal, False, nil, False, nil, wbConditionsAfterSet))
     ], []),
     wbUNAMs,
@@ -16908,7 +16916,7 @@ begin
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
         wbInteger('Unknown',itU32), //0xE0
-        wbInteger('Quest Type',itU32, wbEnum([
+        wbInteger('Quest Type',itU8, wbEnum([
           'None',
           'Primary',
           'Secondary',
@@ -16917,7 +16925,8 @@ begin
           'Daily',
           'Public Event',
           'Miscellaneous',
-          'Event'
+          'Event',
+          'Daily Ops'
         ])),  //0xE9
         wbByteArray('Unused',3)
       ]),
@@ -16948,7 +16957,8 @@ begin
           'Daily',
           'Public Event',
           'Miscellaneous',
-          'Event'
+          'Event',
+          'Daily Ops'
         ])),  //0xE9
         wbByteArray('Unused',3)
       ])
@@ -16963,7 +16973,18 @@ begin
     wbFormIDCk(QSLC, 'Quest Start Location', [LCTN]),
     wbFormIDCk(QECV, 'Enable Keyword', [KYWD]),
     wbUnknown(QSDD),
-    wbUnknown(QETE),
+    wbInteger(QETE, 'Quest Event Type', itU8, wbEnum([
+      'Co-op',
+      'Versus',
+      'Free For All',
+      'Defense',
+      'Waves',
+      'Boss',
+      'Special',
+      'Collection',
+      'Escort',
+      'Multi'
+    ])),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbRArray('Quest Variables', wbString(QTVR, 'Quest Variable')),
     wbFLTR,
@@ -17013,15 +17034,15 @@ begin
           wbFormID(QRLI, 'Legendary Item Reward List'),
           wbFloat(ESRE, 'XP Amount'),
           wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
-          wbUnknown(QRRI),
+          wbEmpty(QRRI, 'Random Rank Indicator'),
           wbRArray('Items', wbStruct(QSRD, 'Item', [
             wbFormIDCk('Item', sigBaseObjects),
             wbInteger('Count', itS32)
           ])),
-          wbFormID(QUIM, 'Message'),
           wbCTDAs
         ],[]).IncludeFlag(dfAllowAnyMember)
-        )
+        ),
+        wbFormID(QUIM, 'Message')
       ], []))
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
@@ -17039,19 +17060,13 @@ begin
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbByteArray('Unknown',1),
-          wbFromVersion(158, wbByteArray('Unknown',1)),
-          wbBelowVersion(151, wbByteArray('Unused',3)),
-          wbFromVersion(82, wbByteArray('Unknown',4)),
-          wbFromVersion(151, wbByteArray('Unknown',4))
-          (** )
-          wbInteger('Flags', itU32, wbFlags([
+          wbFromVersion(158, wbInteger('Flags', itU16, wbFlags([
             {0x01} 'Compass Marker Ignores Locks',
             {0x02} 'Hostile',
             {0x04} 'Use Straight Line Pathing'
-          ])),
-          wbFormIDCk('Keyword', [KYWD, NULL])
-          (**)
+          ]))),
+          wbFromVersion(82, wbFormIDCk('Keyword', [KYWD, NULL])),
+          wbFromVersion(151, wbByteArray('Unknown',4))
         ]),
         wbCTDAs
       ], []))
@@ -17264,7 +17279,7 @@ begin
   ], []);
 
   wbRaceRBPC :=
-    wbArray(RBPC, 'Biped Object Conditions',
+    wbArray(RBPC, 'Biped Object Condition AVs',
       wbUnion('Slot 30+', wbFormVersionDecider(78), [
         wbInteger('Slot 30+', itU32),
         wbFormIDCk('Slot 30+', [AVIF, NULL])
@@ -17374,13 +17389,17 @@ begin
         'Large',
         'Extra Large'
       ])),
-      wbByteArray('Unknown', 8),
+      wbByteArray('Unknown Bytes1', 4),
+      wbByteArray('Unknown Bytes2', 4),
       wbFloat('Injured Health Pct'),
       wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
       wbFromVersion(124, wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum)),
       wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
       wbFloat('Aim Angle Tolerance'),
       wbFloat('Flight Radius'),
+      wbFromVersion(143, wbFloat('Unknown Float1')),
+      wbFromVersion(143, wbFloat('Unknown Float2')),
+      wbFromVersion(143, wbFloat('Unknown Float3')),
       wbFloat('Angular Acceleration Rate'),
       wbFloat('Angular Tolerance'),
       wbInteger('Flags 2', itU32, wbFlags([
@@ -17407,23 +17426,24 @@ begin
         {0x00100000} 'Use Quadruped Controller',
         {0x00200000} 'Low Priority Pushable',
         {0x00400000} 'Cannot Use Playable Items',
-        {0x00800000} '',
-        {0x01000000} '',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
         {0x02000000} 'Unknown 25',
         {0x04000000} 'Unknown 26',
         {0x08000000} 'Unknown 27',
         {0x10000000} 'Unknown 28',
         {0x20000000} 'Unknown 29'
       ])),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
       (**)
-      wbByteArray('Unknown', 20),
-      wbFloat('Unknown'),
-      wbByteArray('Unknown', 4),
+      wbFloat('Unknown Float4'),
+      wbFloat('Unknown Float5'),
+      wbByteArray('Unknown Bytes3',4),
+      wbByteArray('Unknown Bytes4',4),
+      wbByteArray('Unknown Bytes5',4),
+      wbByteArray('Unknown Bytes6',4),
+      wbByteArray('Unknown Bytes7',4),
+      wbFloat('Unknown Float6'),
+      wbByteArray('Unknown Bytes8',4),
       wbInteger('Pipboy Biped Object', itS32, wbBipedObjectEnum),
       wbInteger('XP Value', itS16),
       wbFloat('Severable - Debris Scale'),
@@ -17449,16 +17469,21 @@ begin
       wbFromVersion(118, wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL])),
       wbFromVersion(98, wbFloat('Orientation Limits - Pitch')),
       wbFromVersion(101, wbFloat('Orientation Limits - Roll')),
-      wbFromVersion(188, wbByteArray('Unknown', 4))
+      wbFromVersion(188, wbInteger('Backpack Biped Object', itS32, wbBipedObjectEnum))
     ], cpNormal, True),
 
-    wbEmpty(MNAM, 'Male Marker'),
-    wbString(ANAM, 'Male Skeletal Model'),
-    wbMODT,
-    wbEmpty(FNAM, 'Female Marker'),
-    wbString(ANAM, 'Female Skeletal Model'),
-    wbMODT,
-    wbEmpty(NAM2, 'Marker NAM2 #1'),
+    wbRStruct('Skeletal Data', [
+      wbEmpty(MNAM, 'Male Marker'),
+      wbRStruct('Male Skeletal Data', [
+        wbString(ANAM, 'Male Skeletal Model'),
+        wbMODT
+      ],[]),
+      wbEmpty(FNAM, 'Female Marker'),
+      wbRStruct('Female Skeletal Data', [
+        wbString(ANAM, 'Female Skeletal Model'),
+        wbMODT
+      ],[])
+    ],[]),
     wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
     //wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [NULL, ARMO]), ['Male', 'Female'], cpNormal, False),
@@ -17483,22 +17508,21 @@ begin
     ], [], cpNormal, True),
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD]),
     wbFormIDCk(DNAM, 'Aim Assist Pose Data', [AAPD]),
-
-      wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
-      wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
-    wbRStruct('Male Behavior Graph', [
-      wbEmpty(MNAM, 'Male Data Marker'),
-      wbGenericModel
-    ], [], cpNormal, True)
-    .SetSummaryKey([1])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
-    wbRStruct('Female Behavior Graph', [
-      wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-      wbGenericModel
-    ], [], cpNormal, True)
-    .SetSummaryKey([1])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
-
+    wbRStruct('Behavior Graph Data', [
+      wbEmpty(NAM3, 'Behavior Graph Marker', cpNormal, True),
+      wbRStruct('Male Behavior Graph', [
+        wbEmpty(MNAM, 'Male Data Marker'),
+        wbGenericModel
+      ], [], cpNormal, True)
+      .SetSummaryKey([1])
+      .IncludeFlag(dfCollapsed, wbCollapseModels),
+      wbRStruct('Female Behavior Graph', [
+        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+        wbGenericModel
+      ], [], cpNormal, True)
+      .SetSummaryKey([1])
+      .IncludeFlag(dfCollapsed, wbCollapseModels)
+    ],[]),
     wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
     wbFormIDCk(NAM5, 'Impact Data Set', [IPDS]),
     wbFormIDCk(NAM7, 'Dismember Blood Art', [ARTO]),
@@ -17525,44 +17549,51 @@ begin
     wbFormIDCk(FLMV, 'Base Movement Defaults - Fly', [MOVT]),
     wbFormIDCk(SNMV, 'Base Movement Defaults - Sneak', [MOVT]),
 
-    // Male head
-    wbEmpty(NAM0, 'Head Data Marker'),
-    wbEmpty(MNAM, 'Male Data Marker'),
-    wbStruct(NNAM, 'Male Neck Fat Adjustments Scale', [
-      wbByteArray('Unknown', 4),
-      wbFloat('X'),
-      wbFloat('Y')
-    ]),
-    wbRArrayS('Male Head Parts', wbHeadPart),
-    wbRArray('Male Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
-    wbRArray('Male Hair Colors', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
-    wbRArrayS('Male Face Details', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
-    wbFormIDCk(DFTM, 'Male Default Face Texture', [TXST]),
-    wbTintTemplateGroups('Male Tint Layers'),
-    wbMorphGroups('Male Morph Groups'),
-    wbFaceMorphs('Male Face Morphs'),
-    wbString(WMAP, 'Male Wrinkle Map Path'),
+    //Head Data
+    wbRStruct('Head Datas', [
+      wbEmpty(NAM0, 'Head Data Marker'),
+      // Male head
+      wbRStruct('Male Head Data',[
+        wbEmpty(MNAM, 'Male Data Marker'),
+        wbStruct(NNAM, 'Male Neck Fat Adjustments Scale', [
+          wbByteArray('Unknown', 4),
+          wbFloat('X'),
+          wbFloat('Y')
+        ]),
+        wbRArrayS('Male Head Parts', wbHeadPart),
+        wbRArray('Male Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
+        wbRArray('Male Hair Colors', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
+        wbRArrayS('Male Face Details', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
+        wbFormIDCk(DFTM, 'Male Default Face Texture', [TXST]),
+        wbTintTemplateGroups('Male Tint Layers'),
+        wbMorphGroups('Male Morph Groups'),
+        wbFaceMorphs('Male Face Morphs'),
+        wbString(WMAP, 'Male Wrinkle Map Path')
+      ],[]),
 
-    // Female head
-    wbEmpty(NAM0, 'Head Data Marker'),
-    wbEmpty(FNAM, 'Female Data Marker'),
-    wbStruct(NNAM, 'Female Neck Fat Adjustments Scale', [
-      wbByteArray('Unknown', 4),
-      wbFloat('X'),
-      wbFloat('Y')
-    ]),
-    wbRArrayS('Female Head Parts', wbHeadPart),
-    wbRArray('Female Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
-    wbRArray('Female Hair Colors', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
-    wbRArrayS('Female Face Details', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
-    wbFormIDCk(DFTF, 'Female Default Face Texture', [TXST]),
-    wbTintTemplateGroups('Female Tint Layers'),
-    wbMorphGroups('Female Morph Groups'),
-    wbFaceMorphs('Female Face Morphs'),
-    wbString(WMAP, 'Female Wrinkle Map Path'),
+      // Female head
+      wbEmpty(NAM0, 'Head Data Marker'),
+      wbRStruct('Female Head Data', [
+        wbEmpty(FNAM, 'Female Data Marker'),
+        wbStruct(NNAM, 'Female Neck Fat Adjustments Scale', [
+          wbByteArray('Unknown', 4),
+          wbFloat('X'),
+          wbFloat('Y')
+        ]),
+        wbRArrayS('Female Head Parts', wbHeadPart),
+        wbRArray('Female Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
+        wbRArray('Female Hair Colors', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
+        wbRArrayS('Female Face Details', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
+        wbFormIDCk(DFTF, 'Female Default Face Texture', [TXST]),
+        wbTintTemplateGroups('Female Tint Layers'),
+        wbMorphGroups('Female Morph Groups'),
+        wbFaceMorphs('Female Face Morphs'),
+        wbString(WMAP, 'Female Wrinkle Map Path')
+      ],[])
+    ],[]),
     wbFormIDCk(NAM8, 'Morph Race', [RACE]),
     wbFormIDCk(RNAM, 'Armor Race', [RACE]),
-    wbFormIDCk(CVT1, 'Curve Table?', [CURV]),
+    wbFormIDCk(CVT1, 'EWS Actor Cost Curve', [CURV]),
     wbFormIDCk(SRAC, 'Subgraph Template Race', [RACE]),
     wbFormIDCk(SADD, 'Subgraph Additive Race', [RACE]),
     wbRArray('Subgraph Data',
@@ -18527,7 +18558,7 @@ begin
       {0x00000200}  9, 'ESL'
     ], False), True), [
     wbHEDR,
-    wbUnknown(MMSB),
+    wbUnknown(MMSB),   //Added in 1.2.0.15
     //wbByteArray(OFST, 'Unknown', 0, cpIgnore), {unused in FO76}
     //wbByteArray(DELE, 'Unknown', 0, cpIgnore), {unused in FO76}
     wbString(CNAM, 'Author', 0, cpTranslate, True),
@@ -19384,13 +19415,12 @@ begin
 
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
-    // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID
-    wbUnion(DNAM, 'Data', wbFormVersionDecider(78), [
-      wbArray('Damage Types', wbInteger('Actor Value Index', itU32)),
-      wbArray('Damage Types', wbStruct('Damage Type', [
-        wbFormIDck('Actor Value', [AVIF, NULL]),
-        wbFormIDck('Spell', [SPEL, NULL])
-      ]))
+    wbStruct(DNAM,'Damage Type', [
+      wbUnion('Actor Value', wbFormVersionDecider(78), [
+        wbInteger('Actor Value Index', itU32, wbActorValueEnum),
+        wbFormIDck('Actor Value', [AVIF, NULL])
+      ]),
+      wbFormIDck('Spell', [SPEL, NULL])
     ])
   ]);
 
@@ -19460,7 +19490,7 @@ begin
                 {4} '='
               ]))
             ]),
-            wbInteger(YNAM, 'Index', itU16)
+            wbInteger(YNAM, 'Priority', itU16)
           ], []),
           cpNormal, False, nil, wbINNRAfterSet
         )
@@ -19667,8 +19697,8 @@ begin
       {0x00000010} 4, 'Legendary Mod',
       {0x00000040} 6, 'Unknown 6',
       {0x00000080} 7, 'Mod Collection',
-      {0x00000100} 8, 'Unknown 8',
-      {0x00000200} 9, 'Unknown 9'
+      {0x00000100} 8, 'Mod Template',
+      {0x00000200} 9, 'Mod Selector'
     ])), [
     wbEDID,
     wbDURL,
@@ -19676,11 +19706,12 @@ begin
     wbFULL,
     wbDESC,
     wbGenericModel,
-    wbInteger(INDX, 'Unknown', itU8),
+    wbInteger(INDX, 'Model Attach Index', itU8),
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbInteger('Unknown Bool 1', itU8, wbBoolEnum),
+      wbInteger('Unknown Bool 2', itU8, wbBoolEnum),
       wbInteger('Form Type', itU32, wbEnum([], [
         Sig2Int(ARMO), 'Armor',
         Sig2Int(NPC_), 'Non-player character',
@@ -19688,8 +19719,8 @@ begin
         Sig2Int(MSTT), 'Movable Static',
         Sig2Int(NONE), 'None'
       ])).SetDefaultEditValue('None'),
-      wbInteger('Max Rank', itU8),
-      wbInteger('Level Tier Scaled Offset', itU8),
+      wbFromVersion(90, wbInteger('Max Rank', itU8)),
+      wbFromVersion(107, wbInteger('Level Tier Scaled Offset', itU8)),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
       // no way to change these in CK, legacy data leftover?
@@ -19714,7 +19745,7 @@ begin
     wbInteger(NAM1, 'Priority', itU8),
     wbFormIDCk(ARTC, 'Art Object', [ARTO]),
     wbByteArray(NAM2, 'Unused', 0),
-    wbArray(NAM3, 'Unknown Keywords', wbFormIDCk('Keyword', [KYWD])),
+    wbArray(NAM3, 'Attribute Descriptor Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFLTR,
     wbString(OBST, 'Obstacle')
   ]);
@@ -20427,12 +20458,12 @@ begin
     wbFULL,
     wbDESC,
     wbKeywords,
-    wbString(SWFI, 'SWF Icon'),
+    wbString(SWFI, 'SWF Image'),
     wbLString(NNAM, 'Display Name'),
-    wbUnknown(BEVA),
+    wbEmpty(BEVA, 'Has SWF Image'),
     wbString(ETIP, 'Storefront Image Path'),
     wbString(ETDI, 'Storefront Preview Image'),
-    wbFormID(ETLG, 'Entitlement Reference'),
+    wbFormID(ETLG, 'Entitlement Loadout Reference'),
     wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
 
   ]);
@@ -20444,8 +20475,8 @@ begin
     wbKeywords,
     wbFormID(CENT, 'Linked Object'),
     wbLStringKC(NNAM, 'Display Name', 0, cpTranslate),
-    wbString(ETIP, 'Texture Path'),
-    wbString(ETDI, 'Texture File')
+    wbString(ETIP, 'Storefront Image Path'),
+    wbString(ETDI, 'Storefront Preview Image')
   ]);
 
   wbRecord(CSEN, 'Crate Service Entitlement', [
