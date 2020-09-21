@@ -8378,12 +8378,23 @@ begin
       wbInteger('Unused', itU16, nil, cpIgnore, False, wbNeverShow),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbFormID('FormID').IncludeFlag(dfNoReport)
-    ], [2, 1, 0]),
+    ], [2, 1, 0])
+      .SetSummaryKey([2, 1])
+      .SetSummaryMemberPrefixSuffix(2, '', '')
+      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey),
     wbStructSK([1], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
     ])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, '', '')
+      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
+      .SetSummaryDelimiter('')
+      .IncludeFlag(dfSummaryMembersNoName)
   ]);
 
   wbScriptPropertyStruct :=

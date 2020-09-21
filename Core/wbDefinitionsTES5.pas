@@ -5338,17 +5338,20 @@ begin
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbFormID('FormID')
     ], [2, 1, 0])
-      .SetSummaryKey([1])
-      .SetSummaryMemberPrefixSuffix(1, '.Alias[', ']')
+      .SetSummaryKey([2, 1])
+      .SetSummaryMemberPrefixSuffix(2, '', '')
+      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
       .SetSummaryDelimiter('')
-      .IncludeFlag(dfSummaryMembersNoName),
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey),
     wbStructSK([0], 'Object v1', [
       wbFormID('FormID'),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
       wbInteger('Unused', itU16, nil, cpIgnore)
     ])
-      .SetSummaryKey([1])
-      .SetSummaryMemberPrefixSuffix(1, '.Alias[', ']')
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, '', '')
+      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
   ]);
