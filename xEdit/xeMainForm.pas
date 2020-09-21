@@ -5235,6 +5235,7 @@ begin
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
+  wbConvertIntFormID := Settings.ReadBool('Options', 'ConvertIntFormID', wbConvertIntFormID);
   wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
   wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
   wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
@@ -5447,13 +5448,26 @@ var
   _File                       : IwbFile;
   MainRecord                  : IwbMainRecord;
   Node                        : PVirtualNode;
-  i, j                        : Integer;
+  i, j, tmp                   : Integer;
 
 begin
   if (Key = VK_RETURN) and (Shift = []) then begin
     Key := 0;
 
     s := Trim(edFormIDSearch.Text);
+
+    if wbConvertIntFormID then
+      if not StartsText('0', s) and not StartsText('0x', s) then
+        if TryStrToInt(s, tmp) then
+        begin
+          s := IntToHex(tmp, 8);
+          edFormIDSearch.Text := s;
+        end else
+          s := '00000000';
+
+    if StartsText('0x', s) then
+      s := ReplaceText(s, '0x', '');
+
     FormID := TwbFormID.FromStrDef(s, 0);
     FileID := FormID.FileID;
     if not FormID.IsNull then begin
@@ -9402,6 +9416,17 @@ begin
       // string editor
       else if not InputQuery('Edit Value', 'Please change the value:', EditValue) then
         Exit;
+
+      if wbConvertIntFormID and Element.CanContainFormIDs then
+      begin
+        var tmp: Integer;
+        if not StartsText('0', EditValue) and not StartsText('0x', EditValue) then
+          if TryStrToInt(EditValue, tmp) then
+            EditValue := IntToHex(tmp, 8);
+
+        if StartsText('0x', EditValue) then
+          EditValue := ReplaceText(EditValue, '0x', '');
+      end;
 
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
@@ -13360,6 +13385,7 @@ begin
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     cbManualCleaningHide.Checked := wbManualCleaningHide;
     cbManualCleaningAllow.Checked := wbManualCleaningAllow;
+    cbConvertIntFormID.Checked := wbConvertIntFormID;
     cbCollapseRecordHeader.Checked := wbCollapseRecordHeader;
     cbCollapseObjectBounds.Checked := wbCollapseObjectBounds;
     cbCollapseModels.Checked := wbCollapseModels;
@@ -13431,6 +13457,7 @@ begin
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
+    wbConvertIntFormID := cbConvertIntFormID.Checked;
     wbCollapseRecordHeader := cbCollapseRecordHeader.Checked;
     wbCollapseObjectBounds := cbCollapseObjectBounds.Checked;
     wbCollapseModels := cbCollapseModels.Checked;
@@ -13501,6 +13528,7 @@ begin
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
     Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
+    Settings.WriteBool('Options', 'ConvertIntFormID', wbConvertIntFormID);
     Settings.WriteBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
     Settings.WriteBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
     Settings.WriteBool('Options', 'CollapseModels', wbCollapseModels);

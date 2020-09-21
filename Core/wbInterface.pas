@@ -176,6 +176,7 @@ var
   wbAlwaysSaveOnamForce    : Boolean  = False;
   wbManualCleaningAllow    : Boolean  = False;
   wbManualCleaningHide     : Boolean  = False;
+  wbConvertIntFormID       : Boolean  = False;
   wbShrinkButtons          : Boolean  = False;
   wbCollapseRecordHeader   : Boolean  = True;
   wbCollapseObjectBounds   : Boolean  = True;
