@@ -5123,7 +5123,7 @@ const
     (Index: 931; AltIndex: 8002; Name: 'GetRemainingQuestTimeSeconds'),
     (Index: 932; Name: 'GetNumPlayersInSameInterior'),
     (Index: 933; Name: 'GetQuestFormType'),
-    (Index: 934; Name: 'GetSecondsSinceLastAttack')
+    (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack')
   );
 
 var
@@ -5138,13 +5138,12 @@ begin
   L := Low(wbCTDAFunctions);
   H := High(wbCTDAFunctions);
   if aIndex > H then begin
-     L := H - 20;
      while L <= H do begin
-         if wbCTDAFunctions[L].AltIndex = aIndex then begin
-           Result := @wbCTDAFunctions[L];
-           L := H;
+         if wbCTDAFunctions[H].AltIndex = aIndex then begin
+           Result := @wbCTDAFunctions[H];
+           H := L;
          end;
-         L := L + 1;
+         H := H - 1;
      end;
   end else begin
 
