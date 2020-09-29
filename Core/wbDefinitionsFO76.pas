@@ -12388,8 +12388,10 @@ begin
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
     wbZNAMMarkerParams,
-    wbUnknown(CNAM),
-    wbUnknown(LNAM),
+    wbRStruct('Keypad Data', [
+      wbFloat(CNAM, 'Default Code'),
+      wbInteger(LNAM, 'Default Code Length', itU8)
+    ], []),
     wbAPPR,
     wbObjectTemplate,
     wbNVNM
