@@ -798,6 +798,7 @@ const
   QRLI : TwbSignature = 'QRLI'; { New To Fallout 76 }
   QRLR : TwbSignature = 'QRLR'; { New To Fallout 76 }
   QRRI : TwbSignature = 'QRRI'; { New To Fallout 76 }
+  QRWT : TwbSignature = 'QRWT'; { New To Fallout 76 }
   QSDD : TwbSignature = 'QSDD'; { New To Fallout 76 }
   QSDT : TwbSignature = 'QSDT';
   QSLC : TwbSignature = 'QSLC'; { New To Fallout 76 }
@@ -914,6 +915,7 @@ const
   STAG : TwbSignature = 'STAG'; { New to Fallout 4 }
   STAT : TwbSignature = 'STAT';
   STCP : TwbSignature = 'STCP'; { New to Fallout 4 }
+  STXF : TwbSignature = 'STXF'; { New To Fallout 76 }
   STHD : TwbSignature = 'STHD'; { New To Fallout 76 }
   STKD : TwbSignature = 'STKD'; { New to Fallout 4 }
   STMP : TwbSignature = 'STMP'; { New To Fallout 76 }
@@ -948,6 +950,7 @@ const
   TPIC : TwbSignature = 'TPIC';
   TPLT : TwbSignature = 'TPLT';
   TPTA : TwbSignature = 'TPTA'; { New To Fallout 4 }
+  TRAE : TwbSignature = 'TRAE'; { New To Fallout 76 }
   TRDA : TwbSignature = 'TRDA'; { New To Fallout 4 }
   TRDT : TwbSignature = 'TRDT';
   TREE : TwbSignature = 'TREE';
@@ -1003,6 +1006,7 @@ const
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
   VTYP : TwbSignature = 'VTYP';
+  WAAM : TwbSignature = 'WAAM'; { New To Fallout 76 }
   WAIT : TwbSignature = 'WAIT'; { New To Skyrim }
   WAMD : TwbSignature = 'WAMD'; { New To Fallout 4 }
   WATR : TwbSignature = 'WATR';
@@ -1344,7 +1348,6 @@ var
   wbLVIG: IwbSubRecordDef;
   wbXPCK: IwbSubRecordDef;
   wbVCRY: IwbSubRecordDef;
-  wbQRCO: IwbSubRecordDef;
   wbXCHG: IwbSubRecordDef;
   wbWTFG: IwbSubRecordDef;
   wbXLKR: IwbSubRecordArrayDef;
@@ -4538,7 +4541,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..584] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..587] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -5123,7 +5126,10 @@ const
     (Index: 931; AltIndex: 8002; Name: 'GetRemainingQuestTimeSeconds'),
     (Index: 932; Name: 'GetNumPlayersInSameInterior'),
     (Index: 933; Name: 'GetQuestFormType'),
-    (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack')
+    (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
+    (Index: 935; AltIndex: 9000; Name: 'IsPlayerInShelterOwned'),
+    (Index: 936; AltIndex: 9001; Name: 'IsPlayerInShelter'),
+    (Index: 937; AltIndex: 9002; Name: 'IsBuildingInShelter')
   );
 
 var
@@ -8294,7 +8300,6 @@ begin
     ]));
 
   wbVCRY := wbFormIDCk(VCRY, 'Value Currency', [NULL, CNCY]);
-  wbQRCO := wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]);
 
   wbXCHG := wbByteArray(XCHG, 'Charge', 4);
 
@@ -8319,7 +8324,7 @@ begin
         wbFloat('Y Offset'),
         wbFloat('Z Offset'),
         wbFloat('Unknown')
-      ]))
+      ]), ['Linear','Angular'])
     ], []);
 
   wbNAM1LODP := wbRStruct('Unknown', [
@@ -13149,7 +13154,7 @@ begin
     ], []),
     wbTimeInterpolatorsMultAdd(_08_IAD, _48_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_09_IAD, _49_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0A_IAD, _4B_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0A_IAD, _4A_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_0B_IAD, _4B_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_0C_IAD, _4C_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_0D_IAD, _4D_IAD, 'Unused'),
@@ -14341,7 +14346,7 @@ begin
     wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
-    wbUnknown(XNAM)
+    wbInteger(XNAM, 'Max concurrent quests', itU32)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMQN, 'Story Manager Quest Node', [
@@ -14364,10 +14369,10 @@ begin
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
-      wbUnknown(FNAM),
-      wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
-    ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet),
-    wbUnknown(UNAM)
+      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
+      wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24),
+      wbInteger(UNAM, 'Priority', itU32)
+    ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMEN, 'Story Manager Event Node', [
@@ -14377,7 +14382,7 @@ begin
     wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
-    wbUnknown(XNAM),
+    wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
     .SetSummaryKey([7]);
@@ -15286,6 +15291,7 @@ begin
         wbFromVersion(116, wbInteger('Camera Target Alias', itS32)),
         wbFromVersion(116, wbInteger('Camera Location Alias', itS32))
       ]),
+      wbUnknown(TRAE),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
       wbString(NAM3, 'Edits', 0, cpNormal, True),
@@ -15699,6 +15705,7 @@ begin
   wbRecord(LVLI, 'Leveled Item', [
     wbEDID,
     wbOBND(True),
+    wbPTRN,
     wbOPDSs,
     wbDEFL,
     wbXALG,
@@ -17001,19 +17008,20 @@ begin
         wbRArray('Rewards', wbRStruct('Reward', [
           wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
           wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
-          wbQRCO,
-          wbFloat(NAM9, 'Currency Amount'),
+          wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
+          wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
           wbFormID(QRLI, 'Legendary Item Reward List'),
+          wbFormID(QRCX, 'SCORE Reward Amount'),
           wbFloat(ESRE, 'XP Amount'),
           wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
-          wbEmpty(QRRI, 'Random Rank Indicator'),
-          wbRArray('Items', wbStruct(QSRD, 'Item', [
-            wbFormIDCk('Item', sigBaseObjects),
-            wbInteger('Count', itS32)
-          ])),
+          wbEmpty(QRRI, 'Legendary Item Rank Random'),
+          wbStruct(QSRD, 'Items', [
+            wbFormID('Item'),
+            wbInteger('Count', itU32)
+          ]),
+          wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
           wbCTDAs
-        ],[]).IncludeFlag(dfAllowAnyMember)
-        ),
+        ], []).IncludeFlag(dfAllowAnyMember)),
         wbFormID(QUIM, 'Message')
       ], []))
     ], [])),
@@ -17023,7 +17031,7 @@ begin
         {0x01} 'ORed With Previous',
         {0x02} 'No Stats Tracking',
         {0x04} 'Unknown 3',
-        {0x08} 'Unknown 4'
+        {0x08} 'Uses Timer'
       ])),
       wbFormIDCk(QOTM, 'Quest Objective Timer', [GLOB]),
       wbInteger(SNAM, 'Stage to set', itU16),
@@ -17032,13 +17040,17 @@ begin
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
           wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFromVersion(158, wbInteger('Flags', itU16, wbFlags([
-            {0x01} 'Compass Marker Ignores Locks',
-            {0x02} 'Hostile',
-            {0x04} 'Use Straight Line Pathing'
+          wbFromVersion(158, wbInteger('Target Flags', itU8, wbFlags([
+            {0x0001} 'Compass Marker Ignores Locks',
+            {0x0002} 'Hostile',
+            {0x0004} 'Use Straight Line Pathing'
+          ]))),
+          wbFromVersion(158, wbInteger('Area Flags', itU8, wbFlags([
+            {0x0001} 'Use Global',
+            {0x0002} 'Unknown 1'
           ]))),
           wbFromVersion(82, wbFormIDCk('Keyword', [KYWD, NULL])),
-          wbFromVersion(151, wbByteArray('Unknown',4))
+          wbFromVersion(151, wbByteArray('Area',4))
         ]),
         wbCTDAs
       ], []))
@@ -17166,6 +17178,7 @@ begin
     wbFormIDCk(GNAM, 'Quest Group', [KYWD]),
     wbString(SNAM, 'SWF File'),
     wbString(SCCM, 'Comments'),
+    wbLString(QRWT, 'Reward Text'),
     wbUnknown(QARV),
     wbUnknown(QARF),
     wbInteger(PEDF, 'Public Event Difficulty', itU32, wbEnum([
@@ -18497,6 +18510,7 @@ begin
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True, nil, 2),
+    wbInteger(STXF, 'Unknown Bool', itU8, wbBoolEnum),
     wbNVNM,
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
@@ -18927,6 +18941,7 @@ begin
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS]),
     wbFormIDCk(LNAM, 'NPC Add Ammo List', [LVLI]),
     wbFormIDCk(WAMD, 'Aim Model', [AMDL]),
+    wbFormIDCk(WAAM, 'Aim Assist Model', [AMDL]),
     wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
     wbFormIDCk(CNAM, 'Template', [WEAP]),
     wbArrayS(DAMA, 'Damage Types', wbStructSK([0], 'Damage Type', [
@@ -19746,6 +19761,7 @@ begin
     wbOPDSs,
     wbVMAD,
     wbPTRN,
+    wbSNTP,
     wbXALG,
     wbFLTR,
     wbOPDSs,
@@ -19758,6 +19774,7 @@ begin
       wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR]))
     ], []),
     wbKeywordsNoReq,
+    wbPRPS,
     wbLString(FULL, 'Name')
   ]);
 
@@ -20053,6 +20070,32 @@ begin
       wbFloat(RADR),
       wbFloat(WTMX)
     ], [])
+  ]);
+
+  wbRecord(AAMD, 'Aim Assist Model Data', [
+    wbEDID,
+    wbFloat(ANAM),
+    wbFloat(BNAM),
+    wbFloat(CNAM),
+    wbFloat(DNAM),
+    wbFloat(ENAM),
+    wbFloat(FNAM),
+    wbFloat(GNAM),
+    wbFloat(HNAM),
+    wbFloat(INAM),
+    wbFloat(JNAM),
+    wbFloat(KNAM),
+    wbFloat(LNAM),
+    wbFloat(MNAM),
+    wbFloat(NNAM),
+    wbFloat(ONAM),
+    wbFloat(PNAM),
+    wbFloat(QNAM),
+    wbFloat(RNAM),
+    wbFloat(SNAM),
+    wbFloat(TNAM),
+    wbFloat(UNAM),
+    wbFloat(VNAM)
   ]);
 
   wbRecord(SECH, 'Sound Echo Marker', [
@@ -20513,23 +20556,23 @@ begin
     ])),
     wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
     wbCTDAs,
-    wbRArray('Challenge Rewards', wbRStruct('Reward', [
-    wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
+    wbRArray('Rewards', wbRStruct('Reward', [
+      wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
       wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
-      wbQRCO,
+      wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
       wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
       wbFormID(QRLI, 'Legendary Item Reward List'),
       wbFormID(QRCX, 'SCORE Reward Amount'),
       wbFloat(ESRE, 'XP Amount'),
       wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
-      wbUnknown(QRRI),
-      wbStruct(QSRD, 'Completion Reward', [
+      wbEmpty(QRRI, 'Legendary Item Rank Random'),
+      wbStruct(QSRD, 'Items', [
         wbFormID('Item'),
         wbInteger('Count', itU32)
       ]),
-      wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL])
-    ], []).IncludeFlag(dfAllowAnyMember)
-    ),
+      wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
+      wbCTDAs
+    ], []).IncludeFlag(dfAllowAnyMember)),
     wbString(JASF, 'Associated Json File'),
     wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST]),
     wbString(MNAM, 'Reward Display'),
