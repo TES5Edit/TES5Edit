@@ -11045,7 +11045,7 @@ begin
     ], []),
     wbTimeInterpolatorsMultAdd(_08_IAD, _48_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_09_IAD, _49_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0A_IAD, _4B_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0A_IAD, _4A_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_0B_IAD, _4B_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_0C_IAD, _4C_IAD, 'Unused'),
     wbTimeInterpolatorsMultAdd(_0D_IAD, _4D_IAD, 'Unused'),
