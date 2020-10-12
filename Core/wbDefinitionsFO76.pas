@@ -4572,7 +4572,7 @@ const
     (Index:  50; Name: 'GetTalkedToPC'),
     (Index:  56; Name: 'GetQuestRunning'; ParamType1: ptQuest),
     (Index:  58; Name: 'GetStageCurrentInstance'; Desc: 'Get the stage of the current quest instance'),
-    (Index:  59; Name: 'GetStageDoneCurrentInstance';  Desc: 'Is the current quest instance''s stage done'; ParamType1: ptQuest; ParamType2: ptQuestStage),
+    (Index:  59; Name: 'GetStageDoneCurrentInstance';  Desc: 'Is the current quest instance''s stage done';),
     (Index:  60; Name: 'GetFactionRankDifference'; ParamType1: ptFaction; Paramtype2: ptActor),
     (Index:  61; Name: 'GetAlarmed'),
     (Index:  62; Name: 'IsRaining'; ParamType1: ptRegionOpt),
@@ -5127,9 +5127,9 @@ const
     (Index: 932; Name: 'GetNumPlayersInSameInterior'),
     (Index: 933; Name: 'GetQuestFormType'),
     (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
-    (Index: 935; AltIndex: 9000; Name: 'IsPlayerInShelterOwned'),
-    (Index: 936; AltIndex: 9001; Name: 'IsPlayerInShelter'),
-    (Index: 937; AltIndex: 9002; Name: 'IsBuildingInShelter')
+    (Index: 935; AltIndex: 9001; Name: 'IsPlayerInShelterOwned'),
+    (Index: 936; AltIndex: 9002; Name: 'IsPlayerInShelter'),
+    (Index: 937; AltIndex: 9003; Name: 'IsBuildingInShelter')
   );
 
 var
@@ -5143,7 +5143,7 @@ begin
 
   L := Low(wbCTDAFunctions);
   H := High(wbCTDAFunctions);
-  if aIndex > H then begin
+  if aIndex > wbCTDAFunctions[H].Index then begin
      while L <= H do begin
          if wbCTDAFunctions[H].AltIndex = aIndex then begin
            Result := @wbCTDAFunctions[H];
@@ -7052,9 +7052,9 @@ begin
       slList.Clear;
 
       if not Female2 then
-        Element := Race.ElementByName['Male Morph Groups']
+        Element := Race.ElementByPath['Head Datas\Male Head Data\Male Morph Groups']
       else
-        Element := Race.ElementByName['Female Morph Groups'];
+        Element := Race.ElementByPath['Head Datas\Female Head Data\Female Morph Groups'];
 
       // iterate over morph groups
       if Supports(Element, IwbContainerElementRef, Container) then
@@ -7207,9 +7207,9 @@ begin
       Cache.Female := Female2;
 
       if not Female2 then
-        Element := Race.ElementByName['Male Face Morphs']
+        Element := Race.ElementByPath['Head Datas\Male Head Data\Male Face Morphs']
       else
-        Element := Race.ElementByName['Female Face Morphs'];
+        Element := Race.ElementByPath['Head Datas\Female Head Data\Female Face Morphs'];
 
       if not Supports(Element, IwbContainerElementRef, Container) then
         Continue;
@@ -7353,9 +7353,9 @@ begin
       Cache.Female := Female2;
 
       if not Female2 then
-        Element := Race.ElementByName['Male Tint Layers']
+        Element := Race.ElementByPath['Head Datas\Male Head Data\Male Tint Layers']
       else
-        Element := Race.ElementByName['Female Tint Layers'];
+        Element := Race.ElementByPath['Head Datas\Female Head Data\Female Tint Layers'];
 
       if not Supports(Element, IwbContainerElementRef, Container) then
         Continue;
@@ -8324,7 +8324,7 @@ begin
         wbFloat('Y Offset'),
         wbFloat('Z Offset'),
         wbFloat('Unknown')
-      ]), ['Linear','Angular'])
+      ]), ['Linear','Angular','Unknown'])
     ], []);
 
   wbNAM1LODP := wbRStruct('Unknown', [
@@ -10047,7 +10047,7 @@ begin
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   wbEFIT := //TODO ECK: Revisit decider logic.
-    wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 183]), [
+    wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 184]), [
       wbStruct('', [                                //<154
         wbUnused,
         wbFloat('Magnitude'),
@@ -10784,7 +10784,10 @@ begin
    {100} 'ZoomDataFOVMultC',
    {101} 'UnsightedTransitionSeconds',
    {102} 'MinWeaponDrawTime',
-   {103} 'ModelSwap'
+   {103} 'ModelSwap',
+   {104} 'MinChargeTime',
+   {105} 'PowerAffectsProjectileSpeed',
+   {106} 'DamageBonusMult'
   ]);
 
   wbObjectModProperties :=
@@ -11437,7 +11440,7 @@ begin
 
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x0000002}  2, 'Unknown 2',
+      {0x0000002}  2, 'Is Instanced',
       {0x0000020}  6, 'Unknown 6',
       {0x0000040}  7, 'No Pre Vis',
       {0x0000200} 10, 'Persistent',
@@ -12189,7 +12192,8 @@ begin
       ])),
       wbFloat('Charge Time'),
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
-      wbFormIDCk('Worn Restrictions', [FLST, NULL])
+      wbFormIDCk('Worn Restrictions', [FLST, NULL]),
+      wbUnknown
     ], cpNormal, True, nil, 8),
     wbEffectsReq,
     wbMIID
@@ -15197,9 +15201,10 @@ begin
     wbStruct(DNAM, '', [  //WIP - Names could be
       wbFloat('Unknown'),
       wbFloat('Unknown'),
-      wbFloat('Distance From Water Level'),
-      wbFloat('Unknown'),
       wbFloat('Height Range'),
+      wbFloat('Color Range'),
+      wbFloat('Wave Period'),
+      wbByteArray('Unknown', 4),
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
       wbInteger('Max Slope', itU8),
@@ -15208,7 +15213,6 @@ begin
         'Uniform Scaling',
         'Fit to Slope'
       ])),
-      wbByteArray('Unknown', 4),
       wbFromVersion(137, wbFloat('Unknown')),
       wbFromVersion(175, wbFloat('Position Range'))
     ], cpNormal, True, nil, 7)
@@ -17904,10 +17908,10 @@ begin
       wbInteger('Level', itU8, wbEnum([], [
          0, 'None',
          1, 'Opens Door',
-        25, 'Novice',
-        50, 'Advanced',
-        75, 'Expert',
-       100, 'Master',
+        25, 'Novice (Level 0)',
+        50, 'Advanced (Level 1)',
+        75, 'Expert (Level 2)',
+       100, 'Master (Level 3)',
        250, 'Unknown',
        251, 'Barred',
        252, 'Chained',
@@ -18216,7 +18220,7 @@ begin
           {2} 'Objects',
           {3} 'Weather',
           {4} 'Map',
-          {5} 'Land',
+          {5} 'Workshop',
           {6} 'Grass',
           {7} 'Sound',
           {8} 'Imposter',
@@ -18941,7 +18945,7 @@ begin
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS]),
     wbFormIDCk(LNAM, 'NPC Add Ammo List', [LVLI]),
     wbFormIDCk(WAMD, 'Aim Model', [AMDL]),
-    wbFormIDCk(WAAM, 'Aim Assist Model', [AMDL]),
+    wbFormIDCk(WAAM, 'Aim Assist Model', [AAMD]),
     wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
     wbFormIDCk(CNAM, 'Template', [WEAP]),
     wbArrayS(DAMA, 'Damage Types', wbStructSK([0], 'Damage Type', [
