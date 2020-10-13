@@ -16605,7 +16605,7 @@ begin
 
   var wbStaticPart :=
     wbRStructSK([0], 'Part', [
-      wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP]),
+      wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
           wbFloat('X'),
@@ -16625,7 +16625,7 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00000200}  9, 'Hidden From Local Map',
-      {0x00000400} 10, 'Unknown 10',
+      {0x00000400} 10, 'Loadscreen',
       {0x00000800} 11, 'Used as Platform',
       {0x00008000} 15, 'Has Distant LOD',
       {0x02000000} 25, 'Obstacle',
