@@ -68,6 +68,7 @@ procedure TfrmDeveloperMessage.FixZoom;
 var
   i, CharCount : Integer;
   pt        : TPoint;
+  ToBigBy, ToSmallBy: Integer;
 begin
   if RichEditVersion >= 3 then begin
     reMain.Zoom := reMain.Zoom - 1;
@@ -90,10 +91,20 @@ begin
       reMain.Zoom := reMain.Zoom + 1;
       pt := reMain.GetCharPos(CharCount);
     end;
+    ToBigBy := pt.Y - reMain.Height;
     while pt.Y > reMain.Height do begin
       reMain.Zoom := reMain.Zoom - 1;
       pt := reMain.GetCharPos(CharCount);
     end;
+    ToSmallBy := reMain.Height - pt.Y;
+
+    if (ToBigBy < ToSmallBy) and (ToBigBy < (Self.Monitor.Height - Height)) then begin
+      Height := Height + ToBigBy;
+      reMain.Zoom := reMain.Zoom + 1;
+    end else begin
+      Height := Height - ToSmallBy;
+    end;
+
     pt := reMain.GetCharPos(80);
     pnlElminster.Top := reMain.Top + 10;
     pnlElminster.Height := pt.y - 20;
