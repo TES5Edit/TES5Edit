@@ -14977,11 +14977,11 @@ begin
       Exit;
     end;
     4: begin
-      Result := Result + ' Exterior Cell Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
+      Result := Result + ' Exterior Cell Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
       Exit;
     end;
     5: begin
-      Result := Result + ' Exterior Cell Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi);
+      Result := Result + ' Exterior Cell Sub-Block ' + IntToStr(LongRecSmall(grStruct.grsLabel).Hi) + ', ' + IntToStr(LongRecSmall(grStruct.grsLabel).Lo);
       Exit;
     end;
     6: Result := Result + ' Cell Children of ';
