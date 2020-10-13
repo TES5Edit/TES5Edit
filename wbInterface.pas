@@ -52,13 +52,13 @@ var
     Major   : 4;
     Minor   : 0;
     Release : 3;
-    Build   : 'b';
+    Build   : 'd';
     Title   : '';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04000302;
-  wbDeveloperMessageVersion : Integer = 04000302;
+  wbWhatsNewVersion : Integer = 04000304;
+  wbDeveloperMessageVersion : Integer = 04000304;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
   clOrange       = $004080FF;
