@@ -6297,7 +6297,7 @@ begin
 end;
 
 var
-  wbRecordFlagsFlags : IwbFlagsDef;
+  wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
 procedure DefineFO4a;
 begin
@@ -6521,6 +6521,41 @@ begin
 //  ], [18]);
 
   wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
+    {0x00000001} { 0} 'Unknown 0',
+    {0x00000002} { 1} 'Unknown 1',
+    {0x00000004} { 2} 'Unknown 2',
+    {0x00000008} { 3} 'Unknown 3',
+    {0x00000010} { 4} 'Unknown 4',
+    {0x00000020} { 4} 'Unknown 5',
+    {0x00000040} { 6} 'Unknown 6',
+    {0x00000080} { 7} 'Unknown 7',
+    {0x00000100} { 8} 'Unknown 8',
+    {0x00000200} { 9} 'Unknown 9',
+    {0x00000400} {10} 'Unknown 10',
+    {0x00000800} {11} 'Unknown 11',
+    {0x00001000} {12} 'Unknown 12',
+    {0x00002000} {13} 'Unknown 13',
+    {0x00004000} {14} 'Unknown 14',
+    {0x00008000} {15} 'Unknown 15',
+    {0x00010000} {16} 'Unknown 16',
+    {0x00020000} {17} 'Unknown 17',
+    {0x00040000} {18} 'Unknown 18',
+    {0x00080000} {19} 'Unknown 19',
+    {0x00100000} {20} 'Unknown 20',
+    {0x00200000} {21} 'Unknown 21',
+    {0x00400000} {22} 'Unknown 22',
+    {0x00800000} {23} 'Unknown 23',
+    {0x01000000} {24} 'Unknown 24',
+    {0x02000000} {25} 'Unknown 25',
+    {0x04000000} {26} 'Unknown 26',
+    {0x08000000} {27} 'Unknown 27',
+    {0x10000000} {28} 'Unknown 28',
+    {0x20000000} {29} 'Unknown 29',
+    {0x40000000} {30} 'Unknown 30',
+    {0x80000000} {31} 'Unknown 31'
+  ]);
+
+  wbEmptyBaseFlags := wbFlags(wbEmptyBaseFlags, [
     {0x00000001} { 0} 'Unknown 0',
     {0x00000002} { 1} 'Unknown 1',
     {0x00000004} { 2} 'Unknown 2',
@@ -10902,89 +10937,82 @@ begin
 
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbStruct(DNAM, 'Data Count', [
-      wbInteger('Flags', itU32, wbFlags(['Animatable'])),
+    wbStruct(DNAM, 'Data', [
+      wbInteger('Animatable', itU32, wbBoolEnum),
       wbFloat('Duration'),
       wbStruct('HDR', [
-        wbInteger('Eye Adapt Speed Mult', itU32),
-        wbInteger('Eye Adapt Speed Add', itU32),
-        wbInteger('Bloom Blur Radius Mult', itU32),
-        wbInteger('Bloom Blur Radius Add', itU32),
-        wbInteger('Bloom Threshold Mult', itU32),
-        wbInteger('Bloom Threshold Add', itU32),
-        wbInteger('Bloom Scale Mult', itU32),
-        wbInteger('Bloom Scale Add', itU32),
-        wbInteger('Target Lum Min Mult', itU32),
-        wbInteger('Target Lum Min Add', itU32),
-        wbInteger('Target Lum Max Mult', itU32),
-        wbInteger('Target Lum Max Add', itU32),
-        wbInteger('Sunlight Scale Mult', itU32),
-        wbInteger('Sunlight Scale Add', itU32),
-        wbInteger('Sky Scale Mult', itU32),
-        wbInteger('Sky Scale Add', itU32)
+        wbInteger('Eye Adapt Speed Mult Count', itU32),
+        wbInteger('Eye Adapt Speed Add Count', itU32),
+        wbInteger('Bloom Blur Radius Mult Count', itU32),
+        wbInteger('Bloom Blur Radius Add Count', itU32),
+        wbInteger('Bloom Threshold Mult Count', itU32),
+        wbInteger('Bloom Threshold Add Count', itU32),
+        wbInteger('Bloom Scale Mult Count', itU32),
+        wbInteger('Bloom Scale Add Count', itU32),
+        wbInteger('Target Lum Min Mult Count', itU32),
+        wbInteger('Target Lum Min Add Count', itU32),
+        wbInteger('Target Lum Max Mult Count', itU32),
+        wbInteger('Target Lum Max Add Count', itU32),
+        wbInteger('Sunlight Scale Mult Count', itU32),
+        wbInteger('Sunlight Scale Add Count', itU32),
+        wbInteger('Sky Scale Mult Count', itU32),
+        wbInteger('Sky Scale Add Count', itU32)
       ]),
-      wbInteger('Unknown08 Mult', itU32),
-      wbInteger('Unknown48 Add', itU32),
-      wbInteger('Unknown09 Mult', itU32),
-      wbInteger('Unknown49 Add', itU32),
-      wbInteger('Unknown0A Mult', itU32),
-      wbInteger('Unknown4A Add', itU32),
-      wbInteger('Unknown0B Mult', itU32),
-      wbInteger('Unknown4B Add', itU32),
-      wbInteger('Unknown0C Mult', itU32),
-      wbInteger('Unknown4C Add', itU32),
-      wbInteger('Unknown0D Mult', itU32),
-      wbInteger('Unknown4D Add', itU32),
-      wbInteger('Unknown0E Mult', itU32),
-      wbInteger('Unknown4E Add', itU32),
-      wbInteger('Unknown0F Mult', itU32),
-      wbInteger('Unknown4F Add', itU32),
-      wbInteger('Unknown10 Mult', itU32),
-      wbInteger('Unknown50 Add', itU32),
+      wbInteger('Unused08 Mult Count', itU32),
+      wbInteger('Unused48 Add Count', itU32),
+      wbInteger('Unused09 Mult Count', itU32),
+      wbInteger('Unused49 Add Count', itU32),
+      wbInteger('Unused0A Mult Count', itU32),
+      wbInteger('Unused4A Add Count', itU32),
+      wbInteger('Unused0B Mult Count', itU32),
+      wbInteger('Unused4B Add Count', itU32),
+      wbInteger('Unused0C Mult Count', itU32),
+      wbInteger('Unused4C Add Count', itU32),
+      wbInteger('Unused0D Mult Count', itU32),
+      wbInteger('Unused4D Add Count', itU32),
+      wbInteger('Unused0E Mult Count', itU32),
+      wbInteger('Unused4E Add Count', itU32),
+      wbInteger('Unused0F Mult Count', itU32),
+      wbInteger('Unused4F Add Count', itU32),
+      wbInteger('Unused10 Mult Count', itU32),
+      wbInteger('Unused50 Add Count', itU32),
       wbStruct('Cinematic', [
-        wbInteger('Saturation Mult', itU32),
-        wbInteger('Saturation Add', itU32),
-        wbInteger('Brightness Mult', itU32),
-        wbInteger('Brightness Add', itU32),
-        wbInteger('Contrast Mult', itU32),
-        wbInteger('Contrast Add', itU32)
+        wbInteger('Saturation Mult Count', itU32),
+        wbInteger('Saturation Add Count', itU32),
+        wbInteger('Brightness Mult Count', itU32),
+        wbInteger('Brightness Add Count', itU32),
+        wbInteger('Contrast Mult Count', itU32),
+        wbInteger('Contrast Add Count', itU32),
+        wbInteger('Unused14 Mult Count', itU32),
+        wbInteger('Unused54 Add Count', itU32)
       ]),
-      wbInteger('Unknown14 Mult', itU32),
-      wbInteger('Unknown54 Add', itU32),
-      wbInteger('Tint Color', itU32),
-      wbInteger('Blur Radius', itU32),
-      wbInteger('Double Vision Strength', itU32),
-      wbInteger('Radial Blur Strength', itU32),
-      wbInteger('Radial Blur Ramp Up', itU32),
-      wbInteger('Radial Blur Start', itU32),
-      wbInteger('Radial Blur Flags', itU32, wbFlags(['Use Target'])),
+      wbInteger('Tint Color Count', itU32),
+      wbInteger('Blur Radius Count', itU32),
+      wbInteger('Double Vision Strength Count', itU32),
+      wbInteger('Radial Blur Strength Count', itU32),
+      wbInteger('Radial Blur Ramp Up Count', itU32),
+      wbInteger('Radial Blur Start Count', itU32),
+      wbInteger('Radial Blur Use Target', itU32, wbBoolEnum),
       wbFloat('Radial Blur Center X'),
       wbFloat('Radial Blur Center Y'),
-      wbInteger('DoF Strength', itU32),
-      wbInteger('DoF Distance', itU32),
-      wbInteger('DoF Range', itU32),
-      wbInteger('DoF Flags', itU32, wbFlags([
-        {0x00000001} 'Use Target',
-        {0x00000002} 'Unknown 2',
-        {0x00000004} 'Unknown 3',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} 'Unknown 6',
-        {0x00000040} 'Unknown 7',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Mode - Front',
-        {0x00000200} 'Mode - Back',
-        {0x00000400} 'No Sky',
-        {0x00000800} 'Blur Radius Bit 2',
-        {0x00001000} 'Blur Radius Bit 1',
-        {0x00002000} 'Blur Radius Bit 0'
+      wbInteger('DoF Strength Count', itU32),
+      wbInteger('DoF Distance Count', itU32),
+      wbInteger('DoF Range Count', itU32),
+      wbInteger('DoF Use Target', itU8, wbBoolEnum),
+      wbInteger('DoF Flags', itU24, wbFlags([
+        {0x00000001} 'Mode - Front',
+        {0x00000002} 'Mode - Back',
+        {0x00000004} 'No Sky',
+        {0x00000008} 'Blur Radius Bit 2',
+        {0x00000010} 'Blur Radius Bit 1',
+        {0x00000020} 'Blur Radius Bit 0'
       ])),
-      wbInteger('Radial Blur Ramp Down', itU32),
-      wbInteger('Radial Blur Down Start', itU32),
-      wbInteger('Fade Color', itU32),
-      wbInteger('Motion Blur Strength', itU32),
-      wbInteger('Vignette Radius', itU32),
-      wbInteger('Vignette Strength', itU32)
+      wbInteger('Radial Blur Ramp Down Count', itU32),
+      wbInteger('Radial Blur Down Start Count', itU32),
+      wbInteger('Fade Color Count', itU32),
+      wbInteger('Motion Blur Strength Count', itU32),
+      wbFromSize(248, wbInteger('Vignette Radius Count', itU32)),
+      wbFromSize(252, wbInteger('Vignette Strength Count', itU32))
     ]),
     wbTimeInterpolators(BNAM, 'Blur Radius'),
     wbTimeInterpolators(VNAM, 'Double Vision Strength'),
@@ -10997,7 +11025,7 @@ begin
       wbTimeInterpolators(NAM1, 'Ramp Down'),
       wbTimeInterpolators(NAM2, 'Down Start')
     ], []),
-    wbRStruct('Depht of Field', [
+    wbRStruct('Depth of Field', [
       wbTimeInterpolators(WNAM, 'Strength'),
       wbTimeInterpolators(XNAM, 'Distance'),
       wbTimeInterpolators(YNAM, 'Range'),
@@ -11015,24 +11043,15 @@ begin
       wbTimeInterpolatorsMultAdd(_06_IAD, _46_IAD, 'Sunlight Scale'),
       wbTimeInterpolatorsMultAdd(_07_IAD, _47_IAD, 'Sky Scale')
     ], []),
-    wbTimeInterpolators(_08_IAD, 'Unused'),
-    wbTimeInterpolators(_48_IAD, 'Unused'),
-    wbTimeInterpolators(_09_IAD, 'Unused'),
-    wbTimeInterpolators(_49_IAD, 'Unused'),
-    wbTimeInterpolators(_0A_IAD, 'Unused'),
-    wbTimeInterpolators(_4A_IAD, 'Unused'),
-    wbTimeInterpolators(_0B_IAD, 'Unused'),
-    wbTimeInterpolators(_4B_IAD, 'Unused'),
-    wbTimeInterpolators(_0C_IAD, 'Unused'),
-    wbTimeInterpolators(_4C_IAD, 'Unused'),
-    wbTimeInterpolators(_0D_IAD, 'Unused'),
-    wbTimeInterpolators(_4D_IAD, 'Unused'),
-    wbTimeInterpolators(_0E_IAD, 'Unused'),
-    wbTimeInterpolators(_4E_IAD, 'Unused'),
-    wbTimeInterpolators(_0F_IAD, 'Unused'),
-    wbTimeInterpolators(_4F_IAD, 'Unused'),
-    wbTimeInterpolators(_10_IAD, 'Unused'),
-    wbTimeInterpolators(_50_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_08_IAD, _48_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_09_IAD, _49_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0A_IAD, _4A_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0B_IAD, _4B_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0C_IAD, _4C_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0D_IAD, _4D_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0E_IAD, _4E_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_0F_IAD, _4F_IAD, 'Unused'),
+    wbTimeInterpolatorsMultAdd(_10_IAD, _50_IAD, 'Unused'),
     wbCinematicIMAD
   ]);
 
@@ -12153,7 +12172,7 @@ begin
     wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
-    wbUnknown(XNAM)
+    wbInteger(XNAM, 'Max concurrent quests', itU32)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMQN, 'Story Manager Quest Node', [
@@ -12176,7 +12195,7 @@ begin
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
-      wbUnknown(FNAM),
+      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
@@ -12188,7 +12207,7 @@ begin
     wbCITCReq,
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
-    wbUnknown(XNAM),
+    wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
     .SetSummaryKey([7]);
@@ -15260,9 +15279,9 @@ begin
 
     wbUnknown(XCVR),
     wbUnknown(XCVL),
-    wbFormIDCk(XCZR, 'Unknown', sigReferences),
+    wbFormIDCk(XCZR, 'Current Zone Reference', sigReferences),
     wbUnknown(XCZA),
-    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
+    wbFormIDCk(XCZC, 'Current Zone Cell', [CELL, NULL]),
 
     wbXSCL,
     wbXLOD, // not seen in FO4 vanilla files
