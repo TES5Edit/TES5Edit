@@ -1031,7 +1031,8 @@ type
     mrsOverridesSorted,
     mrsEditorIDFromCache,
     mrsFullNameFromCache,
-    mrsResettingConflict
+    mrsResettingConflict,
+    mrsOFSTRemoved
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -4221,6 +4222,13 @@ begin
       if Groups[GroupRecord.SortOrder] then
         raise Exception.Create('File '+GetFileName+' contains duplicated top level group: '+ cntElements[i].Name);
       Groups[GroupRecord.SortOrder] := True;
+
+      //make sure all WRLD records have been initialized, so that OFST have been removed and child groups sorted
+      if GroupRecord.GroupLabelSignature = 'WRLD' then begin
+        for j := 0 to Pred(GroupRecord.ElementCount) do
+          if Supports(GroupRecord.Elements[j], IwbMainRecord, Current) then
+            Current.ElementCount;
+      end;
     end;
 
     if Length(cntElements) > 1 then
@@ -8751,6 +8759,18 @@ begin
   if wbSortSubRecords and (mrDef.AllowUnordered or (esModified in eStates)) and (Length(cntElements) > 1) then
     wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareSubRecords);
 
+  if wbRemoveOffsetData and (GetSignature = 'WRLD') then begin
+    if Supports(GetRecordBySignature('OFST'), IwbSubRecord, CurrentRec) then begin
+      if wbBeginInternalEdit then try
+        RemoveElement('OFST');
+      finally
+        wbEndInternalEdit;
+      end else
+        RemoveElement(CurrentRec, True);
+      Include(mrStates, mrsOFSTRemoved);
+    end;
+  end;
+
   mrDef.AfterLoad(Self);
 
   if not mrStruct.mrsFlags.IsDeleted then begin
@@ -11124,6 +11144,13 @@ var
     if GetIsDeleted and (GetDataSize > 0) then begin
       GetDataSize;
       Delete;
+    end;
+
+    if mrsOFSTRemoved in mrStates then begin
+      GroupRecord := GetChildGroup;
+      if Assigned(GroupRecord) then
+        GroupRecord.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
+      Exclude(mrStates, mrsOFSTRemoved);
     end;
 
     //not needed for now

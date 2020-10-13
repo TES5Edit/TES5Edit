@@ -5467,8 +5467,6 @@ var
   MainRecord: IwbMainRecord;
   Container: IwbContainer;
 begin
-  wbRemoveOFST(aElement);
-
   if wbBeginInternalEdit then try
 
     if not Supports(aElement, IwbMainRecord, MainRecord) then

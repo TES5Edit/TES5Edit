@@ -19499,7 +19499,7 @@ var
   NewFile   : IwbFile;
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
-  DoMarkModified: Boolean;
+  Worldspaces: IwbElement;
 begin
   try
     wbLoaderDone := True;
@@ -19609,14 +19609,6 @@ begin
         if xeQuickClean then begin
           pnlNavContent.Visible := False;
           try
-            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
-              BuildOrLoadRef(False);
-              DoMarkModified :=
-                    wbForceMarkModified
-                or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'))
-                or (wbAutoMarkModified and SameText(FileName, 'Dragonborn.esm'));
-            end;
-
             mniNavFilterForCleaning.Click;
             JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
             vstNav.ClearSelection;
@@ -19629,16 +19621,8 @@ begin
 
             WasUnsaved := False;
             with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
-              if esUnsaved in ElementStates then begin
-
-                if DoMarkModified then begin
-                  wbProgress('Marking groups and records in Worldspaces as modified');
-                  var Worldspaces := ElementBySignature['WRLD'];
-                  if Assigned(Worldspaces) then
-                    Worldspaces.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
-                end;
+              if esUnsaved in ElementStates then
                 WasUnsaved := True;
-              end;
 
             if xeQuickCleanAutoSave then begin
               if SaveChanged(True) >= srAbort then
@@ -19646,9 +19630,6 @@ begin
 
               if WasUnsaved then begin
                 ResetAllConflict;
-
-                with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
-                  BuildOrLoadRef(False);
 
                 mniNavFilterForCleaning.Click;
                 JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
@@ -19662,15 +19643,8 @@ begin
 
                 WasUnsaved := False;
                 with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
-                  if esUnsaved in ElementStates then begin
-                    if DoMarkModified then begin
-                      wbProgress('Marking groups and records in Worldspaces as modified');
-                      var Worldspaces := ElementBySignature['WRLD'];
-                      if Assigned(Worldspaces) then
-                        Worldspaces.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
-                    end;
+                  if esUnsaved in ElementStates then
                     WasUnsaved := True;
-                  end;
 
                 if xeQuickCleanAutoSave then begin
                   if SaveChanged(True) >= srAbort then

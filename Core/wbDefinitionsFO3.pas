@@ -9975,7 +9975,7 @@ begin
         'Water'
       ]),
       wbByteArray(OFST, 'Offset Data')
-    ], False, nil, cpNormal, False, wbRemoveOFST)
+    ])
   else
     wbRecord(WRLD, 'Worldspace', [
       wbEDIDReq,
@@ -10060,7 +10060,7 @@ begin
         'Water'
       ]),
       wbOFST
-    ], False, nil, cpNormal, False, wbRemoveOFST);
+    ]);
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
