@@ -13842,6 +13842,7 @@ begin
 
   end;
 
+  wbHEDRVersion := 1.7;
 end;
 
 initialization

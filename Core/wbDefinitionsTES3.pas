@@ -1889,6 +1889,8 @@ begin
   wbAddGroupOrder(SNDG);
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(INFO);
+
+  wbHEDRVersion := 1.30;
 end;
 
 initialization

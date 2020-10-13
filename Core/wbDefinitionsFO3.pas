@@ -10227,6 +10227,8 @@ begin
   DefineFO3d;
   DefineFO3e;
   DefineFO3f;
+
+  wbHEDRVersion := 0.94;
 end;
 
 end.

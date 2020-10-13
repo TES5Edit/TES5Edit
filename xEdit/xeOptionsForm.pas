@@ -99,7 +99,6 @@ type
     cbCollapseScriptProperties: TCheckBox;
     cbCollapseConditions: TCheckBox;
     cbCollapseBenignArray: TCheckBox;
-    cbExtendedESL: TCheckBox;
     tsViewSettings: TTabSheet;
     lblFieldsToCollapse: TLabel;
     cbCollapseLeveledItems: TCheckBox;
