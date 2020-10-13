@@ -780,6 +780,16 @@ object frmOptions: TfrmOptions
         Caption = 'Decode Texture Hashes (requires restart)'
         TabOrder = 7
       end
+      object cbConvertIntFormID: TCheckBox
+        Left = 16
+        Top = 194
+        Width = 438
+        Height = 24
+        Caption = 
+          'Allow use of integer FormIDs (requires '#39'0x'#39' prefix on hex FormID' +
+          's)'
+        TabOrder = 8
+      end
     end
   end
   object btnOK: TButton
