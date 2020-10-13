@@ -181,9 +181,6 @@ var
   wbCollapseBenignArray    : Boolean  = True;
   wbExtendedESL            : Boolean  = False;
 
-  wbAutoMarkModified       : Boolean  = True;
-  wbForceMarkModified      : Boolean  = False;
-
   wbGlobalModifedGeneration : UInt64;
 
   wbPluginsFileName    : String;

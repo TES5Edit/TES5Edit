@@ -19723,7 +19723,6 @@ var
   NewFile   : IwbFile;
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
-  DoMarkModified: Boolean;
   Worldspaces: IwbElement;
 begin
   try
@@ -19834,13 +19833,6 @@ begin
         if wbQuickClean then begin
           pnlNavContent.Visible := False;
           try
-            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do begin
-              DoMarkModified :=
-                    wbForceMarkModified
-                or (wbAutoMarkModified and SameText(FileName, 'Dawnguard.esm'))
-                or (wbAutoMarkModified and SameText(FileName, 'Dragonborn.esm'));
-            end;
-
             mniNavFilterForCleaning.Click;
             JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
             vstNav.ClearSelection;
@@ -19853,16 +19845,8 @@ begin
 
             WasUnsaved := False;
             with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
-              if esUnsaved in ElementStates then begin
-
-                if DoMarkModified then begin
-                  wbProgress('Marking groups and records in Worldspaces as modified');
-                  Worldspaces := ElementBySignature['WRLD'];
-                  if Assigned(Worldspaces) then
-                    Worldspaces.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
-                end;
+              if esUnsaved in ElementStates then
                 WasUnsaved := True;
-              end;
 
             if wbQuickCleanAutoSave then begin
               if SaveChanged(True) >= srAbort then
@@ -19883,15 +19867,8 @@ begin
 
                 WasUnsaved := False;
                 with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
-                  if esUnsaved in ElementStates then begin
-                    if DoMarkModified then begin
-                      wbProgress('Marking groups and records in Worldspaces as modified');
-                      Worldspaces := ElementBySignature['WRLD'];
-                      if Assigned(Worldspaces) then
-                        Worldspaces.MarkModifiedRecursive([etFile, etMainRecord, etGroupRecord]);
-                    end;
+                  if esUnsaved in ElementStates then
                     WasUnsaved := True;
-                  end;
 
                 if wbQuickCleanAutoSave then begin
                   if SaveChanged(True) >= srAbort then

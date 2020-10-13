@@ -5057,7 +5057,7 @@ begin
       ], []),
       wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
       wbByteArray(OFST, 'Offset Data')
-    ], False, nil, cpNormal, False, wbRemoveOFST)
+    ])
   else
 	wbRecord(WRLD, 'Worldspace', [
       wbEDID,
@@ -5105,7 +5105,7 @@ begin
       ], []),
       wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
       wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0)
-    ], False, nil, cpNormal, False, wbRemoveOFST);
+    ]);
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
