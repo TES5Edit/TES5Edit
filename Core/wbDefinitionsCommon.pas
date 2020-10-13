@@ -1903,7 +1903,7 @@ begin
   if not wbTryGetMainRecord(FormID, MainRecord) then
     Exit;
 
-  PropertyValue := MainRecord.ShortName
+  PropertyValue := MainRecord.Name;
 end;
 
 procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
