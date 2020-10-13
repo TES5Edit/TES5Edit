@@ -2110,6 +2110,7 @@ procedure TwbFile.AddMainRecord(const aRecord: IwbMainRecord);
 const
   MGEF      : TwbSignature = 'MGEF';
   GMST      : TwbSignature = 'GMST';
+  DFOB      : TwbSignature = 'DFOB';
 var
   FormID    : TwbFormID;
   s         : string;
@@ -2190,7 +2191,7 @@ begin
 
   Signature := aRecord.Signature;
 
-  if (Cardinal(Signature) = Cardinal(MGEF)) or (Cardinal(Signature) = Cardinal(GMST)) or wbTrackAllEditorID then begin
+  if (Cardinal(Signature) = Cardinal(MGEF)) or (Cardinal(Signature) = Cardinal(GMST)) or (Cardinal(Signature) = Cardinal(DFOB)) or wbTrackAllEditorID then begin
     s := aRecord.EditorID;
     if s <> '' then begin
       if flRecordsByEditorIDCount >= Length(flRecordsByEditorID) then
@@ -2460,6 +2461,10 @@ begin
         (flRecords[i] as IwbElementInternal).Reached;
 
   Group := GetGroupBySignature('GMST');
+  if Assigned(Group) then
+    for i := 0 to Pred(Group.ElementCount) do
+      (Group.Elements[i] as IwbElementInternal).Reached;
+  Group := GetGroupBySignature('DFOB');
   if Assigned(Group) then
     for i := 0 to Pred(Group.ElementCount) do
       (Group.Elements[i] as IwbElementInternal).Reached;
@@ -15643,7 +15648,7 @@ begin
   if Result = cpFormID then begin
     Result := cpCritical;
     MainRecord := GetContainingMainRecord;
-    if Assigned(MainRecord) and (MainRecord.Signature = 'GMST') then
+    if Assigned(MainRecord) and ((MainRecord.Signature = 'GMST') or (MainRecord.Signature = 'DFOB')) then
       Result := cpBenign;
   end;
 end;
@@ -18841,7 +18846,7 @@ begin
   if Result = cpFormID then begin
     Result := cpCritical;
     MainRecord := GetContainingMainRecord;
-    if Assigned(MainRecord) and (MainRecord.Signature = 'GMST') then
+    if Assigned(MainRecord) and ((MainRecord.Signature = 'GMST') or (MainRecord.Signature = 'DFOB')) then
       Result := cpBenign;
   end;
 end;
@@ -19119,7 +19124,7 @@ begin
   if Result = cpFormID then begin
     Result := cpCritical;
     MainRecord := GetContainingMainRecord;
-    if Assigned(MainRecord) and (MainRecord.Signature = 'GMST') then
+    if Assigned(MainRecord) and ((MainRecord.Signature = 'GMST') or (MainRecord.Signature = 'DFOB')) then
       Result := cpBenign;
   end;
 end;
