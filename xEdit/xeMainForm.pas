@@ -2119,7 +2119,7 @@ begin
     Exit;
 
   Master := aMainRecord.MasterOrSelf;
-  if (Master.OverrideCount = 0) and not wbTranslationMode and not (Master.Signature = 'GMST') then begin
+  if (Master.OverrideCount = 0) and not wbTranslationMode and not ((Master.Signature = 'GMST') or (Master.Signature = 'DFOB')) then begin
     aConflictAll := caOnlyOne;
     aConflictThis := ctOnlyOne;
     aMainRecord.ConflictAll := aConflictAll;
@@ -2144,12 +2144,12 @@ begin
         NodeDatas[0].ConflictThis := ctMaster;
         NodeDatas[1].ConflictThis := ctIdenticalToMaster;
       end else begin
-        aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
+        aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ) );
         if aConflictAll = caNoConflict then
           IsCompareToSame;
       end
     end else
-      aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not (aMainRecord.Signature = 'GMST')) );
+      aConflictAll := ConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ) );
 
     for i := Low(NodeDatas) to High(NodeDatas) do
       with NodeDatas[i] do
@@ -13663,13 +13663,13 @@ begin
   MainRecords := nil;
   Result := nil;
 
-  if aMainRecord.Signature = 'GMST' then begin
+  if (aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB') then begin
     EditorID := aMainRecord.EditorID;
     SetLength(MainRecords, Length(Files));
     Master := nil;
     j := 0;
     for i := Low(Files) to High(Files) do begin
-      Group := Files[i].GroupBySignature['GMST'];
+      Group := Files[i].GroupBySignature[aMainRecord.Signature];
       if Assigned(Group) then begin
         Rec := Group.MainRecordByEditorID[EditorID];
         if Assigned(Rec) then begin
@@ -15746,7 +15746,7 @@ begin
         vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
         if Assigned(ActiveMaster) and Assigned(ActiveMaster.Def) then begin
           vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
-          InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not (ActiveMaster.Signature = 'GMST'), @ActiveRecords[0]);
+          InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not ((ActiveMaster.Signature = 'GMST') or (ActiveMaster.Signature = 'DFOB')), @ActiveRecords[0]);
           ExpandView;
         end;
 

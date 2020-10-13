@@ -7,6 +7,7 @@
 * #823 - FO3: Anchorage.esm & PointLookout.esm need Mark Modified applied during QAC 
 * #853 - FNV - cleaning dead money master erases map geometry
 * #855 - After cleaning dlcnukaworld.esm, items in Nuka-Town market vanish
+* #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
 
 # What's new in xEdit 4.0.3?
