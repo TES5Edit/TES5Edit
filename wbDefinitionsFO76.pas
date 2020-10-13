@@ -19252,6 +19252,7 @@ begin
   //end else
   //  wbCreationClubContentFileName := 'Fallout4.ccc';
 
+  wbHEDRVersion := 68.0;
 end;
 
 initialization

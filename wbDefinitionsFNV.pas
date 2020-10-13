@@ -12014,6 +12014,8 @@ begin
   DefineFNVd;
   DefineFNVe;
   DefineFNVf;
+
+  wbHEDRVersion := 1.34;
 end;
 
 end.

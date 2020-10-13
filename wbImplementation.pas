@@ -782,6 +782,10 @@ type
     function GetNextObjectID: Cardinal;
     procedure SetNextObjectID(aObjectID: Cardinal);
 
+    function GetVersion: Double;
+
+    function GetAllowHardcodedRangeUse: Boolean;
+
     function HasONAM: Boolean;
     procedure MarkHeaderModified;
 
@@ -2885,21 +2889,9 @@ begin
     flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
-  if wbGameMode = gmFNV then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
-  else if wbGameMode = gmFO3 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
-  else if wbGameMode = gmTES3 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
-  else if wbGameMode = gmTES4 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbIsSkyrim then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbIsFallout4 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
-  else if wbIsFallout76 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
-  Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
+  Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
+  if wbGameMode >= gmTES4 then
+    Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if aIsESL then begin
     Header.IsESL := True;
@@ -2954,21 +2946,9 @@ begin
     flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
-  if wbGameMode = gmFNV then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.34'
-  else if wbGameMode = gmFO3 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.94'
-  else if wbGameMode = gmTES3 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.30'
-  else if wbGameMode = gmTES4 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.0'
-  else if wbIsSkyrim then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '1.7'
-  else if wbIsFallout4 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '0.95'
-  else if wbIsFallout76 then
-    Header.RecordBySignature['HEDR'].Elements[0].EditValue := '68.0';
-  Header.RecordBySignature['HEDR'].Elements[2].EditValue := '$800';
+  Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
+  if wbGameMode >= gmTES4 then
+    Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if mfHasESLFlag in aTemplate.miFlags then begin
     Header.IsESL := True;
@@ -3054,9 +3034,10 @@ end;
 function TwbFile.FileFormIDtoLoadOrderFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
 begin
   Result := aFormID;
-  if aFormID.IsHardcoded then
-    Exit;
-  Result.FileID := FileFileIDtoLoadOrderFileID(Result.FileID, aNew);
+  if (Result.ObjectID < $800) and not GetAllowHardcodedRangeUse then
+    Result.FileID := TwbFileID.Null
+  else
+    Result.FileID := FileFileIDtoLoadOrderFileID(Result.FileID, aNew);
 end;
 
 function TwbFile.FindEditorID(const aEditorID: string; var Index: Integer): Boolean;
@@ -3393,6 +3374,11 @@ begin
   end;
 end;
 
+function TwbFile.GetAllowHardcodedRangeUse: Boolean;
+begin
+  Result := (wbGameMode = gmFO4) and (GetVersion >= 1.0);
+end;
+
 function TwbFile.GetBaseName: string;
 begin
   Result := GetFileName;
@@ -3593,9 +3579,14 @@ var
 begin
   Assert(not (fsMastersUpdating in flStates));
 
-  Result := $800;
+  if GetAllowHardcodedRangeUse then
+    Result := 1
+  else
+    Result := $800;
+
   if not flFormIDsSorted then
     SortRecords;
+
   if Length(flRecords) > 0 then begin
     FormID := flRecords[High(flRecords)].FixedFormID;
     if FormID.FileID.FullSlot >= GetMasterCount(True) then
@@ -3688,20 +3679,21 @@ var
   V              : Variant;
   i              : Int64;
 begin
-  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+  if (wbGameMode >= gmTES4) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
     V := Header.ElementNativeValues['HEDR\Next Object ID'];
     i := V;
     Result := i;
   end else
-    Result := 0;
+    Result := wbHEDRNextObjectID;
 end;
 
 procedure TwbFile.SetNextObjectID(aObjectID: Cardinal);
 var
   Header         : IwbMainRecord;
 begin
-  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
-    Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
+  if wbGameMode >= gmTES4 then
+    if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
+      Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
 end;
 
 procedure TwbFile.SetParentModified;
@@ -3746,7 +3738,7 @@ var
   MasterCount : Integer;
   Master      : IwbFile;
 begin
-  if aFormID.IsHardcoded then
+  if aFormID.IsHardcoded and not GetAllowHardcodedRangeUse then
     Master := wbGetGameMasterFile
   else begin
     FileID := aFormID.FileID.FullSlot;
@@ -3885,6 +3877,20 @@ begin
   Result := flUnsavedSince;
 end;
 
+function TwbFile.GetVersion: Double;
+var
+  Header         : IwbContainerElementRef;
+  V              : Variant;
+  d              : Double;
+begin
+  if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+    V := Header.ElementNativeValues['HEDR\Version'];
+    d := V;
+    Result := d;
+  end else
+    Result := 0.0;
+end;
+
 function TwbFile.HasGroup(const aSignature: TwbSignature): Boolean;
 begin
   Result := GetGroupBySignature(aSignature) <> nil;
@@ -3930,7 +3936,7 @@ var
   i: Integer;
 begin
   if Length(flInjectedRecords) > 0 then begin
-    if FindInjectedID(aRecord.FormID, i) then begin
+    if FindInjectedID(aRecord.FixedFormID, i) then begin
       if [fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = [] then begin
         if wbHasProgressCallback then
           wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with '+flInjectedRecords[i].Name+' from '+flInjectedRecords[i]._File.FileName+' >');
@@ -4076,18 +4082,30 @@ begin
 
   NextObjectID := GetNextObjectID and Mask;
 
-  if (NextObjectID < $800) or (NextObjectID = Mask) then begin
-    NextObjectID := GetHighObjectID + 1;
-    if NextObjectID > Mask then
-      NextObjectID := $800;
+  if GetAllowHardcodedRangeUse then begin
+    if (NextObjectID < 1) or (NextObjectID = Mask) then begin
+      NextObjectID := GetHighObjectID;
+      if NextObjectID > Mask then
+        NextObjectID := 1;
+    end;
+  end else begin
+    if (NextObjectID < $800) or (NextObjectID = Mask) then begin
+      NextObjectID := GetHighObjectID;
+      if NextObjectID > Mask then
+        NextObjectID := $800;
+    end;
   end;
 
   Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(GetFileFileID(True));
   First := Result;
   while GetRecordByFormID(Result, True, True) <> nil do begin
     Inc(NextObjectID);
-    if NextObjectID > Mask then
-      NextObjectID := $800;
+    if NextObjectID > Mask then begin
+      if GetAllowHardcodedRangeUse then
+        NextObjectID := 1
+      else
+        NextObjectID := $800;
+    end;
     Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(GetFileFileID(True));
     if Result = First then //we've gone through all possible FormIDs once, no more space free
       raise ERangeError.Create('File '+GetFileName+' has no more space for a new FormID');
@@ -4095,7 +4113,10 @@ begin
 
   Inc(NextObjectID);
   if NextObjectID > Mask then
-    NextObjectID := $800;
+    if GetAllowHardcodedRangeUse then
+      NextObjectID := 1
+    else
+      NextObjectID := $800;
 
   SetNextObjectID(NextObjectID);
 end;
@@ -4418,6 +4439,7 @@ procedure TwbFile.RemoveMainRecord(const aRecord: IwbMainRecord);
 var
   i      : Integer;
   Master : IwbMainRecord;
+  FormID : TwbFormID;
   FileID : Byte;
 begin
   if not Assigned(aRecord) then
@@ -4429,8 +4451,10 @@ begin
     if not aRecord.Equals(flRecordProcessing) then begin
       Assert(not Assigned(flRecordProcessing));
 
-      if (Length(flRecords) < 1) or not FindFormID(aRecord.FormID, i, True) then
-        raise Exception.Create('Can''t remove FormID ['+aRecord.FormID.ToString(True)+'] from file ' + GetName + ': FormID not registered');
+      FormID := aRecord.FixedFormID;
+
+      if (Length(flRecords) < 1) or not FindFormID(FormID, i, True) then
+        raise Exception.Create('Can''t remove FormID ['+FormID.ToString(True)+'] from file ' + GetName + ': FormID not registered');
 
       flRecords[i] := nil;
       if i < High(flRecords) then begin
@@ -4440,11 +4464,11 @@ begin
       SetLength(flRecords, Pred(Length(flRecords)));
     end;
 
-    FileID := aRecord.FormID.FileID.FullSlot;
-    if FileID >= Cardinal(GetMasterCount(True)) then begin
+    FileID := FormID.FileID.FullSlot;
+    if (FileID >= Cardinal(GetMasterCount(True))) and not ((FormID.ObjectID < $800) and not GetAllowHardcodedRangeUse)  then begin
       {record for this file}
     end else try
-      Master := GetMasterRecordByFormID(aRecord.FormID, True, True);
+      Master := GetMasterRecordByFormID(FormID, True, True);
       if Assigned(Master) and ((Master as IwbElement) <> (aRecord as IwbElement)) then
         (Master as IwbMainRecordInternal).RemoveOverride(aRecord)
       else
@@ -7715,9 +7739,12 @@ var
 begin
   Result := PwbMainRecordStruct(dcBasePtr).mrsFormID;
   _File := GetFile;
-  if Assigned(_File) then
+  if Assigned(_File) then begin
     if Result.FileID.FullSlot > _File.MasterCount[GetMastersUpdated] then
       Result.FileID := _File.FileFileID[GetMastersUpdated];
+    if (Result.ObjectID < $800) and not _File.AllowHardcodedRangeUse then
+      Result.FileID := TwbFileID.Null;
+  end;
   mrFixedFormID := Result;
 end;
 

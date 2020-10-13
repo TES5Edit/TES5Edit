@@ -643,14 +643,6 @@ object frmOptions: TfrmOptions
         Caption = 'Allow Manual Cleaning functions'
         TabOrder = 5
       end
-      object cbExtendedESL: TCheckBox
-        Left = 16
-        Top = 147
-        Width = 439
-        Height = 17
-        Caption = 'Extended FormID space for ESL'
-        TabOrder = 6
-      end
     end
   end
   object btnOK: TButton

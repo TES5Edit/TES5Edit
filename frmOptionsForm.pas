@@ -83,7 +83,6 @@ type
     cbShrinkButtons: TCheckBox;
     cbCollapseConditions: TCheckBox;
     cbCollapseBenignArray: TCheckBox;
-    cbExtendedESL: TCheckBox;
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormCreate(Sender: TObject);
     procedure cbConflictThisChange(Sender: TObject);

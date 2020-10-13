@@ -5190,7 +5190,6 @@ begin
   wbSortFLST := Settings.ReadBool('Options', 'SortFLST2', wbSortFLST);
   //wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO); read in wbInit
   //wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM); read in wbInit
-  //wbExtendedESL := Settings.ReadBool('Options', 'ExtendedESL', wbExtendedESL); read in wbInit
   wbFocusAddedElement := Settings.ReadBool('Options', 'FocusAddedElement', wbFocusAddedElement);
   wbRequireCtrlForDblClick := Settings.ReadBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
   wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
@@ -11719,14 +11718,8 @@ var
     end else
       TargetFile := SourceFile;
 
-    if wbExtendedESL and
-       (TargetFile.MasterCount[True] > 0) and
-       ((Sender = mniNavCompactFormIDs) or TargetFile.IsESL) and
-       (TargetFile.LoadOrderFileID.IsLightSlot or (TargetFile.LoadOrderFileID.FullSlot > 0)) then begin
-
-      if MessageDlg('Do you want to extend the FormID space from 800-FFF to 001-FFF?', mtConfirmation, mbYesNo, 0) = mrYes then
-        LowestFormID := 1;
-    end;
+    if TargetFile.AllowHardcodedRangeUse then
+      LowestFormID := 1;
 
     if AllOrNothing or (Sender = mniNavCompactFormIDs) then
       StartFormID := TwbFormID.FromCardinal(LowestFormID)
@@ -13176,7 +13169,6 @@ begin
     cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := wbLoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
-    cbExtendedESL.Checked := wbExtendedESL;
     cbSortINFO.Checked := wbSortINFO;
     cbFillPNAM.Checked := wbFillPNAM;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
@@ -13236,7 +13228,6 @@ begin
     wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbLoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
-    wbExtendedESL := cbExtendedESL.Checked;
     wbSortINFO := cbSortINFO.Checked;
     wbFillPNAM := cbFillPNAM.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
@@ -13293,7 +13284,6 @@ begin
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
     Settings.WriteBool('Options', 'SortFLST2', wbSortFLST);
-    Settings.WriteBool('Options', 'ExtendedESL', wbExtendedESL);
     Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
     Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
