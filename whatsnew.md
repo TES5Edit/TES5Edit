@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #792 - Flipped indexes in display of blocks and sub-blocks 
 * #803 - after cleaning, some new worldspaces from DLCs may not load their temporary records correctly
 * #823 - FO3: Anchorage.esm & PointLookout.esm need Mark Modified applied during QAC 
 * #853 - FNV - cleaning dead money master erases map geometry
