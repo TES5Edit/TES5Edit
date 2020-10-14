@@ -14357,7 +14357,7 @@ begin
 
         if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
           FormID.FileID := TwbFileID.Null;
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, aElement.MastersUpdated];
+          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
         end else
           MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
 
@@ -14901,7 +14901,7 @@ begin
       FormID := TwbFormID.FromCardinal(aInt);
       if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
         FormID.FileID := TwbFileID.Null;
-        Result := wbGetGameMasterFile.RecordByFormID[FormID, True, aElement.MastersUpdated];
+        Result := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
       end else
         Result := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
     except end;
@@ -14924,7 +14924,7 @@ begin
     if Assigned(_File) then begin
       if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
         FormID.FileID := TwbFileID.Null;
-        Result := wbGetGameMasterFile.RecordByFormID[FormID, True, aElement.MastersUpdated];
+        Result := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
       end else
         Result := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
     end;
@@ -15162,7 +15162,7 @@ begin
           MainRecord := wbRecordByLoadOrderFormID(FormID);
         end else if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
           FormID.FileID := TwbFileID.Null;
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, aElement.MastersUpdated];
+          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
         end else  begin
           MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
           if wbDisplayLoadOrderFormID then

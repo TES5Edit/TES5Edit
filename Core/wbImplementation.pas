@@ -19718,6 +19718,10 @@ begin
   for i := Low(Files) to High(Files) do
     if fsIsGameMaster in  Files[i].FileStates then
       Exit(Files[i]);
+  for i := Low(Files) to High(Files) do
+    with Files[i].LoadOrderFileID do
+      if IsFullSlot and (FullSlot = 0) then
+        Exit(Files[i]);
   Result := nil;
 end;
 
