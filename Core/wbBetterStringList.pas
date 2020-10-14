@@ -295,26 +295,26 @@ initialization
     Free;
   end;
 
-  BeginHooks;
+  var Handle := BeginTransaction;
   try
 
     @Trampoline_TStringList_Assign := InterceptCreate(@CodePointer_TStringList_Assign, @Detour_TStringList_Assign);
     @Trampoline_TStringList_Sort := InterceptCreate(@CodePointer_TStringList_Sort, @Detour_TStringList_Sort);
 
   finally
-    EndHooks;
+    EndTransaction(Handle);
   end;
 
 finalization
 
-  BeginUnHooks;
+  var Handle := BeginTransaction;
   try
 
     InterceptRemove(@Trampoline_TStringList_Assign);
     InterceptRemove(@Trampoline_TStringList_Sort);
 
   finally
-    EndUnHooks;
+    EndTransaction(Handle);
   end;
 
 end.
