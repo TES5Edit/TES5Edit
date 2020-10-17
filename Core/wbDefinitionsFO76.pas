@@ -59,7 +59,6 @@ var
   wbWeaponAnimTypeEnum: IwbEnumDef;
   wbWeaponPropertyEnum: IwbEnumDef;
   wbZTestFuncEnum: IwbEnumDef;
-  wbQuestEventEnum: IwbEnumDef;
   wbDialogueSubtypeEnum: IwbEnumDef;
   wbStatNameEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
@@ -11425,26 +11424,28 @@ begin
   ReferenceRecord(PMIS, 'Placed Missile');
 
   wbCellFlags := wbFlags([
-      {0x00001} 'Is Interior Cell',
-      {0x00002} 'Has Water',
-      {0x00004} 'Can''t Travel From Here',
-      {0x00008} 'No LOD Water',
-      {0x00010} 'Unknown 5',
-      {0x00020} 'Public Area',
-      {0x00040} 'Hand Changed',
-      {0x00080} 'Show Sky',
-      {0x00100} 'Use Sky Lighting',
-      {0x00200} 'Unknown 10',
-      {0x00400} 'Hidden from Interior Cell List',
-      {0x00800} 'Sunlight Shadows',
-      {0x01000} 'Distant LOD only',
-      {0x02000} 'Player Followers Can''t Travel Here',
-      {0x04000} 'Unknown 15',
-      {0x08000} 'Is Instanced',
-      {0x10000} 'Unknown 17',
-      {0x20000} 'Unknown 18',
-      {0x40000} 'Unknown 19',
-      {0x80000} 'Unknown 20'
+      {0x000001} 'Is Interior Cell',
+      {0x000002} 'Has Water',
+      {0x000004} 'Can Travel From Here',
+      {0x000008} 'No LOD Water',
+      {0x000010} 'Unknown 4',
+      {0x000020} 'Public Area',
+      {0x000040} 'Hand Changed',
+      {0x000080} 'Show Sky',
+      {0x000100} 'Use Sky Lighting',
+      {0x000200} 'Unknown 9',
+      {0x000400} 'Hidden from Interior Cell List',
+      {0x000800} 'Sunlight Shadows',
+      {0x001000} 'Distant LOD only',
+      {0x002000} 'Player Followers Can''t Travel Here',
+      {0x004000} 'Unknown 14',
+      {0x008000} 'Is Instanced',
+      {0x010000} 'Unknown 16',
+      {0x020000} 'Unknown 17',
+      {0x040000} 'Unknown 18',
+      {0x080000} 'Unknown 19',
+      {0x100000} 'Unknown 20',
+      {0x200000} 'Unknown 21'
     ]);
 
   wbRecord(CELL, 'Cell',
@@ -11581,7 +11582,7 @@ begin
     wbStruct(XCRI, 'Combined References', [
       wbInteger('Meshes Count', itU64),
       wbInteger('References Count', itU64),
-      wbArrayS('Meshes', wbStruct('Unknown', [
+      wbArrayS('Meshes', wbStruct('Mesh', [
         wbInteger('Combined Mesh', itU32, wbCombinedMeshIDToStr, wbCombinedMeshIDToInt),
         wbByteArray('Unknown', 4)
       ]), wbCELLCombinedMeshesCounter, cpNormal, False, nil, wbCELLCombinedMeshesAfterSet),
@@ -16129,7 +16130,7 @@ begin
         {0x0001} 'Traits',
         {0x0002} 'Stats',
         {0x0004} 'Factions',
-        {0x0008} 'Spell List',
+        {0x0008} 'Actor Effects',
         {0x0010} 'AI Data',
         {0x0020} 'AI Packages',
         {0x0040} 'Model/Animation',
@@ -17878,7 +17879,7 @@ begin
     wbStruct(XPDD, 'Projected Decal Data', [
       wbFloat('Width Scale'),
       wbFloat('Height Scale'),
-      wbByteRGBA('Color')
+      wbFromSize(12, wbByteRGBA('Color'))
       // "Uses Box Primitive" checkbox does the following:
       // 1. "Rounds" above floats (probably due to floating point precision)  [DIRTY EDITS?]
       // 2. "Rounds" DATA\Position floats (probably due to floating point precision)  [DIRTY EDITS?]
@@ -18893,7 +18894,7 @@ begin
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
       wbFloat('Animation Reload Seconds'),
-      wbFromVersion(55, wbFloat('Unknown')),
+      wbFromVersion(55, wbFloat('Bolt Anim Seconds')),
       wbFromVersion(66, wbFloat('Sighted Transition Seconds')),
       wbInteger('# Projectiles', itU8),
       wbFromVersion(80, wbFormIDCk('Override Projectile', [PROJ, NULL])),
@@ -18912,9 +18913,9 @@ begin
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
       wbFloat('Animation Reload Seconds'),
-      wbFloat('Unknown Float'),
+      wbFloat('Bolt Anim Seconds'),
       wbFloat('Sighted Transition Seconds'),
-      wbFloat('Unsigned Transition Seconds'),
+      wbFloat('Unsighted Transition Seconds'),
       wbFloat('Min Weapon Draw Time'),
       wbInteger('Rumble - Period (ms)', itU32),
       wbInteger('Rumble Pattern', itU32, wbEnum([
@@ -18932,9 +18933,9 @@ begin
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
       wbFloat('Animation Reload Seconds'),
-      wbFloat('Unknown Float'),
+      wbFloat('Bolt Draw Speed'),
       wbFloat('Sighted Transition Seconds'),
-      wbFloat('Unsigned Transition Seconds'),
+      wbFloat('Unsighted Transition Seconds'),
       wbFloat('Min Weapon Draw Time'),
       wbFloat('Damage Bonus Multiplier'),
       wbInteger('Rumble - Period (ms)', itU32),
@@ -20488,10 +20489,12 @@ begin
 
   wbRecord(COEN, 'Consumable Entitlement', [
     wbEDID,
+    wbXALG,
     wbFULL,
     wbDESC,
     wbKeywords,
     wbFormID(CENT, 'Linked Object'),
+    wbUnknown(FNAM),
     wbLStringKC(NNAM, 'Display Name', 0, cpTranslate),
     wbString(ETIP, 'Storefront Image Path'),
     wbString(ETDI, 'Storefront Preview Image')

@@ -15870,7 +15870,7 @@ begin
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
       wbFloat('Animation Reload Seconds'),
-      wbByteArray('Unknown', 4),
+      wbByteArray('Bolt Anim Seconds', 4),
       wbFloat('Sighted Transition Seconds'),
       wbInteger('# Projectiles', itU8),
       wbFormIDCk('Override Projectile', [PROJ, NULL]),
