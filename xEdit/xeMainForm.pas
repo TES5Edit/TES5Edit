@@ -20823,27 +20823,27 @@ initialization
     Free;
   end;
 
-  BeginHooks;
+  var Handle := BeginTransaction;
   try
 
     @Trampoline_TWinControl_MainWndProc := InterceptCreate(@CodePointer_TWinControl_MainWndProc, @Detour_TWinControl_MainWndProc);
     @Trampoline_TUxThemeStyle_DoDrawIcon := InterceptCreate(@CodePointer_TUxThemeStyle_DoDrawIcon, @Detour_TUxThemeStyle_DoDrawIcon);
 
   finally
-    EndHooks;
+    EndTransaction(Handle);
   end;
 
 
 finalization
   _LoaderProgressLock.Free;
 
-  BeginUnHooks;
+  var Handle := BeginTransaction;
   try
 
     InterceptRemove(@Trampoline_TWinControl_MainWndProc);
     InterceptRemove(@Trampoline_TUxThemeStyle_DoDrawIcon);
 
   finally
-    EndUnHooks;
+    EndTransaction(Handle);
   end;
 end.
