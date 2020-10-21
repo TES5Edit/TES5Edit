@@ -461,7 +461,7 @@ begin
   if i > 1 then
     wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
-  if wbGameMode = gmTES5 then begin
+  if (wbGameMode = gmTES5) or (wbGameMode = gmEnderal) then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
