@@ -14675,9 +14675,9 @@ begin
         wbFormId(ESCS, 'Response')
       ], [])),
       wbRStruct('Prior Action Info', [
-        wbInteger(ATTR, 'Action to Follow'),
+        wbInteger(ATTR, 'Action to Follow', itU32),
         wbEmpty(ACBS, 'Action Comes Before Start')
-      ]),
+      ],[]),
       wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
     wbFormIDCk(PNAM, 'Parent Quest', [QUST]),
