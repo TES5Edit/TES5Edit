@@ -10359,7 +10359,7 @@ begin
       wbFloat('Min Distance'),
       wbFloat('Max Distance'),
       wbArray('Curve', wbInteger('Value', itU8), 5),
-      wbByteArray('Unknown')
+      wbByteArray('Unknown', 3)
     ])
   ]);
 

@@ -1421,6 +1421,15 @@ begin
     .IncludeFlag(dfAllowAnyMember);
 end; //WIP }
 
+function wbDamageTypeArray(aItemName: string): IwbSubRecordDef;
+begin
+    Result := wbArrayS(DAMA, aItemName+'s', wbStructSK([0], aItemName, [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    ]))
+end;
+
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -1759,7 +1768,7 @@ begin
         if aType = ctToStr then
           Result := Result + ' <Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       end;
-      ctCheck: Result := '<Warning: Quest Stage not/Objective found in "' + MainRecord.Name + '">';
+      ctCheck: Result := '<Warning: Quest Stage/Objective not found in "' + MainRecord.Name + '">';
       ctEditInfo: begin
         EditInfos.Sort;
         Result := EditInfos.CommaText;
@@ -5128,7 +5137,7 @@ const
     (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
     (Index: 935; AltIndex: 9001; Name: 'IsPlayerInShelterOwned'),
     (Index: 936; AltIndex: 9002; Name: 'IsPlayerInShelter'),
-    (Index: 937; AltIndex: 9003; Name: 'IsBuildingInShelter')
+    (Index: 937; AltIndex: 9003; Name: 'IsInShelterLocation')
   );
 
 var
@@ -5471,8 +5480,8 @@ begin
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
 
-    if MainRecord.ElementExists['Unused RNAM'] then
-      MainRecord.RemoveElement('Unused RNAM');
+    //if MainRecord.ElementExists['Unused RNAM'] then
+    //  MainRecord.RemoveElement('Unused RNAM');
 
     //if MainRecord.ElementExists['World Default Level Data'] then
     //  MainRecord.RemoveElement('World Default Level Data');
@@ -5480,8 +5489,8 @@ begin
     //if MainRecord.ElementExists['MHDT'] then
     //  MainRecord.RemoveElement('MHDT');
 
-    if MainRecord.ElementExists['CLSZ'] then
-      MainRecord.RemoveElement('CLSZ');
+    //if MainRecord.ElementExists['CLSZ'] then
+    //  MainRecord.RemoveElement('CLSZ');
 
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
@@ -10795,7 +10804,8 @@ begin
    {103} 'ModelSwap',
    {104} 'MinChargeTime',
    {105} 'PowerAffectsProjectileSpeed',
-   {106} 'DamageBonusMult'
+   {106} 'DamageBonusMult',
+   {107} 'AimAssistModel'
   ]);
 
   wbObjectModProperties :=
@@ -11218,11 +11228,7 @@ begin
       wbFromVersion(99, wbInteger('Stagger Rating', itU32, wbStaggerEnum)),
       wbFromVersion(192, wbByteArray('Unknown',4))
     ]),
-    wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32),
-      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
-    ])),
+    wbDamageTypeArray('Resistance'),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
     wbAPPR,
     wbObjectTemplate,
@@ -12202,8 +12208,7 @@ begin
       ])),
       wbFloat('Charge Time'),
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
-      wbFormIDCk('Worn Restrictions', [FLST, NULL]),
-      wbUnknown
+      wbFormIDCk('Worn Restrictions', [FLST, NULL])
     ], cpNormal, True, nil, 8),
     wbEffectsReq,
     wbMIID
@@ -12955,7 +12960,8 @@ begin
         wbInteger('Count', itU32)
       ])),
       wbFromVersion(173, wbFloat('Base Weapon Damage Mult'))
-    ], cpNormal, True, nil, 13)
+    ], cpNormal, True, nil, 13),
+    wbDamageTypeArray('Damage Type')
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -14664,15 +14670,17 @@ begin
       wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
       wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
       wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-      wbRArray('Unknown Array', wbRStruct('Unknown Struct', [
-        wbFormId(ESCE),
-        wbFormId(ESCS)
+      wbRArray('Dialogue Choices', wbRStruct('Dialogue Choice', [
+        wbFormId(ESCE, 'Option'),
+        wbFormId(ESCS, 'Response')
       ], [])),
-      wbUnknown(ATTR),
-      wbUnknown(ACBS),
+      wbRStruct('Prior Action Info', [
+        wbInteger(ATTR, 'Action to Follow'),
+        wbEmpty(ACBS, 'Action Comes Before Start')
+      ]),
       wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
-    wbFormIDCk(PNAM, 'Quest', [QUST]),
+    wbFormIDCk(PNAM, 'Parent Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
     wbUnknown(VNAM),
     wbFloat(CNAM, 'Camera Distance Override'),
@@ -15267,26 +15275,46 @@ begin
     wbEDID,
     wbVMADFragmentedINFO,
     wbStruct(ENAM, 'Response flags', [
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001} 'Start Scene on End',
-        {0x0002} 'Random',
-        {0x0004} 'Say Once',
-        {0x0008} 'Requires Player Activation',
-        {0x0010} 'Info Refusal',
-        {0x0020} 'Random End',
-        {0x0040} 'End Running Scene',
-        {0x0080} 'ForceGreet Hello',
-        {0x0100} 'Player Address',
-        {0x0200} 'Unknown 9',
-        {0x0400} 'Can Move While Greeting',
-        {0x0800} 'No LIP File',
-        {0x1000} 'Requires post-processing',
-        {0x2000} 'Audio Output Override',
-        {0x4000} 'Has Capture',
-        {0x8000} 'Unknown 16'
-      ])),
+    wbUnion('', wbFormVersionDecider(153), [
+        wbInteger('Flags', itU16, wbFlags([
+          {0x0001} 'Start Scene on End',
+          {0x0002} 'Random',
+          {0x0004} 'Say Once',
+          {0x0008} 'Requires Player Activation',
+          {0x0010} 'Info Refusal',
+          {0x0020} 'Random End',
+          {0x0040} 'End Running Scene',
+          {0x0080} 'ForceGreet Hello',
+          {0x0100} 'Player Address',
+          {0x0200} 'Unknown 9',
+          {0x0400} 'Can Move While Greeting',
+          {0x0800} 'No LIP File',
+          {0x1000} 'Requires post-processing',
+          {0x2000} 'Audio Output Override',
+          {0x4000} 'Has Capture',
+          {0x8000} 'Unknown 16'
+        ])),
+        wbInteger('Flags', itU32, wbFlags([
+          {0x0001} 'Start Scene on End',
+          {0x0002} 'Random',
+          {0x0004} 'Say Once',
+          {0x0008} 'Requires Player Activation',
+          {0x0010} 'Info Refusal',
+          {0x0020} 'Random End',
+          {0x0040} 'End Running Scene',
+          {0x0080} 'ForceGreet Hello',
+          {0x0100} 'Player Address',
+          {0x0200} 'Unknown 9',
+          {0x0400} 'Can Move While Greeting',
+          {0x0800} 'No LIP File',
+          {0x1000} 'Requires post-processing',
+          {0x2000} 'Audio Output Override',
+          {0x4000} 'Has Capture',
+          {0x8000} 'Unknown 16'
+        ]))
+      ]),
       wbInteger('Reset Hours', itU16, wbDiv(2730)),
-      wbUnknown
+      wbFromVersion(153,wbByteArray('Unknown',2))
     ]),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
     wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
@@ -15296,7 +15324,7 @@ begin
 
     wbRArray('Responses', wbRStruct('Response', [
      wbStruct(TRDA, 'Response Data', [
-        wbFormIDCk('Emotion', [KYWD, FFFF]),
+        wbFromVersion(86, wbFormIDCk('Emotion', [KYWD, FFFF])),
         wbBelowVersion(119, wbByteArray('Unused', 4)),
         wbInteger('Response number', itU8),
         wbFormIDCk('Sound File', [SNDR, NULL]),
@@ -15322,8 +15350,8 @@ begin
     wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_, VTYP]),
     wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
-    wbUnknown(ALFT),
-    wbUnknown(INTV),
+    wbInteger(ALFT, 'Unknown Int32 1', itU32),
+    wbInteger(INTV, 'Unknown Int32 2', itU32),
     wbInteger(ALFA, 'Forced Alias', itS32),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
     wbInteger(GREE, 'Greet Distance', itU32),
@@ -16200,8 +16228,10 @@ begin
     wbFTYP,
     wbNTRM,
     wbINRD,
-    wbCOCT,
-    wbCNTOs,
+    wbRStruct('Inventory', [
+      wbCOCT,
+      wbCNTOs
+    ],[]),
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
     wbKeywords,
@@ -16580,38 +16610,40 @@ begin
       {101} 'CultistMarker',
       {102} 'BloodEagleMarker',
       {103} 'Vault79Marker',
-      {104} 'PublicWorkshopMarker', {ECKTODO: Look into when these changed and add checking for it. Used to be number 099}
-      {105} 'DoorMarker', {Used to be number 100}
-      {106} 'QuestMarker', {Used to be number 101}
-      {107} 'DoorMarker', {Used to be number 102}
-      {108} 'QuestMarker', {Used to be number 103}
-      {109} 'PlayerSetMarker', {Used to be number 104}
-      {110} 'PlayerLocMarker', {Used to be number 105}
-      {111} 'PowerArmorLocMarker', {Used to be number 106}
-      {112} 'TeammateMarker', {Used to be number 107}
-      {113} 'LastCorpseMarker', {Used to be number 108}
-      {114} 'YourCampMarker', {Used to be number 109}
-      {115} 'YourQuickCampMarker',
-      {116} 'InWorldEventMarker', {Used to be number 110}
-      {117} 'InWorldPublicEventMarker',
-      {118} 'MasterFissureMarker', {Used to be number 111}
-      {119} 'NukedZoneMarker', {Used to be number 112}
-      {120} 'WaypointMarker', {Used to be number 113}
-      {121} 'StrangerCorpseMarker',
-      {122} 'BabylonSpawnMarkerTeam',
-      {123} 'BabylonSpawnMarkerPlayer',
+      {104} 'BoSBaseMarker',
+      {105} 'LegendaryPurveyorMarker',
+      {106} 'PublicWorkshopMarker', {ECKTODO: Look into when these changed and add checking for it. Used to be number 099}
+      {107} 'DoorMarker', {Used to be number 100}
+      {108} 'QuestMarker', {Used to be number 101}
+      {109} 'DoorMarker', {Used to be number 102}
+      {110} 'QuestMarker', {Used to be number 103}
+      {111} 'PlayerSetMarker', {Used to be number 104}
+      {112} 'PlayerLocMarker', {Used to be number 105}
+      {113} 'PowerArmorLocMarker', {Used to be number 106}
+      {114} 'TeammateMarker', {Used to be number 107}
+      {115} 'LastCorpseMarker', {Used to be number 108}
+      {116} 'YourCampMarker', {Used to be number 109}
+      {117} 'YourQuickCampMarker',
+      {118} 'InWorldEventMarker', {Used to be number 110}
+      {119} 'InWorldPublicEventMarker',
+      {120} 'MasterFissureMarker', {Used to be number 111}
+      {121} 'NukedZoneMarker', {Used to be number 112}
+      {122} 'WaypointMarker', {Used to be number 113}
+      {123} 'StrangerCorpseMarker',
       {124} 'BabylonTextMarker',
-      {125} 'StormZoneMarker',
-      {126} 'BabylonTerminalMarker',
-      {127} 'NuclearBriefcaseMarker',
-      {128} 'StormCenterMarker',
-      {129} 'WarningZoneMarker',
-      {130} 'EnemyPlayerMarker',
-      {131} 'BabylonAIMarker',
-      {132} 'TeamAliveMarker',
-      {133} 'TeamDeadMarker',
-      {134} 'TeammateDownMarker',
-      {135} 'TeammateLeaderMarker'
+      {125} 'BabylonSpawnMarkerPlayer',
+      {126} 'BabylonSpawnMarkerTeam',
+      {127} 'StormZoneMarker',
+      {128} 'BabylonTerminalMarker',
+      {129} 'NuclearBriefcaseMarker',
+      {130} 'StormCenterMarker',
+      {131} 'WarningZoneMarker',
+      {132} 'EnemyPlayerMarker',
+      {133} 'BabylonAIMarker',
+      {134} 'TeamAliveMarker',
+      {135} 'TeamDeadMarker',
+      {136} 'TeammateDownMarker',
+      {137} 'TeammateLeaderMarker'
     ]);
 
   wbBlendOperationEnum := wbEnum([
@@ -18958,11 +18990,7 @@ begin
     wbFormIDCk(WAAM, 'Aim Assist Model', [AAMD]),
     wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
     wbFormIDCk(CNAM, 'Template', [WEAP]),
-    wbArrayS(DAMA, 'Damage Types', wbStructSK([0], 'Damage Type', [
-      wbFormIDCk('Type', [DMGT]),
-      wbInteger('Amount', itU32),
-      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
-    ])),
+    wbDamageTypeArray('Damage Type'),
     wbFLTR,
     wbVCRY,
     wbFloat(WMCT, 'Minimum Charge Time'),
@@ -19271,8 +19299,8 @@ begin
       wbFloat('On Lightning Strike - Threshold'),
       wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
       wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbByteArray('Unknown', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbFloat('Unknown'))
+      wbFromVersion(130, wbByteArray('Unused', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbByteArray('Unused', 4))
     ], cpNormal, False, nil, 3),
     wbFloat(VNAM, 'Volatility Mult'),
     wbFloat(WNAM, 'Visibility Mult'),
@@ -19351,7 +19379,7 @@ begin
       wbFloat('Stability - Base Stability')
     ]),
     wbUnknown(AMMR),
-    wbUnknown(AMRS)
+    wbFloat(AMRS, 'Unknown')
   ]);
 
   wbRecord(AORU, 'Attraction Rule', [
@@ -20125,7 +20153,7 @@ begin
         wbFormIDCk(ETRG, 'Trigger', [SNDR]),
         wbFormIDCk(SDSC, 'Sound', [SNDR]),
         wbUnknown(ANAM),
-        wbUnknown(BNAM),
+        wbFloat(BNAM),
         wbUnknown(CNAM),
         wbUnknown(DNAM),
         wbUnknown(ENAM),

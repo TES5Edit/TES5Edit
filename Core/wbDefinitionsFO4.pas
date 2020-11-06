@@ -13057,8 +13057,8 @@ begin
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
         wbInteger('Response number', itU8),
-        wbByteArray('Unused', 3),
-        wbByteArray('Unknown', 2),
+        wbFormIDCk('Sound File', [SNDR, NULL]),
+        wbByteArray('Unknown', 1),
         wbInteger('Interrupt Percentage', itU16),
         wbInteger('Camera Target Alias', itS32),
         wbInteger('Camera Location Alias', itS32)
