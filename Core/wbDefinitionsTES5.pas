@@ -10039,7 +10039,7 @@ begin
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Begin on Quest Start',
       'Stop on Quest End',
-      'Unknown 3',
+      'Show All Text',
       'Repeat Conditions While True',
       'Interruptible'
     ])),
