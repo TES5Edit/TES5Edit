@@ -441,6 +441,11 @@ type
     mniCopyShortNameToClipboard: TMenuItem;
     mniCopySignatureToClipboard: TMenuItem;
     mniCopyPathNameToClipboard: TMenuItem;
+    mniN32: TMenuItem;
+    mniNavAddNewFile: TMenuItem;
+    mniNavAddNewFileESP: TMenuItem;
+    mniNavAddNewFileESL: TMenuItem;
+    mniNavAddNewESP: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -715,6 +720,8 @@ type
     procedure mniCopyShortNameToClipboardClick(Sender: TObject);
     procedure mniCopySignatureToClipboardClick(Sender: TObject);
     procedure mniCopyPathNameToClipboardClick(Sender: TObject);
+    procedure mniNavAddNewFileESPClick(Sender: TObject);
+    procedure mniNavAddNewFileESLClick(Sender: TObject);
 
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -7855,6 +7862,20 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniNavAddNewFileESLClick(Sender: TObject);
+var
+  f: IwbFile;
+begin
+  AddNewFile(f, True);
+end;
+
+procedure TfrmMain.mniNavAddNewFileESPClick(Sender: TObject);
+var
+  f: IwbFile;
+begin
+  AddNewFile(f, False);
+end;
+
 procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string);
 const
   sJustWait                   = 'Applying script. Please wait...';
@@ -14070,6 +14091,13 @@ begin
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if Assigned(NodeData) then
     Element := NodeData.Element;
+
+  // ESL supported only in SSE/FO4, show alternate menu item for other games
+  mniNavAddNewFile.Visible := not wbTranslationMode and
+                              ((wbGameMode = gmSSE) or
+                              (wbGameMode = gmFO4));
+  mniNavAddNewESP.Visible  := not wbTranslationMode and
+                              not mniNavAddNewFile.Visible;
 
   mniNavHidden.Visible := Assigned(Element);
   mniNavHidden.Checked := Assigned(Element) and (esHidden in Element.ElementStates);

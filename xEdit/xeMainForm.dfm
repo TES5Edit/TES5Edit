@@ -2169,6 +2169,24 @@ object frmMain: TfrmMain
     OnPopup = pmuNavPopup
     Left = 152
     Top = 136
+    object mniNavAddNewFile: TMenuItem
+      Caption = 'Add new plugin...'
+      object mniNavAddNewFileESP: TMenuItem
+        Caption = 'ESP'
+        OnClick = mniNavAddNewFileESPClick
+      end
+      object mniNavAddNewFileESL: TMenuItem
+        Caption = 'ESL'
+        OnClick = mniNavAddNewFileESLClick
+      end
+    end
+    object mniNavAddNewESP: TMenuItem
+      Caption = 'Add new ESP plugin...'
+      OnClick = mniNavAddNewFileESPClick
+    end
+    object mniN32: TMenuItem
+      Caption = '-'
+    end
     object mniNavCompareTo: TMenuItem
       Caption = 'Compare to...'
       OnClick = mniNavCompareToClick
