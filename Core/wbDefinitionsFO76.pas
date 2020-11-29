@@ -5137,7 +5137,7 @@ const
     (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
     (Index: 935; AltIndex: 9001; Name: 'IsPlayerInShelterOwned'),
     (Index: 936; AltIndex: 9002; Name: 'IsPlayerInShelter'),
-    (Index: 937; AltIndex: 9003; Name: 'IsInShelterLocation')
+    (Index: 937; AltIndex: 9003; Name: 'IsInShelterLocation'; Desc: 'Is this ref in a shelter location?')
   );
 
 var
@@ -8014,7 +8014,8 @@ begin
    {191} 'Mod Crafted Item Bonus Health',
    {192} 'Set Cheat Death',
    {193} 'Apply Combat Hit Spell Taken',
-   {194} 'Apply On Death Spell'
+   {194} 'Apply On Death Spell',
+   {195} 'Mod Max Barter Currency'
   ]);
 
   wbEquipType := wbFlags([
@@ -11321,8 +11322,8 @@ begin
         wbFormIDCk('Perk', [PERK, NULL])
       ]),
       wbStruct('Text Offset' , [
-        wbInteger('X', itU32),
-        wbInteger('Y', itU32)
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
       ])
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
