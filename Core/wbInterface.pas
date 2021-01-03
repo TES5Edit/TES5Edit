@@ -9603,7 +9603,8 @@ function TwbMainRecordDef.ToSummary(aDepth: Integer; const aMainRecord: IwbMainR
 begin
   Result := '';
   if Assigned(ndToStr) then
-    ndToStr(Result, aMainRecord.DataBasePtr, aMainRecord.DataEndPtr, aMainRecord, ctToSummary);
+    // don't access DataBasePtr for IwbMainRecord, it forces a Merge which isn't properly implmented
+    ndToStr(Result, nil {aMainRecord.DataBasePtr}, nil{aMainRecord.DataEndPtr}, aMainRecord, ctToSummary);
 
   if Result = '' then
     StructKeysToSummary(aDepth, Result, aMainRecord, recMembers, recSummaryKey, recSummaryPrefix, recSummarySuffix, recSummaryMaxDepth, recSummaryDelimiter);
