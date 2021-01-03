@@ -441,6 +441,8 @@ type
     mniCopyShortNameToClipboard: TMenuItem;
     mniCopySignatureToClipboard: TMenuItem;
     mniCopyPathNameToClipboard: TMenuItem;
+    N32: TMenuItem;
+    mniCreateNewFile: TMenuItem;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -715,6 +717,7 @@ type
     procedure mniCopyShortNameToClipboardClick(Sender: TObject);
     procedure mniCopySignatureToClipboardClick(Sender: TObject);
     procedure mniCopyPathNameToClipboardClick(Sender: TObject);
+    procedure mniCreateNewFileClick(Sender: TObject);
 
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -765,6 +768,7 @@ type
     procedure DoRunScript;
 
     function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
+    procedure AddNewFileWithDialog;
 
     procedure BuildAllRef;
     procedure ResetAllTags;
@@ -2943,6 +2947,35 @@ begin
     end;
   finally
     sl.Free;
+  end;
+end;
+
+procedure TfrmMain.AddNewFileWithDialog;
+begin
+  with TfrmModuleSelect.Create(Self) do try
+    AllModules := wbModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
+    Caption := 'What type of module do you want to create?';
+
+    FilterFlag := mfValid;
+    SelectFlag := mfTagged;
+    AllModules.ExcludeAll(mfTagged);
+    MinSelect := 1;
+    AllowCancel;
+
+    if ShowModal <> mrOK then
+      Exit;
+
+    if Length(SelectedModules) <> 1 then
+      Exit;
+
+    if not (mfTemplate in SelectedModules[0].miFlags) then
+      Exit;
+
+    var NewFile: IwbFile := nil;
+    AddNewFile(NewFile, SelectedModules[0]);
+
+  finally
+    Free;
   end;
 end;
 
@@ -11535,6 +11568,11 @@ begin
   var SubRecord: IwbSubRecord := nil;
   if Supports(Element, IwbSubRecord, SubRecord) then
     Clipboard.AsText := string(SubRecord.Signature);
+end;
+
+procedure TfrmMain.mniCreateNewFileClick(Sender: TObject);
+begin
+  AddNewFileWithDialog;
 end;
 
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);

@@ -2323,6 +2323,15 @@ object frmMain: TfrmMain
       GroupIndex = 4
       OnClick = mniNavCellChild
     end
+    object N32: TMenuItem
+      Caption = '-'
+      GroupIndex = 4
+    end
+    object mniCreateNewFile: TMenuItem
+      Caption = 'Create New File...'
+      GroupIndex = 4
+      OnClick = mniCreateNewFileClick
+    end
     object N5: TMenuItem
       Caption = '-'
       GroupIndex = 4
