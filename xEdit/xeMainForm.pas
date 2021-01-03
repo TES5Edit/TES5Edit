@@ -8027,7 +8027,8 @@ begin
               if LastErrorLocation <> '' then
                 LastErrorLocation := ' in ' + LastErrorLocation;
               wbProgress('Exception' + LastErrorLocation + ': [' + E.ClassName + '] ' + E.Message, True);
-              raise;
+              //raise; crashes, with Access Violation in delphi exception handling code even though it shouldn't...
+              Abort;
             end;
           end;
 
