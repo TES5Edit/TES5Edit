@@ -686,9 +686,6 @@ const
   YNAM : TwbSignature = 'YNAM';
   ZNAM : TwbSignature = 'ZNAM';
 
-  INOM : TwbSignature = 'INOM'; { xEdit internal use only }
-  INOA : TwbSignature = 'INOA'; { xEdit internal use only }
-
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
