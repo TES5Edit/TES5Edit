@@ -58,6 +58,17 @@ begin
   CallFunction(nil, [O2V(Sender)]);
 end;}
 
+function TStringList_IndexStr(const AText: AnsiString; const AValues: TStringList): Integer;
+begin
+  Result := -1;
+  for var i := 0 to Pred(AValues.Count) do
+    if SameStr(AText, AValues[i]) then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
 { StrUtils }
 
 procedure JvInterpreter_ContainsStr(var Value: Variant; Args: TJvInterpreterArgs);
@@ -102,9 +113,45 @@ begin
       Value := Variant(Args.Values[2]);
 end;
 
+procedure JvInterpreter_IndexStr(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := -1;
+  if VarIsArray(Args.Values[1]) then
+    Value := StrUtils.IndexStr(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
+  else if V2O(Args.Values[1]) is TStringList then
+    Value := TStringList_IndexStr(String(Args.Values[0]), TStringList(V2O(Args.Values[1])));
+end;
+
+procedure JvInterpreter_IndexText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := -1;
+  if VarIsArray(Args.Values[1]) then
+    Value := StrUtils.IndexText(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
+  else if V2O(Args.Values[1]) is TStringList then
+    Value := TStringList(V2O(Args.Values[1])).IndexOf(String(Args.Values[0]));
+end;
+
 procedure JvInterpreter_LeftStr(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := StrUtils.LeftStr(String(Args.Values[0]), Integer(Args.Values[1]));
+end;
+
+procedure JvInterpreter_MatchStr(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := False;
+  if VarIsArray(Args.Values[1]) then
+    Value := StrUtils.MatchStr(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
+  else if V2O(Args.Values[1]) is TStringList then
+    Value := TStringList_IndexStr(String(Args.Values[0]), TStringList(V2O(Args.Values[1]))) <> -1;
+end;
+
+procedure JvInterpreter_MatchText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := False;
+  if VarIsArray(Args.Values[1]) then
+    Value := StrUtils.MatchText(String(Args.Values[0]), System.TArray<string>(Args.Values[1]))
+  else if V2O(Args.Values[1]) is TStringList then
+    Value := TStringList(V2O(Args.Values[1])).IndexOf(String(Args.Values[0])) <> -1;
 end;
 
 procedure JvInterpreter_MidStr(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1779,7 +1826,11 @@ begin
     AddFunction('StrUtils', 'EndsStr', JvInterpreter_EndsStr, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('StrUtils', 'EndsText', JvInterpreter_EndsText, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('StrUtils', 'IfThen', JvInterpreter_IfThen, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('StrUtils', 'IndexStr', JvInterpreter_IndexStr, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('StrUtils', 'IndexText', JvInterpreter_IndexText, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('StrUtils', 'LeftStr', JvInterpreter_LeftStr, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('StrUtils', 'MatchStr', JvInterpreter_MatchStr, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('StrUtils', 'MatchText', JvInterpreter_MatchText, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('StrUtils', 'MidStr', JvInterpreter_MidStr, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('StrUtils', 'ReverseString', JvInterpreter_ReverseString, 1, [varEmpty], varEmpty);
     AddFunction('StrUtils', 'RightStr', JvInterpreter_RightStr, 2, [varEmpty, varEmpty], varEmpty);
