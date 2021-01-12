@@ -17062,10 +17062,12 @@ begin
           wbFloat(ESRE, 'XP Amount'),
           wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
           wbEmpty(QRRI, 'Legendary Item Rank Random'),
-          wbStruct(QSRD, 'Items', [
-            wbFormID('Item'),
-            wbInteger('Count', itU32)
-          ]),
+          wbArray(QSRD, 'Rewarded Items',
+            wbStruct('Rewarded Item', [
+              wbFormID('Item'),
+              wbInteger('Count', itU32)
+            ])
+          ,[]),
           wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
           wbCTDAs
         ], []).IncludeFlag(dfAllowAnyMember)),
