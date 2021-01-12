@@ -844,8 +844,7 @@ type
 
   TwbDataContainerFlag = (
     dcfDontCompare,
-    dcfDontMerge,
-    dcfDontSave,
+    dcfDontMergeOrSave, //combined from previous dcfDontMerge and dcfDontSave, it never makes sense for these two to be different
     dcfStorageInvalid,
     dcfBasePtrInvalid
   );
@@ -1162,6 +1161,8 @@ type
     procedure UpdateInteriorCellGroup;
 
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override;
+
+    procedure UpdateStorageFromElements; override;
 
     {---IwbMainRecord---}
     function GetDef: IwbNamedDef; override;
@@ -7728,7 +7729,7 @@ begin
 
         BasePtr := dcBasePtr;
         with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-          Include(dcFlags, dcfDontSave);
+          Include(dcFlags, dcfDontMergeOrSave);
           SetSortOrder(-1);
           SetMemoryOrder(Low(Integer));
           _AddRef; _Release;
@@ -8524,7 +8525,7 @@ begin
 
   BasePtr := dcBasePtr;
   with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-    Include(dcFlags, dcfDontSave);
+    Include(dcFlags, dcfDontMergeOrSave);
     SetSortOrder(-1);
     SetMemoryOrder(Low(Integer));
     _AddRef; _Release;
@@ -8605,7 +8606,7 @@ begin
 
     CurrentPtr := dcBasePtr;
     with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
-      Include(dcFlags, dcfDontSave);
+      Include(dcFlags, dcfDontMergeOrSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
       _AddRef; _Release;
@@ -11788,7 +11789,7 @@ begin
 
       BasePtr := dcBasePtr;
       with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-        Include(dcFlags, dcfDontSave);
+        Include(dcFlags, dcfDontMergeOrSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
         _AddRef; _Release;
@@ -12372,6 +12373,16 @@ procedure TwbMainRecord.UpdateRefs;
 begin
   if (csRefsBuild in cntStates) then
     BuildRef;
+end;
+
+procedure TwbMainRecord.UpdateStorageFromElements;
+begin
+  if not (dcfStorageInvalid in dcFlags) then
+    Exit;
+  // this is not optimal, as it invalidates all currently referenced child elements,
+  // but it's better than calling inherited which corrupts data
+  // under normal circumstances, this method should never be called
+  CollapseStorage(nil, True);
 end;
 
 procedure TwbMainRecord.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
@@ -13899,7 +13910,7 @@ var
   SubHeader         : TwbSubRecordHeaderStruct;
   SelfRef           : IwbContainerElementRef;
 begin
-  if not (dcfDontSave in dcFlags) then begin
+  if not (dcfDontMergeOrSave in dcFlags) then begin
     if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
@@ -19986,11 +19997,11 @@ var
 begin
   Def := GetDef;
   if Assigned(Def) and (dfDontSave in Def.DefFlags) then
-    Include(dcFlags, dcfDontSave);{
+    Include(dcFlags, dcfDontMergeOrSave);{
   else begin
     Def := GetValueDef;
     if Assigned(Def) and (dfDontSave in Def.DefFlags) then
-      Include(dcFlags, dcfDontSave);
+      Include(dcFlags, dcfDontMergeOrSave);
   end;}
   inherited;
 end;
@@ -20097,7 +20108,7 @@ end;
 
 function TwbDataContainer.GetDontSave: Boolean;
 begin
-  Result := (dcfDontSave in dcFlags);
+  Result := (dcfDontMergeOrSave in dcFlags);
 end;
 
 function TwbDataContainer.GetEditInfo: TArray<string>;
@@ -20134,7 +20145,7 @@ var
   SizeAvailable : Cardinal;
   BasePtr       : Pointer;
 begin
-  if [dcfDontMerge, dcfDontCompare] * dcFlags <> [] then
+  if [dcfDontMergeOrSave, dcfDontCompare] * dcFlags <> [] then
     Exit;
 
   if Length(dcDataStorage) <> 0 then
@@ -20150,7 +20161,7 @@ begin
     inherited;
 
     if BasePtr = aBasePtr then begin
-      if not (dcfDontMerge in dcFlags) then
+      if not (dcfDontMergeOrSave in dcFlags) then
         Inc(PByte(aBasePtr), SizeNeeded);
     end else
       if NativeUInt(aBasePtr) - NativeUInt(BasePtr) > SizeNeeded then // we overwrote something
@@ -20201,7 +20212,7 @@ var
   BasePtr       : Pointer;
   PrefixSize   : Integer;
 begin
-  if [dcfDontMerge, dcfDontCompare] * dcFlags <> [] then
+  if [dcfDontMergeOrSave, dcfDontCompare] * dcFlags <> [] then
     Exit;
 
   if (dcfStorageInvalid in dcFlags) then begin
@@ -20379,7 +20390,7 @@ var
   ExpectedSize : NativeUInt;
   NeedReset    : Boolean;
 begin
-  if [dcfDontSave, dcfDontCompare] * dcFlags <> [] then begin
+  if [dcfDontMergeOrSave, dcfDontCompare] * dcFlags <> [] then begin
     ResetModified(aResetModified);
     Exit;
   end;
@@ -21126,8 +21137,7 @@ begin
   if wbVWDAsQuestChildren then Grp := [1, 6, 7, 10] else Grp := [1, 6, 7];
   Assert(GroupRecord.GroupType in Grp);
 
-  Include(dcFlags, dcfDontMerge);
-  Include(dcFlags, dcfDontSave);
+  Include(dcFlags, dcfDontMergeOrSave);
 
   BasePtr := nil;
   EndPtr := nil;

@@ -119,6 +119,10 @@ const
   _53_IAD: TwbSignature = #$53'IAD';
   _54_IAD: TwbSignature = #$54'IAD';
 
+  INOM : TwbSignature = 'INOM'; { xEdit internal use only }
+  INOA : TwbSignature = 'INOA'; { xEdit internal use only }
+
+
 var
   wbActionFlag: IwbSubRecordDef;
   wbAlternateTexture: IwbValueDef;
