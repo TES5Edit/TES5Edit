@@ -17993,7 +17993,7 @@ begin
 
     IsAlpha := True;
     for i := 1 to 4 do
-      if not(s[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
+      if not(Value[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
         IsAlpha := False;
         break;
       end;
