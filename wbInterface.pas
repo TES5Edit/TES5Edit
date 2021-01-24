@@ -16520,14 +16520,21 @@ begin
   end;
 
   Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement, aTransformType);
-
   i := Length(Result);
-  if (i <> 4) then
+
+  if aTransformType = ttCheck then
+    if i = 0 then begin
+      Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement, ttToString);
+      i := Length(Result);
+    end else
+      Exit;
+
+  if i <> 4 then
     case aTransformType of
       ttToString:
         Result := Result + ' <Warning: Expected 4 bytes but found ' + i.ToString + '>';
       ttCheck:
-        Exit('Expected 4 bytes but found ' + i.ToString);
+        Exit('Expected 4 bytes but found ' + i.ToString + ': ' + Result);
     end;
 
   if aTransformType = ttCheck then

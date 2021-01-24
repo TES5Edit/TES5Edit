@@ -11,6 +11,7 @@
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * #871 - Updates for Static Collections [FO4] 
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
+* (reported on Discord) - [TES4] EDID and ESCE incorrectly report "Expected 4 bytes but found 0" when running "Check for Errors" on MGEF
 
 # What's new in xEdit 4.0.3?
 
