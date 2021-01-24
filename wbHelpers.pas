@@ -1026,7 +1026,7 @@ var
   SelfAsContainer : IwbContainer;
 begin
   Result := False;
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if (Length(aCounterName) >= 4) and Supports(aElement.Container, IwbContainer, Container) and
       Supports(aElement, IwbContainer, SelfAsContainer) then begin
       Element := Container.ElementByName[aCounterName];
@@ -1057,7 +1057,7 @@ var
   SelfAsContainer : IwbContainer;
 begin
   Result := False;
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if (Length(aCounterName) >= 4) and Supports(aElement.Container, IwbContainer, Container) and
       Supports(aElement, IwbContainer, SelfAsContainer) then begin
       Element := Container.ElementByPath[aCounterName];
@@ -1088,7 +1088,7 @@ var
   Container       : IwbContainer;
 begin
   Result := False;  // You may need to check alternative counter name
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if not Supports(aElement, IwbContainer, Container) then
       Exit;
 
@@ -1117,7 +1117,7 @@ var
   Container       : IwbContainer;
 begin
   Result := False;  // You may need to check alterative counter name
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if Supports(aElement, IwbContainer, Container) then begin
       Element := Container.ElementByPath[aCounterName];
       Elems   := Container.ElementByName[anArrayName];

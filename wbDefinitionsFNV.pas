@@ -1444,7 +1444,7 @@ procedure wbHeadPartsAfterSet(const aElement: IwbElement; const aOldValue, aNewV
 var
   Container : IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if Supports(aElement, IwbContainerElementRef, Container) then
       if (Container.Elements[0].NativeValue = 1) and (Container.ElementCount > 2) then
         Container.RemoveElement(1);
@@ -4418,7 +4418,7 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
 //    if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
       if Supports(aElement.Container, IwbContainer, Container) then begin
         Element := Container.ElementByPath['IDLC\Animation Count'];
@@ -4437,7 +4437,7 @@ var
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
 //    if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
       if Supports(aElement, IwbContainer, Container) then begin
         Element := Container.ElementByPath['IDLC\Animation Count'];

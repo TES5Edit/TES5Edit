@@ -5606,7 +5606,7 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if not wbCounterAfterSet('IDLC - Animation Count', aElement) then
       if Supports(aElement.Container, IwbContainer, Container) then begin
         Element := Container.ElementByPath['IDLC'];
@@ -5625,7 +5625,7 @@ var
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if not wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
       if Supports(aElement, IwbContainer, Container) then begin
         Element := Container.ElementByPath['IDLC\Animation Count'];
@@ -5902,7 +5902,7 @@ var
   SelfAsContainer : IwbContainer;
 begin
   // the counter is double of entries (each member of struct is counted)
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if Supports(aElement.Container, IwbContainer, Container) and
        Supports(aElement, IwbContainer, SelfAsContainer) then begin
       Element := Container.ElementByName['References Count'];
