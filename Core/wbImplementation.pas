@@ -7623,7 +7623,6 @@ begin
     IwbMainRecord(mrMasteR).AddReferencedBy(aMainRecord);
     Exit;
   end;
-(**)
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   if wbBuildingRefsParallel then
     _ResizeLock.Enter;
@@ -7643,10 +7642,10 @@ begin
     Include(mrStates, mrsReferencedByUnsorted);
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   finally
-    _ResizeLock.Leave;
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
   end;
 {$ENDIF}
-(**)
 end;
 
 procedure TwbMainRecord.AddReferencedFromID(aFormID: TwbFormID);
@@ -8862,9 +8861,11 @@ begin
   Result := False;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   L := 0;
   H := Pred(mrReferencedByCount);
   while L <= H do begin
@@ -8885,6 +8886,12 @@ begin
     end;
   end;
   Index := L;
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbMainRecord.FindUsedMasters(aMasters: PwbUsedMasters);
@@ -10321,12 +10328,20 @@ begin
     Exit(IwbMainRecord(mrMaster).ReferencedBy[aIndex]);
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   if mrsReferencedByUnsorted in mrStates then
     SortReferencedBy;
   Result := mrReferencedBy[aIndex];
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 function TwbMainRecord.GetReferencedByCount: Integer;
@@ -10335,10 +10350,18 @@ begin
     Exit(IwbMainRecord(mrMaster).ReferencedByCount);
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   Result := mrReferencedByCount;
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 function TwbMainRecord.GetReferenceFile: IwbFile;
@@ -11517,9 +11540,11 @@ begin
     Exit;
   end;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   if mrsReferencedByUnsorted in mrStates then
     SortReferencedBy;
 
@@ -11535,6 +11560,12 @@ begin
       mrReferencedBySize := 0;
     end;
   end;
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false);
@@ -12100,12 +12131,20 @@ end;
 procedure TwbMainRecord.SortReferencedBy;
 begin
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   Exclude(mrStates, mrsReferencedByUnsorted);
   if mrReferencedByCount > 1  then
     wbMergeSortPtr(@mrReferencedBy[0], mrReferencedByCount, CompareReferencedBy);
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbMainRecord.UpdateCellChildGroup;
