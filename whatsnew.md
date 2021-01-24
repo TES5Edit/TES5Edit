@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #788 - For Oblivion Copy as overrides fails for MGEF
 * #792 - Flipped indexes in display of blocks and sub-blocks 
 * #803 - after cleaning, some new worldspaces from DLCs may not load their temporary records correctly
 * #823 - FO3: Anchorage.esm & PointLookout.esm need Mark Modified applied during QAC 
@@ -10,6 +11,7 @@
 * #855 - After cleaning dlcnukaworld.esm, items in Nuka-Town market vanish
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * #871 - Updates for Static Collections [FO4] 
+* #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
 * (reported on Discord) - [TES4] EDID and ESCE incorrectly report "Expected 4 bytes but found 0" when running "Check for Errors" on MGEF
 
