@@ -4436,7 +4436,7 @@ var
   Container       : IwbContainer;
   SelfAsContainer : IwbContainer;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if wbCounterAfterSet('IDLC - Animation Count', aElement) then
       Exit;
 
@@ -4458,7 +4458,7 @@ var
   Elems           : IwbElement;
   Container       : IwbContainer;
 begin
-  if wbBeginInternalEdit then try
+  if wbBeginInternalEdit(True) then try
     if wbCounterContainerAfterSet('IDLC - Animation Count', 'IDLA - Animations', aElement) then
       Exit;
 

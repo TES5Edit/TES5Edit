@@ -47,7 +47,7 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 3;
-    Build   : 'e';
+    Build   : 'f';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
@@ -12370,7 +12370,7 @@ var
               else if DC.Def.DefType = dtEmpty then
                 MemberDef := DC.Def as IwbValueDef
               else
-                Assert(MemberDef.Equals(DC.Def));
+                Assert(MemberDef.Equals(DC.Def), 'TwbStructDef.ToSummary for ['+Element.FullPath+']: ['+MemberDef.Path+'] is not equal to ['+DC.Def.Path+']');
             var s:= MemberDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
             if s <> '' then begin
               var Prefix := TFromArray<string>.Get(stSummaryPrefix, SortMember);
@@ -17993,7 +17993,7 @@ begin
 
     IsAlpha := True;
     for i := 1 to 4 do
-      if not(s[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
+      if not(Value[i] in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then begin
         IsAlpha := False;
         break;
       end;
@@ -18199,14 +18199,21 @@ begin
   end;
 
   Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement, aTransformType);
-
   i := Length(Result);
-  if (i <> 4) then
+
+  if aTransformType = ttCheck then
+    if i = 0 then begin
+      Result := inherited ToStringNative(aBasePtr, aEndPtr, aElement, ttToString);
+      i := Length(Result);
+    end else
+      Exit;
+
+  if i <> 4 then
     case aTransformType of
       ttToString:
         Result := Result + ' <Warning: Expected 4 bytes but found ' + i.ToString + '>';
       ttCheck:
-        Exit('Expected 4 bytes but found ' + i.ToString);
+        Exit('Expected 4 bytes but found ' + i.ToString + ': ' + Result);
     end;
 
   if aTransformType = ttCheck then

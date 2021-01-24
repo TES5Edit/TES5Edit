@@ -844,7 +844,8 @@ type
 
   TwbDataContainerFlag = (
     dcfDontCompare,
-    dcfDontMergeOrSave, //combined from previous dcfDontMerge and dcfDontSave, it never makes sense for these two to be different
+    dcfDontMerge,
+    dcfDontSave,
     dcfStorageInvalid,
     dcfBasePtrInvalid
   );
@@ -7622,7 +7623,6 @@ begin
     IwbMainRecord(mrMasteR).AddReferencedBy(aMainRecord);
     Exit;
   end;
-(**)
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   if wbBuildingRefsParallel then
     _ResizeLock.Enter;
@@ -7642,10 +7642,10 @@ begin
     Include(mrStates, mrsReferencedByUnsorted);
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   finally
-    _ResizeLock.Leave;
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
   end;
 {$ENDIF}
-(**)
 end;
 
 procedure TwbMainRecord.AddReferencedFromID(aFormID: TwbFormID);
@@ -7729,7 +7729,7 @@ begin
 
         BasePtr := dcBasePtr;
         with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-          Include(dcFlags, dcfDontMergeOrSave);
+          Include(dcFlags, dcfDontSave);
           SetSortOrder(-1);
           SetMemoryOrder(Low(Integer));
           _AddRef; _Release;
@@ -8525,7 +8525,7 @@ begin
 
   BasePtr := dcBasePtr;
   with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-    Include(dcFlags, dcfDontMergeOrSave);
+    Include(dcFlags, dcfDontSave);
     SetSortOrder(-1);
     SetMemoryOrder(Low(Integer));
     _AddRef; _Release;
@@ -8606,7 +8606,7 @@ begin
 
     CurrentPtr := dcBasePtr;
     with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
-      Include(dcFlags, dcfDontMergeOrSave);
+      Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
       _AddRef; _Release;
@@ -8861,9 +8861,11 @@ begin
   Result := False;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   L := 0;
   H := Pred(mrReferencedByCount);
   while L <= H do begin
@@ -8884,6 +8886,12 @@ begin
     end;
   end;
   Index := L;
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbMainRecord.FindUsedMasters(aMasters: PwbUsedMasters);
@@ -10320,12 +10328,20 @@ begin
     Exit(IwbMainRecord(mrMaster).ReferencedBy[aIndex]);
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   if mrsReferencedByUnsorted in mrStates then
     SortReferencedBy;
   Result := mrReferencedBy[aIndex];
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 function TwbMainRecord.GetReferencedByCount: Integer;
@@ -10334,10 +10350,18 @@ begin
     Exit(IwbMainRecord(mrMaster).ReferencedByCount);
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   Result := mrReferencedByCount;
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 function TwbMainRecord.GetReferenceFile: IwbFile;
@@ -11516,9 +11540,11 @@ begin
     Exit;
   end;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   if mrsReferencedByUnsorted in mrStates then
     SortReferencedBy;
 
@@ -11534,6 +11560,12 @@ begin
       mrReferencedBySize := 0;
     end;
   end;
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbMainRecord.ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false);
@@ -11789,7 +11821,7 @@ begin
 
       BasePtr := dcBasePtr;
       with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-        Include(dcFlags, dcfDontMergeOrSave);
+        Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
         _AddRef; _Release;
@@ -12099,12 +12131,20 @@ end;
 procedure TwbMainRecord.SortReferencedBy;
 begin
 {$IFDEF USE_PARALLEL_BUILD_REFS}
-  Assert(not wbBuildingRefsParallel);
+  //Assert(not wbBuildingRefsParallel);
+  if wbBuildingRefsParallel then
+    _ResizeLock.Enter;
+  try
 {$ENDIF}
-
   Exclude(mrStates, mrsReferencedByUnsorted);
   if mrReferencedByCount > 1  then
     wbMergeSortPtr(@mrReferencedBy[0], mrReferencedByCount, CompareReferencedBy);
+{$IFDEF USE_PARALLEL_BUILD_REFS}
+  finally
+    if wbBuildingRefsParallel then
+      _ResizeLock.Leave;
+  end;
+{$ENDIF}
 end;
 
 procedure TwbMainRecord.UpdateCellChildGroup;
@@ -13910,7 +13950,7 @@ var
   SubHeader         : TwbSubRecordHeaderStruct;
   SelfRef           : IwbContainerElementRef;
 begin
-  if not (dcfDontMergeOrSave in dcFlags) then begin
+  if not (dcfDontSave in dcFlags) then begin
     if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
@@ -19997,11 +20037,11 @@ var
 begin
   Def := GetDef;
   if Assigned(Def) and (dfDontSave in Def.DefFlags) then
-    Include(dcFlags, dcfDontMergeOrSave);{
+    Include(dcFlags, dcfDontSave);{
   else begin
     Def := GetValueDef;
     if Assigned(Def) and (dfDontSave in Def.DefFlags) then
-      Include(dcFlags, dcfDontMergeOrSave);
+      Include(dcFlags, dcfDontSave);
   end;}
   inherited;
 end;
@@ -20108,7 +20148,7 @@ end;
 
 function TwbDataContainer.GetDontSave: Boolean;
 begin
-  Result := (dcfDontMergeOrSave in dcFlags);
+  Result := (dcfDontSave in dcFlags);
 end;
 
 function TwbDataContainer.GetEditInfo: TArray<string>;
@@ -20145,7 +20185,7 @@ var
   SizeAvailable : Cardinal;
   BasePtr       : Pointer;
 begin
-  if [dcfDontMergeOrSave, dcfDontCompare] * dcFlags <> [] then
+  if [dcfDontMerge, dcfDontCompare] * dcFlags <> [] then
     Exit;
 
   if Length(dcDataStorage) <> 0 then
@@ -20161,7 +20201,7 @@ begin
     inherited;
 
     if BasePtr = aBasePtr then begin
-      if not (dcfDontMergeOrSave in dcFlags) then
+      if not (dcfDontMerge in dcFlags) then
         Inc(PByte(aBasePtr), SizeNeeded);
     end else
       if NativeUInt(aBasePtr) - NativeUInt(BasePtr) > SizeNeeded then // we overwrote something
@@ -20212,7 +20252,7 @@ var
   BasePtr       : Pointer;
   PrefixSize   : Integer;
 begin
-  if [dcfDontMergeOrSave, dcfDontCompare] * dcFlags <> [] then
+  if [dcfDontMerge, dcfDontCompare] * dcFlags <> [] then
     Exit;
 
   if (dcfStorageInvalid in dcFlags) then begin
@@ -20390,7 +20430,7 @@ var
   ExpectedSize : NativeUInt;
   NeedReset    : Boolean;
 begin
-  if [dcfDontMergeOrSave, dcfDontCompare] * dcFlags <> [] then begin
+  if [dcfDontSave, dcfDontCompare] * dcFlags <> [] then begin
     ResetModified(aResetModified);
     Exit;
   end;
@@ -21137,7 +21177,8 @@ begin
   if wbVWDAsQuestChildren then Grp := [1, 6, 7, 10] else Grp := [1, 6, 7];
   Assert(GroupRecord.GroupType in Grp);
 
-  Include(dcFlags, dcfDontMergeOrSave);
+  Include(dcFlags, dcfDontMerge);
+  Include(dcFlags, dcfDontSave);
 
   BasePtr := nil;
   EndPtr := nil;
