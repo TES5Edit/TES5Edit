@@ -11121,7 +11121,7 @@ begin
       wbFormIDCk('Addiction', [SPEL, NULL]),
       wbFloat('Addiction Chance'),
       wbFormIDCk('Sound - Consume', [SNDR, NULL]),
-      wbFormIDCk('Health', [CURV, NULL]),
+      wbFromVersion(171, wbFormIDCk('Health', [CURV, NULL])),
       wbFromVersion(176, wbFormIDCk('Spoiled', [ALCH, NULL]))
     ], cpNormal, True),
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
@@ -12904,7 +12904,7 @@ begin
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormID('Placed Object'),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
-      wbFromVersion(150, wbFormIDCk('Force Curve Table', [CURV, NULL])),
+      wbFromVersion(150, wbFormIDCk('Damage Curve Table', [CURV, NULL])),
       wbFloat('Force'),
       wbFloat('Damage'),
       wbFromVersion(97, wbFloat('Inner Radius')),
@@ -17064,12 +17064,12 @@ begin
           wbFloat(ESRE, 'XP Amount'),
           wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
           wbEmpty(QRRI, 'Legendary Item Rank Random'),
-          wbArray(QSRD, 'Rewarded Items',
-            wbStruct('Rewarded Item', [
+          wbRArray('Rewarded Items',
+            wbStruct(QSRD, 'Rewarded Item', [
               wbFormID('Item'),
               wbInteger('Count', itU32)
             ])
-          ,[]),
+          ),
           wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
           wbCTDAs
         ], []).IncludeFlag(dfAllowAnyMember)),
@@ -18292,10 +18292,10 @@ begin
       {--- Sound ---}
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbRegionSounds,
-      wbRArray('Unknown', wbStruct(RDSN, 'Unknown', [
+      wbRArray('Sounds', wbStruct(RDSN, 'Sound', [
         wbFormIDCk('Sound', [SNDR, NULL]),
         wbArray('Keywords', wbFormIDCk('Keyword', [KYWD]), -1),
-        wbFloat('Unknown')
+        wbFloat('Chance')
       ])),
 
             {--- Map ---}
@@ -18405,7 +18405,7 @@ begin
       wbFloat(ANAM, 'Occlusion Accuracy Dist'),
 
       {--- Unknown ---}
-      wbStruct(RDWK, 'Unknown', [
+      wbStruct(RDWK, 'Workshop', [
         wbFloat('Unknown'),
         wbFloat('Unknown')
       ])
