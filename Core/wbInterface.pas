@@ -12370,7 +12370,7 @@ var
               else if DC.Def.DefType = dtEmpty then
                 MemberDef := DC.Def as IwbValueDef
               else
-                Assert(MemberDef.Equals(DC.Def));
+                Assert(MemberDef.Equals(DC.Def), 'TwbStructDef.ToSummary for ['+Element.FullPath+']: ['+MemberDef.Path+'] is not equal to ['+DC.Def.Path+']');
             var s:= MemberDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
             if s <> '' then begin
               var Prefix := TFromArray<string>.Get(stSummaryPrefix, SortMember);
