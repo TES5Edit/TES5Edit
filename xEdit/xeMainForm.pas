@@ -17494,7 +17494,7 @@ begin
       end else begin
         if (Element.ConflictPriority <> cpIgnore) or not wbHideIgnored then begin
           CellText := Element.Value;
-          if (CellText = '') and (Element.Collapsed = tbTrue) then
+          if (CellText = '') and not (vsExpanded in Node.States) then
             CellText := Element.Summary;
         end;
       end;
