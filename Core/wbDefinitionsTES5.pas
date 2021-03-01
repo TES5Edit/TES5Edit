@@ -7098,7 +7098,7 @@ begin
     wbInteger(DATA, 'Flags', itU16, wbFlags([
       {0x0001} 'Is Interior Cell',
       {0x0002} 'Has Water',
-      {0x0004} 'Can''t Travel From Here',
+      {0x0004} 'Can Travel From Here',
       {0x0008} 'No LOD Water',
       {0x0010} 'Unknown 5',
       {0x0020} 'Public Area',
@@ -10356,7 +10356,7 @@ begin
       wbFloat('Min Distance'),
       wbFloat('Max Distance'),
       wbArray('Curve', wbInteger('Value', itU8), 5),
-      wbByteArray('Unknown')
+      wbByteArray('Unknown', 3)
     ])
   ]);
 

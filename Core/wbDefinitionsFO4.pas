@@ -9423,7 +9423,7 @@ begin
     wbInteger(DATA, 'Flags', itU16, wbFlags([
       {0x0001} 'Is Interior Cell',
       {0x0002} 'Has Water',
-      {0x0004} 'Can''t Travel From Here',
+      {0x0004} 'Can Travel From Here',
       {0x0008} 'No LOD Water',
       {0x0010} 'Unknown 5',
       {0x0020} 'Public Area',
@@ -13059,8 +13059,8 @@ begin
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
         wbInteger('Response number', itU8),
-        wbByteArray('Unused', 3),
-        wbByteArray('Unknown', 2),
+        wbFormIDCk('Sound File', [SNDR, NULL]),
+        wbByteArray('Unknown', 1),
         wbInteger('Interrupt Percentage', itU16),
         wbInteger('Camera Target Alias', itS32),
         wbInteger('Camera Location Alias', itS32)
@@ -15872,7 +15872,7 @@ begin
       wbFloat('Rumble - Right Motor Strength'),
       wbFloat('Rumble - Duration'),
       wbFloat('Animation Reload Seconds'),
-      wbByteArray('Unknown', 4),
+      wbByteArray('Bolt Anim Seconds', 4),
       wbFloat('Sighted Transition Seconds'),
       wbInteger('# Projectiles', itU8),
       wbFormIDCk('Override Projectile', [PROJ, NULL]),
