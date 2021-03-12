@@ -363,21 +363,21 @@ end;
 
 { TStringList }
 
-procedure StringSetOp_Difference(const aSetListA: TStringList; const aSetListB: TStringList; var aLH: TStringList);
+procedure StringSetOp_Difference(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
 begin
   for var i := 0 to Pred(aSetListA.Count) do
     if aSetListB.IndexOf(aSetListA[i]) = -1 then
       aLH.Append(aSetListA[i]);
 end;
 
-procedure StringSetOp_Intersection(const aSetListA: TStringList; const aSetListB: TStringList; var aLH: TStringList);
+procedure StringSetOp_Intersection(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
 begin
   for var i := 0 to Pred(aSetListA.Count) do
     if aSetListB.IndexOf(aSetListA[i]) > -1 then
       aLH.Append(aSetListA[i]);
 end;
 
-procedure StringSetOp_SymmetricDifference(const aSetListA: TStringList; const aSetListB: TStringList; var aLH: TStringList);
+procedure StringSetOp_SymmetricDifference(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
 begin
   aLH.AddStrings(aSetListA);
   aLH.AddStrings(aSetListB);
@@ -398,7 +398,7 @@ begin
   Intersection.Free;
 end;
 
-procedure StringSetOp_Union(const aSetListA: TStringList; const aSetListB: TStringList; var aLH: TStringList);
+procedure StringSetOp_Union(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
 begin
   aLH.AddStrings(aSetListA);
   aLH.AddStrings(aSetListB);
@@ -407,7 +407,7 @@ end;
 type
    TSetOperation = (D, I, S, U);
 
-procedure StringSetOp(const aOperation: TSetOperation; const aRH: TStringList; var aLH: TStringList);
+procedure StringSetOp(const aOperation: TSetOperation; const aLH: TStringList; const aRH: TStringList);
 begin
   { Executes set operations on TStringList objects and modifies aListA in-place }
 
@@ -449,22 +449,22 @@ end;
 
 procedure TStringList_Difference(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.D, TStringList(V2O(Args.Values[0])), TStringList(Args.Obj));
+  StringSetOp(TSetOperation.D, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
 procedure TStringList_Intersection(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.I, TStringList(V2O(Args.Values[0])), TStringList(Args.Obj));
+  StringSetOp(TSetOperation.I, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
 procedure TStringList_SymmetricDifference(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.S, TStringList(V2O(Args.Values[0])), TStringList(Args.Obj));
+  StringSetOp(TSetOperation.S, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
 procedure TStringList_Union(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  StringSetOp(TSetOperation.U, TStringList(V2O(Args.Values[0])), TStringList(Args.Obj));
+  StringSetOp(TSetOperation.U, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
 
