@@ -362,10 +362,6 @@ begin
     Value := O2V(TfrmFileSelect.Create(nil));
     Done := True;
   end
-  else if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
-    Value := O2V(TfrmFileSelect.Create(nil));
-    Done := True;
-  end
   else if SameText(Identifier, 'ExecuteCaptureConsoleOutput') and (Args.Count = 1) then begin
     Value := ExecuteCaptureConsoleOutput(Args.Values[0]);
     Done := True;
