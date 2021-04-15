@@ -5963,7 +5963,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
+      wbInteger('DR', itS16, wbDiv(100)),
       wbByteArray('Unused', 2),
       wbFloat('DT'),
       wbInteger('Flags', itU16, wbFlags([
@@ -6028,7 +6028,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
+      wbInteger('DR', itS16, wbDiv(100)),
       wbInteger('Flags', itU16, wbFlags([ // Only a byte or 2 distincts byte
         'Modulates Voice'
       ])),
