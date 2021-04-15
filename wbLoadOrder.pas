@@ -143,6 +143,8 @@ uses
   wbImplementation,
   wbSort;
 
+var _UpdateIndex: Integer = -1;
+
 function TwbModuleExtensionHelper.ToString: string;
 begin
   case Self of
@@ -266,6 +268,10 @@ var
 begin
   if Assigned(_ModulesByName) then {already loaded}
     Exit;
+
+  if wbGameMode = gmEnderalSE then
+    _UpdateIndex := Pred(High(Integer));
+
   if wbDataPath <> '' then begin
     Files := TDirectory.GetFiles(wbDataPath);
     i := Length(Files);
@@ -436,7 +442,7 @@ begin
   if wbIsSkyrim then
     with wbModuleByName('Update.esm')^ do
       if IsValid then begin
-        miOfficialIndex := -1;
+        miOfficialIndex := _UpdateIndex;
         Include(miFlags, mfActive);
         Include(miFlags, mfHasIndex);
       end;
@@ -461,7 +467,7 @@ begin
   if i > 1 then
     wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
-  if (wbGameMode = gmTES5) or (wbGameMode = gmEnderal) then begin
+  if (wbGameMode in [gmTES5, gmEnderal]) then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
@@ -701,7 +707,7 @@ begin
     Result := Result + '[GameMaster]'
   else if miOfficialIndex = Succ(Low(Integer)) then
     Result := Result + '[Hardcoded]'
-  else if miOfficialIndex = -1 then
+  else if miOfficialIndex = _UpdateIndex then
     Result := Result + '[Update]'
   else if miOfficialIndex < High(Integer) then
     Result := Result + '[DLC:'+miOfficialIndex.ToString+']';
