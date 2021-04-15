@@ -4963,7 +4963,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or wbQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE]) then begin
+        if ((wbToolMode in wbPluginModes) or wbQuickClean or wbQuickEdit) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE]) then begin
           Modules.DeactivateAll;
 
           if (wbPluginToUse <> '') or not wbQuickClean then
