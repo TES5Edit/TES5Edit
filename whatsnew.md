@@ -12,6 +12,7 @@
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * #871 - Updates for Static Collections [FO4] 
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
+* #909 - xEdit should double apostrophes in generated LOOT masterlist entry names
 * #914 - RNAM subrecord of INFO needs to be treated as case sensitive
 * #916 - DR displayed incorrectly in Armor and Armor Addons for F3/NV
 * #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
