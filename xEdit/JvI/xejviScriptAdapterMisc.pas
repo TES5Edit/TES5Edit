@@ -39,6 +39,7 @@ uses
   IniFiles,
   Registry,
   Math,
+  Vcl.Clipbrd,
   RegularExpressionsCore,
   RegularExpressionsConsts,
   JsonDataObjects,
@@ -67,6 +68,22 @@ begin
       Result := i;
       Break;
     end;
+end;
+
+{ Clipboard }
+
+procedure JvInterpreter_Clipboard_GetAsText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Clipboard.AsText;
+end;
+
+procedure JvInterpreter_Clipboard_SetAsText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  var s := string(Args.Values[0]);
+  if Length(s) > 0 then
+    Clipboard.AsText := s
+  else
+    Clipboard.Clear;
 end;
 
 { StrUtils }
@@ -1912,6 +1929,10 @@ begin
     AddConst('Windows', 'SW_SHOWNA', Ord(SW_SHOWNA));
     AddConst('Windows', 'SW_SHOWNOACTIVATE', Ord(SW_SHOWNOACTIVATE));
     AddConst('Windows', 'SW_SHOWNORMAL', Ord(SW_SHOWNORMAL));
+
+    { Clipboard }
+    AddFunction('Vcl.Clipbrd', 'GetClipboardText', JvInterpreter_Clipboard_GetAsText, 0, [varEmpty], varEmpty);
+    AddFunction('Vcl.Clipbrd', 'SetClipboardText', JvInterpreter_Clipboard_SetAsText, 1, [varString], varEmpty);
 
     { StrUtils }
     AddFunction('StrUtils', 'ContainsStr', JvInterpreter_ContainsStr, 2, [varEmpty, varEmpty], varEmpty);
