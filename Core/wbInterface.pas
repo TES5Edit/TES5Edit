@@ -4097,7 +4097,7 @@ var
 
 type
   //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmFO76);
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -4172,6 +4172,7 @@ var
     gmTES5,
     gmEnderal,
     gmSSE,
+    gmEnderalSE,
     gmTES5VR,
     gmFO4,
     gmFO4VR,
@@ -4731,7 +4732,7 @@ end;
 
 function wbIsSkyrim: Boolean; inline;
 begin
-  Result := wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE];
+  Result := wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
 end;
 
 function wbIsFallout3: Boolean; inline;
@@ -4751,7 +4752,7 @@ end;
 
 function wbIsEslSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmTES5VR, gmFO4, gmFO4VR, gmFO76]);
+  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4]);
 end;
 
 function wbDefToName(const aDef: IwbDef): string;
