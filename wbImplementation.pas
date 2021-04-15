@@ -375,6 +375,7 @@ type
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); virtual;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); virtual;
     procedure Remove; virtual;
+    procedure BeforeActualRemove; virtual;
     function CanContainFormIDs: Boolean; virtual;
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; virtual;
@@ -1773,6 +1774,9 @@ type
                               aPos       : Integer);
 
     procedure DoInit(aNeedSorted: Boolean); override;
+
+    procedure BeforeActualRemove; override;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
 
     function GetValue: string; override;
     function GetName: string; override;
@@ -15325,6 +15329,11 @@ begin
   Result := TargetValueDef.Assign(Self, aIndex, aElement, aOnlySK);;
 end;
 
+procedure TwbElement.BeforeActualRemove;
+begin
+  {can be overriden}
+end;
+
 procedure TwbElement.BeforeDestruction;
 begin
   Assert(eExternalRefs = 0);
@@ -16287,6 +16296,7 @@ begin
     try
       SetModified(True);
       InvalidateParentStorage;
+      BeforeActualRemove;
       lContainer.RemoveElement(SelfRef);
     finally
       lContainer.EndUpdate;
@@ -16800,6 +16810,34 @@ begin
   end;
 end;
 
+procedure TwbSubRecordArray.BeforeActualRemove;
+var
+  CountPath      : string;
+  Container      : IwbContainerElementRef;
+  CounterElement : IwbElement;
+
+  SelfRef    : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  inherited;
+
+  CountPath := arcDef.CountPath;
+
+  if CountPath = '' then
+    Exit;
+
+  Container := GetContainer as IwbContainerElementRef;
+  if not Assigned(Container) then
+    Exit;
+
+  CounterElement := Container.ElementByPath[CountPath];
+  if not Assigned(CounterElement) then
+    Exit;
+
+  CounterElement.NativeValue := 0;
+end;
+
 function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
@@ -16868,6 +16906,34 @@ begin
     SetModified(True);
     InvalidateStorage;
   end;
+end;
+
+procedure TwbSubRecordArray.DoAfterSet(const aOldValue, aNewValue: Variant);
+var
+  CountPath      : string;
+  Container      : IwbContainerElementRef;
+  CounterElement : IwbElement;
+
+  SelfRef    : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  inherited;
+
+  CountPath := arcDef.CountPath;
+
+  if CountPath = '' then
+    Exit;
+
+  Container := GetContainer as IwbContainerElementRef;
+  if not Assigned(Container) then
+    Exit;
+
+  CounterElement := Container.ElementByPath[CountPath];
+  if not Assigned(CounterElement) then
+    Exit;
+
+  CounterElement.NativeValue := GetElementCount;
 end;
 
 procedure TwbSubRecordArray.DoInit(aNeedSorted: Boolean);

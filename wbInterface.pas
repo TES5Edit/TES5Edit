@@ -2022,9 +2022,13 @@ type
     ['{67943BAC-B558-4112-8DBC-C94A44E0B1D1}']
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
+    function GetCountPath: string;
+
+    function SetCountPath(const aValue: string): IwbSubRecordArrayDef;
 
     property Element: IwbRecordMemberDef read GetElement;
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
+    property CountPath: string read GetCountPath;
   end;
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
@@ -4932,6 +4936,7 @@ type
     sraElement  : IwbRecordMemberDef;
     sraSorted   : Boolean;
     sraIsSorted : TwbIsSortedCallback;
+    sraCountPath: string;
   public
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
@@ -4943,6 +4948,7 @@ type
                        aDontShow  : TwbDontShowCallback;
                        aIsSorted  : TwbIsSortedCallback;
                        aGetCP     : TwbGetConflictPriority);
+    procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -4967,6 +4973,9 @@ type
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
+    function GetCountPath: string;
+
+    function SetCountPath(const aValue: string): IwbSubRecordArrayDef;
   end;
 
   TwbSubRecordStructDef = class(TwbRecordMemberDef, IwbSubRecordStructDef, IwbRecordDef)
@@ -8980,6 +8989,14 @@ end;
 
 { TwbSubRecordArrayDef }
 
+procedure TwbSubRecordArrayDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited AfterClone(aSource);
+  with aSource as TwbSubRecordArrayDef do begin
+    Self.sraCountPath := sraCountPath;
+  end;
+end;
+
 procedure TwbSubRecordArrayDef.AfterLoad(const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
@@ -9046,6 +9063,11 @@ begin
   Result := sraElement;
 end;
 
+function TwbSubRecordArrayDef.GetCountPath: string;
+begin
+  Result := sraCountPath;
+end;
+
 function TwbSubRecordArrayDef.GetDefaultSignature: TwbSignature;
 begin
   Result := sraElement.GetDefaultSignature;
@@ -9086,6 +9108,12 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbSubRecordArrayDef.SetCountPath(const aValue: string): IwbSubRecordArrayDef;
+begin
+  Result := Self;
+  sraCountPath := aValue;
 end;
 
 function TwbSubRecordArrayDef.GetDefType: TwbDefType;

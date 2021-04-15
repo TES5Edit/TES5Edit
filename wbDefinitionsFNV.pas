@@ -10467,7 +10467,7 @@ begin
       ]),
       wbRArrayS('Linked Rooms',
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
-      )
+      ).SetCountPath('XRMR\Linked Rooms Count')
     ], []),
 
     wbStruct(XOCP, 'Occlusion Plane Data', [
