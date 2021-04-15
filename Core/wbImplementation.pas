@@ -1820,6 +1820,8 @@ type
 
     procedure DoInit(aNeedSorted: Boolean); override;
 
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+
     function GetValue: string; override;
     function GetCheck: string; override;
     function GetSummary: string; override;
@@ -17504,6 +17506,11 @@ end;
 {$D+}
 
 { TwbSubRecordArray }
+
+function TwbSubRecordArray.Add(const aName: string; aSilent: Boolean): IwbElement;
+begin
+  Result := Assign(StrToIntDef(aName, High(Integer)), nil, False);
+end;
 
 function TwbSubRecordArray.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy: Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
