@@ -10540,7 +10540,7 @@ begin
     ),
     {>>> END leftover from earlier CK versions <<<}
 
-    wbLString(RNAM, 'Prompt', 0, cpTranslate),
+    wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCkNoReach(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])

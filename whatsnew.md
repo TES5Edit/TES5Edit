@@ -12,6 +12,7 @@
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * #871 - Updates for Static Collections [FO4] 
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
+* #914 - RNAM subrecord of INFO needs to be treated as case sensitive
 * #916 - DR displayed incorrectly in Armor and Armor Addons for F3/NV
 * #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
