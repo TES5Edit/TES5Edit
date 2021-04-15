@@ -958,10 +958,8 @@ procedure IwbMainRecord_SetEditorID(var Value: Variant; Args: TJvInterpreterArgs
 var
   MainRecord: IwbMainRecord;
 begin
-  Value := '';
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
     MainRecord.EditorID := Args.Values[1];
-    Value := MainRecord.EditorID;
 end;
 
 procedure IwbMainRecord_FixedFormID(var Value: Variant; Args: TJvInterpreterArgs);

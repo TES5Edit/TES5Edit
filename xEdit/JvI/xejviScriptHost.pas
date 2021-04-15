@@ -195,7 +195,7 @@ begin
   end
   else if SameText(Identifier, 'FileByName') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
-      Value := '';
+      Value := Null;
       for i := Low(Files) to High(Files) do
         if SameText(Args.Values[0], Files[i].FileName) then begin
           Value := Files[i];
@@ -362,10 +362,6 @@ begin
     Value := O2V(TfrmFileSelect.Create(nil));
     Done := True;
   end
-  else if SameText(Identifier, 'frmFileSelect') and (Args.Count = 0) then begin
-    Value := O2V(TfrmFileSelect.Create(nil));
-    Done := True;
-  end
   else if SameText(Identifier, 'ExecuteCaptureConsoleOutput') and (Args.Count = 1) then begin
     Value := ExecuteCaptureConsoleOutput(Args.Values[0]);
     Done := True;
@@ -396,15 +392,15 @@ begin
   end
   else if SameText(Identifier, 'wbGetUVRangeTexturesList') and (Args.Count = 3) then begin
     wbGetUVRangeTexturesList(
-      TStrings(V2O(Args.Values[0])), // TStrings list of meshes
-      TStrings(V2O(Args.Values[1])), // TStrings list of textures, output
-      Single(Args.Values[2]) // UVRange
+      TStrings(V2O(Args.Values[0])),  // TStrings list of meshes
+      TStrings(V2O(Args.Values[1])),  // TStrings list of textures, output
+      Single(Args.Values[2])          // UVRange
     );
     Done := True;
   end
   else if SameText(Identifier, 'wbBuildAtlasFromTexturesList') and (Args.Count = 7) then begin
     wbBuildAtlasFromTexturesList(
-      TStrings(V2O(Args.Values[0])), // TStrings list of textures
+      TStrings(V2O(Args.Values[0])),  // TStrings list of textures
       Args.Values[1], // max texture size
       Args.Values[2], // max tile size
       Args.Values[3], // atlas width
@@ -417,7 +413,7 @@ begin
   end
   else if SameText(Identifier, 'wbBuildAtlasFromAtlasMap') and (Args.Count = 5) then begin
     wbBuildAtlasFromAtlasMap(
-      TStrings(V2O(Args.Values[0])), // TStrings atlas map
+      TStrings(V2O(Args.Values[0])),  // TStrings atlas map
       Args.Values[1],                // brightness
       Args.Values[2],                // GammaR
       Args.Values[3],                // GammaG
