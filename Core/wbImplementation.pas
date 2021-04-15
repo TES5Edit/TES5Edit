@@ -3456,7 +3456,7 @@ end;
 
 function TwbFile.GetAllowHardcodedRangeUse: Boolean;
 begin
-  Result := (wbGameMode = gmFO4) and (GetVersion >= 1.0);
+  Result := (wbGameMode = gmTES3) or ((wbGameMode = gmFO4) and (GetVersion >= 1.0));
 end;
 
 function TwbFile.GetBaseName: string;
