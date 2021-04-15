@@ -5027,7 +5027,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or xeQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE]) then begin
+        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE]) then begin
           Modules.DeactivateAll;
 
           if (xePluginToUse <> '') or not xeQuickClean then

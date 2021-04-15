@@ -28,6 +28,7 @@ var
   xeQuickShowConflicts     : Boolean;
   xeVeryQuickShowConflicts : Boolean;
   xeQuickClean             : Boolean;
+  xeQuickEdit              : Boolean;
   xeQuickCleanAutoSave     : Boolean;
   xeAutoLoad               : Boolean;
   xeAutoExit               : Boolean;
@@ -1141,6 +1142,13 @@ begin
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
+
+  if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
+    if not (wbToolMode = tmEdit) then
+      ShowMessage(wbToolName+' is incompatible with quickedit request!')
+    else
+      xeQuickEdit := True;
+  end;
 
   if wbToolMode in wbPluginModes then // look for the file name
     if not xeFindNextValidCmdLineModule(xeParamIndex, xePluginToUse, wbDataPath) then begin
