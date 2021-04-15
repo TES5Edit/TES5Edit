@@ -811,7 +811,7 @@ begin
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
         regPath := sBethRegKey + wbGameNameReg + '\';
       end;
-      gmEnderal: begin
+      gmEnderal, gmEnderalSE: begin
         RootKey := HKEY_CURRENT_USER;
         regPath := sSureAIRegKey + wbGameNameReg + '\';
       end;
@@ -832,7 +832,7 @@ begin
       case wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
                   regKey := 'Installed Path';
-      gmEnderal:  regKey := 'Install_Path';
+      gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
       gmFO76:     regKey := 'Path';
       end;
 
@@ -877,7 +877,10 @@ begin
     gmFO3:            SwitchToFO3CoSave;
     gmFO4, gmFO4vr:   SwitchToFO4CoSave;
     gmTES4:           SwitchToTES4CoSave;
-    gmTES5, gmTES5vr, gmEnderal: SwitchToTES5CoSave;
+    gmTES5,
+    gmTES5vr,
+    gmEnderal,
+    gmEnderalSE,
     gmSSE:            SwitchToTES5CoSave;
   end;
 end;
@@ -1092,6 +1095,18 @@ begin
             tsPlugins: DefineTES5;
           end;
         end;
+        gmEnderalSE: begin
+          wbAppName := 'EnderalSE';
+          wbGameName := 'Enderal';
+          wbGameExeName := 'SkyrimSE';
+          wbGameName2 := 'Enderal Special Edition';
+          wbGameNameReg := 'EnderalSE';
+          wbGameMasterEsm := 'Skyrim.esm';
+          case wbToolSource of
+            tsSaves:   DefineTES5Saves;
+            tsPlugins: DefineTES5;
+          end;
+        end;
         gmFO76: begin
           wbGameName := 'Fallout76';
           wbGameNameReg := 'Fallout 76';
@@ -1279,7 +1294,7 @@ begin
       else begin
         wbLEncodingDefault[False] := TEncoding.UTF8;
         case wbGameMode of
-        gmSSE, gmTES5VR:
+        gmSSE, gmTES5VR, gmEnderalSE:
           wbAddLEncodingIfMissing('english', '1252', False);
         else {FO4, FO76}
           wbAddLEncodingIfMissing('en', '1252', False);
@@ -1367,8 +1382,9 @@ begin
               WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
           gmTES5,
           gmTES5vr,
-          gmEnderal: if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
-          gmSSE:    if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+          gmEnderal,
+          gmEnderalSE,
+          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
         else
             WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
         end;

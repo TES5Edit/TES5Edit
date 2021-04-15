@@ -832,7 +832,7 @@ end;
 
 function IsSSE: Boolean; inline; overload;
 begin
-  Result := wbGameMode in [gmSSE, gmTES5VR];
+  Result := wbGameMode in [gmSSE, gmTES5VR, gmEnderalSE];
 end;
 
 function IsSSE(const aDef1, aDef2: String): String; inline; overload;
@@ -13803,8 +13803,10 @@ begin
       wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
 
-  if wbGameMode = gmEnderal then
-    wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+  case wbGameMode of
+    gmEnderal: wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+    gmEnderalSE: wbNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
+  end;
 
   DefineTES5a;
   DefineTES5b;

@@ -362,7 +362,7 @@ begin
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
         regPath := sBethRegKey + wbGameNameReg + '\';
       end;
-      gmEnderal: begin
+      gmEnderal, gmEnderalSE: begin
         RootKey := HKEY_CURRENT_USER;
         regPath := sSureAIRegKey + wbGameNameReg + '\';
       end;
@@ -385,7 +385,7 @@ begin
       case wbGameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
                   regKey := 'Installed Path';
-      gmEnderal:  regKey := 'Install_Path';
+      gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
       gmFO76:     regKey := 'Path';
       end;
 
@@ -508,7 +508,7 @@ var
 procedure DetectAppMode;
 const
   SourceModes : array of string = ['plugins', 'saves'];
-  GameModes: array of string = ['tes5vr', 'fo4vr', 'tes3', 'tes4', 'tes5', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76'];
+  GameModes: array of string = ['tes5vr', 'fo4vr', 'tes3', 'tes4', 'tes5', 'enderalse', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76'];
   ToolModes: array of string = [
     'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
@@ -726,6 +726,18 @@ begin
     ToolSources := [tsPlugins, tsSaves];
   end
 
+  else if isMode('EnderalSE') then begin
+    wbGameMode := gmEnderalSE;
+    wbAppName := 'EnderalSE';
+    wbGameName := 'Enderal';
+    wbGameExeName := 'SkyrimSE';
+    wbGameName2 := 'Enderal Special Edition';
+    wbGameNameReg := 'EnderalSE';
+    wbGameMasterEsm := 'Skyrim.esm';
+    ToolModes := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources := [tsPlugins, tsSaves];
+  end
+
   else if isMode('Enderal') then begin
     wbGameMode := gmEnderal;
     wbAppName := 'Enderal';
@@ -793,7 +805,7 @@ begin
   end
 
   else begin
-    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5, TES5VR, or Enderal to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5, TES5VR, Enderal, or EnderalSE to select game.');
     Exit(False);
   end;
 
@@ -869,7 +881,7 @@ begin
       wbAllowInternalEdit := false;
       wbCanSortINFO := True;
     end;
-    gmTES5, gmEnderal, gmTES5VR, gmSSE: begin
+    gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
       wbVWDInTemporary := True;
       wbLoadBSAs := True; // localization won't work otherwise
       wbHideIgnored := False; // to show Form Version
@@ -921,7 +933,7 @@ begin
   else begin
     wbLEncodingDefault[False] := TEncoding.UTF8;
     case wbGameMode of
-    gmSSE, gmTES5VR:
+    gmSSE, gmTES5VR, gmEnderalSE:
       wbAddLEncodingIfMissing('english', '1252', False);
     else {FO4, FO76}
       wbAddLEncodingIfMissing('en', '1252', False);
@@ -990,6 +1002,9 @@ begin
       xeQuickCleanAutoSave := xeQuickClean;
     end;
   end;
+
+  if xeQuickCleanAutoSave then
+    wbRemoveOffsetData := True;
 
   i := 0;
   if xeQuickShowConflicts then
@@ -1092,15 +1107,7 @@ begin
       tsSaves:   DefineTES4Saves;
       tsPlugins: DefineTES4;
     end;
-    gmTES5, gmTES5VR: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
-    end;
-    gmEnderal: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
-    end;
-    gmSSE: case wbToolSource of
+    gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE: case wbToolSource of
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
     end
@@ -1269,9 +1276,7 @@ begin
     gmFNV:  SwitchToFNVCoSave;
     gmFO3:  SwitchToFO3CoSave;
     gmTES4: SwitchToTES4CoSave;
-    gmTES5: SwitchToTES5CoSave;
-    gmEnderal:  SwitchToTES5CoSave;
-    gmSSE:  SwitchToTES5CoSave;
+    gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE:  SwitchToTES5CoSave;
   end;
 end;
 
