@@ -644,7 +644,6 @@ type
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var Allowed: Boolean);
     procedure mniNavApplyScriptClick(Sender: TObject);
-    procedure mniRefByApplyScriptClick(Sender: TObject);
     procedure mniNavOptionsClick(Sender: TObject);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
     procedure mniRefByMarkModifiedClick(Sender: TObject);
@@ -8338,14 +8337,8 @@ begin
   finally
     Free;
   end;
+  ScriptToRunFromReferencedBy := Sender = mniRefByApplyScript;
   ApplyScript(ScriptName, Scr);
-end;
-
-procedure TfrmMain.mniRefByApplyScriptClick(Sender: TObject);
-begin
-  ScriptToRunFromReferencedBy := True;
-  mniNavApplyScriptClick(Sender);
-  ScriptToRunFromReferencedBy := False;
 end;
 
 procedure TfrmMain.CreateActionsForScripts;

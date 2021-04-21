@@ -2903,7 +2903,7 @@ object frmMain: TfrmMain
     end
     object mniRefByApplyScript: TMenuItem
       Caption = 'Apply Script...'
-      OnClick = mniRefByApplyScriptClick
+      OnClick = mniNavApplyScriptClick
     end
     object N14: TMenuItem
       Caption = '-'
