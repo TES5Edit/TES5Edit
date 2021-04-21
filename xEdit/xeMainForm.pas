@@ -857,7 +857,7 @@ type
     function RestorePluginsFromMaster: Boolean;
     procedure ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
-    procedure ApplyScript(const aScriptName: string; aScript: string);
+    procedure ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean = False);
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
@@ -897,7 +897,6 @@ type
     OnlyShowMasterAndLeafs: Boolean;
     ShowUnsavedHint: Boolean;
     ScriptRunning: Boolean;
-    ScriptToRunFromReferencedBy: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
     DelayedExpandView: Boolean;
@@ -8004,7 +8003,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string);
+procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean);
 const
   sJustWait                   = 'Applying script. Please wait...';
   sTerminated                 = 'Script terminated itself, Result=';
@@ -8042,7 +8041,7 @@ begin
     if bShowMessages then
       pgMain.ActivePage := tbsMessages;
 
-    if not ScriptToRunFromReferencedBy then
+    if not aRefByMode then
       SelectedNodes := vstNav.GetSortedSelection(True)
     else
       SelectedElements := GetRefBySelectionAsElements;
@@ -8080,7 +8079,7 @@ begin
 
             // skip selected records iteration if Process() function doesn't exist
             if Script.FunctionExists('Process') then
-              if not ScriptToRunFromReferencedBy then
+              if not aRefByMode then
                 ApplyScriptToSelection(SelectedNodes, Count, bShowMessages)
               else
                 ApplyScriptToSelection(SelectedElements, Count, bShowMessages);
@@ -8337,8 +8336,7 @@ begin
   finally
     Free;
   end;
-  ScriptToRunFromReferencedBy := Sender = mniRefByApplyScript;
-  ApplyScript(ScriptName, Scr);
+  ApplyScript(ScriptName, Scr, Sender = mniRefByApplyScript);
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
