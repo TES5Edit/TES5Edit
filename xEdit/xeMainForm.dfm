@@ -2898,6 +2898,13 @@ object frmMain: TfrmMain
       Caption = 'Compare Selected'
       OnClick = mniRefByCompareSelectedClick
     end
+    object N33: TMenuItem
+      Caption = '-'
+    end
+    object mniRefByApplyScript: TMenuItem
+      Caption = 'Apply Script...'
+      OnClick = mniRefByApplyScriptClick
+    end
     object N14: TMenuItem
       Caption = '-'
     end

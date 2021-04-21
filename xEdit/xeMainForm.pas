@@ -365,6 +365,8 @@ type
     mniViewStickSelected: TMenuItem;
     mniViewSetToDefault: TMenuItem;
     mniRefByCompareSelected: TMenuItem;
+    N33: TMenuItem;
+    mniRefByApplyScript: TMenuItem;
     pmuMessages: TPopupMenu;
     mniMessagesAutoscroll: TMenuItem;
     mniMessagesClear: TMenuItem;
@@ -642,6 +644,7 @@ type
     procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var Allowed: Boolean);
     procedure mniNavApplyScriptClick(Sender: TObject);
+    procedure mniRefByApplyScriptClick(Sender: TObject);
     procedure mniNavOptionsClick(Sender: TObject);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
     procedure mniRefByMarkModifiedClick(Sender: TObject);
@@ -853,6 +856,8 @@ type
     function SetAllToMaster: Boolean;
     function UpdateAllOnam: Boolean;
     function RestorePluginsFromMaster: Boolean;
+    procedure ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
+    procedure ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScript(const aScriptName: string; aScript: string);
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
@@ -893,6 +898,7 @@ type
     OnlyShowMasterAndLeafs: Boolean;
     ShowUnsavedHint: Boolean;
     ScriptRunning: Boolean;
+    ScriptToRunFromReferencedBy: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
     DelayedExpandView: Boolean;
@@ -7890,14 +7896,122 @@ begin
   end;
 end;
 
+procedure TfrmMain.ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
+const
+  sTerminated = 'Script terminated itself, Result=';
+var
+  Node        : PVirtualNode;
+begin
+  for var i := Low(aSelection) to High(aSelection) do
+  begin
+    var StartNode: PVirtualNode := aSelection[i];
+
+    if Assigned(StartNode) then
+    begin
+      Node := vstNav.GetLast(StartNode);
+
+      if not Assigned(Node) then
+        Node := StartNode;
+    end
+    else
+      Node := nil;
+
+    while Assigned(Node) do
+    begin
+      var NextNode: PVirtualNode := vstNav.GetPrevious(Node);
+      var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
+
+      if Assigned(NodeData.Element) then
+        if NodeData.Element.ElementType in ScriptProcessElements then
+        begin
+          var Result: Variant;
+
+          if not abShowMessages then
+            wbProgressUnlock;
+
+          try
+            Inc(wbHideStartTime);
+
+            try
+              Result := Script.CallFunction('Process', [NodeData.Element]);
+            finally
+              Dec(wbHideStartTime);
+            end;
+          finally
+            if not abShowMessages then
+              wbProgressLock;
+          end;
+
+          if Result <> 0 then
+          begin
+            wbProgress(sTerminated + IntToStr(Result));
+            Exit;
+          end;
+
+          Inc(aCount);
+
+          wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+        end;
+
+      if Node = StartNode then
+        Node := nil
+      else
+        Node := NextNode;
+
+      wbTick;
+    end;
+  end;
+end;
+
+procedure TfrmMain.ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean);
+const
+  sTerminated = 'Script terminated itself, Result=';
+begin
+  for var i := Low(aSelection) to High(aSelection) do
+  begin
+    var Element: IwbElement := aSelection[i];
+
+    if Element.ElementType in ScriptProcessElements then
+    begin
+      var Result: Variant;
+
+      if not abShowMessages then
+        wbProgressUnlock;
+
+      try
+        Inc(wbHideStartTime);
+
+        try
+          Result := Script.CallFunction('Process', [Element]);
+        finally
+          Dec(wbHideStartTime);
+        end;
+      finally
+        if not abShowMessages then
+          wbProgressLock;
+      end;
+
+      if Result <> 0 then begin
+        wbProgress(sTerminated + IntToStr(Result));
+        Exit;
+      end;
+
+      Inc(aCount);
+
+      wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+    end;
+
+    wbTick;
+  end;
+end;
+
 procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string);
 const
   sJustWait                   = 'Applying script. Please wait...';
   sTerminated                 = 'Script terminated itself, Result=';
 var
-  Selection                   : TNodeArray;
-  StartNode, Node, NextNode   : PVirtualNode;
-  NodeData                    : PNavNodeData;
+  SelectedNodes               : TNodeArray;
+  SelectedElements            : TDynElements;
   Count                       : Cardinal;
   i, p                        : Integer;
   s                           : string;
@@ -7929,7 +8043,10 @@ begin
     if bShowMessages then
       pgMain.ActivePage := tbsMessages;
 
-    Selection := vstNav.GetSortedSelection(True);
+    if not ScriptToRunFromReferencedBy then
+      SelectedNodes := vstNav.GetSortedSelection(True)
+    else
+      SelectedElements := GetRefBySelectionAsElements;
 
     PrevMaxMessageInterval := wbMaxMessageInterval;
     wbMaxMessageInterval := High(Integer);
@@ -7964,50 +8081,10 @@ begin
 
             // skip selected records iteration if Process() function doesn't exist
             if Script.FunctionExists('Process') then
-              for i := Low(Selection) to High(Selection) do begin
-                StartNode := Selection[i];
-                if Assigned(StartNode) then begin
-                  Node := vstNav.GetLast(StartNode);
-                  if not Assigned(Node) then
-                    Node := StartNode;
-                end else
-                  Node := nil;
-                while Assigned(Node) do begin
-                  NextNode := vstNav.GetPrevious(Node);
-                  NodeData := vstNav.GetNodeData(Node);
-
-                  if Assigned(NodeData.Element) then
-                    if NodeData.Element.ElementType in ScriptProcessElements then begin
-                      var Result: Variant;
-                      if not bShowMessages then
-                        wbProgressUnlock;
-                      try
-                        Inc(wbHideStartTime);
-                        try
-                          Result := Script.CallFunction('Process', [NodeData.Element]);
-                        finally
-                          Dec(wbHideStartTime);
-                        end;
-                      finally
-                        if not bShowMessages then
-                          wbProgressLock;
-                      end;
-                      if Result <> 0 then begin
-                        wbProgress(sTerminated + IntToStr(Result));
-                        Exit;
-                      end;
-                      Inc(Count);
-                      wbCurrentProgress := 'Processed Records: ' + Count.ToString;
-                    end;
-
-                  if Node = StartNode then
-                    Node := nil
-                  else
-                    Node := NextNode;
-
-                  wbTick;
-                end;
-              end;
+              if not ScriptToRunFromReferencedBy then
+                ApplyScriptToSelection(SelectedNodes, Count, bShowMessages)
+              else
+                ApplyScriptToSelection(SelectedElements, Count, bShowMessages);
 
             if Script.FunctionExists('Finalize') then begin
               var Result: Variant;
@@ -8262,6 +8339,13 @@ begin
     Free;
   end;
   ApplyScript(ScriptName, Scr);
+end;
+
+procedure TfrmMain.mniRefByApplyScriptClick(Sender: TObject);
+begin
+  ScriptToRunFromReferencedBy := True;
+  mniNavApplyScriptClick(Sender);
+  ScriptToRunFromReferencedBy := False;
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -14395,6 +14479,8 @@ begin
         sig := Rec.Signature;
     end;
   end;
+
+  mniRefByApplyScript.Visible := Length(Selected) > 0;
 
   AnyVWD    := False;
   AnyNotVWD := False;
