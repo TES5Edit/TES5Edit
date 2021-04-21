@@ -75,6 +75,7 @@ uses
 const
   DefaultInterval             = 1 / 24 / 6; // 10 minutes
   MaxSaveListCount            = 5;
+  ScriptSelfTerminated        = 'Script terminated itself, Result=';
 
 type
   TDynBooleans = array of Boolean;
@@ -7895,8 +7896,6 @@ begin
 end;
 
 procedure TfrmMain.ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
-const
-  sTerminated = 'Script terminated itself, Result=';
 var
   Node        : PVirtualNode;
 begin
@@ -7942,7 +7941,7 @@ begin
 
           if Result <> 0 then
           begin
-            wbProgress(sTerminated + IntToStr(Result));
+            wbProgress(ScriptSelfTerminated + IntToStr(Result));
             Exit;
           end;
 
@@ -7962,8 +7961,6 @@ begin
 end;
 
 procedure TfrmMain.ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean);
-const
-  sTerminated = 'Script terminated itself, Result=';
 begin
   for var i := Low(aSelection) to High(aSelection) do
   begin
@@ -7990,7 +7987,7 @@ begin
       end;
 
       if Result <> 0 then begin
-        wbProgress(sTerminated + IntToStr(Result));
+        wbProgress(ScriptSelfTerminated + IntToStr(Result));
         Exit;
       end;
 
@@ -8006,7 +8003,6 @@ end;
 procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean);
 const
   sJustWait                   = 'Applying script. Please wait...';
-  sTerminated                 = 'Script terminated itself, Result=';
 var
   SelectedNodes               : TNodeArray;
   SelectedElements            : TDynElements;
@@ -8072,7 +8068,7 @@ begin
                 Dec(wbHideStartTime);
               end;
               if Result <> 0 then begin
-                wbProgress(sTerminated + IntToStr(Result));
+                wbProgress(ScriptSelfTerminated + IntToStr(Result));
                 Exit;
               end;
             end;
@@ -8093,7 +8089,7 @@ begin
                 Dec(wbHideStartTime);
               end;
               if Result <> 0 then begin
-                wbProgress(sTerminated + IntToStr(Result));
+                wbProgress(ScriptSelfTerminated + IntToStr(Result));
                 Exit;
               end;
             end;
