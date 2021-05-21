@@ -332,11 +332,11 @@ function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(const aSizes: array of Integer): TwbUnionDecider; overload;
 
-function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
-function wbFromSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
+function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+function wbFromSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
-function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
-function wbBelowSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
+function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+function wbBelowSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
 
 implementation
@@ -2581,40 +2581,72 @@ begin
     end;
 end;
 
-function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 begin
-  Result :=
-    wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
-      wbUnused,
-      aValue
-    ]).IncludeFlagOnValue(dfUnionStaticResolve);
+  if aIsUnused then begin
+    Result :=
+      wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
+        wbUnused,
+        aValue
+      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+  end else begin
+      Result :=
+      wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
+        wbEmpty(aValue.Name),
+        aValue
+      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+  end;
 end;
 
-function wbFromSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef;
+
+
+function wbFromSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
 begin
-  Result :=
-    wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
-      wbUnused,
-      aValue
-    ]).IncludeFlag(dfUnionStaticResolve);
+  if aIsUnused then
+    Result :=
+      wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
+        wbUnused,
+        aValue
+      ]).IncludeFlag(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
+        wbEmpty(aValue.Name),
+        aValue
+      ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
-function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
+function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 begin
-  Result :=
-    wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
-      aValue,
-      wbUnused
-    ]).IncludeFlagOnValue(dfUnionStaticResolve);
+  if aIsUnused then
+    Result :=
+      wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
+        aValue,
+        wbUnused
+      ]).IncludeFlagOnValue(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
+        aValue,
+        wbEmpty(aValue.Name)
+      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+
 end;
 
-function wbBelowSize(aSize: Integer; const aValue: IwbValueDef): IwbValueDef;
+function wbBelowSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
 begin
-  Result :=
-    wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
-      aValue,
-      wbUnused
-    ]).IncludeFlag(dfUnionStaticResolve);
+  if aIsUnused then
+    Result :=
+      wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
+        aValue,
+        wbUnused
+      ]).IncludeFlag(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
+        aValue,
+        wbEmpty(aValue.Name)
+      ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
 
