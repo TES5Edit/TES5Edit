@@ -8909,7 +8909,7 @@ begin
         {0} 'Int',
         {1} 'Float',
         {2} 'Bool',
-        {3} 'Unknown 3',
+        {3} 'String',
         {4} 'FormID,Int',
         {5} 'Enum',
         {6} 'FormID,Float'
@@ -16002,7 +16002,7 @@ begin
       wbByteArray(WLEV, 'Data')
     ], []),
     wbOFST,
-    wbUnknown(CLSZ)
+    wbByteArray(CLSZ, 'Cell Size Data')
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
