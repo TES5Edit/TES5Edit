@@ -336,6 +336,7 @@ const
   CSRA : TwbSignature = 'CSRA'; { New To Fallout 4 }
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
+  CTRG : TwbSignature = 'CTRG'; { New To Fallout 76 }
   CURV : TwbSignature = 'CURV'; { New To Fallout 76 }
   CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   CVPA : TwbSignature = 'CVPA'; { New to Fallout 4 }
@@ -377,6 +378,7 @@ const
   DOFT : TwbSignature = 'DOFT'; { New to Skyrim }
   DOOR : TwbSignature = 'DOOR';
   DPLT : TwbSignature = 'DPLT'; { New to Skyrim }
+  DSCF : TwbSignature = 'DSCF'; { New To Fallout 76 }
   DSTA : TwbSignature = 'DSTA'; { New To Fallout 4 }
   DSTD : TwbSignature = 'DSTD';
   DSTF : TwbSignature = 'DSTF';
@@ -397,6 +399,7 @@ const
   EFID : TwbSignature = 'EFID';
   EFIT : TwbSignature = 'EFIT';
   EFSH : TwbSignature = 'EFSH';
+  EIES : TwbSignature = 'EIES'; { New To Fallout 76 0.2.626.7 }
   EILV : TwbSignature = 'EILV'; { New To Fallout 76 }
   EITM : TwbSignature = 'EITM';
   EMOT : TwbSignature = 'EMOT'; { New To Fallout 76 }
@@ -875,6 +878,7 @@ const
   SCRO : TwbSignature = 'SCRO';
   SCSN : TwbSignature = 'SCSN'; { New To Fallout 4 }
   SCTX : TwbSignature = 'SCTX';
+  SDCT : TwbSignature = 'SDCT'; { New to Fallout 76 }
   SDSC : TwbSignature = 'SDSC'; { New to Skyrim }
   SECH : TwbSignature = 'SECH'; { New To Fallout 76 }
   SGNM : TwbSignature = 'SGNM'; { New to Fallout 4 }
@@ -906,6 +910,8 @@ const
   SPLO : TwbSignature = 'SPLO';
   SPMV : TwbSignature = 'SPMV'; { New To Skyrim }
   SPOR : TwbSignature = 'SPOR'; { New to Skyrim }
+  SPPI : TwbSignature = 'SPPI'; { New To Fallout 76 0.2.626.7 }
+  SPPT : TwbSignature = 'SPPT'; { New To Fallout 76 0.2.626.7 }
   SPWN : TwbSignature = 'SPWN'; { New To Fallout 76 }
   SRAC : TwbSignature = 'SRAC'; { New to Fallout 4 }
   SRAF : TwbSignature = 'SRAF'; { New to Fallout 4 }
@@ -1310,6 +1316,7 @@ var
   //wbRaceFRMI: IwbSubrecordArrayDef;
   wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
+  wbNVNMRecordVal: IwbStructDef;
   wbMNAMNAVM: IwbSubRecordDef;
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
@@ -3997,6 +4004,21 @@ begin
     Result := 1;
 end;
 
+function wbSceneActionRadioDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainerElementRef;
+begin
+  Result := 0;
+  if not Assigned(aElement) then
+    Exit;
+
+  if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+    Exit;
+
+  if Container.ElementNativeValues['ANAM'] <> 6 then
+    Result := 1;
+end;
+
 
 function wbDeciderCELLFlags(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
@@ -4549,7 +4571,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..587] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..589] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -5113,31 +5135,33 @@ const
     (Index: 909; Name: 'ActorPackageHasRandomConversationsFlagOn'; Desc: 'Is this ref allowed random conversation'),
     (Index: 910; Name: 'IsInInstancedLocation'; Desc: 'Is this ref in an instanced location?'),
     (Index: 911; Name: 'IsInstanceOwner'; Desc: 'Is this player an owner of the given ref''s instanced location?'; ParamType1: ptReferencableObject),
-    (Index: 913; Name: 'IsQuestTracked'; Desc: 'Does the player have the given base quest tracked?'; ParamType1: ptQuest),
-    (Index: 914; Name: 'IsPlayerFO1Member'; Desc: 'Is the selected player a FO1 Member?'),
+    (Index: 914; Name: 'IsQuestTracked'; Desc: 'Does the player have the given base quest tracked?'; ParamType1: ptQuest),
     (Index: 915; Name: 'IsPlayerFO1Member'; Desc: 'Is the selected player a FO1 Member?'),
-    (Index: 916; Name: 'IsServerOverEWSActorBudget'; Desc: 'Is the server over the actor budget used by the EWS?'),
-    (Index: 917; Name: 'GetStageDonePlayerInstance'; Desc: 'Get if the stage is done on a player''s quest instance'; ParamType1: ptQuest; ParamType2: ptQuestStage),
-    (Index: 918; Name: 'IsAuthoritativeOverMovement'; Desc: 'Returns true if the refr is authoritative over it''s movement'),
-    (Index: 919; Name: 'IsWeaponMinChargeTimeElapsed'; Desc: 'Returns true if the current weapon''s min charge time has elapsed'),
-    (Index: 920; Name: 'IsOccupiedFurnitureRef'; ParamType1: ptObjectReference),
-    (Index: 921; Name: 'IsOccupiedFurnitureObj'; ParamType1: ptFurniture),
-    (Index: 922; AltIndex: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
-    (Index: 923; AltIndex: 10000; Name: 'IsChallengeTypeDaily'; Desc: 'Is the target challenge a Daily challenge?'),
-    (Index: 924; AltIndex: 10001; Name: 'IsChallengeTypeWeekly'; Desc: 'Is the target challenge a Weekly challenge?'),
-    (Index: 925; AltIndex: 10002; Name: 'IsChallengeTypeLifetime'; Desc: 'Is the target challenge a Lifetime challenge?'),
-    (Index: 926; AltIndex: 10003; Name: 'IsStealthed'),
-    (Index: 927; Name: 'GetTeammateBondScore'),
-    (Index: 928; Name: 'GetTeamType'),
-    (Index: 929; AltIndex: 8000; Name: 'IsDailyContentAvailable'),
-    (Index: 930; AltIndex: 8001; Name: 'StartDailyContent'),
-    (Index: 931; AltIndex: 8002; Name: 'GetRemainingQuestTimeSeconds'),
-    (Index: 932; Name: 'GetNumPlayersInSameInterior'),
-    (Index: 933; Name: 'GetQuestFormType'),
-    (Index: 934; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
-    (Index: 935; AltIndex: 9001; Name: 'IsPlayerInShelterOwned'),
-    (Index: 936; AltIndex: 9002; Name: 'IsPlayerInShelter'),
-    (Index: 937; AltIndex: 9003; Name: 'IsInShelterLocation'; Desc: 'Is this ref in a shelter location?')
+    (Index: 916; Name: 'IsPlayerFO1Member'; Desc: 'Is the selected player a FO1 Member?'),
+    (Index: 917; Name: 'IsServerOverEWSActorBudget'; Desc: 'Is the server over the actor budget used by the EWS?'),
+    (Index: 918; Name: 'GetStageDonePlayerInstance'; Desc: 'Get if the stage is done on a player''s quest instance'; ParamType1: ptQuest; ParamType2: ptQuestStage),
+    (Index: 919; Name: 'IsAuthoritativeOverMovement'; Desc: 'Returns true if the refr is authoritative over it''s movement'),
+    (Index: 920; Name: 'IsWeaponMinChargeTimeElapsed'; Desc: 'Returns true if the current weapon''s min charge time has elapsed'),
+    (Index: 921; Name: 'IsOccupiedFurnitureRef'; ParamType1: ptObjectReference),
+    (Index: 922; Name: 'IsOccupiedFurnitureObj'; ParamType1: ptFurniture),
+    (Index: 923; AltIndex: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
+    (Index: 924; AltIndex: 10000; Name: 'IsChallengeTypeDaily'; Desc: 'Is the target challenge a Daily challenge?'),
+    (Index: 925; AltIndex: 10001; Name: 'IsChallengeTypeWeekly'; Desc: 'Is the target challenge a Weekly challenge?'),
+    (Index: 926; AltIndex: 10002; Name: 'IsChallengeTypeLifetime'; Desc: 'Is the target challenge a Lifetime challenge?'),
+    (Index: 927; AltIndex: 10003; Name: 'IsStealthed'),
+    (Index: 928; Name: 'GetTeammateBondScore'),
+    (Index: 929; Name: 'GetTeamType'),
+    (Index: 930; AltIndex: 8000; Name: 'IsDailyContentAvailable'),
+    (Index: 931; AltIndex: 8001; Name: 'StartDailyContent'),
+    (Index: 932; AltIndex: 8002; Name: 'GetRemainingQuestTimeSeconds'),
+    (Index: 933; Name: 'GetNumPlayersInSameInterior'),
+    (Index: 934; Name: 'GetQuestFormType'),
+    (Index: 935; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
+    (Index: 936; AltIndex: 9001; Name: 'IsPlayerInShelterOwned'),
+    (Index: 937; AltIndex: 9002; Name: 'IsPlayerInShelter'),
+    (Index: 938; AltIndex: 9003; Name: 'IsInShelterLocation'; Desc: 'Is this ref in a shelter location?'),
+    (Index: 939; Name: 'GetPlayerSeasonRank'),
+    (Index: 940; AltIndex: 5001; Name: 'GetIsForm')
   );
 
 var
@@ -8110,7 +8134,9 @@ begin
     {6} 'TwoHandAxe',
     {7} 'Bow',
     {8} 'Staff',
-    {9} 'Crossbow'
+    {9} 'Gun',
+    {10}'Grenade',
+    {11}'Mine'
   ]);
 
   wbReverbClassEnum := wbEnum([
@@ -8301,10 +8327,14 @@ begin
   wbNAM1 := wbUnknown(NAM1);
   wbLODP := wbUnknown(LODP);
 
-  wbWTFG := wbInteger(WTFG, 'World Type', itU32, wbEnum([], [
-      4,  'Survival',
-      24, 'Nuclear Winter'
-    ]));
+  wbWTFG := wbInteger(WTFG, 'World Type', itU32, wbFlags([ {Based on 1 << world type enum value. For WTFG of 0 or not existing it sets it to 0x3E which is everything except invalid }
+      {0x00000001} 'Invalid',
+      {0x00000002} 'Adventure',
+      {0x00000004} 'Survival',
+      {0x00000008} 'NWTemp',
+      {0x00000010} 'Nuclear Winter',
+      {0x00000020} 'Private'
+      ]));
 
   wbVCRY := wbFormIDCk(VCRY, 'Value Currency', [NULL, CNCY]);
 
@@ -8832,6 +8862,9 @@ begin
       wbInteger('Value', itU32),
       wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ])),
+    //wbCTDAs,
+    wbUnknown(CTDA),
+    wbUnknown(DSCF),
     wbRArray('Stages',
       wbRStruct('Stage', [
         wbStruct(DSTD, 'Destruction Stage Data', [
@@ -9061,44 +9094,217 @@ begin
             '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
             ''                    //$8000 /
           ])),
-{ Flags below are wrong. The first 4 bit are an enum as follows:
-0000 = Open Edge No Cover
-1000 = wall no cover
-0100 = ledge cover
-1100 = UNUSED
-0010 = cover  64
-1010 = cover  80
-0110 = cover  96
-1110 = cover 112
-0001 = cover 128
-1001 = cover 144
-0101 = cover 160
-1101 = cover 176
-0011 = cover 192
-1011 = cover 208
-0111 = cover 224
-1111 = max cover
-then 2 bit flags, then another such enum, and the rest is probably flags.
-Can't properly represent that with current record definition methods.
-}
-            wbInteger('Cover Flags', itU16, wbFlags([
-              'Edge 0-1 Cover Value 1/4',
-              'Edge 0-1 Cover Value 2/4',
-              'Edge 0-1 Cover Value 3/4',
-              'Edge 0-1 Cover Value 4/4',
-              'Edge 0-1 Left',
-              'Edge 0-1 Right',
-              'Edge 1-2 Cover Value 1/4',
-              'Edge 1-2 Cover Value 2/4',
-              'Edge 1-2 Cover Value 3/4',
-              'Edge 1-2 Cover Value 4/4',
-              'Edge 1-2 Left',
-              'Edge 1-2 Right',
-              'Unknown 13',
-              'Unknown 14',
-              'Unknown 15',
-              'Unknown 16'
-            ]))
+          { Flags below are wrong. The first 4 bit are an enum as follows:
+          0000 = Open Edge No Cover
+          1000 = wall no cover
+          0100 = ledge cover
+          1100 = UNUSED
+          0010 = cover  64
+          1010 = cover  80
+          0110 = cover  96
+          1110 = cover 112
+          0001 = cover 128
+          1001 = cover 144
+          0101 = cover 160
+          1101 = cover 176
+          0011 = cover 192
+          1011 = cover 208
+          0111 = cover 224
+          1111 = max cover
+          then 2 bit flags, then another such enum, and the rest is probably flags.
+          Can't properly represent that with current record definition methods.
+          }
+          wbInteger('Cover Flags', itU16, wbFlags([
+            'Edge 0-1 Cover Value 1/4',
+            'Edge 0-1 Cover Value 2/4',
+            'Edge 0-1 Cover Value 3/4',
+            'Edge 0-1 Cover Value 4/4',
+            'Edge 0-1 Left',
+            'Edge 0-1 Right',
+            'Edge 1-2 Cover Value 1/4',
+            'Edge 1-2 Cover Value 2/4',
+            'Edge 1-2 Cover Value 3/4',
+            'Edge 1-2 Cover Value 4/4',
+            'Edge 1-2 Left',
+            'Edge 1-2 Right',
+            'Unknown 13',
+            'Unknown 14',
+            'Unknown 15',
+            'Unknown 16'
+          ]))
+        ])
+      , -1).IncludeFlag(dfNotAlignable),
+      wbArray('Edge Links',
+        wbStruct('Edge Link', [
+          wbByteArray('Unknown', 4, cpIgnore),
+          wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
+          wbInteger('Triangle', itS16, nil, cpIgnore),
+          wbByteArray('Unknown', 1, cpIgnore) // if form ver > 127
+        ], cpIgnore)
+      , -1, cpIgnore).IncludeFlag(dfNotAlignable),
+      wbArrayS('Door Triangles',
+        wbStructSK([0, 2], 'Door Triangle', [
+          wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
+          wbInteger('DTUnknown', itU32), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
+          wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
+        ])
+      , -1),
+      wbArray('Unknown 5',  // if navmesh version gt 12
+        wbStruct('Unknown', [
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU16),
+          wbInteger('Unknown', itU32 {, wbFlags([]) ? })
+        ])
+      , -1).IncludeFlag(dfNotAlignable),
+      wbArray('Unknown 6',
+        wbStruct('Unknown', [
+          wbInteger('Unknown', itU16), //not triangle or vertex
+          wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
+        ])
+      , -1).IncludeFlag(dfNotAlignable),
+      wbArray('Waypoints',  // if navmesh version gt 11
+        wbStruct('Waypoint', [
+          wbFloat('X'),
+          wbFloat('Y'),
+          wbFloat('Z'),
+          wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
+          wbInteger('Unknown', itU32)
+        ])
+      , -1).IncludeFlag(dfNotAlignable),
+      wbStruct('Navmesh Grid', [
+        wbInteger('Navmesh Grid Size', itU32),  // max 12
+        wbFloat('Max X Distance'),
+        wbFloat('Max Y Distance'),
+        wbFloat('Min X'),
+        wbFloat('Min Y'),
+        wbFloat('Min Z'),
+        wbFloat('Max X'),
+        wbFloat('Max Y'),
+        wbFloat('Max Z'),
+        wbArray('NavMesh Grid Arrays',
+          wbArray('NavMeshGridCell',
+            wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+          , -1).IncludeFlag(dfNotAlignable)
+        ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+      ])
+    ]);
+
+  if wbSimpleRecords then
+    wbNVNMRecordVal := wbStruct('Navmesh Geometry', [
+      wbInteger('Version', itU32).SetDefaultNativeValue(15),
+      wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbUnion('Parent', wbNVNMParentDecider, [
+        wbStruct('Coordinates', [
+          wbInteger('Grid Y', itS16),
+          wbInteger('Grid X', itS16)
+        ]),
+        wbFormIDCk('Parent Cell', [CELL])
+      ]),
+      wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfNotAlignable),
+      wbArray('Triangles', wbByteArray('Triangle', 21), -1).IncludeFlag(dfNotAlignable),
+      wbArray('Edge Links',
+        wbStruct('Edge Link', [
+          wbInteger('Unknown', itU32),
+          wbFormIDCk('Mesh', [NAVM]),
+          wbInteger('Triangle', itS16),
+          wbInteger('Unknown', itU8)
+        ])
+      , -1).IncludeFlag(dfNotAlignable),
+      wbArrayS('Door Triangles',
+        wbStructSK([0, 2], 'Door Triangle', [
+          wbInteger('Triangle before door', itU16),
+          wbInteger('DTUnknown', itU32),
+          wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
+        ])
+      , -1).IncludeFlag(dfNotAlignable),
+      wbUnknown
+    ])
+  else
+    wbNVNMRecordVal := wbStruct('Navmesh Geometry', [
+      wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
+      wbStruct('Pathing Cell', [
+        wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
+      ]),
+      wbArray('Vertices', wbStruct('Vertex', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable),
+      wbArray('Triangles',
+        wbStruct('Triangle', [
+          wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+          wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+          wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
+          wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
+          wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
+          wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
+          wbFloat('Height'), // this and next if form ver > 57
+          wbInteger('Unknown', itU8), // flags
+          wbInteger('Flags', itU16, wbFlags([
+            'Edge 0-1 link',      //$0001 1
+            'Edge 1-2 link',      //$0002 2
+            'Edge 2-0 link',      //$0004 4
+            '',                   //$0008 8
+            'No Large Creatures',          //$0010 16   used in CK source according to Nukem
+            'Overlapping',        //$0020 32
+            'Preferred',          //$0040 64
+            '',                   //$0080 128
+            'Unknown 9',          //$0100 256  used in CK source according to Nukem
+            'Water',              //$0200 512
+            'Door',               //$0400 1024
+            'Found',              //$0800 2048
+            'Unknown 13',         //$1000 4096 used in CK source according to Nukem
+            '',                   //$2000 \
+            '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
+            ''                    //$8000 /
+          ])),
+          { Flags below are wrong. The first 4 bit are an enum as follows:
+          0000 = Open Edge No Cover
+          1000 = wall no cover
+          0100 = ledge cover
+          1100 = UNUSED
+          0010 = cover  64
+          1010 = cover  80
+          0110 = cover  96
+          1110 = cover 112
+          0001 = cover 128
+          1001 = cover 144
+          0101 = cover 160
+          1101 = cover 176
+          0011 = cover 192
+          1011 = cover 208
+          0111 = cover 224
+          1111 = max cover
+          then 2 bit flags, then another such enum, and the rest is probably flags.
+          Can't properly represent that with current record definition methods.
+          }
+          wbInteger('Cover Flags', itU16, wbFlags([
+            'Edge 0-1 Cover Value 1/4',
+            'Edge 0-1 Cover Value 2/4',
+            'Edge 0-1 Cover Value 3/4',
+            'Edge 0-1 Cover Value 4/4',
+            'Edge 0-1 Left',
+            'Edge 0-1 Right',
+            'Edge 1-2 Cover Value 1/4',
+            'Edge 1-2 Cover Value 2/4',
+            'Edge 1-2 Cover Value 3/4',
+            'Edge 1-2 Cover Value 4/4',
+            'Edge 1-2 Left',
+            'Edge 1-2 Right',
+            'Unknown 13',
+            'Unknown 14',
+            'Unknown 15',
+            'Unknown 16'
+          ]))
         ])
       , -1).IncludeFlag(dfNotAlignable),
       wbArray('Edge Links',
@@ -10815,7 +11021,7 @@ begin
         {0} 'Int',
         {1} 'Float',
         {2} 'Bool',
-        {3} 'Unknown 3',
+        {3} 'String',
         {4} 'FormID,Int',
         {5} 'Enum',
         {6} 'FormID,Float'
@@ -10942,6 +11148,7 @@ begin
       wbCTDAs,
       wbFormIDCk(DURG, 'Duration', [GLOB]),
       wbFormIDCk(MAGG, 'Magnitude', [GLOB]),
+      wbFormIDCk(EIES, 'Next Stage', [SPEL]),
       wbInteger(CODV, 'Cooldown Duration', itU32)
     ], [], cpNormal, True);
 
@@ -11020,9 +11227,6 @@ begin
     ], cpNormal, False, nil, 4),
     wbCNDCs,
     wbFormIDCk(GCDA, 'Global Cooldown Timer', [GLOB]),
-    wbFloat(PAHD, 'Unknown Float'),
-    wbUnknown(MNAM),
-    wbNVNM,
     wbArray(VEND, 'Vendable Item Datas',
       wbStruct('Vendable Item Data', [
         wbFormID('Allowed Item List'),
@@ -11032,6 +11236,8 @@ begin
       ])
     ),
     wbFloat(PAHD, 'Unknown Float'),
+    wbFromSize(1, NVNM, wbNVNMRecordVal, False),
+    wbUnknown(MNAM),
     wbNAM1LODP
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -11435,7 +11641,7 @@ begin
       {0x000002} 'Has Water',
       {0x000004} 'Can Travel From Here',
       {0x000008} 'No LOD Water',
-      {0x000010} 'Unknown 4',
+      {0x000010} 'Entry disallowed',
       {0x000020} 'Public Area',
       {0x000040} 'Hand Changed',
       {0x000080} 'Show Sky',
@@ -11447,10 +11653,10 @@ begin
       {0x002000} 'Player Followers Can''t Travel Here',
       {0x004000} 'Unknown 14',
       {0x008000} 'Is Instanced',
-      {0x010000} 'Unknown 16',
-      {0x020000} 'Unknown 17',
-      {0x040000} 'Unknown 18',
-      {0x080000} 'Unknown 19',
+      {0x010000} 'NWTemp entry disallowed',
+      {0x020000} 'Adventure entry disallowed',
+      {0x040000} 'Survival entry disallowed',
+      {0x080000} 'Nuclear Winter entry disallowed',
       {0x100000} 'Unknown 20',
       {0x200000} 'Unknown 21'
     ]);
@@ -12421,7 +12627,7 @@ begin
     ], []),
     wbAPPR,
     wbObjectTemplate,
-    wbNVNM
+    wbEmpty(NVNM, 'Navmesh Marker')
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(GLOB, 'Global',
@@ -13305,7 +13511,21 @@ begin
               ]),
           {9} wbFormIDCk('Ingestible', [ALCH,KYWD])
         ], cpNormal, False{, wbEPFDDontShow}),
-        wbInteger(EPF2, 'Unknown Spell Value', itU32)
+        wbInteger(EPF2, 'Unknown Spell Value', itU32),
+        // keeping as struct to be similar to tes5 format
+        wbUnion(EPF3, '', wbEPF3Decider, [           //ECKToDo: Fix this to be seperate structures based on the type.
+          wbStruct('Script Flags', [
+            wbInteger('Script Flags', itU16, wbFlags([
+              'Run Immediately',
+              'Replace Default'
+            ])),
+            wbUnion('Unused', wbFormVersionDecider(34, 126), [
+              wbUnused,
+              wbByteArray('Unused', 2)
+            ])
+          ]),
+          wbActorValue
+        ])
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
     ], []);
@@ -13484,7 +13704,7 @@ begin
       {0x00000400} 'Default to 0',
       {0x00000800} 'Default to 1.0',
       {0x00001000} 'Default to 100.0',
-      {0x00002000} 'Unsigned Integer',
+      {0x00002000} 'Ignore Default Value',
       {0x00004000} 'Unknown 14',
       {0x00008000} 'Contains List',
       {0x00010000} 'Unknown 16',
@@ -13500,7 +13720,7 @@ begin
       {0x04000000} 'Damage Is Positive',
       {0x08000000} 'God Mode Immune',
       {0x10000000} 'Applies to Armor',
-      {0x20000000} 'Unknown 39',
+      {0x20000000} 'Unknown 29',
       {0x40000000} 'Unknown 30',
       {0x80000000} 'Hardcoded'
     ])),
@@ -13519,7 +13739,14 @@ begin
       'Reputation',
       'Unknown'
     ])),
-    wbInteger(NAM2, 'Unknown Flags', itU32, wbEmptyBaseFlags),
+    wbInteger(NAM2, 'Secondary Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
+      {0x00000002}  1, 'First Grouping',
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000008}  3, 'Network Float Value',
+      {0x00000010}  4, 'Only Modified Value',
+      {0x00000040}  6, 'Unknown 6',
+      {0x00000080}  7, 'Low Priority'
+    ]))),
     wbFormIDCk(NAM3, 'Actor Value Keyword', [KYWD]), // always a KYWD
     wbFormIDCk(NAM4, 'Associated List', [FLST])
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
@@ -14523,6 +14750,99 @@ begin
       wbCTDAs
     ], []);
 
+  var wbSceneDialogueAction :=
+    wbRStruct('Dialogue', [
+      wbFloat(DMAX, 'Looping - Max'),
+      wbFloat(DMIN, 'Looping - Min'),
+      wbStruct(CRIS, 'Camera', [
+        wbFloat('FOV On Player Camera'),
+        wbFloat('Rate Of Camera Change')
+      ]),
+      wbArray(HTID, 'Player Headtracking', wbInteger('Actor ID', itS32)),
+      wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
+      wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
+      wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
+    ], []);
+
+  var wbScenePackageAction :=
+    wbRStruct('Package', [
+      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK]))
+    ], []);
+
+  var wbSceneStartSceneActionAlt :=
+    wbRStruct('Start Scene', [
+      wbRArray('Scenes', wbStartScene),
+      wbEmpty(HTID, 'End Scene Say Greeting')
+    ], []);
+  var wbSceneStartSceneAction :=
+    wbRStruct('Start Scene', [
+      wbFormIDCk(STSC, 'Start Scene Marker', [SCEN,NULL]),
+      wbRArray('Scenes', wbStartScene),
+      wbEmpty(HTID, 'End Scene Say Greeting')
+    ], []);
+
+  var wbSceneNPCResponseDialogue :=
+    wbRStruct('NPC Response Dialogue', [
+      wbFormIDCk(ONAM, 'Sound Output', [SOPM])
+    ], []);
+
+  var wbSceneRadioAction :=
+    wbRStruct('Radio', [
+      wbFormIDCk(HTID, 'Play Sound', [SNDR, NULL]),
+      wbFormIDCk(DMAX, 'Sound Output', [SOPM, NULL]),
+      wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD])
+    ], []);
+
+  var wbSceneTimerAction :=
+    wbRStruct('Timer',[
+      wbFloat(SNAM, 'Timer - Max Seconds'),
+      wbInteger(SCQS, 'Set Parent Quest Stage', itS16),
+      wbFloat(TNAM, 'Timer - Min Seconds')
+    ], []);
+
+  var wbScenePlayerDialogueAction :=
+    wbRStruct('Player Dialogue', [
+      wbInteger(DTGT, 'Dialogue Target Actor', itS32),
+      wbRArray('Dialogue Choices', wbRStruct('Dialogue Choice', [
+        wbFormId(ESCE, 'Dialogue Exit'),
+        wbFormId(ESCS, 'Choice')
+      ], [])),
+      wbRStruct('Prior Action Info', [
+        wbInteger(ATTR, 'Action to Follow', itU32),
+        wbEmpty(ACBS, 'Action Comes Before Start')
+      ],[])
+    ], []);
+
+  var wbScenePlayerDialogueActionOld :=
+    wbRStruct('Player Dialogue Responses', [
+      wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
+      wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
+      wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
+      wbFormIDCk(QTOP, 'Player Question Response', [DIAL]),
+      wbFormIDCk(VENC, 'Player Positive Dialogue Subtype', [KYWD]),
+      wbFormIDCk(PLVD, 'Player Negative Dialogue Subtype', [KYWD]),
+      wbFormIDCk(JOUT, 'Player Neutral Dialogue Subtype', [KYWD]),
+      wbFormIDCk(DALC, 'Player Question Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NPOT, 'NPC Positive Response', [DIAL]),
+      wbFormIDCk(NNGT, 'NPC Negative Response', [DIAL]),
+      wbFormIDCk(NNUT, 'NPC Neutral Response', [DIAL]),
+      wbFormIDCk(NQUT, 'NPC Question Response', [DIAL]),
+      wbFormIDCk(NPOS, 'NPC Positive Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NNGS, 'NPC Negative Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NNUS, 'NPC Neutral Dialogue Subtype', [KYWD]),
+      wbFormIDCk(NQUS, 'NPC Question Dialogue Subtype', [KYWD]),
+      wbScenePlayerDialogueAction
+    ], []).IncludeFlag(dfAllowAnyMember);
+
+  var wbSceneRadioDialogueAction :=
+    wbRStruct('Radio and Dialogue', [
+      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
+      wbRUnion('',[
+        wbSceneDialogueAction,
+        wbSceneRadioAction
+      ],[])
+    ], []);
+
   wbRecord(SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
@@ -14552,6 +14872,10 @@ begin
         wbRStruct('Completion Conditions', [wbCTDAs], []),
         wbEmpty(NEXT, 'Marker Completion Conditions', cpNormal, True),
         wbInteger(WNAM, 'Editor Width', itU32, nil, cpNormal, True, false, nil, nil, 350),
+        wbUnknown(SPPI),
+        wbUnknown(SPPT),
+        wbUnknown(SPCT),// Might actually be SDCT but they messed up. Kept since it's used in previous versions
+        wbUnknown(SDCT),
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
@@ -14632,55 +14956,16 @@ begin
       ])),
       wbInteger(SNAM, 'Start Phase', itU32),
       wbInteger(ENAM, 'End Phase', itU32),
-      wbFloat(SNAM, 'Timer - Max Seconds'),
-      wbInteger(SCQS, 'Set Parent Quest Stage', itS16),
-      wbFloat(TNAM, 'Timer - Min Seconds'),
-      wbUnknown(STSC),
-      wbRArray('Start Scenes', wbStartScene),
-      wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
-      wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
-      wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
-      wbFormIDCk(QTOP, 'Player Question Response', [DIAL]),
-      wbFormIDCk(VENC, 'Player Positive Dialogue Subtype', [KYWD]),
-      wbFormIDCk(PLVD, 'Player Negative Dialogue Subtype', [KYWD]),
-      wbFormIDCk(JOUT, 'Player Neutral Dialogue Subtype', [KYWD]),
-      wbFormIDCk(DALC, 'Player Question Dialogue Subtype', [KYWD]),
-      wbArray(DTID, 'NPC Headtracking', wbInteger('Actor ID', itS32)),
-      wbFormIDCk(NPOT, 'NPC Positive Response', [DIAL]),
-      wbFormIDCk(NNGT, 'NPC Negative Response', [DIAL]),
-      wbFormIDCk(NNUT, 'NPC Neutral Response', [DIAL]),
-      wbFormIDCk(NQUT, 'NPC Question Response', [DIAL]),
-      wbFormIDCk(NPOS, 'NPC Positive Dialogue Subtype', [KYWD]),
-      wbFormIDCk(NNGS, 'NPC Negative Dialogue Subtype', [KYWD]),
-      wbFormIDCk(NNUS, 'NPC Neutral Dialogue Subtype', [KYWD]),
-      wbFormIDCk(NQUS, 'NPC Question Dialogue Subtype', [KYWD]),
-      wbInteger(DTGT, 'Dialogue Target Actor', itS32),
-      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
-      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
-      wbUnion(HTID, '', wbSceneActionSoundDecider, [
-        wbEmpty('End Scene Say Greeting'),
-        wbFormIDCk('Play Sound', [SNDR, NULL])
-      ]),
-      wbFloat(DMAX, 'Looping - Max'),
-      wbFloat(DMIN, 'Looping - Min'),
-      wbStruct(CRIS, 'Camera', [
-        wbFloat('FOV On Player Camera'),
-        wbFloat('Rate Of Camera Change')
-      ]),
-      wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
-      wbInteger(DEVA, 'Emotion Value', itU32),
-      wbArray(HTID, 'Player Headtracking', wbInteger('Actor ID', itS32)),
-      wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
-      wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
-      wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-      wbRArray('Dialogue Choices', wbRStruct('Dialogue Choice', [
-        wbFormId(ESCE, 'Option'),
-        wbFormId(ESCS, 'Response')
-      ], [])),
-      wbRStruct('Prior Action Info', [
-        wbInteger(ATTR, 'Action to Follow', itU32),
-        wbEmpty(ACBS, 'Action Comes Before Start')
-      ],[]),
+      wbRUnion('Scene Action Data', [
+        wbScenePackageAction,
+        wbSceneTimerAction,
+        wbScenePlayerDialogueAction,
+        //wbScenePlayerDialogueActionOld,
+        wbSceneStartSceneAction,
+        wbSceneStartSceneActionAlt,
+        wbSceneNPCResponseDialogue,
+        wbSceneRadioDialogueAction
+      ], []),
       wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
     wbFormIDCk(PNAM, 'Parent Quest', [QUST]),
@@ -16133,7 +16418,7 @@ begin
         {0x00004000} 'Summonable',
         {0x00008000} 'Unknown 15',
         {0x00010000} 'Doesn''t bleed',
-        {0x00020000} 'Unknown 17',
+        {0x00020000} 'Is Armor Rack',
         {0x00040000} 'Bleedout Override',
         {0x00080000} 'Opposite Gender Anims',
         {0x00100000} 'Simple Actor',
@@ -16927,7 +17212,7 @@ begin
           {0x00002000} 'Keep Instance',
           {0x00004000} 'Want Dormant',
           {0x00008000} 'Has Dialogue Data',
-          {0x00010000} 'Unknown 17',
+          {0x00010000} 'Instanced Quest',
           {0x00020000} 'Unknown 18',
           {0x00040000} 'Unknown 19',
           {0x00080000} 'Holotape Container Quest',
@@ -17233,11 +17518,12 @@ begin
     wbUnknown(QARV),
     wbUnknown(QARF),
     wbInteger(PEDF, 'Public Event Difficulty', itU32, wbEnum([
+      'Very Easy',
       'Easy',
       'Medium',
       'Hard',
       'Very Hard',
-      'None'
+      'Nuclear'
     ])),
     wbString(PEPI, 'Public Event Popup Info'),
     wbUnknown(PERM),
@@ -17895,10 +18181,10 @@ begin
       wbFloat('Frequency'),
       wbFloat('Min Weak Distance'),
       wbFloat('Max Weak Distance'),
-      wbInteger('Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      wbInteger('Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
         {0x00000200}  1, 'Ignores Distance Checks',
-        {0x00000400}  8, 'Unknown',
-        {0x00000800} 16, 'Unknown'
+        {0x00000400}  8, 'Unknown 8',
+        {0x00000800} 16, 'Unknown 16'
       ], True, True)))]),
     wbXFLG,
     wbByteArray(XKPD, 'Keypad Data', 5),
@@ -18470,12 +18756,14 @@ begin
       {3} 'Lesser Power',
       {4} 'Ability',
       {5} 'Poison',
-      {6} 'Unknown 6',
-      {7} 'Unknown 7',
-      {8} 'Unknown 8',
-      {9} 'Unknown 9',
+      {6} 'Enchantment',
+      {7} 'Potion',
+      {8} 'Wortcraft',
+      {9} 'Levelled',
      {10} 'Addiction',
-     {11} 'Voice'
+     {11} 'Voice',
+     {12} 'Staff Enchantment',
+     {13} 'Scroll'
     ])),
     wbFloat('Charge Time'),
     wbInteger('Cast Type', itU32, wbCastEnum),
@@ -19121,7 +19409,7 @@ begin
       wbByteArray(WLEV, 'Data')
     ], []),
     wbOFST,
-    wbUnknown(CLSZ),
+    wbByteArray(CLSZ, 'Cell Size Data'),
     wbUnknown(VISI)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
@@ -19766,6 +20054,7 @@ begin
     wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
     wbFormIDCk(DNAM, 'Dependant Mod', [OMOD,NULL]),
     wbFormIDCk(ENAM, 'Condition Form', [CNDF]),
+    wbFormID(XNAM, 'Possible Mod List'),
     wbInteger(NAM1, 'Priority', itU8),
     wbFormIDCk(ARTC, 'Art Object', [ARTO]),
     wbByteArray(NAM2, 'Unused', 0),
@@ -20209,7 +20498,8 @@ begin
     wbUnknown(AQIC),
     wbInteger(MXCT, 'Max Currency', itU32),
     wbLString(SNAM, 'Plural Name'),
-    wbInteger(CRTY, 'Collections Order', itU16)
+    wbInteger(CRTY, 'Collections Order', itU16),
+    wbInteger(FNAM, 'Unknown Int', itU32)
   ]);
 
   wbRecord(PPAK, 'Perk Card Pack',
@@ -20605,7 +20895,12 @@ begin
     ])),
     wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
     wbCTDAs,
+    wbRStruct('More Conditions', [
+      wbEmpty(NEXT, 'Marker', cpNormal, True),
+      wbCTDAs
+    ],[]),
     wbRArray('Rewards', wbRStruct('Reward', [
+      wbUnknown(CTRG),
       wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
       wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
       wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
@@ -20624,7 +20919,8 @@ begin
     ], []).IncludeFlag(dfAllowAnyMember)),
     wbString(JASF, 'Associated Json File'),
     wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST]),
-    wbString(MNAM, 'Reward Display'),
+    wbLStringKC(MNAM, 'Reward Display', 0, cpTranslate),
+//    wbString(MNAM, 'Reward Display'), TODO: Prior to esm version 155
     wbString(RNAM, 'Reward Icon')
   ]);
 
