@@ -5168,7 +5168,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
+      wbInteger('DR', itS16, wbDiv(100)),
       wbInteger('Flags', itU16, wbFlags([
         'Modulates Voice'
       ]))
@@ -5195,7 +5195,7 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('AR', itS16, wbDiv(100)),
+      wbInteger('DR', itS16, wbDiv(100)),
       wbInteger('Flags', itU16, wbFlags([
         'Modulates Voice'
       ]))
@@ -9290,7 +9290,7 @@ begin
       ]),
       wbRArrayS('Linked Rooms',
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
-      )
+      ).SetCountPath('XRMR\Linked Rooms Count')
     ], []),
 
     wbSizePosRot(XOCP, 'Occlusion Plane Data'),

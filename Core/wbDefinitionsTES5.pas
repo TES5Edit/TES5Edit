@@ -832,7 +832,7 @@ end;
 
 function IsSSE: Boolean; inline; overload;
 begin
-  Result := wbGameMode in [gmSSE, gmTES5VR];
+  Result := wbGameMode in [gmSSE, gmTES5VR, gmEnderalSE];
 end;
 
 function IsSSE(const aDef1, aDef2: String): String; inline; overload;
@@ -10540,7 +10540,7 @@ begin
     ),
     {>>> END leftover from earlier CK versions <<<}
 
-    wbLString(RNAM, 'Prompt', 0, cpTranslate),
+    wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCkNoReach(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TWAT, 'Walk Away Topic', [DIAL]),
     wbFormIDCk(ONAM, 'Audio Output Override', [SOPM])
@@ -12501,7 +12501,7 @@ begin
       wbFormIDCk(INAM, 'Image Space', [IMGS]),
       wbRArrayS('Linked Rooms',
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
-      )
+      ).SetCountPath('XRMR\Linked Rooms Count')
     ], []),
     wbEmpty(XMBP, 'MultiBound Primitive Marker', cpIgnore),
 
@@ -13803,8 +13803,10 @@ begin
       wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
 
-  if wbGameMode = gmEnderal then
-    wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+  case wbGameMode of
+    gmEnderal: wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+    gmEnderalSE: wbNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
+  end;
 
   DefineTES5a;
   DefineTES5b;

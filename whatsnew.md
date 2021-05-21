@@ -12,9 +12,27 @@
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * #871 - Updates for Static Collections [FO4] 
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
+* #909 - xEdit should double apostrophes in generated LOOT masterlist entry names
+* #914 - RNAM subrecord of INFO needs to be treated as case sensitive
+* #916 - DR displayed incorrectly in Armor and Armor Addons for F3/NV
+* #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
 * (reported on Discord) - [TES4] EDID and ESCE incorrectly report "Expected 4 bytes but found 0" when running "Check for Errors" on MGEF
 * (found by developer) - Need to force InternalEdit for AfterSet handlers
+
+## Enderal Special Edition
+
+Initial support for Enderal Special Edition has been added.
+
+xEdit can be renamed to `EnderalSEEdit.exe` or started with `-enderalse` as parameter.
+
+## QuickEdit
+
+By starting xEdit with a `-quickedit:somefile.esp` parameter, only that file (and it's required masters) will be initially selected in the Module Selection Form.
+
+It is possible to list multiple files, e.g. `-quickedit:dawnguard.esm dragonborn.esm`.
+
+This parameter can be combined with `-autoload` (see below).
 
 # What's new in xEdit 4.0.3?
 

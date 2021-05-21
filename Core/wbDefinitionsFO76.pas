@@ -18121,7 +18121,7 @@ begin
       wbFormIDCk(INAM, 'Image Space', [IMGS]),
       wbRArrayS('Linked Rooms',
         wbFormIDCk(XLRM, 'Linked Room', [REFR])
-      )
+      ).SetCountPath('XRMR\Linked Rooms Count')
     ], []),
     wbEmpty(XMBP, 'MultiBound Primitive Marker', cpIgnore),
 

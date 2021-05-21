@@ -39,6 +39,7 @@ uses
   IniFiles,
   Registry,
   Math,
+  Vcl.Clipbrd,
   RegularExpressionsCore,
   RegularExpressionsConsts,
   JsonDataObjects,
@@ -67,6 +68,22 @@ begin
       Result := i;
       Break;
     end;
+end;
+
+{ Clipboard }
+
+procedure JvInterpreter_Clipboard_GetAsText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Clipboard.AsText;
+end;
+
+procedure JvInterpreter_Clipboard_SetAsText(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  var s := string(Args.Values[0]);
+  if Length(s) > 0 then
+    Clipboard.AsText := s
+  else
+    Clipboard.Clear;
 end;
 
 { StrUtils }
@@ -363,6 +380,80 @@ end;
 
 { TStringList }
 
+procedure StringSetOp_Difference(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
+begin
+  for var i := 0 to Pred(aSetListA.Count) do
+    if aSetListB.IndexOf(aSetListA[i]) = -1 then
+      aLH.Append(aSetListA[i]);
+end;
+
+procedure StringSetOp_Intersection(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
+begin
+  for var i := 0 to Pred(aSetListA.Count) do
+    if aSetListB.IndexOf(aSetListA[i]) > -1 then
+      aLH.Append(aSetListA[i]);
+end;
+
+procedure StringSetOp_SymmetricDifference(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
+begin
+  aLH.AddStrings(aSetListA);
+  aLH.AddStrings(aSetListB);
+
+  var Intersection: TStringList := TStringList.Create;
+
+  for var i := 0 to Pred(aSetListA.Count) do
+    if aSetListB.IndexOf(aSetListA[i]) > -1 then
+      Intersection.Append(aSetListA[i]);
+
+  for var i := 0 to Pred(Intersection.Count) do
+  begin
+    var j := aLH.IndexOf(Intersection[i]);
+    if j > -1 then
+      aLH.Delete(j);
+  end;
+
+  Intersection.Free;
+end;
+
+procedure StringSetOp_Union(const aSetListA: TStringList; const aSetListB: TStringList; const aLH: TStringList);
+begin
+  aLH.AddStrings(aSetListA);
+  aLH.AddStrings(aSetListB);
+end;
+
+type
+   TSetOperation = (D, I, S, U);
+
+procedure StringSetOp(const aOperation: TSetOperation; const aLH: TStringList; const aRH: TStringList);
+begin
+  { Executes set operations on TStringList objects and modifies aListA in-place }
+
+  aLH.Duplicates := dupIgnore;
+  aLH.Sorted := True;
+
+  var SetListA: TStringList := TStringList.Create;
+  SetListA.Duplicates := dupIgnore;
+  SetListA.Sorted := True;
+  SetListA.AddStrings(aLH);
+
+  var SetListB: TStringList := TStringList.Create;
+  SetListB.Duplicates := dupIgnore;
+  SetListB.Sorted := True;
+  SetListB.AddStrings(aRH);
+
+  aLH.Clear;
+
+  case aOperation of
+    D : StringSetOp_Difference(SetListA, SetListB, aLH);
+    I : StringSetOp_Intersection(SetListA, SetListB, aLH);
+    S : StringSetOp_SymmetricDifference(SetListA, SetListB, aLH);
+    U : StringSetOp_Union(SetListA, SetListB, aLH);
+  end;
+
+  SetListA.Free;
+  SetListB.Free;
+end;
+
 procedure TStringList_Read_CaseSensitive(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := TStringList(Args.Obj).CaseSensitive;
@@ -371,6 +462,26 @@ end;
 procedure TStringList_Write_CaseSensitive(const Value: Variant; Args: TJvInterpreterArgs);
 begin
   TStringList(Args.Obj).CaseSensitive := Value;
+end;
+
+procedure TStringList_Difference(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  StringSetOp(TSetOperation.D, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+end;
+
+procedure TStringList_Intersection(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  StringSetOp(TSetOperation.I, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+end;
+
+procedure TStringList_SymmetricDifference(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  StringSetOp(TSetOperation.S, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
+end;
+
+procedure TStringList_Union(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  StringSetOp(TSetOperation.U, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
 
@@ -1819,6 +1930,10 @@ begin
     AddConst('Windows', 'SW_SHOWNOACTIVATE', Ord(SW_SHOWNOACTIVATE));
     AddConst('Windows', 'SW_SHOWNORMAL', Ord(SW_SHOWNORMAL));
 
+    { Clipboard }
+    AddFunction('Vcl.Clipbrd', 'GetClipboardText', JvInterpreter_Clipboard_GetAsText, 0, [varEmpty], varEmpty);
+    AddFunction('Vcl.Clipbrd', 'SetClipboardText', JvInterpreter_Clipboard_SetAsText, 1, [varString], varEmpty);
+
     { StrUtils }
     AddFunction('StrUtils', 'ContainsStr', JvInterpreter_ContainsStr, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('StrUtils', 'ContainsText', JvInterpreter_ContainsText, 2, [varEmpty, varEmpty], varEmpty);
@@ -1903,6 +2018,10 @@ begin
     { TStringList }
     AddGet(TStrings, 'CaseSensitive', TStringList_Read_CaseSensitive, 0, [varEmpty], varEmpty);
     AddSet(TStrings, 'CaseSensitive', TStringList_Write_CaseSensitive, 0, [varEmpty]);
+    AddGet(TStrings, 'Difference', TStringList_Difference, 1, [varEmpty], varEmpty);
+    AddGet(TStrings, 'Intersection', TStringList_Intersection, 1, [varEmpty], varEmpty);
+    AddGet(TStrings, 'SymmetricDifference', TStringList_SymmetricDifference, 1, [varEmpty], varEmpty);
+    AddGet(TStrings, 'Union', TStringList_Union, 1, [varEmpty], varEmpty);
 
     { THashedStringList }
     AddClass('IniFiles', THashedStringList, 'THashedStringList');

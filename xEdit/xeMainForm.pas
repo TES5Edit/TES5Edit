@@ -75,6 +75,7 @@ uses
 const
   DefaultInterval             = 1 / 24 / 6; // 10 minutes
   MaxSaveListCount            = 5;
+  ScriptSelfTerminated        = 'Script terminated itself, Result=';
 
 type
   TDynBooleans = array of Boolean;
@@ -365,6 +366,8 @@ type
     mniViewStickSelected: TMenuItem;
     mniViewSetToDefault: TMenuItem;
     mniRefByCompareSelected: TMenuItem;
+    N33: TMenuItem;
+    mniRefByApplyScript: TMenuItem;
     pmuMessages: TPopupMenu;
     mniMessagesAutoscroll: TMenuItem;
     mniMessagesClear: TMenuItem;
@@ -853,7 +856,9 @@ type
     function SetAllToMaster: Boolean;
     function UpdateAllOnam: Boolean;
     function RestorePluginsFromMaster: Boolean;
-    procedure ApplyScript(const aScriptName: string; aScript: string);
+    procedure ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
+    procedure ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
+    procedure ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean = False);
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
@@ -4981,7 +4986,7 @@ begin
               gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
               gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
               gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
-              gmTES5, gmEnderal, gmTES5VR, gmSSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+              gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
             if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
@@ -5027,7 +5032,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or xeQuickClean) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal]) then begin
+        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE]) then begin
           Modules.DeactivateAll;
 
           if (xePluginToUse <> '') or not xeQuickClean then
@@ -5138,8 +5143,10 @@ begin
               frmMain.Close;
               Exit;
             end;
-          gmTES5: if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
-          gmEnderal:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
+          gmTES5,
+          gmTES5VR,
+          gmEnderal,
+          gmEnderalSE,
           gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then xeSwitchToCoSave;
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
@@ -7888,14 +7895,117 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string);
+procedure TfrmMain.ApplyScriptToSelection(aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean);
+var
+  Node        : PVirtualNode;
+begin
+  for var i := Low(aSelection) to High(aSelection) do
+  begin
+    var StartNode: PVirtualNode := aSelection[i];
+
+    if Assigned(StartNode) then
+    begin
+      Node := vstNav.GetLast(StartNode);
+
+      if not Assigned(Node) then
+        Node := StartNode;
+    end
+    else
+      Node := nil;
+
+    while Assigned(Node) do
+    begin
+      var NextNode: PVirtualNode := vstNav.GetPrevious(Node);
+      var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
+
+      if Assigned(NodeData.Element) then
+        if NodeData.Element.ElementType in ScriptProcessElements then
+        begin
+          var Result: Variant;
+
+          if not abShowMessages then
+            wbProgressUnlock;
+
+          try
+            Inc(wbHideStartTime);
+
+            try
+              Result := Script.CallFunction('Process', [NodeData.Element]);
+            finally
+              Dec(wbHideStartTime);
+            end;
+          finally
+            if not abShowMessages then
+              wbProgressLock;
+          end;
+
+          if Result <> 0 then
+          begin
+            wbProgress(ScriptSelfTerminated + IntToStr(Result));
+            Exit;
+          end;
+
+          Inc(aCount);
+
+          wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+        end;
+
+      if Node = StartNode then
+        Node := nil
+      else
+        Node := NextNode;
+
+      wbTick;
+    end;
+  end;
+end;
+
+procedure TfrmMain.ApplyScriptToSelection(aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean);
+begin
+  for var i := Low(aSelection) to High(aSelection) do
+  begin
+    var Element: IwbElement := aSelection[i];
+
+    if Element.ElementType in ScriptProcessElements then
+    begin
+      var Result: Variant;
+
+      if not abShowMessages then
+        wbProgressUnlock;
+
+      try
+        Inc(wbHideStartTime);
+
+        try
+          Result := Script.CallFunction('Process', [Element]);
+        finally
+          Dec(wbHideStartTime);
+        end;
+      finally
+        if not abShowMessages then
+          wbProgressLock;
+      end;
+
+      if Result <> 0 then begin
+        wbProgress(ScriptSelfTerminated + IntToStr(Result));
+        Exit;
+      end;
+
+      Inc(aCount);
+
+      wbCurrentProgress := 'Processed Records: ' + aCount.ToString;
+    end;
+
+    wbTick;
+  end;
+end;
+
+procedure TfrmMain.ApplyScript(const aScriptName: string; aScript: string; aRefByMode: Boolean);
 const
   sJustWait                   = 'Applying script. Please wait...';
-  sTerminated                 = 'Script terminated itself, Result=';
 var
-  Selection                   : TNodeArray;
-  StartNode, Node, NextNode   : PVirtualNode;
-  NodeData                    : PNavNodeData;
+  SelectedNodes               : TNodeArray;
+  SelectedElements            : TDynElements;
   Count                       : Cardinal;
   i, p                        : Integer;
   s                           : string;
@@ -7927,7 +8037,10 @@ begin
     if bShowMessages then
       pgMain.ActivePage := tbsMessages;
 
-    Selection := vstNav.GetSortedSelection(True);
+    if not aRefByMode then
+      SelectedNodes := vstNav.GetSortedSelection(True)
+    else
+      SelectedElements := GetRefBySelectionAsElements;
 
     PrevMaxMessageInterval := wbMaxMessageInterval;
     wbMaxMessageInterval := High(Integer);
@@ -7955,57 +8068,17 @@ begin
                 Dec(wbHideStartTime);
               end;
               if Result <> 0 then begin
-                wbProgress(sTerminated + IntToStr(Result));
+                wbProgress(ScriptSelfTerminated + IntToStr(Result));
                 Exit;
               end;
             end;
 
             // skip selected records iteration if Process() function doesn't exist
             if Script.FunctionExists('Process') then
-              for i := Low(Selection) to High(Selection) do begin
-                StartNode := Selection[i];
-                if Assigned(StartNode) then begin
-                  Node := vstNav.GetLast(StartNode);
-                  if not Assigned(Node) then
-                    Node := StartNode;
-                end else
-                  Node := nil;
-                while Assigned(Node) do begin
-                  NextNode := vstNav.GetPrevious(Node);
-                  NodeData := vstNav.GetNodeData(Node);
-
-                  if Assigned(NodeData.Element) then
-                    if NodeData.Element.ElementType in ScriptProcessElements then begin
-                      var Result: Variant;
-                      if not bShowMessages then
-                        wbProgressUnlock;
-                      try
-                        Inc(wbHideStartTime);
-                        try
-                          Result := Script.CallFunction('Process', [NodeData.Element]);
-                        finally
-                          Dec(wbHideStartTime);
-                        end;
-                      finally
-                        if not bShowMessages then
-                          wbProgressLock;
-                      end;
-                      if Result <> 0 then begin
-                        wbProgress(sTerminated + IntToStr(Result));
-                        Exit;
-                      end;
-                      Inc(Count);
-                      wbCurrentProgress := 'Processed Records: ' + Count.ToString;
-                    end;
-
-                  if Node = StartNode then
-                    Node := nil
-                  else
-                    Node := NextNode;
-
-                  wbTick;
-                end;
-              end;
+              if not aRefByMode then
+                ApplyScriptToSelection(SelectedNodes, Count, bShowMessages)
+              else
+                ApplyScriptToSelection(SelectedElements, Count, bShowMessages);
 
             if Script.FunctionExists('Finalize') then begin
               var Result: Variant;
@@ -8016,7 +8089,7 @@ begin
                 Dec(wbHideStartTime);
               end;
               if Result <> 0 then begin
-                wbProgress(sTerminated + IntToStr(Result));
+                wbProgress(ScriptSelfTerminated + IntToStr(Result));
                 Exit;
               end;
             end;
@@ -8259,7 +8332,7 @@ begin
   finally
     Free;
   end;
-  ApplyScript(ScriptName, Scr);
+  ApplyScript(ScriptName, Scr, Sender = mniRefByApplyScript);
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -9834,7 +9907,7 @@ begin
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
 
-      if Assigned(Sender) and (wbGameMode in [gmSSE, gmTES5VR]) then begin
+      if Assigned(Sender) and (wbGameMode in [gmSSE, gmTES5VR, gmEnderalSE]) then begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
         Application.MessageBox(
@@ -10686,7 +10759,7 @@ begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
     if aFileChanged then
-      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]) + CRLF;
+      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
     Result := Result + StringOfChar(' ', 4) + 'dirty:';
     if aInfo.NAV <> 0 then
       Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *reqManualFix'
@@ -14200,7 +14273,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -14393,6 +14466,8 @@ begin
         sig := Rec.Signature;
     end;
   end;
+
+  mniRefByApplyScript.Visible := Length(Selected) > 0;
 
   AnyVWD    := False;
   AnyNotVWD := False;
@@ -20066,7 +20141,7 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5, gmEnderal], wbIsSkyrim, n, m)>0 then begin
+                    wbGameMode in [gmTES5, gmEnderal, gmEnderalSE], wbIsSkyrim, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
