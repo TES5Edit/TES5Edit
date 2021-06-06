@@ -890,6 +890,7 @@ var
   s, t            : string;
   i,j             : integer;
   c               : Integer;
+  bsaCount        : Integer;
   _File           : IwbFile;
   Masters         : TStringList;
   IsLocalized     : Boolean;
@@ -1170,7 +1171,7 @@ begin
       if FindCmdLineSwitch('dh') then begin
         DumpHidden := True;
       end;
-	  
+
       if wbReportMode then
         wbShowFlagEnumValue := True;
 
@@ -1305,7 +1306,7 @@ begin
 
       if wbFindCmdLineParam('l', s) then begin
         wbLanguage := s;
-      end else
+      end else begin
         if FileExists(wbTheGameIniFileName) then begin
           with TMemIniFile.Create(wbTheGameIniFileName) do try
             case wbGameMode of
@@ -1320,12 +1321,37 @@ begin
             else
               s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
             end;
-            if (s <> '') and not SameText(s, wbLanguage) then
-              wbLanguage := s;
           finally
             Free;
           end;
         end;
+
+        if FileExists(wbCustomIniFileName) then begin
+          with TMemIniFile.Create(wbCustomIniFileName) do try
+            case wbGameMode of
+              gmTES4: begin
+                if ValueExists('Controls', 'iLanguage') then
+                  case ReadInteger('Controls', 'iLanguage', 0) of
+                    1: s := 'German';
+                    2: s := 'French';
+                    3: s := 'Spanish';
+                    4: s := 'Italian';
+                  else
+                    s := 'English';
+                  end;
+              end else begin
+                if ValueExists('General', 'sLanguage') then
+                  s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+              end;
+            end;
+          finally
+            Free;
+          end;
+        end;
+
+        if (s <> '') and not SameText(s, wbLanguage) then
+          wbLanguage := s;
+      end;
 
       wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
 
@@ -1514,7 +1540,15 @@ begin
               try
                 m := TStringList.Create;
                 try
-                  if (Length(wbTheGameIniFileName)>0) and (FindBSAs(wbTheGameIniFileName, wbDataPath, n, m)>0) then begin
+                  bsaCount := 0;
+                  if FileExists(wbTheGameIniFileName) then begin
+                    if FileExists(wbCustomIniFileName) then
+                      bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, wbDataPath, n, m)
+                    else
+                      bsaCount := FindBSAs(wbTheGameIniFileName, wbDataPath, n, m);
+                  end;
+
+                  if (bsaCount > 0) then begin
                     for i := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[i] + '] Loading Resources.');
                       wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));

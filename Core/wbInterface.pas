@@ -289,6 +289,7 @@ var
   wbSavePath           : string;
   wbMyGamesTheGamePath : string;
   wbTheGameIniFileName : string;
+  wbCustomIniFileName  : string;
 
   wbCreationClubContentFileName : string;
   wbCreationClubContent: array of string;
