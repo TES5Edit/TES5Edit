@@ -1233,7 +1233,7 @@ begin
     try
       if not cIni.SectionExists('Archive') then
         Result := FindBSAs(IniName, DataPath, bsaNames, bsaMissing)
-      else
+      else begin
         mIni := TIniFile.Create(IniName);
         try
           with TStringList.Create do try
@@ -1280,6 +1280,7 @@ begin
         finally
           FreeAndNil(mIni);
         end;
+      end;
     finally
       FreeAndNil(cIni);
     end;
