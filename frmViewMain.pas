@@ -20253,7 +20253,7 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5, gmEnderal, gmEnderalSE], wbIsSkyrim, n, m)>0 then begin
+                    wbGameMode in [gmTES5, gmEnderal], wbIsSkyrim, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + n[j] + '] Loading Resources.');
