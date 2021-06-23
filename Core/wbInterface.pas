@@ -2102,6 +2102,8 @@ type
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+
+    function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
   end;
 
   TwbUsedMasters = array[Byte] of Boolean;
@@ -5282,6 +5284,7 @@ type
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef;
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+    function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
 
     {---IwbSubRecordDef---}
     function GetValue: IwbValueDef;
@@ -5315,6 +5318,7 @@ type
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+    function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
   end;
 
   TwbSubRecordArrayDef = class(TwbRecordMemberDef, IwbSubRecordArrayDef)
@@ -9907,6 +9911,12 @@ function TwbSubRecordDef.SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aP
 begin
   Result := Self;
   (srValue as IwbStructDef).SetSummaryMemberPrefixSuffix(aIndex, aPrefix, aSuffix);
+end;
+
+function TwbSubRecordDef.SetRequired(const aRequired: Boolean): IwbRecordMemberDef;
+begin
+  Result := Self;
+  defRequired := aRequired;
 end;
 
 function TwbSubRecordDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
@@ -19441,6 +19451,12 @@ function TwbRecordMemberDef.SetAfterSet(const aAfterSet: TwbAfterSetCallback): I
 begin
   Result := Self;
   ndAfterSet := aAfterSet;
+end;
+
+function TwbRecordMemberDef.SetRequired(const aRequired: Boolean): IwbRecordMemberDef;
+begin
+  Result := Self;
+  defRequired := aRequired;
 end;
 
 function TwbRecordMemberDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
