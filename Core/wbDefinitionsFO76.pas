@@ -8217,7 +8217,7 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
 
   wbXALGFlags := wbFlags([
-    {0x00000001} 'Unknown 1',
+    {0x00000001} 'Unknown 1 (No Havok??)',
     {0x00000002} 'Unknown 2',
     {0x00000004} 'Unknown 3 (Reference??)',
     {0x00000008} 'Unknown 4',
