@@ -8909,7 +8909,7 @@ begin
         {0} 'Int',
         {1} 'Float',
         {2} 'Bool',
-        {3} 'Unknown 3',
+        {3} 'String',
         {4} 'FormID,Int',
         {5} 'Enum',
         {6} 'FormID,Float'
@@ -12331,7 +12331,7 @@ begin
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       {0x00000001} 'Begin on Quest Start',
       {0x00000002} 'Stop on Quest End',
-      {0x00000004} 'Unknown 2',
+      {0x00000004} 'Show All Text',
       {0x00000008} 'Repeat Conditions While True',
       {0x00000010} 'Interruptible',
       {0x00000020} 'Unknown 5',
@@ -16002,7 +16002,7 @@ begin
       wbByteArray(WLEV, 'Data')
     ], []),
     wbOFST,
-    wbUnknown(CLSZ)
+    wbByteArray(CLSZ, 'Cell Size Data')
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
