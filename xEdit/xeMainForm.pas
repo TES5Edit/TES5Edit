@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -4844,6 +4844,10 @@ begin
   if not FileExists(wbTheGameIniFileName) then begin
     AddMessage('Fatal: Could not find ini');
     Exit;
+  end;
+
+  if FileExists(wbCustomIniFileName) then begin
+    AddMessage('Using custom ini: ' + wbCustomIniFileName);
   end;
 
   if wbSavePath <> '' then begin
@@ -10773,7 +10777,7 @@ begin
   end
   else if (aInfo.ITM = 0) and (aInfo.UDR = 0) and (aInfo.NAV = 0) then begin
     if aFileChanged then
-      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin]) + CRLF;
+      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
     Result := Result + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString.ToString]);
@@ -11555,7 +11559,7 @@ end;
 procedure TfrmMain.mniBtnShrinkButtonsClick(Sender: TObject);
 begin
   wbShrinkButtons := not wbShrinkButtons;
-  
+
   if (Settings <> nil) then begin
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);
     Settings.UpdateFile;
@@ -20079,6 +20083,7 @@ procedure TLoaderThread.Execute;
 var
   i,j                         : Integer;
   dummy                       : Integer;
+  bsaCount                    : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   b                           : TBytes;
@@ -20112,7 +20117,15 @@ begin
           try
             m := TStringList.Create;
             try
-              if FindBSAs(wbTheGameIniFileName, ltDataPath, n, m)>0 then begin
+              bsaCount := 0;
+              if FileExists(wbTheGameIniFileName) then begin
+                if FileExists(wbCustomIniFileName) then
+                  bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, ltDataPath, n, m)
+                else
+                  bsaCount := FindBSAs(wbTheGameIniFileName, ltDataPath, n, m);
+              end;
+
+              if (bsaCount > 0) then begin
                 for i := 0 to Pred(n.Count) do
                   if wbLoadBSAs then begin
                     LoaderProgress('[' + n[i] + '] Loading Resources.');

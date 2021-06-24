@@ -416,7 +416,7 @@ begin
 
   wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
 
-  if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
+  if not wbFindCmdLineParam('M', wbMyGamesTheGamePath) then begin
     xeMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
     if xeMyProfileName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
@@ -431,7 +431,9 @@ begin
     else
       wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
     end;
+  end;
 
+  if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
     if wbGameMode in [gmFO3, gmFNV] then
       wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
     else
@@ -440,6 +442,13 @@ begin
     // VR games don't create ini file in My Games by default, use the one in the game folder
     if (wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(wbTheGameIniFileName) then
       wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName);
+  end;
+
+  if not wbFindCmdLineParam('CustomIni', wbCustomIniFileName) then begin
+    if wbGameMode in [gmFO3, gmFNV] then
+      wbCustomIniFileName := wbMyGamesTheGamePath + 'FalloutCustom.ini'
+    else
+      wbCustomIniFileName := wbMyGamesTheGamePath + wbGameName + 'Custom.ini';
   end;
 
   if not wbFindCmdLineParam('G', wbSavePath) then begin
@@ -455,6 +464,16 @@ begin
         FreeAndNil(IniFile);
       end;
     end;
+
+    if FileExists(wbCustomIniFileName) then begin
+      with TMemIniFile.Create(wbCustomIniFileName) do try
+        if ValueExists('General', 'SLocalSavePath') then
+          s := ReadString('General', 'SLocalSavePath', s);
+      finally
+        Free;
+      end;
+    end;
+    
     wbSavePath := PathRelativeToFull(wbMyGamesTheGamePath, s);
   end;
   wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
@@ -1051,7 +1070,7 @@ begin
 
   if wbFindCmdLineParam('l', s) then begin
     wbLanguage := s;
-  end else
+  end else begin
     if FileExists(wbTheGameIniFileName) then begin
       with TMemIniFile.Create(wbTheGameIniFileName) do try
         case wbGameMode of
@@ -1066,12 +1085,37 @@ begin
         else
           s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
         end;
-        if (s <> '') and not SameText(s, wbLanguage) then
-          wbLanguage := s;
       finally
         Free;
       end;
     end;
+
+    if FileExists(wbCustomIniFileName) then begin
+       with TMemIniFile.Create(wbCustomIniFileName) do try
+        case wbGameMode of
+          gmTES4: begin
+            if ValueExists('Controls', 'iLanguage') then
+              case ReadInteger('Controls', 'iLanguage', 0) of
+                1: s := 'German';
+                2: s := 'French';
+                3: s := 'Spanish';
+                4: s := 'Italian';
+              else
+                s := 'English';
+              end;
+          end else begin
+            if ValueExists('General', 'sLanguage') then
+              s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+          end;
+        end;
+      finally
+        Free;
+      end;
+    end;
+
+    if (s <> '') and not SameText(s, wbLanguage) then
+      wbLanguage := s;
+  end;
 
   wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
 

@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -128,7 +128,9 @@ function wbCounterContainerByPathAfterSet(aCounterName: String; anArrayName: Str
 // BSA helper
 
 function MakeDataFileName(FileName, DataPath: String): String;
-function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; Section, Ident: String): String;
+function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
+function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
 function HasBSAs(ModName, DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
@@ -1138,6 +1140,15 @@ begin
     Result := FileName;
 end;
 
+function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; Section, Ident: String): String;
+begin
+  Result := '';
+  if cIni.ValueExists(Section, Ident) then
+    Result := StringReplace(cIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll])
+  else
+    Result := StringReplace(mIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll]);
+end;
+
 function FindBSAs(IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 var
   i: Integer;
@@ -1197,6 +1208,81 @@ begin
       end;
     finally
       Free;
+    end;
+end;
+
+function FindBSAs(IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+var
+  i: Integer;
+  j: Integer;
+  s: String;
+  t: String;
+  cIni, mIni: TIniFile;
+begin
+  Result := 0;
+  j := 0;
+  if Assigned(bsaNames) then
+    j := bsaNames.Count;
+  if Assigned(bsaMissing) then
+    j := j + bsaMissing.Count;
+
+  if Assigned(bsaNames) then
+    // TIniFile uses GetPrivateProfileString() to read data, it is virtualized by MO
+    // TMemIniFile reads from string list directly, not supported by MO
+    cIni := TIniFile.Create(CustomIniName);
+    try
+      if not cIni.SectionExists('Archive') then
+        Result := FindBSAs(IniName, DataPath, bsaNames, bsaMissing)
+      else begin
+        mIni := TIniFile.Create(IniName);
+        try
+          with TStringList.Create do try
+            if wbGameMode in [gmTES4, gmFO3, gmFNV] then begin
+              s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sArchiveList');
+              // Update.bsa is hardcoded to load in FNV
+              if wbGameMode = gmFNV then begin
+                if s <> '' then s := s + #10;
+                s := s + 'Update.bsa';
+              end;
+              Text := s;
+            end else if wbIsSkyrim then begin
+              s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList');
+              if s <> '' then s := s + #10;
+              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList2');
+              Text := s;
+            end else if wbIsFallout4 or wbIsFallout76 then begin
+              s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceIndexFileList');
+              if s <> '' then s := s + #10;
+              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceStartUpArchiveList');
+              if s <> '' then s := s + #10;
+              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList');
+              if s <> '' then s := s + #10;
+              s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList2');
+              Text := s;
+            end;
+
+            for i := 0 to Pred(Count) do begin
+              s := Trim(Strings[i]);
+              t := MakeDataFileName(s, DataPath);
+              if (Length(t)>0) then
+                if FileExists(t) then begin
+                  if wbContainerHandler.ContainerExists(t) then
+                    Continue;
+                  bsaNames.Add(s);
+                end else
+                  if Assigned(bsaMissing) then
+                    bsaMissing.Add(s);
+            end;
+            Result := bsaNames.Count  + bsaMissing.Count - j; // How many were added
+          finally
+            Free;
+          end;
+        finally
+          FreeAndNil(mIni);
+        end;
+      end;
+    finally
+      FreeAndNil(cIni);
     end;
 end;
 
