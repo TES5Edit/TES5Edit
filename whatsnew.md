@@ -18,6 +18,7 @@
 * #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
 * (reported on Discord) - [TES4] EDID and ESCE incorrectly report "Expected 4 bytes but found 0" when running "Check for Errors" on MGEF
+* (reported on Discord) - EnderalSE mode incorrectly performs exact instead of partial matching when loading .bsa for loaded modules
 * (found by developer) - Need to force InternalEdit for AfterSet handlers
 
 ## Enderal Special Edition
