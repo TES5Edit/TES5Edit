@@ -20974,7 +20974,7 @@ begin
   dcDataEndPtr := nil;
   dcDataStorage := nil;
   DoInit(True);
-  RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]);
+  RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self] + GetDataPrefixSize);
   inherited;
 end;
 
