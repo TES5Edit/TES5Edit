@@ -3048,7 +3048,7 @@ begin
 
   wbCTDA :=
     wbRUnion('Condition', [
-      wbStructSK(CTDA, [3, 4], 'Condition', [
+      wbStructSK(CTDA, [3, 5, 6], 'Condition', [
      {0}wbInteger('Type', itU8, wbCtdaType),
      {1}wbByteArray('Unused', 3),
      {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [

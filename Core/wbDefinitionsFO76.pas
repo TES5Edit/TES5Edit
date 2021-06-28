@@ -10303,7 +10303,7 @@ begin
     ], cpNormal, True);
 
   wbCTDA := wbRStructSK([0], 'Condition', [
-    wbStructSK(CTDA, [3, 5], '', [
+    wbStructSK(CTDA, [3, 5, 6], '', [
    {0}wbInteger('Type', itU8, wbCtdaTypeToStr, wbCtdaTypeToInt, cpNormal, False, nil, wbCtdaTypeAfterSet),
    {1}wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow),
    {2}wbUnion('Comparison Value', wbCTDACompValueDecider, [
