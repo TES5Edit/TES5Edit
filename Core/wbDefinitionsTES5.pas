@@ -12136,7 +12136,7 @@ begin
   ], []);
 
   var wbHeadParts :=
-    wbRArrayS('Head Parts', wbHeadPart, cpNormal, True);
+    wbRArrayS('Head Parts', wbHeadPart, cpNormal);
 
   var wbBodyParts :=
     wbRArrayS('Parts',
