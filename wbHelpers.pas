@@ -173,6 +173,8 @@ type
 
 procedure wbCodeBlock(const aProc: TProc);
 
+function wbVarArray(const aElements: array of Variant): Variant;
+
 implementation
 
 uses
@@ -1507,6 +1509,17 @@ end;
 procedure wbCodeBlock(const aProc: TProc);
 begin
   aProc;
+end;
+
+function wbVarArray(const aElements: array of Variant): Variant;
+var
+  Elements : array of Variant;
+  i        : Integer;
+begin
+  SetLength(Elements, Length(aElements));
+  for i := Low(aElements) to High(aElements) do
+    Elements[i] := aElements[i];
+  Result := Elements;
 end;
 
 initialization

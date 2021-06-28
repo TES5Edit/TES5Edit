@@ -755,7 +755,7 @@ var
   wbFirstPersonFlagsU32: IwbIntegerDef;
   wbBODT: IwbSubRecordDef;
   wbBOD2: IwbSubRecordDef;
-  wbBODTBOD2: IwbSubRecordUnionDef;
+  wbBODTBOD2: IwbRecordMemberDef;
   wbScriptEntry: IwbStructDef;
   wbScriptFlags: IwbIntegerDef;
   wbScriptPropertyObject: IwbUnionDef;
@@ -5219,7 +5219,7 @@ begin
         ], True)),
         wbEmpty('Unused'),
         wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-      ], cpNormal, False),
+      ], cpNormal, True),
       wbStruct(BODT, 'Body Template', [
         wbFirstPersonFlagsU32,
         wbInteger('General Flags', itU8, wbFlags([
@@ -5234,8 +5234,8 @@ begin
         ], True)),
         wbByteArray('Unused', 3, cpIgnore),
         wbInteger('Armor Type', itU32, wbArmorTypeEnum)
-      ], cpNormal, False, nil, 3)
-    ], []);
+      ], cpNormal, True, nil, 3)
+    ], []).SetRequired;
 
   wbMDOB := wbFormID(MDOB, 'Menu Display Object', cpNormal, False);
   wbCNAM := wbStruct(CNAM, 'Color', [
@@ -12558,8 +12558,6 @@ begin
     wbSPCT,
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-//    wbBODT,
-//    wbBOD2,
     wbBODTBOD2,
     wbKSIZ,
     wbKWDAs,
@@ -12621,20 +12619,20 @@ begin
       ])
       //wbByteArray('Unknown', 4*7)
     ], cpNormal, True, nil, 29),
-    wbEmpty(MNAM, 'Male Marker'),
+    wbEmpty(MNAM, 'Male Marker').SetRequired,
     wbString(ANAM, 'Male Skeletal Model'),
     wbMODT,
-    wbEmpty(FNAM, 'Female Marker'),
+    wbEmpty(FNAM, 'Female Marker').SetRequired,
     wbString(ANAM, 'Female Skeletal Model'),
     wbMODT,
     wbEmpty(NAM2, 'Marker NAM2 #1'),
-    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)),
-    wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
+    wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)).SetDefaultEditValues(['BLDO', 'RUN1', 'SNEK', 'SWIM', 'WALK']).SetRequired,
+    wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True).SetDefaultEditValues(['MaleUniqueMolagBal [VTYP:0000002D]', 'FemaleUniqueAzura [VTYP:0000002E]']),
     wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [NULL, ARMO]), ['Male', 'Female'], cpNormal, False),
     wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [NULL, CLFM]), ['Male', 'Female'], cpNormal, False),
     wbInteger(TINL, 'Total Number of Tints in List', itU16, nil, nil, cpNormal, False), {>>> Needs Count Updated <<<}
-    wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
-    wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
+    wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True).SetDefaultNativeValue(5.0),
+    wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True).SetDefaultNativeValue(5.0),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArrayS('Attacks', wbAttackData),
     wbRStruct('Body Data', [
@@ -12656,7 +12654,7 @@ begin
     ], [], cpNormal, True),
     wbArrayS(HNAM, 'Hairs', wbFormIDCk('Hair', [HDPT, NULL]), 0, cpNormal),
     wbArrayS(ENAM, 'Eyes', wbFormIDCk('Eye', [EYES, NULL]),  0,  cpNormal),
-    wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]),
+    wbFormIDCk(GNAM, 'Body Part Data', [BPTD, NULL]).SetDefaultEditValue('DefaultBodyPartData [BPTD:0000001D]').SetRequired,
 	  wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
 	  wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
     wbRStruct('Male Behavior Graph', [
@@ -12673,7 +12671,7 @@ begin
     wbFormIDCk(ONAM, 'Open Loot Sound', [SNDR, NULL]),
     wbFormIDCk(LNAM, 'Close Loot Sound', [SNDR, NULL]),
     {>>> When NAME is user defined wbBipedObjectEnum will be incorrect <<<}
-    wbRArray('Biped Object Names', wbString(NAME, 'Name')).IncludeFlag(dfNotAlignable),
+    wbRArray('Biped Object Names', wbString(NAME, 'Name'), 32).IncludeFlag(dfNotAlignable).SetRequired,
     wbRArrayS('Movement Types', wbRStructSK([0], 'Movement Types', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT, NULL]),
       wbStruct(SPED, 'Override Values', [
@@ -12690,7 +12688,7 @@ begin
         wbFloat('Unknown')
       ])
     ], [])),
-    wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
+    wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType).SetRequired,
     wbRArrayS('Equip Slots', wbFormIDCk(QNAM, 'Equip Slot', [EQUP, NULL])),
     wbFormIDCk(UNES, 'Unarmed Equip Slot', [EQUP, NULL]),
     wbRArray('Phoneme Target Names', wbString(PHTN, 'Name')),

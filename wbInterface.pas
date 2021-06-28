@@ -2016,6 +2016,7 @@ type
 
     function SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
     function SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
+    function SetDefaultEditValues(const aValues: array of string): IwbRecordMemberDef;
 
     property Value: IwbValueDef read GetValue;
   end;
@@ -2025,12 +2026,18 @@ type
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
     function GetCountPath: string;
+    function GetCount: Integer;
 
     function SetCountPath(const aValue: string): IwbSubRecordArrayDef;
 
+    function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
+    function GetDefaultEditValues: TArray<string>;
+
     property Element: IwbRecordMemberDef read GetElement;
+    property Count: Integer read GetCount; //fixed number of elementes if > 0
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
     property CountPath: string read GetCountPath;
+    property DefaultEditValues: TArray<string> read GetDefaultEditValues;
   end;
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
@@ -2133,6 +2140,9 @@ type
     function GetPrefixLength(aBasePtr: Pointer): Integer;
     function GetPrefixCount(aBasePtr: Pointer): Cardinal;
     procedure SetPrefixCount(aBasePtr: Pointer; aCount: Cardinal);
+
+    function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
+    function GetDefaultEditValues: TArray<string>;
 
     property Element: IwbValueDef
       read GetElement;
@@ -3212,6 +3222,18 @@ function wbRArray(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordArrayDef; overload;
 
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aCount     : Integer; //fixed count
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordArrayDef; overload;
+
+
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
                   const aElement   : IwbValueDef;
@@ -3303,6 +3325,19 @@ function wbRArrayS(const aName      : string;
                          aIsSorted  : TwbIsSortedCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordArrayDef; overload;
+
+function wbRArrayS(const aName      : string;
+                   const aElement   : IwbRecordMemberDef;
+                         aCount     : Integer;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aIsSorted  : TwbIsSortedCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordArrayDef; overload;
+
 
 {--- wbStruct - ordered list of members ----------------------------------------}
 function wbStructSK(const aSortKey             : array of Integer;
@@ -4921,6 +4956,7 @@ type
 
     function SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
     function SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
+    function SetDefaultEditValues(const aValues: array of string): IwbRecordMemberDef;
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
@@ -4937,15 +4973,19 @@ type
 
   TwbSubRecordArrayDef = class(TwbRecordMemberDef, IwbSubRecordArrayDef)
   private
-    sraElement  : IwbRecordMemberDef;
-    sraSorted   : Boolean;
-    sraIsSorted : TwbIsSortedCallback;
-    sraCountPath: string;
+    sraElement           : IwbRecordMemberDef;
+    sraCount             : Integer;
+    sraSorted            : Boolean;
+    sraIsSorted          : TwbIsSortedCallback;
+    sraDefaultEditValues : TArray<string>;
+    sraCountPath         : string;
   public
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
+    constructor Create(aPriority  : TwbConflictPriority;
+                       aRequired: Boolean;
                  const aName      : string;
                  const aElement   : IwbRecordMemberDef;
+                       aCount     : Integer;
                        aSorted    : Boolean;
                        aAfterLoad : TwbAfterLoadCallback;
                        aAfterSet  : TwbAfterSetCallback;
@@ -4978,6 +5018,10 @@ type
     function GetElement: IwbRecordMemberDef;
     function GetSorted(const aContainer: IwbContainer): Boolean;
     function GetCountPath: string;
+    function GetCount: Integer;
+
+    function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
+    function GetDefaultEditValues: TArray<string>;
 
     function SetCountPath(const aValue: string): IwbSubRecordArrayDef;
   end;
@@ -5640,13 +5684,14 @@ type
 
   TwbArrayDef = class(TwbValueDef, IwbArrayDef)
   private
-    arCount         : Integer;
-    arCountCallback : TwbCountCallback;
-    arElement       : IwbValueDef;
-    arLabels        : array of string;
-    arSorted        : Boolean;
-    arCanAddTo      : Boolean;
-    arTerminated    : Boolean;
+    arCount             : Integer;
+    arCountCallback     : TwbCountCallback;
+    arElement           : IwbValueDef;
+    arLabels            : array of string;
+    arSorted            : Boolean;
+    arCanAddTo          : Boolean;
+    arTerminated        : Boolean;
+    arDefaultEditValues : TArray<string>;
   protected
     constructor Clone(const aSource: TwbDef); override;
 
@@ -5680,6 +5725,8 @@ type
                        aTerminator    : Boolean;
                        aTerminated    : Boolean); overload;
 
+    procedure AfterClone(const aSource: TwbDef); override;
+
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
@@ -5705,6 +5752,9 @@ type
     function GetPrefixLength(aBasePtr: Pointer): Integer;
     function GetPrefixCount(aBasePtr: Pointer): Cardinal;
     procedure SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);
+
+    function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
+    function GetDefaultEditValues: TArray<string>;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -7146,8 +7196,23 @@ function wbRArray(const aName      : string;
                         aGetCP     : TwbGetConflictPriority = nil)
                                    : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, False, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, 0, False, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
 end;
+
+function wbRArray(const aName      : string;
+                  const aElement   : IwbRecordMemberDef;
+                        aCount     : Integer;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aAfterLoad : TwbAfterLoadCallback = nil;
+                        aAfterSet  : TwbAfterSetCallback = nil;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordArrayDef; overload;
+begin
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, False, aAfterLoad, aAfterSet, aDontShow, nil, aGetCP);
+end;
+
 
 function wbArray(const aSignature : TwbSignature;
                  const aName      : string;
@@ -7374,7 +7439,22 @@ function wbRArrayS(const aName      : string;
                          aGetCP     : TwbGetConflictPriority = nil)
                                     : IwbSubRecordArrayDef; overload;
 begin
-  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, True, aAfterLoad, aAfterSet, aDontShow, aIsSorted, aGetCP);
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, 0, True, aAfterLoad, aAfterSet, aDontShow, aIsSorted, aGetCP);
+end;
+
+function wbRArrayS(const aName      : string;
+                   const aElement   : IwbRecordMemberDef;
+                         aCount     : Integer;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aAfterLoad : TwbAfterLoadCallback = nil;
+                         aAfterSet  : TwbAfterSetCallback = nil;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aIsSorted  : TwbIsSortedCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordArrayDef; overload;
+begin
+  Result := TwbSubRecordArrayDef.Create(aPriority, aRequired, aName, aElement, aCount, True, aAfterLoad, aAfterSet, aDontShow, aIsSorted, aGetCP);
 end;
 
 function wbArrayS(const aSignature : TwbSignature;
@@ -8968,6 +9048,15 @@ begin
   Result := Self;
 end;
 
+function TwbSubRecordDef.SetDefaultEditValues(const aValues: array of string): IwbRecordMemberDef;
+var
+  a: IwbArrayDef;
+begin
+  if Supports(srValue, IwbArrayDef, a) then
+    a.SetDefaultEditValues(aValues);
+  Result := Self;
+end;
+
 function TwbSubRecordDef.SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
 begin
   if Assigned(srValue) then
@@ -9003,6 +9092,7 @@ procedure TwbSubRecordArrayDef.AfterClone(const aSource: TwbDef);
 begin
   inherited AfterClone(aSource);
   with aSource as TwbSubRecordArrayDef do begin
+    Self.sraDefaultEditValues := sraDefaultEditValues;
     Self.sraCountPath := sraCountPath;
   end;
 end;
@@ -9047,13 +9137,14 @@ end;
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbSubRecordArrayDef do
-    Self.Create(defPriority, defRequired, ndName, sraElement, sraSorted,
+    Self.Create(defPriority, defRequired, ndName, sraElement, sraCount, sraSorted,
       ndAfterLoad, ndAfterSet, ndDontShow, sraIsSorted, defGetCP).AfterClone(aSource);
 end;
 
 constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequired: Boolean;
                                   const aName      : string;
                                   const aElement   : IwbRecordMemberDef;
+                                        aCount     : Integer;
                                         aSorted    : Boolean;
                                         aAfterLoad : TwbAfterLoadCallback;
                                         aAfterSet  : TwbAfterSetCallback;
@@ -9065,6 +9156,7 @@ begin
     sraElement := (aElement as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
   sraSorted := aSorted;
   sraIsSorted := aIsSorted;
+  sraCount := aCount;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
 
@@ -9073,9 +9165,19 @@ begin
   Result := sraElement;
 end;
 
+function TwbSubRecordArrayDef.GetCount: Integer;
+begin
+  Result := sraCount;
+end;
+
 function TwbSubRecordArrayDef.GetCountPath: string;
 begin
   Result := sraCountPath;
+end;
+
+function TwbSubRecordArrayDef.GetDefaultEditValues: TArray<string>;
+begin
+  Result := Copy(sraDefaultEditValues);
 end;
 
 function TwbSubRecordArrayDef.GetDefaultSignature: TwbSignature;
@@ -9124,6 +9226,16 @@ function TwbSubRecordArrayDef.SetCountPath(const aValue: string): IwbSubRecordAr
 begin
   Result := Self;
   sraCountPath := aValue;
+end;
+
+function TwbSubRecordArrayDef.SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
+var
+  i: Integer;
+begin
+  Result := Self;
+  SetLength(sraDefaultEditValues, Length(aValues));
+  for i := Low(aValues) to High(aValues) do
+    sraDefaultEditValues[i] := aValues[i];
 end;
 
 function TwbSubRecordArrayDef.GetDefType: TwbDefType;
@@ -10404,6 +10516,13 @@ begin
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
+procedure TwbArrayDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited;
+  with aSource as TwbArrayDef do
+    Self.arDefaultEditValues := arDefaultEditValues;
+end;
+
 function TwbArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   ArrayDef: IwbArrayDef;
@@ -10721,6 +10840,11 @@ begin
   Inc(Result, Ord(arTerminated));
 end;
 
+function TwbArrayDef.GetDefaultEditValues: TArray<string>;
+begin
+  Result := Copy(arDefaultEditValues);
+end;
+
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if ((arCount = 0) and not Assigned(arCountCallback)) then
@@ -10754,6 +10878,16 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbArrayDef.SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
+var
+  i: Integer;
+begin
+  Result := Self;
+  SetLength(arDefaultEditValues, Length(aValues));
+  for i := Low(aValues) to High(aValues) do
+    arDefaultEditValues[i] := aValues[i];
 end;
 
 procedure TwbArrayDef.SetPrefixCount(aBasePtr: Pointer; aValue: Cardinal);

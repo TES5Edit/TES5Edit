@@ -1455,6 +1455,8 @@ type
     procedure Init; override;
     procedure Reset; override;
 
+    procedure SetToDefaultInternal; override;
+
     procedure ResetMemoryOrder; override;
 
     function GetElementType: TwbElementType; override;
@@ -13342,6 +13344,9 @@ procedure TwbSubRecord.SetToDefaultInternal;
 var
   SelfRef: IwbContainerElementRef;
   BasePtr, EndPtr: Pointer;
+  ArrayDef: IwbArrayDef;
+  DefaultEditValues: TArray<string>;
+  i: Integer;
 begin
   SelfRef := Self as IwbContainerElementRef;
 
@@ -13356,6 +13361,12 @@ begin
   if Assigned(srValueDef) then
     RequestStorageChange(BasePtr, EndPtr, srValueDef.DefaultSize[nil, nil, Self]);
   inherited;
+  if srsIsArray in srStates then
+    if Supports(srValueDef, IwbArrayDef, ArrayDef) then begin
+      DefaultEditValues := ArrayDef.GetDefaultEditValues;
+      for i := 0 to Pred(Min(Length(DefaultEditValues), GetElementCount)) do
+        cntElements[i].EditValue := DefaultEditValues[i];
+    end;
 end;
 
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
@@ -16888,6 +16899,10 @@ constructor TwbSubRecordArray.Create(const aOwner     : IwbContainer;
                                      const aContainer : IwbContainer;
                                            aPos       : Integer;
                                      const aDef       : IwbSubRecordArrayDef);
+var
+  DEV      : TArray<string>;
+  MinCount : Integer;
+  i        : Integer;
 begin
   arcDef := aDef;
   eContainer := Pointer(aOwner);
@@ -16895,7 +16910,12 @@ begin
     if aPos <> Low(Integer) then begin
       DoProcess(aContainer, aPos)
     end else begin
-      Assign(High(Integer), nil, False);
+      DEV := arcDef.DefaultEditValues;
+      MinCount := Max(Max(1, arcDef.Count), Length(DEV));
+      while Length(cntElements) < MinCount do
+        Assign(High(Integer), nil, False);
+      for i := Low(DEV) to High(DEV) do
+        cntElements[i].EditValue := DEV[i];
       Include(cntStates, csAsCreatedEmpty);
     end;
   finally
@@ -17077,8 +17097,11 @@ begin
 end;
 
 function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
+var
+  MinCount: Integer;
 begin
-  Result := IsElementEditable(aElement) and (Length(cntElements) > 1);
+  MinCount := Max(1, arcDef.Count);
+  Result := IsElementEditable(aElement) and (Length(cntElements) > MinCount);
 end;
 
 procedure TwbSubRecordArray.SetModified(aValue: Boolean);
@@ -17655,6 +17678,8 @@ var
   t        : string;
   VarSize  : Boolean;
   ArrSize  : Integer;
+
+  DefaultEditValues: TArray<string>;
 begin
   ArrayDef := aValueDef as IwbArrayDef;
   Result := wbSortSubRecords and ArrayDef.Sorted;
@@ -17669,8 +17694,11 @@ begin
   if ValueDef.DefType = dtResolvable then
     ValueDef := Resolve(ValueDef, nil, nil, aContainer);
 
+  if not Assigned(aBasePtr) then
+    DefaultEditValues := ArrayDef.GetDefaultEditValues;
+
   VarSize := ArrayDef.IsVariableSize;
-  ArrSize := ArrayDef.ElementCount;
+  ArrSize := Max(ArrayDef.ElementCount, Length(DefaultEditValues));
   if ArrSize < 0 then begin
     ArrSize := ArrayDef.PrefixCount[aBasePtr];
   end else
@@ -17681,6 +17709,7 @@ begin
 
   if Assigned(aBasePtr) then
     Inc(PByte(aBasePtr), SizePrefix);
+
 
   if ArrSize > 0 then
     while not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr))) do begin
@@ -17708,6 +17737,9 @@ begin
       else
         Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
       end;
+
+      if Length(DefaultEditValues) > i then
+        Element.EditValue := DefaultEditValues[i];
 
       Inc(i);
       if VarSize and not Assigned(aBasePtr) then begin
@@ -17994,7 +18026,7 @@ begin
         Sorting := False;
         for i := 0 to Length(cntElements)-1 do
           if (esSorting in (cntElements[i] as IwbElementInternal).ElementStates) then begin
-            Sorting := TRue;
+            Sorting := True;
             Break;
           end;
           if not Sorting then begin
@@ -18085,6 +18117,24 @@ begin
   inherited;
   if aValue and arrSorted then
     arrSortInvalid := True;
+end;
+
+procedure TwbArray.SetToDefaultInternal;
+var
+  SelfRef           : IwbContainerElementRef;
+  ArrayDef          : IwbArrayDef;
+  DefaultEditValues : TArray<string>;
+  i                 : Integer;
+begin
+  SelfRef := Self as IwbContainerElementRef;
+
+  inherited;
+
+  if Supports(vbValueDef, IwbArrayDef, ArrayDef) then begin
+    DefaultEditValues := ArrayDef.GetDefaultEditValues;
+    for i := 0 to Pred(Min(Length(DefaultEditValues), GetElementCount)) do
+      cntElements[i].EditValue := DefaultEditValues[i];
+  end;
 end;
 
 { TwbStruct }
