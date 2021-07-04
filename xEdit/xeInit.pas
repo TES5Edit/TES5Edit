@@ -896,6 +896,10 @@ begin
       wbCreateContainedIn := False;
     end;
     gmTES4: begin
+      if (not FileExists(wbDataPath + 'Oblivion.esm')) and FileExists(wbDataPath + 'Nehrim.esm') then begin
+        wbAppName := 'Nehrim';
+        wbGameMasterEsm := 'Nehrim.esm';
+      end;
       wbLoadBSAs := True;
       wbAllowInternalEdit := false;
       wbCanSortINFO := True;
