@@ -17694,22 +17694,30 @@ begin
   if ValueDef.DefType = dtResolvable then
     ValueDef := Resolve(ValueDef, nil, nil, aContainer);
 
-  if not Assigned(aBasePtr) then
-    DefaultEditValues := ArrayDef.GetDefaultEditValues;
-
   VarSize := ArrayDef.IsVariableSize;
-  ArrSize := Max(ArrayDef.ElementCount, Length(DefaultEditValues));
+  ArrSize := ArrayDef.ElementCount;
+
+  if not Assigned(aBasePtr) then begin
+    DefaultEditValues := ArrayDef.GetDefaultEditValues;
+    if Length(DefaultEditValues) > 0 then
+      ArrSize := Max(ArrSize, Length(DefaultEditValues));
+  end;
+
   if ArrSize < 0 then begin
     ArrSize := ArrayDef.PrefixCount[aBasePtr];
   end else
     if (ArrSize < 1) and Assigned(ArrayDef.CountCallback) then
       ArrSize := ArrayDef.CountCallback(aBasePtr, aEndPtr, aContainer)
-    else if VarSize then
-      ArrSize := High(Integer);
+    else if VarSize then begin
+      if (ArrSize > 0) and not Assigned(aBasePtr) then
+        VarSize := False //the array is static in size, even if the elements aren't...
+      else
+        if Assigned(aBasePtr) then
+          ArrSize := High(Integer);
+    end;
 
   if Assigned(aBasePtr) then
     Inc(PByte(aBasePtr), SizePrefix);
-
 
   if ArrSize > 0 then
     while not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr))) do begin
