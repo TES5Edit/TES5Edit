@@ -1427,6 +1427,8 @@ type
 
     procedure CheckTerminator;
 
+    procedure NotifyChangedInternal(aContainer: Pointer); override;
+
     {--- IwbSubRecord ---}
     function GetSubRecordHeaderSize: Integer;
 
@@ -12890,7 +12892,7 @@ begin
               CopyCount := ArrayDef.ElementCount;
 
             for i := 0 to Pred(CopyCount) do
-              if i < Length(cntElements) then
+              if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
                 cntElements[i].Assign(Low(Integer), Container.Elements[i], aOnlySK)
               else
                 Assign(i, Container.Elements[i], aOnlySK);
@@ -13073,6 +13075,9 @@ var
   ArrayDef  : IwbArrayDef;
   StringDef : IwbStringDef;
 begin
+  if eUpdateCount > 0 then
+    Exit; {will be checked in NotifyChangedInternal}
+
   if not Supports(srValueDef, IwbArrayDef, ArrayDef) then
     Exit;
   if not ArrayDef.IsVariableSize then
@@ -13720,6 +13725,15 @@ begin
   else
     //will need to write XXXX subrecord on save
     srStruct.srsDataSize := 0;
+end;
+
+procedure TwbSubRecord.NotifyChangedInternal(aContainer: Pointer);
+begin
+  if (srsIsArray in srStates) and (esModified in eStates) then begin
+    CheckCount;
+    CheckTerminator;
+  end;
+  inherited;
 end;
 
 procedure TwbSubRecord.PrepareSave;

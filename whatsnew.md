@@ -1,3 +1,9 @@
+# What's new in xEdit 4.1.4?
+
+## Bugfixes
+
+* #908 - overriding a creature in fo3/fnv mode doesn't properly copy NIFZ and KFFZ sections
+
 # What's new in xEdit 4.0.4?
 
 ## Bugfixes
