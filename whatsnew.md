@@ -14,6 +14,7 @@
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
 * #894 - [Skyrim] Several RACE subrecords are not marked as required
 * #909 - xEdit should double apostrophes in generated LOOT masterlist entry names
+* #912 - TES4Edit crashes when trying to load Nehrim.esm
 * #914 - RNAM subrecord of INFO needs to be treated as case sensitive
 * #916 - DR displayed incorrectly in Armor and Armor Addons for F3/NV
 * #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
