@@ -1867,7 +1867,7 @@ begin
       sl.CustomSort(CompareLoadOrder);
 
       if Result then begin
-        WasEnabled := Enabled;
+        WasEnabled := pnlClient.Enabled;
         pnlClient.Enabled := False;
         UpdatePnlCancelVisible;
         try
@@ -14049,7 +14049,7 @@ begin
   wbLocalStartTime := Now;
   if wbShowStartTime < 1 then
     wbStartTime := wbLocalStartTime;
-  WasEnabled := Enabled;
+  WasEnabled := pnlClient.Enabled;
   HadTick := wbCurrentTick > 0;
   HadLastMsg := wbLastMessageAt > 0;
 
@@ -16614,6 +16614,9 @@ begin
   end;
 
   if not Enabled then
+    Exit;
+
+  if not pnlClient.Enabled then
     Exit;
 
   if not wbEditAllowed then
@@ -19984,7 +19987,7 @@ begin
     DelayedExpandView := False;
     ExpandView;
   end;
-  if Enabled then
+  if Enabled and pnlClient.Enabled then
     NavUpdate(False);
   inherited;
 end;
