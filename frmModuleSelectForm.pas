@@ -335,8 +335,9 @@ begin
         Include(mndModule.miFlags, SelectFlag);
 
   SimulateLoad;
-  if btnOK.Enabled then
-    btnOK.Click;
+  if Length(SelectedModules) > 0 then
+    if btnOK.Enabled then
+      btnOK.Click;
 end;
 
 procedure TfrmModuleSelect.edFilterChange(Sender: TObject);
