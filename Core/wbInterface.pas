@@ -604,6 +604,7 @@ type
     dfTranslatable,
     dfAllowAnyMember,
     dfDontSave,
+    dfDontAssign,
     dfUseLoadOrder,
     dfSummaryMembersNoName,
     dfSummaryNoName,
@@ -735,6 +736,7 @@ type
     esLocalized,
     esNotLocalized,
     esOptionalAndMissing,
+    esEndingUpdate,
 
     //the following entries must match TwbElementErrorType:
     esReportedErrorReading,
@@ -9821,6 +9823,9 @@ function TwbSubRecordDef.CanAssign(const aElement: IwbElement; aIndex: Integer; 
 var
   SubRecordDef : IwbSubRecordDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   if Supports(aDef, IwbSubRecordDef, SubRecordDef) then
     Result := Equals(aDef) or Assigned(srValue) and srValue.CanAssign(aElement, aIndex, SubRecordDef.Value)
   else
@@ -10054,6 +10059,9 @@ function TwbSubRecordArrayDef.CanAssign(const aElement: IwbElement; aIndex: Inte
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   if aIndex = Low(Integer) then
     Result := Supports(aDef, IwbSubRecordArrayDef, SubRecordArrayDef) and
       GetElement.CanAssign(aElement, aIndex, SubRecordArrayDef.Element)
@@ -10269,6 +10277,9 @@ var
   RecordDef          : IwbRecordDef;
   i                  : Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   if Supports(aDef, IwbSubRecordStructDef, SubRecordStructDef) then begin
     Result := Equals(aDef);
     if not Result and
@@ -10522,6 +10533,9 @@ var
   RecordDef         : IwbRecordDef;
   i                 : Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   for i := Low(sruMembers) to High(sruMembers) do begin
     Result := sruMembers[i].CanAssign(aElement, aIndex, aDef);
     if Result = True then
@@ -10878,6 +10892,9 @@ function TwbIntegerDef.CanAssign(const aElement: IwbElement; aIndex: Integer; co
 var
   IntegerDef : IwbIntegerDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbIntegerDef, IntegerDef);
   if Result then begin
     if Assigned(inFormater) then
@@ -11639,6 +11656,9 @@ function TwbArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; cons
 var
   ArrayDef: IwbArrayDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := (aIndex = Low(Integer)) and
     Supports(aDef, IwbArrayDef, ArrayDef) and
     ( ( arCount <= 0 ) or (arCount = ArrayDef.ElementCount) ) and
@@ -12158,6 +12178,9 @@ var
   StructDef : IwbStructDef;
   i         : Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := (aIndex = Low(Integer)) and
     Supports(aDef, IwbStructDef, StructDef) and
     ( GetMemberCount = StructDef.MemberCount);
@@ -12622,6 +12645,9 @@ var
   FlagDef  : IwbFlagDef;
   i        : Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   if Supports(aDef, IwbFlagsDef, FlagsDef) then begin
     Result := FlagsDef.FlagCount = GetFlagCount;
     if Result and not GetRoot.Equals(FlagsDef.Root) then
@@ -13014,6 +13040,9 @@ var
   EnumDef: IwbEnumDef;
   i: Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbEnumDef, EnumDef) and (EnumDef.NameCount = GetNameCount);
   if Result and not Equals(EnumDef) then
     for i := 0 to Pred(GetNameCount) do
@@ -13583,6 +13612,9 @@ function TwbStringDef.CanAssign(const aElement: IwbElement; aIndex: Integer; con
 var
   StringDef: IwbStringDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbStringDef, StringDef) and
     ((sdSize = 0) or (StringDef.StringSize = 0) or (sdSize <= StringDef.StringSize));
 end;
@@ -13894,6 +13926,9 @@ function TwbFloatDef.CanAssign(const aElement: IwbElement; aIndex: Integer; cons
 var
   FloatDef: IwbFloatDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbFloatDef, FloatDef);
 end;
 
@@ -14295,6 +14330,9 @@ end;
 
 function TwbChar4.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbChar4);
 end;
 
@@ -14393,6 +14431,9 @@ end;
 
 function TwbStr4.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbStr4);
 end;
 
@@ -14496,6 +14537,9 @@ end;
 
 function TwbFormIDDefFormater.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbFormID);
 end;
 
@@ -15442,6 +15486,9 @@ function TwbByteArrayDef.CanAssign(const aElement: IwbElement; aIndex: Integer; 
 var
   ByteArrayDef: IwbByteArrayDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbByteArrayDef, ByteArrayDef);
   if Result and (badSize > 0) then begin
     Result := ByteArrayDef.IsVariableSize or (ByteArrayDef.DefaultSize[nil, nil, nil] <= Integer(badSize));
@@ -16045,6 +16092,9 @@ end;
 
 function TwbDivDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := True;
 end;
 
@@ -16100,6 +16150,9 @@ end;
 
 function TwbMulDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := True;
 end;
 
@@ -16155,6 +16208,9 @@ function TwbCallbackDef.CanAssign(const aElement: IwbElement; aIndex: Integer; c
 var
   CallbackDef: IwbCallbackDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := Supports(aDef, IwbCallbackDef, CallbackDef) and
     (@CallbackDef.Callback = @cdToStr);
 end;
@@ -16534,6 +16590,9 @@ var
   i             : Integer;
   Dummy         : Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   if Supports(aDef, IwbFormIDChecked, FormIDChecked) then begin
     Result := False;
     for i := 0 to Pred(FormIDChecked.SignatureCount) do
@@ -16916,6 +16975,9 @@ var
   UnionDef : IwbUnionDef;
   i        : Integer;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   if Supports(aDef, IwbUnionDef, UnionDef) then begin
     Result := Equals(aDef);
     if not Result then
@@ -16944,6 +17006,9 @@ function TwbResolvableDef.CanAssign(const aElement: IwbElement; aIndex: Integer;
 var
   ValueDef: IwbValueDef;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   ValueDef := ResolveDef(nil, nil, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.CanAssign(aElement, aIndex, aDef)
@@ -17578,6 +17643,9 @@ end;
 
 function TwbLenStringDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef) : Boolean;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   Result := aDef.DefType in [dtString, dtLString, dtLenString];
 end;
 
@@ -18661,6 +18729,9 @@ function TwbIntegerDefFormaterUnion.CanAssign(const aElement : IwbElement;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
+  if dfDontAssign in defFlags then
+    Exit(False);
+
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
     Result := IntegerDef.CanAssign(aElement, aIndex, aDef)

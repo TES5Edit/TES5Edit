@@ -440,7 +440,7 @@ type
 
     function BeginUpdate: Integer;
     function EndUpdate: Integer;
-    procedure UpdatedEnded; virtual;
+    procedure UpdateEnded; virtual;
 
     constructor Create(const aContainer: IwbContainer);
     procedure BeforeDestruction; override;
@@ -1723,6 +1723,7 @@ type
     gsSorted,
     gsSorting,
     gsSortPostponed,
+    gsSortForcedPostponed,
     gsInformedMainRecord
   );
 
@@ -1765,7 +1766,7 @@ type
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
     procedure Sort(aForce: Boolean = False);
 
-    procedure UpdatedEnded; override;
+    procedure UpdateEnded; override;
 
     procedure SetModified(aValue: Boolean); override;
 
@@ -6900,6 +6901,14 @@ var
   i: Integer;
   SelfRef : IwbContainerElementRef;
 begin
+  var Def := GetDef;
+  if Assigned(Def) and (dfDontAssign in Def.DefFlags) then
+    Exit;
+
+  var ValueDef := GetValueDef;
+  if Assigned(ValueDef) and (dfDontAssign in ValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
   inherited;
@@ -7758,7 +7767,23 @@ begin
 
         if NeedUpdate then
           UpdateCellChildGroup;
-
+{
+        if wbCanSortINFO and wbSortINFO then
+          if not GetIsDeleted and wbAllowInternalEdit then begin
+            if GetSignature = 'INFO' then begin
+              if wbFillINOM or wbFillINOA or (wbFillPNAM and not Assigned(GetRecordBySignature('PNAM'))) then begin
+                var GroupRecordInternal: IwbGroupRecordInternal := nil;
+                if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
+                  GroupRecordInternal.Sort(True);
+              end;
+            end else if GetSignature = 'DIAL' then
+              if (wbFillINOM and not Assigned(GetRecordBySignature('INOM'))) or (wbFillINOA and not Assigned(GetRecordBySignature('INOA'))) then begin
+                var GroupRecordInternal: IwbGroupRecordInternal := nil;
+                if Supports(GetChildGroup, IwbGroupRecordInternal, GroupRecordInternal) then
+                  GroupRecordInternal.Sort(True);
+              end;
+          end;
+}
         CollapseStorage(nil, True);
 
       end else begin
@@ -15878,8 +15903,10 @@ begin
     if grStates * [gsSorted, gsSorting] <> [] then
       Exit;
 
-  if eUpdateCount > 0 then begin
+  if not (esEndingUpdate in eStates) and (eUpdateCount > 0) then begin
     Include(grStates, gsSortPostponed);
+    if aForce then
+      Include(grStates, gsSortForcedPostponed);
     Exit;
   end;
 
@@ -15945,11 +15972,13 @@ begin
 {$ENDIF}
 end;
 
-procedure TwbGroupRecord.UpdatedEnded;
+procedure TwbGroupRecord.UpdateEnded;
 begin
   if gsSortPostponed in grStates then begin
     Exclude(grStates, gsSortPostponed);
-    Sort;
+    var Force := gsSortForcedPostponed in grStates;
+    Exclude(grStates, gsSortForcedPostponed);
+    Sort(Force);
   end;
   inherited;
 end;
@@ -16446,8 +16475,14 @@ function TwbElement.EndUpdate: Integer;
 
 begin
   Result := Pred(eUpdateCount);
-  if Result = 0 then
-    UpdatedEnded;
+  if Result = 0 then begin
+    Include(eStates, esEndingUpdate);
+    try
+      UpdateEnded;
+    finally
+      Exclude(eStates, esEndingUpdate);
+    end;
+  end;
   eUpdateCount := Result;
 end;
 
@@ -17180,6 +17215,14 @@ var
   Element       : IwbElement;
   ReferenceFile : IwbFile;
 begin
+  var Def := GetDef;
+  if Assigned(Def) and (dfDontAssign in Def.DefFlags) then
+    Exit;
+
+  var ValueDef := GetValueDef;
+  if Assigned(ValueDef) and (dfDontAssign in ValueDef.DefFlags) then
+    Exit;
+
   Element := GetLinksTo;
   if Assigned(Element) then begin
     ReferenceFile := Element.ReferenceFile;
@@ -17425,7 +17468,7 @@ begin
   {can be overridden}
 end;
 
-procedure TwbElement.UpdatedEnded;
+procedure TwbElement.UpdateEnded;
 var
   IsInternal: Boolean;
 begin
