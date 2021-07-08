@@ -2,8 +2,9 @@
 
 ## Bugfixes
 
-* #908 - overriding a creature in fo3/fnv mode doesn't properly copy NIFZ and KFFZ sections
+* #897 - Assertion Failure when using Referenced By to jump to INFO
 * #904 - Any mod referred to in INOM and INOA in all present overrides will be added to a mod's master list on override
+* #908 - overriding a creature in fo3/fnv mode doesn't properly copy NIFZ and KFFZ sections
 
 # What's new in xEdit 4.1.x?
 

@@ -7767,23 +7767,7 @@ begin
 
         if NeedUpdate then
           UpdateCellChildGroup;
-{
-        if wbCanSortINFO and wbSortINFO then
-          if not GetIsDeleted and wbAllowInternalEdit then begin
-            if GetSignature = 'INFO' then begin
-              if wbFillINOM or wbFillINOA or (wbFillPNAM and not Assigned(GetRecordBySignature('PNAM'))) then begin
-                var GroupRecordInternal: IwbGroupRecordInternal := nil;
-                if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
-                  GroupRecordInternal.Sort(True);
-              end;
-            end else if GetSignature = 'DIAL' then
-              if (wbFillINOM and not Assigned(GetRecordBySignature('INOM'))) or (wbFillINOA and not Assigned(GetRecordBySignature('INOA'))) then begin
-                var GroupRecordInternal: IwbGroupRecordInternal := nil;
-                if Supports(GetChildGroup, IwbGroupRecordInternal, GroupRecordInternal) then
-                  GroupRecordInternal.Sort(True);
-              end;
-          end;
-}
+
         CollapseStorage(nil, True);
 
       end else begin
@@ -15915,6 +15899,7 @@ begin
     Exit;
 
   Include(grStates, gsSorting);
+  wbLockProcessMessages;
   try
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
@@ -15961,6 +15946,7 @@ begin
       wbMergeSortPtr(@cntElements[0], Length(cntElements), CompareGroupContents);
     Include(grStates, gsSorted);
   finally
+    wbUnLockProcessMessages;
     Exclude(grStates, gsSorting);
   end;
 
