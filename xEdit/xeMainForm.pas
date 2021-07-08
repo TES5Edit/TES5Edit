@@ -181,6 +181,7 @@ type
     tmrMessages: TTimer;
     vstView: TVirtualEditTree;
     stbMain: TStatusBar;
+    pnlClient: TPanel;
     pnlRight: TPanel;
     pmuNav: TPopupMenu;
     mniNavFilterRemove: TMenuItem;
@@ -446,6 +447,8 @@ type
     mniCopyPathNameToClipboard: TMenuItem;
     N32: TMenuItem;
     mniCreateNewFile: TMenuItem;
+    pnlCancel: TPanel;
+    btnCancel: TButton;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -722,6 +725,9 @@ type
     procedure mniCopyPathNameToClipboardClick(Sender: TObject);
     procedure mniCreateNewFileClick(Sender: TObject);
 
+    procedure btnCancelClick(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -776,6 +782,8 @@ type
     procedure BuildAllRef;
     procedure ResetAllTags;
 
+    procedure UpdatePnlCancelPosition;
+    procedure UpdatePnlCancelVisible;
   public
     procedure ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
     procedure ConflictLevelForContainer(const aContainer: IwbDataContainer; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
@@ -1860,7 +1868,8 @@ begin
 
       if Result then begin
         WasEnabled := Enabled;
-        Enabled := False;
+        pnlClient.Enabled := False;
+        UpdatePnlCancelVisible;
         try
           if WasEnabled then
             wbStartTime := Now;
@@ -1880,7 +1889,8 @@ begin
           wbCurrentAction := PrevAction;
           if WasEnabled then
             Caption := Application.Title;
-          Enabled := WasEnabled;
+          pnlClient.Enabled := WasEnabled;
+          UpdatePnlCancelVisible;
         end;
       end;
     end else
@@ -1983,7 +1993,8 @@ begin
   wbStartTime := Now;
   pgMain.ActivePage := tbsMessages;
 
-  Enabled := False;
+  pnlClient.Enabled := False;
+  UpdatePnlCancelVisible;
   try
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
@@ -1999,7 +2010,8 @@ begin
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
-    Enabled := True;
+    pnlClient.Enabled := True;
+    UpdatePnlCancelVisible;
   end;
 end;
 
@@ -6023,14 +6035,16 @@ begin
   if LoaderStarted and not wbLoaderDone then begin
     wbForceTerminate := True;
     Caption := 'Waiting for Background Loader to terminate...';
-    Enabled := False;
+    pnlClient.Enabled := False;
+    UpdatePnlCancelVisible;
     try
       while not wbLoaderDone do begin
         DoProcessMessages;
         Sleep(100);
       end;
     finally
-      Enabled := True;
+      pnlClient.Enabled := True;
+      UpdatePnlCancelVisible;
     end;
   end;
 
@@ -6495,6 +6509,12 @@ begin
     if Key = VK_SHIFT then
       vstNav.Header.Options := vstNav.Header.Options - [hoAutoSpring];
   end;
+end;
+
+procedure TfrmMain.FormResize(Sender: TObject);
+begin
+  if pnlCancel.Visible then
+    UpdatePnlCancelPosition;
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
@@ -9866,13 +9886,15 @@ begin
         Exit;
 
       wbStartTime := Now;
-      Self.Enabled := False;
+      pnlClient.Enabled := False;
+      UpdatePnlCancelVisible;
       try
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then
             wbGenerateLODTES4(IwbMainRecord(Pointer(CheckListBox1.Items.Objects[i])), Settings)
       finally
-        Self.Enabled := True;
+        pnlClient.Enabled := True;
+        UpdatePnlCancelVisible;
         Self.Caption := Application.Title
       end;
     finally
@@ -10001,7 +10023,8 @@ begin
 
       pgMain.ActivePage := tbsMessages;
       wbStartTime := Now;
-      Self.Enabled := False;
+      pnlClient.Enabled := False;
+      UpdatePnlCancelVisible;
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
@@ -10010,7 +10033,8 @@ begin
             else if wbIsFallout4 then
               wbGenerateLODFO4(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
-        Self.Enabled := True;
+        pnlClient.Enabled := True;
+        UpdatePnlCancelVisible;
         Self.Caption := Application.Title
       end;
     finally
@@ -10216,7 +10240,8 @@ begin
     StartTick := GetTickCount64;
     wbStartTime := Now;
 
-    Enabled := False;
+    pnlClient.Enabled := False;
+    UpdatePnlCancelVisible;
 
     ChangeCount := 0;
     Count := 0;
@@ -10264,7 +10289,8 @@ begin
       end;
 
     finally
-      Enabled := True;
+      pnlClient.Enabled := True;
+      UpdatePnlCancelVisible;
     end;
 
     AddMessage('[Setting VWD for all REFR with VWD Mesh] ' + ' Processed Records: ' + IntToStr(Count) +
@@ -10350,7 +10376,8 @@ begin
           end;
         end;
       finally
-        Enabled := True;
+        pnlClient.Enabled := True;
+        UpdatePnlCancelVisible;
       end;
 
       SetLength(Elements, j);
@@ -10804,6 +10831,11 @@ begin
   end;
 end;
 
+procedure TfrmMain.btnCancelClick(Sender: TObject);
+begin
+  wbForceTerminate := True;
+end;
+
 procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
 const
   sJustWait                   = 'Undeleting and Disabling References. Please wait...';
@@ -10900,7 +10932,8 @@ begin
     StartTick := GetTickCount64;
     wbStartTime := Now;
 
-    Enabled := False;
+    pnlClient.Enabled := False;
+    UpdatePnlCancelVisible;
 
     Plugin := '';
     PluginCRC32 := 0;
@@ -10997,7 +11030,8 @@ begin
       end;
 
     finally
-      Enabled := True;
+      pnlClient.Enabled := True;
+      UpdatePnlCancelVisible;
     end;
 
     PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
@@ -11193,7 +11227,8 @@ begin
     StartTick := GetTickCount64;
     wbStartTime := Now;
 
-    Enabled := False;
+    pnlClient.Enabled := False;
+    UpdatePnlCancelVisible;
 
     RemovedCount := 0;
     Count := 0;
@@ -11262,7 +11297,8 @@ begin
       end;
 
     finally
-      Enabled := True;
+      pnlClient.Enabled := True;
+      UpdatePnlCancelVisible;
     end;
 
     PostAddMessage('['+Operation+'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
@@ -11779,7 +11815,8 @@ begin
 
       StartTick := GetTickCount64;
       wbStartTime := Now;
-      Enabled := false;
+      pnlClient.Enabled := false;
+      UpdatePnlCancelVisible;
 
       if fTranslate then begin
         PostAddMessage('[Processing] Building translation index...');
@@ -11854,7 +11891,8 @@ begin
       end;
 
       wbLocalizationHandler.NoTranslate := false;
-      Enabled := true;
+      pnlClient.Enabled := true;
+      UpdatePnlCancelVisible;
       PostAddMessage('[Processing done] ' +
         ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
         ' Translated: ' + IntToStr(Translated) +
@@ -14024,7 +14062,8 @@ begin
   Inc(wbShowCaption);
   PrevAction := wbCurrentAction;
   PrevProgress := wbCurrentProgress;
-  Enabled := False;
+  pnlClient.Enabled := False;
+  UpdatePnlCancelVisible;
   try
     pgMain.ActivePage := tbsMessages;
     if aDesc <> '' then
@@ -14059,7 +14098,8 @@ begin
       wbProgress(s);
     end;
   finally
-    Enabled := WasEnabled;
+    pnlClient.Enabled := WasEnabled;
+    UpdatePnlCancelVisible;
     wbCurrentAction := PrevAction;
     wbCurrentProgress := PrevProgress;
     Dec(wbShowStartTime);
@@ -14884,7 +14924,8 @@ var
 begin
   wbStartTime := Now;
 
-  Enabled := False;
+  pnlClient.Enabled := False;
+  UpdatePnlCancelVisible;
   try
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
@@ -14895,7 +14936,8 @@ begin
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
-    Enabled := True;
+    pnlClient.Enabled := True;
+    UpdatePnlCancelVisible;
   end;
 end;
 
@@ -14906,7 +14948,8 @@ var
 begin
   wbStartTime := Now;
 
-  Enabled := False;
+  pnlClient.Enabled := False;
+  UpdatePnlCancelVisible;
   try
     for i := Low(Files) to High(Files) do begin
       _File := Files[i];
@@ -14917,7 +14960,8 @@ begin
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
-    Enabled := True;
+    pnlClient.Enabled := True;
+    UpdatePnlCancelVisible;
   end;
 end;
 
@@ -16472,6 +16516,29 @@ begin
     vstView.Header.Columns.EndUpdate;
     vstView.EndUpdate;
   end;
+end;
+
+procedure TfrmMain.UpdatePnlCancelPosition;
+begin
+  pnlCancel.SetBounds(
+    (ClientWidth - pnlCancel.Width) div 2,
+    (ClientHeight - pnlCancel.Height) div 2,
+    pnlCancel.Width,
+    pnlCancel.Height
+  );
+end;
+
+procedure TfrmMain.UpdatePnlCancelVisible;
+var
+  WasVisible : Boolean;
+begin
+  UpdatePnlCancelPosition;
+  WasVisible := pnlCancel.Visible;
+  pnlCancel.Visible := not pnlClient.Enabled;
+  if pnlCancel.Visible <> WasVisible then
+    wbForceTerminate := False;
+  if pnlCancel.Visible then
+    pnlCancel.BringToFront;
 end;
 
 procedure TfrmMain.SetDefaultNodeHeight(aHeight: Integer);
