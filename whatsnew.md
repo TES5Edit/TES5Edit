@@ -27,6 +27,10 @@
 * (reported on Discord) - Long running operations like filters and scripts can't be aborted
 * (found by developer) - Need to force InternalEdit for AfterSet handlers
 
+## Minor changes
+
+* #901 - "Unhide all..." option in column context menu
+
 ## Enderal Special Edition
 
 Initial support for Enderal Special Edition has been added.

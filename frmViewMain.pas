@@ -240,6 +240,7 @@ type
     mniNavCopyAsNewRecord: TMenuItem;
     mniViewHeaderRemove: TMenuItem;
     mniViewHeaderCopyAsWrapper: TMenuItem;
+    mniViewHeaderUnhideAll: TMenuItem;
     mniNavCopyAsWrapper: TMenuItem;
     mniViewCopyToSelectedRecords: TMenuItem;
     mniViewCopyMultipleToSelectedRecords: TMenuItem;
@@ -564,9 +565,11 @@ type
 
     {--- pmuViewHeaderPopup ---}
     procedure pmuViewHeaderPopup(Sender: TObject);
+    procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure mniViewHeaderCopyIntoClick(Sender: TObject);
-    procedure mniViewHeaderHiddenClick(Sender: TObject);
     procedure mniViewHeaderRemoveClick(Sender: TObject);
+    procedure mniViewHeaderHiddenClick(Sender: TObject);
+    procedure mniViewHeaderUnhideAllClick(Sender: TObject);
 
     {--- pmuRefByPopup ---}
     procedure pmuRefByPopup(Sender: TObject);
@@ -642,7 +645,6 @@ type
       const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
     procedure mniViewNextMemberClick(Sender: TObject);
     procedure mniViewPreviousMemberClick(Sender: TObject);
-    procedure mniViewHeaderJumpToClick(Sender: TObject);
     procedure acScriptExecute(Sender: TObject);
     procedure mniNavFilterConflictsClick(Sender: TObject);
     procedure mniModGroupsAbleClick(Sender: TObject);
@@ -11168,6 +11170,26 @@ begin
   tbsSpreadsheetShow(vstSpreadsheet.Parent);
 end;
 
+procedure TfrmMain.mniViewHeaderUnhideAllClick(Sender: TObject);
+var
+  i, j       : Integer;
+  Element    : IwbElement;
+  MainRecord : IwbMainRecord;
+begin
+  for i := Low(ActiveRecords) to High(ActiveRecords) do begin
+    Element := ActiveRecords[i].Element;
+    if Supports(Element, IwbMainRecord, MainRecord) then begin
+      MainRecord := MainRecord.MasterOrSelf;
+      MainRecord.Show;
+      for j := 0 to Pred(MainRecord.OverrideCount) do
+        MainRecord.Overrides[j].Show;
+      Break;
+    end;
+  end;
+  PostResetActiveTree;
+  InvalidateElementsTreeView(NoNodes);
+end;
+
 procedure TfrmMain.mniViewRemoveClick(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
@@ -14189,8 +14211,10 @@ end;
 
 procedure TfrmMain.pmuViewHeaderPopup(Sender: TObject);
 var
-  Column                      : TColumnIndex;
-  MainRecord                  : IwbMainRecord;
+  Column     : TColumnIndex;
+  MainRecord : IwbMainRecord;
+  AnyHidden  : Boolean;
+  i          : Integer;
 begin
   mniViewCreateModGroup.Visible := Length(ActiveRecords) > 2;
 
@@ -14237,10 +14261,19 @@ begin
   mniViewHeaderJumpTo.Visible := True;
   mniViewHeaderHidden.Visible := True;
   mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
+
+  MainRecord := MainRecord.MasterOrSelf;
+  AnyHidden := MainRecord.IsHidden;
+  if not AnyHidden then
+    for i := 0 to Pred(MainRecord.OverrideCount) do
+      if MainRecord.Overrides[i].IsHidden then begin
+        AnyHidden := True;
+        Break;
+      end;
+  mniViewHeaderUnhideAll.Visible := AnyHidden;
+
   if not ActiveRecords[Column].Element._File.IsEditable then
     Exit;
-//  if DebugHook = 0 then //reserve Delete for debugging until we know why it can go "crazy"
-//    Exit;
   mniViewHeaderRemove.Visible := True;
 end;
 
