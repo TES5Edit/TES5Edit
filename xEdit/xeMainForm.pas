@@ -6036,7 +6036,6 @@ begin
     wbForceTerminate := True;
     Caption := 'Waiting for Background Loader to terminate...';
     pnlClient.Enabled := False;
-    UpdatePnlCancelVisible;
     try
       while not wbLoaderDone do begin
         DoProcessMessages;
