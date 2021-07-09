@@ -8,6 +8,10 @@
 * #904 - Any mod referred to in INOM and INOA in all present overrides will be added to a mod's master list on override
 * #908 - overriding a creature in fo3/fnv mode doesn't properly copy NIFZ and KFFZ sections
 
+## Minor changes
+
+* #856 - Ability to apply xEdit script to selected refs in Referenced By window
+
 # What's new in xEdit 4.1.x?
 
 There are a large number of changes between 4.0.x and 4.1.x which aren't currently documented here, but will be before the release of 4.2.x
