@@ -948,7 +948,20 @@ begin
   if not wbRequireCtrlForDblClick or (GetKeyState(VK_CONTROL) < 0) then
     with HitInfo do
       if Assigned(HitNode) then
-        DoSingleModuleLoad(HitNode);
+        if [
+          hiAbove,             // above the client area (if relative) or the absolute tree area
+          hiBelow,             // below the client area (if relative) or the absolute tree area
+          hiNowhere,           // no node is involved (possible only if the tree is not as tall as the client area)
+          hiOnItemButton,      // on the button associated with an item
+          hiOnItemButtonExact, // exactly on the button associated with an item
+          hiOnItemCheckbox,    // on the checkbox if enabled
+          hiOnItemIndent,      // in the indentation area in front of a node
+          hiToLeft,            // to the left of the client area (if relative) or the absolute tree area
+          hiToRight,           // to the right of the client area (if relative) or the absolute tree area
+          hiUpperSplitter,     // in the upper splitter area of a node
+          hiLowerSplitter      // in the lower splitter area of a node
+        ] * HitPositions = [] then
+          DoSingleModuleLoad(HitNode);
 end;
 
 procedure TfrmModuleSelect.vstModulesPaintText(Sender: TBaseVirtualTree;
