@@ -14,6 +14,7 @@
 * #871 - Updates for Static Collections [FO4] 
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
 * #886 - Crash by confirming add of *no* master
+* #880 - Minor problem with double clicking during module selection
 * #894 - [Skyrim] Several RACE subrecords are not marked as required
 * #909 - xEdit should double apostrophes in generated LOOT masterlist entry names
 * #912 - TES4Edit crashes when trying to load Nehrim.esm
