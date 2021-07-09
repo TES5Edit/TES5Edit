@@ -22,6 +22,7 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 * #848 - Records with hardcoded FormIDs show as new records instead of overrides/injected
 * #853 - FNV - cleaning dead money master erases map geometry
 * #855 - After cleaning dlcnukaworld.esm, items in Nuka-Town market vanish
+* #860 - tooltip always disappears after a second
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
 * #871 - Updates for Static Collections [FO4] 
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records

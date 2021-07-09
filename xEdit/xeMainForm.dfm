@@ -134,7 +134,6 @@ object frmMain: TfrmMain
             OnFreeNode = vstViewFreeNode
             OnGetText = vstViewGetText
             OnPaintText = vstViewPaintText
-            OnGetHint = vstViewGetHint
             OnHeaderClick = vstViewHeaderClick
             OnHeaderDrawQueryElements = vstViewHeaderDrawQueryElements
             OnHeaderMouseDown = vstViewHeaderMouseDown
@@ -791,7 +790,6 @@ object frmMain: TfrmMain
             OnFreeNode = vstSpreadSheetFreeNode
             OnGetText = vstSpreadSheetGetText
             OnPaintText = vstSpreadSheetPaintText
-            OnGetHint = vstSpreadSheetGetHint
             OnHeaderClick = vstNavHeaderClick
             OnIncrementalSearch = vstSpreadSheetIncrementalSearch
             OnInitNode = vstSpreadSheetWeaponInitNode
@@ -996,7 +994,6 @@ object frmMain: TfrmMain
             OnFreeNode = vstSpreadSheetFreeNode
             OnGetText = vstSpreadSheetGetText
             OnPaintText = vstSpreadSheetPaintText
-            OnGetHint = vstSpreadSheetGetHint
             OnHeaderClick = vstNavHeaderClick
             OnIncrementalSearch = vstSpreadSheetIncrementalSearch
             OnInitNode = vstSpreadSheetArmorInitNode
@@ -1137,7 +1134,6 @@ object frmMain: TfrmMain
             OnFreeNode = vstSpreadSheetFreeNode
             OnGetText = vstSpreadSheetGetText
             OnPaintText = vstSpreadSheetPaintText
-            OnGetHint = vstSpreadSheetGetHint
             OnHeaderClick = vstNavHeaderClick
             OnIncrementalSearch = vstSpreadSheetIncrementalSearch
             OnInitNode = vstSpreadSheetAmmoInitNode
