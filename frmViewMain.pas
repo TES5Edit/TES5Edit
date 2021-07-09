@@ -532,7 +532,6 @@ type
     procedure vstViewFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode; OldColumn, NewColumn: TColumnIndex; var Allowed: Boolean);
     procedure vstViewFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstViewGetEditText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var CellText: string);
-    procedure vstViewGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle; var HintText: string);
     procedure vstViewGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstViewHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
     procedure vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
@@ -589,7 +588,6 @@ type
     procedure vstSpreadSheetEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstSpreadSheetFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstSpreadSheetGetEditText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var CellText: string);
-    procedure vstSpreadSheetGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle; var HintText: string);
     procedure vstSpreadSheetGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstSpreadSheetIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
     procedure vstSpreadSheetNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: string);
@@ -17158,14 +17156,6 @@ begin
     CellText := Element.EditValue;
 end;
 
-procedure TfrmMain.vstViewGetHint(Sender: TBaseVirtualTree; Node: PVirtualNode;
-  Column: TColumnIndex; var LineBreakStyle: TVTTooltipLineBreakStyle;
-  var HintText: string);
-begin
-  if GetKeyState(VK_SHIFT) < 0 then
-    HintText := vstView.Text[Node, Column, False];
-end;
-
 procedure TfrmMain.vstViewGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: string);
@@ -18921,14 +18911,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.vstSpreadSheetGetHint(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex;
-  var LineBreakStyle: TVTTooltipLineBreakStyle; var HintText: string);
-begin
-  if GetKeyState(VK_SHIFT) < 0 then
-    HintText := TVirtualEditTree(Sender).Text[Node, Column, False];
-end;
-
 procedure TfrmMain.vstSpreadSheetIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
 var
   CompareText                 : string;
@@ -20090,6 +20072,8 @@ begin
 end;
 
 procedure TfrmMain.UpdateActions;
+var
+  HintMode: TVTHintMode;
 begin
   if DelayedExpandView then begin
     DelayedExpandView := False;
@@ -20098,6 +20082,18 @@ begin
   if Enabled and pnlClient.Enabled then
     NavUpdate(False);
   inherited;
+
+  if GetAsyncKeyState(VK_SHIFT) and $8000 <> 0 then
+    HintMode := hmTooltip
+  else
+    HintMode := hmDefault;
+
+  if HintMode <> vstView.HintMode then begin
+    vstView.HintMode := HintMode;
+    vstSpreadSheetWeapon.HintMode := HintMode;
+    vstSpreadsheetArmor.HintMode := HintMode;
+    vstSpreadSheetAmmo.HintMode := HintMode;
+  end;
 end;
 
 procedure TfrmMain.UpdateActiveFromPluggyLink;
