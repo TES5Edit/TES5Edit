@@ -18331,10 +18331,8 @@ begin
         Assert(Assigned(CurrentDef));
       end;
 
-      if Assigned(FoundMembers[CurrentDefPos]) then begin
-        //Beep;
+      if Assigned(FoundMembers[CurrentDefPos]) then
         Break; // don't allow duplicate members
-      end;
 
       case CurrentDef.DefType of
         dtSubRecord : begin
@@ -18352,6 +18350,9 @@ begin
       Element.SetSortOrder(CurrentDefPos);
       Element.SetMemoryOrder(CurrentDefPos);
       FoundMembers[CurrentDefPos] := Element;
+
+      if dfTerminator in CurrentDef.DefFlags then
+        Break;
 
       if srcDef.AllowUnordered then
         CurrentDefPos := 0

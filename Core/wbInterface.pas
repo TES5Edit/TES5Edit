@@ -615,7 +615,8 @@ type
     dfSummaryShowIgnore,
     dfUnionStaticResolve,
     dfHideText,
-    dfRemoveLastOnly
+    dfRemoveLastOnly,
+    dfTerminator
   );
 
   TwbDefFlags = set of TwbDefFlag;

@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #864 - subgraph data is incorrectly created/overriden
 * #888 - Plugins with no masters can't resolve references to hardcoded records
 * #897 - Assertion Failure when using Referenced By to jump to INFO
 * #904 - Any mod referred to in INOM and INOA in all present overrides will be added to a mod's master list on override

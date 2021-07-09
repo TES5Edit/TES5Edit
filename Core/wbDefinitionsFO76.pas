@@ -17920,10 +17920,10 @@ begin
     wbFormIDCk(SADD, 'Subgraph Additive Race', [RACE]),
     wbRArray('Subgraph Data',
       wbRStruct('Data', [
-        wbString(SGNM, 'Behaviour Graph'),
         wbRArray('Actor Keywords', wbFormIDCk(SAKD, 'Keyword', [KYWD])),
-        wbRArray('Target Keywords', wbFormIDCk(STKD, 'Keyword', [KYWD])),
+        wbString(SGNM, 'Behaviour Graph'),
         wbRArray('Animation Paths', wbString(SAPT, 'Path'), cpNormal, True),
+        wbRArray('Target Keywords', wbFormIDCk(STKD, 'Keyword', [KYWD])),
         // Values greater than $10000 sets a bool. Reading this "closes" the current record.
         wbStruct(SRAF, 'Flags', [
           wbInteger('Role', itU16, wbEnum([
@@ -17938,6 +17938,8 @@ begin
             '1st'
           ]))
         ], cpNormal, True)
+        .SetSummaryKeyOnValue([0, 1])
+        .IncludeFlag(dfTerminator)
       ], [], cpNormal, False, nil, True)
     ),
     wbFloat(PTOP, 'Idle Chatter Time Min'),
