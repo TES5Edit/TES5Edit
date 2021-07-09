@@ -2858,8 +2858,12 @@ object frmMain: TfrmMain
     end
     object mniViewHeaderHidden: TMenuItem
       AutoCheck = True
-      Caption = 'Hidden'
+      Caption = 'Hide'
       OnClick = mniViewHeaderHiddenClick
+    end
+    object mniViewHeaderUnhideAll: TMenuItem
+      Caption = 'Unhide all...'
+      OnClick = mniViewHeaderUnhideAllClick
     end
   end
   object tmrCheckUnsaved: TTimer

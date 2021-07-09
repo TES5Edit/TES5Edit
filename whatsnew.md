@@ -40,6 +40,10 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 * (reported on Discord) - Long running operations like filters and scripts can't be aborted
 * (found by developer) - Need to force InternalEdit for AfterSet handlers
 
+## Minor changes
+
+* #901 - "Unhide all..." option in column context menu
+
 ## Enderal Special Edition
 
 Initial support for Enderal Special Edition has been added.
