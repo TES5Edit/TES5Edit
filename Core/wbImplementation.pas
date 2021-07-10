@@ -18683,7 +18683,10 @@ begin
         VarSize := False //the array is static in size, even if the elements aren't...
       else
         if Assigned(aBasePtr) then
-          ArrSize := High(Integer);
+          ArrSize := High(Integer)
+        else
+          if SizePrefix = 0 then
+            ArrSize := 1;
     end;
 
   if Assigned(aBasePtr) then
