@@ -3972,6 +3972,7 @@ begin
     Result := d;
   end else
     Result := 0.0;
+  Result := RoundTo(Result, -2);
 end;
 
 function TwbFile.HasGroup(const aSignature: TwbSignature): Boolean;
