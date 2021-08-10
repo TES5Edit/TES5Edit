@@ -235,13 +235,16 @@ const
   ARTC : TwbSignature = 'ARTC'; { New To Fallout 76 }
   ARTO : TwbSignature = 'ARTO';
   ASPC : TwbSignature = 'ASPC';
+  ASTM : TwbSignature = 'ASTM'; { New To Fallout 76 }
   ASTP : TwbSignature = 'ASTP';
+  ATAT : TwbSignature = 'ATAT'; { New to Fallout 76 }
   ATKD : TwbSignature = 'ATKD'; { New to Skyrim }
   ATKE : TwbSignature = 'ATKE'; { New to Skyrim }
   ATKR : TwbSignature = 'ATKR'; { New to Skyrim }
   ATKS : TwbSignature = 'ATKS'; { New To Fallout 4 }
   ATKT : TwbSignature = 'ATKT'; { New To Fallout 4 }
   ATKW : TwbSignature = 'ATKW'; { New To Fallout 4 }
+  ATSI : TwbSignature = 'ATSI'; { New to Fallout 76 }
   ATTN : TwbSignature = 'ATTN'; { New To Fallout 4 }
   ATTR : TwbSignature = 'ATTR'; { New To Fallout 76 }
   ATTX : TwbSignature = 'ATTX'; { New To Fallout 4 }
@@ -1007,6 +1010,7 @@ const
   VNAM : TwbSignature = 'VNAM';
   VNML : TwbSignature = 'VNML';
   VOLI : TwbSignature = 'VOLI'; { New To Fallout 76 }
+  VONL : TwbSignature = 'VONL'; { New To Fallout 76 }
   VTCK : TwbSignature = 'VTCK';
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
@@ -11485,7 +11489,8 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
-    wbBSMPSequence
+    wbBSMPSequence,
+    wbInteger(VONL, 'Unknown Bool', itU8, wbBoolEnum)
   ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
   wbRecord(BOOK, 'Book', [
@@ -11663,7 +11668,7 @@ begin
 
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x0000002}  2, 'Is Instanced',
+      {0x0000004}  2, 'Is Instancable',
       {0x0000020}  6, 'Unknown 6',
       {0x0000040}  7, 'No Pre Vis',
       {0x0000200} 10, 'Persistent',
@@ -11673,6 +11678,7 @@ begin
     ]), [18]), [
     wbEDID,
     wbDURL,
+    wbXALG,
     wbFULL,
     wbUnion(DATA, 'Flags', wbDeciderCELLFlags, [
       wbInteger('', itU16, wbCELLFlags),
@@ -11762,7 +11768,7 @@ begin
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
     wbFloat(XILS),
-    wbUnknown(RDES),
+    wbFormIDCk(RDES, 'Unknown Reference', [REFR]),
     wbUnknown(NAVH),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
@@ -12635,6 +12641,7 @@ begin
       {0x00000040}  6, 'Constant'
     ])), [
     wbEDID,
+    wbXALG,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
       Ord('s'), 'Short',
       Ord('l'), 'Long',
@@ -15556,7 +15563,7 @@ begin
 
   wbRecord(INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Unknown 6',
+      {0x00000040}  6, 'Info Group',
       {0x00000080}  7, 'Exclude From Export',
       {0x00002000} 13, 'Actor Changed'
     ])), [
@@ -15574,7 +15581,7 @@ begin
           {0x0040} 'End Running Scene',
           {0x0080} 'ForceGreet Hello',
           {0x0100} 'Player Address',
-          {0x0200} 'Unknown 9',
+          {0x0200} 'Force Subtitle',
           {0x0400} 'Can Move While Greeting',
           {0x0800} 'No LIP File',
           {0x1000} 'Requires post-processing',
@@ -15592,7 +15599,7 @@ begin
           {0x0040} 'End Running Scene',
           {0x0080} 'ForceGreet Hello',
           {0x0100} 'Player Address',
-          {0x0200} 'Unknown 9',
+          {0x0200} 'Force Subtitle',
           {0x0400} 'Can Move While Greeting',
           {0x0800} 'No LIP File',
           {0x1000} 'Requires post-processing',
@@ -20968,6 +20975,13 @@ begin
       wbString(ENAM, 'Item Storefront Image')
     )
   ]);
+
+  wbRecord(ASTM, 'Unknown - ASTM', [
+    wbEDID,
+    wbDESC,
+    wbByteArray(ATAT, 'Unknown', 4),
+    wbByteArray(ATSI, 'Unknown', 4)
+  ]);
 end;
 
 procedure DefineFO76Groups;
@@ -20982,6 +20996,7 @@ begin
   wbAddGroupOrder(EMOT); //new in Fallout 76
   wbAddGroupOrder(AVTR); //new in Fallout 76
   wbAddGroupOrder(CPRD); //new in Fallout 76
+  wbAddGroupOrder(ASTM);
   wbAddGroupOrder(LCRT);
   wbAddGroupOrder(AACT);
   wbAddGroupOrder(TRNS);
