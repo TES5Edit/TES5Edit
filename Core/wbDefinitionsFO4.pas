@@ -13022,7 +13022,7 @@ begin
 
   wbRecord(INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Unknown 6',
+      {0x00000040}  6, 'Info Group',
       {0x00000080}  7, 'Exclude From Export',
       {0x00002000} 13, 'Actor Changed'
     ])), [
