@@ -4566,7 +4566,6 @@ type
   PCTDAFunction = ^TCTDAFunction;
   TCTDAFunction = record
     Index: Integer;
-    AltIndex: Integer;
     Name: string;
     Desc: string;
     ParamType1: TCTDAFunctionParamType;
@@ -5141,31 +5140,31 @@ const
     (Index: 911; Name: 'IsInstanceOwner'; Desc: 'Is this player an owner of the given ref''s instanced location?'; ParamType1: ptReferencableObject),
     (Index: 914; Name: 'IsQuestTracked'; Desc: 'Does the player have the given base quest tracked?'; ParamType1: ptQuest),
     (Index: 915; Name: 'IsPlayerFO1Member'; Desc: 'Is the selected player a FO1 Member?'),
-    (Index: 916; Name: 'IsPlayerFO1Member'; Desc: 'Is the selected player a FO1 Member?'),
-    (Index: 917; Name: 'IsServerOverEWSActorBudget'; Desc: 'Is the server over the actor budget used by the EWS?'),
-    (Index: 918; Name: 'GetStageDonePlayerInstance'; Desc: 'Get if the stage is done on a player''s quest instance'; ParamType1: ptQuest; ParamType2: ptQuestStage),
-    (Index: 919; Name: 'IsAuthoritativeOverMovement'; Desc: 'Returns true if the refr is authoritative over it''s movement'),
-    (Index: 920; Name: 'IsWeaponMinChargeTimeElapsed'; Desc: 'Returns true if the current weapon''s min charge time has elapsed'),
-    (Index: 921; Name: 'IsOccupiedFurnitureRef'; ParamType1: ptObjectReference),
-    (Index: 922; Name: 'IsOccupiedFurnitureObj'; ParamType1: ptFurniture),
-    (Index: 923; AltIndex: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
-    (Index: 924; AltIndex: 10000; Name: 'IsChallengeTypeDaily'; Desc: 'Is the target challenge a Daily challenge?'),
-    (Index: 925; AltIndex: 10001; Name: 'IsChallengeTypeWeekly'; Desc: 'Is the target challenge a Weekly challenge?'),
-    (Index: 926; AltIndex: 10002; Name: 'IsChallengeTypeLifetime'; Desc: 'Is the target challenge a Lifetime challenge?'),
-    (Index: 927; AltIndex: 10003; Name: 'IsStealthed'),
-    (Index: 928; Name: 'GetTeammateBondScore'),
-    (Index: 929; Name: 'GetTeamType'),
-    (Index: 930; AltIndex: 8000; Name: 'IsDailyContentAvailable'),
-    (Index: 931; AltIndex: 8001; Name: 'StartDailyContent'),
-    (Index: 932; AltIndex: 8002; Name: 'GetRemainingQuestTimeSeconds'),
-    (Index: 933; Name: 'GetNumPlayersInSameInterior'),
-    (Index: 934; Name: 'GetQuestFormType'),
-    (Index: 935; AltIndex: 6000; Name: 'GetSecondsSinceLastAttack'),
-    (Index: 936; AltIndex: 9001; Name: 'IsPlayerInShelterOwned'),
-    (Index: 937; AltIndex: 9002; Name: 'IsPlayerInShelter'),
-    (Index: 938; AltIndex: 9003; Name: 'IsInShelterLocation'; Desc: 'Is this ref in a shelter location?'),
-    (Index: 939; Name: 'GetPlayerSeasonRank'),
-    (Index: 940; AltIndex: 5001; Name: 'GetIsForm')
+    (Index: 916; Name: 'IsServerOverEWSActorBudget'; Desc: 'Is the server over the actor budget used by the EWS?'),
+    (Index: 917; Name: 'GetStageDonePlayerInstance'; Desc: 'Get if the stage is done on a player''s quest instance'; ParamType1: ptQuest; ParamType2: ptQuestStage),
+    (Index: 918; Name: 'IsAuthoritativeOverMovement'; Desc: 'Returns true if the refr is authoritative over it''s movement'),
+    (Index: 919; Name: 'IsWeaponMinChargeTimeElapsed'; Desc: 'Returns true if the current weapon''s min charge time has elapsed'),
+    (Index: 920; Name: 'IsOccupiedFurnitureRef'; ParamType1: ptObjectReference),
+    (Index: 921; Name: 'IsOccupiedFurnitureObj'; ParamType1: ptFurniture),
+    (Index: 922; Name: 'GetTeammateBondScore'),
+    (Index: 923; Name: 'GetTeamType'),
+    (Index: 924; Name: 'GetNumPlayersInSameInterior'),
+    (Index: 925; Name: 'GetQuestFormType'),
+    (Index: 926; Name: 'GetPlayerSeasonRank'),
+    (Index: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
+    (Index: 5001; Name: 'GetIsForm'),
+    (Index: 6000; Name: 'GetSecondsSinceLastAttack'),
+    (Index: 8000; Name: 'IsDailyContentAvailable'),
+    (Index: 8001; Name: 'StartDailyContent'),
+    (Index: 8002; Name: 'GetRemainingQuestTimeSeconds'),
+    (Index: 9001; Name: 'IsPlayerInShelterOwned'),
+    (Index: 9002; Name: 'IsPlayerInShelter'),
+    (Index: 9003; Name: 'IsInShelterLocation'; Desc: 'Is this ref in a shelter location?'),
+    (Index: 10000; Name: 'IsChallengeTypeDaily'; Desc: 'Is the target challenge a Daily challenge?'),
+    (Index: 10001; Name: 'IsChallengeTypeWeekly'; Desc: 'Is the target challenge a Weekly challenge?'),
+    (Index: 10002; Name: 'IsChallengeTypeLifetime'; Desc: 'Is the target challenge a Lifetime challenge?'),
+    (Index: 10003; Name: 'IsStealthed'),
+    (Index: 12000; Name: 'IsFOWPersonalEWSEnabled'; Desc: 'Is the personal EWS enabled?')
   );
 
 var
@@ -5179,29 +5178,17 @@ begin
 
   L := Low(wbCTDAFunctions);
   H := High(wbCTDAFunctions);
-  if aIndex > wbCTDAFunctions[H].Index then begin
-     while L <= H do begin
-         if wbCTDAFunctions[H].AltIndex = aIndex then begin
-           Result := @wbCTDAFunctions[H];
-           H := L;
-         end;
-         H := H - 1;
-     end;
-  end else begin
 
-    while L <= H do begin
-      I := (L + H) shr 1;
-      C := CmpW32(wbCTDAFunctions[I].Index, aIndex);
-      if (C < 0) and (aIndex = wbCTDAFunctions[I].AltIndex)  then
-        C := 0;
-      if C < 0 then
-        L := I + 1
-      else begin
-        H := I - 1;
-        if C = 0 then begin
-          L := I;
-          Result := @wbCTDAFunctions[L];
-        end;
+  while L <= H do begin
+    I := (L + H) shr 1;
+    C := CmpW32(wbCTDAFunctions[I].Index, aIndex);
+    if C < 0 then
+      L := I + 1
+    else begin
+      H := I - 1;
+      if C = 0 then begin
+        L := I;
+        Result := @wbCTDAFunctions[L];
       end;
     end;
   end;
@@ -18544,7 +18531,7 @@ begin
     wbByteRGBA(RCLR, 'Map Color'),
     wbFormIDCkNoReach(WNAM, 'Worldspace/Reference', [WRLD, REFR]),
     wbFormIDCkNoReach(LNAM, 'Location', [LCTN]),
-    wbUnknown(LCPR),
+    wbInteger(LCPR, 'Location Priority', itU8),
     wbRArray('Region Areas', wbRStruct('Region Area', [
       wbInteger(RPLI, 'Edge Fall-off', itU32),
       wbArray(RPLD, 'Points', wbStruct('Point', [
