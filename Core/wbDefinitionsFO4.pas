@@ -13022,7 +13022,7 @@ begin
 
   wbRecord(INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Unknown 6',
+      {0x00000040}  6, 'Info Group',
       {0x00000080}  7, 'Exclude From Export',
       {0x00002000} 13, 'Actor Changed'
     ])), [
@@ -13039,7 +13039,7 @@ begin
         {0x0040} 'End Running Scene',
         {0x0080} 'ForceGreet Hello',
         {0x0100} 'Player Address',
-        {0x0200} 'Unknown 9',
+        {0x0200} 'Force Subtitle',
         {0x0400} 'Can Move While Greeting',
         {0x0800} 'No LIP File',
         {0x1000} 'Requires post-processing',
