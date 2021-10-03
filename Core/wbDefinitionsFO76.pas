@@ -8842,140 +8842,6 @@ begin
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
-  wbDEST := wbRStruct('Destructible', [
-    wbStruct(DEST, 'Header', [
-      wbInteger('Health', itS32),
-      wbInteger('DEST Count', itU8),
-      wbByteArray('Unused',3),
-      wbInteger('Flags', itU32, wbFlags([
-      { 0x0001 } 'VATS Targetable',
-      { 0x0002 } 'Large Actor Destroys',
-      { 0x0004 } 'Unknown 2',
-      { 0x0008 } 'Unknown 3',
-      { 0x0010 } 'Unknown 4',
-      { 0x0020 } 'Unknown 5',
-      { 0x0040 } 'Unknown 6',
-      { 0x0080 } 'Unknown 7',
-      { 0x0100 } 'Unknown 8',
-      { 0x0200 } 'Unknown 9',
-      { 0x0800 } 'Unknown 10',
-      { 0x1000 } 'Unknown 11'
-      ])),
-      wbFromSize(12,wbFloat('Unknown'))
-    ], cpNormal, True),
-    wbCTDAs,
-    wbUnknown(DSCF),
-    wbFormIDCk(HGLB, 'Health Global', [GLOB]),
-    wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32),
-      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
-    ])),
-    wbRArray('Stages',
-      wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
-          wbInteger('Health %', itU8),
-          wbInteger('Index', itU8),
-          wbInteger('Model Damage Stage', itU8),
-          wbInteger('Flags', itU8, wbFlags([
-            'Cap Damage',
-            'Disable',
-            'Destroy',
-            'Ignore External Dmg',
-            'Becomes Dynamic',
-            'Unknown 6',
-            'Unknown 7',
-            'Unknown 8'
-          ])),
-          wbInteger('Self Damage per Second', itS32),
-          wbFormIDCk('Explosion', [EXPL, NULL]),
-          wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32),
-          wbFormIDCk('Material Swap', [MSWP, NULL]),
-          wbFloat
-        ], cpNormal, True),
-        wbString(DSTA, 'Sequence Name'),
-        wbRArray('Models',
-          wbRStructSK([0], 'Model', [
-            wbString(DMDL, 'Model FileName', 0, cpNormal, True),
-            wbDMDT,
-            wbDMDC,
-            wbDMDS,
-            wbENLM,
-            wbENLT,
-            wbENLS,
-            wbAUUV
-          ], []).IncludeFlag(dfAllowAnyMember)
-        ),
-        wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], [], cpNormal, False, nil)
-    )
-  ], [], cpNormal, False, nil, True).IncludeFlag(dfAllowAnyMember);
-
-  wbReward := wbRStruct('Reward', [
-    wbUnknown(CTRG),
-    wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
-    wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
-    wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
-    wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
-    wbFormID(QRLI, 'Legendary Item Reward List'),
-    wbFormID(QRCX, 'SCORE Reward Amount'),
-    wbFloat(ESRE, 'XP Amount'),
-    wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
-    wbUnion(QRRI, '', wbRecordSizeDecider(1), [
-      wbEmpty('Legendary Item Rank Random'),
-      wbInteger('Legendary Item Rank Random', itU8, wbBoolEnum)
-    ]),
-    wbRArray('Rewarded Items',
-      wbStruct(QSRD, 'Rewarded Item', [
-        wbFormID('Item'),
-        wbInteger('Count', itU32)
-      ])
-    ),
-    wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
-    wbCTDAs,
-    wbFormIDCk(DNAM, 'Reward Record', [GMRW]),
-    wbEmpty(ITME, 'Reward End Marker')
-  ], [], cpNormal, False, nil, True).IncludeFlag(dfAllowAnyMember);
-
-  wbDESTActor := wbRStruct('Destructible', [
-    wbStruct(DEST, 'Header', [
-      wbInteger('Health', itS32),
-      wbInteger('Count', itU8),
-      wbInteger('VATS Targetable', itU8, wbBoolEnum),
-      wbByteArray('Unknown', 2)
-    ]),
-    wbRArray('Stages',  // Begin Stage Array
-      wbRStruct('Stage', [ // Begin Stage RStruct
-        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
-          wbInteger('Health %', itU8),
-          wbInteger('Index', itU8),
-          wbInteger('Damage Stage', itU8),
-          wbInteger('Flags', itU8, wbFlags([
-            'Cap Damage',
-            'Disable',
-            'Destroy'
-          ])),
-          wbInteger('Self Damage per Second', itS32),
-          wbFormIDCk('Explosion', [EXPL, NULL]),
-          wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32)
-        ], cpNormal, True), // End DSTD
-        wbRStructSK([0], 'Model', [ // Begin DMDL
-          wbString(DMDL, 'Model FileName')
-        ], []), // End DMDL
-        wbDMDT,
-        wbDMDC,
-        wbDMDS,
-        wbENLM,
-        wbENLT,
-        wbENLS,
-        wbAUUV,
-        wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], []) // Begin Stage RStruct
-    ) // End Stage Array
-  ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation});
-
   wbXESP := wbStruct(XESP, 'Enable Parent', [
     wbFormIDCk('Reference', sigReferences),
     wbInteger('Flags', itU8, wbFlags([
@@ -10691,6 +10557,140 @@ begin
         ], [])
       ], [])
     );
+
+  wbDEST := wbRStruct('Destructible', [
+    wbStruct(DEST, 'Header', [
+      wbInteger('Health', itS32),
+      wbInteger('DEST Count', itU8),
+      wbByteArray('Unused',3),
+      wbInteger('Flags', itU32, wbFlags([
+      { 0x0001 } 'VATS Targetable',
+      { 0x0002 } 'Large Actor Destroys',
+      { 0x0004 } 'Unknown 2',
+      { 0x0008 } 'Unknown 3',
+      { 0x0010 } 'Unknown 4',
+      { 0x0020 } 'Unknown 5',
+      { 0x0040 } 'Unknown 6',
+      { 0x0080 } 'Unknown 7',
+      { 0x0100 } 'Unknown 8',
+      { 0x0200 } 'Unknown 9',
+      { 0x0800 } 'Unknown 10',
+      { 0x1000 } 'Unknown 11'
+      ])),
+      wbFromSize(12,wbFloat('Unknown'))
+    ], cpNormal, True),
+    wbCTDAs,
+    wbUnknown(DSCF),
+    wbFormIDCk(HGLB, 'Health Global', [GLOB]),
+    wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    ])),
+    wbRArray('Stages',
+      wbRStruct('Stage', [
+        wbStruct(DSTD, 'Destruction Stage Data', [
+          wbInteger('Health %', itU8),
+          wbInteger('Index', itU8),
+          wbInteger('Model Damage Stage', itU8),
+          wbInteger('Flags', itU8, wbFlags([
+            'Cap Damage',
+            'Disable',
+            'Destroy',
+            'Ignore External Dmg',
+            'Becomes Dynamic',
+            'Unknown 6',
+            'Unknown 7',
+            'Unknown 8'
+          ])),
+          wbInteger('Self Damage per Second', itS32),
+          wbFormIDCk('Explosion', [EXPL, NULL]),
+          wbFormIDCk('Debris', [DEBR, NULL]),
+          wbInteger('Debris Count', itS32),
+          wbFormIDCk('Material Swap', [MSWP, NULL]),
+          wbFloat
+        ], cpNormal, True),
+        wbString(DSTA, 'Sequence Name'),
+        wbRArray('Models',
+          wbRStructSK([0], 'Model', [
+            wbString(DMDL, 'Model FileName', 0, cpNormal, True),
+            wbDMDT,
+            wbDMDC,
+            wbDMDS,
+            wbENLM,
+            wbENLT,
+            wbENLS,
+            wbAUUV
+          ], []).IncludeFlag(dfAllowAnyMember)
+        ),
+        wbEmpty(DSTF, 'End Marker', cpNormal, True)
+      ], [], cpNormal, False, nil)
+    )
+  ], [], cpNormal, False, nil, True).IncludeFlag(dfAllowAnyMember);
+
+  wbReward := wbRStruct('Reward', [
+    wbUnknown(CTRG),
+    wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
+    wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
+    wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
+    wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
+    wbFormID(QRLI, 'Legendary Item Reward List'),
+    wbFormID(QRCX, 'SCORE Reward Amount'),
+    wbFloat(ESRE, 'XP Amount'),
+    wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
+    wbUnion(QRRI, '', wbRecordSizeDecider(1), [
+      wbEmpty('Legendary Item Rank Random'),
+      wbInteger('Legendary Item Rank Random', itU8, wbBoolEnum)
+    ]),
+    wbRArray('Rewarded Items',
+      wbStruct(QSRD, 'Rewarded Item', [
+        wbFormID('Item'),
+        wbInteger('Count', itU32)
+      ])
+    ),
+    wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
+    wbCTDAs,
+    wbFormIDCk(DNAM, 'Reward Record', [GMRW]),
+    wbEmpty(ITME, 'Reward End Marker')
+  ], [], cpNormal, False, nil, True).IncludeFlag(dfAllowAnyMember);
+
+  wbDESTActor := wbRStruct('Destructible', [
+    wbStruct(DEST, 'Header', [
+      wbInteger('Health', itS32),
+      wbInteger('Count', itU8),
+      wbInteger('VATS Targetable', itU8, wbBoolEnum),
+      wbByteArray('Unknown', 2)
+    ]),
+    wbRArray('Stages',  // Begin Stage Array
+      wbRStruct('Stage', [ // Begin Stage RStruct
+        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
+          wbInteger('Health %', itU8),
+          wbInteger('Index', itU8),
+          wbInteger('Damage Stage', itU8),
+          wbInteger('Flags', itU8, wbFlags([
+            'Cap Damage',
+            'Disable',
+            'Destroy'
+          ])),
+          wbInteger('Self Damage per Second', itS32),
+          wbFormIDCk('Explosion', [EXPL, NULL]),
+          wbFormIDCk('Debris', [DEBR, NULL]),
+          wbInteger('Debris Count', itS32)
+        ], cpNormal, True), // End DSTD
+        wbRStructSK([0], 'Model', [ // Begin DMDL
+          wbString(DMDL, 'Model FileName')
+        ], []), // End DMDL
+        wbDMDT,
+        wbDMDC,
+        wbDMDS,
+        wbENLM,
+        wbENLT,
+        wbENLS,
+        wbAUUV,
+        wbEmpty(DSTF, 'End Marker', cpNormal, True)
+      ], []) // Begin Stage RStruct
+    ) // End Stage Array
+  ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation});
 
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
@@ -15650,7 +15650,7 @@ begin
         wbFromVersion(116, wbInteger('Camera Location Alias', itS32))
       ]),
       wbUnknown(TRAE),
-      wbUnknown(BNAM),
+      wbLStringKC(BNAM, 'Comment?'),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
       wbString(NAM3, 'Edits', 0, cpNormal, True),
@@ -16190,7 +16190,8 @@ begin
     {47} 'Permanent Reanimate',
     {48} 'Jetpack',
     {49} 'Chameleon',
-    {50} 'Grow Flora'
+    {50} 'Grow Flora',
+    {51} 'Corpse Highlight'
   ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet);
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
@@ -17530,23 +17531,25 @@ begin
     wbLString(QRWT, 'Reward Text'),
     wbUnknown(QARV),
     wbUnknown(QARF),
-    wbInteger(PEDF, 'Public Event Difficulty', itU32, wbEnum([
-      'Very Easy',
-      'Easy',
-      'Medium',
-      'Hard',
-      'Very Hard',
-      'Nuclear'
-    ])),
-    wbString(PEPI, 'Public Event Popup Info'),
-    wbUnknown(PERM),
-    wbUnknown(PERT),
-    wbRArray('Unknown Array',
-      wbRStruct('Unknown Struct', [
-        wbString(PEWI, 'Icon'),
-        wbFloat(PEWR, 'Unknown Float')
-      ], [])
-    )
+    wbRStruct('Public Event Data', [
+      wbInteger(PEDF, 'Public Event Difficulty', itU32, wbEnum([
+        'Very Easy',
+        'Easy',
+        'Medium',
+        'Hard',
+        'Very Hard',
+        'Nuclear'
+      ])),
+      wbString(PEPI, 'Public Event Popup Info'),
+      wbUnknown(PERM),
+      wbUnknown(PERT),
+      wbRArray('Possible Rewards',
+        wbRStruct('Possible Reward', [
+          wbString(PEWI, 'Icon'),
+          wbLStringKC(PEWR, 'Description')
+        ], [])
+      )
+    ], [])
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
