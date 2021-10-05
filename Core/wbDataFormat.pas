@@ -741,6 +741,8 @@ begin
     Result := SingleNaN
   else if SameText(aValue, 'Inf') then
     Result := SingleInf
+  else if SameText(aValue, '-Inf') then
+    Result := -SingleInf   
   else if SameText(aValue, 'Max') then
     Result := MaxSingle
   else if SameText(aValue, 'Min') then
@@ -759,6 +761,8 @@ begin
     Result := HalfToFloat(HalfNaN)
   else if SameText(aValue, 'Inf') then
     Result := HalfToFloat(HalfPosInf)
+  else if SameText(aValue, '-Inf') then
+    Result := -HalfToFloat(HalfPosInf)
   else if SameText(aValue, 'Max') then
     Result := MaxHalf
   else if SameText(aValue, 'Min') then
