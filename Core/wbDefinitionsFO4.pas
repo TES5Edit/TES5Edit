@@ -14235,7 +14235,7 @@ begin
       ])),
       wbInteger('Priority', itU8),
       wbByteArray('Unused', 1),
-      wbInteger('Form Version', itU32, nil, cpIgnore),
+      wbFloat('Delay Time'),
       wbInteger('Type', itU8, wbEnum([
         {0} 'None',
         {1} 'Main Quest',

@@ -7551,8 +7551,8 @@ begin
          ]),
     {08} wbFloat('Item Condition'),
          wbStruct('Curve Tables', [
-           wbFormIDCk('Min', [CURV]),
-           wbFormIDCk('Max', [CURV])
+           wbFormIDCk('Min', [CURV, NULL]),
+           wbFormIDCk('Max', [CURV, NULL])
          ])
   ]);
 
@@ -10575,9 +10575,11 @@ begin
       { 0x0100 } 'Unknown 8',
       { 0x0200 } 'Unknown 9',
       { 0x0800 } 'Unknown 10',
-      { 0x1000 } 'Unknown 11'
+      { 0x1000 } 'Unknown 11',
+      { 0x2000 } 'Unknown 12',
+      { 0x4000 } 'Unknown 13'
       ])),
-      wbFromSize(12,wbFloat('Unknown'))
+      wbFromSize(12, wbFloat('Unknown'))
     ], cpNormal, True),
     wbCTDAs,
     wbUnknown(DSCF),
@@ -11153,7 +11155,9 @@ begin
       wbEFIT,
       wbFormIDCk(CVT0, 'Curve Table', [CURV]),
       wbFormIDCk(MAGA, 'Actor Value', [AVIF]),
-      wbByteArray(MAGF, 'Unknown'),
+      wbInteger(MAGF, 'Effect Flags', itU32, wbFlags([
+        'Unknown 0',
+      ])),
       wbCTDAs,
       wbFormIDCk(DURG, 'Duration', [GLOB]),
       wbFormIDCk(MAGG, 'Magnitude', [GLOB]),
@@ -12661,9 +12665,11 @@ begin
 
   wbRecord(KYWD, 'Keyword',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000010} { 4}  4, 'Unknown 4',
-      {0x00000800} {11} 11, 'Unknown 11', //AnimFaceArchetype*
-      {0x00080000} {15} 15, 'Restricted'
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000010}  4, 'Unknown 4',
+      {0x00000200}  9, 'Unknown 9'
+      {0x00000800} 11, 'Unknown 11', //AnimFaceArchetype*
+      {0x00080000} 15, 'Restricted'
     ])), [
     wbEDID,
     wbXALG,
@@ -13709,7 +13715,11 @@ end;
 
 procedure DefineFO76h;
 begin
-  wbRecord(AVIF, 'Actor Value Information', [
+  wbRecord(AVIF, 'Actor Value Information' ,
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbDURL,
     wbFULL,
@@ -13941,7 +13951,8 @@ begin
 
   wbRecord(LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000002}  2, 'Unknown 2',
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000100}  8, 'Unknown 8',
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
       {0x00004000} 14, 'Partial Form'
     ])), [
@@ -16202,35 +16213,37 @@ begin
         {0x00000004}  'Detrimental',
         {0x00000008}  'Snap to Navmesh',
         {0x00000010}  'No Hit Event',
-        {0x00000020}  'Unknown 6',
-        {0x00000040}  'Unknown 7',
-        {0x00000080}  'Unknown 8',
+        {0x00000020}  'Unknown 5',
+        {0x00000040}  'Unknown 6',
+        {0x00000080}  'Unknown 7',
         {0x00000100}  'Dispel with Keywords',
         {0x00000200}  'No Duration',
         {0x00000400}  'No Magnitude',
         {0x00000800}  'No Area',
         {0x00001000}  'FX Persist',
-        {0x00002000}  'Unknown 14',
+        {0x00002000}  'Unknown 13',
         {0x00004000}  'Gory Visuals',
         {0x00008000}  'Hide in UI',
-        {0x00010000}  'Unknown 17',
+        {0x00010000}  'Unknown 16',
         {0x00020000}  'No Recast',
-        {0x00040000}  'Unknown 19',
-        {0x00080000}  'Unknown 20',
-        {0x00100000}  'Unknown 21',
+        {0x00040000}  'Unknown 18',
+        {0x00080000}  'Difficulty Affects Magnitude',
+        {0x00100000}  'Difficulty Affects Duration',
         {0x00200000}  'Power Affects Magnitude',
         {0x00400000}  'Power Affects Duration',
-        {0x00800000}  'Unknown 24',
-        {0x01000000}  'Unknown 25',
-        {0x02000000}  'Unknown 26',
+        {0x00800000}  'Unknown 23',
+        {0x01000000}  'Unknown 24',
+        {0x02000000}  'Unknown 25',
         {0x04000000}  'Painless',
         {0x08000000}  'No Hit Effect',
         {0x10000000}  'No Death Dispel',
-        {0x20000000}  'Unknown 30',
-        {0x40000000}  'Unknown 31',
-        {0x80000000}  'Unknown 32'
+        {0x20000000}  'Unknown 29',
+        {0x40000000}  'Unknown 30',
+        {0x80000000}  'Unknown 31'
       ])),
-      wbFromVersion(164, wbByteArray('Unknown', 4).IncludeFlag(dfNoReport)),
+      wbFromVersion(164, wbInteger('Flags 2', itU32, wbFlags([
+        'Unknown 0',
+      ]))),
       wbFloat('Base Cost'),
       wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
         wbFormIDCk('Unused', [NULL], False, cpIgnore),
@@ -16371,6 +16384,8 @@ begin
 
   wbRecord(COBJ, 'Constructible Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9',
       {0x00000800} 11, 'Unknown 11',
       {0x04000000} 26, 'Show as build variants'
     ])), [
@@ -17258,7 +17273,7 @@ begin
         ])),
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
-        wbInteger('Unknown',itU32), //0xE0
+        wbFloat('Delay Time'), //0xE0
         wbInteger('Quest Type',itU8, wbEnum([
           'None',
           'Primary',
@@ -17290,7 +17305,8 @@ begin
           {0x1000} 'Unknown 13'
         ])),
         wbInteger('Priority', itU8),
-        wbByteArray('Unused', 5),
+        wbByteArray('Unused', 1),
+        wbFloat('Delay Time'),
         wbInteger('Quest Type',itU8, wbEnum([
           'None',
           'Primary',
@@ -18799,7 +18815,10 @@ begin
     wbFormIDCk('Casting Perk', [NULL, PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Spell', [
+  wbRecord(SPEL, 'Spell',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000} 15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbOBND(True),
     wbOPDSs,
@@ -20821,7 +20840,11 @@ begin
     ])
   ]);
 
-  wbRecord(ENTM, 'Entitlement', [
+  wbRecord(ENTM, 'Entitlement',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbXALG,
     wbFULL,
@@ -20901,13 +20924,14 @@ begin
       {0x00000004} 'Unknown 2',
       {0x00000008} 'Unknown 3'
     ])),
-    wbInteger(TNAM,'Unknown', itU32),
+    wbInteger(TNAM, 'Required Count', itU32),
     wbXFLGLong, //Unused?
-    wbFormIDCk(HNAM, 'Required Count', [GLOB]),
+    wbFormIDCk(HNAM, 'Required Count Global', [GLOB]),
     wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
       'Daily',
       'Weekly',
-      'Lifetime'
+      'Lifetime',
+      'Bi-weekly?'
     ])),
     wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
       'Character',
@@ -20991,7 +21015,11 @@ begin
     wbRArray('Rewards List', wbReward)
   ]);
 
-  wbRecord(PEPF, 'Event Playlist', [
+  wbRecord(PEPF, 'Event Playlist' ,
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbFormID(EPEG, 'Playlist Enabled Global'),
     wbInteger(EPCD, 'Cooldown', itU32),
