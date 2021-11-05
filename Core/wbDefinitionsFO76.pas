@@ -1319,6 +1319,7 @@ var
   wbDAMS: IwbSubRecordDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
+  wbStorefrontData: IwbSubRecordStructDef;
   wbObjectTemplate: IwbSubRecordStructDef;
   wbBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
@@ -11025,6 +11026,14 @@ begin
    {106} 'DamageBonusMult',
    {107} 'AimAssistModel'
   ]);
+
+  wbStorefrontData :=
+    wbRStruct('Storefront Data', [
+      wbString(ETIP, 'Storefront Image Path'),
+      wbString(ETDI, 'Storefront Preview Image'),
+      wbFormID(ETLG, 'Entitlement Loadout Reference'),
+      wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
+    ], []);
 
   wbObjectModProperties :=
     wbArrayS('Properties', wbStructSK([4], 'Property', [
@@ -20915,11 +20924,7 @@ begin
     wbString(SWFI, 'SWF Image'),
     wbLString(NNAM, 'Display Name'),
     wbEmpty(BEVA, 'Has SWF Image'),
-    wbString(ETIP, 'Storefront Image Path'),
-    wbString(ETDI, 'Storefront Preview Image'),
-    wbFormID(ETLG, 'Entitlement Loadout Reference'),
-    wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
-
+    wbStorefrontData
   ]);
 
   wbRecord(COEN, 'Consumable Entitlement', [
@@ -20931,8 +20936,7 @@ begin
     wbFormID(CENT, 'Linked Object'),
     wbUnknown(FNAM),
     wbLStringKC(NNAM, 'Display Name', 0, cpTranslate),
-    wbString(ETIP, 'Storefront Image Path'),
-    wbString(ETDI, 'Storefront Preview Image')
+    wbStorefrontData
   ]);
 
   wbRecord(CSEN, 'Crate Service Entitlement', [
