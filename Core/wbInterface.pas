@@ -20195,6 +20195,7 @@ finalization
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
   wbContainerHandler := nil;
-  FreeAndNil(wbLEncoding);
+  FreeAndNil(wbLEncoding[True]);
+  FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);
 end.
