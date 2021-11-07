@@ -8510,7 +8510,7 @@ begin
 
   if wbRemoveOffsetData and (GetSignature = 'WRLD') then begin
     if Supports(GetRecordBySignature('OFST'), IwbSubRecord, CurrentRec) then begin
-      if wbBeginInternalEdit then try
+      if wbBeginInternalEdit(True) then try
         RemoveElement('OFST');
       finally
         wbEndInternalEdit;
