@@ -12,7 +12,7 @@
 ## Minor changes
 
 * #856 - Ability to apply xEdit script to selected refs in Referenced By window
-  (reported on Discord) - added optional 4th `aSilent: Boolean` parameter to `AddRequiredElementMasters` script function
+* (reported on Discord) - added optional 4th `aSilent: Boolean` parameter to `AddRequiredElementMasters` script function
 
 # What's new in xEdit 4.1.x?
 
