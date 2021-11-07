@@ -9726,7 +9726,8 @@ begin
       {55} 'DLC02 - Beast Stone',
       {56} 'DLC02 - Tel Mithryn',
       {57} 'DLC02 - To Skyrim',
-      {58} 'DLC02 - To Solstheim'
+      {58} 'DLC02 - To Solstheim',
+      {59} 'DLC02 - Castle Karstaag'
     ]);
 
   // load quest types list from external file if present
