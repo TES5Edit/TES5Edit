@@ -2740,6 +2740,11 @@ begin
           for i := Pred(MasterFiles.ElementCount) downto 0 do
             if MasterFiles[i].SortOrder = $100 then
               MasterFiles.RemoveElement(i);
+
+          (MasterFiles as IwbElementInternal).InvalidateStorage;
+          if MasterFiles.ElementCount = 0 then
+            MasterFiles.Remove;
+          (Header as IwbElementInternal).InvalidateStorage;
         finally
           wbEndInternalEdit;
         end else
