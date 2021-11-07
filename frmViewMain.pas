@@ -5251,7 +5251,6 @@ begin
   //wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM); read in wbInit
   wbFocusAddedElement := Settings.ReadBool('Options', 'FocusAddedElement', wbFocusAddedElement);
   wbRequireCtrlForDblClick := Settings.ReadBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
-  wbRemoveOffsetData := Settings.ReadBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
   wbShowGroupRecordCount := Settings.ReadBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
   wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
@@ -13277,7 +13276,6 @@ begin
     cbFillPNAM.Checked := wbFillPNAM;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
-    cbRemoveOffsetData.Checked := wbRemoveOffsetData;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
     cbShowFileFlags.Checked := wbShowFileFlags;
@@ -13336,7 +13334,6 @@ begin
     wbFillPNAM := cbFillPNAM.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
-    wbRemoveOffsetData := cbRemoveOffsetData.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
     wbShowFileFlags := cbShowFileFlags.Checked;
@@ -13392,7 +13389,6 @@ begin
     Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
-    Settings.WriteBool('Options', 'RemoveOffsetData', wbRemoveOffsetData);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
     Settings.WriteBool('Options', 'ShowFileFlags', wbShowFileFlags);

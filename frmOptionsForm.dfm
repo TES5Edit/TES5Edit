@@ -95,22 +95,13 @@ object frmOptions: TfrmOptions
         Caption = 'Track all EditorID'
         TabOrder = 5
       end
-      object cbRemoveOffsetData: TCheckBox
-        Left = 16
-        Top = 129
-        Width = 243
-        Height = 17
-        Hint = 'Remove OFST subrecords from worldspaces'
-        Caption = 'Remove OFST offset data'
-        TabOrder = 7
-      end
       object cbActorTemplateHide: TCheckBox
         Left = 16
         Top = 84
         Width = 233
         Height = 17
         Caption = 'Hide templated fields on actors'
-        TabOrder = 8
+        TabOrder = 7
       end
       object cbShowGroupRecordCount: TCheckBox
         Left = 16
@@ -118,7 +109,7 @@ object frmOptions: TfrmOptions
         Width = 243
         Height = 17
         Caption = 'Show elements count for group records'
-        TabOrder = 9
+        TabOrder = 8
       end
       object cbShowTip: TCheckBox
         Left = 266
@@ -127,7 +118,7 @@ object frmOptions: TfrmOptions
         Height = 17
         Hint = 'Default only track MGEF and game settings'
         Caption = 'Show tip on start'
-        TabOrder = 10
+        TabOrder = 9
       end
       object cbShowFileFlags: TCheckBox
         Left = 16
@@ -135,7 +126,7 @@ object frmOptions: TfrmOptions
         Width = 243
         Height = 17
         Caption = 'Show file header flags'
-        TabOrder = 11
+        TabOrder = 10
       end
       object cbAlignArrayElements: TCheckBox
         Left = 16
@@ -143,7 +134,7 @@ object frmOptions: TfrmOptions
         Width = 439
         Height = 17
         Caption = 'Align alignable array elements'
-        TabOrder = 12
+        TabOrder = 11
       end
       object cbPatron: TCheckBox
         Left = 266
@@ -153,7 +144,7 @@ object frmOptions: TfrmOptions
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'I am a patron or donor'
         ParentBiDiMode = False
-        TabOrder = 13
+        TabOrder = 12
       end
       object cbNoGitHubCheck: TCheckBox
         Left = 266
@@ -163,7 +154,7 @@ object frmOptions: TfrmOptions
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Don'#39't check for GitHub update'
         ParentBiDiMode = False
-        TabOrder = 14
+        TabOrder = 13
       end
       object cbNoNexusModsCheck: TCheckBox
         Left = 266
@@ -173,7 +164,7 @@ object frmOptions: TfrmOptions
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Don'#39't check for NexusMods update'
         ParentBiDiMode = False
-        TabOrder = 15
+        TabOrder = 14
       end
       object cbResetModifiedOnSave: TCheckBox
         Left = 265
@@ -183,7 +174,7 @@ object frmOptions: TfrmOptions
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Reset Modified (Bold) on Save'
         ParentBiDiMode = False
-        TabOrder = 16
+        TabOrder = 15
       end
       object cbAlwaysSaveOnam: TCheckBox
         Left = 265
@@ -193,7 +184,7 @@ object frmOptions: TfrmOptions
         BiDiMode = bdRightToLeftReadingOnly
         Caption = 'Always save ONAM'
         ParentBiDiMode = False
-        TabOrder = 17
+        TabOrder = 16
       end
       object cbManualCleaningHide: TCheckBox
         Left = 16
@@ -201,7 +192,7 @@ object frmOptions: TfrmOptions
         Width = 439
         Height = 17
         Caption = 'Hide Manual Cleaning functions'
-        TabOrder = 18
+        TabOrder = 17
       end
       object cbCollapseConditions: TCheckBox
         Left = 16
@@ -209,7 +200,7 @@ object frmOptions: TfrmOptions
         Width = 439
         Height = 17
         Caption = 'Collapse Conditions by Default (requires restart)'
-        TabOrder = 19
+        TabOrder = 18
       end
       object cbCollapseBenignArray: TCheckBox
         Left = 16
@@ -221,7 +212,7 @@ object frmOptions: TfrmOptions
           'es restart)'
         Ctl3D = True
         ParentCtl3D = False
-        TabOrder = 20
+        TabOrder = 19
       end
     end
     object tsCleaning: TTabSheet
