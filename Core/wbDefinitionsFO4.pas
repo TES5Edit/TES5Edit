@@ -9697,7 +9697,7 @@ begin
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
           ]),
-          wbByteArray('Unknown', 4)
+          wbFromVersion(29, wbInteger('No Slow Approach', itU32, wbBoolEnum))
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbRecord(CSTY, 'Combat Style',
@@ -10887,7 +10887,26 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbByteArray(ENAM, 'Unused', 0, cpIgnore),
+    wbStruct(ENAM, 'Image Space Data', [
+      wbStruct('HDR', [
+        wbFloat('Eye Adapt Speed'),
+        wbFloat('Tonemap E'),
+        wbFloat('Bloom Threshold'),
+        wbFloat('Bloom Scale'),
+        wbFloat('Auto Exposure Min/Max'),
+        wbFloat('Sunlight Scale'),
+        wbFloat('Sky Scale')
+      ]),
+      wbStruct('Cinematic', [
+        wbFloat('Saturation'),
+        wbFloat('Brightness'),
+        wbFloat('Contrast')
+      ]),
+      wbStruct('Tint', [
+        wbFloat('Amount'),
+        wbFloatColors('Color')
+      ])
+    ]),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Tonemap E'),
@@ -14216,7 +14235,7 @@ begin
       ])),
       wbInteger('Priority', itU8),
       wbByteArray('Unused', 1),
-      wbInteger('Form Version', itU32, nil, cpIgnore),
+      wbFloat('Delay Time'),
       wbInteger('Type', itU8, wbEnum([
         {0} 'None',
         {1} 'Main Quest',
@@ -15041,9 +15060,11 @@ begin
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
-      wbFloat('Unknown'), // not shown in editor
-      wbFloat('Unknown'), // not shown in editor
-      wbFloat('Unknown'), // not shown in editor
+      wbStruct('Half Extents', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]),
       wbInteger('Wind - Detached End', itU8, wbBoolEnum),
       wbByteArray('Unused', 0) // junk data?
     ], cpNormal, False, nil, 5),
@@ -15561,6 +15582,7 @@ begin
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
+      {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
       {0x00000200}  9, 'ESL'
     ], False), True), [

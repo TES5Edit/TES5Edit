@@ -413,11 +413,17 @@ const
   ENLS : TwbSignature = 'ENLS'; { New To Fallout 76 }
   ENLT : TwbSignature = 'ENLT'; { New To Fallout 76 }
   ENTM : TwbSignature = 'ENTM'; { New To Fallout 76 }
+  EPCD : TwbSignature = 'EPCD'; { New To Fallout 76 0.2.782.0 }
+  EPEG : TwbSignature = 'EPEG'; { New To Fallout 76 0.2.782.0 }
   EPF2 : TwbSignature = 'EPF2';
   EPF3 : TwbSignature = 'EPF3';
   EPFB : TwbSignature = 'EPFB'; { New To Fallout 4 }
   EPFD : TwbSignature = 'EPFD';
+  EPFL : TwbSignature = 'EPFL'; { New To Fallout 76 0.2.782.0 }
   EPFT : TwbSignature = 'EPFT';
+  EPNQ : TwbSignature = 'EPNQ'; { New To Fallout 76 0.2.782.0 }
+  EPPR : TwbSignature = 'EPPR'; { New To Fallout 76 0.2.782.0 }
+  EPQA : TwbSignature = 'EPQA'; { New To Fallout 76 0.2.782.0 }
   EQUP : TwbSignature = 'EQUP';
   EQWG : TwbSignature = 'EQWG'; { New To Fallout 76. In Exe Grup Order }
   ESAV : TwbSignature = 'ESAV'; { New To Fallout 76 }
@@ -473,6 +479,7 @@ const
   GCVR : TwbSignature = 'GCVR'; { New To Fallout 76 }
   GDRY : TwbSignature = 'GDRY'; { New to Fallout 4; Unused in Fallout 76 but exists in SeventySix.esm }
   GLOB : TwbSignature = 'GLOB';
+  GMRW : TwbSignature = 'GMRW'; { New to Fallout 76 0.2.782.0 }
   GMST : TwbSignature = 'GMST';
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
@@ -738,10 +745,13 @@ const
   PCRD : TwbSignature = 'PCRD'; { New To Fallout 76 }
   PDTO : TwbSignature = 'PDTO'; { New to Skyrim }
   PEDF : TwbSignature = 'PEDF'; { New To Fallout 76 }
+  PEPF : TwbSignature = 'PEPF'; { New To Fallout 76 0.2.782.0 }
   PEPI : TwbSignature = 'PEPI'; { New To Fallout 76 }
   PERK : TwbSignature = 'PERK';
   PERM : TwbSignature = 'PERM'; { New To Fallout 76 }
   PERT : TwbSignature = 'PERT'; { New To Fallout 76 }
+  PEWI : TwbSignature = 'PEWI'; { New To Fallout 76 0.2.782.0 }
+  PEWR : TwbSignature = 'PEWR'; { New To Fallout 76 0.2.782.0 }
   PFAC : TwbSignature = 'PFAC'; { New To Fallout 76 }
   PFIG : TwbSignature = 'PFIG';
   PFLA : TwbSignature = 'PFLA'; { New to Skyrim }
@@ -803,6 +813,7 @@ const
   QRLI : TwbSignature = 'QRLI'; { New To Fallout 76 }
   QRLR : TwbSignature = 'QRLR'; { New To Fallout 76 }
   QRRI : TwbSignature = 'QRRI'; { New To Fallout 76 }
+  QRWD : TwbSignature = 'QRWD'; { New To Fallout 76 0.2.782.0 }
   QRWT : TwbSignature = 'QRWT'; { New To Fallout 76 }
   QSDD : TwbSignature = 'QSDD'; { New To Fallout 76 }
   QSDT : TwbSignature = 'QSDT';
@@ -863,6 +874,7 @@ const
   RPRF : TwbSignature = 'RPRF'; { New To Skyrim }
   RPRM : TwbSignature = 'RPRM'; { New To Skyrim }
   RVIS : TwbSignature = 'RVIS'; { New to Fallout 4 }
+  RWDS : TwbSignature = 'RWDS'; { New to Fallout 76 0.2.782.0 }
   SADD : TwbSignature = 'SADD'; { New To Fallout 4 }
   SAKD : TwbSignature = 'SAKD'; { New To Fallout 4 }
   SAPT : TwbSignature = 'SAPT'; { New To Fallout 4 }
@@ -1187,7 +1199,7 @@ var
   wbBEVA: IwbSubRecordDef;
   wbFEVA: IwbSubRecordDef;
   wbNTWK: IwbSubRecordDef;
-  wbDEST: IwbSubRecordStructDef;
+  wbDEST: IwbRecordMemberDef;
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
@@ -1307,6 +1319,7 @@ var
   wbDAMS: IwbSubRecordDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
+  wbStorefrontData: IwbSubRecordStructDef;
   wbObjectTemplate: IwbSubRecordStructDef;
   wbBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
@@ -1366,6 +1379,7 @@ var
   wbWaterData: IwbSubRecordStructDef;
   wbPERKData: IwbSubRecordDef;
   wbPerkEffect: IwbSubRecordStructDef;
+  wbReward: IwbRecordMemberDef;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -4574,7 +4588,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..589] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..592] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -5153,6 +5167,9 @@ const
     (Index: 926; Name: 'GetPlayerSeasonRank'),
     (Index: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
     (Index: 5001; Name: 'GetIsForm'),
+    (Index: 5002; Name: 'GetIsInDailyOps'),
+    (Index: 5003; Name: 'GetRadsHealthPercentage'),
+    (Index: 5004; Name: 'PlayerHasQuest'),
     (Index: 6000; Name: 'GetSecondsSinceLastAttack'),
     (Index: 8000; Name: 'IsDailyContentAvailable'),
     (Index: 8001; Name: 'StartDailyContent'),
@@ -7535,8 +7552,8 @@ begin
          ]),
     {08} wbFloat('Item Condition'),
          wbStruct('Curve Tables', [
-           wbFormIDCk('Min', [CURV]),
-           wbFormIDCk('Max', [CURV])
+           wbFormIDCk('Min', [CURV, NULL]),
+           wbFormIDCk('Max', [CURV, NULL])
          ])
   ]);
 
@@ -8826,115 +8843,6 @@ begin
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
-  wbDEST := wbRStruct('Destructible', [
-    wbStruct(DEST, 'Header', [
-      wbInteger('Health', itS32),
-      wbInteger('DEST Count', itU8),
-      wbByteArray('Unused',3),
-      wbInteger('Flags', itU32, wbFlags([
-      { 0x0001 } 'VATS Targetable',
-      { 0x0002 } 'Large Actor Destroys',
-      { 0x0004 } 'Unknown 2',
-      { 0x0008 } 'Unknown 3',
-      { 0x0010 } 'Unknown 4',
-      { 0x0020 } 'Unknown 5',
-      { 0x0040 } 'Unknown 6',
-      { 0x0080 } 'Unknown 7',
-      { 0x0100 } 'Unknown 8',
-      { 0x0200 } 'Unknown 9',
-      { 0x0800 } 'Unknown 10',
-      { 0x1000 } 'Unknown 11'
-      ])),
-      wbFromSize(12,wbFloat('Unknown'))
-    ]),
-    wbFormIDCk(HGLB, 'Health Global', [GLOB]),
-    wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32),
-      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
-    ])),
-    //wbCTDAs,
-    wbUnknown(CTDA),
-    wbUnknown(DSCF),
-    wbRArray('Stages',
-      wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
-          wbInteger('Health %', itU8),
-          wbInteger('Index', itU8),
-          wbInteger('Model Damage Stage', itU8),
-          wbInteger('Flags', itU8, wbFlags([
-            'Cap Damage',
-            'Disable',
-            'Destroy',
-            'Ignore External Dmg',
-            'Becomes Dynamic',
-            'Unknown 6',
-            'Unknown 7',
-            'Unknown 8'
-          ])),
-          wbInteger('Self Damage per Second', itS32),
-          wbFormIDCk('Explosion', [EXPL, NULL]),
-          wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32),
-          wbFormIDCk('Material Swap', [MSWP, NULL]),
-          wbFloat
-        ], cpNormal, True),
-        wbString(DSTA, 'Sequence Name'),
-        wbRArray('Models',
-          wbRStructSK([0], 'Model', [
-            wbString(DMDL, 'Model FileName', 0, cpNormal, True),
-            wbDMDT,
-            wbDMDC,
-            wbDMDS,
-            wbENLM,
-            wbENLT,
-            wbENLS,
-            wbAUUV
-          ], []).IncludeFlag(dfAllowAnyMember)
-        ),
-        wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], [], cpNormal, False, nil)
-    )
-  ], [], cpNormal, False, nil);
-
-  wbDESTActor := wbRStruct('Destructible', [
-    wbStruct(DEST, 'Header', [
-      wbInteger('Health', itS32),
-      wbInteger('Count', itU8),
-      wbInteger('VATS Targetable', itU8, wbBoolEnum),
-      wbByteArray('Unknown', 2)
-    ]),
-    wbRArray('Stages',  // Begin Stage Array
-      wbRStruct('Stage', [ // Begin Stage RStruct
-        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
-          wbInteger('Health %', itU8),
-          wbInteger('Index', itU8),
-          wbInteger('Damage Stage', itU8),
-          wbInteger('Flags', itU8, wbFlags([
-            'Cap Damage',
-            'Disable',
-            'Destroy'
-          ])),
-          wbInteger('Self Damage per Second', itS32),
-          wbFormIDCk('Explosion', [EXPL, NULL]),
-          wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32)
-        ], cpNormal, True), // End DSTD
-        wbRStructSK([0], 'Model', [ // Begin DMDL
-          wbString(DMDL, 'Model FileName')
-        ], []), // End DMDL
-        wbDMDT,
-        wbDMDC,
-        wbDMDS,
-        wbENLM,
-        wbENLT,
-        wbENLS,
-        wbAUUV,
-        wbEmpty(DSTF, 'End Marker', cpNormal, True)
-      ], []) // Begin Stage RStruct
-    ) // End Stage Array
-  ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation});
-
   wbXESP := wbStruct(XESP, 'Enable Parent', [
     wbFormIDCk('Reference', sigReferences),
     wbInteger('Flags', itU8, wbFlags([
@@ -9356,7 +9264,7 @@ begin
   wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
     wbFormID('Reference'),
     wbArrayS('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
-  ]))
+  ]));
 end;
 
 procedure DefineFO76b;
@@ -9424,7 +9332,7 @@ begin
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
 
     wbEmpty(XIS2, 'Ignored by Sandbox'),
-    wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
+    wbRArray('Power Links', wbStruct(XPLK, 'Link', [
       wbFormIDCk('Ref', [REFR, ACHR]),
       wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
     ])),
@@ -10261,37 +10169,14 @@ begin
 
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
-  wbEFIT := //TODO ECK: Revisit decider logic.
-    wbUnion(EFIT, '', wbFormVersionDecider([154, 166, 184]), [
-      wbStruct('', [                                //<154
-        wbUnused,
-        wbFloat('Magnitude'),
-        wbInteger('Area', itU32),
-        wbInteger('Duration', itU32),
-        wbUnused
-      ], cpNormal, True, nil, -1, wbEFITAfterLoad),
-      wbStruct('', [                       //154-165
-        wbUnused,
-        wbFloat('Magnitude'),
-        wbInteger('Area', itU32),
-        wbInteger('Duration', itU32),
-        wbByteArray('Unknown', 12) //Unused?
-      ], cpNormal, True),
-      wbStruct('', [              //166-182
-        wbInteger('Effect ID', itU32),
-        wbFloat('Magnitude'),
-        wbInteger('Area', itU32),
-        wbInteger('Duration', itU32),
-        wbByteArray('Unknown', 8) //Unused?
-      ], cpNormal, True),
-      wbStruct('', [        //183+
-        wbInteger('Effect ID', itU32),
-        wbFloat('Magnitude'),
-        wbInteger('Area', itU32),
-        wbInteger('Duration', itU32),
-        wbUnused
-      ], cpNormal, True)
-    ], cpNormal, True);
+  wbEFIT :=
+    wbStruct(EFIT, '', [
+      wbFromVersion(166, wbInteger('Effect ID', itU32)),
+      wbFloat('Magnitude'),
+      wbInteger('Area', itU32),
+      wbInteger('Duration', itU32),
+      wbUnknown { If form version is less than 154 or greater than 182 this is empty. If form version is between 154 and 165 then its a 12 byte value. If form version is between 166 and 182 then this is an 8 byte value. }
+    ], cpNormal, True, nil, -1, wbEFITAfterLoad);
 
   wbCTDA := wbRStructSK([0], 'Condition', [
     wbStructSK(CTDA, [3, 5, 6], '', [
@@ -10674,6 +10559,142 @@ begin
       ], [])
     );
 
+  wbDEST := wbRStruct('Destructible', [
+    wbStruct(DEST, 'Header', [
+      wbInteger('Health', itS32),
+      wbInteger('DEST Count', itU8),
+      wbByteArray('Unused',3),
+      wbInteger('Flags', itU32, wbFlags([
+      { 0x0001 } 'VATS Targetable',
+      { 0x0002 } 'Large Actor Destroys',
+      { 0x0004 } 'Unknown 2',
+      { 0x0008 } 'Unknown 3',
+      { 0x0010 } 'Unknown 4',
+      { 0x0020 } 'Unknown 5',
+      { 0x0040 } 'Unknown 6',
+      { 0x0080 } 'Unknown 7',
+      { 0x0100 } 'Unknown 8',
+      { 0x0200 } 'Unknown 9',
+      { 0x0800 } 'Unknown 10',
+      { 0x1000 } 'Unknown 11',
+      { 0x2000 } 'Unknown 12',
+      { 0x4000 } 'Unknown 13'
+      ])),
+      wbFromSize(12, wbFloat('Unknown'))
+    ], cpNormal, True),
+    wbCTDAs,
+    wbUnknown(DSCF),
+    wbFormIDCk(HGLB, 'Health Global', [GLOB]),
+    wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    ])),
+    wbRArray('Stages',
+      wbRStruct('Stage', [
+        wbStruct(DSTD, 'Destruction Stage Data', [
+          wbInteger('Health %', itU8),
+          wbInteger('Index', itU8),
+          wbInteger('Model Damage Stage', itU8),
+          wbInteger('Flags', itU8, wbFlags([
+            'Cap Damage',
+            'Disable',
+            'Destroy',
+            'Ignore External Dmg',
+            'Becomes Dynamic',
+            'Unknown 6',
+            'Unknown 7',
+            'Unknown 8'
+          ])),
+          wbInteger('Self Damage per Second', itS32),
+          wbFormIDCk('Explosion', [EXPL, NULL]),
+          wbFormIDCk('Debris', [DEBR, NULL]),
+          wbInteger('Debris Count', itS32),
+          wbFormIDCk('Material Swap', [MSWP, NULL]),
+          wbFloat
+        ], cpNormal, True),
+        wbString(DSTA, 'Sequence Name'),
+        wbRArray('Models',
+          wbRStructSK([0], 'Model', [
+            wbString(DMDL, 'Model FileName', 0, cpNormal, True),
+            wbDMDT,
+            wbDMDC,
+            wbDMDS,
+            wbENLM,
+            wbENLT,
+            wbENLS,
+            wbAUUV
+          ], []).IncludeFlag(dfAllowAnyMember)
+        ),
+        wbEmpty(DSTF, 'End Marker', cpNormal, True)
+      ], [], cpNormal, False, nil)
+    )
+  ], [], cpNormal, False, nil, True).IncludeFlag(dfAllowAnyMember);
+
+  wbReward := wbRStruct('Reward', [
+    wbUnknown(CTRG),
+    wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
+    wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
+    wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
+    wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
+    wbFormID(QRLI, 'Legendary Item Reward List'),
+    wbFormID(QRCX, 'SCORE Reward Amount'),
+    wbFloat(ESRE, 'XP Amount'),
+    wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
+    wbUnion(QRRI, '', wbRecordSizeDecider(1), [
+      wbEmpty('Legendary Item Rank Random'),
+      wbInteger('Legendary Item Rank Random', itU8, wbBoolEnum)
+    ]),
+    wbRArray('Rewarded Items',
+      wbStruct(QSRD, 'Rewarded Item', [
+        wbFormID('Item'),
+        wbInteger('Count', itU32)
+      ])
+    ),
+    wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
+    wbCTDAs,
+    wbFormIDCk(DNAM, 'Reward Record', [GMRW]),
+    wbEmpty(ITME, 'Reward End Marker')
+  ], [], cpNormal, False, nil, True).IncludeFlag(dfAllowAnyMember);
+
+  wbDESTActor := wbRStruct('Destructible', [
+    wbStruct(DEST, 'Header', [
+      wbInteger('Health', itS32),
+      wbInteger('Count', itU8),
+      wbInteger('VATS Targetable', itU8, wbBoolEnum),
+      wbByteArray('Unknown', 2)
+    ]),
+    wbRArray('Stages',  // Begin Stage Array
+      wbRStruct('Stage', [ // Begin Stage RStruct
+        wbStruct(DSTD, 'Destruction Stage Data', [ // Begin DSTD
+          wbInteger('Health %', itU8),
+          wbInteger('Index', itU8),
+          wbInteger('Damage Stage', itU8),
+          wbInteger('Flags', itU8, wbFlags([
+            'Cap Damage',
+            'Disable',
+            'Destroy'
+          ])),
+          wbInteger('Self Damage per Second', itS32),
+          wbFormIDCk('Explosion', [EXPL, NULL]),
+          wbFormIDCk('Debris', [DEBR, NULL]),
+          wbInteger('Debris Count', itS32)
+        ], cpNormal, True), // End DSTD
+        wbRStructSK([0], 'Model', [ // Begin DMDL
+          wbString(DMDL, 'Model FileName')
+        ], []), // End DMDL
+        wbDMDT,
+        wbDMDC,
+        wbDMDS,
+        wbENLM,
+        wbENLT,
+        wbENLS,
+        wbAUUV,
+        wbEmpty(DSTF, 'End Marker', cpNormal, True)
+      ], []) // Begin Stage RStruct
+    ) // End Stage Array
+  ], [], cpNormal, False, nil{wbActorTemplateUseModelAnimation});
+
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
       wbFloat('Damage Mult'),
@@ -11006,6 +11027,14 @@ begin
    {107} 'AimAssistModel'
   ]);
 
+  wbStorefrontData :=
+    wbRStruct('Storefront Data', [
+      wbString(ETIP, 'Storefront Image Path'),
+      wbString(ETDI, 'Storefront Preview Image'),
+      wbFormID(ETLG, 'Entitlement Loadout Reference'),
+      wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
+    ], []);
+
   wbObjectModProperties :=
     wbArrayS('Properties', wbStructSK([4], 'Property', [
       wbInteger('Value Type', itU8, wbEnum([
@@ -11135,7 +11164,40 @@ begin
       wbEFIT,
       wbFormIDCk(CVT0, 'Curve Table', [CURV]),
       wbFormIDCk(MAGA, 'Actor Value', [AVIF]),
-      wbByteArray(MAGF, 'Unknown'),
+      wbInteger(MAGF, 'Effect Flags', itU32, wbFlags([
+        {0x00000001} { 0} 'Unknown 0',
+        {0x00000002} { 1} 'Unknown 1',
+        {0x00000004} { 2} 'Unknown 2',
+        {0x00000008} { 3} 'Unknown 3',
+        {0x00000010} { 4} 'Unknown 4',
+        {0x00000020} { 4} 'Unknown 5',
+        {0x00000040} { 6} 'Unknown 6',
+        {0x00000080} { 7} 'Unknown 7',
+        {0x00000100} { 8} 'Unknown 8',
+        {0x00000200} { 9} 'Unknown 9',
+        {0x00000400} {10} 'Unknown 10',
+        {0x00000800} {11} 'Unknown 11',
+        {0x00001000} {12} 'Unknown 12',
+        {0x00002000} {13} 'Unknown 13',
+        {0x00004000} {14} 'Unknown 14',
+        {0x00008000} {15} 'Unknown 15',
+        {0x00010000} {16} 'Unknown 16',
+        {0x00020000} {17} 'Unknown 17',
+        {0x00040000} {18} 'Unknown 18',
+        {0x00080000} {19} 'Unknown 19',
+        {0x00100000} {20} 'Unknown 20',
+        {0x00200000} {21} 'Unknown 21',
+        {0x00400000} {22} 'Unknown 22',
+        {0x00800000} {23} 'Unknown 23',
+        {0x01000000} {24} 'Unknown 24',
+        {0x02000000} {25} 'Unknown 25',
+        {0x04000000} {26} 'Unknown 26',
+        {0x08000000} {27} 'Unknown 27',
+        {0x10000000} {28} 'Unknown 28',
+        {0x20000000} {29} 'Unknown 29',
+        {0x40000000} {30} 'Unknown 30',
+        {0x80000000} {31} 'Unknown 31'
+      ])),
       wbCTDAs,
       wbFormIDCk(DURG, 'Duration', [GLOB]),
       wbFormIDCk(MAGG, 'Magnitude', [GLOB]),
@@ -11251,15 +11313,7 @@ begin
     wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbQSTI,
-    wbInteger(FNAM, 'Flags', itU16, wbFlags([
-      'No Displacement',
-      'Ignored by Sandbox',
-      'Unknown 2', {Only used on DefaultProceduralWater [ACTI:00000019]}
-      'Unknown 3', {Currently Unused}
-      'Is a Radio',
-      'Is a Lookat Trigger',
-      'Unknown 6' {Currently Unused}
-    ])),
+    wbInteger(FNAM, 'Flags (Unused)', itU16),
     wbCNDCs,
     wbFloat(PAHD, 'Unknown Float'),
     wbFormIDCk(GCDA, 'Clobal Cooldown Timer', [GLOB]),
@@ -11655,13 +11709,13 @@ begin
 
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x0000004}  2, 'Is Instancable',
-      {0x0000020}  6, 'Unknown 6',
-      {0x0000040}  7, 'No Pre Vis',
-      {0x0000200} 10, 'Persistent',
-      {0x0002000} 17, 'Off Limits',
-      {0x0004000} 18, 'Compressed',
-      {0x0008000} 19, 'Can''t Wait'
+      {0x00000004}  2, 'Is Instancable',
+      {0x00000040}  6, 'Unknown 6',
+      {0x00000080}  7, 'No Pre Vis',
+      {0x00000400} 10, 'Persistent',
+      {0x00020000} 17, 'Off Limits',
+      {0x00040000} 18, 'Compressed',
+      {0x00080000} 19, 'Can''t Wait'
     ]), [18]), [
     wbEDID,
     wbDURL,
@@ -11757,7 +11811,7 @@ begin
     wbFloat(XILS),
     wbFormIDCk(RDES, 'Unknown Reference', [REFR]),
     wbUnknown(NAVH),
-    wbFormIDCk(XCWT, 'Water', [WATR]),
+    wbFormIDCk(XCWT, 'Water Type', [WATR]),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbXLCN,
     wbWaterData,
@@ -11768,7 +11822,7 @@ begin
 
     wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
 
-    wbStruct(XILW, 'Exterior LOD', [
+    wbStruct(XILW, 'Interior LOD', [
       wbFormIDCk('Worldspace', [WRLD]),
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
@@ -11986,8 +12040,7 @@ begin
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
           ]),
-          wbFromVersion(29, wbInteger('Unknown Bool', itU8, wbBoolEnum)),
-          wbFromVersion(29, wbByteArray('Unused', 3))
+          wbFromVersion(29, wbInteger('No Slow Approach', itU32, wbBoolEnum))
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbRecord(CSTY, 'Combat Style',
@@ -12652,14 +12705,17 @@ begin
 
   wbRecord(KYWD, 'Keyword',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000010} { 4}  4, 'Unknown 4',
-      {0x00000800} {11} 11, 'Unknown 11', //AnimFaceArchetype*
-      {0x00080000} {15} 15, 'Restricted'
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000010}  4, 'Unknown 4',
+      {0x00000200}  9, 'Unknown 9',
+      {0x00000800} 11, 'Unknown 11', //AnimFaceArchetype*
+      {0x00080000} 15, 'Restricted'
     ])), [
     wbEDID,
     wbXALG,
     wbCNAM,
     wbString(DNAM, 'Notes'),
+    wbUnknown(FNAM),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
     wbString(ENAM, 'Icon Name'),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
@@ -12677,6 +12733,7 @@ begin
     ])), [
     wbEDID,
     wbCNAM,
+    wbUnknown(FNAM),
     wbUnknown(TNAM),
     wbGenericModel,
     wbUnknown(FNAM)
@@ -13174,7 +13231,19 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbArray(ENAM, 'Unknown', wbFloat('Unknown')),
+    wbStruct(ENAM, 'HDR', [
+      wbFloat('Eye Adapt Speed'),
+      wbFloat('Tonemap E'),
+      wbFloat('Bloom Threshold'),
+      wbFloat('Bloom Scale'),
+      wbFloat('Auto Exposure Max'),
+      wbFloat('Auto Exposure Min'),
+      wbFloat('Sunlight Scale'),
+      wbFloat('Sky Scale'),
+      wbFloat('Middle Gray'),
+      wbFloat('Fog Scale'),
+      wbFloat('Tonemap White Point')
+    ], cpNormal),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Tonemap E'),
@@ -13196,8 +13265,8 @@ begin
       wbFloat('Sunlight Scale'),
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown')
+      wbFloat('Fog Scale'),
+      wbFloat('Tonemap White Point')
     ], cpNormal),
     wbStruct(GNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
@@ -13209,8 +13278,8 @@ begin
       wbFloat('Sunlight Scale'),
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray'),
-      wbFromVersion(155, wbFloat('Unknown')),
-      wbFromVersion(155, wbFloat('Unknown'))
+      wbFromVersion(155, wbFloat('Fog Scale')),
+      wbFromVersion(155, wbFloat('Tonemap White Point'))
     ], cpNormal),
     wbStruct(CNAM, 'Cinematic', [
       wbFloat('Saturation'),
@@ -13248,9 +13317,19 @@ begin
       wbFloat('Vignette Radius'),
       wbFloat('Vignette Strength')
     ], cpNormal, True, nil, 5),
-    wbArray(XNAM, 'Unknown', wbFloat('Unknown')),
+    wbStruct(XNAM, 'Camera Parameters', [
+      wbFloat('Exposure Value'),
+      wbFloat('UnknownFloat2'),
+      wbFloat('Aperture'),
+      wbFloat('Shutter Time'),
+      wbFloat('ISO')
+    ]),
     wbFloat(INAM),
-    wbUnknown(YNAM), {TODO}
+    wbInteger(YNAM, 'Exposure Mode', itU32, wbEnum([
+      'Auto',
+      'Fixed Ev100',
+      'Camera parameters'
+    ],[])),
     wbUnknown(ZNAM), {TODO}
     wbString(TX00, 'LUT')
   ]);
@@ -13438,6 +13517,7 @@ begin
           ])),
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore),
           wbUnknown
+          //wbInteger('Has
         ])
       ], cpNormal, True),
       (**)
@@ -13675,7 +13755,11 @@ end;
 
 procedure DefineFO76h;
 begin
-  wbRecord(AVIF, 'Actor Value Information', [
+  wbRecord(AVIF, 'Actor Value Information' ,
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbDURL,
     wbFULL,
@@ -13907,7 +13991,8 @@ begin
 
   wbRecord(LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000002}  2, 'Unknown 2',
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000100}  8, 'Unknown 8',
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
       {0x00004000} 14, 'Partial Form'
     ])), [
@@ -14058,7 +14143,7 @@ begin
     wbRStruct('Menu Button', [
       wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs,
-      wbUnknown(MBNR)
+      wbEmpty(MBNR, 'No Response')
     ], []);
 
   wbRecord(MESG, 'Message', [
@@ -15616,6 +15701,7 @@ begin
         wbFromVersion(116, wbInteger('Camera Location Alias', itS32))
       ]),
       wbUnknown(TRAE),
+      wbLStringKC(BNAM, 'Comment?'),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
       wbString(NAM3, 'Edits', 0, cpNormal, True),
@@ -16155,7 +16241,8 @@ begin
     {47} 'Permanent Reanimate',
     {48} 'Jetpack',
     {49} 'Chameleon',
-    {50} 'Grow Flora'
+    {50} 'Grow Flora',
+    {51} 'Corpse Highlight'
   ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet);
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
@@ -16166,35 +16253,68 @@ begin
         {0x00000004}  'Detrimental',
         {0x00000008}  'Snap to Navmesh',
         {0x00000010}  'No Hit Event',
-        {0x00000020}  'Unknown 6',
-        {0x00000040}  'Unknown 7',
-        {0x00000080}  'Unknown 8',
+        {0x00000020}  'Unknown 5',
+        {0x00000040}  'Unknown 6',
+        {0x00000080}  'Unknown 7',
         {0x00000100}  'Dispel with Keywords',
         {0x00000200}  'No Duration',
         {0x00000400}  'No Magnitude',
         {0x00000800}  'No Area',
         {0x00001000}  'FX Persist',
-        {0x00002000}  'Unknown 14',
+        {0x00002000}  'Unknown 13',
         {0x00004000}  'Gory Visuals',
         {0x00008000}  'Hide in UI',
-        {0x00010000}  'Unknown 17',
+        {0x00010000}  'Unknown 16',
         {0x00020000}  'No Recast',
-        {0x00040000}  'Unknown 19',
-        {0x00080000}  'Unknown 20',
-        {0x00100000}  'Unknown 21',
+        {0x00040000}  'Unknown 18',
+        {0x00080000}  'Difficulty Affects Magnitude',
+        {0x00100000}  'Difficulty Affects Duration',
         {0x00200000}  'Power Affects Magnitude',
         {0x00400000}  'Power Affects Duration',
-        {0x00800000}  'Unknown 24',
-        {0x01000000}  'Unknown 25',
-        {0x02000000}  'Unknown 26',
+        {0x00800000}  'Unknown 23',
+        {0x01000000}  'Unknown 24',
+        {0x02000000}  'Unknown 25',
         {0x04000000}  'Painless',
         {0x08000000}  'No Hit Effect',
         {0x10000000}  'No Death Dispel',
-        {0x20000000}  'Unknown 30',
-        {0x40000000}  'Unknown 31',
-        {0x80000000}  'Unknown 32'
+        {0x20000000}  'Unknown 29',
+        {0x40000000}  'Unknown 30',
+        {0x80000000}  'Unknown 31'
       ])),
-      wbFromVersion(164, wbByteArray('Unknown', 4).IncludeFlag(dfNoReport)),
+      wbFromVersion(164, wbInteger('Flags 2', itU32, wbFlags([
+        {0x00000001} { 0} 'Unknown 0',
+        {0x00000002} { 1} 'Unknown 1',
+        {0x00000004} { 2} 'Unknown 2',
+        {0x00000008} { 3} 'Unknown 3',
+        {0x00000010} { 4} 'Unknown 4',
+        {0x00000020} { 4} 'Unknown 5',
+        {0x00000040} { 6} 'Unknown 6',
+        {0x00000080} { 7} 'Unknown 7',
+        {0x00000100} { 8} 'Unknown 8',
+        {0x00000200} { 9} 'Unknown 9',
+        {0x00000400} {10} 'Unknown 10',
+        {0x00000800} {11} 'Unknown 11',
+        {0x00001000} {12} 'Unknown 12',
+        {0x00002000} {13} 'Unknown 13',
+        {0x00004000} {14} 'Unknown 14',
+        {0x00008000} {15} 'Unknown 15',
+        {0x00010000} {16} 'Unknown 16',
+        {0x00020000} {17} 'Unknown 17',
+        {0x00040000} {18} 'Unknown 18',
+        {0x00080000} {19} 'Unknown 19',
+        {0x00100000} {20} 'Unknown 20',
+        {0x00200000} {21} 'Unknown 21',
+        {0x00400000} {22} 'Unknown 22',
+        {0x00800000} {23} 'Unknown 23',
+        {0x01000000} {24} 'Unknown 24',
+        {0x02000000} {25} 'Unknown 25',
+        {0x04000000} {26} 'Unknown 26',
+        {0x08000000} {27} 'Unknown 27',
+        {0x10000000} {28} 'Unknown 28',
+        {0x20000000} {29} 'Unknown 29',
+        {0x40000000} {30} 'Unknown 30',
+        {0x80000000} {31} 'Unknown 31'
+      ]))),
       wbFloat('Base Cost'),
       wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
         wbFormIDCk('Unused', [NULL], False, cpIgnore),
@@ -16335,6 +16455,8 @@ begin
 
   wbRecord(COBJ, 'Constructible Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9',
       {0x00000800} 11, 'Unknown 11',
       {0x04000000} 26, 'Show as build variants'
     ])), [
@@ -16412,7 +16534,7 @@ begin
         {0x00004000} 'Summonable',
         {0x00008000} 'Unknown 15',
         {0x00010000} 'Doesn''t bleed',
-        {0x00020000} 'Is Armor Rack',
+        {0x00020000} 'Immobile',
         {0x00040000} 'Bleedout Override',
         {0x00080000} 'Opposite Gender Anims',
         {0x00100000} 'Simple Actor',
@@ -16619,37 +16741,37 @@ begin
 
   wbPKDTFlags := wbFlags([
     {0x00000001} 'Offers Services',
-    {0x00000002} 'Unknown 2',
+    {0x00000002} 'Unknown 1',
     {0x00000004} 'Must complete',
     {0x00000008} 'Maintain Speed at Goal',
     {0x00000010} 'Treat As Player Follower',
-    {0x00000020} 'Unknown 6',
+    {0x00000020} 'Unknown 5',
     {0x00000040} 'Unlock doors at package start',
     {0x00000080} 'Unlock doors at package end',
     {0x00000100} 'Request Block Idles',
     {0x00000200} 'Continue if PC Near',
     {0x00000400} 'Once per day',
-    {0x00000800} 'Unknown 12',
+    {0x00000800} 'Unknown 11',
     {0x00001000} 'Skip Load Into Furniture',
     {0x00002000} 'Preferred Speed',
-    {0x00004000} 'Unknown 15',
-    {0x00008000} 'Unknown 16',
-    {0x00010000} 'Unknown 17',
+    {0x00004000} 'Unknown 14',
+    {0x00008000} 'Unknown 15',
+    {0x00010000} 'Unknown 16',
     {0x00020000} 'Always Sneak',
     {0x00040000} 'Allow Swimming',
-    {0x00080000} 'Unknown 20',
+    {0x00080000} 'Unknown 19',
     {0x00100000} 'Ignore Combat',
     {0x00200000} 'Weapons Unequipped',
-    {0x00400000} 'Unknown 23',
+    {0x00400000} 'Unknown 22',
     {0x00800000} 'Weapon Drawn',
-    {0x01000000} 'Unknown 25',
-    {0x02000000} 'Unknown 26',
-    {0x04000000} 'Unknown 27',
+    {0x01000000} 'Unknown 24',
+    {0x02000000} 'Unknown 25',
+    {0x04000000} 'Unknown 26',
     {0x08000000} 'No Combat Alert',
-    {0x10000000} 'Unknown 29',
+    {0x10000000} 'Unknown 28',
     {0x20000000} 'Wear Sleep Outfit',
-    {0x40000000} 'Unknown 31',
-    {0x80000000} 'Unknown 32'
+    {0x40000000} 'Unknown 30',
+    {0x80000000} 'Unknown 31'
   ], [29]);
 
   wbPKDTInterruptFlags := wbFlags([
@@ -16661,14 +16783,14 @@ begin
     {0x0020} 'Friendly fire comments',
     {0x0040} 'Aggro Radius Behavior',
     {0x0080} 'Allow Idle Chatter',
-    {0x0100} 'Unknown 9',
+    {0x0100} 'Unknown 8',
     {0x0200} 'World Interactions',
     {0x0400} 'Off For Important Scene',
-    {0x0800} 'Unknown 12',
-    {0x1000} 'Unknown 13',
-    {0x2000} 'Unknown 14',
-    {0x4000} 'Unknown 15',
-    {0x8000} 'Unknown 16'
+    {0x0800} 'Unknown 11',
+    {0x1000} 'Unknown 12',
+    {0x2000} 'Unknown 13',
+    {0x4000} 'Unknown 14',
+    {0x8000} 'Unknown 15'
   ]);
 end;
 
@@ -17222,7 +17344,7 @@ begin
         ])),
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
-        wbInteger('Unknown',itU32), //0xE0
+        wbFloat('Delay Time'), //0xE0
         wbInteger('Quest Type',itU8, wbEnum([
           'None',
           'Primary',
@@ -17254,7 +17376,8 @@ begin
           {0x1000} 'Unknown 13'
         ])),
         wbInteger('Priority', itU8),
-        wbByteArray('Unused', 5),
+        wbByteArray('Unused', 1),
+        wbFloat('Delay Time'),
         wbInteger('Quest Type',itU8, wbEnum([
           'None',
           'Primary',
@@ -17333,25 +17456,8 @@ begin
         wbString(SCFC, 'Comments'),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbFormIDCk(NAM0, 'Next Quest', [QUST]),
-        wbRArray('Rewards', wbRStruct('Reward', [
-          wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
-          wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
-          wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
-          wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
-          wbFormID(QRLI, 'Legendary Item Reward List'),
-          wbFormID(QRCX, 'SCORE Reward Amount'),
-          wbFloat(ESRE, 'XP Amount'),
-          wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
-          wbEmpty(QRRI, 'Legendary Item Rank Random'),
-          wbRArray('Rewarded Items',
-            wbStruct(QSRD, 'Rewarded Item', [
-              wbFormID('Item'),
-              wbInteger('Count', itU32)
-            ])
-          ),
-          wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
-          wbCTDAs
-        ], []).IncludeFlag(dfAllowAnyMember)),
+        wbRArray('Rewards', wbReward),
+        wbFormID(QRWD, 'Quest Reward'),
         wbFormID(QUIM, 'Message')
       ], []))
     ], [])),
@@ -17366,6 +17472,7 @@ begin
       wbFormIDCk(QOTM, 'Quest Objective Timer', [GLOB]),
       wbInteger(SNAM, 'Stage to set', itU16),
       wbLString(NAM1, 'Quest Notes'),
+      wbString(SCCM, 'Comments'),
       wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
@@ -17511,17 +17618,25 @@ begin
     wbLString(QRWT, 'Reward Text'),
     wbUnknown(QARV),
     wbUnknown(QARF),
-    wbInteger(PEDF, 'Public Event Difficulty', itU32, wbEnum([
-      'Very Easy',
-      'Easy',
-      'Medium',
-      'Hard',
-      'Very Hard',
-      'Nuclear'
-    ])),
-    wbString(PEPI, 'Public Event Popup Info'),
-    wbUnknown(PERM),
-    wbUnknown(PERT)
+    wbRStruct('Public Event Data', [
+      wbInteger(PEDF, 'Public Event Difficulty', itU32, wbEnum([
+        'Very Easy',
+        'Easy',
+        'Medium',
+        'Hard',
+        'Very Hard',
+        'Nuclear'
+      ])),
+      wbString(PEPI, 'Public Event Popup Info'),
+      wbUnknown(PERM),
+      wbUnknown(PERT),
+      wbRArray('Possible Rewards',
+        wbRStruct('Possible Reward', [
+          wbString(PEWI, 'Icon'),
+          wbLStringKC(PEWR, 'Description')
+        ], [])
+      )
+    ], [])
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
@@ -18184,12 +18299,14 @@ begin
       ], True, True)))]),
     wbXFLG,
     wbByteArray(XKPD, 'Keypad Data', 5),
-    wbStruct(XBSD, 'Spline', [
+    wbStruct(XBSD, 'Bendable Spline Data', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
-      wbFloat('Unknown'), // not shown in editor
-      wbFloat('Unknown'), // not shown in editor
-      wbFloat('Unknown'), // not shown in editor
+      wbStruct('Half Extents', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]),
       wbInteger('Wind - Detached End', itU8, wbBoolEnum),
       wbByteArray('Unused', 3), // junk data?
       wbBelowVersion(131, wbFloat('Unknown')), // not shown in editor
@@ -18769,7 +18886,10 @@ begin
     wbFormIDCk('Casting Perk', [NULL, PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Spell', [
+  wbRecord(SPEL, 'Spell',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000} 15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbOBND(True),
     wbOPDSs,
@@ -18865,6 +18985,7 @@ begin
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
+      {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
       {0x00000200}  9, 'ESL'
     ], False), True), [
@@ -20221,8 +20342,8 @@ begin
 
   wbRecord(TERM, 'Terminal',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  4, 'Unknown 4',
-      {0x00002000} 13, 'Unknown 13',
+      {0x00000004}  4, 'Non Occluder',
+      {0x00002000} 13, 'Pack-In Use Only',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start'
     ])), [
@@ -20406,28 +20527,28 @@ begin
 
   wbRecord(AAMD, 'Aim Assist Model Data', [
     wbEDID,
-    wbFloat(ANAM),
-    wbFloat(BNAM),
-    wbFloat(CNAM),
-    wbFloat(DNAM),
-    wbFloat(ENAM),
-    wbFloat(FNAM),
-    wbFloat(GNAM),
-    wbFloat(HNAM),
-    wbFloat(INAM),
-    wbFloat(JNAM),
-    wbFloat(KNAM),
-    wbFloat(LNAM),
-    wbFloat(MNAM),
-    wbFloat(NNAM),
-    wbFloat(ONAM),
-    wbFloat(PNAM),
-    wbFloat(QNAM),
-    wbFloat(RNAM),
-    wbFloat(SNAM),
-    wbFloat(TNAM),
-    wbFloat(UNAM),
-    wbFloat(VNAM)
+    wbFloat(ANAM, 'Inner Cone Angle Degrees'),
+    wbFloat(BNAM, 'Outer Cone Angle Degrees'),
+    wbFloat(CNAM, 'Steering Degrees Per Sec'),
+    wbFloat(DNAM, 'Pitch Scale'),
+    wbFloat(ENAM, 'Inner Steering Ring'),
+    wbFloat(FNAM, 'Outer Steering Ring'),
+    wbFloat(GNAM, 'Friction'),
+    wbFloat(HNAM, 'Move Follow Degrees Per Sec'),
+    wbFloat(INAM, 'ADS Snap Steering Mult'),
+    wbFloat(JNAM, 'ADS Snap Seconds'),
+    wbFloat(KNAM, 'ADS Snap Cone Angle Degrees'),
+    wbFloat(LNAM, 'No Steering'),
+    wbFloat(MNAM, 'Bullet Bending Cone Angle Degrees'),
+    wbFloat(NNAM, 'ADS Snap Steering Mutliplier Inner Ring'),
+    wbFloat(ONAM, 'ADS Snap Steering Mutliplier Outer Ring'),
+    wbFloat(PNAM, 'ADS Multiplier Inner Cone Angle Degrees'),
+    wbFloat(QNAM, 'ADS Multiplier Outer Cone Angle Degrees'),
+    wbFloat(RNAM, 'ADS Multiplier Inner Steering Ring'),
+    wbFloat(SNAM, 'ADS Multiplier Outer Steering Ring'),
+    wbFloat(TNAM, 'ADS Multiplier Friction'),
+    wbFloat(UNAM, 'ADS Multiplier Steering Degrees Per Sec'),
+    wbFloat(VNAM, 'Aim Assist Enabled')
   ]);
 
   wbRecord(SECH, 'Sound Echo Marker', [
@@ -20790,7 +20911,11 @@ begin
     ])
   ]);
 
-  wbRecord(ENTM, 'Entitlement', [
+  wbRecord(ENTM, 'Entitlement',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbXALG,
     wbFULL,
@@ -20799,11 +20924,7 @@ begin
     wbString(SWFI, 'SWF Image'),
     wbLString(NNAM, 'Display Name'),
     wbEmpty(BEVA, 'Has SWF Image'),
-    wbString(ETIP, 'Storefront Image Path'),
-    wbString(ETDI, 'Storefront Preview Image'),
-    wbFormID(ETLG, 'Entitlement Loadout Reference'),
-    wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
-
+    wbStorefrontData
   ]);
 
   wbRecord(COEN, 'Consumable Entitlement', [
@@ -20815,8 +20936,7 @@ begin
     wbFormID(CENT, 'Linked Object'),
     wbUnknown(FNAM),
     wbLStringKC(NNAM, 'Display Name', 0, cpTranslate),
-    wbString(ETIP, 'Storefront Image Path'),
-    wbString(ETDI, 'Storefront Preview Image')
+    wbStorefrontData
   ]);
 
   wbRecord(CSEN, 'Crate Service Entitlement', [
@@ -20870,13 +20990,14 @@ begin
       {0x00000004} 'Unknown 2',
       {0x00000008} 'Unknown 3'
     ])),
-    wbInteger(TNAM,'Unknown', itU32),
+    wbInteger(TNAM, 'Required Count', itU32),
     wbXFLGLong, //Unused?
-    wbFormIDCk(HNAM, 'Required Count', [GLOB]),
+    wbFormIDCk(HNAM, 'Required Count Global', [GLOB]),
     wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
       'Daily',
       'Weekly',
-      'Lifetime'
+      'Lifetime',
+      'Bi-weekly?'
     ])),
     wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
       'Character',
@@ -20895,24 +21016,7 @@ begin
       wbEmpty(NEXT, 'Marker', cpNormal, True),
       wbCTDAs
     ],[]),
-    wbRArray('Rewards', wbRStruct('Reward', [
-      wbUnknown(CTRG),
-      wbFormIDCk(NAM7, 'XP Amount Global', [GLOB, NULL]),
-      wbFormIDCk(NAM8, 'Currency Amount Global', [GLOB, NULL]),
-      wbFormIDCk(QRCO, 'Quest Reward Currency Object', [NULL, CNCY]),
-      wbFormIDCk(NAM9, 'Unknown Global', [GLOB, NULL]),
-      wbFormID(QRLI, 'Legendary Item Reward List'),
-      wbFormID(QRCX, 'SCORE Reward Amount'),
-      wbFloat(ESRE, 'XP Amount'),
-      wbInteger(QRLR, 'Legendary Item Reward Rank', itU32),
-      wbEmpty(QRRI, 'Legendary Item Rank Random'),
-      wbStruct(QSRD, 'Items', [
-        wbFormID('Item'),
-        wbInteger('Count', itU32)
-      ]),
-      wbFormIDCk(CENT, 'Entitlement', [ENTM, NULL]),
-      wbCTDAs
-    ], []).IncludeFlag(dfAllowAnyMember)),
+    wbRArray('Rewards', wbReward),
     wbString(JASF, 'Associated Json File'),
     wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST]),
     wbLStringKC(MNAM, 'Reward Display', 0, cpTranslate),
@@ -20968,6 +21072,29 @@ begin
     wbDESC,
     wbByteArray(ATAT, 'Unknown', 4),
     wbByteArray(ATSI, 'Unknown', 4)
+  ]);
+
+  wbRecord(GMRW, 'Gameplay Reward', [
+    wbEDID,
+    wbFormIDCk(ANAM, 'Parent Quest', [QUST]),
+    wbInteger(RWDS, 'Rewards Count', itU32),
+    wbRArray('Rewards List', wbReward)
+  ]);
+
+  wbRecord(PEPF, 'Event Playlist' ,
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
+    wbEDID,
+    wbFormID(EPEG, 'Playlist Enabled Global'),
+    wbInteger(EPCD, 'Cooldown', itU32),
+    wbInteger(EPPR, 'Priority', itU32),
+    wbInteger(EPNQ, 'Unknown Int', itU32),
+    wbRArray('Quest List',
+      wbFormID(EPQA, 'Quest')
+    ),
+    wbInteger(EPFL, 'Unknown Byte', itU8)
   ]);
 end;
 
@@ -21167,6 +21294,8 @@ begin
   wbAddGroupOrder(AUVF); //new in Fallout 76
   wbAddGroupOrder(LGDI); //new in Fallout 76
   wbAddGroupOrder(EQWG); //new in Fallout 76
+  wbAddGroupOrder(PEPF); //new in Fallout 76 0.2.782.0
+  wbAddGroupOrder(GMRW); //new in Fallout 76 0.2.782.0
 end;
 
 
