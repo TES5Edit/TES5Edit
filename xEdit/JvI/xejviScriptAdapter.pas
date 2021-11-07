@@ -2118,7 +2118,7 @@ begin
     { IwbFile }
     AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrder', IwbFile_GetLoadOrder, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 0, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);
     AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsESL, 1, [varEmpty], varEmpty);
