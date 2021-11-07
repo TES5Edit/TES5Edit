@@ -230,11 +230,15 @@ begin
     Value := AddNewFileName(Args.Values[0], Args.Values[1]);
     Done := True;
   end
-  else if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count = 3) then begin
+  else if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count in [3, 4]) then begin
     Value := false;
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-      if Supports(IInterface(Args.Values[1]), IwbFile, _File) then
-        Value := AddRequiredMasters(Element, _File, Args.Values[2]);
+      if Supports(IInterface(Args.Values[1]), IwbFile, _File) then begin
+        var Silent := False;
+        if Args.Count >= 4 then
+          Silent := Args.Values[3];
+        Value := AddRequiredMasters(Element, _File, Args.Values[2], Silent);
+      end;
     Done := True;
   end
   else if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
