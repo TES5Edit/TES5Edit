@@ -1538,6 +1538,51 @@ begin
   Result := True;
 end;
 
+function DoBackupModule(const aFrom, aOriginal: string; aSilent: Boolean): Boolean;
+var
+  lFrom       : string;
+  lBackup     : string;
+  s           : string;
+  i           : Integer;
+begin
+  Result := False;
+
+  Assert(not wbDontSave);
+  Assert(not xeDontBackup);
+
+  if not xeDontBackup and not DirectoryExists(wbBackupPath) then
+    if not ForceDirectories(wbBackupPath) then
+      wbBackupPath := wbDataPath;
+
+  lFrom := wbDataPath + aFrom;
+  if not FileExists(lFrom) then begin
+    s := 'Could not rename "'+lFrom+'". File not found.';
+    wbProgress(s);
+    if not aSilent then
+      MessageBox(0, PChar(s), 'Error', 0);
+    Exit;
+  end;
+
+  lBackup := wbBackupPath + aFrom.Replace('.save.', '.backup.');
+  s := lBackup;
+  i := 1;
+  while FileExists(lBackup) and (i < 1000) do begin
+    lBackup := s + '_' + i.ToString;
+    Inc(i);
+  end;
+
+  wbProgress('Renaming "' + lFrom + '" to "' + lBackup + '".');
+  if not RenameFile(lFrom, lBackup) then begin
+    s := 'Could not rename "' + lFrom + '" to "' + lBackup + '".';
+    wbProgress(s);
+    if not aSilent then
+      MessageBox(0, PChar(s), 'Error', 0);
+    Exit;
+  end;
+
+  Result := True;
+end;
+
 var
   _SaveProgress: Boolean;
 
@@ -15045,6 +15090,7 @@ var
   TryDirectRename             : Boolean;
   FoundSomething              : Boolean;
   CRC                         : TwbCRC32;
+  BackupWarningGiven          : Boolean;
 
 const
   ResetModifiedFromBool : array[Boolean] of TwbResetModified =
@@ -15052,6 +15098,7 @@ const
 begin
   Result := srNothingToDo;
   FoundSomething := False;
+  BackupWarningGiven := False;
 
   if wbDontSave then
     Exit;
@@ -15207,31 +15254,43 @@ begin
 
             end;
 
-            if NeedsRename and TryDirectRename then try
-              if not DoRenameModule(s, u, True) then begin
-                AnyErrors := True;
-                wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
-              end else
-                NeedsRename := False;
-            except end;
+            if SavedThisOne then begin
+              if NeedsRename and TryDirectRename then try
+                if not DoRenameModule(s, u, True) then begin
+                  AnyErrors := True;
+                  wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
+                end else
+                  NeedsRename := False;
+              except end;
 
-            if NeedsRename then begin
-              if not Assigned(FilesToRename) then
-                FilesToRename := TStringList.Create;
-              // s - rename from, relative to DataPath
-              // u - rename to, relative to DataPath
-              FilesToRename.AddPair(u, s);
-              wbProgress('Queued renaming of save "' + wbDataPath + s + '" to "' + wbDataPath + u + '" on shutdown.');
-            end else begin
-              if Assigned(FilesToRename) then
-                for j := Pred(FilesToRename.Count) downto 0 do begin
-                  if SameText(u, FilesToRename.KeyNames[j]) then begin
-                    s := FilesToRename.ValueFromIndex[j];
-                    wbProgress('Removing previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
-                    DeleteFile(wbDataPath + s);
-                    FilesToRename.Delete(j);
+              if NeedsRename then begin
+                if not Assigned(FilesToRename) then
+                  FilesToRename := TStringList.Create;
+                // s - rename from, relative to DataPath
+                // u - rename to, relative to DataPath
+                FilesToRename.AddPair(u, s);
+                wbProgress('Queued renaming of save "' + wbDataPath + s + '" to "' + wbDataPath + u + '" on shutdown.');
+              end else begin
+                if Assigned(FilesToRename) then
+                  for j := Pred(FilesToRename.Count) downto 0 do begin
+                    if SameText(u, FilesToRename.KeyNames[j]) then begin
+                      s := FilesToRename.ValueFromIndex[j];
+                      if xeDontBackup then begin
+                        if not BackupWarningGiven then begin
+                          wbProgress('******** WARNING ********');
+                          wbProgress('* Backups are disabled! *');
+                          wbProgress('******** WARNING ********');
+                        end;
+                        wbProgress('Removing previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
+                        DeleteFile(wbDataPath + s);
+                      end else begin
+                        wbProgress('Backing up previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
+                        DoBackupModule(s, u, aSilent);
+                      end;
+                      FilesToRename.Delete(j);
+                    end;
                   end;
-                end;
+              end;
             end;
 
             DoProcessMessages;
