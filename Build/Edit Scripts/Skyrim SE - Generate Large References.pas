@@ -1,7 +1,7 @@
 {
   Add large reference RNAM data to a worldspace
 
-  1. Select ESM plugin that adds new references to a worldspace
+  1. Select ESM plugin that modifies existing or adds new references to a worldspace
      * only new ESMs are listed - see sDefaultPlugins below
 
   2. Select worldspace for which to add large references
@@ -42,22 +42,61 @@ begin
 end;
 
 //============================================================================
-procedure ProcessReference(e: IInterface);
+procedure ProcessReference(wrld, e: IInterface);
 var
+  i: integer;
   stat: IInterface;
   Dimensions: TwbVector;
   fScale: float;
   Cell: TwbGridCell;
 begin
-  // skip XESP
-  if ElementExists(e, 'XESP') then
+  // safety check
+  if GetFile(wrld) <> GetFile(e) then
+    Exit;
+
+  // is a large reference that is overwritten
+  if GetFile(wrld) <> GetFile(MasterOrSelf(e)) then begin
+    if ReferencedByCount(MasterOrSelf(e)) > 0 then begin
+      for i := 0 to Pred(ReferencedByCount(MasterOrSelf(e))) do begin
+        stat := ReferencedByIndex(MasterOrSelf(e), i);
+        if SameText(Name(wrld), Name(stat)) then begin
+          Cell := wbPositionToGridCell(GetPosition(e));
+          AddMessage('Overwrite: ' + Name(e));
+          slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
+          Exit;
+        end;
+      end;
+    end;
+    Exit;
+  end;
+
+  // IsFullLOD
+  if GetElementNativeValues(e, 'Record Header\Record Flags') and $00010000 = $00010000 then
+    Exit;
+
+  // InitiallyDisabled
+  if GetElementNativeValues(e, 'Record Header\Record Flags') and $00008000 = $00008000 then
     Exit;
 
   stat := BaseRecord(e);
 
-  // skip markers
+  // Marker
   if GetElementNativeValues(stat, 'Record Header\Record Flags') and $00800000 = $00800000 then
     Exit;
+
+  // Primitive?
+  if ElementExists(e, 'XPRM') then begin
+    Dimensions.x := GetElementNativeValues(e, 'XPRM - Primitive\Bounds\X') / 2;
+    Dimensions.y := GetElementNativeValues(e, 'XPRM - Primitive\Bounds\Y') / 2;
+    Dimensions.z := GetElementNativeValues(e, 'XPRM - Primitive\Bounds\Z') / 2;
+    // rule based on debugging thanks to aers
+    if SQRT(Power(Dimensions.x, 2) + Power(Dimensions.y, 2) + Power(Dimensions.z, 2)) >= fLargeRefMinSize then begin
+      Cell := wbPositionToGridCell(GetPosition(e));
+      AddMessage('XPRM: ' + Name(e));
+      slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
+    end;
+    Exit;
+  end;
 
   // skip no model
   if not ElementExists(stat, 'Model') then
@@ -77,38 +116,35 @@ begin
     fScale := 1.0;
 
   // get base object size
-  Dimensions.x := (GetElementNativeValues(stat, 'OBND\X2') - GetElementNativeValues(stat, 'OBND\X1')) * fScale;
-  Dimensions.y := (GetElementNativeValues(stat, 'OBND\Y2') - GetElementNativeValues(stat, 'OBND\Y1')) * fScale;
-  Dimensions.z := (GetElementNativeValues(stat, 'OBND\Z2') - GetElementNativeValues(stat, 'OBND\Z1')) * fScale;
+  Dimensions.x := GetElementNativeValues(stat, 'OBND\X2') - GetElementNativeValues(stat, 'OBND\X1');
+  Dimensions.y := GetElementNativeValues(stat, 'OBND\Y2') - GetElementNativeValues(stat, 'OBND\Y1');
+  Dimensions.z := GetElementNativeValues(stat, 'OBND\Z2') - GetElementNativeValues(stat, 'OBND\Z1');
 
   // skipping wierd stuff or data
   if (Dimensions.z = 0) or (Dimensions.y = 0) or (Dimensions.x = 0) then
     Exit;
 
-  // rules based on emperical evidence - could be incomplete
-  // technically any reference can be added as large reference, but the game does check bounds and BASE signatures etc.
-  // if in-game checks fail -> LOD does not unload and reference might not load at all
-  // it seems adding up all bounds needs to be > 1743
-  if (Dimensions.x + Dimensions.y + Dimensions.z) > (fLargeRefMinSize * 3.405) then begin
+  // rule based on debugging thanks to aers
+  if SQRT(Power(Dimensions.x, 2) + Power(Dimensions.y, 2) + Power(Dimensions.z, 2)) * 0.5 * fscale >= fLargeRefMinSize then begin
     Cell := wbPositionToGridCell(GetPosition(e));
+    AddMessage('New: ' + Name(e));
     slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
   end;
 
 end;
 
 //============================================================================
-procedure IterateWorldspace(e: IInterface);
+procedure IterateWorldspace(wrld: IInterface);
 var
   lst: TList;
   i: integer;
 begin
   lst := TList.Create;
-  AddMessage('Gathering large references added by ' + GetFileName(GetFile(e)));
-  // find all new references added by this plugin
-  // no need to include modified references from master plugins again, since all RNAM data is merged anyways
-  wbFindREFRsByBase(e, sLargeRefBaseObjects, 1, lst);
+  AddMessage('Gathering large references added by ' + GetFileName(GetFile(wrld)));
+  // find all references added/modified by this plugin
+  wbFindREFRsByBase(wrld, sLargeRefBaseObjects, 1, lst);
   for i := 0 to lst.Count - 1 do
-    ProcessReference(ObjectToElement(lst[i]));
+    ProcessReference(wrld, ObjectToElement(lst[i]));
   lst.Free;
 end;
 
