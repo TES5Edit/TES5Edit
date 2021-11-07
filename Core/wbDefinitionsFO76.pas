@@ -64,7 +64,6 @@ var
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
   wbHitBehaviourEnum: IwbEnumDef;
-  wbBoolEnum: IwbEnumDef;
   wbSpecialTypeEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
   wbMapMarkerEnum: IwbEnumDef;
@@ -7476,7 +7475,6 @@ var
 procedure DefineFO76a;
 begin
   wbNull := wbByteArray('Unused', -255);
-  wbBoolEnum := wbEnum(['False', 'True']);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCNDC := wbInteger(CNDC, 'Condition Position', itU32, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
@@ -13409,7 +13407,7 @@ begin
       wbInteger('DoF Distance Count', itU32),
       wbInteger('DoF Range Count', itU32),
       wbInteger('DoF Use Target', itU8, wbBoolEnum),
-      wbInteger('DoF Flags', itU24, wbFlags([
+      wbInteger('DoF Flags', itU8, wbFlags([
         {0x00000001} 'Mode - Front',
         {0x00000002} 'Mode - Back',
         {0x00000004} 'No Sky',
@@ -13417,6 +13415,7 @@ begin
         {0x00000010} 'Blur Radius Bit 1',
         {0x00000020} 'Blur Radius Bit 0'
       ])),
+      wbInteger('Unused', itU16),
       wbInteger('Radial Blur Ramp Down Count', itU32),
       wbInteger('Radial Blur Down Start Count', itU32),
       wbInteger('Fade Coloe Count', itU32),

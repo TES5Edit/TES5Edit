@@ -155,6 +155,7 @@ var
   wbMODT: IwbRecordMemberDef;
   wbDMDT: IwbRecordMemberDef;
   wbUnused: IwbValueDef;
+  wbBoolEnum: IwbEnumDef;
 
 procedure DefineCommon;
 
@@ -447,6 +448,7 @@ end;
 procedure DefineCommon;
 begin
   wbUnused := wbEmpty('Unused');
+  wbBoolEnum := wbEnum(['False', 'True']);
 
   wbHEDR :=
     wbStruct(HEDR, 'Header', [
