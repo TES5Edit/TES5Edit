@@ -1026,7 +1026,10 @@ begin
     end;
   end;
 
-  if xeQuickCleanAutoSave then
+  if FindCmdLineSwitch('dontremoveoffsetdata') then
+    wbRemoveOffsetData := False;
+
+  if xeQuickClean then
     wbRemoveOffsetData := True;
 
   i := 0;

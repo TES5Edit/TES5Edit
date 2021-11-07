@@ -50,7 +50,6 @@ type
     cbTrackAllEditorID: TCheckBox;
     cbSortINFO: TCheckBox;
     cbShowFlagEnumValue: TCheckBox;
-    cbRemoveOffsetData: TCheckBox;
     pnlFontRecords: TPanel;
     pnlFontMessages: TPanel;
     pnlFontViewer: TPanel;

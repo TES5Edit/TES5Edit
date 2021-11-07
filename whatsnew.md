@@ -41,6 +41,7 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 * #916 - DR displayed incorrectly in Armor and Armor Addons for F3/NV
 * #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
 * #926 - [FO4] Load order is being ignored
+* #959 - Quick Auto Clean should force-enable "Remove OFST Data"
 * #964 - SLGM and FLOR refs are completely valid for pack data
 * #965 - Game master automatically re-added after clean masters removes it (when no masters left)
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
