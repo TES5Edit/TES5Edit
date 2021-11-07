@@ -22,6 +22,7 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 
 ## Bugfixes
 
+* #777 - [Skyrim SE/LE] - Unknown Map Marker TNAM value 59
 * #788 - For Oblivion Copy as overrides fails for MGEF
 * #792 - Flipped indexes in display of blocks and sub-blocks 
 * #803 - after cleaning, some new worldspaces from DLCs may not load their temporary records correctly
