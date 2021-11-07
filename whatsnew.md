@@ -27,6 +27,7 @@
 * (reported on Discord) - EnderalSE mode incorrectly performs exact instead of partial matching when loading .bsa for loaded modules
 * (reported on Discord) - Long running operations like filters and scripts can't be aborted
 * (reported on Discord) - 64 bit version does not handle extended FormID range in FO4 correctly
+* (reported on Discord) - saving a file without changes could discard previously queued saves for that file, resulting in data loss
 * (found by developer) - Need to force InternalEdit for AfterSet handlers
 
 ## Minor changes
