@@ -1264,6 +1264,16 @@ uses
   xeDeveloperMessageForm,
   WinInet;
 
+function wbFormatElapsedTime(aElapsed: double): string;
+var
+  Hours: Integer;
+begin
+  Result := FormatDateTime('nn:ss', aElapsed);
+  Hours := Trunc(aElapsed / (1/24));
+  if Hours > 0 then
+    Result := IntToStr(Hours) + ':' + Result;
+end;
+
 function GetUrlContent(const Url: string): UTF8String;
 var
   NetHandle: HINTERNET;
@@ -1335,9 +1345,9 @@ begin
         lStartTime := wbLocalStartTime;
         if lStartTime = 0 then
           lStartTime := wbStartTime;
-        t := t + 'Elapsed Time: ' + FormatDateTime('nn:ss', Now - lStartTime);
+        t := t + 'Elapsed Time: ' + wbFormatElapsedTime( Now - lStartTime);
         if wbLocalStartTime <> wbStartTime then
-          t := t + ', Total Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+          t := t + ', Total Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime);
       end;
 
       if wbCurrentAction <> '' then begin
@@ -1359,7 +1369,7 @@ var
 begin
   if s <> '' then begin
     if (wbShowStartTime > 0) and (wbHideStartTime < 1) then
-      frmMain.PostAddMessage(FormatDateTime('[nn:ss] ', Now - wbStartTime) + s)
+      frmMain.PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] ' + s)
     else
       frmMain.PostAddMessage(s);
     if wbLastMessageAt <> 0 then
@@ -1923,13 +1933,13 @@ begin
             wbCurrentAction := 'Adding '+IwbFile(Pointer(sl.Objects[0])).Name+' as new master to ' + aTargetFile.Name
           else
             wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
-          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
+          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + wbCurrentAction);
           DoProcessMessages;
           aTargetFile.AddMasters(sl);
           wbCurrentAction := 'Sorting masters for ' + aTargetFile.Name;
           DoProcessMessages;
           aTargetFile.SortMasters;
-          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Done adding and sorting masters.');
+          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Done adding and sorting masters.');
         finally
           wbCurrentAction := PrevAction;
           if WasEnabled then
@@ -2046,12 +2056,12 @@ begin
       if not (csRefsBuild in _File.ContainerStates) then begin
         pgMain.ActivePage := tbsMessages;
         wbCurrentAction := 'Building reference information for ' + _File.Name;
-        AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] ' + wbCurrentAction);
+        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + wbCurrentAction);
         DoProcessMessages;
         _File.BuildRef;
       end;
     end;
-    AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] All done!');
+    AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] All done!');
   finally
     wbCurrentAction := '';
     Caption := Application.Title;
@@ -4680,7 +4690,7 @@ begin
 
   // TES4LODGen, rebuild for all worldspaces
   if wbGameMode = gmTES4 then try
-    frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: starting');
+    frmMain.PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] LOD Generator: starting');
 
     Worldspaces := nil;
     for i := Low(Files) to High(Files) do begin
@@ -4721,11 +4731,11 @@ begin
         end;
       except
         on E: Exception do begin
-          frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: <Error: '+E.Message+'>');
+          frmMain.PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] LOD Generator: <Error: '+E.Message+'>');
           raise;
         end;
       end;
-      frmMain.PostAddMessage('[' + FormatDateTime('hh:nn:ss', Now - wbStartTime) + '] LOD Generator: finished (you can close this application now)');
+      frmMain.PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] LOD Generator: finished (you can close this application now)');
     finally
       Self.Caption := Application.Title;
     end;
@@ -10323,7 +10333,7 @@ begin
         if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
             ' Change Records: ' + IntToStr(ChangeCount) +
-            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+            ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime);
           DoProcessMessages;
           StartTick := GetTickCount64;
         end;
@@ -10338,7 +10348,7 @@ begin
 
     AddMessage('[Setting VWD for all REFR with VWD Mesh] ' + ' Processed Records: ' + IntToStr(Count) +
       ' Change Records: ' + IntToStr(ChangeCount) +
-      ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
     vstNav.Invalidate;
   finally
     vstNav.EndUpdate;
@@ -11064,7 +11074,7 @@ begin
         if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
             ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
-            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+            ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime);
           DoProcessMessages;
           StartTick := GetTickCount64;
         end;
@@ -11079,7 +11089,7 @@ begin
 
     PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
-      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+      ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
     if NotDeletedCount > 0 then
@@ -11331,7 +11341,7 @@ begin
         if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
             ' '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
-            ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
+            ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime);
           DoProcessMessages;
           StartTick := GetTickCount64;
         end;
@@ -11346,7 +11356,7 @@ begin
 
     PostAddMessage('['+Operation+'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
       ', '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
-      ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime)); // Does not show up if handling "a lot" of records !
+      ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime)); // Does not show up if handling "a lot" of records !
 
     // store dirty information
     if Plugin <> '' then begin
@@ -11959,7 +11969,7 @@ begin
       PostAddMessage('[Processing done] ' +
         ' Localizable Strings: ' + IntToStr(Length(lstrings)) +
         ' Translated: ' + IntToStr(Translated) +
-        ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime));
+        ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
       Caption := Application.Title;
 
       // that "(de)localization" is a very dirty hack which can probably lead
@@ -14154,7 +14164,7 @@ begin
       s := 'Done: ' + aDesc;
       if wbCurrentProgress <> '' then
         s := s + ', ' + wbCurrentProgress;
-      s := s + ', Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbLocalStartTime);
+      s := s + ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbLocalStartTime);
       wbProgress(s);
     end;
   finally
@@ -15043,7 +15053,7 @@ begin
   Result := False;
   for i := Low(Files) to High(Files) do with Files[i] do
     if IsESM and (not (fsIsHardcoded in FileStates)) and SameText(ExtractFileExt(FileName), '.esp') then begin
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Removing ESM Flag: ' + FileName);
+      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Removing ESM Flag: ' + FileName);
       IsESM := False;
       Result := True;
     end;
@@ -15179,7 +15189,7 @@ begin
                 end;
                 FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
                 try
-                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
                   _LFile.WriteToStream(FileStream);
                   SavedAny := True;
                   TryDirectRename := True; //TODO: make sure this is ok?
@@ -15192,7 +15202,7 @@ begin
                 on E: Exception do begin
                   AnyErrors := True;
                   NeedsRename := False;
-                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
+                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
                 end;
               end;
 
@@ -15219,7 +15229,7 @@ begin
               FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
               try
                 try
-                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Saving: ' + s);
+                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
                   _File.WriteToStream(FileStream, ResetModifiedFromBool[wbResetModifiedOnSave]);
                   SavedThisOne := True;
                   if not (fsMemoryMapped in _File.FileStates) then
@@ -15234,7 +15244,7 @@ begin
                     NeedsRename := False;
                     TryDirectRename := False;
                     SavedThisOne := False;
-                    PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] File has not changed, removing: ' + s);
+                    PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] File has not changed, removing: ' + s);
                   end;
 
                 if SavedThisOne then
@@ -15244,7 +15254,7 @@ begin
                   DeleteFile(wbDataPath + s);
                   AnyErrors := True;
                   NeedsRename := False;
-                  PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
+                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
                 end;
               end;
 
@@ -15301,15 +15311,15 @@ begin
     except
       on E: Exception do begin
         if not (E is EAbort) then
-          AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Error "' + E.ClassName + '": "' + E.Message + '"');
+          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error "' + E.ClassName + '": "' + E.Message + '"');
         AnyErrors := True;
       end;
     end;
 
     if AnyErrors then
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Errors have occured. At least one file was not saved.');
+      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Errors have occured. At least one file was not saved.');
     if SavedAny then begin
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Done saving.');
+      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Done saving.');
       Result := srAllDone;
     end;
     if AnyErrors then
@@ -15763,7 +15773,7 @@ begin
   Result := False;
   for i := Low(Files) to High(Files) do with Files[i] do
     if (not IsESM) and (not (fsIsHardcoded in FileStates)) then begin
-      AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Setting ESM Flag: ' + FileName);
+      AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Setting ESM Flag: ' + FileName);
       IsESM := True;
       Result := True;
     end else begin
@@ -15781,7 +15791,7 @@ begin
     if IsEditable and (FileStates * [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] = []) then begin
       if MasterCount[True] > 0 then begin
         Elements[0].MarkModifiedRecursive(AllElementTypes);
-        AddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Updating ONAM in: ' + FileName);
+        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Updating ONAM in: ' + FileName);
         Result := True;
       end;
     end;
@@ -16858,17 +16868,17 @@ begin
     ChangesMade := False;
     if wbLoaderError then begin
       wbDontSave := True;
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] An error occured while loading your active modules.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while loading your active modules.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
     end else try
       if (wbToolMode = tmSortAndCleanMasters) then begin
         for i := Low(Files) to High(Files) do
@@ -16925,33 +16935,33 @@ begin
       if SaveChanged = srNothingToDo then
         ChangesMade := False;
 
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= All Done =--');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= All Done =--');
       if ChangesMade then begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] You have to close this program to finalize renaming of the .save files.');
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] It is still possible for the renaming to fail if any of your original module files is still open by another process.')
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] You have to close this program to finalize renaming of the .save files.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] It is still possible for the renaming to fail if any of your original module files is still open by another process.')
       end else begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] None of your active modules required changes.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] None of your active modules required changes.');
       end;
       if (wbToolMode in [tmOnamUpdate, tmMasterUpdate]) then begin
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-        PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+        PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end else
         if (wbToolMode in wbPluginModes) then
           AutoDone := true;
 
     except
       wbDontSave := True;
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] --= Error =--');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + ']');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
-      PostAddMessage('[' + FormatDateTime('nn:ss', Now - wbStartTime) + '] to get the original fixed.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] The most likely reason for this is a module file that contains structural errors.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! No changes have been made to any of your active modules.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! You have to resolve the problem and run this program again.');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Loading and saving the problematic module in CS/GECK/CK can sometimes produce');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
     end;
   end;
 end;
@@ -20217,7 +20227,7 @@ begin
       t := 'still ' + _LoaderProgressAction + '...';
 
     if t <> '' then begin
-      frmMain.PostAddMessage('[' + FormatDateTime('nn:ss', lNow - wbStartTime) + '] Background Loader: ' + t);
+      frmMain.PostAddMessage('[' + wbFormatElapsedTime( lNow - wbStartTime) + '] Background Loader: ' + t);
       _LoaderProgressLastShown := lNow;
     end;
   finally

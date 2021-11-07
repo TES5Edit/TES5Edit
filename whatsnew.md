@@ -7,6 +7,7 @@
 * #897 - Assertion Failure when using Referenced By to jump to INFO
 * #904 - Any mod referred to in INOM and INOA in all present overrides will be added to a mod's master list on override
 * #908 - overriding a creature in fo3/fnv mode doesn't properly copy NIFZ and KFFZ sections
+* #954 - IMAD unknown flags in 4.1.3h
 
 ## Minor changes
 
@@ -41,6 +42,7 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 * #916 - DR displayed incorrectly in Armor and Armor Addons for F3/NV
 * #919 - For REFR, Linked Rooms Count needs to be updated whenever the Linked Rooms are changed
 * #926 - [FO4] Load order is being ignored
+* #953 - Time passed wrong for long running scripts
 * #959 - Quick Auto Clean should force-enable "Remove OFST Data"
 * #964 - SLGM and FLOR refs are completely valid for pack data
 * #965 - Game master automatically re-added after clean masters removes it (when no masters left)
