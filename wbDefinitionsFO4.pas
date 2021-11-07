@@ -14029,7 +14029,8 @@ begin
       wbInteger('Unknown', itU16),
       wbInteger('Unknown', itU16),
       wbInteger('Far Away Model Distance', itU16),
-      wbInteger('Geared Up Weapons', itU16)
+      wbInteger('Geared Up Weapons', itU8),
+      wbByteArray('Unused', 1, cpIgnore)
     ]),
     wbRArrayS('Head Parts', wbFormIDCk(PNAM, 'Head Part', [HDPT]), cpNormal, False, nil, nil, nil{wbActorTemplateUseModelAnimation}),
     wbFormIDCk(HCLF, 'Hair Color', [CLFM], False, cpNormal, False),
