@@ -16648,7 +16648,8 @@ begin
       wbInteger('Base Health', itU16),
       wbInteger('Base Action Points', itU16),
       wbInteger('Far Away Model Distance', itU16),
-      wbInteger('Geared Up Weapons', itU16)
+      wbInteger('Geared Up Weapons', itU8),
+      wbByteArray('Unused', 1, cpIgnore)
     ]),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
     wbFormIDCk(GNAM, 'Gift Filter', [FLST], False, cpNormal, False),
