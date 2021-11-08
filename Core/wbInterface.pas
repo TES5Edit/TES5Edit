@@ -5667,6 +5667,7 @@ type
   TwbRecursiveDef = class(TwbResolvableDef, IwbRecursiveDef)
   protected {private}
     rdLevelsUp: Integer;
+    rdCached: IwbValueDef;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority : TwbConflictPriority;
@@ -17005,14 +17006,21 @@ end;
 
 function TwbResolvableDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
-  ValueDef: IwbValueDef;
+  SelfValueDef: IwbValueDef;
+  SourceDef: IwbDef;
+  SourceResolvableDef: IwbResolvableDef;
 begin
   if dfDontAssign in defFlags then
     Exit(False);
 
-  ValueDef := ResolveDef(nil, nil, aElement);
-  if Assigned(ValueDef) then
-    Result := ValueDef.CanAssign(aElement, aIndex, aDef)
+  SelfValueDef := ResolveDef(nil, nil, aElement);
+
+  SourceDef := aDef;
+  if Supports(SourceDef, IwbRecursiveDef, SourceResolvableDef) then
+    SourceDef := SourceResolvableDef.ResolveDef(nil, nil, aElement);
+
+  if Assigned(SelfValueDef) then
+    Result := SelfValueDef.CanAssign(aElement, aIndex, SourceDef)
   else
     Result := False;
 end;
@@ -17254,11 +17262,12 @@ end;
 
 function TwbUnionDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
-  i         : Integer;
-  Size      : Integer;
-  aMember   : IwbValueDef;
-  Container : IwbContainerElementRef;
-  Element   : IwbElement;
+  i           : Integer;
+  Size        : Integer;
+  aMember     : IwbValueDef;
+  Container   : IwbContainerElementRef;
+  Element     : IwbElement;
+  Resolveable : IwbResolvableDef;
 begin
 //  if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aEndPtr)<Cardinal(aBasePtr)) then begin
 //    wbProgressCallback('Found a union with a negative size! (1) '+IntToHex64(Cardinal(aBasePtr), 8)+
@@ -17287,6 +17296,8 @@ begin
   end else begin
     if GetIsVariableSize and Supports(aElement, IwbContainerElementRef, Container) and Equals(Container.ValueDef) and (Container.ElementCount = 1) then begin
       Element := Container.Elements[0];
+      while not aMember.Equals(Element.ValueDef) and Supports(aMember, IwbResolvableDef, Resolveable) do
+        aMember := Resolveable.ResolveDefAndElement(aBasePtr, aEndPtr, Element);
       if not aMember.Equals(Element.ValueDef) then
         Element := nil;
     end;
@@ -19621,6 +19632,9 @@ function TwbRecursiveDef.ResolveDef(aBasePtr, aEndPtr: Pointer; const aElement: 
 var
   i : Integer;
 begin
+  if Assigned(rdCached) then
+    Exit(rdCached);
+
   Result := nil;
   for i := 1 to rdLevelsUp do
     if i = 1 then begin
@@ -19629,6 +19643,8 @@ begin
     end else
       if not Supports(Result.Parent, IwbValueDef, Result) then
         Exit(nil);
+
+  rdCached := Result;
 end;
 
 { TwbRecordMemberDef }

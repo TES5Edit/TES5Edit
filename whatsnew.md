@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #826 - FO4 VMADs with complex script properties still parse incompletely
 * #864 - subgraph data is incorrectly created/overriden
 * #888 - Plugins with no masters can't resolve references to hardcoded records
 * #897 - Assertion Failure when using Referenced By to jump to INFO
