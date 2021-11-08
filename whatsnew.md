@@ -41,6 +41,7 @@
 
 ## Minor changes
 
+* #827 - Allow SSEEdit to Minimize during processing
 * #901 - "Unhide all..." option in column context menu
 
 ## Enderal Special Edition
