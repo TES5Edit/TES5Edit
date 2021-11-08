@@ -10886,7 +10886,9 @@ end;
 
 procedure TfrmMain.btnCancelClick(Sender: TObject);
 begin
-  wbForceTerminate := True;
+  if MessageDlg('Are you sure you want to request to force cancel the current operation?' + sLineBreak + sLineBreak +
+    'Canceling the operation might leave xEdit in an inconsistent state.', mtConfirmation, mbYesNo, 0, mbNo) = mrYes then
+    wbForceTerminate := True;
 end;
 
 procedure TfrmMain.mniNavUndeleteAndDisableReferencesClick(Sender: TObject);
