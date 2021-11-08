@@ -7919,7 +7919,7 @@ begin
   ]);
 
   wbScriptFragmentsInfo := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -7934,7 +7934,7 @@ begin
   ]);
 
   wbScriptFragmentsPack := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
@@ -7950,7 +7950,7 @@ begin
   ]);
 
   wbScriptFragmentsQuest := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
     wbInteger('FragmentCount', itU16, nil, cpBenign),
     wbLenString('ScriptName', 2).SetAfterSet(wbScriptFragmentsQuestScriptNameAfterSet),
     // if ScriptName = "" then no Flags and Properties
@@ -7979,7 +7979,7 @@ begin
   ]).SetAfterSet(wbScriptFragmentsQuestAfterSet);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -8007,7 +8007,7 @@ begin
   ]);
 
   wbScriptFragments := wbStruct('Script Fragments', [
-    wbInteger('Unknown', itS8),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
     wbScriptEntry,
     wbArrayS('Fragments',
       wbStructSK([0], 'Fragment', [

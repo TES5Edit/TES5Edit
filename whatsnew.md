@@ -6,6 +6,7 @@
 * #788 - For Oblivion Copy as overrides fails for MGEF
 * #792 - Flipped indexes in display of blocks and sub-blocks 
 * #803 - after cleaning, some new worldspaces from DLCs may not load their temporary records correctly
+* #813 - Unknown field in Script Fragments decoded by Creation Kit error log
 * #823 - FO3: Anchorage.esm & PointLookout.esm need Mark Modified applied during QAC 
 * #848 - Records with hardcoded FormIDs show as new records instead of overrides/injected
 * #853 - FNV - cleaning dead money master erases map geometry
