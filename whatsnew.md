@@ -61,6 +61,7 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 
 ## Minor changes
 
+* #827 - Allow SSEEdit to Minimize during processing
 * #901 - "Unhide all..." option in column context menu
 
 ## Enderal Special Edition
