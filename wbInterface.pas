@@ -52,13 +52,13 @@ var
     Major   : 4;
     Minor   : 0;
     Release : 3;
-    Build   : 'i';
-    Title   : '(RC1 for 4.0.4)';
+    Build   : 'j';
+    Title   : '(RC2 for 4.0.4)';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04000309;
-  wbDeveloperMessageVersion : Integer = 04000304;
+  wbWhatsNewVersion : Integer = 04000310;
+  wbDeveloperMessageVersion : Integer = 04000310;
   wbDevCRC32App : Cardinal = $FFFFFFEB;
 
   clOrange       = $004080FF;
