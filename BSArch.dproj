@@ -72,10 +72,10 @@
         <Manifest_File>(None)</Manifest_File>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>FileDescription=BSArch;FileVersion=0.7.0.0;ProductName=BSArch;ProductVersion=0.7.0.0</VerInfo_Keys>
+        <VerInfo_Keys>FileDescription=BSArch;FileVersion=0.8.0.0;ProductName=BSArch;ProductVersion=0.8.0.0</VerInfo_Keys>
         <VerInfo_Locale>3081</VerInfo_Locale>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
-        <VerInfo_MinorVer>7</VerInfo_MinorVer>
+        <VerInfo_MinorVer>8</VerInfo_MinorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''"/>
     <PropertyGroup Condition="'$(Base_Win64)'!=''"/>

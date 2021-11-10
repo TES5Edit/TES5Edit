@@ -46,14 +46,14 @@ var
   VersionString : TwbVersion = (
     Major   : 4;
     Minor   : 1;
-    Release : 3;
-    Build   : 'j';
-    Title   : 'EXTREMELY EXPERIMENTAL (RC2 for 4.1.4)';
+    Release : 4;
+    Build   : '';
+    Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010310;
-  wbDeveloperMessageVersion : Integer = 04010310;
+  wbWhatsNewVersion : Integer = 04010400;
+  wbDeveloperMessageVersion : Integer = 04010400;
   wbDevCRC32App : Cardinal = $FFFFFFE8;
 
   clOrange       = $004080FF;
