@@ -39,6 +39,7 @@
 * (reported on Discord) - Long running operations like filters and scripts can't be aborted
 * (reported on Discord) - 64 bit version does not handle extended FormID range in FO4 correctly
 * (reported on Discord) - saving a file without changes could discard previously queued saves for that file, resulting in data loss
+* (reported on Discord) - loading a masterless file alone can crash xEdit if it contains references to hardcoded records
 * (found by developer) - Need to force InternalEdit for AfterSet handlers
 
 ## Minor changes
