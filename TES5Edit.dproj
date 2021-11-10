@@ -62,14 +62,14 @@
         <DCC_UnitSearchPath>.\jcl\jcl\source\include\jedi;.\jcl\jcl\source\include;.\jcl\jcl\source\common;.\jcl\jcl\source\vcl;.\jcl\jcl\source\windows;.\jvcl\jvcl\common;.\jvcl\jvcl\resources;.\jvcl\jvcl\run;.\Imaging;.\Imaging\zlib;.\zlib;.\lz4;.\VirtualTrees\Source;.\delphi-detours-library\Source;.\vcl-styles-utils\Common;.\FileContainer;.\Tools\BSArchive;.\Tools\BSArchive\TForge;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>TES5Edit_Icon.ico</Icon_MainIcon>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_Build>1</VerInfo_Build>
+        <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.0.3.1;ProductName=xEdit;ProductVersion=4.0.3.1</VerInfo_Keys>
+        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.0.4.0;ProductName=xEdit;ProductVersion=4.0.4.0</VerInfo_Keys>
         <VerInfo_Locale>3081</VerInfo_Locale>
         <VerInfo_MajorVer>4</VerInfo_MajorVer>
-        <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Release>3</VerInfo_Release>
+        <VerInfo_PreRelease>false</VerInfo_PreRelease>
+        <VerInfo_Release>4</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_DcpOutput>.\dcu\Win32</DCC_DcpOutput>
@@ -171,6 +171,7 @@
         <DCCReference Include="wbDataFormatNifTypes.pas"/>
         <DCCReference Include="wbNifMath.pas"/>
         <DCCReference Include="wbHalfFloat.pas"/>
+        <DCCReference Include="wbLoadOrder.pas"/>
         <DCCReference Include="wbModGroups.pas"/>
         <DCCReference Include="wbBetterStringList.pas"/>
         <DCCReference Include="frmLegendForm.pas">
