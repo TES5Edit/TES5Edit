@@ -3846,7 +3846,7 @@ begin
       Master := GetMaster(FileID, aNewMasters);
   end;
 
-  if Assigned(Master) then
+  if Assigned(Master) and not Equals(Master) then
     Result := Master.RecordByFormID[aFormID.ChangeFileID(Master.FileFileID[aNewMasters]), aAllowInjected, aNewMasters]
   else
     Result := nil;
