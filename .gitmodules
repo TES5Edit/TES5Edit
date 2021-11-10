@@ -1,12 +1,44 @@
 [submodule "delphi-detours-library"]
-	path = delphi-detours-library
-	url = https://github.com/ElminsterAU/delphi-detours-library.git
-	branch = master
+	path = External/delphi-detours-library
+	url = ../../ElminsterAU/delphi-detours-library.git
+	branch = xEdit-4.1.x
 [submodule "vcl-styles-utils"]
-	path = vcl-styles-utils
-	url = https://github.com/ElminsterAU/vcl-styles-utils.git
-	branch = master
+	path = External/vcl-styles-utils
+	url = ../../ElminsterAU/vcl-styles-utils.git
+	branch = xEdit-4.1.x
 [submodule "VirtualTrees"]
-	path = VirtualTrees
-	url = https://github.com/ElminsterAU/Virtual-TreeView.git
-	branch = master
+	path = External/VirtualTrees
+	url = ../../ElminsterAU/Virtual-TreeView.git
+	branch = xEdit-4.1.x
+[submodule "jcl"]
+	path = External/jcl
+	url = ../../ElminsterAU/jcl.git
+	branch = xEdit-4.1.x
+[submodule "jvcl"]
+	path = External/jvcl
+	url = ../../ElminsterAU/jvcl.git
+	branch = xEdit-4.1.x
+[submodule "DWScript"]
+	path = External/DWScript
+	url = ../../ElminsterAU/DWScript.git
+	branch = xEdit-4.1.x
+[submodule "JsonDataObjects"]
+	path = External/JsonDataObjects
+	url = ../../ElminsterAU/JsonDataObjects.git
+	branch = xEdit-4.1.x
+[submodule "imaginglib"]
+	path = External/ImagingLib
+	url = ../../ElminsterAU/imaginglib.git
+	branch = xEdit-4.1.x
+[submodule "LZ4Delphi"]
+	path = External/lz4
+	url = ../../ElminsterAU/LZ4Delphi.git
+	branch = xEdit-4.1.x
+[submodule "tforge"]
+	path = External/TForge
+	url = ../../ElminsterAU/tforge.git
+	branch = xEdit-4.1.x
+[submodule "External/FileContainer"]
+	path = External/FileContainer
+	url = ../../ElminsterAU/FileContainer.git
+	branch = xEdit-4.1.x

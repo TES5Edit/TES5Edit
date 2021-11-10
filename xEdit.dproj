@@ -1,0 +1,268 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Base>True</Base>
+        <AppType>Application</AppType>
+        <Config Condition="'$(Config)'==''">Debug</Config>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>xEdit.dpr</MainSource>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
+        <ProjectVersion>18.8</ProjectVersion>
+        <TargetedPlatforms>3</TargetedPlatforms>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
+        <Cfg_2_Win32>true</Cfg_2_Win32>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win64)'!=''">
+        <Cfg_2_Win64>true</Cfg_2_Win64>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='DebugFO' or '$(Cfg_3)'!=''">
+        <Cfg_3>true</Cfg_3>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='LiteDebug' or '$(Cfg_4)'!=''">
+        <Cfg_4>true</Cfg_4>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_4)'=='true') or '$(Cfg_4_Win32)'!=''">
+        <Cfg_4_Win32>true</Cfg_4_Win32>
+        <CfgParent>Cfg_4</CfgParent>
+        <Cfg_4>true</Cfg_4>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>xEdit</SanitizedProjectName>
+        <AppDPIAwarenessMode>system</AppDPIAwarenessMode>
+        <AppEnableHighDPI>true</AppEnableHighDPI>
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <DCC_BplOutput>.\Build</DCC_BplOutput>
+        <DCC_DcpOutput>.\Temp\xEdit\$(Platform)\$(Config)</DCC_DcpOutput>
+        <DCC_DcuOutput>.\Temp\xEdit\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_Define>$(USERDEFINES);EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
+        <DCC_Description>xEdit by ElminsterAU</DCC_Description>
+        <DCC_ExeOutput>.\Build</DCC_ExeOutput>
+        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;.\External\Diff;.\External\TOM2;.\External\DWScript\Source;.\Core;.\xEdit;.\xEdit\JvI;.\xEdit\DWS;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <Icon_MainIcon>.\xEdit\xEdit_TES_Icon.ico</Icon_MainIcon>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Debug>true</VerInfo_Debug>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.1.4.0;ProductName=xEdit;ProductVersion=4.1.4.0</VerInfo_Keys>
+        <VerInfo_Locale>3081</VerInfo_Locale>
+        <VerInfo_MajorVer>4</VerInfo_MajorVer>
+        <VerInfo_MinorVer>1</VerInfo_MinorVer>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
+        <VerInfo_Release>4</VerInfo_Release>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win32)'!=''"/>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_DebugDCUs>true</DCC_DebugDCUs>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_MapFile>3</DCC_MapFile>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
+        <BT_BuildType>Debug</BT_BuildType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_3)'!=''">
+        <Icon_MainIcon>xEdit\xEdit_FO_Icon.ico</Icon_MainIcon>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_4)'!=''">
+        <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''"/>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="xEdit\xeInit.pas"/>
+        <DCCReference Include="Core\wbBetterStringList.pas"/>
+        <DCCReference Include="Core\wbBSA.pas"/>
+        <DCCReference Include="Core\wbCommandLine.pas"/>
+        <DCCReference Include="Core\wbDataFormat.pas"/>
+        <DCCReference Include="Core\wbDataFormatMaterial.pas"/>
+        <DCCReference Include="Core\wbDataFormatMisc.pas"/>
+        <DCCReference Include="Core\wbDataFormatNif.pas"/>
+        <DCCReference Include="Core\wbDataFormatNifTypes.pas"/>
+        <DCCReference Include="Core\wbDefinitionsCommon.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFNV.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFNVSaves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO3.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO3Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO4.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO4Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsFO76.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES3.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES4.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES4Saves.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
+        <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
+        <DCCReference Include="Core\wbHalfFloat.pas"/>
+        <DCCReference Include="Core\wbHardcoded.pas">
+            <Form>wbHardcodedContainer</Form>
+            <FormType>dfm</FormType>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="Core\wbHelpers.pas"/>
+        <DCCReference Include="Core\wbImplementation.pas"/>
+        <DCCReference Include="Core\wbInterface.pas"/>
+        <DCCReference Include="Core\wbLocalization.pas"/>
+        <DCCReference Include="Core\wbLOD.pas"/>
+        <DCCReference Include="Core\wbModGroups.pas"/>
+        <DCCReference Include="Core\wbNifMath.pas"/>
+        <DCCReference Include="Core\wbNifScanner.pas"/>
+        <DCCReference Include="Core\wbSaveInterface.pas"/>
+        <DCCReference Include="Core\wbSort.pas"/>
+        <DCCReference Include="Core\wbStreams.pas"/>
+        <DCCReference Include="xEdit\xeDeveloperMessageForm.pas">
+            <Form>frmDeveloperMessage</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeEditWarningForm.pas">
+            <Form>frmEditWarning</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeFileSelectForm.pas">
+            <Form>frmFileSelect</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeFilterOptionsForm.pas">
+            <Form>frmFilterOptions</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeLegendForm.pas">
+            <Form>frmLegend</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeLocalizationForm.pas">
+            <Form>frmLocalization</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeLocalizePluginForm.pas">
+            <Form>frmLocalizePlugin</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeLODGenForm.pas"/>
+        <DCCReference Include="xEdit\xeLogAnalyzerForm.pas">
+            <Form>frmLogAnalyzer</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeMainForm.pas">
+            <Form>frmMain</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeModGroupEditForm.pas"/>
+        <DCCReference Include="xEdit\xeModGroupSelectForm.pas"/>
+        <DCCReference Include="xEdit\xeModuleSelectForm.pas"/>
+        <DCCReference Include="xEdit\xeOptionsForm.pas">
+            <Form>frmOptions</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeRichEditForm.pas">
+            <Form>frmRichEdit</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\JvI\xejviScriptAdapter.pas"/>
+        <DCCReference Include="xEdit\JvI\xejviScriptAdapterDF.pas"/>
+        <DCCReference Include="xEdit\JvI\xejviScriptAdapterMisc.pas"/>
+        <DCCReference Include="xEdit\xeScriptForm.pas">
+            <Form>frmScript</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeTipForm.pas"/>
+        <DCCReference Include="xEdit\xeViewElementsForm.pas">
+            <Form>frmViewElements</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeWaitForm.pas">
+            <Form>frmWait</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeWorldspaceCellDetailsForm.pas">
+            <Form>frmWorldspaceCellDetails</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="xEdit\xeScriptHost.pas"/>
+        <DCCReference Include="xEdit\JvI\xejviScriptHost.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="DebugFO">
+            <Key>Cfg_3</Key>
+            <CfgParent>Cfg_2</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="LiteDebug">
+            <Key>Cfg_4</Key>
+            <CfgParent>Cfg_2</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">xEdit.dpr</Source>
+                </Source>
+                <Excluded_Packages/>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">True</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>

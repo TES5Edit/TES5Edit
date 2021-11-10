@@ -237,3 +237,6 @@ __recovery/*
 /Tools/xDump/SSEDump.exe
 /TES5Edit_log.txt
 /FNVEdit_log.txt
+/FO76Edit_log.txt
+Temp
+Temp/*
