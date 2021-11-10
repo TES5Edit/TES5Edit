@@ -53,6 +53,7 @@ There are a large number of changes between 4.0.x and 4.1.x which aren't current
 * #965 - Game master automatically re-added after clean masters removes it (when no masters left)
 * #972 - NPC_ 'Geared Up Weapons' should only show 1 byte
 * #973 - GetIsID condition with Hazard argument is reported as an error
+* #974 - xNVSE inline variable declarations comes up as error in error checking
 * (reported on Discord) - .esl extensions don't always force loading as ESL correctly when the module is not ESL flagged
 * (reported on Discord) - [TES4] EDID and ESCE incorrectly report "Expected 4 bytes but found 0" when running "Check for Errors" on MGEF
 * (reported on Discord) - EnderalSE mode incorrectly performs exact instead of partial matching when loading .bsa for loaded modules

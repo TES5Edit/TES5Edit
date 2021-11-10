@@ -4470,7 +4470,7 @@ begin
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
     wbInteger('Index', itU32),
     wbByteArray('Unused', 12),
-    wbInteger('Flags', itU8, wbFlags(['IsLongOrShort']), cpCritical),
+    wbInteger('Type', itU8, wbEnum(['FloatOrRef', 'Integer', 'String (xNVSE)', 'Array (xNVSE)', 'Ref (xNVSE)', 'Invalid (xNVSE)']), cpCritical),
     wbByteArray('Unused', 7)
   ]);
 
