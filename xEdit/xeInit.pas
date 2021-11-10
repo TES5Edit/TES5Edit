@@ -1069,6 +1069,9 @@ begin
   else if FindCmdLineSwitch('hidefixup') then
     wbShowInternalEdit := False;
 
+  if FindCmdLineSwitch('IgnoreWorldMHDT') then
+    wbIgnoreWorldMHDT := True;
+
   if xeQuickClean then begin
     wbFixupPGRD := True;
     wbAllowInternalEdit := True;

@@ -157,6 +157,9 @@ var
   wbUnused: IwbValueDef;
   wbBoolEnum: IwbEnumDef;
 
+const
+  wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
+
 procedure DefineCommon;
 
 {>>> Common Procedure Callbacks <<<}

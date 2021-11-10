@@ -7532,7 +7532,7 @@ begin
 
   if wbSimpleRecords then begin
     wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
+    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
   end
   else begin
     wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
@@ -7545,14 +7545,14 @@ begin
     ]);
     wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
       wbStruct('Min', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
+        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
       ]),
       wbStruct('Max', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
+        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
       ]),
-      wbByteArray('Cell Data', 0)
+      wbByteArray('Cell Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
       // way too verbose for no practical use
       {wbArray('Cell Data', wbStruct('Quad Height', [
         wbInteger('Bottom Left', itU8),
@@ -7560,7 +7560,7 @@ begin
         wbInteger('Top Left', itU8),
         wbInteger('Top Right', itU8)
       ]))}
-    ]);
+    ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
   end;
 
   wbXOWN := wbStruct(XOWN, 'Owner', [
