@@ -2598,7 +2598,7 @@ const
     (Index: 4832; Name: 'GetDistance2D'; ParamType1: ptObjectReference; ),
     (Index: 4833; Name: 'GetDistance3D'; ParamType1: ptObjectReference; ),
     (Index: 4843; Name: 'PlayerHasKey'; ),
-	(Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
+    (Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
 
     // Added by JIP NVSE Plugin  - up to v48
     (Index: 5637; Name: 'GetIsPoisoned'; ),
@@ -4900,7 +4900,7 @@ begin
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
     wbInteger('Index', itU32),
     wbByteArray('Unused', 12),
-    wbInteger('Flags', itU8, wbFlags(['IsLongOrShort']), cpCritical),
+    wbInteger('Type', itU8, wbEnum(['FloatOrRef', 'Integer', 'String (xNVSE)', 'Array (xNVSE)', 'Ref (xNVSE)', 'Invalid (xNVSE)']), cpCritical),
     wbByteArray('Unused', 7)
   ]);
 
