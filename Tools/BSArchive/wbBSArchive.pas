@@ -1976,10 +1976,16 @@ begin
         DDSHeaderDX10.arraySize := 1;
 
         if FileFO4.CubeMaps = 2049 then begin
-          DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS2_CUBEMAP or DDSCAPS_COMPLEX
-                           or DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
-                           or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
-                           or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;
+          // Archive2.exe creates invalid textures like this
+          //DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS2_CUBEMAP or DDSCAPS_COMPLEX
+          //                 or DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
+          //                 or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
+          //                 or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;
+          // This is the correct way
+          DDSHeader.dwCaps2 := DDSCAPS2_CUBEMAP
+                            or DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
+                            or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
+                            or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;          
           DDSHeaderDX10.miscFlags := DDS_RESOURCE_MISC_TEXTURECUBE;
         end;
         DDSHeader.ddspf.dwSize := SizeOf(DDSHeader.ddspf);
