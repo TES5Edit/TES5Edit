@@ -213,6 +213,8 @@ var
   wbAllowInternalEdit : Boolean = True;
   wbShowInternalEdit  : Boolean = False;
 
+  wbIgnoreWorldMHDT : Boolean = False;
+
   wbReportMode                       : Boolean = False;
   wbReportUnused                     : Boolean = False;
   wbReportRequired                   : Boolean = False;

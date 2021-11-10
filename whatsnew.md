@@ -47,6 +47,7 @@
 
 * #827 - Allow SSEEdit to Minimize during processing
 * #901 - "Unhide all..." option in column context menu
+* #902 - Option to ignore MHDT conflicts when using Very Quick Show Conflicts (use `-IgnoreWorldMHDT` parameter)
 
 ## Enderal Special Edition
 
