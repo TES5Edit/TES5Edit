@@ -14,7 +14,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, wbInterface, ComCtrls, ExtCtrls, StdCtrls, Buttons, Menus, IniFiles;
+  Dialogs, wbInterface, ComCtrls, ExtCtrls, StdCtrls, Buttons, Menus, IniFiles,
+  SynEdit, SynMemo, xeMainForm;
 
 type
   TwbEdit = record
@@ -70,8 +71,7 @@ implementation
 {$R *.dfm}
 
 uses
-  wbHelpers, ShellApi,
-  xeMainForm;
+  wbHelpers, ShellApi;
 
 { TfrmViewElements }
 

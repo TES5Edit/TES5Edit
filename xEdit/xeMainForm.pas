@@ -70,7 +70,11 @@ uses
   Vcl.Styles.Utils.SystemMenu,
   Vcl.Styles.Ext,
   JvBalloonHint, JvExStdCtrls, JvRichEdit, FileContainer, JvExControls,
-  JvButton, JvTransparentButton;
+  JvButton, JvTransparentButton,
+  SynEdit, SynMemo, SynEditKeyCmds;
+
+type
+  TMemo = class(TSynMemo);
 
 const
   DefaultInterval             = 1 / 24 / 6; // 10 minutes
@@ -1748,11 +1752,8 @@ end;
 
 procedure TfrmMain.ScrollToTheLastMessage;
 begin
-  if mniMessagesAutoscroll.Checked then begin
-    mmoMessages.CaretPos := Point(0, mmoMessages.Lines.Count - 1);
-    mmoMessages.SelLength := 1;
-    mmoMessages.SelLength := 0;
-  end;
+  if mniMessagesAutoscroll.Checked then
+    mmoMessages.CaretY := mmoMessages.Lines.Count;
 end;
 
 procedure TfrmMain.AddMessage(const s: string);
@@ -6342,8 +6343,10 @@ begin
   else //give up
     MonospaceFontName := '';
 
-  if MonospaceFontName <> '' then
+  if MonospaceFontName <> '' then begin
     Memo1.Font.Name := MonospaceFontName;
+    mmoMessages.Font.Name := MonospaceFontName;
+  end;
   Memo1.WordWrap := True;
 
   try
