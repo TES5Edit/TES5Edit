@@ -7292,6 +7292,8 @@ var
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
 begin
+  Exit; //should be handled by NavUpdate
+
   Node := vstNav.GetLastInitialized;
   while Assigned(Node) do begin
     NodeData := vstNav.GetNodeData(Node);
@@ -7456,6 +7458,8 @@ var
   MainRecord                  : IwbMainRecord;
   i                           : Integer;
 begin
+  Exit; //should be handled by NavUpdate
+
   if not Assigned(vstNav) then
     Exit;
 
