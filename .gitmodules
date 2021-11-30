@@ -42,3 +42,7 @@
 	path = External/FileContainer
 	url = ../../ElminsterAU/FileContainer.git
 	branch = xEdit-4.1.x
+[submodule "External/SynEdit"]
+	path = External/SynEdit
+	url = ../../ElminsterAU/SynEdit.git
+	branch = xEdit-4.1.x
