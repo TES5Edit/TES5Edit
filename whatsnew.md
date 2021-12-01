@@ -1,3 +1,9 @@
+# What's new in xEdit 4.0.5?
+
+## Bugfixes
+
+* (reported on Discord) - .strings files may not be saved if there were no changes to the .es? file
+
 # What's new in xEdit 4.0.4?
 
 ## Bugfixes
