@@ -15176,6 +15176,7 @@ begin
             FoundSomething := True;
             TryDirectRename := False;
             NeedsRename := False;
+            SavedThisOne := False;
 
             // localization file
             if FileType[i] = 1 then begin
@@ -15201,6 +15202,7 @@ begin
                   PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
                   _LFile.WriteToStream(FileStream);
                   SavedAny := True;
+                  SavedThisOne := True;
                   TryDirectRename := True; //TODO: make sure this is ok?
                   _LFile.Modified := False;
                 finally
@@ -15211,6 +15213,7 @@ begin
                 on E: Exception do begin
                   AnyErrors := True;
                   NeedsRename := False;
+                  SavedThisOne := False;
                   PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
                 end;
               end;

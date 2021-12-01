@@ -19,6 +19,12 @@
 
 There are a large number of changes between 4.0.x and 4.1.x which aren't currently documented here, but will be before the release of 4.2.x
 
+# What's new in xEdit 4.0.5?
+
+## Bugfixes
+
+* (reported on Discord) - .strings files may not be saved if there were no changes to the .es? file
+
 # What's new in xEdit 4.0.4?
 
 ## Bugfixes
