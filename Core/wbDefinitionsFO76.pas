@@ -1022,6 +1022,7 @@ const
   VNML : TwbSignature = 'VNML';
   VOLI : TwbSignature = 'VOLI'; { New To Fallout 76 }
   VONL : TwbSignature = 'VONL'; { New To Fallout 76 }
+  VREN : TwbSignature = 'VREN'; { New To Fallout 76 }
   VTCK : TwbSignature = 'VTCK';
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
@@ -12544,6 +12545,7 @@ begin
     wbFormIDCk(VENR, 'Vendor Reset', [GLOB]),
     wbFormIDCk(VENG, 'Vendor Caps Balance', [AVIF]),
     wbFormIDCk(VBCY, 'Vendor Buy Currency', [NULL, CNCY]),
+    wbEmpty(VREN, 'Unknown'),
     wbStruct(VENP, 'Vendor Values', [
       wbInteger('Start Hour', itU16),
       wbInteger('End Hour', itU16),
@@ -13772,8 +13774,8 @@ begin
       {0x00000002} 'Skill',
       {0x00000004} 'Uses Enum',
       {0x00000008} 'Don''t allow Script edits',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
+      {0x00000010} 'Is Full AV Cached',
+      {0x00000020} 'Is Permanant AV Cached',
       {0x00000040} 'No Modifiers',
       {0x00000080} 'Unknown 7',
       {0x00000100} 'Unknown 8',
@@ -13817,10 +13819,12 @@ begin
       'Unknown'
     ])),
     wbInteger(NAM2, 'Secondary Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
+      {0x00000001}  0, 'Unknown 0',
       {0x00000002}  1, 'First Grouping',
       {0x00000004}  2, 'Unknown 2',
       {0x00000008}  3, 'Network Float Value',
       {0x00000010}  4, 'Only Modified Value',
+      {0x00000020}  5, 'Unknown 5',
       {0x00000040}  6, 'Unknown 6',
       {0x00000080}  7, 'Low Priority'
     ]))),
