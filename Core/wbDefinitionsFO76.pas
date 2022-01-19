@@ -339,6 +339,7 @@ const
   CSTY : TwbSignature = 'CSTY';
   CTDA : TwbSignature = 'CTDA';
   CTRG : TwbSignature = 'CTRG'; { New To Fallout 76 }
+  CTRN : TwbSignature = 'CTRN'; { New To Fallout 76 0.2.838.0 }
   CURV : TwbSignature = 'CURV'; { New To Fallout 76 }
   CUSD : TwbSignature = 'CUSD'; { New to Fallout 4 }
   CVPA : TwbSignature = 'CVPA'; { New to Fallout 4 }
@@ -736,6 +737,8 @@ const
   PARW : TwbSignature = 'PARW'; { New to Skyrim }
   PBAR : TwbSignature = 'PBAR'; { New to Skyrim }
   PBEA : TwbSignature = 'PBEA'; { New to Skyrim }
+  PBLT : TwbSignature = 'PBLT'; { New To Fallout 76 0.2.838.0 }
+  PBRT : TwbSignature = 'PBRT'; { New To Fallout 76 0.2.838.0 }
   PCDP : TwbSignature = 'PCDP'; { New To Fallout 76 }
   PCDV : TwbSignature = 'PCDV'; { New To Fallout 76 }
   PCEN : TwbSignature = 'PCEN'; { New To Fallout 76 }
@@ -1380,6 +1383,7 @@ var
   wbPERKData: IwbSubRecordDef;
   wbPerkEffect: IwbSubRecordStructDef;
   wbReward: IwbRecordMemberDef;
+  wbCTRN: IwbSubRecordDef;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -11157,6 +11161,8 @@ begin
 
   wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
 
+  wbCTRN := wbByteArray(CTRN, 'Unknown CTRN', 13);
+
   var wbEffect :=
     wbRStruct('Effect', [
       wbEFID,
@@ -11288,6 +11294,7 @@ begin
       ])
     ),
     wbFloat(PAHD, 'Unknown Float'),
+    wbCTRN,
     wbFromSize(1, NVNM, wbNVNMRecordVal, False),
     wbUnknown(MNAM),
     wbNAM1LODP
@@ -11315,6 +11322,7 @@ begin
     wbInteger(FNAM, 'Flags (Unused)', itU16),
     wbCNDCs,
     wbFloat(PAHD, 'Unknown Float'),
+    wbCTRN,
     wbFormIDCk(GCDA, 'Clobal Cooldown Timer', [GLOB]),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP]),
     wbFormIDCk(FNAM, 'Faction', [FACT])
@@ -12623,12 +12631,14 @@ begin
       wbInteger('No Signal Static', itU8, wbBoolEnum)
     ], cpNormal, False, nil, 4),
     wbFloat(PAHD, 'Unknown Float'),
+    wbCTRN,
     wbCOCT,
     wbCNTOs,
     wbInteger(LAVT, 'Lookat Value', itU32),
     wbInteger(LAMN, 'Lookat Minimum', itU32),
     wbInteger(LAMX, 'Lookat Maximum', itU32),
     wbFloat(PAHD, 'Unknown Float'),
+    wbCTRN, //Temporary fix. Figure out how to do this in a way that isn't just duplication
     wbMNAMFurnitureMarker,
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
@@ -12746,6 +12756,7 @@ begin
     wbEDID,
     wbCNAM,
     wbString(DNAM, 'Notes'),
+    wbByteArray(FNAM, 'Unknown FNAM', 4),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbFULL
@@ -16649,8 +16660,8 @@ begin
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('Base Health', itU16),
-      wbInteger('Base Action Points', itU16),
+      wbInteger('Calculated Health', itU16),
+      wbInteger('Calculated Action Points', itU16),
       wbInteger('Far Away Model Distance', itU16),
       wbInteger('Geared Up Weapons', itU8),
       wbByteArray('Unused', 1, cpIgnore)
@@ -17477,6 +17488,8 @@ begin
       wbInteger(SNAM, 'Stage to set', itU16),
       wbLString(NAM1, 'Quest Notes'),
       wbString(SCCM, 'Comments'),
+      wbByteArray(PBLT, 'Unknown PBLT', 4),
+      wbByteArray(PBRT, 'Unknown PBRT', 4),
       wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
@@ -19090,6 +19103,7 @@ begin
       'Unknown 6' {Currently Unused}
     ])),
     wbFloat(PAHD, 'Unknown Float'),
+    wbCTRN,
     wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
     wbFormIDCK(SNAM, 'Harvest Sound', [SNDR]),
     wbStruct(PFPC, 'Ingredient Production', [
@@ -20379,6 +20393,7 @@ begin
       'Unknown 6' {Currently Unused}
     ])),
     wbFloat(PAHD, 'Unknown Float'),
+    wbCTRN,
     wbInteger(COCT, 'Holds Holotape (Count)', itU32),
     wbRArray('Holotapes',
       wbStruct(CNTO, 'Holotape', [
