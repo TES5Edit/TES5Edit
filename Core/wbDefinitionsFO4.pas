@@ -13829,8 +13829,8 @@ begin
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('Base Health', itU16),
-      wbInteger('Base Action Points', itU16),
+      wbInteger('Calculated Health', itU16),
+      wbInteger('Calculated Action Points', itU16),
       wbInteger('Far Away Model Distance', itU16),
       wbInteger('Geared Up Weapons', itU8),
       wbByteArray('Unused', 1, cpIgnore)
