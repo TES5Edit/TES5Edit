@@ -14,7 +14,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, VirtualEditTree, ExtDlgs, Menus;
+  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, VirtualEditTree, ExtDlgs, Menus,
+  SynEdit, SynMemo, xeMainForm, IniFiles;
 
 type
   TfrmLocalization = class(TForm)
@@ -47,6 +48,7 @@ type
   private
     { Private declarations }
   public
+    Settings: TMemIniFile;
     { Public declarations }
     procedure EditValue(aFileName: string; ID: integer);
   end;
@@ -59,7 +61,7 @@ implementation
 {$R *.dfm}
 
 uses
-  xeMainForm,
+  wbHelpers,
   wbLocalization;
 
 type
@@ -71,6 +73,9 @@ type
 
 procedure TfrmLocalization.FormCreate(Sender: TObject);
 begin
+  Settings := frmMain.Settings;
+  LoadFont(Settings, 'UI', 'FontViewer', memoText.Font);
+
   xeApplyFontAndScale(Self);
 
   vetStrings.NodeDataSize := SizeOf(TTreeData);
