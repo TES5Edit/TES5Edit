@@ -14,7 +14,11 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, IOUtils, StrUtils, Vcl.ComCtrls;
+  Dialogs, StdCtrls, ExtCtrls, IOUtils, StrUtils, Vcl.ComCtrls,
+  SynEdit, SynMemo, SynEditKeyCmds;
+
+type
+  TMemo = class(TSynMemo);
 
 const
   sNewScript = '<new script>';
