@@ -13829,10 +13829,10 @@ begin
       'Reputation',
       'Unknown'
     ])),
-    wbInteger(NAM2, 'Secondary Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
+    wbInteger(NAM2, 'Networking Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
       {0x00000001}  0, 'Unknown 0',
-      {0x00000002}  1, 'First Grouping',
-      {0x00000004}  2, 'Unknown 2',
+      {0x00000002}  1, 'Replicate all',
+      {0x00000004}  2, 'Replicate one',
       {0x00000008}  3, 'Network Float Value',
       {0x00000010}  4, 'Only Modified Value',
       {0x00000020}  5, 'Unknown 5',
