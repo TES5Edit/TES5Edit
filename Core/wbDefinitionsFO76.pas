@@ -13836,7 +13836,7 @@ begin
       {0x00000008}  3, 'Network Float Value',
       {0x00000010}  4, 'Only Modified Value',
       {0x00000020}  5, 'Unknown 5',
-      {0x00000040}  6, 'Unknown 6',
+      {0x00000040}  6, 'Only Base Value',
       {0x00000080}  7, 'Low Priority'
     ]))),
     wbFormIDCk(NAM3, 'Actor Value Keyword', [KYWD]), // always a KYWD
