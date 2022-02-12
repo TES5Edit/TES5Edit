@@ -12579,7 +12579,7 @@ begin
 
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2',
+      {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
       {0x00002000} 13, 'Unknown 13',
