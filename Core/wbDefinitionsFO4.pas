@@ -9046,8 +9046,8 @@ begin
 
   wbRecord(ACTI, 'Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000002}  2, 'Never Fades',
-      {0x00000004}  4, 'Non Occluder',
+      {0x00000004}  2, 'Never Fades',
+      {0x00000010}  4, 'Non Occluder',
       {0x00000040}  6, 'Unknown 6',
       {0x00000080}  7, 'Heading Marker',
       {0x00000100}  8, 'Must Update Anims',
@@ -10377,7 +10377,7 @@ begin
 
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2',
+      {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
       {0x00002000} 13, 'Unknown 13',
