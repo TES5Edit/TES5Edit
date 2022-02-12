@@ -2809,6 +2809,19 @@ begin
     Result := 1;
 end;
 
+function wbINFOGroupDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  MainRecord: IwbMainRecord;
+begin
+  Result := 0;
+  MainRecord := aElement.GetContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if (MainRecord.Flags._Flags and $40) > 0 then
+    Result := 1;
+end;
+
 function wbMGEFAssocItemDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -8977,16 +8990,47 @@ begin
 
   var wbBoneDataItem :=
     wbRStruct('Data', [
-    wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
-    // should not be sorted!!!
-    wbRArray('Bones',
-      wbRStructSK([0], 'Bone', [
-        wbString(BSMB, 'Name'),
-        wbArray(BSMS, 'Values', wbFloat('Value')).IncludeFlag(dfNotAlignable),
-        wbUnknown(BMMP)
-      ], [])
-    )
-  ], []);
+      wbRArray('Bone Datas',
+        wbRStruct('Bone Data', [
+          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
+          // should not be sorted!!!
+          wbRArray('Bone Weight Scales',
+            wbRStructSK([0], 'Bone Weight Scale', [
+              wbString(BSMB, 'Name'),
+              wbStruct(BSMS, 'Weight Scale Values', [
+                wbStruct('Thin', [
+                  wbFloat('X'),
+                  wbFloat('Y'),
+                  wbFloat('Z')
+                ]),
+                wbStruct('Muscular', [
+                  wbFloat('X'),
+                  wbFloat('Y'),
+                  wbFloat('Z')
+                ]),
+                wbStruct('Fat', [
+                  wbFloat('X'),
+                  wbFloat('Y'),
+                  wbFloat('Z')
+                ])
+              ])
+            ], [])
+          ),
+          wbInteger(BMMP, 'Bone Modifiers Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArray('Bone Modifier',
+            wbRStructSK([0], 'Bone', [
+              wbString(BSMB, 'Name'),
+              wbStruct(BSMS, 'Modifiers', [
+                wbFloat('Min Y'),
+                wbFloat('Min Z'),
+                wbFloat('Max Y'),
+                wbFloat('Max Z')
+              ])
+            ], [])
+          )
+        ],[])
+      )
+    ], []);
 
   wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
 
@@ -11326,11 +11370,11 @@ begin
     wbFloat(NAM0, 'Default Value'), // Prior to form version 81, it was either 0.0, 1.0 or 100.0, so scale or multiplier ?
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
       {0x00000001} 'Unknown 0',
-      {0x00000002} 'Unknown 1',
-      {0x00000004} 'Unknown 2',
+      {0x00000002} 'Skill',
+      {0x00000004} 'Uses Enum',
       {0x00000008} 'Don''t allow Script edits',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
+      {0x00000010} 'Is Full AV Cached',
+      {0x00000020} 'Is Permanant AV Cached',
       {0x00000040} 'Unknown 6',
       {0x00000080} 'Unknown 7',
       {0x00000100} 'Unknown 8',
@@ -13047,24 +13091,44 @@ begin
     wbEDID,
     wbVMADFragmentedINFO,
     wbStruct(ENAM, 'Response flags', [
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001} 'Start Scene on End',
-        {0x0002} 'Random',
-        {0x0004} 'Say Once',
-        {0x0008} 'Requires Player Activation',
-        {0x0010} 'Unknown 4',
-        {0x0020} 'Random End',
-        {0x0040} 'End Running Scene',
-        {0x0080} 'ForceGreet Hello',
-        {0x0100} 'Player Address',
-        {0x0200} 'Force Subtitle',
-        {0x0400} 'Can Move While Greeting',
-        {0x0800} 'No LIP File',
-        {0x1000} 'Requires post-processing',
-        {0x2000} 'Audio Output Override',
-        {0x4000} 'Has Capture',
-        {0x8000} 'Unknown 16'
-      ])),
+      wbUnion('Flags', wbINFOGroupDecider,[
+        wbInteger('Flags', itU16, wbFlags([
+          {0x0001} 'Start Scene on End',
+          {0x0002} 'Random',
+          {0x0004} 'Say Once',
+          {0x0008} 'Requires Player Activation',
+          {0x0010} 'Unknown 4',
+          {0x0020} 'Random End',
+          {0x0040} 'End Running Scene',
+          {0x0080} 'ForceGreet Hello',
+          {0x0100} 'Player Address',
+          {0x0200} 'Force Subtitle',
+          {0x0400} 'Can Move While Greeting',
+          {0x0800} 'No LIP File',
+          {0x1000} 'Requires post-processing',
+          {0x2000} 'Audio Output Override',
+          {0x4000} 'Has Capture',
+          {0x8000} 'Unknown 15'
+        ])),
+        wbInteger('Flags', itU16, wbFlags([   //Info groups
+          {0x0001} 'Unknown 0', // Any changes to the idle group removes this flag
+          {0x0002} 'Random',
+          {0x0004} 'Unknown 2', // Any changes to the idle group removes this flag
+          {0x0008} 'Force all children player activate only',
+          {0x0010} 'Unknown 4',
+          {0x0020} 'Random End',
+          {0x0040} 'Unknown 6', // Any changes to the idle group removes this flag
+          {0x0080} 'Unknown 7', // Any changes to the idle group removes this flag
+          {0x0100} 'Child infos don''t inherit reset data',
+          {0x0200} 'Force All Children Random',
+          {0x0400} 'Unknown 10', // Any changes to the idle group removes this flag
+          {0x0800} 'Don''t do all before repeating',
+          {0x1000} 'Unknown 12', // Any changes to the idle group removes this flag
+          {0x2000} 'Unknown 13', // Any changes to the idle group removes this flag
+          {0x4000} 'Unknown 14', // Any changes to the idle group removes this flag
+          {0x8000} 'Unknown 15'
+        ]))
+      ]),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
@@ -13765,8 +13829,8 @@ begin
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
     wbEmpty(DATA, 'Marker', cpNormal, True),
     wbStruct(DNAM, '', [
-      wbInteger('Base Health', itU16),
-      wbInteger('Base Action Points', itU16),
+      wbInteger('Calculated Health', itU16),
+      wbInteger('Calculated Action Points', itU16),
       wbInteger('Far Away Model Distance', itU16),
       wbInteger('Geared Up Weapons', itU8),
       wbByteArray('Unused', 1, cpIgnore)
