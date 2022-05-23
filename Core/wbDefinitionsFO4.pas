@@ -23,6 +23,7 @@ var
   wbPKDTInterruptFlags: IwbFlagsDef;
   wbSMNodeFlags: IwbFlagsDef;
 
+  wbCRCValuesEnum: IwbEnumDef;
   wbActorPropertyEnum: IwbEnumDef;
   wbAdvanceActionEnum: IwbEnumDef;
   wbStaggerEnum: IwbEnumDef;
@@ -1025,6 +1026,15 @@ var
   //wbRaceFRMI: IwbSubrecordArrayDef;
   wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
+  wbNavmeshVertices: IwbArrayDef;
+  wbNavmeshTriangles: IwbArrayDef;
+  wbNavmeshEdgeLinks: IwbArrayDef;
+  wbNavmeshDoorTypeEnum: IwbEnumDef;
+  wbNavmeshDoorTriangles: IwbArrayDef;
+  wbNavmeshCoverArray: IwbArrayDef;
+  wbNavmeshCoverTriangleMap: IwbArrayDef;
+  wbNavmeshWaypoints: IwbArrayDef;
+  wbNavmeshGrid: IwbStructDef;
   wbMNAMNAVM: IwbSubRecordDef;
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
@@ -1715,6 +1725,41 @@ begin
   Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
 
   Result := Vertex;
+end;
+
+function wbCoverLinksTo(const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  CoverArray   : IwbContainerElementRef;
+  Cover     : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Cover Array'], IwbContainerElementRef, CoverArray) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  if aInt >= CoverArray.ElementCount then
+    Exit;
+  if aInt < 0 then
+    Exit;
+
+  Cover := CoverArray.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Cover;
 end;
 
 function wbVertexToInt(aVertex: Integer; const aString: string; const aElement: IwbElement): Int64;
@@ -2964,7 +3009,7 @@ begin
   if not Supports(Container, IwbSubRecord, SubRecord) then
     Exit;
 
-  Element := SubRecord.ElementByName['Parent Worldspace'];
+  Element := SubRecord.ElementByName['Pathing Worldspace'];
   if not Assigned(Element) then
     Exit;
 
@@ -2982,7 +3027,7 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
 
   Container := aElement.Container;
 
-  Parent := Container.ElementByName['Parent Worldspace'];
+  Parent := Container.ElementByName['Pathing Worldspace'];
 
   if not Assigned(Parent) then
     Exit;
@@ -6607,8 +6652,17 @@ begin
 
   wbIgnoreRecords.Add(XXXX);
 
-  wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
-  wbXRGB := wbByteArray(XRGB, 'Ragdoll Biped Data');
+  wbXRGD := wbArray(XRGD, 'Ragdoll Data', wbStruct('Ragdoll Data', [
+    wbInteger('Bone Id', itU8),
+    wbByteArray('Unknown/Unused', 3),
+    wbPosRot
+  ]));
+
+  wbXRGB := wbStruct(XRGB, 'Ragdoll Biped Rotation', [
+    wbFloat('X'),
+    wbFloat('Y'),
+    wbFloat('Z')
+  ]);
 
   wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
   wbSoundLevelEnum := wbEnum([
@@ -7584,178 +7638,392 @@ begin
   ]);
   wbXRNK := wbInteger(XRNK, 'Owner Faction Rank', itS32);
 
-  if wbSimpleRecords then
-    wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-      wbInteger('Version', itU32).SetDefaultNativeValue(15),
-      wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),
-      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbUnion('Parent', wbNVNMParentDecider, [
+  wbNavmeshEdgeLinks := wbArray('Edge Links',
+		wbStruct('Edge Link', [
+			wbInteger('Type', itU32,
+				wbEnum([
+					'Portal',
+					'Ledge Up',
+					'Ledge Down',
+					'Enable/Disable Portal'
+				])
+			),
+			wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
+			wbInteger('Triangle Index', itS16, nil, cpIgnore),
+			wbByteArray('Edge Index', 1, cpIgnore) // if form ver > 127
+		], cpIgnore)
+	, -1, cpIgnore);
+
+  wbCRCValuesEnum :=
+    wbEnum([],[
+      0, 'None',
+      $E37A15ED, 'BGSAutoWeaponSoundDef',
+      $431A6554, 'BGSCompoundSoundDef',
+      $C378F623, 'BGSMusicPaletteTrack',
+      $D5C4A9A1, 'BGSMusicSilenceTrack',
+      $48E0D76E, 'BGSMusicSingleTrack',
+      $0A54EF1E, 'BGSStandardSoundDef',
+      $4F7B8318, 'BSDelayEffect',
+      $BE044886, 'BSOverdrive',
+      $31ED3405, 'BSPathingRequest',
+      $DBEB617C, 'BSPathingSolution',
+      $F97B5AFF, 'BSPathingStreamSimpleBufferRead',
+      $AB26B9B8, 'BSPathingStreamSimpleBufferWrite',
+      $7F5F57EF, 'BSStateVariableFilter',
+      $809BB1D2, 'CharacterBumper',
+      $95D2D9DF, 'Combat Area Shape',
+      $68394EFB, 'Combat Cluster Shape',
+      $87AA1C6F, 'CombatAcquireSearchDebugData',
+      $A030D386, 'CombatAimController',
+      $846535C7, 'CombatAnimatedPath',
+      $6F0DBD19, 'CombatApproachTargetPathController',
+      $55B4FA55, 'CombatAreaHoldPosition',
+      $7B25C155, 'CombatAreaReference',
+      $A317E805, 'CombatAreaShape',
+      $FEAABDA9, 'CombatAreaStandard',
+      $8B10F78D, 'CombatChangePositionPathController',
+      $EF05762C, 'CombatChargingSearch',
+      $9584C5C0, 'CombatCluster',
+      $2B7E114F, 'CombatCoverLocation',
+      $559B4093, 'CombatCoverSearch',
+      $7CA8F2CE, 'CombatCoverSearchDebugData',
+      $57B4D03B, 'CombatCoverSearchResult',
+      $2E50772F, 'CombatCoveredPath',
+      $C7E6049B, 'CombatCoveredPathDebugData',
+      $0AED92D0, 'CombatDebugTaskPath',
+      $C7C41CEE, 'CombatDisableActionController',
+      $C96A23BE, 'CombatDisableAimController',
+      $1DF9F546, 'CombatEnterCoverPathController',
+      $D6374788, 'CombatFindCoverPathSpeedController',
+      $96B7BCD6, 'CombatFlankingSearch',
+      $F5CD16FD, 'CombatFollowTargetPathController',
+      $D83702D1, 'CombatInventoryItemGrenade',
+      $470B2A9C, 'CombatInventoryItemMagic',
+      $D56B2284, 'CombatInventoryItemMagicT',
+      $C899CB5A, 'CombatInventoryItemMelee',
+      $1D582181, 'CombatInventoryItemOneHandedBlock',
+      $3EAA4FAC, 'CombatInventoryItemPotion',
+      $312EB771, 'CombatInventoryItemRanged',
+      $1024EE0B, 'CombatInventoryItemScroll',
+      $7BC86AF8, 'CombatInventoryItemShield',
+      $FB1142D7, 'CombatInventoryItemStaff',
+      $0F8F0326, 'CombatInventoryItemThrown',
+      $1ED9D566, 'CombatInventoryItemTorch',
+      $486C1211, 'CombatMagicCasterArmor',
+      $9A3CBA3D, 'CombatMagicCasterBoundItem',
+      $78ED8FE1, 'CombatMagicCasterChameleon',
+      $A44E7822, 'CombatMagicCasterCloak',
+      $ADFCB0B6, 'CombatMagicCasterDisarm',
+      $FB5C05A3, 'CombatMagicCasterInvisibility',
+      $43CE2FC5, 'CombatMagicCasterLight',
+      $914FA741, 'CombatMagicCasterOffensive',
+      $9B4701EC, 'CombatMagicCasterParalyze',
+      $9FEC0403, 'CombatMagicCasterReanimate',
+      $E10AA658, 'CombatMagicCasterRestore',
+      $B02A2102, 'CombatMagicCasterScript',
+      $11BC94E6, 'CombatMagicCasterStagger',
+      $6350CAD2, 'CombatMagicCasterSummon',
+      $11B9D25A, 'CombatMagicCasterTargetEffect',
+      $D5D6FD22, 'CombatMagicCasterWard',
+      $02BCD258, 'CombatMantlePathController',
+      $A1DCDA4C, 'CombatMatchTargetAimController',
+      $7C7B9264, 'CombatMeleeAimController',
+      $D3AD5C9F, 'CombatMeleeDebugData',
+      $F11AAE4C, 'CombatMovementRequestFollowActor',
+      $AD7B48E4, 'CombatPath',
+      $6BD9843E, 'CombatPathBuilderOpen',
+      $4E03BC1E, 'CombatPathBuilderStandard',
+      $65645406, 'CombatPathDestinationActor',
+      $33F7418D, 'CombatPathDestinationFollowActor',
+      $2055CFF4, 'CombatPathDestinationLocation',
+      $1BCF96F2, 'CombatPathDestinationLocations',
+      $C08050E3, 'CombatPathDestinationNone',
+      $41E883D2, 'CombatPathDestinationRef',
+      $68D205C8, 'CombatPathDestinationRefs',
+      $F5C30381, 'CombatPathMovementMessage',
+      $285BBFF8, 'CombatPathMovementMessageEvent',
+      $31C0BCFD, 'CombatPathRequestFlight',
+      $72711042, 'CombatPathRequestFlyingAttack',
+      $458814F2, 'CombatPathRequestGeneric',
+      $542592AB, 'CombatPathRequestHover',
+      $83E7618B, 'CombatPathRequestLanding',
+      $8BC9C8BE, 'CombatPathRequestMultiGoal',
+      $939738E5, 'CombatPathRequestOrbit',
+      $F9ED5462, 'CombatPathRequestRotatePath',
+      $5255FDDB, 'CombatPathRequestStandard',
+      $5D271A18, 'CombatPathRequestStraightPath',
+      $2DF62611, 'CombatPathRequestWeightedMultiGoal',
+      $5ADEC169, 'CombatPathTeleportEvent',
+      $2A16AB0E, 'CombatPathingDebugData',
+      $AC165091, 'CombatPathingGoalPolicyAvoidThreat',
+      $4775F3ED, 'CombatPathingGoalPolicyCharge',
+      $90F76CBA, 'CombatPathingGoalPolicyCovered',
+      $2F67CD8B, 'CombatPathingGoalPolicyDistract',
+      $775CAFBC, 'CombatPathingGoalPolicyFindAttackLocation',
+      $B393D20B, 'CombatPathingGoalPolicyFindCover',
+      $DD928490, 'CombatPathingGoalPolicyFindFlankCover',
+      $07CF1B5B, 'CombatPathingGoalPolicyFindPotentialCoverLocations',
+      $FB89798E, 'CombatPathingGoalPolicyFindTargetLocation',
+      $C98413A5, 'CombatPathingGoalPolicyFindValidLocation',
+      $B46EB5E3, 'CombatPathingGoalPolicyFlank',
+      $1C9CBADA, 'CombatPathingGoalPolicyFlankDistant',
+      $6FBADB25, 'CombatPathingGoalPolicyFlee',
+      $0395ACD0, 'CombatPathingGoalPolicyFollow',
+      $958C97AB, 'CombatPathingGoalPolicyInvestigateLocation',
+      $DBEB81EA, 'CombatPathingGoalPolicyLocation',
+      $5F1FE20D, 'CombatPathingGoalPolicyRetreat',
+      $7477BDEE, 'CombatPathingGoalPolicyReturnToCombatArea',
+      $D40A680C, 'CombatPathingGoalPolicySearch',
+      $9C6AE8B3, 'CombatPathingGoalPolicySearchWander',
+      $8E3DC101, 'CombatPathingGoalPolicyWithdraw',
+      $0F0027BA, 'CombatPathingRequestAdapter',
+      $39C42102, 'CombatPathingRequestCovered',
+      $A0C5B435, 'CombatPathingRequestGeneric',
+      $AF34AC95, 'CombatPathingRequestMultiGoal',
+      $E8E35A0B, 'CombatPathingRequestStandard',
+      $69062930, 'CombatPathingSearchArea',
+      $5EF1755C, 'CombatPathingSearchPolicyCharge',
+      $D4D9B6DE, 'CombatPathingSearchPolicyCovered',
+      $883818FA, 'CombatPathingSearchPolicyDistract',
+      $8F53D86E, 'CombatPathingSearchPolicyFlank',
+      $30EA3DD5, 'CombatPathingSearchPolicyStandard',
+      $29621470, 'CombatPathingSearchPolicyWithdraw',
+      $123DE538, 'CombatPathingTweener',
+      $6922DDA0, 'CombatPositionTracker',
+      $917A6EF0, 'CombatProjectileAimController',
+      $02A8CFAA, 'CombatProjectileDebugData',
+      $53015DD5, 'CombatSearchLockData',
+      $9E9E03D5, 'CombatSharedPath',
+      $A12F0B15, 'CombatSuppressiveFireBehavior',
+      $1130E51E, 'CombatTargetLocation',
+      $FA292C9C, 'CombatTargetLocationSearch',
+      $9E4331C3, 'CombatTargetLocationSearchResult',
+      $875BE9D6, 'CombatTargetSelector',
+      $BC7BB1F7, 'CombatTargetSelectorFixed',
+      $C9D0E756, 'CombatTargetSelectorPreferred',
+      $CAE350CE, 'CombatTargetSelectorRandom',
+      $859B71C3, 'CombatTargetSelectorStandard',
+      $BFDC6737, 'CombatThreatExplosion',
+      $14502E3C, 'CombatThreatLOF',
+      $6615A2A7, 'CombatThreatMelee',
+      $0FAF60A1, 'CombatThreatProjectile',
+      $3FB5D95A, 'CombatTrackTargetAimController',
+      $AE93F634, 'CombatTunnelPathController',
+      $4C8390CB, 'CombatViewController',
+      $37E32252, 'CombatViewControllerGlance',
+      $532864C5, 'CombatViewControllerPath',
+      $FC82CCC8, 'CombatViewControllerStandard',
+      $F9820712, 'Covered Path Shape',
+      $D841AAB1, 'CoveredPath',
+      $75CF9458, 'DiveBombPathController',
+      $61C74162, 'EquippedWeaponData',
+      $532CFC76, 'MasterFilePathingStreamGetSize',
+      $34BE0F3F, 'MasterFilePathingStreamWriteToBuffer',
+      $37A2C25C, 'MovementMessageActivateDoor',
+      $FA7BA377, 'MovementMessageActorCollision',
+      $6AF86376, 'MovementMessageApproachingDoor',
+      $3E15B4C8, 'MovementMessageBlocked',
+      $0B43ED3B, 'MovementMessageFreezeDirection',
+      $0E87DC00, 'MovementMessageJump',
+      $634FEDCD, 'MovementMessageNewPath',
+      $51F5D7C4, 'MovementMessageNewPathImmediate',
+      $998F57D7, 'MovementMessagePathComplete',
+      $C4F6CE8B, 'MovementMessagePathFailed',
+      $E6639511, 'MovementMessagePlayIdle',
+      $D5536661, 'MovementMessageSetStaticPath',
+      $2390DA67, 'MovementMessageWarpToLocation',
+      $EC64F33C, 'MovementMessageWarpToMultiple',
+      $1A269172, 'MovementNodeAvoidance',
+      $4B90183B, 'MovementNodeGoal',
+      $C5D1280C, 'MovementParameters',
+      $28F7DCBC, 'MovementParametersFixed',
+      $C5674ECD, 'NoSupport',
+      $3CA0E9A5, 'PathingCell',
+      $F3738BE4, 'PathingDoor',
+      $DDA52658, 'PathingLockData',
+      $E3B00E33, 'PathingRequest',
+      $74D85EEB, 'PathingRequestClosePoint',
+      $AB4315F3, 'PathingRequestClosestGoal',
+      $73E51806, 'PathingRequestCover',
+      $CE6327FA, 'PathingRequestFlee',
+      $34F15F3C, 'PathingRequestFly',
+      $511702A5, 'PathingRequestFlyAction',
+      $3B105383, 'PathingRequestFlyHover',
+      $F7EE75F0, 'PathingRequestFlyLand',
+      $FCA2F9CD, 'PathingRequestFlyOrbit',
+      $79C6C498, 'PathingRequestFlyTakeOff',
+      $57E72805, 'PathingRequestHide',
+      $55CADA54, 'PathingRequestLOS',
+      $282562CA, 'PathingRequestOptimalLocation',
+      $5BBB02C7, 'PathingRequestRotate',
+      $1DB17347, 'PathingRequestSafeStraightLine',
+      $AF52218B, 'PathingRequestStopMoving',
+      $42CFA213, 'PathingStreamLoadGame',
+      $D0FD7773, 'PathingStreamMasterFileRead',
+      $0B8CB5C5, 'PathingStreamSaveGame',
+      $9011F16A, 'QuestPathingRequest',
+      $C3CCD0FC, 'Water'
+    ]);
+
+	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
+		wbStructSK([0, 2], 'Door Triangle', [
+			wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
+			wbInteger('Door Type', itU32, wbCRCValuesEnum), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
+			wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
+		])
+	, -1);
+
+	if wbSimpleRecords then begin
+		wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 12), -1);
+		wbNavmeshTriangles := wbArray('Triangles', wbByteArray('Triangle', 21), -1);
+		wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 16), -1);
+		wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 8), -1);
+		wbNavmeshWaypoints := wbArray('Waypoints', wbByteArray('Waypoint', 18), -1);
+		wbNavmeshGrid := wbStruct('Navmesh Grid', [wbUnknown])
+	end else begin
+		wbNavmeshVertices := wbArray('Vertices',
+			wbStruct('Vertex', [
+				wbFloat('X'),
+				wbFloat('Y'),
+				wbFloat('Z')
+			]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
+		, -1);
+
+		wbNavmeshTriangles := wbArray('Triangles',
+			wbStruct('Triangle', [
+				wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+				wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+				wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
+				wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
+				wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
+				wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
+				wbFloat('Height'), // this and next if form ver > 57
+				wbByteArray('Flag Bytes?', 5)
+				{ wbInteger('Unknown', itU8), // flags
+				wbInteger('Flags', itU16, wbFlags([
+					'Edge 0-1 link',      //$0001 1
+					'Edge 1-2 link',      //$0002 2
+					'Edge 2-0 link',      //$0004 4
+					'',                   //$0008 8
+					'No Large Creatures',          //$0010 16   used in CK source according to Nukem
+					'Overlapping',        //$0020 32
+					'Preferred',          //$0040 64
+					'',                   //$0080 128
+					'Unknown 9',          //$0100 256  used in CK source according to Nukem
+					'Water',              //$0200 512
+					'Door',               //$0400 1024
+					'Found',              //$0800 2048
+					'Unknown 13',         //$1000 4096 used in CK source according to Nukem
+					'',                   //$2000 \
+					'',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
+					''                    //$8000 /
+				])),
+				{ Flags below are wrong. The first 4 bit are an enum as follows:
+				0000 = Open Edge No Cover
+				1000 = wall no cover
+				0100 = ledge cover
+				1100 = UNUSED
+				0010 = cover  64
+				1010 = cover  80
+				0110 = cover  96
+				1110 = cover 112
+				0001 = cover 128
+				1001 = cover 144
+				0101 = cover 160
+				1101 = cover 176
+				0011 = cover 192
+				1011 = cover 208
+				0111 = cover 224
+				1111 = max cover
+				then 2 bit flags, then another such enum, and the rest is probably flags.
+				Can't properly represent that with current record definition methods.
+				}
+				{ wbInteger('Cover Flags', itU16, wbFlags([
+					'Edge 0-1 Cover Value 1/4',
+					'Edge 0-1 Cover Value 2/4',
+					'Edge 0-1 Cover Value 3/4',
+					'Edge 0-1 Cover Value 4/4',
+					'Edge 0-1 Left',
+					'Edge 0-1 Right',
+					'Edge 1-2 Cover Value 1/4',
+					'Edge 1-2 Cover Value 2/4',
+					'Edge 1-2 Cover Value 3/4',
+					'Edge 1-2 Cover Value 4/4',
+					'Edge 1-2 Left',
+					'Edge 1-2 Right',
+					'Unknown 13',
+					'Unknown 14',
+					'Unknown 15',
+					'Unknown 16'
+				]))  }
+			])
+		, -1);
+
+		wbNavmeshCoverArray := wbArray('Cover Array',  // if navmesh version gt 12
+			wbStruct('Cover', [
+				wbInteger('Vertex 1', itU16).SetLinksToCallback(wbVertexLinksTo),
+				wbInteger('Vertex 2', itU16).SetLinksToCallback(wbVertexLinksTo),
+				wbByteArray('Data', 4 {, wbFlags([]) ? })
+			])
+		, -1);
+
+		wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings',
+			wbStruct('Cover Triangle Map', [
+				wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
+				wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
+			])
+		, -1);
+
+		wbNavmeshWaypoints := wbArray('Waypoints',  // if navmesh version gt 11
+			wbStruct('Waypoint', [
+				wbFloat('X'),
+				wbFloat('Y'),
+				wbFloat('Z'),
+				wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
+				wbInteger('Flags', itU32)
+			])
+		, -1);
+
+		wbNavmeshGrid := wbStruct('Navmesh Grid', [
+			wbInteger('Navmesh Grid Size', itU32),  // max 12
+			wbFloat('Max X Distance'),
+			wbFloat('Max Y Distance'),
+			wbFloat('Min X'),
+			wbFloat('Min Y'),
+			wbFloat('Min Z'),
+			wbFloat('Max X'),
+			wbFloat('Max Y'),
+			wbFloat('Max Z'),
+			wbArray('NavMesh Grid Arrays',
+				wbArray('NavMeshGridCell',
+					wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+				, -1).IncludeFlag(dfNotAlignable)
+			).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+		])
+	end;
+
+	wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
+	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
+	  wbStruct('Pathing Cell', [
+      wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+      wbFormIDCk('Pathing Worldspace', [WRLD, NULL]),
+      wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
         wbStruct('Coordinates', [
           wbInteger('Grid Y', itS16),
           wbInteger('Grid X', itS16)
         ]),
-        wbFormIDCk('Parent Cell', [CELL])
-      ]),
-      wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfNotAlignable),
-      wbArray('Triangles', wbByteArray('Triangle', 21), -1).IncludeFlag(dfNotAlignable),
-      wbArray('Edge Links',
-        wbStruct('Edge Link', [
-          wbInteger('Unknown', itU32),
-          wbFormIDCk('Mesh', [NAVM]),
-          wbInteger('Triangle', itS16),
-          wbInteger('Unknown', itU8)
-        ])
-      , -1).IncludeFlag(dfNotAlignable),
-      wbArrayS('Door Triangles',
-        wbStructSK([0, 2], 'Door Triangle', [
-          wbInteger('Triangle before door', itU16),
-          wbInteger('DTUnknown', itU32),
-          wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
-        ])
-      , -1).IncludeFlag(dfNotAlignable),
-      wbUnknown
-    ])
-  else
-    wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-      wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
-      wbStruct('Pathing Cell', [
-        wbByteArray('Magic', 4).SetDefaultEditValue('3C A0 E9 A5'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
-        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-        wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
-          wbStruct('Coordinates', [
-            wbInteger('Grid Y', itS16),
-            wbInteger('Grid X', itS16)
-          ]),
-          wbFormIDCk('Parent Cell', [CELL])
-        ])
-      ]),
-      wbArray('Vertices', wbStruct('Vertex', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable),
-      wbArray('Triangles',
-        wbStruct('Triangle', [
-          wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
-          wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
-          wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
-          wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
-          wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
-          wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
-          wbFloat('Height'), // this and next if form ver > 57
-          wbInteger('Unknown', itU8), // flags
-          wbInteger('Flags', itU16, wbFlags([
-            'Edge 0-1 link',      //$0001 1
-            'Edge 1-2 link',      //$0002 2
-            'Edge 2-0 link',      //$0004 4
-            '',                   //$0008 8
-            'No Large Creatures',          //$0010 16   used in CK source according to Nukem
-            'Overlapping',        //$0020 32
-            'Preferred',          //$0040 64
-            '',                   //$0080 128
-            'Unknown 9',          //$0100 256  used in CK source according to Nukem
-            'Water',              //$0200 512
-            'Door',               //$0400 1024
-            'Found',              //$0800 2048
-            'Unknown 13',         //$1000 4096 used in CK source according to Nukem
-            '',                   //$2000 \
-            '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
-            ''                    //$8000 /
-          ])),
-{ Flags below are wrong. The first 4 bit are an enum as follows:
-0000 = Open Edge No Cover
-1000 = wall no cover
-0100 = ledge cover
-1100 = UNUSED
-0010 = cover  64
-1010 = cover  80
-0110 = cover  96
-1110 = cover 112
-0001 = cover 128
-1001 = cover 144
-0101 = cover 160
-1101 = cover 176
-0011 = cover 192
-1011 = cover 208
-0111 = cover 224
-1111 = max cover
-then 2 bit flags, then another such enum, and the rest is probably flags.
-Can't properly represent that with current record definition methods.
-}
-            wbInteger('Cover Flags', itU16, wbFlags([
-              'Edge 0-1 Cover Value 1/4',
-              'Edge 0-1 Cover Value 2/4',
-              'Edge 0-1 Cover Value 3/4',
-              'Edge 0-1 Cover Value 4/4',
-              'Edge 0-1 Left',
-              'Edge 0-1 Right',
-              'Edge 1-2 Cover Value 1/4',
-              'Edge 1-2 Cover Value 2/4',
-              'Edge 1-2 Cover Value 3/4',
-              'Edge 1-2 Cover Value 4/4',
-              'Edge 1-2 Left',
-              'Edge 1-2 Right',
-              'Unknown 13',
-              'Unknown 14',
-              'Unknown 15',
-              'Unknown 16'
-            ]))
-        ])
-      , -1).IncludeFlag(dfNotAlignable),
-      wbArray('Edge Links',
-        wbStruct('Edge Link', [
-          wbByteArray('Unknown', 4, cpIgnore),
-          wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
-          wbInteger('Triangle', itS16, nil, cpIgnore),
-          wbByteArray('Unknown', 1, cpIgnore) // if form ver > 127
-        ], cpIgnore)
-      , -1, cpIgnore).IncludeFlag(dfNotAlignable),
-      wbArrayS('Door Triangles',
-        wbStructSK([0, 2], 'Door Triangle', [
-          wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-          wbInteger('DTUnknown', itU32), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
-          wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
-        ])
-      , -1),
-      wbArray('Unknown 5',  // if navmesh version gt 12
-        wbStruct('Unknown', [
-          wbInteger('Unknown', itU16),
-          wbInteger('Unknown', itU16),
-          wbInteger('Unknown', itU32 {, wbFlags([]) ? })
-        ])
-      , -1).IncludeFlag(dfNotAlignable),
-      wbArray('Unknown 6',
-        wbStruct('Unknown', [
-          wbInteger('Unknown', itU16), //not triangle or vertex
-          wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
-        ])
-      , -1).IncludeFlag(dfNotAlignable),
-      wbArray('Waypoints',  // if navmesh version gt 11
-        wbStruct('Waypoint', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z'),
-          wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
-          wbInteger('Unknown', itU32)
-        ])
-      , -1).IncludeFlag(dfNotAlignable),
-      wbStruct('Navmesh Grid', [
-        wbInteger('Navmesh Grid Size', itU32),  // max 12
-        wbFloat('Max X Distance'),
-        wbFloat('Max Y Distance'),
-        wbFloat('Min X'),
-        wbFloat('Min Y'),
-        wbFloat('Min Z'),
-        wbFloat('Max X'),
-        wbFloat('Max Y'),
-        wbFloat('Max Z'),
-        wbArray('NavMesh Grid Arrays',
-          wbArray('NavMeshGridCell',
-            wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
-          , -1).IncludeFlag(dfNotAlignable)
-        ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+        wbFormIDCk('Pathing Cell', [CELL])
       ])
-    ]);
+	  ]),
+	  wbNavmeshVertices.IncludeFlag(dfNotAlignable),
+	  wbNavmeshTriangles.IncludeFlag(dfNotAlignable),
+	  wbNavmeshEdgeLinks.IncludeFlag(dfNotAlignable),
+	  wbNavmeshDoorTriangles.IncludeFlag(dfNotAlignable),
+	  wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
+	  wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
+	  wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
+	  wbNavmeshGrid
+	]);
 
   wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
     wbFormID('Reference'),
@@ -10008,7 +10276,8 @@ begin
       'No "To" Text'
     ]), cpNormal, True),
     wbLStringKC(ONAM, 'Alternate Text - Open', 0, cpTranslate),
-    wbLStringKC(CNAM, 'Alternate Text - Close', 0, cpTranslate)
+    wbLStringKC(CNAM, 'Alternate Text - Close', 0, cpTranslate),
+    wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
 
   wbBlendModeEnum := wbEnum([
@@ -10755,14 +11024,16 @@ begin
               wbArray('Vertices', wbByteArray('Vertex', 12), -1)
             ])
           ]),
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-          wbUnion('Parent', wbNAVIParentDecider, [
-            wbStruct('Coordinates', [
-              wbInteger('Grid Y', itS16),
-              wbInteger('Grid X', itS16)
-            ]),
-            wbFormIDCk('Parent Cell', [CELL])
+          wbStruct('Pathing Cell', [
+            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
+            wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+            wbUnion('Parent', wbNAVIParentDecider, [
+              wbStruct('Coordinates', [
+                wbInteger('Grid Y', itS16),
+                wbInteger('Grid X', itS16)
+              ]),
+              wbFormIDCk('Parent Cell', [CELL])
+            ])
           ])
         ])
       ),
@@ -10798,15 +11069,16 @@ begin
       wbRArray('Navigation Map Infos',
         wbStruct(NVMI, 'Navigation Map Info', [
           wbFormIDCk('Navigation Mesh', [NAVM]),
-          wbByteArray('Unknown', 4),
+          wbByteArray('Unknown 1', 4), //Only the first byte is used
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z'),
-          wbInteger('Preferred Merges Flag', itU32),
+          wbFloat('Unknown float 2'),
+          //wbInteger('Preferred Merges Flag', itU32),
           wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
           wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
           wbArray('Linked Doors', wbStruct('Door', [
-            wbByteArray('Unknown', 4),
+            wbInteger('Door Type', itu32, wbNavmeshDoorTypeEnum),
             wbFormIDCk('Door Ref', [REFR])
           ]), -1),
           wbInteger('Is Island', itU8, wbBoolEnum),
@@ -10831,14 +11103,16 @@ begin
               ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1)
             ])
           ]),
-          wbByteArray('Unknown', 4),
-          wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-          wbUnion('Parent', wbNAVIParentDecider, [
-            wbStruct('Coordinates', [
-              wbInteger('Grid Y', itS16),
-              wbInteger('Grid X', itS16)
-            ]),
-            wbFormIDCk('Parent Cell', [CELL])
+          wbStruct('Pathing Cell', [
+            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
+            wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+            wbUnion('Parent', wbNAVIParentDecider, [
+              wbStruct('Coordinates', [
+                wbInteger('Grid Y', itS16),
+                wbInteger('Grid X', itS16)
+              ]),
+              wbFormIDCk('Parent Cell', [CELL])
+            ])
           ])
         ])
       ),
@@ -16264,8 +16538,8 @@ begin
       wbFloat('On Lightning Strike - Threshold'),
       wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
       wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbByteArray('Unknown', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbFloat('Unknown'))
+      wbFromVersion(130, wbByteArray('Unused', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbFloat('Unused'))
     ], cpNormal, False),
     wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
     wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
@@ -16541,7 +16815,13 @@ begin
     wbRArray('Unknown',
       wbRStruct('Unknown', [
         wbInteger(INDX, 'Index', itU32),
-        wbRArray('Unknown', wbUnknown(DATA)),
+        wbRArray('Unknown datas',
+          wbStruct(DATA, 'Unknown data', [
+            wbByteArray('Unknown 1',2),
+            wbByteArray('Unknown 2',2),
+            wbByteArray('Unknown 4',4)
+          ])
+        ),
         wbUnknown(INTV),
         wbString(NAM1, 'Model')
       ], [])
