@@ -9064,8 +9064,7 @@ begin
 				wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
 				wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
 				wbFloat('Height'), // this and next if form ver > 57
-        wbByteArray('Flag Bytes?', 5)
-				{ wbInteger('Unknown', itU8), // flags
+        wbInteger('Unknown', itU8), // flags
 				wbInteger('Flags', itU16, wbFlags([
 					'Edge 0-1 link',      //$0001 1
 					'Edge 1-2 link',      //$0002 2
@@ -9104,7 +9103,7 @@ begin
 				then 2 bit flags, then another such enum, and the rest is probably flags.
 				Can't properly represent that with current record definition methods.
 				}
-				{ wbInteger('Cover Flags', itU16, wbFlags([
+        wbInteger('Cover Flags', itU16, wbFlags([
 					'Edge 0-1 Cover Value 1/4',
 					'Edge 0-1 Cover Value 2/4',
 					'Edge 0-1 Cover Value 3/4',
@@ -9121,7 +9120,7 @@ begin
 					'Unknown 14',
 					'Unknown 15',
 					'Unknown 16'
-				]))  }
+				]))
 			])
 		, -1);
 
@@ -21107,10 +21106,10 @@ begin
     wbInteger(QMDI, 'Index', itU16),
     wbFormID(QMDQ, 'Associated Quest'),
     wbFormID(QMDP, 'Parent Quest'),
-    wbInteger(QMDT, 'QMDT - Unknown 2 Bytes', itU16),
+    wbInteger(QMDT, 'Unknown Timer', itU16),
     wbString(QMDN, 'Notes'),
-    wbInteger(QMPO, 'Some Objective', itU16),
-    wbByteArray(QMOD, 'QMOD - Unknown 4 Bytes', 4),
+    wbInteger(QMPO, 'Unknown Objective', itU16),
+    wbInteger(QMOD, 'Objective Count', itU32),
     wbRArray('Module Objectives',
       wbRStruct('Module Objective', [
         wbInteger(QMOI, 'Index', itU16),
@@ -21119,18 +21118,18 @@ begin
         wbByteArray(QMTR, 'QMTR - Unknown 4 Bytes', 4)
       ],[])
     ),
-    wbByteArray(QMAD, 'QMAD - Unknown 4 Bytes', 4),
+    wbInteger(QMAD, 'Alias Count', itU32),
     wbRArray('Module Aliases',
       wbRStruct('Module Alias', [
-        wbByteArray(QMAI, 'QMAI - Unknown 2 Bytes', 4),
-        wbByteArray(QMAO, 'QMAO - Unknown 2 Bytes', 4)
+        wbInteger(QMAI, 'Index', itU32),
+        wbInteger(QMAO, 'Parent Quest Alias', itU32)
       ],[])
     ),
-    wbByteArray(QMSD, 'QMSD - Unknown 4 Bytes', 4),
+    wbInteger(QMSD, 'Stage Count', itU32),
     wbRArray('Module Stages',
       wbRStruct('Module Stage', [
-        wbByteArray(QMSI, 'QMSI - Unknown 2 Bytes', 2),
-        wbByteArray(QMSO, 'QMSO - Unknown 2 Bytes', 2)
+        wbInteger(QMSI, 'Index', itU16),
+        wbInteger(QMSO, 'Parent Quest Stage', itU16)
       ],[])
     )
   ]);
@@ -21142,8 +21141,8 @@ begin
 
   wbRecord(DCGF, 'Daily Content Group', [
     wbEDID,
-    wbRArray('DCGQ Array',
-      wbFormID(DCGQ, 'DCGQ - Unknown FormID')
+    wbRArray('Quest List',
+      wbFormID(DCGQ, 'Quest')
     ),
     wbByteArray(DCGS, 'DCGS - Unknown 4 bytes', 4),
     wbFormID(DCGL, 'Location'),

@@ -7898,8 +7898,7 @@ begin
 				wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
 				wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
 				wbFloat('Height'), // this and next if form ver > 57
-				wbByteArray('Flag Bytes?', 5)
-				{ wbInteger('Unknown', itU8), // flags
+				wbInteger('Unknown', itU8), // flags
 				wbInteger('Flags', itU16, wbFlags([
 					'Edge 0-1 link',      //$0001 1
 					'Edge 1-2 link',      //$0002 2
@@ -7938,7 +7937,7 @@ begin
 				then 2 bit flags, then another such enum, and the rest is probably flags.
 				Can't properly represent that with current record definition methods.
 				}
-				{ wbInteger('Cover Flags', itU16, wbFlags([
+				wbInteger('Cover Flags', itU16, wbFlags([
 					'Edge 0-1 Cover Value 1/4',
 					'Edge 0-1 Cover Value 2/4',
 					'Edge 0-1 Cover Value 3/4',
@@ -7955,7 +7954,7 @@ begin
 					'Unknown 14',
 					'Unknown 15',
 					'Unknown 16'
-				]))  }
+				]))
 			])
 		, -1);
 
