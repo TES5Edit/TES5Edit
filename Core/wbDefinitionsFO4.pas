@@ -7868,7 +7868,7 @@ begin
 	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
 		wbStructSK([0, 2], 'Door Triangle', [
 			wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-			wbInteger('Door Type', itU32, wbCRCValuesEnum), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
+			wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
 			wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
 		])
 	, -1);
@@ -8004,7 +8004,7 @@ begin
 	wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
 	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
 	  wbStruct('Pathing Cell', [
-      wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+      wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
       wbFormIDCk('Pathing Worldspace', [WRLD, NULL]),
       wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
         wbStruct('Coordinates', [
