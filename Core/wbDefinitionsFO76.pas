@@ -3929,7 +3929,7 @@ begin
 
   Container := aElement.Container;
 
-  Parent := Container.ElementByName['DTUnknown'];
+  Parent := Container.ElementByName['Door Type'];
 
   if not Assigned(Parent) then
     Exit;
@@ -9246,7 +9246,7 @@ begin
 	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
 		wbStructSK([0, 2], 'Door Triangle', [
 			wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-			wbInteger('DTUnknown', itU32).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
+ 			wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
 			wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
 		])
 	, -1);

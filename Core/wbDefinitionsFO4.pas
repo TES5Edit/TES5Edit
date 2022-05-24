@@ -3049,7 +3049,7 @@ begin
 
   Container := aElement.Container;
 
-  Parent := Container.ElementByName['DTUnknown'];
+  Parent := Container.ElementByName['Door Type'];
 
   if not Assigned(Parent) then
     Exit;
