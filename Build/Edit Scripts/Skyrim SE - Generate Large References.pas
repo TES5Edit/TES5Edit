@@ -158,7 +158,7 @@ begin
   rnam := ElementAssign(ElementByPath(rnam, 'References'), HighInteger, nil, False);
   SetElementNativeValues(rnam, 'X', Cell.x);
   SetElementNativeValues(rnam, 'Y', Cell.y);
-  SetElementNativeValues(rnam, 'Ref', GetLoadOrderFormID(e));
+  SetElementEditValues(rnam, 'Ref', Name(e));
 end;
 
 //============================================================================
