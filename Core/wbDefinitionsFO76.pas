@@ -476,6 +476,7 @@ const
   FPRT : TwbSignature = 'FPRT'; { New to Skyrim }
   FSTP : TwbSignature = 'FSTP';
   FSTS : TwbSignature = 'FSTS';
+  FTAG : TwbSignature = 'FTAG'; { New To Fallout 76 }
   FTSF : TwbSignature = 'FTSF'; { New to Skyrim }
   FTSM : TwbSignature = 'FTSM'; { New to Skyrim }
   FTST : TwbSignature = 'FTST'; { New to Skyrim }
@@ -1353,7 +1354,7 @@ var
   wbDAMS: IwbSubRecordDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
-  wbStorefrontData: IwbSubRecordStructDef;
+  wbStorefrontData: IwbRecordMemberDef;
   wbObjectTemplate: IwbSubRecordStructDef;
   wbBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
@@ -8148,7 +8149,8 @@ begin
    {192} 'Set Cheat Death',
    {193} 'Apply Combat Hit Spell Taken',
    {194} 'Apply On Death Spell',
-   {195} 'Mod Max Barter Currency'
+   {195} 'Mod Max Barter Currency',
+   {196} 'Mod Body Part Damage Mult'
   ]);
 
   wbEquipType := wbFlags([
@@ -8261,7 +8263,7 @@ begin
     'Normal formula behaviour',
     'Dismember only',
     'Explode only',
-    'No dismember/explode'
+    'No dismember or explode'
   ]);
 
   wbLGDIStarSlot := wbEnum([
@@ -9035,212 +9037,212 @@ begin
   wbCRCValuesEnum :=
     wbEnum([],[
       0, 'None',
-      $E37A15ED, 'BGSAutoWeaponSoundDef',
-      $431A6554, 'BGSCompoundSoundDef',
-      $C378F623, 'BGSMusicPaletteTrack',
-      $D5C4A9A1, 'BGSMusicSilenceTrack',
-      $48E0D76E, 'BGSMusicSingleTrack',
-      $0A54EF1E, 'BGSStandardSoundDef',
-      $4F7B8318, 'BSDelayEffect',
-      $BE044886, 'BSOverdrive',
-      $31ED3405, 'BSPathingRequest',
-      $DBEB617C, 'BSPathingSolution',
-      $F97B5AFF, 'BSPathingStreamSimpleBufferRead',
-      $AB26B9B8, 'BSPathingStreamSimpleBufferWrite',
-      $7F5F57EF, 'BSStateVariableFilter',
-      $809BB1D2, 'CharacterBumper',
-      $95D2D9DF, 'Combat Area Shape',
-      $68394EFB, 'Combat Cluster Shape',
-      $87AA1C6F, 'CombatAcquireSearchDebugData',
-      $A030D386, 'CombatAimController',
-      $846535C7, 'CombatAnimatedPath',
-      $6F0DBD19, 'CombatApproachTargetPathController',
-      $55B4FA55, 'CombatAreaHoldPosition',
-      $7B25C155, 'CombatAreaReference',
-      $A317E805, 'CombatAreaShape',
-      $FEAABDA9, 'CombatAreaStandard',
-      $8B10F78D, 'CombatChangePositionPathController',
-      $EF05762C, 'CombatChargingSearch',
-      $9584C5C0, 'CombatCluster',
-      $2B7E114F, 'CombatCoverLocation',
-      $559B4093, 'CombatCoverSearch',
-      $7CA8F2CE, 'CombatCoverSearchDebugData',
-      $57B4D03B, 'CombatCoverSearchResult',
-      $2E50772F, 'CombatCoveredPath',
-      $C7E6049B, 'CombatCoveredPathDebugData',
-      $0AED92D0, 'CombatDebugTaskPath',
-      $C7C41CEE, 'CombatDisableActionController',
-      $C96A23BE, 'CombatDisableAimController',
-      $1DF9F546, 'CombatEnterCoverPathController',
-      $D6374788, 'CombatFindCoverPathSpeedController',
-      $96B7BCD6, 'CombatFlankingSearch',
-      $F5CD16FD, 'CombatFollowTargetPathController',
-      $D83702D1, 'CombatInventoryItemGrenade',
-      $470B2A9C, 'CombatInventoryItemMagic',
-      $D56B2284, 'CombatInventoryItemMagicT',
-      $C899CB5A, 'CombatInventoryItemMelee',
-      $1D582181, 'CombatInventoryItemOneHandedBlock',
-      $3EAA4FAC, 'CombatInventoryItemPotion',
-      $312EB771, 'CombatInventoryItemRanged',
-      $1024EE0B, 'CombatInventoryItemScroll',
-      $7BC86AF8, 'CombatInventoryItemShield',
-      $FB1142D7, 'CombatInventoryItemStaff',
-      $0F8F0326, 'CombatInventoryItemThrown',
-      $1ED9D566, 'CombatInventoryItemTorch',
-      $486C1211, 'CombatMagicCasterArmor',
-      $9A3CBA3D, 'CombatMagicCasterBoundItem',
-      $78ED8FE1, 'CombatMagicCasterChameleon',
-      $A44E7822, 'CombatMagicCasterCloak',
-      $ADFCB0B6, 'CombatMagicCasterDisarm',
-      $FB5C05A3, 'CombatMagicCasterInvisibility',
-      $43CE2FC5, 'CombatMagicCasterLight',
-      $914FA741, 'CombatMagicCasterOffensive',
-      $9B4701EC, 'CombatMagicCasterParalyze',
-      $9FEC0403, 'CombatMagicCasterReanimate',
-      $E10AA658, 'CombatMagicCasterRestore',
-      $B02A2102, 'CombatMagicCasterScript',
-      $11BC94E6, 'CombatMagicCasterStagger',
-      $6350CAD2, 'CombatMagicCasterSummon',
-      $11B9D25A, 'CombatMagicCasterTargetEffect',
-      $D5D6FD22, 'CombatMagicCasterWard',
-      $02BCD258, 'CombatMantlePathController',
-      $A1DCDA4C, 'CombatMatchTargetAimController',
-      $7C7B9264, 'CombatMeleeAimController',
-      $D3AD5C9F, 'CombatMeleeDebugData',
-      $F11AAE4C, 'CombatMovementRequestFollowActor',
-      $AD7B48E4, 'CombatPath',
-      $6BD9843E, 'CombatPathBuilderOpen',
-      $4E03BC1E, 'CombatPathBuilderStandard',
-      $65645406, 'CombatPathDestinationActor',
-      $33F7418D, 'CombatPathDestinationFollowActor',
-      $2055CFF4, 'CombatPathDestinationLocation',
-      $1BCF96F2, 'CombatPathDestinationLocations',
-      $C08050E3, 'CombatPathDestinationNone',
-      $41E883D2, 'CombatPathDestinationRef',
-      $68D205C8, 'CombatPathDestinationRefs',
-      $F5C30381, 'CombatPathMovementMessage',
-      $285BBFF8, 'CombatPathMovementMessageEvent',
-      $31C0BCFD, 'CombatPathRequestFlight',
-      $72711042, 'CombatPathRequestFlyingAttack',
-      $458814F2, 'CombatPathRequestGeneric',
-      $542592AB, 'CombatPathRequestHover',
-      $83E7618B, 'CombatPathRequestLanding',
-      $8BC9C8BE, 'CombatPathRequestMultiGoal',
-      $939738E5, 'CombatPathRequestOrbit',
-      $F9ED5462, 'CombatPathRequestRotatePath',
-      $5255FDDB, 'CombatPathRequestStandard',
-      $5D271A18, 'CombatPathRequestStraightPath',
-      $2DF62611, 'CombatPathRequestWeightedMultiGoal',
-      $5ADEC169, 'CombatPathTeleportEvent',
-      $2A16AB0E, 'CombatPathingDebugData',
-      $AC165091, 'CombatPathingGoalPolicyAvoidThreat',
-      $4775F3ED, 'CombatPathingGoalPolicyCharge',
-      $90F76CBA, 'CombatPathingGoalPolicyCovered',
-      $2F67CD8B, 'CombatPathingGoalPolicyDistract',
-      $775CAFBC, 'CombatPathingGoalPolicyFindAttackLocation',
-      $B393D20B, 'CombatPathingGoalPolicyFindCover',
-      $DD928490, 'CombatPathingGoalPolicyFindFlankCover',
-      $07CF1B5B, 'CombatPathingGoalPolicyFindPotentialCoverLocations',
-      $FB89798E, 'CombatPathingGoalPolicyFindTargetLocation',
-      $C98413A5, 'CombatPathingGoalPolicyFindValidLocation',
-      $B46EB5E3, 'CombatPathingGoalPolicyFlank',
-      $1C9CBADA, 'CombatPathingGoalPolicyFlankDistant',
-      $6FBADB25, 'CombatPathingGoalPolicyFlee',
-      $0395ACD0, 'CombatPathingGoalPolicyFollow',
-      $958C97AB, 'CombatPathingGoalPolicyInvestigateLocation',
-      $DBEB81EA, 'CombatPathingGoalPolicyLocation',
-      $5F1FE20D, 'CombatPathingGoalPolicyRetreat',
-      $7477BDEE, 'CombatPathingGoalPolicyReturnToCombatArea',
-      $D40A680C, 'CombatPathingGoalPolicySearch',
-      $9C6AE8B3, 'CombatPathingGoalPolicySearchWander',
-      $8E3DC101, 'CombatPathingGoalPolicyWithdraw',
-      $0F0027BA, 'CombatPathingRequestAdapter',
-      $39C42102, 'CombatPathingRequestCovered',
-      $A0C5B435, 'CombatPathingRequestGeneric',
-      $AF34AC95, 'CombatPathingRequestMultiGoal',
-      $E8E35A0B, 'CombatPathingRequestStandard',
-      $69062930, 'CombatPathingSearchArea',
-      $5EF1755C, 'CombatPathingSearchPolicyCharge',
-      $D4D9B6DE, 'CombatPathingSearchPolicyCovered',
-      $883818FA, 'CombatPathingSearchPolicyDistract',
-      $8F53D86E, 'CombatPathingSearchPolicyFlank',
-      $30EA3DD5, 'CombatPathingSearchPolicyStandard',
-      $29621470, 'CombatPathingSearchPolicyWithdraw',
-      $123DE538, 'CombatPathingTweener',
-      $6922DDA0, 'CombatPositionTracker',
-      $917A6EF0, 'CombatProjectileAimController',
-      $02A8CFAA, 'CombatProjectileDebugData',
-      $53015DD5, 'CombatSearchLockData',
-      $9E9E03D5, 'CombatSharedPath',
-      $A12F0B15, 'CombatSuppressiveFireBehavior',
-      $1130E51E, 'CombatTargetLocation',
-      $FA292C9C, 'CombatTargetLocationSearch',
-      $9E4331C3, 'CombatTargetLocationSearchResult',
-      $875BE9D6, 'CombatTargetSelector',
-      $BC7BB1F7, 'CombatTargetSelectorFixed',
-      $C9D0E756, 'CombatTargetSelectorPreferred',
-      $CAE350CE, 'CombatTargetSelectorRandom',
-      $859B71C3, 'CombatTargetSelectorStandard',
-      $BFDC6737, 'CombatThreatExplosion',
-      $14502E3C, 'CombatThreatLOF',
-      $6615A2A7, 'CombatThreatMelee',
-      $0FAF60A1, 'CombatThreatProjectile',
-      $3FB5D95A, 'CombatTrackTargetAimController',
-      $AE93F634, 'CombatTunnelPathController',
-      $4C8390CB, 'CombatViewController',
-      $37E32252, 'CombatViewControllerGlance',
-      $532864C5, 'CombatViewControllerPath',
-      $FC82CCC8, 'CombatViewControllerStandard',
-      $F9820712, 'Covered Path Shape',
-      $D841AAB1, 'CoveredPath',
-      $75CF9458, 'DiveBombPathController',
-      $61C74162, 'EquippedWeaponData',
-      $532CFC76, 'MasterFilePathingStreamGetSize',
-      $34BE0F3F, 'MasterFilePathingStreamWriteToBuffer',
-      $37A2C25C, 'MovementMessageActivateDoor',
-      $FA7BA377, 'MovementMessageActorCollision',
-      $6AF86376, 'MovementMessageApproachingDoor',
-      $3E15B4C8, 'MovementMessageBlocked',
-      $0B43ED3B, 'MovementMessageFreezeDirection',
-      $0E87DC00, 'MovementMessageJump',
-      $634FEDCD, 'MovementMessageNewPath',
-      $51F5D7C4, 'MovementMessageNewPathImmediate',
-      $998F57D7, 'MovementMessagePathComplete',
-      $C4F6CE8B, 'MovementMessagePathFailed',
-      $E6639511, 'MovementMessagePlayIdle',
-      $D5536661, 'MovementMessageSetStaticPath',
-      $2390DA67, 'MovementMessageWarpToLocation',
-      $EC64F33C, 'MovementMessageWarpToMultiple',
-      $1A269172, 'MovementNodeAvoidance',
-      $4B90183B, 'MovementNodeGoal',
-      $C5D1280C, 'MovementParameters',
-      $28F7DCBC, 'MovementParametersFixed',
-      $C5674ECD, 'NoSupport',
-      $3CA0E9A5, 'PathingCell',
-      $F3738BE4, 'PathingDoor',
-      $DDA52658, 'PathingLockData',
-      $E3B00E33, 'PathingRequest',
-      $74D85EEB, 'PathingRequestClosePoint',
-      $AB4315F3, 'PathingRequestClosestGoal',
-      $73E51806, 'PathingRequestCover',
-      $CE6327FA, 'PathingRequestFlee',
-      $34F15F3C, 'PathingRequestFly',
-      $511702A5, 'PathingRequestFlyAction',
-      $3B105383, 'PathingRequestFlyHover',
-      $F7EE75F0, 'PathingRequestFlyLand',
-      $FCA2F9CD, 'PathingRequestFlyOrbit',
-      $79C6C498, 'PathingRequestFlyTakeOff',
-      $57E72805, 'PathingRequestHide',
-      $55CADA54, 'PathingRequestLOS',
-      $282562CA, 'PathingRequestOptimalLocation',
-      $5BBB02C7, 'PathingRequestRotate',
-      $1DB17347, 'PathingRequestSafeStraightLine',
-      $AF52218B, 'PathingRequestStopMoving',
-      $42CFA213, 'PathingStreamLoadGame',
-      $D0FD7773, 'PathingStreamMasterFileRead',
-      $0B8CB5C5, 'PathingStreamSaveGame',
-      $9011F16A, 'QuestPathingRequest',
-      $C3CCD0FC, 'Water'
+      $ED157AE3, 'BGSAutoWeaponSoundDef',
+      $54651A43, 'BGSCompoundSoundDef',
+      $23F678C3, 'BGSMusicPaletteTrack',
+      $A1A9C4D5, 'BGSMusicSilenceTrack',
+      $6ED7E048, 'BGSMusicSingleTrack',
+      $1EEF540A, 'BGSStandardSoundDef',
+      $18837B4F, 'BSDelayEffect',
+      $864804BE, 'BSOverdrive',
+      $0534ED31, 'BSPathingRequest',
+      $7C61EBDB, 'BSPathingSolution',
+      $FF5A7BF9, 'BSPathingStreamSimpleBufferRead',
+      $B8B926AB, 'BSPathingStreamSimpleBufferWrite',
+      $EF575F7F, 'BSStateVariableFilter',
+      $D2B19B80, 'CharacterBumper',
+      $DFD9D295, 'Combat Area Shape',
+      $FB4E3968, 'Combat Cluster Shape',
+      $6F1CAA87, 'CombatAcquireSearchDebugData',
+      $86D330A0, 'CombatAimController',
+      $C7356584, 'CombatAnimatedPath',
+      $19BD0D6F, 'CombatApproachTargetPathController',
+      $55FAB455, 'CombatAreaHoldPosition',
+      $55C1257B, 'CombatAreaReference',
+      $05E817A3, 'CombatAreaShape',
+      $A9BDAAFE, 'CombatAreaStandard',
+      $8DF7108B, 'CombatChangePositionPathController',
+      $2C7605EF, 'CombatChargingSearch',
+      $C0C58495, 'CombatCluster',
+      $4F117E2B, 'CombatCoverLocation',
+      $93409B55, 'CombatCoverSearch',
+      $CEF2A87C, 'CombatCoverSearchDebugData',
+      $3BD0B457, 'CombatCoverSearchResult',
+      $2F77502E, 'CombatCoveredPath',
+      $9B04E6C7, 'CombatCoveredPathDebugData',
+      $D092ED0A, 'CombatDebugTaskPath',
+      $EE1CC4C7, 'CombatDisableActionController',
+      $BE236AC9, 'CombatDisableAimController',
+      $46F5F91D, 'CombatEnterCoverPathController',
+      $884737D6, 'CombatFindCoverPathSpeedController',
+      $D6BCB796, 'CombatFlankingSearch',
+      $FD16CDF5, 'CombatFollowTargetPathController',
+      $D10237D8, 'CombatInventoryItemGrenade',
+      $9C2A0B47, 'CombatInventoryItemMagic',
+      $84226BD5, 'CombatInventoryItemMagicT',
+      $5ACB99C8, 'CombatInventoryItemMelee',
+      $8121581D, 'CombatInventoryItemOneHandedBlock',
+      $AC4FAA3E, 'CombatInventoryItemPotion',
+      $71B72E31, 'CombatInventoryItemRanged',
+      $0BEE2410, 'CombatInventoryItemScroll',
+      $F86AC87B, 'CombatInventoryItemShield',
+      $D74211FB, 'CombatInventoryItemStaff',
+      $26038F0F, 'CombatInventoryItemThrown',
+      $66D5D91E, 'CombatInventoryItemTorch',
+      $11126C48, 'CombatMagicCasterArmor',
+      $3DBA3C9A, 'CombatMagicCasterBoundItem',
+      $E18FED78, 'CombatMagicCasterChameleon',
+      $22784EA4, 'CombatMagicCasterCloak',
+      $B6B0FCAD, 'CombatMagicCasterDisarm',
+      $A3055CFB, 'CombatMagicCasterInvisibility',
+      $C52FCE43, 'CombatMagicCasterLight',
+      $41A74F91, 'CombatMagicCasterOffensive',
+      $EC01479B, 'CombatMagicCasterParalyze',
+      $0304EC9F, 'CombatMagicCasterReanimate',
+      $58A60AE1, 'CombatMagicCasterRestore',
+      $02212AB0, 'CombatMagicCasterScript',
+      $E694BC11, 'CombatMagicCasterStagger',
+      $D2CA5063, 'CombatMagicCasterSummon',
+      $5AD2B911, 'CombatMagicCasterTargetEffect',
+      $22FDD6D5, 'CombatMagicCasterWard',
+      $58D2BC02, 'CombatMantlePathController',
+      $4CDADCA1, 'CombatMatchTargetAimController',
+      $64927B7C, 'CombatMeleeAimController',
+      $9F5CADD3, 'CombatMeleeDebugData',
+      $4CAE1AF1, 'CombatMovementRequestFollowActor',
+      $E4487BAD, 'CombatPath',
+      $3E84D96B, 'CombatPathBuilderOpen',
+      $1EBC034E, 'CombatPathBuilderStandard',
+      $06546465, 'CombatPathDestinationActor',
+      $8D41F733, 'CombatPathDestinationFollowActor',
+      $F4CF5520, 'CombatPathDestinationLocation',
+      $F296CF1B, 'CombatPathDestinationLocations',
+      $E35080C0, 'CombatPathDestinationNone',
+      $D283E841, 'CombatPathDestinationRef',
+      $C805D268, 'CombatPathDestinationRefs',
+      $8103C3F5, 'CombatPathMovementMessage',
+      $F8BF5B28, 'CombatPathMovementMessageEvent',
+      $FDBCC031, 'CombatPathRequestFlight',
+      $42107172, 'CombatPathRequestFlyingAttack',
+      $F2148845, 'CombatPathRequestGeneric',
+      $AB922554, 'CombatPathRequestHover',
+      $8B61E783, 'CombatPathRequestLanding',
+      $BEC8C98B, 'CombatPathRequestMultiGoal',
+      $E5389793, 'CombatPathRequestOrbit',
+      $6254EDF9, 'CombatPathRequestRotatePath',
+      $DBFD5552, 'CombatPathRequestStandard',
+      $181A275D, 'CombatPathRequestStraightPath',
+      $1126F62D, 'CombatPathRequestWeightedMultiGoal',
+      $69C1DE5A, 'CombatPathTeleportEvent',
+      $0EAB162A, 'CombatPathingDebugData',
+      $915016AC, 'CombatPathingGoalPolicyAvoidThreat',
+      $EDF37547, 'CombatPathingGoalPolicyCharge',
+      $BA6CF790, 'CombatPathingGoalPolicyCovered',
+      $8BCD672F, 'CombatPathingGoalPolicyDistract',
+      $BCAF5C77, 'CombatPathingGoalPolicyFindAttackLocation',
+      $0BD293B3, 'CombatPathingGoalPolicyFindCover',
+      $908492DD, 'CombatPathingGoalPolicyFindFlankCover',
+      $5B1BCF07, 'CombatPathingGoalPolicyFindPotentialCoverLocations',
+      $8E7989FB, 'CombatPathingGoalPolicyFindTargetLocation',
+      $A51384C9, 'CombatPathingGoalPolicyFindValidLocation',
+      $E3B56EB4, 'CombatPathingGoalPolicyFlank',
+      $DABA9C1C, 'CombatPathingGoalPolicyFlankDistant',
+      $25DBBA6F, 'CombatPathingGoalPolicyFlee',
+      $D0AC9503, 'CombatPathingGoalPolicyFollow',
+      $AB978C95, 'CombatPathingGoalPolicyInvestigateLocation',
+      $EA81EBDB, 'CombatPathingGoalPolicyLocation',
+      $0DE21F5F, 'CombatPathingGoalPolicyRetreat',
+      $EEBD7774, 'CombatPathingGoalPolicyReturnToCombatArea',
+      $0C680AD4, 'CombatPathingGoalPolicySearch',
+      $B3E86A9C, 'CombatPathingGoalPolicySearchWander',
+      $01C13D8E, 'CombatPathingGoalPolicyWithdraw',
+      $BA27000F, 'CombatPathingRequestAdapter',
+      $0221C439, 'CombatPathingRequestCovered',
+      $35B4C5A0, 'CombatPathingRequestGeneric',
+      $95AC34AF, 'CombatPathingRequestMultiGoal',
+      $0B5AE3E8, 'CombatPathingRequestStandard',
+      $30290669, 'CombatPathingSearchArea',
+      $5C75F15E, 'CombatPathingSearchPolicyCharge',
+      $DEB6D9D4, 'CombatPathingSearchPolicyCovered',
+      $FA183888, 'CombatPathingSearchPolicyDistract',
+      $6ED8538F, 'CombatPathingSearchPolicyFlank',
+      $D53DEA30, 'CombatPathingSearchPolicyStandard',
+      $70146229, 'CombatPathingSearchPolicyWithdraw',
+      $38E53D12, 'CombatPathingTweener',
+      $A0DD2269, 'CombatPositionTracker',
+      $F06E7A91, 'CombatProjectileAimController',
+      $AACFA802, 'CombatProjectileDebugData',
+      $D55D0153, 'CombatSearchLockData',
+      $D5039E9E, 'CombatSharedPath',
+      $150B2FA1, 'CombatSuppressiveFireBehavior',
+      $1EE53011, 'CombatTargetLocation',
+      $9C2C29FA, 'CombatTargetLocationSearch',
+      $C331439E, 'CombatTargetLocationSearchResult',
+      $D6E95B87, 'CombatTargetSelector',
+      $F7B17BBC, 'CombatTargetSelectorFixed',
+      $56E7D0C9, 'CombatTargetSelectorPreferred',
+      $CE50E3CA, 'CombatTargetSelectorRandom',
+      $C3719B85, 'CombatTargetSelectorStandard',
+      $3767DCBF, 'CombatThreatExplosion',
+      $3C2E5014, 'CombatThreatLOF',
+      $A7A21566, 'CombatThreatMelee',
+      $A160AF0F, 'CombatThreatProjectile',
+      $5AD9B53F, 'CombatTrackTargetAimController',
+      $34F693AE, 'CombatTunnelPathController',
+      $CB90834C, 'CombatViewController',
+      $5222E337, 'CombatViewControllerGlance',
+      $C5642853, 'CombatViewControllerPath',
+      $C8CC82FC, 'CombatViewControllerStandard',
+      $120782F9, 'Covered Path Shape',
+      $B1AA41D8, 'CoveredPath',
+      $5894CF75, 'DiveBombPathController',
+      $6241C761, 'EquippedWeaponData',
+      $76FC2C53, 'MasterFilePathingStreamGetSize',
+      $3F0FBE34, 'MasterFilePathingStreamWriteToBuffer',
+      $5CC2A237, 'MovementMessageActivateDoor',
+      $77A37BFA, 'MovementMessageActorCollision',
+      $7663F86A, 'MovementMessageApproachingDoor',
+      $C8B4153E, 'MovementMessageBlocked',
+      $3BED430B, 'MovementMessageFreezeDirection',
+      $00DC870E, 'MovementMessageJump',
+      $CDED4F63, 'MovementMessageNewPath',
+      $C4D7F551, 'MovementMessageNewPathImmediate',
+      $D7578F99, 'MovementMessagePathComplete',
+      $8BCEF6C4, 'MovementMessagePathFailed',
+      $119563E6, 'MovementMessagePlayIdle',
+      $616653D5, 'MovementMessageSetStaticPath',
+      $67DA9023, 'MovementMessageWarpToLocation',
+      $3CF364EC, 'MovementMessageWarpToMultiple',
+      $7291261A, 'MovementNodeAvoidance',
+      $3B18904B, 'MovementNodeGoal',
+      $0C28D1C5, 'MovementParameters',
+      $BCDCF728, 'MovementParametersFixed',
+      $CD4E67C5, 'NoSupport',
+      $A5E9A03C, 'PathingCell',
+      $E48B73F3, 'PathingDoor',
+      $5826A5DD, 'PathingLockData',
+      $330EB0E3, 'PathingRequest',
+      $EB5ED874, 'PathingRequestClosePoint',
+      $F31543AB, 'PathingRequestClosestGoal',
+      $0618E573, 'PathingRequestCover',
+      $FA2763CE, 'PathingRequestFlee',
+      $3C5FF134, 'PathingRequestFly',
+      $A5021751, 'PathingRequestFlyAction',
+      $8353103B, 'PathingRequestFlyHover',
+      $F075EEF7, 'PathingRequestFlyLand',
+      $CDF9A2FC, 'PathingRequestFlyOrbit',
+      $98C4C679, 'PathingRequestFlyTakeOff',
+      $0528E757, 'PathingRequestHide',
+      $54DACA55, 'PathingRequestLOS',
+      $CA622528, 'PathingRequestOptimalLocation',
+      $C702BB5B, 'PathingRequestRotate',
+      $4773B11D, 'PathingRequestSafeStraightLine',
+      $8B2152AF, 'PathingRequestStopMoving',
+      $13A2CF42, 'PathingStreamLoadGame',
+      $7377FDD0, 'PathingStreamMasterFileRead',
+      $C5B58C0B, 'PathingStreamSaveGame',
+      $6AF11190, 'QuestPathingRequest',
+      $FCD0CCC3, 'Water'
     ]);
 
 	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
@@ -10736,20 +10738,22 @@ begin
       wbInteger('Flags', itU32, wbFlags([
       { 0x0001 } 'VATS Targetable',
       { 0x0002 } 'Large Actor Destroys',
-      { 0x0004 } 'Unknown 2',
-      { 0x0008 } 'Unknown 3',
-      { 0x0010 } 'Unknown 4',
-      { 0x0020 } 'Unknown 5',
-      { 0x0040 } 'Unknown 6',
-      { 0x0080 } 'Unknown 7',
-      { 0x0100 } 'Unknown 8',
-      { 0x0200 } 'Unknown 9',
-      { 0x0800 } 'Unknown 10',
-      { 0x1000 } 'Unknown 11',
-      { 0x2000 } 'Unknown 12',
-      { 0x4000 } 'Unknown 13'
+      { 0x0004 } 'Unknown 3',
+      { 0x0008 } 'Unknown 4',
+      { 0x0010 } 'Unknown 5',
+      { 0x0020 } 'Unknown 6',
+      { 0x0040 } 'Unknown 7',
+      { 0x0080 } 'Unknown 8',
+      { 0x0100 } 'Unknown 9',
+      { 0x0200 } 'Unknown 10',
+      { 0x0400 } 'Unknown 11',
+      { 0x0800 } 'Unknown 12',
+      { 0x1000 } 'Has Conditions',
+      { 0x2000 } 'Unknown 14',
+      { 0x4000 } 'Unknown 15',
+      { 0x8000 } 'Unknown 16'
       ])),
-      wbFromSize(12, wbFloat('Unknown'))
+      wbFromSize(16, wbFloat('Unknown'))
     ], cpNormal, True),
     wbCTDAs,
     wbUnknown(DSCF),
@@ -10766,14 +10770,13 @@ begin
           wbInteger('Index', itU8),
           wbInteger('Model Damage Stage', itU8),
           wbInteger('Flags', itU8, wbFlags([
-            'Cap Damage',
-            'Disable',
-            'Destroy',
-            'Ignore External Dmg',
-            'Becomes Dynamic',
-            'Unknown 6',
-            'Unknown 7',
-            'Unknown 8'
+            {0x01} 'Cap Damage',
+            {0x02} 'Disable',
+            {0x04} 'Destroy',
+            {0x08} 'Ignore External Damage',
+            {0x10} 'Becomes Dynamic',
+            {0x20} 'Unknown 5',
+            {0x40} 'Disable Collision'
           ])),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
@@ -10840,9 +10843,13 @@ begin
           wbInteger('Index', itU8),
           wbInteger('Damage Stage', itU8),
           wbInteger('Flags', itU8, wbFlags([
-            'Cap Damage',
-            'Disable',
-            'Destroy'
+            {0x01} 'Cap Damage',
+            {0x02} 'Disable',
+            {0x04} 'Destroy',
+            {0x08} 'Ignore External Damage',
+            {0x10} 'Becomes Dynamic',
+            {0x20} 'Unknown 5',
+            {0x40} 'Disable Collision'
           ])),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
@@ -11026,7 +11033,7 @@ begin
       wbFloat('Offset Z'),
       wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU32, wbFlags([
+      wbInteger('Entry Types', itU8, wbFlags([
         'Front',
         'Rear',
         'Right',
@@ -11035,7 +11042,8 @@ begin
         'Unused 5',
         'Unused 6',
         'Unused 7'
-      ]))
+      ])),
+      wbByteArray('Unused',3)
     ], cpNormal, False, nil, 4));
   wbZNAMMarkerParams :=
     wbArray(ZNAM, 'Marker Parameters', wbStruct('Marker', [
@@ -11044,7 +11052,7 @@ begin
       wbFloat('Offset Z'),
       wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU32, wbFlags([
+      wbInteger('Entry Types', itU8, wbFlags([
         'Front',
         'Rear',
         'Right',
@@ -11053,7 +11061,8 @@ begin
         'Unused 5',
         'Unused 6',
         'Unused 7'
-      ]))
+      ])),
+      wbByteArray('Unused',3)
     ], cpNormal, False, nil, 4));
 
   wbArmorPropertyEnum := wbEnum([
@@ -11202,7 +11211,7 @@ begin
       wbString(ETDI, 'Storefront Preview Image'),
       wbFormID(ETLG, 'Entitlement Loadout Reference'),
       wbRArray('Storefront Confirm Image List', wbString(ECIL, 'Image'))
-    ], []);
+    ], []).IncludeFlag(dfAllowAnyMember);
 
   wbObjectModProperties :=
     wbArrayS('Properties', wbStructSK([4], 'Property', [
@@ -11540,7 +11549,8 @@ begin
         {0x00008000} 'Unknown 15', //Unused
         {0x00010000} 'Medicine',
         {0x00020000} 'Poison',
-        {0x00040000} 'Unknown 18'  //Unused
+        {0x00040000} 'Unknown 18',  //Unused
+        {0x00080000} 'Unknown 19'
       ])),
       wbFormIDCk('Addiction', [SPEL, NULL]),
       wbFloat('Addiction Chance'),
@@ -11604,6 +11614,7 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
+      {0x00000200}  9, 'Unknown 9',
       {0x00000400} 10, 'Unknown 10',
       {0x00008000} 15, 'Unknown 15'
     ])), [
@@ -11667,6 +11678,7 @@ begin
 
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
       {0x00000040}  6, 'No Underarmor Scaling',
       {0x00000200}  9, 'Unknown 9',
       {0x40000000} 30, 'Hi-Res 1st Person Only'
@@ -11899,7 +11911,7 @@ begin
       wbInteger('', itU32, wbCELLFlags)
     ], cpNormal, True).SetAfterSet(wbCELLDATAAfterSet),
 
-    wbByteArray(VISI, 'PreVis Files Timestamp', 4),//.SetToStr(wbTimeStampToString),
+    wbByteArray(VISI, 'PreVis File Hash', 4),//.SetToStr(wbTimeStampToString),
     wbFormIDCk(RVIS, 'In PreVis File Of', [CELL]),
     wbByteArray(PCMB, 'PreCombined Files Timestamp', 2).SetToStr(wbTimeStampToString),
 
@@ -12460,7 +12472,9 @@ begin
 
   wbRecord(DOOR, 'Door',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
       {0x00000010}  4, 'Non Occluder',
+      {0x00000200}  9, 'Unknown 9',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker'
@@ -12753,6 +12767,7 @@ begin
       {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
+      {0x00000200}  9, 'Unknown 9',
       {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
@@ -13876,6 +13891,7 @@ begin
           wbInteger('Severable - Decal Count', itU8),
           wbInteger('Explodable - Decal Count', itU8),
           wbInteger('Geometry Segment Index', itU8),
+          wbBelowVersion(78, wbByteArray('Unused',1)),
           wbFromVersion(95, wbStruct('On Cripple', [
             wbFormIDCk('On Cripple - Art Object', [ARTO, NULL]),
             wbFormIDCk('On Cripple - Debris', [DEBR, NULL]),
@@ -14091,7 +14107,8 @@ begin
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
       'Female'
-    ]), cpNormal, True)
+    ]), cpNormal, True),
+    wbString(ENAM, 'TTS voice name')
   ]);
 
   wbRecord(MATT, 'Material Type', [
@@ -15144,7 +15161,8 @@ begin
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
-          {0x0004} 'Start - Inherit In Templated Scenes'
+          {0x0004} 'Start - Inherit In Templated Scenes',
+          {0x0008} 'Unknown 3'
         ])),
         wbStruct(SCQS, 'Set Parent Quest Stage', [
           wbInteger('On Start', itS16),
@@ -15480,7 +15498,11 @@ begin
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
   ]);
 
-  wbRecord(ARTO, 'Art Object', [
+  wbRecord(ARTO, 'Art Object',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbOBND(True),
     wbOPDSs,
@@ -15782,7 +15804,9 @@ begin
       wbInteger('Flags', itU8, wbFlags([
         'Vertex Lighting',
         'Uniform Scaling',
-        'Fit to Slope'
+        'Fit to Slope',
+        'Billboard',
+        'LOD Land Blend'
       ])),
       wbFromVersion(137, wbFloat('Unknown')),
       wbFromVersion(175, wbFloat('Position Range'))
@@ -15845,25 +15869,30 @@ begin
           {0x1000} 'Requires post-processing',
           {0x2000} 'Audio Output Override',
           {0x4000} 'Has Capture',
-          {0x8000} 'Unknown 16'
+          {0x8000} 'Unknown 15'
         ])),
         wbInteger('Flags', itU32, wbFlags([
-          {0x0001} 'Start Scene on End',
-          {0x0002} 'Random',
-          {0x0004} 'Say Once',
-          {0x0008} 'Requires Player Activation',
-          {0x0010} 'Info Refusal',
-          {0x0020} 'Random End',
-          {0x0040} 'End Running Scene',
-          {0x0080} 'ForceGreet Hello',
-          {0x0100} 'Player Address',
-          {0x0200} 'Force Subtitle',
-          {0x0400} 'Can Move While Greeting',
-          {0x0800} 'No LIP File',
-          {0x1000} 'Requires post-processing',
-          {0x2000} 'Audio Output Override',
-          {0x4000} 'Has Capture',
-          {0x8000} 'Unknown 16'
+          {0x000001} 'Start Scene on End',
+          {0x000002} 'Random',
+          {0x000004} 'Say Once',
+          {0x000008} 'Requires Player Activation',
+          {0x000010} 'Info Refusal',
+          {0x000020} 'Random End',
+          {0x000040} 'End Running Scene',
+          {0x000080} 'ForceGreet Hello',
+          {0x000100} 'Player Address',
+          {0x000200} 'Force Subtitle',
+          {0x000400} 'Can Move While Greeting',
+          {0x000800} 'No LIP File',
+          {0x001000} 'Requires post-processing',
+          {0x002000} 'Audio Output Override',
+          {0x004000} 'Has Capture',
+          {0x008000} 'Unknown 15',
+          {0x010000} 'Unknown 16',
+          {0x020000} 'Unknown 17',
+          {0x040000} 'Unknown 18',
+          {0x080000} 'Unknown 19',
+          {0x100000} 'Unknown 20'
         ]))
       ]),
       wbInteger('Reset Hours', itU16, wbDiv(2730)),
@@ -17443,44 +17472,48 @@ begin
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
   wbQUSTAliasFlagsActual := wbFlags([
-    {0x0000000001} { 1} 'Reserves Location/Reference',
-    {0x0000000002} { 2} 'Optional',
-    {0x0000000004} { 3} 'Quest Object',
-    {0x0000000008} { 4} 'Allow Reuse in Quest',
-    {0x0000000010} { 5} 'Allow Dead',
-    {0x0000000020} { 6} 'Matching Ref - In Loaded Area',
-    {0x0000000040} { 7} 'Essential',
-    {0x0000000080} { 8} 'Allow Disabled',
-    {0x0000000100} { 9} 'Stores Text',
-    {0x0000000200} {10} 'Allow Reserved',
-    {0x0000000400} {11} 'Protected',
-    {0x0000000800} {12} 'Forced by Aliases',
-    {0x0000001000} {13} 'Allow Destroyed',
-    {0x0000002000} {14} 'Matching Ref - Closest',
-    {0x0000004000} {15} 'Uses Stored Text',
-    {0x0000008000} {16} 'Initially Disabled',
-    {0x0000010000} {17} 'Allow Cleared',
-    {0x0000020000} {18} 'Clear Names When Removed',
-    {0x0000040000} {19} 'Matching Ref - Actors Only',
-    {0x0000080000} {20} 'Create Ref - Temp',
-    {0x0000100000} {21} 'External Alias - Linked',
-    {0x0000200000} {22} 'No Pickpocket',
-    {0x0000400000} {23} 'Can Apply Data To Non-Aliased Refs',
-    {0x0000800000} {24} 'Is Companion',
-    {0x0001000000} {25} 'Optional All Scenes',
-    {0x0002000000} {26} 'Unknown 26',
-    {0x0004000000} {27} 'Unknown 27',
-    {0x0008000000} {28} 'Unknown 28',
-    {0x0010000000} {29} 'Unknown 29',
-    {0x0020000000} {30} 'Unknown 30',
-    {0x0040000000} {31} 'Unknown 31',
-    {0x0080000000} {32} 'Unknown 32',
-    {0x0100000000} {33} 'Unknown 33',
-    {0x0200000000} {34} 'Unknown 34',
-    {0x0400000000} {35} 'Unknown 35',
-    {0x0800000000} {36} 'Unknown 36',
-    {0x1000000000} {37} 'Unknown 37',
-    {0x2000000000} {38} 'Unknown 38'
+    {0x00000000001} { 0} 'Reserves Location/Reference',
+    {0x00000000002} { 1} 'Optional',
+    {0x00000000004} { 2} 'Quest Object',
+    {0x00000000008} { 3} 'Allow Reuse in Quest',
+    {0x00000000010} { 4} 'Allow Dead',
+    {0x00000000020} { 5} 'Matching Ref - In Loaded Area',
+    {0x00000000040} { 6} 'Essential',
+    {0x00000000080} { 7} 'Allow Disabled',
+    {0x00000000100} { 8} 'Stores Text',
+    {0x00000000200} { 9} 'Allow Reserved',
+    {0x00000000400} {10} 'Protected',
+    {0x00000000800} {11} 'Forced by Aliases',
+    {0x00000001000} {12} 'Allow Destroyed',
+    {0x00000002000} {13} 'Matching Ref - Closest',
+    {0x00000004000} {14} 'Uses Stored Text',
+    {0x00000008000} {15} 'Initially Disabled',
+    {0x00000010000} {16} 'Allow Cleared',
+    {0x00000020000} {17} 'Clear Names When Removed',
+    {0x00000040000} {18} 'Matching Ref - Actors Only',
+    {0x00000080000} {19} 'Create Ref - Temp',
+    {0x00000100000} {20} 'External Alias - Linked',
+    {0x00000200000} {21} 'No Pickpocket',
+    {0x00000400000} {22} 'Can Apply Data To Non-Aliased Refs',
+    {0x00000800000} {23} 'Is Companion',
+    {0x00001000000} {24} 'Optional All Scenes',
+    {0x00002000000} {25} 'Unknown 25',
+    {0x00004000000} {26} 'Unknown 26',
+    {0x00008000000} {27} 'Unknown 27',
+    {0x00010000000} {28} 'Unknown 28',
+    {0x00020000000} {29} 'Unknown 29',
+    {0x00040000000} {30} 'Unknown 30',
+    {0x00080000000} {31} 'Unknown 31',
+    {0x00100000000} {32} 'Unknown 32',
+    {0x00200000000} {33} 'Unknown 33',
+    {0x00400000000} {34} 'Unknown 34',
+    {0x00800000000} {35} 'Unknown 35',
+    {0x01000000000} {36} 'Unknown 36',
+    {0x02000000000} {37} 'Unknown 37',
+    {0x04000000000} {38} 'Unknown 38',
+    {0x08000000000} {39} 'Unknown 39',
+    {0x10000000000} {40} 'Unknown 40',
+    {0x20000000000} {41} 'Unknown 41'
   ]);
 
   wbQUSTAliasFlags :=
@@ -17519,18 +17552,20 @@ begin
           {0x00004000} 'Want Dormant',
           {0x00008000} 'Has Dialogue Data',
           {0x00010000} 'Instanced Quest',
-          {0x00020000} 'Unknown 18',
-          {0x00040000} 'Unknown 19',
+          {0x00020000} 'Unknown 17',
+          {0x00040000} 'Unknown 18',
           {0x00080000} 'Holotape Container Quest',
-          {0x00100000} 'Unknown 21',
-          {0x00200000} 'Unknown 22',
-          {0x00400000} 'Unknown 23',
-          {0x00800000} 'Unknown 24',
-          {0x01000000} 'Unknown 25',
+          {0x00100000} 'Unknown 20',
+          {0x00200000} 'Unknown 21',
+          {0x00400000} 'Unknown 22',
+          {0x00800000} 'Unknown 23',
+          {0x01000000} 'Unknown 24',
           {0x02000000} 'Uses Default Quest Expire Timer',
-          {0x04000000} 'Unknown 27',
+          {0x04000000} 'Unknown 26',
           {0x08000000} 'Event Quest',
-          {0x10000000} 'Raid Quest'
+          {0x10000000} 'Raid Quest',
+          {0x20000000} 'Unknown 29',
+          {0x40000000} 'Unknown 30'
         ])),
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
@@ -17545,7 +17580,9 @@ begin
           'Public Event',
           'Miscellaneous',
           'Event',
-          'Daily Ops'
+          'Daily Ops',
+          'Expedition',
+          'Module'
         ])),  //0xE9
         wbByteArray('Unused',3)
       ]),
@@ -17578,7 +17615,9 @@ begin
           'Public Event',
           'Miscellaneous',
           'Event',
-          'Daily Ops'
+          'Daily Ops',
+          'Expedition',
+          'Module'
         ])),  //0xE9
         wbByteArray('Unused',3)
       ])
@@ -17663,8 +17702,8 @@ begin
       wbInteger(SNAM, 'Stage to set', itU16),
       wbLString(NAM1, 'Quest Notes'),
       wbString(SCCM, 'Comments'),
-      wbByteArray(PBLT, 'Unknown PBLT', 4),
-      wbByteArray(PBRT, 'Unknown PBRT', 4),
+      wbLStringKC(PBLT, 'Unknown PBLT', 0, cpTranslate),
+      wbLStringKC(PBRT, 'Unknown PBRT', 0, cpTranslate),
       wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),
       wbRArray('Targets', wbRStruct('Target', [
         wbStruct(QSTA, 'Target', [
@@ -20332,6 +20371,7 @@ begin
 
   wbRecord(OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004} 2, 'Unknown 2',
       {0x00000010} 4, 'Legendary Mod',
       {0x00000040} 6, 'Unknown 6',
       {0x00000080} 7, 'Mod Collection',
@@ -21189,9 +21229,14 @@ begin
     wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
-  wbRecord(CHAL, 'Challenge', [
+  wbRecord(CHAL, 'Challenge',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])),[
     wbEDID,
     wbWTFG,
+    wbRArray('Season Tags', wbString(FTAG, 'Season Tag')),
     wbFULL,
     wbString(SNAM, 'Tracked Stat Used'),
     wbString(NNAM, 'Comment'),
@@ -21208,7 +21253,9 @@ begin
       'Daily',
       'Weekly',
       'Lifetime',
-      'Bi-weekly?'
+      'Monthly',
+      'Event',
+      'Seasonal'
     ])),
     wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
       'Character',
@@ -21252,7 +21299,11 @@ begin
     wbAUUV
   ]);
 
-  wbRecord(MDSP, 'Model Swap', [
+  wbRecord(MDSP, 'Model Swap' ,
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbXALG,
     wbRArray('Model Swaps', wbRStruct('Model Swap', [
@@ -21285,8 +21336,13 @@ begin
     wbByteArray(ATSI, 'Unknown', 4)
   ]);
 
-  wbRecord(GMRW, 'Gameplay Reward', [
+  wbRecord(GMRW, 'Gameplay Reward',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
+    wbRArray('Season Tags', wbString(FTAG, 'Season Tag')),
     wbFormIDCk(ANAM, 'Parent Quest', [QUST]),
     wbInteger(RWDS, 'Rewards Count', itU32),
     wbRArray('Rewards List', wbReward)
@@ -21351,7 +21407,11 @@ begin
     wbFormID(DATA, 'Object')
   ]);
 
-  wbRecord(DCGF, 'Daily Content Group', [
+  wbRecord(DCGF, 'Daily Content Group',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbRArray('Quest List',
       wbFormID(DCGQ, 'Quest')
