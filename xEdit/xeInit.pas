@@ -368,7 +368,6 @@ begin
       end;
       gmFO76: begin
         regPath := sUninstallRegKey + wbGameNameReg + '\';
-        client  := 'Bethesda.net Launcher';
       end;
       end;
 
@@ -386,7 +385,7 @@ begin
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
                   regKey := 'Installed Path';
       gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
-      gmFO76:     regKey := 'Path';
+      gmFO76:     regKey := 'InstallLocation';
       end;
 
       wbDataPath := ReadString(regKey);
@@ -426,8 +425,6 @@ begin
     case wbGameMode of
       gmTES3:
         wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
-      gmFO76:
-        wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameNameReg + '\';
     else
       wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
     end;
@@ -490,7 +487,10 @@ begin
         Exit;
       end;
 
-      wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
+      if wbGameMode = gmFO76 then
+        wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt'
+      else
+        wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
     end;
   if ExtractFilePath(wbPluginsFileName) = '' then
     wbPluginsFileName := ExpandFileName(wbPluginsFileName);
@@ -815,7 +815,8 @@ begin
     wbGameMode := gmFO76;
     wbAppName := 'FO76';
     wbGameName := 'Fallout76';
-    wbGameNameReg := 'Fallout 76';
+    wbGameName2 := 'Fallout 76';
+    wbGameNameReg := 'Steam App 1151340';
     wbGameMasterEsm := 'SeventySix.esm';
     wbLanguage := 'En';
     wbArchiveExtension := '.ba2';
