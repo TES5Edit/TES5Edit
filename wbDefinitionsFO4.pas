@@ -9507,7 +9507,7 @@ begin
       wbInteger('Armor Rating', itU16),
       wbInteger('Base Addon Index', itU16),
       wbInteger('Stagger Rating', itU8, wbStaggerEnum),
-      wbUnknown(cpIgnore, False, wbNeverShow, nil)
+      wbByteArray('Unused', 3, cpIgnore, false, wbNeverShow)
     ]),
     wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
