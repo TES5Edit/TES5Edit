@@ -861,8 +861,8 @@ Ctrl+Alt+C will copy the following value of the 3rd column.
 
 xEdit can be started with the following parameters:
 
-`-quickshowconflicts` - after confirming modules to be loaded, automatically load all valid mod groups and "Apply Filter to show conflicts" in a special, faster, way
-`-veryquickshowconflicts` - same as above, but automatically loads the modules as specified in plugins.txt without showing the module selection dialog (except if CTRL is held when starting)
+`-quickshowconflicts` - after confirming modules to be loaded, automatically load all valid mod groups and "Apply Filter to show conflicts", where any row with exactly 2 columns is always only considered as override
+`-veryquickshowconflicts` - same as above, but automatically loads the modules as specified in plugins.txt without showing the module selection dialog (except if CTRL is held when starting), the filter will never show the game master, and all records with less than 2 overrides are filtered without further checking conflict status
 
 ## Quick [Auto] Clean
 
