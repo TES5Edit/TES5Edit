@@ -989,6 +989,7 @@ type
     Script: IxeScript;
   public
     ScriptProcessElements: TwbElementTypes;
+    MonospaceFontName: string;
   private
     ScriptHotkeys: TStringList;
 
@@ -1015,7 +1016,6 @@ type
     AutoDone    : Boolean;
     ColumnWidth : Integer;
     RowHeight   : Integer;
-    MonospaceFontName: string;
 
     LOOTPluginInfos: array of TLOOTPluginInfo;
     StickViewNodeLabel: string;
@@ -21149,3 +21149,5 @@ finalization
     EndTransaction(Handle);
   end;
 end.
+
+

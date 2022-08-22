@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -15,7 +15,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, ExtCtrls, IOUtils, StrUtils, Vcl.ComCtrls,
-  SynEdit, SynMemo, xeMainForm;
+  SynEdit, SynMemo, SynEditKeyCmds, xeMainForm, SynHighlighterPas;
 
 const
   sNewScript = '<new script>';
@@ -71,6 +71,7 @@ type
     procedure EditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure EditorKeyPress(Sender: TObject; var Key: Char);
   private
+    Highlighter : TSynPasSyn;
     ScriptSelectionChanged : Boolean;
     LastCloseUp : Int64;
     SelectionOnDropDown: string;
@@ -422,6 +423,11 @@ procedure TfrmScript.FormCreate(Sender: TObject);
 begin
   cmbScripts.OnBeforeWheel := cmbScriptsBeforeWheel;
   cmbScripts.OnAfterWheel := cmbScriptsAfterWheel;
+
+  Highlighter := TSynPasSyn.Create(Self);
+  Editor.Highlighter := Highlighter;
+  if frmMain.MonospaceFontName <> '' then
+    Editor.Font.Name := frmMain.MonospaceFontName;
 end;
 
 procedure TfrmScript.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
