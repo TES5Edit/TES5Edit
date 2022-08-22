@@ -1975,10 +1975,11 @@ begin
           //                 or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
           //                 or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;
           // This is the correct way
+          DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS_COMPLEX;
           DDSHeader.dwCaps2 := DDSCAPS2_CUBEMAP
                             or DDSCAPS2_POSITIVEX or DDSCAPS2_NEGATIVEX
                             or DDSCAPS2_POSITIVEY or DDSCAPS2_NEGATIVEY
-                            or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;          
+                            or DDSCAPS2_POSITIVEZ or DDSCAPS2_NEGATIVEZ;
           DDSHeaderDX10.miscFlags := DDS_RESOURCE_MISC_TEXTURECUBE;
         end;
         DDSHeader.ddspf.dwSize := SizeOf(DDSHeader.ddspf);
