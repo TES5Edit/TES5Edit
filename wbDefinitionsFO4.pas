@@ -13038,8 +13038,8 @@ begin
   ]);
 
   wbRecord(DUAL, 'Dual Cast Data', [
-    wbEDID
-    wbOBND(True),
+    wbEDID,
+    wbOBNDReq,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
       wbFormIDCk('Explosion', [EXPL, NULL]),
