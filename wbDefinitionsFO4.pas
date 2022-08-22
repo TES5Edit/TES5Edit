@@ -13039,6 +13039,19 @@ begin
 
   wbRecord(DUAL, 'Dual Cast Data', [
     wbEDID
+    wbOBND(True),
+    wbStruct(DATA, 'Data', [
+      wbFormIDCk('Projectile', [PROJ, NULL]),
+      wbFormIDCk('Explosion', [EXPL, NULL]),
+      wbFormIDCk('Effect Shader', [EFSH, NULL]),
+      wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      wbInteger('Inherit Scale', itU32, wbFlags([
+        'Hit Effect Art',
+        'Projectile',
+        'Explosion'
+      ]))
+    ], cpNormal, True)
   ]);
 
   wbRecord(SNCT, 'Sound Category', [
