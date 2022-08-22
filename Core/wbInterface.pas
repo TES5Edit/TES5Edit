@@ -3922,6 +3922,17 @@ function wbFormIDCk(const aSignature : TwbSignature;
                           aGetCP     : TwbGetConflictPriority = nil)
                                      : IwbSubRecordDef; overload;
 
+function wbFormIDCkST(const aSignature : TwbSignature;
+                      const aName      : string;
+                      const aValidRefs : TwbSignatures;
+                            aPersistent: Boolean = False;
+                            aPriority  : TwbConflictPriority = cpNormal;
+                            aRequired  : Boolean = False;
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
+                                       : IwbSubRecordDef; overload;
+
+
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
                            const aName      : string;
                            const aValidRefs : TwbSignatures;
@@ -6477,6 +6488,9 @@ type
     function GetSignatureCount: Integer;
   end;
 
+  TwbFormIDCheckedST = class(TwbFormIDChecked)
+  end;
+
   TwbChar4 = class(TwbIntegerDefFormater, IwbChar4)
   protected
     constructor Clone(const aSource: TwbDef); override;
@@ -8384,6 +8398,13 @@ begin
   Result := TwbFormIDChecked.Create(aValidRefs, [], aPersistent);
 end;
 
+function wbFormIDST(const aValidRefs : TwbSignatures;
+                        aPersistent: Boolean)
+                                   : IwbFormID;
+begin
+  Result := TwbFormIDCheckedST.Create(aValidRefs, [], aPersistent);
+end;
+
 function wbFormID(const aValidRefs     : TwbSignatures;
                   const aValidFlstRefs : TwbSignatures;
                         aPersistent    : Boolean)
@@ -8473,6 +8494,20 @@ function wbFormIDCk(const aSignature : TwbSignature;
 begin
   Result := wbInteger(aSignature, aName, itU32, wbFormID(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
 end;
+
+function wbFormIDCkST(const aSignature : TwbSignature;
+                      const aName      : string;
+                      const aValidRefs : TwbSignatures;
+                            aPersistent: Boolean = False;
+                            aPriority  : TwbConflictPriority = cpNormal;
+                            aRequired  : Boolean = False;
+                            aDontShow  : TwbDontShowCallback = nil;
+                            aGetCP     : TwbGetConflictPriority = nil)
+                                       : IwbSubRecordDef; overload;
+begin
+  Result := wbInteger(aSignature, aName, itU32, wbFormIDST(aValidRefs, aPersistent), aPriority, aRequired, False, aDontShow, nil, 0, aGetCP);
+end;
+
 
 function wbFormIDCkNoReach(const aSignature : TwbSignature;
                            const aName      : string;
@@ -15268,6 +15303,8 @@ var
   FormID     : TwbFormID;
   MainRecord : IwbMainRecord;
   _File      : IwbFile;
+  Sig        : TwbSignature;
+  i, j       : Integer;
 begin
   FormID := TwbFormID.FromCardinal(aInt);
 
@@ -15292,6 +15329,22 @@ begin
     end;
 
   Result := FormID.ToString(False);
+
+  if Self is TwbFormIDCheckedST then with TwbFormIDCheckedST(Self) do begin
+    j := -1;
+    if Assigned(MainRecord) then begin
+      Sig := MainRecord.Signature;
+      for i := Low(fidcValidRefsArr) to High(fidcValidRefsArr) do
+        if Sig = fidcValidRefsArr[i] then begin
+          j := i;
+          Break;
+        end;
+    end;
+    if j >= 0 then
+      Result := IntToHex(i, 2) + ':' + Result
+    else
+      Result := 'XX:' + Result;
+  end;
 end;
 
 function TwbFormIDDefFormater.ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string;
