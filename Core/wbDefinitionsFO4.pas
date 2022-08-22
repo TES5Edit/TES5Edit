@@ -13153,7 +13153,7 @@ begin
   ]);
 
   wbRecord(DUAL, 'Dual Cast Data', [
-    wbEDID
+    wbEDID,
     wbOBND(True),
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
