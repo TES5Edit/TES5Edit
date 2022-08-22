@@ -7624,7 +7624,8 @@ begin
       'Minimal Use',
       'Sliding',
       'Do Not Open in Combat Search'
-    ]), cpNormal, True)
+    ]), cpNormal, True),
+    wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
 
   wbBlendModeEnum := wbEnum([
