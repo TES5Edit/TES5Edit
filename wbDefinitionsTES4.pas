@@ -2567,7 +2567,7 @@ begin
     ], cpNormal, True)
   ], True);
 
-  wbSPLO := wbFormIDCk(SPLO, 'Spell', [SPEL, LVSP]);
+  wbSPLO := wbFormIDCkST(SPLO, 'Spell', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Spells', wbSPLO);
 
   wbRecord(BSGN, 'Birthsign', [
@@ -4134,9 +4134,9 @@ begin
     ),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True),
-    wbCNTOs,
     wbSPLOs,
     wbSCRI,
+    wbCNTOs,
     wbStruct(AIDT, 'AI Data', [
       wbInteger('Aggression', itU8),
       wbInteger('Confidence', itU8),

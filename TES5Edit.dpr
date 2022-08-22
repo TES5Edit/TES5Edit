@@ -88,6 +88,7 @@ uses
   wbDataFormatNifTypes in 'wbDataFormatNifTypes.pas',
   wbNifMath in 'wbNifMath.pas',
   wbHalfFloat in 'wbHalfFloat.pas',
+  wbLoadOrder in 'wbLoadOrder.pas',
   wbModGroups in 'wbModGroups.pas',
   wbBetterStringList in 'wbBetterStringList.pas',
   frmLegendForm in 'frmLegendForm.pas' {frmLegend},
