@@ -22,7 +22,9 @@ With the 4.0 update all previous guides are obsolete. Refer to the [xEdit Quick 
 Rename to TES4Edit.exe to work with Oblivion.
 Rename to TES5Edit.exe to work with Skyrim.
 Rename to TES5VREdit.exe to work with Skyrim VR.
+Rename to EnderalEdit.exe to work with Enderal.
 Rename to SSEEdit to work with Skyrim SE.
+Rename to EnderalSEEdit to work with Enderal SE.
 Rename to FO3Edit.exe to work with Fallout3.
 Rename to FNVEdit.exe to work with New Vegas.
 Rename to FO4Edit.exe to work with Fallout 4.
