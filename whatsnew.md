@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #1034 - Incorrect encoding for cyrillic symbols for Player Dialog Prompts
 * (reported on Discord) - .strings files may not be saved if there were no changes to the .es? file
 
 # What's new in xEdit 4.0.4?

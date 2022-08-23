@@ -8325,7 +8325,7 @@ begin
       wbEmbeddedScriptReq
     ], [], cpNormal, True),
     wbFormIDCk(SNDD, 'Unused', [SOUN]),
-    wbStringKC(RNAM, 'Prompt'),
+    wbStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [CREA, NPC_]),
     wbFormIDCk(KNAM, 'ActorValue/Perk', [AVIF, PERK]),
     wbInteger(DNAM, 'Speech Challenge', itU32, wbEnum([
