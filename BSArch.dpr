@@ -436,12 +436,17 @@ end;
 
 //======================================================================
 procedure Main;
+var s: string;
 begin
   WriteLn('');
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxEHAppVersion := 'BSArch v' + csBSAVersion;
   {$ENDIF}
-  WriteLn('BSArch v' + csBSAVersion + ' by zilav, ElminsterAU, Sheson');
+  s := csBSAVersion;
+  {$IFDEF WIN64}
+  s := s + ' x64';
+  {$ENDIF WIN64}
+  WriteLn('BSArch v' + s + ' by zilav, ElminsterAU, Sheson');
   WriteLn('Packer and unpacker for Bethesda Game Studios archive files');
   WriteLn;
   WriteLn('The Source Code Form is subject to the terms of the Mozilla Public License,');

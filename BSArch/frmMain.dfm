@@ -10,11 +10,9 @@ object FormMain: TFormMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDefault
   OnClose = FormClose
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object pnlFilter: TPanel
     Left = 0
@@ -43,6 +41,7 @@ object FormMain: TFormMain
       EditLabel.Caption = 'Filter'
       LabelPosition = lpLeft
       TabOrder = 0
+      Text = ''
       OnKeyPress = edFilterKeyPress
     end
     object rbAll: TRadioButton

@@ -15,7 +15,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, VirtualTrees, Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Menus, System.Types, System.UITypes, System.StrUtils, System.IniFiles,
-  Vcl.Themes, wbAssets, wbBSArchive, Vcl.Styles.Utils.SystemMenu;
+  Vcl.Themes, wbAssets, wbBSArchive, Vcl.Styles.Utils.SystemMenu, Vcl.Mask;
 
 const
   WM_PACK = WM_USER + 3;
@@ -571,6 +571,9 @@ begin
   end;
 
   Application.Title := Application.Title + ' ' + csBSAVersion;
+  {$IFDEF WIN64}
+  Application.Title := Application.Title + ' x64';
+  {$ENDIF WIN64}
   Caption := Application.Title;
   Assets := TList.Create;
   lblTip.Caption :=
