@@ -1695,7 +1695,7 @@ begin
         if aBrightness <> 0 then
           imgcanv.ModifyContrastBrightness(aBrightness / 10, aBrightness);
         if (not SameValue(GammaR, 1.0)) or (not SameValue(GammaG, 1.0)) or (not SameValue(GammaB, 1.0)) then
-          imgcanv.GammaCorection(GammaR, GammaG, GammaB);
+          imgcanv.GammaCorrection(GammaR, GammaG, GammaB);
       finally
         imgcanv.Free;
       end;
