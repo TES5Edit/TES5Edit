@@ -14,7 +14,7 @@
 // JCL_DEBUG_EXPERT_DELETEMAPFILE ON
 {$ENDIF}
 
-program xDump;
+program BSArch;
 
 {$APPTYPE CONSOLE}
 
@@ -33,13 +33,9 @@ uses
   wbStreams in 'Core\wbStreams.pas';
 
 const
-  sVersion = '0.8';
   IMAGE_FILE_LARGE_ADDRESS_AWARE = $0020;
 
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
-
-var
-  bMultiThreaded: Boolean = False;
 
 //======================================================================
 function HexToInt(s: string): Cardinal;
@@ -62,7 +58,7 @@ var
   bExtendedDump: Boolean;
 
 function IterShowFileInfo(bsa: TwbBSArchive; const aFileName: string;
-  aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+  aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 var
   FileTES3: PwbBSFileTES3;
   FileTES4: PwbBSFileTES4;
@@ -141,19 +137,6 @@ begin
 end;
 
 procedure DoShowArchiveInfo(bsa: TwbBSArchive); overload;
-const
-  FlagNames: array [0..31] of string = (
-    'NamedDir', 'NamedFiles', 'Compressed', 'RetainDir',
-    'RetainName', 'RetainFOff', 'XBox360', 'StartupStr',
-    'EmbedName', 'XMem', '', '',
-    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-  );
-  FileFlagNames: array [0..31] of string = (
-    'NIF', 'DDS', 'XML', 'WAV',
-    'MP3', 'TXT', 'SPT', 'FNT',
-    'MISC', '', '', '',
-    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
-  );
 var
   i: integer;
   s, s2: string;
@@ -166,24 +149,24 @@ begin
   WriteLn(Format('%014s: %d', ['Files', bsa.FileCount]));
   // flags
   if bsa.ArchiveType in [baTES4, baFO3, baSSE] then begin
-    WriteLn(Format('%014s: 0x%s%014s: 0x%s', [
+    WriteLn(Format('%014s: 0x%s%020s: 0x%s', [
       'Archive Flags', IntToHex(bsa.ArchiveFlags, 8),
       'File Flags', IntToHex(bsa.FileFlags, 8)
     ]));
     for i := 0 to 10 do begin
       if (bsa.ArchiveFlags shr i) and 1 = 1 then s := '*' else s := ' ';
-      if FlagNames[i] <> '' then
-        s := s + FlagNames[i]
+      if cArchiveFlagNames[i] <> '' then
+        s := s + cArchiveFlagNames[i]
       else
         s := s + 'Bit ' + IntToStr(i);
-      s := Format('%17s%s', [' ', s]);
+      s := Format('%16s%s', [' ', s]);
 
       if (bsa.FileFlags shr i) and 1 = 1 then s2 := '*' else s2 := ' ';
-      if FileFlagNames[i] <> '' then
-        s2 := s2 + FileFlagNames[i]
+      if cFileFlagNames[i] <> '' then
+        s2 := s2 + cFileFlagNames[i]
       else
         s2 := s2 + 'Bit ' + IntToStr(i);
-      WriteLn(Format('%s%s%s', [s, StringOfChar(' ', 43 - Length(s)), s2]));
+      WriteLn(Format('%s%s%s', [s, StringOfChar(' ', 48 - Length(s)), s2]));
     end;
   end;
   // optional list or dump
@@ -240,7 +223,7 @@ end;
 
 procedure DoPack(const aFolderName, aArchiveName: string);
 var
-  root, s, ext, mask: string;
+  root, archname, s, ext, mask: string;
   i: integer;
   atype: TBSArchiveType;
   sl: TStringList;
@@ -250,6 +233,9 @@ var
 begin
   sw := TStopwatch.StartNew;
   root := IncludeTrailingPathDelimiter(aFolderName);
+  archname := aArchiveName;
+  if TPath.IsRelativePath(archname) then
+    archname := root + archname;
 
   if FindCmdLineSwitch('tes3') then atype := baTES3 else
   if FindCmdLineSwitch('tes4') then atype := baTES4 else
@@ -262,14 +248,12 @@ begin
   else
     raise Exception.Create('Archive type is not provided for packing!');
 
-  if FindCmdLineSwitch('mt') then
-    bMultiThreaded := True;
-
   sl := TStringList.Create;
   bsa := TwbBSArchive.Create;
   try
     bsa.Compress := FindCmdLineSwitch('z', s);
     bsa.ShareData := FindCmdLineSwitch('share', s);
+    bsa.Multithreaded := FindCmdLineSwitch('mt');
 
     if atype = baFO4dds then begin
       mask := '*.dds';
@@ -297,7 +281,7 @@ begin
       raise Exception.Create('No valid files found for packing');
 
     try
-      bsa.CreateArchive(aArchiveName, atype, sl);
+      bsa.CreateArchive(archname, atype, sl);
     except
       on E: Exception do
         raise Exception.Create('Archive creation error: ' + E.Message);
@@ -315,10 +299,8 @@ begin
     DoShowArchiveInfo(bsa);
     WriteLn;
 
-    if bMultiThreaded then
-      bsa.Sync := TSimpleRWSync.Create;
     Completed := 0;
-    if Assigned(bsa.Sync) then
+    if bsa.Multithreaded then
       TParallel.&For(0, Pred(sl.Count), procedure(i:Integer) begin
         try
           bsa.AddFile(root, root + sl[i]);
@@ -326,13 +308,13 @@ begin
           on E: Exception do
             raise Exception.Create('File packing error "' + root + sl[i] + '": ' + E.Message);
         end;
-        bsa.Sync.BeginWrite;
+        bsa.SyncBeginWrite;
         try
           Inc(Completed);
           if (Completed mod 10 = 0) or (Completed = Pred(sl.Count)) then
             Write(#13'[' + IntToStr(Round((Completed+1)/sl.Count*100)) + '%]');
         finally
-          bsa.Sync.EndWrite;
+          bsa.SyncEndWrite;
         end;
       end)
     else
@@ -372,11 +354,11 @@ var
   UnpackDir: string; // store root folder for unpacking
 
 var
-  Completed: Integer;
+  Completed: Cardinal;
   bQuiet : Boolean = False;
 
 function IterUnpackFile(bsa: TwbBSArchive; const aFileName: string;
-  aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+  aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 var
   dir, fname: string;
   FileData: TBytes;
@@ -386,15 +368,13 @@ begin
 
   dir := UnpackDir + ExtractFilePath(fname);
   if not DirectoryExists(dir) then begin
-    if Assigned(bsa.Sync) then
-      bsa.Sync.BeginWrite;
+    bsa.SyncBeginWrite;
     try
       if not ForceDirectories(dir) then
         if not DirectoryExists(dir) then
           raise Exception.Create('Can not create destination folder: ' + dir);
     finally
-      if Assigned(bsa.Sync) then
-        bsa.Sync.EndWrite;
+      bsa.SyncEndWrite;
     end;
   end;
 
@@ -411,8 +391,7 @@ begin
     Free;
   end;
 
-  if Assigned(bsa.Sync) then
-    bsa.Sync.BeginWrite;
+  bsa.SyncBeginWrite;
   try
     if bQuiet then begin
       Inc(Completed);
@@ -421,8 +400,7 @@ begin
     end else
       WriteLn(fname);
   finally
-    if Assigned(bsa.Sync) then
-      bsa.Sync.EndWrite;
+    bsa.SyncEndWrite;
   end;
   Result := False;
 end;
@@ -435,9 +413,6 @@ begin
   if FindCmdLineSwitch('quiet') or FindCmdLineSwitch('q') then
     bQuiet := True;
 
-  if FindCmdLineSwitch('mt') then
-    bMultiThreaded := True;
-
   UnpackDir := IncludeTrailingPathDelimiter(aFolderName);
   if not DirectoryExists(UnpackDir) then
     raise Exception.Create('Folder does not exist: ' + UnpackDir);
@@ -449,8 +424,7 @@ begin
   bsa := TwbBSArchive.Create;
   try
     bsa.LoadFromFile(aArchiveName);
-    if bMultiThreaded then
-      bsa.Sync := TSimpleRWSync.Create;
+    bsa.MultiThreaded := FindCmdLineSwitch('mt');
     bsa.IterateFiles(@IterUnpackFile);
     sw.Stop;
     WriteLn;
@@ -465,9 +439,9 @@ procedure Main;
 begin
   WriteLn('');
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
-  nxEHAppVersion := 'BSArch v' + sVersion;
+  nxEHAppVersion := 'BSArch v' + csBSAVersion;
   {$ENDIF}
-  WriteLn('BSArch v' + sVersion + ' by zilav and ElminsterAU');
+  WriteLn('BSArch v' + csBSAVersion + ' by zilav, ElminsterAU, Sheson');
   WriteLn('Packer and unpacker for Bethesda Game Studios archive files');
   WriteLn;
   WriteLn('The Source Code Form is subject to the terms of the Mozilla Public License,');
@@ -519,9 +493,9 @@ begin
     WriteLn('  -fo4        Fallout 4 General archive format');
     WriteLn('  -fo4dds     Fallout 4 DDS archive format (streamed DDS textures mipmaps)');
     WriteLn('  -af:value   Override archive flags with a hex value');
-    WriteLn('              Oblivion, Fallout 3/NV and Skyrim LE archives only');
+    WriteLn('              Oblivion, Fallout 3/NV and Skyrim archives only');
     WriteLn('  -ff:value   Override files flags with a hex value');
-    WriteLn('              Oblivion, Fallout 3/NV and Skyrim LE archives only');
+    WriteLn('              Oblivion, Fallout 3/NV and Skyrim archives only');
     WriteLn('  -z          Compress archive. This will also force "Compressed" flag');
     WriteLn('              in archive flags even if they are overridden with -af');
     WriteLn('              parameter custom value. Keep in mind that sounds and voices');
@@ -555,7 +529,7 @@ end;
 
 {
 function IterFilesTES3(bsa: TwbBSArchive; const aFileName: string;
-  aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+  aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 var
   filerec: PwbBSFileTES3;
 begin
@@ -565,7 +539,7 @@ begin
 end;
 
 function IterFilesTES4(bsa: TwbBSArchive; const aFileName: string;
-  aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+  aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 var
   filerec: PwbBSFileTES4;
   h: UInt64;
@@ -579,7 +553,7 @@ begin
 end;
 
 function IterFilesFO4(bsa: TwbBSArchive; const aFileName: string;
-  aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+  aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 var
   filerec: PwbBSFileFO4;
   d, fname, f, e: string;
@@ -601,7 +575,7 @@ begin
 end;
 
 function IterDumpFileFO4(bsa: TwbBSArchive; const aFileName: string;
-  aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+  aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 var
   filerec: PwbBSFileFO4;
 begin

@@ -12,6 +12,9 @@
         <Projects Include="BSArch.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="BSArchPro.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -47,14 +50,23 @@
     <Target Name="BSArch:Make">
         <MSBuild Projects="BSArch.dproj" Targets="Make"/>
     </Target>
+    <Target Name="BSArchPro">
+        <MSBuild Projects="BSArchPro.dproj"/>
+    </Target>
+    <Target Name="BSArchPro:Clean">
+        <MSBuild Projects="BSArchPro.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="BSArchPro:Make">
+        <MSBuild Projects="BSArchPro.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="xEdit;xDump;BSArch"/>
+        <CallTarget Targets="xEdit;xDump;BSArch;BSArchPro"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="xEdit:Clean;xDump:Clean;BSArch:Clean"/>
+        <CallTarget Targets="xEdit:Clean;xDump:Clean;BSArch:Clean;BSArchPro:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="xEdit:Make;xDump:Make;BSArch:Make"/>
+        <CallTarget Targets="xEdit:Make;xDump:Make;BSArch:Make;BSArchPro:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

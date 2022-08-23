@@ -7,7 +7,7 @@
         <MainSource>xEdit.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
-        <ProjectVersion>18.8</ProjectVersion>
+        <ProjectVersion>19.2</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
@@ -75,7 +75,6 @@
         <DCC_UnitSearchPath>.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\vcl;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\VirtualTrees\Source;.\External\vcl-styles-utils\Common;.\External\delphi-detours-library\Source;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;.\External\Diff;.\External\TOM2;.\External\DWScript\Source;.\External\SynEdit\Source;.\Core;.\xEdit;.\xEdit\JvI;.\xEdit\DWS;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>.\xEdit\xEdit_TES_Icon.ico</Icon_MainIcon>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.1.4.0;ProductName=xEdit;ProductVersion=4.1.4.0</VerInfo_Keys>
@@ -102,9 +101,11 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
+        <ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
+        <ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_3)'!=''">
         <Icon_MainIcon>xEdit\xEdit_FO_Icon.ico</Icon_MainIcon>

@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -15,11 +15,18 @@ uses
   Classes,
   Windows,
   Threading,
+  SyncObjs,
   wbStreams,
   tfTypes,
   tfMD5;
 
+const
+  csBSAVersion = '0.9a';
+
 type
+  // per file compression options
+  TPackingCompression = (pcGlobal, pcCompress, pcUncompress);
+
   TMagic4 = array [0..3] of AnsiChar;
   PMagic4 = ^TMagic4;
 
@@ -182,13 +189,45 @@ type
   end;
   PDDSHeaderDX10 = ^TDDSHeaderDX10;
 
+const
+  DDSD_CAPS            = $00000001;
+  DDSD_HEIGHT          = $00000002;
+  DDSD_WIDTH           = $00000004;
+  DDSD_PITCH           = $00000008;
+  DDSD_PIXELFORMAT     = $00001000;
+  DDSD_MIPMAPCOUNT     = $00020000;
+  DDSD_LINEARSIZE      = $00080000;
+  DDSD_DEPTH           = $00800000;
+  DDSCAPS_COMPLEX      = $00000008;
+  DDSCAPS_TEXTURE      = $00001000;
+  DDSCAPS_MIPMAP       = $00400000;
+  DDSCAPS2_CUBEMAP     = $00000200;
+  DDSCAPS2_POSITIVEX   = $00000400;
+  DDSCAPS2_NEGATIVEX   = $00000800;
+  DDSCAPS2_POSITIVEY   = $00001000;
+  DDSCAPS2_NEGATIVEY   = $00002000;
+  DDSCAPS2_POSITIVEZ   = $00004000;
+  DDSCAPS2_NEGATIVEZ   = $00008000;
+  DDSCAPS2_VOLUME      = $00200000;
+  DDPF_ALPHAPIXELS     = $00000001;
+  DDPF_ALPHA           = $00000002;
+  DDPF_FOURCC          = $00000004;
+  DDPF_RGB             = $00000040;
+  DDPF_YUV             = $00000200;
+  DDPF_LUMINANCE       = $00020000;
+
+  // DX10
+  DDS_DIMENSION_TEXTURE2D       = $00000003;
+  DDS_RESOURCE_MISC_TEXTURECUBE = $00000004;
+
+type
   TwbBSArchive = class;
 
   TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds);
   TBSArchiveState = (stReading, stWriting);
   TBSArchiveStates = set of TBSArchiveState;
   TBSFileIterationProc = function(aArchive: TwbBSArchive; const aFileName: string;
-    aFileRecord: Pointer; aFolderRecord: Pointer): Boolean;
+    aFileRecord: Pointer; aFolderRecord: Pointer; aData: Pointer): Boolean;
 
   TDDSInfo = record Width, Height, MipMaps: Integer; end;
   TBSFileDDSInfoProc = procedure(aArchive: TwbBSArchive; const aFileName: string;
@@ -222,7 +261,9 @@ type
     Size: Cardinal;
     Offset: Int64;
     Name: string;
-    function Compressed(bsa: TwbBSArchive): Boolean;
+    PackingCompression: TPackingCompression;
+    function Compress(bsa: TwbBSArchive): Boolean; // compress when packing into a new archive
+    function Compressed(bsa: TwbBSArchive): Boolean; // compressed in existing archive
     function RawSize: Cardinal;
   end;
   PwbBSFileTES4 = ^TwbBSFileTES4;
@@ -273,7 +314,10 @@ type
     TexChunks  : array of TwbBSTexChunkRec;
     //
     Name: string;
+    PackingCompression: TPackingCompression;
     function DXGIFormatName: string;
+    function Compress(bsa: TwbBSArchive): Boolean; // compress when packing into a new archive
+    function Compressed(bsa: TwbBSArchive): Boolean; // compressed in existing archive
   end;
   PwbBSFileFO4 = ^TwbBSFileFO4;
 
@@ -295,6 +339,7 @@ type
     fVersion: Cardinal;
     fCompress: Boolean;
     fShareData: Boolean;
+    fMultiThreaded: Boolean;
     fDDSInfoProc: TBSFileDDSInfoProc;
 
     fHeaderTES3: TwbBSHeaderTES3;
@@ -314,9 +359,17 @@ type
     fPackedData: array of TPackedDataInfo;
     fPackedDataCount: Integer;
 
+    {$IF CompilerVersion >= 34.0} { Delphi 10.4 }
+    Sync: TLightweightMREW;
+    {$ELSE}
+    Sync: IReadWriteSync;
+    {$IFEND}
+
     function GetArchiveFormatName: string;
     function GetFileCount: Cardinal;
+    function GetCreatedArchiveSize: Int64;
     procedure SetArchiveFlags(aFlags: Cardinal);
+    procedure SetMultiThreaded(aValue: Boolean);
     function FindFileRecordTES3(const aFileName: string; var aFileIdx: Integer): Boolean;
     function FindFileRecordTES4(const aFileName: string; var aFolderIdx, aFileIdx: Integer): Boolean;
     function FindFileRecordFO4(const aFileName: string; var aFileIdx: Integer): Boolean;
@@ -324,9 +377,11 @@ type
     function CalcDataHash(aData: Pointer; aLen: Cardinal): TPackedDataHash;
     function FindPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer): Boolean;
     procedure AddPackedData(aSize: Cardinal; aHash: TPackedDataHash; aFileRecord: Pointer);
+    procedure PackData(aFileRecord: Pointer; const aFileName: string;
+      aDataHash: TPackedDataHash; aData: PByte; aSize: Integer;
+      aCompress: Boolean; aDoCompress: Boolean = False);
 
   public
-    Sync: IReadWriteSync;
     constructor Create;
     destructor Destroy; override;
     procedure LoadFromFile(const aFileName: string);
@@ -340,23 +395,66 @@ type
     function ExtractFileData(const aFileName: string): TBytes; overload;
     procedure ExtractFileToStream(const aFileName: string; aStream: TStream);
     procedure ExtractFile(const aFileName, aSaveAs: string);
-    procedure IterateFiles(aProc: TBSFileIterationProc);
+    procedure IterateFiles(aProc: TBSFileIterationProc; aData: Pointer = nil;
+      aSingleThreaded: Boolean = False);
     function FileExists(const aFileName: string): Boolean;
     procedure ResourceList(const aList: TStrings; aFolder: string = '');
     //procedure IterateFolders(aProc: TBSFileIterationProc);
     procedure Close;
+
+    procedure SyncBeginWrite;
+    procedure SyncEndWrite;
 
     property FileName: string read fFileName;
     property ArchiveType: TBSArchiveType read fType;
     property Version: Cardinal read fVersion;
     property FormatName: string read GetArchiveFormatName;
     property FileCount: Cardinal read GetFileCount;
+    property CreatedArchiveSize: Int64 read GetCreatedArchiveSize;
     property ArchiveFlags: Cardinal read fHeaderTES4.Flags write SetArchiveFlags;
     property FileFlags: Cardinal read fHeaderTES4.FileFlags write fHeaderTES4.FileFlags;
     property Compress: Boolean read fCompress write fCompress;
     property ShareData: Boolean read fShareData write fShareData;
+    property MultiThreaded: Boolean read fMultiThreaded write SetMultiThreaded;
     property DDSInfoProc: TBSFileDDSInfoProc read fDDSInfoProc write fDDSInfoProc;
   end;
+
+const
+  cArchiveFormatNames: array[TBSArchiveType] of string = (
+    'None',
+    'Morrowind',
+    'Oblivion',
+    'Skyrim LE, New Vegas, Fallout 3',
+    'Skyrim SE, Skyrim AE',
+    'Fallout 4',
+    'Fallout 4 DDS'
+  );
+
+  cArchiveTypeExtensions: array[TBSArchiveType] of string = (
+    '.bsa',
+    '.bsa',
+    '.bsa',
+    '.bsa',
+    '.bsa',
+    '.ba2',
+    '.ba2'
+  );
+
+  cArchiveFlagNames: array [0..31] of string = (
+    'Include Directory Names', 'Include File Names', 'Compressed',
+    'Retain Directory Names', 'Retain File Names',
+    'Retain File Name Offsets', 'XBox 360 Archive',
+    'Retain Strings During Startup',
+    'Embed File Names', 'XMem Codec', '', '',
+    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+  );
+
+  cFileFlagNames: array [0..31] of string = (
+    'Meshes', 'Textures', 'Menus', 'Sounds',
+    'Voices', 'Shaders', 'Trees', 'Fonts',
+    'Misc', '', '', '',
+    '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+  );
 
 function SplitDirName(const aFileName: string; var Dir, Name: string): Integer;
 function SplitNameExt(const aFileName: string; var Name, Ext: string): Integer;
@@ -372,22 +470,12 @@ uses
   lz4io;
 
 const
-  TBSArchiveFormatName: array[TBSArchiveType] of string = (
-    'None',
-    'Morrowind',
-    'Oblivion',
-    'Fallout 3, New Vegas, Skyrim LE',
-    'Skyrim Special Edition',
-    'Fallout 4 General',
-    'Fallout 4 DDS'
-  );
-
   MAGIC_TES3: TMagic4 = #0#1#0#0;
   MAGIC_BSA : TMagic4 = 'BSA'#0;
   MAGIC_BTDX: TMagic4 = 'BTDX';
   MAGIC_GNRL: TMagic4 = 'GNRL';
   MAGIC_DX10: TMagic4 = 'DX10';
-  MAGIC_DDS: TMagic4 = 'DDS ';
+  MAGIC_DDS : TMagic4 = 'DDS ';
   MAGIC_DXT1: TMagic4 = 'DXT1';
   MAGIC_DXT3: TMagic4 = 'DXT3';
   MAGIC_DXT5: TMagic4 = 'DXT5';
@@ -434,36 +522,6 @@ const
   FILE_MISC = $0100; // CTL and others
 
   FILE_SIZE_COMPRESS = $40000000; // Whether the file is compressed
-
-  DDSD_CAPS            = $00000001;
-  DDSD_HEIGHT          = $00000002;
-  DDSD_WIDTH           = $00000004;
-  DDSD_PITCH           = $00000008;
-  DDSD_PIXELFORMAT     = $00001000;
-  DDSD_MIPMAPCOUNT     = $00020000;
-  DDSD_LINEARSIZE      = $00080000;
-  DDSD_DEPTH           = $00800000;
-  DDSCAPS_COMPLEX      = $00000008;
-  DDSCAPS_TEXTURE      = $00001000;
-  DDSCAPS_MIPMAP       = $00400000;
-  DDSCAPS2_CUBEMAP     = $00000200;
-  DDSCAPS2_POSITIVEX   = $00000400;
-  DDSCAPS2_NEGATIVEX   = $00000800;
-  DDSCAPS2_POSITIVEY   = $00001000;
-  DDSCAPS2_NEGATIVEY   = $00002000;
-  DDSCAPS2_POSITIVEZ   = $00004000;
-  DDSCAPS2_NEGATIVEZ   = $00008000;
-  DDSCAPS2_VOLUME      = $00200000;
-  DDPF_ALPHAPIXELS     = $00000001;
-  DDPF_ALPHA           = $00000002;
-  DDPF_FOURCC          = $00000004;
-  DDPF_RGB             = $00000040;
-  DDPF_YUV             = $00000200;
-  DDPF_LUMINANCE       = $00020000;
-
-  // DX10
-  DDS_DIMENSION_TEXTURE2D       = $00000003;
-  DDS_RESOURCE_MISC_TEXTURECUBE = $00000004;
 
   crc32table : array [0..255] of Cardinal = (
     $00000000, $77073096, $ee0e612c, $990951ba, $076dc419, $706af48f,
@@ -700,6 +758,16 @@ begin
   end;
 end;
 
+function TwbBSFileTES4.Compress(bsa: TwbBSArchive): Boolean;
+begin
+  case PackingCompression of
+    pcCompress  : Result := True;
+    pcUncompress: Result := False;
+    else
+      Result := bsa.Compress;
+  end;
+end;
+
 function TwbBSFileTES4.Compressed(bsa: TwbBSArchive): Boolean;
 begin
   Result := (bsa.ArchiveFlags and ARCHIVE_COMPRESS <> 0) xor (Size and FILE_SIZE_COMPRESS <> 0);
@@ -713,6 +781,24 @@ end;
 function TwbBSFileFO4.DXGIFormatName: string;
 begin
   Result := GetEnumName(TypeInfo(TDXGI), Integer(DXGIFormat));
+end;
+
+function TwbBSFileFO4.Compress(bsa: TwbBSArchive): Boolean;
+begin
+  case PackingCompression of
+    pcCompress  : Result := True;
+    pcUncompress: Result := False;
+    else
+      Result := bsa.Compress;
+  end;
+end;
+
+function TwbBSFileFO4.Compressed(bsa: TwbBSArchive): Boolean;
+begin
+  if bsa.ArchiveType = baFO4 then
+    Result := PackedSize <> 0
+  else
+    Result := (Length(TexChunks) <> 0) and (TexChunks[0].PackedSize <> 0);
 end;
 
 
@@ -734,7 +820,7 @@ end;
 
 function TwbBSArchive.GetArchiveFormatName: string;
 begin
-  Result := TBSArchiveFormatName[fType];
+  Result := cArchiveFormatNames[fType];
 end;
 
 function TwbBSArchive.GetFileCount: Cardinal;
@@ -762,6 +848,15 @@ begin
   // force compression flag if needed
   if fCompress then
     fHeaderTES4.Flags := fHeaderTES4.Flags or ARCHIVE_COMPRESS;
+end;
+
+procedure TwbBSArchive.SetMultiThreaded(aValue: Boolean);
+begin
+  fMultiThreaded := aValue;
+  {$IF CompilerVersion < 34.0}
+  if aValue and not Assigned(Sync) then
+    Sync := TSimpleRWSync.Create;
+  {$IFEND}
 end;
 
 function TwbBSArchive.FindFileRecordTES3(const aFileName: string; var aFileIdx: Integer): Boolean;
@@ -1081,7 +1176,6 @@ begin
       for i := Low(fFoldersTES4) to High(fFoldersTES4) do
         for j := Low(fFoldersTES4[i].Files) to High(fFoldersTES4[i].Files) do
           fFoldersTES4[i].Files[j].Name := fStream.ReadStringTerm;
-
     end;
 
   end;
@@ -1092,7 +1186,7 @@ end;
 
 
 type
-  THashPair = record DirHash, FileHash: UInt64; end;
+  THashPair = record DirHash, FileHash: UInt64; pc: TPackingCompression end;
   PHashPair = ^THashPair;
 
 function HashPairSort(List: TStringList; Index1, Index2: Integer): Integer;
@@ -1234,16 +1328,29 @@ begin
       h.DirHash := CreateHashTES4(fdir, '');
       SplitNameExt(fname, s, fext);
       h.FileHash := CreateHashTES4(s, fext);
+      h.pc := TPackingCompression(aFilesList.Objects[i]);
       aFilesList.Objects[i] := Pointer(h);
 
-      // determine file flags
       fext := LowerCase(fext);
-      with fHeaderTES4 do
+      with fHeaderTES4 do begin
+        // determine file flags
+        if fdir.StartsWith('meshes\',      True) then FileFlags := FileFlags or FILE_NIF else
+        if fdir.StartsWith('textures\',    True) then FileFlags := FileFlags or FILE_DDS else
+        if fdir.StartsWith('sound\',       True) then FileFlags := FileFlags or FILE_WAV or FILE_MP3 else
         if fext = '.nif' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.lod' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.bto' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.btr' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.btt' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.dtl' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.kf'  then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.kfm' then FileFlags := FileFlags or FILE_NIF else
+        if fext = '.hkx' then FileFlags := FileFlags or FILE_NIF else
         if fext = '.dds' then FileFlags := FileFlags or FILE_DDS else
         if fext = '.xml' then FileFlags := FileFlags or FILE_XML or FILE_MISC else
         if fext = '.wav' then FileFlags := FileFlags or FILE_WAV else
         if fext = '.fuz' then FileFlags := FileFlags or FILE_WAV else
+        if fext = '.lip' then FileFlags := FileFlags or FILE_MP3 else
         if fext = '.mp3' then FileFlags := FileFlags or FILE_MP3 else
         if fext = '.ogg' then FileFlags := FileFlags or FILE_MP3 else
         if fext = '.txt' then FileFlags := FileFlags or FILE_TXT else
@@ -1254,6 +1361,13 @@ begin
         if fext = '.fnt' then FileFlags := FileFlags or FILE_FNT else
         if fext = '.tex' then FileFlags := FileFlags or FILE_FNT else
           FileFlags := FileFlags or FILE_MISC;
+
+        // determine archive flags
+
+        // packed scripts can't be added to objects in the SSE CK if the archive was packed
+        // without the "RetainNames" flag (the scripts aren't shown in the script adding window)
+        if fext = '.pex' then ArchiveFlags := ArchiveFlags or ARCHIVE_RETAINNAME;
+      end;
     end;
 
     // sort by hashes
@@ -1281,6 +1395,7 @@ begin
       SetLength(fFoldersTES4[folderidx].Files, fileidx + 1);
       fFoldersTES4[folderidx].Files[fileidx].Hash := h.FileHash;
       fFoldersTES4[folderidx].Files[fileidx].Name := LowerCase(fname);
+      fFoldersTES4[folderidx].Files[fileidx].PackingCompression := h.pc;
       Inc(fileidx);
       Inc(fFoldersTES4[folderidx].FileCount);
       Inc(fHeaderTES4.FileCount);
@@ -1308,12 +1423,13 @@ begin
 
     // final flags detection
 
-    // misc file flag is not in Skyrim
+    // misc file flag is not in Skyrim SE
     if fType = baSSE then
       fHeaderTES4.FileFlags := fHeaderTES4.FileFlags and not FILE_MISC;
 
     // embedded names in texture only archives
-    if fHeaderTES4.FileFlags = FILE_DDS then
+    // except Skyrim SE: crashing engine bug if texture is uncompressed and file name is embedded
+    if (fHeaderTES4.FileFlags = FILE_DDS) and (fType <> baSSE) then
       fHeaderTES4.Flags := fHeaderTES4.Flags or ARCHIVE_EMBEDNAME;
 
     // startupstr flag in archives with meshes
@@ -1325,7 +1441,7 @@ begin
       fHeaderTES4.Flags := fHeaderTES4.Flags or ARCHIVE_RETAINNAME;
 
     // txt, xml and fnt file flags are exclusive for Oblivion
-    if fType = baTES4 then
+    if fType <> baTES4 then
       fHeaderTES4.FileFlags := fHeaderTES4.FileFlags and not (FILE_XML or FILE_TXT or FILE_FNT);
 
     // set compression flag if needed
@@ -1338,6 +1454,9 @@ begin
       raise Exception.Create('Archive requires predefined files list');
 
     SetLength(fFilesFO4, aFilesList.Count);
+    for i := 0 to Pred(aFilesList.Count) do
+      fFilesFO4[i].PackingCompression := TPackingCompression(aFilesList.Objects[i]);
+
     fDataOffset := SizeOf(fMagic) + SizeOf(fVersion) + SizeOf(fHeaderFO4);
 
     // file records have fixed length in general archive
@@ -1356,7 +1475,6 @@ begin
     end;
 
   end;
-
 
   fStream := TwbWriteCachedFileStream.Create(aFileName, fmCreate);
   fFileName := aFileName;
@@ -1510,13 +1628,21 @@ begin
             fStream.WriteCardinal(iFileFO4Tail);
           end;
       end;
-    end
+    end;
 
   end;
 
   FreeAndNil(fStream);
   Exclude(fStates, stWriting);
   Close;
+end;
+
+function TwbBSArchive.GetCreatedArchiveSize: Int64;
+begin
+  if (stWriting in fStates) and Assigned(fStream) then
+    Result := fStream.Position
+  else
+    Result := 0;
 end;
 
 procedure TwbBSArchive.AddFile(const aRootDir, aFileName: string);
@@ -1544,13 +1670,121 @@ begin
   AddFile(fname, Buffer);
 end;
 
+procedure TwbBSArchive.SyncBeginWrite;
+begin
+  if fMultiThreaded then
+    Sync.BeginWrite;
+end;
+
+procedure TwbBSArchive.SyncEndWrite;
+begin
+  if fMultiThreaded then
+    Sync.EndWrite;
+end;
+
+procedure TwbBSArchive.PackData(aFileRecord: Pointer; const aFileName: string;
+  aDataHash: TPackedDataHash; aData: PByte; aSize: Integer;
+  aCompress: Boolean; aDoCompress: Boolean = False);
+var
+  zStream: TBytesStream;
+  msData: TPreallocatedMemoryStream;
+  DataSize: Integer;
+  Position: Int64;
+begin
+  DataSize := aSize;
+  zStream := nil;
+  msData := nil;
+
+  if FindPackedData(DataSize, aDataHash, aFileRecord) then
+    Exit;
+
+  try
+    if aCompress then begin
+      // compressing in parallel when multithreaded
+      SyncEndWrite;
+      try
+        zStream := TBytesStream.Create;
+        msData := TPreallocatedMemoryStream.Create(aData, aSize);
+
+        if fType = baSSE then
+          lz4CompressStream(msData, zStream)
+        else
+          ZCompressStream(msData, zStream);
+
+        // leave as compressed if compression reduced the size
+        // by at least let's say 32 bytes
+        // or data is forced to be compressed
+        if aDoCompress or (zStream.Size + 32 < aSize) then begin
+          aData := @zStream.Bytes[0];
+          aSize := zStream.Size;
+        end else
+          aCompress := False;
+      finally
+        SyncBeginWrite;
+      end;
+    end;
+
+    // let's try to find existing data again if multithreaded
+    // maybe some other thread has written the same data while we've been busy compressing
+    // zStream exists if we've really spent time compressing
+    if fMultiThreaded and Assigned(zStream) then
+      if FindPackedData(DataSize, aDataHash, aFileRecord) then
+        Exit;
+
+    Position := fStream.Position;
+    
+    // embedded name for Fallout 3/NV/Skyrim/Skyrim SE
+    if (fType in [baFO3, baSSE]) and (fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0) then
+      fStream.WriteStringLen(aFileName, False);
+
+    // if compressed then write uncompressed size first for Oblivion/Fallout 3/NV/Skyrim/Skyrim SE
+    if (fType in [baTES4, baFO3, baSSE]) and aCompress then
+      fStream.WriteCardinal(DataSize);
+
+    fStream.Write(aData^, aSize);
+
+    // updating file record
+    case fType of
+      baTES3: with PwbBSFileTES3(aFileRecord)^ do begin
+        Offset := Position;
+        Size := DataSize;
+      end;
+      baTES4, baFO3, baSSE: with PwbBSFileTES4(aFileRecord)^ do begin
+        Offset := Position;
+        Size := fStream.Position - Offset;
+        // compress flag in Size inverts compression status from the header
+        // set it if archive's compression doesn't match file's compression
+        if Self.fCompress xor aCompress then
+          Size := Size or FILE_SIZE_COMPRESS;
+      end;
+      baFO4: with PwbBSFileFO4(aFileRecord)^ do begin
+        Offset := Position;
+        Size := DataSize;
+        if aCompress then
+          PackedSize := aSize;
+      end;
+      baFO4dds: with PwbBSTexChunkRec(aFileRecord)^ do begin
+        Offset := Position;
+        Size := DataSize;
+        if aCompress then
+          PackedSize := aSize;
+      end;
+    end;
+    
+    AddPackedData(DataSize, aDataHash, aFileRecord);
+
+  finally
+    if Assigned(zStream) then
+      zStream.Free;
+    if Assigned(msData) then
+      msData.Free;
+  end;
+end;
+
 procedure TwbBSArchive.AddFile(const aFileName: string; const aData: TBytes);
 var
   i, j, Off, MipSize, BitsPerPixel: integer;
   fdir, fname, name, ext: string;
-  msData: TPreallocatedMemoryStream;
-  MemoryStream: TBytesStream;
-  wasCompressed: Boolean;
   DataHash: TPackedDataHash;
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
@@ -1563,89 +1797,24 @@ begin
   if fShareData and (fType <> baFO4dds) then
     DataHash := CalcDataHash(@aData[0], Length(aData));
 
-  MemoryStream := nil;
-  if Assigned(Sync) then
-    Sync.BeginWrite;
+  SyncBeginWrite;
   try
     case fType of
       baTES3: begin
         if not FindFileRecordTES3(aFileName, i) then
           raise Exception.Create('File not found in files table: ' + aFileName);
 
-        if FindPackedData(Length(aData), DataHash, @fFilesTES3[i]) then
-          Exit;
-
-        fFilesTES3[i].Size := Length(aData);
-        fFilesTES3[i].Offset := fStream.Position;
-        fStream.Write(aData[0], Length(aData));
-        AddPackedData(Length(aData), DataHash, @fFilesTES3[i]);
+        PackData(@fFilesTES3[i], aFileName, DataHash, @aData[0], Length(aData), False);
       end;
 
       baTES4, baFO3, baSSE: begin
         if not FindFileRecordTES4(aFileName, i, j) then
           raise Exception.Create('File not found in files table: ' + aFileName);
 
-        if FindPackedData(Length(aData), DataHash, @fFoldersTES4[i].Files[j]) then
-          Exit;
-
-        if Assigned(Sync) and fCompress and (Length(aData) >= 32) then begin
-          Sync.EndWrite;
-          try
-            MemoryStream := TBytesStream.Create;
-            msData := TPreallocatedMemoryStream.Create(@aData[0], Length(aData));
-            try
-              // store compressed data
-              if fType = baSSE then
-                lz4CompressStream(msData, MemoryStream)
-              else
-                ZCompressStream(msData, MemoryStream);
-            finally
-              msData.Free;
-            end;
-          finally
-            Sync.BeginWrite;
-          end;
-          if FindPackedData(Length(aData), DataHash, @fFoldersTES4[i].Files[j]) then
-            Exit;
-        end;
-
-        fFoldersTES4[i].Files[j].Offset := fStream.Position;
-
-        if (fType in [baFO3, baSSE]) and (fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0) then
-          fStream.WriteStringLen(fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, False);
-
-        if Assigned(MemoryStream) then begin
-          fStream.WriteCardinal(Length(aData));
-          fStream.Write(MemoryStream.Bytes[0], MemoryStream.Size);
-          wasCompressed := True;
-        end else if fCompress and (Length(aData) >= 32) then begin
-          msData := TPreallocatedMemoryStream.Create(@aData[0], Length(aData));
-          try
-            // store uncompressed length
-            fStream.WriteCardinal(Length(aData));
-            // store compressed data
-            if fType = baSSE then
-              lz4CompressStream(msData, fStream)
-            else
-              ZCompressStream(msData, fStream);
-          finally
-            msData.Free;
-          end;
-          wasCompressed := True;
-        end
-        else begin
-          fStream.Write(aData[0], Length(aData));
-          wasCompressed := False;
-        end;
-
-        fFoldersTES4[i].Files[j].Size := fStream.Position - fFoldersTES4[i].Files[j].Offset;
-
-        // compress flag in Size inverts compression status from the header
-        // set it if archive is flagged as compressed but file was not compressed
-        if fCompress and not WasCompressed then
-          fFoldersTES4[i].Files[j].Size := fFoldersTES4[i].Files[j].Size or FILE_SIZE_COMPRESS;
-
-        AddPackedData(Length(aData), DataHash, @fFoldersTES4[i].Files[j]);
+        PackData(
+          @fFoldersTES4[i].Files[j], fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name,
+          DataHash, @aData[0], Length(aData), fFoldersTES4[i].Files[j].Compress(Self)
+        );
       end;
 
       baFO4: begin
@@ -1666,28 +1835,10 @@ begin
         fFilesFO4[i].Offset := fStream.Position;
         fFilesFO4[i].Size := Length(aData);
 
-        if FindPackedData(Length(aData), DataHash, @fFilesFO4[i]) then
-          Exit;
-
-        if fCompress and (Length(aData) >= 32) then begin
-          msData := TPreallocatedMemoryStream.Create(@aData[0], Length(aData));
-          try
-            ZCompressStream(msData, fStream);
-            fFilesFO4[i].PackedSize := fStream.Position - fFilesFO4[i].Offset;
-            // rare case: if packed size matches original, then rewrite with original data
-            if fFilesFO4[i].PackedSize = fFilesFO4[i].Size then begin
-              fFilesFO4[i].PackedSize := 0;
-              fStream.Position := fFilesFO4[i].Offset;
-              fStream.Write(aData[0], Length(aData));
-            end;
-          finally
-            msData.Free;
-          end;
-        end
-        else
-          fStream.Write(aData[0], Length(aData));
-
-        AddPackedData(Length(aData), DataHash, @fFilesFO4[i]);
+        PackData(
+          @fFilesFO4[i], fFilesFO4[i].Name,
+          DataHash, @aData[0], Length(aData), fFilesFO4[i].Compress(Self)
+        );
       end;
 
       baFO4dds: begin
@@ -1749,6 +1900,7 @@ begin
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8G8B8A8_UNORM)
             else
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B8G8R8A8_UNORM)
+
           else if DDSHeader.ddspf.dwRGBBitCount = 16 then
             if (DDSHeader.ddspf.dwRBitMask = $F800) and (DDSHeader.ddspf.dwGBitMask = $07E0) and
                (DDSHeader.ddspf.dwBBitMask = $001F) and (DDSHeader.ddspf.dwABitMask = $0000) then
@@ -1758,11 +1910,13 @@ begin
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_B5G5R5A1_UNORM)
             else
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8G8_UNORM)
+
           else if DDSHeader.ddspf.dwRGBBitCount = 8 then
             if DDSHeader.ddspf.dwFlags and DDPF_ALPHA <> 0 then
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_A8_UNORM)
             else
               fFilesFO4[i].DXGIFormat := Byte(DXGI_FORMAT_R8_UNORM)
+
           else
             raise Exception.Create('Unsupported uncompressed DDS format');
         end;
@@ -1817,23 +1971,12 @@ begin
           end;
 
           DataHash := CalcDataHash(@aData[Off], MipSize);
-          if not FindPackedData(MipSize, DataHash, @fFilesFO4[i].TexChunks[j]) then begin
-            fFilesFO4[i].TexChunks[j].Offset := fStream.Position;
-            fFilesFO4[i].TexChunks[j].Size := MipSize;
-            if fCompress then begin
-              msData := TPreallocatedMemoryStream.Create(@aData[Off], MipSize);
-              try
-                ZCompressStream(msData, fStream);
-                fFilesFO4[i].TexChunks[j].PackedSize := fStream.Position - fFilesFO4[i].TexChunks[j].Offset;
-              finally
-                msData.Free;
-              end;
-            end
-            else
-              fStream.Write(aData[Off], MipSize);
 
-            AddPackedData(MipSize, DataHash, @fFilesFO4[i].TexChunks[j]);
-          end;
+          PackData(
+            @fFilesFO4[i].TexChunks[j], fFilesFO4[i].Name,
+            DataHash, @aData[Off], MipSize,
+            fFilesFO4[i].Compress(Self), fFilesFO4[i].Compress(Self) // force compression
+          );
           Inc(Off, MipSize);
           MipSize := MipSize div 4;
         end;
@@ -1841,9 +1984,7 @@ begin
 
     end;
   finally
-    if Assigned(Sync) then
-      Sync.EndWrite;
-    FreeAndNil(MemoryStream);
+    SyncEndWrite;
   end;
 end;
 
@@ -1864,8 +2005,7 @@ begin
   if aFileRecord = nil then
     Exit;
 
-  if Assigned(Sync) then
-    Sync.BeginWrite;
+  SyncBeginWrite;
   try
     case fType of
       baTES3: begin
@@ -1896,8 +2036,7 @@ begin
           if (Length(Result) > 0) and (size > 0) then begin
             SetLength(Buffer, size);
             fStream.ReadBuffer(Buffer[0], Length(Buffer));
-            if Assigned(Sync) then
-              Sync.EndWrite;
+            SyncEndWrite;
             try
               if fType = baSSE then
                 lz4DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result))
@@ -1909,8 +2048,7 @@ begin
                 on E: Exception do if E.Message <> 'Buffer error' then raise;
               end;
             finally
-              if Assigned(Sync) then
-                Sync.BeginWrite;
+              SyncBeginWrite;
             end;
           end;
         end
@@ -1928,13 +2066,11 @@ begin
           SetLength(Buffer, FileFO4.PackedSize);
           fStream.ReadBuffer(Buffer[0], Length(Buffer));
           SetLength(Result, FileFO4.Size);
-          if Assigned(Sync) then
-            Sync.EndWrite;
+          SyncEndWrite;
           try
             DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
           finally
-            if Assigned(Sync) then
-              Sync.BeginWrite;
+            SyncBeginWrite;
           end;
         end
         else begin
@@ -1961,7 +2097,7 @@ begin
         DDSHeader.dwCaps := DDSCAPS_TEXTURE;
         DDSHeader.dwMipMapCount := FileFO4.NumMips;
         if DDSHeader.dwMipMapCount > 1 then
-         DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS_MIPMAP or DDSCAPS_COMPLEX;
+          DDSHeader.dwCaps := DDSHeader.dwCaps or DDSCAPS_MIPMAP or DDSCAPS_COMPLEX;
         DDSHeader.dwDepth := 1;
 
         DDSHeaderDX10 := @Result[SizeOf(TDDSHeader)];
@@ -1983,6 +2119,7 @@ begin
           DDSHeaderDX10.miscFlags := DDS_RESOURCE_MISC_TEXTURECUBE;
         end;
         DDSHeader.ddspf.dwSize := SizeOf(DDSHeader.ddspf);
+
         case TDXGI(FileFO4.DXGIFormat) of
           DXGI_FORMAT_BC1_UNORM: begin
             DDSHeader.dwFlags := DDSHeader.dwFlags or DDSD_LINEARSIZE;
@@ -2135,11 +2272,13 @@ begin
             DDSHeader.dwPitchOrLinearSize := FileFO4.Width;
           end;
         end;
+
         TexSize := SizeOf(TDDSHeader);
         if DDSHeader.ddspf.dwFourCC = MAGIC_DX10 then begin
           SetLength(Result, Length(Result) + SizeOf(TDDSHeaderDX10));
           Inc(TexSize, SizeOf(TDDSHeaderDX10));
         end;
+
         // append chunks
         for i := Low(FileFO4.TexChunks) to High(FileFO4.TexChunks) do with FileFO4.TexChunks[i] do begin
           fStream.Position := Offset;
@@ -2147,18 +2286,17 @@ begin
           if PackedSize <> 0 then begin
             SetLength(Buffer, PackedSize);
             fStream.ReadBuffer(Buffer[0], Length(Buffer));
-            if Assigned(Sync) then
-              Sync.EndWrite;
+            SyncEndWrite;
             try
               DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[TexSize], Size);
             finally
-              if Assigned(Sync) then
-                Sync.BeginWrite;
+              SyncBeginWrite;
             end;
           end
           // uncompressed chunk
           else
             fStream.ReadBuffer(Result[TexSize], Size);
+
           Inc(TexSize, Size);
         end;
       end
@@ -2167,8 +2305,7 @@ begin
         raise Exception.Create('Extraction is not supported for this archive');
     end;
   finally
-    if Assigned(Sync) then
-      Sync.EndWrite;
+    SyncEndWrite;
   end;
 end;
 
@@ -2210,24 +2347,25 @@ begin
   end;
 end;
 
-procedure TwbBSArchive.IterateFiles(aProc: TBSFileIterationProc);
+procedure TwbBSArchive.IterateFiles(aProc: TBSFileIterationProc; aData: Pointer = nil;
+ aSingleThreaded: Boolean = False);
 var
   i, j: Integer;
 begin
   if not Assigned(aProc) then
     Exit;
 
-  if Assigned(Sync) then
+  if fMultiThreaded and not aSingleThreaded then
     case fType of
       baTES3:
         TParallel.&For(Low(fFilesTES3), High(fFilesTES3), procedure(i: Integer; LoopState: TParallel.TLoopState) begin
-          if aProc(Self, fFilesTES3[i].Name, @fFilesTES3[i], nil) then
+          if aProc(Self, fFilesTES3[i].Name, @fFilesTES3[i], nil, aData) then
             LoopState.Stop;
         end);
       baTES4, baFO3, baSSE:
         TParallel.&For(Low(fFoldersTES4), High(fFoldersTES4), procedure(i: Integer; OuterLoopState: TParallel.TLoopState) begin
           TParallel.&For(Low(fFoldersTES4[i].Files), High(fFoldersTES4[i].Files), procedure(j: Integer; InnerLoopState: TParallel.TLoopState) begin
-            if aProc(Self, fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, @fFoldersTES4[i].Files[j], @fFoldersTES4[i]) then begin
+            if aProc(Self, fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, @fFoldersTES4[i].Files[j], @fFoldersTES4[i], aData) then begin
               OuterLoopState.Stop;
               InnerLoopState.Stop;
             end;
@@ -2235,7 +2373,7 @@ begin
         end);
       baFO4, baFO4dds:
         TParallel.&For(Low(fFilesFO4), High(fFilesFO4), procedure(i: Integer; LoopState: TParallel.TLoopState) begin
-          if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil) then
+          if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil, aData) then
             LoopState.Stop;
         end);
     end
@@ -2243,16 +2381,16 @@ begin
     case fType of
       baTES3:
         for i := Low(fFilesTES3) to High(fFilesTES3) do
-          if aProc(Self, fFilesTES3[i].Name, @fFilesTES3[i], nil) then
+          if aProc(Self, fFilesTES3[i].Name, @fFilesTES3[i], nil, aData) then
             Break;
       baTES4, baFO3, baSSE:
         for i := Low(fFoldersTES4) to High(fFoldersTES4) do
           for j := Low(fFoldersTES4[i].Files) to High(fFoldersTES4[i].Files) do
-            if aProc(Self, fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, @fFoldersTES4[i].Files[j], @fFoldersTES4[i]) then
+            if aProc(Self, fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, @fFoldersTES4[i].Files[j], @fFoldersTES4[i], aData) then
               Break;
       baFO4, baFO4dds:
         for i := Low(fFilesFO4) to High(fFilesFO4) do
-          if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil) then
+          if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil, aData) then
             Break;
     end;
 end;
