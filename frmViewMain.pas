@@ -10670,13 +10670,14 @@ function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Bool
 begin
   Result := '';
   if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
-    if aFileChanged then
+    if aFileChanged then begin
       Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
-    Result := Result + StringOfChar(' ', 4) + 'dirty:';
+      Result := Result + StringOfChar(' ', 4) + 'dirty:' + CRLF;
+    end;
     if aInfo.NAV <> 0 then
-      Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *reqManualFix'
+      Result := Result + StringOfChar(' ', 6) + '- <<: *reqManualFix'
     else
-      Result := Result + CRLF + StringOfChar(' ', 6) + '- <<: *quickClean';
+      Result := Result + StringOfChar(' ', 6) + '- <<: *quickClean';
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, wbNexusModsUrl]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
