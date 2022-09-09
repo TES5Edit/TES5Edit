@@ -21,6 +21,7 @@ const
   sDefaultPlugins = 'skyrim.esm,update.esm,dawnguard.esm,hearthfires.esm,dragonborn.esm';
   sLargeRefBaseObjects = 'STAT MSTT';
   fLargeRefMinSize = 512;
+  bAddPrimitives = False;
 
 var
   cbPlugin, cbWorld: TComboBox;
@@ -48,7 +49,8 @@ var
   stat: IInterface;
   Dimensions: TwbVector;
   fScale: float;
-  Cell: TwbGridCell;
+  Cell: IInterface;
+  Grid: TwbGridCell;
 begin
   // safety check
   if GetFile(wrld) <> GetFile(e) then
@@ -60,9 +62,12 @@ begin
       for i := 0 to Pred(ReferencedByCount(MasterOrSelf(e))) do begin
         stat := ReferencedByIndex(MasterOrSelf(e), i);
         if SameText(Name(wrld), Name(stat)) then begin
-          Cell := wbPositionToGridCell(GetPosition(e));
+          Cell := LinksTo(ElementByPath(e, 'Cell'));
+          if not Assigned(Cell) then
+            Exit;
+          Grid := GetGridCell(Cell);
           AddMessage('Overwrite: ' + Name(e));
-          slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
+          slLargeReferences.AddObject(IntToStr(Grid.x) + ' ' + IntToStr(Grid.y), e);
           Exit;
         end;
       end;
@@ -70,12 +75,16 @@ begin
     Exit;
   end;
 
+  // IsPersistent - causes large reference to never unload
+  if GetElementNativeValues(e, 'Record Header\Record Flags') and $00000400 = $00000400 then
+    Exit;
+
   // IsFullLOD
   if GetElementNativeValues(e, 'Record Header\Record Flags') and $00010000 = $00010000 then
     Exit;
 
-  // InitiallyDisabled
-  if GetElementNativeValues(e, 'Record Header\Record Flags') and $00008000 = $00008000 then
+  // InitiallyDisabled - causes large ref LOD for the cell to not unload
+  if GetElementNativeValues(e, 'Record Header\Record Flags') and $00000800 = $00000800 then
     Exit;
 
   stat := BaseRecord(e);
@@ -84,14 +93,19 @@ begin
   if GetElementNativeValues(stat, 'Record Header\Record Flags') and $00800000 = $00800000 then
     Exit;
 
-  // Primitive?
+  // Primitive
   if ElementExists(e, 'XPRM') then begin
+    if not bAddPrimitives then
+      Exit;
     Dimensions.x := GetElementNativeValues(e, 'XPRM - Primitive\Bounds\X') / 2;
     Dimensions.y := GetElementNativeValues(e, 'XPRM - Primitive\Bounds\Y') / 2;
     Dimensions.z := GetElementNativeValues(e, 'XPRM - Primitive\Bounds\Z') / 2;
     // rule based on debugging thanks to aers
     if SQRT(Power(Dimensions.x, 2) + Power(Dimensions.y, 2) + Power(Dimensions.z, 2)) >= fLargeRefMinSize then begin
-      Cell := wbPositionToGridCell(GetPosition(e));
+      Cell := LinksTo(ElementByPath(e, 'Cell'));
+      if not Assigned(Cell) then
+        Exit;
+      Grid := GetGridCell(Cell);
       AddMessage('XPRM: ' + Name(e));
       slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
     end;
@@ -126,9 +140,12 @@ begin
 
   // rule based on debugging thanks to aers
   if SQRT(Power(Dimensions.x, 2) + Power(Dimensions.y, 2) + Power(Dimensions.z, 2)) * 0.5 * fscale >= fLargeRefMinSize then begin
-    Cell := wbPositionToGridCell(GetPosition(e));
+    Cell := LinksTo(ElementByPath(e, 'Cell'));
+    if not Assigned(Cell) then
+      Exit;
+    Grid := GetGridCell(Cell);
     AddMessage('New: ' + Name(e));
-    slLargeReferences.AddObject(IntToStr(Cell.x) + ' ' + IntToStr(Cell.y), e);
+    slLargeReferences.AddObject(IntToStr(Grid.x) + ' ' + IntToStr(Grid.y), e);
   end;
 
 end;
@@ -140,35 +157,51 @@ var
   i: integer;
 begin
   lst := TList.Create;
-  AddMessage('Gathering large references added by ' + GetFileName(GetFile(wrld)));
-  // find all references added/modified by this plugin
-  wbFindREFRsByBase(wrld, sLargeRefBaseObjects, 1, lst);
-  for i := 0 to lst.Count - 1 do
-    ProcessReference(wrld, ObjectToElement(lst[i]));
-  lst.Free;
+  try
+    AddMessage('Gathering large references added by ' + GetFileName(GetFile(wrld)));
+    // find all references added/modified by this plugin
+    wbFindREFRsByBase(wrld, sLargeRefBaseObjects, 1, lst);
+    for i := 0 to lst.Count - 1 do
+      ProcessReference(wrld, ObjectToElement(lst[i]));
+  finally
+    lst.Free;
+  end;
 end;
 
 //============================================================================
 // add reference to existing RNAM
 procedure AddRNAMItem(rnam, e: IInterface);
 var 
-  Cell: TwbGridCell;
+  Cell: IInterface;
+  Grid: TwbGridCell;
 begin
-  Cell := wbPositionToGridCell(GetPosition(e));
+  Cell := LinksTo(ElementByPath(e, 'Cell'));
+  if not Assigned(Cell) then
+    Exit;
+  Grid := GetGridCell(Cell);
   rnam := ElementAssign(ElementByPath(rnam, 'References'), HighInteger, nil, False);
-  SetElementNativeValues(rnam, 'X', Cell.x);
-  SetElementNativeValues(rnam, 'Y', Cell.y);
-  SetElementEditValues(rnam, 'Ref', Name(e));
+  BeginUpdate(rnam);
+  try
+    SetElementNativeValues(rnam, 'X', Grid.x);
+    SetElementNativeValues(rnam, 'Y', Grid.y);
+    SetElementEditValues(rnam, 'Ref', Name(e));
+  finally
+    EndUpdate(rnam);
+  end;
 end;
 
 //============================================================================
 // add new RNAM
 function AddRNAM(wrld, e: IInterface): IInterface;
 var 
-  Cell: TwbGridCell;
+  Cell: IInterface;
+  Grid: TwbGridCell;
 begin
   Result := nil;
-  Cell := wbPositionToGridCell(GetPosition(e));
+  Cell := LinksTo(ElementByPath(e, 'Cell'));
+  if not Assigned(Cell) then
+    Exit;
+  Grid := GetGridCell(Cell);
 
   if not ElementExists(wrld, 'RNAM') then begin
     Result := ElementByPath(Add(wrld, 'RNAM', True), 'RNAM');
@@ -177,10 +210,14 @@ begin
     Result := ElementAssign(ElementByPath(wrld, 'RNAM'), HighInteger, nil, False);
   end
 
-  SetElementNativeValues(Result, 'X', Cell.x);
-  SetElementNativeValues(Result, 'Y', Cell.y);
-
-  AddRNAMItem(Result, e);
+  BeginUpdate(Result);
+  try
+    SetElementNativeValues(Result, 'X', Grid.x);
+    SetElementNativeValues(Result, 'Y', Grid.y);
+    AddRNAMItem(Result, e);
+  finally
+    EndUpdate(Result);
+  end;
 end;
 
 //============================================================================
@@ -189,7 +226,6 @@ var
   i, j: integer;
   s: string;
   e, rnam: IInterface;
-  CurrentCell, Cell: TwbGridCell;
 begin
 
   if slLargeReferences.Count = 0 then
@@ -204,23 +240,28 @@ begin
 
     // add new RNAM
     rnam := AddRNAM(wrld, e);
-    // remove reference from list
-    slLargeReferences.Delete(i);
 
-    // add all other references for same cell
-    for j := Pred(i) downto 0 do begin
-      e := ObjectToElement(slLargeReferences.Objects[j]);
-      // go through list sorted by coordinates
-      if (s = slLargeReferences[j]) then begin
-        // add reference to existing RNAM
-        AddRNAMItem(rnam, e);
-        // remove reference from list
-        slLargeReferences.Delete(j);
-      end
-      else
-        break;
+    BeginUpdate(rnam);
+    try
+      // remove reference from list
+      slLargeReferences.Delete(i);
+
+      // add all other references for same cell
+      for j := Pred(i) downto 0 do begin
+        e := ObjectToElement(slLargeReferences.Objects[j]);
+        // go through list sorted by coordinates
+        if (s = slLargeReferences[j]) then begin
+          // add reference to existing RNAM
+          AddRNAMItem(rnam, e);
+          // remove reference from list
+          slLargeReferences.Delete(j);
+        end
+        else
+          break;
+      end;
+    finally
+      EndUpdate(rnam);
     end;
-
     i := Pred(slLargeReferences.Count);
   end;
 end;
@@ -412,17 +453,24 @@ begin
   slLargeReferences := TwbFastStringList.Create;
   slLargeReferences.Duplicates := dupAccept;
   slLargeReferences.Sorted := True;
+  try
+    if (wbGameMode <> gmSSE) then begin
+      AddMessage('Game not supported');
+      Exit;
+    end;
 
-  if (wbGameMode <> gmSSE) then begin
-    AddMessage('Game not supported');
-    Exit;
+    wrld := OptionsForm;
+    if Assigned(wrld) then begin
+      BeginUpdate(wrld);
+      try
+        GenerateWorldspace(wrld);
+      finally
+        EndUpdate(wrld);
+      end;
+    end;
+  finally
+    slLargeReferences.Free;
   end;
-
-  wrld := OptionsForm;
-  if Assigned(wrld) then
-    GenerateWorldspace(wrld);
-
-  slLargeReferences.Free;
 
 end;
 
