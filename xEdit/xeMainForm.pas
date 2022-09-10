@@ -11416,9 +11416,9 @@ begin
     if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
       BOSS := wbGameMode = gmTES4;
   end;
+  PostAddMessage('');
 
   if BOSS then begin
-    PostAddMessage('');
     PostAddMessage('BOSS Masterlist Entries');
     for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
       PostAddMessage(BOSSDirtyInfo(LOOTPluginInfos[i]));
