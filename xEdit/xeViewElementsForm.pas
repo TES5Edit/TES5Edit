@@ -95,6 +95,8 @@ begin
   Memo := TMemo.Create(TabSheet);
   Memo.Parent := TabSheet;
   LoadFont(Settings, 'UI', 'FontViewer', Memo.Font);
+  if frmMain.MonospaceFontName <> '' then
+    Memo.Font.Name := frmMain.MonospaceFontName;
   if aEditable then begin
     Memo.Lines.Text := aElement.EditValue;
     btnOK.Visible := True;

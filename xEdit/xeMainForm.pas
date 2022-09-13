@@ -71,7 +71,7 @@ uses
   Vcl.Styles.Ext,
   JvBalloonHint, JvExStdCtrls, JvRichEdit, FileContainer, JvExControls,
   JvButton, JvTransparentButton,
-  SynEdit, SynMemo, SynEditKeyCmds;
+  SynEdit, SynMemo, SynEditKeyCmds, Vcl.Mask;
 
 type
   TMemo = class(TSynMemo);
@@ -1234,7 +1234,6 @@ implementation
 uses
   JsonDataObjects,
   DDetours,
-  Mask,
   {$IFNDEF LiteVersion}
   cxVTEditors,
   {$ENDIF}
@@ -6251,8 +6250,10 @@ begin
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
       if ForceDirectories(ExtractFilePath(xeSettingsFileName)) then
         Settings := TMemIniFile.Create(xeSettingsFileName);
-    if Assigned(Settings) then
+    if Assigned(Settings) then begin
       TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
+      Graphics.PaletteChanged;
+    end;
   except end;
 
   xeApplyFontAndScale(Self);
