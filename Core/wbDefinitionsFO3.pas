@@ -1844,20 +1844,6 @@ begin
   end;
 end;
 
-function wbIMGSSkinDimmerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container : IwbContainer;
-  SubRecord : IwbSubRecord;
-begin
-  Result := 0;
-  if not wbTryGetContainerFromUnion(aElement, Container) then
-    Exit;
-
-  if Supports(Container, IwbSubRecord, SubRecord) then
-    if SubRecord.SubRecordHeaderSize in [132, 148] then
-      Result := 1;
-end;
-
 function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -7025,10 +7011,7 @@ begin
         {44} wbFloat('Sunlight Dimmer'),
         {48} wbFloat('Grass Dimmer'),
         {52} wbFloat('Tree Dimmer'),
-        {56} wbUnion('Skin Dimmer', wbIMGSSkinDimmerDecider, [
-               wbFloat('Skin Dimmer'),
-               wbEmpty('Skin Dimmer', cpIgnore)
-             ])
+        {56} wbFromVersion(10, wbFloat('Skin Dimmer'))
       ], cpNormal, False, nil, 14),
       wbStruct('Bloom', [
         {60} wbFloat('Blur Radius'),
@@ -7064,17 +7047,17 @@ begin
         {128} wbFloat('Value')
         ])
       ]),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbByteArray('Unused', 4),
-      wbInteger('Flags', itU8, wbFlags([
+      wbByteArray('Unknown', 4),
+      wbFromVersion(10, wbByteArray('Unused', 4)),
+      wbFromVersion(10, wbByteArray('Unused', 4)),
+      wbFromVersion(10, wbByteArray('Unused', 4)),
+      wbFromVersion(13, wbInteger('Flags', itU8, wbFlags([
         'Saturation',
         'Contrast',
         'Tint',
         'Brightness'
-      ], True)),
-      wbByteArray('Unused', 3)
+      ], True))),
+      wbFromVersion(13, wbByteArray('Unused', 3))
     ], cpNormal, True, nil, 5)
   ]);
 
