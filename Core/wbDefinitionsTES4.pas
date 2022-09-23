@@ -670,7 +670,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..191] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..196] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -841,8 +841,10 @@ const
     (Index: 362; Name: 'GetPlayerHasLastRiddenHorse'),
     (Index: 365; Name: 'GetPlayerInSEWorld'),
 
-    // Added by OBSE:
-    (Index: 1107; Name: 'IsAmmo,'; ParamType1: ptInteger),
+    // Added by (x)OBSE:
+    (Index: 1107; Name: 'IsAmmo'; ParamType1: ptInteger),
+    (Index: 1122; Name: 'HasSpell'; ParamType1: ptMagicItem),
+    (Index: 1124; Name: 'IsClassSkill'; ParamType1: ptActorValue; ParamType2: ptClass),
     (Index: 1884; Name: 'GetPCTrainingSessionsUsed'; ParamType1: ptPackage),
     (Index: 2213; Name: 'GetPackageOffersServices'; ParamType1: ptPackage),
     (Index: 2214; Name: 'GetPackageMustReachLocation'; ParamType1: ptPackage),
@@ -864,7 +866,10 @@ const
     (Index: 2230; Name: 'GetPackageWeaponsUnequipped'; ParamType1: ptPackage),
     (Index: 2231; Name: 'GetPackageDefensiveCombat'; ParamType1: ptPackage),
     (Index: 2232; Name: 'GetPackageUseHorse'; ParamType1: ptPackage),
-    (Index: 2233; Name: 'GetPackageNoIdleAnims'; ParamType1: ptPackage)
+    (Index: 2233; Name: 'GetPackageNoIdleAnims'; ParamType1: ptPackage),
+    (Index: 2571; Name: 'GetBaseAV3'; ParamType1: ptActorValue),
+    (Index: 2573; Name: 'IsNaked'; ParamType1: ptInteger),
+    (Index: 2578; Name: 'IsDiseased')
   );
 
 var
