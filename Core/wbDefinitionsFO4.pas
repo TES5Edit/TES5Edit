@@ -1016,6 +1016,7 @@ var
   wbAPPR: IwbSubRecordDef;
   wbObjectTemplate: IwbSubRecordStructDef;
   wbBSMPSequence: IwbSubRecordArrayDef;
+  wbArmorAddonBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
   wbATTX: IwbSubRecordDef;
   wbMNAMFurnitureMarker: IwbSubRecordDef;
@@ -9044,7 +9045,7 @@ begin
       wbFloat('Offset Z'),
       wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU8, wbFlags([
+      wbFromVersion(125, wbInteger('Entry Types', itU8, wbFlags([
         'Front',
         'Rear',
         'Right',
@@ -9053,8 +9054,8 @@ begin
         'Unused 5',
         'Unused 6',
         'Unused 7'
-      ])).IncludeFlag(dfCollapsed),
-      wbByteArray('Unknown', 3)
+      ])).IncludeFlag(dfCollapsed)),
+      wbFromVersion(125, wbByteArray('Unknown', 3))
     ], cpNormal, False, nil, 4));
 
   wbArmorPropertyEnum := wbEnum([
@@ -9299,7 +9300,29 @@ begin
       )
     ], []);
 
+  var wbArmorAddonBoneDataItem :=
+    wbRStruct('Data', [
+      wbRArray('Bone Datas',
+        wbRStruct('Bone Data', [
+          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
+          // should not be sorted!!!
+          wbRArray('Bone Weight Scales',
+            wbRStructSK([0], 'Bone Weight Scale', [
+              wbString(BSMB, 'Name'),
+              wbStruct(BSMS, 'Weight Scale Values', [
+                wbFloat('X'),
+                wbFloat('Y'),
+                wbFloat('Z')
+              ])
+            ], [])
+          )
+        ],[])
+      )
+    ], []);
+
   wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
+
+  wbArmorAddonBSMPSequence := wbRArray('Bone Data', wbArmorAddonBoneDataItem);
 
   var wbEffect :=
     wbRStruct('Effect', [
@@ -9584,7 +9607,7 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
-    wbBSMPSequence
+    wbArmorAddonBSMPSequence
   ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
   wbRecord(BOOK, 'Book', [
