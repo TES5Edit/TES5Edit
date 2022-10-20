@@ -11143,7 +11143,9 @@ begin
       wbFloat('Weight')
     ], cpNormal, True),
     wbFloat(FNAM, 'Fade value', cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SNDR])
+    wbFormIDCk(SNAM, 'Sound', [SNDR]),
+    // SSE
+    wbFormIDCk(LNAM, 'Lens', [LENS])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
