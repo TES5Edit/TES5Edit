@@ -463,6 +463,7 @@ type
 
     {--- lvReferencedBy ---}
     procedure lvReferencedByDblClick(Sender: TObject);
+    procedure lvReferencedByKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     {--- edFormIDSearch ---}
     procedure edFormIDSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -7426,6 +7427,53 @@ begin
   ListItem := lvReferencedBy.Selected;
   if Assigned(ListItem) and Assigned(ListItem.Data) then
     JumpTo(IwbMainRecord(ListItem.Data), False);
+end;
+
+procedure TfrmMain.lvReferencedByKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  Nodes      : TDynMainRecords;
+  MainRecord : IwbMainRecord;
+  s, t       : string;
+  i          : integer;
+begin
+  Nodes := GetRefBySelectionAsMainRecords;
+
+  case Key of
+    VK_DELETE: begin
+      pmuRefByPopup(nil);
+      if mniRefByRemove.Enabled and mniRefByRemove.Visible then
+        mniRefByRemove.Click;
+    end;
+  end;
+
+  if ssCtrl in Shift then begin
+    case Key of
+      Ord('C'): begin
+        Key := 0;
+        s := '';
+        Nodes := GetRefBySelectionAsMainRecords;
+        for i := Low(Nodes) to High(Nodes) do begin
+          MainRecord := Nodes[i] as IwbMainRecord;
+          t := '';
+          if Assigned(MainRecord) then
+            if Shift * [ssShift, ssAlt] = [ssAlt] then
+              t := MainRecord.Name
+            else
+              t := IntToHex64(Cardinal(MainRecord.FixedFormID), 8);
+          if t <> '' then begin
+            if s <> '' then
+              s := s + CRLF;
+            s := s + t;
+          end;
+        end;
+        if s <> '' then
+          Clipboard.AsText := s;
+        Exit;
+      end;
+    else
+      Exit;
+    end;
+  end;
 end;
 
 procedure TfrmMain.mniViewAddClick(Sender: TObject);
