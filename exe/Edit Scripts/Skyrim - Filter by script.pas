@@ -11,7 +11,7 @@ function HasScript(e: IInterface; aScript: string): Boolean;
 var
   i: integer;
 begin
-  if Name(e) = 'scriptName' then begin
+  if Name(e) = 'ScriptName' then begin
     Result := SameText(GetEditValue(e), aScript);
     bSkipSection := True;
   end else
@@ -35,7 +35,7 @@ function Initialize: Integer;
 begin
   Result := 1;
 
-  if wbGameMode <> gmTES5 then begin
+  if not wbGameMode = gmTES5 and not wbGameMode = gmSSE then begin
     AddMessage('Filtering by papyrus script works only for Skyrim.');
     Exit;
   end;
