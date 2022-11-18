@@ -67,7 +67,7 @@ begin
   ElemName := Name(e);
   
   // new script entry
-  if ElemName = 'scriptName' then begin
+  if ElemName = 'ScriptName' then begin
     // report missing props for previous script
     ReportMissingProps(LastRec);
     LastScript := GetEditValue(e);
