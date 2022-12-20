@@ -7735,7 +7735,7 @@ begin
     SetLength(TargetColumns, CheckListBox1.Count);
     for i := 0 to Pred(CheckListBox1.Count) do
       if CheckListBox1.Checked[i] then begin
-        TargetColumns[i] := Integer(CheckListBox1.Items.Objects[i]) + 1;
+        TargetColumns[j] := Integer(CheckListBox1.Items.Objects[i]) + 1;
         Inc(j);
       end;
 
