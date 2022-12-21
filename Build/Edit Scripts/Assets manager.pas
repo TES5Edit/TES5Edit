@@ -796,7 +796,7 @@ begin
   if Name(e) = 'Properties' then 
     Exit;
   
-  if Name(e) = 'scriptName' then begin
+  if Name(e) = 'ScriptName' then begin
     s := StringReplace(GetEditValue(e), ':', '\', [rfReplaceAll]);
     ProcessAssetEx(e, 'scripts\' + s + '.pex', 'Papyrus script attached to ' + Name(CurrentRecord), atPapyrusScript);
     ProcessAssetEx(e, 'scripts\source\' + s + '.psc', 'Source of papyrus script attached to ' + Name(CurrentRecord), atPapyrusScript);

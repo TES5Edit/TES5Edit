@@ -20,7 +20,7 @@ begin
     e := RecordByIndex(f, i);
     
     // override doesn't affect ESL
-    if not IsMaster(e) then
+    if not IsMaster(e) or IsInjected(e) then
       Continue;
     
     if Signature(e) = 'CELL' then

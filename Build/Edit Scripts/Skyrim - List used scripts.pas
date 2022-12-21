@@ -24,7 +24,7 @@ begin
     else
       Exit;
 
-  if Name(e) = 'scriptName' then begin
+  if Name(e) = 'ScriptName' then begin
     s := GetEditValue(e);
     i := slScripts.IndexOf(s); 
     if i = -1 then begin
