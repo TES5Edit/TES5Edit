@@ -1357,6 +1357,7 @@ var
   wbStorefrontData: IwbRecordMemberDef;
   wbObjectTemplate: IwbSubRecordStructDef;
   wbBSMPSequence: IwbSubRecordArrayDef;
+  wbArmorAddonBSMPSequence: IwbSubRecordArrayDef;
   wbFTYP: IwbSubRecordDef;
   wbATTX: IwbSubRecordDef;
   wbMNAMFurnitureMarker: IwbSubRecordDef;
@@ -1394,6 +1395,7 @@ var
   wbNAM1: IwbSubRecordDef;
   wbLODP: IwbSubRecordDef;
   wbNAM1LODP: IwbSubRecordStructDef;
+  wbNAMMarkerParam: IwbStructDef;
   wbPHST: IwbRecordMemberDef;
   wbDOFA: IwbSubRecordDef;
   wbQSTI: IwbSubRecordDef;
@@ -11026,14 +11028,13 @@ begin
     {0x80000000} 'Is Sleep Furniture'
   ]));
 
-  wbSNAMMarkerParams :=
-    wbArray(SNAM, 'Marker Parameters', wbStruct('Marker', [
+  wbNAMMarkerParam := wbStruct('Marker', [
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
       wbFloat('Offset Z'),
       wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
       wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU8, wbFlags([
+      wbFromVersion(125, wbInteger('Entry Types', itU8, wbFlags([
         'Front',
         'Rear',
         'Right',
@@ -11042,28 +11043,12 @@ begin
         'Unused 5',
         'Unused 6',
         'Unused 7'
-      ])),
-      wbByteArray('Unused',3)
-    ], cpNormal, False, nil, 4));
-  wbZNAMMarkerParams :=
-    wbArray(ZNAM, 'Marker Parameters', wbStruct('Marker', [
-      wbFloat('Offset X'),
-      wbFloat('Offset Y'),
-      wbFloat('Offset Z'),
-      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFormIDCk('Keyword', [KYWD, NULL]),
-      wbInteger('Entry Types', itU8, wbFlags([
-        'Front',
-        'Rear',
-        'Right',
-        'Left',
-        'Other',
-        'Unused 5',
-        'Unused 6',
-        'Unused 7'
-      ])),
-      wbByteArray('Unused',3)
-    ], cpNormal, False, nil, 4));
+      ]))),
+      wbFromVersion(125, wbByteArray('Unused',3))
+    ], cpNormal, False, nil, 4);
+
+  wbSNAMMarkerParams := wbArray(SNAM, 'Marker Parameters', wbNAMMarkerParam);
+  wbZNAMMarkerParams := wbArray(ZNAM, 'Marker Parameters', wbNAMMarkerParam);
 
   wbArmorPropertyEnum := wbEnum([
     { 0} 'Enchantments',
@@ -11334,7 +11319,28 @@ begin
       )
     ], []);
 
+  var wbArmorAddonBoneDataItem :=
+    wbRStruct('Data', [
+      wbRArray('Bone Datas',
+        wbRStruct('Bone Data', [
+          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
+          // should not be sorted!!!
+          wbRArray('Bone Weight Scales',
+            wbRStructSK([0], 'Bone Weight Scale', [
+              wbString(BSMB, 'Name'),
+              wbStruct(BSMS, 'Weight Scale Values', [
+                wbFloat('X'),
+                wbFloat('Y'),
+                wbFloat('Z')
+              ])
+            ], [])
+          )
+        ],[])
+      )
+    ], []);
+
   wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
+  wbArmorAddonBSMPSequence := wbRArray('Bone Data', wbArmorAddonBoneDataItem);
 
   wbCTRN := wbByteArray(CTRN, 'Unknown CTRN', 13);
 
@@ -11715,7 +11721,7 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
-    wbBSMPSequence,
+    wbArmorAddonBSMPSequence,
     wbInteger(VONL, 'Unknown Bool', itU8, wbBoolEnum)
   ], False, nil, cpNormal, False, wbARMAAfterLoad);
 
@@ -15219,7 +15225,7 @@ begin
         {0x00000800} 'Player Question Use Dialogue Subtype',
         {0x00001000} 'Keep/Clear Target on Action End',
         {0x00002000} 'Unknown 13',
-        {0x00004000} 'Unknown 14',
+        {0x00004000} 'Started Talking',
         {0x00008000} 'Face Target',
         {0x00010000} 'Looping',
         {0x00020000} 'Headtrack Player',
@@ -19226,6 +19232,7 @@ begin
       {0x00000001}  0, 'ESM',
       {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
+      {0x00000100}  8, 'Pre-calc Data Only',
       {0x00000200}  9, 'ESL'
     ], False), True), [
     wbHEDR,
@@ -21381,7 +21388,7 @@ begin
     wbRArray('Module Objectives',
       wbRStruct('Module Objective', [
         wbInteger(QMOI, 'Index', itU16),
-        wbString(QMOT, 'Text'),
+        wbLStringKC(QMOT, 'Text'),
         wbByteArray(QMTT, 'QMTT - Unknown 4 Bytes', 4),
         wbByteArray(QMTR, 'QMTR - Unknown 4 Bytes', 4)
       ],[])
