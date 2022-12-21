@@ -352,6 +352,7 @@ object frmMain: TfrmMain
             OnColumnClick = lvReferencedByColumnClick
             OnCompare = lvReferencedByCompare
             OnDblClick = lvReferencedByDblClick
+            OnKeyDown = lvReferencedByKeyDown
           end
         end
         object tbsMessages: TTabSheet
