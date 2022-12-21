@@ -10029,7 +10029,8 @@ begin
             wbInteger('Warn/Attack', itU32),
             wbInteger('Attack', itU32)
           ]),
-          wbFromVersion(29, wbInteger('No Slow Approach', itU32, wbBoolEnum))
+          wbFromVersion(29, wbInteger('No Slow Approach', itU8, wbBoolEnum)),
+          wbFromVersion(29, wbByteArray('Unknown', 3))
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbRecord(CSTY, 'Combat Style',
