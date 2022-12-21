@@ -13742,6 +13742,27 @@ begin
     .SetSummaryMemberMaxDepth(0, 1)
     .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
+  var wbLeveledListEntrySpell :=
+    wbRStructSK([0], 'Leveled List Entry', [
+      wbStructExSK(LVLO, [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itU16),
+        wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+        wbFormIDCk('Reference', [SPEL, LVSP]),
+        wbInteger('Count', itU16),
+        wbInteger('Chance None', itU8),
+        wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2, 4])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryPrefixSuffixOnValue(4, '{Chance None:', '%}')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
   var wbFilterKeywordChances :=
     wbArrayS(LLKC, 'Filter Keyword Chances',
       wbStructSK([0], 'Filter', [
@@ -13785,7 +13806,17 @@ begin
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVSP, 'Leveled Spell', [
-    wbEDID
+    wbEDID,
+    wbOBND(True),
+    wbLVLD,
+    wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
+    wbInteger(LVLF, 'Flags', itU8, wbFlags([
+      {0x01} 'Calculate from all levels <= player''s level',
+      {0x02} 'Calculate for each item in count',
+      {0x04} 'Use All'
+    ]), cpNormal, True),
+    wbLLCT,
+    wbRArrayS('Leveled List Entries', wbLeveledListEntrySpell, cpNormal, False, nil, wbLVLOsAfterSet)
   ]);
 
   wbMGEFType := wbInteger('Archetype', itU32, wbEnum([
