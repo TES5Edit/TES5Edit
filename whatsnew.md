@@ -4,6 +4,16 @@
 
 * #1034 - Incorrect encoding for cyrillic symbols for Player Dialog Prompts
 * (reported on Discord) - .strings files may not be saved if there were no changes to the .es? file
+* (contributed) - CalculateFaceNormals always failed with assert
+* (contributed) - fixed some scripts failing because of case sensitive comparison of element names
+* (contributed) - removed duplicated script "Find plugins which could be turned into ESL.pas"
+
+## Minor changes
+
+* (contributed) - SSE: LIGH was missing LNAM -> LENS 
+* (contributed) - updated CTDA for latest xOBSE
+* (contributed) - updated CTDA for latest xNVSE
+* (contributed) - added hotkey actions Ctrl+C, Ctrl+Alt+C, and Del to Referenced By tab
 
 # What's new in xEdit 4.0.4?
 
