@@ -527,7 +527,7 @@ var
   a, b, c, fn: TVector3;
   i: Integer;
 begin
-  SetLength(norms, Length(triangles) * SizeOf(TTriangle));
+  SetLength(norms, Length(verts));
   Assert(Length(norms) = Length(verts));
   for i := Low(triangles) to High(triangles) do begin
     a := verts[triangles[i][0]];
