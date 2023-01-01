@@ -11,7 +11,7 @@ function HasScript(e: IInterface; aScript: string): Boolean;
 var
   i: integer;
 begin
-  if Name(e) = 'ScriptName' then begin
+  if SameText(Name(e),'ScriptName') then begin
     Result := SameText(GetEditValue(e), aScript);
     bSkipSection := True;
   end else
