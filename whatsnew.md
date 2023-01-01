@@ -1,3 +1,24 @@
+# What's new in xEdit 4.1.5?
+
+## Bugfixes
+
+* (contributed) - various changes and fixes to .nif handling
+* (contributed) - various changes and fixes to FO76 definitions
+* (contributed) - [FO4] better BSMP decoding
+* (contributed) - [FO4] LVSP (Leveled Spells) support
+* (contributed) - [FO3/FNV] imporved decoding of IMGS
+
+## Minor changes
+
+* Themes updated to versions that came with Delphi 11.2
+* Compiled with Delphi 11.2
+
+## Update Skyrim SE - Generate Large References.pas
+
+* use cell coordinates instead of the position of the reference
+* do not add primitives as large refs by default
+* improve speed
+
 # What's new in xEdit 4.1.4?
 
 ## Bugfixes
