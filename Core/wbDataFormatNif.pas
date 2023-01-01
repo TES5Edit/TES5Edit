@@ -73,6 +73,7 @@ type
     procedure AddString(const aElement: TdfElement);
     procedure RemoveString(const aElement: TdfElement);
     function IsNiObject(const aTemplate: string; aInherited: Boolean = True): Boolean;
+    function IsReferenced: Boolean;
     function AddChild(const aBlockType: string): TwbNifBlock;
     function AddExtraData(const aBlockType: string): TwbNifBlock;
     function AddProperty(const aBlockType: string): TwbNifBlock;
@@ -84,6 +85,7 @@ type
     function PropertyByType(const aBlockType: string; aInherited: Boolean = False): TwbNifBlock;
     function ExtraDatasByType(const aBlockType: string; aInherited: Boolean = False): TwbNifBlocks;
     function ExtraDataByType(const aBlockType: string; aInherited: Boolean = False): TwbNifBlock;
+    function BlockByPath(const aBlockPath: string): TwbNifBlock;
     function GetVertices(aElement: TdfElement = nil): TVector3Array;
     function GetNormals(aElement: TdfElement = nil): TVector3Array;
     function GetTexCoord(aElement: TdfElement = nil): TVector2Array;
@@ -93,6 +95,7 @@ type
     function UpdateNormals(aAddIfMissing: Boolean = True): Boolean;
     function UpdateTangents(aAddIfMissing: Boolean = True): Boolean;
     function GetAssetsList: TStringDynArray;
+    procedure RemoveBranch;
     property BlockType: string read GetBlockType;
     property NifFile: TwbNifFile read GetNifFile;
     property RefsCount: Integer read GetRefsCount;
@@ -134,6 +137,7 @@ type
     function BlocksByType(const aBlockType: string; aInherited: Boolean = False): TwbNifBlocks;
     function BlockByType(const aBlockType: string; aInherited: Boolean = False): TwbNifBlock;
     function BlockByName(const aBlockName: string): TwbNifBlock;
+    function BlockByPath(const aBlockPath: string): TwbNifBlock;
     function SpellTriangulate: Boolean;
     function SpellFaceNormals: Boolean;
     function SpellUpdateTangents: Boolean;
@@ -158,7 +162,7 @@ procedure wbNiObjectCheckDups;
 implementation
 
 uses
-  wbDataFormatNifTypes, Math;
+  wbDataFormatNifTypes, Math, SyncObjs;
 
 const
   sNifMagicGamebryo = 'Gamebryo File Format, Version ';
@@ -189,10 +193,13 @@ var
   v4202    : Cardinal;
   v4210    : Cardinal;
   v4220    : Cardinal;
+  v5001    : Cardinal;
   v10010   : Cardinal;
   v10012   : Cardinal;
   v10013   : Cardinal;
   v10100   : Cardinal;
+  v10018   : Cardinal;
+  v1010101 : Cardinal;
   v1010106 : Cardinal;
   v10200   : Cardinal;
   v10401   : Cardinal;
@@ -201,8 +208,16 @@ var
   v20005   : Cardinal;
   v20007   : Cardinal;
   v20101   : Cardinal;
+  v20102   : Cardinal;
   v20205   : Cardinal;
   v20207   : Cardinal;
+
+  NifDefsInitialized: Boolean;
+  {$IF CompilerVersion >= 34.0} { Delphi 10.4 }
+  Sync: TLightweightMREW;
+  {$ELSE}
+  Sync: IReadWriteSync;
+  {$IFEND}
 
 procedure wbDefineNif; forward;
 
@@ -427,8 +442,18 @@ function wbNiObjectDef(const aNiObject: string): TdfDef;
 var
   i: integer;
 begin
-  if Length(NiObjectInfos.NiObjects) = 0 then
-    wbDefineNif;
+  // initialize NIF definitions if missing
+  if not NifDefsInitialized then begin
+    Sync.BeginWrite;
+    try
+      if not NifDefsInitialized then begin
+        wbDefineNif;
+        NifDefsInitialized := True;
+      end;
+    finally
+      Sync.EndWrite;
+    end;
+  end;
 
   i := NiObjectInfos.IndexOf(aNiObject);
 
@@ -436,7 +461,7 @@ begin
     raise Exception.Create('Unknown NiObject: ' + aNiObject);
 
   if NiObjectInfos.NiObjects[i].IsAbstract then
-    raise Exception.Create('Can not initialize from asbtract NiObject: ' + aNiObject);
+    raise Exception.Create('Can not initialize from abstract NiObject: ' + aNiObject);
 
   Result := NiObjectInfos.NiObjects[i].Def;
 end;
@@ -583,6 +608,26 @@ end;
 function TwbNifBlock.IsNiObject(const aTemplate: string; aInherited: Boolean = True): Boolean;
 begin
   Result := (not aInherited and (BlockType = aTemplate)) or (aInherited and wbIsNiObject(BlockType, aTemplate));
+end;
+
+function TwbNifBlock.IsReferenced: Boolean;
+var
+  i, j: Integer;
+  b: TwbNifBlock;
+begin
+  Result := False;
+  for i := 0 to Pred(Self.NifFile.BlocksCount) do begin
+    b := Self.NifFile.Blocks[i];
+    // skip checking for self referencing
+    if b = Self then
+      Continue;
+
+    for j := 0 to Pred(b.RefsCount) do
+      if TwbNifBlock(b.Refs[j].LinksTo) = Self then begin
+        Result := True;
+        Exit;
+      end;
+  end;
 end;
 
 function TwbNifBlock.AddChild(const aBlockType: string): TwbNifBlock;
@@ -748,6 +793,7 @@ var
   Child: TwbNifBlock;
   i: integer;
 begin
+  Result := nil;
   Children := Elements['Children'];
 
   if not Assigned(Children) then
@@ -779,6 +825,7 @@ var
   Prop: TwbNifBlock;
   i: integer;
 begin
+  Result := nil;
   Props := Elements['Shader Property'];
   if Assigned(Props) then begin
     Prop := TwbNifBlock(Props.LinksTo);
@@ -825,6 +872,7 @@ var
   Data: TwbNifBlock;
   i: integer;
 begin
+  Result := nil;
   Datas := Elements['Extra Data List'];
   if Assigned(Datas) then begin
     for i := 0 to Pred(Datas.Count) do begin
@@ -858,15 +906,57 @@ begin
     Result := nil;
 end;
 
+function TwbNifBlock.BlockByPath(const aBlockPath: string): TwbNifBlock;
+var
+  i, p: Integer;
+  curpath, path: string;
+begin
+  Result := nil;
+
+  path := aBlockPath;
+  while (path <> '') and (path[1] = '\') do
+    System.Delete(path, 1, 1);
+
+  if path = '' then
+    Exit;
+
+  p := Pos('\', path);
+  if p <> 0 then begin
+    curpath := Copy(path, 1, p - 1);
+    path := Copy(path, p + 1, Length(path));
+  end
+  else begin
+    curpath := path;
+    path := '';
+  end;
+
+  for i := 0 to Pred(RefsCount) do begin
+    var b: TwbNifBlock := TwbNifBlock(Refs[i].LinksTo);
+    if not Assigned(b) then
+      Continue;
+
+    if SameText(b.BlockType, curpath) or (b.EditValues['Name'] = curpath) then begin
+      if path <> '' then
+        Result := b.BlockByPath(path)
+      else
+        Result := b;
+
+      Exit;
+    end;
+  end;
+end;
+
 function TwbNifBlock.GetVertices(aElement: TdfElement = nil): TVector3Array;
 var
   i: integer;
   Entries: TdfElement;
 begin
+  Result := nil;
+
   if not Assigned(aElement) then
     aElement := Self;
 
-  if IsNiObject('BSTriShape') then begin
+  if IsNiObject('BSTriShape') or IsNiObject('NiSkinPartition') then begin
     if not aElement.NativeValues['VertexDesc\VF\VF_VERTEX'] then
       Exit;
 
@@ -895,6 +985,8 @@ var
   i: integer;
   Entries: TdfElement;
 begin
+  Result := nil;
+
   if not Assigned(aElement) then
     aElement := Self;
 
@@ -927,6 +1019,8 @@ var
   i: integer;
   Entries: TdfElement;
 begin
+  Result := nil;
+
   if not Assigned(aElement) then
     aElement := Self;
 
@@ -959,6 +1053,8 @@ var
   i: integer;
   Entries: TdfElement;
 begin
+  Result := nil;
+
   if not Assigned(aElement) then
     aElement := Self;
 
@@ -969,7 +1065,7 @@ begin
       wbGetTriangle(Result[i], Entries[i]);
   end
   else
-    Result := Triangulate(GetStrips);
+    Result := TriangulateStrips(GetStrips);
 end;
 
 function TwbNifBlock.GetStrips(aElement: TdfElement = nil): TStripArray;
@@ -977,6 +1073,8 @@ var
   i, j: integer;
   Entries, e: TdfElement;
 begin
+  Result := nil;
+
   if not Assigned(aElement) then
     aElement := Self;
 
@@ -994,6 +1092,7 @@ end;
 
 function TwbNifBlock.UpdateBounds: Boolean;
 var
+  skin, skinpart: TwbNifBlock;
   verts: TVector3Array;
   center: TVector3;
   r: Extended;
@@ -1002,6 +1101,19 @@ begin
   Result := False;
 
   verts := GetVertices;
+
+  if Length(verts) = 0 then
+    // skinned BSTriShapes have vertices in NiSkinPartition
+    if IsNiObject('BSTriShape') then begin
+      skin := TwbNifBlock(Elements['Skin'].LinksTo);
+      e := skin.Elements['Skin Partition'];
+      if Assigned(e) then begin
+        skinpart := TwbNifBlock(e.LinksTo);
+        if Assigned(skinpart) then
+          verts := skinpart.GetVertices;
+      end;
+    end;
+
   if Length(verts) = 0 then
     Exit;
 
@@ -1103,7 +1215,8 @@ begin
 
   if not aAddIfMissing then
     if (IsBSTriShape and not NativeValues['VertexDesc\VF\VF_TANGENT']) or
-       (IsGeomData and not NativeValues['Vector Flags\Has_Tangents'])
+       (IsGeomData and not (NativeValues['Vector Flags\Has_Tangents'] or (NifFile.NifVersion = nfTES4)))
+       // Oblivion meshes don't use tangents flag
     then
       Exit;
 
@@ -1209,6 +1322,8 @@ var
   i: integer;
   e: TdfElement;
 begin
+  Result := nil;
+
   // check for material file in the Name field of FO4 meshes
   if (NifFile.NifVersion = nfFO4) and (BlockType = 'BSLightingShaderProperty') then
     AddAsset(EditValues['Name'])
@@ -1247,6 +1362,41 @@ begin
   else if BlockType = 'BSSubIndexTriShape' then
     AddAsset(EditValues['Segment Data\SSF File']);
 end;
+
+procedure TwbNifBlock.RemoveBranch;
+
+  function Exists(var blocks: TwbNifBlocks; block: TwbNifBlock): Boolean;
+  begin
+    Result := False;
+    for var b: TwbNifBlock in blocks do
+      if b = block then begin
+        Result := True;
+        Break;
+      end;
+  end;
+
+var
+  LinkedBlocks: TwbNifBlocks;
+  b: TwbNifBlock;
+begin
+  if IsReferenced then
+    Exit;
+
+  // list of used blocks
+  SetLength(LinkedBlocks, 0);
+  for var i: Integer := 0 to Pred(Self.RefsCount) do begin
+    b := TwbNifBlock(Self.Refs[i].LinksTo);
+    if Assigned(b) and not Exists(LinkedBlocks, b) then
+      LinkedBlocks := LinkedBlocks + [b];
+  end;
+
+  NifFile.Delete(Index);
+
+  // remove linked blocks
+  for b in LinkedBlocks do
+    b.RemoveBranch;
+end;
+
 
 
 { TwbNifFile }
@@ -1372,7 +1522,10 @@ begin
 
     except
       on E: Exception do
-        raise Exception.CreateFmt('Error reading NIF block %d %s: %s', [CurBlock, BlockType, E.Message]);
+        if (CurBlock = 0) or (CurBlock = Pred(NumBlocks)) then
+          raise Exception.CreateFmt('Error reading %s: %s', [BlockType, E.Message])
+        else
+          raise Exception.CreateFmt('Error reading NIF block %d %s: %s', [Pred(CurBlock), BlockType, E.Message]);
     end;
 
     //if Assigned(aDataStart) and (Result < (PByte(aDataEnd) - PByte(aDataStart))) then
@@ -1583,7 +1736,7 @@ begin
 
   bTriangulate := (Block.BlockType = 'NiTriStripsData') and (NewBlock.BlockType = 'NiTriShapeData');
   if bTriangulate then
-    tris := Triangulate(Block.GetStrips);
+    tris := TriangulateStrips(Block.GetStrips);
 
   try
     NewBlock.Assign(Block);
@@ -1656,6 +1809,42 @@ begin
   Result := nil;
 end;
 
+function TwbNifFile.BlockByPath(const aBlockPath: string): TwbNifBlock;
+var
+  i, cnt, p: Integer;
+  curpath, path: string;
+begin
+  Result := nil;
+
+  path := aBlockPath;
+  while (path <> '') and (path[1] = '\') do
+    System.Delete(path, 1, 1);
+
+  if path = '' then
+    Exit;
+
+  p := Pos('\', path);
+  if p <> 0 then begin
+    curpath := Copy(path, 1, p - 1);
+    path := Copy(path, p + 1, Length(path));
+  end
+  else begin
+    curpath := path;
+    path := '';
+  end;
+
+  cnt := Pred(BlocksCount);
+  for i := 0 to cnt do
+    if SameText(Blocks[i].BlockType, curpath) or (Blocks[i].EditValues['Name'] = curpath) then begin
+      if path <> '' then
+        Result := Blocks[i].BlockByPath(path)
+      else
+        Result := Blocks[i];
+
+      Exit;
+    end;
+end;
+
 function TwbNifFile.SpellTriangulate: Boolean;
 var
   i, j, p: integer;
@@ -1680,7 +1869,7 @@ begin
         Part := Parts[p];
         if Part.NativeValues['Num Strips'] = 0 then
           Continue;
-        tris := Triangulate(Blocks[i].GetStrips(Part));
+        tris := TriangulateStrips(Blocks[i].GetStrips(Part));
         Part.NativeValues['Num Strips'] := 0;
         Part.NativeValues['Num Triangles'] := Length(tris);
         Entries := Part.Elements['Triangles'];
@@ -1893,14 +2082,17 @@ begin
 
   if Version = v4002 then
     FNifVersion := nfTES3
-  else if (Version = v20005) and (UserVersion = 11) and (UserVersion2 = 11) then
+  // some 3rd party Oblivion meshes have user version 0
+  else if (Version = v20005) and (UserVersion in [0, 11]) and (UserVersion2 in [0, 11]) then
     FNifVersion := nfTES4
   else if (Version = v20004) and (UserVersion in [10, 11]) and (UserVersion2 = 11) then
     FNifVersion := nfTES4
   else if (Version = v1010106) and (UserVersion = 10) and (UserVersion2 = 5) then
     FNifVersion := nfTES4
-  else if (Version = v10200) and (UserVersion = 10) and (UserVersion2 in [6, 9, 11]) then
+  else if (Version = v10200) and (UserVersion = 10) and (UserVersion2 in [6, 7, 8, 9, 11]) then
     FNifVersion := nfTES4
+  //else if (Version = v10010) then
+  //  FNifVersion := nfTES4
   else if (Version = v20207) and (UserVersion = 11) then
     FNifVersion := nfFO3
   else if (Version = v20207) and (UserVersion = 12) and (UserVersion2 = 83) then
@@ -1985,6 +2177,7 @@ function EnSince10100(const e: TdfElement): Boolean; begin Result := nif(e).Vers
 function EnBefore10200(const e: TdfElement): Boolean; begin Result := nif(e).Version <= v10200; end;
 function EnSince10200(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v10200; end;
 function En1010106(const e: TdfElement): Boolean; begin Result := nif(e).Version = v1010106; end;
+function EnSince1010101(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v1010101; end;
 function EnSince1010106(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v1010106; end;
 function EnBefore10401(const e: TdfElement): Boolean; begin Result := nif(e).Version <= v10401; end;
 function EnSince10401(const e: TdfElement): Boolean; begin Result := nif(e).Version >= v10401; end;
@@ -2836,7 +3029,8 @@ end;
 { Basic NIF data structures: NIF, Header, Footer }
 
 function NiHeader_EnSince20004(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20004; end;
-function NiHeader_EnSince10010(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v10010; end;
+function NiHeader_EnSince10018(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v10018; end;
+function NiHeader_EnSince5001(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v5001; end;
 
 function NiHeader_EnUserVersion2(const e: TdfElement): Boolean;
 var
@@ -2847,6 +3041,7 @@ begin
   Result := (Version >= v10010) and ((UserVersion >= 10) or ((UserVersion = 1) and (Version <> v10200)));
 end;
 
+function NiHeader_EnExportInfo(const e: TdfElement): Boolean; begin Result := (e.NativeValues['..\Version'] >= v10010) and (e.NativeValues['..\User Version'] >= 3); end;
 function NiHeader_EnBefore10012(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\Version'] <= v10012; end;
 function NiHeader_EnMaxFilepath(const e: TdfElement): Boolean; begin Result := (e.NativeValues['..\Version'] = v20207) and (e.NativeValues['..\User Version 2'] = 130); end;
 function NiHeader_EnSince20207(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Version'] >= v20207; end;
@@ -2900,7 +3095,7 @@ begin
       0, 'ENDIAN_BIG',
       1, 'ENDIAN_LITTLE'
     ], 'ENDIAN_LITTLE', [DF_OnGetEnabled, @NiHeader_EnSince20004]),
-    dfInteger('User Version', dtU32, '12', [DF_OnGetEnabled, @NiHeader_EnSince10010]),
+    dfInteger('User Version', dtU32, '12', [DF_OnGetEnabled, @NiHeader_EnSince10018]),
     dfInteger('Num Blocks', dtU32),
     // BSStreamHeader
     dfInteger('User Version 2', dtU32, '83', [DF_OnGetEnabled, @NiHeader_EnUserVersion2]),
@@ -2909,10 +3104,10 @@ begin
       wbShortString('Author'),
       wbShortString('Process Script'),
       wbShortString('Export Script')
-    ], [DF_OnGetEnabled, @NiHeader_EnSince10010]),
+    ], [DF_OnGetEnabled, @NiHeader_EnExportInfo]),
     wbShortString('Max Filepath', [DF_OnGetEnabled, @NiHeader_EnMaxFilepath]),
     // BSStreamHeader
-    dfArray('Block Types', wbSizedString('Type'), -2, '', [DF_OnGetEnabled, @NiHeader_EnSince10010]),
+    dfArray('Block Types', wbSizedString('Type'), -2, '', [DF_OnGetEnabled, @NiHeader_EnSince5001]),
     dfArray(
       'Block Type Index',
       dfInteger('Block', dtU16, [
@@ -2920,13 +3115,13 @@ begin
         DF_OnSetText, @NiHeader_SetTextBlockType
       ]),
       0, 'Num Blocks',
-      [DF_OnGetEnabled, @NiHeader_EnSince10010]
+      [DF_OnGetEnabled, @NiHeader_EnSince5001]
     ),
     dfArray('Block Size', dfInteger('Size', dtU32), 0, 'Num Blocks', [DF_OnGetEnabled, @NiHeader_EnSince20207]),
     dfInteger('Num Strings', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince20103]),
     dfInteger('Max String Length', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince20103]),
     dfArray('Strings', wbSizedString('String'), 0, 'Num Strings', [DF_OnGetEnabled, @NiHeader_EnSince20103]),
-    dfInteger('Num Groups', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince10010])
+    dfInteger('Num Groups', dtU32, [DF_OnGetEnabled, @NiHeader_EnSince5001])
   ], [DF_OnAfterLoad, @NiHeader_AfterLoad]));
 
   { NiFooter }
@@ -3865,6 +4060,7 @@ end;
 //===========================================================================
 { NiTexturingProperty }
 function NiTexturingProperty_EnFlags(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version <= v10012) or (Version >= v20103); end;
+function NiTexturingProperty_EnApplyMode(const e: TdfElement): Boolean; begin with nif(e) do Result := Version <= v20101; end;
 function NiTexturingProperty_EnAmbientColor(const e: TdfElement): Boolean; begin with nif(e) do Result := not ((Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21)); end;
 function NiTexturingProperty_EnEmitMult(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version = v20207) and (UserVersion >= 11) and (UserVersion2 > 21); end;
 function NiTexturingProperty_EnBaseTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Base Texture'] <> 0; end;
@@ -3872,15 +4068,19 @@ function NiTexturingProperty_EnDarkTexture(const e: TdfElement): Boolean; begin 
 function NiTexturingProperty_EnDetailTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Detail Texture'] <> 0; end;
 function NiTexturingProperty_EnGlossTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Gloss Texture'] <> 0; end;
 function NiTexturingProperty_EnGlowTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Glow Texture'] <> 0; end;
+function NiTexturingProperty_EnHasBumpMapTexture(const e: TdfElement): Boolean; begin with nif(e) do Result := e.NativeValues['..\Texture Count'] >= 6; end;
 function NiTexturingProperty_EnBumpMapTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Bump Map Texture'] <> 0; end;
-function NiTexturingProperty_EnNormalTexture(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v20207) and (e.NativeValues['..\Has Normal Texture'] <> 0); end;
-function NiTexturingProperty_EnUnknown2Texture(const e: TdfElement): Boolean; begin Result := (nif(e).Version >= v20207) and (e.NativeValues['..\Has Unknown2 Texture'] <> 0); end;
+function NiTexturingProperty_EnHasNormalTexture(const e: TdfElement): Boolean; begin with nif(e) do Result := (nif(e).Version >= v20205) and (e.NativeValues['..\Texture Count'] >= 7); end;
+function NiTexturingProperty_EnNormalTexture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Normal Texture'] <> 0; end;
+function NiTexturingProperty_EnHasParallaxTexture(const e: TdfElement): Boolean; begin with nif(e) do Result := (nif(e).Version >= v20205) and (e.NativeValues['..\Texture Count'] >= 8); end;
+function NiTexturingProperty_EnParallax(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Parallax Texture'] <> 0; end;
+function NiTexturingProperty_EnHasDecal0Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version < v20205) and (e.NativeValues['..\Texture Count'] >= 7)) or ((Version >= v20205) and (e.NativeValues['..\Texture Count'] >= 9)); end;
 function NiTexturingProperty_EnDecal0Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 0 Texture'] <> 0; end;
-function NiTexturingProperty_EnHasDecal1Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 8)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 10)); end;
+function NiTexturingProperty_EnHasDecal1Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version < v20205) and (e.NativeValues['..\Texture Count'] >= 8)) or ((Version >= v20205) and (e.NativeValues['..\Texture Count'] >= 10)); end;
 function NiTexturingProperty_EnDecal1Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 1 Texture'] <> 0; end;
-function NiTexturingProperty_EnHasDecal2Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 9)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 11)); end;
+function NiTexturingProperty_EnHasDecal2Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version < v20205) and (e.NativeValues['..\Texture Count'] >= 9)) or ((Version >= v20205) and (e.NativeValues['..\Texture Count'] >= 11)); end;
 function NiTexturingProperty_EnDecal2Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 2 Texture'] <> 0; end;
-function NiTexturingProperty_EnHasDecal3Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version <= v20103) and (e.NativeValues['..\Texture Count'] >= 10)) or ((Version >= v20207) and (e.NativeValues['..\Texture Count'] >= 12)); end;
+function NiTexturingProperty_EnHasDecal3Texture(const e: TdfElement): Boolean; begin with nif(e) do Result := ((Version < v20205) and (e.NativeValues['..\Texture Count'] >= 10)) or ((Version >= v20205) and (e.NativeValues['..\Texture Count'] >= 12)); end;
 function NiTexturingProperty_EnDecal3Texture(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\Has Decal 3 Texture'] <> 0; end;
 
 procedure wbDefineNiTexturingProperty;
@@ -3888,7 +4088,7 @@ begin
   wbNiObject(wbNifBlock('NiTexturingProperty', [
     dfInteger('Flags', dtU16, '', [DF_OnGetEnabled, @NiTexturingProperty_EnFlags]),
     wbApplyMode('Apply Mode', 'APPLY_MODULATE', [DF_OnGetEnabled, @EnBefore20005]),
-    dfInteger('Texture Count', dtU32),
+    dfInteger('Texture Count', dtU32, '7'),
     wbBool('Has Base Texture'),
     wbTexDesc('Base Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnBaseTexture]),
     wbBool('Has Dark Texture'),
@@ -3899,16 +4099,17 @@ begin
     wbTexDesc('Gloss Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnGlossTexture]),
     wbBool('Has Glow Texture'),
     wbTexDesc('Glow Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnGlowTexture]),
-    wbBool('Has Bump Map Texture'),
+    wbBool('Has Bump Map Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasBumpMapTexture]),
     wbTexDesc('Bump Map Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
     dfFloat('Bump Map Luma Scale', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
     dfFloat('Bump Map Luma Offset', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
     wbMatrix22('Bump Map Matrix', [DF_OnGetEnabled, @NiTexturingProperty_EnBumpMapTexture]),
-    wbBool('Has Normal Texture', [DF_OnGetEnabled, @EnSince20207]),
+    wbBool('Has Normal Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasNormalTexture]),
     wbTexDesc('Normal Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnNormalTexture]),
-    wbBool('Has Unknown2 Texture', [DF_OnGetEnabled, @EnSince20207]),
-    wbTexDesc('Unknown2 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnUnknown2Texture]),
-    wbBool('Has Decal 0 Texture'),
+    wbBool('Has Parallax Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasParallaxTexture]),
+    wbTexDesc('Parallax Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnParallax]),
+    dfFloat('Parallax Offset', [DF_OnGetEnabled, @NiTexturingProperty_EnParallax]),
+    wbBool('Has Decal 0 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasDecal0Texture]),
     wbTexDesc('Decal 0 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDecal0Texture]),
     wbBool('Has Decal 1 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnHasDecal1Texture]),
     wbTexDesc('Decal 1 Texture', [DF_OnGetEnabled, @NiTexturingProperty_EnDecal1Texture]),
@@ -3960,7 +4161,7 @@ procedure wbDefineBSShaderProperty;
 begin
   wbNiObject(wbNifBlock('BSShaderProperty', [
     wbBSShaderType('Shader Type', 'SHADER_DEFAULT', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
-    wbBSShaderFlags('Shader Flags', 'Specular | Remappable_Textures | ZBuffer_Test', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
+    wbBSShaderFlags('Shader Flags 1', 'Specular | Remappable_Textures | ZBuffer_Test', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
     wbBSShaderFlags2('Shader Flags 2', 'ZBuffer_Write', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType]),
     dfFloat('Environment Map Scale', '1.0', [DF_OnGetEnabled, @BSShaderProperty_EnShaderType])
   ]), 'NiShadeProperty', False);
@@ -4555,16 +4756,31 @@ begin
 end;
 
 procedure BSTriShape_BeforeSaveParticleDataSize(const e: TdfElement);
-var
-  el: TdfElement;
-  size: Cardinal;
 begin
-  size := 0;
-  el := e.Elements['..\Vertices'];
-  if Assigned(el) then Inc(size, el.DataSize);
-  el := e.Elements['..\Triangles Copy'];
-  if Assigned(el) then Inc(size, el.DataSize);
-  e.NativeValue := size;
+  // code to update particle data
+
+//  // Find NiOptimizeKeep string
+//  for (auto& extraData : bsOptShape->extraDataRefs) {
+//    auto stringData = hdr.GetBlock<NiStringExtraData>(extraData);
+//    if (stringData) {
+//      if (stringData->stringData.get().find("NiOptimizeKeep") != std::string::npos) {
+//        bsOptShape->particleDataSize = bsOptShape->GetNumVertices() * 6
+//                         + static_cast<uint32_t>(triangles.size()) * 3;
+//        bsOptShape->particleVerts = *vertices;
+//
+//        bsOptShape->particleNorms.resize(vertices->size(), Vector3(1.0f, 0.0f, 0.0f));
+//        if (normals && normals->size() == vertices->size())
+//          bsOptShape->particleNorms = *normals;
+//
+//        bsOptShape->particleTris = triangles;
+//      }
+//    }
+//  }
+
+  // we are just updating the data size if it was already set
+  // updating relevant vertices and triangles copy arrays is up to the user
+  if e.NativeValue > 0 then
+    e.NativeValue := e.NativeValues['..\Num Vertices'] * 6 + e.NativeValues['..\Num Triangles'] * 3;
 end;
 
 procedure wbDefineBSTriShape;
@@ -4584,7 +4800,7 @@ begin
     dfInteger('Data Size', dtU32, '1', [DF_OnBeforeSave, @BSTriShape_BeforeSaveDataSize]),
     dfArray('Vertex Data', wbBSVertexData('Vertex Data'), 0, 'Num Vertices', [DF_OnGetEnabled, @BSTriShape_EnVertexData]),
     dfArray('Triangles', wbTriangle('Triangles'), 0, 'Num Triangles', [DF_OnGetEnabled, @BSTriShape_EnTriangles]),
-    dfInteger('Particle Data Size', dtU32, '1', [
+    dfInteger('Particle Data Size', dtU32, [
       DF_OnGetEnabled, @BSTriShape_EnParticleDataSize,
       DF_OnBeforeSave, @BSTriShape_BeforeSaveParticleDataSize
     ]),
@@ -4704,7 +4920,7 @@ procedure wbDefineNiSkinInstance;
 begin
   wbNiObject(wbNifBlock('NiSkinInstance', [
     wbNiRef('Data', 'NiSkinData'),
-    wbNiRef('Skin Partition', 'NiSkinPartition', [DF_OnGetEnabled, @EnSince10200]),
+    wbNiRef('Skin Partition', 'NiSkinPartition', [DF_OnGetEnabled, @EnSince1010101]),
     wbNiPtr('Skeleton Root', 'NiNode'),
     dfArray('Bones', wbNiPtr('Bones', 'NiNode'), -4, '', [DF_OnBeforeSave, @RemoveNoneLinks])
   ]), 'NiObject', False);
@@ -4753,7 +4969,8 @@ begin
 
 procedure NiSkinPartition_GetCountVertexData(const e: TdfElement; var aCount: Integer);
 begin
-  try aCount := e.NativeValues['..\Data Size'] / e.NativeValues['..\Vertex Size']; except aCount := 0; end;
+  aCount := e.NativeValues['..\Vertex Size'];
+  if aCount > 0 then try aCount := e.NativeValues['..\Data Size'] / aCount; except aCount := 0; end;
 end;
 
 procedure NiSkinPartition_BeforeSaveDataSize(const e: TdfElement);
@@ -4818,11 +5035,15 @@ end;
 
 //===========================================================================
 { bhkBlendCollisionObject }
+function bhkBlendCollisionObject_EnUnknownFloat(const e: TdfElement): Boolean; begin Result := nif(e).UserVersion2 < 9; end;
+
 procedure wbDefinebhkBlendCollisionObject;
 begin
   wbNiObject(wbNifBlock('bhkBlendCollisionObject', [
     dfFloat('Heir Gain'),
-    dfFloat('Val Gain')
+    dfFloat('Val Gain'),
+    dfFloat('Unknown Float 1', [DF_OnGetEnabled, @bhkBlendCollisionObject_EnUnknownFloat]),
+    dfFloat('Unknown Float 2', [DF_OnGetEnabled, @bhkBlendCollisionObject_EnUnknownFloat])
   ]), 'bhkCollisionObject', False);
 end;
 
@@ -4937,8 +5158,8 @@ begin
     wbhkMatrix3('Inertia Tensor'),
     wbVector4('Center'),
     dfFloat('Mass', '1.0'),
-    dfFloat('Linear Dumping', '0.1'),
-    dfFloat('Angular Dumping', '0.05'),
+    dfFloat('Linear Damping', '0.1'),
+    dfFloat('Angular Damping', '0.05'),
     dfFloat('Time Factor', '1.0', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     dfFloat('Gravity Factor', '1.0', [DF_OnGetEnabled, @bhkRigidBody_EnUserVersion2gt34]),
     dfFloat('Friction', '0.5'),
@@ -5590,8 +5811,7 @@ end;
 { NiMorphData }
 function NiMorphData_EnForward(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 2; end;
 function NiMorphData_EnTBC(const e: TdfElement): Boolean; begin Result := e.NativeValues['..\..\..\Interpolation'] = 3; end;
-function NiMorphData_EnUnknownInt(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v10200); end;
-function NiMorphData_EnUnknownInt2(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and (Version <= v20005) and (UserVersion = 0); end;
+function NiMorphData_EnLegacyWeight(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v20102) and (UserVersion2 < 10); end;
 
 procedure wbDefineNiMorphData;
 begin
@@ -5610,8 +5830,7 @@ begin
         dfFloat('Backward', [DF_OnGetEnabled, @NiMorphData_EnForward]),
         wbTBC('TBC', [DF_OnGetEnabled, @NiMorphData_EnTBC])
       ]), 0, 'Num Keys', [DF_OnGetEnabled, @EnBefore10100]),
-      dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @NiMorphData_EnUnknownInt]),
-      dfInteger('Unknown Int', dtU32, [DF_OnGetEnabled, @NiMorphData_EnUnknownInt2]),
+      dfFloat('Legacy Weight', [DF_OnGetEnabled, @NiMorphData_EnLegacyWeight]),
       dfArray('Vectors', wbVector3('Vectors'), 0, '..\..\Num Vertices', [])
     ]), 0, 'Num Morphs', [])
   ]), 'NiObject', False);
@@ -6021,7 +6240,9 @@ end;
 { NiInterpController }
 procedure wbDefineNiInterpController;
 begin
-  wbNiObject(wbNifBlock('NiInterpController'), 'NiTimeController', True);
+  wbNiObject(wbNifBlock('NiInterpController', [
+    wbBool('Manager Controlled', [DF_OnGetEnabled, @En1010106])
+  ]), 'NiTimeController', True);
 end;
 
 //===========================================================================
@@ -6038,7 +6259,7 @@ end;
 procedure wbDefineNiSingleInterpController;
 begin
   wbNiObject(wbNifBlock('NiSingleInterpController', [
-    wbNiRef('Interpolator', 'NiInterpolator', [DF_OnGetEnabled, @EnSince10200])
+    wbNiRef('Interpolator', 'NiInterpolator', [DF_OnGetEnabled, @EnSince1010106])
   ]), 'NiInterpController', True);
 end;
 
@@ -6312,15 +6533,15 @@ end;
 
 //===========================================================================
 { NiGeomMorpherController }
-function NiGeomMorpherController_EnUnknown2(const e: TdfElement): Boolean; begin Result := nif(e).Version = v1010106; end;
+//function NiGeomMorpherController_EnUnknown2(const e: TdfElement): Boolean; begin Result := nif(e).Version = v1010106; end;
 function NiGeomMorpherController_EnInterpolators(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v1010106) and (Version <= v20005); end;
-function NiGeomMorpherController_EnUnknownInts(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v20004) and (Version <= v20005) and (UserVersion2 > 0); end;
+function NiGeomMorpherController_EnUnknownInts(const e: TdfElement): Boolean; begin with nif(e) do Result := (Version >= v10200) and (Version <= v20005) and (UserVersion2 > 9); end;
 
 procedure wbDefineNiGeomMorpherController;
 begin
   wbNiObject(wbNifBlock('NiGeomMorpherController', [
     dfInteger('Extra Flags', dtU16, [DF_OnGetEnabled, @EnSince10012]),
-    dfInteger('Unknown 2', dtU8, [DF_OnGetEnabled, @NiGeomMorpherController_EnUnknown2]),
+    //dfInteger('Unknown 2', dtU8, [DF_OnGetEnabled, @NiGeomMorpherController_EnUnknown2]),
     wbNiRef('Data', 'NiMorphData'),
     dfInteger('Always Update', dtU8),
     dfInteger('Num Interpolators', dtU32, [DF_OnGetEnabled, @EnSince1010106]),
@@ -6358,7 +6579,7 @@ procedure wbDefineNiPSysEmitterCtlr;
 begin
   wbNiObject(wbNifBlock('NiPSysEmitterCtlr', [
     wbNiRef('Data', 'NiPSysEmitterCtlrData', [DF_OnGetEnabled, @EnBefore10100]),
-    wbNiRef('Visibility Interpolator', 'NiInterpolator', [DF_OnGetEnabled, @EnSince10200])
+    wbNiRef('Visibility Interpolator', 'NiInterpolator', [DF_OnGetEnabled, @EnSince10100])
   ]), 'NiPSysModifierCtlr', False);
 end;
 
@@ -7614,10 +7835,13 @@ begin
   v4202    := wbNifVersionToInt('4.2.0.2');
   v4210    := wbNifVersionToInt('4.2.1.0');
   v4220    := wbNifVersionToInt('4.2.2.0');
+  v5001    := wbNifVersionToInt('5.0.0.1');
   v10010   := wbNifVersionToInt('10.0.1.0');
   v10012   := wbNifVersionToInt('10.0.1.2');
   v10013   := wbNifVersionToInt('10.0.1.3');
   v10100   := wbNifVersionToInt('10.1.0.0');
+  v10018   := wbNifVersionToInt('10.0.1.8');
+  v1010101 := wbNifVersionToInt('10.1.0.101');
   v1010106 := wbNifVersionToInt('10.1.0.106');
   v10200   := wbNifVersionToInt('10.2.0.0');
   v10401   := wbNifVersionToInt('10.4.0.1');
@@ -7626,6 +7850,7 @@ begin
   v20005   := wbNifVersionToInt('20.0.0.5');
   v20007   := wbNifVersionToInt('20.0.0.7');
   v20101   := wbNifVersionToInt('20.1.0.1');
+  v20102   := wbNifVersionToInt('20.1.0.2');
   v20205   := wbNifVersionToInt('20.2.0.5');
   v20207   := wbNifVersionToInt('20.2.0.7');
 
@@ -8009,6 +8234,10 @@ end;
 
 
 initialization
+  {$IF CompilerVersion < 34.0}
+  Sync := TReadWriteSync.Create;
+  {$IFEND}
+  NifDefsInitialized := False;
 
 finalization
   FreeNiObjectDefs;

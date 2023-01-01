@@ -340,31 +340,26 @@ end;
 
 constructor TwbLODSettingsTES5File.Create;
 begin
-  wbDefineMisc;
   inherited Create(dfLODSettingsTES5, nil);
 end;
 
 constructor TwbLODSettingsFO3File.Create;
 begin
-  wbDefineMisc;
   inherited Create(dfLODSettingsFO3, nil);
 end;
 
 constructor TwbLODTreeLSTFile.Create;
 begin
-  wbDefineMisc;
   inherited Create(dfLODTreeLST, nil);
 end;
 
 constructor TwbLODTreeBTTFile.Create;
 begin
-  wbDefineMisc;
   inherited Create(dfLODTreeBTT, nil);
 end;
 
 constructor TwbFUZFile.Create;
 begin
-  wbDefineMisc;
   inherited Create(dfFUZ, nil);
 end;
 
@@ -385,13 +380,13 @@ end;
 
 constructor TwbDDSFile.Create;
 begin
-  wbDefineMisc;
   inherited Create(dfDDS, nil);
 end;
 
 
 
 initialization
+  wbDefineMisc;
 
 finalization
 

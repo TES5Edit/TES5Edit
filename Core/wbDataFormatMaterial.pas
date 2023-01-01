@@ -405,7 +405,6 @@ end;
 
 constructor TwbBGSMFile.Create;
 begin
-  wbDefineMaterial;
   inherited Create(dfBGSM, nil);
 end;
 
@@ -455,7 +454,6 @@ end;
 
 constructor TwbBGEMFile.Create;
 begin
-  wbDefineMaterial;
   inherited Create(dfBGEM, nil);
 end;
 
@@ -504,9 +502,9 @@ end;
 
 
 initialization
+  wbDefineMaterial;
 
 finalization
-
   FreeAndNil(dfBGSM);
   FreeAndNil(dfBGEM);
 

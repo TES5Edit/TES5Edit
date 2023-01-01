@@ -1000,7 +1000,7 @@ begin
     25, 'Remappable_Textures',
     26, 'Decal_Single_Pass',
     27, 'Dynamic_Decal_Single_Pass',
-    28, 'Parallax_Occulsion',
+    28, 'Parallax_Occlusion',
     29, 'External_Emittance',
     30, 'Shadow_Map',
     31, 'ZBuffer_Test'
@@ -1032,7 +1032,7 @@ begin
     19, 'Premult_Alpha',
     20, 'Skip_Normal_Maps',
     21, 'Alpha_Decal',
-    22, 'No_Transparecny_Multisampling',
+    22, 'No_Transparency_Multisampling',
     23, 'Unknown2',
     24, 'Unknown3',
     25, 'Unknown4',
