@@ -3,6 +3,7 @@
 ## Bugfixes
 
 * #1034 - Incorrect encoding for cyrillic symbols for Player Dialog Prompts
+* #1036 - QAC reports with multiple dirty checksums produce invalid LOOT masterlist entries
 * (reported on Discord) - .strings files may not be saved if there were no changes to the .es? file
 * (contributed) - CalculateFaceNormals always failed with assert
 * (contributed) - fixed some scripts failing because of case sensitive comparison of element names
