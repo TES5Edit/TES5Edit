@@ -9892,10 +9892,10 @@ begin
     wbInteger(MNAM, 'Num quests to run', itU32),
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
-      wbFormIDCk(NNAM, 'Quest', [QUST], False, cpBenign),
-      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags, cpBenign),
-      wbFloat(RNAM, 'Hours until reset', cpBenign, False, 1/24)
-    ], []), cpBenign, False, nil, wbSMQNQuestsAfterSet)
+      wbFormIDCk(NNAM, 'Quest', [QUST], False),
+      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
+      wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
+    ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
   wbRecord(SMEN, 'Story Manager Event Node', [
