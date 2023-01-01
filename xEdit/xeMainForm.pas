@@ -1758,8 +1758,13 @@ end;
 
 procedure TfrmMain.AddMessage(const s: string);
 begin
-  mmoMessages.Lines.Add(s);
-  stbMain.Panels[0].Text := s;
+  var Strs := s.Split(CRLF);
+  if Length(Strs) < 1 then
+    SetLength(Strs, 1);
+  for var t in Strs do begin
+    mmoMessages.Lines.Add(t);
+    stbMain.Panels[0].Text := t;
+  end;
 
   ScrollToTheLastMessage;
 
@@ -19785,7 +19790,13 @@ begin
   Pointer(t) := Pointer(Message.WParam);
   if not Assigned(NewMessages) then
     NewMessages := TStringList.Create;
-  NewMessages.Add(t);
+
+  var Strs := t.Split(CRLF);
+  if Length(Strs) < 1 then
+    SetLength(Strs, 1);
+
+  for var s in Strs do
+    NewMessages.Add(s);
 end;
 
 procedure TfrmMain.WMUser1(var Message: TMessage);

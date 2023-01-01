@@ -60,8 +60,8 @@ const
   wbFloatDigits  = 6;
   wbRefCacheExt  = '.refcache';
 
-const
-  CRLF = #13#10;
+var
+  CRLF: string = #13#10;
 
 const
   csDotExe   = '.exe';
