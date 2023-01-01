@@ -4833,6 +4833,25 @@ var
 
   Stream        : TStream;
 begin
+  {$IFDEF USE_PARALLEL_BUILD_REFS}
+  TThread.CreateAnonymousThread(procedure begin
+    var ThreadCount := TThread.ProcessorCount;
+    ThreadCount := (ThreadCount * 7) div 8;
+    if ThreadCount < 3 then
+      ThreadCount := 3;
+    if ThreadCount > 16 then
+      ThreadCount := 16;
+    with TThreadPool.Default do begin
+      SetMaxWorkerThreads(ThreadCount);
+      SetMinWorkerThreads(ThreadCount);
+    end;
+
+    TTask.Run(procedure begin
+      Sleep(1);
+    end).Wait;
+  end).Resume;
+  {$ENDIF}
+
   AutoDone := False;
   ErrorsCount := 0;
   ITMcount := 0;
