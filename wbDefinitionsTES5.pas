@@ -10453,8 +10453,8 @@ begin
     wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Begin on Quest Start',
-      'Stop on Quest End',
-      'Unknown 3',
+      'Stop Quest on End',
+      'Show All Text',
       'Repeat Conditions While True',
       'Interruptible'
     ])),

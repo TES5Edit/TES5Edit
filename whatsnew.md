@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #1002 - FNAM Scene Flags (Stop on Quest End -> Stop Quest on End)
 * #1012 - [FO4] Condition GetIsID does not accept an Enchantment ID
 * #1016 - [TES5/SSE] Quests/QNAM in SMQN shouldn't show as benign conflict 
 * #1034 - Incorrect encoding for cyrillic symbols for Player Dialog Prompts
