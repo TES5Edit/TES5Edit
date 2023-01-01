@@ -300,7 +300,7 @@ var
   i, j: integer;
 begin
   {$IF CompilerVersion < 34.0}
-  fObjectLock := TSimpleRWSync.Create;
+  fObjectLock := TReadWriteSync.Create;
   {$IFEND}
   fCurrentIndex := fLowIndex;
   fExceptionIndex := -1;

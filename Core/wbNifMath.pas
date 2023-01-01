@@ -74,8 +74,8 @@ procedure QuaternionToEuler(const Quat: TQuaternion; var x, y, z: Extended);
 procedure M33ToAxisAngle(const m: TMatrix33; var a, x, y, z: Extended);
 procedure AxisAngleToM33(const a, x, y, z: Extended; var m: TMatrix33);
 
-function Triangulate(const strip: TStrip): TTriangleArray; overload;
-function Triangulate(const strips: TStripArray): TTriangleArray; overload;
+function TriangulateStrip(const strip: TStrip): TTriangleArray;
+function TriangulateStrips(const strips: TStripArray): TTriangleArray;
 
 procedure CalculateCenterRadius(
   const verts: TVector3Array;
@@ -423,12 +423,13 @@ begin
   Result := (A.X * B.X) + (A.Y * B.Y) + (A.Z * B.Z);
 end;
 
-function Triangulate(const strip: TStrip): TTriangleArray;
+function TriangulateStrip(const strip: TStrip): TTriangleArray;
 var
   a, b, c: Word;
   s: Integer;
   flip: Boolean;
 begin
+  Result := nil;
   if Length(strip) < 3 then
     Exit;
 
@@ -459,13 +460,15 @@ begin
   end;
 end;
 
-function Triangulate(const strips: TStripArray): TTriangleArray;
+function TriangulateStrips(const strips: TStripArray): TTriangleArray;
 var
   t: TTriangleArray;
   i, j: Integer;
 begin
+  Result := nil;
   for j := Low(strips) to High(strips) do begin
-    t := Triangulate(strips[j]);
+    t := TriangulateStrip(strips[j]);
+    if Length(t) = 0 then Continue;
     i := Length(Result);
     SetLength(Result, i + Length(t));
     System.Move(t[0], Result[i], SizeOf(TTriangle) * Length(t));
@@ -535,8 +538,7 @@ var
   a, b, c, fn: TVector3;
   i: Integer;
 begin
-  SetLength(norms, Length(triangles) * SizeOf(TTriangle));
-  Assert(Length(norms) = Length(verts));
+  SetLength(norms, Length(verts));
   for i := Low(triangles) to High(triangles) do begin
     a := verts[triangles[i][0]];
     b := verts[triangles[i][1]];

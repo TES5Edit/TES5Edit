@@ -277,6 +277,7 @@ type
     procedure SerializeToJSON(const aJSON: TJSONBaseObject); override;
     procedure Assign(const aElement: TdfElement); override;
     function DataSize: Integer; override;
+    property DataStart: PByte read FDataStart;
   end;
 
 
@@ -3509,11 +3510,16 @@ begin
     Result := Size + StringSize;
     ValidateData(aDataStart, aDataEnd, Result);
 
-    if Terminated then begin
+    // exception if no terminator
+    {if (StringSize > 0) and Terminated then begin
       if PAnsiChar(PData + Pred(Result))^ <> TdfCharsDef(Def).Terminator then
         DoException('Prefixed terminated string does not end with terminator');
       Dec(StringSize);
-    end;
+    end;}
+
+    // no exception, but don't omit the last char if it is not a terminator
+    if (StringSize > 0) and Terminated and (PAnsiChar(PData + Pred(Result))^ = TdfCharsDef(Def).Terminator) then
+      Dec(StringSize);
 
     if StringSize < 0 then
       DoException('Prefixed string size is negative');
