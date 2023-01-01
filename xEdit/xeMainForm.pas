@@ -18325,8 +18325,9 @@ begin
       (NodeData.Element.ElementType = etMainRecord) then begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
-      if NodeData.ConflictAll = caUnknown then begin
+      if (NodeData.ConflictAll = caUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
         ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        NodeData.ElementGen := MainRecord.ElementGeneration;
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -19236,8 +19237,9 @@ begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
       if wbLoaderDone then
-        if NodeData.ConflictThis = ctUnknown then begin
+        if (NodeData.ConflictThis = ctUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+          NodeData.ElementGen := MainRecord.ElementGeneration;
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected)
           else

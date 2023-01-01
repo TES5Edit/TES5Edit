@@ -2,6 +2,7 @@
 
 ## Bugfixes
 
+* #1060 - changing values in override doesn't update record color on left side
 * (contributed) - various changes and fixes to .nif handling
 * (contributed) - various changes and fixes to FO76 definitions
 * (contributed) - [FO4] better BSMP decoding

@@ -1130,6 +1130,8 @@ type
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
+    procedure NotifyChangedInternal(aContainer: Pointer); override;
+
     procedure Init; override;
     procedure Reset; override;
 
@@ -11126,6 +11128,12 @@ begin
   Result := PwbMainRecordStruct(dcBasePtr);
 end;
 
+procedure TwbMainRecord.NotifyChangedInternal(aContainer: Pointer);
+begin
+  ResetConflict;
+  inherited;
+end;
+
 procedure TwbMainRecord.PrepareSave;
 var
   KAR: IwbKeepAliveRoot;
@@ -11620,8 +11628,11 @@ begin
   Include(mrStates, mrsResettingConflict);
   try
     inherited;
-    mrConflictAll := caUnknown;
-    mrConflictThis := ctUnknown;
+    if (mrConflictAll <> caUnknown) or (mrConflictThis <> ctUnknown) then begin
+      mrConflictAll := caUnknown;
+      mrConflictThis := ctUnknown;
+      Inc(eGeneration);
+    end;
     if Assigned(mrMaster) then
       IwbElement(mrMaster).ResetConflict
     else
