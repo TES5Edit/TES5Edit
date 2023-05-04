@@ -853,7 +853,19 @@ var
             miFileID := TwbFileID.Create($FE, _NextLightSlot);
             Inc(_NextLightSlot);
           end else begin
-            if _NextFullSlot > $FD then
+            if wbGameMode = gmEnderalSE then
+              if _NextFullSlot > $FD then
+              raise Exception.Create('Too many full modules');
+            end else begin
+            if wbGameMode = gmSSE then
+              if _NextFullSlot > $FD then
+              raise Exception.Create('Too many full modules');
+            end else begin
+            if wbGameMode = gmFO4 then
+              if _NextFullSlot > $FD then
+              raise Exception.Create('Too many full modules');
+            end else begin
+            if _NextFullSlot > $FE then
               raise Exception.Create('Too many full modules');
             miFileID := TwbFileID.Create(_NextFullSlot);
             Inc(_NextFullSlot);
