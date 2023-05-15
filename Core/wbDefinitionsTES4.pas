@@ -1895,8 +1895,9 @@ begin
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbOwnership(wbXOWN, [], wbXGLB),
-    wbXESP,
     wbXRGD,
+    wbXLOD,
+    wbXESP,
     wbXSCL,
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
