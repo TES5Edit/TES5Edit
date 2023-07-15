@@ -26,6 +26,7 @@ uses
   wbLocalization,
   wbSort,
   wbNifScanner,
+  wbBSArchive,
   wbLOD;
 
 implementation
@@ -1754,6 +1755,11 @@ begin
   Value := wbCRC32File(string(Args.Values[0]));
 end;
 
+procedure Misc_CreateHashFO4(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := CreateHashFO4(string(Args.Values[0]));
+end;
+
 procedure Misc_bscrc32(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := bscrc32(string(Args.Values[0]));
@@ -2177,6 +2183,7 @@ begin
     AddFunction(cUnit, 'wbCRC32Resource', Misc_wbCRC32Resource, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbCRC32File', Misc_wbCRC32File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'bscrc32', Misc_bscrc32, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'CreateHashFO4', Misc_CreateHashFO4, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbSHA1Data', Misc_wbSHA1Data, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbSHA1File', Misc_wbSHA1File, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'wbMD5Data', Misc_wbMD5Data, 1, [varEmpty], varEmpty);
