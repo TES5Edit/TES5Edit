@@ -10,7 +10,7 @@ xEdit 4.0.0 by ElminsterAU. Updates since 2012 include TES5Edit/SSEEdit/FO4Edit 
 
 ## xEdit Cleaning Guide
 
-With the 4.0 update all previous guides are obsolete. Refer to the [xEdit Quick Auto Clean](https://tes5edit.github.io/docs/5-mod-cleaning-and-error-checking.html#quickautoclean)
+With the 4.0 update, all previous guides are obsolete. Refer to the [xEdit Quick Auto Clean](https://tes5edit.github.io/docs/7-mod-cleaning-and-error-checking.html#ThreeEasyStepstocleanMods)
 
 ## Current Official Threads
 - [Bethesda.net](https://bethesda.net/community/topic/57570/relz-sseedit)
@@ -39,9 +39,9 @@ Rename to FO76Edit.exe to work with Fallout 76.
 
 ## Online Documentation
 
-EpFwip started an HTML conversion of the Fallout 3 Training Manual many years ago. With the help of GhPages and Jekyll online documentation for xEdit is now available. New screen shots of the Fallout 3 examples that Miax and JustinOther presented will be added as time permits. Also the website will continue to evolve over time.
+EpFwip started an HTML conversion of the Fallout 3 Training Manual many years ago. With the help of GhPages and Jekyll online documentation for xEdit is now available. New screenshots of the Fallout 3 examples that Miax and JustinOther presented will be added as time permits. Also, the website will continue to evolve over time.
 
-However, for now consider what the Tome of xEdit presents as a current resource for xEdit functionality. The previous PDF file presented step by step illustrations of the built in functions available to xEdit. While the UI itself has had few changes over time the functions work the same and only certain functions are game specific.
+However, for now consider what the Tome of xEdit presents as a current resource for xEdit functionality. The previous PDF file presented step-by-step illustrations of the built-in functions available to xEdit. While the UI itself has had few changes over time the functions work the same and only certain functions are game-specific.
 
 The online documentation is available from the Help button built into the developmental version of xEdit or you can view it [from here](https://tes5edit.github.io/docs/).
 
@@ -71,7 +71,7 @@ Check for new versions here
 
 # xEdit Updates
 
-With each new version of xEdit it is recommended to restore plugins from backups and reclean them. Otherwise any fixes and updates to cleaning process won't take effect.
+With each new version of xEdit, it is recommended to restore plugins from backups and reclean them. Otherwise, any fixes and updates to the cleaning process won't take effect.
 
 # Changelog
 
