@@ -431,6 +431,7 @@ const
   EPNQ : TwbSignature = 'EPNQ'; { New To Fallout 76 0.2.782.0 }
   EPPR : TwbSignature = 'EPPR'; { New To Fallout 76 0.2.782.0 }
   EPQA : TwbSignature = 'EPQA'; { New To Fallout 76 0.2.782.0 }
+  EPSI : TwbSignature = 'EPSI'; { New To Fallout 76 0.2.782.0 }
   EQUP : TwbSignature = 'EQUP';
   EQWG : TwbSignature = 'EQWG'; { New To Fallout 76. In Exe Grup Order }
   ESAV : TwbSignature = 'ESAV'; { New To Fallout 76 }
@@ -1229,6 +1230,7 @@ var
   wbEITM: IwbSubRecordDef;
   wbOPDS: IwbSubRecordDef;
   wbOPDSs: IwbSubRecordArrayDef;
+  wbFTAGs: IwbSubRecordArrayDef;
   wbDEFL: IwbSubRecordDef;
   wbDIQO: IwbSubRecordDef;
   wbBEVA: IwbSubRecordDef;
@@ -4670,7 +4672,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..605] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..606] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
@@ -4745,7 +4747,7 @@ const
     (Index: 125; Name: 'IsGuard'),
     (Index: 127; Name: 'HasBeenEaten'),
     (Index: 128; Name: 'GetStaminaPercentage'),
-    (Index: 129; Name: 'HasBeenRead'),
+    (Index: 129; Name: 'HasBeenRead'; ParamType1: ptInventoryObject),
     (Index: 130; Name: 'GetDying'),
     (Index: 131; Name: 'GetSceneActionPercent'; ParamType1: ptScene; ParamType2: ptInteger),
     (Index: 132; Name: 'WouldRefuseCommand'; ParamType1: ptObjectReference),
@@ -5276,6 +5278,7 @@ const
     (Index: 10010; Name: 'StartNewExpedition'; ParamType1: ptQuest),    //Does nothing on the client
     (Index: 10011; Name: 'ResumeExpedition'; ParamType1: ptQuest),    //Does nothing on the client
     (Index: 10012; Name: 'JoinExpedition'),    //Does nothing on the client
+    (Index: 10013; Name: 'GetPublicEventHasMutation'),
     (Index: 12000; Name: 'IsFOWPersonalEWSEnabled'; Desc: 'Is the personal EWS enabled?')
   );
 
@@ -8306,6 +8309,7 @@ begin
   wbFEVA := wbFloat(FEVA, 'Float Value');
 
   wbOPDSs:= wbRArray('Object Placement Defaults', wbOPDS);
+  wbFTAGs:= wbRArray('Form Tags', wbString(FTAG, 'Form Tag'));
 
   wbNTWK := wbEmpty(NTWK, 'Network? Marker');
 
@@ -11426,7 +11430,9 @@ begin
     wbOPDSs,
     wbDEFL,
     wbSNTP,
+    wbOPDSs,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -11632,6 +11638,7 @@ begin
     wbPTRN,
     wbSNTP,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbEITM,
     wbTexturedModel('Male world model', [MOD2, MO2T], [wbMODC, wbMO2S, wbENLT, wbENLS, wbAUUV]),
@@ -11691,6 +11698,7 @@ begin
     ])), [
     wbEDID,
     wbXALG,
+    wbFTAGs,
     wbBOD2,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
@@ -12494,6 +12502,7 @@ begin
     wbDEFL,
     wbSNTP,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -12792,6 +12801,7 @@ begin
     wbDEFL,
     wbSNTP,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -12916,6 +12926,7 @@ begin
     ])), [
     wbEDID,
     wbXALG,
+    wbFTAGs,
     wbCNAM,
     wbString(DNAM, 'Notes'),
     wbUnknown(FNAM),
@@ -13066,7 +13077,9 @@ begin
     wbSTCP,
     wbDEFL,
     wbSNTP,
+    wbOPDSs,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -13939,6 +13952,7 @@ begin
     wbEDID,
     wbOBND(True),
     wbXALG,
+    wbFTAGs,
     wbOPDSs,
     wbGenericModel,
     wbRUnion('Node Index', [
@@ -15514,6 +15528,7 @@ begin
     wbOPDSs,
     wbPTRN,
     wbXALG,
+    wbFTAGs,
     wbKeywords,
     wbGenericModel,
     wbInteger(DNAM, 'Art Type', itU32, wbEnum([
@@ -16340,6 +16355,7 @@ begin
     wbOPDSs,
     wbDEFL,
     wbXALG,
+    wbFTAGs,
     wbLVLD,
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
     wbLVMV,
@@ -16685,6 +16701,7 @@ begin
     ])), [
     wbEDID,
     wbXALG,
+    wbFTAGs,
     wbYNAM,
     wbZNAM,
     wbComponents,
@@ -19197,6 +19214,7 @@ begin
     wbDEFL,
     wbSNTP,
     wbXALG,
+    wbFTAGs,
     wbFTYP,
     wbGenericModel,
     wbPRPS,
@@ -20240,6 +20258,7 @@ begin
     ])), [
     wbEDID,
     wbXALG,
+    wbFTAGs,
     wbString(FNAM, 'Tree Folder'), {First FNAM}
     wbRArrayS('Material Substitutions',
       wbRStructSK([0], 'Substitution', [
@@ -20388,6 +20407,7 @@ begin
     wbEDID,
     wbDURL,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbDESC,
     wbGenericModel,
@@ -21176,6 +21196,7 @@ begin
     ])), [
     wbEDID,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbDESC,
     wbKeywords,
@@ -21218,20 +21239,21 @@ begin
   wbRecord(PMFT, 'Photo Mode Feature', [
     wbEDID,
     wbXALG,
+    wbFTAGs,
     wbFULL,
     wbICON,
     wbCTDAs,
     wbUnknown(FNAM),
-//    wbStruct(FNAM, 'Unknown', [
-//      wbInteger('Unknown 1', itU32),
-//      wbFloat('Unknown 2'),
-//      wbFloat('Unknown 3'),
-//      wbByteArray('Unknown 4', 4),
-//      wbByteArray('Unknown 5', 4),
-//      wbByteArray('Unknown 6', 4),
-//      wbByteArray('Unknown 7', 4),
-//      wbByteArray('Unknown 8', 4)
-//   ]),
+    //wbStruct(FNAM, 'Unknown', [
+    //  wbInteger('Unknown 1', itU32),
+    //  wbFloat('Unknown 2'),
+    //  wbFloat('Unknown 3'),
+    //  wbByteArray('Unknown 4', 4),
+    //  wbByteArray('Unknown 5', 4),
+    //  wbByteArray('Unknown 6', 4),
+    //  wbByteArray('Unknown 7', 4),
+    //  wbByteArray('Unknown 8', 4)
+    //]),
     wbFormIDCk(INAM, 'Image Space', [IMAD]),
     wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
@@ -21243,7 +21265,7 @@ begin
     ])),[
     wbEDID,
     wbWTFG,
-    wbRArray('Season Tags', wbString(FTAG, 'Season Tag')),
+    wbFTAGs,
     wbFULL,
     wbString(SNAM, 'Tracked Stat Used'),
     wbString(NNAM, 'Comment'),
@@ -21291,6 +21313,7 @@ begin
 
   wbRecord(AVTR, 'Avatar', [
     wbEDID,
+    wbXALG,
     wbFULL,
     wbString(SWFI, 'SWF Image'),
     wbFormID(RENT, 'Required Entitlement')
@@ -21349,7 +21372,7 @@ begin
       {0x00000200}  9, 'Unknown 9'
     ])), [
     wbEDID,
-    wbRArray('Season Tags', wbString(FTAG, 'Season Tag')),
+    wbFTAGs,
     wbFormIDCk(ANAM, 'Parent Quest', [QUST]),
     wbInteger(RWDS, 'Rewards Count', itU32),
     wbRArray('Rewards List', wbReward)
@@ -21365,49 +21388,52 @@ begin
     wbInteger(EPCD, 'Cooldown', itU32),
     wbInteger(EPPR, 'Priority', itU32),
     wbInteger(EPNQ, 'Unknown Int', itU32),
-    wbRArray('Quest List',
-      wbFormID(EPQA, 'Quest')
+    wbRArray('Playlist Quests',
+      wbRStruct('Quest Info', [
+        wbFormID(EPQA, 'Quest'),
+        wbFormIDCk(EPSI, 'Spell Modifier', [SPEL])
+      ], [])
     ),
     wbInteger(EPFL, 'Unknown Byte', itU8)
   ]);
 
-  wbRecord(QMDL, 'Quest Module' ,
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2',
-      {0x00000200}  9, 'Unknown 9'
-    ])), [
-    wbEDID,
-    wbVMAD,
-    wbInteger(QMDI, 'Index', itU16),
-    wbFormID(QMDQ, 'Associated Quest'),
-    wbFormID(QMDP, 'Parent Quest'),
-    wbInteger(QMDT, 'Unknown Timer', itU16),
-    wbString(QMDN, 'Notes'),
-    wbInteger(QMPO, 'Unknown Objective', itU16),
-    wbInteger(QMOD, 'Objective Count', itU32),
-    wbRArray('Module Objectives',
-      wbRStruct('Module Objective', [
-        wbInteger(QMOI, 'Index', itU16),
-        wbLStringKC(QMOT, 'Text'),
-        wbByteArray(QMTT, 'QMTT - Unknown 4 Bytes', 4),
-        wbByteArray(QMTR, 'QMTR - Unknown 4 Bytes', 4)
-      ],[])
-    ),
-    wbInteger(QMAD, 'Alias Count', itU32),
-    wbRArray('Module Aliases',
-      wbRStruct('Module Alias', [
-        wbInteger(QMAI, 'Index', itU32),
-        wbInteger(QMAO, 'Parent Quest Alias', itU32)
-      ],[])
-    ),
-    wbInteger(QMSD, 'Stage Count', itU32),
-    wbRArray('Module Stages',
-      wbRStruct('Module Stage', [
-        wbInteger(QMSI, 'Index', itU16),
-        wbInteger(QMSO, 'Parent Quest Stage', itU16)
-      ],[])
-    )
-  ]);
+    wbRecord(QMDL, 'Quest Module' ,
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00000004}  2, 'Unknown 2',
+        {0x00000200}  9, 'Unknown 9'
+      ])), [
+      wbEDID,
+      wbVMAD,
+      wbInteger(QMDI, 'Index', itU16),
+      wbFormID(QMDQ, 'Associated Quest'),
+      wbFormID(QMDP, 'Parent Quest'),
+      wbInteger(QMDT, 'Unknown Timer', itU16),
+      wbString(QMDN, 'Notes'),
+      wbInteger(QMPO, 'Unknown Objective', itU16),
+      wbInteger(QMOD, 'Objective Count', itU32),
+      wbRArray('Module Objectives',
+        wbRStruct('Module Objective', [
+          wbInteger(QMOI, 'Index', itU16),
+          wbLStringKC(QMOT, 'Text'),
+          wbByteArray(QMTT, 'QMTT - Unknown 4 Bytes', 4),
+          wbByteArray(QMTR, 'QMTR - Unknown 4 Bytes', 4)
+        ],[])
+      ),
+      wbInteger(QMAD, 'Alias Count', itU32),
+      wbRArray('Module Aliases',
+        wbRStruct('Module Alias', [
+          wbInteger(QMAI, 'Index', itU32),
+          wbInteger(QMAO, 'Parent Quest Alias', itU32)
+        ],[])
+      ),
+      wbInteger(QMSD, 'Stage Count', itU32),
+      wbRArray('Module Stages',
+        wbRStruct('Module Stage', [
+          wbInteger(QMSI, 'Index', itU16),
+          wbInteger(QMSO, 'Parent Quest Stage', itU16)
+        ],[])
+      )
+    ]);
 
   wbRecord(ATXO, 'ATX Default Object', [
     wbEDID,
