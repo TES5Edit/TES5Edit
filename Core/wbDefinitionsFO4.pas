@@ -926,6 +926,7 @@ var
   wbDESCReq: IwbSubRecordDef;
   wbXSCL: IwbSubRecordDef;
   wbMODC: IwbSubRecordDef;
+  wbModelFlags: IwbFlagsDef;
   wbMODF: IwbSubRecordDef;
   wbMODS: IwbSubRecordDef;
   wbMO2S: IwbSubRecordDef;
@@ -7475,11 +7476,15 @@ begin
   wbMO4S := wbFormIDCk(MO4S, 'Material Swap', [MSWP]);
   wbMO5S := wbFormIDCk(MO5S, 'Material Swap', [MSWP]);
 
-  wbMODF := wbUnknown(MODF);
-  wbMO2F := wbUnknown(MO2F);
-  wbMO3F := wbUnknown(MO3F);
-  wbMO4F := wbUnknown(MO4F);
-  wbMO5F := wbUnknown(MO5F);
+  wbModelFlags := wbFlags([
+    'Has FaceBones Model',
+    'Has 1stPerson Model'
+  ]);
+  wbMODF := wbInteger(MODF, 'Flags', itU8, wbModelFlags);
+  wbMO2F := wbInteger(MO2F, 'Flags', itU8, wbModelFlags);
+  wbMO3F := wbInteger(MO3F, 'Flags', itU8, wbModelFlags);
+  wbMO4F := wbInteger(MO4F, 'Flags', itU8, wbModelFlags);
+  wbMO5F := wbInteger(MO5F, 'Flags', itU8, wbModelFlags);
 
   wbMODC := wbFloat(MODC, 'Color Remapping Index');
   wbMO2C := wbFloat(MO2C, 'Color Remapping Index');
