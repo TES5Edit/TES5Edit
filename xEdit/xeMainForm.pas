@@ -5020,18 +5020,19 @@ begin
   if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
 
     {$IFDEF WIN64}
-    if Settings.ReadBool('Init', 'First64Start', True) then begin
-      if MessageDlg('You have started the 64bit version.' + CRLF + CRLF +
-        'The only reason to use the 64bit version is if you are getting an out of memory ' +
-        'error while using the 32bit version.' + CRLF + CRLF +
-        'The 32bit version is generally faster and uses less memory than the 64bit version.' + CRLF + CRLF +
-        'Are you sure you want to continue?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then begin
-        tmrShutdown.Enabled := True;
-        Exit;
-        end;
-      Settings.WriteBool('Init', 'First64Start', False);
-      Settings.UpdateFile;
-    end;
+    if not wbIsStarfield then
+      if Settings.ReadBool('Init', 'First64Start', True) then begin
+        if MessageDlg('You have started the 64bit version.' + CRLF + CRLF +
+          'The only reason to use the 64bit version is if you are getting an out of memory ' +
+          'error while using the 32bit version.' + CRLF + CRLF +
+          'The 32bit version is generally faster and uses less memory than the 64bit version.' + CRLF + CRLF +
+          'Are you sure you want to continue?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then begin
+          tmrShutdown.Enabled := True;
+          Exit;
+          end;
+        Settings.WriteBool('Init', 'First64Start', False);
+        Settings.UpdateFile;
+      end;
     {$ENDIF WIN64}
 
     i := Settings.ReadInteger('WhatsNew', 'Version', 0);

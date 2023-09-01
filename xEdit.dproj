@@ -7,15 +7,10 @@
         <MainSource>xEdit.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{BB5B51E2-CC9A-4404-A582-958449C5049E}</ProjectGuid>
-        <ProjectVersion>19.4</ProjectVersion>
+        <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
-        <Base_Win32>true</Base_Win32>
-        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
@@ -52,13 +47,6 @@
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_4)'=='true') or '$(Cfg_4_Win32)'!=''">
-        <Cfg_4_Win32>true</Cfg_4_Win32>
-        <CfgParent>Cfg_4</CfgParent>
-        <Cfg_4>true</Cfg_4>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>xEdit</SanitizedProjectName>
         <AppDPIAwarenessMode>system</AppDPIAwarenessMode>
@@ -84,7 +72,6 @@
         <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_Release>4</VerInfo_Release>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Win32)'!=''"/>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -113,7 +100,6 @@
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_4_Win32)'!=''"/>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
@@ -227,6 +213,8 @@
         </DCCReference>
         <DCCReference Include="xEdit\xeScriptHost.pas"/>
         <DCCReference Include="xEdit\JvI\xejviScriptHost.pas"/>
+        <DCCReference Include="Core\wbDefinitionsSF1.pas"/>
+        <DCCReference Include="Core\wbDefinitionsSignatures.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

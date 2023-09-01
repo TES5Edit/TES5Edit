@@ -9,4 +9,6 @@ EnableMissingPlatforms=0
 RemoveUnusedPlatforms=1
 RefreshFormType=1
 RemoveExcludedPackages=1
+RemoveDeployment=1
+RemoveUWP=1
 

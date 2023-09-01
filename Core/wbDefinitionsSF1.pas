@@ -17329,9 +17329,8 @@ end;
 
 procedure DefineSF1;
 begin
-  //wbNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
-  {if wbToolMode = tmLODgen then
-    wbNexusModsUrl := '';}
+  wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
+
   DefineSF1a;
   DefineSF1b;
   DefineSF1c;
