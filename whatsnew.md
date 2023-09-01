@@ -1,4 +1,21 @@
-# What's new in xEdit 4.1.5?
+# What's new in (future) xEdit 4.1.5?
+
+## Starfield
+
+This version includes extremely preliminary support for Starfield.
+
+Currently, only the View mode is supported.
+The record definitions are either copies from FO4 and FO76 or are empty. Countless errors are to be expected.
+
+Please refrain from reporting errors in the record definitions at this point, as we are aware they are very incomplete.
+
+The primary purpose of this version is to establish the baseline necessary for the extended and grueling process of reverse engineering the record definitions of Starfield.
+
+However, any support would be highly appreciated.
+
+## Updated Developer Message
+
+We've updated the Developer Message; please take a moment to read it.
 
 ## Bugfixes
 
