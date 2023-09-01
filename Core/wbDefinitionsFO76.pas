@@ -44,6 +44,7 @@ var
   wbEntryPointsEnum: IwbEnumDef;
   wbEventFunctionEnum: IwbEnumDef;
   wbEventMemberEnum: IwbEnumDef;
+  wbConditionFormTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
   wbFurnitureAnimTypeEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
@@ -424,6 +425,7 @@ const
   EPEG : TwbSignature = 'EPEG'; { New To Fallout 76 0.2.782.0 }
   EPF2 : TwbSignature = 'EPF2';
   EPF3 : TwbSignature = 'EPF3';
+  EPF4 : TwbSignature = 'EPF4';
   EPFB : TwbSignature = 'EPFB'; { New To Fallout 4 }
   EPFD : TwbSignature = 'EPFD';
   EPFL : TwbSignature = 'EPFL'; { New To Fallout 76 0.2.782.0 }
@@ -562,6 +564,7 @@ const
   LCTN : TwbSignature = 'LCTN';
   LCUN : TwbSignature = 'LCUN'; { New to Skyrim }
   LENS : TwbSignature = 'LENS'; { New to Fallout 4 }
+  LEPC : TwbSignature = 'LEPC'; { New to Fallout 4 }
   LFSD : TwbSignature = 'LFSD'; { New to Fallout 4 }
   LFSP : TwbSignature = 'LFSP'; { New to Fallout 4 }
   LGDI : TwbSignature = 'LGDI'; { New To Fallout 76 }
@@ -569,15 +572,20 @@ const
   LIGH : TwbSignature = 'LIGH';
   LILS : TwbSignature = 'LILS'; { New To Fallout 76 }
   LIMC : TwbSignature = 'LIMC'; { New To Fallout 76 }
+  LINV : TwbSignature = 'LINV'; { New To Fallout 76 }
+  LIPC : TwbSignature = 'LIPC'; { New To Fallout 76 }
   LLCT : TwbSignature = 'LLCT'; { New to Skyrim, part of LVLI 'Count' }
+  LLVL : TwbSignature = 'LLVL'; { New To Fallout 76 }
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LNAM : TwbSignature = 'LNAM';
   LODP : TwbSignature = 'LODP'; { New To Fallout 76 }
+  LOUT : TwbSignature = 'LOUT'; { New To Fallout 76 }
   LRNC : TwbSignature = 'LRNC'; { New to Fallout 76 }
   LRNM : TwbSignature = 'LRNM'; { New to Fallout 76 }
   LSCR : TwbSignature = 'LSCR';
-  LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
   LSST : TwbSignature = 'LSST'; { New to Fallout 76 }
+  LSPR : TwbSignature = 'LSPR'; { New to Fallout 4 }
+  LSPC : TwbSignature = 'LSPC'; { New to Fallout 76 }
   LTEX : TwbSignature = 'LTEX';
   LTMP : TwbSignature = 'LTMP';
   LTPC : TwbSignature = 'LTPC'; { New to Fallout 4 }
@@ -609,6 +617,7 @@ const
   LVPC : TwbSignature = 'LVPC'; { New To Fallout 76 }
   LVSG : TwbSignature = 'LVSG'; { New to Fallout 4 }
   LVSP : TwbSignature = 'LVSP';
+  LVUD : TwbSignature = 'LVUD'; { New To Fallout 76 }
   LVUO : TwbSignature = 'LVUO'; { New To Fallout 76 }
   MAGA : TwbSignature = 'MAGA'; { New To Fallout 76 }
   MAGF : TwbSignature = 'MAGF'; { New To Fallout 76 }
@@ -824,6 +833,7 @@ const
   QMDL : TwbSignature = 'QMDL'; { New To Fallout 76 }
   QMDN : TwbSignature = 'QMDN'; { New To Fallout 76 }
   QMDP : TwbSignature = 'QMDP'; { New To Fallout 76 }
+  QMDE : TwbSignature = 'QMDE'; { New To Fallout 76 }
   QMDQ : TwbSignature = 'QMDQ'; { New To Fallout 76 }
   QMDT : TwbSignature = 'QMDT'; { New To Fallout 76 }
   QMOD : TwbSignature = 'QMOD'; { New To Fallout 76 }
@@ -4658,7 +4668,8 @@ type
     {65} ptChallenge,          // CHAL
     {66} ptAttackData,         // Unsure. Defaulting to int
     {67} ptLegendaryItem,      // Unsure. Possibly formid?
-    {68} ptDailyContentGroup   // DailyContentGroup or Quest formid
+    {68} ptDailyContentGroup,  // DailyContentGroup or Quest formid
+    {69} ptSpell
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -4672,9 +4683,11 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..606] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..610] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
+    (Index:   2; Name: 'AddItem'), { ObjID (Form ID), Count, Flag (Opt), Level (Opt), Equip (Opt) }
+    (Index:   3; Name: 'SetEssential'),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
     (Index:   8; Name: 'GetAngle'; ParamType1: ptAxis),
@@ -4703,7 +4716,7 @@ const
     (Index:  50; Name: 'GetTalkedToPC'),
     (Index:  56; Name: 'GetQuestRunning'; ParamType1: ptQuest),
     (Index:  58; Name: 'GetStageCurrentInstance'; Desc: 'Get the stage of the current quest instance'),
-    (Index:  59; Name: 'GetStageDoneCurrentInstance';  Desc: 'Is the current quest instance''s stage done';),
+    (Index:  59; Name: 'GetStageDoneCurrentInstance';  Desc: 'Is the current quest instance''s stage done'; ParamType1: ptQuestStage),
     (Index:  60; Name: 'GetFactionRankDifference'; ParamType1: ptFaction; Paramtype2: ptActor),
     (Index:  61; Name: 'GetAlarmed'),
     (Index:  62; Name: 'IsRaining'; ParamType1: ptRegionOpt),
@@ -5249,6 +5262,8 @@ const
     (Index: 924; Name: 'GetNumPlayersInSameInterior'),
     (Index: 925; Name: 'GetQuestFormType'),
     (Index: 926; Name: 'GetPlayerSeasonRank'),
+    (Index: 927; Name: 'IsInWorkshopFreeCameraMode'),
+    (Index: 928; Name: 'IsVendor'),
     (Index: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
     (Index: 5001; Name: 'GetIsForm'),
     (Index: 5002; Name: 'GetIsInDailyOps'),
@@ -5278,7 +5293,7 @@ const
     (Index: 10010; Name: 'StartNewExpedition'; ParamType1: ptQuest),    //Does nothing on the client
     (Index: 10011; Name: 'ResumeExpedition'; ParamType1: ptQuest),    //Does nothing on the client
     (Index: 10012; Name: 'JoinExpedition'),    //Does nothing on the client
-    (Index: 10013; Name: 'GetPublicEventHasMutation'),
+    (Index: 10013; Name: 'GetPublicEventHasMutation'; ParamType1: ptSpell),
     (Index: 12000; Name: 'IsFOWPersonalEWSEnabled'; Desc: 'Is the personal EWS enabled?')
   );
 
@@ -8155,7 +8170,8 @@ begin
    {193} 'Apply Combat Hit Spell Taken',
    {194} 'Apply On Death Spell',
    {195} 'Mod Max Barter Currency',
-   {196} 'Mod Body Part Damage Mult'
+   {196} 'Mod Body Part Damage Mult',
+   {197} 'Apply On Kill Participation Spell'
   ]);
 
   wbEquipType := wbFlags([
@@ -8237,7 +8253,8 @@ begin
     $3252, 'Reference2',    { R2: Attacker, Killer, Mine, OriginalContainer, Criminal, Object, SpellTarget, Actor 2, Dead Actor, hGuard, Lock Object, NPC 2, ItemRef, Ref 2, Trespasser }
     $3352, 'Reference3',    { R3: Workshop, Player }
     $3156, 'Value1',        { V1: Crime, Crime Status, AquireType, iCrimeType, iCommanded, iBountyAmount, Gold Value, Success, New Level, Crime Gold, Is Crime, Connected, Old Relationship, RemoveType, Value 1 }
-    $3256, 'Value2'         { V2: Relationship Rank to Killer Before Death, ItemValue, iBountyReason, New Relationship, Value 2, Days Jail }
+    $3256, 'Value2',        { V2: Relationship Rank to Killer Before Death, ItemValue, iBountyReason, New Relationship, Value 2, Days Jail }
+    $7FFFFFFF, 'All'
   ]);
 
   wbWeaponAnimTypeEnum := wbEnum([
@@ -9042,213 +9059,213 @@ begin
 
   wbCRCValuesEnum :=
     wbEnum([],[
-      0, 'None',
-      $ED157AE3, 'BGSAutoWeaponSoundDef',
-      $54651A43, 'BGSCompoundSoundDef',
-      $23F678C3, 'BGSMusicPaletteTrack',
-      $A1A9C4D5, 'BGSMusicSilenceTrack',
-      $6ED7E048, 'BGSMusicSingleTrack',
-      $1EEF540A, 'BGSStandardSoundDef',
-      $18837B4F, 'BSDelayEffect',
-      $864804BE, 'BSOverdrive',
-      $0534ED31, 'BSPathingRequest',
-      $7C61EBDB, 'BSPathingSolution',
-      $FF5A7BF9, 'BSPathingStreamSimpleBufferRead',
-      $B8B926AB, 'BSPathingStreamSimpleBufferWrite',
-      $EF575F7F, 'BSStateVariableFilter',
-      $D2B19B80, 'CharacterBumper',
-      $DFD9D295, 'Combat Area Shape',
-      $FB4E3968, 'Combat Cluster Shape',
-      $6F1CAA87, 'CombatAcquireSearchDebugData',
-      $86D330A0, 'CombatAimController',
-      $C7356584, 'CombatAnimatedPath',
-      $19BD0D6F, 'CombatApproachTargetPathController',
-      $55FAB455, 'CombatAreaHoldPosition',
-      $55C1257B, 'CombatAreaReference',
-      $05E817A3, 'CombatAreaShape',
-      $A9BDAAFE, 'CombatAreaStandard',
-      $8DF7108B, 'CombatChangePositionPathController',
-      $2C7605EF, 'CombatChargingSearch',
-      $C0C58495, 'CombatCluster',
-      $4F117E2B, 'CombatCoverLocation',
-      $93409B55, 'CombatCoverSearch',
-      $CEF2A87C, 'CombatCoverSearchDebugData',
-      $3BD0B457, 'CombatCoverSearchResult',
-      $2F77502E, 'CombatCoveredPath',
-      $9B04E6C7, 'CombatCoveredPathDebugData',
-      $D092ED0A, 'CombatDebugTaskPath',
-      $EE1CC4C7, 'CombatDisableActionController',
-      $BE236AC9, 'CombatDisableAimController',
-      $46F5F91D, 'CombatEnterCoverPathController',
-      $884737D6, 'CombatFindCoverPathSpeedController',
-      $D6BCB796, 'CombatFlankingSearch',
-      $FD16CDF5, 'CombatFollowTargetPathController',
-      $D10237D8, 'CombatInventoryItemGrenade',
-      $9C2A0B47, 'CombatInventoryItemMagic',
-      $84226BD5, 'CombatInventoryItemMagicT',
-      $5ACB99C8, 'CombatInventoryItemMelee',
-      $8121581D, 'CombatInventoryItemOneHandedBlock',
-      $AC4FAA3E, 'CombatInventoryItemPotion',
-      $71B72E31, 'CombatInventoryItemRanged',
-      $0BEE2410, 'CombatInventoryItemScroll',
-      $F86AC87B, 'CombatInventoryItemShield',
-      $D74211FB, 'CombatInventoryItemStaff',
-      $26038F0F, 'CombatInventoryItemThrown',
-      $66D5D91E, 'CombatInventoryItemTorch',
-      $11126C48, 'CombatMagicCasterArmor',
-      $3DBA3C9A, 'CombatMagicCasterBoundItem',
-      $E18FED78, 'CombatMagicCasterChameleon',
-      $22784EA4, 'CombatMagicCasterCloak',
-      $B6B0FCAD, 'CombatMagicCasterDisarm',
-      $A3055CFB, 'CombatMagicCasterInvisibility',
-      $C52FCE43, 'CombatMagicCasterLight',
-      $41A74F91, 'CombatMagicCasterOffensive',
-      $EC01479B, 'CombatMagicCasterParalyze',
-      $0304EC9F, 'CombatMagicCasterReanimate',
-      $58A60AE1, 'CombatMagicCasterRestore',
-      $02212AB0, 'CombatMagicCasterScript',
-      $E694BC11, 'CombatMagicCasterStagger',
-      $D2CA5063, 'CombatMagicCasterSummon',
-      $5AD2B911, 'CombatMagicCasterTargetEffect',
-      $22FDD6D5, 'CombatMagicCasterWard',
-      $58D2BC02, 'CombatMantlePathController',
-      $4CDADCA1, 'CombatMatchTargetAimController',
-      $64927B7C, 'CombatMeleeAimController',
-      $9F5CADD3, 'CombatMeleeDebugData',
-      $4CAE1AF1, 'CombatMovementRequestFollowActor',
-      $E4487BAD, 'CombatPath',
-      $3E84D96B, 'CombatPathBuilderOpen',
-      $1EBC034E, 'CombatPathBuilderStandard',
-      $06546465, 'CombatPathDestinationActor',
-      $8D41F733, 'CombatPathDestinationFollowActor',
-      $F4CF5520, 'CombatPathDestinationLocation',
-      $F296CF1B, 'CombatPathDestinationLocations',
-      $E35080C0, 'CombatPathDestinationNone',
-      $D283E841, 'CombatPathDestinationRef',
-      $C805D268, 'CombatPathDestinationRefs',
-      $8103C3F5, 'CombatPathMovementMessage',
-      $F8BF5B28, 'CombatPathMovementMessageEvent',
-      $FDBCC031, 'CombatPathRequestFlight',
-      $42107172, 'CombatPathRequestFlyingAttack',
-      $F2148845, 'CombatPathRequestGeneric',
-      $AB922554, 'CombatPathRequestHover',
-      $8B61E783, 'CombatPathRequestLanding',
-      $BEC8C98B, 'CombatPathRequestMultiGoal',
-      $E5389793, 'CombatPathRequestOrbit',
-      $6254EDF9, 'CombatPathRequestRotatePath',
-      $DBFD5552, 'CombatPathRequestStandard',
-      $181A275D, 'CombatPathRequestStraightPath',
-      $1126F62D, 'CombatPathRequestWeightedMultiGoal',
-      $69C1DE5A, 'CombatPathTeleportEvent',
-      $0EAB162A, 'CombatPathingDebugData',
-      $915016AC, 'CombatPathingGoalPolicyAvoidThreat',
-      $EDF37547, 'CombatPathingGoalPolicyCharge',
-      $BA6CF790, 'CombatPathingGoalPolicyCovered',
-      $8BCD672F, 'CombatPathingGoalPolicyDistract',
-      $BCAF5C77, 'CombatPathingGoalPolicyFindAttackLocation',
-      $0BD293B3, 'CombatPathingGoalPolicyFindCover',
-      $908492DD, 'CombatPathingGoalPolicyFindFlankCover',
-      $5B1BCF07, 'CombatPathingGoalPolicyFindPotentialCoverLocations',
-      $8E7989FB, 'CombatPathingGoalPolicyFindTargetLocation',
-      $A51384C9, 'CombatPathingGoalPolicyFindValidLocation',
-      $E3B56EB4, 'CombatPathingGoalPolicyFlank',
-      $DABA9C1C, 'CombatPathingGoalPolicyFlankDistant',
-      $25DBBA6F, 'CombatPathingGoalPolicyFlee',
-      $D0AC9503, 'CombatPathingGoalPolicyFollow',
-      $AB978C95, 'CombatPathingGoalPolicyInvestigateLocation',
-      $EA81EBDB, 'CombatPathingGoalPolicyLocation',
-      $0DE21F5F, 'CombatPathingGoalPolicyRetreat',
-      $EEBD7774, 'CombatPathingGoalPolicyReturnToCombatArea',
-      $0C680AD4, 'CombatPathingGoalPolicySearch',
-      $B3E86A9C, 'CombatPathingGoalPolicySearchWander',
-      $01C13D8E, 'CombatPathingGoalPolicyWithdraw',
-      $BA27000F, 'CombatPathingRequestAdapter',
-      $0221C439, 'CombatPathingRequestCovered',
-      $35B4C5A0, 'CombatPathingRequestGeneric',
-      $95AC34AF, 'CombatPathingRequestMultiGoal',
-      $0B5AE3E8, 'CombatPathingRequestStandard',
-      $30290669, 'CombatPathingSearchArea',
-      $5C75F15E, 'CombatPathingSearchPolicyCharge',
-      $DEB6D9D4, 'CombatPathingSearchPolicyCovered',
-      $FA183888, 'CombatPathingSearchPolicyDistract',
-      $6ED8538F, 'CombatPathingSearchPolicyFlank',
-      $D53DEA30, 'CombatPathingSearchPolicyStandard',
-      $70146229, 'CombatPathingSearchPolicyWithdraw',
-      $38E53D12, 'CombatPathingTweener',
-      $A0DD2269, 'CombatPositionTracker',
-      $F06E7A91, 'CombatProjectileAimController',
-      $AACFA802, 'CombatProjectileDebugData',
-      $D55D0153, 'CombatSearchLockData',
-      $D5039E9E, 'CombatSharedPath',
-      $150B2FA1, 'CombatSuppressiveFireBehavior',
-      $1EE53011, 'CombatTargetLocation',
-      $9C2C29FA, 'CombatTargetLocationSearch',
-      $C331439E, 'CombatTargetLocationSearchResult',
-      $D6E95B87, 'CombatTargetSelector',
-      $F7B17BBC, 'CombatTargetSelectorFixed',
-      $56E7D0C9, 'CombatTargetSelectorPreferred',
-      $CE50E3CA, 'CombatTargetSelectorRandom',
-      $C3719B85, 'CombatTargetSelectorStandard',
-      $3767DCBF, 'CombatThreatExplosion',
-      $3C2E5014, 'CombatThreatLOF',
-      $A7A21566, 'CombatThreatMelee',
-      $A160AF0F, 'CombatThreatProjectile',
-      $5AD9B53F, 'CombatTrackTargetAimController',
-      $34F693AE, 'CombatTunnelPathController',
-      $CB90834C, 'CombatViewController',
-      $5222E337, 'CombatViewControllerGlance',
-      $C5642853, 'CombatViewControllerPath',
-      $C8CC82FC, 'CombatViewControllerStandard',
-      $120782F9, 'Covered Path Shape',
-      $B1AA41D8, 'CoveredPath',
-      $5894CF75, 'DiveBombPathController',
-      $6241C761, 'EquippedWeaponData',
-      $76FC2C53, 'MasterFilePathingStreamGetSize',
-      $3F0FBE34, 'MasterFilePathingStreamWriteToBuffer',
-      $5CC2A237, 'MovementMessageActivateDoor',
-      $77A37BFA, 'MovementMessageActorCollision',
-      $7663F86A, 'MovementMessageApproachingDoor',
-      $C8B4153E, 'MovementMessageBlocked',
-      $3BED430B, 'MovementMessageFreezeDirection',
-      $00DC870E, 'MovementMessageJump',
-      $CDED4F63, 'MovementMessageNewPath',
-      $C4D7F551, 'MovementMessageNewPathImmediate',
-      $D7578F99, 'MovementMessagePathComplete',
-      $8BCEF6C4, 'MovementMessagePathFailed',
-      $119563E6, 'MovementMessagePlayIdle',
-      $616653D5, 'MovementMessageSetStaticPath',
-      $67DA9023, 'MovementMessageWarpToLocation',
-      $3CF364EC, 'MovementMessageWarpToMultiple',
-      $7291261A, 'MovementNodeAvoidance',
-      $3B18904B, 'MovementNodeGoal',
-      $0C28D1C5, 'MovementParameters',
-      $BCDCF728, 'MovementParametersFixed',
-      $CD4E67C5, 'NoSupport',
-      $A5E9A03C, 'PathingCell',
-      $E48B73F3, 'PathingDoor',
-      $5826A5DD, 'PathingLockData',
-      $330EB0E3, 'PathingRequest',
-      $EB5ED874, 'PathingRequestClosePoint',
-      $F31543AB, 'PathingRequestClosestGoal',
-      $0618E573, 'PathingRequestCover',
-      $FA2763CE, 'PathingRequestFlee',
-      $3C5FF134, 'PathingRequestFly',
-      $A5021751, 'PathingRequestFlyAction',
-      $8353103B, 'PathingRequestFlyHover',
-      $F075EEF7, 'PathingRequestFlyLand',
-      $CDF9A2FC, 'PathingRequestFlyOrbit',
-      $98C4C679, 'PathingRequestFlyTakeOff',
-      $0528E757, 'PathingRequestHide',
-      $54DACA55, 'PathingRequestLOS',
-      $CA622528, 'PathingRequestOptimalLocation',
-      $C702BB5B, 'PathingRequestRotate',
-      $4773B11D, 'PathingRequestSafeStraightLine',
-      $8B2152AF, 'PathingRequestStopMoving',
-      $13A2CF42, 'PathingStreamLoadGame',
-      $7377FDD0, 'PathingStreamMasterFileRead',
-      $C5B58C0B, 'PathingStreamSaveGame',
-      $6AF11190, 'QuestPathingRequest',
-      $FCD0CCC3, 'Water'
+      Int64(0), 'None',
+      Int64($ED157AE3), 'BGSAutoWeaponSoundDef',
+      Int64($54651A43), 'BGSCompoundSoundDef',
+      Int64($23F678C3), 'BGSMusicPaletteTrack',
+      Int64($A1A9C4D5), 'BGSMusicSilenceTrack',
+      Int64($6ED7E048), 'BGSMusicSingleTrack',
+      Int64($1EEF540A), 'BGSStandardSoundDef',
+      Int64($18837B4F), 'BSDelayEffect',
+      Int64($864804BE), 'BSOverdrive',
+      Int64($0534ED31), 'BSPathingRequest',
+      Int64($7C61EBDB), 'BSPathingSolution',
+      Int64($FF5A7BF9), 'BSPathingStreamSimpleBufferRead',
+      Int64($B8B926AB), 'BSPathingStreamSimpleBufferWrite',
+      Int64($EF575F7F), 'BSStateVariableFilter',
+      Int64($D2B19B80), 'CharacterBumper',
+      Int64($DFD9D295), 'Combat Area Shape',
+      Int64($FB4E3968), 'Combat Cluster Shape',
+      Int64($6F1CAA87), 'CombatAcquireSearchDebugData',
+      Int64($86D330A0), 'CombatAimController',
+      Int64($C7356584), 'CombatAnimatedPath',
+      Int64($19BD0D6F), 'CombatApproachTargetPathController',
+      Int64($55FAB455), 'CombatAreaHoldPosition',
+      Int64($55C1257B), 'CombatAreaReference',
+      Int64($05E817A3), 'CombatAreaShape',
+      Int64($A9BDAAFE), 'CombatAreaStandard',
+      Int64($8DF7108B), 'CombatChangePositionPathController',
+      Int64($2C7605EF), 'CombatChargingSearch',
+      Int64($C0C58495), 'CombatCluster',
+      Int64($4F117E2B), 'CombatCoverLocation',
+      Int64($93409B55), 'CombatCoverSearch',
+      Int64($CEF2A87C), 'CombatCoverSearchDebugData',
+      Int64($3BD0B457), 'CombatCoverSearchResult',
+      Int64($2F77502E), 'CombatCoveredPath',
+      Int64($9B04E6C7), 'CombatCoveredPathDebugData',
+      Int64($D092ED0A), 'CombatDebugTaskPath',
+      Int64($EE1CC4C7), 'CombatDisableActionController',
+      Int64($BE236AC9), 'CombatDisableAimController',
+      Int64($46F5F91D), 'CombatEnterCoverPathController',
+      Int64($884737D6), 'CombatFindCoverPathSpeedController',
+      Int64($D6BCB796), 'CombatFlankingSearch',
+      Int64($FD16CDF5), 'CombatFollowTargetPathController',
+      Int64($D10237D8), 'CombatInventoryItemGrenade',
+      Int64($9C2A0B47), 'CombatInventoryItemMagic',
+      Int64($84226BD5), 'CombatInventoryItemMagicT',
+      Int64($5ACB99C8), 'CombatInventoryItemMelee',
+      Int64($8121581D), 'CombatInventoryItemOneHandedBlock',
+      Int64($AC4FAA3E), 'CombatInventoryItemPotion',
+      Int64($71B72E31), 'CombatInventoryItemRanged',
+      Int64($0BEE2410), 'CombatInventoryItemScroll',
+      Int64($F86AC87B), 'CombatInventoryItemShield',
+      Int64($D74211FB), 'CombatInventoryItemStaff',
+      Int64($26038F0F), 'CombatInventoryItemThrown',
+      Int64($66D5D91E), 'CombatInventoryItemTorch',
+      Int64($11126C48), 'CombatMagicCasterArmor',
+      Int64($3DBA3C9A), 'CombatMagicCasterBoundItem',
+      Int64($E18FED78), 'CombatMagicCasterChameleon',
+      Int64($22784EA4), 'CombatMagicCasterCloak',
+      Int64($B6B0FCAD), 'CombatMagicCasterDisarm',
+      Int64($A3055CFB), 'CombatMagicCasterInvisibility',
+      Int64($C52FCE43), 'CombatMagicCasterLight',
+      Int64($41A74F91), 'CombatMagicCasterOffensive',
+      Int64($EC01479B), 'CombatMagicCasterParalyze',
+      Int64($0304EC9F), 'CombatMagicCasterReanimate',
+      Int64($58A60AE1), 'CombatMagicCasterRestore',
+      Int64($02212AB0), 'CombatMagicCasterScript',
+      Int64($E694BC11), 'CombatMagicCasterStagger',
+      Int64($D2CA5063), 'CombatMagicCasterSummon',
+      Int64($5AD2B911), 'CombatMagicCasterTargetEffect',
+      Int64($22FDD6D5), 'CombatMagicCasterWard',
+      Int64($58D2BC02), 'CombatMantlePathController',
+      Int64($4CDADCA1), 'CombatMatchTargetAimController',
+      Int64($64927B7C), 'CombatMeleeAimController',
+      Int64($9F5CADD3), 'CombatMeleeDebugData',
+      Int64($4CAE1AF1), 'CombatMovementRequestFollowActor',
+      Int64($E4487BAD), 'CombatPath',
+      Int64($3E84D96B), 'CombatPathBuilderOpen',
+      Int64($1EBC034E), 'CombatPathBuilderStandard',
+      Int64($06546465), 'CombatPathDestinationActor',
+      Int64($8D41F733), 'CombatPathDestinationFollowActor',
+      Int64($F4CF5520), 'CombatPathDestinationLocation',
+      Int64($F296CF1B), 'CombatPathDestinationLocations',
+      Int64($E35080C0), 'CombatPathDestinationNone',
+      Int64($D283E841), 'CombatPathDestinationRef',
+      Int64($C805D268), 'CombatPathDestinationRefs',
+      Int64($8103C3F5), 'CombatPathMovementMessage',
+      Int64($F8BF5B28), 'CombatPathMovementMessageEvent',
+      Int64($FDBCC031), 'CombatPathRequestFlight',
+      Int64($42107172), 'CombatPathRequestFlyingAttack',
+      Int64($F2148845), 'CombatPathRequestGeneric',
+      Int64($AB922554), 'CombatPathRequestHover',
+      Int64($8B61E783), 'CombatPathRequestLanding',
+      Int64($BEC8C98B), 'CombatPathRequestMultiGoal',
+      Int64($E5389793), 'CombatPathRequestOrbit',
+      Int64($6254EDF9), 'CombatPathRequestRotatePath',
+      Int64($DBFD5552), 'CombatPathRequestStandard',
+      Int64($181A275D), 'CombatPathRequestStraightPath',
+      Int64($1126F62D), 'CombatPathRequestWeightedMultiGoal',
+      Int64($69C1DE5A), 'CombatPathTeleportEvent',
+      Int64($0EAB162A), 'CombatPathingDebugData',
+      Int64($915016AC), 'CombatPathingGoalPolicyAvoidThreat',
+      Int64($EDF37547), 'CombatPathingGoalPolicyCharge',
+      Int64($BA6CF790), 'CombatPathingGoalPolicyCovered',
+      Int64($8BCD672F), 'CombatPathingGoalPolicyDistract',
+      Int64($BCAF5C77), 'CombatPathingGoalPolicyFindAttackLocation',
+      Int64($0BD293B3), 'CombatPathingGoalPolicyFindCover',
+      Int64($908492DD), 'CombatPathingGoalPolicyFindFlankCover',
+      Int64($5B1BCF07), 'CombatPathingGoalPolicyFindPotentialCoverLocations',
+      Int64($8E7989FB), 'CombatPathingGoalPolicyFindTargetLocation',
+      Int64($A51384C9), 'CombatPathingGoalPolicyFindValidLocation',
+      Int64($E3B56EB4), 'CombatPathingGoalPolicyFlank',
+      Int64($DABA9C1C), 'CombatPathingGoalPolicyFlankDistant',
+      Int64($25DBBA6F), 'CombatPathingGoalPolicyFlee',
+      Int64($D0AC9503), 'CombatPathingGoalPolicyFollow',
+      Int64($AB978C95), 'CombatPathingGoalPolicyInvestigateLocation',
+      Int64($EA81EBDB), 'CombatPathingGoalPolicyLocation',
+      Int64($0DE21F5F), 'CombatPathingGoalPolicyRetreat',
+      Int64($EEBD7774), 'CombatPathingGoalPolicyReturnToCombatArea',
+      Int64($0C680AD4), 'CombatPathingGoalPolicySearch',
+      Int64($B3E86A9C), 'CombatPathingGoalPolicySearchWander',
+      Int64($01C13D8E), 'CombatPathingGoalPolicyWithdraw',
+      Int64($BA27000F), 'CombatPathingRequestAdapter',
+      Int64($0221C439), 'CombatPathingRequestCovered',
+      Int64($35B4C5A0), 'CombatPathingRequestGeneric',
+      Int64($95AC34AF), 'CombatPathingRequestMultiGoal',
+      Int64($0B5AE3E8), 'CombatPathingRequestStandard',
+      Int64($30290669), 'CombatPathingSearchArea',
+      Int64($5C75F15E), 'CombatPathingSearchPolicyCharge',
+      Int64($DEB6D9D4), 'CombatPathingSearchPolicyCovered',
+      Int64($FA183888), 'CombatPathingSearchPolicyDistract',
+      Int64($6ED8538F), 'CombatPathingSearchPolicyFlank',
+      Int64($D53DEA30), 'CombatPathingSearchPolicyStandard',
+      Int64($70146229), 'CombatPathingSearchPolicyWithdraw',
+      Int64($38E53D12), 'CombatPathingTweener',
+      Int64($A0DD2269), 'CombatPositionTracker',
+      Int64($F06E7A91), 'CombatProjectileAimController',
+      Int64($AACFA802), 'CombatProjectileDebugData',
+      Int64($D55D0153), 'CombatSearchLockData',
+      Int64($D5039E9E), 'CombatSharedPath',
+      Int64($150B2FA1), 'CombatSuppressiveFireBehavior',
+      Int64($1EE53011), 'CombatTargetLocation',
+      Int64($9C2C29FA), 'CombatTargetLocationSearch',
+      Int64($C331439E), 'CombatTargetLocationSearchResult',
+      Int64($D6E95B87), 'CombatTargetSelector',
+      Int64($F7B17BBC), 'CombatTargetSelectorFixed',
+      Int64($56E7D0C9), 'CombatTargetSelectorPreferred',
+      Int64($CE50E3CA), 'CombatTargetSelectorRandom',
+      Int64($C3719B85), 'CombatTargetSelectorStandard',
+      Int64($3767DCBF), 'CombatThreatExplosion',
+      Int64($3C2E5014), 'CombatThreatLOF',
+      Int64($A7A21566), 'CombatThreatMelee',
+      Int64($A160AF0F), 'CombatThreatProjectile',
+      Int64($5AD9B53F), 'CombatTrackTargetAimController',
+      Int64($34F693AE), 'CombatTunnelPathController',
+      Int64($CB90834C), 'CombatViewController',
+      Int64($5222E337), 'CombatViewControllerGlance',
+      Int64($C5642853), 'CombatViewControllerPath',
+      Int64($C8CC82FC), 'CombatViewControllerStandard',
+      Int64($120782F9), 'Covered Path Shape',
+      Int64($B1AA41D8), 'CoveredPath',
+      Int64($5894CF75), 'DiveBombPathController',
+      Int64($6241C761), 'EquippedWeaponData',
+      Int64($76FC2C53), 'MasterFilePathingStreamGetSize',
+      Int64($3F0FBE34), 'MasterFilePathingStreamWriteToBuffer',
+      Int64($5CC2A237), 'MovementMessageActivateDoor',
+      Int64($77A37BFA), 'MovementMessageActorCollision',
+      Int64($7663F86A), 'MovementMessageApproachingDoor',
+      Int64($C8B4153E), 'MovementMessageBlocked',
+      Int64($3BED430B), 'MovementMessageFreezeDirection',
+      Int64($00DC870E), 'MovementMessageJump',
+      Int64($CDED4F63), 'MovementMessageNewPath',
+      Int64($C4D7F551), 'MovementMessageNewPathImmediate',
+      Int64($D7578F99), 'MovementMessagePathComplete',
+      Int64($8BCEF6C4), 'MovementMessagePathFailed',
+      Int64($119563E6), 'MovementMessagePlayIdle',
+      Int64($616653D5), 'MovementMessageSetStaticPath',
+      Int64($67DA9023), 'MovementMessageWarpToLocation',
+      Int64($3CF364EC), 'MovementMessageWarpToMultiple',
+      Int64($7291261A), 'MovementNodeAvoidance',
+      Int64($3B18904B), 'MovementNodeGoal',
+      Int64($0C28D1C5), 'MovementParameters',
+      Int64($BCDCF728), 'MovementParametersFixed',
+      Int64($CD4E67C5), 'NoSupport',
+      Int64($A5E9A03C), 'PathingCell',
+      Int64($E48B73F3), 'PathingDoor',
+      Int64($5826A5DD), 'PathingLockData',
+      Int64($330EB0E3), 'PathingRequest',
+      Int64($EB5ED874), 'PathingRequestClosePoint',
+      Int64($F31543AB), 'PathingRequestClosestGoal',
+      Int64($0618E573), 'PathingRequestCover',
+      Int64($FA2763CE), 'PathingRequestFlee',
+      Int64($3C5FF134), 'PathingRequestFly',
+      Int64($A5021751), 'PathingRequestFlyAction',
+      Int64($8353103B), 'PathingRequestFlyHover',
+      Int64($F075EEF7), 'PathingRequestFlyLand',
+      Int64($CDF9A2FC), 'PathingRequestFlyOrbit',
+      Int64($98C4C679), 'PathingRequestFlyTakeOff',
+      Int64($0528E757), 'PathingRequestHide',
+      Int64($54DACA55), 'PathingRequestLOS',
+      Int64($CA622528), 'PathingRequestOptimalLocation',
+      Int64($C702BB5B), 'PathingRequestRotate',
+      Int64($4773B11D), 'PathingRequestSafeStraightLine',
+      Int64($8B2152AF), 'PathingRequestStopMoving',
+      Int64($13A2CF42), 'PathingStreamLoadGame',
+      Int64($7377FDD0), 'PathingStreamMasterFileRead',
+      Int64($C5B58C0B), 'PathingStreamSaveGame',
+      Int64($6AF11190), 'QuestPathingRequest',
+      Int64($FCD0CCC3), 'Water'
     ]);
 
 	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
@@ -9879,6 +9896,173 @@ begin
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
   wbETYPReq := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL], False, cpNormal, True);
+  wbConditionFormTypeEnum := wbEnum([
+    'Activator',
+    'Armor',
+    'Book',
+    'Container',
+    'Door',
+    'Ingredient',
+    'Light',
+    'Misc Item',
+    'Static Object',
+    'Grass',
+    'Tree',
+    'Unknown 11',
+    'Weapon',
+    'Non-Player Character',
+    'Leveled NPC',
+    'Spell',
+    'Enchantment',
+    'Ingestible',
+    'Leveled Item',
+    'Key',
+    'Ammunition',
+    'Flora',
+    'Furniture',
+    'Sound Marker',
+    'Land Texture',
+    'Combat Style',
+    'Load Screen',
+    'Leveled Spell',
+    'Animated Object',
+    'Water',
+    'Idle Marker',
+    'Effect Shader',
+    'Projectile',
+    'Talking Activator',
+    'Explosion',
+    'Texture Set',
+    'Debris',
+    'Menu Icon',
+    'List Form',
+    'Perk',
+    'Perk Card',
+    'Body Part Data',
+    'Addon Node',
+    'Movable Static',
+    'Camera Shot',
+    'Impact Data',
+    'Impact Data Set',
+    'Quest',
+    'Unknown 48',
+    'Voice Type',
+    'Class',
+    'Race',
+    'Eyes',
+    'Head Part',
+    'Faction',
+    'Holotape',
+    'Weather',
+    'Climate',
+    'Armor Addon',
+    'Global',
+    'Image Space',
+    'Image Space Modifier',
+    'Unknown 62',
+    'Message',
+    'Constructible Object',
+    'Acoustic Space',
+    'Unknown 66',
+    'Script',
+    'Effect Setting',
+    'Music Type',
+    'Static Collection',
+    'Keyword',
+    'Location',
+    'Location Ref Type',
+    'Footstep',
+    'Footstep Set',
+    'Material Type',
+    'Action',
+    'Music Track Form Helper',
+    'Word Of Power',
+    'Shout',
+    'Relationship',
+    'Equip Slot',
+    'Association Type',
+    'Outfit',
+    'Art Object',
+    'Material Object',
+    'Unknown 87',
+    'Lighting Template',
+    'Shader Particle Geometry Data',
+    'Reference Effect',
+    'Unknown 91',
+    'Movement Type',
+    'Hazard',
+    'Story Manager Event Node',
+    'Sound Descriptor',
+    'Dual Cast Data',
+    'Sound Category',
+    'Soul Gem',
+    'Sound Output',
+    'Collision Layer',
+    'Scroll',
+    'Color Form',
+    'Reverb Parameters',
+    'Pack-In',
+    'Leveled Pack-In',
+    'Reference Group',
+    'Bendable Spline',
+    'Unknown 108',
+    'Unknown 109',
+    'Aim Model',
+    'Component',
+    'Object Mod',
+    'Material Swap',
+    'Transform',
+    'Zoom Data',
+    'Instance Naming Rules',
+    'Sound Keyword Mapping',
+    'Terminal',
+    'Audio Effect Chain',
+    'Damage Type',
+    'Actor Value',
+    'Attraction Rule',
+    'Sound Category Snapshot',
+    'Sound Tag Set',
+    'Lens Flare',
+    'Unknown 126',
+    'Snap Template Node',
+    'Snap Template',
+    'Ground Cover',
+    'Emote',
+    'Spell Threshold Data',
+    'Resource',
+    'Sound Echo',
+    'Currency',
+    'Unknown 135',
+    'Perk Card Pack',
+    'Leveled Perk Card',
+    'Volumetric Lighting',
+    'Curve Table Form',
+    'Emote Category',
+    'Workshop Permission',
+    'Entitlement',
+    'Power Armor Chasis',
+    'Unknown 144',
+    'Aim Assist Pose Data',
+    'PhotoMode Feature',
+    'Consumable Entitlement',
+    'Crate Service Entitlement',
+    'Challenge',
+    'Avatar',
+    'Region',
+    'Condition Form',
+    'Unknown 153',
+    'Legendary Item',
+    'Utility Item',
+    'Model Swap',
+    'Event Quest Widget',
+    'Aim Assist Model',
+    'Challenge Pass Reward Data',
+    'Event Playlist',
+    'Gameplay Reward',
+    'Unknown 163',
+    'Daily Content Group',
+    'Idle Form'
+  ], []);
 
   wbFormTypeEnum := wbEnum([
     'None',
@@ -10411,7 +10595,7 @@ begin
         {22 ptFormList}
         wbFormIDCkNoReach('Form List', [FLST]),
         {23 ptFormType}
-        wbInteger('Form Type', itU32, wbFormTypeEnum),
+        wbInteger('Form Type', itU32, wbConditionFormTypeEnum),
         {24 ptFurniture}
         wbFormIDCkNoReach('Furniture', [FURN, FLST]),
         {25 ptFurnitureAnim}
@@ -10501,7 +10685,9 @@ begin
         {67 ptLegendaryItem }
         wbFormIDCk('Legendary Item', [LGDI]),
         {68 ptDailyContentGroup }
-        wbFormIDCk('Daily Content Group', [DCGF, QUST])
+        wbFormIDCk('Daily Content Group', [DCGF, QUST]),
+        {69 ptSpell }
+        wbFormIDCk('Spell', [SPEL])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -10554,7 +10740,7 @@ begin
         {22 ptFormList}
         wbFormIDCkNoReach('Form List', [FLST]),
         {23 ptFormType}
-        wbInteger('Form Type', itU32, wbFormTypeEnum),
+        wbInteger('Form Type', itU32, wbConditionFormTypeEnum),
         {24 ptFurniture}
         wbFormIDCkNoReach('Furniture', [FURN, FLST]),
         {25 ptFurnitureAnim}
@@ -10687,7 +10873,9 @@ begin
         {67 ptLegendaryItem }
         wbFormIDCk('Legendary Item', [LGDI]),
         {68 ptDailyContentGroup }
-        wbFormIDCk('Daily Content Group', [DCGF, QUST])
+        wbFormIDCk('Daily Content Group', [DCGF, QUST]),
+        {69 ptSpell }
+        wbFormIDCk('Spell', [SPEL])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         { 0} 'Subject',
@@ -11636,6 +11824,7 @@ begin
     wbRArray('Unknown ENLM', wbENLM),
     wbOPDSs,
     wbPTRN,
+    wbPHST,
     wbSNTP,
     wbXALG,
     wbFTAGs,
@@ -12644,7 +12833,8 @@ begin
       ])),
       wbFloat('Fill/Texture Effect - Texture Scale (U)'),
       wbFloat('Fill/Texture Effect - Texture Scale (V)'),
-      wbBelowVersion(107, wbByteArray('Unused', 2))
+      wbBelowVersion(107, wbByteArray('Unused', 2)),
+      wbFromVersion(196, wbUnknown())
     ], cpNormal, True),
     wbGenericModel
   ]);
@@ -13804,6 +13994,7 @@ begin
           {9} wbFormIDCk('Ingestible', [ALCH,KYWD])
         ], cpNormal, False{, wbEPFDDontShow}),
         wbInteger(EPF2, 'Unknown Spell Value', itU32),
+        wbFormIdCk(EPF4, 'Actor value 2', [AVIF]),
         // keeping as struct to be similar to tes5 format
         wbUnion(EPF3, '', wbEPF3Decider, [           //ECKToDo: Fix this to be seperate structures based on the type.
           wbStruct('Script Flags', [
@@ -14048,7 +14239,8 @@ begin
       {0x00000080}  7, 'Low Priority'
     ]))),
     wbFormIDCk(NAM3, 'Actor Value Keyword', [KYWD]), // always a KYWD
-    wbFormIDCk(NAM4, 'Associated List', [FLST])
+    wbFormIDCk(NAM4, 'Associated List', [FLST]),
+    wbString(CNAM, 'Description')
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
   wbRecord(CAMS, 'Camera Shot', [
@@ -16348,7 +16540,7 @@ begin
     wbGenericModel
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
-  wbRecord(LVLI, 'Leveled Item', [
+  wbRecord(LVLI , 'Leveled Item', [
     wbEDID,
     wbOBND(True),
     wbPTRN,
@@ -16824,7 +17016,7 @@ begin
       wbFormIDCk(AJNG, 'Level Min Global', [GLOB]),
       wbFormIDCk(AJXG, 'Level Max Global', [GLOB]),
       wbFormIDCk(AJOG, 'Level Offset Global', [GLOB])
-    ],[]),
+    ],[]).IncludeFlag(dfAllowAnyMember),
     wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
@@ -17898,7 +18090,8 @@ begin
         wbString(QQSV, 'Value')
       ],[])
     ),
-    wbByteArray(QTFS, 'QTFS - Unknown 2 bytes', 2)
+    wbByteArray(QTFS, 'QTFS - Unknown 2 bytes', 2),
+    wbEmpty(QMDE, 'Unknown - QMDE')
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
@@ -18903,7 +19096,7 @@ begin
   wbRecord(REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Border Region',
-      {0x00000080}  7, 'Unknown 7',
+      {0x00000080}  7, 'Unknown 7 ',
       {0x00000400} 10, 'Unknown 10'
     ])), [
     wbEDID,
@@ -20109,6 +20302,7 @@ begin
 
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
+    wbFULL,
     wbStruct(DNAM,'Damage Type', [
       wbUnion('Actor Value', wbFormVersionDecider(78), [
         wbInteger('Actor Value Index', itU32, wbActorValueEnum),
@@ -21000,6 +21194,7 @@ begin
       ]),
       wbCOED,
       wbCTDAs,
+      wbUnknown(LVUD),
       wbLVOV,
       wbLVIV,
       wbLVLV,
@@ -21012,6 +21207,7 @@ begin
   wbRecord(LVPC, 'Leveled Perk Card', [
     wbEDID,
     wbLVLD,
+    wbLStringKC(ONAM, 'Display Name', 0, cpTranslate),
     wbLVMV,
     wbLVCV,
     wbUnion(LVLF, 'Flags', wbFormVersionDecider(185), [
@@ -21397,43 +21593,63 @@ begin
     wbInteger(EPFL, 'Unknown Byte', itU8)
   ]);
 
-    wbRecord(QMDL, 'Quest Module' ,
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00000004}  2, 'Unknown 2',
-        {0x00000200}  9, 'Unknown 9'
-      ])), [
-      wbEDID,
-      wbVMAD,
-      wbInteger(QMDI, 'Index', itU16),
-      wbFormID(QMDQ, 'Associated Quest'),
-      wbFormID(QMDP, 'Parent Quest'),
-      wbInteger(QMDT, 'Unknown Timer', itU16),
-      wbString(QMDN, 'Notes'),
-      wbInteger(QMPO, 'Unknown Objective', itU16),
-      wbInteger(QMOD, 'Objective Count', itU32),
-      wbRArray('Module Objectives',
-        wbRStruct('Module Objective', [
-          wbInteger(QMOI, 'Index', itU16),
-          wbLStringKC(QMOT, 'Text'),
-          wbByteArray(QMTT, 'QMTT - Unknown 4 Bytes', 4),
-          wbByteArray(QMTR, 'QMTR - Unknown 4 Bytes', 4)
-        ],[])
-      ),
-      wbInteger(QMAD, 'Alias Count', itU32),
-      wbRArray('Module Aliases',
-        wbRStruct('Module Alias', [
-          wbInteger(QMAI, 'Index', itU32),
-          wbInteger(QMAO, 'Parent Quest Alias', itU32)
-        ],[])
-      ),
-      wbInteger(QMSD, 'Stage Count', itU32),
-      wbRArray('Module Stages',
-        wbRStruct('Module Stage', [
-          wbInteger(QMSI, 'Index', itU16),
-          wbInteger(QMSO, 'Parent Quest Stage', itU16)
-        ],[])
-      )
-    ]);
+  wbRecord(QMDL, 'Quest Module' ,
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
+    wbEDID,
+    wbVMAD,
+    wbInteger(QMDI, 'Index', itU16),
+    wbFormID(QMDQ, 'Associated Quest'),
+    wbFormID(QMDP, 'Parent Quest'),
+    wbInteger(QMDT, 'Unknown Timer', itU16),
+    wbString(QMDN, 'Notes'),
+    wbInteger(QMPO, 'Unknown Objective', itU16),
+    wbInteger(QMOD, 'Objective Count', itU32),
+    wbRArray('Module Objectives',
+      wbRStruct('Module Objective', [
+        wbInteger(QMOI, 'Index', itU16),
+        wbLStringKC(QMOT, 'Text'),
+        wbByteArray(QMTT, 'QMTT - Unknown 4 Bytes', 4),
+        wbByteArray(QMTR, 'QMTR - Unknown 4 Bytes', 4)
+      ],[])
+    ),
+    wbInteger(QMAD, 'Alias Count', itU32),
+    wbRArray('Module Aliases',
+      wbRStruct('Module Alias', [
+        wbInteger(QMAI, 'Index', itU32),
+        wbInteger(QMAO, 'Parent Quest Alias', itU32)
+      ],[])
+    ),
+    wbInteger(QMSD, 'Stage Count', itU32),
+    wbRArray('Module Stages',
+      wbRStruct('Module Stage', [
+        wbInteger(QMSI, 'Index', itU16),
+        wbInteger(QMSO, 'Parent Quest Stage', itU16)
+      ],[])
+    )
+  ]);
+
+  wbRecord(LOUT, 'Loadout', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbFormID(LIPC, 'Bonus Cards'),
+    wbFormID(LEPC, 'Perk Card List'),
+    wbFormID(LINV, 'Inventory'),
+    wbStruct(LSPC, 'SPECIAL Values', [
+      wbInteger('Strength', itU8),
+      wbInteger('Perception', itU8),
+      wbInteger('Endurance', itU8),
+      wbInteger('Charisma', itU8),
+      wbInteger('Intelligence', itU8),
+      wbInteger('Agility', itU8),
+      wbInteger('Luck', itU8)
+    ]),
+    wbInteger(LLVL, 'Loadout Level', itU16),
+    wbUnknown(NAM0)
+  ]);
 
   wbRecord(ATXO, 'ATX Default Object', [
     wbEDID,
@@ -21656,6 +21872,7 @@ begin
   wbAddGroupOrder(GMRW); //new in Fallout 76 0.2.782.0
   wbAddGroupOrder(DCGF); //new in Fallout 76
   wbAddGroupOrder(QMDL); //new in Fallout 76
+  wbAddGroupOrder(LOUT); //new in Fallout 76
 end;
 
 
