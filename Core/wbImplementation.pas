@@ -4289,7 +4289,7 @@ begin
 
     j := 0;
     ONAMs := nil;
-    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
+    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
       while FileHeader.RemoveElement('ONAM') <> nil do
         ;
@@ -4324,7 +4324,7 @@ begin
                    (Signature = 'PBAR') or {>>> Skyrim <<<}
                    (Signature = 'PHZD') or {>>> Skyrim <<<}
                    // Fallout 4 (and later games?)
-                   (wbIsFallout4 and (
+                   ((wbIsFallout4  or wbIsStarfield) and (
                      (Signature = 'SCEN') or
                      (Signature = 'DLBR') or
                      (Signature = 'DIAL') or
@@ -4901,7 +4901,7 @@ begin
   SortRecordsByEditorID;
   flProgress('EditorID index built');
 
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -8334,6 +8334,7 @@ var
 
     if wbGameMode >= gmFO3 then begin
       case wbGameMode of
+        gmSF1                        : BasePtr.mrsVersion^ := 555;
         gmFO76                       : BasePtr.mrsVersion^ := 184;
         gmFO4, gmFO4VR               : BasePtr.mrsVersion^ := 131;
         gmSSE, gmTES5VR, gmEnderalSE : BasePtr.mrsVersion^ := 44;

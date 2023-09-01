@@ -47,12 +47,12 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'c';
+    Build   : 'f';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010403;
+  wbWhatsNewVersion : Integer = 04010406;
   wbDeveloperMessageVersion : Integer = 04010400;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
@@ -4155,7 +4155,7 @@ var
 
 type
   //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76);
+  TwbGameMode   = (gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
   TwbGameModes  = set of TwbGameMode;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -4234,7 +4234,8 @@ var
     gmTES5VR,
     gmFO4,
     gmFO4VR,
-    gmFO76
+    gmFO76,
+    gmSF1
   ];
 
 function wbDefToName(const aDef: IwbDef): string;
@@ -4244,6 +4245,7 @@ function wbIsFallout3: Boolean; inline;
 function wbIsFallout4: Boolean; inline;
 function wbIsFallout76: Boolean; inline;
 function wbIsEslSupported: Boolean; inline;
+function wbIsStarfield: Boolean; inline;
 
 procedure ReportDefs;
 
@@ -4808,9 +4810,15 @@ begin
   Result := wbGameMode in [gmFO76];
 end;
 
+function wbIsStarfield: Boolean; inline;
+begin
+  Result := wbGameMode in [gmSF1];
+end;
+
+
 function wbIsEslSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4]);
+  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]);
 end;
 
 function wbDefToName(const aDef: IwbDef): string;

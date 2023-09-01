@@ -6,7 +6,7 @@
 
 *******************************************************************************}
 
-unit wbDefinitionsFO4;
+unit wbDefinitionsSF1;
 
 {$I wbDefines.inc}
 
@@ -22,6 +22,7 @@ var
   wbPKDTFlags: IwbFlagsDef;
   wbPKDTInterruptFlags: IwbFlagsDef;
   wbSMNodeFlags: IwbFlagsDef;
+  wbXALGFlags: IwbFlagsDef;
 
   wbCRCValuesEnum: IwbEnumDef;
   wbActorPropertyEnum: IwbEnumDef;
@@ -59,8 +60,9 @@ var
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
   wbHitBehaviourEnum: IwbEnumDef;
+  wbLGDIStarSlot: IwbEnumDef;
 
-procedure DefineFO4;
+procedure DefineSF1;
 
 implementation
 
@@ -91,7 +93,7 @@ const
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
-    'WATR', 'WEAP', 'ENCH'
+    'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI'
   ];
 
 var
@@ -231,6 +233,7 @@ var
   wbMNAMNAVM: IwbSubRecordDef;
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
+  wbXALG: IwbRecordMemberDef;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -1030,6 +1033,102 @@ end;
 function wbEdgeToInt2(const aString: string; const aElement: IwbElement): Int64;
 begin
   Result := wbEdgeToInt(2, aString, aElement);
+end;
+
+function wbLGDIFiltersLinksTo(const aElement: IwbElement): IwbElement;
+var
+  LegendaryIndex : Integer;
+  Filter         : IwbContainerElementRef;
+  MainRecord     : IwbMainRecord;
+  LegendaryMods  : IwbContainerElementRef;
+  LegendaryMod   : IwbContainerElementRef;
+  BaseStarSlot   : Integer;
+  ModIndex       : Integer;
+  ModBase        : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Filter := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Filter) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
+    Exit;
+
+  BaseStarSlot := Filter.Elements[0].NativeValue;
+  ModIndex := aElement.NativeValue;
+  LegendaryIndex := -1;
+
+  for var i := 0 to Pred(LegendaryMods.ElementCount) do
+  begin
+    LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
+    if LegendaryMod[0].NativeValue = BaseStarSlot then
+    begin
+       LegendaryIndex := i + ModIndex;
+       Break;
+    end
+  end;
+
+  if LegendaryIndex = -1 then
+    Exit;
+    
+  if not Supports(LegendaryMods.Elements[LegendaryIndex], IwbContainerElementRef, ModBase) then
+    Exit;
+  
+
+  Result := ModBase.Elements[1].LinksTo;
+end;
+
+function wbLGDIFiltersToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  LegendaryIndex : Integer;
+  Filter         : IwbContainerElementRef;
+  MainRecord     : IwbMainRecord;
+  LegendaryMods  : IwbContainerElementRef;
+  LegendaryMod   : IwbContainerElementRef;
+  BaseStarSlot   : Integer;
+  ModIndex       : Integer;
+begin
+  Result := 'Unknown Ref';
+  if not Assigned(aElement) then
+    Exit;
+
+  Filter := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Filter) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
+    Exit;
+
+  BaseStarSlot := Filter.Elements[0].NativeValue;
+  ModIndex := aElement.NativeValue;
+  LegendaryIndex := -1;
+
+  for var i := 0 to Pred(LegendaryMods.ElementCount) do
+  begin
+    LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
+    if LegendaryMod[0].NativeValue = BaseStarSlot then
+    begin
+       LegendaryIndex := i + ModIndex;
+       Break;
+    end
+  end;
+  if LegendaryIndex = -1 then
+    Exit;
+
+  LegendaryMod := LegendaryMods.Elements[LegendaryIndex] as IwbContainerElementRef;
+
+  Result := LegendaryMod[1].EditValue;
 end;
 
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
@@ -3203,7 +3302,7 @@ const
     (Index: 571; Name: 'GetCurrentCastingType'; ParamType1: ptCastingSource),
     (Index: 572; Name: 'GetCurrentDeliveryType'; ParamType1: ptCastingSource),
     (Index: 574; Name: 'GetAttackState'),    // 291
-    (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent; ParamType2: ptEventData; ParamType3: ptString),  // fireundubh: Event Function, Event Member, Data (FO4)
+    (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent; ParamType2: ptEventData; ParamType3: ptString),  // fireundubh: Event Function, Event Member, Data (SF1)
     (Index: 577; Name: 'IsCloserToAThanB'; ParamType1: ptObjectReference; ParamType2: ptObjectReference),
     (Index: 578; Name: 'LevelMinusPCLevel'),    // 294
     (Index: 580; Name: 'IsBleedingOut'),    // 295
@@ -5547,7 +5646,7 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
-procedure DefineFO4a;
+procedure DefineSF1a;
 begin
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
@@ -6138,7 +6237,15 @@ begin
     'Normal formula behaviour',
     'Dismember only',
     'Explode only',
-    'No dismember/explode'
+    'No dismember or explode'
+  ]);
+
+  wbLGDIStarSlot := wbEnum([
+    'First Star Slot',
+    'Second Star Slot',
+    'Third Star Slot',
+    'Fourth Star Slot',
+    'Fifth Star Slot'
   ]);
 
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
@@ -6148,6 +6255,42 @@ begin
   wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
   wbXSCL := wbFloat(XSCL, 'Scale');
+  wbXALGFlags := wbFlags([ //copied from FO76, probably wrong
+    {0x00000001} 'Unknown 1 (No Havok??)',
+    {0x00000002} 'Unknown 2',
+    {0x00000004} 'Unknown 3 (Reference??)',
+    {0x00000008} 'Unknown 4',
+    {0x00000010} 'Unknown 5',
+    {0x00000020} 'Unknown 6', //Unused
+    {0x00000040} 'Unknown 7',
+    {0x00000080} 'Unknown 8',
+    {0x00000100} 'Atom Shop Item',
+    {0x00000200} 'Unknown 10',
+    {0x00000400} 'Unknown 11',
+    {0x00000800} 'Fallout 1st',
+    {0x00001000} 'Unknown 13',
+    {0x00002000} 'Unknown 14',
+    {0x00004000} 'Unknown 15', //Unused
+    {0x00008000} 'Unknown 16', //Unused
+    {0x00010000} 'Unknown 17', //Unused
+    {0x00020000} 'Unknown 18', //Unused
+    {0x00040000} 'Unknown 19', //Unused
+    {0x00080000} 'Unknown 20', //Unused
+    {0x00100000} 'Unknown 21', //Unused
+    {0x00200000} 'Unknown 22', //Unused
+    {0x00400000} 'Unknown 23', //Unused
+    {0x00800000} 'Unknown 24', //Unused
+    {0x01000000} 'Unknown 25', //Unused
+    {0x02000000} 'Unknown 26', //Unused
+    {0x04000000} 'Unknown 27', //Unused
+    {0x08000000} 'Unknown 28', //Unused
+    {0x10000000} 'Unknown 29', //Unused
+    {0x20000000} 'Unknown 30', //Unused
+    {0x40000000} 'Unknown 31', //Unused
+    {0x80000000} 'Unknown 32'  //Unused
+  ]);
+
+  wbXALG := wbInteger(XALG, 'Flags', itU64, wbXALGFlags);
 
   wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -7240,7 +7383,7 @@ begin
   ]))
 end;
 
-procedure DefineFO4b;
+procedure DefineSF1b;
 begin
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -8863,7 +9006,7 @@ begin
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 end;
 
-procedure DefineFO4c;
+procedure DefineSF1c;
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
@@ -9317,7 +9460,7 @@ begin
   ]);
 end;
 
-procedure DefineFO4d;
+procedure DefineSF1d;
 begin
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
@@ -9876,6 +10019,10 @@ begin
     wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
+  wbRecord(AFFE, 'Unknown', [
+    wbEDID
+  ]);
+
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Has Container',
@@ -9965,6 +10112,7 @@ begin
 
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
+    wbXALG,
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
       wbInteger('Int', itS32),
@@ -9985,9 +10133,14 @@ begin
     wbFULL,
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
+
+  wbRecord(FFKW, 'Unknown', [
+    wbEDID
+  ]);
+
 end;
 
-procedure DefineFO4e;
+procedure DefineSF1e;
 begin
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
@@ -10112,7 +10265,7 @@ begin
   ]);
 end;
 
-procedure DefineFO4f;
+procedure DefineSF1f;
 begin
   wbRecord(IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10374,7 +10527,7 @@ begin
 
 end;
 
-procedure DefineFO4g;
+procedure DefineSF1g;
 begin
   wbRecord(EXPL, 'Explosion', [
     wbEDID,
@@ -10866,7 +11019,7 @@ begin
   ]);
 end;
 
-procedure DefineFO4h;
+procedure DefineSF1h;
 begin
   wbRecord(AVIF, 'Actor Value Information', [
     wbEDID,
@@ -11211,7 +11364,7 @@ begin
 end;
 
 
-procedure DefineFO4i;
+procedure DefineSF1i;
 var
   a, b, c : TVarRecs;
 begin
@@ -11639,8 +11792,8 @@ begin
   ]);
 
   c := CombineVarRecs(a, b);
-
-  if wbGameMode = gmFO4VR then begin
+{
+  if wbGameMode = gmSF1VR then begin
     b := MakeVarRecs([
       Sig2Int('TUSW'), 'TUSW',
       Sig2Int('HMVW'), 'HMVW'
@@ -11648,7 +11801,7 @@ begin
 
     c := CombineVarRecs(c, b);
   end;
-
+}
   wbRecord(DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
@@ -11784,7 +11937,7 @@ begin
     .SetSummaryKey([7]);
 end;
 
-procedure DefineFO4j;
+procedure DefineSF1j;
 begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
@@ -12072,7 +12225,7 @@ begin
   ]);
 end;
 
-procedure DefineFO4k;
+procedure DefineSF1k;
 begin
   wbSPED := wbUnion(SPED, 'Movement Data', wbFormVersionDecider([28, 60, 104]), [
  {0}wbStruct('', [
@@ -12522,7 +12675,7 @@ begin
   ]);
 end;
 
-procedure DefineFO4l;
+procedure DefineSF1l;
 begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
@@ -12872,7 +13025,7 @@ begin
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
-procedure DefineFO4m;
+procedure DefineSF1m;
 begin
   wbRecord(LSCR, 'Load Screen',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -12951,6 +13104,24 @@ begin
     .SetSummaryMemberMaxDepth(0, 1)
     .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
+  var wbLeveledListEntryPackIn :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbFormIDCk(LVLO, 'Reference', sigBaseObjects)
+      //wbCOED,
+      //wbCTDAs,
+//      wbLVOV,
+      //wbLVOC,
+      //wbLVOT,
+//      wbLVIV,
+      //wbLVIG,
+//      wbLVLV
+      //wbLVOG,
+      //wbLVLT
+    ], [])
+    .SetSummaryKey([0])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
   var wbLeveledListEntrySpell :=
     wbRStructSK([0], 'Leveled List Entry', [
       wbStructExSK(LVLO, [0, 2], [3], 'Base Data', [
@@ -13012,6 +13183,44 @@ begin
     wbFilterKeywordChances,
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
+  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+
+  wbRecord(LVLP, 'Leveled Pack In', [
+    wbEDID,
+    wbOBND(True),
+    //wbOPDSs,
+    //wbDEFL,
+    //wbXALG,
+    wbLVLD,
+//    wbLVMV,
+    //wbLVMG,
+    //wbLVMT,
+//    wbLVCV,
+    //wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
+    //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    //wbLVCT,
+//    wbUnion(LVLF, 'Flags', wbFormVersionDecider(185), [
+//      wbInteger('', itU8, wbLVLFFlags),
+//      wbInteger('', itU16, wbLVLFFlags)
+//    ], cpNormal, True),
+    //wbCTDAs,
+    //wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbLLCT,
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryPackIn, cpNormal, False, nil, wbLVLOsAfterSet),
+    {
+    wbArrayS(LLKC, 'Filter Keyword Chances',
+      wbStructSK([0], 'Filter', [
+        wbFormIDCk('Keyword', [KYWD]),
+        wbInteger('Chance', itU32),
+        wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+      ])
+    ),
+    }
+    //wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
+    //wbDIQO,
+    //wbUnknown(LIMC),
+    wbGenericModel
+    //wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVSP, 'Leveled Spell', [
@@ -13521,7 +13730,7 @@ begin
 end;
 
 
-procedure DefineFO4n;
+procedure DefineSF1n;
 var
   wbBlendOperationEnum: IwbEnumDef;
 
@@ -15219,7 +15428,8 @@ begin
       wbArray('Unknown', wbFormID('Unknown'))
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
-    wbInteger(INCC, 'Internal Cell Count', itU32)                     // Size of some array of 12 bytes elements
+    wbInteger(INCC, 'Internal Cell Count', itU32),                    // Size of some array of 12 bytes elements
+    wbUnknown(CHGL)
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(PLYR, 'Player Reference', [
@@ -15228,7 +15438,7 @@ begin
   ]).IncludeFlag(dfInternalEditOnly);
 end;
 
-procedure DefineFO4o;
+procedure DefineSF1o;
 begin
   wbRecord(TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -15822,7 +16032,7 @@ begin
   ]);
 end;
 
-procedure DefineFO4p;
+procedure DefineSF1p;
 begin
   {wbRecord(SCPT, 'SCPT', [
     wbEDID
@@ -15831,7 +16041,7 @@ end;
 
 {>>> Start of new Fallout 4 Records <<<}
 
-procedure DefineFO4q;
+procedure DefineSF1q;
 begin
   wbRecord(AECH, 'Audio Effect Chain', [
     wbEDID,
@@ -15932,6 +16142,7 @@ begin
 
   wbRecord(DFOB, 'Default Object', [
     wbEDID,
+    wbXALG,
     wbFormID(DATA, 'Object')
   ]);
 
@@ -15964,7 +16175,7 @@ begin
 
 end;
 
-procedure DefineFO4r;
+procedure DefineSF1r;
 begin
   wbRecord(INNR, 'Instance Naming Rules', [
     wbEDID,
@@ -16104,9 +16315,41 @@ begin
     )
   ]);
 
+
+  wbRecord(LGDI, 'Legendary Item', [
+    wbEDID,
+    wbOBND,
+    wbPTRN,
+    wbGenericModel,
+//    wbENLT,
+//    wbENLS,
+//    wbAUUV,
+    wbFULL,
+//    wbVCRY,
+    wbInteger(DATA, 'Scrip Cost', itU32),
+    wbFormID(ANAM, 'Applicable Item List'),
+    wbArray(BNAM, 'Legendary Mods', wbStruct('Legendary Mod', [
+      wbInteger('Star Slot', itU32, wbLGDIStarSlot),
+      wbFormID('Legendary Modifier')
+    ])),
+
+    wbArray(CNAM, 'Include Filters', wbStruct('Include Filter', [
+      wbInteger('Star Slot', itU32, wbLGDIStarSlot),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
+      wbFormIDCk('Keyword', [KYWD])
+    ])),
+
+    wbArray(DNAM, 'Exclude Filters', wbStruct('Exclude Filter', [
+      wbInteger('Star Slot', itU32, wbLGDIStarSlot),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
+      wbFormIDCk('Keyword', [KYWD])
+    ])),
+    wbFormID(ENAM, 'Legendary Template List')
+  ]);
+
 end;
 
-procedure DefineFO4s;
+procedure DefineSF1s;
 begin
   wbRecord(NOTE, 'Note', [
     wbEDID,
@@ -16299,7 +16542,7 @@ begin
 
 end;
 
-procedure DefineFO4t;
+procedure DefineSF1t;
 begin
   {wbRecord(SKIL, 'SKIL', [
     wbEDID
@@ -16460,194 +16703,657 @@ begin
 
 end;
 
-procedure DefineFO4u;
+procedure DefineSF1u;
 begin
-   wbAddGroupOrder(GMST);
-   wbAddGroupOrder(KYWD);
-   wbAddGroupOrder(LCRT);
-   wbAddGroupOrder(AACT);
-   wbAddGroupOrder(TRNS);
-   wbAddGroupOrder(CMPO);
-   wbAddGroupOrder(TXST);
-   //wbAddGroupOrder(MICN);
-   wbAddGroupOrder(GLOB);
-   wbAddGroupOrder(DMGT);
-   wbAddGroupOrder(CLAS);
-   wbAddGroupOrder(FACT);
-   wbAddGroupOrder(HDPT);
-   wbAddGroupOrder(EYES);
-   wbAddGroupOrder(RACE);
-   wbAddGroupOrder(SOUN);
-   wbAddGroupOrder(ASPC);
-   //wbAddGroupOrder(SKIL);
-   wbAddGroupOrder(MGEF);
-   //wbAddGroupOrder(SCPT);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(LTEX);
-   wbAddGroupOrder(ENCH);
-   wbAddGroupOrder(SPEL);
-   //wbAddGroupOrder(SCRL);
-   wbAddGroupOrder(ACTI);
-   wbAddGroupOrder(TACT);
-   wbAddGroupOrder(ARMO);
-   wbAddGroupOrder(BOOK);
-   wbAddGroupOrder(CONT);
-   wbAddGroupOrder(DOOR);
-   wbAddGroupOrder(INGR);
-   wbAddGroupOrder(LIGH);
-   wbAddGroupOrder(MISC);
-   wbAddGroupOrder(STAT);
-   wbAddGroupOrder(SCOL);
-   wbAddGroupOrder(MSTT);
-   wbAddGroupOrder(GRAS);
-   wbAddGroupOrder(TREE);
-   wbAddGroupOrder(FLOR);
-   wbAddGroupOrder(FURN);
-   wbAddGroupOrder(WEAP);
-   wbAddGroupOrder(AMMO);
-   wbAddGroupOrder(NPC_);
-   wbAddGroupOrder(PLYR);
-   wbAddGroupOrder(LVLN);
-   wbAddGroupOrder(KEYM);
-   wbAddGroupOrder(ALCH);
-   wbAddGroupOrder(IDLM);
-   wbAddGroupOrder(NOTE);
-   wbAddGroupOrder(PROJ);
-   wbAddGroupOrder(HAZD);
-   wbAddGroupOrder(BNDS);
-   //wbAddGroupOrder(SLGM);
-   wbAddGroupOrder(TERM);
-   wbAddGroupOrder(LVLI);
-   wbAddGroupOrder(WTHR);
-   wbAddGroupOrder(CLMT);
-   wbAddGroupOrder(SPGD);
-   wbAddGroupOrder(RFCT);
-   wbAddGroupOrder(REGN);
-   wbAddGroupOrder(NAVI);
-   wbAddGroupOrder(CELL);
-   //wbAddGroupOrder(REFR);
-   //wbAddGroupOrder(ACHR);
-   //wbAddGroupOrder(PMIS);
-   //wbAddGroupOrder(PARW);
-   //wbAddGroupOrder(PGRE);
-   //wbAddGroupOrder(PBEA);
-   //wbAddGroupOrder(PFLA);
-   //wbAddGroupOrder(PCON);
-   //wbAddGroupOrder(PBAR);
-   //wbAddGroupOrder(PHZD);
-   wbAddGroupOrder(WRLD);
-   //wbAddGroupOrder(LAND);
-   //wbAddGroupOrder(NAVM);
-   //wbAddGroupOrder(TLOD);
-   //wbAddGroupOrder(DIAL);
-   //wbAddGroupOrder(INFO);
-   wbAddGroupOrder(QUST);
-   wbAddGroupOrder(IDLE);
-   wbAddGroupOrder(PACK);
-   wbAddGroupOrder(CSTY);
-   wbAddGroupOrder(LSCR);
-   wbAddGroupOrder(LVSP);
-   wbAddGroupOrder(ANIO);
-   wbAddGroupOrder(WATR);
-   wbAddGroupOrder(EFSH);
-   //wbAddGroupOrder(TOFT);
-   wbAddGroupOrder(EXPL);
-   wbAddGroupOrder(DEBR);
-   wbAddGroupOrder(IMGS);
-   wbAddGroupOrder(IMAD);
-   wbAddGroupOrder(FLST);
-   wbAddGroupOrder(PERK);
-   wbAddGroupOrder(BPTD);
-   wbAddGroupOrder(ADDN);
-   wbAddGroupOrder(AVIF);
-   wbAddGroupOrder(CAMS);
-   wbAddGroupOrder(CPTH);
-   wbAddGroupOrder(VTYP);
-   wbAddGroupOrder(MATT);
-   wbAddGroupOrder(IPCT);
-   wbAddGroupOrder(IPDS);
-   wbAddGroupOrder(ARMA);
-   wbAddGroupOrder(ECZN);
-   wbAddGroupOrder(LCTN);
-   wbAddGroupOrder(MESG);
-   //wbAddGroupOrder(RGDL);{>>> Unused in Skyrim, but contained in Skyrim.esm <<<}
-   wbAddGroupOrder(DOBJ);
-   wbAddGroupOrder(DFOB);
-   wbAddGroupOrder(LGTM);
-   wbAddGroupOrder(MUSC);
-   wbAddGroupOrder(FSTP);
-   wbAddGroupOrder(FSTS);
-   wbAddGroupOrder(SMBN);
-   wbAddGroupOrder(SMQN);
-   wbAddGroupOrder(SMEN);
-   wbAddGroupOrder(DLBR);
-   wbAddGroupOrder(MUST);
-   wbAddGroupOrder(DLVW);
-   //wbAddGroupOrder(WOOP);
-   //wbAddGroupOrder(SHOU);
-   wbAddGroupOrder(EQUP);
-   wbAddGroupOrder(RELA);
-   wbAddGroupOrder(SCEN);
-   wbAddGroupOrder(ASTP);
-   wbAddGroupOrder(OTFT);
-   wbAddGroupOrder(ARTO);
-   wbAddGroupOrder(MATO);
-   wbAddGroupOrder(MOVT);
-   wbAddGroupOrder(SNDR);
-   wbAddGroupOrder(DUAL); // doesn't exist but can be created in CK
-   wbAddGroupOrder(SNCT);
-   wbAddGroupOrder(SOPM);
-   wbAddGroupOrder(COLL);
-   wbAddGroupOrder(CLFM);
-   wbAddGroupOrder(REVB);
-   wbAddGroupOrder(PKIN);
-   wbAddGroupOrder(RFGP);
-   wbAddGroupOrder(AMDL);
-   wbAddGroupOrder(LAYR);
-   wbAddGroupOrder(COBJ);
-   wbAddGroupOrder(OMOD);
-   wbAddGroupOrder(MSWP);
-   wbAddGroupOrder(ZOOM);
-   wbAddGroupOrder(INNR);
-   wbAddGroupOrder(KSSM);
-   wbAddGroupOrder(AECH);
-   wbAddGroupOrder(SCCO);
-   wbAddGroupOrder(AORU);
-   wbAddGroupOrder(SCSN);
-   wbAddGroupOrder(STAG);
-   wbAddGroupOrder(NOCM);
-   wbAddGroupOrder(LENS);
-   //wbAddGroupOrder(LSPR);
-   wbAddGroupOrder(GDRY);
-   wbAddGroupOrder(OVIS);
+  wbRecord(AAPD, 'Aim Assist Pose Data', [
+    wbEDID,
+    wbRStruct('Attach Point', [
+      wbEmpty(AAAP, 'Attach Point Marker'),
+      wbString(ANAM, 'Part'),
+      wbString(BNAM, 'Part'),
+      wbFloat(RADR),
+      wbFloat(WTMX)
+    ], []),
+    wbInteger(AAPS, 'Count', itU64),
+    wbRStructS('Connections', 'Connection', [
+      wbString(ANAM, 'Part'),
+      wbString(BNAM, 'Part'),
+      wbFloat(RADR),
+      wbFloat(WTMX)
+    ], [])
+  ]);
+
+  wbRecord(AAMD, 'Aim Assist Model Data', [
+    wbEDID,
+    wbFloat(ANAM, 'Inner Cone Angle Degrees'),
+    wbFloat(BNAM, 'Outer Cone Angle Degrees'),
+    wbFloat(CNAM, 'Steering Degrees Per Sec'),
+    wbFloat(DNAM, 'Pitch Scale'),
+    wbFloat(ENAM, 'Inner Steering Ring'),
+    wbFloat(FNAM, 'Outer Steering Ring'),
+    wbFloat(GNAM, 'Friction'),
+    wbFloat(HNAM, 'Move Follow Degrees Per Sec'),
+    wbFloat(INAM, 'ADS Snap Steering Mult'),
+    wbFloat(JNAM, 'ADS Snap Seconds'),
+    wbFloat(KNAM, 'ADS Snap Cone Angle Degrees'),
+    wbFloat(LNAM, 'No Steering'),
+    wbFloat(MNAM, 'Bullet Bending Cone Angle Degrees'),
+    wbFloat(NNAM, 'ADS Snap Steering Mutliplier Inner Ring'),
+    wbFloat(ONAM, 'ADS Snap Steering Mutliplier Outer Ring'),
+    wbFloat(PNAM, 'ADS Multiplier Inner Cone Angle Degrees'),
+    wbFloat(QNAM, 'ADS Multiplier Outer Cone Angle Degrees'),
+    wbFloat(RNAM, 'ADS Multiplier Inner Steering Ring'),
+    wbFloat(SNAM, 'ADS Multiplier Outer Steering Ring'),
+    wbFloat(TNAM, 'ADS Multiplier Friction'),
+    wbFloat(UNAM, 'ADS Multiplier Steering Degrees Per Sec'),
+    wbFloat(VNAM, 'Aim Assist Enabled')
+  ]);
+
+  wbRecord(SECH, 'Sound Echo Marker', [
+    wbEDID,
+    wbOBND,
+    wbString(NNAM, 'Description'),
+    wbRArray('Echos',
+      wbRStruct('Echo', [
+        wbRUnion('Echo Marker', [
+          wbEmpty(ECHO, 'Echo Start Marker'),
+          wbEmpty(ECHD, 'Echo Default Start Marker')
+        ], []),
+        wbFormIDCk(ETRG, 'Trigger', [SNDR]),
+        wbFormIDCk(SDSC, 'Sound', [SNDR]),
+        wbUnknown(ANAM),
+        wbFloat(BNAM),
+        wbUnknown(CNAM),
+        wbUnknown(DNAM),
+        wbUnknown(ENAM),
+        wbString(NNAM, 'Description'),
+        wbEmpty(ECHE, 'Echo End Marker')
+      ], [])
+    )
+  ]);
+
+  wbRecord(CURV, 'Curve Table', [
+    wbEDID,
+    wbString(CRVE, 'JSON File Path'),
+    wbString(JASF, 'JSON File Path')
+  ]);
+
+  wbRecord(STND, 'Snap Template Node', [
+    wbEDID,
+    wbOBND,
+    wbGenericModel,
+    wbKeywords,
+    wbByteRGBA(CNAM, 'Unknown Colors'),
+    wbInteger(FNAM, 'Unknown Flags', itU32, wbFlags([
+      {0x00000001} 'Unknown 0',
+      {0x00000002} 'Unknown 1',
+      {0x00000004} 'Unknown 2',
+      {0x00000008} 'Unknown 3',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Unknown 5',
+      {0x00000040} 'Unknown 6',
+      {0x00000080} 'Unknown 7',
+      {0x00000100} 'Unknown 8',
+      {0x00000200} 'Unknown 9',
+      {0x00000400} 'Unknown 10',
+      {0x00000800} 'Unknown 11',
+      {0x00001000} 'Unknown 12',
+      {0x00002000} 'Unknown 13',
+      {0x00004000} 'Unknown 14',
+      {0x00008000} 'Unknown 15',
+      {0x00010000} 'Unknown 16',
+      {0x00020000} 'Unknown 17',
+      {0x00040000} 'Unknown 18',
+      {0x00080000} 'Unknown 19',
+      {0x00100000} 'Unknown 20',
+      {0x00200000} 'Unknown 21',
+      {0x00400000} 'Unknown 22',
+      {0x00800000} 'Unknown 23',
+      {0x01000000} 'Unknown 24',
+      {0x02000000} 'Unknown 25',
+      {0x04000000} 'Unknown 26',
+      {0x08000000} 'Unknown 27',
+      {0x10000000} 'Unknown 28',
+      {0x20000000} 'Unknown 29',
+      {0x40000000} 'Unknown 30',
+      {0x80000000} 'Unknown 31'
+    ])),
+    wbInteger(SNST, 'Unknown', itU32),
+    wbRArray('Adjacent Snap Nodes', wbFormID(NNAM, 'Adjacent Snap Node')),
+    wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'))
+  ]);
+
+  wbRecord(STMP, 'Snap Template', [
+    wbEDID,
+    wbPTRN,
+    wbFormIDCk(PNAM, 'Parent', [STMP]),
+    wbRArray('Nodes', wbStruct(ENAM, 'Node', [
+      wbInteger('Node ID', itU32),
+      wbFormIDCk('Node', [STND]),
+      wbArray('Unknown', wbFloat('Unknown'), 4),
+      wbFromVersion(187, wbFloat('Unknown')),
+      wbFromVersion(187, wbFloat('Unknown')),
+      wbFromVersion(187, wbInteger('Unknown', itU32))
+   ])),
+    wbRArray('Parent Nodes', wbRStruct('Parent Node', [
+      wbInteger(ONAM, 'Node ID', itU32),
+      wbStruct(TNAM, 'Unknown', [
+        wbArray('Unknown', wbFloat('Unknown'), 4),
+        wbFromVersion(187, wbFloat('Unknown')),
+        wbFromVersion(187, wbFloat('Unknown'))
+      ])
+    ], [])),
+    wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
+    wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
+    wbInteger(INAM, 'Next Node ID', itU32),
+    wbUnknown(STPT),
+    wbUnknown(SNFG)
+  ]);
+
+  wbRecord(GCVR, 'Ground Cover', [
+    wbEDID,
+    wbRArray('Grasses', wbRStruct('Grass', [
+      wbFormID(GNAM, 'Grass Texture'),
+      wbInteger(DNAM, 'Unknown Int', itU16)
+    ], [])),
+    wbRArray('Landscape Textures', wbFormID(LNAM, 'Landscape Texture')),
+    wbFloat(YNAM),
+    wbFloat(ZNAM, 'Unused Float')
+  ]);
+
+  wbRecord(VOLI, 'Volumetric Lighting', [
+    wbEDID,
+    wbFloat(CNAM, 'Intensity'),
+    wbFloat(DNAM, 'Custom Color - Contribution'),
+    wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
+    wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
+    wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
+    wbFloat(HNAM, 'Density - Contribution'),
+    wbFloat(INAM, 'Density - Size'),
+    wbFloat(JNAM, 'Density - Wind Speed'),
+    wbFloat(KNAM, 'Density - Falling Speed'),
+    wbFloat(LNAM, 'Phase Function - Contribution'),
+    wbFloat(MNAM, 'Phase Function - Scattering'),
+    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
+  ]);
+
+  wbRecord(PMFT, 'Photo Mode Feature', [
+    wbEDID,
+    wbXALG,
+//    wbFTAGs,
+    wbFULL,
+    wbICON,
+    wbCTDAs,
+    wbUnknown(FNAM),
+    //wbStruct(FNAM, 'Unknown', [
+    //  wbInteger('Unknown 1', itU32),
+    //  wbFloat('Unknown 2'),
+    //  wbFloat('Unknown 3'),
+    //  wbByteArray('Unknown 4', 4),
+    //  wbByteArray('Unknown 5', 4),
+    //  wbByteArray('Unknown 6', 4),
+    //  wbByteArray('Unknown 7', 4),
+    //  wbByteArray('Unknown 8', 4)
+    //]),
+    wbFormIDCk(INAM, 'Image Space', [IMAD]),
+    wbFormIDCk(KNAM, 'Keyword', [KYWD])
+  ]);
+
+  wbRecord(CHAL, 'Challenge',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])),[
+    wbEDID,
+//    wbWTFG,
+//    wbFTAGs,
+    wbFULL,
+    wbString(SNAM, 'Tracked Stat Used'),
+    wbString(NNAM, 'Comment'),
+    wbInteger(FNAM, 'Challenge Flags', itU32, wbFlags([
+      {0x00000001} 'Repeatable',
+      {0x00000002} 'Unknown 1',
+      {0x00000004} 'Unknown 2',
+      {0x00000008} 'Unknown 3'
+    ])),
+    wbInteger(TNAM, 'Required Count', itU32),
+//    wbXFLGLong, //Unused?
+    wbFormIDCk(HNAM, 'Required Count Global', [GLOB]),
+    wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
+      'Daily',
+      'Weekly',
+      'Lifetime',
+      'Monthly',
+      'Event',
+      'Seasonal'
+    ])),
+    wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
+      'Character',
+      'Survival',
+      'Exploration',
+      'Pets',
+      'Combat',
+      'Social',
+      'World',
+      'Tracker',
+      'Sub Challenge (Unsorted)'
+    ])),
+    wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
+    wbCTDAs,
+    wbRStruct('More Conditions', [
+      wbEmpty(NEXT, 'Marker', cpNormal, True),
+      wbCTDAs
+    ],[]),
+//    wbRArray('Rewards', wbReward),
+    wbString(JASF, 'Associated Json File'),
+    wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST]),
+    wbLStringKC(MNAM, 'Reward Display', 0, cpTranslate),
+//    wbString(MNAM, 'Reward Display'), TODO: Prior to esm version 155
+    wbString(RNAM, 'Reward Icon')
+  ]);
+
+
+  wbRecord(CNDF, 'Condition Form', [
+    wbEDID,
+    wbCTDAs
+  ]);
+  
+  wbRecord(AOPF, 'Audio Occlusion Primitive', [
+    wbEDID
+  ]);
+
+  wbRecord(PDCL, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(CUR3, 'Something having to do with water?', [
+    wbEDID
+  ]);
+
+  wbRecord(BMMO, 'Biome Marker', [
+    wbEDID
+  ]);
+
+  wbRecord(GBFT, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(GBFM, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(LVLB, 'Leveled Ship?', [
+    wbEDID
+  ]);
+
+  wbRecord(WTHS, 'Weather Settings', [
+    wbEDID
+  ]);
+
+  wbRecord(MAAM, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(IRES, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(BIOM, 'Biome', [
+    wbEDID
+  ]);
+
+  wbRecord(AMBS, 'Ambience Set', [
+    wbEDID
+  ]);
+
+  wbRecord(AOPS, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(ATMO, 'Atmosphere', [
+    wbEDID
+  ]);
+
+  wbRecord(AVMD, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(BMOD, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(CLDF, 'Clouds', [
+    wbEDID
+  ]);
+
+  wbRecord(EFSQ, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(FOGV, 'Fog', [
+    wbEDID
+  ]);
+
+  wbRecord(FORC, 'Force Data', [
+    wbEDID
+  ]);
+
+  wbRecord(LMSW, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(LVSC, 'Leveled Scene?', [
+    wbEDID
+  ]);
+
+  wbRecord(MRPH, 'Morph', [
+    wbEDID
+  ]);
+
+  wbRecord(MTPT, 'Something with Decal?', [
+    wbEDID
+  ]);
+
+  wbRecord(OSWP, 'Biome Swap', [
+    wbEDID
+  ]);
+
+  wbRecord(PCBN, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(PCCN, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(PCMT, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(PNDT, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(PSDC, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(PTST, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(RSGD, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(RSPJ, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(SDLT, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(SFBK, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(SFPC, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(SFPT, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(SFTR, 'Surface Tree', [
+    wbEDID
+  ]);
+
+  wbRecord(SPCH, 'Speech Challenge', [
+    wbEDID
+  ]);
+
+  wbRecord(STBH, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(STDT, 'Star Data', [
+    wbEDID
+  ]);
+
+  wbRecord(SUNP, 'Sun Preset', [
+    wbEDID
+  ]);
+
+  wbRecord(TMLM, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(TODD, 'External Emittance', [
+    wbEDID
+  ]);
+
+  wbRecord(TRAV, 'Traversal', [
+    wbEDID
+  ]);
+
+  wbRecord(WBAR, 'Weapon Barrel?', [
+    wbEDID
+  ]);
+
+  wbRecord(WKMF, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbRecord(WWED, 'Unknown', [
+    wbEDID
+  ]);
+
+  wbAddGroupOrder(GMST);
+  wbAddGroupOrder(KYWD);
+  wbAddGroupOrder(FFKW);
+  wbAddGroupOrder(LCRT);
+  wbAddGroupOrder(AACT);
+  wbAddGroupOrder(TRNS);
+  wbAddGroupOrder(TXST);
+  wbAddGroupOrder(GLOB);
+  wbAddGroupOrder(DMGT);
+  wbAddGroupOrder(CLAS);
+  wbAddGroupOrder(FACT);
+  wbAddGroupOrder(AFFE);
+  wbAddGroupOrder(HDPT);
+  wbAddGroupOrder(RACE);
+  wbAddGroupOrder(SOUN);
+  wbAddGroupOrder(SECH);
+  wbAddGroupOrder(ASPC);
+  wbAddGroupOrder(AOPF);
+  wbAddGroupOrder(MGEF);
+  wbAddGroupOrder(LTEX);
+  wbAddGroupOrder(PDCL);
+  wbAddGroupOrder(ENCH);
+  wbAddGroupOrder(SPEL);
+  wbAddGroupOrder(ACTI);
+  wbAddGroupOrder(CURV);
+  wbAddGroupOrder(CUR3);
+  wbAddGroupOrder(ARMO);
+  wbAddGroupOrder(BOOK);
+  wbAddGroupOrder(CONT);
+  wbAddGroupOrder(DOOR);
+  wbAddGroupOrder(LIGH);
+  wbAddGroupOrder(MISC);
+  wbAddGroupOrder(STAT);
+  wbAddGroupOrder(SCOL);
+  wbAddGroupOrder(PKIN);
+  wbAddGroupOrder(MSTT);
+  wbAddGroupOrder(GRAS);
+  wbAddGroupOrder(FLOR);
+  wbAddGroupOrder(FURN);
+  wbAddGroupOrder(WEAP);
+  wbAddGroupOrder(AMMO);
+  wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(LVLN);
+  wbAddGroupOrder(LVLP);
+  wbAddGroupOrder(KEYM);
+  wbAddGroupOrder(ALCH);
+  wbAddGroupOrder(IDLM);
+  wbAddGroupOrder(BMMO);
+  wbAddGroupOrder(PROJ);
+  wbAddGroupOrder(HAZD);
+  wbAddGroupOrder(BNDS);
+  wbAddGroupOrder(TERM);
+  wbAddGroupOrder(LVLI);
+  wbAddGroupOrder(GBFT);
+  wbAddGroupOrder(GBFM);
+  wbAddGroupOrder(LVLB);
+  wbAddGroupOrder(WTHR);
+  wbAddGroupOrder(WTHS);
+  wbAddGroupOrder(CLMT);
+  wbAddGroupOrder(SPGD);
+  wbAddGroupOrder(REGN);
+  wbAddGroupOrder(NAVI);
+  wbAddGroupOrder(CELL);
+  wbAddGroupOrder(WRLD);
+  wbAddGroupOrder(NAVM);
+  wbAddGroupOrder(DIAL);
+  wbAddGroupOrder(INFO);
+  wbAddGroupOrder(QUST);
+  wbAddGroupOrder(IDLE);
+  wbAddGroupOrder(PACK);
+  wbAddGroupOrder(CSTY);
+  wbAddGroupOrder(LSCR);
+  wbAddGroupOrder(ANIO);
+  wbAddGroupOrder(WATR);
+  wbAddGroupOrder(EFSH);
+  wbAddGroupOrder(EXPL);
+  wbAddGroupOrder(DEBR);
+  wbAddGroupOrder(IMGS);
+  wbAddGroupOrder(IMAD);
+  wbAddGroupOrder(FLST);
+  wbAddGroupOrder(PERK);
+  wbAddGroupOrder(BPTD);
+  wbAddGroupOrder(ADDN);
+  wbAddGroupOrder(AVIF);
+  wbAddGroupOrder(CAMS);
+  wbAddGroupOrder(CPTH);
+  wbAddGroupOrder(VTYP);
+  wbAddGroupOrder(MATT);
+  wbAddGroupOrder(IPCT);
+  wbAddGroupOrder(IPDS);
+  wbAddGroupOrder(ARMA);
+  wbAddGroupOrder(LCTN);
+  wbAddGroupOrder(MESG);
+  wbAddGroupOrder(DOBJ);
+  wbAddGroupOrder(DFOB);
+  wbAddGroupOrder(LGTM);
+  wbAddGroupOrder(MUSC);
+  wbAddGroupOrder(FSTP);
+  wbAddGroupOrder(FSTS);
+  wbAddGroupOrder(SMBN);
+  wbAddGroupOrder(SMQN);
+  wbAddGroupOrder(SMEN);
+  wbAddGroupOrder(DLBR);
+  wbAddGroupOrder(MUST);
+  wbAddGroupOrder(EQUP);
+  wbAddGroupOrder(SCEN);
+  wbAddGroupOrder(OTFT);
+  wbAddGroupOrder(ARTO);
+  wbAddGroupOrder(MOVT);
+  wbAddGroupOrder(COLL);
+  wbAddGroupOrder(CLFM);
+  wbAddGroupOrder(REVB);
+  wbAddGroupOrder(RFGP);
+  wbAddGroupOrder(AMDL);
+  wbAddGroupOrder(AAMD);
+  wbAddGroupOrder(MAAM);
+  wbAddGroupOrder(LAYR);
+  wbAddGroupOrder(COBJ);
+  wbAddGroupOrder(OMOD);
+  wbAddGroupOrder(ZOOM);
+  wbAddGroupOrder(INNR);
+  wbAddGroupOrder(KSSM);
+  wbAddGroupOrder(AORU);
+  wbAddGroupOrder(STAG);
+  wbAddGroupOrder(IRES);
+  wbAddGroupOrder(BIOM);
+  wbAddGroupOrder(NOCM);
+  wbAddGroupOrder(LENS);
+  wbAddGroupOrder(OVIS);
+  wbAddGroupOrder(STND);
+  wbAddGroupOrder(STMP);
+  wbAddGroupOrder(GCVR);
+  wbAddGroupOrder(MRPH);
+  wbAddGroupOrder(TRAV);
+  wbAddGroupOrder(RSGD);
+  wbAddGroupOrder(OSWP);
+  wbAddGroupOrder(ATMO);
+  wbAddGroupOrder(LVSC);
+  wbAddGroupOrder(SPCH);
+  wbAddGroupOrder(AAPD);
+  wbAddGroupOrder(VOLI);
+  wbAddGroupOrder(SFBK);
+  wbAddGroupOrder(SFPC);
+  wbAddGroupOrder(SFPT);
+  wbAddGroupOrder(SFTR);
+  wbAddGroupOrder(PCMT);
+  wbAddGroupOrder(BMOD);
+  wbAddGroupOrder(STBH);
+  wbAddGroupOrder(PNDT);
+  wbAddGroupOrder(CNDF);
+  wbAddGroupOrder(PCBN);
+  wbAddGroupOrder(PCCN);
+  wbAddGroupOrder(STDT);
+  wbAddGroupOrder(WWED);
+  wbAddGroupOrder(RSPJ);
+  wbAddGroupOrder(AOPS);
+  wbAddGroupOrder(AMBS);
+  wbAddGroupOrder(WBAR);
+  wbAddGroupOrder(PTST);
+  wbAddGroupOrder(LMSW);
+  wbAddGroupOrder(FORC);
+  wbAddGroupOrder(TMLM);
+  wbAddGroupOrder(EFSQ);
+  wbAddGroupOrder(SDLT);
+  wbAddGroupOrder(MTPT);
+  wbAddGroupOrder(CLDF);
+  wbAddGroupOrder(FOGV);
+  wbAddGroupOrder(WKMF);
+  wbAddGroupOrder(LGDI);
+  wbAddGroupOrder(PSDC);
+  wbAddGroupOrder(SUNP);
+  wbAddGroupOrder(PMFT);
+  wbAddGroupOrder(TODD);
+  wbAddGroupOrder(AVMD);
+  wbAddGroupOrder(CHAL);
 end;
 
-procedure DefineFO4;
+procedure DefineSF1;
 begin
-  wbNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
+  //wbNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  DefineFO4a;
-  DefineFO4b;
-  DefineFO4c;
-  DefineFO4d;
-  DefineFO4e;
-  DefineFO4f;
-  DefineFO4g;
-  DefineFO4h;
-  DefineFO4i;
-  DefineFO4j;
-  DefineFO4k;
-  DefineFO4l;
-  DefineFO4m;
-  DefineFO4n;
-  DefineFO4o;
-  DefineFO4p;
-  DefineFO4q;
-  DefineFO4r;
-  DefineFO4s;
-  DefineFO4t;
-  DefineFO4u;
-
+  DefineSF1a;
+  DefineSF1b;
+  DefineSF1c;
+  DefineSF1d;
+  DefineSF1e;
+  DefineSF1f;
+  DefineSF1g;
+  DefineSF1h;
+  DefineSF1i;
+  DefineSF1j;
+  DefineSF1k;
+  DefineSF1l;
+  DefineSF1m;
+  DefineSF1n;
+  DefineSF1o;
+  DefineSF1p;
+  DefineSF1q;
+  DefineSF1r;
+  DefineSF1s;
+  DefineSF1t;
+  DefineSF1u;
+  {
   SetLength(wbOfficialDLC, 7);
   wbOfficialDLC[0] := 'DLCRobot.esm';
   wbOfficialDLC[1] := 'DLCworkshop01.esm';
@@ -16657,19 +17363,21 @@ begin
   wbOfficialDLC[5] := 'DLCNukaWorld.esm';
   wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
 
-  if wbGameMode = gmFO4VR then begin
+  if wbGameMode = gmSF1VR then begin
     // new VR esm is loaded after DLCs
     SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
     wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
   end else
     wbCreationClubContentFileName := 'Fallout4.ccc';
 
-  if wbGameMode = gmFO4VR then
+  if wbGameMode = gmSF1VR then
     wbHEDRVersion := 0.95
   else begin
     wbHEDRVersion := 1.0;
     wbHEDRNextObjectID := 1;
   end;
+}
+  wbHEDRVersion := 0.96;
 end;
 
 initialization

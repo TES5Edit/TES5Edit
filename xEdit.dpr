@@ -101,7 +101,9 @@ uses
   xeWaitForm in 'xEdit\xeWaitForm.pas' {frmWait},
   xeWorldspaceCellDetailsForm in 'xEdit\xeWorldspaceCellDetailsForm.pas' {frmWorldspaceCellDetails},
   xeScriptHost in 'xEdit\xeScriptHost.pas',
-  xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas';
+  xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas',
+  wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas',
+  wbDefinitionsSignatures in 'Core\wbDefinitionsSignatures.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

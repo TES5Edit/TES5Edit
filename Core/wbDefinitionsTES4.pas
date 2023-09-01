@@ -44,7 +44,8 @@ uses
   Math,
   Variants,
   wbHelpers,
-  wbDefinitionsCommon;
+  wbDefinitionsCommon,
+  wbDefinitionsSignatures;
 
 const
   ACBS : TwbSignature = 'ACBS';

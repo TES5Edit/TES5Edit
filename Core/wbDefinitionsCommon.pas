@@ -13,115 +13,8 @@ unit wbDefinitionsCommon;
 interface
 
 uses
-  wbInterface;
-
-const
-  ADBO: TwbSignature = 'ADBO';
-  ADCR: TwbSignature = 'ADCR';
-  ADIA: TwbSignature = 'ADIA';
-  AFAV: TwbSignature = 'AFAV';
-  AHEL: TwbSignature = 'AHEL';
-  AIPL: TwbSignature = 'AIPL';
-  ANAM: TwbSignature = 'ANAM';
-  AOBJ: TwbSignature = 'AOBJ';
-  ARRT: TwbSignature = 'ARRT';
-  ASSU: TwbSignature = 'ASSU';
-  ATXT: TwbSignature = 'ATXT';
-  BRIB: TwbSignature = 'BRIB';
-  BTXT: TwbSignature = 'BTXT';
-  CAST: TwbSignature = 'CAST';
-  CHRR: TwbSignature = 'CHRR';
-  CLOC: TwbSignature = 'CLOC';
-  CLRL: TwbSignature = 'CLRL';
-  CNAM: TwbSignature = 'CNAM';
-  CRFT: TwbSignature = 'CRFT';
-  CS2D: TwbSignature = 'CS2D';
-  CS2K: TwbSignature = 'CS2K';
-  CSDC: TwbSignature = 'CSDC';
-  CSDI: TwbSignature = 'CSDI';
-  CTDA: TwbSignature = 'CTDA';
-  CURE: TwbSignature = 'CURE';
-  DATA: TwbSignature = 'DATA';
-  DEAD: TwbSignature = 'DEAD';
-  DMDT: TwbSignature = 'DMDT';
-  ESJA: TwbSignature = 'ESJA';
-  FACT: TwbSignature = 'FACT';
-  FLAT: TwbSignature = 'FLAT';
-  GLOB: TwbSignature = 'GLOB';
-  HACK: TwbSignature = 'HACK';
-  HDPT: TwbSignature = 'HDPT';
-  HEAD: TwbSignature = 'HEAD';
-  HEDR: TwbSignature = 'HEDR';
-  ICON: TwbSignature = 'ICON';
-  ILOC: TwbSignature = 'ILOC';
-  INDX: TwbSignature = 'INDX';
-  INFC: TwbSignature = 'INFC';
-  INTM: TwbSignature = 'INTM';
-  IRON: TwbSignature = 'IRON';
-  JAIL: TwbSignature = 'JAIL';
-  KILL: TwbSignature = 'KILL';
-  KYWD: TwbSignature = 'KYWD';
-  LCLD: TwbSignature = 'LCLD';
-  LCPG: TwbSignature = 'LCPG';
-  LEVL: TwbSignature = 'LEVL';
-  LOCK: TwbSignature = 'LOCK';
-  LTEX: TwbSignature = 'LTEX';
-  MDOB: TwbSignature = 'MDOB';
-  MICO: TwbSignature = 'MICO';
-  MODL: TwbSignature = 'MODL';
-  MODT: TwbSignature = 'MODT';
-  NAM0: TwbSignature = 'NAM0';
-  NAM9: TwbSignature = 'NAM9';
-  NULL: TwbSignature = 'NULL';
-  NVPE: TwbSignature = 'NVPE';
-  OAAT: TwbSignature = 'OAAT';
-  OBND: TwbSignature = 'OBND';
-  OFST: TwbSignature = 'OFST';
-  PCON: TwbSignature = 'PCON';
-  PFIN: TwbSignature = 'PFIN';
-  PFPC: TwbSignature = 'PFPC';
-  PRFV: TwbSignature = 'PRFV';
-  QPMT: TwbSignature = 'QPMT';
-  QSTR: TwbSignature = 'QSTR';
-  RACE: TwbSignature = 'RACE';
-  RDSA: TwbSignature = 'RDSA';
-  RDSD: TwbSignature = 'RDSD';
-  REMP: TwbSignature = 'REMP';
-  SCDA: TwbSignature = 'SCDA';
-  SCPT: TwbSignature = 'SCPT';
-  SCTX: TwbSignature = 'SCTX';
-  SKIL: TwbSignature = 'SKIL';
-  SNAM: TwbSignature = 'SNAM';
-  SNDD: TwbSignature = 'SNDD';
-  SNDR: TwbSignature = 'SNDR';
-  SOUN: TwbSignature = 'SOUN';
-  STIJ: TwbSignature = 'STIJ';
-  TMEE: TwbSignature = 'TMEE';
-  TNAM: TwbSignature = 'TNAM';
-  TRES: TwbSignature = 'TRES';
-  TXST: TwbSignature = 'TXST';
-  VCLR: TwbSignature = 'VCLR';
-  VHGT: TwbSignature = 'VHGT';
-  VNML: TwbSignature = 'VNML';
-  VTXT: TwbSignature = 'VTXT';
-  XACT: TwbSignature = 'XACT';
-  XCLC: TwbSignature = 'XCLC';
-  XGLB: TwbSignature = 'XGLB';
-  XLOD: TwbSignature = 'XLOD';
-  XNAM: TwbSignature = 'XNAM';
-  XRNK: TwbSignature = 'XRNK';
-  _11_IAD: TwbSignature = #$11'IAD';
-  _12_IAD: TwbSignature = #$12'IAD';
-  _13_IAD: TwbSignature = #$13'IAD';
-  _14_IAD: TwbSignature = #$14'IAD';
-  _51_IAD: TwbSignature = #$51'IAD';
-  _52_IAD: TwbSignature = #$52'IAD';
-  _53_IAD: TwbSignature = #$53'IAD';
-  _54_IAD: TwbSignature = #$54'IAD';
-
-  INOM : TwbSignature = 'INOM'; { xEdit internal use only }
-  INOA : TwbSignature = 'INOA'; { xEdit internal use only }
-
+  wbInterface,
+  wbDefinitionsSignatures;
 
 var
   wbActionFlag: IwbSubRecordDef;
@@ -343,6 +236,12 @@ function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValu
 function wbBelowSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
 
+function wbByteColors(const aName: string = 'Color'): IwbValueDef;
+function wbFloatColors(const aName: string = 'Color'): IwbValueDef;
+function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
+function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
+function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+
 implementation
 
 uses
@@ -514,7 +413,7 @@ begin
       'Hide - Quad 3',
       'Hide - Quad 4'
     ], True);
-  if wbGameMode in [gmFO4, gmFO76] then
+  if wbGameMode in [gmFO4, gmFO76, gmSF1] then
     wbLandFlags :=
       wbFlags([
         'Hide - Quad 1',
@@ -588,7 +487,7 @@ begin
     wbStructSK(SNAM, [0], 'Faction', [
       wbFormIDCk('Faction', [FACT]),
       wbInteger('Rank', itS8),
-      IfThen(wbGameMode in [gmFO4, gmFO76], nil, wbByteArray('Unused', 3))
+      IfThen(wbGameMode in [gmFO4, gmFO76, gmSF1], nil, wbByteArray('Unused', 3))
     ])
     .SetSummaryKeyOnValue([0, 1])
     .SetSummaryPrefixSuffixOnValue(1, '{Rank: ', '}')
@@ -2654,6 +2553,54 @@ begin
       ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
+function wbByteColors(const aName: string = 'Color'): IwbValueDef;
+begin
+  Result := wbStruct(aName, [
+    wbInteger('Red', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Blue', itU8),
+    wbByteArray('Unused', 1)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbFloatColors(const aName: string = 'Color'): IwbValueDef;
+begin
+  Result := wbStruct(aName, [
+    wbFloat('Red', cpNormal, True, 255, 0),
+    wbFloat('Green', cpNormal, True, 255, 0),
+    wbFloat('Blue', cpNormal, True, 255, 0)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
+begin
+  Result := wbStruct(aName, [
+    wbFloat('Red', cpNormal, True, 255, 0),
+    wbFloat('Green', cpNormal, True, 255, 0),
+    wbFloat('Blue', cpNormal, True, 255, 0),
+    wbFloat('Alpha', cpNormal, True, 255, 0)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
+begin
+  Result := wbStruct(aName, [
+    wbInteger('Red', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Blue', itU8),
+    wbInteger('Alpha', itU8)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
+    wbInteger('Red', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Blue', itU8),
+    wbInteger('Alpha', itU8)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
 
 
 end.

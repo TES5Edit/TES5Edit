@@ -1184,7 +1184,7 @@ begin
             ReadString('Archive', 'sResourceArchiveList2', ''),
             ',', #10, [rfReplaceAll]
           )
-        else if wbIsFallout4 or wbIsFallout76 then
+        else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
           Text := StringReplace(
             ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
             ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +
@@ -1252,7 +1252,7 @@ begin
               if s <> '' then s := s + #10;
               s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList2');
               Text := s;
-            end else if wbIsFallout4 or wbIsFallout76 then begin
+            end else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
               s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceIndexFileList');
               if s <> '' then s := s + #10;
               s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceStartUpArchiveList');

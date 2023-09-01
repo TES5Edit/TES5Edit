@@ -52,7 +52,8 @@ uses
   wbDefinitionsTES4 in 'Core\wbDefinitionsTES4.pas',
   wbDefinitionsTES4Saves in 'Core\wbDefinitionsTES4Saves.pas',
   wbDefinitionsTES5 in 'Core\wbDefinitionsTES5.pas',
-  wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas';
+  wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas',
+  wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}
@@ -808,7 +809,7 @@ begin
       client  := 'Steam';
 
       case wbGameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
+      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1: begin
         regPath := sBethRegKey + wbGameNameReg + '\';
       end;
       gmEnderal, gmEnderalSE: begin
@@ -830,7 +831,7 @@ begin
       end;
 
       case wbGameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
+      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1:
                   regKey := 'Installed Path';
       gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
       gmFO76:     regKey := 'Path';
@@ -882,6 +883,7 @@ begin
     gmEnderal,
     gmEnderalSE,
     gmSSE:            SwitchToTES5CoSave;
+    gmSF1:            {nothing};
   end;
 end;
 
@@ -1118,6 +1120,13 @@ begin
             tsPlugins: DefineFO76;
           end;
         end;
+        gmSF1: begin
+          wbGameName := 'Starfield';
+          wbCreateContainedIn := False;
+          case wbToolSource of
+            tsPlugins: DefineSF1;
+          end;
+        end;
       else
         WriteLn(ErrOutput, 'Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5 or TES5VR to select game.');
         Exit;
@@ -1145,7 +1154,7 @@ begin
         Exit;
       end;
 
-      if wbGameMode in [gmFO4, gmFO4vr, gmFO76] then
+      if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
         wbArchiveExtension := '.ba2';
 
       DoInitPath;
@@ -1287,7 +1296,7 @@ begin
         DumpForms.Free;
       end;
 
-      if wbGameMode in [gmFO4, gmFO4vr, gmFO76] then
+      if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
         wbLanguage := 'En';
 
       if wbGameMode <= gmEnderal then

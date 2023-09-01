@@ -21,7 +21,7 @@ uses
   tfMD5;
 
 const
-  csBSAVersion = '0.9a';
+  csBSAVersion = '0.9b';
 
 type
   // per file compression options
@@ -223,7 +223,7 @@ const
 type
   TwbBSArchive = class;
 
-  TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds);
+  TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds, baSF, baSFdds);
   TBSArchiveState = (stReading, stWriting);
   TBSArchiveStates = set of TBSArchiveState;
   TBSFileIterationProc = function(aArchive: TwbBSArchive; const aFileName: string;
@@ -282,6 +282,11 @@ type
     Magic: TMagic4;
     FileCount: Cardinal;
     FileTableOffset: Int64;
+  end;
+
+  TwbBSHeaderSF = packed record
+    Unknown1: Cardinal;
+    Unknown2: Cardinal;
   end;
 
   TwbBSTexChunkRec = record
@@ -349,6 +354,7 @@ type
     fFoldersTES4: array of TwbBSFolderTES4;
 
     fHeaderFO4: TwbBSHeaderFO4;
+    fHeaderSF: TwbBSHeaderSF;
     fFilesFO4: array of TwbBSFileFO4;
     fMaxChunkCount: Integer;
     fSingleMipChunkX: Integer;
@@ -427,7 +433,9 @@ const
     'Skyrim LE, New Vegas, Fallout 3',
     'Skyrim SE, Skyrim AE',
     'Fallout 4',
-    'Fallout 4 DDS'
+    'Fallout 4 DDS',
+    'Starfield',
+    'Starfield DDS'
   );
 
   cArchiveTypeExtensions: array[TBSArchiveType] of string = (
@@ -436,6 +444,8 @@ const
     '.bsa',
     '.bsa',
     '.bsa',
+    '.ba2',
+    '.ba2',
     '.ba2',
     '.ba2'
   );
@@ -457,9 +467,10 @@ const
   );
 
 function SplitDirName(const aFileName: string; var Dir, Name: string): Integer;
-function SplitNameExt(const aFileName: string; var Name, Ext: string): Integer;
+function SplitNameExt(const aFileName: string; var Name, Ext: string; aNoExtDot: Boolean = False): Integer;
 function CreateHashTES3(const aFileName: string): UInt64;
 function CreateHashTES4(const aFileName: string): UInt64; overload;
+function CreateHashTES4(const aName, aExt: string): UInt64; overload;
 function CreateHashFO4(const aFileName: string): Cardinal;
 
 implementation
@@ -496,6 +507,8 @@ const
   HEADER_VERSION_FO3  = $68; // FO3, FNV, TES5
   HEADER_VERSION_SSE  = $69; // SSE
   HEADER_VERSION_FO4  = $01; // FO4
+  HEADER_VERSION_SFa  = $02; // SF
+  HEADER_VERSION_SFb  = $03; // SF?
 
   // archive flags
   ARCHIVE_PATHNAMES  = $0001; // Whether the BSA has names for paths
@@ -644,16 +657,24 @@ begin
   Result := LastCharPos(aFileName, '\');
   if Result = 0 then
     Result := LastCharPos(aFileName, '/');
-  Dir := Copy(aFileName, 1, Pred(Result));
-  Name := Copy(aFileName, Succ(Result), Length(aFileName) - Result);
+  if Result <> 0 then begin
+    Dir := Copy(aFileName, 1, Pred(Result));
+    Name := Copy(aFileName, Succ(Result), Length(aFileName) - Result);
+  end
+  else begin
+    Dir := '';
+    Name := aFileName;
+  end;
 end;
 
-function SplitNameExt(const aFileName: string; var Name, Ext: string): Integer;
+function SplitNameExt(const aFileName: string; var Name, Ext: string; aNoExtDot: Boolean = False): Integer;
 begin
   Result := LastCharPos(aFileName, '.');
   if Result <> 0 then begin
     Name := Copy(aFileName, 1, Pred(Result));
-    Ext := Copy(aFileName, Result, Length(aFileName) - Result + 2);
+    if aNoExtDot then
+      Inc(Result);
+    Ext := Copy(aFileName, Result, Length(aFileName) - Result + 1);
   end
   else begin
     Name := aFileName;
@@ -830,9 +851,8 @@ begin
       Result := fHeaderTES3.FileCount;
     baTES4, baFO3, baSSE:
       Result := fHeaderTES4.FileCount;
-    baFO4, baFO4dds:
-      // because we use fHeaderFO4.FileCount as the current index in new archives
-      Result := Length(fFilesFO4);
+    baFO4, baFO4dds, baSF, baSFdds:
+      Result := fHeaderFO4.FileCount;
     else
       Result := 0;
   end;
@@ -855,7 +875,7 @@ begin
   fMultiThreaded := aValue;
   {$IF CompilerVersion < 34.0}
   if aValue and not Assigned(Sync) then
-    Sync := TSimpleRWSync.Create;
+    Sync := TReadWriteSync.Create;
   {$IFEND}
 end;
 
@@ -881,9 +901,7 @@ var
   h: UInt64;
   i, j: integer;
 begin
-  if SplitDirName(aFileName, fdir, fname) = 0 then
-    Exit(False);
-
+  SplitDirName(aFileName, fdir, fname);
   Result := False;
   h := CreateHashTES4(fdir, '');
   for i := Low(fFoldersTES4) to High(fFoldersTES4) do begin
@@ -918,14 +936,10 @@ var
   hext: TMagic4;
   i: integer;
 begin
-  if SplitDirName(aFileName, fdir, fname) = 0 then
-    Exit(False);
-
-  SplitNameExt(fname, name, ext);
+  SplitDirName(aFileName, fdir, fname);
+  SplitNameExt(fname, name, ext, True);
   hdir := CreateHashFO4(fdir);
   hfile := CreateHashFO4(name);
-  if Copy(ext, 1, 1) = '.' then
-    Delete(ext, 1, 1);
   hext := String2Magic(LowerCase(ext));
 
   Result := False;
@@ -948,7 +962,7 @@ begin
       if FindFileRecordTES3(aFileName, i) then Result := @fFilesTES3[i];
     baTES4, baFO3, baSSE:
       if FindFileRecordTES4(aFileName, i, j) then Result := @fFoldersTES4[i].Files[j];
-    baFO4, baFO4dds:
+    baFO4, baFO4dds, baSF, baSFdds:
       if FindFileRecordFO4(aFileName, i) then Result := @fFilesFO4[i];
   end;
 end;
@@ -1000,12 +1014,12 @@ begin
           PwbBSFileTES4(aFileRecord).Size := PwbBSFileTES4(fPackedData[i].FileRecord).Size;
           PwbBSFileTES4(aFileRecord).Offset := PwbBSFileTES4(fPackedData[i].FileRecord).Offset;
         end;
-        baFO4: begin
+        baFO4, baSF: begin
           PwbBSFileFO4(aFileRecord).Size := PwbBSFileFO4(fPackedData[i].FileRecord).Size;
           PwbBSFileFO4(aFileRecord).PackedSize := PwbBSFileFO4(fPackedData[i].FileRecord).PackedSize;
           PwbBSFileFO4(aFileRecord).Offset := PwbBSFileFO4(fPackedData[i].FileRecord).Offset;
         end;
-        baFO4dds: begin
+        baFO4dds, baSFdds: begin
           PwbBSTexChunkRec(aFileRecord).Size := PwbBSTexChunkRec(fPackedData[i].FileRecord).Size;
           PwbBSTexChunkRec(aFileRecord).PackedSize := PwbBSTexChunkRec(fPackedData[i].FileRecord).PackedSize;
           PwbBSTexChunkRec(aFileRecord).Offset := PwbBSTexChunkRec(fPackedData[i].FileRecord).Offset;
@@ -1057,6 +1071,8 @@ begin
       HEADER_VERSION_FO3 : fType := baFO3;
       HEADER_VERSION_SSE : fType := baSSE;
       HEADER_VERSION_FO4 : fType := baFO4;
+      HEADER_VERSION_SFa : fType := baSF;
+      HEADER_VERSION_SFb : fType := baSFdds;
     else
       raise Exception.Create('Unknown archive version 0x' + IntToHex(fVersion, 8));
     end;
@@ -1086,10 +1102,13 @@ begin
     end;
 
     //--------------------------------------------------
-    // Fallout 4
-    baFO4: begin
+    // Fallout 4, Starfield
+    baFO4, baSF: begin
       // read header
       fStream.ReadBuffer(fHeaderFO4, SizeOf(fHeaderFO4));
+      // SF header
+      if fType = baSF then
+        fStream.ReadBuffer(fHeaderSF, SizeOf(fHeaderSF));
 
       // read GNRL files
       if fHeaderFO4.Magic = MAGIC_GNRL then begin
@@ -1218,7 +1237,7 @@ var
   HashPairs: array of THashPair;
   h: PHashPair;
   hdir: UInt64;
-  s, fdir, fname, fext: string;
+  s, fdir, fname, fext, name: string;
   i, len, folderidx, fileidx: Integer;
   Buffer: TBytes;
   ddsinfo: TDDSInfo;
@@ -1263,6 +1282,16 @@ begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_DX10;
       fVersion := HEADER_VERSION_FO4;
+    end;
+    baSF: begin
+      fMagic := MAGIC_BTDX;
+      fHeaderFO4.Magic := MAGIC_GNRL;
+      fVersion := HEADER_VERSION_SFa;
+    end;
+    baSFdds: begin
+      fMagic := MAGIC_BTDX;
+      fHeaderFO4.Magic := MAGIC_DX10;
+      fVersion := HEADER_VERSION_SFb;
     end;
   else
     raise Exception.Create('Unsupported archive type');
@@ -1449,15 +1478,29 @@ begin
       fHeaderTES4.Flags := fHeaderTES4.Flags or ARCHIVE_COMPRESS;
   end
 
-  else if fType in [baFO4, baFO4dds] then begin
+  else if fType in [baFO4, baFO4dds, baSF, baSFdds] then begin
     if not Assigned(aFilesList) or (aFilesList.Count = 0) then
       raise Exception.Create('Archive requires predefined files list');
 
+    fHeaderFO4.FileCount := aFilesList.Count;
     SetLength(fFilesFO4, aFilesList.Count);
-    for i := 0 to Pred(aFilesList.Count) do
+    for i := 0 to Pred(aFilesList.Count) do begin
+      if SplitDirName(aFilesList[i], fdir, fname) = 0 then
+        raise Exception.Create('File is missing the folder part: ' + aFileName);
+
+      SplitNameExt(fname, name, fext, True);
+      // archive2.exe uses /
+      fFilesFO4[i].Name := StringReplace(aFilesList[i], '\', '/', [rfReplaceAll]);
+      fFilesFO4[i].DirHash := CreateHashFO4(fdir);
+      fFilesFO4[i].NameHash := CreateHashFO4(name);
+      fFilesFO4[i].Ext := String2Magic(LowerCase(fext));
+      fFilesFO4[i].Unknown := iFileFO4Unknown;
       fFilesFO4[i].PackingCompression := TPackingCompression(aFilesList.Objects[i]);
+    end;
 
     fDataOffset := SizeOf(fMagic) + SizeOf(fVersion) + SizeOf(fHeaderFO4);
+    if fType in [baSF, baSFdds] then
+      Inc(fDataOffset, SizeOf(fHeaderSF));
 
     // file records have fixed length in general archive
     if fType = baFO4 then
@@ -1562,10 +1605,10 @@ begin
           fStream.WriteStringTerm(fFoldersTES4[i].Files[j].Name);
     end;
 
-    baFO4: begin
+    baFO4, baSF: begin
       for i := Low(fFilesFO4) to High(fFilesFO4) do
         if fFilesFO4[i].Offset = 0 then
-          raise Exception.Create('Archived file has no data: ' + fFilesFO4[i].Name);
+         raise Exception.Create('Archived file has no data: ' + fFilesFO4[i].Name);
 
       // file names table
       fHeaderFO4.FileTableOffset := fStream.Position;
@@ -1577,6 +1620,12 @@ begin
       fStream.Write(fMagic, SizeOf(fMagic));
       fStream.Write(fVersion, SizeOf(fVersion));
       fStream.Write(fHeaderFO4, SizeOf(fHeaderFO4));
+      // additional SF header
+      if fType = baSF then begin
+        fHeaderSF.Unknown1 := 1;
+        fHeaderSF.Unknown2 := 0;
+        fStream.Write(fHeaderSF, SizeOf(fHeaderSF));
+      end;
       // file records
       for i := Low(fFilesFO4) to High(fFilesFO4) do begin
         fStream.WriteCardinal(fFilesFO4[i].NameHash);
@@ -1605,6 +1654,12 @@ begin
       fStream.Write(fMagic, SizeOf(fMagic));
       fStream.Write(fVersion, SizeOf(fVersion));
       fStream.Write(fHeaderFO4, SizeOf(fHeaderFO4));
+      // additional SF header
+      if fType = baSF then begin
+        fHeaderSF.Unknown1 := 1;
+        fHeaderSF.Unknown2 := 0;
+        fStream.Write(fHeaderSF, SizeOf(fHeaderSF));
+      end;
       // file records
       for i := Low(fFilesFO4) to High(fFilesFO4) do begin
         fStream.WriteCardinal(fFilesFO4[i].NameHash);
@@ -1757,13 +1812,13 @@ begin
         if Self.fCompress xor aCompress then
           Size := Size or FILE_SIZE_COMPRESS;
       end;
-      baFO4: with PwbBSFileFO4(aFileRecord)^ do begin
+      baFO4, baSF: with PwbBSFileFO4(aFileRecord)^ do begin
         Offset := Position;
         Size := DataSize;
         if aCompress then
           PackedSize := aSize;
       end;
-      baFO4dds: with PwbBSTexChunkRec(aFileRecord)^ do begin
+      baFO4dds, baSFdds: with PwbBSTexChunkRec(aFileRecord)^ do begin
         Offset := Position;
         Size := DataSize;
         if aCompress then
@@ -1784,7 +1839,6 @@ end;
 procedure TwbBSArchive.AddFile(const aFileName: string; const aData: TBytes);
 var
   i, j, Off, MipSize, BitsPerPixel: integer;
-  fdir, fname, name, ext: string;
   DataHash: TPackedDataHash;
   DDSHeader: PDDSHeader;
   DDSHeaderDX10: PDDSHeaderDX10;
@@ -1817,21 +1871,10 @@ begin
         );
       end;
 
-      baFO4: begin
-        if SplitDirName(aFileName, fdir, fname) = 0 then
-          raise Exception.Create('File is missing the folder part: ' + aFileName);
+      baFO4, baSF: begin
+        if not FindFileRecordFO4(aFileName, i) then
+          raise Exception.Create('File not found in files table: ' + aFileName);
 
-        SplitNameExt(fname, name, ext);
-        if Length(ext) > 1 then Delete(ext, 1, 1); // no dot in extension
-
-        i := fHeaderFO4.FileCount;
-        Inc(fHeaderFO4.FileCount);
-        // archive2.exe uses /
-        fFilesFO4[i].Name := StringReplace(aFileName, '\', '/', [rfReplaceAll]);
-        fFilesFO4[i].DirHash := CreateHashFO4(fdir);
-        fFilesFO4[i].NameHash := CreateHashFO4(name);
-        fFilesFO4[i].Ext := Int2Magic(Str2MagicInt(ext));
-        fFilesFO4[i].Unknown := iFileFO4Unknown;
         fFilesFO4[i].Offset := fStream.Position;
         fFilesFO4[i].Size := Length(aData);
 
@@ -1841,23 +1884,11 @@ begin
         );
       end;
 
-      baFO4dds: begin
-        if SplitDirName(aFileName, fdir, fname) = 0 then
-          raise Exception.Create('File is missing the folder part: ' + aFileName);
+      baFO4dds, baSFdds: begin
+        if not FindFileRecordFO4(aFileName, i) then
+          raise Exception.Create('File not found in files table: ' + aFileName);
 
-        SplitNameExt(fname, name, ext);
-        if Length(ext) > 1 then Delete(ext, 1, 1); // no dot in extension
-
-        // filling common part
-        i := fHeaderFO4.FileCount;
-        Inc(fHeaderFO4.FileCount);
-        // archive2.exe uses /
-        fFilesFO4[i].Name := StringReplace(aFileName, '\', '/', [rfReplaceAll]);
-        fFilesFO4[i].DirHash := CreateHashFO4(fdir);
-        fFilesFO4[i].NameHash := CreateHashFO4(name);
-        fFilesFO4[i].Ext := Int2Magic(Str2MagicInt(ext));
         fFilesFO4[i].UnknownTex := 0;
-
         // DDS file parameters
         DDSHeader := @aData[0];
         Off := SizeOf(DDSHeader^); // offset to image data
@@ -2059,7 +2090,7 @@ begin
         end;
       end;
 
-      baFO4: begin
+      baFO4, baSF: begin
         FileFO4 := aFileRecord;
         fStream.Position := FileFO4.Offset;
         if FileFO4.PackedSize <> 0 then begin
@@ -2079,7 +2110,7 @@ begin
         end;
       end;
 
-      baFO4dds: begin
+      baFO4dds, baSFdds: begin
         FileFO4 := aFileRecord;
 
         TexSize := SizeOf(TDDSHeader);
@@ -2371,7 +2402,7 @@ begin
             end;
           end);
         end);
-      baFO4, baFO4dds:
+      baFO4, baFO4dds, baSF, baSFdds:
         TParallel.&For(Low(fFilesFO4), High(fFilesFO4), procedure(i: Integer; LoopState: TParallel.TLoopState) begin
           if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil, aData) then
             LoopState.Stop;
@@ -2388,7 +2419,7 @@ begin
           for j := Low(fFoldersTES4[i].Files) to High(fFoldersTES4[i].Files) do
             if aProc(Self, fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, @fFoldersTES4[i].Files[j], @fFoldersTES4[i], aData) then
               Break;
-      baFO4, baFO4dds:
+      baFO4, baFO4dds, baSF, baSFdds:
         for i := Low(fFilesFO4) to High(fFilesFO4) do
           if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil, aData) then
             Break;
@@ -2459,7 +2490,7 @@ begin
             for j := Low(Files) to High(Files) do
               aList.Add(Name + '\' + Files[j].Name);
         end;
-    baFO4, baFO4dds:
+    baFO4, baFO4dds, baSF, baSFdds:
       for i := Low(fFilesFO4) to High(fFilesFO4) do
         with fFilesFO4[i] do
           if (Folder = '') or Name.StartsWith(Folder, True) then

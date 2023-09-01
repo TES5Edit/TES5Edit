@@ -1897,6 +1897,7 @@ begin
     AddConst(cUnit, 'gmSSE', ord(gmSSE));
     AddConst(cUnit, 'gmEnderal', ord(gmEnderal));
     AddConst(cUnit, 'gmEnderalSE', ord(gmEnderalSE));
+    AddConst(cUnit, 'gmSF1', ord(gmSF1));
 
     { TwbElementType }
     AddConst(cUnit, 'etFile', ord(etFile));

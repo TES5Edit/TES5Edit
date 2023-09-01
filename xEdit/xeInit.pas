@@ -83,6 +83,7 @@ uses
   wbDefinitionsTES4Saves,
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves,
+  wbDefinitionsSF1,
   xeScriptHost;
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
@@ -366,7 +367,7 @@ begin
         RootKey := HKEY_CURRENT_USER;
         regPath := sSureAIRegKey + wbGameNameReg + '\';
       end;
-      gmFO76: begin
+      gmFO76, gmSF1: begin
         regPath := sUninstallRegKey + wbGameNameReg + '\';
       end;
       end;
@@ -385,7 +386,7 @@ begin
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
                   regKey := 'Installed Path';
       gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
-      gmFO76:     regKey := 'InstallLocation';
+      gmFO76, gmSF1:     regKey := 'InstallLocation';
       end;
 
       wbDataPath := ReadString(regKey);
@@ -437,7 +438,7 @@ begin
       wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
 
     // VR games don't create ini file in My Games by default, use the one in the game folder
-    if (wbGameMode in [gmTES5VR, gmFO4VR]) and not FileExists(wbTheGameIniFileName) then
+    if (wbGameMode in [gmTES5VR, gmFO4VR, gmSF1]) and not FileExists(wbTheGameIniFileName) then
       wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName);
   end;
 
@@ -527,7 +528,7 @@ var
 procedure DetectAppMode;
 const
   SourceModes : array of string = ['plugins', 'saves'];
-  GameModes: array of string = ['tes5vr', 'fo4vr', 'tes3', 'tes4', 'tes5', 'enderalse', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76'];
+  GameModes: array of string = ['tes5vr', 'fo4vr', 'tes3', 'tes4', 'tes5', 'enderalse', 'enderal', 'sse', 'fo3', 'fnv', 'fo4', 'fo76', 'sf1'];
   ToolModes: array of string = [
     'edit', 'view', 'lodgen', 'script', 'translate', 'onamupdate', 'masterupdate', 'masterrestore',
     'setesm', 'clearesm', 'sortandclean', 'sortandcleanmasters',
@@ -824,8 +825,20 @@ begin
     ToolSources := [tsPlugins];
   end
 
+  else if isMode('SF1') then begin
+    wbGameMode := gmSF1;
+    wbAppName := 'SF1';
+    wbGameName := 'Starfield';
+    wbGameNameReg := 'Steam App 1716740';
+    wbArchiveExtension := '.ba2';
+    wbLanguage := 'En';
+    ToolModes := [tmView];
+    ToolSources := [tsPlugins];
+    wbBuildRefs := False;
+  end
+
   else begin
-    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5, TES5VR, Enderal, or EnderalSE to select game.');
+    ShowMessage('Application name must contain FNV, FO3, FO4, FO4VR, FO76, SSE, TES4, TES5, TES5VR, Enderal, or EnderalSE, SF1 to select game.');
     Exit(False);
   end;
 
@@ -920,6 +933,14 @@ begin
       wbAlwaysSaveOnamForce := True;
     end;
     gmFO76: begin
+      wbVWDInTemporary := True;
+      wbVWDAsQuestChildren := True;
+      wbLoadBSAs := True; // localization won't work otherwise
+      wbHideIgnored := False; // to show Form Version
+      wbAlwaysSaveOnam := True;
+      wbAlwaysSaveOnamForce := True;
+    end;
+    gmSF1: begin
       wbVWDInTemporary := True;
       wbVWDAsQuestChildren := True;
       wbLoadBSAs := True; // localization won't work otherwise
@@ -1165,7 +1186,10 @@ begin
     gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE: case wbToolSource of
       tsSaves:   DefineTES5Saves;
       tsPlugins: DefineTES5;
-    end
+    end;
+    gmSF1: case wbToolSource of
+      tsPlugins: DefineSF1;
+    end;
   end;
 
   if FindCmdLineSwitch('reportinjected') then

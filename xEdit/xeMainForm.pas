@@ -3832,7 +3832,7 @@ var
   i               : Integer;
   EditState       : Boolean;
 begin
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
+  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -4684,7 +4684,7 @@ var
   Worldspaces : TDynMainRecords;
 begin
   // xLODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -5128,7 +5128,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE]) then begin
+        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit) and (wbGameMode in [gmTES4, gmFO3, gmFO4, gmFO4VR, gmFO76, gmFNV, gmTES5, gmTES5VR, gmSSE, gmEnderal, gmEnderalSE, gmSF1]) then begin
           Modules.DeactivateAll;
 
           if (xePluginToUse <> '') or not xeQuickClean then
@@ -9953,7 +9953,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -9978,7 +9978,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -10036,7 +10036,7 @@ begin
   end;
 
   // xLODGen
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 then begin
+  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
@@ -10058,7 +10058,7 @@ begin
       Section := wbAppName + ' LOD Options';
 
       // FO4 settings
-      if wbIsFallout4 then begin
+      if wbIsFallout4 or wbIsStarfield then begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
         fDefaultUVRange := 1.1;
@@ -10101,7 +10101,7 @@ begin
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-      if wbIsFallout4 then begin
+      if wbIsFallout4 or wbIsStarfield then begin
         cbTreesLOD.Checked := False;
         cbTreesLOD.Enabled := False;
         cbUseAlphaThreshold.Visible := True;
@@ -10163,7 +10163,7 @@ begin
           if clbWorldspace.Checked[i] then
             if wbIsSkyrim or wbIsFallout3 then
               wbGenerateLODTES5(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
-            else if wbIsFallout4 then
+            else if wbIsFallout4 or wbIsStarfield then
               wbGenerateLODFO4(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
         pnlClient.Enabled := True;
@@ -11115,7 +11115,7 @@ begin
             if not AutoModeCheckForDR then begin
               IsDeleted := True;
               IsDeleted := False;
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
                 IsPersistent := True
               else if wbGameMode = gmTES4 then
                 IsPersistent := False;
@@ -14315,9 +14315,9 @@ var
 begin
   jbhSave.CancelHint;
 
-  mniMainLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76);
+  mniMainLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield);
 
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then begin
+  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
     mniMainLocalizationLanguage.Clear;
     sl := TStringList.Create;
     try
@@ -14470,7 +14470,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR, gmSF1]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -14580,7 +14580,7 @@ begin
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76);
+  mniNavLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield);
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
