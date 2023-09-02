@@ -25,6 +25,7 @@ const
   BMOD : TwbSignature = 'BMOD'; { New To Starfield }
   CLDF : TwbSignature = 'CLDF'; { New To Starfield }
   CUR3 : TwbSignature = 'CUR3'; { New To Starfield }
+  CUSH : TwbSignature = 'CUSH'; { New To Starfield }
   EFSQ : TwbSignature = 'EFSQ'; { New To Starfield }
   FOGV : TwbSignature = 'FOGV'; { New To Starfield }
   FORC : TwbSignature = 'FORC'; { New To Starfield }
