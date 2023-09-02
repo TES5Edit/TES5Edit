@@ -113,6 +113,11 @@ var
   wbCNTOs: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
   wbFULL: IwbSubRecordDef;
+  wbSNTP: IwbSubRecordDef;
+  wbSNBH: IwbSubRecordDef;
+  wbODTY: IwbSubRecordDef;
+  wbBFCB: IwbSubRecordArrayDef;
+  wbPTT2: IwbSubRecordWithStructDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
   wbDESC: IwbSubRecordDef;
@@ -264,10 +269,10 @@ begin
       wbString(MODL, 'Model FileName'),
       wbUnknown(MOLM),
       wbMODT,
+      wbUnknown(FLLD),
       wbMODC,
       wbMODS,
-      wbMODF,
-      wbUnknown(FLLD)
+      wbMODF
     ], [], cpNormal, aRequired, aDontShow)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
@@ -6969,6 +6974,34 @@ begin
 
   wbPDTOs := wbRArray('Topic', wbPDTO, cpNormal, False, nil);
 
+  wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
+  wbSNBH := wbFormIDCk(SNBH, 'Unknown', [SNBH]);
+  wbODTY := wbFloat(ODTY, 'Unknown');
+
+  wbBFCB := wbRStructs('Unknown', 'Unknown', [
+      wbString(BFCB, 'Unknown'),
+      wbString(ANAM, 'Unknown'),
+      wbString(BNAM, 'Unknown'),
+      wbString(CNAM, 'Unknown'),
+      wbUnknown(REFL),
+      wbUnknown(PTCL),
+      wbUnknown(FLCS),
+      wbFormID(SODA, 'Spawn on destroy'), // MSTT
+      wbFormID(INAM, 'Add to inventory on destroy'), // MSTT
+      wbEmpty(BFCE, 'End Marker')
+    ], []);
+
+// PTT2 is some kind of transform list
+  wbPTT2 := wbStruct(PTT2, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [TRNS]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [TRNS]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [TRNS]),
+        wbByteArray('Unknown', 4)
+      ]);
+
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32, wbEnum([
     'Easy',
     'Medium',
@@ -8739,22 +8772,13 @@ begin
     wbOBND(True),
 //    wbPTRN,
 //    wbSTCP,
-    wbUnknown(ODTY),
+    wbODTY,
     wbUnknown(OPDS),
     wbUnknown(XALG),
-    wbUnknown(PTT2),
-    wbUnknown(SNTP),
-    wbUnknown(SNBH),
-    wbRStructs('Unknown', 'Unknown', [
-      wbString(BFCB, 'Unknown'),
-      wbString(ANAM, 'Unknown'),
-      wbString(BNAM, 'Unknown'),
-      wbString(CNAM, 'Unknown'),
-      wbUnknown(REFL),
-      wbUnknown(PTCL),
-      wbUnknown(FLCS),
-      wbUnknown(BFCE)
-    ], []),
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbBFCB,
     wbFULL,
     wbGenericModel,
     wbUnknown(XFLG),
@@ -10303,14 +10327,25 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTY,
+    wbUnknown(OPDS),
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbFormIDCk(DEFL, 'Default Layer', [LAYR]),
+    wbUnknown(XALG),
+    wbBFCB,
     wbPTRN,
     wbFULL,
     wbGenericModel,
+    wbUnknown(XFLG),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
     wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
+    wbUnknown(MSLS),
+    wbFloat(MSMO, 'Unknown'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
 end;
