@@ -235,11 +235,34 @@ var
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
 
+function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
+begin
+  Result :=
+    wbStruct(OBND, 'Object Bounds', [
+      wbFloat('X1'),
+      wbFloat('Y1'),
+      wbFloat('Z1'),
+      wbFloat('X2'),
+      wbFloat('Y2'),
+      wbFloat('Z2')
+    ], cpNormal, aRequired)
+    .SetSummaryKeyOnValue([0, 1, 2, 3, 4, 5])
+    .SetSummaryPrefixSuffixOnValue(0, '(', '')
+    .SetSummaryPrefixSuffixOnValue(2, '', ')')
+    .SetSummaryPrefixSuffixOnValue(3, '(', '')
+    .SetSummaryPrefixSuffixOnValue(5, '', ')')
+    .SetSummaryDelimiterOnValue(', ')
+    .IncludeFlagOnValue(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+end;
+
+
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
   Result :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName'),
+      wbUnknown(MOLM),
       wbMODT,
       wbMODC,
       wbMODS,
@@ -8711,10 +8734,28 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbPTRN,
-    wbSTCP,
+//    wbPTRN,
+//    wbSTCP,
+    wbUnknown(ODTY),
+    wbUnknown(OPDS),
+    wbUnknown(XALG),
+    wbUnknown(PTT2),
+    wbUnknown(SNTP),
+    wbUnknown(SNBH),
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(BFCB),
+      wbUnknown(ANAM),
+      wbUnknown(BNAM),
+      wbUnknown(CNAM),
+      wbUnknown(REFL),
+      wbUnknown(PTCL),
+      wbUnknown(FLCS),
+      wbUnknown(BFCE)
+    ], []),
     wbFULL,
     wbGenericModel,
+    wbUnknown(FLLD),
+    wbUnknown(XFLG),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -8727,9 +8768,11 @@ begin
       wbInteger('Blue', itU8),
       wbInteger('Unused', itU8)
     ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
-    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
-    wbFormIDCk(WNAM, 'Water Type', [WATR]),
+//    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
+//    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
+//    wbFormIDCk(WNAM, 'Water Type', [WATR]),
+    wbUnknown(WTFM),
+    wbUnknown(ACSH),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -8738,14 +8781,15 @@ begin
       'Unknown 3',
       'Is a Radio'
     ])),
-    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
-    wbStruct(RADR, 'Radio Receiver', [
+    wbUnknown(JNAM),
+//    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
+{    wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
       wbFloat('Frequency'),
       wbFloat('Volume'),
       wbInteger('Starts Active', itU8, wbBoolEnum),
       wbInteger('No Signal Static', itU8, wbBoolEnum)
-    ], cpNormal, False, nil, 4),
+    ], cpNormal, False, nil, 4),}
     wbCITC,
     wbCTDAs,
     wbNVNM

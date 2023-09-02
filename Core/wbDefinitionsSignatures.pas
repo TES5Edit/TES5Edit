@@ -64,6 +64,19 @@ const
   WTHS : TwbSignature = 'WTHS'; { New To Starfield }
   WWED : TwbSignature = 'WWED'; { New To Starfield }
 
+  ODTY : TwbSignature = 'ODTY'; { New To Starfield }
+  FLLD : TwbSignature = 'FLLD'; { New To Starfield }
+  MOLM : TwbSignature = 'MOLM'; { New To Starfield }
+
+  PTT2 : TwbSignature = 'PTT2'; { New To Starfield }
+  SNBH : TwbSignature = 'SNBH'; { New To Starfield }
+  BFCB : TwbSignature = 'BFCB'; { New To Starfield }
+  REFL : TwbSignature = 'REFL'; { New To Starfield }
+  PTCL : TwbSignature = 'PTCL'; { New To Starfield }
+  FLCS : TwbSignature = 'FLCS'; { New To Starfield }
+  BFCE : TwbSignature = 'BFCE'; { New To Starfield }
+  ACSH : TwbSignature = 'ACSH'; { New To Starfield }
+  WTFM : TwbSignature = 'WTFM'; { New To Starfield }
 
   A0TX : TwbSignature = 'A0TX';
   AAAP : TwbSignature = 'AAAP'; { New To Fallout 76 }
