@@ -116,7 +116,7 @@ var
   wbSNTP: IwbSubRecordDef;
   wbSNBH: IwbSubRecordDef;
   wbODTY: IwbSubRecordDef;
-  wbBFCB: IwbSubRecordArrayDef;
+  wbBFCBs: IwbSubRecordArrayDef;
   wbPTT2: IwbSubRecordWithStructDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
@@ -6978,16 +6978,43 @@ begin
   wbSNBH := wbFormIDCk(SNBH, 'Unknown', [SNBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
 
-  wbBFCB := wbRStructs('Unknown', 'Unknown', [
-      wbString(BFCB, 'Unknown'),
+  wbBFCBs := wbRStructs('Base Form Components', 'Base Form Component', [
+      wbString(BFCB, 'Base Form Component Type'),
+
       wbString(ANAM, 'Unknown'),
       wbString(BNAM, 'Unknown'),
       wbString(CNAM, 'Unknown'),
+
       wbUnknown(REFL),
       wbUnknown(PTCL),
       wbUnknown(FLCS),
       wbFormID(SODA, 'Spawn on destroy'), // MSTT
       wbFormID(INAM, 'Add to inventory on destroy'), // MSTT
+      wbKeywords,
+
+      //BGSOrbitalDataComponent_Component
+      //BGSOrbitedDataComponent_Component
+      //BGSStarDataComponent_Component
+      wbUnknown(DATA),
+
+      //TESPlanetModel_Component
+      wbString(MODL, 'Model'),
+      wbUnknown(FLLD), //TESModel_Component
+      wbUnknown(XMPM),
+
+      //TESFullName_Component
+      wbFull,
+
+      //HoudiniData_Component
+      wbUnknown(PCCC),
+
+      //BGSObjectWindowFilter_Component
+      wbUnknown(INTV),
+      wbUnknown(FLTR),
+
+      //?
+      wbUnknown(DAT2),
+
       wbEmpty(BFCE, 'End Marker')
     ], []);
 
@@ -8778,7 +8805,7 @@ begin
     wbPTT2,
     wbSNTP,
     wbSNBH,
-    wbBFCB,
+    wbBFCBs,
     wbFULL,
     wbGenericModel,
     wbUnknown(XFLG),
@@ -10334,7 +10361,7 @@ begin
     wbSNBH,
     wbFormIDCk(DEFL, 'Default Layer', [LAYR]),
     wbUnknown(XALG),
-    wbBFCB,
+    wbBFCBs,
     wbPTRN,
     wbFULL,
     wbGenericModel,
@@ -16756,6 +16783,7 @@ begin
 
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
+    (*
     wbStruct(GNAM, 'Data', [
       wbFloat('FOV Mult'),
       wbInteger('Overlay', itU32, wbEnum([
@@ -16783,7 +16811,8 @@ begin
         wbFloat('Y'),
         wbFloat('Z')
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ])
+    ])*)
+    wbUnknown(ZNAM)
   ]);
 
 end;
@@ -17072,7 +17101,10 @@ begin
   ]);
 
   wbRecord(WTHS, 'Weather Settings', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL),
+    wbUnknown(RFDP),
+    wbUnknown(RDIF)
   ]);
 
   wbRecord(MAAM, 'Melee Aim Assist Model', [
@@ -17086,7 +17118,7 @@ begin
     wbUnknown(CUSH),
     wbFormID(FNAM, 'Item List'),
     wbUnknown(SNAM),
-    wbFormID(CNAM, 'Next Rarity),
+    wbFormID(CNAM, 'Next Rarity'),
     wbUnknown(TINC),
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
@@ -17180,71 +17212,206 @@ begin
   ]);
 
   wbRecord(RSGD, 'Resource Generation Data', [
-    wbEDID
+    wbEDID,
+    wbRStructs('Unknown', 'Unknown', [
+      wbFormIDCk(RNAM, 'Resource', [IRE]), //required
+      wbUnknown(DNAM) //required
+    ], [])
   ]);
 
   wbRecord(RSPJ, 'Research Project', [
-    wbEDID
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
+    wbStructs(FVPA, 'Resources', 'Resource', [
+      wbFormIDCk('Resource', [IRES, ALCH]),
+      wbByteArray('Unknown', 4),
+      wbFormID('Unknown')
+    ]),
+    wbStructs(RQPK, 'Perks', 'Perk', [
+      wbFormIDCk('Perk', [PERK]),
+      wbByteArray('Unknown', 4),
+      wbFormID('Unknown')
+    ]),
+    wbFormID(CNAM),
+    wbUnknown(NNAM),
+    wbUnknown(SNAM),
+    wbUnknown(TNAM),
+    wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
+    wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);
 
   wbRecord(SDLT, 'Secondary Damage List', [
-    wbEDID
+    wbEDID,
+    wbUnknown(ITMC), //count?
+    wbRStructs('Secondary Damages', 'Secondary Damage', [
+      wbFormIDCk(DAMA, 'Damage Type', [DMGT]),
+      wbFormIDCk(ACTV, 'Actor Value', [AVIF])
+    ], [])
   ]);
 
   wbRecord(SFBK, 'Surface Block', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbString(ANAM),
+    wbUnknown(DNAM), //req
+    wbUnknown(ENAM), //req
+    wbUnknown(FNAM),
+    wbUnknown(GNAM), //req
+    wbUnknown(HNAM), //req
+    wbUnknown(INAM), //req
+    wbUnknown(JNAM), //req
+    wbUnknown(KNAM), //req
+    wbUnknown(WHGT), //req
+    wbUnknown(NAM0),
+    wbString(NAM1),
+    wbUnknown(NAM2),
+    wbUnknown(NAM3),
+    wbUnknown(NAM4),
+    wbFormIDCk(NAM5, 'Surface Block', [SFBK, NULL] )
   ]);
 
   wbRecord(SFPC, 'Surface Pattern Config', [
-    wbEDID
+    wbEDID,
+    wbFormIDCk(ENAM, 'Unknown', [PTST]), //req
+    wbRStructs('Unknown', 'Unknown', [
+      wbString(BNAM),
+      wbUnknown(CNAM)
+    ], []),
+    wbUnknown(DNAM)  //req
   ]);
 
   wbRecord(SFPT, 'Surface Pattern', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbFormID(CNAM),  //req
+    wbUnknown(BNAM), //req
+    wbUnknown(DNAM)
   ]);
 
   wbRecord(SFTR, 'Surface Tree', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(CNAM), //req
+    wbUnknown(DNAM), //req
+    wbUnknown(ENAM), //req
+    wbUnknown(ENAM), //req
+    wbString(NAM1)   //req
   ]);
 
   wbRecord(SPCH, 'Speech Challenge', [
-    wbEDID
+    wbEDID,
+    wbUnknown(SPWI), //req
+    wbUnknown(SPLO), //req
+    wbUnknown(SRAN),
+    wbUnknown(SGEN),
+    wbFormIDCk(SPQU, 'Quest', [QUST], False, cpNormal, True),
+    wbKeywords,
+    wbArray(SPMA, 'Scenes', wbFormIDCk('Scene', [SCEN])),
+    wbUnknown(DIFF) //req
   ]);
 
   wbRecord(STBH, 'Snap Template Behavior', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(ENAM), //req
+      wbUnknown(PNAM), //req
+      wbCITCReq,
+      wbCTDAsCount,
+      wbUnknown(UNAM), //req
+      wbUnknown(VNAM)  //req
+    ], [])
   ]);
 
   wbRecord(STDT, 'Galaxy Star Data', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbKeywords,
+    wbString(ANAM),
+    wbUnknown(BNAM),
+    wbUnknown(ONAM),
+    wbUnknown(DNAM),
+    wbUnknown(ENAM),
+    wbFormID(PNAM, 'Sun Preset')
   ]);
 
   wbRecord(SUNP, 'Galaxy Sun Preset', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL),
+    wbUnknown(RFDP),
+    wbUnknown(RDIF)
   ]);
 
   wbRecord(TMLM, 'Terminal Menu', [
-    wbEDID
+    wbEDID,
+    wbVMAD,
+    wbFULL,
+    wbUnknown(TMVT),
+    wbUnknown(DNAM),
+    wbUnknown(SNAM),
+    wbUnknown(INAM),
+    wbUnknown(BSIZ),
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(BTXT),
+      wbCTDAs,
+      wbUnknown(CIS1),
+      wbUnknown(CIS2),
+      wbCTDAs,
+      wbUnknown(CIS2),
+      wbUnknown(TPLT)
+    ], []),
+    wbUnknown(ISIZ),
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(ITXT),
+      wbUnknown(ISTX),
+      wbUnknown(ISET),
+      wbUnknown(ITID),
+      wbUnknown(XLOC),
+      wbUnknown(TNAM),
+      wbUnknown(UNAM),
+      wbCTDAs,
+      wbUnknown(CIS1),
+      wbCTDAs,
+      wbUnknown(CIS1),
+      wbUnknown(CIS2),
+      wbCTDAs,
+      wbUnknown(CIS2)
+    ], [])
   ]);
 
   wbRecord(TODD, 'Time Of Day Data', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(REFL)
   ]);
 
   wbRecord(TRAV, 'Traversal', [
-    wbEDID
+    wbEDID,
+    wbUnknown(DNAM)
   ]);
 
   wbRecord(WBAR, 'Weapon Barrel Model', [
-    wbEDID
+    wbEDID,
+    wbUnknown(ZNAM)
   ]);
 
   wbRecord(WKMF, 'WWise Keyword Mapping', [
-    wbEDID
+    wbEDID,
+    wbUnknown(WMTI),
+    wbUnknown(WMKA),
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(WMSI),
+      wbUnknown(WMSD)
+    ], [])
   ]);
 
   wbRecord(WWED, 'WWise Event Data', [
-    wbEDID
+    wbEDID,
+    wbUnknown(WSED),
+    wbUnknown(CNAM),
+    wbUnknown(WTED)
   ]);
 
   wbAddGroupOrder(GMST);

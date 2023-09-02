@@ -85,6 +85,30 @@ const
   WMAT : TwbSignature = 'WMAT'; { New To Starfield }
   WTFM : TwbSignature = 'WTFM'; { New To Starfield }
 
+  WSED : TwbSignature = 'WSED'; { New To Starfield }
+  WTED : TwbSignature = 'WTED'; { New To Starfield }
+  RFDP : TwbSignature = 'RFDP'; { New To Starfield }
+  RDIF : TwbSignature = 'RDIF'; { New To Starfield }
+  WMTI : TwbSignature = 'WMTI'; { New To Starfield }
+  WMKA : TwbSignature = 'WMKA'; { New To Starfield }
+  WMSI : TwbSignature = 'WMSI'; { New To Starfield }
+  WMSD : TwbSignature = 'WMSD'; { New To Starfield }
+  TMVT : TwbSignature = 'TMVT'; { New To Starfield }
+  ISTX : TwbSignature = 'ISTX'; { New To Starfield }
+  ISET : TwbSignature = 'ISET'; { New To Starfield }
+
+  XMPM : TwbSignature = 'XMPM'; { New To Starfield }
+  PCCC : TwbSignature = 'PCCC'; { New To Starfield }
+
+  SPWI : TwbSignature = 'SPWI'; { New To Starfield }
+  SRAN : TwbSignature = 'SRAN'; { New To Starfield }
+  SGEN : TwbSignature = 'SGEN'; { New To Starfield }
+  SPQU : TwbSignature = 'SPQU'; { New To Starfield }
+  SPMA : TwbSignature = 'SPMA'; { New To Starfield }
+  DIFF : TwbSignature = 'DIFF'; { New To Starfield }
+
+  RQPK : TwbSignature = 'RQPK'; { New To Starfield }
+
   A0TX : TwbSignature = 'A0TX';
   AAAP : TwbSignature = 'AAAP'; { New To Fallout 76 }
   AACT : TwbSignature = 'AACT';
