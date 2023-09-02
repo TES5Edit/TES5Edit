@@ -266,7 +266,8 @@ begin
       wbMODT,
       wbMODC,
       wbMODS,
-      wbMODF
+      wbMODF,
+      wbUnknown(FLLD)
     ], [], cpNormal, aRequired, aDontShow)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
@@ -6879,6 +6880,7 @@ begin
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32)
     ])),
+    wbFormIDCk(DSDL, 'Unknown', [SDLT]),
     wbRArray('Stages',
       wbRStruct('Stage', [
         wbStruct(DSTD, 'Destruction Stage Data', [
@@ -6900,6 +6902,7 @@ begin
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName', 0, cpNormal, True),
+          wbUnknown(FLLD),
           wbDMDT,
           wbDMDC,
           wbDMDS
@@ -8743,10 +8746,10 @@ begin
     wbUnknown(SNTP),
     wbUnknown(SNBH),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(BFCB),
-      wbUnknown(ANAM),
-      wbUnknown(BNAM),
-      wbUnknown(CNAM),
+      wbString(BFCB, 'Unknown'),
+      wbString(ANAM, 'Unknown'),
+      wbString(BNAM, 'Unknown'),
+      wbString(CNAM, 'Unknown'),
       wbUnknown(REFL),
       wbUnknown(PTCL),
       wbUnknown(FLCS),
@@ -8754,14 +8757,13 @@ begin
     ], []),
     wbFULL,
     wbGenericModel,
-    wbUnknown(FLLD),
     wbUnknown(XFLG),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
-    wbNTRM,
     wbFTYP,
+    wbNTRM,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -8771,7 +8773,9 @@ begin
 //    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
 //    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
 //    wbFormIDCk(WNAM, 'Water Type', [WATR]),
+    wbUnknown(WMAT),
     wbUnknown(WTFM),
+    wbUnknown(ALSH),
     wbUnknown(ACSH),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -8782,6 +8786,7 @@ begin
       'Is a Radio'
     ])),
     wbUnknown(JNAM),
+    wbUnknown(INAM),
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
 {    wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
@@ -10201,7 +10206,8 @@ begin
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
-    wbFULL
+    wbFULL,
+    wbUnknown(FNAM)
   ]);
 
   wbRecord(TXST, 'Texture Set', [
