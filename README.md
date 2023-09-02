@@ -58,6 +58,45 @@ However, for now consider what the Tome of xEdit presents as a current resource 
 
 The online documentation is available from the Help button built into the developmental version of xEdit or you can view it [from here](https://tes5edit.github.io/docs/).
 
+## Developer Documentation
+
+Getting started with xEdit development requires a properly configured Delphi environment. The following instructions should get you through the minimal viable setup.
+
+### Install Delphi
+
+If you don't already have a Delphi environment, we recommend using [Delphi 11 Community Edition](https://www.embarcadero.com/products/delphi/starter).
+
+### Install Dependencies
+
+- Download and install [Project Magician](https://www.uweraabe.de/Blog/downloads/download-info/project-magician/).
+- Download and install [DDevExtensions](https://github.com/DelphiPraxis/DDevExtensions/releases).
+- Launch Delphi and navigate to Tools &rarr; DDevExtensions Options.
+- Under Extended IDE Settings, **enable** the _Disable Package Cache_ option.
+- Exit Delphi.
+- Clone the xEdit repo (if you haven't already) and initialize submodules (run `git submodule update --init --recursive` from the git root).
+- Navigate to the _External\jcl\jcl\source\include\\_ directory and copy **jcl.template.inc** to **jcld28win32.inc**.
+- Open _External\jcl\jcl\packages\JclPackagesD280.groupproj_.
+- Build All, then install all packages (non-runtime packages with green icons).
+- Restart Delphi.
+- Open _External\jvcl\jvcl\packages\D28 Packages.groupproj_.
+- Navigate to Tools &rarr; Options.
+- Under Language &rarr; Delphi, add the below paths to the _Library_ option:
+  - _{TES5Edit repo}\External\jcl\jcl\lib\d28\win32_
+  - _{TES5Edit repo}\External\jcl\jcl\source\include_
+- Build All, then install all packages (non-runtime packages with green icons).
+- Restart Delphi.
+- Navigate to Tools &rarr; Options.
+- Under Language &rarr; Delphi, add the below path to the _Library_ option:
+  - _{TES5Edit repo}\External\jvcl\jvcl\lib\d28\win32_
+- Restart Delphi.
+- Open _External\VirtualTrees\Packages\RAD Studio 11\VirtualTreeView.groupproj_.
+- Build All, then install **VirtualTreesD28.bpl**.
+- Open _External\FileContainer\FileContainer28.groupproj_.
+- Build All, then install **FileContainerD28.bpl**.
+
+### Important Note
+
+If you don't have commercial [DevExpress](https://www.devexpress.com/) components, you'll need to open _BethWorkBench.groupproj_ and ensure the Build Configuration is set to `LiteDebug`.
 
 ### xEdit versions
 
