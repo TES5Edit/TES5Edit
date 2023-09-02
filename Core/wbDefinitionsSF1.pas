@@ -116,6 +116,7 @@ var
   wbSNTP: IwbSubRecordDef;
   wbSNBH: IwbSubRecordDef;
   wbODTY: IwbSubRecordDef;
+  wbDEFL: IwbSubRecordDef;
   wbBFCBs: IwbSubRecordArrayDef;
   wbPTT2: IwbSubRecordWithStructDef;
   wbFULLActor: IwbSubRecordDef;
@@ -6977,6 +6978,7 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbSNBH := wbFormIDCk(SNBH, 'Unknown', [SNBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
+  wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
   wbBFCBs := wbRStructs('Base Form Components', 'Base Form Component', [
       wbString(BFCB, 'Base Form Component Type'),
@@ -7014,6 +7016,9 @@ begin
 
       //?
       wbUnknown(DAT2),
+
+      //Volumes_Component
+      wbUnknown(VLMS),
 
       wbEmpty(BFCE, 'End Marker')
     ], []);
@@ -10359,7 +10364,7 @@ begin
     wbPTT2,
     wbSNTP,
     wbSNBH,
-    wbFormIDCk(DEFL, 'Default Layer', [LAYR]),
+    wbDEFL,
     wbUnknown(XALG),
     wbBFCBs,
     wbPTRN,
@@ -15487,17 +15492,27 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbPTRN,
+//    wbPTRN,
+    wbODTY,
+    wbUnknown(OPDS),
+    wbXALG,
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbBFCBs,
     wbFTYP,
     wbGenericModel,
     wbPRPS,
     wbFULL,
+    wbUnknown(XFLG),
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True, nil, 2),
+    wbUnknown(STLS),
     wbNVNM,
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [

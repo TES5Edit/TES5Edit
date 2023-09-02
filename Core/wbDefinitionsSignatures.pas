@@ -72,6 +72,8 @@ const
   MSLS : TwbSignature = 'MSLS'; { New To Starfield }
   MSMO : TwbSignature = 'MSMO'; { New To Starfield }
   SODA : TwbSignature = 'SODA'; { New To Starfield }
+  STLS : TwbSignature = 'STLS'; { New To Starfield }
+  VLMS : TwbSignature = 'VLMS'; { New To Starfield }
 
   PTT2 : TwbSignature = 'PTT2'; { New To Starfield }
   SNBH : TwbSignature = 'SNBH'; { New To Starfield }
