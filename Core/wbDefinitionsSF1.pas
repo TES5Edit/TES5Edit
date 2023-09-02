@@ -116,6 +116,7 @@ var
   wbSNTP: IwbSubRecordDef;
   wbSNBH: IwbSubRecordDef;
   wbODTY: IwbSubRecordDef;
+  wbDEFL: IwbSubRecordDef;
   wbBFCBs: IwbSubRecordArrayDef;
   wbPTT2: IwbSubRecordWithStructDef;
   wbFULLActor: IwbSubRecordDef;
@@ -6977,6 +6978,7 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbSNBH := wbFormIDCk(SNBH, 'Unknown', [SNBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
+  wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
   wbBFCBs := wbRStructs('Base Form Components', 'Base Form Component', [
       wbString(BFCB, 'Base Form Component Type'),
@@ -7014,6 +7016,9 @@ begin
 
       //?
       wbUnknown(DAT2),
+
+      //Volumes_Component
+      wbUnknown(VLMS),
 
       wbEmpty(BFCE, 'End Marker')
     ], []);
@@ -10359,7 +10364,7 @@ begin
     wbPTT2,
     wbSNTP,
     wbSNBH,
-    wbFormIDCk(DEFL, 'Default Layer', [LAYR]),
+    wbDEFL,
     wbUnknown(XALG),
     wbBFCBs,
     wbPTRN,
@@ -13074,66 +13079,77 @@ begin
       {0x00020000} 28, 'Portal-strict'
     ])), [
     wbEDID,
-    wbVMAD,
+//    wbVMAD,
     wbOBND(True),
-    wbPTRN,
+    wbODTY,
+//    wbPTRN,
+    wbBFCBs,
     wbGenericModel,
     wbKSIZ,
     wbKWDAs,
-    wbDEST,
-    wbPRPS,
-    wbFULL,
-    wbICON,
-    wbMICO,
-    wbStruct(DATA, '', [
-      wbInteger('Time', itS32),
-      wbInteger('Radius', itU32),
-      wbByteColors('Color'),
-      // Omnidirectional is the default type
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Unknown 0',
-        {0x00000002} 'Can be Carried',
-        {0x00000004} 'Unknown 2',
-        {0x00000008} 'Flicker',
-        {0x00000010} 'Unknown 4',
-        {0x00000020} 'Off By Default',
-        {0x00000040} 'Unknown 6',
-        {0x00000080} 'Pulse',
-        {0x00000100} 'Unknown 8',
-        {0x00000200} 'Unknown 9',
-        {0x00000400} 'Shadow Spotlight',
-        {0x00000800} 'Shadow Hemisphere',
-        {0x00001000} 'Shadow OmniDirectional',
-        {0x00002000} 'Unknown 13',
-        {0x00004000} 'NonShadow Spotlight',
-        {0x00008000} 'Non Specular',
-        {0x00010000} 'Attenuation Only',
-        {0x00020000} 'NonShadow Box',
-        {0x00040000} 'Ignore Roughness',
-        {0x00080000} 'No Rim Lighting',
-        {0x00100000} 'Ambient Only',
-        {0x00200000} 'Unknown 21' // only in [001C7F0C] <RandomSpot01GR>
-      ])),
-      wbFloat('Falloff Exponent'),
-      wbFloat('FOV'),
-      wbFloat('Near Clip'),
-      wbStruct('Flicker Effect', [
-        wbFloat('Period'),
-        wbFloat('Intensity Amplitude'),
-        wbFloat('Movement Amplitude')
-      ]),
-      wbFloat('Constant'),
-      wbFloat('Scalar'),
-      wbFloat('Exponent'),
-      wbFloat('God Rays - Near Clip'),
-      wbInteger('Value', itU32),
-      wbFloat('Weight')
-    ], cpNormal, True, nil, 10),
-    wbFloat(FNAM, 'Fade value', cpNormal, True),
+    wbUnknown(DAT2),
+//    wbDEST,
+//    wbPRPS,
+//    wbFULL,
+//    wbICON,
+//    wbMICO,
+
+//    wbStruct(DATA, '', [
+//      wbInteger('Time', itS32),
+//      wbInteger('Radius', itU32),
+//      wbByteColors('Color'),
+//      // Omnidirectional is the default type
+//      wbInteger('Flags', itU32, wbFlags([
+//        {0x00000001} 'Unknown 0',
+//        {0x00000002} 'Can be Carried',
+//        {0x00000004} 'Unknown 2',
+//        {0x00000008} 'Flicker',
+//        {0x00000010} 'Unknown 4',
+//        {0x00000020} 'Off By Default',
+//        {0x00000040} 'Unknown 6',
+//        {0x00000080} 'Pulse',
+//        {0x00000100} 'Unknown 8',
+//        {0x00000200} 'Unknown 9',
+//        {0x00000400} 'Shadow Spotlight',
+//        {0x00000800} 'Shadow Hemisphere',
+//        {0x00001000} 'Shadow OmniDirectional',
+//        {0x00002000} 'Unknown 13',
+//        {0x00004000} 'NonShadow Spotlight',
+//        {0x00008000} 'Non Specular',
+//        {0x00010000} 'Attenuation Only',
+//        {0x00020000} 'NonShadow Box',
+//        {0x00040000} 'Ignore Roughness',
+//        {0x00080000} 'No Rim Lighting',
+//        {0x00100000} 'Ambient Only',
+//        {0x00200000} 'Unknown 21' // only in [001C7F0C] <RandomSpot01GR>
+//      ])),
+//      wbFloat('Falloff Exponent'),
+//      wbFloat('FOV'),
+//      wbFloat('Near Clip'),
+//      wbStruct('Flicker Effect', [
+//        wbFloat('Period'),
+//        wbFloat('Intensity Amplitude'),
+//        wbFloat('Movement Amplitude')
+//      ]),
+//      wbFloat('Constant'),
+//      wbFloat('Scalar'),
+//      wbFloat('Exponent'),
+//      wbFloat('God Rays - Near Clip'),
+//      wbInteger('Value', itU32),
+//      wbFloat('Weight')
+//    ], cpNormal, True, nil, 10),
+
+//    wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbString(NAM0, 'Gobo'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
-    wbFormIDCk(WGDR, 'God Rays', [GDRY]),
-    wbFormIDCk(SNAM, 'Sound', [SNDR])
+    wbUnknown(FLBD),
+    wbUnknown(FLRD),
+    wbUnknown(FLGD),
+    wbUnknown(LLLD),
+    wbUnknown(FLAD),
+    wbUnknown(FVLD)
+//    wbFormIDCk(WGDR, 'God Rays', [GDRY]),
+//    wbFormIDCk(SNAM, 'Sound', [SNDR])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
@@ -15487,17 +15503,27 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbPTRN,
+//    wbPTRN,
+    wbODTY,
+    wbUnknown(OPDS),
+    wbXALG,
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbBFCBs,
     wbFTYP,
     wbGenericModel,
     wbPRPS,
     wbFULL,
+    wbUnknown(XFLG),
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True, nil, 2),
+    wbUnknown(STLS),
     wbNVNM,
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
@@ -16498,9 +16524,11 @@ begin
       {0x00000040} 7, 'Mod Collection'
     ])), [
     wbEDID,
+    wbBFCBs,
     wbFULL,
     wbDESC,
     wbGenericModel,
+    wbUnknown(XFLG),
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
@@ -17214,7 +17242,7 @@ begin
   wbRecord(RSGD, 'Resource Generation Data', [
     wbEDID,
     wbRStructs('Unknown', 'Unknown', [
-      wbFormIDCk(RNAM, 'Resource', [IRE]), //required
+      wbFormIDCk(RNAM, 'Resource', [IRES]), //required
       wbUnknown(DNAM) //required
     ], [])
   ]);
