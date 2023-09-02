@@ -10124,7 +10124,7 @@ begin
     wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
-  wbRecord(AFFE, 'Unknown', [
+  wbRecord(AFFE, 'Affinity Event', [
     wbEDID
   ]);
 
@@ -10239,7 +10239,7 @@ begin
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
 
-  wbRecord(FFKW, 'Unknown', [
+  wbRecord(FFKW, 'Form Folder Keyword List', [
     wbEDID
   ]);
 
