@@ -17006,11 +17006,11 @@ begin
     wbEDID
   ]);
 
-  wbRecord(PDCL, 'Unknown', [
+  wbRecord(PDCL, 'Projected Decal', [
     wbEDID
   ]);
 
-  wbRecord(CUR3, 'Something having to do with water?', [
+  wbRecord(CUR3, 'Curve 3D', [
     wbEDID
   ]);
 
@@ -17018,15 +17018,15 @@ begin
     wbEDID
   ]);
 
-  wbRecord(GBFT, 'Unknown', [
+  wbRecord(GBFT, 'Generic Base Form Template', [
     wbEDID
   ]);
 
-  wbRecord(GBFM, 'Unknown', [
+  wbRecord(GBFM, 'Generic Base Form', [
     wbEDID
   ]);
 
-  wbRecord(LVLB, 'Leveled Ship?', [
+  wbRecord(LVLB, 'Leveled Base Form', [
     wbEDID
   ]);
 
@@ -17034,12 +17034,24 @@ begin
     wbEDID
   ]);
 
-  wbRecord(MAAM, 'Unknown', [
+  wbRecord(MAAM, 'Melee Aim Assist Model', [
     wbEDID
   ]);
 
-  wbRecord(IRES, 'Unknown', [
-    wbEDID
+  wbRecord(IRES, 'Resource', [
+    wbEDID,
+    wbFULL,
+    wbKeywords,
+    wbUnknown(CUSH),
+    wbFormID(FNAM, 'Item List'),
+    wbUnknown(SNAM),
+    wbFormID(CNAM, 'Next Rarity),
+    wbUnknown(TINC),
+    wbLString(NNAM, 'Short Name'),
+    wbString(GNAM, 'Unknown Name'),
+    wbFormIDCk(NAM1, 'Actor Value', [AVIF]),
+    wbFormIDCk(NAM2, 'Produce', [LVLI, NULL]),
+    wbFormIDCK(NAM3, 'Interval', [GLOB])
   ]);
 
   wbRecord(BIOM, 'Biome', [
@@ -17050,7 +17062,7 @@ begin
     wbEDID
   ]);
 
-  wbRecord(AOPS, 'Unknown', [
+  wbRecord(AOPS, 'Aim Optical Sight Marker', [
     wbEDID
   ]);
 
@@ -17058,11 +17070,11 @@ begin
     wbEDID
   ]);
 
-  wbRecord(AVMD, 'Unknown', [
+  wbRecord(AVMD, 'AVM Data', [
     wbEDID
   ]);
 
-  wbRecord(BMOD, 'Unknown', [
+  wbRecord(BMOD, 'Bone Modifier', [
     wbEDID
   ]);
 
@@ -17070,11 +17082,11 @@ begin
     wbEDID
   ]);
 
-  wbRecord(EFSQ, 'Unknown', [
+  wbRecord(EFSQ, 'Effect Sequence', [
     wbEDID
   ]);
 
-  wbRecord(FOGV, 'Fog', [
+  wbRecord(FOGV, 'Fog Volume', [
     wbEDID
   ]);
 
@@ -17082,15 +17094,15 @@ begin
     wbEDID
   ]);
 
-  wbRecord(LMSW, 'Unknown', [
+  wbRecord(LMSW, 'Layered Material Swap', [
     wbEDID
   ]);
 
-  wbRecord(LVSC, 'Leveled Scene?', [
+  wbRecord(LVSC, 'Leveled Space Cell', [
     wbEDID
   ]);
 
-  wbRecord(MRPH, 'Morph', [
+  wbRecord(MRPH, 'Morphable Object', [
     wbEDID
   ]);
 
@@ -17102,51 +17114,51 @@ begin
     wbEDID
   ]);
 
-  wbRecord(PCBN, 'Unknown', [
+  wbRecord(PCBN, 'Planet Content Manager Branch Node', [
     wbEDID
   ]);
 
-  wbRecord(PCCN, 'Unknown', [
+  wbRecord(PCCN, 'Planet Content Manager Content Node', [
     wbEDID
   ]);
 
-  wbRecord(PCMT, 'Unknown', [
+  wbRecord(PCMT, 'Planet Content Manager Tree', [
     wbEDID
   ]);
 
-  wbRecord(PNDT, 'Unknown', [
+  wbRecord(PNDT, 'Planet Data', [
     wbEDID
   ]);
 
-  wbRecord(PSDC, 'Unknown', [
+  wbRecord(PSDC, 'Particle System Define Collision', [
     wbEDID
   ]);
 
-  wbRecord(PTST, 'Unknown', [
+  wbRecord(PTST, 'Surface Pattern Style', [
     wbEDID
   ]);
 
-  wbRecord(RSGD, 'Unknown', [
+  wbRecord(RSGD, 'Resource Generation Data', [
     wbEDID
   ]);
 
-  wbRecord(RSPJ, 'Unknown', [
+  wbRecord(RSPJ, 'Research Project', [
     wbEDID
   ]);
 
-  wbRecord(SDLT, 'Unknown', [
+  wbRecord(SDLT, 'Secondary Damage List', [
     wbEDID
   ]);
 
-  wbRecord(SFBK, 'Unknown', [
+  wbRecord(SFBK, 'Surface Block', [
     wbEDID
   ]);
 
-  wbRecord(SFPC, 'Unknown', [
+  wbRecord(SFPC, 'Surface Pattern Config', [
     wbEDID
   ]);
 
-  wbRecord(SFPT, 'Unknown', [
+  wbRecord(SFPT, 'Surface Pattern', [
     wbEDID
   ]);
 
@@ -17158,23 +17170,23 @@ begin
     wbEDID
   ]);
 
-  wbRecord(STBH, 'Unknown', [
+  wbRecord(STBH, 'Snap Template Behavior', [
     wbEDID
   ]);
 
-  wbRecord(STDT, 'Star Data', [
+  wbRecord(STDT, 'Galaxy Star Data', [
     wbEDID
   ]);
 
-  wbRecord(SUNP, 'Sun Preset', [
+  wbRecord(SUNP, 'Galaxy Sun Preset', [
     wbEDID
   ]);
 
-  wbRecord(TMLM, 'Unknown', [
+  wbRecord(TMLM, 'Terminal Menu', [
     wbEDID
   ]);
 
-  wbRecord(TODD, 'External Emittance', [
+  wbRecord(TODD, 'Time Of Day Data', [
     wbEDID
   ]);
 
@@ -17182,15 +17194,15 @@ begin
     wbEDID
   ]);
 
-  wbRecord(WBAR, 'Weapon Barrel?', [
+  wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID
   ]);
 
-  wbRecord(WKMF, 'Unknown', [
+  wbRecord(WKMF, 'WWise Keyword Mapping', [
     wbEDID
   ]);
 
-  wbRecord(WWED, 'Unknown', [
+  wbRecord(WWED, 'WWise Event Data', [
     wbEDID
   ]);
 
