@@ -113,6 +113,11 @@ var
   wbCNTOs: IwbSubRecordArrayDef;
   wbAIDT: IwbSubRecordDef;
   wbFULL: IwbSubRecordDef;
+  wbSNTP: IwbSubRecordDef;
+  wbSNBH: IwbSubRecordDef;
+  wbODTY: IwbSubRecordDef;
+  wbBFCB: IwbSubRecordArrayDef;
+  wbPTT2: IwbSubRecordWithStructDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
   wbDESC: IwbSubRecordDef;
@@ -264,6 +269,7 @@ begin
       wbString(MODL, 'Model FileName'),
       wbUnknown(MOLM),
       wbMODT,
+      wbUnknown(FLLD),
       wbMODC,
       wbMODS,
       wbMODF
@@ -6879,6 +6885,7 @@ begin
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32)
     ])),
+    wbFormIDCk(DSDL, 'Unknown', [SDLT]),
     wbRArray('Stages',
       wbRStruct('Stage', [
         wbStruct(DSTD, 'Destruction Stage Data', [
@@ -6900,6 +6907,7 @@ begin
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName', 0, cpNormal, True),
+          wbUnknown(FLLD),
           wbDMDT,
           wbDMDC,
           wbDMDS
@@ -6965,6 +6973,34 @@ begin
     ]);
 
   wbPDTOs := wbRArray('Topic', wbPDTO, cpNormal, False, nil);
+
+  wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
+  wbSNBH := wbFormIDCk(SNBH, 'Unknown', [SNBH]);
+  wbODTY := wbFloat(ODTY, 'Unknown');
+
+  wbBFCB := wbRStructs('Unknown', 'Unknown', [
+      wbString(BFCB, 'Unknown'),
+      wbString(ANAM, 'Unknown'),
+      wbString(BNAM, 'Unknown'),
+      wbString(CNAM, 'Unknown'),
+      wbUnknown(REFL),
+      wbUnknown(PTCL),
+      wbUnknown(FLCS),
+      wbFormID(SODA, 'Spawn on destroy'), // MSTT
+      wbFormID(INAM, 'Add to inventory on destroy'), // MSTT
+      wbEmpty(BFCE, 'End Marker')
+    ], []);
+
+// PTT2 is some kind of transform list
+  wbPTT2 := wbStruct(PTT2, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [TRNS]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [TRNS]),
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Unknown', [TRNS]),
+        wbByteArray('Unknown', 4)
+      ]);
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32, wbEnum([
     'Easy',
@@ -8736,32 +8772,22 @@ begin
     wbOBND(True),
 //    wbPTRN,
 //    wbSTCP,
-    wbUnknown(ODTY),
+    wbODTY,
     wbUnknown(OPDS),
     wbUnknown(XALG),
-    wbUnknown(PTT2),
-    wbUnknown(SNTP),
-    wbUnknown(SNBH),
-    wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(BFCB),
-      wbUnknown(ANAM),
-      wbUnknown(BNAM),
-      wbUnknown(CNAM),
-      wbUnknown(REFL),
-      wbUnknown(PTCL),
-      wbUnknown(FLCS),
-      wbUnknown(BFCE)
-    ], []),
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbBFCB,
     wbFULL,
     wbGenericModel,
-    wbUnknown(FLLD),
     wbUnknown(XFLG),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
-    wbNTRM,
     wbFTYP,
+    wbNTRM,
     wbStruct(PNAM, 'Marker Color', [
       wbInteger('Red', itU8),
       wbInteger('Green', itU8),
@@ -8771,7 +8797,9 @@ begin
 //    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
 //    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
 //    wbFormIDCk(WNAM, 'Water Type', [WATR]),
+    wbUnknown(WMAT),
     wbUnknown(WTFM),
+    wbUnknown(ALSH),
     wbUnknown(ACSH),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -8782,6 +8810,7 @@ begin
       'Is a Radio'
     ])),
     wbUnknown(JNAM),
+    wbUnknown(INAM),
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
 {    wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
@@ -10201,7 +10230,8 @@ begin
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
-    wbFULL
+    wbFULL,
+    wbUnknown(FNAM)
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -10297,14 +10327,25 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTY,
+    wbUnknown(OPDS),
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbFormIDCk(DEFL, 'Default Layer', [LAYR]),
+    wbUnknown(XALG),
+    wbBFCB,
     wbPTRN,
     wbFULL,
     wbGenericModel,
+    wbUnknown(XFLG),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
     wbPRPS,
     wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
+    wbUnknown(MSLS),
+    wbFloat(MSMO, 'Unknown'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
 end;
