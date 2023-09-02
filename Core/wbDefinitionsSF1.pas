@@ -16498,9 +16498,11 @@ begin
       {0x00000040} 7, 'Mod Collection'
     ])), [
     wbEDID,
+    wbBFCBs,
     wbFULL,
     wbDESC,
     wbGenericModel,
+    wbUnknown(XFLG),
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
@@ -17214,7 +17216,7 @@ begin
   wbRecord(RSGD, 'Resource Generation Data', [
     wbEDID,
     wbRStructs('Unknown', 'Unknown', [
-      wbFormIDCk(RNAM, 'Resource', [IRE]), //required
+      wbFormIDCk(RNAM, 'Resource', [IRES]), //required
       wbUnknown(DNAM) //required
     ], [])
   ]);
