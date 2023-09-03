@@ -108,6 +108,8 @@ const
   XMPM : TwbSignature = 'XMPM'; { New To Starfield }
   PCCC : TwbSignature = 'PCCC'; { New To Starfield }
 
+  ASAE : TwbSignature = 'ASAE'; { New To Starfield }
+
   SPWI : TwbSignature = 'SPWI'; { New To Starfield }
   SRAN : TwbSignature = 'SRAN'; { New To Starfield }
   SGEN : TwbSignature = 'SGEN'; { New To Starfield }
@@ -116,6 +118,100 @@ const
   DIFF : TwbSignature = 'DIFF'; { New To Starfield }
 
   RQPK : TwbSignature = 'RQPK'; { New To Starfield }
+  XLMS : TwbSignature = 'XLMS'; { New To Starfield }
+  PPBD : TwbSignature = 'PPBD'; { New To Starfield }
+  BDST : TwbSignature = 'BDST'; { New To Starfield }
+
+  BDED : TwbSignature = 'BDED'; { New To Starfield }
+  TEMP : TwbSignature = 'TEMP'; { New To Starfield }
+  DENS : TwbSignature = 'DENS'; { New To Starfield }
+  PHLA : TwbSignature = 'PHLA'; { New To Starfield }
+  RSCS : TwbSignature = 'RSCS'; { New To Starfield }
+  PCCB : TwbSignature = 'PCCB'; { New To Starfield }
+
+  TMPP : TwbSignature = 'TMPP'; { New To Starfield }
+  TCMP : TwbSignature = 'TCMP'; { New To Starfield }
+  MOBC : TwbSignature = 'MOBC'; { New To Starfield }
+
+  ASAS : TwbSignature = 'ASAS'; { New To Starfield }
+  ASMB : TwbSignature = 'ASMB'; { New To Starfield }
+  WED0 : TwbSignature = 'WED0'; { New To Starfield }
+
+  BIAS : TwbSignature = 'BIAS'; { New To Starfield }
+  BIMT : TwbSignature = 'BIMT'; { New To Starfield }
+  BMC1 : TwbSignature = 'BMC1'; { New To Starfield }
+  BMC2 : TwbSignature = 'BMC2'; { New To Starfield }
+  BMC3 : TwbSignature = 'BMC3'; { New To Starfield }
+  UX00 : TwbSignature = 'UX00'; { New To Starfield }
+  VX00 : TwbSignature = 'VX00'; { New To Starfield }
+  WX00 : TwbSignature = 'WX00'; { New To Starfield }
+  XX00 : TwbSignature = 'XX00'; { New To Starfield }
+  YX00 : TwbSignature = 'YX00'; { New To Starfield }
+  TX16 : TwbSignature = 'TX16'; { New To Starfield }
+  BTPS : TwbSignature = 'BTPS'; { New To Starfield }
+  BDFS : TwbSignature = 'BDFS'; { New To Starfield }
+
+  ATCP : TwbSignature = 'ATCP'; { New To Starfield }
+  ATAN : TwbSignature = 'ATAN'; { New To Starfield }
+  ATAV : TwbSignature = 'ATAV'; { New To Starfield }
+  ATAF : TwbSignature = 'ATAF'; { New To Starfield }
+
+  BUO4 : TwbSignature = 'BUO4'; { New To Starfield }
+  BODM : TwbSignature = 'BODM'; { New To Starfield }
+  BODC : TwbSignature = 'BODC'; { New To Starfield }
+  BODS : TwbSignature = 'BODS'; { New To Starfield }
+  BODV : TwbSignature = 'BODV'; { New To Starfield }
+  BLUF : TwbSignature = 'BLUF'; { New To Starfield }
+  BOID : TwbSignature = 'BOID'; { New To Starfield }
+
+  CDND : TwbSignature = 'CDND'; { New To Starfield }
+  CDNS : TwbSignature = 'CDNS'; { New To Starfield }
+  STRV : TwbSignature = 'STRV'; { New To Starfield }
+
+  DCSD : TwbSignature = 'DCSD'; { New To Starfield }
+  DCED : TwbSignature = 'DCED'; { New To Starfield }
+
+  ESSF : TwbSignature = 'ESSF'; { New To Starfield }
+
+  EXDC : TwbSignature = 'EXDC'; { New To Starfield }
+  EXDZ : TwbSignature = 'EXDZ'; { New To Starfield }
+  EXCN : TwbSignature = 'EXCN'; { New To Starfield }
+  EXCI : TwbSignature = 'EXCI'; { New To Starfield }
+  EXAC : TwbSignature = 'EXAC'; { New To Starfield }
+  EXAS : TwbSignature = 'EXAS'; { New To Starfield }
+  EXBS : TwbSignature = 'EXBS'; { New To Starfield }
+
+  FCTF : TwbSignature = 'FCTF'; { New To Starfield }
+  HULL : TwbSignature = 'HULL'; { New To Starfield }
+  FLKW : TwbSignature = 'FLKW'; { New To Starfield }
+
+  SAIA : TwbSignature = 'SAIA'; { New To Starfield }
+  SHWB : TwbSignature = 'SHWB'; { New To Starfield }
+
+  STRD : TwbSignature = 'STRD'; { New To Starfield }
+
+  OBSV : TwbSignature = 'OBSV'; { New To Starfield }
+  OCCV : TwbSignature = 'OCCV'; { New To Starfield }
+
+  LNA2 : TwbSignature = 'LNA2'; { New To Starfield }
+
+  ECTE : TwbSignature = 'ECTE'; { New To Starfield }
+  ECSH : TwbSignature = 'ECSH'; { New To Starfield }
+
+  XEED : TwbSignature = 'XEED'; { New To Starfield }
+  XPCS : TwbSignature = 'XPCS'; { New To Starfield }
+  PSDF : TwbSignature = 'PSDF'; { New To Starfield }
+  NLDT : TwbSignature = 'NLDT'; { New To Starfield }
+
+  PUSH : TwbSignature = 'PUSH'; { New To Starfield }
+  PDSH : TwbSignature = 'PDSH'; { New To Starfield }
+
+  EFIF : TwbSignature = 'EFIF'; { New To Starfield }
+  MUID : TwbSignature = 'MUID'; { New To Starfield }
+
+  PRAS : TwbSignature = 'PRAS'; { New To Starfield }
+  PRCS : TwbSignature = 'PRCS'; { New To Starfield }
+  PROD : TwbSignature = 'PROD'; { New To Starfield }
 
   A0TX : TwbSignature = 'A0TX';
   AAAP : TwbSignature = 'AAAP'; { New To Fallout 76 }

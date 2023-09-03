@@ -116,9 +116,10 @@ var
   wbSNTP: IwbSubRecordDef;
   wbSNBH: IwbSubRecordDef;
   wbODTY: IwbSubRecordDef;
+  wbOPDS: IwbSubRecordDef;
   wbDEFL: IwbSubRecordDef;
   wbBFCBs: IwbSubRecordArrayDef;
-  wbPTT2: IwbSubRecordWithStructDef;
+  wbPTT2: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
   wbDESC: IwbSubRecordDef;
@@ -263,17 +264,20 @@ begin
 end;
 
 
+
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
+  {subrecords checked against Starfield.esm}
   Result :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName'),
-      wbUnknown(MOLM),
-      wbMODT,
+      wbRArray('Unknown', wbUnknown(MOLM)),
+      //wbMODT,
       wbUnknown(FLLD),
-      wbMODC,
-      wbMODS,
-      wbMODF
+      wbUnknown(XFLG)
+      //wbMODC,
+      //wbMODS,
+      //wbMODF
     ], [], cpNormal, aRequired, aDontShow)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
@@ -5682,7 +5686,7 @@ begin
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
   wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True);
-  wbLVLD := wbInteger(LVLD, 'Chance None', itU8, nil, cpNormal, True);
+  wbLVLD := wbFloat(LVLD, 'Chance None', cpNormal, True);
 
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, LVSP]);
@@ -6872,6 +6876,7 @@ begin
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
+  {subrecords checked against Starfield.esm}
   wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
@@ -6903,14 +6908,15 @@ begin
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
-          wbInteger('Debris Count', itS32)
+          wbInteger('Debris Count', itS32),
+          wbUnknown {whole thing needs to be checked for Starfield}
         ], cpNormal, True),
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName', 0, cpNormal, True),
           wbUnknown(FLLD),
-          wbDMDT,
-          wbDMDC,
+//          wbDMDT,
+//          wbDMDC,
           wbDMDS
         ], [], cpNormal, False, nil, True),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
@@ -6978,61 +6984,11 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbSNBH := wbFormIDCk(SNBH, 'Unknown', [SNBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
+  wbOPDS := wbUnknown(OPDS);
   wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
-  wbBFCBs := wbRStructs('Base Form Components', 'Base Form Component', [
-      wbString(BFCB, 'Base Form Component Type'),
-
-      wbString(ANAM, 'Unknown'),
-      wbString(BNAM, 'Unknown'),
-      wbString(CNAM, 'Unknown'),
-
-      wbUnknown(REFL),
-      wbUnknown(PTCL),
-      wbUnknown(FLCS),
-      wbFormID(SODA, 'Spawn on destroy'), // MSTT
-      wbFormID(INAM, 'Add to inventory on destroy'), // MSTT
-      wbKeywords,
-
-      //BGSOrbitalDataComponent_Component
-      //BGSOrbitedDataComponent_Component
-      //BGSStarDataComponent_Component
-      wbUnknown(DATA),
-
-      //TESPlanetModel_Component
-      wbString(MODL, 'Model'),
-      wbUnknown(FLLD), //TESModel_Component
-      wbUnknown(XMPM),
-
-      //TESFullName_Component
-      wbFull,
-
-      //HoudiniData_Component
-      wbUnknown(PCCC),
-
-      //BGSObjectWindowFilter_Component
-      wbUnknown(INTV),
-      wbUnknown(FLTR),
-
-      //?
-      wbUnknown(DAT2),
-
-      //Volumes_Component
-      wbUnknown(VLMS),
-
-      wbEmpty(BFCE, 'End Marker')
-    ], []);
-
 // PTT2 is some kind of transform list
-  wbPTT2 := wbStruct(PTT2, 'Unknown', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Unknown', [TRNS]),
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Unknown', [TRNS]),
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Unknown', [TRNS]),
-        wbByteArray('Unknown', 4)
-      ]);
+  wbPTT2 := wbArray(PTT2, 'Unknown', wbFormIDCk('Unknown', [TRNS]), 8);
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32, wbEnum([
     'Easy',
@@ -7083,20 +7039,20 @@ begin
   wbXRNK := wbInteger(XRNK, 'Owner Faction Rank', itS32);
 
   wbNavmeshEdgeLinks := wbArray('Edge Links',
-		wbStruct('Edge Link', [
-			wbInteger('Type', itU32,
-				wbEnum([
-					'Portal',
-					'Ledge Up',
-					'Ledge Down',
-					'Enable/Disable Portal'
-				])
-			),
-			wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
-			wbInteger('Triangle Index', itS16, nil, cpIgnore),
-			wbByteArray('Edge Index', 1, cpIgnore) // if form ver > 127
-		], cpIgnore)
-	, -1, cpIgnore);
+    wbStruct('Edge Link', [
+      wbInteger('Type', itU32,
+        wbEnum([
+          'Portal',
+          'Ledge Up',
+          'Ledge Down',
+          'Enable/Disable Portal'
+        ])
+      ),
+      wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
+      wbInteger('Triangle Index', itS16, nil, cpIgnore),
+      wbByteArray('Edge Index', 1, cpIgnore) // if form ver > 127
+    ], cpIgnore)
+  , -1, cpIgnore);
 
   wbCRCValuesEnum :=
     wbEnum([],[
@@ -7309,145 +7265,145 @@ begin
       Int64($FCD0CCC3), 'Water'
     ]);
 
-	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
-		wbStructSK([0, 2], 'Door Triangle', [
-			wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-			wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
-			wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
-		])
-	, -1);
+  wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
+    wbStructSK([0, 2], 'Door Triangle', [
+      wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
+      wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
+      wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
+    ])
+  , -1);
 
-	if wbSimpleRecords then begin
-		wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 12), -1);
-		wbNavmeshTriangles := wbArray('Triangles', wbByteArray('Triangle', 21), -1);
-		wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 16), -1);
-		wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 8), -1);
-		wbNavmeshWaypoints := wbArray('Waypoints', wbByteArray('Waypoint', 18), -1);
-		wbNavmeshGrid := wbStruct('Navmesh Grid', [wbUnknown])
-	end else begin
-		wbNavmeshVertices := wbArray('Vertices',
-			wbStruct('Vertex', [
-				wbFloat('X'),
-				wbFloat('Y'),
-				wbFloat('Z')
-			]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-		, -1);
+  if wbSimpleRecords then begin
+    wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 12), -1);
+    wbNavmeshTriangles := wbArray('Triangles', wbByteArray('Triangle', 21), -1);
+    wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 16), -1);
+    wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 8), -1);
+    wbNavmeshWaypoints := wbArray('Waypoints', wbByteArray('Waypoint', 18), -1);
+    wbNavmeshGrid := wbStruct('Navmesh Grid', [wbUnknown])
+  end else begin
+    wbNavmeshVertices := wbArray('Vertices',
+      wbStruct('Vertex', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
+    , -1);
 
-		wbNavmeshTriangles := wbArray('Triangles',
-			wbStruct('Triangle', [
-				wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
-				wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
-				wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
-				wbFloat('Height'), // this and next if form ver > 57
-				wbInteger('Unknown', itU8), // flags
-				wbInteger('Flags', itU16, wbFlags([
-					'Edge 0-1 link',      //$0001 1
-					'Edge 1-2 link',      //$0002 2
-					'Edge 2-0 link',      //$0004 4
-					'',                   //$0008 8
-					'No Large Creatures',          //$0010 16   used in CK source according to Nukem
-					'Overlapping',        //$0020 32
-					'Preferred',          //$0040 64
-					'',                   //$0080 128
-					'Unknown 9',          //$0100 256  used in CK source according to Nukem
-					'Water',              //$0200 512
-					'Door',               //$0400 1024
-					'Found',              //$0800 2048
-					'Unknown 13',         //$1000 4096 used in CK source according to Nukem
-					'',                   //$2000 \
-					'',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
-					''                    //$8000 /
-				])),
-				{ Flags below are wrong. The first 4 bit are an enum as follows:
-				0000 = Open Edge No Cover
-				1000 = wall no cover
-				0100 = ledge cover
-				1100 = UNUSED
-				0010 = cover  64
-				1010 = cover  80
-				0110 = cover  96
-				1110 = cover 112
-				0001 = cover 128
-				1001 = cover 144
-				0101 = cover 160
-				1101 = cover 176
-				0011 = cover 192
-				1011 = cover 208
-				0111 = cover 224
-				1111 = max cover
-				then 2 bit flags, then another such enum, and the rest is probably flags.
-				Can't properly represent that with current record definition methods.
-				}
-				wbInteger('Cover Flags', itU16, wbFlags([
-					'Edge 0-1 Cover Value 1/4',
-					'Edge 0-1 Cover Value 2/4',
-					'Edge 0-1 Cover Value 3/4',
-					'Edge 0-1 Cover Value 4/4',
-					'Edge 0-1 Left',
-					'Edge 0-1 Right',
-					'Edge 1-2 Cover Value 1/4',
-					'Edge 1-2 Cover Value 2/4',
-					'Edge 1-2 Cover Value 3/4',
-					'Edge 1-2 Cover Value 4/4',
-					'Edge 1-2 Left',
-					'Edge 1-2 Right',
-					'Unknown 13',
-					'Unknown 14',
-					'Unknown 15',
-					'Unknown 16'
-				]))
-			])
-		, -1);
+    wbNavmeshTriangles := wbArray('Triangles',
+      wbStruct('Triangle', [
+        wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
+        wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
+        wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
+        wbFloat('Height'), // this and next if form ver > 57
+        wbInteger('Unknown', itU8), // flags
+        wbInteger('Flags', itU16, wbFlags([
+          'Edge 0-1 link',      //$0001 1
+          'Edge 1-2 link',      //$0002 2
+          'Edge 2-0 link',      //$0004 4
+          '',                   //$0008 8
+          'No Large Creatures',          //$0010 16   used in CK source according to Nukem
+          'Overlapping',        //$0020 32
+          'Preferred',          //$0040 64
+          '',                   //$0080 128
+          'Unknown 9',          //$0100 256  used in CK source according to Nukem
+          'Water',              //$0200 512
+          'Door',               //$0400 1024
+          'Found',              //$0800 2048
+          'Unknown 13',         //$1000 4096 used in CK source according to Nukem
+          '',                   //$2000 \
+          '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
+          ''                    //$8000 /
+        ])),
+        { Flags below are wrong. The first 4 bit are an enum as follows:
+        0000 = Open Edge No Cover
+        1000 = wall no cover
+        0100 = ledge cover
+        1100 = UNUSED
+        0010 = cover  64
+        1010 = cover  80
+        0110 = cover  96
+        1110 = cover 112
+        0001 = cover 128
+        1001 = cover 144
+        0101 = cover 160
+        1101 = cover 176
+        0011 = cover 192
+        1011 = cover 208
+        0111 = cover 224
+        1111 = max cover
+        then 2 bit flags, then another such enum, and the rest is probably flags.
+        Can't properly represent that with current record definition methods.
+        }
+        wbInteger('Cover Flags', itU16, wbFlags([
+          'Edge 0-1 Cover Value 1/4',
+          'Edge 0-1 Cover Value 2/4',
+          'Edge 0-1 Cover Value 3/4',
+          'Edge 0-1 Cover Value 4/4',
+          'Edge 0-1 Left',
+          'Edge 0-1 Right',
+          'Edge 1-2 Cover Value 1/4',
+          'Edge 1-2 Cover Value 2/4',
+          'Edge 1-2 Cover Value 3/4',
+          'Edge 1-2 Cover Value 4/4',
+          'Edge 1-2 Left',
+          'Edge 1-2 Right',
+          'Unknown 13',
+          'Unknown 14',
+          'Unknown 15',
+          'Unknown 16'
+        ]))
+      ])
+    , -1);
 
-		wbNavmeshCoverArray := wbArray('Cover Array',  // if navmesh version gt 12
-			wbStruct('Cover', [
-				wbInteger('Vertex 1', itU16).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Vertex 2', itU16).SetLinksToCallback(wbVertexLinksTo),
-				wbByteArray('Data', 4 {, wbFlags([]) ? })
-			])
-		, -1);
+    wbNavmeshCoverArray := wbArray('Cover Array',  // if navmesh version gt 12
+      wbStruct('Cover', [
+        wbInteger('Vertex 1', itU16).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 2', itU16).SetLinksToCallback(wbVertexLinksTo),
+        wbByteArray('Data', 4 {, wbFlags([]) ? })
+      ])
+    , -1);
 
-		wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings',
-			wbStruct('Cover Triangle Map', [
-				wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
-				wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
-			])
-		, -1);
+    wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings',
+      wbStruct('Cover Triangle Map', [
+        wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
+        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
+      ])
+    , -1);
 
-		wbNavmeshWaypoints := wbArray('Waypoints',  // if navmesh version gt 11
-			wbStruct('Waypoint', [
-				wbFloat('X'),
-				wbFloat('Y'),
-				wbFloat('Z'),
-				wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
-				wbInteger('Flags', itU32)
-			])
-		, -1);
+    wbNavmeshWaypoints := wbArray('Waypoints',  // if navmesh version gt 11
+      wbStruct('Waypoint', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z'),
+        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
+        wbInteger('Flags', itU32)
+      ])
+    , -1);
 
-		wbNavmeshGrid := wbStruct('Navmesh Grid', [
-			wbInteger('Navmesh Grid Size', itU32),  // max 12
-			wbFloat('Max X Distance'),
-			wbFloat('Max Y Distance'),
-			wbFloat('Min X'),
-			wbFloat('Min Y'),
-			wbFloat('Min Z'),
-			wbFloat('Max X'),
-			wbFloat('Max Y'),
-			wbFloat('Max Z'),
-			wbArray('NavMesh Grid Arrays',
-				wbArray('NavMeshGridCell',
-					wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
-				, -1).IncludeFlag(dfNotAlignable)
-			).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
-		])
-	end;
+    wbNavmeshGrid := wbStruct('Navmesh Grid', [
+      wbInteger('Navmesh Grid Size', itU32),  // max 12
+      wbFloat('Max X Distance'),
+      wbFloat('Max Y Distance'),
+      wbFloat('Min X'),
+      wbFloat('Min Y'),
+      wbFloat('Min Z'),
+      wbFloat('Max X'),
+      wbFloat('Max Y'),
+      wbFloat('Max Z'),
+      wbArray('NavMesh Grid Arrays',
+        wbArray('NavMeshGridCell',
+          wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+        , -1).IncludeFlag(dfNotAlignable)
+      ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+    ])
+  end;
 
-	wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
-	  wbStruct('Pathing Cell', [
+  wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
+    wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
+    wbStruct('Pathing Cell', [
       wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
       wbFormIDCk('Pathing Worldspace', [WRLD, NULL]),
       wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
@@ -7457,16 +7413,16 @@ begin
         ]),
         wbFormIDCk('Pathing Cell', [CELL])
       ])
-	  ]),
-	  wbNavmeshVertices.IncludeFlag(dfNotAlignable),
-	  wbNavmeshTriangles.IncludeFlag(dfNotAlignable),
-	  wbNavmeshEdgeLinks.IncludeFlag(dfNotAlignable),
-	  wbNavmeshDoorTriangles.IncludeFlag(dfNotAlignable),
-	  wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
-	  wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
-	  wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
-	  wbNavmeshGrid
-	]);
+    ]),
+    wbNavmeshVertices.IncludeFlag(dfNotAlignable),
+    wbNavmeshTriangles.IncludeFlag(dfNotAlignable),
+    wbNavmeshEdgeLinks.IncludeFlag(dfNotAlignable),
+    wbNavmeshDoorTriangles.IncludeFlag(dfNotAlignable),
+    wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
+    wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
+    wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
+    wbNavmeshGrid
+  ]);
 
   wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
     wbFormID('Reference'),
@@ -7476,8 +7432,9 @@ end;
 
 procedure DefineSF1b;
 begin
+  {subrecords checked against Starfield.esm}
   wbRefRecord(ACHR, 'Placed NPC',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([ {not checked for Starfield}
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -7487,13 +7444,18 @@ begin
     ], True, True)), [
     wbEDID,
     wbVMAD,
+    wbBFCBs,
+    wbXALG,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Ragdoll ---}
-    wbXRGD,
-    wbXRGB,
+    wbRStruct('Ragdoll Data', [
+      wbXRGD,
+      wbXRGB
+    ], []),
 
+    (*
     {--- Patrol Data ---}
     wbRStruct('Patrol Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
@@ -7502,13 +7464,14 @@ begin
       wbPDTOs,
       wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
     ], []),
+    *)
 
     {--- Leveled Actor ----}
     wbXLCM,
 
     {--- Extra ---}
-    wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
+    //wbInteger(XCNT, 'Count', itS32),
+    //wbFloat(XRDS, 'Radius'),
     wbInteger(XHLT, 'Health %', itU32),
 
     wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
@@ -7516,6 +7479,7 @@ begin
       wbFormIDCk('Ref', sigReferences)
     ], cpNormal, False, nil, 1)),
 
+    (*
     {--- Activate Parents ---}
     wbRStruct('Activate Parents', [
       wbInteger(XAPD, 'Flags', itU8, wbFlags([
@@ -7529,23 +7493,26 @@ begin
       )
     ], []),
     wbEmpty(XATP, 'Activation Point'),
+    *)
 
     wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
-    wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+    //wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
 
     wbEmpty(XIS2, 'Ignored by Sandbox'),
+    (*
     wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
       wbFormIDCk('Ref', [REFR, ACHR]),
       wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
     ])),
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
+    *)
+    //wbFloat(XHTW, 'Head-Tracking Weight'),
+    //wbFloat(XFVC, 'Favor Cost'),
 
     {--- Enable Parent ---}
     wbXESP,
@@ -7555,13 +7522,17 @@ begin
     wbXRNK,
 
     {--- Emittance ---}
-    wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+    //wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', sigReferences),
+    //wbFormIDCk(XMBR, 'MultiBound Reference', sigReferences),
 
     {--- Flags ---}
-    wbEmpty(XIBS, 'Ignored By Sandbox'),
+    //wbEmpty(XIBS, 'Ignored By Sandbox'),
+
+    wbUnknown(XEED),
+
+    wbUnknown(XPCS),
 
     {--- 3D Data ---}
     wbXSCL,
@@ -8436,7 +8407,8 @@ begin
   wbObjectProperty :=
     wbStructSK([0], 'Property', [
       wbActorValue,
-      wbFloat('Value')
+      wbFloat('Value'),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]).SetToStr(wbObjectPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
 
   wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
@@ -8445,6 +8417,212 @@ begin
   wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbFormIDCk(FTYP, 'Forced Loc Ref Type', [LCRT]);
   wbATTX := wbLStringKC(ATTX, 'Activate Text Override', 0, cpTranslate);
+
+  wbBFCBs := wbRStructsSK('Components', 'Component', [0], [
+      wbString(BFCB, 'Component Type'),
+      wbRUnion('Component Data', [
+        //BGSAnimationGraph_Component
+        wbRStruct('Component Data', [
+          wbString(ANAM),
+          wbString(BNAM),
+          wbString(CNAM),
+          wbString(DNAM),
+          wbString(ENAM)
+        ], []),
+        //BGSAttachParentArray_Component
+        wbRStruct('Component Data', [
+          wbAPPR
+        ], []),
+        //BGSActivityTracker
+        wbRStruct('Component Data', [
+          wbUnknown(ATCP),
+          wbString(ATAN),
+          wbFULL,
+          wbDESC,
+          wbRStructs('Unknown', 'Unknown', [
+            wbString(DNAM),
+            wbCITCReq,
+            wbCTDAsCount
+          ], []),
+          wbString(ANAM),
+          wbUnknown(ATAV),
+          wbUnknown(ATAF)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(BUO4),
+          wbUnknown(BODM),
+          wbRStructs('Unknown', 'Unknown', [
+            wbUnknown(BODC),
+            wbRStructs('Unknown', 'Unknown', [
+              wbString(BODS),
+              wbUnknown(BODV)
+            ], [])
+          ], []),
+          wbUnknown(BLUF),
+          wbUnknown(BOID)
+        ], []),
+        //BGSCrowdComponent_Component
+        wbRStruct('Component Data', [
+          wbUnknown(CDND),
+          wbUnknown(CDNS),
+          wbRStructs('Unknown', 'Unknown', [
+            wbPRPS,
+            wbCITCReq,
+            wbCTDAs,
+            wbString(STRV),
+            wbUnknown(FLTV)
+          ], [])
+        ], []),
+        wbRStruct('Component Data', [
+          wbCOCT,
+          wbCNTOs
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(DAT2)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(DATA)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(DCSD),
+          wbUnknown(DCED)
+        ], []),
+        wbRStruct('Component Data', [
+          wbDest
+        ], []),
+        //BGSSpaceshipEquipment_Component
+        wbRStruct('Component Data', [
+          wbUnknown(ESSF)
+        ], []),
+        //BGSExternalComponentDataSource_Component
+        wbRStruct('Component Data', [
+          wbFormID(EXDC),
+          wbUnknown(EXDZ),
+          wbRStructs('Unknown', 'Unknown', [
+            wbString(EXCN),
+            wbFormID(EXCI)
+          ], []),
+          wbUnknown(EXAC),
+          wbRArray('Unknown', wbString(EXAS)),
+          wbUnknown(EXBS)
+        ], []),
+        //BGSLinkedVoiceType_Component
+        wbRStruct('Component Data', [
+          wbFormIDCk(FCTF, 'Voice Type', [VTYP])
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(FLCS)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(FLLD)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(FTYP)
+        ], []),
+        wbRStruct('Component Data', [
+          wbFULL
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(GNAM)
+        ], []),
+        wbRStruct('Component Data', [
+          wbFormID(HULL)
+        ], []),
+        wbRStruct('Component Data', [
+          wbFormID(INAM, 'Add to inventory on destroy')
+        ], []),
+        //BGSObjectWindowFilter_Component
+        wbRStruct('Component Data', [
+          wbUnknown(INTV),
+          wbString(FLTR)
+        ], []),
+        //BGSFormLinkData_Component
+        wbRStruct('Component Data', [
+          wbUnknown(ITMC),
+          wbRArray('Unknown', wbFormID(FLKW))
+        ], []),
+        wbRStruct('Component Data', [
+          wbKeywords
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(MNAM)
+        ], []),
+        wbRStruct('Component Data', [
+          wbString(MODL, 'Model'),
+          wbUnknown(FLLD),
+          wbUnknown(XMPM),
+          wbUnknown(MCQP),
+          wbUnknown(XMSP),
+          wbUnknown(XLMS)
+        ], []),
+        wbRStruct('Component Data', [
+          wbOPDS
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(PCCC)
+        ], []),
+        //BGSPropertySheet_Component
+        wbRStruct('Component Data', [
+          wbPRPS
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(PCCC)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(PTCL)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(REFL)
+        ], []),
+        //BGSSpaceshipAIActor_Component
+        wbRStruct('Component Data', [
+          wbFormID(SAIA, 'Spaceship AI Actor')
+        ], []),
+        //BGSSpaceshipWeaponBindings_Component
+        wbRStruct('Component Data', [
+          wbUnknown(SHWB)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(SNAM),
+          wbUnknown(PNAM),
+          wbUnknown(BNAM)
+        ], []),
+        wbRStruct('Component Data', [
+          wbFormID(SODA, 'Spawn on destroy')
+        ], []),
+        //BGSSoundTag_Component
+        wbRStruct('Component Data', [
+          wbFormID(STCP)
+        ], []),
+        //BGSStoredTraversals_Component
+        wbRStruct('Component Data', [
+          wbUnknown(STRD)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(VLMS)
+        ], []),
+        wbRStruct('Component Data', [
+          wbUnknown(ZNAM),
+          wbUnknown(YNAM),
+          wbUnknown(XNAM),
+          wbUnknown(WNAM),
+          wbUnknown(VNAM),
+          wbUnknown(UNAM),
+          wbUnknown(NAM1),
+          wbUnknown(NAM2),
+          wbUnknown(NAM3),
+          wbUnknown(NAM4),
+          wbUnknown(NAM5),
+          wbUnknown(NAM6),
+          wbUnknown(NAM7),
+          wbUnknown(NAM8),
+          wbUnknown(NAM9),
+          wbCITCReq,
+          wbCTDAs
+        ], [])
+      ], []),
+      wbEmpty(BFCE, 'End Marker')
+    ], []);
 
   wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
     {0x00000001} 'Interaction Point 0',
@@ -8767,18 +8945,25 @@ begin
 
   wbArmorAddonBSMPSequence := wbRArray('Bone Data', wbArmorAddonBoneDataItem);
 
+  {subrecords checked against Starfield.esm}
   var wbEffect :=
     wbRStruct('Effect', [
       wbEFID,
       wbEFIT,
-      wbCTDAs
+      wbCTDAs,
+      wbUnknown(MNAM),
+      wbUnknown(ANAM), // order between ANAM
+      wbUnknown(ZNAM), // and ZNAM unknown
+      wbUnknown(EFIF),
+      wbUnknown(MUID)
     ], [], cpNormal, True);
 
   wbEffectsReq :=
     wbRArrayS('Effects', wbEffect, cpNormal, True);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ACTI, 'Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([  {flags not checked against Starfield}
       {0x00000004}  2, 'Never Fades',
       {0x00000010}  4, 'Non Occluder',
       {0x00000040}  6, 'Unknown 6',
@@ -8802,10 +8987,11 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
+
 //    wbPTRN,
 //    wbSTCP,
     wbODTY,
-    wbUnknown(OPDS),
+    wbOPDS,
     wbUnknown(XALG),
     wbPTT2,
     wbSNTP,
@@ -8842,7 +9028,7 @@ begin
       'Is a Radio'
     ])),
     wbUnknown(JNAM),
-    wbUnknown(INAM),
+    wbUnknown(INAM), //unknown if here or any later position
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
 {    wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
@@ -8876,25 +9062,37 @@ begin
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ALCH, 'Ingestible',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Medicine'
     ])), [
     wbEDID,
     wbOBND(True),
-    wbPTRN,
+    wbODTY,
+    wbOPDS,
+    wbPTT2,
+    wbBFCBs,
+    wbXALG,
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbGenericModel,
-    wbICON,
-    wbMICO,
-    wbYNAM,
-    wbZNAM,
-    wbETYP,
-    wbCUSD,
-    wbDEST,
+    wbUnknown(PUSH),
+    wbUnknown(PDSH),
+    wbUnknown(CUSH),
+//    wbICON,
+//    wbMICO,
+//    wbYNAM,
+//    wbZNAM,
+//    wbETYP,
+//    wbCUSD,
+//    wbDEST,
     wbDESC,
+    wbStructs(CVPA, 'Components', 'Component', [
+      wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
+      wbInteger('Count', itU32)
+    ]),
+    wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8)),
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
@@ -8920,27 +9118,31 @@ begin
       ])),
       wbFormID('Addiction'),
       wbFloat('Addiction Chance'),
-      wbFormIDCk('Sound - Consume', [SNDR, NULL])
+      wbFormIDCk('Sound - Consume', [SNDR, NULL]),
+      wbUnknown
     ], cpNormal, True),
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
     wbEffectsReq
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AMMO, 'Ammunition',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
     wbOBND(True),
-    wbPTRN,
+    wbODTY,
+    wbPTT2,
     wbFULL,
     wbGenericModel,
-    wbDEST,
-    wbYNAM,
-    wbZNAM,
+    wbUnknown(PUSH),
+    wbUnknown(PDSH),
     wbDESC,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
+//    wbDEST,
+//    wbYNAM,
+//    wbZNAM,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -8958,7 +9160,8 @@ begin
     ], cpNormal, True),
     wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
-    wbModelInfo(NAM2)
+    //wbModelInfo(NAM2)
+    wbUnknown(FLLD)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbRecord(ANIO, 'Animated Object',
@@ -10031,7 +10234,8 @@ begin
       ])),
       wbFloat('Charge Time'),
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
-      wbFormIDCk('Worn Restrictions', [FLST, NULL])
+      wbFormIDCk('Worn Restrictions', [FLST, NULL]),
+      wbUnknown
     ], cpNormal, True, nil, 8),
     wbEffectsReq
   ]);
@@ -10124,8 +10328,20 @@ begin
     wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AFFE, 'Affinity Event', [
-    wbEDID
+    wbEDID,
+    wbUnknown(FNAM, 4).SetRequired, //req
+    wbUnknown(NLDT),
+    wbRStructsSK('Unknown', 'Unknown', [0], [
+      wbFormIDCk(NNAM, 'Actor', [NPC_]),
+      wbFormIDCk(RNAM, 'Reaction', [GLOB]).SetRequired
+    ], []),
+    wbFormIDCk(ANAM, 'Actor Value', [AVIF]).SetRequired,
+    wbFormIDCk(ENAM, 'Size', [GLOB]).SetRequired,
+    wbFormIDCk(DNAM, 'Distance', [GLOB]),
+    wbFormIDCk(CNAM, 'Cooldown', [GLOB]),
+    wbFormIDCk(BNAM, 'Faction', [FACT])
   ]);
 
   wbRecord(FURN, 'Furniture',
@@ -10200,11 +10416,14 @@ begin
     wbNVNM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(GLOB, 'Global',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Constant'
     ])), [
     wbEDID,
+    wbBFCBs,
+    {
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
              0, 'Unknown',
       Ord('s'), 'Short',
@@ -10212,9 +10431,11 @@ begin
       Ord('f'), 'Float',
       Ord('b'), 'Boolean'
     ]), cpNormal, True).SetDefaultEditValue('Float'),
+    }
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True, nil, wbGMSTEDIDAfterSet),
     wbXALG,
@@ -10226,17 +10447,21 @@ begin
     ], cpNormal, True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(KYWD, 'Keyword',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
+    wbBFCBs,
     wbCNAM,
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
+    wbUnknown(FNAM),
+    wbUnknown(ENAM),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
-    wbFULL,
-    wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
+    wbFULL
+    //wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
 
   wbRecord(FFKW, 'Form Folder Keyword List', [
@@ -10253,6 +10478,7 @@ begin
     wbUnknown(TNAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AACT, 'Action',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
@@ -10261,8 +10487,8 @@ begin
     wbCNAM,
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
-    wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
-    wbFULL,
+//    wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
+//    wbFULL,
     wbUnknown(FNAM)
   ]);
 
@@ -10360,7 +10586,7 @@ begin
     wbVMAD,
     wbOBND(True),
     wbODTY,
-    wbUnknown(OPDS),
+    wbOPDS,
     wbPTT2,
     wbSNTP,
     wbSNBH,
@@ -10409,10 +10635,16 @@ begin
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
     wbOBND(True),
+    wbODTY,
+    wbOPDS,
+    wbXALG,
+    wbBFCBs,
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbByteArray(DATA, 'Unused', 0, cpIgnore),
+    wbUnknown(DATA),
+    wbUnknown(PROD),
+    (*
     wbStruct(DNAM, 'Data', [
       wbInteger('Flags', itU16, wbFlags([
         {0x00001} 'Hitscan',
@@ -10463,11 +10695,17 @@ begin
       wbInteger('Tracer Frequency', itU8),
       wbFormIDCk('VATS Projectile', [PROJ, NULL])
     ]),
+
+    *)
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbModelInfo(NAM2)
+      wbUnknown(FLLD)
+      //wbModelInfo(NAM2)
     ], [], cpNormal, True),
-    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
+    wbUnknown(PRAS),
+    wbUnknown(PRCS),
+    wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
+    wbFormID(NAM3)
   ]);
 
   wbRecord(HAZD, 'Hazard', [
@@ -10646,13 +10884,25 @@ end;
 
 procedure DefineSF1g;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbOBND(True),
+    wbODTY,
+    wbOPDS,
+    wbXALG,
+    wbDEFL,
+    wbBFCBs,
     wbFULL,
     wbGenericModel,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
+    wbUnknown(ENAM),
+    wbStruct(DAMA, 'Damage', [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbUnknown
+    ])
+    (*
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Light', [LIGH, NULL]),
       wbFormIDCk('Sound 1', [SNDR, NULL]),
@@ -10696,6 +10946,7 @@ begin
         wbInteger('Count', itU32)
       ]))
     ], cpNormal, True, nil, 13)
+    *)
   ]);
 
   wbRecord(DEBR, 'Debris', [
@@ -11117,13 +11368,17 @@ begin
     )
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBND(True),
+    wbODTY,
+    wbBFCBs,
     wbGenericModel,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    wbFormIDCk(SNAM, 'Sound', [SNDR]),
+    //wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCk(LNAM, 'Light', [LIGH]),
+    wbUnknown(PSDF),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([
@@ -11138,10 +11393,11 @@ end;
 
 procedure DefineSF1h;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(AVIF, 'Actor Value Information', [
     wbEDID,
     wbFULL,
-    wbDESCReq,
+    wbString(NLDT),
     wbLString(ANAM, 'Abbreviation', 0, cpTranslate),
     wbFloat(NAM0, 'Default Value'), // Prior to form version 81, it was either 0.0, 1.0 or 100.0, so scale or multiplier ?
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
@@ -11189,7 +11445,9 @@ begin
       'Int Value',
       'Variable',
       'Resource'
-    ]))
+    ])),
+    wbUnknown(NAM2),
+    wbUnknown(NAM3)
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
   wbRecord(CAMS, 'Camera Shot', [
@@ -13010,7 +13268,8 @@ begin
         {0x00000040} 'Unknown 7',
         {0x00000080} 'Unknown 8',
         {0x00000100} 'References Persist'
-      ]))
+      ])),
+      wbUnknown
     ], cpNormal, True),
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -15466,7 +15725,7 @@ begin
   ]);}
 
   wbRecord(STAT, 'Static',
-    wbFlags(wbRecordFlagsFlags, [
+    wbFlags(wbRecordFlagsFlags, [ //flags not checked aginst Starfield
       {0x00000001} { 0} '',
       {0x00000002} { 1} '',
       {0x00000004} { 2} 'Heading Marker',
@@ -15501,30 +15760,30 @@ begin
       {0x80000000} {31} ''
     ]), [
     wbEDID,
-    wbVMAD,
+//    wbVMAD,
     wbOBND(True),
 //    wbPTRN,
     wbODTY,
-    wbUnknown(OPDS),
-    wbXALG,
+    wbOPDS,
     wbPTT2,
     wbSNTP,
-    wbSNBH,
+    wbSNBH, //order between SNBH
+    wbXALG, //and XALG unknown
     wbDEFL,
     wbBFCBs,
     wbFTYP,
     wbGenericModel,
     wbPRPS,
     wbFULL,
-    wbUnknown(XFLG),
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
       wbFormIDCk('Material', [MATO, NULL]),
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True, nil, 2),
-    wbUnknown(STLS),
-    wbNVNM,
+    wbUnknown(STLS), //order between STLS
+    wbNVNM           //and NVNM unknown
+    (*
     wbArray(MNAM, 'Distant LOD',
       wbStruct('LOD', [
         {>>> Contains null-terminated mesh FileName followed by random data up to 260 bytes <<<}
@@ -15538,6 +15797,7 @@ begin
       ],
       cpNormal, False
     )
+    *)
   ], True);  // unordered, NVNM can be before or after MNAM
 
   wbRecord(TES4, 'Main File Header',
@@ -16220,8 +16480,11 @@ begin
     )
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
+    wbUnknown(ANAM)
+    {
     wbStruct(DNAM, 'Data', [
       wbFloat('Cone of Fire - Min Angle'),
       wbFloat('Cone of Fire - Max Angle'),
@@ -16240,6 +16503,7 @@ begin
       wbFloat('Cone of Fire - Iron Sights Mult'),
       wbFloat('Stability - Base Stability')
     ])
+    }
   ]);
 
   wbRecord(AORU, 'Attraction Rule', [
@@ -16847,6 +17111,7 @@ end;
 
 procedure DefineSF1u;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbRStruct('Attach Point', [
@@ -16865,8 +17130,11 @@ begin
     ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AAMD, 'Aim Assist Model Data', [
     wbEDID,
+    wbUnknown(SNAM)
+    {
     wbFloat(ANAM, 'Inner Cone Angle Degrees'),
     wbFloat(BNAM, 'Outer Cone Angle Degrees'),
     wbFloat(CNAM, 'Steering Degrees Per Sec'),
@@ -16889,11 +17157,15 @@ begin
     wbFloat(TNAM, 'ADS Multiplier Friction'),
     wbFloat(UNAM, 'ADS Multiplier Steering Degrees Per Sec'),
     wbFloat(VNAM, 'Aim Assist Enabled')
+    }
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SECH, 'Sound Echo Marker', [
     wbEDID,
     wbOBND,
+    wbODTY,
+    wbXALG, //unknown if before or after NNAM
     wbString(NNAM, 'Description'),
     wbRArray('Echos',
       wbRStruct('Echo', [
@@ -16901,8 +17173,8 @@ begin
           wbEmpty(ECHO, 'Echo Start Marker'),
           wbEmpty(ECHD, 'Echo Default Start Marker')
         ], []),
-        wbFormIDCk(ETRG, 'Trigger', [SNDR]),
-        wbFormIDCk(SDSC, 'Sound', [SNDR]),
+        wbUnknown(ECTE),
+        wbUnknown(ECSH),
         wbUnknown(ANAM),
         wbFloat(BNAM),
         wbUnknown(CNAM),
@@ -16914,15 +17186,17 @@ begin
     )
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(CURV, 'Curve Table', [
     wbEDID,
-    wbString(CRVE, 'JSON File Path'),
-    wbString(JASF, 'JSON File Path')
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(STND, 'Snap Template Node', [
     wbEDID,
     wbOBND,
+    wbBFCBs,
     wbGenericModel,
     wbKeywords,
     wbByteRGBA(CNAM, 'Unknown Colors'),
@@ -16962,12 +17236,15 @@ begin
     ])),
     wbInteger(SNST, 'Unknown', itU32),
     wbRArray('Adjacent Snap Nodes', wbFormID(NNAM, 'Adjacent Snap Node')),
-    wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'))
+    wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'), 3),
+    wbFormID(ANAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(STMP, 'Snap Template', [
     wbEDID,
-    wbPTRN,
+    wbBFCBs,
+    //wbPTRN,
     wbFormIDCk(PNAM, 'Parent', [STMP]),
     wbRArray('Nodes', wbStruct(ENAM, 'Node', [
       wbInteger('Node ID', itU32),
@@ -16975,7 +17252,8 @@ begin
       wbArray('Unknown', wbFloat('Unknown'), 4),
       wbFromVersion(187, wbFloat('Unknown')),
       wbFromVersion(187, wbFloat('Unknown')),
-      wbFromVersion(187, wbInteger('Unknown', itU32))
+      wbFromVersion(187, wbInteger('Unknown', itU32)),
+      wbUnknown
    ])),
     wbRArray('Parent Nodes', wbRStruct('Parent Node', [
       wbInteger(ONAM, 'Node ID', itU32),
@@ -16986,47 +17264,46 @@ begin
       ])
     ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
-    wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
+    //wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
     wbInteger(INAM, 'Next Node ID', itU32),
-    wbUnknown(STPT),
-    wbUnknown(SNFG)
+    wbUnknown(STPT, 4),
+    //wbUnknown(SNFG)
+    wbString(CNAM),
+    wbRStructsSK('Unknown', 'Unknown', [0], [
+      wbFormIDCk(RNAM, 'Traversal', [TRAV]),
+      wbRArrayS('Unknown', wbInteger(SNAM, 'Node ID', itU32))
+    ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(GCVR, 'Ground Cover', [
     wbEDID,
+    wbBFCBs,
     wbRArray('Grasses', wbRStruct('Grass', [
       wbFormID(GNAM, 'Grass Texture'),
       wbInteger(DNAM, 'Unknown Int', itU16)
     ], [])),
     wbRArray('Landscape Textures', wbFormID(LNAM, 'Landscape Texture')),
-    wbFloat(YNAM),
-    wbFloat(ZNAM, 'Unused Float')
+    wbFloat(YNAM)
+    //wbFloat(ZNAM, 'Unused Float')
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(VOLI, 'Volumetric Lighting', [
     wbEDID,
-    wbFloat(CNAM, 'Intensity'),
-    wbFloat(DNAM, 'Custom Color - Contribution'),
-    wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
-    wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
-    wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
-    wbFloat(HNAM, 'Density - Contribution'),
-    wbFloat(INAM, 'Density - Size'),
-    wbFloat(JNAM, 'Density - Wind Speed'),
-    wbFloat(KNAM, 'Density - Falling Speed'),
-    wbFloat(LNAM, 'Phase Function - Contribution'),
-    wbFloat(MNAM, 'Phase Function - Scattering'),
-    wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PMFT, 'Photo Mode Feature', [
     wbEDID,
-    wbXALG,
+//    wbXALG,
 //    wbFTAGs,
     wbFULL,
-    wbICON,
-    wbCTDAs,
+//    wbICON,
+//    wbCTDAs,
     wbUnknown(FNAM),
+    wbUnknown(HNAM),
     //wbStruct(FNAM, 'Unknown', [
     //  wbInteger('Unknown 1', itU32),
     //  wbFloat('Unknown 2'),
@@ -17037,108 +17314,161 @@ begin
     //  wbByteArray('Unknown 7', 4),
     //  wbByteArray('Unknown 8', 4)
     //]),
-    wbFormIDCk(INAM, 'Image Space', [IMAD]),
-    wbFormIDCk(KNAM, 'Keyword', [KYWD])
+    wbFormIDCk(INAM, 'Image Space', [IMAD])
+    //wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
-  wbRecord(CHAL, 'Challenge',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2',
-      {0x00000200}  9, 'Unknown 9'
-    ])),[
+  {subrecords checked against Starfield.esm}
+  wbRecord(CHAL, 'Challenge', [
     wbEDID,
-//    wbWTFG,
-//    wbFTAGs,
-    wbFULL,
-    wbString(SNAM, 'Tracked Stat Used'),
-    wbString(NNAM, 'Comment'),
-    wbInteger(FNAM, 'Challenge Flags', itU32, wbFlags([
-      {0x00000001} 'Repeatable',
-      {0x00000002} 'Unknown 1',
-      {0x00000004} 'Unknown 2',
-      {0x00000008} 'Unknown 3'
-    ])),
-    wbInteger(TNAM, 'Required Count', itU32),
-//    wbXFLGLong, //Unused?
-    wbFormIDCk(HNAM, 'Required Count Global', [GLOB]),
-    wbInteger(CNAM, 'Challenge Frequency', itU32, wbEnum([
-      'Daily',
-      'Weekly',
-      'Lifetime',
-      'Monthly',
-      'Event',
-      'Seasonal'
-    ])),
-    wbInteger(ENAM, 'Challenge Category', itU32, wbEnum([
-      'Character',
-      'Survival',
-      'Exploration',
-      'Pets',
-      'Combat',
-      'Social',
-      'World',
-      'Tracker',
-      'Sub Challenge (Unsorted)'
-    ])),
-    wbRArray('Pre-Requisites', wbFormIDCk(ANAM, 'Challenge', [CHAL])),
-    wbCTDAs,
-    wbRStruct('More Conditions', [
-      wbEmpty(NEXT, 'Marker', cpNormal, True),
-      wbCTDAs
-    ],[]),
-//    wbRArray('Rewards', wbReward),
-    wbString(JASF, 'Associated Json File'),
-    wbFormIDCk(SCFL, 'SubChallenge Completion List', [FLST]),
-    wbLStringKC(MNAM, 'Reward Display', 0, cpTranslate),
-//    wbString(MNAM, 'Reward Display'), TODO: Prior to esm version 155
-    wbString(RNAM, 'Reward Icon')
+    wbBFCBs
   ]);
 
-
+  {subrecords checked against Starfield.esm}
   wbRecord(CNDF, 'Condition Form', [
     wbEDID,
-    wbCTDAs
+    wbCTDAs,
+    {
+    wbRStruct('Unknown', [
+      wbUnknown(CIS1),
+      wbCTDAs,
+      wbUnknown(CIS1)
+    ], []),
+    wbRStruct('Unknown', [
+      wbUnknown(CIS2),
+      wbCTDAs,
+      wbUnknown(CIS2)
+    ], []);
+    }
+    wbFormIDCk(QNAM, 'Quest', [QUST])
   ]);
-  
+
+  {subrecords checked against Starfield.esm}
   wbRecord(AOPF, 'Audio Occlusion Primitive', [
-    wbEDID
+    wbEDID,
+    wbOBND(True),
+    wbODTY,
+    wbUnknown(OBSV),
+    wbUnknown(OCCV)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PDCL, 'Projected Decal', [
-    wbEDID
+    wbEDID,
+    wbOBND(True),
+    wbODTY,
+    wbOPDS,
+    wbBFCBs,
+    wbUnknown(PTT2), // order between PTT2
+    wbFormID(SNBH),  // and SNBH is unknown
+    wbFormID(DODT),
+    wbUnknown(DATA)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(CUR3, 'Curve 3D', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(BMMO, 'Biome Marker', [
-    wbEDID
+    wbEDID,
+    wbVMAD,
+    wbOBND(True),
+    wbODTY,
+    wbOPDS,
+    wbGenericModel,
+    wbKeywords,
+    wbCTDAs,
+    wbFormID(KNAM),
+    wbFormID(LNAM),
+    wbFormID(LNA2)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(GBFT, 'Generic Base Form Template', [
-    wbEDID
+    wbEDID,
+    wbRArray('Unknown', wbString(STRV))
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(GBFM, 'Generic Base Form', [
-    wbEDID
+    wbEDID,
+    wbVMAD,
+    wbOBND(True),
+    wbODTY,
+    wbOPDS,
+    wbBFCBs,
+    wbFLTR,
+    wbFormID(ANAM),
+    wbRArray('Unknown', wbString(STRV)),
+    wbUnknown(OBTE),
+    wbUnknown(OBTF),
+    wbUnknown(OBTS),
+    wbUnknown(STOP),
+    wbUnknown(STOP),
+    wbNVNM
   ]);
 
+  {subrecords checked against Starfield.esm}
+  var wbLeveledListEntryBaseForm :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbStructExSK(LVLO, [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itU16),
+        wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+        wbFormIDCk('Generic Base Form', [GBFM, LVLB]),
+        wbInteger('Count', itS16),
+        wbInteger('Chance None', itU8),
+        wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2, 4])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryPrefixSuffixOnValue(4, '{Chance None:', '%}')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey),
+      wbCTDAs
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
+  {subrecords checked against Starfield.esm}
   wbRecord(LVLB, 'Leveled Base Form', [
-    wbEDID
-  ]);
+    wbEDID,
+    wbVMAD,
+    wbOBND(True),
+    wbODTY,
+    wbLVLD,
+    wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
+    wbInteger(LVLF, 'Flags', itU16, wbFlags([
+      {0x01} 'Calculate from all levels <= player''s level',
+      {0x02} 'Calculate for each item in count',
+      {0x04} 'Calculate All' {Still picks just one}
+    ]), cpNormal, True),
+    wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbCTDAs,
+    wbLLCT,
+    wbRArrayS('Leveled List Entries', wbLeveledListEntryBaseForm, cpNormal, False, nil, wbLVLOsAfterSet),
+    wbGenericModel
+  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WTHS, 'Weather Settings', [
     wbEDID,
     wbUnknown(REFL),
-    wbUnknown(RFDP),
+    wbFormID(RFDP),
     wbUnknown(RDIF)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(MAAM, 'Melee Aim Assist Model', [
-    wbEDID
+    wbEDID,
+    wbUnknown(SNAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(IRES, 'Resource', [
     wbEDID,
     wbFULL,
@@ -17155,98 +17485,292 @@ begin
     wbFormIDCK(NAM3, 'Interval', [GLOB])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(BIOM, 'Biome', [
-    wbEDID
+    wbEDID,
+    wbFULL,
+    wbKeywords,
+    wbString(SNAM),
+    wbArray(PNAM, 'Plants', wbFormIDCk('Flora', [FLOR])),
+    wbFormID(RNAM),
+    wbRStructs('Unknown', 'Unknown', [
+      wbString(FNAM),
+      wbUnknown(BNAM),
+      wbRArray('Unknown', wbStruct(GNAM, 'Unknown', [
+        wbFormIDCk('Pack-In', [PKIN]),
+        wbUnknown
+      ])),
+      wbUnknown(DNAM)
+    ], []),
+    wbUnknown(ONAM),
+    wbRArray('Unknown', wbFormID(NAM1)),
+    wbFormIDCk(ENAM, 'Climate', [CLMT]),
+    wbUnknown(MNAM),
+    wbFormIDCk(INAM, 'Water', [WATR]),
+    wbString(JNAM),
+    wbUnknown(WNAM),
+    wbUnknown(YNAM),
+    wbUnknown(UNAM),
+    wbFormIDCk(BIAS, 'Ambient Set', [AMBS]),
+    wbFormIDCk(BIMT, 'Music', [MUSC]),
+    wbUnknown(NAM0),
+    wbFormIDCk(NNAM, 'Pattern Style', [PTST]),
+    wbUnknown(CNAM),
+    wbUnknown(BMC1),
+    wbUnknown(BMC2),
+    wbUnknown(BMC3),
+    wbUnknown(TNAM),
+    wbRStructs('Unknown', 'Unknown', [
+      wbFormIDCk(KNAM, 'Keyword', [KYWD]),
+      wbKSIZ,
+      wbKWDAs
+    ], []),
+    wbRStructs('Unknown', 'Unknown', [
+      wbStruct(LNAM, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Land Texture', [LTEX]),
+        wbFormIDCk('Ground Cover', [GCVR])
+      ]),
+      wbStruct(ANAM, 'Unknown', [
+        wbByteArray('Unknown', 4),
+        wbFormIDCk('Land Texture', [LTEX]),
+        wbFormIDCk('Ground Cover', [GCVR])
+      ]),
+      wbString(TX00),
+      wbString(UX00),
+      wbString(VX00),
+      wbString(WX00),
+      wbString(XX00),
+      wbString(YX00)
+    ], []),
+    wbString(TX16),
+    wbUnknown(BTPS),
+    wbUnknown(BDFS),
+    wbString(EFSD),
+    wbUnknown(NAM2),
+    wbUnknown(NAM3),
+    wbUnknown(NAM4)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AMBS, 'Ambience Set', [
-    wbEDID
+    wbEDID,
+    wbUnknown(ASAS), //count
+    wbRArray('Unknown', wbUnknown(ASAE)),
+    wbUnknown(ASMB),
+    wbUnknown(WED0)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AOPS, 'Aim Optical Sight Marker', [
-    wbEDID
+    wbEDID,
+    wbUnknown(ANAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ATMO, 'Atmosphere', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL),
+    wbFormID(RFDP),
+    wbUnknown(RDIF)
   ]);
 
-  wbRecord(AVMD, 'AVM Data', [
-    wbEDID
+  {subrecords checked against Starfield.esm}
+  wbRecord(AVMD, 'Actor Value Modulations', [
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(MNAM), //req
+    wbString(YNAM),  //req
+    wbString(TNAM),  //req
+    wbUnknown(ITMC), //req
+    wbRStructs('Unknown', 'Unknown', [
+      wbString(LNAM), //req
+      wbString(VNAM),
+      wbUnknown(NNAM)  //req
+    ], []),
+    wbUnknown(MODT)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(BMOD, 'Bone Modifier', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(DATA)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(CLDF, 'Clouds', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(EFSQ, 'Effect Sequence', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FOGV, 'Fog Volume', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FORC, 'Force Data', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(LMSW, 'Layered Material Swap', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
+  var wbLeveledListEntrySpaceCell :=
+    wbRStructExSK([0], [1], 'Leveled List Entry', [
+      wbStructExSK(LVLO, [0, 2], [3], 'Base Data', [
+        wbInteger('Level', itU16),
+        wbByteArray('Unused', 2, cpIgnore, false, wbNeverShow),
+        wbFormIDCk('Space Cell', [CELL, LVSC]),
+        wbInteger('Count', itS16),
+        wbInteger('Chance None', itU8),
+        wbByteArray('Unused', 1, cpIgnore, false, wbNeverShow)
+      ])
+      .SetSummaryKeyOnValue([0, 3, 2, 4])
+      .SetSummaryPrefixSuffixOnValue(0, '[Lv', ']')
+      .SetSummaryPrefixSuffixOnValue(3, '', 'x')
+      .SetSummaryPrefixSuffixOnValue(4, '{Chance None:', '%}')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+//      , wbCOED
+    ], [])
+    .SetSummaryMemberMaxDepth(0, 1)
+    .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
+
+  {subrecords checked against Starfield.esm}
   wbRecord(LVSC, 'Leveled Space Cell', [
-    wbEDID
-  ]);
+    wbEDID,
+    wbLVLD,
+    wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
+    wbInteger(LVLF, 'Flags', itU16, wbFlags([
+      {0x01} 'Calculate from all levels <= player''s level',
+      {0x02} 'Calculate for each item in count',
+      {0x04} 'Calculate All' {Still picks just one}
+    ]), cpNormal, True),
+    wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbLLCT,
+    wbRArrayS('Leveled List Entries', wbLeveledListEntrySpaceCell, cpNormal, False, nil, wbLVLOsAfterSet)
+//    wbFilterKeywordChances,
+//    wbGenericModel
+  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(MRPH, 'Morphable Object', [
+    wbEDID,
+    wbUnknown(TMPP),
+    wbUnknown(TCMP),
+    wbUnknown(MOBC)
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(MTPT, 'Material Path', [
+    wbEDID,
+    wbUnknown(REFL)
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(OSWP, 'Biome Swap', [ //OSWP -> EDID  (3)
     wbEDID
   ]);
 
-  wbRecord(MTPT, 'Something with Decal?', [
-    wbEDID
-  ]);
-
-  wbRecord(OSWP, 'Biome Swap', [
-    wbEDID
-  ]);
-
+  {subrecords checked against Starfield.esm}
   wbRecord(PCBN, 'Planet Content Manager Branch Node', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(NAM1), //req
+    wbUnknown(NAM2), //req
+    wbUnknown(NAM3),
+    wbUnknown(NAM4),
+    wbUnknown(NAM5), //req
+    wbRArray('Unknown', wbFormIDCk(PCCB, 'Unknown', [PCCN])),
+    wbCITCReq,
+    wbCTDAsCount,
+    wbKWDAs
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PCCN, 'Planet Content Manager Content Node', [
-    wbEDID
+    wbEDID,
+    wbBFCBs,
+    wbFormIDCk(PCCC, 'Worldspace', [WRLD]), //req
+    wbUnknown(IOVR),
+    wbKWDAs
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PCMT, 'Planet Content Manager Tree', [
-    wbEDID
+    wbEDID,
+    wbUnknown(NAM1), //req
+    wbUnknown(NAM2), //req
+    wbUnknown(NAM5), //req
+    wbRArray('Unknown', wbFormIDCk(PCCB, 'Unknown', [PCBN])),
+    wbCITCReq,
+    wbCTDAsCount
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PNDT, 'Planet Data', [
+    wbEDID,
+    wbBFCBs,
+    wbUnknown(CNAM), //req
+    wbRArray('Unknown', wbUnknown(PPBD)),
+    wbUnknown(FNAM), //req
+    wbUnknown(GNAM), //req
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(BDST), //req
+      wbString(ANAM),  //req
+      wbUnknown(CNAM), //req
+      wbUnknown(DNAM), //req
+      wbUnknown(ENAM),
+      wbUnknown(FNAM),
+      wbUnknown(GNAM), //req?
+      wbUnknown(HNAM),
+      wbUnknown(INAM),
+      wbUnknown(NNAM)
+    ], []),
+    wbUnknown(BDED), //req
+    wbUnknown(TEMP), //req
+    wbUnknown(DENS), //req
+    wbUnknown(PHLA), //req
+    wbUnknown(RSCS)
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(PSDC, 'Particle System Define Collision', [ //PSDC -> EDID REFL  (9)
+    wbEDID,
+    wbUnknown(REFL)
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(PTST, 'Surface Pattern Style', [ //PTST -> EDID  (46)
     wbEDID
   ]);
 
-  wbRecord(PSDC, 'Particle System Define Collision', [
-    wbEDID
-  ]);
-
-  wbRecord(PTST, 'Surface Pattern Style', [
-    wbEDID
-  ]);
-
+  {subrecords checked against Starfield.esm}
   wbRecord(RSGD, 'Resource Generation Data', [
     wbEDID,
     wbRStructs('Unknown', 'Unknown', [
-      wbFormIDCk(RNAM, 'Resource', [IRES]), //required
-      wbUnknown(DNAM) //required
+      wbFormIDCk(RNAM, 'Resource', [IRES]), //req
+      wbUnknown(DNAM)                       //req
     ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(RSPJ, 'Research Project', [
     wbEDID,
     wbFULL,
@@ -17270,6 +17794,7 @@ begin
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SDLT, 'Secondary Damage List', [
     wbEDID,
     wbUnknown(ITMC), //count?
@@ -17279,6 +17804,7 @@ begin
     ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SFBK, 'Surface Block', [
     wbEDID,
     wbBFCBs,
@@ -17300,6 +17826,7 @@ begin
     wbFormIDCk(NAM5, 'Surface Block', [SFBK, NULL] )
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SFPC, 'Surface Pattern Config', [
     wbEDID,
     wbFormIDCk(ENAM, 'Unknown', [PTST]), //req
@@ -17310,6 +17837,7 @@ begin
     wbUnknown(DNAM)  //req
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SFPT, 'Surface Pattern', [
     wbEDID,
     wbBFCBs,
@@ -17318,6 +17846,7 @@ begin
     wbUnknown(DNAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SFTR, 'Surface Tree', [
     wbEDID,
     wbBFCBs,
@@ -17328,6 +17857,7 @@ begin
     wbString(NAM1)   //req
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SPCH, 'Speech Challenge', [
     wbEDID,
     wbUnknown(SPWI), //req
@@ -17340,19 +17870,21 @@ begin
     wbUnknown(DIFF) //req
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(STBH, 'Snap Template Behavior', [
     wbEDID,
     wbBFCBs,
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(ENAM), //req
-      wbUnknown(PNAM), //req
+      wbFormID(PNAM), //req
       wbCITCReq,
       wbCTDAsCount,
-      wbUnknown(UNAM), //req
-      wbUnknown(VNAM)  //req
+      wbFormID(UNAM), //req
+      wbFormID(VNAM)  //req
     ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(STDT, 'Galaxy Star Data', [
     wbEDID,
     wbBFCBs,
@@ -17365,13 +17897,15 @@ begin
     wbFormID(PNAM, 'Sun Preset')
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SUNP, 'Galaxy Sun Preset', [
     wbEDID,
     wbUnknown(REFL),
-    wbUnknown(RFDP),
+    wbFormID(RFDP),
     wbUnknown(RDIF)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TMLM, 'Terminal Menu', [
     wbEDID,
     wbVMAD,
@@ -17409,22 +17943,26 @@ begin
     ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TODD, 'Time Of Day Data', [
     wbEDID,
     wbBFCBs,
     wbUnknown(REFL)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TRAV, 'Traversal', [
     wbEDID,
     wbUnknown(DNAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID,
     wbUnknown(ZNAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WKMF, 'WWise Keyword Mapping', [
     wbEDID,
     wbUnknown(WMTI),
@@ -17435,6 +17973,7 @@ begin
     ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WWED, 'WWise Event Data', [
     wbEDID,
     wbUnknown(WSED),

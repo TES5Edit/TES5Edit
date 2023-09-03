@@ -74,10 +74,13 @@ var
   DumpCheckReport : Boolean = False;
   DumpSize        : Boolean = False;
   DumpHidden      : Boolean = False;
+  DontWriteReport : Boolean = False;
+  ProgressLocked  : Boolean = False;
 
 procedure ReportProgress(const aStatus: string);
 begin
-  WriteLn(ErrOutput, FormatDateTime('<hh:nn:ss.zzz>', Now - StartTime), ' ', aStatus);
+  if not ProgressLocked then
+    WriteLn(ErrOutput, FormatDateTime('<hh:nn:ss.zzz>', Now - StartTime), ' ', aStatus);
 end;
 
 type
@@ -659,8 +662,19 @@ begin
         then
           Exit;
 
-  if aElement.ElementType = etMainRecord then
+  if aElement.ElementType = etMainRecord then begin
     Inc(DumpCount);
+    if wbReportMode and DontWriteReport then
+      if Supports(aElement, IwbContainer, Container) then begin
+        Container.ElementCount;
+        if DumpCount mod 10000 = 0 then begin
+          ProgressLocked := False;
+          ReportProgress(DumpCount.ToString);
+          ProgressLocked := True;
+         end;
+        Exit;
+      end;
+  end;
   if (DumpMax > 0) and (DumpCount > DumpMax) then
     Exit;
 
@@ -1168,6 +1182,12 @@ begin
       else
         wbReportMode := False;
 
+      if FindCmdLineSwitch('sro') then
+      begin
+        wbReportMode := True;
+        DontWriteReport := True;
+      end;
+
       if FindCmdLineSwitch('dcr') then begin
         wbReportMode := True;
         DumpCheckReport := True;
@@ -1649,8 +1669,12 @@ begin
       if wbToolMode in [tmDump] then begin
         if FindCmdLineSwitch('check') and not wbReportMode then
           CheckForErrors(0, _File)
-        else
+        else begin
+          if DontWriteReport then
+            ProgressLocked := True;
           WriteContainer(_File);
+          ProgressLocked := False;
+        end;
 
         if wbReportMode then begin
           if DumpCheckReport then begin
@@ -1659,7 +1683,8 @@ begin
             WriteLn;
           end;
 
-          ReportDefs;
+          if not DontWriteReport then
+            ReportDefs;
         end;
       end else if wbToolMode in [tmExport] then begin
         for Pass := epRead to epRemaining do begin

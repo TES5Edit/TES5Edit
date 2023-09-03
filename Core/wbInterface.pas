@@ -3034,6 +3034,22 @@ function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
                    aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef; overload;
 
+function wbUnknown(const aSignature : TwbSignature;
+                         aSize      : Integer;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef; overload;
+
+function wbUnknown(aSize     : Integer;
+                   aPriority : TwbConflictPriority = cpNormal;
+                   aRequired : Boolean = False;
+                   aDontShow : TwbDontShowCallback = nil;
+                   aGetCP    : TwbGetConflictPriority = nil)
+                             : IwbByteArrayDef; overload;
+
+
 function wbInteger(const aSignature : TwbSignature;
                    const aName      : string;
                    const aIntType   : TwbIntType;
@@ -7294,6 +7310,27 @@ function wbUnknown(aPriority : TwbConflictPriority = cpNormal;
                              : IwbByteArrayDef;
 begin
   Result := wbByteArray('Unknown', 0, aPriority, aRequired, aDontShow, aGetCP);
+end;
+
+function wbUnknown(const aSignature : TwbSignature;
+                         aSize      : Integer;
+                         aPriority  : TwbConflictPriority = cpNormal;
+                         aRequired  : Boolean = False;
+                         aDontShow  : TwbDontShowCallback = nil;
+                         aGetCP     : TwbGetConflictPriority = nil)
+                                    : IwbSubRecordDef;
+begin
+  Result := wbByteArray(aSignature, 'Unknown', aSize, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
+function wbUnknown(aSize      : Integer;
+                   aPriority : TwbConflictPriority = cpNormal;
+                   aRequired : Boolean = False;
+                   aDontShow : TwbDontShowCallback = nil;
+                   aGetCP    : TwbGetConflictPriority = nil)
+                             : IwbByteArrayDef;
+begin
+  Result := wbByteArray('Unknown', aSize, aPriority, aRequired, aDontShow, aGetCP);
 end;
 
 function wbInteger(const aSignature : TwbSignature;
