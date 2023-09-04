@@ -896,6 +896,7 @@ type
     function GetFullPath: string;
     function GetPathName: string;
     function GetSkipped: Boolean;
+    procedure SetSkipped(aValue: Boolean);
     function GetDef: IwbNamedDef;
     function GetValueDef: IwbValueDef;
     function GetResolvedValueDef: IwbValueDef;
@@ -1039,7 +1040,8 @@ type
     property PathName: string
       read GetPathName;
     property Skipped: Boolean
-      read GetSkipped;
+      read GetSkipped
+      write SetSkipped;
 
     property Value: string
       read GetValue;
@@ -2059,6 +2061,9 @@ type
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbMainRecordDef;
 
     function ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord): string;
+
+    function SetIgnoreList(const aSignatures: array of TwbSignature): {Self}IwbMainRecordDef;
+    function ShouldIgnore(const aSignature: TwbSignature): Boolean;
 
     property IsReference: Boolean
       read GetIsReference;
@@ -5225,6 +5230,7 @@ type
     recSummarySuffix      : TArray<string>;
     recSummaryMaxDepth    : TArray<Integer>;
     recSummaryDelimiter   : string;
+    recIgnoreList         : TwbSignatures;
 
     procedure recBuildReferences;
   protected
@@ -5314,6 +5320,9 @@ type
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbMainRecordDef;
 
     function ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord): string;
+
+    function SetIgnoreList(const aSignatures: array of TwbSignature): {Self}IwbMainRecordDef;
+    function ShouldIgnore(const aSignature: TwbSignature): Boolean;
     {--- IwbMainRecordDefInternal ---}
   end;
 
@@ -9624,6 +9633,14 @@ begin
   Result := Self;
 end;
 
+function TwbMainRecordDef.SetIgnoreList(const aSignatures: array of TwbSignature): IwbMainRecordDef;
+begin
+  Result := Self;
+  SetLength(recIgnoreList, Length(aSignatures));
+  for var lIdx := Low(aSignatures) to High(aSignatures) do
+    recIgnoreList[lIdx] := aSignatures[lIdx];
+end;
+
 function TwbMainRecordDef.SetSetEditorIDCallback(const aCallback: TwbMainRecordSetEditorIDCallback): IwbMainRecordDef;
 begin
   recSetEditorIDCallback := aCallback;
@@ -9695,6 +9712,14 @@ function TwbMainRecordDef.SetToStr(const aToStr: TwbToStrCallback): IwbMainRecor
 begin
   Result := Self;
   ndToStr := aToStr;
+end;
+
+function TwbMainRecordDef.ShouldIgnore(const aSignature: TwbSignature): Boolean;
+begin
+  for var lIdx := Low(recIgnoreList) to High(recIgnoreList) do
+    if recIgnoreList[lIdx] = aSignature then
+      Exit(True);
+  Result := False;
 end;
 
 type

@@ -340,6 +340,7 @@ type
     function GetFullPath: string; virtual;
     function GetPathName: string; virtual;
     function GetSkipped: Boolean; virtual;
+    procedure SetSkipped(aValue: Boolean); virtual;
     function GetDef: IwbNamedDef; virtual;
     function GetValueDef: IwbValueDef; virtual;
     function GetResolvedValueDef: IwbValueDef; virtual;
@@ -934,6 +935,7 @@ type
 
     function GetName: string; override;
     function GetSkipped: Boolean; override;
+    procedure SetSkipped(aValue: Boolean); override;
   end;
 
   PwbMainRecordStruct = ^TwbMainRecordStruct;
@@ -7465,6 +7467,12 @@ begin
   {can be overriden}
 end;
 
+procedure TwbRecord.SetSkipped(aValue: Boolean);
+begin
+  inherited;
+  recSkipped := aValue;
+end;
+
 function TwbRecord.GetSignature: TwbSignature;
 begin
   if Assigned(dcBasePtr) then
@@ -8668,10 +8676,14 @@ begin
       if IsTES3REFR and (PwbSignature(CurrentPtr)^ = 'FRMR') then
         Inc(FRMRCount);
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
-      {$IFDEF DBGSUBREC}
-      if Supports(Element, IwbSubRecord, CurrentRec) then
+      if Supports(Element, IwbSubRecord, CurrentRec) then begin
+        var lSignature := CurrentRec.Signature;
+        if wbIgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) then
+          CurrentRec.Skipped := True;
+        {$IFDEF DBGSUBREC}
         s := s + CurrentRec.DisplaySignature + ' ';
-      {$ENDIF}
+        {$ENDIF}
+      end;
     end;
   end;
   Element := nil;
@@ -8694,7 +8706,7 @@ begin
       Continue;
     end;
     CurrentRec := cntElements[CurrentRecPos] as IwbSubRecord;
-    if wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
+    if CurrentRec.Skipped then begin
       Inc(CurrentRecPos);
       Continue;
     end;
@@ -8801,7 +8813,7 @@ begin
       Continue;
     end;
     CurrentRec := cntElements[CurrentRecPos] as IwbSubRecord;
-    if wbIgnoreRecords.Find(CurrentRec.Signature, Dummy) then begin
+    if CurrentRec.Skipped then begin
       Inc(CurrentRecPos);
       Continue;
     end;
@@ -17408,6 +17420,11 @@ begin
     (IwbContainer(eContainer) as IwbElementInternal).Modified := True;
 end;
 
+procedure TwbElement.SetSkipped(aValue: Boolean);
+begin
+  { can be overridden }
+end;
+
 procedure TwbElement.SetSortOrder(aIndex: Integer);
 begin
   eSortOrder := aIndex;
@@ -17898,6 +17915,10 @@ begin
     (aContainer[aPos].ElementType = etSubRecord) do begin
 
     SubRecord := aContainer[aPos] as IwbSubRecordInternal;
+    if SubRecord.Skipped then begin
+      Inc(aPos);
+      Continue;
+    end;
     ElementDef := arcDef.Element;
     if ElementDef.DefType = dtSubRecordUnion then begin
       ElementDef := (ElementDef as IwbRecordDef).GetMemberFor(SubRecord.Signature, SubRecord);
@@ -18324,6 +18345,11 @@ begin
         Break;
 
       CurrentRec := aContainer[aPos] as IwbSubRecordInternal;
+
+      if CurrentRec.Skipped then begin
+        Inc(aPos);
+        Continue;
+      end;
 
       if not srcDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
         if srcDef.SkipSignature[CurrentRec.Signature] then begin

@@ -213,6 +213,24 @@ const
   PRCS : TwbSignature = 'PRCS'; { New To Starfield }
   PROD : TwbSignature = 'PROD'; { New To Starfield }
 
+  MO6F : TwbSignature = 'MO6F'; { New To Starfield }
+  MO7F : TwbSignature = 'MO7F'; { New To Starfield }
+
+  MLM1 : TwbSignature = 'MLM1'; { New To Starfield }
+  MLM2 : TwbSignature = 'MLM2'; { New To Starfield }
+  MLM3 : TwbSignature = 'MLM3'; { New To Starfield }
+  MLM4 : TwbSignature = 'MLM4'; { New To Starfield }
+  MLM5 : TwbSignature = 'MLM5'; { New To Starfield }
+  MLM6 : TwbSignature = 'MLM6'; { New To Starfield }
+
+  MOD6 : TwbSignature = 'MOD6'; { New to Starfield }
+  MOD7 : TwbSignature = 'MOD7'; { New to Starfield }
+
+  MO6T : TwbSignature = 'MO6T'; { New to Starfield }
+  MO7T : TwbSignature = 'MO7T'; { New to Starfield }
+
+  BO64 : TwbSignature = 'BO64'; { New To Starfield }
+
   A0TX : TwbSignature = 'A0TX';
   AAAP : TwbSignature = 'AAAP'; { New To Fallout 76 }
   AACT : TwbSignature = 'AACT';

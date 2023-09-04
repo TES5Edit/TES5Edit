@@ -136,6 +136,8 @@ var
   wbMO3F: IwbSubRecordDef;
   wbMO4F: IwbSubRecordDef;
   wbMO5F: IwbSubRecordDef;
+  wbMO6F: IwbSubRecordDef;
+  wbMO7F: IwbSubRecordDef;
   wbMO2C: IwbSubRecordDef;
   wbMO3C: IwbSubRecordDef;
   wbMO4C: IwbSubRecordDef;
@@ -263,7 +265,11 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
 
-
+function wbMOLM(const aSignature: TwbSignature): IwbSubRecordDef;
+begin
+  Result :=
+    wbArrayS(aSignature, 'Material Swaps', wbFormIDCk('Layered Material Swap', [LMSW]), -2);
+end;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -271,13 +277,13 @@ begin
   Result :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName'),
-      wbRArray('Unknown', wbUnknown(MOLM)),
-      //wbMODT,
+      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+      wbMOLM(MOLM),
       wbUnknown(FLLD),
-      wbUnknown(XFLG)
-      //wbMODC,
-      //wbMODS,
-      //wbMODF
+      wbUnknown(XFLG),
+      wbMODC, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+      wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
     ], [], cpNormal, aRequired, aDontShow)
     .SetSummaryKey([0])
     .IncludeFlag(dfSummaryMembersNoName)
@@ -6866,6 +6872,8 @@ begin
   wbMO3F := wbInteger(MO3F, 'Flags', itU8, wbModelFlags);
   wbMO4F := wbInteger(MO4F, 'Flags', itU8, wbModelFlags);
   wbMO5F := wbInteger(MO5F, 'Flags', itU8, wbModelFlags);
+  wbMO6F := wbInteger(MO6F, 'Flags', itU8, wbModelFlags);
+  wbMO7F := wbInteger(MO7F, 'Flags', itU8, wbModelFlags);
 
   wbMODC := wbFloat(MODC, 'Color Remapping Index');
   wbMO2C := wbFloat(MO2C, 'Color Remapping Index');
@@ -9164,13 +9172,16 @@ begin
     wbUnknown(FLLD)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ANIO, 'Animated Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
     wbEDID,
-    wbGenericModel,
-    wbString(BNAM, 'Unload Event')
+    wbXALG,
+    wbBFCBs,
+    wbGenericModel
+    //wbString(BNAM, 'Unload Event')
   ]);
 
   wbRecord(ARMO, 'Armor',
@@ -9230,16 +9241,22 @@ begin
     wbObjectTemplate
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'No Underarmor Scaling',
+      {0x00000040}  6, 'No Underarmor Scaling', //need to confirm
+      {0x00000080}  7, 'Unknown 7',
+      {0x00000100}  8, 'Unknown 8',
       {0x00000200}  9, 'Unknown 9',
-      {0x40000000} 30, 'Hi-Res 1st Person Only'
+      {0x40000000} 30, 'Hi-Res 1st Person Only' //need to confirm
     ])), [
     wbEDID,
-    wbBOD2,
+    wbBFCBs,
+    wbUnknown(BO64),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
+      wbUnknown
+      (*
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
       // essentialy a number of world models for different weights (Enabled = 2 models _0.nif and _1.nif)
@@ -9255,20 +9272,39 @@ begin
       wbInteger('Detection Sound Value', itU8),
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
+      *)
     ], cpNormal, True),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbMO3F]),
-    wbTexturedModel('Male 1st person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbMO4F]),
-    wbTexturedModel('Female 1st person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbMO5F]),
+    wbTexturedModel('Male world model',   [MOD2, MO2T], [wbMOLM(MLM1), wbMO2C, wbMO2S, wbMO2F]),
+    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMOLM(MLM2), wbMO3C, wbMO3S, wbMO3F]),
+    wbTexturedModel('Male 1st person',    [MOD4, MO4T], [wbMOLM(MLM3), wbMO4C, wbMO4S, wbMO4F]),
+    wbTexturedModel('Female 1st person',  [MOD5, MO5T], [wbMOLM(MLM4), wbMO5C, wbMO5S, wbMO5F]),
+    wbTexturedModel('Skeleton',           [MOD6, MO6T], [wbMOLM(MLM5), wbMO6F]),
+    //wbTexturedModel('Unknown',  [MOD7, MO7T], [wbMOLM(MLM6), wbMO7F]), does not occur in Starfield.esm, but the code support loading it
+
+    { do not occur in Starfield.esm
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
     wbFormIDCK(NAM3, 'Female Skin Texture Swap List', [FLST, NULL]),
+    }
+    wbFormIDCk(NAM4, 'Male world Morph', [MRPH]),
+    wbFormIDCk(NAM5, 'Male 1st person Morph', [MRPH]),
+    wbFormIDCk(NAM6, 'Female world Morph', [MRPH]),
+    wbFormIDCk(NAM7, 'Female 1st person Morph', [MRPH]),
+
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
-    wbArmorAddonBSMPSequence
-  ], False, nil, cpNormal, False, wbARMAAfterLoad);
+    wbFormID(PNAM),
+    wbUnknown(MNAM),
+    wbString(TNAM),
+    wbString(SNAM),
+    wbString(VNAM),
+    wbRStructs('Bone Datas', 'Bone Data', [
+      wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
+      wbRArray('Modifiers', wbFormIDCk(BNAM, 'Modifier', [BMOD]))
+    ], [])
+  ], False, nil, cpNormal, False, wbARMAAfterLoad).SetIgnoreList([FLLD, XFLG]);
 
   wbRecord(BOOK, 'Book', [
     wbEDID,
@@ -16507,6 +16543,7 @@ begin
     }
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(AORU, 'Attraction Rule', [
     wbEDID,
     wbStruct(AOR2, 'Data', [
