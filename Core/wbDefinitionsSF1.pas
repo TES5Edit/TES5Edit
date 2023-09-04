@@ -15805,7 +15805,8 @@ begin
       {0x00000001}  0, 'ESM',
       {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
-      {0x00000200}  9, 'ESL'
+      {0x00000100}  8, 'ESL',
+      {0x00000200}  9, 'Unknown'
     ], False), True), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK

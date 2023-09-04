@@ -17657,8 +17657,12 @@ end;
 
 function TwbMainRecordStructFlags.IsESL: Boolean;
 begin
-  Result := wbIsEslSupported and
-    ((_Flags and $00000200) <> 0);
+  if wbIsStarfield then
+    Result := wbIsEslSupported and
+      ((_Flags and $00000100) <> 0)
+  else
+    Result := wbIsEslSupported and
+      ((_Flags and $00000200) <> 0);
 end;
 
 function TwbMainRecordStructFlags.IsESM: Boolean;
