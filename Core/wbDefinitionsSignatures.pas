@@ -231,6 +231,57 @@ const
 
   BO64 : TwbSignature = 'BO64'; { New To Starfield }
 
+  AVSG : TwbSignature = 'AVSG'; { New To Starfield }
+  AFSG : TwbSignature = 'AFSG'; { New To Starfield }
+
+  ASLS : TwbSignature = 'ASLS'; { New To Starfield }
+  WED1 : TwbSignature = 'WED1'; { New To Starfield }
+  AAMB : TwbSignature = 'AAMB'; { New To Starfield }
+  AMUS : TwbSignature = 'AMUS'; { New To Starfield }
+  AEAR : TwbSignature = 'AEAR'; { New To Starfield }
+  BOLV : TwbSignature = 'BOLV'; { New To Starfield }
+  DEVT : TwbSignature = 'DEVT'; { New To Starfield }
+  ASDF : TwbSignature = 'ASDF'; { New To Starfield }
+  BPD2 : TwbSignature = 'BPD2'; { New To Starfield }
+
+  XCLA : TwbSignature = 'XCLA'; { New To Starfield }
+  XCLD : TwbSignature = 'XCLD'; { New To Starfield }
+
+  XBPS : TwbSignature = 'XBPS'; { New To Starfield }
+  XCGD : TwbSignature = 'XCGD'; { New To Starfield }
+  XCIB : TwbSignature = 'XCIB'; { New To Starfield }
+  XCWM : TwbSignature = 'XCWM'; { New To Starfield }
+  XEMP : TwbSignature = 'XEMP'; { New To Starfield }
+  XTV2 : TwbSignature = 'XTV2'; { New To Starfield }
+
+  WSLT : TwbSignature = 'WSLT'; { New To Starfield }
+
+  CSTN : TwbSignature = 'CSTN'; { New To Starfield }
+  CSSG : TwbSignature = 'CSSG'; { New To Starfield }
+  CSSM : TwbSignature = 'CSSM'; { New To Starfield }
+  CSSR : TwbSignature = 'CSSR'; { New To Starfield }
+  CSSA : TwbSignature = 'CSSA'; { New To Starfield }
+
+  TIFL : TwbSignature = 'TIFL'; { New To Starfield }
+
+  DOSH : TwbSignature = 'DOSH'; { New To Starfield }
+  DCSH : TwbSignature = 'DCSH'; { New To Starfield }
+  DLSH : TwbSignature = 'DLSH'; { New To Starfield }
+
+  ESSH : TwbSignature = 'ESSH'; { New To Starfield }
+
+
+
+
+
+
+
+
+
+
+
+//   : TwbSignature = ''; { New To Starfield }
+
   A0TX : TwbSignature = 'A0TX';
   AAAP : TwbSignature = 'AAAP'; { New To Fallout 76 }
   AACT : TwbSignature = 'AACT';

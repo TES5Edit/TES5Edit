@@ -1177,7 +1177,14 @@ begin
 end;
 
 function wbClimateTiming(aTimeCallback: TwbIntToStrCallback; aPhaseCallback: TwbIntToStrCallback): IwbRecordMemberDef;
+var
+  lMoonPhase: IwbValueDef;
 begin
+  if Assigned(aPhaseCallback) then
+    lMoonPhase := wbInteger('Moons / Phase Length', itU8, aPhaseCallback)
+  else
+    lMoonPhase := nil;
+
   Result :=
     wbStruct(TNAM, 'Timing', [
       wbStruct('Sunrise', [
@@ -1189,7 +1196,7 @@ begin
         wbInteger('End', itU8, aTimeCallback)
       ]),
       wbInteger('Volatility', itU8),
-      wbInteger('Moons / Phase Length', itU8, aPhaseCallback)
+      lMoonPhase
     ], cpNormal, True);
 end;
 
