@@ -13855,29 +13855,49 @@ begin
   wbComponent :=
     wbStructSK([0], 'Component', [
       wbFormIDCkNoReach('Component', sigBaseObjects),
-      wbInteger('Count', itU32)
+      wbInteger('Count', itU32),
+      wbByteArray('Unknown', 4)
     ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
 
   wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
 
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
-    wbYNAM,
-    wbZNAM,
-    wbComponents,
+    wbBFCBs,
+//    wbYNAM,
+//    wbZNAM,
     wbDESC,
-    wbCTDAs,
-    wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
     wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [KYWD]),
-    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
-    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
-    wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
+    wbCTDAs,
+    wbComponents,
+    wbStruct(RQPK, 'Required Perk', [
+      wbFormID('PERK'),
+      wbInteger('Rank', itU32),
+      wbByteArray('Unknown', 4)
+    ]),
+    wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
+    wbUnknown(NNAM), // req
+    wbUnknown(SNAM), // req
+    wbUnknown(TNAM), // req - always 1 byte value $00
+    wbUnknown(CUSH),
+    wbUnknown(PUSH),
+    wbUnknown(PDSH),
+    wbUnknown(LRNM), // always 1 byte value $03
+    wbInteger(DATA, 'Unknown', itU32), // req
+//    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
+//    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
+//    wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
+    wbFormIDCk(JNAM, 'Build Limit', [GLOB]),
     wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
-    wbStruct(INTV, 'Data', [
-      wbInteger('Created Object Count', itU16),
-      wbInteger('Priority', itU16)
-    ], cpNormal, False, nil, 1)
+    wbStruct(RECF, 'Unknown', [
+      wbInteger('Unknown', itU32),
+      wbByteArray('Unknown', 4)
+    ])
+//    wbStruct(INTV, 'Data', [
+//      wbInteger('Created Object Count', itU16),
+//      wbInteger('Priority', itU16)
+//    ], cpNormal, False, nil, 1)
   ]);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
