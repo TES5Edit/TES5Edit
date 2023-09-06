@@ -947,6 +947,7 @@ begin
       wbHideIgnored := False; // to show Form Version
       wbAlwaysSaveOnam := True;
       wbAlwaysSaveOnamForce := True;
+      wbDecodeTextureHashes := False;
     end;
   else
     ShowMessage('Unknown GameMode');
@@ -957,6 +958,9 @@ begin
 
   if not ReadSettings then
     Exit(False);
+
+  if wbGameMode = gmSF1 then
+    wbDecodeTextureHashes := False;
 
   if wbCanSortINFO then begin
     if FindCmdLineSwitch('sortinfo') then
