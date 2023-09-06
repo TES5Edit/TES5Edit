@@ -17840,10 +17840,19 @@ begin
     wbBFCBs,
     wbKeywords,
     wbString(ANAM),
-    wbUnknown(BNAM),
+    wbStruct(BNAM, 'Galaxy position', [
+      wbFloat('x'),
+      wbFloat('y'),
+      wbFloat('z')
+    ]),
     wbUnknown(ONAM),
     wbUnknown(DNAM),
-    wbUnknown(ENAM),
+    wbStruct(ENAM, 'Star color', [
+      wbInteger('r', itU8),
+      wbInteger('g', itU8),
+      wbInteger('b', itU8),
+      wbInteger('padding', itU8)
+    ]),
     wbFormID(PNAM, 'Sun Preset')
   ]);
 
