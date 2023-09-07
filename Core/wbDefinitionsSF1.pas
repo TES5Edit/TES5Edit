@@ -2189,6 +2189,39 @@ begin
     Result := 1;
 end;
 
+function wbBFCDATADecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  lContainer           : IwbContainer;
+  lContainerElementRef :  IwbContainerElementRef;
+  lComponentName       : string;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, lContainer) then
+    Exit;
+  lContainer := lContainer.Container;
+  if not Assigned(lContainer) then
+    Exit;
+  lContainer := lContainer.Container;
+  if not Assigned(lContainer) then
+    Exit;
+  if not Supports(lContainer, IwbContainerElementRef, lContainerElementRef) then
+    Exit;
+  if lContainerElementRef.ElementCount < 2 then
+    Exit;
+
+  var lBFCB := lContainerElementRef.Elements[0];
+  if not Assigned(lBFCB) then
+    Exit;
+
+  lComponentName := lBFCB.EditValue;
+
+  if lComponentName = 'BGSStarDataComponent_Component' then
+    Exit(1);
+  if lComponentName = 'BGSOrbitedDataComponent_Component' then
+    Exit(2);
+end;
+
+
 function wbINFOGroupDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   MainRecord: IwbMainRecord;
@@ -5128,25 +5161,6 @@ begin
      (MainRecord.Signature = ALCH)
   then
     Result := 7;
-end;
-
-function wbByteColors(const aName: string = 'Color'): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbInteger('Red', itU8),
-    wbInteger('Green', itU8),
-    wbInteger('Blue', itU8),
-    wbByteArray('Unused', 1)
-  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
-end;
-
-function wbFloatColors(const aName: string = 'Color'): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbFloat('Red', cpNormal, True, 255, 0),
-    wbFloat('Green', cpNormal, True, 255, 0),
-    wbFloat('Blue', cpNormal, True, 255, 0)
-  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
 function wbWeatherColors(const aName: string): IwbValueDef;
@@ -8508,8 +8522,20 @@ begin
         wbRStruct('Component Data', [
           wbUnknown(DAT2)
         ], []),
+        //BGSStarDataComponent_Component
+        //BGSOrbitedDataComponent_Component
         wbRStruct('Component Data', [
-          wbUnknown(DATA)
+          wbUnion(DATA, 'Data', wbBFCDATADecider, [
+            wbUnknown,
+            //BGSStarDataComponent_Component
+            wbStruct('', [
+              wbUnknown
+            ]),
+            //BGSOrbitedDataComponent_Component
+            wbStruct('', [
+              wbUnknown
+            ])
+          ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(DCSD),
@@ -17855,12 +17881,7 @@ begin
     ]),
     wbUnknown(ONAM),
     wbUnknown(DNAM),
-    wbStruct(ENAM, 'Star color', [
-      wbInteger('r', itU8),
-      wbInteger('g', itU8),
-      wbInteger('b', itU8),
-      wbInteger('padding', itU8)
-    ]),
+    wbByteColors(ENAM, 'Star color'),
     wbFormID(PNAM, 'Sun Preset')
   ]);
 
