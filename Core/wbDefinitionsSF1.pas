@@ -2207,7 +2207,7 @@ begin
     Exit;
   if not Supports(lContainer, IwbContainerElementRef, lContainerElementRef) then
     Exit;
-  if lContainerElementRef.ElementCount < 2 then
+  if lContainerElementRef.ElementCount < 3 then
     Exit;
 
   var lBFCB := lContainerElementRef.Elements[0];
@@ -2220,6 +2220,8 @@ begin
     Exit(1);
   if lComponentName = 'BGSOrbitedDataComponent_Component' then
     Exit(2);
+  if lComponentName = 'BGSOrbitalDataComponent_Component' then
+    Exit(3);
 end;
 
 
@@ -8550,6 +8552,10 @@ begin
               wbUnknown(8),
               wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
               wbUnknown(8)
+            ]),
+            //BGSOrbitalDataComponent_Component
+            wbStruct('', [
+              wbUnknown()
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
