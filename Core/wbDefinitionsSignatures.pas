@@ -279,6 +279,26 @@ const
   CRGP : TwbSignature = 'CRGP'; { New To Starfield }
   GRPH : TwbSignature = 'GRPH'; { New To Starfield }
 
+  PFHS : TwbSignature = 'PFHS'; { New To Starfield }
+  FLXP : TwbSignature = 'FLXP'; { New To Starfield }
+  FHLS : TwbSignature = 'FHLS'; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
+//   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 
   A0TX : TwbSignature = 'A0TX';
