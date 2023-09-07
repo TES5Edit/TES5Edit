@@ -8704,7 +8704,8 @@ begin
         'Unused 6',
         'Unused 7'
       ])).IncludeFlag(dfCollapsed)),
-      wbFromVersion(555, wbByteArray('Unknown', 7))
+      wbFromVersion(125, wbByteArray('Unknown', 3)),
+      wbFromVersion(555, wbByteArray('Unknown', 4))
     ], cpNormal, False, nil, 4));
 
   wbArmorPropertyEnum := wbEnum([
