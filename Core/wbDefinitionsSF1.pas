@@ -9080,8 +9080,8 @@ begin
 //    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
 //    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
 //    wbFormIDCk(WNAM, 'Water Type', [WATR]),
-    wbUnknown(WMAT),
-    wbUnknown(WTFM),
+    wbString(WMAT, 'Water Material'),
+    wbFormIDCk(WTFM, 'Water', [WATR]),
     wbUnknown(ALSH),
     wbUnknown(ACSH),
     wbATTX,
@@ -9090,9 +9090,10 @@ begin
       'Ignored by Sandbox',
       'Unknown 2',
       'Unknown 3',
-      'Is a Radio'
+      'Is a Radio',
+      'Unknown 5'
     ])),
-    wbUnknown(JNAM),
+    wbInteger(JNAM, 'Unknown', itU16),
     wbUnknown(INAM), //unknown if here or any later position
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
 {    wbStruct(RADR, 'Radio Receiver', [
@@ -15921,9 +15922,9 @@ begin
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker').SetRequired(True),
     wbFormIDCk(ANAM, 'Action Keyword', [KYWD]),
-    wbUnknown(BNAM),
-    wbUnknown(FMAH),
-    wbUnknown(FMIH),
+    wbFloat(BNAM),
+    wbFloat(FMAH),
+    wbFloat(FMIH),
     wbFormIDCk(FMAG, 'Max Global', [GLOB]),
     wbFormIDCk(FMIG, 'Min Global', [GLOB]),
     wbFormIDCk(FLXP, 'Explosion', [EXPL]),
