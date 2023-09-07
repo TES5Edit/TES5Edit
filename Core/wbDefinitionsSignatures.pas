@@ -80,6 +80,7 @@ const
   LLLD : TwbSignature = 'LLLD'; { New To Starfield }
   FLAD : TwbSignature = 'FLAD'; { New To Starfield }
   FVLD : TwbSignature = 'FVLD'; { New To Starfield }
+  FLAG : TwbSignature = 'FLAG'; { New To Starfield }
 
   PTT2 : TwbSignature = 'PTT2'; { New To Starfield }
   SNBH : TwbSignature = 'SNBH'; { New To Starfield }
@@ -89,6 +90,7 @@ const
   FLCS : TwbSignature = 'FLCS'; { New To Starfield }
   BFCE : TwbSignature = 'BFCE'; { New To Starfield }
   ALSH : TwbSignature = 'ALSH'; { New To Starfield }
+  FTMP : TwbSignature = 'FTMP'; { New To Starfield }
   ACSH : TwbSignature = 'ACSH'; { New To Starfield }
   WMAT : TwbSignature = 'WMAT'; { New To Starfield }
   WTFM : TwbSignature = 'WTFM'; { New To Starfield }

@@ -93,7 +93,7 @@ const
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
-    'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI'
+    'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES'
   ];
 
 var
@@ -187,6 +187,7 @@ var
   wbKWDAs: IwbSubRecordDef;
   wbReqKWDAs: IwbSubRecordDef;
   wbKeywords: IwbSubRecordStructDef;
+  wbCVPA: IwbSubRecordDef;
   wbContainerItems: IwbSubRecordStructDef;
   wbWED01: IwbSubRecordStructDef;
   wbCITC: IwbSubRecordDef;
@@ -5709,6 +5710,12 @@ begin
     wbReqKWDAs
   ], []);
 
+  wbCVPA := wbStructs(CVPA, 'Components', 'Component', [
+      wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
+      wbInteger('Count', itU32),
+      wbUnknown(4)
+    ]);
+
   //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
   wbActorValue := wbFormIDCkNoReach('Actor Value', [AVIF, NULL]);
 
@@ -6910,7 +6917,8 @@ begin
     ]),
     wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32)
+      wbInteger('Value', itU32),
+      wbUnknown(4)
     ])),
     wbFormIDCk(DSDL, 'Unknown', [SDLT]),
     wbRArray('Stages',
@@ -8565,7 +8573,7 @@ begin
           wbKeywords
         ], []),
         wbRStruct('Component Data', [
-          wbUnknown(MNAM)
+          wbFormID(MNAM, 'Unknown')
         ], []),
         wbRStruct('Component Data', [
           wbString(MODL, 'Model'),
@@ -8696,7 +8704,7 @@ begin
         'Unused 6',
         'Unused 7'
       ])).IncludeFlag(dfCollapsed)),
-      wbFromVersion(125, wbByteArray('Unknown', 3))
+      wbFromVersion(555, wbByteArray('Unknown', 7))
     ], cpNormal, False, nil, 4));
 
   wbArmorPropertyEnum := wbEnum([
@@ -9102,10 +9110,7 @@ begin
 //    wbCUSD,
 //    wbDEST,
     wbDESC,
-    wbStructs(CVPA, 'Components', 'Component', [
-      wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
-      wbInteger('Count', itU32)
-    ]),
+    wbCVPA,
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8)),
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
@@ -10241,38 +10246,46 @@ begin
       {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
+      {0x00000100}  8, 'Unknown',
+      {0x00000200}  9, 'Unknown' ,
+      {0x00000400} 10, 'Unknown' ,
       {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
+      {0x00020000} 17, 'Unknown',
       {0x00800000} 23, 'Is Marker',
       {0x02000000} 25, 'Power Armor',
+      {0x08000000} 27, 'Unknown',
       {0x10000000} 28, 'Must Exit To Talk',
       {0x20000000} 29, 'Child Can Use'
     ])), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbUnknown(ODTY),
+    wbUnknown(OPDS),
     wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbXALG,
+    wbBFCBs,
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbPRPS,
-    wbNTRM,
     wbFTYP,
     wbUnknown(PNAM),
-    wbFormIDCk(WNAM, 'Drinking Water Type', [WATR]),
     wbATTX,
+    wbUnknown(ALSH),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
       {0x0002} 'Ignored By Sandbox'
     ])),
-    wbCITC,
-    wbCTDAsCount,
-    wbCOCT,
-    wbCNTOs,
+    wbUnknown(JNAM),
+    wbUnknown(INAM),
     wbMNAMFurnitureMarker,
+    wbUnknown(GNAM),
     wbStruct(WBDT, 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
         {0} 'None',
@@ -10280,33 +10293,28 @@ begin
         {2} 'Weapons', // used for the Weapons (plural) workbench
         {3} 'Enchanting (unused)', // not used
         {4} 'Enchanting Experiment (unused)', // not used
-        {5} 'Alchemy', // used for Chemistry and Cooking, so Alchemy is probably okay
+        {5} 'Alchemy', // used for Cooking, Industrial, Pharmaceutical
         {6} 'Alchemy Experiment (unused)', // not used
-        {7} 'Armor', // FO4 calls this the Armor workbench, no mention of Smithing
+        {7} 'Armor', // aka Spacesuit workbench
         {8} 'Power Armor', // used for Power Armor stations
-        {9} 'Robot Mod' // used for Robot stations
+        {9} 'Robot Mod', // used for Robot stations
+       {10} 'Unknown 10',
+       {11} 'Research'
       ])),
       wbInteger('Uses Skill', itS8, wbSkillEnum)
     ], cpNormal, True, nil, 1),
-    wbFormIDCk(NAM1, 'Associated Form', [ARMO, WEAP, PERK, SPEL, HAZD]),
-    wbRArray('Markers', wbRStruct('Marker', [
-      wbInteger(ENAM, 'Marker Index', itS32),
-      wbStruct(NAM0, 'Disabled Entry Points', [
-        wbByteArray('Unknown', 2),
-        wbInteger('Disabled Points', itU16, wbFurnitureEntryTypeFlags)
-      ])
-      //wbFormIDCk(FNMK, 'Marker Keyword', [KYWD, NULL])
-    ], [])),
+    wbUnknown(FTMP),
     wbRArray('Marker Entry Points', wbStruct(FNPR, 'Marker', [
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbAPPR,
-    wbObjectTemplate,
-    wbEmpty(STOP, 'Marker', cpNormal, True),
-    wbNVNM
+    wbArray(NNAM, 'Marker Files', wbStruct('Marker', [
+      wbString('Name'),
+      wbString('Model FileName')
+      ])),
+    wbEmpty(STOP, 'Marker', cpNormal, True)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -13713,27 +13721,26 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTY,
+    wbOPDS,
     wbPTT2,
+    wbXALG,
+    wbBFCBs,
     wbFULL,
     wbGenericModel,
-    wbICON,
-    wbMICO,
     wbDEST,
-    wbYNAM,
-    wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
-    wbFormID(FIMD, 'Featured Item Message'),
+    wbUnknown(CUSH),
+    wbUnknown(PUSH),
+    wbUnknown(PDSH),
+    wbKeywords,
+    wbCVPA,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
-    wbStructs(CVPA, 'Components', 'Component', [
-      wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
-      wbInteger('Count', itU32)
-    ]),
-    wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
+    wbUnknown(FLAG),
+    wbUnknown(NNAM)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbComponent :=
