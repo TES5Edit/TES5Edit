@@ -2207,7 +2207,7 @@ begin
     Exit;
   if not Supports(lContainer, IwbContainerElementRef, lContainerElementRef) then
     Exit;
-  if lContainerElementRef.ElementCount < 3 then
+  if lContainerElementRef.ElementCount < 2 then
     Exit;
 
   var lBFCB := lContainerElementRef.Elements[0];
