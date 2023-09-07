@@ -8547,7 +8547,9 @@ begin
             ]),
             //BGSOrbitedDataComponent_Component
             wbStruct('', [
-              wbUnknown
+              wbUnknown(8),
+              wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
+              wbUnknown(8)
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -17909,7 +17911,7 @@ begin
       wbFloat('z')
     ]),
     wbUnknown(ONAM),
-    wbUnknown(DNAM),
+    wbInteger(DNAM, 'Star ID', itU32),
     wbByteColors(ENAM, 'Star color'),
     wbFormID(PNAM, 'Sun Preset')
   ]);
