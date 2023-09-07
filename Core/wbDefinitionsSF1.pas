@@ -17643,19 +17643,36 @@ begin
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(BDST), //req
       wbString(ANAM),  //req
-      wbUnknown(CNAM), //req
+      wbInteger(CNAM, 'Action', itU8, wbEnum([], [
+        2, 'Planet',
+        3, 'Moon',
+        5, 'Asteroid Belt'
+      ])),
       wbUnknown(DNAM), //req
       wbUnknown(ENAM),
-      wbUnknown(FNAM),
-      wbUnknown(GNAM), //req?
+      wbStruct(FNAM, 'Unknown', [
+        wbUnknown(8),
+        wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
+        wbFloat('Radius in km'),
+        wbFloat('Gravity'),
+        wbUnknown(4)
+      ]),
+      wbStruct(GNAM, 'Unknown', [
+        wbInteger('Star ID', itu32),
+        wbInteger('Primary planet ID', itu32),
+        wbInteger('Planet ID', itu32)
+      ]),
       wbUnknown(HNAM),
-      wbUnknown(INAM),
+      wbStruct(INAM, 'Unknown', [
+        wbInteger('Atmos Handle', itu32),
+        wbUnknown()
+      ]),
       wbUnknown(NNAM)
     ], []),
     wbUnknown(BDED), //req
-    wbUnknown(TEMP), //req
-    wbUnknown(DENS), //req
-    wbUnknown(PHLA), //req
+    wbFloat(TEMP, 'Maybe temperature in K'),
+    wbFloat(DENS, 'Density'),
+    wbFloat(PHLA, 'Peri angle in deg'),
     wbUnknown(RSCS)
   ]);
 
