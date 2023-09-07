@@ -14440,6 +14440,7 @@ begin
     wbEDID,
     wbVMADFragmentedQUST,
     wbFULL,
+    wbBaseFormComponents,
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU16, wbFlags([
         {0x0001} 'Start Game Enabled',
@@ -14481,11 +14482,16 @@ begin
       ])),
       wbByteArray('Unused', 3)
     ]),
+    wbFormIDCk(QTYP, 'Quest Type', [KYWD]),
+    wbFormIDCk(FTYP, 'Quest Faction', [FACT]),
     wbString(ENAM, 'Event', 4),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
-    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
+//    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
+    wbFormIDCk(QTLM, 'Quest Time Limit', [GLOB]),
+    wbFormID(QSRC),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
+    wbString(NAM3),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbEmpty(NEXT, 'Marker', cpNormal, True),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
@@ -14507,8 +14513,18 @@ begin
         ])),
         wbCTDAs,
         wbString(NAM2, 'Note'),
+        wbString(SCFC),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
-        wbFormIDCk(NAM0, 'Next Quest', [QUST])
+        wbRArray('Unknown', wbRStruct('Unknown', [
+          wbUnknown(QSRD),
+          wbFormIDCk(QRXP, 'Unknown', [GLOB]),
+          wbFormIDCk(QRCR, 'Unknown', [GLOB]),
+          wbRArray('Rewards', wbStruct(QRRD, 'Reward', [
+            wbFormIDCk('Item', sigBaseObjects, False, cpNormal, True),
+            wbInteger('Count', itU32)
+          ]))
+        ], []))
+//        wbFormIDCk(NAM0, 'Next Quest', [QUST])
       ], []))
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
@@ -14542,6 +14558,8 @@ begin
           wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
           wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
+          wbUnknown(ALFG),
+
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
           wbFormID(ALFR, 'Forced Reference'),
@@ -14585,10 +14603,11 @@ begin
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbCTDAs,
-          wbKSIZ,
-          wbKWDAs,
-          wbCOCT,
-          wbCNTOs,
+          wbUnknown(LNAM),
+          wbUnknown(ALPN),
+          wbUnknown(ALLR),
+          wbKeywords,
+          wbContainerItems,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
@@ -14603,6 +14622,9 @@ begin
           wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+          wbUnknown(ALPC),
+          wbUnknown(ALUB),
+          wbString(SCCM),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
@@ -14612,6 +14634,7 @@ begin
           wbInteger(ALLS, 'Location Alias ID', itU32),
           wbString(ALID, 'Alias Name'),
           wbQUSTAliasFlags,
+          wbUnknown(ALFG),
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
           wbRStruct('Reference Alias Location', [
@@ -14627,22 +14650,40 @@ begin
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
           ], []),
           wbCTDAs,
+          wbUnknown(ALPN),
+          wbUnknown(ALSY),
+          wbUnknown(ALKF),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+          wbUnknown(LNAM),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], []),
 
         // Ref Collection Alias
         wbRStructSK([0], 'Alias', [
-          wbInteger(ALCS, 'Collection Alias ID', itU32),
-          wbInteger(ALMI, 'Max Initial Fill Count', itU8)
+          wbInteger(ALCS, 'Collection Alias ID', itU32, wbQuestAliasToStr, wbStrToAlias),
+          wbInteger(ALMI, 'Max Initial Fill Count', itU8),
+          wbUnknown(ALAM),
+          wbCTDAs,
+          wbUnknown(ALLA),
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+          wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [])
 
       ], [])
     ),
 
-    wbString(NNAM, 'Description', 0, cpTranslate, False),
+//    wbString(NNAM, 'Description', 0, cpTranslate, False),
     wbFormIDCk(GNAM, 'Quest Group', [KYWD]),
-    wbString(SNAM, 'SWF File')
+//    wbString(SNAM, 'SWF File'),
+
+    wbFormIDCk(QMTY, 'Quest Mission Type Keyword', [KYWD]),
+    wbLStringKC(QMSU, 'Unknown', 0, cpTranslate),
+    wbRArray('Unknown', wbRStruct('Unknown', [
+      wbLStringKC(QMDT, 'Unknown', 0, cpTranslate),
+      wbLStringKC(QMDP, 'Unknown', 0, cpTranslate)
+    ], [])),
+    wbKeywords,
+    wbString(SCCM)
   ]);
 
   wbPhonemeTargets := wbStruct(PHWT, 'Phoneme Target Weight', [

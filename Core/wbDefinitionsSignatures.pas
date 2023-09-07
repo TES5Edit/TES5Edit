@@ -81,6 +81,22 @@ const
   FLAD : TwbSignature = 'FLAD'; { New To Starfield }
   FVLD : TwbSignature = 'FVLD'; { New To Starfield }
   FLAG : TwbSignature = 'FLAG'; { New To Starfield }
+  QTYP : TwbSignature = 'QTYP'; { New To Starfield }
+  QSRC : TwbSignature = 'QSRC'; { New To Starfield }
+  ALFG : TwbSignature = 'ALFG'; { New To Starfield }
+  ALPN : TwbSignature = 'ALPN'; { New To Starfield }
+  ALPS : TwbSignature = 'ALPS'; { New To Starfield }
+  ALKF : TwbSignature = 'ALKF'; { New To Starfield }
+  ALLR : TwbSignature = 'ALLR'; { New To Starfield }
+  ALCM : TwbSignature = 'ALCM'; { New To Starfield }
+  ALUB : TwbSignature = 'ALUB'; { New To Starfield }
+  ALAM : TwbSignature = 'ALAM'; { New To Starfield }
+  ALSY : TwbSignature = 'ALSY'; { New To Starfield }
+  QRXP : TwbSignature = 'QRXP'; { New To Starfield }
+  QRCR : TwbSignature = 'QRCR'; { New To Starfield }
+  QMTY : TwbSignature = 'QMTY'; { New To Starfield }
+  QMSU : TwbSignature = 'QMSU'; { New To Starfield }
+  QRRD : TwbSignature = 'QRRD'; { New To Starfield }
 
   PTT2 : TwbSignature = 'PTT2'; { New To Starfield }
   SNBH : TwbSignature = 'SNBH'; { New To Starfield }
