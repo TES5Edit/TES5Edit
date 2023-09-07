@@ -47,13 +47,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'g';
+    Build   : 'h';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010406;
-  wbDeveloperMessageVersion : Integer = 0401046;
+  wbWhatsNewVersion : Integer = 04010407;
+  wbDeveloperMessageVersion : Integer = 0401047;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
@@ -3863,6 +3863,33 @@ function wbEmpty(const aName      : string;
                        aSorted    : Boolean = False;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbValueDef; overload;
+
+function wbMarker(const aSignature : TwbSignature;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef; overload;
+
+function wbMarker(aPriority  : TwbConflictPriority = cpNormal;
+                  aRequired  : Boolean = False;
+                  aDontShow  : TwbDontShowCallback = nil;
+                  aSorted    : Boolean = False;
+                  aGetCP     : TwbGetConflictPriority = nil)
+                             : IwbValueDef; overload;
+
+function wbMarkerReq(const aSignature : TwbSignature;
+                           aPriority  : TwbConflictPriority = cpNormal;
+                           aDontShow  : TwbDontShowCallback = nil;
+                           aGetCP     : TwbGetConflictPriority = nil)
+                                      : IwbSubRecordDef; overload;
+
+function wbMarkerReq(aPriority  : TwbConflictPriority = cpNormal;
+                     aDontShow  : TwbDontShowCallback = nil;
+                     aSorted    : Boolean = False;
+                     aGetCP     : TwbGetConflictPriority = nil)
+                                : IwbValueDef; overload;
+
 
 function wbRefID: IwbRefID; overload;
 
@@ -8379,6 +8406,45 @@ function wbEmpty(const aName      : string;
 begin
   Result := TwbEmptyDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aSorted, aGetCP);
 end;
+
+function wbMarker(const aSignature : TwbSignature;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef;
+begin
+  Result := wbEmpty(aSignature, 'Marker', aPriority, aRequired, aDontShow, aGetCP);
+end;
+
+function wbMarker(aPriority  : TwbConflictPriority = cpNormal;
+                  aRequired  : Boolean = False;
+                  aDontShow  : TwbDontShowCallback = nil;
+                  aSorted    : Boolean = False;
+                  aGetCP     : TwbGetConflictPriority = nil)
+                             : IwbValueDef;
+begin
+  Result := wbEmpty('Marker', aPriority, aRequired, aDontShow, aSorted, aGetCP);
+end;
+
+function wbMarkerReq(const aSignature : TwbSignature;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef;
+begin
+  Result := wbMarker(aSignature, aPriority, True, aDontShow, aGetCP);
+end;
+
+function wbMarkerReq(aPriority  : TwbConflictPriority = cpNormal;
+                  aDontShow  : TwbDontShowCallback = nil;
+                  aSorted    : Boolean = False;
+                  aGetCP     : TwbGetConflictPriority = nil)
+                             : IwbValueDef;
+begin
+  Result := wbMarker(aPriority, True, aDontShow, aSorted, aGetCP);
+end;
+
 
 function wbDumpInteger : IwbIntegerDefFormater;
 begin

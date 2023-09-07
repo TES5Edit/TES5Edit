@@ -10474,11 +10474,13 @@ begin
     wbString(MNAM, 'Material')
   ]).SetSummaryKey([2, 3]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(HDPT, 'Head Part',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
@@ -10487,7 +10489,8 @@ begin
       {0x04} 'Female',
       {0x10} 'Is Extra Part',
       {0x20} 'Use Solid Tint',
-      {0x40} 'Uses Body Texture'
+      {0x40} 'Uses Body Texture',
+      {0x80} 'Unknown 6'
     ]), cpNormal, True),
     wbInteger(PNAM, 'Type', itU32, wbEnum([
       'Misc',
@@ -10504,18 +10507,13 @@ begin
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbRArray('Parts', wbRStruct('Part', [
-      wbInteger(NAM0, 'Part Type', itU32, wbEnum([
-        'Race Morph',
-        'Tri',
-        'Chargen Morph'
-      ])),
-      wbString(NAM1, 'FileName', 0, cpTranslate, True)
-    ], [])),
+    wbString(NAM2),
+    wbString(NAM3),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
-    wbFormIDCk(CNAM, 'Color', [CLFM]),
+//    wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
-    wbCTDAs
+    wbFormIDCk(MNAM, 'Morph', [MRPH])
+//    wbCTDAs
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -10577,27 +10575,32 @@ end;
 
 procedure DefineSF1f;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
     ])), [
     wbEDID,
     wbOBND(True),
-    wbKSIZ,
-    wbKWDAs,
+    wbODTY,
+    wbKeywords,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
       'Unknown 1',
       'Do Once',
       'Unknown 3',
-      'Ignored by Sandbox'
+      'Ignored by Sandbox',
+      'Unknown 5'
     ]), cpNormal, False),
-    wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
-    wbFloat(IDLT, 'Idle Timer Setting', cpNormal, False),
-    wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, False),
+    wbRStruct('Animations', [
+      wbInteger(IDLC, 'Animation Count', itU32, nil, cpBenign),
+      wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
+      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True)
+    ], []),
+    wbGenericModel,
     wbFormIDCk(QNAM, 'Unknown', [KYWD]),
-    wbGenericModel
-  ], False, nil, cpNormal, False, nil, wbAnimationsAfterSet);
+    wbFormIDCk(PNAM, 'Unknown', [KYWD])
+  ], False, nil, cpNormal, False);
 
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
@@ -10675,13 +10678,19 @@ begin
     wbFormID(NAM3)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(HAZD, 'Hazard', [
     wbEDID,
     wbOBND(True),
+    wbODTY,
+    wbXALG,
+    wbBaseFormComponents,
     wbFULL,
-    wbGenericModel  ,
+    wbGenericModel,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
     wbStruct(DNAM, 'Data', [
+      wbUnknown
+      (*
       wbInteger('Limit', itU32),
       wbFloat('Radius'),
       wbFloat('Lifetime'),
@@ -10704,7 +10713,9 @@ begin
         wbFloat('Taper Weight'),
         wbFloat('Taper Curse')
       ])
-    ])
+      *)
+    ]),
+    wbCTDAs
   ]);
 
   if wbSimpleRecords then begin
@@ -10922,197 +10933,18 @@ begin
     wbRArray('Models', wbDebrisModel(wbMODT), cpNormal, True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbStruct(ENAM, 'Image Space Data', [
-      wbStruct('HDR', [
-        wbFloat('Eye Adapt Speed'),
-        wbFloat('Tonemap E'),
-        wbFloat('Bloom Threshold'),
-        wbFloat('Bloom Scale'),
-        wbFloat('Auto Exposure Min/Max'),
-        wbFloat('Sunlight Scale'),
-        wbFloat('Sky Scale')
-      ]),
-      wbStruct('Cinematic', [
-        wbFloat('Saturation'),
-        wbFloat('Brightness'),
-        wbFloat('Contrast')
-      ]),
-      wbStruct('Tint', [
-        wbFloat('Amount'),
-        wbFloatColors('Color')
-      ])
-    ]),
-    wbStruct(HNAM, 'HDR', [
-      wbFloat('Eye Adapt Speed'),
-      wbFloat('Tonemap E'),
-      wbFloat('Bloom Threshold'),
-      wbFloat('Bloom Scale'),
-      wbFloat('Auto Exposure Max'),
-      wbFloat('Auto Exposure Min'),
-      wbFloat('Sunlight Scale'),
-      wbFloat('Sky Scale'),
-      wbFloat('Middle Gray')
-    ], cpNormal, True),
-    wbStruct(CNAM, 'Cinematic', [
-      wbFloat('Saturation'),
-      wbFloat('Brightness'),
-      wbFloat('Contrast')
-    ], cpNormal, True),
-    wbStruct(TNAM, 'Tint', [
-      wbFloat('Amount'),
-      wbFloatColors('Color')
-    ], cpNormal, True),
-    wbStruct(DNAM, 'Depth of Field', [
-      wbFloat('Strength'),
-      wbFloat('Distance'),
-      wbFloat('Range'),
-      wbByteArray('Unused', 2, cpIgnore),
-      wbInteger('Sky / Blur Radius', itU16, wbEnum([], [
-            0, 'None',
-        16384, 'Radius 0',
-        16672, 'Radius 1',
-        16784, 'Radius 2',
-        16848, 'Radius 3',
-        16904, 'Radius 4',
-        16936, 'Radius 5',
-        16968, 'Radius 6',
-        17000, 'Radius 7',
-        16576, 'No Sky, Radius 0',
-        16736, 'No Sky, Radius 1',
-        16816, 'No Sky, Radius 2',
-        16880, 'No Sky, Radius 3',
-        16920, 'No Sky, Radius 4',
-        16952, 'No Sky, Radius 5',
-        16984, 'No Sky, Radius 6',
-        17016, 'No Sky, Radius 7'
-      ])),
-      wbFloat('Vignette Radius'),
-      wbFloat('Vignette Strength')
-    ], cpNormal, True, nil, 5),
-    wbString(TX00, 'LUT')
+    wbUnknown(REFL),
+    wbUnknown(RFDP),
+    wbUnknown(RDIF)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbStruct(DNAM, 'Data', [
-      wbInteger('Animatable', itU32, wbBoolEnum),
-      wbFloat('Duration'),
-      wbStruct('HDR', [
-        wbInteger('Eye Adapt Speed Mult Count', itU32),
-        wbInteger('Eye Adapt Speed Add Count', itU32),
-        wbInteger('Bloom Blur Radius Mult Count', itU32),
-        wbInteger('Bloom Blur Radius Add Count', itU32),
-        wbInteger('Bloom Threshold Mult Count', itU32),
-        wbInteger('Bloom Threshold Add Count', itU32),
-        wbInteger('Bloom Scale Mult Count', itU32),
-        wbInteger('Bloom Scale Add Count', itU32),
-        wbInteger('Target Lum Min Mult Count', itU32),
-        wbInteger('Target Lum Min Add Count', itU32),
-        wbInteger('Target Lum Max Mult Count', itU32),
-        wbInteger('Target Lum Max Add Count', itU32),
-        wbInteger('Sunlight Scale Mult Count', itU32),
-        wbInteger('Sunlight Scale Add Count', itU32),
-        wbInteger('Sky Scale Mult Count', itU32),
-        wbInteger('Sky Scale Add Count', itU32)
-      ]),
-      wbInteger('Unused08 Mult Count', itU32),
-      wbInteger('Unused48 Add Count', itU32),
-      wbInteger('Unused09 Mult Count', itU32),
-      wbInteger('Unused49 Add Count', itU32),
-      wbInteger('Unused0A Mult Count', itU32),
-      wbInteger('Unused4A Add Count', itU32),
-      wbInteger('Unused0B Mult Count', itU32),
-      wbInteger('Unused4B Add Count', itU32),
-      wbInteger('Unused0C Mult Count', itU32),
-      wbInteger('Unused4C Add Count', itU32),
-      wbInteger('Unused0D Mult Count', itU32),
-      wbInteger('Unused4D Add Count', itU32),
-      wbInteger('Unused0E Mult Count', itU32),
-      wbInteger('Unused4E Add Count', itU32),
-      wbInteger('Unused0F Mult Count', itU32),
-      wbInteger('Unused4F Add Count', itU32),
-      wbInteger('Unused10 Mult Count', itU32),
-      wbInteger('Unused50 Add Count', itU32),
-      wbStruct('Cinematic', [
-        wbInteger('Saturation Mult Count', itU32),
-        wbInteger('Saturation Add Count', itU32),
-        wbInteger('Brightness Mult Count', itU32),
-        wbInteger('Brightness Add Count', itU32),
-        wbInteger('Contrast Mult Count', itU32),
-        wbInteger('Contrast Add Count', itU32),
-        wbInteger('Unused14 Mult Count', itU32),
-        wbInteger('Unused54 Add Count', itU32)
-      ]),
-      wbInteger('Tint Color Count', itU32),
-      wbInteger('Blur Radius Count', itU32),
-      wbInteger('Double Vision Strength Count', itU32),
-      wbInteger('Radial Blur Strength Count', itU32),
-      wbInteger('Radial Blur Ramp Up Count', itU32),
-      wbInteger('Radial Blur Start Count', itU32),
-      wbInteger('Radial Blur Use Target', itU32, wbBoolEnum),
-      wbFloat('Radial Blur Center X'),
-      wbFloat('Radial Blur Center Y'),
-      wbInteger('DoF Strength Count', itU32),
-      wbInteger('DoF Distance Count', itU32),
-      wbInteger('DoF Range Count', itU32),
-      wbInteger('DoF Use Target', itU8, wbBoolEnum),
-      wbInteger('DoF Flags', itU8, wbFlags([
-        {0x00000001} 'Mode - Front',
-        {0x00000002} 'Mode - Back',
-        {0x00000004} 'No Sky',
-        {0x00000008} 'Blur Radius Bit 2',
-        {0x00000010} 'Blur Radius Bit 1',
-        {0x00000020} 'Blur Radius Bit 0'
-      ])),
-      wbInteger('Unused', itU16),
-      wbInteger('Radial Blur Ramp Down Count', itU32),
-      wbInteger('Radial Blur Down Start Count', itU32),
-      wbInteger('Fade Color Count', itU32),
-      wbInteger('Motion Blur Strength Count', itU32),
-      wbFromSize(248, wbInteger('Vignette Radius Count', itU32)),
-      wbFromSize(252, wbInteger('Vignette Strength Count', itU32))
-    ]),
-    wbTimeInterpolators(BNAM, 'Blur Radius'),
-    wbTimeInterpolators(VNAM, 'Double Vision Strength'),
-    wbArray(TNAM, 'Tint Color', wbColorInterpolator),
-    wbArray(NAM3, 'Fade Color', wbColorInterpolator),
-    wbRStruct('Radial Blur', [
-      wbTimeInterpolators(RNAM, 'Strength'),
-      wbTimeInterpolators(SNAM, 'Ramp Up'),
-      wbTimeInterpolators(UNAM, 'Start'),
-      wbTimeInterpolators(NAM1, 'Ramp Down'),
-      wbTimeInterpolators(NAM2, 'Down Start')
-    ], []),
-    wbRStruct('Depth of Field', [
-      wbTimeInterpolators(WNAM, 'Strength'),
-      wbTimeInterpolators(XNAM, 'Distance'),
-      wbTimeInterpolators(YNAM, 'Range'),
-      wbTimeInterpolators(NAM5, 'Vignette Radius'),
-      wbTimeInterpolators(NAM6, 'Vignette Strength')
-    ], []),
-    wbTimeInterpolators(NAM4, 'Motion Blur Strength'),
-    wbRStruct('HDR', [
-      wbTimeInterpolatorsMultAdd(_00_IAD, _40_IAD, 'Eye Adapt Speed'),
-      wbTimeInterpolatorsMultAdd(_01_IAD, _41_IAD, 'Bloom Blur Radius'),
-      wbTimeInterpolatorsMultAdd(_02_IAD, _42_IAD, 'Bloom Threshold'),
-      wbTimeInterpolatorsMultAdd(_03_IAD, _43_IAD, 'Bloom Scale'),
-      wbTimeInterpolatorsMultAdd(_04_IAD, _44_IAD, 'Target Lum Min'),
-      wbTimeInterpolatorsMultAdd(_05_IAD, _45_IAD, 'Target Lum Max'),
-      wbTimeInterpolatorsMultAdd(_06_IAD, _46_IAD, 'Sunlight Scale'),
-      wbTimeInterpolatorsMultAdd(_07_IAD, _47_IAD, 'Sky Scale')
-    ], []),
-    wbTimeInterpolatorsMultAdd(_08_IAD, _48_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_09_IAD, _49_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0A_IAD, _4A_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0B_IAD, _4B_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0C_IAD, _4C_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0D_IAD, _4D_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0E_IAD, _4E_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_0F_IAD, _4F_IAD, 'Unused'),
-    wbTimeInterpolatorsMultAdd(_10_IAD, _50_IAD, 'Unused'),
-    wbCinematicIMAD
+    wbUnknown(REFL)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -13063,11 +12895,19 @@ begin
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass', [
+  {subrecords checked against Starfield.esm}
+  wbRecord(GRAS, 'Grass',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000} 15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbOBND(True),
+    wbODTY,
+    wbBaseFormComponents,
     wbGenericModel,
-    wbStruct(DATA, '', [
+    wbUnknown(DNAM)
+    {
+    wbStruct(DNAM, '', [
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
       wbInteger('Max Slope', itU8),
@@ -13095,8 +12935,10 @@ begin
       ])),
       wbByteArray('Unknown', 3)
     ], cpNormal, True)
+    }
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(IDLE, 'Idle Animation', [
     wbEDID,
     wbCTDAs,
@@ -13104,6 +12946,8 @@ begin
     wbString(ENAM, 'Animation Event'),
     wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL]),
       ['Parent', 'Previous Sibling'], cpNormal, True),
+    wbUnknown(FNAM),
+    (*
     wbStruct(DATA, '', [
       wbStruct('Looping seconds (both 255 forever)', [
         wbInteger('Min', itU8),
@@ -13118,9 +12962,12 @@ begin
       wbInteger('Animation Group Section', itU8{, wbIdleAnam}),
       wbInteger('Replay Delay', itU16)
     ], cpNormal, True),
-    wbString(GNAM, 'Animation File')
+    *)
+    wbString(GNAM, 'Animation File'),
+    wbFULL
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(INFO, 'Dialog response',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'Info Group',
@@ -13129,6 +12976,7 @@ begin
     ])), [
     wbEDID,
     wbVMADFragmentedINFO,
+    wbBaseFormComponents,
     wbStruct(ENAM, 'Response flags', [
       wbUnion('Flags', wbINFOGroupDecider,[
         wbInteger('Flags', itU16, wbFlags([
@@ -13170,11 +13018,10 @@ begin
       ]),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
-    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
+//    wbFormIDCk(TPIC, 'Topic', [DIAL]),
+//    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
     wbFormIDCk(DNAM, 'Shared INFO', [INFO]),
     wbFormIDCk(GNAM, 'INFO group', [INFO]),
-    wbString(IOVR, 'Override FileName'),
 
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
@@ -13182,35 +13029,56 @@ begin
         wbInteger('Response number', itU8),
         wbFormIDCk('Sound File', [SNDR, NULL]),
         wbByteArray('Unknown', 1),
-        wbInteger('Interrupt Percentage', itU16),
-        wbInteger('Camera Target Alias', itS32),
-        wbInteger('Camera Location Alias', itS32)
+        wbInteger('Interrupt Percentage', itU16)
+//        wbInteger('Camera Target Alias', itS32),
+//        wbInteger('Camera Location Alias', itS32)
       ]),
+      wbRArray('Unknown', wbStruct(TROT, 'Unknown', [
+        wbFormID('Unknown'),
+        wbUnknown(4)
+      ])),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
       wbString(NAM3, 'Edits', 0, cpNormal, True),
       wbString(NAM4, 'Alternate LIP Text', 0, cpNormal, True),
-      wbFormIDCk(SNAM, 'Idle Animations: Speaker', [IDLE]),
-      wbFormIDCk(LNAM, 'Idle Animations: Listener', [IDLE]),
-      wbInteger(TNAM, 'Interrupt Percentage', itU16),
       wbByteArray(NAM9, 'Text Hash'),
-      wbFormIDCk(SRAF, 'Camera Path', [CPTH]),
-      wbEmpty(WZMD, 'Stop on Scene End')
+      wbFormIDCk(BNAM, 'Unknown', [NULL, IDLE]),
+      wbString(STRV),
+      wbFormID(VCLR),
+      wbUnknown(FLMV),
+      wbUnknown(FLAV),
+      wbEmpty(QUAL, 'Unknown'), // order between QUAL
+      wbEmpty(DOFT, 'Unknown'), // and DOFT is unknown
+      wbUnknown(DPLT),
+      wbUnknown(OCOR),
+      wbUnknown(LVCR),
+      wbUnknown(ATAC),
+      wbEmpty(PLRL, 'Unknown'),
+      wbEmpty(XNAM, 'Unknown'),
+      wbRStruct('Unknown', [
+        wbMarker(HNAM).SetRequired(True),
+        wbInteger(HTID, 'Unknown', itS32),
+        wbUnknown(FNAM),
+        wbUnknown(PNAM),
+        wbMarker(HNAM).SetRequired(True)
+      ], [])
     ], [])),
-
+    wbUnknown(RVSH),
     wbCTDAs,
     wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
     wbUnknown(INTV),
-    wbInteger(ALFA, 'Forced Alias', itS32),
-    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-    wbInteger(GREE, 'Greet Distance', itU32),
+    wbUnknown(WED0),
+//    wbInteger(ALFA, 'Forced Alias', itS32),
+//    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
+//    wbInteger(GREE, 'Greet Distance', itU32),
     wbStruct(TIQS, 'Set Parent Quest Stage', [
       wbInteger('On Begin', itS16),
       wbInteger('On End', itS16)
     ]),
     wbString(NAM0, 'Start Scene Phase'),
+    (*
     wbInteger(INCC, 'Challenge', itU32, wbEnum([
       {0} 'None',
       {1} 'Easy',
@@ -13221,13 +13089,18 @@ begin
       {6} 'Medium Repeatable',
       {7} 'Hard Repeatable'
     ])),
+    *)
     wbFormIDCk(MODQ, 'Reset Global', [GLOB]),
     wbInteger(INAM, 'Subtitle Priority', itU32, wbEnum([
       'Low',
       'Normal',
       'Unknown 2',
       'Force'
-    ]))
+    ])),
+    wbUnknown(COCT), // container count? never followed by CNTO in Starfield.esm
+    wbFormID(NAM8), // order between COCT and NAM8 unknown
+    wbFormIDCk(PERK, 'Perk', [PERK]),             // order between PERK
+    wbFormIDCk(SCSP, 'Speech Challenge', [SPCH])  // and SCSP unknown
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
   wbRecord(INGR, 'Ingredient', [
@@ -17369,18 +17242,6 @@ begin
   wbRecord(CNDF, 'Condition Form', [
     wbEDID,
     wbCTDAs,
-    {
-    wbRStruct('Unknown', [
-      wbUnknown(CIS1),
-      wbCTDAs,
-      wbUnknown(CIS1)
-    ], []),
-    wbRStruct('Unknown', [
-      wbUnknown(CIS2),
-      wbCTDAs,
-      wbUnknown(CIS2)
-    ], []);
-    }
     wbFormIDCk(QNAM, 'Quest', [QUST])
   ]);
 
@@ -17963,10 +17824,6 @@ begin
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(BTXT),
       wbCTDAs,
-      wbUnknown(CIS1),
-      wbUnknown(CIS2),
-      wbCTDAs,
-      wbUnknown(CIS2),
       wbUnknown(TPLT)
     ], []),
     wbUnknown(ISIZ),
@@ -17978,13 +17835,7 @@ begin
       wbUnknown(XLOC),
       wbUnknown(TNAM),
       wbUnknown(UNAM),
-      wbCTDAs,
-      wbUnknown(CIS1),
-      wbCTDAs,
-      wbUnknown(CIS1),
-      wbUnknown(CIS2),
-      wbCTDAs,
-      wbUnknown(CIS2)
+      wbCTDAs
     ], [])
   ]);
 
