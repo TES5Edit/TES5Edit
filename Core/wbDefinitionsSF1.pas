@@ -10303,6 +10303,7 @@ begin
     wbFormIDCk(BNAM, 'Faction', [FACT])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FURN, 'Furniture',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Has Container',
@@ -10324,8 +10325,8 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbUnknown(ODTY),
-    wbUnknown(OPDS),
+    wbODTY,
+    wbOPDS,
     wbPTT2,
     wbSNTP,
     wbSNBH,
@@ -10376,6 +10377,7 @@ begin
       wbString('Name'),
       wbString('Model FileName')
       ])),
+    //wbObjectTemplate, not in Starfield.esm, but based on the STOP below likely...
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -10427,8 +10429,10 @@ begin
     //wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FFKW, 'Form Folder Keyword List', [
-    wbEDID
+    wbEDID,
+    wbUnknown(REFL)
   ]);
 
 end;
@@ -11118,10 +11122,17 @@ begin
     wbCinematicIMAD
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
+    wbBaseFormComponents,
     wbFULL,
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted)
+    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
+    wbRStructs('Conditional Entries', 'Conditional Entry', [
+      wbInteger(INAM, 'Index', itU32),
+      wbCITCReq,
+      wbCTDAsCount.SetRequired(True)
+    ], [])
   ]);
 
   var wbPerkConditions :=
@@ -12215,12 +12226,14 @@ begin
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FSTP, 'Footstep', [
     wbEDID,
     wbFormIDCk(DATA, 'Impact Data Set', [IPDS, NULL], False, cpNormal, True),
     wbString(ANAM, 'Tag', 0, cpNormal, True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FSTS, 'Footstep Set', [
     wbEDID,
     wbStruct(XCNT, 'Count', [
@@ -15886,30 +15899,43 @@ begin
     ], cpNormal, True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbPTT2,
-    wbFULLReq,
+    wbODTY,
+    wbOPDS,
+    wbBaseFormComponents,
+    wbFULL,
     wbGenericModel,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbPRPS,
     wbUnknown(PNAM),
     wbATTX,
-    wbLStringKC(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
+    wbUnknown(JNAM),
     wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
-    wbFormIDCK(SNAM, 'Harvest Sound', [SNDR]),
+    wbUnknown(PFHS),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
       wbInteger('Summer ', itU8),
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
-    ], cpNormal, True)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+    ], cpNormal, True),
+    wbAPPR,
+    wbObjectTemplate,
+    wbEmpty(STOP, 'Marker').SetRequired(True),
+    wbFormIDCk(ANAM, 'Action Keyword', [KYWD]),
+    wbUnknown(BNAM),
+    wbUnknown(FMAH),
+    wbUnknown(FMIH),
+    wbFormIDCk(FMAG, 'Max Global', [GLOB]),
+    wbFormIDCk(FMIG, 'Min Global', [GLOB]),
+    wbFormIDCk(FLXP, 'Explosion', [EXPL]),
+    wbUnknown(FHLS)
+  ], False, nil, cpNormal, False, nil, nil);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
