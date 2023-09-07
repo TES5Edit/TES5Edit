@@ -8551,7 +8551,8 @@ begin
             wbStruct('', [
               wbUnknown(8),
               wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
-              wbUnknown(8)
+              wbFloat('Radius (in km)'),
+              wbUnknown(4)
             ]),
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
