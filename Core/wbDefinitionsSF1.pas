@@ -8529,7 +8529,15 @@ begin
             wbUnknown,
             //BGSStarDataComponent_Component
             wbStruct('', [
-              wbUnknown
+              wbLenString('Catalogue ID'),
+              wbLenString('Spectral class'),
+              wbFloat('Magnitude'),
+              wbFloat('Mass'),
+              wbFloat('Inner habitable zone'),
+              wbFloat('Outer habitable zone'),
+              wbInteger('HIP', itU32),
+              wbInteger('Radius', itU32),
+              wbInteger('Temperature in K', itU32)
             ]),
             //BGSOrbitedDataComponent_Component
             wbStruct('', [
