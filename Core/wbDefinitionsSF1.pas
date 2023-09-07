@@ -118,7 +118,7 @@ var
   wbODTY: IwbSubRecordDef;
   wbOPDS: IwbSubRecordDef;
   wbDEFL: IwbSubRecordDef;
-  wbBFCBs: IwbSubRecordArrayDef;
+  wbBaseFormComponents: IwbSubRecordArrayDef;
   wbPTT2: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
@@ -190,6 +190,7 @@ var
   wbCVPA: IwbSubRecordDef;
   wbContainerItems: IwbSubRecordStructDef;
   wbWED01: IwbSubRecordStructDef;
+  wbPUSHPDSH: IwbSubRecordStructDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
@@ -5765,6 +5766,11 @@ begin
     wbUnknown(WED1).SetRequired
   ], []);
 
+  wbPUSHPDSH := wbRStruct('Unknown', [
+    wbUnknown(PUSH).SetRequired,
+    wbUnknown(PDSH).SetRequired
+  ], []);
+
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
     '30 - Hair Top',
@@ -7487,7 +7493,7 @@ begin
     ], True, True)), [
     wbEDID,
     wbVMAD,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbXALG,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -8461,7 +8467,7 @@ begin
   wbFTYP := wbArray(FTYP, 'Forced Location Ref Types', wbFormIDCk('Forced Location Ref Type', [LCRT]));
   wbATTX := wbLStringKC(ATTX, 'Activate Text Override', 0, cpTranslate);
 
-  wbBFCBs := wbRStructsSK('Components', 'Component', [0], [
+  wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type'),
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
@@ -8511,7 +8517,7 @@ begin
           wbRStructs('Unknown', 'Unknown', [
             wbPRPS,
             wbCITCReq,
-            wbCTDAs,
+            wbCTDAsCount,
             wbString(STRV),
             wbUnknown(FLTV)
           ], [])
@@ -8532,7 +8538,7 @@ begin
               wbLenString('Catalogue ID'),
               wbLenString('Spectral class'),
               wbFloat('Magnitude'),
-              wbFloat('Mass'),
+              wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
               wbFloat('Inner habitable zone'),
               wbFloat('Outer habitable zone'),
               wbInteger('HIP', itU32),
@@ -8680,10 +8686,10 @@ begin
           wbUnknown(NAM8),
           wbUnknown(NAM9),
           wbCITCReq,
-          wbCTDAs
+          wbCTDAsCount
         ], [])
       ], []),
-      wbEmpty(BFCE, 'End Marker')
+      wbEmpty(BFCE, 'End Marker', cpIgnore, True)
     ], []);
 
   wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
@@ -9055,7 +9061,7 @@ begin
     wbPTT2,
     wbSNTP,
     wbSNBH,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -9129,13 +9135,12 @@ begin
     wbODTY,
     wbOPDS,
     wbPTT2,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbXALG,
     wbFULL,
     wbKeywords,
     wbGenericModel,
-    wbUnknown(PUSH),
-    wbUnknown(PDSH),
+    wbPUSHPDSH,
     wbUnknown(CUSH),
 //    wbICON,
 //    wbMICO,
@@ -9190,8 +9195,7 @@ begin
     wbPTT2,
     wbFULL,
     wbGenericModel,
-    wbUnknown(PUSH),
-    wbUnknown(PDSH),
+    wbPUSHPDSH,
     wbDESC,
     wbKeywords,
 //    wbDEST,
@@ -9225,7 +9229,7 @@ begin
     ]), [9]), [
     wbEDID,
     wbXALG,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbGenericModel
     //wbString(BNAM, 'Unload Event')
   ]);
@@ -9244,14 +9248,13 @@ begin
     wbODTY,
 //    wbPTT2,
     wbPTT2,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbEITM,
     wbTexturedModel('Male world model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
     wbTexturedModel('Female world model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
     wbUnknown(BO64),
-    wbUnknown(PUSH),
-    wbUnknown(PDSH),
+    wbPUSHPDSH,
 //    wbDEST,
 //    wbYNAM,
 //    wbZNAM,
@@ -9301,7 +9304,7 @@ begin
       {0x40000000} 30, 'Hi-Res 1st Person Only' //need to confirm
     ])), [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(BO64),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
@@ -9358,12 +9361,11 @@ begin
     wbODTY,
     wbPTT2,
     wbXALG,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbDESCreq,
-    wbUnknown(PUSH),
-    wbUnknown(PDSH),
+    wbPUSHPDSH,
 //    wbDEST,
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
@@ -9498,7 +9500,7 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ]), [18]), [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x0001} 'Is Interior Cell',
@@ -9716,7 +9718,7 @@ begin
     wbPTT2,
     wbSNTP,
     wbSNBH,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbUnknown(XFLG),
@@ -9891,7 +9893,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(DIAL, 'Dialog Topic', [
     wbEDID,
-    wbBFCBs, // unknown if before or after FULL
+    wbBaseFormComponents, // unknown if before or after FULL
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
     wbFormIDCkNoReach(BNAM, 'Branch', [DLBR]),
@@ -10069,7 +10071,7 @@ begin
 //    wbPTT2,
 //    wbSNTP,
 //    wbSNBH,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
 //    wbDEST,
@@ -10135,7 +10137,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(EFSH, 'Effect Shader', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFormIDCk(ENAM, 'Unknown', [EFSQ]),
     wbEmpty(DATA, 'Empty', cpIgnore),
     wbStruct(DNAM, 'Data', [
@@ -10199,10 +10201,13 @@ begin
       wbString(INAM, 'Insignia (unused)')
     ], []);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(FACT, 'Faction', [
     wbEDID,
+    wbBaseFormComponents,
     wbFULL,
     wbFactionRelations,
+    wbFormIDCk(DNAM, 'Unknown', [KYWD]),
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Hidden From NPC',
@@ -10221,15 +10226,17 @@ begin
         {0x00002000} 'Ignore Crimes: Pickpocket',
         {0x00004000} 'Vendor',
         {0x00008000} 'Can Be Owner',
-        {0x00010000} 'Ignore Crimes: Werewolf (unused)'
+        {0x00010000} 'Unknown 16',
+        {0x00020000} 'Unknown 17',
+        {0x00040000} 'Unknown 18'
       ]))
     ], cpNormal, True, nil, 1),
-    wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
-    wbFormIDCk(WAIT, 'Follower Wait Marker', [REFR]),
-    wbFormIDCk(STOL, 'Stolen Goods Container', [REFR]),
-    wbFormIDCk(PLCN, 'Player Inventory Container', [REFR]),
+//    wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
+//    wbFormIDCk(WAIT, 'Follower Wait Marker', [REFR]),
+//    wbFormIDCk(STOL, 'Stolen Goods Container', [REFR]),
+//    wbFormIDCk(PLCN, 'Player Inventory Container', [REFR]),
     wbFormIDCk(CRGR, 'Shared Crime Faction List', [FLST]),
-    wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
+//    wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
     wbStruct(CRVA, 'Crime Values', [
       wbInteger('Arrest', itU8, wbBoolEnum),
       wbInteger('Attack On Sight', itU8, wbBoolEnum),
@@ -10240,11 +10247,12 @@ begin
       wbInteger('Unknown', itU16),
       wbFloat('Steal Multiplier'),
       wbInteger('Escape', itU16),
-      wbInteger('Werewolf (unused)', itU16)
+      wbUnknown
     ], cpNormal, False, nil, 7),
-    wbRArrayS('Ranks', wbFactionRank),
+//    wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
+    wbArray(PRIS, 'Unknown', wbFormIDCk('Unknown', [NULL, REFR])), //could be earlier, can't determine from data
     wbStruct(VENV, 'Vendor Values', [
       wbInteger('Start Hour', itU16),
       wbInteger('End Hour', itU16),
@@ -10256,8 +10264,18 @@ begin
       wbInteger('Unknown', itU8)
     ]),
     wbPLVD,
-    wbCITC,
-    wbCTDAsCount
+    wbFormIDCk(VTCK, 'Unknown', [FLST, VTYP]),
+    wbRStruct('Unknown', [
+      wbEmpty(CRHR, 'Marker').SetRequired(True),
+      wbUnknown(HERD).SetRequired(True)
+    ], []),
+    wbRStruct('Unknown', [
+      wbEmpty(CRGP, 'Marker').SetRequired(True),
+      wbUnknown(GRPH).SetRequired(True)
+    ], [])
+
+    //wbCITC,
+    //wbCTDAsCount
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -10303,7 +10321,7 @@ begin
     wbSNTP,
     wbSNBH,
     wbXALG,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -10358,7 +10376,7 @@ begin
       {0x00000040}  6, 'Constant'
     ])), [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     {
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
              0, 'Unknown',
@@ -10389,7 +10407,7 @@ begin
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbCNAM,
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
@@ -10536,14 +10554,13 @@ begin
     wbSNBH,
     wbDEFL,
     wbUnknown(XALG),
-    wbBFCBs,
+    wbBaseFormComponents,
     wbPTT2,
     wbFULL,
     wbGenericModel,
     wbUnknown(XFLG),
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbPRPS,
     wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
     wbUnknown(MSLS),
@@ -10582,7 +10599,7 @@ begin
     wbODTY,
     wbOPDS,
     wbXALG,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbDEST,
@@ -10836,7 +10853,7 @@ begin
     wbOPDS,
     wbXALG,
     wbDEFL,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbEITM,
@@ -11322,7 +11339,7 @@ begin
     wbEDID,
     wbOBND(True),
     wbODTY,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbGenericModel,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     //wbFormIDCk(SNAM, 'Sound', [SNDR]),
@@ -12319,6 +12336,7 @@ begin
     wbEDID
   ]);}
 
+  {subrecords checked against Starfield.esm}
   wbRecord(EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormIDCk('Parent', [EQUP])),
@@ -12774,7 +12792,7 @@ begin
     wbOPDS,
     wbUnknown(XALG),
     wbPTT2,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbKeywords,
     wbGenericModel,
     wbStruct(DNAM, 'Data', [
@@ -13301,7 +13319,7 @@ begin
     wbOBND(True),
     wbODTY,
 //    wbPTT2,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbGenericModel,
     wbKSIZ,
     wbKWDAs,
@@ -13760,13 +13778,12 @@ begin
     wbOPDS,
     wbPTT2,
     wbXALG,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
     wbDEST,
     wbUnknown(CUSH),
-    wbUnknown(PUSH),
-    wbUnknown(PDSH),
+    wbPUSHPDSH,
     wbKeywords,
     wbCVPA,
     wbStruct(DATA, 'Data', [
@@ -13790,7 +13807,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
 //    wbYNAM,
 //    wbZNAM,
     wbDESC,
@@ -13807,8 +13824,7 @@ begin
     wbUnknown(SNAM), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbUnknown(CUSH),
-    wbUnknown(PUSH),
-    wbUnknown(PDSH),
+    wbPUSHPDSH,
     wbUnknown(LRNM), // always 1 byte value $03
     wbInteger(DATA, 'Unknown', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -15635,6 +15651,8 @@ begin
   ]);
 
   wbSPIT := wbStruct(SPIT, 'Data', [
+    wbUnknown
+    (*
     wbInteger('Base Cost', itU32),
     wbInteger('Flags', itU32, wbFlags([
       {0x00000001} 'Manual Cost Calc',
@@ -15690,19 +15708,22 @@ begin
     wbFloat('Cast Duration'),
     wbFloat('Range'),
     wbFormIDCk('Casting Perk', [NULL, PERK])
+    *)
   ], cpNormal, True);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SPEL, 'Spell', [
     wbEDID,
     wbOBND(True),
+    wbODTY,
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbETYP,
+    wbPUSHPDSH,
     wbDESCReq,
     wbSPIT,
     wbEffectsReq
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil, nil);
 
   {wbRecord(SCRL, 'Scroll', [
     wbEDID
@@ -15754,7 +15775,7 @@ begin
     wbSNBH, //order between SNBH
     wbXALG, //and XALG unknown
     wbDEFL,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFTYP,
     wbGenericModel,
     wbPRPS,
@@ -16510,7 +16531,7 @@ begin
     wbEDID,
     wbOBND,
     wbODTY,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbStruct(DNAM, 'Data', [
       wbFloat('Default Number of Tiles'),
       wbInteger('Default Number of Slices', itU16),
@@ -16780,7 +16801,7 @@ begin
       {0x00000040} 7, 'Mod Collection'
     ])), [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFULL,
     wbDESC,
     wbGenericModel,
@@ -17188,7 +17209,7 @@ begin
   wbRecord(STND, 'Snap Template Node', [
     wbEDID,
     wbOBND,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbGenericModel,
     wbKeywords,
     wbByteRGBA(CNAM, 'Unknown Colors'),
@@ -17235,7 +17256,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(STMP, 'Snap Template', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     //wbPTT2,
     wbFormIDCk(PNAM, 'Parent', [STMP]),
     wbRArray('Nodes', wbStruct(ENAM, 'Node', [
@@ -17270,7 +17291,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(GCVR, 'Ground Cover', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbRArray('Grasses', wbRStruct('Grass', [
       wbFormID(GNAM, 'Grass Texture'),
       wbInteger(DNAM, 'Unknown Int', itU16)
@@ -17313,7 +17334,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(CHAL, 'Challenge', [
     wbEDID,
-    wbBFCBs
+    wbBaseFormComponents
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -17350,7 +17371,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(PTT2), // order between PTT2
     wbFormID(SNBH),  // and SNBH is unknown
     wbFormID(DODT),
@@ -17391,7 +17412,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFLTR,
     wbFormID(ANAM),
     wbRArray('Unknown', wbString(STRV)),
@@ -17570,7 +17591,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AVMD, 'Actor Value Modulations', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(MNAM), //req
     wbString(YNAM),  //req
     wbString(TNAM),  //req
@@ -17586,7 +17607,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(BMOD, 'Bone Modifier', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(DATA)
   ]);
 
@@ -17617,7 +17638,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(LMSW, 'Layered Material Swap', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(REFL)
   ]);
 
@@ -17683,7 +17704,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(PCBN, 'Planet Content Manager Branch Node', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(NAM1), //req
     wbUnknown(NAM2), //req
     wbUnknown(NAM3),
@@ -17698,7 +17719,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(PCCN, 'Planet Content Manager Content Node', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFormIDCk(PCCC, 'Worldspace', [WRLD]), //req
     wbUnknown(IOVR),
     wbKWDAs
@@ -17718,7 +17739,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(PNDT, 'Planet Data', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(CNAM), //req
     wbRArray('Unknown', wbUnknown(PPBD)),
     wbUnknown(FNAM), //req
@@ -17799,7 +17820,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SFBK, 'Surface Block', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbString(ANAM),
     wbUnknown(DNAM), //req
     wbUnknown(ENAM), //req
@@ -17832,7 +17853,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SFPT, 'Surface Pattern', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbFormID(CNAM),  //req
     wbUnknown(BNAM), //req
     wbUnknown(DNAM)
@@ -17841,7 +17862,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SFTR, 'Surface Tree', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(CNAM), //req
     wbUnknown(DNAM), //req
     wbUnknown(ENAM), //req
@@ -17865,7 +17886,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(STBH, 'Snap Template Behavior', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(ENAM), //req
       wbFormID(PNAM), //req
@@ -17879,7 +17900,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(STDT, 'Galaxy Star Data', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbKeywords,
     wbString(ANAM),
     wbStruct(BNAM, 'Galaxy position', [
@@ -17942,7 +17963,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(TODD, 'Time Of Day Data', [
     wbEDID,
-    wbBFCBs,
+    wbBaseFormComponents,
     wbUnknown(REFL)
   ]);
 

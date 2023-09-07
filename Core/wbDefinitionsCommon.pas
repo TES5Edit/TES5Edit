@@ -2571,7 +2571,7 @@ begin
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
-function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef;
+function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 begin
   Result := wbStruct(aSignature, aName, [
     wbInteger('Red', itU8),

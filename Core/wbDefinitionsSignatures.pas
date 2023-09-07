@@ -272,15 +272,12 @@ const
 
   ESSH : TwbSignature = 'ESSH'; { New To Starfield }
 
+  PRIS : TwbSignature = 'PRIS'; { New To Starfield }
 
-
-
-
-
-
-
-
-
+  CRHR : TwbSignature = 'CRHR'; { New To Starfield }
+  HERD : TwbSignature = 'HERD'; { New To Starfield }
+  CRGP : TwbSignature = 'CRGP'; { New To Starfield }
+  GRPH : TwbSignature = 'GRPH'; { New To Starfield }
 
 //   : TwbSignature = ''; { New To Starfield }
 

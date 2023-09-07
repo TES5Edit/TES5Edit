@@ -14072,8 +14072,9 @@ begin
   fdDigits := aDigits;
   fdNormalizer := aNormalizer;
   fdDouble := aDouble;
-  if fdDigits < 0 then
-    fdDigits := wbFloatDigits;
+  if fdDigits <> Low(Integer) then
+    if fdDigits < 0 then
+      fdDigits := wbFloatDigits;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
@@ -14253,8 +14254,12 @@ begin
 
         if Assigned(fdNormalizer) then
           Value := fdNormalizer(aElement, Value);
-        Value := Value * fdScale;
-        Result := RoundToEx(Value, -fdDigits);
+        if fdScale <> 1.0 then
+          Value := Value * fdScale;
+        if fdDigits >= 0 then
+          Result := RoundToEx(Value, -fdDigits)
+        else
+          Result := Value;
       end;
     end;
   except
@@ -14286,8 +14291,12 @@ begin
 
           if Assigned(fdNormalizer) then
             Value := fdNormalizer(aElement, Value);
-          Value := Value * fdScale;
-          Result := RoundToEx(Value, -fdDigits);
+          if fdScale <> 1.0 then
+            Value := Value * fdScale;
+          if fdDigits >= 0 then
+            Result := RoundToEx(Value, -fdDigits)
+          else
+            Result := Value;
         end;
       end;
       if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
@@ -14389,7 +14398,10 @@ begin
     else if (Value=-maxDouble) or (Value=-maxSingle) then
       Result := 'Min'
     else
-      Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
+      if fdDigits >= 0 then
+        Result := FloatToStrF(Value, ffFixed, 99, fdDigits)
+      else
+        Result := FloatToStr(Value);
     if Len > GetDefaultSize(aBasePtr, aEndPtr, aElement) then
       if wbCheckExpectedBytes then
         Result := Format(' <Warning: Expected %d bytes of data, found %d>', [GetDefaultSize(aBasePtr, aEndPtr, aElement), Len]);
