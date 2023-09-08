@@ -305,9 +305,9 @@ const
   PLRL : TwbSignature = 'PLRL'; { New To Starfield }
   RVSH : TwbSignature = 'RVSH'; { New To Starfield }
   SCSP : TwbSignature = 'SCSP'; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
+  ALNR : TwbSignature = 'ALNR'; { New To Starfield }
+  ALTM : TwbSignature = 'ALTM'; { New To Starfield }
+  QMDS : TwbSignature = 'QMDS'; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }

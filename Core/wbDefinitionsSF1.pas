@@ -14313,6 +14313,7 @@ begin
       {0x01000000} 'Optional All Scenes'
     ]), cpNormal, True);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00004000} 14, 'Partial Form'  // Allows the Record to inherit some subrecords from its master
@@ -14368,12 +14369,12 @@ begin
     wbFormIDCk(LNAM, 'Location', [LCTN]),
 //    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
     wbFormIDCk(QTLM, 'Quest Time Limit', [GLOB]),
-    wbFormID(QSRC),
+    wbFormIDCk(QSRC, 'Source Quest', [QUST]),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
     wbString(NAM3),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
-    wbEmpty(NEXT, 'Marker', cpNormal, True),
+    wbMarkerReq(NEXT),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
@@ -14397,12 +14398,16 @@ begin
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbRArray('Unknown', wbRStruct('Unknown', [
           wbUnknown(QSRD),
-          wbFormIDCk(QRXP, 'Unknown', [GLOB]),
-          wbFormIDCk(QRCR, 'Unknown', [GLOB]),
-          wbRArray('Rewards', wbStruct(QRRD, 'Reward', [
-            wbFormIDCk('Item', sigBaseObjects, False, cpNormal, True),
-            wbInteger('Count', itU32)
-          ]))
+          wbUnknown(NAM1),
+          wbRArray('Unknown', wbRStruct('Unknown', [
+            wbFormIDCk(QRXP, 'Unknown', [GLOB]),
+            wbFormIDCk(QRCR, 'Unknown', [GLOB]),
+            wbRArray('Rewards', wbStruct(QRRD, 'Reward', [
+              wbFormIDCk('Item', sigBaseObjects, False, cpNormal, True),
+              wbInteger('Count', itU32)
+            ])),
+            wbCTDAs
+          ], []))
         ], []))
 //        wbFormIDCk(NAM0, 'Next Quest', [QUST])
       ], []))
@@ -14441,18 +14446,19 @@ begin
           wbUnknown(ALFG),
 
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
-          //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
+          wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
           wbFormID(ALFR, 'Forced Reference'),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
             wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbFormIDCk(KNAM, 'Keyword', [KYWD]),
-            wbFormIDCk(ALRT, 'Ref Type', [LCRT])
+            wbFormIDCk(KNAM, 'Keyword', [KYWD]), //not in Starfield.esm
+            wbFormIDCk(ALRT, 'Ref Type', [LCRT]).SetRequired(True)
           ], []),
           wbRStruct('External Alias Reference', [
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
-            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
+            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias).SetRequired(True)
           ], []),
+          wbUnknown(ALLR),
           wbRStruct('Create Reference to Object', [
             wbFormID(ALCO, 'Object'),
             wbStruct(ALCA, 'Alias', [
@@ -14461,51 +14467,55 @@ begin
                 $0000, 'At',
                 $8000, 'In'
               ]))
-            ]),
+            ]).SetRequired(True),
             wbInteger(ALCL, 'Level', itU32, wbEnum([
               'Easy',
               'Medium',
               'Hard',
               'Very Hard',
               'None'
-            ]))
+            ])).SetRequired(True)
           ], []),
           wbRStruct('Find Matching Reference Near Alias', [
             wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
             wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked From',
               'Linked Ref'
-            ]))
+            ])).SetRequired(True)
           ], []),
           wbRStruct('Find Matching Reference From Event', [
             wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
-            wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
+            wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired(True)
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+          wbUnknown(ALNR),
           wbCTDAs,
-          wbUnknown(LNAM),
-          wbUnknown(ALPN),
-          wbUnknown(ALLR),
+          wbUnknown(ALUB),
           wbKeywords,
           wbContainerItems,
+
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
+
+          wbRStruct('Unknown', [
+            wbUnknown(ALCM),
+            wbUnknown(ALCA)
+          ], []),
           wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
             wbFormIDCk('Keyword', [KYWD, NULL]),
             wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
           ])),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
-          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbFormIDCk(ALDI, 'Death Item', [LVLI]),
+          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
           wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbUnknown(ALPC),
-          wbUnknown(ALUB),
           wbString(SCCM),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+          wbUnknown(ALTM),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
@@ -14530,11 +14540,20 @@ begin
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
           ], []),
           wbCTDAs,
-          wbUnknown(ALPN),
-          wbUnknown(ALSY),
-          wbUnknown(ALKF),
+          wbRStruct('Unknown', [
+            wbUnknown(ALPS),
+            wbCTDAs,
+            wbUnknown(LNAM)
+          ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbUnknown(LNAM),
+
+          wbUnknown(ALPN),                               // order between ALPN
+          wbFormIDCk(ALFL, 'Specific Location', [LCTN]), // and ALFL unknown
+          wbUnknown(ALSY),                               // and ALSY unknown
+
+          wbUnknown(ALKF),
+          wbFormIDCk(ALDN, 'Display Name', [MESG]),
+
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], []),
 
@@ -14544,7 +14563,18 @@ begin
           wbInteger(ALMI, 'Max Initial Fill Count', itU8),
           wbUnknown(ALAM),
           wbCTDAs,
-          wbUnknown(ALLA),
+          wbKeywords,
+          wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
+            wbFormIDCk('Keyword', [KYWD, NULL]),
+            wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+          ])),
+          wbFormIDCk(ALDN, 'Display Name', [MESG]),
+          wbFormIDCk(ALDI, 'Death Item', [LVLI]),
+          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
+          wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+          wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+          wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+          wbString(SCCM),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [])
@@ -14556,12 +14586,16 @@ begin
     wbFormIDCk(GNAM, 'Quest Group', [KYWD]),
 //    wbString(SNAM, 'SWF File'),
 
-    wbFormIDCk(QMTY, 'Quest Mission Type Keyword', [KYWD]),
-    wbLStringKC(QMSU, 'Unknown', 0, cpTranslate),
-    wbRArray('Unknown', wbRStruct('Unknown', [
-      wbLStringKC(QMDT, 'Unknown', 0, cpTranslate),
-      wbLStringKC(QMDP, 'Unknown', 0, cpTranslate)
-    ], [])),
+    wbRStruct('Quest Mission', [
+      wbFormIDCk(QMTY, 'Quest Mission Type Keyword', [KYWD]),
+      wbLStringKC(QMSU, 'Unknown', 0, cpTranslate),
+      wbRArray('Unknown', wbRStruct('Unknown', [
+        wbLStringKC(QMDT, 'Unknown', 0, cpTranslate),
+        wbLStringKC(QMDP, 'Unknown', 0, cpTranslate),
+        wbUnknown(QMDS)
+      ], []))
+    ], []),
+
     wbKeywords,
     wbString(SCCM)
   ]);
