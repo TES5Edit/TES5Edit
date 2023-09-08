@@ -17746,7 +17746,7 @@ begin
       wbUnknown(NNAM)
     ], []),
     wbUnknown(BDED), //req
-    wbFloat(TEMP, 'Maybe temperature in K'),
+    wbFloat(TEMP, 'Temperature in C'),
     wbFloat(DENS, 'Density'),
     wbFloat(PHLA, 'Peri angle in deg'),
     wbUnknown(RSCS)
