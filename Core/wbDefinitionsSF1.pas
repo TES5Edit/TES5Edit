@@ -17801,7 +17801,11 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbUnknown(CNAM), //req
-    wbRArray('Unknown', wbUnknown(PPBD)),
+    wbRArray('Unknown', wbStruct(PPBD, 'name', [
+      wbFormID('something'),
+      wbFloat('percentage'),
+      wbUnknown()
+    ])),
     wbFormID(FNAM, 'Surface Tree'), //req
     wbUnknown(GNAM), //req
     wbRStructs('Unknown', 'Unknown', [
