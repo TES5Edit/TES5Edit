@@ -17681,12 +17681,12 @@ begin
     wbBaseFormComponents,
     wbUnknown(CNAM), //req
     wbRArray('Unknown', wbUnknown(PPBD)),
-    wbUnknown(FNAM), //req
+    wbFormID(FNAM, 'Surface Tree'), //req
     wbUnknown(GNAM), //req
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(BDST), //req
       wbString(ANAM),  //req
-      wbInteger(CNAM, 'Action', itU8, wbEnum([], [
+      wbInteger(CNAM, 'Body type', itU8, wbEnum([], [
         2, 'Planet',
         3, 'Moon',
         5, 'Asteroid Belt'
