@@ -5861,7 +5861,8 @@ begin
     wbFloat('Min Height'),
     wbFloat('Max Height'),
     wbFloat('Depth'),
-    wbFloat('Shininess'),
+    wbFloat('Shininess')
+    (*
     wbStruct('Parallax', [
       wbFloat('Scale'),
       wbInteger('Passes', itU8) {>>> This can't be higher than 30 <<<}
@@ -5875,6 +5876,7 @@ begin
     ], True)),
     wbInteger('Alpha Threshold?', itU16),
     wbByteColors('Color')
+    *)
   ]);
 
 //  wbRecordFlagsFlags := wbFlags([
@@ -10440,10 +10442,13 @@ end;
 
 procedure DefineSF1e;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
+    wbBaseFormComponents,
     wbCNAM,
-    wbUnknown(TNAM)
+    wbUnknown(TNAM),
+    wbUnknown(FNAM)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -11374,8 +11379,10 @@ begin
     wbMODT
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(IPCT, 'Impact', [
     wbEDID,
+    wbBaseFormComponents,
     wbGenericModel,
     wbStruct(DATA, '', [
       wbFloat('Effect - Duration'),
@@ -11399,16 +11406,16 @@ begin
       ])),
       wbByteArray('Unknown', 2)
     ], cpNormal, True),
+    wbArray(GNAM, 'Projected Decals', wbFormIDCk('Projected Decal', [PDCL])),
+    wbUnknown(HNAM),
     wbDODT,
-    wbFormIDCk(DNAM, 'Texture Set', [TXST]),
-    wbFormIDCk(ENAM, 'Secondary Texture Set', [TXST]),
-    wbFormIDCk(SNAM, 'Sound 1', [SNDR]),
-    wbFormIDCk(NAM1, 'Sound 2', [SNDR]),
-    wbFormIDCk(NAM3, 'Footstep Explosion', [EXPL]),
-    wbFormIDCk(NAM2, 'Hazard', [HAZD]),
+    wbUnknown(IDSH),
+    wbUnknown(IDP1),
+    wbUnknown(IDP3),
     wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
@@ -11434,110 +11441,71 @@ begin
     ], cpNormal, True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
       {0x00004000} 14, 'Partial Form'
     ])), [
     wbEDID,
+    wbPRPS,
 
-    wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', sigReferences, False, cpBenign),
-      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
-    ])),
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Grid Y', itS32, nil, cpBenign),
+      wbInteger('Grid X', itS32, nil, cpBenign)
     ])),
-    wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
 
-    wbArray(ACUN, 'Actor Cell Unique', wbStruct('', [
-      wbFormIDCk('Actor', [NPC_], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR], False, cpBenign),
-      wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
-    ])),
+    wbUnknown(LCUR),
+
     wbArray(LCUN, 'Location Cell Unique', wbStruct('', [
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
       wbFormIDCk('Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
-    wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_], False, cpBenign)),
 
-    wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
-      wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', sigReferences, False, cpBenign),
-      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
-    ])),
     wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
       wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Grid Y', itS32, nil, cpBenign),
+      wbInteger('Grid X', itS32, nil, cpBenign)
     ])),
-    wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
 
-    wbRArray('Actor Cell Encounter Cell',
-      wbStruct(ACEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-        wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS16, nil, cpBenign),
-          wbInteger('Grid X', itS16, nil, cpBenign)
-        ]))
-      ])
-    ),
     wbRArray('Location Cell Encounter Cell',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
         wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS16, nil, cpBenign),
-          wbInteger('Grid X', itS16, nil, cpBenign)
-        ]))
-      ])
-    ),
-    wbRArray('Reference Cell Encounter Cell',
-      wbStruct(RCEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-        wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS16, nil, cpBenign),
-          wbInteger('Grid X', itS16, nil, cpBenign)
+          wbInteger('Grid Y', itS32, nil, cpBenign),
+          wbInteger('Grid X', itS32, nil, cpBenign)
         ]))
       ])
     ),
 
-    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
     wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
 
-    wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', sigReferences, False, cpBenign),
-      wbFormIDCk('Ref', sigReferences, False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
-    ])),
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Grid Y', itS32, nil, cpBenign),
+      wbInteger('Grid X', itS32, nil, cpBenign)
     ])),
 
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
+    wbPRPS,
+    wbUnknown(DATA),
+
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
-    wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
     wbFormIDCk(MNAM, 'World Location Marker Ref', [REFR, ACHR]),
     wbFloat(RNAM, 'World Location Radius'),
-    //wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbFloat(ANAM, 'Actor Fade Mult'),
-    wbCNAM
+    wbUnknown(TNAM),
+    wbCNAM,
+    wbUnknown(XNAM),
+    wbUnknown(YNAM)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 end;
@@ -13155,20 +13123,18 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTY,
     wbPTT2,
+    wbXALG,
     wbFULLReq,
     wbGenericModel,
-    wbICON,
-    wbMICO,
-    wbDEST,
-    wbYNAM,
-    wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
+//    wbDEST,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True)
+    ], cpNormal, True),
+    wbUnknown(FLAG)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   if wbSimpleRecords then begin
@@ -16576,6 +16542,7 @@ end;
 
 procedure DefineSF1r;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(INNR, 'Instance Naming Rules', [
     wbEDID,
     wbInteger(UNAM, 'Target', itU32, wbEnum([], [
@@ -16584,7 +16551,7 @@ begin
       $2D, 'Actor',
       $2A, 'Furniture',
       $2B, 'Weapon'
-    ])),
+    ])).SetRequired(True),
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
         wbInteger(VNAM, 'Count', itU32),
@@ -16592,8 +16559,7 @@ begin
         wbRArray('Names',
           wbRStruct('Name', [
             wbLStringKC(WNAM, 'Text', 0, cpTranslate),
-            wbKSIZ,
-            wbKWDAs,
+            wbKeywords,
             wbStruct(XNAM, 'Property', [
               wbFloat('Value'),
               wbInteger('Target', itU8, wbEnum([
@@ -16625,25 +16591,26 @@ begin
           cpNormal, False, nil, wbINNRAfterSet
         )
       ], [])
-    )
+    , 10).SetRequired(True)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
-    wbFormIDCk(DNAM, 'Primary Descriptor', [SNDR]),
-    wbFormIDCk(ENAM, 'Exterior Tail', [SNDR]),
-    wbFormIDCk(VNAM, 'VATS Descriptor', [SNDR]),
-    wbFloat(TNAM, 'VATS Threshold'),
+    wbUnknown(WED0),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD])),
-    wbRArrayS('Sounds', wbStructSK(RNAM, [0], 'Sound', [
-      wbInteger('Reverb Class', itU32, wbReverbClassEnum),
-      wbFormIDCk('Descriptor', [SNDR])
-    ]))
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(RSMC),
+      wbUnknown(RSMH)
+    ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(LAYR, 'Layer', [
     wbEDID,
-    wbFormIDCk(PNAM, 'Parent', [LAYR])
+    wbFormIDCk(PNAM, 'Parent', [LAYR]),
+    wbUnknown(XCLP),
+    wbUnknown(LODB)
   ]);
 
   wbRecord(LENS, 'Lens Flare', [
