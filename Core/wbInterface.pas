@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -2339,7 +2339,7 @@ type
     function SetSummaryPassthroughMaxLength(aLength: Integer): IwbArrayDef;
     function SetSummaryPassthroughMaxDepth(aDepth: Integer): IwbArrayDef;
     function SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
-    
+
     function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
     function GetDefaultEditValues: TArray<string>;
 
@@ -3890,6 +3890,20 @@ function wbMarkerReq(aPriority  : TwbConflictPriority = cpNormal;
                      aGetCP     : TwbGetConflictPriority = nil)
                                 : IwbValueDef; overload;
 
+function wbGUID(const aSignature : TwbSignature;
+                 const aName      : string = 'Unknown';
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
+                                  : IwbSubRecordDef; overload;
+
+function wbGUID(const aName      : string = 'Unknown';
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
+                                  : IwbByteArrayDef; overload;
 
 function wbRefID: IwbRefID; overload;
 
@@ -6260,7 +6274,7 @@ type
     function SetSummaryPassthroughMaxLength(aLength: Integer): IwbArrayDef;
     function SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
     function SetSummaryPassthroughMaxDepth(aCount: Integer): IwbArrayDef;
-    
+
     function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
     function GetDefaultEditValues: TArray<string>;
   end;
@@ -8445,6 +8459,26 @@ begin
   Result := wbMarker(aPriority, True, aDontShow, aSorted, aGetCP);
 end;
 
+function wbGUID(const aSignature : TwbSignature;
+                 const aName      : string = 'Unknown';
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
+                                  : IwbSubRecordDef;
+begin
+  Result := wbByteArray(aSignature, aName, 16, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
+function wbGUID(const aName      : string = 'Unknown';
+                       aPriority  : TwbConflictPriority = cpNormal;
+                       aRequired  : Boolean = False;
+                       aDontShow  : TwbDontShowCallback = nil;
+                       aGetCP     : TwbGetConflictPriority = nil)
+                                  : IwbByteArrayDef;
+begin
+  Result := wbByteArray(aName, 16, aPriority, aRequired, aDontShow, aGetCP);
+end;
 
 function wbDumpInteger : IwbIntegerDefFormater;
 begin
@@ -10376,7 +10410,7 @@ begin
     end;
   end;
 end;
-  
+
 function TwbSubRecordArrayDef.SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
 var
   i: Integer;
@@ -20422,3 +20456,4 @@ finalization
   FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);
 end.
+
