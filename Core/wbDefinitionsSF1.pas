@@ -13053,7 +13053,7 @@ begin
         wbFormIDCk('Emotion', [KYWD, FFFF]),
         // wbInteger('Response number', itU8),
         wbFormIDCk('Sound File', [SNDR, NULL]),
-        wbFloat('Unknown'), // Interrupt Percentage?
+        wbFloat('Unknown') // Interrupt Percentage?
         // wbByteArray('Unknown', 1),
         // wbInteger('Interrupt Percentage', itU16)
         // wbInteger('Camera Target Alias', itS32),
