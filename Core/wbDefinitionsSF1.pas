@@ -248,6 +248,7 @@ var
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
+  wbHNAMHNAM: IwbRecordMemberDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
@@ -7507,7 +7508,15 @@ begin
   wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
     wbFormID('Reference'),
     wbArrayS('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
-  ]))
+  ]));
+
+  wbHNAMHNAM := wbRStruct('Unknown', [
+    wbMarker(HNAM).SetRequired(True),
+    wbArray(HTID, 'Unknown', wbInteger('Reference Alias ID', itS32)),
+    wbUnknown(FNAM),
+    wbUnknown(PNAM),
+    wbMarker(HNAM).SetRequired(True)
+  ], []);
 end;
 
 procedure DefineSF1b;
@@ -12389,13 +12398,7 @@ begin
       ]),
       wbFloat(DMAX, 'Looping - Max'),
       wbFloat(DMIN, 'Looping - Min'),
-      wbRStruct('Unknown', [
-        wbMarker(HNAM).SetRequired(True),
-        wbArray(HTID, 'Unknown', wbInteger('Reference Alias ID', itS32)),
-        wbUnknown(FNAM),
-        wbUnknown(PNAM),
-        wbMarker(HNAM).SetRequired(True)
-      ], []),
+      wbHNAMHNAM,
       wbStruct(CRIS, 'Camera', [
         wbFloat('FOV On Player Camera'),
         wbFloat('Rate Of Camera Change')
@@ -13088,13 +13091,7 @@ begin
       wbUnknown(ATAC),
       wbEmpty(PLRL, 'Unknown'),
       wbEmpty(XNAM, 'Unknown'),
-      wbRStruct('Unknown', [
-        wbMarker(HNAM).SetRequired(True),
-        wbInteger(HTID, 'Unknown', itS32),
-        wbUnknown(FNAM),
-        wbUnknown(PNAM),
-        wbMarker(HNAM).SetRequired(True)
-      ], [])
+      wbHNAMHNAM
     ], [])),
     wbUnknown(RVSH),
     wbCTDAs,
