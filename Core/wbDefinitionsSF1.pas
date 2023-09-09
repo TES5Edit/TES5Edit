@@ -17835,7 +17835,29 @@ begin
         wbInteger('Primary planet ID', itu32),
         wbInteger('Planet ID', itu32)
       ]),
-      wbUnknown(HNAM),
+      wbStruct(HNAM, 'Unknown', [
+        wbUnknown(4),
+        wbLenString('Spectral Class'),
+        wbLenString('Catalogue ID'),
+        wbLenString('Life'),
+        wbLenString('Magnetosphere'),
+        wbLenString('Mass in kg'),
+        wbLenString('Type'),
+        wbLenString('Star name'),
+        wbUnknown(8),
+        wbFloat('Unknown'),
+        wbUnknown(8),
+        wbFloat('Density'),
+        wbFloat('Heat'),
+        wbFloat('Hydro'),
+        wbFloat('Inner HZ'),
+        wbFloat('Outer HZ'),
+        wbFloat('Peri. Angle'),
+        wbUnknown(4),
+        wbFloat('Start angle in deg'),
+        wbFloat('Year length in days'),
+        wbUnknown()
+      ]),
       wbStruct(INAM, 'Unknown', [
         wbInteger('Atmos Handle', itu32),
         wbUnknown()
