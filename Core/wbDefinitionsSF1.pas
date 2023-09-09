@@ -12389,6 +12389,13 @@ begin
       ]),
       wbFloat(DMAX, 'Looping - Max'),
       wbFloat(DMIN, 'Looping - Min'),
+      wbRStruct('Unknown', [
+        wbMarker(HNAM).SetRequired(True),
+        wbArray(HTID, 'Unknown', wbInteger('Reference Alias ID', itS32)),
+        wbUnknown(FNAM),
+        wbUnknown(PNAM),
+        wbMarker(HNAM).SetRequired(True)
+      ], []),
       wbStruct(CRIS, 'Camera', [
         wbFloat('FOV On Player Camera'),
         wbFloat('Rate Of Camera Change')
