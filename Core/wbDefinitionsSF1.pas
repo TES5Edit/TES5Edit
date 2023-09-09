@@ -17840,6 +17840,7 @@ begin
         wbInteger('Atmos Handle', itu32),
         wbUnknown()
       ]),
+      wbUnknown(KNAM),
       wbUnknown(NNAM)
     ], []),
     wbUnknown(BDED), //req
