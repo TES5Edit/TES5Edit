@@ -190,7 +190,9 @@ var
   wbKeywords: IwbSubRecordStructDef;
   wbCVPA: IwbSubRecordDef;
   wbContainerItems: IwbSubRecordStructDef;
-  wbWED01: IwbSubRecordStructDef;
+  wbALSH: IwbSubRecordDef;
+  wbACSH: IwbSubRecordDef;
+  wbCUSH: IwbSubRecordDef;
   wbPUSHPDSH: IwbSubRecordStructDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
@@ -5741,6 +5743,17 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
+function wbSHDef(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbSubRecordWithStructDef;
+begin
+  Result :=
+    wbStruct(aSignature, aName, [
+      wbGUID, // GUID 1
+      wbGUID, // GUID 2
+      wbUnknown(4),  // ID 1
+      wbUnknown(4)   // ID 2
+    ]);
+end;
+
 procedure DefineSF1a;
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -5798,15 +5811,14 @@ begin
     wbCNTOs.SetRequired
   ], []);
 
-  wbWED01 := wbRStruct('Unknown', [
-    wbUnknown(WED0).SetRequired,
-    wbUnknown(WED1).SetRequired
+  wbPUSHPDSH := wbRStruct('Unknown', [
+    wbSHDef(PUSH).SetRequired,
+    wbSHDef(PDSH).SetRequired
   ], []);
 
-  wbPUSHPDSH := wbRStruct('Unknown', [
-    wbUnknown(PUSH).SetRequired,
-    wbUnknown(PDSH).SetRequired
-  ], []);
+  wbALSH := wbSHDef(ALSH);
+  wbACSH := wbSHDef(ACSH);
+  wbCUSH := wbSHDef(CUSH);
 
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
@@ -8933,6 +8945,16 @@ begin
   ]);
 
   wbObjectModProperties :=
+   wbArrayS('Properties', wbStructSK([4], 'Property', [
+        wbUnknown(4),
+        wbUnknown(4),
+        wbInteger('Signature', itU32, wbChar4, cpNormal, True), // this seems to replace the itU8 as the enum for the function
+        wbByteArray('Value 1', 4),                              // thus the 12 bytes following are the data related to the function
+        wbByteArray('Value 2', 4),
+        wbUnknown(4)
+      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
+
+(*
     wbArrayS('Properties', wbStructSK([4], 'Property', [
       wbInteger('Value Type', itU8, wbEnum([
         {0} 'Int',
@@ -8972,6 +8994,7 @@ begin
       ]),
       wbFloat('Step')
     ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
+*)
 
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
@@ -9079,11 +9102,11 @@ begin
       wbEFID,
       wbEFIT,
       wbCTDAs,
-      wbUnknown(MNAM),
-      wbUnknown(ANAM), // order between ANAM
-      wbUnknown(ZNAM), // and ZNAM unknown
-      wbUnknown(EFIF),
-      wbUnknown(MUID)
+      wbFormID(MNAM),
+      wbFormID(ANAM), // order between ANAM
+      wbFormID(ZNAM), // and ZNAM unknown
+      wbInteger(EFIF, 'Unknown', itU32),
+      wbInteger(MUID, 'Unknown', itU32)
     ], [], cpNormal, True);
 
   wbEffectsReq :=
@@ -9117,7 +9140,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbUnknown(XALG),
+    wbXALG,
     wbPTT2,
     wbSNTP,
     wbSNBH,
@@ -9140,8 +9163,8 @@ begin
 //    wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbString(WMAT, 'Water Material'),
     wbFormIDCk(WTFM, 'Water', [WATR]),
-    wbUnknown(ALSH),
-    wbUnknown(ACSH),
+    wbALSH,
+    wbACSH,
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -9202,7 +9225,7 @@ begin
     wbKeywords,
     wbGenericModel,
     wbPUSHPDSH,
-    wbUnknown(CUSH),
+    wbCUSH,
 //    wbICON,
 //    wbMICO,
 //    wbYNAM,
@@ -9351,8 +9374,14 @@ begin
     wbAPPR,
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker', cpNormal, True),
-    wbUnknown(AVSG),
-    wbUnknown(AFSG)
+    wbStruct(AVSG, 'Unknown Sound GUID', [
+      wbGUID,
+      wbGUID
+    ]),
+    wbStruct(AFSG, 'Unknown Sound GUID', [
+      wbGUID,
+      wbGUID
+    ])
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet).SetIgnoreList([FLLD, XFLG]);
 
   {subrecords checked against Starfield.esm}
@@ -9403,7 +9432,7 @@ begin
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
-    wbFormID(PNAM),
+    wbFormIDCk(PNAM, 'Body Part Data', [BPTD]),
     wbUnknown(MNAM),
     wbString(TNAM),
     wbString(SNAM),
@@ -9802,11 +9831,13 @@ begin
     ], cpNormal, True),
     wbKeywords,
     wbFTYP,
+    wbFormIDCk(NTRM, 'Native Terminal', [NTRM]),
     wbPRPS,
     wbAPPR,
 //    wbObjectTemplate, likely, but doesn't occur in Starfield.esm
     wbEmpty(STOP, 'Marker'),
-    wbWED01,
+    wbSHDef(WED0),
+    wbSHDef(WED1),
     wbFormIDCk(ONAM, 'Display Filter', [FLST])
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
@@ -10398,7 +10429,7 @@ begin
     wbFTYP,
     wbUnknown(PNAM),
     wbATTX,
-    wbUnknown(ALSH),
+    wbALSH,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
       {0x0002} 'Ignored By Sandbox'
@@ -10589,15 +10620,16 @@ begin
     wbEDID,
     wbOBND(True),
     wbODTY,
-    wbUnknown(ASLS),
-    wbWED01,
+    wbSHDef(ASLS),
+    wbSHDef(WED0),
+    wbSHDef(WED1),
     wbFormIDCk(AAMB, 'Ambient Set', [AMBS]),
     wbFormIDCk(AMUS, 'Music', [MUSC]),
     wbFormIDCk(BNAM, 'Environment Type', [REVB]),
-    wbUnknown(AEAR),
-    wbUnknown(FLTV),
+    wbFloat(AEAR),
+    wbFloat(FLTV),
     wbInteger(XTRI, 'Is Interior', itU8, wbBoolEnum, cpNormal, True),
-    wbUnknown(BOLV),
+    wbInteger(BOLV, 'Unknown', itU8), // looks like probably a boolean
     wbUnknown(DEVT),
     wbUnknown(ASDF)
   ]);
@@ -11360,8 +11392,8 @@ begin
       'Variable',
       'Resource'
     ])),
-    wbUnknown(NAM2),
-    wbUnknown(NAM3)
+    wbFloat(NAM2),
+    wbFloat(NAM3)
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
   {subrecords checked against Starfield.esm}
@@ -13794,7 +13826,7 @@ begin
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbUnknown(CUSH),
+    wbCUSH,
     wbPUSHPDSH,
     wbKeywords,
     wbCVPA,
@@ -13835,7 +13867,7 @@ begin
     wbUnknown(NNAM), // req
     wbUnknown(SNAM), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
-    wbUnknown(CUSH),
+    wbCUSH,
     wbPUSHPDSH,
     wbUnknown(LRNM), // always 1 byte value $03
     wbInteger(DATA, 'Unknown', itU32), // req
@@ -16939,27 +16971,45 @@ begin
     wbFULL,
     wbDESC,
     wbGenericModel,
+    wbUnknown(XFLG),
+//    wbStruct(DATA, 'Data', [
+//      wbInteger('Include Count', itU32),
+//      wbInteger('Property Count', itU32),
+//      wbInteger('Unknown Bool 1', itU8, wbBoolEnum),
+//      wbInteger('Unknown Bool 2', itU8, wbBoolEnum),
+//      wbInteger('Form Type', itU32, wbEnum([], [
+//        Sig2Int(ARMO), 'Armor',
+//        Sig2Int(NPC_), 'Non-player character',
+//        Sig2Int(WEAP), 'Weapon',
+//        Sig2Int(NONE), 'None'
+//      ])).SetDefaultEditValue('None'),
+//      wbInteger('Max Rank', itU8),
+//      wbInteger('Level Tier Scaled Offset', itU8),
+//      wbFormIDCk('Attach Point', [KYWD, NULL]),
+//      wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
+//      // no way to change these in CK, legacy data leftover?
+//      wbArray('Items', wbStruct('Item', [
+//        wbByteArray('Value 1', 4),
+//        wbByteArray('Value 2', 4)
+//      ]), -1),
+//      // should not be sorted
+//      wbArray('Includes', wbStruct('Include', [
+//        wbFormIDCk('Mod', [OMOD]),
+//        wbInteger('Minimum Level', itU8),
+//        wbInteger('Optional', itU8, wbBoolEnum),
+//        wbInteger('Don''t Use All', itU8, wbBoolEnum)
+//      ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+//      wbObjectModProperties
+//    ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
-      wbInteger('Unknown Bool 1', itU8, wbBoolEnum),
-      wbInteger('Unknown Bool 2', itU8, wbBoolEnum),
-      wbInteger('Form Type', itU32, wbEnum([], [
-        Sig2Int(ARMO), 'Armor',
-        Sig2Int(NPC_), 'Non-player character',
-        Sig2Int(WEAP), 'Weapon',
-        Sig2Int(NONE), 'None'
-      ])).SetDefaultEditValue('None'),
-      wbInteger('Max Rank', itU8),
-      wbInteger('Level Tier Scaled Offset', itU8),
+      wbUnknown(2),
+      wbLenString('Name', 4),
+      wbUnknown(2),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
-      // no way to change these in CK, legacy data leftover?
-      wbArray('Items', wbStruct('Item', [
-        wbByteArray('Value 1', 4),
-        wbByteArray('Value 2', 4)
-      ]), -1),
-      // should not be sorted
+      wbUnknown(4),
       wbArray('Includes', wbStruct('Include', [
         wbFormIDCk('Mod', [OMOD]),
         wbInteger('Minimum Level', itU8),
@@ -17500,8 +17550,8 @@ begin
     wbEDID,
     wbOBND(True),
     wbODTY,
-    wbUnknown(OBSV),
-    wbUnknown(OCCV)
+    wbFloat(OBSV),
+    wbFloat(OCCV)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -17625,7 +17675,7 @@ begin
     wbEDID,
     wbFULL,
     wbKeywords,
-    wbUnknown(CUSH),
+    wbCUSH,
     wbFormID(FNAM, 'Item List'),
     wbUnknown(SNAM),
     wbFormID(CNAM, 'Next Rarity'),
@@ -17731,16 +17781,21 @@ begin
   wbRecord(AVMD, 'Actor Value Modulations', [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(MNAM), //req
+    wbInteger(MNAM, 'Unknown', itU32), //req
     wbString(YNAM),  //req
     wbString(TNAM),  //req
-    wbUnknown(ITMC), //req
+    wbInteger(ITMC, 'Unknown',itU32), //req
     wbRStructs('Unknown', 'Unknown', [
       wbString(LNAM), //req
       wbString(VNAM),
-      wbUnknown(NNAM)  //req
+      wbStruct(NNAM, 'Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbInteger('Alpha', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], []),
-    wbUnknown(MODT)
+    wbInteger(MODT, 'Unknown', itU32)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18157,7 +18212,7 @@ begin
   wbRecord(WKMF, 'WWise Keyword Mapping', [
     wbEDID,
     wbUnknown(WMTI),
-    wbUnknown(WMKA),
+    wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(WMSI),
       wbUnknown(WMSD)
