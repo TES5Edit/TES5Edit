@@ -190,9 +190,9 @@ var
   wbKeywords: IwbSubRecordStructDef;
   wbCVPA: IwbSubRecordDef;
   wbContainerItems: IwbSubRecordStructDef;
-  wbALSH: IwbSubRecordDef;
-  wbACSH: IwbSubRecordDef;
-  wbCUSH: IwbSubRecordDef;
+  wbALSH: IwbRecordMemberDef;
+  wbACSH: IwbRecordMemberDef;
+  wbCUSH: IwbRecordMemberDef;
   wbPUSHPDSH: IwbSubRecordStructDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
@@ -5861,7 +5861,7 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
-function wbSHDef(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbSubRecordWithStructDef;
+function wbSHDef(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(aSignature, aName, [
@@ -5869,7 +5869,10 @@ begin
       wbGUID, // GUID 2
       wbUnknown(4),  // ID 1
       wbUnknown(4)   // ID 2
-    ]);
+    ])
+    .SetSummaryKeyOnValue([0, 1])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed);
 end;
 
 procedure DefineSF1a;
@@ -15116,8 +15119,8 @@ begin
     wbFormIDCk(ENAM, 'Aim Assist Pose Data', [AAPD]),
     wbMarkerReq(NAM3),
     wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
-    wbUnknown(WED0),
-    wbUnknown(WED1),
+    wbSHDef(WED0),
+    wbSHDef(WED1),
 
     wbRArray('Biped Object Names', wbString(NAME, 'Name'), 64).IncludeFlag(dfNotAlignable),
     wbArray(RBPC, 'Biped Object Conditions', wbFormIDCk('Condition', [AVIF, NULL]), 64).IncludeFlag(dfNotAlignable),

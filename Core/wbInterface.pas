@@ -20457,4 +20457,3 @@ finalization
   FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);
 end.
-
