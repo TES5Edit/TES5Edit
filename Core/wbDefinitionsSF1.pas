@@ -173,7 +173,7 @@ var
   wbScriptFragmentsScen: IwbValueDef;
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
-  wbTargetData: IwbStructDef;
+  wbPTDA: IwbSubRecordWithStructDef;
 //  wbAttackData: IwbSubRecordStructDef;
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
@@ -4762,12 +4762,19 @@ end;
 
 function wbPubPackCNAMDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
+  Container : IwbContainer;
   rANAM: IwbRecord;
   ctype: string;
 begin
   Result := 0;
 
-  rANAM := aElement.Container.RecordBySignature[ANAM];
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+  Container := Container.Container;
+  if not Assigned(Container) then
+    Exit;
+
+  rANAM := Container.RecordBySignature[ANAM];
   if not Assigned(rANAM) then
     Exit;
 
@@ -6900,7 +6907,7 @@ begin
     wbInteger('Collection Index', itU32)
   ], cpNormal, False, nil, 3);
 
-  wbTargetData := wbStruct('Target Data', [
+  wbPTDA := wbStruct(PTDA, 'Target Data', [
     wbInteger('Type', itS32, wbEnum([
       {0} 'Specific Reference',
       {1} 'Object ID',
@@ -12645,6 +12652,7 @@ begin
     ], cpNormal, True)
   ]);
   *)
+  {subrecords checked against Starfield.esm}
   wbRecord(OTFT, 'Outfit', [
     wbEDID,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
@@ -14223,6 +14231,7 @@ begin
     ]))
   ], []));
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PACK, 'Package', [
     wbEDID,
     wbVMADFragmentedPACK,
@@ -14290,12 +14299,13 @@ begin
       ]), cpNormal, True),
       wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
-      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True),
-      wbByteArray(IDLB, 'Unknown', 4, cpIgnore)
+      wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True)
+      //wbByteArray(IDLB, 'Unknown', 4, cpIgnore) not in Starfield.esm
     ], [], cpNormal, False, nil, False, nil {cannot be totally removed , wbAnimationsAfterSet}),
 
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
+    wbFormIDCk(FLAV, 'Unknown', [KYWD]),
     wbStruct(PKCU, 'Counter', [
       wbInteger('Data Input Count', itU32),
       wbFormIDCk('Package Template', [PACK, NULL]),
@@ -14305,25 +14315,31 @@ begin
     wbRStruct('Package Data', [
       wbRArray('Data Input Values', wbRStruct('Value', [
         wbString(ANAM, 'Type').SetAfterSet(wbPackageDataInputValueTypeAfterSet),
-        wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
-          {0} wbByteArray('Unknown'),
-          {1} wbInteger('Bool', itU8, wbBoolEnum),
-          {2} wbInteger('Integer', itU32),
-          {3} wbFloat('Float')
-        ]),
-        wbUnknown(BNAM),
-        wbPDTOs,
-        wbPLDT,
-        wbStruct(PTDA, 'Target', [wbTargetData]),
-        wbUnknown(TPIC)
+        wbRUnion('Typed Input Value', [
+          wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
+            {0} wbByteArray(''),
+            {1} wbInteger('', itU8, wbBoolEnum),
+            {2} wbInteger('', itU32),
+            {3} wbFloat('')
+          ]).IncludeFlag(dfUnionStaticResolve),
+          wbPLDT,
+          wbRStruct('Target', [
+            wbPTDA,
+            wbCITCReq,
+            wbCTDAsCount
+          ], []),
+          wbUnknown(STSC)
+        ], [])
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
-    wbByteArray(XNAM, 'Marker', 0, cpNormal, True),
+
+    wbInteger(XNAM, 'Unknown', itU8, wbEnum([]), cpNormal, True),
 
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
         wbString(ANAM, 'Branch Type'),
+        wbUnknown(NNAM),
         wbCITCReq,
         wbCTDAsCount,
         wbStruct(PRCB, 'Root', [
@@ -14351,8 +14367,8 @@ begin
             ])),
             wbByteArray('Unknown', 3)
           ])
-        ),
-        wbRArray('Unknown', wbUnknown(PFOR), cpIgnore)
+        )
+        //wbRArray('Unknown', wbUnknown(PFOR), cpIgnore) not in Starfield.esm
       ], [], cpNormal, False, nil, False, nil, wbConditionsAfterSet))
     ], []),
     wbUNAMs,
@@ -16871,6 +16887,7 @@ begin
     wbString(PNAM, 'Program File')
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000008} 4, 'Legendary Mod',
@@ -16881,7 +16898,6 @@ begin
     wbFULL,
     wbDESC,
     wbGenericModel,
-    wbUnknown(XFLG),
     wbStruct(DATA, 'Data', [
       wbInteger('Include Count', itU32),
       wbInteger('Property Count', itU32),
@@ -16913,11 +16929,12 @@ begin
     ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
+    wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects), //not in Starfield.esm
     wbInteger(NAM1, 'Priority', itU8),
     wbFLTR
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(OVIS, 'Object Visibility Manager', [
     wbEDID,
     wbRArray('Unknown',
