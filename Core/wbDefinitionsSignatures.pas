@@ -202,6 +202,7 @@ const
   FCTF : TwbSignature = 'FCTF'; { New To Starfield }
   HULL : TwbSignature = 'HULL'; { New To Starfield }
   FLKW : TwbSignature = 'FLKW'; { New To Starfield }
+  FLFM : TwbSignature = 'FLFM'; { New To Starfield }
 
   SAIA : TwbSignature = 'SAIA'; { New To Starfield }
   SHWB : TwbSignature = 'SHWB'; { New To Starfield }
