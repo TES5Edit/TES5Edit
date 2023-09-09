@@ -14639,9 +14639,8 @@ begin
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
 
-          wbUnknown(ALPN),                               // order between ALPN
-          wbFormIDCk(ALFL, 'Specific Location', [LCTN]), // and ALFL unknown
-          wbUnknown(ALSY),                               // and ALSY unknown
+          wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
+          wbInteger(ALSY, 'System Location Alias ID', itS32),        // need a new alias to str routine for this
 
           wbFormIDCk(ALKF, 'Location Type Keyword', [KYWD]),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
