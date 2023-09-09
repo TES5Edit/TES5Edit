@@ -18054,10 +18054,10 @@ begin
     ]),
     wbStructs(RQPK, 'Perks', 'Perk', [
       wbFormIDCk('Perk', [PERK]),
-      wbInteger('Perk Rank', itU32),
+      wbInteger('Rank', itU32),
       wbUnknown(4)
     ]),
-    wbFormID(CNAM),
+    wbFormID(CNAM, 'Icon Source'),
     wbUnknown(NNAM), // always 2 byte $0000
     wbFloat(SNAM),
     wbUnknown(TNAM), // always 1 byte $00
