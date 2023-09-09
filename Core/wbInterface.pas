@@ -17667,7 +17667,8 @@ begin
   if Result = '' then begin
     var Element := aElement;
     ValueDef := ResolveDefAndElement(aBasePtr, aEndPtr, Element);
-    Result := ValueDef.ToSummary(aDepth, aBasePtr, aEndPtr, Element);
+    if Assigned(ValueDef) then
+      Result := ValueDef.ToSummary(aDepth, aBasePtr, aEndPtr, Element);
   end;
 
   Used(aElement, Result);

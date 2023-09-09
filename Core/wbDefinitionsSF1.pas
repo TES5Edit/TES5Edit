@@ -174,7 +174,7 @@ var
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
   wbPTDA: IwbSubRecordWithStructDef;
-//  wbAttackData: IwbSubRecordStructDef;
+  wbAttackData: IwbSubRecordStructDef;
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
   wbVMAD: IwbSubRecordDef;
@@ -205,8 +205,6 @@ var
   wbSPCT: IwbSubRecordDef;
   wbXOWN: IwbSubRecordDef;
   wbXRNK: IwbSubRecordDef;
-  wbPhonemeTargets: IwbSubRecordDef;
-  wbPHWT: IwbSubRecordStructDef;
   wbQUSTAliasFlags: IwbSubRecordDef;
   wbPDTO: IwbSubRecordDef;
   wbPDTOs: IwbSubRecordArrayDef;
@@ -235,7 +233,6 @@ var
   //wbTintTemplateGroups: IwbSubrecordArrayDef;
   //wbMorphGroups: IwbSubrecordArrayDef;
   //wbRaceFRMI: IwbSubrecordArrayDef;
-  wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbNavmeshVertices: IwbArrayDef;
   wbNavmeshTriangles: IwbArrayDef;
@@ -6890,7 +6887,7 @@ begin
     wbScriptFragmentsInfo
   ], cpNormal, False, nil, 3)
   .SetSummaryKeyOnValue([2, 3]);
-(*
+
   wbAttackData := wbRStructSK([1], 'Attack', [
     wbStruct(ATKD, 'Attack Data', [
       wbFloat('Damage Mult'),
@@ -6936,14 +6933,15 @@ begin
       wbFloat('Knockdown'),
       wbFloat('Recovery Time'),
       wbFloat('Action Points Mult'),
-      wbInteger('Stagger Offset', itS32)
+      wbInteger('Stagger Offset', itS32),
+      wbUnknown
     ]),
     wbString(ATKE, 'Attack Event'),
     wbFormIDCk(ATKW, 'Weapon Slot', [EQUP]),
     wbFormIDCk(ATKS, 'Required Slot', [EQUP]),
     wbString(ATKT, 'Description')
   ], []);
-*)
+
   wbLocationEnum := wbEnum([
     {0} 'Near reference', // string dump: '%s' in '%s' radius %u
     {1} 'In cell', // string dump: In cell '%s'
@@ -14398,6 +14396,8 @@ var
       wbRArray(aName,
         wbRStruct('Morph Group', [
           wbString(MPGN, 'Name'),
+          wbRArray('Morphs', wbString(MPGM, 'Morph'))
+          {
           wbInteger(MPPC, 'Count', itU32, nil, cpBenign),
           wbRArray('Morph Presets',
             wbRStruct('Morph Preset', [
@@ -14411,6 +14411,7 @@ var
           ),
           wbUnknown(MPPK),
           wbArray(MPGS, 'Unknown', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
+          }
         ], [])
       );
   end;
@@ -14421,8 +14422,15 @@ var
       wbRArray(aName,
         wbRStruct('Face Morph', [
           wbInteger(FMRI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
-          wbLString(FMRN, 'Name')
-        ], [])
+          wbString(FMRU),
+          wbLString(FMRN, 'Name'),
+          wbString(FMRS),
+          wbRStructs('Unknown', 'Unknown', [
+            wbUnknown(FMSR),
+            wbString(FMRU),
+            wbLString(FMRN, 'Name')
+          ], [])
+        ], []).IncludeFlag(dfAllowAnyMember)
       );
   end;
 
@@ -14920,132 +14928,21 @@ begin
     wbString(SCCM)
   ]);
 
-  wbPhonemeTargets := wbStruct(PHWT, 'Phoneme Target Weight', [
-    wbFloat('Aah / LipBigAah'),
-    wbFloat('BigAah / LipDST'),
-    wbFloat('BMP / LipEee'),
-    wbFloat('ChJsh / LipFV'),
-    wbFloat('DST / LipK'),
-    wbFloat('Eee / LipL'),
-    wbFloat('Eh / LipR'),
-    wbFloat('FV / LipTh'),
-    wbFloat('I'),
-    wbFloat('K'),
-    wbFloat('N'),
-    wbFloat('Oh'),
-    wbFloat('OohQ'),
-    wbFloat('R'),
-    wbFloat('TH'),
-    wbFloat('W'),
-    wbUnknown
-  ], cpNormal, False, nil, 1); // only a single value in HandyRace
-
-  wbPHWT := wbRStruct('FaceFX Phonemes', [
-    wbRStruct('IY', [wbPhonemeTargets], []),
-    wbRStruct('IH', [wbPhonemeTargets], []),
-    wbRStruct('EH', [wbPhonemeTargets], []),
-    wbRStruct('EY', [wbPhonemeTargets], []),
-    wbRStruct('AE', [wbPhonemeTargets], []),
-    wbRStruct('AA', [wbPhonemeTargets], []),
-    wbRStruct('AW', [wbPhonemeTargets], []),
-    wbRStruct('AY', [wbPhonemeTargets], []),
-    wbRStruct('AH', [wbPhonemeTargets], []),
-    wbRStruct('AO', [wbPhonemeTargets], []),
-    wbRStruct('OY', [wbPhonemeTargets], []),
-    wbRStruct('OW', [wbPhonemeTargets], []),
-    wbRStruct('UH', [wbPhonemeTargets], []),
-    wbRStruct('UW', [wbPhonemeTargets], []),
-    wbRStruct('ER', [wbPhonemeTargets], []),
-    wbRStruct('AX', [wbPhonemeTargets], []),
-    wbRStruct('S',  [wbPhonemeTargets], []),
-    wbRStruct('SH', [wbPhonemeTargets], []),
-    wbRStruct('Z',  [wbPhonemeTargets], []),
-    wbRStruct('ZH', [wbPhonemeTargets], []),
-    wbRStruct('F',  [wbPhonemeTargets], []),
-    wbRStruct('TH', [wbPhonemeTargets], []),
-    wbRStruct('V',  [wbPhonemeTargets], []),
-    wbRStruct('DH', [wbPhonemeTargets], []),
-    wbRStruct('M',  [wbPhonemeTargets], []),
-    wbRStruct('N',  [wbPhonemeTargets], []),
-    wbRStruct('NG', [wbPhonemeTargets], []),
-    wbRStruct('L',  [wbPhonemeTargets], []),
-    wbRStruct('R',  [wbPhonemeTargets], []),
-    wbRStruct('W',  [wbPhonemeTargets], []),
-    wbRStruct('Y',  [wbPhonemeTargets], []),
-    wbRStruct('HH', [wbPhonemeTargets], []),
-    wbRStruct('B',  [wbPhonemeTargets], []),
-    wbRStruct('D',  [wbPhonemeTargets], []),
-    wbRStruct('JH', [wbPhonemeTargets], []),
-    wbRStruct('G',  [wbPhonemeTargets], []),
-    wbRStruct('P',  [wbPhonemeTargets], []),
-    wbRStruct('T',  [wbPhonemeTargets], []),
-    wbRStruct('K',  [wbPhonemeTargets], []),
-    wbRStruct('CH', [wbPhonemeTargets], []),
-    wbRStruct('SIL', [wbPhonemeTargets], []),
-    wbRStruct('SHOTSIL', [wbPhonemeTargets], []),
-    wbRStruct('FLAP', [wbPhonemeTargets], [])
-  ], []);
-
-  wbRaceRBPC :=
-    wbArray(RBPC, 'Biped Object Conditions',
-      wbUnion('Slot 30+', wbFormVersionDecider(78), [
-        wbInteger('Slot 30+', itU32),
-        wbFormIDCk('Slot 30+', [AVIF, NULL])
-      ])
-    );
-    // since version 78: array of pair of AVIF FormID, before array of AVIF index. Similar to DamageType (and MGEF also somehow).
-    {wbUnion(RBPC, 'Biped Object Conditions', wbFormVersionDecider(78), [
-      wbArray('Biped Object Conditions', wbInteger('Condition AV', itU32)),
-      wbArray('Biped Object Conditions', wbStruct('Condition AV', [
-        wbFormIDck('AVIF 1', [AVIF, NULL]),
-        wbFormIDck('AVIF 2', [AVIF, NULL])
-      ]))
-    ]);}
-
-  var wbEquipSlot :=
-    wbRStruct('Equip Slot', [
-      wbFormIDCk(QNAM, 'Equip Slot', [EQUP]),
-      wbString(ZNAM, 'Node')
-    ], [])
-    .SetSummaryKey([1, 0])
-    .SetSummaryDelimiter(' = ')
-    .IncludeFlag(dfSummaryMembersNoName)
-    .IncludeFlag(dfCollapsed, wbCollapseEquipSlots);
-
-  var wbBodyPartIndexEnum := wbEnum([
-    'Body Texture'
-  ]);
-
-  var wbBodyParts :=
-    wbRArrayS('Parts',
-      wbRStructSK([0], 'Part', [
-        wbInteger(INDX, 'Index', itU32, wbBodyPartIndexEnum),
-        wbGenericModel
-      ], [])
-      .SetSummaryKey([0, 1])
-      .SetSummaryMemberPrefixSuffix(0, '[', ']')
-      .SetSummaryDelimiter(' ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfSummaryNoSortKey)
-      .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
-    , cpNormal, True);
-
   wbRecord(RACE, 'Race',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
     wbEDID,
-    wbSTCP,
     wbFULL,
     wbDESCReq,
-    wbSPCT,
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbBOD2,
-    wbKSIZ,
-    wbKWDAs,
+    wbUnknown(BO64),
+    wbKeywords,
     wbPRPS,
-    wbAPPR,
+    wbFormID(GNAM),
+    wbUnknown(DAT2),
+    (*
     wbStruct(DATA, 'Data', [
       wbFloat('Male Height'),
       wbFloat('Female Height'),
@@ -15171,118 +15068,125 @@ begin
       wbFromVersion(98, wbFloat('Orientation Limits - Pitch')),
       wbFromVersion(101, wbFloat('Orientation Limits - Roll'))
     ], cpNormal, True),
+    *)
 
-    wbEmpty(MNAM, 'Male Marker'),
-    wbString(ANAM, 'Male Skeletal Model'),
-    wbMODT,
-    wbEmpty(FNAM, 'Female Marker'),
-    wbString(ANAM, 'Female Skeletal Model'),
-    wbMODT,
-    wbEmpty(NAM2, 'Marker NAM2 #1'),
+    wbRStruct('Sekleton Data', [
+      wbRStruct('Male Data', [
+        wbEmpty(MNAM, 'Male Marker').SetRequired(True),
+        wbString(ANAM, 'Skeletal Model'),
+        wbUnknown(FLLD),
+        wbString(NAM5),
+        wbString(NAM6),
+        wbString(DNAM)
+      ], [], cpNormal, True),
+
+      wbRStruct('Female Data', [
+        wbEmpty(FNAM, 'Female Marker').SetRequired(True),
+        wbString(ANAM, 'Skeletal Model'),
+        wbUnknown(FLLD),
+        wbString(NAM5),
+        wbString(NAM6),
+        wbString(DNAM)
+      ], [], cpNormal, True)
+    ], [], cpNormal, True),
+
     wbRArrayS('Movement Type Names', wbString(MTNM, 'Name', 4)),
     wbArray(VTCK, 'Voices', wbFormIDCk('Voice', [VTYP]), ['Male', 'Female'], cpNormal, True),
-    //wbArray(DNAM, 'Decapitate Armors', wbFormIDCk('Decapitate Armor', [NULL, ARMO]), ['Male', 'Female'], cpNormal, False),
-    wbArray(HCLF, 'Default Hair Colors', wbFormIDCk('Default Hair Color', [NULL, CLFM]), ['Male', 'Female'], cpNormal, False),
-    wbInteger(TINL, 'Total Number of Tints in List', itU16, nil, nil, cpNormal, False), {>>> Needs Count Updated <<<}
+
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
 
-    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
-//    wbRArrayS('Attacks', wbAttackData),
+//    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
+    wbRArrayS('Attacks', wbAttackData),
 
-    wbRStruct('Body Data', [
-      wbEmpty(NAM1, 'Body Data Marker', cpNormal, True),
+    wbRStruct('Junk Data', [
+      wbMarkerReq(NAM1, cpIgnore),
       wbRStruct('Male Body Data', [
-        wbEmpty(MNAM, 'Male Data Marker'),
-        wbBodyParts
-      ], [], cpNormal, True),
-      wbRStruct('Female Body Data', [
-        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-        wbBodyParts
-      ], [], cpNormal, True)
-    ], [], cpNormal, True),
-    wbFormIDCk(GNAM, 'Body Part Data', [BPTD]),
+        wbMarkerReq(MNAM, cpIgnore),
+        wbInteger(INDX, 'Unknown', itU32).SetDefaultNativeValue(0).SetRequired(True),
+        wbUnknown(FLLD, 4).SetDefaultEditValue('01 00 00 00').SetRequired(True)
+      ], [], cpIgnore, True),
+      wbRStruct('Female', [
+        wbMarkerReq(FNAM, cpIgnore),
+        wbInteger(INDX, 'Unknown', itU32).SetDefaultNativeValue(0).SetRequired(True),
+        wbUnknown(FLLD, 4).SetDefaultEditValue('01 00 00 00').SetRequired(True)
+      ], [], cpIgnore, True)
+    ], [], cpIgnore, True).IncludeFlag(dfCollapsed),
 
-    wbEmpty(NAM2, 'Marker NAM2 #2', cpNormal),
-    wbEmpty(NAM3, 'Marker NAM3 #3', cpNormal, True),
-    wbRStruct('Male Behavior Graph', [
-      wbEmpty(MNAM, 'Male Data Marker'),
-      wbGenericModel
-    ], [], cpNormal, True)
-    .SetSummaryKey([1])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
-    wbRStruct('Female Behavior Graph', [
-      wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
-      wbGenericModel
-    ], [], cpNormal, True)
-    .SetSummaryKey([1])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
-
+    wbFormIDCk(ENAM, 'Aim Assist Pose Data', [AAPD]),
+    wbMarkerReq(NAM3),
     wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
-    wbFormIDCk(NAM5, 'Impact Data Set', [IPDS]),
-    wbFormIDCk(NAM7, 'Dismember Blood Art', [ARTO]),
-    wbFormIDCk(CNAM, 'Meat Cap TextureSet', [TXST]),
-    wbFormIDCk(NAM2, 'Collar TextureSet', [TXST]),
-    wbFormIDCk(ONAM, 'Sound - Open Corpse', [SNDR]),
-    wbFormIDCk(LNAM, 'Sound - Close Corpse', [SNDR]),
-    wbRArray('Biped Object Names', wbString(NAME, 'Name')),
-    wbRaceRBPC,
+    wbUnknown(WED0),
+    wbUnknown(WED1),
+
+    wbRArray('Biped Object Names', wbString(NAME, 'Name'), 64).IncludeFlag(dfNotAlignable),
+    wbArray(RBPC, 'Biped Object Conditions', wbFormIDCk('Condition', [AVIF, NULL]), 64).IncludeFlag(dfNotAlignable),
+
     wbRArrayS('Movement Data Overrides', wbRStructSK([0], 'Override', [
       wbFormIDCk(MTYP, 'Movement Type', [MOVT]),
       wbSPED
     ], [])),
     wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
-    wbRArray('Equip Slots', wbEquipSlot),
+    wbRArrayS('Equip Slots', wbRStructSK([0], 'Equip Slot', [
+        wbFormIDCk(QNAM, 'Equip Slot', [EQUP]),
+        wbString(ZNAM, 'Node')
+      ], [])
+      .SetSummaryKey([1, 0])
+      .SetSummaryDelimiter(' = ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed, wbCollapseEquipSlots)
+    ),
     wbFormIDCk(UNWP, 'Unarmed Weapon', [WEAP]),
-
-    wbRArray('Phoneme Target Names', wbString(PHTN, 'Name')),
-    wbPHWT,
 
     wbFormIDCk(WKMV, 'Base Movement Defaults - Default', [MOVT]),
     wbFormIDCk(SWMV, 'Base Movement Defaults - Swim', [MOVT]),
     wbFormIDCk(FLMV, 'Base Movement Defaults - Fly', [MOVT]),
-    wbFormIDCk(SNMV, 'Base Movement Defaults - Sneak', [MOVT]),
+//    wbFormIDCk(SNMV, 'Base Movement Defaults - Sneak', [MOVT]),
 
-    // Male head
-    wbEmpty(NAM0, 'Head Data Marker'),
-    wbEmpty(MNAM, 'Male Data Marker'),
-    wbStruct(NNAM, 'Male Neck Fat Adjustments Scale', [
-      wbByteArray('Unknown', 4),
-      wbFloat('X'),
-      wbFloat('Y')
-    ]),
-    wbRArrayS('Male Head Parts', wbHeadPart),
-    wbRArray('Male Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
-    wbRArray('Male Hair Colors', wbFormIDCk(AHCM, 'Hair Color', [CLFM, NULL])),
-    wbRArrayS('Male Face Details', wbFormIDCk(FTSM, 'Texture Set', [TXST, NULL])),
-    wbFormIDCk(DFTM, 'Male Default Face Texture', [TXST]),
-    wbTintTemplateGroups('Male Tint Layers'),
-    wbMorphGroups('Male Morph Groups'),
-    wbFaceMorphs('Male Face Morphs'),
-    wbString(WMAP, 'Male Wrinkle Map Path'),
+    wbRStruct('Chargen and Skintones', [
+      wbRStruct('Male', [
+        wbMarkerReq(MNAM),
+        wbRStruct('Chargen', [
+          wbMarkerReq(NAM0),
+          wbUnknown(NNAM, 12),
+          wbRArray('Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
+          wbMorphGroups('Morph Groups'),
+          wbFaceMorphs('Face Morphs'),
+          wbRStructs('Face Dials', 'Face Dial', [
+            wbInteger(FDSI, 'Index', itU32),
+            wbLString(FDSL, 'Label', 0, cpTranslate)
+          ], [])
+        ], []),
+        wbString(BSTT, 'Body Skin Tones'),
+        wbString(HSTT, 'Hand Skin Tones'),
+        wbString(FCTP),
+        wbString(FSTT, 'Face Skin Tones')
+      ], [], cpNormal, True),
+      wbRStruct('Female', [
+        wbMarkerReq(FNAM),
+        wbRStruct('Chargen', [
+          wbMarkerReq(NAM0),
+          wbUnknown(NNAM, 12),
+          wbRArray('Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
+          wbMorphGroups('Morph Groups'),
+          wbFaceMorphs('Face Morphs'),
+          wbRStructs('Face Dials', 'Face Dial', [
+            wbInteger(FDSI, 'Index', itU32),
+            wbLString(FDSL, 'Label', 0, cpTranslate)
+          ], [])
+        ], []),
+        wbString(BSTT, 'Body Skin Tones'),
+        wbString(HSTT, 'Hand Skin Tones'),
+        wbString(FCTP),
+        wbString(FSTT, 'Face Skin Tones')
+      ], [], cpNormal, True)
+    ], []),
 
-    // Female head
-    wbEmpty(NAM0, 'Head Data Marker'),
-    wbEmpty(FNAM, 'Female Data Marker'),
-    wbStruct(NNAM, 'Female Neck Fat Adjustments Scale', [
-      wbByteArray('Unknown', 4),
-      wbFloat('X'),
-      wbFloat('Y')
-    ]),
-    wbRArrayS('Female Head Parts', wbHeadPart),
-    wbRArray('Female Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
-    wbRArray('Female Hair Colors', wbFormIDCk(AHCF, 'Hair Color', [CLFM, NULL])),
-    wbRArrayS('Female Face Details', wbFormIDCk(FTSF, 'Texture Set', [TXST, NULL])),
-    wbFormIDCk(DFTF, 'Female Default Face Texture', [TXST]),
-    wbTintTemplateGroups('Female Tint Layers'),
-    wbMorphGroups('Female Morph Groups'),
-    wbFaceMorphs('Female Face Morphs'),
-    wbString(WMAP, 'Female Wrinkle Map Path'),
-
-    wbFormIDCk(NAM8, 'Morph Race', [RACE]),
     wbFormIDCk(RNAM, 'Armor Race', [RACE]),
+
     wbFormIDCk(SRAC, 'Subgraph Template Race', [RACE]),
-    wbFormIDCk(SADD, 'Subgraph Additive Race', [RACE]),
+
     wbRArray('Subgraph Data',
       wbRStruct('Data', [
         wbRArray('Actor Keywords', wbFormIDCk(SAKD, 'Keyword', [KYWD])),
@@ -15295,7 +15199,7 @@ begin
             {0} 'MT',
             {1} 'Weapon',
             {2} 'Furniture',
-            {3} 'Idle',
+            {3} 'Linking Only',
             {4} 'Pipboy'
           ])),
           wbInteger('Perspective', itU16, wbEnum([
@@ -15306,21 +15210,43 @@ begin
         .SetSummaryKeyOnValue([0, 1])
         .IncludeFlag(dfTerminator)
       ], [], cpNormal, False, nil, True)
+      .IncludeFlag(dfAllowAnyMember)
     ),
+
     wbFloat(PTOP, 'Idle Chatter Time Min'),
     wbFloat(NTOP, 'Idle Chatter Time Max'),
-    wbRArray('Morph Values',
-      wbRStruct('Value', [
-        wbInteger(MSID, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
-        wbString(MSM0, 'Min Name'),
-        wbString(MSM1, 'Max Name')
-      ], [])
-    ),
-    wbInteger(MLSI, 'Morph Last Index', itU32, wbIntToHexStr, wbHexStrToInt),
-    wbString(HNAM, 'Hair Color Lookup Texture'),
-    wbString(HLTX, 'Hair Color Extended Lookup Texture'),
+
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
-    wbBSMPSequence
+
+    wbRStruct('Head Parts and Bone Modifiers', [
+      wbRStruct('Male Data', [
+        wbEmpty(MNAM, 'Male Data Marker'),
+        wbRStructs('Head Parts', 'Head Part', [
+          wbInteger(INDX, 'Index', itU32),
+          wbFormIDCk(HEAD, 'Part', [HDPT] ).SetRequired(True)
+        ], []),
+        wbRArray('Bone Modifiers', wbFormIDCk(BNAM, 'Bone Modifier', [BMOD]))
+      ], [], cpNormal, True),
+      wbRStruct('Female Data', [
+        wbEmpty(FNAM, 'Female Data Marker', cpNormal, True),
+        wbRStructs('Head Parts', 'Head Part', [
+          wbInteger(INDX, 'Index', itU32),
+          wbFormIDCk(HEAD, 'Part', [HDPT] ).SetRequired(True)
+        ], []),
+        wbRArray('Bone Modifiers', wbFormIDCk(BNAM, 'Bone Modifier', [BMOD]))
+      ], [], cpNormal, True)
+    ], []),
+
+    wbRStructs('Unknown', 'Unknown', [
+      wbUnknown(MSSS),
+      wbRStructs('Unknown', 'Unknown', [
+        wbUnknown(MSSI),
+        wbFormIDCk(MSSA, 'Material Swap', [LMSW]).SetRequired(True)
+      ], [])
+    ], []),
+
+    wbLString(SNAM, 'Unknown', 0, cpTranslate)
+
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
