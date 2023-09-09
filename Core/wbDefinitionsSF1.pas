@@ -3081,8 +3081,7 @@ type
     {53} ptWardState,          // enum
     {54} ptWeather,            // WTHR
     {55} ptWorldspace,         // WRLD
-    {56} ptDamageType,         // DMGT
-    {57} ptRSPJ                // RSPJ
+    {56} ptDamageType          // DMGT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3096,7 +3095,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..479] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..478] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3575,8 +3574,7 @@ const
     (Index: 812; Name: 'GetPathingRequestedQuickTurn'),    // 475
     (Index: 813; Name: 'EPIsCalculatingBaseDamage'),    // 476
     (Index: 814; Name: 'GetReanimating'),    // 477
-    (Index: 817; Name: 'IsInRobotWorkbench'),    // 478
-    (Index: 874; Name: 'IsResearchComplete'; Paramtype1: ptRSPJ)    // 479
+    (Index: 817; Name: 'IsInRobotWorkbench')    // 478
   );
 
 var
@@ -8313,9 +8311,7 @@ begin
           {55 ptWorldspace}
           wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
           {56 ptDamageType}
-          wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
-          {57 ptRSPJ}
-          wbFormIDCkNoReach('Pesearch Project', [RSPJ])
+          wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
