@@ -79,8 +79,8 @@ uses
 const
   // signatures of reference records
   sigReferences : TwbSignatures = [
-    'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD',
-    'PMIS', 'PARW', 'PBAR', 'PBEA', 'PCON', 'PFLA'
+    'NULL', 'PLYR', 'ACHR', 'REFR', 'PGRE', 'PHZD'
+//    'PMIS', 'PARW', 'PBAR', 'PBEA', 'PCON', 'PFLA'
   ]
   ;
 
@@ -9458,6 +9458,7 @@ procedure DefineSF1c;
 
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
+    {subrecords checked against Starfield.esm}
     wbRefRecord(aSignature, aName,
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00000080}  7, 'Turn Off Fire',
@@ -9467,13 +9468,13 @@ procedure DefineSF1c;
         {0x20000000} 29, 'Don''t Havok Settle',
         {0x40000000} 30, 'No Respawn'
       ], True, True)), [
-      wbEDID,
+      wbEDID, //not in Starfield.esm
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbFloat(XHTW, 'Head-Tracking Weight'),
-      wbFloat(XFVC, 'Favor Cost'),
-      wbRArrayS('Reflected/Refracted By',
+//      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+//      wbFloat(XHTW, 'Head-Tracking Weight'),
+//      wbFloat(XFVC, 'Favor Cost'),
+{      wbRArrayS('Reflected/Refracted By',
         wbStructSK(XPWR, [0], 'Water', [
           wbFormIDCk('Reference', [REFR]),
           wbInteger('Type', itU32, wbFlags([
@@ -9481,11 +9482,12 @@ procedure DefineSF1c;
             'Refraction'
           ]))
         ], cpNormal, False, nil, 1)
-      ),
+      ),}
       wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
         wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
         wbFormIDCk('Ref', sigReferences)
       ], cpNormal, False, nil, 1)),
+      {
       wbRStruct('Activate Parents', [
         wbInteger(XAPD, 'Flags', itU8, wbFlags([
           'Parent Activate Only'
@@ -9497,27 +9499,31 @@ procedure DefineSF1c;
           ])
         )
       ], []),
-
-      wbFormIDCk(XASP, 'Unknown', [REFR]),
-      wbUnknown(XATP),
-      wbInteger(XAMC, 'Ammo Count', itU32),
+      }
+//      wbFormIDCk(XASP, 'Unknown', [REFR]),
+//      wbUnknown(XATP),
+//      wbInteger(XAMC, 'Ammo Count', itU32),
       wbEmpty(XLKT, 'Linked Ref Transient'),
       wbFormIDCk(XLYR, 'Layer', [LAYR]),
-      wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+//      wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
       wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-      wbUnknown(XCVR),
+//      wbUnknown(XCVR),
       wbXESP,
       wbXOWN,
-      wbXRNK,
-      wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-      wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-      wbEmpty(XIS2, 'Ignored by Sandbox'),
+//      wbXRNK,
+//      wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+//      wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+//      wbEmpty(XIS2, 'Ignored by Sandbox'),
       wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+//      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
       wbXSCL,
-      wbXLOD,
-      wbDataPosRot,
-      wbString(MNAM, 'Comments')
+//      wbXLOD,
+
+      wbUnknown(XCVR),
+      wbXRGD,
+
+      wbDataPosRot
+//      wbString(MNAM, 'Comments')
     ], True, wbPlacedAddInfo);
   end;
 
@@ -9533,14 +9539,14 @@ begin
   PHZD 'Hazards'
   I guess all of them have the same structure
 <<<}
-  ReferenceRecord(PARW, 'Placed Arrow');
-  ReferenceRecord(PBAR, 'Placed Barrier');
-  ReferenceRecord(PBEA, 'Placed Beam');
-  ReferenceRecord(PCON, 'Placed Cone/Voice');
-  ReferenceRecord(PFLA, 'Placed Flame');
+//  ReferenceRecord(PARW, 'Placed Arrow');
+//  ReferenceRecord(PBAR, 'Placed Barrier');
+//  ReferenceRecord(PBEA, 'Placed Beam');
+//  ReferenceRecord(PCON, 'Placed Cone/Voice');
+//  ReferenceRecord(PFLA, 'Placed Flame');
   ReferenceRecord(PGRE, 'Placed Projectile');
   ReferenceRecord(PHZD, 'Placed Hazard');
-  ReferenceRecord(PMIS, 'Placed Missile');
+//  ReferenceRecord(PMIS, 'Placed Missile');
 
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
@@ -16991,15 +16997,32 @@ begin
     )
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PKIN, 'Pack-In',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Prefab'
     ])), [
     wbEDID,
+    wbVMAD,
     wbOBND,
+    wbODTY,
+    wbOPDS,
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbXALG,
+    wbBaseFormComponents,
     wbFLTR,
+    wbOPDS,
     wbFormIDCk(CNAM, 'Cell', [CELL]),
-    wbInteger(VNAM, 'Version', itU32)
+    wbInteger(VNAM, 'Version', itU32),
+    wbUnknown(FNAM),
+    wbKeywords,
+    wbNTRM,
+    wbFTYP,
+    wbPRPS,
+    wbMOLM(MOLM),
+    wbFULL
   ]);
 
   wbRecord(RFGP, 'Reference Group', [
