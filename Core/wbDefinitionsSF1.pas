@@ -13051,16 +13051,17 @@ begin
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
-        wbInteger('Response number', itU8),
+        // wbInteger('Response number', itU8),
         wbFormIDCk('Sound File', [SNDR, NULL]),
-        wbByteArray('Unknown', 1),
-        wbInteger('Interrupt Percentage', itU16)
-//        wbInteger('Camera Target Alias', itS32),
-//        wbInteger('Camera Location Alias', itS32)
+        wbFloat('Unknown'), // Interrupt Percentage?
+        // wbByteArray('Unknown', 1),
+        // wbInteger('Interrupt Percentage', itU16)
+        // wbInteger('Camera Target Alias', itS32),
+        // wbInteger('Camera Location Alias', itS32)
       ]),
       wbRArray('Unknown', wbStruct(TROT, 'Unknown', [
-        wbFormID('Unknown'),
-        wbUnknown(4)
+        wbFormIDCk('Unknown', [VTYP]),
+        wbFloat('Unknown')
       ])),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
