@@ -13313,8 +13313,8 @@ begin
       end;
 
   if Assigned(dcDataEndPtr) and Assigned(BasePtr) and (BasePtr <> dcDataEndPtr) then begin
-    HasUnusedData := not SameText(ValueDef.Name, 'Unused');
-    if HasUnusedData and (ValueDef.DefType = dtString) then begin
+    HasUnusedData := Assigned(ValueDef) and not SameText(ValueDef.Name, 'Unused');
+    if HasUnusedData and Assigned(ValueDef) and (ValueDef.DefType = dtString) then begin
       HasUnusedData := False;
       while NativeUInt(BasePtr) < NativeUInt(dcDataEndPtr) do begin
         if PAnsiChar(BasePtr)^ <> #0 then begin

@@ -337,8 +337,8 @@ const
   TETC : TwbSignature = 'TETC'; { New To Starfield }
   PRON : TwbSignature = 'PRON'; { New To Starfield }
   ONA2 : TwbSignature = 'ONA2'; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
+  PRRK : TwbSignature = 'PRRK'; { New To Starfield }
+  PRRF : TwbSignature = 'PRRF'; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
