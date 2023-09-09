@@ -14531,7 +14531,7 @@ begin
           wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
           wbString(ALID, 'Alias Name', 0, cpNormal, True),
           wbQUSTAliasFlags,
-          wbUnknown(ALFG),
+          wbUnknown(ALFG), // always zero?
 
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
@@ -14546,7 +14546,11 @@ begin
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
             wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias).SetRequired(True)
           ], []),
-          wbUnknown(ALLR),
+          wbInteger(ALLR, 'Legendary Rank', itU8, wbEnum([], [
+            $0001, '1',
+            $0002, '2',
+            $0003, '3'
+          ])).SetDefaultNativeValue(1),
           wbRStruct('Create Reference to Object', [
             wbFormID(ALCO, 'Object'),
             wbStruct(ALCA, 'Alias', [
@@ -14576,9 +14580,9 @@ begin
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired(True)
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbUnknown(ALNR),
+          wbFormIDCk(ALNR, 'Ref Type', [LCRT]),
           wbCTDAs,
-          wbUnknown(ALUB),
+          wbFormIDCk(ALUB, 'Unknown', [GBFM]), // starfield.esm only has instances of GBFM but it may support any base type object
           wbKeywords,
           wbContainerItems,
 
@@ -14587,9 +14591,9 @@ begin
           wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
           wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
 
-          wbRStruct('Unknown', [
-            wbUnknown(ALCM),
-            wbUnknown(ALCA)
+          wbRStruct('Create Object Template', [
+            wbInteger(ALCM, 'Template Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALCA, 'Target Override Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
           ], []),
           wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
             wbFormIDCk('Keyword', [KYWD, NULL]),
@@ -14603,7 +14607,7 @@ begin
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbString(SCCM),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
-          wbUnknown(ALTM),
+          wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
 
@@ -14629,9 +14633,9 @@ begin
           ], []),
           wbCTDAs,
           wbRStruct('Unknown', [
-            wbUnknown(ALPS),
+            wbUnknown(ALPS), // always empty when present?
             wbCTDAs,
-            wbUnknown(LNAM)
+            wbFormIDCk(LNAM, 'PCM Type Keyword', [KYWD])
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
 
@@ -14639,7 +14643,7 @@ begin
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]), // and ALFL unknown
           wbUnknown(ALSY),                               // and ALSY unknown
 
-          wbUnknown(ALKF),
+          wbFormIDCk(ALKF, 'Location Type Keyword', [KYWD]),
           wbFormIDCk(ALDN, 'Display Name', [MESG]),
 
           wbEmpty(ALED, 'Alias End', cpNormal, True)
@@ -14649,7 +14653,7 @@ begin
         wbRStructSK([0], 'Alias', [
           wbInteger(ALCS, 'Collection Alias ID', itU32, wbQuestAliasToStr, wbStrToAlias),
           wbInteger(ALMI, 'Max Initial Fill Count', itU8),
-          wbUnknown(ALAM),
+          wbUnknown(ALAM), // always zero?
           wbCTDAs,
           wbKeywords,
           wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
@@ -14674,13 +14678,13 @@ begin
     wbFormIDCk(GNAM, 'Quest Group', [KYWD]),
 //    wbString(SNAM, 'SWF File'),
 
-    wbRStruct('Quest Mission', [
-      wbFormIDCk(QMTY, 'Quest Mission Type Keyword', [KYWD]),
-      wbLStringKC(QMSU, 'Unknown', 0, cpTranslate),
-      wbRArray('Unknown', wbRStruct('Unknown', [
-        wbLStringKC(QMDT, 'Unknown', 0, cpTranslate),
-        wbLStringKC(QMDP, 'Unknown', 0, cpTranslate),
-        wbUnknown(QMDS)
+    wbRStruct('Mission Board Info', [
+      wbFormIDCk(QMTY, 'Mission Type Keyword', [KYWD]),
+      wbLStringKC(QMSU, 'Description', 0, cpTranslate),
+      wbRArray('Info Panel', wbRStruct('Panel Item', [
+        wbLStringKC(QMDT, 'Header', 0, cpTranslate),
+        wbLStringKC(QMDP, 'Line 1', 0, cpTranslate),
+        wbLStringKC(QMDS, 'Line 2', 0, cpTranslate)
       ], []))
     ], []),
 
