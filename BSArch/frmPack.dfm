@@ -3,7 +3,7 @@ object FormPack: TFormPack
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Packing Options'
-  ClientHeight = 441
+  ClientHeight = 480
   ClientWidth = 634
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -20,12 +20,12 @@ object FormPack: TFormPack
   OnShow = FormShow
   DesignSize = (
     634
-    441)
+    480)
   PixelsPerInch = 96
   TextHeight = 13
   object lblTip: TLabel
     Left = 296
-    Top = 203
+    Top = 253
     Width = 316
     Height = 13
     AutoSize = False
@@ -34,7 +34,7 @@ object FormPack: TFormPack
   end
   object Label1: TLabel
     Left = 32
-    Top = 222
+    Top = 272
     Width = 580
     Height = 35
     Anchors = [akLeft, akTop, akRight]
@@ -48,7 +48,7 @@ object FormPack: TFormPack
   end
   object Label2: TLabel
     Left = 32
-    Top = 286
+    Top = 336
     Width = 580
     Height = 27
     Anchors = [akLeft, akTop, akRight]
@@ -63,7 +63,7 @@ object FormPack: TFormPack
   end
   object Label3: TLabel
     Left = 16
-    Top = 333
+    Top = 383
     Width = 100
     Height = 13
     Caption = 'Archive File Name'
@@ -85,7 +85,7 @@ object FormPack: TFormPack
     Left = 16
     Top = 27
     Width = 249
-    Height = 166
+    Height = 206
     Alignment = taLeftJustify
     AutoWrap = False
     BevelOuter = bvNone
@@ -140,7 +140,7 @@ object FormPack: TFormPack
   end
   object chkMultiThreaded: TCheckBox
     Left = 16
-    Top = 199
+    Top = 249
     Width = 161
     Height = 17
     Caption = 'Multithreaded Packing'
@@ -154,7 +154,7 @@ object FormPack: TFormPack
   end
   object chkSharedData: TCheckBox
     Left = 16
-    Top = 263
+    Top = 313
     Width = 161
     Height = 17
     Caption = 'Shared Data'
@@ -168,7 +168,7 @@ object FormPack: TFormPack
   end
   object edFileName: TEdit
     Left = 16
-    Top = 352
+    Top = 402
     Width = 556
     Height = 21
     ReadOnly = True
@@ -176,7 +176,7 @@ object FormPack: TFormPack
   end
   object btnBrowse: TButton
     Left = 578
-    Top = 350
+    Top = 400
     Width = 34
     Height = 25
     Caption = '...'
@@ -185,7 +185,7 @@ object FormPack: TFormPack
   end
   object btnPack: TButton
     Left = 426
-    Top = 401
+    Top = 441
     Width = 90
     Height = 25
     Anchors = [akRight, akBottom]
@@ -195,7 +195,7 @@ object FormPack: TFormPack
   end
   object Button1: TButton
     Left = 522
-    Top = 401
+    Top = 441
     Width = 90
     Height = 25
     Anchors = [akRight, akBottom]
