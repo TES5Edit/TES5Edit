@@ -17805,7 +17805,11 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbUnknown(CNAM), //req
-    wbRArray('Unknown', wbUnknown(PPBD)),
+    wbRArray('Unknown', wbStruct(PPBD, 'name', [
+      wbFormID('Unknown'),
+      wbFloat('Percentage'),
+      wbUnknown()
+    ])),
     wbFormID(FNAM, 'Surface Tree'), //req
     wbUnknown(GNAM), //req
     wbRStructs('Unknown', 'Unknown', [
@@ -17819,7 +17823,8 @@ begin
       wbUnknown(DNAM), //req
       wbUnknown(ENAM),
       wbStruct(FNAM, 'Unknown', [
-        wbUnknown(8),
+        wbUnknown(4),
+        wbFloat('Spawn-In Projection Offset'),
         wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
         wbFloat('Radius in km'),
         wbFloat('Gravity'),
