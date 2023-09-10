@@ -3079,7 +3079,8 @@ type
     {54} ptWeather,            // WTHR
     {55} ptWorldspace,         // WRLD
     {56} ptDamageType,         // DMGT
-    {57} ptResearchProject     // RSPJ
+    {57} ptResearchProject,    // RSPJ
+    {58} ptConditionForm       // CNDF
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3594,9 +3595,9 @@ const
     (Index: 834; Name: 'HasHerdLeader'; Desc: 'Has a herd Leader.'),
     (Index: 835; Name: 'TrySetPlayerHomeSpaceShip'; Desc: 'Attempt to set Player Home Ship. Returns true if home ship is set.'),
     (Index: 836; Name: 'GetPlayerHomeSpaceShip'; Desc: ' Get Player Home Ship.'),
-    (Index: 837; Name: 'IsTrueForConditionForm'; Desc: 'See if the condition is true or false for the subject.'),
+    (Index: 837; Name: 'IsTrueForConditionForm'; Desc: 'See if the condition is true or false for the subject.'; ParamType1: ptConditionForm),
     (Index: 838; Name: 'GetNumElementsInRefCollection'; Desc: 'Gets the number of elements in a ref collection'),
-    (Index: 839; Name: 'GetCurrentWeatherHasKeyword'; Desc: 'Check to see if the current weather has the provided keyword.'),
+    (Index: 839; Name: 'GetCurrentWeatherHasKeyword'; Desc: 'Check to see if the current weather has the provided keyword.'; ParamType1: ptKeyword),
     (Index: 840; Name: 'IsSnappedTo'; Desc: 'Is the given reference snapped to this other reference?'),
     (Index: 841; Name: 'HasKeywordOnNode'; Desc: 'Checks for a specific keyword on the node that is snapped to.'),
     (Index: 842; Name: 'HasKeywordOnStacked'; Desc: 'Checks for a specific keyword on the object I am stacked atop.'),
@@ -3615,10 +3616,10 @@ const
     (Index: 855; Name: 'GetCameraActorCount'; Desc: 'Returns the number of non-player actors who will talk in the scene'),
     (Index: 856; Name: 'GetIsCurrentLocationAliasExact'; Desc: 'Is the ref currently in the exact given location of our owner quest?'),
     (Index: 857; Name: 'IsJailInSystem'; Desc: 'See if the ref''s crime faction has a jail in the player''s current system.'),
-    (Index: 858; Name: 'BodyHasKeyword'; Desc: 'Does the ref object''s current planetary body use the keyword in the parameter data?'),
-    (Index: 859; Name: 'BiomeHasKeyword'; Desc: 'Does the ref object''s current biome use the keyword in the parameter data?'),
-    (Index: 860; Name: 'SystemHasKeyword'; Desc: 'Does the ref object''s current planetary system use the keyword in the parameter data?'),
-    (Index: 861; Name: 'GetDistanceFromLocationWithKeyword'; Desc: 'Get the distance from the ref to any location with a specific keyword.'),
+    (Index: 858; Name: 'BodyHasKeyword'; Desc: 'Does the ref object''s current planetary body use the keyword in the parameter data?'; ParamType1: ptKeyword),
+    (Index: 859; Name: 'BiomeHasKeyword'; Desc: 'Does the ref object''s current biome use the keyword in the parameter data?'; ParamType1: ptKeyword),
+    (Index: 860; Name: 'SystemHasKeyword'; Desc: 'Does the ref object''s current planetary system use the keyword in the parameter data?'; ParamType1: ptKeyword),
+    (Index: 861; Name: 'GetDistanceFromLocationWithKeyword'; Desc: 'Get the distance from the ref to any location with a specific keyword.'; ParamType1: ptKeyword),
     (Index: 862; Name: 'GetPlanetVisited'; Desc: 'Has the ref object''s current planet been visited by the player?'),
     (Index: 863; Name: 'IsLocalDay'; Desc: 'Check if the sun is up on the current planet.'),
     (Index: 864; Name: 'SpeechChallengePreviousSceneHasKeyword'; Desc: 'Does the last speech challenge scene have a keyword?'),
@@ -3637,7 +3638,7 @@ const
     (Index: 877; Name: 'HasPerkSkillGroup'; Desc: 'Checks if the owner of an activity is a perk of a certain skill group.'),
     (Index: 878; Name: 'CountAquiredPerkRanksByType'; Desc: 'Gets the total amount of acquired perk ranks.'),
     (Index: 879; Name: 'IsScanned'; Desc: 'Check if a object has been scanned.'),
-    (Index: 880; Name: 'IsScannableKeywordRevealed'; Desc: 'Check if a scannable object has a piece of information revealed.'),
+    (Index: 880; Name: 'IsScannableKeywordRevealed'; Desc: 'Check if a scannable object has a piece of information revealed.'; ParamType1: ptKeyword),
     (Index: 881; Name: 'IsMyVictim'; Desc: 'Check if dead actor was killed by this actor or this actor''s ally/friend or this actor''s herd.'),
     (Index: 882; Name: 'GetResourceScarcity'; Desc: 'Get produced resource scarcity.'),
     (Index: 883; Name: 'CheckContrabandStatus'; Desc: 'Retrieve the ship''s contraband status.'),
@@ -3659,10 +3660,10 @@ const
     (Index: 904; Name: 'IsInsidePrimitiveTopAndBottom'; Desc: 'Check if the reference''s top and bottom are in a specified primitive.'),
     (Index: 905; Name: 'GetPlayerBountyCrimeFaction'; Desc: 'Check the last crime faction for player bounty.'),
     (Index: 906; Name: 'GetIsFloating'; Desc: 'Gets whether or not the actor is floating.'),
-    (Index: 907; Name: 'LocationOrParentHasKeyword'; Desc: 'Determine if a location, or any of its parent locations, has a keyword.'),
+    (Index: 907; Name: 'LocationOrParentHasKeyword'; Desc: 'Determine if a location, or any of its parent locations, has a keyword.'; ParamType1: ptKeyword),
     (Index: 908; Name: 'IsCelestialBodyScanned'; Desc: 'Get whether the celestial body is scanned.'),
     (Index: 912; Name: 'IsActorReactionInCooldown'; Desc: 'Get whether an actor''s reaction is in cooldown or not.'),
-    (Index: 916; Name: 'BiomeSupportsCreature'; Desc: 'Does the actor parameter resolve to a creature in the planet''s biome''s creature list?'),
+    (Index: 916; Name: 'BiomeSupportsCreature'; Desc: 'Does the actor parameter resolve to a creature in the planet''s biome''s creature list?'; ParamType1: ptActorBase),
     (Index: 921; Name: 'IsFacingActor'; Desc: 'Is the actor facing the refr?'),
     (Index: 923; Name: 'GetValueCurrentLocation'; Desc: 'Get an actor value from the reference''s current location'),
     (Index: 924; Name: 'IsBoostPackActive'; Desc: 'Is player''s boost pack active?'),
@@ -8328,7 +8329,9 @@ begin
           {56 ptDamageType}
           wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
           {57 ptResearchProject}
-          wbFormIDCkNoReach('Research Project', [RSPJ])
+          wbFormIDCkNoReach('Research Project', [RSPJ]),
+          {58 ptConditionForm}
+          wbFormIDCkNoReach('Condition Form', [CNDF])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
