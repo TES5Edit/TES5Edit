@@ -8684,7 +8684,22 @@ begin
           wbUnknown(ATAF)
         ], []),
         wbRStruct('Component Data', [
-          wbUnknown(BUO4),
+          wbArray(BUO4, 'Unknown',
+            wbStruct('Unknown', [
+              wbFormIDCk('Base Item', [GBFM]),
+              wbFormIDCk('Construction Object', [COBJ]),
+              wbStruct('Position Offset', [
+                wbFloat('X'),
+                wbFloat('Y'),
+                wbFloat('Z')
+              ]),
+              wbStruct('Unknown', [
+                wbFloat,
+                wbFloat,
+                wbFloat
+              ]),
+              wbInteger('Part Index', itU32)
+          ])),
           wbUnknown(BODM),
           wbRStructs('Unknown', 'Unknown', [
             wbUnknown(BODC),
@@ -8800,7 +8815,10 @@ begin
         //BGSFormLinkData_Component
         wbRStruct('Component Data', [
           wbUnknown(ITMC),
-          wbRArray('Unknown', wbFormID(FLKW))
+          wbRArray('Unknown', wbRStruct('Unknown', [
+            wbFormID(FLKW),
+            wbFormID(FLFM)
+          ], []))
         ], []),
         wbRStruct('Component Data', [
           wbKeywords
@@ -13991,7 +14009,7 @@ begin
     wbCUSH,
     wbPUSHPDSH,
     wbUnknown(LRNM), // always 1 byte value $03
-    wbInteger(DATA, 'Unknown', itU32), // req
+    wbInteger(DATA, 'Value', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
 //    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
 //    wbByteArray(NAM3, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -16435,7 +16453,8 @@ begin
     wbFormIDCk(CNAM, 'Template', [WEAP]),
     wbStructs(DAMA, 'Damage Types', 'Damage Type', [
       wbFormIDCk('Type', [DMGT]),
-      wbInteger('Amount', itU32)
+      wbInteger('Amount', itU32),
+      wbUnknown(4)
     ]),
     wbFLTR,
     wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
@@ -17726,9 +17745,7 @@ begin
     wbFLTR,
     wbFormID(ANAM),
     wbRArray('Unknown', wbString(STRV)),
-    wbUnknown(OBTE),
-    wbUnknown(OBTF),
-    wbUnknown(OBTS),
+    wbObjectTemplate,
     wbUnknown(STOP),
     wbUnknown(STOP),
     wbNVNM
@@ -18142,7 +18159,9 @@ begin
     wbEDID,
     wbRStructs('Unknown', 'Unknown', [
       wbFormIDCk(RNAM, 'Resource', [IRES]), //req
-      wbUnknown(DNAM)                       //req
+    wbArray(DNAM, 'Unknown',                // req
+      wbArray('Unknown',
+        wbFloat('Unknown'), 10), 14) // structure appears to fixed size
     ], [])
   ]);
 
@@ -18154,18 +18173,18 @@ begin
     wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
     wbStructs(FVPA, 'Resources', 'Resource', [
       wbFormIDCk('Resource', [IRES, ALCH]),
-      wbByteArray('Unknown', 4),
-      wbFormID('Unknown')
+      wbInteger('Required Count', itU32),
+      wbUnknown(4)
     ]),
     wbStructs(RQPK, 'Required Perks', 'Perk', [
       wbFormIDCk('Perk', [PERK]),
-      wbByteArray('Unknown', 4),
-      wbFormID('Unknown')
+      wbInteger('Rank', itU32),
+      wbUnknown(4)
     ]),
-    wbFormID(CNAM),
-    wbUnknown(NNAM),
-    wbUnknown(SNAM),
-    wbUnknown(TNAM),
+    wbFormID(CNAM, 'Icon Source'),
+    wbUnknown(NNAM), // always 2 byte $0000
+    wbFloat(SNAM),
+    wbUnknown(TNAM), // always 1 byte $00
     wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);
@@ -18185,20 +18204,20 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbString(ANAM),
-    wbUnknown(DNAM), //req
-    wbUnknown(ENAM), //req
+    wbArray(DNAM, 'Unknown', wbInteger('Unknown', itU32), 2), //req
+    wbArray(ENAM, 'Unknown', wbFloat('Unknown'), 2), //req
     wbUnknown(FNAM),
-    wbUnknown(GNAM), //req
-    wbUnknown(HNAM), //req
-    wbUnknown(INAM), //req
-    wbUnknown(JNAM), //req
-    wbUnknown(KNAM), //req
-    wbUnknown(WHGT), //req
-    wbUnknown(NAM0),
+    wbUnknown(GNAM), //req always 1 byte $00
+    wbInteger(HNAM, 'Unknown', itS16), //req
+    wbUnknown(INAM), //req boolean?
+    wbUnknown(JNAM), //req boolean?
+    wbInteger(KNAM, 'Unknown', itU8), //req
+    wbFloat(WHGT), //req
+    wbString(NAM0),
     wbString(NAM1),
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbUnknown(NAM4),
+    wbUnknown(NAM2), // always 8 bytes zero
+    wbArray(NAM3, 'Unknown', wbInteger('Unknown', itU32), 2),
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown'), 2),
     wbFormIDCk(NAM5, 'Surface Block', [SFBK, NULL] )
   ]);
 
@@ -18208,9 +18227,9 @@ begin
     wbFormIDCk(ENAM, 'Unknown', [PTST]), //req
     wbRStructs('Unknown', 'Unknown', [
       wbString(BNAM),
-      wbUnknown(CNAM)
+      wbFloat(CNAM)
     ], []),
-    wbUnknown(DNAM)  //req
+    wbArray(DNAM, 'Unknown', wbFloat('Unknown'), 3)  //req seems to be fixed length
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18219,7 +18238,7 @@ begin
     wbBaseFormComponents,
     wbFormID(CNAM),  //req
     wbUnknown(BNAM), //req
-    wbUnknown(DNAM)
+    wbFormIDCk(DNAM, 'Worldpsace', [WRLD])
   ]);
 
   {subrecords checked against Starfield.esm}
