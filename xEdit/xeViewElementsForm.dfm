@@ -6,6 +6,7 @@ object frmViewElements: TfrmViewElements
   Color = clBtnFace
   ParentFont = True
   KeyPreview = True
+  OldCreateOrder = False
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
