@@ -85,7 +85,7 @@ object frmViewElements: TfrmViewElements
         Height = 27
         Caption = 'Save'
         ModalResult = 1
-        TabOrder = 2
+        TabOrder = 4
         Visible = False
       end
       object btnCancel: TButton
@@ -105,7 +105,7 @@ object frmViewElements: TfrmViewElements
         Height = 25
         Caption = 'Compare'
         DropDownMenu = PopupMenu1
-        TabOrder = 4
+        TabOrder = 2
         Visible = False
         OnClick = btnCompareClick
       end
