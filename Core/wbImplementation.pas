@@ -8873,11 +8873,12 @@ begin
     end;
   end;
 
-  if wbReportMode {and mrDef.AllowUnordered} then begin
-    s := GetSignature + ' -> ' + s;
-    CurrentRecPos := SubRecordOrderList.Add(s);
-    SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
-  end;
+  if wbReportMode {and mrDef.AllowUnordered} then
+    if not wbSubRecordErrorsOnly or FoundError then begin
+      s := GetSignature + ' -> ' + s;
+      CurrentRecPos := SubRecordOrderList.Add(s);
+      SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
+    end;
 
 {
   if GetSignature = 'SCPT' then begin
@@ -19583,13 +19584,16 @@ begin
   end;
 
   if wbMoreInfoForUnknown then begin
-    if Assigned(ValueDef) then
-      t := ValueDef.Name
-    else
+    var lSkip := False;
+    if Assigned(ValueDef) then begin
+      t := ValueDef.Name;
+      if ValueDef.DefType <> dtByteArray then
+        lSkip := True;
+    end else
       t := '';
     if t = '' then
       t := aContainer.Def.Name;
-    if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) then
+    if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
         var lContainer: IwbContainer := TwbStruct.Create(aContainer, BasePtr, aEndPtr, wbStruct('Offset '+IntToStr(i), []), '');

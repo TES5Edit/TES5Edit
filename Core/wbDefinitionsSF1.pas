@@ -3958,8 +3958,8 @@ begin
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
 
-    if MainRecord.ElementExists['Unused RNAM'] then
-      MainRecord.RemoveElement('Unused RNAM');
+//    if MainRecord.ElementExists['Unused RNAM'] then
+//      MainRecord.RemoveElement('Unused RNAM');
 
     //if MainRecord.ElementExists['World Default Level Data'] then
     //  MainRecord.RemoveElement('World Default Level Data');
@@ -3969,7 +3969,7 @@ begin
 
     if MainRecord.ElementExists['CLSZ'] then
       MainRecord.RemoveElement('CLSZ');
-
+{
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
     if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
@@ -3979,7 +3979,7 @@ begin
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
       then
         wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
-
+}
   finally
     wbEndInternalEdit;
   end;
@@ -7662,114 +7662,6 @@ end;
 
 procedure DefineSF1b;
 begin
-  {subrecords checked against Starfield.esm}
-  wbRefRecord(ACHR, 'Placed NPC',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([ {not checked for Starfield}
-      {0x00000200}  9, 'Starts Dead',
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00002000} 13, 'Starts Unconscious',
-      {0x02000000} 25, 'No AI Acquire',
-      {0x20000000} 29, 'Don''t Havok Settle'
-    ], True, True)), [
-    wbEDID,
-    wbVMAD,
-    wbBaseFormComponents,
-    wbXALG,
-    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-
-    {--- Ragdoll ---}
-    wbRStruct('Ragdoll Data', [
-      wbXRGD,
-      wbXRGB
-    ], []),
-
-    (*
-    {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbPDTOs,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
-    ], []),
-    *)
-
-    {--- Leveled Actor ----}
-    wbXLCM,
-
-    {--- Extra ---}
-    //wbInteger(XCNT, 'Count', itS32),
-    //wbFloat(XRDS, 'Radius'),
-    wbInteger(XHLT, 'Health %', itU32),
-
-    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
-      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-      wbFormIDCk('Ref', sigReferences)
-    ], cpNormal, False, nil, 1)),
-
-    (*
-    {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', sigReferences),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    wbEmpty(XATP, 'Activation Point'),
-    *)
-
-    wbEmpty(XLKT, 'Linked Ref Transient'),
-    wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-    wbFormIDCk(XLYR, 'Layer', [LAYR]),
-    //wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
-
-    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-    (*
-    wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
-      wbFormIDCk('Ref', [REFR, ACHR]),
-      wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
-    ])),
-    *)
-    //wbFloat(XHTW, 'Head-Tracking Weight'),
-    //wbFloat(XFVC, 'Favor Cost'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
-    {--- Ownership ---}
-    wbXOWN,
-    wbXRNK,
-
-    {--- Emittance ---}
-    //wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-
-    {--- MultiBound ---}
-    //wbFormIDCk(XMBR, 'MultiBound Reference', sigReferences),
-
-    {--- Flags ---}
-    //wbEmpty(XIBS, 'Ignored By Sandbox'),
-
-    wbUnknown(XEED),
-
-    wbUnknown(XPCS),
-
-    {--- 3D Data ---}
-    wbXSCL,
-    wbDATAPosRot,
-    wbString(MNAM, 'Comments')
-  ], True, wbPlacedAddInfo);
-
   wbVatsValueFunctionEnum :=
     wbEnum([
       { 0} 'Weapon Is',
@@ -9699,6 +9591,7 @@ procedure DefineSF1c;
 
       wbUnknown(XCVR),
       wbXRGD,
+      wbUnknown(XPCS),
 
       wbDataPosRot
 //      wbString(MNAM, 'Comments')
@@ -9851,6 +9744,12 @@ begin
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
 //    wbFormIDCk(XGDR, 'God Rays', [GDRY]),
 
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
+      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+      wbFormIDCk('Ref', sigReferences)
+    ], cpNormal, False, nil, 1)),
+    wbEmpty(XLKT, 'Linked Ref Transient'),
+
     wbUnknown(TODD),
     wbUnknown(XBPS),
     wbUnknown(XCGD),
@@ -9887,6 +9786,7 @@ begin
     wbClimateTiming(wbClmtTime, nil)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SPGD, 'Shader Particle Geometry', [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -10691,27 +10591,36 @@ begin
     wbUnknown(FNAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TXST, 'Texture Set', [
     wbEDID,
     wbOBND(True),
+    wbODTY,
     wbRStruct('Textures (RGB/A)', [
       wbString(TX00, 'Diffuse'),
       wbString(TX01, 'Normal/Gloss'),
+      (* not seen in
       wbString(TX03, 'Glow'),
       wbString(TX04, 'Height'),
       wbString(TX05, 'Environment'),
       wbString(TX02, 'Wrinkles'), {TX05 TX02 TX06 Yes this has to go here}
       wbString(TX06, 'Multilayer'),
       wbString(TX07, 'Smooth Spec')
-    ], []).SetSummaryKey([0]),
+      *)
+      wbString(TX08, 'Unknown'),
+      wbString(TX09, 'Unknown'),
+      wbString(TX17, 'Unknown'),
+      wbString(TX19, 'Opacity')
+    ], []).SetSummaryKey([0]).IncludeFlag(dfAllowAnyMember),
     wbDODT,
     wbInteger(DNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'No Specular Map',
       {0x0002} 'Facegen Textures',
-      {0x0004} 'Has Model Space Normal Map'
+      {0x0004} 'Has Model Space Normal Map',
+      {0x0010} 'Unknown 3'
     ]), cpNormal, True),
     wbString(MNAM, 'Material')
-  ]).SetSummaryKey([2, 3]);
+  ]).SetSummaryKey([3, 4]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(HDPT, 'Head Part',
@@ -11613,12 +11522,15 @@ begin
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(VTYP, 'Voice Type', [
     wbEDID,
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
       'Female'
-    ]), cpNormal, True)
+    ]), cpNormal, True),
+    wbFormIDCk(ANAM, 'Animation Face Archetype', [KYWD]),
+    wbUnknown(PNAM)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -12315,6 +12227,7 @@ begin
     'Warn if no child quest started'
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
@@ -12325,6 +12238,7 @@ begin
     wbInteger(XNAM, 'Max concurrent quests', itU32)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
@@ -12345,7 +12259,7 @@ begin
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
-      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
+      //wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
@@ -12468,15 +12382,6 @@ begin
     ])
   ]);
 
-  var wbStartScene :=
-    wbRStruct('Start Scene', [
-        wbFormIDCk(LCEP, 'Scene', [SCEN]),
-        wbInteger(INTT, 'Phase Index', itU16),
-        wbString(SSPN, 'Start Phase for Scene'),
-        wbCITC,
-        wbCTDAs
-      ], []);
-
   wbRecord(SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
@@ -12500,9 +12405,9 @@ begin
         wbEmpty(HNAM, 'Marker Phase Start', cpNormal, True),
         wbString(NAM0, 'Name', 0, cpNormal, True),
         wbRStruct('Start Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker Start Conditions', cpNormal, True),
+        wbEmpty(NEXT, 'End Marker Start Conditions', cpNormal, True),
         wbRStruct('Completion Conditions', [wbCTDAs], []),
-        wbEmpty(NEXT, 'Marker Completion Conditions', cpNormal, True),
+        wbEmpty(NEXT, 'End Marker Completion Conditions', cpNormal, True),
         wbInteger(WNAM, 'Editor Width', itU32, nil, cpNormal, True, false, nil, nil, 350),
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
@@ -12513,6 +12418,7 @@ begin
           wbInteger('On Start', itS16),
           wbInteger('On Completion', itS16)
         ]),
+        wbUnknown(SPMV),
         wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
@@ -12546,6 +12452,7 @@ begin
         {6} 'Radio'
       ]), cpNormal, True),
       wbString(NAM0, 'Name'),
+      wbUnknown(SNOT),
       wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(INAM, 'Index', itU32),
       wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -12584,10 +12491,100 @@ begin
       wbInteger(SNAM, 'Start Phase', itU32),
       wbInteger(ENAM, 'End Phase', itU32),
       wbFloat(SNAM, 'Timer - Max Seconds'),
-      wbInteger(SCQS, 'Set Parent Quest Stage', itS16),
       wbFloat(TNAM, 'Timer - Min Seconds'),
-      wbUnknown(STSC),
-      wbRArray('Start Scenes', wbStartScene),
+
+      wbRStructs('Start Scenes', 'Start Scene', [
+        wbFormIDCk(LCEP, 'Scene', [SCEN]),
+        wbInteger(INTT, 'Phase Index', itU16),
+        wbString(SSPN, 'Start Phase for Scene'),
+        wbCITCReq,
+        wbCTDAsCount
+      ], []),
+
+      wbRStructs('Unknown', 'Unknown', [
+        wbUnknown(BNAM),
+        wbUnknown(STRV),
+        wbUnknown(VCLR),
+        wbUnknown(FLMV),
+        wbUnknown(FLAV),
+        wbUnknown(QUAL),
+        wbUnknown(SPOR),
+        wbUnknown(OCOR),
+        wbUnknown(SOFT),
+        wbUnknown(DOFT),
+        wbUnknown(LVCR),
+        wbCTDAs,
+        wbUnknown(ATAC),
+        wbUnknown(PLRL),
+        wbUnknown(SHRT),
+        wbUnknown(XNAM)
+      ], []),
+
+      wbRStruct('Unknown', [
+        wbUnknown(SNAM),
+        wbUnknown(UNAM),
+        wbUnknown(LNAM),
+        wbUnknown(CNAM)
+      ], []),
+
+      wbRArray('Unknown', wbUnknown(PNAM)),
+
+      wbUnknown(NVCI),
+      wbUnknown(CNAM),
+      wbUnknown(DNAM),
+
+      wbUnknown(ALLA),
+
+      wbRStruct('Unknown', [
+        wbUnknown(REPL),
+        wbUnknown(HNAM),
+        wbUnknown(VCLR),
+        wbUnknown(VNML),
+        wbUnknown(LVCR),
+        wbUnknown(BTXT),
+        wbUnknown(ATXT),
+        wbUnknown(VTXT),
+        wbUnknown(AIDT),
+        wbUnknown(FLMV),
+        wbUnknown(MPCD),
+        wbUnknown(VNAM),
+        wbSHDef(WED0),
+        wbUnknown(BIPL),
+        wbUnknown(LVLO),
+        wbUnknown(XNAM)
+      ], []),
+
+
+      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
+      wbFloat(DMAX, 'Looping - Max'),
+      wbFloat(DMIN, 'Looping - Min'),
+
+      wbSHDef(WED0),
+
+      wbHNAMHNAM,
+
+      wbSHDef(WED0),
+
+      wbUnknown(VENC),
+
+      wbRStruct('Unknown', [
+        wbUnknown(DTGT),
+        wbRStructs('Unknown', 'Unknown', [
+          wbUnknown(ESCE),
+          wbUnknown(PPST),
+          wbUnknown(PNST),
+          wbUnknown(PASP),
+          wbUnknown(PAPI),
+          wbUnknown(PAPN),
+          wbUnknown(ESCS).SetRequired(True)
+        ], []),
+        wbUnknown(ATTR),
+        wbUnknown(ACBS)
+      ], []),
+
+      wbUnknown(HTID),
+
+      {
       wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
       wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
       wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
@@ -12612,8 +12609,6 @@ begin
         wbEmpty('End Scene Say Greeting'),
         wbFormIDCk('Play Sound', [SNDR, NULL])
       ]),
-      wbFloat(DMAX, 'Looping - Max'),
-      wbFloat(DMIN, 'Looping - Min'),
       wbHNAMHNAM,
       wbStruct(CRIS, 'Camera', [
         wbFloat('FOV On Player Camera'),
@@ -12625,16 +12620,13 @@ begin
       wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
       wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
       wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
+      }
       wbEmpty(ANAM, 'End Marker', cpNormal, True)
     ], [])),
+
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
     wbUnknown(VNAM),
-    wbFloat(CNAM, 'Camera Distance Override'),
-    wbFloat(ACTV, 'Dialogue Distance Override'),
-    wbFloat(CRIS, 'FOV Override'),
-    wbKSIZ,
-    wbKWDAs,
     wbCTDAs,
     wbStruct(SCQS, 'Set Parent Quest Stage', [
       wbInteger('On Begin', itS16),
@@ -12642,7 +12634,23 @@ begin
     ]),
     wbString(NNAM, 'Notes'),
     wbFormIDCk(TNAM, 'Template Scene', [SCEN]),
-    wbInteger(XNAM, 'Index', itU32)
+    wbUnknown(BOLV),
+    wbInteger(XNAM, 'Index', itU32),
+    wbUnknown(SCPI),
+    wbUnknown(JNAM),
+    wbUnknown(SCPP),
+    wbUnknown(DEVT),
+    wbUnknown(SCSP),
+    wbUnknown(SPMA),
+    wbUnknown(SPEX),
+    wbUnknown(SPRK),
+    wbUnknown(SPRW),
+    wbUnknown(SPRP),
+    wbUnknown(SPDF),
+    wbUnknown(SPPQ),
+    wbUnknown(SPKW),
+    wbUnknown(SPPK),
+    wbUnknown(SPKY)
   ]);
 
   wbRecord(ASTP, 'Association Type', [
@@ -12895,7 +12903,8 @@ begin
         'Enchantment Effect'
       ])),
       wbUnknown(4)
-    ])
+    ]),
+    wbUnknown(ENAM)
   ]);
 
   wbRecord(MATO, 'Material Object', [
@@ -13312,9 +13321,9 @@ begin
       wbUnknown(ATAC),
       wbEmpty(PLRL, 'Unknown'),
       wbEmpty(XNAM, 'Unknown'),
-      wbHNAMHNAM
+      wbHNAMHNAM,
+      wbUnknown(RVSH)
     ], [])),
-    wbUnknown(RVSH),
     wbCTDAs,
     wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
@@ -13696,6 +13705,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
+    wbUnknown(ONAM),
     wbGenericModel
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
@@ -15258,6 +15268,114 @@ begin
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
   {subrecords checked against Starfield.esm}
+  wbRefRecord(ACHR, 'Placed NPC',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([ {not checked for Starfield}
+      {0x00000200}  9, 'Starts Dead',
+      {0x00000400} 10, 'Persistent',
+      {0x00000800} 11, 'Initially Disabled',
+      {0x00002000} 13, 'Starts Unconscious',
+      {0x02000000} 25, 'No AI Acquire',
+      {0x20000000} 29, 'Don''t Havok Settle'
+    ], True, True)), [
+    wbEDID,
+    wbVMAD,
+    wbBaseFormComponents,
+    wbXALG,
+    wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+
+    {--- Ragdoll ---}
+    wbRStruct('Ragdoll Data', [
+      wbXRGD,
+      wbXRGB
+    ], []),
+
+    (*
+    {--- Patrol Data ---}
+    wbRStruct('Patrol Data', [
+      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+      wbPDTOs,
+      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
+    ], []),
+    *)
+
+    {--- Leveled Actor ----}
+    wbXLCM,
+
+    {--- Extra ---}
+    //wbInteger(XCNT, 'Count', itS32),
+    //wbFloat(XRDS, 'Radius'),
+    wbInteger(XHLT, 'Health %', itU32),
+
+    wbRArrayS('Linked References', wbStructSK(XLKR, [0], 'Linked Reference', [
+      wbFormIDCk('Keyword/Ref', [KYWD, PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+      wbFormIDCk('Ref', sigReferences)
+    ], cpNormal, False, nil, 1)),
+
+    (*
+    {--- Activate Parents ---}
+    wbRStruct('Activate Parents', [
+      wbInteger(XAPD, 'Flags', itU8, wbFlags([
+        'Parent Activate Only'
+      ], True)),
+      wbRArrayS('Activate Parent Refs',
+        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+          wbFormIDCk('Reference', sigReferences),
+          wbFloat('Delay')
+        ])
+      )
+    ], []),
+    wbEmpty(XATP, 'Activation Point'),
+    *)
+
+    wbEmpty(XLKT, 'Linked Ref Transient'),
+    wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
+    wbFormIDCk(XLYR, 'Layer', [LAYR]),
+    //wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+
+    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
+    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+    (*
+    wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
+      wbFormIDCk('Ref', [REFR, ACHR]),
+      wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
+    ])),
+    *)
+    //wbFloat(XHTW, 'Head-Tracking Weight'),
+    //wbFloat(XFVC, 'Favor Cost'),
+
+    {--- Enable Parent ---}
+    wbXESP,
+
+    {--- Ownership ---}
+    wbXOWN,
+    wbXRNK,
+
+    {--- Emittance ---}
+    //wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+
+    {--- MultiBound ---}
+    //wbFormIDCk(XMBR, 'MultiBound Reference', sigReferences),
+
+    {--- Flags ---}
+    //wbEmpty(XIBS, 'Ignored By Sandbox'),
+
+    wbUnknown(XEED),
+
+    wbUnknown(XPCS),
+
+    {--- 3D Data ---}
+    wbXSCL,
+    wbDATAPosRot,
+    wbString(MNAM, 'Comments')
+  ], True, wbPlacedAddInfo);
+
+  {subrecords checked against Starfield.esm}
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
@@ -15938,15 +16056,15 @@ begin
     ], []))
   ], True);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbOBND(True),
-    wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR, NULL]),
-    wbStruct(REPT, 'Repeat', [
-      wbFloat('Min Time'),
-      wbFloat('Max Time'),
-      wbInteger('Stackable', itU8, wbBoolEnum)
-    ], cpNormal, False, nil, 2)
+    wbODTY,
+    wbXALG,
+    wbKeywords,
+    wbUnknown(SMLS),
+    wbUnknown(DEVT)
   ]);
 
   wbSPIT := wbStruct(SPIT, 'Data', [
@@ -16028,6 +16146,7 @@ begin
     wbEDID
   ]);}
 
+  {subrecords checked against Starfield.esm}
   wbRecord(STAT, 'Static',
     wbFlags(wbRecordFlagsFlags, [ //flags not checked aginst Starfield
       {0x00000001} { 0} '',
@@ -16102,7 +16221,7 @@ begin
       cpNormal, False
     )
     *)
-  ], True);  // unordered, NVNM can be before or after MNAM
+  ], False);  // unordered, NVNM can be before or after MNAM
 
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -16223,11 +16342,10 @@ begin
       {0x02} 'Unknown 1',
       {0x04} 'Directional Sound'
     ]), cpNormal, True),
-    wbFormIDCk(TNAM, 'Material (unused)', [MATT]),
-    wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
+    wbSHDef(WASH),
     wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
-    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+//    wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbByteArray(DATA, 'Unused', 0),
     wbStruct(DNAM, 'Visual Data', [
       wbStruct('Fog Properties', [
@@ -16305,9 +16423,13 @@ begin
       wbFloat('Y'),
       wbFloat('Z')
     ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    wbString(NAM2, 'Layer 1 Noise Texture'),
-    wbString(NAM3, 'Layer 2 Noise Texture'),
-    wbString(NAM4, 'Layer 3 Noise Texture')
+    wbFormIDCk(ENAM, 'Unknown', [CUR3]),
+    wbFormIDCk(HNAM, 'Unknown', [CUR3]),
+    wbFormIDCk(JNAM, 'Unknown', [CUR3]),
+    wbFormIDCk(LNAM, 'Unknown', [CUR3]),
+    wbFormIDCk(MNAM, 'Unknown', [CUR3]),
+    wbFormIDCk(QNAM, 'Unknown', [CUR3]),
+    wbFormIDCk(UNAM, 'Unknown', [CUR3])
   ]);
 
   wbRecord(WEAP, 'Weapon',
@@ -16318,160 +16440,53 @@ begin
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTY,
+    wbOPDS,
     wbPTT2,
-    wbSTCP,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
-    wbICON,
-    wbMICO,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbDEST,
+//    wbDEST,
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbYNAM,
-    wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbPUSHPDSH,
+    wbKeywords,
     wbDESC,
     wbFormIDCk(INRD, 'Instance Naming', [INNR]),
     wbAPPR,
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker', cpNormal, True),
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
-    wbRStruct('1st Person Model', [
-      wbString(MOD4, 'Model FileName'),
-      wbModelInfo(MO4T),
-      wbMO4S,
-      wbMO4C,
-      wbMO4F
-    ], []),
-    wbStruct(DNAM, 'Data', [
-      wbFormIDCk('Ammo', [AMMO, NULL]),
-      wbFloat('Speed'),
-      wbFloat('Reload Speed'),
-      wbFloat('Reach'),
-      wbFloat('Min Range'),
-      wbFloat('Max Range'),
-      wbFloat('Attack Delay'),
-      wbByteArray('Unknown', 4),
-      wbFloat('Damage - OutOfRange Mult'),
-      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
-      wbFormIDCk('Skill', [AVIF, NULL]),
-      wbFormIDCk('Resist', [AVIF, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Player Only',
-        {0x00000002} 'NPCs Use Ammo',
-        {0x00000004} 'No Jam After Reload',
-        {0x00000008} 'Charging Reload',
-        {0x00000010} 'Minor Crime',
-        {0x00000020} 'Fixed Range',
-        {0x00000040} 'Not Used In Normal Combat',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Crit Effect - on Death',
-        {0x00000200} 'Charging Attack',
-        {0x00000400} 'Unknown 11',
-        {0x00000800} 'Hold Input To Power',
-        {0x00001000} 'Non Hostile',
-        {0x00002000} 'Bound Weapon',
-        {0x00004000} 'Ignores Normal Weapon Resistance',
-        {0x00008000} 'Automatic',
-        {0x00010000} 'Repeatable Single Fire',
-        {0x00020000} 'Can''t Drop',
-        {0x00040000} 'Hide Backpack',
-        {0x00080000} 'Embedded Weapon',
-        {0x00100000} 'Not Playable',
-        {0x00200000} 'Has Scope',
-        {0x00400000} 'Bolt Action',
-        {0x00800000} 'Secondary Weapon',
-        {0x01000000} 'Disable Shells',
-        {0x02000000} 'Unknown 26',
-        {0x04000000} 'Unknown 27',
-        {0x08000000} 'Unknown 28',
-        {0x10000000} 'Unknown 29',
-        {0x20000000} 'Unknown 30',
-        {0x40000000} 'Unknown 31',
-        {0x80000000} 'Unknown 32'
-      ])),
-      wbInteger('Capacity', itU16),
-      wbInteger('Animation Type', itU8, wbEnum([
-        'HandToHandMelee',
-        'OneHandSword',
-        'OneHandDagger',
-        'OneHandAxe',
-        'OneHandMace',
-        'TwoHandSword',
-        'TwoHandAxe',
-        'Bow',
-        'Staff',
-        'Gun',
-        'Grenade',
-        'Mine'
-      ])),
-      wbFloat('Damage - Secondary'),
-      wbFloat('Weight'),
-      wbInteger('Value', itU32),
-      wbInteger('Damage - Base', itU16),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbFormIDCk('Sound - Attack', [SNDR, NULL]),
-      wbFormIDCk('Sound - Attack 2D', [SNDR, NULL]),
-      wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
-      wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
-      wbFormIDCk('Sound - Idle', [SNDR, NULL]),
-      wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
-      wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
-      wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]),
-      wbInteger('Accuracy Bonus', itU8),
-      wbFloat('Animation Attack Seconds'),
-      wbByteArray('Unknown', 2),
-      wbFloat('Action Point Cost'),
-      wbFloat('Full Power Seconds'),
-      wbFloat('Min Power Per Shot'),
-      wbInteger('Stagger', itU32, wbStaggerEnum),
-      wbByteArray('Unknown', 4)
-    ]),
-    wbStruct(FNAM, '', [
-      wbFloat('Animation Fire Seconds'),
-      wbFloat('Rumble - Left Motor Strength'),
-      wbFloat('Rumble - Right Motor Strength'),
-      wbFloat('Rumble - Duration'),
-      wbFloat('Animation Reload Seconds'),
-      wbByteArray('Bolt Anim Seconds', 4),
-      wbFloat('Sighted Transition Seconds'),
-      wbInteger('# Projectiles', itU8),
-      wbFormIDCk('Override Projectile', [PROJ, NULL]),
-      wbInteger('Pattern', itU32, wbEnum([
-        'Constant',
-        'Square',
-        'Triangle',
-        'Sawtooth'
-      ])),
-      wbInteger('Rumble - Peroid (ms)', itU32)
-    ]),
-    wbStruct(CRDT, 'Critical Data', [
-      wbFloat('Crit Damage Mult'),
-      wbFloat('Crit Charge Bonus'),
-      wbFormIDCk('Crit Effect', [SPEL, NULL])
-    ]),
-    wbFormIDCk(INAM, 'Impact Data Set', [IPDS]),
-    wbFormIDCk(LNAM, 'NPC Add Ammo List', [LVLI]),
-    wbFormIDCk(WAMD, 'Aim Model', [AMDL]),
-    wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
-    wbFormIDCk(CNAM, 'Template', [WEAP]),
+    wbUnknown(BNAM),
+    wbUnknown(WAIM),
+    wbUnknown(WAM2),
+    wbUnknown(WAUD),
+    wbUnknown(WTUR),
+    wbUnknown(WCHG),
+    wbUnknown(WDMG),
     wbStructs(DAMA, 'Damage Types', 'Damage Type', [
       wbFormIDCk('Type', [DMGT]),
       wbInteger('Amount', itU32),
       wbUnknown(4)
     ]),
-    wbFLTR,
-    wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
-      'Very Slow',
-      'Slow',
-      'Medium',
-      'Fast',
-      'Very Fast'
-    ]))
+    wbUnknown(WFIR),
+    wbUnknown(WFLG),
+    wbUnknown(WGEN),
+    wbUnknown(WABB),
+    wbUnknown(WMEL),
+    wbUnknown(QNAM),
+    wbUnknown(WRLO),
+    wbUnknown(WVAR),
+    wbRStruct('1st Person Model', [
+      wbString(MOD4, 'Model FileName'),
+      wbUnknown(FLLD),
+      wbMO4S
+    ], []).IncludeFlag(dfAllowAnyMember),
+    wbUnknown(WVIS),
+    wbUnknown(WTRM)
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
   wbRecord(WRLD, 'Worldspace',
@@ -16479,16 +16494,30 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ])), [
     wbEDID,
-    wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
-    wbMaxHeightDataWRLD,
+    wbBaseFormComponents,
+    wbRArray('Large References',
+      wbStruct(RNAM, 'Grid', [
+        wbInteger('Y', itS16, nil, cpIgnore),
+        wbInteger('X', itS16, nil, cpIgnore),
+        wbArray('References', wbStruct('Reference', [
+          wbFormIDCk('Ref', [REFR], False, cpIgnore),
+          wbInteger('Y', itS16, nil, cpIgnore),
+          wbInteger('X', itS16, nil, cpIgnore)
+        ]), -1).IncludeFlag(dfNotAlignable)
+      ]),
+      cpIgnore, False, nil, nil, wbNeverShow
+    ).IncludeFlag(dfNotAlignable),
     wbFULL,
+    {
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
       wbInteger('Y', itS16)
     ]),
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+    }
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbFormIDCk(BNAM, 'Biome', [BIOM]),
     wbRStruct('Parent', [
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
@@ -16506,14 +16535,13 @@ begin
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbUnknown(NAM7),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
     wbStruct(DNAM, 'Land Data', [
       wbFloat('Default Land Height'),
       wbFloat('Default Water Height')
     ]),
-    wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbGenericModel], []),
     wbStruct(MNAM, 'Map Data', [
       wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
@@ -16548,71 +16576,32 @@ begin
       {0x80} 'No Grass'
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
+    wbUnknown(FNAM),
     wbWorldspaceOBND,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-    wbString(XWEM, 'Water Environment Map'),
-    wbString(TNAM, 'HD LOD Diffuse Texture'),
-    wbString(UNAM, 'HD LOD Normal Texture'),
-    wbRStruct('World Default Level Data', [
-      wbStruct(WLEV, 'Dimension', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS8),
-          wbInteger('Y', itS8)
-        ]),
-        wbStruct('Size', [
-          wbInteger('Width', itU8),
-          wbInteger('Height', itU8)
-        ])
-      ]),
-      wbByteArray(WLEV, 'Data')
-    ], []),
+    wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
+    wbString(XEMP),
+    wbString(XWEM),
+    wbUnknown(GNAM),
+    wbRArray('Unknown', wbUnknown(LNAM)),
+    wbUnknown(XCLW),
+    wbUnknown(WHGT),
+    wbUnknown(HNAM),
     wbOFST,
     wbByteArray(CLSZ, 'Cell Size Data')
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
-
+  {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ])), [
     wbEDID,
-    wbString(_30_0TX, 'Cloud Texture Layer #0'),
-    wbString(_31_0TX, 'Cloud Texture Layer #1'),
-    wbString(_32_0TX, 'Cloud Texture Layer #2'),
-    wbString(_33_0TX, 'Cloud Texture Layer #3'),
-    wbString(_34_0TX, 'Cloud Texture Layer #4'),
-    wbString(_35_0TX, 'Cloud Texture Layer #5'),
-    wbString(_36_0TX, 'Cloud Texture Layer #6'),
-    wbString(_37_0TX, 'Cloud Texture Layer #7'),
-    wbString(_38_0TX, 'Cloud Texture Layer #8'),
-    wbString(_39_0TX, 'Cloud Texture Layer #9'),
-    wbString(_3A_0TX, 'Cloud Texture Layer #10'),
-    wbString(_3B_0TX, 'Cloud Texture Layer #11'),
-    wbString(_3C_0TX, 'Cloud Texture Layer #12'),
-    wbString(_3D_0TX, 'Cloud Texture Layer #13'),
-    wbString(_3E_0TX, 'Cloud Texture Layer #14'),
-    wbString(_3F_0TX, 'Cloud Texture Layer #15'),
-    wbString(_40_0TX, 'Cloud Texture Layer #16'),
-    wbString(A0TX, 'Cloud Texture Layer #17'),
-    wbString(B0TX, 'Cloud Texture Layer #18'),
-    wbString(C0TX, 'Cloud Texture Layer #19'),
-    wbString(D0TX, 'Cloud Texture Layer #20'),
-    wbString(E0TX, 'Cloud Texture Layer #21'),
-    wbString(F0TX, 'Cloud Texture Layer #22'),
-    wbString(G0TX, 'Cloud Texture Layer #23'),
-    wbString(H0TX, 'Cloud Texture Layer #24'),
-    wbString(I0TX, 'Cloud Texture Layer #25'),
-    wbString(J0TX, 'Cloud Texture Layer #26'),
-    wbString(K0TX, 'Cloud Texture Layer #27'),
-    wbString(L0TX, 'Cloud Texture Layer #28'),
-    wbString(M0TX, 'Cloud Texture Layer #29'),
-    wbString(N0TX, 'Cloud Texture Layer #30'),
-    wbString(O0TX, 'Cloud Texture Layer #31'),
+    wbKeywords,
     wbUnknown(LNAM),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
+    wbUnknown(CLDC),
     wbRStruct('Cloud Speed', [
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
@@ -16703,7 +16692,6 @@ begin
       wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
     ], cpNormal, True),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
-    wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbStruct(IMSP, 'Image Spaces', [
       wbFormIDCK('Sunrise', [IMGS, NULL]),
@@ -16715,16 +16703,7 @@ begin
       wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
       wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
     ], cpNormal, True),
-    wbStruct(WGDR, 'God Rays', [ //Form Version 120+
-      wbFormIDCK('Sunrise', [GDRY, NULL]),
-      wbFormIDCK('Day', [GDRY, NULL]),
-      wbFormIDCK('Sunset', [GDRY, NULL]),
-      wbFormIDCK('Night', [GDRY, NULL]),
-      wbFormIDCK('EarlySunrise', [GDRY, NULL]),
-      wbFormIDCK('LateSunrise', [GDRY, NULL]),
-      wbFormIDCK('EarlySunset', [GDRY, NULL]),
-      wbFormIDCK('LateSunset', [GDRY, NULL])
-    ]),
+    wbUnknown(HNAM),
     wbRStruct('Directional Ambient Lighting Colors', [
       wbAmbientColors(DALC, 'Sunrise'),
       wbAmbientColors(DALC, 'Day'),
@@ -17280,6 +17259,7 @@ begin
       ]), 0, cpNormal, True)
     ], [], cpNormal, True);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SCOL, 'Static Collection',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
@@ -17294,7 +17274,9 @@ begin
     ])), [
     wbEDID,
     wbOBND(True),
-    wbPTT2,
+    wbODTY,
+    wbSNTP,
+    wbBaseFormComponents,
     wbGenericModel,
     wbFULL,
     wbFLTR,
@@ -17318,14 +17300,17 @@ begin
     wbEDID
   ]);}
 
+  {subrecords checked against Starfield.esm}
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
-    wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
-      wbFormIDCk('Sound', [SNDR, NULL]),
-      wbString('Action')
-    ]))
+    wbInteger(STMS, 'Count', itU32),
+    wbRStructs('Unknown', 'Unknown', [
+      wbString(STAE),
+      wbUnknown(STAD).SetRequired(True)
+    ], [])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TERM, 'Terminal',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  4, 'Unknown 4',
@@ -17336,86 +17321,30 @@ begin
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBND(True),
+    wbODTY,
     wbPTT2,
-    wbLStringKC(NAM0, 'Header Text'),
-    wbLStringKC(WNAM, 'Welcome Text'),
+    wbBaseFormComponents,
+    wbFormIDCk(DNAM, 'Menu', [TMLM]),
+    wbUnknown(NAM1),
+//    wbLStringKC(NAM0, 'Header Text'),
+//    wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
     wbGenericModel,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbPRPS,
+    wbFTYP,
     wbUnknown(PNAM),
-    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM),
-    wbInteger(COCT, 'Holds Holotape (Count)', itU32),
-    wbRArray('Holotapes',
-      wbStruct(CNTO, 'Holotape', [
-        wbFormIDCk('Item', [NULL, NOTE]),
-        wbInteger('Count', itS32, nil, cpNormal, False, nil, nil, 1)
-      ])
-        .SetSummaryKeyOnValue([1, 0])
-        .SetSummaryPrefixSuffixOnValue(1, '', 'x')
-        .SetSummaryDelimiterOnValue(' ')
-        .IncludeFlagOnValue(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed),
-      cpNormal, False, nil, wbTERMCNTOsAfterSet
-    ),
+    wbUnknown(JNAM),
     wbMNAMFurnitureMarker,
+    wbUnknown(GNAM),
     wbByteArray(WBDT, 'Workbench Data (unused)', 0),
+    wbFormIDCk(FTMP, 'Furniture Template', [FURN]),
+    wbUnknown(FNPR),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    wbInteger(BSIZ, 'Count', itU32, nil, cpBenign),
-    wbRArray('Body Text',
-      wbRStruct('Item', [
-        wbLStringKC(BTXT, 'Text', 0, cpTranslate),
-        wbCTDAs
-      ], [])
-        .SetSummaryKey([0, 1])
-        .SetSummaryMemberPrefixSuffix(1, '{', '}')
-        .SetSummaryDelimiter(' ')
-        .IncludeFlag(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed),
-      cpNormal, False, nil, wbTERMDisplayItemsAfterSet
-    ),
-    wbInteger(ISIZ, 'Count', itU32, nil, cpBenign),
-    wbRArray('Menu Items',
-      wbRStruct('Menu Item', [
-        wbLStringKC(ITXT, 'Item Text', 0, cpTranslate),
-        wbLStringKC(RNAM, 'Response Text', 0, cpTranslate),
-        wbInteger(ANAM, 'Type', itU8, wbEnum([
-          {0} 'Unknown 0',
-          {1} 'Unknown 1',
-          {2} 'Unknown 2',
-          {3} 'Unknown 3',
-          {4} 'Submenu - Terminal',
-          {5} 'Submenu - Return to Top Level',
-          {6} 'Submenu - Force Redraw',
-          {7} 'Unknown 7',
-          {8} 'Display Text',
-          {9} 'Unknown 9',
-         {10} 'Unknown 10',
-         {11} 'Unknown 11',
-         {12} 'Unknown 12',
-         {13} 'Unknown 13',
-         {14} 'Unknown 14',
-         {15} 'Unknown 15',
-         {16} 'Display Image'
-        ]), cpNormal, True),
-        wbInteger(ITID, 'Item ID', itU16),
-        wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
-        wbString(VNAM, 'Show Image'),
-        wbFormIDCk(TNAM, 'Submenu', [TERM]),
-        wbCTDAs
-      ], [])
-        .SetSummaryKey([3, 2, 0, 7])
-        .SetSummaryMemberPrefixSuffix(3, '[', ']')
-        .SetSummaryMemberPrefixSuffix(2, '[', ']')
-        .SetSummaryMemberPrefixSuffix(7, '{', '}')
-        .SetSummaryDelimiter(' ')
-        .IncludeFlag(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed),
-      cpNormal, False, nil, wbTERMMenuItemsAfterSet
-    )
+    //wbObjectTemplate, not in Starfield.esm, but likely given STOP marker
+    wbMarkerReq(STOP)
   ]);
 
   {wbRecord(TLOD, 'TLOD', [
@@ -17426,6 +17355,7 @@ begin
     wbEDID
   ]);}
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 16, 'Around Origin'
@@ -17436,7 +17366,9 @@ begin
       wbFloat('Scale'),
       wbFloat('Zoom Min'),
       wbFloat('Zoom Max')
-    ], cpNormal, True, nil, 2)
+    ], cpNormal, True, nil, 2),
+    wbUnknown(BNAM),
+    wbUnknown(ENAM)
   ]);
 
   wbRecord(ZOOM, 'Zoom', [
@@ -17562,6 +17494,7 @@ begin
   wbRecord(STND, 'Snap Template Node', [
     wbEDID,
     wbOBND,
+    wbODTY,
     wbBaseFormComponents,
     wbGenericModel,
     wbKeywords,
@@ -17828,7 +17761,7 @@ begin
     wbCUSH,
     wbFormID(FNAM, 'Item List'),
     wbUnknown(SNAM),
-    wbFormID(CNAM, 'Next Rarity'),
+    wbRArray('Unknown', wbFormID(CNAM, 'Next Rarity')),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
@@ -18368,6 +18301,7 @@ begin
     wbEDID,
     wbUnknown(WMTI),
     wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
+    wbUnknown(WMSS),
     wbRStructs('Unknown', 'Unknown', [
       wbUnknown(WMSI),
       wbUnknown(WMSD)
@@ -18380,6 +18314,11 @@ begin
     wbUnknown(WSED),
     wbUnknown(CNAM),
     wbUnknown(WTED)
+  ]);
+
+  wbRecord(PERS, 'Unknown', [
+    wbUnknown(DATA),
+    wbRArray('Unknown', wbUnknown(DAT2))
   ]);
 
   wbAddGroupOrder(GMST);
@@ -18424,6 +18363,7 @@ begin
   wbAddGroupOrder(WEAP);
   wbAddGroupOrder(AMMO);
   wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(PLYR);
   wbAddGroupOrder(LVLN);
   wbAddGroupOrder(LVLP);
   wbAddGroupOrder(KEYM);
@@ -18495,6 +18435,7 @@ begin
   wbAddGroupOrder(CLFM);
   wbAddGroupOrder(REVB);
   wbAddGroupOrder(RFGP);
+  wbAddGroupOrder(PERS);
   wbAddGroupOrder(AMDL);
   wbAddGroupOrder(AAMD);
   wbAddGroupOrder(MAAM);

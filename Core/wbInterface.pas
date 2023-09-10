@@ -263,6 +263,8 @@ var
   wbReportFormIDNotAllowedReferences : Boolean = True;
   wbReportUnknown                    : Boolean = False;
 
+  wbSubRecordErrorsOnly              : Boolean = False;
+
   wbReportUnknownStep                : Integer = 1;
 
   wbMoreInfoForRequired              : Boolean = False;

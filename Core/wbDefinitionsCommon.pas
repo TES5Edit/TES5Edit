@@ -708,24 +708,31 @@ begin
       wbByteArray('Unused', 3)
     ]);
 
+  var lScaleFactor := 1/4096;
+  if wbGameMode = gmSF1 then
+    lScaleFactor := 1;
+
+
   wbWorldspaceOBND :=
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
+        wbFloat('X', cpNormal, False, lScaleFactor),
+        wbFloat('Y', cpNormal, False, lScaleFactor)
       ], cpIgnore, True)
       .SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
       .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryDelimiterOnValue(', ')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, 1/4096),
-        wbFloat('Y', cpNormal, False, 1/4096)
+        wbFloat('X', cpNormal, False, lScaleFactor),
+        wbFloat('Y', cpNormal, False, lScaleFactor)
       ], cpIgnore, True)
       .SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
       .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryDelimiterOnValue(', ')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
     ], [])
