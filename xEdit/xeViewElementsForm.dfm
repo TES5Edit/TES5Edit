@@ -1,8 +1,8 @@
 object frmViewElements: TfrmViewElements
   Left = 0
   Top = 0
-  ClientHeight = 324
-  ClientWidth = 561
+  ClientHeight = 325
+  ClientWidth = 565
   Color = clBtnFace
   ParentFont = True
   KeyPreview = True
@@ -11,13 +11,14 @@ object frmViewElements: TfrmViewElements
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 13
   object Panel1: TPanel
     AlignWithMargins = True
     Left = 8
     Top = 8
-    Width = 545
-    Height = 275
+    Width = 549
+    Height = 276
     Margins.Left = 8
     Margins.Top = 8
     Margins.Right = 8
@@ -26,8 +27,6 @@ object frmViewElements: TfrmViewElements
     BevelOuter = bvLowered
     Caption = 'Panel1'
     TabOrder = 0
-    ExplicitWidth = 549
-    ExplicitHeight = 276
     object pcView: TPageControl
       Left = 1
       Top = 1
@@ -44,15 +43,13 @@ object frmViewElements: TfrmViewElements
   end
   object Panel2: TPanel
     Left = 0
-    Top = 291
-    Width = 561
+    Top = 292
+    Width = 565
     Height = 33
     Align = alBottom
     BevelOuter = bvNone
     PopupMenu = PopupMenu1
     TabOrder = 1
-    ExplicitTop = 292
-    ExplicitWidth = 565
     object pnlButtons: TPanel
       Left = 192
       Top = 0
