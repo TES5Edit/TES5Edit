@@ -3078,7 +3078,8 @@ type
     {53} ptWardState,          // enum
     {54} ptWeather,            // WTHR
     {55} ptWorldspace,         // WRLD
-    {56} ptDamageType          // DMGT
+    {56} ptDamageType,         // DMGT
+    {57} ptResearchProject     // RSPJ
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3630,7 +3631,7 @@ const
     (Index: 871; Name: 'GetBodyGravity'; Desc: 'Get the planet gravity for the ref''s planet.'),
     (Index: 872; Name: 'GetBodySurveyPercent'; Desc: 'Get the planet survey percent for the ref''s planet.'),
     (Index: 873; Name: 'IsPlayerLoitering'; Desc: 'Returns whether the player is loitering or not.'),
-    (Index: 874; Name: 'IsResearchComplete'; Desc: 'Check if a research project is completed.'),
+    (Index: 874; Name: 'IsResearchComplete'; Desc: 'Check if a research project is completed.'; ParamType1: ptResearchProject),
     (Index: 875; Name: 'BodyIsPlanetTraitKnown'; Desc: 'Does the ref object''s current planetary body has a specific planet trait known by the player?'),
     (Index: 876; Name: 'HasPerkCategory'; Desc: 'Checks if the owner of an activity is a perk of a certain category.'),
     (Index: 877; Name: 'HasPerkSkillGroup'; Desc: 'Checks if the owner of an activity is a perk of a certain skill group.'),
@@ -8325,7 +8326,9 @@ begin
           {55 ptWorldspace}
           wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
           {56 ptDamageType}
-          wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
+          wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
+          {57 ptResearchProject}
+          wbFormIDCkNoReach('Research Project', [RSPJ])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
