@@ -17762,7 +17762,7 @@ begin
     wbFormID(FNAM, 'Item List'),
     wbUnknown(SNAM),
     wbRArray('Unknown', wbFormID(CNAM, 'Next Rarity')),
-    wbUnknown(TINC),
+    wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
     wbFormIDCk(NAM1, 'Actor Value', [AVIF]),
