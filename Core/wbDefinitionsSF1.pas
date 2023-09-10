@@ -13864,7 +13864,7 @@ begin
       wbUnknown(4)
     ]),
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
-    wbUnknown(NNAM), // req
+    wbInteger(NNAM, 'Amount Produced', itU16), // req
     wbUnknown(SNAM), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
@@ -18033,7 +18033,7 @@ begin
       wbByteArray('Unknown', 4),
       wbFormID('Unknown')
     ]),
-    wbStructs(RQPK, 'Perks', 'Perk', [
+    wbStructs(RQPK, 'Required Perks', 'Perk', [
       wbFormIDCk('Perk', [PERK]),
       wbByteArray('Unknown', 4),
       wbFormID('Unknown')
