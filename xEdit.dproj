@@ -94,6 +94,9 @@
         <BT_BuildType>Debug</BT_BuildType>
         <ILINK_MapFileType>DetailedSegments</ILINK_MapFileType>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_3)'!=''">
+        <Icon_MainIcon>xEdit\xEdit_FO_Icon.ico</Icon_MainIcon>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
