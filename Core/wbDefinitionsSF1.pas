@@ -2869,6 +2869,15 @@ begin
   Result := Integer(Container.ElementNativeValues['FragmentCount']);
 end;
 
+function wbPndtPpbdFloraLen(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container     : IwbContainer;
+begin
+  Result := 0;
+  if Supports(aElement.Container, IwbContainer, Container) then
+    Result := Container.ElementNativeValues['Length of flora array'];
+end;
+
 procedure wbScriptFragmentsQuestAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerAfterSet('FragmentCount', 'Fragments', aElement);
@@ -18024,6 +18033,17 @@ begin
     wbRArray('Unknown', wbStruct(PPBD, 'name', [
       wbFormID('Unknown'),
       wbFloat('Percentage'),
+      wbUnknown(4),
+      wbFormID('Resource gen override'),
+      wbArray('Fauna', wbStruct('Fauna', [wbFormID('Animal')]), -1),
+      wbUnknown(4),
+      wbInteger('Length of flora array', itU32),
+      wbInteger('Size of flora struct', itU32),
+      wbArray('Flora', wbStruct('Flora', [
+        wbFormID('Model'),
+        wbFormID('Resource'),
+        wbInteger('Frequency', itU8)
+      ]), wbPndtPpbdFloraLen),
       wbUnknown()
     ])),
     wbFormID(FNAM, 'Surface Tree'), //req
