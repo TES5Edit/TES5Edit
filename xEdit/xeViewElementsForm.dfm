@@ -59,6 +59,15 @@ object frmViewElements: TfrmViewElements
       Align = alRight
       BevelOuter = bvNone
       TabOrder = 0
+      object LiteCopyButton: TButton
+        Left = 0
+        Top = 3
+        Width = 75
+        Height = 25
+        TabOrder = 0
+        Caption = 'Copy'
+        OnClick = btnCopyToClipboard
+      end
       object btnCompare: TButton
         Left = 53
         Top = 3
@@ -67,7 +76,7 @@ object frmViewElements: TfrmViewElements
         Caption = 'Compare'
         DropDownMenu = PopupMenu1
         Style = bsSplitButton
-        TabOrder = 0
+        TabOrder = 1
         OnClick = btnCompareClick
       end
       object btnOK: TButton
@@ -77,7 +86,7 @@ object frmViewElements: TfrmViewElements
         Height = 27
         Caption = 'Save'
         ModalResult = 1
-        TabOrder = 1
+        TabOrder = 4
         Visible = False
       end
       object btnCancel: TButton
@@ -87,17 +96,17 @@ object frmViewElements: TfrmViewElements
         Height = 27
         Caption = 'Close'
         ModalResult = 2
-        TabOrder = 2
+        TabOrder = 3
         OnClick = btnCancelClick
       end
       object LiteCompareButton: TButton
-        Left = 96
+        Left = 105
         Top = 3
         Width = 75
         Height = 25
         Caption = 'Compare'
         DropDownMenu = PopupMenu1
-        TabOrder = 3
+        TabOrder = 2
         Visible = False
         OnClick = btnCompareClick
       end

@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -15,7 +15,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, wbInterface, ComCtrls, ExtCtrls, StdCtrls, Buttons, Menus, IniFiles,
-  SynEdit, SynMemo, xeMainForm;
+  SynEdit, SynMemo, xeMainForm, Clipbrd;
 
 type
   TwbEdit = record
@@ -43,6 +43,7 @@ type
     procedure btnCompareClick(Sender: TObject);
     procedure mniCompareConfClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+    procedure btnCopyToClipboard(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FindDialog1Find(Sender: TObject);
@@ -127,6 +128,18 @@ end;
 procedure TfrmViewElements.btnCancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+procedure TfrmViewElements.btnCopyToClipboard(Sender: TObject);
+var
+  Memo: TMemo;
+begin
+  if pcView.PageCount > 0 then
+  begin
+    Memo := TMemo(pcView.ActivePage.Controls[0]);
+    Clipboard.AsText := Memo.Text;
+    frmMain.PostAddMessage('Copied field to clipboard');
+  end
 end;
 
 procedure TfrmViewElements.btnCompareClick(Sender: TObject);
