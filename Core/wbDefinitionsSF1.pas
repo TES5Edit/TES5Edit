@@ -18030,7 +18030,7 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbUnknown(CNAM), //req
-    wbRArray('Unknown', wbStruct(PPBD, 'name', [
+    wbRArray('Biomes', wbStruct(PPBD, 'name', [
       wbFormID('Unknown'),
       wbFloat('Percentage'),
       wbUnknown(4),
