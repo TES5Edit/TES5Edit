@@ -1188,6 +1188,14 @@ begin
         DontWriteReport := True;
       end;
 
+      if FindCmdLineSwitch('sroe') then
+      begin
+        wbReportMode := True;
+        wbSubRecordErrorsOnly := True;
+        DontWriteReport := True;
+      end;
+
+
       if FindCmdLineSwitch('dcr') then begin
         wbReportMode := True;
         DumpCheckReport := True;
