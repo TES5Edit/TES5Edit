@@ -17973,10 +17973,10 @@ begin
         wbLenString('Magnetosphere'),
         wbLenString('Mass in kg'),
         wbLenString('Type'),
-        wbLenString('Star name'),
-        wbUnknown(8),
-        wbFloat('Unknown'),
-        wbUnknown(8),
+        wbLenString('Settled'),
+        wbLenString('Special'),
+        wbDouble('Perihelion'),
+        wbDouble('Star Dist'),
         wbFloat('Density'),
         wbFloat('Heat'),
         wbFloat('Hydro'),
@@ -17986,7 +17986,10 @@ begin
         wbUnknown(4),
         wbFloat('Start angle in deg'),
         wbFloat('Year length in days'),
-        wbUnknown()
+        wbInteger('Asteroids', itu32),
+        wbInteger('Geostationary', itu32, wbBoolEnum),
+        wbUnknown(4),
+        wbInteger('Rings', itu32, wbBoolEnum)
       ]),
       wbStruct(INAM, 'Unknown', [
         wbInteger('Atmos Handle', itu32),
