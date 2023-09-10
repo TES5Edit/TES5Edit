@@ -13128,8 +13128,11 @@ end;
 
 procedure DefineSF1l;
 begin
+  {subrecords checked against Starfield.esm}
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
+    wbUnknown(RABG),
+    {
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
       wbInteger('HF Reference (Hz)', itU16),
@@ -13144,6 +13147,7 @@ begin
       wbInteger('Density %', itU8),
       wbInteger('Unknown', itU8)
     ], cpNormal, True),
+    }
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
@@ -14931,6 +14935,7 @@ begin
     wbString(SCCM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(RACE, 'Race',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
@@ -15252,7 +15257,7 @@ begin
 
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
-
+  {subrecords checked against Starfield.esm}
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
@@ -15808,6 +15813,7 @@ begin
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040} 6, 'Border Region'
@@ -15819,14 +15825,14 @@ begin
       wbInteger('Blue', itU8),
       wbByteArray('Unknown', 1)
     ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-    wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
+    //wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
     wbRArray('Region Areas', wbRStruct('Region Area', [
       wbInteger(RPLI, 'Edge Fall-off', itU32),
       wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
         wbFloat('X'),
         wbFloat('Y')
-      ]), 0, wbRPLDAfterLoad),
-      wbUnknown(ANAM)
+      ]), 0, wbRPLDAfterLoad)
+      //wbUnknown(ANAM)
     ], [])),
     wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
       {always starts with an RDAT}
@@ -15857,18 +15863,25 @@ begin
       ], cpNormal, True),
 
       {--- Icon ---}
+      {
       wbICON,
+      }
 
       {--- Sound ---}
+      {
       wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
       wbRegionSounds,
+      }
 
       {--- Map ---}
+      {
       wbLString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
+      }
 
       {followed by one of these: }
 
       {--- Objects ---}
+      (*
       wbArray(RDOT, 'Objects', wbStruct('Object', [
         wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT, SCOL]),
         wbInteger('Parent Index', itU16, wbHideFFFF),
@@ -15902,22 +15915,25 @@ begin
         wbByteArray('Unknown', 2),
         wbByteArray('Unknown', 4)
       ]), 0, nil, nil, cpNormal, False, wbREGNObjectsDontShow),
+      *)
 
       {--- Grass ---}
+      {
       wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
         wbFormIDCk('Grass', [GRAS]),
         wbByteArray('Unknown',4)
       ]), 0, cpNormal, False, nil, nil, wbREGNGrassDontShow),
+      }
 
       {--- Weather ---}
       wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
         wbFormIDCk('Weather', [WTHR]),
         wbInteger('Chance', itU32),
         wbFormIDCk('Global', [GLOB, NULL])
-      ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow),
+      ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow)
 
-      wbFloat(RLDM, 'LOD Display Distance Multiplier'),
-      wbFloat(ANAM, 'Occlusion Accuracy Dist')
+//      wbFloat(RLDM, 'LOD Display Distance Multiplier'),
+//      wbFloat(ANAM, 'Occlusion Accuracy Dist')
 
     ], []))
   ], True);
@@ -17211,11 +17227,15 @@ begin
     wbFULL
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(RFGP, 'Reference Group', [
     wbEDID,
+    wbBaseFormComponents,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
-    wbUnknown(PNAM)
+    wbUnknown(PNAM),
+    wbUnknown(LNAM),
+    wbUnknown(MNAM)
   ]);
 
   {wbRecord(RGDL, 'RGDL', [

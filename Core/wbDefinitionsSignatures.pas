@@ -374,7 +374,7 @@ const
   XVL2 : TwbSignature = 'XVL2'; { New To Starfield }
   XVOI : TwbSignature = 'XVOI'; { New To Starfield }
   XGOM : TwbSignature = 'XGOM'; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
+  RABG : TwbSignature = 'RABG'; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
