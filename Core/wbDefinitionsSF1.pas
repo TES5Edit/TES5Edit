@@ -15356,15 +15356,19 @@ begin
   ]), [
     wbEDID,
     wbVMAD,
+    wbXALG,
+    wbBaseFormComponents,
     wbFormIDCk(NAME, 'Base', sigBaseObjects, False, cpNormal, True),
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
+    {
     wbStruct(XMBO, 'Bound Half Extents', [
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
     ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    }
 
     {--- Primitive ---}
     wbStruct(XPRM, 'Primitive', [
@@ -15385,18 +15389,22 @@ begin
       ]))
     ]),
 
+    {
     wbArray(XPOD, 'Portal Data', wbStruct('References', [
       wbFormIDCk('Origin', [REFR, NULL]),
       wbFormIDCk('Destination', [REFR, NULL])
     ])),
+    }
 
+    {
     // not seen in FO4 vanilla files, but can be added in CK
     wbSizePosRot(XPTL, 'Room Portal'),
+    }
 
-    wbUnknown(XORD),
+    //wbUnknown(XORD),
 
-    wbSizePosRot(XOCP, 'Occlusion Plane Data'),
-
+    //wbSizePosRot(XOCP, 'Occlusion Plane Data'),
+    {
     wbRStruct('Bound Data', [
       wbStruct(XRMR, 'Header', [
         wbInteger('Linked Rooms Count', itU8),
@@ -15419,10 +15427,10 @@ begin
       ).SetCountPath('XRMR\Linked Rooms Count')
     ], []),
     wbEmpty(XMBP, 'MultiBound Primitive Marker', cpIgnore),
-
+    }
     {--- Ragdoll ---}
     wbXRGD,
-    wbXRGB,
+//    wbXRGB,
 
     wbFloat(XRDS, 'Radius'),
 
@@ -15437,6 +15445,7 @@ begin
       wbFloat('Volumetric Intensity')
     ], cpNormal, False, nil, 4),
     {--- Lit Water ---}
+    {
     wbRArrayS('Lit Water',
       wbFormIDCk(XLTW, 'Water', [REFR])
     ),
@@ -15444,6 +15453,7 @@ begin
       wbInteger('Cutoff', itU8),
       wbInteger('Base', itU8)
     ]),
+    }
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [
@@ -15459,9 +15469,10 @@ begin
     wbFormIDCk(XTNM, 'Teleport Loc Name', [MESG]),
 
     {--- MultiBound ---}
-    wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+    //wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Placed Water ---}
+    {
     wbUnknown(XWCN),
     wbStruct(XWCU, 'Water Velocity', [
       wbFloat('X Offset'),
@@ -15473,20 +15484,23 @@ begin
       wbFloat('Z Angle'),
       wbByteArray('Unknown', 0)
     ]),
+    }
 
-    wbFormIDCk(XASP, 'Acoustic Restriction', [REFR]),
+    //wbFormIDCk(XASP, 'Acoustic Restriction', [REFR]),
     wbEmpty(XATP, 'Activation Point'),
-    wbInteger(XAMC, 'Ammo Count', itU32),
+    //wbInteger(XAMC, 'Ammo Count', itU32),
     wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
-    wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+    //wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
+    {
     wbStruct(XRDO, 'Radio', [
       wbFloat('Frequency'),
       wbFloat('Min Weak Distance'),
       wbFloat('Max Weak Distance'),
       wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
     ]),
+    }
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
@@ -15512,9 +15526,10 @@ begin
       //    4d. Color (RGB): 0, 128, 128
       //    4e. Unknown: 0.4
     ]),
-    wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
+    //wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
 
     {--- Activate Parents ---}
+    {
     wbRStruct('Activate Parents', [
       wbInteger(XAPD, 'Flags', itU8, wbFlags([
         'Parent Activate Only'
@@ -15526,13 +15541,13 @@ begin
         ])
       )
     ], []),
-
-    wbFormIDCk(XLIB, 'Leveled Item Base Object', [LVLI]),
+    }
+    //wbFormIDCk(XLIB, 'Leveled Item Base Object', [LVLI]),
     wbXLCM,
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
     {>>> COLL form Index value <<<}
-    wbInteger(XTRI, 'Collision Layer', itU32),
+    //wbInteger(XTRI, 'Collision Layer', itU32),
 
     {--- Lock ---}
     wbStruct(XLOC, 'Lock Data', [
@@ -15565,7 +15580,7 @@ begin
       wbByteArray('Unused', 2, cpIgnore)
     ]),
 
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+    //wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
@@ -15593,7 +15608,7 @@ begin
     wbActionFlag,
 
     wbFloat(XHTW, 'Head-Tracking Weight'),
-    wbFloat(XFVC, 'Favor Cost'),
+    //wbFloat(XFVC, 'Favor Cost'),
 
     wbEmpty(ONAM, 'Open by Default'),
 
@@ -15713,7 +15728,10 @@ begin
           99, 'Custom 99'
         ])),
         wbByteArray('Unused', 1)
-      ], cpNormal, True)
+      ], cpNormal, True),
+      wbUnknown(VNAM),
+      wbUnknown(UNAM),
+      wbUnknown(VISI)
     ], []),
 
     {--- Attach reference ---}
@@ -15724,6 +15742,7 @@ begin
       wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
     ])),
 
+    {
     wbRStruct('Power Grid', [
       wbInteger(XWPG, 'Count', itU32),
       wbRArray('Connections', wbStruct(XWPN, 'Connection', [
@@ -15732,15 +15751,59 @@ begin
         wbFormIDCk('Line', [REFR, NULL]) // BNDS ref
       ]))
     ], []),
+    }
 
-    wbUnknown(XCVR),
-    wbUnknown(XCVL),
-    wbFormIDCk(XCZR, 'Current Zone Reference', sigReferences),
+    //wbUnknown(XCVR),
+    //wbUnknown(XCVL),
+    //wbFormIDCk(XCZR, 'Current Zone Reference', sigReferences),
     wbUnknown(XCZA),
     wbFormIDCk(XCZC, 'Current Zone Cell', [CELL, NULL]),
 
+    wbUnknown(TODD),
+    wbUnknown(XALD),
+    wbUnknown(XBPO),
+    wbUnknown(XCDD),
+    wbUnknown(XCOL),
+    wbRStruct('Unknown', [
+      wbUnknown(XDTS),
+      wbUnknown(XDTF)
+    ], []),
+    wbUnknown(XEED),
+    wbUnknown(XFLG),
+    wbUnknown(XGDS),
+    wbUnknown(XLBD),
+    wbUnknown(XLCD),
+    wbUnknown(XLFD),
+    wbUnknown(XLGD),
+    wbUnknown(XLLD),
+    wbUnknown(XLMS),
+    wbUnknown(XLRD),
+    wbUnknown(XLSM),
+    wbUnknown(XLVD),
+    wbUnknown(XNSE),
+    wbUnknown(XPCK),
+    wbUnknown(XPCS),
+    wbUnknown(XPDO),
+    wbUnknown(XSAD),
+    wbUnknown(XSL1),
+    wbUnknown(XTV2),
+    wbUnknown(XVL2),
+    wbUnknown(XVOI),
+    wbUnknown(XPPS),
+    wbRStruct('Unknown', [
+      wbUnknown(XWPK).SetRequired(True),
+      wbUnknown(GNAM),
+      wbUnknown(HNAM),
+      wbUnknown(INAM),
+      wbUnknown(JNAM),
+      wbUnknown(LNAM),
+      wbUnknown(XGOM),
+      wbUnknown(XWPK).SetRequired(True)
+    ], []),
+
     wbXSCL,
-    wbXLOD, // not seen in FO4 vanilla files
+    wbUnknown(BOLV),
+//    wbXLOD, // not seen in FO4 vanilla files
     wbDataPosRot,
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
@@ -18111,9 +18174,9 @@ begin
       wbUnknown(4)
     ]),
     wbFormID(CNAM, 'Icon Source'),
-    wbUnknown(NNAM), // always 2 byte $0000
+    wbUnknown(NNAM,2), // always 2 byte $0000
     wbFloat(SNAM),
-    wbUnknown(TNAM), // always 1 byte $00
+    wbUnknown(TNAM,1), // always 1 byte $00
     wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);

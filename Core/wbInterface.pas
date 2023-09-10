@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License,
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
+  This Source Code Form is subject to the terms of the Mozilla Public License, 
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -47,13 +47,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'h';
+    Build   : 'j';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010407;
-  wbDeveloperMessageVersion : Integer = 0401047;
+  wbWhatsNewVersion : Integer = 04010410;
+  wbDeveloperMessageVersion : Integer = 04010410;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
