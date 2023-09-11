@@ -62,6 +62,7 @@ var
   wbHitBehaviourEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
   wbPronounEnum: IwbEnumDef;
+  wbLRNM: IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -6512,6 +6513,14 @@ begin
     {2} 'She/Her',
     {3} 'They/Them'
   ]);
+
+  wbLRNM := wbEnum([
+        'Learned when picked up or by script',
+        'Learned by scrapping',
+        'Learned when ingested',
+        'Known by default or when conditions are met',
+        'Learned from plan'
+      ]);
 
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
@@ -14042,7 +14051,7 @@ begin
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
     wbPUSHPDSH,
-    wbUnknown(LRNM), // always 1 byte value $03
+    wbInteger(LRNM, 'Learn Method', itU8, wbLRNM),
     wbInteger(DATA, 'Value', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
 //    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
