@@ -62,7 +62,7 @@ var
   wbHitBehaviourEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
   wbPronounEnum: IwbEnumDef;
-  wbLRNM: IwbEnumDef;
+  wbLearnMethodEnum : IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -6514,7 +6514,7 @@ begin
     {3} 'They/Them'
   ]);
 
-  wbLRNM := wbEnum([
+  wbLearnMethodEnum  := wbEnum([
         'Learned when picked up or by script',
         'Learned by scrapping',
         'Learned when ingested',
@@ -14051,7 +14051,7 @@ begin
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
     wbPUSHPDSH,
-    wbInteger(LRNM, 'Learn Method', itU8, wbLRNM),
+    wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum ),
     wbInteger(DATA, 'Value', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
 //    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -17630,7 +17630,7 @@ begin
 //    wbICON,
 //    wbCTDAs,
     wbUnknown(FNAM),
-    wbUnknown(HNAM),
+    wbString(HNAM),
     //wbStruct(FNAM, 'Unknown', [
     //  wbInteger('Unknown 1', itU32),
     //  wbFloat('Unknown 2'),
