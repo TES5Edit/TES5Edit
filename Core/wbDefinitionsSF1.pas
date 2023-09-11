@@ -61,6 +61,7 @@ var
   wbReverbClassEnum: IwbEnumDef;
   wbHitBehaviourEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
+  wbPronounEnum: IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -3080,7 +3081,9 @@ type
     {55} ptWorldspace,         // WRLD
     {56} ptDamageType,         // DMGT
     {57} ptResearchProject,    // RSPJ
-    {58} ptConditionForm       // CNDF
+    {58} ptConditionForm,      // CNDF
+    {58} ptPronoun             //Enum: Pronouns
+
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3094,7 +3097,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..599] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..600] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3673,6 +3676,7 @@ const
     (Index: 928; Name: 'EPGetLastCombatHitGunBash'; Desc: 'Was the last combat hit we caused a gun bash?'),
     (Index: 929; Name: 'EPIsLastCombatHitLimbInCategory'; Desc: 'Check if the last combat hit limb in limb category'),
     (Index: 930; Name: 'IsEditorLocationInsidePrimitive'; Desc: 'Check if the reference''s editor location is inside a specified primitive'),
+    (Index: 931; Name: 'GetIsPronoun'; Desc: 'Does the reference NPC use the given pronoun?'; ParamType1: ptPronoun),
     (Index: 932; Name: 'GetDistanceGalacticLightYears'; Desc: 'Get the distance between two references in lightyears.'; ParamType1: ptActor),
     (Index: 933; Name: 'GetDistanceFromCelestialBodyAliasLightyears'; Desc: 'Gets the distance from the given alias in terms of lightyears.'),
     (Index: 934; Name: 'IsOnPlayerHomeSpaceShip'; Desc: 'Is the ref on the player''s home ship?'),
@@ -3694,7 +3698,7 @@ const
     (Index: 955; Name: 'BodyHasResourceWithKeyword'; Desc: 'Does the ref object''s current planetary body have a resource with the given keyword? Optional integer 1 to include atmospheric resources.'),
     (Index: 957; Name: 'GetShipReactorClass'; Desc: 'Gets a value representing the ship reactor class (based on its index in the ShipClassOrder form list)'),
     (Index: 958; Name: 'ShipReactorHasClassKeyword'; Desc: 'Check if the reactor of the supplied ship has the provided reactor class keyword (keywords in ShipClassOrder form list)'),
-    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')
+    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')         //600
   );
 
 var
@@ -6502,6 +6506,13 @@ begin
     'Fifth Star Slot'
   ]);
 
+  wbPronounEnum := wbEnum([
+    {0} 'Unspecified',
+    {1} 'He/Him',
+    {2} 'She/Her',
+    {3} 'They/Them'
+  ]);
+
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
@@ -8331,7 +8342,9 @@ begin
           {57 ptResearchProject}
           wbFormIDCkNoReach('Research Project', [RSPJ]),
           {58 ptConditionForm}
-          wbFormIDCkNoReach('Condition Form', [CNDF])
+          wbFormIDCkNoReach('Condition Form', [CNDF]),
+          {59 ptPronoun}
+          wbInteger('Pronouns', itU32, wbPronounEnum)
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
