@@ -1334,6 +1334,9 @@ begin
 
   wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
 
+  if FindCmdLineSwitch('moreunknown') then
+    wbMoreInfoForUnknown := True;
+
   try
     if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
       wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
