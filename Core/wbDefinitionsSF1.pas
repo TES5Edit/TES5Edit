@@ -10172,7 +10172,7 @@ begin
     wbFormIDCkNoReach(BNAM, 'Branch', [DLBR]),
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST], False, cpNormal, False),
     wbFormIDCk(KNAM, 'Keyword', [KYWD]),
-    wbUnknown(ANAM),
+    wbFormIDCk(ANAM, 'Affinity Event', [AFFE]),
     wbStruct(DATA, 'Data', [
       // this should not be named Flags since TwbFile.BuildReachable
       // expects Top-Level flag here from FNV
@@ -14334,7 +14334,6 @@ begin
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
 //    wbFormIDCk(GNAM, 'Gift Filter', [FLST], False, cpNormal, False),
     wbUnknown(NAM5, cpNormal, True),
-    wbUnknown(NAM6, cpNormal, True),
     wbFloat(NAM6, 'Height Min', cpNormal, True),
 //    wbFloat(NAM7, 'Unused', cpNormal, True),
     wbFloat(NAM4, 'Height Max'),
@@ -14352,7 +14351,7 @@ begin
       wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
     }
       wbUnknown(CS3H),
-      wbUnknown(CS3S),
+      wbSHDef(CS3S),
       wbUnknown(CS3F),
       wbUnknown(CS3E)
     ], []),
@@ -14360,8 +14359,8 @@ begin
 //    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
 
     wbRStruct('Unknown', [
-      wbUnknown(QSTA),
-      wbUnknown(BNAM)
+      wbFormIDCk(QSTA, 'Unknown', [QUST]),
+      wbFormIDCk(BNAM, 'Unknown', [DLBR])
     ], []),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
@@ -14370,12 +14369,17 @@ begin
     wbFormID(HEFA, 'Unknown'),
     wbInteger(EDCT, 'Unknown Count', itU8),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(MNAM).SetRequired(True),
+      wbInteger(MNAM, 'Unknown', itU32).SetRequired(True),
       wbString(TNAM, 'Unknown').SetRequired(True),
       wbString(QNAM, 'Unknown').SetRequired(True),
       wbString(VNAM, 'Unknown').SetRequired(True),
-      wbUnknown(NNAM).SetRequired(True),
-      wbUnknown(INTV).SetRequired(True)
+      wbStruct(NNAM, 'Tint Color Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbInteger('Unused', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA).SetRequired(True),
+      wbInteger(INTV, 'Unknown', itU32).SetRequired(True)
     ], []),
 
     wbStruct(MRSV, 'Body Morph Region Values', [
@@ -14411,7 +14415,7 @@ begin
     wbString(FHCL, 'Unknown'),
     wbString(BCOL, 'Unknown'),
     wbString(ECOL, 'Unknown'),
-    wbUnknown(JCOL),
+    wbString(JCOL, 'Unknown'),
     wbString(TETC, 'Unknown'),
     wbInteger(PRON, 'Unknown', itU8),
     wbUnknown(ONA2)
