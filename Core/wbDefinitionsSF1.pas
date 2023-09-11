@@ -149,6 +149,12 @@ var
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbCTDAsCount: IwbSubRecordArrayDef;
   wbConditions: IwbSubRecordStructDef;
+  wbATCP: IwbSubRecordDef;
+  wbATCPReq: IwbSubRecordDef;
+  wbATAN: IwbSubRecordStructDef;
+  wbATANs: IwbSubRecordArrayDef;
+  wbATANsCount: IwbSubRecordArrayDef;
+  wbActivityTracker: IwbSubRecordStructDef;
   wbXESP: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbMICO: IwbSubRecordDef;
@@ -8626,6 +8632,28 @@ begin
     wbCTDAsCount.SetRequired(True)
   ], []);
 
+  wbATCP := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign);
+  wbATCPReq := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign, True);
+  wbATAN := wbRStruct('Activity', [
+      wbString(ATAN),
+      wbFULL,
+      wbDESC.SetRequired(True),
+      wbRStructs('Progression Evaluator', 'Argument', [
+        wbString(DNAM, 'Name').SetRequired(True),
+        wbCITCReq,
+        wbCTDAsCount.SetRequired(False)
+      ], []).SetRequired(True),
+      wbRStruct('Progression Configuration', [
+        wbString(ANAM).SetRequired(True),
+        wbString(ATAV, 'Configuration').SetRequired(True),
+        wbUnknown(ATAF).SetRequired(True)
+      ], []).SetRequired(True)], []);
+  wbATANs := wbRArray('Activities', wbATAN, cpNormal, False);
+  wbATANsCount := wbRArray('Activities', wbATAN, cpNormal, False, nil, wbATANsAfterSet);
+  wbActivityTracker := wbRStruct('Activity Tracker', [
+    wbATCPReq,
+    wbATANsCount.SetRequired(True)
+  ], []);
 
   wbICON := wbString(ICON, 'Inventory Image');
   wbMICO := wbString(MICO, 'Message Icon');
@@ -8668,18 +8696,7 @@ begin
         ], []),
         //BGSActivityTracker
         wbRStruct('Component Data', [
-          wbUnknown(ATCP),
-          wbString(ATAN),
-          wbFULL,
-          wbDESC,
-          wbRStructs('Unknown', 'Unknown', [
-            wbString(DNAM),
-            wbCITCReq,
-            wbCTDAsCount
-          ], []),
-          wbString(ANAM),
-          wbUnknown(ATAV),
-          wbUnknown(ATAF)
+          wbActivityTracker
         ], []),
         wbRStruct('Component Data', [
           wbArray(BUO4, 'Unknown',
@@ -9083,16 +9100,6 @@ begin
 
   wbObjectModProperties :=
    wbArrayS('Properties', wbStructSK([4], 'Property', [
-        wbUnknown(4),
-        wbUnknown(4),
-        wbInteger('Signature', itU32, wbChar4, cpNormal, True), // this seems to replace the itU8 as the enum for the function
-        wbByteArray('Value 1', 4),                              // thus the 12 bytes following are the data related to the function
-        wbByteArray('Value 2', 4),
-        wbUnknown(4)
-      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
-
-(*
-    wbArrayS('Properties', wbStructSK([4], 'Property', [
       wbInteger('Value Type', itU8, wbEnum([
         {0} 'Int',
         {1} 'Float',
@@ -9110,8 +9117,7 @@ begin
         { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
       wbByteArray('Unused', 3, cpIgnore),
-      wbInteger('Property', itU16, wbObjectModPropertyToStr, wbObjectModPropertyToInt),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbInteger('Unknown Identifier', itU32, wbChar4, cpNormal, True),
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
         { 1} wbInteger('Value 1 - Int', itU32),
@@ -9130,8 +9136,7 @@ begin
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
       wbFloat('Step')
-    ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
-*)
+      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
 
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
@@ -11323,6 +11328,23 @@ begin
     wbFULL,
     wbDESCReq,
     wbStruct(DATA, 'Data', [
+      wbInteger('Perk Category', itU8, wbEnum([
+        {0} 'None',
+        {1} 'Combat',
+        {2} 'Science',
+        {3} 'Tech',
+        {4} 'Physical',
+        {5} 'Social',
+        {6} 'All',
+        {7} 'AllIncludingNone'
+      ])),
+      wbInteger('Perk Skill Group', itU8, wbEnum([
+        {0} 'None',
+        {1} 'Basic',
+        {2} 'Advanced',
+        {3} 'Expert',
+        {4} 'Master'
+      ])),
       wbUnknown
       {
       wbInteger('Trait', itU8, wbBoolEnum),
@@ -11337,27 +11359,14 @@ begin
     wbFormIDCk(UNAM, 'Unknown' , [PERK]), // unknown what order relative to TNAM and GNAM
 
     wbRStructs('Ranks', 'Rank', [
-      wbUnknown(PRRK),
+      wbEmpty(PRRK, 'Header Marker').SetRequired(True),
       wbRArrayS('Effects', wbPerkEffect),
       wbCTDAs,
-      wbUnknown(ATCP),
-      wbString(ATAN),
-      wbFULL,
-      wbDESC,
-      wbRStructs('Unknown', 'Unknown', [
-        wbString(DNAM),
-        wbCITCReq,
-        wbCTDAsCount
-      ], []),
-      wbRStruct('Unknown', [
-        wbString(ANAM).SetRequired(True),
-        wbUnknown(ATAV).SetRequired(True),
-        wbUnknown(ATAF).SetRequired(True),
-        wbDESC.SetRequired(True)
-      ], []),
-      wbUnknown(PRRF).SetRequired(True)
+      wbActivityTracker,
+      wbDESC.SetRequired(True),
+      wbEmpty(PRRF, 'End Marker').SetRequired(True)
     ], []),
-    wbRArray('Unknown', wbFormIDCk(RNAM, 'Unknown', [PERK]))
+    wbRArray('Background Skills', wbFormIDCk(RNAM, 'Unknown', [PERK]))
 
     (*
     //wbString(ICON, 'Image'), not in Starfield.esm
