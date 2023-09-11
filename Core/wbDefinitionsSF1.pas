@@ -9091,16 +9091,6 @@ begin
 
   wbObjectModProperties :=
    wbArrayS('Properties', wbStructSK([4], 'Property', [
-        wbUnknown(4),
-        wbUnknown(4),
-        wbInteger('Signature', itU32, wbChar4, cpNormal, True), // this seems to replace the itU8 as the enum for the function
-        wbByteArray('Value 1', 4),                              // thus the 12 bytes following are the data related to the function
-        wbByteArray('Value 2', 4),
-        wbUnknown(4)
-      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
-
-(*
-    wbArrayS('Properties', wbStructSK([4], 'Property', [
       wbInteger('Value Type', itU8, wbEnum([
         {0} 'Int',
         {1} 'Float',
@@ -9118,8 +9108,7 @@ begin
         { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
       wbByteArray('Unused', 3, cpIgnore),
-      wbInteger('Property', itU16, wbObjectModPropertyToStr, wbObjectModPropertyToInt),
-      wbByteArray('Unused', 2, cpIgnore),
+      wbInteger('Unknown Identifier', itU32, wbChar4, cpNormal, True),
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
         { 1} wbInteger('Value 1 - Int', itU32),
@@ -9138,8 +9127,7 @@ begin
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
       wbFloat('Step')
-    ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
-*)
+      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
 
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
