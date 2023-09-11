@@ -61,6 +61,8 @@ var
   wbReverbClassEnum: IwbEnumDef;
   wbHitBehaviourEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
+  wbPronounEnum: IwbEnumDef;
+  wbLearnMethodEnum : IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -3094,7 +3096,10 @@ type
     {54} ptWeather,            // WTHR
     {55} ptWorldspace,         // WRLD
     {56} ptDamageType,         // DMGT
-    {57} ptResearchProject     // RSPJ
+    {57} ptResearchProject,    // RSPJ
+    {58} ptConditionForm,      // CNDF
+    {58} ptPronoun             //Enum: Pronouns
+
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3108,7 +3113,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..599] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..600] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3609,9 +3614,9 @@ const
     (Index: 834; Name: 'HasHerdLeader'; Desc: 'Has a herd Leader.'),
     (Index: 835; Name: 'TrySetPlayerHomeSpaceShip'; Desc: 'Attempt to set Player Home Ship. Returns true if home ship is set.'),
     (Index: 836; Name: 'GetPlayerHomeSpaceShip'; Desc: ' Get Player Home Ship.'),
-    (Index: 837; Name: 'IsTrueForConditionForm'; Desc: 'See if the condition is true or false for the subject.'),
+    (Index: 837; Name: 'IsTrueForConditionForm'; Desc: 'See if the condition is true or false for the subject.'; ParamType1: ptConditionForm),
     (Index: 838; Name: 'GetNumElementsInRefCollection'; Desc: 'Gets the number of elements in a ref collection'),
-    (Index: 839; Name: 'GetCurrentWeatherHasKeyword'; Desc: 'Check to see if the current weather has the provided keyword.'),
+    (Index: 839; Name: 'GetCurrentWeatherHasKeyword'; Desc: 'Check to see if the current weather has the provided keyword.'; ParamType1: ptKeyword),
     (Index: 840; Name: 'IsSnappedTo'; Desc: 'Is the given reference snapped to this other reference?'),
     (Index: 841; Name: 'HasKeywordOnNode'; Desc: 'Checks for a specific keyword on the node that is snapped to.'),
     (Index: 842; Name: 'HasKeywordOnStacked'; Desc: 'Checks for a specific keyword on the object I am stacked atop.'),
@@ -3626,14 +3631,14 @@ const
     (Index: 851; Name: 'GetIsCurrentLocationExact'; Desc: 'Is the ref currently in the given location?'),
     (Index: 852; Name: 'GetIsEditorLocationExact'; Desc: 'Is the ref''s editor location in the given location?'),
     (Index: 853; Name: 'IsInThreatBackdown'; Desc: 'Has the actor already done threadbackdown for current radius reaction?'),
-    (Index: 854; Name: 'IsInsidePrimitive'; Desc: 'Check if the reference is inside a specified primitive.'),
+    (Index: 854; Name: 'IsInsidePrimitive'; Desc: 'Check if the reference is inside a specified primitive.'; ParamType1: ptKeyword),
     (Index: 855; Name: 'GetCameraActorCount'; Desc: 'Returns the number of non-player actors who will talk in the scene'),
-    (Index: 856; Name: 'GetIsCurrentLocationAliasExact'; Desc: 'Is the ref currently in the exact given location of our owner quest?'),
+    (Index: 856; Name: 'GetIsCurrentLocationAliasExact'; Desc: 'Is the ref currently in the exact given location of our owner quest?'; ParamType1: ptAlias),
     (Index: 857; Name: 'IsJailInSystem'; Desc: 'See if the ref''s crime faction has a jail in the player''s current system.'),
-    (Index: 858; Name: 'BodyHasKeyword'; Desc: 'Does the ref object''s current planetary body use the keyword in the parameter data?'),
-    (Index: 859; Name: 'BiomeHasKeyword'; Desc: 'Does the ref object''s current biome use the keyword in the parameter data?'),
-    (Index: 860; Name: 'SystemHasKeyword'; Desc: 'Does the ref object''s current planetary system use the keyword in the parameter data?'),
-    (Index: 861; Name: 'GetDistanceFromLocationWithKeyword'; Desc: 'Get the distance from the ref to any location with a specific keyword.'),
+    (Index: 858; Name: 'BodyHasKeyword'; Desc: 'Does the ref object''s current planetary body use the keyword in the parameter data?'; ParamType1: ptKeyword),
+    (Index: 859; Name: 'BiomeHasKeyword'; Desc: 'Does the ref object''s current biome use the keyword in the parameter data?'; ParamType1: ptKeyword),
+    (Index: 860; Name: 'SystemHasKeyword'; Desc: 'Does the ref object''s current planetary system use the keyword in the parameter data?'; ParamType1: ptKeyword),
+    (Index: 861; Name: 'GetDistanceFromLocationWithKeyword'; Desc: 'Get the distance from the ref to any location with a specific keyword.'; ParamType1: ptKeyword),
     (Index: 862; Name: 'GetPlanetVisited'; Desc: 'Has the ref object''s current planet been visited by the player?'),
     (Index: 863; Name: 'IsLocalDay'; Desc: 'Check if the sun is up on the current planet.'),
     (Index: 864; Name: 'SpeechChallengePreviousSceneHasKeyword'; Desc: 'Does the last speech challenge scene have a keyword?'),
@@ -3652,7 +3657,7 @@ const
     (Index: 877; Name: 'HasPerkSkillGroup'; Desc: 'Checks if the owner of an activity is a perk of a certain skill group.'),
     (Index: 878; Name: 'CountAquiredPerkRanksByType'; Desc: 'Gets the total amount of acquired perk ranks.'),
     (Index: 879; Name: 'IsScanned'; Desc: 'Check if a object has been scanned.'),
-    (Index: 880; Name: 'IsScannableKeywordRevealed'; Desc: 'Check if a scannable object has a piece of information revealed.'),
+    (Index: 880; Name: 'IsScannableKeywordRevealed'; Desc: 'Check if a scannable object has a piece of information revealed.'; ParamType1: ptKeyword),
     (Index: 881; Name: 'IsMyVictim'; Desc: 'Check if dead actor was killed by this actor or this actor''s ally/friend or this actor''s herd.'),
     (Index: 882; Name: 'GetResourceScarcity'; Desc: 'Get produced resource scarcity.'),
     (Index: 883; Name: 'CheckContrabandStatus'; Desc: 'Retrieve the ship''s contraband status.'),
@@ -3664,22 +3669,22 @@ const
     (Index: 892; Name: 'SystemBodyHasKeyword'; Desc: 'Does the ref object''s current planetary system use the given keyword?'),
     (Index: 894; Name: 'GetShipGroupThreatRatio'; Desc: 'Calculates the threat ratio between the group of pilots defined by the subject''s group vs. the group of pilots defined by the target''s group.'),
     (Index: 895; Name: 'IsOnGrazingTerrain'; Desc: 'Is the actor standing on grazing ground?'),
-    (Index: 896; Name: 'GetDistanceGalacticParsec'; Desc: 'Get the distance between two references in parsecs.'),
+    (Index: 896; Name: 'GetDistanceGalacticParsec'; Desc: 'Get the distance between two references in parsecs.'; ParamType1: ptActor),
     (Index: 897; Name: 'GetDistanceGalacticMegaMeter'; Desc: 'Get the distance between two references in mega meters.'),
     (Index: 898; Name: 'GetShipToShipGroupThreatRatio'; Desc: 'Calculates the threat ratio between the ship (or pilot) of the subject vs. the group of ships allied to the target.'),
     (Index: 899; Name: 'GetGroupMembersInRadiusCount'; Desc: 'Check if an AI has any combat group members within the radius.'),
     (Index: 900; Name: 'GetShipPiracyValue'; Desc: 'Calculates the piracy value of the subject ref vs the target ref''s group of allied ships.'),
     (Index: 901; Name: 'GetDistanceFromCelestialBodyAliasParsecs'; Desc: 'Gets the distance from the given alias in terms of parsecs.'),
     (Index: 902; Name: 'GetDistanceFromCelestialBodyAliasMegaMeters'; Desc: 'Gets the distance from the given alias in terms of mega meters.'),
-    (Index: 904; Name: 'IsInsidePrimitiveTopAndBottom'; Desc: 'Check if the reference''s top and bottom are in a specified primitive.'),
+    (Index: 904; Name: 'IsInsidePrimitiveTopAndBottom'; Desc: 'Check if the reference''s top and bottom are in a specified primitive.'; ParamType1: ptKeyword),
     (Index: 905; Name: 'GetPlayerBountyCrimeFaction'; Desc: 'Check the last crime faction for player bounty.'),
     (Index: 906; Name: 'GetIsFloating'; Desc: 'Gets whether or not the actor is floating.'),
-    (Index: 907; Name: 'LocationOrParentHasKeyword'; Desc: 'Determine if a location, or any of its parent locations, has a keyword.'),
+    (Index: 907; Name: 'LocationOrParentHasKeyword'; Desc: 'Determine if a location, or any of its parent locations, has a keyword.'; ParamType1: ptKeyword),
     (Index: 908; Name: 'IsCelestialBodyScanned'; Desc: 'Get whether the celestial body is scanned.'),
     (Index: 912; Name: 'IsActorReactionInCooldown'; Desc: 'Get whether an actor''s reaction is in cooldown or not.'),
-    (Index: 916; Name: 'BiomeSupportsCreature'; Desc: 'Does the actor parameter resolve to a creature in the planet''s biome''s creature list?'),
+    (Index: 916; Name: 'BiomeSupportsCreature'; Desc: 'Does the actor parameter resolve to a creature in the planet''s biome''s creature list?'; ParamType1: ptActorBase),
     (Index: 921; Name: 'IsFacingActor'; Desc: 'Is the actor facing the refr?'),
-    (Index: 923; Name: 'GetValueCurrentLocation'; Desc: 'Get an actor value from the reference''s current location'),
+    (Index: 923; Name: 'GetValueCurrentLocation'; Desc: 'Get an actor value from the reference''s current location'; ParamType1: ptActorValue),
     (Index: 924; Name: 'IsBoostPackActive'; Desc: 'Is player''s boost pack active?'),
     (Index: 925; Name: 'GetTimeSinceLastBoostPackEnded'; Desc: 'Get time since last boost pack ended, in seconds.'),
     (Index: 926; Name: 'EPGetLastCombatHitCritical'; Desc: 'Was the last combat hit we caused a Critical?'),
@@ -3687,7 +3692,8 @@ const
     (Index: 928; Name: 'EPGetLastCombatHitGunBash'; Desc: 'Was the last combat hit we caused a gun bash?'),
     (Index: 929; Name: 'EPIsLastCombatHitLimbInCategory'; Desc: 'Check if the last combat hit limb in limb category'),
     (Index: 930; Name: 'IsEditorLocationInsidePrimitive'; Desc: 'Check if the reference''s editor location is inside a specified primitive'),
-    (Index: 932; Name: 'GetDistanceGalacticLightYears'; Desc: 'Get the distance between two references in lightyears.'),
+    (Index: 931; Name: 'GetIsPronoun'; Desc: 'Does the reference NPC use the given pronoun?'; ParamType1: ptPronoun),
+    (Index: 932; Name: 'GetDistanceGalacticLightYears'; Desc: 'Get the distance between two references in lightyears.'; ParamType1: ptActor),
     (Index: 933; Name: 'GetDistanceFromCelestialBodyAliasLightyears'; Desc: 'Gets the distance from the given alias in terms of lightyears.'),
     (Index: 934; Name: 'IsOnPlayerHomeSpaceShip'; Desc: 'Is the ref on the player''s home ship?'),
     (Index: 937; Name: 'IsPlayerSteadyingWeapon'; Desc: 'Is the player steadying their weapon?'),
@@ -3708,7 +3714,7 @@ const
     (Index: 955; Name: 'BodyHasResourceWithKeyword'; Desc: 'Does the ref object''s current planetary body have a resource with the given keyword? Optional integer 1 to include atmospheric resources.'),
     (Index: 957; Name: 'GetShipReactorClass'; Desc: 'Gets a value representing the ship reactor class (based on its index in the ShipClassOrder form list)'),
     (Index: 958; Name: 'ShipReactorHasClassKeyword'; Desc: 'Check if the reactor of the supplied ship has the provided reactor class keyword (keywords in ShipClassOrder form list)'),
-    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')
+    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')         //600
   );
 
 var
@@ -6609,6 +6615,21 @@ begin
     'Fifth Star Slot'
   ]);
 
+  wbPronounEnum := wbEnum([
+    {0} 'Unspecified',
+    {1} 'He/Him',
+    {2} 'She/Her',
+    {3} 'They/Them'
+  ]);
+
+  wbLearnMethodEnum  := wbEnum([
+        'Learned when picked up or by script',
+        'Learned by scrapping',
+        'Learned when ingested',
+        'Known by default or when conditions are met',
+        'Learned from plan'
+      ]);
+
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
@@ -8436,7 +8457,11 @@ begin
           {56 ptDamageType}
           wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
           {57 ptResearchProject}
-          wbFormIDCkNoReach('Research Project', [RSPJ])
+          wbFormIDCkNoReach('Research Project', [RSPJ]),
+          {58 ptConditionForm}
+          wbFormIDCkNoReach('Condition Form', [CNDF]),
+          {59 ptPronoun}
+          wbInteger('Pronouns', itU32, wbPronounEnum)
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -14137,7 +14162,7 @@ begin
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
     wbPUSHPDSH,
-    wbUnknown(LRNM), // always 1 byte value $03
+    wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum ),
     wbInteger(DATA, 'Value', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
 //    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -17716,7 +17741,7 @@ begin
 //    wbICON,
 //    wbCTDAs,
     wbUnknown(FNAM),
-    wbUnknown(HNAM),
+    wbString(HNAM),
     //wbStruct(FNAM, 'Unknown', [
     //  wbInteger('Unknown 1', itU32),
     //  wbFloat('Unknown 2'),
