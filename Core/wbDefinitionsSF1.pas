@@ -62,7 +62,8 @@ var
   wbHitBehaviourEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
   wbPronounEnum: IwbEnumDef;
-  wbLearnMethodEnum : IwbEnumDef;
+  wbLearnMethodEnum: IwbEnumDef;
+  wbPhotoModeEnum: IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -6515,12 +6516,18 @@ begin
   ]);
 
   wbLearnMethodEnum  := wbEnum([
-        'Learned when picked up or by script',
-        'Learned by scrapping',
-        'Learned when ingested',
-        'Known by default or when conditions are met',
-        'Learned from plan'
+    {0} 'Learned when picked up or by script',
+    {1} 'Learned by scrapping',
+    {2} 'Learned when ingested',
+    {3} 'Known by default or when conditions are met',
+    {4} 'Learned from plan'
       ]);
+
+  wbPhotoModeEnum  := wbEnum([
+    {0} 'Texture Overlay',
+    {1} 'Frame',
+    {2} 'Filter'
+  ]);
 
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
@@ -14051,7 +14058,7 @@ begin
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
     wbPUSHPDSH,
-    wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum ),
+    wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum),
     wbInteger(DATA, 'Value', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
 //    wbByteArray(NAM2, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -17629,8 +17636,19 @@ begin
     wbFULL,
 //    wbICON,
 //    wbCTDAs,
-    wbUnknown(FNAM),
-    wbString(HNAM),
+    wbStruct(FNAM, 'Unknown', [
+      wbInteger('Feature Type', itU8, wbPhotoModeEnum)          ,
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbUnknown(9),
+      wbInteger('Flags', itU32, wbFlags([
+      {0x01} '',
+      {0x02} 'Not Full Screen',
+      {0x04} 'Non-Playable'
+    ]), cpNormal, True),
+      wbUnknown()
+    ]),
+    wbString(HNAM, 'Texture'),
     //wbStruct(FNAM, 'Unknown', [
     //  wbInteger('Unknown 1', itU32),
     //  wbFloat('Unknown 2'),
