@@ -352,6 +352,110 @@ begin
   Result := AsCardinal;
 end;
 
+function wbSPCHQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+  Param1     : IwbElement;
+  MainRecord : IwbMainRecord;
+  EditInfos  : TStringList;
+  Stages     : IwbContainerElementRef;
+  Stage      : IwbContainerElementRef;
+  i, j       : Integer;
+  s, t       : string;
+begin;
+  case aType of
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve Quest>';
+    end;
+    ctToEditValue: Result := aInt.ToString;
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '<Warning: Could not resolve Quest>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if not wbTryGetContainingMainRecord(aElement, MainRecord) then
+    Exit;
+
+
+  Param1 := MainRecord.ElementByName['SPQU - Quest'];
+
+  if not wbTryGetMainRecord(Param1, MainRecord) then
+    Exit;
+
+  // get winning quest override except for partial forms
+  if MainRecord.WinningOverride.Flags._Flags and $00004000 = 0 then
+    MainRecord := MainRecord.WinningOverride
+  else if MainRecord.Flags._Flags and $00004000 <> 0 then
+    MainRecord := MainRecord.MasterOrSelf;
+
+  if MainRecord.Signature <> QUST then begin
+    case aType of
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+      end;
+      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Quest record>';
+    end;
+    Exit;
+  end;
+
+  case aType of
+    ctEditType: begin
+      Result := 'ComboBox';
+      Exit;
+    end;
+    ctEditInfo:
+      EditInfos := TStringList.Create;
+  else
+    EditInfos := nil;
+  end;
+  try
+    if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
+      for i := 0 to Pred(Stages.ElementCount) do
+        if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
+          j := Stage.ElementNativeValues['INDX\Stage Index'];
+          s := Trim(Stage.ElementValues['Log Entries\Log Entry\NAM2']);
+          t := IntToStr(j);
+          while Length(t) < 3 do
+            t := '0' + t;
+          if s <> '' then
+            t := t + ' ' + s;
+          if Assigned(EditInfos) then
+            EditInfos.AddObject(t, TObject(j))
+          else if j = aInt then begin
+            case aType of
+              ctToStr, ctToSummary, ctToEditValue: Result := t;
+              ctCheck: Result := '';
+            end;
+            Exit;
+          end;
+        end;
+    end;
+
+    case aType of
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      end;
+      ctCheck: Result := '<Warning: Quest Stage not found in "' + MainRecord.Name + '">';
+      ctEditInfo: begin
+        EditInfos.Sort;
+        Result := EditInfos.CommaText;
+      end;
+    end;
+  finally
+    FreeAndNil(EditInfos);
+  end;
+end;
+
 function wbCTDAParam2QuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   Container  : IwbContainerElementRef;
@@ -10320,7 +10424,7 @@ begin
       ]))
     ]),
     wbString(SNAM, 'Subtype Name', 4),
-    wbArray(TIFL, 'Unknown', wbFormIDCk('Unknown', [INFO])),
+    wbArray(TIFL, 'Topic Info List', wbFormIDCk('Topic', [INFO])),
     wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign),
     wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
     wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
@@ -12707,15 +12811,15 @@ begin
       wbUnknown(VENC),
 
       wbRStruct('Unknown', [
-        wbUnknown(DTGT),
+        wbUnknown(DTGT),      // "dialogue target"?
         wbRStructs('Unknown', 'Unknown', [
-          wbUnknown(ESCE),
+          wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),
           wbUnknown(PPST),
           wbUnknown(PNST),
           wbUnknown(PASP),
           wbUnknown(PAPI),
           wbUnknown(PAPN),
-          wbUnknown(ESCS).SetRequired(True)
+          wbFormIDCk(ESCS, 'NPC Response', [DIAL]).SetRequired(True)
         ], []),
         wbUnknown(ATTR),
         wbUnknown(ACBS)
@@ -12775,20 +12879,20 @@ begin
     wbFormIDCk(TNAM, 'Template Scene', [SCEN]),
     wbUnknown(BOLV),
     wbInteger(XNAM, 'Index', itU32),
-    wbUnknown(SCPI),
+    wbUnknown(SCPI),    // seems to be 1-100 - skill req? percentage increase?
     wbUnknown(JNAM),
     wbUnknown(SCPP),
     wbUnknown(DEVT),
     wbUnknown(SCSP),
     wbUnknown(SPMA),
     wbUnknown(SPEX),
-    wbUnknown(SPRK),
+    wbUnknown(SPRK), // seems to correlate with CF05_Guard_SpeechChallenge*, maybe minimum level of skill?
     wbUnknown(SPRW),
     wbUnknown(SPRP),
     wbUnknown(SPDF),
     wbUnknown(SPPQ),
-    wbUnknown(SPKW),
-    wbUnknown(SPPK),
+    wbArray(SPKW, 'Keywords', wbFormIDCk('Keyword',[KYWD])),
+    wbFormIDCk(SPPK, 'Perk', [PERK]),
     wbUnknown(SPKY)
   ]);
 
@@ -18333,7 +18437,7 @@ begin
     wbBaseFormComponents,
     wbFormID(CNAM),  //req
     wbUnknown(BNAM), //req
-    wbFormIDCk(DNAM, 'Worldpsace', [WRLD])
+    wbFormIDCk(DNAM, 'Worldspace', [WRLD])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18350,14 +18454,14 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SPCH, 'Speech Challenge', [
     wbEDID,
-    wbUnknown(SPWI), //req
-    wbUnknown(SPLO), //req
-    wbUnknown(SRAN),
-    wbUnknown(SGEN),
+    wbInteger(SPWI, 'Quest Stage on Win', itU16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
+    wbInteger(SPLO, 'Quest Stage on Loss', itU16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
+    wbUnknown(SRAN), // unused?
+    wbUnknown(SGEN), // always empty when present?
     wbFormIDCk(SPQU, 'Quest', [QUST], False, cpNormal, True),
     wbKeywords,
     wbArray(SPMA, 'Scenes', wbFormIDCk('Scene', [SCEN])),
-    wbUnknown(DIFF) //req
+    wbUnknown(DIFF) //req - 0, 1, 2 - difficulty of check?
   ]);
 
   {subrecords checked against Starfield.esm}
