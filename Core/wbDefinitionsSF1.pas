@@ -17125,7 +17125,7 @@ begin
     wbUnknown(WCHG),
     wbStruct(WDMG, 'Unknown', [
       wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbFloat('Range'),
       wbFloat('Unknown')
     ]),
     wbDamageTypeArray('Damage Type'),
