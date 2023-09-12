@@ -17096,20 +17096,46 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True),
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
     wbUnknown(BNAM),
-    wbUnknown(WAIM),
-    wbUnknown(WAM2),
+    wbStruct(WAIM, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFormID('Unknown'),
+      wbFormID('Unknown'),
+      wbUnknown(2),
+      wbFormID('Unknown'),
+      wbFormID('Unknown'),
+      wbUnknown()
+    ]),
+    wbStruct(WAM2, 'Unknown', [
+      wbFormID('Unknown'),
+      wbInteger('Magazine size', itu32),
+      wbFormID('Unknown'),
+      wbFormID('Unknown'),
+      wbUnknown()
+    ]),
     wbUnknown(WAUD),
     wbUnknown(WTUR),
     wbUnknown(WCHG),
-    wbUnknown(WDMG),
+    wbStruct(WDMG, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]),
     wbDamageTypeArray('Damage Type'),
     wbUnknown(WFIR),
     wbUnknown(WFLG),
-    wbUnknown(WGEN),
+    wbStruct(WGEN, 'Unknown', [
+      wbUnknown(4),
+      wbFloat('Unknown'),
+      wbUnknown(12),
+      wbFormID('Unknown')
+    ]),
     wbUnknown(WABB),
     wbUnknown(WMEL),
     wbUnknown(QNAM),
-    wbUnknown(WRLO),
+    wbStruct(WRLO, 'Unknown', [
+      wbFloat('Unknown'),
+      wbUnknown()
+    ]),
     wbUnknown(WVAR),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
@@ -18422,7 +18448,7 @@ begin
     wbKeywords,
     wbCUSH,
     wbFormID(FNAM, 'Item List'),
-    wbUnknown(SNAM),
+    wbInteger(SNAM, 'Unknown', itU32),
     wbRArray('Unknown', wbFormID(CNAM, 'Next Rarity')),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
@@ -18680,7 +18706,7 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbUnknown(CNAM), //req
-    wbRArray('Biomes', wbStruct(PPBD, 'name', [
+    wbRArray('Biomes', wbStruct(PPBD, 'Biome', [
       wbFormID('Unknown'),
       wbFloat('Percentage'),
       wbUnknown(4),
@@ -18729,7 +18755,7 @@ begin
         wbLenString('Magnetosphere'),
         wbLenString('Mass in kg'),
         wbLenString('Type'),
-        wbLenString('Settled'),
+        wbLenString('Settled star'), // This is "old" csv data and does not always use the correct ingame star name
         wbLenString('Special'),
         wbDouble('Perihelion'),
         wbDouble('Star Dist'),
