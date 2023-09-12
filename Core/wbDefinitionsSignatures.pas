@@ -417,10 +417,9 @@ const
   WMSS : TwbSignature = 'WMSS'; { New To Starfield }
   WAMB : TwbSignature = 'WAMB'; { New To Starfield }
   PERS : TwbSignature = 'PERS'; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
-//   : TwbSignature = ''; { New To Starfield }
+  BETH : TwbSignature = 'BETH'; { New To Starfield }
+  STRT : TwbSignature = 'STRT'; { New To Starfield }
+ &TYPE : TwbSignature = 'TYPE'; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }
 //   : TwbSignature = ''; { New To Starfield }

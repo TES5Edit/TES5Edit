@@ -118,6 +118,7 @@ var
   wbAIDT: IwbSubRecordDef;
   wbFULL: IwbSubRecordDef;
   wbSNTP: IwbSubRecordDef;
+  wbREFL: IwbSubRecordDef;
   wbSNBH: IwbSubRecordDef;
   wbODTY: IwbSubRecordDef;
   wbOPDS: IwbSubRecordDef;
@@ -258,6 +259,7 @@ var
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbXALG: IwbRecordMemberDef;
   wbHNAMHNAM: IwbRecordMemberDef;
+  wbReflectionChunkUnion: IwbValueDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
@@ -7988,6 +7990,40 @@ begin
   ], []);
 end;
 
+var
+  _ReflectionChunkSignatures : TArray<TwbSignature>;
+  _ReflectionChunkStructs    : TArray<IwbValueDef>;
+
+function wbReflectionChunk(const aSignature : TwbSignature;
+                           const aName      : string;
+                           const aMembers   : array of IwbValueDef)
+                                            : IwbStructDef;
+var
+  lMembers: TArray<IwbValueDef>;
+begin
+  SetLength(lMembers, Length(aMembers) + 2);
+  lMembers[0] := wbString('Signature', 4);
+  lMembers[1] := wbInteger('Size', itU32);
+  for var lIdx := Low(aMembers) to High(aMembers) do
+    lMembers[lIdx + 2] := aMembers[lIdx];
+  Result := wbStruct(aName, lMembers)
+    .SetSizeCallback(function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
+    begin
+      Result := 0;
+      if not Assigned(aBasePtr) then
+        Exit;
+      var lBasePtr: PCardinal := aBasePtr;
+      Inc(lBasePtr);//skip signature
+      Result := lBasePtr^ + 8;
+    end);
+  var lLength := Length(_ReflectionChunkSignatures);
+  var lNewLength := Succ(lLength);
+  SetLength(_ReflectionChunkSignatures, lNewLength);
+  SetLength(_ReflectionChunkStructs,    lNewLength);
+  _ReflectionChunkSignatures[lLength] := aSignature;
+  _ReflectionChunkStructs[lLength] := Result;
+end;
+
 procedure DefineSF1b;
 begin
   wbVatsValueFunctionEnum :=
@@ -8902,6 +8938,132 @@ begin
   wbFTYP := wbArray(FTYP, 'Forced Location Ref Types', wbFormIDCk('Forced Location Ref Type', [LCRT]));
   wbATTX := wbLStringKC(ATTX, 'Activate Text Override', 0, cpTranslate);
 
+  _ReflectionChunkSignatures := [NULL];
+  _ReflectionChunkStructs    := [wbEmpty('Empty')];
+
+  wbReflectionChunk(NULL, 'Unknown', [
+    wbUnknown
+  ]);
+
+  wbReflectionChunk(BETH, 'Reflection Header', [
+    wbInteger('Version', itU32),
+    wbInteger('Chunk Count', itU32)
+  ]);
+
+  wbReflectionChunk(STRT, 'String Table', [
+    wbArray('Strings', wbString('String'))
+  ]);
+
+  var wbStringTableLookup :=
+    wbCallback( function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string begin
+      Result := '';
+      if aInt < 0 then
+        case aInt of
+          Integer($FFFFFF01): Exit('Null');
+          Integer($FFFFFF02): Exit('String');
+          Integer($FFFFFF03): Exit('List');
+          Integer($FFFFFF04): Exit('Map');
+          Integer($FFFFFF05): Exit('Ref');
+          Integer($FFFFFF08): Exit('Int8');
+          Integer($FFFFFF09): Exit('UInt8');
+          Integer($FFFFFF0A): Exit('Int16');
+          Integer($FFFFFF0B): Exit('UInt16');
+          Integer($FFFFFF0C): Exit('Int32');
+          Integer($FFFFFF0D): Exit('UInt32');
+          Integer($FFFFFF0E): Exit('Int64');
+          Integer($FFFFFF0F): Exit('UInt64');
+          Integer($FFFFFF10): Exit('Bool');
+          Integer($FFFFFF11): Exit('Float');
+          Integer($FFFFFF12): Exit('Double');
+        else
+          Exit('<unknown build-in type>');
+        end;
+      if not (aType in [ctToStr, ctToSortKey, ctToEditValue]) then
+        Exit;
+      if not Assigned(aElement) then
+        Exit;
+      var lContainer := aElement.Container;
+      while Assigned(lContainer) do begin
+        var lValueDef := lContainer.ValueDef;
+        if not Assigned(lValueDef) then
+          Exit;
+        if (lValueDef.DefType = dtArray) and
+           (lValueDef as IwbArrayDef).Element.Root.Equals(wbReflectionChunkUnion.Root)
+        then
+          Break;
+        lContainer := lContainer.Container;
+      end;
+      var lContainerElementRef: IwbContainerElementRef;
+      if not Supports(lContainer, IwbContainerElementRef, lContainerElementRef) then
+        Exit;
+      if lContainerElementRef.ElementCount < 2 then
+        Exit;
+      var lStringTableChunkUnion := lContainerElementRef.Elements[1];
+      if not Supports(lStringTableChunkUnion, IwbContainerElementRef, lContainerElementRef) then
+        Exit;
+      if lContainerElementRef.ElementCount <> 1 then
+        Exit;
+      if not Supports(lContainerElementRef.Elements[0], IwbContainerElementRef, lContainerElementRef) then
+        Exit;
+      if lContainerElementRef.ElementCount < 3 then
+        Exit;
+      if lContainerElementRef.Elements[0].EditValue <> STRT then
+        Exit;
+      var lStringTable := lContainerElementRef.Elements[2];
+      var lDataContainer: IwbDataContainer;
+      if not Supports(lStringTable, IwbDataContainer, lDataContainer) then
+        Exit;
+      var lBasePtr: PAnsiChar := lDataContainer.DataBasePtr;
+      //!!! this isn't safe access, should check against DataEndPtr and handle cases of missing terminating #0
+      Result := PAnsiChar(@lBasePtr[aInt]);
+    end, nil);
+
+  wbReflectionChunk(&TYPE, 'Type', [
+    wbInteger('Class Count', itU32)
+  ]);
+
+  wbReflectionChunk(CLAS, 'Class', [
+    wbInteger('Name', itS32, wbStringTableLookup),
+    wbInteger('Type', itU32, wbStringTableLookup),
+    wbInteger('Flags', itU16, wbFlags([
+      '',
+      '',
+      'User',
+      'Struct'
+    ])),
+    wbArray('Fields', wbStruct('Field', [
+      wbInteger('Name', itS32, wbStringTableLookup),
+      wbInteger('Type', itS32, wbStringTableLookup),
+      wbInteger('Offset', itU16),
+      wbInteger('Size', itU16)
+    ]), -2)
+  ]);
+
+  {
+  wbReflectionChunk(DIFF, 'Diff', [
+    wbInteger('Type', itU32, wbStringTableLookup),
+    wbArray('Fields', wbStruct('Field', [
+      wbInteger('FieldIndex', itU16)
+    ]))
+  ]);
+  }
+
+  wbReflectionChunkUnion :=
+    wbUnion('', function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer begin
+      Result := 0;
+      if not Assigned(aBasePtr) then
+        Exit;
+      if NativeInt(aEndPtr) - NativeInt(aBasePtr) < 8 then
+        Exit;
+      Result := 1;
+      for var lIdx := 2 to High(_ReflectionChunkSignatures) do
+        if _ReflectionChunkSignatures[lIdx] = PwbSignature(aBasePtr)^ then
+          Exit(lIdx);
+    end, _ReflectionChunkStructs);
+
+  //wbREFL := wbArray(REFL, 'Reflection', wbReflectionChunkUnion);
+  wbREFL := wbByteArray(REFL, 'Reflection');
+
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type'),
       wbRUnion('Component Data', [
@@ -9089,7 +9251,7 @@ begin
           wbUnknown(PTCL)
         ], []),
         wbRStruct('Component Data', [
-          wbUnknown(REFL)
+          wbREFL
         ], []),
         //BGSSpaceshipAIActor_Component
         wbRStruct('Component Data', [
@@ -9554,6 +9716,7 @@ begin
     wbNVNM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(TACT, 'Talking Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
@@ -9573,6 +9736,7 @@ begin
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  *)
 
   {subrecords checked against Starfield.esm}
   wbRecord(ALCH, 'Ingestible',
@@ -10151,6 +10315,7 @@ begin
     wbString(MNAM, 'Particle Texture')
   ]);
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
@@ -10163,6 +10328,7 @@ begin
       ]))
     ], cpNormal, True)
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(CONT, 'Container',
@@ -10642,6 +10808,7 @@ begin
     wbEffectsReq
   ]);
 
+  (* still exists in game code, but not in Starfield.esm
   wbRecord(EYES, 'Eyes',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
@@ -10660,6 +10827,7 @@ begin
       {0x80}'Unknown 8'
     ]), cpNormal, True)
   ]);
+  *)
 
   var wbFactionRank :=
     wbRStructSK([0], 'Rank', [
@@ -10891,7 +11059,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(FFKW, 'Form Folder Keyword List', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
 end;
@@ -11081,6 +11249,7 @@ begin
     wbFormIDCk(PNAM, 'Unknown', [KYWD])
   ], False, nil, cpNormal, False);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
     wbOBND(True),
@@ -11416,7 +11585,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbUnknown(REFL),
+    wbREFL,
     wbUnknown(RFDP),
     wbUnknown(RDIF)
   ]);
@@ -11424,7 +11593,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -11536,6 +11705,7 @@ begin
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
     ], []);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PERK, 'Perk',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
@@ -11931,6 +12101,7 @@ begin
     ]))
   ]);
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(ECZN, 'Encounter Zone', [
     wbEDID,
     wbStruct(DATA, '', [
@@ -11947,6 +12118,7 @@ begin
       wbInteger('Max Level', itS8)
     ], cpNormal, True)
   ]);
+  *)
 
   {subrecords checked against Starfield.esm}
   wbRecord(LCTN, 'Location',
@@ -12595,6 +12767,7 @@ begin
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
@@ -12651,6 +12824,7 @@ begin
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
+  (* still exists in game code, but not in Starfield.esm
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
@@ -12661,7 +12835,7 @@ begin
     wbUnknown(ENAM),
     wbUnknown(DNAM)
   ]);
-
+  *)
   {wbRecord(WOOP, 'Word of Power', [
     wbEDID
   ]);}
@@ -12682,6 +12856,7 @@ begin
     wbFormIDCk(ANAM, 'Condition Actor Value', [AVIF, NULL, FFFF])
   ]);
 
+  (*
   wbRecord(RELA, 'Relationship', [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -12712,7 +12887,9 @@ begin
       wbFormIDCk('Association Type', [ASTP, NULL])
     ])
   ]);
+  *)
 
+  {subrecords checked against Starfield.esm}
   wbRecord(SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
@@ -12984,6 +13161,7 @@ begin
     wbUnknown(SPKY)
   ]);
 
+  (* still exists in game code, but not in Starfield.esm
   wbRecord(ASTP, 'Association Type', [
     wbEDID,
     wbString(MPRT, 'Male Parent Title'),
@@ -12994,6 +13172,7 @@ begin
       'Family Association'
     ]))
   ]);
+  *)
 end;
 
 procedure DefineSF1k;
@@ -13238,6 +13417,7 @@ begin
     wbUnknown(ENAM)
   ]);
 
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(MATO, 'Material Object', [
     wbEDID,
     wbGenericModel,
@@ -13259,6 +13439,7 @@ begin
       wbInteger('Flags', itU32, wbFlags(['Single Pass']))
     ], cpNormal, True, nil, 5)
   ]);
+  *)
 
   {subrecords checked against Starfield.esm}
   wbRecord(MOVT, 'Movement Type', [
@@ -13279,6 +13460,7 @@ begin
     wbUnknown(BOLV)
   ]);
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(SNDR, 'Sound Descriptor', [
     wbEDID,
     wbString(NNAM, 'Notes'),
@@ -13325,7 +13507,9 @@ begin
       cpNormal, False, nil, wbSNDRRatesOfFireAfterSet
     )
   ]);
+  (**)
 
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(DUAL, 'Dual Cast Data', [
     wbEDID,
     wbOBND(True),
@@ -13342,7 +13526,9 @@ begin
       ]))
     ], cpNormal, True)
   ]);
+  (*)
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(SNCT, 'Sound Category', [
     wbEDID,
     wbFULL,
@@ -13362,7 +13548,9 @@ begin
     wbFloat(MNAM, 'Min Frequency Multiplier'),
     wbFloat(CNAM, 'Sidechain Target Multiplier')
   ]);
+  (**)
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(SOPM, 'Sound Output Model', [
     wbEDID,
     wbStruct(NAM1, 'Data', [
@@ -13420,6 +13608,7 @@ begin
     ]),
     wbFormIDCk(ENAM, 'Effect Chain', [AECH])
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(COLL, 'Collision Layer', [
@@ -13694,6 +13883,7 @@ begin
     wbFormIDCk(SCSP, 'Speech Challenge', [SPCH])  // and SCSP unknown
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
@@ -13729,6 +13919,7 @@ begin
     ], cpNormal, True),
     wbEffectsReq
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  (**)
 
   wbRecord(KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -13752,6 +13943,7 @@ begin
     wbUnknown(FLAG)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
+  (* exists neither in Starfield.esm nor the game code * )
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape',
@@ -13783,6 +13975,7 @@ begin
     ]);
 
   end;
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(LIGH, 'Light',
@@ -14115,6 +14308,7 @@ begin
     wbFTYP
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(LVSP, 'Leveled Spell', [
     wbEDID,
     wbOBND(True),
@@ -14128,6 +14322,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntrySpell, cpNormal, False, nil, wbLVLOsAfterSet)
   ]);
+  (**)
 
   wbMGEFType := wbInteger('Archetype', itU32, wbEnum([
     {00} 'Value Modifier',
@@ -16558,6 +16753,7 @@ begin
     *)
   ], False);  // unordered, NVNM can be before or after MNAM
 
+  {subrecords checked against Starfield.esm}
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000001}  0, 'ESM',
@@ -16589,6 +16785,7 @@ begin
     wbUnknown(CHGL)
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
+  {xEdit internal subrecord type}
   wbRecord(PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
@@ -16597,6 +16794,7 @@ end;
 
 procedure DefineSF1o;
 begin
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD'
@@ -16629,6 +16827,7 @@ begin
       wbFloat('Leaf Frequency')
     ], cpNormal, True)
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(FLOR, 'Flora', [
@@ -16668,6 +16867,7 @@ begin
     wbUnknown(FHLS)
   ], False, nil, cpNormal, False, nil, nil);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WATR, 'Water', [
     wbEDID,
     wbFULL,
@@ -16767,6 +16967,7 @@ begin
     wbFormIDCk(UNAM, 'Unknown', [CUR3])
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WEAP, 'Weapon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
@@ -16820,6 +17021,7 @@ begin
     wbUnknown(WTRM)
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00080000} 19, 'Can''t Wait'
@@ -17071,6 +17273,7 @@ end;
 
 procedure DefineSF1q;
 begin
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(AECH, 'Audio Effect Chain', [
     wbEDID,
     wbRArray('Effects',
@@ -17109,6 +17312,7 @@ begin
       ], [])
     )
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
@@ -17166,6 +17370,7 @@ begin
     wbFormIDCk(MNAM, 'Material Path', [NULL, MTPT])
   ]);
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(CMPO, 'Component', [
     wbEDID,
     wbOBND,
@@ -17175,6 +17380,7 @@ begin
     wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
     wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB])
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(DFOB, 'Default Object', [
@@ -17196,6 +17402,7 @@ begin
     ])
   ]);
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(GDRY, 'God Rays', [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -17210,6 +17417,7 @@ begin
       wbFloat('Fwd Phase')
     ])
   ]);
+  (**)
 
 end;
 
@@ -17325,6 +17533,7 @@ begin
     wbEDID
   ]);}
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(MSWP, 'Material Swap',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00010000} 16, 'Custom Swap'
@@ -17340,9 +17549,10 @@ begin
       ], [])
     )
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
-  wbRecord(NOCM, 'Navigation Mesh Obstacle Manager', [
+  wbRecord(NOCM, 'Navigation Mesh Obstacle Cover Manager', [
     wbEDID,
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -17389,6 +17599,7 @@ end;
 
 procedure DefineSF1s;
 begin
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(NOTE, 'Note', [
     wbEDID,
     wbVMAD,
@@ -17417,6 +17628,7 @@ begin
     ]),
     wbString(PNAM, 'Program File')
   ]);
+  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(OMOD, 'Object Modification',
@@ -17552,6 +17764,7 @@ begin
     wbEDID
   ]);}
 
+  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
@@ -17571,6 +17784,7 @@ begin
     ])),
     wbUnknown(VNAM, cpNormal, True)
   ]);
+  (**)
 
   var wbStaticPart :=
     wbRStructSK([0], 'Part', [
@@ -17614,6 +17828,7 @@ begin
     wbRArrayS('Parts', wbStaticPart, cpNormal, True)
   ]);
 
+  (* exists neither in Starfield.esm nor the game code * )
   wbRecord(SCSN, 'Audio Category Snapshot', [
     wbEDID,
     wbInteger(PNAM, 'Priority', itU16),
@@ -17622,6 +17837,7 @@ begin
       wbFloat('Multiplier')
     ]))
   ]);
+  (**)
 
 end;
 
@@ -17702,6 +17918,7 @@ begin
     wbUnknown(ENAM)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
     (*
@@ -17818,7 +18035,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(CURV, 'Curve Table', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -17921,7 +18138,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(VOLI, 'Volumetric Lighting', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -17994,7 +18211,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(CUR3, 'Curve 3D', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18081,7 +18298,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(WTHS, 'Weather Settings', [
     wbEDID,
-    wbUnknown(REFL),
+    wbREFL,
     wbFormID(RFDP),
     wbUnknown(RDIF)
   ]);
@@ -18194,7 +18411,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(ATMO, 'Atmosphere', [
     wbEDID,
-    wbUnknown(REFL),
+    wbREFL,
     wbFormID(RFDP),
     wbUnknown(RDIF)
   ]);
@@ -18230,32 +18447,32 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(CLDF, 'Clouds', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(EFSQ, 'Effect Sequence', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(FOGV, 'Fog Volume', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(FORC, 'Force Data', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(LMSW, 'Layered Material Swap', [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18309,7 +18526,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(MTPT, 'Material Path', [
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18441,7 +18658,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(PSDC, 'Particle System Define Collision', [ //PSDC -> EDID REFL  (9)
     wbEDID,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18595,7 +18812,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SUNP, 'Galaxy Sun Preset', [
     wbEDID,
-    wbUnknown(REFL),
+    wbREFL,
     wbFormID(RFDP),
     wbUnknown(RDIF)
   ]);
@@ -18632,7 +18849,7 @@ begin
   wbRecord(TODD, 'Time Of Day Data', [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(REFL)
+    wbREFL
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18667,6 +18884,7 @@ begin
     wbUnknown(WTED)
   ]);
 
+  {subrecords checked against Starfield.esm}
   wbRecord(PERS, 'Unknown', [
     wbUnknown(DATA),
     wbRArray('Unknown', wbUnknown(DAT2))

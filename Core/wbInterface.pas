@@ -1904,7 +1904,7 @@ type
   TwbDontShowCallback = function(const aElement: IwbElement): Boolean;
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
-  TwbIntToStrCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+  TwbIntToStrCallback = reference to function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
   TwbToStrCallback = reference to procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
   TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
   TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
@@ -1919,6 +1919,7 @@ type
   TwbGetChapterNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   TwbLinksToCallback = function(const aElement: IwbElement): IwbElement;
   TwbIsRemoveableCallback = reference to function(const aElement: IwbElement): Boolean;
+  TwbStructSizeCallback = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -2387,6 +2388,8 @@ type
     function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbStructDef;
     function SetSummaryMemberMaxDepth(aIndex, aMaxDepth: Integer): {Self}IwbStructDef;
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbStructDef;
+
+    function SetSizeCallback(const aCallback: TwbStructSizeCallback): {Self}IwbStructDef;
   end;
 
   IwbStructCDef = interface(IwbStructDef)
@@ -6294,6 +6297,7 @@ type
     stSummarySuffix       : TArray<string>;
     stSummaryMaxDepth     : TArray<Integer>;
     stSummaryDelimiter    : string;
+    stSizeCallback        : TwbStructSizeCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority            : TwbConflictPriority;
@@ -6341,6 +6345,8 @@ type
     function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbStructDef;
     function SetSummaryMemberMaxDepth(aIndex, aMaxDepth: Integer): {Self}IwbStructDef;
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbStructDef;
+
+    function SetSizeCallback(const aCallback: TwbStructSizeCallback): {Self}IwbStructDef;
   end;
 
   TwbStructCDef = class(TwbStructDef, IwbStructCDef)
@@ -12381,6 +12387,7 @@ begin
     Self.stSummarySuffix := Copy(stSummarySuffix);
     Self.stSummaryMaxDepth := Copy(stSummaryMaxDepth);
     Self.stSummaryDelimiter := stSummaryDelimiter;
+    Self.stSizeCallback := stSizeCallback;
   end;
 end;
 
@@ -12511,6 +12518,8 @@ var
   Element   : IwbElement;
 begin
   Result := 0;
+  if Assigned(stSizeCallback) then
+    Exit(stSizeCallback(aBasePtr, aEndPtr, aElement));
   if Supports(Self, IwbStructCDef, scDef) then begin
     scDef.GetSizing(aBasePtr, aEndPtr, aElement, Size);
     if Size>0 then begin
@@ -12571,6 +12580,9 @@ var
   i     : Integer;
   Size  : Integer;
 begin
+  if Assigned(stSizeCallback) then
+    Exit(stSizeCallback(aBasePtr, aEndPtr, aElement));
+
   Result := 0;
   for i := Low(stMembers) to High(stMembers) do begin
     Size := stMembers[i].DefaultSize[aBasePtr, aEndPtr, aElement];
@@ -12615,6 +12627,12 @@ begin
     end;
 
   defReported := True;
+end;
+
+function TwbStructDef.SetSizeCallback(const aCallback: TwbStructSizeCallback): IwbStructDef;
+begin
+  Result := Self;
+  stSizeCallback := aCallback;
 end;
 
 function TwbStructDef.SetSummaryDelimiter(const aDelimiter: string): IwbStructDef;
@@ -16453,7 +16471,7 @@ begin
     Exit(False);
 
   Result := Supports(aDef, IwbCallbackDef, CallbackDef) and
-    (@CallbackDef.Callback = @cdToStr);
+    (Pointer(CallbackDef.Callback) = Pointer(@cdToStr));
 end;
 
 function TwbCallbackDef.CanContainFormIDs: Boolean;

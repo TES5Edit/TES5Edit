@@ -273,27 +273,27 @@ end;
 
 function wbVMType : IwbIntegerDefFormater;
 begin
-  Result := wbCallback(@TwbVMTypeFormaterToString, nil);
+  Result := wbCallback(TwbVMTypeFormaterToString, nil);
 end;
 
 function wbVMHandle : IwbIntegerDefFormater; overload;
 begin
-  Result := wbCallback(@TwbHandleFormaterToString, nil);
+  Result := wbCallback(TwbHandleFormaterToString, nil);
 end;
 
 function wbVMObjectHandle : IwbIntegerDefFormater; overload;
 begin
-  Result := wbCallback(@TwbObjectHandleFormaterToString, nil);
+  Result := wbCallback(TwbObjectHandleFormaterToString, nil);
 end;
 
 function wbVMArrayHandle : IwbIntegerDefFormater;
 begin
-  Result := wbCallback(@TwbVMArrayHandleFormaterToString, nil);
+  Result := wbCallback(TwbVMArrayHandleFormaterToString, nil);
 end;
 
 function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
 begin
-  Result := wbCallback(@TwbSaveWorldspaceIndexFormaterToString, nil);
+  Result := wbCallback(TwbSaveWorldspaceIndexFormaterToString, nil);
 end;
 
 function wbFindSaveElement(aName: String; aElement: IwbElement): IwbElement;
