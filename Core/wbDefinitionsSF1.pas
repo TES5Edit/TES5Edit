@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -16997,20 +16997,46 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True),
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
     wbUnknown(BNAM),
-    wbUnknown(WAIM),
-    wbUnknown(WAM2),
+    wbStruct(WAIM, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFormID('Unknown'),
+      wbFormID('Unknown'),
+      wbUnknown(2),
+      wbFormID('Unknown'),
+      wbFormID('Unknown'),
+      wbUnknown()
+    ]),
+    wbStruct(WAM2, 'Unknown', [
+      wbFormID('Unknown'),
+      wbInteger('Magazine size', itu32),
+      wbFormID('Unknown'),
+      wbFormID('Unknown'),
+      wbUnknown()
+    ]),
     wbUnknown(WAUD),
     wbUnknown(WTUR),
     wbUnknown(WCHG),
-    wbUnknown(WDMG),
+    wbStruct(WDMG, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]),
     wbDamageTypeArray('Damage Type'),
     wbUnknown(WFIR),
     wbUnknown(WFLG),
-    wbUnknown(WGEN),
+    wbStruct(WGEN, 'Unknown', [
+      wbUnknown(4),
+      wbFloat('Unknown'),
+      wbUnknown(12),
+      wbFormID('Unknown')
+    ]),
     wbUnknown(WABB),
     wbUnknown(WMEL),
     wbUnknown(QNAM),
-    wbUnknown(WRLO),
+    wbStruct(WRLO, 'Unknown', [
+      wbFloat('Unknown'),
+      wbUnknown()
+    ]),
     wbUnknown(WVAR),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
