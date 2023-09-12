@@ -64,6 +64,7 @@ var
   wbPronounEnum: IwbEnumDef;
   wbLearnMethodEnum: IwbEnumDef;
   wbPhotoModeEnum: IwbEnumDef;
+  wbObjectModPropertiesEnum: IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -6750,6 +6751,83 @@ begin
     {2} 'Filter'
   ]);
 
+  wbObjectModPropertiesEnum := wbEnum([],[
+    Sig2Int('AACT'), 'Armor - Actor Value',
+    Sig2Int('ADMG'), 'Armor - Damage Resistance',
+    Sig2Int('AENC'), 'Armor - Enchantment',
+    Sig2Int('AKEY'), 'Armor - Keyword',
+    Sig2Int('ARAT'), 'Armor - Rating',
+    Sig2Int('AVAL'), 'Armor - Value',
+    Sig2Int('AWGT'), 'Armor - Weight',
+    Sig2Int('FHDT'), 'FHDT',
+    Sig2Int('FLMS'), 'Flora - Layered Material Swap',
+    Sig2Int('NACV'), 'NPC - Actor Value',
+    Sig2Int('NAID'), 'NPC - AI Data',
+    Sig2Int('NARO'), 'NPC - Actor Race Override',
+    Sig2Int('NCST'), 'NPC - Combat Style ',
+    Sig2Int('NENC'), 'NPC - Enchantment',
+    Sig2Int('NFAC'), 'NPC - Faction',
+    Sig2Int('NGFA'), 'NPC - Group Faction',
+    Sig2Int('NINV'), 'NPC - Inventory',
+    Sig2Int('NKEY'), 'NPC - Keyword',
+    Sig2Int('NMMX'), 'NPC - Min-Max Size',
+    Sig2Int('NMSL'), 'NPC - Layered Material Swap',
+    Sig2Int('NPRK'), 'NPC - Perk',
+    Sig2Int('NRCE'), 'NPC - Race',
+    Sig2Int('NREA'), 'NPC - Reaction Radius',
+    Sig2Int('NSKN'), 'NPC - Skin',
+    Sig2Int('NSPL'), 'NPC - Spell',
+    Sig2Int('NXPO'), 'NPC - XP Override',
+    Sig2Int('SDMG'), 'SDMG',
+    Sig2Int('SPAV'), 'Spaceship - Actor Value ',
+    Sig2Int('ACPT'), 'Weapon - Ammo Capacity',
+    Sig2Int('AA01'), 'AA01',
+    Sig2Int('AA02'), 'AA02',
+    Sig2Int('FBDS'), 'FBDS',
+    Sig2Int('FBUR'), 'FBUR',
+    Sig2Int('FORF'), 'Weapon - Override Rate of Fire',
+    Sig2Int('FREP'), 'FREP',
+    Sig2Int('FTYP'), 'FTYP',
+    Sig2Int('GVAL'), 'Weapon - Value',
+    Sig2Int('GWEI'), 'Weapon - Weight',
+    Sig2Int('WABS'), 'Weapon - Aim Model Base Stability',
+    Sig2Int('WACV'), 'Weapon - Actor Value',
+    Sig2Int('WADL'), 'WADL',
+    Sig2Int('WAIM'), 'Weapon - Aim Model',
+    Sig2Int('WAOS'), 'Weapon - Aim Optical Sight Marker',
+    Sig2Int('WCO1'), 'WCO1',
+    Sig2Int('WCO2'), 'WCO2',
+    Sig2Int('WCO3'), 'WCO3',
+    Sig2Int('WCO4'), 'WCO4',
+    Sig2Int('WCO5'), 'WCO5',
+    Sig2Int('WCO6'), 'WCO6',
+    Sig2Int('WCDM'), 'WCDM',
+    Sig2Int('WCIM'), 'WCIM',
+    Sig2Int('WDMG'), 'Weapon - Damage',
+    Sig2Int('WDTV'), 'Weapon - Damage Type Value',
+    Sig2Int('WEMT'), 'WEMT',
+    Sig2Int('WENC'), 'Weapon - Enchantment',
+    Sig2Int('WIMP'), 'Weapon - Impact Dataset',
+    Sig2Int('WKEY'), 'Weapon - Keyword',
+    Sig2Int('WMNR'), 'Weapon - Min Range',
+    Sig2Int('WMXR'), 'Weapon - Max Range',
+    Sig2Int('WNPR'), 'Weapon - Projectile Count',
+    Sig2Int('WOPR'), 'Weapon - Projectile',
+    Sig2Int('WRC1'), 'WRC1',
+    Sig2Int('WRC2'), 'WRC2',
+    Sig2Int('WRC5'), 'WRC5',
+    Sig2Int('WRSP'), 'WRSP',
+    Sig2Int('WSCP'), 'Weapon - Scope',
+    Sig2Int('WSDM'), 'WSDM',
+    Sig2Int('WSLV'), 'Weapon - Stealth Level',
+    Sig2Int('WSPD'), 'Weapon - Speed',
+    Sig2Int('WSPS'), 'WSPS',
+    Sig2Int('WSTS'), 'Weapon - Sighted Transition (Seconds)',
+    Sig2Int('WTMC'), 'WTMC',
+    Sig2Int('ZDTA'), 'Weapon - Zoom Data',
+    Sig2Int('ZFOV'), 'Weapon - Zoom FOV'
+  ]);
+
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
@@ -9262,10 +9340,10 @@ begin
         { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
       wbByteArray('Unused', 3, cpIgnore),
-      wbInteger('Unknown Identifier', itU32, wbChar4, cpNormal, True),
+      wbInteger('Property Name', itU32, wbObjectModPropertiesEnum, cpNormal, True),
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
-        { 1} wbInteger('Value 1 - Int', itU32),
+        { 1} wbInteger('Value 1 - Int', itS32),
         { 2} wbFloat('Value 1 - Float'),
         { 3} wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
         { 4} wbFormID('Value 1 - FormID'),
@@ -9276,7 +9354,7 @@ begin
       ]),
       wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
         wbByteArray('Unused', 4, cpIgnore),
-        wbInteger('Value 2 - Int', itU32),
+        wbInteger('Value 2 - Int', itS32),
         wbFloat('Value 2 - Float'),
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
@@ -17856,14 +17934,11 @@ begin
 //    wbCTDAs,
     wbStruct(FNAM, 'Unknown', [
       wbInteger('Feature Type', itU8, wbPhotoModeEnum)          ,
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbUnknown(9),
-      wbInteger('Flags', itU32, wbFlags([
-      {0x01} '',
-      {0x02} 'Not Full Screen',
-      {0x04} 'Non-Playable'
-    ]), cpNormal, True),
+      wbFloat('X offset'),
+      wbFloat('Y offset'),
+      wbUnknown(8),
+      wbInteger('Width', itU32),
+      wbInteger('Height', itU32),
       wbUnknown()
     ]),
     wbString(HNAM, 'Texture'),
