@@ -324,6 +324,15 @@ begin
     .IncludeFlag(dfAllowAnyMember);
 end;
 
+function wbDamageTypeArray(aItemName: string): IwbSubRecordDef;
+begin
+    Result := wbArrayS(DAMA, aItemName+'s', wbStructSK([0], aItemName, [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    ]))
+end;
+
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -9533,10 +9542,7 @@ begin
       wbInteger('Stagger Rating', itU8, wbStaggerEnum),
       wbByteArray('Unused', 3, cpIgnore, false, wbNeverShow)
     ]),
-    wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32)
-    ])),
+    wbDamageTypeArray('Resistance'),
 //    wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
     wbAPPR,
     wbObjectTemplate,
@@ -10172,7 +10178,7 @@ begin
     wbFormIDCkNoReach(BNAM, 'Branch', [DLBR]),
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST], False, cpNormal, False),
     wbFormIDCk(KNAM, 'Keyword', [KYWD]),
-    wbUnknown(ANAM),
+    wbFormIDCk(ANAM, 'Affinity Event', [AFFE]),
     wbStruct(DATA, 'Data', [
       // this should not be named Flags since TwbFile.BuildReachable
       // expects Top-Level flag here from FNV
@@ -11164,10 +11170,7 @@ begin
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbUnknown(ENAM),
-    wbStruct(DAMA, 'Damage', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbUnknown
-    ])
+    wbDamageTypeArray('Damage Type')
     (*
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Light', [LIGH, NULL]),
@@ -14334,7 +14337,6 @@ begin
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False),
 //    wbFormIDCk(GNAM, 'Gift Filter', [FLST], False, cpNormal, False),
     wbUnknown(NAM5, cpNormal, True),
-    wbUnknown(NAM6, cpNormal, True),
     wbFloat(NAM6, 'Height Min', cpNormal, True),
 //    wbFloat(NAM7, 'Unused', cpNormal, True),
     wbFloat(NAM4, 'Height Max'),
@@ -14352,7 +14354,7 @@ begin
       wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
     }
       wbUnknown(CS3H),
-      wbUnknown(CS3S),
+      wbSHDef(CS3S),
       wbUnknown(CS3F),
       wbUnknown(CS3E)
     ], []),
@@ -14360,8 +14362,8 @@ begin
 //    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
 
     wbRStruct('Unknown', [
-      wbUnknown(QSTA),
-      wbUnknown(BNAM)
+      wbFormIDCk(QSTA, 'Unknown', [QUST]),
+      wbFormIDCk(BNAM, 'Unknown', [DLBR])
     ], []),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
@@ -14370,12 +14372,17 @@ begin
     wbFormID(HEFA, 'Unknown'),
     wbInteger(EDCT, 'Unknown Count', itU8),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(MNAM).SetRequired(True),
+      wbInteger(MNAM, 'Unknown', itU32).SetRequired(True),
       wbString(TNAM, 'Unknown').SetRequired(True),
       wbString(QNAM, 'Unknown').SetRequired(True),
       wbString(VNAM, 'Unknown').SetRequired(True),
-      wbUnknown(NNAM).SetRequired(True),
-      wbUnknown(INTV).SetRequired(True)
+      wbStruct(NNAM, 'Tint Color Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8),
+        wbInteger('Unused', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA).SetRequired(True),
+      wbInteger(INTV, 'Unknown', itU32).SetRequired(True)
     ], []),
 
     wbStruct(MRSV, 'Body Morph Region Values', [
@@ -14411,7 +14418,7 @@ begin
     wbString(FHCL, 'Unknown'),
     wbString(BCOL, 'Unknown'),
     wbString(ECOL, 'Unknown'),
-    wbUnknown(JCOL),
+    wbString(JCOL, 'Unknown'),
     wbString(TETC, 'Unknown'),
     wbInteger(PRON, 'Unknown', itU8),
     wbUnknown(ONA2)
@@ -16606,11 +16613,7 @@ begin
     wbUnknown(WTUR),
     wbUnknown(WCHG),
     wbUnknown(WDMG),
-    wbStructs(DAMA, 'Damage Types', 'Damage Type', [
-      wbFormIDCk('Type', [DMGT]),
-      wbInteger('Amount', itU32),
-      wbUnknown(4)
-    ]),
+    wbDamageTypeArray('Damage Type'),
     wbUnknown(WFIR),
     wbUnknown(WFLG),
     wbUnknown(WGEN),
@@ -18287,11 +18290,12 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SDLT, 'Secondary Damage List', [
     wbEDID,
-    wbUnknown(ITMC), //count?
-    wbRStructs('Secondary Damages', 'Secondary Damage', [
-      wbFormIDCk(DAMA, 'Damage Type', [DMGT]),
-      wbFormIDCk(ACTV, 'Actor Value', [AVIF])
-    ], [])
+    wbInteger(ITMC, 'Secondary List Count', itU32).SetRequired(True),
+    wbRArray('Secondary Damages',
+      wbRStruct('Secondary Damage', [
+        wbFormIDCk(DAMA, 'Damage Type', [DMGT], False, cpNormal, True),
+        wbFormIDCk(ACTV, 'Actor Value', [AVIF], False, cpNormal, True)
+      ], []), cpNormal, False, nil, wbSDLTListAfterSet).SetRequired(True)
   ]);
 
   {subrecords checked against Starfield.esm}
