@@ -97,12 +97,14 @@ const
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
-    'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES'
+    'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
+    'BMMP', 'PDCL', 'PKIN'
   ];
 
 var
   wbPKDTSpecificFlagsUnused : Boolean;
   wbEDID: IwbSubRecordDef;
+  wbNLDT: IwbSubRecordDef;
   wbCOED: IwbSubRecordDef;
   wbXLCM: IwbSubRecordDef;
   wbEITM: IwbSubRecordDef;
@@ -6831,6 +6833,7 @@ begin
   ]);
 
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
+  wbNLDT := wbString(NLDT);
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
@@ -7267,7 +7270,7 @@ begin
       wbFloat('Recovery Time'),
       wbFloat('Action Points Mult'),
       wbInteger('Stagger Offset', itS32),
-      wbUnknown
+      wbFloat
     ]),
     wbString(ATKE, 'Attack Event'),
     wbFormIDCk(ATKW, 'Weapon Slot', [EQUP]),
@@ -7424,7 +7427,7 @@ begin
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
-  wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [MSWP]);
+  wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [NULL, MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
   {subrecords checked against Starfield.esm}
@@ -7434,7 +7437,8 @@ begin
       wbInteger('DEST Count', itU8),
       wbInteger('Flags', itU8, wbFlags([
         'VATS Targetable',
-        'Large Actor Destroys'
+        'Large Actor Destroys',
+        'Unknown 2'
       ])),
       wbByteArray('Unknown', 2)
     ]),
@@ -7461,7 +7465,7 @@ begin
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32),
-          wbUnknown {whole thing needs to be checked for Starfield}
+          wbFloat
         ], cpNormal, True),
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
@@ -7534,9 +7538,18 @@ begin
   wbPDTOs := wbRArray('Topic', wbPDTO, cpNormal, False, nil);
 
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
-  wbSNBH := wbFormIDCk(SNBH, 'Unknown', [STBH]);
+  wbSNBH := wbFormIDCk(SNBH, 'Snap Behavior', [STBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
-  wbOPDS := wbUnknown(OPDS);
+  wbOPDS := wbStruct(OPDS, 'Unknown', [
+    { 0} wbUnknown(20),
+    {20} wbFloat,
+    {24} wbUnknown(28),
+    {52} wbFloat,
+    {60} wbFloat,
+    {64} wbFloat,
+    {68} wbFloat,
+    {72} wbUnknown(12)
+  ]);
   wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
 // PTT2 is some kind of transform list
@@ -7826,7 +7839,7 @@ begin
   , -1);
 
   if wbSimpleRecords then begin
-    wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 12), -1);
+    wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 16), -1);
     wbNavmeshTriangles := wbArray('Triangles', wbByteArray('Triangle', 21), -1);
     wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 16), -1);
     wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 8), -1);
@@ -7837,7 +7850,8 @@ begin
       wbStruct('Vertex', [
         wbFloat('X'),
         wbFloat('Y'),
-        wbFloat('Z')
+        wbFloat('Z'),
+        wbUnknown(4)
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
     , -1);
 
@@ -8870,7 +8884,10 @@ begin
           { 7} 'Event Data',
           { 9} 'Command Target',
           {10} 'Event Camera Ref',
-          {11} 'My Killer'
+          {11} 'My Killer',
+          {12} 'Unknown 12',
+          {13} 'Unknown 13',
+          {14} 'Unknown 14'
         ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
         wbUnion('Reference', wbCTDAReferenceDecider, [
           wbInteger('Unused', itU32, nil, cpIgnore),
@@ -9159,9 +9176,15 @@ begin
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
+        //BGSDisplayCase
         wbRStruct('Component Data', [
-          wbUnknown(DCSD),
-          wbUnknown(DCED)
+          wbArray(DCSD, 'Unknown', wbStruct('Unknown', [
+            wbFormIDCk('Display Filter', [FLST]),
+            wbUnknown(4),
+            wbInteger('Index', itU32),
+            wbUnknown(4)
+          ])),
+          wbArray(DCED, 'Unknown', wbUnknown(4))
         ], []),
         wbRStruct('Component Data', [
           wbDest
@@ -9629,9 +9652,9 @@ begin
       wbEFID,
       wbEFIT,
       wbCTDAs,
-      wbFormID(MNAM),
-      wbFormID(ANAM), // order between ANAM
-      wbFormID(ZNAM), // and ZNAM unknown
+      wbFormIDCk(MNAM, 'Unknown', [GLOB]),
+      wbFormIDCk(ANAM, 'Unknown', [GLOB]),
+      wbFormIDCk(ZNAM, 'Unknown', [GLOB]),
       wbInteger(EFIF, 'Unknown', itU32),
       wbInteger(MUID, 'Unknown', itU32)
     ], [], cpNormal, True);
@@ -9699,7 +9722,8 @@ begin
       'Unknown 2',
       'Unknown 3',
       'Is a Radio',
-      'Unknown 5'
+      'Unknown 5',
+      'Unknown 6'
     ])),
     wbInteger(JNAM, 'Unknown', itU16),
     wbUnknown(INAM), //unknown if here or any later position
@@ -10011,8 +10035,8 @@ begin
       wbUnknown
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
-    wbUnknown(ENAM),
-    wbUnknown(FNAM),
+    wbLStringKC(ENAM, 'Unknown', 0, cpTranslate),
+    wbLStringKC(FNAM, 'Unknown', 0, cpTranslate),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbFormIDCk(GNAM, 'Scene', [SCEN])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -10367,7 +10391,7 @@ begin
     ], cpNormal, True),
     wbKeywords,
     wbFTYP,
-    wbFormIDCk(NTRM, 'Native Terminal', [NTRM]),
+    wbNTRM,
     wbPRPS,
     wbAPPR,
 //    wbObjectTemplate, likely, but doesn't occur in Starfield.esm
@@ -10787,6 +10811,8 @@ begin
     wbODTY,
     wbFULL,
     wbStruct(ENIT, 'Effect Data', [
+      wbUnknown(27)
+      {
       wbInteger('Enchantment Cost', itS32),
       wbInteger('Flags', itU32, wbFlags([
         'No Auto-Calc',
@@ -10803,7 +10829,7 @@ begin
       wbFloat('Charge Time'),
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
       wbFormIDCk('Worn Restrictions', [FLST, NULL]),
-      wbUnknown
+      wbUnknown}
     ], cpNormal, True, nil, 8),
     wbEffectsReq
   ]);
@@ -10902,12 +10928,15 @@ begin
     wbPLVD,
     wbFormIDCk(VTCK, 'Unknown', [FLST, VTYP]),
     wbRStruct('Unknown', [
-      wbEmpty(CRHR, 'Marker').SetRequired(True),
-      wbUnknown(HERD).SetRequired(True)
+      wbMarkerReq(CRHR),
+      wbStruct(HERD, 'Unknown', [
+        wbFloat,
+        wbUnknown
+      ]).SetRequired(True)
     ], []),
     wbRStruct('Unknown', [
-      wbEmpty(CRGP, 'Marker').SetRequired(True),
-      wbUnknown(GRPH).SetRequired(True)
+      wbMarkerReq(CRGP),
+      wbFloat(GRPH).SetRequired(True)
     ], [])
 
     //wbCITC,
@@ -10918,7 +10947,7 @@ begin
   wbRecord(AFFE, 'Affinity Event', [
     wbEDID,
     wbUnknown(FNAM, 4).SetRequired, //req
-    wbUnknown(NLDT),
+    wbNLDT,
     wbRStructsSK('Unknown', 'Unknown', [0], [
       wbFormIDCk(NNAM, 'Actor', [NPC_]),
       wbFormIDCk(RNAM, 'Reaction', [GLOB]).SetRequired
@@ -11148,7 +11177,11 @@ begin
       'Eyebrows',
       'Meatcaps',
       'Teeth',
-      'Head Rear'
+      'Head Rear',
+      '',
+      'Unknown 11',
+      'Unknown 12',
+      'Unknown 13'
     ])),
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
@@ -11893,7 +11926,7 @@ begin
   wbRecord(AVIF, 'Actor Value Information', [
     wbEDID,
     wbFULL,
-    wbString(NLDT),
+    wbNLDT,
     wbLString(ANAM, 'Abbreviation', 0, cpTranslate),
     wbFloat(NAM0, 'Default Value'), // Prior to form version 81, it was either 0.0, 1.0 or 100.0, so scale or multiplier ?
     wbInteger(AVFL, 'Flags', itU32, wbFlags([ // 32 bits Flags, it used to impact NAM0 loading (bits 10, 11, 12) (even though it loads later :) )
@@ -11951,7 +11984,7 @@ begin
     wbEDID,
     wbGenericModel,
     wbKeywords,
-    wbString(NLDT), //unknown if before or after CTDAs
+    wbNLDT, //unknown if before or after CTDAs
     wbCTDAs,
     wbStruct(DATA, 'Data', [
       wbInteger('Action', itU32, wbEnum([
@@ -13614,7 +13647,7 @@ begin
   wbRecord(COLL, 'Collision Layer', [
     wbEDID,
     //wbDESCReq,
-    wbString(NLDT),
+    wbNLDT,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
     wbStruct(FNAM, 'Debug Color', [
       wbInteger('Red', itU8),
@@ -14379,7 +14412,31 @@ begin
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
     wbStruct(DATA, 'Data', [
-      wbUnknown
+      {  0} wbFormIDCk('Unknown', [NULL, DMGT, HAZD, KYWD, SPEL]),
+      {  4} wbUnknown(4),
+      {  8} wbFormIDCk('Unknown', [NULL, ARTO]),
+      { 12} wbUnknown(4),
+      { 16} wbFormIDCk('Unknown', [NULL, EFSH]),
+      { 20} wbUnknown(12),
+      { 32} wbFormIDCk('Unknown', [NULL, EXPL]),
+      { 36} wbFormIDCk('Unknown', [NULL, ARTO]),
+      { 40} wbFormIDCk('Unknown', [NULL, IMAD]),
+      { 44} wbFormIDCk('Unknown', [NULL, IPDS]),
+      { 48} wbUnknown(4),
+      { 52} wbFormIDCk('Unknown', [NULL, PERK]),
+      { 56} wbUnknown(4),
+      { 60} wbFormIDCk('Unknown', [NULL, PROJ]),
+      { 64} wbFormIDCk('Unknown', [NULL, AVIF]),
+      { 68} wbUnknown(4),
+      { 72} wbFloat,
+      { 76} wbFloat,
+      { 80} wbUnknown(4),
+      { 84} wbFloat,
+      { 88} wbUnknown(4),
+      { 92} wbFloat,
+      { 96} wbUnknown(32),
+      {128} wbFloat,
+      {132} wbFloat
       (*
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001}  'Hostile',
@@ -15488,8 +15545,40 @@ begin
     wbUnknown(BO64),
     wbKeywords,
     wbPRPS,
-    wbFormID(GNAM),
-    wbUnknown(DAT2),
+    wbFormIDCk(GNAM, 'Body Part Data', [BPTD]),
+    wbStruct(DAT2, 'Data', [
+      {  0} wbFloat,
+      {  4} wbFloat,
+      {  8} wbUnknown(32),
+      { 40} wbFloat,
+      { 44} wbFloat,
+      { 48} wbUnknown(12),
+      { 60} wbFloat,
+      { 64} wbUnknown(12),
+      { 76} wbFloat,
+      { 80} wbUnknown(4),
+      { 84} wbFloat,
+      { 88} wbFloat,
+      { 92} wbUnknown(28),
+      {120} wbFloat,
+      {124} wbUnknown(28),
+      {152} wbFloat,
+      {156} wbFloat,
+      {160} wbFloat,
+      {164} wbFloat,
+      {168} wbFloat,
+      {172} wbFloat,
+      {176} wbFloat,
+      {180} wbFloat,
+      {184} wbUnknown(9), //Yes, really!
+      {193} wbFloat,
+      {197} wbFloat,
+      {201} wbFloat,
+      {205} wbFloat,
+      {209} wbUnknown(4),
+      {213} wbFloat,
+      {217} wbFloat
+    ]),
     (*
     wbStruct(DATA, 'Data', [
       wbFloat('Male Height'),
@@ -15748,7 +15837,10 @@ begin
             {1} 'Weapon',
             {2} 'Furniture',
             {3} 'Linking Only',
-            {4} 'Pipboy'
+            {4} 'Pipboy',
+            {5} 'Unknown 5',
+            {6} 'Unknown 6',
+            {7} 'Unknown 7'
           ])),
           wbInteger('Perspective', itU16, wbEnum([
             '3rd',
@@ -16593,12 +16685,19 @@ begin
     wbODTY,
     wbXALG,
     wbKeywords,
-    wbUnknown(SMLS),
-    wbUnknown(DEVT)
+    wbSHDef(SMLS),
+    wbStruct(DEVT, 'Unknown', [
+      wbUnknown(4),
+      wbFloat
+    ])
   ]);
 
   wbSPIT := wbStruct(SPIT, 'Data', [
-    wbUnknown
+    { 0} wbUnknown(9),
+    { 9} wbFloat,
+    {13} wbUnknown(14)
+
+
     (*
     wbInteger('Base Cost', itU32),
     wbInteger('Flags', itU32, wbFlags([
@@ -16768,9 +16867,9 @@ begin
     wbString(CNAM, 'Author', 0, cpTranslate, True),
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
-      wbStringForward(MAST, 'FileName', 0, cpNormal, True),
+      wbStringForward(MAST, 'FileName', 0, cpNormal, True)
       // wbInteger(DATA, 'Filesize', itU64, nil, nil, cpIgnore, True)  // Should be set by CK but usually null
-      wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
+//      wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
     wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DLBR, DIAL, INFO, SCEN]),
@@ -18019,8 +18118,8 @@ begin
           wbEmpty(ECHO, 'Echo Start Marker'),
           wbEmpty(ECHD, 'Echo Default Start Marker')
         ], []),
-        wbUnknown(ECTE),
-        wbUnknown(ECSH),
+        wbGuid(ECTE),
+        wbSHDef(ECSH),
         wbUnknown(ANAM),
         wbFloat(BNAM),
         wbUnknown(CNAM),
@@ -18202,10 +18301,17 @@ begin
     wbODTY,
     wbOPDS,
     wbBaseFormComponents,
-    wbUnknown(PTT2), // order between PTT2
-    wbFormID(SNBH),  // and SNBH is unknown
-    wbFormID(DODT),
-    wbUnknown(DATA)
+    wbUnknown(PTT2),
+    wbSNBH,
+    wbFormIDCk(DODT, 'Unknown', [MTPT]),
+    wbStruct(DATA, 'Data', [// possibly the same format as wbDODT? which is different from the DODT usage above...
+      { 0} wbFloat,
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbFloat,
+      {16} wbFloat,
+      {20} wbFloat
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18890,35 +18996,35 @@ begin
     wbRArray('Unknown', wbUnknown(DAT2))
   ]);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(KYWD);
-  wbAddGroupOrder(FFKW);
-  wbAddGroupOrder(LCRT);
-  wbAddGroupOrder(AACT);
-  wbAddGroupOrder(TRNS);
-  wbAddGroupOrder(TXST);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(DMGT);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(AFFE);
-  wbAddGroupOrder(HDPT);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SECH);
-  wbAddGroupOrder(ASPC);
-  wbAddGroupOrder(AOPF);
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(PDCL);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(CURV);
-  wbAddGroupOrder(CUR3);
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CONT);
+  wbAddGroupOrder(GMST); {SF1Dump: no errors}
+  wbAddGroupOrder(KYWD); {SF1Dump: no errors}
+  wbAddGroupOrder(FFKW); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(LCRT); {SF1Dump: no errors}
+  wbAddGroupOrder(AACT); {SF1Dump: no errors}
+  wbAddGroupOrder(TRNS); {SF1Dump: no errors}
+  wbAddGroupOrder(TXST); {SF1Dump: no errors}
+  wbAddGroupOrder(GLOB); {SF1Dump: no errors}
+  wbAddGroupOrder(DMGT); {SF1Dump: no errors}
+  wbAddGroupOrder(CLAS); {SF1Dump: no errors}
+  wbAddGroupOrder(FACT); {SF1Dump: no errors}
+  wbAddGroupOrder(AFFE); {SF1Dump: no errors}
+  wbAddGroupOrder(HDPT); {SF1Dump: no errors}
+  wbAddGroupOrder(RACE); {SF1Dump: no errors}
+  wbAddGroupOrder(SOUN); {SF1Dump: no errors}
+  wbAddGroupOrder(SECH); {SF1Dump: no errors}
+  wbAddGroupOrder(ASPC); {SF1Dump: no errors}
+  wbAddGroupOrder(AOPF); {SF1Dump: no errors}
+  wbAddGroupOrder(MGEF); {SF1Dump: no errors (outside of CTDA parameters)}
+  wbAddGroupOrder(LTEX); {SF1Dump: no errors}
+  wbAddGroupOrder(PDCL); {SF1Dump: no errors}
+  wbAddGroupOrder(ENCH); {SF1Dump: no errors}
+  wbAddGroupOrder(SPEL); {SF1Dump: no errors}
+  wbAddGroupOrder(ACTI); {SF1Dump: no errors}
+  wbAddGroupOrder(CURV); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(CUR3); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(ARMO); {SF1Dump: no errors}
+  wbAddGroupOrder(BOOK); {SF1Dump: no errors}
+  wbAddGroupOrder(CONT); {SF1Dump: no errors}
   wbAddGroupOrder(DOOR);
   wbAddGroupOrder(LIGH);
   wbAddGroupOrder(MISC);
