@@ -324,6 +324,15 @@ begin
     .IncludeFlag(dfAllowAnyMember);
 end;
 
+function wbDamageTypeArray(aItemName: string): IwbSubRecordDef;
+begin
+    Result := wbArrayS(DAMA, aItemName+'s', wbStructSK([0], aItemName, [
+      wbFormIDCk('Damage Type', [DMGT]),
+      wbInteger('Value', itU32),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    ]))
+end;
+
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -9533,10 +9542,7 @@ begin
       wbInteger('Stagger Rating', itU8, wbStaggerEnum),
       wbByteArray('Unused', 3, cpIgnore, false, wbNeverShow)
     ]),
-    wbArrayS(DAMA, 'Resistances', wbStructSK([0], 'Resistance', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32)
-    ])),
+    wbDamageTypeArray('Resistance'),
 //    wbFormIDCk(TNAM, 'Template Armor', [ARMO]),
     wbAPPR,
     wbObjectTemplate,
@@ -11164,10 +11170,7 @@ begin
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbUnknown(ENAM),
-    wbStruct(DAMA, 'Damage', [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbUnknown
-    ])
+    wbDamageTypeArray('Damage Type')
     (*
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Light', [LIGH, NULL]),
@@ -16610,11 +16613,7 @@ begin
     wbUnknown(WTUR),
     wbUnknown(WCHG),
     wbUnknown(WDMG),
-    wbStructs(DAMA, 'Damage Types', 'Damage Type', [
-      wbFormIDCk('Type', [DMGT]),
-      wbInteger('Amount', itU32),
-      wbUnknown(4)
-    ]),
+    wbDamageTypeArray('Damage Type'),
     wbUnknown(WFIR),
     wbUnknown(WFLG),
     wbUnknown(WGEN),
@@ -18291,11 +18290,12 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SDLT, 'Secondary Damage List', [
     wbEDID,
-    wbUnknown(ITMC), //count?
-    wbRStructs('Secondary Damages', 'Secondary Damage', [
-      wbFormIDCk(DAMA, 'Damage Type', [DMGT]),
-      wbFormIDCk(ACTV, 'Actor Value', [AVIF])
-    ], [])
+    wbInteger(ITMC, 'Secondary List Count', itU32).SetRequired(True),
+    wbRArray('Secondary Damages',
+      wbRStruct('Secondary Damage', [
+        wbFormIDCk(DAMA, 'Damage Type', [DMGT], False, cpNormal, True),
+        wbFormIDCk(ACTV, 'Actor Value', [AVIF], False, cpNormal, True)
+      ], []), cpNormal, False, nil, wbSDLTListAfterSet).SetRequired(True)
   ]);
 
   {subrecords checked against Starfield.esm}

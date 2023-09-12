@@ -87,6 +87,8 @@ procedure wbSMQNQuestsAfterSet(const aElement: IwbElement; const aOldValue, aNew
 
 procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
+procedure wbSDLTListAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -941,6 +943,11 @@ end;
 procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterAfterSet('CITC - Condition Count', aElement);
+end;
+
+procedure wbSDLTListAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+begin
+  wbCounterAfterSet('ITMC - Secondary List Count', aElement);
 end;
 
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
