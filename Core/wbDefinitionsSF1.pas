@@ -9269,9 +9269,9 @@ begin
               wbUnknown(4)
             ]), -2)
           ]),
-          wbUnknown(MCQP),
-          wbUnknown(XMSP),
-          wbUnknown(XLMS)
+          wbString(MCQP, 'Ring model'),
+          wbString(XMSP, 'Ring material'),
+          wbString(XLMS, 'Ring id')
         ], []),
         wbRStruct('Component Data', [
           wbOPDS
@@ -18464,8 +18464,16 @@ begin
     wbKeywords,
     wbCUSH,
     wbFormID(FNAM, 'Item List'),
-    wbInteger(SNAM, 'Unknown', itU32),
-    wbRArray('Unknown', wbFormID(CNAM, 'Next Rarity')),
+    wbInteger(SNAM, 'Rarity', itU32, wbEnum ([], [
+        0, 'Common',
+        1, 'Uncommon',
+        2, 'Rare',
+        3, 'Exotic',
+        4, 'Unique',
+        5, 'Unique to He-3',
+        6, 'Unique to H2O'
+      ])),
+    wbRArray('Next rarities', wbFormID(CNAM, 'Next Rarity')),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
