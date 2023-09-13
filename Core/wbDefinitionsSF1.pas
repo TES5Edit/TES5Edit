@@ -7552,8 +7552,16 @@ begin
   ]);
   wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
-// PTT2 is some kind of transform list
-  wbPTT2 := wbArray(PTT2, 'Unknown', wbFormIDCk('Unknown', [NULL, TRNS]), 8);
+  wbPTT2 := wbStruct(PTT2, 'Transforms', [
+    wbFormIDCk('Inventory Icon Transform', [NULL, TRNS]),
+    wbFormIDCk('Unknown 1', [NULL, TRNS]),
+    wbFormIDCk('Unknown 2', [NULL, TRNS]),
+    wbFormIDCk('Preview Transform', [NULL, TRNS]),
+    wbFormIDCk('Inventory Transform', [NULL, TRNS]),
+    wbFormIDCk('Workbench Transform ', [NULL, TRNS]),
+    wbFormIDCk('Main Game UI Transform', [NULL, TRNS]),
+    wbFormIDCk('Unknown 7', [NULL, TRNS])
+  ]);
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32, wbEnum([
     'Easy',
@@ -15838,9 +15846,9 @@ begin
             {2} 'Furniture',
             {3} 'Linking Only',
             {4} 'Pipboy',
-            {5} 'Unknown 5',
-            {6} 'Unknown 6',
-            {7} 'Unknown 7'
+            {5} 'MT Generation',
+            {6} 'Weapon Generation',
+            {7} 'Furniture Generation'
           ])),
           wbInteger('Perspective', itU16, wbEnum([
             '3rd',
