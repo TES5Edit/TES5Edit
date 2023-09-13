@@ -17142,7 +17142,8 @@ begin
     wbStruct(WGEN, 'Unknown', [
       wbUnknown(4),
       wbFloat('Base weight'),
-      wbUnknown(12),
+      wbInteger('Base value', itu32),
+      wbUnknown(8),
       wbFormID('Unknown')
     ]),
     wbUnknown(WABB),
