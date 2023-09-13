@@ -9252,7 +9252,15 @@ begin
         wbRStruct('Component Data', [
           wbString(MODL, 'Model'),
           wbUnknown(FLLD),
-          wbUnknown(XMPM),
+          wbStruct(XMPM, 'Unknown', [
+            wbArray('Unknown', wbLenString('Unknown', 2), -2),
+            wbArray('Unknown', wbStruct('Unknown', [
+              wbLenString('Unknown', 2),
+              wbUnknown(4),
+              wbString('Unknown'),
+              wbUnknown(4)
+            ]), -2)
+          ]),
           wbUnknown(MCQP),
           wbUnknown(XMSP),
           wbUnknown(XLMS)
@@ -17117,7 +17125,7 @@ begin
     wbUnknown(WCHG),
     wbStruct(WDMG, 'Unknown', [
       wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbFloat('Range'),
       wbFloat('Unknown')
     ]),
     wbDamageTypeArray('Damage Type'),
