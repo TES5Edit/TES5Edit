@@ -18794,9 +18794,10 @@ begin
         wbUnknown()
       ]),
       wbUnknown(KNAM),
-      wbUnknown(NNAM)
+      wbUnknown(NNAM),
+      wbUnknown(BDED) //req
     ], []),
-    wbUnknown(BDED), //req
+
     wbFloat(TEMP, 'Temperature in C'),
     wbFloat(DENS, 'Density'),
     wbFloat(PHLA, 'Peri angle in deg'),
