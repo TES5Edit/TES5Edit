@@ -11038,7 +11038,7 @@ begin
       ])),
       wbInteger('Uses Skill', itS8, wbSkillEnum)
     ], cpNormal, True, nil, 1),
-    wbUnknown(FTMP),
+    wbFormIDCk(FTMP, 'Furniture Template', [FURN]),
     wbRArray('Marker Entry Points', wbStruct(FNPR, 'Marker', [
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
@@ -11790,9 +11790,9 @@ begin
       wbFromSize(5, wbInteger('Hidden', itU8, wbBoolEnum)
       }
     ], cpNormal, True),
-    wbFormIDCk(TNAM, 'Unknown' , [KYWD]),
-    wbString(GNAM),
-    wbFormIDCk(UNAM, 'Unknown' , [PERK]), // unknown what order relative to TNAM and GNAM
+    wbFormIDCk(TNAM, 'Restriction' , [KYWD]),
+    wbString(GNAM, 'Perk Icon'),
+    wbFormIDCk(UNAM, 'Training' , [PERK]), // unknown what order relative to TNAM and GNAM
 
     wbRStructs('Ranks', 'Rank', [
       wbEmpty(PRRK, 'Header Marker').SetRequired(True),
