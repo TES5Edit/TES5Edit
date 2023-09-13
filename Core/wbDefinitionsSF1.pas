@@ -7554,8 +7554,8 @@ begin
 
   wbPTT2 := wbStruct(PTT2, 'Transforms', [
     wbFormIDCk('Inventory Icon Transform', [NULL, TRNS]),
-    wbFormIDCk('Unknown 1', [NULL, TRNS]),
-    wbFormIDCk('Unknown 2', [NULL, TRNS]),
+    wbFormIDCk('Outpost Transform', [NULL, TRNS]),
+    wbFormIDCk('Ship Transform', [NULL, TRNS]),
     wbFormIDCk('Preview Transform', [NULL, TRNS]),
     wbFormIDCk('Inventory Transform', [NULL, TRNS]),
     wbFormIDCk('Workbench Transform ', [NULL, TRNS]),
