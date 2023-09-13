@@ -120,7 +120,7 @@ var
   wbAIDT: IwbSubRecordDef;
   wbFULL: IwbSubRecordDef;
   wbSNTP: IwbSubRecordDef;
-  wbREFL: IwbSubRecordDef;
+  wbREFL: IwbRecordMemberDef;
   wbSNBH: IwbSubRecordDef;
   wbODTY: IwbSubRecordDef;
   wbOPDS: IwbSubRecordDef;
@@ -206,7 +206,6 @@ var
   wbALSH: IwbRecordMemberDef;
   wbACSH: IwbRecordMemberDef;
   wbCUSH: IwbRecordMemberDef;
-  wbPUSHPDSH: IwbSubRecordStructDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
@@ -6002,16 +6001,16 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
-function wbSHDef(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbRecordMemberDef;
+function wbSoundReference(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(aSignature, aName, [
       wbGUID, // GUID 1
       wbGUID, // GUID 2
-      wbUnknown(4),  // ID 1
-      wbUnknown(4)   // ID 2
+      wbFormIDCk('Unknown', [NULL, CNDF]),
+      wbFormIDCk('Unknown', [NULL, WWED])
     ])
-    .SetSummaryKeyOnValue([0, 1])
+    .SetSummaryKeyOnValue([0, 2, 1, 3])
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 end;
@@ -6073,14 +6072,9 @@ begin
     wbCNTOs.SetRequired
   ], []);
 
-  wbPUSHPDSH := wbRStruct('Unknown', [
-    wbSHDef(PUSH).SetRequired,
-    wbSHDef(PDSH).SetRequired
-  ], []);
-
-  wbALSH := wbSHDef(ALSH);
-  wbACSH := wbSHDef(ACSH);
-  wbCUSH := wbSHDef(CUSH);
+  wbALSH := wbSoundReference(ALSH);
+  wbACSH := wbSoundReference(ACSH);
+  wbCUSH := wbSoundReference(CUSH);
 
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
@@ -7403,11 +7397,11 @@ begin
 
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
 
-  wbMODS := wbFormIDCk(MODS, 'Material Swap', [MSWP]);
-  wbMO2S := wbFormIDCk(MO2S, 'Material Swap', [MSWP]);
-  wbMO3S := wbFormIDCk(MO3S, 'Material Swap', [MSWP]);
-  wbMO4S := wbFormIDCk(MO4S, 'Material Swap', [MSWP]);
-  wbMO5S := wbFormIDCk(MO5S, 'Material Swap', [MSWP]);
+  wbMODS := wbFormIDCk(MODS, 'Material Swap', [NULL, MSWP]);
+  wbMO2S := wbFormIDCk(MO2S, 'Material Swap', [NULL, MSWP]);
+  wbMO3S := wbFormIDCk(MO3S, 'Material Swap', [NULL, MSWP]);
+  wbMO4S := wbFormIDCk(MO4S, 'Material Swap', [NULL, MSWP]);
+  wbMO5S := wbFormIDCk(MO5S, 'Material Swap', [NULL, MSWP]);
 
   wbModelFlags := wbFlags([
     'Has FaceBones Model',
@@ -7540,15 +7534,27 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbSNBH := wbFormIDCk(SNBH, 'Snap Behavior', [STBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
-  wbOPDS := wbStruct(OPDS, 'Unknown', [
-    { 0} wbUnknown(20),
-    {20} wbFloat,
-    {24} wbUnknown(28),
-    {52} wbFloat,
-    {60} wbFloat,
-    {64} wbFloat,
-    {68} wbFloat,
-    {72} wbUnknown(12)
+  wbOPDS := wbStruct(OPDS, 'Object Placement Default', [
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown'),
+    wbFloat('Unknown')
   ]);
   wbDEFL := wbFormIDCk(DEFL, 'Default Layer', [LAYR]);
 
@@ -9087,7 +9093,7 @@ begin
     end, _ReflectionChunkStructs);
 
   //wbREFL := wbArray(REFL, 'Reflection', wbReflectionChunkUnion);
-  wbREFL := wbByteArray(REFL, 'Reflection');
+  wbREFL := wbByteArray(REFL, 'Reflection').IncludeFlag(dfNoReport);
 
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type'),
@@ -9217,8 +9223,15 @@ begin
         wbRStruct('Component Data', [
           wbFormIDCk(FCTF, 'Voice Type', [VTYP])
         ], []),
+        //BGSContactShadowComponent_Component
         wbRStruct('Component Data', [
-          wbUnknown(FLCS)
+          wbStruct(FLCS, 'Unknown', [
+            wbFloat,
+            wbFloat,
+            wbFloat,
+            wbFloat,
+            wbFloat
+          ])
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(FLLD)
@@ -9254,8 +9267,9 @@ begin
         wbRStruct('Component Data', [
           wbKeywords
         ], []),
+        //TESImageSpaceModifiableForm_Component
         wbRStruct('Component Data', [
-          wbFormID(MNAM, 'Unknown')
+          wbFormIDCk(MNAM, 'Image Space Adapter', [IMAD])
         ], []),
         wbRStruct('Component Data', [
           wbString(MODL, 'Model'),
@@ -9284,11 +9298,10 @@ begin
           wbPRPS
         ], []),
         wbRStruct('Component Data', [
-          wbUnknown(PCCC)
+          wbUnknown(PTCL).IncludeFlag(dfNoReport)
         ], []),
-        wbRStruct('Component Data', [
-          wbUnknown(PTCL)
-        ], []),
+        //BGSLodOwner_Component
+        //BGSEffectSequenceComponent
         wbRStruct('Component Data', [
           wbREFL
         ], []),
@@ -9310,7 +9323,7 @@ begin
         ], []),
         //BGSSoundTag_Component
         wbRStruct('Component Data', [
-          wbFormID(STCP)
+          wbSTCP
         ], []),
         //BGSStoredTraversals_Component
         wbRStruct('Component Data', [
@@ -9326,8 +9339,8 @@ begin
           wbUnknown(WNAM),
           wbUnknown(VNAM),
           wbUnknown(UNAM),
-          wbUnknown(NAM1),
-          wbUnknown(NAM2),
+          wbFloat(NAM1),
+          wbFormIDCk(NAM2, 'Unknown', [NULL, GLOB]),
           wbUnknown(NAM3),
           wbUnknown(NAM4),
           wbUnknown(NAM5),
@@ -9791,7 +9804,8 @@ begin
     wbFULL,
     wbKeywords,
     wbGenericModel,
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
     wbCUSH,
 //    wbICON,
 //    wbMICO,
@@ -9846,7 +9860,8 @@ begin
     wbPTT2,
     wbFULL,
     wbGenericModel,
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
     wbDESC,
     wbKeywords,
 //    wbDEST,
@@ -9905,7 +9920,8 @@ begin
     wbTexturedModel('Male world model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
     wbTexturedModel('Female world model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
     wbUnknown(BO64),
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
 //    wbDEST,
 //    wbYNAM,
 //    wbZNAM,
@@ -10019,7 +10035,8 @@ begin
     wbFULL,
     wbGenericModel,
     wbDESCreq,
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
 //    wbDEST,
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
@@ -10410,8 +10427,8 @@ begin
     wbAPPR,
 //    wbObjectTemplate, likely, but doesn't occur in Starfield.esm
     wbEmpty(STOP, 'Marker'),
-    wbSHDef(WED0),
-    wbSHDef(WED1),
+    wbSoundReference(WED0),
+    wbSoundReference(WED1),
     wbFormIDCk(ONAM, 'Display Filter', [FLST])
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
@@ -10752,9 +10769,9 @@ begin
     wbFTYP,
     wbPRPS,
 
-    wbUnknown(DOSH),
-    wbUnknown(DCSH),
-    wbUnknown(DLSH),
+    wbSoundReference(DOSH, 'Open Sound'),
+    wbSoundReference(DCSH, 'Close Sound'),
+    wbSoundReference(DLSH, 'Lock Sound'),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       '',
       'Automatic',
@@ -11016,7 +11033,7 @@ begin
       {0x0002} 'Ignored By Sandbox'
     ])),
     wbUnknown(JNAM),
-    wbUnknown(INAM),
+    wbEmpty(INAM, 'Unknown'),
     wbMNAMFurnitureMarker,
     wbUnknown(GNAM),
     wbStruct(WBDT, 'Workbench Data', [
@@ -11214,9 +11231,9 @@ begin
     wbEDID,
     wbOBND(True),
     wbODTY,
-    wbSHDef(ASLS),
-    wbSHDef(WED0),
-    wbSHDef(WED1),
+    wbSoundReference(ASLS),
+    wbSoundReference(WED0),
+    wbSoundReference(WED1),
     wbFormIDCk(AAMB, 'Ambient Set', [AMBS]),
     wbFormIDCk(AMUS, 'Music', [MUSC]),
     wbFormIDCk(BNAM, 'Environment Type', [REVB]),
@@ -11260,10 +11277,10 @@ begin
     wbDEST,
     wbKeywords,
     wbPRPS,
-    wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
-    wbUnknown(MSLS),
-    wbFloat(MSMO, 'Unknown'),
-    wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
+    //wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
+    wbUnknown(DATA),
+    wbSoundReference(MSLS),
+    wbFloat(MSMO, 'Unknown')
   ]);
 end;
 
@@ -13103,7 +13120,7 @@ begin
         wbUnknown(FLMV),
         wbUnknown(MPCD),
         wbUnknown(VNAM),
-        wbSHDef(WED0),
+        wbSoundReference(WED0),
         wbUnknown(BIPL),
         wbUnknown(LVLO),
         wbUnknown(XNAM)
@@ -13114,11 +13131,11 @@ begin
       wbFloat(DMAX, 'Looping - Max'),
       wbFloat(DMIN, 'Looping - Min'),
 
-      wbSHDef(WED0),
+      wbSoundReference(WED0),
 
       wbHNAMHNAM,
 
-      wbSHDef(WED0),
+      wbSoundReference(WED0),
 
       wbUnknown(VENC),
 
@@ -13737,7 +13754,16 @@ begin
     wbODTY,
     wbBaseFormComponents,
     wbGenericModel,
-    wbUnknown(DNAM)
+    wbStruct(DNAM, '', [
+      { 0} wbFloat,
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbFloat,
+      {16} wbFloat,
+      {20} wbUnknown(12),
+      {32} wbFloat,
+      {36} wbUnknown(2)
+    ])
     {
     wbStruct(DNAM, '', [
       wbInteger('Density', itU8),
@@ -14041,7 +14067,20 @@ begin
     wbGenericModel,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(DAT2),
+    wbStruct(DAT2, 'Data', [
+      { 0} wbUnknown(16),
+      {16} wbFloat,
+      {20} wbUnknown(12),
+      {32} wbFloat,
+      {36} wbFloat,
+      {40} wbUnknown(4),
+      {44} wbFloat,
+      {48} wbUnknown(12),
+      {60} wbFloat,
+      {64} wbFloat,
+      {68} wbFloat,
+      {72} wbFloat
+    ]),
 //    wbDEST,
 //    wbPRPS,
 //    wbFULL,
@@ -14096,14 +14135,46 @@ begin
 //    wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbString(NAM0, 'Gobo'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
-    wbUnknown(FLBD),
-    wbUnknown(FLRD),
-    wbUnknown(FLGD),
+    wbStruct(FLBD, 'Unknown', [
+      { 0} wbFloat,
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbFloat,
+      {16} wbFloat,
+      {20} wbUnknown(4)
+    ]),
+    wbStruct(FLRD, 'Unknown', [
+      { 0} wbFloat,
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbFloat,
+      {16} wbUnknown(4)
+    ]),
+    wbStruct(FLGD, 'Unknown', [
+      { 0} wbFloat,
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbFloat,
+      {16} wbUnknown(16),
+      {32} wbFloat,
+      {36} wbFloat,
+      {40} wbUnknown(16),
+      {56} wbFloat,
+      {60} wbFloat,
+      {64} wbUnknown(4),
+      {68} wbFloat,
+      {72} wbUnknown(8),
+      {80} wbFloat,
+      {84} wbUnknown(4)
+    ]),
     wbUnknown(LLLD),
-    wbUnknown(FLAD),
-    wbUnknown(FVLD)
-//    wbFormIDCk(WGDR, 'God Rays', [GDRY]),
-//    wbFormIDCk(SNAM, 'Sound', [SNDR])
+    wbStruct(FLAD, 'Unknown', [
+      { 0} wbFloat,
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbUnknown(4)
+    ]),
+    wbFloat(FVLD)
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
@@ -14578,7 +14649,8 @@ begin
     wbGenericModel,
     wbDEST,
     wbCUSH,
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
     wbKeywords,
     wbCVPA,
     wbStruct(DATA, 'Data', [
@@ -14587,7 +14659,7 @@ begin
     ], cpNormal, True),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
     wbUnknown(FLAG),
-    wbUnknown(NNAM)
+    wbLStringKC(NNAM, 'Unknown', 0, cpTranslate)
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   wbComponent :=
@@ -14619,7 +14691,8 @@ begin
     wbUnknown(SNAM), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
     wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum),
     wbInteger(DATA, 'Value', itU32), // req
 //    wbByteArray(NAM1, 'Unused', 0, cpIgnore, False, False, wbNeverShow), // co_PA_FusionCore01
@@ -14809,7 +14882,7 @@ begin
       wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
     }
       wbUnknown(CS3H),
-      wbSHDef(CS3S),
+      wbSoundReference(CS3S),
       wbUnknown(CS3F),
       wbUnknown(CS3E)
     ], []),
@@ -15767,8 +15840,8 @@ begin
     wbFormIDCk(ENAM, 'Aim Assist Pose Data', [AAPD]),
     wbMarkerReq(NAM3),
     wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
-    wbSHDef(WED0),
-    wbSHDef(WED1),
+    wbSoundReference(WED0),
+    wbSoundReference(WED1),
 
     wbRArray('Biped Object Names', wbString(NAME, 'Name'), 64).IncludeFlag(dfNotAlignable),
     wbArray(RBPC, 'Biped Object Conditions', wbFormIDCk('Condition', [AVIF, NULL]), 64).IncludeFlag(dfNotAlignable),
@@ -16010,6 +16083,8 @@ begin
     wbDATAPosRot,
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo);
+
+  var TES4: TwbSignature := 'TES4';
 
   {subrecords checked against Starfield.esm}
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
@@ -16567,6 +16642,8 @@ begin
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
+  var lS: PAnsiChar := @TES4;
+
   {subrecords checked against Starfield.esm}
   wbRecord(REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -16692,6 +16769,8 @@ begin
     ], []))
   ], True);
 
+  var lTM := Ord(wbToolMode);
+
   {subrecords checked against Starfield.esm}
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
@@ -16699,7 +16778,7 @@ begin
     wbODTY,
     wbXALG,
     wbKeywords,
-    wbSHDef(SMLS),
+    wbSoundReference(SMLS),
     wbStruct(DEVT, 'Unknown', [
       wbUnknown(4),
       wbFloat
@@ -16779,7 +16858,8 @@ begin
     wbFULL,
     wbKeywords,
     wbETYP,
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
     wbDESCReq,
     wbSPIT,
     wbEffectsReq
@@ -16788,6 +16868,9 @@ begin
   {wbRecord(SCRL, 'Scroll', [
     wbEDID
   ]);}
+
+  if lTM - 1 = 0  then
+    Inc(lS[0]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(STAT, 'Static',
@@ -16828,7 +16911,6 @@ begin
     wbEDID,
 //    wbVMAD,
     wbOBND(True),
-//    wbPTT2,
     wbODTY,
     wbOPDS,
     wbPTT2,
@@ -16843,28 +16925,13 @@ begin
     wbFULL,
     wbStruct(DNAM, 'Direction Material', [
       wbFloat('Max Angle (30-120)'),
-      wbFormIDCk('Material', [MATO, NULL]),
+      wbFloat,
       wbFloat('Leaf Amplitude'),
       wbFloat('Leaf Frequency')
     ], cpNormal, True, nil, 2),
-    wbUnknown(STLS), //order between STLS
-    wbNVNM           //and NVNM unknown
-    (*
-    wbArray(MNAM, 'Distant LOD',
-      wbStruct('LOD', [
-        {>>> Contains null-terminated mesh FileName followed by random data up to 260 bytes <<<}
-        wbString(True, 'Mesh', 260)
-        //wbByteArray('Mesh', 260, cpIgnore)
-      ]), [
-        'Level 0',
-        'Level 1',
-        'Level 2',
-        'Level 3'
-      ],
-      cpNormal, False
-    )
-    *)
-  ], False);  // unordered, NVNM can be before or after MNAM
+    wbSoundReference(STLS),
+    wbNVNM
+  ], False);
 
   {subrecords checked against Starfield.esm}
   wbRecord(TES4, 'Main File Header',
@@ -16882,8 +16949,6 @@ begin
     wbString(SNAM, 'Description', 0, cpTranslate),
     wbRArray('Master Files', wbRStruct('Master File', [
       wbStringForward(MAST, 'FileName', 0, cpNormal, True)
-      // wbInteger(DATA, 'Filesize', itU64, nil, nil, cpIgnore, True)  // Should be set by CK but usually null
-//      wbByteArray(DATA, 'Unknown', 8, cpIgnore, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
     wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DLBR, DIAL, INFO, SCEN]),
@@ -16960,7 +17025,7 @@ begin
     wbUnknown(FNAM),
     wbUnknown(JNAM),
     wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
-    wbUnknown(PFHS),
+    wbSoundReference(PFHS),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
       wbInteger('Summer ', itU8),
@@ -16977,7 +17042,7 @@ begin
     wbFormIDCk(FMAG, 'Max Global', [GLOB]),
     wbFormIDCk(FMIG, 'Min Global', [GLOB]),
     wbFormIDCk(FLXP, 'Explosion', [EXPL]),
-    wbUnknown(FHLS)
+    wbSoundReference(FHLS)
   ], False, nil, cpNormal, False, nil, nil);
 
   {subrecords checked against Starfield.esm}
@@ -16990,7 +17055,7 @@ begin
       {0x02} 'Unknown 1',
       {0x04} 'Directional Sound'
     ]), cpNormal, True),
-    wbSHDef(WASH),
+    wbSoundReference(WASH),
     wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
 //    wbFormIDCk(INAM, 'Image Space', [IMGS]),
@@ -17101,64 +17166,159 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbPUSHPDSH,
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
     wbKeywords,
     wbDESC,
     wbFormIDCk(INRD, 'Instance Naming', [INNR]),
     wbAPPR,
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker', cpNormal, True),
-    wbFormIDCk(NNAM, 'Embedded Weapon Mod', [OMOD]),
-    wbUnknown(BNAM),
+    wbFormIDCk(NNAM, 'Embedded Weapon Mod', [NULL, OMOD]),
+    wbEmpty(BNAM, 'Unknown'),
     wbStruct(WAIM, 'Unknown', [
       wbFloat('Unknown'),
-      wbFormID('Unknown'),
-      wbFormID('Unknown'),
+      wbFormIDCk('Zoom', [NULL, ZOOM]),
+      wbFormIDCk('Aim Model', [NULL, AMDL]),
       wbUnknown(2),
-      wbFormID('Unknown'),
-      wbFormID('Unknown'),
-      wbUnknown()
+      wbFormIDCk('Aim Assist Model Data', [NULL, AAMD]),
+      wbFormIDCk('Aim Optical Sight Marker', [NULL, AOPS]),
+      wbFormIDCk('Melee Aim Assist Model', [NULL, MAAM]),
+      wbUnknown
     ]),
     wbStruct(WAM2, 'Unknown', [
-      wbFormID('Unknown'),
+      wbFormIDCk('Unknown', [NULL, AMMO]),
       wbInteger('Magazine size', itu32),
-      wbFormID('Unknown'),
-      wbFormID('Unknown'),
-      wbUnknown()
+      wbFormIDCk('Unknown', [NULL, LVLI]),
+      wbFormIDCk('Unknown', [NULL, PROJ]),
+      wbUnknown
     ]),
-    wbUnknown(WAUD),
-    wbUnknown(WTUR),
-    wbUnknown(WCHG),
+    wbStruct(WAUD, 'Unknown', [
+      wbArray('Unknown',
+        wbStruct('Unknown', [
+          wbGUID, // GUID 1
+          wbGUID, // GUID 2
+          wbFormIDCk('Unknown', [NULL, CNDF]),
+          wbFormIDCk('Unknown', [NULL, WWED])
+        ])
+        .SetSummaryKey([0, 2, 1, 3])
+        .IncludeFlag(dfSummaryMembersNoName)
+        .IncludeFlag(dfCollapsed)
+      , 7),
+      wbInteger('Unknown', itU32),
+      wbInteger('Unknown', itU32)
+    ]),
+    wbStruct(WTUR, 'Unknown', [
+      wbUnknown(1),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbStruct(WCHG, 'Unknown', [
+      wbFloat('Unknown'),
+      wbFloat('Range'),
+      wbFloat('Unknown'),
+      wbUnknown
+    ]),
     wbStruct(WDMG, 'Unknown', [
       wbFloat('Unknown'),
       wbFloat('Range'),
-      wbFloat('Unknown')
+      wbFloat('Unknown'),
+      wbFloat,
+      wbFloat,
+      wbFormIDCk('Unknown', [NULL, SPEL]),
+      wbUnknown(10),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
     ]),
     wbDamageTypeArray('Damage Type'),
-    wbUnknown(WFIR),
+    wbStruct(WFIR, 'Unknown', [
+      wbUnknown(3),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbUnknown(2),
+      wbFloat,
+      wbFloat,
+      wbUnknown(1),
+      wbFloat,
+      wbUnknown(1),
+      wbFloat,
+      wbUnknown(2),
+      wbFloat
+    ]),
     wbUnknown(WFLG),
     wbStruct(WGEN, 'Unknown', [
-      wbUnknown(4),
+      wbInteger('Unknown', itu32),
       wbFloat('Base weight'),
       wbInteger('Base value', itu32),
-      wbUnknown(8),
-      wbFormID('Unknown')
+      wbFloat,
+      wbFloat,
+      wbFormIDCk('Weapon Barrel', [NULL, WBAR])
     ]),
-    wbUnknown(WABB),
+    wbLStringKC(WABB, 'Unknown', 0, cpTranslate),
+    wbStruct(WMEL, 'Unknown', [
+      wbUnknown(1),
+      wbFloat,
+      wbFloat,
+      wbInteger('Unknown', itU32)
+    ]),
     wbUnknown(WMEL),
-    wbUnknown(QNAM),
-    wbStruct(WRLO, 'Unknown', [
-      wbFloat('Unknown'),
-      wbUnknown()
+    wbStruct(QNAM, 'Unknown', [
+      { 0} wbUnknown(4),
+      { 4} wbFloat,
+      { 8} wbFloat,
+      {12} wbUnknown(16),
+      {28} wbFloat,
+      {32} wbUnknown(4)
     ]),
-    wbUnknown(WVAR),
+    wbStruct(WRLO, 'Unknown', [
+      wbFloat,
+      wbFloat,
+      wbUnknown(2)
+    ]),
+    wbStruct(WVAR, 'Unknown', [
+      { 0} wbUnknown(4),
+      { 4} wbFloat,
+      { 8} wbUnknown(4),
+      {12} wbFloat,
+      {16} wbFloat,
+      {20} wbFloat,
+      {24} wbFloat,
+      {28} wbFloat,
+      {32} wbUnknown(4),
+      {36} wbFloat,
+      {40} wbFloat,
+      {44} wbFloat,
+      {48} wbUnknown(1)
+    ]),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
       wbUnknown(FLLD),
       wbMO4S
     ], []).IncludeFlag(dfAllowAnyMember),
-    wbUnknown(WVIS),
-    wbUnknown(WTRM)
+    wbStruct(WVIS, 'Unknown', [
+      { 0} wbUnknown(12),
+      {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
+      {16} wbUnknown(8)
+    ]),
+    wbStruct(WTRM, 'Unknown', [
+      { 0} wbFloat,
+      { 4} wbUnknown(1),
+      { 5} wbFloat,
+      { 9} wbFloat,
+      {13} wbFloat
+    ])
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -17878,6 +18038,7 @@ begin
     wbBaseFormComponents,
     wbFLTR,
     wbOPDS,
+    //wbUnknown(CNAM),
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbInteger(VNAM, 'Version', itU32),
     wbUnknown(FNAM),
@@ -17928,7 +18089,10 @@ begin
 
   var wbStaticPart :=
     wbRStructSK([0], 'Part', [
-      wbFormIDCk(ONAM, 'Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]),
+      wbStruct(ONAM, 'Unknown', [
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]),
+        wbUnknown(4)
+      ]),
       wbArrayS(DATA, 'Placements', wbStruct('Placement', [
         wbStruct('Position', [
           wbFloat('X'),
@@ -18160,7 +18324,7 @@ begin
           wbEmpty(ECHD, 'Echo Default Start Marker')
         ], []),
         wbGuid(ECTE),
-        wbSHDef(ECSH),
+        wbSoundReference(ECSH),
         wbUnknown(ANAM),
         wbFloat(BNAM),
         wbUnknown(CNAM),
@@ -19075,17 +19239,17 @@ begin
   wbAddGroupOrder(ARMO); {SF1Dump: no errors}
   wbAddGroupOrder(BOOK); {SF1Dump: no errors}
   wbAddGroupOrder(CONT); {SF1Dump: no errors}
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(SCOL);
-  wbAddGroupOrder(PKIN);
-  wbAddGroupOrder(MSTT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
+  wbAddGroupOrder(DOOR); {SF1Dump: no errors}
+  wbAddGroupOrder(LIGH); {SF1Dump: no errors}
+  wbAddGroupOrder(MISC); {SF1Dump: no errors}
+  wbAddGroupOrder(STAT); {SF1Dump: no errors}
+  wbAddGroupOrder(SCOL); {SF1Dump: no errors}
+  wbAddGroupOrder(PKIN); {SF1Dump: no errors}
+  wbAddGroupOrder(MSTT); {SF1Dump: no errors}
+  wbAddGroupOrder(GRAS); {SF1Dump: no errors}
+  wbAddGroupOrder(FLOR); {SF1Dump: no errors}
+  wbAddGroupOrder(FURN); {SF1Dump: no errors}
+  wbAddGroupOrder(WEAP); {SF1Dump: no errors}
   wbAddGroupOrder(AMMO);
   wbAddGroupOrder(NPC_);
   wbAddGroupOrder(PLYR);

@@ -8476,6 +8476,7 @@ function wbGUID(const aSignature : TwbSignature;
                                   : IwbSubRecordDef;
 begin
   Result := wbByteArray(aSignature, aName, 16, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result.IncludeFlag(dfNoReport);
 end;
 
 function wbGUID(const aName      : string = 'Unknown';
@@ -8486,6 +8487,7 @@ function wbGUID(const aName      : string = 'Unknown';
                                   : IwbByteArrayDef;
 begin
   Result := wbByteArray(aName, 16, aPriority, aRequired, aDontShow, aGetCP);
+  Result.IncludeFlag(dfNoReport);
 end;
 
 function wbDumpInteger : IwbIntegerDefFormater;
