@@ -9565,10 +9565,8 @@ begin
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
     wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
     wbInteger('Property Count', itU32), // fixed name for wbOMOD* handlers
-    wbInteger('Level Min', itU8),
-    wbByteArray('Unused', 1),
-    wbInteger('Level Max', itU8),
-    wbByteArray('Unused', 1),
+    wbInteger('Level Min', itU16),
+    wbInteger('Level Max', itU16),
     wbInteger('Addon Index', itS16{, wbOBTEAddonIndexToStr, nil, cpNormal, True, nil, nil, -1}),
     wbInteger('Default', itU8, wbBoolEnum),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
