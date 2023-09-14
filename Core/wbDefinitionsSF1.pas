@@ -18650,27 +18650,27 @@ begin
     wbEDID,
     wbFULL,
     wbKeywords,
-    wbString(SNAM),
+    wbString(SNAM, ' Biome Type'),
     wbArray(PNAM, 'Plants', wbFormIDCk('Flora', [FLOR])),
-    wbFormID(RNAM),
+    wbFormIDCk(RNAM, 'Resource Generation Data', [RSGD]),
     wbRStructs('Unknown', 'Unknown', [
       wbString(FNAM),
-      wbUnknown(BNAM),
+      wbUnknown(BNAM),       //Always 01 00 00 00 if it exists
       wbRArray('Unknown', wbStruct(GNAM, 'Unknown', [
         wbFormIDCk('Pack-In', [PKIN]),
         wbUnknown
       ])),
-      wbUnknown(DNAM)
+      wbFloat(DNAM, 'Unknown')
     ], []),
     wbUnknown(ONAM),
-    wbRArray('Unknown', wbFormID(NAM1)),
+    wbRArray('Material Swaps', wbFormID(NAM1)),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
     wbUnknown(MNAM),
     wbFormIDCk(INAM, 'Water', [WATR]),
-    wbString(JNAM),
-    wbUnknown(WNAM),
-    wbUnknown(YNAM),
-    wbUnknown(UNAM),
+    wbString(JNAM, 'Water Material'),
+    wbFloat(WNAM, 'Unknown'),
+    wbFloat(YNAM, 'Unknown'),
+    wbFloat(UNAM, 'Unknown'),
     wbFormIDCk(BIAS, 'Ambient Set', [AMBS]),
     wbFormIDCk(BIMT, 'Music', [MUSC]),
     wbUnknown(NAM0),
@@ -18680,7 +18680,7 @@ begin
     wbUnknown(BMC2),
     wbUnknown(BMC3),
     wbUnknown(TNAM),
-    wbRStructs('Unknown', 'Unknown', [
+    wbRStructs('Marker Type', 'Type', [
       wbFormIDCk(KNAM, 'Keyword', [KYWD]),
       wbKSIZ,
       wbKWDAs
@@ -18694,7 +18694,7 @@ begin
       wbStruct(ANAM, 'Unknown', [
         wbByteArray('Unknown', 4),
         wbFormIDCk('Land Texture', [LTEX]),
-        wbFormIDCk('Ground Cover', [GCVR])
+        wbFormIDCk('Ground Cover', [GCVR, NULL])
       ]),
       wbString(TX00),
       wbString(UX00),
@@ -18707,9 +18707,9 @@ begin
     wbUnknown(BTPS),
     wbUnknown(BDFS),
     wbString(EFSD),
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbUnknown(NAM4)
+    wbFormIDCk(NAM2, 'Unknown', [GLOB]),
+    wbFormIDCk(NAM3, 'Unknown', [GLOB]),
+    wbFormIDCk(NAM4, 'Unknown', [GLOB])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19185,7 +19185,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(WKMF, 'WWise Keyword Mapping', [
+  wbRecord(WKMF, 'Wwise Keyword Mapping', [
     wbEDID,
     wbUnknown(WMTI),
     wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
@@ -19197,7 +19197,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(WWED, 'WWise Event Data', [
+  wbRecord(WWED, 'Wwise Event Data', [
     wbEDID,
     wbUnknown(WSED),
     wbUnknown(CNAM),
