@@ -18665,9 +18665,14 @@ begin
     wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
     wbRArray('Material Swaps', wbFormID(NAM1)),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
-    wbUnknown(MNAM),
-    wbFormIDCk(INAM, 'Water', [WATR]),
-    wbString(JNAM, 'Water Material'),
+    wbRStruct('Water Data', [
+      wbInteger(MNAM, 'Unknown', itU8, wbEnum([
+      {0} 'No Water',
+      {1} 'Has Water'
+      ])), //implicit required
+      wbFormIDCk(INAM, 'Water', [WATR]),
+      wbString(JNAM, 'Water Material')
+    ], []),
     wbFloat(WNAM, 'Unknown'),
     wbFloat(YNAM, 'Unknown'),
     wbFloat(UNAM, 'Unknown'),
