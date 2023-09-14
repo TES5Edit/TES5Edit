@@ -188,6 +188,7 @@ var
   wbPLDT: IwbSubRecordDef;
   wbPLVD: IwbSubRecordDef;
   wbPTDA: IwbSubRecordWithStructDef;
+  wbXLOC: IwbSubrecordWithStructDef;
   wbAttackData: IwbSubRecordStructDef;
   wbLLCT: IwbSubRecordDef;
   wbLVLD: IwbSubRecordDef;
@@ -7396,6 +7397,27 @@ begin
     ]),
     wbInteger('Count / Distance', itS32)
   ]);
+
+  wbXLOC := wbStruct(XLOC, 'Lock Data', [
+    wbInteger('Level', itU8, wbEnum([], [
+       0, 'None',
+       1, 'Novice 1',
+      25, 'Novice 25',
+      50, 'Advanced',
+      75, 'Expert',
+     100, 'Master',
+     253, 'Requires Terminal',
+     251, 'Barred',
+     252, 'Chained',
+     254, 'Inaccessible',
+     255, 'Requires Key'
+    ])),
+    wbByteArray('Unused', 3, cpIgnore),
+    wbFormIDCkNoReach('Key', [KEYM, NULL]),
+    wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
+    wbByteArray('Unused', 3, cpIgnore),
+    wbUnknown
+  ], cpNormal, False, nil, 4);
 
   wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
 
@@ -16622,26 +16644,7 @@ begin
     //wbInteger(XTRI, 'Collision Layer', itU32),
 
     {--- Lock ---}
-    wbStruct(XLOC, 'Lock Data', [
-      wbInteger('Level', itU8, wbEnum([], [
-         0, 'None',
-         1, 'Novice 1',
-        25, 'Novice 25',
-        50, 'Advanced',
-        75, 'Expert',
-       100, 'Master',
-       253, 'Requires Terminal',
-       251, 'Barred',
-       252, 'Chained',
-       254, 'Inaccessible',
-       255, 'Requires Key'
-      ])),
-      wbByteArray('Unused', 3, cpIgnore),
-      wbFormIDCkNoReach('Key', [KEYM, NULL]),
-      wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
-      wbByteArray('Unused', 3, cpIgnore),
-      wbUnknown
-    ], cpNormal, False, nil, 4),
+    wbXLOC,
 
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
@@ -19372,24 +19375,28 @@ begin
     wbUnknown(TMVT),
     wbUnknown(DNAM),
     wbUnknown(SNAM),
-    wbLString(INAM, 'Unknown'),
-    wbInteger(BSIZ, 'Element Count', itU32),
-    wbRStructs('Screen Content', 'Screen', [
-      wbLString(BTXT, 'Element Text'),
+    wbLStringKC(INAM, 'Unknown', 0, cpTranslate, True),
+    wbRStruct('Body Text', [
+      wbInteger(BSIZ, 'Count', itU32),
+      wbRStructs('Items', 'Item', [
+        wbLStringKC(BTXT, 'Text', 0, cpTranslate, True),
       wbCTDAs,
       wbInteger(TPLT, 'Uses Templated Text', itU8, wbBoolEnum) // note that this is not set on text that uses aliases or script token replacement
+      ], [])
     ], []),
-    wbInteger(ISIZ, 'Options Count', itU32),
-    wbRStructs('Terminal Options', 'Option', [
-      wbLString(ITXT, 'Title'),
-      wbInteger(ISTX, 'Unknown', itU32), // always false/0 in Starfield.esm
-      wbUnknown(ISET), // button template?
-      wbInteger(ITID, 'Entry Index', itU16),
-      wbUnknown(XLOC), // X location? but the floats don't make sense..
-      wbFormIDCk(TNAM, 'Go To', [TMLM]),
-      wbLString(UNAM, 'Clicked Text'),
+    wbRStruct('Menu', [
+      wbInteger(ISIZ, 'Options Count', itU32),
+      wbRStructs('Menu Items', 'Menu Item', [
+        wbLStringKC(ITXT, 'Item Text', 0, cpTranslate, True),
+        wbInteger(ISTX, 'Unknown', itU32), // always false/0 in Starfield.esm
+        wbUnknown(ISET), // button template?
+        wbInteger(ITID, 'Item ID', itU16),
+        wbXLOC,
+        wbFormIDCk(TNAM, 'Submenu', [NULL, TMLM]),
+        wbLStringKC(UNAM, 'Display Text', 0, cpTranslate, True),
       wbCTDAs
     ], [])
+      ],[] )
   ]);
 
   {subrecords checked against Starfield.esm}
