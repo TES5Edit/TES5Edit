@@ -9119,16 +9119,16 @@ begin
             wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
               wbFormIDCk('Construction Object', [COBJ]),
-              wbStruct('Position Offset', [
+              wbStruct('Position', [
                 wbFloat('X'),
                 wbFloat('Y'),
                 wbFloat('Z')
-              ]),
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
               wbStruct('Rotation', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ]),
+                wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+                wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+                wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
               wbInteger('Part ID', itU32)
           ])),
           wbRStruct('Component Configurations', [
@@ -9138,15 +9138,9 @@ begin
               wbRArray('Unknown', wbRStruct('Unknown', [
                 wbString(BODS, 'Name'),
                 wbStruct(BODV, 'Configuration', [
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
-                  wbFloat,
+                  wbFloatColors('Color 1'),
+                  wbFloatColors('Color 2'),
+                  wbFloatColors('Color 3'),
                   wbInteger('Unknown', itU32) // known values 0 - 7, possible enum?
                 ])
               ], []), cpNormal, False, nil, wbBODSsAfterSet)
@@ -9232,10 +9226,10 @@ begin
               ], [])
             )
           ], []),
-        wbRstruct('Unknown', [
-          wbInteger(EXAC, 'Count', itU32), // count for EXAS array
-          wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil, wbEXASsAfterSet)
-        ], []),
+          wbRstruct('Unknown', [
+            wbInteger(EXAC, 'Count', itU32), // count for EXAS array
+            wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil, wbEXASsAfterSet)
+          ], []),
           wbString(EXBS).SetRequired(True)
         ], []),
         //BGSLinkedVoiceType_Component
