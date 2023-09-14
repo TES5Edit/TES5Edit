@@ -18660,7 +18660,7 @@ begin
         wbFormIDCk('Pack-In', [PKIN, LVLP]),
         wbArray('Unknown', wbFloat(), 20)
       ])),
-      wbFloat(DNAM)
+      wbArray(DNAM,'Unknown', wbFloat(), 4)
     ], []),
     wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
     wbRArray('Material Swaps', wbFormID(NAM1)),
