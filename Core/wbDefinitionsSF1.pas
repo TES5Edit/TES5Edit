@@ -17621,27 +17621,24 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
-    wbUnknown(ANAM)
-    {
-    wbStruct(DNAM, 'Data', [
-      wbFloat('Cone of Fire - Min Angle'),
-      wbFloat('Cone of Fire - Max Angle'),
-      wbFloat('Cone of Fire - Increase Per Shot'),
-      wbFloat('Cone of Fire - Decrease Per Sec'),
-      wbInteger('Cone of Fire - Decrease Delay MS', itU32),
-      wbFloat('Cone of Fire - Sneak Mult'),
-      wbFloat('Recoil - Diminish Spring Force'),
-      wbFloat('Recoil - Diminish Sights Mult'),
-      wbFloat('Recoil - Max Per Shot'),
-      wbFloat('Recoil - Min Per Shot'),
-      wbFloat('Recoil - Hip Mult'),
-      wbInteger('Runaway - Recoil Shots', itU32),
-      wbFloat('Recoil - Arc'),
-      wbFloat('Recoil - Arc Rotate'),
-      wbFloat('Cone of Fire - Iron Sights Mult'),
-      wbFloat('Stability - Base Stability')
+    wbStruct(ANAM, 'Data', [
+       wbFloat('Cone of Fire - Min Angle'),
+       wbFloat('Cone of Fire - Max Angle'),
+       wbFloat('Cone of Fire - Increase Per Shot'),
+       wbFloat('Cone of Fire - Decrease Per Sec'),
+       wbFloat('Cone of Fire - Decrease Delay in Sec'),
+       wbFloat('Cone of Fire - Sneak Mult'),
+       wbFloat('Recoil - Diminish Spring Force'),
+       wbFloat('Recoil - Diminish Sights Mult'),
+       wbFloat('Recoil - Min Per Shot'),
+       wbFloat('Recoil - Max Per Shot'),
+       wbFloat('Recoil - Hip Mult'),
+       wbInteger('Runaway - Recoil Shots', itU32),
+       wbFloat('Recoil - Arc'),
+       wbFloat('Recoil - Arc Rotate'),
+       wbFloat('Cone of Fire - Iron Sights Mult'),
+       wbFloat('Stability - Base Stability')
     ])
-    }
   ]);
 
   {subrecords checked against Starfield.esm}
