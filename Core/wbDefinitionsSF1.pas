@@ -9921,12 +9921,7 @@ begin
     wbPRPS,
     wbFTYP,
     wbNTRM,
-    wbStruct(PNAM, 'Marker Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Unused', itU8)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(PNAM, 'Marker Color'),
 //    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
 //    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
 //    wbFormIDCk(WNAM, 'Water Type', [WATR]),
@@ -12288,11 +12283,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
     wbString(MNAM, 'Material Name'),
-    wbStruct(CNAM, 'Havok Display Color', [
-      wbFloat('Red', cpNormal, True, 255, 0),
-      wbFloat('Green', cpNormal, True, 255, 0),
-      wbFloat('Blue', cpNormal, True, 255, 0)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbFloatColors(CNAM, 'Havok Display Color'),
     wbFloat(BNAM, 'Buoyancy'),
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Stair Material',
@@ -13873,12 +13864,7 @@ begin
     //wbDESCReq,
     wbNLDT,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
-    wbStruct(FNAM, 'Debug Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Unused', itU8)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(FNAM, 'Debug Color'),
     wbInteger(GNAM, 'Flags', itU32, wbFlags([
       {0x00000001} 'Trigger Volume',
       {0x00000002} 'Sensor',
@@ -15128,12 +15114,7 @@ begin
       wbString(TNAM, 'Unknown').SetRequired(True),
       wbString(QNAM, 'Unknown').SetRequired(True),
       wbString(VNAM, 'Unknown').SetRequired(True),
-      wbStruct(NNAM, 'Tint Color Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unused', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA).SetRequired(True),
+      wbByteColors(NNAM, 'Tint Color Color').SetRequired(True),
       wbInteger(INTV, 'Unknown', itU32).SetRequired(True)
     ], []),
 
@@ -16907,12 +16888,7 @@ begin
       {0x00000040} 6, 'Border Region'
     ])), [
     wbEDID,
-    wbStruct(RCLR, 'Map Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unknown', 1)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(RCLR, 'Map Color'),
     //wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
     wbRArray('Region Areas', wbRStruct('Region Area', [
       wbInteger(RPLI, 'Edge Fall-off', itU32),
@@ -19002,12 +18978,7 @@ begin
     wbRStructs('Unknown', 'Unknown', [
       wbString(LNAM), //req
       wbString(VNAM),
-      wbStruct(NNAM, 'Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Alpha', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteRGBA(NNAM, 'Color')
     ], []),
     wbInteger(MODT, 'Unknown', itU32)
   ]);
