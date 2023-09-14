@@ -6829,7 +6829,7 @@ begin
   ]);
 
   wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
-  wbNLDT := wbString(NLDT);
+  wbNLDT := wbString(NLDT, 'Context'); // localization note, explanation of variable, etc.
   wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
@@ -11161,9 +11161,9 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AFFE, 'Affinity Event', [
     wbEDID,
-    wbUnknown(FNAM, 4).SetRequired, //req
+    wbInteger(FNAM, 'Unknown', itU32, wbBoolEnum).SetRequired, //req
     wbNLDT,
-    wbRStructsSK('Unknown', 'Unknown', [0], [
+    wbRStructsSK('Reaction Data', 'Follower', [0], [
       wbFormIDCk(NNAM, 'Actor', [NPC_]),
       wbFormIDCk(RNAM, 'Reaction', [GLOB]).SetRequired
     ], []),
@@ -12188,10 +12188,11 @@ begin
       'Charge',
       'Int Value',
       'Variable',
-      'Resource'
+      'Resource',
+      'Anim Graph Variable'
     ])),
-    wbFloat(NAM2),
-    wbFloat(NAM3)
+    wbFloat(NAM2, 'Min'),
+    wbFloat(NAM3, 'Max')
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
   {subrecords checked against Starfield.esm}
@@ -15668,7 +15669,7 @@ begin
         wbString(SCFC, 'Script Flag Comment'),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbRArray('Stage Complete Data', wbRStruct('Datum', [
-//          wbInteger(QSRD, 'Reward Scenario', itU32), // I am 100% sure of this but the empty record afterwards stumps me
+//          wbInteger(QSRD, 'Reward Scenario Count', itU32), // I am 100% sure of this but the empty record afterwards stumps me
           wbUnknown(QSRD),
           wbFormIDCk(NAM1, 'Affinity Change', [AFFE, NULL]),
           wbRArray('Reward List', wbRStruct('Reward Data', [
@@ -19400,22 +19401,22 @@ begin
     wbUnknown(TMVT),
     wbUnknown(DNAM),
     wbUnknown(SNAM),
-    wbUnknown(INAM),
-    wbUnknown(BSIZ),
-    wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(BTXT),
+    wbLString(INAM, 'Unknown'),
+    wbInteger(BSIZ, 'Element Count', itU32),
+    wbRStructs('Screen Content', 'Screen', [
+      wbLString(BTXT, 'Element Text'),
       wbCTDAs,
-      wbUnknown(TPLT)
+      wbInteger(TPLT, 'Uses Templated Text', itU8, wbBoolEnum) // note that this is not set on text that uses aliases or script token replacement
     ], []),
-    wbUnknown(ISIZ),
-    wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(ITXT),
-      wbUnknown(ISTX),
-      wbUnknown(ISET),
-      wbUnknown(ITID),
-      wbUnknown(XLOC),
-      wbUnknown(TNAM),
-      wbUnknown(UNAM),
+    wbInteger(ISIZ, 'Options Count', itU32),
+    wbRStructs('Terminal Options', 'Option', [
+      wbLString(ITXT, 'Title'),
+      wbInteger(ISTX, 'Unknown', itU32), // always false/0 in Starfield.esm
+      wbUnknown(ISET), // button template?
+      wbInteger(ITID, 'Entry Index', itU16),
+      wbUnknown(XLOC), // X location? but the floats don't make sense..
+      wbFormIDCk(TNAM, 'Go To', [TMLM]),
+      wbLString(UNAM, 'Clicked Text'),
       wbCTDAs
     ], [])
   ]);
