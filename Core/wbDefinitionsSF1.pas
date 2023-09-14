@@ -18651,27 +18651,27 @@ begin
     wbEDID,
     wbFULL,
     wbKeywords,
-    wbString(SNAM),
+    wbString(SNAM, 'Biome Type'),
     wbArray(PNAM, 'Plants', wbFormIDCk('Flora', [FLOR])),
-    wbFormID(RNAM),
+    wbFormIDCk(RNAM, 'Resource Generation Data', [RSGD]),
     wbRStructs('Unknown', 'Unknown', [
       wbString(FNAM),
-      wbUnknown(BNAM),
+      wbUnknown(BNAM),       //Always 01 00 00 00 if it exists
       wbRArray('Unknown', wbStruct(GNAM, 'Unknown', [
-        wbFormIDCk('Pack-In', [PKIN]),
-        wbUnknown
+        wbFormIDCk('Pack-In', [PKIN, LVLP]),
+        wbArray('Unknown', wbFloat(), 20)
       ])),
-      wbUnknown(DNAM)
+      wbFloat(DNAM)
     ], []),
-    wbUnknown(ONAM),
-    wbRArray('Unknown', wbFormID(NAM1)),
+    wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
+    wbRArray('Material Swaps', wbFormID(NAM1)),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
     wbUnknown(MNAM),
     wbFormIDCk(INAM, 'Water', [WATR]),
-    wbString(JNAM),
-    wbUnknown(WNAM),
-    wbUnknown(YNAM),
-    wbUnknown(UNAM),
+    wbString(JNAM, 'Water Material'),
+    wbFloat(WNAM, 'Unknown'),
+    wbFloat(YNAM, 'Unknown'),
+    wbFloat(UNAM, 'Unknown'),
     wbFormIDCk(BIAS, 'Ambient Set', [AMBS]),
     wbFormIDCk(BIMT, 'Music', [MUSC]),
     wbUnknown(NAM0),
@@ -18681,36 +18681,36 @@ begin
     wbUnknown(BMC2),
     wbUnknown(BMC3),
     wbUnknown(TNAM),
-    wbRStructs('Unknown', 'Unknown', [
+    wbRStructs('Marker Type', 'Type', [
       wbFormIDCk(KNAM, 'Keyword', [KYWD]),
       wbKSIZ,
       wbKWDAs
     ], []),
     wbRStructs('Unknown', 'Unknown', [
       wbStruct(LNAM, 'Unknown', [
-        wbByteArray('Unknown', 4),
+        wbInteger('Unknown', itU32),
         wbFormIDCk('Land Texture', [LTEX]),
         wbFormIDCk('Ground Cover', [GCVR])
       ]),
       wbStruct(ANAM, 'Unknown', [
-        wbByteArray('Unknown', 4),
+        wbInteger('Unknown', itU32),
         wbFormIDCk('Land Texture', [LTEX]),
-        wbFormIDCk('Ground Cover', [GCVR])
+        wbFormIDCk('Ground Cover', [GCVR, NULL])
       ]),
-      wbString(TX00),
-      wbString(UX00),
-      wbString(VX00),
-      wbString(WX00),
-      wbString(XX00),
-      wbString(YX00)
+      wbString(TX00, 'Mask - Type 0'),
+      wbString(UX00, 'Mask - Type 1'),
+      wbString(VX00, 'Mask - Type 2'),
+      wbString(WX00, 'Mask - Type 3'),
+      wbString(XX00, 'Mask - Type 4'),
+      wbString(YX00, 'Mask - Type 5')
     ], []),
-    wbString(TX16),
-    wbUnknown(BTPS),
-    wbUnknown(BDFS),
-    wbString(EFSD),
-    wbUnknown(NAM2),
-    wbUnknown(NAM3),
-    wbUnknown(NAM4)
+    wbString(TX16, 'Ground Layer Normal'),
+    wbArray(BTPS, 'Unknown', wbFloat(), 56),
+    wbArray(BDFS, 'Unknown', wbFloat(), 11),
+    wbString(EFSD, 'Ground Layer Material'),
+    wbFormIDCk(NAM2, 'Unknown', [GLOB]),
+    wbFormIDCk(NAM3, 'Unknown', [GLOB]),
+    wbFormIDCk(NAM4, 'Unknown', [GLOB])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19186,7 +19186,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(WKMF, 'WWise Keyword Mapping', [
+  wbRecord(WKMF, 'Wwise Keyword Mapping', [
     wbEDID,
     wbUnknown(WMTI),
     wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
@@ -19198,7 +19198,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(WWED, 'WWise Event Data', [
+  wbRecord(WWED, 'Wwise Event Data', [
     wbEDID,
     wbUnknown(WSED),
     wbUnknown(CNAM),
