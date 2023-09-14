@@ -18650,7 +18650,7 @@ begin
     wbEDID,
     wbFULL,
     wbKeywords,
-    wbString(SNAM, ' Biome Type'),
+    wbString(SNAM, 'Biome Type'),
     wbArray(PNAM, 'Plants', wbFormIDCk('Flora', [FLOR])),
     wbFormIDCk(RNAM, 'Resource Generation Data', [RSGD]),
     wbRStructs('Unknown', 'Unknown', [
@@ -18660,7 +18660,7 @@ begin
         wbFormIDCk('Pack-In', [PKIN, LVLP]),
         wbArray('Unknown', wbFloat(), 20)
       ])),
-      wbFloat(DNAM, 'Unknown')
+      wbFloat(DNAM)
     ], []),
     wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
     wbRArray('Material Swaps', wbFormID(NAM1)),
