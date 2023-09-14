@@ -12255,8 +12255,13 @@ begin
     wbFULL,
     wbKeywords,
     wbPRPS,
-    wbUnknown(DATA),
-
+    wbStruct(DATA, 'Unknown', [
+      wbFormIDCk('Faction', [FACT]),
+      wbUnknown(1),
+      wbInteger('System level', itu8),
+      wbUnknown(1),
+      wbInteger('Unknown', itu8)
+    ]),
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
     wbFormIDCk(MNAM, 'World Location Marker Ref', [REFR, ACHR]),
