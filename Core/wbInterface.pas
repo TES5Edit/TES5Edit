@@ -648,6 +648,7 @@ type
     function GetCollapsed: Boolean;
     procedure SetCollapsed(const aValue: Boolean);
     function GetCollapsedGen: Integer;
+    function GetChildPos(const aChild: IwbDef): Integer;
 
     procedure Report(const aParents: TwbDefPath);
     procedure Used(const aElement: IwbElement = nil; const s: string = '');
@@ -686,6 +687,8 @@ type
       read GetNoReach;
     property Parent: IwbDef
       read GetParent;
+    property ChildPos[const aChild: IwbDef]: Integer
+      read GetChildPos;
   end;
 
   TwbElementType = (
@@ -1924,8 +1927,10 @@ type
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
     function GetName: string;
+    function GetFullName: string;
     function GetSingularName: string;
     function GetPath: string;
+    function GetFullPath: string;
     procedure AfterLoad(const aElement: IwbElement);
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
@@ -1943,8 +1948,12 @@ type
 
     property Name: string
       read GetName;
+    property FullName: string
+      read GetFullName;
     property Path: string
       read GetPath;
+    property FullPath: string
+      read GetFullPath;
 
     property TreeHead: Boolean
       read GetTreeHead write SetTreeHead;
@@ -5085,15 +5094,15 @@ type
   TwbDefClass = class of TwbDef;
   TwbDef = class(TInterfacedObject, IwbDef, IwbDefInternal)
   private
-    defSource   : IwbDef;
-    defParent   : TwbDef;
+    defSource           : IwbDef;
+    defParent           : TwbDef;
 
-    defPriority     : TwbConflictPriority;
-    defGetCP        : TwbGetConflictPriority;
-    defFlags        : TwbDefFlags;
-    defCollapsedGen : Integer;
+    defPriority         : TwbConflictPriority;
+    defGetCP            : TwbGetConflictPriority;
+    defFlags            : TwbDefFlags;
+    defCollapsedGen     : Integer;
 
-    defRequired : Boolean;
+    defRequired         : Boolean;
 
     defUsed             : Boolean;
     defReported         : Boolean;
@@ -5131,6 +5140,7 @@ type
     function GetCollapsed: Boolean;
     procedure SetCollapsed(const aValue: Boolean);
     function GetCollapsedGen: Integer;
+    function GetChildPos(const aChild: IwbDef): Integer; virtual;
 
     procedure Report(const aParents: TwbDefPath); virtual;
     procedure Used(const aElement: IwbElement; const s: string);
@@ -5181,8 +5191,10 @@ type
 
     {---IwbNamedDef---}
     function GetName: string;
+    function GetFullName: string; virtual;
     function GetSingularName: string;
     function GetPath: string;
+    function GetFullPath: string;
     procedure AfterLoad(const aElement: IwbElement); virtual;
     procedure AfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
@@ -5201,6 +5213,9 @@ type
 
   TwbBaseSignatureDef = class(TwbNamedDef, IwbSignatureDef)
   protected
+    {---IwbNamedDef---}
+    function GetFullName: string; override;
+
     {---IwbSignatureDef---}
     function GetDefaultSignature: TwbSignature; virtual;
 
@@ -5299,6 +5314,7 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
+    function GetChildPos(const aChild: IwbDef): Integer; override;
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbRecordDef---}
@@ -5540,6 +5556,8 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
+    function GetChildPos(const aChild: IwbDef): Integer; override;
+
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
@@ -5605,6 +5623,8 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
+    function GetChildPos(const aChild: IwbDef): Integer; override;
+
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
@@ -5794,6 +5814,8 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
+    function GetChildPos(const aChild: IwbDef): Integer; override;
+
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
@@ -6322,6 +6344,8 @@ type
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
+    function GetChildPos(const aChild: IwbDef): Integer; override;
+
     function CanContainFormIDs: Boolean; override;
     procedure Report(const aParents: TwbDefPath); override;
 
@@ -6635,6 +6659,8 @@ type
 
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
+    function GetChildPos(const aChild: IwbDef): Integer; override;
+
     function GetDefTypeName: string; override;
 
     {---IwbIntegerDefFormater---}
@@ -8992,6 +9018,11 @@ begin
   Result := Assigned(aDef) and (aDef.DefID = GetDefID);
 end;
 
+function TwbDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := -1;
+end;
+
 function TwbDef.GetCollapsed: Boolean;
 begin
   Result := dfCollapsed in defFlags;
@@ -9244,6 +9275,35 @@ begin
     Result := ndDontShow(aElement)
   else
     Result := wbHideUnused and ndUnused;
+end;
+
+function TwbNamedDef.GetFullName: string;
+begin
+  Result := GetName;
+end;
+
+function TwbNamedDef.GetFullPath: string;
+var
+  Child    : IwbDef;
+  Parent   : IwbDef;
+  NamedDef : IwbNamedDef;
+begin
+  Result := GetFullName;
+  Parent := defParent;
+  Child := Self;
+  while Assigned(Parent) do begin
+    var lPos := Parent.ChildPos[Child];
+    var lPosStr := '';
+    if lPos >= 0 then
+      lPosStr := '[' + lPos.ToString + '] ';
+    if Supports(Parent, IwbNamedDef, NamedDef) then
+      Result := NamedDef.FullName + ' \ ' + lPosStr + Result
+    else
+      Result := Parent.DefTypeName + ' \ ' + lPosStr + Result;
+
+    Child := Parent;
+    Parent := Child.Parent;
+  end;
 end;
 
 function TwbNamedDef.GetHasDontShow: Boolean;
@@ -9945,6 +10005,15 @@ begin
     Result := recBaseRecordFormID.SignatureCount
   else
     Result := 0;
+end;
+
+function TwbMainRecordDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := inherited;
+  if not Assigned(aChild) or (Result < 0) then
+    for var lIdx := Low(recMembers) to High(recMembers) do
+      if aChild.Equals(recMembers[lIdx]) then
+        Exit(lIdx);
 end;
 
 function TwbMainRecordDef.GetContainsBaseRecord: Boolean;
@@ -10650,6 +10719,15 @@ begin
   Result := wbMainRecordHeader as IwbStructDef;
 end;
 
+function TwbSubRecordStructDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := inherited;
+  if not Assigned(aChild) or (Result < 0) then
+    for var lIdx := Low(srsMembers) to High(srsMembers) do
+      if aChild.Equals(srsMembers[lIdx]) then
+        Exit(lIdx);
+end;
+
 function TwbSubRecordStructDef.GetDefaultSignature: TwbSignature;
 begin
   Result := srsMembers[0].GetDefaultSignature;
@@ -10851,6 +10929,15 @@ destructor TwbSubRecordUnionDef.Destroy;
 begin
   inherited;
   FreeAndNil(sruSignatures);
+end;
+
+function TwbSubRecordUnionDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := inherited;
+  if not Assigned(aChild) or (Result < 0) then
+    for var lIdx := Low(sruMembers) to High(sruMembers) do
+      if aChild.Equals(sruMembers[lIdx]) then
+        Exit(lIdx);
 end;
 
 function TwbSubRecordUnionDef.GetDefaultSignature: TwbSignature;
@@ -12577,6 +12664,15 @@ begin
   end;
 end;
 
+function TwbStructDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := inherited;
+  if not Assigned(aChild) or (Result < 0) then
+    for var lIdx := Low(stMembers) to High(stMembers) do
+      if aChild.Equals(stMembers[lIdx]) then
+        Exit(lIdx);
+end;
+
 function TwbStructDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   i     : Integer;
@@ -13009,6 +13105,15 @@ begin
     Result := flgBaseFlagsDef
   else
     Result := GetRoot as IwbFlagsDef;
+end;
+
+function TwbFlagsDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := inherited;
+  if not Assigned(aChild) or (Result < 0) then
+    for var lIdx := Low(flgFlagDefs) to High(flgFlagDefs) do
+      if aChild.Equals(flgFlagDefs[lIdx]) then
+        Exit(lIdx);
 end;
 
 function TwbFlagsDef.GetDefTypeName: string;
@@ -17370,6 +17475,15 @@ begin
     NativeValue[aBasePtr, aEndPtr, aElement] := aValue;
 end;
 
+function TwbUnionDef.GetChildPos(const aChild: IwbDef): Integer;
+begin
+  Result := inherited;
+  if not Assigned(aChild) or (Result < 0) then
+    for var lIdx := Low(udMembers) to High(udMembers) do
+      if aChild.Equals(udMembers[lIdx]) then
+        Exit(lIdx);
+end;
+
 function TwbUnionDef.GetDefType: TwbDefType;
 begin
   Result := dtUnion;
@@ -19969,6 +20083,13 @@ end;
 function TwbBaseSignatureDef.GetDefaultSignature: TwbSignature;
 begin
   Result := #0#0#0#0;
+end;
+
+function TwbBaseSignatureDef.GetFullName: string;
+begin
+  Result := inherited;
+  if GetSignatureCount > 0 then
+    Result := GetSignature(0) + ' - ' + Result;
 end;
 
 function TwbBaseSignatureDef.GetSignature(const aIndex: Integer): TwbSignature;

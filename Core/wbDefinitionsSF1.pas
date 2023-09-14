@@ -6750,6 +6750,7 @@ begin
   ]);
 
   wbObjectModPropertiesEnum := wbEnum([],[
+                  6, 'Layered Material Swap',
     Sig2Int('AACT'), 'Armor - Actor Value',
     Sig2Int('ADMG'), 'Armor - Damage Resistance',
     Sig2Int('AENC'), 'Armor - Enchantment',
@@ -10486,15 +10487,7 @@ begin
             'Helps Allies',
             'Helps Friends and Allies'
           ])),
-          wbStruct('Aggro', [
-            wbInteger('Aggro Radius Behavior', itU8, wbBoolEnum),
-            wbInteger('Unknown', itU8),
-            wbInteger('Warn', itU32),
-            wbInteger('Warn/Attack', itU32),
-            wbInteger('Attack', itU32)
-          ]),
-          wbFromVersion(29, wbInteger('No Slow Approach', itU8, wbBoolEnum)),
-          wbFromVersion(29, wbByteArray('Unknown', 3))
+          wbUnknown(1)
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   {subrecords checked against Starfield.esm}
@@ -14742,6 +14735,7 @@ begin
       {0x00000400} 10, 'Unknown 10',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Unknown 19',
+      {0x00400000} 22, 'Unknown 22',
       {0x20000000} 29, 'Bleedout Override'
     ]), [18]), [
     wbEDID,
@@ -14817,25 +14811,25 @@ begin
     wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
-    wbFormIDCk(TPLT, 'Default Template', [LVLN, NPC_]),
-    wbFormIDCk(LTPT, 'Legendary Template', [LVLN, NPC_]),
+    wbFormIDCk(TPLT, 'Default Template', [BMMO, LVLN, NPC_]),
+    wbFormIDCk(LTPT, 'Legendary Template', [BMMO, LVLN, NPC_]),
     wbFormIDCk(LTPC, 'Legendary Chance', [GLOB]),
     wbStruct(TPTA, 'Template Actors', [
-      wbFormIDCk('Traits', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate0),
-      wbFormIDCk('Stats', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate1),
-      wbFormIDCk('Factions', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate2),
-      wbFormIDCk('Spell List', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate3),
-      wbFormIDCk('AI Data', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate4),
-      wbFormIDCk('AI Packages', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate5),
-      wbFormIDCk('Model/Animation', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate6),
-      wbFormIDCk('Base Data', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate7),
-      wbFormIDCk('Inventory', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate8),
-      wbFormIDCk('Script', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate9),
-      wbFormIDCk('Def Pack List', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate10),
-      wbFormIDCk('Attack Data', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate11),
-      wbFormIDCk('Keywords', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate12),
-      wbFormIDCk('Unknown 13', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate13),
-      wbFormIDCk('Unknown 14', [LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate14)
+      wbFormIDCk('Traits', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate0),
+      wbFormIDCk('Stats', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate1),
+      wbFormIDCk('Factions', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate2),
+      wbFormIDCk('Spell List', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate3),
+      wbFormIDCk('AI Data', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate4),
+      wbFormIDCk('AI Packages', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate5),
+      wbFormIDCk('Model/Animation', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate6),
+      wbFormIDCk('Base Data', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate7),
+      wbFormIDCk('Inventory', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate8),
+      wbFormIDCk('Script', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate9),
+      wbFormIDCk('Def Pack List', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate10),
+      wbFormIDCk('Attack Data', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate11),
+      wbFormIDCk('Keywords', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate12),
+      wbFormIDCk('Unknown 13', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate13),
+      wbFormIDCk('Unknown 14', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate14)
     ], cpNormal, False, wbActorTemplatesUseTemplateAny),
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
 //    wbSPCT,
@@ -14866,16 +14860,46 @@ begin
     wbContainerItems,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
-    wbUnknown(FLEE),
-    wbUnknown(RDSA),
+    wbStruct(FLEE, 'Unknown', [
+      wbUnknown(12),
+      wbFloat,
+      wbUnknown(8)
+    ]),
+    wbStructs(RDSA, 'Unknown', 'Unknown', [
+      {  0} wbInteger('Unknown', itU32),
+      {  4} wbInteger('Unknown', itU32),
+      {  8} wbFormIDCk('Unknown', [NULL, FLST]),
+      { 12} wbUnknown(4),
+      { 16} wbFormIDCk('Unknown', [NULL, GLOB]),
+      { 20} wbFormIDCk('Unknown', [NULL, GLOB]),
+      { 24} wbFormIDCk('Unknown', [NULL, GLOB]),
+      { 28} wbFormIDCk('Unknown', [NULL, GLOB]),
+      { 32} wbFormIDCk('Unknown', [NULL, GLOB]),
+      { 36} wbFloat,
+      { 40} wbFloat,
+      { 44} wbFloat,
+      { 48} wbFloat,
+      { 52} wbFloat,
+      { 56} wbFormIDCk('Unknown', [NULL, KYWD]),
+      { 60} wbUnknown(4),
+      { 64} wbFormIDCk('Unknown', [NULL, GLOB]),
+      { 68} wbFloat,
+      { 72} wbUnknown(4),
+      { 76} wbFormIDCk('Unknown', [NULL, GLOB])
+    ]),
     wbKeywords,
     wbAPPR,
-    wbObjectTemplate,
-    wbMarkerReq(STOP),
-    wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
+    wbRUnion('Object Template and Marker', [
+      wbRStruct('Object Template', [
+        wbObjectTemplate,
+        wbMarkerReq(STOP)
+      ], []),
+      wbMarker(STOP)
+    ], []),
+    wbFormIDCk(CNAM, 'Class', [CLAS], False),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbUnknown(LNAM),
+    wbLStringKC(LNAM, 'Long Name', 0, cpTranslate),
     wbMarkerReq(DATA),
     wbStruct(DNAM, '', [
       wbInteger('Calculated Health', itU16),
@@ -14906,10 +14930,10 @@ begin
       wbEmpty(CS2E, 'End Marker', cpNormal, True),
       wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
     }
-      wbUnknown(CS3H),
+      wbInteger(CS3H, 'Count', itU32, nil, cpBenign, True),
       wbSoundReference(CS3S),
       wbUnknown(CS3F),
-      wbUnknown(CS3E)
+      wbMarkerReq(CS3E)
     ], []),
     wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
 //    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
@@ -14922,7 +14946,7 @@ begin
     wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
-    wbFormID(HEFA, 'Unknown'),
+    wbFormIDCk(HEFA, 'Unknown', [FACT]),
     wbInteger(EDCT, 'Unknown Count', itU8),
     wbRStructs('Unknown', 'Unknown', [
       wbInteger(MNAM, 'Unknown', itU32).SetRequired(True),
@@ -14974,7 +14998,39 @@ begin
     wbString(JCOL, 'Unknown'),
     wbString(TETC, 'Unknown'),
     wbInteger(PRON, 'Unknown', itU8),
-    wbUnknown(ONA2)
+    wbStruct(ONA2, 'Unknown', [
+      {  0} wbByteArray('LLLL', 25),
+      (*
+      {  5} wbFloat,
+      {  9} wbFloat,
+      { 13} wbFloat,
+      { 17} wbFloat,
+      { 21} wbUnknown(4),
+      *)
+      { 25} wbFloat,
+      { 29} wbFormIDCk('Unknown', [NULL, WEAP]),
+      { 33} wbUnknown(20),
+      { 53} wbFloat,
+      { 57} wbFloat,
+      { 61} wbFloat,
+      { 65} wbFloat,
+      { 69} wbFloat,
+      { 73} wbFormIDCk('Unknown', [NULL, MATT]),
+      { 77} wbUnknown(36),
+      {113} wbFloat,
+      {117} wbUnknown(47),
+      {164} wbFloat,
+      {168} wbFloat,
+      {172} wbFloat,
+      {176} wbUnknown(4),
+      {180} wbFloat,
+      {184} wbFloat,
+      {188} wbFloat,
+      {192} wbFloat,
+      {196} wbUnknown(4),
+      {200} wbFloat,
+      {204} wbFloat
+    ])
 
   ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
 
@@ -19275,9 +19331,9 @@ begin
   wbAddGroupOrder(FLOR); {SF1Dump: no errors}
   wbAddGroupOrder(FURN); {SF1Dump: no errors}
   wbAddGroupOrder(WEAP); {SF1Dump: no errors}
-  wbAddGroupOrder(AMMO);
+  wbAddGroupOrder(AMMO); {SF1Dump: no errors}
   wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(PLYR);
+  wbAddGroupOrder(PLYR); {purely internal type}
   wbAddGroupOrder(LVLN);
   wbAddGroupOrder(LVLP);
   wbAddGroupOrder(KEYM);

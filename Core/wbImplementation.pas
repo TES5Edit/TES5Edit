@@ -9240,7 +9240,7 @@ begin
           end;
         end;
         if not FoundIt then
-          Result := Result + Def.Name + ', ';
+          Result := Result + Def.FullPath + ', ';
       end;
     SetLength(Result, Length(Result) - 2);
   end;
