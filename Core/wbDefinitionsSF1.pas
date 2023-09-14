@@ -18666,10 +18666,7 @@ begin
     wbRArray('Material Swaps', wbFormID(NAM1)),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
     wbRStruct('Water Data', [
-      wbInteger(MNAM, 'Unknown', itU8, wbEnum([
-      {0} 'No Water',
-      {1} 'Has Water'
-      ])), //implicit required
+      wbInteger(MNAM, 'Has Water', itU8, wbBoolEnum), //implicit required
       wbFormIDCk(INAM, 'Water', [WATR]),
       wbString(JNAM, 'Water Material')
     ], []),
