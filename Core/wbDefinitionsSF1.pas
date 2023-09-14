@@ -18704,7 +18704,7 @@ begin
       wbString(YX00)
     ], []),
     wbString(TX16),
-    wbUnknown(BTPS),
+    wbArray(BTPS, 'Unknown', wbFloat(), 56),
     wbUnknown(BDFS),
     wbString(EFSD),
     wbFormIDCk(NAM2, 'Unknown', [GLOB]),
