@@ -18678,14 +18678,16 @@ begin
         wbFormIDCk('Pack-In', [PKIN, LVLP]),
         wbArray('Unknown', wbFloat(), 20)
       ])),
-      wbFloat(DNAM)
+      wbArray(DNAM,'Unknown', wbFloat(), 4)
     ], []),
     wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
     wbRArray('Material Swaps', wbFormID(NAM1)),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
-    wbUnknown(MNAM),
-    wbFormIDCk(INAM, 'Water', [WATR]),
-    wbString(JNAM, 'Water Material'),
+    wbRStruct('Water Data', [
+      wbInteger(MNAM, 'Has Water', itU8, wbBoolEnum), //implicit required
+      wbFormIDCk(INAM, 'Water', [WATR]),
+      wbString(JNAM, 'Water Material')
+    ], []),
     wbFloat(WNAM, 'Unknown'),
     wbFloat(YNAM, 'Unknown'),
     wbFloat(UNAM, 'Unknown'),
