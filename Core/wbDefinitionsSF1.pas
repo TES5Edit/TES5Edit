@@ -18657,12 +18657,12 @@ begin
       wbString(FNAM),
       wbUnknown(BNAM),       //Always 01 00 00 00 if it exists
       wbRArray('Unknown', wbStruct(GNAM, 'Unknown', [
-        wbFormIDCk('Pack-In', [PKIN]),
-        wbUnknown
+        wbFormIDCk('Pack-In', [PKIN, LVLP]),
+        wbArray('Unknown', wbFloat(), 20)
       ])),
       wbFloat(DNAM, 'Unknown')
     ], []),
-    wbUnknown(ONAM),
+    wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
     wbRArray('Material Swaps', wbFormID(NAM1)),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
     wbUnknown(MNAM),
@@ -18687,26 +18687,26 @@ begin
     ], []),
     wbRStructs('Unknown', 'Unknown', [
       wbStruct(LNAM, 'Unknown', [
-        wbByteArray('Unknown', 4),
+        wbInteger('Unknown', itU32),
         wbFormIDCk('Land Texture', [LTEX]),
         wbFormIDCk('Ground Cover', [GCVR])
       ]),
       wbStruct(ANAM, 'Unknown', [
-        wbByteArray('Unknown', 4),
+        wbInteger('Unknown', itU32),
         wbFormIDCk('Land Texture', [LTEX]),
         wbFormIDCk('Ground Cover', [GCVR, NULL])
       ]),
-      wbString(TX00),
-      wbString(UX00),
-      wbString(VX00),
-      wbString(WX00),
-      wbString(XX00),
-      wbString(YX00)
+      wbString(TX00, 'Mask - Type 0'),
+      wbString(UX00, 'Mask - Type 1'),
+      wbString(VX00, 'Mask - Type 2'),
+      wbString(WX00, 'Mask - Type 3'),
+      wbString(XX00, 'Mask - Type 4'),
+      wbString(YX00, 'Mask - Type 5')
     ], []),
-    wbString(TX16),
+    wbString(TX16, 'Ground Layer Normal'),
     wbArray(BTPS, 'Unknown', wbFloat(), 56),
-    wbUnknown(BDFS),
-    wbString(EFSD),
+    wbArray(BDFS, 'Unknown', wbFloat(), 11),
+    wbString(EFSD, 'Ground Layer Material'),
     wbFormIDCk(NAM2, 'Unknown', [GLOB]),
     wbFormIDCk(NAM3, 'Unknown', [GLOB]),
     wbFormIDCk(NAM4, 'Unknown', [GLOB])
