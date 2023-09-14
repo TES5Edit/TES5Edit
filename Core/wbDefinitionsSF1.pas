@@ -9115,32 +9115,39 @@ begin
           wbActivityTracker
         ], []),
         wbRStruct('Component Data', [
-          wbArray(BUO4, 'Unknown',
-            wbStruct('Unknown', [
+          wbArray(BUO4, 'Blue Print Components',
+            wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
               wbFormIDCk('Construction Object', [COBJ]),
-              wbStruct('Position Offset', [
+              wbStruct('Position', [
                 wbFloat('X'),
                 wbFloat('Y'),
                 wbFloat('Z')
-              ]),
-              wbStruct('Unknown', [
-                wbFloat,
-                wbFloat,
-                wbFloat
-              ]),
-              wbInteger('Part Index', itU32)
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+              wbStruct('Rotation', [
+                wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+                wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+                wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+              wbInteger('Part ID', itU32)
           ])),
-          wbUnknown(BODM),
-          wbRStructs('Unknown', 'Unknown', [
-            wbUnknown(BODC),
-            wbRStructs('Unknown', 'Unknown', [
-              wbString(BODS),
-              wbUnknown(BODV)
-            ], [])
-          ], []),
-          wbUnknown(BLUF),
-          wbUnknown(BOID)
+          wbRStruct('Component Configurations', [
+            wbInteger(BODM, 'Count', itU32).SetRequired(True),  // count for the following array of struct BODC+BODS/BODV
+            wbRArray('Unknown', wbRStruct('Unknown', [
+              wbInteger(BODC, 'Count', itU32).SetRequired(True), // count for the follow array of struct BODS/BODV
+              wbRArray('Unknown', wbRStruct('Unknown', [
+                wbString(BODS, 'Name'),
+                wbStruct(BODV, 'Configuration', [
+                  wbFloatColors('Color 1'),
+                  wbFloatColors('Color 2'),
+                  wbFloatColors('Color 3'),
+                  wbInteger('Unknown', itU32) // known values 0 - 7, possible enum?
+                ])
+              ], []), cpNormal, False, nil, wbBODSsAfterSet)
+            ], []), cpNormal, False, nil, wbBODCsAfterSet).SetRequired(True)
+          ], []).SetRequired(True),
+          wbInteger(BLUF, 'Unknown', itU8),
+          wbInteger(BOID, 'Next Part ID', itU32)
         ], []),
         //BGSCrowdComponent_Component
         wbRStruct('Component Data', [
@@ -9209,15 +9216,21 @@ begin
         ], []),
         //BGSExternalComponentDataSource_Component
         wbRStruct('Component Data', [
-          wbFormID(EXDC),
-          wbUnknown(EXDZ),
-          wbRStructs('Unknown', 'Unknown', [
-            wbString(EXCN),
-            wbFormID(EXCI)
+          wbFormID(EXDC, 'External Base Template'),
+          wbRStruct('External Data Sources', [
+            wbInteger(EXDZ, 'Data Source Count', itU32), // count for EXCN/EXCI struct array
+            wbRArray('External Sources',
+              wbRStruct('Component', [
+                wbString(EXCN, 'Component Name'),
+                wbFormID(EXCI, 'Component Source')
+              ], [])
+            )
           ], []),
-          wbUnknown(EXAC),
-          wbRArray('Unknown', wbString(EXAS)),
-          wbUnknown(EXBS)
+          wbRstruct('Unknown', [
+            wbInteger(EXAC, 'Count', itU32), // count for EXAS array
+            wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil, wbEXASsAfterSet)
+          ], []),
+          wbString(EXBS).SetRequired(True)
         ], []),
         //BGSLinkedVoiceType_Component
         wbRStruct('Component Data', [
@@ -9311,7 +9324,11 @@ begin
         ], []),
         //BGSSpaceshipWeaponBindings_Component
         wbRStruct('Component Data', [
-          wbUnknown(SHWB)
+          wbStruct(SHWB, 'Ship Weapon Binding', [
+            wbInteger('Weapon Slot 1', itS32),
+            wbInteger('Weapon Slot 2', itS32),
+            wbInteger('Weapon Slot 3', itS32)
+          ])
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(SNAM),
