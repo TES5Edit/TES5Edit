@@ -9115,32 +9115,39 @@ begin
           wbActivityTracker
         ], []),
         wbRStruct('Component Data', [
-          wbArray(BUO4, 'Unknown',
-            wbStruct('Unknown', [
+          wbArray(BUO4, 'Blue Print Components',
+            wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
               wbFormIDCk('Construction Object', [COBJ]),
-              wbStruct('Position Offset', [
+              wbStruct('Position', [
                 wbFloat('X'),
                 wbFloat('Y'),
                 wbFloat('Z')
-              ]),
-              wbStruct('Unknown', [
-                wbFloat,
-                wbFloat,
-                wbFloat
-              ]),
-              wbInteger('Part Index', itU32)
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+              wbStruct('Rotation', [
+                wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+                wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+                wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+              wbInteger('Part ID', itU32)
           ])),
-          wbUnknown(BODM),
-          wbRStructs('Unknown', 'Unknown', [
-            wbUnknown(BODC),
-            wbRStructs('Unknown', 'Unknown', [
-              wbString(BODS),
-              wbUnknown(BODV)
-            ], [])
-          ], []),
-          wbUnknown(BLUF),
-          wbUnknown(BOID)
+          wbRStruct('Component Configurations', [
+            wbInteger(BODM, 'Count', itU32).SetRequired(True),  // count for the following array of struct BODC+BODS/BODV
+            wbRArray('Unknown', wbRStruct('Unknown', [
+              wbInteger(BODC, 'Count', itU32).SetRequired(True), // count for the follow array of struct BODS/BODV
+              wbRArray('Unknown', wbRStruct('Unknown', [
+                wbString(BODS, 'Name'),
+                wbStruct(BODV, 'Configuration', [
+                  wbFloatColors('Color 1'),
+                  wbFloatColors('Color 2'),
+                  wbFloatColors('Color 3'),
+                  wbInteger('Unknown', itU32) // known values 0 - 7, possible enum?
+                ])
+              ], []), cpNormal, False, nil, wbBODSsAfterSet)
+            ], []), cpNormal, False, nil, wbBODCsAfterSet).SetRequired(True)
+          ], []).SetRequired(True),
+          wbInteger(BLUF, 'Unknown', itU8),
+          wbInteger(BOID, 'Next Part ID', itU32)
         ], []),
         //BGSCrowdComponent_Component
         wbRStruct('Component Data', [
@@ -9209,15 +9216,21 @@ begin
         ], []),
         //BGSExternalComponentDataSource_Component
         wbRStruct('Component Data', [
-          wbFormID(EXDC),
-          wbUnknown(EXDZ),
-          wbRStructs('Unknown', 'Unknown', [
-            wbString(EXCN),
-            wbFormID(EXCI)
+          wbFormID(EXDC, 'External Base Template'),
+          wbRStruct('External Data Sources', [
+            wbInteger(EXDZ, 'Data Source Count', itU32), // count for EXCN/EXCI struct array
+            wbRArray('External Sources',
+              wbRStruct('Component', [
+                wbString(EXCN, 'Component Name'),
+                wbFormID(EXCI, 'Component Source')
+              ], [])
+            )
           ], []),
-          wbUnknown(EXAC),
-          wbRArray('Unknown', wbString(EXAS)),
-          wbUnknown(EXBS)
+          wbRstruct('Unknown', [
+            wbInteger(EXAC, 'Count', itU32), // count for EXAS array
+            wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil, wbEXASsAfterSet)
+          ], []),
+          wbString(EXBS).SetRequired(True)
         ], []),
         //BGSLinkedVoiceType_Component
         wbRStruct('Component Data', [
@@ -9311,7 +9324,11 @@ begin
         ], []),
         //BGSSpaceshipWeaponBindings_Component
         wbRStruct('Component Data', [
-          wbUnknown(SHWB)
+          wbStruct(SHWB, 'Ship Weapon Binding', [
+            wbInteger('Weapon Slot 1', itS32),
+            wbInteger('Weapon Slot 2', itS32),
+            wbInteger('Weapon Slot 3', itS32)
+          ])
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(SNAM),
@@ -13021,10 +13038,13 @@ begin
         {3} 'Player Dialogue',
         {4} 'Start Scene',
         {5} 'NPC Response Dialogue',
-        {6} 'Radio'
+        {6} 'Radio',
+        {7} 'Camera Direction',
+        {8} 'Unknown',
+        {9} 'NPC Anim'
       ]), cpNormal, True),
       wbString(NAM0, 'Name'),
-      wbUnknown(SNOT),
+      wbString(SNOT, 'Scene Notes'),
       wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(INAM, 'Index', itU32),
       wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -13074,7 +13094,7 @@ begin
       ], []),
 
       wbRStructs('Unknown', 'Unknown', [
-        wbUnknown(BNAM),
+        wbFormIDCk(BNAM, 'NPC Anim', [IDLE]),
         wbUnknown(STRV),
         wbUnknown(VCLR),
         wbUnknown(FLMV),
@@ -13096,10 +13116,10 @@ begin
         wbUnknown(SNAM),
         wbUnknown(UNAM),
         wbUnknown(LNAM),
-        wbUnknown(CNAM)
+        wbFormIDCk(CNAM, 'Camera Param', [CAMS])
       ], []),
 
-      wbRArray('Unknown', wbUnknown(PNAM)),
+      wbRArray('Unknown', wbFormIDCk(PNAM, 'Param', [PACK])),
 
       wbUnknown(NVCI),
       wbUnknown(CNAM),
@@ -15380,7 +15400,7 @@ begin
       wbByteArray('Unused', 3)
     ]),
     wbFormIDCk(QTYP, 'Quest Type', [KYWD]),
-    wbFormIDCk(FTYP, 'Quest Faction', [FACT]),
+    wbFormIDCk(FTYP, 'Quest Faction', [KYWD]), // was FACT but now separate from FACT
     wbString(ENAM, 'Event', 4),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
 //    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
@@ -15388,7 +15408,7 @@ begin
     wbFormIDCk(QSRC, 'Source Quest', [QUST]),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
-    wbString(NAM3),
+    wbString(NAM3, 'Summary'),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbMarkerReq(NEXT),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
@@ -15410,14 +15430,15 @@ begin
         ])),
         wbCTDAs,
         wbString(NAM2, 'Note'),
-        wbString(SCFC),
+        wbString(SCFC, 'Script Flag Comment'),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
-        wbRArray('Unknown', wbRStruct('Unknown', [
+        wbRArray('Stage Complete Data', wbRStruct('Datum', [
+//          wbInteger(QSRD, 'Reward Scenario', itU32), // I am 100% sure of this but the empty record afterwards stumps me
           wbUnknown(QSRD),
-          wbUnknown(NAM1),
-          wbRArray('Unknown', wbRStruct('Unknown', [
-            wbFormIDCk(QRXP, 'Unknown', [GLOB]),
-            wbFormIDCk(QRCR, 'Unknown', [GLOB]),
+          wbFormIDCk(NAM1, 'Affinity Change', [AFFE, NULL]),
+          wbRArray('Reward List', wbRStruct('Reward Data', [
+            wbFormIDCk(QRXP, 'XP Awarded', [NULL, GLOB]),
+            wbFormIDCk(QRCR, 'Bonus Credits', [NULL, GLOB]),
             wbRArray('Rewards', wbStruct(QRRD, 'Reward', [
               wbFormIDCk('Item', sigBaseObjects, False, cpNormal, True),
               wbInteger('Count', itU32)
@@ -15533,7 +15554,7 @@ begin
           wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbString(SCCM),
+          wbString(SCCM, 'Script Comment'),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
@@ -15593,7 +15614,7 @@ begin
           wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbString(SCCM),
+          wbString(SCCM, 'Script Comment'),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [])
@@ -15616,7 +15637,7 @@ begin
     ], []),
 
     wbKeywords,
-    wbString(SCCM)
+    wbString(SCCM, 'Script Comment')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -17617,27 +17638,24 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
-    wbUnknown(ANAM)
-    {
-    wbStruct(DNAM, 'Data', [
-      wbFloat('Cone of Fire - Min Angle'),
-      wbFloat('Cone of Fire - Max Angle'),
-      wbFloat('Cone of Fire - Increase Per Shot'),
-      wbFloat('Cone of Fire - Decrease Per Sec'),
-      wbInteger('Cone of Fire - Decrease Delay MS', itU32),
-      wbFloat('Cone of Fire - Sneak Mult'),
-      wbFloat('Recoil - Diminish Spring Force'),
-      wbFloat('Recoil - Diminish Sights Mult'),
-      wbFloat('Recoil - Max Per Shot'),
-      wbFloat('Recoil - Min Per Shot'),
-      wbFloat('Recoil - Hip Mult'),
-      wbInteger('Runaway - Recoil Shots', itU32),
-      wbFloat('Recoil - Arc'),
-      wbFloat('Recoil - Arc Rotate'),
-      wbFloat('Cone of Fire - Iron Sights Mult'),
-      wbFloat('Stability - Base Stability')
+    wbStruct(ANAM, 'Data', [
+       wbFloat('Cone of Fire - Min Angle'),
+       wbFloat('Cone of Fire - Max Angle'),
+       wbFloat('Cone of Fire - Increase Per Shot'),
+       wbFloat('Cone of Fire - Decrease Per Sec'),
+       wbFloat('Cone of Fire - Decrease Delay in Sec'),
+       wbFloat('Cone of Fire - Sneak Mult'),
+       wbFloat('Recoil - Diminish Spring Force'),
+       wbFloat('Recoil - Diminish Sights Mult'),
+       wbFloat('Recoil - Min Per Shot'),
+       wbFloat('Recoil - Max Per Shot'),
+       wbFloat('Recoil - Hip Mult'),
+       wbInteger('Runaway - Recoil Shots', itU32),
+       wbFloat('Recoil - Arc'),
+       wbFloat('Recoil - Arc Rotate'),
+       wbFloat('Cone of Fire - Iron Sights Mult'),
+       wbFloat('Stability - Base Stability')
     ])
-    }
   ]);
 
   {subrecords checked against Starfield.esm}
