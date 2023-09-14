@@ -13021,10 +13021,13 @@ begin
         {3} 'Player Dialogue',
         {4} 'Start Scene',
         {5} 'NPC Response Dialogue',
-        {6} 'Radio'
+        {6} 'Radio',
+        {7} 'Camera Direction',
+        {8} 'Unknown',
+        {9} 'NPC Anim'
       ]), cpNormal, True),
       wbString(NAM0, 'Name'),
-      wbUnknown(SNOT),
+      wbString(SNOT, 'Scene Notes'),
       wbInteger(ALID, 'Alias ID', itS32),
       wbInteger(INAM, 'Index', itU32),
       wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -13074,7 +13077,7 @@ begin
       ], []),
 
       wbRStructs('Unknown', 'Unknown', [
-        wbUnknown(BNAM),
+        wbFormIDCk(BNAM, 'NPC Anim', [IDLE]),
         wbUnknown(STRV),
         wbUnknown(VCLR),
         wbUnknown(FLMV),
@@ -13096,10 +13099,10 @@ begin
         wbUnknown(SNAM),
         wbUnknown(UNAM),
         wbUnknown(LNAM),
-        wbUnknown(CNAM)
+        wbFormIDCk(CNAM, 'Camera Param', [CAMS])
       ], []),
 
-      wbRArray('Unknown', wbUnknown(PNAM)),
+      wbRArray('Unknown', wbFormIDCk(PNAM, 'Param', [PACK])),
 
       wbUnknown(NVCI),
       wbUnknown(CNAM),
@@ -15380,7 +15383,7 @@ begin
       wbByteArray('Unused', 3)
     ]),
     wbFormIDCk(QTYP, 'Quest Type', [KYWD]),
-    wbFormIDCk(FTYP, 'Quest Faction', [FACT]),
+    wbFormIDCk(FTYP, 'Quest Faction', [KYWD]), // was FACT but now separate from FACT
     wbString(ENAM, 'Event', 4),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
 //    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
@@ -15388,7 +15391,7 @@ begin
     wbFormIDCk(QSRC, 'Source Quest', [QUST]),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
     wbFLTR,
-    wbString(NAM3),
+    wbString(NAM3, 'Summary'),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbMarkerReq(NEXT),
     wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
@@ -15410,14 +15413,15 @@ begin
         ])),
         wbCTDAs,
         wbString(NAM2, 'Note'),
-        wbString(SCFC),
+        wbString(SCFC, 'Script Flag Comment'),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
-        wbRArray('Unknown', wbRStruct('Unknown', [
+        wbRArray('Stage Complete Data', wbRStruct('Datum', [
+//          wbInteger(QSRD, 'Reward Scenario', itU32), // I am 100% sure of this but the empty record afterwards stumps me
           wbUnknown(QSRD),
-          wbUnknown(NAM1),
-          wbRArray('Unknown', wbRStruct('Unknown', [
-            wbFormIDCk(QRXP, 'Unknown', [GLOB]),
-            wbFormIDCk(QRCR, 'Unknown', [GLOB]),
+          wbFormIDCk(NAM1, 'Affinity Change', [AFFE, NULL]),
+          wbRArray('Reward List', wbRStruct('Reward Data', [
+            wbFormIDCk(QRXP, 'XP Awarded', [NULL, GLOB]),
+            wbFormIDCk(QRCR, 'Bonus Credits', [NULL, GLOB]),
             wbRArray('Rewards', wbStruct(QRRD, 'Reward', [
               wbFormIDCk('Item', sigBaseObjects, False, cpNormal, True),
               wbInteger('Count', itU32)
@@ -15533,7 +15537,7 @@ begin
           wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbString(SCCM),
+          wbString(SCCM, 'Script Comment'),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
@@ -15593,7 +15597,7 @@ begin
           wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbString(SCCM),
+          wbString(SCCM, 'Script Comment'),
           wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
           wbEmpty(ALED, 'Alias End', cpNormal, True)
         ], [])
@@ -15616,7 +15620,7 @@ begin
     ], []),
 
     wbKeywords,
-    wbString(SCCM)
+    wbString(SCCM, 'Script Comment')
   ]);
 
   {subrecords checked against Starfield.esm}
