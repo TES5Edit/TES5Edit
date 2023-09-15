@@ -827,8 +827,8 @@ In either case, the existing settings file is being backed up and all settings a
 
 New command line parameters have been added that allow directly saving over an existing file (instead of saving in a temporary file and waiting until xEdit is closed to rename the file) by preventing the use of memory mapped files.
 
-`-AllowDirectSave` will load all non-official (official = game master, official dlcs, CCs) modules without using memory mapped files
-`-AllowDirectSave:a.esm,b.esl,c.esp` will load only the listed modules without using memory mapped files. The list may include official modules.
+`-AllowDirectSaves` will load all non-official (official = game master, official dlcs, CCs) modules without using memory mapped files
+`-AllowDirectSaves:a.esm,b.esl,c.esp` will load only the listed modules without using memory mapped files. The list may include official modules.
 
 ## "Show Unsaved Hint" replaces previous "Auto Save" option
 
