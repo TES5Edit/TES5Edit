@@ -515,28 +515,41 @@ begin
   for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
     _ModulesLoadOrder[i].miCombinedIndex := i;
 
-  TwbModuleInfo.AddNewModule('<new file>.esp', True);
-  with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
-    Include(miFlags, mfHasESMFlag);
-    Include(miFlags, mfIsESM);
-  end;
-  if wbIsEslSupported then begin
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
-      Include(miFlags, mfHasESLFlag);
+  if wbGameMode <> gmSF1 then begin
+    TwbModuleInfo.AddNewModule('<new file>.esp', True);
     with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
-      Include(miFlags, mfHasESLFlag);
       Include(miFlags, mfIsESM);
     end;
+    if wbIsEslSupported then begin
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+        Include(miFlags, mfHasESLFlag);
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+        Include(miFlags, mfHasESMFlag);
+        Include(miFlags, mfHasESLFlag);
+        Include(miFlags, mfIsESM);
+      end;
+    end;
   end;
+
   with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
     Include(miFlags, mfHasESMFlag);
-  end;
-  if wbIsEslSupported then
-    with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
-      Include(miFlags, mfHasESMFlag);
-      Include(miFlags, mfHasESLFlag);
+    Include(miFlags, mfIsESM);
+    if wbIsEslSupported then begin
+      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+        Include(miFlags, mfHasESLFlag);
+        Include(miFlags, mfHasESMFlag);
+        Include(miFlags, mfIsESM);
+      end;
     end;
+  end;
+
+  if wbGameMode <> gmSF1 then
+    if wbIsEslSupported then
+      with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+        Include(miFlags, mfHasESMFlag);
+        Include(miFlags, mfHasESLFlag);
+      end;
 end;
 
 function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;

@@ -2624,21 +2624,21 @@ type
       read GetFileName;
   end;
 
-  IwbBA2File = interface(IwbResourceContainer)
+  IwbBA2File = interface(IwbBSAFile)
     ['{D05EAAEC-8A23-4CDD-83E4-7593AC846CE3}']
-    function GetFileName: string;
+    function GetVersion: Cardinal;
 
-    property FileName: string
-      read GetFileName;
+    property Version: Cardinal
+      read GetVersion;
   end;
 
   TDynResources = array of IwbResource;
 
   IwbContainerHandler = interface(IwbInterface)
     ['{0CC80043-EADC-4C7D-8677-8719735582C7}']
-    procedure AddFolder(const aPath: string);
-    procedure AddBSA(const aFileName: string);
-    procedure AddBA2(const aFileName: string);
+    function AddFolder(const aPath: string): IwbResourceContainer;
+    function AddBSA(const aFileName: string): IwbResourceContainer;
+    function AddBA2(const aFileName: string): IwbResourceContainer;
 
     function OpenResource(const aFileName: string): TDynResources;
     function OpenResourceData(const aContainerName, aFileName: string): TBytes;
@@ -3040,6 +3040,7 @@ function wbByteArray(const aName          : string;
                            aGetCP         : TwbGetConflictPriority = nil)
                                           : IwbByteArrayDef; overload;
 
+
 function wbUnknown(const aSignature : TwbSignature;
                          aPriority  : TwbConflictPriority = cpNormal;
                          aRequired  : Boolean = False;
@@ -3068,6 +3069,34 @@ function wbUnknown(aSize     : Integer;
                    aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef; overload;
 
+
+function wbUnused(const aSignature : TwbSignature;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef; overload;
+
+function wbUnused(aPriority : TwbConflictPriority = cpNormal;
+                  aRequired : Boolean = False;
+                  aDontShow : TwbDontShowCallback = nil;
+                  aGetCP    : TwbGetConflictPriority = nil)
+                            : IwbValueDef; overload;
+
+function wbUnused(const aSignature : TwbSignature;
+                        aSize      : Integer;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef; overload;
+
+function wbUnused(aSize     : Integer;
+                  aPriority : TwbConflictPriority = cpNormal;
+                  aRequired : Boolean = False;
+                  aDontShow : TwbDontShowCallback = nil;
+                  aGetCP    : TwbGetConflictPriority = nil)
+                            : IwbValueDef; overload;
 
 function wbInteger(const aSignature : TwbSignature;
                    const aName      : string;
@@ -7407,7 +7436,7 @@ begin
   Result := wbByteArray(aSignature, 'Unknown', aSize, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
-function wbUnknown(aSize      : Integer;
+function wbUnknown(aSize     : Integer;
                    aPriority : TwbConflictPriority = cpNormal;
                    aRequired : Boolean = False;
                    aDontShow : TwbDontShowCallback = nil;
@@ -7416,6 +7445,47 @@ function wbUnknown(aSize      : Integer;
 begin
   Result := wbByteArray('Unknown', aSize, aPriority, aRequired, aDontShow, aGetCP);
 end;
+
+function wbUnused(const aSignature : TwbSignature;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef;
+begin
+  Result := wbEmpty(aSignature, 'Unused', aPriority, aRequired, aDontShow, aGetCP);
+end;
+
+function wbUnused(aPriority : TwbConflictPriority = cpNormal;
+                  aRequired : Boolean = False;
+                  aDontShow : TwbDontShowCallback = nil;
+                  aGetCP    : TwbGetConflictPriority = nil)
+                            : IwbValueDef;
+begin
+  Result := wbEmpty('Unused', aPriority, aRequired, aDontShow, False, aGetCP);
+end;
+
+function wbUnused(const aSignature : TwbSignature;
+                        aSize      : Integer;
+                        aPriority  : TwbConflictPriority = cpNormal;
+                        aRequired  : Boolean = False;
+                        aDontShow  : TwbDontShowCallback = nil;
+                        aGetCP     : TwbGetConflictPriority = nil)
+                                   : IwbSubRecordDef;
+begin
+  Result := wbByteArray(aSignature, 'Unused', aSize, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
+function wbUnused(aSize      : Integer;
+                   aPriority : TwbConflictPriority = cpNormal;
+                   aRequired : Boolean = False;
+                   aDontShow : TwbDontShowCallback = nil;
+                   aGetCP    : TwbGetConflictPriority = nil)
+                             : IwbValueDef;
+begin
+  Result := wbByteArray('Unused', aSize, aPriority, aRequired, aDontShow, aGetCP);
+end;
+
 
 function wbInteger(const aSignature : TwbSignature;
                    const aName      : string;
@@ -17983,10 +18053,16 @@ end;
 procedure TwbMainRecordStructFlags.SetESL(aValue: Boolean);
 begin
   if wbIsEslSupported then
-    if aValue then
-      _Flags := _Flags or $00000200
-    else
-      _Flags := _Flags and not $00000200;
+    if wbIsStarfield then begin
+      if aValue then
+        _Flags := _Flags or $00000100
+      else
+        _Flags := _Flags and not $00000100;
+    end else
+      if aValue then
+        _Flags := _Flags or $00000200
+      else
+        _Flags := _Flags and not $00000200;
 end;
 
 procedure TwbMainRecordStructFlags.SetESM(aValue: Boolean);

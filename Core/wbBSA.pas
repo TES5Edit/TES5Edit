@@ -50,21 +50,22 @@ type
     chContainers : array of IwbResourceContainer;
     chCache      : TwbContainerCache;
   protected
-    procedure AddContainer(aContainer: IwbResourceContainer);
+    function AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 
     procedure BuildCache;
     procedure InvalidateCache;
     procedure EnsureCache;
 
     {---IwbContainerHandler---}
-    procedure AddFolder(const aPath: string);
-    procedure AddBSA(const aFileName: string);
-    procedure AddBA2(const aFileName: string);
+    function AddFolder(const aPath: string): IwbResourceContainer;
+    function AddBSA(const aFileName: string): IwbResourceContainer;
+    function AddBA2(const aFileName: string): IwbResourceContainer;
 
     function OpenResource(const aFileName: string): TDynResources;
     function OpenResourceData(const aContainerName, aFileName: string): TBytes;
 
-    function ContainerExists(aContainerName: string): Boolean;
+    function ContainerExists(aContainerName: string): Boolean; overload;
+    function ContainerExists(aContainerName: string; out aContainer: IwbResourceContainer): Boolean; overload;
     procedure ContainerList(const aList: TStrings);
     procedure ContainerResourceList(const aContainerName: string; const aList: TStrings; const aFolder: string = '');
 
@@ -100,6 +101,12 @@ type
   public
     constructor Create(const aFileName: string);
     destructor Destroy; override;
+  end;
+
+  TwbBA2File = class(TwbBSAFile, IwbBA2File)
+  protected
+    {---IwbBA2File---}
+    function GetVersion: Cardinal;
   end;
 
   TwbBSAResource = class(TInterfacedObject, IwbResource)
@@ -157,8 +164,9 @@ end;
 
 { TwbContainerHandler }
 
-procedure TwbContainerHandler.AddContainer(aContainer: IwbResourceContainer);
+function TwbContainerHandler.AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 begin
+  Result := aContainer;
   SetLength(chContainers, Succ(Length(chContainers)));
   chContainers[High(chContainers)] := aContainer;
 end;
@@ -174,24 +182,37 @@ begin
   Result := False;
 end;
 
-procedure TwbContainerHandler.AddBSA(const aFileName: string);
+function TwbContainerHandler.ContainerExists(aContainerName: string; out aContainer: IwbResourceContainer): Boolean;
+var
+  i: Integer;
 begin
-  if not ContainerExists(aFileName) then
-    AddContainer(TwbBSAFile.Create(aFileName));
+  aContainer := nil;
+  for i := Low(chContainers) to High(chContainers) do
+    if SameText(chContainers[i].Name, aContainerName) then begin
+      aContainer := chContainers[i];
+      Exit(True);
+    end;
+  Result := False;
+end;
+
+function TwbContainerHandler.AddBSA(const aFileName: string): IwbResourceContainer;
+begin
+  if not ContainerExists(aFileName, Result) then
+    Result := AddContainer(TwbBSAFile.Create(aFileName));
   InvalidateCache;
 end;
 
-procedure TwbContainerHandler.AddBA2(const aFileName: string);
+function TwbContainerHandler.AddBA2(const aFileName: string): IwbResourceContainer;
 begin
-  if not ContainerExists(aFileName) then
-    AddContainer(TwbBSAFile.Create(aFileName));
+  if not ContainerExists(aFileName, Result) then
+    Result := AddContainer(TwbBA2File.Create(aFileName));
   InvalidateCache;
 end;
 
-procedure TwbContainerHandler.AddFolder(const aPath: string);
+function TwbContainerHandler.AddFolder(const aPath: string): IwbResourceContainer;
 begin
-  if not ContainerExists(aPath) then
-    AddContainer(TwbFolder.Create(aPath));
+  if not ContainerExists(aPath, Result) then
+    Result := AddContainer(TwbFolder.Create(aPath));
   InvalidateCache;
 end;
 
@@ -679,6 +700,13 @@ begin
       H := Pred(I);
     end;
   end;
+end;
+
+{ TwbBA2File }
+
+function TwbBA2File.GetVersion: Cardinal;
+begin
+  Result := bfArchive.Version;
 end;
 
 end.

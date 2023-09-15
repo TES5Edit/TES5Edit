@@ -172,6 +172,7 @@ var
   wbETYPReq: IwbSubRecordDef;
   wbEFID: IwbSubRecordDef;
   wbEFIT: IwbSubRecordDef;
+  wbEffects: IwbSubRecordArrayDef;
   wbEffectsReq: IwbSubRecordArrayDef;
   wbFirstPersonFlagsU32: IwbIntegerDef;
   wbBOD2: IwbSubRecordDef;
@@ -225,10 +226,7 @@ var
   wbPDTOs: IwbSubRecordArrayDef;
   wbUNAMs: IwbSubRecordArrayDef;
   wbNull: IwbValueDef;
-  wbYNAM: IwbSubRecordDef;
-  wbZNAM: IwbSubRecordDef;
   wbSPED: IwbSubRecordDef;
-  wbCUSD: IwbSubRecordDef;
   wbINRD: IwbSubRecordDef;
   wbPTRN: IwbSubRecordDef;
   wbSTCP: IwbSubRecordDef;
@@ -2838,29 +2836,6 @@ begin
     3: Result := 3;
   end;
 end;
-
-function wbSNDRDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container  : IwbContainer;
-  rCNAM      : IwbElement;
-begin
-  Result := 0;
-  if not wbTryGetContainerFromUnion(aElement, Container) then
-    Exit;
-
-  Container := Container.Container;
-  if not Assigned(Container) then
-    Exit;
-
-  rCNAM := Container.ElementBySignature['CNAM'];
-  if not Assigned(rCNAM) then
-    Exit;
-
-  // TODO: F076 definition uses rCNAM.NativeValue = Int64($ED157AE3)
-  if rCNAM.EditValue = 'AutoWeapon' then
-    Result := 1;
-end;
-
 
 {>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -6004,7 +5979,7 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
-function wbSoundReference(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbRecordMemberDef;
+function wbSoundReference(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbRecordMemberDef; overload;
 begin
   Result :=
     wbStruct(aSignature, aName, [
@@ -6017,6 +5992,21 @@ begin
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 end;
+
+function wbSoundReference(const aName: string = 'Unknown'): IwbValueDef; overload;
+begin
+  Result :=
+    wbStruct(aName, [
+      wbGUID, // GUID 1
+      wbGUID, // GUID 2
+      wbFormIDCk('Unknown', [NULL, CNDF]),
+      wbFormIDCk('Unknown', [NULL, WWED])
+    ])
+    .SetSummaryKey([0, 2, 1, 3])
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed);
+end;
+
 
 procedure DefineSF1a;
 begin
@@ -7446,7 +7436,10 @@ begin
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
-  wbFLLD := wbInteger(FLLD, 'Unknown', itU32, wbBoolEnum);
+  wbFLLD := wbInteger(FLLD, 'Unknown', itU32, wbFlags([
+    'Unknown 0',
+    'Unknown 1'
+  ]));
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [NULL, MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
@@ -7967,8 +7960,8 @@ begin
 
     wbNavmeshCoverArray := wbArray('Cover Array',  // if navmesh version gt 12
       wbStruct('Cover', [
-        wbInteger('Vertex 1', itU16).SetLinksToCallback(wbVertexLinksTo),
-        wbInteger('Vertex 2', itU16).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 1', itS16).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 2', itS16).SetLinksToCallback(wbVertexLinksTo),
         wbByteArray('Data', 4 {, wbFlags([]) ? })
       ])
     , -1);
@@ -9150,9 +9143,6 @@ begin
   wbPTRN := wbFormIDCk(PTRN, 'Preview Transform', [TRNS]);
   wbSTCP := wbFormIDCk(STCP, 'Animation Sound', [STAG]);
   wbNTRM := wbFormIDCk(NTRM, 'Native Terminal', [TMLM]);
-  wbYNAM := wbFormIDCk(YNAM, 'Sound - Pick Up', [SNDR]);
-  wbZNAM := wbFormIDCk(ZNAM, 'Sound - Put Down', [SNDR]);
-  wbCUSD := wbFormIDCk(CUSD, 'Sound - Crafting', [SNDR]);
   wbINRD := wbFormIDCk(INRD, 'Instance Naming', [INNR]);
 
   wbObjectProperty :=
@@ -9318,7 +9308,7 @@ begin
           wbArray(BUO4, 'Blue Print Components',
             wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
-              wbFormIDCk('Construction Object', [COBJ]),
+              wbFormIDCk('Construction Object', [NULL, COBJ]),
               wbStruct('Position', [
                 wbFloat('X'),
                 wbFloat('Y'),
@@ -9904,6 +9894,9 @@ begin
       wbInteger(MUID, 'Unknown', itU32)
     ], [], cpNormal, True);
 
+  wbEffects :=
+    wbRArrayS('Effects', wbEffect);
+
   wbEffectsReq :=
     wbRArrayS('Effects', wbEffect, cpNormal, True);
 
@@ -9948,9 +9941,6 @@ begin
     wbFTYP,
     wbNTRM,
     wbByteColors(PNAM, 'Marker Color'),
-//    wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
-//    wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
-//    wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbString(WMAT, 'Water Material'),
     wbFormIDCk(WTFM, 'Water', [WATR]),
     wbALSH,
@@ -10053,13 +10043,12 @@ begin
         {0x00010000} 'Medicine',
         {0x00020000} 'Poison'
       ])),
-      wbFormID('Addiction'),
+      wbFormIDCk('Addiction', [NULL, SPEL]),
       wbFloat('Addiction Chance'),
-      wbFormIDCk('Sound - Consume', [SNDR, NULL]),
-      wbUnknown
+      wbSoundReference
     ], cpNormal, True),
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
-    wbEffectsReq
+    wbEffects
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -11529,70 +11518,77 @@ begin
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbUnknown(DATA),
-    wbUnknown(PROD),
-    (*
-    wbStruct(DNAM, 'Data', [
-      wbInteger('Flags', itU16, wbFlags([
-        {0x00001} 'Hitscan',
-        {0x00002} 'Explosion',
-        {0x00004} 'Alt. Trigger',
-        {0x00008} 'Muzzle Flash',
-        {0x00010} 'Unknown 4',
-        {0x00020} 'Can Be Disabled',
-        {0x00040} 'Can Be Picked Up',
-        {0x00080} 'Supersonic',
-        {0x00100} 'Pins Limbs',
-        {0x00200} 'Pass Through Small Transparent',
-        {0x00400} 'Disable Combat Aim Correction',
-        {0x00800} 'Penetrates Geometry',
-        {0x01000} 'Continuous Update',
-        {0x02000} 'Seeks Target'
-      ])),
-      wbInteger('Type', itU16, wbEnum([], [
-        $01, 'Missile',
-        $02, 'Lobber',
-        $04, 'Beam',
-        $08, 'Flame',
-        $10, 'Cone',
-        $20, 'Barrier',
-        $40, 'Arrow'
-      ])),
-      wbFloat('Gravity'),
-      wbFloat('Speed'),
-      wbFloat('Range'),
-      wbFormIDCk('Light', [LIGH, NULL]),
-      wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
-      wbFloat('Explosion - Alt. Trigger - Proximity'),
-      wbFloat('Explosion - Alt. Trigger - Timer'),
-      wbFormIDCk('Explosion', [EXPL, NULL]),
-      wbFormIDCk('Sound', [SNDR, NULL]),
-      wbFloat('Muzzle Flash - Duration'),
-      wbFloat('Fade Duration'),
-      wbFloat('Impact Force'),
-      wbFormIDCk('Sound - Countdown', [SNDR, NULL]),
-      wbFormIDCk('Sound - Disable', [SNDR, NULL]),
-      wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
-      wbFloat('Cone Spread'),
-      wbFloat('Collision Radius'),
-      wbFloat('Lifetime'),
-      wbFloat('Relaunch Interval'),
-      wbFormIDCk('Decal Data', [TXST, NULL]),
-      wbFormIDCk('Collision Layer', [COLL, NULL]),
-      wbInteger('Tracer Frequency', itU8),
-      wbFormIDCk('VATS Projectile', [PROJ, NULL])
-    ]),
+    wbEmpty(DATA, 'Unused').SetRequired(True),
+    wbStruct(PROD, 'Data', [
+    {  0} wbInteger('Flags', itU16, wbFlags([
+            {0x0001} 'Hitscan',
+            {0x0002} 'Explosion',
+            {0x0004} 'Alt. Trigger',
+            {0x0008} 'Muzzle Flash',
+            {0x0010} 'Unknown 4',
+            {0x0020} 'Can Be Disabled',
+            {0x0040} 'Can Be Picked Up',
+            {0x0080} 'Supersonic',
+            {0x0100} 'Pins Limbs',
+            {0x0200} 'Pass Through Small Transparent',
+            {0x0400} 'Disable Combat Aim Correction',
+            {0x0800} 'Penetrates Geometry',
+            {0x1000} 'Continuous Update',
+            {0x2000} 'Seeks Target',
+            {0x4000} 'Unknown 14',
+            {0x8000} 'Unknown 15'
+          ])),
+    {  2} wbInteger('Type', itU16, wbEnum([], [
+              0, 'Bullet',
+            $01, 'Missile',
+            $02, 'Lobber',
+            $04, 'Beam',
+              5, 'Cutter Beam',
+            $08, 'Flame',
+            $10, 'Cone',
+            $20, 'Barrier',
+            $40, 'Arrow'
+          ])),
+    {  4} wbFloat('Gravity'),
+    {  8} wbFloat('Speed'),
+    { 12} wbFloat('Range'),
+    { 16} wbFormIDCk('Light', [LIGH, NULL]),
+    { 20} wbFormIDCk('Muzzle Flash - Light', [LIGH, NULL]),
+    { 24} wbFloat('Explosion - Alt. Trigger - Proximity'),
+    { 28} wbFloat('Explosion - Alt. Trigger - Timer'),
+    { 32} wbFormIDCk('Explosion', [EXPL, NULL]),
+    { 36} wbFloat('Muzzle Flash - Duration'),
+    { 40} wbFloat('Fade Duration'),
+    { 44} wbFloat('Impact Force'),
+    { 48} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
+    { 52} wbFloat('Cone Spread'),
+    { 56} wbFloat('Collision Radius'),
+    { 60} wbFloat('Lifetime'),
+    { 64} wbFloat('Relaunch Interval'),
+    { 68} wbFormIDCk('Decal Data', [TXST, NULL]),
+    { 72} wbFormIDCk('Collision Layer', [COLL, NULL]),
+    { 76} wbInteger('Tracer Frequency', itU8),
+    { 77} wbUnknown(4),
+    { 81} wbLenString('Unknown'), //variable length!
+          wbFloat,
+          wbInteger('Unknown', itU32),
+          wbInteger('Unknown', itU8),
+          wbLenString('Unknown'), //variable length!
+          wbFloat,
+          wbFloat,
+          wbFloat,
+          wbFloat
+    ]).SetRequired(True),
 
-    *)
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
       wbFLLD
       //wbModelInfo(NAM2)
     ], [], cpNormal, True),
-    wbUnknown(PRAS),
-    wbUnknown(PRCS),
+    wbSoundReference(PRAS),
+    wbSoundReference(PRCS),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
-    wbFormID(NAM3)
+    wbFormIDCk(NAM3, 'Unknown', [CURV])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -11606,7 +11602,30 @@ begin
     wbGenericModel,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
     wbStruct(DNAM, 'Data', [
-      wbUnknown
+      { 0} wbSoundReference,
+      {40} wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
+      {44} wbUnknown(8),
+      {52} wbFloat,
+      {56} wbFloat,
+      {60} wbFloat,
+      {64} wbFloat,
+      {68} wbFloat,
+      {72} wbFloat,
+      {76} wbFloat,
+      {80} wbFloat,
+      {84} wbUnknown(4),
+      {88} wbInteger('Flags', itU32, wbFlags([
+             {0x01} 'Affects Player Only',               //copied from FO4, might be wrong
+             {0x02} 'Inherit Duration from Spawn Spell', //copied from FO4, might be wrong
+             {0x04} 'Align to Impact Normal',            //copied from FO4, might be wrong
+             {0x08} 'Inherit Radius from Spawn Spell',   //copied from FO4, might be wrong
+             {0x10} 'Drop to Ground',                    //copied from FO4, might be wrong
+             {0x20} 'Taper Effectiveness by Proximity',  //copied from FO4, might be wrong
+             {0x40} 'Unknown 6',
+             {0x80} 'Unknown 7'
+           ]))
+      {92}
+
       (*
       wbInteger('Limit', itU32),
       wbFloat('Radius'),
@@ -12141,7 +12160,6 @@ begin
     wbBaseFormComponents,
     wbGenericModel,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
-    //wbFormIDCk(SNAM, 'Sound', [SNDR]),
     wbFormIDCk(LNAM, 'Light', [LIGH]),
     wbUnknown(PSDF),
     wbStruct(DNAM, 'Data', [
@@ -14097,7 +14115,7 @@ begin
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
         // wbInteger('Response number', itU8),
-        wbFormIDCk('Sound File', [SNDR, NULL]),
+        wbUnknown(4),
         wbFloat('Unknown') // Interrupt Percentage?
         // wbByteArray('Unknown', 1),
         // wbInteger('Interrupt Percentage', itU16)
@@ -14225,7 +14243,10 @@ begin
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True),
-    wbUnknown(FLAG)
+    wbInteger(FLAG, 'Flags', itU32, wbFlags([
+      'Unknown 0',
+      'Unknown 1'
+    ]))
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   (* exists neither in Starfield.esm nor the game code * )
@@ -17461,15 +17482,7 @@ begin
     ]),
     wbStruct(WAUD, 'Unknown', [
       wbArray('Unknown',
-        wbStruct('Unknown', [
-          wbGUID, // GUID 1
-          wbGUID, // GUID 2
-          wbFormIDCk('Unknown', [NULL, CNDF]),
-          wbFormIDCk('Unknown', [NULL, WWED])
-        ])
-        .SetSummaryKey([0, 2, 1, 3])
-        .IncludeFlag(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed)
+        wbSoundReference
       , 7),
       wbInteger('Unknown', itU32),
       wbInteger('Unknown', itU32)
@@ -18430,7 +18443,10 @@ begin
       {0x00000004}  4, 'Unknown 4',
       {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start'
+      {0x00010000} 16, 'Random Anim Start',
+      {0x08000000} 27, 'Unknown 27',
+      {0x20000000} 29, 'Unknown 29',
+      {0x40000000} 30, 'Unknown 30'
     ])), [
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
@@ -18789,18 +18805,21 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BMMO, 'Biome Marker', [
+  wbRecord(BMMO, 'Biome Marker',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00100000} 20, 'Unknown 20' //all occurences on prey/preditor BMMOs
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTY.SetRequired(True),
     wbOPDS,
     wbGenericModel,
     wbKeywords,
     wbCTDAs,
-    wbFormID(KNAM),
-    wbFormID(LNAM),
-    wbFormID(LNA2)
+    wbFormIDCk(KNAM, 'Marker Type', [NULL, KYWD]).SetRequired(True),
+    wbFormIDCk(LNAM, 'Unknown', [NULL, LVLI]).SetRequired(True),
+    wbFormIDCk(LNA2, 'Unknown', [NULL, FLOR, PKIN, STAT]).SetRequired(True) //probably any type of non-actor reference?
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18810,7 +18829,10 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GBFM, 'Generic Base Form', [
+  wbRecord(GBFM, 'Generic Base Form',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -19523,16 +19545,16 @@ begin
   wbAddGroupOrder(NPC_); {SF1Dump: no errors right now, but more work needed}
   wbAddGroupOrder(PLYR); {purely internal type}
   wbAddGroupOrder(LVLN); {SF1Dump: no errors}
-  wbAddGroupOrder(LVLP);
-  wbAddGroupOrder(KEYM);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(IDLM);
-  wbAddGroupOrder(BMMO);
-  wbAddGroupOrder(PROJ);
-  wbAddGroupOrder(HAZD);
-  wbAddGroupOrder(BNDS);
-  wbAddGroupOrder(TERM);
-  wbAddGroupOrder(LVLI);
+  wbAddGroupOrder(LVLP); {SF1Dump: no errors}
+  wbAddGroupOrder(KEYM); {SF1Dump: no errors}
+  wbAddGroupOrder(ALCH); {SF1Dump: no errors}
+  wbAddGroupOrder(IDLM); {SF1Dump: no errors}
+  wbAddGroupOrder(BMMO); {SF1Dump: no errors}
+  wbAddGroupOrder(PROJ); {SF1Dump: no errors right now, but more work needed}
+  wbAddGroupOrder(HAZD); {SF1Dump: no errors}
+  wbAddGroupOrder(BNDS); {SF1Dump: no errors}
+  wbAddGroupOrder(TERM); {SF1Dump: no errors}
+  wbAddGroupOrder(LVLI); {SF1Dump: no errors}
   wbAddGroupOrder(GBFT);
   wbAddGroupOrder(GBFM);
   wbAddGroupOrder(LVLB);
