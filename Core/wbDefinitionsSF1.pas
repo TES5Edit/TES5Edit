@@ -9871,9 +9871,9 @@ begin
       wbEFID,
       wbEFIT,
       wbCTDAs,
-      wbFormIDCk(MNAM, 'Unknown', [GLOB]),
-      wbFormIDCk(ANAM, 'Unknown', [GLOB]),
-      wbFormIDCk(ZNAM, 'Unknown', [GLOB]),
+      wbFormIDCk(MNAM, 'Magnitude', [GLOB]),
+      wbFormIDCk(ANAM, 'Area', [GLOB]),
+      wbFormIDCk(ZNAM, 'Duration', [GLOB]),
       wbInteger(EFIF, 'Unknown', itU32),
       wbInteger(MUID, 'Unknown', itU32)
     ], [], cpNormal, True);
@@ -12386,7 +12386,7 @@ begin
     ])),
 
     wbArray(LCUR, 'Unknown', wbStruct('', [
-     wbFormIDCk('Generic Base Form', [GBFM]),
+     wbFormIDCk('Generic Base Form', [GBFM]),                 //GBFM may be unique, only used by a single REFR (the one on the next line), and all have Unknown 2
      wbFormIDCk('Placed Object', [REFR]),
      wbFormIDCk('Location', [LCTN])
     ])),
@@ -19443,7 +19443,12 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID,
-    wbUnknown(ZNAM)
+    wbStruct(ZNAM, 'Unknown', [
+      wbUnknown(1),
+      wbFloat(),
+      wbFloat(),
+      wbFloat()
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
