@@ -9893,9 +9893,9 @@ begin
       wbEFID,
       wbEFIT,
       wbCTDAs,
-      wbFormIDCk(MNAM, 'Unknown', [GLOB]),
-      wbFormIDCk(ANAM, 'Unknown', [GLOB]),
-      wbFormIDCk(ZNAM, 'Unknown', [GLOB]),
+      wbFormIDCk(MNAM, 'Magnitude', [GLOB]),
+      wbFormIDCk(ANAM, 'Area', [GLOB]),
+      wbFormIDCk(ZNAM, 'Duration', [GLOB]),
       wbInteger(EFIF, 'Unknown', itU32),
       wbInteger(MUID, 'Unknown', itU32)
     ], [], cpNormal, True);
@@ -12394,11 +12394,16 @@ begin
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbInteger('Grid Y', itS32, nil, cpBenign),
-      wbInteger('Grid X', itS32, nil, cpBenign)
+      wbUnknown(8)
+   //   wbInteger('Grid Y', itS32, nil, cpBenign),
+   //   wbInteger('Grid X', itS32, nil, cpBenign)
     ])),
 
-    wbUnknown(LCUR),
+    wbArray(LCUR, 'Unknown', wbStruct('', [
+     wbFormIDCk('Generic Base Form', [GBFM]),                 //GBFM may be unique, only used by a single REFR (the one on the next line), and all have Unknown 2
+     wbFormIDCk('Placed Object', [REFR]),
+     wbFormIDCk('Location', [LCTN])
+    ])),
 
     wbArray(LCUN, 'Location Cell Unique', wbStruct('', [
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
@@ -12410,8 +12415,9 @@ begin
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
       wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbInteger('Grid Y', itS32, nil, cpBenign),
-      wbInteger('Grid X', itS32, nil, cpBenign)
+      wbUnknown(8)
+       //  wbInteger('Grid Y', itS32, nil, cpBenign)
+       //  wbInteger('Grid X', itS32, nil, cpBenign)
     ])),
 
     wbRArray('Location Cell Encounter Cell',
@@ -12429,8 +12435,9 @@ begin
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
-      wbInteger('Grid Y', itS32, nil, cpBenign),
-      wbInteger('Grid X', itS32, nil, cpBenign)
+      wbUnknown(4)
+//      wbInteger('Grid Y', itS32, nil, cpBenign),
+//      wbInteger('Grid X', itS32, nil, cpBenign)
     ])),
 
     wbFULL,
@@ -12448,10 +12455,10 @@ begin
     wbFormIDCk(MNAM, 'World Location Marker Ref', [REFR, ACHR]),
     wbFloat(RNAM, 'World Location Radius'),
     wbFloat(ANAM, 'Actor Fade Mult'),
-    wbUnknown(TNAM),
+    wbFloat(TNAM, 'Unknown'),    //Usually 600 (00 00 16 44), two have 00 00 34 42 (45) and are labeled Starstations
     wbCNAM,
     wbUnknown(XNAM),
-    wbUnknown(YNAM)
+    wbInteger(YNAM, 'Unknown', itS32)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 end;
@@ -18289,9 +18296,9 @@ begin
     wbBaseFormComponents,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
-    wbUnknown(PNAM),
-    wbUnknown(LNAM),
-    wbUnknown(MNAM)
+    wbFormIDCk(PNAM, 'Pack-in', [PKIN]),
+    wbFormIDCk(LNAM, 'Unknown', [REFR]),
+    wbArray(MNAM,'Unknown', wbFloat(), 3)
   ]);
 
   {wbRecord(RGDL, 'RGDL', [
@@ -19415,7 +19422,12 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID,
-    wbUnknown(ZNAM)
+    wbStruct(ZNAM, 'Unknown', [
+      wbUnknown(1),
+      wbFloat(),
+      wbFloat(),
+      wbFloat()
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
