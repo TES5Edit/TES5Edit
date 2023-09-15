@@ -628,11 +628,11 @@ begin
   if not wbIsAeroEnabled then
     wbThemesSupported := False;
 
-  Result := True;
-  wbReportMode := False;
+  Result        := True;
+  wbReportMode  := False;
   wbEditAllowed := True;
   wbDontSave    := False;
-  wbDevMode := FindCmdLineSwitch('devmode');
+  wbDevMode     := FindCmdLineSwitch('devmode');
 
   CheckForcedMode;
   DetectAppMode;
@@ -702,139 +702,139 @@ begin
 
   wbLanguage := 'English';
 
-  wbGameExeName := '';
+  wbGameExeName        := '';
   if isMode('FNV') then begin
-    wbGameMode := gmFNV;
-    wbAppName := 'FNV';
-    wbGameName := 'FalloutNV';
-    ToolModes := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    ToolSources := [tsPlugins, tsSaves];
+    wbGameMode         := gmFNV;
+    wbAppName          := 'FNV';
+    wbGameName         := 'FalloutNV';
+    ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
+    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO3') then begin
-    wbGameMode := gmFO3;
-    wbAppName := 'FO3';
-    wbGameName := 'Fallout3';
-    ToolModes := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    ToolSources := [tsPlugins];
+    wbGameMode         := gmFO3;
+    wbAppName          := 'FO3';
+    wbGameName         := 'Fallout3';
+    ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
+    ToolSources        := [tsPlugins];
   end
 
   else if isMode('TES3') then begin
-    wbGameMode := gmTES3;
-    wbAppName := 'TES3';
-    wbGameName := 'Morrowind';
+    wbGameMode         := gmTES3;
+    wbAppName          := 'TES3';
+    wbGameName         := 'Morrowind';
     (**)
-    ToolModes := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
-    ToolSources := [tsPlugins];
+    ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
+    ToolSources        := [tsPlugins];
     (**)
   end
 
   else if isMode('TES4') then begin
-    wbGameMode := gmTES4;
-    wbAppName := 'TES4';
-    wbGameName := 'Oblivion';
-    ToolModes := wbAlwaysMode;
-    ToolSources := [tsPlugins];
+    wbGameMode         := gmTES4;
+    wbAppName          := 'TES4';
+    wbGameName         := 'Oblivion';
+    ToolModes          := wbAlwaysMode;
+    ToolSources        := [tsPlugins];
   end
 
   else if isMode('TES5') then begin
-    wbGameMode := gmTES5;
-    wbAppName := 'TES5';
-    wbGameName := 'Skyrim';
-    wbGameExeName := 'TESV';
-    ToolModes := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources := [tsPlugins, tsSaves];
+    wbGameMode         := gmTES5;
+    wbAppName          := 'TES5';
+    wbGameName         := 'Skyrim';
+    wbGameExeName      := 'TESV';
+    ToolModes          := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('EnderalSE') then begin
-    wbGameMode := gmEnderalSE;
-    wbAppName := 'EnderalSE';
-    wbGameName := 'Enderal';
-    wbGameExeName := 'SkyrimSE';
-    wbGameName2 := 'Enderal Special Edition';
-    wbGameNameReg := 'EnderalSE';
-    wbGameMasterEsm := 'Skyrim.esm';
-    ToolModes := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources := [tsPlugins, tsSaves];
+    wbGameMode         := gmEnderalSE;
+    wbAppName          := 'EnderalSE';
+    wbGameName         := 'Enderal';
+    wbGameExeName      := 'SkyrimSE';
+    wbGameName2        := 'Enderal Special Edition';
+    wbGameNameReg      := 'EnderalSE';
+    wbGameMasterEsm    := 'Skyrim.esm';
+    ToolModes          := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('Enderal') then begin
-    wbGameMode := gmEnderal;
-    wbAppName := 'Enderal';
-    wbGameName := 'Enderal';
-    wbGameExeName := 'TESV';
-    wbGameMasterEsm := 'Skyrim.esm';
-    ToolModes := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources := [tsPlugins, tsSaves];
+    wbGameMode         := gmEnderal;
+    wbAppName          := 'Enderal';
+    wbGameName         := 'Enderal';
+    wbGameExeName      := 'TESV';
+    wbGameMasterEsm    := 'Skyrim.esm';
+    ToolModes          := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('TES5VR') then begin
-    wbGameMode := gmTES5VR;
-    wbAppName := 'TES5VR';
-    wbGameName := 'Skyrim';
-    wbGameName2 := 'Skyrim VR';
-    wbGameExeName := 'SkyrimVR';
+    wbGameMode         := gmTES5VR;
+    wbAppName          := 'TES5VR';
+    wbGameName         := 'Skyrim';
+    wbGameName2        := 'Skyrim VR';
+    wbGameExeName      := 'SkyrimVR';
 
-    ToolModes := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources := [tsPlugins];
+    ToolModes          := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources        := [tsPlugins];
   end
 
   else if isMode('SSE') then begin
-    wbGameMode := gmSSE;
-    wbAppName := 'SSE';
-    wbGameName := 'Skyrim';
-    wbGameExeName := 'SkyrimSE';
-    wbGameName2 := 'Skyrim Special Edition';
-    ToolModes := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources := [tsPlugins, tsSaves];
+    wbGameMode         := gmSSE;
+    wbAppName          := 'SSE';
+    wbGameName         := 'Skyrim';
+    wbGameExeName      := 'SkyrimSE';
+    wbGameName2        := 'Skyrim Special Edition';
+    ToolModes          := wbAlwaysMode + [tmOnamUpdate];
+    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO4') then begin
-    wbGameMode := gmFO4;
-    wbAppName := 'FO4';
-    wbGameName := 'Fallout4';
+    wbGameMode         := gmFO4;
+    wbAppName          := 'FO4';
+    wbGameName         := 'Fallout4';
     wbArchiveExtension := '.ba2';
-    wbLanguage := 'En';
-    ToolModes := wbAlwaysMode;
-    ToolSources := [tsPlugins, tsSaves];
+    wbLanguage         := 'En';
+    ToolModes          := wbAlwaysMode;
+    ToolSources        := [tsPlugins, tsSaves];
   end
 
   else if isMode('FO4VR') then begin
-    wbGameMode := gmFO4VR;
-    wbAppName := 'FO4VR';
-    wbGameName := 'Fallout4';
-    wbGameExeName := 'Fallout4VR';
-    wbGameName2 := 'Fallout4VR';
-    wbGameNameReg := 'Fallout 4 VR';
-    wbLanguage := 'En';
+    wbGameMode         := gmFO4VR;
+    wbAppName          := 'FO4VR';
+    wbGameName         := 'Fallout4';
+    wbGameExeName      := 'Fallout4VR';
+    wbGameName2        := 'Fallout4VR';
+    wbGameNameReg      := 'Fallout 4 VR';
+    wbLanguage         := 'En';
     wbArchiveExtension := '.ba2';
-    ToolModes := wbAlwaysMode;
-    ToolSources := [tsPlugins];
+    ToolModes          := wbAlwaysMode;
+    ToolSources        := [tsPlugins];
   end
 
   else if isMode('FO76') then begin
-    wbGameMode := gmFO76;
-    wbAppName := 'FO76';
-    wbGameName := 'Fallout76';
-    wbGameName2 := 'Fallout 76';
-    wbGameNameReg := 'Steam App 1151340';
-    wbGameMasterEsm := 'SeventySix.esm';
-    wbLanguage := 'En';
+    wbGameMode         := gmFO76;
+    wbAppName          := 'FO76';
+    wbGameName         := 'Fallout76';
+    wbGameName2        := 'Fallout 76';
+    wbGameNameReg      := 'Steam App 1151340';
+    wbGameMasterEsm    := 'SeventySix.esm';
+    wbLanguage         := 'En';
     wbArchiveExtension := '.ba2';
-    ToolModes := wbAlwaysMode;
-    ToolSources := [tsPlugins];
+    ToolModes          := wbAlwaysMode;
+    ToolSources        := [tsPlugins];
   end
 
   else if isMode('SF1') then begin
-    wbGameMode := gmSF1;
-    wbAppName := 'SF1';
-    wbGameName := 'Starfield';
-    wbGameNameReg := 'Steam App 1716740';
+    wbGameMode         := gmSF1;
+    wbAppName          := 'SF1';
+    wbGameName         := 'Starfield';
+    wbGameNameReg      := 'Steam App 1716740';
     wbArchiveExtension := '.ba2';
-    wbLanguage := 'En';
-    ToolModes := [tmView];
-    ToolSources := [tsPlugins];
-    wbBuildRefs := False;
+    wbLanguage         := 'En';
+    ToolModes          := [tmView];
+    ToolSources        := [tsPlugins];
+    wbBuildRefs        := False;
   end
 
   else begin
@@ -890,62 +890,62 @@ begin
   // specific Game settings
   case wbGameMode of
     gmFNV: begin
-      wbVWDInTemporary := True;
-      wbLoadBSAs := False;
-      wbCanSortINFO := True;
+      wbVWDInTemporary      := True;
+      wbLoadBSAs            := False;
+      wbCanSortINFO         := True;
     end;
     gmFO3: begin
-      wbVWDInTemporary := True;
-      wbLoadBSAs := False;
-      wbCanSortINFO := True;
+      wbVWDInTemporary      := True;
+      wbLoadBSAs            := False;
+      wbCanSortINFO         := True;
     end;
     gmTES3: begin
-      wbLoadBSAs := False;
-      wbAllowInternalEdit := false;
-      wbDontCache := True;
-      wbDontCacheLoad := True;
-      wbDontCacheSave := True;
-      wbBuildRefs := False;
-      wbVWDInTemporary := True;
-      wbCreateContainedIn := False;
+      wbLoadBSAs            := False;
+      wbAllowInternalEdit   := false;
+      wbDontCache           := True;
+      wbDontCacheLoad       := True;
+      wbDontCacheSave       := True;
+      wbBuildRefs           := False;
+      wbVWDInTemporary      := True;
+      wbCreateContainedIn   := False;
     end;
     gmTES4: begin
       if (not FileExists(wbDataPath + 'Oblivion.esm')) and FileExists(wbDataPath + 'Nehrim.esm') then begin
-        wbAppName := 'Nehrim';
-        wbGameMasterEsm := 'Nehrim.esm';
+        wbAppName           := 'Nehrim';
+        wbGameMasterEsm     := 'Nehrim.esm';
       end;
-      wbLoadBSAs := True;
-      wbAllowInternalEdit := false;
-      wbCanSortINFO := True;
+      wbLoadBSAs            := True;
+      wbAllowInternalEdit   := false;
+      wbCanSortINFO         := True;
     end;
     gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
-      wbVWDInTemporary := True;
-      wbLoadBSAs := True; // localization won't work otherwise
-      wbHideIgnored := False; // to show Form Version
-      wbCanSortINFO := True;
+      wbVWDInTemporary      := True;
+      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbHideIgnored         := False; // to show Form Version
+      wbCanSortINFO         := True;
     end;
     gmFO4, gmFO4VR: begin
-      wbVWDInTemporary := True;
-      wbVWDAsQuestChildren := True;
-      wbLoadBSAs := True; // localization won't work otherwise
-      wbHideIgnored := False; // to show Form Version
-      wbAlwaysSaveOnam := True;
+      wbVWDInTemporary      := True;
+      wbVWDAsQuestChildren  := True;
+      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbHideIgnored         := False; // to show Form Version
+      wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
     end;
     gmFO76: begin
-      wbVWDInTemporary := True;
-      wbVWDAsQuestChildren := True;
-      wbLoadBSAs := True; // localization won't work otherwise
-      wbHideIgnored := False; // to show Form Version
-      wbAlwaysSaveOnam := True;
+      wbVWDInTemporary      := True;
+      wbVWDAsQuestChildren  := True;
+      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbHideIgnored         := False; // to show Form Version
+      wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
     end;
     gmSF1: begin
-      wbVWDInTemporary := True;
-      wbVWDAsQuestChildren := True;
-      wbLoadBSAs := True; // localization won't work otherwise
-      wbHideIgnored := False; // to show Form Version
-      wbAlwaysSaveOnam := True;
+      wbVWDInTemporary      := True;
+      wbVWDAsQuestChildren  := True;
+      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbHideIgnored         := False; // to show Form Version
+      wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
       wbDecodeTextureHashes := False;
     end;
@@ -1242,43 +1242,43 @@ begin
   // specific Tool Mode settings overrides
   case wbToolMode of
     tmLODgen: begin
-      wbIKnowWhatImDoing := True;
-      wbAllowInternalEdit := False;
-      wbShowInternalEdit := False;
-      wbLoadBSAs := True;
-      wbBuildRefs := False;
+      wbIKnowWhatImDoing       := True;
+      wbAllowInternalEdit      := False;
+      wbShowInternalEdit       := False;
+      wbLoadBSAs               := True;
+      wbBuildRefs              := False;
     end;
     tmScript: begin
-      wbIKnowWhatImDoing := True;
-      wbLoadBSAs := True;
-      wbBuildRefs := True;
+      wbIKnowWhatImDoing       := True;
+      wbLoadBSAs               := True;
+      wbBuildRefs              := True;
     end;
     tmOnamUpdate, tmMasterUpdate, tmESMify: begin
-      wbIKnowWhatImDoing := True;
-      wbAllowInternalEdit := False;
-      wbShowInternalEdit := False;
-      wbLoadBSAs := False;
-      wbBuildRefs := False;
+      wbIKnowWhatImDoing       := True;
+      wbAllowInternalEdit      := False;
+      wbShowInternalEdit       := False;
+      wbLoadBSAs               := False;
+      wbBuildRefs              := False;
       wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
       if wbToolMode = tmOnamUpdate then begin
-        wbAlwaysSaveOnam := True;
-        wbAlwaysSaveOnamForce := True;
+        wbAlwaysSaveOnam       := True;
+        wbAlwaysSaveOnamForce  := True;
       end;
     end;
     tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors: begin
-      wbIKnowWhatImDoing := True;
-      wbAllowInternalEdit := False;
-      wbShowInternalEdit := False;
-      wbLoadBSAs := False;
-      wbBuildRefs := False;
+      wbIKnowWhatImDoing       := True;
+      wbAllowInternalEdit      := False;
+      wbShowInternalEdit       := False;
+      wbLoadBSAs               := False;
+      wbBuildRefs              := False;
     end;
     tmTranslate: begin
       if wbGameMode >= gmTES5 then
-        wbLoadBSAs := True; //needed for localization
-      wbTranslationMode := True;
-      wbHideUnused := True;
-      wbHideIgnored := True;
-      wbHideNeverShow := True;
+        wbLoadBSAs             := True; //needed for localization
+      wbTranslationMode        := True;
+      wbHideUnused             := True;
+      wbHideIgnored            := True;
+      wbHideNeverShow          := True;
     end;
   end;
 

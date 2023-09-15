@@ -96,225 +96,225 @@ type
   PwbTwoPtrArray = ^TwbTwoPtrArray;         {General array of TwbTwoPtr}
 
 threadvar
-  _wbProgressCallback     : TwbProgressCallback;
-  wbCurrentTick           : UInt64;
-  wbCurrentAction         : string;
-  wbCurrentProgress       : string;
-  wbStartTime             : TDateTime;
-  wbLocalStartTime        : TDateTime;
-  wbShowStartTime         : Integer;
-  wbShowCaption           : Integer;
-  wbHideStartTime         : Integer;
-  wbLastMessageAt         : UInt64;
-  wbMaxMessageInterval    : UInt64;
+  _wbProgressCallback                : TwbProgressCallback;
+  wbCurrentTick                      : UInt64;
+  wbCurrentAction                    : string;
+  wbCurrentProgress                  : string;
+  wbStartTime                        : TDateTime;
+  wbLocalStartTime                   : TDateTime;
+  wbShowStartTime                    : Integer;
+  wbShowCaption                      : Integer;
+  wbHideStartTime                    : Integer;
+  wbLastMessageAt                    : UInt64;
+  wbMaxMessageInterval               : UInt64;
 
 var
-  wbForceTerminate    : Boolean;
+  wbForceTerminate                   : Boolean;
 
 var
-  wbDisplayLoadOrderFormID : Boolean  = False;
-  wbPrettyFormID           : Boolean  = False;
-  wbSimpleRecords          : Boolean  = True;
-  wbDecodeTextureHashes    : Boolean  = True;
-  wbFixupPGRD              : Boolean  = False;
-  wbIKnowWhatImDoing       : Boolean  = False;
-  wbHideUnused             : Boolean  = True;
-  wbHideIgnored            : Boolean  = True;
-  wbHideNeverShow          : Boolean  = True;
-  wbShowFormVersion        : Boolean  = False;
-  wbShowFlagEnumValue      : Boolean  = False;
-  wbShowGroupRecordCount   : Boolean  = False;
-  wbShowFileFlags          : Boolean  = False;
-  wbDisplayShorterNames    : Boolean  = False;
-  wbSortSubRecords         : Boolean  = False;
-  wbSortFLST               : Boolean  = False;
-  wbCanSortINFO            : Boolean  = False;
-  wbSortINFO               : Boolean  = False;
-  wbFillPNAM               : Boolean  = False;
-  wbFillINOM               : Boolean  = True;
-  wbFillINOA               : Boolean  = True;
-  wbRemoveOffsetData       : Boolean  = True;
-  wbEditAllowed            : Boolean  = False;
-  wbFlagsAsArray           : Boolean  = False;
-  wbDelayLoadRecords       : Boolean  = True;
-  wbMoreInfoForUnknown     : Boolean  = False;
-  wbMoreInfoForIndex       : Boolean  = False;
-  wbTranslationMode        : Boolean  = False;
-  wbTestWrite              : Boolean  = False;
-  wbForceNewHeader         : Boolean  = False; // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
-  wbNewHeaderAddon         : Cardinal = 40;    // 4 additional bytes, 40 - new form version field
-  wbRequireLoadOrder       : Boolean  = False;
-  wbCreateContainedIn      : Boolean  = True;
-  wbVWDInTemporary         : Boolean  = False;
-  wbVWDAsQuestChildren     : Boolean  = False;
-  wbResolveAlias           : Boolean  = True;
-  wbActorTemplateHide      : Boolean  = True;
-  wbClampFormID            : Boolean  = True;
-  wbAlignArrayElements     : Boolean  = True;
-  wbAlignArrayLimit        : Integer  = 5000;
-  wbCopyIsRunning          : Integer  = 0;
-  wbIgnoreESL              : Boolean  = False;
-  wbPseudoESL              : Boolean  = False;
-  wbAllowEditGameMaster    : Boolean  = False;
-  wbAllowDirectSave        : Boolean  = False;
-  wbAllowDirectSaveFor     : TStringList;
-  wbAllowMasterFilesEdit   : Boolean  = False; //must be set before DefineDefs
-  wbCanAddScripts          : Boolean  = True;
-  wbCanAddScriptProperties : Boolean  = True;
-  wbEditInfoUseShortName   : Boolean  = False;
-  wbDevMode                : Boolean  = True;
-  wbStripEmptyMasters      : Boolean  = False;
-  wbAlwaysSorted           : Boolean  = False;
-  wbThemesSupported        : Boolean  = True;
-  wbReportModGroups        : Boolean  = False;
-  wbRequireCtrlForDblClick : Boolean  = False;
-  wbFocusAddedElement      : Boolean  = True;
-  wbCheckNonCPNChars       : Boolean  = False;
-  wbShowStringBytes        : Boolean  = False;
-  wbResetModifiedOnSave    : Boolean  = True;
-  wbAlwaysSaveOnam         : Boolean  = False;
-  wbAlwaysSaveOnamForce    : Boolean  = False;
-  wbManualCleaningAllow    : Boolean  = False;
-  wbManualCleaningHide     : Boolean  = False;
-  wbConvertIntFormID       : Boolean  = False;
-  wbShrinkButtons          : Boolean  = False;
-  wbCollapseRecordHeader   : Boolean  = True;
-  wbCollapseObjectBounds   : Boolean  = True;
-  wbCollapseModels         : Boolean  = True;
-  wbCollapseFactions       : Boolean  = True;
-  wbCollapseFactionRelations : Boolean  = True;
-  wbCollapseFragments      : Boolean  = True;
-  wbCollapseItems          : Boolean  = True;
-  wbCollapseLeveledItems   : Boolean  = True;
-  wbCollapseEquipSlots     : Boolean  = True;
-  wbCollapseObjectProperties : Boolean  = True;
-  wbCollapseScriptProperties : Boolean  = True;
-  wbCollapseConditions     : Boolean  = True;
-  wbCollapseBenignArray    : Boolean  = True;
-  wbCollapseRGBA           : Boolean  = True;
-  wbCollapseVec3           : Boolean  = True;
-  wbCollapseScriptData     : Boolean  = True;
-  wbCollapseHeadParts      : Boolean  = True;
-  wbCollapseBodyParts      : Boolean  = True;
-  wbCollapseModelInfoTexture        : Boolean  = True;
-  wbCollapseModelInfoTextures       : Boolean  = True;
-  wbCollapseModelInfoAddons         : Boolean  = True;
-  wbCollapseModelInfoMaterial       : Boolean  = True;
-  wbCollapseModelInfoMaterials      : Boolean  = True;
-  wbCollapseModelInfo      : Boolean  = True;
-  wbCollapseModelInfoHeader : Boolean  = True;
-  wbCollapseTimeInterpolator : Boolean  = True;
-  wbCollapseTimeInterpolators : Boolean  = True;
-  wbCollapseTimeInterpolatorsMultAdd : Boolean  = True;
-  wbReportInjected         : Boolean  = True;
-  wbNoFullInShortName      : Boolean  = True;
-  wbNoIndexInAliasSummary  : Boolean  = True;
-  wbExtendedESL            : Boolean  = False;
+  wbDisplayLoadOrderFormID           : Boolean    = False;
+  wbPrettyFormID                     : Boolean    = False;
+  wbSimpleRecords                    : Boolean    = True;
+  wbDecodeTextureHashes              : Boolean    = True;
+  wbFixupPGRD                        : Boolean    = False;
+  wbIKnowWhatImDoing                 : Boolean    = False;
+  wbHideUnused                       : Boolean    = True;
+  wbHideIgnored                      : Boolean    = True;
+  wbHideNeverShow                    : Boolean    = True;
+  wbShowFormVersion                  : Boolean    = False;
+  wbShowFlagEnumValue                : Boolean    = False;
+  wbShowGroupRecordCount             : Boolean    = False;
+  wbShowFileFlags                    : Boolean    = False;
+  wbDisplayShorterNames              : Boolean    = False;
+  wbSortSubRecords                   : Boolean    = False;
+  wbSortFLST                         : Boolean    = False;
+  wbCanSortINFO                      : Boolean    = False;
+  wbSortINFO                         : Boolean    = False;
+  wbFillPNAM                         : Boolean    = False;
+  wbFillINOM                         : Boolean    = True;
+  wbFillINOA                         : Boolean    = True;
+  wbRemoveOffsetData                 : Boolean    = True;
+  wbEditAllowed                      : Boolean    = False;
+  wbFlagsAsArray                     : Boolean    = False;
+  wbDelayLoadRecords                 : Boolean    = True;
+  wbMoreInfoForUnknown               : Boolean    = False;
+  wbMoreInfoForIndex                 : Boolean    = False;
+  wbTranslationMode                  : Boolean    = False;
+  wbTestWrite                        : Boolean    = False;
+  wbForceNewHeader                   : Boolean    = False;          // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
+  wbNewHeaderAddon                   : Cardinal   = 40;             // 4 additional bytes, 40 - new form version field
+  wbRequireLoadOrder                 : Boolean    = False;
+  wbCreateContainedIn                : Boolean    = True;
+  wbVWDInTemporary                   : Boolean    = False;
+  wbVWDAsQuestChildren               : Boolean    = False;
+  wbResolveAlias                     : Boolean    = True;
+  wbActorTemplateHide                : Boolean    = True;
+  wbClampFormID                      : Boolean    = True;
+  wbAlignArrayElements               : Boolean    = True;
+  wbAlignArrayLimit                  : Integer    = 5000;
+  wbCopyIsRunning                    : Integer    = 0;
+  wbIgnoreESL                        : Boolean    = False;
+  wbPseudoESL                        : Boolean    = False;
+  wbAllowEditGameMaster              : Boolean    = False;
+  wbAllowDirectSave                  : Boolean    = False;
+  wbAllowDirectSaveFor               : TStringList;
+  wbAllowMasterFilesEdit             : Boolean    = False;          //must be set before DefineDefs
+  wbCanAddScripts                    : Boolean    = True;
+  wbCanAddScriptProperties           : Boolean    = True;
+  wbEditInfoUseShortName             : Boolean    = False;
+  wbDevMode                          : Boolean    = False;
+  wbStripEmptyMasters                : Boolean    = False;
+  wbAlwaysSorted                     : Boolean    = False;
+  wbThemesSupported                  : Boolean    = True;
+  wbReportModGroups                  : Boolean    = False;
+  wbRequireCtrlForDblClick           : Boolean    = False;
+  wbFocusAddedElement                : Boolean    = True;
+  wbCheckNonCPNChars                 : Boolean    = False;
+  wbShowStringBytes                  : Boolean    = False;
+  wbResetModifiedOnSave              : Boolean    = True;
+  wbAlwaysSaveOnam                   : Boolean    = False;
+  wbAlwaysSaveOnamForce              : Boolean    = False;
+  wbManualCleaningAllow              : Boolean    = False;
+  wbManualCleaningHide               : Boolean    = False;
+  wbConvertIntFormID                 : Boolean    = False;
+  wbShrinkButtons                    : Boolean    = False;
+  wbCollapseRecordHeader             : Boolean    = True;
+  wbCollapseObjectBounds             : Boolean    = True;
+  wbCollapseModels                   : Boolean    = True;
+  wbCollapseFactions                 : Boolean    = True;
+  wbCollapseFactionRelations         : Boolean    = True;
+  wbCollapseFragments                : Boolean    = True;
+  wbCollapseItems                    : Boolean    = True;
+  wbCollapseLeveledItems             : Boolean    = True;
+  wbCollapseEquipSlots               : Boolean    = True;
+  wbCollapseObjectProperties         : Boolean    = True;
+  wbCollapseScriptProperties         : Boolean    = True;
+  wbCollapseConditions               : Boolean    = True;
+  wbCollapseBenignArray              : Boolean    = True;
+  wbCollapseRGBA                     : Boolean    = True;
+  wbCollapseVec3                     : Boolean    = True;
+  wbCollapseScriptData               : Boolean    = True;
+  wbCollapseHeadParts                : Boolean    = True;
+  wbCollapseBodyParts                : Boolean    = True;
+  wbCollapseModelInfoTexture         : Boolean    = True;
+  wbCollapseModelInfoTextures        : Boolean    = True;
+  wbCollapseModelInfoAddons          : Boolean    = True;
+  wbCollapseModelInfoMaterial        : Boolean    = True;
+  wbCollapseModelInfoMaterials       : Boolean    = True;
+  wbCollapseModelInfo                : Boolean    = True;
+  wbCollapseModelInfoHeader          : Boolean    = True;
+  wbCollapseTimeInterpolator         : Boolean    = True;
+  wbCollapseTimeInterpolators        : Boolean    = True;
+  wbCollapseTimeInterpolatorsMultAdd : Boolean    = True;
+  wbReportInjected                   : Boolean    = True;
+  wbNoFullInShortName                : Boolean    = True;
+  wbNoIndexInAliasSummary            : Boolean    = True;
+  wbExtendedESL                      : Boolean    = False;
 
-  wbHEDRVersion            : Double = 1.0;
-  wbHEDRNextObjectID       : Integer = $800;
+  wbHEDRVersion                      : Double     = 1.0;
+  wbHEDRNextObjectID                 : Integer    = $800;
 
-  wbGlobalModifedGeneration : UInt64;
+  wbGlobalModifedGeneration          : UInt64;
 
-  wbPluginsFileName    : String;
-  wbModGroupFileName   : string;
+  wbPluginsFileName                  : String;
+  wbModGroupFileName                 : string;
 
-  wbDontSave           : Boolean;
+  wbDontSave                         : Boolean;
 
-  wbDontCache          : Boolean = False;
-  wbDontCacheLoad      : Boolean = False;
-  wbDontCacheSave      : Boolean = False;
+  wbDontCache                        : Boolean    = False;
+  wbDontCacheLoad                    : Boolean    = False;
+  wbDontCacheSave                    : Boolean    = False;
 
-  wbCacheRecordsThreshold  : Integer   = 500;
-  wbCacheTimeThreshold     : TDateTime = 2 * 1/24/60/60; //2 seconds
+  wbCacheRecordsThreshold            : Integer    = 500;
+  wbCacheTimeThreshold               : TDateTime  = 2 * 1/24/60/60; //2 seconds
 
-  wbAutoCompareSelectedLimit : Integer = 5;
+  wbAutoCompareSelectedLimit         : Integer    = 5;
 
-  wbUDRSetXESP       : Boolean = True;
-  wbUDRSetScale      : Boolean = False;
-  wbUDRSetScaleValue : Single  = 0.0;
-  wbUDRSetZ          : Boolean = True;
-  wbUDRSetZValue     : Single  = -30000;
-  wbUDRSetMSTT       : Boolean = True;
-  wbUDRSetMSTTValue  : Int64   = $0000001B; { AshPile01 }
+  wbUDRSetXESP                       : Boolean    = True;
+  wbUDRSetScale                      : Boolean    = False;
+  wbUDRSetScaleValue                 : Single     = 0.0;
+  wbUDRSetZ                          : Boolean    = True;
+  wbUDRSetZValue                     : Single     = -30000;
+  wbUDRSetMSTT                       : Boolean    = True;
+  wbUDRSetMSTTValue                  : Int64      = $0000001B; { AshPile01 }
 
-  wbMasterUpdateFilterONAM     : Boolean = False;
-  wbMasterUpdateFixPersistence : Boolean = True;
+  wbMasterUpdateFilterONAM           : Boolean    = False;
+  wbMasterUpdateFixPersistence       : Boolean    = True;
 
-  wbAllowInternalEdit : Boolean = True;
-  wbShowInternalEdit  : Boolean = False;
+  wbAllowInternalEdit                : Boolean    = True;
+  wbShowInternalEdit                 : Boolean    = False;
 
-  wbIgnoreWorldMHDT : Boolean = False;
+  wbIgnoreWorldMHDT                  : Boolean    = False;
 
-  wbReportMode                       : Boolean = False;
-  wbReportUnused                     : Boolean = False;
-  wbReportRequired                   : Boolean = False;
-  wbReportUnusedData                 : Boolean = True;
-  wbReportUnknownFormIDs             : Boolean = True;
-  wbReportUnknownFloats              : Boolean = True;
-  wbReportUnknownStrings             : Boolean = True;
-  wbReportUnknownLStrings            : Boolean = True;
-  wbReportEmpty                      : Boolean = True;
-  wbReportSometimesEmpty             : Boolean = True;
-  wbReportFormIDs                    : Boolean = True;
-  wbReportNotFoundButAllowedFormIDs  : Boolean = False;
-  wbReportUnknownFlags               : Boolean = True;
-  wbReportUnknownEnums               : Boolean = True;
-  wbReportFormIDNotAllowedReferences : Boolean = True;
-  wbReportUnknown                    : Boolean = False;
+  wbReportMode                       : Boolean    = False;
+  wbReportUnused                     : Boolean    = False;
+  wbReportRequired                   : Boolean    = False;
+  wbReportUnusedData                 : Boolean    = True;
+  wbReportUnknownFormIDs             : Boolean    = True;
+  wbReportUnknownFloats              : Boolean    = True;
+  wbReportUnknownStrings             : Boolean    = True;
+  wbReportUnknownLStrings            : Boolean    = True;
+  wbReportEmpty                      : Boolean    = True;
+  wbReportSometimesEmpty             : Boolean    = True;
+  wbReportFormIDs                    : Boolean    = True;
+  wbReportNotFoundButAllowedFormIDs  : Boolean    = False;
+  wbReportUnknownFlags               : Boolean    = True;
+  wbReportUnknownEnums               : Boolean    = True;
+  wbReportFormIDNotAllowedReferences : Boolean    = True;
+  wbReportUnknown                    : Boolean    = False;
 
-  wbSubRecordErrorsOnly              : Boolean = False;
+  wbSubRecordErrorsOnly              : Boolean    = False;
 
-  wbReportUnknownStep                : Integer = 1;
+  wbReportUnknownStep                : Integer    = 1;
 
-  wbMoreInfoForRequired              : Boolean = False;
-  wbMoreInfoForDecider               : Boolean = False;
-  wbTrackAllEditorID                 : Boolean = False;
-  wbShowTip                          : Boolean = True;
-  wbPatron                           : Boolean = False;
-  wbNoGitHubCheck                    : Boolean = False;
-  wbNoNexusModsCheck                 : Boolean = False;
+  wbMoreInfoForRequired              : Boolean    = False;
+  wbMoreInfoForDecider               : Boolean    = False;
+  wbTrackAllEditorID                 : Boolean    = False;
+  wbShowTip                          : Boolean    = True;
+  wbPatron                           : Boolean    = False;
+  wbNoGitHubCheck                    : Boolean    = False;
+  wbNoNexusModsCheck                 : Boolean    = False;
 
-  wbCheckExpectedBytes : Boolean = True;
+  wbCheckExpectedBytes               : Boolean    = True;
 
-  wbRotationFactor : Extended = 180/Pi;
-  wbRotationScale  : Integer = 4;
+  wbRotationFactor                   : Extended   = 180/Pi;
+  wbRotationScale                    : Integer    = 4;
 
-  wbDumpOffset : Integer  = 0;  // 1= starting offset, 2 = Count, 3 = Offsets, size and count
-  wbBaseOffset : NativeUInt = 0;
+  wbDumpOffset                       : Integer    = 0;              // 1= starting offset, 2 = Count, 3 = Offsets, size and count
+  wbBaseOffset                       : NativeUInt = 0;
 
-  wbProgramPath        : string;
-  wbDataPath           : string;
-  wbOutputPath         : string;
-  wbScriptsPath        : string;
-  wbBackupPath         : string;
-  wbCachePath          : string;
-  wbTempPath           : string;
-  wbSavePath           : string;
-  wbMyGamesTheGamePath : string;
-  wbTheGameIniFileName : string;
-  wbCustomIniFileName  : string;
+  wbProgramPath                      : string;
+  wbDataPath                         : string;
+  wbOutputPath                       : string;
+  wbScriptsPath                      : string;
+  wbBackupPath                       : string;
+  wbCachePath                        : string;
+  wbTempPath                         : string;
+  wbSavePath                         : string;
+  wbMyGamesTheGamePath               : string;
+  wbTheGameIniFileName               : string;
+  wbCustomIniFileName                : string;
 
-  wbCreationClubContentFileName : string;
-  wbCreationClubContent: array of string;
-  wbOfficialDLC        : array of string;
+  wbCreationClubContentFileName      : string;
+  wbCreationClubContent              : array of string;
+  wbOfficialDLC                      : array of string;
 
-  wbShouldLoadMOHookFile : Boolean;
-  wbMOProfile            : string;
-  wbMOHookFile           : string;
+  wbShouldLoadMOHookFile             : Boolean;
+  wbMOProfile                        : string;
+  wbMOHookFile                       : string;
 
-  wbSpeedOverMemory : Boolean = False;
+  wbSpeedOverMemory                  : Boolean    = False;
 
-  wbDarkMode : Boolean = False;
+  wbDarkMode                         : Boolean    = False;
 
-  wbHelpUrl: string = 'https://tes5edit.github.io/docs';
-  wbVideosUrl: string = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
-  wbNexusModsUrl: string;
-  wbGitHubUrl: string = 'https://github.com/TES5Edit/TES5Edit/releases';
-  wbDiscordUrl: string = 'https://discord.gg/5t8RnNQ';
-  wbPatreonUrl: string = 'https://www.patreon.com/ElminsterAU';
-  wbKoFiUrl: string = 'https://www.ko-fi.com/ElminsterAU';
-  wbPayPalUrl: string = 'https://paypal.me/ElminsterAU';
+  wbHelpUrl                          : string     = 'https://tes5edit.github.io/docs';
+  wbVideosUrl                        : string     = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
+  wbNexusModsUrl                     : string;
+  wbGitHubUrl                        : string     = 'https://github.com/TES5Edit/TES5Edit/releases';
+  wbDiscordUrl                       : string     = 'https://discord.gg/5t8RnNQ';
+  wbPatreonUrl                       : string     = 'https://www.patreon.com/ElminsterAU';
+  wbKoFiUrl                          : string     = 'https://www.ko-fi.com/ElminsterAU';
+  wbPayPalUrl                        : string     = 'https://paypal.me/ElminsterAU';
 
 {$IFDEF USE_CODESITE}
 type

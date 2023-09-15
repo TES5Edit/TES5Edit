@@ -150,6 +150,7 @@ var
   wbMO3C: IwbSubRecordDef;
   wbMO4C: IwbSubRecordDef;
   wbMO5C: IwbSubRecordDef;
+  wbFLLD: IwbSubRecordDef;
   wbComponent: IwbValueDef;
   wbComponents: IwbSubRecordDef;
   wbCTDA: IwbRecordMemberDef;
@@ -299,7 +300,7 @@ begin
       wbString(MODL, 'Model FileName'),
       wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMOLM(MOLM),
-      wbUnknown(FLLD),
+      wbFLLD,
       wbUnknown(XFLG),
       wbMODC, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
@@ -7445,6 +7446,8 @@ begin
   wbMO4C := wbFloat(MO4C, 'Color Remapping Index');
   wbMO5C := wbFloat(MO5C, 'Color Remapping Index');
 
+  wbFLLD := wbInteger(FLLD, 'Unknown', itU32, wbBoolEnum);
+
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [NULL, MSWP]);
   wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
 
@@ -7488,7 +7491,7 @@ begin
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName', 0, cpNormal, True),
-          wbUnknown(FLLD),
+          wbFLLD,
 //          wbDMDT,
 //          wbDMDC,
           wbDMDS
@@ -9444,7 +9447,7 @@ begin
           ])
         ], []),
         wbRStruct('Component Data', [
-          wbUnknown(FLLD)
+          wbFLLD
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(FTYP)
@@ -9483,7 +9486,7 @@ begin
         ], []),
         wbRStruct('Component Data', [
           wbString(MODL, 'Model'),
-          wbUnknown(FLLD),
+          wbFLLD,
           wbStruct(XMPM, 'Unknown', [
             wbArray('Unknown', wbLenString('Unknown', 2), -2),
             wbArray('Unknown', wbStruct('Unknown', [
@@ -9546,22 +9549,23 @@ begin
         wbRStruct('Component Data', [
           wbUnknown(VLMS)
         ], []),
+        //BGSPlanetContentManagerContentProperties_Component
         wbRStruct('Component Data', [
-          wbUnknown(ZNAM),
-          wbUnknown(YNAM),
-          wbUnknown(XNAM),
-          wbUnknown(WNAM),
-          wbUnknown(VNAM),
-          wbUnknown(UNAM),
+          wbUnknown(ZNAM, 4),
+          wbUnknown(YNAM, 1),
+          wbUnknown(XNAM, 4),
+          wbUnknown(WNAM, 4),
+          wbUnknown(VNAM, 1),
+          wbUnknown(UNAM, 4),
           wbFloat(NAM1),
           wbFormIDCk(NAM2, 'Unknown', [NULL, GLOB]),
-          wbUnknown(NAM3),
-          wbUnknown(NAM4),
-          wbUnknown(NAM5),
-          wbUnknown(NAM6),
-          wbUnknown(NAM7),
-          wbUnknown(NAM8),
-          wbUnknown(NAM9),
+          wbUnknown(NAM3, 4),
+          wbUnknown(NAM4).IncludeFlag(dfNoReport),
+          wbUnknown(NAM5, 4),
+          wbUnknown(NAM6, 4),
+          wbUnknown(NAM7, 4),
+          wbUnknown(NAM8, 1),
+          wbUnknown(NAM9, 4),
           wbCITCReq,
           wbCTDAsCount
         ], [])
@@ -10094,7 +10098,7 @@ begin
     wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
     //wbModelInfo(NAM2)
-    wbUnknown(FLLD)
+    wbFLLD
   ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -11582,7 +11586,7 @@ begin
     *)
     wbRStructSK([0], 'Muzzle Flash Model', [
       wbString(NAM1, 'Model FileName'),
-      wbUnknown(FLLD)
+      wbFLLD
       //wbModelInfo(NAM2)
     ], [], cpNormal, True),
     wbUnknown(PRAS),
@@ -12315,7 +12319,7 @@ begin
     ], False)),
     wbFormIDCk(HNAM, 'Havok Impact Data Set', [IPDS]),
     wbString(ANAM, 'Breakable FX'),
-    wbUnknown(FLLD)
+    wbFLLD
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -14611,7 +14615,6 @@ begin
     wbBaseFormComponents,
     wbXALG,
     wbLVLD,
-    wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
@@ -15184,14 +15187,33 @@ begin
     wbString(TETC, 'Unknown'),
     wbInteger(PRON, 'Unknown', itU8),
     wbStruct(ONA2, 'Unknown', [
-      {  0} wbByteArray('LLLL', 25),
+      wbInteger('Flags', itU32, wbFlags([])),
+
+      wbIsFlag(0, wbInteger('Unknown', itS8)),
+
+      wbIsFlag(1, wbStruct('Unknown', [
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat
+      ])),
+
+      wbIsFlag(2, wbUnknown(4)),
+
+      wbHasNoFlags(wbStruct('Unknown', [
+        wbUnknown
+      ])),
+
+      wbUnknown
+
       (*
+
+      {  0} wbByteArray('Unknown', 25),
       {  5} wbFloat,
       {  9} wbFloat,
       { 13} wbFloat,
       { 17} wbFloat,
       { 21} wbUnknown(4),
-      *)
       { 25} wbFloat,
       { 29} wbFormIDCk('Unknown', [NULL, WEAP]),
       { 33} wbUnknown(20),
@@ -15215,6 +15237,7 @@ begin
       {196} wbUnknown(4),
       {200} wbFloat,
       {204} wbFloat
+      *)
     ])
 
   ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
@@ -16065,7 +16088,7 @@ begin
       wbRStruct('Male Data', [
         wbEmpty(MNAM, 'Male Marker').SetRequired(True),
         wbString(ANAM, 'Skeletal Model'),
-        wbUnknown(FLLD),
+        wbFLLD,
         wbString(NAM5),
         wbString(NAM6),
         wbString(DNAM)
@@ -16074,7 +16097,7 @@ begin
       wbRStruct('Female Data', [
         wbEmpty(FNAM, 'Female Marker').SetRequired(True),
         wbString(ANAM, 'Skeletal Model'),
-        wbUnknown(FLLD),
+        wbFLLD,
         wbString(NAM5),
         wbString(NAM6),
         wbString(DNAM)
@@ -17547,7 +17570,7 @@ begin
     ]),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
-      wbUnknown(FLLD),
+      wbFLLD,
       wbMO4S
     ], []).IncludeFlag(dfAllowAnyMember),
     wbStruct(WVIS, 'Unknown', [
@@ -19497,9 +19520,9 @@ begin
   wbAddGroupOrder(FURN); {SF1Dump: no errors}
   wbAddGroupOrder(WEAP); {SF1Dump: no errors}
   wbAddGroupOrder(AMMO); {SF1Dump: no errors}
-  wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(NPC_); {SF1Dump: no errors right now, but more work needed}
   wbAddGroupOrder(PLYR); {purely internal type}
-  wbAddGroupOrder(LVLN);
+  wbAddGroupOrder(LVLN); {SF1Dump: no errors}
   wbAddGroupOrder(LVLP);
   wbAddGroupOrder(KEYM);
   wbAddGroupOrder(ALCH);

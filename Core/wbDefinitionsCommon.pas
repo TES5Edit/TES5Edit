@@ -239,12 +239,20 @@ function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(const aSizes: array of Integer): TwbUnionDecider; overload;
 
+function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
+function wbNoFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
 function wbFromSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbFromSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
 function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbBelowSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
+function wbIsFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+function wbIsFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
+
+function wbHasNoFlags(const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+function wbHasNoFlags(const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
 function wbByteColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
@@ -2487,6 +2495,55 @@ begin
   Result := _RecordSizeDeciders[aSize];
 end;
 
+var
+  _FlagDeciders : array of TwbUnionDecider;
+
+function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
+begin
+  if aFlag > High(_FlagDeciders) then
+    SetLength(_FlagDeciders, Succ(aFlag));
+
+  if not Assigned(_FlagDeciders[aFlag]) then
+    _FlagDeciders[aFlag] :=
+      function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+      var
+        lContainer: IwbContainerElementRef;
+      begin
+        if not wbTryGetContainerRefFromUnionOrValue(aElement, lContainer) then
+          Exit(0);
+
+        var lFlags := lContainer.ElementByPath['Flags'];
+        if not Assigned(lFlags) then
+          Exit(0);
+
+        var lFlagBits: Integer := lFlags.NativeValue;
+        if (lFlagBits and (1 shl aFlag)) <> 0 then
+          Exit(1);
+
+        Exit(0);
+      end;
+
+  Result := _FlagDeciders[aFlag];
+end;
+
+function wbNoFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  lContainer: IwbContainerElementRef;
+begin
+  if not wbTryGetContainerRefFromUnionOrValue(aElement, lContainer) then
+    Exit(0);
+
+  var lFlags := lContainer.ElementByPath['Flags'];
+  if not Assigned(lFlags) then
+    Exit(0);
+
+  var lFlagBits: Integer := lFlags.NativeValue;
+  if lFlagBits = 0 then
+    Exit(1);
+
+  Exit(0);
+end;
+
 function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
 begin
   Result :=
@@ -2601,6 +2658,70 @@ begin
       wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
         aValue,
         wbEmpty(aValue.Name)
+      ]).IncludeFlag(dfUnionStaticResolve);
+end;
+
+function wbIsFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+begin
+  if aIsUnused then
+    Result :=
+      wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
+        aValue,
+        wbUnused
+      ]).IncludeFlagOnValue(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
+        aValue,
+        wbEmpty(aValue.Name)
+      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+end;
+
+function wbIsFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
+begin
+  if aIsUnused then
+    Result :=
+      wbUnion(aValue.Name, wbFlagDecider(aFlag), [
+        wbUnused,
+        aValue
+      ]).IncludeFlag(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aValue.Name, wbFlagDecider(aFlag), [
+        wbEmpty(aValue.Name),
+        aValue
+      ]).IncludeFlag(dfUnionStaticResolve);
+end;
+
+function wbHasNoFlags(const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+begin
+  if aIsUnused then
+    Result :=
+      wbUnion(aSignature, aValue.Name, wbNoFlagsDecider, [
+        aValue,
+        wbUnused
+      ]).IncludeFlagOnValue(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aSignature, aValue.Name, wbNoFlagsDecider, [
+        aValue,
+        wbEmpty(aValue.Name)
+      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+end;
+
+function wbHasNoFlags(const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
+begin
+  if aIsUnused then
+    Result :=
+      wbUnion(aValue.Name, wbNoFlagsDecider, [
+        wbUnused,
+        aValue
+      ]).IncludeFlag(dfUnionStaticResolve)
+  else
+      Result :=
+      wbUnion(aValue.Name, wbNoFlagsDecider, [
+        wbEmpty(aValue.Name),
+        aValue
       ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
