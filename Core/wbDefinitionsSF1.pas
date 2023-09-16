@@ -18488,10 +18488,15 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
-    (*
-    wbStruct(GNAM, 'Data', [
+    wbStruct(ZNAM, 'Data', [
+      wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
+      wbStruct('Camera Offset', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbFloat('FOV Mult'),
-      wbInteger('Overlay', itU32, wbEnum([
+      wbInteger('Overlay', itU8, wbEnum([
         { 0} 'Default',
         { 1} 'Fine',
         { 2} 'Duplex',
@@ -18508,16 +18513,16 @@ begin
         {13} 'Double Zero',
         {14} 'Rangefinder 1',
         {15} 'Rangefinder 2',
-        {16} 'Rectangle'
+        {16} 'Rectangle',
+        {17} 'Tactical 4x',
+        {18} 'Tactical 2x'
       ])),
-      wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
-      wbStruct('Camera Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ])*)
-    wbUnknown(ZNAM)
+      wbFloat('ADS Distance from Camera Offset'),
+      wbInteger('ADS Height Delay Enabled', itU8, wbBoolEnum),
+      wbFloat('ADS Height Delay S'),
+      wbInteger('ADS Depth Enabled', itU8, wbBoolEnum),
+      wbFloat('ADS Depth Delay S')
+    ])
   ]);
 
 end;
