@@ -20389,8 +20389,12 @@ begin
                     LoaderProgress('[' + n[i] + '] Loading Resources.');
                     if wbArchiveExtension = '.bsa' then
                       wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath))
-                    else if wbArchiveExtension = '.ba2' then
-                      wbContainerHandler.AddBA2(MakeDataFileName(n[i], ltDataPath))
+                    else if wbArchiveExtension = '.ba2' then begin
+                      var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(n[i], ltDataPath));
+                      var lBA2File: IwbBA2File;
+                      if Supports(lContainer, IwbBA2File, lBA2File) then
+                        LoaderProgress('[' + n[i] + '] Version: ' + lBA2File.Version.ToString);
+                    end
                   end else
                     LoaderProgress('[' + n[i] + '] Skipped.');
                 for i := 0 to Pred(m.Count) do
@@ -20419,8 +20423,12 @@ begin
                           try
                             if wbArchiveExtension = '.bsa' then
                               wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath))
-                            else if wbArchiveExtension = '.ba2' then
-                              wbContainerHandler.AddBA2(MakeDataFileName(n[j], ltDataPath))
+                            else if wbArchiveExtension = '.ba2' then begin
+                              var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(n[j], ltDataPath));
+                              var lBA2File: IwbBA2File;
+                              if Supports(lContainer, IwbBA2File, lBA2File) then
+                                LoaderProgress('[' + n[i] + '] Version: ' + lBA2File.Version.ToString);
+                            end;
                           except
                             on E: Exception do
                               LoaderProgress(Format('[%s] Could not be loaded. <Error: [%s] %s>', [n[j], E.ClassName, E.Message]));

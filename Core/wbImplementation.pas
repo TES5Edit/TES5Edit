@@ -39,6 +39,7 @@ const
 
 var
   RecordToSkip       : TStringList;
+  SubRecordToSkip    : TStringList;
   GroupToSkip        : TStringList;
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
@@ -1357,6 +1358,7 @@ type
   protected {private}
     srDef                : IwbSubRecordDef;
     srValueDef           : IwbValueDef;
+    srResolvedDef        : IwbValueDef;
     srStates             : TwbSubRecordStates;
     srArraySizePrefix    : Integer;
   protected
@@ -1441,7 +1443,7 @@ type
     function GetAlignable: Boolean;
   end;
 
-  TwbValueBase = class(TwbDataContainer)
+  TwbValueBase = class(TwbDataContainer, IwbValueBase)
   protected
     vbValueDef   : IwbValueDef;
   protected
@@ -1492,7 +1494,7 @@ type
                        const aNameSuffix : string); reintroduce; overload;
   end;
 
-  TwbArray = class(TwbValueBase, IwbSortableContainer)
+  TwbArray = class(TwbValueBase, IwbSortableContainer, IwbArray)
   protected {private}
     arrSorted        : Boolean;
     arrSortInvalid   : Boolean;
@@ -1531,11 +1533,12 @@ type
     function GetAlignable: Boolean;
   end;
 
-  TwbStruct = class(TwbValueBase)
+  TwbStruct = class(TwbValueBase, IwbStruct)
   protected
     szCompressedSize   : Integer;
     szUncompressedSize : Cardinal;
     szCompressedType   : TwbStructCompression;
+  protected
     procedure Init; override;
     procedure Reset; override;
 
@@ -1567,18 +1570,24 @@ type
                        const aNameSuffix : string);  reintroduce; overload;
   end;
 
-  TwbUnion = class(TwbValueBase)
+  TwbUnion = class(TwbValueBase, IwbUnion)
+  protected
+    unResolvedDef: IwbValueDef;
   protected
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
     procedure Init; override;
     procedure Reset; override;
+    function GetResolvedValueDef: IwbValueDef; override;
 
     function GetElementType: TwbElementType; override;
     function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
+
+    {---IwbUnion---}
+    procedure RecheckDecider;
   end;
 
-  TwbRecordHeaderStruct = class(TwbStruct)
+  TwbRecordHeaderStruct = class(TwbStruct, IwbRecordHeaderStruct)
   protected
     function CanContainFormIDs: Boolean; override;
     procedure BuildRef; override;
@@ -1591,7 +1600,8 @@ type
 
   TwbValue = class(TwbValueBase, IwbSortableContainer)
   protected {private}
-    vIsFlags    : Boolean;
+    vIsFlags     : Boolean;
+    vResolvedDef : IwbValueDef;
   protected
     function GetValue: string; override;
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
@@ -5293,8 +5303,8 @@ type
 
 function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean; forward;
 procedure StructDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer); forward;
-function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags; forward;
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean; forward;
+function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; var aResolvedDef : IwbValueDef): TwbUnionFlags; forward
+function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals; var aResolvedDef: IwbValueDef): Boolean; forward;
 
 { TwbContainer }
 
@@ -5453,18 +5463,18 @@ end;
 
 function TwbContainer.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
-  Container  : IwbContainer;
-  uContainer : IwbContainerElementRef;
-  sElement   : IwbElement;
-  BasePtr    : Pointer;
-  i, j       : Integer;
-  SelfRef    : IwbContainerElementRef;
-  Def        : IwbDef;
-  ValueDef   : IwbValueDef;
+  Container       : IwbContainer;
+  uContainer      : IwbContainerElementRef;
+  sElement        : IwbElement;
+  BasePtr         : Pointer;
+  i, j            : Integer;
+  SelfRef         : IwbContainerElementRef;
+  Def             : IwbDef;
+  ValueDef        : IwbValueDef;
   ResolvableDef   : IwbResolvableDef;
-  HasMap     : Boolean;
-  StructDef  : IwbStructDef;
-  OurSize    : Integer;
+  HasMap          : Boolean;
+  StructDef       : IwbStructDef;
+  OurSize         : Integer;
 begin
   Result := nil;
 
@@ -5524,7 +5534,8 @@ begin
                 end;
                 if (uContainer.ElementCount = 0) then begin
                   BasePtr := nil;
-                  UnionDoInit(ResolvableDef, uContainer as IwbContainer, BasePtr, nil);
+                  var lResolvedDef: IwbValueDef;
+                  UnionDoInit(ResolvableDef, uContainer as IwbContainer, BasePtr, nil, lResolvedDef);
                 end;
               end;
               if (not aOnlySK or GetIsInSK(cntElements[j].SortOrder)) then begin
@@ -8678,7 +8689,7 @@ begin
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
       if Supports(Element, IwbSubRecord, CurrentRec) then begin
         var lSignature := CurrentRec.Signature;
-        if wbIgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) then
+        if wbIgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) or SubRecordToSkip.Find(lSignature, Dummy) then
           CurrentRec.Skipped := True;
         {$IFDEF DBGSUBREC}
         s := s + CurrentRec.DisplaySignature + ' ';
@@ -12756,9 +12767,15 @@ function wbUnionCreate(const aContainer  : IwbContainer;
 var
   UnionDef: IwbUnionDef;
 begin
-  if Supports(aValueDef, IwbUnionDef, UnionDef) and
-    (UnionDef.MemberTypes * [dtArray, dtStruct, dtStructChapter, dtUnion] <> []) then
-      Exit(TwbUnion.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare));
+  if Supports(aValueDef, IwbUnionDef, UnionDef)
+    and
+    (
+      (UnionDef.MemberTypes * [dtArray, dtStruct, dtStructChapter, dtUnion] <> [])
+      or
+      (dfMustBeUnion in UnionDef.DefFlags)
+    )
+  then
+    Exit(TwbUnion.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare));
 
   Result := TwbValue.Create(aContainer, aBasePtr, aEndPtr, aValueDef, aNameSuffix, aDontCompare);
 end;
@@ -13269,6 +13286,7 @@ begin
   BasePtr := GetDataBasePtr;
   ValueDef := Resolve(srDef.Value, BasePtr, dcDataEndPtr, Self);
   srArraySizePrefix := 0;
+  srResolvedDef := nil;
 
   if Assigned(ValueDef) then
     if (ValueDef.Name = '') or (dfUnionStaticResolve in srDef.Value.DefFlags) then begin
@@ -13282,7 +13300,8 @@ begin
         dtStruct, dtStructChapter: StructDoInit(ValueDef, Self, BasePtr, dcDataEndPtr);
         dtUnion:  begin
           Include(srStates, srsIsUnion);
-          case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr) of
+
+          case UnionDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, srResolvedDef) of
             ufArray: Include(srStates, srsIsArray);
             ufSortedArray: begin
               Include(srStates, srsIsArray);
@@ -13295,7 +13314,7 @@ begin
           end;
         end;
       else
-        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil) then begin
+        if ValueDoInit(ValueDef, Self, BasePtr, dcDataEndPtr, Self, nil, srResolvedDef) then begin
           Include(srStates, srsIsFlags);
           Include(srStates, srsSorted);
         end;
@@ -18237,13 +18256,22 @@ begin
             Element.Assign(Low(Integer), aElement, aOnlySK)
         end else begin
 
-          case Member.DefType of
+          var lDefType := Member.DefType;
+          if lDefType = dtSubRecordUnion then
+            if Assigned(aElement) then begin
+              Member := aElement.Def as IwbRecordMemberDef;
+              lDefType := Member.DefType;
+            end;
+
+          case lDefType of
             dtSubRecord:
               Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
             dtSubRecordArray:
               Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
             dtSubRecordStruct:
               Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
+            dtSubRecordUnion:
+              Element := nil;
           else
             Assert(False);
           end;
@@ -19331,41 +19359,39 @@ end;
 
 { TwbUnion }
 
-function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer): TwbUnionFlags;
+function UnionDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; var aResolvedDef : IwbValueDef): TwbUnionFlags;
 var
   ResolvableDef : IwbResolvableDef;
-  ValueDef : IwbValueDef;
-  ArrayDef : IwbArrayDef;
-  Element  : IwbElementInternal;
-
+  ArrayDef      : IwbArrayDef;
+  Element       : IwbElementInternal;
 begin
   Result := ufNone;
   ResolvableDef := aValueDef as IwbResolvableDef;
 
-  ValueDef := ResolvableDef.ResolveDef(aBasePtr, aEndPtr, aContainer);
+  aResolvedDef := ResolvableDef.ResolveDef(aBasePtr, aEndPtr, aContainer);
 
-  if Assigned(ValueDef) then begin
-    if ValueDef.DefType = dtResolvable then
-      ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
-    if dfUnionStaticResolve in ValueDef.DefFlags then
-      ValueDef := Resolve(ValueDef, aBasePtr, aEndPtr, aContainer);
+  if Assigned(aResolvedDef) then begin
+    if aResolvedDef.DefType = dtResolvable then
+      aResolvedDef := Resolve(aResolvedDef, aBasePtr, aEndPtr, aContainer);
+    if dfUnionStaticResolve in aResolvedDef.DefFlags then
+      aResolvedDef := Resolve(aResolvedDef, aBasePtr, aEndPtr, aContainer);
   end;
 
-  if Assigned(ValueDef) then // I had one case. Most likely due to an error in wbXXXXDefinitions
-    case ValueDef.DefType of
+  if Assigned(aResolvedDef) then // I had one case. Most likely due to an error in wbXXXXDefinitions
+    case aResolvedDef.DefType of
       dtArray: begin
-        if wbSortSubRecords and Supports(ValueDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
+        if wbSortSubRecords and Supports(aResolvedDef, IwbArrayDef, ArrayDef) and ArrayDef.Sorted then
           Result := ufSortedArray
         else
           Result := ufArray;
-        Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+        Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, aResolvedDef, '');
       end;
-      dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, ValueDef, '');
+      dtStruct: Element := TwbStruct.Create(aContainer, aBasePtr, aEndPtr, aResolvedDef, '');
+      dtStructChapter: Element := TwbChapter.Create(aContainer, aBasePtr, aEndPtr, aResolvedDef, '');
+      dtUnion: Element := wbUnionCreate(aContainer, aBasePtr, aEndPtr, aResolvedDef, '');
     else
-      Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, '');
-      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer, nil) then Result := ufFlags;
+      Element := nil; // >>> so that simple union behave as they did <<< TwbValue.Create(aContainer, aBasePtr, aEndPtr, aResolvedDef, '');
+      if ValueDoInit(aValueDef, aContainer, aBasePtr, aEndPtr, aContainer, nil, aResolvedDef) then Result := ufFlags;
     end;
 
   if Assigned(Element) then begin
@@ -19406,6 +19432,31 @@ begin
   Result := etUnion;
 end;
 
+function TwbUnion.GetResolvedValueDef: IwbValueDef;
+begin
+  Result := inherited;
+  if Assigned(Result) and Assigned(unResolvedDef) and not unResolvedDef.Equals(Result) then begin
+    var lShouldDataSize := Result.Size[GetDataBasePtr, dcDataEndPtr, Self];
+    var lIsDataSize := GetDataSize;
+
+    var lShouldDefType := Result.DefType;
+    var lIsDefType := unResolvedDef.DefType;
+
+    var lOldDef := unResolvedDef;
+    unResolvedDef := Result;
+
+    if (lShouldDataSize <> lIsDataSize)
+       or
+       (lShouldDefType <> lIsDefType)
+       or
+       not unResolvedDef.CanAssign(nil, Low(Integer), lOldDef)
+    then begin
+      SetToDefault;
+    end else
+      Reset;
+  end;
+end;
+
 procedure TwbUnion.Init;
 var
   BasePtr: Pointer;
@@ -19416,12 +19467,12 @@ begin
     Exit;
 
   BasePtr := GetDataBasePtr;
-  UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr);
+  UnionDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, unResolvedDef);
 end;
 
 function TwbUnion.MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean;
 var
-  SelfRef    : IwbContainerElementRef;
+  SelfRef     : IwbContainerElementRef;
   ResolvedDef : IwbValueDef;
 begin
   SelfRef := Self as IwbContainerElementRef;
@@ -19458,6 +19509,11 @@ begin
   ResolvedDef := Resolve(vbValueDef, GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(ResolvedDef) then
     ResolvedDef.FindUsedMasters(GetDataBasePtr, dcDataEndPtr, Self, aMasters);
+end;
+
+procedure TwbUnion.RecheckDecider;
+begin
+  GetResolvedValueDef;
 end;
 
 procedure TwbUnion.Reset;
@@ -19524,7 +19580,7 @@ begin
   end;
 end;
 
-function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals): Boolean;
+function ValueDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; const aPrevFlags: TDynElementInternals; var aResolvedDef: IwbValueDef): Boolean;
 var
   IntegerDef : IwbIntegerDef;
   FlagsDef   : IwbFlagsDef;
@@ -19532,17 +19588,16 @@ var
   t          : string;
   BasePtr    : Pointer;
   Element    : IwbElement;
-  ValueDef   : IwbValueDef;
   Flag       : IwbFlag;
 begin
   Result := False;
 
-  ValueDef := Resolve(aValueDef, aBasePtr, aEndPtr, aElement);
+  aResolvedDef := Resolve(aValueDef, aBasePtr, aEndPtr, aElement);
 
-  if Assigned(ValueDef) then
+  if Assigned(aResolvedDef) then
   begin
     if wbFlagsAsArray then
-      if Supports(ValueDef, IwbIntegerDef, IntegerDef) then
+      if Supports(aResolvedDef, IwbIntegerDef, IntegerDef) then
         if Supports(IntegerDef.Formater[aElement], IwbFlagsDef, FlagsDef) then begin
           if Assigned(aBasePtr) and (FlagsDef.FlagCount > 0) then begin
             l := Low(aPrevFlags);
@@ -19580,14 +19635,14 @@ begin
 
         end;
 
-    ValueDef.AfterLoad(aContainer);
+    aResolvedDef.AfterLoad(aContainer);
   end;
 
   if wbMoreInfoForUnknown then begin
     var lSkip := False;
-    if Assigned(ValueDef) then begin
-      t := ValueDef.Name;
-      if ValueDef.DefType <> dtByteArray then
+    if Assigned(aResolvedDef) then begin
+      t := aResolvedDef.Name;
+      if aResolvedDef.DefType <> dtByteArray then
         lSkip := True;
     end else
       t := '';
@@ -19640,8 +19695,8 @@ begin
       end;
   end;
 
-  if assigned(ValueDef) then
-    i := ValueDef.Size[aBasePtr, aEndPtr, aContainer]
+  if assigned(aResolvedDef) then
+    i := aResolvedDef.Size[aBasePtr, aEndPtr, aContainer]
   else
     i := High(Integer);
   if i = Cardinal(High(Integer)) then
@@ -19659,7 +19714,7 @@ var
 begin
   inherited;
   BasePtr := GetDataBasePtr;
-  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags);
+  vIsFlags := ValueDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, Self, _PrevFlags, vResolvedDef);
   _PrevFlags := nil;
 end;
 
@@ -22065,6 +22120,10 @@ initialization
   RecordToSkip := TwbFastStringList.Create;
   RecordToSkip.Sorted := True;
   RecordToSkip.Duplicates := dupIgnore;
+
+  SubRecordToSkip := TwbFastStringList.Create;
+  SubRecordToSkip.Sorted := True;
+  SubRecordToSkip.Duplicates := dupIgnore;
 
   GroupToSkip := TwbFastStringList.Create;
   GroupToSkip.Sorted := True;

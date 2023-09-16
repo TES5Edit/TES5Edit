@@ -41,6 +41,10 @@ const
   HalfPosInf:  THalfFloat = 31744;
   HalfNegInf:  THalfFloat = 64512;
 
+var
+  HalfPosMax :  THalfFloat;
+  HalfNegMax :  THalfFloat;
+
 function FloatToHalf(Float: Single): THalfFloat;
 function HalfToFloat(Half: THalfFloat): Single;
 
@@ -56,7 +60,7 @@ begin
   Sign := Src shr 31;
   Exp := LongInt((Src and $7F800000) shr 23) - 127 + 15;
   Mantissa := Src and $007FFFFF;
- 
+
   if (Exp > 0) and (Exp < 30) then
   begin
     // Simple case - round the significand and combine it with the sign and exponent
@@ -178,9 +182,12 @@ begin
     // Not a number - preserve sign and mantissa
     Dst := (Sign shl 31) or $7F800000 or (Mantissa shl 13);
   end;
- 
+
   // Reinterpret LongWord as Single
   Result := PSingle(@Dst)^;
 end;
 
+initialization
+  HalfPosMax := FloatToHalf(MaxHalf);
+  HalfNegMax := FloatToHalf(-MaxHalf);
 end.

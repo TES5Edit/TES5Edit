@@ -206,6 +206,7 @@ var
   wbCollapseTimeInterpolator         : Boolean    = True;
   wbCollapseTimeInterpolators        : Boolean    = True;
   wbCollapseTimeInterpolatorsMultAdd : Boolean    = True;
+  wbCollapseBluePrintItem            : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
@@ -610,6 +611,7 @@ type
     dfDontSave,
     dfDontAssign,
     dfUseLoadOrder,
+    dfMustBeUnion,
     dfSummaryMembersNoName,
     dfSummaryNoName,
     dfSummaryNoSortKey,
@@ -1501,6 +1503,27 @@ type
       read GetDontSave;
   end;
 
+  IwbValueBase = interface(IwbDataContainer)
+    ['{BF7CC22E-5577-4502-A7CC-5B258B77957F}']
+  end;
+
+  IwbArray = interface(IwbValueBase)
+    ['{D1044612-41D0-4CAC-A6C5-C4C88FC0CE2F}']
+  end;
+
+  IwbStruct = interface(IwbValueBase)
+    ['{3FA46212-8B64-41C0-89FC-7B7A6E6EE72D}']
+  end;
+
+  IwbUnion = interface(IwbValueBase)
+    ['{CA57AB59-2186-4A5E-9C9D-ECA8581C70B5}']
+    procedure RecheckDecider;
+  end;
+
+  IwbRecordHeaderStruct = interface(IwbStruct)
+    ['{E4E49F77-970B-419E-842D-9D6A841B7CF4}']
+  end;
+
   TDynDataContainers = array of IwbDataContainer;
 
   IwbRecord = interface(IwbDataContainer)
@@ -1804,7 +1827,7 @@ type
       read GetFileMagic;
   end;
 
-  IwbChapter = interface(IwbInterface)
+  IwbChapter = interface(IwbStruct)
     ['{3E575648-EF6F-4e9f-956F-D2E184B670E4}']
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
@@ -1903,7 +1926,7 @@ type
   );
 
   TwbAfterLoadCallback = procedure(const aElement: IwbElement);
-  TwbAfterSetCallback = procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+  TwbAfterSetCallback = reference to procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
   TwbDontShowCallback = function(const aElement: IwbElement): Boolean;
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
@@ -1915,12 +1938,12 @@ type
   TwbUnionDecider = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbIntegerDefFormaterUnionDecider = function(const aElement: IwbElement): Integer;
   TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
-  TwbCountCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+  TwbCountCallback = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
   TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
   TwbGetChapterTypeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
   TwbGetChapterTypeNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
   TwbGetChapterNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
-  TwbLinksToCallback = function(const aElement: IwbElement): IwbElement;
+  TwbLinksToCallback = reference to function(const aElement: IwbElement): IwbElement;
   TwbIsRemoveableCallback = reference to function(const aElement: IwbElement): Boolean;
   TwbStructSizeCallback = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 
@@ -2330,8 +2353,18 @@ type
       read GetExpectedLength;
   end;
 
+  TwbFloatKind = (
+    fkHalf,
+    fkSingle,
+    fkDouble
+  );
+
   IwbFloatDef = interface(IwbValueDef)
     ['{29F116C6-0208-4D55-ACA7-2A9BB17BF80B}']
+    function GetKind: TwbFloatKind;
+
+    property Kind: TwbFloatKind
+      read GetKind;
   end;
 
   IwbArrayDef = interface(IwbValueDef)
@@ -3196,6 +3229,39 @@ function wbIntegerT(const aName     : string;
                           aDefault  : Int64 = 0;
                           aGetCP    : TwbGetConflictPriority = nil)
                                     : IwbIntegerDef; overload;
+
+function wbHalf(const aSignature  : TwbSignature;
+                const aName       : string = 'Unknown';
+                      aPriority   : TwbConflictPriority = cpNormal;
+                      aRequired   : Boolean = False;
+                      aScale      : Extended = 1.0;
+                      aDigits     : Integer = -1;
+                      aDontShow   : TwbDontShowCallback = nil;
+                      aNormalizer : TwbFloatNormalizer = nil;
+                      aDefault    : Extended = 0.0;
+                      aGetCP      : TwbGetConflictPriority = nil)
+                                  : IwbSubRecordDef; overload;
+
+function wbHalf(const aName       : string = 'Unknown';
+                      aPriority   : TwbConflictPriority = cpNormal;
+                      aRequired   : Boolean = False;
+                      aScale      : Extended = 1.0;
+                      aDigits     : Integer = -1;
+                      aDontShow   : TwbDontShowCallback = nil;
+                      aNormalizer : TwbFloatNormalizer = nil;
+                      aDefault    : Extended = 0.0;
+                      aGetCP      : TwbGetConflictPriority = nil)
+                                  : IwbFloatDef; overload;
+
+function wbHalf(const aName       : string;
+                      aPriority   : TwbConflictPriority;
+                      aRequired   : Boolean;
+                      aDontShow   : TwbDontShowCallback;
+                      aAfterSet   : TwbAfterSetCallback = nil;
+                      aNormalizer : TwbFloatNormalizer = nil;
+                      aDefault    : Extended = 0.0;
+                      aGetCP      : TwbGetConflictPriority = nil)
+                                  : IwbFloatDef; overload;
 
 function wbFloat(const aSignature  : TwbSignature;
                  const aName       : string = 'Unknown';
@@ -4540,7 +4606,8 @@ uses
   TypInfo,
   wbSort,
   wbLocalization,
-  wbImplementation;
+  wbImplementation,
+  wbHalfFloat;
 
 type
   IwbIntegerDefInternal = interface(IwbIntegerDef)
@@ -6209,7 +6276,7 @@ type
     fdScale      : Extended;
     fdDigits     : Integer;
     fdNormalizer : TwbFloatNormalizer;
-    fdDouble     : Boolean;
+    fdKind       : TwbFloatKind;
   protected
     constructor Clone(const aSource: TwbDef); override;
     {---IwbDef---}
@@ -6234,6 +6301,9 @@ type
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
 
     function ToValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Extended;
+
+    {---IwbFloatDef---}
+    function GetKind: TwbFloatKind;
   public
     constructor Create(aPriority   : TwbConflictPriority;
                        aRequired   : Boolean;
@@ -6246,7 +6316,7 @@ type
                        aNormalizer : TwbFloatNormalizer;
                        aDefault    : Extended;
                        aGetCP      : TwbGetConflictPriority;
-                       aDouble     : Boolean;
+                       aKind       : TwbFloatKind;
                        aTerminator : Boolean); reintroduce;
   end;
 
@@ -7625,6 +7695,21 @@ begin
   Result := wbIntegerT(aName, aIntType, Callback, aPriority, aRequired, aDontShow, aAfterSet, aDefault, aGetCP);
 end;
 
+function wbHalf(const aSignature  : TwbSignature;
+                const aName       : string = 'Unknown';
+                      aPriority   : TwbConflictPriority = cpNormal;
+                      aRequired   : Boolean = False;
+                      aScale      : Extended = 1.0;
+                      aDigits     : Integer = -1;
+                      aDontShow   : TwbDontShowCallback = nil;
+                      aNormalizer : TwbFloatNormalizer = nil;
+                      aDefault    : Extended = 0.0;
+                      aGetCP      : TwbGetConflictPriority = nil)
+                                  : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbHalf('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
 function wbFloat(const aSignature  : TwbSignature;
                  const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
@@ -7655,6 +7740,20 @@ begin
   Result := wbSubRecord(aSignature, aName, wbDouble('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
+function wbHalf(const aName       : string = 'Unknown';
+                      aPriority   : TwbConflictPriority = cpNormal;
+                      aRequired   : Boolean = False;
+                      aScale      : Extended = 1.0;
+                      aDigits     : Integer = -1;
+                      aDontShow   : TwbDontShowCallback = nil;
+                      aNormalizer : TwbFloatNormalizer = nil;
+                      aDefault    : Extended = 0.0;
+                      aGetCP      : TwbGetConflictPriority = nil)
+                                  : IwbFloatDef; overload;
+begin
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, fkHalf, False);
+end;
+
 function wbFloat(const aName       : string = 'Unknown';
                        aPriority   : TwbConflictPriority = cpNormal;
                        aRequired   : Boolean = False;
@@ -7666,7 +7765,7 @@ function wbFloat(const aName       : string = 'Unknown';
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, fkSingle, False);
 end;
 
 function wbDouble(const aName       : string = 'Unknown';
@@ -7680,7 +7779,20 @@ function wbDouble(const aName       : string = 'Unknown';
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, fkDouble, False);
+end;
+
+function wbHalf(const aName       : string;
+                      aPriority   : TwbConflictPriority;
+                      aRequired   : Boolean;
+                      aDontShow   : TwbDontShowCallback;
+                      aAfterSet   : TwbAfterSetCallback = nil;
+                      aNormalizer : TwbFloatNormalizer = nil;
+                      aDefault    : Extended = 0.0;
+                      aGetCP      : TwbGetConflictPriority = nil)
+                                  : IwbFloatDef; overload;
+begin
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, fkHalf, False);
 end;
 
 function wbFloat(const aName       : string;
@@ -7693,7 +7805,7 @@ function wbFloat(const aName       : string;
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, False);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, fkSingle, False);
 end;
 
 function wbDouble(const aName       : string;
@@ -7706,7 +7818,7 @@ function wbDouble(const aName       : string;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, False);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, fkDouble, False);
 end;
 
 function wbFloatT(const aSignature  : TwbSignature;
@@ -7750,7 +7862,7 @@ function wbFloatT(const aName       : string = 'Unknown';
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, fkSingle, True);
 end;
 
 function wbDoubleT(const aName       : string = 'Unknown';
@@ -7764,7 +7876,7 @@ function wbDoubleT(const aName       : string = 'Unknown';
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, fkDouble, True);
 end;
 
 function wbFloatT(const aName       : string;
@@ -7777,7 +7889,7 @@ function wbFloatT(const aName       : string;
                         aGetCP      : TwbGetConflictPriority = nil)
                                     : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, False, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, fkSingle, True);
 end;
 
 function wbDoubleT(const aName       : string;
@@ -7790,7 +7902,7 @@ function wbDoubleT(const aName       : string;
                          aGetCP      : TwbGetConflictPriority = nil)
                                      : IwbFloatDef; overload;
 begin
-  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, True, True);
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, fkDouble, True);
 end;
 
 {--- wbArray - list of identical elements -------------------------------------}
@@ -14347,7 +14459,7 @@ constructor TwbFloatDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFloatDef do
     Self.Create(defPriority, defRequired, ndName, ndAfterLoad, ndAfterSet, fdScale, fdDigits, ndDontShow,
-      fdNormalizer, fdDefault, defGetCP, fdDouble, ndTerminator).AfterClone(aSource);
+      fdNormalizer, fdDefault, defGetCP, fdKind, ndTerminator).AfterClone(aSource);
 end;
 
 constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
@@ -14361,59 +14473,83 @@ constructor TwbFloatDef.Create(aPriority   : TwbConflictPriority;
                                aNormalizer : TwbFloatNormalizer;
                                aDefault    : Extended;
                                aGetCP      : TwbGetConflictPriority;
-                               aDouble     : Boolean;
+                               aKind       : TwbFloatKind;
                                aTerminator : Boolean);
 begin
   fdDefault := aDefault;
   fdScale := aScale;
   fdDigits := aDigits;
   fdNormalizer := aNormalizer;
-  fdDouble := aDouble;
+  fdKind := aKind;
   if fdDigits <> Low(Integer) then
-    if fdDigits < 0 then
+    if fdDigits < 0 then begin
       fdDigits := wbFloatDigits;
+      case fdKind of
+        fkHalf: fdDigits := fdDigits div 2;
+        fkDouble: fdDigits := fdDigits * 2;
+      end;
+    end;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, aTerminator);
 end;
 
 procedure TwbFloatDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 var
-  Value: Extended;
+  Value : Extended;
+  Size  : Integer;
 begin
-  aElement.RequestStorageChange(aBasePtr, aEndPtr, 4);
+  case fdKind of
+    fkHalf  : Size := SizeOf(THalfFloat)+Ord(ndTerminator);
+    fkSingle: Size := SizeOf(Single)+Ord(ndTerminator);
+    fkDouble: Size := SizeOf(Double)+Ord(ndTerminator);
+  end;
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, Size);
   if aValue = '' then begin
-    if fdDouble then
-      PDouble(aBasePtr)^ := 0.0
-    else
-      PSingle(aBasePtr)^ := 0.0;
+    case fdKind of
+      fkHalf  : PHalfFloat(aBasePtr)^ := 0;
+      fkSingle: PSingle(aBasePtr)^ := 0.0;
+      fkDouble: PDouble(aBasePtr)^ := 0.0;
+    end;
   end else if SameText(aValue, 'NaN') then begin
-    if fdDouble then
-      PDouble(aBasePtr)^ := DoubleNaN
-    else
-      PSingle(aBasePtr)^ := SingleNaN;
+    case fdKind of
+      fkHalf  : PHalfFloat(aBasePtr)^ := HalfNaN;
+      fkSingle: PSingle(aBasePtr)^ := SingleNaN;
+      fkDouble: PDouble(aBasePtr)^ := DoubleNaN;
+    end;
   end else if SameText(aValue, 'Inf') then begin
-    if fdDouble then
-      PDouble(aBasePtr)^ := DoubleInf
-    else
-      PSingle(aBasePtr)^ := SingleInf;
+    case fdKind of
+      fkHalf  : PHalfFloat(aBasePtr)^ := HalfPosInf;
+      fkSingle: PSingle(aBasePtr)^ := SingleInf;
+      fkDouble: PDouble(aBasePtr)^ := DoubleInf;
+    end;
   end else if SameText(aValue, 'Default') or SameText(aValue, 'Max') then begin
-    if fdDouble then
-      PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
-    else
-      PCardinal(aBasePtr)^ := $7F7FFFFF;
+    case fdKind of
+      fkHalf  : PHalfFloat(aBasePtr)^ := HalfPosMax;
+      fkSingle: PCardinal(aBasePtr)^ := $7F7FFFFF;
+      fkDouble: PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF;
+    end;
   end else if SameText(aValue, 'Min') then begin
-    if fdDouble then
-      PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
-    else
-      PCardinal(aBasePtr)^ := $FF7FFFFF;
+    case fdKind of
+      fkHalf  : PHalfFloat(aBasePtr)^ := HalfNegMax;
+      fkSingle: PCardinal(aBasePtr)^ := $FF7FFFFF;
+      fkDouble: PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
+    end;
   end else begin
-    Value := RoundToEx(StrToFloat(aValue), -fdDigits);
-    Value := Value / fdScale;
+    Value := StrToFloat(aValue);
+
+    if fdDigits >= 0 then
+      Value := RoundToEx(Value, -fdDigits);
+
+    if fdScale <> 1.0 then
+      Value := Value / fdScale;
+
     if Assigned(fdNormalizer) then
       Value := fdNormalizer(aElement, Value);
-    if fdDouble then
-      PDouble(aBasePtr)^ := Value
-    else
-      PSingle(aBasePtr)^ := Value;
+
+    case fdKind of
+      fkHalf  : PHalfFloat(aBasePtr)^ := FloatToHalf(Value);
+      fkSingle: PSingle(aBasePtr)^ := Value;
+      fkDouble: PDouble(aBasePtr)^ := Value;
+    end;
   end;
 end;
 
@@ -14429,35 +14565,66 @@ begin
   else
     Value := 0;
 
-  if fdDouble then
-    Size := SizeOf(Double)+Ord(ndTerminator)
-  else
-    Size := SizeOf(Single)+Ord(ndTerminator);
+  case fdKind of
+    fkHalf  : Size := SizeOf(THalfFloat)+Ord(ndTerminator);
+    fkSingle: Size := SizeOf(Single)+Ord(ndTerminator);
+    fkDouble: Size := SizeOf(Double)+Ord(ndTerminator);
+  end;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, Size);
   if Assigned(aBasePtr) then begin
     if Clear then begin
-      if fdDouble then
-        PDouble(aBasePtr)^ := DoubleNaN
-      else
-        PSingle(aBasePtr)^ := SingleNaN;
-    end else if fdDouble and (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then
-      PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF
-    else if fdDouble and (SameValue(Value, -MaxDouble) or (Value < -MaxDouble)) then
-      PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
-    else if not fdDouble and (SameValue(Value, MaxSingle) or (Value > MaxSingle)) then
-      PCardinal(aBasePtr)^ := $7F7FFFFF
-    else if not fdDouble and (SameValue(Value, -MaxSingle) or (Value < -MaxSingle)) then
-      PCardinal(aBasePtr)^ := $FF7FFFFF
-    else begin
-      Value := RoundToEx(Value, -fdDigits);
-      Value := Value / fdScale;
-      if Assigned(fdNormalizer) then
-        Value := fdNormalizer(aElement, Value);
-      if fdDouble then
-        PDouble(aBasePtr)^ := Value
-      else
-        PSingle(aBasePtr)^ := Value;
-    end;
+      case fdKind of
+        fkHalf  : PHalfFloat(aBasePtr)^ := HalfNaN;
+        fkSingle: PSingle(aBasePtr)^ := SingleNaN;
+        fkDouble: PDouble(aBasePtr)^ := DoubleNaN;
+      end;
+    end else
+      repeat
+        case fdKind of
+          fkHalf  : begin
+            if (SingleSameValue(Value, MaxHalf) or (Value > MaxHalf)) then begin
+              PHalfFloat(aBasePtr)^ := HalfPosMax;
+              Break;
+            end else if (SingleSameValue(Value, -MaxHalf) or (Value < -MaxHalf)) then begin
+              PHalfFloat(aBasePtr)^ := HalfNegMax;
+              Break;
+            end;
+          end;
+          fkSingle: begin
+            if (SingleSameValue(Value, MaxSingle) or (Value > MaxSingle)) then begin
+              PCardinal(aBasePtr)^ := $7F7FFFFF;
+              Break;
+            end else if (SingleSameValue(Value, -MaxSingle) or (Value < -MaxSingle)) then begin
+              PCardinal(aBasePtr)^ := $FF7FFFFF;
+              Break;
+            end;
+          end;
+          fkDouble:
+            if (SameValue(Value, MaxDouble) or (Value > MaxDouble)) then begin
+              PInt64(aBasePtr)^ := $7FEFFFFFFFFFFFFF;
+              Break;
+            end else if (SameValue(Value, -MaxDouble) or (Value < -MaxDouble)) then begin
+              PInt64(aBasePtr)^ := -$10000000000001; // $FFEFFFFFFFFFFFFF
+              Break;
+            end;
+        end;
+
+        if fdDigits >= 0 then
+          Value := RoundToEx(Value, -fdDigits);
+
+        if fdScale <> 1.0 then
+          Value := Value / fdScale;
+
+        if Assigned(fdNormalizer) then
+          Value := fdNormalizer(aElement, Value);
+
+        case fdKind of
+          fkHalf  : PHalfFloat(aBasePtr)^ := FloatToHalf(Value);
+          fkSingle: PSingle(aBasePtr)^ := Value;
+          fkDouble: PDouble(aBasePtr)^ := Value;
+        end;
+      until True;
+
     if ndTerminator then
       PByte(aBasePtr)[SizeOf(Single)] := wbTerminator;
   end;
@@ -14481,6 +14648,11 @@ begin
       Result := False;
 end;
 
+function TwbFloatDef.GetKind: TwbFloatKind;
+begin
+  Result := fdKind;
+end;
+
 function TwbFloatDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (NativeUInt(aBasePtr) >= NativeUInt(aEndPtr)) then
@@ -14491,10 +14663,11 @@ end;
 
 function TwbFloatDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if fdDouble then
-    Result := SizeOf(Double) + Ord(ndTerminator)
-  else
-    Result := SizeOf(Single) + Ord(ndTerminator);
+  case fdKind of
+    fkHalf  : Result := SizeOf(THalfFloat)+Ord(ndTerminator);
+    fkSingle: Result := SizeOf(Single)+Ord(ndTerminator);
+    fkDouble: Result := SizeOf(Double)+Ord(ndTerminator);
+  end;
 end;
 
 function TwbFloatDef.SetDefaultNativeValue(const aValue: Variant): IwbValueDef;
@@ -14513,10 +14686,11 @@ begin
       FromEditValue(aBasePtr, aEndPtr, aElement, vdDefaultEditValue);
   end else begin
     Value := ToNativeValue(aBasePtr, aEndPtr, aElement);
-    if fdDouble then
-      Result := not Assigned(aBasePtr) or not SameValue(Value, fdDefault)
-    else
-      Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
+    case fdKind of
+      fkHalf  : Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault); //!!!
+      fkSingle: Result := not Assigned(aBasePtr) or not SingleSameValue(Value, fdDefault);
+      fkDouble: Result := not Assigned(aBasePtr) or not SameValue(Value, fdDefault);
+    end;
     if Result then
       FromNativeValue(aBasePtr, aEndPtr, aElement, fdDefault);
   end;
@@ -14530,23 +14704,56 @@ var
 begin
   Len := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   if Len < GetDefaultSize(aBasePtr, aEndPtr, aElement) then
-    Result := NaN
-  else if fdDouble then try
-    if PInt64(aBasePtr)^ = $7FEFFFFFFFFFFFFF then
-      Result := maxDouble
-    else if PInt64(aBasePtr)^ = $FFEFFFFFFFFFFFFF then
-      Result := -maxDouble
-    else begin
-      Value := PDouble(aBasePtr)^;
-      if IsInfinite(Value) or IsNan(Value) then
-        Result := Value
-      else begin
-        try
+    Exit(NaN)
+  else begin
+    Result := NaN;
+    ClearExceptions(False);
+    ExceptionMask := GetExceptionMask;
+    try
+      try
+        SetExceptionMask(exAllArithmeticExceptions);
+        case fdKind of
+          fkHalf: begin
+            if PHalfFloat(aBasePtr)^ = HalfPosMax then
+              Result := MaxHalf
+            else if PHalfFloat(aBasePtr)^ = HalfNegMax then
+              Result := -MaxHalf
+            else begin
+              Value := HalfToFloat(PHalfFloat(aBasePtr)^);
+            end;
+          end;
+          fkSingle: begin
+            if PCardinal(aBasePtr)^ = $7F7FFFFF then
+              Exit(maxSingle)
+            else if PCardinal(aBasePtr)^ = $FF7FFFFF then
+              Exit(-maxSingle)
+            else
+              Value := PSingle(aBasePtr)^;
+          end;
+          fkDouble: begin
+            if PInt64(aBasePtr)^ = $7FEFFFFFFFFFFFFF then
+              Exit(maxDouble)
+            else if PInt64(aBasePtr)^ = $FFEFFFFFFFFFFFFF then
+              Exit(maxDouble)
+            else
+              Value := PDouble(aBasePtr)^;
+          end;
+        end;
+
+        if IsInfinite(Value) or IsNan(Value) then
+          Exit(Value)
+        else
           if Value <> 0.0 then
-            if SameValue(Value, 0.0) then
-              Value := 0.0;
-        except
-          Value := 0.0;
+            case fdKind of
+              fkHalf:   if SingleSameValue(Value, 0.0) then Value := 0.0;
+              fkSingle: if SingleSameValue(Value, 0.0) then Value := 0.0;
+              fkDouble: if SameValue(Value, 0.0) then Value := 0.0;
+            end;
+
+        if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
+          if aElement.ShouldReportError(eeReading) then
+            wbProgress('<Error reading float in "%s">', [aElement.FullPath]);
+          Exit(NaN);
         end;
 
         if Assigned(fdNormalizer) then
@@ -14557,15 +14764,6 @@ begin
           Result := RoundToEx(Value, -fdDigits)
         else
           Result := Value;
-      end;
-    end;
-  except
-    Result := NaN;
-  end else try
-    ClearExceptions(False);
-    ExceptionMask := GetExceptionMask;
-    try
-      SetExceptionMask(exAllArithmeticExceptions);
 
       if PCardinal(aBasePtr)^ = $7F7FFFFF then
         Result := maxSingle
@@ -14623,9 +14821,21 @@ begin
     Result := 'NaN'
   else if IsInfinite(Value) then
     Result := 'Inf'
-  else if (Value = maxDouble) or (Value = maxSingle) then
+  else if
+    ((fdKind = fkHalf) and (Value = MaxHalf))
+    or
+    ((fdKind = fkSingle) and (Value = maxSingle))
+    or
+    ((fdKind = fkHalf) and (Value = maxDouble))
+  then
     Result := 'Default' // 'Max' ??
-  else if (Value = -maxDouble) or (Value = -maxSingle) then
+  else if
+    ((fdKind = fkHalf) and (Value = -MaxHalf))
+    or
+    ((fdKind = fkSingle) and (Value = -maxSingle))
+    or
+    ((fdKind = fkHalf) and (Value = -maxDouble))
+  then
     Result := 'Min'
   else
     Result := FloatToStrF(Value, ffFixed, 99, fdDigits);
@@ -14641,6 +14851,8 @@ begin
   Value := ToValue(aBasePtr, aEndPtr, aElement);
   if IsNaN(Value) then
     VarClear(Result)
+  else if Value = MaxHalf then
+    Result := MaxHalf
   else if Value = maxDouble then
     Result := maxDouble
   else if Value = maxSingle then
@@ -14690,9 +14902,21 @@ begin
       Result := 'NaN'
     else if IsInfinite(Value) then
       Result := 'Inf'
-    else if (Value=maxDouble) or (Value=maxSingle) then
+    else if
+      ((fdKind = fkHalf) and (Value = MaxHalf))
+      or
+      ((fdKind = fkSingle) and (Value = maxSingle))
+      or
+      ((fdKind = fkHalf) and (Value = maxDouble))
+    then
       Result := 'Default' // 'Max' ??
-    else if (Value=-maxDouble) or (Value=-maxSingle) then
+    else if
+      ((fdKind = fkHalf) and (Value = -MaxHalf))
+      or
+      ((fdKind = fkSingle) and (Value = -maxSingle))
+      or
+      ((fdKind = fkHalf) and (Value = -maxDouble))
+    then
       Result := 'Min'
     else
       if fdDigits >= 0 then
@@ -16648,7 +16872,7 @@ begin
     Exit(False);
 
   Result := Supports(aDef, IwbCallbackDef, CallbackDef) and
-    (Pointer(CallbackDef.Callback) = Pointer(@cdToStr));
+    (Pointer(CallbackDef.Callback) = Pointer(GetCallback));
 end;
 
 function TwbCallbackDef.CanContainFormIDs: Boolean;

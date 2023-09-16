@@ -127,6 +127,7 @@ var
   wbOPDS: IwbSubRecordDef;
   wbDEFL: IwbSubRecordDef;
   wbBaseFormComponents: IwbSubRecordArrayDef;
+  wbTraversalData: IwbStructDef;
   wbPTT2: IwbSubRecordDef;
   wbFULLActor: IwbSubRecordDef;
   wbFULLReq: IwbSubRecordDef;
@@ -232,6 +233,7 @@ var
   wbSTCP: IwbSubRecordDef;
   wbNTRM: IwbSubRecordDef;
   wbPRPS: IwbSubRecordDef;
+  wbCrowdPRPS: IwbSubRecordDef;
   wbObjectProperty: IwbValueDef;
   wbFLTR: IwbSubRecordDef;
   wbAPPR: IwbSubRecordDef;
@@ -262,6 +264,7 @@ var
   wbXALG: IwbRecordMemberDef;
   wbHNAMHNAM: IwbRecordMemberDef;
   wbReflectionChunkUnion: IwbValueDef;
+  wbXTV2: IwbSubRecordDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
@@ -7474,7 +7477,9 @@ begin
             'Disable',
             'Destroy',
             'Ignore External Dmg',
-            'Becomes Dynamic'
+            'Becomes Dynamic',
+            'Unknown 5',
+            'Unknown 6'
           ])),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
@@ -7867,7 +7872,7 @@ begin
 
   wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
     wbStructSK([0, 2], 'Door Triangle', [
-      wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
+      wbInteger('Triangle before door', itS16).SetLinksToCallback(wbTriangleLinksTo),
       wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
       wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
     ])
@@ -7961,16 +7966,21 @@ begin
 
     wbNavmeshCoverArray := wbArray('Cover Array',  // if navmesh version gt 12
       wbStruct('Cover', [
-        wbInteger('Vertex 1', itS16).SetLinksToCallback(wbVertexLinksTo),
-        wbInteger('Vertex 2', itS16).SetLinksToCallback(wbVertexLinksTo),
-        wbByteArray('Data', 4 {, wbFlags([]) ? })
+        //wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+        //wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 4),
+        wbByteArray('Unknown', 4)
       ])
     , -1);
 
     wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings',
       wbStruct('Cover Triangle Map', [
-        wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
-        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
+        {wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
+        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)}
+        wbByteArray('Unknown', 2),
+        wbByteArray('Unknown', 2)
       ])
     , -1);
 
@@ -7979,7 +7989,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
-        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
+        wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo),
         wbInteger('Flags', itU32)
       ])
     , -1);
@@ -7998,7 +8008,22 @@ begin
         wbArray('NavMeshGridCell',
           wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
         , -1).IncludeFlag(dfNotAlignable)
-      ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+      , function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
+      begin
+        var lContainer := aElement.Container;
+        if not Assigned(lContainer) then
+          Exit(0);
+
+        var lGridSizeElement := lContainer.ElementByName['Navmesh Grid Size'];
+        if not Assigned(lGridSizeElement) then
+          Exit(0);
+
+        var lGridSize: Integer := lGridSizeElement.NativeValue;
+        if (lGridSize < 0) or (lGridSize > 12) then
+          Exit(0);
+
+        Result := lGridSize * lGridSize;
+      end).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
     ])
   end;
 
@@ -8022,7 +8047,9 @@ begin
     wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
     wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
     wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
-    wbNavmeshGrid
+    wbNavmeshGrid,
+    wbUnknown(2),
+    wbUnknown(2)
   ]);
 
   wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
@@ -9157,6 +9184,15 @@ begin
 
   wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
 
+  var wbCrowdProperty :=
+    wbStructSK([0], 'Property', [
+      wbFormIDCk('Actor', [NPC_]),
+      wbFloat('Value'),
+      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+    ]).SetToStr(wbCrowdPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
+
+  wbCrowdPRPS := wbArrayS(PRPS, 'Properties', wbCrowdProperty);
+
   wbFLTR := wbString(FLTR, 'Filter');
   wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
   wbFTYP := wbArray(FTYP, 'Forced Location Ref Types', wbFormIDCk('Forced Location Ref Type', [LCRT]));
@@ -9288,6 +9324,116 @@ begin
   //wbREFL := wbArray(REFL, 'Reflection', wbReflectionChunkUnion);
   wbREFL := wbByteArray(REFL, 'Reflection').IncludeFlag(dfNoReport);
 
+  var wbLinksToBluePrintComponent:TwbLinksToCallback  := function(const aElement: IwbElement): IwbElement
+  begin
+    if not Assigned(aElement) then
+      Exit(nil);
+    var lElementValue: Integer := aElement.NativeValue;
+    if lElementValue < 0 then
+      Exit(nil);
+    var lContainer := aElement.Container;
+    while Assigned(lContainer) do begin
+      var lDef := lContainer.Def;
+      if not Assigned(lDef) or (lDef.DefType = dtRecord) then
+        Exit(nil);
+      if lDef.Root.Equals(wbBaseFormComponents.Root) then
+        Break;
+      lContainer := lContainer.Container;
+    end;
+    if not Assigned(lContainer) then
+      Exit(nil);
+    for var lArrayIdx := 0 to Pred (lContainer.ElementCount) do begin
+      var lComponentStruct: IwbContainerElementRef;
+      if Supports(lContainer.Elements[lArrayIdx], IwbContainerElementRef, lComponentStruct) then begin
+        var lBFCB := lComponentStruct.ElementBySignature[BFCB];
+        if Assigned(lBFCB) and (lBFCB.Value = 'Blueprint_Component') then begin
+          var lItems: IwbContainerElementRef;
+          if Supports(lComponentStruct.ElementByPath['Component Data\BUO4 - Blue Print Components'], IwbContainerElementRef, lItems) then begin
+            var lItemIdx := lElementValue;
+            var lElementCount := lItems.ElementCount;
+            lItemIdx := Min(lItemIdx, Pred(lElementCount));
+            var lItem: IwbContainerElementRef;
+            var lMoveBy := 0;
+            repeat
+              if Supports(lItems[lItemIdx], IwbContainerElementRef, lItem) then begin
+                var lPart := lItem.ElementByName['Part ID'];
+                if Assigned(lPart) then begin
+                  var lPartValue: Integer := lPart.NativeValue;
+                  var lDiff := lElementValue - lPartValue;
+                  if lDiff = 0 then
+                    Exit(lItem);
+                  if lDiff < 0 then begin
+                    if lMoveBy <= 0 then
+                      lMoveBy := -1
+                    else
+                      Exit(nil);
+                  end else begin
+                    if lMoveBy >= 0 then
+                      lMoveBy := 1
+                    else
+                      Exit(nil);
+                  end;
+                  lItemIdx := lItemIdx + lMoveBy;
+                  if (lItemIdx < 0) or (lItemIdx >= lElementCount) then
+                    Exit(nil);
+                end;
+              end else
+                Exit(nil);
+            until False;
+          end;
+        end;
+      end;
+    end;
+    Result := nil;
+  end;
+
+  var wbToStringFromLinksTo: TwbToStrCallback := procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
+  begin
+    case aType of
+      ctToStr:
+      begin
+        if Assigned(aElement) then begin
+          var lLinksTo := aElement.LinksTo;
+          if Assigned(lLinksTo) then begin
+            var lSummary := lLinksTo.Summary;
+            if lSummary <> '' then
+              aValue := lSummary;
+          end;
+        end;
+      end;
+    end;
+  end;
+
+  var wbXYZStruct :=
+    wbStruct('Unknown', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ])
+    .SetSummaryKey([0, 1, 2])
+    .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
+    .SetSummaryMemberPrefixSuffix(2, '', ')')
+    .SetSummaryDelimiter(', ')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseVec3);
+
+  wbTraversalData := wbStruct('Unknown', [
+    wbUnknown(4),
+    wbXYZStruct,
+    wbXYZStruct,
+    wbXYZStruct,
+    wbInteger('Flags', itU32, wbFlags([
+      '',
+      '',
+      'No Traversal FormID'
+    ])).SetAfterSet(wbFlagsAfterSet),
+    wbIsNotFlag(2, wbFormIDCk('Traversal', [TRAV])),
+    wbHalf,
+    wbHalf,
+    wbHalf,
+    wbHalf
+  ]);
+
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type'),
       wbRUnion('Component Data', [
@@ -9323,7 +9469,16 @@ begin
                 wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
               ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
               wbInteger('Part ID', itU32)
-          ])),
+            ])
+            .SetSummaryKey([4, 0, 2, 3, 1])
+            .SetSummaryMemberPrefixSuffix(4, '[', ']')
+            .SetSummaryMemberPrefixSuffix(0, ' ', '')
+            .SetSummaryMemberPrefixSuffix(2, ' Pos: ', '')
+            .SetSummaryMemberPrefixSuffix(3, ' Rot: ', '')
+            .SetSummaryMemberPrefixSuffix(1, ' Build: ', '')
+            .IncludeFlag(dfSummaryMembersNoName)
+            .IncludeFlag(dfCollapsed, wbCollapseBluePrintItem)
+          ),
           wbRStruct('Component Configurations', [
             wbInteger(BODM, 'Count', itU32).SetRequired(True),  // count for the following array of struct BODC+BODS/BODV
             wbRArray('Unknown', wbRStruct('Unknown', [
@@ -9336,6 +9491,10 @@ begin
                   wbFloatColors('Color 3'),
                   wbInteger('Unknown', itU32) // known values 0 - 7, possible enum?
                 ])
+                .SetSummaryKeyOnValue([0, 1, 2, 3])
+                .IncludeFlag(dfSummaryMembersNoName)
+                .IncludeFlag(dfHideText)
+                .IncludeFlag(dfCollapsed)
               ], []), cpNormal, False, nil, wbBODSsAfterSet)
             ], []), cpNormal, False, nil, wbBODCsAfterSet).SetRequired(True)
           ], []).SetRequired(True),
@@ -9344,14 +9503,14 @@ begin
         ], []),
         //BGSCrowdComponent_Component
         wbRStruct('Component Data', [
-          wbUnknown(CDND),
+          wbFloat(CDND),
           wbUnknown(CDNS),
           wbRStructs('Unknown', 'Unknown', [
-            wbPRPS,
+            wbCrowdPRPS,
             wbCITCReq,
             wbCTDAsCount,
             wbString(STRV),
-            wbUnknown(FLTV)
+            wbFloat(FLTV)
           ], [])
         ], []),
         wbRStruct('Component Data', [
@@ -9409,13 +9568,13 @@ begin
         ], []),
         //BGSExternalComponentDataSource_Component
         wbRStruct('Component Data', [
-          wbFormID(EXDC, 'External Base Template'),
+          wbFormIDCk(EXDC, 'External Base Template', [NULL, GBFM, LVLB]),
           wbRStruct('External Data Sources', [
             wbInteger(EXDZ, 'Data Source Count', itU32), // count for EXCN/EXCI struct array
             wbRArray('External Sources',
               wbRStruct('Component', [
                 wbString(EXCN, 'Component Name'),
-                wbFormID(EXCI, 'Component Source')
+                wbFormIDCk(EXCI, 'Component Source', [GBFM, LVLB])
               ], [])
             )
           ], []),
@@ -9427,7 +9586,7 @@ begin
         ], []),
         //BGSLinkedVoiceType_Component
         wbRStruct('Component Data', [
-          wbFormIDCk(FCTF, 'Voice Type', [VTYP])
+          wbFormIDCk(FCTF, 'Voice Type', [NULL, VTYP])
         ], []),
         //BGSContactShadowComponent_Component
         wbRStruct('Component Data', [
@@ -9443,7 +9602,7 @@ begin
           wbFLLD
         ], []),
         wbRStruct('Component Data', [
-          wbUnknown(FTYP)
+          wbFTYP
         ], []),
         wbRStruct('Component Data', [
           wbFULL
@@ -9451,8 +9610,9 @@ begin
         wbRStruct('Component Data', [
           wbUnknown(GNAM)
         ], []),
+        //BGSSpaceshipHullCode_Component
         wbRStruct('Component Data', [
-          wbFormID(HULL)
+          wbLStringKC(HULL, 'Hull Code', 0, cpTranslate)
         ], []),
         wbRStruct('Component Data', [
           wbFormID(INAM, 'Add to inventory on destroy')
@@ -9466,7 +9626,7 @@ begin
         wbRStruct('Component Data', [
           wbUnknown(ITMC),
           wbRArray('Unknown', wbRStruct('Unknown', [
-            wbFormID(FLKW),
+            wbFormIDCk(FLKW,'Keyword', [KYWD]),
             wbFormID(FLFM)
           ], []))
         ], []),
@@ -9513,14 +9673,14 @@ begin
         ], []),
         //BGSSpaceshipAIActor_Component
         wbRStruct('Component Data', [
-          wbFormID(SAIA, 'Spaceship AI Actor')
+          wbFormIDCk(SAIA, 'Spaceship AI Actor', [NPC_])
         ], []),
         //BGSSpaceshipWeaponBindings_Component
         wbRStruct('Component Data', [
           wbStruct(SHWB, 'Ship Weapon Binding', [
-            wbInteger('Weapon Slot 1', itS32),
-            wbInteger('Weapon Slot 2', itS32),
-            wbInteger('Weapon Slot 3', itS32)
+            wbInteger('Weapon Slot 1', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksTo),
+            wbInteger('Weapon Slot 2', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksTo),
+            wbInteger('Weapon Slot 3', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksTo)
           ])
         ], []),
         wbRStruct('Component Data', [
@@ -9537,7 +9697,14 @@ begin
         ], []),
         //BGSStoredTraversals_Component
         wbRStruct('Component Data', [
-          wbUnknown(STRD)
+          wbStruct(STRD, 'Stored Traversal Data', [
+            wbArray('Unknown', wbTraversalData, -1).IncludeFlag(dfNotAlignable),
+            wbArray('Unknown', wbStruct('Unknown', [
+              wbFormID('Unknown'),
+              wbXYZStruct,
+              wbArray('Unknown', wbTraversalData, -1).IncludeFlag(dfNotAlignable)
+            ]), -1).IncludeFlag(dfNotAlignable)
+          ])
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(VLMS)
@@ -10373,6 +10540,8 @@ begin
   ReferenceRecord(PHZD, 'Placed Hazard');
 //  ReferenceRecord(PMIS, 'Placed Missile');
 
+  wbXTV2 := wbArray(XTV2, 'Traversals', wbTraversalData);
+
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10510,7 +10679,7 @@ begin
     wbUnknown(XCIB),
     wbUnknown(XCWM),
     wbString(XEMP),
-    wbUnknown(XTV2)
+    wbXTV2
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
   {subrecords checked against Starfield.esm}
@@ -16915,7 +17084,7 @@ begin
     wbUnknown(XPDO),
     wbUnknown(XSAD),
     wbUnknown(XSL1),
-    wbUnknown(XTV2),
+    wbXTV2,
     wbUnknown(XVL2),
     wbUnknown(XVOI),
     wbUnknown(XPPS),
@@ -18847,11 +19016,11 @@ begin
     wbOPDS,
     wbBaseFormComponents,
     wbFLTR,
-    wbFormID(ANAM),
+    wbFormIDCk(ANAM, 'Template', [GBFT]),
     wbRArray('Unknown', wbString(STRV)),
     wbObjectTemplate,
-    wbUnknown(STOP),
-    wbUnknown(STOP),
+    wbMarkerReq(STOP),
+    wbMarkerReq(STOP),
     wbNVNM
   ]);
 

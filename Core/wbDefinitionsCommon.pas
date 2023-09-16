@@ -126,6 +126,7 @@ procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbCrowdPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbScriptPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
@@ -251,8 +252,13 @@ function wbBelowSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boole
 function wbIsFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbIsFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
+function wbIsNotFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+function wbIsNotFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
+
 function wbHasNoFlags(const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbHasNoFlags(const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
+
+procedure wbFlagsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 function wbByteColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
@@ -1799,7 +1805,7 @@ begin
 
   aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
 
-  if wbGameMode <> gmFO76 then
+  if not (wbGameMode in [gmFO76, gmSF1]) then
     Exit;
 
   var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
@@ -1812,6 +1818,37 @@ begin
 
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
 end;
+
+procedure wbCrowdPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container: IwbContainerElementRef;
+  MainRecord: IwbMainRecord;
+begin
+  if not wbTrySetContainer(aElement, aType, Container) then
+    Exit;
+
+  var ActorForm := Container.ElementByName['Actor'];
+  if not wbTryGetMainRecord(ActorForm, MainRecord) then
+    Exit;
+
+  var ActorValueData := Container.ElementByName['Value'];
+
+  aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
+
+  if not (wbGameMode in [gmFO76, gmSF1]) then
+    Exit;
+
+  var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
+  if not Assigned(CurveTable) then
+    Exit;
+
+  var CurveTableForm := CurveTable.ElementByName['Curve Table'];
+  if not wbTryGetMainRecord(CurveTableForm, MainRecord) then
+    Exit;
+
+  aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
+end;
+
 
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
@@ -2516,7 +2553,7 @@ begin
         if not Assigned(lFlags) then
           Exit(0);
 
-        var lFlagBits: Integer := lFlags.NativeValue;
+        var lFlagBits: Int64 := lFlags.NativeValue;
         if (lFlagBits and (1 shl aFlag)) <> 0 then
           Exit(1);
 
@@ -2668,13 +2705,13 @@ begin
       wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
         aValue,
         wbUnused
-      ]).IncludeFlagOnValue(dfUnionStaticResolve)
+      ]).IncludeFlagOnValue(dfMustBeUnion)
   else
       Result :=
       wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
         aValue,
         wbEmpty(aValue.Name)
-      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+      ]).IncludeFlagOnValue(dfMustBeUnion);
 end;
 
 function wbIsFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
@@ -2684,14 +2721,47 @@ begin
       wbUnion(aValue.Name, wbFlagDecider(aFlag), [
         wbUnused,
         aValue
-      ]).IncludeFlag(dfUnionStaticResolve)
+      ]).IncludeFlag(dfMustBeUnion)
   else
       Result :=
       wbUnion(aValue.Name, wbFlagDecider(aFlag), [
         wbEmpty(aValue.Name),
         aValue
-      ]).IncludeFlag(dfUnionStaticResolve);
+      ]).IncludeFlag(dfMustBeUnion);
 end;
+
+function wbIsNotFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
+begin
+  if aIsUnused then
+    Result :=
+      wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
+        wbUnused,
+        aValue
+      ]).IncludeFlagOnValue(dfMustBeUnion)
+  else
+      Result :=
+      wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
+        wbEmpty(aValue.Name),
+        aValue
+      ]).IncludeFlagOnValue(dfMustBeUnion);
+end;
+
+function wbIsNotFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
+begin
+  if aIsUnused then
+    Result :=
+      wbUnion(aValue.Name, wbFlagDecider(aFlag), [
+        aValue,
+        wbUnused
+      ]).IncludeFlag(dfMustBeUnion)
+  else
+      Result :=
+      wbUnion(aValue.Name, wbFlagDecider(aFlag), [
+        aValue,
+        wbEmpty(aValue.Name)
+      ]).IncludeFlag(dfMustBeUnion);
+end;
+
 
 function wbHasNoFlags(const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 begin
@@ -2700,13 +2770,13 @@ begin
       wbUnion(aSignature, aValue.Name, wbNoFlagsDecider, [
         aValue,
         wbUnused
-      ]).IncludeFlagOnValue(dfUnionStaticResolve)
+      ]).IncludeFlagOnValue(dfMustBeUnion)
   else
       Result :=
       wbUnion(aSignature, aValue.Name, wbNoFlagsDecider, [
         aValue,
         wbEmpty(aValue.Name)
-      ]).IncludeFlagOnValue(dfUnionStaticResolve);
+      ]).IncludeFlagOnValue(dfMustBeUnion);
 end;
 
 function wbHasNoFlags(const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef;
@@ -2716,13 +2786,24 @@ begin
       wbUnion(aValue.Name, wbNoFlagsDecider, [
         wbUnused,
         aValue
-      ]).IncludeFlag(dfUnionStaticResolve)
+      ]).IncludeFlag(dfMustBeUnion)
   else
       Result :=
       wbUnion(aValue.Name, wbNoFlagsDecider, [
         wbEmpty(aValue.Name),
         aValue
-      ]).IncludeFlag(dfUnionStaticResolve);
+      ]).IncludeFlag(dfMustBeUnion);
+end;
+
+procedure wbFlagsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  lContainer: IwbContainerElementRef;
+begin
+  if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+    Exit;
+  for var lElementIdx := 0 to Pred(lContainer.ElementCount) do
+    //will trigger Unions to re-evaluate their type and fix themselves
+    var lResolvedDef := lContainer.Elements[lElementIdx].ResolvedValueDef;
 end;
 
 function wbByteColors(const aName: string = 'Color'): IwbValueDef;
