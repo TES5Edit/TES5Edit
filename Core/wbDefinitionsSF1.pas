@@ -18507,10 +18507,15 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
-    (*
-    wbStruct(GNAM, 'Data', [
+    wbStruct(ZNAM, 'Data', [
+      wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
+      wbStruct('Camera Offset', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbFloat('FOV Mult'),
-      wbInteger('Overlay', itU32, wbEnum([
+      wbInteger('Overlay', itU8, wbEnum([
         { 0} 'Default',
         { 1} 'Fine',
         { 2} 'Duplex',
@@ -18527,16 +18532,16 @@ begin
         {13} 'Double Zero',
         {14} 'Rangefinder 1',
         {15} 'Rangefinder 2',
-        {16} 'Rectangle'
+        {16} 'Rectangle',
+        {17} 'Tactical 4x',
+        {18} 'Tactical 2x'
       ])),
-      wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
-      wbStruct('Camera Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ])*)
-    wbUnknown(ZNAM)
+      wbFloat('ADS Distance from Camera Offset'),
+      wbInteger('ADS Height Delay Enabled', itU8, wbBoolEnum),
+      wbFloat('ADS Height Delay S'),
+      wbInteger('ADS Depth Enabled', itU8, wbBoolEnum),
+      wbFloat('ADS Depth Delay S')
+    ])
   ]);
 
 end;
@@ -18565,31 +18570,30 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AAMD, 'Aim Assist Model Data', [
     wbEDID,
-    wbUnknown(SNAM)
-    {
-    wbFloat(ANAM, 'Inner Cone Angle Degrees'),
-    wbFloat(BNAM, 'Outer Cone Angle Degrees'),
-    wbFloat(CNAM, 'Steering Degrees Per Sec'),
-    wbFloat(DNAM, 'Pitch Scale'),
-    wbFloat(ENAM, 'Inner Steering Ring'),
-    wbFloat(FNAM, 'Outer Steering Ring'),
-    wbFloat(GNAM, 'Friction'),
-    wbFloat(HNAM, 'Move Follow Degrees Per Sec'),
-    wbFloat(INAM, 'ADS Snap Steering Mult'),
-    wbFloat(JNAM, 'ADS Snap Seconds'),
-    wbFloat(KNAM, 'ADS Snap Cone Angle Degrees'),
-    wbFloat(LNAM, 'No Steering'),
-    wbFloat(MNAM, 'Bullet Bending Cone Angle Degrees'),
-    wbFloat(NNAM, 'ADS Snap Steering Mutliplier Inner Ring'),
-    wbFloat(ONAM, 'ADS Snap Steering Mutliplier Outer Ring'),
-    wbFloat(PNAM, 'ADS Multiplier Inner Cone Angle Degrees'),
-    wbFloat(QNAM, 'ADS Multiplier Outer Cone Angle Degrees'),
-    wbFloat(RNAM, 'ADS Multiplier Inner Steering Ring'),
-    wbFloat(SNAM, 'ADS Multiplier Outer Steering Ring'),
-    wbFloat(TNAM, 'ADS Multiplier Friction'),
-    wbFloat(UNAM, 'ADS Multiplier Steering Degrees Per Sec'),
-    wbFloat(VNAM, 'Aim Assist Enabled')
-    }
+    wbStruct(SNAM, 'Data', [
+      wbFloat('Inner Cone Angle Degrees'),
+      wbFloat('Outer Cone Angle Degrees'),
+      wbFloat('Steering Degrees Per Sec'),
+      wbFloat('Pitch Scale'),
+      wbFloat('Inner Steering Ring'),
+      wbFloat('Outer Steering Ring'),
+      wbFloat('Friction'),
+      wbFloat('Move Follow Degrees Per Sec'),
+      wbFloat('ADS Snap Steering Mult'),
+      wbFloat('ADS Snap Seconds'),
+      wbFloat('ADS Snap Cone Angle Degrees'),
+      wbFloat('No Steering'),
+      wbFloat('Bullet Bending Cone Angle Degrees'),
+      wbFloat('ADS Snap Steering Mutliplier Inner Ring'),
+      wbFloat('ADS Snap Steering Mutliplier Outer Ring'),
+      wbFloat('ADS Multiplier Inner Cone Angle Degrees'),
+      wbFloat('ADS Multiplier Outer Cone Angle Degrees'),
+      wbFloat('ADS Multiplier Inner Steering Ring'),
+      wbFloat('ADS Multiplier Outer Steering Ring'),
+      wbFloat('ADS Multiplier Friction'),
+      wbFloat('ADS Multiplier Steering Degrees Per Sec'),
+      wbInteger('Aim Assist Enabled', itU8, wbBoolEnum)
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
