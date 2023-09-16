@@ -3194,7 +3194,8 @@ type
     {56} ptDamageType,         // DMGT
     {57} ptResearchProject,    // RSPJ
     {58} ptConditionForm,      // CNDF
-    {58} ptPronoun             //Enum: Pronouns
+    {59} ptPronoun,             //Enum: Pronouns
+    {60} ptResource            //IRES
 
   );
 
@@ -3804,7 +3805,7 @@ const
     (Index: 946; Name: 'IsBoostPackHovering'; Desc: 'Is player''s boost pack hovering?'),
     (Index: 947; Name: 'GetUsedWeightCapacityConditionFunction'; Desc: 'Get the used weight capacity for actors, ships, containers. 1.0f is 100%'),
     (Index: 948; Name: 'RecalculateTemplatedSpaceship'; Desc: 'force a recalculation of a tempalted spaceship'),
-    (Index: 949; Name: 'BodyHasResource'; Desc: 'Does the ref object''s current planetary body have the given resource? Optional integer 1 to include atmospheric resources.'),
+    (Index: 949; Name: 'BodyHasResource'; Desc: 'Does the ref object''s current planetary body have the given resource? Optional integer 1 to include atmospheric resources.'; ParamType1: ptResource),
     (Index: 950; Name: 'GetPCIsReloading'; Desc: 'Returns true if the Player is currently reloading.'),
     (Index: 951; Name: 'ActorExposedToSky'; Desc: 'Test if actor is exposed to sky'),
     (Index: 955; Name: 'BodyHasResourceWithKeyword'; Desc: 'Does the ref object''s current planetary body have a resource with the given keyword? Optional integer 1 to include atmospheric resources.'),
@@ -8916,7 +8917,9 @@ begin
           {58 ptConditionForm}
           wbFormIDCkNoReach('Condition Form', [CNDF]),
           {59 ptPronoun}
-          wbInteger('Pronouns', itU32, wbPronounEnum)
+          wbInteger('Pronouns', itU32, wbPronounEnum),
+          {60 ptResource}
+          wbFormIDCkNoReach('Resource', [IRES])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -9290,10 +9293,10 @@ begin
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
         wbRStruct('Component Data', [
-          wbString(ANAM),
-          wbString(BNAM),
-          wbString(CNAM),
-          wbString(DNAM),
+          wbString(ANAM, 'Animation Root'),
+          wbString(BNAM, 'Skeleton'),
+          wbString(CNAM, 'Animations'),
+          wbString(DNAM, 'Response Handler'),
           wbString(ENAM)
         ], []),
         //BGSAttachParentArray_Component
