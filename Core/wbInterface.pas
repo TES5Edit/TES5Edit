@@ -14765,49 +14765,21 @@ begin
         else
           Result := Value;
 
-      if PCardinal(aBasePtr)^ = $7F7FFFFF then
-        Result := maxSingle
-      else if PCardinal(aBasePtr)^ = $FF7FFFFF then
-        Result := -maxSingle
-      else begin
-        Value := PSingle(aBasePtr)^;
-        if IsInfinite(Value) or IsNan(Value) then
-          Result := Value
-        else begin
-          try
-            if Value <> 0.0 then
-              if SingleSameValue(Value, 0.0) then
-                Value := 0.0;
-            if SetExceptions([]) * DefaultExceptionFlags <> [] then
-              Value := 0.0;
-          except
-            Value := 0.0;
-          end;
-
-          if Assigned(fdNormalizer) then
-            Value := fdNormalizer(aElement, Value);
-          if fdScale <> 1.0 then
-            Value := Value * fdScale;
-          if fdDigits >= 0 then
-            Result := RoundToEx(Value, -fdDigits)
-          else
-            Result := Value;
+        if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
+          if aElement.ShouldReportError(eeReading) then
+            wbProgress('<Error reading float in "%s">', [aElement.FullPath]);
+          Exit(NaN);
         end;
+      finally
+        ClearExceptions(False);
+        SetExceptionMask(ExceptionMask);
       end;
-      if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
+    except
+      on e: Exception do begin
         Result := NaN;
         if aElement.ShouldReportError(eeReading) then
-          wbProgress('<Error reading float in "%s">', [aElement.FullPath]);
+          wbProgress('<Error reading float in "%s": [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
       end;
-    finally
-      SetExceptionMask(ExceptionMask)
-    end;
-  except
-    on e: Exception do begin
-      ClearExceptions(False);
-      Result := NaN;
-      if aElement.ShouldReportError(eeReading) then
-        wbProgress('<Error reading float in "%s": [%s] %s>', [aElement.FullPath, E.ClassName, E.Message]);
     end;
   end;
 end;
