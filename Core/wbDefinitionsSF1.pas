@@ -99,7 +99,7 @@ const
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
-    'BMMP', 'PDCL', 'PKIN'
+    'BMMP', 'PDCL', 'PKIN', 'GBFM'
   ];
 
 var
@@ -9624,7 +9624,7 @@ begin
         ], []),
         //BGSFormLinkData_Component
         wbRStruct('Component Data', [
-          wbUnknown(ITMC),
+          wbInteger(ITMC, 'Count', itU32),
           wbRArray('Unknown', wbRStruct('Unknown', [
             wbFormIDCk(FLKW,'Keyword', [KYWD]),
             wbFormID(FLFM)
@@ -13481,55 +13481,52 @@ begin
       ], []),
 
       wbRStructs('Unknown', 'Unknown', [
-        wbFormIDCk(BNAM, 'NPC Anim', [IDLE]),
-        wbUnknown(STRV),
-        wbUnknown(VCLR),
-        wbUnknown(FLMV),
-        wbUnknown(FLAV),
+        wbFormIDCk(BNAM, 'NPC Anim', [NULL, IDLE]),
+        wbString(STRV),
+        wbUnknown(VCLR, 4).SetRequired(True),
+        wbFormIDCk(FLMV, 'Unknown', [NULL, KYWD]).SetRequired(True),
+        wbFormIDCk(FLAV, 'Unknown', [NULL, KYWD]).SetRequired(True),
         wbUnknown(QUAL),
         wbUnknown(SPOR),
-        wbUnknown(OCOR),
+        wbUnknown(OCOR).SetRequired(True),
         wbUnknown(SOFT),
         wbUnknown(DOFT),
-        wbUnknown(LVCR),
+        wbFloat(LVCR).SetRequired(True),
         wbCTDAs,
-        wbUnknown(ATAC),
+        wbUnknown(ATAC, 4).SetRequired(True),
         wbUnknown(PLRL),
         wbUnknown(SHRT),
-        wbUnknown(XNAM)
+        wbUnknown(XNAM).SetRequired(True)
       ], []),
 
       wbRStruct('Unknown', [
         wbUnknown(SNAM),
         wbUnknown(UNAM),
-        wbUnknown(LNAM),
-        wbFormIDCk(CNAM, 'Camera Param', [CAMS])
+        wbUnknown(LNAM)
       ], []),
 
-      wbRArray('Unknown', wbFormIDCk(PNAM, 'Param', [PACK])),
-
       wbUnknown(NVCI),
-      wbUnknown(CNAM),
+      wbFormIDCk(CNAM, 'Camera Shot', [NULL, CAMS]),
       wbUnknown(DNAM),
 
-      wbUnknown(ALLA),
+      wbInteger(ALLA, 'Unknown', itS32),
 
       wbRStruct('Unknown', [
-        wbUnknown(REPL),
-        wbUnknown(HNAM),
-        wbUnknown(VCLR),
-        wbUnknown(VNML),
+        wbFormID(REPL),
+        wbFloat(HNAM).SetRequired(True),
+        wbFloat(VCLR).SetRequired(True),
+        wbFloat(VNML).SetRequired(True),
         wbUnknown(LVCR),
         wbUnknown(BTXT),
         wbUnknown(ATXT),
         wbUnknown(VTXT),
         wbUnknown(AIDT),
-        wbUnknown(FLMV),
+        wbInteger(FLMV, 'Flags', itU32, wbFlags([])).SetRequired(True),
         wbUnknown(MPCD),
         wbUnknown(VNAM),
         wbSoundReference(WED0),
-        wbUnknown(BIPL),
-        wbUnknown(LVLO),
+        wbFormID(BIPL).SetRequired(True),
+        wbInteger(LVLO, 'Unknown', itS32).SetRequired(True),
         wbUnknown(XNAM)
       ], []),
 
@@ -13544,17 +13541,17 @@ begin
 
       wbSoundReference(WED0),
 
-      wbUnknown(VENC),
+      wbFormIDCk(VENC, 'Unknown', [NULL, KYWD]),
 
-      wbRStruct('Unknown', [
-        wbUnknown(DTGT),      // "dialogue target"?
-        wbRStructs('Unknown', 'Unknown', [
+      wbRStruct('Dialogue Choices', [
+        wbInteger(DTGT, 'Unknown', itS32),      // "dialogue target"?
+        wbRStructs('Dialogue List', 'Item', [
           wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),
-          wbUnknown(PPST),
-          wbUnknown(PNST),
-          wbUnknown(PASP),
-          wbUnknown(PAPI),
-          wbUnknown(PAPN),
+          wbFormIDCk(PPST, 'Unknown', [NULL, KYWD]),
+          wbFormIDCk(PNST, 'Unknown', [NULL, KYWD]),
+          wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),
+          wbInteger(PAPI, 'Phase Index', itU32),
+          wbString(PAPN),
           wbFormIDCk(ESCS, 'NPC Response', [DIAL]).SetRequired(True)
         ], []),
         wbUnknown(ATTR),
@@ -13562,6 +13559,7 @@ begin
       ], []),
 
       wbUnknown(HTID),
+      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
 
       {
       wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
@@ -13617,19 +13615,19 @@ begin
     wbInteger(XNAM, 'Index', itU32),
     wbUnknown(SCPI),    // seems to be 1-100 - skill req? percentage increase?
     wbUnknown(JNAM),
-    wbUnknown(SCPP),
-    wbUnknown(DEVT),
-    wbUnknown(SCSP),
-    wbUnknown(SPMA),
-    wbUnknown(SPEX),
+    wbFormIDCk(SCPP, 'Unknown', [NULL, SCEN]),
+    wbEmpty(DEVT, 'Unknown'),
+    wbEmpty(SCSP, 'Unknown'),
+    wbArray(SPMA, 'Unknown', wbFormIDCk('Unknown', [SCEN])),
+    wbArray(SPEX, 'Unknown', wbFormIDCk('Unknown', [SCEN])),
     wbUnknown(SPRK), // seems to correlate with CF05_Guard_SpeechChallenge*, maybe minimum level of skill?
     wbUnknown(SPRW),
-    wbUnknown(SPRP),
-    wbUnknown(SPDF),
-    wbUnknown(SPPQ),
+    wbEmpty(SPRP, 'Unknown'),
+    wbEmpty(SPDF, 'Unknown'),
+    wbEmpty(SPPQ, 'Unknown'),
     wbArray(SPKW, 'Keywords', wbFormIDCk('Keyword',[KYWD])),
     wbFormIDCk(SPPK, 'Perk', [PERK]),
-    wbUnknown(SPKY)
+    wbArray(SPKY, 'Keywords', wbFormIDCk('Keyword',[KYWD]))
   ]);
 
   (* still exists in game code, but not in Starfield.esm
@@ -14305,26 +14303,26 @@ begin
       wbByteArray(NAM9, 'Text Hash'),
       wbFormIDCk(BNAM, 'Unknown', [NULL, IDLE]),
       wbString(STRV),
-      wbFormID(VCLR),
+      wbFormIDCk(VCLR, 'Unknown', [NULL, KYWD]),
       wbUnknown(FLMV),
       wbUnknown(FLAV),
       wbEmpty(QUAL, 'Unknown'), // order between QUAL
       wbEmpty(DOFT, 'Unknown'), // and DOFT is unknown
-      wbUnknown(DPLT),
-      wbUnknown(OCOR),
-      wbUnknown(LVCR),
+      wbEmpty(DPLT, 'Unknown'),
+      wbEmpty(OCOR, 'Unknown'),
+      wbFloat(LVCR),
       wbUnknown(ATAC),
       wbEmpty(PLRL, 'Unknown'),
       wbEmpty(XNAM, 'Unknown'),
       wbHNAMHNAM,
-      wbUnknown(RVSH)
+      wbSoundReference(RVSH)
     ], [])),
     wbCTDAs,
     wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
     wbUnknown(INTV),
-    wbUnknown(WED0),
+    wbSoundReference(WED0),
 //    wbInteger(ALFA, 'Forced Alias', itS32),
 //    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
 //    wbInteger(GREE, 'Greet Distance', itU32),
@@ -14353,7 +14351,7 @@ begin
       'Force'
     ])),
     wbUnknown(COCT), // container count? never followed by CNTO in Starfield.esm
-    wbFormID(NAM8), // order between COCT and NAM8 unknown
+    wbFormIDCk(NAM8, 'Unknown', [AFFE]), // order between COCT and NAM8 unknown
     wbFormIDCk(PERK, 'Perk', [PERK]),             // order between PERK
     wbFormIDCk(SCSP, 'Speech Challenge', [SPCH])  // and SCSP unknown
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
