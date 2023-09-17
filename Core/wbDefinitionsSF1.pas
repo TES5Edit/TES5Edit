@@ -19078,7 +19078,16 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(MAAM, 'Melee Aim Assist Model', [
     wbEDID,
-    wbUnknown(SNAM)
+    wbStruct(SNAM, 'Data', [
+      wbFloat('Outer Cone Angle Degrees'),
+      wbFloat('Inner Cone Angle Degrees'),
+      wbFloat('Steering Degrees Per Sec'),
+      wbFloat('Snap Steering Multiplier Outer Ring'),
+      wbFloat('Snap Steering Multiplier Inner Ring'), { default 'MeleeBase_AA' entry has a value of -8000, this seems to be read as absolute by the engine }
+      wbFloat('Max Aim Assist Distance'),
+      wbInteger('Melee Aim Assist Enabled', itU8, wbBoolEnum),
+      wbFloat('Unknown') { possibly 'Move Follow Degrees Per Sec'? couldn't figre out what this is doing }
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
