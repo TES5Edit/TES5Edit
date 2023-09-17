@@ -13544,7 +13544,7 @@ begin
       wbFormIDCk(VENC, 'Unknown', [NULL, KYWD]),
 
       wbRStruct('Dialogue Choices', [
-        wbInteger(DTGT, 'Unknown', itS32),      // "dialogue target"?
+        wbInteger(DTGT, 'Dialogue Target Actor', itS32), // as an alias ID
         wbRStructs('Dialogue List', 'Item', [
           wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),
           wbFormIDCk(PPST, 'Unknown', [NULL, KYWD]),
@@ -13558,8 +13558,8 @@ begin
         wbUnknown(ACBS)
       ], []),
 
-      wbUnknown(HTID),
       wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
+      wbUnknown(HTID),
 
       {
       wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
