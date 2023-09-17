@@ -13644,6 +13644,9 @@ begin
     Result := srValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(srDef) then
     srDef.ToString(Result, Self, ctToStr);
+
+  if wbShowDataSizeInValue then
+    Result := Result + ' {DataSize: ' + GetDataSize.ToString + '}';
 end;
 
 function TwbSubRecord.GetValueDef: IwbValueDef;
@@ -21038,6 +21041,9 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
   Result := vbValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
+
+  if wbShowDataSizeInValue then
+    Result := Result + ' {DataSize: ' + GetDataSize.ToString + '}';
 end;
 
 function TwbValueBase.GetValueDef: IwbValueDef;

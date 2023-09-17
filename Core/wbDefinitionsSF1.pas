@@ -99,7 +99,7 @@ const
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
-    'BMMP', 'PDCL', 'PKIN'
+    'BMMP', 'PDCL', 'PKIN', 'GBFM'
   ];
 
 var
@@ -291,6 +291,7 @@ function wbMOLM(const aSignature: TwbSignature): IwbSubRecordDef;
 begin
   Result :=
     wbArrayS(aSignature, 'Material Swaps', wbFormIDCk('Layered Material Swap', [LMSW]), -2);
+  Result.IncludeFlag(dfMergeIfMultiple);
 end;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
@@ -8854,7 +8855,7 @@ begin
           {13 ptCell}
           wbFormIDCkNoReach('Cell', [CELL]),
           {14 ptClass}
-          wbFormIDCkNoReach('Class', [CLAS]),
+          wbFormIDCkNoReach('Class', [CLAS, NULL]),
           {15 ptCrimeType}
           wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {16 ptCriticalStage}
@@ -9624,7 +9625,7 @@ begin
         ], []),
         //BGSFormLinkData_Component
         wbRStruct('Component Data', [
-          wbUnknown(ITMC),
+          wbInteger(ITMC, 'Count', itU32),
           wbRArray('Unknown', wbRStruct('Unknown', [
             wbFormIDCk(FLKW,'Keyword', [KYWD]),
             wbFormID(FLFM)
@@ -13374,7 +13375,16 @@ begin
       {0x00000200} 'Unknown 9',
       {0x00000400} 'Unknown 10',
       {0x00000800} 'Disable Dialogue Camera',
-      {0x00001000} 'No Follower Idle Chatter'
+      {0x00001000} 'No Follower Idle Chatter',
+      {0x00002000} 'Unknown 13',
+      {0x00004000} 'Unknown 14',
+      {0x00008000} 'Unknown 15',
+      {0x00010000} 'Unknown 16',
+      {0x00020000} 'Unknown 17',
+      {0x00040000} 'Unknown 18',
+      {0x00080000} 'Unknown 19',
+      {0x00100000} 'Unknown 20',
+      {0x00200000} 'Unknown 21'
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
@@ -13388,13 +13398,15 @@ begin
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
-          {0x0004} 'Start - Inherit In Templated Scenes'
+          {0x0004} 'Start - Inherit In Templated Scenes',
+          {0x0008} 'Unknown 3',
+          {0x0010} 'Unknown 4'
         ])),
         wbStruct(SCQS, 'Set Parent Quest Stage', [
           wbInteger('On Start', itS16),
           wbInteger('On Completion', itS16)
         ]),
-        wbUnknown(SPMV),
+        wbEmpty(SPMV, 'Unknown'),
         wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
@@ -13404,7 +13416,9 @@ begin
         'No Player Activation',
         'Optional',
         'Run Only Scene Packages',
-        'No Command State'
+        'No Command State',
+        'Unknown 4',
+        'Unknown 5'
       ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
         'Death Pause',
@@ -13414,7 +13428,9 @@ begin
         'Dialogue Pause',
         'Dialogue End',
         'OBS_COM Pause',
-        'OBS_COM End'
+        'OBS_COM End',
+        'Unknown 8',
+        'Unknown 9'
       ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
@@ -13428,7 +13444,8 @@ begin
         {6} 'Radio',
         {7} 'Camera Direction',
         {8} 'Unknown',
-        {9} 'NPC Anim'
+        {9} 'NPC Anim',
+        {10}'Unknown 10'
       ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbString(SNOT, 'Scene Notes'),
@@ -13481,56 +13498,71 @@ begin
       ], []),
 
       wbRStructs('Unknown', 'Unknown', [
-        wbFormIDCk(BNAM, 'NPC Anim', [IDLE]),
-        wbUnknown(STRV),
-        wbUnknown(VCLR),
-        wbUnknown(FLMV),
-        wbUnknown(FLAV),
-        wbUnknown(QUAL),
-        wbUnknown(SPOR),
-        wbUnknown(OCOR),
-        wbUnknown(SOFT),
-        wbUnknown(DOFT),
-        wbUnknown(LVCR),
+        wbFormIDCk(BNAM, 'NPC Anim', [NULL, IDLE]),
+        wbString(STRV),
+        wbUnknown(VCLR, 4).SetRequired(True),
+        wbFormIDCk(FLMV, 'Unknown', [NULL, KYWD]).SetRequired(True),
+        wbFormIDCk(FLAV, 'Unknown', [NULL, KYWD]).SetRequired(True),
+        wbEmpty(QUAL, 'Unknown'),
+        wbEmpty(SPOR, 'Unknown'),
+        wbUnknown(OCOR).SetRequired(True), /// required but always empty?
+        wbEmpty(SOFT, 'Unknown'),
+        wbEmpty(DOFT, 'Unknown'), // only one occurrence, empty
+        wbFloat(LVCR).SetRequired(True),
         wbCTDAs,
-        wbUnknown(ATAC),
-        wbUnknown(PLRL),
-        wbUnknown(SHRT),
-        wbUnknown(XNAM)
+        wbUnknown(ATAC, 4).SetRequired(True),
+        wbEmpty(PLRL, 'Unknown'),
+        wbEmpty(SHRT, 'Unknown'),
+        wbUnknown(XNAM).SetRequired(True) // required but always empty?
       ], []),
 
       wbRStruct('Unknown', [
         wbUnknown(SNAM),
         wbUnknown(UNAM),
-        wbUnknown(LNAM),
-        wbFormIDCk(CNAM, 'Camera Param', [CAMS])
+        wbUnknown(LNAM)
       ], []),
 
-      wbRArray('Unknown', wbFormIDCk(PNAM, 'Param', [PACK])),
+      wbEmpty(NVCI, 'Unknown'),
+      wbFormIDCk(CNAM, 'Camera Shot', [NULL, CAMS]),
+      wbEmpty(DNAM, 'Unknown'),
 
-      wbUnknown(NVCI),
-      wbUnknown(CNAM),
-      wbUnknown(DNAM),
-
-      wbUnknown(ALLA),
+      wbInteger(ALLA, 'Unknown', itS32),
 
       wbRStruct('Unknown', [
-        wbUnknown(REPL),
-        wbUnknown(HNAM),
-        wbUnknown(VCLR),
-        wbUnknown(VNML),
+        wbFormIDCk(REPL, 'Unknown', [ACHR, IMAD, REFR, NULL]),
+        wbFloat(HNAM).SetRequired(True),
+        wbFloat(VCLR).SetRequired(True),
+        wbFloat(VNML).SetRequired(True),
         wbUnknown(LVCR),
         wbUnknown(BTXT),
-        wbUnknown(ATXT),
-        wbUnknown(VTXT),
-        wbUnknown(AIDT),
-        wbUnknown(FLMV),
-        wbUnknown(MPCD),
-        wbUnknown(VNAM),
+        wbEmpty(ATXT, 'Unknown'),
+        wbEmpty(VTXT, 'Unknown'),
+        wbEmpty(AIDT, 'Unknown'),
+        wbInteger(FLMV, 'Flags', itU32, wbFlags([
+          {0x00000001} 'Unknown 0',
+          {0x00000002} 'Unknown 1',
+          {0x00000004} 'Unknown 2',
+          {0x00000008} 'Unknown 3',
+          {0x00000010} 'Unknown 4',
+          {0x00000020} 'Unknown 5',
+          {0x00000040} 'Unknown 6',
+          {0x00000080} 'Unknown 7',
+          {0x00000100} 'Unknown 8',
+          {0x00000200} 'Unknown 9',
+          {0x00000400} 'Unknown 10',
+          {0x00000800} 'Unknown 11',
+          {0x00001000} 'Unknown 12',
+          {0x00002000} 'Unknown 13',
+          {0x00004000} 'Unknown 14',
+          {0x00008000} 'Unknown 15',
+          {0x00010000} 'Unknown 16'
+        ])).SetRequired(True),
+        wbEmpty(MPCD, 'Unknown'),
+        wbEmpty(VNAM, 'Unknown'),
         wbSoundReference(WED0),
-        wbUnknown(BIPL),
-        wbUnknown(LVLO),
-        wbUnknown(XNAM)
+        wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]).SetRequired(True),
+        wbInteger(LVLO, 'Unknown', itS32).SetRequired(True),
+        wbEmpty(XNAM, 'Unknown')
       ], []),
 
 
@@ -13540,27 +13572,28 @@ begin
 
       wbSoundReference(WED0),
 
-      wbHNAMHNAM,
+      wbHNAMHNAM, // reported as always empty
 
       wbSoundReference(WED0),
 
-      wbUnknown(VENC),
+      wbFormIDCk(VENC, 'Unknown', [NULL, KYWD]),
 
-      wbRStruct('Unknown', [
-        wbUnknown(DTGT),      // "dialogue target"?
-        wbRStructs('Unknown', 'Unknown', [
+      wbRStruct('Dialogue Choices', [
+        wbInteger(DTGT, 'Dialogue Target Actor', itS32), // as an alias ID
+        wbRStructs('Dialogue List', 'Item', [
           wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),
-          wbUnknown(PPST),
-          wbUnknown(PNST),
-          wbUnknown(PASP),
-          wbUnknown(PAPI),
-          wbUnknown(PAPN),
-          wbFormIDCk(ESCS, 'NPC Response', [DIAL]).SetRequired(True)
+          wbFormIDCk(PPST, 'Unknown', [NULL, KYWD]),
+          wbFormIDCk(PNST, 'Unknown', [NULL, KYWD]),
+          wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),
+          wbInteger(PAPI, 'Phase Index', itU32),
+          wbString(PAPN),
+          wbFormIDCk(ESCS, 'NPC Response', [DIAL, NULL]).SetRequired(True)
         ], []),
         wbUnknown(ATTR),
-        wbUnknown(ACBS)
+        wbEmpty(ACBS, 'Unknown')
       ], []),
 
+      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
       wbUnknown(HTID),
 
       {
@@ -13617,19 +13650,19 @@ begin
     wbInteger(XNAM, 'Index', itU32),
     wbUnknown(SCPI),    // seems to be 1-100 - skill req? percentage increase?
     wbUnknown(JNAM),
-    wbUnknown(SCPP),
-    wbUnknown(DEVT),
-    wbUnknown(SCSP),
-    wbUnknown(SPMA),
-    wbUnknown(SPEX),
+    wbFormIDCk(SCPP, 'Unknown', [NULL, SCEN]),
+    wbEmpty(DEVT, 'Unknown'),
+    wbEmpty(SCSP, 'Unknown'),
+    wbArray(SPMA, 'Unknown', wbFormIDCk('Unknown', [SCEN])),
+    wbArray(SPEX, 'Unknown', wbFormIDCk('Unknown', [SCEN])),
     wbUnknown(SPRK), // seems to correlate with CF05_Guard_SpeechChallenge*, maybe minimum level of skill?
     wbUnknown(SPRW),
-    wbUnknown(SPRP),
-    wbUnknown(SPDF),
-    wbUnknown(SPPQ),
+    wbEmpty(SPRP, 'Unknown'),
+    wbEmpty(SPDF, 'Unknown'),
+    wbEmpty(SPPQ, 'Unknown'),
     wbArray(SPKW, 'Keywords', wbFormIDCk('Keyword',[KYWD])),
     wbFormIDCk(SPPK, 'Perk', [PERK]),
-    wbUnknown(SPKY)
+    wbArray(SPKY, 'Keywords', wbFormIDCk('Keyword',[KYWD]))
   ]);
 
   (* still exists in game code, but not in Starfield.esm
@@ -14305,26 +14338,26 @@ begin
       wbByteArray(NAM9, 'Text Hash'),
       wbFormIDCk(BNAM, 'Unknown', [NULL, IDLE]),
       wbString(STRV),
-      wbFormID(VCLR),
+      wbFormIDCk(VCLR, 'Unknown', [NULL, KYWD]),
       wbUnknown(FLMV),
       wbUnknown(FLAV),
       wbEmpty(QUAL, 'Unknown'), // order between QUAL
       wbEmpty(DOFT, 'Unknown'), // and DOFT is unknown
-      wbUnknown(DPLT),
-      wbUnknown(OCOR),
-      wbUnknown(LVCR),
+      wbEmpty(DPLT, 'Unknown'),
+      wbEmpty(OCOR, 'Unknown'),
+      wbFloat(LVCR),
       wbUnknown(ATAC),
       wbEmpty(PLRL, 'Unknown'),
       wbEmpty(XNAM, 'Unknown'),
       wbHNAMHNAM,
-      wbUnknown(RVSH)
+      wbSoundReference(RVSH)
     ], [])),
     wbCTDAs,
     wbLStringKC(RNAM, 'Prompt', 0, cpTranslate),
     wbFormIDCk(ANAM, 'Speaker', [NPC_]),
     wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
     wbUnknown(INTV),
-    wbUnknown(WED0),
+    wbSoundReference(WED0),
 //    wbInteger(ALFA, 'Forced Alias', itS32),
 //    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
 //    wbInteger(GREE, 'Greet Distance', itU32),
@@ -14353,7 +14386,7 @@ begin
       'Force'
     ])),
     wbUnknown(COCT), // container count? never followed by CNTO in Starfield.esm
-    wbFormID(NAM8), // order between COCT and NAM8 unknown
+    wbFormIDCk(NAM8, 'Unknown', [AFFE]), // order between COCT and NAM8 unknown
     wbFormIDCk(PERK, 'Perk', [PERK]),             // order between PERK
     wbFormIDCk(SCSP, 'Speech Challenge', [SPCH])  // and SCSP unknown
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
@@ -15388,23 +15421,63 @@ begin
     wbStruct(ONA2, 'Unknown', [
       wbInteger('Flags', itU32, wbFlags([])),
 
-      wbIsFlag(0, wbInteger('Unknown', itS8)),
+      wbIsFlag(0, wbStruct('Unknown 0', [
+        wbInteger('Unknown', itS8)
+      ])),
 
-      wbIsFlag(1, wbStruct('Unknown', [
+      wbIsFlag(1, wbStruct('Unknown 1', [
         wbFloat,
         wbFloat,
         wbFloat,
         wbFloat
       ])),
 
-      wbIsFlag(2, wbUnknown(4)),
-
-      wbHasNoFlags(wbStruct('Unknown', [
-        wbUnknown
+      wbIsFlag(2, wbStruct('Unknown 2', [
+        wbFloat
       ])),
 
-      wbUnknown
+      wbIsFlag(3, wbStruct('Unknown 3', [
+        wbFloat,
+        wbFormId('Unknown')
+      ])),
 
+      wbIsFlag(4, wbStruct('Unknown 4', [
+        wbUnknown(8),
+        wbUnknown(8)
+      ])),
+
+      wbIsFlag(5, wbStruct('Unknown 5', [
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat
+      ])),
+
+      wbIsFlag(6, wbStruct('Unknown 6', [
+        wbFormId('Material'),
+        wbSoundReference(),
+        wbSoundReference(),
+        wbFormId('Unknown'),
+        wbFormId('Unknown'),
+        wbFormId('Unknown'),
+        wbFloat,
+        wbUnknown(1),
+        wbUnknown(1),
+        wbUnknown(4)
+      ])),
+
+      wbIsFlag(7, wbStruct('Unknown 7', [
+        wbUnknown(1),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4)
+      ]))
       (*
 
       {  0} wbByteArray('Unknown', 25),
@@ -15952,7 +16025,7 @@ begin
 
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
-          wbFormID(ALFR, 'Forced Reference'),
+          wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR]),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
             wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
@@ -15969,7 +16042,7 @@ begin
             $0003, '3'
           ])).SetDefaultNativeValue(1),
           wbRStruct('Create Reference to Object', [
-            wbFormID(ALCO, 'Object'),
+            wbFormIDCk(ALCO, 'Object', [ACTI,ARMO,BOOK,CELL,CONT,DOOR,FLOR,FURN,GBFM,IDLM,KEYM,LVLI,LVSC,MISC,NPC_,PKIN,SOUN,STAT,WEAP]), // yee haw
             wbStruct(ALCA, 'Alias', [
               wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
               wbInteger('Create', itU16, wbEnum([] ,[
@@ -15997,7 +16070,7 @@ begin
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired(True)
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFormIDCk(ALNR, 'Ref Type', [LCRT]),
+          wbFormIDCk(ALNR, 'Ref Type', [LCRT, NULL]),
           wbCTDAs,
           wbFormIDCk(ALUB, 'Unknown', [GBFM]), // starfield.esm only has instances of GBFM but it may support any base type object
           wbKeywords,
@@ -16095,7 +16168,7 @@ begin
 //    wbString(SNAM, 'SWF File'),
 
     wbRStruct('Mission Board Info', [
-      wbFormIDCk(QMTY, 'Mission Type Keyword', [KYWD]),
+      wbFormIDCk(QMTY, 'Mission Type Keyword', [KYWD, NULL]),
       wbLStringKC(QMSU, 'Description', 0, cpTranslate),
       wbRArray('Info Panel', wbRStruct('Panel Item', [
         wbLStringKC(QMDT, 'Header', 0, cpTranslate),
@@ -19084,7 +19157,16 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(MAAM, 'Melee Aim Assist Model', [
     wbEDID,
-    wbUnknown(SNAM)
+    wbStruct(SNAM, 'Data', [
+      wbFloat('Outer Cone Angle Degrees'),
+      wbFloat('Inner Cone Angle Degrees'),
+      wbFloat('Steering Degrees Per Sec'),
+      wbFloat('Snap Steering Multiplier Outer Ring'),
+      wbFloat('Snap Steering Multiplier Inner Ring'), { default 'MeleeBase_AA' entry has a value of -8000, this seems to be read as absolute by the engine }
+      wbFloat('Max Aim Assist Distance'),
+      wbInteger('Melee Aim Assist Enabled', itU8, wbBoolEnum),
+      wbFloat('Unknown') { possibly 'Move Follow Degrees Per Sec'? couldn't figre out what this is doing }
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
