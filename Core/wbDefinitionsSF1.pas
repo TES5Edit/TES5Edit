@@ -13709,7 +13709,7 @@ begin
     wbEmpty(SPDF, 'Unknown'),
     wbEmpty(SPPQ, 'Unknown'),
     wbArray(SPKW, 'Keywords', wbFormIDCk('Keyword',[KYWD])),
-    wbFormIDCk(SPPK, 'Perk', [PERK]),
+    wbArray(SPPK, 'Perks', wbFormIDCk('Perk', [PERK])),
     wbArray(SPKY, 'Keywords', wbFormIDCk('Keyword',[KYWD]))
   ]);
 
