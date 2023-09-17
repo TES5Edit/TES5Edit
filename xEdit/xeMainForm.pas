@@ -18020,9 +18020,6 @@ var
 begin
   UserWasActive := True;
 
-  if not wbEditAllowed then
-    Exit;
-
   Column := Pred(vstView.FocusedColumn);
 
   if Column > High(ActiveRecords) then
@@ -18049,6 +18046,9 @@ begin
 
     case Key of
       VK_INSERT: begin
+        if not wbEditAllowed then
+          Exit;
+
         pmuViewPopup(nil);
         Key := 0;
         if mniViewAdd.Visible and mniViewAdd.Enabled then begin
@@ -18057,6 +18057,9 @@ begin
         end;
       end;
       VK_UP: begin
+        if not wbEditAllowed then
+          Exit;
+
         LockProcessMessages;
         try
           if not Element.CanMoveUp then
@@ -18071,6 +18074,9 @@ begin
         end;
       end;
       VK_DOWN: begin
+        if not wbEditAllowed then
+          Exit;
+
         LockProcessMessages;
         try
           if not Element.CanMoveDown then
@@ -18095,6 +18101,9 @@ begin
     end;
 
     if not Element.IsEditable then
+      Exit;
+
+    if not wbEditAllowed then
       Exit;
 
     case Key of
@@ -20530,7 +20539,11 @@ begin
                   if (fsIsHardcoded in _File.FileStates) or not _File.IsNotPlugin then begin
                     try
                       OnlyLoad := False;
-
+                      if (wbGameMode = gmSF1) and
+                         (SizeOf(Pointer) = 4) and
+                         (fsIsGameMaster in _File.FileStates)
+                      then
+                        OnlyLoad := True;
                       if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
                         if OnlyLoad then
                           s := 'loading'

@@ -4985,19 +4985,12 @@ begin
     end;
   end;
 
-  if (fsIsHardcoded in flStates) and (wbGameMode > gmTES3) then begin
-    IsInternal := wbEditAllowed;
-    wbEditAllowed := True;
-    try
-      if wbBeginInternalEdit(True) then try
-        ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
-      finally
-        wbEndInternalEdit;
-      end;
+  if (fsIsHardcoded in flStates) and (wbGameMode > gmTES3) then
+    if wbBeginInternalEdit(True) then try
+      ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
     finally
-      wbEditAllowed := IsInternal;
+      wbEndInternalEdit;
     end;
-  end;
 
   flProgress('Processing completed');
   flLoadFinished := True;
@@ -5489,10 +5482,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
-
   if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+
     Def := GetDef;
     if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
       Exit;
@@ -5626,6 +5619,14 @@ var
   i: Integer;
   SelfRef : IwbContainerElementRef;
 begin
+  var lDef := GetDef;
+  if Assigned(lDef) and (dfExcludeFromBuildRef in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if Assigned(lValueDef) and (dfExcludeFromBuildRef in lValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
   Include(cntStates, csRefsBuild);
@@ -5644,10 +5645,11 @@ var
   ValueDef  : IwbValueDef;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
 
   if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
+
     Def := GetDef;
     if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
       Exit;
@@ -7621,8 +7623,9 @@ function TwbMainRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, 
 var
   SelfRef   : IwbContainerElementRef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
     Exit;
@@ -7748,8 +7751,9 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
     if aIndex <> Low(Integer) then
@@ -7896,6 +7900,9 @@ procedure TwbMainRecord.BuildRef;
   end;
 
 begin
+  if dfExcludeFromBuildRef in mrDef.DefFlags then
+    Exit;
+
   if mrsNoUpdateRefs in mrStates then
     Exit;
 
@@ -7985,6 +7992,9 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   Result := False;
+
+  if dfExcludeFromBuildRef in mrDef.DefFlags then
+    Exit;
 
   if mrsBuildingRef in mrStates then
     Exit;
@@ -8155,11 +8165,13 @@ end;
 function TwbMainRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if dfInternalEditOnly in mrDef.DefFlags then
       Exit;
+  end;
 
   if GetIsDeleted then
     if aIndex <> Low(Integer) then
@@ -8913,7 +8925,7 @@ begin
   Include(cntStates, csInitOnce);
 
   if wbCanSortINFO and wbSortINFO then
-    if not GetIsDeleted and wbAllowInternalEdit then begin
+    if not GetIsDeleted and wbBeginInternalEdit(False) then try
       if wbFillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
           GroupRecordInternal.Sort(True);
@@ -8922,6 +8934,8 @@ begin
           if Supports(GetChildGroup, IwbGroupRecordInternal, GroupRecordInternal) then
             GroupRecordInternal.Sort(True);
         end;
+    finally
+      wbEndInternalEdit;
     end;
 end;
 
@@ -11849,8 +11863,12 @@ end;
 
 procedure TwbMainRecord.SetEditValue(const aValue: string);
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+    if dfInternalEditOnly in mrDef.DefFlags then
+      Exit;
+  end;
 
   if wbDisplayLoadOrderFormID then begin
     SetLoadOrderFormID(TwbFormID.FromStr(aValue));
@@ -12106,8 +12124,12 @@ end;
 
 procedure TwbMainRecord.SetNativeValue(const aValue: Variant);
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+    if dfInternalEditOnly in mrDef.DefFlags then
+      Exit;
+  end;
 
   if wbDisplayLoadOrderFormID then begin
     SetLoadOrderFormID(TwbFormID.FromVar(aValue));
@@ -12825,8 +12847,10 @@ var
   FlagsDef   : IwbFlagsDef;
   ValueDef   : IwbValueDef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be modified.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be modified.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
 
@@ -12930,8 +12954,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -13047,6 +13073,14 @@ procedure TwbSubRecord.BuildRef;
 var
   SelfRef: IwbElement;
 begin
+  var lDef := GetDef;
+  if Assigned(lDef) and (dfExcludeFromBuildRef in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if Assigned(lValueDef) and (dfExcludeFromBuildRef in lValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
 
   if Assigned(srDef) then begin
@@ -13064,11 +13098,13 @@ var
   ArrayDef: IwbArrayDef;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if Assigned(srDef) and (dfInternalEditOnly in srDef.DefFlags) then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -13805,32 +13841,26 @@ begin
     Exit(False);
 
   var lOldElementCount := GetElementCount;
-  var lWasEditAllowed := wbEditAllowed;
-  wbEditAllowed := True;
+  if not wbBeginInternalEdit(True) then
+    Exit(False);
   try
-    if not wbBeginInternalEdit(True) then
-      Exit(False);
+    BeginUpdate;
     try
-      BeginUpdate;
-      try
-        var lBasePtr := lSourceDataContainer.DataBasePtr;
-        ArrayDoInit(srValueDef, Self, lBasePtr, lSourceDataContainer.DataEndPtr, srArraySizePrefix);
-        var lNewElementCount := GetElementCount;
-        if lNewElementCount > lOldElementCount then begin
-          InvalidateStorage;
-          for var lElementIdx := lOldElementCount to Pred(lNewElementCount) do
-            (GetElement(lElementIdx) as IwbElementInternal).Modified := True;
-          UpdateStorageFromElements;
-        end;
-        Result := True;
-      finally
-        EndUpdate;
+      var lBasePtr := lSourceDataContainer.DataBasePtr;
+      ArrayDoInit(srValueDef, Self, lBasePtr, lSourceDataContainer.DataEndPtr, srArraySizePrefix);
+      var lNewElementCount := GetElementCount;
+      if lNewElementCount > lOldElementCount then begin
+        InvalidateStorage;
+        for var lElementIdx := lOldElementCount to Pred(lNewElementCount) do
+          (GetElement(lElementIdx) as IwbElementInternal).Modified := True;
+        UpdateStorageFromElements;
       end;
+      Result := True;
     finally
-      wbEndInternalEdit;
+      EndUpdate;
     end;
   finally
-    wbEditAllowed := lWasEditAllowed;
+    wbEndInternalEdit;
   end;
 end;
 
@@ -13961,8 +13991,10 @@ var
   SelfRef : IwbContainerElementRef;
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
@@ -14001,8 +14033,10 @@ var
   OldValue, NewValue: Variant;
   OldLinksTo: IwbElement;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
@@ -14048,8 +14082,10 @@ var
   OldValue, NewValue: Variant;
   SelfRef : IwbContainerElementRef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
@@ -16385,8 +16421,10 @@ begin
   if Result then
     Exit;
 
-  if not wbEditAllowed then
-    Exit;
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
+  end;
 
   if not GetIsEditable then
     Exit;
@@ -17721,8 +17759,10 @@ var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -17777,8 +17817,11 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
+
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -17882,11 +17925,12 @@ end;
 function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if dfInternalEditOnly in arcDef.DefFlags then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -18240,8 +18284,10 @@ function TwbSubRecordStruct.AddIfMissingInternal(const aElement: IwbElement; aAs
 var
   SelfRef   : IwbContainerElementRef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -18302,8 +18348,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   if aIndex = Low(Integer) then begin
 
@@ -18374,11 +18422,12 @@ end;
 function TwbSubRecordStruct.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if dfInternalEditOnly in srcDef.DefFlags then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -18950,8 +18999,10 @@ var
   ArrayDef  : IwbArrayDef;
   ValueDef  : IwbValueDef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be modified.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be modified.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
 
@@ -19009,8 +19060,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False); //function will only either replace all elements or add new elements, sort order is irrelevant
@@ -19096,11 +19149,12 @@ var
   ArrayDef: IwbArrayDef;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if Assigned(vbValueDef) and (dfInternalEditOnly in vbValueDef.DefFlags) then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -19933,8 +19987,10 @@ var
   OldValue, NewValue: Variant;
   lValue: string;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -19964,8 +20020,10 @@ procedure TwbValue.SetNativeValue(const aValue: Variant);
 var
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -20388,8 +20446,10 @@ var
   s: string;
   c: Char;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   if aValue = '1' then
     c := '1'
@@ -20409,8 +20469,10 @@ var
   s: string;
   c: Char;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   if aValue = True then
     c := '1'
@@ -20887,6 +20949,14 @@ procedure TwbValueBase.BuildRef;
 var
   SelfRef: IwbElement;
 begin
+  var lDef := GetDef;
+  if Assigned(lDef) and (dfExcludeFromBuildRef in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if Assigned(lValueDef) and (dfExcludeFromBuildRef in lValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
 
   inherited;
@@ -21170,8 +21240,10 @@ procedure TwbValueBase.SetEditValue(const aValue: string);
 var
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -21194,8 +21266,10 @@ var
   OldValue, NewValue: Variant;
   OldLinksTo: IwbElement;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -21220,8 +21294,10 @@ procedure TwbValueBase.SetNativeValue(const aValue: Variant);
 var
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -21272,8 +21348,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);

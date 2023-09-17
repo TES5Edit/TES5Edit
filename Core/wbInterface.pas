@@ -193,6 +193,7 @@ var
   wbCollapseBenignArray              : Boolean    = True;
   wbCollapseRGBA                     : Boolean    = True;
   wbCollapseVec3                     : Boolean    = True;
+  wbCollapsePosRot                   : Boolean    = True;
   wbCollapseScriptData               : Boolean    = True;
   wbCollapseHeadParts                : Boolean    = True;
   wbCollapseBodyParts                : Boolean    = True;
@@ -207,6 +208,8 @@ var
   wbCollapseTimeInterpolators        : Boolean    = True;
   wbCollapseTimeInterpolatorsMultAdd : Boolean    = True;
   wbCollapseBluePrintItem            : Boolean    = True;
+  wbCollapsePlacement                : Boolean    = True;
+  wbCollapseVertices                 : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
@@ -615,6 +618,7 @@ type
     dfUseLoadOrder,
     dfMustBeUnion,
     dfMergeIfMultiple,
+    dfExcludeFromBuildRef,
     dfSummaryMembersNoName,
     dfSummaryNoName,
     dfSummaryNoSortKey,
@@ -4850,7 +4854,7 @@ end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := wbEditAllowed and (wbAllowInternalEdit or aForce) and not _BlockInternalEdit;
+  Result := wbEditAllowed or ((wbAllowInternalEdit or aForce) and not _BlockInternalEdit);
   if Result then
     Inc(_InternalEditCount);
 end;
@@ -11357,6 +11361,9 @@ procedure TwbIntegerDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: Iwb
 var
   Value       : Int64;
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   if Assigned(inFormater) then
     if Int64(NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) >= GetExpectedLength then begin
       case inType of
@@ -14937,6 +14944,9 @@ var
   _File: IwbFile;
   Rec: IwbMainRecord;
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   U32 := aInt;
 
   _File := aElement._File;
@@ -15144,6 +15154,9 @@ end;
 
 procedure TwbFormIDDefFormater.BuildRef(aInt: Int64; const aElement: IwbElement);
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   if ((aInt < $800) or (aInt = $FFFFFFFF)) and IsValid('ACVA') then
     Exit;
 
@@ -17601,6 +17614,9 @@ procedure TwbResolvableDef.BuildRef(aBasePtr, aEndPtr: Pointer; const aElement: 
 var
   ValueDef : IwbValueDef;
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   inherited;
   ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
@@ -18769,6 +18785,9 @@ var
   _File : IwbFile;
   Rec   : IwbMainRecord;
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   _File := aElement._File;
   if Assigned(_File) then begin
     Rec := _File.RecordByEditorID[ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey)];
@@ -19185,6 +19204,9 @@ var
   key        : Integer;
   val        : Integer;
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   // First two bits are the key:
   key := aInt shr 22;
   val := aInt and $003FFFFF;
@@ -19384,6 +19406,9 @@ procedure TwbIntegerDefFormaterUnion.BuildRef(aInt     : Int64;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
+  if dfExcludeFromBuildRef in defFlags then
+    Exit;
+
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
     IntegerDef.BuildRef(aInt, aElement);

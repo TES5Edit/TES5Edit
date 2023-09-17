@@ -253,7 +253,6 @@ var
   wbNavmeshVertices: IwbArrayDef;
   wbNavmeshTriangles: IwbArrayDef;
   wbNavmeshEdgeLinks: IwbArrayDef;
-  wbNavmeshDoorTypeEnum: IwbEnumDef;
   wbNavmeshDoorTriangles: IwbArrayDef;
   wbNavmeshCoverArray: IwbArrayDef;
   wbNavmeshCoverTriangleMap: IwbArrayDef;
@@ -271,18 +270,10 @@ function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(OBND, 'Object Bounds', [
-      wbFloat('X1'),
-      wbFloat('Y1'),
-      wbFloat('Z1'),
-      wbFloat('X2'),
-      wbFloat('Y2'),
-      wbFloat('Z2')
+      wbVec3('Min', ''),
+      wbVec3('Max', '')
     ], cpNormal, aRequired)
-    .SetSummaryKeyOnValue([0, 1, 2, 3, 4, 5])
-    .SetSummaryPrefixSuffixOnValue(0, '(', '')
-    .SetSummaryPrefixSuffixOnValue(2, '', ')')
-    .SetSummaryPrefixSuffixOnValue(3, '(', '')
-    .SetSummaryPrefixSuffixOnValue(5, '', ')')
+    .SetSummaryKeyOnValue([0, 1])
     .SetSummaryDelimiterOnValue(', ')
     .IncludeFlagOnValue(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
@@ -301,17 +292,16 @@ begin
   Result :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName'),
-      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+//      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMOLM(MOLM),
       wbFLLD,
-      wbUnknown(XFLG),
-      wbMODC, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
-      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
-      wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+      wbUnknown(XFLG)
+//      wbMODC, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+//      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+//      wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
     ], [], cpNormal, aRequired, aDontShow)
-    .SetSummaryKey([2])
+    .SetSummaryKey([1])
     .IncludeFlag(dfSummaryMembersNoName)
-    //.IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels)
     .IncludeFlag(dfAllowAnyMember);
 end;
@@ -4057,7 +4047,7 @@ begin
   if not Supports(aElement, IwbContainer, Container) then
     Exit;
 
-    if wbBeginInternalEdit then try
+  if wbBeginInternalEdit then try
     Container.RemoveElement(OFST);
   finally
     wbEndInternalEdit;
@@ -4068,45 +4058,32 @@ begin
   end;
 end;
 
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
-  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
-  begin
-    Result := (aValue < -aRange) or (aValue > aRange);
-  end;
+procedure wbRemoveCLSZ(const aElement: IwbElement);
 var
-  MainRecord: IwbMainRecord;
   Container: IwbContainer;
+  rCLSZ: IwbRecord;
 begin
+  if not wbRemoveOffsetData then
+    Exit;
+
+  if not Supports(aElement, IwbContainer, Container) then
+    Exit;
+
   if wbBeginInternalEdit then try
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-//    if MainRecord.ElementExists['Unused RNAM'] then
-//      MainRecord.RemoveElement('Unused RNAM');
-
-    //if MainRecord.ElementExists['World Default Level Data'] then
-    //  MainRecord.RemoveElement('World Default Level Data');
-
-    //if MainRecord.ElementExists['MHDT'] then
-    //  MainRecord.RemoveElement('MHDT');
-
-    if MainRecord.ElementExists['CLSZ'] then
-      MainRecord.RemoveElement('CLSZ');
-{
-    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
-    // CK can occasionally set them wrong, so make a warning
-    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
-      if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
-      then
-        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
-}
+    Container.RemoveElement(CLSZ);
   finally
     wbEndInternalEdit;
+  end else begin
+    rCLSZ := Container.RecordBySignature[CLSZ];
+    if Assigned(rCLSZ) then
+      Container.RemoveElement(rCLSZ);
   end;
+end;
+
+procedure wbWRLDAfterLoad(const aElement: IwbElement);
+begin
+  wbRemoveOFST(aElement);
+  wbRemoveCLSZ(aElement);
 end;
 
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
@@ -4548,211 +4525,6 @@ begin
   Result := Cardinal(MainRecord.ElementNativeValues['ACBS\Use Template Actors']) = 0;
 end;
 
-procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if Assigned(Container.ElementBySignature['KSIZ']) then
-      Exit;
-
-  if Assigned(Container.ElementBySignature['KWDA']) then
-    Container.ElementBySignature['KWDA'].Remove;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbReplaceBODTwithBOD2(const aElement: IwbElement);
-var
-  MainRecord    : IwbMainRecord;
-  ContainerBOD2 : IwbContainerElementRef;
-  ContainerBODT : IwbContainerElementRef;
-begin
-  Exit; {>>> Looks like causes problems with Dawnguard.esm <<<}
-
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if not Supports(MainRecord.ElementBySignature[BODT], IwbContainerElementRef, ContainerBODT) then
-      Exit;
-
-    if not Supports(MainRecord.Add('BOD2', True), IwbContainerElementRef, ContainerBOD2) then
-      Exit;
-
-    ContainerBOD2.ElementNativeValues['First Person Flags'] := ContainerBODT.ElementNativeValues['First Person Flags'];
-    ContainerBOD2.ElementNativeValues['Armor Type'] := ContainerBODT.ElementNativeValues['Armor Type'];
-    MainRecord.RemoveElement(BODT);
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbARMOAfterLoad(const aElement: IwbElement);
-begin
-  wbRemoveEmptyKWDA(aElement);
-  wbReplaceBODTwithBOD2(aElement);
-end;
-
-procedure wbARMAAfterLoad(const aElement: IwbElement);
-{var
-  MainRecord    : IwbMainRecord;}
-begin
-  wbReplaceBODTwithBOD2(aElement);
-  {if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-    if MainRecord.ElementNativeValues['DNAM\Weight slider - Male'] = 0 then
-      MainRecord.ElementNativeValues['DNAM\Weight slider - Male'] := 2;
-    if MainRecord.ElementNativeValues['DNAM\Weight slider - Female'] = 0 then
-      MainRecord.ElementNativeValues['DNAM\Weight slider - Female'] := 2;
-  finally
-    wbEndInternalEdit;
-  end;}
-end;
-
-procedure wbCheckMorphKeyOrder(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  Master     : IwbMainRecord;
-  MasterContainer : IwbContainerElementRef;
-  lKeys       : IwbContainerElementRef;
-  lMasterKeys : IwbContainerElementRef;
-  lValues     : IwbContainerElementRef;
-  i, j, k    : Integer;
-  NeedsSort  : Boolean;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    Master := MainRecord.Master;
-    if not Assigned(Master) then
-      Exit;
-
-    if not Supports(Master, IwbContainerElementRef, MasterContainer) then
-      Exit;
-
-    if not Supports(Container.ElementBySignature['MSDK'], IwbContainerElementRef, lKeys) then
-      Exit;
-
-    if not Supports(MasterContainer.ElementBySignature['MSDK'], IwbContainerElementRef, lMasterKeys) then
-      Exit;
-
-    if lKeys.ElementCount < lMasterKeys.ElementCount then
-      Exit;
-
-    if not Supports(Container.ElementBySignature['MSDV'], IwbContainerElementRef, lValues) then
-      Exit;
-
-    if lKeys.ElementCount <> lValues.ElementCount then
-      Exit;
-
-    with TStringList.Create do try
-      for i := 0 to Pred(lMasterKeys.ElementCount) do
-        AddObject(lMasterKeys.Elements[i].SortKey[True], Pointer(i));
-      Sorted := True;
-
-      NeedsSort := False;
-      j := lMasterKeys.ElementCount;
-      for i := 0 to Pred(lKeys.ElementCount) do
-        if Find(lKeys.Elements[i].SortKey[True], k) then begin
-          k := Integer(Objects[k]);
-          if k <> i then
-            NeedsSort := True;
-          lKeys.Elements[i].SortOrder := k;
-          lValues.Elements[i].SortOrder := k;
-        end else begin
-          lKeys.Elements[i].SortOrder := j;
-          lValues.Elements[i].SortOrder := j;
-          Inc(j);
-        end;
-
-      if not NeedsSort then
-        Exit;
-
-      if j <> lKeys.ElementCount then
-        Exit;
-
-      lKeys.SortBySortOrder;
-      lValues.SortBySortOrder;
-    finally
-      Free;
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-
-procedure wbNPCAfterLoad(const aElement: IwbElement);
-begin
-  wbRemoveEmptyKWDA(aElement);
-  wbCheckMorphKeyOrder(aElement);
-end;
-
-procedure wbREFRAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if not Container.ElementExists['XLOC'] then
-      Exit;
-
-    if Container.ElementNativeValues['XLOC - Lock Data\Level'] = 0 then
-      Container.ElementNativeValues['XLOC - Lock Data\Level'] := 1;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbWEAPAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  Flags      : Cardinal;
-begin
-  wbRemoveEmptyKWDA(aElement);
-
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    // clear IronSights flags which are randomly assigned in CK
-    if not Container.ElementExists['DNAM'] then
-      Exit;
-
-    Flags := Container.ElementNativeValues['DNAM - Data\Flags'];
-    Flags := Flags and ($FFFF xor $0040);
-    Container.ElementNativeValues['DNAM - Data\Flags'] := Flags;
-
-    Flags := Container.ElementNativeValues['DNAM - Data\Flags2'];
-    Flags := Flags and ($FFFFFFFF xor $0100);
-    Container.ElementNativeValues['DNAM - Data\Flags2'] := Flags;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbCELLXCLWGetConflictPriority(const aElement: IwbElement; var aCP: TwbConflictPriority);
 var
   Container  : IwbContainerElementRef;
@@ -4803,137 +4575,6 @@ begin
     Container.ResetConflict;
 end;
 
-procedure wbCELLAfterLoad(const aElement: IwbElement);
-var
-  Container    : IwbContainerElementRef;
-//  Container2   : IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-  DataSubRec   : IwbSubrecord;
-  Flags        : Byte;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if Supports(Container.ElementBySignature['DATA'] , IwbSubRecord, DataSubRec) then begin
-      // expand itU8 flags to itU16
-      if DataSubRec.SubRecordHeaderSize = 1 then begin
-        Flags := PByte(DataSubRec.DataBasePtr)^;
-        DataSubRec.SetToDefault;
-        DataSubRec.NativeValue := Flags;
-      end;
-      // 'Default' water height for exterior cells if not set (so water height will be taken from WRLD by game)
-      if (not Container.ElementExists['XCLW']) and ((Integer(DataSubRec.NativeValue) and $02) <> 0) then begin
-        Container.Add('XCLW', True);
-        Container.ElementEditValues['XCLW'] := 'Default';
-      end;
-    end;
-
-    // Min (-0 as in CK) water height is set to 0 when saving in CK
-    if Container.ElementEditValues['XCLW'] = 'Min' then
-      Container.ElementEditValues['XCLW'] := '0.0';
-
-//    if Supports(Container.ElementBySignature[XCLR], IwbContainerElementRef, Container2) then begin
-//      for i := Pred(Container2.ElementCount) downto 0 do
-//        if not Supports(Container2.Elements[i].LinksTo, IwbMainRecord, MainRecord) or (MainRecord.Signature <> 'REGN') then
-//          Container2.RemoveElement(i);
-//      if Container2.ElementCount < 1 then
-//        Container2.Remove;
-//    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbMESGAfterLoad(const aElement: IwbElement);
-var
-  Container    : IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-  IsMessageBox : Boolean;
-  HasTimeDelay : Boolean;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    IsMessageBox := (Integer(Container.ElementNativeValues['DNAM']) and 1) = 1;
-    HasTimeDelay := Container.ElementExists['TNAM'];
-
-    if not (IsMessageBox = HasTimeDelay) then
-      Exit;
-    
-  if IsMessageBox then
-      Container.RemoveElement('TNAM')
-    else begin
-      if not Container.ElementExists['DNAM'] then
-        Container.Add('DNAM', True);
-      Container.ElementNativeValues['DNAM'] := Integer(Container.ElementNativeValues['DNAM']) or 1;
-    end;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbLIGHAfterLoad(const aElement: IwbElement);
-var
-  Container: IwbContainerElementRef;
-  MainRecord   : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if not Container.ElementExists['FNAM'] then begin
-      Container.Add('FNAM', True);
-      Container.ElementNativeValues['FNAM'] := 1.0;
-    end;
-
-    if not Container.ElementExists['DATA'] then
-      Exit;
-
-      if SameValue(Container.ElementNativeValues['DATA\Falloff Exponent'], 0.0) then
-        Container.ElementNativeValues['DATA\Falloff Exponent'] := 1.0;
-
-      if SameValue(Container.ElementNativeValues['DATA\FOV'], 0.0) then
-        Container.ElementNativeValues['DATA\FOV'] := 90.0;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbEFITAfterLoad(const aElement: IwbElement);
-var
-  Container : IwbContainerElementRef;
-  Element   : IwbElement;
-  ActorValue: Variant;
-  MainRecord: IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    MainRecord := Container.ContainingMainRecord;
-    if not Assigned(MainRecord) or MainRecord.IsDeleted then
-      Exit;
-
-    Element := Container.ElementByPath['..\EFID'];
-    if not wbTryGetMainRecord(Element, MainRecord, 'MGEF') then
-      Exit;
-
-    ActorValue := MainRecord.ElementNativeValues['DATA - Data\Actor Value'];
-    if VarIsNull(ActorValue) or VarIsClear(ActorValue) then
-      Exit;
-
-    if VarCompareValue(ActorValue, Container.ElementNativeValues['Actor Value']) <> vrEqual then
-      Container.ElementNativeValues['Actor Value'] := ActorValue;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbRPLDAfterLoad(const aElement: IwbElement);
 var
   Container: IwbContainer;
@@ -4963,43 +4604,6 @@ begin
 
     if NeedsFlip then
       Container.ReverseElements;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbLLEAfterLoad(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  Entries    : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  i          : integer;
-begin
-  if wbBeginInternalEdit then try
-    // zero entries' Chance None if Form Version < 69
-    if wbFormVersionDecider(69)(nil, nil, aElement) = 1 then
-      Exit;
-
-    if not Supports(aElement, IwbContainerElementRef, Container) then
-      Exit;
-
-    if Container.ElementCount < 1 then
-      Exit;
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    if MainRecord.IsDeleted then
-      Exit;
-
-    if not Supports(MainRecord.ElementByName['Leveled List Entries'], IwbContainerElementRef, Entries) then
-      Exit;
-
-    for i := 0 to Pred(Entries.ElementCount) do begin
-      if not Supports(Entries.Elements[i], IwbContainerElementRef, Container) then
-        Exit;
-      Container.ElementNativeValues['LVLO\Chance None'] := 0;
-    end;
   finally
     wbEndInternalEdit;
   end;
@@ -7901,10 +7505,9 @@ begin
   if wbSimpleRecords then begin
     wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 16), -1);
     wbNavmeshTriangles := wbArray('Triangles', wbByteArray('Triangle', 21), -1);
-    wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 16), -1);
-    wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 8), -1);
+    wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 12), -1);
+    wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 4), -1);
     wbNavmeshWaypoints := wbArray('Waypoints', wbByteArray('Waypoint', 18), -1);
-    wbNavmeshGrid := wbStruct('Navmesh Grid', [wbUnknown])
   end else begin
     wbNavmeshVertices := wbArray('Vertices',
       wbStruct('Vertex', [
@@ -8013,39 +7616,39 @@ begin
         wbInteger('Flags', itU32)
       ])
     , -1);
-
-    wbNavmeshGrid := wbStruct('Navmesh Grid', [
-      wbInteger('Navmesh Grid Size', itU32),  // max 12
-      wbFloat('Max X Distance'),
-      wbFloat('Max Y Distance'),
-      wbFloat('Min X'),
-      wbFloat('Min Y'),
-      wbFloat('Min Z'),
-      wbFloat('Max X'),
-      wbFloat('Max Y'),
-      wbFloat('Max Z'),
-      wbArray('NavMesh Grid Arrays',
-        wbArray('NavMeshGridCell',
-          wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
-        , -1).IncludeFlag(dfNotAlignable)
-      , function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
-      begin
-        var lContainer := aElement.Container;
-        if not Assigned(lContainer) then
-          Exit(0);
-
-        var lGridSizeElement := lContainer.ElementByName['Navmesh Grid Size'];
-        if not Assigned(lGridSizeElement) then
-          Exit(0);
-
-        var lGridSize: Integer := lGridSizeElement.NativeValue;
-        if (lGridSize < 0) or (lGridSize > 12) then
-          Exit(0);
-
-        Result := lGridSize * lGridSize;
-      end).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
-    ])
   end;
+
+  wbNavmeshGrid := wbStruct('Navmesh Grid', [
+    wbInteger('Navmesh Grid Size', itU32),  // max 12
+    wbFloat('Max X Distance'),
+    wbFloat('Max Y Distance'),
+    wbFloat('Min X'),
+    wbFloat('Min Y'),
+    wbFloat('Min Z'),
+    wbFloat('Max X'),
+    wbFloat('Max Y'),
+    wbFloat('Max Z'),
+    wbArray('NavMesh Grid Arrays',
+      wbArray('NavMeshGridCell',
+        wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+      , -1).IncludeFlag(dfNotAlignable)
+    , function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
+    begin
+      var lContainer := aElement.Container;
+      if not Assigned(lContainer) then
+        Exit(0);
+
+      var lGridSizeElement := lContainer.ElementByName['Navmesh Grid Size'];
+      if not Assigned(lGridSizeElement) then
+        Exit(0);
+
+      var lGridSize: Integer := lGridSizeElement.NativeValue;
+      if (lGridSize < 0) or (lGridSize > 12) then
+        Exit(0);
+
+      Result := lGridSize * lGridSize;
+    end).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
+  ]);
 
   wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
     wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
@@ -8829,7 +8432,7 @@ begin
       wbFloat('Magnitude', cpNormal, True),
       wbInteger('Area', itU32),
       wbInteger('Duration', itU32)
-    ], cpNormal, True, nil, -1, wbEFITAfterLoad);
+    ], cpNormal, True, nil, -1);
 
   wbCTDA :=
     wbRStructSK([0], 'Condition', [
@@ -9424,24 +9027,11 @@ begin
     end;
   end;
 
-  var wbXYZStruct :=
-    wbStruct('Unknown', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ])
-    .SetSummaryKey([0, 1, 2])
-    .SetSummaryMemberPrefixSuffix(0, 'Vec3(', '')
-    .SetSummaryMemberPrefixSuffix(2, '', ')')
-    .SetSummaryDelimiter(', ')
-    .IncludeFlag(dfSummaryMembersNoName)
-    .IncludeFlag(dfCollapsed, wbCollapseVec3);
-
   wbTraversalData := wbStruct('Unknown', [
     wbUnknown(4),
-    wbXYZStruct,
-    wbXYZStruct,
-    wbXYZStruct,
+    wbVec3,
+    wbVec3,
+    wbVec3,
     wbInteger('Flags', itU32, wbFlags([
       '',
       '',
@@ -9453,6 +9043,7 @@ begin
     wbHalf,
     wbHalf
   ]);
+  wbTraversalData.IncludeFlag(dfExcludeFromBuildRef);
 
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type'),
@@ -9478,24 +9069,14 @@ begin
             wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
               wbFormIDCk('Construction Object', [NULL, COBJ]),
-              wbStruct('Position', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-              wbStruct('Rotation', [
-                wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-                wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-                wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+              wbVec3PosRot,
               wbInteger('Part ID', itU32)
             ])
-            .SetSummaryKey([4, 0, 2, 3, 1])
-            .SetSummaryMemberPrefixSuffix(4, '[', ']')
-            .SetSummaryMemberPrefixSuffix(0, ' ', '')
-            .SetSummaryMemberPrefixSuffix(2, ' Pos: ', '')
-            .SetSummaryMemberPrefixSuffix(3, ' Rot: ', '')
-            .SetSummaryMemberPrefixSuffix(1, ' Build: ', '')
+            .SetSummaryKey([3, 0, 2, 1])
+            .SetSummaryMemberPrefixSuffix(3, '[', ']')
+            .SetSummaryMemberPrefixSuffix(0, '', '')
+            .SetSummaryMemberPrefixSuffix(2, '', '')
+            .SetSummaryMemberPrefixSuffix(1, '', '')
             .IncludeFlag(dfSummaryMembersNoName)
             .IncludeFlag(dfCollapsed, wbCollapseBluePrintItem)
           ),
@@ -9721,10 +9302,10 @@ begin
             wbArray('Unknown', wbTraversalData, -1).IncludeFlag(dfNotAlignable),
             wbArray('Unknown', wbStruct('Unknown', [
               wbFormID('Unknown'),
-              wbXYZStruct,
+              wbVec3,
               wbArray('Unknown', wbTraversalData, -1).IncludeFlag(dfNotAlignable)
             ]), -1).IncludeFlag(dfNotAlignable)
-          ])
+          ]).IncludeFlag(dfExcludeFromBuildRef)
         ], []),
         wbRStruct('Component Data', [
           wbUnknown(VLMS)
@@ -10200,13 +9781,6 @@ begin
     wbSoundReference(PUSH),
     wbSoundReference(PDSH),
     wbCUSH,
-//    wbICON,
-//    wbMICO,
-//    wbYNAM,
-//    wbZNAM,
-//    wbETYP,
-//    wbCUSD,
-//    wbDEST,
     wbDESC,
     wbCVPA,
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8)),
@@ -10239,7 +9813,7 @@ begin
     ], cpNormal, True),
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
     wbEffects
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False);
 
   {subrecords checked against Starfield.esm}
   wbRecord(AMMO, 'Ammunition',
@@ -10257,8 +9831,6 @@ begin
     wbDESC,
     wbKeywords,
 //    wbDEST,
-//    wbYNAM,
-//    wbZNAM,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -10278,7 +9850,7 @@ begin
     wbString(NAM1, 'Casing Model'),
     //wbModelInfo(NAM2)
     wbFLLD
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False);
 
   {subrecords checked against Starfield.esm}
   wbRecord(ANIO, 'Animated Object',
@@ -10315,8 +9887,7 @@ begin
     wbSoundReference(PUSH),
     wbSoundReference(PDSH),
 //    wbDEST,
-//    wbYNAM,
-//    wbZNAM,
+//    ,
 //    wbETYP,
 //    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
@@ -10354,7 +9925,7 @@ begin
       wbGUID,
       wbGUID
     ])
-  ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet).SetIgnoreList([FLLD, XFLG]);
+  ], False, nil, cpNormal, False).SetIgnoreList([FLLD, XFLG]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(ARMA, 'Armor Addon',
@@ -10413,7 +9984,7 @@ begin
       wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
       wbRArray('Modifiers', wbFormIDCk(BNAM, 'Modifier', [BMOD]))
     ], [])
-  ], False, nil, cpNormal, False, wbARMAAfterLoad).SetIgnoreList([FLLD, XFLG]);
+  ], False, nil, cpNormal, False).SetIgnoreList([FLLD, XFLG]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(BOOK, 'Book', [
@@ -10561,6 +10132,7 @@ begin
 //  ReferenceRecord(PMIS, 'Placed Missile');
 
   wbXTV2 := wbArray(XTV2, 'Traversals', wbTraversalData);
+  wbXTV2.IncludeFlag(dfExcludeFromBuildRef);
 
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
@@ -11906,9 +11478,10 @@ begin
           wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
           wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
           wbArray('Linked Doors', wbStruct('Door', [
-            wbByteArray('Unknown', 4),
+            wbInteger('Door Type', itU32, wbCRCValuesEnum),
             wbFormIDCk('Door Ref', [REFR])
           ]), -1),
+          wbUnknown{
           wbInteger('Is Island', itU8, wbBoolEnum),
           wbUnion('Island', wbNAVIIslandDataDecider, [
             wbNull,
@@ -11928,7 +11501,7 @@ begin
               ]),
               wbFormIDCk('Parent Cell', [CELL])
             ])
-          ])
+          ])}
         ])
       ),
       wbStruct(NVPP, 'Preferred Pathing', [
@@ -11940,7 +11513,7 @@ begin
       ])
       //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
       //wbUnknown(NVSI)
-    ]);
+    ]).IncludeFlag(dfExcludeFromBuildRef);
 
     {subrecords checked against Starfield.esm}
     wbRecord(NAVM, 'Navigation Mesh',
@@ -11965,52 +11538,73 @@ begin
       wbRArray('Navigation Map Infos',
         wbStruct(NVMI, 'Navigation Map Info', [
           wbFormIDCk('Navigation Mesh', [NAVM]),
-          wbByteArray('Unknown 1', 4), //Only the first byte is used
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z'),
-          wbFloat('Unknown float 2'),
+          wbInteger('Flags', itU32, wbFlags([
+            '',
+            '',
+            '',
+            '',
+            '',
+            'Island'
+          ])), //Only the first byte is used
+          wbVec3,
+          wbFloat,
           //wbInteger('Preferred Merges Flag', itU32),
           wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
           wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
           wbArray('Linked Doors', wbStruct('Door', [
-            wbInteger('Door Type', itu32, wbNavmeshDoorTypeEnum),
+            wbInteger('Door Type', itU32, wbCRCValuesEnum),
             wbFormIDCk('Door Ref', [REFR])
           ]), -1),
+          wbArray('Triangles', wbStruct('Triangle', [
+            wbInteger('Type', itU32, wbCRCValuesEnum),
+            wbFormIDCk('Cell', [CELL]),
+            wbUnknown(4),
+            wbArray('Vertices', wbVec3('Vertex'), 3){.IncludeFlag(dfCollapsed, wbCollapseVertices)},
+            wbUnknown(4),
+            wbFormIDCk('Unknown', [NAVM]),
+            wbFormIDCk('Unknown', [NAVM])
+          ]), -1).IncludeFlag(dfCollapsed),
           wbInteger('Is Island', itU8, wbBoolEnum),
           wbUnion('Island', wbNAVIIslandDataDecider, [
             wbNull,
             wbStruct('Island Data', [
-              wbFloat('Min X'),
-              wbFloat('Min Y'),
-              wbFloat('Min Z'),
-              wbFloat('Max X'),
-              wbFloat('Max Y'),
-              wbFloat('Max Z'),
+              wbVec3('Min'),
+              wbVec3('Max'),
               wbArray('Triangles',
                 wbStruct('Triangle', [
                   wbArray('Vertices', wbInteger('Vertex', itS16), 3)
+                  .SetSummaryPassthroughMaxCount(3)
                 ])
               , -1),
-              wbArray('Vertices', wbStruct('Vertex', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1)
+              wbArray('Vertices', wbVec3('Vertex'), -1)
+              .IncludeFlag(dfCollapsed)
             ])
           ]),
           wbStruct('Pathing Cell', [
-            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
+            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
             wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
             wbUnion('Parent', wbNAVIParentDecider, [
               wbStruct('Coordinates', [
                 wbInteger('Grid Y', itS16),
                 wbInteger('Grid X', itS16)
-              ]),
+              ])
+              .SetSummaryKey([0, 1])
+              .SetSummaryMemberPrefixSuffix(0, '[', '')
+              .SetSummaryMemberPrefixSuffix(1, '', ']')
+              .SetSummaryDelimiter(', ')
+              .IncludeFlag(dfSummaryMembersNoName)
+              .IncludeFlag(dfCollapsed),
+
               wbFormIDCk('Parent Cell', [CELL])
             ])
+            .IncludeFlag(dfCollapsed)
           ])
+          .SetSummaryKey([1, 2])
+          .IncludeFlag(dfCollapsed),
+          wbUnknown
         ])
+        .SetSummaryKeyOnValue([0])
+        .IncludeFlag(dfCollapsed)
       ),
       wbStruct(NVPP, 'Preferred Pathing', [
         wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
@@ -12020,7 +11614,7 @@ begin
         ]), -1)
       ])
       //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-    ]);
+    ]).IncludeFlag(dfExcludeFromBuildRef);;
 
     {subrecords checked against Starfield.esm}
     wbRecord(NAVM, 'Navigation Mesh',
@@ -12522,11 +12116,7 @@ begin
       wbFloat('Near Target Distance'),
       wbFloat('Location Spring'),
       wbFloat('Target Spring'),
-      wbStruct('Rotation Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
+      wbVec3('Rotation Offset')
     ], cpNormal, True, nil, 9),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbString(GNAM)
@@ -12773,7 +12363,7 @@ begin
     wbInteger(BNAM, 'Unknown', itS32),
     wbLStringKC(NNAM, 'Short Title', 0, cpTranslate),
     wbRArray('Menu Buttons', wbMenuButton)
-  ], False, nil, cpNormal, False, wbMESGAfterLoad);
+  ], False, nil, cpNormal, False);
 
   a := MakeVarRecs([
                   0, 'None',
@@ -14470,8 +14060,6 @@ begin
     wbMICO,
     wbDEST,
     wbETYP,
-    wbYNAM,
-    wbZNAM,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -14679,7 +14267,7 @@ begin
       {12} wbUnknown(4)
     ]),
     wbFloat(FVLD)
-  ], False, nil, cpNormal, False, wbLIGHAfterLoad);
+  ], False, nil, cpNormal, False);
 end;
 
 procedure DefineSF1m;
@@ -14853,7 +14441,7 @@ begin
     wbFilterKeywordChances,
     wbUnknown(ONAM),
     wbGenericModel
-  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLI, 'Leveled Item',
@@ -14891,7 +14479,7 @@ begin
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
     wbGenericModel,
     wbFTYP
-  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLP, 'Leveled Pack In',
@@ -14927,7 +14515,7 @@ begin
     //wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
     wbGenericModel,
     wbFTYP
-  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   (* still exists in game code, but not in Starfield.esm * )
   wbRecord(LVSP, 'Leveled Spell', [
@@ -15163,7 +14751,7 @@ begin
     // the amount of components is the same as size of CDIX, so should not be sorted probably
     wbUnknown(FLAG),
     wbLStringKC(NNAM, 'Unknown', 0, cpTranslate)
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False);
 
   wbComponent :=
     wbStructSK([0], 'Component', [
@@ -15178,8 +14766,6 @@ begin
   wbRecord(COBJ, 'Constructible Object', [
     wbEDID,
     wbBaseFormComponents,
-//    wbYNAM,
-//    wbZNAM,
     wbDESC,
     wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [KYWD]),
     wbCTDAs,
@@ -15578,7 +15164,7 @@ begin
       *)
     ])
 
-  ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
+  ], False, nil, cpNormal, False);
 
   wbPKDTSpecificFlagsUnused := False;
 
@@ -17255,7 +16841,7 @@ begin
 //    wbXLOD, // not seen in FO4 vanilla files
     wbDataPosRot,
     wbString(MNAM, 'Comments')
-  ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
+  ], True, wbPlacedAddInfo, cpNormal, False);
 
   var lS: PAnsiChar := @TES4;
 
@@ -17550,26 +17136,41 @@ begin
       {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
       {0x00000100}  8, 'ESL',
-      {0x00000200}  9, 'Unknown'
+      {0x00000200}  9, 'Only Overrides'
     ], False), True), [
     wbHEDR,
-    wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
-    wbByteArray(DELE, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
+
+    wbByteArray(OFST, 'Unknown', 0, cpIgnore),                        // If possible then ignored by the runtime. Neither from the CK
+
+    wbByteArray(DELE, 'Unknown', 0, cpIgnore),                        // If possible then ignored by the runtime. Neither from the CK
+
     wbString(CNAM, 'Author', 0, cpTranslate, True),
+
     wbString(SNAM, 'Description', 0, cpTranslate),
+
     wbRArray('Master Files', wbRStruct('Master File', [
       wbStringForward(MAST, 'FileName', 0, cpNormal, True)
     ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
-    wbArray(ONAM, 'Overridden Forms',                     // Valid in CK
+
+    wbArray(ONAM, 'Overridden Forms',                                 // Valid in CK
       wbFormIDCk('Form', [ACHR, LAND, NAVM, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, DLBR, DIAL, INFO, SCEN]),
-      0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow}),
-    wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime. Neither from the CK
-    wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
-      wbInteger('FormType', itU32), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
+    0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow})
+    .IncludeFlag(dfExcludeFromBuildRef)
+    .IncludeFlag(dfCollapsed),
+
+    wbByteArray(SCRN, 'Screenshot'),                                  // If possible then ignored by the runtime. Neither from the CK
+
+    wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [ // Ignored by the runtime
+      wbInteger('FormType', itU32),                                   // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
       wbArray('Unknown', wbFormIDCk('Unknown',[DIAL,SCEN]))
-    ])),          // Ignored by the runtime
-    wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
+    ]))
+    .IncludeFlag(dfExcludeFromBuildRef)
+    .IncludeFlag(dfCollapsed),
+
+    wbInteger(INTV, 'Unknown', itU32),                                // Ignored by the runtime, 4 bytes loaded in CK
+
     wbInteger(INCC, 'Internal Cell Count', itU32),                    // Size of some array of 12 bytes elements
+
     wbUnknown(CHGL)
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
@@ -17736,16 +17337,8 @@ begin
       wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
     ], cpNormal, True, nil, 4),
     wbByteArray(GNAM, 'Unused', 0),
-    wbStruct(NAM0, 'Linear Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    wbStruct(NAM1, 'Angular Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(NAM0, 'Linear Velocity'),
+    wbVec3(NAM1, 'Angular Velocity'),
     wbFormIDCk(ENAM, 'Unknown', [CUR3]),
     wbFormIDCk(HNAM, 'Unknown', [CUR3]),
     wbFormIDCk(JNAM, 'Unknown', [CUR3]),
@@ -18507,8 +18100,6 @@ begin
     wbFULL,
     wbGenericModel,
     wbICON,
-    wbYNAM,
-    wbZNAM,
     wbInteger(DNAM, 'Type', itU8, wbEnum([
       'Sound',
       'Voice',
@@ -18692,19 +18283,17 @@ begin
         wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]),
         wbUnknown(4)
       ]),
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbFloat('Scale')
-      ]), 0, cpNormal, True)
+      wbArrayS(DATA, 'Placements',
+        wbStruct('Placement', [
+          wbVec3Pos,
+          wbVec3Rot,
+          wbFloat('Scale')
+        ])
+        .SetSummaryKey([0, 1, 2])
+        .SetSummaryMemberPrefixSuffix(2, 'Scale: ', '')
+        .IncludeFlag(dfSummaryMembersNoName)
+        .IncludeFlag(dfCollapsed, wbCollapsePlacement)
+      , 0, cpNormal, True)
     ], [], cpNormal, True);
 
   {subrecords checked against Starfield.esm}
@@ -18829,11 +18418,7 @@ begin
     wbEDID,
     wbStruct(ZNAM, 'Data', [
       wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
-      wbStruct('Camera Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      wbVec3('Camera Offset'),
       wbFloat('FOV Mult'),
       wbInteger('Overlay', itU8, wbEnum([
         { 0} 'Default',
@@ -19216,7 +18801,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryBaseForm, cpNormal, False, nil, wbLVLOsAfterSet),
     wbGenericModel
-  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
   wbRecord(WTHS, 'Weather Settings', [
@@ -19450,7 +19035,7 @@ begin
     wbRArrayS('Leveled List Entries', wbLeveledListEntrySpaceCell, cpNormal, False, nil, wbLVLOsAfterSet)
 //    wbFilterKeywordChances,
 //    wbGenericModel
-  ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
+  ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
   wbRecord(MRPH, 'Morphable Object', [
@@ -19845,7 +19430,7 @@ begin
       wbFormID('Unknown'),
       wbUnknown(4),
       wbUnknown(4)
-    ]))
+    ])).IncludeFlag(dfExcludeFromBuildRef)
   ]);
 
   wbAddGroupOrder(GMST); {SF1Dump: no errors}
