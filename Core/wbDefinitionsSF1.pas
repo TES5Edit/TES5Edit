@@ -8926,7 +8926,7 @@ begin
           {39 ptPerk}
           wbFormIDCkNoReach('Perk', [PERK]),
           {40 ptQuest}
-          wbFormIDCkNoReach('Quest', [QUST, NULL]).AddOverlay(wbCTDAParamQuestOverlay),
+          wbFormIDCkNoReach('Quest', [QUST]).AddOverlay(wbCTDAParamQuestOverlay),
           {41 ptQuestStage}
           wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbQuestStageToInt),
           {42 ptRace}
