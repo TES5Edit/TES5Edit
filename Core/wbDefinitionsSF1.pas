@@ -99,7 +99,7 @@ const
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
-    'BMMP', 'PDCL', 'PKIN', 'GBFM'
+    'BMMP', 'PDCL', 'PKIN', 'GBFM', 'AOPF', 'BMMO'
   ];
 
 var
@@ -8061,8 +8061,8 @@ begin
   wbHNAMHNAM := wbRStruct('Unknown', [
     wbMarker(HNAM).SetRequired(True),
     wbArray(HTID, 'Unknown', wbInteger('Reference Alias ID', itS32)),
-    wbUnknown(FNAM),
-    wbUnknown(PNAM),
+    wbEmpty(FNAM, 'Unknown'),
+    wbEmpty(PNAM, 'Unknown'),
     wbMarker(HNAM).SetRequired(True)
   ], []);
 end;
@@ -8827,7 +8827,8 @@ begin
           { unknown }
           wbByteArray('Unknown', 4).IncludeFlag(dfZeroSortKey),
           { 0 ptNone}
-          wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+          //wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
+          wbFormIDCk('Unknown',[GLOB,KYWD,NULL,NPC_,LCTN]), // no idea what is going on here.
           { 1 ptString}
           wbInteger('String', itU32, wbCTDAParam1StringToString, wbCTDAParam1StringToInt),
           { 2 ptInteger}
@@ -8837,7 +8838,7 @@ begin
           { 4 ptActor}
           wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
           { 5 ptActorBase}
-          wbFormIDCkNoReach('Actor Base', [NPC_]),
+          wbFormIDCkNoReach('Actor Base', [NPC_, NULL]),
           { 6 ptActorValue}
           wbActorValue,
           { 7 ptAdvanceAction}
@@ -8853,7 +8854,7 @@ begin
           {12 ptCastingSource}
           wbInteger('Casting Type', itU32, wbCastingSourceEnum),
           {13 ptCell}
-          wbFormIDCkNoReach('Cell', [CELL]),
+          wbFormIDCkNoReach('Cell', [CELL, NULL]),
           {14 ptClass}
           wbFormIDCkNoReach('Class', [CLAS, NULL]),
           {15 ptCrimeType}
@@ -8871,7 +8872,7 @@ begin
           {21 ptFaction}
           wbFormIDCkNoReach('Faction', [FACT]),
           {22 ptFormList}
-          wbFormIDCkNoReach('Form List', [FLST]),
+          wbFormIDCkNoReach('Form List', [FLST, NULL]),
           {23 ptFormType}
           wbInteger('Form Type', itU32, wbFormTypeEnum),
           {24 ptFurniture}
@@ -8994,7 +8995,7 @@ begin
           {19 ptEvent}
           wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
           {20 ptEventData}
-          wbFormID('Event Data'),
+          wbFormIDCk('Event Data', [KYWD,LCTN,NULL]),
           {21 ptFaction}
           wbFormIDCkNoReach('Faction', [FACT]),
           {22 ptFormList}
@@ -11099,7 +11100,54 @@ begin
        {121} 'PlayerActivateFurniture',
        {122} 'PlayerActivateActivators',
        {123} 'PlayerActivateContainer',
-       {124} 'PlayerAquireFeaturedItem'
+       {124} 'PlayerAquireFeaturedItem',
+       {125} 'QuestOrSpecialHellos', // special hellos?
+       {126} 'Unknown',
+       {127} 'Unknown',
+       {128} 'Unknown',
+       {129} 'Unknown',
+       {130} 'Unknown',
+       {131} 'Unknown',
+       {132} 'Unknown',
+       {133} 'Unknown',
+       {134} 'Unknown',
+       {135} 'GravJumpCalcComplete',
+       {136} 'LandingStart',
+       {137} 'ReturnToOrbit',
+       {138} 'DockingComplete',
+       {139} 'UndockingComplete',
+       {140} 'EnemyDockingInitiated',
+       {141} 'GravJumpCompleted',
+       {142} 'TakeOffInitiated',
+       {143} 'GuardPursue',   // stop right there, criminal scum
+       {144} 'SharedInfos', // lines used across many interactions, both for player and npc. distinct from 99 somehow?
+       {145} 'Unknown',
+       {146} 'Unknown',
+       {147} 'Unknown',
+       {148} 'Unknown',
+       {149} 'Idles',
+       {150} 'SprintBreathing', // 0005C8C5
+       {151} 'BowZoomHoldBreath', // 0005C8C7
+       {152} 'BowZoomReleaseBreath', // 0005C8C6
+       {153} 'Unknown',
+       {154} 'Unknown',
+       {155} 'PlayerOutOfBreath', // 0005C8CA
+       {156} 'Unknown',
+       {157} 'LeaveWaterBreath', // 0005C8C8
+       {158} 'Unknown',
+       {159} 'Unknown',
+       {160} 'Unknown',
+       {161} 'Unknown',
+       {162} 'WaitingForPlayerInput',
+       {163} 'Unknown',
+       {164} 'Unknown',
+       {165} 'Unknown',
+       {166} 'Unknown',
+       {167} 'Unknown',
+       {168} 'Unknown',
+       {169} 'Unknown',
+       {170} 'MaxCO2OutOfBreath', // 00076E87
+       {171} 'BlockingHellos'
       ]))
     ]),
     wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
@@ -13594,7 +13642,7 @@ begin
       ], []),
 
       wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
-      wbUnknown(HTID),
+      wbEmpty(HTID, 'Unknown'),
 
       {
       wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
@@ -13646,7 +13694,7 @@ begin
     ]),
     wbString(NNAM, 'Notes'),
     wbFormIDCk(TNAM, 'Template Scene', [SCEN]),
-    wbUnknown(BOLV),
+    wbEmpty(BOLV, 'Unknown'),
     wbInteger(XNAM, 'Index', itU32),
     wbUnknown(SCPI),    // seems to be 1-100 - skill req? percentage increase?
     wbUnknown(JNAM),
@@ -13661,7 +13709,7 @@ begin
     wbEmpty(SPDF, 'Unknown'),
     wbEmpty(SPPQ, 'Unknown'),
     wbArray(SPKW, 'Keywords', wbFormIDCk('Keyword',[KYWD])),
-    wbFormIDCk(SPPK, 'Perk', [PERK]),
+    wbArray(SPPK, 'Perks', wbFormIDCk('Perk', [PERK])),
     wbArray(SPKY, 'Keywords', wbFormIDCk('Keyword',[KYWD]))
   ]);
 
@@ -14385,7 +14433,7 @@ begin
       'Unknown 2',
       'Force'
     ])),
-    wbUnknown(COCT), // container count? never followed by CNTO in Starfield.esm
+    wbEmpty(COCT, 'Unknown'), // container count? never followed by CNTO in Starfield.esm
     wbFormIDCk(NAM8, 'Unknown', [AFFE]), // order between COCT and NAM8 unknown
     wbFormIDCk(PERK, 'Perk', [PERK]),             // order between PERK
     wbFormIDCk(SCSP, 'Speech Challenge', [SPCH])  // and SCSP unknown
@@ -15954,7 +16002,10 @@ begin
           {0x01} 'Unknown 1',
           {0x02} 'Run On Start',
           {0x04} 'Run On Stop',
-          {0x08} 'Keep Instance Data From Here On'
+          {0x08} 'Keep Instance Data From Here On',
+          'Unknown',
+          'Unknown',
+          'Unknown'
         ])),
         wbInteger('Unknown', itU8)
       ]),
@@ -16056,7 +16107,10 @@ begin
             wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
             wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked From',
-              'Linked Ref'
+              'Linked Ref',
+              'Unknown',  // DebugMQ101HelperQuest
+              'Unknown',  // BE series 1 - quests & derelicts (10)
+              'Unknown'   // BE series 2 - mostly generic derelicts (10)
             ])).SetRequired(True)
           ], []),
           wbRStruct('Find Matching Reference From Event', [
@@ -16117,7 +16171,7 @@ begin
           ], []),
           wbCTDAs,
           wbRStruct('Unknown', [
-            wbUnknown(ALPS), // always empty when present?
+            wbEmpty(ALPS, 'Unknown'),
             wbCTDAs,
             wbFormIDCk(LNAM, 'PCM Type Keyword', [KYWD])
           ], []),
@@ -17488,7 +17542,7 @@ begin
     wbByteArray(SCRN, 'Screenshot'),                      // If possible then ignored by the runtime. Neither from the CK
     wbRArray('Transient Types (CK only)', wbStruct(TNAM, 'Transient Type', [
       wbInteger('FormType', itU32), // seen TESTopic 78 (array of DIAL) and BGSScene 126 (array of SCEN)
-      wbArray('Unknown', wbFormID('Unknown'))
+      wbArray('Unknown', wbFormIDCk('Unknown',[DIAL,SCEN]))
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
     wbInteger(INCC, 'Internal Cell Count', itU32),                    // Size of some array of 12 bytes elements
