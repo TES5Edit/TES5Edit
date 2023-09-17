@@ -8854,7 +8854,7 @@ begin
           {13 ptCell}
           wbFormIDCkNoReach('Cell', [CELL]),
           {14 ptClass}
-          wbFormIDCkNoReach('Class', [CLAS]),
+          wbFormIDCkNoReach('Class', [CLAS, NULL]),
           {15 ptCrimeType}
           wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
           {16 ptCriticalStage}
@@ -13405,7 +13405,7 @@ begin
           wbInteger('On Start', itS16),
           wbInteger('On Completion', itS16)
         ]),
-        wbUnknown(SPMV),
+        wbEmpty(SPMV, 'Unknown'),
         wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
@@ -13502,17 +13502,17 @@ begin
         wbUnknown(VCLR, 4).SetRequired(True),
         wbFormIDCk(FLMV, 'Unknown', [NULL, KYWD]).SetRequired(True),
         wbFormIDCk(FLAV, 'Unknown', [NULL, KYWD]).SetRequired(True),
-        wbUnknown(QUAL),
-        wbUnknown(SPOR),
-        wbUnknown(OCOR).SetRequired(True),
-        wbUnknown(SOFT),
-        wbUnknown(DOFT),
+        wbEmpty(QUAL, 'Unknown'),
+        wbEmpty(SPOR, 'Unknown'),
+        wbUnknown(OCOR).SetRequired(True), /// required but always empty?
+        wbEmpty(SOFT, 'Unknown'),
+        wbEmpty(DOFT, 'Unknown'), // only one occurrence, empty
         wbFloat(LVCR).SetRequired(True),
         wbCTDAs,
         wbUnknown(ATAC, 4).SetRequired(True),
-        wbUnknown(PLRL),
-        wbUnknown(SHRT),
-        wbUnknown(XNAM).SetRequired(True)
+        wbEmpty(PLRL, 'Unknown'),
+        wbEmpty(SHRT, 'Unknown'),
+        wbUnknown(XNAM).SetRequired(True) // required but always empty?
       ], []),
 
       wbRStruct('Unknown', [
@@ -13521,22 +13521,22 @@ begin
         wbUnknown(LNAM)
       ], []),
 
-      wbUnknown(NVCI),
+      wbEmpty(NVCI, 'Unknown'),
       wbFormIDCk(CNAM, 'Camera Shot', [NULL, CAMS]),
-      wbUnknown(DNAM),
+      wbEmpty(DNAM, 'Unknown'),
 
       wbInteger(ALLA, 'Unknown', itS32),
 
       wbRStruct('Unknown', [
-        wbFormID(REPL),
+        wbFormIDCk(REPL, 'Unknown', [ACHR, IMAD, REFR, NULL]),
         wbFloat(HNAM).SetRequired(True),
         wbFloat(VCLR).SetRequired(True),
         wbFloat(VNML).SetRequired(True),
         wbUnknown(LVCR),
         wbUnknown(BTXT),
-        wbUnknown(ATXT),
-        wbUnknown(VTXT),
-        wbUnknown(AIDT),
+        wbEmpty(ATXT, 'Unknown'),
+        wbEmpty(VTXT, 'Unknown'),
+        wbEmpty(AIDT, 'Unknown'),
         wbInteger(FLMV, 'Flags', itU32, wbFlags([
           {0x00000001} 'Unknown 0',
           {0x00000002} 'Unknown 1',
@@ -13556,12 +13556,12 @@ begin
           {0x00008000} 'Unknown 15',
           {0x00010000} 'Unknown 16'
         ])).SetRequired(True),
-        wbUnknown(MPCD),
-        wbUnknown(VNAM),
+        wbEmpty(MPCD, 'Unknown'),
+        wbEmpty(VNAM, 'Unknown'),
         wbSoundReference(WED0),
-        wbFormID(BIPL).SetRequired(True),
+        wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]).SetRequired(True),
         wbInteger(LVLO, 'Unknown', itS32).SetRequired(True),
-        wbUnknown(XNAM)
+        wbEmpty(XNAM, 'Unknown')
       ], []),
 
 
@@ -13571,7 +13571,7 @@ begin
 
       wbSoundReference(WED0),
 
-      wbHNAMHNAM,
+      wbHNAMHNAM, // reported as always empty
 
       wbSoundReference(WED0),
 
@@ -13586,10 +13586,10 @@ begin
           wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),
           wbInteger(PAPI, 'Phase Index', itU32),
           wbString(PAPN),
-          wbFormIDCk(ESCS, 'NPC Response', [DIAL]).SetRequired(True)
+          wbFormIDCk(ESCS, 'NPC Response', [DIAL, NULL]).SetRequired(True)
         ], []),
         wbUnknown(ATTR),
-        wbUnknown(ACBS)
+        wbEmpty(ACBS, 'Unknown')
       ], []),
 
       wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
@@ -16035,7 +16035,7 @@ begin
             $0003, '3'
           ])).SetDefaultNativeValue(1),
           wbRStruct('Create Reference to Object', [
-            wbFormID(ALCO, 'Object'),
+            wbFormIDCk(ALCO, 'Object', [ACTI,ARMO,BOOK,CELL,CONT,DOOR,FLOR,FURN,GBFM,IDLM,KEYM,LVLI,LVSC,MISC,NPC_,PKIN,SOUN,STAT,WEAP]), // yee haw
             wbStruct(ALCA, 'Alias', [
               wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
               wbInteger('Create', itU16, wbEnum([] ,[
