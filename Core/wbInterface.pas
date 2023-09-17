@@ -15843,7 +15843,7 @@ begin
     if wbReportFormIDs then begin
       if Assigned(FoundSignatures) then
         if ClassType = TwbFormIDDefFormater then begin
-          WriteLn('Unchecked FormID Formater: ', wbDefsToPath(aParents), wbDefToName(Self));
+          WriteLn('Unchecked FormID Formatter: ', wbDefsToPath(aParents), wbDefToName(Self));
           WriteLn('  ', FoundSignatures.CommaText);
           for i := 0 to Pred(FoundSignatures.Count) do
             WriteLn('  ', FoundSignatures.Strings[i], ' (', Integer(FoundSignatures.Objects[i]),')');
