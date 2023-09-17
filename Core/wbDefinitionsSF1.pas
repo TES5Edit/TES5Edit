@@ -13374,7 +13374,16 @@ begin
       {0x00000200} 'Unknown 9',
       {0x00000400} 'Unknown 10',
       {0x00000800} 'Disable Dialogue Camera',
-      {0x00001000} 'No Follower Idle Chatter'
+      {0x00001000} 'No Follower Idle Chatter',
+      {0x00002000} 'Unknown 13',
+      {0x00004000} 'Unknown 14',
+      {0x00008000} 'Unknown 15',
+      {0x00010000} 'Unknown 16',
+      {0x00020000} 'Unknown 17',
+      {0x00040000} 'Unknown 18',
+      {0x00080000} 'Unknown 19',
+      {0x00100000} 'Unknown 20',
+      {0x00200000} 'Unknown 21'
     ])),
     wbRArray('Phases',
       wbRStruct('Phase', [
@@ -13388,7 +13397,9 @@ begin
         wbInteger(FNAM, 'Flags', itU16, wbFlags([
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
-          {0x0004} 'Start - Inherit In Templated Scenes'
+          {0x0004} 'Start - Inherit In Templated Scenes',
+          {0x0008} 'Unknown 3',
+          {0x0010} 'Unknown 4'
         ])),
         wbStruct(SCQS, 'Set Parent Quest Stage', [
           wbInteger('On Start', itS16),
@@ -13404,7 +13415,9 @@ begin
         'No Player Activation',
         'Optional',
         'Run Only Scene Packages',
-        'No Command State'
+        'No Command State',
+        'Unknown 4',
+        'Unknown 5'
       ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
         'Death Pause',
@@ -13414,7 +13427,9 @@ begin
         'Dialogue Pause',
         'Dialogue End',
         'OBS_COM Pause',
-        'OBS_COM End'
+        'OBS_COM End',
+        'Unknown 8',
+        'Unknown 9'
       ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
     wbRArray('Actions', wbRStruct('Action', [
@@ -13428,7 +13443,8 @@ begin
         {6} 'Radio',
         {7} 'Camera Direction',
         {8} 'Unknown',
-        {9} 'NPC Anim'
+        {9} 'NPC Anim',
+        {10}'Unknown 10'
       ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbString(SNOT, 'Scene Notes'),
@@ -13521,7 +13537,25 @@ begin
         wbUnknown(ATXT),
         wbUnknown(VTXT),
         wbUnknown(AIDT),
-        wbInteger(FLMV, 'Flags', itU32, wbFlags([])).SetRequired(True),
+        wbInteger(FLMV, 'Flags', itU32, wbFlags([
+          {0x00000001} 'Unknown 0',
+          {0x00000002} 'Unknown 1',
+          {0x00000004} 'Unknown 2',
+          {0x00000008} 'Unknown 3',
+          {0x00000010} 'Unknown 4',
+          {0x00000020} 'Unknown 5',
+          {0x00000040} 'Unknown 6',
+          {0x00000080} 'Unknown 7',
+          {0x00000100} 'Unknown 8',
+          {0x00000200} 'Unknown 9',
+          {0x00000400} 'Unknown 10',
+          {0x00000800} 'Unknown 11',
+          {0x00001000} 'Unknown 12',
+          {0x00002000} 'Unknown 13',
+          {0x00004000} 'Unknown 14',
+          {0x00008000} 'Unknown 15',
+          {0x00010000} 'Unknown 16'
+        ])).SetRequired(True),
         wbUnknown(MPCD),
         wbUnknown(VNAM),
         wbSoundReference(WED0),
