@@ -201,6 +201,7 @@ var
   wbVMADFragmentedQUST: IwbSubRecordDef;
   wbVMADFragmentedSCEN: IwbSubRecordDef;
   wbVMADFragmentedINFO: IwbSubRecordDef;
+  wbVMADFragmentedTMLM: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
   wbKSIZ: IwbSubRecordDef;
   wbKWDAs: IwbSubRecordDef;
@@ -7181,6 +7182,14 @@ begin
   ])
   .SetSummaryKeyOnValue([2]);
 
+  wbVMADFragmentedTMLM := wbStruct(VMAD, 'Virtual Machine Adapter',[
+    wbVMADVersion,
+    wbVMADObjectFormat,
+    wbVMADScripts,
+    wbScriptFragments
+  ])
+  .SetSummaryKeyOnValue([2]);
+
   wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
     wbVMADVersion,
     wbVMADObjectFormat,
@@ -8917,7 +8926,7 @@ begin
           {39 ptPerk}
           wbFormIDCkNoReach('Perk', [PERK]),
           {40 ptQuest}
-          wbFormIDCkNoReach('Quest', [QUST]).AddOverlay(wbCTDAParamQuestOverlay),
+          wbFormIDCkNoReach('Quest', [QUST, NULL]).AddOverlay(wbCTDAParamQuestOverlay),
           {41 ptQuestStage}
           wbInteger('Quest Stage', itU32, wbCTDAParam2QuestStageToStr, wbQuestStageToInt),
           {42 ptRace}
@@ -12745,7 +12754,7 @@ begin
     wbRStruct('Menu Button', [
       wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
       wbCTDAs,
-      wbUnknown(DODT)
+      wbFormIDCk(DODT, 'Reference', [REFR, PLYR, NULL])
     ], []);
 
   {subrecords checked against Starfield.esm}
@@ -19699,8 +19708,8 @@ begin
     wbEDID,
     wbInteger(SPWI, 'Quest Stage on Win', itU16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
     wbInteger(SPLO, 'Quest Stage on Loss', itU16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
-    wbUnknown(SRAN), // unused?
-    wbUnknown(SGEN), // always empty when present?
+    wbEmpty(SRAN, 'Unknown'),
+    wbEmpty(SGEN, 'Unknown'),
     wbFormIDCk(SPQU, 'Quest', [QUST], False, cpNormal, True),
     wbKeywords,
     wbArray(SPMA, 'Scenes', wbFormIDCk('Scene', [SCEN])),
@@ -19749,7 +19758,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(TMLM, 'Terminal Menu', [
     wbEDID,
-    wbVMAD,
+    wbVMADFragmentedTMLM,
     wbFULL,
     wbUnknown(TMVT),
     wbUnknown(DNAM),
@@ -19767,8 +19776,9 @@ begin
       wbInteger(ISIZ, 'Options Count', itU32),
       wbRStructs('Menu Items', 'Menu Item', [
         wbLStringKC(ITXT, 'Item Text', 0, cpTranslate, True),
-        wbInteger(ISTX, 'Unknown', itU32), // always false/0 in Starfield.esm
-        wbUnknown(ISET), // button template?
+        wbLStringKC(ISTX, 'Item Short Text', 0, cpTranslate, False), // sometimes icon label, sometimes debug text... weird
+
+        wbArray(ISET, 'Unknown',wbInteger('Unknown',itU8),8),
         wbInteger(ITID, 'Item ID', itU16),
         wbXLOC,
         wbFormIDCk(TNAM, 'Submenu', [NULL, TMLM]),
