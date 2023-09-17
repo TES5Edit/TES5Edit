@@ -47,13 +47,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'k';
+    Build   : 'm';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010411;
-  wbDeveloperMessageVersion : Integer = 04010411;
+  wbWhatsNewVersion : Integer = 04010412;
+  wbDeveloperMessageVersion : Integer = 04010412;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
@@ -263,6 +263,8 @@ var
   wbReportUnknownEnums               : Boolean    = True;
   wbReportFormIDNotAllowedReferences : Boolean    = True;
   wbReportUnknown                    : Boolean    = False;
+
+  wbShowDataSizeInValue              : Boolean    = False;
 
   wbSubRecordErrorsOnly              : Boolean    = False;
 
@@ -612,6 +614,7 @@ type
     dfDontAssign,
     dfUseLoadOrder,
     dfMustBeUnion,
+    dfMergeIfMultiple,
     dfSummaryMembersNoName,
     dfSummaryNoName,
     dfSummaryNoSortKey,

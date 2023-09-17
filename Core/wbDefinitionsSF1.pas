@@ -291,6 +291,7 @@ function wbMOLM(const aSignature: TwbSignature): IwbSubRecordDef;
 begin
   Result :=
     wbArrayS(aSignature, 'Material Swaps', wbFormIDCk('Layered Material Swap', [LMSW]), -2);
+  Result.IncludeFlag(dfMergeIfMultiple);
 end;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
