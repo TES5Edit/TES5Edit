@@ -11693,7 +11693,7 @@ begin
     wbKeywords,
     wbPRPS,
     //wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
-    wbUnknown(DATA),
+    wbInteger(DATA, 'Unknown', itU8).SetRequired(True),        //Values seen are 02, 04, and 06
     wbSoundReference(MSLS),
     wbFloat(MSMO, 'Unknown')
   ]);
@@ -15415,13 +15415,13 @@ begin
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(HEFA, 'Unknown', [FACT]),
     wbInteger(EDCT, 'Unknown Count', itU8),
-    wbRStructs('Unknown', 'Unknown', [
+    wbRStructs('Tints', 'Tint', [
       wbInteger(MNAM, 'Unknown', itU32).SetRequired(True),
-      wbString(TNAM, 'Unknown').SetRequired(True),
-      wbString(QNAM, 'Unknown').SetRequired(True),
-      wbString(VNAM, 'Unknown').SetRequired(True),
-      wbByteColors(NNAM, 'Tint Color Color').SetRequired(True),
-      wbInteger(INTV, 'Unknown', itU32).SetRequired(True)
+      wbString(TNAM, 'Tint Group').SetRequired(True),
+      wbString(QNAM, 'Tint Name').SetRequired(True),
+      wbString(VNAM, 'Tint Texture').SetRequired(True),
+      wbByteColors(NNAM, 'Tint Color').SetRequired(True),
+      wbInteger(INTV, 'Intensity', itU32).SetRequired(True)       //1-128
     ], []),
 
     wbStruct(MRSV, 'Body Morph Region Values', [
@@ -15432,34 +15432,40 @@ begin
       wbFloat('Legs')
     ]),
 
-    wbRStructs('Unknown', 'Unknown', [
-      wbInteger(FMSI, 'Unknown', itU32).SetRequired(True),
-      wbFloat(FMRS, 'Unknown').SetRequired(True)
-    ], []),
 
-    wbRStructs('Unknown', 'Unknown', [
-      wbInteger(FMRI, 'Unknown', itU32).SetRequired(True),
-      wbRStructs('Unknown', 'Unknown', [
-        wbString(FMRG, 'Unknown').SetRequired(True),
-        wbFloat(FMRS, 'Unknown').SetRequired(True)
+    wbRArrayS('Face Dials',
+      wbRStructSK([0], 'Face Dial', [
+         wbInteger(FMSI, 'Face Dial Index', itU32).SetRequired(True),
+         wbFloat(FMRS, 'Face Dial Position').SetRequired(True)
+      ], [])
+      .SetSummaryMemberPrefixSuffix(0, 'Index [','], Position = ')
+      .SetSummaryKey([1])
+      .IncludeFlag(dfCollapsed)
+    ),
+
+    wbRStructs('Face Morphs', 'Face Morph Phenotype', [
+      wbInteger(FMRI, 'Face Morph Index', itU32).SetRequired(True),
+      wbRStructs('Morph Groups', 'Morph Group', [
+        wbString(FMRG, 'Morph Group').SetRequired(True),
+        wbFloat(FMRS, 'Blend Intensity').SetRequired(True)
       ], [])
     ], []),
 
-    wbRStructs('Unknown', 'Unknown', [
-      wbString(BMPN, 'Unknown').SetRequired(True),
-      wbFloat(BMPV, 'Unknown').SetRequired(True)
+    wbRStructs('Morph Groups', 'Morph Blend', [
+      wbString(BMPN, 'Blend Name').SetRequired(True),
+      wbFloat(BMPV, 'Intensity').SetRequired(True)
     ], []),
 
     wbATTX,
 
-    wbInteger(STON, 'Unknown', itU8),
-    wbString(HCOL, 'Unknown'),
-    wbString(FHCL, 'Unknown'),
-    wbString(BCOL, 'Unknown'),
-    wbString(ECOL, 'Unknown'),
-    wbString(JCOL, 'Unknown'),
-    wbString(TETC, 'Unknown'),
-    wbInteger(PRON, 'Unknown', itU8),
+    wbInteger(STON, 'Skin Tone Index', itU8),
+    wbString(HCOL, 'Hair Color'),
+    wbString(FHCL, 'Facial Hair Color'),
+    wbString(BCOL, 'Eyebrow Color'),
+    wbString(ECOL, 'Eye Color'),
+    wbString(JCOL, 'Jewelry Color'),
+    wbString(TETC, 'Teeth Color'),
+    wbInteger(PRON, 'Pronoun', itU8),
     wbStruct(ONA2, 'Unknown', [
       wbInteger('Flags', itU32, wbFlags([])),
 
@@ -15714,8 +15720,8 @@ var
   begin
     Result :=
       wbRArray(aName,
-        wbRStruct('Face Morph', [
-          wbInteger(FMRI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
+        wbRStruct('Face Morph Phenotype', [
+          wbInteger(FMRI, 'Index', itU32),
           wbString(FMRU),
           wbLString(FMRN, 'Name'),
           wbString(FMRS),
@@ -16486,9 +16492,9 @@ begin
           wbUnknown(NNAM, 12),
           wbRArray('Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
           wbMorphGroups('Morph Groups'),
-          wbFaceMorphs('Face Morphs'),
+          wbFaceMorphs('Face Morph Phenotypes'),
           wbRStructs('Face Dials', 'Face Dial', [
-            wbInteger(FDSI, 'Index', itU32),
+            wbInteger(FDSI, 'Skin Index', itU32),
             wbLString(FDSL, 'Label', 0, cpTranslate)
           ], [])
         ], []),
@@ -16504,9 +16510,9 @@ begin
           wbUnknown(NNAM, 12),
           wbRArray('Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
           wbMorphGroups('Morph Groups'),
-          wbFaceMorphs('Face Morphs'),
+          wbFaceMorphs('Face Morph Phenotypes'),
           wbRStructs('Face Dials', 'Face Dial', [
-            wbInteger(FDSI, 'Index', itU32),
+            wbInteger(FDSI, 'Skin Index', itU32),
             wbLString(FDSL, 'Label', 0, cpTranslate)
           ], [])
         ], []),
@@ -19431,8 +19437,8 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(MRPH, 'Morphable Object', [
     wbEDID,
-    wbUnknown(TMPP),
-    wbUnknown(TCMP),
+    wbString(TMPP, 'Unknown'),
+    wbString(TCMP, 'Unknown'),
     wbUnknown(MOBC)
   ]);
 
