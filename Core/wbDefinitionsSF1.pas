@@ -19566,7 +19566,7 @@ begin
         wbFloat('Year length in days'),
         wbInteger('Asteroids', itu32),
         wbInteger('Geostationary', itu32, wbBoolEnum),
-        wbUnknown(4),
+        wbInteger('Rnd seed', itu32),
         wbInteger('Rings', itu32, wbBoolEnum)
       ]),
       wbStruct(INAM, 'Unknown', [
