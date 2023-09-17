@@ -15382,23 +15382,63 @@ begin
     wbStruct(ONA2, 'Unknown', [
       wbInteger('Flags', itU32, wbFlags([])),
 
-      wbIsFlag(0, wbInteger('Unknown', itS8)),
+      wbIsFlag(0, wbStruct('Unknown 0', [
+        wbInteger('Unknown', itS8)
+      ])),
 
-      wbIsFlag(1, wbStruct('Unknown', [
+      wbIsFlag(1, wbStruct('Unknown 1', [
         wbFloat,
         wbFloat,
         wbFloat,
         wbFloat
       ])),
 
-      wbIsFlag(2, wbUnknown(4)),
-
-      wbHasNoFlags(wbStruct('Unknown', [
-        wbUnknown
+      wbIsFlag(2, wbStruct('Unknown 2', [
+        wbFloat
       ])),
 
-      wbUnknown
+      wbIsFlag(3, wbStruct('Unknown 3', [
+        wbFloat,
+        wbFormId('Unknown')
+      ])),
 
+      wbIsFlag(4, wbStruct('Unknown 4', [
+        wbUnknown(8),
+        wbUnknown(8)
+      ])),
+
+      wbIsFlag(5, wbStruct('Unknown 5', [
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat
+      ])),
+
+      wbIsFlag(6, wbStruct('Unknown 6', [
+        wbFormId('Material'),
+        wbSoundReference(),
+        wbSoundReference(),
+        wbFormId('Unknown'),
+        wbFormId('Unknown'),
+        wbFormId('Unknown'),
+        wbFloat,
+        wbUnknown(1),
+        wbUnknown(1),
+        wbUnknown(4)
+      ])),
+
+      wbIsFlag(7, wbStruct('Unknown 7', [
+        wbUnknown(1),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4),
+        wbUnknown(4)
+      ]))
       (*
 
       {  0} wbByteArray('Unknown', 25),
