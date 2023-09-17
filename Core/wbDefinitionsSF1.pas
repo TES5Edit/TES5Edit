@@ -16019,7 +16019,7 @@ begin
 
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
-          wbFormID(ALFR, 'Forced Reference'),
+          wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR]),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
             wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
@@ -16064,7 +16064,7 @@ begin
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired(True)
           ], []),
           wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFormIDCk(ALNR, 'Ref Type', [LCRT]),
+          wbFormIDCk(ALNR, 'Ref Type', [LCRT, NULL]),
           wbCTDAs,
           wbFormIDCk(ALUB, 'Unknown', [GBFM]), // starfield.esm only has instances of GBFM but it may support any base type object
           wbKeywords,
@@ -16162,7 +16162,7 @@ begin
 //    wbString(SNAM, 'SWF File'),
 
     wbRStruct('Mission Board Info', [
-      wbFormIDCk(QMTY, 'Mission Type Keyword', [KYWD]),
+      wbFormIDCk(QMTY, 'Mission Type Keyword', [KYWD, NULL]),
       wbLStringKC(QMSU, 'Description', 0, cpTranslate),
       wbRArray('Info Panel', wbRStruct('Panel Item', [
         wbLStringKC(QMDT, 'Header', 0, cpTranslate),
