@@ -308,9 +308,9 @@ begin
       wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
     ], [], cpNormal, aRequired, aDontShow)
-    .SetSummaryKey([0])
+    .SetSummaryKey([2])
     .IncludeFlag(dfSummaryMembersNoName)
-    .IncludeFlag(dfSummaryNoSortKey)
+    //.IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels)
     .IncludeFlag(dfAllowAnyMember);
 end;
@@ -5993,7 +5993,12 @@ begin
       wbFormIDCk('Unknown', [NULL, CNDF]),
       wbFormIDCk('Unknown', [NULL, WWED])
     ])
-    .SetSummaryKeyOnValue([0, 2, 1, 3])
+    .SetSummaryKeyOnValue([0, 1, 2, 3])
+    .SetSummaryPrefixSuffixOnValue(0, '{', '}')
+    .SetSummaryPrefixSuffixOnValue(1, '{', '}')
+    .SetSummaryPrefixSuffixOnValue(2, 'Cond: ', '')
+    .SetSummaryPrefixSuffixOnValue(3, 'Event: ', '')
+    .SetSummaryDelimiterOnValue(' ')
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 end;
@@ -6007,7 +6012,12 @@ begin
       wbFormIDCk('Unknown', [NULL, CNDF]),
       wbFormIDCk('Unknown', [NULL, WWED])
     ])
-    .SetSummaryKey([0, 2, 1, 3])
+    .SetSummaryKey([0, 1, 2, 3])
+    .SetSummaryMemberPrefixSuffix(0, '{', '}')
+    .SetSummaryMemberPrefixSuffix(1, '{', '}')
+    .SetSummaryMemberPrefixSuffix(2, 'Cond: ', '')
+    .SetSummaryMemberPrefixSuffix(3, 'Event: ', '')
+    .SetSummaryDelimiter(' ')
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 end;
@@ -8827,8 +8837,7 @@ begin
           { unknown }
           wbByteArray('Unknown', 4).IncludeFlag(dfZeroSortKey),
           { 0 ptNone}
-          //wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
-          wbFormIDCk('Unknown',[GLOB,KYWD,NULL,NPC_,LCTN]), // no idea what is going on here.
+          wbByteArray('None', 4, cpIgnore).IncludeFlag(dfZeroSortKey),
           { 1 ptString}
           wbInteger('String', itU32, wbCTDAParam1StringToString, wbCTDAParam1StringToInt),
           { 2 ptInteger}
@@ -14368,7 +14377,7 @@ begin
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
         // wbInteger('Response number', itU8),
-        wbUnknown(4),
+        wbInteger('WEM File', itU32, wbIntToHexStr, wbHexStrToInt),
         wbFloat('Unknown') // Interrupt Percentage?
         // wbByteArray('Unknown', 1),
         // wbInteger('Interrupt Percentage', itU16)
@@ -15726,7 +15735,7 @@ var
           wbLString(FMRN, 'Name'),
           wbString(FMRS),
           wbRStructs('Unknown', 'Unknown', [
-            wbUnknown(FMSR),
+            wbInteger(FMSR, 'Index', itU32),
             wbString(FMRU),
             wbLString(FMRN, 'Name')
           ], [])
@@ -19796,27 +19805,37 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(WKMF, 'Wwise Keyword Mapping', [
     wbEDID,
-    wbUnknown(WMTI),
+    wbInteger(WMTI, 'Unknown', itU16),
     wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbUnknown(WMSS),
+    wbInteger(WMSS, 'Unknown', itU32),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(WMSI),
-      wbUnknown(WMSD)
+      wbInteger(WMSI, 'Unknown', itU16),
+      wbStruct(WMSD, 'Unknown', [
+        wbSoundReference('Unknown'),
+        wbArray('Unknown', wbStruct('Unknown', [
+          wbGUID('Unknown'),
+          wbGUID('Unknown')
+        ]), -1)
+      ])
     ], [])
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(WWED, 'Wwise Event Data', [
     wbEDID,
-    wbUnknown(WSED),
-    wbUnknown(CNAM),
-    wbUnknown(WTED)
+    wbGUID(WSED),
+    wbFormIDCk(CNAM, 'Condition Form', [CNDF]),
+    wbGUID(WTED)
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(PERS, 'Unknown', [
-    wbUnknown(DATA),
-    wbRArray('Unknown', wbUnknown(DAT2))
+    wbInteger(DATA, 'Unknown', itU32),
+    wbRArray('Unknown', wbStructs(DAT2, 'Unknown', 'Unknown', [
+      wbFormID('Unknown'),
+      wbUnknown(4),
+      wbUnknown(4)
+    ]))
   ]);
 
   wbAddGroupOrder(GMST); {SF1Dump: no errors}

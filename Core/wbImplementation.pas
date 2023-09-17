@@ -455,6 +455,8 @@ type
 
     function GetMastersUpdated: Boolean;
     procedure SetMastersUpdated(aValue: Boolean);
+
+    function MergeMultiple(const aElement: IwbElement): Boolean; virtual;
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -1435,6 +1437,8 @@ type
 
     procedure NotifyChangedInternal(aContainer: Pointer); override;
 
+    function MergeMultiple(const aElement: IwbElement): Boolean; override;
+
     {--- IwbSubRecord ---}
     function GetSubRecordHeaderSize: Integer;
 
@@ -2278,7 +2282,14 @@ begin
 
   Signature := aRecord.Signature;
 
-  if ((wbGameMode > gmTES3) and (Cardinal(Signature) = Cardinal(MGEF))) or (Cardinal(Signature) = Cardinal(GMST)) or (Cardinal(Signature) = Cardinal(DFOB)) or wbTrackAllEditorID then begin
+  if ((wbGameMode > gmTES3) and (Cardinal(Signature) = Cardinal(MGEF)))
+     or
+     (Cardinal(Signature) = Cardinal(GMST))
+     or
+     (Cardinal(Signature) = Cardinal(DFOB))
+     or
+     wbTrackAllEditorID
+  then begin
     s := aRecord.EditorID;
     if s <> '' then begin
       if flRecordsByEditorIDCount >= Length(flRecordsByEditorID) then
@@ -13766,6 +13777,63 @@ begin
   end;
 end;
 
+function TwbSubRecord.MergeMultiple(const aElement: IwbElement): Boolean;
+var
+  SelfRef              : IwbContainerElementRef;
+  lSourceDataContainer : IwbDataContainerInternal;
+begin
+  if not Supports(aElement, IwbDataContainerInternal, lSourceDataContainer) then
+    Exit(False);
+  if lSourceDataContainer.DataSize < 1 then
+    Exit(True);
+  if not Assigned(srDef) then
+    Exit(False);
+  if not (dfMergeIfMultiple in srDef.DefFlags) then
+    Exit(False);
+  var lValueDef := GetValueDef;
+  if not Assigned(lValueDef) then
+    Exit(False);
+  if lValueDef.DefType <> dtArray then
+    Exit(False);
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(True);
+
+  if not (srsIsArray in srStates) then
+    Exit(False);
+  if not Assigned(srValueDef) then
+    Exit(False);
+
+  var lOldElementCount := GetElementCount;
+  var lWasEditAllowed := wbEditAllowed;
+  wbEditAllowed := True;
+  try
+    if not wbBeginInternalEdit(True) then
+      Exit(False);
+    try
+      BeginUpdate;
+      try
+        var lBasePtr := lSourceDataContainer.DataBasePtr;
+        ArrayDoInit(srValueDef, Self, lBasePtr, lSourceDataContainer.DataEndPtr, srArraySizePrefix);
+        var lNewElementCount := GetElementCount;
+        if lNewElementCount > lOldElementCount then begin
+          InvalidateStorage;
+          for var lElementIdx := lOldElementCount to Pred(lNewElementCount) do
+            (GetElement(lElementIdx) as IwbElementInternal).Modified := True;
+          UpdateStorageFromElements;
+        end;
+        Result := True;
+      finally
+        EndUpdate;
+      end;
+    finally
+      wbEndInternalEdit;
+    end;
+  finally
+    wbEditAllowed := lWasEditAllowed;
+  end;
+end;
+
 procedure TwbSubRecord.MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer);
 var
   SizeNeeded    : Cardinal;
@@ -17111,6 +17179,11 @@ begin
   Assert( Length(aOld) = Length(aNew) );
 end;
 
+function TwbElement.MergeMultiple(const aElement: IwbElement): Boolean;
+begin
+  Result := False;
+end;
+
 procedure TwbElement.MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 {$IFDEF USE_CODESITE}
 var
@@ -18361,10 +18434,14 @@ var
   CurrentDefPos : Integer;
   CurrentRec    : IwbSubRecordInternal;
   CurrentDef    : IwbRecordMemberDef;
+  LastDef       : IwbRecordMemberDef;
   Element       : IwbElementInternal;
+  LastElement   : IwbElementInternal;
   FoundMembers  : IwbElements;
 begin
   srcDef := aDef as IwbRecordDef;
+  LastDef := nil;
+  LastElement := nil;
 
   if aPos = Low(Integer) then begin
     AddRequiredElements;
@@ -18407,6 +18484,17 @@ begin
 
       CurrentDef := srcDef.Members[CurrentDefPos];
       if not CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec) then begin
+        if Assigned(LastDef)
+           and
+           (dfMergeIfMultiple in LastDef.DefFlags)
+           and
+           LastDef.CanHandle(CurrentRec.Signature, CurrentRec)
+        then begin
+          if LastElement.MergeMultiple(CurrentRec) then begin
+            aContainer.RemoveElement(aPos);
+            Continue;
+          end;
+        end;
         Inc(CurrentDefPos);
         Continue;
       end;
@@ -18416,8 +18504,12 @@ begin
         Assert(Assigned(CurrentDef));
       end;
 
-      if Assigned(FoundMembers[CurrentDefPos]) then
+      if Assigned(FoundMembers[CurrentDefPos]) then begin
+        if dfMergeIfMultiple in CurrentDef.DefFlags then
+          if FoundMembers[CurrentDefPos].MergeMultiple(CurrentRec) then
+            Continue;
         Break; // don't allow duplicate members
+      end;
 
       case CurrentDef.DefType of
         dtSubRecord : begin
@@ -18435,6 +18527,8 @@ begin
       Element.SetSortOrder(CurrentDefPos);
       Element.SetMemoryOrder(CurrentDefPos);
       FoundMembers[CurrentDefPos] := Element;
+      LastDef := CurrentDef;
+      LastElement := Element;
 
       if dfTerminator in CurrentDef.DefFlags then
         Break;

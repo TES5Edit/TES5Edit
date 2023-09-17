@@ -1015,6 +1015,8 @@ type
 
     function GetMastersUpdated: Boolean;
 
+    function MergeMultiple(const aElement: IwbElement): Boolean;
+
     property ElementID: Pointer
       read GetElementID;
     property ElementStates: TwbElementStates
