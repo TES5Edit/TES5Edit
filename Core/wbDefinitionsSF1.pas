@@ -66,7 +66,6 @@ var
   wbPhotoModeEnum: IwbEnumDef;
   wbObjectModPropertiesEnum: IwbEnumDef;
   wbDialogueSubtypeEnum: IwbEnumDef;
-
 procedure DefineSF1;
 
 implementation
@@ -333,6 +332,7 @@ begin
       wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]))
 end;
+
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -3205,7 +3205,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..600] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..602] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3608,6 +3608,7 @@ const
     (Index: 726; Name: 'DoesNotExist'),    // 399
     (Index: 728; Name: 'GetPlayerWalkAwayFromDialogueScene'),    // 400
     (Index: 729; Name: 'GetActorStance'),    // 401
+    (Index: 730; Name: 'Unknown'; ParamType1: ptKeyword),
     (Index: 734; Name: 'CanProduceForWorkshop'),    // 402
     (Index: 735; Name: 'CanFlyHere'),    // 403
     (Index: 736; Name: 'EPIsDamageType'; ParamType1: ptDamageType),
@@ -3733,7 +3734,7 @@ const
     (Index: 861; Name: 'GetDistanceFromLocationWithKeyword'; Desc: 'Get the distance from the ref to any location with a specific keyword.'; ParamType1: ptKeyword),
     (Index: 862; Name: 'GetPlanetVisited'; Desc: 'Has the ref object''s current planet been visited by the player?'),
     (Index: 863; Name: 'IsLocalDay'; Desc: 'Check if the sun is up on the current planet.'),
-    (Index: 864; Name: 'SpeechChallengePreviousSceneHasKeyword'; Desc: 'Does the last speech challenge scene have a keyword?'),
+    (Index: 864; Name: 'SpeechChallengePreviousSceneHasKeyword'; Desc: 'Does the last speech challenge scene have a keyword?'; ParamType1: ptKeyword),
     (Index: 865; Name: 'GetBiomeMaskValue'; Desc: 'Get the ref object''s biome mask on the terrain at its position.'),
     (Index: 866; Name: 'BodyIsType'; Desc: 'Check if the planet type for the ref''s planet matches the given keyword.'),
     (Index: 867; Name: 'BodyIsAtmosphereType'; Desc: 'Check if the planet atmosphere type for the ref''s planet matches the given keyword.'),
@@ -3776,6 +3777,7 @@ const
     (Index: 912; Name: 'IsActorReactionInCooldown'; Desc: 'Get whether an actor''s reaction is in cooldown or not.'),
     (Index: 916; Name: 'BiomeSupportsCreature'; Desc: 'Does the actor parameter resolve to a creature in the planet''s biome''s creature list?'; ParamType1: ptActorBase),
     (Index: 921; Name: 'IsFacingActor'; Desc: 'Is the actor facing the refr?'),
+    (Index: 922; Name: 'Unknown'; Desc: 'Unknown'; ParamType1: ptGlobal),
     (Index: 923; Name: 'GetValueCurrentLocation'; Desc: 'Get an actor value from the reference''s current location'; ParamType1: ptActorValue),
     (Index: 924; Name: 'IsBoostPackActive'; Desc: 'Is player''s boost pack active?'),
     (Index: 925; Name: 'GetTimeSinceLastBoostPackEnded'; Desc: 'Get time since last boost pack ended, in seconds.'),
@@ -3868,9 +3870,11 @@ begin
 
   if ParamType in [ptObjectReference, ptActor, ptPackage] then begin
     if ParamFlag and $02 > 0 then begin
+      if ((Container.ElementByName['Run On'].NativeValue = 14) and (Desc.Name = 'GetDistance')) then
+          ParamType := ptAlias
+      else if not ((Container.ElementByName['Run On'].NativeValue = 5) and (Desc.Name = 'GetIsCurrentPackage')) then
       // except for this func when Run On = Quest Alias, then alias is param3 and package is param1
       // [INFO:00020D3C]
-      if not ((Container.ElementByName['Run On'].NativeValue = 5) and (Desc.Name = 'GetIsCurrentPackage')) then
         ParamType := ptAlias    {>>> 'use aliases' is set <<<}
       end
       else if ParamFlag and $08 > 0 then
@@ -7980,7 +7984,8 @@ begin
       'Attack',
       'Murder',
       'Escape Jail',
-      'Werewolf Transformation'
+      'Werewolf Transformation',
+      'Smuggling'
     ], [
       -1, 'None'
     ]);
@@ -8460,7 +8465,7 @@ begin
           wbFormIDCkNoReach('Actor', [NULL, PLYR, ACHR, REFR]),
           { 5 ptActorBase}
           wbFormIDCkNoReach('Actor Base', [NPC_, NULL]),
-          { 6 ptActorValue}
+          { 6 ptActorValue }
           wbActorValue,
           { 7 ptAdvanceAction}
           wbInteger('Player Action', itU32, wbAdvanceActionEnum),
@@ -8741,13 +8746,14 @@ begin
           { 4} 'Linked Reference',
           { 5} 'Quest Alias',
           { 6} 'Package Data',
+          { 8} 'Unknown 8',
           { 7} 'Event Data',
           { 9} 'Command Target',
           {10} 'Event Camera Ref',
           {11} 'My Killer',
           {12} 'Unknown 12',
           {13} 'Unknown 13',
-          {14} 'Unknown 14'
+          {14} 'Player Ship'
         ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
         wbUnion('Reference', wbCTDAReferenceDecider, [
           wbInteger('Unused', itU32, nil, cpIgnore),
@@ -15680,7 +15686,7 @@ begin
 
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
-          wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR]),
+          wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR, PLYR]),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
             wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
