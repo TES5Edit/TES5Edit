@@ -16,56 +16,61 @@ uses
   wbInterface;
 
 var
-  wbBipedObjectFlags: IwbFlagsDef;
-  wbEquipType: IwbFlagsDef;
-  wbFurnitureEntryTypeFlags: IwbFlagsDef;
-  wbPKDTFlags: IwbFlagsDef;
-  wbPKDTInterruptFlags: IwbFlagsDef;
-  wbSMNodeFlags: IwbFlagsDef;
-  wbXALGFlags: IwbFlagsDef;
+  wbIdxSimpleGroup          : TwbNamedIndex;
+  wbIdxComplexGroup         : TwbNamedIndex;
+  wbIdxModulation           : TwbNamedIndex;
 
-  wbCRCValuesEnum: IwbEnumDef;
-  wbActorPropertyEnum: IwbEnumDef;
-  wbAdvanceActionEnum: IwbEnumDef;
-  wbStaggerEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
-  wbArmorPropertyEnum: IwbEnumDef;
-  wbBipedObjectEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
-  wbCastEnum: IwbEnumDef;
-  wbCastingSourceEnum: IwbEnumDef;
-  wbCrimeTypeEnum: IwbEnumDef;
-  wbCriticalStageEnum: IwbEnumDef;
-  wbEmotionTypeEnum: IwbEnumDef;
-  wbEntryPointsEnum: IwbEnumDef;
-  wbEventFunctionEnum: IwbEnumDef;
-  wbEventMemberEnum: IwbEnumDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbFurnitureAnimTypeEnum: IwbEnumDef;
-  wbLocationEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
-  wbObjectModProperties: IwbArrayDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbPropTypeEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbTargetEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbWardStateEnum: IwbEnumDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbWeaponPropertyEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
-  wbKeywordTypeEnum: IwbEnumDef;
-  wbReverbClassEnum: IwbEnumDef;
-  wbHitBehaviourEnum: IwbEnumDef;
-  wbLGDIStarSlot: IwbEnumDef;
-  wbPronounEnum: IwbEnumDef;
-  wbLearnMethodEnum: IwbEnumDef;
-  wbPhotoModeEnum: IwbEnumDef;
-  wbObjectModPropertiesEnum: IwbEnumDef;
-  wbDialogueSubtypeEnum: IwbEnumDef;
+  wbBipedObjectFlags        : IwbFlagsDef;
+  wbEquipType               : IwbFlagsDef;
+  wbFurnitureEntryTypeFlags : IwbFlagsDef;
+  wbPKDTFlags               : IwbFlagsDef;
+  wbPKDTInterruptFlags      : IwbFlagsDef;
+  wbSMNodeFlags             : IwbFlagsDef;
+  wbXALGFlags               : IwbFlagsDef;
+
+  wbCRCValuesEnum           : IwbEnumDef;
+  wbActorPropertyEnum       : IwbEnumDef;
+  wbAdvanceActionEnum       : IwbEnumDef;
+  wbStaggerEnum             : IwbEnumDef;
+  wbAlignmentEnum           : IwbEnumDef;
+  wbArmorPropertyEnum       : IwbEnumDef;
+  wbBipedObjectEnum         : IwbEnumDef;
+  wbBlendModeEnum           : IwbEnumDef;
+  wbBlendOpEnum             : IwbEnumDef;
+  wbCastEnum                : IwbEnumDef;
+  wbCastingSourceEnum       : IwbEnumDef;
+  wbCrimeTypeEnum           : IwbEnumDef;
+  wbCriticalStageEnum       : IwbEnumDef;
+  wbEmotionTypeEnum         : IwbEnumDef;
+  wbEntryPointsEnum         : IwbEnumDef;
+  wbEventFunctionEnum       : IwbEnumDef;
+  wbEventMemberEnum         : IwbEnumDef;
+  wbFormTypeEnum            : IwbEnumDef;
+  wbFurnitureAnimTypeEnum   : IwbEnumDef;
+  wbLocationEnum            : IwbEnumDef;
+  wbMiscStatEnum            : IwbEnumDef;
+  wbMusicEnum               : IwbEnumDef;
+  wbObjectModProperties     : IwbArrayDef;
+  wbObjectTypeEnum          : IwbEnumDef;
+  wbPropTypeEnum            : IwbEnumDef;
+  wbSkillEnum               : IwbEnumDef;
+  wbSoundLevelEnum          : IwbEnumDef;
+  wbTargetEnum              : IwbEnumDef;
+  wbVatsValueFunctionEnum   : IwbEnumDef;
+  wbWardStateEnum           : IwbEnumDef;
+  wbWeaponAnimTypeEnum      : IwbEnumDef;
+  wbWeaponPropertyEnum      : IwbEnumDef;
+  wbZTestFuncEnum           : IwbEnumDef;
+  wbKeywordTypeEnum         : IwbEnumDef;
+  wbReverbClassEnum         : IwbEnumDef;
+  wbHitBehaviourEnum        : IwbEnumDef;
+  wbLGDIStarSlot            : IwbEnumDef;
+  wbPronounEnum             : IwbEnumDef;
+  wbLearnMethodEnum         : IwbEnumDef;
+  wbPhotoModeEnum           : IwbEnumDef;
+  wbObjectModPropertiesEnum : IwbEnumDef;
+  wbDialogueSubtypeEnum     : IwbEnumDef;
+
 procedure DefineSF1;
 
 implementation
@@ -103,167 +108,167 @@ const
 
 var
   wbPKDTSpecificFlagsUnused : Boolean;
-  wbEDID: IwbSubRecordDef;
-  wbNLDT: IwbSubRecordDef;
-  wbCOED: IwbSubRecordDef;
-  wbXLCM: IwbSubRecordDef;
-  wbEITM: IwbSubRecordDef;
-  wbDEST: IwbSubRecordStructDef;
-  wbDESTActor: IwbSubRecordStructDef;
-  wbDODT: IwbSubRecordDef;
-  wbXRGD: IwbSubRecordDef;
-  wbXRGB: IwbSubRecordDef;
-  wbSPLO: IwbSubRecordDef;
-  wbSPLOs: IwbSubRecordArrayDef;
-  wbCNTO: IwbRecordMemberDef;
-  wbCNTOs: IwbSubRecordArrayDef;
-  wbAIDT: IwbSubRecordDef;
-  wbFULL: IwbSubRecordDef;
-  wbSNTP: IwbSubRecordDef;
-  wbREFL: IwbRecordMemberDef;
-  wbSNBH: IwbSubRecordDef;
-  wbODTY: IwbSubRecordDef;
-  wbOPDS: IwbSubRecordDef;
-  wbDEFL: IwbSubRecordDef;
-  wbBaseFormComponents: IwbSubRecordArrayDef;
-  wbTraversalData: IwbStructDef;
-  wbPTT2: IwbSubRecordDef;
-  wbFULLActor: IwbSubRecordDef;
-  wbFULLReq: IwbSubRecordDef;
-  wbDESC: IwbSubRecordDef;
-  wbDESCReq: IwbSubRecordDef;
-  wbXSCL: IwbSubRecordDef;
-  wbMODC: IwbSubRecordDef;
-  wbModelFlags: IwbFlagsDef;
-  wbMODF: IwbSubRecordDef;
-  wbMODS: IwbSubRecordDef;
-  wbMO2S: IwbSubRecordDef;
-  wbMO3S: IwbSubRecordDef;
-  wbMO4S: IwbSubRecordDef;
-  wbMO2F: IwbSubRecordDef;
-  wbMO3F: IwbSubRecordDef;
-  wbMO4F: IwbSubRecordDef;
-  wbMO5F: IwbSubRecordDef;
-  wbMO6F: IwbSubRecordDef;
-  wbMO7F: IwbSubRecordDef;
-  wbMO2C: IwbSubRecordDef;
-  wbMO3C: IwbSubRecordDef;
-  wbMO4C: IwbSubRecordDef;
-  wbMO5C: IwbSubRecordDef;
-  wbFLLD: IwbSubRecordDef;
-  wbComponent: IwbValueDef;
-  wbComponents: IwbSubRecordDef;
-  wbCTDA: IwbRecordMemberDef;
-  wbCTDAs: IwbSubRecordArrayDef;
-  wbCTDAsReq: IwbSubRecordArrayDef;
-  wbCTDAsCount: IwbSubRecordArrayDef;
-  wbConditions: IwbSubRecordStructDef;
-  wbATCP: IwbSubRecordDef;
-  wbATCPReq: IwbSubRecordDef;
-  wbATAN: IwbSubRecordStructDef;
-  wbATANs: IwbSubRecordArrayDef;
-  wbATANsCount: IwbSubRecordArrayDef;
-  wbActivityTracker: IwbSubRecordStructDef;
-  wbXESP: IwbSubRecordDef;
-  wbICON: IwbSubRecordDef;
-  wbMICO: IwbSubRecordDef;
-  wbActorValue: IwbIntegerDef;
-  wbETYP: IwbSubRecordDef;
-  wbETYPReq: IwbSubRecordDef;
-  wbEFID: IwbSubRecordDef;
-  wbEFIT: IwbSubRecordDef;
-  wbEffects: IwbSubRecordArrayDef;
-  wbEffectsReq: IwbSubRecordArrayDef;
-  wbFirstPersonFlagsU32: IwbIntegerDef;
-  wbBOD2: IwbSubRecordDef;
-  wbScriptEntry: IwbValueDef;
-  wbScriptFlags: IwbIntegerDef;
-  wbScriptPropertyObject: IwbUnionDef;
-  wbScriptPropertyStruct: IwbArrayDef;
-  wbScriptProperty: IwbValueDef;
-  wbScriptProperties: IwbArrayDef;
-  wbScriptFragments: IwbValueDef;
-  wbScriptFragmentsQuest: IwbValueDef;
-  wbScriptFragmentsInfo: IwbValueDef;
-  wbScriptFragmentsPack: IwbValueDef;
-  wbScriptFragmentsScen: IwbValueDef;
-  wbPLDT: IwbSubRecordDef;
-  wbPLVD: IwbSubRecordDef;
-  wbPTDA: IwbSubRecordWithStructDef;
-  wbXLOC: IwbSubrecordWithStructDef;
-  wbAttackData: IwbSubRecordStructDef;
-  wbLLCT: IwbSubRecordDef;
-  wbLVLD: IwbSubRecordDef;
-  wbVMAD: IwbSubRecordDef;
-  wbVMADFragmentedPERK: IwbSubRecordDef;
-  wbVMADFragmentedPACK: IwbSubRecordDef;
-  wbVMADFragmentedQUST: IwbSubRecordDef;
-  wbVMADFragmentedSCEN: IwbSubRecordDef;
-  wbVMADFragmentedINFO: IwbSubRecordDef;
-  wbVMADFragmentedTMLM: IwbSubRecordDef;
-  wbCOCT: IwbSubRecordDef;
-  wbKSIZ: IwbSubRecordDef;
-  wbKWDAs: IwbSubRecordDef;
-  wbReqKWDAs: IwbSubRecordDef;
-  wbKeywords: IwbSubRecordStructDef;
-  wbCVPA: IwbSubRecordDef;
-  wbContainerItems: IwbSubRecordStructDef;
-  wbALSH: IwbRecordMemberDef;
-  wbACSH: IwbRecordMemberDef;
-  wbCUSH: IwbRecordMemberDef;
-  wbCITC: IwbSubRecordDef;
-  wbCITCReq: IwbSubRecordDef;
-  wbMGEFData: IwbSubRecordStructDef;
-  wbMGEFType: IwbIntegerDef;
-  wbSPIT: IwbSubRecordDef;
-  wbDMDC: IwbSubRecordDef;
-  wbDMDS: IwbSubRecordDef;
-  wbMO5S: IwbSubRecordDef;
-  wbSPCT: IwbSubRecordDef;
-  wbXOWN: IwbSubRecordDef;
-  wbXRNK: IwbSubRecordDef;
-  wbQUSTAliasFlags: IwbSubRecordDef;
-  wbPDTO: IwbSubRecordDef;
-  wbPDTOs: IwbSubRecordArrayDef;
-  wbUNAMs: IwbSubRecordArrayDef;
-  wbNull: IwbValueDef;
-  wbSPED: IwbSubRecordDef;
-  wbINRD: IwbSubRecordDef;
-  wbPTRN: IwbSubRecordDef;
-  wbSTCP: IwbSubRecordDef;
-  wbNTRM: IwbSubRecordDef;
-  wbPRPS: IwbSubRecordDef;
-  wbCrowdPRPS: IwbSubRecordDef;
-  wbObjectProperty: IwbValueDef;
-  wbFLTR: IwbSubRecordDef;
-  wbAPPR: IwbSubRecordDef;
-  wbObjectTemplate: IwbSubRecordStructDef;
-  wbBSMPSequence: IwbSubRecordArrayDef;
-  wbArmorAddonBSMPSequence: IwbSubRecordArrayDef;
-  wbFTYP: IwbSubRecordDef;
-  wbATTX: IwbSubRecordDef;
-  wbMNAMFurnitureMarker: IwbSubRecordDef;
-  wbSNAMMarkerParams: IwbSubRecordDef;
-  wbOBTSReq: IwbSubRecordDef;
+  wbEDID                    : IwbSubRecordDef;
+  wbNLDT                    : IwbSubRecordDef;
+  wbCOED                    : IwbSubRecordDef;
+  wbXLCM                    : IwbSubRecordDef;
+  wbEITM                    : IwbSubRecordDef;
+  wbDEST                    : IwbSubRecordStructDef;
+  wbDESTActor               : IwbSubRecordStructDef;
+  wbDODT                    : IwbSubRecordDef;
+  wbXRGD                    : IwbSubRecordDef;
+  wbXRGB                    : IwbSubRecordDef;
+  wbSPLO                    : IwbSubRecordDef;
+  wbSPLOs                   : IwbSubRecordArrayDef;
+  wbCNTO                    : IwbRecordMemberDef;
+  wbCNTOs                   : IwbSubRecordArrayDef;
+  wbAIDT                    : IwbSubRecordDef;
+  wbFULL                    : IwbSubRecordDef;
+  wbSNTP                    : IwbSubRecordDef;
+  wbREFL                    : IwbRecordMemberDef;
+  wbSNBH                    : IwbSubRecordDef;
+  wbODTY                    : IwbSubRecordDef;
+  wbOPDS                    : IwbSubRecordDef;
+  wbDEFL                    : IwbSubRecordDef;
+  wbBaseFormComponents      : IwbSubRecordArrayDef;
+  wbTraversalData           : IwbStructDef;
+  wbPTT2                    : IwbSubRecordDef;
+  wbFULLActor               : IwbSubRecordDef;
+  wbFULLReq                 : IwbSubRecordDef;
+  wbDESC                    : IwbSubRecordDef;
+  wbDESCReq                 : IwbSubRecordDef;
+  wbXSCL                    : IwbSubRecordDef;
+  wbMODC                    : IwbSubRecordDef;
+  wbModelFlags              : IwbFlagsDef;
+  wbMODF                    : IwbSubRecordDef;
+  wbMODS                    : IwbSubRecordDef;
+  wbMO2S                    : IwbSubRecordDef;
+  wbMO3S                    : IwbSubRecordDef;
+  wbMO4S                    : IwbSubRecordDef;
+  wbMO2F                    : IwbSubRecordDef;
+  wbMO3F                    : IwbSubRecordDef;
+  wbMO4F                    : IwbSubRecordDef;
+  wbMO5F                    : IwbSubRecordDef;
+  wbMO6F                    : IwbSubRecordDef;
+  wbMO7F                    : IwbSubRecordDef;
+  wbMO2C                    : IwbSubRecordDef;
+  wbMO3C                    : IwbSubRecordDef;
+  wbMO4C                    : IwbSubRecordDef;
+  wbMO5C                    : IwbSubRecordDef;
+  wbFLLD                    : IwbSubRecordDef;
+  wbComponent               : IwbValueDef;
+  wbComponents              : IwbSubRecordDef;
+  wbCTDA                    : IwbRecordMemberDef;
+  wbCTDAs                   : IwbSubRecordArrayDef;
+  wbCTDAsReq                : IwbSubRecordArrayDef;
+  wbCTDAsCount              : IwbSubRecordArrayDef;
+  wbConditions              : IwbSubRecordStructDef;
+  wbATCP                    : IwbSubRecordDef;
+  wbATCPReq                 : IwbSubRecordDef;
+  wbATAN                    : IwbSubRecordStructDef;
+  wbATANs                   : IwbSubRecordArrayDef;
+  wbATANsCount              : IwbSubRecordArrayDef;
+  wbActivityTracker         : IwbSubRecordStructDef;
+  wbXESP                    : IwbSubRecordDef;
+  wbICON                    : IwbSubRecordDef;
+  wbMICO                    : IwbSubRecordDef;
+  wbActorValue              : IwbIntegerDef;
+  wbETYP                    : IwbSubRecordDef;
+  wbETYPReq                 : IwbSubRecordDef;
+  wbEFID                    : IwbSubRecordDef;
+  wbEFIT                    : IwbSubRecordDef;
+  wbEffects                 : IwbSubRecordArrayDef;
+  wbEffectsReq              : IwbSubRecordArrayDef;
+  wbFirstPersonFlagsU32     : IwbIntegerDef;
+  wbBOD2                    : IwbSubRecordDef;
+  wbScriptEntry             : IwbValueDef;
+  wbScriptFlags             : IwbIntegerDef;
+  wbScriptPropertyObject    : IwbUnionDef;
+  wbScriptPropertyStruct    : IwbArrayDef;
+  wbScriptProperty          : IwbValueDef;
+  wbScriptProperties        : IwbArrayDef;
+  wbScriptFragments         : IwbValueDef;
+  wbScriptFragmentsQuest    : IwbValueDef;
+  wbScriptFragmentsInfo     : IwbValueDef;
+  wbScriptFragmentsPack     : IwbValueDef;
+  wbScriptFragmentsScen     : IwbValueDef;
+  wbPLDT                    : IwbSubRecordDef;
+  wbPLVD                    : IwbSubRecordDef;
+  wbPTDA                    : IwbSubRecordWithStructDef;
+  wbXLOC                    : IwbSubrecordWithStructDef;
+  wbAttackData              : IwbSubRecordStructDef;
+  wbLLCT                    : IwbSubRecordDef;
+  wbLVLD                    : IwbSubRecordDef;
+  wbVMAD                    : IwbSubRecordDef;
+  wbVMADFragmentedPERK      : IwbSubRecordDef;
+  wbVMADFragmentedPACK      : IwbSubRecordDef;
+  wbVMADFragmentedQUST      : IwbSubRecordDef;
+  wbVMADFragmentedSCEN      : IwbSubRecordDef;
+  wbVMADFragmentedINFO      : IwbSubRecordDef;
+  wbVMADFragmentedTMLM      : IwbSubRecordDef;
+  wbCOCT                    : IwbSubRecordDef;
+  wbKSIZ                    : IwbSubRecordDef;
+  wbKWDAs                   : IwbSubRecordDef;
+  wbReqKWDAs                : IwbSubRecordDef;
+  wbKeywords                : IwbSubRecordStructDef;
+  wbCVPA                    : IwbSubRecordDef;
+  wbContainerItems          : IwbSubRecordStructDef;
+  wbALSH                    : IwbRecordMemberDef;
+  wbACSH                    : IwbRecordMemberDef;
+  wbCUSH                    : IwbRecordMemberDef;
+  wbCITC                    : IwbSubRecordDef;
+  wbCITCReq                 : IwbSubRecordDef;
+  wbMGEFData                : IwbSubRecordStructDef;
+  wbMGEFType                : IwbIntegerDef;
+  wbSPIT                    : IwbSubRecordDef;
+  wbDMDC                    : IwbSubRecordDef;
+  wbDMDS                    : IwbSubRecordDef;
+  wbMO5S                    : IwbSubRecordDef;
+  wbSPCT                    : IwbSubRecordDef;
+  wbXOWN                    : IwbSubRecordDef;
+  wbXRNK                    : IwbSubRecordDef;
+  wbQUSTAliasFlags          : IwbSubRecordDef;
+  wbPDTO                    : IwbSubRecordDef;
+  wbPDTOs                   : IwbSubRecordArrayDef;
+  wbUNAMs                   : IwbSubRecordArrayDef;
+  wbNull                    : IwbValueDef;
+  wbSPED                    : IwbSubRecordDef;
+  wbINRD                    : IwbSubRecordDef;
+  wbPTRN                    : IwbSubRecordDef;
+  wbSTCP                    : IwbSubRecordDef;
+  wbNTRM                    : IwbSubRecordDef;
+  wbPRPS                    : IwbSubRecordDef;
+  wbCrowdPRPS               : IwbSubRecordDef;
+  wbObjectProperty          : IwbValueDef;
+  wbFLTR                    : IwbSubRecordDef;
+  wbAPPR                    : IwbSubRecordDef;
+  wbObjectTemplate          : IwbSubRecordStructDef;
+  wbBSMPSequence            : IwbSubRecordArrayDef;
+  wbArmorAddonBSMPSequence  : IwbSubRecordArrayDef;
+  wbFTYP                    : IwbSubRecordDef;
+  wbATTX                    : IwbSubRecordDef;
+  wbMNAMFurnitureMarker     : IwbSubRecordDef;
+  wbSNAMMarkerParams        : IwbSubRecordDef;
+  wbOBTSReq                 : IwbSubRecordDef;
   //wbTintTemplateGroups: IwbSubrecordArrayDef;
   //wbMorphGroups: IwbSubrecordArrayDef;
   //wbRaceFRMI: IwbSubrecordArrayDef;
-  wbNVNM: IwbSubRecordDef;
-  wbNavmeshVertices: IwbArrayDef;
-  wbNavmeshTriangles: IwbArrayDef;
-  wbNavmeshEdgeLinks: IwbArrayDef;
-  wbNavmeshDoorTriangles: IwbArrayDef;
-  wbNavmeshCoverArray: IwbArrayDef;
-  wbNavmeshCoverTriangleMap: IwbArrayDef;
-  wbNavmeshWaypoints: IwbArrayDef;
-  wbNavmeshGrid: IwbStructDef;
-  wbMNAMNAVM: IwbSubRecordDef;
-  wbMaxHeightDataCELL: IwbSubRecordDef;
-  wbMaxHeightDataWRLD: IwbSubRecordDef;
-  wbXALG: IwbRecordMemberDef;
-  wbHNAMHNAM: IwbRecordMemberDef;
-  wbReflectionChunkUnion: IwbValueDef;
-  wbXTV2: IwbSubRecordDef;
+  wbNVNM                    : IwbSubRecordDef;
+  wbNavmeshVertices         : IwbArrayDef;
+  wbNavmeshTriangles        : IwbArrayDef;
+  wbNavmeshEdgeLinks        : IwbArrayDef;
+  wbNavmeshDoorTriangles    : IwbArrayDef;
+  wbNavmeshCoverArray       : IwbArrayDef;
+  wbNavmeshCoverTriangleMap : IwbArrayDef;
+  wbNavmeshWaypoints        : IwbArrayDef;
+  wbNavmeshGrid             : IwbStructDef;
+  wbMNAMNAVM                : IwbSubRecordDef;
+  wbMaxHeightDataCELL       : IwbSubRecordDef;
+  wbMaxHeightDataWRLD       : IwbSubRecordDef;
+  wbXALG                    : IwbRecordMemberDef;
+  wbHNAMHNAM                : IwbRecordMemberDef;
+  wbReflectionChunkUnion    : IwbValueDef;
+  wbXTV2                    : IwbSubRecordDef;
 
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
@@ -291,7 +296,7 @@ begin
   Result :=
     wbRStructSK([0], 'Model', [
       wbString(MODL, 'Model FileName'),
-//      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMOLM(MOLM),
       wbFLLD,
       wbUnknown(XFLG),
@@ -326,13 +331,12 @@ end;
 
 function wbDamageTypeArray(aItemName: string): IwbSubRecordDef;
 begin
-    Result := wbArrayS(DAMA, aItemName+'s', wbStructSK([0], aItemName, [
-      wbFormIDCk('Damage Type', [DMGT]),
-      wbInteger('Value', itU32),
-      wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
-    ]))
+  Result := wbArrayS(DAMA, aItemName+'s', wbStructSK([0], aItemName, [
+    wbFormIDCk('Damage Type', [DMGT]),
+    wbInteger('Value', itU32),
+    wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
+  ]))
 end;
-
 
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -519,10 +523,8 @@ begin
   end;
 
   case aType of
-    ctEditType: begin
-      Result := 'ComboBox';
-      Exit;
-    end;
+    ctEditType:
+      Exit('ComboBox');
     ctEditInfo:
       EditInfos := TStringList.Create;
   else
@@ -2470,47 +2472,45 @@ begin
 end;
 
 function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  SubRecord   : IwbMainRecord;
-  Element     : IwbElement;
 begin
   Result := 0;
 
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etSubRecord) do
-    Container := Container.Container;
-
-  if not Supports(Container, IwbSubRecord, SubRecord) then
+  if not Assigned(aElement) then
     Exit;
 
-  Element := SubRecord.ElementByName['Is Island'];
-  if not Assigned(Element) then
+  var lContainer: IwbContainer;
+  if not Supports(aElement, IwbContainer, lContainer) then
+    lContainer := aElement.Container;
+
+  if not Assigned(lContainer) then
     Exit;
 
-  Result := Element.NativeValue;
+  var lElement := lContainer.ElementByPath['...\Has Island Data'];
+  if not Assigned(lElement) then
+    Exit;
+
+  Result := lElement.NativeValue;
 end;
 
 function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  SubRecord   : IwbMainRecord;
-  Element     : IwbElement;
 begin
   Result := 0;
 
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
-    Container := Container.Container;
-
-  if not Supports(Container, IwbSubRecord, SubRecord) then
+  if not Assigned(aElement) then
     Exit;
 
-  Element := SubRecord.ElementByName['Pathing Worldspace'];
-  if not Assigned(Element) then
+  var lContainer: IwbContainer;
+  if not Supports(aElement, IwbContainer, lContainer) then
+    lContainer := aElement.Container;
+
+  if not Assigned(lContainer) then
     Exit;
 
-  if (Element.NativeValue = 0) then
+  var lElement := lContainer.ElementByPath['...\Parent Worldspace'];
+  if not Assigned(lElement) then
+    Exit;
+
+  if (lElement.NativeValue = 0) then
     Result := 1;
 end;
 
@@ -3880,6 +3880,7 @@ begin
       else if ParamFlag and $08 > 0 then
         ParamType := ptPackdata;  {>>> 'use packdata' is set <<<}
   end;
+
   Result := Succ(Integer(ParamType));
 end;
 
@@ -5633,6 +5634,10 @@ end;
 
 procedure DefineSF1a;
 begin
+  wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
+  wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);
+  wbIdxModulation := wbNamedIndex('Modulation', True);
+
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
@@ -9042,7 +9047,7 @@ begin
       '',
       '',
       'No Traversal FormID'
-    ])).SetAfterSet(wbFlagsAfterSet),
+    ])).SetAfterSet(wbUpdateSameParentUnions),
     wbIsNotFlag(2, wbFormIDCk('Traversal', [TRAV])),
     wbHalf,
     wbHalf,
@@ -10342,21 +10347,6 @@ begin
     wbString(MNAM, 'Particle Texture')
   ]);
 
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(RFCT, 'Visual Effect', [
-    wbEDID,
-    wbStruct(DATA, 'Effect Data', [
-      wbFormIDCK('Effect Art', [ARTO, NULL]),
-      wbFormIDCK('Shader', [EFSH, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Rotate to Face Target',
-        {0x00000002} 'Attach to Camera',
-        {0x00000004} 'Inherit Rotation'
-      ]))
-    ], cpNormal, True)
-  ]);
-  (**)
-
   {subrecords checked against Starfield.esm}
   wbRecord(CONT, 'Container',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -11108,7 +11098,8 @@ begin
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbBoolEnum)
     ], cpNormal, True)
-  ]);
+  ])
+  .IncludeFlag(dfIndexEditorID);
 
   {subrecords checked against Starfield.esm}
   wbRecord(KYWD, 'Keyword',
@@ -11228,7 +11219,21 @@ begin
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbString(NAM2),
+    wbString(NAM2, 'Color Mapping').SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
+    begin
+      Result := nil;
+      if not Assigned(aElement) then
+        Exit;
+      var lAVMDName := aElement.NativeValue;
+      if not VarIsStr(lAVMDName) then
+        Exit;
+
+      var lFile := aElement._File;
+      if not Assigned(lFile) then
+        Exit;
+
+      Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
+    end),
     wbString(NAM3),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
 //    wbFormIDCk(CNAM, 'Color', [CLFM]),
@@ -11488,7 +11493,7 @@ begin
             wbFormIDCk('Door Ref', [REFR])
           ]), -1),
           wbUnknown{
-          wbInteger('Is Island', itU8, wbBoolEnum),
+          wbInteger('Has Island Data', itU8, wbBoolEnum),
           wbUnion('Island', wbNAVIIslandDataDecider, [
             wbNull,
             wbStruct('Island Data', [
@@ -11551,65 +11556,100 @@ begin
             '',
             '',
             'Island'
-          ])), //Only the first byte is used
+          ])).IncludeFlag(dfCollapsed), //Only the first byte is used
           wbVec3,
           wbFloat,
           //wbInteger('Preferred Merges Flag', itU32),
-          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Linked Doors', wbStruct('Door', [
-            wbInteger('Door Type', itU32, wbCRCValuesEnum),
-            wbFormIDCk('Door Ref', [REFR])
-          ]), -1),
-          wbArray('Triangles', wbStruct('Triangle', [
-            wbInteger('Type', itU32, wbCRCValuesEnum),
-            wbFormIDCk('Cell', [CELL]),
-            wbUnknown(4),
-            wbArray('Vertices', wbVec3('Vertex'), 3){.IncludeFlag(dfCollapsed, wbCollapseVertices)},
-            wbUnknown(4),
-            wbFormIDCk('Unknown', [NAVM]),
-            wbFormIDCk('Unknown', [NAVM])
-          ]), -1).IncludeFlag(dfCollapsed),
-          wbInteger('Is Island', itU8, wbBoolEnum),
-          wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbNull,
-            wbStruct('Island Data', [
-              wbVec3('Min'),
-              wbVec3('Max'),
-              wbArray('Triangles',
-                wbStruct('Triangle', [
+          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+          wbArray('Linked Doors',
+            wbStruct('Door', [
+              wbInteger('Door Type', itU32, wbCRCValuesEnum),
+              wbFormIDCk('Door Ref', [REFR])
+            ])
+            .SetSummaryKey([0, 1])
+            .IncludeFlag(dfSummaryMembersNoName)
+            .IncludeFlag(dfCollapsed)
+          , -1).IncludeFlag(dfCollapsed),
+          wbArray('Triangles',
+            wbStruct('Triangle', [
+              wbInteger('Type', itU32, wbCRCValuesEnum),
+              wbFormIDCk('Cell', [CELL]),
+              wbUnknown(4),
+              wbArray('Vertices', wbVec3('Vertex'), 3)
+              .SetSummaryPassthroughMaxCount(3)
+              .IncludeFlag(dfCollapsed, wbCollapseVertices),
+              wbUnknown(4),
+              wbFormIDCk('Unknown', [NAVM]),
+              wbFormIDCk('Unknown', [NAVM])
+            ])
+            .SetSummaryKey([0, 1, 3, 5, 6])
+              .SetSummaryMemberPrefixSuffix(0, '', '')
+              .SetSummaryMemberPrefixSuffix(1, 'in ', '')
+              .SetSummaryMemberPrefixSuffix(3, 'at ', '')
+              .SetSummaryMemberPrefixSuffix(5, '', '')
+              .SetSummaryMemberPrefixSuffix(6, '', '')
+            .IncludeFlag(dfSummaryMembersNoName)
+            .IncludeFlag(dfCollapsed),
+          -1).IncludeFlag(dfCollapsed),
+          wbStruct('Optional Island Data', [
+            wbInteger('Has Island Data', itU8, wbBoolEnum).SetAfterSet(wbUpdateSameParentUnions),
+            wbUnion('', wbNAVIIslandDataDecider, [
+              wbNull,
+              wbStruct('Island Data', [
+
+                wbVec3('Min'),
+                wbVec3('Max'),
+
+                wbArray('Triangles',
                   wbArray('Vertices', wbInteger('Vertex', itS16), 3)
                   .SetSummaryPassthroughMaxCount(3)
-                ])
-              , -1),
-              wbArray('Vertices', wbVec3('Vertex'), -1)
+                , -1)
+                .IncludeFlag(dfCollapsed),
+
+                wbArray('Vertices', wbVec3('Vertex'), -1)
+                .IncludeFlag(dfCollapsed)
+              ])
+              .SetSummaryKey([2])
+              .IncludeFlag(dfSummaryMembersNoName)
               .IncludeFlag(dfCollapsed)
             ])
-          ]),
+            .IncludeFlag(dfCollapsed)
+          ])
+          .SetSummaryKey([1])
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed),
           wbStruct('Pathing Cell', [
             wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
             wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-            wbUnion('Parent', wbNAVIParentDecider, [
+            wbUnion('', wbNAVIParentDecider, [
               wbStruct('Coordinates', [
                 wbInteger('Grid Y', itS16),
                 wbInteger('Grid X', itS16)
               ])
               .SetSummaryKey([0, 1])
-              .SetSummaryMemberPrefixSuffix(0, '[', '')
-              .SetSummaryMemberPrefixSuffix(1, '', ']')
+              .SetSummaryMemberPrefixSuffix(0, '[X:', '')
+              .SetSummaryMemberPrefixSuffix(1, 'Y:', ']')
               .SetSummaryDelimiter(', ')
               .IncludeFlag(dfSummaryMembersNoName)
               .IncludeFlag(dfCollapsed),
 
               wbFormIDCk('Parent Cell', [CELL])
             ])
+            .IncludeFlag(dfUnionStaticResolve)
             .IncludeFlag(dfCollapsed)
           ])
           .SetSummaryKey([1, 2])
+          .IncludeFlag(dfSummaryMembersNoName)
           .IncludeFlag(dfCollapsed),
           wbUnknown
         ])
-        .SetSummaryKeyOnValue([0])
+        .SetSummaryKeyOnValue([0, 9, 7, 8])
+        .SetSummaryPrefixSuffixOnValue(0, '', '')
+        .SetSummaryPrefixSuffixOnValue(9, 'in ', '')
+        .SetSummaryPrefixSuffixOnValue(7, 'containing ', '')
+        .SetSummaryPrefixSuffixOnValue(8, 'has Island with ', '')
+        .IncludeFlag(dfSummaryMembersNoName)
         .IncludeFlag(dfCollapsed)
       ),
       wbStruct(NVPP, 'Preferred Pathing', [
@@ -12219,25 +12259,6 @@ begin
       wbFormIDCk('Impact', [IPCT])
     ]))
   ]);
-
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(ECZN, 'Encounter Zone', [
-    wbEDID,
-    wbStruct(DATA, '', [
-      wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-      wbFormIDCk('Location', [LCTN, NULL]),
-      wbInteger('Rank', itS8),
-      wbInteger('Min Level', itS8),
-      wbInteger('Flags', itU8, wbFlags([
-        'Never Resets',
-        'Match PC Below Minimum Level',
-        'Disable Combat Boundary',
-        'Workshop'
-      ])),
-      wbInteger('Max Level', itS8)
-    ], cpNormal, True)
-  ]);
-  *)
 
   {subrecords checked against Starfield.esm}
   wbRecord(LCTN, 'Location',
@@ -13626,55 +13647,6 @@ begin
     wbUnknown(BOLV)
   ]);
 
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(SNDR, 'Sound Descriptor', [
-    wbEDID,
-    wbString(NNAM, 'Notes'),
-    wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
-      Int64($1EEF540A), 'Standard',
-      Int64($54651A43), 'Compound',
-      Int64($ED157AE3), 'AutoWeapon'
-    ])),
-    wbFormIDCk(GNAM, 'Category', [SNCT]),
-    wbFormIDCk(SNAM, 'Alternate Sound For', [SNDR]),
-    wbSoundDescriptorSounds,
-    wbFormIDCk(ONAM, 'Output Model', [SOPM]),
-    wbCTDAs,
-    wbStruct(LNAM, 'Values', [
-      wbByteArray('Unknown', 1),
-      wbInteger('Looping', itU8, wbEnum([], [
-        $00, 'None',
-        $08, 'Loop',
-        $10, 'Envelope Fast',
-        $20, 'Envelope Slow'
-      ])),
-      wbInteger('Sidechain', itU8),
-      wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
-    ]),
-    wbUnion(BNAM, 'Data', wbSNDRDataDecider, [
-      wbStruct('Values', [
-        wbInteger('% Frequency Shift', itS8),
-        wbInteger('% Frequency Variance', itS8),
-        wbInteger('Priority', itU8),
-        wbInteger('db Variance', itU8),
-        wbInteger('Static Attenuation (db)', itU16, wbDiv(100))
-      ]),
-      wbFormIDCk('Base Descriptor', [SNDR])
-    ]),
-    wbRArray('Descriptors', wbFormIDCk(DNAM, 'Descriptor', [SNDR])),
-    wbInteger(ITMC, 'Count', itU32, nil, cpBenign),
-    wbRArrayS('Rates of Fire',
-      wbRStructSK([1], 'Sound', [
-        wbEmpty(ITMS, 'Marker Start'),
-        wbInteger(INTV, 'RoF (RPM)', itU32),
-        wbString(FNAM, 'File'),
-        wbEmpty(ITME, 'Marker End')
-      ], []),
-      cpNormal, False, nil, wbSNDRRatesOfFireAfterSet
-    )
-  ]);
-  (**)
-
   (* still exists in game code, but not in Starfield.esm * )
   wbRecord(DUAL, 'Dual Cast Data', [
     wbEDID,
@@ -13693,88 +13665,6 @@ begin
     ], cpNormal, True)
   ]);
   (*)
-
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(SNCT, 'Sound Category', [
-    wbEDID,
-    wbFULL,
-    wbInteger(FNAM, 'Flags', itU32, wbFlags([
-      {0x0000001} 'Mute When Submerged',
-      {0x0000002} 'Should Appear on Menu',
-      {0x0000004} 'Immune to Time Speedup',
-      {0x0000008} 'Pause During Menus (Immed)',
-      {0x0000010} 'Pause During Menus (Fade)',
-      {0x0000020} 'Exclude from Player OPM Override',
-      {0x0000040} 'Pause During Start Menu'
-    ]), cpNormal, True),
-    wbFormIDCk(PNAM, 'Parent Category', [SNCT]),
-    wbFormIDCk(ONAM, 'Menu Slider Category', [SNCT]),
-    wbInteger(VNAM, 'Static Volume Multiplier', itU16, wbDiv(65535)),
-    wbInteger(UNAM, 'Default Menu Value', itU16, wbDiv(65535)),
-    wbFloat(MNAM, 'Min Frequency Multiplier'),
-    wbFloat(CNAM, 'Sidechain Target Multiplier')
-  ]);
-  (**)
-
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(SOPM, 'Sound Output Model', [
-    wbEDID,
-    wbStruct(NAM1, 'Data', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Attenuates With Distance',
-        {0x02} 'Allows Rumble',
-        {0x04} 'Applies Doppler',
-        {0x08} 'Applies Distance Delay',
-        {0x10} 'Player Output Model',
-        {0x20} 'Try Play on Controller',
-        {0x40} 'Causes Ducking',
-        {0x80} 'Avoids Ducking'
-      ])),
-      wbByteArray('Unknown', 2),
-      wbInteger('Reverb Send %', itU8)
-    ]),
-    wbInteger(MNAM, 'Type', itU32, wbEnum([
-      'Uses HRTF',
-      'Defined Speaker Output'
-    ])),
-    wbInteger(VNAM, 'Static Attenuation', itS16, wbDiv(100)),
-    wbStruct(ONAM, 'Output Values', [
-      wbArray('Channels', wbStruct('', [
-        wbInteger('FL', itU8),
-        wbInteger('FR', itU8),
-        wbInteger('C', itU8),
-        wbInteger('LFE', itU8),
-        wbInteger('RL', itU8),
-        wbInteger('RR', itU8),
-        wbInteger('SL', itU8),
-        wbInteger('SR', itU8)
-      ]), [
-        'Channel 0',
-        'Channel 1',
-        'Channel 2? (unused)'
-      ])
-    ]),
-    wbStruct(ATTN, 'Dynamic Attenuation Values', [
-      wbFloat('Fade In Distance - Start'),
-      wbFloat('Fade In Distance - End'),
-      wbFloat('Fade Out Distance - Start'),
-      wbFloat('Fade Out Distance - End'),
-      wbStruct('Fade In Curve', [
-        wbInteger('Value 1', itU8),
-        wbInteger('Value 2', itU8),
-        wbInteger('Value 3', itU8),
-        wbInteger('Value 4', itU8)
-      ]),
-      wbStruct('Fade Out Curve', [
-        wbInteger('Value 1', itU8),
-        wbInteger('Value 2', itU8),
-        wbInteger('Value 3', itU8),
-        wbInteger('Value 4', itU8)
-      ])
-    ]),
-    wbFormIDCk(ENAM, 'Effect Chain', [AECH])
-  ]);
-  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(COLL, 'Collision Layer', [
@@ -14113,40 +14003,6 @@ begin
       'Unknown 1'
     ]))
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
-
-  (* exists neither in Starfield.esm nor the game code * )
-  if wbSimpleRecords then begin
-
-    wbRecord(LAND, 'Landscape',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
-      ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertex Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
-    ]);
-
-  end else begin
-
-    wbRecord(LAND, 'Landscape',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
-      ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
-      wbVertexColumns(VNML, 'Vertex Normals'),
-      wbVertexHeightMap,
-      wbVertexColumns(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
-    ]);
-
-  end;
-  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(LIGH, 'Light',
@@ -17199,41 +17055,6 @@ end;
 
 procedure DefineSF1o;
 begin
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(TREE, 'Tree',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} 15, 'Has Distant LOD'
-    ])), [
-    wbEDID,
-    wbVMAD,
-    wbOBND(True),
-    wbGenericModel,
-    wbFormIDCK(PFIG, 'Ingredient', sigBaseObjects),
-    wbFormIDCK(SNAM, 'Harvest Sound', [SNDR, NULL]),
-    wbStruct(PFPC, 'Ingredient Production', [
-      wbInteger('Spring', itU8),
-      wbInteger('Summer', itU8),
-      wbInteger('Fall', itU8),
-      wbInteger('Winter', itU8)
-    ]),
-    wbFULL,
-    wbStruct(CNAM, 'Tree Data', [
-      wbFloat('Trunk Flexibility'),
-      wbFloat('Branch Flexibility'),
-      wbFloat('Trunk Amplitude'),
-      wbFloat('Front Amplitude'),
-      wbFloat('Back Amplitude'),
-      wbFloat('Side Amplitude'),
-      wbFloat('Front Frequency'),
-      wbFloat('Back Frequency'),
-      wbFloat('Side Frequency'),
-      wbFloat('Leaf Flexibility'),
-      wbFloat('Leaf Amplitude'),
-      wbFloat('Leaf Frequency')
-    ], cpNormal, True)
-  ]);
-  (**)
-
   {subrecords checked against Starfield.esm}
   wbRecord(FLOR, 'Flora', [
     wbEDID,
@@ -17784,47 +17605,6 @@ end;
 
 procedure DefineSF1q;
 begin
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(AECH, 'Audio Effect Chain', [
-    wbEDID,
-    wbRArray('Effects',
-      wbRStruct('Effect', [
-        wbInteger(KNAM, 'Type', itU32, wbEnum([], [
-          Int64($864804BE), 'BSOverdrive',
-          Int64($EF575F7F), 'BSStateVariableFilter',
-          Int64($18837B4F), 'BSDelayEffect'
-        ]), cpNormal, False, False, nil, nil, Int64($864804BE)).SetAfterSet(wbAECHTypeAfterSet),
-        wbStruct(DNAM, 'Data', [
-          wbInteger('Enabled', itU32, wbBoolEnum),
-          wbUnion('Value', wbAECHDataDecider, [
-            wbStruct('Overdrive', [
-              wbFloat('Input Gain'), // exponentially(?) normalized from 0..10 to -80..20
-              wbFloat('Output Gain'), // exponentially(?) normalized from 0..10 to -80..20
-              wbFloat('Upper Threshold'), // exponentially(?) normalized from 0..1 to -74..0
-              wbFloat('Lower Threshold') // exponentially(?) normalized from 0..1 to -80..0
-            ]),
-            wbStruct('State Variable Filter', [
-              wbFloat('Center Freq'),
-              wbFloat('Q Value'),
-              wbInteger('Filter Mode', itU32, wbEnum([
-                'High Pass',
-                'Low Pass',
-                'Band Pass',
-                'Notch'
-              ]))
-            ]),
-            wbStruct('Delay Effect', [
-              wbFloat('Feedback %'),
-              wbFloat('Wet Mix %'),
-              wbInteger('Delay MS', itU32)
-            ])
-          ])
-        ])
-      ], [])
-    )
-  ]);
-  (**)
-
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
@@ -17878,24 +17658,13 @@ begin
     wbFormIDCk(MNAM, 'Material Path', [NULL, MTPT])
   ]);
 
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(CMPO, 'Component', [
-    wbEDID,
-    wbOBND,
-    wbFULL,
-    wbCUSD,
-    wbInteger(DATA, 'Auto Calc Value', itU32),
-    wbFormIDCk(MNAM, 'Scrap Item', [MISC]),
-    wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB])
-  ]);
-  (**)
-
   {subrecords checked against Starfield.esm}
   wbRecord(DFOB, 'Default Object', [
     wbEDID,
     wbXALG,
     wbFormID(DATA, 'Object')
-  ]);
+  ])
+  .IncludeFlag(dfIndexEditorID);
 
   {subrecords checked against Starfield.esm}
   wbRecord(DMGT, 'Damage Type', [
@@ -17909,24 +17678,6 @@ begin
       ]))
     ])
   ]);
-
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(GDRY, 'God Rays', [
-    wbEDID,
-    wbStruct(DATA, 'Data', [
-      wbFloatColors('Back Color'),
-      wbFloatColors('Fwd Color'),
-      wbFloat('Intensity'),
-      wbFloat('Air Color - Scale'),
-      wbFloat('Back Color - Scale'),
-      wbFloat('Fwd Color - Scale'),
-      wbFloat('Back Phase'),
-      wbFloatColors('Air Color'),
-      wbFloat('Fwd Phase')
-    ])
-  ]);
-  (**)
-
 end;
 
 procedure DefineSF1r;
@@ -18032,32 +17783,6 @@ begin
       cpNormal, False, nil, wbLENSAfterSet
     )
   ]);
-
-  {wbRecord(LSPR, 'LSPR', [
-    wbEDID
-  ]);
-
-  wbRecord(MICN, 'MICN', [
-    wbEDID
-  ]);}
-
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(MSWP, 'Material Swap',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00010000} 16, 'Custom Swap'
-    ])), [
-    wbEDID,
-    wbString(FNAM, 'Tree Folder'), {First FNAM}
-    wbRArrayS('Material Substitutions',
-      wbRStructSK([0], 'Substitution', [
-        wbString(BNAM, 'Original Material'),
-        wbString(SNAM, 'Replacement Material'),
-        wbString(FNAM, 'Tree Folder (obsolete)'), {Unused, will be moved up to First FNAM}
-        wbFloat(CNAM, 'Color Remapping Index')
-      ], [])
-    )
-  ]);
-  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(NOCM, 'Navigation Mesh Obstacle Cover Manager', [
@@ -18336,25 +18061,10 @@ begin
     wbRArrayS('Parts', wbStaticPart, cpNormal, True)
   ]);
 
-  (* exists neither in Starfield.esm nor the game code * )
-  wbRecord(SCSN, 'Audio Category Snapshot', [
-    wbEDID,
-    wbInteger(PNAM, 'Priority', itU16),
-    wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
-      wbFormIDCk('Categoty', [SNCT]),
-      wbFloat('Multiplier')
-    ]))
-  ]);
-  (**)
-
 end;
 
 procedure DefineSF1t;
 begin
-  {wbRecord(SKIL, 'SKIL', [
-    wbEDID
-  ]);}
-
   {subrecords checked against Starfield.esm}
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
@@ -18963,17 +18673,52 @@ begin
   wbRecord(AVMD, 'Actor Value Modulations', [
     wbEDID,
     wbBaseFormComponents,
-    wbInteger(MNAM, 'Unknown', itU32), //req
+    wbInteger(MNAM, 'Type', itU32, wbEnum([
+      '',
+      'Simple Group',
+      'Complex Group',
+      'Modulation'
+    ])), //req
     wbString(YNAM),  //req
-    wbString(TNAM),  //req
+    wbString(TNAM, 'Name'),  //req
     wbInteger(ITMC, 'Unknown',itU32), //req
-    wbRStructs('Unknown', 'Unknown', [
-      wbString(LNAM), //req
-      wbString(VNAM),
-      wbByteRGBA(NNAM, 'Color')
-    ], []),
+    wbRArray('Unknown',
+      wbRStruct('Unknown', [
+        wbString(LNAM), //req
+        wbString(VNAM),
+        wbByteRGBA(NNAM, 'Color').SetDontShow(function(const aElement: IwbElement): Boolean
+        begin
+          var lContainer: IwbContainer;
+          if not wbTryGetContainerFromUnion(aElement, lContainer) then
+            Exit(False);
+          Result := lContainer.ElementValues['...\MNAM'] <> 'Modulation';
+        end)
+      ], [])
+      .SetSummaryKey([2, 0, 1])
+      .SetSummaryMemberPrefixSuffix(2, '', ' as')
+      .SetSummaryMemberPrefixSuffix(0, '"', '"')
+      .SetSummaryMemberPrefixSuffix(1, 'using ', '')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    ),
     wbInteger(MODT, 'Unknown', itU32)
-  ]);
+  ])
+  .SetBuildIndexKeys(procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys)
+  begin
+    var lType := aMainRecord.ElementNativeValues[MNAM];
+    if not VarIsOrdinal(lType) then
+      Exit;
+
+    var lName := aMainRecord.ElementEditValues[TNAM];
+    if lName = '' then
+      Exit;
+
+    case Integer(lType) of
+      1: aIndexKeys.Keys[wbIdxSimpleGroup] := lName;
+      2: aIndexKeys.Keys[wbIdxComplexGroup] := lName;
+      3: aIndexKeys.Keys[wbIdxModulation] := lName;
+    end;
+  end);
 
   {subrecords checked against Starfield.esm}
   wbRecord(BMOD, 'Bone Modifier', [
@@ -19176,7 +18921,7 @@ begin
         wbFloat('Year length in days'),
         wbInteger('Asteroids', itu32),
         wbInteger('Geostationary', itu32, wbBoolEnum),
-        wbInteger('Rnd seed', itu32),
+        wbInteger('Random Seed', itu32),
         wbInteger('Rings', itu32, wbBoolEnum)
       ]),
       wbStruct(INAM, 'Unknown', [

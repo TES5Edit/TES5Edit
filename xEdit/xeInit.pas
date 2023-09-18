@@ -834,7 +834,7 @@ begin
     wbLanguage         := 'En';
     ToolModes          := [tmView];
     ToolSources        := [tsPlugins];
-    wbBuildRefs        := False;
+    //wbBuildRefs        := False;
   end
 
   else begin

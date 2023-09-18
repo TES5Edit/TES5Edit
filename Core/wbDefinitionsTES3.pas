@@ -1117,7 +1117,9 @@ begin
       wbInteger(INTV, 'Interer Value', its32),
       wbFloat(FLTV, 'Float Value')
     ], [])
-  ]).SetFormIDBase($50);
+  ])
+  .SetFormIDBase($50)
+  .IncludeFlag(dfIndexEditorID);
 
   wbRecord(INGR, 'Ingredient', [
     wbString(NAME, 'ID'),

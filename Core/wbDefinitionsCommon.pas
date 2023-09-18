@@ -258,7 +258,7 @@ function wbIsNotFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boole
 function wbHasNoFlags(const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbHasNoFlags(const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
-procedure wbFlagsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 function wbByteColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
@@ -2754,7 +2754,7 @@ begin
       ]).IncludeFlag(dfMustBeUnion);
 end;
 
-procedure wbFlagsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   lContainer: IwbContainerElementRef;
 begin

@@ -7431,7 +7431,8 @@ begin
       wbFloat('Float'),
       wbInteger('Bool', itU32, wbEnum(['False', 'True']))
     ], cpNormal, True)
-  ]);
+  ])
+  .IncludeFlag(dfIndexEditorID);
 
   wbRecord(KYWD, 'Keyword', [
     wbEDID,
