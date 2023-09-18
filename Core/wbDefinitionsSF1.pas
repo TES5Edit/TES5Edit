@@ -6363,6 +6363,7 @@ begin
   ]);
 
   wbObjectModPropertiesEnum := wbEnum([],[
+                  6, 'Layered Material Swap',
     Sig2Int('AACT'), 'Armor - Actor Value',
     Sig2Int('ADMG'), 'Armor - Damage Resistance',
     Sig2Int('AENC'), 'Armor - Enchantment',
