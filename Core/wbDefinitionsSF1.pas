@@ -3880,7 +3880,6 @@ begin
       else if ParamFlag and $08 > 0 then
         ParamType := ptPackdata;  {>>> 'use packdata' is set <<<}
   end;
-
   Result := Succ(Integer(ParamType));
 end;
 
@@ -15545,7 +15544,14 @@ begin
       {0x00200000} 'No Pickpocket',
       {0x00400000} 'Can Apply Data To Non-Aliased Refs',
       {0x00800000} 'Is Companion',
-      {0x01000000} 'Optional All Scenes'
+      {0x01000000} 'Optional All Scenes',
+      {0x02000000} 'Unknown 26',
+      {0x04000000} 'Unknown 27',
+      {0x08000000} 'Unknown 28',
+      {0x10000000} 'Unknown 29',
+      {0x20000000} 'Unknown 30',
+      {0x40000000} 'Unknown 31',
+      {0x80000000} 'Unknown 32'
     ]), cpNormal, True);
 
   {subrecords checked against Starfield.esm}
