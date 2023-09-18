@@ -18681,9 +18681,9 @@ begin
     ])), //req
     wbString(YNAM),  //req
     wbString(TNAM, 'Name'),  //req
-    wbInteger(ITMC, 'Unknown',itU32), //req
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
+    wbInteger(ITMC, 'Property Count',itU32), //req
+    wbRArray('Properties',
+      wbRStruct('Property', [
         wbString(LNAM), //req
         wbString(VNAM),
         wbByteRGBA(NNAM, 'Color').SetDontShow(function(const aElement: IwbElement): Boolean
@@ -18701,7 +18701,17 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed)
     ),
-    wbInteger(MODT, 'Unknown', itU32)
+    wbInteger(MODT, 'Texture Type', itU32, wbFlags([
+          {0} 'None',
+          {1} 'Rough',
+          {2} 'Opacity',
+          {3} 'Normal',
+          {4} 'AO',
+          {5} 'Metal',
+          {6} 'Conditions',
+          {7} 'Emissive'
+        ])
+    )
   ])
   .SetBuildIndexKeys(procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys)
   begin
