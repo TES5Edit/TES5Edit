@@ -295,8 +295,8 @@ begin
 //      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMOLM(MOLM),
       wbFLLD,
-      wbUnknown(XFLG)
-//      wbMODC, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+      wbUnknown(XFLG),
+      wbMODC
 //      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
 //      wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
     ], [], cpNormal, aRequired, aDontShow)
@@ -17970,11 +17970,11 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
-    wbUnknown(WED0),
+    wbSoundReference(WED0),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD])),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(RSMC),
-      wbUnknown(RSMH)
+      wbInteger(RSMC, 'Unknown', itU32),
+      wbSoundReference(RSMH)
     ], [])
   ]);
 
@@ -17982,7 +17982,7 @@ begin
   wbRecord(LAYR, 'Layer', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR]),
-    wbUnknown(XCLP),
+    wbByteColors(XCLP),
     wbUnknown(LODB)
   ]);
 
@@ -17991,9 +17991,9 @@ begin
     wbEDID,
     wbFloat(CNAM, 'Color Influence'),
     wbFloat(DNAM, 'Fade Distance Radius Scale'),
-    wbUnknown(ENAM),
-    wbUnknown(MNAM),
-    wbUnknown(XNAM),
+    wbFloat(ENAM),
+    wbFloat(MNAM),
+    wbFloat(XNAM),
     wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
     wbRArrayS('Lens Flare Sprites',
       wbRStructSK([0], 'Flare', [
@@ -19260,32 +19260,65 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SFPC, 'Surface Pattern Config', [
     wbEDID,
-    wbFormIDCk(ENAM, 'Unknown', [PTST]), //req
+    wbFormIDCk(ENAM, 'Surface Pattern Style', [NULL, PTST]).SetRequired(True),
     wbRStructs('Unknown', 'Unknown', [
-      wbString(BNAM),
-      wbFloat(CNAM)
+      wbString(BNAM, 'Type'),
+      wbFloat(CNAM, 'Chance') // chance or weight?
     ], []),
-    wbArray(DNAM, 'Unknown', wbFloat('Unknown'), 3)  //req seems to be fixed length
+    wbArray(DNAM, 'Unknown', wbFloat('Unknown'), 3).SetRequired(True)  // seems to be fixed length
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(SFPT, 'Surface Pattern', [
     wbEDID,
     wbBaseFormComponents,
-    wbFormID(CNAM),  //req
-    wbUnknown(BNAM), //req
-    wbFormIDCk(DNAM, 'Worldspace', [WRLD])
+    wbFormIDCk(CNAM, 'Surface Pattern Style', [NULL, PTST]).SetRequired(True),
+    wbArray(BNAM, 'Surface Blocks', wbFormIDCk('Surface Block', [SFBK]), 256).SetRequired(True),
+    wbArray(DNAM, 'Worldspaces', wbFormIDCk('Worldspace', [WRLD]))
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(SFTR, 'Surface Tree', [
+  wbRecord(SFTR, 'Surface Tree', wbFlags(wbRecordFlagsFlags, [
+      {0x00000001} { 0} '',
+      {0x00000002} { 1} '',
+      {0x00000004} { 2} '',
+      {0x00000008} { 3} '',
+      {0x00000010} { 4} ' ',
+      {0x00000020} { 5} '',
+      {0x00000040} { 6} '',
+      {0x00000080} { 7} '',
+      {0x00000100} { 8} '',
+      {0x00000200} { 9} '',
+      {0x00000400} {10} '',
+      {0x00000800} {11} '',
+      {0x00001000} {12} '',
+      {0x00002000} {13} '',
+      {0x00004000} {14} '',
+      {0x00008000} {15} '',
+      {0x00010000} {16} '',
+      {0x00020000} {17} '',
+      {0x00040000} {18} 'Unknown 18',
+      {0x00080000} {19} '',
+      {0x00100000} {20} '',
+      {0x00200000} {21} '',
+      {0x00400000} {22} '',
+      {0x00800000} {23} '',
+      {0x01000000} {24} '',
+      {0x02000000} {25} '',
+      {0x04000000} {26} '',
+      {0x08000000} {27} '',
+      {0x10000000} {28} '',
+      {0x20000000} {29} '',
+      {0x40000000} {30} '',
+      {0x80000000} {31} ''
+    ]), [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(CNAM), //req
-    wbUnknown(DNAM), //req
-    wbUnknown(ENAM), //req
-    wbUnknown(ENAM), //req
-    wbString(NAM1)   //req
+    wbUnknown(CNAM).SetRequired(True),
+    wbUnknown(DNAM).SetRequired(True),
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]), 65536).SetRequired(True),
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]), 65536).SetRequired(True),
+    wbString(NAM1, 'Filter').SetRequired(True)
   ]);
 
   {subrecords checked against Starfield.esm}
