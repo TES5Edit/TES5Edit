@@ -17252,7 +17252,7 @@ begin
     ]),
     wbStruct(WCHG, 'Unknown', [
       wbFloat('Unknown'),
-      wbFloat('Range'),
+      wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbUnknown
     ]),
