@@ -18858,7 +18858,7 @@ begin
     wbBaseFormComponents,
     wbUnknown(CNAM), //req
     wbRArray('Biomes', wbStruct(PPBD, 'Biome', [
-      wbFormID('Biome reference'),
+      wbFormIDCK('Biome reference', [BIOM]),
       wbFloat('Percentage'),
       wbUnknown(4),
       wbFormID('Resource gen override'),
