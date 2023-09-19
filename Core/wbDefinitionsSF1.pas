@@ -18766,7 +18766,7 @@ begin
     ])), //req
     wbString(YNAM),  //req
     wbString(TNAM, 'Name'),  //req
-    wbInteger(ITMC, 'Item Count',itU32), //req
+    wbInteger(ITMC, 'Entry Count',itU32), //req
     wbRArray('Entries',
       wbRStruct('Entry', [
         wbString(LNAM, 'Name'), //req
