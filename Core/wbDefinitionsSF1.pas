@@ -18787,7 +18787,7 @@ begin
       .IncludeFlag(dfCollapsed)
     ),
     wbInteger(MODT, 'Texture Type', itU32, wbFlags([
-          {0} 'Diffuse',
+          {0} 'None',
           {1} 'Rough',
           {2} 'Opacity',
           {3} 'Normal',
