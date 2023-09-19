@@ -405,7 +405,7 @@ end;
 
 function TwbLocalizationFile.IDExists(ID: Cardinal): Boolean;
 begin
-  Result := fStrings.IndexOfObject(Pointer(ID)) <> -1;
+  Result := fStrings.IndexOfObject(Pointer(ID)) >= 0;
 end;
 
 function TwbLocalizationFile.Get(Index: Cardinal): string;
@@ -414,7 +414,7 @@ var
 begin
   Result := '';
   idx := fStrings.IndexOfObject(Pointer(Index));
-  if idx <> -1 then
+  if idx >= 0 then
     Result := fStrings[idx]
   else
     Result := '<Error: Unknown lstring ID ' + IntToHex(Index, 8) + '>';
@@ -425,7 +425,7 @@ var
   idx: integer;
 begin
   idx := fStrings.IndexOfObject(Pointer(Index));
-  if idx <> -1 then
+  if idx >= 0 then
     if fStrings[idx] <> S then begin
       fStrings[idx] := S;
       fModified := true;
@@ -464,7 +464,7 @@ end;
 
 constructor TwbLocalizationHandler.Create;
 begin
-  lFiles := TwbFastStringListCS.CreateSorted;
+  lFiles := TwbFastStringListIC.CreateSorted;
   fReuseDup := false;
   NoTranslate := false;
 end;
@@ -521,8 +521,13 @@ begin
   if lFiles.Find(s, i) then
     Result := lFiles.Objects[i] as TwbLocalizationFile
   else begin
-    Result := TwbLocalizationFile.Create(aFileName, aData);
-    lFiles.AddObject(s, Result);
+    wbLockProcessMessages;
+    try
+      Result := TwbLocalizationFile.Create(aFileName, aData);
+      lFiles.AddObject(s, Result);
+    finally
+      wbUnLockProcessMessages;
+    end;
   end;
 end;
 
@@ -564,7 +569,7 @@ var
       if s = '' then
         Exit;
       s := AnsiUpperCase(s[1]) + Copy(s, 2, Length(s));
-      if aLanguages.IndexOf(s) = -1 then
+      if aLanguages.IndexOf(s) < 0 then
         aLanguages.Add(s);
     end;
   end;
@@ -638,11 +643,11 @@ begin
     Exit;
 
   for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
-    s := wbLocalizationHandler.GetLocalizationFileNameByType(aFileName, ls);
+    s := GetLocalizationFileNameByType(aFileName, ls);
     if not lFiles.Find(ExtractFileName(s), i) then begin
       res := wbContainerHandler.OpenResource(s);
       if length(res) > 0 then
-        wbLocalizationHandler.AddLocalization(wbDataPath + s, res[High(res)].GetData);
+        AddLocalization(wbDataPath + s, res[High(res)].GetData);
     end;
   end;
 end;
@@ -692,7 +697,7 @@ begin
     for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
       FileName := GetLocalizationFileNameByType(aElement._File.FileName, ls);
       idx := lFiles.IndexOf(ExtractFileName(FileName));
-      if idx = -1 then begin
+      if idx < 0 then begin
         wblf[ls] := AddLocalization(wbDataPath + FileName, data);
         wblf[ls].Modified := true;
       end else
@@ -707,7 +712,9 @@ begin
     // detect a duplicate string
     if ReuseDup then begin
       idx := wblf[ls].fStrings.IndexOf(aValue);
-      if idx <> -1 then ID := Cardinal(wblf[ls].fStrings.Objects[idx]) else
+      if idx >= 0 then
+        ID := Cardinal(wblf[ls].fStrings.Objects[idx])
+      else
         wblf[ls].AddString(ID, aValue);
     end else
       wblf[ls].AddString(ID, aValue);
@@ -731,7 +738,7 @@ begin
   FileName := GetLocalizationFileNameByElement(aElement);
   idx := lFiles.IndexOf(ExtractFileName(FileName));
 
-  if (idx = -1) or (ID = 0) then begin
+  if (idx < 0 ) or (ID = 0) then begin
     // new string
     Result := AddValue(aValue, aElement);
     Exit;
@@ -769,7 +776,7 @@ begin
   idx := lFiles.IndexOf(lFileName);
 
   // load strings files if absent
-  if idx = - 1 then begin
+  if idx < 0 then begin
     LoadForFile(aElement._File.FileName);
     // get file again
     idx := lFiles.IndexOf(lFileName);

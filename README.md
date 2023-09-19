@@ -74,7 +74,7 @@ If you don't already have a Delphi environment, we recommend using [Delphi 11 Co
 - Under Extended IDE Settings, **enable** the _Disable Package Cache_ option.
 - Exit Delphi.
 - Clone the xEdit repo (if you haven't already) and initialize submodules (run `git submodule update --init --recursive` from the git root).
-- Navigate to the _External\jcl\jcl\source\include\\_ directory and copy **jcl.template.inc** to **jcld28win32.inc**.
+- Navigate to the _External\jcl\jcl\source\include\\_ directory and copy **jcl.template.inc** to **jcld28win32.inc**. To build xEdit 64 bit, copy **jcl.template.inc** again, to **jcld28win64.inc**
 - Open _External\jcl\jcl\packages\JclPackagesD280.groupproj_.
 - Build All, then install all packages (non-runtime packages with green icons).
 - Restart Delphi.

@@ -5706,7 +5706,8 @@ begin
       wbInteger('', itS32),
       wbFloat('')
     ], cpNormal, True)
-  ]);
+  ])
+  .IncludeFlag(dfIndexEditorID);
 
   wbDODT := wbStruct(DODT, 'Decal Data', [
               wbFloat('Min Width'),

@@ -18020,9 +18020,6 @@ var
 begin
   UserWasActive := True;
 
-  if not wbEditAllowed then
-    Exit;
-
   Column := Pred(vstView.FocusedColumn);
 
   if Column > High(ActiveRecords) then
@@ -18049,6 +18046,9 @@ begin
 
     case Key of
       VK_INSERT: begin
+        if not wbEditAllowed then
+          Exit;
+
         pmuViewPopup(nil);
         Key := 0;
         if mniViewAdd.Visible and mniViewAdd.Enabled then begin
@@ -18057,6 +18057,9 @@ begin
         end;
       end;
       VK_UP: begin
+        if not wbEditAllowed then
+          Exit;
+
         LockProcessMessages;
         try
           if not Element.CanMoveUp then
@@ -18071,6 +18074,9 @@ begin
         end;
       end;
       VK_DOWN: begin
+        if not wbEditAllowed then
+          Exit;
+
         LockProcessMessages;
         try
           if not Element.CanMoveDown then
@@ -18095,6 +18101,9 @@ begin
     end;
 
     if not Element.IsEditable then
+      Exit;
+
+    if not wbEditAllowed then
       Exit;
 
     case Key of
@@ -20339,14 +20348,12 @@ end;
 
 procedure TLoaderThread.Execute;
 var
-  i,j                         : Integer;
   dummy                       : Integer;
   bsaCount                    : Integer;
   _File                       : IwbFile;
   s,t                         : string;
   b                           : TBytes;
 //  F                           : TSearchRec;
-  n,m                         : TStringList;
   StartTime                   : TDateTime;
   {$IFNDEF USE_PARALLEL_BUILD_REFS}
   OnlyLoad: Boolean;
@@ -20371,78 +20378,78 @@ begin
           _LoaderProgressAction := 'loading resources';
 
           // Load archives defined in the game ini
-          n := TStringList.Create;
+          var lFoundArchives := TStringList.Create;
           try
-            m := TStringList.Create;
+            var lNotFoundArchives := TStringList.Create;
             try
               bsaCount := 0;
               if FileExists(wbTheGameIniFileName) then begin
                 if FileExists(wbCustomIniFileName) then
-                  bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, ltDataPath, n, m)
+                  bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
                 else
-                  bsaCount := FindBSAs(wbTheGameIniFileName, ltDataPath, n, m);
+                  bsaCount := FindBSAs(wbTheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
               end;
 
               if (bsaCount > 0) then begin
-                for i := 0 to Pred(n.Count) do
+                for var lFoundIdx := 0 to Pred(lFoundArchives.Count) do
                   if wbLoadBSAs then begin
-                    LoaderProgress('[' + n[i] + '] Loading Resources.');
+                    LoaderProgress('[' + lFoundArchives[lFoundIdx] + '] Loading Resources.');
                     if wbArchiveExtension = '.bsa' then
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[i], ltDataPath))
+                      wbContainerHandler.AddBSA(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath))
                     else if wbArchiveExtension = '.ba2' then begin
-                      var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(n[i], ltDataPath));
+                      var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath));
                       var lBA2File: IwbBA2File;
                       if Supports(lContainer, IwbBA2File, lBA2File) then
-                        LoaderProgress('[' + n[i] + '] Version: ' + lBA2File.Version.ToString);
+                        LoaderProgress('[' + lFoundArchives[lFoundIdx] + '] Version: ' + lBA2File.Version.ToString);
                     end
                   end else
-                    LoaderProgress('[' + n[i] + '] Skipped.');
-                for i := 0 to Pred(m.Count) do
-                  LoaderProgress('Warning: <Can''t find ' + m[i] + '>')
+                    LoaderProgress('[' + lFoundArchives[lFoundIdx] + '] Skipped.');
+                for var lNotFoundIdx := 0 to Pred(lNotFoundArchives.Count) do
+                  LoaderProgress('Warning: <Can''t find ' + lNotFoundArchives[lNotFoundIdx] + '>')
               end;
             finally
-              FreeAndNil(m);
+              FreeAndNil(lNotFoundArchives);
             end;
           finally
-            FreeAndNil(n);
+            FreeAndNil(lFoundArchives);
           end;
 
           // Load archives associated with plugins
-          for i := 0 to Pred(ltLoadList.Count) do begin
-            n := TStringList.Create;
+          for var lLoadListIdx := 0 to Pred(ltLoadList.Count) do begin
+            var lFoundPluginArchives := TStringList.Create;
             try
-              m := TStringList.Create;
+              var lNotFoundPluginArchives := TStringList.Create;
               try
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
-                if HasBSAs(ChangeFileExt(ltLoadList[i], ''), ltDataPath,
-                    wbGameMode in [gmTES5, gmEnderal], wbIsSkyrim, n, m)>0 then begin
-                      for j := 0 to Pred(n.Count) do
+                if HasBSAs(ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
+                    wbGameMode in [gmTES5, gmEnderal], wbIsSkyrim, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
+                      for var lFoundPluginIdx := 0 to Pred(lFoundPluginArchives.Count) do
                         if wbLoadBSAs then begin
-                          LoaderProgress('[' + n[j] + '] Loading Resources.');
+                          LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Loading Resources.');
                           try
                             if wbArchiveExtension = '.bsa' then
-                              wbContainerHandler.AddBSA(MakeDataFileName(n[j], ltDataPath))
+                              wbContainerHandler.AddBSA(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath))
                             else if wbArchiveExtension = '.ba2' then begin
-                              var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(n[j], ltDataPath));
+                              var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath));
                               var lBA2File: IwbBA2File;
                               if Supports(lContainer, IwbBA2File, lBA2File) then
-                                LoaderProgress('[' + n[i] + '] Version: ' + lBA2File.Version.ToString);
+                                LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Version: ' + lBA2File.Version.ToString);
                             end;
                           except
                             on E: Exception do
-                              LoaderProgress(Format('[%s] Could not be loaded. <Error: [%s] %s>', [n[j], E.ClassName, E.Message]));
+                              LoaderProgress(Format('[%s] Could not be loaded. <Error: [%s] %s>', [lFoundPluginArchives[lFoundPluginIdx], E.ClassName, E.Message]));
                           end;
                         end else
-                          LoaderProgress('[' + n[j] + '] Skipped.');
-                      for j := 0 to Pred(m.Count) do
-                        LoaderProgress('Warning: <Can''t find ' + m[j] + '>');
+                          LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Skipped.');
+                      for var lNotFoundPluginIdx := 0 to Pred(lNotFoundPluginArchives.Count) do
+                        LoaderProgress('Warning: <Can''t find ' + lNotFoundPluginArchives[lNotFoundPluginIdx] + '>');
                 end;
               finally
-                FreeAndNil(m);
+                FreeAndNil(lNotFoundPluginArchives);
               end;
             finally
-              FreeAndNil(n);
+              FreeAndNil(lFoundPluginArchives);
             end;
 
           end;
@@ -20452,10 +20459,11 @@ begin
 
         _LoaderProgressAction := 'loading modules';
 
-        for i := 0 to Pred(ltLoadList.Count) do begin
+        for var
+        lLoadListIdx := 0 to Pred(ltLoadList.Count) do begin
 
           if wbGameMode = gmTES3 then
-            if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
+            if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
               b := TwbHardcodedContainer.GetHardCodedDat;
               if Length(b) > 0 then begin
                 t := wbGameExeName;
@@ -20471,17 +20479,17 @@ begin
                 Assert(False, 'Can''t find Hardcoded module.')
             end;
 
-          LoaderProgress('loading "' + ltLoadList[i] + '"...');
-          if FileExists(ltLoadList[i]) then
-            s := ltLoadList[i]
+          LoaderProgress('loading "' + ltLoadList[lLoadListIdx] + '"...');
+          if FileExists(ltLoadList[lLoadListIdx]) then
+            s := ltLoadList[lLoadListIdx]
           else begin
-            s := ltDataPath + ltLoadList[i];
-            if not wbIsModule(ltLoadList[i]) then
+            s := ltDataPath + ltLoadList[lLoadListIdx];
+            if not wbIsModule(ltLoadList[lLoadListIdx]) then
               if wbToolSource in [tsSaves] then
                 if not FileExists(s) then // Assume its a save in the save path
-                  s := wbSavePath + ltLoadList[i];
+                  s := wbSavePath + ltLoadList[lLoadListIdx];
           end;
-          _File := wbFile(s, i + ltLoadOrderOffset, ltMaster, ltStates);
+          _File := wbFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);
@@ -20489,12 +20497,12 @@ begin
           if wbForceTerminate then
             Exit;
 
-          if (i = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
+          if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
             b := TwbHardcodedContainer.GetHardCodedDat;
             if Length(b) > 0 then begin
               t := wbGameExeName;
               LoaderProgress('loading "' + t + '"...');
-              _File := wbFile(t, 0, ltDataPath + ltLoadList[i], [fsIsHardcoded], b);
+              _File := wbFile(t, 0, ltDataPath + ltLoadList[lLoadListIdx], [fsIsHardcoded], b);
               SetLength(ltFiles, Succ(Length(ltFiles)));
               ltFiles[High(ltFiles)] := _File;
               frmMain.SendAddFile(_File);
@@ -20514,7 +20522,7 @@ begin
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           wbBuildingRefsParallel := True;
           try
-            TParallel.&For(Low(ltFiles), High(ltFiles), procedure(i: Integer)
+            TParallel.&For(Low(ltFiles), High(ltFiles), procedure(lLoadListIdx: Integer)
             var
               OnlyLoad : Boolean;
               _File    : IwbFile;
@@ -20524,14 +20532,18 @@ begin
               wbCurrentTick := GetTickCount64;
               try
                 {$ELSE}
-                for i := Low(ltFiles) to High(ltFiles) do
+                for lLoadListIdx := Low(ltFiles) to High(ltFiles) do
                 {$ENDIF}
                 begin
-                  _File := ltFiles[i];
+                  _File := ltFiles[lLoadListIdx];
                   if (fsIsHardcoded in _File.FileStates) or not _File.IsNotPlugin then begin
                     try
                       OnlyLoad := False;
-
+                      if (wbGameMode = gmSF1) and
+                         (SizeOf(Pointer) = 4) and
+                         (fsIsGameMaster in _File.FileStates)
+                      then
+                        OnlyLoad := True;
                       if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
                         if OnlyLoad then
                           s := 'loading'

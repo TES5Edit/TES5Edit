@@ -2926,7 +2926,8 @@ begin
       wbInteger('', itS32),
       wbFloat('')
     ], cpNormal, True)
-  ]).SetSummaryKey([1]);
+  ]).SetSummaryKey([1])
+  .IncludeFlag(dfIndexEditorID);
 
   wbRecord(GRAS, 'Grass', [
     wbEDID,
@@ -3667,7 +3668,8 @@ begin
     ], cpNormal, True, nil, 10),
     wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4),
       0, cpNormal, False, nil, wbCounterEffectsAfterSet)
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
+  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet)
+  .IncludeFlag(dfIndexEditorID);;
 
   wbRecord(MISC, 'Misc. Item', [
     wbEDID,

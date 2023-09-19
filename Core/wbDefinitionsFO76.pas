@@ -11932,7 +11932,8 @@ begin
       wbInteger('Bool', itU32, wbBoolEnum),
       wbInteger('UInt', itU32)
     ], cpNormal, True)
-  ]);
+  ])
+  .IncludeFlag(dfIndexEditorID);
 
   wbRecord(KYWD, 'Keyword',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -19126,7 +19127,8 @@ begin
   wbRecord(DFOB, 'Default Object', [
     wbEDID,
     wbFormID(DATA, 'Object')
-  ]);
+  ])
+  .IncludeFlag(dfIndexEditorID);
 
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,

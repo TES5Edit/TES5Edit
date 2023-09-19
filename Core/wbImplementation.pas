@@ -283,6 +283,9 @@ type
 
     eNameSuffix        : string;
 
+    eLinksToGeneration : Integer;
+    eCachedLinksTo     : IwbElement;
+
     {---IInterface---}
     function _AddRef: Integer; virtual; stdcall;
     function _Release: Integer; virtual; stdcall;
@@ -408,7 +411,8 @@ type
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); virtual;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); virtual;
     procedure ResetModified(aResetModified: TwbResetModified); virtual;
-    function GetLinksTo: IwbElement; virtual;
+    function GetLinksTo: IwbElement;
+    function InternalGetLinksTo: IwbElement; virtual;
     procedure SetLinksTo(const aElement: IwbElement); virtual;
     function GetNoReach: Boolean;
 
@@ -455,6 +459,8 @@ type
 
     function GetMastersUpdated: Boolean;
     procedure SetMastersUpdated(aValue: Boolean);
+
+    function MergeMultiple(const aElement: IwbElement): Boolean; virtual;
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -475,6 +481,8 @@ type
     function CanChangeElementMember(const aElement: IwbElement): Boolean;
 
     procedure UpdateNameSuffixes;
+
+    function ResolveElementName(aName: string; out aRemainingName: string; aCanCreate: Boolean = False): IwbElement;
   end;
 
   TwbContainer = class(TwbElement, IwbContainerElementRef, IwbContainer, IwbContainerInternal)
@@ -635,6 +643,7 @@ type
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
+    procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
   end;
 
   TwbCachedEditInfo = record
@@ -644,6 +653,8 @@ type
   end;
 
   TwbCachedEditInfos = TArray<TwbCachedEditInfo>;
+
+  TwbMainRecordIndexDictionary = TDictionary<string, IwbMainRecord>;
 
   TwbFile = class(TwbContainer, IwbFile, IwbFileInternal)
   protected
@@ -675,11 +686,11 @@ type
     flRecordNeedCompactFrom  : Integer;
     flRecordBits             : array of array of array of set of Byte;
 
-    flRecordsByEditorID      : array of IwbMainRecord;
-    flRecordsByEditorIDCount : Integer; {only used during loading}
+    flRecordsIndices         : array of TwbMainRecordIndexDictionary;
 
     flLoadFinished           : Boolean;
     flFormIDsSorted          : Boolean;
+    flIndicesActive          : Boolean;
 
     flInjectedRecords        : array of IwbMainRecord;
 
@@ -713,7 +724,6 @@ type
 
     function FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
     function FindInjectedID(aFormID: TwbFormID; var Index: Integer): Boolean;
-    function FindEditorID(const aEditorID: string; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
     function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
@@ -738,6 +748,14 @@ type
     function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord; override;
     function GetElementBySignature(const aSignature: TwbSignature): IwbElement; override;
 
+    procedure flAddKeysToIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
+    procedure flRemoveKeysFromIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
+    procedure flUpdateChangedKeysInIndices(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
+
+    function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
+
+    procedure flActivateIndices;
+
     {---IwbFile---}
     function GetFileName: string;
     function GetFileNameOnDisk: string;
@@ -749,6 +767,7 @@ type
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
+    function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
     function HasGroup(const aSignature: TwbSignature): Boolean;
     function GetFileStates: TwbFileStates; inline;
@@ -821,10 +840,10 @@ type
     procedure GetMasters(aMasters: TStrings); virtual;
     procedure IncGeneration;
     function GetFileGeneration: Integer;
+    procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
 
     procedure Scan; virtual;
     procedure SortRecords;
-    procedure SortRecordsByEditorID;
 
     procedure AddMaster(const aFileName: string; isTemporary: Boolean = False; aAutoLoadOrder: Boolean = False); overload;
     procedure AddMaster(const aFile: IwbFile); overload;
@@ -1040,7 +1059,8 @@ type
     mrsEditorIDFromCache,
     mrsFullNameFromCache,
     mrsResettingConflict,
-    mrsOFSTRemoved
+    mrsOFSTRemoved,
+    mrsIndexKeysActive
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1090,6 +1110,8 @@ type
     mrLGeneration       : Integer;
 
     mrPositionGeneration: Integer;
+
+    mrIndexKeys         : TwbIndexKeys;
 
     function mrStruct: PwbMainRecordStruct; inline;
 
@@ -1171,6 +1193,8 @@ type
 
     procedure UpdateStorageFromElements; override;
 
+    function BuildIndexKeys(out aKeys: TwbIndexKeys): Boolean;
+
     {---IwbMainRecord---}
     function GetDef: IwbNamedDef; override;
     function GetMainRecordDef: IwbMainRecordDef;
@@ -1247,6 +1271,7 @@ type
     procedure SetIsESL(aValue: Boolean);
 
     procedure UpdateRefs;
+    procedure UpdateKeys;
 
     function GetPosition(out aPosition: TwbVector): Boolean;
     function SetPosition(const aPosition: TwbVector): Boolean;
@@ -1269,6 +1294,9 @@ type
     procedure DeleteInto(const aFile: IwbFile);
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
+
+    function ActivateIndexKeys: TwbDefinedKeys;
+    function DeactivateIndexKeys: TwbDefinedKeys;
 
     {---IwbMainRecordInternal---}
     procedure AddOverride(const aMainRecord: IwbMainRecord);
@@ -1406,7 +1434,7 @@ type
     procedure SetModified(aValue: Boolean); override;
     function CanContainFormIDs: Boolean; override;
     function CanElementReset: Boolean; override;
-    function GetLinksTo: IwbElement; override;
+    function InternalGetLinksTo: IwbElement; override;
     procedure SetLinksTo(const aValue: IwbElement); override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
     procedure PrepareSave; override;
@@ -1434,6 +1462,8 @@ type
     procedure CheckTerminator;
 
     procedure NotifyChangedInternal(aContainer: Pointer); override;
+
+    function MergeMultiple(const aElement: IwbElement): Boolean; override;
 
     {--- IwbSubRecord ---}
     function GetSubRecordHeaderSize: Integer;
@@ -1472,7 +1502,7 @@ type
 
     procedure BuildRef; override;
     function CanContainFormIDs: Boolean; override;
-    function GetLinksTo: IwbElement; override;
+    function InternalGetLinksTo: IwbElement; override;
     procedure SetLinksTo(const aValue: IwbElement); override;
     function GetDataSize: Integer; override;
     function DoCheckSizeAfterWrite: Boolean; override;
@@ -2082,7 +2112,7 @@ end;
 { TwbFile }
 
 var
-  _FileGeneration: Integer;
+  _FileGeneration: Integer = 1;
 
 procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean; aAutoLoadOrder: Boolean);
 var
@@ -2271,23 +2301,10 @@ begin
     end;
   end;
 
+  if flIndicesActive then
+    flAddKeysToIndices(aRecord, aRecord.ActivateIndexKeys);
+
   IncGeneration;
-
-  if flFormIDsSorted then
-    Exit;
-
-  Signature := aRecord.Signature;
-
-  if ((wbGameMode > gmTES3) and (Cardinal(Signature) = Cardinal(MGEF))) or (Cardinal(Signature) = Cardinal(GMST)) or (Cardinal(Signature) = Cardinal(DFOB)) or wbTrackAllEditorID then begin
-    s := aRecord.EditorID;
-    if s <> '' then begin
-      if flRecordsByEditorIDCount >= Length(flRecordsByEditorID) then
-        SetLength(flRecordsByEditorID, Succ(flRecordsByEditorIDCount));
-
-      flRecordsByEditorID[flRecordsByEditorIDCount] := aRecord;
-      Inc(flRecordsByEditorIDCount);
-    end;
-  end;
 end;
 
 procedure TwbFile.AddMaster(const aFile: IwbFile);
@@ -3126,32 +3143,6 @@ begin
     Result.FileID := FileFileIDtoLoadOrderFileID(Result.FileID, aNew);
 end;
 
-function TwbFile.FindEditorID(const aEditorID: string; var Index: Integer): Boolean;
-var
-  L, H, I, C: Integer;
-begin
-  Result := False;
-  if not flLoadFinished then
-    Exit;
-
-  L := Low(flRecordsByEditorID);
-  H := High(flRecordsByEditorID);
-  while L <= H do begin
-    I := (L + H) shr 1;
-    C := CompareText(flRecordsByEditorID[I].EditorID, aEditorID);
-    if C < 0 then
-      L := I + 1
-    else begin
-      H := I - 1;
-      if C = 0 then begin
-        Result := True;
-        L := I;
-      end;
-    end;
-  end;
-  Index := L;
-end;
-
 function TwbFile.FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
 var
   L, H, I, C: Integer;
@@ -3263,6 +3254,49 @@ begin
   Index := L;
 end;
 
+procedure TwbFile.flActivateIndices;
+begin
+  if flIndicesActive then
+    Exit;
+
+  flProgress('Buildinging string indices');
+  try
+    flIndicesActive := True;
+    for var lRecordIdx := Low(flRecords) to High(flRecords) do begin
+      var lIndexKeys := flRecords[lRecordIdx].ActivateIndexKeys;
+      flAddKeysToIndices(flRecords[lRecordIdx], lIndexKeys);
+    end;
+    flProgress('String indices built');
+  except
+    on E: Exception do begin
+      flIndicesActive := True;
+      flProgress('Buildinging string indices failed: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TwbFile.flAddKeysToIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
+begin
+  if not flIndicesActive then
+    Exit;
+  for var lKeyIdx := Low(aKeys) to High(aKeys) do try
+    with aKeys[lKeyIdx] do begin
+      if dkIndex > High(flRecordsIndices) then
+        SetLength(flRecordsIndices, Succ(dkIndex));
+      if not Assigned(flRecordsIndices[dkIndex]) then
+        flRecordsIndices[dkIndex] := TwbMainRecordIndexDictionary.Create(wbNamedIndexComparer(dkIndex));
+      if not flRecordsIndices[dkIndex].TryAdd(dkKey, aMainRecord) then begin
+        var lMainRecord: IwbMainRecord;
+        flRecordsIndices[dkIndex].TryGetValue(dkKey, lMainRecord);
+        flProgress('Duplicate Key in Index "' + wbNamedIndexName(dkIndex) + '": "' + dkKey + '" Existing: '+lMainRecord.ShortName+' New: '+ aMainRecord.ShortName);
+      end;
+    end;
+  except
+    on E: Exception do
+      flProgress('Unexpected Error adding a Key to an Index: ' + E.Message);
+  end;
+end;
+
 procedure TwbFile.flCloseFile;
 begin
   if Length(flData) > 0 then begin
@@ -3286,13 +3320,25 @@ begin
     if fsIsTemporary in flStates then try
       DeleteFile(Self.flFileNameOnDisk);
     except
-      flProgress('Could not delete temporary file '+flFileNameOnDisk);
+      flProgress('Could not delete temporary file ' + flFileNameOnDisk);
     end;
   end else
     if Assigned(flView) then begin
       VirtualFree(flView, 0 , MEM_RELEASE);
       flView := nil;
     end;
+end;
+
+function TwbFile.flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
+begin
+  Result :=
+    flIndicesActive and
+    (aIndex >= 0) and
+    (aIndex <= High(flRecordsIndices)) and
+    Assigned(flRecordsIndices[aIndex]) and
+    flRecordsIndices[aIndex].TryGetValue(aKey, aMainRecord);
+  if not Result then
+    aMainRecord := nil;
 end;
 
 procedure TwbFile.flOpenFile;
@@ -3394,6 +3440,28 @@ begin
     wbProgressCallback('['+GetFileName+'] ' + aStatus);
 end;
 
+procedure TwbFile.flRemoveKeysFromIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
+begin
+  if not flIndicesActive then
+    Exit;
+  for var lKeyIdx := Low(aKeys) to High(aKeys) do try
+    with aKeys[lKeyIdx] do begin
+      if dkIndex > High(flRecordsIndices) then
+        Exit;
+      if Assigned(flRecordsIndices[dkIndex]) then begin
+        var lMainRecord: IwbMainRecord;
+        if flRecordsIndices[dkIndex].TryGetValue(dkKey, lMainRecord) and
+           aMainRecord.Equals(lMainRecord)
+        then
+          flRecordsIndices[dkIndex].Remove(dkKey);
+      end;
+    end;
+  except
+    on E: Exception do
+      flProgress('Unexpected Error removing a Key from an Index: ' + E.Message);
+  end;
+end;
+
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
   if wbGameMode <= gmTES3 then
@@ -3418,17 +3486,58 @@ begin
   Include(flRecordBits[i1, i2, i3], i4);
 end;
 
+procedure TwbFile.flUpdateChangedKeysInIndices(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
+begin
+  if not flIndicesActive then
+    Exit;
+
+  for var lKeyIdx := Low(aChangedKeys) to High(aChangedKeys) do try
+    with aChangedKeys[lKeyIdx] do begin
+      if ckIndex > High(flRecordsIndices) then
+        if ckNewKey <> '' then
+          SetLength(flRecordsIndices, Succ(ckIndex))
+        else
+          Continue;
+
+      if not Assigned(flRecordsIndices[ckIndex]) then
+        if ckNewKey <> '' then
+          flRecordsIndices[ckIndex] := TwbMainRecordIndexDictionary.Create(wbNamedIndexComparer(ckIndex));
+
+      if Assigned(flRecordsIndices[ckIndex]) then begin
+        if ckOldKey <> '' then begin
+          var lMainRecord: IwbMainRecord;
+          if flRecordsIndices[ckIndex].TryGetValue(ckOldKey, lMainRecord) and
+             aMainRecord.Equals(lMainRecord)
+          then
+            flRecordsIndices[ckIndex].Remove(ckOldKey);
+        end;
+        if ckNewKey <> '' then
+          if not flRecordsIndices[ckIndex].TryAdd(ckNewKey, aMainRecord) then begin
+            var lMainRecord: IwbMainRecord;
+            flRecordsIndices[ckIndex].TryGetValue(ckNewKey, lMainRecord);
+            flProgress('Duplicate Key in Index "' + wbNamedIndexName(ckIndex) + '": "' + ckNewKey + '" Existing Record: '+lMainRecord.ShortName+' New Record: '+ aMainRecord.ShortName);
+          end;
+      end;
+    end;
+  except
+    on E: Exception do
+      flProgress('Unexpected Error updating a Key in an Index: ' + E.Message);
+  end;
+end;
+
 procedure TwbFile.ForceClosed;
 var
   i: Integer;
 begin
+  for i := Low(flRecordsIndices) to High(flRecordsIndices) do
+    FreeAndNil(flRecordsIndices[i]);
+  flIndicesActive := False;
   for i := High(flRecords) downto Low(flRecords) do
     (flRecords[i] as IwbMainRecordInternal).ClearForRelease;
   for i := High(flInjectedRecords) downto Low(flInjectedRecords) do
     (flInjectedRecords[i] as IwbMainRecordInternal).ClearForRelease;
   flMasters                := nil;
   flRecords                := nil;
-  flRecordsByEditorID      := nil;
   flInjectedRecords        := nil;
   ReleaseElements;
   flCloseFile;
@@ -3927,8 +4036,8 @@ var
   i: Integer;
 begin
   Result := nil;
-  if FindEditorID(aEditorID, i) then
-    Result := flRecordsByEditorID[i]
+  if flFindKeyInIndex(wbIdxEditorID, aEditorID, Result) then
+    Exit
   else
     for i := Pred(GetMasterCount(True)) downto 0 do begin
       Result := GetMaster(i, True).RecordByEditorID[aEditorID];
@@ -3976,6 +4085,12 @@ end;
 function TwbFile.GetRecordCount: Integer;
 begin
   Result := Length(flRecords);
+end;
+
+function TwbFile.GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
+begin
+  if not flFindKeyInIndex(aIndex, aKey, Result) then
+    Result := nil;
 end;
 
 function TwbFile.GetReferenceFile: IwbFile;
@@ -4593,6 +4708,9 @@ begin
     end;
   end;
 
+  if flIndicesActive then
+    flRemoveKeysFromIndices(aRecord, aRecord.DeactivateIndexKeys);
+
   IncGeneration;
 end;
 
@@ -4916,11 +5034,7 @@ begin
   flRecordBits := nil;
   flProgress('FormID index built');
 
-  flProgress('Building EditorID index');
-  if flRecordsByEditorIDCount < Length(flRecordsByEditorID) then
-    SetLength(flRecordsByEditorID, flRecordsByEditorIDCount);
-  SortRecordsByEditorID;
-  flProgress('EditorID index built');
+  flActivateIndices;
 
   if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
@@ -4974,19 +5088,12 @@ begin
     end;
   end;
 
-  if (fsIsHardcoded in flStates) and (wbGameMode > gmTES3) then begin
-    IsInternal := wbEditAllowed;
-    wbEditAllowed := True;
-    try
-      if wbBeginInternalEdit(True) then try
-        ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
-      finally
-        wbEndInternalEdit;
-      end;
+  if (fsIsHardcoded in flStates) and (wbGameMode > gmTES3) then
+    if wbBeginInternalEdit(True) then try
+      ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
     finally
-      wbEditAllowed := IsInternal;
+      wbEndInternalEdit;
     end;
-  end;
 
   flProgress('Processing completed');
   flLoadFinished := True;
@@ -5237,10 +5344,10 @@ begin
   flRecordNeedCompactFrom := High(Integer);
 end;
 
-procedure TwbFile.SortRecordsByEditorID;
+procedure TwbFile.UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
 begin
-  if Length(flRecordsByEditorID) > 0 then
-    wbMergeSortPtr(@flRecordsByEditorID[0], Length(flRecordsByEditorID), CompareRecordsByEditorID);
+  if flIndicesActive then
+    flUpdateChangedKeysInIndices(aMainRecord, aChangedKeys);
 end;
 
 procedure TwbFile.UpdateModuleMasters;
@@ -5478,10 +5585,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
-
   if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+
     Def := GetDef;
     if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
       Exit;
@@ -5615,6 +5722,14 @@ var
   i: Integer;
   SelfRef : IwbContainerElementRef;
 begin
+  var lDef := GetDef;
+  if Assigned(lDef) and (dfExcludeFromBuildRef in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if Assigned(lValueDef) and (dfExcludeFromBuildRef in lValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
   Include(cntStates, csRefsBuild);
@@ -5633,10 +5748,11 @@ var
   ValueDef  : IwbValueDef;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
 
   if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
+
     Def := GetDef;
     if Assigned(Def) and (dfInternalEditOnly in Def.DefFlags) then
       Exit;
@@ -7067,20 +7183,71 @@ function TwbContainer.ResolveElementName(aName: string; out aRemainingName: stri
 var
   i : Integer;
 begin
+  Result := nil;
+
   aRemainingName := '';
   i := Pos('\', aName);
   if i > 0 then begin
     aRemainingName := Copy(aName, Succ(i), High(Integer));
     Delete(aName, i, High(Integer));
   end;
-  if aName = '..' then
+
+  if aName = '.' then
+    Result := Self
+  else if aName = '..' then
     Result := GetContainer
-  else if (Length(aName) > 0) and (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
+  else if aName = '...' then begin // this or any parent
+
+    var lNextRemainingName := '';
+    var lNextName := aRemainingName;
+    i := Pos('\', lNextName);
+    if i > 0 then begin
+      lNextRemainingName := Copy(lNextName, Succ(i), High(Integer));
+      Delete(lNextName, i, High(Integer));
+    end;
+    lNextName := lNextName.Trim;
+    if lNextName = '' then
+      Exit(Self);
+
+    var lSigPtr    : PwbSignature := nil;
+    var lSignature : TwbSignature := #0#0#0#0;
+    if (Length(aName) = 4) then begin
+      lSignature := StrToSignature(aName);
+      lSigPtr := @lSigPtr;
+    end;
+
+    var lContainer: IwbContainerInternal := Self;
+    while Assigned(lContainer) do begin
+
+      var lRemainingName := '';
+      var lCheckElement := lContainer.ResolveElementName(aRemainingName, lRemainingName, aCanCreate);
+      if Assigned(lCheckElement) then begin
+        aRemainingName := lRemainingName;
+        Exit(lCheckElement);
+      end;
+
+      var lHasSignature: IwbHasSignature;
+      if SameText(lContainer.Name, lNextName) or
+         SameText(lContainer.DisplayName[True], lNextName) or
+         (
+           Assigned(lSigPtr) and
+           Supports(lContainer, IwbHasSignature, lHasSignature) and
+           (lHasSignature.Signature = lSigPtr^)
+         )
+      then begin
+        aRemainingName := lNextRemainingName;
+        Exit(lContainer);
+      end;
+      if not Supports(lContainer.Container, IwbContainerInternal, lContainer) then
+        Exit(nil);
+    end;
+
+  end else if (Length(aName) > 0) and (aName[1] = '[') and (aName[Length(aName)] = ']') then begin
     i := StrToIntDef(Copy(aName, 2, Length(aName) - 2), 0);
     Result := GetElement(i);
-  end
-  else
+  end else
     Result := GetElementByName(aName);
+
   if not Assigned(Result) and (Length(aName) = 4) then
     Result := GetElementBySignature(StrToSignature(aName));
 end;
@@ -7494,6 +7661,26 @@ end;
 
 { TwbMainRecord }
 
+function TwbMainRecord.ActivateIndexKeys: TwbDefinedKeys;
+begin
+  Assert(not (mrsIndexKeysActive in mrStates));
+  if BuildIndexKeys(mrIndexKeys) then begin
+    Include(mrStates, mrsIndexKeysActive);
+    Result := mrIndexKeys.GetDefinedKeys;
+  end else
+    Result := nil;
+end;
+
+function TwbMainRecord.DeactivateIndexKeys: TwbDefinedKeys;
+begin
+  if mrsIndexKeysActive in mrStates then begin
+    Result := mrIndexKeys.GetDefinedKeys;
+    Exclude(mrStates, mrsIndexKeysActive);
+  end else
+    Result := nil;
+  mrIndexKeys.Clear;
+end;
+
 function TwbMainRecord.Add(const aName: string; aSilent: Boolean): IwbElement;
 var
   s         : string;
@@ -7610,8 +7797,9 @@ function TwbMainRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, 
 var
   SelfRef   : IwbContainerElementRef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
     Exit;
@@ -7737,8 +7925,9 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
     if aIndex <> Low(Integer) then
@@ -7873,6 +8062,20 @@ begin
     Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 end;
 
+function TwbMainRecord.BuildIndexKeys(out aKeys: TwbIndexKeys): Boolean;
+begin
+  Result := False;
+  aKeys.Clear;
+  if Assigned(mrDef) then begin
+    if GetCanHaveEditorID and wbTrackAllEditorID or (dfIndexEditorID in mrDef.DefFlags) then begin
+      Result := True;
+      aKeys.Keys[wbIdxEditorID] := GetEditorID;
+    end
+  end;
+  if Assigned(mrDef) and mrDef.BuildIndexKeys(Self, aKeys) then
+    Result := True;
+end;
+
 procedure TwbMainRecord.BuildRef;
 
   procedure UseKAC;
@@ -7885,6 +8088,12 @@ procedure TwbMainRecord.BuildRef;
   end;
 
 begin
+  if not Assigned(mrDef) then
+    Exit;
+
+  if dfExcludeFromBuildRef in mrDef.DefFlags then
+    Exit;
+
   if mrsNoUpdateRefs in mrStates then
     Exit;
 
@@ -7974,6 +8183,9 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   Result := False;
+
+  if dfExcludeFromBuildRef in mrDef.DefFlags then
+    Exit;
 
   if mrsBuildingRef in mrStates then
     Exit;
@@ -8105,6 +8317,7 @@ begin
     end;
   end;
   inherited;
+  UpdateKeys;
   if not (mrsNoUpdateRefs in mrStates) then
     UpdateRefs;
 end;
@@ -8144,11 +8357,13 @@ end;
 function TwbMainRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if dfInternalEditOnly in mrDef.DefFlags then
       Exit;
+  end;
 
   if GetIsDeleted then
     if aIndex <> Low(Integer) then
@@ -8249,9 +8464,11 @@ begin
   if (esModified in eStates) then begin
     WasInternal := (esInternalModified in eStates);
     KAR := wbCreateKeepAliveRoot;
+    UpdateKeys;
     UpdateRefs;
     PrepareSave;
     UpdateRefs;
+    UpdateKeys;
     Stream := TMemoryStream.Create;
     try
       WriteToStream(Stream, rmYes);
@@ -8902,7 +9119,7 @@ begin
   Include(cntStates, csInitOnce);
 
   if wbCanSortINFO and wbSortINFO then
-    if not GetIsDeleted and wbAllowInternalEdit then begin
+    if not GetIsDeleted and wbBeginInternalEdit(False) then try
       if wbFillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
           GroupRecordInternal.Sort(True);
@@ -8911,6 +9128,8 @@ begin
           if Supports(GetChildGroup, IwbGroupRecordInternal, GroupRecordInternal) then
             GroupRecordInternal.Sort(True);
         end;
+    finally
+      wbEndInternalEdit;
     end;
 end;
 
@@ -11838,8 +12057,12 @@ end;
 
 procedure TwbMainRecord.SetEditValue(const aValue: string);
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+    if dfInternalEditOnly in mrDef.DefFlags then
+      Exit;
+  end;
 
   if wbDisplayLoadOrderFormID then begin
     SetLoadOrderFormID(TwbFormID.FromStr(aValue));
@@ -12095,8 +12318,12 @@ end;
 
 procedure TwbMainRecord.SetNativeValue(const aValue: Variant);
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+    if dfInternalEditOnly in mrDef.DefFlags then
+      Exit;
+  end;
 
   if wbDisplayLoadOrderFormID then begin
     SetLoadOrderFormID(TwbFormID.FromVar(aValue));
@@ -12117,6 +12344,7 @@ begin
   mrInvalidateNameCache;
   inherited;
   UpdateRefs;
+  UpdateKeys;
 end;
 
 function TwbMainRecord.SetPosition(const aPosition: TwbVector): Boolean;
@@ -12478,6 +12706,21 @@ begin
   end;
 end;
 
+procedure TwbMainRecord.UpdateKeys;
+begin
+  if mrsIndexKeysActive in mrStates then begin
+    var lIndexKeys: TwbIndexKeys;
+    BuildIndexKeys(lIndexKeys);
+    var lChangedKeys := lIndexKeys.GetChangedKeys(mrIndexKeys);
+    if Length(lChangedKeys) > 0 then begin
+      mrIndexKeys := lIndexKeys;
+      var lFile: IwbFileInternal;
+      if Supports(GetFile, IwbFileInternal, lFile) then
+        lFile.UpdateIndexKeys(Self, lChangedKeys);
+    end;
+  end;
+end;
+
 procedure TwbMainRecord.UpdateRefs;
 begin
   if (csRefsBuild in cntStates) then
@@ -12814,8 +13057,10 @@ var
   FlagsDef   : IwbFlagsDef;
   ValueDef   : IwbValueDef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be modified.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be modified.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
 
@@ -12919,8 +13164,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -13036,6 +13283,14 @@ procedure TwbSubRecord.BuildRef;
 var
   SelfRef: IwbElement;
 begin
+  var lDef := GetDef;
+  if Assigned(lDef) and (dfExcludeFromBuildRef in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if Assigned(lValueDef) and (dfExcludeFromBuildRef in lValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
 
   if Assigned(srDef) then begin
@@ -13053,11 +13308,13 @@ var
   ArrayDef: IwbArrayDef;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if Assigned(srDef) and (dfInternalEditOnly in srDef.DefFlags) then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -13514,7 +13771,7 @@ begin
   Result := HasSortKey.IsInSK(aIndex);
 end;
 
-function TwbSubRecord.GetLinksTo: IwbElement;
+function TwbSubRecord.InternalGetLinksTo: IwbElement;
 var
   SelfRef: IwbContainerElementRef;
 begin
@@ -13644,6 +13901,9 @@ begin
     Result := srValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
   if Assigned(srDef) then
     srDef.ToString(Result, Self, ctToStr);
+
+  if wbShowDataSizeInValue then
+    Result := Result + ' {DataSize: ' + GetDataSize.ToString + '}';
 end;
 
 function TwbSubRecord.GetValueDef: IwbValueDef;
@@ -13760,6 +14020,57 @@ begin
       end;
   finally
     EndUpdate;
+  end;
+end;
+
+function TwbSubRecord.MergeMultiple(const aElement: IwbElement): Boolean;
+var
+  SelfRef              : IwbContainerElementRef;
+  lSourceDataContainer : IwbDataContainerInternal;
+begin
+  if not Supports(aElement, IwbDataContainerInternal, lSourceDataContainer) then
+    Exit(False);
+  if lSourceDataContainer.DataSize < 1 then
+    Exit(True);
+  if not Assigned(srDef) then
+    Exit(False);
+  if not (dfMergeIfMultiple in srDef.DefFlags) then
+    Exit(False);
+  var lValueDef := GetValueDef;
+  if not Assigned(lValueDef) then
+    Exit(False);
+  if lValueDef.DefType <> dtArray then
+    Exit(False);
+
+  SelfRef := Self as IwbContainerElementRef;
+  DoInit(True);
+
+  if not (srsIsArray in srStates) then
+    Exit(False);
+  if not Assigned(srValueDef) then
+    Exit(False);
+
+  var lOldElementCount := GetElementCount;
+  if not wbBeginInternalEdit(True) then
+    Exit(False);
+  try
+    BeginUpdate;
+    try
+      var lBasePtr := lSourceDataContainer.DataBasePtr;
+      ArrayDoInit(srValueDef, Self, lBasePtr, lSourceDataContainer.DataEndPtr, srArraySizePrefix);
+      var lNewElementCount := GetElementCount;
+      if lNewElementCount > lOldElementCount then begin
+        InvalidateStorage;
+        for var lElementIdx := lOldElementCount to Pred(lNewElementCount) do
+          (GetElement(lElementIdx) as IwbElementInternal).Modified := True;
+        UpdateStorageFromElements;
+      end;
+      Result := True;
+    finally
+      EndUpdate;
+    end;
+  finally
+    wbEndInternalEdit;
   end;
 end;
 
@@ -13890,8 +14201,10 @@ var
   SelfRef : IwbContainerElementRef;
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
@@ -13930,8 +14243,10 @@ var
   OldValue, NewValue: Variant;
   OldLinksTo: IwbElement;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
@@ -13977,8 +14292,10 @@ var
   OldValue, NewValue: Variant;
   SelfRef : IwbContainerElementRef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   if not Assigned(srDef) then
@@ -16314,8 +16631,10 @@ begin
   if Result then
     Exit;
 
-  if not wbEditAllowed then
-    Exit;
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
+  end;
 
   if not GetIsEditable then
     Exit;
@@ -16808,9 +17127,18 @@ begin
   Result := not Assigned(eContainer) or IwbContainer(eContainer).IsElementRemoveable(Self);
 end;
 
-function TwbElement.GetLinksTo: IwbElement;
+function TwbElement.InternalGetLinksTo: IwbElement;
 begin
   Result := nil;
+end;
+
+function TwbElement.GetLinksTo: IwbElement;
+begin
+  if eLinksToGeneration = _FileGeneration then
+    Exit(eCachedLinksTo);
+  Result := InternalGetLinksTo;
+  eLinksToGeneration := _FileGeneration;
+  eCachedLinksTo := Result;
 end;
 
 function TwbElement.GetLocalized: TwbTriBool;
@@ -17106,6 +17434,11 @@ function TwbElement.MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNew
 begin
   Result := False;
   Assert( Length(aOld) = Length(aNew) );
+end;
+
+function TwbElement.MergeMultiple(const aElement: IwbElement): Boolean;
+begin
+  Result := False;
 end;
 
 procedure TwbElement.MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -17645,8 +17978,10 @@ var
   SelfRef   : IwbContainerElementRef;
   i         : Integer;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -17701,8 +18036,11 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
+
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -17806,11 +18144,12 @@ end;
 function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if dfInternalEditOnly in arcDef.DefFlags then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -18164,8 +18503,10 @@ function TwbSubRecordStruct.AddIfMissingInternal(const aElement: IwbElement; aAs
 var
   SelfRef   : IwbContainerElementRef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
@@ -18226,8 +18567,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   if aIndex = Low(Integer) then begin
 
@@ -18298,11 +18641,12 @@ end;
 function TwbSubRecordStruct.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if dfInternalEditOnly in srcDef.DefFlags then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -18358,10 +18702,14 @@ var
   CurrentDefPos : Integer;
   CurrentRec    : IwbSubRecordInternal;
   CurrentDef    : IwbRecordMemberDef;
+  LastDef       : IwbRecordMemberDef;
   Element       : IwbElementInternal;
+  LastElement   : IwbElementInternal;
   FoundMembers  : IwbElements;
 begin
   srcDef := aDef as IwbRecordDef;
+  LastDef := nil;
+  LastElement := nil;
 
   if aPos = Low(Integer) then begin
     AddRequiredElements;
@@ -18404,6 +18752,17 @@ begin
 
       CurrentDef := srcDef.Members[CurrentDefPos];
       if not CurrentDef.CanHandle(CurrentRec.Signature, CurrentRec) then begin
+        if Assigned(LastDef)
+           and
+           (dfMergeIfMultiple in LastDef.DefFlags)
+           and
+           LastDef.CanHandle(CurrentRec.Signature, CurrentRec)
+        then begin
+          if LastElement.MergeMultiple(CurrentRec) then begin
+            aContainer.RemoveElement(aPos);
+            Continue;
+          end;
+        end;
         Inc(CurrentDefPos);
         Continue;
       end;
@@ -18413,8 +18772,12 @@ begin
         Assert(Assigned(CurrentDef));
       end;
 
-      if Assigned(FoundMembers[CurrentDefPos]) then
+      if Assigned(FoundMembers[CurrentDefPos]) then begin
+        if dfMergeIfMultiple in CurrentDef.DefFlags then
+          if FoundMembers[CurrentDefPos].MergeMultiple(CurrentRec) then
+            Continue;
         Break; // don't allow duplicate members
+      end;
 
       case CurrentDef.DefType of
         dtSubRecord : begin
@@ -18432,6 +18795,8 @@ begin
       Element.SetSortOrder(CurrentDefPos);
       Element.SetMemoryOrder(CurrentDefPos);
       FoundMembers[CurrentDefPos] := Element;
+      LastDef := CurrentDef;
+      LastElement := Element;
 
       if dfTerminator in CurrentDef.DefFlags then
         Break;
@@ -18853,8 +19218,10 @@ var
   ArrayDef  : IwbArrayDef;
   ValueDef  : IwbValueDef;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be modified.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be modified.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
 
@@ -18912,8 +19279,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False); //function will only either replace all elements or add new elements, sort order is irrelevant
@@ -18999,11 +19368,12 @@ var
   ArrayDef: IwbArrayDef;
 begin
   Result := False;
-  if not wbEditAllowed then
-    Exit;
-  if not wbIsInternalEdit then
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      Exit;
     if Assigned(vbValueDef) and (dfInternalEditOnly in vbValueDef.DefFlags) then
       Exit;
+  end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -19836,8 +20206,10 @@ var
   OldValue, NewValue: Variant;
   lValue: string;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -19867,8 +20239,10 @@ procedure TwbValue.SetNativeValue(const aValue: Variant);
 var
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -19910,6 +20284,8 @@ var
   FileName: string;
   i: Integer;
 begin
+  wbInitRecords;
+
   FileName := wbExpandFileName(aFileName);
   {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
@@ -19988,6 +20364,8 @@ var
   FileName: string;
   i: Integer;
 begin
+  wbInitRecords;
+
   FileName := wbExpandFileName(aFileName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
@@ -20004,6 +20382,8 @@ var
   FileName: string;
   i: Integer;
 begin
+  wbInitRecords;
+
   FileName := wbExpandFileName(aFileName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
@@ -20291,8 +20671,10 @@ var
   s: string;
   c: Char;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   if aValue = '1' then
     c := '1'
@@ -20312,8 +20694,10 @@ var
   s: string;
   c: Char;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   if aValue = True then
     c := '1'
@@ -20790,6 +21174,14 @@ procedure TwbValueBase.BuildRef;
 var
   SelfRef: IwbElement;
 begin
+  var lDef := GetDef;
+  if Assigned(lDef) and (dfExcludeFromBuildRef in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if Assigned(lValueDef) and (dfExcludeFromBuildRef in lValueDef.DefFlags) then
+    Exit;
+
   SelfRef := Self as IwbContainerElementRef;
 
   inherited;
@@ -20959,7 +21351,7 @@ begin
   Result := HasSortKey.IsInSK(aIndex);
 end;
 
-function TwbValueBase.GetLinksTo: IwbElement;
+function TwbValueBase.InternalGetLinksTo: IwbElement;
 var
   SelfRef: IwbContainerElementRef;
 begin
@@ -21038,6 +21430,9 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
   Result := vbValueDef.ToString(GetDataBasePtr, dcDataEndPtr, Self);
+
+  if wbShowDataSizeInValue then
+    Result := Result + ' {DataSize: ' + GetDataSize.ToString + '}';
 end;
 
 function TwbValueBase.GetValueDef: IwbValueDef;
@@ -21070,8 +21465,10 @@ procedure TwbValueBase.SetEditValue(const aValue: string);
 var
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -21094,8 +21491,10 @@ var
   OldValue, NewValue: Variant;
   OldLinksTo: IwbElement;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -21120,8 +21519,10 @@ procedure TwbValueBase.SetNativeValue(const aValue: Variant);
 var
   OldValue, NewValue: Variant;
 begin
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be edited.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
 
   BeginUpdate;
   try
@@ -21172,8 +21573,10 @@ var
 begin
   Result := nil;
 
-  if not wbEditAllowed then
-    raise Exception.Create(GetName + ' can not be assigned.');
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be assigned.');
+  end;
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);

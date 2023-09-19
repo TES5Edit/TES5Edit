@@ -64,18 +64,19 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
-  StartTime       : TDateTime;
-  DumpGroups      : TStringList;
-  SkipChildGroups : TStringList;
-  DumpChapters    : TStringList;
-  DumpForms       : TStringList;
-  DumpCount       : Integer;
-  DumpMax         : Integer;
-  DumpCheckReport : Boolean = False;
-  DumpSize        : Boolean = False;
-  DumpHidden      : Boolean = False;
-  DontWriteReport : Boolean = False;
-  ProgressLocked  : Boolean = False;
+  StartTime            : TDateTime;
+  DumpGroups           : TStringList;
+  SkipChildGroups      : TStringList;
+  DumpChapters         : TStringList;
+  DumpForms            : TStringList;
+  DumpCount            : Integer;
+  DumpMax              : Integer;
+  DumpCheckReport      : Boolean      = False;
+  DumpSize             : Boolean      = False;
+  DumpHidden           : Boolean      = False;
+  DontWriteReport      : Boolean      = False;
+  ProgressLocked       : Boolean      = False;
+  ReportRecordProgress : Boolean      = True;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -607,6 +608,7 @@ var
   GroupRecord  : IwbGroupRecord;
   ContainerRef : IwbContainerElementRef;
   Chapter      : IwbChapter;
+  MainRecord   : IwbMainRecord;
 begin
   if (wbToolSource in [tsPlugins]) then if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
@@ -634,6 +636,11 @@ begin
   if aContainer.Skipped then begin
     if ((not wbReportMode) or DumpCheckReport) then WriteLn(aIndent, '<contents skipped>');
   end else begin
+    if ReportRecordProgress and (wbToolSource in [tsPlugins]) then
+      if (aContainer.ElementType = etMainRecord) then
+        if Supports(aContainer, IwbMainRecord, MainRecord) then
+          ReportProgress('Dumping: ' + MainRecord.Name);
+
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
       WriteElement(aContainer.Elements[i], aIndent);
@@ -1022,6 +1029,9 @@ begin
       tss := [tsPlugins, tsSaves];
       tms := [tmDump, tmExport];
 
+      if FindCmdLineSwitch('sr') then
+        wbSimpleRecords := True;
+
       wbLanguage := 'English';
 
       DefineCommon;
@@ -1290,6 +1300,9 @@ begin
       if wbFindCmdLineParam('xr', s) then
         RecordToSkip.CommaText := s;
 
+      if wbFindCmdLineParam('xsr', s) then
+        SubRecordToSkip.CommaText := s;
+
       if wbFindCmdLineParam('xg', s) then
         GroupToSkip.CommaText := s
       else if FindCmdLineSwitch('xbloat') then begin
@@ -1536,6 +1549,8 @@ begin
         ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
       if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
+      if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
+        ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
 
       if Assigned(DumpChapters) then
         ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
