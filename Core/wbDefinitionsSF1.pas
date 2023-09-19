@@ -101,7 +101,7 @@ const
     'FURN', 'HAZD', 'IDLM', 'INGR', 'KEYM', 'LIGH',
     'LVLI', 'LVLN', 'LVSP', 'MISC', 'MSTT', 'NOTE',
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
-    'SPEL', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
+    'SPEL', 'STAT',{'TACT',}'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
     'BMMP', 'PDCL', 'PKIN', 'GBFM', 'AOPF', 'BMMO'
   ];
@@ -126,6 +126,7 @@ var
   wbFULL                    : IwbSubRecordDef;
   wbSNTP                    : IwbSubRecordDef;
   wbREFL                    : IwbRecordMemberDef;
+  wbRDIF                    : IwbRecordMemberDef;
   wbSNBH                    : IwbSubRecordDef;
   wbODTY                    : IwbSubRecordDef;
   wbOPDS                    : IwbSubRecordDef;
@@ -705,7 +706,12 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
     else if MainRecord.Signature = SCEN then begin
       Element := MainRecord.ElementBySignature[PNAM];
       if Assigned(Element) then
-        Result := Element.NativeValue;
+        Result := Element.NativeValue
+      else
+        if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+          if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
+            if MainRecord.Signature = QUST then
+              Result := MainRecord.FixedFormID.ToCardinal
     end else if MainRecord.Signature = PACK then begin
       Element := MainRecord.ElementBySignature[QNAM];
       if Assigned(Element) then
@@ -717,7 +723,12 @@ function wbCTDAParamQuestOverlay(aInt: Int64; const aElement: IwbElement; aType:
           if MainRecord.Signature = DIAL then begin
             Element := MainRecord.ElementBySignature[QNAM];
             if Assigned(Element) then
-              Result := Element.NativeValue;
+              Result := Element.NativeValue
+            else
+              if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
+                if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
+                  if MainRecord.Signature = QUST then
+                    Result := MainRecord.FixedFormID.ToCardinal
           end;
     end;
   end;
@@ -3204,7 +3215,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..607] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..608 ] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3571,6 +3582,7 @@ const
     (Index: 673; Name: 'IsPowerAttacking'),    // 361
     (Index: 674; Name: 'IsLastHostileActor'),    // 362
     (Index: 675; Name: 'GetGraphVariableInt'; ParamType1: ptString),
+    (Index: 676; Name: 'Unknown'),
     (Index: 678; Name: 'ShouldAttackKill'; ParamType1: ptActor),    // 364
     (Index: 680; Name: 'GetActivationHeight'),    // 365
     (Index: 682; Name: 'WornHasKeyword'; ParamType1: ptKeyword),    // 366
@@ -7507,6 +7519,7 @@ begin
       Int64($13A2CF42), 'PathingStreamLoadGame',
       Int64($7377FDD0), 'PathingStreamMasterFileRead',
       Int64($C5B58C0B), 'PathingStreamSaveGame',
+      Int64($DAF94F6D), 'PathingTraversalLink', //actually CRC of BSPathingTraversalLink
       Int64($6AF11190), 'QuestPathingRequest',
       Int64($FCD0CCC3), 'Water'
     ]);
@@ -7670,7 +7683,7 @@ begin
   wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
     wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
     wbStruct('Pathing Cell', [
-      wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+      wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
       wbFormIDCk('Pathing Worldspace', [WRLD, NULL]),
       wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
         wbStruct('Coordinates', [
@@ -8843,6 +8856,7 @@ begin
       wbString(CIS1, 'Parameter #1'),
       wbString(CIS2, 'Parameter #2')
     ], [], cpNormal).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
+  wbCTDA.IncludeFlag(dfNoReport); //!!! temporarily !!!
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
@@ -9031,6 +9045,7 @@ begin
 
   //wbREFL := wbArray(REFL, 'Reflection', wbReflectionChunkUnion);
   wbREFL := wbByteArray(REFL, 'Reflection').IncludeFlag(dfNoReport);
+  wbRDIF := wbByteArray(RDIF, 'Reflection Diff').IncludeFlag(dfNoReport);
 
   var wbLinksToBluePrintComponent:TwbLinksToCallback  := function(const aElement: IwbElement): IwbElement
   begin
@@ -9311,9 +9326,9 @@ begin
         //BGSFormLinkData_Component
         wbRStruct('Component Data', [
           wbInteger(ITMC, 'Count', itU32),
-          wbRArray('Unknown', wbRStruct('Unknown', [
+          wbRArray('Linked Forms', wbRStruct('Linked Form', [
             wbFormIDCk(FLKW,'Keyword', [KYWD]),
-            wbFormID(FLFM)
+            wbFormID(FLFM, 'Linked Form')
           ], []))
         ], []),
         wbRStruct('Component Data', [
@@ -10391,30 +10406,31 @@ begin
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbFloat('Rotation Velocity'),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbFloat('Particle Size X'),
       wbFloat('Center Offset Min'),
       wbFloat('Particle Size Y'),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbFloat('Center Offset Min'),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbFloat('Center Offset Max'),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbFloat('Initial Rotation'),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbInteger('# of Subtextures X', itU32),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbInteger('# of Subtextures Y', itU32),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbInteger('Type', itU32, wbEnum([
         'Rain',
-        'Snow'
+        'Snow',
+        'Unknown 2'
       ])),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbInteger('Box Size', itU32),
-      wbByteArray('Unknown', 4),
+      wbUnknown(4),
       wbFloat('Particle Density'),
       wbUnknown
     ], cpNormal, True, nil, 10),
@@ -10527,7 +10543,9 @@ begin
       wbFloat('Avoid Threat Chance'),
       wbFloat('Dodge Threat Chance'),
       wbFloat('Evade Threat Chance'),
-      wbUnknown
+      wbFloat,
+      wbFloat,
+      wbFloat
     ], cpNormal, True),
 //    wbUnknown(CSMD, cpIgnore),
     wbStruct(CSME, 'Melee', [
@@ -10544,7 +10562,11 @@ begin
     ], cpNormal, True, nil, 9),
     wbStruct(CSRA, 'Ranged Accuracy', [
       wbFloat('Ranged Accuracy Mult', cpNormal, True),
-      wbUnknown
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
     ], cpNormal, True),
     wbStruct(CSCR, 'Close Range', [
       wbFloat('Dueling - Circle Mult'),
@@ -10558,7 +10580,8 @@ begin
       wbFloat('Charging - Disengane Probability'),
       wbInteger('Charging - Throw Max Targets', itU32),
       wbFloat('Flanking - Flank Variance'),
-      wbUnknown
+      wbFloat,
+      wbFloat
     ], cpNormal, True),
     wbStruct(CSLR, 'Long Range', [
       wbFloat('Strafe Mult'),
@@ -10566,11 +10589,14 @@ begin
       wbFloat('Crouch Mult'),
       wbFloat('Wait Mult'),
       wbFloat('Range Mult'),
-      wbUnknown
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
     ], cpNormal, True, nil, 3),
     wbStruct(CSCV, 'Cover Search', [
       wbFloat('Cover Search Distance Mult', cpNormal, True),
-      wbUnknown
+      wbFloat
     ], cpNormal, True),
     wbStruct(CSFL, 'Flight', [
       wbFloat('Hover Chance'),
@@ -10580,15 +10606,106 @@ begin
       wbFloat('Ground Attack Time'),
       wbFloat('Perch Attack Chance'),
       wbFloat('Perch Attack Time'),
-      wbFloat('Flying Attack Chance'),
-      wbUnknown
+      wbFloat('Flying Attack Chance')
     ], cpNormal, True),
-    wbUnknown(CSTN),
-    wbUnknown(CSSG),
-    wbUnknown(CSSM),
-    wbUnknown(CSSR),
-    wbUnknown(CSSA),
-    wbUnknown(CSSD),
+    wbStruct(CSTN, 'Unknown', [
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbStruct(CSSG, 'Unknown', [
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbStruct(CSSM, 'Unknown', [
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbUnknown(4),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbUnknown(8),
+      wbFloat
+    ]),
+    wbStruct(CSSR, 'Unknown', [
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbStruct(CSSA, 'Unknown', [
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbStruct(CSSD, 'Unknown', [
+      wbFloat,
+      wbUnknown
+    ]),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
       {0x02} 'Flanking',
@@ -11600,7 +11717,7 @@ begin
             ])
           ]),
           wbStruct('Pathing Cell', [
-            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
+            wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
             wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
             wbUnion('Parent', wbNAVIParentDecider, [
               wbStruct('Coordinates', [
@@ -11645,7 +11762,7 @@ begin
       wbInteger(NVER, 'Version', itU32),
       wbRArray('Navigation Map Infos',
         wbStruct(NVMI, 'Navigation Map Info', [
-          wbFormIDCk('Navigation Mesh', [NAVM]),
+          wbFormIDCk('Navigation Mesh', [NAVM]).IncludeFlag(dfSummaryNoName),
           wbInteger('Flags', itU32, wbFlags([
             '',
             '',
@@ -11661,31 +11778,38 @@ begin
           wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
           wbArray('Linked Doors',
             wbStruct('Door', [
-              wbInteger('Door Type', itU32, wbCRCValuesEnum),
+              wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
               wbFormIDCk('Door Ref', [REFR])
             ])
             .SetSummaryKey([0, 1])
             .IncludeFlag(dfSummaryMembersNoName)
             .IncludeFlag(dfCollapsed)
           , -1).IncludeFlag(dfCollapsed),
-          wbArray('Triangles',
-            wbStruct('Triangle', [
-              wbInteger('Type', itU32, wbCRCValuesEnum),
-              wbFormIDCk('Cell', [CELL]),
-              wbUnknown(4),
-              wbArray('Vertices', wbVec3('Vertex'), 3)
-              .SetSummaryPassthroughMaxCount(3)
-              .IncludeFlag(dfCollapsed, wbCollapseVertices),
-              wbUnknown(4),
-              wbFormIDCk('Unknown', [NAVM]),
-              wbFormIDCk('Unknown', [NAVM])
+          wbArray('Traversals',
+            wbStruct('Traversal', [
+              wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingTraversalLink'),
+              wbFormIDCk('Cell or Object', [CELL, REFR]),
+              wbFormIDCk('Traversal', [TRAV, REFR]),
+              wbVec3('From Position'),
+              wbVec3('To Position'),
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbInteger('Flags', itU32, wbFlags([
+                '',
+                '',
+                'Unknown 2'
+              ])),
+              wbFormIDCk('From Mesh', [NAVM]),
+              wbFormIDCk('To Mesh', [NAVM])
             ])
-            .SetSummaryKey([0, 1, 3, 5, 6])
-              .SetSummaryMemberPrefixSuffix(0, '', '')
-              .SetSummaryMemberPrefixSuffix(1, 'in ', '')
-              .SetSummaryMemberPrefixSuffix(3, 'at ', '')
-              .SetSummaryMemberPrefixSuffix(5, '', '')
-              .SetSummaryMemberPrefixSuffix(6, '', '')
+            .SetSummaryKey([2, 1, 3, 9, 4, 10])
+              .SetSummaryMemberPrefixSuffix(2, '', '')
+              .SetSummaryMemberPrefixSuffix(1, 'in/with ', '')
+              .SetSummaryMemberPrefixSuffix(3, 'from ', '')
+              .SetSummaryMemberPrefixSuffix(9, 'in ', '')
+              .SetSummaryMemberPrefixSuffix(4, 'to ', '')
+              .SetSummaryMemberPrefixSuffix(10, 'in ', '')
             .IncludeFlag(dfSummaryMembersNoName)
             .IncludeFlag(dfCollapsed),
           -1).IncludeFlag(dfCollapsed),
@@ -11717,7 +11841,7 @@ begin
           .IncludeFlag(dfSummaryMembersNoName)
           .IncludeFlag(dfCollapsed),
           wbStruct('Pathing Cell', [
-            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
+            wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
             wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
             wbUnion('', wbNAVIParentDecider, [
               wbStruct('Coordinates', [
@@ -11725,8 +11849,8 @@ begin
                 wbInteger('Grid X', itS16)
               ])
               .SetSummaryKey([0, 1])
-              .SetSummaryMemberPrefixSuffix(0, '[X:', '')
-              .SetSummaryMemberPrefixSuffix(1, 'Y:', ']')
+              .SetSummaryMemberPrefixSuffix(0, '<X:', '')
+              .SetSummaryMemberPrefixSuffix(1, 'Y:', '>')
               .SetSummaryDelimiter(', ')
               .IncludeFlag(dfSummaryMembersNoName)
               .IncludeFlag(dfCollapsed),
@@ -11739,24 +11863,27 @@ begin
           .SetSummaryKey([1, 2])
           .IncludeFlag(dfSummaryMembersNoName)
           .IncludeFlag(dfCollapsed),
-          wbUnknown
+          wbUnknown(1),
+          wbArray('Unknown', wbStruct('Unknown', [
+            wbInteger('Type', itU32, wbCRCValuesEnum)
+            // don't know?
+          ]), -1)
         ])
         .SetSummaryKeyOnValue([0, 9, 7, 8])
         .SetSummaryPrefixSuffixOnValue(0, '', '')
         .SetSummaryPrefixSuffixOnValue(9, 'in ', '')
-        .SetSummaryPrefixSuffixOnValue(7, 'containing ', '')
-        .SetSummaryPrefixSuffixOnValue(8, 'has Island with ', '')
+        .SetSummaryPrefixSuffixOnValue(7, 'with ', '')
+        .SetSummaryPrefixSuffixOnValue(8, 'is island with ', '')
         .IncludeFlag(dfSummaryMembersNoName)
         .IncludeFlag(dfCollapsed)
       ),
       wbStruct(NVPP, 'Preferred Pathing', [
-        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-        wbArray('NavMesh Tree?', wbStruct('', [
-          wbFormIDCk('NavMesh', [NAVM]),
+        wbArray('NavMesh Sets', wbArray('Set', wbFormIDCk('Mesh', [NAVM]), -1), -1),
+        wbArray('NavMesh Tree', wbStruct('Node', [
+          wbFormIDCk('Mesh', [NAVM]),
           wbInteger('Index/Node', itU32)
         ]), -1)
       ])
-      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
     ]).IncludeFlag(dfExcludeFromBuildRef);;
 
     {subrecords checked against Starfield.esm}
@@ -11850,8 +11977,8 @@ begin
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
     wbREFL,
-    wbUnknown(RFDP),
-    wbUnknown(RDIF)
+    wbFormIDCk(RFDP, 'Reflection Parent', [IMGS]),
+    wbRDIF
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -17729,7 +17856,7 @@ begin
     wbKeywords,
     wbUnknown(LNAM),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
+    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
     wbUnknown(CLDC),
     wbRStruct('Cloud Speed', [
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
@@ -18728,7 +18855,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(GBFT, 'Generic Base Form Template', [
     wbEDID,
-    wbRArray('Unknown', wbString(STRV))
+    wbRArray('Components', wbString(STRV, 'Component'))
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18783,9 +18910,16 @@ begin
     wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Calculate All' {Still picks just one}
+      {0x0001} 'Calculate from all levels <= player''s level',
+      {0x0002} 'Calculate for each item in count',
+      {0x0004} 'Calculate All',
+      {0x0008} 'Unknown 3',
+      {0x0010} 'Unknown 4',
+      {0x0020} '',
+      {0x0040} 'Unknown 6',
+      {0x0080} '',
+      {0x0100} '',
+      {0x0200} 'Unknown 9'
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbCTDAs,
@@ -18798,8 +18932,8 @@ begin
   wbRecord(WTHS, 'Weather Settings', [
     wbEDID,
     wbREFL,
-    wbFormID(RFDP),
-    wbUnknown(RDIF)
+    wbFormIDCk(RFDP, 'Reflection Parent', [WTHS]),
+    wbRDIF
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18930,8 +19064,8 @@ begin
   wbRecord(ATMO, 'Atmosphere', [
     wbEDID,
     wbREFL,
-    wbFormID(RFDP),
-    wbUnknown(RDIF)
+    wbFormIDCk(RFDP, 'Reflection Parent', [ATMO]),
+    wbRDIF
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19405,8 +19539,8 @@ begin
   wbRecord(SUNP, 'Galaxy Sun Preset', [
     wbEDID,
     wbREFL,
-    wbFormID(RFDP),
-    wbUnknown(RDIF)
+    wbFormIDCk(RFDP, 'Reflection Parent', [SUNP]),
+    wbRDIF
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19556,23 +19690,23 @@ begin
   wbAddGroupOrder(BNDS); {SF1Dump: no errors}
   wbAddGroupOrder(TERM); {SF1Dump: no errors}
   wbAddGroupOrder(LVLI); {SF1Dump: no errors}
-  wbAddGroupOrder(GBFT);
-  wbAddGroupOrder(GBFM);
-  wbAddGroupOrder(LVLB);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(WTHS);
-  wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(SPGD);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(NAVI);
+  wbAddGroupOrder(GBFT); {SF1Dump: no errors}
+  wbAddGroupOrder(GBFM); {SF1Dump: no errors}
+  wbAddGroupOrder(LVLB); {SF1Dump: no errors}
+  wbAddGroupOrder(WTHR); {SF1Dump: no errors}
+  wbAddGroupOrder(WTHS); {SF1Dump: no errors}
+  wbAddGroupOrder(CLMT); {SF1Dump: no errors}
+  wbAddGroupOrder(SPGD); {SF1Dump: no errors}
+  wbAddGroupOrder(REGN); {SF1Dump: no errors}
+  wbAddGroupOrder(NAVI); {SF1Dump: no errors}
   wbAddGroupOrder(CELL);
   wbAddGroupOrder(WRLD);
   wbAddGroupOrder(NAVM);
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(INFO);
   wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
+  wbAddGroupOrder(IDLE); {SF1Dump: no errors}
+  wbAddGroupOrder(PACK); {SF1Dump: no errors}
   wbAddGroupOrder(CSTY);
   wbAddGroupOrder(LSCR);
   wbAddGroupOrder(ANIO);
