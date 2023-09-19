@@ -12008,12 +12008,23 @@ begin
     wbREFL
   ]);
 
+  var flstValidRefs : TwbSignatures;
+  flstValidRefs := [AACT, ACTI, AFFE, ALCH, ARMO,
+                    AVIF, BOOK, CLFM, CNDF, COBJ,
+                    CONT, EXPL, FACT, FLST, FURN,
+                    GBFM, GLOB, HAZD, HDPT, IDLE,
+                    IPCT, IRES, KYWD, LCRT, LCTN,
+                    LGDI, MATT, MESG, MISC, MSTT,
+                    NPC_, OMOD, PACK, PERK, PKIN,
+                    PMFT, QUST, RACE, SPEL, STAT,
+                    STND, VTYP, WEAP];
+
   {subrecords checked against Starfield.esm}
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbBaseFormComponents,
     wbFULL,
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
+    wbRArrayS('FormIDs', wbFormIDCk(LNAM, 'FormID', flstValidRefs), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
     wbRStructs('Conditional Entries', 'Conditional Entry', [
       wbInteger(INAM, 'Index', itU32),
       wbCITCReq,
