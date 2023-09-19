@@ -18767,10 +18767,10 @@ begin
     wbString(YNAM),  //req
     wbString(TNAM, 'Name'),  //req
     wbInteger(ITMC, 'Item Count',itU32), //req
-    wbRArray('Items',
-      wbRStruct('Item', [
-        wbString(LNAM, 'Item Name'), //req
-        wbString(VNAM, 'Item Value'),
+    wbRArray('Entries',
+      wbRStruct('Entry', [
+        wbString(LNAM, 'Name'), //req
+        wbString(VNAM, 'Value'),
         wbByteRGBA(NNAM, 'Color').SetDontShow(function(const aElement: IwbElement): Boolean
         begin
           var lContainer: IwbContainer;
