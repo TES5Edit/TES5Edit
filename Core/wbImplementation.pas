@@ -3279,14 +3279,22 @@ procedure TwbFile.flAddKeysToIndices(const aMainRecord: IwbMainRecord; const aKe
 begin
   if not flIndicesActive then
     Exit;
-  for var lKeyIdx := Low(aKeys) to High(aKeys) do
+  for var lKeyIdx := Low(aKeys) to High(aKeys) do try
     with aKeys[lKeyIdx] do begin
       if dkIndex > High(flRecordsIndices) then
         SetLength(flRecordsIndices, Succ(dkIndex));
       if not Assigned(flRecordsIndices[dkIndex]) then
         flRecordsIndices[dkIndex] := TwbMainRecordIndexDictionary.Create(wbNamedIndexComparer(dkIndex));
-      flRecordsIndices[dkIndex].Add(dkKey, aMainRecord);
+      if not flRecordsIndices[dkIndex].TryAdd(dkKey, aMainRecord) then begin
+        var lMainRecord: IwbMainRecord;
+        flRecordsIndices[dkIndex].TryGetValue(dkKey, lMainRecord);
+        flProgress('Duplicate Key in Index "' + wbNamedIndexName(dkIndex) + '": "' + dkKey + '" Existing: '+lMainRecord.ShortName+' New: '+ aMainRecord.ShortName);
+      end;
     end;
+  except
+    on E: Exception do
+      flProgress('Unexpected Error adding a Key to an Index: ' + E.Message);
+  end;
 end;
 
 procedure TwbFile.flCloseFile;
@@ -3312,7 +3320,7 @@ begin
     if fsIsTemporary in flStates then try
       DeleteFile(Self.flFileNameOnDisk);
     except
-      flProgress('Could not delete temporary file '+flFileNameOnDisk);
+      flProgress('Could not delete temporary file ' + flFileNameOnDisk);
     end;
   end else
     if Assigned(flView) then begin
@@ -3436,7 +3444,7 @@ procedure TwbFile.flRemoveKeysFromIndices(const aMainRecord: IwbMainRecord; cons
 begin
   if not flIndicesActive then
     Exit;
-  for var lKeyIdx := Low(aKeys) to High(aKeys) do
+  for var lKeyIdx := Low(aKeys) to High(aKeys) do try
     with aKeys[lKeyIdx] do begin
       if dkIndex > High(flRecordsIndices) then
         Exit;
@@ -3448,6 +3456,10 @@ begin
           flRecordsIndices[dkIndex].Remove(dkKey);
       end;
     end;
+  except
+    on E: Exception do
+      flProgress('Unexpected Error removing a Key from an Index: ' + E.Message);
+  end;
 end;
 
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
@@ -3479,7 +3491,7 @@ begin
   if not flIndicesActive then
     Exit;
 
-  for var lKeyIdx := Low(aChangedKeys) to High(aChangedKeys) do
+  for var lKeyIdx := Low(aChangedKeys) to High(aChangedKeys) do try
     with aChangedKeys[lKeyIdx] do begin
       if ckIndex > High(flRecordsIndices) then
         if ckNewKey <> '' then
@@ -3500,9 +3512,17 @@ begin
             flRecordsIndices[ckIndex].Remove(ckOldKey);
         end;
         if ckNewKey <> '' then
-          flRecordsIndices[ckIndex].Add(ckNewKey, aMainRecord);
+          if not flRecordsIndices[ckIndex].TryAdd(ckNewKey, aMainRecord) then begin
+            var lMainRecord: IwbMainRecord;
+            flRecordsIndices[ckIndex].TryGetValue(ckNewKey, lMainRecord);
+            flProgress('Duplicate Key in Index "' + wbNamedIndexName(ckIndex) + '": "' + ckNewKey + '" Existing Record: '+lMainRecord.ShortName+' New Record: '+ aMainRecord.ShortName);
+          end;
       end;
     end;
+  except
+    on E: Exception do
+      flProgress('Unexpected Error updating a Key in an Index: ' + E.Message);
+  end;
 end;
 
 procedure TwbFile.ForceClosed;
@@ -20264,6 +20284,8 @@ var
   FileName: string;
   i: Integer;
 begin
+  wbInitRecords;
+
   FileName := wbExpandFileName(aFileName);
   {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\'+aFileName)
@@ -20342,6 +20364,8 @@ var
   FileName: string;
   i: Integer;
 begin
+  wbInitRecords;
+
   FileName := wbExpandFileName(aFileName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
@@ -20358,6 +20382,8 @@ var
   FileName: string;
   i: Integer;
 begin
+  wbInitRecords;
+
   FileName := wbExpandFileName(aFileName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
