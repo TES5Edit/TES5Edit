@@ -19196,7 +19196,22 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AOPS, 'Aim Optical Sight Marker', [
     wbEDID,
-    wbUnknown(ANAM)
+    wbStruct(ANAM, 'Data', [
+      wbInteger('Hide Beam By Default', itU8, wbBoolEnum),
+      wbLenString('Unknown'), { always either 'LaserNode', 'ProjectileNode' or empty }
+      wbFloat('Beam Reactivation Delay After Equip/Reload S'),
+      wbFloat('Beam Deactivation Delay After Reload S'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Beam Reactivation Delay After Firing S'),
+      wbFormIdCk('Beam Art Object', [ARTO, NULL]),
+      wbFormIdCk('Dot Art Object', [ARTO,  NULL]),
+      wbFloat('Unknown'), { vaguely related to length/range, but not range itself }
+      wbInteger('Unknown', itU8, wbBoolEnum),
+      wbInteger('Show Beam At Hip', itU8, wbBoolEnum),
+      wbInteger('Unknown', itU8, wbBoolEnum)
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
