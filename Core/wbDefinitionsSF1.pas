@@ -18488,7 +18488,7 @@ begin
     wbInteger(STMS, 'Count', itU32),
     wbRStructs('Unknown', 'Unknown', [
       wbString(STAE),
-      wbUnknown(STAD).SetRequired(True)
+      wbSoundReference(STAD).SetRequired(True)
     ], [])
   ]);
 
@@ -18983,7 +18983,7 @@ begin
     wbFULL,
     wbKeywords,
     wbCUSH,
-    wbFormID(FNAM, 'Item List'),
+    wbFormIDCk(FNAM, 'Item List', [LVLI]),
     wbInteger(SNAM, 'Rarity', itU32, wbEnum ([], [
         0, 'Common',
         1, 'Uncommon',
@@ -18993,12 +18993,12 @@ begin
         5, 'Unique to He-3',
         6, 'Unique to H2O'
       ])),
-    wbRArray('Next rarities', wbFormID(CNAM, 'Next Rarity')),
+    wbRArray('Next rarities', wbFormIDCk(CNAM, 'Next Rarity', [IRES])),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
     wbFormIDCk(NAM1, 'Actor Value', [AVIF]),
-    wbFormIDCk(NAM2, 'Produce', [LVLI, NULL]),
+    wbFormIDCk(NAM2, 'Produce', [LVLI, COBJ]),
     wbFormIDCK(NAM3, 'Interval', [GLOB])
   ]);
 
