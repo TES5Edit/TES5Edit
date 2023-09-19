@@ -8019,7 +8019,73 @@ begin
       {15} 'Anim Face',
       {16} 'Quest Group',
       {17} 'Anim Injured',
-      {18} 'Dispel Effect'
+      {18} 'Dispel Effect',
+      {19} 'Unknown 19',
+      {20} 'Unknown 20',
+      {21} 'Unknown 21',
+      {22} 'Unknown 22',
+      {23} 'Unknown 23',
+      {24} 'Unknown 24',
+      {25} 'Unknown 25',
+      {26} 'Quest Type',
+      {27} 'Faction',
+      {28} 'Unknown 28',
+      {29} 'Inventory Category',
+      {30} 'Unknown 30',
+      {31} 'Unknown 31',
+      {32} 'Affliction',
+      {33} 'Hazard Effect',
+      {34} 'Unknown 34',
+      {35} 'Planet Type',
+      {36} 'Atmosphere Type',
+      {37} 'Atmosphere Toxicity',
+      {38} 'Planet Gravity',
+      {39} 'Planet Water Abundance',
+      {40} 'Planet Water Quality',
+      {41} 'Magnetosphere Type',
+      {42} 'Planet Flora Probability',
+      {43} 'Planet Fauna Probability',
+      {44} 'Planet Trait',
+      {45} 'Planet Temperature',
+      {46} 'Planet Pressure',
+      {47} 'Planet Flora Abundance',
+      {48} 'Planet Fauna Abundance',
+      {49} 'Unknown 49',                     //Biome Clutter?
+      {50} 'Hand Scanner Info',
+      {51} 'Ship Module Class',
+      {52} 'Unknown 52',
+      {53} 'Unknown 53',
+      {54} 'Mission Board Type',
+      {55} 'Ship Engine',
+      {56} 'Unknown 56',
+      {57} 'Ship Cockpit',
+      {58} 'Grav Drive',
+      {59} 'Perk Restriction',
+      {60} 'Creature Skin',
+      {61} 'Creature Size',
+      {62} 'Unknown 62',
+      {63} 'Photomode Category',
+      {64} 'Unknown 64',
+      {65} 'Unknown 65',
+      {66} 'Unknown 66',
+      {67} 'Unknown 66',
+      {68} 'Unknown 67',
+      {69} 'Houdini Biome Style',
+      {70} 'Unknown 70',
+      {71} 'Unknown 71',
+      {72} 'Unknown 72',
+      {73} 'Unknown 73',
+      {74} 'Unknown 74',
+      {75} 'Unknown 75',
+      {76} 'Unknown 76',                         //BCT something
+      {77} 'Ship Upgrade',
+      {78} 'Unknown 78',
+      {79} 'Unknown 79',
+      {80} 'Treatment',
+      {81} 'Unknown 81',
+      {82} 'Crafting Resource Type',
+      {83} 'Weapon Display Type'
+
     ]);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
@@ -10905,7 +10971,7 @@ begin
     wbBaseFormComponents,
     wbFULL,
     wbFactionRelations,
-    wbFormIDCk(DNAM, 'Unknown', [KYWD]),
+    wbFormIDCk(DNAM, 'Faction Type', [KYWD]),
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Hidden From NPC',
@@ -10950,7 +11016,16 @@ begin
 //    wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
-    wbArray(PRIS, 'Unknown', wbFormIDCk('Unknown', [NULL, REFR])), //could be earlier, can't determine from data
+    wbArray(PRIS, 'Prisons',
+      wbStruct('Prison Location', [
+        wbFormIDCk('Prison Door Marker', [NULL, REFR]),
+        wbFormIDCk('Ship Landing Marker', [NULL, REFR]),
+        wbFormIDCk('Cargo Contraband', [NULL, REFR]),
+        wbFormIDCk('Inventory Contraband', [NULL, REFR]),
+        wbFormIDCk('Companion Wait Marker', [NULL, REFR])
+      ])
+    ),
+
     wbStruct(VENV, 'Vendor Values', [
       wbInteger('Start Hour', itU16),
       wbInteger('End Hour', itU16),
@@ -10962,7 +11037,7 @@ begin
       wbInteger('Unknown', itU8)
     ]),
     wbPLVD,
-    wbFormIDCk(VTCK, 'Unknown', [FLST, VTYP]),
+    wbFormIDCk(VTCK, 'Voice', [FLST, VTYP]),
     wbRStruct('Unknown', [
       wbMarkerReq(CRHR),
       wbStruct(HERD, 'Unknown', [
@@ -11116,7 +11191,7 @@ begin
     wbString(DNAM, 'Notes'),
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum),
     wbUnknown(FNAM),
-    wbUnknown(ENAM),
+    wbString(ENAM),
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbFULL
     //wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
@@ -11171,9 +11246,9 @@ begin
       wbString(TX06, 'Multilayer'),
       wbString(TX07, 'Smooth Spec')
       *)
-      wbString(TX08, 'Unknown'),
-      wbString(TX09, 'Unknown'),
-      wbString(TX17, 'Unknown'),
+      wbString(TX08, 'Metal'),
+      wbString(TX09, 'Rough'),
+      wbString(TX17, 'AO'),
       wbString(TX19, 'Opacity')
     ], []).SetSummaryKey([0]).IncludeFlag(dfAllowAnyMember),
     wbDODT,
@@ -18135,7 +18210,8 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} 16, 'Around Origin'
+      {0x00008000} 16, 'Around Origin',
+      {0x00010000} 17, 'Unknown'
     ])), [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -18679,7 +18755,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AVMD, 'Actor Value Modulations', [
+  wbRecord(AVMD, 'AVM Data', [
     wbEDID,
     wbBaseFormComponents,
     wbInteger(MNAM, 'Type', itU32, wbEnum([
@@ -18690,11 +18766,11 @@ begin
     ])), //req
     wbString(YNAM),  //req
     wbString(TNAM, 'Name'),  //req
-    wbInteger(ITMC, 'Unknown',itU32), //req
-    wbRArray('Unknown',
-      wbRStruct('Unknown', [
-        wbString(LNAM), //req
-        wbString(VNAM),
+    wbInteger(ITMC, 'Entry Count',itU32), //req
+    wbRArray('Entries',
+      wbRStruct('Entry', [
+        wbString(LNAM, 'Name'), //req
+        wbString(VNAM, 'Value'),
         wbByteRGBA(NNAM, 'Color').SetDontShow(function(const aElement: IwbElement): Boolean
         begin
           var lContainer: IwbContainer;
@@ -18710,7 +18786,17 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed)
     ),
-    wbInteger(MODT, 'Unknown', itU32)
+    wbInteger(MODT, 'Texture Type', itU32, wbFlags([
+          {0} 'None',
+          {1} 'Rough',
+          {2} 'Opacity',
+          {3} 'Normal',
+          {4} 'AO',
+          {5} 'Metal',
+          {6} 'Conditions',
+          {7} 'Emissive'
+        ])
+    )
   ])
   .SetBuildIndexKeys(procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys)
   begin
