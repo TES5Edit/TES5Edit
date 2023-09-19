@@ -17833,7 +17833,11 @@ end;
 
 function TwbResolvableDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
-  Result := ResolveDef(aBasePtr, aEndPtr, aElement).Check(aBasePtr, aEndPtr, aElement);
+  var lResolvedDef := ResolveDef(aBasePtr, aEndPtr, aElement);
+  if Assigned(lResolvedDef) then
+    Result := lResolvedDef.Check(aBasePtr, aEndPtr, aElement)
+  else
+    Result := 'Union could not be resolved';
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
