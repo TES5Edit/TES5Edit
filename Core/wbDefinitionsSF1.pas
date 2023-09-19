@@ -2373,7 +2373,7 @@ var
   DataContainer : IwbDataContainer;
   Element       : IwbElement;
 const
-  OffsetArchtype = 56;
+  OffsetArchtype = 80;
 
 begin
   Result := 0;
@@ -2399,13 +2399,13 @@ begin
     17: Result := 2; // Bound Item
     18: Result := 3; // Summon Creature
     25: Result := 4; // Guide
+    26: Result := 5; // Unknown 26
     34: Result := 8; // Peak Mod
     35: Result := 5; // Cloak
-    36: Result := 6; // Werewolf
     39: Result := 7; // Enhance Weapon
     40: Result := 4; // Spawn Hazard
     45: Result := 9; // Damage Type
-    46: Result := 6; // Vampire Lord
+    46: Result := 6; // Immunity
   end;
 end;
 
@@ -10901,7 +10901,21 @@ begin
     wbFormIDCk(ENAM, 'Unknown', [EFSQ]),
     wbEmpty(DATA, 'Empty', cpIgnore),
     wbStruct(DNAM, 'Data', [
-      wbUnknown
+      wbFloat,
+      wbByteColors,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbSoundReference('Sounds'),
+      wbUnknown(5)
     ]),
     wbGenericModel
   ]);
@@ -14529,34 +14543,126 @@ begin
     {46} 'Immunity',
     {47} 'Permanent Reanimate',
     {48} 'Jetpack',
-    {49} 'Chameleon'
+    {49} 'Chameleon',
+    {50} 'Unknown 50',
+    {51} 'Unknown 51',
+    {52} 'Unknown 52',
+    {53} 'Unknown 53'
   ]), cpNormal, False, nil, wbMGEFArchtypeAfterSet);
 
   wbMGEFData := wbRStruct('Magic Effect Data', [
     wbStruct(DATA, 'Data', [
-      {  0} wbFormIDCk('Unknown', [NULL, DMGT, HAZD, KYWD, SPEL]),
-      {  4} wbUnknown(4),
-      {  8} wbFormIDCk('Unknown', [NULL, ARTO]),
-      { 12} wbUnknown(4),
-      { 16} wbFormIDCk('Unknown', [NULL, EFSH]),
-      { 20} wbUnknown(12),
-      { 32} wbFormIDCk('Unknown', [NULL, EXPL]),
-      { 36} wbFormIDCk('Unknown', [NULL, ARTO]),
-      { 40} wbFormIDCk('Unknown', [NULL, IMAD]),
-      { 44} wbFormIDCk('Unknown', [NULL, IPDS]),
-      { 48} wbUnknown(4),
-      { 52} wbFormIDCk('Unknown', [NULL, PERK]),
-      { 56} wbUnknown(4),
-      { 60} wbFormIDCk('Unknown', [NULL, PROJ]),
-      { 64} wbFormIDCk('Unknown', [NULL, AVIF]),
-      { 68} wbFormIDCk('Unknown', [NULL, AVIF]), // script arg for legendary weaps?
+      {  0} wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
+              wbFormID('Unused', cpIgnore),
+              wbFormIDCk('Assoc. Item', [LIGH, NULL]),        // light
+              wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),  // bound item
+              wbFormIDCk('Assoc. Item', [NPC_, NULL]),        // summon creature
+              wbFormIDCk('Assoc. Item', [HAZD, NULL]),        // guide, spawn hazard
+              wbFormIDCk('Assoc. Item', [SPEL, NULL]),        // cloak
+              wbFormIDCk('Assoc. Item', [DMGT, NULL]),        // immunity
+              wbFormIDCk('Assoc. Item', [ENCH, NULL]),        // enhance weapon
+              wbFormIDCk('Assoc. Item', [KYWD, NULL]),        // peak modifier
+              wbFormIDCk('Assoc. Item', [DMGT, NULL])         // damage type
+            ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
+      {  4} wbActorValue,
+      {  8} wbFormIDCk('Casting Art', [NULL, ARTO]),
+      { 12} wbFormIDCk('Unknown', [NULL, MOVT]),
+      { 16} wbFormIDCk('Hit Shader', [NULL, EFSH]),
+      { 20} wbFormIDCk('Enchant Shader', [NULL, EFSH]),
+      { 24} wbFormIDCk('Enchant Art', [NULL, ARTO]),
+      { 28} wbFormIDCk('Equip Ability', [NULL, SPEL]),
+      { 32} wbFormIDCk('Explosion', [NULL, EXPL]),
+      { 36} wbFormIDCk('Hit Effect Art', [NULL, ARTO]),
+      { 40} wbFormIDCk('Image Space Modifier', [NULL, IMAD]),
+      { 44} wbFormIDCk('Impact Data', [NULL, IPDS]),
+      { 48} wbFormIDCk('Casting Light', [NULL, LIGH]),
+      { 52} wbFormIDCk('Perk to Apply', [NULL, PERK]),
+      { 56} wbActorValue,
+      { 60} wbFormIDCk('Projectile', [NULL, PROJ]),
+      { 64} wbFormIDCk('Resist Value', [AVIF, NULL]),
+      { 68} wbActorValue,
       { 72} wbFloat,
       { 76} wbFloat,
-      { 80} wbUnknown(4),
+      { 80} wbMGEFType,
       { 84} wbFloat,
       { 88} wbUnknown(4),
       { 92} wbFloat,
-      { 96} wbUnknown(32),
+      { 96} wbInteger('Unknown', itU32),
+      {100} wbInteger('Casting Type', itU8, wbCastEnum),
+      {101} wbInteger('Delivery Type', itU8, wbTargetEnum),
+      {102} wbUnknown(4),
+      {106} wbInteger('Flags', itU32, wbFlags([
+        {0x00000001}  'Hostile',
+        {0x00000002}  'Recover',
+        {0x00000004}  'Detrimental',
+        {0x00000008}  'Snap to Navmesh',
+        {0x00000010}  'No Hit Event',
+        {0x00000020}  'Unknown 6',
+        {0x00000040}  'Unknown 7',
+        {0x00000080}  'Unknown 8',
+        {0x00000100}  'Dispel with Keywords',
+        {0x00000200}  'No Duration',
+        {0x00000400}  'No Magnitude',
+        {0x00000800}  'No Area',
+        {0x00001000}  'FX Persist',
+        {0x00002000}  'Unknown 14',
+        {0x00004000}  'Gory Visuals',
+        {0x00008000}  'Hide in UI',
+        {0x00010000}  'Unknown 17',
+        {0x00020000}  'No Recast',
+        {0x00040000}  'Unknown 19',
+        {0x00080000}  'Unknown 20',
+        {0x00100000}  'Unknown 21',
+        {0x00200000}  'Power Affects Magnitude',
+        {0x00400000}  'Power Affects Duration',
+        {0x00800000}  'Unknown 24',
+        {0x01000000}  'Unknown 25',
+        {0x02000000}  'Unknown 26',
+        {0x04000000}  'Painless',
+        {0x08000000}  'No Hit Effect',
+        {0x10000000}  'No Death Dispel',
+        {0x20000000}  'Unknown 30',
+        {0x40000000}  'Unknown 31',
+        {0x80000000}  'Unknown 32'
+      ])),
+      {110} wbFromVersion(164, wbInteger('Flags 2', itU32, wbFlags([
+        {0x00000001} { 0} 'Unknown 0',
+        {0x00000002} { 1} 'Unknown 1',
+        {0x00000004} { 2} 'Unknown 2',
+        {0x00000008} { 3} 'Unknown 3',
+        {0x00000010} { 4} 'Unknown 4',
+        {0x00000020} { 4} 'Unknown 5',
+        {0x00000040} { 6} 'Unknown 6',
+        {0x00000080} { 7} 'Unknown 7',
+        {0x00000100} { 8} 'Unknown 8',
+        {0x00000200} { 9} 'Unknown 9',
+        {0x00000400} {10} 'Unknown 10',
+        {0x00000800} {11} 'Unknown 11',
+        {0x00001000} {12} 'Unknown 12',
+        {0x00002000} {13} 'Unknown 13',
+        {0x00004000} {14} 'Unknown 14',
+        {0x00008000} {15} 'Unknown 15',
+        {0x00010000} {16} 'Unknown 16',
+        {0x00020000} {17} 'Unknown 17',
+        {0x00040000} {18} 'Unknown 18',
+        {0x00080000} {19} 'Unknown 19',
+        {0x00100000} {20} 'Unknown 20',
+        {0x00200000} {21} 'Unknown 21',
+        {0x00400000} {22} 'Unknown 22',
+        {0x00800000} {23} 'Unknown 23',
+        {0x01000000} {24} 'Unknown 24',
+        {0x02000000} {25} 'Unknown 25',
+        {0x04000000} {26} 'Unknown 26',
+        {0x08000000} {27} 'Unknown 27',
+        {0x10000000} {28} 'Unknown 28',
+        {0x20000000} {29} 'Unknown 29',
+        {0x40000000} {30} 'Unknown 30',
+        {0x80000000} {31} 'Unknown 31'
+      ]))),
+      {114} wbUnknown(2),
+      {116} wbUnknown(4),
+      {120} wbUnknown(4),
+      {124} wbFloat,
       {128} wbFloat,
       {132} wbFloat
       (*
@@ -14662,8 +14768,10 @@ begin
     wbKeywords,
     wbMGEFData,
 //    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet),
-    //wbMagicEffectSounds,
-    wbRArray('Unknown', wbUnknown(ESSH)),
+    wbRArray('Sounds', wbStruct(ESSH, 'Sound Reference', [
+      wbInteger('Unknown', itU8),
+      wbSoundReference('Sound Reference')
+    ])),
     wbLStringKC(DNAM, 'Magic Item Description', 0, cpTranslate),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
