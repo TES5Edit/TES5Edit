@@ -464,7 +464,7 @@ end;
 
 constructor TwbLocalizationHandler.Create;
 begin
-  lFiles := TwbFastStringListCS.CreateSorted;
+  lFiles := TwbFastStringListIC.CreateSorted;
   fReuseDup := false;
   NoTranslate := false;
 end;

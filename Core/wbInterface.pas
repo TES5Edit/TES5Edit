@@ -13,12 +13,14 @@ unit wbInterface;
 interface
 
 uses
-  Types,
-  Classes,
-  SysUtils,
-  UITypes,
-  Graphics,
-  RegularExpressions;
+  System.Types,
+  System.Classes,
+  System.SysUtils,
+  System.UITypes,
+  VCL.Graphics,
+  System.Generics.Defaults,
+  System.Generics.Collections,
+  System.RegularExpressions;
 
 type
   TwbVersion = record
@@ -619,6 +621,7 @@ type
     dfMustBeUnion,
     dfMergeIfMultiple,
     dfExcludeFromBuildRef,
+    dfIndexEditorID,
     dfSummaryMembersNoName,
     dfSummaryNoName,
     dfSummaryNoSortKey,
@@ -1331,6 +1334,8 @@ type
 
   TwbBuildOrLoadRefResult = (blrNone, blrBuilt, blrBuiltAndSaved, blrLoaded);
 
+  TwbNamedIndex = type Integer;
+
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
@@ -1342,6 +1347,7 @@ type
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
+    function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetLoadOrder: Integer;
     function GetLoadOrderFileID: TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
@@ -1429,6 +1435,8 @@ type
       read GetGroupBySignature;
     property ContainedRecordByLoadOrderFormID[aFormID: TwbFormID; aAllowInjected: Boolean]: IwbMainRecord
       read GetContainedRecordByLoadOrderFormID;
+    property RecordFromIndexByKey[aIndex: TwbNamedIndex; const aKey: string]: IwbMainRecord
+      read GetRecordFromIndexByKey;
 
     property Records[aIndex: Integer]: IwbMainRecord
       read GetRecord;
@@ -1606,6 +1614,44 @@ type
 
   EwbSkipLoad = class(EAbort);
 
+  IwbNamedIndexEqualityComparer = IEqualityComparer<string>;
+
+  TwbChangedKey = record
+    ckIndex  : TwbNamedIndex;
+    ckOldKey : string;
+    ckNewKey : string;
+  end;
+
+  TwbChangedKeys = TArray<TwbChangedKey>;
+
+  TwbDefinedKey = record
+    dkIndex : TwbNamedIndex;
+    dkKey   : string;
+  end;
+
+  TwbDefinedKeys = TArray<TwbDefinedKey>;
+
+  TwbIndexKeys = record
+  private
+    ikKeys: array of string;
+
+    function GetKey(aIndex: TwbNamedIndex): string;
+    procedure SetKey(aIndex: TwbNamedIndex; const aValue: string);
+    function GetContains(aIndex: TwbNamedIndex): Boolean;
+  public
+    procedure Clear;
+    function IsEmpty: Boolean;
+
+    function GetDefinedKeys: TwbDefinedKeys;
+    function GetChangedKeys(const aOldKeys: TwbIndexKeys): TwbChangedKeys;
+
+    property Keys[aIndex : TwbNamedIndex]: string
+      read GetKey
+      write SetKey;
+    property Contains[aIndex : TwbNamedIndex]: Boolean
+      read GetContains;
+  end;
+
   IwbMainRecordDef = interface;
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']
@@ -1700,6 +1746,9 @@ type
     procedure ClampFormID(aIndex: Byte);
 
     function ContentEquals(const aMainRecord: IwbMainRecord): Boolean;
+
+    function ActivateIndexKeys: TwbDefinedKeys;
+    function DeactivateIndexKeys: TwbDefinedKeys;
 
     property Def: IwbMainRecordDef
       read GetMainRecordDef;
@@ -1936,7 +1985,7 @@ type
 
   TwbAfterLoadCallback = procedure(const aElement: IwbElement);
   TwbAfterSetCallback = reference to procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-  TwbDontShowCallback = function(const aElement: IwbElement): Boolean;
+  TwbDontShowCallback = reference to function(const aElement: IwbElement): Boolean;
   TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
   TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
   TwbIntToStrCallback = reference to function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -1955,6 +2004,7 @@ type
   TwbLinksToCallback = reference to function(const aElement: IwbElement): IwbElement;
   TwbIsRemoveableCallback = reference to function(const aElement: IwbElement): Boolean;
   TwbStructSizeCallback = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+  TwbBuildIndexKeysCallback = reference to procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys);
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -1968,6 +2018,7 @@ type
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbNamedDef;
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbNamedDef;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
@@ -2109,6 +2160,9 @@ type
     function SetIgnoreList(const aSignatures: array of TwbSignature): {Self}IwbMainRecordDef;
     function ShouldIgnore(const aSignature: TwbSignature): Boolean;
 
+    function SetBuildIndexKeys(const aCallback: TwbBuildIndexKeysCallback): {Self}IwbMainRecordDef;
+    function BuildIndexKeys(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys): Boolean;
+
     property IsReference: Boolean
       read GetIsReference;
 
@@ -2155,6 +2209,7 @@ type
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
 
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
@@ -2167,6 +2222,7 @@ type
     ['{BBF684A6-0EE5-4EF6-83DD-D323A0D2919A}']
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbValueDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbValueDef;
 
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
     function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
@@ -2242,6 +2298,8 @@ type
     function SetDefaultEditValues(const aValues: array of string): IwbRecordMemberDef;
 
     function ForValue(const aCallback: TwbSubRecordForValueCallback): {Self}IwbSubRecordDef;
+
+    function SetLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef{Self};
 
     property Value: IwbValueDef read GetValue;
   end;
@@ -2718,6 +2776,15 @@ var
 
 const
   AllElementTypes = [Low(TwbElementType)..High(TwbElementType)];
+
+var
+  wbIdxEditorID: TwbNamedIndex;
+
+function wbNamedIndex(const aName          : string;
+                            aCaseSensitive : Boolean)
+                                           : TwbNamedIndex;
+
+function wbNamedIndexComparer(aIndex: TwbNamedIndex): IwbNamedIndexEqualityComparer;
 
 function wbRecord(const aSignature      : TwbSignature;
                   const aName           : string;
@@ -5305,6 +5372,7 @@ type
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbNamedDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbNamedDef;
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbNamedDef;
 
     function GetTreeHead: Boolean;              // Is the element expected to be a "header record" in the tree navigator
     procedure SetTreeHead(aValue: Boolean);     // Make the element a "header record" in the tree navigator;
@@ -5397,6 +5465,7 @@ type
     recSummaryMaxDepth    : TArray<Integer>;
     recSummaryDelimiter   : string;
     recIgnoreList         : TwbSignatures;
+    recBuildIndexKeys     : TwbBuildIndexKeysCallback;
 
     procedure recBuildReferences;
   protected
@@ -5490,6 +5559,9 @@ type
 
     function SetIgnoreList(const aSignatures: array of TwbSignature): {Self}IwbMainRecordDef;
     function ShouldIgnore(const aSignature: TwbSignature): Boolean;
+
+    function SetBuildIndexKeys(const aCallback: TwbBuildIndexKeysCallback): {Self}IwbMainRecordDef;
+    function BuildIndexKeys(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys): Boolean;
     {--- IwbMainRecordDefInternal ---}
   end;
 
@@ -5534,6 +5606,7 @@ type
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef;
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbRecordMemberDef;
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
 
@@ -5553,6 +5626,8 @@ type
 
     function ForValue(const aCallback: TwbSubRecordForValueCallback): {Self}IwbSubRecordDef;
 
+    function SetLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef{Self};
+
     {---IwbSubRecordWithStructDef---}
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
     function SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordWithStructDef;
@@ -5569,7 +5644,9 @@ type
 
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+    function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
   end;
 
@@ -5812,6 +5889,7 @@ type
     {---IwbValueDef---}
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbValueDef;
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbValueDef;
+    function SetDontShow(const aDontShow : TwbDontShowCallback): IwbValueDef;
 
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; reintroduce; virtual; abstract;
     function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
@@ -6963,6 +7041,33 @@ type
     {---IwbCallbackDef---}
     function GetCallback: TwbIntToStrCallback;
   end;
+
+var
+  _NamedIndices: TStringList;
+  _NamedIndicesCaseSensitive: set of Byte;
+
+function wbNamedIndex(const aName: string; aCaseSensitive: Boolean): TwbNamedIndex;
+begin
+  if not Assigned(_NamedIndices) then
+    _NamedIndices := TwbFastStringListIC.CreateSorted(dupIgnore);
+
+  var lIndex: Integer;
+  if _NamedIndices.Find(aName, lIndex) then
+    Exit(TwbNamedIndex(_NamedIndices.Objects[lIndex]));
+
+  Result := _NamedIndices.Count;
+  _NamedIndices.AddObject(aName, TObject(Result));
+  if aCaseSensitive then
+    Include(_NamedIndicesCaseSensitive, Result);
+end;
+
+function wbNamedIndexComparer(aIndex: TwbNamedIndex): IwbNamedIndexEqualityComparer;
+begin
+  if (aIndex >=0) and (aIndex < _NamedIndices.Count) and not (aIndex in _NamedIndicesCaseSensitive) then
+    Result := TIStringComparer.Ordinal
+  else
+    Result := TStringComparer.Ordinal;
+end;
 
 function wbRecord(const aSignature       : TwbSignature;
                   const aName            : string;
@@ -9574,6 +9679,12 @@ begin
   ndAfterSet := aAfterSet;
 end;
 
+function TwbNamedDef.SetDontShow(const aDontShow: TwbDontShowCallback): IwbNamedDef;
+begin
+  Result := Self;
+  ndDontShow := aDontShow;
+end;
+
 procedure TwbNamedDef.SetTreeBranch(aValue: Boolean);
 begin
   ndTreeBranch := avalue;
@@ -9679,6 +9790,7 @@ begin
   recSummaryPrefix := Copy((aSource as TwbMainRecordDef).recSummaryPrefix);
   recSummarySuffix := Copy((aSource as TwbMainRecordDef).recSummarySuffix);
   recSummaryDelimiter := (aSource as TwbMainRecordDef).recSummaryDelimiter;
+  recBuildIndexKeys := (aSource as TwbMainRecordDef).recBuildIndexKeys;
 end;
 
 procedure TwbMainRecordDef.AfterLoad(const aElement: IwbElement);
@@ -9709,6 +9821,13 @@ end;
 function TwbMainRecordDef.AllowUnordered: Boolean;
 begin
   Result := rdfAllowUnordered in recDefFlags;
+end;
+
+function TwbMainRecordDef.BuildIndexKeys(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys): Boolean;
+begin
+  Result := Assigned(recBuildIndexKeys);
+  if Result then
+    recBuildIndexKeys(aMainRecord, aIndexKeys);
 end;
 
 function TwbMainRecordDef.CanContainFormIDs: Boolean;
@@ -9948,6 +10067,12 @@ begin
   defReported := True;
 end;
 
+function TwbMainRecordDef.SetBuildIndexKeys(const aCallback: TwbBuildIndexKeysCallback): IwbMainRecordDef;
+begin
+  Result := Self;
+  recBuildIndexKeys := aCallback;
+end;
+
 procedure TwbMainRecordDef.SetEditorID(const aSubRecord: IwbSubRecord; const aEditorID: string);
 begin
   if Assigned(recSetEditorIDCallback) then
@@ -10126,7 +10251,7 @@ begin
             if not Supports(Member, IwbContainerElementRef, MemberCER) then
               MemberCER := nil;
             var RMD: IwbRecordMemberDef;
-            if Assigned(Member) and Supports(Member.Def, IwbRecordMemberDef, RMD) and (MembersShowIgnore or (dfSummaryShowIgnore in RMD.DefFlags) or not wbHideIgnored or (Member.ConflictPriority > cpIgnore)) then begin
+            if Assigned(Member) and not Member.DontShow and Supports(Member.Def, IwbRecordMemberDef, RMD) and (MembersShowIgnore or (dfSummaryShowIgnore in RMD.DefFlags) or not wbHideIgnored or (Member.ConflictPriority > cpIgnore)) then begin
               var s := RMD.ToSummary(Succ(aDepth), Member).Trim;
               if s <> '' then begin
                 var Prefix := TFromArray<string>.Get(aPrefix, SortOrder);
@@ -10457,6 +10582,19 @@ function TwbSubRecordDef.SetDefaultNativeValue(const aValue: Variant): IwbSubRec
 begin
   if Assigned(srValue) then
     srValue := srValue.SetDefaultNativeValue(aValue);
+  Result := Self;
+end;
+
+function TwbSubRecordDef.SetDontShow(const aDontShow: TwbDontShowCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  ndDontShow := aDontShow;
+end;
+
+function TwbSubRecordDef.SetLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef;
+begin
+  if Assigned(srValue) then
+    srValue.SetLinksToCallback(aCallback);
   Result := Self;
 end;
 
@@ -17091,6 +17229,12 @@ begin
   Result := Self;
 end;
 
+function TwbValueDef.SetDontShow(const aDontShow: TwbDontShowCallback): IwbValueDef;
+begin
+  Result := Self;
+  ndDontShow := aDontShow;
+end;
+
 function TwbValueDef.SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef;
 begin
   Result := Self;
@@ -20347,6 +20491,17 @@ begin
   ndAfterSet := aAfterSet;
 end;
 
+function TwbRecordMemberDef.SetDontShow(const aDontShow: TwbDontShowCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+  ndDontShow := aDontShow;
+end;
+
+function TwbRecordMemberDef.SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef;
+begin
+  Result := Self;
+end;
+
 function TwbRecordMemberDef.SetRequired(const aRequired: Boolean): IwbRecordMemberDef;
 begin
   Result := Self;
@@ -20848,7 +21003,116 @@ begin
       Inc(Result);
 end;
 
+{ TwbIndexKeys }
+
+procedure TwbIndexKeys.Clear;
+begin
+  ikKeys := nil;
+end;
+
+function TwbIndexKeys.GetChangedKeys(const aOldKeys: TwbIndexKeys): TwbChangedKeys;
+begin
+  var lNewHigh := High(ikKeys);
+  var lOldHigh := High(aOldKeys.ikKeys);
+
+  var lMinHigh := Min(lNewHigh, lOldHigh);
+  var lMaxHigh := Max(lNewHigh, lOldHigh);
+
+  SetLength(Result, Succ(lMaxHigh));
+  var lResultIdx := 0;
+  for var lIdx := 0 to lMinHigh do
+    if (
+         (lIdx in _NamedIndicesCaseSensitive) and
+         (ikKeys[lIdx] <> aOldKeys.ikKeys[lIdx])
+       ) or (
+         (not (lIdx in _NamedIndicesCaseSensitive)) and
+         (not SameText(ikKeys[lIdx], aOldKeys.ikKeys[lIdx]))
+       )
+    then begin
+      Result[lResultIdx].ckIndex  := lIdx;
+      Result[lResultIdx].ckOldKey := aOldKeys.ikKeys[lIdx];
+      Result[lResultIdx].ckNewKey := ikKeys[lIdx];
+      Inc(lResultIdx);
+    end;
+  if lNewHigh > lOldHigh then begin
+    for var lNewIdx := Succ(lMinHigh) to lNewHigh do
+      if ikKeys[lNewIdx] <> '' then begin
+        Result[lResultIdx].ckIndex := lNewIdx;
+        Result[lResultIdx].ckOldKey := '';
+        Result[lResultIdx].ckNewKey := ikKeys[lNewIdx];
+        Inc(lResultIdx);
+      end;
+  end else if lOldHigh > lNewHigh then begin
+    for var lOldIdx := Succ(lMinHigh) to lOldHigh do
+      if aOldKeys.ikKeys[lOldIdx] <> '' then begin
+        Result[lResultIdx].ckIndex := lOldIdx;
+        Result[lResultIdx].ckOldKey := aOldKeys.ikKeys[lOldIdx];
+        Result[lResultIdx].ckNewKey := '';
+        Inc(lResultIdx);
+      end;
+  end;
+  SetLength(Result, lResultIdx);
+end;
+
+function TwbIndexKeys.GetContains(aIndex: TwbNamedIndex): Boolean;
+begin
+  Result :=
+    (aIndex >= 0) and
+    (High(ikKeys) >= aIndex) and
+    (ikKeys[aIndex] <> '');
+end;
+
+function TwbIndexKeys.GetDefinedKeys: TwbDefinedKeys;
+begin
+  var lHigh := High(ikKeys);
+  SetLength(Result, Succ(lHigh));
+  var lResultIdx := 0;
+  for var lIdx := 0 to lHigh do
+    if ikKeys[lIdx] <> '' then begin
+      Result[lResultIdx].dkIndex := lIdx;
+      Result[lResultIdx].dkKey := ikKeys[lIdx];
+      Inc(lResultIdx);
+    end;
+  SetLength(Result, lResultIdx);
+end;
+
+function TwbIndexKeys.GetKey(aIndex: TwbNamedIndex): string;
+begin
+  if (aIndex >= 0) and
+     (High(ikKeys) >= aIndex)
+  then
+    Result := ikKeys[aIndex]
+  else
+    Result := '';
+end;
+
+function TwbIndexKeys.IsEmpty: Boolean;
+begin
+  var lHigh := High(ikKeys);
+  for var lIdx := 0 to lHigh do
+    if ikKeys[lIdx] <> '' then
+      Exit(False);
+  if lHigh >= 0 then
+    Clear;
+  Result := True;
+end;
+
+procedure TwbIndexKeys.SetKey(aIndex: TwbNamedIndex; const aValue: string);
+begin
+  if (aIndex < 0) or (aIndex >= _NamedIndices.Count) then
+    Exit;
+  var lHigh := High(ikKeys);
+  if lHigh < aIndex then
+    if aValue = '' then
+      Exit
+    else
+      SetLength(ikKeys, Succ(aIndex));
+  ikKeys[aIndex] := aValue;
+end;
+
 initialization
+  wbIdxEditorID := wbNamedIndex('EditorID', False);
+
   _MBCSEncodings := TStringList.Create;
   _MBCSEncodings.CaseSensitive := False;
   _MBCSEncodings.Sorted := True;
@@ -20901,4 +21165,5 @@ finalization
   FreeAndNil(wbLEncoding[True]);
   FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);
+  FreeAndNil(_NamedIndices);
 end.
