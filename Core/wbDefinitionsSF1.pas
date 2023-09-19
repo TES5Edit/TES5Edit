@@ -369,7 +369,6 @@ end;
 
 function wbSPCHQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
-  Container  : IwbContainerElementRef;
   Param1     : IwbElement;
   MainRecord : IwbMainRecord;
   EditInfos  : TStringList;
@@ -9242,7 +9241,7 @@ begin
               wbUnknown(8),
               wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
               wbFloat('Radius (in km)'),
-              wbUnknown(4)
+              wbFloat('Unknown')
             ]),
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
@@ -12410,7 +12409,8 @@ begin
         {0x00000040} 'Don''t Reset Location Spring',
         {0x00000080} 'Don''t Reset Target Spring',
         {0x00000100} 'Unknown 8',
-        {0x00000200} 'Unknown 9'
+        {0x00000200} 'Unknown 9',
+        {0x00000400} 'Unknown 10'
       ])),
       wbStruct('Time Multipliers', [
         wbFloat('Player'),
@@ -17756,8 +17756,8 @@ begin
     wbStruct(WVIS, 'Unknown', [
       { 0} wbUnknown(12),
       {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
-      {16} wbUnknown(8)
-    ]),
+      {16} wbUnknown(8) // suspect first 4 bytes are RGBA 255, 255, 127, 127
+    ]),                 // impact colour, maybe? if so it's the same for all weaps in Starfield.esm
     wbStruct(WTRM, 'Unknown', [
       { 0} wbFloat,
       { 4} wbUnknown(1),
@@ -18104,7 +18104,10 @@ begin
       $1D, 'Armor',
       $2D, 'Actor',
       $2A, 'Furniture',
-      $2B, 'Weapon'
+      $2B, 'Weapon',
+      $22, 'AdjectiveArmor',
+      $30, 'AdjectiveWeapon',
+      $32, 'CreaturePrefixSuffix'
     ])).SetRequired(True),
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
@@ -19555,7 +19558,7 @@ begin
     wbUnknown(ONAM),
     wbInteger(DNAM, 'Star ID', itU32),
     wbByteColors(ENAM, 'Star color'),
-    wbFormID(PNAM, 'Sun Preset')
+    wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
   ]);
 
   {subrecords checked against Starfield.esm}
