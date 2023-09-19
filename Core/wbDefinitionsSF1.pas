@@ -6922,7 +6922,9 @@ begin
    {11} 'Target (location)', // string dump: Target: %s, radius %u
    {12} 'Near self', // Near Self, radius %u
    {13} 'Near Editor Location Cell',
-   {14} 'Alias (ref collection)'
+   {14} 'Alias (ref collection)',
+   {15} 'Unknown 15',
+   {16} 'Unknown 16'
   ]);
 
   wbObjectTypeEnum := wbEnum([
@@ -6975,9 +6977,11 @@ begin
      {11} wbInteger('Packdata Target', itU32),
      {12} wbByteArray('Unknown', 4, cpIgnore),
      {13} wbByteArray('Unknown', 4),
-     {14} wbInteger('Ref Collection Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias)
+     {14} wbInteger('Ref Collection Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+     {15} wbUnknown(4),
+     {16} wbFormIDCkNoReach('Keyword', [KYWD])
     ]),
-    wbInteger('Radius', itS32),
+    wbFloat('Radius'),
     wbInteger('Collection Index', itU32)
   ], cpNormal, False, nil, 3);
 
@@ -7018,7 +7022,7 @@ begin
     ]), cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', sigReferences, True),
-      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
+      {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ, PKIN]),
       {2} wbInteger('Object Type', itU32, wbObjectTypeEnum),
       {3} wbFormIDCk('Keyword', [KYWD, NULL]),
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
@@ -15509,18 +15513,86 @@ begin
             wbCITCReq,
             wbCTDAsCount
           ], []),
-          wbUnknown(STSC)
+          wbFormIDCk(STSC, 'Scene', [SCEN])
         ], [])
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
 
-    wbInteger(XNAM, 'Unknown', itU8, wbEnum([]), cpNormal, True),
-
+    wbInteger(XNAM, 'Package Group', itU8, wbEnum([], [ // these are all guesses
+         0, 'Sandbox',
+         1, 'HoldPosition',
+         2, 'Unknown',
+         3, 'SitLinkedRef',
+         4, 'TravelToLinkedRef',
+         //5
+         6, 'RetreatPackage',
+         7, 'Follow NPC',
+         8, 'StayAtSelf',
+         9, 'Unknown',
+        10, 'Headtrack',
+        11, 'Patrol',
+        12, 'Unknown 12', //guard packages, watch the player
+        13, 'Unknown 13',
+        14, 'HeadtrackPlayer',
+        15, 'FleeArea',
+        16, 'Unknown',
+        17, 'FollowPlayer',
+        18, 'Unknown 18',
+        19, 'Unknown 19',
+        20, 'TravelBetweenLandings',
+        21, 'SandboxEditorLocation',
+        22, 'Ambush',
+        23, 'EscortPlayer',
+        24, 'Unknown 24',
+        25, 'Unknown 25',
+        26, 'Unknown 26',
+        27, 'SandboxInteriorUnlockDoors',
+        28, 'Unknown 28',
+        29, 'KeepEyeOn',
+        30, 'Sleep',
+        31, 'Unknown 31',
+        32, 'DefaultPassengerPackage',
+        33, 'Unknown 33',
+        34, 'UseWeapon',
+        35, 'ForceGreetWhileAimWeapon',
+        36, 'SandboxWalk',
+        37, 'Unknown 37',
+        38, 'Unknown 38',
+        39, 'ForceGreet 1',
+        40, 'ForceGreet 2',
+        41, 'SuspiciousPatrol',
+        42, 'AmbushAtFoundLocation',
+        43, 'Patrol_Creature',
+        //44
+        45, 'UseMagicAndWait',
+        46, 'SleepAtLair',
+        //47
+        //48
+        49, 'AnimTest_Patrol',
+        50, 'UseMagicAndWait_NoTravel',
+        //51
+        //52
+        53, 'AnimTest_Sandbox_Package',
+        //54
+        55, 'ForceGreetPatrolGuard',
+        //56
+        57, 'PredatorSeekPrey',
+        //58
+        //59
+        60, 'FollowPlayer',
+        //61-65
+        66, 'RangingWithPlayer',
+        67, 'Unknown 67',
+        //68-80
+        81, 'DefaultCombatMasterTemplate',
+       134, 'Master_ShootTarget',
+       145, 'ShootTarget'
+    ]), cpNormal, True),
     wbRStruct('Procedure Tree', [
       wbRArray('Branches', wbRStruct('Branch', [
         wbString(ANAM, 'Branch Type'),
-        wbUnknown(NNAM),
+        wbString(NNAM, 'Note'),
         wbCITCReq,
         wbCTDAsCount,
         wbStruct(PRCB, 'Root', [
