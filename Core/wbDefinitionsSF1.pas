@@ -11300,7 +11300,7 @@ begin
     wbInteger(PNAM, 'Type', itU32, wbEnum([
       'Misc',
       'Face',
-      'Eyes',
+      'Right Eye',
       'Hair',
       'Facial Hair',
       'Scar',
@@ -11308,10 +11308,10 @@ begin
       'Meatcaps',
       'Teeth',
       'Head Rear',
-      '',
-      'Unknown 11',
-      'Unknown 12',
-      'Unknown 13'
+      'Unknown 10',
+      'Unknown 11',             //Only used on "Buzz front" extra head parts, which are atttached to the "buzz back"  chargen option
+      'Left Eye',
+      'Eyelashes'
     ])),
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
@@ -11331,7 +11331,7 @@ begin
 
       Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
     end),
-    wbString(NAM3),
+    wbString(NAM3, 'Mask'),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
 //    wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
