@@ -8046,9 +8046,11 @@ function TwbMainRecord.BuildIndexKeys(out aKeys: TwbIndexKeys): Boolean;
 begin
   Result := False;
   aKeys.Clear;
-  if GetCanHaveEditorID and wbTrackAllEditorID or (dfIndexEditorID in mrDef.DefFlags) then begin
-    Result := True;
-    aKeys.Keys[wbIdxEditorID] := GetEditorID;
+  if Assigned(mrDef) then begin
+    if GetCanHaveEditorID and wbTrackAllEditorID or (dfIndexEditorID in mrDef.DefFlags) then begin
+      Result := True;
+      aKeys.Keys[wbIdxEditorID] := GetEditorID;
+    end
   end;
   if Assigned(mrDef) and mrDef.BuildIndexKeys(Self, aKeys) then
     Result := True;
@@ -8066,6 +8068,9 @@ procedure TwbMainRecord.BuildRef;
   end;
 
 begin
+  if not Assigned(mrDef) then
+    Exit;
+
   if dfExcludeFromBuildRef in mrDef.DefFlags then
     Exit;
 
