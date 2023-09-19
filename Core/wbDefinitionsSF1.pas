@@ -18670,7 +18670,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AVMD, 'Actor Value Modulations', [
+  wbRecord(AVMD, 'AVM Data', [
     wbEDID,
     wbBaseFormComponents,
     wbInteger(MNAM, 'Type', itU32, wbEnum([
@@ -18681,11 +18681,11 @@ begin
     ])), //req
     wbString(YNAM),  //req
     wbString(TNAM, 'Name'),  //req
-    wbInteger(ITMC, 'Property Count',itU32), //req
-    wbRArray('Properties',
-      wbRStruct('Property', [
-        wbString(LNAM), //req
-        wbString(VNAM),
+    wbInteger(ITMC, 'Item Count',itU32), //req
+    wbRArray('Items',
+      wbRStruct('Item', [
+        wbString(LNAM, 'Item Name'), //req
+        wbString(VNAM, 'Item Value'),
         wbByteRGBA(NNAM, 'Color').SetDontShow(function(const aElement: IwbElement): Boolean
         begin
           var lContainer: IwbContainer;
