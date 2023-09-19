@@ -3189,9 +3189,8 @@ type
     {56} ptDamageType,         // DMGT
     {57} ptResearchProject,    // RSPJ
     {58} ptConditionForm,      // CNDF
-    {59} ptPronoun,             //Enum: Pronouns
-    {60} ptResource            //IRES
-
+    {59} ptPronoun,            //Enum: Pronouns
+    {60} ptResource           //IRES
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3205,7 +3204,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..602] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..607] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3445,6 +3444,8 @@ const
     (Index: 485; Name: 'GetFullyEnabledActorsInHigh'),    // 236
     (Index: 487; Name: 'IsCarryable'),    // 237
     (Index: 488; Name: 'GetConcussed'),    // 238
+    (Index: 489; Name: 'SetZoneRespawns'; Desc:'Sets whether the given zone respawns (1) or not (0).'; ParamType1: ptInteger),
+    (Index: 490; Name: 'GetBiomeScanPercent'; Desc:'Returns the biome scan percentage of this object type. 0 if it''s not part of this biome.'),
     (Index: 491; Name: 'GetMapMarkerVisible'),    // 239
     (Index: 493; Name: 'PlayerKnows'; ParamType1: ptReferencableObject),
     (Index: 494; Name: 'GetPermanentValue'; ParamType1: ptActorValue),
@@ -3608,7 +3609,7 @@ const
     (Index: 726; Name: 'DoesNotExist'),    // 399
     (Index: 728; Name: 'GetPlayerWalkAwayFromDialogueScene'),    // 400
     (Index: 729; Name: 'GetActorStance'),    // 401
-    (Index: 730; Name: 'Unknown'; ParamType1: ptKeyword),
+    (Index: 730; Name: 'SpeechScenarioHasKeyword'; Desc:'See if Keyword is in current speech challenge game.'; ParamType1: ptKeyword),
     (Index: 734; Name: 'CanProduceForWorkshop'),    // 402
     (Index: 735; Name: 'CanFlyHere'),    // 403
     (Index: 736; Name: 'EPIsDamageType'; ParamType1: ptDamageType),
@@ -3770,14 +3771,15 @@ const
     (Index: 901; Name: 'GetDistanceFromCelestialBodyAliasParsecs'; Desc: 'Gets the distance from the given alias in terms of parsecs.'),
     (Index: 902; Name: 'GetDistanceFromCelestialBodyAliasMegaMeters'; Desc: 'Gets the distance from the given alias in terms of mega meters.'),
     (Index: 904; Name: 'IsInsidePrimitiveTopAndBottom'; Desc: 'Check if the reference''s top and bottom are in a specified primitive.'; ParamType1: ptKeyword),
-    (Index: 905; Name: 'GetPlayerBountyCrimeFaction'; Desc: 'Check the last crime faction for player bounty.'),
+    (Index: 905; Name: 'GetPlayerBountyCrimeFaction'; Desc: 'Check the last crime faction for player bounty.'; ParamType1: ptFaction),
     (Index: 906; Name: 'GetIsFloating'; Desc: 'Gets whether or not the actor is floating.'),
     (Index: 907; Name: 'LocationOrParentHasKeyword'; Desc: 'Determine if a location, or any of its parent locations, has a keyword.'; ParamType1: ptKeyword),
     (Index: 908; Name: 'IsCelestialBodyScanned'; Desc: 'Get whether the celestial body is scanned.'),
     (Index: 912; Name: 'IsActorReactionInCooldown'; Desc: 'Get whether an actor''s reaction is in cooldown or not.'),
     (Index: 916; Name: 'BiomeSupportsCreature'; Desc: 'Does the actor parameter resolve to a creature in the planet''s biome''s creature list?'; ParamType1: ptActorBase),
+    (Index: 919; Name: 'EPMagic_SpellHasMagicEffect'; Desc:'The passed in reference is a temp reference whose referring object is a MagicItem. Does it have the given Magic Effect?'; ParamType1: ptMagicEffect),
     (Index: 921; Name: 'IsFacingActor'; Desc: 'Is the actor facing the refr?'),
-    (Index: 922; Name: 'Unknown'; Desc: 'Unknown'; ParamType1: ptGlobal),
+    (Index: 922; Name: 'IsSameVoiceType'; Desc: 'Does the reference share a voice type with the specified ref?'; ParamType1: ptGlobal),
     (Index: 923; Name: 'GetValueCurrentLocation'; Desc: 'Get an actor value from the reference''s current location'; ParamType1: ptActorValue),
     (Index: 924; Name: 'IsBoostPackActive'; Desc: 'Is player''s boost pack active?'),
     (Index: 925; Name: 'GetTimeSinceLastBoostPackEnded'; Desc: 'Get time since last boost pack ended, in seconds.'),
@@ -3790,6 +3792,8 @@ const
     (Index: 932; Name: 'GetDistanceGalacticLightYears'; Desc: 'Get the distance between two references in lightyears.'; ParamType1: ptActor),
     (Index: 933; Name: 'GetDistanceFromCelestialBodyAliasLightyears'; Desc: 'Gets the distance from the given alias in terms of lightyears.'),
     (Index: 934; Name: 'IsOnPlayerHomeSpaceShip'; Desc: 'Is the ref on the player''s home ship?'),
+    (Index: 935; Name: 'EPMagic_EffectHasKeyword'; Desc:'The passed in reference is a temp reference whose referring object is a Magic Effect. Does the Magic Effect have the given keyword?'; ParamType1: ptKeyword),  // listed Name: "n the spell have the specified skill?"
+    (Index: 936; Name: 'EPMagic_SpellIs'; Desc: 'The passed in reference is a temp reference whose referring object is a MagicItem. Does it match the given Magic Item?'; ParamType1: ptMagicItem),
     (Index: 937; Name: 'IsPlayerSteadyingWeapon'; Desc: 'Is the player steadying their weapon?'),
     (Index: 938; Name: 'ResourceVeinHasKeyword'; Desc: 'Checks to see if the resource produced by the vein where the ref is has the given keyword.'),
     (Index: 939; Name: 'GetLastCombatHitActorConsecutiveHits'; Desc: 'Get the last combat hit actor consecutive hits.'),
@@ -3808,7 +3812,7 @@ const
     (Index: 955; Name: 'BodyHasResourceWithKeyword'; Desc: 'Does the ref object''s current planetary body have a resource with the given keyword? Optional integer 1 to include atmospheric resources.'),
     (Index: 957; Name: 'GetShipReactorClass'; Desc: 'Gets a value representing the ship reactor class (based on its index in the ShipClassOrder form list)'),
     (Index: 958; Name: 'ShipReactorHasClassKeyword'; Desc: 'Check if the reactor of the supplied ship has the provided reactor class keyword (keywords in ShipClassOrder form list)'),
-    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')         //600
+    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')         //608
   );
 
 var
@@ -8793,7 +8797,7 @@ begin
       wbRStruct('Progression Configuration', [
         wbString(ANAM).SetRequired(True),
         wbString(ATAV, 'Configuration').SetRequired(True),
-        wbUnknown(ATAF).SetRequired(True)
+        wbUnknown(ATAF).SetRequired(True) // always empty
       ], []).SetRequired(True)], []);
   wbATANs := wbRArray('Activities', wbATAN, cpNormal, False);
   wbATANsCount := wbRArray('Activities', wbATAN, cpNormal, False, nil, wbATANsAfterSet);
@@ -11813,7 +11817,8 @@ begin
            {12} 'Set to Actor Value Mult', // EPFT=2
            {13} 'Multiply Actor Value Mult', // EPFT=2
            {14} 'Multiply 1 + Actor Value Mult', // EPFT=2
-           {15} 'Set Text' // EPFT=7
+           {15} 'Set Text', // EPFT=7
+           {16} 'Legendary Magic Effect Event' // EPFT=9
           ])),
           wbInteger('Perk Condition Tab Count', itU8, nil, cpIgnore)
         ])
@@ -11831,7 +11836,8 @@ begin
           {5} 'SPEL',
           {6} 'string',
           {7} 'lstring',
-          {8} 'AVIF'
+          {8} 'AVIF',
+          {9} 'Replacement Projectile'
         ])),
         // case(EPFT) of
         // 1: EPFD=float
@@ -11841,6 +11847,8 @@ begin
         // 5: EPFD=SPEL
         // 6: EPFD=string
         // 7: EPFD=lstring
+        // 8: EPFD=AVIF
+        // 9: EPFD=PROJ
 
         wbInteger(EPFB, 'Perk Entry ID (unique)', itU16),
         wbLString(EPF2, 'Button Label', 0, cpTranslate),
@@ -11866,7 +11874,8 @@ begin
           {8} wbStruct('Actor Value, Float', [
                 wbActorValue, // wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
                 wbFloat('Float')
-              ])
+              ]),
+          {9} wbFormIDCk('Projectile',[PROJ])
         ], cpNormal, False{, wbEPFDDontShow})
       ], [], cpNormal, False{, wbPERKPRKCDontShow}),
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
@@ -14465,7 +14474,7 @@ begin
       { 56} wbUnknown(4),
       { 60} wbFormIDCk('Unknown', [NULL, PROJ]),
       { 64} wbFormIDCk('Unknown', [NULL, AVIF]),
-      { 68} wbUnknown(4),
+      { 68} wbFormIDCk('Unknown', [NULL, AVIF]), // script arg for legendary weaps?
       { 72} wbFloat,
       { 76} wbFloat,
       { 80} wbUnknown(4),
