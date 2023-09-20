@@ -16262,7 +16262,8 @@ begin
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbString(SCCM, 'Script Comment'),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL])
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+          wbEmpty(ALED, 'Alias End', cpNormal, False)
         ], [])
 
       ], [])
