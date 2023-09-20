@@ -369,7 +369,6 @@ end;
 
 function wbSPCHQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
-  Container  : IwbContainerElementRef;
   Param1     : IwbElement;
   MainRecord : IwbMainRecord;
   EditInfos  : TStringList;
@@ -9242,7 +9241,7 @@ begin
               wbUnknown(8),
               wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
               wbFloat('Radius (in km)'),
-              wbUnknown(4)
+              wbFloat('Unknown')
             ]),
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
@@ -12008,12 +12007,23 @@ begin
     wbREFL
   ]);
 
+  var flstValidRefs : TwbSignatures;
+  flstValidRefs := [AACT, ACTI, AFFE, ALCH, ARMO,
+                    AVIF, BOOK, CLFM, CNDF, COBJ,
+                    CONT, EXPL, FACT, FLST, FURN,
+                    GBFM, GLOB, HAZD, HDPT, IDLE,
+                    IPCT, IRES, KYWD, LCRT, LCTN,
+                    LGDI, MATT, MESG, MISC, MSTT,
+                    NPC_, OMOD, PACK, PERK, PKIN,
+                    PMFT, QUST, RACE, SPEL, STAT,
+                    STND, VTYP, WEAP];
+
   {subrecords checked against Starfield.esm}
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbBaseFormComponents,
     wbFULL,
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
+    wbRArrayS('FormIDs', wbFormIDCk(LNAM, 'FormID', flstValidRefs), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
     wbRStructs('Conditional Entries', 'Conditional Entry', [
       wbInteger(INAM, 'Index', itU32),
       wbCITCReq,
@@ -12399,7 +12409,8 @@ begin
         {0x00000040} 'Don''t Reset Location Spring',
         {0x00000080} 'Don''t Reset Target Spring',
         {0x00000100} 'Unknown 8',
-        {0x00000200} 'Unknown 9'
+        {0x00000200} 'Unknown 9',
+        {0x00000400} 'Unknown 10'
       ])),
       wbStruct('Time Multipliers', [
         wbFloat('Player'),
@@ -17745,8 +17756,8 @@ begin
     wbStruct(WVIS, 'Unknown', [
       { 0} wbUnknown(12),
       {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
-      {16} wbUnknown(8)
-    ]),
+      {16} wbUnknown(8) // suspect first 4 bytes are RGBA 255, 255, 127, 127
+    ]),                 // impact colour, maybe? if so it's the same for all weaps in Starfield.esm
     wbStruct(WTRM, 'Unknown', [
       { 0} wbFloat,
       { 4} wbUnknown(1),
@@ -18093,7 +18104,10 @@ begin
       $1D, 'Armor',
       $2D, 'Actor',
       $2A, 'Furniture',
-      $2B, 'Weapon'
+      $2B, 'Weapon',
+      $22, 'AdjectiveArmor',
+      $30, 'AdjectiveWeapon',
+      $32, 'CreaturePrefixSuffix'
     ])).SetRequired(True),
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
@@ -18474,7 +18488,7 @@ begin
     wbInteger(STMS, 'Count', itU32),
     wbRStructs('Unknown', 'Unknown', [
       wbString(STAE),
-      wbUnknown(STAD).SetRequired(True)
+      wbSoundReference(STAD).SetRequired(True)
     ], [])
   ]);
 
@@ -18969,7 +18983,7 @@ begin
     wbFULL,
     wbKeywords,
     wbCUSH,
-    wbFormID(FNAM, 'Item List'),
+    wbFormIDCk(FNAM, 'Item List', [LVLI]),
     wbInteger(SNAM, 'Rarity', itU32, wbEnum ([], [
         0, 'Common',
         1, 'Uncommon',
@@ -18979,12 +18993,12 @@ begin
         5, 'Unique to He-3',
         6, 'Unique to H2O'
       ])),
-    wbRArray('Next rarities', wbFormID(CNAM, 'Next Rarity')),
+    wbRArray('Next rarities', wbFormIDCk(CNAM, 'Next Rarity', [IRES])),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
     wbFormIDCk(NAM1, 'Actor Value', [AVIF]),
-    wbFormIDCk(NAM2, 'Produce', [LVLI, NULL]),
+    wbFormIDCk(NAM2, 'Produce', [LVLI, COBJ]),
     wbFormIDCK(NAM3, 'Interval', [GLOB])
   ]);
 
@@ -19559,7 +19573,7 @@ begin
     wbUnknown(ONAM),
     wbInteger(DNAM, 'Star ID', itU32),
     wbByteColors(ENAM, 'Star color'),
-    wbFormID(PNAM, 'Sun Preset')
+    wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
   ]);
 
   {subrecords checked against Starfield.esm}
