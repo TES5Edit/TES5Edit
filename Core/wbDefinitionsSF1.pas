@@ -16045,9 +16045,9 @@ begin
             wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked From',
               'Linked Ref',
-              'Unknown',  // DebugMQ101HelperQuest
-              'Unknown',  // BE series 1 - quests & derelicts (10)
-              'Unknown'   // BE series 2 - mostly generic derelicts (10)
+              'Unknown 3',  // DebugMQ101HelperQuest
+              'Unknown 4',  // BE series 1 - quests & derelicts (10)
+              'Unknown 5'   // BE series 2 - mostly generic derelicts (10)
             ])).SetRequired(True)
           ], []),
           wbRStruct('Find Matching Reference From Event', [
