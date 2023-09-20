@@ -10951,14 +10951,14 @@ begin
        {123} 'PlayerActivateContainer',
        {124} 'PlayerAquireFeaturedItem',
        {125} 'QuestOrSpecialHellos', // special hellos?
-       {126} 'Unknown',
-       {127} 'Unknown',
-       {128} 'Unknown',
-       {129} 'Unknown',
-       {130} 'Unknown',
-       {131} 'Unknown',
-       {132} 'Unknown',
-       {133} 'Unknown',
+       {126} 'Unknown 126',
+       {127} 'Unknown 127',
+       {128} 'Unknown 128',
+       {129} 'Unknown 129',
+       {130} 'Unknown 130',
+       {131} 'Unknown 131',
+       {132} 'Unknown 132',
+       {133} 'Unknown 133',
        {134} 'Unknown',
        {135} 'GravJumpCalcComplete',
        {136} 'LandingStart',
@@ -10970,31 +10970,31 @@ begin
        {142} 'TakeOffInitiated',
        {143} 'GuardPursue',   // stop right there, criminal scum
        {144} 'SharedInfos', // lines used across many interactions, both for player and npc. distinct from 99 somehow?
-       {145} 'Unknown',
-       {146} 'Unknown',
-       {147} 'Unknown',
-       {148} 'Unknown',
+       {145} 'Unknown 145',
+       {146} 'Unknown 146',
+       {147} 'Unknown 147',
+       {148} 'Unknown 148',
        {149} 'Idles',
        {150} 'SprintBreathing', // 0005C8C5
        {151} 'BowZoomHoldBreath', // 0005C8C7
        {152} 'BowZoomReleaseBreath', // 0005C8C6
-       {153} 'Unknown',
-       {154} 'Unknown',
+       {153} 'Unknown 153',
+       {154} 'Unknown 154',
        {155} 'PlayerOutOfBreath', // 0005C8CA
-       {156} 'Unknown',
+       {156} 'Unknown 156',
        {157} 'LeaveWaterBreath', // 0005C8C8
-       {158} 'Unknown',
-       {159} 'Unknown',
-       {160} 'Unknown',
-       {161} 'Unknown',
+       {158} 'Unknown 158',
+       {159} 'Unknown 159',
+       {160} 'Unknown 160',
+       {161} 'Unknown 161',
        {162} 'WaitingForPlayerInput',
-       {163} 'Unknown',
-       {164} 'Unknown',
-       {165} 'Unknown',
-       {166} 'Unknown',
-       {167} 'Unknown',
-       {168} 'Unknown',
-       {169} 'Unknown',
+       {163} 'Unknown 163',
+       {164} 'Unknown 164',
+       {165} 'Unknown 165',
+       {166} 'Unknown 166',
+       {167} 'Unknown 167',
+       {168} 'Unknown 168',
+       {169} 'Unknown 169',
        {170} 'MaxCO2OutOfBreath', // 00076E87
        {171} 'BlockingHellos'
       ]))
@@ -11289,10 +11289,10 @@ begin
       {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
-      {0x00020000} 17, 'Unknown',
+      {0x00020000} 17, 'Unknown 17',
       {0x00800000} 23, 'Is Marker',
       {0x02000000} 25, 'Power Armor',
-      {0x08000000} 27, 'Unknown',
+      {0x08000000} 27, 'Unknown 27',
       {0x10000000} 28, 'Must Exit To Talk',
       {0x20000000} 29, 'Child Can Use'
     ])), [
@@ -13540,7 +13540,7 @@ begin
         {5} 'NPC Response Dialogue',
         {6} 'Radio',
         {7} 'Camera Direction',
-        {8} 'Unknown',
+        {8} 'Unknown 8',
         {9} 'NPC Anim',
         {10}'Unknown 10'
       ]), cpNormal, True),
@@ -15788,7 +15788,7 @@ begin
 
     wbRStruct('Idle Animations', [
       wbInteger(IDLF, 'Flags', itU8, wbEnum([], [
-         0, 'Unknown',
+         0, 'Unknown 0',
          8, 'Random',
          9, 'Run in Sequence',
         12, 'Random, Do Once',
@@ -15834,21 +15834,21 @@ begin
     wbInteger(XNAM, 'Package Group', itU8, wbEnum([], [ // these are all guesses
          0, 'Sandbox',
          1, 'HoldPosition',
-         2, 'Unknown',
+         2, 'Unknown 2',
          3, 'SitLinkedRef',
          4, 'TravelToLinkedRef',
          //5
          6, 'RetreatPackage',
          7, 'Follow NPC',
          8, 'StayAtSelf',
-         9, 'Unknown',
+         9, 'Unknown 9',
         10, 'Headtrack',
         11, 'Patrol',
         12, 'Unknown 12', //guard packages, watch the player
         13, 'Unknown 13',
         14, 'HeadtrackPlayer',
         15, 'FleeArea',
-        16, 'Unknown',
+        16, 'Unknown 16',
         17, 'FollowPlayer',
         18, 'Unknown 18',
         19, 'Unknown 19',
@@ -16061,9 +16061,9 @@ begin
           {0x02} 'Run On Start',
           {0x04} 'Run On Stop',
           {0x08} 'Keep Instance Data From Here On',
-          'Unknown',
-          'Unknown',
-          'Unknown'
+          'Unknown 4',
+          'Unknown 5',
+          'Unknown 6'
         ])),
         wbInteger('Unknown', itU8)
       ]),
@@ -16166,9 +16166,9 @@ begin
             wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked From',
               'Linked Ref',
-              'Unknown',  // DebugMQ101HelperQuest
-              'Unknown',  // BE series 1 - quests & derelicts (10)
-              'Unknown'   // BE series 2 - mostly generic derelicts (10)
+              'Unknown 3',  // DebugMQ101HelperQuest
+              'Unknown 4',  // BE series 1 - quests & derelicts (10)
+              'Unknown 5'   // BE series 2 - mostly generic derelicts (10)
             ])).SetRequired(True)
           ], []),
           wbRStruct('Find Matching Reference From Event', [
@@ -16262,8 +16262,7 @@ begin
           wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
           wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
           wbString(SCCM, 'Script Comment'),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
-          wbEmpty(ALED, 'Alias End', cpNormal, True)
+          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL])
         ], [])
 
       ], [])
