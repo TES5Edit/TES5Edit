@@ -180,8 +180,8 @@ var
   wbEFIT                    : IwbSubRecordDef;
   wbEffects                 : IwbSubRecordArrayDef;
   wbEffectsReq              : IwbSubRecordArrayDef;
-  wbFirstPersonFlagsU32     : IwbIntegerDef;
-  wbBOD2                    : IwbSubRecordDef;
+  wbFirstPersonFlagsU64     : IwbIntegerDef;
+  wbBO64                    : IwbSubRecordDef;
   wbScriptEntry             : IwbValueDef;
   wbScriptFlags             : IwbIntegerDef;
   wbScriptPropertyObject    : IwbUnionDef;
@@ -369,7 +369,6 @@ end;
 
 function wbSPCHQuestStageToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
-  Container  : IwbContainerElementRef;
   Param1     : IwbElement;
   MainRecord : IwbMainRecord;
   EditInfos  : TStringList;
@@ -5715,81 +5714,145 @@ begin
 
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
-    '30 - Hair Top',
-    '31 - Hair Long',
-    '32 - FaceGen Head',
-    '33 - BODY',
-    '34 - L Hand',
-    '35 - R Hand',
-    '36 - [U] Torso',
-    '37 - [U] L Arm',
-    '38 - [U] R Arm',
-    '39 - [U] L Leg',
-    '40 - [U] R Leg',
-    '41 - [A] Torso',
-    '42 - [A] L Arm',
-    '43 - [A] R Arm',
-    '44 - [A] L Leg',
-    '45 - [A] R Leg',
-    '46 - Headband',
-    '47 - Eyes',
-    '48 - Beard',
-    '49 - Mouth',
-    '50 - Neck',
-    '51 - Ring',
-    '52 - Scalp',
-    '53 - Decapitation',
-    '54 - Unnamed',
-    '55 - Unnamed',
-    '56 - Unnamed',
-    '57 - Unnamed',
-    '58 - Unnamed',
-    '59 - Shield',
-    '60 - Pipboy',
-    '61 - FX'
+    '0 - Hide Hair',
+    '1 - Morph Hair',
+    '2 - Hide Head',
+    '3 - BODY',
+    '4 - Hat',
+    '5 - Backpack',
+    '6 - Gloves',
+    '7 - Lower Body (Vis Only)',
+    '8 - Sleeves (Vis Only)',
+    '9 - Head (Vis Only)',
+    '10 - Upper Body 1 (Vis Only)',
+    '11 - Upper Body 2 (Vis Only)',
+    '12 - Upper Body 3 (Vis Only no 1st person)',
+    '13 - Misc 1 (Vis Only)',
+    '14 - Misc 2 (Vis Only)',
+    '15 - Misc 3 (Vis Only)',
+    '16 - Eyes',
+    '17 - Beard',
+    '18 - Neuroamp',
+    '19 - Hide Ear',
+    '20 - AddonRig',
+    '21 - Unused',
+    '22 - Chronomark',
+    '23 - Chronomark1',
+    '24 - Chronomark2',
+    '25 - Chronomark3',
+    '26 - Eyepatch',
+    '27 - Morph Beard',
+    '28 - Unused',
+    '29 - Shield',
+    '30 - BoostPackFX',
+    '31 - Unused',
+    '32 - SS Hide Hair',
+    '33 - SS Morph Hair',
+    '34 - SS Hide Head',
+    '35 - SS BODY',
+    '36 - SS Helmet',
+    '37 - SS Backpack',
+    '38 - SS Gloves',
+    '39 - SS Lower Body',
+    '40 - SS Sleeves',
+    '41 - SS Head Vis',
+    '42 - SS U Body 1',
+    '43 - SS U Body 2',
+    '44 - SS U Body 3',
+    '45 - SS Misc 1',
+    '46 - SS Misc 2',
+    '47 - SS Misc 3',
+    '48 - SS Eyes',
+    '49 - SS Beard',
+    '50 - SS Neuroamp',
+    '51 - SS Hide Ear',
+    '52 - SS Addon Rig',
+    '53 - SS Backpack Misc',
+    '54 - SS ChronoMark',
+    '55 - Unused',
+    '56 - Unused',
+    '57 - Unused',
+    '58 - Unused',
+    '59 - SS Morph Beard',
+    '60 - Unused',
+    '61 - Unused',
+    '62 - Unused',
+    '63 - FaceLights'
   ], [
     -1, 'None'
   ]);
 
   wbBipedObjectFlags := wbFlags([
-    {0x00000001} '30 - Hair Top',
-    {0x00000002} '31 - Hair Long',
-    {0x00000004} '32 - FaceGen Head',
-    {0x00000008} '33 - BODY',
-    {0x00000010} '34 - L Hand',
-    {0x00000020} '35 - R Hand',
-    {0x00000040} '36 - [U] Torso',
-    {0x00000080} '37 - [U] L Arm',
-    {0x00000100} '38 - [U] R Arm',
-    {0x00000200} '39 - [U] L Leg',
-    {0x00000400} '40 - [U] R Leg',
-    {0x00000800} '41 - [A] Torso',
-    {0x00001000} '42 - [A] L Arm',
-    {0x00002000} '43 - [A] R Arm',
-    {0x00004000} '44 - [A] L Leg',
-    {0x00008000} '45 - [A] R Leg',
-    {0x00010000} '46 - Headband',
-    {0x00020000} '47 - Eyes',
-    {0x00040000} '48 - Beard',
-    {0x00080000} '49 - Mouth',
-    {0x00100000} '50 - Neck',
-    {0x00200000} '51 - Ring',
-    {0x00400000} '52 - Scalp',
-    {0x00800000} '53 - Decapitation',
-    {0x01000000} '54 - Unnamed',
-    {0x02000000} '55 - Unnamed',
-    {0x04000000} '56 - Unnamed',
-    {0x08000000} '57 - Unnamed',
-    {0x10000000} '58 - Unnamed',
-    {0x20000000} '59 - Shield',
-    {0x40000000} '60 - Pipboy',
-    {0x80000000} '61 - FX'
+    {0x000000000000001} '0 - Hide Hair',
+    {0x000000000000002} '1 - Morph Hair',
+    {0x000000000000004} '2 - Hide Head',
+    {0x000000000000008} '3 - BODY',
+    {0x000000000000010} '4 - Hat',
+    {0x000000000000020} '5 - Backpack',
+    {0x000000000000040} '6 - Gloves',
+    {0x000000000000080} '7 - Lower Body (Vis Only)',
+    {0x000000000000100} '8 - Sleeves (Vis Only)',
+    {0x000000000000200} '9 - Head (Vis Only)',
+    {0x000000000000400} '10 - Upper Body 1 (Vis Only)',
+    {0x000000000000800} '11 - Upper Body 2 (Vis Only)',
+    {0x000000000001000} '12 - Upper Body 3 (Vis Only no 1st person)',
+    {0x000000000002000} '13 - Misc 1 (Vis Only)',
+    {0x000000000004000} '14 - Misc 2 (Vis Only)',
+    {0x000000000008000} '15 - Misc 3 (Vis Only)',
+    {0x000000000010000} '16 - Eyes',
+    {0x000000000020000} '17 - Beard',
+    {0x000000000040000} '18 - Neuroamp',
+    {0x000000000080000} '19 - Hide Ear',
+    {0x000000000100000} '20 - AddonRig',
+    {0x000000000200000} '21 - Unused',
+    {0x000000000400000} '22 - Chronomark',
+    {0x000000000800000} '23 - Chronomark1',
+    {0x000000001000000} '24 - Chronomark2',
+    {0x000000002000000} '25 - Chronomark3',
+    {0x000000004000000} '26 - Eyepatch',
+    {0x000000008000000} '27 - Morph Beard',
+    {0x000000010000000} '28 - Unused',
+    {0x000000020000000} '29 - Shield',
+    {0x000000040000000} '30 - BoostPackFX',
+    {0x000000080000000} '31 - Unused',
+    {0x000000100000000} '32 - SS Hide Hair',
+    {0x000000200000000} '33 - SS Morph Hair',
+    {0x000000400000000} '34 - SS Hide Head',
+    {0x000000800000000} '35 - SS BODY',
+    {0x000001000000000} '36 - SS Helmet',
+    {0x000002000000000} '37 - SS Backpack',
+    {0x000004000000000} '38 - SS Gloves',
+    {0x000008000000000} '39 - SS Lower Body',
+    {0x000010000000000} '40 - SS Sleeves',
+    {0x000020000000000} '41 - SS Head Vis',
+    {0x000040000000000} '42 - SS U Body 1',
+    {0x000080000000000} '43 - SS U Body 2',
+    {0x000100000000000} '44 - SS U Body 3',
+    {0x000200000000000} '45 - SS Misc 1',
+    {0x000400000000000} '46 - SS Misc 2',
+    {0x000800000000000} '47 - SS Misc 3',
+    {0x001000000000000} '48 - SS Eyes',
+    {0x002000000000000} '49 - SS Beard',
+    {0x004000000000000} '50 - SS Neuroamp',
+    {0x008000000000000} '51 - SS Hide Ear',
+    {0x010000000000000} '52 - SS Addon Rig',
+    {0x020000000000000} '53 - SS Backpack Misc',
+    {0x040000000000000} '54 - SS ChronoMark',
+    {0x080000000000000} '55 - Unused',
+    {0x100000000000000} '56 - Unused',
+    {0x020000000000000} '57 - Unused',
+    {0x040000000000000} '58 - Unused',
+    {0x080000000000000} '59 - SS Morph Beard',
+    {0x100000000000000} '60 - Unused',
+    {0x200000000000000} '61 - Unused',
+    {0x400000000000000} '62 - Unused',
+    {0x800000000000000} '63 - FaceLights'
   ], True);
 
-  wbFirstPersonFlagsU32 := wbInteger('First Person Flags', itU32, wbBipedObjectFlags);
+  wbFirstPersonFlagsU64 := wbInteger('First Person Flags', itU64, wbBipedObjectFlags);
 
-  wbBOD2 := wbStruct(BOD2, 'Biped Body Template', [
-    wbFirstPersonFlagsU32
+  wbBO64 := wbStruct(BO64, 'Biped Object Template', [
+    wbFirstPersonFlagsU64
   ], cpNormal, False)
   .SetSummaryKeyOnValue([0])
   .SetSummaryPrefixSuffixOnValue(0, '(', ')')
@@ -9242,7 +9305,7 @@ begin
               wbUnknown(8),
               wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
               wbFloat('Radius (in km)'),
-              wbUnknown(4)
+              wbFloat('Unknown')
             ]),
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
@@ -9983,7 +10046,7 @@ begin
     wbEITM,
     wbTexturedModel('Male world model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
     wbTexturedModel('Female world model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
-    wbUnknown(BO64),
+    wbBO64,
     wbSoundReference(PUSH),
     wbSoundReference(PDSH),
 //    wbDEST,
@@ -10038,7 +10101,7 @@ begin
     ])), [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(BO64),
+    wbBO64,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
       wbUnknown
@@ -11918,7 +11981,28 @@ begin
     wbGenericModel,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbUnknown(ENAM),
+    wbStruct(ENAM, 'Data', [
+      wbFormIDCk('Light', [LIGH, NULL]),
+      wbSoundReference,
+      wbSoundReference,
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      wbFormID('Placed Object'),
+      wbUnknown(4),
+      wbFormIDCk('Condition', [CNDF, NULL]),
+      wbUnknown(4),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbUnknown(4),
+      wbFloat,
+      wbUnknown(8),
+      wbFloat,
+      wbUnknown(12),
+      wbFloat,
+      wbFloat,
+      wbUnknown(4),
+      wbFloat
+    ]),
     wbDamageTypeArray('Damage Type')
     (*
     wbStruct(DATA, 'Data', [
@@ -11987,12 +12071,23 @@ begin
     wbREFL
   ]);
 
+  var flstValidRefs : TwbSignatures;
+  flstValidRefs := [AACT, ACTI, AFFE, ALCH, ARMO,
+                    AVIF, BOOK, CLFM, CNDF, COBJ,
+                    CONT, EXPL, FACT, FLST, FURN,
+                    GBFM, GLOB, HAZD, HDPT, IDLE,
+                    IPCT, IRES, KYWD, LCRT, LCTN,
+                    LGDI, MATT, MESG, MISC, MSTT,
+                    NPC_, OMOD, PACK, PERK, PKIN,
+                    PMFT, QUST, RACE, SPEL, STAT,
+                    STND, VTYP, WEAP];
+
   {subrecords checked against Starfield.esm}
   wbRecord(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbBaseFormComponents,
     wbFULL,
-    wbRArrayS('FormIDs', wbFormID(LNAM, 'FormID'), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
+    wbRArrayS('FormIDs', wbFormIDCk(LNAM, 'FormID', flstValidRefs), cpNormal, False, nil, nil, nil, wbFLSTLNAMIsSorted),
     wbRStructs('Conditional Entries', 'Conditional Entry', [
       wbInteger(INAM, 'Index', itU32),
       wbCITCReq,
@@ -12378,7 +12473,8 @@ begin
         {0x00000040} 'Don''t Reset Location Spring',
         {0x00000080} 'Don''t Reset Target Spring',
         {0x00000100} 'Unknown 8',
-        {0x00000200} 'Unknown 9'
+        {0x00000200} 'Unknown 9',
+        {0x00000400} 'Unknown 10'
       ])),
       wbStruct('Time Multipliers', [
         wbFloat('Player'),
@@ -16112,19 +16208,102 @@ begin
     wbDESCReq,
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
-    wbUnknown(BO64),
+    wbBO64,
     wbKeywords,
     wbPRPS,
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD]),
     wbStruct(DAT2, 'Data', [
-      {  0} wbFloat,
-      {  4} wbFloat,
-      {  8} wbUnknown(32),
-      { 40} wbFloat,
-      { 44} wbFloat,
-      { 48} wbUnknown(12),
+      {  0} wbFloat('Male Height'),
+      {  4} wbFloat('Female Height'),
+            wbFromVersion(109, wbStruct('Male Default Weight', [
+      {  8}   wbFloat('Thin'),
+      { 12}   wbFloat('Muscular'),
+      { 16}   wbFloat('Fat')
+            ])),
+            wbFromVersion(109, wbStruct('Female Default Weight', [
+      { 20}   wbFloat('Thin'),
+      { 24}   wbFloat('Muscular'),
+      { 28}   wbFloat('Fat')
+            ])),
+      { 32} wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Playable',
+        {0x00000002} 'FaceGen Head',
+        {0x00000004} 'Child',
+        {0x00000008} 'Tilt Front/Back',
+        {0x00000010} 'Tilt Left/Right',
+        {0x00000020} 'No Shadow',
+        {0x00000040} 'Swims',
+        {0x00000080} 'Flies',
+        {0x00000100} 'Walks',
+        {0x00000200} 'Immobile',
+        {0x00000400} 'Not Pushable',
+        {0x00000800} 'No Combat In Water',
+        {0x00001000} 'No Rotating to Head-Track',
+        {0x00002000} 'Don''t Show Blood Spray',
+        {0x00004000} 'Don''t Show Blood Decal',
+        {0x00008000} 'Uses Head Track Anims',
+        {0x00010000} 'Spells Align w/Magic Node',
+        {0x00020000} 'Use World Raycasts For FootIK',
+        {0x00040000} 'Allow Ragdoll Collision',
+        {0x00080000} 'Regen HP In Combat',
+        {0x00100000} 'Can''t Open Doors',
+        {0x00200000} 'Allow PC Dialogue',
+        {0x00400000} 'No Knockdowns',
+        {0x00800000} 'Allow Pickpocket',
+        {0x01000000} 'Always Use Proxy Controller',
+        {0x02000000} 'Don''t Show Weapon Blood',
+        {0x04000000} 'Overlay Head Part List', {>>>Only one can be active<<<}
+        {0x08000000} 'Override Head Part List', {>>>Only one can be active<<<}
+        {0x10000000} 'Can Pickup Items',
+        {0x20000000} 'Allow Multiple Membrane Shaders',
+        {0x40000000} 'Can Dual Wield',
+        {0x80000000} 'Avoids Roads'
+      ])),
+      wbInteger('Flags 2', itU32, wbFlags([
+        {0x00000001} 'Use Advanced Avoidance',
+        {0x00000002} 'Non-Hostile',
+        {0x00000004} 'Floats',
+        {0x00000008} 'Unknown 3',
+        {0x00000010} 'Unknown 4',
+        {0x00000020} 'Head Axis Bit 0',
+        {0x00000040} 'Head Axis Bit 1',
+        {0x00000080} 'Can Melee When Knocked Down',
+        {0x00000100} 'Use Idle Chatter During Combat',
+        {0x00000200} 'Ungendered',
+        {0x00000400} 'Can Move When Knocked Down',
+        {0x00000800} 'Use Large Actor Pathing',
+        {0x00001000} 'Use Subsegmented Damage',
+        {0x00002000} 'Flight - Defer Kill',
+        {0x00004000} 'Unknown 14',
+        {0x00008000} 'Flight - Allow Procedural Crash Land',
+        {0x00010000} 'Disable Weapon Culling',
+        {0x00020000} 'Use Optimal Speeds',
+        {0x00040000} 'Has Facial Rig',
+        {0x00080000} 'Can Use Crippled Limbs',
+        {0x00100000} 'Use Quadruped Controller',
+        {0x00200000} 'Low Priority Pushable',
+        {0x00400000} 'Cannot Use Playable Items',
+        {0x00800000} 'Unknown 23',
+        {0x01000000} 'Unknown 24',
+        {0x02000000} 'Unknown 25',
+        {0x04000000} 'Unknown 26',
+        {0x08000000} 'Unknown 27',
+        {0x10000000} 'Unknown 28',
+        {0x20000000} 'Unknown 29'
+      ])),
+      { 40} wbFloat('Acceleration Rate'),
+      { 44} wbFloat('Deceleration Rate'),
+      { 48} wbInteger('Size', itU32, wbEnum([
+              'Small',
+              'Medium',
+              'Large',
+              'Extra Large'
+            ])),
+      { 52} wbUnknown(8),
       { 60} wbFloat,
-      { 64} wbUnknown(12),
+      { 64} wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
+      { 68} wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum),
+      { 72} wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
       { 76} wbFloat,
       { 80} wbUnknown(4),
       { 84} wbFloat,
@@ -16132,15 +16311,17 @@ begin
       { 92} wbUnknown(28),
       {120} wbFloat,
       {124} wbUnknown(28),
-      {152} wbFloat,
-      {156} wbFloat,
+      {152} wbFloat('Orientation Limits - Pitch'),
+      {156} wbFloat('Orientation Limits - Roll'),
       {160} wbFloat,
       {164} wbFloat,
       {168} wbFloat,
       {172} wbFloat,
       {176} wbFloat,
       {180} wbFloat,
-      {184} wbUnknown(9), //Yes, really!
+      {184} wbUnknown(4),
+      {188} wbUnknown(4),
+      {192} wbUnknown(1),
       {193} wbFloat,
       {197} wbFloat,
       {201} wbFloat,
@@ -17498,7 +17679,7 @@ begin
     wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
 //    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbByteArray(DATA, 'Unused', 0),
+    wbEmpty(DATA, 'Unused', cpIgnore, True),
     wbStruct(DNAM, 'Visual Data', [
       wbStruct('Fog Properties', [
         wbFloat('Depth Amount'),
@@ -17546,16 +17727,7 @@ begin
         wbFloat('Layer 3 - Wind Direction'),
         wbFloat('Layer 1 - Wind Speed'),
         wbFloat('Layer 2 - Wind Speed'),
-        wbFloat('Layer 3 - Wind Speed'),
-        wbFloat('Layer 1 - Amplitude Scale'),
-        wbFloat('Layer 2 - Amplitude Scale'),
-        wbFloat('Layer 3 - Amplitude Scale'),
-        wbFloat('Layer 1 - UV Scale'),
-        wbFloat('Layer 2 - UV Scale'),
-        wbFloat('Layer 3 - UV Scale'),
-        wbFloat('Layer 1 - Noise Falloff'),
-        wbFloat('Layer 2 - Noise Falloff'),
-        wbFloat('Layer 3 - Noise Falloff')
+        wbFloat('Layer 3 - Wind Speed')
       ]),
       wbStruct('Silt Properties', [
         wbFloat('Silt Amount'),
@@ -17733,8 +17905,8 @@ begin
     wbStruct(WVIS, 'Unknown', [
       { 0} wbUnknown(12),
       {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
-      {16} wbUnknown(8)
-    ]),
+      {16} wbUnknown(8) // suspect first 4 bytes are RGBA 255, 255, 127, 127
+    ]),                 // impact colour, maybe? if so it's the same for all weaps in Starfield.esm
     wbStruct(WTRM, 'Unknown', [
       { 0} wbFloat,
       { 4} wbUnknown(1),
@@ -18090,7 +18262,10 @@ begin
       $1D, 'Armor',
       $2D, 'Actor',
       $2A, 'Furniture',
-      $2B, 'Weapon'
+      $2B, 'Weapon',
+      $22, 'AdjectiveArmor',
+      $30, 'AdjectiveWeapon',
+      $32, 'CreaturePrefixSuffix'
     ])).SetRequired(True),
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
@@ -18471,7 +18646,7 @@ begin
     wbInteger(STMS, 'Count', itU32),
     wbRStructs('Unknown', 'Unknown', [
       wbString(STAE),
-      wbUnknown(STAD).SetRequired(True)
+      wbSoundReference(STAD).SetRequired(True)
     ], [])
   ]);
 
@@ -18966,7 +19141,7 @@ begin
     wbFULL,
     wbKeywords,
     wbCUSH,
-    wbFormID(FNAM, 'Item List'),
+    wbFormIDCk(FNAM, 'Item List', [LVLI]),
     wbInteger(SNAM, 'Rarity', itU32, wbEnum ([], [
         0, 'Common',
         1, 'Uncommon',
@@ -18976,12 +19151,12 @@ begin
         5, 'Unique to He-3',
         6, 'Unique to H2O'
       ])),
-    wbRArray('Next rarities', wbFormID(CNAM, 'Next Rarity')),
+    wbRArray('Next rarities', wbFormIDCk(CNAM, 'Next Rarity', [IRES])),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
     wbFormIDCk(NAM1, 'Actor Value', [AVIF]),
-    wbFormIDCk(NAM2, 'Produce', [LVLI, NULL]),
+    wbFormIDCk(NAM2, 'Produce', [LVLI, COBJ]),
     wbFormIDCK(NAM3, 'Interval', [GLOB])
   ]);
 
@@ -19066,7 +19241,22 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AOPS, 'Aim Optical Sight Marker', [
     wbEDID,
-    wbUnknown(ANAM)
+    wbStruct(ANAM, 'Data', [
+      wbInteger('Hide Beam By Default', itU8, wbBoolEnum),
+      wbLenString('Unknown'), { always either 'LaserNode', 'ProjectileNode' or empty }
+      wbFloat('Beam Reactivation Delay After Equip/Reload S'),
+      wbFloat('Beam Deactivation Delay After Reload S'),
+      wbUnknown(4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Beam Reactivation Delay After Firing S'),
+      wbFormIdCk('Beam Art Object', [ARTO, NULL]),
+      wbFormIdCk('Dot Art Object', [ARTO,  NULL]),
+      wbFloat('Unknown'), { vaguely related to length/range, but not range itself }
+      wbUnknown(1),
+      wbInteger('Show Beam At Hip', itU8, wbBoolEnum),
+      wbUnknown(1)
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19541,7 +19731,7 @@ begin
     wbUnknown(ONAM),
     wbInteger(DNAM, 'Star ID', itU32),
     wbByteColors(ENAM, 'Star color'),
-    wbFormID(PNAM, 'Sun Preset')
+    wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19601,11 +19791,11 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID,
-    wbStruct(ZNAM, 'Unknown', [
-      wbUnknown(1),
-      wbFloat(),
-      wbFloat(),
-      wbFloat()
+    wbStruct(ZNAM, 'Data', [
+      wbInteger('Allow Cover State', itU8, wbBoolEnum),
+      wbFloat('Cover Detection Distance'),
+      wbFloat('Enter Cover Animation Time S'),
+      wbFloat('Hipfire During Cover Animation Time S')
     ])
   ]);
 
@@ -19716,12 +19906,12 @@ begin
   wbAddGroupOrder(QUST);
   wbAddGroupOrder(IDLE); {SF1Dump: no errors}
   wbAddGroupOrder(PACK); {SF1Dump: no errors}
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
-  wbAddGroupOrder(EXPL);
+  wbAddGroupOrder(CSTY); {SF1Dump: no errors}
+  wbAddGroupOrder(LSCR); {SF1Dump: no errors}
+  wbAddGroupOrder(ANIO); {SF1Dump: no errors}
+  wbAddGroupOrder(WATR); {SF1Dump: no errors}
+  wbAddGroupOrder(EFSH); {SF1Dump: no errors}
+  wbAddGroupOrder(EXPL); {SF1Dump: no errors}
   wbAddGroupOrder(DEBR);
   wbAddGroupOrder(IMGS);
   wbAddGroupOrder(IMAD);

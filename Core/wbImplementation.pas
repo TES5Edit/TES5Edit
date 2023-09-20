@@ -3259,7 +3259,7 @@ begin
   if flIndicesActive then
     Exit;
 
-  flProgress('Buildinging string indices');
+  flProgress('Building string indices');
   try
     flIndicesActive := True;
     for var lRecordIdx := Low(flRecords) to High(flRecords) do begin
@@ -3270,7 +3270,7 @@ begin
   except
     on E: Exception do begin
       flIndicesActive := True;
-      flProgress('Buildinging string indices failed: ' + E.Message);
+      flProgress('Building string indices failed: ' + E.Message);
     end;
   end;
 end;
