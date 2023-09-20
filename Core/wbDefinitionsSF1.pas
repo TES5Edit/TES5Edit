@@ -17959,7 +17959,16 @@ begin
       wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
       wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
     ], cpNormal, True),
-    wbUnknown(HNAM),
+    wbStruct(HNAM, 'Volumetric Lighting', [
+      wbFormIDCK('Sunrise',[VOLI, NULL]),
+      wbFormIDCK('Day',[VOLI, NULL]),
+      wbFormIDCK('Sunset',[VOLI, NULL]),
+      wbFormIDCK('Night',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL]),
+      wbFormIDCK('LateSunrise',[VOLI, NULL]),
+      wbFormIDCK('EarlySunset',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL])
+    ]),
     wbRStruct('Directional Ambient Lighting Colors', [
       wbAmbientColors(DALC, 'Sunrise'),
       wbAmbientColors(DALC, 'Day'),
