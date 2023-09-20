@@ -16248,22 +16248,24 @@ begin
         wbRStructSK([0], 'Alias', [
           wbInteger(ALCS, 'Collection Alias ID', itU32, wbQuestAliasToStr, wbStrToAlias),
           wbInteger(ALMI, 'Max Initial Fill Count', itU8),
-          wbUnknown(ALAM), // always zero?
-          wbCTDAs,
-          wbKeywords,
-          wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
-            wbFormIDCk('Keyword', [KYWD, NULL]),
-            wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
-          ])),
-          wbFormIDCk(ALDN, 'Display Name', [MESG]),
-          wbFormIDCk(ALDI, 'Death Item', [LVLI]),
-          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
-          wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
-          wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
-          wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbString(SCCM, 'Script Comment'),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
-          wbEmpty(ALED, 'Alias End', cpNormal, False)
+          wbUnknown(ALAM), // always zero
+          wbRStruct('Unknown', [
+            wbCTDAs,
+            wbKeywords,
+            wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
+              wbFormIDCk('Keyword', [KYWD, NULL]),
+              wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+            ])),
+            wbFormIDCk(ALDN, 'Display Name', [MESG]),
+            wbFormIDCk(ALDI, 'Death Item', [LVLI]),
+            wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
+            wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+            wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+            wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+            wbString(SCCM, 'Script Comment'),
+            wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+            wbEmpty(ALED, 'Alias End', cpNormal, True)
+          ], [])
         ], [])
 
       ], [])
