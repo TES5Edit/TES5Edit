@@ -74,6 +74,7 @@ var
   DumpCheckReport      : Boolean      = False;
   DumpSize             : Boolean      = False;
   DumpHidden           : Boolean      = False;
+  DumpSummary          : Boolean      = True;
   DontWriteReport      : Boolean      = False;
   ProgressLocked       : Boolean      = False;
   ReportRecordProgress : Boolean      = True;
@@ -692,6 +693,9 @@ begin
 
     Name := aElement.DisplayName[True];
     Value := aElement.Value;
+    var lSummary := '';
+    if DumpSummary and (Value = '') then
+      lSummary := aElement.Summary;
 
     if DumpHidden or ((aElement.Name <> 'Unused') and (Name <> 'Unused')) then begin
       if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
@@ -705,12 +709,17 @@ begin
             Write('[', aElement.DataSize, ']');
           end;
       end;
-      if (Value <> '') and (DumpHidden or (Pos('Hidden: ', Name)<>1)) then begin
-        if ((not wbReportMode) or DumpCheckReport) then
-          WriteLn(': ', Value);
-      end else begin
-        if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
-          WriteLn;
+      if (DumpHidden or (Pos('Hidden: ', Name)<>1)) and ((not wbReportMode) or DumpCheckReport) then begin
+        if (Value <> '') then begin
+          WriteLn(': ', Value)
+        end else begin
+          if (Name <> '') then begin
+            if lSummary <> '' then
+              WriteLn(' [S]: ', lSummary)
+            else
+              WriteLn;
+          end;
+        end;
       end;
     end;
   end;
@@ -1205,6 +1214,9 @@ begin
         DontWriteReport := True;
       end;
 
+      if FindCmdLineSwitch('summary') then begin
+        DumpSummary := True;
+      end;
 
       if FindCmdLineSwitch('dcr') then begin
         wbReportMode := True;
