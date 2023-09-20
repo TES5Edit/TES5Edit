@@ -6545,7 +6545,7 @@ begin
     {0x00000020} 'Unknown 6', //Unused
     {0x00000040} 'Unknown 7',
     {0x00000080} 'Unknown 8',
-    {0x00000100} 'Atom Shop Item',
+    {0x00000100} 'Unknown 9',      //'Atom Shop Item'
     {0x00000200} 'Unknown 10',
     {0x00000400} 'Unknown 11',
     {0x00000800} 'Fallout 1st',
@@ -7276,7 +7276,7 @@ begin
   wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   wbSNBH := wbFormIDCk(SNBH, 'Snap Behavior', [STBH]);
   wbODTY := wbFloat(ODTY, 'Unknown');
-  wbOPDS := wbStruct(OPDS, 'Object Placement Default', [
+  wbOPDS := wbStruct(OPDS, 'Object Placement Defaults', [
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
@@ -7289,12 +7289,12 @@ begin
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
+    wbFloat('Unknown Angle', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbFloat('Unknown'),
-    wbFloat('Unknown'),
+    wbFloat('Unknown Angle', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
     wbFloat('Unknown'),
     wbFloat('Unknown')
   ]);
@@ -9889,7 +9889,7 @@ begin
       'Unknown 5',
       'Unknown 6'
     ])),
-    wbInteger(JNAM, 'Unknown', itU16),
+    wbInteger(JNAM, 'Activation Angle', itU16),
     wbUnknown(INAM), //unknown if here or any later position
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
 {    wbStruct(RADR, 'Radio Receiver', [
@@ -10516,7 +10516,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbUnknown(XALG),
+    wbXALG,
     wbPTT2,
     wbSNTP,
     wbSNBH,
@@ -11011,7 +11011,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbUnknown(XALG),
+    wbXALG,
 //    wbPTT2,
 //    wbSNTP,
 //    wbSNBH,
@@ -11480,7 +11480,7 @@ begin
     wbInteger(PNAM, 'Type', itU32, wbEnum([
       'Misc',
       'Face',
-      'Eyes',
+      'Right Eye',
       'Hair',
       'Facial Hair',
       'Scar',
@@ -11488,10 +11488,10 @@ begin
       'Meatcaps',
       'Teeth',
       'Head Rear',
-      '',
-      'Unknown 11',
-      'Unknown 12',
-      'Unknown 13'
+      'Unknown 10',
+      'Unknown 11',             //Only used on "Buzz front" extra head parts, which are atttached to the "buzz back"  chargen option
+      'Left Eye',
+      'Eyelashes'
     ])),
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
@@ -11511,7 +11511,7 @@ begin
 
       Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
     end),
-    wbString(NAM3),
+    wbString(NAM3, 'Mask'),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
 //    wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
@@ -11562,7 +11562,7 @@ begin
     wbSNTP,
     wbSNBH,
     wbDEFL,
-    wbUnknown(XALG),
+    wbXALG,
     wbBaseFormComponents,
     wbPTT2,
     wbFULL,
@@ -11602,8 +11602,8 @@ begin
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True)
     ], []),
     wbGenericModel,
-    wbFormIDCk(QNAM, 'Unknown', [KYWD]),
-    wbFormIDCk(PNAM, 'Unknown', [KYWD])
+    wbFormIDCk(QNAM, 'Animation Flavor', [KYWD]),
+    wbFormIDCk(PNAM, 'Unknown', [KYWD])                              //Anim Archetype? Only one record uses it
   ], False, nil, cpNormal, False);
 
   {subrecords checked against Starfield.esm}
@@ -11687,7 +11687,7 @@ begin
     wbSoundReference(PRAS),
     wbSoundReference(PRCS),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
-    wbFormIDCk(NAM3, 'Unknown', [CURV])
+    wbFormIDCk(NAM3, 'Curve Table', [CURV])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -11720,8 +11720,8 @@ begin
              {0x08} 'Inherit Radius from Spawn Spell',   //copied from FO4, might be wrong
              {0x10} 'Drop to Ground',                    //copied from FO4, might be wrong
              {0x20} 'Taper Effectiveness by Proximity',  //copied from FO4, might be wrong
-             {0x40} 'Unknown 6',
-             {0x80} 'Unknown 7'
+             {0x40} 'Increased Gravity',
+             {0x80} 'Reversed Gravity'
            ]))
       {92}
 
@@ -13917,7 +13917,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbUnknown(XALG),
+    wbXALG,
     wbPTT2,
     wbBaseFormComponents,
     wbKeywords,
@@ -14665,7 +14665,7 @@ begin
     wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
     //wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
-    wbUnknown(LVLL),
+    wbUnknown(LVLL),                                  //Likely ENUM (value is either 01, 02, or 03)
     wbUnknown(LIMC),
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
     wbGenericModel,
@@ -15099,7 +15099,7 @@ begin
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbUnknown(XALG),
+    wbXALG,
     wbPTT2,
     wbSNTP,
     wbBaseFormComponents,
@@ -18135,7 +18135,16 @@ begin
       wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
       wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
     ], cpNormal, True),
-    wbUnknown(HNAM),
+    wbStruct(HNAM, 'Volumetric Lighting', [
+      wbFormIDCK('Sunrise',[VOLI, NULL]),
+      wbFormIDCK('Day',[VOLI, NULL]),
+      wbFormIDCK('Sunset',[VOLI, NULL]),
+      wbFormIDCK('Night',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL]),
+      wbFormIDCK('LateSunrise',[VOLI, NULL]),
+      wbFormIDCK('EarlySunset',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL])
+    ]),
     wbRStruct('Directional Ambient Lighting Colors', [
       wbAmbientColors(DALC, 'Sunrise'),
       wbAmbientColors(DALC, 'Day'),
@@ -18996,7 +19005,7 @@ begin
     wbBaseFormComponents,
     wbUnknown(PTT2),
     wbSNBH,
-    wbFormIDCk(DODT, 'Unknown', [MTPT]),
+    wbFormIDCk(DODT, 'Material', [MTPT]),
     wbStruct(DATA, 'Data', [// possibly the same format as wbDODT? which is different from the DODT usage above...
       { 0} wbFloat,
       { 4} wbFloat,
@@ -19027,7 +19036,7 @@ begin
     wbKeywords,
     wbCTDAs,
     wbFormIDCk(KNAM, 'Marker Type', [NULL, KYWD]).SetRequired(True),
-    wbFormIDCk(LNAM, 'Unknown', [NULL, LVLI]).SetRequired(True),
+    wbFormIDCk(LNAM, 'Flora List', [NULL, LVLI]).SetRequired(True),
     wbFormIDCk(LNA2, 'Unknown', [NULL, FLOR, PKIN, STAT]).SetRequired(True) //probably any type of non-actor reference?
   ]);
 
