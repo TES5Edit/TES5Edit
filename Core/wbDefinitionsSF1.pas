@@ -11918,7 +11918,28 @@ begin
     wbGenericModel,
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbUnknown(ENAM),
+    wbStruct(ENAM, 'Data', [
+      wbFormIDCk('Light', [LIGH, NULL]),
+      wbSoundReference,
+      wbSoundReference,
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      wbFormID('Placed Object'),
+      wbUnknown(4),
+      wbFormIDCk('Condition', [CNDF, NULL]),
+      wbUnknown(4),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbUnknown(4),
+      wbFloat,
+      wbUnknown(8),
+      wbFloat,
+      wbUnknown(12),
+      wbFloat,
+      wbFloat,
+      wbUnknown(4),
+      wbFloat
+    ]),
     wbDamageTypeArray('Damage Type')
     (*
     wbStruct(DATA, 'Data', [
@@ -17498,7 +17519,7 @@ begin
     wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
 //    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbByteArray(DATA, 'Unused', 0),
+    wbEmpty(DATA, 'Unused', cpIgnore, True),
     wbStruct(DNAM, 'Visual Data', [
       wbStruct('Fog Properties', [
         wbFloat('Depth Amount'),
@@ -17546,16 +17567,7 @@ begin
         wbFloat('Layer 3 - Wind Direction'),
         wbFloat('Layer 1 - Wind Speed'),
         wbFloat('Layer 2 - Wind Speed'),
-        wbFloat('Layer 3 - Wind Speed'),
-        wbFloat('Layer 1 - Amplitude Scale'),
-        wbFloat('Layer 2 - Amplitude Scale'),
-        wbFloat('Layer 3 - Amplitude Scale'),
-        wbFloat('Layer 1 - UV Scale'),
-        wbFloat('Layer 2 - UV Scale'),
-        wbFloat('Layer 3 - UV Scale'),
-        wbFloat('Layer 1 - Noise Falloff'),
-        wbFloat('Layer 2 - Noise Falloff'),
-        wbFloat('Layer 3 - Noise Falloff')
+        wbFloat('Layer 3 - Wind Speed')
       ]),
       wbStruct('Silt Properties', [
         wbFloat('Silt Amount'),
@@ -19707,12 +19719,12 @@ begin
   wbAddGroupOrder(QUST);
   wbAddGroupOrder(IDLE); {SF1Dump: no errors}
   wbAddGroupOrder(PACK); {SF1Dump: no errors}
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
-  wbAddGroupOrder(EXPL);
+  wbAddGroupOrder(CSTY); {SF1Dump: no errors}
+  wbAddGroupOrder(LSCR); {SF1Dump: no errors}
+  wbAddGroupOrder(ANIO); {SF1Dump: no errors}
+  wbAddGroupOrder(WATR); {SF1Dump: no errors}
+  wbAddGroupOrder(EFSH); {SF1Dump: no errors}
+  wbAddGroupOrder(EXPL); {SF1Dump: no errors}
   wbAddGroupOrder(DEBR);
   wbAddGroupOrder(IMGS);
   wbAddGroupOrder(IMAD);
