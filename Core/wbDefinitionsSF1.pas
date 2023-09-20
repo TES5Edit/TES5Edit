@@ -11982,26 +11982,30 @@ begin
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(ENAM, 'Data', [
-      wbFormIDCk('Light', [LIGH, NULL]),
-      wbSoundReference,
-      wbSoundReference,
-      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
-      wbFormID('Placed Object'),
-      wbUnknown(4),
-      wbFormIDCk('Condition', [CNDF, NULL]),
-      wbUnknown(4),
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbUnknown(4),
-      wbFloat,
-      wbUnknown(8),
-      wbFloat,
-      wbUnknown(12),
-      wbFloat,
-      wbFloat,
-      wbUnknown(4),
-      wbFloat
+      wbFormIDCk('Light', [LIGH, NULL]),                  //formid // +0x28   //+0x28 is expected to be LIGH
+      wbSoundReference,                                   //struct // +0x38   //same struct as STAT's STLS, could be optimization reusing same reading code or the same struct
+      wbSoundReference,                                   //struct unused     //same struct as STAT's STLS, could be optimization reusing same reading code or the same struct
+      wbFormIDCk('Impact Data Set', [IPDS, NULL]),        //formid // +0x10   //+0x10 is expected to be IDPS
+      wbFormIDCk('Placed Object', sigBaseObjects),        //formid? // +0x20  //+0x20 has a check of some kind, but it's not form type, but a function on the class vftable, if it returns non-zero then it's not allowed
+      wbFormIDCk('Spawn Projectile', [PROJ, NULL]),       //formid // +0x18   //+0x18 is expected to be PRO
+      wbFormIDCk('Condition', [CNDF, NULL]),              //if form_version >= 507 formid? // +0x30  +0x30 is expected to be CNDF
+      wbUnknown(4),                                       //uint32 // +0x84
+      wbFloat,                                            //uint32 // +0x88
+      wbFloat,                                            //uint32 // +0x90   // +0x90, +0x94 are floats
+      wbFloat,                                            //uint32 // +0x94   // it's basically doing +0x94 = max(+0x90, +0x94)
+      wbUnknown(4),                                       //uint32 // +0x98
+      wbFloat,                                            //uint32 // +0x9C
+      wbUnknown(4),                                       //uint32 // +0x78
+      wbUnknown(4),                                       //uint32 unknown_70 // +0x70
+                                                          //if form_version < 295  unknown_70 += 1
+      wbFloat,                                            //uint32 // +0xA0
+      wbUnknown(4),                                       //uint32 // +0x74
+      wbUnknown(4),                                       //uint32 // +0x00
+      wbUnknown(4),                                       //uint32 // +0x04
+      wbFloat,                                            //uint32 // +0x08
+      wbFloat,                                            //uint32 // +0x80
+      wbUnknown(4),                                       //uint32 // +0x7C
+      wbFloat                                             //if form_version >= 250 uint32 // +0x8C
     ]),
     wbDamageTypeArray('Damage Type')
     (*
