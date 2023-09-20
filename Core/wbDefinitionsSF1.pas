@@ -103,7 +103,8 @@ const
     'NPC_', 'OMOD', 'PROJ', 'SCOL', 'SCRL', 'SOUN',
     'SPEL', 'STAT',{'TACT',}'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
-    'BMMP', 'PDCL', 'PKIN', 'GBFM', 'AOPF', 'BMMO'
+    'BMMP', 'PDCL', 'PKIN', 'GBFM', 'AOPF', 'BMMO',
+    'LVLP'
   ];
 
 var
@@ -5608,7 +5609,7 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
-function wbSoundReference(const aSignature: TwbSignature; const aName: string = 'Unknown'): IwbRecordMemberDef; overload;
+function wbSoundReference(const aSignature: TwbSignature; const aName: string = 'Sound'): IwbRecordMemberDef; overload;
 begin
   Result :=
     wbStruct(aSignature, aName, [
@@ -6049,7 +6050,8 @@ begin
      'Normal',
      'Silent',
      'Very Loud',
-     'Quiet'
+     'Quiet',
+     'Unknown 5'
     ]);
 
   wbEntryPointsEnum := wbEnum([
@@ -7816,6 +7818,12 @@ begin
   _ReflectionChunkStructs[lLength] := Result;
 end;
 
+function wbReflection(aSignature: TwbSignature; const aName: string = 'Reflection'): IwbRecordMemberDef;
+begin
+  Result :=
+    wbByteArray(aSignature, aName).IncludeFlag(dfNoReport);
+end;
+
 procedure DefineSF1b;
 begin
   wbVatsValueFunctionEnum :=
@@ -8944,7 +8952,7 @@ begin
       wbRStruct('Progression Configuration', [
         wbString(ANAM).SetRequired(True),
         wbString(ATAV, 'Configuration').SetRequired(True),
-        wbUnknown(ATAF).SetRequired(True) // always empty
+        wbEmpty(ATAF, 'Unknown').SetRequired(True) // always empty
       ], []).SetRequired(True)], []);
   wbATANs := wbRArray('Activities', wbATAN, cpNormal, False);
   wbATANsCount := wbRArray('Activities', wbATAN, cpNormal, False, nil, wbATANsAfterSet);
@@ -9106,9 +9114,8 @@ begin
           Exit(lIdx);
     end, _ReflectionChunkStructs);
 
-  //wbREFL := wbArray(REFL, 'Reflection', wbReflectionChunkUnion);
-  wbREFL := wbByteArray(REFL, 'Reflection').IncludeFlag(dfNoReport);
-  wbRDIF := wbByteArray(RDIF, 'Reflection Diff').IncludeFlag(dfNoReport);
+  wbREFL := wbReflection(REFL);
+  wbRDIF := wbReflection(RDIF, 'Reflection Diff');
 
   var wbLinksToBluePrintComponent:TwbLinksToCallback  := function(const aElement: IwbElement): IwbElement
   begin
@@ -9427,8 +9434,9 @@ begin
         wbRStruct('Component Data', [
           wbPRPS
         ], []),
+        //ParticleSystem_Component
         wbRStruct('Component Data', [
-          wbUnknown(PTCL).IncludeFlag(dfNoReport)
+          wbReflection(PTCL)
         ], []),
         //BGSLodOwner_Component
         //BGSEffectSequenceComponent
@@ -10104,7 +10112,8 @@ begin
     wbBO64,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
-      wbUnknown
+      wbUnknown(9), //always 00 00 00 00 00 00 00 00 00 in Starfield.esm
+      wbFloat
       (*
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
@@ -10119,7 +10128,7 @@ begin
       ])),
       wbByteArray('Unknown', 2),
       wbInteger('Detection Sound Value', itU8),
-      wbByteArray('Unknown', 1),
+      wbByteArray('Unknown', 2),
       wbFloat('Weapon Adjust')
       *)
     ], cpNormal, True),
@@ -12343,7 +12352,57 @@ begin
           wbInteger('On Cripple - Decal Count', itU8)
         ], cpNormal, True),
         *)
-        wbUnknown(BPD2),
+        wbStruct(BPD2, 'Data', [
+          wbFloat('Damage Mult'),                                     //     uint32 +0x00
+          wbInteger('Flags', itU8, wbFlags([                          //     uint8  +0x08 - flags of some kind
+            {0x01} 'Severable',
+            {0x02} 'Hit Reaction',
+            {0x04} 'Hit Reaction - Default',
+            {0x08} 'Explodable',
+            {0x10} 'Cut - Meat Cap Sever',
+            {0x20} 'On Cripple',
+            {0x40} 'Explodable - Absolute Chance',
+            {0x80} 'Show Cripple Geometry'
+          ])),
+          wbInteger('Part Type', itU8, wbEnum([                       //     uint8  +0x09
+            { 0} 'Torso',
+            { 1} 'Head1',
+            { 2} 'Eye',
+            { 3} 'LookAt',
+            { 4} 'Fly Grab',
+            { 5} 'Head2',
+            { 6} 'LeftArm1',
+            { 7} 'LeftArm2',
+            { 8} 'RightArm1',
+            { 9} 'RightArm2',
+            {10} 'LeftLeg1',
+            {11} 'LeftLeg2',
+            {12} 'LeftLeg3',
+            {13} 'RightLeg1',
+            {14} 'RightLeg2',
+            {15} 'RightLeg3',
+            {16} 'Brain',
+            {17} 'Weapon',
+            {18} 'Root',
+            {19} 'COM',
+            {20} 'Pelvis',
+            {21} 'Camera',
+            {22} 'Offset Root',
+            {23} 'Left Foot',
+            {24} 'Right Foot',
+            {25} 'Face Target Source'
+          ])),
+          wbInteger('Health Percent', itU8),                          //     uint8  +0x0A
+          wbFormIDCk('Actor Value', [AVIF, NULL]),                    //     formid +0x28
+          wbInteger('To Hit Chance', itU8),                           //     uint8  +0x0B
+          wbFormIDCk('On Cripple - Art Object', [ARTO, NULL]),        //     formid +0x30
+          wbFormIDCk('On Cripple - Debris', [DEBR, NULL]),            //     formid +0x10
+          wbFormIDCk('On Cripple - Explosion', [EXPL, NULL]),         //     formid +0x18
+          wbFormIDCk('On Cripple - Impact DataSet', [IPDS, NULL]),    //     formid +0x20
+          wbFloat('On Cripple - Debris Scale'),                       //     uint32 +0x04
+          wbInteger('On Cripple - Debris Count', itU8),               //     uint8  +0x0C
+          wbInteger('On Cripple - Decal Count', itU8)                 //     uint8  +0x0D
+       ], cpNormal, True),
 //        wbString(NAM1, 'Limb Replacement Model', 0, cpNormal, True),
         wbString(NAM4, 'Gore Effects - Target Bone', 0, cpNormal, True),
 //        wbModelInfo(NAM5),
@@ -12351,7 +12410,7 @@ begin
         wbString(FNAM, 'Hit Reaction - End'),
 //        wbFormIDCk(BNAM, 'Gore Effects - Dismember Blood Art', [ARTO]),
         wbFormIDCk(INAM, 'Gore Effects - Blood Impact Material Type', [MATT]),
-//        wbFormIDCk(JNAM, 'On Cripple - Blood Impact Material Type', [MATT]),
+        wbFormIDCk(JNAM, 'On Cripple - Blood Impact Material Type', [MATT]),
 //        wbFormIDCk(CNAM, 'Meat Cap TextureSet', [TXST]),
 //        wbFormIDCk(NAM2, 'Collar TextureSet', [TXST]),
         wbString(DNAM, 'Twist Variable Prefix')
@@ -12368,7 +12427,7 @@ begin
     wbGenericModel,
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(LNAM, 'Light', [LIGH]),
-    wbUnknown(PSDF),
+    wbReflection(PSDF),
     wbStruct(DNAM, 'Data', [
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([
@@ -12572,11 +12631,16 @@ begin
       wbByteArray('Unknown', 2)
     ], cpNormal, True),
     wbArray(GNAM, 'Projected Decals', wbFormIDCk('Projected Decal', [PDCL])),
-    wbUnknown(HNAM),
+    wbStruct(HNAM, 'Unknown', [
+      wbFormIDCk('Unknown', [PDCL, NULL]),
+      wbFormIDCk('Unknown', [PDCL, NULL]),
+      wbFormIDCk('Unknown', [PDCL, NULL]),
+      wbFormIDCk('Unknown', [PDCL, NULL])
+    ]),
     wbDODT,
-    wbUnknown(IDSH),
-    wbUnknown(IDP1),
-    wbUnknown(IDP3),
+    wbSoundReference(IDSH),
+    wbSoundReference(IDP1),
+    wbSoundReference(IDP3),
     wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
@@ -12589,11 +12653,32 @@ begin
     ]))
   ]);
 
+
+  var lDontShowForCellLocation: TwbDontShowCallback :=
+    function(const aElement: IwbElement): Boolean
+    begin
+      var lContainer: IwbContainer;
+      if not Supports(aElement, IwbContainer, lContainer) then
+        Exit(False);
+
+      var lLocation := lContainer.ElementByPath['..\Location'];
+      if not Assigned(lLocation) then
+        Exit(False);
+
+      var lMainRecord: IwbMainRecord;
+      if not Supports(lLocation.LinksTo, IwbMainRecord, lMainRecord) then
+        Exit(False);
+
+      Result := lMainRecord.Signature = CELL;
+    end;
+
   {subrecords checked against Starfield.esm}
   wbRecord(LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
-      {0x00004000} 14, 'Partial Form'
+      {0x00004000} 14, 'Partial Form',
+      {0x00080000} 19, 'Unknown 19',
+      {0x00100000} 20, 'Unknown 20'
     ])), [
     wbEDID,
     wbPRPS,
@@ -12601,9 +12686,9 @@ begin
     wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbUnknown(8)
-   //   wbInteger('Grid Y', itS32, nil, cpBenign),
-   //   wbInteger('Grid X', itS32, nil, cpBenign)
+      wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
 
     wbArray(LCUR, 'Unknown', wbStruct('', [
@@ -12622,9 +12707,9 @@ begin
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
       wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-      wbUnknown(8)
-       //  wbInteger('Grid Y', itS32, nil, cpBenign)
-       //  wbInteger('Grid X', itS32, nil, cpBenign)
+      wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
 
     wbRArray('Location Cell Encounter Cell',
@@ -19916,27 +20001,27 @@ begin
   wbAddGroupOrder(WATR); {SF1Dump: no errors}
   wbAddGroupOrder(EFSH); {SF1Dump: no errors}
   wbAddGroupOrder(EXPL); {SF1Dump: no errors}
-  wbAddGroupOrder(DEBR);
-  wbAddGroupOrder(IMGS);
-  wbAddGroupOrder(IMAD);
-  wbAddGroupOrder(FLST);
-  wbAddGroupOrder(PERK);
-  wbAddGroupOrder(BPTD);
-  wbAddGroupOrder(ADDN);
-  wbAddGroupOrder(AVIF);
-  wbAddGroupOrder(CAMS);
-  wbAddGroupOrder(CPTH);
-  wbAddGroupOrder(VTYP);
-  wbAddGroupOrder(MATT);
-  wbAddGroupOrder(IPCT);
-  wbAddGroupOrder(IPDS);
-  wbAddGroupOrder(ARMA);
-  wbAddGroupOrder(LCTN);
-  wbAddGroupOrder(MESG);
-  wbAddGroupOrder(DOBJ);
-  wbAddGroupOrder(DFOB);
-  wbAddGroupOrder(LGTM);
-  wbAddGroupOrder(MUSC);
+  wbAddGroupOrder(DEBR); {SF1Dump: no errors}
+  wbAddGroupOrder(IMGS); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(IMAD); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(FLST); {SF1Dump: no errors}
+  wbAddGroupOrder(PERK); {SF1Dump: no errors}
+  wbAddGroupOrder(BPTD); {SF1Dump: no errors}
+  wbAddGroupOrder(ADDN); {SF1Dump: no errors} {contains Reflection}
+  wbAddGroupOrder(AVIF); {SF1Dump: no errors}
+  wbAddGroupOrder(CAMS); {SF1Dump: no errors}
+  wbAddGroupOrder(CPTH); {SF1Dump: no errors}
+  wbAddGroupOrder(VTYP); {SF1Dump: no errors}
+  wbAddGroupOrder(MATT); {SF1Dump: no errors}
+  wbAddGroupOrder(IPCT); {SF1Dump: no errors}
+  wbAddGroupOrder(IPDS); {SF1Dump: no errors}
+  wbAddGroupOrder(ARMA); {SF1Dump: no errors}
+  wbAddGroupOrder(LCTN); {SF1Dump: no errors}
+  wbAddGroupOrder(MESG); {SF1Dump: no errors}
+  wbAddGroupOrder(DOBJ); {SF1Dump: only errors are from the incomplete Use enum }
+  wbAddGroupOrder(DFOB); {SF1Dump: no errors}
+  wbAddGroupOrder(LGTM); {SF1Dump: no errors}
+  wbAddGroupOrder(MUSC); {SF1Dump: no errors}
   wbAddGroupOrder(FSTP);
   wbAddGroupOrder(FSTS);
   wbAddGroupOrder(SMBN);
