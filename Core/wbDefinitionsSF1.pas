@@ -19069,7 +19069,22 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AOPS, 'Aim Optical Sight Marker', [
     wbEDID,
-    wbUnknown(ANAM)
+    wbStruct(ANAM, 'Data', [
+      wbInteger('Hide Beam By Default', itU8, wbBoolEnum),
+      wbLenString('Unknown'), { always either 'LaserNode', 'ProjectileNode' or empty }
+      wbFloat('Beam Reactivation Delay After Equip/Reload S'),
+      wbFloat('Beam Deactivation Delay After Reload S'),
+      wbUnknown(4),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Beam Reactivation Delay After Firing S'),
+      wbFormIdCk('Beam Art Object', [ARTO, NULL]),
+      wbFormIdCk('Dot Art Object', [ARTO,  NULL]),
+      wbFloat('Unknown'), { vaguely related to length/range, but not range itself }
+      wbUnknown(1),
+      wbInteger('Show Beam At Hip', itU8, wbBoolEnum),
+      wbUnknown(1)
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19604,11 +19619,11 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID,
-    wbStruct(ZNAM, 'Unknown', [
-      wbUnknown(1),
-      wbFloat(),
-      wbFloat(),
-      wbFloat()
+    wbStruct(ZNAM, 'Data', [
+      wbInteger('Allow Cover State', itU8, wbBoolEnum),
+      wbFloat('Cover Detection Distance'),
+      wbFloat('Enter Cover Animation Time S'),
+      wbFloat('Hipfire During Cover Animation Time S')
     ])
   ]);
 
