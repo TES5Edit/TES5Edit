@@ -272,6 +272,8 @@ var
   wbReflectionChunkUnion    : IwbValueDef;
   wbXTV2                    : IwbSubRecordDef;
 
+  wbQuestEventEnumSF1       : IwbEnumDef;
+
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
   Result :=
@@ -12756,31 +12758,7 @@ begin
 
 end;
 
-{this is required to prevent XE6 compiler error}
-type
-  TVarRecs = array of TVarRec;
-
-function CombineVarRecs(const a, b : array of const)
-                                   : TVarRecs;
-begin
-  SetLength(Result, Length(a) + Length(b));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-  if Length(b) > 0 then
-    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
-end;
-
-function MakeVarRecs(const a : array of const)
-                             : TVarRecs;
-begin
-  SetLength(Result, Length(a));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-end;
-
 procedure DefineSF1i;
-var
-  a, b, c : TVarRecs;
 begin
   var wbMenuButton :=
     wbRStruct('Menu Button', [
@@ -12807,7 +12785,7 @@ begin
     wbRArray('Menu Buttons', wbMenuButton)
   ], False, nil, cpNormal, False);
 
-  a := MakeVarRecs([
+  var lDOBJUsesVarRecs1 := wbMakeVarRecs([
                   0, 'None',
     Sig2Int('AAAC'), 'Action Activate',
     Sig2Int('AAB1'), 'Action Bleedout Start',
@@ -13023,7 +13001,7 @@ begin
     Sig2Int('FTRF'), 'Female Face Texture Set: Eyes'
   ]);
 
-  b := MakeVarRecs([
+  var lDOBJUsesVarRecs2 := wbMakeVarRecs([
     Sig2Int('GCK1'), 'Keyword Generic Craftable Keyword 01',
     Sig2Int('GCK2'), 'Keyword Generic Craftable Keyword 02',
     Sig2Int('GCK3'), 'Keyword Generic Craftable Keyword 03',
@@ -13208,14 +13186,14 @@ begin
     Sig2Int('WWSP'), 'UNUSED03'
   ]);
 
-  c := CombineVarRecs(a, b);
+  var lDOBJUsesVarRecs3 := wbCombineVarRecs(lDOBJUsesVarRecs1, lDOBJUsesVarRecs2);
 
   {subrecords checked against Starfield.esm}
   wbRecord(DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
-        wbInteger('Use', itU32, wbEnum([], c), cpNormalIgnoreEmpty),
+        wbInteger('Use', itU32, wbEnum([], lDOBJUsesVarRecs3), cpNormalIgnoreEmpty),
         wbFormID('Object ID', cpNormalIgnoreEmpty)
       ]), 0, cpNormalIgnoreEmpty, True, wbDOBJObjectsAfterLoad
     )
@@ -13334,6 +13312,13 @@ begin
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
+  var lQuestEventVarRecsSF1 := wbMakeVarRecs([
+    Sig2Int(LAND), 'Ship Landing',
+    Sig2Int(DOCK), 'Ship Docking'
+  ]);
+
+  wbQuestEventEnumSF1 := wbEnum([], wbCombineVarRecs(wbQuestEventVarRecs, lQuestEventVarRecsSF1));
+
   {subrecords checked against Starfield.esm}
   wbRecord(SMEN, 'Story Manager Event Node', [
     wbEDID,
@@ -13343,7 +13328,7 @@ begin
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
-    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
+    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnumSF1)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
     .SetSummaryKey([7]);
 end;
@@ -15991,6 +15976,145 @@ begin
       {0x80000000} 'Unknown 32'
     ]), cpNormal, True);
 
+  var lReferenceAlias :=
+    wbRStructSK([0], 'Reference Alias', [
+      wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
+      wbString(ALID, 'Alias Name', 0, cpNormal, True),
+      wbQUSTAliasFlags,
+      wbUnknown(ALFG), // always zero?
+
+      wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
+      wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
+      wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR, PLYR]),
+      wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
+      wbRStruct('Location Alias Reference', [
+        wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+        wbFormIDCk(KNAM, 'Keyword', [KYWD]), //not in Starfield.esm
+        wbFormIDCk(ALRT, 'Ref Type', [LCRT]).SetRequired(True)
+      ], []),
+      wbRStruct('External Alias Reference', [
+        wbFormIDCk(ALEQ, 'Quest', [QUST]),
+        wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias).SetRequired(True)
+      ], []),
+      wbInteger(ALLR, 'Legendary Rank', itU8, wbEnum([], [
+        $0001, '1',
+        $0002, '2',
+        $0003, '3'
+      ])).SetDefaultNativeValue(1),
+      wbRStruct('Create Reference to Object', [
+        wbFormIDCk(ALCO, 'Object', [ACTI,ARMO,BOOK,CELL,CONT,DOOR,FLOR,FURN,GBFM,IDLM,KEYM,LVLI,LVSC,MISC,NPC_,PKIN,SOUN,STAT,WEAP]), // yee haw
+        wbStruct(ALCA, 'Alias', [
+          wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
+          wbInteger('Create', itU16, wbEnum([] ,[
+            $0000, 'At',
+            $8000, 'In'
+          ]))
+        ]).SetRequired(True),
+        wbInteger(ALCL, 'Level', itU32, wbEnum([
+          'Easy',
+          'Medium',
+          'Hard',
+          'Very Hard',
+          'None'
+        ])).SetRequired(True)
+      ], []),
+      wbRStruct('Find Matching Reference Near Alias', [
+        wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+        wbInteger(ALNT, 'Type', itU32, wbEnum([
+          'Linked From',
+          'Linked Ref',
+          'Unknown 3',  // DebugMQ101HelperQuest
+          'Unknown 4',  // BE series 1 - quests & derelicts (10)
+          'Unknown 5'   // BE series 2 - mostly generic derelicts (10)
+        ])).SetRequired(True)
+      ], []),
+      wbRStruct('Find Matching Reference From Event', [
+        wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnumSF1),
+        wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired(True)
+      ], []),
+      wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+      wbFormIDCk(ALNR, 'Ref Type', [LCRT, NULL]),
+
+      wbUnknown(ALCS, 4),
+
+      wbCTDAs,
+      wbFormIDCk(ALUB, 'Unknown', [GBFM]), // starfield.esm only has instances of GBFM but it may support any base type object
+      wbKeywords,
+      wbContainerItems,
+
+      wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
+      wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
+      wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
+      wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
+
+      wbRStruct('Create Object Template', [
+        wbInteger(ALCM, 'Template Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+        wbInteger(ALCA, 'Target Override Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+      ], []),
+      wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
+        wbFormIDCk('Keyword', [KYWD, NULL]),
+        wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+      ])),
+      wbFormIDCk(ALDN, 'Display Name', [MESG]),
+      wbFormIDCk(ALDI, 'Death Item', [LVLI]),
+      wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
+      wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
+      wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
+      wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
+      wbString(SCCM, 'Script Comment'),
+      wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+      wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
+      wbEmpty(ALED, 'Alias End', cpNormal, True)
+    ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet);
+
+    var lLocationAlias :=
+      wbRStructSK([0], 'Location Alias', [
+        wbInteger(ALLS, 'Location Alias ID', itU32),
+        wbString(ALID, 'Alias Name'),
+        wbQUSTAliasFlags,
+        wbUnknown(ALFG),
+        wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
+        wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
+        wbRStruct('Reference Alias Location', [
+          wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+          wbFormIDCk(KNAM, 'Keyword', [KYWD])
+        ], []),
+        wbRStruct('External Alias Location', [
+          wbFormIDCk(ALEQ, 'Quest', [QUST]),
+          wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
+        ], []),
+        wbRStruct('Find Matching Location From Event', [
+          wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnumSF1),
+          wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
+        ], []),
+        wbCTDAs,
+        wbRStruct('Unknown', [
+          wbEmpty(ALPS, 'Unknown'),
+          wbCTDAs,
+          wbFormIDCk(LNAM, 'PCM Type Keyword', [KYWD])
+        ], []),
+        wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+
+        wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
+        wbInteger(ALSY, 'System Location Alias ID', itS32),        // need a new alias to str routine for this
+
+        wbFormIDCk(ALKF, 'Location Type Keyword', [KYWD]),
+        wbFormIDCk(ALDN, 'Display Name', [MESG]),
+
+        wbEmpty(ALED, 'Alias End', cpNormal, True)
+      ], []);
+
+  var lRefCollectionAlias :=
+    wbRStructSK([0], 'Collection Alias', [
+      wbInteger(ALCS, 'Collection Alias ID', itU32),
+      wbInteger(ALMI, 'Max Initial Fill Count', itU8).SetRequired(True),
+      wbUnknown(ALAM),  // always zero
+      wbRUnion('', [
+        lReferenceAlias,
+        wbEmpty(ALED, 'Alias End', cpNormal, True)
+      ], [], cpNormal, True)
+    ], []);
+
   {subrecords checked against Starfield.esm}
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -16119,160 +16243,9 @@ begin
 
     wbRArray('Aliases',
       wbRUnion('Alias', [
-
-        // Reference Alias
-        wbRStructSK([0], 'Alias', [
-          wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
-          wbString(ALID, 'Alias Name', 0, cpNormal, True),
-          wbQUSTAliasFlags,
-          wbUnknown(ALFG), // always zero?
-
-          wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFormIDCk(ALFL, 'Specific Location', [LCTN]), //not in Starfield.esm
-          wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR, PLYR]),
-          wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
-          wbRStruct('Location Alias Reference', [
-            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbFormIDCk(KNAM, 'Keyword', [KYWD]), //not in Starfield.esm
-            wbFormIDCk(ALRT, 'Ref Type', [LCRT]).SetRequired(True)
-          ], []),
-          wbRStruct('External Alias Reference', [
-            wbFormIDCk(ALEQ, 'Quest', [QUST]),
-            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias).SetRequired(True)
-          ], []),
-          wbInteger(ALLR, 'Legendary Rank', itU8, wbEnum([], [
-            $0001, '1',
-            $0002, '2',
-            $0003, '3'
-          ])).SetDefaultNativeValue(1),
-          wbRStruct('Create Reference to Object', [
-            wbFormIDCk(ALCO, 'Object', [ACTI,ARMO,BOOK,CELL,CONT,DOOR,FLOR,FURN,GBFM,IDLM,KEYM,LVLI,LVSC,MISC,NPC_,PKIN,SOUN,STAT,WEAP]), // yee haw
-            wbStruct(ALCA, 'Alias', [
-              wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
-              wbInteger('Create', itU16, wbEnum([] ,[
-                $0000, 'At',
-                $8000, 'In'
-              ]))
-            ]).SetRequired(True),
-            wbInteger(ALCL, 'Level', itU32, wbEnum([
-              'Easy',
-              'Medium',
-              'Hard',
-              'Very Hard',
-              'None'
-            ])).SetRequired(True)
-          ], []),
-          wbRStruct('Find Matching Reference Near Alias', [
-            wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbInteger(ALNT, 'Type', itU32, wbEnum([
-              'Linked From',
-              'Linked Ref',
-              'Unknown 3',  // DebugMQ101HelperQuest
-              'Unknown 4',  // BE series 1 - quests & derelicts (10)
-              'Unknown 5'   // BE series 2 - mostly generic derelicts (10)
-            ])).SetRequired(True)
-          ], []),
-          wbRStruct('Find Matching Reference From Event', [
-            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
-            wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired(True)
-          ], []),
-          wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFormIDCk(ALNR, 'Ref Type', [LCRT, NULL]),
-          wbCTDAs,
-          wbFormIDCk(ALUB, 'Unknown', [GBFM]), // starfield.esm only has instances of GBFM but it may support any base type object
-          wbKeywords,
-          wbContainerItems,
-
-          wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(OCOR, 'Observe dead body override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(GWOR, 'Guard warn override package list', [FLST], False, cpNormal, False),
-          wbFormIDCk(ECOR, 'Combat override package list', [FLST], False, cpNormal, False),
-
-          wbRStruct('Create Object Template', [
-            wbInteger(ALCM, 'Template Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbInteger(ALCA, 'Target Override Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
-          ], []),
-          wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
-            wbFormIDCk('Keyword', [KYWD, NULL]),
-            wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
-          ])),
-          wbFormIDCk(ALDN, 'Display Name', [MESG]),
-          wbFormIDCk(ALDI, 'Death Item', [LVLI]),
-          wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
-          wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
-          wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
-          wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-          wbString(SCCM, 'Script Comment'),
-          wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
-          wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
-          wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet),
-
-        // Location Alias
-        wbRStructSK([0], 'Alias', [
-          wbInteger(ALLS, 'Location Alias ID', itU32),
-          wbString(ALID, 'Alias Name'),
-          wbQUSTAliasFlags,
-          wbUnknown(ALFG),
-          wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
-          wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
-          wbRStruct('Reference Alias Location', [
-            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-            wbFormIDCk(KNAM, 'Keyword', [KYWD])
-          ], []),
-          wbRStruct('External Alias Location', [
-            wbFormIDCk(ALEQ, 'Quest', [QUST]),
-            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
-          ], []),
-          wbRStruct('Find Matching Location From Event', [
-            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
-            wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
-          ], []),
-          wbCTDAs,
-          wbRStruct('Unknown', [
-            wbEmpty(ALPS, 'Unknown'),
-            wbCTDAs,
-            wbFormIDCk(LNAM, 'PCM Type Keyword', [KYWD])
-          ], []),
-          wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
-
-          wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
-          wbInteger(ALSY, 'System Location Alias ID', itS32),        // need a new alias to str routine for this
-
-          wbFormIDCk(ALKF, 'Location Type Keyword', [KYWD]),
-          wbFormIDCk(ALDN, 'Display Name', [MESG]),
-
-          wbEmpty(ALED, 'Alias End', cpNormal, True)
-        ], []),
-
-        // Ref Collection Alias
-        wbRStructSK([0], 'Alias', [
-          wbInteger(ALCS, 'Collection Alias ID', itU32, wbQuestAliasToStr, wbStrToAlias),
-          wbRUnion('Unknown', [
-            wbRStruct('Unknown', [
-              wbInteger(ALMI, 'Max Initial Fill Count', itU8),
-              wbUnknown(ALAM)  // always zero
-            ], []),
-            wbRStruct('Unknown', [
-              wbCTDAs,
-              wbKeywords,
-              wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
-                wbFormIDCk('Keyword', [KYWD, NULL]),
-                wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
-              ])),
-              wbFormIDCk(ALDN, 'Display Name', [MESG]),
-              wbFormIDCk(ALDI, 'Death Item', [LVLI]),
-              wbFormIDCk(ALFV, 'Forced Voice', [VTYP]),
-              wbRArrayS('Alias Spells', wbFormIDCk(ALSP, 'Spell', [SPEL])),
-              wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
-              wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
-              wbString(SCCM, 'Script Comment'),
-              wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
-              wbEmpty(ALED, 'Alias End', cpNormal, True)
-            ], [])
-          ], [])
-        ], [])
-
+        lReferenceAlias,
+        lLocationAlias,
+        lRefCollectionAlias
       ], [])
     ),
 

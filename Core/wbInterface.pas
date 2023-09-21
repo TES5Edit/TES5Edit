@@ -139,6 +139,7 @@ var
   wbEditAllowed                      : Boolean    = False;
   wbFlagsAsArray                     : Boolean    = False;
   wbDelayLoadRecords                 : Boolean    = True;
+  wbExtendedIntUnknowns              : Boolean    = True;
   wbMoreInfoForUnknown               : Boolean    = False;
   wbMoreInfoForIndex                 : Boolean    = False;
   wbTranslationMode                  : Boolean    = False;
@@ -4679,6 +4680,8 @@ procedure wbTimeStampToString(var aValue:string; aBasePtr: Pointer; aEndPtr: Poi
 function ShortenText(const aText: string; const aWidth: Integer = 64; const aPlaceholder: string = '…'): string;
 
 procedure wbInitRecords;
+
+function wbGetUnknownIntString(aInt: Int64): string;
 
 implementation
 
@@ -13605,7 +13608,7 @@ begin
         if i <= High(flgNames) then
           s := flgNames[i];
         if s = '' then begin
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s :=  wbGetUnknownIntString(i);
           Result := Result + s + ', ';
         end;
       end;
@@ -13748,7 +13751,7 @@ begin
         if flgUnknownIsUnused then
           s := 'Unused'
         else
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s :=  wbGetUnknownIntString(i);
       if GetFlagDontShow(aElement, i) then
         s := '(' + s + ')';
       if wbShowFlagEnumValue then
@@ -13955,7 +13958,7 @@ begin
         if aForSummary then
           s := '<'+IntToStr(i)+'>'
         else
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s :=  wbGetUnknownIntString(aInt);
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
@@ -14008,7 +14011,7 @@ begin
       Result := enSparseNamesMap[i].snName;
 
   if Result = '' then
-    Result := '<Unknown: '+IntToStr(aInt)+'>'
+    Result := wbGetUnknownIntString(aInt)
   else
     Result := '';
 end;
@@ -14523,7 +14526,7 @@ begin
       if wbShowFlagEnumValue then
         Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
     end else begin
-      Result := '<Unknown: '+IntToStr(aInt)+'>';
+      Result := wbGetUnknownIntString(aInt);
       if wbReportMode and wbReportUnknownEnums then begin
         if not Assigned(UnknownEnums) then
           UnknownEnums := TwbFastStringListIC.CreateSorted;
@@ -21529,6 +21532,24 @@ begin
     if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
       lDef.InitFromParent;
   end;
+end;
+
+function wbGetUnknownIntString(aInt: Int64): string;
+begin
+  Result := '<Unknown: ' + aInt.ToString;
+  if wbExtendedIntUnknowns then begin
+    var lHex := IntToHex(aInt).TrimLeft(['0']);
+    if Length(lHex) > 0 then
+      Result := Result + ' $' + lHex;
+    if Length(lHex) = 8 then begin
+      var lCardinal := aInt;
+      var s: string := PwbSignature(@lCardinal)^;
+      var t := s.ToUpperInvariant;
+      if s = t then
+        Result := Result + ' ' + t;
+    end;
+  end;
+  Result := Result + '>';
 end;
 
 initialization
