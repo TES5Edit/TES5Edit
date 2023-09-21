@@ -680,7 +680,7 @@ var
 begin
   i := 1;
   s := Trim(aString);
-  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+  while (i <= Length(s)) and (ANSIChar(s[i]) in ['0'..'9']) do
     Inc(i);
   s := Copy(s, 1, Pred(i));
 
@@ -1448,7 +1448,7 @@ begin
 
   i := 1;
   s := Trim(aString);
-  while (i <= Length(s)) and (s[i] in ['-', '0'..'9']) do
+  while (i <= Length(s)) and (ANSIChar(s[i]) in ['-', '0'..'9']) do
     Inc(i);
   s := Copy(s, 1, Pred(i));
 
@@ -3215,7 +3215,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..608 ] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..609 ] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),    //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),    //   2
@@ -3821,10 +3821,11 @@ const
     (Index: 949; Name: 'BodyHasResource'; Desc: 'Does the ref object''s current planetary body have the given resource? Optional integer 1 to include atmospheric resources.'; ParamType1: ptResource),
     (Index: 950; Name: 'GetPCIsReloading'; Desc: 'Returns true if the Player is currently reloading.'),
     (Index: 951; Name: 'ActorExposedToSky'; Desc: 'Test if actor is exposed to sky'),
+    (Index: 954; Name: 'GetQuetStarting'; Desc: 'Is the given quest starting?'; ParamType1: ptQuest), // sic
     (Index: 955; Name: 'BodyHasResourceWithKeyword'; Desc: 'Does the ref object''s current planetary body have a resource with the given keyword? Optional integer 1 to include atmospheric resources.'),
     (Index: 957; Name: 'GetShipReactorClass'; Desc: 'Gets a value representing the ship reactor class (based on its index in the ShipClassOrder form list)'),
     (Index: 958; Name: 'ShipReactorHasClassKeyword'; Desc: 'Check if the reactor of the supplied ship has the provided reactor class keyword (keywords in ShipClassOrder form list)'),
-    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')         //608
+    (Index: 960; Name: 'EPIsRes936istanceActorValue'; Desc: 'Is a specific resistance actor value passed into this check?')         //609
   );
 
 var
