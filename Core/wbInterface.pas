@@ -608,6 +608,7 @@ type
   end;
 
   IwbElement = interface;
+  IwbTemplateElement = interface;
 
   TwbDefFlag = (
     dfInternalEditOnly,
@@ -719,7 +720,8 @@ type
     etFlag,
     etStringListTerminator,
     etUnion,
-    etStructChapter
+    etStructChapter,
+    etTemplate
   );
 
   TwbElementTypes = set of TwbElementType;
@@ -893,6 +895,8 @@ type
     tbTrue
   );
 
+  TwbTemplateElements = TArray<IwbTemplateElement>;
+
   IwbElement = interface(IwbInterface)
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -978,6 +982,7 @@ type
     procedure NotifyChanged(aContainer: Pointer);
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     procedure Remove;
 
@@ -1152,6 +1157,10 @@ type
 
     property MastersUpdated: Boolean
       read GetMastersUpdated;
+  end;
+
+  IwbTemplateElement = interface(IwbElement)
+    ['{200EE482-1FD5-4CB8-AEF8-7612F2A3D928}']
   end;
 
   IwbElements = TArray<IwbElement>;
@@ -2339,10 +2348,21 @@ type
     function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordStructDef;
     function SetSummaryMemberMaxDepth(aIndex, aMaxDepth: Integer): {Self}IwbSubRecordStructDef;
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbSubRecordStructDef;
+
+    function GetMember(aIndex: Integer): IwbRecordMemberDef;
+    function GetMemberCount: Integer;
+
+    property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
+    property MemberCount: Integer read GetMemberCount;
   end;
 
   IwbSubRecordUnionDef = interface(IwbRecordMemberDef)
     ['{BC66ABFF-3108-4C64-B416-674A2A8F297D}']
+    function GetMember(aIndex: Integer): IwbRecordMemberDef;
+    function GetMemberCount: Integer;
+
+    property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
+    property MemberCount: Integer read GetMemberCount;
   end;
 
   IwbResolvableDef = interface(IwbValueDef)
@@ -5654,6 +5674,9 @@ type
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
+    {---IwbDefInternal---}
+    procedure InitFromParent; override;
+
     {---IwbRecordMemberDef---}
     function ToSummary(aDepth: Integer; const aElement: IwbElement): string;
     function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string; virtual;
@@ -20872,6 +20895,15 @@ begin
 
   Result := Self;
   if aOnlyWhenTrue then Include(defFlags, aFlag);
+end;
+
+procedure TwbRecordMemberDef.InitFromParent;
+begin
+  inherited;
+  var lRUnion: IwbSubRecordUnionDef;
+  if Supports(defParent, IwbSubRecordUnionDef, lRUnion) then
+    if lRUnion.Required then
+      defRequired := True;
 end;
 
 function TwbRecordMemberDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;

@@ -405,6 +405,7 @@ type
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
+    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; virtual;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
@@ -461,6 +462,19 @@ type
     procedure SetMastersUpdated(aValue: Boolean);
 
     function MergeMultiple(const aElement: IwbElement): Boolean; virtual;
+  end;
+
+  TwbTemplateElement = class(TwbElement, IwbTemplateElement)
+  protected
+    teDef: IwbNamedDef;
+  protected
+    {---TwbElement---}
+    function GetName: string; override;
+    function GetDef: IwbNamedDef; override;
+    function GetValueDef: IwbValueDef; override;
+    function GetElementType: TwbElementType; override;
+  public
+    constructor Create(aDef: IwbNamedDef);
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -1888,6 +1902,7 @@ type
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
 
@@ -1930,6 +1945,7 @@ type
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; override;
@@ -5799,6 +5815,7 @@ end;
 function TwbContainer.CanChangeElementMember(const aElement: IwbElement): Boolean;
 var
   SubRecordArrayDef : IwbSubRecordArrayDef;
+  SubRecordStructDef : IwbSubRecordStructDef;
   Def               : IwbDef;
   ValueDef          : IwbValueDef;
 begin
@@ -5811,9 +5828,18 @@ begin
     if Assigned(ValueDef) and (dfInternalEditOnly in ValueDef.DefFlags) then
       Exit;
   end;
-  Result := Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) and
-    Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef) and
-    IsElementEditable(Self);
+  if not IsElementEditable(Self) then
+    Exit;
+
+  if Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) then begin
+    Result := Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef);
+  end else if Supports(GetDef, IwbSubRecordStructDef, SubRecordStructDef) then begin
+    var lSortOrder := aElement.SortOrder;
+    if (lSortOrder >= 0) and
+       (lSortOrder < SubRecordStructDef.MemberCount)
+    then
+      Result := Supports(SubRecordStructDef.Members[lSortOrder], IwbSubRecordUnionDef);
+  end;
 end;
 
 function TwbContainer.CanMoveElement: Boolean;
@@ -6807,6 +6833,7 @@ var
   Container           : IwbContainer;
 
   SubRecordArrayDef   : IwbSubRecordArrayDef;
+  SubRecordStructDef   : IwbSubRecordStructDef;
   SubRecordUnionDef   : IwbSubRecordUnionDef;
   RecordDef           : IwbRecordDef;
 
@@ -6841,24 +6868,28 @@ begin
     Exit;
 
   if not Supports(GetDef, IwbSubRecordArrayDef, SubRecordArrayDef) or
-     not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then
-    Exit;
+     not Supports(SubRecordArrayDef.Element, IwbSubRecordUnionDef, SubRecordUnionDef) then begin
 
-  if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
-    Exit;
+    if Supports(GetDef, IwbSubRecordStructDef, SubRecordStructDef) then begin
+      var lSortOrder := aElement.SortOrder;
+      if (lSortOrder >= 0) and
+         (lSortOrder < SubRecordStructDef.MemberCount)
+      then begin
+        if not Supports(SubRecordStructDef.Members[lSortOrder], IwbSubRecordUnionDef, SubRecordUnionDef) then
+          Exit
+      end else
+        Exit;
 
-  // Make sure memory order is updated properly
-  UpdateMemoryOrder(MemoryOrderElements);
+      if not Supports(SubRecordUnionDef, IwbRecordDef, RecordDef) then
+        Exit;
 
-  OldElementIndex := -1;
-  for i := Low(cntElements) to High(cntElements) do
-    if aElement.Equals(cntElements[i]) then begin
-      OldElementIndex := i;
-      Break;
-    end;
+    end else
+      Exit;
 
-  if OldElementIndex < 0 then
-    Exit;
+  end else begin
+    if not Supports(SubRecordArrayDef.Element, IwbRecordDef, RecordDef) then
+      Exit;
+  end;
 
   OldMemberIndex := -1;
   for i := 0 to Pred(RecordDef.MemberCount) do
@@ -6885,46 +6916,70 @@ begin
 
   NewElementDef := RecordDef.Members[NewMemberIndex];
 
-  BeginUpdate;
-  try
-    case NewElementDef.DefType of
-      dtSubRecord:
-        NewElement := TwbSubRecord.Create(Self, NewElementDef as IwbSubRecordDef);
-      dtSubRecordArray:
-        NewElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordArrayDef);
-      dtSubRecordStruct:
-        NewElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordStructDef);
-    else
-      Assert(False);
-    end;
+  if Assigned(SubRecordArrayDef) then begin
+    // Make sure memory order is updated properly
+    UpdateMemoryOrder(MemoryOrderElements);
 
-    NewElement.SetToDefault;
-
-    Assert(aElement.Equals(cntElements[OldElementIndex]));
-
-    NewElementIndex := -1;
-    for i := High(cntElements) downto Low(cntElements) do
-      if NewElement.Equals(cntElements[i]) then begin
-        NewElementIndex := i;
+    OldElementIndex := -1;
+    for i := Low(cntElements) to High(cntElements) do
+      if aElement.Equals(cntElements[i]) then begin
+        OldElementIndex := i;
         Break;
       end;
 
-    Assert(NewElementIndex >= 0);
+    if OldElementIndex < 0 then
+      Exit;
 
-    NewElement.MemoryOrder := aElement.MemoryOrder;
-    cntElements[OldElementIndex] := NewElement as IwbElementInternal;
-    cntElements[NewElementIndex] := aElement as IwbElementInternal;
+    BeginUpdate;
+    try
+      case NewElementDef.DefType of
+        dtSubRecord:
+          NewElement := TwbSubRecord.Create(Self, NewElementDef as IwbSubRecordDef);
+        dtSubRecordArray:
+          NewElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordArrayDef);
+        dtSubRecordStruct:
+          NewElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), NewElementDef as IwbSubRecordStructDef);
+      else
+        Assert(False);
+      end;
 
-    if NewElement.CanAssign(Low(Integer), aElement, False) then
-      NewElement.Assign(Low(Integer), aElement, False)
-    else
-      (NewElement as IwbElementInternal).TryAssignMembers(aElement);
+      NewElement.SetToDefault;
 
+      Assert(aElement.Equals(cntElements[OldElementIndex]));
 
-    Result := NewElement;
+      NewElementIndex := -1;
+      for i := High(cntElements) downto Low(cntElements) do
+        if NewElement.Equals(cntElements[i]) then begin
+          NewElementIndex := i;
+          Break;
+        end;
+
+      Assert(NewElementIndex >= 0);
+
+      NewElement.MemoryOrder := aElement.MemoryOrder;
+      cntElements[OldElementIndex] := NewElement as IwbElementInternal;
+      cntElements[NewElementIndex] := aElement as IwbElementInternal;
+
+      if NewElement.CanAssign(Low(Integer), aElement, False) then
+        NewElement.Assign(Low(Integer), aElement, False)
+      else
+        (NewElement as IwbElementInternal).TryAssignMembers(aElement);
+
+      Result := NewElement;
+      aElement.Remove;
+    finally
+      EndUpdate;
+    end;
+  end else if Assigned(SubRecordStructDef) then begin
+    var lSortOrder := aElement.SortOrder;
     aElement.Remove;
-  finally
-    EndUpdate;
+
+    Result := Assign(lSortOrder, TwbTemplateElement.Create(NewElementDef), False);
+
+    if Result.CanAssign(Low(Integer), aElement, False) then
+      Result.Assign(Low(Integer), aElement, False)
+    else
+      (Result as IwbElementInternal).TryAssignMembers(aElement);
   end;
 end;
 
@@ -16878,6 +16933,11 @@ begin
   inherited;
 end;
 
+function TwbElement.GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
+begin
+  Result := nil;
+end;
+
 function TwbElement.GetBaseName: string;
 begin
   Result := GetName;
@@ -18064,7 +18124,9 @@ begin
 
     Element := nil;
 
-    if (csAsCreatedEmpty in cntStates) and Assigned(aElement) then begin
+    var lElement := aElement;
+
+    if (csAsCreatedEmpty in cntStates) and Assigned(lElement) then begin
       SetModified(True);
       Assert(Length(cntElements)=1);
       Element := cntElements[0];
@@ -18073,9 +18135,15 @@ begin
 
       ElementDef := arcDef.Element;
       if ElementDef.DefType = dtSubRecordUnion then begin
-        if Assigned(aElement) then begin
-          Supports(aElement, IwbDataContainer, DataContainer);
-          ElementDef := (ElementDef as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer)
+        if Assigned(lElement) then begin
+          var lTemplate: IwbTemplateElement;
+          if Supports(lElement, IwbDataContainer, DataContainer) then
+            ElementDef := (ElementDef as IwbRecordDef).GetMemberFor((lElement as IwbHasSignature).Signature, DataContainer)
+          else if Supports(lElement, IwbTemplateElement, lTemplate) then begin
+            if not Supports(lTemplate.Def, IwbRecordMemberDef, ElementDef) then
+              ElementDef := nil;
+            lElement := nil;
+          end;
         end else
           ElementDef := (ElementDef as IwbRecordDef).Members[0];
         Assert(Assigned(ElementDef));
@@ -18093,8 +18161,8 @@ begin
       end;
     end;
 
-    if Assigned(Element) and Assigned(aElement) then try
-      Element.Assign(Low(Integer), aElement, aOnlySK);
+    if Assigned(Element) and Assigned(lElement) then try
+      Element.Assign(Low(Integer), lElement, aOnlySK);
       if csAsCreatedEmpty in cntStates then
         Exclude(cntStates, csAsCreatedEmpty);
     except
@@ -18326,6 +18394,22 @@ begin
   if Assigned(arcDef) and (dfNotAlignable in arcDef.DefFlags) then
     Exit(False);
   Result := True;
+end;
+
+function TwbSubRecordArray.GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
+begin
+  Result := nil;
+  if not Assigned(arcDef)  then
+    Exit;
+  if aIndex <> High(Integer) then
+    Exit;
+
+  var lRUnion: IwbSubRecordUnionDef;
+  if not Supports(arcDef.Element, IwbSubRecordUnionDef, lRUnion) then
+    Exit;
+  SetLength(Result, lRUnion.MemberCount);
+  for var lMemberIdx := Low(Result) to High(Result) do
+    Result[lMemberIdx] := TwbTemplateElement.Create(lRUnion.Members[lMemberIdx]);
 end;
 
 function TwbSubRecordArray.GetCheck: string;
@@ -18600,11 +18684,18 @@ begin
         end else begin
 
           var lDefType := Member.DefType;
-          if lDefType = dtSubRecordUnion then
+          if lDefType = dtSubRecordUnion then begin
             if Assigned(aElement) then begin
               Member := aElement.Def as IwbRecordMemberDef;
               lDefType := Member.DefType;
+            end else begin
+              repeat
+                var lUnion := Member as IwbSubRecordUnionDef;
+                Member :=lUnion.Members[0];
+                lDefType := Member.DefType;
+              until lDefType <> dtSubRecordUnion;
             end;
+          end;
 
           case lDefType of
             dtSubRecord:
@@ -18621,7 +18712,7 @@ begin
 
           if Assigned(Element) then try
             Element.SortOrder := aIndex;
-            if Assigned(aElement) then
+            if Assigned(aElement) and (aElement.ElementType <> etTemplate) then
               Element.Assign(Low(Integer), aElement, aOnlySK);
           except
             Element.Container.RemoveElement(Element);
@@ -18817,6 +18908,21 @@ begin
     SetModified(True);
     InvalidateStorage;
   end;
+end;
+
+function TwbSubRecordStruct.GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
+begin
+  Result := nil;
+  if not Assigned(srcDef) then
+    Exit;
+  if not ((aIndex >= 0) and (aIndex < srcDef.MemberCount)) then
+    Exit;
+  var lRUnion: IwbSubRecordUnionDef;
+  if not Supports(srcDef.Members[aIndex], IwbSubRecordUnionDef, lRUnion) then
+    Exit;
+  SetLength(Result, lRUnion.MemberCount);
+  for var lMemberIdx := Low(Result) to High(Result) do
+    Result[lMemberIdx] := TwbTemplateElement.Create(lRUnion.Members[lMemberIdx]);
 end;
 
 function TwbSubRecordStruct.GetCheck: string;
@@ -22503,6 +22609,34 @@ begin
       Result := Files[i].RecordByFormID[aFormID, True, False];
       Exit;
     end;
+end;
+
+{ TwbTemplateElement }
+
+constructor TwbTemplateElement.Create(aDef: IwbNamedDef);
+begin
+  teDef := aDef;
+  inherited Create(nil);
+end;
+
+function TwbTemplateElement.GetDef: IwbNamedDef;
+begin
+  Result := teDef;
+end;
+
+function TwbTemplateElement.GetElementType: TwbElementType;
+begin
+  Result := etTemplate;
+end;
+
+function TwbTemplateElement.GetName: string;
+begin
+  Result := teDef.Name;
+end;
+
+function TwbTemplateElement.GetValueDef: IwbValueDef;
+begin
+  Supports(teDef, IwbValueDef, Result);
 end;
 
 initialization
