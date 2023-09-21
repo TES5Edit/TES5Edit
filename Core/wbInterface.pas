@@ -13981,7 +13981,7 @@ begin
         if aForSummary then
           s := '<'+IntToStr(i)+'>'
         else
-          s :=  wbGetUnknownIntString(aInt);
+          s :=  wbGetUnknownIntString(i);
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
