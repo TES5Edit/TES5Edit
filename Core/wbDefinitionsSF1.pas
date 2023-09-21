@@ -13410,7 +13410,7 @@ begin
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent ', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Sibling ', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
-    wbCITCReq,
+    wbCITC,
     wbCTDAsCount,
     wbStruct(DNAM, 'Flags', [
       wbInteger('Node Flags', itU16, wbSMNodeFlags),
