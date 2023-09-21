@@ -1560,6 +1560,7 @@ const
   XPDD : TwbSignature = 'XPDD'; { New To Fallout 4 }
   XPDO : TwbSignature = 'XPDO'; { New To Starfield }
   XPLK : TwbSignature = 'XPLK'; { New To Fallout 4 }
+  XPLL : TwbSignature = 'XPLL'; { New To Starfield }
   XPOD : TwbSignature = 'XPOD';
   XPPA : TwbSignature = 'XPPA';
   XPPS : TwbSignature = 'XPPS'; { New To Fallout 76 }

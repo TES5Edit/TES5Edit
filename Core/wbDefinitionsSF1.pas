@@ -164,6 +164,7 @@ var
   wbCTDAs                   : IwbSubRecordArrayDef;
   wbCTDAsReq                : IwbSubRecordArrayDef;
   wbCTDAsCount              : IwbSubRecordArrayDef;
+  wbCTDAsCountReq           : IwbSubRecordArrayDef;
   wbConditions              : IwbSubRecordStructDef;
   wbATCP                    : IwbSubRecordDef;
   wbATCPReq                 : IwbSubRecordDef;
@@ -3221,10 +3222,7 @@ type
     {68} ptPerkSkillGroupComparison,
     {69} ptPerkSkillGroup,
     {70} ptReactionType,
-    {71} ptLimbCategory,
-
-
-    ptEnd
+    {71} ptLimbCategory
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3458,7 +3456,7 @@ const
     (Index: 435; Name: 'PlayerAudioDetection'),                                                                                                             //   216
     (Index: 437; Name: 'GetIsCreatureType'; ParamType1: ptInteger),                                                                                         //   217
     (Index: 438; Name: 'HasKey'; ParamType1: ptObjectReference),                                                                                            //   218
-    (Index: 439; Name: 'IsFurnitureEntryType'; ParamType1: ptReferencableObject),                                                                           //   219
+    (Index: 439; Name: 'IsFurnitureEntryType'; ParamType1: ptFurnitureEntry),                                                                           //   219
     (Index: 444; Name: 'GetInCurrentLocationFormList'; ParamType1: ptFormList),                                                                             //   220
     (Index: 445; Name: 'GetInZone'; ParamType1: ptLocation),                                                                                                //   221
     (Index: 446; Name: 'GetVelocity'; ParamType1: ptAxis),                                                                                                  //   222
@@ -3578,7 +3576,7 @@ const
     (Index: 633; Name: 'GetFlyingState'),                                                                                                                   //   336
     (Index: 635; Name: 'IsInFavorState'),                                                                                                                   //   337
     (Index: 636; Name: 'HasTwoHandedWeaponEquipped'),                                                                                                       //   338
-    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptReferencableObject),                                                                            //   339
+    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptFurnitureEntry),                                                                            //   339
     (Index: 638; Name: 'IsInFriendStatewithPlayer'),                                                                                                        //   340
     (Index: 639; Name: 'GetWithinDistance'; ParamType1: ptObjectReference; ParamType2: ptFloat),                                                            //   341
     (Index: 640; Name: 'GetValuePercent'; ParamType1: ptActorValue),                                                                                        //   342
@@ -8697,7 +8695,13 @@ begin
           {25 ptFurnitureAnim}
           wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
           {26 ptFurnitureEntry}
-          wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
+          wbInteger('Furniture Entry', itU32, wbEnum([], [
+            $01, 'Front',
+            $02, 'Behind',
+            $04, 'Right',
+            $08, 'Left',
+            $10, 'Up'
+          ])),
           {27 ptGlobal}
           wbFormIDCkNoReach('Global', [GLOB]),
           {28 ptIdleForm}
@@ -8848,7 +8852,13 @@ begin
           {25 ptFurnitureAnim}
           wbInteger('Furniture Anim', itU32, wbFurnitureAnimTypeEnum),
           {26 ptFurnitureEntry}
-          wbInteger('Furniture Entry', itU32, wbEnum([], [$010000, 'Front', $020000, 'Behind', $040000, 'Right', $80000, 'Left', $100000, 'Up'])),
+          wbInteger('Furniture Entry', itU32, wbEnum([], [
+            $01, 'Front',
+            $02, 'Behind',
+            $04, 'Right',
+            $08, 'Left',
+            $10, 'Up'
+          ])),
           {27 ptGlobal}
           wbFormIDCkNoReach('Global', [GLOB]),
           {28 ptIdleForm}
@@ -9014,11 +9024,12 @@ begin
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA, cpNormal, False, nil, wbCTDAsAfterSet);
+  wbCTDAsCountReq := wbRArray('Conditions', wbCTDA, cpNormal, True, nil, wbCTDAsAfterSet);
   wbCTDAsReq := wbRArray('Conditions', wbCTDA, cpNormal, True);
 
   wbConditions := wbRStruct('Conditions', [
     wbCITCReq,
-    wbCTDAsCount.SetRequired(True)
+    wbCTDAsCountReq
   ], []);
 
   wbATCP := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign);
@@ -9469,7 +9480,7 @@ begin
           wbLStringKC(HULL, 'Hull Code', 0, cpTranslate)
         ], []),
         wbRStruct('Component Data', [
-          wbFormID(INAM, 'Add to inventory on destroy')
+          wbFormIDCk(INAM, 'Add to inventory on destroy', [LVLI])
         ], []),
         //BGSObjectWindowFilter_Component
         wbRStruct('Component Data', [
@@ -13422,7 +13433,8 @@ begin
 
   var lQuestEventVarRecsSF1 := wbMakeVarRecs([
     Sig2Int(LAND), 'Ship Landing',
-    Sig2Int(DOCK), 'Ship Docking'
+    Sig2Int(DOCK), 'Ship Docking',
+    Sig2Int(XPLL), 'Unknown XPLL'
   ]);
 
   wbQuestEventEnumSF1 := wbEnum([], wbCombineVarRecs(wbQuestEventVarRecs, lQuestEventVarRecsSF1));
@@ -13478,7 +13490,7 @@ begin
       wbInteger('Loop Count', itU32)
     ]),
     }
-    wbUnknown(MTSH),
+    wbSoundReference(MTSH),
     wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
     wbConditions,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
@@ -13872,7 +13884,42 @@ end;
 
 procedure DefineSF1k;
 begin
-  wbSPED := wbUnknown(SPED);
+  wbSPED := wbStruct(SPED, 'Movement Data', [
+  {  0} wbUnknown(4),
+  {  4} wbFloat,
+  {  8} wbUnknown(4),
+  { 12} wbFloat,
+  { 16} wbFloat,
+  { 20} wbUnknown(16),
+  { 36} wbFloat,
+  { 40} wbFloat,
+  { 44} wbUnknown(4),
+  { 48} wbFloat,
+  { 52} wbFloat,
+  { 56} wbFloat,
+  { 60} wbFloat,
+  { 64} wbFloat,
+  { 68} wbFloat,
+  { 72} wbFloat,
+  { 76} wbFloat,
+  { 80} wbFloat,
+  { 84} wbUnknown(4),
+  { 88} wbFloat,
+  { 92} wbFloat,
+  { 96} wbFloat,
+  {100} wbUnknown(32),
+  {132} wbFloat,
+  {136} wbFloat,
+  {140} wbUnknown(4),
+  {144} wbFloat,
+  {148} wbFloat,
+  {152} wbFloat,
+  {156} wbUnknown(4),
+  {160} wbFloat,
+  {164} wbFloat,
+  {168} wbUnknown
+  ]);
+
   (*
   wbUnion(SPED, 'Movement Data', wbFormVersionDecider([28, 60, 104]), [
  {0}wbStruct('', [
@@ -14105,7 +14152,8 @@ begin
       wbInteger('Art Type', itU32, wbEnum([
         'Magic Casting',
         'Magic Hit Effect',
-        'Enchantment Effect'
+        'Enchantment Effect',
+        'Unknown 3'
       ])),
       wbUnknown(4)
     ]),
@@ -14152,7 +14200,7 @@ begin
     wbFloat(LNAM, 'Flight - Angle Gain'),
     wbUnknown(KNAM),
     wbUnknown(INTV),
-    wbUnknown(BOLV)
+    wbEmpty(BOLV, 'Unknown')
   ]);
 
   (* still exists in game code, but not in Starfield.esm * )
@@ -15229,11 +15277,14 @@ begin
   wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(COBJ, 'Constructible Object', [
+  wbRecord(COBJ, 'Constructible Object',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x04000000}  26, 'Unknown 26'
+    ])), [
     wbEDID,
     wbBaseFormComponents,
     wbDESC,
-    wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [KYWD]),
+    wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [NULL, KYWD]),
     wbCTDAs,
     wbComponents,
     wbStructs(RQPK, 'Required Perks', 'Required Perk', [
@@ -18659,8 +18710,9 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(OMOD, 'Object Modification',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000008} 4, 'Legendary Mod',
-      {0x00000040} 7, 'Mod Collection'
+      {0x00000010} 4, 'Legendary Mod',
+      {0x00000080} 7, 'Mod Collection',
+      {0x00000100} 8, 'Unknown 8'
     ])), [
     wbEDID,
     wbBaseFormComponents,
@@ -18786,7 +18838,7 @@ begin
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
     wbFormIDCk(PNAM, 'Pack-in', [PKIN]),
-    wbFormIDCk(LNAM, 'Unknown', [REFR]),
+    wbFormIDCk(LNAM, 'Unknown', sigReferences),
     wbArray(MNAM,'Unknown', wbFloat(), 3)
   ]);
 
@@ -19378,9 +19430,9 @@ begin
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
     wbString(GNAM, 'Unknown Name'),
-    wbFormIDCk(NAM1, 'Actor Value', [AVIF]),
-    wbFormIDCk(NAM2, 'Produce', [LVLI, COBJ]),
-    wbFormIDCK(NAM3, 'Interval', [GLOB])
+    wbFormIDCk(NAM1, 'Actor Value', [NULL, AVIF]),
+    wbFormIDCk(NAM2, 'Produce', [NULL, LVLI, COBJ]),
+    wbFormIDCK(NAM3, 'Interval', [NULL, GLOB])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19401,7 +19453,7 @@ begin
       wbArray(DNAM,'Unknown', wbFloat(), 4)
     ], []),
     wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
-    wbRArray('Material Swaps', wbFormID(NAM1)),
+    wbRArray('Material Swaps', wbFormIDCk(NAM1, 'Material Swap', [LMSW])),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
     wbRStruct('Water Data', [
       wbInteger(MNAM, 'Has Water', itU8, wbBoolEnum), //implicit required
@@ -19422,14 +19474,13 @@ begin
     wbUnknown(TNAM),
     wbRStructs('Marker Type', 'Type', [
       wbFormIDCk(KNAM, 'Keyword', [KYWD]),
-      wbKSIZ,
-      wbKWDAs
+      wbKeywords
     ], []),
     wbRStructs('Unknown', 'Unknown', [
       wbStruct(LNAM, 'Unknown', [
         wbInteger('Unknown', itU32),
         wbFormIDCk('Land Texture', [LTEX]),
-        wbFormIDCk('Ground Cover', [GCVR])
+        wbFormIDCk('Ground Cover', [NULL, GCVR])
       ]),
       wbStruct(ANAM, 'Unknown', [
         wbInteger('Unknown', itU32),
@@ -19447,7 +19498,7 @@ begin
     wbArray(BTPS, 'Unknown', wbFloat(), 56),
     wbArray(BDFS, 'Unknown', wbFloat(), 11),
     wbString(EFSD, 'Ground Layer Material'),
-    wbFormIDCk(NAM2, 'Unknown', [GLOB]),
+    wbFormIDCk(NAM2, 'Unknown', [NULL, GLOB]),
     wbFormIDCk(NAM3, 'Unknown', [GLOB]),
     wbFormIDCk(NAM4, 'Unknown', [GLOB])
   ]);
@@ -20076,7 +20127,7 @@ begin
   wbAddGroupOrder(SECH); {SF1Dump: no errors}
   wbAddGroupOrder(ASPC); {SF1Dump: no errors}
   wbAddGroupOrder(AOPF); {SF1Dump: no errors}
-  wbAddGroupOrder(MGEF); {SF1Dump: no errors (outside of CTDA parameters)}
+  wbAddGroupOrder(MGEF); {SF1Dump: no errors}
   wbAddGroupOrder(LTEX); {SF1Dump: no errors}
   wbAddGroupOrder(PDCL); {SF1Dump: no errors}
   wbAddGroupOrder(ENCH); {SF1Dump: no errors}
@@ -20099,7 +20150,7 @@ begin
   wbAddGroupOrder(FURN); {SF1Dump: no errors}
   wbAddGroupOrder(WEAP); {SF1Dump: no errors}
   wbAddGroupOrder(AMMO); {SF1Dump: no errors}
-  wbAddGroupOrder(NPC_); {SF1Dump: no errors right now, but more work needed}
+  wbAddGroupOrder(NPC_); {SF1Dump: no errors}
   wbAddGroupOrder(PLYR); {purely internal type}
   wbAddGroupOrder(LVLN); {SF1Dump: no errors}
   wbAddGroupOrder(LVLP); {SF1Dump: no errors}
@@ -20107,7 +20158,7 @@ begin
   wbAddGroupOrder(ALCH); {SF1Dump: no errors}
   wbAddGroupOrder(IDLM); {SF1Dump: no errors}
   wbAddGroupOrder(BMMO); {SF1Dump: no errors}
-  wbAddGroupOrder(PROJ); {SF1Dump: no errors right now, but more work needed}
+  wbAddGroupOrder(PROJ); {SF1Dump: no errors}
   wbAddGroupOrder(HAZD); {SF1Dump: no errors}
   wbAddGroupOrder(BNDS); {SF1Dump: no errors}
   wbAddGroupOrder(TERM); {SF1Dump: no errors}
@@ -20156,36 +20207,36 @@ begin
   wbAddGroupOrder(DFOB); {SF1Dump: no errors}
   wbAddGroupOrder(LGTM); {SF1Dump: no errors}
   wbAddGroupOrder(MUSC); {SF1Dump: no errors}
-  wbAddGroupOrder(FSTP);
-  wbAddGroupOrder(FSTS);
-  wbAddGroupOrder(SMBN);
-  wbAddGroupOrder(SMQN);
-  wbAddGroupOrder(SMEN);
-  wbAddGroupOrder(DLBR);
-  wbAddGroupOrder(MUST);
-  wbAddGroupOrder(EQUP);
-  wbAddGroupOrder(SCEN);
-  wbAddGroupOrder(OTFT);
-  wbAddGroupOrder(ARTO);
-  wbAddGroupOrder(MOVT);
-  wbAddGroupOrder(COLL);
-  wbAddGroupOrder(CLFM);
-  wbAddGroupOrder(REVB);
-  wbAddGroupOrder(RFGP);
-  wbAddGroupOrder(PERS);
-  wbAddGroupOrder(AMDL);
-  wbAddGroupOrder(AAMD);
-  wbAddGroupOrder(MAAM);
-  wbAddGroupOrder(LAYR);
-  wbAddGroupOrder(COBJ);
-  wbAddGroupOrder(OMOD);
-  wbAddGroupOrder(ZOOM);
-  wbAddGroupOrder(INNR);
-  wbAddGroupOrder(KSSM);
-  wbAddGroupOrder(AORU);
-  wbAddGroupOrder(STAG);
-  wbAddGroupOrder(IRES);
-  wbAddGroupOrder(BIOM);
+  wbAddGroupOrder(FSTP); {SF1Dump: no errors}
+  wbAddGroupOrder(FSTS); {SF1Dump: no errors}
+  wbAddGroupOrder(SMBN); {SF1Dump: no errors}
+  wbAddGroupOrder(SMQN); {SF1Dump: no errors}
+  wbAddGroupOrder(SMEN); {SF1Dump: no errors}
+  wbAddGroupOrder(DLBR); {SF1Dump: no errors}
+  wbAddGroupOrder(MUST); {SF1Dump: no errors}
+  wbAddGroupOrder(EQUP); {SF1Dump: no errors}
+  wbAddGroupOrder(SCEN); {SF1Dump: no errors}
+  wbAddGroupOrder(OTFT); {SF1Dump: no errors}
+  wbAddGroupOrder(ARTO); {SF1Dump: no errors}
+  wbAddGroupOrder(MOVT); {SF1Dump: no errors}
+  wbAddGroupOrder(COLL); {SF1Dump: no errors}
+  wbAddGroupOrder(CLFM); {SF1Dump: no errors}
+  wbAddGroupOrder(REVB); {SF1Dump: no errors}
+  wbAddGroupOrder(RFGP); {SF1Dump: no errors}
+  wbAddGroupOrder(PERS); {SF1Dump: no errors}
+  wbAddGroupOrder(AMDL); {SF1Dump: no errors}
+  wbAddGroupOrder(AAMD); {SF1Dump: no errors}
+  wbAddGroupOrder(MAAM); {SF1Dump: no errors}
+  wbAddGroupOrder(LAYR); {SF1Dump: no errors}
+  wbAddGroupOrder(COBJ); {SF1Dump: no errors}
+  wbAddGroupOrder(OMOD); {SF1Dump: no errors}
+  wbAddGroupOrder(ZOOM); {SF1Dump: no errors}
+  wbAddGroupOrder(INNR); {SF1Dump: no errors}
+  wbAddGroupOrder(KSSM); {SF1Dump: no errors}
+  wbAddGroupOrder(AORU); {SF1Dump: no errors}
+  wbAddGroupOrder(STAG); {SF1Dump: no errors}
+  wbAddGroupOrder(IRES); {SF1Dump: no errors}
+  wbAddGroupOrder(BIOM); {SF1Dump: no errors}
   wbAddGroupOrder(NOCM);
   wbAddGroupOrder(LENS);
   wbAddGroupOrder(OVIS);
