@@ -13285,7 +13285,7 @@ begin
     Sig2Int('ASNB'), 'Action Sneak Begin',
     Sig2Int('ATBD'), 'Action Threat Back Down',
     Sig2Int('ASNE'), 'Action Sneak End',
-    Sig2Int('ATRE'), 'Action Threat Evaluation',
+    Sig2Int('ATRE'), 'Action Threat Assess',
     Sig2Int('ACTE'), 'Action Traversal End',
     Sig2Int('ATLF'), 'Action Threat Listen Front',
     Sig2Int('AGOF'), 'Action Gravity Off',
@@ -13295,7 +13295,7 @@ begin
     Sig2Int('AGON'), 'Action Gravity On',
     Sig2Int('AAVO'), 'Action Avoid',
     Sig2Int('ABSP'), 'Action Blind Fire Stop',
-    Sig2Int('ASTP'), 'Unknown ASTP',                                             //used once, NULL reference
+    Sig2Int('ASTP'), 'Action Step in Talking to Player',
     Sig2Int('ACTS'), 'Action Traversal Start',
     Sig2Int('ACFT'), 'Action Flight TakeOff',
     Sig2Int('ABST'), 'Action Blind Fire Start',
