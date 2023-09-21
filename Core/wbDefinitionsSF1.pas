@@ -3233,7 +3233,7 @@ const
     (Index:  27; Name: 'GetLineOfSight'; ParamType1: ptObjectReference),
     (Index:  32; Name: 'GetInSameCell'; ParamType1: ptObjectReference),
     (Index:  35; Name: 'GetDisabled'),    //  15
-    (Index:  36; Name: 'MenuMode'; ParamType1: ptInteger),
+    (Index:  36; Name: 'MenuPaused'; ParamType1: ptInteger),
     (Index:  39; Name: 'GetDisease'),    //  17
     (Index:  41; Name: 'GetClothingValue'),    //  18
     (Index:  42; Name: 'SameFaction'; ParamType1: ptActor),    //  19
@@ -3288,7 +3288,7 @@ const
     (Index: 122; Name: 'GetCrime'; ParamType1: ptActor; ParamType2: ptCrimeType),
     (Index: 123; Name: 'IsGreetingPlayer'),    //  69
     (Index: 125; Name: 'IsGuard'),    //  70
-    (Index: 127; Name: 'HasBeenEaten'),    //  71
+    (Index: 127; Name: 'ReloadResources'),    //  71
     (Index: 128; Name: 'GetStaminaPercentage'),    //  72
     (Index: 129; Name: 'HasBeenRead'),    //  73
     (Index: 130; Name: 'GetDying'),    //  74
@@ -3413,13 +3413,13 @@ const
     (Index: 390; Name: 'GetHitLocation'),    // 193
     (Index: 391; Name: 'IsPC1stPerson'),    // 194
     (Index: 396; Name: 'GetCauseofDeath'),    // 195
-    (Index: 397; Name: 'IsLimbGone'; ParamType1: ptInteger),    // 196
+    (Index: 397; Name: 'ShowDependencyGraph'; ParamType1: ptInteger),    // 196
     (Index: 398; Name: 'IsWeaponInList'; ParamType1: ptFormList),
     (Index: 402; Name: 'IsBribedbyPlayer'),    // 198
     (Index: 403; Name: 'GetRelationshipRank'; ParamType1: ptActor),    // 199
     (Index: 407; Name: 'GetVATSValue'; ParamType1: ptInteger; ParamType2: ptInteger),
     (Index: 408; Name: 'IsKiller'; ParamType1: ptActor),    // 201
-    (Index: 409; Name: 'IsKillerObject'; ParamType1: ptFormList),
+    (Index: 409; Name: 'IsPlayerInShipTargetingMode'; ParamType1: ptFormList),
     (Index: 410; Name: 'GetFactionCombatReaction'; ParamType1: ptFaction; Paramtype2: ptFaction),    // 203
     (Index: 414; Name: 'Exists'; ParamType1: ptObjectReference),
     (Index: 415; Name: 'GetGroupMemberCount'),    // 205
@@ -3467,8 +3467,8 @@ const
     (Index: 500; Name: 'EPAlchemyGetMakingPoison'),    // 245
     (Index: 501; Name: 'EPAlchemyEffectHasKeyword'; ParamType1: ptKeyword),    // 246
     (Index: 503; Name: 'GetAllowWorldInteractions'),    // 247
-    (Index: 506; Name: 'DialogueGetAv'; ParamType1: ptActorValue),
-    (Index: 507; Name: 'DialogueHasPerk'; ParamType1: ptPerk),    // 249
+    (Index: 506; Name: 'Unused'; ParamType1: ptActorValue),                  //DialogueGetAv
+    (Index: 507; Name: 'GetPerkRank'; ParamType1: ptPerk),    // 249
     (Index: 508; Name: 'GetLastHitCritical'),    // 250
     (Index: 510; Name: 'DialogueGetItemCount'; ParamType1: ptReferencableObject),
     (Index: 511; Name: 'LastCrippledCondition'; ParamType1: ptActorValue),
@@ -3479,7 +3479,7 @@ const
     (Index: 517; Name: 'GetVATSBackAreaFree'; ParamType1: ptObjectReference),
     (Index: 518; Name: 'GetVATSFrontAreaFree'; ParamType1: ptObjectReference),
     (Index: 519; Name: 'GetIsLockBroken'),    // 259
-    (Index: 520; Name: 'IsPS3'),    // 260
+    (Index: 520; Name: 'NotUsed'),    // 260                      IsPS3
     (Index: 521; Name: 'IsWindowsPC'),    // 261
     (Index: 522; Name: 'GetVATSRightTargetVisible'; ParamType1: ptObjectReference),
     (Index: 523; Name: 'GetVATSLeftTargetVisible'; ParamType1: ptObjectReference),
@@ -3495,7 +3495,7 @@ const
     (Index: 544; Name: 'GetSpeechChallengeSuccessLevel'),    // 273
     (Index: 547; Name: 'IsGoreDisabled'),    // 274
     (Index: 550; Name: 'IsSceneActionComplete'; ParamType1: ptScene; ParamType2: ptInteger),
-    (Index: 552; Name: 'GetSpellUsageNum'; ParamType1: ptMagicItem),
+    (Index: 552; Name: 'Unused'; ParamType1: ptMagicItem),                        //GetSpellUsageNum
     (Index: 554; Name: 'GetActorsInHigh'),    // 277
     (Index: 555; Name: 'HasLoaded3D'),    // 278
     (Index: 560; Name: 'HasKeyword'; ParamType1: ptKeyword),    // 279
