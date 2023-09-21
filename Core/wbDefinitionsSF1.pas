@@ -3201,7 +3201,8 @@ type
     {57} ptResearchProject,    // RSPJ
     {58} ptConditionForm,      // CNDF
     {59} ptPronoun,            //Enum: Pronouns
-    {60} ptResource           //IRES
+    {60} ptResource,           //IRES
+    {61} ptActionData          //TRAV, FLST
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3557,7 +3558,7 @@ const
     (Index: 633; Name: 'GetFlyingState'),    // 336
     (Index: 635; Name: 'IsInFavorState'),    // 337
     (Index: 636; Name: 'HasTwoHandedWeaponEquipped'),    // 338
-    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptReferencableObject),
+    (Index: 637; Name: 'IsFurnitureExitType'),                                                   //; ParamType1: ptReferencableObject),
     (Index: 638; Name: 'IsInFriendStatewithPlayer'),    // 340
     (Index: 639; Name: 'GetWithinDistance'; ParamType1: ptObjectReference; ParamType2: ptFloat),
     (Index: 640; Name: 'GetValuePercent'; ParamType1: ptActorValue),
@@ -3582,7 +3583,7 @@ const
     (Index: 673; Name: 'IsPowerAttacking'),    // 361
     (Index: 674; Name: 'IsLastHostileActor'),    // 362
     (Index: 675; Name: 'GetGraphVariableInt'; ParamType1: ptString),
-    (Index: 676; Name: 'Unknown'),
+    (Index: 676; Name: 'GetDockerOrientation';  Desc: 'Get the orientation of the first docker of a spaceship.'),
     (Index: 678; Name: 'ShouldAttackKill'; ParamType1: ptActor),    // 364
     (Index: 680; Name: 'GetActivationHeight'),    // 365
     (Index: 682; Name: 'WornHasKeyword'; ParamType1: ptKeyword),    // 366
@@ -3702,7 +3703,7 @@ const
     (Index: 816; Name: 'IsDocked'; Desc: 'Check if a spaceship is docked.'),
     (Index: 817; Name: 'IsDockedWith'; Desc: 'Check if a spaceship is docked with a specific target'),
     (Index: 818; Name: 'GetLastDialogueCameraHasKeyword'; Desc: '0/1 if last camera exists, -1 if no last camera'),
-    (Index: 819; Name: 'GetActionDataForm'; Desc: 'Gets the current action data as a form and compares it to the parameter.'),
+    (Index: 819; Name: 'GetActionDataForm'; Desc: 'Gets the current action data as a form and compares it to the parameter.'; ParamType1: ptActionData),
     (Index: 820; Name: 'IsInSpace'; Desc: 'Is an reference in space.'),
     (Index: 821; Name: 'GetPilot'; Desc: 'Get the pilot of a spaceship'),
     (Index: 822; Name: 'GetSpaceship'; Desc: 'Get the spaceship a ref is in'),
@@ -8737,7 +8738,9 @@ begin
           {59 ptPronoun}
           wbInteger('Pronouns', itU32, wbPronounEnum),
           {60 ptResource}
-          wbFormIDCkNoReach('Resource', [IRES])
+          wbFormIDCkNoReach('Resource', [IRES]),
+          {61 ptActionData}
+          wbFormIDCkNoReach('Form', [TRAV, FLST])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
