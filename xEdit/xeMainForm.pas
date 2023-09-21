@@ -7673,7 +7673,15 @@ begin
     try
       //    vstView.BeginUpdate;
       try
-        NewElement := TargetElement.Assign(TargetIndex, nil, False);
+        var lTemplate: IwbElement := nil;
+        if Sender <> mniViewAdd then begin
+          var lTemplates := TargetElement.GetAssignTemplates(TargetIndex);
+          var lTemplateIdx := TMenuItem(Sender).Tag;
+          if (lTemplateIdx >= Low(lTemplates)) and (lTemplateIdx <= High(lTemplates)) then
+            lTemplate := lTemplates[lTemplateIdx];
+        end;
+
+        NewElement := TargetElement.Assign(TargetIndex, lTemplate, False);
         if Assigned(NewElement) then
           NewElement.SetToDefaultIfAsCreatedEmpty;
 
@@ -14837,6 +14845,24 @@ begin
     end;
     mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
+  end;
+
+  if mniViewAdd.Visible then begin
+    while mniViewAdd.Count > 0 do
+      mniViewAdd.Items[Pred(mniViewAdd.Count)].Free;
+    mniViewAdd.OnClick := mniViewAddClick;
+
+    var lTemplates := TargetElement.GetAssignTemplates(TargetIndex);
+    if Length(lTemplates) > 0 then begin
+      for var lTemplateIdx := Low(lTemplates) to High(lTemplates) do begin
+        var lMenuItem := mniViewAdd.GetParentMenu.CreateMenuItem;
+        lMenuItem.Caption := lTemplates[lTemplateIdx].Name;
+        lMenuItem.Tag := lTemplateIdx;
+        lMenuItem.OnClick := mniViewAddClick;
+        mniViewAdd.Add(lMenuItem);
+      end;
+      mniViewAdd.OnClick := nil;
+    end;
   end;
 end;
 

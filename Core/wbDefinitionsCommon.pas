@@ -16,6 +16,9 @@ uses
   wbInterface,
   wbDefinitionsSignatures;
 
+type
+  TwbVarRecs = TArray<TVarRec>;
+
 var
   wbActionFlag: IwbSubRecordDef;
   wbAlternateTexture: IwbValueDef;
@@ -35,6 +38,7 @@ var
   wbSexEnum: IwbEnumDef;
   wbActorSounds: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
+  wbQuestEventVarRecs: TwbVarRecs;
   wbQuestEventEnum: IwbEnumDef;
   wbRegionSounds: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
@@ -284,6 +288,11 @@ function wbVec3Rot(const aSignature: TwbSignature; const aName: string = 'Rotati
 
 function wbVec3PosRot(const aPosName: string = 'Position'; const aRotName: string = 'Rotation'; const aPosPrefix: string = wbPosPrefix; const aRotPrefix: string = wbRotPrefix): IwbValueDef; overload;
 function wbVec3PosRot(const aSignature: TwbSignature; aPosName: string = 'Position'; const aRotName: string = 'Rotation'; const aPosPrefix: string = wbPosPrefix; const aRotPrefix: string = wbRotPrefix): IwbRecordMemberDef; overload;
+
+function wbCombineVarRecs(const a, b : array of const)
+                                     : TwbVarRecs;
+function wbMakeVarRecs(const a : array of const)
+                               : TwbVarRecs;
 
 implementation
 
@@ -550,7 +559,7 @@ begin
       {3} 'Top Right'
     ]);
 
-  wbQuestEventEnum := wbEnum([], [
+  wbQuestEventVarRecs := wbMakeVarRecs([
     Sig2Int(ADBO), 'Bounty Event',
     Sig2Int(ADCR), 'Crime Gold Event',
     Sig2Int(ADIA), 'Actor Dialogue Event',
@@ -595,6 +604,8 @@ begin
     Sig2Int(TMEE), 'Trigger Mine Explosion Event',
     Sig2Int(TRES), 'Trespass Actor Event'
   ]);
+
+  wbQuestEventEnum := wbEnum([], wbQuestEventVarRecs);
 
   wbSeasons :=
     wbStruct(PFPC, 'Seasonal ingredient production', [
@@ -2903,7 +2914,23 @@ begin
   Result := wbSubRecord(aSignature, '', wbVec3PosRot(aPosName, aRotName, aPosPrefix, aRotPrefix));
 end;
 
+function wbCombineVarRecs(const a, b : array of const)
+                                     : TwbVarRecs;
+begin
+  SetLength(Result, Length(a) + Length(b));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+  if Length(b) > 0 then
+    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
+end;
 
+function wbMakeVarRecs(const a : array of const)
+                               : TwbVarRecs;
+begin
+  SetLength(Result, Length(a));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+end;
 
 end.
 

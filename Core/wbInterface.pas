@@ -139,6 +139,7 @@ var
   wbEditAllowed                      : Boolean    = False;
   wbFlagsAsArray                     : Boolean    = False;
   wbDelayLoadRecords                 : Boolean    = True;
+  wbExtendedIntUnknowns              : Boolean    = True;
   wbMoreInfoForUnknown               : Boolean    = False;
   wbMoreInfoForIndex                 : Boolean    = False;
   wbTranslationMode                  : Boolean    = False;
@@ -607,6 +608,7 @@ type
   end;
 
   IwbElement = interface;
+  IwbTemplateElement = interface;
 
   TwbDefFlag = (
     dfInternalEditOnly,
@@ -718,7 +720,8 @@ type
     etFlag,
     etStringListTerminator,
     etUnion,
-    etStructChapter
+    etStructChapter,
+    etTemplate
   );
 
   TwbElementTypes = set of TwbElementType;
@@ -892,6 +895,8 @@ type
     tbTrue
   );
 
+  TwbTemplateElements = TArray<IwbTemplateElement>;
+
   IwbElement = interface(IwbInterface)
     ['{F4B4637D-C794-415F-B5C7-587EAA4095B3}']
 
@@ -977,6 +982,7 @@ type
     procedure NotifyChanged(aContainer: Pointer);
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     procedure Remove;
 
@@ -1151,6 +1157,10 @@ type
 
     property MastersUpdated: Boolean
       read GetMastersUpdated;
+  end;
+
+  IwbTemplateElement = interface(IwbElement)
+    ['{200EE482-1FD5-4CB8-AEF8-7612F2A3D928}']
   end;
 
   IwbElements = TArray<IwbElement>;
@@ -2338,10 +2348,21 @@ type
     function SetSummaryMemberPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordStructDef;
     function SetSummaryMemberMaxDepth(aIndex, aMaxDepth: Integer): {Self}IwbSubRecordStructDef;
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbSubRecordStructDef;
+
+    function GetMember(aIndex: Integer): IwbRecordMemberDef;
+    function GetMemberCount: Integer;
+
+    property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
+    property MemberCount: Integer read GetMemberCount;
   end;
 
   IwbSubRecordUnionDef = interface(IwbRecordMemberDef)
     ['{BC66ABFF-3108-4C64-B416-674A2A8F297D}']
+    function GetMember(aIndex: Integer): IwbRecordMemberDef;
+    function GetMemberCount: Integer;
+
+    property Members[aIndex: Integer]: IwbRecordMemberDef read GetMember;
+    property MemberCount: Integer read GetMemberCount;
   end;
 
   IwbResolvableDef = interface(IwbValueDef)
@@ -4680,6 +4701,8 @@ function ShortenText(const aText: string; const aWidth: Integer = 64; const aPla
 
 procedure wbInitRecords;
 
+function wbGetUnknownIntString(aInt: Int64): string;
+
 implementation
 
 uses
@@ -5651,6 +5674,9 @@ type
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
+    {---IwbDefInternal---}
+    procedure InitFromParent; override;
+
     {---IwbRecordMemberDef---}
     function ToSummary(aDepth: Integer; const aElement: IwbElement): string;
     function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string; virtual;
@@ -13605,7 +13631,7 @@ begin
         if i <= High(flgNames) then
           s := flgNames[i];
         if s = '' then begin
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s :=  wbGetUnknownIntString(i);
           Result := Result + s + ', ';
         end;
       end;
@@ -13748,7 +13774,7 @@ begin
         if flgUnknownIsUnused then
           s := 'Unused'
         else
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s :=  wbGetUnknownIntString(i);
       if GetFlagDontShow(aElement, i) then
         s := '(' + s + ')';
       if wbShowFlagEnumValue then
@@ -13955,7 +13981,7 @@ begin
         if aForSummary then
           s := '<'+IntToStr(i)+'>'
         else
-          s := '<Unknown: '+IntToStr(i)+'>';
+          s :=  wbGetUnknownIntString(aInt);
         if wbReportMode and wbReportUnknownFlags then begin
           Inc(UnknownFlags[i]);
           HasUnknownFlags := True;
@@ -14008,7 +14034,7 @@ begin
       Result := enSparseNamesMap[i].snName;
 
   if Result = '' then
-    Result := '<Unknown: '+IntToStr(aInt)+'>'
+    Result := wbGetUnknownIntString(aInt)
   else
     Result := '';
 end;
@@ -14523,7 +14549,7 @@ begin
       if wbShowFlagEnumValue then
         Result := Result + ' (' + IntToStr(enSparseNamesMap[i].snIndex) + ')';
     end else begin
-      Result := '<Unknown: '+IntToStr(aInt)+'>';
+      Result := wbGetUnknownIntString(aInt);
       if wbReportMode and wbReportUnknownEnums then begin
         if not Assigned(UnknownEnums) then
           UnknownEnums := TwbFastStringListIC.CreateSorted;
@@ -20871,6 +20897,15 @@ begin
   if aOnlyWhenTrue then Include(defFlags, aFlag);
 end;
 
+procedure TwbRecordMemberDef.InitFromParent;
+begin
+  inherited;
+  var lRUnion: IwbSubRecordUnionDef;
+  if Supports(defParent, IwbSubRecordUnionDef, lRUnion) then
+    if lRUnion.Required then
+      defRequired := True;
+end;
+
 function TwbRecordMemberDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;
 begin
   if Assigned(defParent) then
@@ -21529,6 +21564,24 @@ begin
     if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
       lDef.InitFromParent;
   end;
+end;
+
+function wbGetUnknownIntString(aInt: Int64): string;
+begin
+  Result := '<Unknown: ' + aInt.ToString;
+  if wbExtendedIntUnknowns then begin
+    var lHex := IntToHex(aInt).TrimLeft(['0']);
+    if Length(lHex) > 0 then
+      Result := Result + ' $' + lHex;
+    if Length(lHex) = 8 then begin
+      var lCardinal := aInt;
+      var s: string := PwbSignature(@lCardinal)^;
+      var t := s.ToUpperInvariant;
+      if s = t then
+        Result := Result + ' ' + t;
+    end;
+  end;
+  Result := Result + '>';
 end;
 
 initialization
