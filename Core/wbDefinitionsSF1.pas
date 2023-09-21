@@ -6473,7 +6473,12 @@ begin
   ]);
 
   wbObjectModPropertiesEnum := wbEnum([],[
-                  6, 'Layered Material Swap',
+                  6, 'Layered Material Swap 6',
+                 14, 'Layered Material Swap 14',
+                 28, 'Unknown 28',
+                 29, 'Unknown 29',
+                 71, 'Unknown 71',
+                 85, 'Unknown 82',
     Sig2Int('AACT'), 'Armor - Actor Value',
     Sig2Int('ADMG'), 'Armor - Damage Resistance',
     Sig2Int('AENC'), 'Armor - Enchantment',
@@ -7181,7 +7186,9 @@ begin
 
   wbFLLD := wbInteger(FLLD, 'Unknown', itU32, wbFlags([
     'Unknown 0',
-    'Unknown 1'
+    'Unknown 1',
+    'Unknown 2',
+    'Unknown 3'
   ]));
 
   wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [NULL, MSWP]);
@@ -9537,7 +9544,7 @@ begin
           wbUnknown(BNAM)
         ], []),
         wbRStruct('Component Data', [
-          wbFormID(SODA, 'Spawn on destroy')
+          wbFormIDCk(SODA, 'Spawn on destroy', sigBaseObjects)
         ], []),
         //BGSSoundTag_Component
         wbRStruct('Component Data', [
@@ -9548,7 +9555,7 @@ begin
           wbStruct(STRD, 'Stored Traversal Data', [
             wbArray('Unknown', wbTraversalData, -1).IncludeFlag(dfNotAlignable),
             wbArray('Unknown', wbStruct('Unknown', [
-              wbFormID('Unknown'),
+              wbFormIDCk('Unknown', [ACTI]),
               wbVec3,
               wbArray('Unknown', wbTraversalData, -1).IncludeFlag(dfNotAlignable)
             ]), -1).IncludeFlag(dfNotAlignable)
@@ -9938,6 +9945,7 @@ begin
       {0x02000000} 25, 'Obstacle',
       {0x04000000} 26, 'NavMesh Generation - Filter',
       {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x10000000} 28, 'Unknown 28',
       {0x20000000} 29, 'Child Can Use',
       {0x40000000} 30, 'NavMesh Generation - Ground'
     ])), [
@@ -10593,6 +10601,7 @@ begin
       {0x02000000} 25, 'Obstacle',
       {0x04000000} 26, 'NavMesh Generation - Filter',
       {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x10000000} 28, 'Unknown 28',
       {0x40000000} 30, 'NavMesh Generation - Ground'
     ])), [
 
@@ -11119,7 +11128,8 @@ begin
       'Minimal Use',
       'Sliding',
       'Do Not Open in Combat Search',
-      'No "To" Text'
+      'No "To" Text',
+      'Unknown 7'
     ]), cpNormal, True),
     wbLStringKC(ONAM, 'Alternate Text - Open', 0, cpTranslate),
     wbLStringKC(CNAM, 'Alternate Text - Close', 0, cpTranslate),
@@ -11340,7 +11350,11 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(AFFE, 'Affinity Event', [
     wbEDID,
-    wbInteger(FNAM, 'Unknown', itU32, wbBoolEnum).SetRequired, //req
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      'Unknown 0',
+      'Unknown 1',
+      'Unknown 2'
+    ])).SetRequired, //req
     wbNLDT,
     wbRStructsSK('Reaction Data', 'Follower', [0], [
       wbFormIDCk(NNAM, 'Actor', [NPC_]),
@@ -11636,6 +11650,7 @@ begin
       {0x02000000} 25, 'Obstacle',
       {0x04000000} 26, 'NavMesh Generation - Filter',
       {0x08000000} 27, 'NavMesh Generation - Bounding Box',
+      {0x10000000} 28, 'Unknown 28',
       {0x40000000} 30, 'NavMesh Generation - Ground'
     ])), [
     wbEDID,
@@ -12791,10 +12806,8 @@ begin
     wbRArray('Location Cell Encounter Cell',
       wbStruct(LCEC, 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-        wbArray('Coordinates', wbStruct('', [
-          wbInteger('Grid Y', itS32, nil, cpBenign),
-          wbInteger('Grid X', itS32, nil, cpBenign)
-        ]))
+        wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+        wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation)
       ])
     ),
 
@@ -12812,7 +12825,7 @@ begin
     wbKeywords,
     wbPRPS,
     wbStruct(DATA, 'Unknown', [
-      wbFormIDCk('Faction', [FACT]),
+      wbFormIDCk('Faction', [FACT, NULL]),
       wbUnknown(1),
       wbInteger('System level', itu8),
       wbUnknown(1),
@@ -13256,7 +13269,29 @@ begin
     Sig2Int('WMWO'), 'Keyword Weapon Material Wood',
     Sig2Int('WPOK'), 'Workshop Player Ownership',
     Sig2Int('WTBA'), 'Keyword WeaponTypeBoundArrow',
-    Sig2Int('WWSP'), 'UNUSED03'
+    Sig2Int('WWSP'), 'UNUSED03',
+    Sig2Int('ATLB'), 'Unknown ATLB',
+    Sig2Int('ASNB'), 'Unknown ASNB',
+    Sig2Int('ATBD'), 'Unknown ATBD',
+    Sig2Int('ASNE'), 'Unknown ASNE',
+    Sig2Int('ATRE'), 'Unknown ATRE',
+    Sig2Int('ACTE'), 'Unknown ACTE',
+    Sig2Int('ATLF'), 'Unknown ATLF',
+    Sig2Int('AGOF'), 'Unknown AGOF',
+    Sig2Int('ACFL'), 'Unknown ACFL',
+    Sig2Int('ATFL'), 'Unknown ATFL',
+    Sig2Int('ATIN'), 'Unknown ATIN',
+    Sig2Int('AGON'), 'Unknown AGON',
+    Sig2Int('AAVO'), 'Unknown AAVO',
+    Sig2Int('ABSP'), 'Unknown ABSP',
+    Sig2Int('ASTP'), 'Unknown ASTP',
+    Sig2Int('ACTS'), 'Unknown ACTS',
+    Sig2Int('ACFT'), 'Unknown ACFT',
+    Sig2Int('ABST'), 'Unknown ABST',
+    Sig2Int('ACTT'), 'Unknown ACTT',
+    Sig2Int('ATCU'), 'Unknown ATCU',
+    Sig2Int('AEM1'), 'Unknown AEM1',
+    Sig2Int('AEM2'), 'Unknown AEM2'
   ]);
 
   var lDOBJUsesVarRecs3 := wbCombineVarRecs(lDOBJUsesVarRecs1, lDOBJUsesVarRecs2);
@@ -14463,7 +14498,7 @@ begin
     wbODTY,
     wbPTT2,
     wbXALG,
-    wbFULLReq,
+    wbFULL,
     wbGenericModel,
     wbKeywords,
 //    wbDEST,
@@ -14480,10 +14515,12 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000080}  7, 'Unknown 7',
+      {0x00008000} 15, 'Unknown 15',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Unknown 17',
-      {0x00020000} 25, 'Obstacle',
-      {0x00020000} 28, 'Portal-strict'
+      {0x02000000} 25, 'Obstacle',
+      {0x10000000} 28, 'Portal-strict'
     ])), [
     wbEDID,
 //    wbVMAD,
@@ -15503,7 +15540,16 @@ begin
     wbString(TETC, 'Teeth Color'),
     wbInteger(PRON, 'Pronoun', itU8),
     wbStruct(ONA2, 'Unknown', [
-      wbInteger('Flags', itU32, wbFlags([])),
+      wbInteger('Flags', itU32, wbFlags([
+        'Unknown 0',
+        'Unknown 1',
+        'Unknown 2',
+        'Unknown 3',
+        'Unknown 4',
+        'Unknown 5',
+        'Unknown 6',
+        'Unknown 7'
+      ])),
 
       wbIsFlag(0, wbStruct('Unknown 0', [
         wbInteger('Unknown', itS8)
@@ -15522,10 +15568,17 @@ begin
 
       wbIsFlag(3, wbStruct('Unknown 3', [
         wbFloat,
-        wbFormId('Unknown')
+        wbFormIDCk('Unknown', [NULL, WEAP])
       ])),
 
       wbIsFlag(4, wbStruct('Unknown 4', [
+        {
+        Found Floats: NPC_ - Non-Player Character (Actor) \ [70] ONA2 - Unknown \  \ [5] Unknown 4 \ [1] Unknown 4 \ [0] Unknown
+          Offset 2: 3 (12)
+            2.0010147 (2)
+            2.0039062 (1)
+            2.0039100 (9)
+        }
         wbUnknown(8),
         wbUnknown(8)
       ])),
@@ -15540,7 +15593,7 @@ begin
       ])),
 
       wbIsFlag(6, wbStruct('Unknown 6', [
-        wbFormId('Material'),
+        wbFormIDCk('Material', [NULL, MATT]),
         wbSoundReference(),
         wbSoundReference(),
         wbFormId('Unknown'),
@@ -15554,13 +15607,13 @@ begin
 
       wbIsFlag(7, wbStruct('Unknown 7', [
         wbUnknown(1),
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat,
         wbUnknown(4),
-        wbUnknown(4),
-        wbUnknown(4),
-        wbUnknown(4),
-        wbUnknown(4),
-        wbUnknown(4),
-        wbUnknown(4)
+        wbFloat,
+        wbFloat
       ]))
       (*
 
@@ -17666,7 +17719,7 @@ begin
     wbSoundReference(PDSH),
     wbDESCReq,
     wbSPIT,
-    wbEffectsReq
+    wbEffects
   ], False, nil, cpNormal, False, nil, nil);
 
   {wbRecord(SCRL, 'Scroll', [
@@ -17708,7 +17761,7 @@ begin
       {0x04000000} {26} 'NavMesh Generation - Filter',
       {0x08000000} {27} 'NavMesh Generation - Bounding Box',
       {0x10000000} {28} 'Show In World Map (Sky Cell Only)',
-      {0x20000000} {29} '',
+      {0x20000000} {29} 'Unknown 29',
       {0x40000000} {30} 'NavMesh Generation - Ground',
       {0x80000000} {31} ''
     ]), [
@@ -18378,7 +18431,10 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BNDS, 'Bendable Spline', [
+  wbRecord(BNDS, 'Bendable Spline',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00800000} 23, 'Unknown 23'
+    ])), [
     wbEDID,
     wbOBND,
     wbODTY,
@@ -18694,7 +18750,10 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(PKIN, 'Pack-In',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Prefab'
+      {0x00000200}  9, 'Prefab',
+      {0x00000400} 10, 'Unknown 10',
+      {0x00000800} 11, 'Unknown 11',
+      {0x02000000} 25, 'Unknown 25'
     ])), [
     wbEDID,
     wbVMAD,
