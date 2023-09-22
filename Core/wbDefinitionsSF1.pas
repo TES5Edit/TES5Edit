@@ -3532,7 +3532,7 @@ const
     (Index: 571; Name: 'GetCurrentCastingType'; ParamType1: ptCastingSource),                                                                               //   289
     (Index: 572; Name: 'GetCurrentDeliveryType'; ParamType1: ptCastingSource),                                                                              //   290
     (Index: 574; Name: 'GetAttackState'),                                                                                                                   //   291
-    (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent; ParamType2: ptString{ptEventMember}; ParamType3: ptEventData),                                    //   292
+    (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent {and EventMember in the same DWORD}; ParamType2: ptEventData),                                    //   292
     (Index: 577; Name: 'IsCloserToAThanB'; ParamType1: ptObjectReference; ParamType2: ptObjectReference),                                                   //   293
     (Index: 578; Name: 'LevelMinusPCLevel'),                                                                                                                //   294
     (Index: 580; Name: 'IsBleedingOut'),                                                                                                                    //   295
@@ -9330,8 +9330,8 @@ begin
     wbVec3,
     wbVec3,
     wbInteger('Flags', itU32, wbFlags([
-      '',
-      '',
+      'Unknown 0',
+      'Unknown 1',
       'No Traversal FormID'
     ])).SetAfterSet(wbUpdateSameParentUnions),
     wbIsNotFlag(2, wbFormIDCk('Traversal', [TRAV])),
@@ -9585,7 +9585,7 @@ begin
         wbRStruct('Component Data', [
           wbUnknown(SNAM),
           wbUnknown(PNAM),
-          wbUnknown(BNAM)
+          wbFormIDCk(BNAM, 'Surface Block', [SFBK])
         ], []),
         wbRStruct('Component Data', [
           wbFormIDCk(SODA, 'Spawn on destroy', sigBaseObjects)
@@ -9811,8 +9811,6 @@ begin
     {93} 'HasChargingAttack',
     {94} 'ActorValues'
   ]);
-
-
 
   wbObjectModProperties :=
    wbArrayS('Properties', wbStructSK([4], 'Property', [
@@ -17565,29 +17563,68 @@ begin
     wbUnknown(XLFD),
     wbUnknown(XLGD),
     wbUnknown(XLLD),
-    wbUnknown(XLMS),
+
+    wbArray(XLMS, 'Unknown', wbFormIDCk('Unknown', [LMSW])),
+
     wbUnknown(XLRD),
     wbUnknown(XLSM),
     wbUnknown(XLVD),
     wbUnknown(XNSE),
-    wbUnknown(XPCK),
-    wbUnknown(XPCS),
-    wbUnknown(XPDO),
-    wbUnknown(XSAD),
-    wbUnknown(XSL1),
+
+    wbFormIDCk(XPCK, 'Unknown', [RFGP]),
+
+    wbFormIDCk(XPCS, 'Unknown', [PKIN]),
+
+    wbArray(XPDO, 'Unknown', wbFormIDCk('Unknown', sigReferences)),
+
+    wbUnknown(XSAD, 17),
+
+    wbArray(XSL1, 'Unknown', wbStruct('Unknown', [
+      wbFormIDCk('Unknown', [REFR]),
+      wbUnknown(12)
+    ]), -1),
+
     wbXTV2,
-    wbUnknown(XVL2),
-    wbUnknown(XVOI),
-    wbUnknown(XPPS),
+
+    wbStruct(XVL2, 'Unknown', [
+      { 0} wbUnknown(4),
+      { 8} wbFormIDCk('Unknown', [IMGS]),
+      {12} wbFormIDCk('Unknown', [FOGV]),
+      {16} wbUnknown(8),
+      {24} wbFloat,
+      {28} wbFloat,
+      {32} wbFloat,
+      {36} wbUnknown(4),
+      {40} wbFloat,
+      {44} wbFloat,
+      {48} wbFloat,
+      {52} wbUnknown(20),
+      {72} wbFloat,
+      {76} wbFloat,
+      {80} wbUnknown(1),
+      {81} wbFloat
+    ]),
+
+    wbStruct(XVOI, 'Unknown', [
+      wbUnknown(12),
+      wbFloat
+    ]),
+
+    wbStruct(XPPS, 'Unknown', [
+      wbFormIDCk('Unknown', [AVIF]),
+      wbFloat,
+      wbUnknown(4)
+    ]),
+
     wbRStruct('Unknown', [
-      wbUnknown(XWPK).SetRequired(True),
-      wbUnknown(GNAM),
-      wbUnknown(HNAM),
+      wbMarkerReq(XWPK),
+      wbFormIDCk(GNAM, 'Unknown', [PKIN]),
+      wbFormIDCk(HNAM, 'Unknown', [REFR]),
       wbUnknown(INAM),
-      wbUnknown(JNAM),
+      wbFormIDCk(JNAM, 'Unknown', [PKIN]),
       wbUnknown(LNAM),
-      wbUnknown(XGOM),
-      wbUnknown(XWPK).SetRequired(True)
+      wbEmpty(XGOM, 'Unknown'),
+      wbMarkerReq(XWPK)
     ], []),
 
     wbXSCL,
@@ -18273,7 +18310,7 @@ begin
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbUnknown(NAM7),
+    wbString(NAM7),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
     wbStruct(DNAM, 'Land Data', [
@@ -18320,10 +18357,10 @@ begin
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP),
     wbString(XWEM),
-    wbUnknown(GNAM),
-    wbRArray('Unknown', wbUnknown(LNAM)),
-    wbUnknown(XCLW),
-    wbUnknown(WHGT),
+    wbFloat(GNAM),
+    wbRArray('Unknown', wbFormIDCk(LNAM, 'Unknown', [LTEX])),
+    wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
+    wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
     wbUnknown(HNAM),
     wbOFST,
     wbByteArray(CLSZ, 'Cell Size Data')
