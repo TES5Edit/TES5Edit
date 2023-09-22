@@ -70,6 +70,9 @@ var
   wbPhotoModeEnum           : IwbEnumDef;
   wbObjectModPropertiesEnum : IwbEnumDef;
   wbDialogueSubtypeEnum     : IwbEnumDef;
+  wbObjectModPropertiesWEAPEnum : IwbEnumDef;
+  wbObjectModPropertiesARMOEnum : IwbEnumDef;
+  wbObjectModPropertiesNPCEnum : IwbEnumDef;
 
 procedure DefineSF1;
 
@@ -4881,6 +4884,9 @@ begin
   end;
 end;
 
+
+
+
 function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container     : IwbContainer;
@@ -6470,13 +6476,20 @@ begin
     {2} 'Filter'
   ]);
 
+  wbObjectModPropertiesWEAPEnum := wbEnum([],[
+                 28, 'Physical Weapon Damage',                    //Applied directly to WEAP records
+                 29, 'Unknown 29',                    //Applied directly to WEAP records
+                 71, 'Damage Type Value',                    //Applied directly to WEAP records
+                 85, 'Layered Material Swap 85'                    //Applied directly to WEAP records
+  ]);
+  wbObjectModPropertiesARMOEnum := wbEnum([],[
+                 14, 'Layered Material Swap 14'      //applied directly to ARMO records
+  ]);
+  wbObjectModPropertiesNPCEnum := wbEnum([],[
+                  6, 'Layered Material Swap 6'       //Applied directly to NPC_ records
+  ]);
+
   wbObjectModPropertiesEnum := wbEnum([],[
-                  6, 'Layered Material Swap 6',
-                 14, 'Layered Material Swap 14',
-                 28, 'Unknown 28',
-                 29, 'Unknown 29',
-                 71, 'Unknown 71',
-                 85, 'Unknown 82',
     Sig2Int('AACT'), 'Armor - Actor Value',
     Sig2Int('ADMG'), 'Armor - Damage Resistance',
     Sig2Int('AENC'), 'Armor - Enchantment',
@@ -6526,7 +6539,7 @@ begin
     Sig2Int('FBUR'), 'Weapon - Burst Shots',
     Sig2Int('WCDM'), 'Weapon - Critical Damage Multiplier',
     Sig2Int('WCIM'), 'Weapon - Critical Chance Inc. Multiplier',
-    Sig2Int('WDMG'), 'Weapon - Damage (Base)',
+    Sig2Int('WDMG'), 'Weapon - Damage (Physical)',
     Sig2Int('WDTV'), 'Weapon - Damage Type Value',
     Sig2Int('WEMT'), 'Weapon - Enable Marking Targets (Recon)',
     Sig2Int('WENC'), 'Weapon - Enchantment',
@@ -9779,6 +9792,8 @@ begin
     {94} 'ActorValues'
   ]);
 
+
+
   wbObjectModProperties :=
    wbArrayS('Properties', wbStructSK([4], 'Property', [
       wbInteger('Value Type', itU8, wbEnum([
@@ -9798,7 +9813,12 @@ begin
         { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
       wbByteArray('Unused', 3, cpIgnore),
-      wbInteger('Property Name', itU32, wbObjectModPropertiesEnum, cpNormal, True),
+      wbUnion('Value', wbObjectModPropertiesDecider, [
+       {0} wbInteger('Property Name', itU32, wbObjectModPropertiesEnum, cpNormal, True),
+       {1} wbInteger('Property Name', itU32, wbObjectModPropertiesWEAPEnum, cpNormal, True),
+       {2} wbInteger('Property Name', itU32, wbObjectModPropertiesARMOEnum, cpNormal, True),
+       {3} wbInteger('Property Name', itU32, wbObjectModPropertiesNPCEnum, cpNormal, True)
+      ]),
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
         { 1} wbInteger('Value 1 - Int', itS32),
