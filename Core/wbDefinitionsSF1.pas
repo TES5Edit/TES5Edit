@@ -107,7 +107,7 @@ const
     'SPEL', 'STAT',{'TACT',}'TERM', 'TREE', 'TXST',
     'WATR', 'WEAP', 'ENCH', 'SECH', 'LGDI', 'IRES',
     'BMMP', 'PDCL', 'PKIN', 'GBFM', 'AOPF', 'BMMO',
-    'LVLP'
+    'LVLP', 'GRAS'
   ];
 
 var
@@ -3170,7 +3170,7 @@ type
     {14} ptClass,              // CLAS
     {15} ptCrimeType,          // ?? Enum
     {16} ptCriticalStage,      // ?? Enum
-    {17} ptEncounterZone,      // ECZN
+    {17} ptEncounterZone,      // LCTN
     {18} ptEquipType,          // ?? Enum
     {19} ptEvent,              // Struct
     {20} ptEventData,          // LCTN, KYWD or FLST
@@ -7184,7 +7184,7 @@ begin
     ])),
     wbByteArray('Unused', 3, cpIgnore),
     wbFormIDCkNoReach('Key', [KEYM, NULL]),
-    wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),
+    wbInteger('Flags', itU8, wbFlags(['Unknown 0', '', 'Leveled Lock'])),
     wbByteArray('Unused', 3, cpIgnore),
     wbUnknown
   ], cpNormal, False, nil, 4);
@@ -7686,19 +7686,19 @@ begin
           'Edge 0-1 link',      //$0001 1
           'Edge 1-2 link',      //$0002 2
           'Edge 2-0 link',      //$0004 4
-          '',                   //$0008 8
-          'No Large Creatures',          //$0010 16   used in CK source according to Nukem
+          'Unknown 3',          //$0008 8
+          'No Large Creatures', //$0010 16   used in CK source according to Nukem
           'Overlapping',        //$0020 32
           'Preferred',          //$0040 64
-          '',                   //$0080 128
-          'Unknown 9',          //$0100 256  used in CK source according to Nukem
+          'Unknown 7',          //$0080 128
+          'Unknown 8',          //$0100 256  used in CK source according to Nukem
           'Water',              //$0200 512
           'Door',               //$0400 1024
           'Found',              //$0800 2048
-          'Unknown 13',         //$1000 4096 used in CK source according to Nukem
-          '',                   //$2000 \
-          '',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
-          ''                    //$8000 /
+          'Unknown 12',         //$1000 4096 used in CK source according to Nukem
+          'Unknown 13',         //$2000
+          'Unknown 14',         //$4000
+          'Unknown 15'          //$8000
         ])),
         { Flags below are wrong. The first 4 bit are an enum as follows:
         0000 = Open Edge No Cover
@@ -7733,10 +7733,10 @@ begin
           'Edge 1-2 Cover Value 4/4',
           'Edge 1-2 Left',
           'Edge 1-2 Right',
+          'Unknown 12',
           'Unknown 13',
           'Unknown 14',
-          'Unknown 15',
-          'Unknown 16'
+          'Unknown 15'
         ]))
       ])
     , -1);
@@ -8710,7 +8710,7 @@ begin
           {16 ptCriticalStage}
           wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
           {17 ptEncounterZone}
-          wbFormIDCkNoReach('Encounter Zone', [ECZN]),
+          wbFormIDCkNoReach('Encounter Location', [LCTN]),
           {18 ptEquipType}
           wbFormIDCkNoReach('Equip Type', [EQUP]),
           {19 ptEvent}
@@ -8867,7 +8867,7 @@ begin
           {16 ptCriticalStage}
           wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
           {17 ptEncounterZone}
-          wbFormIDCkNoReach('Encounter Zone', [ECZN]),
+          wbFormIDCkNoReach('Encounter Location', [LCTN]),
           {18 ptEquipType}
           wbFormIDCkNoReach('Equip Type', [EQUP]),
           {19 ptEvent}
@@ -9334,7 +9334,7 @@ begin
       'Unknown 1',
       'No Traversal FormID'
     ])).SetAfterSet(wbUpdateSameParentUnions),
-    wbIsNotFlag(2, wbFormIDCk('Traversal', [TRAV])),
+    wbIsNotFlag(2, wbFormIDCk('Traversal', [TRAV])), //when they contain NULL, it's because Bethesda did an oopsie and don't calculated the length of their arrays correctly
     wbHalf,
     wbHalf,
     wbHalf,
@@ -9605,6 +9605,7 @@ begin
             ]), -1).IncludeFlag(dfNotAlignable)
           ]).IncludeFlag(dfExcludeFromBuildRef)
         ], []),
+        //Volumes_Component
         wbRStruct('Component Data', [
           wbUnknown(VLMS)
         ], []),
@@ -10360,7 +10361,7 @@ procedure DefineSF1c;
       wbEDID, //not in Starfield.esm
       wbVMAD,
       wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
-//      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+//      wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
 //      wbFloat(XHTW, 'Head-Tracking Weight'),
 //      wbFloat(XFVC, 'Favor Cost'),
 {      wbRArrayS('Reflected/Refracted By',
@@ -10410,7 +10411,7 @@ procedure DefineSF1c;
 
       wbUnknown(XCVR),
       wbXRGD,
-      wbUnknown(XPCS),
+      wbFormIDCk(XPCS, 'Unknown', [PKIN]),
 
       wbDataPosRot
 //      wbString(MNAM, 'Comments')
@@ -10454,22 +10455,26 @@ begin
     wbBaseFormComponents,
     wbFULL,
     wbInteger(DATA, 'Flags', itU32, wbFlags([
-      {0x0001} 'Is Interior Cell',
-      {0x0002} 'Has Water',
-      {0x0004} 'Can Travel From Here',
-      {0x0008} 'No LOD Water',
-      {0x0010} 'Unknown 5',
-      {0x0020} 'Public Area',
-      {0x0040} 'Hand Changed',
-      {0x0080} 'Show Sky',
-      {0x0100} 'Use Sky Lighting',
-      {0x0200} 'Unknown 10',
-      {0x0400} 'Hidden from Interior Cell List',
-      {0x0800} 'Sunlight Shadows',
-      {0x1000} 'Distant LOD only',
-      {0x2000} 'Player Followers Can''t Travel Here',
-      {0x4000} 'Unknown 15',
-      {0x8000} 'Unknown 16'
+      {0x00000001} 'Is Interior Cell',
+      {0x00000002} 'Has Water',
+      {0x00000004} 'Can Travel From Here',
+      {0x00000008} 'No LOD Water',
+      {0x00000010} 'Unknown 4',
+      {0x00000020} 'Public Area',
+      {0x00000040} 'Hand Changed',
+      {0x00000080} 'Show Sky',
+      {0x00000100} 'Use Sky Lighting',
+      {0x00000200} 'Unknown 9',
+      {0x00000400} 'Hidden from Interior Cell List',
+      {0x00000800} 'Sunlight Shadows',
+      {0x00001000} 'Distant LOD only',
+      {0x00002000} 'Player Followers Can''t Travel Here',
+      {0x00004000} 'Unknown 14',
+      {0x00008000} 'Unknown 15',
+      {0x00010000} 'Unknown 16',
+      {0x00020000} 'Unknown 17',
+      {0x00040000} '',
+      {0x00080000} 'Unknown 19'
     ]), cpNormal, True, False, nil, wbCELLDATAAfterSet),
 
     wbCellGrid,
@@ -10490,6 +10495,8 @@ begin
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
+      wbUnknown(4),
+      (* looks off
       wbInteger('Inherits', itU32, wbFlags([
         {0x00000001} 'Ambient Color',
         {0x00000002} 'Directional Color',
@@ -10503,6 +10510,7 @@ begin
         {0x00000200} 'Fog Max',
         {0x00000400} 'Light Fade Distances'
       ])),
+      *)
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
       wbByteColors('Fog Color High Near'),
@@ -10523,9 +10531,9 @@ begin
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
     wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
 
-    wbUnknown(XILS),
+    wbFloat(XILS),
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(XCLA),
+      wbInteger(XCLA, 'Unknown', itU32),
       wbString(XCLD)
     ], []),
 
@@ -10561,7 +10569,7 @@ begin
     wbString(XWEM, 'Water Environment Map'),
     wbFormIDCk(XCCM, 'Sky/Weather from Region', [REGN]),
     wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-//    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+//    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
     wbFormIDCk(XCMO, 'Music Type', [MUSC]),
     wbFormIDCk(XCIM, 'Image Space', [IMGS]),
 //    wbFormIDCk(XGDR, 'God Rays', [GDRY]),
@@ -10572,11 +10580,16 @@ begin
     ], cpNormal, False, nil, 1)),
     wbEmpty(XLKT, 'Linked Ref Transient'),
 
-    wbUnknown(TODD),
-    wbUnknown(XBPS),
-    wbUnknown(XCGD),
-    wbUnknown(XCIB),
-    wbUnknown(XCWM),
+    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+    wbArray(XBPS, 'Unknown', wbStruct('Unknown', [
+      wbFormIDCk('Unknown', sigReferences),
+      wbFormIDCk('Unknown', sigReferences),
+      wbUnknown(4),
+      wbUnknown(4)
+    ])),
+    wbString(XCGD),
+    wbUnknown(XCIB, 1),
+    wbString(XCWM),
     wbString(XEMP),
     wbXTV2
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
@@ -13748,7 +13761,7 @@ begin
         wbFormIDCk(FLAV, 'Unknown', [NULL, KYWD]).SetRequired(True),
         wbEmpty(QUAL, 'Unknown'),
         wbEmpty(SPOR, 'Unknown'),
-        wbUnknown(OCOR).SetRequired(True), /// required but always empty?
+        wbEmpty(OCOR, 'Unknown'),
         wbEmpty(SOFT, 'Unknown'),
         wbEmpty(DOFT, 'Unknown'), // only one occurrence, empty
         wbFloat(LVCR).SetRequired(True),
@@ -13756,7 +13769,7 @@ begin
         wbUnknown(ATAC, 4).SetRequired(True),
         wbEmpty(PLRL, 'Unknown'),
         wbEmpty(SHRT, 'Unknown'),
-        wbUnknown(XNAM).SetRequired(True) // required but always empty?
+        wbMarkerReq(XNAM) //end marker
       ], []),
 
       wbRStruct('Unknown', [
@@ -16963,7 +16976,7 @@ begin
     wbBaseFormComponents,
     wbXALG,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
 
     {--- Ragdoll ---}
     wbRStruct('Ragdoll Data', [
@@ -17048,7 +17061,7 @@ begin
 
     wbUnknown(XEED),
 
-    wbUnknown(XPCS),
+    wbFormIDCk(XPCS, 'Unknown', [PKIN]),
 
     {--- 3D Data ---}
     wbXSCL,
@@ -17191,7 +17204,8 @@ begin
         'Sphere',
         'Plane',
         'Line',
-        'Ellipsoid'
+        'Ellipsoid',
+        'Unknown 7'
       ]))
     ]),
 
@@ -17248,7 +17262,8 @@ begin
       wbFloat('End Distance Cap'),
       wbFloat('Shadow Depth Bias'),
       wbFloat('Near Clip'),
-      wbFloat('Volumetric Intensity')
+      wbFloat('Volumetric Intensity'),
+      wbUnknown(8)
     ], cpNormal, False, nil, 4),
     {--- Lit Water ---}
     {
@@ -17320,7 +17335,9 @@ begin
     ], cpNormal, False, nil, 5),
     wbStruct(XPDD, 'Projected Decal', [
       wbFloat('Width Scale'),
-      wbFloat('Height Scale')
+      wbFloat('Height Scale'),
+      wbFloat,
+      wbUnknown(4)
       // "Uses Box Primitive" checkbox does the following:
       // 1. "Rounds" above floats (probably due to floating point precision)  [DIRTY EDITS?]
       // 2. "Rounds" DATA\Position floats (probably due to floating point precision)  [DIRTY EDITS?]
@@ -17358,7 +17375,7 @@ begin
     {--- Lock ---}
     wbXLOC,
 
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
 
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navigation Door Link', [
@@ -17401,124 +17418,25 @@ begin
 
     {--- Map Data ---}
     wbRStruct('Map Marker', [
-      wbEmpty(XMRK, 'Map Marker Data'),
-      wbInteger(FNAM, 'Map Flags', itU8, wbFlags([
+      wbMarkerReq(XMRK),
+      wbInteger(FNAM, 'Map Flags', itU32, wbFlags([
         {0x01} 'Visible',
         {0x02} 'Can Travel To',
         {0x04} '"Show All" Hidden',
-        {0x08} 'Use Location Name'
+        {0x08} 'Use Location Name',
+        {0x10} 'Unknown 4',
+        {0x20} 'Unknown 5',
+        {0x40} 'Unknown 6',
+        {0x80} 'Unknown 7'
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, '', [
-        wbInteger('Type', itU8, wbEnum([], [
-          {Vv = Verified Vanilla}
-          {No new map markers for Automatron or Workshop}
-          0, 'Cave', {Vv}
-          1, 'City', {Vv}
-          2, 'Diamond City', {Vv}
-          3, 'Encampment', {Vv}
-          4, 'Factory / Industrial Site', {Vv}
-          5, 'Gov''t Building / Monument', {Vv}
-          6, 'Metro Station', {Vv}
-          7, 'Military Base', {Vv}
-          8, 'Natural Landmark', {Vv}
-          9, 'Office / Civic Building', {Vv}
-          10, 'Ruins - Town', {Vv}
-          11, 'Ruins - Urban', {Vv}
-          12, 'Sanctuary', {Vv}
-          13, 'Settlement', {Vv}
-          14, 'Sewer / Utility Tunnels', {Vv}
-          15, 'Vault', {Vv}
-          16, 'Airfield', {Vv}
-          17, 'Bunker Hill', {Vv}
-          18, 'Camper', {Vv}
-          19, 'Car', {Vv}
-          20, 'Church', {Vv}
-          21, 'Country Club', {Vv}
-          22, 'Custom House', {Vv}
-          23, 'Drive-In', {Vv}
-          24, 'Elevated Highway', {Vv}
-          25, 'Faneuil Hall', {Vv}
-          26, 'Farm', {Vv}
-          27, 'Filling Station', {Vv}
-          28, 'Forested', {Vv}
-          29, 'Goodneighbor', {Vv}
-          30, 'Graveyard', {Vv}
-          31, 'Hospital', {Vv}
-          32, 'Industrial Dome', {Vv}
-          33, 'Industrial Stacks', {Vv}
-          34, 'Institute', {Vv}
-          35, 'Irish Pride', {Vv}
-          36, 'Junkyard', {Vv}
-          37, 'Observatory', {Vv}
-          38, 'Pier', {Vv}
-          39, 'Pond / Lake', {Vv}
-          40, 'Quarry', {Vv}
-          41, 'Radioactive Area', {Vv}
-          42, 'Radio Tower', {Vv}
-          43, 'Salem', {Vv}
-          44, 'School', {Vv}
-          45, 'Shipwreck', {Vv}
-          46, 'Submarine', {Vv}
-          47, 'Swan Pond', {Vv}
-          48, 'Synth Head', {Vv}
-          49, 'Town', {Vv}
-          50, 'Brotherhood of Steel', {Vv}
-          51, 'Brownstone Townhouse', {Vv}
-          52, 'Bunker', {Vv}
-          53, 'Castle', {Vv}
-          54, 'Skyscraper', {Vv}
-          55, 'Libertalia', {Vv}
-          56, 'Low-Rise Building', {Vv}
-          57, 'Minutemen', {Vv}
-          58, 'Police Station', {Vv}
-          59, 'Prydwen', {Vv}
-          60, 'Railroad - Faction', {Vv}
-          61, 'Railroad', {Vv}
-          62, 'Satellite', {Vv}
-          63, 'Sentinel', {Vv}
-          64, 'USS Constitution', {Vv}
-          65, 'Mechanist LairRaider settlementVassal settlementPotential Vassal settlement', {Vv}
-          66, 'Custom 66',
-          67, 'Custom 67',
-          68, 'Custom 68',
-          69, 'Custom 69',
-          70, 'Custom 70',
-          71, 'Custom 71',
-          72, 'Custom 72',
-          73, 'Custom 73',
-          74, 'Custom 74',
-          75, 'Custom 75',
-          76, 'Custom 76',
-          77, 'Custom 77',
-          78, 'Custom 78',
-          79, 'Custom 79',
-          80, 'Custom 80',
-          81, 'Custom 81',
-          82, 'Custom 82',
-          83, 'Custom 83',
-          84, 'Custom 84',
-          85, 'Custom 85',
-          86, 'Custom 86',
-          87, 'Custom 87',
-          88, 'Custom 88',
-          89, 'Custom 89',
-          90, 'Custom 90',
-          91, 'Custom 91',
-          92, 'Custom 92',
-          93, 'Custom 93',
-          94, 'Custom 94',
-          95, 'Custom 95',
-          96, 'Custom 96',
-          97, 'Custom 97',
-          98, 'Custom 98',
-          99, 'Custom 99'
-        ])),
+        wbInteger('Type', itU8, wbEnum([], [])),
         wbByteArray('Unused', 1)
       ], cpNormal, True),
-      wbUnknown(VNAM),
-      wbUnknown(UNAM),
-      wbUnknown(VISI)
+      wbUnknown(VNAM, 2),
+      wbLString(UNAM, 'Unknown', 0, cpTranslate),
+      wbUnknown(VISI, 1)
     ], []),
 
     {--- Attach reference ---}
@@ -17526,7 +17444,7 @@ begin
 
     wbRArray('Spline Connection', wbStruct(XPLK, 'Link', [
       wbFormIDCk('Ref', [REFR, ACHR]),
-      wbUnknown  // always 00 00 00 00 so far in DLCWorkshop03.esm
+      wbUnknown(4)
     ])),
 
     {
@@ -17543,33 +17461,69 @@ begin
     //wbUnknown(XCVR),
     //wbUnknown(XCVL),
     //wbFormIDCk(XCZR, 'Current Zone Reference', sigReferences),
+
     wbUnknown(XCZA),
+
     wbFormIDCk(XCZC, 'Current Zone Cell', [CELL, NULL]),
 
-    wbUnknown(TODD),
-    wbUnknown(XALD),
-    wbUnknown(XBPO),
-    wbUnknown(XCDD),
-    wbUnknown(XCOL),
+    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+
+    wbUnknown(XALD, 16),
+
+    wbInteger(XBPO, 'Unknown', itU32),
+
+    wbUnknown(XCDD, 12),
+
+    wbStruct(XCOL, 'Unknown', [
+    { 0} wbUnknown(4),
+    { 4} wbFormIDCk('Unknown', [MATT])
+    { 8}
+    ]),
+
     wbRStruct('Unknown', [
-      wbUnknown(XDTS),
-      wbUnknown(XDTF)
+      wbString(XDTS),
+      wbUnknown(XDTF, 8)
     ], []),
-    wbUnknown(XEED),
-    wbUnknown(XFLG),
-    wbUnknown(XGDS),
-    wbUnknown(XLBD),
-    wbUnknown(XLCD),
-    wbUnknown(XLFD),
-    wbUnknown(XLGD),
-    wbUnknown(XLLD),
+
+    wbStruct(XEED, 'Unknown', [
+    { 0} wbFloat,
+    { 4} wbUnknown(4)
+    { 8}
+    ]),
+
+    wbInteger(XFLG, 'Unknown', itU32, wbFlags([])),
+
+    wbFloat(XGDS),
+
+    wbUnknown(XLBD, 24),
+
+    wbRArray('Unknown', wbUnknown(XLCD, 12)),
+
+    wbStruct(XLFD, 'Unknown', [
+    { 0} wbFloat,
+    { 4} wbFloat,
+    { 8} wbUnknown(8)
+    {16}
+    ]),
+
+    wbStruct(XLGD, 'Unknown', [
+    { 0} wbUnknown(4),
+    { 4} wbFloat,
+    { 8} wbUnknown(8),
+    {16} wbFloat,
+    {20} wbFloat,
+    {24} wbUnknown(64)
+    {88}
+    ]),
+
+    wbInteger(XLLD, 'Unknown', itU32, wbBoolEnum),
 
     wbArray(XLMS, 'Unknown', wbFormIDCk('Unknown', [LMSW])),
 
-    wbUnknown(XLRD),
-    wbUnknown(XLSM),
-    wbUnknown(XLVD),
-    wbUnknown(XNSE),
+    wbUnknown(XLRD, 20),
+    wbInteger(XLSM, 'Unknown', itU32, wbBoolEnum),
+    wbFloat(XLVD),
+    wbReflection(XNSE),
 
     wbFormIDCk(XPCK, 'Unknown', [RFGP]),
 
@@ -17618,11 +17572,11 @@ begin
 
     wbRStruct('Unknown', [
       wbMarkerReq(XWPK),
-      wbFormIDCk(GNAM, 'Unknown', [PKIN]),
-      wbFormIDCk(HNAM, 'Unknown', [REFR]),
-      wbUnknown(INAM),
-      wbFormIDCk(JNAM, 'Unknown', [PKIN]),
-      wbUnknown(LNAM),
+      wbFormIDCk(GNAM, 'Unknown', [PKIN]).SetRequired,
+      wbFormIDCk(HNAM, 'Unknown', [REFR]).SetRequired,
+      wbUnknown(INAM,2).SetRequired,
+      wbFormIDCk(JNAM, 'Unknown', [PKIN]).SetRequired,
+      wbUnknown(LNAM, 4).SetRequired,
       wbEmpty(XGOM, 'Unknown'),
       wbMarkerReq(XWPK)
     ], []),
@@ -18289,7 +18243,7 @@ begin
       wbInteger('Y', itS16)
     ]),
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
     }
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
     wbFormIDCk(BNAM, 'Biome', [BIOM]),
