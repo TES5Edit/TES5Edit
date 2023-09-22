@@ -18647,11 +18647,6 @@ begin
 end;
 
 function TwbSubRecordStruct.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
-var
-  Member    : IwbRecordMemberDef;
-  Container : IwbContainer;
-  Element   : IwbElement;
-  i         : Integer;
 begin
   Result := nil;
 
@@ -18662,69 +18657,113 @@ begin
 
   if aIndex = Low(Integer) then begin
 
-    Container := aElement as IwbContainer;
+    if Assigned(aElement) and not srcDef.Equals(aElement.Def) then begin
+      var lTargetUnionParent: IwbSubRecordUnionDef;
+      var lSourceUnionParent: IwbSubRecordUnionDef;
+      if Assigned(srcDef) and
+         Assigned(aElement.Def) and
+         Supports(srcDef.Parent, IwbSubRecordUnionDef, lTargetUnionParent) and
+         Supports(aElement.Def.Parent, IwbSubRecordUnionDef, lSourceUnionParent) and
+         lTargetUnionParent.Equals(lSourceUnionParent)
+      then begin
+        //We are in an RUnion and need to switch to a different type
+
+        var lContainer := GetContainer;
+        var lContainerElementRef: IwbContainerElementRef;
+        if not Supports(lContainer, IwbContainerElementRef, lContainerElementRef) then
+          Exit;
+
+        var lReplacementElement: IwbElement;
+        case aElement.Def.DefType of
+          dtSubRecord:
+            lReplacementElement := TwbSubRecord.Create(lContainer, aElement.Def as IwbSubRecordDef);
+          dtSubRecordArray:
+            lReplacementElement := TwbSubRecordArray.Create(lContainer, nil, Low(Integer), aElement.Def as IwbSubRecordArrayDef);
+          dtSubRecordStruct:
+            lReplacementElement := TwbSubRecordStruct.Create(lContainer, nil, Low(Integer), aElement.Def as IwbSubRecordStructDef);
+        else
+          Assert(False);
+        end;
+
+        if Assigned(lReplacementElement) then try
+          lReplacementElement.SortOrder := Self.GetSortOrder;
+          lReplacementElement.MemoryOrder := Self.GetMemoryOrder;
+          if Assigned(aElement) and (aElement.ElementType <> etTemplate) then
+            lReplacementElement.Assign(Low(Integer), aElement, aOnlySK);
+          lContainer.RemoveElement(Self);
+          lContainer.SortBySortOrder;
+        except
+          lReplacementElement.Container.RemoveElement(lReplacementElement);
+          raise;
+        end;
+      end;
+
+      Exit;
+    end;
+
+    var lElementAsContainer := aElement as IwbContainer;
 
     SetModified(True);
     InvalidateStorage;
     ReleaseElements;
     AddRequiredElements;
 
-    if Assigned(Container) then
-      for i := 0 to Pred(Container.ElementCount) do begin
-        Element := Container.Elements[i];
-        if not aOnlySK or GetIsInSK(Element.SortOrder) then
-          Assign(Element.SortOrder, Element, aOnlySK);
+    if Assigned(lElementAsContainer) then
+      for var lContainedElementIdx := 0 to Pred(lElementAsContainer.ElementCount) do begin
+        var lContainedElement := lElementAsContainer.Elements[lContainedElementIdx];
+        if not aOnlySK or GetIsInSK(lContainedElement.SortOrder) then
+          Assign(lContainedElement.SortOrder, lContainedElement, aOnlySK);
       end;
 
   end else begin
 
     if (aIndex >= 0) and (aIndex < srcDef.MemberCount) then begin
-      Member := srcDef.Members[aIndex];
-      if not Assigned(aElement) or Member.CanAssign(Self, Low(Integer), aElement.Def) then begin
-        Element := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
-        if Assigned(Element) then begin
+      var lMember := srcDef.Members[aIndex];
+      if not Assigned(aElement) or lMember.CanAssign(Self, Low(Integer), aElement.Def) then begin
+        var lResultElement := GetElementBySortOrder(aIndex + GetAdditionalElementCount);
+        if Assigned(lResultElement) then begin
           if Assigned(aElement) then
-            Element.Assign(Low(Integer), aElement, aOnlySK)
+            lResultElement.Assign(Low(Integer), aElement, aOnlySK)
         end else begin
 
-          var lDefType := Member.DefType;
+          var lDefType := lMember.DefType;
           if lDefType = dtSubRecordUnion then begin
             if Assigned(aElement) then begin
-              Member := aElement.Def as IwbRecordMemberDef;
-              lDefType := Member.DefType;
+              lMember := aElement.Def as IwbRecordMemberDef;
+              lDefType := lMember.DefType;
             end else begin
               repeat
-                var lUnion := Member as IwbSubRecordUnionDef;
-                Member :=lUnion.Members[0];
-                lDefType := Member.DefType;
+                var lUnion := lMember as IwbSubRecordUnionDef;
+                lMember :=lUnion.Members[0];
+                lDefType := lMember.DefType;
               until lDefType <> dtSubRecordUnion;
             end;
           end;
 
           case lDefType of
             dtSubRecord:
-              Element := TwbSubRecord.Create(Self, Member as IwbSubRecordDef);
+              lResultElement := TwbSubRecord.Create(Self, lMember as IwbSubRecordDef);
             dtSubRecordArray:
-              Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), Member as IwbSubRecordArrayDef);
+              lResultElement := TwbSubRecordArray.Create(Self, nil, Low(Integer), lMember as IwbSubRecordArrayDef);
             dtSubRecordStruct:
-              Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), Member as IwbSubRecordStructDef);
+              lResultElement := TwbSubRecordStruct.Create(Self, nil, Low(Integer), lMember as IwbSubRecordStructDef);
             dtSubRecordUnion:
-              Element := nil;
+              lResultElement := nil;
           else
             Assert(False);
           end;
 
-          if Assigned(Element) then try
-            Element.SortOrder := aIndex;
+          if Assigned(lResultElement) then try
+            lResultElement.SortOrder := aIndex;
             if Assigned(aElement) and (aElement.ElementType <> etTemplate) then
-              Element.Assign(Low(Integer), aElement, aOnlySK);
+              lResultElement.Assign(Low(Integer), aElement, aOnlySK);
           except
-            Element.Container.RemoveElement(Element);
+            lResultElement.Container.RemoveElement(lResultElement);
             raise;
           end;
 
         end;
-        Result := Element;
+        Result := lResultElement;
       end;
     end;
   end;
@@ -18762,9 +18801,20 @@ begin
       Exit;
     end;
 
-    if aIndex = Low(Integer) then
-      Result := srcDef.Equals(aElement.Def)
-    else begin
+    if aIndex = Low(Integer) then begin
+      Result := srcDef.Equals(aElement.Def);
+      if not Result then begin
+        var lTargetUnionParent: IwbSubRecordUnionDef;
+        var lSourceUnionParent: IwbSubRecordUnionDef;
+        if Assigned(srcDef) and
+           Assigned(aElement.Def) and
+           Supports(srcDef.Parent, IwbSubRecordUnionDef, lTargetUnionParent) and
+           Supports(aElement.Def.Parent, IwbSubRecordUnionDef, lSourceUnionParent) and
+           lTargetUnionParent.Equals(lSourceUnionParent)
+        then
+          Result := True;
+      end;
+    end else begin
       Result := (aIndex >= 0) and (aIndex < srcDef.MemberCount) and
         srcDef.Members[aIndex].CanAssign(Self, Low(Integer), aElement.Def);
       if Result and aCheckDontShow then
