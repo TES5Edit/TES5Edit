@@ -4885,6 +4885,26 @@ begin
 end;
 
 
+function wbObjectModPropertiesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;                            //work in progress
+var
+  MainRecord : IwbMainRecord;
+  PropName      : string;
+
+begin
+  Result := 0;
+
+  if not wbTryGetContainingMainRecord(aElement, MainRecord) then
+    Exit;
+    
+    
+  PropName :=  MainRecord.Signature;
+   
+        if PropName = 'WEAP' then Result := 1 else 
+        if PropName = 'ARMO' then Result := 2 else 
+        if PropName = 'NPC_' then Result := 3 
+        else Result := 0;
+   
+end;
 
 
 function wbOMODDataPropertyValue1Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -9819,6 +9839,8 @@ begin
        {2} wbInteger('Property Name', itU32, wbObjectModPropertiesARMOEnum, cpNormal, True),
        {3} wbInteger('Property Name', itU32, wbObjectModPropertiesNPCEnum, cpNormal, True)
       ]),
+
+      
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
         { 1} wbInteger('Value 1 - Int', itS32),
