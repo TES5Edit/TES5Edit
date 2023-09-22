@@ -18134,31 +18134,35 @@ begin
     end else begin
 
       ElementDef := arcDef.Element;
-      if ElementDef.DefType = dtSubRecordUnion then begin
+      while ElementDef.DefType = dtSubRecordUnion do begin
         if Assigned(lElement) then begin
           var lTemplate: IwbTemplateElement;
-          if Supports(lElement, IwbDataContainer, DataContainer) then
-            ElementDef := (ElementDef as IwbRecordDef).GetMemberFor((lElement as IwbHasSignature).Signature, DataContainer)
-          else if Supports(lElement, IwbTemplateElement, lTemplate) then begin
+          if Supports(lElement, IwbTemplateElement, lTemplate) then begin
             if not Supports(lTemplate.Def, IwbRecordMemberDef, ElementDef) then
               ElementDef := nil;
             lElement := nil;
+            Break;
+          end else begin
+            Supports(lElement, IwbDataContainer, DataContainer);
+            ElementDef := (ElementDef as IwbRecordDef).GetMemberFor((lElement as IwbHasSignature).Signature, DataContainer)
           end;
         end else
           ElementDef := (ElementDef as IwbRecordDef).Members[0];
         Assert(Assigned(ElementDef));
       end;
 
-      case ElementDef.DefType of
-        dtSubRecord:
-          Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
-        dtSubRecordArray:
-          Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct:
-          Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
-      else
-        Assert(False);
-      end;
+      Element := nil;
+      if Assigned(ElementDef) then
+        case ElementDef.DefType of
+          dtSubRecord:
+            Element := TwbSubRecord.Create(Self, ElementDef as IwbSubRecordDef);
+          dtSubRecordArray:
+            Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordArrayDef);
+          dtSubRecordStruct:
+            Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), ElementDef as IwbSubRecordStructDef);
+        else
+          Assert(False);
+        end;
     end;
 
     if Assigned(Element) and Assigned(lElement) then try
