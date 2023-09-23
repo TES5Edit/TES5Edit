@@ -5061,6 +5061,17 @@ begin
           flProgress('Error: File contains invalid top level record: '+ cntElements[i].Name);
           Continue;
         end;
+        if GroupRecord.ElementCount = 0 then begin
+          var lName := GroupRecord.Name;
+          flProgress('Warning: File contains empty top level group: ' + lName);
+          if wbBeginInternalEdit(True) then try
+            GroupRecord.Remove;
+            flProgress('Removed empty group: ' + lName);
+          finally
+            wbEndInternalEdit;
+          end;
+          Continue;
+        end;
         if GroupRecord.GroupType <> 0 then begin
           flProgress('Error: File contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
           Continue;
@@ -13242,7 +13253,28 @@ begin
 
           Container := aElement as IwbContainer;
 
-          if ArrayDef.IsVariableSize then begin
+          var lDataContainer: IwbDataContainer;
+          if (
+               (dfFastAssign in srDef.DefFlags) or
+               (dfFastAssign in ArrayDef.DefFlags)
+             ) and
+             Supports(aElement, IwbDataContainer, lDataContainer)
+          then begin
+            SetModified(True);
+            InvalidateStorage;
+            ReleaseElements;
+            dcDataStorage := nil;
+            dcDataBasePtr := @EmptyPtr;
+            dcDataEndPtr := @EmptyPtr;
+            Exclude(dcFlags, dcfStorageInvalid);
+            var lSize := lDataContainer.DataSize;
+            RequestStorageChange(p, q, lSize);
+            Move(lDataContainer.DataBasePtr^, dcDataBasePtr^, lSize);
+            DoReset(True);
+            Assert(GetElementCount = Container.ElementCount);
+            for i := 0 to Pred(Container.ElementCount) do
+              cntElements[i].Assign(Low(Integer), Container.Elements[i], aOnlySK);
+          end else if ArrayDef.IsVariableSize then begin
             SetModified(True);
             InvalidateStorage;
             ReleaseElements;
@@ -16549,7 +16581,18 @@ begin
   {$ENDIF}
   BeginUpdate;
   try
-    Result := AssignInternal(aIndex, aElement, aOnlySK);
+    try
+      Result := AssignInternal(aIndex, aElement, aOnlySK);
+    except
+      on E: Exception do begin
+        var lSourceName := 'nil';
+        if Assigned(aElement) then
+          lSourceName := aElement.FullPath;
+        var lTargetName := GetFullPath;
+        wbProgress('Error assigning to [%s] from [%s]: [%s] %s', [lTargetName, lSourceName, E.ClassName, E.Message]);
+        Result := nil;
+      end;
+    end;
   finally
     EndUpdate;
   {$IFDEF USE_CODESITE}

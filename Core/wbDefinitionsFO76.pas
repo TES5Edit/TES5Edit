@@ -12795,7 +12795,7 @@ begin
               'Replace Default'
             ])),
             wbUnion('Unused', wbFormVersionDecider(34, 126), [
-              wbUnused,
+              wbUnused(),
               wbByteArray('Unused', 2)
             ])
           ]),
@@ -12832,7 +12832,7 @@ begin
               'Replace Default'
             ])),
             wbUnion('Unused', wbFormVersionDecider(34, 126), [
-              wbUnused,
+              wbUnused(),
               wbByteArray('Unused', 2)
             ])
           ]),

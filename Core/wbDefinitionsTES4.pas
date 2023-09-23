@@ -4130,7 +4130,7 @@ begin
       wbByteArray('Unused', 3),
       wbFormIDCk('Key', [KEYM, NULL]),
       wbUnion('Unused', wbXLOCFillerDecider, [
-        wbUnused,
+        wbUnused(),
         wbByteArray('Unused', 4)
       ]),
       wbInteger('Flags', itU8, wbFlags(['', '', 'Leveled Lock'])),

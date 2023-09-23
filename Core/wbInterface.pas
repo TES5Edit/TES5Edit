@@ -624,6 +624,7 @@ type
     dfMustBeUnion,
     dfMergeIfMultiple,
     dfExcludeFromBuildRef,
+    dfFastAssign,
     dfIndexEditorID,
     dfSummaryMembersNoName,
     dfSummaryNoName,
@@ -3204,33 +3205,22 @@ function wbUnknown(aSize     : Integer;
                    aGetCP    : TwbGetConflictPriority = nil)
                              : IwbByteArrayDef; overload;
 
+function wbNeverShow(const aElement: IwbElement): Boolean;
 
 function wbUnused(const aSignature : TwbSignature;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
+                        aRequired  : Boolean = False)
                                    : IwbSubRecordDef; overload;
 
-function wbUnused(aPriority : TwbConflictPriority = cpNormal;
-                  aRequired : Boolean = False;
-                  aDontShow : TwbDontShowCallback = nil;
-                  aGetCP    : TwbGetConflictPriority = nil)
+function wbUnused(aRequired : Boolean = False)
                             : IwbValueDef; overload;
 
 function wbUnused(const aSignature : TwbSignature;
                         aSize      : Integer;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
+                        aRequired  : Boolean = False)
                                    : IwbSubRecordDef; overload;
 
 function wbUnused(aSize     : Integer;
-                  aPriority : TwbConflictPriority = cpNormal;
-                  aRequired : Boolean = False;
-                  aDontShow : TwbDontShowCallback = nil;
-                  aGetCP    : TwbGetConflictPriority = nil)
+                  aRequired : Boolean = False)
                             : IwbValueDef; overload;
 
 function wbInteger(const aSignature : TwbSignature;
@@ -7710,45 +7700,32 @@ begin
 end;
 
 function wbUnused(const aSignature : TwbSignature;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
+                        aRequired  : Boolean = False)
                                    : IwbSubRecordDef;
 begin
-  Result := wbEmpty(aSignature, 'Unused', aPriority, aRequired, aDontShow, aGetCP);
+  Result := wbEmpty(aSignature, 'Unused', cpIgnore, aRequired, nil, nil);
 end;
 
-function wbUnused(aPriority : TwbConflictPriority = cpNormal;
-                  aRequired : Boolean = False;
-                  aDontShow : TwbDontShowCallback = nil;
-                  aGetCP    : TwbGetConflictPriority = nil)
+function wbUnused(aRequired : Boolean = False)
                             : IwbValueDef;
 begin
-  Result := wbEmpty('Unused', aPriority, aRequired, aDontShow, False, aGetCP);
+  Result := wbEmpty('Unused', cpIgnore, aRequired, nil, False, nil);
 end;
 
 function wbUnused(const aSignature : TwbSignature;
                         aSize      : Integer;
-                        aPriority  : TwbConflictPriority = cpNormal;
-                        aRequired  : Boolean = False;
-                        aDontShow  : TwbDontShowCallback = nil;
-                        aGetCP     : TwbGetConflictPriority = nil)
+                        aRequired  : Boolean = False)
                                    : IwbSubRecordDef;
 begin
-  Result := wbByteArray(aSignature, 'Unused', aSize, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbByteArray(aSignature, 'Unused', aSize, cpIgnore, aRequired, False, nil, nil);
 end;
 
-function wbUnused(aSize      : Integer;
-                   aPriority : TwbConflictPriority = cpNormal;
-                   aRequired : Boolean = False;
-                   aDontShow : TwbDontShowCallback = nil;
-                   aGetCP    : TwbGetConflictPriority = nil)
-                             : IwbValueDef;
+function wbUnused(aSize     : Integer;
+                  aRequired : Boolean = False)
+                            : IwbValueDef;
 begin
-  Result := wbByteArray('Unused', aSize, aPriority, aRequired, aDontShow, aGetCP);
+  Result := wbByteArray('Unused', aSize, cpIgnore, aRequired, nil, nil);
 end;
-
 
 function wbInteger(const aSignature : TwbSignature;
                    const aName      : string;
@@ -9476,9 +9453,12 @@ end;
 
 procedure TwbDef.InitFromParent;
 begin
-  if Assigned(defParent) then
+  if Assigned(defParent) then begin
     if (dfNoReport in defParent.defFlags) then
       Include(defFlags, dfNoReport);
+    if (dfExcludeFromBuildRef in defParent.defFlags) then
+      Include(defFlags, dfExcludeFromBuildRef);
+  end;
 end;
 
 function TwbDef.IsNotRequired: Boolean;
@@ -20899,11 +20879,11 @@ end;
 
 procedure TwbRecordMemberDef.InitFromParent;
 begin
-  inherited;
   var lRUnion: IwbSubRecordUnionDef;
   if Supports(defParent, IwbSubRecordUnionDef, lRUnion) then
     if lRUnion.Required then
       defRequired := True;
+  inherited;
 end;
 
 function TwbRecordMemberDef.SetAfterLoad(const aAfterLoad: TwbAfterLoadCallback): IwbRecordMemberDef;
@@ -21582,6 +21562,11 @@ begin
     end;
   end;
   Result := Result + '>';
+end;
+
+function wbNeverShow(const aElement: IwbElement): Boolean;
+begin
+  Result := wbHideNeverShow;
 end;
 
 initialization

@@ -51,7 +51,6 @@ var
   wbOFST: IwbSubRecordDef;
   wbMODT: IwbRecordMemberDef;
   wbDMDT: IwbRecordMemberDef;
-  wbUnused: IwbValueDef;
   wbBoolEnum: IwbEnumDef;
 
 const
@@ -154,8 +153,6 @@ function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackT
 
 function wbFolderHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbFileHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-
-function wbNeverShow(const aElement: IwbElement): Boolean;
 
 function GetREGNType(aElement: IwbElement): Integer;
 
@@ -294,6 +291,9 @@ function wbCombineVarRecs(const a, b : array of const)
 function wbMakeVarRecs(const a : array of const)
                                : TwbVarRecs;
 
+procedure wbToStringFromLinksToSummary(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+procedure wbToStringFromLinksToMainRecordName(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+
 implementation
 
 uses
@@ -401,7 +401,6 @@ end;
 
 procedure DefineCommon;
 begin
-  wbUnused := wbEmpty('Unused');
   wbBoolEnum := wbEnum(['False', 'True']);
 
   wbHEDR :=
@@ -1074,12 +1073,6 @@ begin
       ctToEditValue:
         Result := aInt.ToString;
     end;
-end;
-
-
-function wbNeverShow(const aElement: IwbElement): Boolean;
-begin
-  Result := wbHideNeverShow;
 end;
 
 function GetREGNType(aElement: IwbElement): Integer;
@@ -2450,7 +2443,7 @@ function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDe
 begin
   Result :=
     wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
-      wbUnused,
+      wbUnused(),
       aValue
     ]).IncludeFlag(dfUnionStaticResolve);
 end;
@@ -2460,7 +2453,7 @@ begin
   Result :=
     wbUnion(aSignature, aValue.Name, wbFormVersionDecider(aVersion), [
       aValue,
-      wbUnused
+      wbUnused()
     ]).IncludeFlagOnValue(dfUnionStaticResolve);
 end;
 
@@ -2469,7 +2462,7 @@ begin
   Result :=
     wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
       aValue,
-      wbUnused
+      wbUnused()
     ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
@@ -2605,7 +2598,7 @@ begin
   if aIsUnused then begin
     Result :=
       wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
-        wbUnused,
+        wbUnused(),
         aValue
       ]).IncludeFlagOnValue(dfUnionStaticResolve);
   end else begin
@@ -2624,7 +2617,7 @@ begin
   if aIsUnused then
     Result :=
       wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
-        wbUnused,
+        wbUnused(),
         aValue
       ]).IncludeFlag(dfUnionStaticResolve)
   else
@@ -2641,7 +2634,7 @@ begin
     Result :=
       wbUnion(aSignature, aValue.Name, wbRecordSizeDecider(aSize), [
         aValue,
-        wbUnused
+        wbUnused()
       ]).IncludeFlagOnValue(dfUnionStaticResolve)
   else
       Result :=
@@ -2658,7 +2651,7 @@ begin
     Result :=
       wbUnion(aValue.Name, wbRecordSizeDecider(aSize), [
         aValue,
-        wbUnused
+        wbUnused()
       ]).IncludeFlag(dfUnionStaticResolve)
   else
       Result :=
@@ -2674,7 +2667,7 @@ begin
     Result :=
       wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
         aValue,
-        wbUnused
+        wbUnused()
       ]).IncludeFlagOnValue(dfMustBeUnion)
   else
       Result :=
@@ -2689,7 +2682,7 @@ begin
   if aIsUnused then
     Result :=
       wbUnion(aValue.Name, wbFlagDecider(aFlag), [
-        wbUnused,
+        wbUnused(),
         aValue
       ]).IncludeFlag(dfMustBeUnion)
   else
@@ -2705,7 +2698,7 @@ begin
   if aIsUnused then
     Result :=
       wbUnion(aSignature, aValue.Name, wbFlagDecider(aFlag), [
-        wbUnused,
+        wbUnused(),
         aValue
       ]).IncludeFlagOnValue(dfMustBeUnion)
   else
@@ -2722,7 +2715,7 @@ begin
     Result :=
       wbUnion(aValue.Name, wbFlagDecider(aFlag), [
         aValue,
-        wbUnused
+        wbUnused()
       ]).IncludeFlag(dfMustBeUnion)
   else
       Result :=
@@ -2739,7 +2732,7 @@ begin
     Result :=
       wbUnion(aSignature, aValue.Name, wbNoFlagsDecider, [
         aValue,
-        wbUnused
+        wbUnused()
       ]).IncludeFlagOnValue(dfMustBeUnion)
   else
       Result :=
@@ -2754,7 +2747,7 @@ begin
   if aIsUnused then
     Result :=
       wbUnion(aValue.Name, wbNoFlagsDecider, [
-        wbUnused,
+        wbUnused(),
         aValue
       ]).IncludeFlag(dfMustBeUnion)
   else
@@ -2931,6 +2924,61 @@ begin
   if Length(a) > 0 then
     Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
 end;
+
+procedure wbToStringFromLinksToSummary(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  case aType of
+    ctToStr:
+    begin
+      if Assigned(aElement) then begin
+        var lLinksTo := aElement.LinksTo;
+        if Assigned(lLinksTo) then begin
+          var lSummary := lLinksTo.Summary;
+          if lSummary <> '' then begin
+            aValue := lSummary;
+            var lMainRecord: IwbMainRecord;
+            if not Supports(lLinksTo, IwbMainRecord) and
+                   wbTryGetContainingMainRecord(lLinksTo, lMainRecord)
+            then begin
+              var lRecordName := lMainRecord.Name;
+              if lRecordName <> '' then
+                aValue := aValue + ' on ' + lRecordName;
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure wbToStringFromLinksToMainRecordName(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+begin
+  case aType of
+    ctToStr:
+    begin
+      if aValue = '' then
+        Exit;
+
+      aValue := '[' + aValue + ']';
+
+      if not Assigned(aElement) then
+        Exit;
+
+      var lLinksTo := aElement.LinksTo;
+      if not Assigned(lLinksTo) then
+        Exit;
+
+      var lMainRecord: IwbMainRecord;
+      if not Supports(lLinksTo, IwbMainRecord, lMainRecord) then
+        Exit;
+
+      var lRecordName := lMainRecord.Name;
+      if lRecordName <> '' then
+        aValue := aValue + ' ' + lRecordName;
+    end;
+  end;
+end;
+
 
 end.
 

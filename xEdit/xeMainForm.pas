@@ -14484,20 +14484,25 @@ begin
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
 
+  var lItemCount := 0;
+  var lAddToMni := mniNavAdd;
   if not wbTranslationMode and wbEditAllowed then
     if Supports(Element, IwbContainerElementRef, Container) then
       if Container.IsElementEditable(nil) then begin
         AddList := Container.GetAddList;
         for i := Low(AddList) to High(AddList) do begin
-          MenuItem := TMenuItem.Create(mniNavAdd);
+          MenuItem := TMenuItem.Create(lAddToMni);
           MenuItem.Caption := AddList[i];
           MenuItem.OnClick := mniNavAddClick;
-          mniNavAdd.Add(MenuItem);
-
-          MenuItem := TMenuItem.Create(mniNavAdd);
-          MenuItem.Caption := AddList[i];
-          MenuItem.OnClick := mniNavAddClick;
-          pmuNavAdd.Items.Add(MenuItem);
+          lAddToMni.Add(MenuItem);
+          Inc(lItemCount);
+          if (lItemCount > 29) and ((High(AddList)-i) > 1) then begin
+            MenuItem := TMenuItem.Create(lAddToMni);
+            MenuItem.Caption := 'More...';
+            lAddToMni.Insert(0, MenuItem);
+            lAddToMni := MenuItem;
+            lItemCount := 0;
+          end;
         end;
       end;
 

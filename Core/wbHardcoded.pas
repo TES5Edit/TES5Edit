@@ -23,6 +23,7 @@ type
     fcFalloutNV: TFileContainer;
     fcFallout4: TFileContainer;
     fcFallout76: TFileContainer;
+    fcStarfield: TFileContainer;
   public
     class function GetHardCodedDat: TBytes;
   end;
