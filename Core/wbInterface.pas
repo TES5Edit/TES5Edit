@@ -49,13 +49,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'm';
+    Build   : 'n';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010412;
-  wbDeveloperMessageVersion : Integer = 04010412;
+  wbWhatsNewVersion : Integer = 04010413;
+  wbDeveloperMessageVersion : Integer = 04010413;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
@@ -6239,6 +6239,8 @@ type
   TwbByteArrayDef = class(TwbValueDef, IwbByteArrayDef)
   protected {private}
     badSize                : Int64;
+
+    FoundReflection        : Boolean;
 
     FoundFormIDAtOffSet    : array of Integer;
     NotFoundFormIDAtOffSet : array of Integer;
@@ -16774,6 +16776,12 @@ begin
 
   s := wbDefsToPath(aParents) + wbDefToName(Self);
 
+  if FoundReflection then begin
+    WriteLn('Found Reflection: ', s);
+    defReported := True;
+    Exit;
+  end;
+
   if (Pos('Hashes', s) < 1) and
      (Pos('SCDA', s) < 1) and
      (Pos('SCTX', s) < 1) and
@@ -17001,6 +17009,11 @@ begin
         p := aBasePtr;
         OffSet := 0;
         while (NativeUInt(p)+3) < NativeUInt(aEndPtr) do begin
+          if (OffSet = 0) and (PwbSignature(p)^ = 'BETH') then begin
+            FoundReflection := True;
+            Exit;
+          end;
+
           aInt := PCardinal(p)^;
           if (aInt <> $0) and (aInt <> $14) and ((Length(NotFoundFormIDAtOffSet) < Succ(OffSet)) or (NotFoundFormIDAtOffSet[Offset] < 1)) then begin
             MainRecord := nil;

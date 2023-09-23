@@ -312,7 +312,7 @@ begin
       wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
       wbMOLM(MOLM),
       wbFLLD,
-      wbXFLG,
+      wbUnknown(XFLG),
       wbMODC
 //      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
 //      wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
@@ -392,15 +392,27 @@ begin;
   case aType of
     ctToStr, ctToSummary: begin
       Result := aInt.ToString;
+      if aInt < 0 then begin
+        Result := Result + ' NONE';
+        Exit;
+      end;
       if aType = ctToStr then
         Result := Result + ' <Warning: Could not resolve Quest>';
     end;
-    ctToEditValue: Result := aInt.ToString;
+    ctToEditValue: begin
+      Result := aInt.ToString;
+      if aInt < 0 then
+        Exit;
+    end;
     ctToSortKey: begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: Result := '<Warning: Could not resolve Quest>';
+    ctCheck: begin
+      if aInt < 0 then
+        Exit;
+      Result := '<Warning: Could not resolve Quest>';
+    end;
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
@@ -443,24 +455,28 @@ begin;
     EditInfos := nil;
   end;
   try
+    if Assigned(EditInfos) then
+      EditInfos.AddObject('-1 NONE', TObject(-1));
     if Supports(MainRecord.ElementByName['Stages'], IwbContainerElementRef, Stages) then begin
       for i := 0 to Pred(Stages.ElementCount) do
         if Supports(Stages.Elements[i], IwbContainerElementRef, Stage) then begin
           j := Stage.ElementNativeValues['INDX\Stage Index'];
-          s := Trim(Stage.ElementValues['Log Entries\Log Entry\NAM2']);
-          t := IntToStr(j);
-          while Length(t) < 3 do
-            t := '0' + t;
-          if s <> '' then
-            t := t + ' ' + s;
-          if Assigned(EditInfos) then
-            EditInfos.AddObject(t, TObject(j))
-          else if j = aInt then begin
-            case aType of
-              ctToStr, ctToSummary, ctToEditValue: Result := t;
-              ctCheck: Result := '';
+          if Assigned(EditInfos) or (j = aInt) then begin
+            s := Trim(Stage.ElementValues['Log Entries\Log Entry\NAM2']);
+            t := IntToStr(j);
+            while Length(t) < 3 do
+              t := '0' + t;
+            if s <> '' then
+              t := t + ' ' + s;
+            if Assigned(EditInfos) then
+              EditInfos.AddObject(t, TObject(j))
+            else if j = aInt then begin
+              case aType of
+                ctToStr, ctToSummary, ctToEditValue: Result := t;
+                ctCheck: Result := '';
+              end;
+              Exit;
             end;
-            Exit;
           end;
         end;
     end;
@@ -691,7 +707,7 @@ var
 begin
   i := 1;
   s := Trim(aString);
-  while (i <= Length(s)) and (ANSIChar(s[i]) in ['0'..'9']) do
+  while (i <= Length(s)) and (ANSIChar(s[i]) in ['-', '0'..'9']) do
     Inc(i);
   s := Copy(s, 1, Pred(i));
 
@@ -2378,7 +2394,42 @@ begin
     Exit(2);
   if lComponentName = 'BGSOrbitalDataComponent_Component' then
     Exit(3);
+  if lComponentName = 'BGSBlockEditorMetaData_Component' then
+    Exit(4);
+  if lComponentName = 'UniqueOverlayList_Component' then
+    Exit(5);
 end;
+
+function wbBFCDAT2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  lContainer           : IwbContainer;
+  lContainerElementRef :  IwbContainerElementRef;
+  lComponentName       : string;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, lContainer) then
+    Exit;
+  lContainer := lContainer.Container;
+  if not Assigned(lContainer) then
+    Exit;
+  lContainer := lContainer.Container;
+  if not Assigned(lContainer) then
+    Exit;
+  if not Supports(lContainer, IwbContainerElementRef, lContainerElementRef) then
+    Exit;
+  if lContainerElementRef.ElementCount < 2 then
+    Exit;
+
+  var lBFCB := lContainerElementRef.Elements[0];
+  if not Assigned(lBFCB) then
+    Exit;
+
+  lComponentName := lBFCB.EditValue;
+
+  if lComponentName = 'BlockHeightAdjustment_Component' then
+    Exit(1);
+end;
+
 
 
 function wbINFOGroupDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -9509,8 +9560,15 @@ begin
         wbRStruct('Component Data', [
           wbContainerItems
         ], []),
+
         wbRStruct('Component Data', [
-          wbUnknown(DAT2)
+          wbUnion(DAT2, 'Data', wbBFCDAT2Decider, [
+            wbUnknown,
+            //BlockHeightAdjustment_Component
+            wbStruct('', [
+              wbArray('Unknown', wbUnknown(8))
+            ])
+          ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
         //BGSStarDataComponent_Component
         //BGSOrbitedDataComponent_Component
@@ -9539,6 +9597,25 @@ begin
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
               wbUnknown()
+            ]),
+            //BGSBlockEditorMetaData_Component
+            wbStruct('', [
+              wbLenString('Unknown'),
+              wbUnknown(1),
+              wbLenString('Unknown'),
+              wbLenString('Unknown'),
+              wbArray('Unknown', wbUnknown(4), -1).IncludeFlag(dfNotAlignable),
+              wbInteger('Unknown', itS32),
+              wbInteger('Unknown', itS32),
+              wbInteger('Unknown', itS32),
+              wbInteger('Unknown', itS32),
+              wbUnknown(16)
+            ]),
+            //UniqueOverlayList_Component
+            wbStruct('', [
+              wbArray('Unknown', wbFormIDCk('Unknown', [SFBK]), -1).IncludeFlag(dfNotAlignable),
+              wbInteger('Unknown', itS32),
+              wbInteger('Unknown', itS32)
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -9986,7 +10063,6 @@ begin
        {3} wbInteger('Property Name', itU32, wbObjectModPropertiesNPCEnum, cpNormal, True)
       ]),
 
-      
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
         { 1} wbInteger('Value 1 - Int', itS32),
@@ -10330,7 +10406,6 @@ begin
     wbVMAD,
     wbOBND(True),
     wbODTY,
-//    wbPTT2,
     wbPTT2,
     wbBaseFormComponents,
     wbFULL,
@@ -10847,7 +10922,7 @@ begin
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel,
-    wbXFLG,
+    wbUnknown(XFLG),
     wbContainerItems,
     wbDEST,
     wbStruct(DATA, '', [
@@ -11353,7 +11428,7 @@ begin
     wbSoundReference(DCSH, 'Close Sound'),
     wbSoundReference(DLSH, 'Lock Sound'),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      '',
+      'Unknown 0',
       'Automatic',
       'Hidden',
       'Minimal Use',
@@ -16185,7 +16260,7 @@ begin
         12, 'Random, Do Once',
         13, 'Run in Sequence, Do Once'
       ]), cpNormal, True),
-      wbInteger(IDLC, 'Animation Count', itU8, nil, cpBenign),
+      wbInteger(IDLC, 'Animation Count', itU32, nil, cpBenign),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True)
       //wbByteArray(IDLB, 'Unknown', 4, cpIgnore) not in Starfield.esm
@@ -18078,7 +18153,7 @@ begin
     wbEDID
   ]);}
 
-`  if lTM - 1 = 0  then
+  if lTM - 1 = 0  then
     Inc(lS[0]);
 
   {subrecords checked against Starfield.esm}
@@ -19022,7 +19097,7 @@ begin
     wbFULL,
     wbDESC,
     wbGenericModel,
-    wbXFLG,
+    wbUnknown(XFLG),
 //    wbStruct(DATA, 'Data', [
 //      wbInteger('Include Count', itU32),
 //      wbInteger('Property Count', itU32),
@@ -19343,13 +19418,13 @@ begin
       wbFloat(RADR),
       wbFloat(WTMX)
     ], []),
-    wbInteger(AAPS, 'Count', itU64),
+    wbInteger(AAPS, 'Count', itU32),
     wbRStructS('Connections', 'Connection', [
       wbString(ANAM, 'Part'),
       wbString(BNAM, 'Part'),
       wbFloat(RADR),
       wbFloat(WTMX)
-    ], [])
+    ], []).SetCountPath(AAPS)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19457,9 +19532,9 @@ begin
       {0x80000000} 'Unknown 31'
     ])),
     wbInteger(SNST, 'Unknown', itU32),
-    wbRArray('Adjacent Snap Nodes', wbFormID(NNAM, 'Adjacent Snap Node')),
+    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND])),
     wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'), 3),
-    wbFormID(ANAM)
+    wbFormIDCk(ANAM, 'Art Object', [ARTO])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19511,10 +19586,10 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbRArray('Grasses', wbRStruct('Grass', [
-      wbFormID(GNAM, 'Grass Texture'),
-      wbInteger(DNAM, 'Unknown Int', itU16)
+      wbFormIDCk(GNAM, 'Grass', [GRAS]),
+      wbInteger(DNAM, 'Unknown', itS16)
     ], [])),
-    wbRArray('Landscape Textures', wbFormID(LNAM, 'Landscape Texture')),
+    wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
     wbFloat(YNAM)
   ]);
 
@@ -19585,7 +19660,7 @@ begin
     wbODTY,
     wbOPDS,
     wbBaseFormComponents,
-    wbUnknown(PTT2),
+    wbPTT2,
     wbSNBH,
     wbFormIDCk(DODT, 'Material', [MTPT]),
     wbStruct(DATA, 'Data', [// possibly the same format as wbDODT? which is different from the DODT usage above...
@@ -20227,7 +20302,7 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbFormIDCk(CNAM, 'Surface Pattern Style', [NULL, PTST]).SetRequired(True),
-    wbArray(BNAM, 'Surface Blocks', wbFormIDCk('Surface Block', [SFBK]), 256).SetRequired(True),
+    wbArray(BNAM, 'Surface Blocks', wbArray('Row', wbFormIDCk('Column', [SFBK]), 16), 16).SetRequired(True),
     wbArray(DNAM, 'Worldspaces', wbFormIDCk('Worldspace', [WRLD]))
   ]);
 
@@ -20278,8 +20353,8 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(SPCH, 'Speech Challenge', [
     wbEDID,
-    wbInteger(SPWI, 'Quest Stage on Win', itU16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
-    wbInteger(SPLO, 'Quest Stage on Loss', itU16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
+    wbInteger(SPWI, 'Quest Stage on Win', itS16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
+    wbInteger(SPLO, 'Quest Stage on Loss', itS16, wbSPCHQuestStageToStr, wbQuestStageToInt), //req
     wbEmpty(SRAN, 'Unknown'),
     wbEmpty(SGEN, 'Unknown'),
     wbFormIDCk(SPQU, 'Quest', [QUST], False, cpNormal, True),
@@ -20548,16 +20623,16 @@ begin
   wbAddGroupOrder(STAG); {SF1Dump: no errors}
   wbAddGroupOrder(IRES); {SF1Dump: no errors}
   wbAddGroupOrder(BIOM); {SF1Dump: no errors}
-  wbAddGroupOrder(NOCM);
-  wbAddGroupOrder(LENS);
-  wbAddGroupOrder(OVIS);
-  wbAddGroupOrder(STND);
-  wbAddGroupOrder(STMP);
-  wbAddGroupOrder(GCVR);
-  wbAddGroupOrder(MRPH);
-  wbAddGroupOrder(TRAV);
-  wbAddGroupOrder(RSGD);
-  wbAddGroupOrder(OSWP);
+  wbAddGroupOrder(NOCM); {SF1Dump: no errors}
+  wbAddGroupOrder(LENS); {SF1Dump: no errors}
+  wbAddGroupOrder(OVIS); {SF1Dump: no errors}
+  wbAddGroupOrder(STND); {SF1Dump: no errors}
+  wbAddGroupOrder(STMP); {SF1Dump: no errors}
+  wbAddGroupOrder(GCVR); {SF1Dump: no errors}
+  wbAddGroupOrder(MRPH); {SF1Dump: no errors}
+  wbAddGroupOrder(TRAV); {SF1Dump: no errors}
+  wbAddGroupOrder(RSGD); {SF1Dump: no errors}
+  wbAddGroupOrder(OSWP); {SF1Dump: no errors}
   wbAddGroupOrder(ATMO);
   wbAddGroupOrder(LVSC);
   wbAddGroupOrder(SPCH);
