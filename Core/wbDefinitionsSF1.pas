@@ -10925,7 +10925,8 @@ begin
     ]),
     wbStruct(CSSD, 'Unknown', [
       wbFloat,
-      wbUnknown
+      wbFloat,
+      wbFloat
     ]),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
@@ -11241,7 +11242,7 @@ begin
   wbRecord(EFSH, 'Effect Shader', [
     wbEDID,
     wbBaseFormComponents,
-    wbFormIDCk(ENAM, 'Unknown', [EFSQ]),
+    wbFormIDCk(ENAM, 'Effect Sequence', [EFSQ]),
     wbEmpty(DATA, 'Empty', cpIgnore),
     wbStruct(DNAM, 'Data', [
       wbFloat,
@@ -11258,7 +11259,7 @@ begin
       wbFloat,
       wbFloat,
       wbSoundReference('Sounds'),
-      wbUnknown(5)
+      wbUnknown(5)                                                       //Flags?
     ]),
     wbGenericModel
   ]);
@@ -12153,19 +12154,19 @@ begin
       wbFormIDCk('Placed Object', sigBaseObjects),        //formid? // +0x20  //+0x20 has a check of some kind, but it's not form type, but a function on the class vftable, if it returns non-zero then it's not allowed
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),       //formid // +0x18   //+0x18 is expected to be PRO
       wbFormIDCk('Condition', [CNDF, NULL]),              //if form_version >= 507 formid? // +0x30  +0x30 is expected to be CNDF
-      wbUnknown(4),                                       //uint32 // +0x84
+      wbFloat,                                            //uint32 // +0x84
       wbFloat,                                            //uint32 // +0x88
       wbFloat,                                            //uint32 // +0x90   // +0x90, +0x94 are floats
       wbFloat,                                            //uint32 // +0x94   // it's basically doing +0x94 = max(+0x90, +0x94)
-      wbUnknown(4),                                       //uint32 // +0x98
+      wbFloat,                                            //uint32 // +0x98
       wbFloat,                                            //uint32 // +0x9C
       wbUnknown(4),                                       //uint32 // +0x78
-      wbUnknown(4),                                       //uint32 unknown_70 // +0x70
+      wbInteger('Unknown Enum', itU32),                   //uint32 unknown_70 // +0x70
                                                           //if form_version < 295  unknown_70 += 1
       wbFloat,                                            //uint32 // +0xA0
-      wbUnknown(4),                                       //uint32 // +0x74
+      wbInteger('Unknown', itU32),                        //uint32 // +0x74
       wbUnknown(4),                                       //uint32 // +0x00
-      wbUnknown(4),                                       //uint32 // +0x04
+      wbFloat,                                            //uint32 // +0x04
       wbFloat,                                            //uint32 // +0x08
       wbFloat,                                            //uint32 // +0x80
       wbUnknown(4),                                       //uint32 // +0x7C
@@ -12708,7 +12709,7 @@ begin
       wbVec3('Rotation Offset')
     ], cpNormal, True, nil, 9),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
-    wbString(GNAM)
+    wbString(GNAM, 'Animation')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -16018,7 +16019,7 @@ begin
 
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
-    wbFormIDCk(FLAV, 'Unknown', [KYWD]),
+    wbFormIDCk(FLAV, 'Anim Flavor', [KYWD]),
     wbStruct(PKCU, 'Counter', [
       wbInteger('Data Input Count', itU32),
       wbFormIDCk('Package Template', [PACK, NULL]),
@@ -18040,13 +18041,13 @@ begin
     wbByteArray(GNAM, 'Unused', 0),
     wbVec3(NAM0, 'Linear Velocity'),
     wbVec3(NAM1, 'Angular Velocity'),
-    wbFormIDCk(ENAM, 'Unknown', [CUR3]),
-    wbFormIDCk(HNAM, 'Unknown', [CUR3]),
-    wbFormIDCk(JNAM, 'Unknown', [CUR3]),
-    wbFormIDCk(LNAM, 'Unknown', [CUR3]),
-    wbFormIDCk(MNAM, 'Unknown', [CUR3]),
-    wbFormIDCk(QNAM, 'Unknown', [CUR3]),
-    wbFormIDCk(UNAM, 'Unknown', [CUR3])
+    wbFormIDCk(ENAM, 'River Absorption Curve', [CUR3]),
+    wbFormIDCk(HNAM, 'Ocean Absorption Curve', [CUR3]),
+    wbFormIDCk(JNAM, 'River Scattering Curve', [CUR3]),
+    wbFormIDCk(LNAM, 'Ocean Scattering Curve', [CUR3]),
+    wbFormIDCk(MNAM, 'Phytoplankton Curve', [CUR3]),
+    wbFormIDCk(QNAM, 'Sediment Curve', [CUR3]),
+    wbFormIDCk(UNAM, 'Yellow-Matter Curve', [CUR3])
   ]);
 
   {subrecords checked against Starfield.esm}
