@@ -2596,6 +2596,22 @@ begin
     Result := 1;
 end;
 
+function wbVLMSTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+begin
+  Result := 0;
+
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  case Integer(Container.ElementNativeValues['Type']) of
+     1: Result := 0;
+     3: Result := 1;
+     5: Result := 2;
+  end;
+end;
+
 function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;
@@ -9609,29 +9625,39 @@ begin
         wbRStruct('Component Data', [
           wbStruct(VLMS, 'Unknown', [
             wbArray('Unknown', wbStruct('Unknown', [
-              wbInteger('Unknown', itU32),
+              wbInteger('Type', itU32, wbEnum([], [
+                $1, '1',
+                $3, '3',
+                $5, '5'
+              ])).SetAfterSet(wbUpdateSameParentUnions),
+              wbArray('Matrix', wbStruct('Matrix', [
+                wbFloat,
+                wbFloat,
+                wbFloat,
+                wbFloat
+              ])
+              .SetSummaryKey([0, 1, 2, 3])
+              .SetSummaryDelimiter(', ')
+              .IncludeFlag(dfSummaryMembersNoName)
+              .IncludeFlag(dfSummaryNoSortKey)
+              .IncludeFlag(dfCollapsed, wbCollapseItems), 4),
               wbFloat,
               wbFloat,
               wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat,
-              wbFloat
+              wbUnion('Unknown', wbVLMSTypeDecider, [
+                wbStruct('Unknown', [
+                  wbFloat               // type 1
+                ]),
+                wbStruct('Unknown', [   // type 3
+                  wbFloat,
+                  wbFloat
+                  ]),
+                wbStruct('Unknown', [   // type 5
+                  wbFloat,
+                  wbFloat,
+                  wbFloat
+                ])
+              ])
             ]), -1)
           ])
         ], []),
