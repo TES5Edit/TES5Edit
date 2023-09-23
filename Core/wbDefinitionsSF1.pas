@@ -9607,7 +9607,33 @@ begin
         ], []),
         //Volumes_Component
         wbRStruct('Component Data', [
-          wbUnknown(VLMS)
+          wbStruct(VLMS, 'Unknown', [
+            wbArray('Unknown', wbStruct('Unknown', [
+              wbInteger('Unknown', itU32),
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat
+            ]), -1)
+          ])
         ], []),
         //BGSPlanetContentManagerContentProperties_Component
         wbRStruct('Component Data', [
@@ -17477,7 +17503,7 @@ begin
 
     wbStruct(XCOL, 'Unknown', [
     { 0} wbUnknown(4),
-    { 4} wbFormIDCk('Unknown', [MATT])
+    { 4} wbFormIDCk('Unknown', [NULL, MATT])
     { 8}
     ]),
 
@@ -17536,16 +17562,20 @@ begin
 
     wbArray(XSL1, 'Unknown', wbStruct('Unknown', [
       wbFormIDCk('Unknown', [REFR]),
-      wbUnknown(12)
+      wbArray('Unknown', wbStruct('Unknown', [
+        wbInteger('Unknown', itU32),
+        wbInteger('Unknown', itU32)
+      ]), -1)
     ]), -1),
 
     wbXTV2,
 
     wbStruct(XVL2, 'Unknown', [
-      { 0} wbUnknown(4),
-      { 8} wbFormIDCk('Unknown', [IMGS]),
-      {12} wbFormIDCk('Unknown', [FOGV]),
-      {16} wbUnknown(8),
+      { 0} wbUnknown(8),
+      { 8} wbFormIDCk('Unknown', [NULL, IMGS]),
+      {12} wbFormIDCk('Unknown', [NULL, FOGV]),
+      {16} wbUnknown(4),
+      {20} wbFloat,
       {24} wbFloat,
       {28} wbFloat,
       {32} wbFloat,
@@ -17553,7 +17583,11 @@ begin
       {40} wbFloat,
       {44} wbFloat,
       {48} wbFloat,
-      {52} wbUnknown(20),
+      {52} wbUnknown(4),
+      {56} wbFloat,
+      {60} wbFloat,
+      {64} wbFloat,
+      {68} wbFloat,
       {72} wbFloat,
       {76} wbFloat,
       {80} wbUnknown(1),
