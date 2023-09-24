@@ -8513,18 +8513,7 @@ begin
         {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
         {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
         {40} wbFloat('Severable - Debris Scale'),
-        wbStruct('Gore Effects Positioning', [
-          wbStruct('Translate', [
-            {44} wbFloat('X'),
-            {48} wbFloat('Y'),
-            {52} wbFloat('Z')
-          ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-          wbStruct('Rotation', [
-            {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-            {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-            {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-          ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-        ]),
+        {44} wbVec3PosRot('Gore Effects Positioning'),
         {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
         {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
         {28} wbInteger('Severable - Decal Count', itU8),
@@ -9847,9 +9836,9 @@ begin
       wbFloat('Forward Run'),
       wbFloat('Back Walk'),
       wbFloat('Back Run'),
-      wbFloat('Rotate in Place Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Rotate in Place Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Rotate while Moving Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbFloatAngle('Rotate in Place Walk'),
+      wbFloatAngle('Rotate in Place Run'),
+      wbFloatAngle('Rotate while Moving Run')
     ], cpNormal, True, nil, 10),
     wbStruct(INAM, 'Anim Change Thresholds', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
@@ -13240,19 +13229,7 @@ begin
   wbStaticPart :=
     wbRStruct('Part', [
       wbFormIDCk(ONAM, 'Static', [STAT]),
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-        ]),
-        wbFloat('Scale')
-      ]), 0, cpNormal, True)
+      wbStaticPartPlacements
     ], [], cpNormal, True);
 
   wbRecord(SCOL, 'Static Collection', [

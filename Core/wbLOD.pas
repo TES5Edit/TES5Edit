@@ -2143,11 +2143,11 @@ begin
               end;
               with Rot, (DataRec.Elements[1] as IwbContainerElementRef) do begin
                 if ElementCount >= 1 then
-                  X := Elements[0].NativeValue / wbRotationFactor;
+                  X := Elements[0].NativeValue / wbRadiansToDegreesScale;
                 if ElementCount >= 2 then
-                  Y := Elements[1].NativeValue / wbRotationFactor;
+                  Y := Elements[1].NativeValue / wbRadiansToDegreesScale;
                 if ElementCount >= 3 then
-                  Z := Elements[2].NativeValue / wbRotationFactor;
+                  Z := Elements[2].NativeValue / wbRadiansToDegreesScale;
               end;
               if Supports(REFRs[i].RecordBySignature['XSCL'], IwbContainerElementRef, DataRec) then
                 Scale := DataRec.NativeValue

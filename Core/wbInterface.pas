@@ -287,8 +287,8 @@ var
 
   wbCheckExpectedBytes               : Boolean    = True;
 
-  wbRotationFactor                   : Extended   = 180/Pi;
-  wbRotationScale                    : Integer    = 4;
+  wbRadiansToDegreesScale            : Extended   = 180/Pi;
+  wbAngleDigits                      : Integer    = 4;
 
   wbDumpOffset                       : Integer    = 0;              // 1= starting offset, 2 = Count, 3 = Offsets, size and count
   wbBaseOffset                       : NativeUInt = 0;
@@ -3388,6 +3388,23 @@ function wbFloat(const aName       : string;
                        aGetCP      : TwbGetConflictPriority = nil)
                                    : IwbFloatDef; overload;
 
+function wbFloatAngle(const aSignature  : TwbSignature;
+                      const aName       : string = 'Unknown Angle';
+                            aPriority   : TwbConflictPriority = cpNormal;
+                            aRequired   : Boolean = False;
+                            aDontShow   : TwbDontShowCallback = nil;
+                            aDefault    : Extended = 0.0;
+                            aGetCP      : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef; overload;
+
+function wbFloatAngle(const aName       : string = 'Unknown Angle';
+                            aPriority   : TwbConflictPriority = cpNormal;
+                            aRequired   : Boolean = False;
+                            aDontShow   : TwbDontShowCallback = nil;
+                            aDefault    : Extended = 0.0;
+                            aGetCP      : TwbGetConflictPriority = nil)
+                                        : IwbFloatDef; overload;
+
 function wbDouble(const aSignature  : TwbSignature;
                   const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
@@ -4566,7 +4583,7 @@ type
   TwbFastStringListIC = class(TwbFastStringList)
   end;
 
-function RadiansNormalize(const aElement: IwbElement; aFloat: Extended): Extended;
+function wbNormalizeRadians(const aElement: IwbElement; aFloat: Extended): Extended;
 
 function wbBeginInternalEdit(aForce: Boolean = False): Boolean;
 procedure wbEndInternalEdit;
@@ -4984,7 +5001,7 @@ begin
   Result := DoSingleSameValue(sA, sB);
 end;
 
-function RadiansNormalize(const aElement: IwbElement; aFloat: Extended): Extended;
+function wbNormalizeRadians(const aElement: IwbElement; aFloat: Extended): Extended;
 begin
   Result := aFloat;
 
@@ -7897,6 +7914,18 @@ begin
   Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, aScale, aDigits, nil, aNormalizer, aDefault, aGetCP), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
+function wbFloatAngle(const aSignature  : TwbSignature;
+                      const aName       : string = 'Unknown Angle';
+                            aPriority   : TwbConflictPriority = cpNormal;
+                            aRequired   : Boolean = False;
+                            aDontShow   : TwbDontShowCallback = nil;
+                            aDefault    : Extended = 0.0;
+                            aGetCP      : TwbGetConflictPriority = nil)
+                                        : IwbSubRecordDef; overload;
+begin
+  Result := wbSubRecord(aSignature, aName, wbFloat('', aPriority, False, wbRadiansToDegreesScale, wbAngleDigits, nil, wbNormalizeRadians, aDefault, aGetCP), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+end;
+
 function wbDouble(const aSignature  : TwbSignature;
                   const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
@@ -7940,6 +7969,18 @@ begin
   Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, aScale, aDigits, aDontShow, aNormalizer, aDefault, aGetCP, fkSingle, False);
 end;
 
+function wbFloatAngle(const aName       : string = 'Unknown Angle';
+                            aPriority   : TwbConflictPriority = cpNormal;
+                            aRequired   : Boolean = False;
+                            aDontShow   : TwbDontShowCallback = nil;
+                            aDefault    : Extended = 0.0;
+                            aGetCP      : TwbGetConflictPriority = nil)
+                                        : IwbFloatDef; overload;
+begin
+  Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, nil, wbRadiansToDegreesScale, wbAngleDigits, aDontShow, wbNormalizeRadians, aDefault, aGetCP, fkSingle, False);
+end;
+
+
 function wbDouble(const aName       : string = 'Unknown';
                         aPriority   : TwbConflictPriority = cpNormal;
                         aRequired   : Boolean = False;
@@ -7979,6 +8020,7 @@ function wbFloat(const aName       : string;
 begin
   Result := TwbFloatDef.Create(aPriority, aRequired, aName, nil, aAfterSet, 1.0, -1, aDontShow, aNormalizer, aDefault, aGetCP, fkSingle, False);
 end;
+
 
 function wbDouble(const aName       : string;
                         aPriority   : TwbConflictPriority;

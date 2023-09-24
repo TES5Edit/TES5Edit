@@ -296,12 +296,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
 
-function wbRotation(const aName: string = 'Unknown Angle'; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbValueDef; overload;
-  Begin
-  Result :=  wbFloat(aName, aPriority, aRequired, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-
-end;
-
 function wbMOLM(const aSignature: TwbSignature): IwbSubRecordDef;
 begin
   Result :=
@@ -7513,12 +7507,12 @@ begin
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbRotation,
+    wbFloatAngle,
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbRotation,
+    wbFloatAngle,
     wbFloat('Unknown'),
     wbFloat('Unknown')
   ]);
@@ -9903,7 +9897,7 @@ begin
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
       wbFloat('Offset Z'),
-      wbRotation('Rotation Z', cpNormal, True),
+      wbFloatAngle('Rotation Z', cpNormal, True),
       wbFormIDCk('Keyword', [KYWD, NULL]),
       wbFromVersion(125, wbInteger('Entry Types', itU8, wbFlags([
         'Front',
@@ -14235,18 +14229,18 @@ begin
   { 72} wbFloat,
   { 76} wbFloat,
   { 80} wbFloat,
-  { 84} wbRotation,
+  { 84} wbFloatAngle,
   { 88} wbFloat,
   { 92} wbFloat,
   { 96} wbFloat,
-  {100} wbRotation,
-  {104} wbRotation,
-  {108} wbRotation,
+  {100} wbFloatAngle,
+  {104} wbFloatAngle,
+  {108} wbFloatAngle,
   {112} wbFloat,
-  {116} wbRotation,
-  {120} wbRotation,
-  {124} wbRotation,
-  {128} wbRotation,
+  {116} wbFloatAngle,
+  {120} wbFloatAngle,
+  {124} wbFloatAngle,
+  {128} wbFloatAngle,
   {132} wbFloat,
   {136} wbFloat,
   {140} wbFloat,
@@ -14256,26 +14250,26 @@ begin
   {156} wbFloat,
   {160} wbFloat,
   {164} wbFloat,
-  {168} wbRotation,
-  {172} wbRotation,
-  {176} wbRotation,
-  {180} wbRotation,
-  {184} wbRotation,
-  {188} wbRotation,
+  {168} wbFloatAngle,
+  {172} wbFloatAngle,
+  {176} wbFloatAngle,
+  {180} wbFloatAngle,
+  {184} wbFloatAngle,
+  {188} wbFloatAngle,
   {192} wbFloat,
-  {196} wbRotation,
-  {200} wbRotation,
-  {204} wbRotation,
-  {208} wbRotation,
-  {212} wbRotation,
-  {216} wbRotation,
+  {196} wbFloatAngle,
+  {200} wbFloatAngle,
+  {204} wbFloatAngle,
+  {208} wbFloatAngle,
+  {212} wbFloatAngle,
+  {216} wbFloatAngle,
   {220} wbFloat,
-  {224} wbRotation,
-  {228} wbRotation,
-  {232} wbRotation,
-  {236} wbRotation,
-  {240} wbRotation,
-  {244} wbRotation,
+  {224} wbFloatAngle,
+  {228} wbFloatAngle,
+  {232} wbFloatAngle,
+  {236} wbFloatAngle,
+  {240} wbFloatAngle,
+  {244} wbFloatAngle,
   {248} wbFloat
   ]);
 
@@ -19316,17 +19310,7 @@ begin
         wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]),
         wbUnknown(4)
       ]),
-      wbArrayS(DATA, 'Placements',
-        wbStruct('Placement', [
-          wbVec3Pos,
-          wbVec3Rot,
-          wbFloat('Scale')
-        ])
-        .SetSummaryKey([0, 1, 2])
-        .SetSummaryMemberPrefixSuffix(2, 'Scale: ', '')
-        .IncludeFlag(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed, wbCollapsePlacement)
-      , 0, cpNormal, True)
+      wbStaticPartPlacements
     ], [], cpNormal, True);
 
   {subrecords checked against Starfield.esm}

@@ -5889,19 +5889,7 @@ begin
   var wbStaticPart :=
     wbRStruct('Part', [
       wbFormIDCk(ONAM, 'Static', [STAT]),
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbFloat('Scale')
-      ]), 0, cpNormal, True)
+      wbStaticPartPlacements
     ], [], cpNormal, True);
 
   wbRecord(SCOL, 'Static Collection', [
@@ -6897,18 +6885,7 @@ begin
     {32} wbFormIDCk('Severable - Debris', [DEBR, NULL]),
     {36} wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
     {40} wbFloat('Severable - Debris Scale'),
-    wbStruct('Gore Effects Positioning', [
-      wbStruct('Translate', [
-        {44} wbFloat('X'),
-        {48} wbFloat('Y'),
-        {52} wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Rotation', [
-        {56} wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        {60} wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        {64} wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ]),
+    {44} wbVec3PosRot('Gore Effects Positioning'),
     {68} wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
     {72} wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
     {28} wbInteger('Severable - Decal Count', itU8),

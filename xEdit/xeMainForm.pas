@@ -5033,6 +5033,20 @@ begin
         Settings.WriteBool('Init', 'First64Start', False);
         Settings.UpdateFile;
       end;
+    {$ELSE}
+    if wbIsStarfield then
+      if Settings.ReadBool('Init', 'First32StarfieldStart', True) then begin
+        if MessageDlg('You have started the 32bit version for Starfield.' + CRLF + CRLF +
+          'Given the size of Starfield.esm, it is very likely that you will run out ' +
+          'of memory quickly while using the 32bit version.' + CRLF + CRLF +
+          'While the 32bit version is generally faster and uses less memory than the 64bit version, in case of Starfield, the use of the 64bit version is preferred.' + CRLF + CRLF +
+          'Are you sure you want to continue?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then begin
+          tmrShutdown.Enabled := True;
+          Exit;
+          end;
+        Settings.WriteBool('Init', 'First32StarfieldStart', False);
+        Settings.UpdateFile;
+      end;
     {$ENDIF WIN64}
 
     i := Settings.ReadInteger('WhatsNew', 'Version', 0);

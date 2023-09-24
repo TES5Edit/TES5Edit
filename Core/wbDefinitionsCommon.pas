@@ -52,6 +52,7 @@ var
   wbMODT: IwbRecordMemberDef;
   wbDMDT: IwbRecordMemberDef;
   wbBoolEnum: IwbEnumDef;
+  wbStaticPartPlacements: IwbRecordMemberDef;
 
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
@@ -283,8 +284,8 @@ function wbVec3Pos(const aSignature: TwbSignature; const aName: string = 'Positi
 function wbVec3Rot(const aName: string = 'Rotation'; const aPrefix: string = wbRotPrefix): IwbValueDef; overload;
 function wbVec3Rot(const aSignature: TwbSignature; const aName: string = 'Rotation'; const aPrefix: string = wbRotPrefix): IwbRecordMemberDef; overload;
 
-function wbVec3PosRot(const aPosName: string = 'Position'; const aRotName: string = 'Rotation'; const aPosPrefix: string = wbPosPrefix; const aRotPrefix: string = wbRotPrefix): IwbValueDef; overload;
-function wbVec3PosRot(const aSignature: TwbSignature; aPosName: string = 'Position'; const aRotName: string = 'Rotation'; const aPosPrefix: string = wbPosPrefix; const aRotPrefix: string = wbRotPrefix): IwbRecordMemberDef; overload;
+function wbVec3PosRot(const aCombinedName: string = 'Position/Rotation'; const aPosName: string = 'Position'; const aRotName: string = 'Rotation'; const aPosPrefix: string = wbPosPrefix; const aRotPrefix: string = wbRotPrefix): IwbValueDef; overload;
+function wbVec3PosRot(const aSignature: TwbSignature; const aCombinedName: string = 'Position/Rotation'; aPosName: string = 'Position'; const aRotName: string = 'Rotation'; const aPosPrefix: string = wbPosPrefix; const aRotPrefix: string = wbRotPrefix): IwbRecordMemberDef; overload;
 
 function wbCombineVarRecs(const a, b : array of const)
                                      : TwbVarRecs;
@@ -755,6 +756,19 @@ begin
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
+
+  wbStaticPartPlacements :=
+    wbArrayS(DATA, 'Placements',
+      wbStruct('Placement', [
+        wbVec3Pos,
+        wbVec3Rot,
+        wbFloat('Scale')
+      ])
+      .SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(2, 'Scale: ', '')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapsePlacement)
+    , 0, cpNormal, True);
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -2873,9 +2887,9 @@ function wbVec3Rot(const aName: string; const aPrefix: string): IwbValueDef; ove
 begin
   Result :=
     wbStruct(aName, [
-      wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbFloatAngle('X', cpNormal, True),
+      wbFloatAngle('Y', cpNormal, True),
+      wbFloatAngle('Z', cpNormal, True)
     ])
     .SetSummaryKey([0, 1, 2])
     .SetSummaryMemberPrefixSuffix(0, aPrefix + '(', '')
@@ -2890,10 +2904,10 @@ begin
   Result := wbSubRecord(aSignature, aName, wbVec3Rot(aName));
 end;
 
-function wbVec3PosRot(const aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbValueDef; overload;
+function wbVec3PosRot(const aCombinedName: string; const aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbValueDef; overload;
 begin
   Result :=
-    wbStruct(aPosName+'/'+aRotName, [
+    wbStruct(aCombinedName, [
       wbVec3Pos(aPosName, aPosPrefix),
       wbVec3Rot(aRotName, aRotPrefix)
     ])
@@ -2902,9 +2916,9 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapsePosRot);
 end;
 
-function wbVec3PosRot(const aSignature: TwbSignature; aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbRecordMemberDef; overload;
+function wbVec3PosRot(const aSignature: TwbSignature; const aCombinedName: string; aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbRecordMemberDef; overload;
 begin
-  Result := wbSubRecord(aSignature, '', wbVec3PosRot(aPosName, aRotName, aPosPrefix, aRotPrefix));
+  Result := wbSubRecord(aSignature, aCombinedName, wbVec3PosRot('', aPosName, aRotName, aPosPrefix, aRotPrefix));
 end;
 
 function wbCombineVarRecs(const a, b : array of const)

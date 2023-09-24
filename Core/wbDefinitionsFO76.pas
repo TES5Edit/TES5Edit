@@ -10052,7 +10052,7 @@ begin
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
       wbFloat('Offset Z'),
-      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloatAngle('Rotation Z'),
       wbFormIDCk('Keyword', [KYWD, NULL]),
       wbFromVersion(125, wbInteger('Entry Types', itU8, wbFlags([
         'Front',
@@ -12873,8 +12873,8 @@ begin
           wbFloat('Cut - Min'),
           wbFloat('Cut - Max'),
           wbFloat('Cut - Radius'),
-          wbFloat('Gore Effects - Local Rotate X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Gore Effects - Local Rotate Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+          wbFloatAngle('Gore Effects - Local Rotate X'),
+          wbFloatAngle('Gore Effects - Local Rotate Y'),
           wbFloat('Cut - Tesselation'),
           wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
           wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
@@ -14353,8 +14353,8 @@ begin
 
       wbStruct('Pitch, Roll, Yaw', [
         wbUnused,
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
         wbUnused
       ]),
 
@@ -14404,8 +14404,8 @@ begin
 
       wbStruct('Pitch, Roll, Yaw', [
         wbUnused,
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
         wbUnused
       ]),
 
@@ -14423,7 +14423,7 @@ begin
         wbUnused
       ]),
 
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbFloatAngle,
       wbUnused,
       wbUnused
     ], cpNormal, True),
@@ -14455,28 +14455,28 @@ begin
 
       wbStruct('Pitch', [
         wbUnused,
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
         wbUnused
       ]),
 
       wbStruct('Roll', [
         wbUnused,
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
         wbUnused
       ]),
 
       wbStruct('Yaw', [
         wbUnused,
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
         wbUnused
       ]),
 
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-      wbFloat('Unknown', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+      wbFloatAngle,
+      wbFloatAngle,
+      wbFloatAngle
     ], cpNormal, True),
  {3}wbStruct('', [
       wbStruct('Left', [
@@ -14508,24 +14508,24 @@ begin
       ]),
 
       wbStruct('Pitch', [
-        wbFloat('Standing', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        wbFloatAngle('Standing'),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
+        wbFloatAngle('Sprint')
       ]),
 
       wbStruct('Roll', [
-        wbFloat('Standing', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        wbFloatAngle('Standing'),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
+        wbFloatAngle('Sprint')
       ]),
 
       wbStruct('Yaw', [
-        wbFloat('Standing', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Walk', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Run', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-        wbFloat('Sprint', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+        wbFloatAngle('Standing'),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Run'),
+        wbFloatAngle('Sprint')
       ]),
 
       wbUnused,
@@ -19569,20 +19569,7 @@ begin
         wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
         wbFromSize(8, wbFormIDCK('Material Swap', [MSWP, REFR, NULL]))
       ]),
-      //wbUnknown(ONAM), { Replaced by above? }
-      wbArrayS(DATA, 'Placements', wbStruct('Placement', [
-        wbStruct('Position', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbStruct('Rotation', [
-          wbFloat('X', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Y', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
-          wbFloat('Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbFloat('Scale')
-      ]), 0, cpNormal, True)
+      wbStaticPartPlacements
     ], [], cpNormal);
 
   wbRecord(SCOL, 'Static Collection',
