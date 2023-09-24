@@ -236,6 +236,8 @@ var
   wbALSH                    : IwbRecordMemberDef;
   wbACSH                    : IwbRecordMemberDef;
   wbCUSH                    : IwbRecordMemberDef;
+  wbPUSH                    : IwbRecordMemberDef;
+  wbPDSH                    : IwbRecordMemberDef;
   wbCITC                    : IwbSubRecordDef;
   wbCITCReq                 : IwbSubRecordDef;
   wbMGEFData                : IwbSubRecordStructDef;
@@ -6004,9 +6006,11 @@ begin
     wbCNTOs.SetRequired
   ], []);
 
-  wbALSH := wbSoundReference(ALSH);
-  wbACSH := wbSoundReference(ACSH);
-  wbCUSH := wbSoundReference(CUSH);
+  wbALSH := wbSoundReference(ALSH, 'Looping Sound');
+  wbACSH := wbSoundReference(ACSH, 'Activate Sound');
+  wbCUSH := wbSoundReference(CUSH, 'Crafting Sound');
+  wbPUSH := wbSoundReference(PUSH, 'Pickup Sound');
+  wbPDSH := wbSoundReference(PDSH, 'Dropdown Sound');
 
   {>>> When NAME is user defined these will be incorrect <<<}
   wbBipedObjectEnum := wbEnum([
@@ -9730,9 +9734,13 @@ begin
             ]),
             //UniqueOverlayList_Component
             wbStruct('', [
-              wbArray('Unknown', wbFormIDCk('Unknown', [SFBK]), -1).IncludeFlag(dfNotAlignable),
-              wbInteger('Unknown', itS32),
-              wbInteger('Unknown', itS32)
+              wbArray('Worldspaces',
+                wbStruct('Worldspace', [
+                  wbFormIDCk('Worldspace', [WRLD]),
+                  wbInteger('Grid Y', itS32),
+                  wbInteger('Grid X', itS32)
+                ])
+              , -1).IncludeFlag(dfNotAlignable)
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -10425,8 +10433,8 @@ begin
     wbFULL,
     wbKeywords,
     wbGenericModel,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
     wbCUSH,
     wbDESC,
     wbCVPA,
@@ -10473,8 +10481,8 @@ begin
     wbPTT2,
     wbFULL,
     wbGenericModel,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
     wbDESC,
     wbKeywords,
 //    wbDEST,
@@ -10530,8 +10538,8 @@ begin
     wbTexturedModel('Male world model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
     wbTexturedModel('Female world model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
     wbBO64,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
 //    wbDEST,
 //    ,
 //    wbETYP,
@@ -10670,8 +10678,8 @@ begin
     wbFULL,
     wbGenericModel,
     wbDESCreq,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
 //    wbDEST,
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
@@ -15735,8 +15743,8 @@ begin
     wbGenericModel,
     wbDEST,
     wbCUSH,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
     wbKeywords,
     wbCVPA,
     wbStruct(DATA, 'Data', [
@@ -15778,8 +15786,8 @@ begin
     wbFloat(SNAM), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
     wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum),
     wbInteger(DATA, 'Value', itU32), // req
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
@@ -18317,8 +18325,8 @@ begin
     wbFULL,
     wbKeywords,
     wbETYP,
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
     wbDESCReq,
     wbSPIT,
     wbEffects
@@ -18588,8 +18596,8 @@ begin
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbSoundReference(PUSH),
-    wbSoundReference(PDSH),
+    wbPUSH,
+    wbPDSH,
     wbKeywords,
     wbDESC,
     wbFormIDCk(INRD, 'Instance Naming', [INNR]),
