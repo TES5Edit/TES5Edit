@@ -296,6 +296,12 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
 
+function wbRotation(const aName: string = 'Unknown Angle'; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbValueDef; overload;
+  Begin
+  Result :=  wbFloat(aName, aPriority, aRequired, wbRotationFactor, wbRotationScale, nil, RadiansNormalize)
+
+end;
+
 function wbMOLM(const aSignature: TwbSignature): IwbSubRecordDef;
 begin
   Result :=
@@ -7507,12 +7513,12 @@ begin
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbFloat('Unknown Angle', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbRotation,
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
     wbFloat('Unknown'),
-    wbFloat('Unknown Angle', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+    wbRotation,
     wbFloat('Unknown'),
     wbFloat('Unknown')
   ]);
@@ -9690,7 +9696,7 @@ begin
         //BGSObjectWindowFilter_Component
         wbRStruct('Component Data', [
           wbUnknown(INTV),
-          wbString(FLTR)
+          wbString(FLTR, 'Filter')
         ], []),
         //BGSFormLinkData_Component
         wbRStruct('Component Data', [
@@ -9897,7 +9903,7 @@ begin
       wbFloat('Offset X'),
       wbFloat('Offset Y'),
       wbFloat('Offset Z'),
-      wbFloat('Rotation Z', cpNormal, True, wbRotationFactor, wbRotationScale, nil, RadiansNormalize),
+      wbRotation('Rotation Z', cpNormal, True),
       wbFormIDCk('Keyword', [KYWD, NULL]),
       wbFromVersion(125, wbInteger('Entry Types', itU8, wbFlags([
         'Front',
@@ -13116,8 +13122,8 @@ begin
       wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
 
-    wbArray(LCUR, 'Unknown', wbStruct('', [
-     wbFormIDCk('Generic Base Form', [GBFM]),                 //GBFM may be unique, only used by a single REFR (the one on the next line), and all have Unknown 2
+    wbArray(LCUR, 'Location Cell Unique Reference', wbStruct('', [
+     wbFormIDCk('Generic Base Form', [GBFM]),
      wbFormIDCk('Placed Object', [REFR]),
      wbFormIDCk('Location', [LCTN])
     ])),
@@ -14208,15 +14214,18 @@ end;
 procedure DefineSF1k;
 begin
   wbSPED := wbStruct(SPED, 'Movement Data', [
-  {  0} wbUnknown(4),
+  {  0} wbFloat,
   {  4} wbFloat,
-  {  8} wbUnknown(4),
+  {  8} wbFloat,
   { 12} wbFloat,
   { 16} wbFloat,
-  { 20} wbUnknown(16),
+  { 20} wbFloat,
+  { 24} wbFloat,
+  { 28} wbFloat,
+  { 32} wbFloat,
   { 36} wbFloat,
   { 40} wbFloat,
-  { 44} wbUnknown(4),
+  { 44} wbFloat,
   { 48} wbFloat,
   { 52} wbFloat,
   { 56} wbFloat,
@@ -14226,21 +14235,48 @@ begin
   { 72} wbFloat,
   { 76} wbFloat,
   { 80} wbFloat,
-  { 84} wbUnknown(4),
+  { 84} wbRotation,
   { 88} wbFloat,
   { 92} wbFloat,
   { 96} wbFloat,
-  {100} wbUnknown(32),
+  {100} wbRotation,
+  {104} wbRotation,
+  {108} wbRotation,
+  {112} wbFloat,
+  {116} wbRotation,
+  {120} wbRotation,
+  {124} wbRotation,
+  {128} wbRotation,
   {132} wbFloat,
   {136} wbFloat,
-  {140} wbUnknown(4),
+  {140} wbFloat,
   {144} wbFloat,
   {148} wbFloat,
   {152} wbFloat,
-  {156} wbUnknown(4),
+  {156} wbFloat,
   {160} wbFloat,
   {164} wbFloat,
-  {168} wbUnknown
+  {168} wbRotation,
+  {172} wbRotation,
+  {176} wbRotation,
+  {180} wbRotation,
+  {184} wbRotation,
+  {188} wbRotation,
+  {192} wbFloat,
+  {196} wbRotation,
+  {200} wbRotation,
+  {204} wbRotation,
+  {208} wbRotation,
+  {212} wbRotation,
+  {216} wbRotation,
+  {220} wbFloat,
+  {224} wbRotation,
+  {228} wbRotation,
+  {232} wbRotation,
+  {236} wbRotation,
+  {240} wbRotation,
+  {244} wbRotation,
+  {248} wbFloat
   ]);
 
   (*
@@ -14480,7 +14516,7 @@ begin
       ])),
       wbUnknown(4)
     ]),
-    wbUnknown(ENAM)
+    wbFormIDCK(ENAM, 'Effect Shader', [EFSH])
   ]);
 
   (* still exists in game code, but not in Starfield.esm * )
@@ -14521,7 +14557,7 @@ begin
     wbFloat(JNAM, 'Float Height'),
     }
     wbFloat(LNAM, 'Flight - Angle Gain'),
-    wbUnknown(KNAM),
+    wbFloat(KNAM),
     wbUnknown(INTV),
     wbEmpty(BOLV, 'Unknown')
   ]);
@@ -15628,7 +15664,7 @@ begin
     ]),
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
     wbInteger(NNAM, 'Amount Produced', itU16), // req
-    wbUnknown(SNAM), // req
+    wbFloat(SNAM), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
     wbSoundReference(PUSH),
@@ -19002,7 +19038,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR]),
     wbByteColors(XCLP),
-    wbUnknown(LODB)
+    wbInteger(LODB, 'Unknown', itU32)                    //Values are 0,1, and 2
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19734,7 +19770,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(GBFM, 'Generic Base Form',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2'
+      {0x00000004}  2, 'Unknown 2'                      //Possibly "Unique"
     ])), [
     wbEDID,
     wbVMAD,
