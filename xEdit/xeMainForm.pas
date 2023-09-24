@@ -20502,6 +20502,8 @@ begin
           wbContainerHandler.AddFolder(ltDataPath);
         end;
 
+        wbResourcesLoaded;
+
         _LoaderProgressAction := 'loading modules';
 
         for var

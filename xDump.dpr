@@ -1672,6 +1672,14 @@ begin
                         wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
                       end;
                     end;
+                    m.Clear;
+                    n.Clear;
+                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Wwise', wbDataPath, false, false, n, m)>0 then begin
+                      for j := 0 to Pred(n.Count) do begin
+                        ReportProgress('[' + n[j] + '] Loading Resources.');
+                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                      end;
+                    end;
                   finally
                     FreeAndNil(m);
                   end;
@@ -1688,6 +1696,8 @@ begin
 
       ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
       wbContainerHandler.AddFolder(wbDataPath);
+
+      wbResourcesLoaded;
 
       if wbToolMode in [tmDump] then
         _File := wbFile(s, High(Integer));

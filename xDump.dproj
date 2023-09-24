@@ -46,9 +46,8 @@
         <DCC_ExeOutput>.\Build</DCC_ExeOutput>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>.\Core;.\xDump;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\Core;.\xDump;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Manifest_File>(None)</Manifest_File>
-        <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>FileDescription=xDump;FileVersion=4.1.4.0;ProductName=xDump;ProductVersion=4.1.4.0</VerInfo_Keys>

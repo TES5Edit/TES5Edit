@@ -2924,16 +2924,6 @@ begin
   Result := wbSubRecord(aSignature, aCombinedName, wbVec3PosRot('', aPosName, aRotName, aPosPrefix, aRotPrefix));
 end;
 
-function wbCombineVarRecs(const a, b : array of const)
-                                     : TwbVarRecs;
-begin
-  SetLength(Result, Length(a) + Length(b));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-  if Length(b) > 0 then
-    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
-end;
-
 function wbVec3PosRotDegrees(const aCombinedName: string; const aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbValueDef; overload;
 begin
   Result :=
@@ -2949,6 +2939,17 @@ end;
 function wbVec3PosRotDegrees(const aSignature: TwbSignature; const aCombinedName: string; aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbRecordMemberDef; overload;
 begin
   Result := wbSubRecord(aSignature, aCombinedName, wbVec3PosRotDegrees('', aPosName, aRotName, aPosPrefix, aRotPrefix));
+end;
+
+
+function wbCombineVarRecs(const a, b : array of const)
+                                     : TwbVarRecs;
+begin
+  SetLength(Result, Length(a) + Length(b));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+  if Length(b) > 0 then
+    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
 end;
 
 function wbMakeVarRecs(const a : array of const)

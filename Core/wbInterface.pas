@@ -97,6 +97,9 @@ type
   TwbTwoPtrArray = array [0..Pred(High(Integer) div SizeOf(TwbTwoPtr))] of TwbTwoPtr;
   PwbTwoPtrArray = ^TwbTwoPtrArray;         {General array of TwbTwoPtr}
 
+  TwbStringArray = TArray<string>;
+  PwbStringArray = ^TwbStringArray;
+
 threadvar
   _wbProgressCallback                : TwbProgressCallback;
   wbCurrentTick                      : UInt64;
@@ -402,7 +405,7 @@ type
   TwbMessagePtrsHelper = record helper for TwbMessagePtrs
     procedure AddMessages(const aMessages: TwbMessagePtrs); overload;
     procedure AddMessages(const aMessages: TwbMessages); overload;
-    function ToStrings: TArray<string>;
+    function ToStrings: TwbStringArray;
   end;
 
   TConflictAll = (
@@ -561,6 +564,7 @@ type
     dtIntegerFormaterUnion,
     dtFlag,
     dtFloat,
+    dtGuid,
     dtArray,
     dtStruct,
     dtUnion,
@@ -633,10 +637,12 @@ type
     dfSummarySelfAsShortName,
     dfSummaryMembersShowIgnore,
     dfSummaryShowIgnore,
+    dfSummaryExcludeNULL,
     dfUnionStaticResolve,
     dfHideText,
     dfRemoveLastOnly,
-    dfTerminator
+    dfTerminator,
+    dfHasZeroTerminator
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -968,7 +974,7 @@ type
     procedure ResetReachable;
     function RemoveInjected(aCanRemove: Boolean): Boolean;
     function GetEditType: TwbEditType;
-    function GetEditInfo: TArray<string>;
+    function GetEditInfo: TwbStringArray;
     function GetDontShow: Boolean;
     procedure SetToDefault;
     procedure SetToDefaultIfAsCreatedEmpty;
@@ -1140,7 +1146,7 @@ type
 
     property EditType: TwbEditType
       read GetEditType;
-    property EditInfo: TArray<string>
+    property EditInfo: TwbStringArray
       read GetEditInfo;
 
     property DontShow: Boolean
@@ -1188,7 +1194,7 @@ type
 
   TwbContainerStates = set of TwbContainerState;
 
-  TDynStrings = TArray<string>;
+  TDynStrings = TwbStringArray;
 
   IwbContainerBase = interface(IwbElement)
     ['{1484D26A-0F67-41FA-9044-8772E68CBA56}']
@@ -1392,8 +1398,8 @@ type
     function GetHighObjectID: Cardinal;
     function GetHeader: IwbMainRecord;
 
-    function GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
-    procedure SetCachedEditInfo(aIdent: Integer; const aEditInfo: TArray<string>);
+    function GetCachedEditInfo(aIdent: Integer; var aEditInfo: TwbStringArray): Boolean;
+    procedure SetCachedEditInfo(aIdent: Integer; const aEditInfo: TwbStringArray);
 
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
@@ -2253,7 +2259,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self};
@@ -2269,6 +2275,7 @@ type
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef{Self};
     function SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef{Self};
+    function SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef{Self};
 
     property Size[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: Integer
       read GetSize;
@@ -2292,8 +2299,13 @@ type
 
     property EditType[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: TwbEditType
       read GetEditType;
-    property EditInfo[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: TArray<string>
+    property EditInfo[aBasePtr, aEndPtr: Pointer; const aElement: IwbElement]: TwbStringArray
       read GetEditInfo;
+  end;
+
+  IwbGuidDef = interface(IwbValueDef)
+    ['{DC03A774-B1F9-45C1-8EF5-53F7DE6FE80A}']
+
   end;
 
   TwbSubRecordForValueCallback = reference to procedure(const v: IwbValueDef);
@@ -2334,13 +2346,13 @@ type
     function SetCountPath(const aValue: string): IwbSubRecordArrayDef;
 
     function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
-    function GetDefaultEditValues: TArray<string>;
+    function GetDefaultEditValues: TwbStringArray;
 
     property Element: IwbRecordMemberDef read GetElement;
     property Count: Integer read GetCount; //fixed number of elementes if > 0
     property Sorted[const aContainer: IwbContainer]: Boolean read GetSorted;
     property CountPath: string read GetCountPath;
-    property DefaultEditValues: TArray<string> read GetDefaultEditValues;
+    property DefaultEditValues: TwbStringArray read GetDefaultEditValues;
   end;
 
   IwbSubRecordStructDef = interface(IwbRecordMemberDef)
@@ -2389,14 +2401,20 @@ type
       read GetMemberTypes;
   end;
 
+  IwbEnumDef = interface;
+
   IwbBaseStringDef = interface(IwbValueDef)
     ['{06632243-538C-48EC-9074-7BB72142CAB8}']
     function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
+
+    function SetEnum(const aEnum: IwbEnumDef): IwbBaseStringDef;
   end;
 
   IwbStringDef = interface(IwbBaseStringDef)
     ['{37B02D28-EDB4-41C6-B933-9F56C013A88A}']
     function GetStringSize: Integer;
+
+    function SetEnum(const aEnum: IwbEnumDef): IwbStringDef;
 
     property StringSize: Integer
       read GetStringSize;
@@ -2404,6 +2422,8 @@ type
 
   IwbLenStringDef = interface(IwbBaseStringDef)
     ['{1AD7FAE2-DAA7-4651-B78D-10E138EDF48B}']
+
+    function SetEnum(const aEnum: IwbEnumDef): IwbLenStringDef;
   end;
 
   IwbByteArrayDef = interface(IwbValueDef)
@@ -2476,7 +2496,7 @@ type
     function SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
 
     function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
-    function GetDefaultEditValues: TArray<string>;
+    function GetDefaultEditValues: TwbStringArray;
 
     property Element: IwbValueDef
       read GetElement;
@@ -2555,7 +2575,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement);
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -2578,7 +2598,7 @@ type
 
     property EditType[aInt: Int64; const aElement: IwbElement]: TwbEditType
       read GetEditType;
-    property EditInfo[aInt: Int64; const aElement: IwbElement]: TArray<string>
+    property EditInfo[aInt: Int64; const aElement: IwbElement]: TwbStringArray
       read GetEditInfo;
 
     property RequiresKey: Boolean
@@ -2684,10 +2704,12 @@ type
   IwbEnumDef = interface(IwbIntegerDefFormater)
     ['{A3AFE02E-F72D-4E0E-BC56-219F7EE2B564}']
 
-    function GetName(aIndex: Integer): string;
+    function GetName(aIndex: Int64): string;
     function GetNameCount: Integer;
 
-    property Names[aIndex: Integer]: string
+    function FindName(const aName: string; out aIndex: Int64): Boolean;
+
+    property Names[aIndex: Int64]: string
       read GetName;
     property NameCount: Integer
       read GetNameCount;
@@ -4109,19 +4131,19 @@ function wbMarkerReq(aPriority  : TwbConflictPriority = cpNormal;
                                 : IwbValueDef; overload;
 
 function wbGUID(const aSignature : TwbSignature;
-                 const aName      : string = 'Unknown';
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil;
-                       aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordDef; overload;
+                const aName      : string = 'Unknown';
+                      aPriority  : TwbConflictPriority = cpNormal;
+                      aRequired  : Boolean = False;
+                      aDontShow  : TwbDontShowCallback = nil;
+                      aGetCP     : TwbGetConflictPriority = nil)
+                                 : IwbSubRecordDef; overload;
 
 function wbGUID(const aName      : string = 'Unknown';
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil;
-                       aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbByteArrayDef; overload;
+                      aPriority  : TwbConflictPriority = cpNormal;
+                      aRequired  : Boolean = False;
+                      aDontShow  : TwbDontShowCallback = nil;
+                      aGetCP     : TwbGetConflictPriority = nil)
+                                 : IwbGuidDef; overload;
 
 function wbRefID: IwbRefID; overload;
 
@@ -4709,6 +4731,9 @@ function ShortenText(const aText: string; const aWidth: Integer = 64; const aPla
 procedure wbInitRecords;
 
 function wbGetUnknownIntString(aInt: Int64): string;
+
+procedure wbResourcesLoaded;
+procedure wbRegisterResourcesLoadedHandler(const aHandler: TProc);
 
 implementation
 
@@ -5399,6 +5424,7 @@ type
 
     {--- IwbDefInternal ---}
     procedure ParentSet; override;
+    procedure InitFromParent; override;
 
     {---IwbNamedDef---}
     function GetName: string;
@@ -5499,8 +5525,8 @@ type
     recFormIDBase         : Byte;
     recFormIDNameBase     : Byte;
     recSummaryKey         : array of Integer;
-    recSummaryPrefix      : TArray<string>;
-    recSummarySuffix      : TArray<string>;
+    recSummaryPrefix      : TwbStringArray;
+    recSummarySuffix      : TwbStringArray;
     recSummaryMaxDepth    : TArray<Integer>;
     recSummaryDelimiter   : string;
     recIgnoreList         : TwbSignatures;
@@ -5703,7 +5729,7 @@ type
     sraCount             : Integer;
     sraSorted            : Boolean;
     sraIsSorted          : TwbIsSortedCallback;
-    sraDefaultEditValues : TArray<string>;
+    sraDefaultEditValues : TwbStringArray;
     sraCountPath         : string;
   public
     constructor Clone(const aSource: TwbDef); override;
@@ -5753,7 +5779,7 @@ type
     function GetCount: Integer;
 
     function SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
-    function GetDefaultEditValues: TArray<string>;
+    function GetDefaultEditValues: TwbStringArray;
 
     function SetCountPath(const aValue: string): IwbSubRecordArrayDef;
   end;
@@ -5766,8 +5792,8 @@ type
     srsCanContainFormIDs : Boolean;
     srsAllowUnordered    : Boolean;
     srsSummaryKey        : array of Integer;
-    srsSummaryPrefix     : TArray<string>;
-    srsSummarySuffix     : TArray<string>;
+    srsSummaryPrefix     : TwbStringArray;
+    srsSummarySuffix     : TwbStringArray;
     srsSummaryMaxDepth   : TArray<Integer>;
     srsSummaryDelimiter  : string;
   public
@@ -5940,6 +5966,7 @@ type
     vdDefaultEditValue   : string;
     vdDefaultNativeValue : Variant;
     vdLinksToCallback    : TwbLinksToCallback;
+    vdEditInfo           : PwbStringArray;
     procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbValueDef---}
@@ -5965,7 +5992,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); virtual;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; virtual;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; virtual;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; virtual;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; virtual;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; virtual;
     function GetElementMap: TDynCardinalArray; virtual;
 
@@ -5974,12 +6001,39 @@ type
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
     function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef; virtual;
     function SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef; virtual;
+    function SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef{Self};
+
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self}; virtual;
 
     function MastersUpdated(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; virtual;
     procedure FindUsedMasters(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aMasters: PwbUsedMasters); virtual;
     function CompareExchangeFormID(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
+  end;
+
+  TwbGuidDef = class(TwbValueDef, IwbGuidDef)
+  protected
+    {---IwbDef---}
+    function GetDefType: TwbDefType; override;
+    function GetDefTypeName: string; override;
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+
+    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    procedure FromStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); virtual;
+    {---IwbValueDef---}
+    function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
+    function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    procedure FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); override;
+    function ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant; override;
+    procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
+    function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override;
+    function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+
   end;
 
   TwbResolvableDef = class(TwbValueDef, IwbResolvableDef)
@@ -6004,7 +6058,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetIsVariableSizeInternal: Boolean; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
@@ -6077,7 +6131,6 @@ type
     function GetMemberTypes: TwbDefTypes;
   end;
 
-
   TwbStringTransformType = (
     ttToString,
     ttToSortKey,
@@ -6091,12 +6144,19 @@ type
   TwbBaseStringDef = class(TwbValueDef, IwbBaseStringDef)
   protected
     bsdEncodingOverride : TEncoding;
+    bsdEnum             : IwbEnumDef;
     function bsdGetEncoding(const aElement: IwbElement): TEncoding;
   protected
     procedure AfterClone(const aSource: TwbDef); override;
 
+
+    {---IwbValueDef---}
+    function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override;
+
     {---IwbBaseStringDef---}
     function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
+    function SetEnum(const aEnum: IwbEnumDef): IwbBaseStringDef;
   public
     constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean;
       const aName: string; aAfterLoad: TwbAfterLoadCallback;
@@ -6120,6 +6180,7 @@ type
                        aGetCP      : TwbGetConflictPriority;
                        aTerminator : Boolean;
                        aForward    : Boolean = False); virtual;
+    procedure AfterClone(const aSource: TwbDef); override;
 
     function ToStringNative(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string; virtual;
     function ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
@@ -6151,6 +6212,7 @@ type
 
     {---IwbStringDef---}
     function GetStringSize: Integer;
+    function SetEnum(const aEnum: IwbEnumDef): IwbStringDef;
   end;
 
   TwbStringScriptDef = class(TwbStringDef)
@@ -6233,6 +6295,7 @@ type
 
     {---TwbLenStringDef---}
     function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    function SetEnum(const aEnum: IwbEnumDef): IwbLenStringDef;
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
@@ -6318,7 +6381,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
   end;
 
@@ -6402,7 +6465,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
 
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
@@ -6484,7 +6547,7 @@ type
     arSorted            : Boolean;
     arCanAddTo          : Boolean;
     arTerminated        : Boolean;
-    arDefaultEditValues : TArray<string>;
+    arDefaultEditValues : TwbStringArray;
 
     arSummaryDelimiter            : string;
     arSummaryPassthroughMaxCount  : Integer;
@@ -6560,7 +6623,7 @@ type
     function SetSummaryPassthroughMaxDepth(aCount: Integer): IwbArrayDef;
 
     function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
-    function GetDefaultEditValues: TArray<string>;
+    function GetDefaultEditValues: TwbStringArray;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -6572,8 +6635,8 @@ type
     stElementMap          : TDynCardinalArray;
     stCanContainFormIDs   : Boolean;
     stOptionalFromElement : Integer;
-    stSummaryPrefix       : TArray<string>;
-    stSummarySuffix       : TArray<string>;
+    stSummaryPrefix       : TwbStringArray;
+    stSummarySuffix       : TwbStringArray;
     stSummaryMaxDepth     : TArray<Integer>;
     stSummaryDelimiter    : string;
     stSizeCallback        : TwbStructSizeCallback;
@@ -6671,8 +6734,9 @@ type
   TwbStructLZDef = class(TwbStructCDef, IwbStructLZDef)
   end;
 
-  TwbIntegerDefFormater = class(TwbDef, IwbIntegerDefFormater)
+  TwbIntegerDefFormater = class(TwbNamedDef, IwbIntegerDefFormater)
   protected
+    constructor Create; reintroduce;
     constructor Clone(const aSource: TwbDef); override;
 
     {---IwbDef---}
@@ -6686,7 +6750,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); virtual;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; virtual;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; virtual;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; virtual;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; virtual;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; virtual;
@@ -6709,10 +6773,7 @@ type
     idfuMembers: array of IwbIntegerDefFormater;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority : TwbConflictPriority;
-                       aRequired : Boolean;
-                       aGetCP    : TwbGetConflictPriority;
-                       aDecider  : TwbIntegerDefFormaterUnionDecider;
+    constructor Create(aDecider  : TwbIntegerDefFormaterUnionDecider;
                  const aMembers  : array of IwbIntegerDefFormater);
 
     {---IwbDef---}
@@ -6728,7 +6789,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -6783,6 +6844,9 @@ type
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
 
+    {--- IwbDefInternal ---}
+    procedure InitFromParent; override;
+
     {---IwbIntegerDefFormater---}
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     function ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string; override;
@@ -6790,7 +6854,7 @@ type
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -6893,8 +6957,8 @@ type
   TwbFlagsDef = class(TwbIntegerDefFormater, IwbFlagsDef)
   private
     flgBaseFlagsDef    : IwbFlagsDef;
-    flgNames           : TArray<string>;
-    flgSummaries       : TArray<string>;
+    flgNames           : TwbStringArray;
+    flgSummaries       : TwbStringArray;
     flgDontShows       : TArray<TwbDontShowCallback>;
     flgHasDontShows    : Boolean;
     flgUnusedMask      : Int64;
@@ -6935,7 +6999,7 @@ type
     function CanContainFormIDs: Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -6998,13 +7062,16 @@ type
     snSummary : string;
   end;
 
+  TwbEnumDictionary = TDictionary<string, Int64>;
+
   TwbEnumDef = class(TwbIntegerDefFormater, IwbEnumDef)
   private
     enNames          : array of string;
     enSummaries      : array of string;
     enSparseNames    : array of TwbSparseName;
     enSparseNamesMap : array of PwbSparseName;
-    enEditInfo       : TArray<string>;
+    enEditInfo       : TwbStringArray;
+    enDictionary     : TwbEnumDictionary;
 
     UnknownEnums: TStringList;
   protected
@@ -7012,6 +7079,7 @@ type
     constructor Create(aHasSummary  : Boolean;
                  const aNames       : array of string;
                  const aSparseNames : array of const);
+    destructor Destroy; override;
 
     function FindSparseName(aSearchIndex: Int64; var Index: Integer): Boolean;
 
@@ -7028,15 +7096,17 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
 
     {---IwbEnumDef---}
-    function GetName(aIndex: Integer): string;
+    function GetName(aIndex: Int64): string;
     function GetNameCount: Integer;
+
+    function FindName(const aName: string; out aIndex: Int64): Boolean;
   end;
 
   TwbKey2Data6EnumDef = class(TwbEnumDef, IwbKey2Data6EnumDef)
@@ -7109,7 +7179,7 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>; override;
+    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -7121,7 +7191,7 @@ type
 
 var
   _NamedIndices: TStringList;
-  _NamedIndicesNames: TArray<string>;
+  _NamedIndicesNames: TwbStringArray;
   _NamedIndicesCaseSensitive: set of Byte;
 
 function wbNamedIndex(const aName: string; aCaseSensitive: Boolean): TwbNamedIndex;
@@ -8890,31 +8960,29 @@ begin
 end;
 
 function wbGUID(const aSignature : TwbSignature;
-                 const aName      : string = 'Unknown';
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil;
-                       aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordDef;
+                const aName      : string = 'Unknown';
+                      aPriority  : TwbConflictPriority = cpNormal;
+                      aRequired  : Boolean = False;
+                      aDontShow  : TwbDontShowCallback = nil;
+                      aGetCP     : TwbGetConflictPriority = nil)
+                                 : IwbSubRecordDef;
 begin
-  Result := wbByteArray(aSignature, aName, 16, aPriority, aRequired, False, aDontShow, aGetCP);
-  Result.IncludeFlag(dfNoReport);
+  Result := wbSubRecord(aSignature, aName, wbGUID('', aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
 end;
 
 function wbGUID(const aName      : string = 'Unknown';
-                       aPriority  : TwbConflictPriority = cpNormal;
-                       aRequired  : Boolean = False;
-                       aDontShow  : TwbDontShowCallback = nil;
-                       aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbByteArrayDef;
+                      aPriority  : TwbConflictPriority = cpNormal;
+                      aRequired  : Boolean = False;
+                      aDontShow  : TwbDontShowCallback = nil;
+                      aGetCP     : TwbGetConflictPriority = nil)
+                                 : IwbGuidDef;
 begin
-  Result := wbByteArray(aName, 16, aPriority, aRequired, aDontShow, aGetCP);
-  Result.IncludeFlag(dfNoReport);
+  Result := TwbGuidDef.Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, False);
 end;
 
 function wbDumpInteger : IwbIntegerDefFormater;
 begin
-  Result := TwbDumpIntegerDefFormater.Create(cpNormal, False, nil);
+  Result := TwbDumpIntegerDefFormater.Create;
 end;
 
 function wbKey2Data6Enum(const aNames : array of string) : IwbKey2Data6EnumDef;
@@ -8933,10 +9001,10 @@ var
 function wbRefID: IwbRefID;
 begin
   if wbReportMode then
-    Result := TwbRefID.Create(cpNormal, False, nil)
+    Result := TwbRefID.Create
   else begin
     if not Assigned(_RefID) then
-      _RefID := TwbRefID.Create(cpNormal, False, nil);
+      _RefID := TwbRefID.Create;
     Result := _RefID;
   end;
 end;
@@ -8969,10 +9037,10 @@ var
 function wbFormID: IwbFormID;
 begin
   if wbReportMode then
-    Result := TwbFormIDDefFormater.Create(cpNormal, False, nil)
+    Result := TwbFormIDDefFormater.Create
   else begin
     if not Assigned(_FormID) then
-      _FormID := TwbFormIDDefFormater.Create(cpNormal, False, nil);
+      _FormID := TwbFormIDDefFormater.Create;
     Result := _FormID;
   end;
 end;
@@ -9017,12 +9085,12 @@ end;
 
 function wbChar4: IwbChar4;
 begin
-  Result := TwbChar4.Create(cpNormal, False, nil);
+  Result := TwbChar4.Create;
 end;
 
 function wbStr4: IwbStr4;
 begin
-  Result := TwbStr4.Create(cpNormal, False, nil);
+  Result := TwbStr4.Create;
 end;
 
 function wbFormID(const aSignature : TwbSignature;
@@ -9342,7 +9410,7 @@ function wbFormaterUnion(aDecider : TwbIntegerDefFormaterUnionDecider;
                          aMembers : array of IwbIntegerDefFormater)
                                   : IwbIntegerDefFormaterUnion;
 begin
-  Result := TwbIntegerDefFormaterUnion.Create(cpNormal, False, nil, aDecider, aMembers);
+  Result := TwbIntegerDefFormaterUnion.Create(aDecider, aMembers);
 end;
 
 { TwbDef }
@@ -9763,6 +9831,16 @@ end;
 function TwbNamedDef.GetTreeHead: Boolean;
 begin
   Result := ndTreeHead;
+end;
+
+procedure TwbNamedDef.InitFromParent;
+begin
+  if Assigned(defParent) and (ndName = 'Unknown') and not Supports(Self, IwbSignatureDef) then begin
+    var lPos := defParent.GetChildPos(Self);
+    if lPos >= 0 then
+      ndName := ndName + '@' + lPos.ToString;
+  end;
+  inherited;
 end;
 
 function TwbNamedDef.IsRemoveable(const aElement: IwbElement): Boolean;
@@ -10312,9 +10390,9 @@ begin
     recSummaryKey[i] := aSummaryKey[i];
 end;
 
-procedure wbSetPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string; var arrPrefix, arrSuffix: TArray<string>);
+procedure wbSetPrefixSuffix(aIndex: Integer; const aPrefix, aSuffix: string; var arrPrefix, arrSuffix: TwbStringArray);
 
-  procedure SetArrayEntry(const aValue: string; var aArray: TArray<string>);
+  procedure SetArrayEntry(const aValue: string; var aArray: TwbStringArray);
   begin
     if aValue <> '' then
       if Length(aArray) < Succ(aIndex) then
@@ -10971,7 +11049,7 @@ begin
   Result := sraCountPath;
 end;
 
-function TwbSubRecordArrayDef.GetDefaultEditValues: TArray<string>;
+function TwbSubRecordArrayDef.GetDefaultEditValues: TwbStringArray;
 begin
   Result := Copy(sraDefaultEditValues);
 end;
@@ -12000,7 +12078,7 @@ begin
   end;
 end;
 
-function TwbIntegerDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+function TwbIntegerDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
 begin
   if Assigned(inFormater) then
     Result := inFormater.EditInfo[ToInt(aBasePtr, aEndPtr, aElement), aElement]
@@ -12904,7 +12982,7 @@ begin
   Inc(Result, Ord(arTerminated));
 end;
 
-function TwbArrayDef.GetDefaultEditValues: TArray<string>;
+function TwbArrayDef.GetDefaultEditValues: TwbStringArray;
 begin
   Result := Copy(arDefaultEditValues);
 end;
@@ -13724,7 +13802,7 @@ begin
     flgHasGetCPs := flgHasGetCPs or Assigned(flgGetCPs[i]);
   end;
 
-  inherited Create(cpNormal, False, nil);
+  inherited Create;
 end;
 
 function TwbFlagsDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -13773,7 +13851,7 @@ begin
   end;
 end;
 
-function TwbFlagsDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
+function TwbFlagsDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
 var
   FlagCount  : Integer;
   IntegerDef : IwbIntegerDef;
@@ -14083,11 +14161,15 @@ var
   i: Integer;
 begin
   with aSource as TwbEnumDef do begin
-    inherited Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    inherited Create;
     Self.enNames := Copy(enNames, 0, Length(enNames));
     Self.enSummaries := Copy(enSummaries, 0, Length(enSummaries));
     Self.enSparseNames := Copy(enSparseNames, 0, Length(enSparseNames));
     Self.enEditInfo := enEditInfo;
+
+    Self.enDictionary := TwbEnumDictionary.Create(enDictionary.Capacity, TIStringComparer.Ordinal);
+    for var lPair in enDictionary.ToArray do
+      Self.enDictionary.Add(lPair.Key, lPair.Value);
   end;
 
   SetLength(enSparseNamesMap, Length(enSparseNames));
@@ -14095,6 +14177,8 @@ begin
     enSparseNamesMap[i] := @enSparseNames[i];
   if Length(enSparseNames) > 0 then
     wbMergeSortPtr(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
+
+  Self.AfterClone(aSource);
 end;
 
 constructor TwbEnumDef.Create(aHasSummary  : Boolean;
@@ -14113,6 +14197,8 @@ begin
     l := l div StepSize;
   end;
 
+  enDictionary := TwbEnumDictionary.Create(l + (Length(aSparseNames) div 2), TIStringComparer.Ordinal);
+
   EditInfo := TwbFastStringListIC.Create;
   try
     SetLength(enNames, l);
@@ -14120,11 +14206,18 @@ begin
     for i := Low(enNames) to High(enNames) do begin
       var lName := aNames[i*StepSize];
       enNames[i] := lName;
-      if lName <> '' then
+      if lName <> '' then begin
+        if not enDictionary.TryAdd(lName, i) then begin
+          lName := lName + '@' + i.ToString;
+          enDictionary.Add(lName, i);
+          enNames[i] := lName;
+        end;
+
         if wbShowFlagEnumValue then
           EditInfo.Add(lName + ' (' + IntToStr(i) + ')')
         else
           EditInfo.Add(lName);
+      end;
 
       var lSummary := '';
       if aHasSummary then
@@ -14174,11 +14267,17 @@ begin
         if snSummary = '' then
           snSummary := snName;
 
-        if snName <> '' then
+        if snName <> '' then begin
+          if not enDictionary.TryAdd(snName, snIndex) then begin
+            snName := snName  + '@' + snIndex.ToString;
+            enDictionary.Add(snName, snIndex);
+          end;
+
           if wbShowFlagEnumValue then
             EditInfo.Add(snName + ' (' + IntToStr(snIndex) + ')')
           else
             EditInfo.Add(snName);
+        end;
       end;
     end;
     EditInfo.Sort;
@@ -14193,7 +14292,13 @@ begin
   if Length(enSparseNames) > 0 then
     wbMergeSortPtr(@enSparseNamesMap[0], Length(enSparseNames), CompareSparseName);
 
-  inherited Create(cpNormal, False, nil);
+  inherited Create;
+end;
+
+destructor TwbEnumDef.Destroy;
+begin
+  inherited;
+  FreeAndNil(enDictionary);
 end;
 
 function CmpB8(a, b: Byte): Integer;
@@ -14386,6 +14491,11 @@ begin
 end;
 
 
+function TwbEnumDef.FindName(const aName: string; out aIndex: Int64): Boolean;
+begin
+  Result := enDictionary.TryGetValue(aName, aIndex);
+end;
+
 function TwbEnumDef.FindSparseName(aSearchIndex: Int64; var Index: Integer): Boolean;
 var
   L, H, I, C: Integer;
@@ -14411,20 +14521,24 @@ begin
 end;
 
 function TwbEnumDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
-var
-  i, j: Integer;
-  Value: string;
 begin
   if aValue = '' then
     Result := 0
   else begin
-    Value := aValue;
-    if wbShowFlagEnumValue and (Value[Length(Value)] = ')') then begin
+    var lValue := aValue;
+
+    if wbShowFlagEnumValue and (lValue[Length(lValue)] = ')') then begin
       // remove an integer value of enum from enum string value
-      i := LastDelimiter('(', Value);
-      if (i > 0) and TryStrToInt(Copy(Value, Succ(i), Length(Value) - Succ(i)), j) then
-        Delete(Value, Pred(i), Length(Value));
+      var lOpenParensIdx := LastDelimiter('(', lValue);
+      var lDummy: Integer;
+      if (lOpenParensIdx > 0) and TryStrToInt(Copy(lValue, Succ(lOpenParensIdx), Length(lValue) - Succ(lOpenParensIdx)), lDummy) then
+        Delete(lValue, Pred(lOpenParensIdx), Length(lValue));
     end;
+
+    if enDictionary.TryGetValue(lValue, Result) then
+      Exit;
+
+    (*
     {Try exact match first}
     for i := Low(enNames) to High(enNames) do
       if SameStr(enNames[i], Value) then begin
@@ -14447,7 +14561,9 @@ begin
         Result := snIndex;
         Exit;
       end;
-    Result := StrToInt64(Value);
+    *)
+
+    Result := StrToInt64(lValue);
   end;
 end;
 
@@ -14465,7 +14581,7 @@ begin
   end;
 end;
 
-function TwbEnumDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
+function TwbEnumDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
 begin
   Result := Copy(enEditInfo);
 end;
@@ -14483,9 +14599,18 @@ begin
       Result := False;
 end;
 
-function TwbEnumDef.GetName(aIndex: Integer): string;
+function TwbEnumDef.GetName(aIndex: Int64): string;
 begin
-  Result := enNames[aIndex];
+  if (aIndex >= Low(enNames)) and (aIndex <= High(enNames)) then
+    Result := enNames[aIndex]
+  else
+    Result := '';
+
+  if Result = '' then begin
+    var lSparseIdx := -1;
+    if FindSparseName(aIndex, lSparseIdx) then
+      Result := enSparseNamesMap[lSparseIdx].snName;
+  end;
 end;
 
 function TwbEnumDef.GetNameCount: Integer;
@@ -14595,6 +14720,11 @@ end;
 
 { TwbStringDef }
 
+procedure TwbStringDef.AfterClone(const aSource: TwbDef);
+begin
+  inherited;
+end;
+
 function TwbStringDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
   StringDef: IwbStringDef;
@@ -14642,6 +14772,14 @@ end;
 
 procedure TwbStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 begin
+  var lValue := aValue;
+  if Assigned(bsdEnum) then begin
+    var lEnumIdx: Int64;
+    if bsdEnum.FindName(lValue, lEnumIdx) then
+      lValue := bsdEnum.Names[lEnumIdx]
+//    else
+//      raise Exception.Create('"' + lValue + '" is not a valid value for ' + GetPath);
+  end;
   FromStringTransform(aBasePtr, aEndPtr, aElement, aValue, ttFromEditValue);
 end;
 
@@ -14712,6 +14850,15 @@ end;
 function TwbStringDef.GetStringSize: Integer;
 begin
   Result := sdSize;
+end;
+
+function TwbStringDef.SetEnum(const aEnum: IwbEnumDef): IwbStringDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbStringDef(Duplicate).SetEnum(aEnum));
+
+  Result := Self;
+  bsdEnum := aEnum;
 end;
 
 function TwbStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -15434,7 +15581,7 @@ end;
 constructor TwbChar4.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbChar4 do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create.AfterClone(aSource);
 end;
 
 function TwbChar4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -15535,7 +15682,7 @@ end;
 constructor TwbStr4.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbStr4 do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create.AfterClone(aSource);
 end;
 
 function TwbStr4.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -15691,7 +15838,7 @@ end;
 constructor TwbFormIDDefFormater.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbFormIDDefFormater do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+    Self.Create.AfterClone(aSource);
 end;
 
 function TwbFormIDDefFormater.CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean;
@@ -15913,7 +16060,7 @@ begin
   Result := FormID.ToCardinal;
 end;
 
-function TwbFormIDDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
+function TwbFormIDDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
 var
   ACVAIsValid : Boolean;
   Strings     : TStringList;
@@ -16236,6 +16383,15 @@ begin
   end;
 end;
 
+procedure TwbFormIDDefFormater.InitFromParent;
+begin
+  inherited;
+  if Assigned(defParent) then begin
+    if dfSummaryExcludeNULL in defParent.defFlags then
+      Include(defFlags, dfSummaryExcludeNULL);
+  end;
+end;
+
 function TwbFormIDDefFormater.IsValid(const aSignature: TwbSignature): Boolean;
 begin
   Result := aSignature <> 'ACVA';
@@ -16442,9 +16598,12 @@ begin
           FoundSignatures.Objects[i] := TObject(Succ(Integer(FoundSignatures.Objects[i])));
         end;
     end else begin
-      if aForSummary then
-        Result := 'NULL'
-      else
+      if aForSummary then begin
+        if dfSummaryExcludeNULL in defFlags then
+          Result := ''
+        else
+          Result := 'NULL'
+      end else
         Result := 'NULL - Null Reference ['+FormID.ToString(False)+']';
       if wbReportMode and not (dfNoReport in defFlags) then
         if wbReportFormIDs then begin
@@ -16721,10 +16880,13 @@ begin
       end
 end;
 
-function TwbByteArrayDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+function TwbByteArrayDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
 var
   s: string;
 begin
+  if Assigned(vdEditInfo) then
+    Exit(vdEditInfo^);
+
   Result := nil;
   if Assigned(ndToStr) then
     with TStringList.Create do try
@@ -16748,7 +16910,11 @@ begin
     if SameText(s, 'ComboBox') then
       Result := etComboBox
     else if SameText(s, 'CheckComboBox') then
-      Result := etCheckComboBox;
+      Result := etCheckComboBox
+    else begin
+      Assert(s = '', 'Invalid result from ToStr ctEditType callback for ' + GetFullPath);
+      Result := etDefault;
+    end;
   end;
 end;
 
@@ -17311,7 +17477,7 @@ end;
 constructor TwbDivDef.Create(aValue: Integer);
 begin
   ddValue := aValue;
-  inherited Create(cpNormal, False, nil);
+  inherited Create;
 end;
 
 function TwbDivDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -17369,7 +17535,7 @@ end;
 constructor TwbMulDef.Create(aValue: Integer);
 begin
   mdValue := aValue;
-  inherited Create(cpNormal, False, nil);
+  inherited Create;
 end;
 
 function TwbMulDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -17435,7 +17601,7 @@ constructor TwbCallbackDef.Create(const aToStr : TwbIntToStrCallback;
 begin
   cdToStr := aToStr;
   cdToInt := aToInt;
-  inherited Create(cpNormal, False, nil);
+  inherited Create;
 end;
 
 function TwbCallbackDef.FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -17451,7 +17617,7 @@ begin
   Result := cdToStr;
 end;
 
-function TwbCallbackDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
+function TwbCallbackDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
 begin
   with TStringList.Create do try
     CommaText := cdToStr(aInt, aElement, ctEditInfo);
@@ -17470,7 +17636,11 @@ begin
   if SameText(s, 'ComboBox') then
     Result := etComboBox
   else if SameText(s, 'CheckComboBox') then
-    Result := etCheckComboBox;
+    Result := etCheckComboBox
+  else begin
+    Assert(s = '', 'Invalid result from ToStr ctEditType callback for ' + GetFullPath);
+    Result := etDefault;
+  end;
 end;
 
 function TwbCallbackDef.GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean;
@@ -17513,6 +17683,7 @@ begin
     Self.vdDefaultNativeValue := vdDefaultNativeValue;
     Self.vdLinksToCallback := vdLinksToCallback;
     Self.ndToStr := ndToStr;
+    Self.vdEditInfo := vdEditInfo;
   end;
 end;
 
@@ -17554,8 +17725,10 @@ begin
   Result := False;
 end;
 
-function TwbValueDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+function TwbValueDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
 begin
+  if Assigned(vdEditInfo) then
+    Exit(vdEditInfo^);
   Result := nil;
 end;
 
@@ -17685,6 +17858,19 @@ begin
 
   Result := Self;
   vdLinksToCallback := aCallback;
+end;
+
+function TwbValueDef.SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef;
+begin
+  Result := Self;
+
+  if vdEditInfo = aEditInfo then
+    Exit;
+
+  if Assigned(defParent) then
+    Exit(TwbValueDef(Duplicate).SetStaticEditInfo(aEditInfo));
+
+  vdEditInfo := aEditInfo;
 end;
 
 function TwbValueDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -17976,7 +18162,7 @@ begin
     fidcValidFlstRefs.Add(aValidFlstRefs[i]);
   end;
 
-  inherited Create(cpNormal, False, nil);
+  inherited Create;
 end;
 
 destructor TwbFormIDChecked.Destroy;
@@ -18115,14 +18301,19 @@ end;
 
 constructor TwbIntegerDefFormater.Clone(const aSource: TwbDef);
 begin
-  with aSource as TwbIntegerDefFormater do
-    Self.Create(defPriority, defRequired, defGetCP).AfterClone(aSource);
+  with (aSource as TwbIntegerDefFormater) do
+    Self.Create.AfterClone(aSource);
 end;
 
 function TwbIntegerDefFormater.CompareExchangeFormID(var aInt: Int64;
   aOldFormID, aNewFormID: TwbFormID; const aElement: IwbElement): Boolean;
 begin
   Result := False; // ? Should be overriden
+end;
+
+constructor TwbIntegerDefFormater.Create;
+begin
+  inherited Create(cpNormal, False, ClassName, nil, nil, nil, nil, False);
 end;
 
 procedure TwbIntegerDefFormater.FindUsedMasters(aInt: Int64; aMasters: PwbUsedMasters; const aElement: IwbElement);
@@ -18151,7 +18342,7 @@ begin
   Result := ClassName;
 end;
 
-function TwbIntegerDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TArray<string>;
+function TwbIntegerDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
 begin
   Result := nil;
 end;
@@ -18377,10 +18568,13 @@ begin
   Result := 'Resolvable';
 end;
 
-function TwbResolvableDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TArray<string>;
+function TwbResolvableDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
 var
   ValueDef: IwbValueDef;
 begin
+  if Assigned(vdEditInfo) then
+    Exit(vdEditInfo^);
+
   ValueDef := ResolveDef(aBasePtr, aEndPtr, aElement);
   if Assigned(ValueDef) then
     Result := ValueDef.EditInfo[aBasePtr, aEndPtr, aElement]
@@ -18989,7 +19183,19 @@ var
   p       : Pointer;
   b       : TBytes;
 begin
-  b := bsdGetEncoding(aElement).GetBytes(aValue);
+  var lValue := aValue;
+  if Assigned(bsdEnum) then begin
+    var lEnumIdx: Int64;
+    if bsdEnum.FindName(lValue, lEnumIdx) then
+      lValue := bsdEnum.Names[lEnumIdx]
+//    else
+//      raise Exception.Create('"' + lValue + '" is not a valid value for ' + GetPath);
+  end;
+
+  b := bsdGetEncoding(aElement).GetBytes(lValue);
+  if (dfHasZeroTerminator in defFlags) and ((Length(b) < 1) or (b[High(b)] <> 0)) then
+    SetLength(b, Succ(Length(b))); //new byte automatically 0
+
   Len := Length(b);
   NewSize := Len + GetPrefixOffset;
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(ndTerminator));
@@ -19089,6 +19295,15 @@ begin
   Result := GetPrefixOffset+Ord(ndTerminator);
 end;
 
+function TwbLenStringDef.SetEnum(const aEnum: IwbEnumDef): IwbLenStringDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbLenStringDef(Duplicate).SetEnum(aEnum));
+
+  Result := Self;
+  bsdEnum := aEnum;
+end;
+
 procedure TwbLenStringDef.SetPrefixValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
 begin
   case Prefix of
@@ -19148,6 +19363,8 @@ begin
   if Len > 0 then begin
     b := BytesOf(aBasePtr, Len);
     try
+      if (dfHasZeroTerminator in defFlags) and (b[High(b)] = 0) then
+        SetLength(b, Pred(Length(b)));
       Result := bsdGetEncoding(aElement).GetString(b);
     except
       on E: Exception do begin
@@ -20045,7 +20262,7 @@ end;
 constructor TwbIntegerDefFormaterUnion.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbIntegerDefFormaterUnion do
-    Self.Create(defPriority, defRequired, defGetCP, idfuDecider, idfuMembers).AfterClone(aSource);
+    Self.Create(idfuDecider, idfuMembers).AfterClone(aSource);
 end;
 
 function TwbIntegerDefFormaterUnion.CompareExchangeFormID(var aInt       : Int64;
@@ -20063,15 +20280,12 @@ begin
     Result := False;
 end;
 
-constructor TwbIntegerDefFormaterUnion.Create(aPriority : TwbConflictPriority;
-                                              aRequired : Boolean;
-                                              aGetCP    : TwbGetConflictPriority;
-                                              aDecider  : TwbIntegerDefFormaterUnionDecider;
+constructor TwbIntegerDefFormaterUnion.Create(aDecider  : TwbIntegerDefFormaterUnionDecider;
                                         const aMembers  : array of IwbIntegerDefFormater);
 var
   i: Integer;
 begin
-  inherited Create(aPriority, aRequired, aGetCP);
+  inherited Create;
   idfuDecider := aDecider;
   SetLength(idfuMembers, Length(aMembers));
   for i := Low(aMembers) to High(aMembers) do
@@ -20132,7 +20346,7 @@ end;
 
 function TwbIntegerDefFormaterUnion.GetEditInfo(aInt     : Int64;
                                           const aElement : IwbElement)
-                                                         : TArray<string>;
+                                                         : TwbStringArray;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
@@ -20838,7 +21052,7 @@ begin
     Self[Len+i] := @aMessages[i];
 end;
 
-function TwbMessagePtrsHelper.ToStrings: TArray<string>;
+function TwbMessagePtrsHelper.ToStrings: TwbStringArray;
 var
   i: Integer;
 begin
@@ -21090,7 +21304,7 @@ class operator TwbVersion.Implicit(const s: string): TwbVersion;
 var
   t  : string;
   i  : Integer;
-  sl : TArray<string>;
+  sl : TwbStringArray;
 begin
   with Result do begin
     t := s;
@@ -21212,8 +21426,10 @@ end;
 procedure TwbBaseStringDef.AfterClone(const aSource: TwbDef);
 begin
   inherited;
-  with aSource as TwbBaseStringDef do
+  with aSource as TwbBaseStringDef do begin
     Self.bsdEncodingOverride := bsdEncodingOverride;
+    Self.bsdEnum := bsdEnum;
+  end;
 end;
 
 function TwbBaseStringDef.bsdGetEncoding(const aElement: IwbElement): TEncoding;
@@ -21246,6 +21462,52 @@ begin
   inherited;
 end;
 
+function TwbBaseStringDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
+begin
+  if Assigned(vdEditInfo) then
+    Exit(vdEditInfo^);
+
+  inherited;
+  if Assigned(bsdEnum) then
+    Result := bsdEnum.EditInfo[0, aElement];
+
+  if Assigned(ndToStr) then
+    with TStringList.Create do try
+      if Length(Result) > 0 then
+        AddStrings(Result);
+      var s := CommaText;
+      ndToStr(s, aBasePtr, aEndPtr, aElement, ctEditInfo);
+      CommaText := s;
+      Result := ToStringArray;
+    finally
+      Free;
+    end;
+end;
+
+function TwbBaseStringDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
+begin
+  inherited;
+  if Assigned(bsdEnum) then
+    Result := bsdEnum.EditType[0, aElement];
+
+  if Assigned(ndToStr) then begin
+    var s := '';
+    if Result = etComboBox then
+      s := 'ComboBox'
+    else if Result = etCheckComboBox then
+      s := 'CheckComboBox';
+    ndToStr(s, aBasePtr, aEndPtr, aElement, ctEditType);
+    if SameText(s, 'ComboBox') then
+      Result := etComboBox
+    else if SameText(s, 'CheckComboBox') then
+      Result := etCheckComboBox
+    else begin
+      Assert(s = '', 'Invalid result from ToStr ctEditType callback for ' + GetFullPath);
+      Result := etDefault;
+    end;
+  end;
+end;
+
 function TwbBaseStringDef.OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
 begin
   if Assigned(defParent) then
@@ -21253,6 +21515,15 @@ begin
 
   Result := Self;
   bsdEncodingOverride := aEncoding;
+end;
+
+function TwbBaseStringDef.SetEnum(const aEnum: IwbEnumDef): IwbBaseStringDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbBaseStringDef(Duplicate).SetEnum(aEnum));
+
+  Result := Self;
+  bsdEnum := aEnum;
 end;
 
 procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
@@ -21622,6 +21893,227 @@ end;
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
   Result := wbHideNeverShow;
+end;
+
+var
+  _ResourcesLoadedHandlers: TArray<TProc>;
+
+procedure wbResourcesLoaded;
+begin
+  for var lIdx := Low(_ResourcesLoadedHandlers) to High(_ResourcesLoadedHandlers) do
+    _ResourcesLoadedHandlers[lIdx]();
+end;
+
+procedure wbRegisterResourcesLoadedHandler(const aHandler: TProc);
+begin
+  SetLength(_ResourcesLoadedHandlers, Succ(Length(_ResourcesLoadedHandlers)));
+  _ResourcesLoadedHandlers[High(_ResourcesLoadedHandlers)] := aHandler;
+end;
+
+{ TwbGuidDef }
+
+function TwbGuidDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+begin
+  Result := Supports(aDef, IwbGuidDef);
+end;
+
+procedure TwbGuidDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
+begin
+  if Assigned(ndToStr) then begin
+    var lValue := aValue;
+    ndToStr(lValue, aBasePtr, aEndPtr, aElement, ctFromEditValue);
+    FromStringInternal(aBasePtr, aEndPtr, aElement, lValue);
+  end else
+    FromStringInternal(aBasePtr, aEndPtr, aElement, aValue);
+end;
+
+procedure TwbGuidDef.FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant);
+begin
+  var lString: string := aValue;
+
+  if Assigned(ndToStr) then
+    ndToStr(lString, aBasePtr, aEndPtr, aElement, ctFromNativeValue);
+
+  FromStringInternal(aBasePtr, aEndPtr, aElement, aValue);
+end;
+
+procedure TwbGuidDef.FromStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
+begin
+  var lLength := 0;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) then
+    lLength := NativeInt(aEndPtr) - NativeInt(aBasePtr);
+  if lLength < 16 then
+    raise Exception.Create('Not enough space to save a GUID');
+
+  var lValue := aValue;
+
+  if aValue = '' then begin
+    var pInt: PInt64 := PInt64(aBasePtr);
+    pInt^ := 0;
+    Inc(pInt);
+    pInt^ := 0;
+    Exit;
+  end;
+
+  if Length(aValue) <> 38 then
+    raise Exception.Create('Not a valid GUID: ' + aValue);
+
+  if (aValue[1] <> '{') or
+     (aValue[10] <> '-') or
+     (aValue[15] <> '-') or
+     (aValue[20] <> '-') or
+     (aValue[25] <> '-') or
+     (aValue[38] <> '}')
+  then
+    raise Exception.Create('Not a valid GUID: ' + aValue);
+
+  Delete(lValue, 38, 1);
+  Delete(lValue, 25, 1);
+  Delete(lValue, 20, 1);
+  Delete(lValue, 15, 1);
+  Delete(lValue, 10, 1);
+  Delete(lValue,  1, 1);
+
+  var lIntA:PInt64 := PInt64(aBasePtr);
+  var lIntB := lIntA;
+  Inc(lIntB);
+
+  if not (TryStrToInt64('$'+Copy(lValue, 1, 16), lIntA^) and TryStrToInt64('$'+Copy(lValue, 17, 16), lIntB^)) then
+    raise Exception.Create('Not a valid GUID: ' + aValue);
+end;
+
+function TwbGuidDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 16;
+end;
+
+function TwbGuidDef.GetDefType: TwbDefType;
+begin
+  Result := dtGuid;
+end;
+
+function TwbGuidDef.GetDefTypeName: string;
+begin
+  Result := 'GUID';
+end;
+
+function TwbGuidDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
+begin
+  if Assigned(vdEditInfo) then
+    Exit(vdEditInfo^);
+
+  Result := nil;
+  if Assigned(ndToStr) then
+    with TStringList.Create do try
+      var s := '';
+      ndToStr(s, aBasePtr, aEndPtr, aElement, ctEditInfo);
+      CommaText := s;
+      Result := ToStringArray;
+    finally
+      Free;
+    end;
+end;
+
+function TwbGuidDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
+begin
+  Result := etDefault;
+  if Assigned(ndToStr) then begin
+    var s := '';
+    ndToStr(s, aBasePtr, aEndPtr, aElement, ctEditType);
+    if SameText(s, 'ComboBox') then
+      Result := etComboBox
+    else if SameText(s, 'CheckComboBox') then
+      Result := etCheckComboBox
+    else begin
+      Assert(s = '', 'Invalid result from ToStr ctEditType callback for ' + GetFullPath);
+      Result := etDefault;
+    end;
+  end;
+end;
+
+function TwbGuidDef.GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+begin
+  Result := True;
+  if defInternalEditOnly then
+    if not wbIsInternalEdit then
+      Result := False;
+end;
+
+function TwbGuidDef.GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 16;
+end;
+
+function TwbGuidDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
+begin
+  Result := False;
+  if vdsHasDefaultNativeValue in vdStates then begin
+    Result := not Assigned(aBasePtr) or (ToNativeValue(aBasePtr, aEndPtr, aElement) <> vdDefaultNativeValue);
+    if Result then
+      FromNativeValue(aBasePtr, aEndPtr, aElement, vdDefaultNativeValue);
+  end else begin
+    Result := not Assigned(aBasePtr) or (ToEditValue(aBasePtr, aEndPtr, aElement) <> vdDefaultEditValue);
+    if Result then
+      FromEditValue(aBasePtr, aEndPtr, aElement, vdDefaultEditValue);
+  end;
+end;
+
+function TwbGuidDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
+end;
+
+function TwbGuidDef.ToNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Variant;
+begin
+  var lString := ToStringInternal(aBasePtr, aEndPtr, aElement);
+
+  if Assigned(ndToStr) then
+    ndToStr(lString, aBasePtr, aEndPtr, aElement, ctToNativeValue);
+
+  Result := lString;
+end;
+
+function TwbGuidDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
+  Used(aElement, Result);
+end;
+
+function TwbGuidDef.ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := '';
+
+  var lLength := 0;
+  if Assigned(aBasePtr) and Assigned(aEndPtr) then
+    lLength := NativeInt(aEndPtr) - NativeInt(aBasePtr);
+  if lLength < 16 then
+    Exit;
+
+  var pInt := PInt64(aBasePtr);
+  Result := IntToHex(pInt^);
+  Inc(pInt);
+  Result := '{' + Result + IntToHex(pInt^) + '}';
+  //         11111111112222222222333333333
+  //12345678901234567890123456789012345678
+  //{25182999-A018-45AC-856A-C8DB4FD7C97F}
+  Insert('-', Result, 10);
+  Insert('-', Result, 15);
+  Insert('-', Result, 20);
+  Insert('-', Result, 25);
+end;
+
+function TwbGuidDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+begin
+  Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
 end;
 
 initialization
