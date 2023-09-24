@@ -4957,7 +4957,7 @@ begin
 end;
 
 
-function wbObjectModPropertiesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;                            //work in progress
+function wbObjectModPropertiesDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   MainRecord : IwbMainRecord;
   PropName      : string;
@@ -10506,10 +10506,38 @@ begin
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
     wbFormIDCk(PNAM, 'Body Part Data', [BPTD]),
-    wbUnknown(MNAM),
-    wbString(TNAM),
-    wbString(SNAM),
-    wbString(VNAM),
+    wbRStruct('AVM Data',[
+     wbInteger(MNAM, 'Type', itU32),
+     wbString(TNAM, 'Color Mapping')
+     .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
+      var
+       Container     : IwbContainer;
+       MNAMType      : Integer;
+      begin
+            Result := nil;
+            if not Assigned(aElement) then
+              Exit;
+            var lAVMDName := aElement.NativeValue;
+            if not VarIsStr(lAVMDName) then
+              Exit;
+
+            var lFile := aElement._File;
+            if not Assigned(lFile) then
+              Exit;
+
+            Container := aElement.Container;
+            MNamType := Container.ElementNativeValues['MNAM'];
+
+             If MNAMType = 1 then
+              Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName]
+             else if MNAMType = 2 then
+              Result := lFile.RecordFromIndexByKey[wbIdxComplexGroup, lAVMDName]
+             else if MNAMType = 3 then
+              Result := lFile.RecordFromIndexByKey[wbIdxModulation, lAVMDName]
+          end),
+     wbString(SNAM, 'Entry Name'),
+     wbString(VNAM, 'Entry Value')
+     ], []),
     wbRStructs('Bone Datas', 'Bone Data', [
       wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
       wbRArray('Modifiers', wbFormIDCk(BNAM, 'Modifier', [BMOD]))
