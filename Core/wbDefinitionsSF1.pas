@@ -14233,13 +14233,13 @@ begin
   { 88} wbFloat,
   { 92} wbFloat,
   { 96} wbFloat,
-  {100} wbFloatAngle,
-  {104} wbFloatAngle,
-  {108} wbFloatAngle,
-  {112} wbFloat,
-  {116} wbFloatAngle,
-  {120} wbFloatAngle,
-  {124} wbFloatAngle,
+  {100} wbFloat,
+  {104} wbFloat,
+  {108} wbFloat,
+  {112} wbFloatAngle,
+  {116} wbFloat,
+  {120} wbFloat,
+  {124} wbFloat,
   {128} wbFloatAngle,
   {132} wbFloat,
   {136} wbFloat,
@@ -19595,8 +19595,9 @@ begin
       wbStruct(ENAM, 'Node', [
         wbInteger('Node ID', itU32),
         wbFormIDCk('Node', [STND]),
-        wbVec3('Offset', 'Ofs:'),
-        wbVec3('Rotation', 'Rot:'),
+        wbVec3PosRotDegrees('Orientation', 'Offset', 'Rotation', 'Ofs:', 'Rot:'),
+ //       wbVec3('Offset', 'Ofs:'),
+ //       wbVec3('Rotation', 'Rot:'),
         wbInteger('Unknown', itU32),
         wbUnknown(4)
       ])
@@ -19611,11 +19612,7 @@ begin
     ),
     wbRArray('Parent Nodes', wbRStruct('Parent Node', [
       wbInteger(ONAM, 'Node ID', itU32),
-      wbStruct(TNAM, 'Unknown', [
-        wbArray('Unknown', wbFloat('Unknown'), 4),
-        wbFromVersion(187, wbFloat('Unknown')),
-        wbFromVersion(187, wbFloat('Unknown'))
-      ])
+      wbVec3PosRotDegrees(TNAM, 'Unknown')
     ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     //wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
@@ -19899,13 +19896,13 @@ begin
     wbFloat(UNAM, 'Unknown'),
     wbFormIDCk(BIAS, 'Ambient Set', [AMBS]),
     wbFormIDCk(BIMT, 'Music', [MUSC]),
-    wbUnknown(NAM0),
+    wbFormIDCk(NAM0,'Unknown', [TODD]),
     wbFormIDCk(NNAM, 'Pattern Style', [PTST]),
-    wbUnknown(CNAM),
-    wbUnknown(BMC1),
-    wbUnknown(BMC2),
-    wbUnknown(BMC3),
-    wbUnknown(TNAM),
+    wbByteRGBA(CNAM),
+    wbByteRGBA(BMC1, 'Biome Color 1'),
+    wbByteRGBA(BMC2, 'Biome Color 2'),
+    wbByteRGBA(BMC3, 'Biome Color 3'),
+    wbInteger(TNAM, 'Unknown', itU32),
     wbRStructs('Marker Type', 'Type', [
       wbFormIDCk(KNAM, 'Keyword', [KYWD]),
       wbKeywords
