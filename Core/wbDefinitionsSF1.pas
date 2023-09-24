@@ -19361,8 +19361,8 @@ begin
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbInteger(STMS, 'Count', itU32),
-    wbRStructs('Unknown', 'Unknown', [
-      wbString(STAE),
+    wbRStructs('Entries', 'Entry', [
+      wbString(STAE, 'Name'),
       wbSoundReference(STAD).SetRequired(True)
     ], [])
   ]);
@@ -19879,7 +19879,7 @@ begin
     wbRArray('Next rarities', wbFormIDCk(CNAM, 'Next Rarity', [IRES])),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLString(NNAM, 'Short Name'),
-    wbString(GNAM, 'Unknown Name'),
+    wbString(GNAM, 'Resource Type'),
     wbFormIDCk(NAM1, 'Actor Value', [NULL, AVIF]),
     wbFormIDCk(NAM2, 'Produce', [NULL, LVLI, COBJ]),
     wbFormIDCK(NAM3, 'Interval', [NULL, GLOB])
