@@ -2412,6 +2412,8 @@ begin
     Exit(4);
   if lComponentName = 'UniqueOverlayList_Component' then
     Exit(5);
+  if lComponentName = 'UniquePatternPlacementInfo_Component' then
+    Exit(6);
 end;
 
 function wbBFCDAT2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -9741,7 +9743,13 @@ begin
                   wbInteger('Grid X', itS32)
                 ])
               , -1).IncludeFlag(dfNotAlignable)
+            ]),
+            //UniquePatternPlacementInfo_Component
+             wbStruct('', [
+              wbFormIDCK('Unknown', [PNDT, NULL]),
+              wbUnknown                              //possibly a pair of doubles as Longitude and lattitude in radians
             ])
+
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
         //BGSDisplayCase
@@ -18617,16 +18625,21 @@ begin
       wbUnknown
     ]),
     wbStruct(WAM2, 'Unknown', [
-      wbFormIDCk('Unknown', [NULL, AMMO]),
+      wbFormIDCk('Ammo Type', [NULL, AMMO]),
       wbInteger('Magazine size', itu32),
-      wbFormIDCk('Unknown', [NULL, LVLI]),
-      wbFormIDCk('Unknown', [NULL, PROJ]),
+      wbFormIDCk('Ammo List', [NULL, LVLI]),
+      wbFormIDCk('Projectile', [NULL, PROJ]),
+      wbFormIDCk('Ejections', [NULL, ARTO]),
       wbUnknown
     ]),
-    wbStruct(WAUD, 'Unknown', [
-      wbArray('Unknown',
-        wbSoundReference
-      , 7),
+    wbStruct(WAUD, 'Audio', [
+      wbSoundReference('Melee or Creature'),
+      wbSoundReference('Primed (Explosive)'),
+      wbSoundReference('Dry Fire'),
+      wbSoundReference('Idle'),
+      wbSoundReference('Equip'),
+      wbSoundReference('Unequip'),
+      wbSoundReference('Fast Equip'),
       wbInteger('Unknown', itU32),
       wbInteger('Unknown', itU32)
     ]),
