@@ -272,9 +272,6 @@ var
   wbMNAMFurnitureMarker     : IwbSubRecordDef;
   wbSNAMMarkerParams        : IwbSubRecordDef;
   wbOBTSReq                 : IwbSubRecordDef;
-  //wbTintTemplateGroups: IwbSubrecordArrayDef;
-  //wbMorphGroups: IwbSubrecordArrayDef;
-  //wbRaceFRMI: IwbSubrecordArrayDef;
   wbNVNM                    : IwbSubRecordDef;
   wbNavmeshVertices         : IwbArrayDef;
   wbNavmeshTriangles        : IwbArrayDef;
@@ -285,8 +282,6 @@ var
   wbNavmeshWaypoints        : IwbArrayDef;
   wbNavmeshGrid             : IwbStructDef;
   wbMNAMNAVM                : IwbSubRecordDef;
-  wbMaxHeightDataCELL       : IwbSubRecordDef;
-  wbMaxHeightDataWRLD       : IwbSubRecordDef;
   wbXALG                    : IwbRecordMemberDef;
   wbHNAMHNAM                : IwbRecordMemberDef;
   wbReflectionChunkUnion    : IwbValueDef;
@@ -7612,43 +7607,6 @@ begin
     'Very Hard'
   ]));
 
-  if wbSimpleRecords then begin
-    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-  end
-  else begin
-    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-(*
-    wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
-      wbFloat('Offset'),
-      wbArray('Rows',
-        wbByteArray('Columns', 32)
-        // way too verbose for no practical use
-        //wbStruct('Row', [ wbArray('Columns', wbInteger('Column', itU8), 32) ])
-      , 32)
-    ]);
-    wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
-      wbStruct('Min', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbStruct('Max', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbByteArray('Cell Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      // way too verbose for no practical use
-      {wbArray('Cell Data', wbStruct('Quad Height', [
-        wbInteger('Bottom Left', itU8),
-        wbInteger('Bottom Right', itU8),
-        wbInteger('Top Left', itU8),
-        wbInteger('Top Right', itU8)
-      ]))}
-    ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-*)
-  end;
-
   wbXOWN := wbStruct(XOWN, 'Ownership', [
     wbFormIDCkNoReach('Owner', [FACT, ACHR, NPC_]),
     wbByteArray('Unknown', 4),
@@ -9811,10 +9769,10 @@ begin
           wbStruct(XMPM, 'Unknown', [
             wbArray('Unknown', wbLenString('Unknown', 2), -2),
             wbArray('Unknown', wbStruct('Unknown', [
-              wbLenString('Unknown', 2),
-              wbUnknown(4),
-              wbString('Unknown'),
-              wbUnknown(4)
+              wbLenString('Resource:ID', 2),
+              wbInteger('File Hash', itU32, wbFileHashCallback),
+              wbString('Extension', 4),
+              wbInteger('Folder Hash', itU32, wbFolderHashCallback)
             ]), -2)
           ]),
           wbString(MCQP, 'Ring model'),
@@ -10843,54 +10801,42 @@ begin
     wbCellGrid,
 
     wbStruct(XCLL, 'Lighting', [
-      wbUnknown
-      (*
-      wbByteColors('Ambient Color'),
-      wbByteColors('Directional Color'),
-      wbByteColors('Fog Color Near'),
-      wbFloat('Fog Near'),
-      wbFloat('Fog Far'),
-      wbInteger('Directional Rotation XY', itS32),
-      wbInteger('Directional Rotation Z', itS32),
-      wbFloat('Directional Fade'),
-      wbFloat('Fog Clip Distance'),
-      wbFloat('Fog Power'),
-      wbAmbientColors,
-      wbByteColors('Fog Color Far'),
-      wbFloat('Fog Max'),
-      wbFloat('Light Fade Begin'),
-      wbFloat('Light Fade End'),
-      wbUnknown(4),
-      ( * looks off
-      wbInteger('Inherits', itU32, wbFlags([
-        {0x00000001} 'Ambient Color',
-        {0x00000002} 'Directional Color',
-        {0x00000004} 'Fog Color',
-        {0x00000008} 'Fog Near',
-        {0x00000010} 'Fog Far',
-        {0x00000020} 'Directional Rotation',
-        {0x00000040} 'Directional Fade',
-        {0x00000080} 'Clip Distance',
-        {0x00000100} 'Fog Power',
-        {0x00000200} 'Fog Max',
-        {0x00000400} 'Light Fade Distances'
-      ])),
-      * )
-      wbFloat('Near Height Mid'),
-      wbFloat('Near Height Range'),
-      wbByteColors('Fog Color High Near'),
-      wbByteColors('Fog Color High Far'),
-      wbFloat('High Density Scale'),
-      wbFloat('Fog Near Scale'),
-      wbFloat('Fog Far Scale'),
-      wbFloat('Fog High Near Scale'),
-      wbFloat('Fog High Far Scale'),
-      wbFloat('Far Height Mid'),
-      wbFloat('Far Height Range')
-      *)
-    ], cpNormal, False, nil, 11),
+    {  0} wbByteColors('Ambient Color'),
+    {  4} wbByteColors('Directional Color'),
+    {  8} wbByteColors('Fog Color Near'),
+    { 12} wbFloat('Fog Near'),
+    { 16} wbFloat('Fog Far'),
+    { 20} wbInteger('Directional Rotation XY', itS32),
+    { 24} wbInteger('Directional Rotation Z', itS32),
+    { 28} wbFloat('Directional Fade'),
+    { 32} wbFloat('Fog Clip Distance'),
+    { 36} wbFloat('Fog Power'),
+    { 40} wbByteColors('Fog Color Far'),
+    { 44} wbFloat('Fog Max'),
+    { 48} wbFloat('Light Fade Begin'),
+    { 52} wbFloat('Light Fade End'),
+    { 56} wbByteColors('Unknown'),
+    { 60} wbFloat('Near Height Mid'),
+    { 64} wbFloat('Near Height Range'),
+    { 68} wbByteColors('Fog Color High Near'),
+    { 72} wbByteColors('Fog Color High Far'),
+    { 76} wbFloat('High Density Scale'),
+    { 80} wbFloat('Fog Near Scale'),
+    { 84} wbFloat('Fog Far Scale'),
+    { 84} wbFloat('Fog High Near Scale'),
+    { 92} wbFloat('Fog High Far Scale'),
+    { 96} wbFloat('Far Height Mid'),
+    {100} wbFloat('Far Height Range'),
+    {104} wbInteger('Flags', itU8, wbFlags([
+            'Unknown 0',
+            'Unknown 1',
+            'Unknown 2'
+          ])),
+    {105} wbUnused(3)
+    {108}
+    ]),
 
-    wbMaxHeightDataCELL,
+    wbUnused(MHDT, 2504, False).SetDontShow(wbNeverShow),
 
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
@@ -20403,8 +20349,8 @@ begin
         wbLenString('Type'),
         wbLenString('Settled star'), // This is "old" csv data and does not always use the correct ingame star name
         wbLenString('Special'),
-        wbDouble('Perihelion'),
-        wbDouble('Star Dist'),
+        wbDouble('Perihelion', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Star Dist', cpNormal, False, 1, Low(Integer)),
         wbFloat('Density'),
         wbFloat('Heat'),
         wbFloat('Hydro'),
