@@ -41,6 +41,12 @@ type
   TwbReadOnlyCachedFileStream = TwbBaseCachedFileStream;
   TwbWriteCachedFileStream = TwbBaseCachedFileStream;
 
+  TwbNothing = record
+  end;
+
+const
+  wbNothing: TwbNothing = ();
+
 implementation
 
 function TwbBaseCachedFileStream.ReadCardinal: Cardinal;

@@ -834,7 +834,6 @@ begin
     wbLanguage         := 'En';
     ToolModes          := [tmView];
     ToolSources        := [tsPlugins];
-    //wbBuildRefs        := False;
   end
 
   else begin
@@ -947,7 +946,7 @@ begin
       wbHideIgnored         := False; // to show Form Version
       wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
-      wbDecodeTextureHashes := False;
+      wbDecodeTextureHashes := True;
     end;
   else
     ShowMessage('Unknown GameMode');
@@ -960,7 +959,7 @@ begin
     Exit(False);
 
   if wbGameMode = gmSF1 then
-    wbDecodeTextureHashes := False;
+    wbDecodeTextureHashes := True;
 
   if wbCanSortINFO then begin
     if FindCmdLineSwitch('sortinfo') then

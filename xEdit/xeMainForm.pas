@@ -202,6 +202,7 @@ type
     mniViewEdit: TMenuItem;
     mniNavChangeReferencingRecords: TMenuItem;
     mniViewRemove: TMenuItem;
+    mniViewClear: TMenuItem;
     N2: TMenuItem;
     mniNavBuildRef: TMenuItem;
     mniViewAdd: TMenuItem;
@@ -577,6 +578,7 @@ type
     procedure mniViewMoveUpClick(Sender: TObject);
     procedure mniViewMoveDownClick(Sender: TObject);
     procedure mniViewRemoveClick(Sender: TObject);
+    procedure mniViewClearClick(Sender: TObject);
     procedure mniViewRemoveFromSelectedClick(Sender: TObject);
     procedure mniViewSortClick(Sender: TObject);
 
@@ -11615,6 +11617,52 @@ begin
   end;
 end;
 
+procedure TfrmMain.mniViewClearClick(Sender: TObject);
+var
+  NodeDatas                   : PViewNodeDatas;
+  Element                     : IwbElement;
+  NextNode                    : PVirtualNode;
+begin
+  if not wbEditAllowed then
+    Exit;
+  if wbTranslationMode then
+    Exit;
+    if not EditWarn then
+      Exit;
+
+  LockProcessMessages;
+  try
+    NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+    NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
+    if not Assigned(NextNode) then
+      NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
+    if not Assigned(NextNode) then begin
+      NextNode := vstView.FocusedNode.Parent;
+      if vstView.RootNode = NextNode then
+        NextNode := nil;
+    end;
+
+    if Assigned(NodeDatas) then begin
+      Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+      if Assigned(Element) then begin
+
+        if Assigned(NextNode) then begin
+          NodeDatas := vstView.GetNodeData(NextNode);
+          ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+        end;
+
+        Element.Clear;
+        ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+        Element := nil;
+        PostResetActiveTree;
+        InvalidateElementsTreeView(NoNodes);
+      end;
+    end;
+  finally
+    UnLockProcessMessages;
+  end;
+end;
+
 procedure TfrmMain.mniViewRemoveFromSelectedClick(Sender: TObject);
 var
   NodeDatas                   : PViewNodeDatas;
@@ -14809,6 +14857,7 @@ begin
   mniViewNextMember.Visible := False;
   mniViewPreviousMember.Visible := False;
   mniViewRemove.Visible := False;
+  mniViewClear.Visible := False;
   mniViewMoveUp.Visible := False;
   mniViewMoveDown.Visible := False;
   mniViewRemoveFromSelected.Visible := False;
@@ -14851,6 +14900,7 @@ begin
       mniViewSetToDefault.Visible := not wbTranslationMode and Assigned(Element) and Element._File.IsEditable and
         (Supports(Element.ValueDef, IwbStructDef, StructDef) and (StructDef.OptionalFromElement <> -1));
       mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemoveable;
+      mniViewClear.Visible := not wbTranslationMode and Assigned(Element) and Element.IsClearable;
       mniViewMoveUp.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
       mniViewMoveDown.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
       mniViewMoveUp.Visible := mniViewMoveUp.Enabled or mniViewMoveDown.Enabled;
@@ -18198,7 +18248,9 @@ begin
         pmuViewPopup(nil);
         Key := 0;
         if mniViewRemove.Visible and mniViewRemove.Enabled then
-          mniViewRemove.Click;
+          mniViewRemove.Click
+        else if mniViewClear.Visible and mniViewClear.Enabled then
+          mniViewClear.Click;
       end;
     else
       Exit;
@@ -20502,6 +20554,12 @@ begin
           wbContainerHandler.AddFolder(ltDataPath);
         end;
 
+        if wbDecodeTextureHashes then begin
+          LoaderProgress('Start building resources cache...');
+          wbContainerHandler.EnsureCache;
+          LoaderProgress('...resources cache finished building');
+        end;
+
         wbResourcesLoaded;
 
         _LoaderProgressAction := 'loading modules';
@@ -20638,12 +20696,6 @@ begin
           end;
           {$ENDIF}
         end;
-      end;
-
-      if wbDecodeTextureHashes then begin
-        LoaderProgress('Start building resources cache...');
-        wbContainerHandler.EnsureCache;
-        LoaderProgress('...resources cache finished building');
       end;
 
     except

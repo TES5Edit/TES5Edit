@@ -115,20 +115,25 @@
         </DelphiCompile>
         <DCCReference Include="BSArch\frmMain.pas">
             <Form>FormMain</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\wbBSArchive.pas"/>
         <DCCReference Include="BSArch\wbAssets.pas"/>
         <DCCReference Include="BSArch\frmSearchReplace.pas">
             <Form>FormSearchReplace</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="Core\wbTaskProgress.pas">
             <Form>FormTaskProgress</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="BSArch\frmArchiveInfo.pas">
             <Form>FormArchiveInfo</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="BSArch\frmPack.pas">
             <Form>FormPack</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -4847,40 +4847,6 @@ begin
     end;
 end;
 
-procedure wbOMODpropertyAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('Property Count', aElement);
-end;
-
-procedure wbOMODincludeAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('Include Count', aElement);
-end;
-
-procedure wbOMODdataAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('Property Count', 'Properties', aElement);
-  wbCounterContainerAfterSet('Include Count', 'Includes', aElement);
-end;
-
-function wbOMODDataIncludeCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container       : IwbContainer;
-begin
-  Result := 0;
-  if Supports(aElement.Container, IwbContainer, Container) then
-    Result := Container.ElementNativeValues['Include Count'];
-end;
-
-function wbOMODDataPropertyCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container       : IwbContainer;
-begin
-  Result := 0;
-  if Supports(aElement.Container, IwbContainer, Container) then
-    Result := Container.ElementNativeValues['Property Count'];
-end;
-
 function GetObjectModPropertyEnum(const aElement: IwbElement): IwbEnumDef;
 var
   MainRecord: IwbMainRecord;
@@ -5042,11 +5008,6 @@ begin
     4: Result := 1;
     6: Result := 2;
   end;
-end;
-
-procedure wbOBTSCombinationsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('OBTE - Count', aElement);
 end;
 
 procedure wbINNRAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -5939,6 +5900,11 @@ begin
       Result := wbResolveSnapTemplateNodeFromReference(lMainRecord, lNodeID, lBaseRecord, lSnapTemplate, lSnapNode);
     end;
 end;
+
+
+const
+ csPropertyCount = 'Property Count';
+ csIncludeCount  = 'Include Count';
 
 procedure DefineSF1a;
 begin
@@ -9749,7 +9715,6 @@ begin
               wbFormIDCK('Unknown', [PNDT, NULL]),
               wbUnknown                              //possibly a pair of doubles as Longitude and lattitude in radians
             ])
-
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
         //BGSDisplayCase
@@ -10190,10 +10155,10 @@ begin
       ]),
       wbUnused(3),
       wbUnion('Value', wbObjectModPropertiesDecider, [
-       {0} wbInteger('Property Name', itU32, wbObjectModPropertiesEnum, cpNormal, True),
-       {1} wbInteger('Property Name', itU32, wbObjectModPropertiesWEAPEnum, cpNormal, True),
-       {2} wbInteger('Property Name', itU32, wbObjectModPropertiesARMOEnum, cpNormal, True),
-       {3} wbInteger('Property Name', itU32, wbObjectModPropertiesNPCEnum, cpNormal, True)
+       {0} wbInteger('Property Name', itU32, wbObjectModPropertiesEnum),
+       {1} wbInteger('Property Name', itU32, wbObjectModPropertiesWEAPEnum),
+       {2} wbInteger('Property Name', itU32, wbObjectModPropertiesARMOEnum),
+       {3} wbInteger('Property Name', itU32, wbObjectModPropertiesNPCEnum)
       ]),
 
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
@@ -10203,9 +10168,9 @@ begin
         { 3} wbInteger('Value 1 - Bool', itU32, wbBoolEnum),
         { 4} wbFormID('Value 1 - FormID'),
         { 5} wbInteger('Value 1 - Enum', itU32),
-        { 6} wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-        { 7} wbInteger('Stagger Value', itU32, wbStaggerEnum),
-        { 8} wbInteger('Hit Behaviour', itU32, wbHitBehaviourEnum)
+        { 6} wbInteger('Value 1 - Sound Level', itU32, wbSoundLevelEnum),
+        { 7} wbInteger('Value 1 - Stagger Value', itU32, wbStaggerEnum),
+        { 8} wbInteger('Value 1 - Hit Behaviour', itU32, wbHitBehaviourEnum)
       ]),
       wbUnion('Value 2', wbOMODDataPropertyValue2Decider, [
         wbUnused(4),
@@ -10214,14 +10179,14 @@ begin
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
       wbFloat('Step')
-      ]), wbOMODDataPropertyCounter, cpNormal, False, nil, wbOMODpropertyAfterSet);
+      ])).SetCountPath(csPropertyCount);
 
   wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
-    wbInteger('Include Count', itU32),  // fixed name for wbOMOD* handlers
-    wbInteger('Property Count', itU32), // fixed name for wbOMOD* handlers
+    wbInteger(csIncludeCount, itU32),
+    wbInteger(csPropertyCount, itU32),
     wbInteger('Level Min', itU16),
     wbInteger('Level Max', itU16),
-    wbInteger('Addon Index', itS16{, wbOBTEAddonIndexToStr, nil, cpNormal, True, nil, nil, -1}),
+    wbInteger('Addon Index', itS16),
     wbInteger('Default', itU8, wbBoolEnum),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
     wbInteger('Min Level For Ranks', itU8),
@@ -10231,7 +10196,7 @@ begin
       wbInteger('Attach Point Index', itU8),
       wbInteger('Optional', itU8, wbBoolEnum),
       wbInteger('Don''t Use All', itU8, wbBoolEnum)
-    ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+    ])).SetCountPath(csIncludeCount),
     wbObjectModProperties
   ], cpNormal, True);
 
@@ -10241,9 +10206,9 @@ begin
       wbRStruct('Combination', [
         wbEmpty(OBTF, 'Editor Only'),
         wbFULL,
-        wbOBTSReq
-      ], [], cpNormal, False, nil, True),
-    cpNormal, False, nil, wbOBTSCombinationsAfterSet)
+        wbOBTSReq.IncludeFlag(dfTerminator)
+      ], []).IncludeFlag(dfAllowAnyMember).IncludeFlag(dfStructFirstNotRequired)
+    ).SetCountPath(OBTE).SetRequired
   ], []);
 
   var wbBoneDataItem :=
@@ -15974,13 +15939,8 @@ begin
     ]),
     wbKeywords,
     wbAPPR,
-    wbRUnion('Object Template and Marker', [
-      wbRStruct('Object Template', [
-        wbObjectTemplate,
-        wbMarkerReq(STOP)
-      ], []),
-      wbMarker(STOP)
-    ], []),
+    wbObjectTemplate,
+    wbMarkerReq(STOP),
     wbFormIDCk(CNAM, 'Class', [CLAS], False),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
@@ -19324,8 +19284,8 @@ begin
 //      wbObjectModProperties
 //    ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbStruct(DATA, 'Data', [
-      wbInteger('Include Count', itU32),
-      wbInteger('Property Count', itU32),
+      wbInteger(csIncludeCount, itU32),
+      wbInteger(csPropertyCount, itU32),
       wbUnknown(2),
       wbLenString('Name', 4),
       wbUnknown(2),
@@ -19337,9 +19297,9 @@ begin
         wbInteger('Minimum Level', itU8),
         wbInteger('Optional', itU8, wbBoolEnum),
         wbInteger('Don''t Use All', itU8, wbBoolEnum)
-      ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
+      ])).SetCountPath(csIncludeCount),
       wbObjectModProperties
-    ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
+    ]),
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects), //not in Starfield.esm

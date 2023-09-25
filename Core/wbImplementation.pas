@@ -361,6 +361,7 @@ type
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
     function GetIsEditable: Boolean; virtual;
     function GetIsRemoveable: Boolean; virtual;
+    function GetIsClearable: Boolean; virtual;
     function GetEditValue: string; virtual;
     procedure SetEditValue(const aValue: string); virtual;
     function GetNativeValue: Variant; virtual;
@@ -386,6 +387,7 @@ type
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); virtual;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); virtual;
     procedure Remove; virtual;
+    procedure Clear; virtual;
     procedure BeforeActualRemove; virtual;
     function CanContainFormIDs: Boolean; virtual;
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
@@ -1428,6 +1430,9 @@ type
 
     function IsFlags: Boolean; override;
 
+    procedure BeforeActualRemove; override;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+
     function GetValue: string; override;
     function GetSummary: string; override;
     function GetCheck: string; override;
@@ -1552,6 +1557,9 @@ type
 
     procedure ResetMemoryOrder; override;
 
+    procedure BeforeActualRemove; override;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+
     function GetElementType: TwbElementType; override;
     function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
     procedure SetModified(aValue: Boolean); override;
@@ -1571,6 +1579,9 @@ type
     function CanMoveElement: Boolean; override;
 
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+
+    function GetIsClearable: Boolean; override;
+    procedure Clear; override;
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
@@ -8076,12 +8087,17 @@ begin
             end else begin
 
               if Member.DefType = dtSubRecordUnion then begin
-                if Assigned(aElement) then begin
-                  Supports(aElement, IwbDataContainer, DataContainer);
-                  Member := (Member as IwbRecordDef).GetMemberFor((aElement as IwbHasSignature).Signature, DataContainer);
+                var lHasSignature: IwbHasSignature;
+                if Supports(aElement, IwbHasSignature, lHasSignature) then begin
+                  if not Supports(aElement, IwbDataContainer, DataContainer) then
+                    DataContainer := nil;
+                  Member := (Member as IwbRecordDef).GetMemberFor(lHasSignature.Signature, DataContainer);
                 end else
                   Member := (Member as IwbRecordDef).Members[0];
+
                 Assert(Assigned(Member));
+                if not (Member.DefType in [dtSubRecord, dtSubRecordArray, dtSubRecordStruct]) then
+                  Beep;
               end;
 
               case Member.DefType of
@@ -13366,6 +13382,41 @@ begin
       Result := inherited AssignInternal(aIndex, aElement, aOnlySK);
 end;
 
+procedure TwbSubRecord.BeforeActualRemove;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  inherited;
+
+  var lArrayDef: IwbArrayDef;
+
+  if Assigned(srResolvedDef) then
+    if not Supports(srResolvedDef, IwbArrayDef, lArrayDef) then
+      Exit;
+
+  if not Assigned(lArrayDef) then
+    if not Supports(srValueDef, IwbArrayDef, lArrayDef) then
+      Exit;
+
+  var lCountPath := lArrayDef.CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := 0;
+end;
+
 procedure TwbSubRecord.BuildRef;
 var
   SelfRef: IwbElement;
@@ -13565,6 +13616,49 @@ begin
   if not Assigned(dcEndPtr) and Assigned(dcBasePtr) then
     FreeMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
   inherited;
+end;
+
+procedure TwbSubRecord.DoAfterSet(const aOldValue, aNewValue: Variant);
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  inherited;
+
+  var lArrayDef: IwbArrayDef;
+
+  if Assigned(srResolvedDef) then
+    if not Supports(srResolvedDef, IwbArrayDef, lArrayDef) then
+      Exit;
+
+  if not Assigned(lArrayDef) then
+    if not Supports(srValueDef, IwbArrayDef, lArrayDef) then
+      Exit;
+
+  var lCountPath := (lArrayDef as IwbArrayDef).CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElementCount := GetElementCount;
+
+  if lElementCount > 0 then begin
+    //setting it this way will try to create the elements along the path if necessary
+    lContainer.ElementNativeValues[lCountPath] := lElementCount;
+    Exit;
+  end;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := lElementCount;
 end;
 
 function TwbSubRecord.DoCheckSizeAfterWrite: Boolean;
@@ -16796,6 +16890,11 @@ begin
     IwbContainerInternal(eContainer).CanMoveElementUp(Self);
 end;
 
+procedure TwbElement.Clear;
+begin
+  {can be overridden}
+end;
+
 function TwbElement.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
 begin
   Result := False;
@@ -17183,6 +17282,11 @@ begin
     SetLength(Result, 1);
     Result[0] := MainRecord.MasterOrSelf._File;
   end;
+end;
+
+function TwbElement.GetIsClearable: Boolean;
+begin
+  Result := False;
 end;
 
 function TwbElement.GetIsEditable: Boolean;
@@ -18230,30 +18334,27 @@ end;
 
 procedure TwbSubRecordArray.BeforeActualRemove;
 var
-  CountPath      : string;
-  Container      : IwbContainerElementRef;
-  CounterElement : IwbElement;
-
-  SelfRef    : IwbContainerElementRef;
+  SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self;
 
   inherited;
 
-  CountPath := arcDef.CountPath;
+  var lCountPath := arcDef.CountPath;
 
-  if CountPath = '' then
+  if lCountPath = '' then
     Exit;
 
-  Container := GetContainer as IwbContainerElementRef;
-  if not Assigned(Container) then
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
     Exit;
 
-  CounterElement := Container.ElementByPath[CountPath];
-  if not Assigned(CounterElement) then
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
     Exit;
 
-  CounterElement.NativeValue := 0;
+  lCounterElement.NativeValue := 0;
 end;
 
 function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
@@ -18338,30 +18439,35 @@ end;
 
 procedure TwbSubRecordArray.DoAfterSet(const aOldValue, aNewValue: Variant);
 var
-  CountPath      : string;
-  Container      : IwbContainerElementRef;
-  CounterElement : IwbElement;
-
   SelfRef    : IwbContainerElementRef;
 begin
   SelfRef := Self;
 
   inherited;
 
-  CountPath := arcDef.CountPath;
+  var lCountPath := arcDef.CountPath;
 
-  if CountPath = '' then
+  if lCountPath = '' then
     Exit;
 
-  Container := GetContainer as IwbContainerElementRef;
-  if not Assigned(Container) then
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
     Exit;
 
-  CounterElement := Container.ElementByPath[CountPath];
-  if not Assigned(CounterElement) then
+  var lElementCount := GetElementCount;
+
+  if lElementCount > 0 then begin
+    //setting it this way will try to create the elements along the path if necessary
+    lContainer.ElementNativeValues[lCountPath] := lElementCount;
+    Exit;
+  end;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
     Exit;
 
-  CounterElement.NativeValue := GetElementCount;
+  lCounterElement.NativeValue := lElementCount;
 end;
 
 procedure TwbSubRecordArray.DoInit(aNeedSorted: Boolean);
@@ -18665,28 +18771,37 @@ var
   CurrentDef    : IwbRecordMemberDef;
   Element       : IwbElementInternal;
 begin
-  for CurrentDefPos := 0 to Pred(srcDef.MemberCount) do begin
-    CurrentDef := srcDef.Members[CurrentDefPos];
-    if ((CurrentDefPos = 0) and not srcDef.AllowUnordered) or CurrentDef.Required then begin
+  var lAnyCreated := False;
+  var lRepeated := False;
+  repeat
+    for CurrentDefPos := 0 to Pred(srcDef.MemberCount) do begin
+      CurrentDef := srcDef.Members[CurrentDefPos];
+      if lRepeated or ((CurrentDefPos = 0) and not (srcDef.AllowUnordered or (dfStructFirstNotRequired in srcDef.DefFlags))) or CurrentDef.Required then begin
 
-      if CurrentDef.DefType = dtSubRecordUnion then begin
-        CurrentDef := (CurrentDef as IwbRecordDef).Members[0];
-        Assert(Assigned(CurrentDef));
+        if CurrentDef.DefType = dtSubRecordUnion then begin
+          CurrentDef := (CurrentDef as IwbRecordDef).Members[0];
+          Assert(Assigned(CurrentDef));
+        end;
+
+        case CurrentDef.DefType of
+          dtSubRecord :       Element := TwbSubRecord.Create(Self, CurrentDef as IwbSubRecordDef);
+          dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordArrayDef);
+          dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordStructDef);
+        else
+          Assert(False);
+        end;
+
+        Element.SetSortOrder(CurrentDefPos);
+        Element.SetMemoryOrder(CurrentDefPos);
+
+        if lRepeated then
+          Exit;
+        lAnyCreated := True;
       end;
-
-      case CurrentDef.DefType of
-        dtSubRecord :       Element := TwbSubRecord.Create(Self, CurrentDef as IwbSubRecordDef);
-        dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, nil, Low(Integer), CurrentDef as IwbSubRecordStructDef);
-      else
-        Assert(False);
-      end;
-
-      Element.SetSortOrder(CurrentDefPos);
-      Element.SetMemoryOrder(CurrentDefPos);
-
     end;
-  end;
+    Assert(not lRepeated);
+    lRepeated := True;
+  until lAnyCreated;
 end;
 
 function TwbSubRecordStruct.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -19162,7 +19277,7 @@ end;
 
 function TwbSubRecordStruct.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and (Length(cntElements) > 1) and (srcDef.AllowUnordered or not cntElements[0].Equals(aElement));
+  Result := IsElementEditable(aElement) and (Length(cntElements) > 1) and ((srcDef.AllowUnordered or (dfStructFirstNotRequired in srcDef.DefFlags)) or not cntElements[0].Equals(aElement));
   if Result and Assigned(aElement.Def) then
     Result := not aElement.Def.Required;
 end;
@@ -19566,6 +19681,31 @@ begin
   CheckTerminator;
 end;
 
+procedure TwbArray.BeforeActualRemove;
+var
+  SelfRef : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  inherited;
+
+  var lCountPath := (vbValueDef as IwbArrayDef).CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := 0;
+end;
+
 function TwbArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   ArrayDef: IwbArrayDef;
@@ -19658,6 +19798,57 @@ begin
     arrSortInvalid := True;
 end;
 
+procedure TwbArray.Clear;
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  if not GetIsClearable then
+    Exit;
+
+  inherited;
+
+  for var lElementIdx := Pred(GetElementCount) downto 0 do begin
+    var lElement := GetElement(lElementIdx);
+    if lElement.IsRemoveable then
+      lElement.Remove;
+  end;
+end;
+
+procedure TwbArray.DoAfterSet(const aOldValue, aNewValue: Variant);
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  inherited;
+
+  var lCountPath := (vbValueDef as IwbArrayDef).CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElementCount := GetElementCount;
+
+  if lElementCount > 0 then begin
+    //setting it this way will try to create the elements along the path if necessary
+    lContainer.ElementNativeValues[lCountPath] := lElementCount;
+    Exit;
+  end;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := lElementCount;
+end;
+
 procedure TwbArray.DoInit(aNeedSorted: Boolean);
 var
   i       : Integer;
@@ -19707,6 +19898,25 @@ end;
 function TwbArray.GetElementType: TwbElementType;
 begin
   Result := etArray;
+end;
+
+function TwbArray.GetIsClearable: Boolean;
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  Result := (vbValueDef as IwbArrayDef).ElementCount <= 0;
+  if not Result then
+    Exit;
+
+  var lElementCount := GetElementCount;
+  if lElementCount = 0 then
+    Exit(False);
+
+  for var lElementIdx := Pred(lElementCount) downto 0 do
+    if not GetElement(lElementIdx).IsRemoveable then
+      Exit(False);
 end;
 
 function TwbArray.GetSorted: Boolean;
@@ -20221,7 +20431,7 @@ begin
       t := '';
     if t = '' then
       t := aContainer.Def.Name;
-    if SameText(t, 'Unknown') and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then
+    if t.StartsWith('Unknown', True) and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
         var lContainer: IwbContainer := TwbStruct.Create(aContainer, BasePtr, aEndPtr, wbStruct('Offset '+IntToStr(i), []), '');

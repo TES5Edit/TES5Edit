@@ -20,7 +20,14 @@ uses
   VCL.Graphics,
   System.Generics.Defaults,
   System.Generics.Collections,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  wbStreams;
+
+type
+  TwbNothing = wbStreams.TwbNothing;
+
+const
+  wbNothing: TwbNothing = ();
 
 type
   TwbVersion = record
@@ -49,7 +56,7 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'n';
+    Build   : 'o';
     Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
@@ -145,6 +152,7 @@ var
   wbExtendedIntUnknowns              : Boolean    = True;
   wbMoreInfoForUnknown               : Boolean    = False;
   wbMoreInfoForIndex                 : Boolean    = False;
+  wdMakeUnknownElementsUnique        : Boolean    = True;
   wbTranslationMode                  : Boolean    = False;
   wbTestWrite                        : Boolean    = False;
   wbForceNewHeader                   : Boolean    = False;          // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
@@ -622,6 +630,7 @@ type
     dfNoReport,
     dfTranslatable,
     dfAllowAnyMember,
+    dfStructFirstNotRequired,
     dfDontSave,
     dfDontAssign,
     dfUseLoadOrder,
@@ -947,6 +956,7 @@ type
     procedure SetNativeValue(const aValue: Variant);
     function GetIsEditable: Boolean;
     function GetIsRemoveable: Boolean;
+    function GetIsClearable: Boolean;
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal);
     function GetConflictPriority: TwbConflictPriority;
     function GetConflictPriorityCanChange: Boolean;
@@ -992,6 +1002,7 @@ type
     function GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     procedure Remove;
+    procedure Clear;
 
     function HasErrors: Boolean;
 
@@ -1112,6 +1123,9 @@ type
 
     property IsRemoveable: Boolean
       read GetIsRemoveable;
+    property IsClearable: Boolean
+      read GetIsClearable;
+
 
     property Def: IwbNamedDef
       read GetDef;
@@ -2336,6 +2350,17 @@ type
     function SetSummaryDelimiterOnValue(const aDelimiter: string): IwbSubRecordWithStructDef{Self};
   end;
 
+  IwbSubRecordWithArrayDef = interface(IwbSubRecordDef)
+    ['{67E87022-6250-494F-B34B-DA058CF916E3}']
+
+    function SetSummaryPassthroughMaxCountOnValue(aCount: Integer): IwbSubRecordWithArrayDef;
+    function SetSummaryPassthroughMaxLengthOnValue(aLength: Integer): IwbSubRecordWithArrayDef;
+    function SetSummaryPassthroughMaxDepthOnValue(aDepth: Integer): IwbSubRecordWithArrayDef;
+    function SetSummaryDelimiterOnValue(const aDelimiter: string): IwbSubRecordWithArrayDef;
+    function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
+    function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
+  end;
+
   IwbSubRecordArrayDef = interface(IwbRecordMemberDef)
     ['{67943BAC-B558-4112-8DBC-C94A44E0B1D1}']
     function GetElement: IwbRecordMemberDef;
@@ -2498,6 +2523,9 @@ type
     function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
     function GetDefaultEditValues: TwbStringArray;
 
+    function GetCountPath: string;
+    function SetCountPath(const aValue: string): IwbArrayDef;
+
     property Element: IwbValueDef
       read GetElement;
     property ElementCount: Integer
@@ -2521,6 +2549,9 @@ type
       read GetPrefixLength;
     property PrefixCount[aBasePtr: Pointer]: Cardinal  // Value stored in the prefix
       read GetPrefixCount write SetPrefixCount;
+
+    property CountPath: string
+      read GetCountPath;
   end;
 
   IwbStructDef = interface(IwbValueDef)
@@ -2742,12 +2773,15 @@ type
       read GetContainer;
   end;
 
+  TwbResourceDict = TDictionary<string, TwbNothing>;
+
   IwbResourceContainer = interface(IwbInterface)
     ['{023EA9C4-19B5-4587-B298-559EEF8F224E}']
     function GetName: String;
     function OpenResource(const aFileName: string): IwbResource;
     function ResourceExists(const aFileName: string): Boolean;
     procedure ResourceList(const aList: TStrings; aFolder: string = '');
+    procedure ResourceDict(const aDict: TwbResourceDict; aFolder: string = '');
 
     property Name: string
       read GetName;
@@ -2791,6 +2825,7 @@ type
     function ContainerExists(aContainerName: string): Boolean;
     procedure ContainerList(const aList: TStrings);
     procedure ContainerResourceList(const aContainerName: string; const aList: TStrings; const aFolder: string = '');
+    procedure ContainerResourceDict(const aContainerName: string; const aDict: TwbResourceDict; const aFolder: string = '');
 
     function ResourceExists(const aFileName: string): Boolean;
     function ResourceCount(const aFileName: string; aContainers: TStrings = nil): Integer;
@@ -3537,7 +3572,7 @@ function wbArray(const aSignature : TwbSignature;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
                        aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordDef; overload;
+                                  : IwbSubRecordWithArrayDef; overload;
 
 function wbArray(const aName     : string;
                  const aElement  : IwbValueDef;
@@ -3576,7 +3611,7 @@ function wbArray(const aSignature : TwbSignature;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
                        aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordDef; overload;
+                                  : IwbSubRecordWithArrayDef; overload;
 
 function wbArray(const aSignature     : TwbSignature;
                  const aName          : string;
@@ -3587,7 +3622,7 @@ function wbArray(const aSignature     : TwbSignature;
                        aRequired      : Boolean = False;
                        aDontShow      : TwbDontShowCallback = nil;
                        aGetCP         : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef; overload;
+                                      : IwbSubRecordWithArrayDef; overload;
 
 function wbArray(const aName     : string;
                  const aElement  : IwbValueDef;
@@ -3627,7 +3662,7 @@ function wbArrayPT(const aSignature : TwbSignature;   // case where the prefix i
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithArrayDef; overload;
 
 function wbArrayPT(const aName     : string;
                    const aElement  : IwbValueDef;
@@ -3667,7 +3702,7 @@ function wbArrayPT(const aSignature : TwbSignature;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithArrayDef; overload;
 
 function wbArrayPT(const aSignature     : TwbSignature;
                    const aName          : string;
@@ -3678,7 +3713,7 @@ function wbArrayPT(const aSignature     : TwbSignature;
                          aRequired      : Boolean = False;
                          aDontShow      : TwbDontShowCallback = nil;
                          aGetCP         : TwbGetConflictPriority = nil)
-                                        : IwbSubRecordDef; overload;
+                                        : IwbSubRecordWithArrayDef; overload;
 
 function wbArrayPT(const aName     : string;
                    const aElement  : IwbValueDef;
@@ -3750,7 +3785,7 @@ function wbArrayS(const aSignature : TwbSignature;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil;
                         aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                                   : IwbSubRecordWithArrayDef; overload;
 
 function wbArrayS(const aName      : string;
                   const aElement   : IwbValueDef;
@@ -3795,7 +3830,7 @@ function wbArray(const aName          : string;
                        aAfterSet      : TwbAfterSetCallback;
                        aDontShow      : TwbDontShowCallback = nil;
                        aGetCP         : TwbGetConflictPriority = nil)
-                                       : IwbArrayDef; overload;
+                                      : IwbArrayDef; overload;
 
 function wbArrayS(const aSignature : TwbSignature;
                   const aName      : string;
@@ -3807,7 +3842,7 @@ function wbArrayS(const aSignature : TwbSignature;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil;
                         aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                                   : IwbSubRecordWithArrayDef; overload;
 
 function wbArrayS(const aName      : string;
                   const aElement   : IwbValueDef;
@@ -5633,7 +5668,7 @@ type
     {--- IwbMainRecordDefInternal ---}
   end;
 
-  TwbSubRecordDef = class(TwbSignatureDef, IwbRecordMemberDef, IwbSubRecordDef, IwbSubRecordWithStructDef)
+  TwbSubRecordDef = class(TwbSignatureDef, IwbRecordMemberDef, IwbSubRecordDef, IwbSubRecordWithStructDef, IwbSubRecordWithArrayDef)
   private
     srValue     : IwbValueDef;
     srSizeMatch : Boolean;
@@ -5703,7 +5738,17 @@ type
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
     function SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): {Self}IwbSubRecordWithStructDef;
     function SetSummaryMemberMaxDepthOnValue(aIndex, aMaxDepth: Integer): {Self}IwbSubRecordWithStructDef;
-    function SetSummaryDelimiterOnValue(const aDelimiter: string): {Self}IwbSubRecordWithStructDef;
+    function SetSummaryDelimiterOnStruct(const aDelimiter: string): {Self}IwbSubRecordWithStructDef;
+    function IwbSubRecordWithStructDef.SetSummaryDelimiterOnValue = SetSummaryDelimiterOnStruct;
+
+    {---IwbSubRecordWithArrayDef---}
+    function SetSummaryPassthroughMaxCountOnValue(aCount: Integer): IwbSubRecordWithArrayDef;
+    function SetSummaryPassthroughMaxLengthOnValue(aLength: Integer): IwbSubRecordWithArrayDef;
+    function SetSummaryPassthroughMaxDepthOnValue(aDepth: Integer): IwbSubRecordWithArrayDef;
+    function SetSummaryDelimiterOnArray(const aDelimiter: string): IwbSubRecordWithArrayDef;
+    function IwbSubRecordWithArrayDef.SetSummaryDelimiterOnValue = SetSummaryDelimiterOnArray;
+    function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
+    function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
@@ -6548,6 +6593,7 @@ type
     arCanAddTo          : Boolean;
     arTerminated        : Boolean;
     arDefaultEditValues : TwbStringArray;
+    arCountPath         : string;
 
     arSummaryDelimiter            : string;
     arSummaryPassthroughMaxCount  : Integer;
@@ -6624,6 +6670,9 @@ type
 
     function SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
     function GetDefaultEditValues: TwbStringArray;
+
+    function GetCountPath: string;
+    function SetCountPath(const aValue: string): IwbArrayDef;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -8200,9 +8249,9 @@ function wbArray(const aSignature : TwbSignature;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
                        aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordDef; overload;
+                                  : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArray(const aName      : string;
@@ -8254,9 +8303,9 @@ function wbArrayPT(const aSignature : TwbSignature;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aCount, aPriority), aAfterLoad, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArrayPT(const aName      : string;
@@ -8334,9 +8383,9 @@ function wbArray(const aSignature : TwbSignature;
                        aRequired  : Boolean = False;
                        aDontShow  : TwbDontShowCallback = nil;
                        aGetCP     : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordDef; overload;
+                                  : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArray(const aSignature     : TwbSignature;
@@ -8348,9 +8397,9 @@ function wbArray(const aSignature     : TwbSignature;
                        aRequired      : Boolean = False;
                        aDontShow      : TwbDontShowCallback = nil;
                        aGetCP         : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef; overload;
+                                      : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArray('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArray(const aName     : string;
@@ -8398,9 +8447,9 @@ function wbArrayPT(const aSignature : TwbSignature;
                          aRequired  : Boolean = False;
                          aDontShow  : TwbDontShowCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArrayPT(const aSignature     : TwbSignature;
@@ -8412,9 +8461,9 @@ function wbArrayPT(const aSignature     : TwbSignature;
                          aRequired      : Boolean = False;
                          aDontShow      : TwbDontShowCallback = nil;
                          aGetCP         : TwbGetConflictPriority = nil)
-                                        : IwbSubRecordDef; overload;
+                                        : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArrayPT('', aElement, aLabels, aCountCallback, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArrayPT(const aName     : string;
@@ -8478,9 +8527,9 @@ function wbArrayS(const aSignature : TwbSignature;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil;
                         aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                                   : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aCount, aPriority, False, aAfterLoad, aAfterSet), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArrayS(const aName      : string;
@@ -8579,9 +8628,9 @@ function wbArrayS(const aSignature : TwbSignature;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aDontShow  : TwbDontShowCallback = nil;
                         aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                                   : IwbSubRecordWithArrayDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aLabels, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbArrayS('', aElement, aLabels, aPriority, False, aAfterLoad), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithArrayDef;
 end;
 
 function wbArrayS(const aName      : string;
@@ -9835,11 +9884,12 @@ end;
 
 procedure TwbNamedDef.InitFromParent;
 begin
-  if Assigned(defParent) and (ndName = 'Unknown') and not Supports(Self, IwbSignatureDef) then begin
-    var lPos := defParent.GetChildPos(Self);
-    if lPos >= 0 then
-      ndName := ndName + '@' + lPos.ToString;
-  end;
+  if wdMakeUnknownElementsUnique then
+    if Assigned(defParent) and ndName.StartsWith('Unknown', True) and not Supports(Self, IwbSignatureDef) then begin
+      var lPos := defParent.GetChildPos(Self);
+      if lPos >= 0 then
+        ndName := ndName + '@' + lPos.ToString;
+    end;
   inherited;
 end;
 
@@ -10836,6 +10886,15 @@ begin
   ndAfterSet := aAfterSet;
 end;
 
+function TwbSubRecordDef.SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetCountPathOnValue(aValue));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetCountPath(aValue);
+end;
+
 function TwbSubRecordDef.SetDefaultEditValue(const aValue: string): IwbSubRecordDef;
 begin
   if Assigned(defParent) then
@@ -10857,6 +10916,15 @@ begin
   if Supports(srValue, IwbArrayDef, a) then
     srValue := a.SetDefaultEditValues(aValues);
   Result := Self;
+end;
+
+function TwbSubRecordDef.SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetDefaultEditValuesOnValue(aValues));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetDefaultEditValues(aValues);
 end;
 
 function TwbSubRecordDef.SetDefaultNativeValue(const aValue: Variant): IwbSubRecordDef;
@@ -10888,10 +10956,19 @@ begin
   Result := Self;
 end;
 
-function TwbSubRecordDef.SetSummaryDelimiterOnValue(const aDelimiter: string): IwbSubRecordWithStructDef;
+function TwbSubRecordDef.SetSummaryDelimiterOnArray(const aDelimiter: string): IwbSubRecordWithArrayDef;
 begin
   if Assigned(defParent) then
-    Exit(TwbSubRecordDef(Duplicate).SetSummaryDelimiterOnValue(aDelimiter));
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryDelimiterOnArray(aDelimiter));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetSummaryDelimiter(aDelimiter);
+end;
+
+function TwbSubRecordDef.SetSummaryDelimiterOnStruct(const aDelimiter: string): IwbSubRecordWithStructDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryDelimiterOnStruct(aDelimiter));
 
   Result := Self;
   srValue := (srValue as IwbStructDef).SetSummaryDelimiter(aDelimiter);
@@ -10913,6 +10990,33 @@ begin
 
   Result := Self;
   srValue := (srValue as IwbStructDef).SetSummaryMemberMaxDepth(aIndex, aMaxDepth);
+end;
+
+function TwbSubRecordDef.SetSummaryPassthroughMaxCountOnValue(aCount: Integer): IwbSubRecordWithArrayDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryPassthroughMaxCountOnValue(aCount));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetSummaryPassthroughMaxCount(aCount);
+end;
+
+function TwbSubRecordDef.SetSummaryPassthroughMaxDepthOnValue(aDepth: Integer): IwbSubRecordWithArrayDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryPassthroughMaxDepthOnValue(aDepth));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetSummaryPassthroughMaxDepth(aDepth);
+end;
+
+function TwbSubRecordDef.SetSummaryPassthroughMaxLengthOnValue(aLength: Integer): IwbSubRecordWithArrayDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryPassthroughMaxLengthOnValue(aLength));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetSummaryPassthroughMaxLength(aLength);
 end;
 
 function TwbSubRecordDef.SetSummaryPrefixSuffixOnValue(aIndex: Integer; const aPrefix, aSuffix: string): IwbSubRecordWithStructDef;
@@ -12649,6 +12753,7 @@ begin
     Self.arSummaryPassthroughMaxLength := arSummaryPassthroughMaxLength;
     Self.arSummaryPassthroughMaxDepth := arSummaryPassthroughMaxDepth;
     Self.arDefaultEditValues := arDefaultEditValues;
+    Self.arCountPath := arCountPath;
   end;
 end;
 
@@ -12718,6 +12823,11 @@ end;
 function TwbArrayDef.GetCountCallBack: TwbCountCallback;
 begin
   Result := arCountCallBack;
+end;
+
+function TwbArrayDef.GetCountPath: string;
+begin
+  Result := arCountPath;
 end;
 
 function TwbArrayDef.GetDefType: TwbDefType;
@@ -13029,10 +13139,49 @@ begin
   defReported := True;
 end;
 
+function _GetCountCallbackForPath(const aPath: string): TwbCountCallback;
+begin
+  Result :=
+    function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
+    begin
+      Result := 0;
+
+      if not Assigned(aElement) then
+        Exit;
+
+      var lContainer: IwbContainerElementRef;
+      if not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+        Exit;
+
+      var lCount := lContainer.ElementNativeValues[aPath];
+      if not VarIsOrdinal(lCount) then
+        Exit;
+
+      Result := lCount;
+    end;
+end;
+
+function TwbArrayDef.SetCountPath(const aValue: string): IwbArrayDef;
+begin
+  if arCountPath = aValue then
+    Exit(Self);
+
+  if Assigned(defParent) then
+    Exit(TwbArrayDef(Duplicate).SetCountPath(aValue));
+
+  Result := Self;
+  arCountPath := aValue;
+  if arCountPath <> '' then
+    arCountCallback := _GetCountCallbackForPath(arCountPath)
+end;
+
 function TwbArrayDef.SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
 var
   i: Integer;
 begin
+  if Assigned(defParent) then
+    Exit(TwbArrayDef(Duplicate).SetDefaultEditValues(aValues));
+
   Result := Self;
   SetLength(arDefaultEditValues, Length(aValues));
   for i := Low(aValues) to High(aValues) do
@@ -13054,24 +13203,36 @@ end;
 
 function TwbArrayDef.SetSummaryDelimiter(const aDelimiter: string): IwbArrayDef;
 begin
+  if Assigned(defParent) then
+    Exit(TwbArrayDef(Duplicate).SetSummaryDelimiter(aDelimiter));
+
   Result := Self;
   arSummaryDelimiter := aDelimiter;
 end;
 
 function TwbArrayDef.SetSummaryPassthroughMaxCount(aCount: Integer): IwbArrayDef;
 begin
+  if Assigned(defParent) then
+    Exit(TwbArrayDef(Duplicate).SetSummaryPassthroughMaxCount(aCount));
+
   Result := Self;
   arSummaryPassthroughMaxCount := aCount;
 end;
 
 function TwbArrayDef.SetSummaryPassthroughMaxDepth(aCount: Integer): IwbArrayDef;
 begin
+  if Assigned(defParent) then
+    Exit(TwbArrayDef(Duplicate).SetSummaryPassthroughMaxDepth(aCount));
+
   Result := Self;
   arSummaryPassthroughMaxDepth := aCount;
 end;
 
 function TwbArrayDef.SetSummaryPassthroughMaxLength(aLength: Integer): IwbArrayDef;
 begin
+  if Assigned(defParent) then
+    Exit(TwbArrayDef(Duplicate).SetSummaryPassthroughMaxLength(aLength));
+
   Result := Self;
   arSummaryPassthroughMaxLength := aLength;
 end;
@@ -13447,6 +13608,9 @@ end;
 
 function TwbStructDef.SetSummaryDelimiter(const aDelimiter: string): IwbStructDef;
 begin
+  if Assigned(defParent) then
+    Exit(TwbStructDef(Duplicate).SetSummaryDelimiter(aDelimiter));
+
   Result := Self;
   stSummaryDelimiter := aDelimiter;
 end;
@@ -21942,8 +22106,9 @@ begin
   var lLength := 0;
   if Assigned(aBasePtr) and Assigned(aEndPtr) then
     lLength := NativeInt(aEndPtr) - NativeInt(aBasePtr);
-  if lLength < 16 then
-    raise Exception.Create('Not enough space to save a GUID');
+
+  if lLength <> 16 then
+    aElement.RequestStorageChange(aBasePtr, aEndPtr, 16);
 
   var lValue := aValue;
 

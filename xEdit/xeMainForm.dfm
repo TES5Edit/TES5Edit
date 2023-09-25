@@ -2607,6 +2607,10 @@ object frmMain: TfrmMain
       Caption = 'Remove'
       OnClick = mniViewRemoveClick
     end
+    object mniViewClear: TMenuItem
+      Caption = 'Clear'
+      OnClick = mniViewClearClick
+    end
     object mniViewRemoveFromSelected: TMenuItem
       Caption = 'Remove from selected records'
       OnClick = mniViewRemoveFromSelectedClick

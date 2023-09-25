@@ -11,11 +11,13 @@ unit wbBSArchive;
 interface
 
 uses
-  SysUtils,
-  Classes,
-  Windows,
-  Threading,
-  SyncObjs,
+  System.SysUtils,
+  System.Classes,
+  Winapi.Windows,
+  System.Threading,
+  System.SyncObjs,
+  System.Generics.Defaults,
+  System.Generics.Collections,
   wbStreams,
   tfTypes,
   tfMD5;
@@ -223,6 +225,8 @@ const
 type
   TwbBSArchive = class;
 
+  TwbResourceDict = TDictionary<string, TwbNothing>;
+
   TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds, baSF, baSFdds);
   TBSArchiveState = (stReading, stWriting);
   TBSArchiveStates = set of TBSArchiveState;
@@ -405,6 +409,7 @@ type
       aSingleThreaded: Boolean = False);
     function FileExists(const aFileName: string): Boolean;
     procedure ResourceList(const aList: TStrings; aFolder: string = '');
+    procedure ResourceDict(const aDict: TwbResourceDict; aFolder: string = '');
     //procedure IterateFolders(aProc: TBSFileIterationProc);
     procedure Close;
 
@@ -2449,7 +2454,7 @@ begin
     FreeAndNil(fStream);
 
   if stWriting in fStates then
-    SysUtils.DeleteFile(fFileName);
+    System.SysUtils.DeleteFile(fFileName);
 
   fStates := [];
   fType := baNone;
@@ -2465,6 +2470,38 @@ begin
   if fShareData then begin
     SetLength(fPackedData, 0);
     fPackedDataCount := 0;
+  end;
+end;
+
+procedure TwbBSArchive.ResourceDict(const aDict: TwbResourceDict; aFolder: string);
+var
+  Folder : string;
+  i, j   : Integer;
+begin
+  if not Assigned(aDict) then
+    Exit;
+
+  Folder := ExcludeTrailingPathDelimiter(aFolder);
+  case fType of
+    baTES3:
+      for i := Low(fFilesTES3) to High(fFilesTES3) do
+        with fFilesTES3[i] do
+          if (Folder = '') or Name.StartsWith(Folder, True) then
+            aDict.TryAdd(Name, wbNothing);
+    baTES4, baFO3, baSSE:
+      for i := Low(fFoldersTES4) to High(fFoldersTES4) do
+        with fFoldersTES4[i] do begin
+          if (Folder = '') or Name.StartsWith(Folder, True) then
+            for j := Low(Files) to High(Files) do begin
+              var lName := Name + '\' + Files[j].Name;
+              aDict.TryAdd(lName, wbNothing);
+            end;
+        end;
+    baFO4, baFO4dds, baSF, baSFdds:
+      for i := Low(fFilesFO4) to High(fFilesFO4) do
+        with fFilesFO4[i] do
+          if (Folder = '') or Name.StartsWith(Folder, True) then
+            aDict.TryAdd(Name, wbNothing);
   end;
 end;
 
