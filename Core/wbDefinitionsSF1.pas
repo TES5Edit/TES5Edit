@@ -18022,8 +18022,9 @@ begin
     { 0} wbFloat,
     { 4} wbFloat,
     { 8} wbFloat,
-    {12} wbInteger('Unknown', itU8),
-    {13} wbUnused(3)
+    {12} wbUnknown(4),
+    {16} wbInteger('Unknown', itU8),
+    {17} wbUnused(3)
     ]),
 
     wbInteger(XLSM, 'Light Static Shadow Map', itU32, wbBoolEnum),
