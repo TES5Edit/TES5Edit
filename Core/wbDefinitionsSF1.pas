@@ -19249,6 +19249,14 @@ begin
 
 end;
 
+const
+  wbKnownSubRecordSignaturesRFGP : TwbKnownSubRecordSignatures = (
+    'EDID',
+    'NNAM',
+    '____',
+    '____'
+  );
+
 procedure DefineSF1s;
 begin
   (* still exists in game code, but not in Starfield.esm * )
@@ -19405,7 +19413,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(RFGP, 'Reference Group', [
+  wbRecord(RFGP, 'Reference Group', @wbKnownSubRecordSignaturesRFGP, [
     wbEDID,
     wbBaseFormComponents,
     wbString(NNAM, 'Name'),

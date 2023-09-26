@@ -15607,10 +15607,17 @@ begin
             end;
 
         if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
-          if aElement.ShouldReportError(eeReading) then
-            wbProgress('<Error reading float in "%s">', [aElement.FullPath]);
+          if aElement.ShouldReportError(eeReading) then begin
+            case fdKind of
+              fkHalf:   wbProgress('<Error reading half in "%s": %s>',   [aElement.FullPath, IntToHex(PHalfFloat(aBasePtr)^) ]);
+              fkSingle: wbProgress('<Error reading float in "%s": %s>',  [aElement.FullPath, IntToHex(PCardinal(aBasePtr)^)  ]);
+              fkDouble: wbProgress('<Error reading double in "%s": %s>', [aElement.FullPath, IntToHex(PInt64(aBasePtr)^)     ]);
+            end;
+          end;
           Exit(NaN);
         end;
+
+        var lOrgValue := Value;
 
         if Assigned(fdNormalizer) then
           Value := fdNormalizer(aElement, Value);
@@ -15622,8 +15629,21 @@ begin
           Result := Value;
 
         if SetExceptions([]) * DefaultExceptionFlags <> [] then begin
-          if aElement.ShouldReportError(eeReading) then
-            wbProgress('<Error reading float in "%s">', [aElement.FullPath]);
+          if aElement.ShouldReportError(eeReading) then begin
+            var lOrgValueStr := '';
+            try
+              lOrgValueStr := FloatToStr(lOrgValue);
+            except
+              on E: Exception do
+                lOrgValueStr := E.ClassName + ': ' + E.Message;
+            end;
+
+            case fdKind of
+              fkHalf:   wbProgress('<Error scaling/rounding half in "%s": %s %s>',   [aElement.FullPath, IntToHex(PHalfFloat(aBasePtr)^), lOrgValueStr]);
+              fkSingle: wbProgress('<Error scaling/rounding float in "%s": %s %s>',  [aElement.FullPath, IntToHex(PCardinal(aBasePtr)^) , lOrgValueStr]);
+              fkDouble: wbProgress('<Error scaling/rounding double in "%s": %s %s>', [aElement.FullPath, IntToHex(PInt64(aBasePtr)^)    , lOrgValueStr]);
+            end;
+          end;
           Exit(NaN);
         end;
       finally
