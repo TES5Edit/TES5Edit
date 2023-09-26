@@ -18026,7 +18026,7 @@ begin
     { 0} wbFloat,
     { 4} wbFloat,
     { 8} wbFloat,
-    {12} wbUnknown(4),
+    {12} wbFloat,
     {16} wbInteger('Unknown', itU8),
     {17} wbUnused(3)
     ]),
