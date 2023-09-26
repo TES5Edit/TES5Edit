@@ -14,7 +14,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, VirtualEditTree, wbInterface;
+  Dialogs, StdCtrls, ExtCtrls, VirtualTrees, VirtualEditTree, wbInterface,
+  Vcl.Mask;
 
 type
   TLogType = (
@@ -81,7 +82,7 @@ type
     ltLog: TLogType;
     MaxLogSize: integer;
     FormIDErrors: integer;
-    PFiles: ^TDynFiles;
+    PFiles: PwbFiles;
     JumpTo: procedure (aInterface: IInterface; aBackward: Boolean) of object;
   end;
 

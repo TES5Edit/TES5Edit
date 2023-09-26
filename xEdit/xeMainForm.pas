@@ -895,7 +895,7 @@ type
     procedure WndProc(var Message: TMessage); override;
     procedure UpdateTreeLineColor;
   public
-    Files: TDynFiles;
+    Files: TwbFiles;
   private
     NewMessages: TStringList;
     ActiveIndex: TColumnIndex;
@@ -1076,7 +1076,7 @@ type
     procedure AddFile(const aFile: IwbFile);
     procedure AddFileInternal(const aFile: IwbFile);
 
-    procedure ReInitTree(aNoGameMaster: Boolean; aFiles: TDynFiles);
+    procedure ReInitTree(aNoGameMaster: Boolean; aFiles: TwbFiles);
 
     procedure PostAddMessage(const s: string);
     procedure SendAddFile(const aFile: IwbFile);
@@ -4227,7 +4227,7 @@ var
   Elements                    : array of IwbElement;
   ReferenceFile               : IwbFile;
   Container                   : IwbContainer;
-  InjectionSourceFiles        : TDynFiles;
+  InjectionSourceFiles        : TwbFiles;
   sl                          : TStringList;
   i, j                        : Integer;
 begin
@@ -12707,7 +12707,7 @@ var
   MainRecordDef: PwbMainRecordDef;
   HasACHR, HasACRE, HasREFR: Boolean;
 
-  FilterFiles : TDynFiles;
+  FilterFiles : TwbFiles;
 begin
   Signatures := nil;
   BaseSignatures := nil;
@@ -14175,7 +14175,7 @@ var
   NodeData                    : PNavNodeData;
   _File                       : IwbFile;
   i, j                        : Integer;
-  Files                       : TDynFiles;
+  Files                       : TwbFiles;
 begin
   UserWasActive := True;
 
@@ -15017,7 +15017,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ReInitTree(aNoGameMaster: Boolean; aFiles: TDynFiles);
+procedure TfrmMain.ReInitTree(aNoGameMaster: Boolean; aFiles: TwbFiles);
 var
   i, j                        : Integer;
   _File                       : IwbFile;
@@ -17340,9 +17340,11 @@ begin
   if not Assigned(Element) then
     Exit;
 
-  Element := Element.LinksTo;
+  var lLinksTo := Element.LinksTo;
+  if not Assigned(lLinksTo) then
+    lLinksTo := Element.SummaryLinksTo;
 
-  Allow := Assigned(Element) and not Element.Equals(ActiveRecord);
+  Allow := Assigned(lLinksTo) and not lLinksTo.Equals(ActiveRecord);
 end;
 
 procedure TfrmMain.vstViewClick(Sender: TObject);
@@ -17368,11 +17370,13 @@ begin
   if not Assigned(Element) then
     Exit;
 
-  Element := Element.LinksTo;
+  var lLinksTo := Element.LinksTo;
+  if not Assigned(lLinksTo) then
+    lLinksTo := Element.SummaryLinksTo;
 
-  if Assigned(Element) and not Element.Equals(ActiveRecord) then begin
+  if Assigned(lLinksTo) and not lLinksTo.Equals(ActiveRecord) then begin
     ForwardHistory := nil;
-    JumpTo(Element, False);
+    JumpTo(lLinksTo, False);
   end;
 end;
 
@@ -18659,9 +18663,22 @@ begin
           GroupRecord2 := SortElement2 as IwbGroupRecord;
           Assert(GroupRecord1.GroupType = GroupRecord2.GroupType);
           case GroupRecord1.GroupType of
-            0: Result := CompareText(
-                TwbSignature(GroupRecord1.GroupLabel),
-                TwbSignature(GroupRecord2.GroupLabel));
+            0: begin
+              var lLabel1 := TwbSignature(GroupRecord1.GroupLabel);
+              var lLabel2 := TwbSignature(GroupRecord2.GroupLabel);
+              var lName1: string := lLabel1;
+              var lName2: string := lLabel2;
+              if xeSortGroupsByFullName then begin
+                var lRecordDef: PwbMainRecordDef;
+                if wbFindRecordDef(lLabel1, lRecordDef) then
+                  lName1 := lRecordDef.Name;
+                if wbFindRecordDef(lLabel2, lRecordDef) then
+                  lName2 := lRecordDef.Name;
+              end;
+              Result := CompareText(
+                lName1,
+                lName2);
+            end;
             2, 3: Result := CmpI32(
                 Integer(GroupRecord1.GroupLabel),
                 Integer(GroupRecord2.GroupLabel));

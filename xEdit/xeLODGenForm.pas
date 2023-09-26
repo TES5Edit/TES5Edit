@@ -83,7 +83,7 @@ type
     { Private declarations }
   public
     { Public declarations }
-    _Files: ^TDynFiles;
+    _Files: PwbFiles;
   end;
 
 var

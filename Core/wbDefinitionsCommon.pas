@@ -121,6 +121,8 @@ procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue:
 
 {>>> Common Summary Callbacks <<<}
 
+function wbConditionSummaryLinksTo(const aElement: IwbElement): IwbElement;
+
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -1659,6 +1661,31 @@ begin
 
   Result := Items.CommaText;
   Items.Free;
+end;
+
+function wbConditionSummaryLinksTo(const aElement: IwbElement): IwbElement;
+var
+  Container : IwbContainerElementRef;
+  cerCTDA   : IwbContainerElementRef;
+begin
+  if not wbTrySetContainer(aElement, ctToSummary, Container) then
+    Exit;
+
+  if wbGameMode > gmFNV then begin
+    if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
+      Exit;
+  end else
+    cerCTDA := Container;
+
+  Result := cerCTDA.Elements[5].LinksTo;
+  if Assigned(Result) then
+    Exit;
+
+  Result := cerCTDA.Elements[6].LinksTo;
+  if Assigned(Result) then
+    Exit;
+
+  Result := cerCTDA.Elements[2].LinksTo;
 end;
 
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);

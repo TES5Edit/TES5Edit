@@ -18,8 +18,8 @@ uses
 var
   xeScriptToRun            : string;
   xeSettingsFileName       : string;
-  xePluginToUse            : string;  // Passed a specific plugin as parameter
-  xeLogFile                : string;  // Optional log file for this session
+  xePluginToUse            : string;          // Passed a specific plugin as parameter
+  xeLogFile                : string;          // Optional log file for this session
   xeMyProfileName          : string;
 
   xeMasterUpdateDone       : Boolean;
@@ -36,6 +36,8 @@ var
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
+
+  xeSortGroupsByFullName   : Boolean = True;
 
 const
   xeDefaultScriptHost = 'JvI';

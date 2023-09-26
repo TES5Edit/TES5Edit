@@ -289,6 +289,7 @@ var
   wbXLKRs                   : IwbSubRecordArrayDef;
   wbXPLKs                   : IwbSubRecordArrayDef;
   wbXFLG                    : IwbRecordMemberDef;
+  wbAVMDMNAMReq             : IwbRecordMemberDef;
 
   wbQuestEventEnumSF1       : IwbEnumDef;
 
@@ -1360,10 +1361,12 @@ var
   i, j       : Integer;
   s, t       : string;
 begin
+  Result := '';
   case aType of
-    ctToStr, ctToSummary: if aInt = -1 then
-        Result := 'None'
-      else if aInt = -2 then
+    ctToStr, ctToSummary: if aInt = -1 then begin
+        if aType <> ctToSummary then
+          Result := 'None';
+      end else if aInt = -2 then
         Result := 'Player'
       else begin
         Result := aInt.ToString;
@@ -1473,6 +1476,54 @@ begin
   end;
 end;
 
+{ Alias to string conversion, requires quest reference or quest record specific to record that references alias }
+function wbAliasLinksTo(aInt: Int64; const aQuestRef: IwbElement): IwbElement;
+var
+  MainRecord : IwbMainRecord;
+  EditInfos  : TStringList;
+  Aliases    : IwbContainerElementRef;
+  Alias      : IwbContainerElementRef;
+  i, j       : Integer;
+  s, t       : string;
+begin
+  Result := nil;
+
+  if aInt < 0 then
+    Exit;
+
+  if not Assigned(aQuestRef) then
+    Exit;
+
+  // aQuestRef can be a QUST record or reference to QUST record
+  if not Supports(aQuestRef, IwbMainRecord, MainRecord) then
+    if not Supports(aQuestRef.LinksTo, IwbMainRecord, MainRecord) then
+      Exit;
+
+  // get winning quest override except for partial forms
+  if MainRecord.WinningOverride.Flags._Flags and $00004000 = 0 then
+    MainRecord := MainRecord.WinningOverride
+  else if MainRecord.Flags._Flags and $00004000 <> 0 then
+    MainRecord := MainRecord.MasterOrSelf;
+
+  if MainRecord.Signature <> QUST then
+    Exit;
+
+    if Supports(MainRecord.ElementByName['Aliases'], IwbContainerElementRef, Aliases) then
+      for i := 0 to Pred(Aliases.ElementCount) do
+        if Supports(Aliases.Elements[i], IwbContainerElementRef, Alias) then begin
+          var lHasSignature: IwbHasSignature;
+          if Supports(Alias, IwbHasSignature, lHasSignature) and (lHasSignature.Signature = ALCS) then begin
+            var lALST := Alias.ElementBySignature[ALST];
+            if Assigned(lALST) then
+              if not Supports(lALST, IwbContainerElementRef, Alias) then
+                Continue;
+          end;
+          j := Alias.Elements[0].NativeValue;
+          if j = aInt then
+            Exit(Alias);
+        end;
+end;
+
 function wbStrToAlias(const aString: string; const aElement: IwbElement): Int64;
 var
   i    : Integer;
@@ -1516,6 +1567,26 @@ begin
 
   Result := wbAliasToStr(aInt, Container.ElementByName['FormID'], aType);
 end;
+
+function wbScriptObjectAliasLinksTo(const aElement: IwbElement): IwbElement;
+var
+  Container  : IwbContainerElementRef;
+begin
+  Result := nil;
+
+  if not wbResolveAlias then
+    Exit;
+
+  if not wbTryGetContainerRefFromUnionOrValue(aElement, Container) then
+    Exit;
+
+  var lAlias := aElement.NativeValue;
+  if not VarIsOrdinal(lAlias) then
+    Exit;
+
+  Result := wbAliasLinksTo(lAlias, Container.ElementByName['FormID']);
+end;
+
 
 function wbPackageLocationAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -6891,23 +6962,26 @@ begin
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
     wbStructSK([1], 'Object v2', [
       wbUnused(2),
-      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
+      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias)
+        .SetDefaultEditValue('None')
+        .SetLinksToCallback(wbScriptObjectAliasLinksTo),
       wbFormID('FormID').IncludeFlag(dfNoReport)
     ], [2, 1, 0])
-      .SetSummaryKey([2, 1])
+      .SetSummaryKey([1, 2])
+      .SetSummaryMemberPrefixSuffix(1, 'Alias[', '] on')
       .SetSummaryMemberPrefixSuffix(2, '', '')
-      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
-      .SetSummaryDelimiter('')
+      .SetSummaryDelimiter(' ')
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfSummaryNoSortKey),
     wbStructSK([0], 'Object v1', [
       wbFormID('FormID'),
-      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
+      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias)
+        .SetLinksToCallback(wbScriptObjectAliasLinksTo),
       wbUnused(2)
     ])
-      .SetSummaryKey([0, 1])
+      .SetSummaryKey([1, 0])
+      .SetSummaryMemberPrefixSuffix(1, 'Alias[', '] on')
       .SetSummaryMemberPrefixSuffix(0, '', '')
-      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
   ]);
@@ -9248,7 +9322,10 @@ begin
       ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
       wbString(CIS1, 'Parameter #1'),
       wbString(CIS2, 'Parameter #2')
-    ], [], cpNormal).SetToStr(wbConditionToStr).IncludeFlag(dfCollapsed, wbCollapseConditions);
+    ], [], cpNormal)
+      .SetToStr(wbConditionToStr)
+      .SetSummaryLinksToCallback(wbConditionSummaryLinksTo)
+      .IncludeFlag(dfCollapsed, wbCollapseConditions);
 
   wbCTDAs := wbRArray('Conditions', wbCTDA, cpNormal, False);
   wbCTDAsCount := wbRArray('Conditions', wbCTDA).SetCountPath(CITC);
@@ -10512,6 +10589,14 @@ begin
     ])
   ], False, nil, cpNormal, False).SetIgnoreList([FLLD, XFLG]);
 
+  wbAVMDMNAMReq :=
+    wbInteger(MNAM, 'Type', itU32, wbEnum([
+      'NONE',
+      'Simple Group',
+      'Complex Group',
+      'Modulation'
+    ])).SetRequired;
+
   {subrecords checked against Starfield.esm}
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10563,7 +10648,7 @@ begin
     wbFormIDCk(ONAM, 'Art Object', [ARTO]),
     wbFormIDCk(PNAM, 'Body Part Data', [BPTD]),
     wbRStruct('AVM Data',[
-      wbInteger(MNAM, 'Type', itU32),
+      wbAVMDMNAMReq,
       wbString(TNAM, 'Color Mapping')
         .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
         begin
@@ -10585,9 +10670,10 @@ begin
             Exit;
           var lType := Integer(lMNAMValue);
 
-          if (lType >= Low(wbIdxAVMByType)) and (lType <= Low(wbIdxAVMByType)) then
+          if (lType >= Low(wbIdxAVMByType)) and (lType <= High(wbIdxAVMByType)) then
             Result := lFile.RecordFromIndexByKey[wbIdxAVMByType[lType], lAVMDName];
-        end),
+        end)
+        .SetToStr(wbToStringFromLinksToMainRecordName),
        wbString(SNAM, 'Entry Name'),
        wbString(VNAM, 'Entry Value')
     ], []),
@@ -11973,21 +12059,23 @@ begin
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
-    wbString(NAM2, 'Color Mapping').SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
-    begin
-      Result := nil;
-      if not Assigned(aElement) then
-        Exit;
-      var lAVMDName := aElement.NativeValue;
-      if not VarIsStr(lAVMDName) then
-        Exit;
+    wbString(NAM2, 'Color Mapping')
+      .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
+      begin
+        Result := nil;
+        if not Assigned(aElement) then
+          Exit;
+        var lAVMDName := aElement.NativeValue;
+        if not VarIsStr(lAVMDName) then
+          Exit;
 
-      var lFile := aElement._File;
-      if not Assigned(lFile) then
-        Exit;
+        var lFile := aElement._File;
+        if not Assigned(lFile) then
+          Exit;
 
-      Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
-    end),
+        Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
+      end)
+      .SetToStr(wbToStringFromLinksToMainRecordName),
     wbString(NAM3, 'Mask'),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
 //    wbFormIDCk(CNAM, 'Color', [CLFM]),
@@ -17853,22 +17941,22 @@ begin
 
     wbStruct(XCOL, 'Collision', [
     { 0} wbInteger('Collision Layer', itU32)
-          .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
-            begin
-              Result := nil;
-              if not Assigned(aElement) then
-                Exit;
-              var lCollisionLayerIndex := aElement.NativeValue;
-              if not VarIsOrdinal(lCollisionLayerIndex) then
-                Exit;
+           .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
+           begin
+             Result := nil;
+             if not Assigned(aElement) then
+               Exit;
+             var lCollisionLayerIndex := aElement.NativeValue;
+             if not VarIsOrdinal(lCollisionLayerIndex) then
+               Exit;
 
-              var lFile := aElement._File;
-              if not Assigned(lFile) then
-                Exit;
+             var lFile := aElement._File;
+             if not Assigned(lFile) then
+               Exit;
 
-              Result := lFile.RecordFromIndexByKey[wbIdxCollisionLayer, lCollisionLayerIndex];
-            end)
-          .SetToStr(wbToStringFromLinksToMainRecordName),
+             Result := lFile.RecordFromIndexByKey[wbIdxCollisionLayer, lCollisionLayerIndex];
+           end)
+           .SetToStr(wbToStringFromLinksToMainRecordName),
      { 4} wbFormIDCk('Unknown', [NULL, MATT])
     { 8}
     ]),
@@ -20020,26 +20108,61 @@ begin
   wbRecord(AVMD, 'AVM Data', [
     wbEDID,
     wbBaseFormComponents,
-    wbInteger(MNAM, 'Type', itU32, wbEnum([
-      '',
-      'Simple Group',
-      'Complex Group',
-      'Modulation'
-    ])), //req
-    wbString(YNAM),  //req
-    wbString(TNAM, 'Name'),  //req
-    wbInteger(ITMC, 'Entry Count',itU32), //req
+    wbAVMDMNAMReq,
+    wbString(YNAM).SetRequired,
+    wbString(TNAM, 'Name').SetRequired,
+    wbInteger(ITMC, 'Entry Count',itU32).SetRequired,
     wbRArray('Entries',
       wbRStruct('Entry', [
-        wbString(LNAM, 'Name'), //req
-        wbString(VNAM, 'Value'),
-        wbByteRGBA(NNAM, 'Color').SetDontShow(function(const aElement: IwbElement): Boolean
-        begin
-          var lContainer: IwbContainer;
-          if not wbTryGetContainerFromUnion(aElement, lContainer) then
-            Exit(False);
-          Result := lContainer.ElementValues['...\MNAM'] <> 'Modulation';
-        end)
+        wbString(LNAM, 'Name')
+          .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
+          begin
+            Result := nil;
+
+            var lContainer: IwbContainer;
+            if not wbTryGetContainerFromUnion(aElement, lContainer) then
+              Exit;
+
+            if lContainer.ElementValues['...\MNAM'] <> 'Complex Group' then
+              Exit;
+
+            var lAVMDName := aElement.NativeValue;
+            if not VarIsStr(lAVMDName) then
+              Exit;
+
+            var lFile := aElement._File;
+            if not Assigned(lFile) then
+              Exit;
+
+            Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
+          end)
+          .SetToStr(procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
+          begin
+            var lContainer: IwbContainer;
+            if not wbTryGetContainerFromUnion(aElement, lContainer) then
+              Exit;
+
+            if lContainer.ElementValues['...\MNAM'] <> 'Complex Group' then
+              Exit;
+
+            wbToStringFromLinksToMainRecordName(aValue, aBasePtr, aEndPtr, aElement, aType);
+          end),
+        wbString(VNAM, 'Value')
+          .SetDontShow(function(const aElement: IwbElement): Boolean
+          begin
+            var lContainer: IwbContainer;
+            if not wbTryGetContainerFromUnion(aElement, lContainer) then
+              Exit(False);
+            Result := lContainer.ElementValues['...\MNAM'] <> 'Simple Group';
+          end),
+        wbByteRGBA(NNAM, 'Color')
+          .SetDontShow(function(const aElement: IwbElement): Boolean
+          begin
+            var lContainer: IwbContainer;
+            if not wbTryGetContainerFromUnion(aElement, lContainer) then
+              Exit(False);
+            Result := lContainer.ElementValues['...\MNAM'] <> 'Modulation';
+          end)
       ], [])
       .SetSummaryKey([2, 0, 1])
       .SetSummaryMemberPrefixSuffix(2, '', ' as')

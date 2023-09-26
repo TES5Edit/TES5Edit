@@ -285,6 +285,7 @@ type
 
     eLinksToGeneration : Integer;
     eCachedLinksTo     : IwbElement;
+    eSummaryLinksTo    : IwbElement;
 
     {---IInterface---}
     function _AddRef: Integer; virtual; stdcall;
@@ -375,7 +376,7 @@ type
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); virtual;
     function GetIsInjected: Boolean; virtual;
     function GetReferencesInjected: Boolean; virtual;
-    function GetInjectionSourceFiles: TDynFiles; virtual;
+    function GetInjectionSourceFiles: TwbFiles; virtual;
     function GetIsNotReachable: Boolean; virtual;
     function GetIsReachable: Boolean; virtual;
     procedure SetModified(aValue: Boolean); virtual;
@@ -416,6 +417,7 @@ type
     procedure ResetModified(aResetModified: TwbResetModified); virtual;
     function GetLinksTo: IwbElement;
     function InternalGetLinksTo: IwbElement; virtual;
+    function GetSummaryLinksTo: IwbElement; virtual;
     procedure SetLinksTo(const aElement: IwbElement); virtual;
     function GetNoReach: Boolean;
 
@@ -660,6 +662,8 @@ type
     procedure IncGeneration;
     function GetFileGeneration: Integer;
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
+    procedure AddAllMastersToDict(aDict: TwbFilesDictionary);
+    function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
   end;
 
   TwbCachedEditInfo = record
@@ -692,8 +696,11 @@ type
     flEndPtr                 : Pointer;
     flCRC32                  : TwbCRC32;
 
-    flMasters                : TDynFiles;
-    flOldMasters             : TDynFiles;
+    flMasters                : TwbFiles;
+    flOldMasters             : TwbFiles;
+
+    flAllMasters             : TwbFiles;
+    flAllMastersGeneration   : Integer;
 
     flRecords                : array of IwbMainRecord;
     flRecordFormIDs          : array of TwbFormID;
@@ -780,6 +787,8 @@ type
     function HasMaster(const aFileName: string): Boolean;
     function GetMaster(aIndex: Integer; aNew: Boolean): IwbFile; inline;
     function GetMasterCount(aNew: Boolean): Integer; inline;
+    function GetAllMasters: TwbFiles;
+    procedure UpdateAllMasters;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
@@ -857,6 +866,7 @@ type
     procedure IncGeneration;
     function GetFileGeneration: Integer;
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
+    procedure AddAllMastersToDict(aDict: TwbFilesDictionary);
 
     procedure Scan; virtual;
     procedure SortRecords;
@@ -1139,7 +1149,7 @@ type
 
     function GetIsInjected: Boolean; override;
     function GetReferencesInjected: Boolean; override;
-    function GetInjectionSourceFiles: TDynFiles; override;
+    function GetInjectionSourceFiles: TwbFiles; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
     function GetIsNotReachable: Boolean; override;
     function GetIsReachable: Boolean; override;
@@ -2213,6 +2223,15 @@ begin
     wbMergeSortPtr(@cntElements[1], High(cntElements), CompareSortOrder);
 end;
 
+procedure TwbFile.AddAllMastersToDict(aDict: TwbFilesDictionary);
+begin
+  var lMasterFileInternal: IwbFileInternal;
+  for var lMasterIdx := Pred(GetMasterCount(True)) downto 0 do
+    if Supports(GetMaster(lMasterIdx, True), IwbFileInternal, lMasterFileInternal) then
+      if aDict.TryAdd(lMasterFileInternal, wbNothing) then
+        lMasterFileInternal.AddAllMastersToDict(aDict);
+end;
+
 function TwbFile.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
   GroupRecord : IwbGroupRecord;
@@ -3030,6 +3049,7 @@ begin
 
   flLoadFinished := True;
   flFormIDsSorted := True;
+  flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported or wbPseudoESL then begin
@@ -3095,6 +3115,7 @@ begin
 
   flLoadFinished := True;
   flFormIDsSorted := True;
+  flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
     if wbIsEslSupported or wbPseudoESL then begin
@@ -3518,6 +3539,8 @@ begin
   if not flIndicesActive then
     Exit;
 
+  var lIndexChanged := False;
+
   for var lKeyIdx := Low(aChangedKeys) to High(aChangedKeys) do try
     with aChangedKeys[lKeyIdx] do begin
       if ckIndex > High(flRecordsIndices) then
@@ -3535,21 +3558,27 @@ begin
           var lMainRecord: IwbMainRecord;
           if flRecordsIndices[ckIndex].TryGetValue(ckOldKey, lMainRecord) and
              aMainRecord.Equals(lMainRecord)
-          then
+          then begin
             flRecordsIndices[ckIndex].Remove(ckOldKey);
+            lIndexChanged := True;
+          end;
         end;
         if ckNewKey <> '' then
           if not flRecordsIndices[ckIndex].TryAdd(ckNewKey, aMainRecord) then begin
             var lMainRecord: IwbMainRecord;
             flRecordsIndices[ckIndex].TryGetValue(ckNewKey, lMainRecord);
             flProgress('Duplicate Key in Index "' + wbNamedIndexName(ckIndex) + '": "' + ckNewKey + '" Existing Record: '+lMainRecord.ShortName+' New Record: '+ aMainRecord.ShortName);
-          end;
+          end else
+            lIndexChanged := True;
       end;
     end;
   except
     on E: Exception do
       flProgress('Unexpected Error updating a Key in an Index: ' + E.Message);
   end;
+
+  if lIndexChanged then
+    IncGeneration;
 end;
 
 procedure TwbFile.ForceClosed;
@@ -3618,6 +3647,12 @@ begin
   finally
     Free;
   end;
+end;
+
+function TwbFile.GetAllMasters: TwbFiles;
+begin
+  UpdateAllMasters;
+  Result := flAllMasters;
 end;
 
 function TwbFile.GetAllowHardcodedRangeUse: Boolean;
@@ -4116,8 +4151,12 @@ end;
 
 function TwbFile.GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
 begin
-  if not flFindKeyInIndex(aIndex, aKey, Result) then
-    Result := nil;
+  if not flFindKeyInIndex(aIndex, aKey, Result) then begin
+    UpdateAllMasters;
+    for var lMasterIdx := Low(flAllMasters) to High(flAllMasters) do
+      if (flAllMasters[lMasterIdx] as IwbFileInternal).flFindKeyInIndex(aIndex, aKey, Result) then
+        Exit;
+  end;
 end;
 
 function TwbFile.GetReferenceFile: IwbFile;
@@ -5380,6 +5419,25 @@ begin
   end;
   flFormIDsSorted := True;
   flRecordNeedCompactFrom := High(Integer);
+end;
+
+procedure TwbFile.UpdateAllMasters;
+begin
+  if flAllMastersGeneration = _FileGeneration then
+    Exit;
+
+  flAllMasters := nil;
+
+  var lDict := TwbFilesDictionary.Create;
+  try
+    AddAllMastersToDict(lDict);
+    flAllMasters := lDict.Keys.ToArray;
+    flAllMasters.SortByReverseLoadOrder;
+  finally
+    lDict.Free;
+  end;
+
+  flAllMastersGeneration := _FileGeneration;
 end;
 
 procedure TwbFile.UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
@@ -10258,7 +10316,7 @@ begin
   end;
 end;
 
-function TwbMainRecord.GetInjectionSourceFiles: TDynFiles;
+function TwbMainRecord.GetInjectionSourceFiles: TwbFiles;
 var
   i, j, k : Integer;
   Rec     : IwbMainRecord;
@@ -10900,8 +10958,10 @@ begin
       Def.Used;
   end;
   Result := '';
-  if Assigned(mrDef) then
-    Result := mrDef.ToSummary(0, Self);
+  if Assigned(mrDef) then begin
+    eSummaryLinksTo := nil;
+    Result := mrDef.ToSummary(0, Self, eSummaryLinksTo);
+  end;
 end;
 
 function TwbMainRecord.GetValue: string;
@@ -14053,8 +14113,10 @@ begin
     Exit;
   DoInit(True);
 
-  if Assigned(srDef) then
-    Result := srDef.ToSummary(0, Self);
+  if Assigned(srDef) then begin
+    eSummaryLinksTo := nil;
+    Result := srDef.ToSummary(0, Self, eSummaryLinksTo);
+  end;
 end;
 
 function TwbSubRecord.GetValue: string;
@@ -17271,7 +17333,7 @@ begin
   Result := Result + GetShortName;
 end;
 
-function TwbElement.GetInjectionSourceFiles: TDynFiles;
+function TwbElement.GetInjectionSourceFiles: TwbFiles;
 var
   Element : IwbElement;
   MainRecord : IwbMainRecord;
@@ -17342,10 +17404,14 @@ end;
 function TwbElement.GetLinksTo: IwbElement;
 begin
   if eLinksToGeneration = _FileGeneration then
-    Exit(eCachedLinksTo);
-  Result := InternalGetLinksTo;
-  eLinksToGeneration := _FileGeneration;
-  eCachedLinksTo := Result;
+    Result := eCachedLinksTo
+  else begin
+    Result := InternalGetLinksTo;
+    eLinksToGeneration := _FileGeneration;
+    eCachedLinksTo := Result;
+  end;
+//  if Result = nil then
+//    Result := eSummaryLinksTo;
 end;
 
 function TwbElement.GetLocalized: TwbTriBool;
@@ -17533,6 +17599,27 @@ end;
 function TwbElement.GetSummary: string;
 begin
   Result := '';
+end;
+
+function TwbElement.GetSummaryLinksTo: IwbElement;
+begin
+  Result := eSummaryLinksTo;
+  if Assigned(Result) then
+    Exit;
+
+  var lDef := GetDef;
+  if not Assigned(lDef) then
+    Exit;
+
+  Result := lDef.GetSummaryLinksTo(Self);
+  if Assigned(Result) then
+    Exit;
+
+  var lValueDef := GetResolvedValueDef;
+  if not Assigned(lValueDef) then
+    Exit;
+
+  Result := lValueDef.GetSummaryLinksTo(Self);
 end;
 
 function TwbElement.GetTreeBranch: Boolean;
@@ -18643,7 +18730,8 @@ begin
     Exit;
   DoInit(True);
 
-  Result := arcDef.ToSummary(0, Self);
+  eSummaryLinksTo := nil;
+  Result := arcDef.ToSummary(0, Self, eSummaryLinksTo);
 end;
 
 function TwbSubRecordArray.GetValue: string;
@@ -19247,7 +19335,8 @@ begin
     Exit;
   DoInit(True);
 
-  Result := RMD.ToSummary(0, Self);
+  eSummaryLinksTo := nil;
+  Result := RMD.ToSummary(0, Self, eSummaryLinksTo);
 end;
 
 function TwbSubRecordStruct.GetValue: string;
@@ -20218,7 +20307,12 @@ end;
 function TwbUnion.GetResolvedValueDef: IwbValueDef;
 begin
   Result := inherited;
-  if Assigned(Result) and Assigned(unResolvedDef) and not unResolvedDef.Equals(Result) then begin
+  if Assigned(Result) and
+     Assigned(unResolvedDef) and
+     not unResolvedDef.Equals(Result) and
+     (unResolvedDef.DefType <> dtUnion) and
+     (Result.DefType <> dtUnion)
+  then begin
     var lShouldDataSize := Result.Size[GetDataBasePtr, dcDataEndPtr, Self];
     var lIsDataSize := GetDataSize;
 
@@ -20234,7 +20328,9 @@ begin
        or
        not unResolvedDef.CanAssign(nil, Low(Integer), lOldDef)
     then begin
-      SetToDefault;
+      var lFile := GetFile;
+      if not Assigned(lFile) or lFile.IsElementEditable(Self) then
+        SetToDefault;
     end else
       Reset;
   end;
@@ -21822,7 +21918,9 @@ begin
 
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
-  Result := vbValueDef.ToSummary(0, GetDataBasePtr, dcDataEndPtr, Self);
+
+  eSummaryLinksTo := nil;
+  Result := vbValueDef.ToSummary(0, GetDataBasePtr, dcDataEndPtr, Self, eSummaryLinksTo);
 end;
 
 function TwbValueBase.GetValue: string;

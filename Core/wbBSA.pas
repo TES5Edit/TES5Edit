@@ -240,6 +240,22 @@ begin
 
     ContainerResourceDict('', ccAll, '');
 
+    var lPath :=  IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+    var lHashSeedName := lPath + wbGameName + '.HashSeed.txt';
+
+    if FileExists(lHashSeedName) then
+    with TStringList.Create do try
+      LoadFromFile(lHashSeedName);
+      for var lHashSeedIdx := Pred(Count) downto 0 do begin
+        var lHashSeed := Strings[lHashSeedIdx].ToLowerInvariant.Replace('/', '\');
+        if not ccAll.TryAdd(lHashSeed, wbNothing) then
+          Delete(lHashSeedIdx);
+      end;
+      SaveToFile(lHashSeedName + '2');
+    finally
+      Free;
+    end;
+
     for var lFullName in ccAll.Keys do begin
       var lFolder := ExcludeTrailingBackslash(ExtractFilePath(lFullName)).ToLowerInvariant.Replace('/', '\');
       if ccFolders.TryAdd(lFolder, wbNothing) then begin

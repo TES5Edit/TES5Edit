@@ -791,10 +791,14 @@ type
     etCheckComboBox
   );
 
-  TDynFiles = TArray<IwbFile>;
+  TwbFiles = TArray<IwbFile>;
+  PwbFiles = ^TwbFiles;
+  TwbFilesDictionary = TDictionary<IwbFile, TwbNothing>;
 
-  TDynFilesHelper = record helper for TDynFiles
+  TwbFilesHelper = record helper for TwbFiles
     procedure Add(const aFile: IwbFile);
+    procedure SortByLoadOrder;
+    procedure SortByReverseLoadOrder;
   end;
 
   TwbFileID = record
@@ -966,7 +970,7 @@ type
     procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes);
     function GetIsInjected: Boolean;
     function GetReferencesInjected: Boolean;
-    function GetInjectionSourceFiles: TDynFiles;
+    function GetInjectionSourceFiles: TwbFiles;
     function GetIsNotReachable: Boolean;
     function GetIsReachable: Boolean;
     function GetDataSize: Integer;
@@ -977,6 +981,7 @@ type
     function CanContainFormIDs: Boolean;
     function GetLinksTo: IwbElement;
     procedure SetLinksTo(const aElement: IwbElement);
+    function GetSummaryLinksTo: IwbElement;
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
@@ -1062,7 +1067,7 @@ type
       read GetFile;
     property ReferenceFile: IwbFile
       read GetReferenceFile;
-    property InjectionSourceFiles: TDynFiles
+    property InjectionSourceFiles: TwbFiles
       read GetInjectionSourceFiles;
 
     property ElementType: TwbElementType
@@ -1155,6 +1160,8 @@ type
     property LinksTo: IwbElement
       read GetLinksTo
       write SetLinksTo;
+    property SummaryLinksTo: IwbElement
+      read GetSummaryLinksTo;
     property NoReach: Boolean
       read GetNoReach;
 
@@ -1376,6 +1383,7 @@ type
     function GetUnsavedSince: TDateTime;
     function GetMaster(aIndex: Integer; aNew: Boolean): IwbFile;
     function GetMasterCount(aNew: Boolean): Integer;
+    function GetAllMasters: TwbFiles;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
@@ -1458,6 +1466,8 @@ type
       read GetMaster;
     property MasterCount[aNew: Boolean]: Integer
       read GetMasterCount;
+    property AllMasters: TwbFiles
+      read GetAllMasters;
 
     property RecordByFormID[aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean]: IwbMainRecord
       read GetRecordByFormID;
@@ -2058,6 +2068,7 @@ type
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
     procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType);
+    function GetSummaryLinksTo(const aElement: IwbElement): IwbElement;
 
     function IsRemoveable(const aElement: IwbElement): Boolean;
 
@@ -2187,7 +2198,7 @@ type
     function SetSummaryMemberMaxDepth(aIndex, aMaxDepth: Integer): {Self}IwbMainRecordDef;
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbMainRecordDef;
 
-    function ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord): string;
+    function ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord; var aLinksTo: IwbElement): string;
 
     function SetIgnoreList(const aSignatures: array of TwbSignature): {Self}IwbMainRecordDef;
     function ShouldIgnore(const aSignature: TwbSignature): Boolean;
@@ -2235,7 +2246,7 @@ type
 
   IwbRecordMemberDef = interface(IwbSignatureDef)
     ['{259F3F08-F4ED-439D-8C1A-48137C84E52A}']
-    function ToSummary(aDepth: Integer; const aElement: IwbElement): string;
+    function ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
@@ -2243,6 +2254,7 @@ type
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
 
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
   end;
@@ -2257,7 +2269,7 @@ type
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbValueDef;
 
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -2287,6 +2299,7 @@ type
     function SetDefaultEditValue(const aValue: string): IwbValueDef{Self};
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef{Self};
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef{Self};
+    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef{Self};
     function SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef{Self};
     function SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef{Self};
@@ -4770,6 +4783,10 @@ function wbGetUnknownIntString(aInt: Int64): string;
 procedure wbResourcesLoaded;
 procedure wbRegisterResourcesLoadedHandler(const aHandler: TProc);
 
+var
+  wbFileBySortOrderComparer        : IComparer<IwbFile>;
+  wbFileByReverseSortOrderComparer : IComparer<IwbFile>;
+
 implementation
 
 uses
@@ -5431,17 +5448,18 @@ type
 
   TwbNamedDef = class(TwbDef, IwbNamedDef)
   private
-    ndName         : string;
-    ndSingularName : string;
-    ndAfterLoad    : TwbAfterLoadCallback;
-    ndAfterSet     : TwbAfterSetCallback;
-    ndToStr        : TwbToStrCallback;
-    ndDontShow     : TwbDontShowCallback;
-    ndIsRemoveable : TwbIsRemoveableCallback;
-    ndTerminator   : Boolean;
-    ndUnused       : Boolean;
-    ndTreeHead     : Boolean;
-    ndTreeBranch   : Boolean;
+    ndName                   : string;
+    ndSingularName           : string;
+    ndAfterLoad              : TwbAfterLoadCallback;
+    ndAfterSet               : TwbAfterSetCallback;
+    ndToStr                  : TwbToStrCallback;
+    ndDontShow               : TwbDontShowCallback;
+    ndIsRemoveable           : TwbIsRemoveableCallback;
+    ndTerminator             : Boolean;
+    ndUnused                 : Boolean;
+    ndTreeHead               : Boolean;
+    ndTreeBranch             : Boolean;
+    ndSummaryLinksToCallback : TwbLinksToCallback;
   protected
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority   : TwbConflictPriority;
@@ -5480,6 +5498,7 @@ type
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
     procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); reintroduce; virtual;
+    function GetSummaryLinksTo(const aElement: IwbElement): IwbElement; virtual;
 
     function IsRemoveable(const aElement: IwbElement): Boolean; virtual;
   end;
@@ -5658,7 +5677,7 @@ type
     function SetSummaryMemberMaxDepth(aIndex, aMaxDepth: Integer): {Self}IwbMainRecordDef;
     function SetSummaryDelimiter(const aDelimiter: string): {Self}IwbMainRecordDef;
 
-    function ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord): string;
+    function ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord; var aLinksTo: IwbElement): string;
 
     function SetIgnoreList(const aSignatures: array of TwbSignature): {Self}IwbMainRecordDef;
     function ShouldIgnore(const aSignature: TwbSignature): Boolean;
@@ -5707,13 +5726,14 @@ type
     procedure InitFromParent; override;
 
     {---IwbRecordMemberDef---}
-    function ToSummary(aDepth: Integer; const aElement: IwbElement): string; virtual;
+    function ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
     function SetAfterLoad(const aAfterLoad : TwbAfterLoadCallback): IwbRecordMemberDef{Self};
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
 
     {---IwbSubRecordDef---}
@@ -5733,6 +5753,7 @@ type
     function ForValue(const aCallback: TwbSubRecordForValueCallback): {Self}IwbSubRecordDef;
 
     function SetLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef{Self};
+    function SetSummaryLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef{Self};
 
     {---IwbSubRecordWithStructDef---}
     function SetSummaryKeyOnValue(const aSummaryKey: array of Integer): {Self}IwbSubRecordWithStructDef;
@@ -5756,8 +5777,8 @@ type
     procedure InitFromParent; override;
 
     {---IwbRecordMemberDef---}
-    function ToSummary(aDepth: Integer; const aElement: IwbElement): string;
-    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string; virtual;
+    function ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
+    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
 
@@ -5765,6 +5786,7 @@ type
     function SetAfterSet(const aAfterSet : TwbAfterSetCallback): IwbRecordMemberDef{Self};
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbRecordMemberDef{Self};
     function SetToStr(const aToStr : TwbToStrCallback): IwbRecordMemberDef{Self};
+    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef{Self};
     function SetRequired(const aRequired : Boolean = True): IwbRecordMemberDef{Self};
   end;
 
@@ -5815,7 +5837,7 @@ type
                                       : Boolean; override;
 
     {---IwbRecordMemberDef---}
-    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string; override;
+    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
 
     {---IwbSubRecordArrayDef---}
     function GetElement: IwbRecordMemberDef;
@@ -5900,7 +5922,7 @@ type
     function GetRecordHeaderStruct: IwbStructDef;
 
     {---IwbRecordMemberDef---}
-    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string; override;
+    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
 
     {---IwbSubRecordStructDef---}
     function SetSummaryKey(const aSummaryKey: array of Integer): {Self}IwbSubRecordStructDef;
@@ -5994,7 +6016,7 @@ type
     function IsInSK(aIndex: Integer): Boolean;
 
     {---IwbRecordMemberDef---}
-    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string; override;
+    function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
   end;
 
   TwbValueDefState = (
@@ -6007,11 +6029,11 @@ type
 
   TwbValueDef = class(TwbNamedDef, IwbValueDef)
   protected
-    vdStates             : TwbValueDefStates;
-    vdDefaultEditValue   : string;
-    vdDefaultNativeValue : Variant;
-    vdLinksToCallback    : TwbLinksToCallback;
-    vdEditInfo           : PwbStringArray;
+    vdStates                 : TwbValueDefStates;
+    vdDefaultEditValue       : string;
+    vdDefaultNativeValue     : Variant;
+    vdLinksToCallback        : TwbLinksToCallback;
+    vdEditInfo               : PwbStringArray;
     procedure AfterClone(const aSource: TwbDef); override;
 
     {---IwbValueDef---}
@@ -6020,7 +6042,7 @@ type
     function SetDontShow(const aDontShow : TwbDontShowCallback): IwbValueDef;
 
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; reintroduce; virtual; abstract;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; virtual;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; virtual;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual; abstract;
@@ -6044,6 +6066,7 @@ type
     function SetDefaultEditValue(const aValue: string): IwbValueDef; virtual;
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; virtual;
     function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
+    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
     function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef; virtual;
     function SetIsRemovable(const aCallback: TwbIsRemoveableCallback): IwbValueDef; virtual;
     function SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef{Self};
@@ -6067,7 +6090,7 @@ type
     procedure FromStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); virtual;
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
@@ -6090,7 +6113,7 @@ type
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
@@ -6496,7 +6519,7 @@ type
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
@@ -6550,7 +6573,7 @@ type
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
@@ -6646,7 +6669,7 @@ type
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function GetIsVariableSizeInternal: Boolean; override;
     function GetCanBeZeroSize: Boolean; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -6725,7 +6748,7 @@ type
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
-    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function GetIsVariableSizeInternal: Boolean; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
@@ -9747,6 +9770,7 @@ begin
   with aSource as TwbNamedDef do begin
     Self.ndToStr := ndToStr;
     Self.ndIsRemoveable := ndIsRemoveable;
+    Self.ndSummaryLinksToCallback := ndSummaryLinksToCallback;
   end;
 end;
 
@@ -9874,6 +9898,13 @@ begin
       SetLength(ndSingularName, Length(ndSingularName) - 1);
   end;
   Result := ndSingularName;
+end;
+
+function TwbNamedDef.GetSummaryLinksTo(const aElement: IwbElement): IwbElement;
+begin
+  if Assigned(ndSummaryLinksToCallback) then
+    Exit(ndSummaryLinksToCallback(aElement));
+  Result := nil;
 end;
 
 function TwbNamedDef.GetTreeBranch: Boolean;
@@ -10535,7 +10566,8 @@ procedure StructKeysToSummary(aDepth     : Integer;
                         const aPrefix    : array of string;
                         const aSuffix    : array of string;
                         const aMaxDepth  : array of integer;
-                        const aDelimiter : string);
+                        const aDelimiter : string;
+                          var aLinksTo   : IwbElement);
 
 
 begin
@@ -10557,7 +10589,7 @@ begin
               MemberCER := nil;
             var RMD: IwbRecordMemberDef;
             if Assigned(Member) and not Member.DontShow and Supports(Member.Def, IwbRecordMemberDef, RMD) and (MembersShowIgnore or (dfSummaryShowIgnore in RMD.DefFlags) or not wbHideIgnored or (Member.ConflictPriority > cpIgnore)) then begin
-              var s := RMD.ToSummary(Succ(aDepth), Member).Trim;
+              var s := RMD.ToSummary(Succ(aDepth), Member, aLinksTo).Trim;
               if s <> '' then begin
                 var Prefix := TFromArray<string>.Get(aPrefix, SortOrder);
                 var Suffix := TFromArray<string>.Get(aSuffix, SortOrder);
@@ -10594,7 +10626,7 @@ begin
   end;
 end;
 
-function TwbMainRecordDef.ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord): string;
+function TwbMainRecordDef.ToSummary(aDepth: Integer; const aMainRecord: IwbMainRecord; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   if Assigned(ndToStr) then
@@ -10602,7 +10634,10 @@ begin
     ndToStr(Result, nil {aMainRecord.DataBasePtr}, nil{aMainRecord.DataEndPtr}, aMainRecord, ctToSummary);
 
   if Result = '' then
-    StructKeysToSummary(aDepth, Result, aMainRecord, recMembers, recSummaryKey, recSummaryPrefix, recSummarySuffix, recSummaryMaxDepth, recSummaryDelimiter);
+    StructKeysToSummary(aDepth, Result, aMainRecord, recMembers, recSummaryKey, recSummaryPrefix, recSummarySuffix, recSummaryMaxDepth, recSummaryDelimiter, aLinksTo);
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aMainRecord) then
+    aLinksTo := aMainRecord.LinksTo;
 end;
 
 destructor TwbMainRecordDef.Destroy;
@@ -10960,6 +10995,25 @@ begin
   Result := Self;
 end;
 
+function TwbSubRecordDef.SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryLinksToCallback(aCallback));
+
+  Result := Self;
+  ndSummaryLinksToCallback := aCallback;
+end;
+
+function TwbSubRecordDef.SetSummaryLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetSummaryLinksToCallbackOnValue(aCallback));
+
+  if Assigned(srValue) then
+    srValue := srValue.SetSummaryLinksToCallback(aCallback);
+  Result := Self;
+end;
+
 function TwbSubRecordDef.SetSummaryDelimiterOnArray(const aDelimiter: string): IwbSubRecordWithArrayDef;
 begin
   if Assigned(defParent) then
@@ -11053,7 +11107,7 @@ begin
     ndToStr := aToStr;
 end;
 
-function TwbSubRecordDef.ToSummary(aDepth: Integer; const aElement: IwbElement): string;
+function TwbSubRecordDef.ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   if Assigned(ndToStr) then
@@ -11061,8 +11115,10 @@ begin
   if (Result = '') and Assigned(aElement) and Assigned(srValue) then begin
     var DataContainer: IwbDataContainer;
     if Supports(aElement, IwbDataContainer, DataContainer) then
-      Result := srValue.ToSummary(aDepth, DataContainer.DataBasePtr, DataContainer.DataEndPtr, aElement);
+      Result := srValue.ToSummary(aDepth, DataContainer.DataBasePtr, DataContainer.DataEndPtr, aElement, aLinksTo);
   end;
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
 { TwbSubRecordArrayDef }
@@ -11220,7 +11276,7 @@ begin
   sraCountPath := aValue;
 end;
 
-function TwbSubRecordArrayDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string;
+function TwbSubRecordArrayDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   var CER: IwbContainerElementRef;
@@ -11231,7 +11287,7 @@ begin
         var Element := CER.Elements[0];
         var RMD: IwbRecordMemberDef;
         if Supports(Element.Def, IwbRecordMemberDef, RMD) then
-          Result := RMD.ToSummary(Succ(aDepth), Element).Trim;
+          Result := RMD.ToSummary(Succ(aDepth), Element, aLinksTo).Trim;
         if Result <> '' then
           Exit(Result);
       end;
@@ -11243,6 +11299,9 @@ begin
       Result := '<' + l.ToString + ' ' + s.ToLower + '>';
     end;
   end;
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
 function TwbSubRecordArrayDef.SetDefaultEditValues(const aValues: array of string): IwbSubRecordArrayDef;
@@ -11584,10 +11643,10 @@ begin
   wbSetPrefixSuffix(aIndex, aPrefix, aSuffix, srsSummaryPrefix, srsSummarySuffix);
 end;
 
-function TwbSubRecordStructDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string;
+function TwbSubRecordStructDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
-  StructKeysToSummary(aDepth, Result, aElement, srsMembers, srsSummaryKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryMaxDepth, srsSummaryDelimiter);
+  StructKeysToSummary(aDepth, Result, aElement, srsMembers, srsSummaryKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryMaxDepth, srsSummaryDelimiter, aLinksTo);
 end;
 
 { TwbSubRecordUnionDef }
@@ -12657,7 +12716,7 @@ begin
   Used(aElement, Result);
 end;
 
-function TwbIntegerDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbIntegerDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 var
   Len         : Int64;
   Value       : Int64;
@@ -12705,6 +12764,9 @@ begin
       end;
     end;
   end;
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 
   Used(aElement, Result);
 end;
@@ -13249,7 +13311,7 @@ begin
   Used(aElement, Result);
 end;
 
-function TwbArrayDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbArrayDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   if Assigned(ndToStr) then
@@ -13286,7 +13348,7 @@ begin
           var DC: IwbDataContainer;
           var MemberCER: IwbContainerElementRef;
           if Supports(Element, IwbContainerElementRef, MemberCER) and Supports(Element, IwbDataContainer, DC) and (Element.ConflictPriority > cpIgnore) then begin
-            var s := DC.ValueDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
+            var s := DC.ValueDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC, aLinksTo).Trim;
             if s <> '' then begin
 
               var NeedDelimiter := Length(Result) > 0;
@@ -13329,6 +13391,9 @@ begin
       end;
     end;
   end;
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
 { TwbStructDef }
@@ -13742,7 +13807,7 @@ begin
   Used(aElement, Result);
 end;
 
-function TwbStructDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbStructDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 var
   CER               : IwbContainerElementRef;
   MemberUsed        : array of Boolean;
@@ -13776,7 +13841,7 @@ var
                 MemberDef := DC.Def as IwbValueDef
               else
                 Assert(MemberDef.Equals(DC.Def), 'TwbStructDef.ToSummary for ['+Element.FullPath+']: ['+MemberDef.Path+'] is not equal to ['+DC.Def.Path+']');
-            var s:= MemberDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC).Trim;
+            var s:= MemberDef.ToSummary(Succ(aDepth), DC.DataBasePtr, DC.DataEndPtr, DC, aLinksTo).Trim;
             if s <> '' then begin
               var Prefix := TFromArray<string>.Get(stSummaryPrefix, SortMember);
               var Suffix := TFromArray<string>.Get(stSummarySuffix, SortMember);
@@ -13827,6 +13892,9 @@ begin
     end;
     Process(stSummaryKey);
   end;
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
 { TwbFlagsDef }
@@ -15693,13 +15761,13 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
-function TwbFloatDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbFloatDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
-  Result := inherited ToSummary(aDepth, aBasePtr, aEndPtr, aElement);
+  Result := inherited ToSummary(aDepth, aBasePtr, aEndPtr, aElement, aLinksTo);
   if Pos('.', Result) > 0 then begin
     var l := Length(Result);
     while l > 1 do
-      if Result[l] in ['0','.'] then begin
+      if AnsiChar(Result[l]) in ['0','.'] then begin
         if Result[l] = '.' then begin
           Dec(l);
           Break;
@@ -15710,7 +15778,12 @@ begin
 
     SetLength(Result, l);
   end;
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
+
+
 
 { TwbChar4 }
 
@@ -18028,6 +18101,15 @@ begin
   vdLinksToCallback := aCallback;
 end;
 
+function TwbValueDef.SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbValueDef(Duplicate).SetSummaryLinksToCallback(aCallback));
+
+  Result := Self;
+  ndSummaryLinksToCallback := aCallback;
+end;
+
 function TwbValueDef.SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef;
 begin
   Result := Self;
@@ -18075,13 +18157,16 @@ begin
       Result := StringOfChar('0', Length(Result));
 end;
 
-function TwbValueDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbValueDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
   if Result = '' then
     Result := ShortenText(ToString(aBasePtr, aEndPtr, aElement));
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
 { TwbSubRecordStructSKDef }
@@ -18153,14 +18238,14 @@ begin
   Result := (aIndex >= Low(srsMemberInSK)) and (aIndex <= High(srsMemberInSK)) and srsMemberInSK[aIndex];
 end;
 
-function TwbSubRecordStructSKDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string;
+function TwbSubRecordStructSKDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   if not (dfSummaryNoSortKey in defFlags) then begin
-    StructKeysToSummary(aDepth, Result, aElement, srsMembers, srsSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryMaxDepth, srsSummaryDelimiter);
-    StructKeysToSummary(aDepth, Result, aElement, srsMembers, srsExSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryMaxDepth, srsSummaryDelimiter);
+    StructKeysToSummary(aDepth, Result, aElement, srsMembers, srsSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryMaxDepth, srsSummaryDelimiter, aLinksTo);
+    StructKeysToSummary(aDepth, Result, aElement, srsMembers, srsExSortKey, srsSummaryPrefix, srsSummarySuffix, srsSummaryMaxDepth, srsSummaryDelimiter, aLinksTo);
   end;
-  var s := inherited ToSummaryInternal(aDepth, aElement);
+  var s := inherited ToSummaryInternal(aDepth, aElement, aLinksTo);
   if s <> '' then begin
     if Result <> '' then
       Result := Result + ' ';
@@ -19035,7 +19120,7 @@ begin
   Used(aElement, Result);
 end;
 
-function TwbResolvableDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbResolvableDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 var
   ValueDef : IwbValueDef;
 begin
@@ -19047,8 +19132,11 @@ begin
     var Element := aElement;
     ValueDef := ResolveDefAndElement(aBasePtr, aEndPtr, Element);
     if Assigned(ValueDef) then
-      Result := ValueDef.ToSummary(aDepth, aBasePtr, aEndPtr, Element);
+      Result := ValueDef.ToSummary(aDepth, aBasePtr, aEndPtr, Element, aLinksTo);
   end;
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 
   Used(aElement, Result);
 end;
@@ -21359,6 +21447,15 @@ begin
   defRequired := aRequired;
 end;
 
+function TwbRecordMemberDef.SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbRecordMemberDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbRecordMemberDef(Duplicate).SetSummaryLinksToCallback(aCallback));
+
+  Result := Self;
+  ndSummaryLinksToCallback := aCallback;
+end;
+
 function TwbRecordMemberDef.SetToStr(const aToStr: TwbToStrCallback): IwbRecordMemberDef;
 begin
   if Assigned(defParent) then
@@ -21368,16 +21465,19 @@ begin
   ndToStr := aToStr;
 end;
 
-function TwbRecordMemberDef.ToSummary(aDepth: Integer; const aElement: IwbElement): string;
+function TwbRecordMemberDef.ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
   if Assigned(ndToStr) then
     ndToStr(Result, nil, nil, aElement, ctToSummary);
-  if (Result = '') then
-    Result := ToSummaryInternal(aDepth, aElement);
+  if Result = '' then
+    Result := ToSummaryInternal(aDepth, aElement, aLinksTo);
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
-function TwbRecordMemberDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement): string;
+function TwbRecordMemberDef.ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
 end;
@@ -21580,7 +21680,7 @@ begin
       Result := StrToInt(s);
 end;
 
-procedure TDynFilesHelper.Add(const aFile: IwbFile);
+procedure TwbFilesHelper.Add(const aFile: IwbFile);
 var
   Len: Integer;
 begin
@@ -22277,15 +22377,45 @@ begin
   Insert('-', Result, 25);
 end;
 
-function TwbGuidDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbGuidDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := ToStringInternal(aBasePtr, aEndPtr, aElement);
 
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
+end;
+
+procedure TwbFilesHelper.SortByLoadOrder;
+begin
+  TArray.Sort<IwbFile>(Self, wbFileBySortOrderComparer);
+end;
+
+procedure TwbFilesHelper.SortByReverseLoadOrder;
+begin
+  TArray.Sort<IwbFile>(Self, wbFileByReverseSortOrderComparer);
+end;
+
+procedure MakeComparers;
+begin
+  wbFileBySortOrderComparer :=
+    TComparer<IwbFile>.Construct(function(const Left, Right: IwbFile): Integer
+    begin
+      Result := Left.LoadOrder - Right.LoadOrder;
+    end);
+
+  wbFileByReverseSortOrderComparer :=
+    TComparer<IwbFile>.Construct(function(const Left, Right: IwbFile): Integer
+    begin
+      Result := Right.LoadOrder - Left.LoadOrder;
+    end);
 end;
 
 initialization
+  MakeComparers;
+
   wbIdxEditorID := wbNamedIndex('EditorID', False);
 
   _MBCSEncodings := TStringList.Create;

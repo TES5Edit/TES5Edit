@@ -31,8 +31,6 @@ object frmMain: TfrmMain
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1360
-    ExplicitHeight = 656
     object splElements: TSplitter
       Left = 455
       Top = 30
@@ -68,8 +66,6 @@ object frmMain: TfrmMain
       BevelOuter = bvNone
       BorderStyle = bsSingle
       TabOrder = 1
-      ExplicitWidth = 902
-      ExplicitHeight = 602
       object pgMain: TPageControl
         Left = 0
         Top = 0
@@ -81,8 +77,6 @@ object frmMain: TfrmMain
         TabOrder = 0
         TabPosition = tpBottom
         OnChange = pgMainChange
-        ExplicitWidth = 898
-        ExplicitHeight = 598
         object tbsView: TTabSheet
           Caption = 'View'
           OnShow = tbsViewShow
@@ -172,7 +166,6 @@ object frmMain: TfrmMain
             Align = alTop
             BevelOuter = bvNone
             TabOrder = 1
-            ExplicitWidth = 890
             object fpnlViewFilter: TFlowPanel
               Left = 0
               Top = 0
@@ -182,7 +175,6 @@ object frmMain: TfrmMain
               BevelOuter = bvNone
               TabOrder = 0
               OnResize = fpnlViewFilterResize
-              ExplicitWidth = 824
               object lblViewFilterName: TLabel
                 AlignWithMargins = True
                 Left = 3
@@ -1988,7 +1980,6 @@ object frmMain: TfrmMain
       BevelOuter = bvNone
       TabOrder = 3
       OnResize = pnlNavResize
-      ExplicitHeight = 602
       object pnlNavContent: TPanel
         Left = 0
         Top = 0
@@ -1997,7 +1988,6 @@ object frmMain: TfrmMain
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitHeight = 602
         object lblFilterHint: TLabel
           AlignWithMargins = True
           Left = 3
@@ -2152,7 +2142,6 @@ object frmMain: TfrmMain
           BevelOuter = bvNone
           BevelWidth = 3
           TabOrder = 2
-          ExplicitTop = 573
           DesignSize = (
             455
             29)

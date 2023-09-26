@@ -251,18 +251,18 @@ procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
 
 procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
 
-procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TDynFiles);
+procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TwbFiles);
 
 procedure wbGenerateLODTES5(
   const aWorldspace: IwbMainRecord;
   const LODTypes: TLODTypes;
-  const Files: TDynFiles;
+  const Files: TwbFiles;
   const Settings: TCustomIniFile
 );
 
 procedure wbGenerateLODFO4(
   const aWorldspace: IwbMainRecord;
-  const Files: TDynFiles;
+  const Files: TwbFiles;
   const Settings: TCustomIniFile
 );
 
@@ -1744,7 +1744,7 @@ begin
   end;
 end;
 
-procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TDynFiles);
+procedure wbSplitTreeLOD(const aWorldspace: IwbMainRecord; const Files: TwbFiles);
 var
   Lst             : TwbLodTES5TreeList;
   LodSet          : TwbLodSettings;
@@ -2353,7 +2353,7 @@ end;
 procedure wbGenerateLODTES5(
   const aWorldspace: IwbMainRecord;
   const LODTypes: TLODTypes;
-  const Files: TDynFiles;
+  const Files: TwbFiles;
   const Settings: TCustomIniFile
 );
 var
@@ -3255,7 +3255,7 @@ end;
 
 procedure wbGenerateLODFO4(
   const aWorldspace: IwbMainRecord;
-  const Files: TDynFiles;
+  const Files: TwbFiles;
   const Settings: TCustomIniFile
 );
 var

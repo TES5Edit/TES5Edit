@@ -124,7 +124,7 @@ type
     procedure UpdateThemePreview;
   public
     { Public declarations }
-    _Files: ^TDynFiles;
+    _Files: PwbFiles ;
     function GetSelectedTheme: string;
   end;
 
