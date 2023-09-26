@@ -10852,11 +10852,13 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
       {0x00000400}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
-      {0x00080000} 19, 'Can''t Wait'
+      {0x00080000} 19, 'Can''t Wait',
+      {0x00400000} 22, 'Unknown 22'
     ]), [18]), [
     wbEDID,
     wbBaseFormComponents,
@@ -17845,7 +17847,7 @@ begin
         {0x0200} 'Unknown 9'
       ]), cpNormal, True),
       wbFULLReq,
-      wbStruct(TNAM, '', [
+      wbStruct(TNAM, 'Type', [
         wbInteger('Type', itU8, wbEnum([
           'Unknown 0',
           'Unknown 1',
@@ -17895,7 +17897,9 @@ begin
           'Unknown 45',
           'Unknown 46',
           'Unknown 47',
-          'Unknown 48'
+          'Unknown 48',
+          '',
+          'Unknown 50'
         ])),
         wbUnused(1)
       ], cpNormal, True),
@@ -20946,9 +20950,9 @@ begin
   wbAddGroupOrder(SPGD); {SF1Dump: no errors}
   wbAddGroupOrder(REGN); {SF1Dump: no errors}
   wbAddGroupOrder(NAVI); {SF1Dump: no errors}
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(WRLD);
-  wbAddGroupOrder(NAVM);
+  wbAddGroupOrder(CELL); {SF1Dump: no errors}
+  wbAddGroupOrder(WRLD); {SF1Dump: no errors}
+  wbAddGroupOrder(NAVM); {SF1Dump: no errors}
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(INFO);
   wbAddGroupOrder(QUST);
