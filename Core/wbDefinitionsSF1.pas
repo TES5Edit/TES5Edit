@@ -9642,7 +9642,7 @@ begin
             wbInteger(BODM, 'Count', itU32).SetRequired,  // count for the following array of struct BODC+BODS/BODV
             wbRArray('Unknown', wbRStruct('Unknown', [
               wbInteger(BODC, 'Count', itU32).SetRequired, // count for the follow array of struct BODS/BODV
-              wbRArray('Unknown', wbRStruct('Unknown', [
+              wbRArrayS('Unknown', wbRStructSK([0], 'Unknown', [
                 wbString(BODS, 'Name'),
                 wbStruct(BODV, 'Configuration', [
                   wbFloatColors('Color 1'),
@@ -9845,7 +9845,7 @@ begin
           wbFLLD,
           wbStruct(XMPM, 'Unknown', [
             wbArray('Unknown', wbLenString('Unknown', 2), -2),
-            wbArray('Unknown', wbStruct('Unknown', [
+            wbArrayS('Unknown', wbStructSK([0], 'Unknown', [
               wbLenString('Resource:ID', 2),
               wbInteger('File Hash', itU32, wbFileHashCallback),
               wbString('Extension', 4),
@@ -16059,13 +16059,13 @@ begin
 
     wbRStructs('Face Morphs', 'Face Morph Phenotype', [
       wbInteger(FMRI, 'Face Morph Index', itU32).SetRequired,
-      wbRStructs('Morph Groups', 'Morph Group', [
+      wbRStructsSK('Morph Groups', 'Morph Group', [0], [
         wbString(FMRG, 'Morph Group').SetRequired,
         wbFloat(FMRS, 'Blend Intensity').SetRequired
       ], [])
     ], []),
 
-    wbRStructs('Morph Groups', 'Morph Blend', [
+    wbRStructsSK('Morph Groups', 'Morph Blend', [0], [
       wbString(BMPN, 'Blend Name').SetRequired,
       wbFloat(BMPV, 'Intensity').SetRequired
     ], []),
@@ -16090,7 +16090,7 @@ begin
         'Unknown 5',
         'Unknown 6',
         'Unknown 7'
-      ])),
+      ])).SetAfterSet(wbUpdateSameParentUnions),
 
       wbIsFlag(0, wbStruct('Unknown 0', [
         wbInteger('Unknown', itS8)
@@ -19490,10 +19490,10 @@ begin
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbInteger(STMS, 'Count', itU32),
-    wbRStructs('Entries', 'Entry', [
+    wbRStructsSK('Entries', 'Entry', [0], [
       wbString(STAE, 'Name'),
       wbSoundReference(STAD).SetRequired
-    ], [])
+    ], []).SetCountPath(STMS)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20541,9 +20541,9 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(RSPJ, 'Research Project', [
     wbEDID,
-    wbFULL,
-    wbDESC,
-    wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
+    wbFULL.SetRequired,
+    wbDESC.SetRequired,
+    wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]).SetRequired,
     wbStructs(FVPA, 'Resources', 'Resource', [
       wbFormIDCk('Resource', [IRES, ALCH]),
       wbInteger('Required Count', itU32),
@@ -20555,10 +20555,10 @@ begin
       wbUnknown(4)
     ]),
     wbFormID(CNAM, 'Icon Source'),
-    wbUnknown(NNAM,2), // always 2 byte $0000
-    wbFloat(SNAM),
-    wbUnknown(TNAM,1), // always 1 byte $00
-    wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
+    wbUnknown(NNAM,2).SetRequired, // always 2 byte $0000
+    wbFloat(SNAM, 'Menu Sort Order').SetRequired,
+    wbUnknown(TNAM,1).SetRequired, // always 1 byte $00
+    wbFormIDCk(KNAM,'Category Keyword', [KYWD]).SetRequired,
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);
 
