@@ -2150,6 +2150,7 @@ end;
 
 var
   _FileGeneration: Integer = 1;
+  _GlobalGeneration: Integer = 1;
 
 procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean; aAutoLoadOrder: Boolean);
 var
@@ -4221,6 +4222,7 @@ end;
 procedure TwbFile.IncGeneration;
 begin
   Inc(_FileGeneration);
+  Inc(_GlobalGeneration);
   flGeneration := _FileGeneration;
 end;
 
@@ -12027,6 +12029,7 @@ begin
       mrConflictAll := caUnknown;
       mrConflictThis := ctUnknown;
       Inc(eGeneration);
+      Inc(_GlobalGeneration);
     end;
     if Assigned(mrMaster) then
       IwbElement(mrMaster).ResetConflict
@@ -17403,15 +17406,13 @@ end;
 
 function TwbElement.GetLinksTo: IwbElement;
 begin
-  if eLinksToGeneration = _FileGeneration then
+  if eLinksToGeneration = _GlobalGeneration then
     Result := eCachedLinksTo
   else begin
     Result := InternalGetLinksTo;
-    eLinksToGeneration := _FileGeneration;
+    eLinksToGeneration := _GlobalGeneration;
     eCachedLinksTo := Result;
   end;
-//  if Result = nil then
-//    Result := eSummaryLinksTo;
 end;
 
 function TwbElement.GetLocalized: TwbTriBool;
@@ -18043,6 +18044,7 @@ begin
     eExtendedSortKey := '';
 
     Inc(eGeneration);
+    Inc(_GlobalGeneration);
 
     if eUpdateCount > 0 then
       Include(eStates, esModifiedUpdated)

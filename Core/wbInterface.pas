@@ -2025,28 +2025,28 @@ type
     ctToSummary
   );
 
-  TwbAfterLoadCallback = procedure(const aElement: IwbElement);
-  TwbAfterSetCallback = reference to procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-  TwbDontShowCallback = reference to function(const aElement: IwbElement): Boolean;
-  TwbFloatNormalizer = function(const aElement: IwbElement; aFloat: Extended): Extended;
-  TwbGetConflictPriority = procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
-  TwbIntToStrCallback = reference to function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-  TwbToStrCallback = reference to procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-  TwbIntOverlayCallback = function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
-  TwbStrToIntCallback = function(const aString: string; const aElement: IwbElement): Int64;
-  TwbAddInfoCallback = function(const aMainRecord: IwbMainRecord): string;
-  TwbUnionDecider = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-  TwbIntegerDefFormaterUnionDecider = function(const aElement: IwbElement): Integer;
-  TwbIsSortedCallback = function(const aContainer: IwbContainer): Boolean;
-  TwbCountCallback = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-  TwbSizeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
-  TwbGetChapterTypeCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-  TwbGetChapterTypeNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
-  TwbGetChapterNameCallback = function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
-  TwbLinksToCallback = reference to function(const aElement: IwbElement): IwbElement;
-  TwbIsRemoveableCallback = reference to function(const aElement: IwbElement): Boolean;
-  TwbStructSizeCallback = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-  TwbBuildIndexKeysCallback = reference to procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys);
+  TwbAfterLoadCallback              = reference to procedure(const aElement: IwbElement);
+  TwbAfterSetCallback               = reference to procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+  TwbDontShowCallback               = reference to function(const aElement: IwbElement): Boolean;
+  TwbFloatNormalizer                = reference to function(const aElement: IwbElement; aFloat: Extended): Extended;
+  TwbGetConflictPriority            = reference to procedure(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
+  TwbIntToStrCallback               = reference to function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+  TwbToStrCallback                  = reference to procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+  TwbIntOverlayCallback             = reference to function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): Int64;
+  TwbStrToIntCallback               = reference to function(const aString: string; const aElement: IwbElement): Int64;
+  TwbAddInfoCallback                = reference to function(const aMainRecord: IwbMainRecord): string;
+  TwbUnionDecider                   = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+  TwbIntegerDefFormaterUnionDecider = reference to function(const aElement: IwbElement): Integer;
+  TwbIsSortedCallback               = reference to function(const aContainer: IwbContainer): Boolean;
+  TwbCountCallback                  = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+  TwbSizeCallback                   = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; var CompressedSize: Integer): Cardinal;
+  TwbGetChapterTypeCallback         = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+  TwbGetChapterTypeNameCallback     = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+  TwbGetChapterNameCallback         = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): String;
+  TwbLinksToCallback                = reference to function(const aElement: IwbElement): IwbElement;
+  TwbIsRemoveableCallback           = reference to function(const aElement: IwbElement): Boolean;
+  TwbStructSizeCallback             = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+  TwbBuildIndexKeysCallback         = reference to procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys);
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
