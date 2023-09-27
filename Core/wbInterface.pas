@@ -269,8 +269,9 @@ var
   wbReportRequired                   : Boolean    = False;
   wbReportUnusedData                 : Boolean    = True;
   wbReportUnknownFormIDs             : Boolean    = True;
-  wbReportUnknownFloats              : Boolean    = True;
   wbReportUnknownHalfs               : Boolean    = False;
+  wbReportUnknownFloats              : Boolean    = True;
+  wbReportUnknownDoubles             : Boolean    = True;
   wbReportUnknownStrings             : Boolean    = True;
   wbReportUnknownLStrings            : Boolean    = True;
   wbReportEmpty                      : Boolean    = True;
@@ -2374,6 +2375,14 @@ type
     function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
   end;
 
+  IwbStringDefFormater = interface;
+
+  IwbSubRecordWithBaseStringDef = interface(IwbSubRecordDef)
+    ['{D3D85C9C-1E5C-4F14-A001-D65659262AC1}']
+
+    function SetFormaterOnValue(const aFormater: IwbStringDefFormater): IwbSubRecordWithBaseStringDef;
+  end;
+
   IwbSubRecordArrayDef = interface(IwbRecordMemberDef)
     ['{67943BAC-B558-4112-8DBC-C94A44E0B1D1}']
     function GetElement: IwbRecordMemberDef;
@@ -2439,20 +2448,18 @@ type
       read GetMemberTypes;
   end;
 
-  IwbEnumDef = interface;
-
   IwbBaseStringDef = interface(IwbValueDef)
     ['{06632243-538C-48EC-9074-7BB72142CAB8}']
     function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
 
-    function SetEnum(const aEnum: IwbEnumDef): IwbBaseStringDef;
+    function SetFormater(const aFormater: IwbStringDefFormater): IwbBaseStringDef;
   end;
 
   IwbStringDef = interface(IwbBaseStringDef)
     ['{37B02D28-EDB4-41C6-B933-9F56C013A88A}']
     function GetStringSize: Integer;
 
-    function SetEnum(const aEnum: IwbEnumDef): IwbStringDef;
+    function SetFormater(const aFormater: IwbStringDefFormater): IwbStringDef;
 
     property StringSize: Integer
       read GetStringSize;
@@ -2461,7 +2468,7 @@ type
   IwbLenStringDef = interface(IwbBaseStringDef)
     ['{1AD7FAE2-DAA7-4651-B78D-10E138EDF48B}']
 
-    function SetEnum(const aEnum: IwbEnumDef): IwbLenStringDef;
+    function SetFormater(const aFormater: IwbStringDefFormater): IwbLenStringDef;
   end;
 
   IwbByteArrayDef = interface(IwbValueDef)
@@ -2612,14 +2619,13 @@ type
 
   IwbIntegerDefFormater = interface(IwbDef)
     ['{56A6EB7B-3A90-4F09-8E80-D7399569DFCC}']
-
     function ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string;
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string;
     function Check(aInt: Int64; const aElement: IwbElement): string;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement);
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
+    function GetEditType(const aElement: IwbElement): TwbEditType;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64;
@@ -2640,9 +2646,9 @@ type
     property LinksTo[aInt: Int64; const aElement: IwbElement]: IwbElement
       read GetLinksTo;
 
-    property EditType[aInt: Int64; const aElement: IwbElement]: TwbEditType
+    property EditType[const aElement: IwbElement]: TwbEditType
       read GetEditType;
-    property EditInfo[aInt: Int64; const aElement: IwbElement]: TwbStringArray
+    property EditInfo[const aElement: IwbElement]: TwbStringArray
       read GetEditInfo;
 
     property RequiresKey: Boolean
@@ -2696,6 +2702,26 @@ type
   IwbStr4 = interface(IwbIntegerDefFormater)  // 4 bytes strings stored as itU32
     ['{2DC5200E-C1F1-47e7-A927-3D110D59F55A}']
   end;  // The interface handles swaping the character in readable order
+
+  IwbStringDefFormater = interface(IwbDef)
+    ['{56E03535-E34C-4AAC-B5C9-2ACB4E59B085}']
+    function ToString(const aString: string; const aElement: IwbElement; aForSummary: Boolean): string;
+    function ToSortKey(const aString: string; const aElement: IwbElement): string;
+    function Check(const aString: string; const aElement: IwbElement): string;
+
+    function GetEditType(const aElement: IwbElement): TwbEditType;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray;
+
+    function ToEditValue(const aString: string; const aElement: IwbElement): string;
+    function FromEditValue(const aValue: string; const aElement: IwbElement): string;
+
+    function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
+
+    property EditType[const aElement: IwbElement]: TwbEditType
+      read GetEditType;
+    property EditInfo[const aElement: IwbElement]: TwbStringArray
+      read GetEditInfo;
+  end;
 
   IwbFlagsDef = interface;
 
@@ -2986,7 +3012,7 @@ function wbString(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                                   : IwbSubRecordWithBaseStringDef; overload;
 
 function wbString(const aName      : string = 'Unknown';
                         aSize      : Integer = 0;
@@ -3005,7 +3031,7 @@ function wbStringForward(const aSignature : TwbSignature;           // When the 
                                aDontShow  : TwbDontShowCallback = nil;
                                aAfterSet  : TwbAfterSetCallback = nil;
                                aGetCP     : TwbGetConflictPriority = nil)
-                                          : IwbSubRecordDef; overload;
+                                          : IwbSubRecordWithBaseStringDef; overload;
 
 function wbString(      aForward   : Boolean = False;
                   const aName      : string = 'Unknown';
@@ -3025,7 +3051,7 @@ function wbStringT(const aSignature : TwbSignature;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithBaseStringDef; overload;
 
 function wbStringT(const aName      : string = 'Unknown';
                          aSize      : Integer = 0;
@@ -3044,7 +3070,7 @@ function wbStringScript(const aSignature : TwbSignature;
                               aDontShow  : TwbDontShowCallback = nil;
                               aAfterSet  : TwbAfterSetCallback = nil;
                               aGetCP     : TwbGetConflictPriority = nil)
-                                         : IwbSubRecordDef; overload;
+                                         : IwbSubRecordWithBaseStringDef; overload;
 
 function wbStringScript(const aName      : string;
                               aSize      : Integer = 0;
@@ -3063,7 +3089,7 @@ function wbStringLC(const aSignature : TwbSignature;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
                           aGetCP     : TwbGetConflictPriority = nil)
-                                     : IwbSubRecordDef; overload;
+                                     : IwbSubRecordWithBaseStringDef; overload;
 
 function wbStringLC(const aName      : string;
                           aSize      : Integer = 0;
@@ -3082,7 +3108,7 @@ function wbStringKC(const aSignature : TwbSignature;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
                           aGetCP     : TwbGetConflictPriority = nil)
-                                     : IwbSubRecordDef; overload;
+                                     : IwbSubRecordWithBaseStringDef; overload;
 
 function wbStringKC(const aName      : string;
                           aSize      : Integer = 0;
@@ -3101,7 +3127,7 @@ function wbLString(const aSignature : TwbSignature;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithBaseStringDef; overload;
 
 function wbLString(const aName      : string;
                          aSize      : Integer = 0;
@@ -3120,7 +3146,7 @@ function wbLStringKC(const aSignature : TwbSignature;
                            aDontShow  : TwbDontShowCallback = nil;
                            aAfterSet  : TwbAfterSetCallback = nil;
                            aGetCP     : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef; overload;
+                                      : IwbSubRecordWithBaseStringDef; overload;
 
 function wbLStringKC(const aName      : string;
                            aSize      : Integer = 0;
@@ -3139,7 +3165,7 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                                 aDontShow  : TwbDontShowCallback = nil;
                                 aAfterSet  : TwbAfterSetCallback = nil;
                                 aGetCP     : TwbGetConflictPriority = nil)
-                                           : IwbSubRecordDef; overload;
+                                           : IwbSubRecordWithBaseStringDef; overload;
 
 function wbStringMgefCode(const aName      : string;
                                 aSize      : Integer = 0;
@@ -3151,15 +3177,15 @@ function wbStringMgefCode(const aName      : string;
                                            : IwbStringDef; overload;
 
 function wbLenString(const aSignature : TwbSignature;
-                     const aName      : string;
+                     const aName      : string = 'Unknown';
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil;
                            aGetCP     : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef; overload;
+                                      : IwbSubRecordWithBaseStringDef; overload;
 
-function wbLenString(const aName      : string;
+function wbLenString(const aName      : string = 'Unknown';
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -3174,7 +3200,7 @@ function wbLenStringT(const aSignature : TwbSignature;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
                             aGetCP     : TwbGetConflictPriority = nil)
-                                       : IwbSubRecordDef; overload;
+                                       : IwbSubRecordWithBaseStringDef; overload;
 
 function wbLenStringT(const aName      : string;
                             aPrefix    : Integer = 4;
@@ -4409,6 +4435,22 @@ function wbEnumSummary(const aNames       : array of string;
                        const aSparseNames : array of const)
                                           : IwbEnumDef; overload;
 
+
+function wbStringEnum(const aNames : array of string)
+                                   : IwbStringDefFormater; overload;
+
+function wbStringEnum(const aNames       : array of string;
+                      const aSparseNames : array of const)
+                                         : IwbStringDefFormater; overload;
+
+function wbStringEnumSummary(const aNames : array of string)
+                                          : IwbStringDefFormater; overload;
+
+function wbStringEnumSummary(const aNames       : array of string;
+                             const aSparseNames : array of const)
+                                                : IwbStringDefFormater; overload;
+
+
 function wbDiv(aValue : Integer)
                       : IwbIntegerDefFormater;
 function wbMul(aValue : Integer)
@@ -5379,7 +5421,7 @@ type
   end;
 
   TwbDefClass = class of TwbDef;
-  TwbDef = class(TInterfacedObject, IwbDef, IwbDefInternal)
+  TwbDef = class(TInterfacedObject, IInterface, IwbDef, IwbDefInternal)
   private
     defSource           : IwbDef;
     defParent           : TwbDef;
@@ -5407,6 +5449,9 @@ type
     constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean; aGetCP: TwbGetConflictPriority);
     procedure AfterClone(const aSource: TwbDef); virtual;
     procedure AfterConstruction; override;
+
+    {---IInterface---}
+    function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; virtual; abstract;
@@ -5687,7 +5732,7 @@ type
     {--- IwbMainRecordDefInternal ---}
   end;
 
-  TwbSubRecordDef = class(TwbSignatureDef, IwbRecordMemberDef, IwbSubRecordDef, IwbSubRecordWithStructDef, IwbSubRecordWithArrayDef)
+  TwbSubRecordDef = class(TwbSignatureDef, IwbRecordMemberDef, IwbSubRecordDef, IwbSubRecordWithStructDef, IwbSubRecordWithArrayDef, IwbSubRecordWithBaseStringDef)
   private
     srValue     : IwbValueDef;
     srSizeMatch : Boolean;
@@ -5715,6 +5760,9 @@ type
                        aSizeMatch  : Boolean;
                        aDontShow   : TwbDontShowCallback;
                        aGetCP      : TwbGetConflictPriority); overload;
+
+    {---IInterface---}
+    function QueryInterface(const IID: TGUID; out Obj): HResult; override; stdcall;
 
     {---IwbDef---}
     function GetDefType: TwbDefType; override;
@@ -5770,6 +5818,9 @@ type
     function IwbSubRecordWithArrayDef.SetSummaryDelimiterOnValue = SetSummaryDelimiterOnArray;
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
     function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
+
+    {---IwbSubRecordWithBaseStringDef---}
+    function SetFormaterOnValue(const aFormater: IwbStringDefFormater): IwbSubRecordWithBaseStringDef;
   end;
 
   TwbRecordMemberDef = class(TwbBaseSignatureDef, IwbRecordMemberDef)
@@ -6212,11 +6263,16 @@ type
   TwbBaseStringDef = class(TwbValueDef, IwbBaseStringDef)
   protected
     bsdEncodingOverride : TEncoding;
-    bsdEnum             : IwbEnumDef;
+    bsdFormater         : IwbStringDefFormater;
     function bsdGetEncoding(const aElement: IwbElement): TEncoding;
   protected
     procedure AfterClone(const aSource: TwbDef); override;
 
+    {---IwbDef---}
+    procedure Report(const aParents: TwbDefPath); override;
+
+    {---IwbDefInternal---}
+    procedure InitFromParent; override;
 
     {---IwbValueDef---}
     function GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType; override;
@@ -6224,7 +6280,7 @@ type
 
     {---IwbBaseStringDef---}
     function OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
-    function SetEnum(const aEnum: IwbEnumDef): IwbBaseStringDef;
+    function SetFormater(const aFormater: IwbStringDefFormater): IwbBaseStringDef;
   public
     constructor Create(aPriority: TwbConflictPriority; aRequired: Boolean;
       const aName: string; aAfterLoad: TwbAfterLoadCallback;
@@ -6266,6 +6322,7 @@ type
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
+    function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
     function ToSortKey(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aExtended: Boolean): string; override;
     function Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function GetSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer; override;
@@ -6280,7 +6337,7 @@ type
 
     {---IwbStringDef---}
     function GetStringSize: Integer;
-    function SetEnum(const aEnum: IwbEnumDef): IwbStringDef;
+    function SetFormater(const aFormater: IwbStringDefFormater): IwbStringDef;
   end;
 
   TwbStringScriptDef = class(TwbStringDef)
@@ -6363,7 +6420,7 @@ type
 
     {---TwbLenStringDef---}
     function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
-    function SetEnum(const aEnum: IwbEnumDef): IwbLenStringDef;
+    function SetFormater(const aFormater: IwbStringDefFormater): IwbLenStringDef;
 
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
@@ -6394,6 +6451,10 @@ type
     NotFoundFormIDAtOffSet : array of Integer;
     SignaturesAtOffSet     : array of TStringList;
     FormIDsAtOffSetFoundIn : array of TStringList;
+
+    FoundDoubleAtOffSet     : array of Integer;
+    NotFoundDoubleAtOffSet  : array of Integer;
+    DoublesAtOffSet         : array of TStringList;
 
     FoundFloatAtOffSet     : array of Integer;
     NotFoundFloatAtOffSet  : array of Integer;
@@ -6821,8 +6882,8 @@ type
     function Check(aInt: Int64; const aElement: IwbElement): string; virtual;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); virtual;
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; virtual;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; virtual;
+    function GetEditType(const aElement: IwbElement): TwbEditType; virtual;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray; virtual;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; virtual;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; virtual;
@@ -6860,8 +6921,8 @@ type
     function Check(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
+    function GetEditType(const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -6925,8 +6986,8 @@ type
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     procedure BuildRef(aInt: Int64; const aElement: IwbElement); override;
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
+    function GetEditType(const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -7070,8 +7131,8 @@ type
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function CanContainFormIDs: Boolean; override;
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
+    function GetEditType(const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -7136,7 +7197,7 @@ type
 
   TwbEnumDictionary = TDictionary<string, Int64>;
 
-  TwbEnumDef = class(TwbIntegerDefFormater, IwbEnumDef)
+  TwbEnumDef = class(TwbIntegerDefFormater, IwbEnumDef, IwbStringDefFormater)
   private
     enNames          : array of string;
     enSummaries      : array of string;
@@ -7162,17 +7223,26 @@ type
     function GetDefTypeName: string; override;
 
     {---IwbIntegerDefFormater---}
-    function Check(aInt: Int64; const aElement: IwbElement): string; override;
-    function ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string; override;
-    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
+    function Check(aInt: Int64; const aElement: IwbElement): string; overload; override;
+    function ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string; overload; override;
+    function ToSortKey(aInt: Int64; const aElement: IwbElement): string; overload; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
+    function GetEditType(const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray; override;
 
-    function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
-    function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
+    function ToEditValue(aInt: Int64; const aElement: IwbElement): string; overload; override;
+    function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; overload; override;
     function GetIsEditable(aInt: Int64; const aElement: IwbElement): Boolean; override;
+
+    {---IwbStringDefFormater---}
+    function Check(const aString: string; const aElement: IwbElement): string; overload;
+    function ToString(const aString: string; const aElement: IwbElement; aForSummary: Boolean): string; overload;
+    function ToSortKey(const aString: string; const aElement: IwbElement): string; overload;
+
+    function ToEditValue(const aString: string; const aElement: IwbElement): string; overload;
+    function StringFromEditValue(const aValue: string; const aElement: IwbElement): string; overload;
+    function IwbStringDefFormater.FromEditValue = StringFromEditValue;
 
     {---IwbEnumDef---}
     function GetName(aIndex: Int64): string;
@@ -7250,8 +7320,8 @@ type
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
-    function GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType; override;
-    function GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray; override;
+    function GetEditType(const aElement: IwbElement): TwbEditType; override;
+    function GetEditInfo(const aElement: IwbElement): TwbStringArray; override;
 
     function ToEditValue(aInt: Int64; const aElement: IwbElement): string; override;
     function FromEditValue(const aValue: string; const aElement: IwbElement): Int64; override;
@@ -7472,9 +7542,9 @@ function wbString(const aSignature : TwbSignature;
                         aDontShow  : TwbDontShowCallback = nil;
                         aAfterSet  : TwbAfterSetCallback = nil;
                         aGetCP     : TwbGetConflictPriority = nil)
-                                   : IwbSubRecordDef; overload;
+                                   : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbString(const aName      : string = 'Unknown';
@@ -7497,9 +7567,9 @@ function wbStringForward(const aSignature : TwbSignature;           // When the 
                                aDontShow  : TwbDontShowCallback = nil;
                                aAfterSet  : TwbAfterSetCallback = nil;
                                aGetCP     : TwbGetConflictPriority = nil)
-                                          : IwbSubRecordDef; overload;
+                                          : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbString(True, '', aSize, aPriority, aRequired, aDontShow, aAfterSet), nil, aAfterSet, aPriority, aRequired, False, aDontShow);
+  Result := wbSubRecord(aSignature, aName, wbString(True, '', aSize, aPriority, aRequired, aDontShow, aAfterSet), nil, aAfterSet, aPriority, aRequired, False, aDontShow) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbString(      aForward   : Boolean = False;
@@ -7523,9 +7593,9 @@ function wbStringT(const aSignature : TwbSignature;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringT('', aSize, aPriority, aRequired, aDontShow, aAfterSet, aGetCP), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbStringT('', aSize, aPriority, aRequired, aDontShow, aAfterSet, aGetCP), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbStringT(const aName      : string = 'Unknown';
@@ -7548,9 +7618,9 @@ function wbStringScript(const aSignature : TwbSignature;
                               aDontShow  : TwbDontShowCallback = nil;
                               aAfterSet  : TwbAfterSetCallback = nil;
                               aGetCP     : TwbGetConflictPriority = nil)
-                                         : IwbSubRecordDef; overload;
+                                         : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringScript('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbStringScript('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbStringScript(const aName      : string;
@@ -7573,9 +7643,9 @@ function wbStringLC(const aSignature : TwbSignature;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
                           aGetCP     : TwbGetConflictPriority = nil)
-                                     : IwbSubRecordDef; overload;
+                                     : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbStringLC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbStringLC(const aName      : string;
@@ -7598,9 +7668,9 @@ function wbStringKC(const aSignature : TwbSignature;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
                           aGetCP     : TwbGetConflictPriority = nil)
-                                     : IwbSubRecordDef; overload;
+                                     : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbStringKC(const aName      : string;
@@ -7623,9 +7693,9 @@ function wbLString(const aSignature : TwbSignature;
                          aDontShow  : TwbDontShowCallback = nil;
                          aAfterSet  : TwbAfterSetCallback = nil;
                          aGetCP     : TwbGetConflictPriority = nil)
-                                    : IwbSubRecordDef; overload;
+                                    : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbLString('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbLString(const aName      : string;
@@ -7648,9 +7718,9 @@ function wbLStringKC(const aSignature : TwbSignature;
                            aDontShow  : TwbDontShowCallback = nil;
                            aAfterSet  : TwbAfterSetCallback = nil;
                            aGetCP     : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef; overload;
+                                      : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbLStringKC('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbLStringKC(const aName      : string;
@@ -7673,9 +7743,9 @@ function wbStringMgefCode(const aSignature : TwbSignature;
                           aDontShow  : TwbDontShowCallback = nil;
                           aAfterSet  : TwbAfterSetCallback = nil;
                           aGetCP     : TwbGetConflictPriority = nil)
-                                     : IwbSubRecordDef; overload;
+                                     : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbStringMgefCode('', aSize, aPriority), nil, aAfterSet, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbStringMgefCode(const aName      : string;
@@ -7691,18 +7761,18 @@ begin
 end;
 
 function wbLenString(const aSignature : TwbSignature;
-                     const aName      : string;
+                     const aName      : string = 'Unknown';
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
                            aDontShow  : TwbDontShowCallback = nil;
                            aGetCP     : TwbGetConflictPriority = nil)
-                                      : IwbSubRecordDef; overload;
+                                      : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbLenString('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
-function wbLenString(const aName      : string;
+function wbLenString(const aName      : string = 'Unknown';
                            aPrefix    : Integer = 4;
                            aPriority  : TwbConflictPriority = cpNormal;
                            aRequired  : Boolean = False;
@@ -7720,9 +7790,9 @@ function wbLenStringT(const aSignature : TwbSignature;
                             aRequired  : Boolean = False;
                             aDontShow  : TwbDontShowCallback = nil;
                             aGetCP     : TwbGetConflictPriority = nil)
-                                       : IwbSubRecordDef; overload;
+                                       : IwbSubRecordWithBaseStringDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbLenStringT('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbLenStringT('', aPrefix, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordWithBaseStringDef;
 end;
 
 function wbLenStringT(const aName      : string;
@@ -7746,7 +7816,7 @@ function wbUnion(const aSignature : TwbSignature;
                        aGetCP     : TwbGetConflictPriority = nil)
                                   : IwbSubRecordDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbUnion('', aDecider, aMembers, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP);
+  Result := wbSubRecord(aSignature, aName, wbUnion('', aDecider, aMembers, aPriority), nil, nil, aPriority, aRequired, False, aDontShow, aGetCP) as IwbSubRecordDef;
 end;
 
 function wbUnion(const aName     : string;
@@ -9438,7 +9508,7 @@ end;
 
 
 function wbEnum(const aNames : array of string)
-                              : IwbEnumDef;
+                             : IwbEnumDef;
 begin
   Result := TwbEnumDef.Create(False, aNames, []);
 end;
@@ -9451,14 +9521,40 @@ begin
 end;
 
 function wbEnumSummary(const aNames : array of string)
-                              : IwbEnumDef;
+                                    : IwbEnumDef;
 begin
   Result := TwbEnumDef.Create(True, aNames, []);
 end;
 
 function wbEnumSummary(const aNames       : array of string;
-                const aSparseNames : array of const)
-                                   : IwbEnumDef; overload;
+                       const aSparseNames : array of const)
+                                          : IwbEnumDef; overload;
+begin
+  Result := TwbEnumDef.Create(True, aNames, aSparseNames);
+end;
+
+function wbStringEnum(const aNames : array of string)
+                                   : IwbStringDefFormater;
+begin
+  Result := TwbEnumDef.Create(False, aNames, []);
+end;
+
+function wbStringEnum(const aNames       : array of string;
+                      const aSparseNames : array of const)
+                                         : IwbStringDefFormater; overload;
+begin
+  Result := TwbEnumDef.Create(False, aNames, aSparseNames);
+end;
+
+function wbStringEnumSummary(const aNames : array of string)
+                                          : IwbStringDefFormater;
+begin
+  Result := TwbEnumDef.Create(True, aNames, []);
+end;
+
+function wbStringEnumSummary(const aNames       : array of string;
+                             const aSparseNames : array of const)
+                                                : IwbStringDefFormater; overload;
 begin
   Result := TwbEnumDef.Create(True, aNames, aSparseNames);
 end;
@@ -9667,6 +9763,11 @@ end;
 procedure TwbDef.PossiblyRequired;
 begin
   defPossiblyRequired := True;
+end;
+
+function TwbDef.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  Result := inherited;
 end;
 
 procedure TwbDef.Report(const aParents: TwbDefPath);
@@ -10885,6 +10986,23 @@ begin
     (srValue as IwbDefInternal).InitFromParent;
 end;
 
+function TwbSubRecordDef.QueryInterface(const IID: TGUID; out Obj): HResult;
+begin
+  if IID = IwbSubRecordWithStructDef then
+    if not Supports(srValue, IwbStructDef) then
+      Exit(E_NOINTERFACE);
+
+  if IID = IwbSubRecordWithArrayDef then
+    if not Supports(srValue, IwbArrayDef) then
+      Exit(E_NOINTERFACE);
+
+  if IID = IwbSubRecordWithBaseStringDef then
+    if not Supports(srValue, IwbBaseStringDef) then
+      Exit(E_NOINTERFACE);
+
+  Result := inherited;
+end;
+
 procedure TwbSubRecordDef.Report(const aParents: TwbDefPath);
 var
   Parents : TwbDefPath;
@@ -10983,6 +11101,15 @@ begin
 
   Result := Self;
   ndDontShow := aDontShow;
+end;
+
+function TwbSubRecordDef.SetFormaterOnValue(const aFormater: IwbStringDefFormater): IwbSubRecordWithBaseStringDef;
+begin
+  if Assigned(defParent) then
+    Exit(TwbSubRecordDef(Duplicate).SetFormaterOnValue(aFormater));
+
+  Result := Self;
+  srValue := (srValue as IwbBaseStringDef).SetFormater(aFormater);
 end;
 
 function TwbSubRecordDef.SetLinksToCallbackOnValue(const aCallback: TwbLinksToCallback): IwbSubRecordDef;
@@ -12248,7 +12375,7 @@ end;
 function TwbIntegerDef.GetEditInfo(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbStringArray;
 begin
   if Assigned(inFormater) then
-    Result := inFormater.EditInfo[ToInt(aBasePtr, aEndPtr, aElement), aElement]
+    Result := inFormater.EditInfo[aElement]
   else
     Result := inherited GetEditInfo(aBasePtr, aEndPtr, aElement);
 end;
@@ -12256,7 +12383,7 @@ end;
 function TwbIntegerDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
 begin
   if Assigned(inFormater) then
-    Result := inFormater.EditType[ToInt(aBasePtr, aEndPtr, aElement), aElement]
+    Result := inFormater.EditType[aElement]
   else
     Result := inherited GetEditType(aBasePtr, aEndPtr, aElement);
 end;
@@ -14087,7 +14214,7 @@ begin
   end;
 end;
 
-function TwbFlagsDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
+function TwbFlagsDef.GetEditInfo(const aElement: IwbElement): TwbStringArray;
 var
   FlagCount  : Integer;
   IntegerDef : IwbIntegerDef;
@@ -14125,7 +14252,7 @@ begin
   end;
 end;
 
-function TwbFlagsDef.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
+function TwbFlagsDef.GetEditType(const aElement: IwbElement): TwbEditType;
 begin
   Result := etCheckComboBox;
 end;
@@ -14817,12 +14944,12 @@ begin
   end;
 end;
 
-function TwbEnumDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
+function TwbEnumDef.GetEditInfo(const aElement: IwbElement): TwbStringArray;
 begin
   Result := Copy(enEditInfo);
 end;
 
-function TwbEnumDef.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
+function TwbEnumDef.GetEditType(const aElement: IwbElement): TwbEditType;
 begin
   Result := etComboBox;
 end;
@@ -14874,6 +15001,71 @@ begin
   end;
 
   defReported := True;
+end;
+
+function TwbEnumDef.StringFromEditValue(const aValue: string; const aElement: IwbElement): string;
+begin
+  if aValue = '' then
+    Exit(aValue);
+
+  var lIndex: Int64;
+  if FindName(aValue, lIndex) then
+    Exit(GetName(lIndex));
+
+  Result := aValue;
+end;
+
+function TwbEnumDef.Check(const aString: string; const aElement: IwbElement): string;
+begin
+  if aString = '' then
+    Exit(aString);
+
+  var lIndex: Int64;
+  if FindName(aString, lIndex) then
+    Exit('');
+
+  Result := '<Unknown: ' + aString + '>';
+end;
+
+function TwbEnumDef.ToSortKey(const aString: string; const aElement: IwbElement): string;
+begin
+  if aString = '' then
+    Exit(aString);
+
+  var lIndex: Int64;
+  if FindName(aString, lIndex) then
+    Exit(GetName(lIndex));
+
+  Result := aString;
+end;
+
+function TwbEnumDef.ToString(const aString: string; const aElement: IwbElement; aForSummary: Boolean): string;
+begin
+  if aString = '' then
+    Exit(aString);
+
+  var lIndex: Int64;
+  if FindName(aString, lIndex) then
+    Exit(GetName(lIndex));
+
+  Result := '<Unknown: ' + aString + '>';
+
+  if wbReportMode and wbReportUnknownEnums then begin
+    if not Assigned(UnknownEnums) then
+      UnknownEnums := TwbFastStringListIC.CreateSorted;
+    var lUnknownIndex: Integer;
+    if not UnknownEnums.Find(Result, lUnknownIndex) then
+      lUnknownIndex := UnknownEnums.AddObject(Result, TwbFastStringListIC.CreateSorted);
+    with UnknownEnums.Objects[lUnknownIndex] as TStringList do begin
+      if Count < 10 then begin
+        var lPath := aElement.FullPath;
+        var lPathIndex: Integer;
+        if not Find(lPath, lPathIndex) then
+          lPathIndex := Add(lPath);
+        Objects[lPathIndex] := TObject(Succ(Integer(Objects[lPathIndex])));
+      end;
+    end;
+  end;
 end;
 
 function TwbEnumDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -14954,6 +15146,18 @@ begin
   Used(aElement, Result);
 end;
 
+function TwbEnumDef.ToEditValue(const aString: string; const aElement: IwbElement): string;
+begin
+  if aString = '' then
+    Exit(aString);
+
+  var lIndex: Int64;
+  if FindName(aString, lIndex) then
+    Exit(GetName(lIndex));
+
+  Result := aString;
+end;
+
 { TwbStringDef }
 
 procedure TwbStringDef.AfterClone(const aSource: TwbDef);
@@ -14980,6 +15184,10 @@ end;
 function TwbStringDef.Check(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttCheck);
+
+  if Assigned(bsdFormater) then
+    Result := bsdFormater.Check(Result, aElement);
+
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctCheck);
 end;
@@ -15009,13 +15217,10 @@ end;
 procedure TwbStringDef.FromEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
 begin
   var lValue := aValue;
-  if Assigned(bsdEnum) then begin
-    var lEnumIdx: Int64;
-    if bsdEnum.FindName(lValue, lEnumIdx) then
-      lValue := bsdEnum.Names[lEnumIdx]
-//    else
-//      raise Exception.Create('"' + lValue + '" is not a valid value for ' + GetPath);
-  end;
+
+  if Assigned(bsdFormater) then
+    lValue := bsdFormater.FromEditValue(lValue, aElement);
+
   FromStringTransform(aBasePtr, aEndPtr, aElement, aValue, ttFromEditValue);
 end;
 
@@ -15088,13 +15293,15 @@ begin
   Result := sdSize;
 end;
 
-function TwbStringDef.SetEnum(const aEnum: IwbEnumDef): IwbStringDef;
+function TwbStringDef.SetFormater(const aFormater: IwbStringDefFormater): IwbStringDef;
 begin
   if Assigned(defParent) then
-    Exit(TwbStringDef(Duplicate).SetEnum(aEnum));
+    Exit(TwbStringDef(Duplicate).SetFormater(aFormater));
 
   Result := Self;
-  bsdEnum := aEnum;
+
+  if Assigned(aFormater) then
+    bsdFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbStringDefFormater;
 end;
 
 function TwbStringDef.SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean;
@@ -15141,6 +15348,10 @@ end;
 function TwbStringDef.ToEditValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToEditValue);
+
+  if Assigned(bsdFormater) then
+    Result := bsdFormater.ToEditValue(Result, aElement);
+
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
 end;
@@ -15165,6 +15376,10 @@ end;
 function TwbStringDef.ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
 begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToString);
+
+  if Assigned(bsdFormater) then
+    Result := bsdFormater.ToString(Result, aElement, False);
+
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
@@ -15264,6 +15479,20 @@ end;
 function TwbStringDef.ToStringTransform(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aTransformType: TwbStringTransformType): string;
 begin
   Result := TransformString(ToStringNative(aBasePtr, aEndPtr, aElement, aTransformType), aTransformType, aElement);
+end;
+
+function TwbStringDef.ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
+begin
+  Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToString);
+
+  if Assigned(bsdFormater) then
+    Result := bsdFormater.ToString(Result, aElement, True);
+
+  if Assigned(ndToStr) then
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
+
+  if not Assigned(aLinksTo) and (Result <> '') and Assigned(aElement) then
+    aLinksTo := aElement.LinksTo;
 end;
 
 function TwbStringDef.TransformString(const s: string; aTransformType: TwbStringTransformType; const aElement: IwbElement): string;
@@ -16321,7 +16550,7 @@ begin
   Result := FormID.ToCardinal;
 end;
 
-function TwbFormIDDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
+function TwbFormIDDefFormater.GetEditInfo(const aElement: IwbElement): TwbStringArray;
 var
   ACVAIsValid : Boolean;
   Strings     : TStringList;
@@ -16546,7 +16775,7 @@ begin
   end;
 end;
 
-function TwbFormIDDefFormater.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
+function TwbFormIDDefFormater.GetEditType(const aElement: IwbElement): TwbEditType;
 begin
   Result := etComboBox;
 end;
@@ -17291,6 +17520,24 @@ begin
       end;
     end;
 
+    if wbReportUnknownDoubles then begin
+      FoundOne := False;
+      with BA do begin
+        for j := Low(FoundDoubleAtOffSet) to High(FoundDoubleAtOffSet) do
+          if (FoundDoubleAtOffSet[j] > 2) and (NotFoundDoubleAtOffSet[j] = 0) then begin
+            if not FoundOne then begin
+              FoundOne := True;
+              WriteLn('Found Doubles: ', s);
+            end;
+            with DoublesAtOffSet[j] do begin
+              WriteLn('  Offset ', j, ': ', Count, ' (', FoundDoubleAtOffSet[j],')');
+              for k := 0 to Pred(Count) do
+                WriteLn('    ', Strings[k], ' (', Integer(Objects[k]),')');
+            end;
+          end;
+      end;
+    end;
+
     if wbReportUnknownFloats then begin
       FoundOne := False;
       with BA do begin
@@ -17326,7 +17573,6 @@ begin
           end;
       end;
     end;
-
 
     if wbReportUnknownLStrings then begin
       FoundOne := False;
@@ -17452,6 +17698,7 @@ var
   MainRecord: IwbMainRecord;
   OffSet: Integer;
   aInt: Cardinal;
+
 // Path : string;
   s: string;
   i: Integer;
@@ -17580,6 +17827,58 @@ begin
           Inc(OffSet,wbReportUnknownStep);
         end;
       end;
+
+      if wbReportUnknownDoubles then begin
+        p := aBasePtr;
+        OffSet := 0;
+        while (NativeUInt(p)+7) < NativeUInt(aEndPtr) do begin
+          var lInt64 := PInt64(p)^;
+          var d := PDouble(p)^;
+          if (lInt64 <> $0) and ((Length(NotFoundDoubleAtOffSet) < Succ(OffSet)) or (NotFoundDoubleAtOffSet[Offset] < 1)) then begin
+
+            if Length(FoundDoubleAtOffSet) < Succ(Offset) then
+              SetLength(FoundDoubleAtOffSet, Succ(Offset));
+            if Length(NotFoundDoubleAtOffSet) < Succ(Offset) then
+              SetLength(NotFoundDoubleAtOffSet, Succ(Offset));
+            if Length(DoublesAtOffSet) < Succ(Offset) then
+              SetLength(DoublesAtOffSet, Succ(Offset));
+
+            try
+              var d2: Double := RoundToEx(d, -6);
+              if (d2 <> 0) and (Abs(d-d2) < 0.0000002) then begin
+                if (d2 > -100000000000) and (d2 < 100000000000) then begin
+                  Inc(FoundDoubleAtOffSet[Offset]);
+
+                  if not Assigned(DoublesAtOffSet[Offset]) then
+                    DoublesAtOffSet[Offset] := TwbFastStringListCS.CreateSorted;
+
+                  s := FloatToStr(RoundToEx(d,-10));
+                  var lDotPos := Pos('.', s);
+                  if lDotPos > 0 then begin
+                    Inc(lDotPos, 10);
+                    if Length(s) > lDotPos then
+                      SetLength(s, lDotPos);
+                  end;
+
+                  with DoublesAtOffSet[Offset] do if Count < 15 then begin
+                    if not Find(s, i) then
+                      i := AddObject(s, TObject(0));
+                    Objects[i] := TObject(Succ(Integer(Objects[i])));
+                  end;
+                end;
+
+              end else
+                Inc(NotFoundDoubleAtOffSet[Offset]);
+            except
+              Inc(NotFoundDoubleAtOffSet[Offset]);
+            end;
+
+          end;
+          Inc(p,wbReportUnknownStep);
+          Inc(OffSet,wbReportUnknownStep);
+        end;
+      end;
+
 
       if wbReportUnknownHalfs then begin
         p := aBasePtr;
@@ -17878,22 +18177,22 @@ begin
   Result := cdToStr;
 end;
 
-function TwbCallbackDef.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
+function TwbCallbackDef.GetEditInfo(const aElement: IwbElement): TwbStringArray;
 begin
   with TStringList.Create do try
-    CommaText := cdToStr(aInt, aElement, ctEditInfo);
+    CommaText := cdToStr(0, aElement, ctEditInfo);
     Result := ToStringArray;
   finally
     Free;
   end;
 end;
 
-function TwbCallbackDef.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
+function TwbCallbackDef.GetEditType(const aElement: IwbElement): TwbEditType;
 var
   s: string;
 begin
   Result := etDefault;
-  s := cdToStr(aInt, aElement, ctEditType);
+  s := cdToStr(0, aElement, ctEditType);
   if SameText(s, 'ComboBox') then
     Result := etComboBox
   else if SameText(s, 'CheckComboBox') then
@@ -18421,14 +18720,14 @@ begin
   fidcPersistent := aPersistent;
   fidcNoReach := aNoReach;
 
-  fidcValidRefs := TwbFastStringListCS.CreateSorted;
+  fidcValidRefs := TwbFastStringListCS.CreateSorted(dupIgnore);
   SetLength(fidcValidRefsArr, Length(aValidRefs));
   for i := Low(aValidRefs) to High(aValidRefs) do begin
     fidcValidRefsArr[i] := aValidRefs[i];
     fidcValidRefs.Add(aValidRefs[i]);
   end;
 
-  fidcValidFlstRefs := TwbFastStringListCS.CreateSorted;
+  fidcValidFlstRefs := TwbFastStringListCS.CreateSorted(dupIgnore);
   SetLength(fidcValidFlstRefsArr, Length(aValidFlstRefs));
   for i := Low(aValidFlstRefs) to High(aValidFlstRefs) do begin
     fidcValidFlstRefsArr[i] := aValidFlstRefs[i];
@@ -18615,12 +18914,12 @@ begin
   Result := ClassName;
 end;
 
-function TwbIntegerDefFormater.GetEditInfo(aInt: Int64; const aElement: IwbElement): TwbStringArray;
+function TwbIntegerDefFormater.GetEditInfo(const aElement: IwbElement): TwbStringArray;
 begin
   Result := nil;
 end;
 
-function TwbIntegerDefFormater.GetEditType(aInt: Int64; const aElement: IwbElement): TwbEditType;
+function TwbIntegerDefFormater.GetEditType(const aElement: IwbElement): TwbEditType;
 begin
   Result := etDefault;
 end;
@@ -19460,13 +19759,8 @@ var
   b       : TBytes;
 begin
   var lValue := aValue;
-  if Assigned(bsdEnum) then begin
-    var lEnumIdx: Int64;
-    if bsdEnum.FindName(lValue, lEnumIdx) then
-      lValue := bsdEnum.Names[lEnumIdx]
-//    else
-//      raise Exception.Create('"' + lValue + '" is not a valid value for ' + GetPath);
-  end;
+  if Assigned(bsdFormater) then
+    lValue := bsdFormater.FromEditValue(lValue, aElement);
 
   b := bsdGetEncoding(aElement).GetBytes(lValue);
   if (dfHasZeroTerminator in defFlags) and ((Length(b) < 1) or (b[High(b)] <> 0)) then
@@ -19571,13 +19865,14 @@ begin
   Result := GetPrefixOffset+Ord(ndTerminator);
 end;
 
-function TwbLenStringDef.SetEnum(const aEnum: IwbEnumDef): IwbLenStringDef;
+function TwbLenStringDef.SetFormater(const aFormater: IwbStringDefFormater): IwbLenStringDef;
 begin
   if Assigned(defParent) then
-    Exit(TwbLenStringDef(Duplicate).SetEnum(aEnum));
+    Exit(TwbLenStringDef(Duplicate).SetFormater(aFormater));
 
   Result := Self;
-  bsdEnum := aEnum;
+  if Assigned(aFormater) then
+    bsdFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbStringDefFormater;
 end;
 
 procedure TwbLenStringDef.SetPrefixValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; aValue: Cardinal);
@@ -20620,28 +20915,24 @@ begin
   Result := dtIntegerFormaterUnion;
 end;
 
-function TwbIntegerDefFormaterUnion.GetEditInfo(aInt     : Int64;
-                                          const aElement : IwbElement)
-                                                         : TwbStringArray;
+function TwbIntegerDefFormaterUnion.GetEditInfo(const aElement: IwbElement): TwbStringArray;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
-    Result := IntegerDef.GetEditInfo(aInt, aElement)
+    Result := IntegerDef.GetEditInfo(aElement)
   else
     Result := nil;
 end;
 
-function TwbIntegerDefFormaterUnion.GetEditType(aInt     : Int64;
-                                          const aElement : IwbElement)
-                                                         : TwbEditType;
+function TwbIntegerDefFormaterUnion.GetEditType(const aElement : IwbElement): TwbEditType;
 var
   IntegerDef: IwbIntegerDefFormater;
 begin
   IntegerDef := Decide(aElement);
   if Assigned(IntegerDef) then
-    Result := IntegerDef.GetEditType(aInt, aElement)
+    Result := IntegerDef.GetEditType(aElement)
   else
     Result := etDefault;
 end;
@@ -21716,7 +22007,8 @@ begin
   inherited;
   with aSource as TwbBaseStringDef do begin
     Self.bsdEncodingOverride := bsdEncodingOverride;
-    Self.bsdEnum := bsdEnum;
+    if Assigned(bsdFormater) then
+      Self.bsdFormater := (bsdFormater as IwbDefInternal).SetParent(Self, False) as IwbStringDefFormater;
   end;
 end;
 
@@ -21756,8 +22048,8 @@ begin
     Exit(vdEditInfo^);
 
   inherited;
-  if Assigned(bsdEnum) then
-    Result := bsdEnum.EditInfo[0, aElement];
+  if Assigned(bsdFormater) then
+    Result := bsdFormater.EditInfo[aElement];
 
   if Assigned(ndToStr) then
     with TStringList.Create do try
@@ -21775,8 +22067,8 @@ end;
 function TwbBaseStringDef.GetEditType(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): TwbEditType;
 begin
   inherited;
-  if Assigned(bsdEnum) then
-    Result := bsdEnum.EditType[0, aElement];
+  if Assigned(bsdFormater) then
+    Result := bsdFormater.EditType[aElement];
 
   if Assigned(ndToStr) then begin
     var s := '';
@@ -21796,6 +22088,13 @@ begin
   end;
 end;
 
+procedure TwbBaseStringDef.InitFromParent;
+begin
+  inherited;
+  if Assigned(bsdFormater) then
+    (bsdFormater as IwbDefInternal).InitFromParent;
+end;
+
 function TwbBaseStringDef.OverrideEncoding(aEncoding: TEncoding): IwbBaseStringDef;
 begin
   if Assigned(defParent) then
@@ -21805,13 +22104,31 @@ begin
   bsdEncodingOverride := aEncoding;
 end;
 
-function TwbBaseStringDef.SetEnum(const aEnum: IwbEnumDef): IwbBaseStringDef;
+procedure TwbBaseStringDef.Report(const aParents: TwbDefPath);
+begin
+  if defReported or (dfNoReport in defFlags) then
+    Exit;
+
+  inherited;
+  if Assigned(bsdFormater) then begin
+    var Parents := aParents;
+    SetLength(Parents, Succ(Length(Parents)));
+    Parents[High(Parents)].Def := Self;
+    Parents[High(Parents)].Index := -1;
+    bsdFormater.Report(aParents);
+  end;
+
+  defReported := True;
+end;
+
+function TwbBaseStringDef.SetFormater(const aFormater: IwbStringDefFormater): IwbBaseStringDef;
 begin
   if Assigned(defParent) then
-    Exit(TwbBaseStringDef(Duplicate).SetEnum(aEnum));
+    Exit(TwbBaseStringDef(Duplicate).SetFormater(aFormater));
 
   Result := Self;
-  bsdEnum := aEnum;
+  if Assigned(aFormater) then
+    bsdFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbStringDefFormater;
 end;
 
 procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;

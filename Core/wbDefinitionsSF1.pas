@@ -2072,15 +2072,6 @@ begin
   Result := Integer(Container.ElementNativeValues['FragmentCount']);
 end;
 
-function wbPndtPpbdFloraLen(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container     : IwbContainer;
-begin
-  Result := 0;
-  if Supports(aElement.Container, IwbContainer, Container) then
-    Result := Container.ElementNativeValues['Length of flora array'];
-end;
-
 procedure wbScriptFragmentsQuestAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerAfterSet('FragmentCount', 'Fragments', aElement);
@@ -7025,7 +7016,7 @@ end;
           Result := wbEventFunctionAndMemberEditInfo;
           if Result = '' then try
             slMember := TStringList.Create;
-            slMember.AddStrings(wbEventMemberEnum.EditInfo[0, nil]);
+            slMember.AddStrings(wbEventMemberEnum.EditInfo[nil]);
             with TStringList.Create do try
               for i := 0 to Pred(wbEventFunctionEnum.NameCount) do
                 for j := 0 to Pred(slMember.Count) do
@@ -7794,7 +7785,43 @@ end;
     .IncludeFlag(dfExcludeFromBuildRef);
 
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
-      wbString(BFCB, 'Component Type'),
+      wbString(BFCB, 'Component Type').SetFormaterOnValue(wbStringEnum([
+        'BGSActivityTracker',
+        'BGSAnimationGraph_Component',
+        'BGSAttachParentArray_Component',
+        'BGSBlockEditorMetaData_Component',
+        'BGSContactShadowComponent_Component',
+        'BGSCrowdComponent_Component',
+        'BGSDisplayCase',
+        'BGSEffectSequenceComponent',
+        'BGSExternalComponentDataSource_Component',
+        'BGSFormLinkData_Component',
+        'BGSKeywordForm_Component',
+        'BGSLinkedVoiceType_Component',
+        'BGSLodOwner_Component',
+        'BGSObjectWindowFilter_Component',
+        'BGSOrbitalDataComponent_Component',
+        'BGSOrbitedDataComponent_Component',
+        'BGSPlanetContentManagerContentProperties_Component',
+        'BGSPropertySheet_Component',
+        'BGSSoundTag_Component',
+        'BGSSpaceshipAIActor_Component',
+        'BGSSpaceshipEquipment_Component',
+        'BGSSpaceshipHullCode_Component',
+        'BGSSpaceshipWeaponBindings_Component',
+        'BGSStarDataComponent_Component',
+        'BGSStoredTraversals_Component',
+        'BlockHeightAdjustment_Component',
+        'HoudiniData_Component',
+        'ParticleSystem_Component',
+        'TESFullName_Component',
+        'TESImageSpaceModifiableForm_Component',
+        'TESModel_Component',
+        'TESPlanetModel_Component',
+        'UniqueOverlayList_Component',
+        'UniquePatternPlacementInfo_Component',
+        'Volumes_Component'
+      ])),
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
         wbRStruct('Component Data', [
@@ -8049,8 +8076,9 @@ end;
         wbRStruct('Component Data', [
           wbOPDS
         ], []),
+        //HoudiniData_Component
         wbRStruct('Component Data', [
-          wbUnknown(PCCC)
+          wbReflection(PCCC)
         ], []),
         //BGSPropertySheet_Component
         wbRStruct('Component Data', [
@@ -18427,7 +18455,7 @@ end;
     wbBaseFormComponents,
     wbStruct(DATA, 'Data', [
       wbLenString('Type')
-        .SetEnum(wbEnum([
+        .SetFormater(wbStringEnum([
           'LookAtChain',
           'MorphDriver',
           'PoseDeformer',
@@ -18641,82 +18669,110 @@ end;
   wbRecord(PNDT, 'Planet Data', [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(CNAM), //req
+    wbArray(CNAM, 'Unknown',
+      wbStruct('Unknown', [
+        wbDouble,
+        wbDouble,
+        wbFormIDCk('Unknown', [WRLD])
+      ])
+    ).SetRequired,
     wbRArray('Biomes', wbStruct(PPBD, 'Biome', [
-      wbFormIDCK('Biome reference', [BIOM]),
-      wbFloat('Percentage'),
+      wbFormIDCK('Biome', [BIOM]),
+      wbFloat('Chance'),
       wbUnknown(4),
-      wbFormID('Resource gen override'),
-      wbArray('Fauna', wbStruct('Fauna', [wbFormID('Animal')]), -1),
+      wbFormIDCk('Resource Generation', [NULL, RSGD]),
+      wbArray('Fauna', wbFormIDCk('Fauna', [NPC_]), -1),
       wbUnknown(4),
-      wbInteger('Length of flora array', itU32),
-      wbInteger('Size of flora struct', itU32),
-      wbArray('Flora', wbStruct('Flora', [
-        wbFormID('Model'),
-        wbFormID('Resource'),
-        wbInteger('Frequency', itU8)
-      ]), wbPndtPpbdFloraLen),
+      wbStruct('Flora', [
+        wbInteger('Count', itU32),
+        wbInteger('Entry Size', itU32).SetDefaultNativeValue(9),
+        wbArray('Entries',
+          wbStruct('Entry', [
+            wbFormIDCk('Flora', [FLOR]),
+            wbFormIDCk('Resource', [MISC]),
+            wbInteger('Frequency', itU8)
+          ])
+        ).SetCountPath('Count')
+      ]),
       wbUnknown()
     ])),
-    wbFormID(FNAM, 'Surface Tree'), //req
-    wbUnknown(GNAM), //req
-    wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(BDST), //req
-      wbString(ANAM),  //req
-      wbInteger(CNAM, 'Body type', itU8, wbEnum([], [
-        2, 'Planet',
-        3, 'Moon',
-        5, 'Asteroid Belt'
-      ])),
-      wbUnknown(DNAM), //req
-      wbUnknown(ENAM),
-      wbStruct(FNAM, 'Unknown', [
-        wbUnknown(4),
-        wbFloat('Spawn-In Projection Offset'),
-        wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
-        wbFloat('Radius in km'),
-        wbFloat('Gravity'),
-        wbUnknown(4)
-      ]),
-      wbStruct(GNAM, 'Unknown', [
-        wbInteger('Star ID', itu32),
-        wbInteger('Primary planet ID', itu32),
-        wbInteger('Planet ID', itu32)
-      ]),
-      wbStruct(HNAM, 'Unknown', [
-        wbUnknown(4),
-        wbLenString('Spectral Class'),
-        wbLenString('Catalogue ID'),
-        wbLenString('Life'),
-        wbLenString('Magnetosphere'),
-        wbLenString('Mass in kg'),
-        wbLenString('Type'),
-        wbLenString('Settled star'), // This is "old" csv data and does not always use the correct ingame star name
-        wbLenString('Special'),
-        wbDouble('Perihelion', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Star Dist', cpNormal, False, 1, Low(Integer)),
-        wbFloat('Density'),
-        wbFloat('Heat'),
-        wbFloat('Hydro'),
-        wbFloat('Inner HZ'),
-        wbFloat('Outer HZ'),
-        wbFloat('Peri. Angle'),
-        wbUnknown(4),
-        wbFloat('Start angle in deg'),
-        wbFloat('Year length in days'),
-        wbInteger('Asteroids', itu32),
-        wbInteger('Geostationary', itu32, wbBoolEnum),
-        wbInteger('Random Seed', itu32),
-        wbInteger('Rings', itu32, wbBoolEnum)
-      ]),
-      wbStruct(INAM, 'Unknown', [
-        wbInteger('Atmos Handle', itu32),
-        wbUnknown()
-      ]),
-      wbUnknown(KNAM),
-      wbUnknown(NNAM),
-      wbUnknown(BDED) //req
-    ], []),
+    wbFormIDCk(FNAM, 'Surface Tree', [NULL, SFTR]).SetRequired,
+    wbFloat(GNAM).SetDefaultNativeValue(1.0).SetRequired,
+
+    wbMarkerReq(BDST),
+    wbString(ANAM).SetRequired,
+    wbInteger(CNAM, 'Body type', itU8, wbEnum([], [
+      2, 'Planet',
+      3, 'Moon',
+      4, 'Orbital',
+      5, 'Asteroid Belt'
+    ])),
+    wbStruct(DNAM, 'Unknown', [
+      wbLenString.IncludeFlag(dfHasZeroTerminator),
+      wbInteger('Unknown', itU8)
+    ]).SetRequired,
+    wbStruct(ENAM, 'Unknown', [
+      {
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Unknown', cpNormal, False, 1, Low(Integer))
+      }
+      wbUnknown(72)
+    ]),
+    wbStruct(FNAM, 'Unknown', [
+      wbUnknown(4),
+      wbFloat('Spawn-In Projection Offset'),
+      wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
+      wbFloat('Radius in km'),
+      wbFloat('Gravity'),
+      wbUnknown(4)
+    ]),
+    wbStruct(GNAM, 'Unknown', [
+      wbInteger('Star ID', itu32),
+      wbInteger('Primary planet ID', itu32),
+      wbInteger('Planet ID', itu32)
+    ]),
+    wbStruct(HNAM, 'Unknown', [
+      wbUnknown(4),
+      wbLenString('Spectral Class').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Catalogue ID').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Life').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Magnetosphere').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Mass in kg').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Type').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Settled star').IncludeFlag(dfHasZeroTerminator), // This is "old" csv data and does not always use the correct ingame star name
+      wbLenString('Special').IncludeFlag(dfHasZeroTerminator),
+      wbDouble('Perihelion', cpNormal, False, 1, Low(Integer)),
+      wbDouble('Star Dist', cpNormal, False, 1, Low(Integer)),
+      wbFloat('Density'),
+      wbFloat('Heat'),
+      wbFloat('Hydro'),
+      wbFloat('Inner HZ'),
+      wbFloat('Outer HZ'),
+      wbFloat('Peri. Angle'),
+      wbUnknown(4),
+      wbFloat('Start angle in deg'),
+      wbFloat('Year length in days'),
+      wbInteger('Asteroids', itu32),
+      wbInteger('Geostationary', itu32, wbBoolEnum),
+      wbInteger('Random Seed', itu32),
+      wbInteger('Rings', itu32, wbBoolEnum)
+    ]),
+    wbStruct(INAM, 'Unknown', [
+      wbInteger('Atmos Handle', itu32),
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbUnknown(KNAM),
+    wbUnknown(NNAM),
+    wbMarkerReq(BDED),
 
     wbFloat(TEMP, 'Temperature in C'),
     wbFloat(DENS, 'Density'),
@@ -18740,18 +18796,18 @@ end;
     wbEDID,
     wbRStructs('Unknown', 'Unknown', [
       wbFormIDCk(RNAM, 'Resource', [IRES]), //req
-    wbArray(DNAM, 'Unknown',                // req
-      wbArray('Unknown',
-        wbFloat('Unknown'), 10), 14) // structure appears to fixed size
+      wbArray(DNAM, 'Unknown',                // req
+        wbArray('Unknown',
+          wbFloat('Unknown'), 10), 14) // structure appears to fixed size
     ], [])
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(RSPJ, 'Research Project', [
     wbEDID,
-    wbFULL.SetRequired,
-    wbDESC.SetRequired,
-    wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]).SetRequired,
+    wbFULL,
+    wbDESC,
+    wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
     wbStructs(FVPA, 'Resources', 'Resource', [
       wbFormIDCk('Resource', [IRES, ALCH]),
       wbInteger('Required Count', itU32),
@@ -18763,10 +18819,10 @@ end;
       wbUnknown(4)
     ]),
     wbFormID(CNAM, 'Icon Source'),
-    wbUnknown(NNAM,2).SetRequired, // always 2 byte $0000
-    wbFloat(SNAM, 'Menu Sort Order').SetRequired,
-    wbUnknown(TNAM,1).SetRequired, // always 1 byte $00
-    wbFormIDCk(KNAM,'Category Keyword', [KYWD]).SetRequired,
+    wbUnknown(NNAM,2), // always 2 byte $0000
+    wbFloat(SNAM),
+    wbUnknown(TNAM,1), // always 1 byte $00
+    wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);
 
@@ -18921,12 +18977,15 @@ end;
     wbEDID,
     wbBaseFormComponents,
     wbRStructs('Unknown', 'Unknown', [
-      wbUnknown(ENAM), //req
-      wbFormID(PNAM), //req
+      wbInteger(ENAM, 'Unknown', itU32, wbFlags([
+        'Unknown 0',
+        'Unknown 1'
+      ])).SetRequired,
+      wbFormIDCk(PNAM, 'Base Object', sigBaseObjects + [FLST], sigBaseObjects).SetRequired,
       wbCITCReq,
       wbCTDAsCount,
-      wbFormID(UNAM), //req
-      wbFormID(VNAM)  //req
+      wbFormIDCk(UNAM, 'Snap Template Node', [NULL, STND]).SetRequired,
+      wbFormIDCk(VNAM, 'Keyword', [NULL, KYWD]).SetRequired
     ], [])
   ]);
 
@@ -19274,8 +19333,8 @@ end;
   wbAddGroupOrder(SFPT); {SF1Dump: no errors}
   wbAddGroupOrder(SFTR); {SF1Dump: no errors}
   wbAddGroupOrder(PCMT); {SF1Dump: no errors}
-  wbAddGroupOrder(BMOD);
-  wbAddGroupOrder(STBH);
+  wbAddGroupOrder(BMOD); {SF1Dump: no errors}
+  wbAddGroupOrder(STBH); {SF1Dump: no errors}
   wbAddGroupOrder(PNDT);
   wbAddGroupOrder(CNDF);
   wbAddGroupOrder(PCBN);
@@ -19306,30 +19365,20 @@ end;
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
-  {
-  SetLength(wbOfficialDLC, 7);
-  wbOfficialDLC[0] := 'DLCRobot.esm';
-  wbOfficialDLC[1] := 'DLCworkshop01.esm';
-  wbOfficialDLC[2] := 'DLCCoast.esm';
-  wbOfficialDLC[3] := 'DLCworkshop02.esm';
-  wbOfficialDLC[4] := 'DLCworkshop03.esm';
-  wbOfficialDLC[5] := 'DLCNukaWorld.esm';
-  wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
+  SetLength(wbOfficialDLC, 3);
+  wbOfficialDLC[0] := 'Constellation.esm';
+  wbOfficialDLC[1] := 'OldMars.esm';
+  wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
 
+  {
   if wbGameMode = gmSF1VR then begin
     // new VR esm is loaded after DLCs
     SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
     wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
   end else
     wbCreationClubContentFileName := 'Fallout4.ccc';
+  }
 
-  if wbGameMode = gmSF1VR then
-    wbHEDRVersion := 0.95
-  else begin
-    wbHEDRVersion := 1.0;
-    wbHEDRNextObjectID := 1;
-  end;
-}
   wbHEDRVersion := 0.96;
 end;
 

@@ -282,7 +282,7 @@ begin
     ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
     ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
     ctEditType: Result := 'ComboBox';
-    ctEditInfo: Result := wbActorValueEnum.EditInfo[aInt, aElement].ToCommaText;
+    ctEditInfo: Result := wbActorValueEnum.EditInfo[aElement].ToCommaText;
   end;
 end;
 
@@ -1638,7 +1638,7 @@ begin
       Result := wbEventFunctionAndMemberEditInfo;
       if Result = '' then try
         slMember := TStringList.Create;
-        slMember.AddStrings(wbEventMemberEnum.EditInfo[0, nil]);
+        slMember.AddStrings(wbEventMemberEnum.EditInfo[nil]);
         with TStringList.Create do try
           for i := 0 to Pred(wbEventFunctionEnum.NameCount) do
             for j := 0 to Pred(slMember.Count) do
@@ -4741,7 +4741,7 @@ begin
       ctCheck: Result := PropEnum.Check(aInt, aElement);
       ctToEditValue: Result := PropEnum.ToEditValue(aInt, aElement);
       ctEditType: Result := 'ComboBox';
-      ctEditInfo: Result := PropEnum.EditInfo[aInt, aElement].ToCommaText;
+      ctEditInfo: Result := PropEnum.EditInfo[aElement].ToCommaText;
     end;
 end;
 

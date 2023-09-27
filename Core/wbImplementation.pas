@@ -8322,7 +8322,7 @@ var
   i, j          : Integer;
   NewCount      : integer;
   Cmp           : Integer;
-  SelfRef : IwbContainerElementRef;
+  SelfRef       : IwbContainerElementRef;
 begin
   Result := False;
 
