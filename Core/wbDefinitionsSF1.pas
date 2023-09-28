@@ -7502,9 +7502,18 @@ end;
           {14} 'Player Ship'
         ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
         wbUnion('Reference', wbCTDAReferenceDecider, [
-          wbUnused(4),
+          wbInteger('Unused', itU32, nil, cpIgnore),
           wbFormIDCkNoReach('Reference', sigReferences, False)
-        ]),
+        ])
+          .SetDontShow(function(const aElement: IwbElement): Boolean
+          begin
+            Result := True;
+            var lContainer: IwbContainer;
+            if not Supports(aElement, IwbContainer, lContainer) then
+              Exit;
+            if lContainer.ElementValues['..\Run On'] = 'Reference' then
+              Exit(False);
+          end),
         wbInteger('Parameter #3', itS32, nil, cpNormal, False, nil, nil, -1)
       ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
       wbString(CIS1, 'Parameter #1'),
@@ -17688,7 +17697,7 @@ end;
     wbNTRM,
     wbFTYP,
     wbPRPS,
-    wbMOLM(MOLM),
+    wbUnknown(MOLM, 2),
     wbFULL
   ]);
 

@@ -1678,6 +1678,7 @@ type
 
     procedure Init; override;
     procedure Reset; override;
+    function GetResolvedValueDef: IwbValueDef; override;
 
     function GetElementType: TwbElementType; override;
     procedure SetEditValue(const aValue: string); override;
@@ -20654,6 +20655,38 @@ end;
 function TwbValue.GetElementType: TwbElementType;
 begin
   Result := etValue;
+end;
+
+function TwbValue.GetResolvedValueDef: IwbValueDef;
+begin
+  Result := inherited;
+  if Assigned(Result) and
+     Assigned(vResolvedDef) and
+     not vResolvedDef.Equals(Result) and
+     (vResolvedDef.DefType <> dtUnion) and
+     (Result.DefType <> dtUnion)
+  then begin
+    var lShouldDataSize := Result.Size[GetDataBasePtr, dcDataEndPtr, Self];
+    var lIsDataSize := GetDataSize;
+
+    var lShouldDefType := Result.DefType;
+    var lIsDefType := vResolvedDef.DefType;
+
+    var lOldDef := vResolvedDef;
+    vResolvedDef := Result;
+
+    if (lShouldDataSize <> lIsDataSize)
+       or
+       (lShouldDefType <> lIsDefType)
+       or
+       not vResolvedDef.CanAssign(nil, Low(Integer), lOldDef)
+    then begin
+      var lFile := GetFile;
+      if not Assigned(lFile) or lFile.IsElementEditable(Self) then
+        SetToDefault;
+    end else
+      Reset;
+  end;
 end;
 
 function TwbValue.GetSorted: Boolean;

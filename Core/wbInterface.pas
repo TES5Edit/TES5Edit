@@ -880,7 +880,8 @@ type
       write SetObjectID;
   end;
 
-  TwbFormIDs = array of TwbFormID;
+  TwbFormIDs = TArray<TwbFormID>;
+  TwbFormIDDictionary = TDictionary<TwbFormID, TwbNothing>;
 
   PwbCRC32 = ^TwbCRC32;
   TwbCRC32 = type Cardinal;
