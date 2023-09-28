@@ -5235,7 +5235,7 @@ begin
     wbVMADObjectFormat,
     wbVMADScripts,
     wbScriptFragments
-  ], cpNormal, False, nil, 3)
+  ], cpNormal, False, nil, 3{some records are missing the fragments part})
   .SetSummaryKeyOnValue([2]);
 
   var wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
@@ -7795,35 +7795,58 @@ end;
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type').SetFormaterOnValue(wbStringEnum([
         'BGSActivityTracker',
+        'BGSAddToInventoryOnDestroy_Component',
         'BGSAnimationGraph_Component',
         'BGSAttachParentArray_Component',
+        'BGSBlockCellHeighGrid_Component',
         'BGSBlockEditorMetaData_Component',
+        'BGSBodyPartInfo_Component',
         'BGSContactShadowComponent_Component',
         'BGSCrowdComponent_Component',
+        'BGSDestructibleObject_Component',
         'BGSDisplayCase',
         'BGSEffectSequenceComponent',
         'BGSExternalComponentDataSource_Component',
+        'BGSForcedLocRefType_Component',
         'BGSFormLinkData_Component',
         'BGSKeywordForm_Component',
         'BGSLinkedVoiceType_Component',
         'BGSLodOwner_Component',
+        'BGSMaterialPropertyComponent',
+        'BGSObjectPaletteDefaults_Component',
         'BGSObjectWindowFilter_Component',
         'BGSOrbitalDataComponent_Component',
         'BGSOrbitedDataComponent_Component',
+        'BGSPapyrusScripts_Component',
+        'BGSPathingData_Component',
         'BGSPlanetContentManagerContentProperties_Component',
+        'BGSPrimitive_Component',
         'BGSPropertySheet_Component',
+        'BGSScannable',
+        'BGSShipManagement',
+        'BGSSkinForm_Component',
         'BGSSoundTag_Component',
+        'BGSSpacePhysicsComponent',
         'BGSSpaceshipAIActor_Component',
         'BGSSpaceshipEquipment_Component',
         'BGSSpaceshipHullCode_Component',
         'BGSSpaceshipWeaponBindings_Component',
+        'BGSSpawnOnDestroy_Component',
         'BGSStarDataComponent_Component',
         'BGSStoredTraversals_Component',
+        'BGSWorkshopItemColor',
         'BlockHeightAdjustment_Component',
+        'Blueprint_Component',
         'HoudiniData_Component',
+        'LensFlareAttachmentFormComponent',
+        'LightAnimFormComponent',
+        'LightAttachmentFormComponent',
         'ParticleSystem_Component',
+        'ReflectionProbes_Component',
+        'TESContainer_Component',
         'TESFullName_Component',
         'TESImageSpaceModifiableForm_Component',
+        'TESMagicTargetForm_Component',
         'TESModel_Component',
         'TESPlanetModel_Component',
         'UniqueOverlayList_Component',
@@ -8645,7 +8668,7 @@ end;
       'Unknown 6'
     ])),
     wbInteger(JNAM, 'Activation Angle', itU16),
-    wbUnknown(INAM), //unknown if here or any later position
+    wbEmpty(INAM), //unknown if here or any later position
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
 {    wbStruct(RADR, 'Radio Receiver', [
       wbFormIDCk('Sound Model', [SOPM, NULL]),
@@ -8657,7 +8680,7 @@ end;
     wbCITC,
     wbCTDAs,
     wbNVNM
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   (* still exists in game code, but not in Starfield.esm * )
   wbRecord(TACT, 'Talking Activator',
@@ -17493,12 +17516,12 @@ end;
     wbOBND,
     wbODTY,
     wbGenericModel(),
-    wbUnknown(DATA),
-    wbFormID(ANAM, 'Applicable Item List'),
-    wbFormID(ENAM, 'Legendary Template List'),
+    wbEmpty(DATA),
+    wbFormIDCk(ANAM, 'Applicable Item List', [LVLI]),
+    wbFormIDCk(ENAM, 'Legendary Template List', [LGDI]),
     wbArray(BNAM, 'Legendary Mods', wbStruct('Legendary Mod', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbFormID('Legendary Modifier')
+      wbFormIDCk('Legendary Modifier', [OMOD])
     ])),
 
     wbArray(CNAM, 'Include Filters', wbStruct('Include Filter', [
@@ -18333,10 +18356,22 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(AMBS, 'Ambience Set', [
     wbEDID,
-    wbUnknown(ASAS), //count
-    wbRArray('Unknown', wbUnknown(ASAE)),
-    wbUnknown(ASMB),
-    wbUnknown(WED0)
+    wbRStruct('Ambient Sounds', [
+      wbInteger(ASAS, 'Count', itU32, nil, cpBenign, True), //count
+      wbRArray('Sounds', wbStruct(ASAE, 'Unknown', [
+      { 0} wbSoundReference,
+      {40} wbUnknown(8),
+      {48} wbWwiseGuid,
+      {64} wbInteger('Unknown', itU8, wbBoolEnum),
+      {65} wbFloat,
+      {69} wbUnknown(4)
+      {73}
+      ]))
+        .SetCountPath(ASAS)
+        .SetRequired
+    ], []),
+    wbInteger(ASMB, 'Unknown', itU8, wbBoolEnum),
+    wbSoundReference(WED0)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18390,6 +18425,9 @@ end;
             if lContainer.ElementValues['...\MNAM'] <> 'Complex Group' then
               Exit;
 
+            if lContainer.ElementExists['..\VNAM'] then
+              Exit;
+
             var lAVMDName := aElement.NativeValue;
             if not VarIsStr(lAVMDName) then
               Exit;
@@ -18399,6 +18437,69 @@ end;
               Exit;
 
             Result := lFile.RecordFromIndexByKey[wbIdxSimpleGroup, lAVMDName];
+            if not Assigned(Result) then
+              Result := lFile.RecordFromIndexByKey[wbIdxComplexGroup, lAVMDName];
+            if not Assigned(Result) then
+              Result := lFile.RecordFromIndexByKey[wbIdxModulation, lAVMDName];
+          end)
+          .SetToStr(procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
+          begin
+            var lContainer: IwbContainer;
+            if not wbTryGetContainerFromUnion(aElement, lContainer) then
+              Exit;
+
+            if lContainer.ElementValues['...\MNAM'] <> 'Complex Group' then
+              Exit;
+
+            if lContainer.ElementExists['..\VNAM'] then
+              Exit;
+
+            wbToStringFromLinksToMainRecordName(aValue, aBasePtr, aEndPtr, aElement, aType);
+          end),
+        wbString(VNAM, 'Value')
+          .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
+          begin
+            Result := nil;
+
+            var lContainer: IwbContainer;
+            if not wbTryGetContainerFromUnion(aElement, lContainer) then
+              Exit;
+
+            if lContainer.ElementValues['...\MNAM'] <> 'Complex Group' then
+              Exit;
+
+            var lAVMDNameValue := aElement.NativeValue;
+            if not VarIsStr(lAVMDNameValue) then
+              Exit;
+
+            var lAVMDName: string := lAVMDNameValue;
+            var lUnderlinePos := Pos('_', lAVMDName);
+            if lUnderlinePos < 11 then
+              Exit;
+
+            var lPrefix := Copy(lAVMDName, 1, Pred(lUnderlinePos));
+
+            var lIndex: TwbNamedIndex := -1;
+            if lPrefix = 'SimpleGroup' then
+              lIndex := wbIdxSimpleGroup
+            else if lPrefix = 'ComplexGroup' then
+              lIndex := wbIdxComplexGroup
+            else if lPrefix = 'Modulation' then
+              lIndex := wbIdxModulation;
+
+            if lIndex < 0 then
+              Exit;
+
+            Delete(lAVMDName, 1, lUnderlinePos);
+
+            if lAVMDName = '' then
+              Exit;
+
+            var lFile := aElement._File;
+            if not Assigned(lFile) then
+              Exit;
+
+            Result := lFile.RecordFromIndexByKey[lIndex, lAVMDName];
           end)
           .SetToStr(procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
           begin
@@ -18410,14 +18511,13 @@ end;
               Exit;
 
             wbToStringFromLinksToMainRecordName(aValue, aBasePtr, aEndPtr, aElement, aType);
-          end),
-        wbString(VNAM, 'Value')
+          end)
           .SetDontShow(function(const aElement: IwbElement): Boolean
           begin
             var lContainer: IwbContainer;
             if not wbTryGetContainerFromUnion(aElement, lContainer) then
               Exit(False);
-            Result := lContainer.ElementValues['...\MNAM'] <> 'Simple Group';
+            Result := lContainer.ElementValues['...\MNAM'] = 'Modulation';
           end),
         wbByteRGBA(NNAM, 'Color')
           .SetDontShow(function(const aElement: IwbElement): Boolean
@@ -18649,12 +18749,18 @@ end;
   wbRecord(PCBN, 'Planet Content Manager Branch Node', [
     wbEDID,
     wbBaseFormComponents,
-    wbUnknown(NAM1), //req
-    wbUnknown(NAM2), //req
-    wbUnknown(NAM3),
-    wbUnknown(NAM4),
-    wbUnknown(NAM5), //req
-    wbRArray('Unknown', wbFormIDCk(PCCB, 'Unknown', [PCCN])),
+    wbInteger(NAM1, 'Unknown', itU32, wbFlags([
+      'Unknown 0',
+      'Unknown 1'
+    ])).SetRequired,
+    wbInteger(NAM2, 'Unknown', itU32, wbEnum([
+      'Unknown 0',
+      'Unknown 1'
+    ])).SetRequired,
+    wbFormIDCk(NAM3, 'Count Curve', [CURV]),
+    wbFormIDCk(NAM4, 'Distribution Curve', [CURV]),
+    wbInteger(NAM5, 'Unknown', itU8, wbBoolEnum).SetRequired,
+    wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN, PCCN])),
     wbCITCReq,
     wbCTDAsCount,
     wbKWDAs
@@ -18664,8 +18770,8 @@ end;
   wbRecord(PCCN, 'Planet Content Manager Content Node', [
     wbEDID,
     wbBaseFormComponents,
-    wbFormIDCk(PCCC, 'Worldspace', [WRLD]), //req
-    wbUnknown(IOVR),
+    wbFormIDCk(PCCC, 'Content', [WRLD, LVLP, PKIN]),
+    wbEmpty(IOVR),
     wbKWDAs
   ]);
 
@@ -18681,14 +18787,16 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PNDT, 'Planet Data', [
+  wbRecord(PNDT, 'Planet', [
     wbEDID,
     wbBaseFormComponents,
-    wbArray(CNAM, 'Unknown',
-      wbStruct('Unknown', [
-        wbDouble,
-        wbDouble,
-        wbFormIDCk('Unknown', [WRLD])
+    wbArray(CNAM, 'Worldspaces',
+      wbStruct('Worldspace', [
+        wbStruct('Position', [
+          wbDouble,
+          wbDouble
+        ]),
+        wbFormIDCk('Worldspace', [WRLD])
       ])
     ).SetRequired,
     wbRArray('Biomes', wbStruct(PPBD, 'Biome', [
@@ -18908,12 +19016,13 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(SFTR, 'Surface Tree', wbFlags(wbRecordFlagsFlags, [
+  wbRecord(SFTR, 'Surface Tree',
+  wbFlags(wbRecordFlagsFlags, [
       {0x00000001} { 0} '',
       {0x00000002} { 1} '',
       {0x00000004} { 2} '',
       {0x00000008} { 3} '',
-      {0x00000010} { 4} ' ',
+      {0x00000010} { 4} 'Unknown 4',
       {0x00000020} { 5} '',
       {0x00000040} { 6} '',
       {0x00000080} { 7} '',
@@ -19005,24 +19114,24 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(STDT, 'Galaxy Star Data', [
+  wbRecord(STDT, 'Star',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([  {flags not checked against Starfield}
+      {0x10000000} 28, 'Unknown 28',
+      {0x20000000} 29, 'Unknown 29'
+    ])), [
     wbEDID,
     wbBaseFormComponents,
     wbKeywords,
-    wbString(ANAM),
-    wbStruct(BNAM, 'Galaxy position', [
-      wbFloat('x'),
-      wbFloat('y'),
-      wbFloat('z')
-    ]),
+    wbString(ANAM, 'Name'),
+    wbVec3Pos(BNAM),
     wbUnknown(ONAM),
-    wbInteger(DNAM, 'Star ID', itU32),
-    wbByteColors(ENAM, 'Star color'),
+    wbInteger(DNAM, 'ID', itU32),
+    wbByteColors(ENAM, 'Color'),
     wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(SUNP, 'Galaxy Sun Preset', [
+  wbRecord(SUNP, 'Sun Preset', [
     wbEDID,
     wbREFL,
     wbFormIDCk(RFDP, 'Reflection Parent', [SUNP]),
@@ -19191,8 +19300,8 @@ end;
 
       except
         on E: Exception do begin
-          FreeAndNil(wbWwiseGUIDs);
-          FreeAndNil(wbWwiseSoundbankInfo);
+//          FreeAndNil(wbWwiseGUIDs);
+//          FreeAndNil(wbWwiseSoundbankInfo);
           wbProgress('Error: Loading Wwise Soundbank Info failed: [%s] %s', [E.ClassName, E.Message]);
         end;
       end;
@@ -19266,9 +19375,9 @@ end;
   wbAddGroupOrder(CELL); {SF1Dump: no errors}
   wbAddGroupOrder(WRLD); {SF1Dump: no errors}
   wbAddGroupOrder(NAVM); {SF1Dump: no errors}
-  wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(INFO);
-  wbAddGroupOrder(QUST);
+  wbAddGroupOrder(DIAL); {SF1Dump: no errors}
+  wbAddGroupOrder(INFO); {SF1Dump: no errors}
+  wbAddGroupOrder(QUST); {SF1Dump: no errors}
   wbAddGroupOrder(IDLE); {SF1Dump: no errors}
   wbAddGroupOrder(PACK); {SF1Dump: no errors}
   wbAddGroupOrder(CSTY); {SF1Dump: no errors}
@@ -19350,33 +19459,33 @@ end;
   wbAddGroupOrder(PCMT); {SF1Dump: no errors}
   wbAddGroupOrder(BMOD); {SF1Dump: no errors}
   wbAddGroupOrder(STBH); {SF1Dump: no errors}
-  wbAddGroupOrder(PNDT);
-  wbAddGroupOrder(CNDF);
-  wbAddGroupOrder(PCBN);
-  wbAddGroupOrder(PCCN);
-  wbAddGroupOrder(STDT);
-  wbAddGroupOrder(WWED);
-  wbAddGroupOrder(RSPJ);
-  wbAddGroupOrder(AOPS);
-  wbAddGroupOrder(AMBS);
-  wbAddGroupOrder(WBAR);
-  wbAddGroupOrder(PTST);
-  wbAddGroupOrder(LMSW);
-  wbAddGroupOrder(FORC);
-  wbAddGroupOrder(TMLM);
-  wbAddGroupOrder(EFSQ);
-  wbAddGroupOrder(SDLT);
-  wbAddGroupOrder(MTPT);
-  wbAddGroupOrder(CLDF);
-  wbAddGroupOrder(FOGV);
-  wbAddGroupOrder(WKMF);
-  wbAddGroupOrder(LGDI);
-  wbAddGroupOrder(PSDC);
-  wbAddGroupOrder(SUNP);
-  wbAddGroupOrder(PMFT);
-  wbAddGroupOrder(TODD);
-  wbAddGroupOrder(AVMD);
-  wbAddGroupOrder(CHAL);
+  wbAddGroupOrder(PNDT); {SF1Dump: no errors}
+  wbAddGroupOrder(CNDF); {SF1Dump: no errors}
+  wbAddGroupOrder(PCBN); {SF1Dump: no errors}
+  wbAddGroupOrder(PCCN); {SF1Dump: no errors except real ones}
+  wbAddGroupOrder(STDT); {SF1Dump: no errors}
+  wbAddGroupOrder(WWED); {SF1Dump: no errors}
+  wbAddGroupOrder(RSPJ); {SF1Dump: no errors}
+  wbAddGroupOrder(AOPS); {SF1Dump: no errors}
+  wbAddGroupOrder(AMBS); {SF1Dump: no errors}
+  wbAddGroupOrder(WBAR); {SF1Dump: no errors}
+  wbAddGroupOrder(PTST); {SF1Dump: no errors}
+  wbAddGroupOrder(LMSW); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(FORC); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(TMLM); {SF1Dump: remaining errors are, I think, real}
+  wbAddGroupOrder(EFSQ); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(SDLT); {SF1Dump: no errors}
+  wbAddGroupOrder(MTPT); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(CLDF); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(FOGV); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(WKMF); {SF1Dump: no errors}
+  wbAddGroupOrder(LGDI); {SF1Dump: no errors}
+  wbAddGroupOrder(PSDC); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(SUNP); {SF1Dump: no errors} {Reflection only}
+  wbAddGroupOrder(PMFT); {SF1Dump: no errors}
+  wbAddGroupOrder(TODD); {SF1Dump: no errors} {Reflection and BFCs only}
+  wbAddGroupOrder(AVMD); {SF1Dump: no errors}
+  wbAddGroupOrder(CHAL); {SF1Dump: no errors}
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 

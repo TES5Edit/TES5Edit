@@ -2910,7 +2910,7 @@ end;
 
 function wbVec3Pos(const aSignature: TwbSignature; const aName: string; const aPrefix: string): IwbRecordMemberDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbVec3Pos(aName));
+  Result := wbSubRecord(aSignature, aName, wbVec3Pos(''));
 end;
 
 function wbVec3Rot(const aName: string; const aPrefix: string): IwbValueDef; overload;
@@ -2931,7 +2931,7 @@ end;
 
 function wbVec3Rot(const aSignature: TwbSignature; const aName: string; const aPrefix: string): IwbRecordMemberDef; overload;
 begin
-  Result := wbSubRecord(aSignature, aName, wbVec3Rot(aName));
+  Result := wbSubRecord(aSignature, aName, wbVec3Rot(''));
 end;
 
 function wbVec3PosRot(const aCombinedName: string; const aPosName: string; const aRotName: string; const aPosPrefix: string; const aRotPrefix: string): IwbValueDef; overload;
