@@ -5227,7 +5227,7 @@ begin
     wbVMADObjectFormat,
     wbVMADScripts,
     wbScriptFragments
-  ])
+  ], cpNormal, False, nil, 3)
   .SetSummaryKeyOnValue([2]);
 
   var wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
@@ -13997,7 +13997,14 @@ end;
       wbFormIDCkNoReach('Component', sigBaseObjects),
       wbInteger('Count', itU32),
       wbByteArray('Unknown', 4)
-    ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
+    ])
+      .SetSummaryKey([1, 0])
+      .SetSummaryMemberPrefixSuffix(0, '', '')
+      .SetSummaryMemberPrefixSuffix(1, '', 'x')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfCollapsed, wbCollapseItems)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfSummaryMembersNoName);
 
   var wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
 
