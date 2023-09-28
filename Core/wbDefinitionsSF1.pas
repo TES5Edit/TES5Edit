@@ -4029,9 +4029,17 @@ begin
       wbStructExSK(CNTO, [0], [1], 'Item', [
         wbFormIDCk('Item', sigBaseObjects),
         wbInteger('Count', itS32)
-      ]),
+      ])
+      .SetSummaryKeyOnValue([1, 0])
+      .SetSummaryPrefixSuffixOnValue(0, '', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', 'x')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryNoSortKey)
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseItems),
       wbCOED
-    ], []).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
+    ], [])
+    .IncludeFlag(dfCollapsed, wbCollapseItems);
 
   var wbCOCT := wbInteger(COCT, 'Count', itU32, nil, cpBenign);
   var wbCNTOs := wbRArrayS('Items', wbCNTO, cpNormal, False, nil, wbCNTOsAfterSet);
@@ -5227,7 +5235,7 @@ begin
     wbVMADObjectFormat,
     wbVMADScripts,
     wbScriptFragments
-  ])
+  ], cpNormal, False, nil, 3)
   .SetSummaryKeyOnValue([2]);
 
   var wbVMADFragmentedPERK := wbStruct(VMAD, 'Virtual Machine Adapter', [
@@ -13997,7 +14005,14 @@ end;
       wbFormIDCkNoReach('Component', sigBaseObjects),
       wbInteger('Count', itU32),
       wbByteArray('Unknown', 4)
-    ]).SetToStr(wbItemToStr).IncludeFlag(dfCollapsed, wbCollapseItems);
+    ])
+      .SetSummaryKey([1, 0])
+      .SetSummaryMemberPrefixSuffix(0, '', '')
+      .SetSummaryMemberPrefixSuffix(1, '', 'x')
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfCollapsed, wbCollapseItems)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfSummaryMembersNoName);
 
   var wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
 
