@@ -14123,7 +14123,7 @@ end;
     ]),
     wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
     wbInteger(NNAM, 'Amount Produced', itU16), // req
-    wbFloat(SNAM), // req
+    wbFloat(SNAM, 'Menu Sort Order'), // req
     wbUnknown(TNAM), // req - always 1 byte value $00
     wbCUSH,
     wbPUSH,
@@ -19029,7 +19029,7 @@ end;
     ]),
     wbFormID(CNAM, 'Icon Source'),
     wbUnknown(NNAM,2), // always 2 byte $0000
-    wbFloat(SNAM),
+    wbFloat(SNAM, 'Menu Sort Order'),
     wbUnknown(TNAM,1), // always 1 byte $00
     wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
