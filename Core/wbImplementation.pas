@@ -526,7 +526,7 @@ type
     function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): Boolean; override;
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
-    procedure ResetMemoryOrder; virtual;
+    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); virtual;
     procedure SortBySortOrder; virtual;
     procedure SetIsSortedBySortOrder(aForce: Boolean);
     procedure CreatedEmpty;
@@ -1122,8 +1122,7 @@ type
     mrReferencedBySize  : Integer;
 
     mrReferences        : TwbFormIDs;
-    mrTmpRefFormIDs     : TwbFormIDs;
-    mrTmpRefFormIDHigh  : Integer;
+    mrTmpRefFormIDs     : TwbFormIDDictionary;
 
     mreGeneration       : Integer;
     mrePrev             : Pointer;
@@ -1436,7 +1435,7 @@ type
     function GetName: string; override;
     function GetDisplayName(aUseSuffix: Boolean): string; override;
 
-    procedure ResetMemoryOrder; override;
+    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override;
 
     function IsFlags: Boolean; override;
 
@@ -1565,7 +1564,7 @@ type
 
     procedure SetToDefaultInternal; override;
 
-    procedure ResetMemoryOrder; override;
+    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override;
 
     procedure BeforeActualRemove; override;
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
@@ -5524,9 +5523,16 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  SetLength(cntElements, Succ(Length(cntElements)));
-  cntElements[High(cntElements)] := aElement as IwbElementInternal;
-  cntElements[High(cntElements)].SetContainer(Self);
+  var lLength := Length(cntElements);
+  SetLength(cntElements, Succ(lLength));
+
+  var lElementInternal := aElement as IwbElementInternal;
+
+  cntElements[lLength] := lElementInternal;
+
+  lElementInternal.MemoryOrder := lLength;
+  lElementInternal.SetContainer(Self);
+
   NotifyChanged(eContainer);
 end;
 
@@ -5584,6 +5590,7 @@ begin
   end;
 
   cntElements[aPosition] := aElement as IwbElementInternal;
+  ResetMemoryOrder(aPosition);
   cntElements[aPosition].SetContainer(Self);
   NotifyChanged(eContainer);
 end;
@@ -6835,9 +6842,12 @@ begin
     if cntElements[i].Equals(aElement) then begin
       SetModified(True);
       InvalidateStorage;
+
       cntElements[i] := cntElements[Succ(i)];
       cntElements[Succ(i)] := aElement as IwbElementInternal;
-      ResetMemoryOrder;
+
+      ResetMemoryOrder(i, Succ(i));
+
       Exit;
     end;
 end;
@@ -6858,9 +6868,12 @@ begin
     if cntElements[i].Equals(aElement) then begin
       SetModified(True);
       InvalidateStorage;
+
       cntElements[i] := cntElements[Pred(i)];
       cntElements[Pred(i)] := aElement as IwbElementInternal;
-      ResetMemoryOrder;
+
+      ResetMemoryOrder(Pred(i), i);
+
       Exit;
     end;
 end;
@@ -7039,9 +7052,11 @@ begin
 
       Assert(NewElementIndex >= 0);
 
-      NewElement.MemoryOrder := aElement.MemoryOrder;
       cntElements[OldElementIndex] := NewElement as IwbElementInternal;
+      cntElements[OldElementIndex].MemoryOrder := OldElementIndex;
+
       cntElements[NewElementIndex] := aElement as IwbElementInternal;
+      cntElements[NewElementIndex].MemoryOrder := NewElementIndex;
 
       if NewElement.CanAssign(Low(Integer), aElement, False) then
         NewElement.Assign(Low(Integer), aElement, False)
@@ -7230,6 +7245,9 @@ begin
   end;
 
   SetLength(cntElements, Pred(Length(cntElements)));
+
+  ResetMemoryOrder(aPos);
+
   NotifyChanged(eContainer);
 end;
 
@@ -7262,11 +7280,13 @@ begin
     cntElements[i].ResetConflict;
 end;
 
-procedure TwbContainer.ResetMemoryOrder;
+procedure TwbContainer.ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer));
 var
   i : Integer;
 begin
-  for i := Low(cntElements) to High(cntElements) do
+  aFrom := Max(aFrom, Low(cntElements));
+  aTo := Min(aTo, High(cntElements));
+  for i := aFrom to aTo do
     cntElements[i].MemoryOrder := i;
 end;
 
@@ -8036,14 +8056,10 @@ begin
   if aFormID.IsNull then
     Exit;
 
-  Inc(mrTmpRefFormIDHigh);
-  if High(mrTmpRefFormIDs) < mrTmpRefFormIDHigh then
-    if mrTmpRefFormIDHigh = 0 then
-      SetLength(mrTmpRefFormIDs, 64)
-    else
-      SetLength(mrTmpRefFormIDs, mrTmpRefFormIDHigh * 2);
+  if not Assigned(mrTmpRefFormIDs) then
+    mrTmpRefFormIDs := TwbFormIDDictionary.Create(Length(mrReferences));
 
-  mrTmpRefFormIDs[mrTmpRefFormIDHigh] := aFormID;
+  mrTmpRefFormIDs.TryAdd(aFormID, wbNothing);
 end;
 
 function TwbMainRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
@@ -8319,10 +8335,10 @@ var
   end;
 
 var
-  LastFormID    : TwbFormID;
+{  LastFormID    : TwbFormID;
   i, j          : Integer;
   NewCount      : integer;
-  Cmp           : Integer;
+  Cmp           : Integer;}
   SelfRef       : IwbContainerElementRef;
 begin
   Result := False;
@@ -8338,55 +8354,52 @@ begin
   Assert(not (mrsBuildingRef in mrStates));
   Include(mrStates, mrsBuildingRef);
   try
-    mrTmpRefFormIDHigh := -1;
-    mrTmpRefFormIDs := nil;
+    var lTmpRefFormIDs: TwbFormIDs := nil;
+    FreeAndNil(mrTmpRefFormIDs);
+    try
 
-    if aRemove then begin
-      Exclude(cntStates, csRefsBuild);
-      cntRefsBuildAt := 0;
-    end else
-      inherited BuildRef;
+      if aRemove then begin
+        Exclude(cntStates, csRefsBuild);
+        cntRefsBuildAt := 0;
+      end else
+        inherited BuildRef;
 
-    NewCount := 0;
-    if mrTmpRefFormIDHigh >= 0 then begin
-      wbMergeSort32(@mrTmpRefFormIDs[0], Succ(mrTmpRefFormIDHigh), CompareFormIDs);
-      LastFormID := TwbFormID.Null;
-      for i := 0 to mrTmpRefFormIDHigh do
-        if mrTmpRefFormIDs[i] <> LastFormID then begin
-          LastFormID := mrTmpRefFormIDs[i];
-          mrTmpRefFormIDs[NewCount] := LastFormID;
-          Inc(NewCount);
-        end;
+      if Assigned(mrTmpRefFormIDs) then
+        lTmpRefFormIDs := mrTmpRefFormIDs.Keys.ToArray;
+
+    finally
+      FreeAndNil(mrTmpRefFormIDs)
     end;
-    SetLength(mrTmpRefFormIDs, NewCount);
 
-    i := 0;
-    j := 0;
-    while (i < NewCount) and (j < Length(mrReferences)) do begin
-      Cmp := TwbFormID.Compare(mrTmpRefFormIDs[i], mrReferences[j]);
-      if Cmp = 0 then begin
-        Inc(i);
-        Inc(j);
-      end else if Cmp < 0 then begin
-        ProcessRef(mrTmpRefFormIDs[i], True);
-        Inc(i);
+    var lTmpRefFormIDsLength := Length(lTmpRefFormIDs);
+    if lTmpRefFormIDsLength > 0 then
+      wbMergeSort32(@lTmpRefFormIDs[0], lTmpRefFormIDsLength, CompareFormIDs);
+
+    var lTmpIdx := 0;
+    var lOldIdx := 0;
+    while (lTmpIdx < lTmpRefFormIDsLength) and (lOldIdx < Length(mrReferences)) do begin
+      var lCmpResult := TwbFormID.Compare(lTmpRefFormIDs[lTmpIdx], mrReferences[lOldIdx]);
+      if lCmpResult = 0 then begin
+        Inc(lTmpIdx);
+        Inc(lOldIdx);
+      end else if lCmpResult < 0 then begin
+        ProcessRef(lTmpRefFormIDs[lTmpIdx], True);
+        Inc(lTmpIdx);
       end else begin
-        ProcessRef(mrReferences[j], False);
-        Inc(j);
+        ProcessRef(mrReferences[lOldIdx], False);
+        Inc(lOldIdx);
       end;
     end;
-    while i < NewCount do begin
-      ProcessRef(mrTmpRefFormIDs[i], True);
-      Inc(i);
+    while lTmpIdx < lTmpRefFormIDsLength do begin
+      ProcessRef(lTmpRefFormIDs[lTmpIdx], True);
+      Inc(lTmpIdx);
     end;
-    while j < Length(mrReferences) do begin
-      ProcessRef(mrReferences[j], False);
-      Inc(j);
+    while lOldIdx < Length(mrReferences) do begin
+      ProcessRef(mrReferences[lOldIdx], False);
+      Inc(lOldIdx);
     end;
 
-    mrReferences := mrTmpRefFormIDs;
-    mrTmpRefFormIDs := nil;
-    mrTmpRefFormIDHigh := -1;
+    mrReferences := lTmpRefFormIDs;
   finally
     Exclude(mrStates, mrsBuildingRef);
     mrTmpRefFormIDs := nil;
@@ -13552,7 +13565,10 @@ end;
 
 function TwbSubRecord.CanMoveElement: Boolean;
 begin
-  Result := srStates * [srsIsArray, srsSorted] = [srsIsArray];
+  Result :=
+    (srStates * [srsIsArray, srsSorted] = [srsIsArray]) and
+    not (dfNoMove in srDef.DefFlags) and
+    not (dfNoMove in srValueDef.DefFlags);
 end;
 
 function TwbSubRecord.CanElementReset: Boolean;
@@ -13948,8 +13964,11 @@ begin
 
   Result := Result + ' - ' + srDef.GetName;
 
-  if aUseSuffix and (GetNameSuffix <> '') then
-    Result := Result + ' ' + eNameSuffix;
+  if aUseSuffix and (GetNameSuffix <> '') then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + eNameSuffix;
+  end;
 end;
 
 function TwbSubRecord.GetEditValue: string;
@@ -14418,16 +14437,22 @@ begin
   Result := inherited ResetLeafFirst and (eExternalRefs = 0) and (cntElementRefs = 0);
 end;
 
-procedure TwbSubRecord.ResetMemoryOrder;
+procedure TwbSubRecord.ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer));
 var
   SetSuffix : Boolean;
   i         : Integer;
 begin
   SetSuffix := [srsIsArray, srsSorted] * srStates = [srsIsArray];
-  for i := Low(cntElements) to High(cntElements) do begin
+  aFrom := Max(aFrom, Low(cntElements));
+  aTo := Min(aTo, High(cntElements));
+
+  var lArrayDef: IwbArrayDef;
+  SetSuffix := SetSuffix and Supports(srValueDef, IwbArrayDef, lArrayDef);
+
+  for i := aFrom to aTo do begin
     cntElements[i].MemoryOrder := i;
     if SetSuffix then
-      cntElements[i].NameSuffix := '#' + i.ToString;
+      cntElements[i].NameSuffix := lArrayDef.ElementNameSuffix[i];
   end;
 end;
 
@@ -17229,8 +17254,11 @@ end;
 function TwbElement.GetDisplayName(aUseSuffix: Boolean): string;
 begin
   Result := GetName;
-  if aUseSuffix and (GetNameSuffix <> '') then
-    Result := Result + ' ' + eNameSuffix;
+  if aUseSuffix and (GetNameSuffix <> '') then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + eNameSuffix;
+  end;
 end;
 
 function TwbElement.GetDontShow: Boolean;
@@ -18485,7 +18513,9 @@ end;
 
 function TwbSubRecordArray.CanMoveElement: Boolean;
 begin
-  Result := not arcSorted;
+  Result :=
+    not arcSorted and
+    not (dfNoMove in arcDef.DefFlags);
 end;
 
 function TwbSubRecordArray.CanElementReset: Boolean;
@@ -19496,16 +19526,27 @@ end;
 
 function ArrayDoInit(const aValueDef: IwbValueDef; const aContainer: IwbContainer; var aBasePtr: Pointer; aEndPtr: Pointer; out SizePrefix: Integer): Boolean;
 var
-  Element  : IwbElement;
-  ArrayDef : IwbArrayDef;
-  ValueDef : IwbValueDef;
-  i        : Integer;
-  t        : string;
-  VarSize  : Boolean;
-  ArrSize  : Int64;
+  Element     : IwbElement;
+  ArrayDef    : IwbArrayDef;
+  ValueDef    : IwbValueDef;
+  i           : Integer;
+  t           : string;
+  VarSize     : Boolean;
+  ArrSize     : Int64;
+  ElementSize : Integer;
 
   DefaultEditValues: TArray<string>;
+
+
+  function ElementCanBeZeroSize: Boolean;
+  begin
+    if ElementSize < 0 then
+      ElementSize := ArrayDef.Element.DefaultSize[nil,nil,nil];
+    Result := ElementSize = 0;
+  end;
+
 begin
+  ElementSize := -1;
   ArrayDef := aValueDef as IwbArrayDef;
   Result := wbSortSubRecords and ArrayDef.Sorted;
   if not ArrayDef.CanAddTo then
@@ -19539,9 +19580,10 @@ begin
       if (ArrSize > 0) and not Assigned(aBasePtr) then
         VarSize := False //the array is static in size, even if the elements aren't...
       else
-        if Assigned(aBasePtr) then
-          ArrSize := High(Integer)
-        else
+        if Assigned(aBasePtr) then begin
+          if ArrSize < 1 then
+            ArrSize := High(Integer)
+        end else
           if SizePrefix = 0 then
             ArrSize := 1;
     end;
@@ -19549,16 +19591,21 @@ begin
   if Assigned(aBasePtr) then
     Inc(PByte(aBasePtr), SizePrefix);
 
+  var lArrayElementNoName := ArrayDef.Element.Name = '';
+
   if ArrSize > 0 then
-    while not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr))) do begin
+    while not VarSize or
+          (not Assigned(aBasePtr)) or
+          (NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or
+          (ArrSize < High(Integer)) and ((NativeUInt(aBasePtr) = NativeUInt(aEndPtr)) and ElementCanBeZeroSize)
+    do begin
       if Result then
         t := ''
-      else begin
-        t := ArrayDef.ElementLabel[i];
-        if t <> '' then
-          t := ' (' + t + ')';
-        t := '#' + IntToStr(i) + t;
-      end;
+      else
+        t := ArrayDef.ElementNameSuffix[i];
+
+      if not ArrayDef.ShouldInclude(aBasePtr, aEndPtr, aContainer) then
+        Break;
 
       case ValueDef.DefType of
         dtArray: Element := TwbArray.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
@@ -19576,6 +19623,8 @@ begin
         Element := TwbValue.Create(aContainer, aBasePtr, aEndPtr, ValueDef, t);
       end;
 
+      Element.MemoryOrder := i;
+
       if Length(DefaultEditValues) > i then
         Element.EditValue := DefaultEditValues[i];
 
@@ -19585,7 +19634,8 @@ begin
         Break;
       end;
 
-      Dec(ArrSize);
+      if ArrSize < High(Integer) then
+        Dec(ArrSize);
       if ArrSize = 0 then
         Break
       { else if not (not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr)))) then
@@ -19830,7 +19880,9 @@ end;
 
 function TwbArray.CanMoveElement: Boolean;
 begin
-  Result := not arrSorted;
+  Result :=
+    not arrSorted and
+    not (dfNoMove in vbValueDef.DefFlags);
 end;
 
 procedure TwbArray.CheckCount;
@@ -20048,16 +20100,22 @@ begin
   inherited;
 end;
 
-procedure TwbArray.ResetMemoryOrder;
+procedure TwbArray.ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer));
 var
   SetSuffix : Boolean;
   i         : Integer;
 begin
   SetSuffix := not arrSorted;
-  for i := Low(cntElements) to High(cntElements) do begin
+  aFrom := Max(aFrom, Low(cntElements));
+  aTo := Min(aTo, High(cntElements));
+
+  var lArrayDef: IwbArrayDef;
+  SetSuffix := SetSuffix and Supports(vbValueDef, IwbArrayDef, lArrayDef);
+
+  for i := aFrom to aTo do begin
     cntElements[i].MemoryOrder := i;
     if SetSuffix then
-      cntElements[i].NameSuffix := '#' + i.ToString;
+      cntElements[i].NameSuffix := lArrayDef.ElementNameSuffix[i];
   end;
 end;
 
@@ -21849,8 +21907,11 @@ begin
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   end;
-  if aUseSuffix and (GetNameSuffix <> '') then
-    Result := Result + ' ' + eNameSuffix;
+  if aUseSuffix and (GetNameSuffix <> '') then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + eNameSuffix;
+  end;
 end;
 
 function TwbValueBase.GetEditValue: string;
@@ -21910,8 +21971,11 @@ end;
 function TwbValueBase.GetName: string;
 begin
   Result := vbValueDef.Name;
-  if GetNameSuffix <> '' then
-    Result := Result + ' ' + eNameSuffix;
+  if GetNameSuffix <> '' then begin
+    if Result <> '' then
+      Result := Result + ' ';
+    Result := Result + eNameSuffix;
+  end;
 end;
 
 function TwbValueBase.GetNativeValue: Variant;

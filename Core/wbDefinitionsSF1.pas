@@ -607,113 +607,8 @@ begin
 
   if LegendaryIndex = -1 then
     Exit;
-    
+
   Result := LegendaryMod.Elements[1].LinksTo;
-end;
-
-function wbLGDIFiltersToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  LegendaryIndex : Integer;
-  Filter         : IwbContainerElementRef;
-  MainRecord     : IwbMainRecord;
-  LegendaryMods  : IwbContainerElementRef;
-  LegendaryMod   : IwbContainerElementRef;
-  BaseStarSlot   : Integer;
-  ModIndex       : Integer;
-begin
-
-  var lEditInfos: TStringList := nil;
-
-  case aType of
-    ctEditType: begin
-      Result := 'ComboBox';
-      Exit;
-    end;
-    ctEditInfo:
-      lEditInfos := TStringList.Create;
-    ctToStr, ctToEditValue, ctCheck, ctToSummary:
-      Result := 'Invalid Ref';
-  end;
-
-  if not Assigned(aElement) then
-    Exit;
-
-  Filter := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Filter) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then
-    Exit;
-
-  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
-    Exit;
-
-  BaseStarSlot := Filter.Elements[0].NativeValue;
-  ModIndex := aElement.NativeValue;
-
-  try
-
-    var iStarIndex := -1;
-    for var i := 0 to Pred(LegendaryMods.ElementCount) do
-    begin
-      LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
-      if LegendaryMod[0].NativeValue = BaseStarSlot then
-      begin
-        Inc(iStarIndex);
-
-        var lIndexString := IntToStr(iStarIndex);
-        while Length(lIndexString) < 3 do
-          lIndexString := '0' + lIndexString;
-
-        if Assigned(lEditInfos) then // build the dropdown list
-        begin
-          lEditInfos.AddObject(lIndexString + ' ' + LegendaryMod[1].EditValue, TObject(LegendaryMod[1]));
-        end
-        else if iStarIndex = ModIndex then
-        begin // ctToStr, ctToEditValue, ctCheck, ctToSummary will end up here if it hits a valid reference
-          if aType = ctCheck then
-            Result := ''
-          else
-          begin
-            if not (aType = ctToSummary) then
-              Result := lIndexString + ' '
-            else
-              Result := '';
-            Result := Result + LegendaryMod[1].EditValue;
-          end;
-          Exit;
-        end;
-      end
-    end;
-
-    case aType of
-      ctCheck:
-        Result := IntToStr(ModIndex) + ' ' + Result;
-      ctEditInfo: begin
-        lEditInfos.Sort;
-        Result := lEditInfos.CommaText;
-      end;
-    end;
-  finally
-    FreeAndNil(lEditInfos);
-  end;
-end;
-
-function wbStrToLGDIFilter(const aString: string; const aElement: IwbElement): Int64;
-var
-  i    : Integer;
-  s    : string;
-begin
-  Result := -1;
-
-  i := 1;
-  s := Trim(aString);
-  while (i <= Length(s)) and (ANSIChar(s[i]) in ['0'..'9']) do
-    Inc(i);
-  s := Copy(s, 1, Pred(i));
-
-  Result := StrToIntDef(s, 0);
 end;
 
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
@@ -17576,6 +17471,208 @@ end;
     )
   ]);
 
+  var wbStarSlot :=
+    wbInteger('Star Slot', itU32, wbLGDIStarSlot)
+    .SetSetToDefault(function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Boolean
+      begin
+        var lContainer: IwbContainerElementRef;
+
+        if not Assigned(aBasePtr) or
+           not Assigned(aEndPtr) or
+           ((IntPtr(aEndPtr) - IntPtr(aBasePtr)) < SizeOf(Integer)) or
+           not Assigned(aElement) or
+           not Supports(aElement.Container, IwbContainerElementRef, lContainer) or
+           not Supports(lContainer.Container, IwbContainerElementRef, lContainer) or
+           not (lContainer.ElementType = etArray) or
+           (lContainer.MemoryOrder < 0) or
+           (lContainer.MemoryOrder > Pred(wbLGDIStarSlot.NameCount))
+        then
+          Exit(False);
+
+        PInteger(aBasePtr)^ := lContainer.MemoryOrder;
+        Result := True;
+      end)
+    .SetDontShow(wbNeverShow)
+    .IncludeFlag(dfInternalEditOnly);
+
+  var wbArrayShouldIncludeStarSlotMatchesMemoryOrder: TwbShouldIncludeCallback :=
+    function(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean
+      begin
+        if not Assigned(aArray) or
+           not Assigned(aBasePtr) or
+           not Assigned(aEndPtr) or
+           ((IntPtr(aEndPtr) - IntPtr(aBasePtr)) < SizeOf(Integer))
+        then
+          Exit(False);
+
+        Result := PInteger(aBasePtr)^ = aArray.MemoryOrder;
+      end;
+
+  var wbLGDIStarSlotArray :=
+    function(aSignature: TwbSignature; const aElement: IwbValueDef; aSorted: Boolean): IwbRecordMemberDef
+    begin
+      var lInnerArray: IwbArrayDef;
+      if aSorted then
+        lInnerArray := wbArrayS('', aElement)
+      else
+        lInnerArray := wbArray('', aElement);
+
+      var lPluralName: string := aElement.Name + 's';
+
+      var lElementDef := lInnerArray
+        .SetShouldInclude(wbArrayShouldIncludeStarSlotMatchesMemoryOrder)
+        .IncludeFlag(dfArrayCanBeEmpty)
+        .SetSummaryName(lPluralName);
+
+      if not aSorted then
+        lElementDef := lElementDef
+          .IncludeFlag(dfNoMove)
+          .IncludeFlag(dfRemoveLastOnly);
+
+      Result :=
+        wbArray(aSignature, lPluralName, lElementDef)
+        .SetSummaryPassthroughMaxCountOnValue(5)
+        .SetCountFromEnumOnValue(wbLGDIStarSlot)
+        .SetSummaryName('Star Slots')
+        .IncludeFlag(dfNoMove)
+    end;
+
+  var wbLGDIFiltersToStr: TwbIntToStrCallback :=
+    function(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string
+    begin
+      Result := '';
+      case aType of
+        ctToStr, ctToSummary: begin
+          Result := aInt.ToString;
+          if aType = ctToStr then
+            Result := Result + ' <Warning: Could not resolve mod index>';
+        end;
+        ctToEditValue:
+          Result := aInt.ToString;
+        ctToSortKey: begin
+          Result := IntToHex64(aInt, 8);
+          Exit;
+        end;
+        ctCheck:
+          Result := '<Warning: Could not resolve mod index>';
+        ctEditType: Exit('ComboBox');
+        ctEditInfo: ;
+      else
+        Exit;
+      end;
+
+      if not Assigned(aElement) then
+        Exit;
+
+      var lFilter: IwbContainerElementRef;
+
+      if not Supports(aElement.Container, IwbContainerElementRef, lFilter) then
+        Exit;
+
+      var lMainRecord := aElement.ContainingMainRecord;
+
+      var lStarSlots: IwbContainerElementRef;
+      if not Supports(lMainRecord.ElementBySignature[BNAM], IwbContainerElementRef, lStarSlots) then
+        Exit;
+
+      var lStarSlotValue := lFilter.Elements[0].NativeValue;
+      if not VarIsOrdinal(lStarSlotValue) then
+        Exit;
+      var lStarSlotIndex: Integer := lStarSlotValue;
+
+      if (lStarSlotIndex < 0) or (lStarSlotIndex >= lStarSlots.ElementCount) then
+        Exit;
+
+      var lStarSlot: IwbContainerElementRef;
+      if not Supports(lStarSlots.Elements[lStarSlotIndex], IwbContainerElementRef, lStarSlot) then
+        Exit;
+
+      if aType = ctEditInfo then
+        with TwbFastStringListIC.Create do try
+          for var lModIdx := 0 to Pred(lStarSlot.ElementCount) do begin
+            var lInfoMod := lStarSlot.Elements[lModIdx] as IwbContainerElementRef;
+            var lIndexString := IntToStr(lModIdx);
+            while Length(lIndexString) < 2 do
+              lIndexString := '0' + lIndexString;
+            Add(lIndexString + ' ' + lInfoMod[1].EditValue);
+          end;
+          Sort;
+          Exit(CommaText);
+        finally
+          Free;
+        end;
+
+      var lModIndexValue := aElement.NativeValue;
+      if not VarIsOrdinal(lModIndexValue) then
+        Exit;
+      var lModIndex: Integer := lModIndexValue;
+
+      if (lModIndex < 0) or (lModIndex >= lStarSlot.ElementCount) then
+        Exit;
+
+      var lMod := lStarSlot.Elements[lModIndex] as IwbContainerElementRef;
+      var lModName := lMod[1].EditValue;
+      if lModName = '' then
+        Exit;
+
+      case aType of
+        ctCheck: Exit('');
+        ctToSummary: begin
+          var lOMOD: IwbMainRecord;
+          if Supports(lMod.Elements[1].LinksTo, IwbMainRecord, lOMOD) then begin
+            lModName := lOMOD.EditorID;
+            if lModName = '' then
+              lModName := lOMOD.ShortName;
+            Exit(lModName);
+          end else
+            Exit('');
+        end;
+        else
+          Result := IntToStr(lModIndex);
+          while Length(Result) < 2 do
+            Result := '0' + Result;
+      end;
+
+      Result := Result + ' ' + lModName;
+    end;
+
+
+  var wbStrToLGDIFilter: TwbStrToIntCallback :=
+    function(const aString: string; const aElement: IwbElement): Int64
+    var
+      i    : Integer;
+      s    : string;
+    begin
+      Result := -1;
+
+      i := 1;
+      s := Trim(aString);
+      while (i <= Length(s)) and (ANSIChar(s[i]) in ['0'..'9']) do
+        Inc(i);
+      s := Copy(s, 1, Pred(i));
+
+      Result := StrToIntDef(s, 0);
+    end;
+
+  var wbLGDIFilter :=
+    function(aSignature: TwbSignature; const aName: string): IwbRecordMemberDef
+    begin
+      Result :=
+        wbLGDIStarSlotArray(aSignature,
+          wbStructExSK([1], [2], aName, [
+            wbStarSlot,
+            wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter{).SetLinksToCallback(wbLGDIFiltersLinksTo}),
+            wbFormIDCk('Keyword', [KYWD])
+          ])//.SetSummaryKey([1, 2])
+            .SetSummaryMemberPrefixSuffix(1, '<', '>')
+            .SetSummaryMemberPrefixSuffix(2, '', '')
+            .SetSummaryDelimiter(' ')
+            .IncludeFlag(dfSummaryMembersNoName)
+            //.IncludeFlag(dfSummaryNoSortKey)
+            .IncludeFlag(dfCollapsed, wbCollapseItems)
+        , True);
+    end;
+
   {subrecords checked against Starfield.esm}
   wbRecord(LGDI, 'Legendary Item', [
     wbEDID,
@@ -17585,45 +17682,23 @@ end;
     wbEmpty(DATA),
     wbFormIDCk(ANAM, 'Applicable Item List', [LVLI]),
     wbFormIDCk(ENAM, 'Legendary Template List', [LGDI]),
-    wbArray(BNAM, 'Legendary Mods', wbStruct('Legendary Mod', [
-      wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbFormIDCk('Legendary Modifier', [OMOD])
-    ]).SetSummaryKey([0, 1])
-      .SetSummaryMemberPrefixSuffix(0, '[', ']')
-      .SetSummaryMemberPrefixSuffix(1, '', '')
-      .SetSummaryDelimiter(' ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfSummaryNoSortKey)
-      .IncludeFlag(dfCollapsed, wbCollapseItems)),
 
-    wbArray(CNAM, 'Include Filters', wbStruct('Include Filter', [
-      wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter).SetLinksToCallback(wbLGDIFiltersLinksTo),
-      wbFormIDCk('Keyword', [KYWD])
-    ]).SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, '[', ']')
+    wbLGDIStarSlotArray(BNAM,
+      wbStruct('Mod', [
+        wbStarSlot,
+        wbFormIDCk('Object Modification', [OMOD])
+      ])
+      .SetSummaryKey([1])
       .SetSummaryMemberPrefixSuffix(1, '', '')
-      .SetSummaryMemberPrefixSuffix(2, '{', '}')
       .SetSummaryDelimiter(' ')
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfSummaryNoSortKey)
-      .IncludeFlag(dfCollapsed, wbCollapseItems)),
+      .IncludeFlag(dfCollapsed, wbCollapseItems)
+    , False),
 
-    wbArray(DNAM, 'Exclude Filters', wbStruct('Exclude Filter', [
-      wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter).SetLinksToCallback(wbLGDIFiltersLinksTo),
-      wbFormIDCk('Keyword', [KYWD])
-    ]).SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, '[', ']')
-      .SetSummaryMemberPrefixSuffix(1, '', '')
-      .SetSummaryMemberPrefixSuffix(2, '{', '}')
-      .SetSummaryDelimiter(' ')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfSummaryNoSortKey)
-      .IncludeFlag(dfCollapsed, wbCollapseItems))
+    wbLGDIFilter(CNAM, 'Include Filter'),
+    wbLGDIFilter(DNAM, 'Exclude Filter')
   ]);
-
-
 
   (* still exists in game code, but not in Starfield.esm * )
   wbRecord(NOTE, 'Note', [
