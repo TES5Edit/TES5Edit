@@ -18954,8 +18954,8 @@ end;
     wbArray(CNAM, 'Worldspaces',
       wbStruct('Worldspace', [
         wbStruct('Position', [
-          wbDouble,
-          wbDouble
+          wbDouble('Latitude (radians)'),
+          wbDouble('Longitude (radians)')
         ]),
         wbFormIDCk('Worldspace', [WRLD])
       ])
