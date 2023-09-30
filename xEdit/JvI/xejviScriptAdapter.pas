@@ -686,6 +686,14 @@ begin
     Value := Element.EndUpdate;
 end;
 
+procedure IwbElement_GetSummary(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+    Value := Element.GetSummary;
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -2045,6 +2053,7 @@ begin
     AddFunction(cUnit, 'SetToDefault', IwbElement_SetToDefault, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'BeginUpdate', IwbElement_BeginUpdate, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EndUpdate', IwbElement_EndUpdate, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetSummary', IwbElement_GetSummary, 1, [varEmpty], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
