@@ -7956,8 +7956,9 @@ end;
             ]),
             //UniquePatternPlacementInfo_Component
              wbStruct('', [
-              wbFormIDCK('Unknown', [PNDT, NULL]),
-              wbUnknown                              //possibly a pair of doubles as Longitude and lattitude in radians
+              wbFormIDCK('Planet', [PNDT, NULL]),
+              wbDouble('Longitude (radians)'),
+              wbDouble('Latitude (radians)')
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -18954,8 +18955,8 @@ end;
     wbArray(CNAM, 'Worldspaces',
       wbStruct('Worldspace', [
         wbStruct('Position', [
-          wbDouble,
-          wbDouble
+          wbDouble('Latitude (radians)'),
+          wbDouble('Longitude (radians)')
         ]),
         wbFormIDCk('Worldspace', [WRLD])
       ])
