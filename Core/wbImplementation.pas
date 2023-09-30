@@ -21456,7 +21456,29 @@ end;
 
 function TwbDataContainer.GetResolvedValueDef: IwbValueDef;
 begin
-  Result := Resolve(GetValueDef, GetDataBasePtr, dcDataEndPtr, Self);
+  var lValueDef := GetValueDef;
+  Exit(Resolve(lValueDef, GetDataBasePtr, dcDataEndPtr, Self));
+{
+  if Supports(lValueDef, IwbResolvableDef) then
+    Exit(Resolve(lValueDef, GetDataBasePtr, dcDataEndPtr, Self));
+
+  var lSortOrder := GetSortOrder;
+  if lSortOrder >= 0 then begin
+    var lContainer: IwbContainerElementRef;
+    if Supports(GetContainer, IwbContainerElementRef, lContainer) then begin
+      var lContainerValueDef := lContainer.ResolvedValueDef;
+      var lStructDef: IwbStructDef;
+      if Supports(lContainerValueDef, IwbStructDef, lStructDef) then begin
+        if lSortOrder <= lStructDef.MemberCount then begin
+          var lMemberValueDef := lStructDef.Members[lSortOrder];
+          if Supports(lMemberValueDef, IwbResolvableDef) then
+            Exit(Resolve(lMemberValueDef, GetDataBasePtr, dcDataEndPtr, Self));
+        end;
+      end;
+    end;
+  end;
+
+  Result := lValueDef;}
 end;
 
 function TwbDataContainer.GetDataPrefixSize: Integer;

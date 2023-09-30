@@ -899,6 +899,7 @@ type
   private
     NewMessages: TStringList;
     ActiveIndex: TColumnIndex;
+    ActiveRecordLock: Integer;
     ActiveRecord: IwbMainRecord;
     ActiveMaster: IwbMainRecord;
     ActiveRecords: TDynViewNodeDatas;
@@ -16095,6 +16096,7 @@ begin
   if (ActiveRecord = aMainRecord) and (Assigned(ActiveRecord) = (Length(ActiveRecords) > 0)) then
     Exit;
 
+  Inc(ActiveRecordLock);
   lvReferencedBy.Items.BeginUpdate;
   try
     vstView.BeginUpdate;
@@ -16229,6 +16231,7 @@ begin
       tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Tag]);
   finally
     lvReferencedBy.Items.EndUpdate;
+    Dec(ActiveRecordLock);
   end;
 
   if Assigned(pgMain.ActivePage) then
@@ -19361,7 +19364,7 @@ begin
     SetActiveRecord(MainRecord)
   else if Supports(aElement, IwbDataContainer) then
     SetActiveContainer(aElement as IwbDataContainer)
-  else
+  else if ActiveRecordLock < 1 then
     ClearActiveContainer;
 end;
 
