@@ -8054,7 +8054,7 @@ end;
               wbInteger('Unknown', itS32),
               wbInteger('Unknown', itS32),
               wbInteger('Unknown', itS32),
-              wbUnknown(16)
+              wbUnknown
             ]),
             //UniqueOverlayList_Component
             wbStruct('', [
@@ -14398,7 +14398,49 @@ end;
 
     wbRArrayS('Face Dials',
       wbRStructSK([0], 'Face Dial', [
-         wbInteger(FMSI, 'Face Dial Index', itU32).SetRequired,
+         wbInteger(FMSI, 'Face Dial Index', itU32)
+         .SetLinksToCallbackOnValue
+         (function(const aElement: IwbElement): IwbElement
+          begin
+          var lRaceMainRecord : IwbMainRecord;
+
+             Result := nil;
+          var lContainer: IwbContainer;
+           if not Supports(aElement, IwbContainer, lContainer) then
+            Exit;
+
+          Var lFaceDialIndex := aElement.NativeValue;
+
+
+
+          var lRace := lContainer.ElementLinksTo['...\RNAM'];
+                if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
+                 Exit;
+
+          var lIsFemale := lContainer.ElementByPath['...\ACBS\Flags\Female'];
+          var lGender := 'Male';
+          if Assigned(lIsFemale) then
+            lGender := 'Female';
+          Var lRaceFaceDials := lRaceMainRecord.ElementLinksTo['Chargen and Skintones\' + lGender + '\Chargen\Face Dials'];
+
+
+          Var lRaceDialIndex :=  lRaceFaceDials.ElementID;
+
+          var i:=0;
+          for i := 0 to 100 do
+
+
+
+
+          //var RaceDailIndex := lRaceMainRecord.ElementValues['...\FDSI'];
+
+
+          //var RaceDiallRaceDialLabel := lRaceMainRecord.ElementLinksTo['..\FDSL'];
+
+          // result := RaceDial;
+          end)
+          .SetRequired
+         ,
          wbFloat(FMRS, 'Face Dial Position').SetRequired
       ], [])
       .SetSummaryMemberPrefixSuffix(0, 'Index [','], Position = ')
@@ -14428,7 +14470,7 @@ end;
     wbString(ECOL, 'Eye Color'),
     wbString(JCOL, 'Jewelry Color'),
     wbString(TETC, 'Teeth Color'),
-    wbInteger(PRON, 'Pronoun', itU8),
+    wbInteger(PRON, 'Pronoun', itU8, wbPronounEnum),
     wbStruct(ONA2, 'Race Overrides', [
       wbInteger('Flags', itU32, wbFlags([
         'Size',
