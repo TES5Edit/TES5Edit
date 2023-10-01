@@ -229,7 +229,7 @@ begin;
   end;
 end;
 
-function wbQuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
+function wbIntPrefixedStrToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   i    : Integer;
   s    : string;
@@ -7363,7 +7363,7 @@ end;
                 lMainRecord := nil;
 
               Result := wbQuestStageToStr(aInt, aElement, aType, 'Quest in Parameter #1', lMainRecord, True);
-            end, wbQuestStageToInt),
+            end, wbIntPrefixedStrToInt),
           {42 ptRace}
           wbFormIDCkNoReach('Race', [RACE]),
           {43 ptReferencableObject}
@@ -11067,7 +11067,7 @@ end;
 
               Result := wbQuestStageToStr(aInt, aElement, aType, 'Quest', lMainRecord, False);
             end,
-            wbQuestStageToInt)
+            wbIntPrefixedStrToInt)
         ]),
         wbFormIDCk('Ability', [SPEL]),
         wbStructSK([0, 1], 'Entry Point', [
@@ -14428,27 +14428,47 @@ end;
       wbFloat('Legs')
     ]),
 
-    wbRArrayS('Face Dials',
-      wbRStructSK([0], 'Face Dial', [
-        wbInteger(FMSI, 'Face Dial Index', itU32)
-        .SetLinksToCallbackOnValue(
-          function(const aElement: IwbElement): IwbElement
+    wbRArrayS('Face Dial Positions',
+      wbRStructSK([0], 'Face Dial Position', [
+        wbInteger(FMSI, 'Index', itU32,
+          function(aFaceDialIndex: Int64; const aElement: IwbElement; aType: TwbCallbackType): string
           begin
-            Result := nil;
-
             var lContainer: IwbContainer;
             if not Supports(aElement, IwbContainer, lContainer) then
               Exit;
 
-            var lFaceDialIndexValue := aElement.NativeValue;
-            if not VarIsOrdinal(lFaceDialIndexValue) then
-              Exit;
-            var lFaceDialIndex: Integer := lFaceDialIndexValue;
+            case aType of
+              ctToStr, ctToSummary, ctToEditValue: begin
+                Result := aFaceDialIndex.ToString;
+                if aType = ctToStr then
+                  Result := Result + ' <Warning: Could not resolve face dial>';
+              end;
+              ctToSortKey: begin
+                Result := IntToHex64(aFaceDialIndex, 8);
+                Exit;
+              end;
+              ctCheck: begin
+                Result := '<Warning: Could not resolve face dial>';
+              end;
+              ctEditType: begin
+                Result := 'ComboBox';
+                Exit;
+              end;
+              ctEditInfo: Result := '';
+            end;
 
             var lRace := lContainer.ElementLinksTo['...\RNAM'];
             var lRaceMainRecord : IwbMainRecord;
             if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
               Exit;
+
+            if lRaceMainRecord.Signature <> RACE then begin
+              case aType of
+                ctToStr: Result := aFaceDialIndex.ToString + ' <Warning: "' + lRaceMainRecord.ShortName + '" is not a Race record>';
+                ctCheck: Result := '<Warning: "' + lRaceMainRecord.ShortName + '" is not a Race record>';
+              end;
+              Exit;
+            end;
 
             var lIsFemale := lContainer.ElementExists['...\ACBS\Flags\Female'];
             var lGender := 'Male';
@@ -14458,30 +14478,128 @@ end;
             var lRaceFaceDials := lRaceMainRecord.ElementByPath['Chargen and Skintones\' + lGender + '\Chargen\Face Dials'];
 
             var lRaceFaceDialsContainer: IwbContainerElementRef;
-            if not Supports(lRaceFaceDials, IwbContainerElementRef, lRaceFaceDialsContainer) then
+            if not Supports(lRaceFaceDials, IwbContainerElementRef, lRaceFaceDialsContainer) then begin
+              case aType of
+                ctToStr: Result := aFaceDialIndex.ToString + ' <Warning: "' + lRaceMainRecord.ShortName + '" does not contain ' + lGender + ' Chargen Face Dials>';
+                ctCheck: Result := '<Warning: "' + lRaceMainRecord.ShortName + '" does not contain ' + lGender + ' Chargen Face Dials>';
+              end;
               Exit;
-
-            for var lRaceFaceDialsIdx := 0 to Pred(lRaceFaceDialsContainer.ElementCount) do begin
-              var lRaceFaceDial := lRaceFaceDialsContainer.Elements[lRaceFaceDialsIdx];
-
-              var lRaceFaceDialContainer: IwbContainerElementRef;
-              if not Supports(lRaceFaceDial, IwbContainerElementRef, lRaceFaceDialContainer) then
-                Continue;
-
-              var lSkinIndexValue := lRaceFaceDialContainer.ElementNativeValues[FDSI];
-              if not VarIsOrdinal(lSkinIndexValue) then
-                Continue;
-              var lSkinIndex: Integer := lSkinIndexValue;
-
-              if lSkinIndex = lFaceDialIndex then
-                Exit(lRaceFaceDial);
             end;
-          end)
+
+            var lEditInfos: TStringList := nil;
+            if aType = ctEditInfo then
+              lEditInfos := TStringList.Create;
+            try
+              for var lRaceFaceDialsIdx := 0 to Pred(lRaceFaceDialsContainer.ElementCount) do begin
+                var lRaceFaceDial := lRaceFaceDialsContainer.Elements[lRaceFaceDialsIdx];
+
+                var lRaceFaceDialContainer: IwbContainerElementRef;
+                if not Supports(lRaceFaceDial, IwbContainerElementRef, lRaceFaceDialContainer) then
+                  Continue;
+
+                var lSkinIndexValue := lRaceFaceDialContainer.ElementNativeValues[FDSI];
+                if not VarIsOrdinal(lSkinIndexValue) then
+                  Continue;
+                var lSkinIndex: Integer := lSkinIndexValue;
+
+                if (lSkinIndex = aFaceDialIndex) or Assigned(lEditInfos) then begin
+                  var lIndexString := IntToStr(lSkinIndex);
+                  while Length(lIndexString) < 3 do
+                    lIndexString := '0' + lIndexString;
+
+                  var lLabel: string;
+                  case aType of
+                    ctToSummary: lLabel := lRaceFaceDialContainer.ElementSummaries[FDSL];
+                    ctToEditValue, ctEditInfo: lLabel := lRaceFaceDialContainer.ElementValues[FDSL];
+                  else
+                    lLabel := lRaceFaceDialContainer.ElementValues[FDSL];
+                  end;
+
+                  if lLabel <> '' then
+                    lIndexString := lIndexString + ' ' + lLabel;
+
+                  if Assigned(lEditInfos) then
+                    lEditInfos.Add(lIndexString)
+                  else if lSkinIndex = aFaceDialIndex then begin
+                    case aType of
+                      ctToStr, ctToSummary, ctToEditValue: Result := lIndexString;
+                      ctCheck: Result := '';
+                    end;
+                    Exit;
+                  end;
+                end;
+              end;
+
+              case aType of
+                ctToStr, ctToSummary: begin
+                  Result := aFaceDialIndex.ToString;
+                  if aType = ctToStr then
+                    Result := Result + ' <Warning: Face Dial not found in "' + lRaceMainRecord.Name + '">';
+                end;
+                ctCheck: Result := '<Warning: Face Dial not found in "' + lRaceMainRecord.Name + '">';
+                ctEditInfo: begin
+                  lEditInfos.Sort;
+                  Result := lEditInfos.CommaText;
+                end;
+              end;
+            finally
+              FreeAndNil(lEditInfos);
+            end;
+          end,
+          wbIntPrefixedStrToInt
+        )
+          .SetLinksToCallbackOnValue(
+            function(const aElement: IwbElement): IwbElement
+            begin
+              Result := nil;
+
+              var lContainer: IwbContainer;
+              if not Supports(aElement, IwbContainer, lContainer) then
+                Exit;
+
+              var lFaceDialIndexValue := aElement.NativeValue;
+              if not VarIsOrdinal(lFaceDialIndexValue) then
+                Exit;
+              var lFaceDialIndex: Integer := lFaceDialIndexValue;
+
+              var lRace := lContainer.ElementLinksTo['...\RNAM'];
+              var lRaceMainRecord : IwbMainRecord;
+              if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
+                Exit;
+
+              var lIsFemale := lContainer.ElementExists['...\ACBS\Flags\Female'];
+              var lGender := 'Male';
+              if lIsFemale then
+                lGender := 'Female';
+
+              var lRaceFaceDials := lRaceMainRecord.ElementByPath['Chargen and Skintones\' + lGender + '\Chargen\Face Dials'];
+
+              var lRaceFaceDialsContainer: IwbContainerElementRef;
+              if not Supports(lRaceFaceDials, IwbContainerElementRef, lRaceFaceDialsContainer) then
+                Exit;
+
+              for var lRaceFaceDialsIdx := 0 to Pred(lRaceFaceDialsContainer.ElementCount) do begin
+                var lRaceFaceDial := lRaceFaceDialsContainer.Elements[lRaceFaceDialsIdx];
+
+                var lRaceFaceDialContainer: IwbContainerElementRef;
+                if not Supports(lRaceFaceDial, IwbContainerElementRef, lRaceFaceDialContainer) then
+                  Continue;
+
+                var lSkinIndexValue := lRaceFaceDialContainer.ElementNativeValues[FDSI];
+                if not VarIsOrdinal(lSkinIndexValue) then
+                  Continue;
+                var lSkinIndex: Integer := lSkinIndexValue;
+
+                if lSkinIndex = lFaceDialIndex then
+                  Exit(lRaceFaceDial);
+              end;
+            end)
           .SetRequired,
         wbFloat(FMRS, 'Face Dial Position').SetRequired
       ], [])
-      .SetSummaryMemberPrefixSuffix(0, 'Index [','], Position = ')
+      .SetSummaryMemberPrefixSuffix(0, '[',']')
       .SetSummaryKey([1])
+      .IncludeFlag(dfSummaryNoName)
       .IncludeFlag(dfCollapsed)
     ),
 
@@ -19443,7 +19561,7 @@ end;
 
             Result := wbQuestStageToStr(aInt, aElement, aType, 'Quest', lMainRecord, True);
           end,
-        wbQuestStageToInt)
+        wbIntPrefixedStrToInt)
           .SetDefaultNativeValue(-1)
           .SetRequired;
     end;
