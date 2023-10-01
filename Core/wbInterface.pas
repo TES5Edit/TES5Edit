@@ -16277,7 +16277,7 @@ begin
   end;
 
   if Assigned(ndToStr) then
-    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToEditValue);
+    ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSummary);
 
   Result := ShortenText(Result);
 

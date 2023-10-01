@@ -1955,117 +1955,6 @@ begin
   Result := PInteger(@value)^;
 end;
 
-procedure  wbCoord(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
-  begin
-    case aType of
-      ctToStr{, ctToEditValue}, ctToSummary{, ctToSortKey}: begin
-        var lVariant: Variant;
-        if Assigned(aElement) then
-          lVariant := aElement.NativeValue;
-
-        if not VarIsFloat(lVariant) then
-          Exit;
-
-         var lValue: Extended := lVariant;
-
-         var CoordType := aElement.Name;
-
-         var coord := lValue * wbRadiansToDegreesScale;
-
-
-         if CoordType = 'Longitude' then
-          while coord > 180 do
-            coord := coord - 360;
-         if CoordType = 'Longitude' then
-          while coord < -180 do
-            coord := coord + 360;
-
-
-         {if CoordType = 'Latitude' then
-          while coord > 90 do
-            coord := coord - 180;
-         if CoordType = 'Latitude' then
-          while coord < -90 do
-            coord := coord + 180;}
-
-
-        var coordDeg := Trunc(coord);
-        var coordMin := Trunc(Abs(coord - coordDeg) * 60);
-        var coordSec := Round((Abs(coord - coordDeg) * 60 - coordMin) * 60);
-        if coordSec = 60 then begin
-          coordSec := 0;
-          Inc(coordMin);
-          if coordMin = 60 then begin
-            Inc(coordDeg);
-            coordMin := 0;
-          end;
-        end;
-
-
-       if CoordType = 'Longitude' then
-          if aType = ctToSortKey then
-            aValue := IfThen(coord >= 0, '+', '-') + IntToHex(coordDeg, 2) + IntToHex(coordMin, 2) + IntToHex(coordSec, 2)
-          else
-            aValue := Format('%d°%d''%d"%s', [ Abs(coordDeg), coordMin, coordSec, IfThen(coord >= 0, 'E', 'W') ]);
-       if CoordType = 'Latitude' then
-          if aType = ctToSortKey then
-            aValue := IfThen(coord >= 0, '+', '-') + IntToHex(coordDeg, 2) + IntToHex(coordMin, 2) + IntToHex(coordSec, 2)
-          else
-            aValue := Format('%d°%d''%d"%s', [ Abs(coordDeg), coordMin, coordSec, IfThen(coord >= 0, 'N', 'S') ]);
-
-      end;
-
-
-      ctFromEditValue: begin
-        var CoordType := aElement.Name;
-
-        if not Assigned(aElement) then
-          Exit;
-
-        // Check Length
-        if Length(aValue) < 7 then
-          Exit;
-
-        // Get positions of symbols
-        var lPosDegree := Pos('°', aValue);
-        var lPosMinute := Pos('''', aValue);
-        var lPosSecond := Pos('"', aValue);
-
-        // Check Valid Symbols and Direction
-        if (lPosDegree = 0) or (lPosMinute = 0) or (lPosSecond = 0) then
-          Exit;
-
-
-        var lDirection := AnsiChar(aValue[Length(aValue)]);
-        if not (lDirection in ['E', 'W']) then
-        if not (lDirection in ['N', 'S']) then
-          Exit;
-
-
-
-        // Check Numeric Values
-        var lDeg := StrToIntDef(Copy(aValue, 1, lPosDegree - 1), -1);
-        var lMin := StrToIntDef(Copy(aValue, lPosDegree + 1, lPosMinute - lPosDegree - 1), -1);
-        var lSec := StrToIntDef(Copy(aValue, lPosMinute + 1, lPosSecond - lPosMinute - 1), -1);
-
-        if (lDeg < 0) or (lDeg > 180) or (lMin < 0) or (lMin > 59) or (lSec < 0) or (lSec > 59) then
-          Exit;
-
-        // Conversion to Decimal Degrees and Return Result
-        var lDecimalDeg := lDeg + (lMin / 60) + (lSec / 3600);
-        if lDirection = 'W' then
-          lDecimalDeg := -lDecimalDeg;
-        if lDirection = 'S' then
-          lDecimalDeg := -lDecimalDeg;
-
-        aElement.NativeValue := lDecimalDeg / wbRadiansToDegreesScale;
-        aValue := wbIgnoreStringValue;
-      end;
-    end;
-  end;
-
-
-
 {>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -7865,6 +7754,110 @@ end;
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfExcludeFromBuildRef);
 
+  var wbLonLanFunc :=
+    function(aIsLat: Boolean): TwbToStrCallback
+    begin
+      var loFull := 360;
+      if aIsLat then
+        loFull := loFull div 2;
+      var loHalf := loFull div 2;
+
+      var loNegDir: Char := 'W';
+      var loPosDir: Char := 'E';
+      if aIsLat then begin
+        loNegDir := 'S';
+        loPosDir := 'N';
+      end;
+
+      Result :=
+        procedure(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
+        begin
+          case aType of
+            ctToStr{, ctToEditValue}, ctToSummary{, ctToSortKey}: begin
+              var lVariant: Variant;
+              if Assigned(aElement) then
+                lVariant := aElement.NativeValue;
+
+              if not VarIsFloat(lVariant) then
+                Exit;
+
+              var lValue: Extended := lVariant;
+
+              var lCoord := lValue * wbRadiansToDegreesScale;
+
+              while lCoord > loHalf do
+                lCoord := lCoord - loFull;
+              while lCoord < -loHalf do
+                lCoord := lCoord + loFull;
+
+              var lCoordDeg := Trunc(lCoord);
+              var lCoordMin := Trunc(Abs(lCoord - lCoordDeg) * 60);
+              var lCoordSec := Round((Abs(lCoord - lCoordDeg) * 60 - lCoordMin) * 60);
+              if lCoordSec = 60 then begin
+                lCoordSec := 0;
+                Inc(lCoordMin);
+                if lCoordMin = 60 then begin
+                  Inc(lCoordDeg);
+                  lCoordMin := 0;
+                end;
+              end;
+
+              if aType = ctToSortKey then
+                aValue := IfThen(lCoord >= 0, '+', '-') + IntToHex(lCoordDeg, 2) + IntToHex(lCoordMin, 2) + IntToHex(lCoordSec, 2)
+              else
+                aValue := Format('%d°%d''%d"%s', [ Abs(lCoordDeg), lCoordMin, lCoordSec, IfThen(lCoord >= 0, loPosDir, loNegDir) ]);
+            end;
+            ctFromEditValue: begin
+              if not Assigned(aElement) then
+                Exit;
+
+              // Check Length
+              if Length(aValue) < 7 then
+                Exit;
+
+              // Get positions of symbols
+              var lPosDegree := Pos('°', aValue);
+              var lPosMinute := Pos('''', aValue);
+              var lPosSecond := Pos('"', aValue);
+
+              // Check Valid Symbols and Direction
+              if (lPosDegree = 0) or (lPosMinute = 0) or (lPosSecond = 0) then
+                Exit;
+
+              var lDirection := aValue[Length(aValue)];
+              if (lDirection <> loPosDir) and (lDirection <> loNegDir) then
+                Exit;
+
+              // Check Numeric Values
+              var lDeg := StrToIntDef(Copy(aValue, 1, lPosDegree - 1), -1);
+              var lMin := StrToIntDef(Copy(aValue, lPosDegree + 1, lPosMinute - lPosDegree - 1), -1);
+              var lSec := StrToIntDef(Copy(aValue, lPosMinute + 1, lPosSecond - lPosMinute - 1), -1);
+
+              if (lDeg < 0) or (lDeg >= loHalf+1) or
+                 ((lDeg = loHalf) and ( (lMin > 0) or (lSec > 0) ) ) or
+                 (lMin < 0) or (lMin > 59) or
+                 (lSec < 0) or (lSec > 59)
+              then
+                Exit;
+
+              // Conversion to Decimal Degrees and Return Result
+              var lDecimalDeg := lDeg + (lMin / 60) + (lSec / 3600);
+              if (lDirection = loNegDir) or (lDecimalDeg = 180.0)  then
+                lDecimalDeg := -lDecimalDeg;
+
+              aElement.NativeValue := lDecimalDeg / wbRadiansToDegreesScale;
+              aValue := wbIgnoreStringValue;
+            end;
+          end;
+        end;
+    end;
+
+  var wbLongitudeToStr := wbLonLanFunc(False);
+  var wbLatitudeToStr := wbLonLanFunc(True);
+
+  var wbLongitudeDouble := wbDouble('Longitude', cpNormal, True, 1, 12).SetToStr(wbLongitudeToStr);
+  var wbLatitudeDouble := wbDouble('Latitude', cpNormal, True, 1, 12).SetToStr(wbLatitudeToStr);
+
   wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
       wbString(BFCB, 'Component Type').SetFormaterOnValue(wbStringEnum([
         'BGSActivityTracker',
@@ -8069,10 +8062,16 @@ end;
             //UniquePatternPlacementInfo_Component
              wbStruct('', [
               wbFormIDCK('Planet', [PNDT, NULL]),
-              wbDouble('Longitude', cpNormal, True, 1, 12)
-                .SetToStr(wbCoord),
-              wbDouble('Latitude', cpNormal, True, 1, 12)
-                .SetToStr(wbCoord)
+              wbStruct('Position', [
+                wbLongitudeDouble,
+                wbLatitudeDouble
+              ])
+                .SetSummaryKey([1, 0])
+                .SetSummaryMemberPrefixSuffix(1, '(', '')
+                .SetSummaryMemberPrefixSuffix(0, '', ')')
+                .SetSummaryDelimiter(', ')
+                .IncludeFlag(dfSummaryMembersNoName)
+                .IncludeFlag(dfCollapsed, wbCollapsePosRot)
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -8944,11 +8943,11 @@ end;
   ], False, nil, cpNormal, False).SetIgnoreList([FLLD, XFLG]);
 
   var wbAVMDMNAMReq :=
-    wbInteger(MNAM, 'Type', itU32, wbEnum([
-      'NONE',
-      'Simple Group',
-      'Complex Group',
-      'Modulation'
+    wbInteger(MNAM, 'Type', itU32, wbEnumSummary([
+      ''              , '',
+      'Simple Group'  , 'Simple',
+      'Complex Group' , 'Complex',
+      'Modulation'    , 'Modulation'
     ])).SetRequired;
 
   {subrecords checked against Starfield.esm}
@@ -18798,6 +18797,8 @@ end;
         ])
     )
   ])
+  .SetSummaryKey([2, 4, 6])
+  .SetSummaryMemberPrefixSuffix(2, '[', ']')
   .SetBuildIndexKeys(procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys)
   begin
     var lType := aMainRecord.ElementNativeValues[MNAM];
@@ -18813,7 +18814,8 @@ end;
       2: aIndexKeys.Keys[wbIdxComplexGroup] := lName;
       3: aIndexKeys.Keys[wbIdxModulation] := lName;
     end;
-  end);
+  end)
+  .IncludeFlag(dfSummaryMembersNoName);
 
   {subrecords checked against Starfield.esm}
   wbRecord(BMOD, 'Bone Modifier', [
@@ -19044,32 +19046,50 @@ end;
     wbArray(CNAM, 'Worldspaces',
       wbStruct('Worldspace', [
         wbStruct('Position', [
-          wbDouble('Latitude', cpNormal, True, 1, 12).SetToStr(wbCoord),
-          wbDouble('Longitude', cpNormal, True, 1, 12).SetToStr(wbCoord)
-        ]),
+          wbLatitudeDouble,
+          wbLongitudeDouble
+        ])
+          .SetSummaryKey([0, 1])
+          .SetSummaryMemberPrefixSuffix(0, '(', '')
+          .SetSummaryMemberPrefixSuffix(1, '', ')')
+          .SetSummaryDelimiter(', ')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapsePosRot),
         wbFormIDCk('Worldspace', [WRLD])
       ])
     ).SetRequired,
-    wbRArray('Biomes', wbStructSK(PPBD, [0], 'Biome', [
-      wbFormIDCK('Biome', [BIOM]),
-      wbFloat('Chance'),
-      wbUnknown(4),
-      wbFormIDCk('Resource Generation', [NULL, RSGD]),
-      wbArray('Fauna', wbFormIDCk('Fauna', [NPC_]), -1),
-      wbUnknown(4),
-      wbStruct('Flora', [
-        wbInteger('Count', itU32),
-        wbInteger('Entry Size', itU32).SetDefaultNativeValue(9),
-        wbArray('Entries',
-          wbStruct('Entry', [
-            wbFormIDCk('Flora', [FLOR]),
-            wbFormIDCk('Resource', [MISC]),
-            wbInteger('Frequency', itU8)
-          ])
-        ).SetCountPath('Count')
-      ]),
-      wbUnknown()
-    ])),
+    wbRArray('Biomes',
+      wbStructSK(PPBD, [0], 'Biome', [
+        wbFormIDCK('Biome', [BIOM]),
+        wbFloat('Chance'),
+        wbUnknown(4),
+        wbFormIDCk('Resource Generation', [NULL, RSGD]).IncludeFlag(dfSummaryExcludeNULL),
+        wbArray('Fauna', wbFormIDCk('Fauna', [NPC_]), -1),
+        wbUnknown(4),
+        wbStruct('Flora', [
+          wbInteger('Count', itU32),
+          wbInteger('Entry Size', itU32).SetDefaultNativeValue(9),
+          wbArray('Entries',
+            wbStruct('Entry', [
+              wbFormIDCk('Flora', [FLOR]),
+              wbFormIDCk('Resource', [MISC]),
+              wbInteger('Frequency', itU8)
+            ])
+          )
+            .SetCountPath('Count')
+            .SetSummaryName('Flora')
+        ])
+          .SetSummaryKey([2]),
+        wbUnknown()
+      ])
+      .SetSummaryKeyOnValue([1, 3, 4, 6])
+      .SetSummaryPrefixSuffixOnValue(0, '', '')
+      .SetSummaryPrefixSuffixOnValue(1, 'Chance: ', '%')
+      .SetSummaryPrefixSuffixOnValue(3, '', '')
+      .SetSummaryPrefixSuffixOnValue(4, '', '')
+      .SetSummaryPrefixSuffixOnValue(6, '', '')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+    ),
     wbFormIDCk(FNAM, 'Surface Tree', [NULL, SFTR]).SetRequired,
     wbFloat(GNAM).SetDefaultNativeValue(1.0).SetRequired,
 
