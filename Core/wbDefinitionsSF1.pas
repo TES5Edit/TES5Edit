@@ -14430,50 +14430,55 @@ end;
 
     wbRArrayS('Face Dials',
       wbRStructSK([0], 'Face Dial', [
-         wbInteger(FMSI, 'Face Dial Index', itU32)
-         .SetLinksToCallbackOnValue
-         (function(const aElement: IwbElement): IwbElement
+        wbInteger(FMSI, 'Face Dial Index', itU32)
+        .SetLinksToCallbackOnValue(
+          function(const aElement: IwbElement): IwbElement
           begin
-          var lRaceMainRecord : IwbMainRecord;
+            Result := nil;
 
-             Result := nil;
-          var lContainer: IwbContainer;
-           if not Supports(aElement, IwbContainer, lContainer) then
-            Exit;
+            var lContainer: IwbContainer;
+            if not Supports(aElement, IwbContainer, lContainer) then
+              Exit;
 
-          Var lFaceDialIndex := aElement.NativeValue;
+            var lFaceDialIndexValue := aElement.NativeValue;
+            if not VarIsOrdinal(lFaceDialIndexValue) then
+              Exit;
+            var lFaceDialIndex: Integer := lFaceDialIndexValue;
 
+            var lRace := lContainer.ElementLinksTo['...\RNAM'];
+            var lRaceMainRecord : IwbMainRecord;
+            if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
+              Exit;
 
+            var lIsFemale := lContainer.ElementExists['...\ACBS\Flags\Female'];
+            var lGender := 'Male';
+            if lIsFemale then
+              lGender := 'Female';
 
-          var lRace := lContainer.ElementLinksTo['...\RNAM'];
-                if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
-                 Exit;
+            var lRaceFaceDials := lRaceMainRecord.ElementByPath['Chargen and Skintones\' + lGender + '\Chargen\Face Dials'];
 
-          var lIsFemale := lContainer.ElementByPath['...\ACBS\Flags\Female'];
-          var lGender := 'Male';
-          if Assigned(lIsFemale) then
-            lGender := 'Female';
-          Var lRaceFaceDials := lRaceMainRecord.ElementLinksTo['Chargen and Skintones\' + lGender + '\Chargen\Face Dials'];
+            var lRaceFaceDialsContainer: IwbContainerElementRef;
+            if not Supports(lRaceFaceDials, IwbContainerElementRef, lRaceFaceDialsContainer) then
+              Exit;
 
+            for var lRaceFaceDialsIdx := 0 to Pred(lRaceFaceDialsContainer.ElementCount) do begin
+              var lRaceFaceDial := lRaceFaceDialsContainer.Elements[lRaceFaceDialsIdx];
 
-          Var lRaceDialIndex :=  lRaceFaceDials.ElementID;
+              var lRaceFaceDialContainer: IwbContainerElementRef;
+              if not Supports(lRaceFaceDial, IwbContainerElementRef, lRaceFaceDialContainer) then
+                Continue;
 
-          var i:=0;
-          for i := 0 to 100 do
+              var lSkinIndexValue := lRaceFaceDialContainer.ElementNativeValues[FDSI];
+              if not VarIsOrdinal(lSkinIndexValue) then
+                Continue;
+              var lSkinIndex: Integer := lSkinIndexValue;
 
-
-
-
-          //var RaceDailIndex := lRaceMainRecord.ElementValues['...\FDSI'];
-
-
-          //var RaceDiallRaceDialLabel := lRaceMainRecord.ElementLinksTo['..\FDSL'];
-
-          // result := RaceDial;
+              if lSkinIndex = lFaceDialIndex then
+                Exit(lRaceFaceDial);
+            end;
           end)
-          .SetRequired
-         ,
-         wbFloat(FMRS, 'Face Dial Position').SetRequired
+          .SetRequired,
+        wbFloat(FMRS, 'Face Dial Position').SetRequired
       ], [])
       .SetSummaryMemberPrefixSuffix(0, 'Index [','], Position = ')
       .SetSummaryKey([1])
