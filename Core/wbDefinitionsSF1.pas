@@ -847,6 +847,39 @@ begin
   Result := wbAliasLinksTo(lAlias, Container.ElementByName['FormID']);
 end;
 
+function wbQuestAliasExternalAliasLinksTo(const aElement: IwbElement): IwbElement;
+var
+  Container  : IwbContainer;
+begin
+  Result := nil;
+
+  if not wbResolveAlias then
+    Exit;
+
+  Container := aElement.Container;
+
+  var lAlias := aElement.NativeValue;
+  if not VarIsOrdinal(lAlias) then
+    Exit;
+
+  Result := wbAliasLinksTo(lAlias, Container.ElementBySignature[ALEQ]);
+end;
+
+function wbSameQuestAliasLinksTo(const aElement: IwbElement): IwbElement;
+var
+  Container  : IwbContainerElementRef;
+begin
+  Result := nil;
+
+  if not wbResolveAlias then
+    Exit;
+
+  var lAlias := aElement.NativeValue;
+  if not VarIsOrdinal(lAlias) then
+    Exit;
+
+  Result := wbAliasLinksTo(lAlias, aElement.ContainingMainRecord);
+end;
 
 function wbPackageLocationAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -15006,17 +15039,20 @@ end;
         $0002, '2',
         $0003, '3'
       ])).SetDefaultNativeValue(1),
-      wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
+      wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias)
+        .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
 
       wbRUnion('Alias Type', [
       {0} wbRStruct('Closest To Alias', [
             wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo)
           ], []),
       {1} wbRStruct('Forced Reference', [
             wbFormIDCk(ALFR, 'Forced Reference', [REFR, ACHR, PLYR])
           ], []),
       {2} wbRStruct('Location Alias Reference', [
-            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
             wbFormIDCk(KNAM, 'Keyword', [KYWD]),
             wbFormIDCk(ALRT, 'Ref Type', [LCRT]).SetRequired
           ], []),
@@ -15027,7 +15063,8 @@ end;
       {4} wbRStruct('Create Reference to Object', [
             wbFormIDCk(ALCO, 'Object', [ACTI,ARMO,BOOK,CELL,CONT,DOOR,FLOR,FURN,GBFM,IDLM,KEYM,LVLI,LVSC,MISC,NPC_,PKIN,SOUN,STAT,WEAP]), // yee haw
             wbStruct(ALCA, 'Alias', [
-              wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias),
+              wbInteger('Alias', itS16, wbQuestAliasToStr, wbStrToAlias)
+                .SetLinksToCallback(wbSameQuestAliasLinksTo),
               wbInteger('Create', itU16, wbEnum([] ,[
                 $0000, 'At',
                 $8000, 'In'
@@ -15043,7 +15080,9 @@ end;
           ], []),
       {5} wbRStruct('External Alias Reference', [
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
-            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias).SetRequired
+            wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbQuestAliasExternalAliasLinksTo)
+              .SetRequired
           ], []),
       {6} wbRStruct('Unique Actor', [
             wbFormIDCk(ALUA, 'Unique Actor', [NPC_])
@@ -15052,7 +15091,8 @@ end;
             wbFormIDCk(ALUB, 'Unique Base Form', [GBFM])
           ], []),
       {7} wbRStruct('Find Matching Reference Near Alias', [
-            wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
             wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked Form',
               'Linked Ref',
@@ -15066,8 +15106,10 @@ end;
             wbInteger(ALCS, 'Ref Collection', itS32, wbQuestAliasToStr, wbStrToAlias)
           ], []),
       {9} wbRStruct('Create Object Template', [
-            wbInteger(ALCM, 'Template Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALCM, 'Template Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
             wbInteger(ALCA, 'Target Override Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo)
           ], [])
       ], []).IncludeFlag(dfMustBeUnion),
 
@@ -15083,6 +15125,7 @@ end;
       wbArray(ALLA, 'Linked Aliases', wbStruct('Linked Alias', [
         wbFormIDCk('Keyword', [KYWD, NULL]),
         wbInteger('Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+          .SetLinksToCallback(wbSameQuestAliasLinksTo)
       ])),
       wbFormIDCk(ALDN, 'Display Name', [MESG]),
       wbFormIDCk(ALDI, 'Death Item', [LVLI]),
@@ -15103,14 +15146,16 @@ end;
       wbQUSTAliasFlags,
       wbUnknown(ALFG, 4),
 
-      wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
+      wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias)
+        .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
 
       wbRUnion('Alias Type', [
       {1} wbRStruct('Specific Location', [
             wbFormIDCk(ALFL, 'Specific Location', [LCTN])
           ], []),
       {2} wbRStruct('Reference Alias Location', [
-            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+            wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
             wbFormIDCk(KNAM, 'Keyword', [KYWD])
           ], []),
       {3} wbRStruct('Find Matching Location From Event', [
@@ -15120,6 +15165,7 @@ end;
       {5} wbRStruct('External Alias Location', [
             wbFormIDCk(ALEQ, 'Quest', [QUST]),
             wbInteger(ALEA, 'Alias', itS32, wbQuestExternalAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbQuestAliasExternalAliasLinksTo)
           ], [])
       ], []).IncludeFlag(dfMustBeUnion),
 
@@ -15131,7 +15177,8 @@ end;
         wbFormIDCk(LNAM, 'PCM Type Keyword', [KYWD])
       ], []),
 
-      wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
+      wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
+        .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
 
       wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
       wbInteger(ALSY, 'System Location Alias ID', itS32),        // need a new alias to str routine for this
