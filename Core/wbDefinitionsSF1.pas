@@ -1955,6 +1955,117 @@ begin
   Result := PInteger(@value)^;
 end;
 
+procedure  wbCoord(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+  begin
+    case aType of
+      ctToStr{, ctToEditValue}, ctToSummary{, ctToSortKey}: begin
+        var lVariant: Variant;
+        if Assigned(aElement) then
+          lVariant := aElement.NativeValue;
+
+        if not VarIsFloat(lVariant) then
+          Exit;
+
+         var lValue: Extended := lVariant;
+
+         var CoordType := aElement.Name;
+
+         var coord := lValue * wbRadiansToDegreesScale;
+
+
+         if CoordType = 'Longitude' then
+          while coord > 180 do
+            coord := coord - 360;
+         if CoordType = 'Longitude' then
+          while coord < -180 do
+            coord := coord + 360;
+
+
+         {if CoordType = 'Latitude' then
+          while coord > 90 do
+            coord := coord - 180;
+         if CoordType = 'Latitude' then
+          while coord < -90 do
+            coord := coord + 180;}
+
+
+        var coordDeg := Trunc(coord);
+        var coordMin := Trunc(Abs(coord - coordDeg) * 60);
+        var coordSec := Round((Abs(coord - coordDeg) * 60 - coordMin) * 60);
+        if coordSec = 60 then begin
+          coordSec := 0;
+          Inc(coordMin);
+          if coordMin = 60 then begin
+            Inc(coordDeg);
+            coordMin := 0;
+          end;
+        end;
+
+
+       if CoordType = 'Longitude' then
+          if aType = ctToSortKey then
+            aValue := IfThen(coord >= 0, '+', '-') + IntToHex(coordDeg, 2) + IntToHex(coordMin, 2) + IntToHex(coordSec, 2)
+          else
+            aValue := Format('%d°%d''%d"%s', [ Abs(coordDeg), coordMin, coordSec, IfThen(coord >= 0, 'E', 'W') ]);
+       if CoordType = 'Latitude' then
+          if aType = ctToSortKey then
+            aValue := IfThen(coord >= 0, '+', '-') + IntToHex(coordDeg, 2) + IntToHex(coordMin, 2) + IntToHex(coordSec, 2)
+          else
+            aValue := Format('%d°%d''%d"%s', [ Abs(coordDeg), coordMin, coordSec, IfThen(coord >= 0, 'N', 'S') ]);
+
+      end;
+
+
+      ctFromEditValue: begin
+        var CoordType := aElement.Name;
+
+        if not Assigned(aElement) then
+          Exit;
+
+        // Check Length
+        if Length(aValue) < 7 then
+          Exit;
+
+        // Get positions of symbols
+        var lPosDegree := Pos('°', aValue);
+        var lPosMinute := Pos('''', aValue);
+        var lPosSecond := Pos('"', aValue);
+
+        // Check Valid Symbols and Direction
+        if (lPosDegree = 0) or (lPosMinute = 0) or (lPosSecond = 0) then
+          Exit;
+
+
+        var lDirection := AnsiChar(aValue[Length(aValue)]);
+        if not (lDirection in ['E', 'W']) then
+        if not (lDirection in ['N', 'S']) then
+          Exit;
+
+
+
+        // Check Numeric Values
+        var lDeg := StrToIntDef(Copy(aValue, 1, lPosDegree - 1), -1);
+        var lMin := StrToIntDef(Copy(aValue, lPosDegree + 1, lPosMinute - lPosDegree - 1), -1);
+        var lSec := StrToIntDef(Copy(aValue, lPosMinute + 1, lPosSecond - lPosMinute - 1), -1);
+
+        if (lDeg < 0) or (lDeg > 180) or (lMin < 0) or (lMin > 59) or (lSec < 0) or (lSec > 59) then
+          Exit;
+
+        // Conversion to Decimal Degrees and Return Result
+        var lDecimalDeg := lDeg + (lMin / 60) + (lSec / 3600);
+        if lDirection = 'W' then
+          lDecimalDeg := -lDecimalDeg;
+        if lDirection = 'S' then
+          lDecimalDeg := -lDecimalDeg;
+
+        aElement.NativeValue := lDecimalDeg / wbRadiansToDegreesScale;
+        aValue := wbIgnoreStringValue;
+      end;
+    end;
+  end;
+
+
+
 {>>> For VMAD <<<}
 function wbScriptPropertyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -3526,11 +3637,11 @@ begin
     
   PropName :=  MainRecord.Signature;
    
-        if PropName = 'WEAP' then Result := 1 else 
-        if PropName = 'ARMO' then Result := 2 else 
+        if PropName = 'WEAP' then Result := 1 else
+        if PropName = 'ARMO' then Result := 2 else
         if PropName = 'NPC_' then Result := 3 
         else Result := 0;
-   
+
 end;
 
 
@@ -7959,156 +8070,9 @@ end;
              wbStruct('', [
               wbFormIDCK('Planet', [PNDT, NULL]),
               wbDouble('Longitude', cpNormal, True, 1, 12)
-                .SetToStr(procedure(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
-                  begin
-                    case aType of
-                      ctToStr{, ctToEditValue}, ctToSummary{, ctToSortKey}: begin
-                        var lVariant: Variant;
-                        if Assigned(aElement) then
-                          lVariant := aElement.NativeValue;
-
-                        if not VarIsFloat(lVariant) then
-                          Exit;
-
-                        var lValue: Extended := lVariant;
-
-                        var lon := lValue * wbRadiansToDegreesScale;
-                        while lon > 180 do
-                          lon := lon - 360;
-                        while lon < -180 do
-                          lon := lon + 360;
-
-                        var lonDeg := Trunc(lon);
-                        var lonMin := Trunc(Abs(lon - lonDeg) * 60);
-                        var lonSec := Round((Abs(lon - lonDeg) * 60 - lonMin) * 60);
-                        if lonSec = 60 then begin
-                          lonSec := 0;
-                          Inc(lonMin);
-                          if lonMin = 60 then begin
-                            Inc(lonDeg);
-                            lonMin := 0;
-                          end;
-                        end;
-
-                        if aType = ctToSortKey then
-                          aValue := IfThen(lon >= 0, '+', '-') + IntToHex(lonDeg, 2) + IntToHex(lonMin, 2) + IntToHex(lonSec, 2)
-                        else
-                          aValue := Format('%d°%d''%d"%s', [ Abs(lonDeg), lonMin, lonSec, IfThen(lon >= 0, 'E', 'W') ]);
-                      end;
-                      ctFromEditValue: begin
-                        if not Assigned(aElement) then
-                          Exit;
-
-                        // Check Length
-                        if Length(aValue) < 7 then
-                          Exit;
-
-                        // Get positions of symbols
-                        var lPosDegree := Pos('°', aValue);
-                        var lPosMinute := Pos('''', aValue);
-                        var lPosSecond := Pos('"', aValue);
-
-                        // Check Valid Symbols and Direction
-                        if (lPosDegree = 0) or (lPosMinute = 0) or (lPosSecond = 0) then
-                          Exit;
-
-                        var lDirection := AnsiChar(aValue[Length(aValue)]);
-                        if not (lDirection in ['E', 'W']) then
-                          Exit;
-
-                        // Check Numeric Values
-                        var lDeg := StrToIntDef(Copy(aValue, 1, lPosDegree - 1), -1);
-                        var lMin := StrToIntDef(Copy(aValue, lPosDegree + 1, lPosMinute - lPosDegree - 1), -1);
-                        var lSec := StrToIntDef(Copy(aValue, lPosMinute + 1, lPosSecond - lPosMinute - 1), -1);
-
-                        if (lDeg < 0) or (lDeg > 180) or (lMin < 0) or (lMin > 59) or (lSec < 0) or (lSec > 59) then
-                          Exit;
-
-                        // Conversion to Decimal Degrees and Return Result
-                        var lDecimalDeg := lDeg + (lMin / 60) + (lSec / 3600);
-                        if lDirection = 'W' then
-                          lDecimalDeg := -lDecimalDeg;
-
-                        aElement.NativeValue := lDecimalDeg / wbRadiansToDegreesScale;
-                        aValue := wbIgnoreStringValue;
-                      end;
-                    end;
-                  end),
+                .SetToStr(wbCoord),
               wbDouble('Latitude', cpNormal, True, 1, 12)
-                .SetToStr(procedure(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
-                  begin
-                    case aType of
-                      ctToStr{, ctToEditValue}, ctToSummary{, ctToSortKey}: begin
-                        var lVariant: Variant;
-                        if Assigned(aElement) then
-                          lVariant := aElement.NativeValue;
-
-                        if not VarIsFloat(lVariant) then
-                          Exit;
-
-                        var lValue: Extended := lVariant;
-
-                        var lat := lValue * wbRadiansToDegreesScale;
-                        while lat > 90 do
-                          lat := lat - 180;
-                        while lat < -90 do
-                          lat := lat + 180;
-
-                        var latDeg := Trunc(lat);
-                        var latMin := Trunc(Abs(lat - latDeg) * 60);
-                        var latSec := Round((Abs(lat - latDeg) * 60 - latMin) * 60);
-                        if latSec = 60 then begin
-                          latSec := 0;
-                          Inc(latMin);
-                          if latMin = 60 then begin
-                            Inc(latDeg);
-                            latMin := 0;
-                          end;
-                        end;
-
-                        if aType = ctToSortKey then
-                          aValue := IfThen(lat >= 0, '+', '-') + IntToHex(latDeg, 2) + IntToHex(latMin, 2) + IntToHex(latSec, 2)
-                        else
-                          aValue := Format('%d°%d''%d"%s', [ Abs(latDeg), latMin, latSec, IfThen(lat >= 0, 'N', 'S') ]);
-                      end;
-                      ctFromEditValue: begin
-                        if not Assigned(aElement) then
-                          Exit;
-
-                        // Check Length
-                        if Length(aValue) < 7 then
-                          Exit;
-
-                        // Get positions of symbols
-                        var lPosDegree := Pos('°', aValue);
-                        var lPosMinute := Pos('''', aValue);
-                        var lPosSecond := Pos('"', aValue);
-
-                        // Check Valid Symbols and Direction
-                        if (lPosDegree = 0) or (lPosMinute = 0) or (lPosSecond = 0) then
-                          Exit;
-
-                        var lDirection := AnsiChar(aValue[Length(aValue)]);
-                        if not (lDirection in ['N', 'S']) then
-                          Exit;
-
-                        // Check Numeric Values
-                        var lDeg := StrToIntDef(Copy(aValue, 1, lPosDegree - 1), -1);
-                        var lMin := StrToIntDef(Copy(aValue, lPosDegree + 1, lPosMinute - lPosDegree - 1), -1);
-                        var lSec := StrToIntDef(Copy(aValue, lPosMinute + 1, lPosSecond - lPosMinute - 1), -1);
-
-                        if (lDeg < 0) or (lDeg > 90) or (lMin < 0) or (lMin > 59) or (lSec < 0) or (lSec > 59) then
-                          Exit;
-
-                        // Conversion to Decimal Degrees and Return Result
-                        var lDecimalDeg := lDeg + (lMin / 60) + (lSec / 3600);
-                        if lDirection = 'S' then
-                          lDecimalDeg := -lDecimalDeg;
-                        aElement.NativeValue := lDecimalDeg / wbRadiansToDegreesScale;
-                        aValue := wbIgnoreStringValue;
-                      end;
-                    end;
-                  end)
+                .SetToStr(wbCoord)
             ])
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -19080,8 +19044,8 @@ end;
     wbArray(CNAM, 'Worldspaces',
       wbStruct('Worldspace', [
         wbStruct('Position', [
-          wbDouble,
-          wbDouble
+          wbDouble('Latitude', cpNormal, True, 1, 12).SetToStr(wbCoord),
+          wbDouble('Longitude', cpNormal, True, 1, 12).SetToStr(wbCoord)
         ]),
         wbFormIDCk('Worldspace', [WRLD])
       ])
