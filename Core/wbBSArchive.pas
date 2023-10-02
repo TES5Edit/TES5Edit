@@ -23,11 +23,13 @@ uses
   tfMD5;
 
 const
-  csBSAVersion = '0.9b';
+  csBSAVersion = '0.9c';
 
 type
   // per file compression options
   TPackingCompression = (pcGlobal, pcCompress, pcUncompress);
+
+  TBGSCompressionType = (ctZlib, ctLZ4Frame, ctLZ4Block);
 
   TMagic4 = array [0..3] of AnsiChar;
   PMagic4 = ^TMagic4;
@@ -288,9 +290,15 @@ type
     FileTableOffset: Int64;
   end;
 
-  TwbBSHeaderSF = packed record
+  TwbBSHeaderSFv2 = packed record
     Unknown1: Cardinal;
     Unknown2: Cardinal;
+  end;
+
+  TwbBSHeaderSFv3 = packed record
+    Unknown1: Cardinal;
+    Unknown2: Cardinal;
+    CompressionMethod: Cardinal;
   end;
 
   TwbBSTexChunkRec = record
@@ -347,6 +355,7 @@ type
     fMagic: TMagic4;
     fVersion: Cardinal;
     fCompress: Boolean;
+    fCompressionType: TBGSCompressionType;
     fShareData: Boolean;
     fMultiThreaded: Boolean;
     fDDSInfoProc: TBSFileDDSInfoProc;
@@ -358,7 +367,8 @@ type
     fFoldersTES4: array of TwbBSFolderTES4;
 
     fHeaderFO4: TwbBSHeaderFO4;
-    fHeaderSF: TwbBSHeaderSF;
+    fHeaderSFv2: TwbBSHeaderSFv2;
+    fHeaderSFv3: TwbBSHeaderSFv3;
     fFilesFO4: array of TwbBSFileFO4;
     fMaxChunkCount: Integer;
     fSingleMipChunkX: Integer;
@@ -390,6 +400,8 @@ type
     procedure PackData(aFileRecord: Pointer; const aFileName: string;
       aDataHash: TPackedDataHash; aData: PByte; aSize: Integer;
       aCompress: Boolean; aDoCompress: Boolean = False);
+    procedure CompressStream(aSrc, aDst: TStream);
+    procedure DecompressBuf(aSrc: Pointer; aSrcSize: Integer; aDst: Pointer; aDstSize: Integer);
 
   public
     constructor Create;
@@ -512,8 +524,8 @@ const
   HEADER_VERSION_FO3  = $68; // FO3, FNV, TES5
   HEADER_VERSION_SSE  = $69; // SSE
   HEADER_VERSION_FO4  = $01; // FO4
-  HEADER_VERSION_SFa  = $02; // SF
-  HEADER_VERSION_SFb  = $03; // SF?
+  HEADER_VERSION_SF2   = $02; // SF
+  HEADER_VERSION_SF3   = $03; // SF
 
   // archive flags
   ARCHIVE_PATHNAMES  = $0001; // Whether the BSA has names for paths
@@ -1071,13 +1083,13 @@ begin
   // archive version except Morrowind
   if fType <> baTES3 then begin
     fVersion := fStream.ReadCardinal;
+    fCompressionType := ctZlib; // default compression type
     case fVersion of
       HEADER_VERSION_TES4: fType := baTES4;
       HEADER_VERSION_FO3 : fType := baFO3;
       HEADER_VERSION_SSE : fType := baSSE;
       HEADER_VERSION_FO4 : fType := baFO4;
-      HEADER_VERSION_SFa : fType := baSF;
-      HEADER_VERSION_SFb : fType := baSFdds;
+      HEADER_VERSION_SF2, HEADER_VERSION_SF3 : fType := baSF;
     else
       raise Exception.Create('Unknown archive version 0x' + IntToHex(fVersion, 8));
     end;
@@ -1113,7 +1125,13 @@ begin
       fStream.ReadBuffer(fHeaderFO4, SizeOf(fHeaderFO4));
       // SF header
       if fType = baSF then
-        fStream.ReadBuffer(fHeaderSF, SizeOf(fHeaderSF));
+        if fVersion = HEADER_VERSION_SF2 then
+          fStream.ReadBuffer(fHeaderSFv2, SizeOf(fHeaderSFv2))
+        else begin
+          fStream.ReadBuffer(fHeaderSFv3, SizeOf(fHeaderSFv3));
+          if fHeaderSFv3.CompressionMethod = 3 then
+            fCompressionType := ctLZ4Block;
+        end;
 
       // read GNRL files
       if fHeaderFO4.Magic = MAGIC_GNRL then begin
@@ -1131,7 +1149,10 @@ begin
       end
       // read DX10 textures
       else if fHeaderFO4.Magic = MAGIC_DX10 then begin
-        fType := baFO4dds;
+        if fType = baFO4 then
+          fType := baFO4dds
+        else if fType = baSF then
+          fType := baSFdds;
         SetLength(fFilesFO4, fHeaderFO4.FileCount);
         for i := Low(fFilesFO4) to High(fFilesFO4) do begin
           fFilesFO4[i].NameHash := fStream.ReadCardinal;
@@ -1169,6 +1190,9 @@ begin
     //--------------------------------------------------
     // Oblivion, Fallout 3, New Vegas, Skyrim, Skyrim SE
     baTES4, baFO3, baSSE: begin
+      if fType = baSSE then
+        fCompressionType := ctLZ4Frame;
+
       // read header
       fStream.ReadBuffer(fHeaderTES4, SizeOf(fHeaderTES4));
       fStream.Position := fHeaderTES4.FoldersOffset;
@@ -1263,6 +1287,7 @@ begin
       fHeaderTES4.Flags := ARCHIVE_PATHNAMES or ARCHIVE_FILENAMES or ARCHIVE_EMBEDNAME or ARCHIVE_XMEM or ARCHIVE_UNKNOWN10;
       fHeaderTES4.FileFlags := 0;
       fHeaderTES4.FoldersOffset := SizeOf(fMagic) + SizeOf(fVersion) + SizeOf(fHeaderTES4);
+      fCompressionType := ctZlib;
     end;
     baFO3: begin
       fVersion := HEADER_VERSION_FO3;
@@ -1270,6 +1295,7 @@ begin
       fHeaderTES4.Flags := ARCHIVE_PATHNAMES or ARCHIVE_FILENAMES;
       fHeaderTES4.FileFlags := 0;
       fHeaderTES4.FoldersOffset := SizeOf(fMagic) + SizeOf(fVersion) + SizeOf(fHeaderTES4);
+      fCompressionType := ctZlib;
     end;
     baSSE: begin
       fVersion := HEADER_VERSION_SSE;
@@ -1277,26 +1303,31 @@ begin
       fHeaderTES4.Flags := ARCHIVE_PATHNAMES or ARCHIVE_FILENAMES;
       fHeaderTES4.FileFlags := 0;
       fHeaderTES4.FoldersOffset := SizeOf(fMagic) + SizeOf(fVersion) + SizeOf(fHeaderTES4);
+      fCompressionType := ctLZ4Frame;
     end;
     baFO4: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_GNRL;
       fVersion := HEADER_VERSION_FO4;
+      fCompressionType := ctZlib;
     end;
     baFO4dds: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_DX10;
       fVersion := HEADER_VERSION_FO4;
+      fCompressionType := ctZlib;
     end;
     baSF: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_GNRL;
-      fVersion := HEADER_VERSION_SFa;
+      fVersion := HEADER_VERSION_SF2;
+      fCompressionType := ctZlib;
     end;
     baSFdds: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_DX10;
-      fVersion := HEADER_VERSION_SFb;
+      fVersion := HEADER_VERSION_SF3;
+      fCompressionType := ctLZ4Block;
     end;
   else
     raise Exception.Create('Unsupported archive type');
@@ -1504,15 +1535,17 @@ begin
     end;
 
     fDataOffset := SizeOf(fMagic) + SizeOf(fVersion) + SizeOf(fHeaderFO4);
-    if fType in [baSF, baSFdds] then
-      Inc(fDataOffset, SizeOf(fHeaderSF));
+    if fType = baSF then
+      Inc(fDataOffset, SizeOf(fHeaderSFv2))
+    else if fType = baSFdds then
+      Inc(fDataOffset, SizeOf(fHeaderSFv3));
 
     // file records have fixed length in general archive
-    if fType = baFO4 then
+    if fType in [baFO4, baSF] then
       fDataOffset := fDataOffset + 36 * Length(fFilesFO4)
 
     // variable file record length depending on DDS chunks number
-    else if fType = baFO4dds then begin
+    else if fType in [baFO4dds, baSFdds] then begin
       if not Assigned(fDDSInfoProc) then
         raise Exception.Create('DDS archive requires DDS file information callback');
 
@@ -1627,9 +1660,9 @@ begin
       fStream.Write(fHeaderFO4, SizeOf(fHeaderFO4));
       // additional SF header
       if fType = baSF then begin
-        fHeaderSF.Unknown1 := 1;
-        fHeaderSF.Unknown2 := 0;
-        fStream.Write(fHeaderSF, SizeOf(fHeaderSF));
+        fHeaderSFv2.Unknown1 := 1;
+        fHeaderSFv2.Unknown2 := 0;
+        fStream.Write(fHeaderSFv2, SizeOf(fHeaderSFv2));
       end;
       // file records
       for i := Low(fFilesFO4) to High(fFilesFO4) do begin
@@ -1644,7 +1677,7 @@ begin
       end;
     end;
 
-    baFO4dds: begin
+    baFO4dds, baSFdds: begin
       for i := Low(fFilesFO4) to High(fFilesFO4) do
         if Length(fFilesFO4[i].TexChunks) = 0 then
           raise Exception.Create('Archived file has no data: ' + fFilesFO4[i].Name);
@@ -1660,10 +1693,11 @@ begin
       fStream.Write(fVersion, SizeOf(fVersion));
       fStream.Write(fHeaderFO4, SizeOf(fHeaderFO4));
       // additional SF header
-      if fType = baSF then begin
-        fHeaderSF.Unknown1 := 1;
-        fHeaderSF.Unknown2 := 0;
-        fStream.Write(fHeaderSF, SizeOf(fHeaderSF));
+      if fType = baSFdds then begin
+        fHeaderSFv3.Unknown1 := 1;
+        fHeaderSFv3.Unknown2 := 0;
+        fHeaderSFv3.CompressionMethod := 3; // lz4
+        fStream.Write(fHeaderSFv3, SizeOf(fHeaderSFv3));
       end;
       // file records
       for i := Low(fFilesFO4) to High(fFilesFO4) do begin
@@ -1742,6 +1776,32 @@ begin
     Sync.EndWrite;
 end;
 
+procedure TwbBSArchive.CompressStream(aSrc, aDst: TStream);
+begin
+  case fCompressionType of
+    ctZlib:     ZCompressStream(aSrc, aDst);
+    ctLZ4Frame: lz4CompressStream(aSrc, aDst);
+    ctLZ4Block: lz4BlockCompressStream(aSrc, aDst);
+    else
+      raise Exception.Create('Archive compression type is undefined');
+  end;
+end;
+
+procedure TwbBSArchive.DecompressBuf(aSrc: Pointer; aSrcSize: Integer; aDst: Pointer; aDstSize: Integer);
+begin
+  case fCompressionType of
+    ctZlib: try
+      DecompressToUserBuf(aSrc, aSrcSize, aDst, aDstSize);
+    except
+      // ignore zlib's Buffer error since it happens in vanilla "Fallout - Misc.bsa"
+      // Bethesda probably used old buggy zlib version when packing it
+      on E: Exception do if E.Message <> 'Buffer error' then raise;
+    end;
+    ctLZ4Frame: lz4DecompressToUserBuf(aSrc, aSrcSize, aDst, aDstSize);
+    ctLZ4Block: lz4BlockDecompressToUserBuf(aSrc, aSrcSize, aDst, aDstSize);
+  end;
+end;
+
 procedure TwbBSArchive.PackData(aFileRecord: Pointer; const aFileName: string;
   aDataHash: TPackedDataHash; aData: PByte; aSize: Integer;
   aCompress: Boolean; aDoCompress: Boolean = False);
@@ -1765,11 +1825,7 @@ begin
       try
         zStream := TBytesStream.Create;
         msData := TPreallocatedMemoryStream.Create(aData, aSize);
-
-        if fType = baSSE then
-          lz4CompressStream(msData, zStream)
-        else
-          ZCompressStream(msData, zStream);
+        CompressStream(msData, zStream);
 
         // leave as compressed if compression reduced the size
         // by at least let's say 32 bytes
@@ -1792,7 +1848,7 @@ begin
         Exit;
 
     Position := fStream.Position;
-    
+
     // embedded name for Fallout 3/NV/Skyrim/Skyrim SE
     if (fType in [baFO3, baSSE]) and (fHeaderTES4.Flags and ARCHIVE_EMBEDNAME <> 0) then
       fStream.WriteStringLen(aFileName, False);
@@ -1852,8 +1908,8 @@ begin
   if not (stWriting in fStates) then
     raise Exception.Create('Archive is not in writing mode');
 
-  // FO4 dds mipmaps have their own partial hash calculation down below
-  if fShareData and (fType <> baFO4dds) then
+  // dds mipmaps have their own partial hash calculation down below
+  if fShareData and not (fType in [baFO4dds, baSFdds]) then
     DataHash := CalcDataHash(@aData[0], Length(aData));
 
   SyncBeginWrite;
@@ -2074,15 +2130,7 @@ begin
             fStream.ReadBuffer(Buffer[0], Length(Buffer));
             SyncEndWrite;
             try
-              if fType = baSSE then
-                lz4DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result))
-              else try
-                DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
-              except
-                // ignore zlib's Buffer error since it happens in vanilla "Fallout - Misc.bsa"
-                // Bethesda probably used old buggy zlib version when packing it
-                on E: Exception do if E.Message <> 'Buffer error' then raise;
-              end;
+              DecompressBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
             finally
               SyncBeginWrite;
             end;
@@ -2104,7 +2152,7 @@ begin
           SetLength(Result, FileFO4.Size);
           SyncEndWrite;
           try
-            DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
+            DecompressBuf(@Buffer[0], Length(Buffer), @Result[0], Length(Result));
           finally
             SyncBeginWrite;
           end;
@@ -2324,7 +2372,7 @@ begin
             fStream.ReadBuffer(Buffer[0], Length(Buffer));
             SyncEndWrite;
             try
-              DecompressToUserBuf(@Buffer[0], Length(Buffer), @Result[TexSize], Size);
+              DecompressBuf(@Buffer[0], Length(Buffer), @Result[TexSize], Size);
             finally
               SyncBeginWrite;
             end;
