@@ -8197,7 +8197,7 @@ begin
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
     wbUnion(ENAM, '', wbFormVersionDecider(15, 19), [
-      wbUnknown(cpignore),
+      wbUnknown(cpIgnore),
       wbStruct('unknown', [
         wbFloat('Eye Adapt Speed'),
         wbFloat('Bloom Blur Radius'),
@@ -8212,7 +8212,6 @@ begin
         wbUnknown
       ])
     ]),
-    //wbUnknown(ENAM, cpIgnore),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Bloom Blur Radius'),
