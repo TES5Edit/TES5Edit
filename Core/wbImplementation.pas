@@ -4073,7 +4073,8 @@ begin
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
         if not wbStripEmptyMasters or (Trim(Rec.EditValue) <> '') then
-          aMasters.Add(Rec.EditValue);
+          if not wbStripMasters or (wbStripMasters and wbStripMastersFileNames.Find(Rec.EditValue, i) = False) then
+            aMasters.Add(Rec.EditValue);
       end;
   end else
     for i := Low(flMasters) to High(flMasters) do
@@ -4899,7 +4900,8 @@ begin
         if not Assigned(Rec) then
           raise Exception.CreateFmt('Unexpected error reading master list for file "%s"', [flFileName]);
         if not wbStripEmptyMasters or (Trim(Rec.EditValue) <> '') then
-          AddMaster(Rec.EditValue, False, flLoadOrder = High(Integer));
+          if not wbStripMasters or (wbStripMasters and wbStripMastersFileNames.Find(Rec.EditValue, i) = False) then
+            AddMaster(Rec.EditValue, False, flLoadOrder = High(Integer));
       end;
 
     s := Header.ElementEditValues['SNAM'].ToLower;

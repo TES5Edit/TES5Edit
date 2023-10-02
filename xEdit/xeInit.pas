@@ -1006,13 +1006,31 @@ begin
       wbAllowDirectSave := True;
 
   if FindCmdLineSwitch('IKnowWhatImDoing') then
+  begin
     wbIKnowWhatImDoing := True;
 
-  if wbIKnowWhatImDoing and FindCmdLineSwitch('AllowMasterFilesEdit') then
-    wbAllowMasterFilesEdit := True;
+    if FindCmdLineSwitch('AllowMasterFilesEdit') then
+      wbAllowMasterFilesEdit := True;
 
-  if wbIKnowWhatImDoing and FindCmdLineSwitch('StripEmptyMasters') then
-    wbStripEmptyMasters := True;
+    if FindCmdLineSwitch('StripEmptyMasters') then
+      wbStripEmptyMasters := True;
+
+    if wbFindCmdLineParam('StripMasters', s) then
+    begin
+      wbStripMasters := True;
+
+      wbStripMastersFileNames := TStringList.Create;
+      wbStripMastersFileNames.Sorted := True;
+      wbStripMastersFileNames.Duplicates := dupIgnore;
+      wbStripMastersFileNames.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
+
+      if wbStripMastersFileNames.Count < 1 then
+      begin
+        FreeAndNil(wbStripMastersFileNames);
+        wbStripMasters := False;
+      end;
+    end;
+  end;
 
   if wbToolMode = tmEdit then begin
     if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
