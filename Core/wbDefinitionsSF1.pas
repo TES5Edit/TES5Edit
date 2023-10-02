@@ -7955,7 +7955,7 @@ end;
       ])),
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #0', [
           wbString(ANAM, 'Animation Root'),
           wbString(BNAM, 'Skeleton'),
           wbString(CNAM, 'Animations'),
@@ -7963,14 +7963,14 @@ end;
           wbString(ENAM)
         ], []),
         //BGSAttachParentArray_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #1', [
           wbAPPR
         ], []),
         //BGSActivityTracker
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #2', [
           wbActivityTracker
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #3', [
           wbArray(BUO4, 'Blue Print Components',
             wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
@@ -8009,7 +8009,7 @@ end;
           wbInteger(BOID, 'Next Part ID', itU32)
         ], []),
         //BGSCrowdComponent_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #4', [
           wbFloat(CDND),
           wbUnknown(CDNS),
           wbRStructs('Unknown', 'Unknown', [
@@ -8020,11 +8020,11 @@ end;
             wbFloat(FLTV)
           ], [])
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #5', [
           wbContainerItems
         ], []),
 
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #6', [
           wbUnion(DAT2, 'Data', wbBFCDAT2Decider, [
             wbUnknown,
             //BlockHeightAdjustment_Component
@@ -8045,7 +8045,7 @@ end;
         ], []),
         //BGSStarDataComponent_Component
         //BGSOrbitedDataComponent_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #7', [
           wbUnion(DATA, 'Data', wbBFCDATADecider, [
             wbUnknown,
             //BGSStarDataComponent_Component
@@ -8111,7 +8111,7 @@ end;
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
         //BGSDisplayCase
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #8', [
           wbArray(DCSD, 'Unknown', wbStruct('Unknown', [
             wbFormIDCk('Display Filter', [FLST]),
             wbUnknown(4),
@@ -8120,15 +8120,15 @@ end;
           ])),
           wbArray(DCED, 'Unknown', wbUnknown(4))
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #9', [
           wbDest
         ], []),
         //BGSSpaceshipEquipment_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #10', [
           wbUnknown(ESSF)
         ], []),
         //BGSExternalComponentDataSource_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #11', [
           wbFormIDCk(EXDC, 'External Base Template', [NULL, GBFM, LVLB]),
           wbRStruct('External Data Sources', [
             wbInteger(EXDZ, 'Data Source Count', itU32), // count for EXCN/EXCI struct array
@@ -8146,11 +8146,11 @@ end;
           wbString(EXBS).SetRequired
         ], []),
         //BGSLinkedVoiceType_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #12', [
           wbFormIDCk(FCTF, 'Voice Type', [NULL, VTYP])
         ], []),
         //BGSContactShadowComponent_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #13', [
           wbStruct(FLCS, 'Unknown', [
             wbFloat,
             wbFloat,
@@ -8159,46 +8159,46 @@ end;
             wbFloat
           ])
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #14', [
           wbFLLD
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #15', [
           wbFTYP
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #16', [
           wbFULL
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #17', [
           wbUnknown(GNAM)
         ], []),
         //BGSSpaceshipHullCode_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #18', [
           wbLStringKC(HULL, 'Hull Code', 0, cpTranslate)
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #19', [
           wbFormIDCk(INAM, 'Add to inventory on destroy', [LVLI])
         ], []),
         //BGSObjectWindowFilter_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #20', [
           wbUnknown(INTV),
           wbString(FLTR, 'Filter')
         ], []),
         //BGSFormLinkData_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #21', [
           wbInteger(ITMC, 'Count', itU32),
           wbRArray('Linked Forms', wbRStruct('Linked Form', [
             wbFormIDCk(FLKW,'Keyword', [KYWD]),
             wbFormID(FLFM, 'Linked Form')
           ], []))
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #22', [
           wbKeywords
         ], []),
         //TESImageSpaceModifiableForm_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #23', [
           wbFormIDCk(MNAM, 'Image Space Adapter', [IMAD])
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #24', [
           wbString(MODL, 'Model'),
           wbFLLD,
           wbStruct(XMPM, 'Unknown', [
@@ -8214,52 +8214,52 @@ end;
           wbString(XMSP, 'Ring material'),
           wbString(XLMS, 'Ring id')
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #25', [
           wbOPDS
         ], []),
         //HoudiniData_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #26', [
           wbReflection(PCCC)
         ], []),
         //BGSPropertySheet_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #27', [
           wbPRPS
         ], []),
         //ParticleSystem_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #28', [
           wbReflection(PTCL)
         ], []),
         //BGSLodOwner_Component
         //BGSEffectSequenceComponent
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #29', [
           wbREFL
         ], []),
         //BGSSpaceshipAIActor_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #30', [
           wbFormIDCk(SAIA, 'Spaceship AI Actor', [NPC_])
         ], []),
         //BGSSpaceshipWeaponBindings_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #31', [
           wbStruct(SHWB, 'Ship Weapon Binding', [
             wbInteger('Weapon Slot 1', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary),
             wbInteger('Weapon Slot 2', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary),
             wbInteger('Weapon Slot 3', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary)
           ])
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #32', [
           wbUnknown(SNAM),
           wbUnknown(PNAM),
           wbFormIDCk(BNAM, 'Surface Block', [SFBK])
         ], []),
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #33', [
           wbFormIDCk(SODA, 'Spawn on destroy', sigBaseObjects)
         ], []),
         //BGSSoundTag_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #34', [
           wbSTCP
         ], []),
         //BGSStoredTraversals_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #35', [
           wbStruct(STRD, 'Stored Traversal Data', [
             wbArray('Unknown', wbTraversalData, -1)
             .IncludeFlag(dfFastAssign)
@@ -8286,7 +8286,7 @@ end;
           .IncludeFlag(dfFastAssign)
         ], []),
         //Volumes_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #36', [
           wbStruct(VLMS, 'Unknown', [
             wbArray('Unknown', wbStruct('Unknown', [
               wbInteger('Type', itU32, wbEnum([], [
@@ -8326,7 +8326,7 @@ end;
           ])
         ], []),
         //BGSPlanetContentManagerContentProperties_Component
-        wbRStruct('Component Data', [
+        wbRStruct('Component Data #37', [
           wbUnknown(ZNAM, 4),
           wbUnknown(YNAM, 1),
           wbUnknown(XNAM, 4),

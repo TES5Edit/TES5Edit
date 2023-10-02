@@ -703,6 +703,34 @@ begin
     Value := Element.GetSummary;
 end;
 
+procedure IwbElement_AssignTemplateCount(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  var elementIdx := Integer(Args.Values[1]);
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  begin
+    var templates := Element.GetAssignTemplates(elementIdx);
+    Value := Length(templates);
+  end;
+end;
+
+procedure IwbElement_AssignTemplateByIndex(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  var elementIdx := Integer(Args.Values[1]);
+  var templateIdx := Integer(Args.Values[2]);
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  begin
+    var list := TList.Create;
+    var templates := Element.GetAssignTemplates(elementIdx);
+
+    if (templateIdx >= Low(templates)) and (templateIdx <= High(templates)) then
+      Value := IInterface(templates[templateIdx]);
+  end;
+end;
+
 procedure _wbCopyElementToFile(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -2063,6 +2091,8 @@ begin
     AddFunction(cUnit, 'BeginUpdate', IwbElement_BeginUpdate, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'EndUpdate', IwbElement_EndUpdate, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetSummary', IwbElement_GetSummary, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'AssignTemplateCount', IwbElement_AssignTemplateCount, 2, [varEmpty, varInteger], varEmpty);
+    AddFunction(cUnit, 'AssignTemplateByIndex', IwbElement_AssignTemplateByIndex, 3, [varEmpty, varInteger, varInteger], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);
