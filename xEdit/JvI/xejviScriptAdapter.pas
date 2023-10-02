@@ -642,8 +642,17 @@ procedure IwbElement_ReportRequiredMasters(var Value: Variant; Args: TJvInterpre
 var
   Element: IwbElement;
 begin
-  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
-    Element.ReportRequiredMasters(TStrings(V2O(Args.Values[1])), Args.Values[2], Args.Values[3]);
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    var lStrings := TStrings(V2O(Args.Values[1]));
+    var lDict := TwbFilesDictionary.Create;
+    try
+      Element.ReportRequiredMasters(lDict, Args.Values[2], Args.Values[3]);
+      for var lFile in lDict.Keys do
+        lStrings.AddObject(lFile.FileName, Pointer(lFile));
+    finally
+      lDict.Free;
+    end;
+  end;
 end;
 
 procedure IwbElement_BuildRef(var Value: Variant; Args: TJvInterpreterArgs);

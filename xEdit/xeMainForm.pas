@@ -37,6 +37,8 @@ uses
   ShellAPI,
   IOUtils,
   Actions,
+  System.Generics.Defaults,
+  System.Generics.Collections,
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   System.Threading,
   System.SyncObjs,
@@ -1965,43 +1967,48 @@ begin
 end;
 
 function TfrmMain.AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean;
-var
-  sl                          : TStringList;
-  i, j                        : Integer;
-
 begin
   Result := True;
-  sl := TStringList.Create;
-  sl.Sorted := True;
-  sl.Duplicates := dupIgnore;
+  var lRequiredMasters := TStringList.Create;
   try
-    aSourceElement.ReportRequiredMasters(sl, aAsNew);
+    lRequiredMasters.Sorted := True;
+    lRequiredMasters.Duplicates := dupIgnore;
 
-    for i := 0 to Pred(aTargetFile.MasterCount[True]) do
-      if sl.Find(aTargetFile.Masters[i, True].FileName, j) then
-        sl.Delete(j);
-    if sl.Find(aTargetFile.FileName, j) then
-      sl.Delete(j);
+    var lDict := TwbFilesDictionary.Create;
+    try
+      aSourceElement.ReportRequiredMasters(lDict, aAsNew);
+      for var lFile in lDict.Keys do
+        lRequiredMasters.AddObject(lFile.FileName, Pointer(lFile));
+    finally
+      lDict.Free;
+    end;
 
-    if sl.Count > 0 then begin
+    var lFindIdx: Integer;
+    for var lTargetMasterIdx := 0 to Pred(aTargetFile.MasterCount[True]) do
+      if lRequiredMasters.Find(aTargetFile.Masters[lTargetMasterIdx, True].FileName, lFindIdx) then
+        lRequiredMasters.Delete(lFindIdx);
+    if lRequiredMasters.Find(aTargetFile.FileName, lFindIdx) then
+      lRequiredMasters.Delete(lFindIdx);
 
-      for i := 0 to Pred(sl.Count) do
-        if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('The required master "' + sl[i] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
+    if lRequiredMasters.Count > 0 then begin
+
+      for var lRequiredMasterIdx := 0 to Pred(lRequiredMasters.Count) do
+        if IwbFile(Pointer(lRequiredMasters.Objects[lRequiredMasterIdx])).LoadOrder >= aTargetFile.LoadOrder then
+          raise Exception.Create('The required master "' + lRequiredMasters[lRequiredMasterIdx] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
 
       Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
-        aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
+        aTargetFile.FileName + '" as masters:'#13#13 + lRequiredMasters.Text +
         #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
 
-      sl.Sorted := False;
-      sl.CustomSort(CompareLoadOrder);
+      lRequiredMasters.Sorted := False;
+      lRequiredMasters.CustomSort(CompareLoadOrder);
 
       if Result then
-        aTargetFile.AddMasters(sl);
+        aTargetFile.AddMasters(lRequiredMasters);
     end else
       Result := True;
   finally
-    sl.Free;
+    lRequiredMasters.Free;
   end;
 end;
 
@@ -2644,33 +2651,44 @@ begin
   sl.Duplicates := dupIgnore;
   try
     j := -1;
-    for i := Low(Elements) to High(Elements) do begin
-      if not Elements[i].CanCopy then begin
-        if j < 0 then begin
-          Elements := Copy(Elements);
-          j := i;
-        end;
-      end else begin
-        Elements[i].ReportRequiredMasters(sl, AsNew);
-        if DeepCopy then
-          if Supports(Elements[i], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
-            GroupRecord.ReportRequiredMasters(sl, AsNew);
-        Container := Elements[i].Container;
-        while Assigned(Container) do begin
-          Container.ReportRequiredMasters(sl, AsNew, False, True);
-          if Container.ElementType = etGroupRecord then
-            with Container as IwbGroupRecord do begin
-              MainRecord := ChildrenOf;
-              if Assigned(MainRecord) then
-                MainRecord.ReportRequiredMasters(sl, AsNew);
-            end;
 
-          Container := Container.Container;
+    begin
+      var lDict := TwbFilesDictionary.Create;
+      try
+        for i := Low(Elements) to High(Elements) do begin
+          if not Elements[i].CanCopy then begin
+            if j < 0 then begin
+              Elements := Copy(Elements);
+              j := i;
+            end;
+          end else begin
+            Elements[i].ReportRequiredMasters(lDict, AsNew);
+            if DeepCopy then
+              if Supports(Elements[i], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
+                GroupRecord.ReportRequiredMasters(lDict, AsNew);
+            Container := Elements[i].Container;
+            while Assigned(Container) do begin
+              Container.ReportRequiredMasters(lDict, AsNew, False, True);
+              if Container.ElementType = etGroupRecord then
+                with Container as IwbGroupRecord do begin
+                  MainRecord := ChildrenOf;
+                  if Assigned(MainRecord) then
+                    MainRecord.ReportRequiredMasters(lDict, AsNew);
+                end;
+
+              Container := Container.Container;
+            end;
+            if j >= 0 then begin
+              Elements[j] := Elements[i];
+              Inc(j);
+            end;
+          end;
         end;
-        if j >= 0 then begin
-          Elements[j] := Elements[i];
-          Inc(j);
-        end;
+
+        for var lFile in lDict.Keys do
+          sl.AddObject(lFile.FileName, Pointer(lFile));
+      finally
+        FreeAndNil(lDict);
       end;
     end;
 
@@ -2908,25 +2926,32 @@ begin
 
               if Assigned(TargetFile) then begin
                 sl.Clear;
-                for j := Low(Elements) to High(Elements) do begin
-                  Elements[j].ReportRequiredMasters(sl, AsNew);
-                  if DeepCopy then
-                    if Supports(Elements[j], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
-                      GroupRecord.ReportRequiredMasters(sl, AsNew);
-                  Container := Elements[j].Container;
-                  while Assigned(Container) do begin
-                    Container.ReportRequiredMasters(sl, AsNew, False, True);
-                    if Container.ElementType = etGroupRecord then
-                      with Container as IwbGroupRecord do begin
-                        MainRecord := ChildrenOf;
-                        if Assigned(MainRecord) then begin
-                          MainRecord := MainRecord.HighestOverrideVisibleForFile[TargetFile];
-                          MainRecord.ReportRequiredMasters(sl, AsNew);
+                var lDict2 := TwbFilesDictionary.Create;
+                try
+                  for j := Low(Elements) to High(Elements) do begin
+                    Elements[j].ReportRequiredMasters(lDict2, AsNew);
+                    if DeepCopy then
+                      if Supports(Elements[j], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
+                        GroupRecord.ReportRequiredMasters(lDict2, AsNew);
+                    Container := Elements[j].Container;
+                    while Assigned(Container) do begin
+                      Container.ReportRequiredMasters(lDict2, AsNew, False, True);
+                      if Container.ElementType = etGroupRecord then
+                        with Container as IwbGroupRecord do begin
+                          MainRecord := ChildrenOf;
+                          if Assigned(MainRecord) then begin
+                            MainRecord := MainRecord.HighestOverrideVisibleForFile[TargetFile];
+                            MainRecord.ReportRequiredMasters(lDict2, AsNew);
+                          end;
                         end;
-                      end;
 
-                    Container := Container.Container;
+                      Container := Container.Container;
+                    end;
                   end;
+                  for var lFile in lDict2.Keys do
+                    sl.AddObject(lFile.FileName, Pointer(lFile));
+                finally
+                  FreeAndNil(lDict2);
                 end;
               end;
 
@@ -4269,13 +4294,20 @@ begin
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    for i := Low(Elements) to High(Elements) do begin
-      Elements[i].ReportRequiredMasters(sl, False);
-      Container := Elements[i].Container;
-      while Assigned(Container) do begin
-        Container.ReportRequiredMasters(sl, False, False);
-        Container := Container.Container;
+    var lDict := TwbFilesDictionary.Create;
+    try
+      for i := Low(Elements) to High(Elements) do begin
+        Elements[i].ReportRequiredMasters(lDict, False);
+        Container := Elements[i].Container;
+        while Assigned(Container) do begin
+          Container.ReportRequiredMasters(lDict, False, False);
+          Container := Container.Container;
+        end;
       end;
+      for var lFile in lDict.Keys do
+        sl.AddObject(lFile.FileName, Pointer(lFile));
+    finally
+      FreeAndNil(lDict);
     end;
 
     if AddRequiredMasters(sl, ReferenceFile) then

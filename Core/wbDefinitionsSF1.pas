@@ -7898,6 +7898,7 @@ end;
         'BGSAnimationGraph_Component',
         'BGSAttachParentArray_Component',
         'BGSBlockCellHeighGrid_Component',
+        'SurfaceTreePatternSwapInfo_Component',
         'BGSBlockEditorMetaData_Component',
         'BGSBodyPartInfo_Component',
         'BGSContactShadowComponent_Component',
@@ -8031,7 +8032,8 @@ end;
               wbArray('Rows',
                 wbArray('Columns',
                   wbStruct('Block Height Adjustment', [
-                    wbUnknown(8)
+                    wbFloat,
+                    wbFloat
                   ]).IncludeFlag(dfCollapsed)
                 , 16).IncludeFlag(dfCollapsed)
               , 16).IncludeFlag(dfCollapsed)
@@ -14595,7 +14597,7 @@ end;
               end;
             end)
           .SetRequired,
-        wbFloat(FMRS, 'Face Dial Position').SetRequired
+        wbFloat(FMRS, 'Position').SetRequired
       ], [])
       .SetSummaryMemberPrefixSuffix(0, '[',']')
       .SetSummaryKey([1])
@@ -15563,7 +15565,7 @@ end;
       { 48} wbRACEDAT2Size,                                                     // +0x00
       { 52} wbUnknown(4),                                                       // +0x88
       { 56} wbUnknown(4),                                                       // +0x8C
-      { 60} wbFloat,                                                            // +0x20
+      { 60} wbFloat,                                                            // +0x20 must have to do with unarmed weapon
       { 64} wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),         // +0x94
       { 68} wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum),          // +0x90
       { 72} wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),           // +0x98
@@ -19305,85 +19307,95 @@ end;
     wbFormIDCk(FNAM, 'Surface Tree', [NULL, SFTR]).SetRequired,
     wbFloat(GNAM).SetDefaultNativeValue(1.0).SetRequired,
 
-    wbMarkerReq(BDST),
-    wbString(ANAM).SetRequired,
-    wbInteger(CNAM, 'Body type', itU8, wbEnum([], [
-      2, 'Planet',
-      3, 'Moon',
-      4, 'Orbital',
-      5, 'Asteroid Belt'
-    ])),
-    wbStruct(DNAM, 'Unknown', [
-      wbLenString.IncludeFlag(dfHasZeroTerminator),
-      wbInteger('Unknown', itU8)
-    ]).SetRequired,
-    wbStruct(ENAM, 'Unknown', [
-      {
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Unknown', cpNormal, False, 1, Low(Integer))
-      }
-      wbUnknown(72)
-    ]),
-    wbStruct(FNAM, 'Unknown', [
-      wbUnknown(4),
-      wbFloat('Spawn-In Projection Offset'),
-      wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
-      wbFloat('Radius in km'),
-      wbFloat('Gravity'),
-      wbUnknown(4)
-    ]),
-    wbStruct(GNAM, 'Unknown', [
-      wbInteger('Star ID', itu32),
-      wbInteger('Primary planet ID', itu32),
-      wbInteger('Planet ID', itu32)
-    ]),
-    wbStruct(HNAM, 'Unknown', [
-      wbUnknown(4),
-      wbLenString('Spectral Class').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Catalogue ID').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Life').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Magnetosphere').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Mass in kg').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Type').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Settled star').IncludeFlag(dfHasZeroTerminator), // This is "old" csv data and does not always use the correct ingame star name
-      wbLenString('Special').IncludeFlag(dfHasZeroTerminator),
-      wbDouble('Perihelion', cpNormal, False, 1, Low(Integer)),
-      wbDouble('Star Dist', cpNormal, False, 1, Low(Integer)),
-      wbFloat('Density'),
-      wbFloat('Heat'),
-      wbFloat('Hydro'),
-      wbFloat('Inner HZ'),
-      wbFloat('Outer HZ'),
-      wbFloat('Peri. Angle'),
-      wbUnknown(4),
-      wbFloat('Start angle in deg'),
-      wbFloat('Year length in days'),
-      wbInteger('Asteroids', itu32),
-      wbInteger('Geostationary', itu32, wbBoolEnum),
-      wbInteger('Random Seed', itu32),
-      wbInteger('Rings', itu32, wbBoolEnum)
-    ]),
-    wbStruct(INAM, 'Unknown', [
-      wbInteger('Atmos Handle', itu32),
-      wbFloat,
-      wbFloat,
-      wbFloat
-    ]),
-    wbUnknown(KNAM),
-    wbUnknown(NNAM),
-    wbMarkerReq(BDED),
+    wbRStruct('Body', [
+      wbMarkerReq(BDST),
+      wbString(ANAM).SetRequired,
+      wbInteger(CNAM, 'Body type', itU8, wbEnum([], [
+        2, 'Planet',
+        3, 'Moon',
+        4, 'Orbital',
+        5, 'Asteroid Belt'
+      ])),
+      wbStruct(DNAM, 'Unknown', [
+        wbLenString.IncludeFlag(dfHasZeroTerminator),
+        wbInteger('Unknown', itU8)
+      ]).SetRequired,
+      wbStruct(ENAM, 'Unknown', [
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbFloat,
+        wbUnknown(1),
+        wbUnknown(1),
+        wbUnused(6)
+      ]),
+      wbStruct(FNAM, 'Unknown', [
+        wbUnknown(4),
+        wbFloat('Spawn-In Projection Offset'),
+        wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
+        wbFloat('Radius in km'),
+        wbFloat('Gravity'),
+        wbUnknown(4)
+      ]),
+      wbStruct(GNAM, 'Unknown', [
+        wbInteger('Star ID', itu32),
+        wbInteger('Primary planet ID', itu32),
+        wbInteger('Planet ID', itu32)
+      ]),
+      wbStruct(HNAM, 'Unknown', [
+        wbUnknown(4),
+        wbLenString('Spectral Class').IncludeFlag(dfHasZeroTerminator),
+        wbLenString('Catalogue ID').IncludeFlag(dfHasZeroTerminator),
+        wbLenString('Life').IncludeFlag(dfHasZeroTerminator),
+        wbLenString('Magnetosphere').IncludeFlag(dfHasZeroTerminator),
+        wbLenString('Mass in kg').IncludeFlag(dfHasZeroTerminator),
+        wbLenString('Type').IncludeFlag(dfHasZeroTerminator),
+        wbLenString('Settled star').IncludeFlag(dfHasZeroTerminator), // This is "old" csv data and does not always use the correct ingame star name
+        wbLenString('Special').IncludeFlag(dfHasZeroTerminator),
+        wbDouble('Perihelion', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Star Dist', cpNormal, False, 1, Low(Integer)),
+        wbFloat('Density'),
+        wbFloat('Heat'),
+        wbFloat('Hydro'),
+        wbFloat('Inner HZ'),
+        wbFloat('Outer HZ'),
+        wbFloat('Peri. Angle'),
+        wbUnknown(4),
+        wbFloat('Start angle in deg'),
+        wbFloat('Year length in days'),
+        wbInteger('Asteroids', itu32),
+        wbInteger('Geostationary', itu32, wbBoolEnum),
+        wbInteger('Random Seed', itu32),
+        wbInteger('Rings', itu32, wbBoolEnum)
+      ]),
+      wbStruct(INAM, 'Unknown', [
+        wbInteger('Atmos Handle', itu32),
+        wbFloat,
+        wbFloat,
+        wbFloat
+      ]),
+      wbStruct(KNAM, 'Unknown', [
+        wbLenString,
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbUnknown(1),
+        wbUnknown(4),
+        wbUnknown(4)
+      ]),
+      wbUnknown(NNAM),
+      wbMarkerReq(BDED)
+    ], []),
 
     wbFloat(TEMP, 'Temperature in C'),
     wbFloat(DENS, 'Density'),
     wbFloat(PHLA, 'Peri angle in deg'),
-    wbUnknown(RSCS)
+    wbInteger(RSCS, 'Resource Creation Seed', itU32)
   ]);
 
   {subrecords checked against Starfield.esm}

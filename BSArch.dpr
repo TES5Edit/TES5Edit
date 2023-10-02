@@ -131,6 +131,36 @@ begin
       WriteLn(s);
     end;
 
+    baSF, baSFdds: begin
+      FileFO4 := aFileRecord;
+      s := Format('  DirHash: %s  NameHash: %s  Ext: %s', [
+        IntToHex(FileFO4.DirHash, 8),
+        IntToHex(FileFO4.NameHash, 8),
+        string(FileFO4.Ext)
+      ]);
+      if bsa.ArchiveType = baSF then
+        s := s + Format('  Unknown: 0x%s'#13#10'  Size: %d  PackedSize: %d', [
+          IntToHex(FileFO4.Unknown, 8),
+          FileFO4.Size,
+          FileFO4.PackedSize
+        ])
+      else if bsa.ArchiveType = baSFdds then begin
+        s := s + Format(#13#10'  Width: %04d  Height: %04d  CubeMap: %s  Format: %s', [
+          FileFO4.Width,
+          FileFO4.Height,
+          IfThen(FileFO4.CubeMaps and 1 <> 0, 'Yes', 'No'),
+          FileFO4.DXGIFormatName
+        ]);
+        for i := Low(FileFO4.TexChunks) to High(FileFO4.TexChunks) do
+          s := s + Format(#13#10'    MipMaps %.2d-%.2d  Size: %8d  PackedSize: %8d', [
+            FileFO4.TexChunks[i].StartMip,
+            FileFO4.TexChunks[i].EndMip,
+            FileFO4.TexChunks[i].Size,
+            FileFO4.TexChunks[i].PackedSize
+          ]);
+      end;
+      WriteLn(s);
+    end;
   end;
 
   WriteLn;
@@ -244,7 +274,9 @@ begin
   if FindCmdLineSwitch('tes5') then atype := baFO3 else
   if FindCmdLineSwitch('sse')  then atype := baSSE else
   if FindCmdLineSwitch('fo4')  then atype := baFO4 else
-  if FindCmdLineSwitch('fo4dds') then atype := baFO4dds
+  if FindCmdLineSwitch('fo4dds') then atype := baFO4dds else
+  if FindCmdLineSwitch('sf1')  then atype := baSF else
+  if FindCmdLineSwitch('sf1dds') then atype := baSFdds
   else
     raise Exception.Create('Archive type is not provided for packing!');
 
@@ -255,7 +287,7 @@ begin
     bsa.ShareData := FindCmdLineSwitch('share', s);
     bsa.Multithreaded := FindCmdLineSwitch('mt');
 
-    if atype = baFO4dds then begin
+    if atype in [baFO4dds, baSFdds] then begin
       mask := '*.dds';
       bsa.DDSInfoProc := GetDDSFileInfo;
       DDSRoot := root;

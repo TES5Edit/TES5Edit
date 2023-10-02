@@ -229,6 +229,7 @@ var
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
   wbExtendedESL                      : Boolean    = False;
+  wbAlwaysFastAssign                 : Boolean    = False;
 
   wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
@@ -990,7 +991,7 @@ type
     procedure SetLinksTo(const aElement: IwbElement);
     function GetSummaryLinksTo: IwbElement;
     function GetNoReach: Boolean;
-    procedure ReportRequiredMasters(aStrings: TStrings; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
+    procedure ReportRequiredMasters(aDict: TwbFilesDictionary; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;

@@ -168,6 +168,7 @@ begin
   case bsa.ArchiveType of
     baTES4, baFO3, baSSE: Compressed := PwbBSFileTES4(aFileRecord).Compressed(bsa);
     baFO4, baFO4dds:      Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
+    baSF, baSFdds:        Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
     else                  Compressed := False;
   end;
 
@@ -1293,6 +1294,31 @@ begin
           ]));
       end;
     end;
+    baSF, baSFdds: begin
+      FileFO4 := aFileRecord;
+      txt.Add(Format('  DirHash: %s  NameHash: %s  Ext: %s', [
+        IntToHex(FileFO4.DirHash, 8),
+        IntToHex(FileFO4.NameHash, 8),
+        string(FileFO4.Ext)
+      ]));
+      if bsa.ArchiveType = baSF then
+        txt.Add(Format('  Size: %d  PackedSize: %d', [FileFO4.Size, FileFO4.PackedSize]))
+      else if bsa.ArchiveType = baSFdds then begin
+        txt.Add(Format('  Width: %04d  Height: %04d  CubeMap: %s  Format: %s', [
+          FileFO4.Width,
+          FileFO4.Height,
+          IfThen(FileFO4.CubeMaps and 1 <> 0, 'Yes', 'No'),
+          FileFO4.DXGIFormatName.Replace('DXGI_FORMAT_', '')
+        ]));
+        for var i := Low(FileFO4.TexChunks) to High(FileFO4.TexChunks) do
+          txt.Add(Format('    MipMaps %.2d-%.2d  Size: %8d  PackedSize: %8d', [
+            FileFO4.TexChunks[i].StartMip,
+            FileFO4.TexChunks[i].EndMip,
+            FileFO4.TexChunks[i].Size,
+            FileFO4.TexChunks[i].PackedSize
+          ]));
+      end;
+    end;
   end;
   txt.Add('');
 end;
@@ -1495,7 +1521,7 @@ begin
       );
       Result := False;
     end;
-    baFO4, baFO4dds: if aSize > High(Cardinal) then begin
+    baFO4, baFO4dds, baSF, baSFdds: if aSize > High(Cardinal) then begin
       DialogMessage(
         Format('Created archive size %.2n MB is too large:'#13'%s'#13#13, [aSize / (1024*1024), aArchiveName]) +
         'The game itself has no size limit, however Creation Kit''s limit ' +
@@ -1561,7 +1587,7 @@ begin
   var pc: TPackingCompression;
   for var asset in Assets do begin
     // FO4 dds archives must be compressed or CTD
-    if asset.Compressed or (Options.ArchiveType = baFO4dds) then
+    if asset.Compressed or (Options.ArchiveType in [baFO4dds, baSFdds]) then
       pc := pcCompress
     else begin
       pc := pcUncompress;
@@ -1577,7 +1603,7 @@ begin
   try
 
   // additional preparation for FO4 dds archive
-  if Options.ArchiveType = baFO4dds then begin
+  if Options.ArchiveType in [baFO4dds, baSFdds]  then begin
 
     // caching DDS files information
     var ProcDDSInfo: TProcessProc :=
