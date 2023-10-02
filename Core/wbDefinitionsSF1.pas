@@ -14617,13 +14617,187 @@ end;
       .IncludeFlag(dfCollapsed)
     ),
 
-    wbRStructs('Face Morphs', 'Face Morph Phenotype', [
-      wbInteger(FMRI, 'Face Morph Index', itU32).SetRequired,
-      wbRStructsSK('Morph Groups', 'Morph Group', [0], [
+    wbRArrayS('Face Morphs',
+    wbRStructSK([0], 'Face Morph Phenotype', [
+      wbInteger(FMRI, 'Face Morph Index', itU32,
+      function(aFaceMorphIndex: Int64; const aElement: IwbElement; aType: TwbCallbackType): string
+          begin
+            var lContainer: IwbContainer;
+            if not Supports(aElement, IwbContainer, lContainer) then
+              Exit;
+
+            case aType of
+              ctToStr, ctToSummary, ctToEditValue: begin
+                Result := aFaceMorphIndex.ToString;
+                if aType = ctToStr then
+                  Result := Result + ' <Warning: Could not resolve face morph phenotype>';
+              end;
+              ctToSortKey: begin
+                Result := IntToHex64(aFaceMorphIndex, 8);
+                Exit;
+              end;
+              ctCheck: begin
+                Result := '<Warning: Could not resolve face morph phenotype>';
+              end;
+              ctEditType: begin
+                Result := 'ComboBox';
+                Exit;
+              end;
+              ctEditInfo: Result := '';
+            end;
+
+            var lRace := lContainer.ElementLinksTo['...\RNAM'];
+            var lRaceMainRecord : IwbMainRecord;
+            if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
+              Exit;
+
+            if lRaceMainRecord.Signature <> RACE then begin
+              case aType of
+                ctToStr: Result := aFaceMorphIndex.ToString + ' <Warning: "' + lRaceMainRecord.ShortName + '" is not a Race record>';
+                ctCheck: Result := '<Warning: "' + lRaceMainRecord.ShortName + '" is not a Race record>';
+              end;
+              Exit;
+            end;
+
+            var lIsFemale := lContainer.ElementExists['...\ACBS\Flags\Female'];
+            var lGender := 'Male';
+            if lIsFemale then
+              lGender := 'Female';
+
+            var lRaceFaceMorphs := lRaceMainRecord.ElementByPath['Chargen and Skintones\' + lGender + '\Chargen\Face Morph Phenotypes'];
+
+            var lRaceFaceMorphsContainer: IwbContainerElementRef;
+            if not Supports(lRaceFaceMorphs, IwbContainerElementRef, lRaceFaceMorphsContainer) then begin
+              case aType of
+                ctToStr: Result := aFaceMorphIndex.ToString + ' <Warning: "' + lRaceMainRecord.ShortName + '" does not contain ' + lGender + ' Chargen Face Morph Phenotype>';
+                ctCheck: Result := '<Warning: "' + lRaceMainRecord.ShortName + '" does not contain ' + lGender + ' Chargen Face Morph Phenotype>';
+              end;
+              Exit;
+            end;
+
+            var lEditInfos: TStringList := nil;
+            if aType = ctEditInfo then
+              lEditInfos := TStringList.Create;
+            try
+              for var lRaceFaceMorphIdx := 0 to Pred(lRaceFaceMorphsContainer.ElementCount) do begin
+                var lRaceFaceMorph := lRaceFaceMorphsContainer.Elements[lRaceFaceMorphIdx];
+
+                var lRaceFaceMorphContainer: IwbContainerElementRef;
+                if not Supports(lRaceFaceMorph, IwbContainerElementRef, lRaceFaceMorphContainer) then
+                  Continue;
+
+                var lMorphIndexValue := lRaceFaceMorphContainer.ElementNativeValues[FMRI];
+                if not VarIsOrdinal(lMorphIndexValue) then
+                  Continue;
+                var lMorphIndex: Integer := lMorphIndexValue;
+
+                if (lMorphIndex = aFaceMorphIndex) or Assigned(lEditInfos) then begin
+                  var lIndexString := IntToStr(lMorphIndex);
+                  while Length(lIndexString) < 3 do
+                    lIndexString := '0' + lIndexString;
+
+                  var lName: string;
+                  case aType of
+                    ctToSummary: lName := lRaceFaceMorphContainer.ElementSummaries[FMRN];
+                    ctToEditValue, ctEditInfo: lName := lRaceFaceMorphContainer.ElementValues[FMRN];
+                  else
+                    lName := lRaceFaceMorphContainer.ElementValues[FMRN];
+                  end;
+
+                  if lName <> '' then
+                    lIndexString := lIndexString + ' ' + lName;
+
+                  if Assigned(lEditInfos) then
+                    lEditInfos.Add(lIndexString)
+                  else if lMorphIndex = aFaceMorphIndex then begin
+                    case aType of
+                      ctToStr, ctToSummary, ctToEditValue: Result := lIndexString;
+                      ctCheck: Result := '';
+                    end;
+                    Exit;
+                  end;
+                end;
+              end;
+
+              case aType of
+                ctToStr, ctToSummary: begin
+                  Result := aFaceMorphIndex.ToString;
+                  if aType = ctToStr then
+                    Result := Result + ' <Warning: Face Morph Phenotype not found in "' + lRaceMainRecord.Name + '">';
+                end;
+                ctCheck: Result := '<Warning: Face Morph Phenotype not found in "' + lRaceMainRecord.Name + '">';
+                ctEditInfo: begin
+                  lEditInfos.Sort;
+                  Result := lEditInfos.CommaText;
+                end;
+              end;
+            finally
+              FreeAndNil(lEditInfos);
+            end;
+          end,
+          wbIntPrefixedStrToInt
+
+      )
+      .SetLinksToCallbackOnValue(
+            function(const aElement: IwbElement): IwbElement
+            begin
+              Result := nil;
+
+              var lContainer: IwbContainer;
+              if not Supports(aElement, IwbContainer, lContainer) then
+                Exit;
+
+              var lFaceMorphIndexValue := aElement.NativeValue;
+              if not VarIsOrdinal(lFaceMorphIndexValue) then
+                Exit;
+              var lFaceMorphIndex: Integer := lFaceMorphIndexValue;
+
+              var lRace := lContainer.ElementLinksTo['...\RNAM'];
+              var lRaceMainRecord : IwbMainRecord;
+              if not Supports(lRace, IwbMainRecord, lRaceMainRecord) then
+                Exit;
+
+              var lIsFemale := lContainer.ElementExists['...\ACBS\Flags\Female'];
+              var lGender := 'Male';
+              if lIsFemale then
+                lGender := 'Female';
+
+              var lRaceFaceMorphs := lRaceMainRecord.ElementByPath['Chargen and Skintones\' + lGender + '\Chargen\Face Morph Phenotypes'];
+
+              var lRaceFaceMorphsContainer: IwbContainerElementRef;
+              if not Supports(lRaceFaceMorphs, IwbContainerElementRef, lRaceFaceMorphsContainer) then
+                Exit;
+
+              for var lRaceFaceMorphsIdx := 0 to Pred(lRaceFaceMorphsContainer.ElementCount) do begin
+                var lRaceFaceMorph := lRaceFaceMorphsContainer.Elements[lRaceFaceMorphsIdx];
+
+                var lRaceFaceMorphContainer: IwbContainerElementRef;
+                if not Supports(lRaceFaceMorph, IwbContainerElementRef, lRaceFaceMorphContainer) then
+                  Continue;
+
+                var lMorphIndexValue := lRaceFaceMorphContainer.ElementNativeValues[FMRI];
+                if not VarIsOrdinal(lMorphIndexValue) then
+                  Continue;
+                var lMorphIndex: Integer := lMorphIndexValue;
+
+                if lMorphIndex = lFaceMorphIndex then
+                  Exit(lRaceFaceMorph);
+              end;
+            end)
+      .SetRequired,
+      wbRArrayS('Morph Groups',
+      wbRStructSK([0], 'Morph Group',  [
         wbString(FMRG, 'Morph Group').SetRequired,
         wbFloat(FMRS, 'Blend Intensity').SetRequired
       ], [])
-    ], []),
+      .SetSummaryMemberPrefixSuffix(0, '[',']')
+      .SetSummaryKey([1])
+      .IncludeFlag(dfCollapsed)
+      )
+
+    ], [])
+    .SetSummaryKey([1])
+    ),
 
     wbRStructsSK('Morph Groups', 'Morph Blend', [0], [
       wbString(BMPN, 'Blend Name').SetRequired,
