@@ -1900,6 +1900,9 @@ var
 begin
   Result := 0;
 
+  if not Assigned(aElement) then
+    Exit;
+
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etsubRecord) do
     Container := Container.Container;
@@ -1921,6 +1924,9 @@ var
   Element     : IwbElement;
 begin
   Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etsubRecord) do
@@ -1948,6 +1954,9 @@ var
   i           : integer;
 begin
   Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
@@ -2019,6 +2028,8 @@ var
   s: string;
 begin
   Result := 1;
+  if not Assigned(aElement) then
+    Exit;
   rEDID := aElement.Container.RecordBySignature[EDID];
   if not Assigned(rEDID) then
     Exit;
@@ -2059,6 +2070,8 @@ var
   eType: IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rPRKE := aElement.Container.RecordBySignature[PRKE];
   if not Assigned(rPRKE) then
     Exit;
@@ -3788,6 +3801,8 @@ var
   ctype: string;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   rANAM := aElement.Container.RecordBySignature[ANAM];
   if not Assigned(rANAM) then

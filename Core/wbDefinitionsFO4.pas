@@ -2052,6 +2052,8 @@ var
   MainRecord: IwbMainRecord;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   MainRecord := aElement.GetContainingMainRecord;
   if not Assigned(MainRecord) then
     Exit;
@@ -2173,6 +2175,8 @@ var
 begin
   Result := 0;
 
+  if not Assigned(aElement) then
+    Exit;
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etSubRecord) do
     Container := Container.Container;
@@ -2195,6 +2199,8 @@ var
 begin
   Result := 0;
 
+  if not Assigned(aElement) then
+    Exit;
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etsubRecord) do
     Container := Container.Container;
@@ -2217,6 +2223,8 @@ var
   i           : integer;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
 
@@ -2239,6 +2247,8 @@ var
   i           : int64;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
 
@@ -2295,6 +2305,8 @@ var
   s: string;
 begin
   Result := 1;
+  if not Assigned(aElement) then
+    Exit;
   rEDID := aElement.Container.RecordBySignature[EDID];
   if not Assigned(rEDID) then
     Exit;
@@ -2335,6 +2347,8 @@ var
   eType: IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rPRKE := aElement.Container.RecordBySignature[PRKE];
   if not Assigned(rPRKE) then
     Exit;
@@ -4561,6 +4575,9 @@ var
   ctype: string;
 begin
   Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
 
   rANAM := aElement.Container.RecordBySignature[ANAM];
   if not Assigned(rANAM) then

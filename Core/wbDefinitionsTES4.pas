@@ -562,6 +562,8 @@ var
   s: string;
 begin
   Result := 1;
+  if not Assigned(aElement) then
+    Exit;
   rEDID := aElement.Container.RecordBySignature[EDID];
   if Assigned(rEDID) then begin
     s := rEDID.Value;

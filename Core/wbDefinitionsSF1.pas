@@ -1629,6 +1629,10 @@ var
   MainRecord: IwbMainRecord;
 begin
   Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
   MainRecord := aElement.GetContainingMainRecord;
   if not Assigned(MainRecord) then
     Exit;
@@ -1777,6 +1781,9 @@ var
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
 
+  if not Assigned(aElement) then
+    Exit;
+
   Container := aElement.Container;
 
   Parent := Container.ElementByName['Pathing Worldspace'];
@@ -1798,6 +1805,9 @@ var
   i           : int64;
 begin
   Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
 
@@ -1855,6 +1865,9 @@ var
   s: string;
 begin
   Result := 1;
+  if not Assigned(aElement) then
+    Exit;
+
   rEDID := aElement.Container.RecordBySignature[EDID];
   if not Assigned(rEDID) then
     Exit;
@@ -1895,6 +1908,9 @@ var
   eType: IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
+
   rPRKE := aElement.Container.RecordBySignature[PRKE];
   if not Assigned(rPRKE) then
     Exit;
@@ -3822,13 +3838,6 @@ begin
       Result := wbResolveSnapTemplateNodeFromReference(lMainRecord, lNodeID, lBaseRecord, lSnapTemplate, lSnapNode);
     end;
 end;
-
-function wbReflection(aSignature: TwbSignature; const aName: string = 'Reflection'): IwbRecordMemberDef;
-begin
-  Result :=
-    wbByteArray(aSignature, aName).IncludeFlag(dfNoReport);
-end;
-
 
 {===Wwise GUIDs and SoundReference ============================================}
 var
@@ -7955,7 +7964,7 @@ end;
       ])),
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
-        wbRStruct('Component Data #0', [
+        wbRStruct('Component Data - Animation Graph', [
           wbString(ANAM, 'Animation Root'),
           wbString(BNAM, 'Skeleton'),
           wbString(CNAM, 'Animations'),
@@ -7963,14 +7972,14 @@ end;
           wbString(ENAM)
         ], []),
         //BGSAttachParentArray_Component
-        wbRStruct('Component Data #1', [
+        wbRStruct('Component Data - Attach Parent', [
           wbAPPR
         ], []),
         //BGSActivityTracker
-        wbRStruct('Component Data #2', [
+        wbRStruct('Component Data - Activity Tracker', [
           wbActivityTracker
         ], []),
-        wbRStruct('Component Data #3', [
+        wbRStruct('Component Data - Blue Print Components', [
           wbArray(BUO4, 'Blue Print Components',
             wbStruct('Item', [
               wbFormIDCk('Base Item', [GBFM]),
@@ -8009,7 +8018,7 @@ end;
           wbInteger(BOID, 'Next Part ID', itU32)
         ], []),
         //BGSCrowdComponent_Component
-        wbRStruct('Component Data #4', [
+        wbRStruct('Component Data - Crowd', [
           wbFloat(CDND),
           wbUnknown(CDNS),
           wbRStructs('Unknown', 'Unknown', [
@@ -8020,11 +8029,11 @@ end;
             wbFloat(FLTV)
           ], [])
         ], []),
-        wbRStruct('Component Data #5', [
+        wbRStruct('Component Data - Container Items', [
           wbContainerItems
         ], []),
 
-        wbRStruct('Component Data #6', [
+        wbRStruct('Component Data - DAT2', [
           wbUnion(DAT2, 'Data', wbBFCDAT2Decider, [
             wbUnknown,
             //BlockHeightAdjustment_Component
@@ -8045,7 +8054,7 @@ end;
         ], []),
         //BGSStarDataComponent_Component
         //BGSOrbitedDataComponent_Component
-        wbRStruct('Component Data #7', [
+        wbRStruct('Component Data - DATA', [
           wbUnion(DATA, 'Data', wbBFCDATADecider, [
             wbUnknown,
             //BGSStarDataComponent_Component
@@ -8111,7 +8120,7 @@ end;
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
         //BGSDisplayCase
-        wbRStruct('Component Data #8', [
+        wbRStruct('Component Data - Display Case', [
           wbArray(DCSD, 'Unknown', wbStruct('Unknown', [
             wbFormIDCk('Display Filter', [FLST]),
             wbUnknown(4),
@@ -8120,15 +8129,15 @@ end;
           ])),
           wbArray(DCED, 'Unknown', wbUnknown(4))
         ], []),
-        wbRStruct('Component Data #9', [
+        wbRStruct('Component Data - Destructible', [
           wbDest
         ], []),
         //BGSSpaceshipEquipment_Component
-        wbRStruct('Component Data #10', [
+        wbRStruct('Component Data - Spaceship Equipment', [
           wbUnknown(ESSF)
         ], []),
         //BGSExternalComponentDataSource_Component
-        wbRStruct('Component Data #11', [
+        wbRStruct('Component Data - External Data Source', [
           wbFormIDCk(EXDC, 'External Base Template', [NULL, GBFM, LVLB]),
           wbRStruct('External Data Sources', [
             wbInteger(EXDZ, 'Data Source Count', itU32), // count for EXCN/EXCI struct array
@@ -8146,11 +8155,11 @@ end;
           wbString(EXBS).SetRequired
         ], []),
         //BGSLinkedVoiceType_Component
-        wbRStruct('Component Data #12', [
+        wbRStruct('Component Data - Linked Voice Type', [
           wbFormIDCk(FCTF, 'Voice Type', [NULL, VTYP])
         ], []),
         //BGSContactShadowComponent_Component
-        wbRStruct('Component Data #13', [
+        wbRStruct('Component Data - Contact Shadow', [
           wbStruct(FLCS, 'Unknown', [
             wbFloat,
             wbFloat,
@@ -8159,46 +8168,46 @@ end;
             wbFloat
           ])
         ], []),
-        wbRStruct('Component Data #14', [
+        wbRStruct('Component Data - FLLD', [
           wbFLLD
         ], []),
-        wbRStruct('Component Data #15', [
+        wbRStruct('Component Data - FTYP', [
           wbFTYP
         ], []),
-        wbRStruct('Component Data #16', [
+        wbRStruct('Component Data - Fullname', [
           wbFULL
         ], []),
-        wbRStruct('Component Data #17', [
+        wbRStruct('Component Data - GNAM', [
           wbUnknown(GNAM)
         ], []),
         //BGSSpaceshipHullCode_Component
-        wbRStruct('Component Data #18', [
+        wbRStruct('Component Data - Spaceship Hull Code', [
           wbLStringKC(HULL, 'Hull Code', 0, cpTranslate)
         ], []),
-        wbRStruct('Component Data #19', [
+        wbRStruct('Component Data - Add to inventory on destroy', [
           wbFormIDCk(INAM, 'Add to inventory on destroy', [LVLI])
         ], []),
         //BGSObjectWindowFilter_Component
-        wbRStruct('Component Data #20', [
+        wbRStruct('Component Data - Object Window Filter', [
           wbUnknown(INTV),
           wbString(FLTR, 'Filter')
         ], []),
         //BGSFormLinkData_Component
-        wbRStruct('Component Data #21', [
+        wbRStruct('Component Data - Form Links', [
           wbInteger(ITMC, 'Count', itU32),
           wbRArray('Linked Forms', wbRStruct('Linked Form', [
             wbFormIDCk(FLKW,'Keyword', [KYWD]),
             wbFormID(FLFM, 'Linked Form')
           ], []))
         ], []),
-        wbRStruct('Component Data #22', [
+        wbRStruct('Component Data - Keywords', [
           wbKeywords
         ], []),
         //TESImageSpaceModifiableForm_Component
-        wbRStruct('Component Data #23', [
+        wbRStruct('Component Data - Image Space Adapter', [
           wbFormIDCk(MNAM, 'Image Space Adapter', [IMAD])
         ], []),
-        wbRStruct('Component Data #24', [
+        wbRStruct('Component Data - Planet Model', [
           wbString(MODL, 'Model'),
           wbFLLD,
           wbStruct(XMPM, 'Unknown', [
@@ -8214,52 +8223,52 @@ end;
           wbString(XMSP, 'Ring material'),
           wbString(XLMS, 'Ring id')
         ], []),
-        wbRStruct('Component Data #25', [
+        wbRStruct('Component Data - Object Placement Defaults', [
           wbOPDS
         ], []),
         //HoudiniData_Component
-        wbRStruct('Component Data #26', [
+        wbRStruct('Component Data - Houdini Data', [
           wbReflection(PCCC)
         ], []),
         //BGSPropertySheet_Component
-        wbRStruct('Component Data #27', [
+        wbRStruct('Component Data - Property Sheet', [
           wbPRPS
         ], []),
         //ParticleSystem_Component
-        wbRStruct('Component Data #28', [
+        wbRStruct('Component Data - Particle System', [
           wbReflection(PTCL)
         ], []),
         //BGSLodOwner_Component
         //BGSEffectSequenceComponent
-        wbRStruct('Component Data #29', [
+        wbRStruct('Component Data - Reflection', [
           wbREFL
         ], []),
         //BGSSpaceshipAIActor_Component
-        wbRStruct('Component Data #30', [
+        wbRStruct('Component Data - Spaceship AI Actor', [
           wbFormIDCk(SAIA, 'Spaceship AI Actor', [NPC_])
         ], []),
         //BGSSpaceshipWeaponBindings_Component
-        wbRStruct('Component Data #31', [
+        wbRStruct('Component Data - Spaceship Weapon Bindings', [
           wbStruct(SHWB, 'Ship Weapon Binding', [
             wbInteger('Weapon Slot 1', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary),
             wbInteger('Weapon Slot 2', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary),
             wbInteger('Weapon Slot 3', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary)
           ])
         ], []),
-        wbRStruct('Component Data #32', [
+        wbRStruct('Component Data - SNAM', [
           wbUnknown(SNAM),
           wbUnknown(PNAM),
           wbFormIDCk(BNAM, 'Surface Block', [SFBK])
         ], []),
-        wbRStruct('Component Data #33', [
+        wbRStruct('Component Data - Spawn on destroy', [
           wbFormIDCk(SODA, 'Spawn on destroy', sigBaseObjects)
         ], []),
         //BGSSoundTag_Component
-        wbRStruct('Component Data #34', [
+        wbRStruct('Component Data - Sound Tag', [
           wbSTCP
         ], []),
         //BGSStoredTraversals_Component
-        wbRStruct('Component Data #35', [
+        wbRStruct('Component Data - Stored Traversals', [
           wbStruct(STRD, 'Stored Traversal Data', [
             wbArray('Unknown', wbTraversalData, -1)
             .IncludeFlag(dfFastAssign)
@@ -8286,7 +8295,7 @@ end;
           .IncludeFlag(dfFastAssign)
         ], []),
         //Volumes_Component
-        wbRStruct('Component Data #36', [
+        wbRStruct('Component Data - Volumes', [
           wbStruct(VLMS, 'Unknown', [
             wbArray('Unknown', wbStruct('Unknown', [
               wbInteger('Type', itU32, wbEnum([], [
@@ -8326,7 +8335,7 @@ end;
           ])
         ], []),
         //BGSPlanetContentManagerContentProperties_Component
-        wbRStruct('Component Data #37', [
+        wbRStruct('Component Data - Planet Content Manager Content Properties', [
           wbUnknown(ZNAM, 4),
           wbUnknown(YNAM, 1),
           wbUnknown(XNAM, 4),
@@ -10309,7 +10318,8 @@ end;
     ]), cpNormal, True).SetDefaultEditValue('Float'),
     }
     wbFloat(FLTV, 'Value', cpNormal, True)
-  ]);
+  ])
+  .SetSummaryKey([2]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(GMST, 'Game Setting', [
@@ -10322,6 +10332,7 @@ end;
       wbInteger('Bool', itU32, wbBoolEnum)
     ], cpNormal, True)
   ])
+  .SetSummaryKey([2])
   .IncludeFlag(dfIndexEditorID);
 
   {subrecords checked against Starfield.esm}
@@ -11440,7 +11451,8 @@ end;
     ])),
     wbFloat(NAM2, 'Min'),
     wbFloat(NAM3, 'Max')
-  ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
+  ])
+  .SetSummaryKey([2]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(CAMS, 'Camera Shot', [
@@ -19498,7 +19510,7 @@ end;
     wbStruct(BNAM, 'Surface Blocks', [
       wbArray('Rows',
         wbArray('Columns',
-          wbFormIDCk('Surface Block', [SFBK])
+          wbFormIDCk('Surface Block', [SFBK]).IncludeFlag(dfUnmappedFormID)
         , 16).IncludeFlag(dfCollapsed)
       , 16)
       .IncludeFlag(dfCollapsed)
@@ -19550,8 +19562,8 @@ end;
     wbBaseFormComponents,
     wbUnknown(CNAM).SetRequired,
     wbUnknown(DNAM).SetRequired,
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]), 65536).IncludeFlag(dfCollapsed).SetRequired,
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]), 65536).IncludeFlag(dfCollapsed).SetRequired,
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID), 65536).IncludeFlag(dfCollapsed).SetRequired,
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID), 65536).IncludeFlag(dfCollapsed).SetRequired,
     wbString(NAM1, 'Filter').SetRequired
   ]);
 

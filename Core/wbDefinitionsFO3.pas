@@ -1260,6 +1260,8 @@ var
   rDATA: IwbRecord;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rDATA := aElement.Container.RecordBySignature[DATA];
   if Assigned(rDATA) then
     if rDATA.NativeValue = 3 then //Voice
@@ -1271,6 +1273,8 @@ var
   rDATA: IwbRecord;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rDATA := aElement.Container.RecordBySignature[DATA];
   if Assigned(rDATA) then
     if rDATA.NativeValue = 3 then //Voice
@@ -1456,6 +1460,8 @@ var
   s: string;
 begin
   Result := 1;
+  if not Assigned(aElement) then
+    Exit;
   rEDID := aElement.Container.RecordBySignature[EDID];
   if not Assigned(rEDID) then
     Exit;
@@ -1514,6 +1520,8 @@ var
   eType: IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rPRKE := aElement.Container.RecordBySignature[PRKE];
   if not Assigned(rPRKE) then
     Exit;

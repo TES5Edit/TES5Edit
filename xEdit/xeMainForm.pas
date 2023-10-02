@@ -19714,7 +19714,7 @@ begin
     Element := NodeDatas[Column].Element;
     if not Assigned(Element) then
       Exit;
-    if Element.Def.CanContainFormIDs then begin
+    if Element.CanContainFormIDs then begin
       Element := Element.LinksTo;
       if Supports(Element, IwbMainRecord, MainRecord) then begin
         CellText := MainRecord.EditorID;

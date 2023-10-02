@@ -391,6 +391,8 @@ type
     procedure Clear; virtual;
     procedure BeforeActualRemove; virtual;
     function CanContainFormIDs: Boolean; virtual;
+    function ContainsReflection: Boolean; virtual;
+    function ContainsUnmappedFormID: Boolean; virtual;
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; virtual;
     procedure ResetConflict; virtual;
@@ -515,6 +517,9 @@ type
 
     function _AddRef: Integer; override; stdcall;
     function _Release: Integer; override; stdcall;
+
+    function ContainsReflection: Boolean; override;
+    function ContainsUnmappedFormID: Boolean; override;
 
     {---IwbContainerElementRef---}
     function ElementAddRef: Integer; stdcall;
@@ -6022,6 +6027,44 @@ begin
         Result := Elements[i].CompareExchangeFormID(aOldFormID, aNewFormID) or Result;
   finally
     EndUpdate;
+  end;
+end;
+
+function TwbContainer.ContainsReflection: Boolean;
+begin
+  Result := inherited ContainsReflection;
+  if Result then
+    Exit;
+
+  var lDef := GetDef;
+  if not Assigned(lDef) or not (dfCanContainReflection in lDef.DefFlags) then
+    Exit;
+
+  var SelfRef := Self as IwbContainerElementRef;
+
+  for var lElementIdx := 0 to Pred(GetElementCount) do begin
+    Result := cntElements[lElementIdx].ContainsReflection;
+    if Result then
+      Exit;
+  end;
+end;
+
+function TwbContainer.ContainsUnmappedFormID: Boolean;
+begin
+  Result := inherited ContainsUnmappedFormID;
+  if Result then
+    Exit;
+
+  var lDef := GetDef;
+  if not Assigned(lDef) or not (dfCanContainUnmappedFormID in lDef.DefFlags) then
+    Exit;
+
+  var SelfRef := Self as IwbContainerElementRef;
+
+  for var lElementIdx := 0 to Pred(GetElementCount) do begin
+    Result := cntElements[lElementIdx].ContainsUnmappedFormID;
+    if Result then
+      Exit;
   end;
 end;
 
@@ -13567,7 +13610,7 @@ end;
 
 function TwbSubRecord.CanContainFormIDs: Boolean;
 begin
-  Result := Assigned(srDef) and srDef.CanContainFormIDs;
+  Result := Assigned(srDef) and (dfCanContainFormID in srDef.DefFlags);
 end;
 
 function TwbSubRecord.CanMoveElement: Boolean;
@@ -15003,6 +15046,22 @@ var
   procedure CopyMainRecord;
   begin
     Result := nil;
+
+    if aElement.ContainsReflection then begin
+      var lSourceName := aElement.FullPath;
+      var lTargetName := GetFullPath;
+      wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Reflection and can not be copied']);
+      Exit;
+    end;
+
+    if aElement.ContainsUnmappedFormID then
+      if Assigned(_File) and (_File.FileStates * [fsIsGameMaster, fsIsHardcoded] = []) then
+        if (_File.MasterCount[True] < 1) or (_File.Masters[0, True].FileStates * [fsIsGameMaster] = []) then begin
+          var lSourceName := aElement.FullPath;
+          var lTargetName := GetFullPath;
+          wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Unmapped FormID and can not be copied into a module which does not have the game master as its first master']);
+          Exit;
+        end;
 
     if aAsNew then
       FormID := _File.NewFormID
@@ -16774,6 +16833,9 @@ begin
   BeginUpdate;
   try
     try
+      if Assigned(aElement) and aElement.ContainsReflection then
+        raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+
       Result := AssignInternal(aIndex, aElement, aOnlySK);
     except
       on E: Exception do begin
@@ -16901,6 +16963,9 @@ begin
   Result := False;
   try
   {$ENDIF}
+    if Assigned(aElement) and aElement.ContainsReflection then
+      Exit(False);
+
     Result := CanAssignInternal(aIndex, aElement, aCheckDontShow);
   {$IFDEF USE_CODESITE}
   finally
@@ -16996,6 +17061,39 @@ end;
 function TwbElement.CompareExchangeFormID(aOldFormID, aNewFormID: TwbFormID): Boolean;
 begin
   Result := False;
+end;
+
+function TwbElement.ContainsReflection: Boolean;
+begin
+  Result := False;
+
+  var lDef := GetDef;
+  if not Assigned(lDef) or not (dfCanContainReflection in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if not Assigned(lValueDef) or not (dfCanContainReflection in lValueDef.DefFlags) then
+    Exit;
+
+  if lValueDef.DefType = dtReflection then
+    Exit(True);
+end;
+
+function TwbElement.ContainsUnmappedFormID: Boolean;
+begin
+  Result := False;
+
+  var lDef := GetDef;
+  if not Assigned(lDef) or not (dfCanContainUnmappedFormID in lDef.DefFlags) then
+    Exit;
+
+  var lValueDef := GetValueDef;
+  if not Assigned(lValueDef) or not (dfUnmappedFormID in lValueDef.DefFlags) then
+    Exit;
+
+  var lNativeValue := GetNativeValue;
+  if VarIsOrdinal(lNativeValue) and (lNativeValue <> 0) then
+    Result := True;
 end;
 
 function TwbElement.ContentIsAllZero: Boolean;
@@ -18514,7 +18612,7 @@ end;
 
 function TwbSubRecordArray.CanContainFormIDs: Boolean;
 begin
-  Result := arcDef.CanContainFormIDs;
+  Result := dfCanContainFormID in arcDef.DefFlags;
 end;
 
 function TwbSubRecordArray.CanMoveElement: Boolean;
@@ -19115,7 +19213,7 @@ end;
 
 function TwbSubRecordStruct.CanContainFormIDs: Boolean;
 begin
- Result := srcDef.CanContainFormIDs;
+ Result := dfCanContainFormID in srcDef.DefFlags;
 end;
 
 function TwbSubRecordStruct.CanElementReset: Boolean;
@@ -21834,7 +21932,7 @@ end;
 
 function TwbValueBase.CanContainFormIDs: Boolean;
 begin
-  Result := vbValueDef.CanContainFormIDs;
+  Result := dfCanContainFormID in vbValueDef.DefFlags;
 end;
 
 function TwbValueBase.CanElementReset: Boolean;

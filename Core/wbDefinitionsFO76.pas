@@ -2751,6 +2751,8 @@ var
   Element     : IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etSubRecord) do
@@ -2773,6 +2775,8 @@ var
   Element     : IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etsubRecord) do
@@ -2796,6 +2800,8 @@ var
   i           : integer;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
 
@@ -2818,6 +2824,9 @@ var
   i           : int64;
 begin
   Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
 
   Container := aElement.Container;
 
@@ -2874,6 +2883,8 @@ var
   s: string;
 begin
   Result := 1;
+  if not Assigned(aElement) then
+    Exit;
   rEDID := aElement.Container.RecordBySignature[EDID];
   if not Assigned(rEDID) then
     Exit;
@@ -2915,6 +2926,8 @@ var
   eType: IwbElement;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rPRKE := aElement.Container.RecordBySignature[PRKE];
   if not Assigned(rPRKE) then
     Exit;
@@ -2931,6 +2944,8 @@ var
   rDATA: IwbRecord;
 begin
   Result := 2;
+  if not Assigned(aElement) then
+    Exit;
   rDATA := aElement.Container.RecordBySignature[DATA];
   if Assigned(rDATA) then begin
     if rDATA.DataSize = 3 then begin
@@ -2962,6 +2977,8 @@ end;
 function wbEPFDAVDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
     Result := 0;
+  if not Assigned(aElement) then
+    Exit;
     if aElement.DataSize < 8 then Result := 1;
 end;
 
@@ -5417,6 +5434,8 @@ var
   ctype: string;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
 
   rANAM := aElement.Container.RecordBySignature[ANAM];
   if not Assigned(rANAM) then

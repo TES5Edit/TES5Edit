@@ -1609,6 +1609,9 @@ var
 begin
   Result := 0;
 
+  if not Assigned(aElement) then
+    Exit;
+
   Container := aElement.Container;
   while Assigned(Container) and (Container.ElementType <> etSubRecord) do
     Container := Container.Container;

@@ -53,9 +53,9 @@ const
 
 procedure bapInitStyles;
 begin
-  var Path := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+  var Path := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0))) + 'Themes';
   if TDirectory.Exists(Path) then
-    for var s in TDirectory.GetFiles(Path + 'Themes', '*.vsf' ) do try
+    for var s in TDirectory.GetFiles(Path, '*.vsf' ) do try
       TStyleManager.LoadFromFile(s);
     except
       on E: Exception do

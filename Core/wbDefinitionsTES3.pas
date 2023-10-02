@@ -218,6 +218,8 @@ var
   s: string;
 begin
   Result := 0;
+  if not Assigned(aElement) then
+    Exit;
   rValue := aElement.Container.RecordBySignature[FNAM];
   if Assigned(rValue) then begin
     s := rValue.Value;
