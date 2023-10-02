@@ -8196,7 +8196,23 @@ begin
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbUnknown(ENAM, cpIgnore),
+    wbUnion(ENAM, '', wbFormVersionDecider(15, 19), [
+      wbUnknown(cpignore),
+      wbStruct('unknown', [
+        wbFloat('Eye Adapt Speed'),
+        wbFloat('Bloom Blur Radius'),
+        wbFloat('Bloom Threshold'),
+        wbFloat('Bloom Scale'),
+        wbFloat('Receive Bloom Threshold'),
+        wbFloat('Sunlight Scale'),
+        wbFloat('Sky Scale'),
+        wbFloat('Saturation'),
+        wbFloat('Brightness'),
+        wbFloat('Contrast'),
+        wbUnknown
+      ])
+    ]),
+    //wbUnknown(ENAM, cpIgnore),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Bloom Blur Radius'),
