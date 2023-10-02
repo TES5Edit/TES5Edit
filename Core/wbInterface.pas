@@ -179,6 +179,8 @@ var
   wbEditInfoUseShortName             : Boolean    = False;
   wbDevMode                          : Boolean    = False;
   wbStripEmptyMasters                : Boolean    = False;
+  wbStripMasters                     : Boolean    = False;
+  wbStripMastersFileNames            : TStringList;
   wbAlwaysSorted                     : Boolean    = False;
   wbThemesSupported                  : Boolean    = True;
   wbReportModGroups                  : Boolean    = False;
