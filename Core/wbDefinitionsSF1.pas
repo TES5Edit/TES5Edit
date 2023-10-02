@@ -18823,7 +18823,7 @@ end;
       wbRArray('Sounds', wbStruct(ASAE, 'Unknown', [
       { 0} wbSoundReference,
       {40} wbUnknown(8),
-      {48} wbWwiseGuid,
+      {48} wbWwiseGuid('Variation'),
       {64} wbInteger('Unknown', itU8, wbBoolEnum),
       {65} wbFloat,
       {69} wbUnknown(4)
@@ -18833,7 +18833,7 @@ end;
         .SetRequired
     ], []),
     wbInteger(ASMB, 'Unknown', itU8, wbBoolEnum),
-    wbSoundReference(WED0)
+    wbSoundReference(WED0, 'Walla')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18841,10 +18841,10 @@ end;
     wbEDID,
     wbStruct(ANAM, 'Data', [
       wbInteger('Hide Beam By Default', itU8, wbBoolEnum),
-      wbLenString('Unknown'), { always either 'LaserNode', 'ProjectileNode' or empty }
+      wbLenString('Node Name'),
       wbFloat('Beam Reactivation Delay After Equip/Reload S'),
       wbFloat('Beam Deactivation Delay After Reload S'),
-      wbUnknown(4),
+      wbFormIdCk('Light', [LIGH]),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Beam Reactivation Delay After Firing S'),
@@ -19607,7 +19607,7 @@ end;
     wbKeywords,
     wbString(ANAM, 'Name'),
     wbVec3Pos(BNAM),
-    wbUnknown(ONAM),
+    wbUnknown(ONAM),                                    //related to BGSOrbitalDataComponent_Component
     wbInteger(DNAM, 'ID', itU32),
     wbByteColors(ENAM, 'Color'),
     wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
