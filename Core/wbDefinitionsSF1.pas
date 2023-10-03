@@ -14468,7 +14468,7 @@ end;
         .SetSummaryMemberPrefixSuffix(2, '[Tint] ','')
         .SetSummaryMemberPrefixSuffix(5, ' [',']')
         .IncludeFlag(dfSummaryMembersNoName)
-    ),
+    ).SetCountPath(EDCT),
 
     wbStruct(MRSV, 'Body Morph Region Values', [
       wbFloat('Head'),
