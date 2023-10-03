@@ -4540,7 +4540,7 @@ begin
           SetIsESL(True);
       end;
 
-      if not (flModule.miExtension = meESP) then
+      if flModule.miExtension = meESP then
         raise Exception.Create('".esp" modules can not be saved.');
     end;
 
