@@ -227,6 +227,8 @@ var
   wbCollapseBluePrintItem            : Boolean    = True;
   wbCollapsePlacement                : Boolean    = True;
   wbCollapseVertices                 : Boolean    = True;
+  wbCollapseRDSA                     : Boolean    = True;
+  wbCollapseFlags                    : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
