@@ -16,7 +16,7 @@ uses
   Windows, Messages, UITypes, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, CheckLst, Menus,
   Vcl.Styles.Utils.SystemMenu, VirtualTrees, VirtualEditTree,
-  wbInterface, wbLoadOrder, Vcl.ExtCtrls, System.Actions, Vcl.ActnList;
+  wbInterface, wbLoadOrder, Vcl.ExtCtrls, System.Actions, Vcl.ActnList, Vcl.Mask;
 
 const
   csPluginsTxt = '<plugins.txt>';
@@ -392,7 +392,10 @@ begin
   if not wbIsEslSupported then
     with vstModules.Header.Columns[3] do
       Options := Options - [coVisible];
-  if wbPseudoESL then
+  if not wbIsOverlaySupported then
+    with vstModules.Header.Columns[6] do
+      Options := Options - [coVisible];
+  if wbPseudoESL or wbPseudoOverlay then
     with vstModules.Header.Columns[5] do
       Options := Options - [coVisible];
 
@@ -787,6 +790,7 @@ begin
         3: Result := CmpBool(mfHasESLFlag in Module1.miFlags, mfHasESLFlag in Module2.miFlags);
         4: Result := CmpI32(Module1.miLoadOrder, Module2.miLoadOrder);
         5: Result := CompareText(Module1.miFileID.ToString, Module2.miFileID.ToString);
+        6: Result := CmpBool(mfHasOverlayFlag in Module1.miFlags, mfHasOverlayFlag in Module2.miFlags);
       end;
     end else
       Result := -1;
@@ -822,6 +826,7 @@ begin
           3 : if mfHasESLFlag in miFlags then Celltext := 'ESL';
           4 : if miLoadOrder < 10000 then Celltext := miLoadOrder.ToString;
           5 : if miLoadOrder < 10000 then Celltext := miFileID.ToString;
+          6 : if mfHasOverlayFlag in miFlags then Celltext := 'Overlay';
         end
     else
       if Column = 0 then

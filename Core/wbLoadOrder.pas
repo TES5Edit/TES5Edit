@@ -38,6 +38,7 @@ type
     mfMastersMissing,
     mfHasESMFlag,
     mfHasESLFlag,
+    mfHasOverlayFlag,
     mfHasLocalizedFlag,
     mfHasESMExtension,
     mfIsESM,
@@ -253,6 +254,7 @@ var
   s          : string;
   IsESM      ,
   IsESL      ,
+  IsOverlay  ,
   IsLocalized: Boolean;
   lIsActive  : Boolean;
   sl         : TStringList;
@@ -315,7 +317,7 @@ begin
 
         miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
 
-        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized) then
+        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized, @IsOverlay) then
           Continue;
 
         if IsESM then begin
@@ -326,9 +328,25 @@ begin
             Include(miFlags, mfIsESM);
         end;
 
+        {
+        if the 0x200 flag is set then begin
+          if there is no master list, or the 0x100 flag is set then
+            remove the 0x200 flag
+        end else
+          if the extension is .esl then
+            force 0x100 flag
+        }
+        if IsOverlay then begin
+          if {(Length(miMasterNames) < 1) or} IsESL then
+            IsOverlay := False;
+        end else
+          if miExtension in [meESL] then
+            Include(miFlags, mfHasESLFlag);
+
+        if IsOverlay then
+          Include(miFlags, mfHasOverlayFlag);
+
         if IsESL then
-          Include(miFlags, mfHasESLFlag);
-        if miExtension in [meESL] then
           Include(miFlags, mfHasESLFlag);
 
         if IsLocalized then
@@ -530,6 +548,15 @@ begin
         Include(miFlags, mfIsESM);
       end;
     end;
+    if wbIsOverlaySupported then begin
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+        Include(miFlags, mfHasOverlayFlag);
+      with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+        Include(miFlags, mfHasESMFlag);
+        Include(miFlags, mfHasOverlayFlag);
+        Include(miFlags, mfIsESM);
+      end;
+    end;
   end;
 
   with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
@@ -542,14 +569,31 @@ begin
         Include(miFlags, mfIsESM);
       end;
     end;
+    if wbIsOverlaySupported then begin
+      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+        Include(miFlags, mfHasOverlayFlag);
+        Include(miFlags, mfHasESMFlag);
+        Include(miFlags, mfIsESM);
+      end;
+    end;
   end;
 
-  if wbGameMode <> gmSF1 then
-    if wbIsEslSupported then
+  if wbGameMode <> gmSF1 then begin
+    if wbIsEslSupported then begin
       with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasESLFlag);
+        Include(miFlags, mfIsESM);
       end;
+      if wbIsOverlaySupported then begin
+        with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+          Include(miFlags, mfHasOverlayFlag);
+          Include(miFlags, mfHasESMFlag);
+          Include(miFlags, mfIsESM);
+        end;
+      end;
+    end;
+  end;
 end;
 
 function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
@@ -657,6 +701,8 @@ begin
     Result := Result + '<ESM>';
   if mfHasESLFlag in miFlags then
     Result := Result + '<ESL>';
+  if mfHasOverlayFlag in miFlags then
+    Result := Result + '<Overlay>';
   if mfHasLocalizedFlag in miFlags then
     Result := Result + '<Localized>';
   if mfMastersMissing in miFlags then
@@ -859,8 +905,10 @@ var
         miLoadOrder := NewLoadOrderCount;
         NewLoadOrder[NewLoadOrderCount] := aModule;
         Inc(NewLoadOrderCount);
-        if not wbPseudoESL then
-          if (mfHasESLFlag in miFlags) and not wbIgnoreESL then begin
+        if not (wbPseudoESL or wbPseudoOverlay) then
+          if (mfHasOverlayFlag in miFlags) and not wbIgnoreOverlay then begin
+            miFileID := TwbFileID.Invalid;
+          end else if (mfHasESLFlag in miFlags) and not wbIgnoreESL then begin
             if _NextLightSlot > $FFF then
               raise Exception.Create('Too many light modules');
             miFileID := TwbFileID.Create($FE, _NextLightSlot);

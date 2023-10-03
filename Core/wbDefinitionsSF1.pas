@@ -8138,20 +8138,20 @@ end;
         ], []),
         //BGSExternalComponentDataSource_Component
         wbRStruct('Component Data - External Data Source', [
-          wbFormIDCk(EXDC, 'External Base Template', [NULL, GBFM, LVLB]),
+          wbFormIDCk(EXDC, 'External Base Template', [NULL, GBFM, LVLB]).SetRequired,
           wbRStruct('External Data Sources', [
-            wbInteger(EXDZ, 'Data Source Count', itU32), // count for EXCN/EXCI struct array
+            wbInteger(EXDZ, 'Data Source Count', itU32).SetRequired, // count for EXCN/EXCI struct array
             wbRArray('External Sources',
               wbRStruct('Component', [
-                wbString(EXCN, 'Component Name'),
-                wbFormIDCk(EXCI, 'Component Source', [GBFM, LVLB])
+                wbString(EXCN, 'Component Name').SetRequired,
+                wbFormIDCk(EXCI, 'Component Source', [GBFM, LVLB]).SetRequired
               ], [])
-            )
-          ], []),
+            ).SetCountPath(EXDZ)
+          ], []).SetRequired,
           wbRstruct('Unknown', [
-            wbInteger(EXAC, 'Count', itU32), // count for EXAS array
-            wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil, wbEXASsAfterSet)
-          ], []),
+            wbInteger(EXAC, 'Count', itU32).SetRequired, // count for EXAS array
+            wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil).SetCountPath(EXAC)
+          ], []).SetRequired,
           wbString(EXBS).SetRequired
         ], []),
         //BGSLinkedVoiceType_Component
@@ -11613,7 +11613,6 @@ end;
     ]))
   ]);
 
-
   var lDontShowForCellLocation: TwbDontShowCallback :=
     function(const aElement: IwbElement): Boolean
     begin
@@ -12755,18 +12754,18 @@ end;
   { 72} wbFloat,
   { 76} wbFloat,
   { 80} wbFloat,
-  { 84} wbFloatAngle,
+  { 84} wbFloat{Angle},
   { 88} wbFloat,
   { 92} wbFloat,
   { 96} wbFloat,
   {100} wbFloat,
   {104} wbFloat,
   {108} wbFloat,
-  {112} wbFloatAngle,
+  {112} wbFloat{Angle},
   {116} wbFloat,
   {120} wbFloat,
   {124} wbFloat,
-  {128} wbFloatAngle,
+  {128} wbFloat{Angle},
   {132} wbFloat,
   {136} wbFloat,
   {140} wbFloat,
@@ -12776,26 +12775,26 @@ end;
   {156} wbFloat,
   {160} wbFloat,
   {164} wbFloat,
-  {168} wbFloatAngle,
-  {172} wbFloatAngle,
-  {176} wbFloatAngle,
-  {180} wbFloatAngle,
-  {184} wbFloatAngle,
-  {188} wbFloatAngle,
+  {168} wbFloat{Angle},
+  {172} wbFloat{Angle},
+  {176} wbFloat{Angle},
+  {180} wbFloat{Angle},
+  {184} wbFloat{Angle},
+  {188} wbFloat{Angle},
   {192} wbFloat,
-  {196} wbFloatAngle,
-  {200} wbFloatAngle,
-  {204} wbFloatAngle,
-  {208} wbFloatAngle,
-  {212} wbFloatAngle,
-  {216} wbFloatAngle,
+  {196} wbFloat{Angle},
+  {200} wbFloat{Angle},
+  {204} wbFloat{Angle},
+  {208} wbFloat{Angle},
+  {212} wbFloat{Angle},
+  {216} wbFloat{Angle},
   {220} wbFloat,
-  {224} wbFloatAngle,
-  {228} wbFloatAngle,
-  {232} wbFloatAngle,
-  {236} wbFloatAngle,
-  {240} wbFloatAngle,
-  {244} wbFloatAngle,
+  {224} wbFloat{Angle},
+  {228} wbFloat{Angle},
+  {232} wbFloat{Angle},
+  {236} wbFloat{Angle},
+  {240} wbFloat{Angle},
+  {244} wbFloat{Angle},
   {248} wbFloat
   ]);
 
@@ -13154,7 +13153,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
-    wbUnknown(RABG),
+    wbWwiseGUID(RABG, 'Audio Bus'),
     {
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
@@ -14453,7 +14452,7 @@ end;
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(HEFA, 'Unknown', [FACT]),
-    wbInteger(EDCT, 'Tint Count', itU8),
+    wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
     wbRArray('Tints',
       wbRStruct('Tint', [
         wbInteger(MNAM, 'Unknown', itU32).SetRequired,
@@ -14463,10 +14462,12 @@ end;
         wbByteColors(NNAM, 'Tint Color').SetRequired,
         wbInteger(INTV, 'Intensity', itU32).SetRequired       //1-128
       ], [])
-        .SetSummaryKey([4,1,2,5])
-        .SetSummaryMemberPrefixSuffix(1, '[Group] ','')
-        .SetSummaryMemberPrefixSuffix(2, '[Tint] ','')
-        .SetSummaryMemberPrefixSuffix(5, ' [',']')
+        .SetSummaryKey([4,1,2,5,3])
+        .SetSummaryMemberPrefixSuffix(4, '',' for')
+        .SetSummaryMemberPrefixSuffix(1, '',':')
+        .SetSummaryMemberPrefixSuffix(2, '','')
+        .SetSummaryMemberPrefixSuffix(5, 'at ',' intensity')
+        .SetSummaryMemberPrefixSuffix(3, 'using "','"')
         .IncludeFlag(dfSummaryMembersNoName)
     ).SetCountPath(EDCT),
 
@@ -17206,7 +17207,7 @@ end;
       {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
       {0x00000100}  8, 'ESL',
-      {0x00000200}  9, 'Only Overrides'
+      {0x00000200}  9, 'Overlay'
     ], False), True), [
     wbHEDR,
 
@@ -17931,7 +17932,7 @@ end;
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbSoundReference(WED0),
-    wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD])),
+    wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID)),
     wbRStructs('Unknown', 'Unknown', [
       wbInteger(RSMC, 'Unknown', itU32),
       wbSoundReference(RSMH)

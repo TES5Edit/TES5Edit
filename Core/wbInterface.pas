@@ -170,6 +170,8 @@ var
   wbCopyIsRunning                    : Integer    = 0;
   wbIgnoreESL                        : Boolean    = False;
   wbPseudoESL                        : Boolean    = False;
+  wbIgnoreOverlay                    : Boolean    = False;
+  wbPseudoOverlay                    : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
   wbAllowDirectSave                  : Boolean    = False;
   wbAllowDirectSaveFor               : TStringList;
@@ -1384,6 +1386,8 @@ type
     fsScanning,
     fsPseudoESL,
     fsESLCompatible,
+    fsPseudoOverlay,
+    fsOverlayCompatible,
     fsIsOfficial,
     fsCompareToHasSameMasters,
     fsAddToMap,
@@ -1451,6 +1455,9 @@ type
 
     function GetIsESL: Boolean;
     procedure SetIsESL(Value: Boolean);
+
+    function GetIsOverlay: Boolean;
+    procedure SetIsOverlay(Value: Boolean);
 
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
@@ -1537,6 +1544,10 @@ type
     property IsESL: Boolean
       read GetIsESL
       write SetIsESL;
+
+    property IsOverlay: Boolean
+      read GetIsOverlay
+      write SetIsOverlay;
 
     property IsLocalized: Boolean
       read GetIsLocalized
@@ -1641,6 +1652,7 @@ type
     function IsDangerous: Boolean; inline;
     function IsCompressed: Boolean; inline;
     function IsESL: Boolean; inline;
+    function IsOverlay: Boolean; inline;
     function CantWait: Boolean; inline;
     function HasLODtree: Boolean; inline;
 
@@ -1652,6 +1664,7 @@ type
     procedure SetInitiallyDisabled(aValue: Boolean);
     procedure SetVisibleWhenDistant(aValue: Boolean);
     procedure SetESL(aValue: Boolean);
+    procedure SetOverlay(aValue: Boolean);
   end;
 
   PwbMainRecordStructFlags3 = ^TwbMainRecordStructFlags3;
@@ -1784,6 +1797,8 @@ type
     procedure SetIsInitiallyDisabled(aValue: Boolean);
     function GetIsESL: Boolean;
     procedure SetIsESL(aValue: Boolean);
+    function GetIsOverlay: Boolean;
+    procedure SetIsOverlay(aValue: Boolean);
 
     procedure UpdateRefs;
 
@@ -1933,6 +1948,9 @@ type
     property IsESL: Boolean
       read GetIsESL
       write SetIsESL;
+    property IsOverlay: Boolean
+      read GetIsOverlay
+      write SetIsOverlay;
 
     property ConflictAll: TConflictAll
       read GetConflictAll
@@ -4699,6 +4717,7 @@ function wbIsFallout4: Boolean; inline;
 function wbIsFallout76: Boolean; inline;
 function wbIsEslSupported: Boolean; inline;
 function wbIsStarfield: Boolean; inline;
+function wbIsOverlaySupported: Boolean; inline;
 
 procedure ReportDefs;
 
@@ -5280,10 +5299,14 @@ begin
   Result := wbGameMode in [gmSF1];
 end;
 
-
 function wbIsEslSupported: Boolean; inline;
 begin
   Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]);
+end;
+
+function wbIsOverlaySupported: Boolean; inline;
+begin
+  Result := wbGameMode in [gmSF1];
 end;
 
 function wbDefToName(const aDef: IwbDef): string;
@@ -19895,6 +19918,12 @@ begin
       ((_Flags and $00000200) <> 0);
 end;
 
+function TwbMainRecordStructFlags.IsOverlay: Boolean;
+begin
+  Result := wbIsOverlaySupported and
+    ((_Flags and $00000200) <> 0);
+end;
+
 function TwbMainRecordStructFlags.IsESM: Boolean;
 begin
   Result := (_Flags and $00000001) <> 0;
@@ -19940,15 +19969,26 @@ procedure TwbMainRecordStructFlags.SetESL(aValue: Boolean);
 begin
   if wbIsEslSupported then
     if wbIsStarfield then begin
-      if aValue then
-        _Flags := _Flags or $00000100
-      else
+      if aValue then begin
+        _Flags := _Flags or $00000100;
+        SetOverlay(False);
+      end else
         _Flags := _Flags and not $00000100;
     end else
       if aValue then
         _Flags := _Flags or $00000200
       else
         _Flags := _Flags and not $00000200;
+end;
+
+procedure TwbMainRecordStructFlags.SetOverlay(aValue: Boolean);
+begin
+  if wbIsOverlaySupported then
+    if aValue then begin
+      _Flags := _Flags or $00000200;
+      SetESL(False);
+    end else
+      _Flags := _Flags and not $00000200;
 end;
 
 procedure TwbMainRecordStructFlags.SetESM(aValue: Boolean);
@@ -21792,7 +21832,10 @@ begin
   if _LightSlot >= 0 then
     Result := 'FE ' + IntToHex(_LightSlot, 3)
   else
-    Result := IntToHex(_FullSlot, 2);
+    if _FullSlot >= 0 then
+      Result := IntToHex(_FullSlot, 2)
+    else
+      Result := 'XX';
 end;
 
 { TwbCRC32Helper }

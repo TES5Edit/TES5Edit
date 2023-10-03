@@ -1242,6 +1242,12 @@ begin
     if FindCmdLineSwitch('PseudoESL') then
       wbPseudoESL := True;
 
+  if FindCmdLineSwitch('IgnoreOverlay') then
+    wbIgnoreOverlay := True
+  else
+    if FindCmdLineSwitch('PseudoOverlay') then
+      wbPseudoOverlay := True;
+
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
 

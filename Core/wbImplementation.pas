@@ -44,8 +44,8 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
@@ -839,6 +839,10 @@ type
     function GetIsESLDirect: Boolean;
     procedure SetIsESL(Value: Boolean);
 
+    function GetIsOverlay: Boolean;
+    function GetIsOverlayDirect: Boolean;
+    procedure SetIsOverlay(Value: Boolean);
+
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(Value: Boolean);
 
@@ -1299,6 +1303,8 @@ type
     procedure SetIsInitiallyDisabled(aValue: Boolean);
     function GetIsESL: Boolean;
     procedure SetIsESL(aValue: Boolean);
+    function GetIsOverlay: Boolean;
+    procedure SetIsOverlay(aValue: Boolean);
 
     procedure UpdateRefs;
     procedure UpdateKeys;
@@ -2331,8 +2337,13 @@ begin
         Exclude(flStates, fsESLCompatible);
         if wbHasProgressCallback then
           if GetIsESL or flLoadOrderFileID.IsLightSlot then
-              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active.>');
+              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the ESL flag active.>');
       end;
+
+      Exclude(flStates, fsOverlayCompatible);
+      if wbHasProgressCallback then
+        if GetIsOverlay then
+          wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for an overlay module. You will not be able to save this file with the Overlay flag active.>');
 
       {new record...}
     end else try
@@ -3016,6 +3027,8 @@ begin
         Include(flModule.miFlags, mfHasESMFlag);
       if GetIsESLDirect then
         Include(flModule.miFlags, mfHasESLFlag);
+      if GetIsOverlayDirect then
+        Include(flModule.miFlags, mfHasOverlayFlag);
       if GetIsLocalized then
         Include(flModule.miFlags, mfHasLocalizedFlag);
     end;
@@ -3058,17 +3071,21 @@ begin
   flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported or wbPseudoESL then begin
+    if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
         flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
         Inc(_NextLightSlot);
       end else begin
-        if _NextFullSlot >= $FE then
-          raise Exception.Create('Too many full modules');
-        flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-        Inc(_NextFullSlot);
+        if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
+          flLoadOrderFileID := TwbFileID.Invalid;
+        end else begin
+          if _NextFullSlot >= $FE then
+            raise Exception.Create('Too many full modules');
+          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+          Inc(_NextFullSlot);
+        end;
       end;
     end else
       flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
@@ -3106,9 +3123,15 @@ begin
   if wbGameMode >= gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
-  if mfHasESLFlag in aTemplate.miFlags then begin
+  if (mfHasOverlayFlag in aTemplate.miFlags) and (wbIsOverlaySupported or wbPseudoOverlay) then begin
+    Header.IsOverlay := True;
+    Include(flModule.miFlags, mfHasOverlayFlag);
+  end;
+
+  if (mfHasESLFlag in aTemplate.miFlags) and (wbIsESLSupported or wbPseudoESL) then begin
     Header.IsESL := True;
     Include(flModule.miFlags, mfHasESLFlag);
+    Exclude(flModule.miFlags, mfHasOverlayFlag);
   end;
 
   if mfHasESMFlag in aTemplate.miFlags then begin
@@ -3124,17 +3147,21 @@ begin
   flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported or wbPseudoESL then begin
+    if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
       if Header.IsESL and not wbIgnoreESL then begin
         if _NextLightSlot > $FFF then
           raise Exception.Create('Too many light modules');
         flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
         Inc(_NextLightSlot);
       end else begin
-        if _NextFullSlot >= $FE then
-          raise Exception.Create('Too many full modules');
-        flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
-        Inc(_NextFullSlot);
+        if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
+          flLoadOrderFileID := TwbFileID.Invalid;
+        end else begin
+          if _NextFullSlot >= $FE then
+            raise Exception.Create('Too many full modules');
+          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+          Inc(_NextFullSlot);
+        end;
       end;
     end else
       flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
@@ -3899,6 +3926,10 @@ end;
 
 function TwbFile.GetIsEditable: Boolean;
 begin
+  if wbIsStarfield and Assigned(flModule) then
+   if flModule.miExtension = meESP then
+     Exit(False);
+
   Result := wbIsInternalEdit or (
         wbEditAllowed and
     ((not (fsIsGameMaster in flStates)) or wbAllowEditGameMaster) and
@@ -3935,6 +3966,36 @@ begin
 
   Result := Header.IsESL;
 end;
+
+function TwbFile.GetIsOverlay: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if wbPseudoOverlay then
+    Exit(fsPseudoOverlay in flStates);
+
+  if not wbIsOverlaySupported or GetIsNotPlugin then
+    Exit(False);
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsOverlay;
+end;
+
+function TwbFile.GetIsOverlayDirect: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if not wbIsOverlaySupported or GetIsNotPlugin then
+    Exit(False);
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsOverlay;
+end;
+
 
 function TwbFile.GetIsESM: Boolean;
 var
@@ -4091,8 +4152,7 @@ begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
     Result := wbGameExeName;
-  if flLoadOrderFileID.FullSlot >= 0 then
-    Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
+  Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
 end;
 
 function TwbFile.GetRecord(aIndex: Integer): IwbMainRecord;
@@ -4357,6 +4417,9 @@ var
   IsESL        : Boolean;
   Mask         : Cardinal;
 begin
+  if GetIsOverlay then
+    raise Exception.Create('File '+GetFileName+' is an overlay and can not contain new records.');
+
   Assert(not (fsMastersUpdating in flStates));
 
   SelfRef := Self as IwbContainerElementRef;
@@ -4464,6 +4527,23 @@ begin
     if not Assigned(HEDR) then
       raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
 
+    if wbIsStarfield then begin
+      if GetIsOverlayDirect and GetIsESLDirect then begin
+        SetIsOverlay(False);
+        SetIsESL(True);
+      end;
+
+      if flModule.miExtension in [meESM, meESL] then
+        SetIsESM(True);
+      if not GetIsOverlayDirect then begin
+        if flModule.miExtension = meESL then
+          SetIsESL(True);
+      end;
+
+      if not (flModule.miExtension = meESP) then
+        raise Exception.Create('".esp" modules can not be saved.');
+    end;
+
     inherited;
 
     SetLength(Groups, wbGroupOrder.Count);
@@ -4501,90 +4581,103 @@ begin
     ONAMs := nil;
     if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
       Include(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
-      while FileHeader.RemoveElement('ONAM') <> nil do
-        ;
+      BeginUpdate;
+      try
+        while FileHeader.RemoveElement('ONAM') <> nil do
+          ;
 
-      if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
-        for i := 0 to Pred(MasterFiles.ElementCount) do begin
-          if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
-            // Fallout 4 CK creates ONAMs in ESP too. Cannot verify for FO76.
-            if wbAlwaysSaveOnam or wbAlwaysSaveOnamForce or FileHeader.IsESM or (Assigned(flModule) and (mfHasESMExtension in flModule.miFlags)) then
-              while j <= High(flRecords) do begin
-                Current := flRecords[j];
-                FormID := Current.FixedFormID;
-                var FileID := FormID.FileID.FullSlot;
-                if FileID > i then
-                  Break;
-                Assert(FileID = i);
-                Inc(j);
+        if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
+          for i := 0 to Pred(MasterFiles.ElementCount) do begin
+            if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
+              // Fallout 4 CK creates ONAMs in ESP too. Cannot verify for FO76.
+              if Assigned(ONAMs) then
+                ONAMs.BeginUpdate;
+              try
+                if wbAlwaysSaveOnam or wbAlwaysSaveOnamForce or FileHeader.IsESM or (Assigned(flModule) and (mfHasESMExtension in flModule.miFlags)) then
+                  while j <= High(flRecords) do begin
+                    Current := flRecords[j];
+                    FormID := Current.FixedFormID;
+                    var FileID := FormID.FileID.FullSlot;
+                    if FileID > i then
+                      Break;
+                    Assert(FileID = i);
+                    Inc(j);
 
-                Signature := Current.Signature;
+                    Signature := Current.Signature;
 
-                if (Signature = 'NAVM') or
-                   (Signature = 'LAND') or
-                   (Signature = 'REFR') or
-                   (Signature = 'PGRE') or
-                   (Signature = 'PMIS') or
-                   (Signature = 'ACHR') or
-                   (Signature = 'ACRE') or
-                   (Signature = 'PARW') or {>>> Skyrim <<<}
-                   (Signature = 'PBEA') or {>>> Skyrim <<<}
-                   (Signature = 'PFLA') or {>>> Skyrim <<<}
-                   (Signature = 'PCON') or {>>> Skyrim <<<}
-                   (Signature = 'PBAR') or {>>> Skyrim <<<}
-                   (Signature = 'PHZD') or {>>> Skyrim <<<}
-                   // Fallout 4 (and later games?)
-                   ((wbIsFallout4  or wbIsStarfield) and (
-                     (Signature = 'SCEN') or
-                     (Signature = 'DLBR') or
-                     (Signature = 'DIAL') or
-                     (Signature = 'INFO')
-                   ))
-                then begin
+                    if (Signature = 'NAVM') or
+                       (Signature = 'LAND') or
+                       (Signature = 'REFR') or
+                       (Signature = 'PGRE') or
+                       (Signature = 'PMIS') or
+                       (Signature = 'ACHR') or
+                       (Signature = 'ACRE') or
+                       (Signature = 'PARW') or {>>> Skyrim <<<}
+                       (Signature = 'PBEA') or {>>> Skyrim <<<}
+                       (Signature = 'PFLA') or {>>> Skyrim <<<}
+                       (Signature = 'PCON') or {>>> Skyrim <<<}
+                       (Signature = 'PBAR') or {>>> Skyrim <<<}
+                       (Signature = 'PHZD') or {>>> Skyrim <<<}
+                       // Fallout 4 (and later games?)
+                       ((wbIsFallout4  or wbIsStarfield) and (
+                         (Signature = 'SCEN') or
+                         (Signature = 'DLBR') or
+                         (Signature = 'DIAL') or
+                         (Signature = 'INFO')
+                       ))
+                    then begin
 
-                  if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
-                    // ONAMs are for overridden temporary refs only
-                    if Current.IsPersistent then
-                      Continue;
+                      if (not wbMasterUpdateFilterONAM) or Current.IsWinningOverride then begin
+                        // ONAMs are for overridden temporary refs only
+                        if Current.IsPersistent then
+                          Continue;
 
-                    if not Assigned(ONAMs) then begin
-                      if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
-                        Assert(False);
-                      Assert(ONAMs.ElementCount = 1);
-                      NewONAM := ONAMs.Elements[0];
-                    end else
-                      NewONAM := ONAMs.Assign(High(Integer), nil, True);
-
-                    NewONAM.NativeValue := FormID.ToCardinal;
-
-                    if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
-                      Master := Current.Master;
-                      if Assigned(Master) then begin
-                        if Master.IsPersistent then begin
-                          flProgress('Setting Persistent: ' + Current.Name);
-                          Current.IsPersistent := True;
+                        if not Assigned(ONAMs) then begin
+                          if not Supports(FileHeader.Add('ONAM', True), IwbContainerElementRef, ONAMs) then
+                            Assert(False);
+                          ONAMs.BeginUpdate;
+                          Assert(ONAMs.ElementCount = 1);
+                          NewONAM := ONAMs.Elements[0];
                         end else
-                          for k := 0 to Pred(Master.OverrideCount) do
-                            if Current.Equals(Master.Overrides[k]) then
-                              Break
-                            else
-                              if Master.Overrides[k].IsPersistent then begin
-                                flProgress('Setting Persistent: ' + Current.Name);
-                                Current.IsPersistent := True;
-                                Break;
-                              end;
+                          NewONAM := ONAMs.Assign(High(Integer), nil, True);
+
+                        NewONAM.NativeValue := FormID.ToCardinal;
+
+                        if wbMasterUpdateFixPersistence and not Current.IsPersistent and not Current.IsMaster then begin
+                          Master := Current.Master;
+                          if Assigned(Master) then begin
+                            if Master.IsPersistent then begin
+                              flProgress('Setting Persistent: ' + Current.Name);
+                              Current.IsPersistent := True;
+                            end else
+                              for k := 0 to Pred(Master.OverrideCount) do
+                                if Current.Equals(Master.Overrides[k]) then
+                                  Break
+                                else
+                                  if Master.Overrides[k].IsPersistent then begin
+                                    flProgress('Setting Persistent: ' + Current.Name);
+                                    Current.IsPersistent := True;
+                                    Break;
+                                  end;
+                          end;
+                        end;
+
                       end;
+
                     end;
 
                   end;
-
-                end;
-
+              finally
+                if Assigned(ONAMs) then
+                  ONAMs.EndUpdate;
               end;
+            end;
+            if j > High(flRecords) then
+              Break;
           end;
-          if j > High(flRecords) then
-            Break;
-        end;
+      finally
+        EndUpdate;
+      end;
       if not (fsIsDeltaPatch in flStates) then begin
         Exclude(TwbMainRecord(FileHeader).mrStates, mrsNoUpdateRefs);
         FileHeader.UpdateRefs;
@@ -4610,6 +4703,20 @@ begin
         if FormID.FileID = FileFileID then begin
           if (FormID.ToCardinal and $00FFF000) <> 0 then
             raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active');
+        end else
+          Break;
+      end;
+    end;
+
+    if FileHeader.IsOverlay then begin
+      FileFileID := GetFileFileID(true);
+      if FileFileID.FullSlot = 0 then
+          raise Exception.Create('File ' + Self.GetName + ' is an overlay module with no masters. You will not be able to save this file with Overlay flag active');
+      for i := High(flRecords) downto Low(flRecords) do begin
+        Current := flRecords[i];
+        FormID := Current.FormID;
+        if FormID.FileID.FullSlot >= FileFileID.FullSlot then begin
+          raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for an overlay module. You will not be able to save this file with Overlay flag active');
         end else
           Break;
       end;
@@ -4802,8 +4909,10 @@ var
 
     if flLoadOrder >= 0 then begin
       _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
-      if wbIsEslSupported or wbPseudoESL then begin
-        if (fsPseudoESL in flStates) or ((Header.IsESL or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreESL) then begin
+      if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
+        if (wbIsOverlaySupported or wbPseudoOverlay) and ((fsPseudoOverlay in flStates) or ((Header.IsOverlay) and not wbIgnoreOverlay)) then begin
+          flLoadOrderFileID := TwbFileID.Invalid;
+        end else if (fsPseudoESL in flStates) or ((Header.IsESL or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreESL) then begin
           if _NextLightSlot > $FFF then
             raise Exception.Create('Too many light modules');
           flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
@@ -4967,14 +5076,24 @@ begin
 
     if wbPseudoESL then
       Include(flStates, fsESLCompatible);
+    if wbPseudoOverlay then
+      Include(flStates, fsOverlayCompatible);
 
-    if Header.IsESL then begin
-      if wbPseudoESL then
-        Include(flStates, fsPseudoESL);
+    if Header.IsOverlay then begin
+      if wbPseudoOverlay then
+        Include(flStates, fsPseudoOverlay);
       AssignSlot;
-    end else
-      if not wbPseudoESL then
-        AssignSlot;
+    end else begin
+      if Header.IsESL then begin
+        if not wbPseudoOverlay then begin
+          if wbPseudoESL then
+            Include(flStates, fsPseudoESL);
+          AssignSlot;
+        end;
+      end else
+        if not (wbPseudoESL or wbPseudoOverlay) then
+          AssignSlot;
+    end;
 
     flRecordsCount := 0;
     HEDR := Header.RecordBySignature['HEDR'];
@@ -5092,9 +5211,15 @@ begin
     if flRecordsCount < Length(flRecords) then
       SetLength(flRecords, flRecordsCount);
 
-    if wbPseudoESL then
-      if fsESLCompatible in flStates then
-        Include(flStates, fsPseudoESL);
+
+    if wbPseudoOverlay then
+      if fsOverlayCompatible in flStates then
+        Include(flStates, fsPseudoOverlay);
+
+    if not (fsPseudoOverlay in flStates) then
+      if wbPseudoESL then
+        if fsESLCompatible in flStates then
+          Include(flStates, fsPseudoESL);
 
     AssignSlot;
   finally
@@ -5221,6 +5346,26 @@ begin
       raise Exception.Create('File "'+GetFileName+'" is not editable');
 
     Header.IsESL := Value;
+  end;
+end;
+
+procedure TwbFile.SetIsOverlay(Value: Boolean);
+var
+  Header         : IwbMainRecord;
+begin
+  if not wbIsOverlaySupported then
+    Exit;
+  if GetIsNotPlugin then
+    Exit;
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Value <> Header.IsOverlay then begin
+    if not IsElementEditable(nil) then
+      raise Exception.Create('File "'+GetFileName+'" is not editable');
+
+    Header.IsOverlay := Value;
   end;
 end;
 
@@ -8956,20 +9101,17 @@ begin
       dcDataEndPtr := nil;
     end;
   end;
+
   {
-  if (GetLoadOrderFormID.ToCardinal = $040179CF) or
-     (GetLoadOrderFormID.ToCardinal = $0402403B) or
-     (GetLoadOrderFormID.ToCardinal = $0403284D) or
-     (GetLoadOrderFormID.ToCardinal = $04024038)
-  then begin
-    s := wbDataPath + GetLoadOrderFormID.ToString  + '_' + ChangeFileExt(GetFile.FileName,'');
-    if not FileExists(s) then
-      with TFileStream.Create(s, fmCreate) do try
-        WriteBuffer(dcDataBasePtr^, NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr) );
-      finally
-        Free;
-      end;
-  end;
+  var lPath := wbDataPath + 'Dump\' + GetFile.FileName + '\' + Self.GetSignature + '\';
+  ForceDirectories(lPath);
+  var lFileName := lPath + GetLoadOrderFormID.ToString;
+  if not FileExists(lFileName) then
+    with TFileStream.Create(lFileName, fmCreate) do try
+      WriteBuffer(dcDataBasePtr^, NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr) );
+    finally
+      Free;
+    end;
   }
 end;
 
@@ -9609,13 +9751,21 @@ begin
 
   _File := GetFile;
   if Assigned(_File) then begin
-    FormID := GetFormID;
-    FixedFormID := GetFixedFormID;
-    if _File.IsESL and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
-      Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
-    else begin
-      if FormID <> FixedFormID then
-        Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
+    if _File.IsOverlay then begin
+      FormID := GetFormID;
+      if FormID.FileID.FullSlot >= _File.FileFileID[True].FullSlot then
+        Result := 'An overlay module can not contain new records.';
+    end;
+
+    if Result = '' then begin
+      FormID := GetFormID;
+      FixedFormID := GetFixedFormID;
+      if _File.IsESL and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
+        Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
+      else begin
+        if FormID <> FixedFormID then
+          Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
+      end;
     end;
 
     if Result <> '' then
@@ -10442,6 +10592,12 @@ function TwbMainRecord.GetIsESL: Boolean;
 begin
   Result := GetFlags.IsESL;
 end;
+
+function TwbMainRecord.GetIsOverlay: Boolean;
+begin
+  Result := GetFlags.IsOverlay;
+end;
+
 
 function TwbMainRecord.GetIsESM: Boolean;
 begin
@@ -12375,6 +12531,14 @@ begin
   if aValue <> GetIsESL then begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetESL(aValue);
+  end;
+end;
+
+procedure TwbMainRecord.SetIsOverlay(aValue: Boolean);
+begin
+  if aValue <> GetIsOverlay then begin
+    MakeHeaderWriteable;
+    GetFlagsPtr.SetOverlay(aValue);
   end;
 end;
 
@@ -21010,7 +21174,7 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized: PBoolean): Boolean;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean;
 var
   FileName : string;
   i        : Integer;
@@ -21023,6 +21187,8 @@ begin
     aIsESM^ := False;
   if Assigned(aIsESL) then
     aIsESL^ := False;
+  if Assigned(aIsOverlay) then
+    aIsOverlay^ := False;
   wbProgressLock;
   try
     FileName := wbExpandFileName(aFileName);
@@ -21040,6 +21206,8 @@ begin
         aIsESM^ := _File.IsESM;
       if Assigned(aIsESL) then
         aIsESL^ := _File.IsESL;
+      if Assigned(aIsOverlay) then
+        aIsOverlay^ := _File.IsOverlay;
       if Assigned(aIsLocalized) then
         aIsLocalized^ := _File.IsLocalized;
       Result := True;
@@ -21052,14 +21220,14 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized: PBoolean): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean; overload;
 var
   sl : TStringList;
 begin
   aMasters := nil;
   sl := TStringList.Create;
   try
-    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL, aIsLocalized);
+    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL, aIsLocalized, aIsOverlay);
     if Result then
       aMasters := sl.ToStringArray;
   finally
@@ -21154,7 +21322,7 @@ var
   i     : Integer;
 begin
   for i := Low(Files) to High(Files) do
-    if fsIsGameMaster in  Files[i].FileStates then
+    if fsIsGameMaster in Files[i].FileStates then
       Exit(Files[i]);
   for i := Low(Files) to High(Files) do
     with Files[i].LoadOrderFileID do

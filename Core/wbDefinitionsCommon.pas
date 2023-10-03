@@ -99,8 +99,6 @@ procedure wbBODCsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue
 
 procedure wbBODSsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
-procedure wbEXASsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-
 procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -982,11 +980,6 @@ end;
 procedure wbBODCsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterAfterSet('BODM - Count', aElement);
-end;
-
-procedure wbEXASsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('EXAC - Count', aElement);
 end;
 
 procedure wbConditionsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);

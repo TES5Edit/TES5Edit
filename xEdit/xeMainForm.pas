@@ -2793,6 +2793,12 @@ begin
               if Result then
                 Result := a._File.LoadOrder >= j;
             end;
+            if Result and AsNew then begin
+              if mfHasOverlayFlag in a.miFlags then
+                Exit(False);
+              if Assigned(a.miFile) and a._File.IsOverlay then
+                Exit(False);
+            end;
           end);
 
         Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
@@ -12323,6 +12329,11 @@ var
     end else
       TargetFile := SourceFile;
 
+    if TargetFile.IsOverlay then begin
+      ShowMessage('"'+TargetFile.Name+'" is an overlay module and can''t own any records.');
+      Exit;
+    end;
+
     if TargetFile.AllowHardcodedRangeUse then
       LowestFormID := 1;
 
@@ -14510,7 +14521,7 @@ begin
     mniNavRenumberFormIDsFrom.Visible and
     wbIsEslSupported and
     Supports(Element, IwbFile, _File) and
-    not _File.IsESL;
+    not (_File.IsESL or _File.IsOverlay);
 
   mniNavRenumberFormIDsInject.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
@@ -14603,7 +14614,13 @@ begin
 
   mniNavAdd.Visible := mniNavAdd.Count > 0;
 
+  var IsMainRecord := Supports(Element, IwbMainRecord, MainRecord);
+
   mniNavCopyAsOverride.Visible := mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
+
+  if IsMainRecord and MainRecord.ContainsReflection then
+    mniNavCopyAsOverride.Visible := False;
+
   mniNavCopyAsOverrideWithOverwrite.Visible := mniNavCopyAsOverride.Visible;
   mniNavDeepCopyAsOverride.Visible := mniNavCopyAsOverride.Visible and SelectionIncludesAnyDeepCopyRecords;
   mniNavDeepCopyAsOverrideWithOverwriting.Visible := mniNavDeepCopyAsOverride.Visible;
@@ -14615,7 +14632,7 @@ begin
   end;
 
   mniNavCopyAsWrapper.Visible := False;
-  if mniNavCopyAsOverride.Visible and Supports(Element, IwbMainRecord, MainRecord) then
+  if (wbGameMode <= gmFNV) and mniNavCopyAsOverride.Visible and IsMainRecord then
     mniNavCopyAsWrapper.Visible :=
       (MainRecord.Signature = 'LVLN') or
       (MainRecord.Signature = 'LVLC') or
@@ -14624,15 +14641,15 @@ begin
   mniNavCopyAsSpawnRateOverride.Visible :=
     mniNavCopyAsWrapper.Visible;
 
-  mniNavCopyIdle.Visible := mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
+  mniNavCopyIdle.Visible := (wbGameMode <= gmFNV) and mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
 
   mniNavCleanupInjected.Visible :=
     mniNavCopyAsOverride.Visible and
-    Supports(Element, IwbMainRecord, MainRecord) and
+    IsMainRecord and
     MainRecord.ReferencesInjected;
 
   mniNavCompareSelected.Visible := False;
-  if Supports(Element, IwbMainRecord, MainRecord) then begin
+  if IsMainRecord then begin
     Nodes := vstNav.GetSortedSelection(True);
     for i := Low(Nodes) to High(Nodes) do begin
       NodeData := vstNav.GetNodeData(Nodes[i]);
@@ -18885,6 +18902,8 @@ begin
                 s := '<ESM>';
               if _File.Header.IsESL then
                 s := s + '<ESL>';
+              if _File.Header.IsOverlay then
+                s := s + '<Overlay>';
               if _File.Header.IsLocalized then
                 s := s + '<Localized>';
             end;
@@ -20369,7 +20388,7 @@ begin
     Exit;
 
   FileID := FormID.FileID;
-  if wbIsEslSupported or wbPseudoESL then begin
+  if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrderFileID = FileID then begin
