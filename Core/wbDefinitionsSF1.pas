@@ -11608,7 +11608,7 @@ end;
   wbRecord(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
-      wbFormIDCk('Material', [MATT]),
+      wbFormIDCk('Material', [MATT]).IncludeFlag(dfUnmappedFormID),
       wbFormIDCk('Impact', [IPCT])
     ]))
   ]);
@@ -12584,9 +12584,9 @@ end;
 
       wbRStruct('Unknown', [
         wbFormIDCk(REPL, 'Unknown', [ACHR, IMAD, REFR, NULL]),
-        wbFloat(HNAM).SetRequired,
-        wbFloat(VCLR).SetRequired,
-        wbFloat(VNML).SetRequired,
+        wbFloat(HNAM),
+        wbFloat(VCLR),
+        wbFloat(VNML),
         wbUnknown(LVCR),
         wbUnknown(BTXT),
         wbEmpty(ATXT, 'Unknown'),
@@ -12610,12 +12610,12 @@ end;
           {0x00004000} 'Unknown 14',
           {0x00008000} 'Unknown 15',
           {0x00010000} 'Unknown 16'
-        ])).SetRequired,
+        ])),
         wbEmpty(MPCD, 'Unknown'),
         wbEmpty(VNAM, 'Unknown'),
         wbSoundReference(WED0),
-        wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]).SetRequired,
-        wbInteger(LVLO, 'Unknown', itS32).SetRequired,
+        wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]),
+        wbInteger(LVLO, 'Unknown', itS32),
         wbEmpty(XNAM, 'Unknown')
       ], []),
 
@@ -18687,7 +18687,7 @@ end;
       {0x80000000} 'Unknown 31'
     ])),
     wbInteger(SNST, 'Unknown', itU32),
-    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND])),
+    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID)),
     wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'), 3),
     wbFormIDCk(ANAM, 'Art Object', [ARTO])
   ]);

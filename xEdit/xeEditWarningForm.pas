@@ -24,7 +24,7 @@ type
     Image2: TImage;
     Panel3: TPanel;
     Label1: TLabel;
-    Memo1: TMemo;
+    LabelMessage: TLabel;
     Timer1: TTimer;
     Panel4: TPanel;
     btnOk: TBitBtn;

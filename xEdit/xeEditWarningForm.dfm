@@ -13,11 +13,9 @@ object frmEditWarning: TfrmEditWarning
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poScreenCenter
   OnCreate = FormCreate
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
     Left = 0
@@ -867,32 +865,26 @@ object frmEditWarning: TfrmEditWarning
           ExplicitLeft = 6
           ExplicitTop = -3
         end
-        object Memo1: TMemo
+        object LabelMessage: TLabel
           Left = 0
           Top = 73
           Width = 294
           Height = 169
           Align = alClient
           Alignment = taCenter
-          BorderStyle = bsNone
+          Caption = 
+            'You are about to edit a module file.'#13#13'If you have the slightest ' +
+            'doubt about'#13'what the implications of your change'#13'are, you should' +
+            'n'#39't be doing it.'#13#13'Are you absolutely sure you want to continue?'
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -16
           Font.Name = 'Tahoma'
           Font.Style = []
-          Lines.Strings = (
-            'You are about to edit a module file.'
-            ''
-            'If you have the slightest doubt about '
-            'what the implications of your change '
-            'are you shouldn'#39't be doing it.'
-            ''
-            'Are you absolutely sure you want to '
-            'continue?')
-          ParentColor = True
           ParentFont = False
-          ReadOnly = True
-          TabOrder = 0
+          WordWrap = True
+          ExplicitWidth = 261
+          ExplicitHeight = 152
         end
       end
       object Panel4: TPanel
