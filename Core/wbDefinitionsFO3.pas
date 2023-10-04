@@ -9762,6 +9762,7 @@ end;
 
 procedure DefineFO3;
 begin
+  DefineCommon;
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';

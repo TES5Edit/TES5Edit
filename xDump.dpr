@@ -1043,8 +1043,6 @@ begin
 
       wbLanguage := 'English';
 
-      DefineCommon;
-
       wbGameExeName := '';
       case wbGameMode of
         gmFNV: begin

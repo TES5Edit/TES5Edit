@@ -1,7 +1,7 @@
 {******************************************************************************
 
-  This Source Code Form is subject to the terms of the Mozilla Public License, 
-  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain 
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain
   one at https://mozilla.org/MPL/2.0/.
 
 *******************************************************************************}
@@ -22,7 +22,8 @@ uses
   Classes,
   SysUtils,
   Math,
-  Variants;
+  Variants,
+  wbDefinitionsCommon;
 
 const
   AADT : TwbSignature = 'AADT';
@@ -237,6 +238,7 @@ const
     'INDX',
     'DESC',
     '____',
+    '____',
     '____'
   );
 
@@ -244,11 +246,13 @@ const
     'INDX',
     'DESC',
     '____',
+    '____',
     '____'
   );
 
   wbKnownSubRecordSignaturesSCPT : TwbKnownSubRecordSignatures = (
     'SCHD',
+    '____',
     '____',
     '____',
     '____'
@@ -258,6 +262,7 @@ const
     'INAM',
     'NAME',
     '____',
+    '____',
     '____'
   );
 
@@ -265,13 +270,15 @@ const
     'NAME',
     'NAME',
     '____',
-    'DATA'
+    'DATA',
+    '____'
   );
 
   wbKnownSubRecordSignaturesREFR : TwbKnownSubRecordSignatures = (
     '____',
     '____',
     'NAME',
+    '____',
     '____'
   );
 
@@ -279,14 +286,16 @@ const
     '____',
     '____',
     '____',
-    'INTV'
+    'INTV',
+    '____'
   );
 
   wbKnownSubRecordSignaturesPGRD : TwbKnownSubRecordSignatures = (
     'NAME',
     'NAME',
     '____',
-    'DATA'
+    'DATA',
+    '____'
   );
 
 
@@ -316,12 +325,13 @@ procedure DefineTES3;
 var
   wbLAND: IwbMainRecordDef;
 begin
+  DefineCommon;
   wbHeaderSignature := 'TES3';
 
-  wbKnownSubRecordSignatures[ksrsEditorID] := 'NAME';
-  wbKnownSubRecordSignatures[ksrsFullName] := 'FNAM';
-  wbKnownSubRecordSignatures[ksrsBaseRecord] := '____';
-  wbKnownSubRecordSignatures[ksrsGridCell] := '____';
+  wbKnownSubRecordSignatures[ksrEditorID] := 'NAME';
+  wbKnownSubRecordSignatures[ksrFullName] := 'FNAM';
+  wbKnownSubRecordSignatures[ksrBaseRecord] := '____';
+  wbKnownSubRecordSignatures[ksrGridCell] := '____';
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',

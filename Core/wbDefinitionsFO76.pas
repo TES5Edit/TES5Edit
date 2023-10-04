@@ -20714,6 +20714,7 @@ end;
 
 procedure DefineFO76;
 begin
+  DefineCommon;
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}

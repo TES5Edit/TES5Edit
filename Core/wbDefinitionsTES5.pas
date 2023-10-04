@@ -13400,6 +13400,7 @@ end;
 
 procedure DefineTES5;
 begin
+  DefineCommon;
   if IsSSE then begin
     wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
     if wbToolMode = tmLODgen then

@@ -1180,8 +1180,6 @@ begin
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
 
-  DefineCommon;
-
   // definitions
   case wbGameMode of
     gmFNV: case wbToolSource of

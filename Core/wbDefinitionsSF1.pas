@@ -3968,11 +3968,19 @@ const
     'EDID',
     'NNAM',
     '____',
-    '____'
+    '____',
+    'BFCB'
   );
 
 procedure DefineSF1;
 begin
+  wbKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
+  wbHEDRVersion := 0.96;
+  wbCellSizeFactor := 100;
+
+  DefineCommon;
+
+
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);
   var wbIdxModulation := wbNamedIndex('Modulation', True);
@@ -8223,6 +8231,7 @@ end;
           wbString(XMSP, 'Ring material'),
           wbString(XLMS, 'Ring id')
         ], []),
+        //BGSObjectPaletteDefaults_Component
         wbRStruct('Component Data - Object Placement Defaults', [
           wbOPDS
         ], []),
@@ -12493,12 +12502,12 @@ end;
         {2} 'Timer',
         {3} 'Player Dialogue',
         {4} 'Start Scene',
-        {5} 'NPC Response Dialogue',
-        {6} 'Radio',
-        {7} 'Camera Direction',
-        {8} 'Unknown 8',
-        {9} 'NPC Anim',
-        {10}'Unknown 10'
+        {5} 'Radio',
+        {6} 'Move',
+        {7} 'Camera',
+        {8} 'FX',
+        {9} 'Animation',
+        {10}'Timeline'
       ]), cpNormal, True),
       wbString(NAM0, 'Name'),
       wbString(SNOT, 'Scene Notes'),
@@ -12617,7 +12626,6 @@ end;
         wbInteger(LVLO, 'Unknown', itS32),
         wbEmpty(XNAM, 'Unknown')
       ], []),
-
 
       wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
       wbFloat(DMAX, 'Looping - Max'),
@@ -16894,10 +16902,10 @@ end;
 
     wbRStruct('Grouped Pack-In', [
       wbMarkerReq(XWPK),
-      wbFormIDCk(GNAM, 'Unknown', [PKIN]).SetRequired,
-      wbFormIDCk(HNAM, 'Unknown', [REFR]).SetRequired,
+      wbFormIDCk(GNAM, 'Unknown', [PKIN]),
+      wbFormIDCk(HNAM, 'Unknown', [REFR]),
       wbInteger(INAM, 'Unknown', itU16, wbBoolEnum).SetRequired,
-      wbFormIDCk(JNAM, 'Unknown', [PKIN]).SetRequired,
+      wbFormIDCk(JNAM, 'Unknown', [PKIN]),
       wbUnknown(LNAM, 4).SetRequired,
       wbEmpty(XGOM, 'Unknown'),
       wbMarkerReq(XWPK)
@@ -20221,7 +20229,6 @@ end;
     wbCreationClubContentFileName := 'Fallout4.ccc';
   }
 
-  wbHEDRVersion := 0.96;
 end;
 
 initialization

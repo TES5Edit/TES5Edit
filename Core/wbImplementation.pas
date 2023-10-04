@@ -2208,7 +2208,7 @@ var
   Dummy     : Integer;
 begin
   if not IsElementEditable(nil) then
-    raise Exception.Create('File "'+GetFileName+'" is not editable');
+    raise Exception.Create('File "' + GetFileName + '" is not editable');
 
   Result := nil;
 
@@ -2253,7 +2253,7 @@ var
   i           : Integer;
 begin
   if not IsElementEditable(nil) then
-    raise Exception.Create('File "'+GetFileName+'" is not editable');
+    raise Exception.Create('File "' + GetFileName + '" is not editable');
 
   SelfRef := Self as IwbContainerElementRef;
   if not Supports(aElement, IwbGroupRecord, GroupRecord) then
@@ -2360,7 +2360,7 @@ begin
     except
       on E: Exception do
         if wbHasProgressCallback then
-          wbProgressCallback('Error: <'+e.Message+'> while trying to determine master record for ' + aRecord.Name);
+          wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
     end;
   end;
 
@@ -2411,7 +2411,7 @@ var
     MaxMasterCount : Integer;
   begin
     if not IsElementEditable(nil) then
-      raise Exception.Create('File "'+GetFileName+'" is not editable');
+      raise Exception.Create('File "' + GetFileName + '" is not editable');
 
     if GetIsNotPlugin then
       Exit;
@@ -2494,7 +2494,7 @@ begin;
     IncGeneration;
 
     if NotAllAdded then
-      raise Exception.Create('Only '+ (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString +' masters could be added. Master list now contains '+ Length(flMasters).ToString +' entries and is full.');
+      raise Exception.Create('Only ' + (Length(flMasters) - Length(flOldMasters)).ToString + ' of ' + lMasters.Count.ToString + ' masters could be added. Master list now contains ' + Length(flMasters).ToString + ' entries and is full.');
   finally
     lMasters.Free;
     flOldMasters := nil;
@@ -2846,7 +2846,7 @@ var
   UsedMasters : TwbUsedMasters;
 begin
   if not IsElementEditable(nil) then
-    raise Exception.Create('File "'+GetFileName+'" is not editable');
+    raise Exception.Create('File "' + GetFileName + '" is not editable');
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbContainerElementRef, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
@@ -3369,7 +3369,7 @@ begin
       if not flRecordsIndices[dkIndex].TryAdd(dkKey, aMainRecord) then begin
         var lMainRecord: IwbMainRecord;
         flRecordsIndices[dkIndex].TryGetValue(dkKey, lMainRecord);
-        flProgress('Duplicate Key in Index "' + wbNamedIndexName(dkIndex) + '": "' + dkKey + '" Existing: '+lMainRecord.ShortName+' New: '+ aMainRecord.ShortName);
+        flProgress('Duplicate Key in Index "' + wbNamedIndexName(dkIndex) + '": "' + dkKey + '" Existing: ' + lMainRecord.ShortName + ' New: ' + aMainRecord.ShortName);
       end;
     end;
   except
@@ -3512,13 +3512,13 @@ begin
   flEndPtr := PByte(flView) + flSize;
 
   if wbHasProgressCallback then
-    flProgress('File loaded (CRC32:'+GetCRC32.ToString+')');
+    flProgress('File loaded (CRC32:' + GetCRC32.ToString + ')');
 end;
 
 procedure TwbFile.flProgress(const aStatus: string);
 begin
   if wbHasProgressCallback then
-    wbProgressCallback('['+GetFileName+'] ' + aStatus);
+    wbProgressCallback('[' + GetFileName + '] ' + aStatus);
 end;
 
 procedure TwbFile.flRemoveKeysFromIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
@@ -3600,7 +3600,7 @@ begin
           if not flRecordsIndices[ckIndex].TryAdd(ckNewKey, aMainRecord) then begin
             var lMainRecord: IwbMainRecord;
             flRecordsIndices[ckIndex].TryGetValue(ckNewKey, lMainRecord);
-            flProgress('Duplicate Key in Index "' + wbNamedIndexName(ckIndex) + '": "' + ckNewKey + '" Existing Record: '+lMainRecord.ShortName+' New Record: '+ aMainRecord.ShortName);
+            flProgress('Duplicate Key in Index "' + wbNamedIndexName(ckIndex) + '": "' + ckNewKey + '" Existing Record: ' + lMainRecord.ShortName + ' New Record: ' + aMainRecord.ShortName);
           end else
             lIndexChanged := True;
       end;
@@ -4125,7 +4125,7 @@ begin
       raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
     if Header.Signature <> wbHeaderSignature then
-      raise Exception.CreateFmt('Expected header signature '+wbHeaderSignature+', found %s in file "%s"', [String(Header.Signature), flFileName]);
+      raise Exception.CreateFmt('Expected header signature ' + wbHeaderSignature + ', found %s in file "%s"', [String(Header.Signature), flFileName]);
 
     MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
     if Assigned(MasterFiles) then
@@ -4152,7 +4152,7 @@ begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
     Result := wbGameExeName;
-  Result := '['+flLoadOrderFileID.ToString+'] ' + Result;
+  Result := '[' + flLoadOrderFileID.ToString + '] ' + Result;
 end;
 
 function TwbFile.GetRecord(aIndex: Integer): IwbMainRecord;
@@ -4301,7 +4301,7 @@ begin
       if wbHasProgressCallback then
         if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
           if ([fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = []) then
-            wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with '+flInjectedRecords[i].Name+' from '+flInjectedRecords[i]._File.FileName+' >');
+            wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with ' + flInjectedRecords[i].Name + ' from ' + flInjectedRecords[i]._File.FileName + ' >');
       (flInjectedRecords[i] as IwbMainRecordInternal).AddOverride(aRecord);
       Exit;
     end
@@ -4359,7 +4359,7 @@ begin
       if GetMaster(i, aNew).LoadOrderFileID = aFileID then
         Exit(TwbFileID.Create(i));
 
-  raise Exception.Create('Load order FileID ['+aFileID.ToString+'] can not be mapped to file FileID for file "'+GetFileName+'"');
+  raise Exception.Create('Load order FileID [' + aFileID.ToString + '] can not be mapped to file FileID for file "' + GetFileName + '"');
 end;
 
 function TwbFile.LoadOrderFormIDtoFileFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -4418,7 +4418,7 @@ var
   Mask         : Cardinal;
 begin
   if GetIsOverlay then
-    raise Exception.Create('File '+GetFileName+' is an overlay and can not contain new records.');
+    raise Exception.Create('File ' + GetFileName + ' is an overlay and can not contain new records.');
 
   Assert(not (fsMastersUpdating in flStates));
 
@@ -4426,18 +4426,18 @@ begin
   DoInit(True);
 
   if Length(cntElements) < 1 then
-    raise Exception.Create('File '+GetFileName+' has no file header');
+    raise Exception.Create('File ' + GetFileName + ' has no file header');
 
   if cntElements[0].ElementType <> etMainRecord then
-    raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
+    raise Exception.Create('File ' + GetFileName + ' has invalid record ' + cntElements[0].Name + ' as file header.');
 
   FileHeader := cntElements[0] as IwbMainRecord;
   if FileHeader.Signature <> wbHeaderSignature then
-    raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
+    raise Exception.Create('File ' + GetFileName + ' has invalid record ' + cntElements[0].Name + ' with invalid signature as file header.');
 
   HEDR := FileHeader.RecordBySignature['HEDR'];
   if not Assigned(HEDR) then
-    raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
+    raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
   IsESL := GetIsESL or flLoadOrderFileID.IsLightSlot;
   if IsESL then
@@ -4473,7 +4473,7 @@ begin
     end;
     Result := TwbFormID.FromCardinal(NextObjectID).ChangeFileID(GetFileFileID(True));
     if Result = First then //we've gone through all possible FormIDs once, no more space free
-      raise ERangeError.Create('File '+GetFileName+' has no more space for a new FormID');
+      raise ERangeError.Create('File ' + GetFileName + ' has no more space for a new FormID');
   end;
 
   if GetRecordCount > 0 then
@@ -4513,19 +4513,19 @@ begin
   DoInit(True);
 
   if Length(cntElements) < 1 then
-    raise Exception.Create('File '+GetFileName+' has no file header');
+    raise Exception.Create('File ' + GetFileName + ' has no file header');
 
   if not GetIsNotPlugin then begin
     if cntElements[0].ElementType <> etMainRecord then
-      raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' as file header.');
+      raise Exception.Create('File ' + GetFileName + ' has invalid record ' + cntElements[0].Name + ' as file header.');
 
     FileHeader := cntElements[0] as IwbMainRecord;
     if FileHeader.Signature <> wbHeaderSignature then
-      raise Exception.Create('File '+GetFileName+' has invalid record '+cntElements[0].Name+' with invalid signature as file header.');
+      raise Exception.Create('File ' + GetFileName + ' has invalid record ' + cntElements[0].Name + ' with invalid signature as file header.');
 
     HEDR := FileHeader.RecordBySignature['HEDR'];
     if not Assigned(HEDR) then
-      raise Exception.Create('File '+GetFileName+' has a file header with missing HEDR subrecord');
+      raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
     if wbIsStarfield then begin
       if GetIsOverlayDirect and GetIsESLDirect then begin
@@ -4549,15 +4549,15 @@ begin
     SetLength(Groups, wbGroupOrder.Count);
     for i := Succ(Low(cntElements)) to High(cntElements) do begin
       if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then
-        raise Exception.Create('File '+GetFileName+' contains invalid top level record: '+ cntElements[i].Name);
+        raise Exception.Create('File ' + GetFileName + ' contains invalid top level record: ' + cntElements[i].Name);
       if GroupRecord.GroupType <> 0 then
-        raise Exception.Create('File '+GetFileName+' contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
+        raise Exception.Create('File ' + GetFileName + ' contains invalid top level group type ' + IntToStr(GroupRecord.GroupType) + ' for group: ' + cntElements[i].Name);
       if GroupRecord.SortOrder < 0 then
-        raise Exception.Create('File '+GetFileName+' contains top level group without known sort order: '+ cntElements[i].Name);
+        raise Exception.Create('File ' + GetFileName + ' contains top level group without known sort order: ' + cntElements[i].Name);
       if GroupRecord.SortOrder > High(Groups) then
-        raise Exception.Create('File '+GetFileName+' contains top level group with invalid sort order: '+ cntElements[i].Name);
+        raise Exception.Create('File ' + GetFileName + ' contains top level group with invalid sort order: ' + cntElements[i].Name);
       if Groups[GroupRecord.SortOrder] then
-        raise Exception.Create('File '+GetFileName+' contains duplicated top level group: '+ cntElements[i].Name);
+        raise Exception.Create('File ' + GetFileName + ' contains duplicated top level group: ' + cntElements[i].Name);
       Groups[GroupRecord.SortOrder] := True;
 
       //make sure all WRLD records have been initialized, so that OFST have been removed and child groups sorted
@@ -4573,7 +4573,7 @@ begin
 
     RecordCount := GetCountedRecordCount;
     if RecordCount < 1 then
-      raise Exception.Create('File '+GetFileName+' has an invalid record count');
+      raise Exception.Create('File ' + GetFileName + ' has an invalid record count');
 
     HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
 
@@ -4863,7 +4863,7 @@ begin
       FormID := aRecord.FixedFormID;
 
       if (Length(flRecords) < 1) or not FindFormID(FormID, i, True) then
-        raise Exception.Create('Can''t remove FormID ['+FormID.ToString(True)+'] from file ' + GetName + ': FormID not registered');
+        raise Exception.Create('Can''t remove FormID [' + FormID.ToString(True) + '] from file ' + GetName + ': FormID not registered');
 
       flRecords[i] := nil;
       if i < High(flRecords) then begin
@@ -4885,7 +4885,7 @@ begin
     except
       on E: Exception do
         if wbHasProgressCallback then
-          wbProgressCallback('Error: <'+e.Message+'> while trying to determine master record for ' + aRecord.Name);
+          wbProgressCallback('Error: <' + e.Message + '> while trying to determine master record for ' + aRecord.Name);
     end;
   end;
 
@@ -5242,7 +5242,7 @@ begin
       SetLength(Groups, wbGroupOrder.Count);
       for i := High(cntElements) downto Succ(Low(cntElements)) do begin
         if not Supports(cntElements[i], IwbGroupRecord, GroupRecord) then begin
-          flProgress('Error: File contains invalid top level record: '+ cntElements[i].Name);
+          flProgress('Error: File contains invalid top level record: ' + cntElements[i].Name);
           Continue;
         end;
         if GroupRecord.ElementCount = 0 then begin
@@ -5257,15 +5257,15 @@ begin
           Continue;
         end;
         if GroupRecord.GroupType <> 0 then begin
-          flProgress('Error: File contains invalid top level group type '+IntToStr(GroupRecord.GroupType)+' for group: '+ cntElements[i].Name);
+          flProgress('Error: File contains invalid top level group type ' + IntToStr(GroupRecord.GroupType) + ' for group: ' + cntElements[i].Name);
           Continue;
         end;
         if GroupRecord.SortOrder < 0 then begin
-          flProgress('Error: File contains top level group without known sort order: '+ cntElements[i].Name);
+          flProgress('Error: File contains top level group without known sort order: ' + cntElements[i].Name);
           Continue;
         end;
         if GroupRecord.SortOrder > High(Groups) then begin
-          flProgress('Error: File contains top level group with invalid sort order: '+ cntElements[i].Name);
+          flProgress('Error: File contains top level group with invalid sort order: ' + cntElements[i].Name);
           Continue;
         end;
         if Assigned(Groups[GroupRecord.SortOrder]) then begin
@@ -5343,7 +5343,7 @@ begin
 
   if Value <> Header.IsESL then begin
     if not IsElementEditable(nil) then
-      raise Exception.Create('File "'+GetFileName+'" is not editable');
+      raise Exception.Create('File "' + GetFileName + '" is not editable');
 
     Header.IsESL := Value;
   end;
@@ -5363,7 +5363,7 @@ begin
 
   if Value <> Header.IsOverlay then begin
     if not IsElementEditable(nil) then
-      raise Exception.Create('File "'+GetFileName+'" is not editable');
+      raise Exception.Create('File "' + GetFileName + '" is not editable');
 
     Header.IsOverlay := Value;
   end;
@@ -5382,7 +5382,7 @@ begin
 
   if Value <> Header.IsESM then begin
     if not IsElementEditable(nil) then
-      raise Exception.Create('File "'+GetFileName+'" is not editable');
+      raise Exception.Create('File "' + GetFileName + '" is not editable');
 
     Header.IsESM := Value;
   end;
@@ -5401,7 +5401,7 @@ begin
 
   if Value <> Header.IsLocalized then begin
     if not IsElementEditable(nil) then
-      raise Exception.Create('File "'+GetFileName+'" is not editable');
+      raise Exception.Create('File "' + GetFileName + '" is not editable');
 
     Header.IsLocalized := Value;
   end;
@@ -5459,7 +5459,7 @@ var
   Rec            : IwbRecord;
 begin
   if not IsElementEditable(nil) then
-    raise Exception.Create('File "'+GetFileName+'" is not editable');
+    raise Exception.Create('File "' + GetFileName + '" is not editable');
   if GetIsNotPlugin then
     Exit;
 
@@ -6550,7 +6550,7 @@ begin
   DoInit(True);
   if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
     if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
-      wbProgressCallback('Debugger: ['+ IwbElement(Self).Path +'] Index ' + IntToStr(aIndex) + ' greater than max '+
+      wbProgressCallback('Debugger: [' + IwbElement(Self).Path + '] Index ' + IntToStr(aIndex) + ' greater than max ' +
         IntToStr(Length(cntElements)-1));
     Result := nil
   end else begin
@@ -7965,7 +7965,7 @@ function TwbRecord.GetDisplaySignature: string;
 begin
   var Sig := GetSignature;
   if (Sig[1] = 'I') and (Sig[2] = 'A') and (Sig[3] = 'D') then
-    Result := '#$'+IntToHex(Ord(Sig[0]), 2)+'IAD'
+    Result := '#$' + IntToHex(Ord(Sig[0]), 2) + 'IAD'
   else
     Result := Sig;
 end;
@@ -8149,8 +8149,17 @@ begin
     if not wbEditAllowed then
       raise Exception.Create(GetName + ' can not be assigned.');
 
-  if GetIsDeleted then
-    Exit;
+  if GetIsDeleted then begin
+    var lHasSignature: IwbHasSignature;
+    if (wbGameMode >= gmFO4) and
+       Supports(aElement, IwbHasSignature, lHasSignature) and
+       Assigned(mrDef) and
+       (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
+    then begin
+      //allow NAME in FO4, SSE, and newer for deleted records
+    end else
+      Exit;
+  end;
 
   if Assigned(mrDef) then begin
 
@@ -8188,9 +8197,9 @@ begin
   if aMainRecord.Signature <> GetSignature then
     if wbHasProgressCallback then
       wbProgressCallback(Format('Warning: Record %s in file %s is being overridden by record %s in file %s.', [
-        '['+ GetSignature + ':' + GetFormID.ToString(True) + ']',
+        '[' + GetSignature + ':' + GetFormID.ToString(True) + ']',
         GetFile.FileName,
-        '['+ aMainRecord.Signature + ':' + aMainRecord.FormID.ToString(True) + ']',
+        '[' + aMainRecord.Signature + ':' + aMainRecord.FormID.ToString(True) + ']',
         aMainRecord._File.FileName
       ]));
 
@@ -8274,8 +8283,21 @@ begin
       raise Exception.Create(GetName + ' can not be assigned.');
 
   if GetIsDeleted then
-    if aIndex <> Low(Integer) then
-      Exit;
+    if aIndex <> Low(Integer) then begin
+      var lShouldExit := True;
+      if (wbGameMode >= gmFO4) and Assigned(mrDef) then begin
+        lShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
+
+        if not lShouldExit and Assigned(aElement) then begin
+          var lHasSignature: IwbHasSignature;
+          if Supports(aElement, IwbHasSignature, lHasSignature) then
+            lShouldExit := mrDef.KnownSubRecordSignatures[ksrBaseRecord] <> lHasSignature.Signature;
+        end;
+      end;
+
+      if lShouldExit then
+        Exit;
+    end;
 
   if Assigned(mrDef) then begin
 
@@ -8641,13 +8663,13 @@ var
 begin
   if Supports(aElement, IwbSubRecord, SubRecord) then begin
     NotRelevant := False;
-    if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrsEditorID] then
+    if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then
       mrEditorID := mrDef.GetEditorID(SubRecord)
-    else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrsFullName] then
+    else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then
       mrFullName := SubRecord.EditValue
-    else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrsBaseRecord] then
+    else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
       Exclude(mrStates, mrsBaseRecordChecked)
-    else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrsGridCell]) and (SubRecord.Container.Equals(Self)) then begin
+    else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
       if mrDef.GetGridCell(SubRecord, mrGridCell) then
         Include(mrStates, mrsHasGridCell)
       else
@@ -8712,8 +8734,17 @@ begin
   end;
 
   if GetIsDeleted then
-    if aIndex <> Low(Integer) then
-      Exit;
+    if aIndex <> Low(Integer) then begin
+      var lHasSignature: IwbHasSignature;
+      if (wbGameMode >= gmFO4) and
+         Supports(aElement, IwbHasSignature, lHasSignature) and
+         Assigned(mrDef) and
+         (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
+      then begin
+        //allow NAME in FO4, SSE, and newer for deleted records
+      end else
+        Exit;
+    end;
 
   if Assigned(eContainer) then
     if not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -9124,26 +9155,44 @@ begin
   SelfRef := Self;
   DoInit(False);
 
-  SetModified(True);
-  InvalidateStorage;
-  ReleaseElements;
+  BeginUpdate;
+  try
 
-  MakeHeaderWriteable;
-  GetFlagsPtr.SetDeleted(True);
+    var lBaseRecord := GetBaseRecord;
 
-  if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
-    if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
-      with TwbContainedInElement.Create(Self) do begin
-        _AddRef; _Release;
+    SetModified(True);
+    InvalidateStorage;
+    ReleaseElements;
+
+    MakeHeaderWriteable;
+    GetFlagsPtr.SetDeleted(True);
+
+    if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+        with TwbContainedInElement.Create(Self) do begin
+          _AddRef; _Release;
+        end;
+    GroupRecord := nil;
+
+    BasePtr := dcBasePtr;
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      Include(dcFlags, dcfDontSave);
+      SetSortOrder(-1);
+      SetMemoryOrder(Low(Integer));
+      _AddRef; _Release;
+    end;
+
+    if (wbGameMode >= gmFO4) and Assigned(lBaseRecord) then begin
+      var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord];
+      if lMemberIndex >= 0 then begin
+        var lBaseRecordElement := Assign(lMemberIndex, nil, False);
+        if Assigned(lBaseRecordElement) then
+          lBaseRecordElement.LinksTo := lBaseRecord;
       end;
-  GroupRecord := nil;
+    end;
 
-  BasePtr := dcBasePtr;
-  with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
-    Include(dcFlags, dcfDontSave);
-    SetSortOrder(-1);
-    SetMemoryOrder(Low(Integer));
-    _AddRef; _Release;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -9286,7 +9335,7 @@ begin
       CurrentDefPos := mrDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
       if CurrentDefPos < 0 then begin
         if wbHasProgressCallback then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+          wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
         FoundError := True;
         Inc(CurrentRecPos);
         Continue;
@@ -9295,7 +9344,7 @@ begin
     end else begin
       if not mrDef.ContainsMemberFor(CurrentRec.Signature, CurrentRec) then begin
         if wbHasProgressCallback then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+          wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
         FoundError := True;
         Inc(CurrentRecPos);
         Continue;
@@ -9309,7 +9358,7 @@ begin
         end;
       end else begin
         if wbHasProgressCallback then
-          wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) );
+          wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.DisplaySignature) );
         FoundError := True;
         Inc(CurrentRecPos);
         Continue;
@@ -9341,14 +9390,14 @@ begin
     case CurrentDef.DefType of
       dtSubRecord       : begin
         (CurrentRec as IwbSubRecordInternal).SetDef(CurrentDef as IwbSubRecordDef);
-        if CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrsEditorID] then
+        if CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then
           mrEditorID := mrDef.GetEditorID(CurrentRec)
-        else if CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrsFullName] then
+        else if CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then
           mrFullName := CurrentRec.EditValue
-        else if (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrsBaseRecord]) and mrDef.IsReference then begin
+        else if (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord]) and mrDef.IsReference then begin
           mrBaseRecordID := TwbFormID.FromCardinal(CurrentRec.NativeValue);
           Include(mrStates, mrsBaseRecordChecked);
-        end else if not (mrsGridCellChecked in mrStates) and (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrsGridCell]) then begin
+        end else if not (mrsGridCellChecked in mrStates) and (CurrentRec.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) then begin
           if mrDef.GetGridCell(CurrentRec as IwbSubRecord, mrGridCell) then
             Include(mrStates, mrsHasGridCell)
           else
@@ -9390,7 +9439,7 @@ begin
     end;
 
     if wbHasProgressCallback then
-      wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) );
+      wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) );
     FoundError := True;
 
     Inc(CurrentRecPos);
@@ -9435,7 +9484,7 @@ begin
         for i := 0 to Pred(mrDef.MemberCount) do
           if i in RequiredRecords then begin
             if wbMoreInfoForRequired  then
-              wbProgressCallback(' ['+mrFixedFormID.ToString(True)+'] Adding missing record: ' + mrDef.Members[i].GetName);
+              wbProgressCallback(' [' + mrFixedFormID.ToString(True) + '] Adding missing record: ' + mrDef.Members[i].GetName);
             Assign(i, nil, False);
           end;
       finally
@@ -9645,7 +9694,7 @@ begin
       Exclude(mrStates, mrsBaseRecordChecked);
 
   if not (mrsBaseRecordChecked in mrStates) then begin
-    if mrDef.ContainsBaseRecord then begin
+    if mrDef.ContainsKnownSubRecord[ksrBaseRecord] then begin
       SelfRef := Self as IwbContainerElementRef;
       if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
         Assert(not (csInit in cntStates));
@@ -9665,7 +9714,7 @@ begin
       mrBaseRecordID := TwbFormID.Null;
       if not (Assigned(_File) and (fsMastersUpdating in _File.FileStates)) then
         Include(mrStates, mrsBaseRecordChecked);
-      if Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrsBaseRecord]), IwbContainerElementRef, NameRec) then
+      if Supports(GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrBaseRecord]), IwbContainerElementRef, NameRec) then
         if Supports(NameRec.LinksTo, IwbMainRecord, Result) then begin
           mrBaseRecordID := TwbFormID.FromCardinal(NameRec.NativeValue);
         end;
@@ -9715,17 +9764,17 @@ end;
 
 function TwbMainRecord.GetCanHaveBaseRecord: Boolean;
 begin
-  Result := Assigned(mrDef) and mrDef.ContainsBaseRecord;
+  Result := Assigned(mrDef) and mrDef.ContainsKnownSubRecord[ksrBaseRecord];
 end;
 
 function TwbMainRecord.GetCanHaveEditorID: Boolean;
 begin
-  Result := Assigned(mrDef) and mrDef.ContainsEditorID;
+  Result := Assigned(mrDef) and mrDef.ContainsKnownSubRecord[ksrEditorID];
 end;
 
 function TwbMainRecord.GetCanHaveFullName: Boolean;
 begin
-  Result := Assigned(mrDef) and mrDef.ContainsFullName;
+  Result := Assigned(mrDef) and mrDef.ContainsKnownSubRecord[ksrFullName];
 end;
 
 function TwbMainRecord.GetCheck: string;
@@ -9779,7 +9828,7 @@ begin
       Element := cntElements[i];
       Def := Element.Def;
       if Assigned(Def) then begin
-        if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (SigDef.DefaultSignature = 'NAME') then
+        if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = SigDef.DefaultSignature) then
           Continue;
         Result := Result + Def.Name + ', ';
       end;
@@ -9964,9 +10013,9 @@ begin
       (GetSignature = 'PHZD')    {>>> Skyrim <<<}
     then begin
       if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
-        Rec := MapMarker.RecordBySignature[mrDef.KnownSubRecordSignatures[ksrsFullName]]
+        Rec := MapMarker.RecordBySignature[mrDef.KnownSubRecordSignatures[ksrFullName]]
       else
-        Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrsBaseRecord]);
+        Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrBaseRecord]);
       if Assigned(Rec) then
         Result := Trim(Rec.Value)
     end else if (GetSignature = 'CELL') then begin
@@ -10016,9 +10065,9 @@ begin
       (GetSignature = 'PHZD')    {>>> Skyrim <<<}
     then begin
       if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
-        Rec := MapMarker.RecordBySignature[mrDef.KnownSubRecordSignatures[ksrsFullName]]
+        Rec := MapMarker.RecordBySignature[mrDef.KnownSubRecordSignatures[ksrFullName]]
       else
-        Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrsBaseRecord]);
+        Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrBaseRecord]);
       if Assigned(Rec) then
         Result := Trim(Rec.Value)
     end else if (GetSignature = 'CELL') then begin
@@ -10182,13 +10231,13 @@ var
 begin
   Result := False;
 
-  if not mrDef.ContainsGridCell then
+  if not mrDef.ContainsKnownSubRecord[ksrGridCell] then
     Exit;
 
   SelfRef := Self;
   DoInit(False);
 
-  GridCellSig := mrDef.KnownSubRecordSignatures[ksrsGridCell];
+  GridCellSig := mrDef.KnownSubRecordSignatures[ksrGridCell];
 
   if not Supports(GetRecordBySignature(GridCellSig), IwbContainerElementRef, GridCellRec) then begin
     Add(GridCellSig, True);
@@ -10266,7 +10315,7 @@ var
 begin
   Result := False;
 
-  if not mrDef.ContainsGridCell then
+  if not mrDef.ContainsKnownSubRecord[ksrGridCell] then
     Exit;
 
   SelfRef := Self as IwbContainerElementRef;
@@ -10311,7 +10360,7 @@ begin
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
-            s := 'meshes\'+ s;//
+            s := 'meshes\' + s;//
             if Length(wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasMesh);
           end;
@@ -10382,7 +10431,7 @@ begin
     SelfRef := Self as IwbContainerElementRef;
 
     // markers can't be precombined
-    if Cardinal(SelfRef.ElementNativeValues[mrDef.KnownSubRecordSignatures[ksrsBaseRecord]]) < $800 then
+    if Cardinal(SelfRef.ElementNativeValues[mrDef.KnownSubRecordSignatures[ksrBaseRecord]]) < $800 then
       Exit;
 
     if Supports(SelfRef.Container, IwbGroupRecord, Group) then
@@ -10467,7 +10516,7 @@ begin
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
-            s := 'textures\trees\billboards'+ChangeFileExt(s, '.dds');
+            s := 'textures\trees\billboards' + ChangeFileExt(s, '.dds');
             if Length(wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
@@ -10478,7 +10527,7 @@ begin
         if Supports(ModelCnt.RecordBySignature['MODL'], IwbContainerElementRef, MODL) then begin
           s := Trim(StringReplace(MODL.EditValue, '/', '\', [rfReplaceAll]));
           if s <> '' then begin
-            s := 'meshes\'+ChangeFileExt(s, '_far.nif');
+            s := 'meshes\' + ChangeFileExt(s, '_far.nif');
             if Length(wbContainerHandler.OpenResource(s)) > 0 then
               Include(mrStates, mrsHasVWDMesh);
           end;
@@ -10789,7 +10838,7 @@ begin
 
     s := GetEditorID;
     if s <> '' then
-      Result := Result + {'<' +} s {+'>'};
+      Result := Result + {'<' + } s { + '>'};
 
     if not wbNoFullInShortName or aForName then begin
       s := GetFullName;
@@ -10797,7 +10846,7 @@ begin
         s := s.Replace('"', '""',[ rfReplaceAll]);
         if Result <> '' then
           Result := Result + ' ';
-        Result := Result + '"' + s +'"';
+        Result := Result + '"' + s + '"';
       end;
     end;
 
@@ -10824,12 +10873,12 @@ begin
 
     s := GetEditorID;
     if s <> '' then
-      Result := Result + ' <' + s +'>';
+      Result := Result + ' <' + s + '>';
 
     s := GetFullName;
     if s <> '' then begin
       s := s.Replace('"', '""',[ rfReplaceAll]);
-      Result := Result + ' "' + s +'"';
+      Result := Result + ' "' + s + '"';
     end;
 
   end;
@@ -11239,7 +11288,7 @@ begin
       mrDef := RecordDef^
     else begin
       if wbHasProgressCallback then
-        wbProgressCallback('Error: unknown record type '+ String(PwbSignature(dcBasePtr)^));
+        wbProgressCallback('Error: unknown record type ' + String(PwbSignature(dcBasePtr)^));
     end;
   end;
 end;
@@ -11727,7 +11776,7 @@ begin
     mrShortName := '';
     mrDisplayName := '';
     if (mrsQuickInitDone in mrStates) or (csInitOnce in cntStates) then begin
-      FULLRec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrsFullName]);
+      FULLRec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrFullName]);
       if Assigned(FULLRec) then
         mrFullName := FULLRec.EditValue;
     end;
@@ -12051,14 +12100,14 @@ begin
   if not (csInit in cntStates) then
     if Assigned(Result) and (Result.ElementType = etSubRecord) then
       with (Result as IwbSubRecord) do begin
-        if Signature = mrDef.KnownSubRecordSignatures[ksrsEditorID] then
+        if Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then
           mrEditorID := ''
-        else if Signature = mrDef.KnownSubRecordSignatures[ksrsFullName] then begin
+        else if Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
           if (mrFullName <> '') and (Value = mrFullName) then
             mrFullName := '';
-        end else if Signature = mrDef.KnownSubRecordSignatures[ksrsBaseRecord] then
+        end else if Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
           Exclude(mrStates, mrsBaseRecordChecked)
-        else if (Signature = mrDef.KnownSubRecordSignatures[ksrsGridCell]) and Container.Equals(Self) then begin
+        else if (Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and Container.Equals(Self) then begin
           Exclude(mrStates, mrsHasGridCell);
           Exclude(mrStates, mrsGridCellChecked);
         end;
@@ -12361,12 +12410,12 @@ begin
   if Assigned(aGroup) then begin
     if not (not Assigned(mrGroup) or (mrGroup.Equals(aGroup))) then begin
       (aGroup as IwbGroupRecordInternal).IsDuplicateOf(mrGroup);
-      wbProgress('<Error: Found additional ' + mrGroup.Name + ' for ' + Self.GetName +'>');
+      wbProgress('<Error: Found additional ' + mrGroup.Name + ' for ' + Self.GetName + '>');
       Exit;
     end;
     if Assigned(eContainer) then
       if not IwbContainer(eContainer).Equals(aGroup.Container) then begin
-        wbProgress('<Error: Group "' + mrGroup.Name + '" has not the same container as record "' + Self.GetName +'">');
+        wbProgress('<Error: Group "' + mrGroup.Name + '" has not the same container as record "' + Self.GetName + '">');
         Exit;
       end;
   end else
@@ -12406,13 +12455,13 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
 
-  Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrsEditorID]);
+  Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrEditorID]);
   if not Assigned(Rec) then begin
-    i := mrDef.GetMemberIndexFor(mrDef.KnownSubRecordSignatures[ksrsEditorID], nil);
+    i := mrDef.GetMemberIndexFor(mrDef.KnownSubRecordSignatures[ksrEditorID], nil);
     if i < 0 then
       Exit;
     Assign(i, nil, False);
-    Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrsEditorID]);
+    Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrEditorID]);
     Assert(Assigned(Rec));
   end;
 
@@ -12614,7 +12663,7 @@ begin
 
     if (aFormID.ObjectID < $800) and not aFormID.IsHardcoded then begin
       if _File.MasterCount[True] < 1 then
-        raise Exception.Create('Using FormID ['+aFormID.ToString(True)+'] requires "' + _File.Name + '" to have at least 1 master' );
+        raise Exception.Create('Using FormID [' + aFormID.ToString(True) + '] requires "' + _File.Name + '" to have at least 1 master' );
     end;
 
     FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
@@ -12637,7 +12686,7 @@ begin
 
     Master := _File.RecordByFormID[FileFormID, False, True];
     if Assigned(Master) and ((Master._File as IwbFileInternal).Equals(_File)) then
-      raise Exception.Create('FormID ['+aFormID.ToString(True)+'] is already present in file ' + _File.Name);
+      raise Exception.Create('FormID [' + aFormID.ToString(True) + '] is already present in file ' + _File.Name);
 
     Master := _File.RecordByFormID[FileFormID, True, True];
     if Assigned(Master) then
@@ -15111,12 +15160,12 @@ begin
   MainRecord := _File.RecordByFormID[FormID, True, True];
   if Assigned(MainRecord) then begin
     if _File.Equals(MainRecord._File) then
-      raise Exception.Create('FormID ['+FormID.ToString(True)+'] is already defined in file "'+_File.Name+'"');
+      raise Exception.Create('FormID [' + FormID.ToString(True) + '] is already defined in file "' + _File.Name + '"');
 
     IsInjected := FormID.FileID.FullSlot = _File.MasterCount[True];
 
     if MainRecord.Signature <> Signature then
-      raise Exception.Create('Existing record '+MainRecord.Name+' has different signature');
+      raise Exception.Create('Existing record ' + MainRecord.Name + ' has different signature');
   end;
 
   Group := Self;
@@ -15191,7 +15240,7 @@ begin
                 if Supports(Container.Elements[i], IwbMainRecord, DialRec) then
                   if DialRec.Signature = 'DIAL' then
                     if DialRec.FormID.ToCardinal = DialGroup.GroupLabel then begin
-                      InsertElement(i+1, aElement);
+                      InsertElement(i + 1, aElement);
                       Exit;
                     end;
     inherited;
@@ -15199,17 +15248,10 @@ end;
 
 function TwbGroupRecord.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
 var
-  MainRecord   : IwbMainRecord;
-  MainRecord2  : IwbMainRecord;
-  FormID       : TwbFormID;
-  i            : Integer;
   SelfRef      : IwbContainerElementRef;
-  s            : string;
-  GroupRecord  : IwbGroupRecord;
-  GroupRecord2 : IwbGroupRecord;
   _File        : IwbFile;
 
-  procedure CopyMainRecord;
+  procedure CopyMainRecord(const aSource: IwbMainRecord);
   begin
     Result := nil;
 
@@ -15229,19 +15271,20 @@ var
           Exit;
         end;
 
+    var lFormID := TwbFormID.Null;
     if aAsNew then
-      FormID := _File.NewFormID
+      lFormID := _File.NewFormID
     else begin
-      Result := _File.ContainedRecordByLoadOrderFormID[MainRecord.LoadOrderFormID, False];
+      Result := _File.ContainedRecordByLoadOrderFormID[aSource.LoadOrderFormID, False];
       if Assigned(Result) then
-        FormID := (Result as IwbMainRecord).FixedFormID
+        lFormID := (Result as IwbMainRecord).FixedFormID
       else
-        FormID := _File.LoadOrderFormIDtoFileFormID(MainRecord.LoadOrderFormID, True);
+        lFormID := _File.LoadOrderFormIDtoFileFormID(aSource.LoadOrderFormID, True);
     end;
 
     if not Assigned(Result) then begin
 
-      Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+      Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
 
     end else begin
 
@@ -15254,7 +15297,7 @@ var
             if not Equals(Result.Container) then begin
               Result.Remove;
               Result := nil;
-              Result := TwbMainRecord.Create(Self, MainRecord.Signature, FormID);
+              Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
             end;
           end;
           coDelete: begin
@@ -15270,25 +15313,28 @@ var
     end;
 
     if aDeepCopy then begin
-      if not MainRecord.IsDeleted then
+      if not aSource.IsDeleted then
         with Result as IwbMainRecord do
           IsDeleted := False;
       Result.Assign(Low(Integer), aElement, False);
       if (aPrefix <> '') or (aSuffix <> '') then
         with Result as IwbMainRecord do begin
-          s := EditorID;
-          s := RemovePrefix(s, aPrefixRemove);
-          s := RemoveSuffix(s, aSuffixRemove);
-          if s <> '' then
-            EditorID := aPrefix + s + aSuffix;
+          var lEditorID := EditorID;
+          lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
+          lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
+          if lEditorID <> '' then
+            EditorID := aPrefix + lEditorID + aSuffix;
         end;
     end;
 
-    if not aAsNew and MainRecord.IsMaster then
-      if (Result._File.LoadOrder < MainRecord._File.LoadOrder) or
-        ((Result._File.LoadOrder = MainRecord._File.LoadOrder) and not (fsIsCompareLoad in Result._File.FileStates) ) then
-        if Supports(Result, IwbMainRecord, MainRecord2) then
-          (MainRecord as IwbMainRecordInternal).YouGotAMaster(MainRecord2);
+    if not aAsNew and aSource.IsMaster then
+      if (Result._File.LoadOrder < aSource._File.LoadOrder) or
+        ((Result._File.LoadOrder = aSource._File.LoadOrder) and not (fsIsCompareLoad in Result._File.FileStates) )
+      then begin
+        var lMainRecordResult: IwbMainRecord;
+        if Supports(Result, IwbMainRecord, lMainRecordResult) then
+          (aSource as IwbMainRecordInternal).YouGotAMaster(lMainRecordResult);
+      end;
 
     if Assigned(Result) and (csRefsBuild in Result._File.ContainerStates) then
       Result.BuildRef;
@@ -15299,282 +15345,406 @@ begin
   Result := nil;
   SelfRef := Self as IwbContainerElementRef;
   _File := GetFile;
+  if not Assigned(_File) then begin
+    wbTick;
+    Exit;
+  end;
+
+  var lElementContainerElementRef: IwbContainerElementRef;
+  Supports(aElement, IwbContainerElementRef, lElementContainerElementRef);
+
   case grStruct.grsGroupType of
     0: begin
       if TwbSignature(grStruct.grsLabel) = 'DIAL' then begin
-        if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-          if GroupRecord.GroupType <> 7 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          MainRecord := GroupRecord.ChildrenOf;
-          if not Assigned(MainRecord) then
-            raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
-          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
-          Assert(Assigned(MainRecord));
-          Result := MainRecord.ChildGroup;
-          if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 7, MainRecord);
+        var lGroupRecord0Dial: IwbGroupRecord;
+        if Supports(aElement, IwbGroupRecord, lGroupRecord0Dial) then begin
+          if lGroupRecord0Dial.GroupType <> 7 then
+            raise Exception.Create('Can''t add ' + lGroupRecord0Dial.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+          var lSourceMainRecord0Dial := lGroupRecord0Dial.ChildrenOf;
+          if not Assigned(lSourceMainRecord0Dial) then
+            raise Exception.Create('Can''t find record for ' + lGroupRecord0Dial.Name);
+          lSourceMainRecord0Dial := lSourceMainRecord0Dial.HighestOverrideVisibleForFile[_File];
+          var lTargetMainRecord0Dial := AddIfMissingInternal(lSourceMainRecord0Dial, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
+          if Assigned(lTargetMainRecord0Dial) then begin
+            Result := lTargetMainRecord0Dial.ChildGroup;
+            if not Assigned(Result) then
+              Result := TwbGroupRecord.Create(Self, 7, lTargetMainRecord0Dial);
 
-          GroupRecord2 := Result as IwbGroupRecord;
-          if aDeepCopy then
-            for i := 0 to Pred(GroupRecord.ElementCount) do
-              GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+            if aDeepCopy then begin
+              var lContainerElementRef0DialResult: IwbContainerElementRef;
+              if Supports(Result, IwbContainerElementRef, lContainerElementRef0DialResult) then begin
+                lContainerElementRef0DialResult.BeginUpdate;
+                try
+                  for var lGroupRecord0DialElementIdx := 0 to Pred(lGroupRecord0Dial.ElementCount) do
+                    lContainerElementRef0DialResult.AddIfMissing(lGroupRecord0Dial.Elements[lGroupRecord0DialElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+                finally
+                  lContainerElementRef0DialResult.EndUpdate;
+                end;
+              end;
+            end;
+          end;
 
           Exit;
         end;
       end else if TwbSignature(grStruct.grsLabel) = 'CELL' then begin
-        if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-          if GroupRecord.GroupType <> 2 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          if GroupRecord.GroupLabel > 9 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          for i := 0 to Pred(GetElementCount) do
-            if Supports(GetElement(i), IwbGroupRecord, GroupRecord2) then begin
-              if (GroupRecord2.GroupType = 2) and (GroupRecord2.GroupLabel = GroupRecord.GroupLabel) then begin
-                Result := GroupRecord2;
+        var lGroupRecord0Cell: IwbGroupRecord;
+        if Supports(aElement, IwbGroupRecord, lGroupRecord0Cell) then begin
+          if lGroupRecord0Cell.GroupType <> 2 then
+            raise Exception.Create('Can''t add ' + lGroupRecord0Cell.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+          if lGroupRecord0Cell.GroupLabel > 9 then
+            raise Exception.Create('Can''t add ' + lGroupRecord0Cell.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+          for var lSelfElementIndex0Cell := 0 to Pred(GetElementCount) do begin
+            var lGroupRecord0Cell2: IwbGroupRecord;
+            if Supports(GetElement(lSelfElementIndex0Cell), IwbGroupRecord, lGroupRecord0Cell2) then begin
+              if (lGroupRecord0Cell2.GroupType = 2) and (lGroupRecord0Cell2.GroupLabel = lGroupRecord0Cell.GroupLabel) then begin
+                Result := lGroupRecord0Cell2;
                 break;
               end;
             end;
+          end;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 2, GroupRecord.GroupLabel);
+            Result := TwbGroupRecord.Create(Self, 2, lGroupRecord0Cell.GroupLabel);
 
-          GroupRecord2 := Result as IwbGroupRecord;
-          if aDeepCopy then
-            for i := 0 to Pred(GroupRecord.ElementCount) do
-              GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+          if aDeepCopy then begin
+            var lContainerElementRef0CellResult: IwbContainerElementRef;
+            if Supports(Result, IwbContainerElementRef, lContainerElementRef0CellResult) then begin
+              lContainerElementRef0CellResult.BeginUpdate;
+              try
+                for var lGroupRecord0CellElementIdx := 0 to Pred(lGroupRecord0Cell.ElementCount) do
+                  lContainerElementRef0CellResult.AddIfMissing(lGroupRecord0Cell.Elements[lGroupRecord0CellElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+              finally
+                lContainerElementRef0CellResult.EndUpdate;
+              end;
+            end;
+          end;
 
           Exit;
         end;
       end else if TwbSignature(grStruct.grsLabel) = 'WRLD' then begin
-        if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-          if GroupRecord.GroupType <> 1 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          MainRecord := GroupRecord.ChildrenOf;
-          if not Assigned(MainRecord) then
-            raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
-          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
-          Assert(Assigned(MainRecord));
-          Result := MainRecord.ChildGroup;
-          if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 1, MainRecord);
+        var lGroupRecord0Wrld: IwbGroupRecord;
+        if Supports(aElement, IwbGroupRecord, lGroupRecord0Wrld) then begin
+          if lGroupRecord0Wrld.GroupType <> 1 then
+            raise Exception.Create('Can''t add ' + lGroupRecord0Wrld.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+          var lSourceMainRecord0Wrld := lGroupRecord0Wrld.ChildrenOf;
+          if not Assigned(lSourceMainRecord0Wrld) then
+            raise Exception.Create('Can''t find record for ' + lGroupRecord0Wrld.Name);
+          lSourceMainRecord0Wrld := lSourceMainRecord0Wrld.HighestOverrideVisibleForFile[_File];
+          var lTargetMainRecord0Wrld := AddIfMissingInternal(lSourceMainRecord0Wrld, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
+          if Assigned(lTargetMainRecord0Wrld) then begin
+            Result := lTargetMainRecord0Wrld.ChildGroup;
+            if not Assigned(Result) then
+              Result := TwbGroupRecord.Create(Self, 1, lTargetMainRecord0Wrld);
 
-          GroupRecord2 := Result as IwbGroupRecord;
-          if aDeepCopy then
-            for i := 0 to Pred(GroupRecord.ElementCount) do
-              GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+            if aDeepCopy then begin
+              var lContainerElementRef0WrldResult: IwbContainerElementRef;
+              if Supports(Result, IwbContainerElementRef, lContainerElementRef0WrldResult) then begin
+                lContainerElementRef0WrldResult.BeginUpdate;
+                try
+                  for var lGroupRecord0WrldElementIdx := 0 to Pred(lGroupRecord0Wrld.ElementCount) do
+                    lContainerElementRef0WrldResult.AddIfMissing(lGroupRecord0Wrld.Elements[lGroupRecord0WrldElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+                finally
+                  lContainerElementRef0WrldResult.EndUpdate;
+                end;
+              end;
+            end;
+          end;
 
           Exit;
         end;
       end else if wbVWDAsQuestChildren and (TwbSignature(grStruct.grsLabel) = 'QUST') then begin
-        if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-          if GroupRecord.GroupType <> 10 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          MainRecord := GroupRecord.ChildrenOf;
-          if not Assigned(MainRecord) then
-            raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
-          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
-          Assert(Assigned(MainRecord));
-          Result := MainRecord.ChildGroup;
-          if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 10, MainRecord);
+        var lGroupRecord0Qust: IwbGroupRecord;
+        if Supports(aElement, IwbGroupRecord, lGroupRecord0Qust) then begin
+          if lGroupRecord0Qust.GroupType <> 10 then
+            raise Exception.Create('Can''t add ' + lGroupRecord0Qust.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+          var lSourceMainRecord0Qust := lGroupRecord0Qust.ChildrenOf;
+          if not Assigned(lSourceMainRecord0Qust) then
+            raise Exception.Create('Can''t find record for ' + lGroupRecord0Qust.Name);
+          lSourceMainRecord0Qust := lSourceMainRecord0Qust.HighestOverrideVisibleForFile[_File];
+          var lTargetMainRecord0Qust := AddIfMissingInternal(lSourceMainRecord0Qust, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
+          if Assigned(lTargetMainRecord0Qust) then begin
+            Result := lTargetMainRecord0Qust.ChildGroup;
+            if not Assigned(Result) then
+              Result := TwbGroupRecord.Create(Self, 10, lTargetMainRecord0Qust);
 
-          GroupRecord2 := Result as IwbGroupRecord;
-          if aDeepCopy then
-            for i := 0 to Pred(GroupRecord.ElementCount) do
-              GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+            if aDeepCopy then begin
+              var lContainerElementRef0QustResult: IwbContainerElementRef;
+              if Supports(Result, IwbContainerElementRef, lContainerElementRef0QustResult) then begin
+                lContainerElementRef0QustResult.BeginUpdate;
+                try
+                  for var lGroupRecord0QustElementIdx := 0 to Pred(lGroupRecord0Qust.ElementCount) do
+                    lContainerElementRef0QustResult.AddIfMissing(lGroupRecord0Qust.Elements[lGroupRecord0QustElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+                finally
+                  lContainerElementRef0QustResult.EndUpdate;
+                end;
+              end;
+            end;
+          end;
 
           Exit;
         end;
       end;
-      if not Supports(aElement, IwbMainRecord, MainRecord) then
-        raise Exception.Create('Only main records can be added to top level groups');
-      if MainRecord.Signature <> TwbSignature(grStruct.grsLabel) then
-        raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-
-      CopyMainRecord;
+      begin
+        var lMainRecord0: IwbMainRecord;
+        if not Supports(aElement, IwbMainRecord, lMainRecord0) then
+          raise Exception.Create('Only main records can be added to top level groups');
+        if lMainRecord0.Signature <> TwbSignature(grStruct.grsLabel) then
+          raise Exception.Create('Can''t add main record with signature ' + lMainRecord0.Signature + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+        CopyMainRecord(lMainRecord0);
+      end;
     end;
     1: begin
-        if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-          if GroupRecord.GroupType = 4 then begin
-            for i := 0 to Pred(GetElementCount) do
-              if Supports(GetElement(i), IwbGroupRecord, GroupRecord2) then begin
-                if (GroupRecord2.GroupType = GroupRecord.GroupType) and (GroupRecord2.GroupLabel = GroupRecord.GroupLabel) then begin
-                  Result := GroupRecord2;
-                  break;
-                end;
+      var lGroupRecord1: IwbGroupRecord;
+      if Supports(aElement, IwbGroupRecord, lGroupRecord1) then begin
+        if lGroupRecord1.GroupType = 4 then begin
+          for var lSelfElementIndex1 := 0 to Pred(GetElementCount) do begin
+            var lGroupRecord1Child: IwbGroupRecord;
+            if Supports(GetElement(lSelfElementIndex1), IwbGroupRecord, lGroupRecord1Child) then begin
+              if (lGroupRecord1Child.GroupType = lGroupRecord1.GroupType) and (lGroupRecord1Child.GroupLabel = lGroupRecord1.GroupLabel) then begin
+                Result := lGroupRecord1Child;
+                break;
               end;
-            if not Assigned(Result) then
-              Result := TwbGroupRecord.Create(Self, 4, GroupRecord.GroupLabel);
-
-            GroupRecord2 := Result as IwbGroupRecord;
-            if aDeepCopy then
-              for i := 0 to Pred(GroupRecord.ElementCount) do
-                GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
-
-            Exit;
+            end;
           end;
-          if GroupRecord.GroupType <> 6 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          MainRecord := GroupRecord.ChildrenOf;
-          if not Assigned(MainRecord) then
-            raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
-          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
-          Assert(Assigned(MainRecord));
-          Result := MainRecord.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 6, MainRecord);
+            Result := TwbGroupRecord.Create(Self, 4, lGroupRecord1.GroupLabel);
 
-          GroupRecord2 := Result as IwbGroupRecord;
-          if aDeepCopy then
-            for i := 0 to Pred(GroupRecord.ElementCount) do
-              GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+          if aDeepCopy then begin
+            var lContainerElementRef1Result: IwbContainerElementRef;
+            if Supports(Result, IwbContainerElementRef, lContainerElementRef1Result) then begin
+              lContainerElementRef1Result.BeginUpdate;
+              try
+                for var lGroupRecord1ElementIdx := 0 to Pred(lGroupRecord1.ElementCount) do
+                  lContainerElementRef1Result.AddIfMissing(lGroupRecord1.Elements[lGroupRecord1ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+              finally
+                lContainerElementRef1Result.EndUpdate;
+              end;
+            end;
+          end;
 
           Exit;
         end;
-      if not Supports(aElement, IwbMainRecord, MainRecord) then
-        raise Exception.Create('Only main records can be added to ' + GetName);
-      if (MainRecord.Signature <> 'CELL') and (MainRecord.Signature <> 'ROAD') then
-        raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
+        if lGroupRecord1.GroupType <> 6 then
+          raise Exception.Create('Can''t add ' + lGroupRecord1.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+        var lSourceMainRecord1 := lGroupRecord1.ChildrenOf;
+        if not Assigned(lSourceMainRecord1) then
+          raise Exception.Create('Can''t find record for ' + lGroupRecord1.Name);
+        lSourceMainRecord1 := lSourceMainRecord1.HighestOverrideVisibleForFile[_File];
+        var lTargetMainRecord1 := AddIfMissingInternal(lSourceMainRecord1, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
+        if Assigned(lTargetMainRecord1) then begin
+          Result := lTargetMainRecord1.ChildGroup;
+          if not Assigned(Result) then
+            Result := TwbGroupRecord.Create(Self, 6, lTargetMainRecord1);
 
-      if aAsNew then
-        raise Exception.Create('Can''t copy record '+MainRecord.Name+' as new record.');
+          if aDeepCopy then begin
+            var lContainerElementRef1bResult: IwbContainerElementRef;
+            if Supports(Result, IwbContainerElementRef, lContainerElementRef1bResult) then begin
+              lContainerElementRef1bResult.BeginUpdate;
+              try
+                for var lGroupRecord1bElementIndex := 0 to Pred(lGroupRecord1.ElementCount) do
+                  lContainerElementRef1bResult.AddIfMissing(lGroupRecord1.Elements[lGroupRecord1bElementIndex], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+              finally
+                lContainerElementRef1bResult.EndUpdate;
+              end;
+            end;
+          end;
+        end;
 
-      CopyMainRecord;
+        Exit;
+      end;
+      begin
+        var lMainRecord1: IwbMainRecord;
+        if not Supports(aElement, IwbMainRecord, lMainRecord1) then
+          raise Exception.Create('Only main records can be added to ' + GetName);
+        if (lMainRecord1.Signature <> 'CELL') and (lMainRecord1.Signature <> 'ROAD') then
+          raise Exception.Create('Can''t add main record with signature ' + lMainRecord1.Signature + ' to ' + GetName);
+
+        if aAsNew then
+          raise Exception.Create('Can''t copy record ' + lMainRecord1.Name + ' as new record.');
+
+        CopyMainRecord(lMainRecord1);
+      end;
     end;
     2, 4: begin
-      if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-        if GroupRecord.GroupType <> grStruct.grsGroupType + 1 then
-          raise Exception.Create('Can''t add '+GroupRecord.Name+' to ' + GetName);
-        for i := 0 to Pred(GetElementCount) do
-          if Supports(GetElement(i), IwbGroupRecord, GroupRecord2) then begin
-            if (GroupRecord2.GroupType = GroupRecord.GroupType) and (GroupRecord2.GroupLabel = GroupRecord.GroupLabel) then begin
-              Result := GroupRecord2;
+      var lGroupRecord24: IwbGroupRecord;
+      if Supports(aElement, IwbGroupRecord, lGroupRecord24) then begin
+        if lGroupRecord24.GroupType <> grStruct.grsGroupType + 1 then
+          raise Exception.Create('Can''t add ' + lGroupRecord24.Name + ' to ' + GetName);
+        for var lSelfElementIndex24 := 0 to Pred(GetElementCount) do begin
+          var lGroupRecord24Child: IwbGroupRecord;
+          if Supports(GetElement(lSelfElementIndex24), IwbGroupRecord, lGroupRecord24Child) then begin
+            if (lGroupRecord24Child.GroupType = lGroupRecord24.GroupType) and (lGroupRecord24Child.GroupLabel = lGroupRecord24.GroupLabel) then begin
+              Result := lGroupRecord24Child;
               break;
             end;
           end;
+        end;
         if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, GroupRecord.GroupType, GroupRecord.GroupLabel);
+          Result := TwbGroupRecord.Create(Self, lGroupRecord24.GroupType, lGroupRecord24.GroupLabel);
 
-        GroupRecord2 := Result as IwbGroupRecord;
-        if aDeepCopy then
-          for i := 0 to Pred(GroupRecord.ElementCount) do
-            GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+        if aDeepCopy then begin
+          var lContainerElementRef24Result: IwbContainerElementRef;
+          if Supports(Result, IwbContainerElementRef, lContainerElementRef24Result) then begin
+            lContainerElementRef24Result.BeginUpdate;
+            try
+              for var lGroupRecord24ElementIdx := 0 to Pred(lGroupRecord24.ElementCount) do
+                lContainerElementRef24Result.AddIfMissing(lGroupRecord24.Elements[lGroupRecord24ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+            finally
+              lContainerElementRef24Result.EndUpdate;
+            end;
+          end;
+        end;
 
         Exit;
       end;
       raise Exception.Create('Can''t add ' + aElement.Name + ' to ' + GetName);
     end;
     3, 5: begin
-        if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-          if GroupRecord.GroupType <> 6 then
-            raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-          MainRecord := GroupRecord.ChildrenOf;
-          if not Assigned(MainRecord) then
-            raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-          MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
-          MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
-          Assert(Assigned(MainRecord));
-          Result := MainRecord.ChildGroup;
+      var lGroupRecord35: IwbGroupRecord;
+      if Supports(aElement, IwbGroupRecord, lGroupRecord35) then begin
+        if lGroupRecord35.GroupType <> 6 then
+          raise Exception.Create('Can''t add ' + lGroupRecord35.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+        var lSourceMainRecord35 := lGroupRecord35.ChildrenOf;
+        if not Assigned(lSourceMainRecord35) then
+          raise Exception.Create('Can''t find record for ' + lGroupRecord35.Name);
+        lSourceMainRecord35 := lSourceMainRecord35.HighestOverrideVisibleForFile[_File];
+        var lTargetMainRecord35 := AddIfMissingInternal(lSourceMainRecord35, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
+        if Assigned(lTargetMainRecord35) then begin
+          Result := lTargetMainRecord35.ChildGroup;
           if not Assigned(Result) then
-            Result := TwbGroupRecord.Create(Self, 6, MainRecord);
+            Result := TwbGroupRecord.Create(Self, 6, lTargetMainRecord35);
 
-          GroupRecord2 := Result as IwbGroupRecord;
-          if aDeepCopy then
-            for i := 0 to Pred(GroupRecord.ElementCount) do
-              GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
-
-          Exit;
+          if aDeepCopy then begin
+            var lContainerElementRef35Result: IwbContainerElementRef;
+            if Supports(Result, IwbContainerElementRef, lContainerElementRef35Result) then begin
+              lContainerElementRef35Result.BeginUpdate;
+              try
+                for var lGroupRecord35ElementIdx := 0 to Pred(lGroupRecord35.ElementCount) do
+                  lContainerElementRef35Result.AddIfMissing(lGroupRecord35.Elements[lGroupRecord35ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+              finally
+                lContainerElementRef35Result.EndUpdate;
+              end;
+            end;
+          end;
         end;
-      if not Supports(aElement, IwbMainRecord, MainRecord) then
-        raise Exception.Create('Only main records can be added to ' + GetName);
-      if MainRecord.Signature <> 'CELL' then
-        raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
 
-      if aAsNew then
-        raise Exception.Create('Can''t copy record '+MainRecord.Name+' as new record.');
+        Exit;
+      end;
 
-      CopyMainRecord;
+      begin
+        var lMainRecord35: IwbMainRecord;
+        if not Supports(aElement, IwbMainRecord, lMainRecord35) then
+          raise Exception.Create('Only main records can be added to ' + GetName);
+        if lMainRecord35.Signature <> 'CELL' then
+          raise Exception.Create('Can''t add main record with signature ' + lMainRecord35.Signature + ' to ' + GetName);
+
+        if aAsNew then
+          raise Exception.Create('Can''t copy record ' + lMainRecord35.Name + ' as new record.');
+
+        CopyMainRecord(lMainRecord35);
+      end;
     end;
     6: begin
-      if Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-        if not (GroupRecord.GroupType in [8, 9, 10]) then
-          raise Exception.Create('Can''t add '+GroupRecord.Name+' to ' + GetName);
-        for i := 0 to Pred(GetElementCount) do
-          if Supports(GetElement(i), IwbGroupRecord, GroupRecord2) then begin
-            if GroupRecord2.GroupType = GroupRecord.GroupType then begin
-              Result := GroupRecord2;
+      var lGroupRecord6: IwbGroupRecord;
+      if Supports(aElement, IwbGroupRecord, lGroupRecord6) then begin
+        if not (lGroupRecord6.GroupType in [8, 9, 10]) then
+          raise Exception.Create('Can''t add ' + lGroupRecord6.Name + ' to ' + GetName);
+        for var lSelfElementIndex6 := 0 to Pred(GetElementCount) do begin
+          var lGroupRecord6Child: IwbGroupRecord;
+          if Supports(GetElement(lSelfElementIndex6), IwbGroupRecord, lGroupRecord6Child) then begin
+            if lGroupRecord6Child.GroupType = lGroupRecord6.GroupType then begin
+              Result := lGroupRecord6Child;
               break;
             end;
           end;
+        end;
         if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, GroupRecord.GroupType, Self.GetChildrenOf);
+          Result := TwbGroupRecord.Create(Self, lGroupRecord6.GroupType, Self.GetChildrenOf);
 
-        GroupRecord2 := Result as IwbGroupRecord;
-        if aDeepCopy then
-          for i := 0 to Pred(GroupRecord.ElementCount) do
-            GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+        if aDeepCopy then begin
+          var lContainerElementRef6Result: IwbContainerElementRef;
+          if Supports(Result, IwbContainerElementRef, lContainerElementRef6Result) then begin
+            lContainerElementRef6Result.BeginUpdate;
+            try
+              for var lGroupRecord6ElementIdx := 0 to Pred(lGroupRecord6.ElementCount) do
+                lContainerElementRef6Result.AddIfMissing(lGroupRecord6.Elements[lGroupRecord6ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+            finally
+              lContainerElementRef6Result.EndUpdate;
+            end;
+          end;
+        end;
 
         Exit;
       end;
       raise Exception.Create('Can''t add ' + aElement.Name + ' to ' + GetName);
     end;
     7: begin
-      if not Supports(aElement, IwbMainRecord, MainRecord) then
+      var lMainRecord7: IwbMainRecord;
+      if not Supports(aElement, IwbMainRecord, lMainRecord7) then
         raise Exception.Create('Only main records can be added to ' + GetName);
-      if MainRecord.Signature <> 'INFO' then
-        raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
+      if lMainRecord7.Signature <> 'INFO' then
+        raise Exception.Create('Can''t add main record with signature ' + lMainRecord7.Signature + ' to ' + GetName);
 
-      CopyMainRecord;
+      CopyMainRecord(lMainRecord7);
     end;
     8, 9, 10: begin
-      if wbVWDAsQuestChildren and Supports(aElement, IwbGroupRecord, GroupRecord) then begin
-        if GroupRecord.GroupType <> 7 then
-          raise Exception.Create('Can''t add '+GroupRecord.Name+' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
-        MainRecord := GroupRecord.ChildrenOf;
-        if not Assigned(MainRecord) then
-          raise Exception.Create('Can''t find record for '+ GroupRecord.Name);
-        MainRecord := MainRecord.HighestOverrideVisibleForFile[_File];
-        MainRecord := AddIfMissingInternal(MainRecord, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
-        Assert(Assigned(MainRecord));
-        Result := MainRecord.ChildGroup;
-        if not Assigned(Result) then
-          Result := TwbGroupRecord.Create(Self, 7, MainRecord);
+      var lGroupRecord8910: IwbGroupRecord;
+      if wbVWDAsQuestChildren and Supports(aElement, IwbGroupRecord, lGroupRecord8910) then begin
+        if lGroupRecord8910.GroupType <> 7 then
+          raise Exception.Create('Can''t add ' + lGroupRecord8910.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
+        var lSourceMainRecord8910 := lGroupRecord8910.ChildrenOf;
+        if not Assigned(lSourceMainRecord8910) then
+          raise Exception.Create('Can''t find record for ' + lGroupRecord8910.Name);
+        lSourceMainRecord8910 := lSourceMainRecord8910.HighestOverrideVisibleForFile[_File];
+        var lTargetMainRecord8910 := AddIfMissingInternal(lSourceMainRecord8910, aAsNew, True, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, False {CheckMe!}) as IwbMainRecord;
+        if Assigned(lTargetMainRecord8910) then begin
+          Result := lTargetMainRecord8910.ChildGroup;
+          if not Assigned(Result) then
+            Result := TwbGroupRecord.Create(Self, 7, lTargetMainRecord8910);
 
-        GroupRecord2 := Result as IwbGroupRecord;
-        if aDeepCopy then
-          for i := 0 to Pred(GroupRecord.ElementCount) do
-            GroupRecord2.AddIfMissing(GroupRecord.Elements[i], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+          if aDeepCopy then begin
+            var lContainerElementRef8910Result: IwbContainerElementRef;
+            if Supports(Result, IwbContainerElementRef, lContainerElementRef8910Result) then begin
+              lContainerElementRef8910Result.BeginUpdate;
+              try
+                for var lGroupRecord8910ElementIdx := 0 to Pred(lGroupRecord8910.ElementCount) do
+                  lContainerElementRef8910Result.AddIfMissing(lGroupRecord8910.Elements[lGroupRecord8910ElementIdx], aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite {CheckMe!});
+              finally
+                lContainerElementRef8910Result.EndUpdate;
+              end;
+            end;
+          end;
+        end;
 
         Exit;
       end;
-      if not Supports(aElement, IwbMainRecord, MainRecord) then
-        raise Exception.Create('Only main records can be added to ' + GetName);
-      if (MainRecord.Signature <> 'REFR') and
-         (MainRecord.Signature <> 'ACHR') and
-         (MainRecord.Signature <> 'ACRE') and
-         (MainRecord.Signature <> 'PGRE') and
-         (MainRecord.Signature <> 'PMIS') and
-         (MainRecord.Signature <> 'PARW') and {>>> Skyrim <<<}
-         (MainRecord.Signature <> 'PBEA') and {>>> Skyrim <<<}
-         (MainRecord.Signature <> 'PFLA') and {>>> Skyrim <<<}
-         (MainRecord.Signature <> 'PCON') and {>>> Skyrim <<<}
-         (MainRecord.Signature <> 'PBAR') and {>>> Skyrim <<<}
-         (MainRecord.Signature <> 'PHZD')     {>>> Skyrim <<<}
-      then
-        // check any non reference record
-        if not (
-          // DIAL, DLBR and SCEN can be added to child group 10 (quest children)
-          (wbVWDAsQuestChildren and (grStruct.grsGroupType = 10) and ((MainRecord.Signature = 'DLBR') or (MainRecord.Signature = 'DIAL') or (MainRecord.Signature = 'SCEN')))
-          or
-          // PGRD, LAND and NAVM can be added to child group 9 (temporary)
-          (grStruct.grsGroupType = 9) and ((MainRecord.Signature = 'PGRD') or (MainRecord.Signature = 'LAND') or (MainRecord.Signature = 'NAVM'))
-        ) then
-          raise Exception.Create('Can''t add main record with signature '+MainRecord.Signature+' to ' + GetName);
+      begin
+        var lMainRecord8910: IwbMainRecord;
+        if not Supports(aElement, IwbMainRecord, lMainRecord8910) then
+          raise Exception.Create('Only main records can be added to ' + GetName);
+        if (lMainRecord8910.Signature <> 'REFR') and
+           (lMainRecord8910.Signature <> 'ACHR') and
+           (lMainRecord8910.Signature <> 'ACRE') and
+           (lMainRecord8910.Signature <> 'PGRE') and
+           (lMainRecord8910.Signature <> 'PMIS') and
+           (lMainRecord8910.Signature <> 'PARW') and {>>> Skyrim <<<}
+           (lMainRecord8910.Signature <> 'PBEA') and {>>> Skyrim <<<}
+           (lMainRecord8910.Signature <> 'PFLA') and {>>> Skyrim <<<}
+           (lMainRecord8910.Signature <> 'PCON') and {>>> Skyrim <<<}
+           (lMainRecord8910.Signature <> 'PBAR') and {>>> Skyrim <<<}
+           (lMainRecord8910.Signature <> 'PHZD')     {>>> Skyrim <<<}
+        then
+          // check any non reference record
+          if not (
+            // DIAL, DLBR and SCEN can be added to child group 10 (quest children)
+            (wbVWDAsQuestChildren and (grStruct.grsGroupType = 10) and ((lMainRecord8910.Signature = 'DLBR') or (lMainRecord8910.Signature = 'DIAL') or (lMainRecord8910.Signature = 'SCEN')))
+            or
+            // PGRD, LAND and NAVM can be added to child group 9 (temporary)
+            (grStruct.grsGroupType = 9) and ((lMainRecord8910.Signature = 'PGRD') or (lMainRecord8910.Signature = 'LAND') or (lMainRecord8910.Signature = 'NAVM'))
+          ) then
+            raise Exception.Create('Can''t add main record with signature ' + lMainRecord8910.Signature + ' to ' + GetName);
 
-      CopyMainRecord;
+        CopyMainRecord(lMainRecord8910);
+      end;
     end;
   else
     raise Exception.Create(ClassName + '.AddIfMissingInternal is not implemented for GroupType ' + IntToStr(grStruct.grsGroupType));
@@ -17609,7 +17779,7 @@ begin
   if Length(Result) > 0 then
     Result := Result + '\';
   if Assigned(eContainer) then
-    Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+']';
+    Result := Result + '[' + IntToStr(IwbContainer(eContainer).IndexOf(Self)) + ']';
 end;
 
 function TwbElement.GetFullPath: string;
@@ -17620,7 +17790,7 @@ begin
     Result := '';
   Result := Result + ' \ ';
   if Assigned(eContainer) then
-    Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
+    Result := Result + '[' + IntToStr(IwbContainer(eContainer).IndexOf(Self)) + '] ';
   Result := Result + GetName;
 end;
 
@@ -17632,7 +17802,7 @@ begin
     Result := '';
   Result := Result + ' \ ';
   if Assigned(eContainer) then
-    Result := Result + '['+IntToStr(IwbContainer(eContainer).IndexOf(Self))+'] ';
+    Result := Result + '[' + IntToStr(IwbContainer(eContainer).IndexOf(Self)) + '] ';
   Result := Result + GetShortName;
 end;
 
@@ -19435,7 +19605,7 @@ begin
         CurrentDefPos := srcDef.GetMemberIndexFor(CurrentRec.Signature, CurrentRec);
         if CurrentDefPos < 0 then begin
           if wbHasProgressCallback then
-            wbProgressCallback('Error: record '+ String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+            wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
           //FoundError := True;
           Inc(aPos);
           Continue;
@@ -19909,7 +20079,7 @@ begin
       if ArrSize = 0 then
         Break
       { else if not (not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr)))) then
-        wbProgressCallback('Error: not enough data for array. Elements remaining are '+IntToStr(ArrSize)) Silently fails = called at an invalid time };
+        wbProgressCallback('Error: not enough data for array. Elements remaining are ' + IntToStr(ArrSize)) Silently fails = called at an invalid time };
     end;
 
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then
@@ -20861,7 +21031,7 @@ begin
     if t.StartsWith('Unknown', True) and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
-        var lContainer: IwbContainer := TwbStruct.Create(aContainer, BasePtr, aEndPtr, wbStruct('Offset '+IntToStr(i), []), '');
+        var lContainer: IwbContainer := TwbStruct.Create(aContainer, BasePtr, aEndPtr, wbStruct('Offset ' + IntToStr(i), []), '');
         lContainer.Collapsed := tbTrue;
         BasePtr := PByte(aBasePtr) + i;
         Element := TwbArray.Create(lContainer, BasePtr, aEndPtr, wbArray('AsU8', wbInteger('AsU8', itU8)), '', True);
@@ -21047,7 +21217,7 @@ begin
      for i := 0 to 63 do
        if (j and (Int64(1) shl i)) <> 0 then
          if (i >= FlagCount) or (Flags[i] = '') then
-           Result := Result + '<Unknown: '+IntToStr(i)+'>, ';
+           Result := Result + '<Unknown: ' + IntToStr(i) + '>, ';
    end;
    SetLength(Result, Length(Result) - 2);
  end else}
@@ -21160,7 +21330,7 @@ begin
 
   FileName := wbExpandFileName(aFileName);
   {if ExtractFilePath(aFileName) = '' then
-    FileName := ExpandFileName('.\'+aFileName)
+    FileName := ExpandFileName('.\' + aFileName)
   else
     FileName := ExpandFileName(aFileName);}
 
@@ -22195,11 +22365,11 @@ begin
       if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
         Result := Result + ' {' + IntToHex64(NativeUInt(GetDataEndPtr) - wbBaseOffset, 8) +
           '-' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) +
-          ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}'
+          ' = ' + IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}'
       else
         Result := Result + ' {{' + IntToHex64(NativeUInt(GetDataEndPtr), 8) +
           '-' + IntToHex64(NativeUInt(GetDataBasePtr), 8) +
-          ' = ' +IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}}';
+          ' = ' + IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}}';
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';
   end;
@@ -22688,7 +22858,7 @@ begin
   SubRecordOrderList.Sorted := False;
 
   for i := 0 to Pred(SubRecordOrderList.Count) do
-    SubRecordOrderList[i] := SubRecordOrderList[i] + ' (' + IntToStr(Integer(SubRecordOrderList.Objects[i]) )+ ')';
+    SubRecordOrderList[i] := SubRecordOrderList[i] + ' (' + IntToStr(Integer(SubRecordOrderList.Objects[i]) ) + ')';
 
   SubRecordOrderList.SaveToFile('SubRecordOrderList.txt');
 end;
@@ -23058,7 +23228,7 @@ begin
         if not FileExists(s) then Break;
       end;
     if FileExists(s) then begin
-      wbProgressCallback('Could not copy '+FileName+' into '+wbDataPath);
+      wbProgressCallback('Could not copy ' + FileName + ' into ' + wbDataPath);
       Exit;
     end;
     CompareFile := s;

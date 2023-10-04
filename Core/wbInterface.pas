@@ -240,6 +240,8 @@ var
   wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
 
+  wbCellSizeFactor                   : Single     = 4096.0;
+
   wbGlobalModifedGeneration          : UInt64;
 
   wbPluginsFileName                  : string;
@@ -531,22 +533,26 @@ type
   TwbSignature = array[0..3] of AnsiChar;
   TwbSignatures = array of TwbSignature;
 
-  TwbKnownSubRecordSignature = (
-    ksrsEditorID,
-    ksrsFullName,
-    ksrsBaseRecord,
-    ksrsGridCell
+  TwbKnownSubRecord = (
+    ksrEditorID,
+    ksrFullName,
+    ksrBaseRecord,
+    ksrGridCell,
+    ksrBaseFormComponents
   );
 
   PwbKnownSubRecordSignatures = ^TwbKnownSubRecordSignatures;
-  TwbKnownSubRecordSignatures = array[TwbKnownSubRecordSignature] of TwbSignature;
+  TwbKnownSubRecordSignatures = array[TwbKnownSubRecord] of TwbSignature;
+
+  TwbKnownSubRecordIndices = array[TwbKnownSubRecord] of Integer;
 
 var
   wbKnownSubRecordSignatures: TwbKnownSubRecordSignatures = (
     'EDID',
     'FULL',
     'NAME',
-    'XCLC'
+    'XCLC',
+    '____'
   );
 
 type
@@ -2206,10 +2212,9 @@ type
 
     function GetQuickInitLimit: Integer;
 
-    function GetContainsEditorID: Boolean;
-    function GetContainsFullName: Boolean;
-    function GetContainsBaseRecord: Boolean;
-    function GetContainsGridCell: Boolean;
+    function GetContainsKnownSubRecord(aKnownSubRecord: TwbKnownSubRecord): Boolean;
+    function GetKnownSubRecordMemberIndex(aKnownSubRecord: TwbKnownSubRecord): Integer;
+    function GetKnownSubRecordMember(aKnownSubRecord: TwbKnownSubRecord): IwbRecordMemberDef;
 
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
@@ -2261,14 +2266,12 @@ type
     property QuickInitLimit: Integer
       read GetQuickInitLimit;
 
-    property ContainsEditorID: Boolean
-      read GetContainsEditorID;
-    property ContainsFullName: Boolean
-      read GetContainsFullName;
-    property ContainsBaseRecord: Boolean
-      read GetContainsBaseRecord;
-    property ContainsGridCell: Boolean
-      read GetContainsGridCell;
+    property ContainsKnownSubRecord[aKnownSubRecord: TwbKnownSubRecord]: Boolean
+      read GetContainsKnownSubRecord;
+    property KnownSubRecordMemberIndex[aKnownSubRecord: TwbKnownSubRecord]: Integer
+      read GetKnownSubRecordMemberIndex;
+    property KnownSubRecordMember[aKnownSubRecord: TwbKnownSubRecord]: IwbRecordMemberDef
+      read GetKnownSubRecordMember;
 
     property BaseSignatures[const aIndex: Integer]: TwbSignature
       read GetBaseSignature;
@@ -5357,10 +5360,10 @@ end;
 
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
-  Result.x := Trunc(aPosition.x / 4096);
+  Result.x := Trunc(aPosition.x / wbCellSizeFactor);
   if aPosition.x < 0 then
     Dec(Result.x);
-  Result.y := Trunc(aPosition.y / 4096);
+  Result.y := Trunc(aPosition.y / wbCellSizeFactor);
   if aPosition.y < 0 then
     Dec(Result.y);
 end;
@@ -5369,13 +5372,13 @@ function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 begin
   Result.z := 0;
   if aGridCell.x >= 0 then
-    Result.x := (Succ(aGridCell.x) * 4096) - 2048
+    Result.x := (Succ(aGridCell.x) * wbCellSizeFactor) - (wbCellSizeFactor/2)
   else
-    Result.x := (aGridCell.x * 4096) + 2048;
+    Result.x := (aGridCell.x * wbCellSizeFactor) + (wbCellSizeFactor/2);
   if aGridCell.y >= 0 then
-    Result.y := (Succ(aGridCell.y) * 4096) - 2048
+    Result.y := (Succ(aGridCell.y) * wbCellSizeFactor) - (wbCellSizeFactor/2)
   else
-    Result.y := (aGridCell.y * 4096) + 2048;
+    Result.y := (aGridCell.y * wbCellSizeFactor) + (wbCellSizeFactor/2);
 end;
 
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
@@ -5689,10 +5692,6 @@ type
 
   TwbRecordDefFlag = (
     rdfAllowUnordered,
-    rdfContainsEditorID,
-    rdfContainsFullName,
-    rdfContainsBaseRecord,
-    rdfContainsGridCell,
     rdfIsReference
   );
   TwbRecordDefFlags = set of TwbRecordDefFlag;
@@ -5709,6 +5708,7 @@ type
     recBaseRecordFormID   : IwbFormIDChecked;
     recReferences         : TStringList;
     recKnownSRs           : PwbKnownSubRecordSignatures;
+    recKnownSRMembers     : TwbKnownSubRecordIndices;
     recGetFormIDCallback  : TwbMainRecordGetFormIDCallback;
     recIdentityCallback   : TwbMainRecordIdentityCallback;
     recGetEditorIDCallback: TwbMainRecordGetEditorIDCallback;
@@ -5775,10 +5775,10 @@ type
     function GetIsReference: Boolean;
 
     function GetQuickInitLimit: Integer;
-    function GetContainsEditorID: Boolean;
-    function GetContainsFullName: Boolean;
-    function GetContainsBaseRecord: Boolean;
-    function GetContainsGridCell: Boolean;
+
+    function GetContainsKnownSubRecord(aKnownSubRecord: TwbKnownSubRecord): Boolean;
+    function GetKnownSubRecordMemberIndex(aKnownSubRecord: TwbKnownSubRecord): Integer;
+    function GetKnownSubRecordMember(aKnownSubRecord: TwbKnownSubRecord): IwbRecordMemberDef;
 
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
@@ -10419,11 +10419,11 @@ constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
                                     aAfterLoad       : TwbAfterLoadCallback;
                                     aAfterSet        : TwbAfterSetCallback;
                                     aIsReference     : Boolean);
-var
-  sRec : IwbSubRecordDef;
-  iDef : IwbIntegerDef;
 begin
   recSummaryDelimiter := ' ';
+
+  for var lKnownSubRecordInitIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
+    recKnownSRMembers[lKnownSubRecordInitIdx] := -1;
 
   if Assigned(aKnownSRs) then
     recKnownSRs := aKnownSRs
@@ -10451,27 +10451,29 @@ begin
 
   SetLength(recMembers, Length(aMembers));
   var NewLength : Integer := 0;
-  for var i := Low(aMembers) to High(aMembers) do begin
-    if Assigned(aMembers[i]) then begin
-      recMembers[NewLength] := (aMembers[i] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
-      for var j := 0 to Pred(aMembers[i].SignatureCount) do begin
-        var Sig := aMembers[i].Signatures[j];
-        if (Sig = recKnownSRs[ksrsEditorID]) or
-           (Sig = recKnownSRs[ksrsFullName]) or
-           (Sig = recKnownSRs[ksrsGridCell]) or
+  for var lMemberIdx := Low(aMembers) to High(aMembers) do begin
+    if Assigned(aMembers[lMemberIdx]) then begin
+      recMembers[NewLength] := (aMembers[lMemberIdx] as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
+      for var lSigIdx := 0 to Pred(aMembers[lMemberIdx].SignatureCount) do begin
+        var Sig := aMembers[lMemberIdx].Signatures[lSigIdx];
+        if (Sig = recKnownSRs[ksrEditorID]) or
+           (Sig = recKnownSRs[ksrFullName]) or
+           (Sig = recKnownSRs[ksrGridCell]) or
            (
-             (Sig = recKnownSRs[ksrsBaseRecord]) and
+             (Sig = recKnownSRs[ksrBaseRecord]) and
              (rdfIsReference in recDefFlags)
            ) then begin
 
           recQuickInitLimit := NewLength;
-          if Sig = recKnownSRs[ksrsEditorID] then
-            Include(recDefFlags, rdfContainsEditorID);
-          if Sig = recKnownSRs[ksrsFullName] then
-            Include(recDefFlags, rdfContainsFullName);
-          if Sig = recKnownSRs[ksrsBaseRecord] then begin
-            Include(recDefFlags, rdfContainsBaseRecord);
-            if not Supports(aMembers[i], IwbSubRecordDef, sRec) then
+
+          for var lKnownSubRecordIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
+            if Sig = recKnownSRs[lKnownSubRecordIdx] then
+              recKnownSRMembers[lKnownSubRecordIdx] := lMemberIdx;
+
+          if Sig = recKnownSRs[ksrBaseRecord] then begin
+            var sRec : IwbSubRecordDef;
+            var iDef : IwbIntegerDef;
+            if not Supports(aMembers[lMemberIdx], IwbSubRecordDef, sRec) then
               Assert(False);
             if not Supports(sRec.Value, IwbIntegerDef, iDef) then
               Assert(False);
@@ -10480,8 +10482,6 @@ begin
             if not Supports(iDef.Formater[nil], IwbFormIDChecked, recBaseRecordFormID) then
               Assert(False);
           end;
-          if Sig = recKnownSRs[ksrsGridCell] then
-            Include(recDefFlags, rdfContainsGridCell);
         end;
         try
           recSignatures.AddObject(Sig, Pointer(NewLength) );
@@ -10944,24 +10944,9 @@ begin
         Exit(lIdx);
 end;
 
-function TwbMainRecordDef.GetContainsBaseRecord: Boolean;
+function TwbMainRecordDef.GetContainsKnownSubRecord(aKnownSubRecord: TwbKnownSubRecord): Boolean;
 begin
-  Result := rdfContainsBaseRecord in recDefFlags;
-end;
-
-function TwbMainRecordDef.GetContainsEditorID: Boolean;
-begin
-  Result := rdfContainsEditorID in recDefFlags;
-end;
-
-function TwbMainRecordDef.GetContainsFullName: Boolean;
-begin
-  Result := rdfContainsFullName in recDefFlags;
-end;
-
-function TwbMainRecordDef.GetContainsGridCell: Boolean;
-begin
-  Result := rdfContainsGridCell in recDefFlags;
+  Result := recKnownSRMembers[aKnownSubRecord] >= 0;
 end;
 
 function TwbMainRecordDef.GetDefType: TwbDefType;
@@ -11031,6 +11016,19 @@ end;
 function TwbMainRecordDef.GetIsReference: Boolean;
 begin
   Result := rdfIsReference in recDefFlags;
+end;
+
+function TwbMainRecordDef.GetKnownSubRecordMember(aKnownSubRecord: TwbKnownSubRecord): IwbRecordMemberDef;
+begin
+  Result := nil;
+  var lIndex := recKnownSRMembers[aKnownSubRecord];
+  if lIndex >= 0 then
+    Result := recMembers[lIndex];
+end;
+
+function TwbMainRecordDef.GetKnownSubRecordMemberIndex(aKnownSubRecord: TwbKnownSubRecord): Integer;
+begin
+  Result := recKnownSRMembers[aKnownSubRecord];
 end;
 
 { TwbSubRecordDef }

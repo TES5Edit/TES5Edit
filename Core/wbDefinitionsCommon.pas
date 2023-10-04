@@ -716,10 +716,7 @@ begin
       wbByteArray('Unused', 3)
     ]);
 
-  var lScaleFactor := 1/4096;
-  if wbGameMode = gmSF1 then
-    lScaleFactor := 1;
-
+  var lScaleFactor := 1/wbCellSizeFactor;
 
   wbWorldspaceOBND :=
     wbRStruct('Object Bounds', [
