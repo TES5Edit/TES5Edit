@@ -11684,9 +11684,8 @@ end;
     wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
-      wbUnknown(4)
-//      wbInteger('Grid Y', itS32, nil, cpBenign),
-//      wbInteger('Grid X', itS32, nil, cpBenign)
+      wbInteger('Set Enable State to Opposite of Parent', itU8, wbBoolEnum),
+      wbUnused(3)
     ])),
 
     wbFULL,
@@ -17449,12 +17448,12 @@ end;
       wbUnknown
     ]),
     wbStruct(WDMG, 'Unknown', [
-      wbFloat('Unknown'),
-      wbFloat('Range'),
-      wbFloat('Unknown'),
+      wbFloat('Physical Damage'),
+      wbFloat('Optimal Range'),
+      wbFloat('Max Range'),
       wbFloat,
       wbFloat,
-      wbFormIDCk('Unknown', [NULL, SPEL]),
+      wbFormIDCk('Crit Hit Spell', [NULL, SPEL]),
       wbUnknown(10),
       wbFloat,
       wbFloat,
@@ -17472,7 +17471,7 @@ end;
       wbFloat,
       wbFloat,
       wbUnknown(2),
-      wbFloat,
+      wbFloat('Fire Rate'),
       wbFloat,
       wbUnknown(1),
       wbFloat,
