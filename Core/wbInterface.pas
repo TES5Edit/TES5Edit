@@ -17266,9 +17266,13 @@ begin
       AllowHardcodedRangeUse := _File.AllowHardcodedRangeUse;
   end;
 
-  if not AllowHardcodedRangeUse then
+  if AllowHardcodedRangeUse then begin
+    if aInt < $800 then
+      Exit(aInt);
+  end else begin
     if (aInt and $FFFFFF) < $800 then
       Exit(aInt and $FFF);
+  end;
 
   if aInt <> 0 then
     Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount).ToCardinal;

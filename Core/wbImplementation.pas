@@ -4092,9 +4092,20 @@ var
   MasterCount : Integer;
   Master      : IwbFile;
 begin
-  if aFormID.IsHardcoded and not GetAllowHardcodedRangeUse then
-    Master := wbGetGameMasterFile
-  else begin
+  Master := nil;
+  if aFormID.ObjectID < $800 then begin
+    if GetAllowHardcodedRangeUse then begin
+      if aFormID.IsHardcoded then
+        Master := wbGetGameMasterFile
+      else
+        {just keep going};
+    end else begin
+      Master := wbGetGameMasterFile;
+      aFormID := aFormID.ChangeFileID(Master.FileFileID[True])
+    end;
+  end;
+
+  if not Assigned(Master) then begin
     FileID := aFormID.FileID.FullSlot;
 
     MasterCount := GetMasterCount(aNewMasters);
@@ -4107,9 +4118,18 @@ begin
       Master := GetMaster(FileID, aNewMasters);
   end;
 
-  if Assigned(Master) and not Equals(Master) then
-    Result := Master.RecordByFormID[aFormID.ChangeFileID(Master.FileFileID[aNewMasters]), aAllowInjected, aNewMasters]
-  else
+  if Assigned(Master) and not Equals(Master) then begin
+    var lTargetFileID := Master.FileFileID[aNewMasters];
+    var lTargetFileFormID := aFormID.ChangeFileID(lTargetFileID);
+
+    if lTargetFileFormID.IsHardcoded and
+       GetAllowHardcodedRangeUse and
+       (Master.LoadOrderFileID.FullSlot <> 0)
+    then
+      Exit(nil);
+
+    Result := Master.RecordByFormID[lTargetFileFormID, aAllowInjected, aNewMasters]
+  end else
     Result := nil;
 end;
 
