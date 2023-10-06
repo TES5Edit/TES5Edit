@@ -66,6 +66,7 @@ const
 var
   StartTime            : TDateTime;
   DumpGroups           : TStringList;
+  DumpRecords          : TStringList;
   SkipChildGroups      : TStringList;
   DumpChapters         : TStringList;
   DumpForms            : TStringList;
@@ -637,10 +638,15 @@ begin
   if aContainer.Skipped then begin
     if ((not wbReportMode) or DumpCheckReport) then WriteLn(aIndent, '<contents skipped>');
   end else begin
-    if ReportRecordProgress and (wbToolSource in [tsPlugins]) then
-      if (aContainer.ElementType = etMainRecord) then
-        if Supports(aContainer, IwbMainRecord, MainRecord) then
-          ReportProgress('Dumping: ' + MainRecord.Name);
+    if (wbToolSource in [tsPlugins]) and
+       (aContainer.ElementType = etMainRecord) and
+        Supports(aContainer, IwbMainRecord, MainRecord)
+    then
+      if not Assigned(DumpRecords) or DumpRecords.Find(MainRecord.Signature, i) then begin
+        if ReportRecordProgress then
+          ReportProgress('Dumping: ' + MainRecord.Name)
+      end else
+        Exit;
 
     Supports(aContainer, IwbContainerElementRef, ContainerRef);
     for i := 0 to Pred(aContainer.ElementCount) do
@@ -1267,6 +1273,14 @@ begin
         DumpGroups.Sort;
       end;
 
+      if wbFindCmdLineParam('dr', s) then begin
+        DumpRecords := TStringList.Create;
+        DumpRecords.Sorted := True;
+        DumpRecords.Duplicates := dupIgnore;
+        DumpRecords.CommaText := s;
+        DumpRecords.Sort;
+      end;
+
       if wbFindCmdLineParam('xcg', s) then begin
         SkipChildGroups := TStringList.Create;
         SkipChildGroups.Sorted := True;
@@ -1555,6 +1569,8 @@ begin
       ReportProgress('Application name : ' + wbApplicationTitle);
       if Assigned(Dumpgroups) then
         ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
+      if Assigned(DumpRecords) then
+        ReportProgress('['+s+']   Dumping records : '+DumpRecords.CommaText);
       if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
       if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then

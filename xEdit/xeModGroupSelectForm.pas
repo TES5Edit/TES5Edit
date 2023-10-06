@@ -16,7 +16,8 @@ uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, StdCtrls, Buttons, CheckLst, Menus,
   Vcl.Styles.Utils.SystemMenu, VirtualTrees, VirtualEditTree,
-  wbInterface, wbLoadOrder, wbModGroups, Vcl.ExtCtrls, System.Actions, Vcl.ActnList;
+  wbInterface, wbLoadOrder, wbModGroups, Vcl.ExtCtrls, System.Actions, Vcl.ActnList,
+  Vcl.Mask;
 
 const
   csLast = '<Last>';
@@ -909,6 +910,8 @@ procedure TfrmModGroupSelect.vstModGroupsPaintText(Sender: TBaseVirtualTree;
   const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   TextType: TVSTTextType);
 begin
+  TargetCanvas.Font.Color := clWindowText;
+
   with PModGroupNodeData(Sender.GetNodeData(Node))^ do begin
     if (Node.Parent = nil) or (Node.Parent = Sender.RootNode) then begin
       if Assigned(mgndModGroup) then

@@ -1,3 +1,4 @@
+
 {******************************************************************************
 
   This Source Code Form is subject to the terms of the Mozilla Public License,
@@ -650,7 +651,8 @@ type
     dfCanContainFormID,
     dfCanContainReflection,
     dfUnmappedFormID,
-    dfCanContainUnmappedFormID
+    dfCanContainUnmappedFormID,
+    dfIncludeValueInDisplaySignature
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -673,6 +675,10 @@ var
     dtStructChapter
   ];
 
+const
+  wbAssignThis = Low(Integer);
+  wbAssignAdd = High(Integer);
+
 type
   IwbDef = interface;
 
@@ -687,12 +693,15 @@ type
 
   IwbInterface = IInvokable;
 
+  IwbContainerElementRef = interface;
+
   IwbDef = interface(IwbInterface)
     ['{C7739FBD-3B58-48A2-9DD0-8057D3496892}']
     function GetDefType: TwbDefType;
     function GetDefTypeName: string;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
     function GetDefID: NativeUInt;
     function Equals(const aDef: IwbDef): Boolean;
     function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
@@ -2096,6 +2105,7 @@ type
   TwbStructSizeCallback             = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
   TwbToStrCallback                  = reference to procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
   TwbUnionDecider                   = reference to function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+  TwbRUnionDecider                  = reference to function(const aContainer: IwbContainerElementRef): Integer;
 
   IwbNamedDef = interface(IwbDef)
     ['{F8FEDE89-C089-42C5-B587-49A7D87055F0}']
@@ -2150,9 +2160,10 @@ type
     function GetSignature(const aIndex: Integer): TwbSignature;
     function GetSignatureCount: Integer;
 
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                             aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean;
 
     property DefaultSignature: TwbSignature
       read GetDefaultSignature;
@@ -2169,15 +2180,18 @@ type
 
   IwbRecordDef = interface(IwbSignatureDef)
     ['{89FE380F-7A0B-493C-AA9E-08957A4C167B}']
-    function ContainsMemberFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Boolean;
-    function GetMemberFor(aSignature     : TwbSignature;
-                    const aDataContainer : IwbDataContainer)
-                                         : IwbRecordMemberDef;
-    function GetMemberIndexFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Integer;
+    function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Boolean;
+    function GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                aSignature     : TwbSignature;
+                          const aDataContainer : IwbDataContainer)
+                                               : IwbRecordMemberDef;
+    function GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Integer;
 
     function AllowUnordered: Boolean;
     function AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
@@ -4199,7 +4213,18 @@ function wbRUnion(const aName     : string;
                         aRequired : Boolean = False;
                         aDontShow : TwbDontShowCallback = nil;
                         aGetCP    : TwbGetConflictPriority = nil)
-                                  : IwbSubRecordUnionDef;
+                                  : IwbSubRecordUnionDef; overload;
+
+function wbRUnion(const aName     : string;
+                  const aDecider  : TwbRUnionDecider; //called with the container of the RUnion
+                  const aMembers  : array of IwbRecordMemberDef;
+                  const aSkipSigs : TwbSignatures;
+                        aPriority : TwbConflictPriority = cpNormal;
+                        aRequired : Boolean = False;
+                        aDontShow : TwbDontShowCallback = nil;
+                        aGetCP    : TwbGetConflictPriority = nil)
+                                  : IwbSubRecordUnionDef; overload;
+
 
 {--- wbStructS - array of struct ----------------------------------------------}
 function wbStructs(const aSignature   : TwbSignature;
@@ -5547,6 +5572,7 @@ type
     function GetDefTypeName: string; virtual; abstract;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; virtual;
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; virtual;
     function GetDefID: NativeUInt;
     function Equals(const aDef: IwbDef): Boolean; reintroduce; virtual;
     function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; virtual;
@@ -5656,9 +5682,10 @@ type
     function GetSignature(const aIndex: Integer): TwbSignature; virtual;
     function GetSignatureCount: Integer; virtual;
 
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean; virtual;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                             aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean; virtual;
   end;
 
   TwbSignatureDef = class(TwbBaseSignatureDef)
@@ -5752,15 +5779,18 @@ type
     procedure InitFromParentDoChildren; override;
 
     {---IwbRecordDef---}
-    function ContainsMemberFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Boolean;
-    function GetMemberFor(aSignature     : TwbSignature;
-                    const aDataContainer : IwbDataContainer)
-                                         : IwbRecordMemberDef;
-    function GetMemberIndexFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Integer;
+    function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Boolean; virtual;
+    function GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                aSignature     : TwbSignature;
+                          const aDataContainer : IwbDataContainer)
+                                               : IwbRecordMemberDef;
+    function GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Integer;
     function AllowUnordered: Boolean;
     function AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 
@@ -5860,6 +5890,7 @@ type
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; override;
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbDefInternal---}
@@ -5881,9 +5912,10 @@ type
     {---IwbSubRecordDef---}
     function GetValue: IwbValueDef;
     procedure HasUnusedData;
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean; override;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                             aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean; override;
 
     function IncludeFlagOnValue(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbSubRecordDef{Self};
 
@@ -5960,6 +5992,7 @@ type
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; override;
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbDefInternal---}
@@ -5974,9 +6007,10 @@ type
     function GetSignature(const aIndex: Integer): TwbSignature; override;
     function GetSignatureCount: Integer; override;
 
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean; override;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                             aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean; override;
 
     {---IwbRecordMemberDef---}
     function ToSummaryInternal(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
@@ -6025,6 +6059,7 @@ type
     function GetChildPos(const aChild: IwbDef): Integer; override;
 
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; override;
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbDefInternal---}
@@ -6039,20 +6074,24 @@ type
     function GetSignature(const aIndex: Integer): TwbSignature; override;
     function GetSignatureCount: Integer; override;
 
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean; override;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                             aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean; override;
 
     {---IwbRecordDef---}
-    function ContainsMemberFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Boolean;
-    function GetMemberFor(aSignature     : TwbSignature;
-                    const aDataContainer : IwbDataContainer)
-                                         : IwbRecordMemberDef;
-    function GetMemberIndexFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Integer;
+    function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Boolean; virtual;
+    function GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                aSignature     : TwbSignature;
+                          const aDataContainer : IwbDataContainer)
+                                               : IwbRecordMemberDef;
+    function GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Integer;
     function AllowUnordered: Boolean;
     function AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 
@@ -6076,6 +6115,7 @@ type
     sruMembers           : array of IwbRecordMemberDef;
     sruSignatures        : TStringList;
     sruSkipSignatures    : TStringList;
+    sruDecider           : TwbRUnionDecider;
   public
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aPriority : TwbConflictPriority;
@@ -6083,8 +6123,9 @@ type
                  const aName     : string;
                  const aMembers  : array of IwbRecordMemberDef;
                  const aSkipSigs : TwbSignatures;
-                       aDontShow : TwbDontShowCallback;
-                       aGetCP    : TwbGetConflictPriority); reintroduce;
+                 const aDontShow : TwbDontShowCallback;
+                 const aGetCP    : TwbGetConflictPriority;
+                 const aDecider  : TwbRUnionDecider); reintroduce;
     destructor Destroy; override;
 
     {---IwbDef---}
@@ -6093,6 +6134,7 @@ type
     function GetChildPos(const aChild: IwbDef): Integer; override;
 
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; override;
     procedure Report(const aParents: TwbDefPath); override;
 
     {---IwbDefInternal---}
@@ -6104,20 +6146,24 @@ type
     function GetSignature(const aIndex: Integer): TwbSignature; override;
     function GetSignatureCount: Integer; override;
 
-    function CanHandle(aSignature     : TwbSignature;
-                 const aDataContainer : IwbDataContainer)
-                                      : Boolean; override;
+    function CanHandle(const aContainer     : IwbContainerElementRef;
+                             aSignature     : TwbSignature;
+                       const aDataContainer : IwbDataContainer)
+                                            : Boolean; override;
 
     {---IwbRecordDef---}
-    function ContainsMemberFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Boolean;
-    function GetMemberFor(aSignature     : TwbSignature;
-                    const aDataContainer : IwbDataContainer)
-                                         : IwbRecordMemberDef;
-    function GetMemberIndexFor(aSignature     : TwbSignature;
-                         const aDataContainer : IwbDataContainer)
-                                              : Integer;
+    function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Boolean; virtual;
+    function GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                aSignature     : TwbSignature;
+                          const aDataContainer : IwbDataContainer)
+                                               : IwbRecordMemberDef;
+    function GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                     aSignature     : TwbSignature;
+                               const aDataContainer : IwbDataContainer)
+                                                    : Integer;
     function AllowUnordered: Boolean;
     function AdditionalInfoFor(const aMainRecord: IwbMainRecord): string;
 
@@ -6126,7 +6172,6 @@ type
     function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
     function GetRecordHeaderStruct: IwbStructDef;
   end;
-
 
   TwbSubRecordStructSKDef = class(TwbSubRecordStructDef, IwbHasSortKeyDef)
   private
@@ -7230,6 +7275,7 @@ type
     function ToSortKey(aInt: Int64; const aElement: IwbElement): string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
+    function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; override;
 
     function GetEditType(const aElement: IwbElement): TwbEditType; override;
     function GetEditInfo(const aElement: IwbElement): TwbStringArray; override;
@@ -9097,8 +9143,22 @@ function wbRUnion(const aName     : string;
                         aGetCP    : TwbGetConflictPriority = nil)
                                   : IwbSubRecordUnionDef; overload;
 begin
-  Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aGetCP);
+  Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aGetCP, nil);
 end;
+
+function wbRUnion(const aName     : string;
+                  const aDecider  : TwbRUnionDecider; //called with the container of the RUnion
+                  const aMembers  : array of IwbRecordMemberDef;
+                  const aSkipSigs : TwbSignatures;
+                        aPriority : TwbConflictPriority = cpNormal;
+                        aRequired : Boolean = False;
+                        aDontShow : TwbDontShowCallback = nil;
+                        aGetCP    : TwbGetConflictPriority = nil)
+                                  : IwbSubRecordUnionDef; overload;
+begin
+  Result := TwbSubRecordUnionDef.Create(aPriority, aRequired, aName, aMembers, aSkipSigs, aDontShow, aGetCP, aDecider);
+end;
+
 
 {--- wbStructS - array of struct ----------------------------------------------}
 function wbStructs(const aSignature   : TwbSignature;
@@ -9764,6 +9824,15 @@ begin
   Result := Assigned(aDef) and (aDef.DefID = GetDefID);
 end;
 
+function TwbDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  Result := nil;
+  if dfDontAssign in defFlags then
+    Exit;
+  if aIndex = wbAssignThis then
+    Result := [Self];
+end;
+
 function TwbDef.GetChildPos(const aChild: IwbDef): Integer;
 begin
   Result := -1;
@@ -10398,9 +10467,10 @@ begin
       AllowUnordered, recAddInfoCallback, ndAfterLoad, ndAfterSet, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
-function TwbMainRecordDef.ContainsMemberFor(aSignature     : TwbSignature;
-                                  const aDataContainer : IwbDataContainer)
-                                                       : Boolean;
+function TwbMainRecordDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                                  aSignature     : TwbSignature;
+                                            const aDataContainer : IwbDataContainer)
+                                                                 : Boolean;
 var
   Dummy: Integer;
 begin
@@ -10512,9 +10582,10 @@ begin
   Result := Length(recMembers);
 end;
 
-function TwbMainRecordDef.GetMemberFor(aSignature     : TwbSignature;
-                             const aDataContainer : IwbDataContainer)
-                                                  : IwbRecordMemberDef;
+function TwbMainRecordDef.GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                             aSignature     : TwbSignature;
+                                       const aDataContainer : IwbDataContainer)
+                                                            : IwbRecordMemberDef;
 var
   i: Integer;
 begin
@@ -10524,9 +10595,10 @@ begin
     Result := nil;
 end;
 
-function TwbMainRecordDef.GetMemberIndexFor(aSignature     : TwbSignature;
-                                  const aDataContainer : IwbDataContainer)
-                                                       : Integer;
+function TwbMainRecordDef.GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                                  aSignature     : TwbSignature;
+                                            const aDataContainer : IwbDataContainer)
+                                                                 : Integer;
 var
   i: Integer;
 begin
@@ -11046,11 +11118,13 @@ begin
     Result := Assigned(srValue) and srValue.CanAssign(aElement, aIndex, aDef);
 end;
 
-function TwbSubRecordDef.CanHandle(aSignature     : TwbSignature;
-                             const aDataContainer : IwbDataContainer)
-                                                  : Boolean;
+function TwbSubRecordDef.CanHandle(const aContainer     : IwbContainerElementRef;
+                                         aSignature     : TwbSignature;
+                                   const aDataContainer : IwbDataContainer)
+                                                        : Boolean;
+
 begin
-  Result := inherited CanHandle(aSignature, aDataContainer);
+  Result := inherited CanHandle(aContainer, aSignature, aDataContainer);
   if Result and srSizeMatch and Assigned(aDataContainer) and Assigned(srValue) then
     Result := aDataContainer.DataSize = srValue.DefaultSize[nil, nil, nil];
 end;
@@ -11102,6 +11176,21 @@ begin
 
   Result := Self;
   aCallback(GetValue);
+end;
+
+function TwbSubRecordDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  {
+  Exit(nil);
+
+  Result := nil;
+  if dfDontAssign in defFlags then
+    Exit;
+
+  if Assigned(srValue) then
+    Exit(srValue.GetAssignTemplates(aContainer, aIndex));
+  }
+  Result := inherited;
 end;
 
 function TwbSubRecordDef.GetDefType: TwbDefType;
@@ -11484,11 +11573,12 @@ begin
     Result := False;
 end;
 
-function TwbSubRecordArrayDef.CanHandle(aSignature     : TwbSignature;
-                                  const aDataContainer : IwbDataContainer)
-                                                       : Boolean;
+function TwbSubRecordArrayDef.CanHandle(const aContainer     : IwbContainerElementRef;
+                                              aSignature     : TwbSignature;
+                                        const aDataContainer : IwbDataContainer)
+                                                             : Boolean;
 begin
-  Result := sraElement.CanHandle(aSignature, aDataContainer);
+  Result := sraElement.CanHandle(aContainer, aSignature, aDataContainer);
 end;
 
 constructor TwbSubRecordArrayDef.Clone(const aSource: TwbDef);
@@ -11520,6 +11610,18 @@ end;
 function TwbSubRecordArrayDef.GetElement: IwbRecordMemberDef;
 begin
   Result := sraElement;
+end;
+
+function TwbSubRecordArrayDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  Result := nil;
+  if dfDontAssign in defFlags then
+    Exit;
+
+  if (aIndex = wbAssignAdd) and Assigned(sraElement) then
+    Exit(sraElement.GetAssignTemplates(aContainer, wbAssignThis));
+
+  Result := inherited;
 end;
 
 function TwbSubRecordArrayDef.GetCount: Integer;
@@ -11720,14 +11822,15 @@ begin
     Result := False;
 end;
 
-function TwbSubRecordStructDef.CanHandle(aSignature     : TwbSignature;
-                                   const aDataContainer : IwbDataContainer)
-                                                        : Boolean;
+function TwbSubRecordStructDef.CanHandle(const aContainer     : IwbContainerElementRef;
+                                               aSignature     : TwbSignature;
+                                         const aDataContainer : IwbDataContainer)
+                                                              : Boolean;
 begin
   if srsAllowUnordered or (dfAllowAnyMember in defFlags) then
-    Result := ContainsMemberFor(aSignature, aDataContainer)
+    Result := ContainsMemberFor(aContainer, aSignature, aDataContainer)
   else
-    Result := srsMembers[0].CanHandle(aSignature, aDataContainer);
+    Result := srsMembers[0].CanHandle(aContainer, aSignature, aDataContainer);
 end;
 
 constructor TwbSubRecordStructDef.Clone(const aSource: TwbDef);
@@ -11745,9 +11848,10 @@ begin
   end;
 end;
 
-function TwbSubRecordStructDef.ContainsMemberFor(aSignature     : TwbSignature;
-                                           const aDataContainer : IwbDataContainer)
-                                                                : Boolean;
+function TwbSubRecordStructDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                                       aSignature     : TwbSignature;
+                                                 const aDataContainer : IwbDataContainer)
+                                                                      : Boolean;
 var
   Dummy: Integer;
 begin
@@ -11820,9 +11924,10 @@ begin
   Result := Length(srsMembers);
 end;
 
-function TwbSubRecordStructDef.GetMemberFor(aSignature     : TwbSignature;
-                                      const aDataContainer : IwbDataContainer)
-                                                           : IwbRecordMemberDef;
+function TwbSubRecordStructDef.GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                                  aSignature     : TwbSignature;
+                                            const aDataContainer : IwbDataContainer)
+                                                                 : IwbRecordMemberDef;
 var
   i: Integer;
 begin
@@ -11832,9 +11937,10 @@ begin
     Result := nil;
 end;
 
-function TwbSubRecordStructDef.GetMemberIndexFor(aSignature     : TwbSignature;
-                                           const aDataContainer : IwbDataContainer)
-                                                                : Integer;
+function TwbSubRecordStructDef.GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                                       aSignature     : TwbSignature;
+                                                 const aDataContainer : IwbDataContainer)
+                                                                      : Integer;
 var
   i: Integer;
 begin
@@ -11847,6 +11953,18 @@ end;
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
   Result := wbMainRecordHeader as IwbStructDef;
+end;
+
+function TwbSubRecordStructDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  Result := nil;
+  if dfDontAssign in defFlags then
+    Exit;
+
+  if (aIndex >= Low(srsMembers)) and (aIndex <= High(srsMembers)) then
+    Exit(srsMembers[aIndex].GetAssignTemplates(aContainer, wbAssignThis));
+
+  Result := inherited;
 end;
 
 function TwbSubRecordStructDef.GetChildPos(const aChild: IwbDef): Integer;
@@ -11983,6 +12101,10 @@ begin
   if dfDontAssign in defFlags then
     Exit(False);
 
+  if Assigned(sruDecider) then begin
+    //???
+  end;
+
   for i := Low(sruMembers) to High(sruMembers) do begin
     Result := sruMembers[i].CanAssign(aElement, aIndex, aDef);
     if Result = True then
@@ -12005,18 +12127,23 @@ begin
     Result := False;
 end;
 
-function TwbSubRecordUnionDef.CanHandle(aSignature     : TwbSignature;
-                                  const aDataContainer : IwbDataContainer)
-                                                       : Boolean;
-var
-  i: Integer;
+function TwbSubRecordUnionDef.CanHandle(const aContainer     : IwbContainerElementRef;
+                                              aSignature     : TwbSignature;
+                                        const aDataContainer : IwbDataContainer)
+                                                             : Boolean;
 begin
+  if Assigned(sruDecider) then begin
+    var lDecidedMemberIdx := sruDecider(aContainer);
+    if (lDecidedMemberIdx >= Low(sruMembers)) and
+       (lDecidedMemberIdx <= High(sruMembers)) and
+       sruMembers[lDecidedMemberIdx].CanHandle(aContainer, aSignature, aDataContainer)
+    then
+      Exit(True);
+  end else
+    for var lMemberIndx := Low(sruMembers) to High(sruMembers) do
+      if sruMembers[lMemberIndx].CanHandle(aContainer, aSignature, aDataContainer) then
+        Exit(True);
   Result := False;
-  for i := Low(sruMembers) to High(sruMembers) do begin
-    Result := sruMembers[i].CanHandle(aSignature, aDataContainer);
-    if Result then
-      Exit;
-  end;
 end;
 
 constructor TwbSubRecordUnionDef.Clone(const aSource: TwbDef);
@@ -12030,15 +12157,16 @@ begin
       for i := 0 to Pred(sruSkipSignatures.Count) do
         SkipSigs[i] := StrToSignature(sruSkipSignatures[i]);
     end;
-    Self.Create(defPriority, defRequired, ndName, sruMembers, SkipSigs, ndDontShow, defGetCP).AfterClone(aSource);
+    Self.Create(defPriority, defRequired, ndName, sruMembers, SkipSigs, ndDontShow, defGetCP, sruDecider).AfterClone(aSource);
   end;
 end;
 
-function TwbSubRecordUnionDef.ContainsMemberFor(aSignature     : TwbSignature;
-                                          const aDataContainer : IwbDataContainer)
-                                                               : Boolean;
+function TwbSubRecordUnionDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
+                                                      aSignature     : TwbSignature;
+                                                const aDataContainer : IwbDataContainer)
+                                                                     : Boolean;
 begin
-  Result := CanHandle(aSignature, aDataContainer);
+  Result := CanHandle(aContainer, aSignature, aDataContainer);
 end;
 
 constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
@@ -12046,12 +12174,14 @@ constructor TwbSubRecordUnionDef.Create(aPriority : TwbConflictPriority;
                                   const aName     : string;
                                   const aMembers  : array of IwbRecordMemberDef;
                                   const aSkipSigs : TwbSignatures;
-                                        aDontShow : TwbDontShowCallback;
-                                        aGetCP    : TwbGetConflictPriority);
+                                  const aDontShow : TwbDontShowCallback;
+                                  const aGetCP    : TwbGetConflictPriority;
+                                  const aDecider  : TwbRUnionDecider);
 var
   i,j: Integer;
 begin
   sruSignatures := TwbFastStringListCS.CreateSorted(dupIgnore);
+  sruDecider := aDecider;
 
   SetLength(sruMembers, Length(aMembers));
   for i := Low(sruMembers) to High(sruMembers) do begin
@@ -12075,6 +12205,27 @@ begin
   FreeAndNil(sruSignatures);
 end;
 
+function TwbSubRecordUnionDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  Result := nil;
+
+  if dfDontAssign in defFlags then
+    Exit(nil);
+
+  if aIndex = wbAssignThis then begin
+    if Assigned(sruDecider) then begin
+      var lDecidedMemberIdx := sruDecider(aContainer);
+      if (lDecidedMemberIdx >= Low(sruMembers)) and (lDecidedMemberIdx <= High(sruMembers)) then
+        Result := [sruMembers[lDecidedMemberIdx]];
+      Exit;
+    end;
+
+    SetLength(Result, Length(sruMembers));
+    for var lMemberIndx := Low(sruMembers) to High(sruMembers) do
+      Result[lMemberIndx] := sruMembers[lMemberIndx];
+  end;
+end;
+
 function TwbSubRecordUnionDef.GetChildPos(const aChild: IwbDef): Integer;
 begin
   Result := inherited;
@@ -12086,6 +12237,10 @@ end;
 
 function TwbSubRecordUnionDef.GetDefaultSignature: TwbSignature;
 begin
+  if Assigned(sruDecider) then begin
+    //???
+  end;
+
   Result := sruMembers[0].GetDefaultSignature;
 end;
 
@@ -12109,34 +12264,44 @@ begin
   Result := Length(sruMembers);
 end;
 
-function TwbSubRecordUnionDef.GetMemberFor(aSignature     : TwbSignature;
-                                     const aDataContainer : IwbDataContainer)
-                                                          : IwbRecordMemberDef;
-var
-  i: Integer;
+function TwbSubRecordUnionDef.GetMemberFor(const aContainer     : IwbContainerElementRef;
+                                                 aSignature     : TwbSignature;
+                                           const aDataContainer : IwbDataContainer)
+                                                                : IwbRecordMemberDef;
 begin
+  if Assigned(sruDecider) then begin
+    var lDecidedMemberIdx := sruDecider(aContainer);
+    if (lDecidedMemberIdx >= Low(sruMembers)) and
+       (lDecidedMemberIdx <= High(sruMembers)) and
+       sruMembers[lDecidedMemberIdx].CanHandle(aContainer, aSignature, aDataContainer)
+    then
+      Exit(sruMembers[lDecidedMemberIdx]);
+  end else
+    for var lMemberIndx := Low(sruMembers) to High(sruMembers) do
+      if sruMembers[lMemberIndx].CanHandle(aContainer, aSignature, aDataContainer) then
+        Exit(sruMembers[lMemberIndx]);
   Result := nil;
-  for i := Low(sruMembers) to High(sruMembers) do begin
-    if sruMembers[i].CanHandle(aSignature, aDataContainer) then begin
-      Result := sruMembers[i];
-      Exit;
-    end;
-  end;
 end;
 
-function TwbSubRecordUnionDef.GetMemberIndexFor(aSignature     : TwbSignature;
-                                          const aDataContainer : IwbDataContainer)
-                                                               : Integer;
+function TwbSubRecordUnionDef.GetMemberIndexFor(const aContainer     : IwbContainerElementRef;
+                                                      aSignature     : TwbSignature;
+                                                const aDataContainer : IwbDataContainer)
+                                                                     : Integer;
 var
   i: Integer;
 begin
+  if Assigned(sruDecider) then begin
+    var lDecidedMemberIdx := sruDecider(aContainer);
+    if (lDecidedMemberIdx >= Low(sruMembers)) and
+       (lDecidedMemberIdx <= High(sruMembers)) and
+       sruMembers[lDecidedMemberIdx].CanHandle(aContainer, aSignature, aDataContainer)
+    then
+      Exit(lDecidedMemberIdx);
+  end else
+    for var lMemberIndx := Low(sruMembers) to High(sruMembers) do
+      if sruMembers[lMemberIndx].CanHandle(aContainer, aSignature, aDataContainer) then
+        Exit(lMemberIndx);
   Result := -1;
-  for i := Low(sruMembers) to High(sruMembers) do begin
-    if sruMembers[i].CanHandle(aSignature, aDataContainer) then begin
-      Result := i;
-      Exit;
-    end;
-  end;
 end;
 
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
@@ -12148,6 +12313,10 @@ function TwbSubRecordUnionDef.GetSignatureCount: Integer;
 var
   i: Integer;
 begin
+  if Assigned(sruDecider) then begin
+    //???
+  end;
+
   Result := 0;
   for i := Low(sruMembers) to High(sruMembers) do
     Inc(Result, sruMembers[i].GetSignatureCount);
@@ -12157,6 +12326,10 @@ function TwbSubRecordUnionDef.GetSignature(const aIndex: Integer): TwbSignature;
 var
   i, j, k: Integer;
 begin
+  if Assigned(sruDecider) then begin
+    //???
+  end;
+
   j := aIndex;
   for i := Low(sruMembers) to High(sruMembers) do begin
     k := sruMembers[i].GetSignatureCount;
@@ -12164,7 +12337,7 @@ begin
       if j >= k then
         Dec(j, k)
       else begin
-        Result := sruMembers[i].GetSignature(Pred(k));
+        Result := sruMembers[i].GetSignature(j);
         Exit;
       end;
     end;
@@ -14407,6 +14580,23 @@ begin
   Result := Result and not flgUnusedMask;
 end;
 
+function TwbFlagsDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
+begin
+  {Result := [];
+  if aIndex >= 0 then begin
+    if aIndex = wbAssignAdd then begin
+      SetLength(Result, Length(flgFlagDefs));
+      for var lFlagIdx := Low(Result) to High(Result) do
+        Result[lFlagIdx] := GetFlagDef(lFlagIdx);
+    end else begin
+      var lFlagDef := GetFlagDef(aIndex);
+      if Assigned(lFlagDef) then
+        Result := [lFlagDef];
+    end;
+  end else}
+    Result := inherited;
+end;
+
 function TwbFlagsDef.GetBaseFlagsDef: IwbFlagsDef;
 begin
   if Assigned(flgBaseFlagsDef) then
@@ -14497,16 +14687,20 @@ begin
 end;
 
 function TwbFlagsDef.GetFlagDef(aIndex: Integer): IwbFlagDef;
-var
-  FlagDef: IwbFlagDef;
 begin
+  if (aIndex < Low(flgFlagDefs)) or (aIndex > High(flgFlagDefs)) then
+    Exit(nil);
+
   Result := flgFlagDefs[aIndex];
   if not Assigned(Result) then begin
-    FlagDef := TwbFlagDef.Create(defPriority, False, flgNames[aIndex], nil, nil,
+    var lFlagDef: IwbFlagDef := TwbFlagDef.Create(defPriority, False, flgNames[aIndex], nil, nil,
       nil, nil, False, aIndex).SetParent(Self, False) as IwbFlagDef;
 
-    {this really should be done threadsafe with a locked compare exchange}
-    flgFlagDefs[aIndex] := FlagDef;
+    var lExchanged: Boolean;
+    AtomicCmpExchange(Pointer(flgFlagDefs[aIndex]), Pointer(lFlagDef), nil, lExchanged);
+    if lExchanged then
+      //we've transfered ownership to the array, make sure the reference count doesn't get wrongly decremented
+      Pointer(lFlagDef) := nil;
 
     Result := flgFlagDefs[aIndex];
   end;
@@ -22131,9 +22325,10 @@ end;
 
 { TwbBaseSignatureDef }
 
-function TwbBaseSignatureDef.CanHandle(aSignature     : TwbSignature;
-                                 const aDataContainer : IwbDataContainer)
-                                                      : Boolean;
+function TwbBaseSignatureDef.CanHandle(const aContainer     : IwbContainerElementRef;
+                                             aSignature     : TwbSignature;
+                                       const aDataContainer : IwbDataContainer)
+                                                            : Boolean;
 begin
   Result := aSignature = GetDefaultSignature;
 end;

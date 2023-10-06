@@ -973,6 +973,8 @@ procedure TfrmModuleSelect.vstModulesPaintText(Sender: TBaseVirtualTree;
   const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   TextType: TVSTTextType);
 begin
+  TargetCanvas.Font.Color := clWindowText;
+
   with PModuleNodeData(Sender.GetNodeData(Node))^ do begin
     if (Node.Parent = nil) or (Node.Parent = Sender.RootNode) then begin
       if Assigned(mndModule) then

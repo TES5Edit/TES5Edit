@@ -7729,7 +7729,7 @@ begin
       //    vstView.BeginUpdate;
       try
         var lTemplate: IwbElement := nil;
-        if Sender <> mniViewAdd then begin
+        if TMenuItem(Sender).Tag >= 0 then begin
           var lTemplates := TargetElement.GetAssignTemplates(TargetIndex);
           var lTemplateIdx := TMenuItem(Sender).Tag;
           if (lTemplateIdx >= Low(lTemplates)) and (lTemplateIdx <= High(lTemplates)) then
@@ -14966,13 +14966,15 @@ begin
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
   end;
 
+  mniViewAdd.Tag := -1;
+  mniViewAdd.Caption := 'Add';
   if mniViewAdd.Visible then begin
     while mniViewAdd.Count > 0 do
       mniViewAdd.Items[Pred(mniViewAdd.Count)].Free;
     mniViewAdd.OnClick := mniViewAddClick;
 
     var lTemplates := TargetElement.GetAssignTemplates(TargetIndex);
-    if Length(lTemplates) > 0 then begin
+    if Length(lTemplates) > 1 then begin
       for var lTemplateIdx := Low(lTemplates) to High(lTemplates) do begin
         var lMenuItem := mniViewAdd.GetParentMenu.CreateMenuItem;
         lMenuItem.Caption := lTemplates[lTemplateIdx].Name;
@@ -14981,6 +14983,9 @@ begin
         mniViewAdd.Add(lMenuItem);
       end;
       mniViewAdd.OnClick := nil;
+    end else if Length(lTemplates) = 1 then begin
+      mniViewAdd.Tag := 0;
+      mniViewAdd.Caption := 'Add "' + lTemplates[0].Name + '"';
     end;
   end;
 end;

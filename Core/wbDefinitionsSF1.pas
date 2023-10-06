@@ -6179,7 +6179,7 @@ begin
     wbEmpty(FNAM, 'Unknown'),
     wbEmpty(PNAM, 'Unknown'),
     wbMarker(HNAM).SetRequired
-  ], []);
+  ], []).IncludeFlag(dfTemplate);
 {
 var
   _ReflectionChunkSignatures : TArray<TwbSignature>;
@@ -7163,7 +7163,7 @@ end;
           {20 ptEventData}
           wbFormID('Event Data'),
           {21 ptFaction}
-          wbFormIDCkNoReach('Faction', [FACT]),
+          wbFormIDCkNoReach('Faction', [FACT, NULL]),
           {22 ptFormList}
           wbFormIDCkNoReach('Form List', [FLST, NULL]),
           {23 ptFormType}
@@ -7320,7 +7320,7 @@ end;
           {20 ptEventData}
           wbFormIDCk('Event Data', [KYWD,LCTN,NULL]),
           {21 ptFaction}
-          wbFormIDCkNoReach('Faction', [FACT]),
+          wbFormIDCkNoReach('Faction', [FACT, NULL]),
           {22 ptFormList}
           wbFormIDCkNoReach('Form List', [FLST]),
           {23 ptFormType}
@@ -7969,7 +7969,8 @@ end;
         'UniqueOverlayList_Component',
         'UniquePatternPlacementInfo_Component',
         'Volumes_Component'
-      ])),
+      ]))
+      .IncludeFlag(dfIncludeValueInDisplaySignature),
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
         wbRStruct('Component Data - Animation Graph', [
@@ -12495,7 +12496,7 @@ end;
         'Unknown 9'
       ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
-    wbRArray('Actions', wbRStruct('Action', [
+    wbRArray('Actions', wbRStructSK([0, 1, 3, 4], 'Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([
         {0} 'Dialogue',
         {1} 'Package',
@@ -12508,12 +12509,28 @@ end;
         {8} 'FX',
         {9} 'Animation',
         {10}'Timeline'
-      ]), cpNormal, True),
-      wbString(NAM0, 'Name'),
+      ]), cpNormal, True)
+      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
+        begin
+          if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+            Exit;
+          if aOldValue = aNewValue then
+            Exit;
+          if not Assigned(aElement) then
+            Exit;
+          var lContainer: IwbContainerElementRef;
+          if not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+            Exit;
+          var lDataElement := lContainer.ElementBySortOrder[8]; //'Type Specific Action' is the member with index 8 in this struct, be sure to adjust if adding more members before
+          if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
+            lDataElement.Remove;
+        end)
+      .IncludeFlag(dfIncludeValueInDisplaySignature),
+      wbString(NAM0, 'Name').SetRequired,
       wbString(SNOT, 'Scene Notes'),
-      wbInteger(ALID, 'Alias ID', itS32),
-      wbInteger(INAM, 'Index', itU32),
-      wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      wbInteger(ALID, 'Alias ID', itS32).SetRequired(),                         //ALID  uint32 // +0x08 - only used if the value is not 0xFFFFFFFB (-5)
+      wbInteger(INAM, 'Index', itU32).SetRequired,                              //INAM  uint32 // +0x10
+      wbInteger(FNAM, 'Flags', itU32, wbFlags([                                 //FNAM  uint32 // +0x0C
         {0x00000001} 'Unknown 0',
         {0x00000002} 'Unknown 1',
         {0x00000004} 'Unknown 2',
@@ -12545,156 +12562,203 @@ end;
         {0x10000000} 'NPC Negative Use Dialogue Subtype',
         {0x20000000} 'NPC Neutral Use Dialogue Subtype',
         {0x40000000} 'NPC Question Use Dialogue Subtype'
-      ])),
-      wbInteger(SNAM, 'Start Phase', itU32),
-      wbInteger(ENAM, 'End Phase', itU32),
-      wbFloat(SNAM, 'Timer - Max Seconds'),
-      wbFloat(TNAM, 'Timer - Min Seconds'),
+      ]))
+      .SetRequired,
+      wbInteger(SNAM, 'Start Phase', itU32).SetRequired,                        //SNAM  uint32 // +0x14 - cast to uint16, ie upper two bytes are dropped
+      wbInteger(ENAM, 'End Phase', itU32).SetRequired,                          //ENAM  uint32 // +0x16 - cast to uint16, ie upper two bytes are dropped
 
-      wbRStructs('Start Scenes', 'Start Scene', [
-        wbFormIDCk(LCEP, 'Scene', [SCEN]),
-        wbInteger(INTT, 'Phase Index', itU16),
-        wbString(SSPN, 'Start Phase for Scene'),
-        wbCITCReq,
-        wbCTDAsCount
-      ], []),
-
-      wbRStructs('Unknown', 'Unknown', [
-        wbFormIDCk(BNAM, 'NPC Anim', [NULL, IDLE]),
-        wbString(STRV),
-        wbUnknown(VCLR, 4).SetRequired,
-        wbFormIDCk(FLMV, 'Unknown', [NULL, KYWD]).SetRequired,
-        wbFormIDCk(FLAV, 'Unknown', [NULL, KYWD]).SetRequired,
-        wbEmpty(QUAL, 'Unknown'),
-        wbEmpty(SPOR, 'Unknown'),
-        wbEmpty(OCOR, 'Unknown'),
-        wbEmpty(SOFT, 'Unknown'),
-        wbEmpty(DOFT, 'Unknown'), // only one occurrence, empty
-        wbFloat(LVCR).SetRequired,
-        wbCTDAs,
-        wbUnknown(ATAC, 4).SetRequired,
-        wbEmpty(PLRL, 'Unknown'),
-        wbEmpty(SHRT, 'Unknown'),
-        wbMarkerReq(XNAM) //end marker
-      ], []),
-
-      wbRStruct('Unknown', [
-        wbUnknown(SNAM),
-        wbUnknown(UNAM),
-        wbUnknown(LNAM)
-      ], []),
-
-      wbEmpty(NVCI, 'Unknown'),
-      wbFormIDCk(CNAM, 'Camera Shot', [NULL, CAMS]),
-      wbEmpty(DNAM, 'Unknown'),
-
-      wbInteger(ALLA, 'Unknown', itS32),
-
-      wbRStruct('Unknown', [
-        wbFormIDCk(REPL, 'Unknown', [ACHR, IMAD, REFR, NULL]),
-        wbFloat(HNAM),
-        wbFloat(VCLR),
-        wbFloat(VNML),
-        wbUnknown(LVCR),
-        wbUnknown(BTXT),
-        wbEmpty(ATXT, 'Unknown'),
-        wbEmpty(VTXT, 'Unknown'),
-        wbEmpty(AIDT, 'Unknown'),
-        wbInteger(FLMV, 'Flags', itU32, wbFlags([
-          {0x00000001} 'Unknown 0',
-          {0x00000002} 'Unknown 1',
-          {0x00000004} 'Unknown 2',
-          {0x00000008} 'Unknown 3',
-          {0x00000010} 'Unknown 4',
-          {0x00000020} 'Unknown 5',
-          {0x00000040} 'Unknown 6',
-          {0x00000080} 'Unknown 7',
-          {0x00000100} 'Unknown 8',
-          {0x00000200} 'Unknown 9',
-          {0x00000400} 'Unknown 10',
-          {0x00000800} 'Unknown 11',
-          {0x00001000} 'Unknown 12',
-          {0x00002000} 'Unknown 13',
-          {0x00004000} 'Unknown 14',
-          {0x00008000} 'Unknown 15',
-          {0x00010000} 'Unknown 16'
-        ])),
-        wbEmpty(MPCD, 'Unknown'),
-        wbEmpty(VNAM, 'Unknown'),
-        wbSoundReference(WED0),
-        wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]),
-        wbInteger(LVLO, 'Unknown', itS32),
-        wbEmpty(XNAM, 'Unknown')
-      ], []),
-
-      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
-      wbFloat(DMAX, 'Looping - Max'),
-      wbFloat(DMIN, 'Looping - Min'),
-
-      wbSoundReference(WED0),
-
-      wbHNAMHNAM, // reported as always empty
-
-      wbSoundReference(WED0),
-
-      wbFormIDCk(VENC, 'Unknown', [NULL, KYWD]),
-
-      wbRStruct('Dialogue Choices', [
-        wbInteger(DTGT, 'Dialogue Target Actor', itS32), // as an alias ID
-        wbRStructs('Dialogue List', 'Item', [
-          wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),
-          wbFormIDCk(PPST, 'Unknown', [NULL, KYWD]),
-          wbFormIDCk(PNST, 'Unknown', [NULL, KYWD]),
-          wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),
-          wbInteger(PAPI, 'Phase Index', itU32),
-          wbString(PAPN),
-          wbFormIDCk(ESCS, 'NPC Response', [DIAL, NULL]).SetRequired
+      wbRUnion('Type Specific Action', function(const aContainer: IwbContainerElementRef): Integer
+        begin
+          Result := -1;
+          if not Assigned(aContainer) then
+            Exit;
+          var lType := aContainer.ElementNativeValues[ANAM];
+          if not VarIsOrdinal(lType) then
+            Exit;
+          Result := lType;
+        end,
+      [
+        {0 Dialogue}
+        wbRStruct('Dialogue', [
+          wbFormIDCk(DATA, 'Topic', [DIAL, NULL]).SetRequired,                  //DATA  uint32 // +0x70
+          wbFloat(DMAX, 'Looping - Max').SetRequired,                           //DMAX  uint32 // +0x80
+          wbFloat(DMIN, 'Looping - Min').SetRequired,                           //DMIN  uint32 // +0x84
+          wbHNAMHNAM.SetRequired,                                               //HNAM  none   // +0x50; probably formid; kicks off component-style read (see HNAM fields)
+          wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),                         //VENC  uint32 // +0x78
+          wbSoundReference(WED0)                                                //WED0  SoundReference // +0x20
         ], []),
-        wbUnknown(ATTR),
-        wbEmpty(ACBS, 'Unknown')
+        {1 Package}
+        wbRStruct('Package', [
+          wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK]))
+        ], []),
+        {2 Timer}
+        wbRStruct('Timer', [
+          wbFloat(SNAM, 'Max Seconds'),                                         //SNAM  uint32 // +0x20, +0x24
+          wbFloat(TNAM, 'Min Seconds'),                                         //TNAM  uint32 // +0x24
+          wbEmpty(HNAM),                                                        //not documented by gibbed, always (4x) empty in Starfield.esm
+          wbInteger(SCQS, 'Unknown', itS16),                                    //SCQS  int16 // if not -1, registers the timer action in some list with the value //never seen in Starfield.esm
+          wbInteger(INTV, 'Unknown', itS16)                                     //INTV  int16 // same as SCQS //never seen in Starfield.esm
+        ], []),
+        {3 Player Dialogue}
+        wbRStruct('Player Dialogue', [
+          wbSoundReference(WED0).SetRequired(False),                            //WED0  SoundReference // +0x40
+          wbHNAMHNAM.SetRequired,                                               //HNAM  none // +0x20; probably formid; kicks off component-style read (see HNAM fields)
+          wbInteger(DTGT, 'Dialogue Target Actor', itS32).SetRequired,          //DTGT  uint32 // +0x90 // as an alias ID
+          wbRStructs('Dialogue List', 'Item', [
+            wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),                    //ESCE  uint32 // +0x88 array; repeated; appears to allocate a new item into the array, with the value set to item+0x00 and item+0x08; likely acts as start marker for an item in this array
+            wbFormIDCk(PPST, 'Unknown', [NULL, KYWD]),                          //PPST  uint32 // +0x88 array; repeated; stored in item+0x10, also sets item+0x24 to 1 (uint8/byte)
+            wbFormIDCk(PNST, 'Unknown', [NULL, KYWD]),                          //PNST  uint32 // +0x88 array; repeated; stored in item+0x18, also sets item+0x25 to 1 (uint8/byte)
+            wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),                      //PASP  uint32 // +0x88 array; repeated; stored in item+0x28
+            wbInteger(PAPI, 'Phase Index', itU32),                              //PAPI  uint32 // +0x88 array; repeated; stored in item+0x20; some sort of parenting/hierarchy index with the items in the array
+            wbString(PAPN),
+            wbFormIDCk(ESCS, 'NPC Response', [DIAL, NULL]).SetRequired          //ESCS  uint32 // +0x88 array; repeated; each item is 0x30 bytes; stored in item+0x08; increases +0x88 index *after* storing the value, likely acts as end marker for an item in this array
+          ], []),
+          wbUnknown(ATTR),                                                      //ATTR  uint32 // +0x94
+          wbEmpty(ACBS, 'Unknown'),                                             //ACBS  nothing // +0x98 set to 1 (uint8/bool)
+          wbEmpty(JAIL, 'Unknown')                                              //JAIL  none // +0x99 set to 1 (uint8/bool) // never seen in Starfield.esm
+        ], [])
+        .IncludeFlag(dfAllowAnyMember)
+        .IncludeFlag(dfStructFirstNotRequired),
+        {4 Start Scene}
+        wbRStruct('Start Scene', [
+          wbRStructs('Start Scenes', 'Start Scene', [
+            wbRUnion('Scene', [
+              wbFormIDCk(LCEP, 'Scene', [SCEN]),                                //LCEP same as STSC
+              wbFormIDCk(STSC, 'Scene', [SCEN])                                 //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
+            ],[]),
+            wbRUnion('Phase Index', [
+              wbInteger(INTT, 'Phase Index', itU16).SetRequired,                //INTT  uint16 // +0x28 array; repeated; sets to item+0x0E
+              wbInteger(ACTV, 'Phase Index', itU16).SetRequired                 //ACTV  same as INTT
+            ],[]).SetRequired,
+            wbString(SSPN, 'Start Phase for Scene'),                            //not documented by gibbed from source, occurs in Starfield.esm
+            wbCITCReq,                                                          //CITC uint32 // +0x28 array; repeated; item+0x08; count of following fields, CTDA/CNDD, others will be ignored
+            wbCTDAsCount
+          ], []).SetRequired(False),
+          wbEmpty(HTID, 'Unknown')
+        ], [])
+        .IncludeFlag(dfAllowAnyMember)
+        .IncludeFlag(dfStructFirstNotRequired),
+        {5 Radio}
+        wbRStruct('Radio', [
+          wbFormIDCk(DATA, 'Topic', [DIAL, NULL]).SetRequired,                  //DATA  uint32 // +0x80  probably formid
+          wbSoundReference(WED0),                                               //WED0  SoundReference // +0x20
+          wbSoundReference(WED1),                                               //WED1  SoundReference // +0x50
+          wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD])                          //uint32 // +0x88  probably formid
+        ], []),
+        {6 Move}
+        wbRStruct('Move', [
+          wbEmpty(DNAM, 'Unknown'),                                             //DNAM  none // sets +0x3D to 1 (uint8/bool)
+          wbEmpty(NVCI, 'Unknown'),                                             //NVCI  none // sets +0x3C to 0 (uint8/bool)
+          wbInteger(ALLA, 'Unknown', itS32).SetRequired,                        //ALLA  uint32 // +0x34
+          wbFormIDCk(REPL, 'Unknown', sigReferences).SetRequired,               //REPL  uint32 // +0x20  probably formid
+          wbFloat(HNAM).SetRequired,                                            //HNAM  uint32 // +0x28
+          wbFloat(VCLR).SetRequired,                                            //VCLR  uint32 // +0x2C
+          wbFloat(VNML).SetRequired,                                            //VNML  uint32 // +0x30
+          wbInteger(FLMV, 'Flags', itU32, wbFlags([                             //FLMV  uint32 // +0x38
+            {0x00000001} 'Unknown 0',
+            {0x00000002} 'Unknown 1',
+            {0x00000004} 'Unknown 2',
+            {0x00000008} 'Unknown 3',
+            {0x00000010} 'Unknown 4',
+            {0x00000020} 'Unknown 5',
+            {0x00000040} 'Unknown 6',
+            {0x00000080} 'Unknown 7',
+            {0x00000100} 'Unknown 8',
+            {0x00000200} 'Unknown 9',
+            {0x00000400} 'Unknown 10',
+            {0x00000800} 'Unknown 11',
+            {0x00001000} 'Unknown 12',
+            {0x00002000} 'Unknown 13',
+            {0x00004000} 'Unknown 14',
+            {0x00008000} 'Unknown 15',
+            {0x00010000} 'Unknown 16'
+          ])).SetRequired
+        ], [])
+        .IncludeFlag(dfAllowAnyMember)
+        .IncludeFlag(dfStructFirstNotRequired),
+        {7 Camera}
+        wbRStruct('Camera', [
+          wbRStructs('Camera Shots', 'Camera Shot', [
+            wbFormIDCk(CNAM, 'Camera Shot', [NULL, CAMS]),                      //CNAM  uint32 // +0x28 array; repeated; allocates new item for the array; value set to item+0x20 probably formid; kicks off component-style read
+            wbInteger(ALLA, 'Unknown', itS32).SetRequired,                      //ALLA  formid // +0x28
+            wbFormIDCk(REPL, 'Unknown', sigReferences).SetRequired,             //REPL  formid // +0x30
+            wbUnknown(HNAM, 4).SetRequired,                                     //HNAM  uint32 // +0x40
+            wbUnknown(VCLR, 4).SetRequired,                                     //VCLR  uint32 // +0x3C
+            wbUnknown(LVCR, 4).SetRequired,                                     //LVCR  uint32 // +0x38
+            wbEmpty(BTXT, 'Unknown'),                                           //BTXT  none // sets +0x44 to 1 (uint8/bool)
+            wbEmpty(ATXT, 'Unknown'),                                           //ATXT  none // sets +0x45 to 1 (uint8/bool)
+            wbEmpty(VTXT, 'Unknown'),                                           //VTXT  none // sets +0x46 to 1 (uint8/bool)
+            wbEmpty(AIDT, 'Unknown'),                                           //AIDT  none // sets +0x48 to 1 (uint8/bool)
+            wbEmpty(MPCD, 'Unknown'),                                           //MPCD  none // sets +0x47 to 1 (uint8/bool)
+            wbEmpty(VNAM, 'Unknown'),                                           //VNAM  none // sets +0x49 to 1 (uint8/bool)
+            wbCTDAs,                                                            //CTDA  standard CTDA reading // +0x10 //not found in Starfield.esm
+            wbMarkerReq(XNAM)                                                   //XNAM  end marker for CNAM fields
+          ], [])
+        ], []),
+        {8 FX}
+        wbRStruct('FX', [
+          wbFormIDCk(REPL, 'Unknown', [NULL, IMAD]).SetRequired,                //REPL  uint32 // +0x68  probably formid
+          wbFloat(HNAM).SetRequired,                                            //HNAM  uint32 // +0x78
+          wbFloat(VCLR).SetRequired,                                            //VCLR  uint32 // +0x7C
+          wbUnknown(BTXT, 4).SetRequired,                                       //BTXT  uint32 // +0x80
+          wbInteger(FLMV, 'Flags', itU32, wbFlags([                             //FLMV  uint32 // +0x88
+            {0x00000001} 'Unknown 0',
+            {0x00000002} 'Unknown 1',
+            {0x00000004} 'Unknown 2',
+            {0x00000008} 'Unknown 3',
+            {0x00000010} 'Unknown 4',
+            {0x00000020} 'Unknown 5',
+            {0x00000040} 'Unknown 6',
+            {0x00000080} 'Unknown 7',
+            {0x00000100} 'Unknown 8',
+            {0x00000200} 'Unknown 9',
+            {0x00000400} 'Unknown 10',
+            {0x00000800} 'Unknown 11',
+            {0x00001000} 'Unknown 12',
+            {0x00002000} 'Unknown 13',
+            {0x00004000} 'Unknown 14',
+            {0x00008000} 'Unknown 15',
+            {0x00010000} 'Unknown 16'
+          ])).SetRequired,
+          wbSoundReference(WED0),                                               //WED0  SoundReference // +0x38
+          wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]).SetRequired,          //BIPL  uint32 // +0x70  probably formid
+          wbInteger(LVLO, 'Unknown', itS32).SetRequired,                        //LVLO  uint32 // +0x84
+          wbCTDAs                                                               //CTDA  standard CTDA reading // +0x20 //not found in Starfield.esm
+        ], []),
+        {9 Animation}
+        wbRStruct('Animation', [
+          wbRStructs('Animations', 'Animation', [
+            wbFormIDCk(BNAM, 'NPC Anim', [NULL, IDLE]),                         //BNAM  uint32 // +0x28 array; repeated; allocates new item for the array; value set to item+0x28 probably formid; kicks off component-style read
+            wbString(STRV),                                                     //STRV  string
+            wbFormIDCk(VCLR, 'Unknown', [NULL, KYWD]).SetRequired,              //VCLR  uint32 // +0x30  probably formid
+            wbFormIDCk(FLMV, 'Unknown', [NULL, KYWD]).SetRequired,              //FLMV  uint32 // +0x38  probably formid
+            wbFormIDCk(FLAV, 'Unknown', [NULL, KYWD]).SetRequired,              //FALV  uint32 // +0x40  probably formid
+            wbEmpty(QUAL, 'Unknown'),                                           //QUAL  none // sets +0x58 to 1 (uint8/bool)
+            wbEmpty(SPOR, 'Unknown'),                                           //SPOR  none // sets +0x5C to 1 (uint8/bool)
+            wbEmpty(OCOR, 'Unknown'),                                           //not documented by gibbed, occurs in Starfield.esm
+            wbEmpty(SOFT, 'Unknown'),                                           //SOFT  none // sets +0x5A to 1 (uint8/bool)
+            wbEmpty(DOFT, 'Unknown'),                                           //DOFT  none // sets +0x59 to 1 (uint8/bool)
+            wbFloat(LVCR).SetRequired,                                          //LVCR  uint32 // +0x50
+            wbCTDAs,                                                            //CTDA  standard CTDA reading // +0x08
+            wbFormIDCk(ATAC, 'Unknown', [NULL, AACT]).SetRequired,              //ATAC  uint32 // +0x48  probably formid
+            wbEmpty(PLRL, 'Unknown'),                                           //PLRL  none // sets +0x5D to 1 (uint8/bool)
+            wbEmpty(SHRT, 'Unknown'),                                           //SHRT  none // sets +0x5F to 1 (uint8/bool)
+            wbUnknown(DTGT, 4),                                                 //DTGT  uint32 // +0x54 //does not occur in Starfield.esm
+            wbEmpty(DPLT, 'Unknown'),                                           //DPLT  none // sets +0x5B to 1 (uint8/bool) //does not occur in Starfield.esm
+            wbEmpty(ACEP, 'Unknown'),                                           //ACEP  none // sets +0x5E to 1 (uint8/bool) //does not occur in Starfield.esm
+            wbMarkerReq(XNAM)                                                   //XNAM  end marker for BNAM fields
+          ], [])
+        ], []),
+        {10 Timeline}
+        wbRStruct('Timeline', [
+          wbUnknown(TNAM, 4),                                                   //TNAM  uint32 // +0x20
+          wbUnknown(SNAM, 4),                                                   //SNAM  uint32 // +0x24
+          wbUnknown(UNAM, 4),                                                   //UNAM  uint32 // +0x2C
+          wbUnknown(LNAM, 4),                                                   //LNAM  uint32 // +0x30
+          wbUnknown(CNAM, 4)                                                    //CNAM  uint32 // +0x34
+        ], [])
       ], []),
-
-      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
-      wbEmpty(HTID, 'Unknown'),
-
-      {
-      wbFormIDCk(PTOP, 'Player Positive Response', [DIAL]),
-      wbFormIDCk(NTOP, 'Player Negative Response', [DIAL]),
-      wbFormIDCk(NETO, 'Player Neutral Response', [DIAL]),
-      wbFormIDCk(QTOP, 'Player Question Response', [DIAL]),
-      wbFormIDCk(VENC, 'Player Positive Dialogue Subtype', [KYWD]),
-      wbFormIDCk(PLVD, 'Player Negative Dialogue Subtype', [KYWD]),
-      wbFormIDCk(JOUT, 'Player Neutral Dialogue Subtype', [KYWD]),
-      wbFormIDCk(DALC, 'Player Question Dialogue Subtype', [KYWD]),
-      wbArray(DTID, 'NPC Headtracking', wbInteger('Actor ID', itS32)),
-      wbFormIDCk(NPOT, 'NPC Positive Response', [DIAL]),
-      wbFormIDCk(NNGT, 'NPC Negative Response', [DIAL]),
-      wbFormIDCk(NNUT, 'NPC Neutral Response', [DIAL]),
-      wbFormIDCk(NQUT, 'NPC Question Response', [DIAL]),
-      wbFormIDCk(NPOS, 'NPC Positive Dialogue Subtype', [KYWD]),
-      wbFormIDCk(NNGS, 'NPC Negative Dialogue Subtype', [KYWD]),
-      wbFormIDCk(NNUS, 'NPC Neutral Dialogue Subtype', [KYWD]),
-      wbFormIDCk(NQUS, 'NPC Question Dialogue Subtype', [KYWD]),
-      wbInteger(DTGT, 'Dialogue Target Actor', itS32),
-      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
-      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
-      wbUnion(HTID, '', wbSceneActionSoundDecider, [
-        wbEmpty('End Scene Say Greeting'),
-        wbFormIDCk('Play Sound', [SNDR, NULL])
-      ]),
-      wbHNAMHNAM,
-      wbStruct(CRIS, 'Camera', [
-        wbFloat('FOV On Player Camera'),
-        wbFloat('Rate Of Camera Change')
-      ]),
-      wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
-      wbInteger(DEVA, 'Emotion Value', itU32),
-      wbArray(HTID, 'Player Headtracking', wbInteger('Actor ID', itS32)),
-      wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),
-      wbFormIDCk(PNAM, 'AnimArchType', [KYWD]),
-      wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-      }
-      wbEmpty(ANAM, 'End Marker', cpNormal, True)
+      wbMarkerReq(ANAM)
     ], [])),
 
     wbFormIDCk(PNAM, 'Quest', [QUST]),
