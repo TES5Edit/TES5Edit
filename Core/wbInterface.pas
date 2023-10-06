@@ -1432,6 +1432,7 @@ type
     function GetRecordFromIndexByKey(aIndex: TwbNamedIndex; const aKey: string): IwbMainRecord;
     function GetLoadOrder: Integer;
     function GetLoadOrderFileID: TwbFileID;
+    function GetResolvedLoadOrderFileID(aNewMasters : Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
     procedure ForceLoadOrder(aValue: Integer);
     function GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
@@ -1543,6 +1544,8 @@ type
       read GetLoadOrder;
     property LoadOrderFileID: TwbFileID
       read GetLoadOrderFileID;
+    property ResolvedLoadOrderFileID[aNewMasters: Boolean]: TwbFileID
+      read GetResolvedLoadOrderFileID;
     property FileFileID[aNewMasters: Boolean]: TwbFileID
       read GetFileFileID;
 

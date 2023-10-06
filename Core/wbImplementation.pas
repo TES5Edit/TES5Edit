@@ -814,6 +814,7 @@ type
     procedure SetLoadOrder(aValue: Integer);
 
     function GetLoadOrderFileID: TwbFileID;
+    function GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
     function GetFileFileID(aNewMasters : Boolean): TwbFileID;
 
     function LoadOrderFormIDtoFileFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -3204,11 +3205,7 @@ begin
   MasterCount := GetMasterCount(aNew);
 
   if aFileID.FullSlot >= MasterCount then begin
-
-    if fsIsCompareLoad in flStates then
-      Result := GetMaster(Pred(MasterCount), aNew).LoadOrderFileID
-    else
-      Result := flLoadOrderFileID;
+    Result := GetResolvedLoadOrderFileID(aNew);
 
     if Result.FullSlot < 0 then
       raise EFileNoSlotExecption.Create('File has no slot assigned');
@@ -4251,6 +4248,22 @@ end;
 function TwbFile.GetReferenceFile: IwbFile;
 begin
   Result := Self;
+end;
+
+function TwbFile.GetResolvedLoadOrderFileID(aNew: Boolean): TwbFileID;
+begin
+  if fsIsCompareLoad in flStates then begin
+    if GetMasterCount(True) > 0 then
+      Result := GetMaster(Pred(GetMasterCount(aNew)), aNew).ResolvedLoadOrderFileID[True]
+    else
+      Result := TwbFileID.Invalid;
+  end else begin
+    Result := flLoadOrderFileID;
+    if not Result.IsValid then
+      if GetIsOverlay then
+        if GetMasterCount(aNew) > 0 then
+          Result := GetMaster(0, aNew).ResolvedLoadOrderFileID[True];
+  end;
 end;
 
 function TwbFile.GetUnsavedSince: TDateTime;
