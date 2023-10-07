@@ -237,6 +237,8 @@ var
   wbNoIndexInAliasSummary            : Boolean    = True;
   wbExtendedESL                      : Boolean    = False;
   wbAlwaysFastAssign                 : Boolean    = False;
+  wbShowRawData                      : Boolean    = False;
+  wbCompareRawData                   : Boolean    = False;
 
   wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
@@ -645,6 +647,7 @@ type
     dfNoMove,
     dfTerminator,
     dfHasZeroTerminator,
+    dfNoZeroTerminator,
     dfArrayCanBeEmpty,
     dfFloatSometimesBroken,
     dfTemplate,
@@ -967,6 +970,8 @@ type
     function GetSummary: string;
     function GetCheck: string;
     function GetSortKey(aExtended: Boolean): string;
+    function GetDisplaySortKey(aExtended: Boolean): string;
+    function GetRawDataAsString: string;
     function GetSortPriority: Integer;
     function GetName: string;
     function GetBaseName: string;
@@ -1138,8 +1143,12 @@ type
       read GetSummary;
     property SortKey[aExtended: Boolean]: string
       read GetSortKey;
+    property DisplaySortKey[aExtended: Boolean]: string
+      read GetDisplaySortKey;
     property Check: string
       read GetCheck;
+    property RawDataAsString: string
+      read GetRawDataAsString;
 
     property Collapsed: TwbTriBool
       read GetCollapsed;
@@ -4815,7 +4824,7 @@ function wbIsInternalEdit: Boolean;
 function StrToSignature(const s: string): TwbSignature;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 
-function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): TwbFormID;
+function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; aAllowHardcodedRangeUse: Boolean): TwbFormID;
 
 threadvar
   _InternalEditCount: Integer;
@@ -15677,8 +15686,11 @@ begin
 
   if sdSize > 0 then
     NewSize := sdSize
-  else
-    NewSize := Succ(Length(b));
+  else begin
+    NewSize := Length(b);
+    if not (dfNoZeroTerminator in defFlags) then
+      Inc(NewSize);
+  end;
 
   aElement.RequestStorageChange(aBasePtr, aEndPtr, NewSize + Ord(ndTerminator));
 
@@ -15693,7 +15705,8 @@ begin
     if NewSize > 1 then
       Move(b[0], aBasePtr^, Length(b));
 
-    PByte(aBasePtr)[Pred(NewSize)] := 0;
+    if not (dfNoZeroTerminator in defFlags) then
+      PByte(aBasePtr)[Pred(NewSize)] := 0;
   end;
   if ndTerminator then
     PAnsiChar(aBasePtr)[NewSize] := AnsiChar(wbTerminator);
@@ -16772,39 +16785,39 @@ begin
 end;
 
 function TwbFormIDDefFormater.Check(aInt: Int64; const aElement: IwbElement): string;
-var
-  FormID : TwbFormID;
-  _File: IwbFile;
-  MainRecord: IwbMainRecord;
 begin
   Result := '';
 
   if dfUseLoadOrder in defFlags then
     Exit;
 
-  FormID := TwbFormID.FromCardinal(aInt);
+  var lFormID := TwbFormID.FromCardinal(aInt);
 
   if Assigned(aElement) then begin
-    _File := aElement._File;
-    if Assigned(_File) then begin
+    var lFile := aElement._File;
+    if Assigned(lFile) then begin
       try
-        if (dfUnmappedFormID in defFlags) and not FormID.IsNull then begin
-          if _File.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
-            if (_File.MasterCount[True] < 1) or (_File.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
-              Exit('['+FormID.ToString(False)+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
+        if (dfUnmappedFormID in defFlags) and not lFormID.IsNull then begin
+          if lFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
+            if (lFile.MasterCount[True] < 1) or (lFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
+              Exit('['+lFormID.ToString(False)+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
         end;
 
-        if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
-          FormID.FileID := TwbFileID.Null;
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
-        end else
-          MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
+        if lFormID.ObjectID < $800 then
+          if not lFile.AllowHardcodedRangeUse then
+            lFormID.FileID := TwbFileID.Null;
 
-        if Assigned(MainRecord) then
+        var lMainRecord: IwbMainRecord;
+        if lFormID.IsHardcoded then
+          lMainRecord := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+        else
+          lMainRecord := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
+
+        if Assigned(lMainRecord) then
           Exit;
 
         if wbDisplayLoadOrderFormID then
-          FormID := _File.FileFormIDtoLoadOrderFormID(FormID, aElement.MastersUpdated);
+          lFormID := lFile.FileFormIDtoLoadOrderFormID(lFormID, aElement.MastersUpdated);
       except
         on E: Exception do begin
           Result := E.Message;
@@ -16815,12 +16828,12 @@ begin
   end;
 
   if dfUnmappedFormID in defFlags then begin
-    if FormID.FileID.FullSlot <> 0 then
-      Exit('['+FormID.ToString(False)+'] <Error: Unmapped FormIDs must belong to File ID [00]>');
+    if lFormID.FileID.FullSlot <> 0 then
+      Exit('['+lFormID.ToString(False)+'] <Error: Unmapped FormIDs must belong to File ID [00]>');
   end;
 
-  if not FormID.IsHardcoded then
-    Result := '['+FormID.ToString(False)+'] <Error: Could not be resolved>';
+  if not lFormID.IsHardcoded then
+    Result := '['+lFormID.ToString(False)+'] <Error: Could not be resolved>';
 end;
 
 function TwbFormIDDefFormater.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -17344,9 +17357,6 @@ begin
 end;
 
 function TwbFormIDDefFormater.GetLinksTo(aInt: Int64; const aElement: IwbElement): IwbElement;
-var
-  _File  : IwbFile;
-  FormID : TwbFormID;
 begin
   Result := nil;
 
@@ -17361,39 +17371,45 @@ begin
   if dfUseLoadOrder in defFlags then
     Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt))
   else if Assigned(aElement) then begin
-    _File := aElement._File;
-    if Assigned(_File) then try
-      FormID := TwbFormID.FromCardinal(aInt);
-      if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
-        FormID.FileID := TwbFileID.Null;
-        Result := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
-      end else
-        Result := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
+    var lFile := aElement._File;
+    if Assigned(lFile) then try
+      var lFormID := TwbFormID.FromCardinal(aInt);
+
+      if lFormID.ObjectID < $800 then
+        if not lFile.AllowHardcodedRangeUse then
+          lFormID.FileID := TwbFileID.Null;
+
+      if lFormID.IsHardcoded then
+        Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+      else
+        Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
+
     except end;
   end;
 end;
 
 function TwbFormIDDefFormater.GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
-var
-  _File  : IwbFile;
-  FormID : TwbFormID;
 begin
   Result := nil;
   if dfUseLoadOrder in defFlags then
     Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt))
   else begin
-  FormID := TwbFormID.FromCardinal(aInt);
+    if Assigned(aElement) then begin
+      var lFile := aElement._File;
+      if Assigned(lFile) then try
+        var lFormID := TwbFormID.FromCardinal(aInt);
 
-  if Assigned(aElement) then begin
-    _File := aElement._File;
-    if Assigned(_File) then begin
-      if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
-        FormID.FileID := TwbFileID.Null;
-        Result := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
-      end else
-        Result := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
+        if lFormID.ObjectID < $800 then
+          if not lFile.AllowHardcodedRangeUse then
+            lFormID.FileID := TwbFileID.Null;
+
+        if lFormID.IsHardcoded then
+          Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
+        else
+          Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
+
+      except end;
     end;
-  end;
   end;
 end;
 
@@ -17412,7 +17428,7 @@ begin
   Result := True;
 end;
 
-function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte): TwbFormID;
+function FixupFormID(aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; aAllowHardcodedRangeUse: Boolean): TwbFormID;
 var
   FileID : TwbFileID;
   i      : Integer;
@@ -17421,6 +17437,15 @@ begin
 
   if Result.IsNull or Result.IsPlayer or Result.IsNone then
     Exit;
+
+  if Result.ObjectID < $800 then
+    if aAllowHardcodedRangeUse then begin
+      if Result.IsHardcoded then
+        Exit;
+    end else begin
+      Result.FileID := TwbFileID.Null;
+      Exit;
+    end;
 
   FileID := Result.FileID;
 
@@ -17446,9 +17471,6 @@ begin
 end;
 
 function TwbFormIDDefFormater.MastersUpdated(aInt: Int64; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: Byte; const aElement: IwbElement): Int64;
-var
-  _File: IwbFile;
-  AllowHardcodedRangeUse : Boolean;
 begin
   Result := aInt;
   if dfUseLoadOrder in defFlags then
@@ -17456,23 +17478,15 @@ begin
   if (aInt = $FFFFFFFF) and (IsValid('ACVA') or IsValid('FFFF')) then
     Exit;
 
-  AllowHardcodedRangeUse := False;
+  var lAllowHardcodedRangeUse := False;
   if Assigned(aElement) then begin
-    _File := aElement._File;
-    if Assigned(_File) then
-      AllowHardcodedRangeUse := _File.AllowHardcodedRangeUse;
-  end;
-
-  if AllowHardcodedRangeUse then begin
-    if aInt < $800 then
-      Exit(aInt);
-  end else begin
-    if (aInt and $FFFFFF) < $800 then
-      Exit(aInt and $FFF);
+    var lFile := aElement._File;
+    if Assigned(lFile) then
+      lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
   end;
 
   if aInt <> 0 then
-    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount).ToCardinal;
+    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse).ToCardinal;
 end;
 
 procedure TwbFormIDDefFormater.Report(const aParents: TwbDefPath);
@@ -17650,16 +17664,21 @@ begin
           {stored FormID is already a LoadOrder FormID}
           FormID := TwbFormID.FromCardinal(aInt);
           MainRecord := wbRecordByLoadOrderFormID(FormID);
-        end else if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
-          FormID.FileID := TwbFileID.Null;
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
-        end else  begin
-          MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
-          if wbDisplayLoadOrderFormID then
-            if Assigned(MainRecord) then
-              FormID := MainRecord.LoadOrderFormID
-            else
-              FormID := _File.FileFormIDtoLoadOrderFormID(FormID, aElement.MastersUpdated);
+        end else begin
+          if FormID.ObjectID < $800 then
+            if not _File.AllowHardcodedRangeUse then
+              FormID.FileID := TwbFileID.Null;
+
+          if FormID.IsHardcoded then
+            MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False]
+          else begin
+            MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
+            if wbDisplayLoadOrderFormID then
+              if Assigned(MainRecord) then
+                FormID := MainRecord.LoadOrderFormID
+              else
+                FormID := _File.FileFormIDtoLoadOrderFormID(FormID, aElement.MastersUpdated);
+          end;
         end;
 
         if dfUnmappedFormID in defFlags then begin
@@ -19162,11 +19181,13 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
+        if FormID.ObjectID < $800 then
+          if not _File.AllowHardcodedRangeUse then
+            FormID.FileID := TwbFileID.Null;
 
-        if (FormID.ObjectID < $800) and not _File.AllowHardcodedRangeUse then begin
-          FormID.FileID := TwbFileID.Null;
-          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False];
-        end else  begin
+        if FormID.IsHardcoded then
+          MainRecord := wbGetGameMasterFile.RecordByFormID[FormID, True, False]
+        else begin
           MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
           if wbDisplayLoadOrderFormID then
             if Assigned(MainRecord) then
@@ -19199,7 +19220,7 @@ begin
     end;
   end;
 
-  if aInt > $800 then
+  if aInt >= $800 then
     Result := '['+FormID.ToString+'] <Error: Could not be resolved>';
 end;
 

@@ -2413,7 +2413,7 @@ begin
 
           ThisPriority := Element.ConflictPriority;
           if ThisPriority <> cpIgnore then
-            UniqueValues.Add(Element.SortKey[True]);
+            UniqueValues.Add(Element.DisplaySortKey[True]);
         end else begin
           Include(DefTypes, dtEmpty);
           ThisPriority := Priority;
@@ -2438,12 +2438,12 @@ begin
         end else begin
           SameAsLast := (i = Pred(aNodeCount)) or not (
             (Assigned(Element) <> Assigned(LastElement)) or
-            (Assigned(Element) and not SameStr(Element.SortKey[True], LastElement.SortKey[True]))
+            (Assigned(Element) and not SameStr(Element.DisplaySortKey[True], LastElement.DisplaySortKey[True]))
             );
 
           SameAsFirst := not (
             (Assigned(Element) <> Assigned(FirstElementNotIgnored)) or
-            (Assigned(Element) and not SameStr(Element.SortKey[True], FirstElementNotIgnored.SortKey[True]))
+            (Assigned(Element) and not SameStr(Element.DisplaySortKey[True], FirstElementNotIgnored.DisplaySortKey[True]))
             );
 
           if not SameAsFirst and
@@ -2479,9 +2479,9 @@ begin
             Element := aNodeDatas[0].Element;
             CompareElement := aNodeDatas[Pred(aNodeCount)].Element;
             if (Assigned(Element) <> Assigned(CompareElement)) or
-              (Assigned(Element) and not SameStr(Element.SortKey[True], CompareElement.SortKey[True])) then
+              (Assigned(Element) and not SameStr(Element.DisplaySortKey[True], CompareElement.DisplaySortKey[True])) then
               Result := caOverride
-            else if (UniqueValues.IndexOf('') >= 0) and Assigned(CompareElement) and (CompareElement.SortKey[True] <> '') then
+            else if (UniqueValues.IndexOf('') >= 0) and Assigned(CompareElement) and (CompareElement.DisplaySortKey[True] <> '') then
               Result := caOverride
             else
               Result := caConflict;
@@ -3717,7 +3717,7 @@ var
           if Supports(Entries.Elements[i], IwbContainerElementRef, Entry) then begin
             SetLength(KeepAlive, Succ(Length(KeepAlive)));
             KeepAlive[High(KeepAlive)] := Entry;
-            Result.AddObject(Entry.SortKey[True], Pointer(Entry));
+            Result.AddObject(Entry.DisplaySortKey[True], Pointer(Entry));
           end;
         if not aAsSet then begin
           Result.Sort;
@@ -6960,7 +6960,7 @@ begin
           LastSortKey := '';
           for j := 0 to Pred(SortableContainer.ElementCount) do begin
             Element := SortableContainer.Elements[j];
-            SortKey := Element.SortKey[False];
+            SortKey := Element.DisplaySortKey[False];
             if SameStr(LastSortKey, SortKey) then
               Inc(DupCounter)
             else begin
@@ -7027,7 +7027,7 @@ begin
                   FreeAndNil(AllKeys);
                 if Assigned(AllKeys) then
                   for j := 0 to Pred(ElementCount) do
-                    AllKeys.Add(Elements[j].SortKey[False]);
+                    AllKeys.Add(Elements[j].DisplaySortKey[False]);
               end;
               if aChildCount < Cardinal(Container.ElementCount) then
                 aChildCount := Container.ElementCount;
@@ -7056,7 +7056,7 @@ begin
                     SetLength(LeftKeys, ElementCount);
                     SetLength(KeyedElements[i], ElementCount);
                     for j := 0 to Pred(ElementCount) do begin
-                      if not AllKeys.Find(Elements[j].SortKey[False], LeftKeys[j]) then
+                      if not AllKeys.Find(Elements[j].DisplaySortKey[False], LeftKeys[j]) then
                         Assert(False);
                       KeyedElements[i, j] := Elements[j];
                     end;
@@ -7065,7 +7065,7 @@ begin
                   with Container do begin
                     SetLength(RightKeys, ElementCount);
                     for j := 0 to Pred(ElementCount) do
-                      if not AllKeys.Find(Elements[j].SortKey[False], RightKeys[j]) then
+                      if not AllKeys.Find(Elements[j].DisplaySortKey[False], RightKeys[j]) then
                         Assert(False);
                   end;
 
@@ -11779,7 +11779,7 @@ begin
     for i := Low(ActiveRecords) to High(ActiveRecords) do begin
       Element := NodeDatas[i].Element;
       if Assigned(Element) then
-        sl.AddObject(Element.SortKey[True], Pointer(i))
+        sl.AddObject(Element.DisplaySortKey[True], Pointer(i))
       else
         sl.AddObject('', Pointer(i));
     end;
@@ -12647,7 +12647,7 @@ begin
   if not Assigned(MasterPos) then
     Exit;
 
-  Result := MasterPos.SortKey[True] <> ThisPos.SortKey[True];
+  Result := MasterPos.DisplaySortKey[True] <> ThisPos.DisplaySortKey[True];
 end;
 
 function IsUnnecessaryPersistent(MainRecord: IwbMainRecord): Boolean;
@@ -17971,11 +17971,15 @@ begin
         else if vnfIsAligned in NodeDatas[0].ViewNodeFlags then
           CellText := CellText + ' (aligned)';
       end else begin
-        if (Element.ConflictPriority <> cpIgnore) or not wbHideIgnored then begin
-          CellText := Element.Value;
-          if (CellText = '') and not (vsExpanded in Node.States) then
-            CellText := Element.Summary;
-        end;
+        CellText := '';
+        if wbShowRawData then
+          CellText := Element.RawDataAsString;
+        if CellText = '' then
+          if (Element.ConflictPriority <> cpIgnore) or not wbHideIgnored then begin
+            CellText := Element.Value;
+            if (CellText = '') and not (vsExpanded in Node.States) then
+              CellText := Element.Summary;
+          end;
       end;
     end
   end else if TextType = ttNormal then
@@ -18442,13 +18446,13 @@ begin
 
       Element := NodeDatas[FocusedColumn].Element;
       if Assigned(Element) then
-        SortKeyFocus := Element.SortKey[True]
+        SortKeyFocus := Element.DisplaySortKey[True]
       else
         SortKeyFocus := '';
 
       Element := NodeDatas[Column].Element;
       if Assigned(Element) then
-        SortKeyThis := Element.SortKey[True]
+        SortKeyThis := Element.DisplaySortKey[True]
       else
         SortKeyThis := '';
 
@@ -19563,7 +19567,7 @@ begin
     0: Result := CompareText(Element1._File.FileName, Element2._File.FileName);
     1: Result := TwbFormID.Compare((Element1 as IwbMainRecord).LoadOrderFormID, (Element2 as IwbMainRecord).LoadOrderFormID);
   else
-    Result := CompareStr(Element1.SortKey[True], Element2.SortKey[True]);
+    Result := CompareStr(Element1.DisplaySortKey[True], Element2.DisplaySortKey[True]);
   end;
 end;
 

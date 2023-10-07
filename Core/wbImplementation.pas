@@ -334,7 +334,9 @@ type
     function GetSummary: string; virtual;
     function GetCheck: string; virtual;
     function GetSortKey(aExtended: Boolean): string; virtual;
+    function GetDisplaySortKey(aExtended: Boolean): string;
     function GetSortKeyInternal(aExtended: Boolean): string; virtual;
+    function GetRawDataAsString: string; virtual;
     function GetSortPriority: Integer; virtual;
     function GetName: string; virtual;
     function GetBaseName: string; virtual;
@@ -953,6 +955,9 @@ type
     function GetEditInfo: TArray<string>; override;
 
     function GetConflictPriority: TwbConflictPriority; override;
+
+    {---IwbElement---}
+    function GetRawDataAsString: string; override;
 
     {---IwbDataContainer---}
     function GetDataBasePtr: Pointer;
@@ -3217,10 +3222,16 @@ end;
 function TwbFile.FileFormIDtoLoadOrderFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
 begin
   Result := aFormID;
-  if (Result.ObjectID < $800) and not GetAllowHardcodedRangeUse then
-    Result.FileID := TwbFileID.Null
-  else
-    Result.FileID := FileFileIDtoLoadOrderFileID(Result.FileID, aNew);
+  if Result.ObjectID < $800 then
+    if GetAllowHardcodedRangeUse then begin
+      if Result.IsHardcoded then
+        Exit;
+    end else begin
+      Result.FileID := TwbFileID.Null;
+      Exit;
+    end;
+
+  Result.FileID := FileFileIDtoLoadOrderFileID(Result.FileID, aNew);
 end;
 
 function TwbFile.FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
@@ -4086,48 +4097,45 @@ begin
 end;
 
 function TwbFile.GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
-var
-  FileID      : Integer;
-  MasterCount : Integer;
-  Master      : IwbFile;
 begin
-  Master := nil;
+  var lMaster: IwbFile;
   if aFormID.ObjectID < $800 then begin
     if GetAllowHardcodedRangeUse then begin
       if aFormID.IsHardcoded then
-        Master := wbGetGameMasterFile
+        lMaster := wbGetGameMasterFile
       else
         {just keep going};
     end else begin
-      Master := wbGetGameMasterFile;
-      aFormID := aFormID.ChangeFileID(Master.FileFileID[True])
+      lMaster := wbGetGameMasterFile;
+      if Assigned(lMaster) then
+        aFormID := aFormID.ChangeFileID(lMaster.FileFileID[True])
     end;
   end;
 
-  if not Assigned(Master) then begin
-    FileID := aFormID.FileID.FullSlot;
+  if not Assigned(lMaster) then begin
+    var lFullSlot := aFormID.FileID.FullSlot;
 
-    MasterCount := GetMasterCount(aNewMasters);
-    if FileID >= MasterCount then
+    var lMasterCount := GetMasterCount(aNewMasters);
+    if lFullSlot >= lMasterCount then
       if fsIsCompareLoad in flStates then
-        Master := GetMaster(Pred(MasterCount), aNewMasters)
+        lMaster := GetMaster(Pred(lMasterCount), aNewMasters)
       else
-        Master := nil
+        lMaster := nil
     else
-      Master := GetMaster(FileID, aNewMasters);
+      lMaster := GetMaster(lFullSlot, aNewMasters);
   end;
 
-  if Assigned(Master) and not Equals(Master) then begin
-    var lTargetFileID := Master.FileFileID[aNewMasters];
+  if Assigned(lMaster) and not Equals(lMaster) then begin
+    var lTargetFileID := lMaster.FileFileID[aNewMasters];
     var lTargetFileFormID := aFormID.ChangeFileID(lTargetFileID);
 
     if lTargetFileFormID.IsHardcoded and
        GetAllowHardcodedRangeUse and
-       (Master.LoadOrderFileID.FullSlot <> 0)
+       (lMaster.LoadOrderFileID.FullSlot <> 0)
     then
       Exit(nil);
 
-    Result := Master.RecordByFormID[lTargetFileFormID, aAllowInjected, aNewMasters]
+    Result := lMaster.RecordByFormID[lTargetFileFormID, aAllowInjected, aNewMasters]
   end else
     Result := nil;
 end;
@@ -4908,8 +4916,17 @@ begin
       SetLength(flRecords, Pred(Length(flRecords)));
     end;
 
+    var lIsHardcoded := FormID.ObjectID < $800;
+    if lIsHardcoded then
+      if GetAllowHardcodedRangeUse then
+        lIsHardcoded := FormID.IsHardcoded;
+
+    if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
+      lIsHardcoded := False;
+
     FileID := FormID.FileID.FullSlot;
-    if (FileID >= Cardinal(GetMasterCount(True))) and not ((FormID.ObjectID < $800) and not GetAllowHardcodedRangeUse)  then begin
+
+    if not lIsHardcoded and (FileID >= Cardinal(GetMasterCount(True))) then begin
       {record for this file}
     end else try
       Master := GetMasterRecordByFormID(FormID, True, True);
@@ -8661,20 +8678,25 @@ begin
 end;
 
 function TwbMainRecord.DoGetFixedFormID: TwbFormID;
-var
-  _File: IwbFile;
 begin
   if wbGameMode = gmTES3 then
     Result := GetFormID
   else
     Result := PwbMainRecordStruct(dcBasePtr).mrsFormID^;
 
-  _File := GetFile;
-  if Assigned(_File) then begin
-    if Result.FileID.FullSlot > _File.MasterCount[GetMastersUpdated] then
-      Result.FileID := _File.FileFileID[GetMastersUpdated];
-    if (Result.ObjectID < $800) and not _File.AllowHardcodedRangeUse then
-      Result.FileID := TwbFileID.Null;
+  var lFile := GetFile;
+  if Assigned(lFile) then begin
+    if Result.ObjectID < $800 then
+      if lFile.GetAllowHardcodedRangeUse then begin
+        if Result.IsHardcoded then
+          Exit;
+      end else begin
+        Result.FileID := TwbFileID.Null;
+        Exit;
+      end;
+
+    if Result.FileID.FullSlot > lFile.MasterCount[GetMastersUpdated] then
+      Result.FileID := lFile.FileFileID[GetMastersUpdated];
   end;
   mrFixedFormID := Result;
 end;
@@ -9630,30 +9652,63 @@ end;
 
 procedure TwbMainRecord.FindUsedMasters(aMasters: PwbUsedMasters);
 var
-  FileID   : Integer;
-  i        : Integer;
-
   SelfRef : IwbContainerElementRef;
   KAR     : IwbKeepAliveRoot;
+
+  lCheckedMasterZero      : Boolean;
+  lMasterZeroIsGameMaster : Boolean;
+  lAllowHardcodedRangeUse : Boolean;
+
+  function MasterZeroIsGameMaster: Boolean;
+  begin
+    if not lCheckedMasterZero then begin
+      lCheckedMasterZero := True;
+      var lFile := GetFile;
+      if Assigned(lFile) then begin
+        lAllowHardcodedRangeUse := lFile.GetAllowHardcodedRangeUse;
+        if lFile.MasterCount[True] > 0 then begin
+          var lMaster := lFile.Masters[0, True];
+          if Assigned(lMaster) and (lMaster.FileStates * [fsIsGameMaster, fsIsHardcoded] <> []) then
+            lMasterZeroIsGameMaster := True;
+        end;
+      end;
+    end;
+    Result := lMasterZeroIsGameMaster;
+  end;
+
 begin
+  lCheckedMasterZero      := False;
+  lMasterZeroIsGameMaster := False;
+
   KAR := wbCreateKeepAliveRoot;
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
 
-  if not GetFormID.IsNull then begin
-    FileID := GetFormID.FileID.FullSlot;
-    aMasters[FileID] := True;
-    if mrStruct.mrsFormID.ObjectID < $800 then
-      aMasters[0] := True;
+  var lFormID := GetFixedFormID;
+  if not lFormID.IsNull then begin
+    if lFormID.IsHardcoded then begin
+      if MasterZeroIsGameMaster then
+        aMasters[0] := True;
+    end else
+      aMasters[lFormID.FileID.FullSlot] := True;
   end;
 
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then begin
 
-    for i := High(mrReferences) downto Low(mrReferences) do begin
-      FileID := mrReferences[i].FileID.FullSlot;
-      aMasters[FileID] := True;
-      if mrReferences[i].ObjectID < $800 then
-        aMasters[0] := True;
+    for var lReferenceIdx := High(mrReferences) downto Low(mrReferences) do begin
+      lFormID := mrReferences[lReferenceIdx];
+
+      if lFormID.ObjectID < $800 then begin
+        MasterZeroIsGameMaster;
+        if not lAllowHardcodedRangeUse then
+          lFormID.FileID := TwbFileID.Null;
+      end;
+
+      if lFormID.IsHardcoded then begin
+        if lMasterZeroIsGameMaster then
+          aMasters[0] := True;
+      end else
+        aMasters[lFormID.FileID.FullSlot] := True;
     end;
 
   end else
@@ -11696,10 +11751,16 @@ var
 
         RefsOutOfDate := cntRefsBuildAt < eGeneration;
 
+        var lAllowHardcodedRangeUse := False;
+
+        var lFile := GetFile;
+        if Assigned(lFile) then
+          lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
+
         HeaderUpdated := False;
         OldFormID := GetFormID;
         if not OldFormID.IsNull then begin
-          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
+          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse);
           if OldFormID <> NewFormID then begin
             MakeHeaderWriteable;
             mrStruct.mrsFormID^ := NewFormID;
@@ -11715,7 +11776,7 @@ var
 
           for i := Low(mrReferences) to High(mrReferences) do begin
             OldFormID := mrReferences[i];
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse);
             if OldFormID <> NewFormID then begin
               FoundOne := True;
               mrReferences[i] := NewFormID;
@@ -14208,6 +14269,9 @@ function TwbSubRecord.GetAlignable: Boolean;
 var
   SelfRef  : IwbContainerElementRef;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   SelfRef := Self as IwbContainerElementRef;
 
   if GetSorted then
@@ -14415,6 +14479,9 @@ var
   EmptyDef : IwbEmptyDef;
   SelfRef  : IwbContainerElementRef;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   SelfRef := Self as IwbContainerElementRef;
 
   if not Assigned(srValueDef) then
@@ -16045,19 +16112,41 @@ begin
 end;
 
 procedure TwbGroupRecord.FindUsedMasters(aMasters: PwbUsedMasters);
-var
-  FormID: TwbFormID;
-  FileID: Integer;
 begin
   inherited;
 
   if grStruct.grsGroupType in [1, 6..10] then begin
     if grStruct.grsLabel <> 0 then begin
-      FormID := TwbFormID.FromCardinal(GetGroupLabel);
-      FileID := FormID.FileID.FullSlot;
-      aMasters[FileID] := True;
-      if FormID.ObjectID < $800 then
-        aMasters[0] := True;
+      var lFormID := TwbFormID.FromCardinal(GetGroupLabel);
+
+
+      if lFormID.ObjectID < $800 then begin
+        var lMasterZeroIsGameMaster := False;
+        var lAllowHardcodedRangeUse := False;
+        var lFile := GetFile;
+        if Assigned(lFile) then begin
+          lAllowHardcodedRangeUse := lFile.GetAllowHardcodedRangeUse;
+          if lFile.MasterCount[True] > 0 then begin
+            var lMaster := lFile.Masters[0, True];
+            if Assigned(lMaster) and (lMaster.FileStates * [fsIsGameMaster, fsIsHardcoded] <> []) then
+              lMasterZeroIsGameMaster := True;
+          end;
+        end;
+
+        if lAllowHardcodedRangeUse then begin
+          if lFormID.IsHardcoded then begin
+            if lMasterZeroIsGameMaster then
+              aMasters[0] := True;
+            Exit;
+          end;
+        end else begin
+          if lMasterZeroIsGameMaster then
+            aMasters[0] := True;
+          Exit;
+        end;
+      end;
+
+      aMasters[lFormID.FileID.FullSlot] := True;
     end;
   end;
 end;
@@ -16386,7 +16475,14 @@ begin
         if grStruct.grsGroupType in [1, 6..10] then begin
           OldFormID := TwbFormID.FromCardinal(GetGroupLabel);
           if not OldFormID.IsNull then begin
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount);
+
+            var lAllowHardcodedRangeUse := False;
+
+            var lFile := GetFile;
+            if Assigned(lFile) then
+              lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
+
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse);
             if grStruct.grsLabel <> NewFormID.ToCardinal then begin
               MakeHeaderWriteable;
               grStruct.grsLabel := NewFormID.ToCardinal;
@@ -17807,6 +17903,14 @@ begin
   end;
 end;
 
+function TwbElement.GetDisplaySortKey(aExtended: Boolean): string;
+begin
+  if wbCompareRawData then
+    Result := GetRawDataAsString
+  else
+    Result := GetSortKey(aExtended);
+end;
+
 function TwbElement.GetDontShow: Boolean;
 var
   Def: IwbDef;
@@ -18070,6 +18174,11 @@ end;
 function TwbElement.GetCountedRecordCount: Cardinal;
 begin
   Result := 0;
+end;
+
+function TwbElement.GetRawDataAsString: string;
+begin
+  Result := '';
 end;
 
 function TwbElement.GetReferenceFile: IwbFile;
@@ -19207,6 +19316,9 @@ end;
 
 function TwbSubRecordArray.GetAlignable: Boolean;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   if GetSorted then
     Exit(False);
   if Assigned(arcDef) and (dfNotAlignable in arcDef.DefFlags) then
@@ -19283,6 +19395,9 @@ end;
 
 function TwbSubRecordArray.GetSorted: Boolean;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   Result := arcSorted;
 end;
 
@@ -20573,6 +20688,9 @@ end;
 
 function TwbArray.GetAlignable: Boolean;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   if GetSorted then
     Exit(False);
   if not Assigned(vbValueDef) then
@@ -20614,6 +20732,9 @@ end;
 
 function TwbArray.GetSorted: Boolean;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   Result := arrSorted;
 end;
 
@@ -21300,6 +21421,9 @@ function TwbValue.GetSorted: Boolean;
 var
   EmptyDef: IwbEmptyDef;
 begin
+  if wbCompareRawData then
+    Exit(False);
+
   Result := vIsFlags or (Supports(Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self), IwbEmptyDef, EmptyDef) and EmptyDef.Sorted);
 end;
 
@@ -22005,6 +22129,28 @@ begin
   Result := etDefault;
   if Supports(GetValueDef, IwbValueDef, ValueDef) then
     Result := ValueDef.EditType[GetDataBasePtr, dcDataEndPtr, Self];
+end;
+
+function TwbDataContainer.GetRawDataAsString: string;
+const
+  HexDigits: PChar = '0123456789ABCDEF';
+begin
+  Result := '';
+  var lData: PByte := GetDataBasePtr;
+  if not Assigned(lData) then
+    Exit;
+
+  var lDataSize := NativeInt(dcDataEndPtr) - NativeInt(lData);
+  if lDataSize < 1 then
+    Exit;
+
+  Result := StringOfChar(' ', Pred(lDataSize*3));
+  var pResult := PChar(Result);
+  for var lByteIdx := 0 to Pred(lDataSize) do begin
+    var lByte := lData[lByteIdx];
+    pResult[     lByteIdx * 3 ] := HexDigits[lByte shr 4];
+    pResult[Succ(lByteIdx * 3)] := HexDigits[lByte and $0F];
+  end;
 end;
 
 function TwbDataContainer.GetResolvedValueDef: IwbValueDef;

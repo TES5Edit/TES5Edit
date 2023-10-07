@@ -362,16 +362,16 @@ begin
       client  := 'Steam';
 
       case wbGameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
-        regPath := sBethRegKey + wbGameNameReg + '\';
-      end;
-      gmEnderal, gmEnderalSE: begin
-        RootKey := HKEY_CURRENT_USER;
-        regPath := sSureAIRegKey + wbGameNameReg + '\';
-      end;
-      gmFO76, gmSF1: begin
-        regPath := sUninstallRegKey + wbGameNameReg + '\';
-      end;
+        gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
+          regPath := sBethRegKey + wbGameNameReg + '\';
+        end;
+        gmEnderal, gmEnderalSE: begin
+          RootKey := HKEY_CURRENT_USER;
+          regPath := sSureAIRegKey + wbGameNameReg + '\';
+        end;
+        gmFO76, gmSF1: begin
+          regPath := sUninstallRegKey + wbGameNameReg + '\';
+        end;
       end;
 
       if not OpenKey(regPath, False) then begin

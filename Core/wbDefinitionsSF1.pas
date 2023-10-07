@@ -86,7 +86,8 @@ begin
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfCollapsed, wbCollapseModels)
-    .IncludeFlag(dfAllowAnyMember);
+    .IncludeFlag(dfAllowAnyMember)
+    .IncludeFlag(dfStructFirstNotRequired)
 end;
 
 function wbDamageTypeArray(aItemName: string): IwbSubRecordDef;
@@ -5415,7 +5416,7 @@ begin
      {15} wbUnknown(4),
      {16} wbFormIDCkNoReach('Keyword', [KYWD])
     ]),
-    wbFloat('Radius'),
+    wbInteger('Radius', itU32),
     wbInteger('Collection Index', itU32)
   ], cpNormal, False, nil, 3);
 
@@ -5643,7 +5644,7 @@ begin
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
-      wbFloat('Unknown'),
+      wbInteger('Unknown', itU32),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
       wbFloat('Unknown'),
@@ -7549,7 +7550,7 @@ end;
       ], []).SetRequired,
       wbRStruct('Progression Configuration', [
         wbString(ANAM).SetRequired,
-        wbString(ATAV, 'Configuration').SetRequired,
+        wbString(ATAV, 'Configuration').IncludeFlag(dfNoZeroTerminator).SetRequired,
         wbEmpty(ATAF, 'Unknown').SetRequired // always empty
       ], []).SetRequired], []);
   var wbATANs := wbRArray('Activities', wbATAN, cpNormal, False);
@@ -8743,7 +8744,8 @@ end;
         .SetSummaryKey([1])
         .IncludeFlag(dfSummaryMembersNoName)
         .IncludeFlag(dfCollapsed, wbCollapseModels)
-        .IncludeFlag(dfAllowAnyMember);
+        .IncludeFlag(dfAllowAnyMember)
+        .IncludeFlag(dfStructFirstNotRequired);
     end;
 
   {subrecords checked against Starfield.esm}
@@ -9670,7 +9672,9 @@ end;
       wbFloat,
       wbFloat,
       wbFloat,
-      wbFloat,
+      wbInteger('Unknown', itU8, wbBoolEnum),
+      wbInteger('Unknown', itU8, wbBoolEnum),
+      wbUnknown(2),
       wbFloat,
       wbFloat,
       wbFloat,
@@ -13148,7 +13152,7 @@ end;
     }
     wbFloat(LNAM, 'Flight - Angle Gain'),
     wbFloat(KNAM),
-    wbUnknown(INTV),
+    wbUnknown(INTV, 4),
     wbEmpty(BOLV, 'Unknown')
   ]);
 
@@ -15693,7 +15697,7 @@ end;
       ])),
       wbInteger('Priority', itU8),
       wbUnused(1),
-      wbFloat('Delay Time'),
+      wbInteger('Delay Time', itS32),
       wbInteger('Type', itU8, wbEnum([
         {0} 'None',
         {1} 'Main Quest',
@@ -18459,7 +18463,7 @@ end;
     wbFormIDCk(RNAM, 'Reference', sigReferences),
     wbFormIDCk(PNAM, 'Pack-in', [PKIN]),
     wbFormIDCk(LNAM, 'Unknown', sigReferences),
-    wbArray(MNAM,'Unknown', wbFloat(), 3)
+    wbArray(MNAM,'Unknown', wbUnknown(4), 3)
   ]);
 
   {wbRecord(RGDL, 'RGDL', [
@@ -19057,7 +19061,7 @@ end;
       wbUnknown(BNAM),       //Always 01 00 00 00 if it exists
       wbRArray('Unknown', wbStruct(GNAM, 'Unknown', [
         wbFormIDCk('Pack-In', [PKIN, LVLP]),
-        wbArray('Unknown', wbFloat(), 20)
+        wbArray('Unknown', wbUnknown(4), 20)
       ])),
       wbArray(DNAM,'Unknown', wbFloat(), 4)
     ], []),
@@ -19104,8 +19108,8 @@ end;
       wbString(YX00, 'Mask - Type 5')
     ], []),
     wbString(TX16, 'Ground Layer Normal'),
-    wbArray(BTPS, 'Unknown', wbFloat(), 56),
-    wbArray(BDFS, 'Unknown', wbFloat(), 11),
+    wbArray(BTPS, 'Unknown', wbUnknown(4), 56),
+    wbArray(BDFS, 'Unknown', wbUnknown(4), 11),
     wbString(EFSD, 'Ground Layer Material'),
     wbFormIDCk(NAM2, 'Unknown', [NULL, GLOB]),
     wbFormIDCk(NAM3, 'Unknown', [GLOB]),
@@ -19620,7 +19624,7 @@ end;
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbUnknown(8),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbFloat,
         wbFloat,
@@ -19955,7 +19959,7 @@ end;
         wbInteger(ITID, 'Item ID', itU16),
         wbXLOC,
         wbFormIDCk(TNAM, 'Submenu', [NULL, TMLM]),
-        wbLStringKC(UNAM, 'Display Text', 0, cpTranslate, True),
+        wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
       wbCTDAs
     ], [])
       ],[] )
