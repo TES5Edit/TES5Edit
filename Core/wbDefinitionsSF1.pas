@@ -5690,6 +5690,14 @@ begin
   ]);
   var wbXRNK := wbInteger(XRNK, 'Owner Faction Rank', itS32);
 
+  var wbXEED :=
+    wbStruct(XEED, 'External Emittance', [
+    { 0} wbFloat,
+    { 4} wbInteger('Unknown', itU8),
+    { 5} wbUnused(3)
+    { 8}
+    ]);
+
   var wbNavmeshEdgeLinks := wbArray('Edge Links',
     wbStruct('Edge Link', [
       wbInteger('Type', itU32,
@@ -7909,7 +7917,8 @@ end;
   var wbLongitudeDouble := wbDouble('Longitude', cpNormal, True, 1, 12).SetToStr(wbLongitudeToStr);
   var wbLatitudeDouble := wbDouble('Latitude', cpNormal, True, 1, 12).SetToStr(wbLatitudeToStr);
 
-  wbBaseFormComponents := wbRStructsSK('Components', 'Component', [0], [
+  wbBaseFormComponents := wbRArray('Components',
+    wbRStructSK([0], 'Component', [
       wbString(BFCB, 'Component Type').SetFormaterOnValue(wbStringEnum([
         'BGSActivityTracker',
         'BGSAddToInventoryOnDestroy_Component',
@@ -8367,7 +8376,8 @@ end;
         ], [])
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
-    ], []);
+    ], [])
+  );
 
   var wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
     {0x00000001} 'Interaction Point 0',
@@ -9166,73 +9176,58 @@ end;
     ]));
 
   var ReferenceRecord :=
-  procedure(aSignature: TwbSignature; const aName: string)
-  begin
-    {subrecords checked against Starfield.esm}
-    wbRefRecord(aSignature, aName,
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00000080}  7, 'Turn Off Fire',
-        {0x00000400} 10, 'Persistent',
-        {0x00000800} 11, 'Initially Disabled',
-        {0x10000000} 28, 'Reflected By Auto Water',
-        {0x20000000} 29, 'Don''t Havok Settle',
-        {0x40000000} 30, 'No Respawn'
-      ], True, True)), [
-      wbEDID, //not in Starfield.esm
-      wbVMAD,
-      wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
-      wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
-      wbFloat(XHTW, 'Head-Tracking Weight'),
-//      wbFloat(XFVC, 'Favor Cost'),
-{      wbRArrayS('Reflected/Refracted By',
-        wbStructSK(XPWR, [0], 'Water', [
-          wbFormIDCk('Reference', [REFR]),
-          wbInteger('Type', itU32, wbFlags([
-            'Reflection',
-            'Refraction'
-          ]))
-        ], cpNormal, False, nil, 1)
-      ),}
-      wbXLKRs,
-      {
-      wbRStruct('Activate Parents', [
-        wbInteger(XAPD, 'Flags', itU8, wbFlags([
-          'Parent Activate Only'
-        ], True)),
-        wbRArrayS('Activate Parent Refs',
-          wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-            wbFormIDCk('Reference', sigReferences),
-            wbFloat('Delay')
-          ])
-        )
-      ], []),
-      }
-      wbFormIDCk(XASP, 'Acoustic Parent', [REFR]), //not in Starfield.esm, but exists in .exe
-      wbEmpty(XATP, 'Activation Point'),
-//      wbInteger(XAMC, 'Ammo Count', itU32),
-      wbEmpty(XLKT, 'Linked Ref Transient'),
-      wbFormIDCk(XLYR, 'Layer', [LAYR]),
-//      wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
-      wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-      //wbUnknown(XCVR),
-      wbXESP,
-      wbXOWN,
-      wbXRNK,
-      wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-//      wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-      wbEmpty(XIS2, 'Ignored by Sandbox'),
-      wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-      wbXSCL,
-//      wbXLOD,
+    procedure(aSignature: TwbSignature; const aName: string)
+    begin
+      {subrecords checked against Starfield.esm}
+      wbRefRecord(aSignature, aName,
+        wbFlags(wbRecordFlagsFlags, wbFlagsList([
+          {0x00000080}  7, 'Turn Off Fire',
+          {0x00000400} 10, 'Persistent',
+          {0x00000800} 11, 'Initially Disabled',
+          {0x10000000} 28, 'Reflected By Auto Water',
+          {0x20000000} 29, 'Don''t Havok Settle',
+          {0x40000000} 30, 'No Respawn'
+        ], True, True)), [
+        wbEDID, //not in Starfield.esm
+        wbVMAD,
+        wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
 
-      wbXRGD,
-      wbXPCS,
+        wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
-      wbDataPosRot
-//      wbString(MNAM, 'Comments')
-    ], True, wbPlacedAddInfo);
-  end;
+        wbXRGD,
+
+        wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
+
+        wbXPCS,
+
+        wbEmpty(XIS2, 'Ignored by Sandbox'),
+
+        wbXRNK,
+
+        wbRStruct('Linked References', [
+          wbXLKRs,
+          wbEmpty(XLKT, 'Transient')
+        ], []),
+
+        wbXOWN,
+
+        wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+
+        wbFormIDCk(XLYR, 'Layer', [LAYR]),
+
+        wbFloat(XHTW, 'Head-Tracking Weight'),
+
+        wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+
+        wbXESP,
+
+        wbEmpty(XATP, 'Activation Point'),
+
+        wbXSCL,
+        wbDataPosRot,
+        wbString(MNAM, 'Comments')
+      ], True, wbPlacedAddInfo);
+    end;
 
 {>>>
   Skrim has its own ref record for every projectile type
@@ -16235,88 +16230,57 @@ end;
     wbBaseFormComponents,
     wbXALG,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
 
-    {--- Ragdoll ---}
-    wbRStruct('Ragdoll Data', [
-      wbXRGD,
-      wbXRGB
-    ], []),
-
-    (*
-    {--- Patrol Data ---}
-    wbRStruct('Patrol Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbPDTOs,
-      wbFormIDCk(TNAM, 'Topic', [DIAL, NULL], False, cpNormal)
-    ], []),
-    *)
-
-    {--- Leveled Actor ----}
     wbXLCM,
-
-    {--- Extra ---}
-    //wbInteger(XCNT, 'Count', itS32),
-    wbFloat(XRDS, 'Radius'),
-    wbInteger(XHLT, 'Health %', itU32),
-
-    wbXLKRs,
-
-    (*
-    {--- Activate Parents ---}
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', sigReferences),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    *)
-    wbEmpty(XATP, 'Activation Point'),
-
-    wbEmpty(XLKT, 'Linked Ref Transient'),
-    wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-    wbFormIDCk(XLYR, 'Layer', [LAYR]),
-    //wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
-
-    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-
-    wbEmpty(XIS2, 'Ignored by Sandbox'),
-
-    wbXPLKs,
-
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    //wbFloat(XFVC, 'Favor Cost'),
-
-    {--- Enable Parent ---}
-    wbXESP,
-
-    {--- Ownership ---}
-    wbXOWN,
-    wbXRNK,
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
-    {--- MultiBound ---}
-    //wbFormIDCk(XMBR, 'MultiBound Reference', sigReferences),
+    wbFloat(XRDS, 'Radius'),
 
-    {--- Flags ---}
-    //wbEmpty(XIBS, 'Ignored By Sandbox'),
+    wbXRGD,
 
-    wbUnknown(XEED),
+    wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
 
     wbXPCS,
 
-    {--- 3D Data ---}
+    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
+
+    wbEmpty(XIS2, 'Ignored by Sandbox'),
+
+    wbXRNK,
+
+    wbXPLKs,
+
+    wbRStruct('Linked References', [
+      wbXLKRs,
+      wbEmpty(XLKT, 'Transient')
+    ], []),
+
+    //wbInteger(XCNT, 'Count', itS32),
+
+    wbXEED,
+
+    {--- Ownership ---}
+    wbXOWN,
+
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+
+    wbFormIDCk(XLYR, 'Layer', [LAYR]),
+
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+
+    wbXRGB,
+
+    wbInteger(XHLT, 'Health %', itU32),
+
+    {--- Enable Parent ---}
+    wbXESP,
+
+    wbEmpty(XATP, 'Activation Point'),
+
     wbXSCL,
     wbDATAPosRot,
     wbString(MNAM, 'Comments')
@@ -16478,15 +16442,43 @@ end;
     wbBaseFormComponents,
     wbFormIDCk(NAME, 'Base', sigBaseObjects, False, cpNormal, True),
 
-    {--- Bound Contents ---}
-    {--- Bound Data ---}
-    {
-    wbStruct(XMBO, 'Bound Half Extents', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    }
+    wbStruct(XVL2, 'Volume Data', [
+      { 0} wbUnknown(8),
+      { 8} wbFormIDCk('Unknown', [NULL, IMGS]),
+      {12} wbFormIDCk('Unknown', [NULL, FOGV]),
+      {16} wbUnknown(4),
+      {20} wbFloat,
+      {24} wbFloat,
+      {28} wbFloat,
+      {32} wbFloat,
+      {36} wbUnknown(4),
+      {40} wbFloat,
+      {44} wbFloat,
+      {48} wbFloat,
+      {52} wbUnknown(4),
+      {56} wbFloat,
+      {60} wbFloat,
+      {64} wbFloat,
+      {68} wbFloat,
+      {72} wbFloat,
+      {76} wbFloat,
+      {80} wbUnknown(1),
+      {81} wbFloat
+    ]),
+
+    wbStruct(XALD, 'Light Area', [
+      wbFloat,
+      wbFloat,
+      wbUnknown(8)
+    ]),
+
+    wbStruct(XSAD, 'Ship Arrival', [
+      wbUnknown(17)
+    ]),
+
+    wbXLCM,
+
+    wbActionFlag,
 
     {--- Primitive ---}
     wbStruct(XPRM, 'Primitive', [
@@ -16509,50 +16501,21 @@ end;
       ]))
     ]),
 
-    {
-    wbArray(XPOD, 'Portal Data', wbStruct('References', [
-      wbFormIDCk('Origin', [REFR, NULL]),
-      wbFormIDCk('Destination', [REFR, NULL])
-    ])),
-    }
+    wbStruct(XVOI, 'Volume Reflection Probe Offset Intensity', [
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
 
-    {
-    // not seen in FO4 vanilla files, but can be added in CK
-    wbSizePosRot(XPTL, 'Room Portal'),
-    }
-
-    //wbUnknown(XORD),
-
-    //wbSizePosRot(XOCP, 'Occlusion Plane Data'),
-    {
-    wbRStruct('Bound Data', [
-      wbStruct(XRMR, 'Header', [
-        wbInteger('Linked Rooms Count', itU8),
-        wbInteger('Flags', itU8, wbFlags([
-          'Unknown 1',
-          'Unknown 2',
-          'Unknown 3',
-          'Unknown 4',
-          'Unknown 5',
-          'Unknown 6',
-          'Has Image Space',
-          'Has Lighting Template'
-        ])),
-        wbByteArray('Unknown', 2)
-      ]),
-      wbFormIDCk(LNAM, 'Lighting Template', [LGTM]),
-      wbFormIDCk(INAM, 'Image Space', [IMGS]),
-      wbRArrayS('Linked Rooms',
-        wbFormIDCk(XLRM, 'Linked Room', [REFR])
-      ).SetCountPath('XRMR\Linked Rooms Count')
+    {--- Debug Text ---}
+    wbRStruct('Debug Text', [
+      wbString(XDTS, 'String'),
+      wbStruct(XDTF, 'Format', [
+        wbByteRGBA,
+        wbInteger('Size', itU32)
+      ]).SetRequired
     ], []),
-    wbEmpty(XMBP, 'MultiBound Primitive Marker', cpIgnore),
-    }
-    {--- Ragdoll ---}
-    wbXRGD,
-    wbXRGB,
-
-    wbFloat(XRDS, 'Radius'),
 
     {--- Emittance ---}
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
@@ -16567,16 +16530,21 @@ end;
       wbInteger('Unknown', itU8),
       wbUnused(3)
     ], cpNormal, False, nil, 4),
-    {--- Lit Water ---}
-    wbRArrayS('Lit Water',              // not found in .esm, but is present in .exe
-      wbFormIDCk(XLTW, 'Water', [REFR])
-    ),
-    {
-    wbStruct(XALP, 'Alpha', [
-      wbInteger('Cutoff', itU8),
-      wbInteger('Base', itU8)
-    ]),
-    }
+
+    wbFloat(XRDS, 'Radius'),
+
+    wbFormIDCk(XCZC, 'Current Zone Cell', [CELL, NULL]),
+    wbUnknown(XCZA),
+
+    wbRArray('Patrol', wbRStruct('Data', [
+      wbFloat(XPRD, 'Idle Time', cpNormal, True),
+      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
+      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
+      wbPDTOs
+    ], [])),
+
+    {--- Ragdoll ---}
+    wbXRGD,
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [
@@ -16591,113 +16559,93 @@ end;
     ]),
     wbFormIDCk(XTNM, 'Teleport Name', [MESG]),
 
-    {--- MultiBound ---}
-    //wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-
-    {--- Placed Water ---}
-    {
-    wbUnknown(XWCN),
-    wbStruct(XWCU, 'Water Velocity', [
-      wbFloat('X Offset'),
-      wbFloat('Y Offset'),
-      wbFloat('Z Offset'),
-      wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
-      wbFloat('Y Angle'),
-      wbFloat('Z Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
-    }
-
-    wbFormIDCk(XASP, 'Acoustic Parent', [REFR]), //not in Starfield.esm, but exists in .exe
-    wbEmpty(XATP, 'Activation Point'),
-    //wbInteger(XAMC, 'Ammo Count', itU32),
-    wbEmpty(XLKT, 'Linked Ref Transient'),
-    wbFormIDCk(XLYR, 'Layer', [LAYR]),
-    //wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-    {
-    wbStruct(XRDO, 'Radio', [
-      wbFloat('Frequency'),
-      wbFloat('Min Weak Distance'),
-      wbFloat('Max Weak Distance'),
-      wbInteger('Flags', itU32, wbFlags(['Ignores Distance Checks']))
-    ]),
-    }
-    wbStruct(XBSD, 'Bendable Spline', [
-      wbFloat('Slack'),
-      wbFloat('Thickness'),
-      wbStruct('Half Extents', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]),
-      wbInteger('Wind - Detached End', itU8, wbBoolEnum),
-      wbUnused(3)
-    ], cpNormal, False, nil, 5),
-    //wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
 
-    {--- Activate Parents ---}
-    {
-    wbRStruct('Activate Parents', [
-      wbInteger(XAPD, 'Flags', itU8, wbFlags([
-        'Parent Activate Only'
-      ], True)),
-      wbRArrayS('Activate Parent Refs',
-        wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-          wbFormIDCk('Reference', sigReferences),
-          wbFloat('Delay')
-        ])
-      )
-    ], []),
-    }
-    //wbFormIDCk(XLIB, 'Leveled Item Base Object', [LVLI]),
-    wbXLCM,
+    wbFormIDCk(XPCK, 'Unknown', [RFGP]),
+
+    wbInteger(XBPO, 'Blueprint Part Origin', itU32),
+
+    wbArray(XSL1, 'Snap Links', wbStruct('Snap Link', [
+      wbFormIDCk('Linked Reference', [REFR]),
+      wbArray('Links', wbStruct('Link', [
+        wbInteger('Parent Node', itU32)
+          .SetLinksToCallback(wbLinksToNodeId())
+          .SetToStr(wbToStringFromLinksToSummary),
+        wbInteger('Linked Node', itU32)
+          .SetLinksToCallback(wbLinksToNodeId('...\Linked Reference'))
+          .SetToStr(wbToStringFromLinksToSummary)
+      ]), -1)
+    ]), -1),
+
+    wbXPCS,
+
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
-    {>>> COLL form Index value <<<}
-    //wbInteger(XTRI, 'Collision Layer', itU32),
+    wbRStruct('Projected Decal', [
+      wbStruct(XPDD, 'Projected Decal Data', [
+        wbFloat('Width Scale'),
+        wbFloat('Height Scale'),
+        wbFloat,
+        wbInteger('Unknown', itU8),
+        wbUnused(3)
+      ]),
+      wbArray(XPDO, 'Projected Decal References', wbFormIDCk('Projected Decal Reference', sigReferences))
+    ], []),
+    wbVec3(XCDD, 'Constrained Decal'),
 
-    {--- Lock ---}
-    wbXLOC,
-
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
-
-    {--- Generated Data ---}
-    wbStruct(XNDP, 'Navigation Door Link', [
-      wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
-      wbUnused(2)
-    ]),
-
-    wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
-    {--- Ownership ---}
-    wbXOWN,
     wbXRNK,
 
+    wbStruct(XLGD, 'Light Gobo', [
+    { 0} wbUnknown(4),
+    { 4} wbFloat,
+    { 8} wbUnknown(8),
+    {16} wbFloat,
+    {20} wbFloat,
+    {24} wbUnknown(64)
+    {88}
+    ]),
+
+    wbStruct(XCOL, 'Collision', [
+    { 0} wbInteger('Collision Layer', itU32)
+           .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
+           begin
+             Result := nil;
+             if not Assigned(aElement) then
+               Exit;
+             var lCollisionLayerIndex := aElement.NativeValue;
+             if not VarIsOrdinal(lCollisionLayerIndex) then
+               Exit;
+
+             var lFile := aElement._File;
+             if not Assigned(lFile) then
+               Exit;
+
+             Result := lFile.RecordFromIndexByKey[wbIdxCollisionLayer, lCollisionLayerIndex];
+           end)
+           .SetToStr(wbToStringFromLinksToMainRecordName),
+    { 4} wbFormIDCk('Unknown', [NULL, MATT])
+    { 8}
+    ]),
+
+    wbXPLKs,
+
+    wbRStruct('Linked References', [
+      wbXLKRs,
+      wbEmpty(XLKT, 'Transient')
+    ], []),
+
     wbInteger(XCNT, 'Item Count', itS32),
-    wbInteger(XHLT, 'Health %', itU32),
 
-    wbXESP,
-    wbXLKRs,
+    wbXFLG,
 
-    wbRArray('Patrol', wbRStruct('Data', [
-      wbFloat(XPRD, 'Idle Time', cpNormal, True),
-      wbEmpty(XPPA, 'Patrol Script Marker', cpNormal, True),
-      wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
-      wbPDTOs
-    ], [])),
-
-    {--- Flags ---}
-    wbActionFlag,
-
-    wbFloat(XHTW, 'Head-Tracking Weight'),
-    //wbFloat(XFVC, 'Favor Cost'),
-
-    wbEmpty(ONAM, 'Open by Default'),
+    wbStruct(XLFD, 'Light Flicker', [
+    { 0} wbFloat,
+    { 4} wbFloat,
+    { 8} wbUnknown(8)
+    {16}
+    ]),
 
     {--- Map Data ---}
     wbRStruct('Map Marker', [
@@ -16776,81 +16724,22 @@ end;
       wbUnknown(VISI, 1)
     ], []),
 
-    {--- Attach reference ---}
-    wbFormIDCk(XATR, 'Attach Ref', sigReferences),
+    wbInteger(XLLD, 'Light Layer Data', itU32, wbBoolEnum),
 
-    wbXPLKs,
+    wbFloat(XLVD, 'Light Volumetric Data'),
 
-    {
-    wbRStruct('Power Grid', [
-      wbInteger(XWPG, 'Count', itU32),
-      wbRArray('Connections', wbStruct(XWPN, 'Connection', [
-        wbFormIDCk('Node 1', [REFR, ACHR, NULL]),
-        wbFormIDCk('Node 2', [REFR, ACHR, NULL]),
-        wbFormIDCk('Line', [REFR, NULL]) // BNDS ref
-      ]))
-    ], []),
-    }
+    wbXEED,
 
-    //wbUnknown(XCVR),
-    //wbUnknown(XCVL),
-    //wbFormIDCk(XCZR, 'Current Zone Reference', sigReferences),
+    wbXOWN,
 
-    wbUnknown(XCZA),
-
-    wbFormIDCk(XCZC, 'Current Zone Cell', [CELL, NULL]),
-
-    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
-
-    wbStruct(XALD, 'Light Area', [
-      wbFloat,
-      wbFloat,
-      wbUnknown(8)
-    ]),
-
-    wbInteger(XBPO, 'Blueprint Part Origin', itU32),
-
-
-    wbStruct(XCOL, 'Collision', [
-    { 0} wbInteger('Collision Layer', itU32)
-           .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
-           begin
-             Result := nil;
-             if not Assigned(aElement) then
-               Exit;
-             var lCollisionLayerIndex := aElement.NativeValue;
-             if not VarIsOrdinal(lCollisionLayerIndex) then
-               Exit;
-
-             var lFile := aElement._File;
-             if not Assigned(lFile) then
-               Exit;
-
-             Result := lFile.RecordFromIndexByKey[wbIdxCollisionLayer, lCollisionLayerIndex];
-           end)
-           .SetToStr(wbToStringFromLinksToMainRecordName),
-     { 4} wbFormIDCk('Unknown', [NULL, MATT])
-    { 8}
-    ]),
-
-    wbRStruct('Debug Text', [
-      wbString(XDTS, 'String'),
-      wbStruct(XDTF, 'Format', [
-        wbByteRGBA,
-        wbInteger('Size', itU32)
-      ]).SetRequired
-    ], []),
-
-    wbStruct(XEED, 'External Emittance', [
+    wbStruct(XLRD, 'Light Roundness', [
     { 0} wbFloat,
-    { 4} wbInteger('Unknown', itU8),
-    { 5} wbUnused(3)
-    { 8}
+    { 4} wbFloat,
+    { 8} wbFloat,
+    {12} wbFloat,
+    {16} wbInteger('Unknown', itU8),
+    {17} wbUnused(3)
     ]),
-
-    wbXFLG,
-
-    wbFloat(XGDS, 'Geometry Dirtyness Scale'),
 
     wbStruct(XLBD, 'Light Barndoor Data', [
       wbFloat,
@@ -16863,110 +16752,19 @@ end;
       wbUnused(2)
     ]),
 
+    wbInteger(XLSM, 'Light Static Shadow Map', itU32, wbBoolEnum),
+
     wbRArray('Light Colors', wbStruct(XLCD, 'Light Color', [
       wbByteRGBA,
       wbUnknown(5),
       wbUnused(3)
     ])),
 
-    wbStruct(XLFD, 'Light Flicker', [
-    { 0} wbFloat,
-    { 4} wbFloat,
-    { 8} wbUnknown(8)
-    {16}
-    ]),
-
-    wbStruct(XLGD, 'Light Gobo', [
-    { 0} wbUnknown(4),
-    { 4} wbFloat,
-    { 8} wbUnknown(8),
-    {16} wbFloat,
-    {20} wbFloat,
-    {24} wbUnknown(64)
-    {88}
-    ]),
-
-    wbInteger(XLLD, 'Light Layer Data', itU32, wbBoolEnum),
-
     wbArray(XLMS, 'Layered Material Swaps', wbFormIDCk('Layered Material Swap', [LMSW])),
 
-    wbStruct(XLRD, 'Light Roundness', [
-    { 0} wbFloat,
-    { 4} wbFloat,
-    { 8} wbFloat,
-    {12} wbFloat,
-    {16} wbInteger('Unknown', itU8),
-    {17} wbUnused(3)
-    ]),
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
 
-    wbInteger(XLSM, 'Light Static Shadow Map', itU32, wbBoolEnum),
-    wbFloat(XLVD, 'Light Volumetric Data'),
-    wbReflection(XNSE),
-
-    wbFormIDCk(XPCK, 'Unknown', [RFGP]),
-
-    wbXPCS,
-
-    wbStruct(XPDD, 'Projected Decal', [
-      wbFloat('Width Scale'),
-      wbFloat('Height Scale'),
-      wbFloat,
-      wbInteger('Unknown', itU8),
-      wbUnused(3)
-    ]),
-    wbArray(XPDO, 'Projected Decal References', wbFormIDCk('Projected Decal Reference', sigReferences)),
-    wbVec3(XCDD, 'Constrained Decal'),
-
-    wbStruct(XSAD, 'Ship Arrival', [
-      wbUnknown(17)
-    ]),
-
-    wbArray(XSL1, 'Snap Links', wbStruct('Snap Link', [
-      wbFormIDCk('Linked Reference', [REFR]),
-      wbArray('Links', wbStruct('Link', [
-        wbInteger('Parent Node', itU32)
-          .SetLinksToCallback(wbLinksToNodeId())
-          .SetToStr(wbToStringFromLinksToSummary),
-        wbInteger('Linked Node', itU32)
-          .SetLinksToCallback(wbLinksToNodeId('...\Linked Reference'))
-          .SetToStr(wbToStringFromLinksToSummary)
-      ]), -1)
-    ]), -1),
-
-    wbXTV2,
-
-    wbStruct(XVL2, 'Volume Data', [
-      { 0} wbUnknown(8),
-      { 8} wbFormIDCk('Unknown', [NULL, IMGS]),
-      {12} wbFormIDCk('Unknown', [NULL, FOGV]),
-      {16} wbUnknown(4),
-      {20} wbFloat,
-      {24} wbFloat,
-      {28} wbFloat,
-      {32} wbFloat,
-      {36} wbUnknown(4),
-      {40} wbFloat,
-      {44} wbFloat,
-      {48} wbFloat,
-      {52} wbUnknown(4),
-      {56} wbFloat,
-      {60} wbFloat,
-      {64} wbFloat,
-      {68} wbFloat,
-      {72} wbFloat,
-      {76} wbFloat,
-      {80} wbUnknown(1),
-      {81} wbFloat
-    ]),
-
-    wbStruct(XVOI, 'Volume Reflection Probe Offset Intensity', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
-    ]),
-
-    wbArrayS(XPPS, 'Properties', wbObjectProperty),
+    wbFloat(XGDS, 'Geometry Dirtyness Scale'),
 
     wbRStruct('Grouped Pack-In', [
       wbMarkerReq(XWPK),
@@ -16979,13 +16777,63 @@ end;
       wbMarkerReq(XWPK)
     ], []),
 
-    wbXSCL,
+    {--- Lock ---}
+    wbXLOC,
+
+    wbArrayS(XPPS, 'Properties', wbObjectProperty),
+
+    wbFormIDCk(XLYR, 'Layer', [LAYR]),
+
+    wbFloat(XHTW, 'Head-Tracking Weight'),
+
     wbInteger(BOLV, 'Water Reflection', itU16, wbEnum([
       '',
       'Unknown 1'
     ])),
-//    wbXLOD, // not seen in FO4 vanilla files
+
+    wbStruct(XBSD, 'Bendable Spline', [
+      wbFloat('Slack'),
+      wbFloat('Thickness'),
+      wbStruct('Half Extents', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]),
+      wbInteger('Wind - Detached End', itU8, wbBoolEnum),
+      wbUnused(3)
+    ], cpNormal, False, nil, 5),
+
+    wbReflection(XNSE),
+
+    wbFormIDCk(XATR, 'Attach Ref', sigReferences),
+
+
+    wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+
+    wbXRGB,
+
+    wbInteger(XHLT, 'Health %', itU32),
+
+    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+
+    wbXESP,
+
+    wbXTV2,
+
+    wbStruct(XNDP, 'Navigation Door Link', [
+      wbFormIDCk('Navigation Mesh', [NAVM]),
+      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
+      wbUnused(2)
+    ]),
+
+    wbEmpty(XATP, 'Activation Point'),
+
+    wbXSCL,
+
+    wbEmpty(ONAM, 'Open by Default'),
+
     wbDataPosRot,
+
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False);
 
@@ -16998,14 +16846,12 @@ end;
     ])), [
     wbEDID,
     wbByteColors(RCLR, 'Map Color'),
-    //wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
     wbRArray('Region Areas', wbRStruct('Region Area', [
       wbInteger(RPLI, 'Edge Fall-off', itU32),
       wbArray(RPLD, 'Region Point List Data', wbStruct('Point', [
         wbFloat('X'),
         wbFloat('Y')
       ]), 0, wbRPLDAfterLoad)
-      //wbUnknown(ANAM)
     ], [])),
     wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
       {always starts with an RDAT}
@@ -17035,79 +16881,12 @@ end;
         wbByteArray('Unknown')
       ], cpNormal, True),
 
-      {--- Icon ---}
-      {
-      wbICON,
-      }
-
-      {--- Sound ---}
-      {
-      wbFormIDCk(RDMO, 'Music', [MUSC], False, cpNormal, False, wbREGNSoundDontShow),
-      wbRegionSounds,
-      }
-
-      {--- Map ---}
-      {
-      wbLString(RDMP, 'Map Name', 0, cpTranslate, False, wbREGNMapDontShow),
-      }
-
-      {followed by one of these: }
-
-      {--- Objects ---}
-      (*
-      wbArray(RDOT, 'Objects', wbStruct('Object', [
-        wbFormIDCk('Object', [TREE, FLOR, STAT, LTEX, MSTT, SCOL]),
-        wbInteger('Parent Index', itU16, wbHideFFFF),
-        wbByteArray('Unknown', 2),
-        wbFloat('Density'),
-        wbInteger('Clustering', itU8),
-        wbInteger('Min Slope', itU8),
-        wbInteger('Max Slope', itU8),
-        wbInteger('Flags', itU8, wbFlags([
-          {0}'Conform to slope',
-          {1}'Paint Vertices',
-          {2}'Size Variance +/-',
-          {3}'X +/-',
-          {4}'Y +/-',
-          {5}'Z +/-',
-          {6}'Tree',
-          {7}'Huge Rock'
-        ])),
-        wbInteger('Radius wrt Parent', itU16),
-        wbInteger('Radius', itU16),
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Sink'),
-        wbFloat('Sink Variance'),
-        wbFloat('Size Variance'),
-        wbStruct('Angle Variance', [
-          wbInteger('X', itU16),
-          wbInteger('Y', itU16),
-          wbInteger('Z', itU16)
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbByteArray('Unknown', 2),
-        wbByteArray('Unknown', 4)
-      ]), 0, nil, nil, cpNormal, False, wbREGNObjectsDontShow),
-      *)
-
-      {--- Grass ---}
-      {
-      wbArrayS(RDGS, 'Grasses', wbStructSK([0], 'Grass', [
-        wbFormIDCk('Grass', [GRAS]),
-        wbByteArray('Unknown',4)
-      ]), 0, cpNormal, False, nil, nil, wbREGNGrassDontShow),
-      }
-
       {--- Weather ---}
       wbArrayS(RDWT, 'Weather Types', wbStructSK([0], 'Weather Type', [
         wbFormIDCk('Weather', [WTHR]),
         wbInteger('Chance', itU32),
         wbFormIDCk('Global', [GLOB, NULL])
       ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow)
-
-//      wbFloat(RLDM, 'LOD Display Distance Multiplier'),
-//      wbFloat(ANAM, 'Occlusion Accuracy Dist')
-
     ], []))
   ], True);
 

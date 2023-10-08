@@ -6795,6 +6795,7 @@ type
     procedure FromNativeValue(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: Variant); override;
     function GetIsEditable(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; override;
+    function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; override;
 
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; override;
 
@@ -15976,6 +15977,36 @@ const
   DoubleNaN : Double = 0.0/0.0;
   SingleInf : Single = 1.0/0.0;
   DoubleInf : Double = 1.0/0.0;
+
+function TwbFloatDef.Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+var
+  aTargetDataContainer: IwbDataContainer;
+  aSourceDataContainer: IwbDataContainer;
+begin
+  if Supports(aTarget, IwbDataContainer, aTargetDataContainer) and
+     Supports(aSource, IwbDataContainer, aSourceDataContainer) and
+     Equals(aTarget.ValueDef) and
+     Equals(aSource.ValueDef)
+  then begin
+    var lSourceBasePtr := aSourceDataContainer.DataBasePtr;
+    if Assigned(lSourceBasePtr) then begin
+      var lSize: Integer;
+      case fdKind of
+        fkHalf  : lSize := SizeOf(THalfFloat)+Ord(ndTerminator);
+        fkSingle: lSize := SizeOf(Single)+Ord(ndTerminator);
+        fkDouble: lSize := SizeOf(Double)+Ord(ndTerminator);
+      end;
+      if aSource.DataSize = lSize then begin
+        var lTargetBasePtr := aTargetDataContainer.DataBasePtr;
+        var lTargetEndPtr := aTargetDataContainer.DataEndPtr;
+        aTargetDataContainer.RequestStorageChange(lTargetBasePtr, lTargetEndPtr, lSize);
+        Move(lSourceBasePtr^, lTargetBasePtr^, lSize);
+        Exit;
+      end;
+    end;
+  end;
+  Result := inherited;
+end;
 
 function TwbFloatDef.CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean;
 var
