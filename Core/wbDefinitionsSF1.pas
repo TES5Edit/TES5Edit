@@ -19320,7 +19320,7 @@ end;
     wbUnknown(NAM1), //req
     wbUnknown(NAM2), //req
     wbUnknown(NAM5), //req
-    wbRArray('Unknown', wbFormIDCk(PCCB, 'Unknown', [PCBN])),
+    wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN])),
     wbCITCReq,
     wbCTDAsCount
   ]);
