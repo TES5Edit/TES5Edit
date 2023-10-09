@@ -732,6 +732,9 @@ type
     flEncoding               : TEncoding;
     flEncodingTrans          : TEncoding;
 
+    flAllowHardcodedRangeUse : Boolean;
+    flHardcodedGeneration    : Integer;
+
     procedure flOpenFile; virtual;
     procedure flCloseFile; virtual;
     procedure flProgress(const aStatus: string);
@@ -3700,6 +3703,9 @@ end;
 
 function TwbFile.GetAllowHardcodedRangeUse: Boolean;
 begin
+  if flHardcodedGeneration = _FileGeneration then
+    Exit(flAllowHardcodedRangeUse);
+
   Result :=
     (
       (wbGameMode = gmTES3)
@@ -3710,6 +3716,9 @@ begin
     )
     and
     (GetMasterCount(True) > 0);
+
+  flAllowHardcodedRangeUse := Result;
+  flHardcodedGeneration := _FileGeneration;
 end;
 
 function TwbFile.GetBaseName: string;
@@ -6609,7 +6618,7 @@ begin
   DoInit(True);
   if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
     if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
-      wbProgressCallback('Debugger: [' + IwbElement(Self).Path + '] Index ' + IntToStr(aIndex) + ' greater than max ' +
+      wbProgressCallback('Debugger: [' + (Self as IwbElement).Path + '] Index ' + IntToStr(aIndex) + ' greater than max ' +
         IntToStr(Length(cntElements)-1));
     Result := nil
   end else begin
@@ -6627,16 +6636,21 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   DoInit(False);
   Result := nil;
-  for i := Low(cntElements) to High(cntElements) do
-    if SameText(cntElements[i].Name, aName) then begin
-      Result := IInterface(cntElements[i]) as IwbElement;
-      Exit;
-    end;
-  for i := Low(cntElements) to High(cntElements) do
-    if SameText(cntElements[i].DisplayName[True], aName) then begin
-      Result := IInterface(cntElements[i]) as IwbElement;
-      Exit;
-    end;
+  try
+    for i := Low(cntElements) to High(cntElements) do
+      if SameText(cntElements[i].Name, aName) then begin
+        Result := IInterface(cntElements[i]) as IwbElement;
+        Exit;
+      end;
+    for i := Low(cntElements) to High(cntElements) do
+      if SameText(cntElements[i].DisplayName[True], aName) then begin
+        Result := IInterface(cntElements[i]) as IwbElement;
+        Exit;
+      end;
+  except
+    on E: Exception do
+      wbProgressCallback('Debugger: [' + (Self as IwbElement).Path + '] Exception in GetElementByName: ['+E.ClassName+'] ' + E.Message);
+  end;
 end;
 
 function TwbContainer.GetElementByPath(const aPath: string): IwbElement;
@@ -9584,6 +9598,12 @@ begin
       CurrentRecPos := SubRecordOrderList.Add(s);
       SubRecordOrderList.Objects[CurrentRecPos] := Pointer(Succ(Integer(SubRecordOrderList.Objects[CurrentRecPos])));
     end;
+
+{$IFDEF DBGSUBREC}
+//  if GetLoadOrderFormID.ObjectID = $175B9 then
+//    wbProgressCallback('[' + GetFile.Name + ': '+ GetLoadOrderFormID.ToString(True) + '] Contained subrecords: ' + lGetSubRecordsString());
+{$ENDIF}
+
 
 {
   if GetSignature = 'SCPT' then begin
