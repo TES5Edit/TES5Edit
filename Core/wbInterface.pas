@@ -58,8 +58,8 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'p';
-    Title   : 'EXTREMELY EXPERIMENTAL';
+    Build   : 'q';
+    Title   : '(2nd Build) EXTREMELY EXPERIMENTAL';
   );
 
 const
@@ -239,6 +239,7 @@ var
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
   wbCompareRawData                   : Boolean    = False;
+  wbDisableFormIDCheck               : Boolean    = False;
 
   wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
@@ -2457,6 +2458,7 @@ type
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
     function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
+    function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
   end;
 
   IwbStringDefFormater = interface;
@@ -2640,6 +2642,9 @@ type
 
     function SetCountFromEnum(const aEnum: IwbEnumDef): IwbArrayDef;
 
+    function SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
+    function GetWronglyAssumedFixedSizePerElement: Integer;
+
     property Element: IwbValueDef
       read GetElement;
     property ElementCount: Integer
@@ -2655,6 +2660,8 @@ type
 
     property CountCallBack: TwbCountCallback
       read GetCountCallback;
+    property WronglyAssumedFixedSizePerElement: Integer
+      read GetWronglyAssumedFixedSizePerElement;
 
     property CanAddTo: Boolean
       read GetCanAddTo;
@@ -5956,6 +5963,7 @@ type
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
     function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
+    function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
 
     {---IwbSubRecordWithBaseStringDef---}
     function SetFormaterOnValue(const aFormater: IwbStringDefFormater): IwbSubRecordWithBaseStringDef;
@@ -6832,6 +6840,7 @@ type
     arDefaultEditValues : TwbStringArray;
     arCountPath         : string;
     arShouldInclude     : TwbShouldIncludeCallback;
+    arWronglyAssumedFixedSizePerElement: Integer;
 
     arSummaryDelimiter            : string;
     arSummaryPassthroughMaxCount  : Integer;
@@ -6916,6 +6925,9 @@ type
     function ShouldInclude(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean;
 
     function SetCountFromEnum(const aEnum: IwbEnumDef): IwbArrayDef;
+
+    function SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
+    function GetWronglyAssumedFixedSizePerElement: Integer;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -11533,6 +11545,16 @@ begin
     ndToStr := aToStr;
 end;
 
+function TwbSubRecordDef.SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordDef(Duplicate).SetWronglyAssumedFixedSizePerElementOnValue(aSize));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetWronglyAssumedFixedSizePerElement(aSize);
+  srValue := (srValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+end;
+
 function TwbSubRecordDef.ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
@@ -13313,6 +13335,7 @@ begin
     Self.arDefaultEditValues := arDefaultEditValues;
     Self.arCountPath := arCountPath;
     Self.arShouldInclude := arShouldInclude;
+    Self.arWronglyAssumedFixedSizePerElement := arWronglyAssumedFixedSizePerElement;
   end;
 end;
 
@@ -13552,13 +13575,24 @@ begin
     Count := GetPrefixCount(aBasePtr);
     Result := Prefix;
   end else begin
+    if arWronglyAssumedFixedSizePerElement > 0 then begin
+      if Count = 0 then begin
+        var lArrayElementCount := ArrayContainer.ElementCount;
+        if lArrayElementCount > 0 then
+          Count := lArrayElementCount
+        else
+          Count := Int64(NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) div arWronglyAssumedFixedSizePerElement;
+      end;
+      Exit(Count * arWronglyAssumedFixedSizePerElement);
+    end;
+
     if (Count < 1) and Assigned(arCountCallback) and not (Container=nil) then
       Count := arCountCallback(BasePtr, aEndPtr, ArrayContainer);
 
     if not Assigned(BasePtr) and (Count < 1) and not Assigned(arCountCallback) then // EXPERIMENT: Probably should not be done
       Count := 1;
 
-    if (Count < 1) and not Assigned(arCountCallback) and not Assigned(arShouldInclude)  then begin
+    if (Count < 1) and not Assigned(arCountCallback) and not Assigned(arShouldInclude) and not (arWronglyAssumedFixedSizePerElement > 0) then begin
       Result := High(Integer);
       Exit;
     end;
@@ -13674,13 +13708,17 @@ end;
 
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if ((arCount = 0) and not Assigned(arCountCallback)) then
-    Result := 0
-  else
+  if ((arCount = 0) and not Assigned(arCountCallback)) then begin
+    if dfArrayCanBeEmpty in defFlags then
+      Result := 0
+    else
+      Result := arWronglyAssumedFixedSizePerElement;
+  end else begin
     if dfArrayCanBeEmpty in defFlags then
       Result := GetPrefixSize(aBasePtr)
     else
       Result := GetSize(aBasePtr, aEndPtr, aElement);
+  end;
 end;
 
 function TwbArrayDef.GetSorted: Boolean;
@@ -13689,6 +13727,11 @@ begin
     Result := arSorted
   else
     Result := False;
+end;
+
+function TwbArrayDef.GetWronglyAssumedFixedSizePerElement: Integer;
+begin
+  Result := arWronglyAssumedFixedSizePerElement;
 end;
 
 procedure TwbArrayDef.InitFromParentDoChildren;
@@ -13834,6 +13877,15 @@ begin
 
   Result := Self;
   arSummaryPassthroughMaxLength := aLength;
+end;
+
+function TwbArrayDef.SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbArrayDef(Duplicate).SetWronglyAssumedFixedSizePerElement(aSize));
+
+  Result := Self;
+  arWronglyAssumedFixedSizePerElement := aSize;
 end;
 
 function TwbArrayDef.ShouldInclude(aBasePtr, aEndPtr: Pointer; const aArray: IwbElement): Boolean;
@@ -19155,7 +19207,7 @@ begin
   if dfDontAssign in defFlags then
     Exit(False);
 
-  if Supports(aDef, IwbFormIDChecked, FormIDChecked) then begin
+  if Supports(aDef, IwbFormIDChecked, FormIDChecked) and not wbDisableFormIDCheck then begin
     Result := False;
     for i := 0 to Pred(FormIDChecked.SignatureCount) do
       if (FormIDChecked.Signatures[i] <> 'NULL') and (FormIDChecked.Signatures[i] <> 'TRGT') then
@@ -19175,6 +19227,8 @@ var
   Found: TwbSignature;
 begin
   Result := '';
+  if wbDisableFormIDCheck then
+    Exit;
 
   {>>> No ACVA errors <<<}
   if IsValid('ACVA') then
@@ -19262,6 +19316,9 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := True;
+
+  if wbDisableFormIDCheck then
+    Exit;
 
   if fidcValidFlstRefs.Count < 1 then
     Exit;
@@ -19367,17 +19424,20 @@ end;
 
 function TwbFormIDChecked.IsValid(const aSignature: TwbSignature): Boolean;
 begin
+  if wbDisableFormIDCheck then
+    Exit(inherited);
+
   Result := fidcValidRefs.IndexOf(aSignature) >= 0;
 end;
 
 function TwbFormIDChecked.IsValidFlst(const aSignature: TwbSignature): Boolean;
 begin
-  Result := (fidcValidFlstRefs.Count = 0) or (fidcValidFlstRefs.IndexOf(aSignature) >= 0);
+  Result := (fidcValidFlstRefs.Count = 0) or (fidcValidFlstRefs.IndexOf(aSignature) >= 0) or wbDisableFormIDCheck;
 end;
 
 function TwbFormIDChecked.IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean;
 begin
-  Result := not fidcPersistent or aMainRecord.IsPersistent;
+  Result := not fidcPersistent or aMainRecord.IsPersistent or wbDisableFormIDCheck;
 end;
 
 procedure TwbFormIDChecked.Report(const aParents: TwbDefPath);

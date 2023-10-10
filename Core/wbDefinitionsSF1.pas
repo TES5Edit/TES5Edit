@@ -9163,6 +9163,12 @@ end;
       wbFormIDCk('Ref', sigReferences)
     ], cpNormal, False, nil, 1));
 
+  var wbLinkedReferences :=
+    wbRStruct('Linked References', [
+      wbXLKRs,
+      wbEmpty(XLKT, 'Transient')
+    ], []);
+
   var wbXPCS := wbFormIDCk(XPCS, 'Source Pack-in', [PKIN]);
 
   var wbXPLKs :=
@@ -9204,10 +9210,7 @@ end;
 
         wbXRNK,
 
-        wbRStruct('Linked References', [
-          wbXLKRs,
-          wbEmpty(XLKT, 'Transient')
-        ], []),
+        wbLinkedReferences,
 
         wbXOWN,
 
@@ -9251,6 +9254,7 @@ end;
 
   var wbXTV2 :=
     wbArray(XTV2, 'Traversals', wbTraversalData)
+    .SetWronglyAssumedFixedSizePerElementOnValue(56)
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfExcludeFromBuildRef)
     .IncludeFlag(dfFastAssign);
@@ -9335,7 +9339,7 @@ end;
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-    wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
+    wbFloat(XCLW, 'Water Height'),// cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
 
     wbFloat(XILS),
     wbRStructs('Unknown', 'Unknown', [
@@ -9343,43 +9347,17 @@ end;
       wbString(XCLD)
     ], []),
 
+    wbByteArray(XWCN, 'Water Data', 0, cpIgnore), // leftover
+
+    wbFormIDCk(XCCM, 'Cell Sky Region', [REGN]),
+
+    wbXOWN,
+
     wbFormIDCk(XLCN, 'Location', [LCTN]),
 
-    wbByteArray(XWCN, 'Water Data', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbVec3('Offset'),
-      wbByteArray('Unknown', 4),
-      wbVec3('Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
 
-    {--- Ownership ---}
-    wbXOWN,
-    wbXRNK,
-
-//    wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
-
-{
-    wbStruct(XILW, 'Exterior LOD', [
-      wbFormIDCk('Worldspace', [WRLD]),
-      wbFloat('Offset X'),
-      wbFloat('Offset Y'),
-      wbFloat('Offset Z')
-    ]),
-}
-    wbString(XWEM, 'Water Environment Map'),
-    wbFormIDCk(XCCM, 'Cell Sky Region', [REGN]),
-    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
-    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-    wbFormIDCk(XCIM, 'Image Space', [IMGS]),
-//    wbFormIDCk(XGDR, 'God Rays', [GDRY]),
-
-    wbXLKRs,
-    wbEmpty(XLKT, 'Linked Ref Transient'),
-
-    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+    wbString(XCWM, 'Water Type'),
 
     wbArray(XBPS, 'Ship Blueprint Snap Links', wbStruct('Ship Blueprint Snap Link', [
       wbFormIDCk('Parent Reference', sigReferences),
@@ -9392,12 +9370,34 @@ end;
         .SetToStr(wbToStringFromLinksToSummary)
     ])),
 
+    wbStruct(XWCU, 'Water Velocity', [
+      wbVec3('Offset'),
+      wbByteArray('Unknown', 4),
+      wbVec3('Angle'),
+      wbByteArray('Unknown', 0)
+    ]),
+
+    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+
+    wbFormIDCk(XCIM, 'Image Space', [IMGS]),
+
+    wbString(XWEM, 'Water Environment Map'),
+
+    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+
     wbRStruct('Global Dirt Layer', [
       wbString(XCGD, 'Material'),
       wbInteger(XCIB, 'Unknown', itU8, wbBoolEnum)
     ], []),
-    wbString(XCWM, 'Water Type'),
+
+    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+
+    wbLinkedReferences,
+
     wbString(XEMP, 'Environment Map'),
+
     wbXTV2
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
@@ -12622,7 +12622,7 @@ end;
         wbRStruct('Start Scene', [
           wbRStructs('Start Scenes', 'Start Scene', [
             wbRUnion('Scene', [
-              wbFormIDCk(LCEP, 'Scene', [SCEN]),                                //LCEP same as STSC
+              wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID),  //LCEP same as STSC
               wbFormIDCk(STSC, 'Scene', [SCEN])                                 //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
             ],[]),
             wbRUnion('Phase Index', [
@@ -16252,10 +16252,7 @@ end;
 
     wbXPLKs,
 
-    wbRStruct('Linked References', [
-      wbXLKRs,
-      wbEmpty(XLKT, 'Transient')
-    ], []),
+    wbLinkedReferences,
 
     //wbInteger(XCNT, 'Count', itS32),
 
@@ -16631,10 +16628,7 @@ end;
 
     wbXPLKs,
 
-    wbRStruct('Linked References', [
-      wbXLKRs,
-      wbEmpty(XLKT, 'Transient')
-    ], []),
+    wbLinkedReferences,
 
     wbInteger(XCNT, 'Item Count', itS32),
 

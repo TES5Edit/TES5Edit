@@ -555,6 +555,7 @@ type
 
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetDataSize: Integer; override;
+    function GetDataSizeFromElements: Integer; virtual;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function UpdateMemoryOrder(out aMemoryOrderElements: TArray<Pointer>): Boolean;
@@ -6593,6 +6594,11 @@ begin
 end;
 
 function TwbContainer.GetDataSize: Integer;
+begin
+  Result := GetDataSizeFromElements;
+end;
+
+function TwbContainer.GetDataSizeFromElements: Integer;
 var
   i             : Integer;
   SelfRef       : IwbContainerElementRef;
@@ -6601,6 +6607,14 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   Result := 0;
   DoInit(False);
+
+  var lArrayDef: IwbArrayDef;
+  if Supports(GetValueDef, IwbArrayDef, lArrayDef) then begin
+    var lWronglyAssumedFixedSizePerElement := lArrayDef.WronglyAssumedFixedSizePerElement;
+    if lWronglyAssumedFixedSizePerElement > 0 then
+      Exit(GetElementCount * lWronglyAssumedFixedSizePerElement);
+  end;
+
   for i := Low(cntElements) to High(cntElements) do begin
     if Supports(cntElements[i], IwbDataContainer, DataContainer) and DataContainer.DontSave then
       Continue;
@@ -20275,6 +20289,14 @@ begin
   if Assigned(aBasePtr) then
     Inc(PByte(aBasePtr), SizePrefix);
 
+  var lWronglyAssumedFixedSizePerElement := ArrayDef.WronglyAssumedFixedSizePerElement;
+  var lFinalBasePtr := nil;
+  if lWronglyAssumedFixedSizePerElement > 0 then
+    if Assigned(aBasePtr) and Assigned(aEndPtr) then begin
+      ArrSize := NativeInt((NativeUInt(aEndPtr) - NativeUInt(aBasePtr))) div lWronglyAssumedFixedSizePerElement;
+      lFinalBasePtr := Pointer(NativeUInt(aBasePtr) + NativeUInt(lWronglyAssumedFixedSizePerElement * ArrSize));
+    end;
+
   var lArrayElementNoName := ArrayDef.Element.Name = '';
 
   if ArrSize > 0 then
@@ -20325,6 +20347,9 @@ begin
       { else if not (not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr)))) then
         wbProgressCallback('Error: not enough data for array. Elements remaining are ' + IntToStr(ArrSize)) Silently fails = called at an invalid time };
     end;
+
+  if Assigned(lFinalBasePtr) and  (NativeUInt(aBasePtr) < NativeUInt(lFinalBasePtr)) then
+    aBasePtr := lFinalBasePtr;
 
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then
     Element := TwbStringListTerminator.Create(aContainer);
