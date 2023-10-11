@@ -14518,7 +14518,7 @@ end;
       wbFormIDCk(BNAM, 'Unknown', [DLBR])
     ], []),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
-    wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
+    wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(HEFA, 'Unknown', [FACT]),
