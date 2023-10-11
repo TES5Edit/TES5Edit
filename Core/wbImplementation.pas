@@ -71,6 +71,8 @@ function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: str
 
 function wbRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
 
+function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
+
 implementation
 
 uses
@@ -483,6 +485,17 @@ type
     function GetElementType: TwbElementType; override;
   public
     constructor Create(aDef: IwbNamedDef);
+  end;
+
+  TwbMultipleElements = class(TwbElement, IwbMultipleElements)
+  protected
+    meElements: IwbElements;
+  protected
+    {---IwbMultipleElements---}
+    function GetElement(aIndex: Integer): IwbElement;
+    function GetElementCount: Integer;
+  public
+    constructor Create(const aElements: IwbElements);
   end;
 
   TDynElementInternals = array of IwbElementInternal;
@@ -19061,9 +19074,18 @@ begin
       raise Exception.Create(GetName + ' can not be assigned.');
   end;
 
-
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
+
+  var lMultipleElements: IwbMultipleElements;
+  if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+    for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+      var lResult := AssignInternal(aIndex, lMultipleElements.Elements[lElementIdx], aOnlySK);
+      if Assigned(lResult) then
+        Result := lResult;
+    end;
+    Exit;
+  end;
 
   if (aIndex = wbAssignThis) and arcDef.CanAssign(Self, aIndex, aElement.Def) then begin
 
@@ -19171,6 +19193,18 @@ begin
 end;
 
 function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+
+  function CheckAssign(const aElement: IwbElement): Boolean;
+  begin
+    Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
+    if not Result then begin
+      Result := arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def);
+      if Result then
+        if aCheckDontShow and arcDef.Element.DontShow[aElement] then
+          Result := False;
+    end;
+  end;
+
 begin
   Result := False;
   if not wbIsInternalEdit then begin
@@ -19192,13 +19226,15 @@ begin
     Exit;
   end;
 
-  Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
-  if not Result then begin
-    Result := arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def);
-    if Result then
-      if aCheckDontShow and arcDef.Element.DontShow[aElement] then
-        Result := False;
-  end;
+  var lMultipleElements: IwbMultipleElements;
+  if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+    for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+      Result := CheckAssign(lMultipleElements.Elements[lElementIdx]);
+      if Result then
+        Exit;
+    end;
+  end else
+    Result := CheckAssign(aElement);
 end;
 
 function TwbSubRecordArray.CanContainFormIDs: Boolean;
@@ -23914,6 +23950,28 @@ end;
 function TwbTemplateElement.GetValueDef: IwbValueDef;
 begin
   Supports(teDef, IwbValueDef, Result);
+end;
+
+{ TwbMultipleElements }
+
+constructor TwbMultipleElements.Create(const aElements: IwbElements);
+begin
+  meElements := aElements;
+end;
+
+function TwbMultipleElements.GetElement(aIndex: Integer): IwbElement;
+begin
+  Result := meElements[aIndex];
+end;
+
+function TwbMultipleElements.GetElementCount: Integer;
+begin
+  Result := Length(meElements);
+end;
+
+function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
+begin
+  Result := TwbMultipleElements.Create(aElements);
 end;
 
 initialization

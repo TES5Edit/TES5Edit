@@ -6797,10 +6797,10 @@ begin
     Exit;
   var lSourceTree := TVirtualEditTree(Source);
 
-  if Length(lSourceTree.DragSelection) <> 1 then
-    Exit;
-
   if lSourceTree = vstView then begin
+    if Length(lSourceTree.DragSelection) <> 1 then
+      Exit;
+
     if lSourceTree.DragColumn < 1 then
       Exit;
     if Pred(lSourceTree.DragColumn) > High(ActiveRecords) then
@@ -6816,13 +6816,32 @@ begin
 
     Result := True;
   end else if lSourceTree = vstNav then begin
-    var lSourceNavNodeData: PNavNodeData := lSourceTree.GetNodeData(lSourceTree.DragSelection[0]);
-    if not Assigned(lSourceNavNodeData) then
+    var lDragSelection := lSourceTree.DragSelection;
+    var lDragSelectionLength := Length(lDragSelection);
+
+    if lDragSelectionLength < 1 then
       Exit;
 
-    SourceElement := lSourceNavNodeData.Element as IwbElement;
-    if not Assigned(SourceElement) then
+    var lElements: IwbElements;
+    SetLength(lElements, lDragSelectionLength);
+    var lElementCount := 0;
+    for var lDragSelectionIdx := 0 to Pred(lDragSelectionLength) do begin
+      var lSourceNavNodeData: PNavNodeData := lSourceTree.GetNodeData(lSourceTree.DragSelection[lDragSelectionIdx]);
+      if not Assigned(lSourceNavNodeData) then
+        Continue;
+      lElements[lElementCount] := lSourceNavNodeData.Element as IwbElement;
+      if Assigned(lElements[lElementCount]) then
+        Inc(lElementCount);
+    end;
+    if lElementCount < 1 then
       Exit;
+
+    if lElementCount = 1 then
+      SourceElement := lElements[0]
+    else begin
+      SetLength(lElements, lElementCount);
+      SourceElement := wbMultipleElements(lElements);
+    end;
 
     Result := True;
   end;

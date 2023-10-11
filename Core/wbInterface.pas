@@ -1241,6 +1241,17 @@ type
     ['{200EE482-1FD5-4CB8-AEF8-7612F2A3D928}']
   end;
 
+  IwbMultipleElements = interface(IwbElement)
+    ['{1FB6EAB9-7301-49C5-90AA-1C3D13192230}']
+    function GetElement(aIndex: Integer): IwbElement;
+    function GetElementCount: Integer;
+
+    property Elements[aIndex: Integer]: IwbElement
+      read GetElement; default;
+    property ElementCount: Integer
+      read GetElementCount;
+  end;
+
   IwbElements = TArray<IwbElement>;
 
   IwbStringListTerminator = interface(IwbInterface)
