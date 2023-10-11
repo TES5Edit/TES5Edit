@@ -13772,9 +13772,26 @@ begin
       dtRecord, dtSubRecord, dtSubRecordArray, dtSubRecordStruct: Assert(False);
       dtArray: begin
 
+        if not Assigned(aElement) then
+          Exit;
+
+        var lMultipleElements: IwbMultipleElements;
+        if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+          for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+            var lResult := AssignInternal(aIndex, lMultipleElements.Elements[lElementIdx], aOnlySK);
+            if Assigned(lResult) then
+              Result := lResult;
+          end;
+          Exit;
+        end;
+
         ArrayDef := srValueDef as IwbArrayDef;
 
-        if (aIndex = wbAssignThis) and ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) then begin
+        var lDef: IwbDef := aElement.ValueDef;
+        if not Assigned(lDef) then
+          lDef := aElement.Def;
+
+        if (aIndex = wbAssignThis) and ArrayDef.CanAssign(Self, aIndex, lDef) then begin
 
           if aOnlySK then
             Exit;
@@ -13834,9 +13851,12 @@ begin
           end;
 
         end else begin
+          if (aIndex = wbAssignThis) and Supports(aElement, IwbMainRecord) then
+            aIndex := wbAssignAdd;
+
           if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) then begin
             AlignedCreate := ( (aIndex < wbAssignAdd) and GetAlignable and (csSortedBySortOrder in cntStates) and not Assigned(GetElementBySortOrder(aIndex)) );
-            if AlignedCreate or ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef)) then begin
+            if AlignedCreate or ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef)) then begin
               {add one entry}
 
               if srsSorted in srStates then
@@ -13957,6 +13977,29 @@ end;
 function TwbSubRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   ArrayDef: IwbArrayDef;
+
+  function CheckAssign(const aElement: IwbElement): Boolean;
+  begin
+    Result := False;
+    if not Assigned(aElement) then
+      Exit;
+
+    var lDef: IwbDef := aElement.ValueDef;
+    if not Assigned(lDef) then
+      lDef := aElement.Def;
+
+    if srsIsArray in srStates then begin
+      Result :=
+         ArrayDef.CanAssign(Self, aIndex, lDef) or
+         ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
+    end else begin
+      Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
+      if not Result and Assigned(srDef) then
+        Result := srDef.CanAssign(Self, aIndex, lDef);
+    end;
+  end;
+
+
 begin
   Result := False;
 
@@ -13981,17 +14024,17 @@ begin
         Result := ArrayDef.ElementCount <= 0;
       Exit;
     end;
-    Result :=
-       ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) or
-       ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef) );
-  end else begin
-    if not Assigned(aElement) then
-      Exit;
-
-    Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
-    if not Result and Assigned(srDef) then
-      Result := srDef.CanAssign(Self, aIndex, aElement.Def);
   end;
+
+  var lMultipleElements: IwbMultipleElements;
+  if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+    for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+      Result := CheckAssign(lMultipleElements.Elements[lElementIdx]);
+      if Result then
+        Exit;
+    end;
+  end else
+    Result := CheckAssign(aElement);
 end;
 
 function TwbSubRecord.CanContainFormIDs: Boolean;
