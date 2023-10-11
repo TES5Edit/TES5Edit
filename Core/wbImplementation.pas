@@ -17515,8 +17515,8 @@ end;
 
 function TwbElement.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
-  TargetValueDef: IwbValueDef;
-  SourceValueDef: IwbValueDef;
+  TargetDef: IwbDef;
+  SourceDef: IwbDef;
 begin
   Result := wbIsInternalEdit;
   if Result then
@@ -17533,18 +17533,25 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  TargetValueDef := GetValueDef;
-  if TargetValueDef = nil then
-    Exit;
+  TargetDef := GetValueDef;
+  if TargetDef = nil then begin
+    TargetDef := GetDef;
+    if TargetDef = nil then
+      Exit;
+  end;
+
   if not wbIsInternalEdit then
-    if dfInternalEditOnly in TargetValueDef.DefFlags then
+    if dfInternalEditOnly in TargetDef.DefFlags then
       Exit;
 
-  SourceValueDef := aElement.ValueDef;
-  if SourceValueDef = nil then
-    Exit;
+  SourceDef := aElement.GetValueDef;
+  if SourceDef = nil then begin
+    SourceDef := aElement.GetDef;
+    if SourceDef = nil then
+      Exit;
+  end;
 
-  Result := TargetValueDef.CanAssign(Self, aIndex, SourceValueDef);
+  Result := TargetDef.CanAssign(Self, aIndex, SourceDef);
 
   if Result and aCheckDontShow and GetDontShow then
     Result := False;

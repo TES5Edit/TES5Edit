@@ -16810,32 +16810,48 @@ function TwbFormIDDefFormater.Assign(const aTarget: IwbElement; aIndex: Integer;
 var
   NativeValue : Int64;
   FormID      : TwbFormID;
-  SourceFile  : IwbFile;
-  TargetFile  : IwbFile;
 begin
+  Result := nil;
+  if not Assigned(aTarget) then
+    Exit;
+
   if Assigned(aSource) then begin
-    NativeValue := aSource.NativeValue;
-    FormID := TwbFormID.FromCardinal(NativeValue);
+    var lMainRecord: IwbMainRecord;
+    if Supports(aSource, IwbMainRecord, lMainRecord) then begin
+      if not IsValidMainRecord(lMainRecord) then
+        Exit;
 
-    if not (FormID.IsHardcoded or FormID.IsNone) then begin
-      SourceFile := aSource._File;
-      TargetFile := aTarget._File;
-      if Assigned(SourceFile) and Assigned(TargetFile) then begin
-        FormID := SourceFile.FileFormIDtoLoadOrderFormID(FormID, aSource.MastersUpdated);
+      FormID := lMainRecord.LoadOrderFormID;
+      NativeValue := FormID.ToCardinal;
+    end else begin
+      NativeValue := aSource.NativeValue;
+      FormID := TwbFormID.FromCardinal(NativeValue);
 
-        if dfUnmappedFormID in defFlags then begin
-          if FormID.FileID.FullSlot <> 0 then
-            raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
-          if TargetFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
-            if (TargetFile.MasterCount[True] < 1) or (TargetFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
-              raise Exception.Create('Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master.');
-        end;
-
-        if not (dfUseLoadOrder in defFlags) then
-          FormID := TargetFile.LoadOrderFormIDtoFileFormID(FormID, aTarget.MastersUpdated);
-      end else
-        raise Exception.Create('Target or Source has no File');
+      if not (FormID.IsHardcoded or FormID.IsNone) then begin
+        var SourceFile := aSource._File;
+        if Assigned(SourceFile) then
+          FormID := SourceFile.FileFormIDtoLoadOrderFormID(FormID, aSource.MastersUpdated)
+        else
+          raise Exception.Create('Source has no File');
+      end;
     end;
+
+    if not (dfUseLoadOrder in defFlags) then
+      if not (FormID.IsHardcoded or FormID.IsNone) then begin
+        var TargetFile := aTarget._File;
+        if Assigned(TargetFile) then begin
+          if dfUnmappedFormID in defFlags then begin
+            if FormID.FileID.FullSlot <> 0 then
+              raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
+            if TargetFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
+              if (TargetFile.MasterCount[True] < 1) or (TargetFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
+                raise Exception.Create('Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master.');
+          end;
+
+          FormID := TargetFile.LoadOrderFormIDtoFileFormID(FormID, aTarget.MastersUpdated);
+        end else
+          raise Exception.Create('Target has no File');
+      end;
 
     NativeValue := FormID.ToCardinal;
   end else
@@ -16864,7 +16880,7 @@ begin
   if dfDontAssign in defFlags then
     Exit(False);
 
-  Result := Supports(aDef, IwbFormID);
+  Result := Supports(aDef, IwbFormID) or Supports(aDef, IwbMainRecordDef);
 end;
 
 function TwbFormIDDefFormater.Check(aInt: Int64; const aElement: IwbElement): string;
@@ -19207,16 +19223,23 @@ begin
   if dfDontAssign in defFlags then
     Exit(False);
 
-  if Supports(aDef, IwbFormIDChecked, FormIDChecked) and not wbDisableFormIDCheck then begin
-    Result := False;
-    for i := 0 to Pred(FormIDChecked.SignatureCount) do
-      if (FormIDChecked.Signatures[i] <> 'NULL') and (FormIDChecked.Signatures[i] <> 'TRGT') then
-        if fidcValidRefs.Find(FormIDChecked.Signatures[i], Dummy) then begin
-          Result := True;
-          Exit;
-        end;
-  end else
-    Result := inherited CanAssign(aElement, aIndex, aDef);
+  if not wbDisableFormIDCheck then begin
+    var lMainRecordDef: IwbMainRecordDef;
+    if Supports(aDef, IwbMainRecordDef, lMainRecordDef)then begin
+      Exit(IsValid(lMainRecordDef.DefaultSignature));
+    end else if Supports(aDef, IwbFormIDChecked, FormIDChecked) and not wbDisableFormIDCheck then begin
+      Result := False;
+      for i := 0 to Pred(FormIDChecked.SignatureCount) do
+        if (FormIDChecked.Signatures[i] <> 'NULL') and (FormIDChecked.Signatures[i] <> 'TRGT') then
+          if fidcValidRefs.Find(FormIDChecked.Signatures[i], Dummy) then begin
+            Result := True;
+            Exit;
+          end;
+      Exit;
+    end;
+  end;
+
+  Result := inherited CanAssign(aElement, aIndex, aDef);
 end;
 
 function TwbFormIDChecked.Check(aInt: Int64; const aElement: IwbElement): string;
@@ -19437,7 +19460,17 @@ end;
 
 function TwbFormIDChecked.IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean;
 begin
-  Result := not fidcPersistent or aMainRecord.IsPersistent or wbDisableFormIDCheck;
+  Result :=  wbDisableFormIDCheck;
+
+  if Result then
+    Exit;
+
+  Result := IsValid(aMainRecord.Signature) and CheckFlst(aMainRecord);
+
+  if not Result then
+    Exit;
+
+  Result := not fidcPersistent or aMainRecord.IsPersistent;
 end;
 
 procedure TwbFormIDChecked.Report(const aParents: TwbDefPath);
