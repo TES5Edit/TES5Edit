@@ -2013,6 +2013,7 @@ object frmMain: TfrmMain
           BevelInner = bvNone
           Colors.SelectionRectangleBlendColor = clGray
           Colors.SelectionRectangleBorderColor = clBlack
+          DragOperations = [doCopy]
           Header.AutoSizeIndex = 2
           Header.Height = 21
           Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -2027,13 +2028,14 @@ object frmMain: TfrmMain
           ShowHint = True
           TabOrder = 0
           TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale, toAutoFreeOnCollapse]
-          TreeOptions.MiscOptions = [toInitOnSave, toToggleOnDblClick, toWheelPanning]
+          TreeOptions.MiscOptions = [toInitOnSave, toToggleOnDblClick, toWheelPanning, toFullRowDrag]
           TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
           TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect]
           TreeOptions.StringOptions = [toShowStaticText, toAutoAcceptEditChange]
           OnBeforeItemErase = vstNavBeforeItemErase
           OnChange = vstNavChange
           OnCompareNodes = vstNavCompareNodes
+          OnDragAllowed = vstNavDragAllowed
           OnExpanding = vstNavExpanding
           OnFocusChanged = vstNavFocusChanged
           OnFreeNode = vstNavFreeNode

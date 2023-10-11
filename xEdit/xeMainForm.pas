@@ -736,6 +736,8 @@ type
 
     procedure btnCancelClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure vstNavDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode;
+        Column: TColumnIndex; var Allowed: Boolean);
 
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
@@ -20437,6 +20439,12 @@ begin
     end else
       SetActiveRecord(MainRecord);
   end;
+end;
+
+procedure TfrmMain.vstNavDragAllowed(Sender: TBaseVirtualTree; Node:
+    PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+begin
+  Allowed := True;
 end;
 
 procedure TfrmMain.WndProc(var Message: TMessage);
