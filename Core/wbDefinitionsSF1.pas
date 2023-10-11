@@ -14521,7 +14521,7 @@ end;
     wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
-    wbFormIDCk(HEFA, 'Unknown', [FACT]),
+    wbFormIDCk(HEFA, 'Formation Faction', [FACT]),
     wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
     wbRArray('Tints',
       wbRStruct('Tint', [
