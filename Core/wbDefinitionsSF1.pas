@@ -14513,9 +14513,9 @@ end;
     ], []),
     wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
 //    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
-    wbRStruct('Unknown', [
-      wbFormIDCk(QSTA, 'Unknown', [QUST]),
-      wbFormIDCk(BNAM, 'Unknown', [DLBR])
+    wbRStruct('Companion Info', [
+      wbFormIDCk(QSTA, 'Quest', [QUST]),
+      wbFormIDCk(BNAM, 'Dialogue', [DLBR])
     ], []),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
