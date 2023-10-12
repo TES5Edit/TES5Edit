@@ -711,7 +711,7 @@ begin
     wbStruct(VHGT, 'Vertex Height Map', [
       wbFloat('Offset'),
       wbArray('Rows', wbStruct('Row', [
-        wbArray('Columns', wbInteger('Column', itU8), 33)
+        wbArray('Columns', wbInteger('Column', itS8), 33)
       ]), 33),
       wbByteArray('Unused', 3)
     ]);
