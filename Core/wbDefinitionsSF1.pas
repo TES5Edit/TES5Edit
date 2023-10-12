@@ -14513,15 +14513,15 @@ end;
     ], []),
     wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
 //    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
-    wbRStruct('Unknown', [
-      wbFormIDCk(QSTA, 'Unknown', [QUST]),
-      wbFormIDCk(BNAM, 'Unknown', [DLBR])
+    wbRStruct('Companion Info', [
+      wbFormIDCk(QSTA, 'Quest', [QUST]),
+      wbFormIDCk(BNAM, 'Dialogue', [DLBR])
     ], []),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
-    wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
+    wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
-    wbFormIDCk(HEFA, 'Unknown', [FACT]),
+    wbFormIDCk(HEFA, 'Formation Faction', [FACT]),
     wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
     wbRArray('Tints',
       wbRStruct('Tint', [
