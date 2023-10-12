@@ -13821,9 +13821,6 @@ begin
       dtRecord, dtSubRecord, dtSubRecordArray, dtSubRecordStruct: Assert(False);
       dtArray: begin
 
-        if not Assigned(aElement) then
-          Exit;
-
         var lMultipleElements: IwbMultipleElements;
         if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
           for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
@@ -13836,9 +13833,12 @@ begin
 
         ArrayDef := srValueDef as IwbArrayDef;
 
-        var lDef: IwbDef := aElement.ValueDef;
-        if not Assigned(lDef) then
-          lDef := aElement.Def;
+        var lDef: IwbDef;
+        if Assigned(aElement) then begin
+          lDef := aElement.ValueDef;
+          if not Assigned(lDef) then
+            lDef := aElement.Def;
+        end;
 
         if (aIndex = wbAssignThis) and ArrayDef.CanAssign(Self, aIndex, lDef) then begin
 
@@ -13882,21 +13882,25 @@ begin
             else if ArrayDef.ElementCount > 0 then
               SetToDefaultInternal;
 
-            var CopyCount := Container.ElementCount;
-            if (ArrayDef.ElementCount > 0) and (CopyCount > ArrayDef.ElementCount) then
-              CopyCount := ArrayDef.ElementCount;
+            if Assigned(Container) then begin
+              var CopyCount := Container.ElementCount;
+              if (ArrayDef.ElementCount > 0) and (CopyCount > ArrayDef.ElementCount) then
+                CopyCount := ArrayDef.ElementCount;
 
-            for i := 0 to Pred(CopyCount) do
-              if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
-                cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK)
-              else
-                Assign(i, Container.Elements[i], aOnlySK);
+              for i := 0 to Pred(CopyCount) do
+                if (i < Length(cntElements)) and not Supports(cntElements[i], IwbStringListTerminator) then
+                  cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK)
+                else
+                  Assign(i, Container.Elements[i], aOnlySK);
+            end;
           end else begin
-            Assert(Container.ElementCount = ArrayDef.ElementCount);
-            Assert(GetElementCount = ArrayDef.ElementCount);
+            if Assigned(Container) then begin
+              Assert(Container.ElementCount = ArrayDef.ElementCount);
+              Assert(GetElementCount = ArrayDef.ElementCount);
 
-            for i := 0 to Pred(Container.ElementCount) do
-              cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK);
+              for i := 0 to Pred(Container.ElementCount) do
+                cntElements[i].Assign(wbAssignThis, Container.Elements[i], aOnlySK);
+            end;
           end;
 
         end else begin
