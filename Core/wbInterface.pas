@@ -339,6 +339,9 @@ var
   wbMOProfile                        : string;
   wbMOHookFile                       : string;
 
+  wbStarfieldIsABugInfestedHellhole  : Boolean    = True;
+  wbAlwaysLoadGameMaster             : Boolean    = True;
+
   wbSpeedOverMemory                  : Boolean    = False;
 
   wbDarkMode                         : Boolean    = False;

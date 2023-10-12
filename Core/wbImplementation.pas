@@ -842,7 +842,8 @@ type
     function LoadOrderFileIDtoFileFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
     function FileFileIDtoLoadOrderFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
 
-    procedure AddMasters(aMasters: TStrings);
+    procedure AddMasters(aMasters: TStrings); overload;
+    procedure AddMasters(const aMasters: array of string); overload;
     procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True);
     procedure SortMasters;
     procedure CleanMasters;
@@ -2421,6 +2422,21 @@ begin
   end;
 end;
 
+procedure TwbFile.AddMasters(const aMasters: array of string);
+begin
+  If Length(aMasters) < 1 then
+    Exit;
+
+  var lMasters := TStringList.Create;
+  try
+    for var lMaster in aMasters do
+      lMasters.Add(lMaster);
+    AddMasters(lMasters);
+  finally
+    lMasters.Free;
+  end;
+end;
+
 procedure TwbFile.AddMasters(aMasters: TStrings);
 var
   NotAllAdded    : Boolean;
@@ -2896,7 +2912,16 @@ begin
       New := nil;
       j := 0;
       for i := Low(flMasters) to High(flMasters) do
-        if UsedMasters[i] then begin
+        if UsedMasters[i] or
+           (
+             wbStarfieldIsABugInfestedHellhole and
+             wbIsStarfield and
+             (
+               SameText(flMasters[i].FileName, 'Starfield.esm') or
+               SameText(flMasters[i].FileName, 'BlueprintShips-Starfield.esm')
+             )
+           )
+        then begin
           if i <> j then begin
             flMasters[j] := flMasters[i];
 
@@ -3124,6 +3149,9 @@ begin
     end;
   end;
 
+  if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+    AddMasters(['Starfield.esm', 'BlueprintShips-Starfield.esm']);
+
   BuildOrLoadRef(False);
 end;
 
@@ -3206,6 +3234,9 @@ begin
         with miMasters[i]^ do
           if Assigned(miFile) then
             AddMaster(_File);
+
+  if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+    AddMasters(['Starfield.esm', 'BlueprintShips-Starfield.esm']);
 
   BuildOrLoadRef(False);
 end;
@@ -15481,6 +15512,9 @@ var
   procedure CopyMainRecord(const aSource: IwbMainRecord);
   begin
     Result := nil;
+
+    if wbIsStarfield and (aSource.LoadOrderFormID.ToCardinal = $25) then
+      Exit;
 
     if aElement.ContainsReflection then begin
       var lSourceName := aElement.FullPath;

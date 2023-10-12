@@ -11617,7 +11617,7 @@ end;
   wbRecord(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
-      wbFormIDCk('Material', [MATT]).IncludeFlag(dfUnmappedFormID),
+      wbFormIDCk('Material', [MATT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
       wbFormIDCk('Impact', [IPCT])
     ]))
   ]);
@@ -12622,7 +12622,7 @@ end;
         wbRStruct('Start Scene', [
           wbRStructs('Start Scenes', 'Start Scene', [
             wbRUnion('Scene', [
-              wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID),  //LCEP same as STSC
+              wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),  //LCEP same as STSC
               wbFormIDCk(STSC, 'Scene', [SCEN])                                 //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
             ],[]),
             wbRUnion('Phase Index', [
@@ -14366,7 +14366,7 @@ end;
       .SetSummaryKeyOnValue([0,6])
       .SetSummaryPrefixSuffixOnValue(0, '[',']')
       .SetSummaryPrefixSuffixOnValue(1, '[',']'),
-    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
+    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Default Template', [BMMO, LVLN, NPC_]),
@@ -14520,7 +14520,7 @@ end;
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Sleeping Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
-    wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
+    wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
     wbFormIDCk(HEFA, 'Unknown', [FACT]),
     wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
     wbRArray('Tints',
@@ -17780,7 +17780,7 @@ end;
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbSoundReference(WED0),
-    wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID)),
+    wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
     wbRStructs('Unknown', 'Unknown', [
       wbInteger(RSMC, 'Unknown', itU32),
       wbSoundReference(RSMH)
@@ -18535,7 +18535,7 @@ end;
       {0x80000000} 'Unknown 31'
     ])),
     wbInteger(SNST, 'Unknown', itU32),
-    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID)),
+    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
     wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'), 3),
     wbFormIDCk(ANAM, 'Art Object', [ARTO])
   ]);
@@ -19570,7 +19570,7 @@ end;
     wbStruct(BNAM, 'Surface Blocks', [
       wbArray('Rows',
         wbArray('Columns',
-          wbFormIDCk('Surface Block', [SFBK]).IncludeFlag(dfUnmappedFormID)
+          wbFormIDCk('Surface Block', [SFBK]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)
         , 16).IncludeFlag(dfCollapsed)
       , 16)
       .IncludeFlag(dfCollapsed)
@@ -19622,8 +19622,8 @@ end;
     wbBaseFormComponents,
     wbUnknown(CNAM).SetRequired,
     wbUnknown(DNAM).SetRequired,
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID), 65536).IncludeFlag(dfCollapsed).SetRequired,
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID), 65536).IncludeFlag(dfCollapsed).SetRequired,
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed).SetRequired,
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed).SetRequired,
     wbString(NAM1, 'Filter').SetRequired
   ]);
 
