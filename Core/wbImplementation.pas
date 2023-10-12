@@ -2398,6 +2398,10 @@ end;
 
 procedure TwbFile.AddMaster(const aFile: IwbFile);
 begin
+  if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+    if aFile.IsESL or aFile.IsOverlay then
+      raise Exception.Create('ESL or Overlay flagged modules can''t be masters of other modules in Starfield');
+
   SetLength(flMasters, Succ(Length(flMasters)));
   flMasters[High(flMasters)] := aFile;
   UpdateModuleMasters;
@@ -4793,6 +4797,9 @@ begin
     end;
 
     if FileHeader.IsESL then begin
+      if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+        raise Exception.Create('ESL flagged files can''te be saved for Starfield.');
+
       FileFileID := GetFileFileID(true);
       for i := High(flRecords) downto Low(flRecords) do begin
         Current := flRecords[i];
@@ -4805,7 +4812,14 @@ begin
       end;
     end;
 
+    if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+      if FileHeader.IsESL <> (mfHasESLFlag in flModule.miFlags) then
+        raise Exception.Create('ESL flag can''t be added or removed from existing files in Starfield.');
+
     if FileHeader.IsOverlay then begin
+      if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+        raise Exception.Create('Overlay flagged files can''te be saved for Starfield.');
+
       FileFileID := GetFileFileID(true);
       if FileFileID.FullSlot = 0 then
           raise Exception.Create('File ' + Self.GetName + ' is an overlay module with no masters. You will not be able to save this file with Overlay flag active');
@@ -4818,6 +4832,10 @@ begin
           Break;
       end;
     end;
+
+    if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+      if FileHeader.IsOverlay <> (mfHasOverlayFlag in flModule.miFlags) then
+        raise Exception.Create('Overlay flag can''t be added or removed from existing files in Starfield.');
 
   end else
     inherited;

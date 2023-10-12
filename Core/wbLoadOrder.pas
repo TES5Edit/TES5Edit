@@ -562,18 +562,20 @@ begin
   with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
-    if wbIsEslSupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
-        Include(miFlags, mfHasESLFlag);
-        Include(miFlags, mfHasESMFlag);
-        Include(miFlags, mfIsESM);
+    if not (wbStarfieldIsABugInfestedHellhole and wbIsStarfield) then begin
+      if wbIsEslSupported then begin
+        with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+          Include(miFlags, mfHasESLFlag);
+          Include(miFlags, mfHasESMFlag);
+          Include(miFlags, mfIsESM);
+        end;
       end;
-    end;
-    if wbIsOverlaySupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
-        Include(miFlags, mfHasOverlayFlag);
-        Include(miFlags, mfHasESMFlag);
-        Include(miFlags, mfIsESM);
+      if wbIsOverlaySupported then begin
+        with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+          Include(miFlags, mfHasOverlayFlag);
+          Include(miFlags, mfHasESMFlag);
+          Include(miFlags, mfIsESM);
+        end;
       end;
     end;
   end;
