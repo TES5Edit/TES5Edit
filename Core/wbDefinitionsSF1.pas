@@ -7864,7 +7864,7 @@ end;
               if aType = ctToSortKey then
                 aValue := IfThen(lCoord >= 0, '+', '-') + IntToHex(lCoordDeg, 2) + IntToHex(lCoordMin, 2) + IntToHex(lCoordSec, 2)
               else
-                aValue := Format('%d°%d''%d"%s', [ Abs(lCoordDeg), lCoordMin, lCoordSec, IfThen(lCoord >= 0, loPosDir, loNegDir) ]);
+                aValue := Format('%d'#$00B0'%d''%d"%s', [ Abs(lCoordDeg), lCoordMin, lCoordSec, IfThen(lCoord >= 0, loPosDir, loNegDir) ]);
             end;
             ctFromEditValue: begin
               if not Assigned(aElement) then
@@ -7875,7 +7875,7 @@ end;
                 Exit;
 
               // Get positions of symbols
-              var lPosDegree := Pos('°', aValue);
+              var lPosDegree := Pos(#$00B0, aValue);
               var lPosMinute := Pos('''', aValue);
               var lPosSecond := Pos('"', aValue);
 
