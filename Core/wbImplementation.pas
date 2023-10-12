@@ -71,6 +71,8 @@ function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: str
 
 function wbRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
 
+function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
+
 implementation
 
 uses
@@ -485,6 +487,17 @@ type
     constructor Create(aDef: IwbNamedDef);
   end;
 
+  TwbMultipleElements = class(TwbElement, IwbMultipleElements)
+  protected
+    meElements: IwbElements;
+  protected
+    {---IwbMultipleElements---}
+    function GetElement(aIndex: Integer): IwbElement;
+    function GetElementCount: Integer;
+  public
+    constructor Create(const aElements: IwbElements);
+  end;
+
   TDynElementInternals = array of IwbElementInternal;
 
   IwbContainerInternal = interface(IwbContainer)
@@ -555,6 +568,7 @@ type
 
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetDataSize: Integer; override;
+    function GetDataSizeFromElements: Integer; virtual;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function UpdateMemoryOrder(out aMemoryOrderElements: TArray<Pointer>): Boolean;
@@ -828,7 +842,8 @@ type
     function LoadOrderFileIDtoFileFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
     function FileFileIDtoLoadOrderFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
 
-    procedure AddMasters(aMasters: TStrings);
+    procedure AddMasters(aMasters: TStrings); overload;
+    procedure AddMasters(const aMasters: array of string); overload;
     procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True);
     procedure SortMasters;
     procedure CleanMasters;
@@ -2407,6 +2422,21 @@ begin
   end;
 end;
 
+procedure TwbFile.AddMasters(const aMasters: array of string);
+begin
+  If Length(aMasters) < 1 then
+    Exit;
+
+  var lMasters := TStringList.Create;
+  try
+    for var lMaster in aMasters do
+      lMasters.Add(lMaster);
+    AddMasters(lMasters);
+  finally
+    lMasters.Free;
+  end;
+end;
+
 procedure TwbFile.AddMasters(aMasters: TStrings);
 var
   NotAllAdded    : Boolean;
@@ -2882,7 +2912,16 @@ begin
       New := nil;
       j := 0;
       for i := Low(flMasters) to High(flMasters) do
-        if UsedMasters[i] then begin
+        if UsedMasters[i] or
+           (
+             wbStarfieldIsABugInfestedHellhole and
+             wbIsStarfield and
+             (
+               SameText(flMasters[i].FileName, 'Starfield.esm') or
+               SameText(flMasters[i].FileName, 'BlueprintShips-Starfield.esm')
+             )
+           )
+        then begin
           if i <> j then begin
             flMasters[j] := flMasters[i];
 
@@ -3110,6 +3149,9 @@ begin
     end;
   end;
 
+  if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+    AddMasters(['Starfield.esm', 'BlueprintShips-Starfield.esm']);
+
   BuildOrLoadRef(False);
 end;
 
@@ -3192,6 +3234,9 @@ begin
         with miMasters[i]^ do
           if Assigned(miFile) then
             AddMaster(_File);
+
+  if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+    AddMasters(['Starfield.esm', 'BlueprintShips-Starfield.esm']);
 
   BuildOrLoadRef(False);
 end;
@@ -6593,6 +6638,11 @@ begin
 end;
 
 function TwbContainer.GetDataSize: Integer;
+begin
+  Result := GetDataSizeFromElements;
+end;
+
+function TwbContainer.GetDataSizeFromElements: Integer;
 var
   i             : Integer;
   SelfRef       : IwbContainerElementRef;
@@ -6601,6 +6651,14 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   Result := 0;
   DoInit(False);
+
+  var lArrayDef: IwbArrayDef;
+  if Supports(GetValueDef, IwbArrayDef, lArrayDef) then begin
+    var lWronglyAssumedFixedSizePerElement := lArrayDef.WronglyAssumedFixedSizePerElement;
+    if lWronglyAssumedFixedSizePerElement > 0 then
+      Exit(GetElementCount * lWronglyAssumedFixedSizePerElement);
+  end;
+
   for i := Low(cntElements) to High(cntElements) do begin
     if Supports(cntElements[i], IwbDataContainer, DataContainer) and DataContainer.DontSave then
       Continue;
@@ -13745,9 +13803,26 @@ begin
       dtRecord, dtSubRecord, dtSubRecordArray, dtSubRecordStruct: Assert(False);
       dtArray: begin
 
+        if not Assigned(aElement) then
+          Exit;
+
+        var lMultipleElements: IwbMultipleElements;
+        if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+          for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+            var lResult := AssignInternal(aIndex, lMultipleElements.Elements[lElementIdx], aOnlySK);
+            if Assigned(lResult) then
+              Result := lResult;
+          end;
+          Exit;
+        end;
+
         ArrayDef := srValueDef as IwbArrayDef;
 
-        if (aIndex = wbAssignThis) and ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) then begin
+        var lDef: IwbDef := aElement.ValueDef;
+        if not Assigned(lDef) then
+          lDef := aElement.Def;
+
+        if (aIndex = wbAssignThis) and ArrayDef.CanAssign(Self, aIndex, lDef) then begin
 
           if aOnlySK then
             Exit;
@@ -13807,9 +13882,12 @@ begin
           end;
 
         end else begin
+          if (aIndex = wbAssignThis) and Supports(aElement, IwbMainRecord) then
+            aIndex := wbAssignAdd;
+
           if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) then begin
             AlignedCreate := ( (aIndex < wbAssignAdd) and GetAlignable and (csSortedBySortOrder in cntStates) and not Assigned(GetElementBySortOrder(aIndex)) );
-            if AlignedCreate or ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef)) then begin
+            if AlignedCreate or ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef)) then begin
               {add one entry}
 
               if srsSorted in srStates then
@@ -13930,6 +14008,29 @@ end;
 function TwbSubRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   ArrayDef: IwbArrayDef;
+
+  function CheckAssign(const aElement: IwbElement): Boolean;
+  begin
+    Result := False;
+    if not Assigned(aElement) then
+      Exit;
+
+    var lDef: IwbDef := aElement.ValueDef;
+    if not Assigned(lDef) then
+      lDef := aElement.Def;
+
+    if srsIsArray in srStates then begin
+      Result :=
+         ArrayDef.CanAssign(Self, aIndex, lDef) or
+         ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) );
+    end else begin
+      Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
+      if not Result and Assigned(srDef) then
+        Result := srDef.CanAssign(Self, aIndex, lDef);
+    end;
+  end;
+
+
 begin
   Result := False;
 
@@ -13954,17 +14055,17 @@ begin
         Result := ArrayDef.ElementCount <= 0;
       Exit;
     end;
-    Result :=
-       ArrayDef.CanAssign(Self, aIndex, aElement.ValueDef) or
-       ( (ArrayDef.ElementCount <= 0) and ArrayDef.Element.CanAssign(Self, wbAssignThis, aElement.ValueDef) );
-  end else begin
-    if not Assigned(aElement) then
-      Exit;
-
-    Result := inherited CanAssignInternal(aIndex, aElement, aCheckDontShow);
-    if not Result and Assigned(srDef) then
-      Result := srDef.CanAssign(Self, aIndex, aElement.Def);
   end;
+
+  var lMultipleElements: IwbMultipleElements;
+  if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+    for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+      Result := CheckAssign(lMultipleElements.Elements[lElementIdx]);
+      if Result then
+        Exit;
+    end;
+  end else
+    Result := CheckAssign(aElement);
 end;
 
 function TwbSubRecord.CanContainFormIDs: Boolean;
@@ -15411,6 +15512,9 @@ var
   procedure CopyMainRecord(const aSource: IwbMainRecord);
   begin
     Result := nil;
+
+    if wbIsStarfield and (aSource.LoadOrderFormID.ToCardinal = $25) then
+      Exit;
 
     if aElement.ContainsReflection then begin
       var lSourceName := aElement.FullPath;
@@ -17501,8 +17605,8 @@ end;
 
 function TwbElement.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
-  TargetValueDef: IwbValueDef;
-  SourceValueDef: IwbValueDef;
+  TargetDef: IwbDef;
+  SourceDef: IwbDef;
 begin
   Result := wbIsInternalEdit;
   if Result then
@@ -17519,18 +17623,25 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  TargetValueDef := GetValueDef;
-  if TargetValueDef = nil then
-    Exit;
+  TargetDef := GetValueDef;
+  if TargetDef = nil then begin
+    TargetDef := GetDef;
+    if TargetDef = nil then
+      Exit;
+  end;
+
   if not wbIsInternalEdit then
-    if dfInternalEditOnly in TargetValueDef.DefFlags then
+    if dfInternalEditOnly in TargetDef.DefFlags then
       Exit;
 
-  SourceValueDef := aElement.ValueDef;
-  if SourceValueDef = nil then
-    Exit;
+  SourceDef := aElement.GetValueDef;
+  if SourceDef = nil then begin
+    SourceDef := aElement.GetDef;
+    if SourceDef = nil then
+      Exit;
+  end;
 
-  Result := TargetValueDef.CanAssign(Self, aIndex, SourceValueDef);
+  Result := TargetDef.CanAssign(Self, aIndex, SourceDef);
 
   if Result and aCheckDontShow and GetDontShow then
     Result := False;
@@ -19040,9 +19151,18 @@ begin
       raise Exception.Create(GetName + ' can not be assigned.');
   end;
 
-
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
+
+  var lMultipleElements: IwbMultipleElements;
+  if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+    for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+      var lResult := AssignInternal(aIndex, lMultipleElements.Elements[lElementIdx], aOnlySK);
+      if Assigned(lResult) then
+        Result := lResult;
+    end;
+    Exit;
+  end;
 
   if (aIndex = wbAssignThis) and arcDef.CanAssign(Self, aIndex, aElement.Def) then begin
 
@@ -19150,6 +19270,18 @@ begin
 end;
 
 function TwbSubRecordArray.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
+
+  function CheckAssign(const aElement: IwbElement): Boolean;
+  begin
+    Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
+    if not Result then begin
+      Result := arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def);
+      if Result then
+        if aCheckDontShow and arcDef.Element.DontShow[aElement] then
+          Result := False;
+    end;
+  end;
+
 begin
   Result := False;
   if not wbIsInternalEdit then begin
@@ -19171,13 +19303,15 @@ begin
     Exit;
   end;
 
-  Result := arcDef.CanAssign(Self, aIndex, aElement.Def);
-  if not Result then begin
-    Result := arcDef.Element.CanAssign(Self, wbAssignThis, aElement.Def);
-    if Result then
-      if aCheckDontShow and arcDef.Element.DontShow[aElement] then
-        Result := False;
-  end;
+  var lMultipleElements: IwbMultipleElements;
+  if  Supports(aElement, IwbMultipleElements, lMultipleElements) then begin
+    for var lElementIdx := 0 to Pred(lMultipleElements.ElementCount) do begin
+      Result := CheckAssign(lMultipleElements.Elements[lElementIdx]);
+      if Result then
+        Exit;
+    end;
+  end else
+    Result := CheckAssign(aElement);
 end;
 
 function TwbSubRecordArray.CanContainFormIDs: Boolean;
@@ -20275,6 +20409,14 @@ begin
   if Assigned(aBasePtr) then
     Inc(PByte(aBasePtr), SizePrefix);
 
+  var lWronglyAssumedFixedSizePerElement := ArrayDef.WronglyAssumedFixedSizePerElement;
+  var lFinalBasePtr := nil;
+  if lWronglyAssumedFixedSizePerElement > 0 then
+    if Assigned(aBasePtr) and Assigned(aEndPtr) then begin
+      ArrSize := NativeInt((NativeUInt(aEndPtr) - NativeUInt(aBasePtr))) div lWronglyAssumedFixedSizePerElement;
+      lFinalBasePtr := Pointer(NativeUInt(aBasePtr) + NativeUInt(lWronglyAssumedFixedSizePerElement * ArrSize));
+    end;
+
   var lArrayElementNoName := ArrayDef.Element.Name = '';
 
   if ArrSize > 0 then
@@ -20325,6 +20467,9 @@ begin
       { else if not (not VarSize or ((NativeUInt(aBasePtr) < NativeUInt(aEndPtr)) or (not Assigned(aBasePtr)))) then
         wbProgressCallback('Error: not enough data for array. Elements remaining are ' + IntToStr(ArrSize)) Silently fails = called at an invalid time };
     end;
+
+  if Assigned(lFinalBasePtr) and  (NativeUInt(aBasePtr) < NativeUInt(lFinalBasePtr)) then
+    aBasePtr := lFinalBasePtr;
 
   if (ValueDef.DefType = dtString) and (ValueDef.IsVariableSize) then
     Element := TwbStringListTerminator.Create(aContainer);
@@ -23882,6 +24027,28 @@ end;
 function TwbTemplateElement.GetValueDef: IwbValueDef;
 begin
   Supports(teDef, IwbValueDef, Result);
+end;
+
+{ TwbMultipleElements }
+
+constructor TwbMultipleElements.Create(const aElements: IwbElements);
+begin
+  meElements := aElements;
+end;
+
+function TwbMultipleElements.GetElement(aIndex: Integer): IwbElement;
+begin
+  Result := meElements[aIndex];
+end;
+
+function TwbMultipleElements.GetElementCount: Integer;
+begin
+  Result := Length(meElements);
+end;
+
+function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
+begin
+  Result := TwbMultipleElements.Create(aElements);
 end;
 
 initialization

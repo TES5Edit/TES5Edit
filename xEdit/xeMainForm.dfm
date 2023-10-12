@@ -175,6 +175,17 @@ object frmMain: TfrmMain
               BevelOuter = bvNone
               TabOrder = 0
               OnResize = fpnlViewFilterResize
+              object bnPinned: TSpeedButton
+                Left = 0
+                Top = 0
+                Width = 23
+                Height = 22
+                AllowAllUp = True
+                GroupIndex = 1
+                Caption = #55357#56524
+                Flat = True
+                OnClick = bnPinnedClick
+              end
               object lblViewFilterName: TLabel
                 AlignWithMargins = True
                 Left = 3
@@ -2013,6 +2024,7 @@ object frmMain: TfrmMain
           BevelInner = bvNone
           Colors.SelectionRectangleBlendColor = clGray
           Colors.SelectionRectangleBorderColor = clBlack
+          DragOperations = [doCopy]
           Header.AutoSizeIndex = 2
           Header.Height = 21
           Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -2027,13 +2039,15 @@ object frmMain: TfrmMain
           ShowHint = True
           TabOrder = 0
           TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScroll, toAutoScrollOnExpand, toAutoSort, toAutoSpanColumns, toAutoTristateTracking, toAutoDeleteMovedNodes, toAutoChangeScale, toAutoFreeOnCollapse]
-          TreeOptions.MiscOptions = [toInitOnSave, toToggleOnDblClick, toWheelPanning]
+          TreeOptions.MiscOptions = [toAcceptOLEDrop, toInitOnSave, toToggleOnDblClick, toWheelPanning]
           TreeOptions.PaintOptions = [toPopupMode, toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines, toUseBlendedSelection]
           TreeOptions.SelectionOptions = [toFullRowSelect, toLevelSelectConstraint, toMultiSelect, toRightClickSelect]
           TreeOptions.StringOptions = [toShowStaticText, toAutoAcceptEditChange]
           OnBeforeItemErase = vstNavBeforeItemErase
           OnChange = vstNavChange
           OnCompareNodes = vstNavCompareNodes
+          OnDragAllowed = vstNavDragAllowed
+          OnDragOver = vstNavDragOver
           OnExpanding = vstNavExpanding
           OnFocusChanged = vstNavFocusChanged
           OnFreeNode = vstNavFreeNode

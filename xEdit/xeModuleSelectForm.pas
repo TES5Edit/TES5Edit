@@ -696,6 +696,25 @@ begin
   Error := '';
   try
     if SelectFlag = mfActive then begin
+      var lForceLoadStarfieldMasters := wbStarfieldIsABugInfestedHellhole and wbIsStarfield;
+      if wbAlwaysLoadGameMaster or lForceLoadStarfieldMasters then
+        for var lModuleIdx := Low(AllModules) to High(AllModules) do begin
+          var lModule := AllModules[lModuleIdx];
+
+          if lForceLoadStarfieldMasters and
+             (
+               SameText(lModule.miName, 'Starfield.esm') or
+               SameText(lModule.miName, 'BlueprintShips-Starfield.esm')
+             )
+          then
+            Include(lModule.miFlags, mfActive);
+
+          if wbAlwaysLoadGameMaster and
+             (mfIsGameMaster in lModule.miFlags)
+          then
+            Include(lModule.miFlags, mfActive);
+        end;
+
       SelectedModules := AllModules.SimulateLoad;
       FilteredModules := SelectedModules.FilteredByFlag(SelectFlag).FilteredByFlag(FilterFlag);
     end else begin

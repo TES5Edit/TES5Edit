@@ -58,8 +58,8 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 'p';
-    Title   : 'EXTREMELY EXPERIMENTAL';
+    Build   : 'q';
+    Title   : '(2nd Build) EXTREMELY EXPERIMENTAL';
   );
 
 const
@@ -239,6 +239,7 @@ var
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
   wbCompareRawData                   : Boolean    = False;
+  wbDisableFormIDCheck               : Boolean    = False;
 
   wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
@@ -337,6 +338,9 @@ var
   wbShouldLoadMOHookFile             : Boolean;
   wbMOProfile                        : string;
   wbMOHookFile                       : string;
+
+  wbStarfieldIsABugInfestedHellhole  : Boolean    = True;
+  wbAlwaysLoadGameMaster             : Boolean    = True;
 
   wbSpeedOverMemory                  : Boolean    = False;
 
@@ -1238,6 +1242,17 @@ type
 
   IwbTemplateElement = interface(IwbElement)
     ['{200EE482-1FD5-4CB8-AEF8-7612F2A3D928}']
+  end;
+
+  IwbMultipleElements = interface(IwbElement)
+    ['{1FB6EAB9-7301-49C5-90AA-1C3D13192230}']
+    function GetElement(aIndex: Integer): IwbElement;
+    function GetElementCount: Integer;
+
+    property Elements[aIndex: Integer]: IwbElement
+      read GetElement; default;
+    property ElementCount: Integer
+      read GetElementCount;
   end;
 
   IwbElements = TArray<IwbElement>;
@@ -2457,6 +2472,7 @@ type
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
     function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
+    function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
   end;
 
   IwbStringDefFormater = interface;
@@ -2640,6 +2656,9 @@ type
 
     function SetCountFromEnum(const aEnum: IwbEnumDef): IwbArrayDef;
 
+    function SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
+    function GetWronglyAssumedFixedSizePerElement: Integer;
+
     property Element: IwbValueDef
       read GetElement;
     property ElementCount: Integer
@@ -2655,6 +2674,8 @@ type
 
     property CountCallBack: TwbCountCallback
       read GetCountCallback;
+    property WronglyAssumedFixedSizePerElement: Integer
+      read GetWronglyAssumedFixedSizePerElement;
 
     property CanAddTo: Boolean
       read GetCanAddTo;
@@ -5956,6 +5977,7 @@ type
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
     function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
+    function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
 
     {---IwbSubRecordWithBaseStringDef---}
     function SetFormaterOnValue(const aFormater: IwbStringDefFormater): IwbSubRecordWithBaseStringDef;
@@ -6832,6 +6854,7 @@ type
     arDefaultEditValues : TwbStringArray;
     arCountPath         : string;
     arShouldInclude     : TwbShouldIncludeCallback;
+    arWronglyAssumedFixedSizePerElement: Integer;
 
     arSummaryDelimiter            : string;
     arSummaryPassthroughMaxCount  : Integer;
@@ -6916,6 +6939,9 @@ type
     function ShouldInclude(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean;
 
     function SetCountFromEnum(const aEnum: IwbEnumDef): IwbArrayDef;
+
+    function SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
+    function GetWronglyAssumedFixedSizePerElement: Integer;
   end;
 
   TwbStructDef = class(TwbValueDef, IwbStructDef)
@@ -11533,6 +11559,16 @@ begin
     ndToStr := aToStr;
 end;
 
+function TwbSubRecordDef.SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbSubRecordDef(Duplicate).SetWronglyAssumedFixedSizePerElementOnValue(aSize));
+
+  Result := Self;
+  srValue := (srValue as IwbArrayDef).SetWronglyAssumedFixedSizePerElement(aSize);
+  srValue := (srValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
+end;
+
 function TwbSubRecordDef.ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 begin
   Result := '';
@@ -13313,6 +13349,7 @@ begin
     Self.arDefaultEditValues := arDefaultEditValues;
     Self.arCountPath := arCountPath;
     Self.arShouldInclude := arShouldInclude;
+    Self.arWronglyAssumedFixedSizePerElement := arWronglyAssumedFixedSizePerElement;
   end;
 end;
 
@@ -13552,13 +13589,24 @@ begin
     Count := GetPrefixCount(aBasePtr);
     Result := Prefix;
   end else begin
+    if arWronglyAssumedFixedSizePerElement > 0 then begin
+      if Count = 0 then begin
+        var lArrayElementCount := ArrayContainer.ElementCount;
+        if lArrayElementCount > 0 then
+          Count := lArrayElementCount
+        else
+          Count := Int64(NativeUInt(aEndPtr) - NativeUInt(aBasePtr)) div arWronglyAssumedFixedSizePerElement;
+      end;
+      Exit(Count * arWronglyAssumedFixedSizePerElement);
+    end;
+
     if (Count < 1) and Assigned(arCountCallback) and not (Container=nil) then
       Count := arCountCallback(BasePtr, aEndPtr, ArrayContainer);
 
     if not Assigned(BasePtr) and (Count < 1) and not Assigned(arCountCallback) then // EXPERIMENT: Probably should not be done
       Count := 1;
 
-    if (Count < 1) and not Assigned(arCountCallback) and not Assigned(arShouldInclude)  then begin
+    if (Count < 1) and not Assigned(arCountCallback) and not Assigned(arShouldInclude) and not (arWronglyAssumedFixedSizePerElement > 0) then begin
       Result := High(Integer);
       Exit;
     end;
@@ -13674,13 +13722,17 @@ end;
 
 function TwbArrayDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
-  if ((arCount = 0) and not Assigned(arCountCallback)) then
-    Result := 0
-  else
+  if ((arCount = 0) and not Assigned(arCountCallback)) then begin
+    if dfArrayCanBeEmpty in defFlags then
+      Result := 0
+    else
+      Result := arWronglyAssumedFixedSizePerElement;
+  end else begin
     if dfArrayCanBeEmpty in defFlags then
       Result := GetPrefixSize(aBasePtr)
     else
       Result := GetSize(aBasePtr, aEndPtr, aElement);
+  end;
 end;
 
 function TwbArrayDef.GetSorted: Boolean;
@@ -13689,6 +13741,11 @@ begin
     Result := arSorted
   else
     Result := False;
+end;
+
+function TwbArrayDef.GetWronglyAssumedFixedSizePerElement: Integer;
+begin
+  Result := arWronglyAssumedFixedSizePerElement;
 end;
 
 procedure TwbArrayDef.InitFromParentDoChildren;
@@ -13834,6 +13891,15 @@ begin
 
   Result := Self;
   arSummaryPassthroughMaxLength := aLength;
+end;
+
+function TwbArrayDef.SetWronglyAssumedFixedSizePerElement(aSize: Integer): IwbArrayDef;
+begin
+  if defIsLocked then
+    Exit(TwbArrayDef(Duplicate).SetWronglyAssumedFixedSizePerElement(aSize));
+
+  Result := Self;
+  arWronglyAssumedFixedSizePerElement := aSize;
 end;
 
 function TwbArrayDef.ShouldInclude(aBasePtr, aEndPtr: Pointer; const aArray: IwbElement): Boolean;
@@ -16758,32 +16824,48 @@ function TwbFormIDDefFormater.Assign(const aTarget: IwbElement; aIndex: Integer;
 var
   NativeValue : Int64;
   FormID      : TwbFormID;
-  SourceFile  : IwbFile;
-  TargetFile  : IwbFile;
 begin
+  Result := nil;
+  if not Assigned(aTarget) then
+    Exit;
+
   if Assigned(aSource) then begin
-    NativeValue := aSource.NativeValue;
-    FormID := TwbFormID.FromCardinal(NativeValue);
+    var lMainRecord: IwbMainRecord;
+    if Supports(aSource, IwbMainRecord, lMainRecord) then begin
+      if not IsValidMainRecord(lMainRecord) then
+        Exit;
 
-    if not (FormID.IsHardcoded or FormID.IsNone) then begin
-      SourceFile := aSource._File;
-      TargetFile := aTarget._File;
-      if Assigned(SourceFile) and Assigned(TargetFile) then begin
-        FormID := SourceFile.FileFormIDtoLoadOrderFormID(FormID, aSource.MastersUpdated);
+      FormID := lMainRecord.LoadOrderFormID;
+      NativeValue := FormID.ToCardinal;
+    end else begin
+      NativeValue := aSource.NativeValue;
+      FormID := TwbFormID.FromCardinal(NativeValue);
 
-        if dfUnmappedFormID in defFlags then begin
-          if FormID.FileID.FullSlot <> 0 then
-            raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
-          if TargetFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
-            if (TargetFile.MasterCount[True] < 1) or (TargetFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
-              raise Exception.Create('Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master.');
-        end;
-
-        if not (dfUseLoadOrder in defFlags) then
-          FormID := TargetFile.LoadOrderFormIDtoFileFormID(FormID, aTarget.MastersUpdated);
-      end else
-        raise Exception.Create('Target or Source has no File');
+      if not (FormID.IsHardcoded or FormID.IsNone) then begin
+        var SourceFile := aSource._File;
+        if Assigned(SourceFile) then
+          FormID := SourceFile.FileFormIDtoLoadOrderFormID(FormID, aSource.MastersUpdated)
+        else
+          raise Exception.Create('Source has no File');
+      end;
     end;
+
+    if not (dfUseLoadOrder in defFlags) then
+      if not (FormID.IsHardcoded or FormID.IsNone) then begin
+        var TargetFile := aTarget._File;
+        if Assigned(TargetFile) then begin
+          if dfUnmappedFormID in defFlags then begin
+            if FormID.FileID.FullSlot <> 0 then
+              raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
+            if TargetFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
+              if (TargetFile.MasterCount[True] < 1) or (TargetFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
+                raise Exception.Create('Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master.');
+          end;
+
+          FormID := TargetFile.LoadOrderFormIDtoFileFormID(FormID, aTarget.MastersUpdated);
+        end else
+          raise Exception.Create('Target has no File');
+      end;
 
     NativeValue := FormID.ToCardinal;
   end else
@@ -16812,7 +16894,7 @@ begin
   if dfDontAssign in defFlags then
     Exit(False);
 
-  Result := Supports(aDef, IwbFormID);
+  Result := Supports(aDef, IwbFormID) or Supports(aDef, IwbMainRecordDef);
 end;
 
 function TwbFormIDDefFormater.Check(aInt: Int64; const aElement: IwbElement): string;
@@ -19155,16 +19237,23 @@ begin
   if dfDontAssign in defFlags then
     Exit(False);
 
-  if Supports(aDef, IwbFormIDChecked, FormIDChecked) then begin
-    Result := False;
-    for i := 0 to Pred(FormIDChecked.SignatureCount) do
-      if (FormIDChecked.Signatures[i] <> 'NULL') and (FormIDChecked.Signatures[i] <> 'TRGT') then
-        if fidcValidRefs.Find(FormIDChecked.Signatures[i], Dummy) then begin
-          Result := True;
-          Exit;
-        end;
-  end else
-    Result := inherited CanAssign(aElement, aIndex, aDef);
+  if not wbDisableFormIDCheck then begin
+    var lMainRecordDef: IwbMainRecordDef;
+    if Supports(aDef, IwbMainRecordDef, lMainRecordDef)then begin
+      Exit(IsValid(lMainRecordDef.DefaultSignature));
+    end else if Supports(aDef, IwbFormIDChecked, FormIDChecked) and not wbDisableFormIDCheck then begin
+      Result := False;
+      for i := 0 to Pred(FormIDChecked.SignatureCount) do
+        if (FormIDChecked.Signatures[i] <> 'NULL') and (FormIDChecked.Signatures[i] <> 'TRGT') then
+          if fidcValidRefs.Find(FormIDChecked.Signatures[i], Dummy) then begin
+            Result := True;
+            Exit;
+          end;
+      Exit;
+    end;
+  end;
+
+  Result := inherited CanAssign(aElement, aIndex, aDef);
 end;
 
 function TwbFormIDChecked.Check(aInt: Int64; const aElement: IwbElement): string;
@@ -19175,6 +19264,8 @@ var
   Found: TwbSignature;
 begin
   Result := '';
+  if wbDisableFormIDCheck then
+    Exit;
 
   {>>> No ACVA errors <<<}
   if IsValid('ACVA') then
@@ -19262,6 +19353,9 @@ var
   MainRecord : IwbMainRecord;
 begin
   Result := True;
+
+  if wbDisableFormIDCheck then
+    Exit;
 
   if fidcValidFlstRefs.Count < 1 then
     Exit;
@@ -19367,16 +19461,29 @@ end;
 
 function TwbFormIDChecked.IsValid(const aSignature: TwbSignature): Boolean;
 begin
+  if wbDisableFormIDCheck then
+    Exit(inherited);
+
   Result := fidcValidRefs.IndexOf(aSignature) >= 0;
 end;
 
 function TwbFormIDChecked.IsValidFlst(const aSignature: TwbSignature): Boolean;
 begin
-  Result := (fidcValidFlstRefs.Count = 0) or (fidcValidFlstRefs.IndexOf(aSignature) >= 0);
+  Result := (fidcValidFlstRefs.Count = 0) or (fidcValidFlstRefs.IndexOf(aSignature) >= 0) or wbDisableFormIDCheck;
 end;
 
 function TwbFormIDChecked.IsValidMainRecord(const aMainRecord: IwbMainRecord): Boolean;
 begin
+  Result :=  wbDisableFormIDCheck;
+
+  if Result then
+    Exit;
+
+  Result := IsValid(aMainRecord.Signature) and CheckFlst(aMainRecord);
+
+  if not Result then
+    Exit;
+
   Result := not fidcPersistent or aMainRecord.IsPersistent;
 end;
 

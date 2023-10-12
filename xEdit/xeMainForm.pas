@@ -457,6 +457,7 @@ type
     mniCreateNewFile: TMenuItem;
     pnlCancel: TPanel;
     btnCancel: TButton;
+    bnPinned: TSpeedButton;
 
     {--- Form ---}
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -495,14 +496,18 @@ type
     procedure vstNavBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
     procedure vstNavChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstNavCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
+    procedure vstNavDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstNavDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
+    procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode; var Allowed: Boolean);
+    procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure vstNavFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstNavGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstNavHeaderClick(Sender: TVTHeader; HitInfo: TVTHeaderHitInfo);
     procedure vstNavIncrementalSearch(Sender: TBaseVirtualTree; Node: PVirtualNode; const SearchText: string; var Result: Integer);
     procedure vstNavInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstNavInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
-    procedure vstNavPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure vstNavKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure vstNavPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
 
     {--- pmuNavPopup ---}
     procedure pmuNavPopup(Sender: TObject);
@@ -623,7 +628,8 @@ type
     procedure mniSpreadsheetRebuildClick(Sender: TObject);
 
     {--- actions ---}
-    function GetFocusedElementSafely: IwbElement;
+    function GetFocusedViewElementSafely: IwbElement;
+    function GetFocusedNavElementSafely: IwbElement;
 
     procedure TryViewOrCompareSelectedRecords(aElement: IwbElement);
 
@@ -655,8 +661,6 @@ type
     procedure mniNavCleaningObsoleteClick(Sender: TObject);
     procedure mniNavFilterForOnlyOneClick(Sender: TObject);
     procedure mniNavCreateSEQFileClick(Sender: TObject);
-    procedure vstNavExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      var Allowed: Boolean);
     procedure mniNavApplyScriptClick(Sender: TObject);
     procedure mniNavOptionsClick(Sender: TObject);
     procedure mniNavLogAnalyzerClick(Sender: TObject);
@@ -713,11 +717,10 @@ type
     procedure jbhNexusModsCloseBtnClick(Sender: TObject; var CanClose: Boolean);
     procedure pmuMainPopup(Sender: TObject);
     procedure bnMainMenuMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure bnPinnedClick(Sender: TObject);
     procedure mniMainSaveClick(Sender: TObject);
     procedure jbhSaveBalloonClick(Sender: TObject);
     procedure jbhSaveCloseBtnClick(Sender: TObject; var CanClose: Boolean);
-    procedure vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex);
     procedure tmrShutdownTimer(Sender: TObject);
     procedure mniMarkallfileswithoutONAMasmodifiedClick(Sender: TObject);
     procedure mniNavHeaderINFOClick(Sender: TObject);
@@ -736,7 +739,6 @@ type
 
     procedure btnCancelClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
-
   protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
@@ -766,6 +768,7 @@ type
 
     vstNavInitChildrenGeneration: UInt64;
     vstNavLastCollapsedChildrenCleanup: UInt64;
+    vstNavLastChangeNode: Pointer;
 
     vstNavLastCheckedForChanges : UInt64;
     vstNavReInit : Boolean;
@@ -1035,6 +1038,8 @@ type
     btnNexusModsNewVersion: boolean;
     btnGithubNewVersion: boolean;
 
+    LockOutPinnedCount : Integer;
+
     procedure DoInit;
     procedure SetDoubleBuffered(aWinControl: TWinControl);
     procedure CleanupRefCache;
@@ -1073,6 +1078,10 @@ type
 
     procedure PostResetActiveTree;
     procedure CheckViewForChange;
+
+    procedure LockOutPinned;
+    procedure UnLockOutPinned;
+    function IsPinned: Boolean;
 
     procedure AddMessage(const s: string);
     procedure ScrollToTheLastMessage;
@@ -6663,6 +6672,8 @@ end;
 procedure TfrmMain.fpnlViewFilterResize(Sender: TObject);
 begin
   pnlViewTop.Height := fpnlViewFilterKeep.Top + fpnlViewFilterKeep.Height + 8;
+  bnPinned.Height := fpnlViewFilterKeep.Height;
+  bnPinned.Width := fpnlViewFilterKeep.Height;
 end;
 
 function TfrmMain.GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer;
@@ -6778,34 +6789,62 @@ begin
 end;
 
 function TfrmMain.GetSourceElement(Source: TObject; out SourceElement: IwbElement): Boolean;
-var
-  SourceTree                  : TVirtualEditTree;
-  SourceNodeDatas             : PViewNodeDatas;
 begin
   Result := False;
   SourceElement := nil;
 
   if not (Source is TVirtualEditTree) then
     Exit;
-  SourceTree := TVirtualEditTree(Source);
+  var lSourceTree := TVirtualEditTree(Source);
 
-  if SourceTree.DragColumn < 1 then
-    Exit;
-  if Pred(SourceTree.DragColumn) > High(ActiveRecords) then
-    Exit;
+  if lSourceTree = vstView then begin
+    if Length(lSourceTree.DragSelection) <> 1 then
+      Exit;
 
-  if Length(SourceTree.DragSelection) <> 1 then
-    Exit;
+    if lSourceTree.DragColumn < 1 then
+      Exit;
+    if Pred(lSourceTree.DragColumn) > High(ActiveRecords) then
+      Exit;
 
-  SourceNodeDatas := SourceTree.GetNodeData(SourceTree.DragSelection[0]);
-  if not Assigned(SourceNodeDatas) then
-    Exit;
+    var lSourceViewNodeDatas: PViewNodeDatas := lSourceTree.GetNodeData(lSourceTree.DragSelection[0]);
+    if not Assigned(lSourceViewNodeDatas) then
+      Exit;
 
-  SourceElement := SourceNodeDatas[Pred(SourceTree.DragColumn)].Element as IwbElement;
-  if not Assigned(SourceElement) then
-    Exit;
+    SourceElement := lSourceViewNodeDatas[Pred(lSourceTree.DragColumn)].Element as IwbElement;
+    if not Assigned(SourceElement) then
+      Exit;
 
-  Result := True;
+    Result := True;
+  end else if lSourceTree = vstNav then begin
+    var lDragSelection := lSourceTree.DragSelection;
+    var lDragSelectionLength := Length(lDragSelection);
+
+    if lDragSelectionLength < 1 then
+      Exit;
+
+    var lElements: IwbElements;
+    SetLength(lElements, lDragSelectionLength);
+    var lElementCount := 0;
+    for var lDragSelectionIdx := 0 to Pred(lDragSelectionLength) do begin
+      var lSourceNavNodeData: PNavNodeData := lSourceTree.GetNodeData(lSourceTree.DragSelection[lDragSelectionIdx]);
+      if not Assigned(lSourceNavNodeData) then
+        Continue;
+      lElements[lElementCount] := lSourceNavNodeData.Element as IwbElement;
+      if Assigned(lElements[lElementCount]) then
+        Inc(lElementCount);
+    end;
+    if lElementCount < 1 then
+      Exit;
+
+    if lElementCount = 1 then
+      SourceElement := lElements[0]
+    else begin
+      SetLength(lElements, lElementCount);
+      SourceElement := wbMultipleElements(lElements);
+    end;
+
+    Result := True;
+  end;
 end;
 
 function CompareElementID(Item1, Item2: Pointer): Integer;
@@ -7411,6 +7450,11 @@ begin
 end;
 
 
+function TfrmMain.IsPinned: Boolean;
+begin
+  Result := bnPinned.Down and (LockOutPinnedCount < 1);
+end;
+
 function TfrmMain.IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
 var
   NameFilter  : string;
@@ -7761,7 +7805,7 @@ procedure TfrmMain.mniViewClipboardClick(Sender: TObject);
 var
   Element                     : IwbElement;
 begin
-  Element := GetFocusedElementSafely;
+  Element := GetFocusedViewElementSafely;
   if not Assigned(Element) then
     Exit;
 
@@ -10964,6 +11008,11 @@ begin
   end;
 end;
 
+procedure TfrmMain.LockOutPinned;
+begin
+  Inc(LockOutPinnedCount);
+end;
+
 function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
 // LOOT dirty entry example
 {
@@ -11870,7 +11919,18 @@ begin
   if wbShrinkButtons then ShrinkButtons else ExpandButtons;
 end;
 
-function TfrmMain.GetFocusedElementSafely: IwbElement;
+function TfrmMain.GetFocusedNavElementSafely: IwbElement;
+begin
+  Result := nil;
+
+  var NodeData: PNavNodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+  if not Assigned(NodeData) then
+    Exit;
+
+  Result := NodeData.Element;
+end;
+
+function TfrmMain.GetFocusedViewElementSafely: IwbElement;
 begin
   Result := nil;
 
@@ -11899,49 +11959,49 @@ end;
 
 procedure TfrmMain.mniCopyDisplayNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.DisplayName[True];
 end;
 
 procedure TfrmMain.mniCopyFullPathToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.FullPath;
 end;
 
 procedure TfrmMain.mniCopyNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.Name;
 end;
 
 procedure TfrmMain.mniCopyPathNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.PathName;
 end;
 
 procedure TfrmMain.mniCopyPathToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.Path;
 end;
 
 procedure TfrmMain.mniCopyShortNameToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.ShortName;
 end;
 
 procedure TfrmMain.mniCopySignatureToClipboardClick(Sender: TObject);
 begin
-  var Element := GetFocusedElementSafely;
+  var Element := GetFocusedViewElementSafely;
   if not Assigned(Element) then
     Exit;
 
@@ -14896,7 +14956,7 @@ var
   TargetElement : IwbElement;
   NodeLabel     : String;
 begin
-  Element := GetFocusedElementSafely;
+  Element := GetFocusedViewElementSafely;
   mniViewClipboard.Visible := Assigned(Element);
 
   mniViewHideNoConflict.Visible := True;
@@ -15770,6 +15830,7 @@ begin
       ActiveContainer := aContainer;
 
       if Assigned(ActiveContainer) then begin
+        bnPinned.Enabled := True;
         ActiveMaster := nil;
 
         if wbLoaderDone then begin
@@ -15831,6 +15892,9 @@ begin
           pgMain.ActivePage := tbsView;
       end
       else begin
+        if not bnPinned.Down then
+          bnPinned.Enabled := False;
+
         with vstView.Header.Columns do begin
           BeginUpdate;
           try
@@ -15874,6 +15938,8 @@ begin
       DoSetActiveRecord(IwbMainRecord(nil));
     Exit;
   end;
+
+  bnPinned.Enabled := True;
 
   if Length(aMainRecords) = Length(ActiveRecords) then
   begin
@@ -16176,6 +16242,7 @@ begin
       ColumnForViewFocusedElement := NoColumn;
 
       if Assigned(ActiveRecord) then begin
+        bnPinned.Enabled := True;
         ActiveMaster := nil;
         if wbLoaderDone then
           ActiveMaster := ActiveRecord.MasterOrSelf
@@ -16246,6 +16313,8 @@ begin
           pgMain.ActivePage := tbsView;
       end
       else begin
+        if not bnPinned.Down then
+          bnPinned.Enabled := False;
         with vstView.Header.Columns do begin
           BeginUpdate;
           try
@@ -16717,7 +16786,9 @@ procedure TfrmMain.tbsViewShow(Sender: TObject);
 begin
   tbsView.TabVisible := True;
   pnlNav.Show;
-  vstNavChange(vstNav, vstNav.FocusedNode);
+  var lNode := vstNav.FocusedNode;
+  if vstNavLastChangeNode <> lNode then
+    vstNavChange(vstNav, lNode);
 end;
 
 procedure TfrmMain.tmrShutdownTimer(Sender: TObject);
@@ -18544,7 +18615,6 @@ begin
 end;
 
 procedure TfrmMain.vstNavChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
-// WARN: vstNavChange is called three times in a row per nav action. --fireundubh
 var
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
@@ -18553,6 +18623,7 @@ var
   HeaderType                  : TwbElementType;
 begin
   HeaderType := etValue;
+  vstNavLastChangeNode := Node;
   NodeData := Sender.GetNodeData(Sender.FocusedNode);
   if Assigned(NodeData) then begin
     Element := NodeData.Element;
@@ -18562,40 +18633,44 @@ begin
         Element := nil;
     end;
 
-    if NodeData.ConflictAll >= caNoConflict then
-      lblPath.Color := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
-    else
-      lblPath.Color := vstNav.Color;
+    if not IsPinned then begin
+      if NodeData.ConflictAll >= caNoConflict then
+        lblPath.Color := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+      else
+        lblPath.Color := vstNav.Color;
 
-    lblPath.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
+      lblPath.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
 
-    s := '';
-    while Assigned(Node) do begin
-      if s <> '' then
-        s := ' \ ' + s;
-      t := vstNav.Text[Node, 0, False];
-      NodeData := Sender.GetNodeData(Node);
-      if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
-        u := vstNav.Text[Node, 2, False];
-        if u <> '' then
-          u := ' (' + u + ')';
-      end else begin
-        u := vstNav.Text[Node, 1, False];
-        if u <> '' then
-          u := ' <' + u + '>';
+      s := '';
+      while Assigned(Node) do begin
+        if s <> '' then
+          s := ' \ ' + s;
+        t := vstNav.Text[Node, 0, False];
+        NodeData := Sender.GetNodeData(Node);
+        if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etFile) then begin
+          u := vstNav.Text[Node, 2, False];
+          if u <> '' then
+            u := ' (' + u + ')';
+        end else begin
+          u := vstNav.Text[Node, 1, False];
+          if u <> '' then
+            u := ' <' + u + '>';
+        end;
+        s := t + u + s;
+        Node := vstNav.NodeParent[Node];
       end;
-      s := t + u + s;
-      Node := vstNav.NodeParent[Node];
+      s := ' ' + s;
+      lblPath.Text := s;
+      lblPath.Visible := True;
     end;
-    s := ' ' + s;
-    lblPath.Text := s;
-    lblPath.Visible := True;
   end
   else begin
-    lblPath.Visible := False;
+    if not IsPinned then
+      lblPath.Visible := False;
   end;
 
-  TryViewOrCompareSelectedRecords(Element);
+  if not IsPinned then
+    TryViewOrCompareSelectedRecords(Element);
 
   if not wbShowGroupRecordCount then
     if HeaderType = etGroupRecord then
@@ -18639,6 +18714,12 @@ begin
       Exit;
   end;
   Result := aElement;
+end;
+
+procedure TfrmMain.bnPinnedClick(Sender: TObject);
+begin
+  if not IsPinned then
+    vstNavChange(vstNav, vstNav.FocusedNode);
 end;
 
 procedure TfrmMain.vstNavCompareNodes(Sender: TBaseVirtualTree; Node1,
@@ -18834,7 +18915,8 @@ end;
 
 procedure TfrmMain.vstNavFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 begin
-  vstNavChange(Sender, Node);
+  if vstNavLastChangeNode <> Node then
+    vstNavChange(Sender, Node);
 end;
 
 procedure TfrmMain.vstNavFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -20341,6 +20423,11 @@ begin
   end;
 end;
 
+procedure TfrmMain.UnLockOutPinned;
+begin
+  Dec(LockOutPinnedCount);
+end;
+
 procedure TfrmMain.UpdateActions;
 var
   HintMode: TVTHintMode;
@@ -20437,6 +20524,24 @@ begin
     end else
       SetActiveRecord(MainRecord);
   end;
+end;
+
+procedure TfrmMain.vstNavDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+begin
+  Allowed := False;
+  if not Assigned(Node) then
+    Exit;
+  var lNodeData: PNavNodeData := Sender.GetNodeData(Node);
+  if not Assigned(lNodeData) then
+    Exit;
+  if not Supports(lNodeData.Element, IwbMainRecord) then
+    Exit;
+  Allowed := True;
+end;
+
+procedure TfrmMain.vstNavDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
+begin
+  Accept := False;
 end;
 
 procedure TfrmMain.WndProc(var Message: TMessage);
@@ -20858,14 +20963,19 @@ var
   i                           : Integer;
 begin
   with frmMain do begin
-    vstNav.ClearSelection;
-    for i := Low(crRecords) to High(crRecords) do begin
-      vstNav.FocusedNode := FindNodeForElement(crRecords[i]);
-      vstNav.Selected[vstNav.FocusedNode] := True;
+    LockOutPinned;
+    try
+      vstNav.ClearSelection;
+      for i := Low(crRecords) to High(crRecords) do begin
+        vstNav.FocusedNode := FindNodeForElement(crRecords[i]);
+        vstNav.Selected[vstNav.FocusedNode] := True;
+      end;
+      DoSetActiveRecord(crRecords);
+      pgMain.ActivePage := tbsView;
+      pgMainChange(pgMain);
+    finally
+      UnLockOutPinned;
     end;
-    DoSetActiveRecord(crRecords);
-    pgMain.ActivePage := tbsView;
-    pgMainChange(pgMain);
   end;
 end;
 
@@ -20901,29 +21011,33 @@ var
   Node                        : PVirtualNode;
 begin
   with frmMain, vstView, Header, Columns do begin
+    LockOutPinned;
+    try
+      inherited;
 
-    inherited;
+      if not crRecordsChanged then begin
 
-    if not crRecordsChanged then begin
+        if Count <> Length(crpColumnWidths) then
+          Exit;
 
-      if Count <> Length(crpColumnWidths) then
-        Exit;
+        for i := 0 to Pred(Count) do
+          Items[i].Width := crpColumnWidths[i];
 
-      for i := 0 to Pred(Count) do
-        Items[i].Width := crpColumnWidths[i];
+        UpdateScrollBars(False);
 
-      UpdateScrollBars(False);
+        OffsetXY := crpOffsetXY;
 
-      OffsetXY := crpOffsetXY;
+        if Assigned(crpFocusNode) then begin
+          Node := vstView.GetNodeAt(crpFocusRect.Left + 2, crpFocusRect.Top + 2);
+          if Assigned(Node) then
+            FocusedNode := Node;
+        end;
+        FocusedColumn := crpFocusColumn;
 
-      if Assigned(crpFocusNode) then begin
-        Node := vstView.GetNodeAt(crpFocusRect.Left + 2, crpFocusRect.Top + 2);
-        if Assigned(Node) then
-          FocusedNode := Node;
+        OffsetXY := crpOffsetXY;
       end;
-      FocusedColumn := crpFocusColumn;
-
-      OffsetXY := crpOffsetXY;
+    finally
+      UnLockOutPinned;
     end;
   end;
 end;
@@ -20953,26 +21067,31 @@ var
   Node                        : PVirtualNode;
 begin
   with frmMain, vstView, Header, Columns do begin
-    inherited;
+    LockOutPinned;
+    try
+      inherited;
 
-    if Count <> Length(mrpColumnWidths) then
-      Exit;
+      if Count <> Length(mrpColumnWidths) then
+        Exit;
 
-    for i := 0 to Pred(Count) do
-      Items[i].Width := mrpColumnWidths[i];
+      for i := 0 to Pred(Count) do
+        Items[i].Width := mrpColumnWidths[i];
 
-    UpdateScrollBars(False);
+      UpdateScrollBars(False);
 
-    OffsetXY := mrpOffsetXY;
+      OffsetXY := mrpOffsetXY;
 
-    if Assigned(mrpFocusNode) then begin
-      Node := vstView.GetNodeAt(mrpFocusRect.Left + 2, mrpFocusRect.Top + 2);
-      if Assigned(Node) then
-        FocusedNode := Node;
+      if Assigned(mrpFocusNode) then begin
+        Node := vstView.GetNodeAt(mrpFocusRect.Left + 2, mrpFocusRect.Top + 2);
+        if Assigned(Node) then
+          FocusedNode := Node;
+      end;
+      FocusedColumn := mrpFocusColumn;
+
+      OffsetXY := mrpOffsetXY;
+    finally
+      UnLockOutPinned;
     end;
-    FocusedColumn := mrpFocusColumn;
-
-    OffsetXY := mrpOffsetXY;
   end;
 end;
 
@@ -20997,12 +21116,17 @@ end;
 procedure TMainRecordHistoryEntry.Show;
 begin
   with frmMain do begin
-    vstNav.ClearSelection;
-    vstNav.FocusedNode := FindNodeForElement(mrRecord);
-    vstNav.Selected[vstNav.FocusedNode] := True;
-    DoSetActiveRecord(mrRecord);
-    pgMain.ActivePage := GetTabSheet;
-    pgMainChange(pgMain);
+    LockOutPinned;
+    try
+      vstNav.ClearSelection;
+      vstNav.FocusedNode := FindNodeForElement(mrRecord);
+      vstNav.Selected[vstNav.FocusedNode] := True;
+      DoSetActiveRecord(mrRecord);
+      pgMain.ActivePage := GetTabSheet;
+      pgMainChange(pgMain);
+    finally
+      UnLockOutPinned;
+    end;
   end;
 end;
 
@@ -21265,22 +21389,27 @@ end;
 procedure TMainRecordElementHistoryEntry.Show;
 begin
   with frmMain do begin
-    ViewFocusedElement := mreElement;
-    NodeForViewFocusedElement := nil;
-    ColumnForViewFocusedElement := NoColumn;
+    LockOutPinned;
+    try
+      ViewFocusedElement := mreElement;
+      NodeForViewFocusedElement := nil;
+      ColumnForViewFocusedElement := NoColumn;
 
-    inherited;
+      inherited;
 
-    if not Assigned(NodeForViewFocusedElement) and Assigned(ViewFocusedElement) and ViewFocusedElement.Equals(mreElement) then
-      ResetActiveTree;
+      if not Assigned(NodeForViewFocusedElement) and Assigned(ViewFocusedElement) and ViewFocusedElement.Equals(mreElement) then
+        ResetActiveTree;
 
-    ViewFocusedElement := nil;
-    if Assigned(NodeForViewFocusedElement) then begin
-      vstView.FocusedNode := NodeForViewFocusedElement;
-      if ColumnForViewFocusedElement <> NoColumn then
-        vstView.FocusedColumn := ColumnForViewFocusedElement;
-      vstView.TopNode := vstView.FocusedNode;
-      vstView.ScrollIntoView(vstView.FocusedColumn, True, vstView.FocusedNode);
+      ViewFocusedElement := nil;
+      if Assigned(NodeForViewFocusedElement) then begin
+        vstView.FocusedNode := NodeForViewFocusedElement;
+        if ColumnForViewFocusedElement <> NoColumn then
+          vstView.FocusedColumn := ColumnForViewFocusedElement;
+        vstView.TopNode := vstView.FocusedNode;
+        vstView.ScrollIntoView(vstView.FocusedColumn, True, vstView.FocusedNode);
+      end;
+    finally
+      UnLockOutPinned;
     end;
   end;
 end;

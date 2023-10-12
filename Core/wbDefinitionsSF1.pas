@@ -3572,13 +3572,13 @@ begin
 
   if not wbTryGetContainingMainRecord(aElement, MainRecord) then
     Exit;
-    
-    
+
+
   PropName :=  MainRecord.Signature;
-   
+
         if PropName = 'WEAP' then Result := 1 else
         if PropName = 'ARMO' then Result := 2 else
-        if PropName = 'NPC_' then Result := 3 
+        if PropName = 'NPC_' then Result := 3
         else Result := 0;
 
 end;
@@ -7864,7 +7864,7 @@ end;
               if aType = ctToSortKey then
                 aValue := IfThen(lCoord >= 0, '+', '-') + IntToHex(lCoordDeg, 2) + IntToHex(lCoordMin, 2) + IntToHex(lCoordSec, 2)
               else
-                aValue := Format('%d°%d''%d"%s', [ Abs(lCoordDeg), lCoordMin, lCoordSec, IfThen(lCoord >= 0, loPosDir, loNegDir) ]);
+                aValue := Format('%dÂ°%d''%d"%s', [ Abs(lCoordDeg), lCoordMin, lCoordSec, IfThen(lCoord >= 0, loPosDir, loNegDir) ]);
             end;
             ctFromEditValue: begin
               if not Assigned(aElement) then
@@ -7875,7 +7875,7 @@ end;
                 Exit;
 
               // Get positions of symbols
-              var lPosDegree := Pos('°', aValue);
+              var lPosDegree := Pos('Â°', aValue);
               var lPosMinute := Pos('''', aValue);
               var lPosSecond := Pos('"', aValue);
 
@@ -9163,6 +9163,12 @@ end;
       wbFormIDCk('Ref', sigReferences)
     ], cpNormal, False, nil, 1));
 
+  var wbLinkedReferences :=
+    wbRStruct('Linked References', [
+      wbXLKRs,
+      wbEmpty(XLKT, 'Transient')
+    ], []);
+
   var wbXPCS := wbFormIDCk(XPCS, 'Source Pack-in', [PKIN]);
 
   var wbXPLKs :=
@@ -9204,10 +9210,7 @@ end;
 
         wbXRNK,
 
-        wbRStruct('Linked References', [
-          wbXLKRs,
-          wbEmpty(XLKT, 'Transient')
-        ], []),
+        wbLinkedReferences,
 
         wbXOWN,
 
@@ -9251,6 +9254,7 @@ end;
 
   var wbXTV2 :=
     wbArray(XTV2, 'Traversals', wbTraversalData)
+    .SetWronglyAssumedFixedSizePerElementOnValue(56)
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfExcludeFromBuildRef)
     .IncludeFlag(dfFastAssign);
@@ -9335,7 +9339,7 @@ end;
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
     {>>> XCLW sometimes has $FF7FFFFF and causes invalid floation point <<<}
-    wbFloat(XCLW, 'Water Height', cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
+    wbFloat(XCLW, 'Water Height'),// cpNormal, False, 1, -1, nil, nil, 0, wbCELLXCLWGetConflictPriority),
 
     wbFloat(XILS),
     wbRStructs('Unknown', 'Unknown', [
@@ -9343,43 +9347,17 @@ end;
       wbString(XCLD)
     ], []),
 
+    wbByteArray(XWCN, 'Water Data', 0, cpIgnore), // leftover
+
+    wbFormIDCk(XCCM, 'Cell Sky Region', [REGN]),
+
+    wbXOWN,
+
     wbFormIDCk(XLCN, 'Location', [LCTN]),
 
-    wbByteArray(XWCN, 'Water Data', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbVec3('Offset'),
-      wbByteArray('Unknown', 4),
-      wbVec3('Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
     wbFormIDCk(XCWT, 'Water', [WATR]),
 
-    {--- Ownership ---}
-    wbXOWN,
-    wbXRNK,
-
-//    wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
-
-{
-    wbStruct(XILW, 'Exterior LOD', [
-      wbFormIDCk('Worldspace', [WRLD]),
-      wbFloat('Offset X'),
-      wbFloat('Offset Y'),
-      wbFloat('Offset Z')
-    ]),
-}
-    wbString(XWEM, 'Water Environment Map'),
-    wbFormIDCk(XCCM, 'Cell Sky Region', [REGN]),
-    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
-    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
-    wbFormIDCk(XCIM, 'Image Space', [IMGS]),
-//    wbFormIDCk(XGDR, 'God Rays', [GDRY]),
-
-    wbXLKRs,
-    wbEmpty(XLKT, 'Linked Ref Transient'),
-
-    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+    wbString(XCWM, 'Water Type'),
 
     wbArray(XBPS, 'Ship Blueprint Snap Links', wbStruct('Ship Blueprint Snap Link', [
       wbFormIDCk('Parent Reference', sigReferences),
@@ -9392,12 +9370,34 @@ end;
         .SetToStr(wbToStringFromLinksToSummary)
     ])),
 
+    wbStruct(XWCU, 'Water Velocity', [
+      wbVec3('Offset'),
+      wbByteArray('Unknown', 4),
+      wbVec3('Angle'),
+      wbByteArray('Unknown', 0)
+    ]),
+
+    wbFormIDCk(XCAS, 'Acoustic Space', [ASPC]),
+
+    wbFormIDCk(XCIM, 'Image Space', [IMGS]),
+
+    wbString(XWEM, 'Water Environment Map'),
+
+    wbFormIDCk(XCMO, 'Music Type', [MUSC]),
+
     wbRStruct('Global Dirt Layer', [
       wbString(XCGD, 'Material'),
       wbInteger(XCIB, 'Unknown', itU8, wbBoolEnum)
     ], []),
-    wbString(XCWM, 'Water Type'),
+
+    wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
+
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+
+    wbLinkedReferences,
+
     wbString(XEMP, 'Environment Map'),
+
     wbXTV2
   ], True, wbCellAddInfo, cpNormal, False{, wbCELLAfterLoad});
 
@@ -11617,7 +11617,7 @@ end;
   wbRecord(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
-      wbFormIDCk('Material', [MATT]).IncludeFlag(dfUnmappedFormID),
+      wbFormIDCk('Material', [MATT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
       wbFormIDCk('Impact', [IPCT])
     ]))
   ]);
@@ -12622,7 +12622,7 @@ end;
         wbRStruct('Start Scene', [
           wbRStructs('Start Scenes', 'Start Scene', [
             wbRUnion('Scene', [
-              wbFormIDCk(LCEP, 'Scene', [SCEN]),                                //LCEP same as STSC
+              wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),  //LCEP same as STSC
               wbFormIDCk(STSC, 'Scene', [SCEN])                                 //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
             ],[]),
             wbRUnion('Phase Index', [
@@ -14366,7 +14366,7 @@ end;
       .SetSummaryKeyOnValue([0,6])
       .SetSummaryPrefixSuffixOnValue(0, '[',']')
       .SetSummaryPrefixSuffixOnValue(1, '[',']'),
-    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
+    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Default Template', [BMMO, LVLN, NPC_]),
@@ -14520,7 +14520,7 @@ end;
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
-    wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
+    wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
     wbFormIDCk(HEFA, 'Formation Faction', [FACT]),
     wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
     wbRArray('Tints',
@@ -16252,10 +16252,7 @@ end;
 
     wbXPLKs,
 
-    wbRStruct('Linked References', [
-      wbXLKRs,
-      wbEmpty(XLKT, 'Transient')
-    ], []),
+    wbLinkedReferences,
 
     //wbInteger(XCNT, 'Count', itS32),
 
@@ -16631,10 +16628,7 @@ end;
 
     wbXPLKs,
 
-    wbRStruct('Linked References', [
-      wbXLKRs,
-      wbEmpty(XLKT, 'Transient')
-    ], []),
+    wbLinkedReferences,
 
     wbInteger(XCNT, 'Item Count', itS32),
 
@@ -17354,8 +17348,8 @@ end;
     wbUnknown(WMEL),
     wbStruct(QNAM, 'Unknown', [
       { 0} wbUnknown(4),
-      { 4} wbFloat,
-      { 8} wbFloat,
+      { 4} wbFloat('Recharge time'),
+      { 8} wbFloat('Recharge delay'),
       {12} wbUnknown(16),
       {28} wbFloat,
       {32} wbUnknown(4)
@@ -17786,7 +17780,7 @@ end;
   wbRecord(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbSoundReference(WED0),
-    wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID)),
+    wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
     wbRStructs('Unknown', 'Unknown', [
       wbInteger(RSMC, 'Unknown', itU32),
       wbSoundReference(RSMH)
@@ -18541,7 +18535,7 @@ end;
       {0x80000000} 'Unknown 31'
     ])),
     wbInteger(SNST, 'Unknown', itU32),
-    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID)),
+    wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
     wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'), 3),
     wbFormIDCk(ANAM, 'Art Object', [ARTO])
   ]);
@@ -19576,7 +19570,7 @@ end;
     wbStruct(BNAM, 'Surface Blocks', [
       wbArray('Rows',
         wbArray('Columns',
-          wbFormIDCk('Surface Block', [SFBK]).IncludeFlag(dfUnmappedFormID)
+          wbFormIDCk('Surface Block', [SFBK]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)
         , 16).IncludeFlag(dfCollapsed)
       , 16)
       .IncludeFlag(dfCollapsed)
@@ -19628,8 +19622,8 @@ end;
     wbBaseFormComponents,
     wbUnknown(CNAM).SetRequired,
     wbUnknown(DNAM).SetRequired,
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID), 65536).IncludeFlag(dfCollapsed).SetRequired,
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID), 65536).IncludeFlag(dfCollapsed).SetRequired,
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed).SetRequired,
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed).SetRequired,
     wbString(NAM1, 'Filter').SetRequired
   ]);
 
