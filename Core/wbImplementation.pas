@@ -17482,7 +17482,8 @@ begin
   try
     try
       if Assigned(aElement) and aElement.ContainsReflection then
-        raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
+        if not Supports(aElement, IwbMainRecord) or Supports(Self, IwbMainRecord) then
+          raise Exception.Create(aElement.Name + ' contains Reflection and can not be assigned');
 
       Result := AssignInternal(aIndex, aElement, aOnlySK);
     except
@@ -17612,7 +17613,8 @@ begin
   try
   {$ENDIF}
     if Assigned(aElement) and aElement.ContainsReflection then
-      Exit(False);
+      if not Supports(aElement, IwbMainRecord) or Supports(Self, IwbMainRecord) then
+        Exit(False);
 
     Result := CanAssignInternal(aIndex, aElement, aCheckDontShow);
   {$IFDEF USE_CODESITE}
@@ -19370,7 +19372,11 @@ begin
       DoProcess(aContainer, aPos)
     end else begin
       DEV := arcDef.DefaultEditValues;
-      MinCount := Max(Max(1, arcDef.Count), Length(DEV));
+      if dfArrayCanBeEmpty in arcDef.DefFlags then
+        MinCount := 0
+      else
+        MinCount := 1;
+      MinCount := Max(Max(MinCount, arcDef.Count), Length(DEV));
       while Length(cntElements) < MinCount do
         Assign(wbAssignAdd, nil, False);
       for i := Low(DEV) to High(DEV) do

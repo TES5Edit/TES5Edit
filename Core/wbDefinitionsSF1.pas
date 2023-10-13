@@ -13812,7 +13812,7 @@ end;
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
-    wbUnknown(ONAM),
+    wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
     wbGenericModel()
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
