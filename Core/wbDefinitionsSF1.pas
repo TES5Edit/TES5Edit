@@ -13296,12 +13296,12 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IDLE, 'Idle Animation', [
+  wbRecord(IDLE, 'Animation', [
     wbEDID,
     wbCTDAs,
     wbString(DNAM, 'Behavior Graph'),
     wbString(ENAM, 'Animation Event'),
-    wbArray(ANAM, 'Related Idle Animations', wbFormIDCk('Related Idle Animation', [AACT, IDLE, NULL]),
+    wbArray(ANAM, 'Related Animations', wbFormIDCk('Related Animation', [AACT, IDLE, NULL]),
       ['Parent', 'Previous Sibling'], cpNormal, True),
     wbUnknown(FNAM),
     (*
@@ -15284,7 +15284,7 @@ end;
 
     wbCTDAs,
 
-    wbRStruct('Idle Animations', [
+    wbRStruct('Animations', [
       wbInteger(IDLF, 'Flags', itU8, wbEnum([], [
          0, 'Unknown 0',
          8, 'Random',
@@ -16090,7 +16090,7 @@ end;
       wbSPED
     ], [])),
     wbInteger(VNAM, 'Equipment Flags', itU32, wbEquipType),
-    wbRArrayS('Equip Slots', wbRStructSK([0], 'Equip Slot', [
+    wbRArray('Equip Slots', wbRStructSK([0], 'Equip Slot', [ //CAN NOT BE SORTED!!!!
         wbFormIDCk(QNAM, 'Equip Slot', [EQUP]),
         wbString(ZNAM, 'Node')
       ], [])

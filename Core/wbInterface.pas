@@ -185,6 +185,7 @@ var
   wbStripMasters                     : Boolean    = False;
   wbStripMastersFileNames            : TStringList;
   wbAlwaysSorted                     : Boolean    = False;
+  wbNeverSorted                      : Boolean    = False;
   wbThemesSupported                  : Boolean    = True;
   wbReportModGroups                  : Boolean    = False;
   wbRequireCtrlForDblClick           : Boolean    = False;
@@ -11648,6 +11649,9 @@ constructor TwbSubRecordArrayDef.Create(aPriority  : TwbConflictPriority; aRequi
                                         aIsSorted  : TwbIsSortedCallback;
                                         aGetCP     : TwbGetConflictPriority);
 begin
+  if wbNeverSorted then
+    aSorted := False;
+
   if Assigned(aElement) then
     sraElement := (aElement as IwbDefInternal).SetParent(Self, False) as IwbRecordMemberDef;
   sraSorted := aSorted;
@@ -13318,6 +13322,9 @@ constructor TwbArrayDef.Create(aPriority   : TwbConflictPriority;
 var
   i: Integer;
 begin
+  if wbNeverSorted then
+    aSorted := False;
+
   arSummaryPassthroughMaxCount := -1;
   arSummaryPassthroughMaxLength := -1;
   arSummaryPassthroughMaxDepth := -1;
@@ -20168,6 +20175,9 @@ constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
                                aSorted    : Boolean;
                                aGetCP     : TwbGetConflictPriority);
 begin
+  if wbNeverSorted then
+    aSorted := False;
+
   edSorted := aSorted;
   inherited Create(aPriority, aRequired, aName, aAfterLoad, aAfterSet, aDontShow, aGetCP, False);
 end;
