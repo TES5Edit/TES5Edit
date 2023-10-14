@@ -54,8 +54,6 @@ object frmMain: TfrmMain
         end>
       ParentFont = True
       UseSystemFont = False
-      ExplicitTop = 635
-      ExplicitWidth = 1360
     end
     object pnlRight: TPanel
       Left = 458
@@ -305,7 +303,6 @@ object frmMain: TfrmMain
               Align = alRight
               BevelOuter = bvNone
               TabOrder = 1
-              ExplicitLeft = 824
               object bnLegend: TSpeedButton
                 AlignWithMargins = True
                 Left = 3
@@ -1257,7 +1254,6 @@ object frmMain: TfrmMain
       Align = alTop
       BevelOuter = bvNone
       TabOrder = 2
-      ExplicitWidth = 1360
       object bnMainMenu: TSpeedButton
         Tag = 1
         AlignWithMargins = True
@@ -1466,7 +1462,6 @@ object frmMain: TfrmMain
         TabOrder = 0
         Visible = False
         StyleElements = [seFont, seBorder]
-        ExplicitWidth = 765
       end
       object pnlBtn: TPanel
         AlignWithMargins = True
@@ -1480,7 +1475,6 @@ object frmMain: TfrmMain
         BevelOuter = bvNone
         PopupMenu = pmuBtnMenu
         TabOrder = 1
-        ExplicitLeft = 862
         object bnPayPal: TSpeedButton
           AlignWithMargins = True
           Left = 442
@@ -2013,7 +2007,6 @@ object frmMain: TfrmMain
             'ply the filter if necessary.'
           Visible = False
           WordWrap = True
-          ExplicitWidth = 440
         end
         object vstNav: TVirtualEditTree
           Left = 0
@@ -2682,6 +2675,10 @@ object frmMain: TfrmMain
       object mniCopyFullPathToClipboard: TMenuItem
         Caption = 'Copy full path'
         OnClick = mniCopyFullPathToClipboardClick
+      end
+      object mniCopyIndexedPathToClipBoard: TMenuItem
+        Caption = 'Copy indexed path'
+        OnClick = mniCopyIndexedPathToClipboardClick
       end
       object mniCopyPathNameToClipboard: TMenuItem
         Caption = 'Copy full path (short names)'
