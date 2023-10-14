@@ -3998,12 +3998,18 @@ begin
    if flModule.miExtension = meESP then
      Exit(False);
 
-  Result := wbIsInternalEdit or (
-        wbEditAllowed and
-    ((not (fsIsGameMaster in flStates)) or wbAllowEditGameMaster) and
-    not (fsIsHardcoded in flStates) and
-    ((not (fsIsCompareLoad in flStates)) or (fsIsDeltaPatch in flStates))
-  );
+  Result :=
+    wbIsInternalEdit or
+    (
+      wbEditAllowed and
+      ((not (fsIsGameMaster in flStates)) or wbAllowEditGameMaster) and
+      not (fsIsHardcoded in flStates) and
+      ((not (fsIsCompareLoad in flStates)) or (fsIsDeltaPatch in flStates))
+    );
+
+  if wbIsStarfield and wbStarfieldIsABugInfestedHellhole then
+    if [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] * flStates <> [] then
+      Exit(False);
 end;
 
 function TwbFile.GetIsESL: Boolean;
@@ -8427,6 +8433,10 @@ var
 begin
   Result := nil;
 
+  if wbIsStarfield and wbStarfieldIsABugInfestedHellhole then
+    if GetSignature = 'PKIN' then
+      Exit;
+
   if not wbIsInternalEdit then
     if not wbEditAllowed then
       raise Exception.Create(GetName + ' can not be assigned.');
@@ -8878,6 +8888,10 @@ end;
 
 function TwbMainRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
+  if wbIsStarfield and wbStarfieldIsABugInfestedHellhole then
+    if GetSignature = 'PKIN' then
+      Exit(False);
+
   Result := False;
 
   if not wbIsInternalEdit then begin
@@ -15535,14 +15549,23 @@ var
   begin
     Result := nil;
 
-    if wbIsStarfield and (aSource.LoadOrderFormID.ToCardinal = $25) then
-      Exit;
+    if wbIsStarfield and wbStarfieldIsABugInfestedHellhole then begin
+      if aSource.LoadOrderFormID.ToCardinal = $25 then
+        Exit;
 
-    if aElement.ContainsReflection then begin
-      var lSourceName := aElement.FullPath;
-      var lTargetName := GetFullPath;
-      wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Reflection and can not be copied']);
-      Exit;
+      if aSource.Signature = 'PKIN' then begin
+        var lSourceName := aElement.FullPath;
+        var lTargetName := GetFullPath;
+        wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Pack-In overrides don''t work correctly in Starfield']);
+        Exit;
+      end;
+
+      if aElement.ContainsReflection then begin
+        var lSourceName := aElement.FullPath;
+        var lTargetName := GetFullPath;
+        wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Source contains Reflection and can not be copied']);
+        Exit;
+      end;
     end;
 
     if aElement.ContainsUnmappedFormID then

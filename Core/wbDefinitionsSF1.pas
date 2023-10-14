@@ -14366,7 +14366,7 @@ end;
       .SetSummaryKeyOnValue([0,6])
       .SetSummaryPrefixSuffixOnValue(0, '[',']')
       .SetSummaryPrefixSuffixOnValue(1, '[',']'),
-    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+    wbRArrayS('Factions', wbFaction, cpNormal, False, nil, nil, nil{wbActorTemplateUseFactions}),
     wbFormIDCk(INAM, 'Death item', [LVLI], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(VTCK, 'Voice', [VTYP], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(TPLT, 'Default Template', [BMMO, LVLN, NPC_]),
@@ -14520,7 +14520,7 @@ end;
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
-    wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+    wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(HEFA, 'Formation Faction', [FACT]),
     wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
     wbRArray('Tints',

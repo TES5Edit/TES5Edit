@@ -1228,23 +1228,26 @@ begin
   if FindCmdLineSwitch('MoreInfoForIndex') then
     wbMoreInfoForIndex := true;
 
-  if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
-    wbAllowEditGameMaster := True;
+  if not (wbIsStarfield and wbStarfieldIsABugInfestedHellhole) then
+    if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
+      wbAllowEditGameMaster := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
-  if FindCmdLineSwitch('IgnoreESL') then
-    wbIgnoreESL := True
-  else
-    if FindCmdLineSwitch('PseudoESL') then
-      wbPseudoESL := True;
+  if not (wbIsStarfield and wbStarfieldIsABugInfestedHellhole) then begin
+    if FindCmdLineSwitch('IgnoreESL') then
+      wbIgnoreESL := True
+    else
+      if FindCmdLineSwitch('PseudoESL') then
+        wbPseudoESL := True;
 
-  if FindCmdLineSwitch('IgnoreOverlay') then
-    wbIgnoreOverlay := True
-  else
-    if FindCmdLineSwitch('PseudoOverlay') then
-      wbPseudoOverlay := True;
+    if FindCmdLineSwitch('IgnoreOverlay') then
+      wbIgnoreOverlay := True
+    else
+      if FindCmdLineSwitch('PseudoOverlay') then
+        wbPseudoOverlay := True;
+  end;
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
