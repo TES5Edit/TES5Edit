@@ -447,6 +447,7 @@ type
     mniViewClipboardSeparator: TMenuItem;
     mniCopyPathToClipboard: TMenuItem;
     mniCopyFullPathToClipboard: TMenuItem;
+    mniCopyIndexedPathToClipboard: TMenuItem;
     mniClipboardSeparator: TMenuItem;
     mniCopyNameToClipboard: TMenuItem;
     mniCopyDisplayNameToClipboard: TMenuItem;
@@ -730,6 +731,7 @@ type
     procedure mniViewClipboardClick(Sender: TObject);
     procedure mniCopyPathToClipboardClick(Sender: TObject);
     procedure mniCopyFullPathToClipboardClick(Sender: TObject);
+    procedure mniCopyIndexedPathToClipboardClick(Sender: TObject);
     procedure mniCopyNameToClipboardClick(Sender: TObject);
     procedure mniCopyDisplayNameToClipboardClick(Sender: TObject);
     procedure mniCopyShortNameToClipboardClick(Sender: TObject);
@@ -7824,6 +7826,9 @@ begin
   if not (Element.FullPath = '') then
     mniCopyFullPathToClipboard.Caption := 'Copy full path <' + ShortenText(Element.FullPath) + '>';
 
+  if not (Element.IndexedPath[False] = '') then
+    mniCopyIndexedPathToClipboard.Caption := 'Copy indexed path <' + ShortenText(Element.IndexedPath[False]) + '>';
+
   if mniCopySignatureToClipboard.Visible then
     mniCopySignatureToClipboard.Caption := 'Copy signature <' + string(SubRecord.Signature) + '>';
 
@@ -11969,6 +11974,13 @@ begin
   var Element := GetFocusedViewElementSafely;
   if Assigned(Element) then
     Clipboard.AsText := Element.FullPath;
+end;
+
+procedure TfrmMain.mniCopyIndexedPathToClipboardClick(Sender: TObject);
+begin
+  var Element := GetFocusedViewElementSafely;
+  if Assigned(Element) then
+    Clipboard.AsText := Element.IndexedPath[False];
 end;
 
 procedure TfrmMain.mniCopyNameToClipboardClick(Sender: TObject);

@@ -723,11 +723,32 @@ begin
   var templateIdx := Integer(Args.Values[2]);
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
   begin
-    var list := TList.Create;
     var templates := Element.GetAssignTemplates(elementIdx);
 
     if (templateIdx >= Low(templates)) and (templateIdx <= High(templates)) then
       Value := IInterface(templates[templateIdx]);
+  end;
+end;
+
+procedure IwbElement_AssignTemplateByName(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  var elementIdx := Integer(Args.Values[1]);
+  var templateName := String(Args.Values[2]);
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then
+  begin
+    var templates := Element.GetAssignTemplates(elementIdx);
+
+    for var i := Low(templates) to High(templates) do
+    begin
+      var tEl := templates[i];
+      if SameText(tEl.Name, templateName) then
+      begin
+        Value := IInterface(tEl);
+        Exit;
+      end;
+    end;
   end;
 end;
 
@@ -2093,6 +2114,7 @@ begin
     AddFunction(cUnit, 'GetSummary', IwbElement_GetSummary, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'AssignTemplateCount', IwbElement_AssignTemplateCount, 2, [varEmpty, varInteger], varEmpty);
     AddFunction(cUnit, 'AssignTemplateByIndex', IwbElement_AssignTemplateByIndex, 3, [varEmpty, varInteger, varInteger], varEmpty);
+    AddFunction(cUnit, 'AssignTemplateByName', IwbElement_AssignTemplateByName, 3, [varEmpty, varInteger, varString], varEmpty);
 
     { IwbContainer }
     AddFunction(cUnit, 'GetElementEditValues', IwbContainer_GetElementEditValues, 2, [varEmpty, varString], varEmpty);

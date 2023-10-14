@@ -205,6 +205,19 @@ begin
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
   end
+  else if SameText(Identifier, 'RecordByHexFormID') then begin
+    if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
+      Value := Null;
+      var aFormID: TwbFormID := TwbFormID.FromStr(string(Args.Values[0]));
+      for i := Low(Files) to High(Files) do
+        if Files[i].LoadOrderFileID = aFormID.FileID then begin
+          Value := Files[i].RecordByFormID[aFormID, True, True];
+          Break;
+        end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
+  end
   else if SameText(Identifier, 'IsPositionChanged') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
       Value := IsPositionChanged(MainRecord);
