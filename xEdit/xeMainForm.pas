@@ -7804,6 +7804,16 @@ begin
 end;
 
 procedure TfrmMain.mniViewClipboardClick(Sender: TObject);
+
+  procedure SetupCopyMni(aMni: TMenuItem; const aName, aValue: string);
+  begin
+    if not Assigned(aMni) then
+      Exit;
+    aMni.Visible := aValue <> '';
+    if aMni.Visible then
+      aMni.Caption := aName + ' <' + ShortenText(aValue) + '>';
+  end;
+
 var
   Element                     : IwbElement;
 begin
@@ -7811,35 +7821,31 @@ begin
   if not Assigned(Element) then
     Exit;
 
-  var SubRecord: IwbSubRecord := nil;
+  SetupCopyMni(mniCopyPathToClipboard, 'Copy path', Element.Path);
+  SetupCopyMni(mniCopyPathNameToClipboard, 'Copy full path (short names)', Element.PathName);
+  SetupCopyMni(mniCopyFullPathToClipboard, 'Copy full path', Element.FullPath);
+  SetupCopyMni(mniCopyIndexedPathToClipboard, 'Copy indexed path', Element.IndexedPath[False]);
 
-  mniCopySignatureToClipboard.Visible := Supports(Element, IwbSubRecord, SubRecord);
-  mniCopyDisplayNameToClipboard.Visible := not (Element.DisplayName[True] = Element.Name);
-  mniCopyShortNameToClipboard.Visible := not (Element.ShortName = Element.Name);
+  var lHasSignature: IwbHasSignature;
+  if Supports(Element, IwbHasSignature, lHasSignature) then
+    SetupCopyMni(mniCopySignatureToClipboard, 'Copy signature', lHasSignature.Signature)
+  else
+    mniCopySignatureToClipboard.Visible := False;
 
-  if not (Element.Path = '') then
-    mniCopyPathToClipboard.Caption := 'Copy path <' + ShortenText(Element.Path) + '>';
+  var lName := Element.Name;
+  SetupCopyMni(mniCopyNameToClipboard, 'Copy name', lName);
 
-  if not (Element.PathName = '') then
-    mniCopyPathNameToClipboard.Caption := 'Copy full path (short names) <' + ShortenText(Element.PathName) + '>';
+  var lDisplayName := Element.DisplayName[True];
+  if lName <> lDisplayName then
+    SetupCopyMni(mniCopyDisplayNameToClipboard, 'Copy display name', lDisplayName)
+  else
+    mniCopyDisplayNameToClipboard.Visible := False;
 
-  if not (Element.FullPath = '') then
-    mniCopyFullPathToClipboard.Caption := 'Copy full path <' + ShortenText(Element.FullPath) + '>';
-
-  if not (Element.IndexedPath[False] = '') then
-    mniCopyIndexedPathToClipboard.Caption := 'Copy indexed path <' + ShortenText(Element.IndexedPath[False]) + '>';
-
-  if mniCopySignatureToClipboard.Visible then
-    mniCopySignatureToClipboard.Caption := 'Copy signature <' + string(SubRecord.Signature) + '>';
-
-  if not (Element.Name = '') then
-    mniCopyNameToClipboard.Caption := 'Copy name <' + Element.Name + '>';
-
-  if mniCopyDisplayNameToClipboard.Visible and not (Element.DisplayName[True] = '') then
-    mniCopyDisplayNameToClipboard.Caption := 'Copy display name <' + Element.DisplayName[True] + '>';
-
-  if mniCopyShortNameToClipboard.Visible and not (Element.ShortName = '') then
-    mniCopyShortNameToClipboard.Caption := 'Copy short name <' + Element.ShortName + '>';
+  var lShortName := Element.ShortName;
+  if lName <> lShortName then
+    SetupCopyMni(mniCopyShortNameToClipboard, 'Copy short name', lShortName)
+  else
+    mniCopyShortNameToClipboard.Visible := False;
 end;
 
 procedure TfrmMain.mniViewColumnWidthClick(Sender: TObject);
