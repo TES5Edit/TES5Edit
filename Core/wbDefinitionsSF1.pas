@@ -4007,7 +4007,7 @@ begin
   var wbKeywords := wbRStruct('Keywords', [
     wbKSIZ,
     wbReqKWDAs
-  ], []);
+  ], []).SetSummaryKey([1]);
 
   var wbCVPA := wbStructs(CVPA, 'Components', 'Component', [
       wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
@@ -4929,7 +4929,7 @@ begin
     {0x80000000} 'Unknown 32'  //Unused
   ]);
 
-  var wbXALG := wbInteger(XALG, 'Flags', itU64, wbXALGFlags);
+  var wbXALG := wbInteger(XALG, 'Flags', itU64, wbXALGFlags).IncludeFlag(dfCollapsed, wbCollapseFlags);
 
   var wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -5523,7 +5523,7 @@ begin
     'Unknown 1',
     'Unknown 2',
     'Unknown 3'
-  ]));
+  ])).IncludeFlag(dfCollapsed, wbCollapseFlags);
 
   var wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [NULL, MSWP]);
   var wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
@@ -5537,9 +5537,11 @@ begin
         'VATS Targetable',
         'Large Actor Destroys',
         'Unknown 2'
-      ])),
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbByteArray('Unknown', 2)
-    ]),
+    ])
+    .SetSummaryKeyOnValue([0,2])
+    .SetSummaryPrefixSuffixOnValue(0,'Health ',' '),
     wbArrayS(DAMC, 'Resistances', wbStructSK([0], 'Resistance', [
       wbFormIDCk('Damage Type', [DMGT]),
       wbInteger('Value', itU32),
@@ -5560,25 +5562,33 @@ begin
             'Becomes Dynamic',
             'Unknown 5',
             'Unknown 6'
-          ])),
+          ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
           wbFormIDCk('Debris', [DEBR, NULL]),
           wbInteger('Debris Count', itS32),
           wbFloat
-        ], cpNormal, True),
+        ], cpNormal, True)
+        .SetSummaryKeyOnValue([0,5,6])
+        .SetSummaryPrefixSuffixOnValue(0,'Health ','%')
+        .SetSummaryDelimiterOnValue(', ')
+        .IncludeFlagOnValue(dfSummaryExcludeNULL)
+        .IncludeFlagOnValue(dfSummaryMembersNoName)
+        ,
         wbString(DSTA, 'Sequence Name'),
         wbRStructSK([0], 'Model', [
           wbString(DMDL, 'Model FileName', 0, cpNormal, True),
           wbFLLD,
 //          wbDMDT,
 //          wbDMDC,
-          wbDMDS
-        ], [], cpNormal, False, nil, True),
+          wbDMDS.IncludeFlagOnValue(dfSummaryExcludeNULL)
+        ], [], cpNormal, False, nil, True).IncludeFlag(dfCollapsed, wbCollapseModels),
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [], cpNormal, False, nil)
-    )
-  ], [], cpNormal, False, nil);
+      .SetSummaryKey([0,2]).IncludeFlag(dfSummaryMembersNoName)
+    ).SetCountPath('...\DEST - Header\DEST Count')
+  ], [], cpNormal, False, nil)
+  .SetSummaryKey([3]);
 
   var wbDESTActor := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
@@ -5675,7 +5685,11 @@ begin
     wbFormIDCk('Workbench Transform ', [NULL, TRNS]),
     wbFormIDCk('Main Game UI Transform', [NULL, TRNS]),
     wbFormIDCk('Unknown 7', [NULL, TRNS])
-  ]);
+  ])
+  .SetSummaryKeyOnValue([0,1,2,3,4,5,6,7])
+  .SetSummaryDelimiterOnValue(', ')
+  .IncludeFlagOnValue(dfSummaryExcludeNULL)
+  .IncludeFlag(dfCollapsed, wbCollapseTransforms);
 
   var wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32, wbEnum([
     'Easy',
@@ -6997,9 +7011,9 @@ end;
   var wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   var wbEFIT :=
-    wbStructSK(EFIT, [3, 4], '', [
+    wbStructSK(EFIT, [0,1,2], '', [
       wbFloat('Magnitude', cpNormal, True),
-      wbInteger('Area', itU32),
+      wbFloat('Area'),
       wbInteger('Duration', itU32)
     ], cpNormal, True, nil, -1);
 
@@ -8221,7 +8235,7 @@ end;
             wbFormID(FLFM, 'Linked Form')
           ], []))
         ], []),
-        wbRStruct('Component Data - Keywords', [
+        wbRStructSK([0], 'Component Data - Keywords', [
           wbKeywords
         ], []),
         //TESImageSpaceModifiableForm_Component
@@ -8722,7 +8736,9 @@ end;
       wbFormIDCk(ZNAM, 'Duration', [GLOB]),
       wbInteger(EFIF, 'Unknown', itU32),
       wbInteger(MUID, 'Unknown', itU32)
-    ], [], cpNormal, True);
+    ], [], cpNormal, True)
+    .SetSummaryKey([0,2]).IncludeFlag(dfSummaryMembersNoName)
+    ;
 
   var wbEffects :=
     wbRArrayS('Effects', wbEffect);
@@ -8815,7 +8831,7 @@ end;
       'Is a Radio',
       'Unknown 5',
       'Unknown 6'
-    ])),
+    ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInteger(JNAM, 'Activation Angle', itU16),
     wbEmpty(INAM), //unknown if here or any later position
 //    wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD]),
@@ -9018,7 +9034,7 @@ end;
 
   var wbAVMDMNAMReq :=
     wbInteger(MNAM, 'Type', itU32, wbEnumSummary([
-      ''              , '',
+      'None'          , 'None',
       'Simple Group'  , 'Simple',
       'Complex Group' , 'Complex',
       'Modulation'    , 'Modulation'
@@ -10159,7 +10175,7 @@ end;
         {0x00010000} 'Unknown 16',
         {0x00020000} 'Unknown 17',
         {0x00040000} 'Unknown 18'
-      ])).IncludeFlag(dfCollapsed)
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], cpNormal, True, nil, 1).SetSummaryKeyOnValue([0]),
 //    wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
 //    wbFormIDCk(WAIT, 'Follower Wait Marker', [REFR]),
@@ -10193,7 +10209,7 @@ end;
       ])
       .SetSummaryKey([0])
       .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfCollapsed, wbCollapseLocations)
     ),
 
     wbStruct(VENV, 'Vendor Values', [
@@ -10240,16 +10256,21 @@ end;
       'Unknown 2'
     ])).SetRequired, //req
     wbNLDT,
-    wbRStructsSK('Reaction Data', 'Follower', [0], [
-      wbFormIDCk(NNAM, 'Actor', [NPC_]),
-      wbFormIDCk(RNAM, 'Reaction', [GLOB]).SetRequired
-    ], []),
+    wbRArray('Reaction Data',
+      wbRStructSK([0], 'Follower', [
+        wbFormIDCk(NNAM, 'Actor', [NPC_]),
+        wbFormIDCk(RNAM, 'Reaction', [GLOB]).SetRequired
+      ], []).SetSummaryKey([1]).IncludeFlag(dfCollapsed)
+    ),
     wbFormIDCk(ANAM, 'Actor Value', [AVIF]).SetRequired,
     wbFormIDCk(ENAM, 'Size', [GLOB]).SetRequired,
     wbFormIDCk(DNAM, 'Distance', [GLOB]),
     wbFormIDCk(CNAM, 'Cooldown', [GLOB]),
     wbFormIDCk(BNAM, 'Faction', [FACT])
-  ]);
+  ])
+  .SetSummaryKey([2])
+  .IncludeFlag(dfSummaryMembersNoName)
+  ;
 
   {subrecords checked against Starfield.esm}
   wbRecord(FURN, 'Furniture',
@@ -13697,11 +13718,11 @@ end;
     wbStruct(HNAM, 'Havok Data', [
       wbInteger('Friction', itU8),
       wbInteger('Restitution', itU8)
-    ], cpNormal, True),
+    ], cpNormal, True).SetSummaryKeyOnValue([0,1]),
     wbFloat(QNAM)
 //    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
 //    wbRArray('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
-  ]);
+  ]).SetSummaryKey([1]);
 
   var wbLeveledListEntryItem :=
     wbRStructExSK([0], [1], 'Leveled List Entry', [
@@ -14053,7 +14074,7 @@ end;
         {0x20000000}  'Unknown 30',
         {0x40000000}  'Unknown 31',
         {0x80000000}  'Unknown 32'
-      ])),
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
       {110} wbFromVersion(164, wbInteger('Flags 2', itU32, wbFlags([
         {0x00000001} { 0} 'Unknown 0',
         {0x00000002} { 1} 'Unknown 1',
@@ -14087,7 +14108,7 @@ end;
         {0x20000000} {29} 'Unknown 29',
         {0x40000000} {30} 'Unknown 30',
         {0x80000000} {31} 'Unknown 31'
-      ]))),
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags)),
       {114} wbUnknown(2),
       {116} wbUnknown(4),
       {120} wbUnknown(4),
@@ -14105,10 +14126,18 @@ end;
     wbKeywords,
     wbMGEFData,
 //    wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet),
-    wbRArray('Sounds', wbStruct(ESSH, 'Sound Reference', [
-      wbInteger('Unknown', itU8),
+    wbRArray('Sounds', wbStructSK(ESSH, [0], 'Sound Reference', [
+      wbInteger('Type', itU8, wbEnum([
+        {00} 'Unknown 0',
+        {01} 'Charge',
+        {02} 'Unknown 2',
+        {03} 'Release',
+        {04} 'Unknown 4',
+        {05} 'OnHit'
+        ])),
       wbSoundReference('Sound Reference')
-    ])),
+    ]).SetSummaryKeyOnValue([1]).IncludeFlag(dfCollapsed, wbCollapseSounds)
+    ),
     wbLStringKC(DNAM, 'Magic Item Description', 0, cpTranslate),
     wbCTDAs
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
@@ -14404,7 +14433,10 @@ end;
       wbFormIDCk('Keywords', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate12),
       wbFormIDCk('Unknown 13', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate13),
       wbFormIDCk('Unknown 14', [BMMO, LVLN, NPC_, NULL], False, cpNormal, False, wbActorTemplatesUseTemplate14)
-    ], cpNormal, False, wbActorTemplatesUseTemplateAny),
+    ], cpNormal, False, wbActorTemplatesUseTemplateAny)
+    .SetSummaryKeyOnValue([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14])
+    .IncludeFlagOnValue(dfSummaryExcludeNULL)
+    ,
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
 //    wbSPCT,
     wbSPLOs,
@@ -14473,7 +14505,7 @@ end;
         .SetSummaryKey([14])
         .IncludeFlag(dfCollapsed, wbCollapseRDSA)
     ),
-    wbKeywords.SetSummaryKey([1]),
+    wbKeywords,
     wbAPPR,
     wbObjectTemplate,
     wbMarkerReq(STOP),
@@ -16914,7 +16946,7 @@ end;
       wbUnknown(4),
       wbFloat
     ])
-  ]);
+  ]).SetSummaryKey([5]);
 
   var wbSPIT := wbStruct(SPIT, 'Data', [
     { 0} wbUnknown(9),
@@ -18505,7 +18537,7 @@ end;
         wbUnknown(ENAM),
         wbString(NNAM, 'Description'),
         wbEmpty(ECHE, 'Echo End Marker')
-      ], [])
+      ], []).SetSummaryKey([1,2])
     )
   ]);
 
@@ -18695,7 +18727,7 @@ end;
       {16} wbFloat,
       {20} wbFloat
     ])
-  ]);
+  ]).SetSummaryKey([7]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(CUR3, 'Curve 3D', [

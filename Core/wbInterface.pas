@@ -233,6 +233,9 @@ var
   wbCollapseVertices                 : Boolean    = True;
   wbCollapseRDSA                     : Boolean    = True;
   wbCollapseFlags                    : Boolean    = True;
+  wbCollapseTransforms               : Boolean    = True;
+  wbCollapseSounds                   : Boolean    = True;
+  wbCollapseLocations                : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
