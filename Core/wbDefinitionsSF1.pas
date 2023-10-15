@@ -5441,7 +5441,9 @@ begin
     ]),
     wbInteger('Radius', itS32),
     wbInteger('Collection Index', itU32)
-  ], cpNormal, False, nil, 3);
+  ], cpNormal, False, nil, 3)
+  .SetSummaryKeyOnValue([0])
+  .SetSummaryPrefixSuffixOnValue(0,'[Type] ','');
 
   var wbPTDA := wbStruct(PTDA, 'Target Data', [
     wbInteger('Type', itS32, wbEnum([
@@ -10157,8 +10159,8 @@ end;
         {0x00010000} 'Unknown 16',
         {0x00020000} 'Unknown 17',
         {0x00040000} 'Unknown 18'
-      ]))
-    ], cpNormal, True, nil, 1),
+      ])).IncludeFlag(dfCollapsed)
+    ], cpNormal, True, nil, 1).SetSummaryKeyOnValue([0]),
 //    wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
 //    wbFormIDCk(WAIT, 'Follower Wait Marker', [REFR]),
 //    wbFormIDCk(STOL, 'Stolen Goods Container', [REFR]),
@@ -10176,7 +10178,8 @@ end;
       wbFloat('Steal Multiplier'),
       wbInteger('Escape', itU16),
       wbUnknown
-    ], cpNormal, False, nil, 7),
+    ], cpNormal, False, nil, 7)
+    .SetSummaryKeyOnValue([0,1]),
 //    wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
@@ -10188,18 +10191,28 @@ end;
         wbFormIDCk('Inventory Contraband', [NULL, REFR]),
         wbFormIDCk('Companion Wait Marker', [NULL, REFR])
       ])
+      .SetSummaryKey([0])
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
     ),
 
     wbStruct(VENV, 'Vendor Values', [
       wbInteger('Start Hour', itU16),
       wbInteger('End Hour', itU16),
-      wbInteger('Radius', itU16),
-      wbByteArray('Unknown 1', 2),
+//     wbInteger('Radius', itU16),
+//      wbByteArray('Unknown 1', 2),
+      wbFloat,
       wbInteger('Buys Stolen Items', itU8, wbBoolEnum),
       wbInteger('Buy/Sell Everything Not In List?', itU8, wbBoolEnum),
       wbInteger('Buys NonStolen Items', itU8, wbBoolEnum),
       wbInteger('Unknown', itU8)
-    ]),
+    ])
+    .SetSummaryKeyOnValue([0,1,4,5])
+    .SetSummaryPrefixSuffixOnValue(4,'Fence = ',',')
+    .SetSummaryPrefixSuffixOnValue(5,'Limited Inv. = ','')
+    .SetSummaryPrefixSuffixOnValue(0,'Hours = ',' to')
+    .SetSummaryPrefixSuffixOnValue(1,'',',')
+    .IncludeFlagOnValue(dfSummaryMembersNoName),
     wbPLVD,
     wbFormIDCk(VTCK, 'Voice', [FLST, VTYP]),
     wbRStruct('Unknown', [
@@ -10365,7 +10378,10 @@ end;
     wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
     wbFULL
     //wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
-  ]);
+  ])
+  .SetSummaryKey([8,4])
+  .SetSummaryMemberPrefixSuffix(4, '[Type] ','')
+  ;
 
   {subrecords checked against Starfield.esm}
   wbRecord(FFKW, 'Form Folder Keyword List', [
@@ -10394,7 +10410,7 @@ end;
 //    wbFormIDCk(DATA, 'Attraction Rule', [AORU]),
 //    wbFULL,
     wbUnknown(FNAM)
-  ]);
+  ]).SetSummaryKey([2]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(TXST, 'Texture Set', [
@@ -17717,7 +17733,10 @@ end;
       wbArray('Damage Types', wbStruct('Damage Type', [
         wbFormIDck('Actor Value', [AVIF, NULL]),
         wbFormIDck('Spell', [SPEL, NULL])
-      ]))
+      ])
+      .SetSummaryKey([0,1])
+      .IncludeFlag(dfSummaryExcludeNULL)
+      )
     ])
   ]);
 
@@ -18369,10 +18388,15 @@ end;
       wbFloat('Scale'),
       wbFloat('Zoom Min'),
       wbFloat('Zoom Max')
-    ], cpNormal, True, nil, 2),
+    ], cpNormal, True, nil, 2)
+    .SetSummaryKeyOnValue([0,1,2,3])
+    .SetSummaryPrefixSuffixOnValue(1, '[Scale] ',' ')
+    .SetSummaryPrefixSuffixOnValue(2, '[Min] ',' ')
+    .SetSummaryPrefixSuffixOnValue(3, '[Max] ',' ')
+    .IncludeFlagOnValue(dfSummaryMembersNoName),
     wbUnknown(BNAM),
     wbUnknown(ENAM)
-  ]);
+  ]).SetSummaryKey([1]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(ZOOM, 'Zoom', [
