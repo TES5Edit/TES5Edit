@@ -17314,7 +17314,13 @@ end;
     ]),
     wbDamageTypeArray('Damage Type'),
     wbStruct(WFIR, 'Unknown', [
-      wbUnknown(3),
+      wbInteger('Firing Type', itU8, wbEnum([
+        {0} 'Single or Binary',
+        {1} 'Burst',
+        {2} 'Automatic'
+      ])),
+      wbInteger('Burst count', itU8),
+      wbUnknown(1),
       wbFloat,
       wbFloat,
       wbFloat,
