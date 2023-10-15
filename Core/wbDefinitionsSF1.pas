@@ -11244,7 +11244,21 @@ end;
         {3} 'Expert',
         {4} 'Master'
       ])),
-      wbUnknown
+      wbFromSize(4, wbInteger('Crew Assignment', itU8, wbEnum([
+        {0} 'None',
+        {1} 'Crew Ship',
+        {2} 'Crew Outpost'
+      ]))),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x0001} 'PC Trait',
+        {0x0002} 'PC Playable',
+        {0x0004} 'Unknown 2',
+        {0x0008} 'Show in crew UI',
+        {0x0010} 'PC Background',
+        {0x0020} 'Unknown 5',
+        {0x0040} 'Unused 6',
+        {0x0080} 'Unused 7'
+      ]))
       {
       wbInteger('Trait', itU8, wbBoolEnum),
       wbInteger('Level', itU8),
@@ -17362,7 +17376,13 @@ end;
     ]),
     wbDamageTypeArray('Damage Type'),
     wbStruct(WFIR, 'Unknown', [
-      wbUnknown(3),
+      wbInteger('Firing Type', itU8, wbEnum([
+        {0} 'Single or Binary',
+        {1} 'Burst',
+        {2} 'Automatic'
+      ])),
+      wbInteger('Burst count', itU8),
+      wbUnknown(1),
       wbFloat,
       wbFloat,
       wbFloat,
