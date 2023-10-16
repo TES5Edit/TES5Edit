@@ -21,21 +21,25 @@ Various record types contain FormID fields that lack the necessary engine code t
 - Surface Block Array in Surface Pattern (`SFPT`) records
 - Surface Patterns arrays in Surface Tree (`SFTR`) records
 
-#### Factions Array Limitation on `NPC_` Records
+#### Factions Array Limitation on NPC_ Records
 
 Any mod that alters the Factions array (`SNAM`) in `NPC_` records will not see those changes reflected if the edit occurs mid-save. Only the factions defined at the onset of the save file will be recognized.
 
-#### Pack-Ins (`PKIN`) Anomalies
+#### Pack-Ins (PKIN) Anomalies
 
 Overriding Pack-Ins (`PKIN`)—even with an exact byte-for-byte copy—results in unpredictable behavior.
 
-#### Generic Base Form (`GBFM`) Crashes
+#### Generic Base Form (GBFM) Crashes
 
 If `GBFM` records overridden in `BlueprintShips-Starfield.esm` are copied as an override from `Starfield.esm` into a new module listing both `Starfield.esm` and `BlueprintShips-Starfield.esm` as masters, the main record will crash to the desktop. Copying these records from `BlueprintShips-Starfield.esm` seems to prevent this issue.
 
 #### Fragility in FormID Formats with ESL Flagging
 
 Changes in the format of file-specific FormIDs have been observed when any master files are ESL-flagged. This modification makes the internal structure of all affected module files incredibly fragile. Any change in the ESL flag status of a master file can render dependent modules unreadable, except when all masters revert to their original ESL state. This new design not only lacks obvious advantages but also complicates the tasks of any tools aiming to support Starfield module files. At the time of writing this, there are no known tools that support this new format.
+
+#### Caution Against Using sTestFile1 to sTestFile10 for Module Loading
+
+Utilizing the `sTestFile1` to `sTestFile10` entries in the `StarfieldCustom.ini` file for the purpose of loading module files is highly discouraged. Doing so can create a chaotic environment where custom module files are loaded in an unexpected sequence, possibly interleaved with official files. This can lead to a variety of issues, including but not limited to, game crashes, data corruption, and other instability problems.
 
 #### General Observations
 
@@ -55,15 +59,15 @@ Any FormID field that is not mapped by the game engine can only contain a non-nu
 - The module containing this field must list `Starfield.esm` as its first master. 
 - Even when `Starfield.esm` is the first master, the FormID field can only take on values formatted as `00xxxxxx`, where the `xxxxxx` references a record belonging to `Starfield.esm`.
 
-#### Pack-Ins (`PKIN`)
+#### Pack-Ins (PKIN)
 
 Due to their unpredictable behavior when overridden, Pack-Ins (`PKIN`) records cannot be copied as overrides in SF1Edit 4.1.5.
 
-#### Modules with `ESL` or `Overlay` Flags
+#### Modules with ESL or Overlay Flags
 
 Modules with either the `ESL` or `Overlay` flags set cannot be saved in SF1Edit 4.1.5.
 
-#### Modules with Masters Having `ESL` or `Overlay` Flags
+#### Modules with Masters Having ESL or Overlay Flags
 
 If a module has a master file that carries either the `ESL` or `Overlay` flags, SF1Edit 4.1.5 will neither save nor read such a module.
 
@@ -175,7 +179,7 @@ Full support for decoding `MODT` is especially crucial for TES5/SSE. These games
 
 To mitigate such issues, xEdit now automates the conversion of Model Information when copied between records with differing form versions. This ensures that the subrecord data aligns with the appropriate format dictated by the form version of the receiving record. Furthermore, xEdit's error-checking functionality will identify any instances where a subrecord contains data that is incompatible with its form version.
 
-## Effective Dialog Response (`INFO`) Order Inside Dialog Topic (`DIAL`)
+## Effective Dialog Response (INFO) Order Inside Dialog Topic (DIAL)
 
 ### Introduction to Virtual Subrecords: INOM and INOA
 
@@ -224,6 +228,8 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 ## Minor Changes
 
 * #856 - Added the ability to apply xEdit script to selected refs in the Referenced By window
+* #1090 - TES4: Add support for ACRE\XLOD
+* #1096 - FO4: MO*F are first-person/facebone flags
 * (reported on Discord) - Added an optional 4th `aSilent: Boolean` parameter to `AddRequiredElementMasters` script function
 * Updated themes to versions that came with Delphi 11.3
 * Compiled with Delphi 11.3
