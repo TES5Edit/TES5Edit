@@ -15,7 +15,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, JvExStdCtrls, JvRichEdit,
-  Vcl.ExtCtrls, Vcl.ComCtrls, VirtualTrees, JvExExtCtrls, JvSplitter, xePushLikeButton;
+  Vcl.ExtCtrls, Vcl.ComCtrls, VirtualTrees, JvExExtCtrls, JvSplitter, xePushLikeButton,
+  Vcl.Mask;
 
 type
   TfrmRichEdit = class(TForm)
@@ -110,23 +111,26 @@ begin
     i := TR.MoveEnd(tomCharFormat, 1);
     while TR.End_ > LastEnd do begin
       LastEnd := TR.End_;
-      if TR.Font.Bold = tomTRUE then begin
-        NewTR := TR.Duplicate;
-        while Assigned(LastNode) do begin
-          if NewTR.Font.Size < LastTR.Font.Size then
-            Break;
-          LastNode := LastNode.Parent;
-          if LastNode = vstTOC.RootNode then
-            LastNode := nil;
-          if Assigned(LastNode) then
-            LastTR := ITextRange(PPointer(LastNode.GetData)^);
+
+      var lText := Trim(TR.Text);
+      if (lText <> '') and not lText.StartsWith('HYPERLINK') then
+        if TR.Font.Bold = tomTRUE then begin
+          NewTR := TR.Duplicate;
+          while Assigned(LastNode) do begin
+            if NewTR.Font.Size < LastTR.Font.Size then
+              Break;
+            LastNode := LastNode.Parent;
+            if LastNode = vstTOC.RootNode then
+              LastNode := nil;
+            if Assigned(LastNode) then
+              LastTR := ITextRange(PPointer(LastNode.GetData)^);
+          end;
+
+          NewNode := vstTOC.AddChild(LastNode, NewTR);
+
+          LastNode := NewNode;
+          LastTR := NewTR;
         end;
-
-        NewNode := vstTOC.AddChild(LastNode, NewTR);
-
-        LastNode := NewNode;
-        LastTR := NewTR;
-      end;
       TR.Start := TR.End_;
       i := TR.MoveEnd(tomCharFormat, 1);
     end;
