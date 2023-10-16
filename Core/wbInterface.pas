@@ -235,7 +235,9 @@ var
   wbCollapseFlags                    : Boolean    = True;
   wbCollapseTransforms               : Boolean    = True;
   wbCollapseSounds                   : Boolean    = True;
+  wbCollapseDestruction              : Boolean    = True;
   wbCollapseLocations                : Boolean    = True;
+  wbCollapseNavmesh                  : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
