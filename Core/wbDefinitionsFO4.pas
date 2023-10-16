@@ -7882,7 +7882,7 @@ begin
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   wbEFIT :=
-    wbStructSK(EFIT, [3, 4], '', [
+    wbStructSK(EFIT, [0,1,2], '', [
       wbFloat('Magnitude', cpNormal, True),
       wbInteger('Area', itU32),
       wbInteger('Duration', itU32)
@@ -8555,7 +8555,9 @@ begin
       wbEFID,
       wbEFIT,
       wbCTDAs
-    ], [], cpNormal, True);
+    ], [], cpNormal, True)
+    .SetSummaryKey([0,2])
+    .IncludeFlag(dfSummaryMembersNoName);
 
   wbEffectsReq :=
     wbRArrayS('Effects', wbEffect, cpNormal, True);

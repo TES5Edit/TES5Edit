@@ -179,6 +179,8 @@ function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
 
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
+function wbBoolEnumSummary(const aTrueSummary: string; const aFalseSummary: string = ''): IwbEnumDef;
+
 {>>> Common Definitions <<<}
 
 function wbRecordHeader(aRecordFlags: IwbIntegerDef): IwbValueDef;
@@ -402,6 +404,14 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolatorsMultAdd);
 end;
 
+function wbBoolEnumSummary(const aTrueSummary: string; const aFalseSummary: string = ''): IwbEnumDef;
+    begin
+      Result :=
+        wbEnumSummary([
+          'False', aFalseSummary,
+          'True',  aTrueSummary
+        ]);
+    end;
 
 procedure DefineCommon;
 begin
