@@ -10671,16 +10671,19 @@ end;
     wbStruct(DNAM, 'Data', [
       { 0} wbSoundReference,
       {40} wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
-      {44} wbUnknown(8),
-      {52} wbFloat,
-      {56} wbFloat,
-      {60} wbFloat,
-      {64} wbFloat,
-      {68} wbFloat,
-      {72} wbFloat,
-      {76} wbFloat,
-      {80} wbFloat,
-      {84} wbUnknown(4),
+      {44} wbFormIDCk('Light', [LIGH, NULL]),
+      {48} wbUnknown(4), // always 00 00 00 00 in Starfield.esm. Previously wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      {52} wbFloat('Radius'),
+      {56} wbFloat('Lifetime'),
+      {60} wbFloat('Image Space Radius'),
+      {64} wbFloat('Target Interval'),
+           wbStruct('Taper Effectiveness', [
+      {68}   wbFloat('Full Effect Radius'),
+      {72}   wbFloat('Taper Weight'),
+      {76}   wbFloat('Taper Curse')
+           ]),
+      {80} wbFloat('Gravity'),
+      {84} wbInteger('Limit', itU32),
       {88} wbInteger('Flags', itU32, wbFlags([
              {0x01} 'Affects Player Only',               //copied from FO4, might be wrong
              {0x02} 'Inherit Duration from Spawn Spell', //copied from FO4, might be wrong
@@ -10692,31 +10695,6 @@ end;
              {0x80} 'Reversed Gravity'
            ]))
       {92}
-
-      (*
-      wbInteger('Limit', itU32),
-      wbFloat('Radius'),
-      wbFloat('Lifetime'),
-      wbFloat('Image Space Radius'),
-      wbFloat('Target Interval'),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x01} 'Affects Player Only',
-        {0x02} 'Inherit Duration from Spawn Spell',
-        {0x04} 'Align to Impact Normal',
-        {0x08} 'Inherit Radius from Spawn Spell',
-        {0x10} 'Drop to Ground',
-        {0x20} 'Taper Effectiveness by Proximity'
-      ])),
-      wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
-      wbFormIDCk('Light', [LIGH, NULL]),
-      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
-      wbFormIDCk('Sound', [SNDR, NULL]),
-      wbStruct('Taper Effectiveness', [
-        wbFloat('Full Effect Radius'),
-        wbFloat('Taper Weight'),
-        wbFloat('Taper Curse')
-      ])
-      *)
     ]),
     wbCTDAs
   ]);
