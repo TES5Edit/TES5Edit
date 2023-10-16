@@ -35,7 +35,7 @@ If `GBFM` records overridden in `BlueprintShips-Starfield.esm` are copied as an 
 
 #### Fragility in FormID Formats with ESL Flagging
 
-Changes in the format of file-specific FormIDs have been observed when any master files are ESL-flagged. This modification makes the internal structure of all affected module files incredibly fragile. Any change in the ESL flag status of a master file can render dependent modules unreadable, except when all masters revert to their original ESL state. This new design not only lacks obvious advantages but also complicates the tasks of any tools aiming to support Starfield module files. At the time of writing this, there are no know tools that support this new format.
+Changes in the format of file-specific FormIDs have been observed when any master files are ESL-flagged. This modification makes the internal structure of all affected module files incredibly fragile. Any change in the ESL flag status of a master file can render dependent modules unreadable, except when all masters revert to their original ESL state. This new design not only lacks obvious advantages but also complicates the tasks of any tools aiming to support Starfield module files. At the time of writing this, there are no known tools that support this new format.
 
 #### General Observations
 
@@ -47,7 +47,7 @@ To navigate around the array of engine bugs and less-than-ideal design decisions
 
 #### Reflection-Based Data Streams
 
-Records that contain data streams reliant on reflection—a programming technique unrelated to in-game visual reflections—cannot be copied as overrides. The limitation stems from the fact that these data streams are yet to be fully decoded. They may contain FormIDs that would require remapping when copied to a different module.
+Records that contain data streams reliant on reflection—a programming technique unrelated to in-game visual reflections—cannot be copied as overrides. This limitation stems from the fact that these data streams are yet to be fully decoded. They may contain FormIDs that would require remapping when copied to a different module.
 
 #### Unmapped FormID Fields
 
@@ -67,9 +67,11 @@ Modules with either the `ESL` or `Overlay` flags set cannot be saved in SF1Edit 
 
 If a module has a master file that carries either the `ESL` or `Overlay` flags, SF1Edit 4.1.5 will neither save nor read such a module.
 
-### The Case for Exclusively Supporting .esm Files
+### The Case for Exclusively Supporting .esm Files in Starfield
 
-The publication of mods in the `.esm` format is strongly encouraged, a practice that should ideally extend to most previous Bethesda games. However, the widespread use of `.esp` modules for older titles renders a complete switch impractical for those games. For Starfield, we stand at a unique juncture where a unified effort can set the standard that all published mods should be `.esm` files. 
+The publication of mods in the .esm format is strongly encouraged, a practice that should ideally extend to most previous Bethesda games. However, the widespread use of .esp modules for older titles renders a complete switch impractical for those games. 
+
+For Starfield, we stand at a unique juncture where a unified effort can set the standard that all published mods should be .esm files. That means that SF1Edit will, for the time being, only support the creation and saving of .esm modules. 
 
 #### Technical Justifications:
 
@@ -99,7 +101,7 @@ We've updated the Developer Message. Please take a moment to read it.
 
 In the top-left corner of the View tab (left of the filter) is a pin button. Pressing this button locks the View tab, allowing you to scroll through the left-hand Navigation Treeview without updating the View to a different record.
 
-You can then drag and drop records from the Navigation Treeview onto compatible FormID-containing elements inside the View tab. For arrays, you can also drop a record onto the array itself, adding a new element with the dropped record's FormID as its value. Multi-selection of multiple records for simultaneous drag and drop is supported.
+You can then drag and drop records from the Navigation Treeview onto compatible FormID-containing elements inside the View tab. For arrays of FormIDs, you can also drop a record onto the array itself, adding a new element with the dropped record's FormID as its value. Multi-selection of multiple records for simultaneous drag and drop is supported if the target is an array.
 
 ## Fallout 76 Support
 
