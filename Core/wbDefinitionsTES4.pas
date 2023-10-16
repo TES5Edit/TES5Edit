@@ -3890,7 +3890,10 @@ begin
         wbInteger('Object type', itU32)
       ]),
       wbInteger('Radius', itS32)
-    ]).ForValue(procedure (const v: IwbValueDef) begin (v as IwbStructDef).SetSummaryKey([0, 1]).IncludeFlag(dfSummaryMembersNoName) end).IncludeFlag(dfSummaryMembersNoName),
+    ])
+      .SetSummaryKeyOnValue([0, 1])
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryMembersNoName),
     wbStruct(PSDT, 'Schedule', [
       wbInteger('Month', itS8),
       wbInteger('Day of week', itS8, wbEnum([
@@ -3924,9 +3927,15 @@ begin
         wbInteger('Object type', itU32)
       ]),
       wbInteger('Count', itS32)
-    ]).ForValue(procedure (const v: IwbValueDef) begin (v as IwbStructDef).SetSummaryKey([0, 1]).IncludeFlag(dfSummaryMembersNoName) end).IncludeFlag(dfSummaryMembersNoName),
+    ])
+      .SetSummaryKeyOnValue([0, 1])
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryMembersNoName),
     wbCTDAs
-  ]).SetSummaryKey([1, 2, 4, 5]).IncludeFlag(dfSummaryMembersNoName);
+  ])
+    .SetSummaryKey([1, 2, 4, 5])
+    .SetSummaryMemberPrefixSuffix(5, 'if ', '')
+    .IncludeFlag(dfSummaryMembersNoName);
 
   wbPGRP :=
     wbArray(PGRP, 'Points', wbStruct('Point', [

@@ -1,62 +1,237 @@
-# What's new in (future) xEdit 4.1.5?
+# What's New in (future) xEdit 4.1.5 since 4.0.x?
 
 ## Starfield
 
-This version includes extremely preliminary support for Starfield.
+After a monumental effort of over 400 hours by me (ElminsterAU), along with the extensive contributions from numerous other contributors, this version now includes support for Starfield, with editing enabled.
 
-Currently, only the View mode is supported.
-The record definitions are either copies from FO4 and FO76 or are empty. Countless errors are to be expected.
+To start xEdit in Starfield game mode, use the `-sf1` parameter or rename the exe to `SF1Edit.exe`.
 
-Please refrain from reporting errors in the record definitions at this point, as we are aware they are very incomplete.
+### Known Engine Bugs and Flawed Design Decisions
 
-The primary purpose of this version is to establish the baseline necessary for the extended and grueling process of reverse engineering the record definitions of Starfield.
+Through rigorous testing and scrutiny (through decompilation) of the current game engine, a variety of bugs and design choices have been identified that negatively affect the modding capabilities of the game. It's crucial to note that the list below is not exhaustive; there are likely many undiscovered issues remaining.
 
-However, any support would be highly appreciated.
+#### FormID Fields Missing Mapping Code
+
+Various record types contain FormID fields that lack the necessary engine code to map them from their file-internal FormIDs to the global, load-order adjusted FormIDs commonly displayed in xEdit and the game itself. Specific instances have been confirmed for the following records:
+
+- Material on Impact Data Set (`IPDS`) records
+- Start Scene -> Scene (`LCEP`) in Scene (`SCEN`) records
+- Keyword (`KNAM`) in Sound Keyword Mapping (`KSSM`) records
+- Adjacent Snap Nodes (`NNAM`) in Snap Template Node (`STND`) records
+- Surface Block Array in Surface Pattern (`SFPT`) records
+- Surface Patterns arrays in Surface Tree (`SFTR`) records
+
+#### Factions Array Limitation on `NPC_` Records
+
+Any mod that alters the Factions array (`SNAM`) in `NPC_` records will not see those changes reflected if the edit occurs mid-save. Only the factions defined at the onset of the save file will be recognized.
+
+#### Pack-Ins (`PKIN`) Anomalies
+
+Overriding Pack-Ins (`PKIN`)—even with an exact byte-for-byte copy—results in unpredictable behavior.
+
+#### Generic Base Form (`GBFM`) Crashes
+
+If `GBFM` records overridden in `BlueprintShips-Starfield.esm` are copied as an override from `Starfield.esm` into a new module listing both `Starfield.esm` and `BlueprintShips-Starfield.esm` as masters, the main record will crash to the desktop. Copying these records from `BlueprintShips-Starfield.esm` seems to prevent this issue.
+
+#### Fragility in FormID Formats with ESL Flagging
+
+Changes in the format of file-specific FormIDs have been observed when any master files are ESL-flagged. This modification makes the internal structure of all affected module files incredibly fragile. Any change in the ESL flag status of a master file can render dependent modules unreadable, except when all masters revert to their original ESL state. This new design not only lacks obvious advantages but also complicates the tasks of any tools aiming to support Starfield module files. At the time of writing this, there are no know tools that support this new format.
+
+#### General Observations
+
+It is evident that modding capabilities were not a priority in the development phase of the current game engine. This lack of focus is also corroborated by the absence of quality assurance for modding from Bethesda. Any existing modding capabilities appear to be incidental, stemming from the engine's legacy code base and the bare minimum effort needed to maintain functionality within the confines of editing `Starfield.esm` using the internal version of CK2.
+
+### Limitations (Implemented to Mitigate the Impact of Identified Engine Bugs and Design Flaws)
+
+To navigate around the array of engine bugs and less-than-ideal design decisions, SF1Edit 4.1.5 imposes the following limitations:
+
+#### Reflection-Based Data Streams
+
+Records that contain data streams reliant on reflection—a programming technique unrelated to in-game visual reflections—cannot be copied as overrides. The limitation stems from the fact that these data streams are yet to be fully decoded. They may contain FormIDs that would require remapping when copied to a different module.
+
+#### Unmapped FormID Fields
+
+Any FormID field that is not mapped by the game engine can only contain a non-null value under specific conditions: 
+- The module containing this field must list `Starfield.esm` as its first master. 
+- Even when `Starfield.esm` is the first master, the FormID field can only take on values formatted as `00xxxxxx`, where the `xxxxxx` references a record belonging to `Starfield.esm`.
+
+#### Pack-Ins (`PKIN`)
+
+Due to their unpredictable behavior when overridden, Pack-Ins (`PKIN`) records cannot be copied as overrides in SF1Edit 4.1.5.
+
+#### Modules with `ESL` or `Overlay` Flags
+
+Modules with either the `ESL` or `Overlay` flags set cannot be saved in SF1Edit 4.1.5.
+
+#### Modules with Masters Having `ESL` or `Overlay` Flags
+
+If a module has a master file that carries either the `ESL` or `Overlay` flags, SF1Edit 4.1.5 will neither save nor read such a module.
+
+### The Case for Exclusively Supporting .esm Files
+
+The publication of mods in the `.esm` format is strongly encouraged, a practice that should ideally extend to most previous Bethesda games. However, the widespread use of `.esp` modules for older titles renders a complete switch impractical for those games. For Starfield, we stand at a unique juncture where a unified effort can set the standard that all published mods should be `.esm` files. 
+
+#### Technical Justifications:
+
+1. **Loading Sequence and Conflict Resolution**: The game engine necessitates that all `ESM`-flagged modules load before non-`ESM` modules. When mods are released in mixed formats (`ESM` and non-`ESM`), it creates two distinct categories that cannot intermingle. Consequently, this severely limits the ability to resolve conflicts through load order adjustments.
+
+2. **Memory Management and Game Performance**: Temporary references like `REFR`, `ACHR`, etc., are treated differently in `ESM` and non-`ESM` modules. In `ESM` modules, these records are loaded into memory only when the player approaches them (within the `uGrid` range), offering a more efficient use of system resources. In contrast, non-`ESM` modules load all these temporary references at the start, keeping them in memory throughout the game's runtime.
+
+3. **Resource Limitations**: The game engine has a finite number of reference handles available for use. Therefore, to optimize the use of these limited resources, mods containing temporary references should be released as `ESM`-flagged modules.
+
+4. **Consistency and Debugging**: Non-`ESM` mods are always loaded as persistent, which might not reveal certain bugs during testing. If a user later attempts to convert such a mod to `ESM`, unforeseen issues may emerge. Hence, both the development and testing phases for mods with temporary references should occur in the `ESM` environment.
+
+Combining these factors leads to a logical conclusion: all mods, especially those with temporary references, should be released as `.esm` modules. The `.esm` file extension ensures that the game engine sets the `ESM` flag, providing users with the assurance that their entire load order is compatible and can be freely adjusted.
+
+#### SF1Edit's Stance
+
+In line with these considerations, SF1Edit will, for the time being, only support the creation and saving of `.esm` modules.
+
+#### Additional Note
+
+As an added benefit, this approach makes it easier to identify potentially problematic modules that were created and released prior to the availability of appropriate tools, as most of these will likely be in `.esp` format.
 
 ## Updated Developer Message
 
-We've updated the Developer Message; please take a moment to read it.
+We've updated the Developer Message. Please take a moment to read it.
+
+## View Pinning and Drag'n'Drop from the Navigation Treeview
+
+In the top-left corner of the View tab (left of the filter) is a pin button. Pressing this button locks the View tab, allowing you to scroll through the left-hand Navigation Treeview without updating the View to a different record.
+
+You can then drag and drop records from the Navigation Treeview onto compatible FormID-containing elements inside the View tab. For arrays, you can also drop a record onto the array itself, adding a new element with the dropped record's FormID as its value. Multi-selection of multiple records for simultaneous drag and drop is supported.
+
+## Fallout 76 Support
+
+Support for Fallout 76 has been included primarily for inspecting game data and creating delta patches to track changes in game data with each update. Module-based mods are not supported by Fallout 76. 
+
+To start xEdit in Fallout 76 game mode, use the `-fo76` parameter or rename the exe to `FO76Edit.exe`.
+
+Special thanks to Eckserah for continually updating the Fallout 76 definitions to keep pace with the game's constant changes.
+
+## TES3: Morrowind Support (View-Only Capability)
+
+xEdit 4.1.5 incorporates support for TES3 (Morrowind), with the current functionality limited to viewing game data.
+
+### Initialization
+
+To access this feature, launch xEdit in Morrowind game mode using the `-tes3` and `-view` parameters. Alternatively, rename the executable to `TES3View.exe`.
+
+### Accommodating FormID Differences
+
+Morrowind's file structure diverges significantly from the architectures of later Bethesda games, particularly concerning the absence of FormIDs—a core element in xEdit's design. To bridge this gap, xEdit generates "virtual" FormIDs for all TES3 records, enabling coherent interaction within the xEdit environment.
+
+### Virtual Groups for Easier Display
+
+Unlike later games, the TES3 file format doesn't categorize records into groups. To improve navigability, xEdit artificially creates "virtual" groups, aligning them with the organization expected in modern Bethesda titles.
+
+### Handling CELL Records and References
+
+In TES3, individual references (like `REFR`, `ACHR`, etc.) are embedded within a `CELL` record, contrary to the practice in later games where such references are stored as individual records in a child group of the `CELL`. To facilitate more straightforward viewing, xEdit extracts these embedded references and places them into a "virtual" child group under the `CELL`, each denoted as a distinct `REFR` record.
+
+## Summaries and Collapsible Nodes in the View Tab
+
+### Collapsing and Expanding Nodes
+
+Within the View tab, each node provides a collapsible interface. You can toggle these nodes using the `[+]` or `[-]` symbols located to the left of the node name. Alternatively, keyboard shortcuts `+` or `-` can also be employed for the same purpose. The state of each collapsed or expanded node is remembered on a per-record basis but may be reset when navigating away from the current record.
+
+### Bulk Operations with Ctrl Key
+
+For bulk operations, hold down the `Ctrl` key while toggling a node. This action will collapse or expand all nodes of the same type—useful for handling array elements, for example. This state is temporarily remembered and will be applied when navigating to other records. However, this setting is session-specific and will be lost upon restarting the program.
+
+### Default Settings and User Customization
+
+Certain container elements in the View tab now default to a collapsed state. Users can modify this default behavior by accessing the Options within the View tab, allowing customization on a per-element-type basis.
+
+### Element Summaries
+
+To enhance usability, many types of container elements now feature summaries that display crucial information from the hidden elements when the node is collapsed. The process of defining these summaries is ongoing, and user feedback is highly valuable for identifying additional types of summaries to implement.
+
+### Record-Level Summaries
+
+In addition to container-level summaries, some records also feature overarching summaries. These are particularly useful for records lacking a defined name and are displayed in the left-hand navigation tree under the "Name" column.
+
+### Visual Indicators for Color
+
+Where a summary represents color attributes, a visual sample of the color is rendered within the summary for immediate reference.
+
+## Model Information Decoding
+
+### Understanding MODT Subrecords
+
+The `MODT` subrecords, along with other subrecords sharing the same format, are now fully decoded. These subrecords primarily contain model-related information extracted from the .nif files. While the presence of this information doesn't appear to be critical for the game's operation—meaning that missing or incorrect `MODT` data doesn't seem to cause in-game issues—it is believed to serve optimization and read-ahead purposes.
+
+### Texture File Hashing
+
+Among the multiple data points, these subrecords include path and filename hashes for the texture files utilized in the model. To render these as actual filenames and paths within xEdit, the program constructs an index comprising all files in the loaded archives as well as loose files in the data folder, each matched with its respective hash. This capability, however, is limited to the files and paths that exist on the user's machine.
+
+### Significance for TES5/SSE
+
+Full support for decoding `MODT` is especially crucial for TES5/SSE. These games introduce complexities because they actually employ two different, mutually incompatible, formats of this subrecord based on the form version. In the past, when xEdit displayed this subrecord merely as an undecoded byte array, it enabled users to copy this data between records with different form versions using drag-and-drop actions. This practice led to the risk of causing in-game crashes because the data within a record may not align with the format expected by the game engine based on the form version of that record.
+
+### Automatic Conversion and Error Checks
+
+To mitigate such issues, xEdit now automates the conversion of Model Information when copied between records with differing form versions. This ensures that the subrecord data aligns with the appropriate format dictated by the form version of the receiving record. Furthermore, xEdit's error-checking functionality will identify any instances where a subrecord contains data that is incompatible with its form version.
+
+## Effective Dialog Response (`INFO`) Order Inside Dialog Topic (`DIAL`)
+
+### Introduction to Virtual Subrecords: INOM and INOA
+
+The `DIAL` record now features two new, virtual subrecords—`INOM` and `INOA`. It's crucial to understand that these subrecords are not part of the actual file format. They are neither saved by xEdit nor can they be modified by users. 
+
+### Importance of INFO Order
+
+The sequence in which `INFO` records appear under each `DIAL` within the game engine is of paramount importance. This is because the game engine evaluates these `INFO` records in their presented order when selecting the next dialog response. 
+
+### Complexity in Sorting Rules
+
+Determining this order is far from straightforward. The rules governing the sort order of these records are complex and are further complicated when only some records are overridden in individual modules. This sorting depends on multiple factors:
+- The initial order of the `INFO` records in the files
+- The content of the `PNAM - Previous INFO` subrecord within each `INFO` record
+- The load order of modules affecting any of these records
+
+Because it is virtually impossible for humans to manually determine this resulting order, xEdit now automates this process and reconstructs the sort order for you.
+
+### INOM Subrecord
+
+The `INOM` subrecord displays the order of the `INFO` records, considering only the masters (recursive) of the module in which they are contained. This is most likely the order that the mod author would see when editing that module in the official editor, such as TESCS or [GE]CK.
+
+### INOA Subrecord
+
+On the other hand, the `INOA` subrecord shows the order of the `INFO` records when taking into account all currently loaded modules in their load order, up to the current module. Importantly, the content of the `INOA` subrecord in the winning override (i.e., the rightmost column in xEdit) will reflect what the game engine perceives when initiated with the same modules in the same order as they are presently loaded into xEdit.
+
+### Implications for Mod Interactions
+
+With the introduction of `INOM` and `INOA`, mod authors and users can now more easily identify potential issues in the final dialog response order due to interactions between multiple mods.
 
 ## Bugfixes
 
-* #1060 - changing values in override doesn't update record color on left side
-* (contributed) - various changes and fixes to .nif handling
-* (contributed) - various changes and fixes to FO76 definitions
-* (contributed) - [FO4] better BSMP decoding
-* (contributed) - [FO4] LVSP (Leveled Spells) support
-* (contributed) - [FO3/FNV] imporved decoding of IMGS
+* #826 - FO4 VMADs with complex script properties now parse completely
+* #864 - Subgraph data is now correctly created/overridden
+* #888 - Plugins with no masters can now resolve references to hardcoded records
+* #897 - Fixed Assertion Failure when using Referenced By to jump to INFO
+* #904 - Fixed issue where any mod referred to in INOM and INOA would be added to a mod's master list on override
+* #908 - Fixed issue where overriding a creature in FO3/FNV mode didn't properly copy NIFZ and KFFZ sections
+* #954 - Fixed IMAD unknown flags in 4.1.3h
+* #1060 - Fixed issue where changing values in override didn't update record color on the left side
+* (contributed) - Various improvements and fixes to .nif handling
+* (contributed) - [FO4] Enhanced BSMP decoding
+* (contributed) - [FO4] Added LVSP (Leveled Spells) support
+* (contributed) - [FO3/FNV] Improved decoding of IMGS
 
-## Minor changes
+## Minor Changes
 
-* Themes updated to versions that came with Delphi 11.2
-* Compiled with Delphi 11.2
+* #856 - Added the ability to apply xEdit script to selected refs in the Referenced By window
+* (reported on Discord) - Added an optional 4th `aSilent: Boolean` parameter to `AddRequiredElementMasters` script function
+* Updated themes to versions that came with Delphi 11.3
+* Compiled with Delphi 11.3
+* (contributed) - Added option to copy paths and names when right-clicking on an element (under Clipboard)
 
 ## Update Skyrim SE - Generate Large References.pas
 
-* use cell coordinates instead of the position of the reference
-* do not add primitives as large refs by default
-* improve speed
-
-# What's new in xEdit 4.1.4?
-
-## Bugfixes
-
-* #826 - FO4 VMADs with complex script properties still parse incompletely
-* #864 - subgraph data is incorrectly created/overriden
-* #888 - Plugins with no masters can't resolve references to hardcoded records
-* #897 - Assertion Failure when using Referenced By to jump to INFO
-* #904 - Any mod referred to in INOM and INOA in all present overrides will be added to a mod's master list on override
-* #908 - overriding a creature in fo3/fnv mode doesn't properly copy NIFZ and KFFZ sections
-* #954 - IMAD unknown flags in 4.1.3h
-
-## Minor changes
-
-* #856 - Ability to apply xEdit script to selected refs in Referenced By window
-* (reported on Discord) - added optional 4th `aSilent: Boolean` parameter to `AddRequiredElementMasters` script function
-
-# What's new in xEdit 4.1.x?
-
-There are a large number of changes between 4.0.x and 4.1.x which aren't currently documented here, but will be before the release of 4.2.x
+* Now uses cell coordinates instead of the position of the reference
+* Primitives are not added as large refs by default
+* Improved speed
 
 # What's new in xEdit 4.0.5?
 
