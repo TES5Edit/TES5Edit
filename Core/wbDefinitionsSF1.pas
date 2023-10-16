@@ -10723,16 +10723,19 @@ end;
     wbStruct(DNAM, 'Data', [
       { 0} wbSoundReference,
       {40} wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
-      {44} wbUnknown(8),
-      {52} wbFloat,
-      {56} wbFloat,
-      {60} wbFloat,
-      {64} wbFloat,
-      {68} wbFloat,
-      {72} wbFloat,
-      {76} wbFloat,
-      {80} wbFloat,
-      {84} wbUnknown(4),
+      {44} wbFormIDCk('Light', [LIGH, NULL]),
+      {48} wbUnknown(4), // always 00 00 00 00 in Starfield.esm. Previously wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      {52} wbFloat('Radius'),
+      {56} wbFloat('Lifetime'),
+      {60} wbFloat('Image Space Radius'),
+      {64} wbFloat('Target Interval'),
+           wbStruct('Taper Effectiveness', [
+      {68}   wbFloat('Full Effect Radius'),
+      {72}   wbFloat('Taper Weight'),
+      {76}   wbFloat('Taper Curse')
+           ]),
+      {80} wbFloat('Gravity'),
+      {84} wbInteger('Limit', itU32),
       {88} wbInteger('Flags', itU32, wbFlags([
              {0x01} 'Affects Player Only',               //copied from FO4, might be wrong
              {0x02} 'Inherit Duration from Spawn Spell', //copied from FO4, might be wrong
@@ -10744,31 +10747,6 @@ end;
              {0x80} 'Reversed Gravity'
            ]))
       {92}
-
-      (*
-      wbInteger('Limit', itU32),
-      wbFloat('Radius'),
-      wbFloat('Lifetime'),
-      wbFloat('Image Space Radius'),
-      wbFloat('Target Interval'),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x01} 'Affects Player Only',
-        {0x02} 'Inherit Duration from Spawn Spell',
-        {0x04} 'Align to Impact Normal',
-        {0x08} 'Inherit Radius from Spawn Spell',
-        {0x10} 'Drop to Ground',
-        {0x20} 'Taper Effectiveness by Proximity'
-      ])),
-      wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
-      wbFormIDCk('Light', [LIGH, NULL]),
-      wbFormIDCk('Impact Data Set', [IPDS, NULL]),
-      wbFormIDCk('Sound', [SNDR, NULL]),
-      wbStruct('Taper Effectiveness', [
-        wbFloat('Full Effect Radius'),
-        wbFloat('Taper Weight'),
-        wbFloat('Taper Curse')
-      ])
-      *)
     ]),
     wbCTDAs
   ]);
@@ -16978,68 +16956,61 @@ end;
   ]).SetSummaryKey([5]);
 
   var wbSPIT := wbStruct(SPIT, 'Data', [
-    { 0} wbUnknown(9),
-    { 9} wbFloat,
-    {13} wbUnknown(14)
-
-
-    (*
-    wbInteger('Base Cost', itU32),
-    wbInteger('Flags', itU32, wbFlags([
-      {0x00000001} 'Manual Cost Calc',
-      {0x00000002} 'Unknown 2',
-      {0x00000004} 'Unknown 3',
-      {0x00000008} 'Unknown 4',
-      {0x00000010} 'Unknown 5',
-      {0x00000020} 'Unknown 6',
-      {0x00000040} 'Unknown 7',
-      {0x00000080} 'Unknown 8',
-      {0x00000100} 'Unknown 9',
-      {0x00000200} 'Unknown 10',
-      {0x00000400} 'Unknown 11',
-      {0x00000800} 'Unknown 12',
-      {0x00001000} 'Unknown 13',
-      {0x00002000} 'Unknown 14',
-      {0x00004000} 'Unknown 15',
-      {0x00008000} 'Unknown 16',
-      {0x00010000} 'Unknown 17',
-      {0x00020000} 'PC Start Spell',
-      {0x00040000} 'Instant Cast',
-      {0x00080000} 'Area Effect Ignores LOS',
-      {0x00100000} 'Ignore Resistance',
-      {0x00200000} 'No Absorb/Reflect',
-      {0x00400000} 'Unknown 23',
-      {0x00800000} 'No Dual Cast Modification',
-      {0x01000000} 'Unknown 25',
-      {0x02000000} 'Unknown 26',
-      {0x04000000} 'Unknown 27',
-      {0x08000000} 'Unknown 28',
-      {0x10000000} 'Unknown 29',
-      {0x20000000} 'Unknown 30',
-      {0x40000000} 'Unknown 31',
-      {0x80000000} 'Unknown 32'
-    ])),
-    wbInteger('Type', itU32, wbEnum([
-      {0} 'Spell',
-      {1} 'Disease',
-      {2} 'Power',
-      {3} 'Lesser Power',
-      {4} 'Ability',
-      {5} 'Poison',
-      {6} 'Unknown 6',
-      {7} 'Unknown 7',
-      {8} 'Unknown 8',
-      {9} 'Unknown 9',
-     {10} 'Addiction',
-     {11} 'Voice'
-    ])),
-    wbFloat('Charge Time'),
-    wbInteger('Cast Type', itU32, wbCastEnum),
-    wbInteger('Target Type', itU32, wbTargetEnum),
-    wbFloat('Cast Duration'),
-    wbFloat('Range'),
-    wbFormIDCk('Casting Perk', [NULL, PERK])
-    *)
+    { 0} wbInteger('Base Cost', itU32),
+    { 4} wbInteger('Flags', itU32, wbFlags([
+           {0x00000001} 'Manual Cost Calc',
+           {0x00000002} 'Unknown 2',
+           {0x00000004} 'Unknown 3',
+           {0x00000008} 'Unknown 4',
+           {0x00000010} 'Unknown 5',
+           {0x00000020} 'Unknown 6',
+           {0x00000040} 'Unknown 7',
+           {0x00000080} 'Unknown 8',
+           {0x00000100} 'Unknown 9',
+           {0x00000200} 'Unknown 10',
+           {0x00000400} 'Unknown 11',
+           {0x00000800} 'Unknown 12',
+           {0x00001000} 'Unknown 13',
+           {0x00002000} 'Unknown 14',
+           {0x00004000} 'Unknown 15',
+           {0x00008000} 'Unknown 16',
+           {0x00010000} 'Unknown 17',
+           {0x00020000} 'Unknown 18',
+           {0x00040000} 'Instant Cast',
+           {0x00080000} 'Area Effect Ignores LOS',
+           {0x00100000} 'Ignore Resistance',
+           {0x00200000} 'No Absorb/Reflect',
+           {0x00400000} 'Unknown 23',
+           {0x00800000} 'Unknown 24',
+           {0x01000000} 'Unknown 25',
+           {0x02000000} 'Unknown 26',
+           {0x04000000} 'Unknown 27',
+           {0x08000000} 'Unknown 28',
+           {0x10000000} 'Unknown 29',
+           {0x20000000} 'Unknown 30',
+           {0x40000000} 'Unknown 31',
+           {0x80000000} 'Unknown 32'
+         ])),
+    { 8} wbInteger('Type', itU8, wbEnum([
+           {0} 'Spell',
+           {1} 'Disease',
+           {2} 'Power',
+           {3} 'Lesser Power',
+           {4} 'Ability',
+           {5} 'Poison',
+           {6} 'Unknown 6',
+           {7} 'Unknown 7',
+           {8} 'Unknown 8',
+           {9} 'Unknown 9',
+           {10} 'Addiction',
+           {11} 'Voice'
+         ])),
+    { 9} wbFloat('Charge Time'),
+    {13} wbInteger('Cast Type', itU8, wbCastEnum),
+    {14} wbInteger('Target Type', itU8, wbTargetEnum),
+    {15} wbFloat('Cast Duration'),
+    {19} wbFloat('Range'),
+    {23} wbFormIDCk('Casting Perk', [NULL, PERK])
   ], cpNormal, True);
 
   {subrecords checked against Starfield.esm}
