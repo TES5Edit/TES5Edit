@@ -5451,8 +5451,10 @@ begin
     wbInteger('Radius', itS32),
     wbInteger('Collection Index', itU32)
   ], cpNormal, False, nil, 3)
-  .SetSummaryKeyOnValue([0])
-  .SetSummaryPrefixSuffixOnValue(0,'[Type] ','');
+   .SetSummaryKeyOnValue([0, 1])
+   .SetSummaryPrefixSuffixOnValue(0,'[',']')
+   .SetSummaryPrefixSuffixOnValue(1,'','')
+   .IncludeFlagOnValue(dfSummaryMembersNoName);
 
   var wbPTDA := wbStruct(PTDA, 'Target Data', [
     wbInteger('Type', itS32, wbEnum([
@@ -10233,16 +10235,14 @@ end;
 //     wbInteger('Radius', itU16),
 //      wbByteArray('Unknown 1', 2),
       wbFloat,
-      wbInteger('Buys Stolen Items', itU8, wbBoolEnum),
-      wbInteger('Buy/Sell Everything Not In List?', itU8, wbBoolEnum),
+      wbInteger('Buys Stolen Items', itU8, wbBoolEnumSummary('Fence,')),
+      wbInteger('Buy/Sell Everything Not In List?', itU8, wbBoolEnumSummary('Specialized Inventory')),
       wbInteger('Buys NonStolen Items', itU8, wbBoolEnum),
       wbInteger('Unknown', itU8)
     ])
-    .SetSummaryKeyOnValue([0,1,4,5])
-    .SetSummaryPrefixSuffixOnValue(4,'Fence = ',',')
-    .SetSummaryPrefixSuffixOnValue(5,'Limited Inv. = ','')
-    .SetSummaryPrefixSuffixOnValue(0,'Hours = ',' to')
-    .SetSummaryPrefixSuffixOnValue(1,'',',')
+    .SetSummaryKeyOnValue([0,1,3,4])
+    .SetSummaryPrefixSuffixOnValue(0,'',':00')
+    .SetSummaryPrefixSuffixOnValue(1,'to ',':00,')
     .IncludeFlagOnValue(dfSummaryMembersNoName),
     wbPLVD,
     wbFormIDCk(VTCK, 'Voice', [FLST, VTYP]),
@@ -18458,9 +18458,9 @@ end;
       wbFloat('Zoom Max')
     ], cpNormal, True, nil, 2)
     .SetSummaryKeyOnValue([0,1,2,3])
-    .SetSummaryPrefixSuffixOnValue(1, '[Scale] ',' ')
-    .SetSummaryPrefixSuffixOnValue(2, '[Min] ',' ')
-    .SetSummaryPrefixSuffixOnValue(3, '[Max] ',' ')
+    .SetSummaryPrefixSuffixOnValue(1, '','x')
+    .SetSummaryPrefixSuffixOnValue(2, 'From ','')
+    .SetSummaryPrefixSuffixOnValue(3, 'to ',' ')
     .IncludeFlagOnValue(dfSummaryMembersNoName),
     wbUnknown(BNAM),
     wbUnknown(ENAM)
