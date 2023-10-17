@@ -6,13 +6,13 @@ After a monumental effort of over 400 hours by me (ElminsterAU), along with the 
 
 To start xEdit in Starfield game mode, use the `-sf1` parameter or rename the exe to `SF1Edit.exe`.
 
-## Initial Module Selection
+### Initial Module Selection
 
-### Reliance on Plugins.txt
+#### Reliance on Plugins.txt
 
 SF1Edit, consistent with its approach for all previous games, will source the initial selection of active modules from the `plugins.txt` file. 
 
-### Ignoring sTestFile1 to sTestFile10 Entries
+#### Ignoring sTestFile1 to sTestFile10 Entries
 
 `sTestFile1` to `sTestFile10` within the `StarfieldCustom.ini` file will be disregarded by SF1Edit when determining which modules to initially select.
 
