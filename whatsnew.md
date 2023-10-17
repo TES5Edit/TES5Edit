@@ -51,7 +51,11 @@ If `GBFM` records overridden in `BlueprintShips-Starfield.esm` are copied as an 
 
 #### Fragility in FormID Formats with ESL Flagging
 
-Changes in the format of file-specific FormIDs have been observed when any master files are ESL-flagged. This modification makes the internal structure of all affected module files incredibly fragile. Any change in the ESL flag status of a master file can render dependent modules unreadable, except when all masters revert to their original ESL state. This new design not only lacks obvious advantages but also complicates the tasks of any tools aiming to support Starfield module files. At the time of writing this, there are no known tools that support this new format.
+Compared to previous games, changes in the format of file-specific FormIDs have been observed when any masters are flagged as ESL. This alteration significantly compromises the internal structure of all affected modules. Should the ESL flag status of a master change in either direction, dependent modules will become misreadable—unless all masters revert to their original ESL state.
+
+To elaborate on the term "misreadable": While the file remains structurally valid, allowing the game, CK, and other tools to read it, the association between the contained records and their respective modules becomes scrambled. As a result, a FormID that once referenced, or a record that overrode a record in ModA, may unexpectedly appear to belong to ModB. This shift could potentially lead to overriding or referencing entirely different records of completely different types.
+
+In addition to this fragility, this new design lacks clear advantages and adds a layer of complexity for any tools designed to support Starfield module files with ESL-flagged masters. As of the time of writing, no known tools support this new format. Consequently, no files that would be affected by this change are currently in circulation, offering Bethesda an opportunity to reverse this ill-advised alteration.
 
 #### Caution Against Using sTestFile1 to sTestFile10 for Module Loading
 
@@ -111,11 +115,9 @@ For Starfield, we stand at a unique juncture where a unified effort can set the 
 
 1. **Loading Sequence and Conflict Resolution**: The game engine necessitates that all `ESM`-flagged modules load before non-`ESM` modules. When mods are released in mixed formats (`ESM` and non-`ESM`), it creates two distinct categories that cannot intermingle. Consequently, this severely limits the ability to resolve conflicts through load order adjustments.
 
-2. **Memory Management and Game Performance**: Temporary references like `REFR`, `ACHR`, etc., are treated differently in `ESM` and non-`ESM` modules. In `ESM` modules, these records are loaded into memory only when the player approaches them (within the `uGrid` range), offering a more efficient use of system resources. In contrast, non-`ESM` modules load all these temporary references at the start, keeping them in memory throughout the game's runtime.
+2. **Resource Limitations**: Temporary references like `REFR`, `ACHR`, etc., are treated differently in `ESM` and non-`ESM` modules. In `ESM` modules, these records are loaded into memory only when the player approaches them (within the `uGrid` range), offering a more efficient use of resources. In contrast, non-`ESM` modules load all these temporary references at the start of the program, keeping them in memory throughout the game's runtime. The game engine only has a fixed, finite number of reference handles available for use, regardless of the system on which it is running. Every loaded reference will use one of these handles, hence it is imperative that all modules with temporary references are `ESM` modules, to prevent issues from running out of reference handles.
 
-3. **Resource Limitations**: The game engine has a finite number of reference handles available for use. Therefore, to optimize the use of these limited resources, mods containing temporary references should be released as `ESM`-flagged modules.
-
-4. **Consistency and Debugging**: Non-`ESM` mods are always loaded as persistent, which might not reveal certain bugs during testing. If a user later attempts to convert such a mod to `ESM`, unforeseen issues may emerge. Hence, both the development and testing phases for mods with temporary references should occur in the `ESM` environment.
+3. **Consistency and Debugging**: Non-`ESM` mods are always loaded as persistent, which might not reveal certain bugs during testing. If a user later attempts to convert such a mod to `ESM`, unforeseen issues may emerge. Hence, both the development and testing phases for mods with temporary references should occur in the `ESM` environment.
 
 Combining these factors leads to a logical conclusion: all mods, especially those with temporary references, should be released as `.esm` modules. The `.esm` file extension ensures that the game engine sets the `ESM` flag, providing users with the assurance that their entire load order is compatible and can be freely adjusted.
 
