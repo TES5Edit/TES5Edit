@@ -41,10 +41,6 @@ Various record types contain FormID fields that lack the necessary engine code t
 - Surface Block Array in Surface Pattern (`SFPT`) records
 - Surface Patterns arrays in Surface Tree (`SFTR`) records
 
-#### Factions Array Limitation on NPC_ Records
-
-Any mod that alters the Factions array (`SNAM`) in `NPC_` records will not see those changes reflected if the edit occurs mid-save. Only the factions defined at the onset of the save file will be recognized.
-
 #### Pack-Ins (PKIN) Anomalies
 
 Overriding Pack-Ins (`PKIN`)—even with an exact byte-for-byte copy—results in unpredictable behavior.
@@ -63,7 +59,7 @@ Utilizing the `sTestFile1` to `sTestFile10` entries in the `StarfieldCustom.ini`
 
 #### General Observations about the current state of modding support in the game engine
 
-It is evident from analyzing both the data structures in the provided module files and from decompiling game code that modding capabilities were not a consideration in the development of the game engine up to now. This can also be inferred from the fact that there has been no quality assurance testing of modding functionality from Bethesda, as various current engine bugs that appear in the context of using mods would have been obvious showstoppers. Any existing modding capabilities appear to be incidental, stemming from the engine's legacy code base and the bare minimum effort needed to maintain functionality within the confines of editing `Starfield.esm` using the internal version of CK2.
+It is evident from analyzing both the data structures in the provided module files and from decompiling game code that modding capabilities were not a consideration in the development of the game engine up to now. This can also be inferred from the fact that there has been no quality assurance testing of modding functionality from Bethesda, as various current engine bugs that appear in the context of using mods would have been obvious showstoppers. Any existing modding capabilities appear to be incidental, stemming from the engine's legacy code base and the required work needed in that context to maintain functionality within the confines of editing `Starfield.esm` using the internal version of CK2.
 
 This does not mean that Bethesda won't or can't still fix this. It is simply a statement about the state as it is right now.
 

@@ -8,7 +8,6 @@ object frmRichEdit: TfrmRichEdit
   Color = clBtnFace
   ParentFont = True
   KeyPreview = True
-  OldCreateOrder = False
   Position = poMainFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
@@ -17,19 +16,19 @@ object frmRichEdit: TfrmRichEdit
   DesignSize = (
     864
     615)
-  PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 15
   object Label1: TLabel
-    Left = 669
+    Left = 665
     Top = 11
-    Width = 30
-    Height = 13
+    Width = 35
+    Height = 15
     Anchors = [akTop, akRight]
     Caption = '&Zoom:'
     FocusControl = tbrZoom
+    ExplicitLeft = 669
   end
   object btnOK: TButton
-    Left = 781
+    Left = 777
     Top = 582
     Width = 75
     Height = 25
@@ -38,18 +37,20 @@ object frmRichEdit: TfrmRichEdit
     Enabled = False
     ModalResult = 1
     TabOrder = 5
+    ExplicitLeft = 773
+    ExplicitTop = 581
   end
   object cbDontShowAgain: TCheckBox
-    Left = 600
+    Left = 568
     Top = 586
-    Width = 175
+    Width = 203
     Height = 17
     Anchors = [akRight, akBottom]
     Caption = '&Don'#39't show again until changed'
     TabOrder = 4
   end
   object tbrZoom: TTrackBar
-    Left = 706
+    Left = 702
     Top = 8
     Width = 150
     Height = 21
@@ -62,6 +63,7 @@ object frmRichEdit: TfrmRichEdit
     ShowSelRange = False
     TabOrder = 2
     OnChange = tbrZoomChange
+    ExplicitLeft = 698
   end
   object pnlMain: TPanel
     AlignWithMargins = True
@@ -74,6 +76,8 @@ object frmRichEdit: TfrmRichEdit
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitWidth = 854
+    ExplicitHeight = 544
     object splTOC: TJvSplitter
       Left = 185
       Top = 0
@@ -105,6 +109,8 @@ object frmRichEdit: TfrmRichEdit
       StreamFormat = sfRichText
       TabOrder = 1
       WantReturns = False
+      ExplicitWidth = 666
+      ExplicitHeight = 544
     end
     object pnlTOC: TPanel
       Left = 0
@@ -117,13 +123,13 @@ object frmRichEdit: TfrmRichEdit
       ShowHint = True
       TabOrder = 0
       Visible = False
+      ExplicitHeight = 544
       object vstTOC: TVirtualStringTree
         Left = 0
         Top = 0
         Width = 185
         Height = 545
         Align = alClient
-        DefaultText = 'Node'
         Header.AutoSizeIndex = 0
         Header.MainColumn = -1
         HintMode = hmTooltip
@@ -134,6 +140,7 @@ object frmRichEdit: TfrmRichEdit
         OnCollapsing = vstTOCCollapsing
         OnGetText = vstTOCGetText
         OnNodeDblClick = vstTOCNodeDblClick
+        ExplicitHeight = 544
         Columns = <>
       end
     end
@@ -141,15 +148,17 @@ object frmRichEdit: TfrmRichEdit
   object edSearch: TLabeledEdit
     Left = 104
     Top = 8
-    Width = 545
-    Height = 21
+    Width = 541
+    Height = 23
     Anchors = [akLeft, akTop, akRight]
-    EditLabel.Width = 37
-    EditLabel.Height = 13
+    EditLabel.Width = 38
+    EditLabel.Height = 23
     EditLabel.Caption = '&Search:'
     LabelPosition = lpLeft
     TabOrder = 1
+    Text = ''
     OnKeyPress = edSearchKeyPress
+    ExplicitWidth = 537
   end
   object btnTOC: TButton
     Left = 8

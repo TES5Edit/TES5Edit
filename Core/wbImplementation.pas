@@ -2497,8 +2497,14 @@ var
         Assert(Assigned(Rec), '[AddMasters] not Assigned(Rec)');
         Assert(Rec.EditValue = '', '[AddMasters] Rec.EditValue <> ''''');
 
+        try
+          AddMaster(lMasters[i]);
+        except
+          Rec.Remove;
+          raise;
+        end;
+
         Rec.EditValue := lMasters[i];
-        AddMaster(lMasters[i]);
         Rec := nil;
       end;
     finally
@@ -4801,6 +4807,13 @@ begin
       for i := Low(flRecords) to High(flRecords) do
         flRecords[i].ClampFormID(k);
     end;
+
+    if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+      for var lMasterIdx := 0 to Pred(GetMasterCount(True)) do begin
+        var lMaster := GetMaster(lMasterIdx, True);
+        if lMaster.IsESL or lMaster.IsOverlay or (PwbModuleInfo(lMaster.ModuleInfo).miFlags * [mfHasESLFlag, mfHasOverlayFlag] <> []) then
+          raise Exception.Create('No ESL or Overlay flagged modules can be masters in Starfield.');
+      end;
 
     if FileHeader.IsESL then begin
       if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
@@ -23099,7 +23112,7 @@ begin
   dcDataEndPtr := nil;
   dcDataStorage := nil;
   DoInit(True);
-  RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self] + GetDataPrefixSize);
+  RequestStorageChange(BasePtr, EndPtr, vbValueDef.DefaultSize[nil, nil, Self]{ + GetDataPrefixSize});
   inherited;
 end;
 

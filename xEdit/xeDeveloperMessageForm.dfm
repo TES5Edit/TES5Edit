@@ -81,18 +81,17 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     end
     object cbDontShowAgain: TCheckBox
       AlignWithMargins = True
-      Left = 375
+      Left = 345
       Top = 3
-      Width = 170
+      Width = 193
       Height = 27
       Align = alRight
       Caption = '&Don'#39't show again until changed'
       TabOrder = 1
-      ExplicitLeft = 371
     end
     object btnCancel: TButton
       AlignWithMargins = True
-      Left = 551
+      Left = 544
       Top = 3
       Width = 74
       Height = 27
@@ -105,9 +104,9 @@ object frmDeveloperMessage: TfrmDeveloperMessage
     end
     object btnOK: TButton
       AlignWithMargins = True
-      Left = 631
+      Left = 624
       Top = 3
-      Width = 74
+      Width = 81
       Height = 27
       Align = alRight
       Caption = 'Open Patreon'
@@ -115,7 +114,6 @@ object frmDeveloperMessage: TfrmDeveloperMessage
       ModalResult = 1
       TabOrder = 3
       OnClick = btnOKClick
-      ExplicitLeft = 627
     end
     object btnKoFi: TButton
       AlignWithMargins = True

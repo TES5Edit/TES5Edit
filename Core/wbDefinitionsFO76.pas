@@ -3331,36 +3331,6 @@ begin
 end;
 
 {>>> For VMAD <<<}
-function wbScriptFragmentsQuestCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container     : IwbContainer;
-begin
-  Result := 0;
-  if aElement.ElementType = etValue then
-    Container := aElement.Container
-  else
-    Container := aElement as IwbContainer;
-  if not Assigned(Container) then
-    Exit;
-  while Assigned(Container) and (Container.Name <> 'Script Fragments') do
-    Container := Container.Container;
-  if not Assigned(Container) then
-    Exit;
-
-  Result := Integer(Container.ElementNativeValues['FragmentCount']);
-end;
-
-procedure wbScriptFragmentsQuestAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('FragmentCount', 'Fragments', aElement);
-end;
-
-procedure wbScriptFragmentsQuestFragmentsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('FragmentCount', aElement);
-end;
-
-{>>> For VMAD <<<}
 function wbScriptFragmentsInfoCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container     : IwbContainer;
@@ -7573,8 +7543,9 @@ begin
         wbInteger('Unknown', itS8),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
-      ]), wbScriptFragmentsQuestCounter).SetAfterSet(wbScriptFragmentsQuestFragmentsAfterSet)
-  ]).SetAfterSet(wbScriptFragmentsQuestAfterSet);
+      ])
+    ).SetCountPath('FragmentCount')
+  ]);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
     wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(4),

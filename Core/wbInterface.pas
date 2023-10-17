@@ -13792,6 +13792,8 @@ begin
     function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
     begin
       Result := 0;
+      if not Assigned(aBasePtr) then
+        Exit;
 
       if not Assigned(aElement) then
         Exit;

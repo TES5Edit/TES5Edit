@@ -31,7 +31,7 @@ type
     Panel2: TPanel;
     PopupMenu1: TPopupMenu;
     mniCompareConf: TMenuItem;
-    pnlButtons: TPanel;
+    pnlButtons: TFlowPanel;
     btnCompare: TButton;
     btnOK: TButton;
     btnCancel: TButton;
