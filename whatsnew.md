@@ -6,6 +6,26 @@ After a monumental effort of over 400 hours by me (ElminsterAU), along with the 
 
 To start xEdit in Starfield game mode, use the `-sf1` parameter or rename the exe to `SF1Edit.exe`.
 
+## Initial Module Selection
+
+### Reliance on Plugins.txt
+
+SF1Edit, consistent with its approach for all previous games, will source the initial selection of active modules from the `plugins.txt` file. 
+
+### Ignoring sTestFile1 to sTestFile10 Entries
+
+`sTestFile1` to `sTestFile10` within the `StarfieldCustom.ini` file will be disregarded by SF1Edit when determining which modules to initially select.
+
+### The Immensity of Starfield's Game Data
+
+Starfield is not just large; it's massive. Given its size, only the 64-bit version of xEdit can handle the game data.
+
+#### First-Time Setup
+On the initial start, the process of building reference information will consume memory in the 4 to 5 GB range. This setup will take over 10 minutes to complete. Although xEdit allows users to browse while this process is ongoing, it is strongly advised to refrain from any operations until the complete loading process has concluded.
+
+#### Subsequent Startups
+For subsequent launches, the cached reference information should load in just a matter of seconds.
+
 ### Known Engine Bugs and Flawed Design Decisions
 
 Through rigorous testing and scrutiny (through decompilation) of the current game engine, a variety of bugs and design choices have been identified that negatively affect the modding capabilities of the game. It's crucial to note that the list below is not exhaustive; there are likely many undiscovered issues remaining.
@@ -41,9 +61,11 @@ Changes in the format of file-specific FormIDs have been observed when any maste
 
 Utilizing the `sTestFile1` to `sTestFile10` entries in the `StarfieldCustom.ini` file for the purpose of loading module files is highly discouraged. Doing so can create a chaotic environment where custom module files are loaded in an unexpected sequence, possibly interleaved with official files. This can lead to a variety of issues, including but not limited to, game crashes, data corruption, and other instability problems.
 
-#### General Observations
+#### General Observations about the current state of modding support in the game engine
 
-It is evident that modding capabilities were not a priority in the development phase of the current game engine. This lack of focus is also corroborated by the absence of quality assurance for modding from Bethesda. Any existing modding capabilities appear to be incidental, stemming from the engine's legacy code base and the bare minimum effort needed to maintain functionality within the confines of editing `Starfield.esm` using the internal version of CK2.
+It is evident from analyzing both the data structures in the provided module files and from decompiling game code that modding capabilities were not a consideration in the development of the game engine up to now. This can also be inferred from the fact that there has been no quality assurance testing of modding functionality from Bethesda, as various current engine bugs that appear in the context of using mods would have been obvious showstoppers. Any existing modding capabilities appear to be incidental, stemming from the engine's legacy code base and the bare minimum effort needed to maintain functionality within the confines of editing `Starfield.esm` using the internal version of CK2.
+
+This does not mean that Bethesda won't or can't still fix this. It is simply a statement about the state as it is right now.
 
 ### Limitations (Implemented to Mitigate the Impact of Identified Engine Bugs and Design Flaws)
 
@@ -70,6 +92,18 @@ Modules with either the `ESL` or `Overlay` flags set cannot be saved in SF1Edit 
 #### Modules with Masters Having ESL or Overlay Flags
 
 If a module has a master file that carries either the `ESL` or `Overlay` flags, SF1Edit 4.1.5 will neither save nor read such a module.
+
+#### Game Masters Must Be Loaded
+
+The module selection dialog box in SF1Edit will prohibit the deselection of `Starfield.esm` and `BlueprintShips-Starfield.esm`. These files are essential and must be loaded at all times.
+
+#### Game Masters as Required Masters for New Modules
+
+When you create a new module, SF1Edit will automatically add `Starfield.esm` and `BlueprintShips-Starfield.esm` as masters. The "Clean Masters" function will not remove these modules, as they are considered obligatory.
+
+#### Official Game Modules Are Read-Only
+
+Be aware that the official game modules—namely `Starfield.esm`, `OldMars.esm`, `Constellation.esm`, and `BlueprintShips-Starfield.esm`—are read-only. You will not be able to make modifications to these modules.
 
 ### The Case for Exclusively Supporting .esm Files in Starfield
 
