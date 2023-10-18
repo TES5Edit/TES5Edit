@@ -8447,8 +8447,14 @@ begin
   Result := nil;
 
   if wbIsStarfield and wbStarfieldIsABugInfestedHellhole then
-    if GetSignature = 'PKIN' then
-      Exit;
+    if (aIndex = wbAssignThis) and (GetSignature = 'PKIN') then begin
+      var lMainRecord: IwbMainRecord;
+      if Supports(aElement, IwbMainRecord, lMainRecord) then begin
+        if lMainRecord.LoadOrderFormID = GetLoadOrderFormID then
+          Exit;
+      end else
+        Exit;
+    end;
 
   if not wbIsInternalEdit then
     if not wbEditAllowed then
@@ -8902,8 +8908,14 @@ end;
 function TwbMainRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 begin
   if wbIsStarfield and wbStarfieldIsABugInfestedHellhole then
-    if GetSignature = 'PKIN' then
-      Exit(False);
+    if (aIndex = wbAssignThis) and (GetSignature = 'PKIN') then begin
+      var lMainRecord: IwbMainRecord;
+      if Supports(aElement, IwbMainRecord, lMainRecord) then begin
+        if lMainRecord.LoadOrderFormID = GetLoadOrderFormID then
+          Exit(False);
+      end else
+        Exit(False);
+    end;
 
   Result := False;
 
@@ -15566,7 +15578,7 @@ var
       if aSource.LoadOrderFormID.ToCardinal = $25 then
         Exit;
 
-      if aSource.Signature = 'PKIN' then begin
+      if (aSource.Signature = 'PKIN') and not aAsNew then begin
         var lSourceName := aElement.FullPath;
         var lTargetName := GetFullPath;
         wbProgress('Error adding [%s] to [%s]: %s', [lSourceName, lTargetName, 'Pack-In overrides don''t work correctly in Starfield']);
