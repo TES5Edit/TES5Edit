@@ -23264,8 +23264,7 @@ begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) then
     lLength := NativeInt(aEndPtr) - NativeInt(aBasePtr);
 
-  if lLength <> 16 then
-    aElement.RequestStorageChange(aBasePtr, aEndPtr, 16);
+  aElement.RequestStorageChange(aBasePtr, aEndPtr, 16);
 
   var lValue := aValue;
 
