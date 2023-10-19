@@ -16401,7 +16401,7 @@ begin
 
     if Counter <= 0 then begin
       if not aSilent then
-        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToString(True) + ' but non of them are in editable files.');
+        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToString(True) + ' but none of them are in editable files.');
       Exit;
     end;
 
