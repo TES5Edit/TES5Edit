@@ -16852,8 +16852,6 @@ end;
     wbString(MNAM, 'Comments')
   ], True, wbPlacedAddInfo, cpNormal, False);
 
-  var lS: PAnsiChar := @TES4;
-
   {subrecords checked against Starfield.esm}
   wbRecord(REGN, 'Region',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -16904,8 +16902,6 @@ end;
       ]), 0, cpNormal, False, nil, nil, wbREGNWeatherDontShow)
     ], []))
   ], True);
-
-  var lTM := Ord(wbToolMode);
 
   {subrecords checked against Starfield.esm}
   wbRecord(SOUN, 'Sound Marker', [
@@ -16997,9 +16993,6 @@ end;
   {wbRecord(SCRL, 'Scroll', [
     wbEDID
   ]);}
-
-  if lTM - 1 = 0  then
-    Inc(lS[0]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(STAT, 'Static',

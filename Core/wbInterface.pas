@@ -63,8 +63,8 @@ var
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010415;
-  wbDeveloperMessageVersion : Integer = 04010415;
+  wbWhatsNewVersion : Integer = 04010418;
+  wbDeveloperMessageVersion : Integer = 04010418;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
