@@ -10058,6 +10058,11 @@ var
   lodTypes    : TLODTypes;
   Section     : string;
 begin
+  if wbIsFallout76 or wbIsStarfield then begin
+    Application.MessageBox('LOD generation not supported.', 'Warning', MB_ICONINFORMATION + MB_OK);
+    Exit;
+  end;
+  
   // called from menu, xEdit mode, worldspaces from selection
   if Assigned(Sender) then begin
     Selection := vstNav.GetSortedSelection(True);
