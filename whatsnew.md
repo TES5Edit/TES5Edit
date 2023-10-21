@@ -61,6 +61,10 @@ In addition to this fragility, this new design lacks clear advantages and adds a
 
 Utilizing the `sTestFile1` to `sTestFile10` entries in the `StarfieldCustom.ini` file for the purpose of loading module files is highly discouraged. Doing so can create a chaotic environment where custom module files are loaded in an unexpected sequence, possibly interleaved with official files. This can lead to a variety of issues, including but not limited to, game crashes, data corruption, and other instability problems.
 
+#### Plugins.txt Not Processed
+
+The current game engine, as published, does not process `plugins.txt` for loading modules. It is highly recommended to use the "Plugins.txt Enabler" mod, along with a mod manager that supports `plugins.txt` for Starfield (e.g., MO2), to use module-based mods in the game.
+
 #### General Observations about the current state of modding support in the game engine
 
 It is evident from analyzing both the data structures in the provided module files and from decompiling game code that modding capabilities were not a consideration in the development of the game engine up to now. This can also be inferred from the fact that there has been no quality assurance testing of modding functionality from Bethesda, as various current engine bugs that appear in the context of using mods would have been obvious showstoppers. Any existing modding capabilities appear to be incidental, stemming from the engine's legacy code base and the required work needed in that context to maintain functionality within the confines of editing `Starfield.esm` using the internal version of CK2.
@@ -253,6 +257,7 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 * #954 - Fixed IMAD unknown flags in 4.1.3h
 * #1060 - Fixed issue where changing values in override didn't update record color on the left side
 * #1223 - [SF] Adding Entries to a complex AVMD can result in an exception
+* (reported on Discord) - in 64bit, JvInterpreter contains a bug that can result in AVs when accessing arrays
 * (contributed) - Various improvements and fixes to .nif handling
 * (contributed) - [FO4] Enhanced BSMP decoding
 * (contributed) - [FO4] Added LVSP (Leveled Spells) support
