@@ -252,6 +252,7 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 * #908 - Fixed issue where overriding a creature in FO3/FNV mode didn't properly copy NIFZ and KFFZ sections
 * #954 - Fixed IMAD unknown flags in 4.1.3h
 * #1060 - Fixed issue where changing values in override didn't update record color on the left side
+* #1223 - [SF] Adding Entries to a complex AVMD can result in an exception
 * (contributed) - Various improvements and fixes to .nif handling
 * (contributed) - [FO4] Enhanced BSMP decoding
 * (contributed) - [FO4] Added LVSP (Leveled Spells) support

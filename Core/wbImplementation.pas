@@ -19874,7 +19874,9 @@ begin
       Exit;
     end;
 
-    var lElementAsContainer := aElement as IwbContainer;
+    var lElementAsContainer: IwbContainerElementRef;
+    if not Supports(aElement, IwbContainerElementRef, lElementAsContainer) then
+      lElementAsContainer := nil;
 
     SetModified(True);
     InvalidateStorage;
