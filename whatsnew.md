@@ -257,7 +257,10 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 * #954 - Fixed IMAD unknown flags in 4.1.3h
 * #1060 - Fixed issue where changing values in override didn't update record color on the left side
 * #1223 - [SF] Adding Entries to a complex AVMD can result in an exception
-* (reported on Discord) - in 64bit, JvInterpreter contains a bug that can result in AVs when accessing arrays
+* (reported on Discord) - Fixed JvInterpreter, in 64bit, contains a bug that can result in AVs when accessing arrays
+* (reported on Discord) - Fixed Copy as Override (with overwriting) shouldn't allow targeting the source
+* (reported on Discord) - Fixed Tab order on Element View/Edit Form is wrong
+* (reported on Discord) - Fixed QAC not working
 * (contributed) - Various improvements and fixes to .nif handling
 * (contributed) - [FO4] Enhanced BSMP decoding
 * (contributed) - [FO4] Added LVSP (Leveled Spells) support
