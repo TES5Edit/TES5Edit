@@ -17363,7 +17363,7 @@ end;
       wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x12
       wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x13
 
-      wbInteger('Can’t Drop', itU8, wbBoolEnum),
+      wbInteger('Can''t Drop', itU8, wbBoolEnum),
       wbInteger('Minor Crime', itU8, wbBoolEnum),
       wbInteger('Non-Hostile', itU8, wbBoolEnum),
       wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x17
