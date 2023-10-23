@@ -6514,11 +6514,11 @@ end;
       {27} 'Faction',
       {28} 'Unknown 28',
       {29} 'Inventory Category',
-      {30} 'Unknown 30',
+      {30} 'Ship Linked',
       {31} 'Unknown 31',
       {32} 'Affliction',
       {33} 'Hazard Effect',
-      {34} 'Unknown 34',
+      {34} 'Unknown 34',                                  //Sandbox or Primitive?
       {35} 'Planet Type',
       {36} 'Atmosphere Type',
       {37} 'Atmosphere Toxicity',
@@ -6537,7 +6537,7 @@ end;
       {50} 'Hand Scanner Info',
       {51} 'Ship Module Class',
       {52} 'Unknown 52',
-      {53} 'Unknown 53',
+      {53} 'Icon',
       {54} 'Mission Board Type',
       {55} 'Ship Engine',
       {56} 'Unknown 56',
@@ -6554,7 +6554,7 @@ end;
       {67} 'Unknown 67',
       {68} 'Unknown 68',
       {69} 'Houdini Biome Style',
-      {70} 'Unknown 70',
+      {70} 'Anim Flavor',
       {71} 'Unknown 71',
       {72} 'Unknown 72',
       {73} 'Unknown 73',
@@ -6563,9 +6563,9 @@ end;
       {76} 'Unknown 76',                         //BCT something
       {77} 'Ship Upgrade',
       {78} 'Unknown 78',
-      {79} 'Unknown 79',
+      {79} 'AVM Data',
       {80} 'Treatment',
-      {81} 'Unknown 81',
+      {81} 'Character Generation Pair',
       {82} 'Crafting Resource Type',
       {83} 'Weapon Display Type'
 
@@ -10471,7 +10471,7 @@ end;
       'Facial Hair',
       'Scar',
       'Eyebrows',
-      'Meatcaps',
+      'Jewelry',
       'Teeth',
       'Head Rear',
       'Unknown 10',
@@ -14544,9 +14544,9 @@ end;
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(HEFA, 'Formation Faction', [FACT]),
     wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
-    wbRArray('Tints',
+    wbRArray('AVMD Tints',
       wbRStruct('Tint', [
-        wbInteger(MNAM, 'Unknown', itU32).SetRequired,
+        wbAVMDMNAMReq,
         wbString(TNAM, 'Tint Group').SetRequired,
         wbString(QNAM, 'Tint Name').SetRequired,
         wbString(VNAM, 'Tint Texture').SetRequired,
@@ -17258,23 +17258,32 @@ end;
     wbEmpty(STOP, 'Marker', cpNormal, True),
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [NULL, OMOD]),
     wbEmpty(BNAM, 'Unknown'),
-    wbStruct(WAIM, 'Unknown', [
-      wbFloat('Unknown'),
-      wbFormIDCk('Zoom', [NULL, ZOOM]),
+    wbStruct(WAIM, 'Aim', [
+      wbFloat('Sighted Transition (Seconds)'),
+      wbFormIDCk('Aim Down Sight Template', [NULL, ZOOM]),
       wbFormIDCk('Aim Model', [NULL, AMDL]),
-      wbUnknown(2),
-      wbFormIDCk('Aim Assist Model Data', [NULL, AAMD]),
-      wbFormIDCk('Aim Optical Sight Marker', [NULL, AOPS]),
+      wbInteger('Accuracy Bonus', itS8),
+      wbInteger('Has Scope', itU8, wbBoolEnum),
+      wbFormIDCk('Aim Assist Template', [NULL, AAMD]),
+      wbFormIDCk('Aim Optical Sight Model', [NULL, AOPS]),
       wbFormIDCk('Melee Aim Assist Model', [NULL, MAAM]),
-      wbUnknown
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8),
+      wbInteger('Enable Marking Targets', itU8, wbBoolEnum),
+      wbInteger('Reticle Type', itU32),                                                //enum
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8)
+
     ]),
-    wbStruct(WAM2, 'Unknown', [
+    wbStruct(WAM2, 'Ammunition', [
       wbFormIDCk('Ammo Type', [NULL, AMMO]),
-      wbInteger('Magazine size', itu32),
+      wbInteger('Ammo Capacity', itu32),
       wbFormIDCk('Ammo List', [NULL, LVLI]),
-      wbFormIDCk('Projectile', [NULL, PROJ]),
-      wbFormIDCk('Ejections', [NULL, ARTO]),
-      wbUnknown
+      wbFormIDCk('Override Projectile', [NULL, PROJ]),
+      wbFormIDCk('Override Shell Casing', [NULL, ARTO]),
+      wbInteger('Projectiles Count', itU8),
+      wbInteger('NPCs Use Ammo', itU8, wbBoolEnum),
+      wbInteger('Unknown', itU8)
     ]),
     wbStruct(WAUD, 'Audio', [
       wbSoundReference('Melee or Creature'),
@@ -17284,11 +17293,11 @@ end;
       wbSoundReference('Equip'),
       wbSoundReference('Unequip'),
       wbSoundReference('Fast Equip'),
-      wbInteger('Unknown', itU32),
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
       wbInteger('Unknown', itU32)
     ]),
-    wbStruct(WTUR, 'Unknown', [
-      wbUnknown(1),
+    wbStruct(WTUR, 'Turret', [
+      wbInteger('Unknown', itU8),
       wbFloat,
       wbFloat,
       wbFloat,
@@ -17297,107 +17306,156 @@ end;
       wbFloat,
       wbFloat
     ]),
-    wbStruct(WCHG, 'Unknown', [
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbFloat('Unknown'),
-      wbUnknown
+    wbStruct(WCHG, 'Charge', [
+      wbFloat('Full Power (Seconds)'),
+      wbFloat('Min Power Per Shot'),
+      wbFloat('Crit Charge Bonus'),
+      wbInteger('Hold Input', itU8, wbBoolEnum),
+      wbInteger('Charging Attack', itU8, wbBoolEnum)
     ]),
-    wbStruct(WDMG, 'Unknown', [
-      wbFloat('Physical Damage'),
-      wbFloat('Optimal Range'),
-      wbFloat('Max Range'),
+    wbStruct(WDMG, 'Damage', [
+      wbFloat('Attack Damage'),
+      wbFloat('Range - Min'),
+      wbFloat('Range - Max'),
+      wbFloat('Out of Range Damage Mult'),
+      wbFloat('Crit Damage Mult'),
+      wbFormIDCk('Crit Effect (Spell)', [NULL, SPEL]),
+      wbInteger('Crit Effect on Death Only', itU8, wbBoolEnum),
+      wbInteger('Hit Behavior', itU8, wbHitBehaviourEnum),
+      wbFormIDCk('Resistance', [NULL, AVIF]),
+      wbFormIDCk('Skill', [NULL, AVIF]),
       wbFloat,
       wbFloat,
-      wbFormIDCk('Crit Hit Spell', [NULL, SPEL]),
-      wbUnknown(10),
       wbFloat,
       wbFloat,
       wbFloat,
       wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+      wbFloat('Crit Chance Inc Mult')
     ]),
     wbDamageTypeArray('Damage Type'),
-    wbStruct(WFIR, 'Unknown', [
+    wbStruct(WFIR, 'Firing', [
       wbInteger('Firing Type', itU8, wbEnum([
         {0} 'Single or Binary',
         {1} 'Burst',
         {2} 'Automatic'
       ])),
       wbInteger('Burst count', itU8),
-      wbUnknown(1),
+      wbInteger('Repeatable Fire', itU8, wbBoolEnum),
+      wbFloat('Attack (Seconds)'),
+      wbFloat('Fire (Seconds)'),
+      wbFloat('Attack Delay (Seconds)'),
+      wbFloat('Bolt Charge (Seconds)'),
+      wbInteger('Bolt Action', itU8, wbBoolEnum),
+      wbInteger('Disable ShellCase Eject', itU8, wbBoolEnum),
+      wbFloat('Shots Per Second'),
       wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbUnknown(2),
-      wbFloat('Fire Rate'),
-      wbFloat,
-      wbUnknown(1),
-      wbFloat,
-      wbUnknown(1),
-      wbFloat,
-      wbUnknown(2),
-      wbFloat
+      wbInteger('Override Rate of Fire', itU8, wbBoolEnum),
+      wbFloat('Trigger Threshold - Primary Trigger'),
+      wbInteger('Unknown', itU8),
+      wbFloat('Trigger Threshold - Second Stage'),
+      wbInteger('Has Staged Trigger', itU8, wbBoolEnum),
+      wbInteger('Has Dual Trigger', itU8, wbBoolEnum),
+      wbFloat('Burst Delay (Seconds)')
     ]),
-    wbUnknown(WFLG),
-    wbStruct(WGEN, 'Unknown', [
-      wbInteger('Unknown', itu32),
+    wbStruct(WFLG, 'Flags', [
+      wbInteger('Non-Playable', itU8, wbBoolEnum),
+      wbInteger('Player Only', itU8, wbBoolEnum),
+      wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x12
+      wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x13
+
+      wbInteger('Can''t Drop', itU8, wbBoolEnum),
+      wbInteger('Minor Crime', itU8, wbBoolEnum),
+      wbInteger('Non-Hostile', itU8, wbBoolEnum),
+      wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x17
+
+      wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x18
+      wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x19
+      wbInteger('Unknown', itU8, wbBoolEnum),                                          //0x1A
+      wbInteger('Unknown', itU8, wbBoolEnum)                                           //0x1B
+    ]),
+    wbStruct(WGEN, 'General', [
+      wbInteger('Type', itu32),                                                    //Enum
       wbFloat('Base weight'),
       wbInteger('Base value', itu32),
-      wbFloat,
-      wbFloat,
+      wbFloat('Base Speed'),
+      wbFloat('Attack Oxygen Cost'),
       wbFormIDCk('Weapon Barrel', [NULL, WBAR])
     ]),
-    wbLStringKC(WABB, 'Unknown', 0, cpTranslate),
-    wbStruct(WMEL, 'Unknown', [
-      wbUnknown(1),
-      wbFloat,
-      wbFloat,
-      wbInteger('Unknown', itU32)
+    wbLStringKC(WABB, 'General', 0, cpTranslate),
+    wbStruct(WMEL, 'Melee', [
+     wbInteger('Unknown', itU8),
+     wbFloat('Bash Damage'),
+     wbFloat('Reach'),
+     wbInteger('Stagger', itU32, wbStaggerEnum)
     ]),
-    wbUnknown(WMEL),
-    wbStruct(QNAM, 'Unknown', [
-      { 0} wbUnknown(4),
+    wbStruct(QNAM, 'Power', [
+      { 0} wbFormIDCK('Power', [NULL, AVIF]),
       { 4} wbFloat('Recharge time'),
       { 8} wbFloat('Recharge delay'),
-      {12} wbUnknown(16),
+      {12} wbInteger('Consume Ammo', itU8, wbBoolEnum),
+      {13} wbFormIDCK('Power - Bonus', [NULL, AVIF]),
+      {17} wbInteger('Use Power', itU8, wbBoolEnum),
+      {18} wbInteger('Unknown', itU8),
+      {19} wbFloat,
+      {23} wbInteger('Unknown', itU8),
+      {24} wbFormIDCK('Unknown', [NULL, CURV]),
       {28} wbFloat,
-      {32} wbUnknown(4)
+      {32} wbFormIDCK('Power Consumption', [NULL, CURV])
     ]),
-    wbStruct(WRLO, 'Unknown', [
+    wbStruct(WRLO, 'Reload', [
       wbFloat,
-      wbFloat,
-      wbUnknown(2)
+      wbFloat('Reload Speed'),
+      wbInteger('Charging', itU8, wbBoolEnum),
+      wbInteger('Single', itU8, wbBoolEnum)
     ]),
-    wbStruct(WVAR, 'Unknown', [
-      { 0} wbUnknown(4),
-      { 4} wbFloat,
-      { 8} wbUnknown(4),
-      {12} wbFloat,
-      {16} wbFloat,
-      {20} wbFloat,
-      {24} wbFloat,
-      {28} wbFloat,
-      {32} wbUnknown(4),
-      {36} wbFloat,
-      {40} wbFloat,
-      {44} wbFloat,
-      {48} wbUnknown(1)
+    wbStruct(WVAR, 'Variable Range', [
+        wbStruct('Aperture', [
+          { 0} wbFloat('Value - Min'),
+          { 4} wbFloat('Value - Min'),
+          { 8} wbFloat('Input - Min'),
+          {12} wbFloat('Input - Max'),
+          {16} wbFloat('Acceleration'),
+          {20} wbFloat('Deceleration')
+        ]),
+        wbStruct('Distance', [
+          {24} wbFloat('Value - Min'),
+          {28} wbFloat('Value - Max'),
+          {32} wbFloat('Input - Min'),
+          {36} wbFloat('Input - Max'),
+          {40} wbFloat('Acceleration'),
+          {44} wbFloat('Deceleration')
+      ]),
+        {48} wbInteger('Use Variable Range', itU8, wbBoolEnum)
     ]),
     wbRStruct('1st Person Model', [
       wbString(MOD4, 'Model FileName'),
       wbFLLD,
       wbMO4S
     ], []).IncludeFlag(dfAllowAnyMember),
-    wbStruct(WVIS, 'Unknown', [
-      { 0} wbUnknown(12),
+    wbStruct(WVIS, 'Visuals', [
+      wbStruct('Unknown', [                        //Data where used looks like three sets of 4, but this is speculation. Only ever has a value in the 4th of each set, and that value is always 128
+      { 0} wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('Unknown', [
+      { 4} wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8)
+      ]),
+      wbStruct('Unknown', [
+      { 8} wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8),
+           wbInteger('Unknown', itU8)
+      ]),
       {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
-      {16} wbUnknown(8) // suspect first 4 bytes are RGBA 255, 255, 127, 127
+      {16} wbFloat('Color Remapping Index'),
+      {20} wbFormIDCK('Image Space Adapter', [NULL, IMAD])
     ]),                 // impact colour, maybe? if so it's the same for all weaps in Starfield.esm
-    wbStruct(WTRM, 'Unknown', [
+    wbStruct(WTRM, 'Ship Weapon', [
       { 0} wbFloat,
       { 4} wbUnknown(1),
       { 5} wbFloat,
