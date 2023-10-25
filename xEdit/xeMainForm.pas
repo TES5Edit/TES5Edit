@@ -7419,6 +7419,8 @@ begin
 
       if Assigned(Container) then
         if Container.ElementCount > 0 then
+          Include(aInitialStates, ivsHasChildren)
+        else if Supports(Container, IwbSubRecordStruct) then
           Include(aInitialStates, ivsHasChildren);
     end;
 end;
