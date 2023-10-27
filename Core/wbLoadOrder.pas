@@ -44,6 +44,7 @@ type
     mfIsESM,
     mfActiveInPluginsTxt,
     mfActive,
+    mfForceLoad,
     mfHasIndex,
     mfLoaded,
     mfLoading,
@@ -946,7 +947,7 @@ begin
   NewLoadOrderCount := 0;
   for i := Low(Self) to High(Self) do
     with Self[i]^ do
-      if miFlags * [mfActive{, mfMastersMissing}] = [mfActive] then
+      if miFlags * [mfActive, mfForceLoad] <> [] then
         Load(Self[i]);
   SetLength(NewLoadOrder, NewLoadOrderCount);
   Result := NewLoadOrder;

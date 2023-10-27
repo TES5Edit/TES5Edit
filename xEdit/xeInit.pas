@@ -834,7 +834,7 @@ begin
     wbGameNameReg      := 'Steam App 1716740';
     wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
-    ToolModes          := [tmView, tmEdit];
+    ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     ToolSources        := [tsPlugins];
   end
 

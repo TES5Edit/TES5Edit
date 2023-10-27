@@ -69,7 +69,7 @@ object frmViewElements: TfrmViewElements
         Height = 27
         Caption = 'Close'
         ModalResult = 2
-        TabOrder = 3
+        TabOrder = 4
         OnClick = btnCancelClick
       end
       object btnOK: TButton
@@ -80,7 +80,7 @@ object frmViewElements: TfrmViewElements
         Height = 27
         Caption = 'Save'
         ModalResult = 1
-        TabOrder = 4
+        TabOrder = 3
         Visible = False
       end
       object LiteCompareButton: TButton
