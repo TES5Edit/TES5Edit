@@ -529,6 +529,8 @@ begin
     WriteLn('  -sse        Skyrim Special Edition archive format');
     WriteLn('  -fo4        Fallout 4 General archive format');
     WriteLn('  -fo4dds     Fallout 4 DDS archive format (streamed DDS textures mipmaps)');
+    WriteLn('  -sf1        Starfield General archive format');
+    WriteLn('  -sf1dds     Starfield DDS archive format (streamed DDS textures mipmaps)');
     WriteLn('  -af:value   Override archive flags with a hex value');
     WriteLn('              Oblivion, Fallout 3/NV and Skyrim archives only');
     WriteLn('  -ff:value   Override files flags with a hex value');
