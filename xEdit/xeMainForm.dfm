@@ -506,7 +506,7 @@ object frmMain: TfrmMain
               '-T:<path> [Temporary Directory]'
               '-D:<path> [Specify a Data Directory]'
               '-O:<path> [Specify path for generated LOD files]'
-              '-I:<path> [Game INI Files]'
+              '-I:<path><filename>  [Game Main INI File]'
               '-G:<path> [Save Game Path]'
               '-P:<path><filename> [Custom Plugins.txt file]'
               '-B:<path> [Backups path i.e. Edit Backups\]'
