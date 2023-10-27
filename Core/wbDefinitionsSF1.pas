@@ -4789,6 +4789,7 @@ begin
     Sig2Int('ADMG'), 'Armor - Damage Resistance',
     Sig2Int('AENC'), 'Armor - Enchantment',
     Sig2Int('AKEY'), 'Armor - Keyword',
+    Sig2Int('AMLS'), 'Armor - Layered Material Swap',
     Sig2Int('ARAT'), 'Armor - Rating',
     Sig2Int('AVAL'), 'Armor - Value',
     Sig2Int('AWGT'), 'Armor - Weight',
@@ -9039,7 +9040,12 @@ end;
     wbBO64,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
-      wbUnknown(9), //always 00 00 00 00 00 00 00 00 00 in Starfield.esm
+      wbUnknown(4),
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8),
       wbFloat
       (*
       wbInteger('Male Priority', itU8),
