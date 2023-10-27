@@ -10084,25 +10084,21 @@ end;
     wbODTY,
     wbFULL,
     wbStruct(ENIT, 'Effect Data', [
-      wbUnknown(27)
-      {
       wbInteger('Enchantment Cost', itS32),
       wbInteger('Flags', itU32, wbFlags([
         'No Auto-Calc',
         '',
         'Extend Duration On Recast'
       ])),
-      wbInteger('Cast Type', itU32, wbCastEnum),
+      wbInteger('Cast Type', itU8, wbCastEnum),
       wbInteger('Enchantment Amount', itS32),
-      wbInteger('Target Type', itU32, wbTargetEnum),
-      wbInteger('Enchant Type', itU32, wbEnum([], [
-        $06, 'Enchantment',
-        $0C, 'Staff Enchantment'
+      wbInteger('Target Type', itU8, wbTargetEnum),
+      wbInteger('Enchant Type', itU8, wbEnum([], [
+        $06, 'Enchantment'
       ])),
       wbFloat('Charge Time'),
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
-      wbFormIDCk('Worn Restrictions', [FLST, NULL]),
-      wbUnknown}
+      wbFormIDCk('Worn Restrictions', [FLST, NULL])
     ], cpNormal, True, nil, 8),
     wbEffectsReq
   ]);
