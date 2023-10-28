@@ -7416,9 +7416,9 @@ begin
       cntElements[NewElementIndex] := aElement as IwbElementInternal;
       cntElements[NewElementIndex].MemoryOrder := NewElementIndex;
 
-      if NewElement.CanAssign(wbAssignThis, aElement, False) then
+{      if NewElement.CanAssign(wbAssignThis, aElement, False) then
         NewElement.Assign(wbAssignThis, aElement, False)
-      else
+      else}
         (NewElement as IwbElementInternal).TryAssignMembers(aElement);
 
       Result := NewElement;
@@ -7431,10 +7431,11 @@ begin
     aElement.Remove;
 
     Result := Assign(lSortOrder, TwbTemplateElement.Create(NewElementDef), False);
+    Result.SetToDefault;
 
-    if Result.CanAssign(wbAssignThis, aElement, False) then
+{    if Result.CanAssign(wbAssignThis, aElement, False) then
       Result.Assign(wbAssignThis, aElement, False)
-    else
+    else}
       (Result as IwbElementInternal).TryAssignMembers(aElement);
   end;
 end;

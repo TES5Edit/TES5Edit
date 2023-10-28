@@ -2819,6 +2819,20 @@ begin
         EditorIDPrefix := '';
         EditorIDSuffix := '';
 
+        if not (AsNew or AsWrapper) then
+          AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
+            var
+              i: Integer;
+            begin
+              Result := mfTemplate in a.miFlags;
+              if not Result then
+                for var lElementIdx := Low(Elements) to High(Elements) do begin
+                  Result := not a._File.Equals(Elements[lElementIdx]._File);
+                  if not Result then
+                    Exit;
+                end;
+            end);
+
         if not Multiple then begin
           MainRecord := (Elements[0] as IwbMainRecord);
           Master := MainRecord.MasterOrSelf;
@@ -7405,6 +7419,8 @@ begin
 
       if Assigned(Container) then
         if Container.ElementCount > 0 then
+          Include(aInitialStates, ivsHasChildren)
+        else if Supports(Container, IwbSubRecordStruct) then
           Include(aInitialStates, ivsHasChildren);
     end;
 end;
