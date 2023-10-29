@@ -9248,7 +9248,7 @@ begin
     {--- Audio Data ---}
     wbRStruct('Audio Data', [
       wbEmpty(MMRK, 'Audio Marker'),
-      wbUnknown(FULL),
+      wbString(FULL, 'Audio Marker Location Name'),
       wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
       wbInteger(BNAM, 'Flags', itU32, wbFlags(['Use Controller Values'])),
       wbFloat(MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
