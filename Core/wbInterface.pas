@@ -21996,9 +21996,17 @@ end;
 
 class function TwbFormID.FromVar(const aValue: Variant): TwbFormID;
 begin
-  if VarIsOrdinal(aValue) then
-    Result._FormID := Int64(aValue)
-  else with FindVarData(aValue)^ do
+  if VarIsOrdinal(aValue) then begin
+    var lInt64 := Int64(aValue);
+    if (lInt64 < -1) and (lInt64 >= Low(Integer)) then begin
+      var lInteger := lInt64;
+      lInt64 := Cardinal(lInteger);
+    end;
+    if lInt64 > High(Cardinal) then
+      lInt64 := -1;
+    if lInt64 >= 0 then
+      Result._FormID := lInt64;
+  end else with FindVarData(aValue)^ do
     if VType = wbVarPointer then
       Result._FormID := NativeUInt(VPointer)
     else

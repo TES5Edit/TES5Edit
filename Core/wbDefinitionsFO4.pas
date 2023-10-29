@@ -2101,7 +2101,7 @@ begin
     39: Result := 7; // Enhance Weapon
     40: Result := 4; // Spawn Hazard
     45: Result := 9; // Damage Type
-    46: Result := 6; // Vampire Lord
+    46: Result := 9; // Immunity
   end;
 end;
 
@@ -13105,16 +13105,16 @@ begin
       ])),
       wbFloat('Base Cost'),
       wbUnion('Assoc. Item', wbMGEFAssocItemDecider, [
-        wbFormID('Unused', cpIgnore),
-        wbFormIDCk('Assoc. Item', [LIGH, NULL]),
-        wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
-        wbFormIDCk('Assoc. Item', [NPC_, NULL]),
-        wbFormIDCk('Assoc. Item', [HAZD, NULL]),
-        wbFormIDCk('Assoc. Item', [SPEL, NULL]),
-        wbFormIDCk('Assoc. Item', [RACE, NULL]),
-        wbFormIDCk('Assoc. Item', [ENCH, NULL]),
-        wbFormIDCk('Assoc. Item', [KYWD, NULL]),
-        wbFormIDCk('Assoc. Item', [DMGT, NULL])
+        { 0} wbFormID('Unused', cpIgnore),
+        { 1} wbFormIDCk('Assoc. Item', [LIGH, NULL]),
+        { 2} wbFormIDCk('Assoc. Item', [WEAP, ARMO, NULL]),
+        { 3} wbFormIDCk('Assoc. Item', [NPC_, NULL]),
+        { 4} wbFormIDCk('Assoc. Item', [HAZD, NULL]),
+        { 5} wbFormIDCk('Assoc. Item', [SPEL, NULL]),
+        { 6} wbFormIDCk('Assoc. Item', [RACE, NULL]),
+        { 7} wbFormIDCk('Assoc. Item', [ENCH, NULL]),
+        { 8} wbFormIDCk('Assoc. Item', [KYWD, NULL]),
+        { 9} wbFormIDCk('Assoc. Item', [DMGT, NULL])
       ], cpNormal, False, nil, wbMGEFAssocItemAfterSet),
       wbByteArray('Magic Skill (unused)', 4),
       wbFormIDCk('Resist Value', [AVIF, NULL]),

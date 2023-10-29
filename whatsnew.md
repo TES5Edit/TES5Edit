@@ -257,6 +257,8 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 * #954 - Fixed IMAD unknown flags in 4.1.3h
 * #1060 - Fixed issue where changing values in override didn't update record color on the left side
 * #1223 - [SF] Adding Entries to a complex AVMD can result in an exception
+* #1234 - [FO4] "MGEF \ Magic Effect Data \ DATA - Data \ Assoc. Item" expects wrong reference type.
+* #1235 - Overflow converting Cardinal to Integer when using SetLoadOrderFormID on ESL load order ID
 * (reported on Discord) - Fixed JvInterpreter, in 64bit, contains a bug that can result in AVs when accessing arrays
 * (reported on Discord) - Fixed Copy as Override (with overwriting) shouldn't allow targeting the source
 * (reported on Discord) - Fixed Tab order on Element View/Edit Form is wrong
