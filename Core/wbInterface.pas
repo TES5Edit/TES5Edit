@@ -58,13 +58,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 4;
-    Build   : 't';
-    Title   : 'EXTREMELY EXPERIMENTAL (RC3 for 4.1.5)';
+    Build   : 'v';
+    Title   : 'EXTREMELY EXPERIMENTAL (RC5 for 4.1.5)';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010420;
-  wbDeveloperMessageVersion : Integer = 04010420;
+  wbWhatsNewVersion : Integer = 04010422;
+  wbDeveloperMessageVersion : Integer = 04010422;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
@@ -21999,7 +21999,7 @@ begin
   if VarIsOrdinal(aValue) then begin
     var lInt64 := Int64(aValue);
     if (lInt64 < -1) and (lInt64 >= Low(Integer)) then begin
-      var lInteger := lInt64;
+      var lInteger: Integer := lInt64;
       lInt64 := Cardinal(lInteger);
     end;
     if lInt64 > High(Cardinal) then
