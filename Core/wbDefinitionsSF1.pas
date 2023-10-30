@@ -16341,7 +16341,7 @@ end;
       ], [])
     ], []),
 
-    wbLString(SNAM, 'Unknown', 0, cpTranslate)
+    wbLString(SNAM, 'Plural Name', 0, cpTranslate)
 
   ]);
 
