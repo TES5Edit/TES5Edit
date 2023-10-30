@@ -13577,6 +13577,7 @@ var
     Result := wbRArray(aName, wbTintTemplateGroup);
   end;
 
+
   function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
   begin
     Result :=
@@ -13588,14 +13589,33 @@ var
             wbRStruct('Morph Preset', [
               wbInteger(MPPI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
               wbLString(MPPN, 'Name', 0, cpTranslate),
-              wbString(MPPM, 'Unknown'),
+              wbString(MPPM, 'Morph'),
               wbFormIDCk(MPPT, 'Texture', [TXST]),
-              wbUnknown(MPPF)
+              wbInteger(MPPF, 'Playable', itU8, wbBoolEnum)
             ], []),
             cpNormal, False, nil, wbMorphPresetsAfterSet
           ),
-          wbUnknown(MPPK),
-          wbArray(MPGS, 'Unknown', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
+          wbInteger(MPPK, 'Mask', itU16, wbEnum ([], [                                                       //Maps to Faceregion tint groups (male and female)
+
+        //Male
+        1171, 'Male Forehead Mask',
+        1172, 'Male Eyes Mask',
+        1173, 'Male Nose Mask',
+        1174, 'Male Ears Mask',
+        1175, 'Male Cheeks Mask',
+        1176, 'Male Mouth Mask',
+        1177, 'Male Neck Mask',
+        //Female
+        1221, 'Female Forehead Mask',
+        1222, 'Female Eyes Mask',
+        1223, 'Female Nose Mask',
+        1224, 'Female Ears Mask',
+        1225, 'Female Cheeks Mask',
+        1226, 'Female Mouth Mask',
+        1227, 'Female Neck Mask',
+        65535, 'None'
+      ])),
+          wbArray(MPGS, 'Morph Group Sliders', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
         ], [])
       );
   end;
