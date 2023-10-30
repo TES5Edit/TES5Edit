@@ -8720,7 +8720,7 @@ end;
     wbInteger(csPropertyCount, itU32),
     wbInteger('Level Min', itU16),
     wbInteger('Level Max', itU16),
-    wbInteger('Addon Index', itS16),
+    wbInteger('Addon Index', itS16).SetDefaultNativeValue(-1),
     wbInteger('Default', itU8, wbBoolEnum),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
     wbInteger('Min Level For Ranks', itU8),
