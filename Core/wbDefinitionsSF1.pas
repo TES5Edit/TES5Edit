@@ -16333,7 +16333,7 @@ end;
       ], [], cpNormal, True)
     ], []),
 
-    wbRStructs('Unknown', 'Unknown', [
+    wbRStructs('Mannequin Skin Swaps', 'Skin Swap', [
       wbUnknown(MSSS),
       wbRStructs('Unknown', 'Unknown', [
         wbUnknown(MSSI),
