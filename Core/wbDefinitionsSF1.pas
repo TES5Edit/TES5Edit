@@ -16159,7 +16159,7 @@ end;
     ], cpNormal, True),
     *)
 
-    wbRStruct('Sekleton Data', [
+    wbRStruct('Skeleton Data', [
       wbRStruct('Male Data', [
         wbEmpty(MNAM, 'Male Marker').SetRequired,
         wbString(ANAM, 'Skeletal Model'),

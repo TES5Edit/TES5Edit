@@ -5333,6 +5333,19 @@ begin
     wbFormIDCk(RNAM, 'Sound - Random/Looping', [SOUN])
   ], True);
 
+var  wbSoundTypeSoundsOld :=
+    wbRArrayS('Sounds',
+      wbRStructSK([0], 'Sound', [
+        wbFormIDCk(CSDI, 'Sound', [SOUN, NULL], False, cpNormal, True),
+        wbInteger(CSDC, 'Sound Chance', itU8, nil, cpNormal, True)
+      ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(1, '{Chance: ', '}')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfCollapsed)
+    , cpNormal, True);
+
   wbCSDT := wbRStructSK([0], 'Sound Type', [
     wbInteger(CSDT, 'Type', itU32,wbEnum([
       {00} 'Left Foot',
@@ -5359,7 +5372,7 @@ begin
       {20} 'Jump',
       {21} 'PlayRandom/Loop'
     ])),
-    wbSoundTypeSounds
+    wbSoundTypeSoundsOld
   ], []);
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
@@ -9235,7 +9248,7 @@ begin
     {--- Audio Data ---}
     wbRStruct('Audio Data', [
       wbEmpty(MMRK, 'Audio Marker'),
-      wbUnknown(FULL),
+      wbString(FULL, 'Audio Marker Location Name'),
       wbFormIDCk(CNAM, 'Audio Location', [ALOC]),
       wbInteger(BNAM, 'Flags', itU32, wbFlags(['Use Controller Values'])),
       wbFloat(MNAM, 'Layer 2 Trigger %', cpNormal, True, 100),
