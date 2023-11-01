@@ -13577,7 +13577,6 @@ var
     Result := wbRArray(aName, wbTintTemplateGroup);
   end;
 
-
   function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
   begin
     Result :=
