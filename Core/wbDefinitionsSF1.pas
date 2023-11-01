@@ -4687,6 +4687,25 @@ begin
     'GetItemValue'
   ]);
 
+  var wbPerkCategoryEnum := wbEnum([
+    {0} 'None',
+    {1} 'Combat',
+    {2} 'Science',
+    {3} 'Tech',
+    {4} 'Physical',
+    {5} 'Social',
+    {6} 'All',
+    {7} 'AllIncludingNone'
+  ]);
+
+  var wbPerkSkillGroupEnum := wbEnum([
+    {0} 'None',
+    {1} 'Basic',
+    {2} 'Advanced',
+    {3} 'Expert',
+    {4} 'Master'
+  ]);
+
   // Event member names and availability are different depending on event type
   // Using generic names for the last 3 of them: Form, Value1, Value2
   // Event member names and availability are different depending on event type
@@ -7377,11 +7396,11 @@ end;
           {66 ptBiomeMask}
           wbByteArray('Biome Mask', 4),
           {67 ptPerkCategory}
-          wbByteArray('Perk Category', 4),
+          wbInteger('Perk Category', itU32, wbPerkCategoryEnum),
           {68 ptPerkSkillGroupComparison}
-          wbByteArray('Perk Skill Group Comparison', 4),
+          wbInteger('Perk Skill Group Comparison', itU32, wbPerkSkillGroupEnum),
           {69 ptPerkSkillGroup}
-          wbByteArray('Perk Skill Group', 4),
+          wbInteger('Perk Skill Group', itU32, wbPerkSkillGroupEnum),
           {70 ptReactionType}
           wbByteArray('Reaction Type', 4),
           {71 ptLimbCategory}
@@ -7591,11 +7610,11 @@ end;
           {66 ptBiomeMask}
           wbByteArray('Biome Mask', 4),
           {67 ptPerkCategory}
-          wbByteArray('Perk Category', 4),
+          wbInteger('Perk Category', itU32, wbPerkCategoryEnum),
           {68 ptPerkSkillGroupComparison}
-          wbByteArray('Perk Skill Group Comparison', 4),
+          wbInteger('Perk Skill Group Comparison', itU32, wbPerkSkillGroupEnum),
           {69 ptPerkSkillGroup}
-          wbByteArray('Perk Skill Group', 4),
+          wbInteger('Perk Skill Group', itU32, wbPerkSkillGroupEnum),
           {70 ptReactionType}
           wbByteArray('Reaction Type', 4),
           {71 ptLimbCategory}
@@ -11285,23 +11304,8 @@ end;
     wbFULL,
     wbDESCReq,
     wbStruct(DATA, 'Data', [
-      wbInteger('Perk Category', itU8, wbEnum([
-        {0} 'None',
-        {1} 'Combat',
-        {2} 'Science',
-        {3} 'Tech',
-        {4} 'Physical',
-        {5} 'Social',
-        {6} 'All',
-        {7} 'AllIncludingNone'
-      ])),
-      wbInteger('Perk Skill Group', itU8, wbEnum([
-        {0} 'None',
-        {1} 'Basic',
-        {2} 'Advanced',
-        {3} 'Expert',
-        {4} 'Master'
-      ])),
+      wbInteger('Perk Category', itU8, wbPerkCategoryEnum),
+      wbInteger('Perk Skill Group', itU8, wbPerkSkillGroupEnum),
       wbFromSize(4, wbInteger('Crew Assignment', itU8, wbEnum([
         {0} 'None',
         {1} 'Crew Ship',
