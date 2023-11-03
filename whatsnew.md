@@ -1,4 +1,4 @@
-# What's New in (future) xEdit 4.1.5 since 4.0.x?
+# What's New in xEdit 4.1.5?
 
 ## Starfield
 

@@ -1,6 +1,6 @@
 [Settings]
 AutoLibSuffix=0
-ClearChildAppSettings=1
+ClearChildAppSettings=0
 ClearChildPackageSettings=0
 ClearChildVersionInfo=1
 NormalizeDproj=1

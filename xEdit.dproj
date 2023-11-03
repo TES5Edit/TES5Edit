@@ -47,6 +47,12 @@
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='DebugSF' or '$(Cfg_5)'!=''">
+        <Cfg_5>true</Cfg_5>
+        <CfgParent>Cfg_2</CfgParent>
+        <Cfg_2>true</Cfg_2>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
         <SanitizedProjectName>xEdit</SanitizedProjectName>
         <AppDPIAwarenessMode>system</AppDPIAwarenessMode>
@@ -65,12 +71,12 @@
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_Debug>true</VerInfo_Debug>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.1.4.0;ProductName=xEdit;ProductVersion=4.1.4.0</VerInfo_Keys>
+        <VerInfo_Keys>FileDescription=xEdit;FileVersion=4.1.5.0;ProductName=xEdit;ProductVersion=4.1.5.0</VerInfo_Keys>
         <VerInfo_Locale>3081</VerInfo_Locale>
         <VerInfo_MajorVer>4</VerInfo_MajorVer>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
-        <VerInfo_PreRelease>true</VerInfo_PreRelease>
-        <VerInfo_Release>4</VerInfo_Release>
+        <VerInfo_PreRelease>false</VerInfo_PreRelease>
+        <VerInfo_Release>5</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_DebugInformation>0</DCC_DebugInformation>
@@ -83,8 +89,7 @@
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_MapFile>3</DCC_MapFile>
-        <DCC_Optimize>false</DCC_Optimize>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <DCC_Optimize>true</DCC_Optimize>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -99,6 +104,9 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_4)'!=''">
         <DCC_Define>LiteVersion;$(DCC_Define)</DCC_Define>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_5)'!=''">
+        <Icon_MainIcon>xEdit\xEdit_SF_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -232,6 +240,10 @@
         </BuildConfiguration>
         <BuildConfiguration Include="LiteDebug">
             <Key>Cfg_4</Key>
+            <CfgParent>Cfg_2</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="DebugSF">
+            <Key>Cfg_5</Key>
             <CfgParent>Cfg_2</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
