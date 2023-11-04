@@ -769,8 +769,8 @@ begin
 
   if aType in [ctToStr, ctToSummary] then begin
     PhaseLength := aInt mod 64;
-    Masser := (aInt and 64) <> 0;
-    Secunda := (aInt and 128) <> 0;
+    Secunda := (aInt and 64) <> 0;
+    Masser := (aInt and 128) <> 0;
     if Masser then
       if Secunda then
         Result := 'Masser, Secunda / '
