@@ -8332,7 +8332,8 @@ end;
         wbRStruct('Component Data - Spaceship Hull Code', [
           wbLStringKC(HULL, 'Hull Code', 0, cpTranslate)
         ], []),
-        wbRStruct('Component Data - Add to inventory on destroy', [
+        //BGSAddToInventoryOnDestroy_Component
+        wbRStructSK([0],'Component Data - Add to inventory on destroy', [
           wbFormIDCk(INAM, 'Add to inventory on destroy', [LVLI])
         ], []),
         //BGSObjectWindowFilter_Component
@@ -8352,7 +8353,7 @@ end;
           wbKeywords
         ], []),
         //TESImageSpaceModifiableForm_Component
-        wbRStruct('Component Data - Image Space Adapter', [
+        wbRStructSK([0],'Component Data - Image Space Adapter', [
           wbFormIDCk(MNAM, 'Image Space Adapter', [IMAD])
         ], []),
         wbRStruct('Component Data - Planet Model', [
@@ -8409,7 +8410,8 @@ end;
           wbUnknown(PNAM),
           wbFormIDCk(BNAM, 'Surface Block', [SFBK])
         ], []),
-        wbRStruct('Component Data - Spawn on destroy', [
+        //BGSSpawnOnDestroy_Component
+        wbRStructSK([0],'Component Data - Spawn on destroy', [
           wbFormIDCk(SODA, 'Spawn on destroy', sigBaseObjects)
         ], []),
         //BGSSoundTag_Component
@@ -8744,7 +8746,7 @@ end;
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
     wbInteger('Min Level For Ranks', itU8),
     wbInteger('Alt Levels Per Tier', itU8),
-    wbArray('Includes', wbStruct('Include', [
+    wbArray('Includes', wbStructSK([0],'Include', [
       wbFormIDCk('Mod', [OMOD]),
       wbInteger('Attach Point Index', itU8),
       wbInteger('Optional', itU8, wbBoolEnum),
@@ -9053,8 +9055,12 @@ end;
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
-    ], cpNormal, True, nil, 1),
-    wbStruct(DNAM, '', [
+    ], cpNormal, True, nil, 1)
+    .SetSummaryKeyOnValue([0,1])
+    .SetSummaryPrefixSuffixOnValue(0, 'Value = ',', ')
+    .SetSummaryPrefixSuffixOnValue(1, 'Weight = ','')
+    ,
+    wbStructSK(DNAM, [0], '', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
       wbInteger('Flags', itU8, wbFlags([
         {0x01} 'Ignores Normal Weapon Resistance',
@@ -10428,7 +10434,7 @@ end;
     wbEmpty(INAM, 'Unknown'),
     wbMNAMFurnitureMarker,
     wbUnknown(GNAM),
-    wbStruct(WBDT, 'Workbench Data', [
+    wbStructSK(WBDT, [0], 'Workbench Data', [
       wbInteger('Bench Type', itU8, wbEnum([
         {0} 'None',
         {1} 'Create Object', // used only for MS11Workbench [FURN:00091FD5]
@@ -10449,13 +10455,18 @@ end;
     wbRArray('Marker Entry Points', wbStruct(FNPR, 'Marker', [
       wbInteger('Type', itU16, wbFurnitureAnimTypeEnum),
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
-    ])),
+    ]).SetSummaryKeyOnValue([0,1])
+    .SetSummaryPrefixSuffixOnValue(0, '[','] ')
+    ),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
     wbArray(NNAM, 'Marker Files', wbStruct('Marker', [
       wbString('Name'),
       wbString('Model FileName')
-      ])),
+      ]).SetSummaryKey([0,1])
+      .SetSummaryMemberPrefixSuffix(0,'[','] ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      ),
     //wbObjectTemplate, not in Starfield.esm, but based on the STOP below likely...
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -17538,7 +17549,7 @@ end;
     wbStruct(WVAR, 'Variable Range', [
         wbStruct('Aperture', [
           { 0} wbFloat('Value - Min'),
-          { 4} wbFloat('Value - Min'),
+          { 4} wbFloat('Value - Max'),
           { 8} wbFloat('Input - Min'),
           {12} wbFloat('Input - Max'),
           {16} wbFloat('Acceleration'),
