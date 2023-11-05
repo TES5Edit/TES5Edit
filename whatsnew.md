@@ -4,6 +4,13 @@
 
 * #1027 - [FNV] TESClimate Moons / Phase Length field is read from the .esm incorrectly
 * #1240 - Conflict colors are not refreshed when filter is re-applied
+* #1242 - GBFM Component Data - Property Sheet
+* #1243 - [SF] WEAP\WVAR\Value - Min/Max typo
+
+## Minor Changes
+
+* #1243 - [SF] Added some more summaries
+* #1244 - [SF] improved RACE record definition
 
 # What's New in xEdit 4.1.5?
 

@@ -20033,111 +20033,117 @@ begin
   LastDef := nil;
   LastElement := nil;
 
-  if aPos = Low(Integer) then begin
-    AddRequiredElements;
-  end else begin
-    SetLength(FoundMembers, srcDef.MemberCount);
-    CurrentDefPos := 0;
-    while (aPos < aContainer.ElementCount) and (CurrentDefPos < srcDef.MemberCount) do begin
+  try
+    inherited Create(aOwner);
 
-      if aContainer[aPos].ElementType <> etSubRecord then
-        Break;
+    if aPos = Low(Integer) then begin
+      AddRequiredElements;
+    end else begin
+      SetLength(FoundMembers, srcDef.MemberCount);
+      CurrentDefPos := 0;
+      while (aPos < aContainer.ElementCount) and (CurrentDefPos < srcDef.MemberCount) do begin
 
-      CurrentRec := aContainer[aPos] as IwbSubRecordInternal;
+        if aContainer[aPos].ElementType <> etSubRecord then
+          Break;
 
-      if CurrentRec.Skipped then begin
-        Inc(aPos);
-        Continue;
-      end;
+        CurrentRec := aContainer[aPos] as IwbSubRecordInternal;
 
-      if not srcDef.ContainsMemberFor(Self, CurrentRec.Signature, CurrentRec) then begin
-        if srcDef.SkipSignature[CurrentRec.Signature] then begin
+        if CurrentRec.Skipped then begin
           Inc(aPos);
           Continue;
         end;
-        Break;
-      end;
 
-      if srcDef.AllowUnordered then begin
-
-        CurrentDefPos := srcDef.GetMemberIndexFor(Self, CurrentRec.Signature, CurrentRec);
-        if CurrentDefPos < 0 then begin
-          if wbHasProgressCallback then
-            wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
-          //FoundError := True;
-          Inc(aPos);
-          Continue;
-        end;
-        CurrentDef := srcDef.Members[CurrentDefPos];
-
-      end;
-
-      CurrentDef := srcDef.Members[CurrentDefPos];
-      if not CurrentDef.CanHandle(Self, CurrentRec.Signature, CurrentRec) then begin
-        if Assigned(LastDef)
-           and
-           (dfMergeIfMultiple in LastDef.DefFlags)
-           and
-           LastDef.CanHandle(Self, CurrentRec.Signature, CurrentRec)
-        then begin
-          if LastElement.MergeMultiple(CurrentRec) then begin
-            aContainer.RemoveElement(aPos);
+        if not srcDef.ContainsMemberFor(Self, CurrentRec.Signature, CurrentRec) then begin
+          if srcDef.SkipSignature[CurrentRec.Signature] then begin
+            Inc(aPos);
             Continue;
           end;
+          Break;
         end;
-        Inc(CurrentDefPos);
-        Continue;
-      end;
 
-      if CurrentDef.DefType = dtSubRecordUnion then begin
-        CurrentDef := (CurrentDef as IwbRecordDef).GetMemberFor(Self, CurrentRec.Signature, CurrentRec);
-        Assert(Assigned(CurrentDef));
-      end;
+        if srcDef.AllowUnordered then begin
 
-      if Assigned(FoundMembers[CurrentDefPos]) then begin
-        if dfMergeIfMultiple in CurrentDef.DefFlags then
-          if FoundMembers[CurrentDefPos].MergeMultiple(CurrentRec) then
+          CurrentDefPos := srcDef.GetMemberIndexFor(Self, CurrentRec.Signature, CurrentRec);
+          if CurrentDefPos < 0 then begin
+            if wbHasProgressCallback then
+              wbProgressCallback('Error: record ' + String(GetSignature) + ' contains unexpected (or out of order) subrecord ' + String(CurrentRec.Signature) + ' ' + IntToHex(Int64(Cardinal(CurrentRec.Signature)), 8) );
+            //FoundError := True;
+            Inc(aPos);
             Continue;
-        Break; // don't allow duplicate members
-      end;
+          end;
+          CurrentDef := srcDef.Members[CurrentDefPos];
 
-      case CurrentDef.DefType of
-        dtSubRecord : begin
-          aContainer.RemoveElement(aPos);
-          CurrentRec.SetDef(CurrentDef as IwbSubRecordDef);
-          AddElement(CurrentRec);
-          Element := CurrentRec as IwbElementInternal;
         end;
-        dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordArrayDef);
-        dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordStructDef);
-      else
-        raise Exception.CreateFmt('Unexpected def type for SubRecord %s', [String(CurrentRec.Signature)]);
+
+        CurrentDef := srcDef.Members[CurrentDefPos];
+        if not CurrentDef.CanHandle(Self, CurrentRec.Signature, CurrentRec) then begin
+          if Assigned(LastDef)
+             and
+             (dfMergeIfMultiple in LastDef.DefFlags)
+             and
+             LastDef.CanHandle(Self, CurrentRec.Signature, CurrentRec)
+          then begin
+            if LastElement.MergeMultiple(CurrentRec) then begin
+              aContainer.RemoveElement(aPos);
+              Continue;
+            end;
+          end;
+          Inc(CurrentDefPos);
+          Continue;
+        end;
+
+        if CurrentDef.DefType = dtSubRecordUnion then begin
+          CurrentDef := (CurrentDef as IwbRecordDef).GetMemberFor(Self, CurrentRec.Signature, CurrentRec);
+          Assert(Assigned(CurrentDef));
+        end;
+
+        if Assigned(FoundMembers[CurrentDefPos]) then begin
+          if dfMergeIfMultiple in CurrentDef.DefFlags then
+            if FoundMembers[CurrentDefPos].MergeMultiple(CurrentRec) then
+              Continue;
+          Break; // don't allow duplicate members
+        end;
+
+        case CurrentDef.DefType of
+          dtSubRecord : begin
+            aContainer.RemoveElement(aPos);
+            CurrentRec.SetDef(CurrentDef as IwbSubRecordDef);
+            AddElement(CurrentRec);
+            Element := CurrentRec as IwbElementInternal;
+          end;
+          dtSubRecordArray  : Element := TwbSubRecordArray.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordArrayDef);
+          dtSubRecordStruct : Element := TwbSubRecordStruct.Create(Self, aContainer, aPos, CurrentDef as IwbSubRecordStructDef);
+        else
+          raise Exception.CreateFmt('Unexpected def type for SubRecord %s', [String(CurrentRec.Signature)]);
+        end;
+
+        Element.SetSortOrder(CurrentDefPos);
+        Element.SetMemoryOrder(CurrentDefPos);
+        FoundMembers[CurrentDefPos] := Element;
+        LastDef := CurrentDef;
+        LastElement := Element;
+
+        if dfTerminator in CurrentDef.DefFlags then
+          Break;
+
+        if srcDef.AllowUnordered then
+          CurrentDefPos := 0
+        else
+          Inc(CurrentDefPos);
       end;
-
-      Element.SetSortOrder(CurrentDefPos);
-      Element.SetMemoryOrder(CurrentDefPos);
-      FoundMembers[CurrentDefPos] := Element;
-      LastDef := CurrentDef;
-      LastElement := Element;
-
-      if dfTerminator in CurrentDef.DefFlags then
-        Break;
-
-      if srcDef.AllowUnordered then
-        CurrentDefPos := 0
-      else
-        Inc(CurrentDefPos);
     end;
-  end;
 
-  FoundMembers := nil;
+    FoundMembers := nil;
 
-  srcDef.AfterLoad(Self);
+    srcDef.AfterLoad(Self);
 
-  inherited Create(aOwner);
-  if aPos = Low(Integer) then begin
-    SetModified(True);
-    InvalidateStorage;
+    if aPos = Low(Integer) then begin
+      SetModified(True);
+      InvalidateStorage;
+    end;
+  except
+    Remove;
+    raise;
   end;
 end;
 {
