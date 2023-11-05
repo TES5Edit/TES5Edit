@@ -58,12 +58,12 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : '';
+    Build   : 'a';
     Title   : 'EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010500;
+  wbWhatsNewVersion : Integer = 04010501;
   wbDeveloperMessageVersion : Integer = 04010500;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
@@ -1630,6 +1630,8 @@ type
     function GetDontSave: Boolean;
     function IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
     function IsLocalOffset(anOffset: Integer): Boolean;
+
+    procedure CopyFrom(aSource: Pointer; aSize: Integer);
 
     property DataBasePtr: Pointer
       read GetDataBasePtr;
@@ -16077,10 +16079,7 @@ begin
         fkDouble: lSize := SizeOf(Double)+Ord(ndTerminator);
       end;
       if aSource.DataSize = lSize then begin
-        var lTargetBasePtr := aTargetDataContainer.DataBasePtr;
-        var lTargetEndPtr := aTargetDataContainer.DataEndPtr;
-        aTargetDataContainer.RequestStorageChange(lTargetBasePtr, lTargetEndPtr, lSize);
-        Move(lSourceBasePtr^, lTargetBasePtr^, lSize);
+        aTargetDataContainer.CopyFrom(lSourceBasePtr, lSize);
         Exit;
       end;
     end;

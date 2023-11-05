@@ -1,3 +1,10 @@
+# What's New in xEdit 4.1.5a?
+
+## Bugfixes
+
+* #1027 - [FNV] TESClimate Moons / Phase Length field is read from the .esm incorrectly
+* #1240 - Conflict colors are not refreshed when filter is re-applied
+
 # What's New in xEdit 4.1.5?
 
 ## Starfield

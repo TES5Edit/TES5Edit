@@ -986,6 +986,7 @@ type
     function GetDontSave: Boolean;
     function IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
     function IsLocalOffset(anOffset: Integer): Boolean;
+    procedure CopyFrom(aSource: Pointer; aSize: Integer);
 
     {--- IwbDataContainerInternal ---}
     procedure UpdateStorageFromElements; virtual;
@@ -22267,6 +22268,45 @@ begin
     end;
   end;
   Result := True;
+end;
+
+procedure TwbDataContainer.CopyFrom(aSource: Pointer; aSize: Integer);
+var
+  SelfRef : IwbContainerElementRef;
+  OldValue, NewValue: Variant;
+begin
+  if not wbIsInternalEdit then begin
+    if not wbEditAllowed then
+      raise Exception.Create(GetName + ' can not be edited.');
+  end;
+
+  SelfRef := Self as IwbContainerElementRef;
+
+  DoInit(False);
+
+  BeginUpdate;
+  try
+    var lValueDef := GetValueDef;
+    if Assigned(lValueDef) then begin
+      OldValue := GetNativeValue;
+
+      var lTargetBasePtr := GetDataBasePtr;
+      var lTargetEndPtr := GetDataEndPtr;
+      RequestStorageChange(lTargetBasePtr, lTargetEndPtr, aSize);
+      if aSize > 0 then
+      Move(aSource^, lTargetBasePtr^, aSize);
+
+      SetModified(True);
+      NewValue := GetNativeValue;
+
+      DoAfterSet(OldValue, NewValue);
+    end else
+      raise Exception.Create(GetName + ' can not be edited');
+
+    NotifyChanged(eContainer);
+  finally
+    EndUpdate;
+  end;
 end;
 
 constructor TwbDataContainer.Create(const aContainer: IwbContainer; var aBasePtr: Pointer; var aEndPtr: Pointer; const aPrevMainRecord : IwbMainRecord);

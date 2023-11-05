@@ -43,7 +43,9 @@
         <DCC_DcuOutput>.\Temp\xDump\$(Platform)\$(Config)</DCC_DcuOutput>
         <DCC_Define>$(USERDEFINES);EH_NO_VERSION;NX_EXCEPTION_LOG_IN_APP_FOLDER;$(DCC_Define)</DCC_Define>
         <DCC_Description>xDump by ElminsterAU</DCC_Description>
+        <DCC_DynamicBase>false</DCC_DynamicBase>
         <DCC_ExeOutput>.\Build</DCC_ExeOutput>
+        <DCC_HighEntropyVa>false</DCC_HighEntropyVa>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <DCC_UnitSearchPath>.\Core;.\xDump;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\ZLibEx;.\External\lz4\lib\delphi;.\External\FileContainer;.\External\TForge\Source\Include;.\External\TForge\Source\Shared;.\External\TForge\Source\Engine\Forge;.\External\TForge\Source\Engine\Hashes;.\External\JsonDataObjects\Source;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
@@ -54,7 +56,7 @@
         <VerInfo_Locale>3081</VerInfo_Locale>
         <VerInfo_MajorVer>4</VerInfo_MajorVer>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
-        <VerInfo_PreRelease>false</VerInfo_PreRelease>
+        <VerInfo_PreRelease>true</VerInfo_PreRelease>
         <VerInfo_Release>5</VerInfo_Release>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
