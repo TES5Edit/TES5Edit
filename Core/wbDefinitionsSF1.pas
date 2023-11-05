@@ -16344,7 +16344,7 @@ end;
       ], [], cpNormal, True)
     ], []),
 
-    wbRStructs('Unknown', 'Unknown', [
+    wbRStructs('Mannequin Skin Swaps', 'Skin Swap', [
       wbUnknown(MSSS),
       wbRStructs('Unknown', 'Unknown', [
         wbUnknown(MSSI),
@@ -16352,7 +16352,7 @@ end;
       ], [])
     ], []),
 
-    wbLString(SNAM, 'Unknown', 0, cpTranslate)
+    wbLString(SNAM, 'Plural Name', 0, cpTranslate)
 
   ]);
 
