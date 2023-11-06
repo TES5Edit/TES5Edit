@@ -742,6 +742,13 @@ type
     procedure btnCancelClick(Sender: TObject);
     procedure FormResize(Sender: TObject);
   protected
+    OverrideViewFocusedNode: PVirtualNode;
+    function GetViewFocusedNode: PVirtualNode;
+    procedure SetViewFocusedNode(aNode: PVirtualNode);
+    property vstViewFocusedNode: PVirtualNode
+      read GetViewFocusedNode
+      write SetViewFocusedNode;
+  protected
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
     procedure SetSaveInterval;
@@ -912,6 +919,8 @@ type
     ActiveRecords: TDynViewNodeDatas;
     ActiveContainer: IwbDataContainer;
     ViewFocusedElement : IwbElement;
+    EditAddedElement: Boolean;
+    EditFocusedViewElement: Boolean;
     NodeForViewFocusedElement: PVirtualNode;
     ColumnForViewFocusedElement: Integer;
     LoaderStarted: Boolean;
@@ -5828,13 +5837,13 @@ procedure TfrmMain.edViewFilterNameKeyDown(Sender: TObject; var Key: Word; Shift
     Node : PVirtualNode;
   begin
     vstView.SetFocus;
-    FocusedNode := vstView.FocusedNode;
+    FocusedNode := vstViewFocusedNode;
     if Assigned(FocusedNode) then
       for Node in vstView.VisibleNodes(nil) do begin
         if Node = FocusedNode then
           Exit;
       end;
-    vstView.FocusedNode := vstView.GetFirstVisible;
+    vstViewFocusedNode := vstView.GetFirstVisible;
   end;
 
 begin
@@ -6540,7 +6549,7 @@ begin
           if Assigned(Element) then
             FocusFile := Element._File;
 
-      ViewNode := vstView.FocusedNode;
+      ViewNode := vstViewFocusedNode;
       if Assigned(ViewNode) then
         r := vstView.GetDisplayRect(ViewNode, Column, False);
       case Key of
@@ -6604,10 +6613,10 @@ begin
           if Assigned(ViewNode) then begin
             ViewNode := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
             if Assigned(ViewNode) then
-              vstView.FocusedNode := ViewNode;
+              vstViewFocusedNode := ViewNode;
           end;
         end else
-          vstView.FocusedNode := FoundViewLabelNode;
+          vstViewFocusedNode := FoundViewLabelNode;
 
         Column := Min(Max(1, Column), Pred(vstView.Header.Columns.Count));
 
@@ -6704,7 +6713,7 @@ begin
   if Pred(vstView.FocusedColumn) > High(ActiveRecords) then
     Exit;
 
-  TargetNode := vstView.FocusedNode;
+  TargetNode := vstViewFocusedNode;
   while Assigned(TargetNode) do begin
     if TargetNode = vstView.RootNode then
       NodeDatas := @ActiveRecords[0]
@@ -7805,8 +7814,10 @@ begin
         ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
         TargetElement := nil;
         Control := GetKeyState(VK_CONTROL) < 0;
-        if wbFocusAddedElement xor Control then
+        if EditAddedElement or (wbFocusAddedElement xor Control) then begin
           ViewFocusedElement := NewElement;
+          EditFocusedViewElement := EditAddedElement;
+        end;
         PostResetActiveTree;
       finally
         //      vstView.EndUpdate;
@@ -7888,7 +7899,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Records                     : TDynMainRecords;
 begin
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if not Assigned(NodeDatas) then
     Exit;
   Records := GetUniqueLinksTo(NodeDatas, Length(ActiveRecords));
@@ -7908,7 +7919,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  Node := vstView.FocusedNode;
+  Node := vstViewFocusedNode;
   if not Assigned(Node) then
     Exit;
 
@@ -7961,6 +7972,7 @@ begin
 
   InvalidateElementsTreeView(NoNodes);
   ViewFocusedElement := SourceElement;
+  EditFocusedViewElement := False;
   PostResetActiveTree;
   vstNav.Invalidate;
 end;
@@ -8697,7 +8709,7 @@ end;
 procedure TfrmMain.mniViewStickSelectedClick(Sender: TObject);
 begin
   if not mniViewStickSelected.Checked then
-    StickViewNodeLabel := GetViewNodePositionLabel(vstView.FocusedNode)
+    StickViewNodeLabel := GetViewNodePositionLabel(vstViewFocusedNode)
   else
     StickViewNodeLabel := '';
 
@@ -8740,7 +8752,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -8751,6 +8763,7 @@ begin
       try
         Element.MoveDown;
         ViewFocusedElement := Element;
+        EditFocusedViewElement := False;
         ResetActiveTree;
       finally
         UnLockProcessMessages;
@@ -8767,7 +8780,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -8778,6 +8791,7 @@ begin
       try
         Element.MoveUp;
         ViewFocusedElement := Element;
+        EditFocusedViewElement := False;
         ResetActiveTree;
       finally
         UnlockProcessMessages;
@@ -9755,7 +9769,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -9829,6 +9843,7 @@ begin
       Element.EditValue := EditValue;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       ViewFocusedElement := Element;
+      EditFocusedViewElement := False;
       Element := nil;
       PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
@@ -9844,7 +9859,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -9854,6 +9869,7 @@ begin
       Element.SetToDefault;
       ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
       ViewFocusedElement := Element;
+      EditFocusedViewElement := False;
       Element := nil;
       PostResetActiveTree;
       InvalidateElementsTreeView(NoNodes);
@@ -11706,12 +11722,12 @@ begin
 
   LockProcessMessages;
   try
-    NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
-    NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
+    NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+    NextNode := vstView.GetNextVisibleSibling(vstViewFocusedNode);
     if not Assigned(NextNode) then
-      NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
+      NextNode := vstView.GetPreviousVisibleSibling(vstViewFocusedNode);
     if not Assigned(NextNode) then begin
-      NextNode := vstView.FocusedNode.Parent;
+      NextNode := vstViewFocusedNode.Parent;
       if vstView.RootNode = NextNode then
         NextNode := nil;
     end;
@@ -11723,6 +11739,7 @@ begin
         if Assigned(NextNode) then begin
           NodeDatas := vstView.GetNodeData(NextNode);
           ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+          EditFocusedViewElement := False;
         end;
 
         Element.Remove;
@@ -11752,12 +11769,12 @@ begin
 
   LockProcessMessages;
   try
-    NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
-    NextNode := vstView.GetNextVisibleSibling(vstView.FocusedNode);
+    NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+    NextNode := vstView.GetNextVisibleSibling(vstViewFocusedNode);
     if not Assigned(NextNode) then
-      NextNode := vstView.GetPreviousVisibleSibling(vstView.FocusedNode);
+      NextNode := vstView.GetPreviousVisibleSibling(vstViewFocusedNode);
     if not Assigned(NextNode) then begin
-      NextNode := vstView.FocusedNode.Parent;
+      NextNode := vstViewFocusedNode.Parent;
       if vstView.RootNode = NextNode then
         NextNode := nil;
     end;
@@ -11769,6 +11786,7 @@ begin
         if Assigned(NextNode) then begin
           NodeDatas := vstView.GetNodeData(NextNode);
           ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+          EditFocusedViewElement := False;
         end;
 
         Element.Clear;
@@ -11794,7 +11812,7 @@ begin
   if wbTranslationMode then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then
     for i := Low(ActiveRecords) to High(ActiveRecords) do begin
       Element := NodeDatas[i].Element;
@@ -11851,7 +11869,7 @@ var
   Recs                        : TDynMainRecords;
   OffsetXY                    : TPoint;
 begin
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
 
   sl := TStringList.Create;
   try
@@ -11966,7 +11984,7 @@ function TfrmMain.GetFocusedViewElementSafely: IwbElement;
 begin
   Result := nil;
 
-  var NodeDatas: PViewNodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  var NodeDatas: PViewNodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -14106,7 +14124,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -14114,6 +14132,7 @@ begin
         Exit;
 
       ViewFocusedElement := Element.NextMember;
+      EditFocusedViewElement := False;
       PostResetActiveTree;
     end;
   end;
@@ -14392,6 +14411,7 @@ begin
 
       ActiveRecords[Pred(TargetColumn)].UpdateRefs;
       ViewFocusedElement := NewElement;
+      EditFocusedViewElement := False;
       NewElement := nil;
       TargetElement := nil;
       Result := True;
@@ -15022,7 +15042,7 @@ begin
     Exit;
 
   mniViewStick.Visible := True;
-  NodeLabel := GetViewNodePositionLabel(vstView.FocusedNode);
+  NodeLabel := GetViewNodePositionLabel(vstViewFocusedNode);
   if StickViewNodeLabel = '*' then begin
     mniViewStickAuto.Checked := True;
     mniViewStickSelected.Checked := False;
@@ -15042,7 +15062,7 @@ begin
   end;
 
   if vstView.FocusedColumn > 0 then begin
-    NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+    NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
     if Assigned(NodeDatas) then begin
       Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       mniViewEdit.Visible := Assigned(Element) and Element.IsEditable;
@@ -15158,7 +15178,7 @@ begin
   if not wbEditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -15166,6 +15186,7 @@ begin
         Exit;
 
       ViewFocusedElement := Element.PreviousMember;
+      EditFocusedViewElement := False;
       PostResetActiveTree;
     end;
   end;
@@ -15264,62 +15285,72 @@ begin
   LockWindowUpdate(vstView.Handle);
   vstView.BeginUpdate;
   try
-    with vstView.Header, Columns do begin
-      SetLength(ColumnWidths, Count);
-      for i := 0 to Pred(Count) do
-        ColumnWidths[i] := Columns[i].Width;
-    end;
-    OffsetXY := vstView.OffsetXY;
-    Column := vstView.FocusedColumn;
-    Node := vstView.FocusedNode;
-    if Assigned(Node) then begin
-      r := vstView.GetDisplayRect(Node, Column, False);
-      if not Assigned(ViewFocusedElement) then
-        if (Column > 0) and (Pred(Column) <= High(ActiveRecords)) then begin
-          NodeDatas := vstView.GetNodeData(Node);
-          ViewFocusedElement := NodeDatas[Pred(Column)].Element;
-        end;
-    end;
-    NodeForViewFocusedElement := nil;
-
-    Containers := CollectViewContainers;
-    if Assigned(ActiveRecord) then begin
-      MainRecord := ActiveRecord;
-      DoSetActiveRecord(nil);
-      DoSetActiveRecord(MainRecord);
-    end
-    else if Length(ActiveRecords) > 0 then begin
-      RootNodeCount := vstView.RootNodeCount;
-      vstView.Clear;
-      vstView.RootNodeCount := RootNodeCount;
-      InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
-      ExpandView;
-    end;
-    Containers := nil;
-
-    vstView.UpdateScrollBars(False);
-    vstView.OffsetXY := OffsetXY;
-    if Assigned(Node) then begin
-      if Assigned(NodeForViewFocusedElement) then begin
-        Node := NodeForViewFocusedElement;
-        Column := ColumnForViewFocusedElement;
-      end else
-        Node := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
-      if Assigned(Node) then
-        vstView.FocusedNode := Node;
-    end;
-    vstView.FocusedColumn := Column;
-//    vstView.OffsetXY := OffsetXY;
-    if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
-      UpdateColumnWidths
-    else
+    repeat
       with vstView.Header, Columns do begin
-        if Length(ColumnWidths) = Count then
-          for i := 0 to Pred(Count) do
-            Columns[i].Width := ColumnWidths[i];
+        SetLength(ColumnWidths, Count);
+        for i := 0 to Pred(Count) do
+          ColumnWidths[i] := Columns[i].Width;
       end;
+      OffsetXY := vstView.OffsetXY;
+      Column := vstView.FocusedColumn;
+      Node := vstViewFocusedNode;
+      if Assigned(Node) then begin
+        r := vstView.GetDisplayRect(Node, Column, False);
+        if not Assigned(ViewFocusedElement) then
+          if (Column > 0) and (Pred(Column) <= High(ActiveRecords)) then begin
+            NodeDatas := vstView.GetNodeData(Node);
+            ViewFocusedElement := NodeDatas[Pred(Column)].Element;
+            EditFocusedViewElement := False;
+          end;
+      end;
+      NodeForViewFocusedElement := nil;
+
+      Containers := CollectViewContainers;
+      if Assigned(ActiveRecord) then begin
+        MainRecord := ActiveRecord;
+        DoSetActiveRecord(nil);
+        DoSetActiveRecord(MainRecord);
+      end
+      else if Length(ActiveRecords) > 0 then begin
+        RootNodeCount := vstView.RootNodeCount;
+        vstView.Clear;
+        vstView.RootNodeCount := RootNodeCount;
+        InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+        ExpandView;
+      end;
+      Containers := nil;
+
+      vstView.UpdateScrollBars(False);
+      vstView.OffsetXY := OffsetXY;
+      if Assigned(Node) then begin
+        if Assigned(NodeForViewFocusedElement) then begin
+          Node := NodeForViewFocusedElement;
+          Column := ColumnForViewFocusedElement;
+        end else
+          Node := vstView.GetNodeAt(r.Left + 2, r.Top + 2);
+        if Assigned(Node) then
+          vstViewFocusedNode := Node;
+      end;
+      vstView.FocusedColumn := Column;
+  //    vstView.OffsetXY := OffsetXY;
+      if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then
+        UpdateColumnWidths
+      else
+        with vstView.Header, Columns do begin
+          if Length(ColumnWidths) = Count then
+            for i := 0 to Pred(Count) do
+              Columns[i].Width := ColumnWidths[i];
+        end;
+      if EditFocusedViewElement then begin
+        EditFocusedViewElement := False;
+        ViewFocusedElement := nil;
+        NodeForViewFocusedElement := nil;
+        vstView.EditNode(vstViewFocusedNode, vstView.FocusedColumn);
+      end;
+    until not PendingResetActiveTree;
   finally
     ViewFocusedElement := nil;
+    EditFocusedViewElement := False;
     NodeForViewFocusedElement := nil;
     vstView.EndUpdate;
     if vstView.FocusedColumn > NoColumn then
@@ -16187,6 +16218,12 @@ begin
     Delete(Result, 1, 1);
 end;
 
+procedure TfrmMain.SetViewFocusedNode(aNode: PVirtualNode);
+begin
+  OverrideViewFocusedNode := nil;
+  vstView.FocusedNode := aNode;
+end;
+
 procedure TfrmMain.SetViewNodePositionLabel(aViewLabel: string);
 var
   Node, LabelNode: PVirtualNode;
@@ -16233,7 +16270,7 @@ begin
   if Assigned(LabelNode) then begin
     vstView.TopNode := LabelNode;
     if StickViewNodeLabel <> '*' then
-      vstView.FocusedNode := LabelNode;
+      vstViewFocusedNode := LabelNode;
     FoundViewLabelNode := LabelNode;
   end;
 end;
@@ -17737,7 +17774,7 @@ begin
     if ComparingSiblings then
       mniViewSort.Click
     else begin
-      vstView.ToggleNode(vstView.FocusedNode);
+      vstView.ToggleNode(vstViewFocusedNode);
       if DelayedExpandView then begin
         DelayedExpandView := False;
         ExpandView;
@@ -17746,13 +17783,14 @@ begin
     Exit;
   end;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
 
     if vstView.FocusedColumn > 0 then
       ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element
     else
       ViewFocusedElement := nil;
+    EditFocusedViewElement := False;
     Element := ViewFocusedElement;
     if not Assigned(Element) then
       for i := Low(ActiveRecords) to High(ActiveRecords) do begin
@@ -17766,13 +17804,13 @@ begin
 
       if Assigned(ViewFocusedElement) and Assigned(Def) and ViewFocusedElement.IsEditable then
         if Def.DefType in [dtInteger, dtFlag, dtFloat] then begin
-          vstView.EditNode(vstView.FocusedNode, vstView.FocusedColumn);
+          vstView.EditNode(vstViewFocusedNode, vstView.FocusedColumn);
           Exit;
         end;
     end;
 
     with TfrmViewElements.Create(nil) do begin
-      Caption := vstView.Path(vstView.FocusedNode, 0,{ ttNormal,} '\');
+      Caption := vstView.Path(vstViewFocusedNode, 0,{ ttNormal,} '\');
       Settings := Self.Settings;
       if Assigned(ActiveMaster) then
         Caption := ActiveMaster.Name + '\' + Caption;
@@ -17892,9 +17930,6 @@ begin
 end;
 
 procedure TfrmMain.vstViewEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-var
-  NodeDatas                   : PViewNodeDatas;
-  Element                     : IwbElement;
 begin
   Allowed := False;
 
@@ -17903,21 +17938,94 @@ begin
 
   if Column < 1 then
     Exit;
-  Dec(Column);
+  var lColumn := Pred(Column);
 
-  if Column > High(ActiveRecords) then
+  if lColumn > High(ActiveRecords) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(Node);
+  var NodeDatas: PViewNodeDatas := vstView.GetNodeData(Node);
   if not Assigned(NodeDatas) then
     Exit;
 
-  Element := NodeDatas[Column].Element;
+  var Element := NodeDatas[lColumn].Element;
 
-  if not Assigned(Element) then
+  if not Assigned(Element) then begin
+    if not EditFocusedViewElement then begin
+      OverrideViewFocusedNode := Node;
+      try
+        pmuViewPopup(Self);
+        if mniViewAdd.Visible and mniViewAdd.Enabled then begin
+          EditAddedElement := True;
+          try
+            if mniViewAdd.Count > 0 then begin
+              //...
+            end else begin
+              mniViewAdd.Click;
+            end;
+          finally
+            EditAddedElement := False;
+          end;
+        end;
+      finally
+        OverrideViewFocusedNode := nil;
+      end;
+    end;
     Exit;
+  end;
 
-  Allowed := Element.IsEditable and EditWarn;
+  if Element.IsEditable then begin
+    Allowed := EditWarn;
+  end else begin
+    for var lChildNode in vstView.ChildNodes(Node) do begin
+      var lAllowed := False;
+      vstViewEditing(Sender, lChildNode, Column, lAllowed);
+      if EditFocusedViewElement then
+        Exit;
+      if lAllowed then begin
+        NodeDatas := vstView.GetNodeData(lChildNode);
+        if not Assigned(NodeDatas) then
+          Exit;
+
+        Element := NodeDatas[lColumn].Element;
+        if not Assigned(Element) then
+          Continue;
+
+        var lDef := Element.Def;
+        if not Assigned(lDef) then
+          Continue;
+
+        if dfSkipImplicitEdit in lDef.DefFlags then
+          Continue;
+
+        ViewFocusedElement := Element;
+        EditFocusedViewElement := True;
+        PostResetActiveTree;
+
+        Exit;
+      end;
+    end;
+
+    if not EditFocusedViewElement then begin
+      OverrideViewFocusedNode := Node;
+      try
+        pmuViewPopup(Self);
+        if mniViewAdd.Visible and mniViewAdd.Enabled then begin
+          EditAddedElement := True;
+          try
+            if mniViewAdd.Count > 0 then begin
+              //...
+            end else begin
+              mniViewAdd.Click;
+            end;
+          finally
+            EditAddedElement := False;
+          end;
+        end;
+      finally
+        OverrideViewFocusedNode := nil;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMain.vstViewExpanded(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -17990,6 +18098,13 @@ begin
   if (NewColumn = Pred(TVirtualEditTree(Sender).Header.Columns.Count)) and (Length(ActiveRecords) > 1) then
     Exit;
   Allowed := True;
+end;
+
+function TfrmMain.GetViewFocusedNode: PVirtualNode;
+begin
+  if Assigned(OverrideViewFocusedNode) then
+    Exit(OverrideViewFocusedNode);
+  Result := vstView.FocusedNode;
 end;
 
 procedure TfrmMain.vstViewFreeNode(Sender: TBaseVirtualTree;
@@ -18297,7 +18412,7 @@ begin
   if Column < Low(ActiveRecords) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.FocusedNode);
+  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
   if Assigned(NodeDatas) then
     Element := NodeDatas[Column].Element;
 
@@ -18337,6 +18452,7 @@ begin
           Key := 0;
           Element.MoveUp;
           ViewFocusedElement := Element;
+          EditFocusedViewElement := False;
           ResetActiveTree;
           Exit;
         finally
@@ -18354,6 +18470,7 @@ begin
           Key := 0;
           Element.MoveDown;
           ViewFocusedElement := Element;
+          EditFocusedViewElement := False;
           ResetActiveTree;
           Exit;
         finally
@@ -18487,6 +18604,7 @@ begin
         Element.EditValue := NewText;
         ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
         ViewFocusedElement := Element;
+        EditFocusedViewElement := False;
         Element := nil;
         PostResetActiveTree;
       finally
@@ -21431,6 +21549,7 @@ begin
     LockOutPinned;
     try
       ViewFocusedElement := mreElement;
+      EditFocusedViewElement := False;
       NodeForViewFocusedElement := nil;
       ColumnForViewFocusedElement := NoColumn;
 
@@ -21440,12 +21559,13 @@ begin
         ResetActiveTree;
 
       ViewFocusedElement := nil;
+      EditFocusedViewElement := False;
       if Assigned(NodeForViewFocusedElement) then begin
-        vstView.FocusedNode := NodeForViewFocusedElement;
+        vstViewFocusedNode := NodeForViewFocusedElement;
         if ColumnForViewFocusedElement <> NoColumn then
           vstView.FocusedColumn := ColumnForViewFocusedElement;
-        vstView.TopNode := vstView.FocusedNode;
-        vstView.ScrollIntoView(vstView.FocusedColumn, True, vstView.FocusedNode);
+        vstView.TopNode := vstViewFocusedNode;
+        vstView.ScrollIntoView(vstView.FocusedColumn, True, vstViewFocusedNode);
       end;
     finally
       UnLockOutPinned;

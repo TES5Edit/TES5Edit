@@ -1479,6 +1479,7 @@ type
 
     procedure BeforeActualRemove; override;
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure UpdateCountViaPath;
 
     function GetValue: string; override;
     function GetSummary: string; override;
@@ -1606,6 +1607,7 @@ type
 
     procedure BeforeActualRemove; override;
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure UpdateCountViaPath;
 
     function GetElementType: TwbElementType; override;
     function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
@@ -1947,6 +1949,7 @@ type
 
     procedure BeforeActualRemove; override;
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure UpdateCountViaPath;
 
     function GetValue: string; override;
     function GetCheck: string; override;
@@ -1959,6 +1962,8 @@ type
     function CanContainFormIDs: Boolean; override;
     function CanElementReset: Boolean; override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
+
+    procedure SetToDefaultInternal; override;
 
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
 //    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
@@ -14279,39 +14284,7 @@ begin
 
   inherited;
 
-  var lArrayDef: IwbArrayDef;
-
-  if Assigned(srResolvedDef) then
-    if not Supports(srResolvedDef, IwbArrayDef, lArrayDef) then
-      Exit;
-
-  if not Assigned(lArrayDef) then
-    if not Supports(srValueDef, IwbArrayDef, lArrayDef) then
-      Exit;
-
-  var lCountPath := (lArrayDef as IwbArrayDef).CountPath;
-
-  if lCountPath = '' then
-    Exit;
-
-  var lContainer := GetContainer as IwbContainerElementRef;
-  if not Assigned(lContainer) then
-    Exit;
-
-  var lElementCount := GetElementCount;
-
-  if lElementCount > 0 then begin
-    //setting it this way will try to create the elements along the path if necessary
-    lContainer.ElementNativeValues[lCountPath] := lElementCount;
-    Exit;
-  end;
-
-  //this way will prevent the creating of the Elements along the path if they don't already exist
-  var lCounterElement := lContainer.ElementByPath[lCountPath];
-  if not Assigned(lCounterElement) then
-    Exit;
-
-  lCounterElement.NativeValue := lElementCount;
+  UpdateCountViaPath;
 end;
 
 function TwbSubRecord.DoCheckSizeAfterWrite: Boolean;
@@ -15202,17 +15175,60 @@ begin
   if Assigned(srValueDef) then
     RequestStorageChange(BasePtr, EndPtr, srValueDef.DefaultSize[nil, nil, Self]);
   inherited;
-  if srsIsArray in srStates then
+  if srsIsArray in srStates then begin
     if Supports(srValueDef, IwbArrayDef, ArrayDef) then begin
       DefaultEditValues := ArrayDef.GetDefaultEditValues;
       for i := 0 to Pred(Min(Length(DefaultEditValues), GetElementCount)) do
         cntElements[i].EditValue := DefaultEditValues[i];
     end;
+    UpdateCountViaPath;
+  end;
 end;
 
 function TwbSubRecord.srStruct: PwbSubRecordHeaderStruct;
 begin
   Result := PwbSubRecordHeaderStruct(dcBasePtr);
+end;
+
+procedure TwbSubRecord.UpdateCountViaPath;
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  var lArrayDef: IwbArrayDef;
+
+  if Assigned(srResolvedDef) then
+    if not Supports(srResolvedDef, IwbArrayDef, lArrayDef) then
+      Exit;
+
+  if not Assigned(lArrayDef) then
+    if not Supports(srValueDef, IwbArrayDef, lArrayDef) then
+      Exit;
+
+  var lCountPath := (lArrayDef as IwbArrayDef).CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElementCount := GetElementCount;
+
+  if lElementCount > 0 then begin
+    //setting it this way will try to create the elements along the path if necessary
+    lContainer.ElementNativeValues[lCountPath] := lElementCount;
+    Exit;
+  end;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := lElementCount;
 end;
 
 procedure TwbSubRecord.WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified);
@@ -19451,29 +19467,7 @@ begin
 
   inherited;
 
-  var lCountPath := arcDef.CountPath;
-
-  if lCountPath = '' then
-    Exit;
-
-  var lContainer := GetContainer as IwbContainerElementRef;
-  if not Assigned(lContainer) then
-    Exit;
-
-  var lElementCount := GetElementCount;
-
-  if lElementCount > 0 then begin
-    //setting it this way will try to create the elements along the path if necessary
-    lContainer.ElementNativeValues[lCountPath] := lElementCount;
-    Exit;
-  end;
-
-  //this way will prevent the creating of the Elements along the path if they don't already exist
-  var lCounterElement := lContainer.ElementByPath[lCountPath];
-  if not Assigned(lCounterElement) then
-    Exit;
-
-  lCounterElement.NativeValue := lElementCount;
+  UpdateCountViaPath;
 end;
 
 procedure TwbSubRecordArray.DoInit(aNeedSorted: Boolean);
@@ -19700,6 +19694,43 @@ begin
   inherited;
   if aValue and arcSorted then
     arcSortInvalid := True;
+end;
+
+procedure TwbSubRecordArray.SetToDefaultInternal;
+begin
+  inherited;
+  UpdateCountViaPath;
+end;
+
+procedure TwbSubRecordArray.UpdateCountViaPath;
+var
+  SelfRef    : IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  var lCountPath := arcDef.CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElementCount := GetElementCount;
+
+  if lElementCount > 0 then begin
+    //setting it this way will try to create the elements along the path if necessary
+    lContainer.ElementNativeValues[lCountPath] := lElementCount;
+    Exit;
+  end;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := lElementCount;
 end;
 
 procedure TwbSubRecordArray.UpdateNameSuffixes;
@@ -20883,29 +20914,7 @@ begin
 
   inherited;
 
-  var lCountPath := (vbValueDef as IwbArrayDef).CountPath;
-
-  if lCountPath = '' then
-    Exit;
-
-  var lContainer := GetContainer as IwbContainerElementRef;
-  if not Assigned(lContainer) then
-    Exit;
-
-  var lElementCount := GetElementCount;
-
-  if lElementCount > 0 then begin
-    //setting it this way will try to create the elements along the path if necessary
-    lContainer.ElementNativeValues[lCountPath] := lElementCount;
-    Exit;
-  end;
-
-  //this way will prevent the creating of the Elements along the path if they don't already exist
-  var lCounterElement := lContainer.ElementByPath[lCountPath];
-  if not Assigned(lCounterElement) then
-    Exit;
-
-  lCounterElement.NativeValue := lElementCount;
+  UpdateCountViaPath;
 end;
 
 procedure TwbArray.DoInit(aNeedSorted: Boolean);
@@ -21063,6 +21072,38 @@ begin
     for i := 0 to Pred(Min(Length(DefaultEditValues), GetElementCount)) do
       cntElements[i].EditValue := DefaultEditValues[i];
   end;
+  UpdateCountViaPath;
+end;
+
+procedure TwbArray.UpdateCountViaPath;
+var
+  SelfRef: IwbContainerElementRef;
+begin
+  SelfRef := Self;
+
+  var lCountPath := (vbValueDef as IwbArrayDef).CountPath;
+
+  if lCountPath = '' then
+    Exit;
+
+  var lContainer := GetContainer as IwbContainerElementRef;
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElementCount := GetElementCount;
+
+  if lElementCount > 0 then begin
+    //setting it this way will try to create the elements along the path if necessary
+    lContainer.ElementNativeValues[lCountPath] := lElementCount;
+    Exit;
+  end;
+
+  //this way will prevent the creating of the Elements along the path if they don't already exist
+  var lCounterElement := lContainer.ElementByPath[lCountPath];
+  if not Assigned(lCounterElement) then
+    Exit;
+
+  lCounterElement.NativeValue := lElementCount;
 end;
 
 { TwbStruct }

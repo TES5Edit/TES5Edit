@@ -3963,18 +3963,17 @@ begin
 
   var wbNull := wbByteArray('Unused', -255);
   var wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
-  var wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
-  var wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True);
+  var wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit);
+  var wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True).IncludeFlag(dfSkipImplicitEdit);
   var wbLVLD := wbFloat(LVLD, 'Chance None', cpNormal, True);
 
   var wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
   var wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, LVSP]);
   var wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
-  var wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
-  var wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
-  var wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True, nil, wbKWDAsAfterSet);
-
+  var wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit);
+  var wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL])).SetCountPathOnValue(KSIZ, False);
+  var wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL])).SetCountPathOnValue(KSIZ, False).SetRequired;
   var wbKeywords := wbRStruct('Keywords', [
     wbKSIZ,
     wbReqKWDAs
@@ -5167,7 +5166,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   var wbScriptFragmentsInfo := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3).IncludeFlag(dfSkipImplicitEdit),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -5175,7 +5174,7 @@ begin
     wbScriptEntry,
     wbArray('Fragments',  // Do NOT sort, ordered OnBegin, OnEnd
       wbStruct('Fragment', [
-        wbInteger('Unknown', itS8),
+        wbInteger('Unknown', itS8).IncludeFlag(dfSkipImplicitEdit),
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
       ])
@@ -5190,7 +5189,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   var wbScriptFragmentsPack := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3).IncludeFlag(dfSkipImplicitEdit),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd',
@@ -5214,8 +5213,8 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   var wbScriptFragmentsQuest := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
-    wbInteger('FragmentCount', itU16, nil, cpBenign),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3).IncludeFlag(dfSkipImplicitEdit),
+    wbInteger('FragmentCount', itU16, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbLenString('ScriptName', 2).SetAfterSet(wbScriptFragmentsQuestScriptNameAfterSet),
     // if ScriptName = "" then no Flags and Properties
     wbUnion('Script', wbScriptFragmentsEmptyScriptDecider, [
@@ -5247,13 +5246,13 @@ begin
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseFragments)
-    ).SetCountPath('FragmentCount')
+    ).SetCountPath('FragmentCount', True)
   ])
   .SetSummaryKey([2, 3])
   .IncludeFlag(dfSummaryMembersNoName);
 
   var wbScriptFragmentsScen := wbStruct('Script Fragments', [
-    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3),
+    wbInteger('Extra bind data version', itS8).SetDefaultNativeValue(3).IncludeFlag(dfSkipImplicitEdit),
     wbInteger('Flags', itU8, wbFlags([
       {1} 'OnBegin',
       {2} 'OnEnd'
@@ -5321,10 +5320,10 @@ begin
   {>>> http://www.uesp.net/wiki/Tes5Mod:Mod_File_Format/VMAD_Field <<<}
 
   var wbVMADVersion :=
-    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6);
+    wbInteger('Version', itS16, nil, cpIgnore).SetDefaultNativeValue(6).IncludeFlag(dfSkipImplicitEdit);
 
   var wbVMADObjectFormat :=
-    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2);
+    wbInteger('Object Format', itS16, nil, cpIgnore).SetDefaultNativeValue(2).IncludeFlag(dfSkipImplicitEdit);
 
   var wbVMADScripts :=
     wbArrayS('Scripts', wbScriptEntry, -2, cpNormal, False, nil, nil, nil, wbCanAddScripts)
@@ -5637,7 +5636,7 @@ begin
   var wbDEST := wbRStruct('Destructible', [
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
-      wbInteger('DEST Count', itU8),
+      wbInteger('Stage Count', itU8).IncludeFlag(dfSkipImplicitEdit),
       wbInteger('Flags', itU8, wbFlags([
         'VATS Targetable',
         'Large Actor Destroys',
@@ -5652,10 +5651,10 @@ begin
       wbInteger('Value', itU32),
       wbUnknown(4)
     ])),
-    wbFormIDCk(DSDL, 'Unknown', [SDLT]),
+    wbFormIDCk(DSDL, 'Secondary Damage List', [SDLT]),
     wbRArray('Stages',
       wbRStruct('Stage', [
-        wbStruct(DSTD, 'Destruction Stage Data', [
+        wbStruct(DSTD, 'Data', [
           wbInteger('Health %', itU8),
           wbInteger('Index', itU8),
           wbInteger('Model Damage Stage', itU8),
@@ -5692,7 +5691,7 @@ begin
         wbEmpty(DSTF, 'End Marker', cpNormal, True)
       ], [], cpNormal, False, nil)
       .SetSummaryKey([0,2]).IncludeFlag(dfSummaryMembersNoName)
-    ).SetCountPath('...\DEST - Header\DEST Count')
+    ).SetCountPath('...\DEST - Header\Stage Count')
   ], [], cpNormal, False, nil)
   .SetSummaryKey([3]);
 
@@ -6275,7 +6274,7 @@ begin
   ]);
 
   var wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-    wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
+    wbInteger('Version', itU32).SetDefaultNativeValue(15).IncludeFlag(dfSkipImplicitEdit),  // Changes how the struct is loaded, should be 15 in FO4
     wbStruct('Pathing Cell', [
       wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
       wbFormIDCk('Pathing Worldspace', [WRLD, NULL]).IncludeFlag(dfSummaryExcludeNULL),
@@ -7669,8 +7668,8 @@ end;
     wbCTDAsCountReq
   ], []);
 
-  var wbATCP := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign);
-  var wbATCPReq := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign, True);
+  var wbATCP := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit);
+  var wbATCPReq := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign, True).IncludeFlag(dfSkipImplicitEdit);
   var wbATAN := wbRStruct('Activity', [
       wbString(ATAN),
       wbFULL,
@@ -8288,7 +8287,7 @@ end;
         wbRStruct('Component Data - External Data Source', [
           wbFormIDCk(EXDC, 'External Base Template', [NULL, GBFM, LVLB]).SetRequired,
           wbRStruct('External Data Sources', [
-            wbInteger(EXDZ, 'Data Source Count', itU32).SetRequired, // count for EXCN/EXCI struct array
+            wbInteger(EXDZ, 'Data Source Count', itU32).SetRequired.IncludeFlag(dfSkipImplicitEdit), // count for EXCN/EXCI struct array
             wbRArray('External Sources',
               wbRStruct('Component', [
                 wbString(EXCN, 'Component Name').SetRequired,
@@ -8297,7 +8296,7 @@ end;
             ).SetCountPath(EXDZ)
           ], []).SetRequired,
           wbRstruct('Unknown', [
-            wbInteger(EXAC, 'Count', itU32).SetRequired, // count for EXAS array
+            wbInteger(EXAC, 'Count', itU32).SetRequired.IncludeFlag(dfSkipImplicitEdit), // count for EXAS array
             wbRArray('Unknown', wbString(EXAS), cpNormal, False, nil).SetCountPath(EXAC)
           ], []).SetRequired,
           wbString(EXBS).SetRequired
@@ -8734,11 +8733,11 @@ end;
         wbInteger('Value 2 - Bool', itU32, wbBoolEnum)
       ]),
       wbFloat('Step')
-      ])).SetCountPath(csPropertyCount);
+      ])).SetCountPath(csPropertyCount, True);
 
   var wbOBTSReq := wbStruct(OBTS, 'Object Mod Template Item', [
-    wbInteger(csIncludeCount, itU32),
-    wbInteger(csPropertyCount, itU32),
+    wbInteger(csIncludeCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
+    wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbInteger('Level Min', itU16),
     wbInteger('Level Max', itU16),
     wbInteger('Addon Index', itS16).SetDefaultNativeValue(-1),
@@ -8751,14 +8750,14 @@ end;
       wbInteger('Attach Point Index', itU8),
       wbInteger('Optional', itU8, wbBoolEnum),
       wbInteger('Don''t Use All', itU8, wbBoolEnum)
-    ])).SetCountPath(csIncludeCount),
+    ])).SetCountPath(csIncludeCount, True),
     wbObjectModProperties
     ], cpNormal, True)
       .SetSummaryKeyOnValue([6,9,10])
       .IncludeFlagOnValue(dfSummaryMembersNoName);
 
   var wbObjectTemplate := wbRStruct('Object Template', [
-    wbInteger(OBTE, 'Count', itU32, nil, cpBenign),
+    wbInteger(OBTE, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbRArray('Combinations',
       wbRStruct('Combination', [
         wbEmpty(OBTF, 'Editor Only'),
@@ -8957,8 +8956,7 @@ end;
       wbInteger('Starts Active', itU8, wbBoolEnum),
       wbInteger('No Signal Static', itU8, wbBoolEnum)
     ], cpNormal, False, nil, 4),}
-    wbCITC,
-    wbCTDAs,
+    wbConditions,
     wbNVNM
   ]);
 
@@ -10358,10 +10356,7 @@ end;
       wbMarkerReq(CRGP),
       wbFloat(GRPH).SetRequired
     ], [])
-
-    //wbCITC,
-    //wbCTDAsCount
-  ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
+  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(AFFE, 'Affinity Event', [
@@ -10830,7 +10825,7 @@ end;
       { 0} wbSoundReference,
       {40} wbFormIDCk('Effect', [SPEL, ENCH, NULL]),
       {44} wbFormIDCk('Light', [LIGH, NULL]),
-      {48} wbUnknown(4), // always 00 00 00 00 in Starfield.esm. Previously wbFormIDCk('Impact Data Set', [IPDS, NULL]),
+      {48} wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       {52} wbFloat('Radius'),
       {56} wbFloat('Lifetime'),
       {60} wbFloat('Image Space Radius'),
@@ -10862,7 +10857,7 @@ end;
     {subrecords checked against Starfield.esm}
     wbRecord(NAVI, 'Navigation Mesh Info Map', [
       wbEDID,
-      wbInteger(NVER, 'Version', itU32),
+      wbInteger(NVER, 'Version', itU32).IncludeFlag(dfSkipImplicitEdit),
       wbRArray('Navigation Map Infos',
         wbStruct(NVMI, 'Navigation Map Info', [
           wbFormIDCk('Navigation Mesh', [NAVM]),
@@ -10926,7 +10921,7 @@ end;
     {subrecords checked against Starfield.esm}
     wbRecord(NAVI, 'Navigation Mesh Info Map', [
       wbEDID,
-      wbInteger(NVER, 'Version', itU32),
+      wbInteger(NVER, 'Version', itU32).IncludeFlag(dfSkipImplicitEdit),
       wbRArray('Navigation Map Infos',
         wbStruct(NVMI, 'Navigation Map Info', [
           wbFormIDCk('Navigation Mesh', [NAVM]).IncludeFlag(dfSummaryNoName),
@@ -12389,7 +12384,7 @@ end;
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbInteger(XNAM, 'Max concurrent quests', itU32)
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(SMQN, 'Story Manager Quest Node', [
@@ -12415,7 +12410,7 @@ end;
       //wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+  ]);
 
   var lQuestEventVarRecsSF1 := wbMakeVarRecs([
     Sig2Int(LAND), 'Ship Landing',
@@ -12435,7 +12430,7 @@ end;
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnumSF1)
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
+  ])
     .SetSummaryKey([7]);
 
   {subrecords checked against Starfield.esm}
@@ -12477,7 +12472,7 @@ end;
     wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
     wbConditions,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
-  ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
+  ]);
 
   (* still exists in game code, but not in Starfield.esm
   wbRecord(DLVW, 'Dialog View', [
@@ -14657,7 +14652,7 @@ end;
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime Faction', [FACT], False, cpNormal, False),
     wbFormIDCk(HEFA, 'Formation Faction', [FACT]),
-    wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign),
+    wbInteger(EDCT, 'Tint Count', itU8, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbRArray('AVMD Tints',
       wbRStruct('Tint', [
         wbAVMDMNAMReq,
@@ -15566,7 +15561,7 @@ end;
           ])
         )
         //wbRArray('Unknown', wbUnknown(PFOR), cpIgnore) not in Starfield.esm
-      ], [], cpNormal, False, nil, False, nil, wbConditionsAfterSet))
+      ], []))
     ], []),
     wbUNAMs,
     wbRStruct('OnBegin', [
@@ -18356,8 +18351,8 @@ end;
 //      wbObjectModProperties
 //    ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbStruct(DATA, 'Data', [
-      wbInteger(csIncludeCount, itU32),
-      wbInteger(csPropertyCount, itU32),
+      wbInteger(csIncludeCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
+      wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbUnknown(2),
       wbLenString('Name', 4),
       wbUnknown(2),
@@ -18369,7 +18364,7 @@ end;
         wbInteger('Minimum Level', itU8),
         wbInteger('Optional', itU8, wbBoolEnum),
         wbInteger('Don''t Use All', itU8, wbBoolEnum)
-      ])).SetCountPath(csIncludeCount),
+      ])).SetCountPath(csIncludeCount, True),
       wbObjectModProperties
     ]),
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
@@ -18515,7 +18510,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(STAG, 'Animation Sound Tag Set', [
     wbEDID,
-    wbInteger(STMS, 'Count', itU32),
+    wbInteger(STMS, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbRStructsSK('Entries', 'Entry', [0], [
       wbString(STAE, 'Name'),
       wbSoundReference(STAD).SetRequired
@@ -18639,7 +18634,7 @@ end;
       wbFloat(RADR),
       wbFloat(WTMX)
     ], []),
-    wbInteger(AAPS, 'Count', itU32),
+    wbInteger(AAPS, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbRStructS('Connections', 'Connection', [
       wbString(ANAM, 'Part'),
       wbString(BNAM, 'Part'),
@@ -19111,7 +19106,7 @@ end;
   wbRecord(AMBS, 'Ambience Set', [
     wbEDID,
     wbRStruct('Ambient Sounds', [
-      wbInteger(ASAS, 'Count', itU32, nil, cpBenign, True), //count
+      wbInteger(ASAS, 'Count', itU32, nil, cpBenign, True).IncludeFlag(dfSkipImplicitEdit), //count
       wbRArray('Sounds', wbStruct(ASAE, 'Unknown', [
       { 0} wbSoundReference,
       {40} wbUnknown(8),
@@ -19164,7 +19159,7 @@ end;
     wbAVMDMNAMReq,
     wbString(YNAM).SetRequired,
     wbString(TNAM, 'Name').SetRequired,
-    wbInteger(ITMC, 'Entry Count',itU32).SetRequired,
+    wbInteger(ITMC, 'Entry Count', itU32, nil, cpBenign).SetRequired.IncludeFlag(dfSkipImplicitEdit),
     wbRArray('Entries',
       wbRStruct('Entry', [
         wbString(LNAM, 'Name')
@@ -19571,8 +19566,8 @@ end;
         wbArray('Fauna', wbFormIDCk('Fauna', [NPC_]), -1),
         wbUnknown(4),
         wbStruct('Flora', [
-          wbInteger('Count', itU32),
-          wbInteger('Entry Size', itU32).SetDefaultNativeValue(9),
+          wbInteger('Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
+          wbInteger('Entry Size', itU32).SetDefaultNativeValue(9).IncludeFlag(dfSkipImplicitEdit),
           wbArray('Entries',
             wbStruct('Entry', [
               wbFormIDCk('Flora', [FLOR]),
@@ -19580,7 +19575,7 @@ end;
               wbInteger('Frequency', itU8)
             ])
           )
-            .SetCountPath('Count')
+            .SetCountPath('Count', True)
             .SetSummaryName('Flora')
         ])
           .SetSummaryKey([2]),
@@ -19939,7 +19934,7 @@ end;
     ])),
     wbLStringKC(INAM, 'Unknown', 0, cpTranslate, True),
     wbRStruct('Body Text', [
-      wbInteger(BSIZ, 'Count', itU32),
+      wbInteger(BSIZ, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbRStructs('Items', 'Item', [
         wbLStringKC(BTXT, 'Text', 0, cpTranslate, True),
         wbCTDAs,
@@ -19947,7 +19942,7 @@ end;
       ], []).SetCountPath(BSIZ)
     ], []),
     wbRStruct('Menu Items', [
-      wbInteger(ISIZ, 'Count', itU32),
+      wbInteger(ISIZ, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbRStructs('Items', 'Item', [
         wbLStringKC(ITXT, 'Text', 0, cpTranslate, True),
         wbLStringKC(ISTX, 'Short Text', 0, cpTranslate, False), // sometimes icon label, sometimes debug text... weird

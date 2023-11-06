@@ -58,12 +58,12 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'a';
-    Title   : 'EXPERIMENTAL';
+    Build   : 'b';
+    Title   : 'EXTREMELY EXPERIMENTAL';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010501;
+  wbWhatsNewVersion : Integer = 04010502;
   wbDeveloperMessageVersion : Integer = 04010500;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
@@ -665,7 +665,8 @@ type
     dfCanContainReflection,
     dfUnmappedFormID,
     dfCanContainUnmappedFormID,
-    dfIncludeValueInDisplaySignature
+    dfIncludeValueInDisplaySignature,
+    dfSkipImplicitEdit
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -2478,7 +2479,7 @@ type
     function SetSummaryPassthroughMaxDepthOnValue(aDepth: Integer): IwbSubRecordWithArrayDef;
     function SetSummaryDelimiterOnValue(const aDelimiter: string): IwbSubRecordWithArrayDef;
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
-    function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
+    function SetCountPathOnValue(const aValue: string; aUseForCountCallback: Boolean): IwbSubRecordWithArrayDef;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
     function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
   end;
@@ -2657,7 +2658,7 @@ type
     function GetDefaultEditValues: TwbStringArray;
 
     function GetCountPath: string;
-    function SetCountPath(const aValue: string): IwbArrayDef;
+    function SetCountPath(const aValue: string; aUseForCountCallback: Boolean): IwbArrayDef;
 
     function SetShouldInclude(const aCallback: TwbShouldIncludeCallback): IwbArrayDef;
     function ShouldInclude(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean;
@@ -5983,7 +5984,7 @@ type
     function SetSummaryDelimiterOnArray(const aDelimiter: string): IwbSubRecordWithArrayDef;
     function IwbSubRecordWithArrayDef.SetSummaryDelimiterOnValue = SetSummaryDelimiterOnArray;
     function SetDefaultEditValuesOnValue(const aValues: array of string): IwbSubRecordWithArrayDef;
-    function SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
+    function SetCountPathOnValue(const aValue: string; aUseForCountCallback: Boolean): IwbSubRecordWithArrayDef;
     function SetCountFromEnumOnValue(const aEnum: IwbEnumDef): IwbSubRecordWithArrayDef;
     function SetWronglyAssumedFixedSizePerElementOnValue(aSize: Integer): IwbSubRecordWithArrayDef;
 
@@ -6941,7 +6942,7 @@ type
     function GetDefaultEditValues: TwbStringArray;
 
     function GetCountPath: string;
-    function SetCountPath(const aValue: string): IwbArrayDef;
+    function SetCountPath(const aValue: string; aUseForCountCallback: Boolean): IwbArrayDef;
 
     function SetShouldInclude(const aCallback: TwbShouldIncludeCallback): IwbArrayDef;
     function ShouldInclude(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean;
@@ -11349,13 +11350,13 @@ begin
   srValue := (srValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
 end;
 
-function TwbSubRecordDef.SetCountPathOnValue(const aValue: string): IwbSubRecordWithArrayDef;
+function TwbSubRecordDef.SetCountPathOnValue(const aValue: string; aUseForCountCallback: Boolean): IwbSubRecordWithArrayDef;
 begin
   if defIsLocked then
-    Exit(TwbSubRecordDef(Duplicate).SetCountPathOnValue(aValue));
+    Exit(TwbSubRecordDef(Duplicate).SetCountPathOnValue(aValue, aUseForCountCallback));
 
   Result := Self;
-  srValue := (srValue as IwbArrayDef).SetCountPath(aValue);
+  srValue := (srValue as IwbArrayDef).SetCountPath(aValue, aUseForCountCallback);
   srValue := (srValue as IwbDefInternal).SetParent(Self, False) as IwbValueDef;
 end;
 
@@ -13824,18 +13825,18 @@ begin
     arLabels[lIdx] := aEnum.Names[lIdx];
 end;
 
-function TwbArrayDef.SetCountPath(const aValue: string): IwbArrayDef;
+function TwbArrayDef.SetCountPath(const aValue: string; aUseForCountCallback: Boolean): IwbArrayDef;
 begin
   if arCountPath = aValue then
     Exit(Self);
 
   if defIsLocked then
-    Exit(TwbArrayDef(Duplicate).SetCountPath(aValue));
+    Exit(TwbArrayDef(Duplicate).SetCountPath(aValue, aUseForCountCallback));
 
   Result := Self;
   arCountPath := aValue;
-  if arCountPath <> '' then
-    arCountCallback := _GetCountCallbackForPath(arCountPath)
+  if (arCountPath <> '') and aUseForCountCallback then
+    arCountCallback := _GetCountCallbackForPath(arCountPath);
 end;
 
 function TwbArrayDef.SetDefaultEditValues(const aValues: array of string): IwbArrayDef;
@@ -17943,6 +17944,8 @@ constructor TwbByteArrayDef.Create(aPriority      : TwbConflictPriority;
                                    aGetCP         : TwbGetConflictPriority;
                                    aTerminator    : Boolean);
 begin
+  Include(defFlags, dfSkipImplicitEdit);
+  
   badSize := aSize;
   badCountCallback := aCountCallback;
   inherited Create(aPriority, aRequired, aName, nil, nil, aDontShow, aGetCP, aTerminator);
@@ -20181,6 +20184,8 @@ constructor TwbEmptyDef.Create(aPriority  : TwbConflictPriority;
                                aSorted    : Boolean;
                                aGetCP     : TwbGetConflictPriority);
 begin
+  Include(defFlags, dfSkipImplicitEdit);
+
   if wbNeverSorted then
     aSorted := False;
 

@@ -6,6 +6,7 @@
 
 ## Minor Changes
 
+* #1196 - Feature Request: Extend F2 to assigning editable elements
 * #1245 - [SF] more TMLM definition 
 
 # What's New in xEdit 4.1.5a?

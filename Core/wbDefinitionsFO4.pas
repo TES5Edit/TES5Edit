@@ -6342,7 +6342,7 @@ begin
       .SetSummaryDelimiter('')
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseFragments)
-    ).SetCountPath('FragmentCount')
+    ).SetCountPath('FragmentCount', True)
   ])
   .SetSummaryKey([2, 3])
   .IncludeFlag(dfSummaryMembersNoName);

@@ -7544,7 +7544,7 @@ begin
         wbLenString('ScriptName', 2),
         wbLenString('FragmentName', 2)
       ])
-    ).SetCountPath('FragmentCount')
+    ).SetCountPath('FragmentCount', True)
   ]);
 
   wbScriptFragmentsScen := wbStruct('Script Fragments', [
