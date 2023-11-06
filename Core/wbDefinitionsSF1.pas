@@ -19928,9 +19928,15 @@ end;
     wbEDID,
     wbVMADFragmentedTMLM,
     wbFULL,
-    wbUnknown(TMVT),
-    wbUnknown(DNAM),
-    wbUnknown(SNAM),
+    wbInteger(TMVT, 'Show Body Text', itU32, wbBoolEnum),
+    wbInteger(DNAM, 'Menu Button Style', itU8, wbFlags([
+      {0x01} 'Unknown 0',
+      {0x02} 'Wide'
+    ])),
+    wbInteger(SNAM, 'Menu Style', itU32, wbEnum([
+      {0} 'Desktop',
+      {1} 'Simple Menu'
+    ])),
     wbLStringKC(INAM, 'Unknown', 0, cpTranslate, True),
     wbRStruct('Body Text', [
       wbInteger(BSIZ, 'Count', itU32),
@@ -19938,21 +19944,36 @@ end;
         wbLStringKC(BTXT, 'Text', 0, cpTranslate, True),
       wbCTDAs,
       wbInteger(TPLT, 'Uses Templated Text', itU8, wbBoolEnum) // note that this is not set on text that uses aliases or script token replacement
-      ], [])
+      ], []).SetCountPath(BSIZ)
     ], []),
     wbRStruct('Menu', [
       wbInteger(ISIZ, 'Options Count', itU32),
       wbRStructs('Menu Items', 'Menu Item', [
         wbLStringKC(ITXT, 'Item Text', 0, cpTranslate, True),
         wbLStringKC(ISTX, 'Item Short Text', 0, cpTranslate, False), // sometimes icon label, sometimes debug text... weird
-
-        wbArray(ISET, 'Unknown',wbInteger('Unknown',itU8),8),
+        wbStruct(ISET, 'Unknown', [
+          wbInteger('Type', itU16, wbEnum([
+            'Display Text',
+            'Submenu - Terminal',
+            'Unknown 2', // not present in starfield.esm
+            'Submenu - Return to Top Level',
+            'Submenu - Force Redraw'
+          ])),
+          wbUnused(2),
+          wbInteger('Flags', itU8, wbFlags([
+            {0x01} 'Unknown 0',
+            {0x02} 'Unknown 1',
+            {0x04} 'Unknown 2',
+            {0x08} 'Unknown 3'
+          ])),
+          wbUnused(3)
+        ]),
         wbInteger(ITID, 'Item ID', itU16),
         wbXLOC,
         wbFormIDCk(TNAM, 'Submenu', [NULL, TMLM]),
         wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
       wbCTDAs
-    ], [])
+    ], []).SetCountPath(ISIZ)
       ],[] )
   ]);
 
