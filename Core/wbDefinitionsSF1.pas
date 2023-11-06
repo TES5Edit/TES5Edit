@@ -19942,16 +19942,16 @@ end;
       wbInteger(BSIZ, 'Count', itU32),
       wbRStructs('Items', 'Item', [
         wbLStringKC(BTXT, 'Text', 0, cpTranslate, True),
-      wbCTDAs,
-      wbInteger(TPLT, 'Uses Templated Text', itU8, wbBoolEnum) // note that this is not set on text that uses aliases or script token replacement
+        wbCTDAs,
+        wbInteger(TPLT, 'Uses Templated Text', itU8, wbBoolEnum) // note that this is not set on text that uses aliases or script token replacement
       ], []).SetCountPath(BSIZ)
     ], []),
-    wbRStruct('Menu', [
-      wbInteger(ISIZ, 'Options Count', itU32),
-      wbRStructs('Menu Items', 'Menu Item', [
-        wbLStringKC(ITXT, 'Item Text', 0, cpTranslate, True),
-        wbLStringKC(ISTX, 'Item Short Text', 0, cpTranslate, False), // sometimes icon label, sometimes debug text... weird
-        wbStruct(ISET, 'Unknown', [
+    wbRStruct('Menu Items', [
+      wbInteger(ISIZ, 'Count', itU32),
+      wbRStructs('Items', 'Item', [
+        wbLStringKC(ITXT, 'Text', 0, cpTranslate, True),
+        wbLStringKC(ISTX, 'Short Text', 0, cpTranslate, False), // sometimes icon label, sometimes debug text... weird
+        wbStruct(ISET, 'Settings', [
           wbInteger('Type', itU16, wbEnum([
             'Display Text',
             'Submenu - Terminal',
@@ -19968,13 +19968,13 @@ end;
           ])),
           wbUnused(3)
         ]),
-        wbInteger(ITID, 'Item ID', itU16),
+        wbInteger(ITID, 'ID', itU16),
         wbXLOC,
         wbFormIDCk(TNAM, 'Submenu', [NULL, TMLM]),
         wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
-      wbCTDAs
-    ], []).SetCountPath(ISIZ)
-      ],[] )
+        wbCTDAs
+      ], []).SetCountPath(ISIZ)
+    ],[])
   ]);
 
   {subrecords checked against Starfield.esm}

@@ -4,6 +4,10 @@
 
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
 
+## Minor Changes
+
+* #1245 - [SF] more TMLM definition 
+
 # What's New in xEdit 4.1.5a?
 
 ## Bugfixes
