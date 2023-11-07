@@ -416,9 +416,8 @@ object frmMain: TfrmMain
               'xEdit is an advanced graphical esp editor and conflict detector.'
               ''
               'Discord: https://discord.gg/5t8RnNQ'
-              
-                'Forum: https://afkmods.iguanadons.net/index.php?/topic/3750-wipz' +
-                '-tes5edit/'
+
+                'Forum: https://www.afkmods.com/index.php?/topic/3750-wipz-tes5edit/'
               ''
               
                 'The navigation treeview on the left side shows all active master' +
