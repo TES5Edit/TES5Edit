@@ -8715,18 +8715,24 @@ begin
 
   wbRecord(ECZN, 'Encounter Zone', [
     wbEDID,
-    wbStruct(DATA, '', [
-      wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
-      wbFormIDCk('Location', [LCTN, NULL]),
-      wbInteger('Rank', itS8),
-      wbInteger('Min Level', itS8),
-      wbInteger('Flags', itU8, wbFlags([
-        'Never Resets',
-        'Match PC Below Minimum Level',
-        'Disable Combat Boundary'
-      ])),
-      wbInteger('Max Level', itS8)
-    ], cpNormal, True, nil, 2)
+    wbUnion(DATA, '', wbFormVersionDecider(34), [
+      wbStruct('', [
+        wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
+        wbFormIDCk('Location', [LCTN, NULL])
+      ], cpNormal, True),
+      wbStruct('', [
+        wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
+        wbFormIDCk('Location', [LCTN, NULL]),
+        wbInteger('Rank', itS8),
+        wbInteger('Min Level', itS8),
+        wbInteger('Flags', itU8, wbFlags([
+          'Never Resets',
+          'Match PC Below Minimum Level',
+          'Disable Combat Boundary'
+        ])),
+        wbInteger('Max Level', itS8)
+      ], cpNormal, True)
+    ])
   ]);
 
   wbRecord(LCTN, 'Location', [
