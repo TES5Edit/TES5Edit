@@ -416,9 +416,8 @@ object frmMain: TfrmMain
               'xEdit is an advanced graphical esp editor and conflict detector.'
               ''
               'Discord: https://discord.gg/5t8RnNQ'
-              
-                'Forum: https://afkmods.iguanadons.net/index.php?/topic/3750-wipz' +
-                '-tes5edit/'
+
+                'Forum: https://www.afkmods.com/index.php?/topic/3750-wipz-tes5edit/'
               ''
               
                 'The navigation treeview on the left side shows all active master' +
@@ -487,8 +486,8 @@ object frmMain: TfrmMain
               
                 '-<gamemode> [Specifies which game mode to use. <gamemode> can be' +
                 ' any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '#39'ender' +
-                'al'#39', '#39'sse'#39', '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39', '#39'fo76'#39']'
-              
+                'al'#39', '#39'sse'#39', '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39', '#39'fo76'#39', '#39'sf1'#39']'
+
                 '-moprofile:<profilename> Opens the plugin selection from the MO ' +
                 'profile named in the switch.'
               '-setesm [Set ESM flag. Plugin selection screen will appear.]'
