@@ -987,6 +987,7 @@ const
   PRAS : TwbSignature = 'PRAS'; { New To Starfield }
   PRCB : TwbSignature = 'PRCB'; { New to Skyrim }
   PRCS : TwbSignature = 'PRCS'; { New To Starfield }
+  PRDS : TwbSignature = 'PRDS'; { New To Starfield }
   PRFI : TwbSignature = 'PRFI'; { New To Fallout 76 }
   PRFS : TwbSignature = 'PRFS'; { New To Fallout 76 }
   PRFV : TwbSignature = 'PRFV';

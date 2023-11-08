@@ -10805,8 +10805,9 @@ end;
       wbFLLD
       //wbModelInfo(NAM2)
     ], [], cpNormal, True),
-    wbSoundReference(PRAS),
-    wbSoundReference(PRCS),
+    wbSoundReference(PRAS, 'Active Sound'),
+    wbSoundReference(PRCS, 'Countdown End Sound'),
+    wbSoundReference(PRDS, 'Disable Sound'),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
     wbFormIDCk(NAM3, 'Curve Table', [CURV])
   ]);

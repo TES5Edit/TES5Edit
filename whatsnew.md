@@ -3,11 +3,15 @@
 ## Bugfixes
 
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
+* #1249 - [TES5/SSE] made LCTN definitions properly formversion aware
 
 ## Minor Changes
 
 * #1196 - Feature Request: Extend F2 to assigning editable elements
 * #1245 - [SF] more TMLM definition 
+* #1248 - Information tab updates
+* #1249 - [BSArchPro] warning about compressing strings 
+* (reported on discord) - [SF] added PRDS to PROJ definitions
 
 # What's New in xEdit 4.1.5a?
 
