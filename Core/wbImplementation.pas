@@ -12332,11 +12332,14 @@ begin
   if Assigned(_File) then
     _File.RemoveMainRecord(Self);
 
-  if Assigned(mrMaster) then
-    (IwbMainRecord(mrMaster) as IwbMainRecordInternal).RemoveOverride(Self)
+  var lMaster := IwbMainRecord(mrMaster);
+  if Assigned(lMaster) then
+    (lMaster as IwbMainRecordInternal).RemoveOverride(Self)
   else
-    if Length(mrOverrides) > 0 then
-      (mrOverrides[0] as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+    if Length(mrOverrides) > 0 then begin
+      lMaster := mrOverrides[0];
+      (lMaster as IwbMainRecordInternal).YouAreTheMaster(mrOverrides, mrReferencedBy, mrReferencedByCount);
+    end;
 
   mrMaster := nil;
   mrOverrides := nil;
@@ -12348,6 +12351,9 @@ begin
   Exclude(mrStates, mrsIsInjectedChecked);
   mrConflictAll := caUnknown;
   mrConflictThis := ctUnknown;
+
+  if Assigned(lMaster) then
+    lMaster.ResetConflict;
 
   inherited;
 end;
