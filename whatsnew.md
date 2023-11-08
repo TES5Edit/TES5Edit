@@ -5,6 +5,7 @@
 * #1249 - [TES5/SSE] made LCTN definitions properly formversion aware
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
 * (reported on discord) - conflict status is not properly reset if a record is removed
+* (reported on discord) - [SF] PLDT\Radius is incorrectly defined as Integer instead of Float
 
 ## Minor Changes
 

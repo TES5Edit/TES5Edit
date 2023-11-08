@@ -5497,57 +5497,41 @@ begin
     {29} 'Headtrack Markers'
   ]);
 
-  var wbPLDT := wbStruct(PLDT, 'Location', [
-    wbInteger('Type', itS32, wbLocationEnum),
-    wbUnion('Location Value', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', sigReferences),
-      {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
-      {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
-      {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
-      {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
-      {6} wbFormIDCk('Keyword', [NULL, KYWD]),
-      {7} wbUnused(4),
-      {8} wbInteger('Ref Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-      {9} wbInteger('Loc Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-     {10} wbInteger('Interrupt Data', itU32),
-     {11} wbInteger('Packdata Target', itU32),
-     {12} wbByteArray('Unknown', 4, cpIgnore),
-     {13} wbByteArray('Unknown', 4),
-     {14} wbInteger('Ref Collection Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-     {15} wbUnknown(4),
-     {16} wbFormIDCkNoReach('Keyword', [KYWD])
-    ]),
-    wbInteger('Radius', itU32),
-    wbInteger('Collection Index', itU32)
-  ], cpNormal, False, nil, 3);
+  var wbLocation :=
+    function(aSignature : TwbSignature): IwbSubRecordDef
+    begin
+      Result := wbStruct(aSignature, 'Location', [
+        wbInteger('Type', itS32, wbLocationEnum),
+        wbUnion('Location Value', wbTypeDecider, [
+          {0} wbFormIDCkNoReach('Reference', sigReferences),
+          {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
+          {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
+          {3} wbByteArray('Near Editor Location', 4, cpIgnore),
+          {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
+          {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
+          {6} wbFormIDCk('Keyword', [NULL, KYWD]),
+          {7} wbUnused(4),
+          {8} wbInteger('Ref Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+          {9} wbInteger('Loc Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+         {10} wbInteger('Interrupt Data', itU32),
+         {11} wbInteger('Packdata Target', itU32),
+         {12} wbByteArray('Unknown', 4, cpIgnore),
+         {13} wbByteArray('Unknown', 4),
+         {14} wbInteger('Ref Collection Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+         {15} wbUnknown(4),
+         {16} wbFormIDCkNoReach('Keyword', [KYWD])
+        ]),
+        wbFloat('Radius'),
+        wbInteger('Collection Index', itU32)
+      ], cpNormal, False, nil, 3)
+       .SetSummaryKeyOnValue([0, 1])
+       .SetSummaryPrefixSuffixOnValue(0,'[',']')
+       .SetSummaryPrefixSuffixOnValue(1,'','')
+       .IncludeFlagOnValue(dfSummaryMembersNoName);
+    end;
 
-  var wbPLVD := wbStruct(PLVD, 'Location', [
-    wbInteger('Type', itS32, wbLocationEnum),
-    wbUnion('Location Value', wbTypeDecider, [
-      {0} wbFormIDCkNoReach('Reference', sigReferences),
-      {1} wbFormIDCkNoReach('Cell', [NULL, CELL]),
-      {2} wbByteArray('Near Package Start Location', 4, cpIgnore),
-      {3} wbByteArray('Near Editor Location', 4, cpIgnore),
-      {4} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ]),
-      {5} wbInteger('Object Type', itU32, wbObjectTypeEnum),
-      {6} wbFormIDCk('Keyword', [NULL, KYWD]),
-      {7} wbUnused(4),
-      {8} wbInteger('Ref Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-      {9} wbInteger('Loc Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
-     {10} wbInteger('Interrupt Data', itU32),
-     {11} wbInteger('Packdata Target', itU32),
-     {12} wbByteArray('Unknown', 4, cpIgnore),
-     {13} wbByteArray('Unknown', 4),
-     {14} wbInteger('Ref Collection Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias)
-    ]),
-    wbInteger('Radius', itS32),
-    wbInteger('Collection Index', itU32)
-  ], cpNormal, False, nil, 3)
-   .SetSummaryKeyOnValue([0, 1])
-   .SetSummaryPrefixSuffixOnValue(0,'[',']')
-   .SetSummaryPrefixSuffixOnValue(1,'','')
-   .IncludeFlagOnValue(dfSummaryMembersNoName);
+  var wbPLDT := wbLocation(PLDT);
+  var wbPLVD := wbLocation(PLVD);
 
   var wbPTDA := wbStruct(PTDA, 'Target Data', [
     wbInteger('Type', itS32, wbEnum([
