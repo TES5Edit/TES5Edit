@@ -15286,6 +15286,7 @@ begin
   vstView.BeginUpdate;
   try
     repeat
+      PendingResetActiveTree := False;
       with vstView.Header, Columns do begin
         SetLength(ColumnWidths, Count);
         for i := 0 to Pred(Count) do
