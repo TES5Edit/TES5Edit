@@ -1316,6 +1316,9 @@ type
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
+    function GetIsPartialForm: Boolean;
+    procedure SetIsPartialForm(aValue: Boolean);
+    function GetCanBePartial: Boolean;
     function GetIsCompressed: Boolean;
     procedure SetIsCompressed(aValue: Boolean);
     function GetIsVisibleWhenDistant: Boolean;
@@ -1353,6 +1356,8 @@ type
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
+
+    procedure MakePartialForm;
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
@@ -8336,6 +8341,17 @@ begin
       Exit;
   end;
 
+  if GetIsPartialForm then begin
+    var lHasSignature: IwbHasSignature;
+    if Supports(aElement, IwbHasSignature, lHasSignature) and
+       Assigned(mrDef) and
+       (mrDef.KnownSubRecordSignatures[ksrEditorID] = lHasSignature.Signature)
+    then begin
+      //allow EDID for partial forms
+    end else
+      Exit;
+  end;
+
   if Assigned(mrDef) then begin
 
     SelfRef := Self as IwbContainerElementRef;
@@ -8477,6 +8493,23 @@ begin
           var lHasSignature: IwbHasSignature;
           if Supports(aElement, IwbHasSignature, lHasSignature) then
             lShouldExit := mrDef.KnownSubRecordSignatures[ksrBaseRecord] <> lHasSignature.Signature;
+        end;
+      end;
+
+      if lShouldExit then
+        Exit;
+    end;
+
+  if GetIsPartialForm then
+    if aIndex <> wbAssignThis then begin
+      var lShouldExit := True;
+      if Assigned(mrDef) then begin
+        lShouldExit := mrDef.KnownSubRecordMemberIndex[ksrEditorID] <> aIndex;
+
+        if not lShouldExit and Assigned(aElement) then begin
+          var lHasSignature: IwbHasSignature;
+          if Supports(aElement, IwbHasSignature, lHasSignature) then
+            lShouldExit := mrDef.KnownSubRecordSignatures[ksrEditorID] <> lHasSignature.Signature;
         end;
       end;
 
@@ -8853,11 +8886,13 @@ var
 begin
   if Supports(aElement, IwbSubRecord, SubRecord) then begin
     NotRelevant := False;
-    if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then
-      mrEditorID := mrDef.GetEditorID(SubRecord)
-    else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then
-      mrFullName := SubRecord.EditValue
-    else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
+    if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
+      mrEditorID := mrDef.GetEditorID(SubRecord);
+      Exclude(mrStates, mrsEditorIDFromCache);
+    end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
+      mrFullName := SubRecord.EditValue;
+      Exclude(mrStates, mrsFullNameFromCache);
+    end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
       Exclude(mrStates, mrsBaseRecordChecked)
     else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
       if mrDef.GetGridCell(SubRecord, mrGridCell) then
@@ -8942,6 +8977,18 @@ begin
          (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
       then begin
         //allow NAME in FO4, SSE, and newer for deleted records
+      end else
+        Exit;
+    end;
+
+  if GetIsPartialForm then
+    if aIndex <> wbAssignThis then begin
+      var lHasSignature: IwbHasSignature;
+      if Supports(aElement, IwbHasSignature, lHasSignature) and
+         Assigned(mrDef) and
+         (mrDef.KnownSubRecordSignatures[ksrEditorID] = lHasSignature.Signature)
+      then begin
+        //allow EDID for partial forms
       end else
         Exit;
     end;
@@ -9366,6 +9413,9 @@ begin
 
     MakeHeaderWriteable;
     GetFlagsPtr.SetDeleted(True);
+    if Assigned(mrDef) and mrDef.CanBePartial then
+      GetFlagsPtr.SetPartialForm(False);
+    GetFlagsPtr.SetCompressed(False);
 
     if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
       if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
@@ -9391,6 +9441,7 @@ begin
       end;
     end;
 
+    CollapseStorage(nil, True);
   finally
     EndUpdate;
   end;
@@ -9694,7 +9745,7 @@ begin
 
   mrDef.AfterLoad(Self);
 
-  if not mrStruct.mrsFlags.IsDeleted then begin
+  if not (mrStruct.mrsFlags.IsDeleted or GetIsPartialForm) then begin
     for i := 0 to Pred(mrDef.MemberCount) do
       if mrDef.Members[i].Required then
         Include(RequiredRecords, i);
@@ -9738,7 +9789,7 @@ begin
   Include(cntStates, csInitOnce);
 
   if wbCanSortINFO and wbSortINFO then
-    if not GetIsDeleted and wbBeginInternalEdit(False) then try
+    if not (GetIsDeleted or GetIsPartialForm) and wbBeginInternalEdit(False) then try
       if wbFillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
           GroupRecordInternal.Sort(True);
@@ -10022,6 +10073,11 @@ begin
     Result := 'NULL';
 end;
 
+function TwbMainRecord.GetCanBePartial: Boolean;
+begin
+  Result := Assigned(mrDef) and mrDef.CanBePartial;
+end;
+
 function TwbMainRecord.GetCanHaveBaseRecord: Boolean;
 begin
   Result := Assigned(mrDef) and mrDef.ContainsKnownSubRecord[ksrBaseRecord];
@@ -10096,7 +10152,27 @@ begin
     SetLength(Result, Length(Result) - 2);
 
     if Result <> '' then
-      Result := 'Record marked as deleted but contains: ' + Result;
+      Result := 'Record marked as deleted, but contains: ' + Result;
+
+    Exit;
+  end;
+
+  if GetIsPartialForm then begin
+    Result := '';
+
+    for i := GetAdditionalElementCount to Pred(GetElementCount) do begin
+      Element := cntElements[i];
+      Def := Element.Def;
+      if Assigned(Def) then begin
+        if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrEditorID] = SigDef.DefaultSignature) then
+          Continue;
+        Result := Result + Def.Name + ', ';
+      end;
+    end;
+    SetLength(Result, Length(Result) - 2);
+
+    if Result <> '' then
+      Result := 'Record is Partial Form, but contains: ' + Result;
 
     Exit;
   end;
@@ -10966,6 +11042,11 @@ begin
         if not (esNotReachable in mrOverrides[i].ElementStates) then
           Exit(False);
   end;
+end;
+
+function TwbMainRecord.GetIsPartialForm: Boolean;
+begin
+  Result :=  Assigned(mrDef) and mrDef.CanBePartial and GetFlags.IsPartialForm;
 end;
 
 function TwbMainRecord.GetIsPersistent: Boolean;
@@ -11842,6 +11923,61 @@ begin
     end;
   end;
 
+end;
+
+procedure TwbMainRecord.MakePartialForm;
+var
+  SelfRef     : IwbContainerElementRef;
+  BasePtr     : Pointer;
+  GroupRecord : IwbGroupRecord;
+begin
+  if not (Assigned(mrDef) and mrDef.CanBePartial) then
+    Exit;
+
+  SelfRef := Self;
+  DoInit(False);
+
+  BeginUpdate;
+  try
+    var lEditorID := GetEditorID;
+
+    SetModified(True);
+    InvalidateStorage;
+    ReleaseElements;
+
+    MakeHeaderWriteable;
+    GetFlagsPtr.SetDeleted(False);
+    GetFlagsPtr.SetPartialForm(True);
+    GetFlagsPtr.SetCompressed(False);
+
+    if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+      if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+        with TwbContainedInElement.Create(Self) do begin
+          _AddRef; _Release;
+        end;
+    GroupRecord := nil;
+
+    BasePtr := dcBasePtr;
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      Include(dcFlags, dcfDontSave);
+      SetSortOrder(-1);
+      SetMemoryOrder(Low(Integer));
+      _AddRef; _Release;
+    end;
+
+    if lEditorID <> '' then begin
+      var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrEditorID];
+      if lMemberIndex >= 0 then begin
+        var lBaseRecordElement := Assign(lMemberIndex, nil, False);
+        if Assigned(lBaseRecordElement) then
+          lBaseRecordElement.EditValue := lEditorID;
+      end;
+    end;
+
+    CollapseStorage(nil, True);
+  finally
+    EndUpdate;
+  end;
 end;
 
 procedure TwbMainRecord.MarkModifiedRecursive(const aElementTypes: TwbElementTypes);
@@ -12828,7 +12964,7 @@ begin
 
         for i := Pred(SelfIndex) downto 0 do begin
           MainRecord := Master.Overrides[i];
-          if not MainRecord.IsDeleted then begin
+          if not (MainRecord.IsDeleted or MainRecord.IsPartialForm) then begin
             for j := Pred(_File.MasterCount[True]) downto 0 do
               if MainRecord._File.Equals(_File.Masters[j, True]) then begin
                 Self.Assign(wbAssignThis, MainRecord, False);
@@ -12837,7 +12973,7 @@ begin
           end;
         end;
 
-        if not Master.IsDeleted then
+        if not (Master.IsDeleted or Master.IsPartialForm) then
           Self.Assign(wbAssignThis, Master, False);
       finally
         EndUpdate;
@@ -12884,6 +13020,90 @@ begin
   if aValue <> GetIsInitiallyDisabled then begin
     MakeHeaderWriteable;
     GetFlagsPtr.SetInitiallyDisabled(aValue);
+  end;
+end;
+
+procedure TwbMainRecord.SetIsPartialForm(aValue: Boolean);
+var
+  SelfRef     : IwbContainerElementRef;
+  i, j        : Integer;
+  BasePtr     : Pointer;
+  GroupRecord : IwbGroupRecord;
+  Master      : IwbMainRecord;
+  MainRecord  : IwbMainRecord;
+  SelfIndex   : Integer;
+  _File       : IwbFile;
+begin
+  if not (Assigned(mrDef) and mrDef.CanBePartial) then
+    aValue := False;
+
+  if aValue <> GetIsPartialForm then begin
+    SetIsDeleted(False);
+    if aValue then
+      MakePartialForm
+    else begin
+      SelfRef := Self;
+      DoInit(False);
+
+      SetModified(True);
+      InvalidateStorage;
+      ReleaseElements;
+
+      MakeHeaderWriteable;
+      GetFlagsPtr.SetPartialForm(False);
+
+      if Supports(Self.GetContainer, IwbGroupRecord, GroupRecord) then
+        if wbCreateContainedIn and (GroupRecord.GroupType in [1, 4..10]) then
+          with TwbContainedInElement.Create(Self) do begin
+            _AddRef; _Release;
+          end;
+      GroupRecord := nil;
+
+      BasePtr := dcBasePtr;
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+        Include(dcFlags, dcfDontSave);
+        SetSortOrder(-1);
+        SetMemoryOrder(Low(Integer));
+        _AddRef; _Release;
+      end;
+
+      BeginUpdate;
+      try
+        for i := 0 to Pred(mrDef.MemberCount) do
+          if mrDef.Members[i].Required then
+            Assign(i, nil, False);
+
+        Master := GetMaster;
+
+        if not Assigned(Master) then
+          Exit;
+
+        _File := GetFile;
+
+        SelfIndex := -1;
+        for i := 0 to Pred(Master.OverrideCount) do
+          if Equals(Master.Overrides[i]) then begin
+            SelfIndex := i;
+            Break;
+          end;
+
+        for i := Pred(SelfIndex) downto 0 do begin
+          MainRecord := Master.Overrides[i];
+          if not (MainRecord.IsDeleted or MainRecord.IsPartialForm) then begin
+            for j := Pred(_File.MasterCount[True]) downto 0 do
+              if MainRecord._File.Equals(_File.Masters[j, True]) then begin
+                Self.Assign(wbAssignThis, MainRecord, False);
+                Exit;
+              end;
+          end;
+        end;
+
+        if not (Master.IsDeleted or Master.IsPartialForm) then
+          Self.Assign(wbAssignThis, Master, False);
+      finally
+        EndUpdate;
+      end;
+    end;
   end;
 end;
 
@@ -15671,6 +15891,9 @@ var
       if not aSource.IsDeleted then
         with Result as IwbMainRecord do
           IsDeleted := False;
+      if not aSource.IsPartialForm then
+        with Result as IwbMainRecord do
+          IsPartialForm := False;
       Result.Assign(wbAssignThis, aElement, False);
       if (aPrefix <> '') or (aSuffix <> '') then
         with Result as IwbMainRecord do begin
@@ -23282,15 +23505,11 @@ var
   DataContainer            : IwbDataContainer;
   Flags                    : TwbMainRecordStructFlags;
   p                        : Pointer;
-
-  ToggleDeleted            : Boolean;
-  TogglePersistent         : Boolean;
-  ToggleVisibleWhenDistant : Boolean;
 begin
-
-  ToggleDeleted := False;
-  TogglePersistent := False;
-  ToggleVisibleWhenDistant := False;
+  var ToggleDeleted := False;
+  var TogglePartialForm := False;
+  var TogglePersistent := False;
+  var ToggleVisibleWhenDistant := False;
 
   if Supports(IInterface(eContainer) , IwbMainRecordInternal, MainRecordInternal) then begin
     if SameText(aElement.Def.Name, 'Record Flags') then begin
@@ -23308,6 +23527,11 @@ begin
         if Flags.IsDeleted <> MainRecordInternal.mrStruct.mrsFlags.IsDeleted then begin
           Flags.SetDeleted(MainRecordInternal.mrStruct.mrsFlags.IsDeleted);
           ToggleDeleted := True;
+        end;
+
+        if Flags.IsPartialForm <> MainRecordInternal.mrStruct.mrsFlags.IsPartialForm then begin
+          Flags.SetPartialForm(MainRecordInternal.mrStruct.mrsFlags.IsPartialForm);
+          TogglePartialForm := True;
         end;
 
         if Flags.IsPersistent <> MainRecordInternal.mrStruct.mrsFlags.IsPersistent then begin
@@ -23329,6 +23553,8 @@ begin
     with MainRecordInternal do begin
       if ToggleDeleted then
         IsDeleted := not IsDeleted;
+      if TogglePartialForm then
+        IsPartialForm := not IsPartialForm;
 
       if not IsDeleted then begin
         if TogglePersistent then

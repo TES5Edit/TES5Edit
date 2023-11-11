@@ -1009,6 +1009,9 @@ begin
   begin
     wbIKnowWhatImDoing := True;
 
+    if FindCmdLineSwitch('AllowMakePartial') then
+      wbAllowMakePartial := True;
+
     if FindCmdLineSwitch('AllowMasterFilesEdit') then
       wbAllowMasterFilesEdit := True;
 

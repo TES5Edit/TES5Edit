@@ -31,8 +31,6 @@ object frmMain: TfrmMain
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1360
-    ExplicitHeight = 656
     object splElements: TSplitter
       Left = 455
       Top = 30
@@ -68,8 +66,6 @@ object frmMain: TfrmMain
       BevelOuter = bvNone
       BorderStyle = bsSingle
       TabOrder = 1
-      ExplicitWidth = 902
-      ExplicitHeight = 602
       object pgMain: TPageControl
         Left = 0
         Top = 0
@@ -81,8 +77,6 @@ object frmMain: TfrmMain
         TabOrder = 0
         TabPosition = tpBottom
         OnChange = pgMainChange
-        ExplicitWidth = 898
-        ExplicitHeight = 598
         object tbsView: TTabSheet
           Caption = 'View'
           OnShow = tbsViewShow
@@ -172,7 +166,6 @@ object frmMain: TfrmMain
             Align = alTop
             BevelOuter = bvNone
             TabOrder = 1
-            ExplicitWidth = 890
             object fpnlViewFilter: TFlowPanel
               Left = 0
               Top = 0
@@ -182,7 +175,6 @@ object frmMain: TfrmMain
               BevelOuter = bvNone
               TabOrder = 0
               OnResize = fpnlViewFilterResize
-              ExplicitWidth = 824
               object bnPinned: TSpeedButton
                 Left = 0
                 Top = 0
@@ -416,8 +408,9 @@ object frmMain: TfrmMain
               'xEdit is an advanced graphical esp editor and conflict detector.'
               ''
               'Discord: https://discord.gg/5t8RnNQ'
-
-                'Forum: https://www.afkmods.com/index.php?/topic/3750-wipz-tes5edit/'
+              
+                'Forum: https://www.afkmods.com/index.php?/topic/3750-wipz-tes5ed' +
+                'it/'
               ''
               
                 'The navigation treeview on the left side shows all active master' +
@@ -487,7 +480,7 @@ object frmMain: TfrmMain
                 '-<gamemode> [Specifies which game mode to use. <gamemode> can be' +
                 ' any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '#39'ender' +
                 'al'#39', '#39'sse'#39', '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39', '#39'fo76'#39', '#39'sf1'#39']'
-
+              
                 '-moprofile:<profilename> Opens the plugin selection from the MO ' +
                 'profile named in the switch.'
               '-setesm [Set ESM flag. Plugin selection screen will appear.]'
@@ -1998,7 +1991,6 @@ object frmMain: TfrmMain
       BevelOuter = bvNone
       TabOrder = 3
       OnResize = pnlNavResize
-      ExplicitHeight = 602
       object pnlNavContent: TPanel
         Left = 0
         Top = 0
@@ -2007,7 +1999,6 @@ object frmMain: TfrmMain
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitHeight = 602
         object lblFilterHint: TLabel
           AlignWithMargins = True
           Left = 3
@@ -2165,7 +2156,6 @@ object frmMain: TfrmMain
           BevelOuter = bvNone
           BevelWidth = 3
           TabOrder = 2
-          ExplicitTop = 573
           DesignSize = (
             455
             29)

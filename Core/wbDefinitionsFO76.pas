@@ -10919,10 +10919,11 @@ begin
       {0x00000040}  6, 'Unknown 6',
       {0x00000080}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
+      {0x00004000} 14, 'Partial Form',
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
-    ]), [18]), [
+    ]), [14, 18]), [
     wbEDID,
     wbDURL,
     wbXALG,
@@ -11333,7 +11334,10 @@ end;
 
 procedure DefineFO76d;
 begin
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(DIAL, 'Dialog Topic',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
@@ -13228,7 +13232,7 @@ begin
       {0x00000004}  2, 'Interior Location',
       {0x00000100}  8, 'Unknown 8',
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
-      {0x00004000} 14, 'Partial Form'
+      {0x00004000} 14, 'Unknown 14'
     ])), [
     wbEDID,
     wbDURL,
@@ -16558,8 +16562,8 @@ begin
 
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form'    // Allows the Record to inherit some subrecords from its master
-    ])), [
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbDURL,
     wbVMADFragmentedQUST,
@@ -18698,8 +18702,9 @@ begin
 
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form',
       {0x00080000} 19, 'Can''t Wait'
-    ])), [
+    ]), [14]), [
     wbEDID,
     wbRArray('Unused RNAM', wbUnknown(RNAM), cpIgnore, False{, wbNeverShow}),
     wbMaxHeightDataWRLD,

@@ -9389,11 +9389,12 @@ end;
       {0x00000004}  2, 'Unknown 2',
       {0x00000400}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
+      {0x00004000} 14, 'Partial Form',
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait',
       {0x00400000} 22, 'Unknown 22'
-    ]), [18]), [
+    ]), [14, 18]), [
     wbEDID,
     wbBaseFormComponents,
     wbFULL,
@@ -9877,7 +9878,10 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(DIAL, 'Dialog Topic',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbBaseFormComponents, // unknown if before or after FULL
     wbFULL,
@@ -11748,10 +11752,10 @@ end;
   wbRecord(LCTN, 'Location',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
-      {0x00004000} 14, 'Partial Form',
+      {0x00004000} 14, 'Unknown 14',
       {0x00080000} 19, 'Unknown 19',
       {0x00100000} 20, 'Unknown 20'
-    ])), [
+    ]), [14]), [
     wbEDID,
     wbPRPS,
 
@@ -15780,8 +15784,8 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(QUST, 'Quest',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form'  // Allows the Record to inherit some subrecords from its master
-    ])), [
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbVMADFragmentedQUST,
     wbFULL,
@@ -17585,8 +17589,9 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form',
       {0x00080000} 19, 'Can''t Wait'
-    ])), [
+    ]), [14]), [
     wbEDID,
     wbBaseFormComponents,
     wbRArray('Large References',

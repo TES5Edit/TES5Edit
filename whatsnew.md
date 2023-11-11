@@ -16,6 +16,10 @@
 * #1249 - [BSArchPro] warning about compressing strings 
 * (reported on discord) - [SF] added PRDS to PROJ definitions
 
+## Partial Form Support
+
+Initial support for Partial Forms
+
 # What's New in xEdit 4.1.5a?
 
 ## Bugfixes

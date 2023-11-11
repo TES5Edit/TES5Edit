@@ -6460,10 +6460,11 @@ begin
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000400} 10, 'Persistent',
+      {0x00004000} 14, 'Partial Form',
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
-    ]), [18]), [
+    ]), [14, 18]), [
     wbEDID,
     wbFULL,
     {>>>
@@ -6844,7 +6845,10 @@ procedure DefineTES5d;
 var
   wbFactionRank: IwbRecordMemberDef;
 begin
-  wbRecord(DIAL, 'Dialog Topic', [
+  wbRecord(DIAL, 'Dialog Topic',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form'
+    ]), [14]), [
     wbEDID,
     wbFULL,
     wbFloat(PNAM, 'Priority', cpNormal, True, 1, -1, nil, nil, 50.0),
@@ -12930,8 +12934,9 @@ begin
 
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form',
       {0x00080000} 19, 'Can''t Wait'
-    ])), [
+    ]), [14]), [
     wbEDID,
     wbRArray(IsSSE('Large References', 'Unused RNAM'),
       wbStruct(RNAM, 'Grid', [

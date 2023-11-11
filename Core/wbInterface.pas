@@ -247,6 +247,8 @@ var
   wbCompareRawData                   : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
 
+  wbAllowMakePartial                 : Boolean    = False;
+
   wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
 
@@ -1694,6 +1696,7 @@ type
     _Flags: Cardinal;
     function IsESM: Boolean; inline;
     function IsDeleted: Boolean; inline;
+    function IsPartialForm: Boolean; inline;
     function IsLocalized: Boolean; inline;
     function CastsShadows: Boolean; inline;
     function IsPersistent: Boolean; inline;
@@ -1709,6 +1712,7 @@ type
 
     procedure SetESM(aValue: Boolean);
     procedure SetDeleted(aValue: Boolean);
+    procedure SetPartialForm(aValue: Boolean);
     procedure SetLocalized(aValue: Boolean);
     procedure SetPersistent(aValue: Boolean);
     procedure SetCompressed(aValue: Boolean);
@@ -1834,6 +1838,9 @@ type
     procedure SetIsPersistent(aValue: Boolean);
     function GetIsDeleted: Boolean;
     procedure SetIsDeleted(aValue: Boolean);
+    function GetIsPartialForm: Boolean;
+    procedure SetIsPartialForm(aValue: Boolean);
+    function GetCanBePartial: Boolean;
     function GetIsLocalized: Boolean;
     procedure SetIsLocalized(aValue: Boolean);
     function GetIsCompressed: Boolean;
@@ -1863,6 +1870,8 @@ type
 
     procedure Delete;
     procedure DeleteInto(const aFile: IwbFile);
+
+    procedure MakePartialForm;
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
@@ -1976,6 +1985,11 @@ type
     property IsDeleted: Boolean
       read GetIsDeleted
       write SetIsDeleted;
+    property IsPartialForm: Boolean
+      read GetIsPartialForm
+      write SetIsPartialForm;
+    property CanBePartial: Boolean
+      read GetCanBePartial;
     property IsCompressed: Boolean
       read GetIsCompressed
       write SetIsCompressed;
@@ -2266,6 +2280,8 @@ type
     function GetKnownSubRecordMemberIndex(aKnownSubRecord: TwbKnownSubRecord): Integer;
     function GetKnownSubRecordMember(aKnownSubRecord: TwbKnownSubRecord): IwbRecordMemberDef;
 
+    function GetCanBePartial: Boolean;
+
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
     function IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
@@ -2322,6 +2338,9 @@ type
       read GetKnownSubRecordMemberIndex;
     property KnownSubRecordMember[aKnownSubRecord: TwbKnownSubRecord]: IwbRecordMemberDef
       read GetKnownSubRecordMember;
+
+    property CanBePartial: Boolean
+      read GetCanBePartial;
 
     property BaseSignatures[const aIndex: Integer]: TwbSignature
       read GetBaseSignature;
@@ -5761,7 +5780,8 @@ type
 
   TwbRecordDefFlag = (
     rdfAllowUnordered,
-    rdfIsReference
+    rdfIsReference,
+    rdfCanBePartial
   );
   TwbRecordDefFlags = set of TwbRecordDefFlag;
 
@@ -5851,6 +5871,8 @@ type
     function GetContainsKnownSubRecord(aKnownSubRecord: TwbKnownSubRecord): Boolean;
     function GetKnownSubRecordMemberIndex(aKnownSubRecord: TwbKnownSubRecord): Integer;
     function GetKnownSubRecordMember(aKnownSubRecord: TwbKnownSubRecord): IwbRecordMemberDef;
+
+    function GetCanBePartial: Boolean;
 
     function GetBaseSignature(const aIndex: Integer): TwbSignature;
     function GetBaseSignatureCount: Integer;
@@ -10613,9 +10635,16 @@ begin
   end;
   SetLength(recMembers, NewLength);
 
-
   if aIsReference and not Assigned(recBaseRecordFormID) then
     raise Exception.Create('Reference MainRecord must have BaseRecordFormID');
+
+  var lRecordFlags: IwbFlagsDef;
+  var lPartialFormFlag: IwbFlagDef;
+  if Assigned(recRecordFlags) and
+     Supports(recRecordFlags, IwbFlagsDef, lRecordFlags) and
+     lRecordFlags.FindFlag('Partial Form', lPartialFormFlag)
+  then
+    Include(recDefFlags, rdfCanBePartial);
 
   inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil, nil);
 end;
@@ -11053,6 +11082,11 @@ begin
     Result := recBaseRecordFormID.SignatureCount
   else
     Result := 0;
+end;
+
+function TwbMainRecordDef.GetCanBePartial: Boolean;
+begin
+  Result := rdfCanBePartial in recDefFlags;
 end;
 
 function TwbMainRecordDef.GetChildPos(const aChild: IwbDef): Integer;
@@ -20318,6 +20352,11 @@ begin
   Result := (_Flags and $00000800) <> 0;
 end;
 
+function TwbMainRecordStructFlags.IsPartialForm: Boolean;
+begin
+  Result := (_Flags and $00004000) <> 0;
+end;
+
 function TwbMainRecordStructFlags.IsPersistent: Boolean;
 begin
   Result := (_Flags and $00000400) <> 0;
@@ -20392,6 +20431,14 @@ begin
     _Flags := _Flags or $00000800
   else
     _Flags := _Flags and not $00000800;
+end;
+
+procedure TwbMainRecordStructFlags.SetPartialForm(aValue: Boolean);
+begin
+  if aValue then
+    _Flags := _Flags or $00004000
+  else
+    _Flags := _Flags and not $00004000;
 end;
 
 procedure TwbMainRecordStructFlags.SetPersistent(aValue: Boolean);

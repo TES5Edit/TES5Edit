@@ -101,6 +101,8 @@ type
     Container       : IwbContainer;
     ConflictAll     : TConflictAll;
     ConflictThis    : TConflictThis;
+    OrgConflictAll  : TConflictAll;
+    OrgConflictThis : TConflictThis;
     ElementGen      : Integer;
     ContainerGen    : Integer;
     MissingElements : TDynElements;
@@ -112,7 +114,8 @@ type
     vnfIgnore,
     vnfUseSortOrder,
     vnfIsSorted,
-    vnfIsAligned
+    vnfIsAligned,
+    vnfIsPartialForm
   );
   TViewNodeFlags = set of TViewNodeFlag;
 
@@ -2301,9 +2304,9 @@ begin
 
   Mainrecord := aContainer as IwbMainrecord;
 
-  if Assigned(Mainrecord) then
-    ConflictLevelForMainRecord(MainRecord, aConflictAll, aConflictThis)
-  else begin
+  if Assigned(Mainrecord) then begin
+    ConflictLevelForMainRecord(MainRecord, aConflictAll, aConflictThis);
+  end else begin
     NodeDatas := NodeDatasForContainer(aContainer);
     if Length(NodeDatas) = 1 then begin
       aConflictAll := caOnlyOne;
@@ -2369,7 +2372,13 @@ begin
         Result := caOnlyOne;
       end
   else
-    LastElement := aNodeDatas[Pred(aNodeCount)].Element;
+    var lLastIndex := Pred(aNodeCount);
+
+    LastElement := aNodeDatas[lLastIndex].Element;
+    while not Assigned(LastElement) and (vnfIsPartialForm in aNodeDatas[lLastIndex].ViewNodeFlags) and (lLastIndex > 0) do begin
+      Dec(lLastIndex);
+      LastElement := aNodeDatas[lLastIndex].Element;
+    end;
     FirstElement := aNodeDatas[0].Element;
 
     UniqueValues := TwbFastStringListCS.Create;
@@ -2423,7 +2432,6 @@ begin
       for i := 0 to Pred(aNodeCount) do begin
         Element := aNodeDatas[i].Element;
         if Assigned(Element) then begin
-
           Include(ElementTypes, Element.ElementType);
           if Assigned(Element.ValueDef) then
             Include(DefTypes, Element.ValueDef.DefType)
@@ -2434,6 +2442,8 @@ begin
           ThisPriority := Element.ConflictPriority;
           if ThisPriority <> cpIgnore then
             UniqueValues.Add(Element.DisplaySortKey[True]);
+        end else if (vnfIsPartialForm in aNodeDatas[i].ViewNodeFlags) then begin
+          ThisPriority := cpIgnore;
         end else begin
           Include(DefTypes, dtEmpty);
           ThisPriority := Priority;
@@ -7409,6 +7419,15 @@ begin
         Include(NodeData.ViewNodeFlags, vnfDontShow);
       end;
     end;
+
+    if not Assigned(NodeData.Element) and
+       Assigned(Container) and
+       (Container.ElementType = etMainRecord) and
+       (Container as IwbMainRecord).IsPartialForm
+    then begin
+      Include(NodeData.ViewNodeFlags, vnfIgnore);
+      Include(NodeData.ViewNodeFlags, vnfIsPartialForm);
+    end;
   end;
 
   aInitialStates := [ivsDisabled];
@@ -7416,9 +7435,12 @@ begin
     with aNodeDatas[i] do begin
       if Assigned(Element) then
         Exclude(aInitialStates, ivsDisabled)
-      else
+      else begin
         if Assigned(aParentDatas) and ((vnfIgnore in aParentDatas[i].ViewNodeFlags) or (Assigned(aParentDatas[i].Element) and (aParentDatas[i].Element.ConflictPriority = cpIgnore))) then
           Include(ViewNodeFlags, vnfIgnore);
+        if Assigned(aParentDatas) and (vnfIsPartialForm in aParentDatas[i].ViewNodeFlags) then
+          Include(ViewNodeFlags, vnfIsPartialForm);
+      end;
 
       if not Assigned(Container) then
         if Supports(Element, IwbContainerElementRef, Container) then begin
@@ -7459,6 +7481,10 @@ begin
           ConflictThis := ctUnknown;
         end;
         ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        with NodeData^ do begin
+          OrgConflictAll  := ConflictAll;
+          OrgConflictThis := ConflictThis;
+        end;
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected);
         if MainRecord.IsNotReachable then
@@ -7640,6 +7666,10 @@ begin
             ConflictThis := ctUnknown;
           end;
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+          with NodeData^ do begin
+            OrgConflictAll  := ConflictAll;
+            OrgConflictThis := ConflictThis;
+          end;
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected);
           if MainRecord.IsNotReachable then
@@ -11540,7 +11570,15 @@ begin
         NodeData := vstNav.GetNodeData(Node);
 
         if Assigned(NodeData.Element) then begin
-          if (Node.ChildCount = 0) {and (NodeData.ConflictAll = caNoConflict)} and
+          if (
+               (Node.ChildCount = 0) or
+               (
+                 wbAllowMakePartial and
+                 Supports(NodeData.Element, IwbMainRecord, MainRecord) and
+                 not MainRecord.IsPartialForm and
+                 MainRecord.CanBePartial
+               )
+             ) and
             (
               (NodeData.ConflictThis = ctIdenticalToMaster) or
               (
@@ -11549,7 +11587,19 @@ begin
                 (MainRecord.Signature = 'NAVM')
               ) or
               (
+                (NodeData.OrgConflictThis = ctIdenticalToMaster) and
+                wbAllowMakePartial and
+                (Node.ChildCount > 0)
+              ) or
+              (
                 Supports(NodeData.Element, IwbGroupRecord, GroupRecord)
+              ) or
+              (
+                (Node.ChildCount = 0) and
+                wbAllowMakePartial and
+                Supports(NodeData.Element, IwbMainRecord, MainRecord) and
+                MainRecord.IsPartialForm and
+                (not Assigned(MainRecord.ChildGroup) or (MainRecord.ChildGroup.ElementCount = 0))
               )
             ) and
               not (Supports(NodeData.Element, IwbMainRecord, MainRecord) and MainRecord.MasterOrSelf.IsInjected)
@@ -11568,12 +11618,19 @@ begin
                 if not HideRemoveMessage then
                   PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
                 if not AutoModeCheckForITM then begin
-                  if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
-                      NodeData.Container.Remove;
-                  NodeData.Element.Remove;
-                  NodeData.Container := nil;
-                  NodeData.Element := nil;
-                  vstNav.DeleteNode(Node);
+                  if Node.ChildCount > 0 then begin
+                    if wbAllowMakePartial and
+                       Supports(NodeData.Element, IwbMainRecord, MainRecord)
+                    then
+                      MainRecord.MakePartialForm;
+                  end else begin
+                    if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
+                        NodeData.Container.Remove;
+                    NodeData.Element.Remove;
+                    NodeData.Container := nil;
+                    NodeData.Element := nil;
+                    vstNav.DeleteNode(Node);
+                  end;
                 end;
                 Inc(RemovedCount);
               end;
@@ -13397,6 +13454,10 @@ begin
 
                 if FilterConflictAll or FilterConflictThis or InheritConflictByParent then begin
                   ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+                  with NodeData^ do begin
+                    OrgConflictAll  := ConflictAll;
+                    OrgConflictThis := ConflictThis;
+                  end;
                   if not (FlattenCellChilds and AssignPersWrldChild and (MainRecord.Signature = 'CELL')) then
                     if Node.ChildCount = 0 then
                       if (FilterConflictAll and not (NodeData.ConflictAll in FilterConflictAllSet)) or
@@ -18747,6 +18808,10 @@ begin
 
       if (NodeData.ConflictAll = caUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
         ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+        with NodeData^ do begin
+          OrgConflictAll  := ConflictAll;
+          OrgConflictThis := ConflictThis;
+        end;
         NodeData.ElementGen := MainRecord.ElementGeneration;
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
@@ -19490,6 +19555,8 @@ begin
       if ConflictThis = ctUnknown then begin
         MainRecord := Element as IwbMainRecord;
         ConflictLevelForMainRecord(MainRecord, ConflictAll, ConflictThis);
+        OrgConflictAll  := ConflictAll;
+        OrgConflictThis := ConflictThis;
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -19685,6 +19752,10 @@ begin
       if wbLoaderDone then
         if (NodeData.ConflictThis = ctUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
+          with NodeData^ do begin
+            OrgConflictAll  := ConflictAll;
+            OrgConflictThis := ConflictThis;
+          end;
           NodeData.ElementGen := MainRecord.ElementGeneration;
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected)
