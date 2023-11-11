@@ -18502,6 +18502,17 @@ end;
     ], []).SetCountPath(STMS)
   ]);
 
+  var wbTerminalBackgroundEnum := wbEnum([
+    'Constellation',
+    'Freestar Collective',
+    'Default',
+    'NASA',
+    'Ryujin Industries',
+    'Slayton Aerospace',
+    'United Colonies',
+    'Crimson Fleet'
+  ]);
+
   {subrecords checked against Starfield.esm}
   wbRecord(TERM, 'Terminal',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -18520,7 +18531,7 @@ end;
     wbPTT2,
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Menu', [TMLM]),
-    wbUnknown(NAM1),
+    wbInteger(NAM1, 'Terminal Background', itU8, wbTerminalBackgroundEnum),
 //    wbLStringKC(NAM0, 'Header Text'),
 //    wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
