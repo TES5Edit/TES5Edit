@@ -6,6 +6,7 @@
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
 * (reported on discord) - conflict status is not properly reset if a record is removed
 * (reported on discord) - [SF] PLDT\Radius is incorrectly defined as Integer instead of Float
+* (found by developer) - [SF] corrected SCEN record definitions to account for changes in Starfield 1.8.83.0
 
 ## Minor Changes
 
