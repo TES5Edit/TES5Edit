@@ -7285,6 +7285,9 @@ begin
     if wbTranslationMode then
       ConflictThis := ctIgnored;
 
+  if (ConflictAll in [caUnknown, caOnlyOne]) and ComparingSiblings then
+    ConflictAll := caNoConflict;
+
   for i := Low(ActiveRecords) to High(ActiveRecords) do
     aNodeDatas[i].ConflictAll := ConflictAll;
 
