@@ -12,9 +12,10 @@
 ## Minor Changes
 
 * #1196 - Feature Request: Extend F2 to assigning editable elements
-* #1245 - [SF] more TMLM definition 
+* #1245 - [SF] more TMLM definition
 * #1248 - Information tab updates
-* #1249 - [BSArchPro] warning about compressing strings 
+* #1249 - [BSArchPro] warning about compressing strings
+* #1255 - [SF] additional TERM decoding
 * (reported on discord) - [SF] added PRDS to PROJ definitions
 
 ## Partial Form Support
@@ -58,7 +59,7 @@ To start xEdit in Starfield game mode, use the `-sf1` parameter or rename the ex
 
 #### Reliance on Plugins.txt
 
-SF1Edit, consistent with its approach for all previous games, will source the initial selection of active modules from the `plugins.txt` file. 
+SF1Edit, consistent with its approach for all previous games, will source the initial selection of active modules from the `plugins.txt` file.
 
 #### Ignoring sTestFile1 to sTestFile10 Entries
 
@@ -129,8 +130,8 @@ Records that contain data streams reliant on reflection—a programming technique 
 
 #### Unmapped FormID Fields
 
-Any FormID field that is not mapped by the game engine can only contain a non-null value under specific conditions: 
-- The module containing this field must list `Starfield.esm` as its first master. 
+Any FormID field that is not mapped by the game engine can only contain a non-null value under specific conditions:
+- The module containing this field must list `Starfield.esm` as its first master.
 - Even when `Starfield.esm` is the first master, the FormID field can only take on values formatted as `00xxxxxx`, where the `xxxxxx` references a record belonging to `Starfield.esm`.
 
 #### Pack-Ins (PKIN)
@@ -159,9 +160,9 @@ Be aware that the official game modules—namely `Starfield.esm`, `OldMars.esm`, `
 
 ### The Case for Exclusively Supporting .esm Files in Starfield
 
-The publication of mods in the .esm format is strongly encouraged, a practice that should ideally extend to most previous Bethesda games. However, the widespread use of .esp modules for older titles renders a complete switch impractical for those games. 
+The publication of mods in the .esm format is strongly encouraged, a practice that should ideally extend to most previous Bethesda games. However, the widespread use of .esp modules for older titles renders a complete switch impractical for those games.
 
-For Starfield, we stand at a unique juncture where a unified effort can set the standard that all published mods should be .esm files. That means that SF1Edit will, for the time being, only support the creation and saving of .esm modules. 
+For Starfield, we stand at a unique juncture where a unified effort can set the standard that all published mods should be .esm files. That means that SF1Edit will, for the time being, only support the creation and saving of .esm modules.
 
 #### Technical Justifications:
 
@@ -193,7 +194,7 @@ You can then drag and drop records from the Navigation Treeview onto compatible 
 
 ## Fallout 76 Support
 
-Support for Fallout 76 has been included primarily for inspecting game data and creating delta patches to track changes in game data with each update. Module-based mods are not supported by Fallout 76. 
+Support for Fallout 76 has been included primarily for inspecting game data and creating delta patches to track changes in game data with each update. Module-based mods are not supported by Fallout 76.
 
 To start xEdit in Fallout 76 game mode, use the `-fo76` parameter or rename the exe to `FO76Edit.exe`.
 
@@ -267,11 +268,11 @@ To mitigate such issues, xEdit now automates the conversion of Model Information
 
 ### Introduction to Virtual Subrecords: INOM and INOA
 
-The `DIAL` record now features two new, virtual subrecords—`INOM` and `INOA`. It's crucial to understand that these subrecords are not part of the actual file format. They are neither saved by xEdit nor can they be modified by users. 
+The `DIAL` record now features two new, virtual subrecords—`INOM` and `INOA`. It's crucial to understand that these subrecords are not part of the actual file format. They are neither saved by xEdit nor can they be modified by users.
 
 ### Importance of INFO Order
 
-The sequence in which `INFO` records appear under each `DIAL` within the game engine is of paramount importance. This is because the game engine evaluates these `INFO` records in their presented order when selecting the next dialog response. 
+The sequence in which `INFO` records appear under each `DIAL` within the game engine is of paramount importance. This is because the game engine evaluates these `INFO` records in their presented order when selecting the next dialog response.
 
 ### Complexity in Sorting Rules
 
@@ -338,7 +339,7 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 
 * #1002 - FNAM Scene Flags (Stop on Quest End -> Stop Quest on End)
 * #1012 - [FO4] Condition GetIsID does not accept an Enchantment ID
-* #1016 - [TES5/SSE] Quests/QNAM in SMQN shouldn't show as benign conflict 
+* #1016 - [TES5/SSE] Quests/QNAM in SMQN shouldn't show as benign conflict
 * #1034 - Incorrect encoding for cyrillic symbols for Player Dialog Prompts
 * #1036 - QAC reports with multiple dirty checksums produce invalid LOOT masterlist entries
 * (reported on Discord) - .strings files may not be saved if there were no changes to the .es? file
@@ -348,7 +349,7 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 
 ## Minor changes
 
-* (contributed) - SSE: LIGH was missing LNAM -> LENS 
+* (contributed) - SSE: LIGH was missing LNAM -> LENS
 * (contributed) - updated CTDA for latest xOBSE
 * (contributed) - updated CTDA for latest xNVSE
 * (contributed) - added hotkey actions Ctrl+C, Ctrl+Alt+C, and Del to Referenced By tab
@@ -359,16 +360,16 @@ With the introduction of `INOM` and `INOA`, mod authors and users can now more e
 
 * #777 - [Skyrim SE/LE] - Unknown Map Marker TNAM value 59
 * #788 - For Oblivion Copy as overrides fails for MGEF
-* #792 - Flipped indexes in display of blocks and sub-blocks 
+* #792 - Flipped indexes in display of blocks and sub-blocks
 * #803 - after cleaning, some new worldspaces from DLCs may not load their temporary records correctly
 * #813 - Unknown field in Script Fragments decoded by Creation Kit error log
-* #823 - FO3: Anchorage.esm & PointLookout.esm need Mark Modified applied during QAC 
+* #823 - FO3: Anchorage.esm & PointLookout.esm need Mark Modified applied during QAC
 * #848 - Records with hardcoded FormIDs show as new records instead of overrides/injected
 * #853 - FNV - cleaning dead money master erases map geometry
 * #855 - After cleaning dlcnukaworld.esm, items in Nuka-Town market vanish
 * #860 - tooltip always disappears after a second
 * #863 - FO4: DefaultObject forms (DFOB) should override via EditorID
-* #871 - Updates for Static Collections [FO4] 
+* #871 - Updates for Static Collections [FO4]
 * #875 - TES4Edit 4.0.3 not able to copy Magic Effect Records
 * #886 - Crash by confirming add of *no* master
 * #880 - Minor problem with double clicking during module selection
