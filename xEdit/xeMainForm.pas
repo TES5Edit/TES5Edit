@@ -2358,17 +2358,36 @@ begin
   FoundAny := False;
   MasterPosition := 0;
   OverallConflictThis := ctUnknown;
-  case aNodeCount of
+
+  var lNodeCount := 0;
+  var lFirstNode := PViewNodeData(nil);
+
+  if aNodeCount = 1 then begin
+    lNodeCount := 1;
+    lFirstNode := @aNodeDatas[0];
+  end else
+    for i := 0 to Pred(aNodeCount) do
+      if aNodeDatas[i].ViewNodeFlags * [vnfDontShow, vnfIgnore] <> [] then with aNodeDatas[i] do begin
+        ConflictThis := ctNotDefined;
+        if Assigned(Element) and (vnfIgnore in ViewNodeFlags) then
+          ConflictThis := ctIgnored;
+      end else begin
+        Inc(lNodeCount);
+        if not Assigned(lFirstNode) then
+          lFirstNode := @aNodeDatas[i];
+      end;
+
+  case lNodeCount of
     0: Result := caUnknown;
     1: begin
-        Element := aNodeDatas[0].Element;
+        Element := lFirstNode^.Element;
         if Assigned(Element) then begin
           if Element.ConflictPriority = cpIgnore then
-            aNodeDatas[0].ConflictThis := ctIgnored
+            lFirstNode^.ConflictThis := ctIgnored
           else
-            aNodeDatas[0].ConflictThis := ctOnlyOne;
+            lFirstNode^.ConflictThis := ctOnlyOne;
         end else
-          aNodeDatas[0].ConflictThis := ctNotDefined;
+          lFirstNode^.ConflictThis := ctNotDefined;
         Result := caOnlyOne;
       end
   else
@@ -2379,7 +2398,7 @@ begin
       Dec(lLastIndex);
       LastElement := aNodeDatas[lLastIndex].Element;
     end;
-    FirstElement := aNodeDatas[0].Element;
+    FirstElement := lFirstNode.Element;
 
     UniqueValues := TwbFastStringListCS.Create;
     UniqueValues.Sorted := True;
@@ -2507,7 +2526,12 @@ begin
         1: Result := caNoConflict;
         2: begin
             Element := aNodeDatas[0].Element;
-            CompareElement := aNodeDatas[Pred(aNodeCount)].Element;
+            var lCompareIndex := Pred(aNodeCount);
+            CompareElement := aNodeDatas[lCompareIndex].Element;
+            while not Assigned(CompareElement) and (vnfIsPartialForm in aNodeDatas[lCompareIndex].ViewNodeFlags) and (lCompareIndex > 0) do begin
+              Dec(lCompareIndex);
+              CompareElement := aNodeDatas[lCompareIndex].Element;
+            end;
             if (Assigned(Element) <> Assigned(CompareElement)) or
               (Assigned(Element) and not SameStr(Element.DisplaySortKey[True], CompareElement.DisplaySortKey[True])) then
               Result := caOverride
@@ -11615,15 +11639,19 @@ begin
               if not NodeData.Element.IsRemoveable then
                 PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
               else begin
-                if not HideRemoveMessage then
-                  PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
                 if not AutoModeCheckForITM then begin
                   if Node.ChildCount > 0 then begin
                     if wbAllowMakePartial and
                        Supports(NodeData.Element, IwbMainRecord, MainRecord)
-                    then
+                    then begin
+                      if not HideRemoveMessage then
+                        PostAddMessage('Making Partial Form: ' + NodeData.Element.Name);
                       MainRecord.MakePartialForm;
+                    end;
                   end else begin
+                    if not HideRemoveMessage then
+                      PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+
                     if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
                         NodeData.Container.Remove;
                     NodeData.Element.Remove;
@@ -11631,7 +11659,9 @@ begin
                     NodeData.Element := nil;
                     vstNav.DeleteNode(Node);
                   end;
-                end;
+                end else
+                  if not HideRemoveMessage then
+                    PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
                 Inc(RemovedCount);
               end;
             end;

@@ -668,7 +668,8 @@ type
     dfUnmappedFormID,
     dfCanContainUnmappedFormID,
     dfIncludeValueInDisplaySignature,
-    dfSkipImplicitEdit
+    dfSkipImplicitEdit,
+    dfNoCopyAsOverride
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -2895,6 +2896,7 @@ type
     function FindFlag(aName: string; out aFlagDef: IwbFlagDef): Boolean;
 
     function SetDontShowMaskPath(const aPath: string; aInvert: Boolean): IwbFlagsDef;
+    function SetFlagHasDontShow(aIndex: Integer; const aDontShow: TwbDontShowCallback): IwbFlagsDef;
 
     property BaseFlagsDef: IwbFlagsDef
       read GetBaseFlagsDef;
@@ -7369,6 +7371,7 @@ type
     function FindFlag(aName: string; out aFlagDef: IwbFlagDef): Boolean;
 
     function SetDontShowMaskPath(const aPath: string; aInvert: Boolean): IwbFlagsDef;
+    function SetFlagHasDontShow(aIndex: Integer; const aDontShow: TwbDontShowCallback): IwbFlagsDef;
   end;
 
   TwbFlagDef = class(TwbValueDef, IwbFlagDef)
@@ -14959,6 +14962,31 @@ begin
   Result := Self;
   flgDontShowPath := aPath;
   flgDontShowInvert := aInvert;
+end;
+
+function TwbFlagsDef.SetFlagHasDontShow(aIndex: Integer; const aDontShow: TwbDontShowCallback): IwbFlagsDef;
+begin
+  if defIsLocked then
+    Exit(TwbFlagsDef(Duplicate).SetFlagHasDontShow(aIndex, aDontShow));
+
+  Result := Self;
+  if Assigned(aDontShow) then begin
+    if Length(flgDontShows) <= aIndex then
+      SetLength(flgDontShows, Succ(aIndex));
+    flgDontShows[aIndex] := aDontShow;
+  end else begin
+    if High(flgDontShows) >= aIndex then
+      flgDontShows[aIndex] := aDontShow;
+  end;
+
+  flgHasDontShows := False;
+  for var lIndex := Low(flgDontShows) to High(flgDontShows) do
+    if Assigned(flgDontShows[lIndex]) then begin
+      flgHasDontShows := True;
+      Break;
+    end;
+  if not flgHasDontShows then
+    flgDontShows := nil;
 end;
 
 function TwbFlagsDef.GetRequiresKey: Boolean;

@@ -3,6 +3,7 @@
 ## Bugfixes
 
 * #1249 - [TES5/SSE] made LCTN definitions properly formversion aware
+* #1254 - Report Error when a NULL Faction is in the Function GetCrimeGoldViolent/GetCrimeGold/GetCrimeGoldNonviolent
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
 * (reported on discord) - conflict status is not properly reset if a record is removed
 * (reported on discord) - [SF] PLDT\Radius is incorrectly defined as Integer instead of Float
@@ -18,7 +19,18 @@
 
 ## Partial Form Support
 
-Initial support for Partial Forms
+Initial support for Partial Forms has been implemented:
+
+* Records marked as Partial Form are ignored in conflict status determination.
+* The Partial Form Flag is correctly displayed as a Record Flag on all Records that support it.
+* The Partial Form Flag can only be set on records where it is likely safe to do so.
+* Setting the Partial Form Flag will remove all subrecords except EditorID.
+* Removing the Partial Form Flag will restore the subrecords from the highest visible master.
+* The `-AllowMakePartial` parameter, which only works if you know what you are doing, will allow QAC to mark ITM records that can be Partial Forms as such, if they can't be removed because they have children.
+
+### Warning
+
+The safety of using Partial Forms in different contexts in the various game engines is still under exploration. Marking a record as Partial Form might result in engine bugs and unexpected behaviour.
 
 # What's New in xEdit 4.1.5a?
 

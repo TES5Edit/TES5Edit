@@ -2328,7 +2328,8 @@ type
     ptWardState,          // enum
     ptEvent,              // Struct
     ptEventData,          // LCTN, KYWD or FLST
-    ptKnowable            // MGEF, WOOP, ENCH
+    ptKnowable,           // MGEF, WOOP, ENCH
+    ptFactionOpt          // NULL, FACT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2532,8 +2533,8 @@ const
 {V} (Index: 370; Name: 'IsTalkingActivatorActor'; ParamType1: ptActor),
 {V} (Index: 372; Name: 'IsInList'; ParamType1: ptFormList),
 {N} (Index: 373; Name: 'GetStolenItemValue'; ParamType1: ptFaction),
-{N} (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFaction),
-{N} (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFaction),
+{N} (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFactionOpt),
+{N} (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFactionOpt),
 {N} (Index: 378; Name: 'HasShout'; ParamType1: ptShout),
 {V} (Index: 381; Name: 'GetHasNote'; ParamType1: ptInteger), // was ptNote
 {V} (Index: 390; Name: 'GetHitLocation'),
@@ -2568,7 +2569,7 @@ const
 {V} (Index: 453; Name: 'GetPlayerTeammate'),
 {V} (Index: 454; Name: 'GetPlayerTeammateCount'),
 {V} (Index: 458; Name: 'GetActorCrimePlayerEnemy'),
-{V} (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFaction),
+{V} (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFactionOpt),
 {V} (Index: 463; Name: 'IsPlayerGrabbedRef'; ParamType1: ptObjectReference),
 {N} (Index: 465; Name: 'GetKeywordItemCount'; ParamType1: ptKeyword),
 {V} (Index: 470; Name: 'GetDestructionStage'),
@@ -6030,7 +6031,8 @@ begin
           wbInteger('Ward State', itU32, wbWardStateEnum),
           wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
           wbFormID('Event Data'),
-          wbFormIDCk('Knowable', [MGEF, WOOP, ENCH])
+          wbFormIDCk('Knowable', [MGEF, WOOP, ENCH]),
+          wbFormIDCkNoReach('Faction', [NULL, FACT])
         ]),
      {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
           wbByteArray('Unknown', 4),
@@ -6132,7 +6134,8 @@ begin
           wbInteger('Ward State', itU32, wbWardStateEnum),
           wbInteger('Event', itU32, wbEventFunctionAndMemberToStr, wbEventFunctionAndMemberToInt),
           wbFormID('Event Data'),
-          wbFormIDCk('Knowable', [MGEF, WOOP, ENCH])
+          wbFormIDCk('Knowable', [MGEF, WOOP, ENCH]),
+          wbFormIDCkNoReach('Faction', [NULL, FACT])
         ]),
      {7}wbInteger('Run On', itU32, wbEnum([
           {0} 'Subject',
@@ -6464,7 +6467,21 @@ begin
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
-    ]), [14, 18]), [
+    ]), [14, 18])
+      .SetFlagHasDontShow(14,
+        function(const aElement: IwbElement): Boolean
+        begin
+          Result := False;
+          if not Assigned(aElement) then
+            Exit;
+          var lMainRecord := aElement.ContainingMainRecord;
+          if not Assigned(lMainRecord) then
+            Exit;
+          if lMainRecord.IsPartialForm then
+            Exit;
+          Result := not lMainRecord.CanBePartial;
+        end),
+  [
     wbEDID,
     wbFULL,
     {>>>
@@ -12949,7 +12966,11 @@ begin
         ]), -1).IncludeFlag(dfNotAlignable)
       ]),
       cpIgnore, False, nil, nil, wbNeverShow
-    ).IncludeFlag(dfNotAlignable),
+    )
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfNoCopyAsOverride)
+      .IncludeFlag(dfNotAlignable)
+      .IncludeFlag(dfFastAssign),
     wbMaxHeightDataWRLD,
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [

@@ -8566,6 +8566,9 @@ begin
         if Assigned(aElement) then begin
           for i := 0 to Pred(Container.ElementCount) do begin
             Element := Container.Elements[i];
+            if dfNoCopyAsOverride in Element.Def.DefFlags then
+              if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
+                Continue;
             Assign(Element.SortOrder, Element, aOnlySK);
           end;
         end else begin
@@ -10076,6 +10079,28 @@ end;
 function TwbMainRecord.GetCanBePartial: Boolean;
 begin
   Result := Assigned(mrDef) and mrDef.CanBePartial;
+  if not Result then
+    Exit;
+
+  if GetSignature <> 'CELL' then
+    Exit;
+
+  var lMasterOrSelf := GetMasterOrSelf;
+
+  var lGridCell: TwbGridCell;
+  if not GetIsPersistent then
+    if lMasterOrSelf.GetGridCell(lGridCell) then
+      //no partial for temporary exterior cells
+      Exit(False);
+
+  // only interior cells get here
+
+  if wbGameMode = gmFO4 then begin
+    var lFile := lMasterOrSelf._File;
+    if not (fsIsGameMaster in lFile.FileStates) then
+      //no partial for interior cells in FO4 if they are not defined in Fallout4.esm
+      Exit(False);
+  end;
 end;
 
 function TwbMainRecord.GetCanHaveBaseRecord: Boolean;
@@ -11931,7 +11956,7 @@ var
   BasePtr     : Pointer;
   GroupRecord : IwbGroupRecord;
 begin
-  if not (Assigned(mrDef) and mrDef.CanBePartial) then
+  if not GetCanBePartial then
     Exit;
 
   SelfRef := Self;
@@ -13034,7 +13059,7 @@ var
   SelfIndex   : Integer;
   _File       : IwbFile;
 begin
-  if not (Assigned(mrDef) and mrDef.CanBePartial) then
+  if not GetCanBePartial then
     aValue := False;
 
   if aValue <> GetIsPartialForm then begin
@@ -22000,16 +22025,15 @@ procedure TwbValue.SetEditValue(const aValue: string);
 
 var
   OldValue, NewValue: Variant;
-  lValue: string;
 begin
   if not wbIsInternalEdit then begin
     if not wbEditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');
   end;
 
+  var lValue := '';
   BeginUpdate;
   try
-    lValue := '';
     if (not Assigned(dcDataBasePtr) or not Assigned(dcDataEndPtr)) or (aValue <> GetEditValue) then begin
       OldValue := GetNativeValue;
       vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] := aValue;
@@ -22021,13 +22045,13 @@ begin
       NewValue := GetNativeValue;
       DoAfterSet(OldValue, NewValue);
       NotifyChanged(eContainer);
-      if vIsFlags and (csInit in cntStates) then begin
-        if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> lValue then
-          RecreateFlags;
-      end;
     end;
   finally
     EndUpdate;
+    if vIsFlags and (csInit in cntStates) then begin
+      if vbValueDef.EditValue[GetDataBasePtr, dcDataEndPtr, Self] <> lValue then
+        RecreateFlags;
+    end;
   end;
 end;
 

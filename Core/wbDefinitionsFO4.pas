@@ -2877,7 +2877,8 @@ type
     {53} ptWardState,          // enum
     {54} ptWeather,            // WTHR
     {55} ptWorldspace,         // WRLD
-    {56} ptDamageType          // DMGT
+    {56} ptDamageType,         // DMGT
+    {57} ptFactionOpt          // FACT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3080,8 +3081,8 @@ const
     (Index: 370; Name: 'IsTalkingActivatorActor'; Paramtype1: ptActor),    // 185
     (Index: 372; Name: 'IsInList'; ParamType1: ptFormList),
     (Index: 373; Name: 'GetStolenItemValue'; Paramtype1: ptFaction),    // 187
-    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFaction),
-    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFaction),
+    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFactionOpt),
+    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFactionOpt),
     (Index: 378; Name: 'IsOwnedBy'; Paramtype1: ptActor),    // 190
     (Index: 380; Name: 'GetCommandDistance'),    // 191
     (Index: 381; Name: 'GetCommandLocationDistance'),    // 192
@@ -3119,7 +3120,7 @@ const
     (Index: 453; Name: 'GetPlayerTeammate'),    // 224
     (Index: 454; Name: 'GetPlayerTeammateCount'),    // 225
     (Index: 458; Name: 'GetActorCrimePlayerEnemy'),    // 226
-    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFaction),
+    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFactionOpt),
     (Index: 463; Name: 'IsPlayerGrabbedRef'; ParamType1: ptObjectReference),
     (Index: 465; Name: 'GetKeywordItemCount'; Paramtype1: ptKeyword),    // 229
     (Index: 470; Name: 'GetDestructionStage'),    // 230
@@ -7981,7 +7982,9 @@ begin
           {55 ptWorldspace}
           wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
           {56 ptDamageType}
-          wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
+          wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
+          {57 ptFactionOpt}
+          wbFormIDCkNoReach('Faction', [NULL, FACT])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -8143,7 +8146,9 @@ begin
           {55 ptWorldspace}
           wbFormIDCkNoReach('Worldspace', [WRLD, FLST]),
           {56 ptDamageType}
-          wbFormIDCkNoReach('Damage Type', [DMGT, FLST])
+          wbFormIDCkNoReach('Damage Type', [DMGT, FLST]),
+          {57 ptFactionOpt}
+          wbFormIDCkNoReach('Faction', [NULL, FACT])
         ]),
         wbInteger('Run On', itU32, wbEnum([
           { 0} 'Subject',
@@ -8944,7 +8949,21 @@ begin
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
-    ]), [14, 18]), [
+    ]), [14, 18])
+      .SetFlagHasDontShow(14,
+        function(const aElement: IwbElement): Boolean
+        begin
+          Result := False;
+          if not Assigned(aElement) then
+            Exit;
+          var lMainRecord := aElement.ContainingMainRecord;
+          if not Assigned(lMainRecord) then
+            Exit;
+          if lMainRecord.IsPartialForm then
+            Exit;
+          Result := not lMainRecord.CanBePartial;
+        end),
+  [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU16, wbFlags([

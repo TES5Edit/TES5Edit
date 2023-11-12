@@ -3533,7 +3533,8 @@ type
     {66} ptAttackData,         // Unsure. Defaulting to int
     {67} ptLegendaryItem,      // Unsure. Possibly formid?
     {68} ptDailyContentGroup,  // DailyContentGroup or Quest formid
-    {69} ptSpell
+    {69} ptSpell,
+    {70} ptFactionOpt          // FACT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -3741,8 +3742,8 @@ const
     (Index: 371; Name: 'IsOnChems'),
     (Index: 372; Name: 'IsInList'; ParamType1: ptFormList),
     (Index: 373; Name: 'GetStolenItemValue'; ParamType1: ptFaction),
-    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFaction),
-    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFaction),
+    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFactionOpt),
+    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFactionOpt),
     (Index: 378; Name: 'IsOwnedBy'; ParamType1: ptActor),
     (Index: 380; Name: 'GetCommandDistance'),
     (Index: 381; Name: 'GetCommandLocationDistance'),
@@ -3780,7 +3781,7 @@ const
     (Index: 453; Name: 'GetPlayerTeammate'),
     (Index: 454; Name: 'GetPlayerTeammateCount'),
     (Index: 458; Name: 'GetActorCrimePlayerEnemy'),
-    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFaction),
+    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFactionOpt),
     (Index: 463; Name: 'IsPlayerGrabbedRef'; ParamType1: ptObjectReference),
     (Index: 465; Name: 'GetKeywordItemCount'; ParamType1: ptKeyword),
     (Index: 470; Name: 'GetDestructionStage'),
@@ -9501,11 +9502,13 @@ begin
         {66 ptAttackData }
         wbInteger('Attack Data', itU32),
         {67 ptLegendaryItem }
-        wbFormIDCk('Legendary Item', [LGDI]),
+        wbFormIDCkNoReach('Legendary Item', [LGDI]),
         {68 ptDailyContentGroup }
-        wbFormIDCk('Daily Content Group', [DCGF, QUST]),
+        wbFormIDCkNoReach('Daily Content Group', [DCGF, QUST]),
         {69 ptSpell }
-        wbFormIDCk('Spell', [SPEL])
+        wbFormIDCkNoReach('Spell', [SPEL]),
+        {70 ptFactionOpt}
+        wbFormIDCkNoReach('Faction', [NULL, FACT])
       ]),
 
       wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -9689,11 +9692,13 @@ begin
         {66 ptAttackData }
         wbInteger('Attack Data', itU32),
         {67 ptLegendaryItem }
-        wbFormIDCk('Legendary Item', [LGDI]),
+        wbFormIDCkNoReach('Legendary Item', [LGDI]),
         {68 ptDailyContentGroup }
-        wbFormIDCk('Daily Content Group', [DCGF, QUST]),
+        wbFormIDCkNoReach('Daily Content Group', [DCGF, QUST]),
         {69 ptSpell }
-        wbFormIDCk('Spell', [SPEL])
+        wbFormIDCkNoReach('Spell', [SPEL]),
+        {70 ptFactionOpt}
+        wbFormIDCkNoReach('Faction', [NULL, FACT])
       ]),
       wbInteger('Run On', itU32, wbEnum([
         { 0} 'Subject',
@@ -10923,7 +10928,21 @@ begin
       {0x00020000} 17, 'Off Limits',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
-    ]), [14, 18]), [
+    ]), [14, 18])
+      .SetFlagHasDontShow(14,
+        function(const aElement: IwbElement): Boolean
+        begin
+          Result := False;
+          if not Assigned(aElement) then
+            Exit;
+          var lMainRecord := aElement.ContainingMainRecord;
+          if not Assigned(lMainRecord) then
+            Exit;
+          if lMainRecord.IsPartialForm then
+            Exit;
+          Result := not lMainRecord.CanBePartial;
+        end),
+  [
     wbEDID,
     wbDURL,
     wbXALG,

@@ -2271,7 +2271,8 @@ type
     {68} ptPerkSkillGroupComparison,
     {69} ptPerkSkillGroup,
     {70} ptReactionType,
-    {71} ptLimbCategory
+    {71} ptLimbCategory,
+    {72} ptFactionOpt         // NULL, FACT
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2475,8 +2476,8 @@ const
     (Index: 370; Name: 'IsTalkingActivatorActor'; ParamType1: ptActor),                                                                                     //   186
     (Index: 372; Name: 'IsInList'; ParamType1: ptFormList),                                                                                                 //   187
     (Index: 373; Name: 'GetStolenItemValue'; ParamType1: ptFaction),                                                                                        //   188
-    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFaction),                                                                                       //   189
-    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFaction),                                                                                    //   190
+    (Index: 375; Name: 'GetCrimeGoldViolent'; ParamType1: ptFactionOpt),                                                                                    //   189
+    (Index: 376; Name: 'GetCrimeGoldNonviolent'; ParamType1: ptFactionOpt),                                                                                 //   190
     (Index: 378; Name: 'IsOwnedBy'; ParamType1: ptActor),                                                                                                   //   191
     (Index: 380; Name: 'GetCommandDistance'),                                                                                                               //   192
     (Index: 381; Name: 'GetCommandLocationDistance'),                                                                                                       //   193
@@ -2516,7 +2517,7 @@ const
     (Index: 453; Name: 'GetPlayerTeammate'),                                                                                                                //   227
     (Index: 454; Name: 'GetPlayerTeammateCount'),                                                                                                           //   228
     (Index: 458; Name: 'GetActorCrimePlayerEnemy'),                                                                                                         //   229
-    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFaction),                                                                                              //   230
+    (Index: 459; Name: 'GetCrimeGold'; ParamType1: ptFactionOpt),                                                                                           //   230
     (Index: 463; Name: 'IsPlayerGrabbedRef'; ParamType1: ptObjectReference),                                                                                //   231
     (Index: 465; Name: 'GetKeywordItemCount'; ParamType1: ptKeyword),                                                                                       //   232
     (Index: 470; Name: 'GetDestructionStage'),                                                                                                              //   233
@@ -7387,7 +7388,9 @@ end;
           {70 ptReactionType}
           wbByteArray('Reaction Type', 4),
           {71 ptLimbCategory}
-          wbByteArray('Limb Category', 4)
+          wbByteArray('Limb Category', 4),
+          {72 ptFactionOpt}
+          wbFormIDCkNoReach('Faction', [NULL, FACT])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -7601,7 +7604,9 @@ end;
           {70 ptReactionType}
           wbByteArray('Reaction Type', 4),
           {71 ptLimbCategory}
-          wbByteArray('Limb Category', 4)
+          wbByteArray('Limb Category', 4),
+          {72 ptFactionOpt}
+          wbFormIDCkNoReach('Faction', [NULL, FACT])
         ]),
         wbInteger('Run On', itU32, wbEnum([
           { 0} 'Subject',
@@ -9394,7 +9399,21 @@ end;
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait',
       {0x00400000} 22, 'Unknown 22'
-    ]), [14, 18]), [
+    ]), [14, 18])
+      .SetFlagHasDontShow(14,
+        function(const aElement: IwbElement): Boolean
+        begin
+          Result := False;
+          if not Assigned(aElement) then
+            Exit;
+          var lMainRecord := aElement.ContainingMainRecord;
+          if not Assigned(lMainRecord) then
+            Exit;
+          if lMainRecord.IsPartialForm then
+            Exit;
+          Result := not lMainRecord.CanBePartial;
+        end),
+  [
     wbEDID,
     wbBaseFormComponents,
     wbFULL,
@@ -17606,8 +17625,10 @@ end;
       ]),
       cpIgnore, False, nil, nil, wbNeverShow
     )
-    .IncludeFlag(dfNotAlignable)
-    .IncludeFlag(dfFastAssign),
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfNoCopyAsOverride)
+      .IncludeFlag(dfNotAlignable)
+      .IncludeFlag(dfFastAssign),
     wbFULL,
     {
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
