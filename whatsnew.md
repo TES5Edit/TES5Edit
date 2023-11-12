@@ -1,3 +1,9 @@
+# Request for Mod Authors using xEdit
+
+To all mod authors who use xEdit as a major component in their mod development process and distribute their mods on NexusMods with the Donation Points (DP) option enabled:
+
+We encourage you to consider allocating 10% of your earned DP to `ElminsterAU`. This gesture of support will contribute significantly to the ongoing development and improvement of xEdit, a tool crucial to our shared modding community. Your contribution, no matter the size, is invaluable and deeply appreciated.
+
 # What's New in xEdit 4.1.5b?
 
 ## Bugfixes
