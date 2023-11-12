@@ -9,6 +9,7 @@
 unit xeInit;
 
 {$I xeDefines.inc}
+{$R 'xEdit\xeIcons.res'}
 
 interface
 
@@ -21,6 +22,8 @@ var
   xePluginToUse            : string;          // Passed a specific plugin as parameter
   xeLogFile                : string;          // Optional log file for this session
   xeMyProfileName          : string;
+
+  xeIconResource           : string;
 
   xeMasterUpdateDone       : Boolean;
   xeDontBackup             : Boolean = False;
@@ -1370,6 +1373,15 @@ begin
     if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
       wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
   except end;
+
+  case wbGameMode of
+    gmTES3, gmTES4,  gmTES5, gmEnderal, gmSSE, gmTES5VR, gmEnderalSE:
+      xeIconResource := 'xTESICON';
+    gmFO3, gmFNV, gmFO4, gmFO4VR, gmFO76:
+      xeIconResource := 'xFOICON';
+    gmSF1:
+      xeIconResource := 'xSFICON';
+  end;
 end;
 
 function xeDoInit: Boolean;

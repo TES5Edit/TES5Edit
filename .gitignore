@@ -219,7 +219,8 @@ pip-log.txt
 #############
 
 *.dcu
-*.res
+/*.res
+/Tools/SniffGUI/*.res
 *.local
 *.identcache
 TES5Dump/*

@@ -22,7 +22,8 @@ program xEdit;
 uses
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxExceptionHook,
-  {$ENDIF}
+  {$ENDIF }
+  Winapi.Windows,
   Forms,
   Dialogs,
   SysUtils,
@@ -38,10 +39,7 @@ uses
   Vcl.Styles.Utils.Menus,
   Vcl.Styles.Utils.Forms,
   Vcl.Styles.Utils.StdCtrls,
-//  Vcl.Styles.Utils.ComCtrls,
   Vcl.Styles.Utils.ScreenTips,
-//  Vcl.Styles.Utils.SysControls,
-//  Vcl.Styles.Utils.SysStyleHook,
   xeInit in 'xEdit\xeInit.pas',
   wbBetterStringList in 'Core\wbBetterStringList.pas',
   wbBSA in 'Core\wbBSA.pas',
@@ -126,6 +124,12 @@ begin
 
   if not xeDoInit then
     Exit;
+
+  if xeIconResource <> '' then begin
+    var lIconHandle := LoadIcon(HInstance, PChar(xeIconResource));
+    if lIconHandle <> 0 then
+      Application.Icon.Handle := lIconHandle;
+  end;
 
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
   nxEHAppVersion := wbApplicationTitle;
