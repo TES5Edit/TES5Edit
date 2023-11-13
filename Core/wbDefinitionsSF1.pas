@@ -1216,6 +1216,11 @@ begin
 end;
 
 function wbStarIDToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  lName : string;
+  lContainer: IwbContainer;
+  lLinksToRec : IwbElement;
+  lStarID : int64;
 begin
   Result := '';
   case aType of
@@ -1249,19 +1254,16 @@ begin
     end;
   end;
 
-  var lStarID := aElement.NativeValue;
-  if not VarIsOrdinal(lStarID) then
-    Exit;
+  lStarID := aElement.NativeValue;
 
-  var lLinksToRec := aElement.LinksTo;
+  lLinksToRec := aElement.LinksTo;
   if not Assigned(lLinksToRec) then
     Exit;
 
-  var lContainer: IwbContainer;
   if not wbTryGetContainerFromUnion(lLinksToRec, lContainer) then
     Exit;
 
-  var lName := lContainer.ElementValues['ANAM'];
+  lName := lContainer.ElementValues['ANAM'];
 
   Result := lStarID.ToString + ' (' + lName + ')';
 end;
@@ -19700,7 +19702,7 @@ end;
         wbUnknown(8),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbFloat,
-        wbFloat,
+        wbFloat('Day Length'),
         wbFloat,
         wbFloat,
         wbUnknown(1),
