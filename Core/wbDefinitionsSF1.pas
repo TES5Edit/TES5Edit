@@ -1215,6 +1215,81 @@ begin
   end;
 end;
 
+function wbStarIDToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToSummary: if aInt = -1 then begin
+        if aType <> ctToSummary then
+          Result := 'Universe';
+      end else begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: Could not resolve Star>';
+      end;
+    ctToEditValue: if aInt = -1 then Result := 'Universe' else
+      Result := aInt.ToString;
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: if (aInt = -1) then Result := '' else
+      Result := '<Warning: Could not resolve Star>';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if (aInt = -1) and (aType <> ctEditType) and (aType <> ctEditInfo) then
+    Exit;
+
+  case aType of
+    ctEditType: begin
+      Result := '';
+      Exit;
+    end;
+  end;
+
+  var lStarID := aElement.NativeValue;
+  if not VarIsOrdinal(lStarID) then
+    Exit;
+
+  var lLinksToRec := aElement.LinksTo;
+  if not Assigned(lLinksToRec) then
+    Exit;
+
+  var lContainer: IwbContainer;
+  if not wbTryGetContainerFromUnion(lLinksToRec, lContainer) then
+    Exit;
+
+  var lName := lContainer.ElementValues['ANAM'];
+
+  Result := lStarID.ToString + ' (' + lName + ')';
+end;
+
+function wbStrToStarID(const aString: string; const aElement: IwbElement): Int64;
+var
+  i    : Integer;
+  s    : string;
+begin
+  Result := -1;
+
+  if aString = 'None' then
+    Exit;
+
+  if aString = 'Universe' then begin
+    Result := -1;
+    Exit;
+  end;
+
+  i := 1;
+  s := Trim(aString);
+  while (i <= Length(s)) and (ANSIChar(s[i]) in ['-', '0'..'9']) do
+    Inc(i);
+  s := Copy(s, 1, Pred(i));
+
+  Result := StrToIntDef(s, -1);
+end;
+
 function wbCtdaTypeToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   s: string;
@@ -3960,6 +4035,8 @@ begin
   var wbIdxAVMByType : TArray<TwbNamedIndex> := [-1, wbIdxSimpleGroup, wbIdxComplexGroup, wbIdxModulation];
 
   var wbIdxCollisionLayer := wbNamedIndex('CollisionLayer', True);
+
+  var wbIdxStarID := wbNamedIndex('StarID', True);
 
   var wbNull := wbByteArray('Unused', -255);
   var wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
@@ -11818,7 +11895,21 @@ end;
     wbFloat(ANAM, 'Actor Fade Mult'),
     wbFloat(TNAM, 'Unknown'),    //Usually 600 (00 00 16 44), two have 00 00 34 42 (45) and are labeled Starstations
     wbCNAM,
-    wbInteger(XNAM, 'Star ID', itS32),
+    wbInteger(XNAM, 'Star ID', itS32, wbStarIDToStr, wbStrToStarID)
+      .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
+        begin
+          Result := nil;
+
+          var lStarID := aElement.NativeValue;
+          if not VarIsOrdinal(lStarID) then
+            Exit;
+
+          var lFile := aElement._File;
+          if not Assigned(lFile) then
+            Exit;
+
+          Result := lFile.RecordFromIndexByKey[wbIdxStarID, lStarID];
+        end),
     wbInteger(YNAM, 'Planet ID', itS32)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -19625,7 +19716,21 @@ end;
         wbUnknown(4)
       ]),
       wbStruct(GNAM, 'Unknown', [
-        wbInteger('Star ID', itu32),
+        wbInteger('Star ID', itu32, wbStarIDToStr, wbStrToStarID)
+         .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
+          begin
+            Result := nil;
+
+            var lStarID := aElement.NativeValue;
+            if not VarIsOrdinal(lStarID) then
+              Exit;
+
+            var lFile := aElement._File;
+            if not Assigned(lFile) then
+              Exit;
+
+            Result := lFile.RecordFromIndexByKey[wbIdxStarID, lStarID];
+          end),
         wbInteger('Primary planet ID', itu32),
         wbInteger('Planet ID', itu32)
       ]),
@@ -19904,7 +20009,15 @@ end;
     wbInteger(DNAM, 'ID', itU32),
     wbByteColors(ENAM, 'Color'),
     wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
-  ]);
+  ])
+  .SetBuildIndexKeys(procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys)
+  begin
+    var lStarID := aMainRecord.ElementNativeValues[DNAM];
+    if not VarIsOrdinal(lStarID) then
+      Exit;
+
+    aIndexKeys.Keys[wbIdxStarID] := lStarID;
+  end);
 
   {subrecords checked against Starfield.esm}
   wbRecord(SUNP, 'Sun Preset', [
