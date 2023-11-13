@@ -11818,8 +11818,8 @@ end;
     wbFloat(ANAM, 'Actor Fade Mult'),
     wbFloat(TNAM, 'Unknown'),    //Usually 600 (00 00 16 44), two have 00 00 34 42 (45) and are labeled Starstations
     wbCNAM,
-    wbUnknown(XNAM),
-    wbInteger(YNAM, 'Unknown', itS32)
+    wbInteger(XNAM, 'Star ID', itS32),
+    wbInteger(YNAM, 'Planet ID', itS32)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
 
