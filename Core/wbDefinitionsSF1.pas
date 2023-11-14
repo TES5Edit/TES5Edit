@@ -19627,7 +19627,7 @@ end;
         wbLenString.IncludeFlag(dfHasZeroTerminator),
         wbInteger('Unknown', itU8)
       ]).SetRequired,
-      wbStruct(ENAM, 'Unknown', [
+      wbStruct(ENAM, 'Movement', [
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
