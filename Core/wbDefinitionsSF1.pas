@@ -19630,12 +19630,12 @@ end;
       wbStruct(ENAM, 'Movement', [
         wbDouble('Semi-Major Axis', cpNormal, False, 1, Low(Integer)),
         wbDouble('Semi-Minor Axis', cpNormal, False, 1, Low(Integer)),
-        wbFloat,
         wbDouble('Apoapsis', cpNormal, False, 1, Low(Integer)),
         wbDouble('Eccentricity', cpNormal, False, 1, Low(Integer)),
         wbDouble('Inclination', cpNormal, False, 1, Low(Integer)),
         wbDouble('Average Distance', cpNormal, False, 1, Low(Integer)),
         wbFloat('Axial Tilt'),
+        wbFloat('Rotation Rate'),
         wbFloat,
         wbFloat,
         wbUnknown(1),
