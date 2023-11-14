@@ -19628,8 +19628,8 @@ end;
         wbInteger('Unknown', itU8)
       ]).SetRequired,
       wbStruct(ENAM, 'Movement', [
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Semi-Major Axis', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Semi-Minor Axis', cpNormal, False, 1, Low(Integer)),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbUnknown(8),
