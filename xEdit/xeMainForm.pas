@@ -14510,6 +14510,10 @@ procedure TfrmMain.pgMainChange(Sender: TObject);
 var
   i: Integer;
 begin
+  if not ((pgMain.ActivePage = tbsWEAPSpreadsheet) or
+      (pgMain.ActivePage = tbsAMMOSpreadsheet) or
+      (pgMain.ActivePage = tbsARMOSpreadsheet)) then
+        pnlNav.Show;
   if pgMain.ActivePage = tbsReferencedBy then begin
     if lvReferencedBy.Tag <> lvReferencedBy.Items.Count then begin
       lvReferencedBy.Items.BeginUpdate;
@@ -20122,17 +20126,17 @@ begin
     {Type}
     NodeDatas[5].Element := MainRecord.RecordBySignature['ETYP'];
 
-    Rec := MainRecord.RecordBySignature['DATA'];
-    if Assigned(Rec) then begin
-      {Value}
-      NodeDatas[8].Element := Rec.Elements[0];
+      Rec := MainRecord.RecordBySignature['DATA'];
+      if Assigned(Rec) then begin
+        {Value}
+        NodeDatas[8].Element := Rec.Elements[0];
 
-      {Weight}
-      NodeDatas[10].Element := Rec.Elements[1];
+        {Weight}
+        NodeDatas[10].Element := Rec.Elements[1];
 
-      {Damage}
-      NodeDatas[11].Element := Rec.Elements[2];
-    end;
+        {Damage}
+        NodeDatas[11].Element := Rec.Elements[2];
+      end;
 
     Rec := MainRecord.RecordBySignature['DNAM'];
     if Assigned(Rec) then begin
@@ -20148,24 +20152,24 @@ begin
       {Stagger}
       NodeDatas[14].Element := Rec.ElementByName['Stagger'];
 
-      {Range Min}
-      NodeDatas[17].Element := Rec.ElementByName['Range Min'];
+        {Range Min}
+        NodeDatas[17].Element := Rec.ElementByName['Range Min'];
 
-      {Range Max}
-      NodeDatas[18].Element := Rec.ElementByName['Range Max'];
-    end;
+        {Range Max}
+        NodeDatas[18].Element := Rec.ElementByName['Range Max'];
+      end;
 
     Rec := MainRecord.RecordBySignature['CRDT'];
     if Assigned(Rec) then begin
-      {CritDamage}
-      NodeDatas[15].Element := Rec.ElementByName['Damage'];
+        {CritDamage}
+        NodeDatas[15].Element := Rec.ElementByName['Damage'];
 
       {Range Max}
-      NodeDatas[16].Element := Rec.ElementByName['% Mult'];
-    end;
+        NodeDatas[16].Element := Rec.ElementByName['% Mult'];
+      end;
 
-    {Detection Sound}
-    NodeDatas[19].Element := MainRecord.RecordBySignature['VNAM'];
+      {Detection Sound}
+      NodeDatas[19].Element := MainRecord.RecordBySignature['VNAM'];
 
     {Detection Sound}
     NodeDatas[20].Element := MainRecord.RecordBySignature['CNAM'];
