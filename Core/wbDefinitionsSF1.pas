@@ -19702,7 +19702,7 @@ end;
         wbUnknown(8),
         wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
         wbFloat,
-        wbFloat('Day Length'),
+        wbFloat,
         wbFloat,
         wbFloat,
         wbUnknown(1),
