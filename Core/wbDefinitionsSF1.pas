@@ -12917,6 +12917,7 @@ end;
             {0x00010000} 'Unknown 16'
           ])).SetRequired,
           wbSoundReference(WED0),                                               //WED0  SoundReference // +0x38
+          wbCTDAs, // inconclusive if before or after WED0
           wbFormIDCk(BIPL, 'Unknown', [REFR, PLYR, NULL]).SetRequired,          //BIPL  uint32 // +0x70  probably formid
           wbInteger(LVLO, 'Unknown', itS32).SetRequired,                        //LVLO  uint32 // +0x84
           wbCTDAs                                                               //CTDA  standard CTDA reading // +0x20 //not found in Starfield.esm
