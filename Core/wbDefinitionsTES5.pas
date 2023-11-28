@@ -11225,7 +11225,7 @@ begin
         {>>> END leftover from earlier CK versions <<<}
       ], []))
     ], [])),
-    wbRArrayS('Objectives', wbRStructS([0], 'Objective', [
+    wbRArrayS('Objectives', wbRStructSK([0], 'Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
       wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
       wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),
