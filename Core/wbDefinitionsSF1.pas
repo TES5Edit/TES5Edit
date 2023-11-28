@@ -7925,6 +7925,62 @@ end;
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfExcludeFromBuildRef);
 
+  var wbAngleToStr: TwbToStrCallback :=
+    procedure(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
+    begin
+      var loFull := 360;
+      var loHalf := 180;
+
+      case aType of
+        ctToStr, ctToSummary: begin
+          var lVariant: Variant;
+          if Assigned(aElement) then
+            lVariant := aElement.NativeValue;
+
+          if not VarIsFloat(lVariant) then
+            Exit;
+
+          var lValue: Extended := lVariant;
+
+          var lAngle := lValue * wbRadiansToDegreesScale;
+          while lAngle > loFull do
+            lAngle := lAngle - loFull;
+          while lAngle < -loFull do
+            lAngle := lAngle + loFull;
+
+          aValue := Format('%g'#$00B0, [ lAngle ]);
+        end;
+        ctFromEditValue: begin
+          if not Assigned(aElement) then
+            Exit;
+
+          // Check length (at least one digit + degree symbol)
+          if Length(aValue) < 2 then
+            Exit;
+
+          // Get position of degree symbol and check for presence
+          var lPosDegree := Pos(#$00B0, aValue);
+          if lPosDegree = 0 then
+            Exit;
+
+          // Check numeric value
+          var lDeg := -1.0;
+          try
+            lDeg := StrToFloat(Copy(aValue, 1, lPosDegree - 1))
+          except
+            Exit
+          end;
+
+          if (lDeg < -loFull) or (lDeg > loFull) then
+            Exit;
+
+          // Return result
+          aElement.NativeValue := lDeg / wbRadiansToDegreesScale;
+          aValue := wbIgnoreStringValue;
+        end;
+      end;
+    end;
+
   var wbLonLanFunc :=
     function(aIsLat: Boolean): TwbToStrCallback
     begin
@@ -19627,15 +19683,15 @@ end;
         wbLenString.IncludeFlag(dfHasZeroTerminator),
         wbInteger('Unknown', itU8)
       ]).SetRequired,
-      wbStruct(ENAM, 'Unknown', [
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbUnknown(8),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbFloat,
-        wbFloat,
+      wbStruct(ENAM, 'Movement', [
+        wbDouble('Semi-Major Axis', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Semi-Minor Axis', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Apoapsis', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Eccentricity', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Incline', cpNormal, False, 1, Low(Integer)).SetToStr(wbAngleToStr),
+        wbDouble('Mean Orbit', cpNormal, False, 1, Low(Integer)),
+        wbFloat('Axial Tilt').SetToStr(wbAngleToStr),
+        wbFloat('Rotation Rate'),
         wbFloat,
         wbFloat,
         wbUnknown(1),
