@@ -7707,6 +7707,7 @@ begin
    100, 'Scroll',
    101, 'ColorForm',
    102, 'Reverb Parameters',
+   109, 'Component',
    116, 'Terminal'
   ]);
 
