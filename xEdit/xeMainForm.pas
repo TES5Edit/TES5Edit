@@ -4458,18 +4458,28 @@ begin
         if Assigned(Element) and (Element.ElementGeneration <> ElementGen) or
            Assigned(Container) and (Container.ElementGeneration <> ContainerGen) then begin
 
+          ConflictAll := caUnknown;
+          ConflictThis := ctUnknown;
+          OrgConflictAll := caUnknown;
+          OrgConflictThis := ctUnknown;
+
           vstNavReInit := True;
+
           _File := nil;
+
           if Assigned(Element) then
             _File := Element._File
           else
             _File := Container._File;
+
           if _File.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
             vstNav.ReinitNode(Node, True);
+
+          vstNav.InvalidateNode(Node);
         end;
       end;
 
-      if vstNavReInit then
+     if vstNavReInit then
         Node := vstNav.GetNextSiblingNoInit(Node)
       else
         Node := vstNav.GetNextInitialized(Node);
@@ -7230,7 +7240,7 @@ end;
 
 procedure TfrmMain.InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; aNodeDatas: PViewNodeDatas = nil);
 
-  procedure InheritConflict(Parent, Child: PNavNodeData);
+  procedure InheritConflict(Parent, Child: PViewNodeData);
   begin
     if Child.ConflictAll > Parent.ConflictAll then
       Parent.ConflictAll := Child.ConflictAll;
@@ -7290,9 +7300,6 @@ begin
 
   for i := Low(ActiveRecords) to High(ActiveRecords) do
     aNodeDatas[i].ConflictAll := ConflictAll;
-
-  if aNodeDatas[0].ConflictAll = caUnknown then
-    Assert(False);
 
   if aNode <> vstView.RootNode then begin
 
@@ -7463,7 +7470,7 @@ begin
       if Assigned(Element) then
         Exclude(aInitialStates, ivsDisabled)
       else begin
-        if Assigned(aParentDatas) and ((vnfIgnore in aParentDatas[i].ViewNodeFlags) or (Assigned(aParentDatas[i].Element) and (aParentDatas[i].Element.ConflictPriority = cpIgnore))) then
+        if Assigned(aParentDatas) and ((vnfIgnore in aParentDatas[i].ViewNodeFlags) or (Assigned(aParentDatas[i].Element) and (aParentDatas[i].Element.ConflictPriority in [cpIgnore, cpNormalIgnoreEmpty]))) then
           Include(ViewNodeFlags, vnfIgnore);
         if Assigned(aParentDatas) and (vnfIsPartialForm in aParentDatas[i].ViewNodeFlags) then
           Include(ViewNodeFlags, vnfIsPartialForm);
@@ -19183,6 +19190,8 @@ begin
     Container := nil;
     ConflictAll := caUnknown;
     ConflictThis := ctUnknown;
+    OrgConflictAll := caUnknown;
+    OrgConflictThis := ctUnknown;
     ElementGen := 0;
     ContainerGen := 0;
   end;
@@ -19435,6 +19444,10 @@ begin
   with NodeData^ do begin
     ElementGen := 0;
     ContainerGen := 0;
+    ConflictAll := caUnknown;
+    ConflictThis := ctUnknown;
+    OrgConflictAll := caUnknown;
+    OrgConflictThis := ctUnknown;
   end;
 
   GroupRecord := nil;

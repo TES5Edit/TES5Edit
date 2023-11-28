@@ -477,25 +477,40 @@ end;
 
 function TwbLocalizationHandler.Count: Integer;
 begin
-  Result := lFiles.Count;
+  TMonitor.Enter(Self);
+  try
+    Result := lFiles.Count;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 procedure TwbLocalizationHandler.Clear;
 var
   i: integer;
 begin
-  for i := 0 to Pred(Count) do
-    _Files[i].Destroy;
-  lFiles.Clear;
-  Inc(Generation);
+  TMonitor.Enter(Self);
+  try
+    for i := 0 to Pred(Count) do
+      _Files[i].Destroy;
+    lFiles.Clear;
+    Inc(Generation);
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 function TwbLocalizationHandler.Get(Index: Integer): TwbLocalizationFile;
 begin
-  if Index < Count then
-    Result := TwbLocalizationFile(lFiles.Objects[Index])
-  else
-    Result := nil;
+  TMonitor.Enter(Self);
+  try
+    if Index < Count then
+      Result := TwbLocalizationFile(lFiles.Objects[Index])
+    else
+      Result := nil;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 function TwbLocalizationHandler.AddLocalization(const aFileName: string): TwbLocalizationFile;
@@ -504,11 +519,16 @@ var
   s: string;
 begin
   s := ExtractFileName(aFileName);
-  if lFiles.Find(s, i) then
-    Result := lFiles.Objects[i] as TwbLocalizationFile
-  else begin
-    Result := TwbLocalizationFile.Create(aFileName);
-    lFiles.AddObject(s, Result);
+  TMonitor.Enter(Self);
+  try
+    if lFiles.Find(s, i) then
+      Result := lFiles.Objects[i] as TwbLocalizationFile
+    else begin
+      Result := TwbLocalizationFile.Create(aFileName);
+      lFiles.AddObject(s, Result);
+    end;
+  finally
+    TMonitor.Exit(Self);
   end;
 end;
 
@@ -518,16 +538,21 @@ var
   s: string;
 begin
   s := ExtractFileName(aFileName);
-  if lFiles.Find(s, i) then
-    Result := lFiles.Objects[i] as TwbLocalizationFile
-  else begin
-    wbLockProcessMessages;
-    try
-      Result := TwbLocalizationFile.Create(aFileName, aData);
-      lFiles.AddObject(s, Result);
-    finally
-      wbUnLockProcessMessages;
+  TMonitor.Enter(Self);
+  try
+    if lFiles.Find(s, i) then
+      Result := lFiles.Objects[i] as TwbLocalizationFile
+    else begin
+      wbLockProcessMessages;
+      try
+        Result := TwbLocalizationFile.Create(aFileName, aData);
+        lFiles.AddObject(s, Result);
+      finally
+        wbUnLockProcessMessages;
+      end;
     end;
+  finally
+    TMonitor.Exit(Self);
   end;
 end;
 
@@ -578,29 +603,35 @@ var
   sl : TStringList;
   i  : Integer;
 begin
-  if Assigned(wbContainerHandler) then begin
-    sl := TStringList.Create;
-    try
-      wbContainerHandler.ContainerResourceList('', sl, 'strings');
-      for i := 0 to Pred(sl.Count) do begin
-        s := sl[i];
-        if s.EndsWith('strings', True) then begin
-          s := ChangeFileExt(s, '').ToLower;
-          ParseString;
+  TMonitor.Enter(Self);
+  try
+    if Assigned(wbContainerHandler) then begin
+      sl := TStringList.Create;
+      try
+        wbContainerHandler.ContainerResourceList('', sl, 'strings');
+        for i := 0 to Pred(sl.Count) do begin
+          s := sl[i];
+          if s.EndsWith('strings', True) then begin
+            s := ChangeFileExt(s, '').ToLower;
+            ParseString;
+          end;
         end;
+      finally
+        sl.Free;
       end;
-    finally
-      sl.Free;
+    end else begin
+      if FindFirst(StringsPath + '*.*STRINGS', faAnyFile, F) = 0 then try
+        repeat
+          s := LowerCase(ChangeFileExt(F.Name, ''));
+          ParseString;
+        until FindNext(F) <> 0;
+      finally
+        FindClose(F);
+      end;
     end;
-  end else
-    if FindFirst(StringsPath + '*.*STRINGS', faAnyFile, F) = 0 then try
-      repeat
-        s := LowerCase(ChangeFileExt(F.Name, ''));
-        ParseString;
-      until FindNext(F) <> 0;
-    finally
-      FindClose(F);
-    end;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 procedure TwbLocalizationHandler.AvailableLocalizationFiles(aFiles: TStringList);
@@ -610,26 +641,32 @@ var
   i  : Integer;
   s  : string;
 begin
-  if Assigned(wbContainerHandler) then begin
-    sl := TStringList.Create;
-    try
-      wbContainerHandler.ContainerResourceList('', sl, 'strings');
-      for i := 0 to Pred(sl.Count) do begin
-        s := sl[i];
-        if s.EndsWith('strings', True) then
-          aFiles.Add(ExtractFileName(s));
+  TMonitor.Enter(Self);
+  try
+    if Assigned(wbContainerHandler) then begin
+      sl := TStringList.Create;
+      try
+        wbContainerHandler.ContainerResourceList('', sl, 'strings');
+        for i := 0 to Pred(sl.Count) do begin
+          s := sl[i];
+          if s.EndsWith('strings', True) then
+            aFiles.Add(ExtractFileName(s));
+        end;
+      finally
+        sl.Free;
       end;
-    finally
-      sl.Free;
+    end else begin
+      if FindFirst(StringsPath + '*.*STRINGS', faAnyFile, F) = 0 then try
+        repeat
+          aFiles.Add(F.Name);
+        until FindNext(F) <> 0;
+      finally
+        FindClose(F);
+      end;
     end;
-  end else
-    if FindFirst(StringsPath + '*.*STRINGS', faAnyFile, F) = 0 then try
-      repeat
-        aFiles.Add(F.Name);
-      until FindNext(F) <> 0;
-    finally
-      FindClose(F);
-    end;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 procedure TwbLocalizationHandler.LoadForFile(aFileName: string);
@@ -642,13 +679,18 @@ begin
   if not Assigned(wbContainerHandler) then
     Exit;
 
-  for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
-    s := GetLocalizationFileNameByType(aFileName, ls);
-    if not lFiles.Find(ExtractFileName(s), i) then begin
-      res := wbContainerHandler.OpenResource(s);
-      if length(res) > 0 then
-        AddLocalization(wbDataPath + s, res[High(res)].GetData);
+  TMonitor.Enter(Self);
+  try
+    for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
+      s := GetLocalizationFileNameByType(aFileName, ls);
+      if not lFiles.Find(ExtractFileName(s), i) then begin
+        res := wbContainerHandler.OpenResource(s);
+        if length(res) > 0 then
+          AddLocalization(wbDataPath + s, res[High(res)].GetData);
+      end;
     end;
+  finally
+    TMonitor.Exit(Self);
   end;
 end;
 
@@ -691,6 +733,7 @@ begin
   if aValue = '' then
     Exit;
 
+  TMonitor.Enter(Self);
   // create localization files if absent
   try
     ID := 1;
@@ -721,7 +764,7 @@ begin
 
     Result := ID;
   finally
-
+    TMonitor.Exit(Self);
   end;
 end;
 
@@ -735,21 +778,26 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  FileName := GetLocalizationFileNameByElement(aElement);
-  idx := lFiles.IndexOf(ExtractFileName(FileName));
+  TMonitor.Enter(Self);
+  try
+    FileName := GetLocalizationFileNameByElement(aElement);
+    idx := lFiles.IndexOf(ExtractFileName(FileName));
 
-  if (idx < 0 ) or (ID = 0) then begin
-    // new string
-    Result := AddValue(aValue, aElement);
-    Exit;
+    if (idx < 0 ) or (ID = 0) then begin
+      // new string
+      Result := AddValue(aValue, aElement);
+      Exit;
+    end;
+
+    if not _Files[idx].IDExists(ID) then
+      // string doesn't exist, create new
+      Result := AddValue(aValue, aElement)
+    else
+      // modify existing
+      _Files[idx][ID] := aValue;
+  finally
+    TMonitor.Exit(Self);
   end;
-
-  if not _Files[idx].IDExists(ID) then
-    // string doesn't exist, create new
-    Result := AddValue(aValue, aElement)
-  else
-    // modify existing
-    _Files[idx][ID] := aValue;
 end;
 
 
@@ -773,21 +821,26 @@ begin
   if lFileName = '' then
     Exit(False);
 
-  idx := lFiles.IndexOf(lFileName);
-
-  // load strings files if absent
-  if idx < 0 then begin
-    LoadForFile(aElement._File.FileName);
-    // get file again
+  TMonitor.Enter(Self);
+  try
     idx := lFiles.IndexOf(lFileName);
-  end;
 
-  if idx < 0 then begin
-    aValue := '<Error: No strings file for lstring ID ' + IntToHex(ID, 8) + '>';
-    Exit(False);
-  end;
+    // load strings files if absent
+    if idx < 0 then begin
+      LoadForFile(aElement._File.FileName);
+      // get file again
+      idx := lFiles.IndexOf(lFileName);
+    end;
 
-  Result := _Files[idx].Find(ID, aValue);
+    if idx < 0 then begin
+      aValue := '<Error: No strings file for lstring ID ' + IntToHex(ID, 8) + '>';
+      Exit(False);
+    end;
+
+    Result := _Files[idx].Find(ID, aValue);
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 procedure TwbLocalizationHandler.GetStringsFromFile(aFileName: string; const aList: TStrings);
@@ -797,11 +850,16 @@ begin
   if not Assigned(aList) then
     Exit;
 
-  for i := 0 to Pred(lFiles.Count) do
-    if SameText(lFiles[i], aFileName) then begin
-      aList.Assign(_Files[i].fStrings);
-      Break;
-    end;
+  TMonitor.Enter(Self);
+  try
+    for i := 0 to Pred(lFiles.Count) do
+      if SameText(lFiles[i], aFileName) then begin
+        aList.Assign(_Files[i].fStrings);
+        Break;
+      end;
+  finally
+    TMonitor.Exit(Self);
+  end;
 end;
 
 

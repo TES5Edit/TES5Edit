@@ -1153,8 +1153,10 @@ begin
   else if MainRecord.Signature = INFO then begin
     // get DIAL for INFO
     if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
-      if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then
+      if Supports(GroupRecord.ChildrenOf, IwbMainRecord, MainRecord) then begin
+        MainRecord := MainRecord.HighestOverrideVisibleForFile[aElement._File];
         Result := wbAliasToStr(aInt, MainRecord.ElementBySignature['QNAM'], aType);
+      end;
   end else
   // this should never be called since aliases in conditions can be in the forms above only
   // but just in case
@@ -1946,60 +1948,24 @@ end;
 function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container   : IwbContainer;
-  Current     : IwbContainer;
-  Parent      : IwbContainer;
-  GroupRecord : IwbGroupRecord;
-  MainRecord  : IwbMainRecord;
-  rData       : IwbRecord;
+  Parent      : IwbElement;
   i           : integer;
 begin
   Result := 0;
-
   if not Assigned(aElement) then
     Exit;
 
   Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
-    Container := Container.Container;
 
-  if not Supports(Container, IwbGroupRecord, GroupRecord) then
+  Parent := Container.ElementByName['Parent Worldspace'];
+
+  if not Assigned(Parent) then
     Exit;
 
-  MainRecord := GroupRecord.ChildrenOf;     // This does NOT work while adding master!
-
-  if not Assigned(MainRecord) then begin // we expect:
-     //   plugin \ CELL group \ Block \ Sub Block \ CELL
-     //                                           \ CELL Children group \ Permanent children group
-     //                                                                 \ Temporary children group = GroupRecord = Container
-    if Assigned(Container) and (Container.ElementType = etGroupRecord) then
-      Container := Container.Container;
-    if Assigned(Container) and (Container.ElementType = etGroupRecord) then
-      Parent := Container.Container;
-    i := 0;
-    while (i < Parent.ElementCount) and Supports(Parent.Elements[i], IwbContainer, Current) and (Current <> Container) do
-      Inc(i);
-    if (i = 0) or (i = Parent.ElementCount) or not Supports(Parent.Elements[i-1], IwbMainRecord,MainRecord) then begin
-      wbProgressCallback('Parent of a NVNM is not a MainRecord');
-//      Assert(Assigned(MainRecord)); // Better an exception than to destroy the plugin.
-      Exit;
-    end;
-  end;
-
-  if (MainRecord.Signature<>CELL) then begin
-    wbProgressCallback('Parent of a NVNM is not identified as a CELL');
-    Assert(MainRecord.Signature=CELL); // Better an exception than to destroy the plugin.
-    Exit;
-  end;
-
-  rDATA := MainRecord.RecordBySignature['DATA'];
-
-  if not Assigned(rData) then
-    Exit;
-
-  i := rData.NativeValue;
+  i := Parent.NativeValue;
 
   // is interior cell?
-  if i and 1 <> 0 then
+  if i = 0 then
     Result := 1;
 end;
 
@@ -4739,26 +4705,26 @@ begin
   ]));
 
   wbScriptPropertyObject := wbUnion('Object Union', wbScriptObjFormatDecider, [
-    wbStructSK([2], 'Object v2', [
+    wbStructSK([2, 1], 'Object v2', [
       wbInteger('Unused', itU16, nil, cpIgnore),
       wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbFormID('FormID')
     ], [2, 1, 0])
-      .SetSummaryKey([2, 1])
+      .SetSummaryKey([1, 2])
       .SetSummaryMemberPrefixSuffix(2, '', '')
-      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
-      .SetSummaryDelimiter('')
+      .SetSummaryMemberPrefixSuffix(1, 'Alias[', '] on')
+      .SetSummaryDelimiter(' ')
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfSummaryNoSortKey),
-    wbStructSK([0], 'Object v1', [
+    wbStructSK([0, 1], 'Object v1', [
       wbFormID('FormID'),
-      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias),
+      wbInteger('Alias', itS16, wbScriptObjectAliasToStr, wbStrToAlias).SetDefaultEditValue('None'),
       wbInteger('Unused', itU16, nil, cpIgnore)
     ])
-      .SetSummaryKey([0, 1])
+      .SetSummaryKey([1, 0])
       .SetSummaryMemberPrefixSuffix(0, '', '')
-      .SetSummaryMemberPrefixSuffix(1, ', Alias[', ']')
-      .SetSummaryDelimiter('')
+      .SetSummaryMemberPrefixSuffix(1, 'Alias[', '] on')
+      .SetSummaryDelimiter(' ')
       .IncludeFlag(dfSummaryMembersNoName)
   ]);
 
@@ -6994,9 +6960,9 @@ begin
       ]))
     ]),
     wbString(SNAM, 'Subtype Name', 4),
-    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign),
-    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
-    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
+    wbInteger(TIFC, 'Info Count', itU32, nil, cpIgnore),
+    wbINOM,
+    wbINOA
   ]);
 
   wbRecord(DOOR, 'Door',
@@ -11259,7 +11225,7 @@ begin
         {>>> END leftover from earlier CK versions <<<}
       ], []))
     ], [])),
-    wbRArray('Objectives', wbRStruct('Objective', [
+    wbRArrayS('Objectives', wbRStructS([0], 'Objective', [
       wbInteger(QOBJ, 'Objective Index', itU16),
       wbInteger(FNAM, 'Flags', itU32, wbFlags(['ORed With Previous'])),
       wbLStringKC(NNAM, 'Display Text', 0, cpTranslate, True),

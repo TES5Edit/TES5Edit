@@ -669,13 +669,14 @@ type
     dfCanContainUnmappedFormID,
     dfIncludeValueInDisplaySignature,
     dfSkipImplicitEdit,
-    dfNoCopyAsOverride
+    dfNoCopyAsOverride,
+    dfIsRecordFlags
   );
 
   TwbDefFlags = set of TwbDefFlag;
 
 const
-  _DefFlagsInheritUp:TwbDefFlags   = [dfNoReport, dfExcludeFromBuildRef, dfDontSave, dfDontAssign, dfSummaryExcludeNULL, dfInternalEditOnly, dfUnmappedFormID, dfUseLoadOrder];
+  _DefFlagsInheritUp:TwbDefFlags   = [dfNoReport, dfExcludeFromBuildRef, dfDontSave, dfDontAssign, dfSummaryExcludeNULL, dfInternalEditOnly, dfUnmappedFormID, dfUseLoadOrder, dfIsRecordFlags];
   _DefFlagsInheritDown:TwbDefFlags = [dfCanContainFormID, dfCanContainReflection, dfCanContainUnmappedFormID];
   _DefFlagsDontClone:TwbDefFlags   = [dfTemplate];
 
@@ -742,6 +743,7 @@ type
     function IsNotRequired: Boolean;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
+    function IncludeFlagNoClone(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
 
     property DefType: TwbDefType
       read GetDefType;
@@ -5449,10 +5451,11 @@ end;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
   Result.x := Trunc(aPosition.x / wbCellSizeFactor);
-  if aPosition.x < 0 then
+  if (aPosition.x < 0) and (Frac(aPosition.x / wbCellSizeFactor) <> 0) then
     Dec(Result.x);
+
   Result.y := Trunc(aPosition.y / wbCellSizeFactor);
-  if aPosition.y < 0 then
+  if (aPosition.y < 0) and (Frac(aPosition.y / wbCellSizeFactor) <> 0) then
     Dec(Result.y);
 end;
 
@@ -5659,6 +5662,7 @@ type
     function GetNoReach: Boolean; virtual;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
+    function IncludeFlagNoClone(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
 
     {--- IwbDefInternal ---}
     function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; virtual;
@@ -6781,6 +6785,9 @@ type
     function GetNoReach: Boolean; override;
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbValueDef{Self}; override;
 
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; override;
+    function GetConflictPriorityCanChange: Boolean; override;
+
     {---IwbDefInternal---}
     procedure InitFromParentDoChildren; override;
 
@@ -7318,6 +7325,8 @@ type
     flgFlagDefs        : TArray<IwbFlagDef>;
     flgDontShowPath    : string;
     flgDontShowInvert  : Boolean;
+    flgDeletedIndex    : ShortInt;
+    flgPartialFormIndex: ShortInt;
 
     UnknownFlags       : array[0..63] of Integer;
     HasUnknownFlags    : Boolean;
@@ -7335,6 +7344,9 @@ type
     {---IwbDef---}
     procedure Report(const aParents: TwbDefPath); override;
     function GetChildPos(const aChild: IwbDef): Integer; override;
+
+    function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; override;
+    function GetConflictPriorityCanChange: Boolean; override;
 
     function GetDefTypeName: string; override;
 
@@ -9979,9 +9991,16 @@ end;
 
 function TwbDef.IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef;
 begin
-  if defIsLocked and aOnlyWhenTrue then
+  if defIsLocked and aOnlyWhenTrue and not (aFlag in defFlags) then
     Exit(TwbDef(Duplicate).IncludeFlag(aFlag, aOnlyWhenTrue));
 
+  Result := Self;
+  if aOnlyWhenTrue then
+    Include(defFlags, aFlag);
+end;
+
+function TwbDef.IncludeFlagNoClone(aFlag: TwbDefFlag; aOnlyWhenTrue: Boolean): IwbDef;
+begin
   Result := Self;
   if aOnlyWhenTrue then
     Include(defFlags, aFlag);
@@ -10007,6 +10026,9 @@ procedure TwbDef.InitFromParentBeforeChildren;
 begin
   if Assigned(defParent) then
     defFlags := defFlags + (defParent.defFlags * _DefFlagsInheritUp);
+
+  if dfIsRecordFlags in defFlags then
+    Include(defFlags, dfIsRecordFlags);
 
   if dfUnmappedFormID in defFlags then
    Include(defFlags, dfCanContainUnmappedFormID);
@@ -10646,8 +10668,9 @@ begin
   if Assigned(recRecordFlags) and
      Supports(recRecordFlags, IwbFlagsDef, lRecordFlags) and
      lRecordFlags.FindFlag('Partial Form', lPartialFormFlag)
-  then
+  then begin
     Include(recDefFlags, rdfCanBePartial);
+  end;
 
   inherited Create(aPriority, aRequired, aSignature, aName, aAfterLoad, aAfterSet, nil, nil);
 end;
@@ -10724,6 +10747,8 @@ begin
   for var lMemberIdx := Low(recMembers) to High(recMembers) do
     if Assigned(recMembers[lMemberIdx]) then
       (recMembers[lMemberIdx] as IwbDefInternal).InitFromParent(Self);
+  if Assigned(recRecordHeaderStruct) then
+    (recRecordHeaderStruct as IwbDefInternal).InitFromParent(Self);
 end;
 
 function TwbMainRecordDef.IsValidBaseSignature(const aSignature: TwbSignature): Boolean;
@@ -12954,6 +12979,22 @@ begin
     (inFormater as IwbDefInternal).InitFromParent(Self);
 end;
 
+function TwbIntegerDef.GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
+begin
+  if Assigned(inFormater) then
+    if inFormater.ConflictPriorityCanChange then
+      Exit(inFormater.GetConflictPriority(aElement));
+
+  Result := inherited;
+end;
+
+function TwbIntegerDef.GetConflictPriorityCanChange: Boolean;
+begin
+  Result := inherited;
+  if not Result and Assigned(inFormater) then
+    Result := inFormater.ConflictPriorityCanChange;
+end;
+
 function TwbIntegerDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   case inType of
@@ -14651,6 +14692,9 @@ constructor TwbFlagsDef.Create(aHasSummary      : Boolean;
 var
   i: Integer;
 begin
+  flgDeletedIndex    := -1;
+  flgPartialFormIndex := -1;
+
   var StepSize := 1;
   var l := Length(aNames);
 
@@ -14745,6 +14789,40 @@ begin
     for var lIdx := Low(flgFlagDefs) to High(flgFlagDefs) do
       if aChild.Equals(flgFlagDefs[lIdx]) then
         Exit(lIdx);
+end;
+
+function TwbFlagsDef.GetConflictPriority(const aElement: IwbElement): TwbConflictPriority;
+begin
+  Result := inherited;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  if aElement.ElementType = etFlag then begin
+    var lFlagDef: IwbFlagDef;
+    if not Supports(aElement.Def, IwbFlagDef, lFlagDef) then
+      Exit;
+    Assert(Equals(lFlagDef.FlagsDef));
+    FlagGetCP(aElement, lFlagDef.FlagIndex, Result);
+    Exit;
+  end;
+
+  if (dfIsRecordFlags in defFlags) and (Result = cpNormal) and Assigned(aElement) then begin
+    var lNativeValue := aElement.NativeValue;
+    if not VarIsOrdinal(lNativeValue) then
+      Exit;
+    var lFlagsValue: Int64 := lNativeValue;
+
+    if ((flgDeletedIndex >= 0) and ((lFlagsValue and (Int64(1) shl Int64(flgDeletedIndex))) <> 0)) or
+       ((flgPartialFormIndex >= 0) and ((lFlagsValue and (Int64(1) shl Int64(flgPartialFormIndex))) <> 0))
+    then
+      Result := cpNormalIgnoreEmpty;
+  end;
+end;
+
+function TwbFlagsDef.GetConflictPriorityCanChange: Boolean;
+begin
+  Result := inherited GetConflictPriorityCanChange or (dfIsRecordFlags in defFlags);
 end;
 
 function TwbFlagsDef.GetDefTypeName: string;
@@ -14852,6 +14930,7 @@ begin
          not Supports(aElement.Container, IwbContainer, lContainer)
       then
         Exit;
+
     var lMaskValue := lContainer.ElementNativeValues[flgDontShowPath];
     if not VarIsOrdinal(lMaskValue) then
       Exit;
@@ -14861,7 +14940,30 @@ begin
     if flgDontShowInvert then
       Result := not Result;
   end;
+{
+  if (dfIsRecordFlags in defFlags) and
+     Assigned(aElement) and
+     (aIndex <> flgDeletedIndex) and
+     (aIndex <> flgPartialFormIndex)
+  then begin
+    var lContainer: IwbContainer;
+    if not Supports(aElement, IwbContainer, lContainer) then
+      if not Assigned(aElement) or
+         not Supports(aElement.Container, IwbContainer, lContainer)
+      then
+        Exit;
 
+    var lNativeValue := lContainer.NativeValue;
+    if not VarIsOrdinal(lNativeValue) then
+      Exit;
+    var lFlagsValue: Int64 := lNativeValue;
+
+    if ((flgDeletedIndex >= 0) and ((lFlagsValue and (Int64(1) shl Int64(flgDeletedIndex))) <> 0)) or
+       ((flgPartialFormIndex >= 0) and ((lFlagsValue and (Int64(1) shl Int64(flgPartialFormIndex))) <> 0))
+    then
+      Result := True;
+  end;
+}
 end;
 
 function TwbFlagsDef.FindFlag(aName: string; out aFlagDef: IwbFlagDef): Boolean;
@@ -14906,21 +15008,44 @@ begin
 end;
 
 procedure TwbFlagsDef.FlagGetCP(const aElement : IwbElement;
-                                     aIndex   : Integer;
-                                 var aCP      : TwbConflictPriority);
+                                      aIndex   : Integer;
+                                  var aCP      : TwbConflictPriority);
 begin
   if flgHasGetCPs and (aIndex <= High(flgGetCPs)) and Assigned(flgGetCPs[aIndex]) then
     flgGetCPs[aIndex](aElement, aCP);
+
+  if (dfIsRecordFlags in defFlags) and
+     Assigned(aElement) and
+     (aIndex <> flgDeletedIndex) and
+     (aIndex <> flgPartialFormIndex)
+  then begin
+    var lContainer: IwbContainer;
+    if not Supports(aElement, IwbContainer, lContainer) then
+      if not Assigned(aElement) or
+         not Supports(aElement.Container, IwbContainer, lContainer)
+      then
+        Exit;
+
+    var lNativeValue := lContainer.NativeValue;
+    if not VarIsOrdinal(lNativeValue) then
+      Exit;
+    var lFlagsValue: Int64 := lNativeValue;
+
+    if ((flgDeletedIndex >= 0) and ((lFlagsValue and (Int64(1) shl Int64(flgDeletedIndex))) <> 0)) or
+       ((flgPartialFormIndex >= 0) and ((lFlagsValue and (Int64(1) shl Int64(flgPartialFormIndex))) <> 0))
+    then
+      aCP := cpIgnore;
+  end;
 end;
 
 function TwbFlagsDef.GetFlagHasDontShow(aIndex: Integer): Boolean;
 begin
-  Result := flgHasDontShows and (aIndex <= High(flgDontShows)) and Assigned(flgDontShows[aIndex]);
+  Result := flgHasDontShows and (aIndex <= High(flgDontShows)) and Assigned(flgDontShows[aIndex]){ or (dfIsRecordFlags in defFlags)};
 end;
 
 function TwbFlagsDef.GetFlagHasGetCP(aIndex: Integer): Boolean;
 begin
-  Result := flgHasGetCPs and (aIndex <= High(flgGetCPs)) and Assigned(flgGetCPs[aIndex]);
+  Result := flgHasGetCPs and (aIndex <= High(flgGetCPs)) and Assigned(flgGetCPs[aIndex]) or (dfIsRecordFlags in defFlags);
 end;
 
 function TwbFlagsDef.GetFlagIgnoreConflict(aIndex: Integer): Boolean;
@@ -15000,6 +15125,14 @@ begin
   for var lFlagIdx := Low(flgFlagDefs) to High(flgFlagDefs) do
     if Assigned(flgFlagDefs[lFlagIdx]) then
       (flgFlagDefs[lFlagIdx] as IwbDefInternal).InitFromParent(Self);
+
+  if dfIsRecordFlags in defFlags then begin
+    var lFlagDef: IwbFlagDef;
+    if FindFlag('Deleted', lFlagDef) then
+      flgDeletedIndex := lFlagDef.FlagIndex;
+    if FindFlag('Partial Form', lFlagDef) then
+      flgPartialFormIndex := lFlagDef.FlagIndex;
+  end;
 end;
 
 function TwbFlagsDef.ToEditValue(aInt: Int64; const aElement: IwbElement): string;
@@ -17205,8 +17338,15 @@ begin
     if IsValid('ACVA') and SameText(Trim(aValue), 'None') then begin
       Result := $FF;
       Exit;
-    end else
-      Result := StrToInt64('$' + aValue);
+    end else begin
+      if SameText(aValue.Trim, 'Self') and Assigned(aElement) then begin
+        var lContainingMainRecord := aElement.ContainingMainRecord;
+        if not Assigned(lContainingMainRecord) then
+          raise Exception.Create('Can not resolve Self without a ContainingMainRecord');
+        Result := lContainingMainRecord.LoadOrderFormID.ToCardinal;
+      end else
+        Result := StrToInt64('$' + aValue);
+    end;
   end;
 
   if (Result <> 0) and (dfUnmappedFormID in defFlags) then begin
@@ -17557,9 +17697,12 @@ begin
   if (aInt < $800) and IsValid('ACVA') then
     Exit;
 
-  if dfUseLoadOrder in defFlags then
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt))
-  else if Assigned(aElement) then begin
+  if dfUseLoadOrder in defFlags then begin
+    var lFile: IwbFile;
+    if Assigned(aElement) then
+      lFile := aElement._File;
+    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+  end else if Assigned(aElement) then begin
     var lFile := aElement._File;
     if Assigned(lFile) then try
       var lFormID := TwbFormID.FromCardinal(aInt);
@@ -17572,17 +17715,25 @@ begin
         Result := wbGetGameMasterFile.RecordByFormID[lFormID, True, False]
       else
         Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
-
     except end;
+
+    if Assigned(Result) and (Result.ElementType = etMainRecord) then begin
+      var lMainRecord: IwbMainRecord;
+      if Supports(Result, IwbMainRecord, lMainRecord) and lMainRecord.IsPartialForm then
+        Result := lMainRecord.HighestOverrideVisibleForFile[lFile];
+    end;
   end;
 end;
 
 function TwbFormIDDefFormater.GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
 begin
   Result := nil;
-  if dfUseLoadOrder in defFlags then
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt))
-  else begin
+  if dfUseLoadOrder in defFlags then begin
+    var lFile: IwbFile;
+    if Assigned(aElement) then
+      lFile := aElement._File;
+    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+  end else begin
     if Assigned(aElement) then begin
       var lFile := aElement._File;
       if Assigned(lFile) then try
@@ -17852,7 +18003,7 @@ begin
         if dfUseLoadOrder in defFlags then begin
           {stored FormID is already a LoadOrder FormID}
           FormID := TwbFormID.FromCardinal(aInt);
-          MainRecord := wbRecordByLoadOrderFormID(FormID);
+          MainRecord := wbRecordByLoadOrderFormID(FormID, _File);
         end else begin
           if FormID.ObjectID < $800 then
             if not _File.AllowHardcodedRangeUse then
@@ -23267,12 +23418,15 @@ begin
     Exit;
   _RecordsInit := True;
 
-  for var Looped := False to True do
+  for var Looped := False to True do begin
     for var lRecordIdx := Low(wbRecordDefs) to High(wbRecordDefs) do begin
       var lDef: IwbDefInternal;
       if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
         lDef.InitFromParent(nil);
     end;
+    if Assigned(wbMainRecordHeader) then
+      (wbMainRecordHeader as IwbDefInternal).InitFromParent(nil);
+  end;
 end;
 
 function wbGetUnknownIntString(aInt: Int64): string;

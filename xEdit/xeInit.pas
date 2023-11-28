@@ -1098,6 +1098,8 @@ begin
 
   if xeQuickClean then begin
     wbIKnowWhatImDoing := True;
+    wbFillINOM := False;
+    wbFillINOA := False;
   end;
 
   if FindCmdLineSwitch('fixup') then

@@ -1,8 +1,8 @@
 # Request for Mod Authors using xEdit
 
-To all mod authors who use xEdit as a major component in their mod development process and distribute their mods on NexusMods with the Donation Points (DP) option enabled:
+If you share you mods on Nexus Mods and use xEdit as a major component in development, please consider donating a small share of your Donation Points (DP) to `ElminsterAU` to support the ongoing development of this tool. The recommended donation is ~10%.
 
-We encourage you to consider allocating 10% of your earned DP to `ElminsterAU`. This gesture of support will contribute significantly to the ongoing development and improvement of xEdit, a tool crucial to our shared modding community. Your contribution, no matter the size, is invaluable and deeply appreciated.
+xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
 # What's New in xEdit 4.1.5b?
 
@@ -10,10 +10,14 @@ We encourage you to consider allocating 10% of your earned DP to `ElminsterAU`. 
 
 * #1249 - [TES5/SSE] made LCTN definitions properly formversion aware
 * #1254 - Report Error when a NULL Faction is in the Function GetCrimeGoldViolent/GetCrimeGold/GetCrimeGoldNonviolent
+* #1260 - REFR Overrides are placed in wrong cell if X or Y position is exactly -n*4096.0
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
 * (reported on discord) - conflict status is not properly reset if a record is removed
 * (reported on discord) - [SF] PLDT\Radius is incorrectly defined as Integer instead of Float
+* (reported on discord) - ONAM in the File Header is always missing it's first entry
 * (found by developer) - [SF] corrected SCEN record definitions to account for changes in Starfield 1.8.83.0
+* (found by developer) - TwbLocalizationHandler is not thread-safe
+* (found by developer) - Removing records might not always update the conflict status in the navigation treeview
 
 ## Minor Changes
 
@@ -22,7 +26,12 @@ We encourage you to consider allocating 10% of your earned DP to `ElminsterAU`. 
 * #1248 - Information tab updates
 * #1249 - [BSArchPro] warning about compressing strings
 * #1255 - [SF] additional TERM decoding
+* #1259 - [SF] People don't know how to properly create Quest Aliases
 * (reported on discord) - [SF] added PRDS to PROJ definitions
+
+## Important
+
+Any ESM flagged (implicit or explicit) module which contains overrides of temporary records and has previously been saved by xEdit must be resaved to correct the incorrect ONAM written by previous versions. This includes any modules cleaned by QAC. Failure to do so means that the game engine will ignore the override that is missing from ONAM.
 
 ## Partial Form Support
 

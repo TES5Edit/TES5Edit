@@ -2221,7 +2221,7 @@ var
   Container   : IwbContainer;
   Parent      : IwbElement;
   i           : integer;
-begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
+begin
   Result := 0;
   if not Assigned(aElement) then
     Exit;
@@ -9482,9 +9482,9 @@ begin
       ]))
     ]),
     wbString(SNAM, 'Subtype Name', 4),
-    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign),
-    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
-    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
+    wbInteger(TIFC, 'Info Count', itU32, nil, cpIgnore),
+    wbINOM,
+    wbINOA
   ]);
 
   wbRecord(DOOR, 'Door',

@@ -69,7 +69,7 @@ function wbEndKeepAlive: Integer;
 
 function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
 
 function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
 
@@ -1207,6 +1207,7 @@ type
     function GetContainingMainRecord: IwbMainRecord; override;
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
     procedure SetParentModified; override;
+    procedure SetModified(aValue: Boolean); override;
 
     function DoBuildRef(aRemove: Boolean): Boolean;
     procedure BuildRef; override;
@@ -4762,8 +4763,9 @@ begin
                           ONAMs.BeginUpdate;
                           Assert(ONAMs.ElementCount = 1);
                           NewONAM := ONAMs.Elements[0];
-                        end else
+                        end else repeat
                           NewONAM := ONAMs.Assign(wbAssignAdd, nil, True);
+                        until NewONAM.NativeValue = 0;
 
                         NewONAM.NativeValue := FormID.ToCardinal;
 
@@ -8485,35 +8487,45 @@ begin
 
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
-      var lShouldExit := True;
+      var lDeleteShouldExit := True;
       if (wbGameMode >= gmFO4) and Assigned(mrDef) then begin
-        lShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
+        lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
 
-        if not lShouldExit and Assigned(aElement) then begin
+        if not lDeleteShouldExit and Assigned(aElement) then begin
           var lHasSignature: IwbHasSignature;
           if Supports(aElement, IwbHasSignature, lHasSignature) then
-            lShouldExit := mrDef.KnownSubRecordSignatures[ksrBaseRecord] <> lHasSignature.Signature;
+            lDeleteShouldExit := mrDef.KnownSubRecordSignatures[ksrBaseRecord] <> lHasSignature.Signature;
         end;
       end;
 
-      if lShouldExit then
+      if lDeleteShouldExit then
         Exit;
     end;
 
   if GetIsPartialForm then
     if aIndex <> wbAssignThis then begin
-      var lShouldExit := True;
+      var lPartialShouldExit := True;
       if Assigned(mrDef) then begin
-        lShouldExit := mrDef.KnownSubRecordMemberIndex[ksrEditorID] <> aIndex;
+        lPartialShouldExit := mrDef.KnownSubRecordMemberIndex[ksrEditorID] <> aIndex;
 
-        if not lShouldExit and Assigned(aElement) then begin
+        if not lPartialShouldExit and Assigned(aElement) then begin
           var lHasSignature: IwbHasSignature;
           if Supports(aElement, IwbHasSignature, lHasSignature) then
-            lShouldExit := mrDef.KnownSubRecordSignatures[ksrEditorID] <> lHasSignature.Signature;
+            lPartialShouldExit := mrDef.KnownSubRecordSignatures[ksrEditorID] <> lHasSignature.Signature;
+        end;
+
+        if lPartialShouldExit and (wbFillINOM or wbFillINOA) and (GetSignature = 'DIAL') then begin
+          var lDIALMember := mrDef.Members[aIndex];
+          if Assigned(lDIALMember) then begin
+            if (wbFillINOM and (lDIALMember.DefaultSignature = 'INOM')) or
+               (wbFillINOA and (lDIALMember.DefaultSignature = 'INOA'))
+            then
+              lPartialShouldExit := False;
+          end;
         end;
       end;
 
-      if lShouldExit then
+      if lPartialShouldExit then
         Exit;
     end;
 
@@ -10905,11 +10917,11 @@ var
 begin
   Result := Self;
   Master := GetMasterOrSelf;
-  for i := Pred(Master.OverrideCount) downto 0 do
-    if Master.Overrides[i]._File.LoadOrder <= aMaxLoadOrder then begin
-      Result := Master.Overrides[i];
-      Exit;
-    end;
+  for i := Pred(Master.OverrideCount) downto 0 do begin
+    var lOverride := Master.Overrides[i];
+    if not lOverride.IsPartialForm and (lOverride._File.LoadOrder <= aMaxLoadOrder) then
+      Exit(lOverride);
+  end;
 end;
 
 function TwbMainRecord.GetHighestOverrideVisibleForFile(const aFile: IwbFile): IwbMainRecord;
@@ -10921,16 +10933,16 @@ var
 begin
   FormID := GetLoadOrderFormID;
   Result := Self;
-  if aFile.LoadOrder > GetFile.LoadOrder then begin
+  if (aFile.LoadOrder > GetFile.LoadOrder) or GetIsPartialForm then begin
     MainRecord := aFile.ContainedRecordByLoadOrderFormID[FormID, True];
-    if Assigned(MainRecord) then
+    if Assigned(MainRecord) and not MainRecord.IsPartialForm then
       Result := MainRecord
     else
       for i := Pred(aFile.MasterCount[True]) downto 0 do begin
         _File := aFile.Masters[i, True];
-        if _File.LoadOrder > Result._File.LoadOrder then begin
+        if (_File.LoadOrder > Result._File.LoadOrder) or Result.IsPartialForm then begin
           MainRecord := _File.ContainedRecordByLoadOrderFormID[FormID, True];
-          if Assigned(MainRecord) then
+          if Assigned(MainRecord) and not MainRecord.IsPartialForm then
             Result := MainRecord;
         end;
       end;
@@ -11103,12 +11115,17 @@ function TwbMainRecord.GetIsWinningOverride: Boolean;
 var
   Master: IwbMainRecord;
 begin
+  if GetIsPartialForm then
+    Exit(False);
   if Assigned(mrMaster) then begin
     Master := IwbMainRecord(mrMaster);
-    Assert(Master.OverrideCount > 0);
-    Result := Equals(Master.Overrides[Pred(Master.OverrideCount)]);
-  end else
-    Result := Length(mrOverrides) < 1;
+    Result := Equals(Master.WinningOverride);
+  end else begin
+    for var lIndex := High(mrOverrides) downto Low(mrOverrides) do
+      if not mrOverrides[lIndex].IsPartialForm then
+        Exit(False);
+    Result := True;
+  end;
 end;
 
 function TwbMainRecord.GetLoadOrderFormID: TwbFormID;
@@ -11614,12 +11631,15 @@ end;
 function TwbMainRecord.GetWinningOverride: IwbMainRecord;
 begin
   if Assigned(mrMaster) then
-    Result := IwbMainRecord(mrMaster).WinningOverride
-  else
-    if Length(mrOverrides) > 0 then
-      Result := mrOverrides[High(mrOverrides)]
-    else
-      Result := Self;
+    Exit(IwbMainRecord(mrMaster).WinningOverride);
+
+  for var lIndex := High(mrOverrides) downto Low(mrOverrides) do begin
+    var lOverride := mrOverrides[lIndex];
+    if not lOverride.IsPartialForm then
+      Exit(lOverride);
+  end;
+
+  Result := Self;
 end;
 
 procedure TwbMainRecord.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -12317,10 +12337,12 @@ var
       end;
     end;
 
+    {
     if GetIsDeleted and (GetDataSize > 0) then begin
       GetDataSize;
       Delete;
     end;
+    }
 
     if mrsOFSTRemoved in mrStates then begin
       GroupRecord := GetChildGroup;
@@ -12530,21 +12552,32 @@ end;
 function TwbMainRecord.RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement;
 begin
   Result := inherited RemoveElement(aPos, aMarkModified);
-  if not (csInit in cntStates) then
-    if Assigned(Result) and (Result.ElementType = etSubRecord) then
-      with (Result as IwbSubRecord) do begin
-        if Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then
-          mrEditorID := ''
-        else if Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
-          if (mrFullName <> '') and (Value = mrFullName) then
-            mrFullName := '';
-        end else if Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
+  if aMarkModified then
+    if Assigned(Result) and (Result.ElementType = etSubRecord) then begin
+      var SubRecord : IwbSubRecord;
+      if Supports(Result, IwbSubRecord, SubRecord) then begin
+        var NotRelevant := False;
+        if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
+          mrEditorID := '';
+          Exclude(mrStates, mrsEditorIDFromCache);
+        end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrFullName] then begin
+          mrFullName := '';
+          Exclude(mrStates, mrsFullNameFromCache);
+        end else if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrBaseRecord] then
           Exclude(mrStates, mrsBaseRecordChecked)
-        else if (Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and Container.Equals(Self) then begin
+        else if (SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrGridCell]) and (SubRecord.Container.Equals(Self)) then begin
           Exclude(mrStates, mrsHasGridCell);
-          Exclude(mrStates, mrsGridCellChecked);
+          Include(mrStates, mrsGridCellChecked);
+        end else
+          NotRelevant := True;
+        if not NotRelevant then begin
+          (GetFile as IwbFileInternal).IncGeneration;
+          mrName := '';
+          mrShortName := '';
+          mrDisplayName := '';
         end;
       end;
+    end;
 end;
 
 procedure TwbMainRecord.RemoveEntry;
@@ -12655,6 +12688,7 @@ begin
   end;
   SetLength(mrOverrides, j);
   mrMasterAndLeafs := nil;
+  ResetConflict;
 end;
 
 procedure TwbMainRecord.RemoveReferencedBy(const aMainRecord: IwbMainRecord);
@@ -13256,6 +13290,12 @@ begin
     Exclude(mrStates, mrsIsInjectedChecked);
 end;
 
+procedure TwbMainRecord.SetModified(aValue: Boolean);
+begin
+  mrDisplayName := '';
+  inherited;
+end;
+
 procedure TwbMainRecord.SetNativeValue(const aValue: Variant);
 begin
   if not wbIsInternalEdit then begin
@@ -13426,10 +13466,16 @@ begin
   OldCell := OldChildGroup.ChildrenOf;
   if not Assigned(OldCell) then
     Exit;//raise Exception.Create(OldChildGroup.GetName + ' can not find its CELL record');
-  if not OldCell.ElementExists['DATA'] then
-    Exit;//raise Exception.Create(OldCell.GetName + ' is missing its DATA subrecord');
 
-  i := OldCell.GetElementNativeValue('DATA');
+  var OldCellNotPartial := OldCell;
+  if not OldCell.ElementExists['DATA'] then begin
+    if not Supports(OldCell.HighestOverrideVisibleForFile[GetFile], IwbMainRecord, OldCellNotPartial) or
+       not OldCellNotPartial.ElementExists['DATA']
+    then
+      Exit;//raise Exception.Create(OldCell.GetName + ' is missing its DATA subrecord');
+  end;
+
+  i := OldCellNotPartial.GetElementNativeValue('DATA');
   IsExterior := (i and 1) = 0;
 
   if (OldTypeGroup.GroupType = CorrectGroupType) and not IsExterior then
@@ -13462,9 +13508,9 @@ begin
       GridCell := wbPositionToGridCell(Position);
 
       NewCell := nil;
-      if not OldCell.IsPersistent then begin
-        if not OldCell.GetGridCell(TempGridCell) then
-          raise Exception.Create('Could not determine grid cell of ' + OldCell.GetName);
+      if not OldCellNotPartial.IsPersistent then begin
+        if not OldCellNotPartial.GetGridCell(TempGridCell) then
+          raise Exception.Create('Could not determine grid cell of ' + OldCellNotPartial.GetName);
         if TempGridCell = GridCell then begin
           if OldTypeGroup.GroupType = CorrectGroupType then
             Exit;
@@ -15882,9 +15928,12 @@ var
         lFormID := _File.LoadOrderFormIDtoFileFormID(aSource.LoadOrderFormID, True);
     end;
 
+    var lIsNew := False;
+
     if not Assigned(Result) then begin
 
       Result := TwbMainRecord.Create(Self, aSource.Signature, lFormID);
+      lIsNew := True;
 
     end else begin
 
@@ -15913,21 +15962,33 @@ var
     end;
 
     if aDeepCopy then begin
+      var lResult := Result as IwbMainRecord;
+
       if not aSource.IsDeleted then
-        with Result as IwbMainRecord do
-          IsDeleted := False;
-      if not aSource.IsPartialForm then
-        with Result as IwbMainRecord do
-          IsPartialForm := False;
-      Result.Assign(wbAssignThis, aElement, False);
-      if (aPrefix <> '') or (aSuffix <> '') then
-        with Result as IwbMainRecord do begin
-          var lEditorID := EditorID;
-          lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
-          lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
-          if lEditorID <> '' then
-            EditorID := aPrefix + lEditorID + aSuffix;
+        lResult.IsDeleted := False;
+      if not aSource.IsPartialForm then begin
+        if lIsNew and wbAllowMakePartial and lResult.CanBePartial then
+          lResult.IsPartialForm := True
+        else
+          lResult.IsPartialForm := False;
+      end else
+        lResult.IsPartialForm := True;
+
+      if not (lResult.IsPartialForm or lResult.IsDeleted) then
+        Result.Assign(wbAssignThis, aElement, False);
+
+      if (aPrefix <> '') or (aSuffix <> '') or lResult.IsPartialForm then begin
+        var lEditorID := aSource.EditorID;
+        lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
+        lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
+        if lEditorID <> lResult.EditorID then begin
+          if wbBeginInternalEdit(True) then try
+            lResult.EditorID := aPrefix + lEditorID + aSuffix;
+          finally
+            wbEndInternalEdit;
+          end;
         end;
+      end;
     end;
 
     if not aAsNew and aSource.IsMaster then
@@ -19026,7 +19087,7 @@ begin
       SetModified(True);
       InvalidateParentStorage;
       BeforeActualRemove;
-      lContainer.RemoveElement(SelfRef);
+      lContainer.RemoveElement(SelfRef, True);
     finally
       lContainer.EndUpdate;
     end;
@@ -24410,7 +24471,7 @@ begin
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
 end;
 
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID): IwbMainRecord;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
 var
   FileID: TwbFileID;
 begin
@@ -24419,6 +24480,11 @@ begin
   for var i:= Low(Files) to High(Files) do
     if Files[i].LoadOrderFileID = FileID then begin
       Result := Files[i].RecordByFormID[aFormID, True, False];
+      if Assigned(Result) and Assigned(aSeenFromFile) then begin
+        var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
+        if Assigned(lVisibleResult) then
+          Result := lVisibleResult;
+      end;
       Exit;
     end;
 end;

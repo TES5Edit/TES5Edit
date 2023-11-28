@@ -2265,7 +2265,7 @@ type
     {63} ptSpeechChallenge,
     {63} ptForm,
     {64} ptAcousticSpace,
-    {65} ptSnapTemplateNode,
+    {65} ptSnapTemplate,
     {66} ptBiomeMask,
     {67} ptPerkCategory,
     {68} ptPerkSkillGroupComparison,
@@ -2792,7 +2792,7 @@ const
     (Index: 837; Name: 'IsTrueForConditionForm'; ParamType1: ptConditionForm; Desc: 'See if the condition is true or false for the subject.'),                                                                                  //   502
     (Index: 838; Name: 'GetNumElementsInRefCollection'; ParamType1: ptAlias; Desc: 'Gets the number of elements in a ref collection'),                                                                          //   503
     (Index: 839; Name: 'GetCurrentWeatherHasKeyword'; ParamType1: ptKeyword; Desc: 'Check to see if the current weather has the provided keyword.';),                                                                               //   504
-    (Index: 840; Name: 'IsSnappedTo'; ParamType1: ptObjectReference; ParamType2: ptSnapTemplateNode; Desc: 'Is the given reference snapped to this other reference?'),                                                       //   505
+    (Index: 840; Name: 'IsSnappedTo'; ParamType1: ptObjectReference; ParamType2: ptSnapTemplate; Desc: 'Is the given reference snapped to this other reference?'),                                                       //   505
     (Index: 841; Name: 'HasKeywordOnNode'; ParamType1: ptKeyword; Desc: 'Checks for a specific keyword on the node that is snapped to.'),                                                                                          //   506
     (Index: 842; Name: 'HasKeywordOnStacked'; ParamType1: ptKeyword; Desc: 'Checks for a specific keyword on the object I am stacked atop.'),                                                                                       //   507
     (Index: 843; Name: 'HasVisualDetection'; ParamType1: ptActor; Desc: 'Checks if an actor has visual detection on another actor'),                                                                                          //   508
@@ -7375,8 +7375,8 @@ end;
           wbFormID('Form'),
           {64 ptAcousticSpace}
           wbFormIDCkNoReach('Acoustic Space', [ASPC]),
-          {65 ptSnapTemplateNode}
-          wbFormIDCkNoReach('Snap Template Node', [STMP]),
+          {65 ptSnapTemplate}
+          wbFormIDCkNoReach('Snap Template', [STMP]),
           {66 ptBiomeMask}
           wbByteArray('Biome Mask', 4),
           {67 ptPerkCategory}
@@ -7591,8 +7591,8 @@ end;
           wbFormID('Form'),
           {64 ptAcousticSpace}
           wbFormIDCkNoReach('Acoustic Space', [ASPC]),
-          {65 ptSnapTemplateNode}
-          wbFormIDCkNoReach('Snap Template Node', [STMP]),
+          {65 ptSnapTemplate}
+          wbFormIDCkNoReach('Snap Template', [STMP]),
           {66 ptBiomeMask}
           wbByteArray('Biome Mask', 4),
           {67 ptPerkCategory}
@@ -10160,9 +10160,9 @@ end;
     ]),
     wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
     wbArray(TIFL, 'Topic Info List', wbFormIDCk('Topic', [INFO])),
-    wbInteger(TIFC, 'Info Count', itU32, nil, cpBenign),
-    wbArray(INOM, 'INFO Order (Masters only)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign),
-    wbArray(INOA, 'INFO Order (All previous modules)', wbFormIDCk('INFO', [INFO], False, cpBenign).IncludeFlag(dfUseLoadOrder), 0, nil, nil, cpBenign).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave).IncludeFlag(dfDontAssign)
+    wbInteger(TIFC, 'Info Count', itU32, nil, cpIgnore),
+    wbINOM,
+    wbINOA
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -15686,7 +15686,7 @@ end;
       wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
       wbString(ALID, 'Alias Name', 0, cpNormal, True),
       wbQUSTAliasFlags,
-      wbUnknown(ALFG,4), // always zero?
+      wbUnknown(ALFG,4).SetDefaultEditValue('00 00 00 00').SetRequired,
 
       wbInteger(ALLR, 'Legendary Rank', itU8, wbEnum([], [
         $0001, '1',
@@ -15788,7 +15788,7 @@ end;
       wbRArrayS('Alias Factions', wbFormIDCk(ALFC, 'Faction', [FACT])),
       wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
       wbString(SCCM, 'Script Comment'),
-      wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]),
+      wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]).SetRequired,
       wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
       wbEmpty(ALED, 'Alias End Marker', cpNormal, True)
     ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet);
@@ -15847,7 +15847,7 @@ end;
     wbRStructSK([0], 'Collection Alias', [
       wbInteger(ALCS, 'Collection Alias ID', itU32),
       wbInteger(ALMI, 'Max Initial Fill Count', itU8).SetRequired,
-      wbUnknown(ALAM, 4),  // always zero
+      wbUnknown(ALAM, 4).SetDefaultEditValue('00 00 00 00').SetRequired,
       wbRUnion('Reference Alias or Alias End Marker', [
         wbRStruct('Alias End Marker', [
           wbEmpty(ALED, 'Alias End Marker', cpNormal, True)

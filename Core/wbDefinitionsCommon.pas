@@ -54,6 +54,9 @@ var
   wbBoolEnum: IwbEnumDef;
   wbStaticPartPlacements: IwbRecordMemberDef;
 
+  wbINOM: IwbRecordMemberDef;
+  wbINOA: IwbRecordMemberDef;
+
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
 
@@ -779,6 +782,24 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapsePlacement)
     , 0, cpNormal, True);
+
+  wbINOM :=
+    wbArray(INOM, 'INFO Order (Masters only)',
+      wbFormIDCk('INFO', [INFO], False, cpBenign)
+        .IncludeFlag(dfUseLoadOrder)
+    , 0, nil, nil, cpBenign)
+      .IncludeFlag(dfInternalEditOnly)
+      .IncludeFlag(dfDontSave)
+      .IncludeFlag(dfDontAssign);
+
+  wbINOA :=
+    wbArray(INOA, 'INFO Order (All previous modules)',
+      wbFormIDCk('INFO', [INFO], False, cpBenign)
+        .IncludeFlag(dfUseLoadOrder)
+    , 0, nil, nil, cpBenign)
+      .IncludeFlag(dfInternalEditOnly)
+      .IncludeFlag(dfDontSave)
+      .IncludeFlag(dfDontAssign);
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -1204,7 +1225,7 @@ begin
   Result := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    aRecordFlags,
+    aRecordFlags.IncludeFlag(dfIsRecordFlags),
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     IfThen(wbIsSkyrim,
       wbUnion('Version Control Info 1', wbFormVersionDecider(44), [
