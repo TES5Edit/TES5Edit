@@ -8454,73 +8454,116 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ], []);
 
+  // Sorting these where applicable, as I cannot reproduce any issues that arise from doing so
   var wbBoneDataItem :=
-    wbRStruct('Data', [
-      wbRArray('Bone Datas',
-        wbRStruct('Bone Data', [
-          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
-          // should not be sorted!!!
-          wbRArray('Bone Weight Scales',
-            wbRStructSK([0], 'Bone Weight Scale', [
+      wbRStruct('Bone Data Set', [
+        wbRStruct('Bone Weight Scale Data', [
+          wbInteger(BSMP, 'Weight Scale Target Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArrayS('Bone Weight Scales',
+            wbRStructSK([0], 'Bone Weight Scale Set', [
               wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Weight Scale Values', [
+              wbStruct(BSMS, 'Scale Set', [
                 wbStruct('Thin', [
                   wbFloat('X'),
                   wbFloat('Y'),
                   wbFloat('Z')
-                ]),
+                ])
+                .SetSummaryKey([0,1,2])
+                .SetSummaryMemberPrefixSuffix(0, '[', '')
+                .SetSummaryMemberPrefixSuffix(1, ' ', '')
+                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
+                .SetSummaryDelimiter(',')
+                .IncludeFlag(dfSummaryNoName)
+                .includeFlag(dfCollapsed, wbCollapseVec3), // May switch all of these off of Vec3
                 wbStruct('Muscular', [
                   wbFloat('X'),
                   wbFloat('Y'),
                   wbFloat('Z')
-                ]),
+                ])
+                .SetSummaryKey([0,1,2])
+                .SetSummaryMemberPrefixSuffix(0, '[', '')
+                .SetSummaryMemberPrefixSuffix(1, ' ', '')
+                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
+                .SetSummaryDelimiter(',')
+                .IncludeFlag(dfSummaryNoName)
+                .includeFlag(dfCollapsed, wbCollapseVec3),
                 wbStruct('Fat', [
                   wbFloat('X'),
                   wbFloat('Y'),
                   wbFloat('Z')
                 ])
+                .SetSummaryKey([0,1,2])
+                .SetSummaryMemberPrefixSuffix(0, '[', '')
+                .SetSummaryMemberPrefixSuffix(1, ' ', '')
+                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
+                .SetSummaryDelimiter(',')
+                .IncludeFlag(dfSummaryNoName)
+                .includeFlag(dfCollapsed, wbCollapseVec3)
               ])
+              .SetSummaryKeyOnValue([0,1,2])
+              .SetSummaryPrefixSuffixOnValue(0, 'Thin: ', '')
+              .SetSummaryPrefixSuffixOnValue(1, 'Muscular: ', '')
+              .SetSummaryPrefixSuffixOnValue(2, 'Fat: ', '')
+              .SetSummaryDelimiterOnValue(', ')
+              .SetRequired
             ], [])
-          ),
-          wbInteger(BMMP, 'Bone Modifiers Gender', itU32, wbEnum(['Male', 'Female'])),
-          wbRArray('Bone Modifier',
-            wbRStructSK([0], 'Bone', [
+            .SetSummaryKey([1])
+            .IncludeFlag(dfCollapsed, wbCollapseRACEBoneData)
+          )
+        ],[]),
+        wbRStruct('Bone Range Modifier Data', [
+          wbInteger(BMMP, 'Range Modifier Target Gender', itU32, wbEnum(['Male', 'Female'])),
+          wbRArrayS('Bone Range Modifiers',
+            wbRStructSK([0], 'Bone Range Modifier', [
               wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Modifiers', [
+              wbStruct(BSMS, 'Range', [
                 wbFloat('Min Y'),
                 wbFloat('Min Z'),
                 wbFloat('Max Y'),
                 wbFloat('Max Z')
               ])
+              .SetSummaryKeyOnValue([0,2,1,3])
+              .SetSummaryPrefixSuffixOnValue(0, 'Y: [', '')
+              .SetSummaryPrefixSuffixOnValue(2, 'to ', '],')
+              .SetSummaryPrefixSuffixOnValue(1, 'Z: [', '')
+              .SetSummaryPrefixSuffixOnValue(3, 'to ', ']')
+              .IncludeFlag(dfCollapsed, wbCollapseRange)
+              .SetRequired
             ], [])
+            .SetSummaryKey([1])
+            .IncludeFlag(dfCollapsed, wbCollapseRACEBoneData)
           )
         ],[])
-      )
-    ], []);
+      ], []);
 
   var wbArmorAddonBoneDataItem :=
-    wbRStruct('Data', [
-      wbRArray('Bone Datas',
-        wbRStruct('Bone Data', [
-          wbInteger(BSMP, 'Bone Scale Gender', itU32, wbEnum(['Male', 'Female'])),
-          // should not be sorted!!!
-          wbRArray('Bone Weight Scales',
-            wbRStructSK([0], 'Bone Weight Scale', [
-              wbString(BSMB, 'Name'),
-              wbStruct(BSMS, 'Weight Scale Values', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ])
-            ], [])
-          )
-        ],[])
-      )
-    ], []);
+      wbRStruct('Bone Scale Modifier Set', [
+        wbInteger(BSMP, 'Target Gender', itU32, wbEnum(['Male', 'Female'])),
+        wbRArrayS('Bone Scale Modifiers',
+          wbRStructSK([0], 'Bone Scale Modifier', [
+            wbString(BSMB, 'Bone Name'),
+            wbStruct(BSMS, 'Bone Scale Delta', [
+              wbFloat('X'),
+              wbFloat('Y'),
+              wbFloat('Z')
+            ])
+            .SetSummaryKeyOnValue([0,1,2])
+            .SetSummaryPrefixSuffixOnValue(0, '[', '')
+            .SetSummaryPrefixSuffixOnValue(1, ' ', '')
+            .SetSummaryPrefixSuffixOnValue(2, ' ', ']')
+            .SetSummaryDelimiterOnValue(',')
+            .IncludeFlag(dfSummaryNoName)
+            .includeFlag(dfCollapsed, wbCollapseVec3)
+            .SetRequired
+          ], [])
+          .SetSummaryKey([1])
+          .IncludeFlag(dfCollapsed, wbCollapseARMABoneData)
+        )
+      ], []);
 
-  wbBSMPSequence := wbRArray('Bone Data', wbBoneDataItem);
+  wbBSMPSequence := wbRArray('Bone Scale Data', wbBoneDataItem);
 
-  wbArmorAddonBSMPSequence := wbRArray('Bone Data', wbArmorAddonBoneDataItem);
+  wbArmorAddonBSMPSequence := wbRArray('Sculpt Data', wbArmorAddonBoneDataItem);
 
   var wbEffect :=
     wbRStruct('Effect', [

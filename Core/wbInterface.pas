@@ -215,6 +215,9 @@ var
   wbCollapseRGBA                     : Boolean    = True;
   wbCollapseVec3                     : Boolean    = True;
   wbCollapsePosRot                   : Boolean    = True;
+  wbCollapseRange                    : Boolean    = True;
+  wbCollapseARMABoneData             : Boolean    = True;
+  wbCollapseRACEBoneData             : Boolean    = True;
   wbCollapseScriptData               : Boolean    = True;
   wbCollapseHeadParts                : Boolean    = True;
   wbCollapseBodyParts                : Boolean    = True;
