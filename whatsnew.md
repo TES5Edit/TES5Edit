@@ -6,11 +6,21 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 # What's New in xEdit 4.1.5b?
 
+## Extended FormID Range in Skyrim Special Edition
+
+Support for Extended FormID Range (001-7FF) has been added for Skyrim Special Edition modules with a header version of 1.71.
+This works exactly the same as Extended FormID Range support for Fallout 4 with header version 1.0.
+
+### Important
+
+Modules that have masters with version 1.71 should themselves be version 1.71 modules, otherwise there will be errors when trying to refernce or override any records with a FormID that falls into the Extended Range (001-7FF).
+
 ## Bugfixes
 
 * #1249 - [TES5/SSE] made LCTN definitions properly formversion aware
 * #1254 - Report Error when a NULL Faction is in the Function GetCrimeGoldViolent/GetCrimeGold/GetCrimeGoldNonviolent
 * #1260 - REFR Overrides are placed in wrong cell if X or Y position is exactly -n*4096.0
+* #1266 - SSEEdit64 4.1.5 access violation
 * (reported on discord) - array access in scripts can result in incorrect RangeCheck errors on 32bit
 * (reported on discord) - conflict status is not properly reset if a record is removed
 * (reported on discord) - [SF] PLDT\Radius is incorrectly defined as Integer instead of Float

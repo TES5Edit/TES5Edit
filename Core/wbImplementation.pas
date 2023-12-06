@@ -3777,6 +3777,8 @@ begin
     (
       (wbGameMode = gmTES3)
       or
+      ((wbGameMode in [gmSSE, gmEnderalSE]) and (GetVersion >= 1.71))
+      or
       ((wbGameMode = gmFO4) and (GetVersion >= 1.0))
       or
       (wbGameMode = gmSF1)
@@ -12882,7 +12884,7 @@ begin
     end;
     if Assigned(eContainer) then
       if not IwbContainer(eContainer).Equals(aGroup.Container) then begin
-        wbProgress('<Error: Group "' + mrGroup.Name + '" has not the same container as record "' + Self.GetName + '">');
+        wbProgress('<Error: Group "' + aGroup.Name + '" has not the same container as record "' + Self.GetName + '">');
         Exit;
       end;
   end else
