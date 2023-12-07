@@ -6828,6 +6828,112 @@ procedure DefineTES5d;
 var
   wbFactionRank: IwbRecordMemberDef;
 begin
+  var wbSubtypeNamesEnum := wbEnum([], [
+    Sig2Int('ACAC'), 'ActorCollidewithActor',
+    Sig2Int('ACYI'), 'AcceptYield',
+    Sig2Int('AGRE'), 'Agree',
+    Sig2Int('ALIL'), 'AlertIdle',
+    Sig2Int('ALKL'), 'AllyKilled',
+    Sig2Int('ALTC'), 'AlertToCombat',
+    Sig2Int('ALTN'), 'AlertToNormal',
+    Sig2Int('ASKF'), 'Ask Favor',
+    Sig2Int('ASKG'), 'Ask Gift',
+    Sig2Int('ASNC'), 'AssaultNC',
+    Sig2Int('ASSA'), 'Assault',
+    Sig2Int('ATCK'), 'Attack',
+    Sig2Int('AVTH'), 'AvoidThreat',
+    Sig2Int('BAEX'), 'BarterExit',
+    Sig2Int('BASH'), 'Bash',
+    Sig2Int('BLED'), 'BleedOut',
+    Sig2Int('BLOC'), 'Block',
+    Sig2Int('BREA'), 'EnterSprintBreath',
+    Sig2Int('BRIB'), 'Bribe',
+    Sig2Int('COLO'), 'CombatToLost',
+    Sig2Int('COTN'), 'CombatToNormal',
+    Sig2Int('CUST'), 'Custom',
+    Sig2Int('DEOB'), 'DestroyObject',
+    Sig2Int('DETH'), 'Death',
+    Sig2Int('DFDA'), 'DetectFriendDie',
+    Sig2Int('ENBZ'), 'EnterBowZoomBreath',
+    Sig2Int('EXBZ'), 'ExitBowZoomBreath',
+    Sig2Int('FAVO'), 'Favor',
+    Sig2Int('FEXT'), 'ExitFavorState',
+    Sig2Int('FIWE'), 'ShootBow',
+    Sig2Int('FLAT'), 'Flatter',
+    Sig2Int('FLEE'), 'Flee',
+    Sig2Int('FMAT'), 'FlyingMountAcceptTarget',
+    Sig2Int('FMDR'), 'FlyingMountDestinationReached',
+    Sig2Int('FMLX'), 'FlyingMountLand',
+    Sig2Int('FMNT'), 'FlyingMountNoTarget',
+    Sig2Int('FMRT'), 'FlyingMountRejectTarget',
+    Sig2Int('FMXL'), 'FlyingMountCancelLand',
+    Sig2Int('FOLL'), 'Follow',
+    Sig2Int('FRJT'), 'Reject',
+    Sig2Int('FVDL'), 'Custom?',
+    Sig2Int('GBYE'), 'Goodbye',
+    Sig2Int('GIFF'), 'Gift',
+    Sig2Int('GRNT'), 'CombatGrunt',
+    Sig2Int('GRST'), 'GroupStrategy',
+    Sig2Int('HELO'), 'Hello',
+    Sig2Int('HIT_'), 'Hit',
+    Sig2Int('IDAT'), 'SharedInfo',
+    Sig2Int('IDLE'), 'Idle',
+    Sig2Int('INTI'), 'Intimidate',
+    Sig2Int('JUMP'), 'Jump',
+    Sig2Int('KNOO'), 'KnockOverObject',
+    Sig2Int('LOIL'), 'LostIdle',
+    Sig2Int('LOOB'), 'LockedObject',
+    Sig2Int('LOTC'), 'LostToCombat',
+    Sig2Int('LOTN'), 'LostToNormal',
+    Sig2Int('LWBS'), 'LeaveWaterBreath',
+    Sig2Int('MREF'), 'MoralRefusal',
+    Sig2Int('MUNC'), 'MurderNC',
+    Sig2Int('MURD'), 'Murder',
+    Sig2Int('NOTA'), 'NormalToAlert',
+    Sig2Int('NOTC'), 'NormalToCombat',
+    Sig2Int('NOTI'), 'NoticeCorpse',
+    Sig2Int('OBCO'), 'ObserveCombat',
+    Sig2Int('OUTB'), 'OutofBreath',
+    Sig2Int('PCPS'), 'PlayerCastProjectileSpell',
+    Sig2Int('PCSH'), 'PlayerShout',
+    Sig2Int('PCSS'), 'PlayerCastSelfSpell',
+    Sig2Int('PFGT'), 'ForceGreet',
+    Sig2Int('PICC'), 'PickpocketCombat',
+    Sig2Int('PICN'), 'PickpocketNC',
+    Sig2Int('PICT'), 'PickpocketTopic',
+    Sig2Int('PIRN'), 'PlayerinIronSights',
+    Sig2Int('POAT'), 'PowerAttack',
+    Sig2Int('PURS'), 'PursueIdleTopic',
+    Sig2Int('RCEX'), 'RechargeExit',
+    Sig2Int('RECH'), 'Recharge',
+    Sig2Int('REEX'), 'RepairExit',
+    Sig2Int('REFU'), 'Refuse',
+    Sig2Int('REPA'), 'Repair',
+    Sig2Int('RUMO'), 'Rumors',
+    Sig2Int('SCEN'), 'Scene',
+    Sig2Int('SERU'), 'ServiceRefusal',
+    Sig2Int('SHOW'), 'Show',
+    Sig2Int('SHRE'), 'Show Relationships',
+    Sig2Int('STEA'), 'Steal',
+    Sig2Int('STFN'), 'StealFromNC',
+    Sig2Int('STOF'), 'StandonFurniture',
+    Sig2Int('SWMW'), 'SwingMeleeWeapon',
+    Sig2Int('TAUT'), 'Taunt',
+    Sig2Int('TITG'), 'TimeToGo',
+    Sig2Int('TRAI'), 'Training',
+    Sig2Int('TRAN'), 'TrespassAgainstNC',
+    Sig2Int('TRAV'), 'Travel',
+    Sig2Int('TRES'), 'Trespass',
+    Sig2Int('TREX'), 'TrainingExit',
+    Sig2Int('VPEL'), 'VoicePowerEndLong',
+    Sig2Int('VPES'), 'VoicePowerEndShort',
+    Sig2Int('VPSL'), 'VoicePowerStartLong',
+    Sig2Int('VPSS'), 'VoicePowerStartShort',
+    Sig2Int('WTCR'), 'WereTransformCrime',
+    Sig2Int('YIEL'), 'Yield',
+    Sig2Int('ZKEY'), 'ZKeyObject'
+  ]);
+
   wbRecord(DIAL, 'Dialog Topic',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00004000} 14, 'Partial Form'
@@ -6866,7 +6972,7 @@ begin
          9, 'Ask Favor',
         10, 'Favor',
         11, 'Show Relationships',
-        12, 'Folow',
+        12, 'Follow',
         13, 'Reject',
         14, 'Scene',
         15, 'Show',
@@ -6957,9 +7063,24 @@ begin
        100, 'OutofBreath',
        101, 'CombatGrunt',
        102, 'LeaveWaterBreath'
-      ]))
+      ]), cpIgnore)
     ]),
-    wbString(SNAM, 'Subtype Name', 4),
+    //wbString(SNAM, 'Subtype Name', 4).SetDefaultEditValue('CUST').SetRequired,
+    wbInteger(SNAM, 'Subtype Name', itU32, wbSubtypeNamesEnum)
+      .SetDefaultNativeValue(Sig2Int('CUST'))
+      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
+        begin
+          var lContainer: IwbContainer;
+          if not Supports(aElement, IwbContainer, lContainer) then
+            Exit;
+
+          var lSubtype := lContainer.ElementByPath['..\DATA\Subtype'];
+          if not Assigned(lSubtype) then
+            Exit;
+
+          lSubtype.EditValue := aElement.EditValue;
+        end)
+       .SetRequired,
     wbInteger(TIFC, 'Info Count', itU32, nil, cpIgnore),
     wbINOM,
     wbINOA
