@@ -8163,8 +8163,8 @@ Can't properly represent that with current record definition methods.
     wbNAVIslandData :=
       wbStruct('Island Data', [
         wbByteArray('Unknown', 24),
-        wbArray('Triangles', wbByteArray('Triangle', 6), -1),
-        wbArray('Vertices', wbByteArray('Vertex', 12), -1)
+        wbArray('Triangles', wbByteArray('Triangle', 6), -1).IncludeFlag(dfCollapsed),
+        wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfCollapsed)
       ])
   else
     wbNAVIslandData :=
@@ -8177,35 +8177,41 @@ Can't properly represent that with current record definition methods.
         wbFloat('Max Z'),
         wbArray('Triangles',
           wbStruct('Triangle', [
-            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable)
-          ])
-        , -1).IncludeFlag(dfNotAlignable),
+            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed)
+          ]).IncludeFlag(dfCollapsed)
+        , -1).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed),
         wbArray('Vertices', wbStruct('Vertex', [
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed)
       ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+  wbRecord(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
-    wbRArray('Navigation Map Infos',
-      wbStruct(NVMI, 'Navigation Map Info', [
-        wbFormIDCk('Navigation Mesh', [NAVM]),
+    wbRArrayS('Navmesh Infos',
+      wbStructSK(NVMI,[0], 'Navmesh Info', [
+        wbFormIDCk('Navmesh', [NAVM]),
         wbByteArray('Unknown', 4),
+        //The above Unknown 4 Byte is a category/type of some sort for the given NVMI
+        //"00 00 00 00" = A Navmesh that is edited by the plugin and is NOT an island
+        //"20 00 00 00" = A Navmesh that is edited by the plugin and IS an island
+        //"40 00 00 00" = A Navmesh that is NOT edited by the plugin and is NOT an island
+        //Uknown if there is a fourth category for NOT edited and NOT island, but there could be.
+
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
         wbInteger('Preferred Merges Flag', itU32),
-        wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Linked Doors', wbStruct('Door', [
-          wbByteArray('Unknown', 4),
+        wbArrayS('Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Preferred Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Door Links', wbStructSK([1],'Door', [
+          wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
           wbFormIDCk('Door Ref', [REFR])
-        ]), -1),
+        ]), -1).IncludeFlag(dfCollapsed),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbUnion('Island', wbNAVIIslandDataDecider, [
+        wbUnion('Island Data', wbNAVIIslandDataDecider, [
           wbNull,
           wbNAVIslandData
         ]),
@@ -8216,20 +8222,20 @@ Can't properly represent that with current record definition methods.
             wbStruct('Coordinates', [
               wbInteger('Grid Y', itS16),
               wbInteger('Grid X', itS16)
-            ]),
+            ]).IncludeFlag(dfCollapsed),
             wbFormIDCk('Parent Cell', [CELL])
-          ])
-        ])
-      ])
-    ),
+          ]).IncludeFlag(dfCollapsed)
+        ]).IncludeFlag(dfCollapsed)
+      ]).IncludeFlag(dfCollapsed)
+    ).IncludeFlag(dfCollapsed),
     wbStruct(NVPP, 'Preferred Pathing', [
-      wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
+      wbArray('NavMeshes', wbArrayS('Set', wbFormIDCk('', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
       wbArray('NavMesh Tree?', wbStruct('', [
         wbFormIDCk('NavMesh', [NAVM]),
         wbInteger('Index/Node', itU32)
-      ]), -1)
-    ]),
-    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+      ]), -1).IncludeFlag(dfCollapsed)
+    ]).IncludeFlag(dfCollapsed),
+    wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
   ]);
 
 end;
