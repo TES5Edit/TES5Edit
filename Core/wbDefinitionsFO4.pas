@@ -14640,7 +14640,13 @@ begin
     // not seen in FO4 vanilla files, but can be added in CK
     wbSizePosRot(XPTL, 'Room Portal'),
 
-    wbUnknown(XORD),
+    // Copied from FO3; assuming that the order is the same
+    wbArray(XORD, 'Linked Occlusion References', wbFormIDCk('Reference', [REFR, NULL]), [
+      'Right',
+      'Left',
+      'Bottom',
+      'Top'
+    ]),
 
     wbSizePosRot(XOCP, 'Occlusion Plane Data'),
 

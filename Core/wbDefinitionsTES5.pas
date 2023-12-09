@@ -12069,7 +12069,13 @@ begin
         'Unknown 4'
       ]))
     ]),
-    wbUnknown(XORD),
+    // Copied from FO3; assuming that the order is the same
+    wbArray(XORD, 'Linked Occlusion References', wbFormIDCk('Reference', [REFR, NULL]), [
+      'Right',
+      'Left',
+      'Bottom',
+      'Top'
+    ]),
     wbSizePosRot(XOCP, 'Occlusion Plane Data'),
 
     wbArray(XPOD, 'Portal Data', wbStruct('References', [
