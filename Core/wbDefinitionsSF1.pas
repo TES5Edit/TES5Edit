@@ -8905,42 +8905,9 @@ end;
             wbRStructSK([0], 'Bone Weight Scale Set', [
               wbString(BSMB, 'Name'),
               wbStruct(BSMS, 'Scale Set', [
-                wbStruct('Thin', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
-                .SetSummaryKey([0,1,2])
-                .SetSummaryMemberPrefixSuffix(0, '[', '')
-                .SetSummaryMemberPrefixSuffix(1, ' ', '')
-                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
-                .SetSummaryDelimiter(',')
-                .IncludeFlag(dfSummaryNoName)
-                .includeFlag(dfCollapsed, wbCollapseVec3),
-                wbStruct('Muscular', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
-                .SetSummaryKey([0,1,2])
-                .SetSummaryMemberPrefixSuffix(0, '[', '')
-                .SetSummaryMemberPrefixSuffix(1, ' ', '')
-                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
-                .SetSummaryDelimiter(',')
-                .IncludeFlag(dfSummaryNoName)
-                .includeFlag(dfCollapsed, wbCollapseVec3),
-                wbStruct('Fat', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
-                .SetSummaryKey([0,1,2])
-                .SetSummaryMemberPrefixSuffix(0, '[', '')
-                .SetSummaryMemberPrefixSuffix(1, ' ', '')
-                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
-                .SetSummaryDelimiter(',')
-                .IncludeFlag(dfSummaryNoName)
-                .includeFlag(dfCollapsed, wbCollapseVec3)
+                wbVec3('Thin'),
+                wbVec3('Muscular'),
+                wbVec3('Fat')
               ])
               .SetSummaryKeyOnValue([0,1,2])
               .SetSummaryPrefixSuffixOnValue(0, 'Thin: ', '')
