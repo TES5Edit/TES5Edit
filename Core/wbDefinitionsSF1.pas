@@ -9330,7 +9330,7 @@ end;
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'No Underarmor Scaling', //need to confirm
-      {0x00000080}  7, 'Unknown 7',
+      {0x00000080}  7, 'Is Skin',
       {0x00000100}  8, 'Unknown 8',
       {0x00000200}  9, 'Unknown 9',
       {0x40000000} 30, 'Hi-Res 1st Person Only' //need to confirm
@@ -10283,7 +10283,7 @@ end;
       ]))
     ]),
     wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
-    wbArray(TIFL, 'Topic Info List', wbFormIDCk('Topic', [INFO])),
+    wbArray(TIFL, 'Topic Info List', wbFormIDCk('Topic', [INFO])).SetCountPathOnValue(TIFC, False),
     wbInteger(TIFC, 'Info Count', itU32, nil, cpIgnore),
     wbINOM,
     wbINOA
