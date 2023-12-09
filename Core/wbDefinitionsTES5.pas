@@ -10192,7 +10192,19 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
@@ -10217,14 +10229,13 @@ begin
         '',
         '',
         '',
-        'MPCD'
+        'Unknown 11'
       ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
     ]);
 
   end;

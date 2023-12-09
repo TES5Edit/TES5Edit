@@ -3386,7 +3386,19 @@ var  wbSoundTypeSoundsOld :=
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
@@ -3397,11 +3409,19 @@ var  wbSoundTypeSoundsOld :=
   end else begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
-//      wbStruct(DATA, '', [
-//        wbInteger('Flags', itU8, wbFlags([])),
-//        wbByteArray('Unknown')
-//      ]),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Has Vertex Normals/Height Map',
+        'Has Vertex Colours',
+        'Has Layers',
+        'Unknown 4',
+        'Unknown 5',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'Unknown 11'
+      ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
