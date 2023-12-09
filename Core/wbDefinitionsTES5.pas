@@ -8846,95 +8846,95 @@ begin
   wbRecord(LCTN, 'Location', [
     wbEDID,
 
-    wbArray(ACPR, 'Actor Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+    wbArrayS(ACPR,'Added Persist Location References', wbStructSK([0],'Reference', [
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('World/Cell', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
-    ], cpBenign), 0, nil, nil, cpBenign),
-    wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
-      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+    ], cpBenign), 0, cpBenign),
+    wbArrayS(LCPR,'Master Persist Location References', wbStructSK([0],'Reference', [
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('World/Cell', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
-    ], cpBenign), 0, nil, nil, cpBenign),
+    ], cpBenign), 0, cpBenign),
     {>>> From Danwguard.esm, Does not follow similar previous patterns <<<}
-    wbArray(RCPR, 'Reference Cell Persistent Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign)),
+    wbArrayS(RCPR,'Removed Persist Location References', wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign), 0, cpBenign),
 
-    wbArray(ACUN, 'Actor Cell Unique', wbStruct('', [
-      wbFormIDCk('Actor', [NPC_], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR], False, cpBenign),
+    wbArrayS(ACUN,'Added Unique NPCs', wbStructSK([1],'Actor', [
+      wbFormIDCk('NPC', [NPC_], False, cpBenign),
+      wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
-    ], cpBenign), 0, nil, nil, cpBenign),
-    wbArray(LCUN, 'Location Cell Unique', wbStruct('', [
-      wbFormIDCk('Actor', [NPC_], False, cpBenign),
-      wbFormIDCk('Ref', [ACHR], False, cpBenign),
+    ], cpBenign), 0, cpBenign),
+    wbArrayS(LCUN,'Master Unique NPCs', wbStructSK([1],'Actor', [
+      wbFormIDCk('NPC', [NPC_], False, cpBenign),
+      wbFormIDCk('Actor Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
-    ], cpBenign), 0, nil, nil, cpBenign),
+    ], cpBenign), 0, cpBenign),
     {>>> in Unofficial Skyrim patch <<<}
-    wbArray(RCUN, 'Reference Cell Unique', wbFormIDCk('Actor', [NPC_], False, cpBenign)),
+    wbRArrayS('Removed Unique NPCs', wbFormIDCk(RCUN, 'Actor', [NPC_], False, cpBenign), 0, cpBenign),
 
-    wbArray(ACSR, 'Actor Cell Static Reference', wbStruct('', [
+    wbArrayS(ACSR,'Added Special References', wbStructSK([1],'Reference', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('World/Cell', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
-    ], cpBenign), 0, nil, nil, cpBenign),
-    wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
+    ], cpBenign), 0, cpBenign),
+    wbArrays(LCSR,'Master Special References', wbStructSK([1],'Reference', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
-      wbFormIDCk('Marker', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('World/Cell', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
-    ], cpBenign), 0, nil, nil, cpBenign),
+    ], cpBenign), 0, cpBenign),
     {>>> Seen in Open Cities <<<}
-    wbArray(RCSR, 'Reference Cell Static Reference', wbFormIDCk('Ref', [ACHR, REFR], False, cpBenign), 0, nil, nil, cpBenign),
+    wbArrayS(RCSR,'Removed Special References', wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign), 0, cpBenign),
 
-    wbRArray('Actor Cell Encounter Cell',
-      wbStruct(ACEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-        wbArray('Coordinates', wbStruct('', [
+    wbRArrayS('Added Worldsapce Cells',
+      wbStructSK(ACEC,[0], 'Worldspace', [
+        wbFormIDCk('World', [WRLD], False, cpBenign),
+        wbArrayS('Cells', wbStructSK([0,1],'Coords', [
           wbInteger('Grid Y', itS16, nil, cpBenign),
           wbInteger('Grid X', itS16, nil, cpBenign)
-        ]))
+        ]), 0, cpBenign)
       ], cpBenign)
     , cpBenign),
-    wbRArray('Location Cell Encounter Cell',
-      wbStruct(LCEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-        wbArray('Coordinates', wbStruct('', [
+    wbRArrayS('Master Worldspace Cells',
+      wbStructSK(LCEC,[0],'Worldspace', [
+        wbFormIDCk('World', [WRLD], False, cpBenign),
+        wbArrayS('Cells', wbStructSK([0,1],'Coords', [
           wbInteger('Grid Y', itS16, nil, cpBenign),
           wbInteger('Grid X', itS16, nil, cpBenign)
-        ]))
-      ])
+        ]), 0, cpBenign)
+      ], cpBenign)
     , cpBenign),
     {>>> Seen in Open Cities <<<}
-    wbRArray('Reference Cell Encounter Cell',
-      wbStruct(RCEC, 'Unknown', [
-        wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
-        wbArray('Coordinates', wbStruct('', [
+    wbRArrayS('Removed Worldspace Cells',
+      wbStructSK(RCEC,[0], 'Worldspace', [
+        wbFormIDCk('World', [WRLD], False, cpBenign),
+        wbArrayS('Cells', wbStructSK([0,1],'Coords', [
           wbInteger('Grid Y', itS16, nil, cpBenign),
           wbInteger('Grid X', itS16, nil, cpBenign)
-        ]))
-      ])
+        ]), 0, cpBenign)
+      ], cpBenign)
     , cpBenign),
 
-    wbArray(ACID, 'Actor Cell Marker Reference', wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign), 0, nil, nil, cpBenign),
-    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign), 0, nil, nil, cpBenign),
+    wbArrayS(ACID,'Added Initially Disabled References', wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign), 0, cpBenign),
+    wbArrayS(LCID,'Master Initially Disabled References', wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign), 0, cpBenign),
 
-    wbArray(ACEP, 'Actor Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+    wbArrayS(ACEP,'Added Enable Point References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Enable Parent', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
-    ]), 0, nil, nil, cpBenign),
-    wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
-      wbFormIDCk('Actor', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+    ]), 0, cpBenign),
+    wbArrayS(LCEP,'Master Enable Parent References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
+      wbFormIDCk('Enable Parent', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign),
       wbInteger('Grid X', itS16, nil, cpBenign)
-    ]), 0, nil, nil, cpBenign),
+    ]), 0, cpBenign),
 
     wbFULL,
     wbKSIZ,
