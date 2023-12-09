@@ -1920,28 +1920,29 @@ begin
 end;
 
 function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  SubRecord   : IwbMainRecord;
-  Element     : IwbElement;
 begin
   Result := 0;
 
   if not Assigned(aElement) then
     Exit;
 
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
-    Container := Container.Container;
+  var lContainer: IwbContainer;
+  if not Supports(aElement, IwbContainer, lContainer) then
+    lContainer := aElement.Container;
 
-  if not Supports(Container, IwbSubRecord, SubRecord) then
+  if not Assigned(lContainer) then
     Exit;
 
-  Element := SubRecord.ElementByName['Parent Worldspace'];
-  if not Assigned(Element) then
+  var lElement := lContainer.ElementByPath['...\Parent Worldspace'];
+  if not Assigned(lElement) then
     Exit;
 
-  if (Element.NativeValue = 0) then
+  var lNativeValue := lElement.NativeValue;
+
+  if not VarIsOrdinal(lNativeValue) then
+    Exit;
+
+  if lNativeValue = 0 then
     Result := 1;
 end;
 

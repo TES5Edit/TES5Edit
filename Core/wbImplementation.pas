@@ -10203,7 +10203,9 @@ begin
       Element := cntElements[i];
       Def := Element.Def;
       if Assigned(Def) then begin
-        if mrDef.IsReference and Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrEditorID] = SigDef.DefaultSignature) then
+        if Supports(Def, IwbSignatureDef, SigDef) and (mrDef.KnownSubRecordSignatures[ksrEditorID] = SigDef.DefaultSignature) then
+          Continue;
+        if dfDontSave in Def.DefFlags then
           Continue;
         Result := Result + Def.Name + ', ';
       end;

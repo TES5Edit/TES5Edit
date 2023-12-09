@@ -3351,16 +3351,20 @@ begin
     Nodes := vstNav.GetSortedSelection(True);
     for i := Low(Nodes) to High(Nodes) do begin
       NodeData := vstNav.GetNodeData(Nodes[i]);
-      if Assigned(NodeData) then
-        if Assigned(NodeData.Container) then begin
-          wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
-          wbProgress(wbCurrentAction);
-          CheckForErrorsLinear(NodeData.Container, nil)
-        end else if Assigned(NodeData.Element) then begin
+      if Assigned(NodeData) then begin
+        if Assigned(NodeData.Element) then begin
           wbCurrentAction := 'Checking for Errors in ' + NodeData.Element.Name;
           wbProgress(wbCurrentAction);
           CheckForErrorsLinear(NodeData.Element, nil)
         end;
+        if Assigned(NodeData.Container) and
+           not NodeData.Container.Equals(NodeData.Element)
+        then begin
+          wbCurrentAction := 'Checking for Errors in ' + NodeData.Container.Name;
+          wbProgress(wbCurrentAction);
+          CheckForErrorsLinear(NodeData.Container, nil)
+        end;
+      end;
     end;
   end);
 end;

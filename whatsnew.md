@@ -28,6 +28,7 @@ Modules that have masters with version 1.71 should themselves be version 1.71 mo
 * (found by developer) - [SF] corrected SCEN record definitions to account for changes in Starfield 1.8.83.0
 * (found by developer) - TwbLocalizationHandler is not thread-safe
 * (found by developer) - Removing records might not always update the conflict status in the navigation treeview
+* (found by developer) - "Check For Errors" on a node which has children only checks the children, not the record itself
 
 ## Minor Changes
 
