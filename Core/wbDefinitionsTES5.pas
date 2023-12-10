@@ -8216,7 +8216,7 @@ Can't properly represent that with current record definition methods.
         wbUnion('Island', wbNAVIIslandDataDecider, [
           wbNull,
           wbNAVIslandData
-        ]),
+        ]).IncludeFlag(dfCollapsed),
         wbStruct('PathingCell', [
           wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
           wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
