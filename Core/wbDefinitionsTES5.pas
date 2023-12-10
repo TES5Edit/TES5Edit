@@ -8224,7 +8224,7 @@ Can't properly represent that with current record definition methods.
             wbStruct('Coordinates', [
               wbInteger('Grid Y', itS16),
               wbInteger('Grid X', itS16)
-            ]),
+            ]).IncludeFlag(dfCollapsed),
             wbFormIDCk('Parent Cell', [CELL])
           ]).IncludeFlag(dfCollapsed)
         ]).IncludeFlag(dfCollapsed)
