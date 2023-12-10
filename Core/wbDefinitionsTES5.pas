@@ -12352,7 +12352,7 @@ begin
 
     {--- Generated Data ---}
     wbStruct(XNDP, 'Navmesh Door Link', [
-      wbFormIDCk('Navmeshesh', [NAVM]),
+      wbFormIDCk('Navmesh', [NAVM]),
       wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
       wbByteArray('Unused', 2, cpIgnore)
     ]),
