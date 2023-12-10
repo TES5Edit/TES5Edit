@@ -8193,17 +8193,15 @@ Can't properly represent that with current record definition methods.
     wbRArrayS('Navmesh Infos',
       wbStructSK(NVMI,[0], 'Navmesh Info', [
         wbFormIDCk('Navmesh', [NAVM]),
-        wbByteArray('Unknown', 4),
-        //The above Unknown 4 Byte is a category/type of some sort for the given NVMI
-        //"00 00 00 00" = A Navmesh that is edited by the plugin and is NOT an island
-        //"20 00 00 00" = A Navmesh that is edited by the plugin and IS an island
-        //"40 00 00 00" = A Navmesh that is NOT edited by the plugin and is NOT an island
-        //Uknown if there is a fourth category for NOT edited and NOT island, but there could be.
-
+        wbInteger('Category', itU32, wbEnum([], [
+          {00 00 00 00} 0, 'Edited and Not Island',
+          {20 00 00 00} $20, 'Edited and Is Island',
+          {40 00 00 00} $40, 'Not Edited and Not Island'
+        ])),
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
-        wbInteger('Preferred Merges Flag', itU32),
+        wbByteArray('Preferred Merges Flag', 4),
         wbArrayS('Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
         wbArrayS('Preferred Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
         wbArrayS('Door Links', wbStructSK([1],'Door', [
@@ -8230,7 +8228,7 @@ Can't properly represent that with current record definition methods.
     ).IncludeFlag(dfCollapsed),
     wbStruct(NVPP, 'Preferred Pathing', [
       wbArray('NavMeshes', wbArrayS('Set', wbFormIDCk('', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
-      wbArray('NavMesh Tree?', wbStruct('', [
+      wbArrayS('NavMesh Tree?', wbStructSK([1],'', [
         wbFormIDCk('NavMesh', [NAVM]),
         wbInteger('Index/Node', itU32)
       ]), -1).IncludeFlag(dfCollapsed)
