@@ -8873,7 +8873,7 @@ begin
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ], cpBenign), 0, cpBenign),
     {>>> in Unofficial Skyrim patch <<<}
-    wbRArrayS('Removed Unique NPCs', wbFormIDCk(RCUN, 'Actor', [NPC_], False, cpBenign), 0, cpBenign),
+    wbArrayS(RCUN, 'Removed Unique NPCs', wbFormIDCk('Actor', [NPC_], False, cpBenign), 0, cpBenign),
 
     wbArrayS(ACSR,'Added Special References', wbStructSK([1],'Reference', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
