@@ -10325,13 +10325,14 @@ begin
         {0x00000080} '',
         {0x00000100} '',
         {0x00000200} '',
-        {0x00000400} 'Unknown 11'
+        {0x00000400} 'MPCD'
       ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
+      wbRArray('Unknown', wbUnknown(MPCD)) // Handling is present in the EXE, not seen in the base game
     ]);
 
   end else begin
@@ -10351,13 +10352,14 @@ begin
         '',
         '',
         '',
-        'Unknown 11'
+        'MPCD'
       ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
+      wbRArray('Unknown', wbUnknown(MPCD))
     ]);
 
   end;
