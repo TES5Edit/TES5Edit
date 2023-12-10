@@ -8209,7 +8209,7 @@ Can't properly represent that with current record definition methods.
           wbFormIDCk('Door Ref', [REFR])
         ]), -1).IncludeFlag(dfCollapsed),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
-        wbUnion('Island Data', wbNAVIIslandDataDecider, [
+        wbUnion('Island Bounds', wbNAVIIslandDataDecider, [
           wbNull,
           wbNAVIslandData
         ]),
