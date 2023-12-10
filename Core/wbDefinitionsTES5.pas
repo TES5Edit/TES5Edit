@@ -8013,7 +8013,7 @@ begin
         wbArray('Edge Links',
           wbStruct('Edge Link', [
             wbByteArray('Unknown', 4),
-            wbFormIDCk('Mesh', [NAVM]),
+            wbFormIDCk('Navmesh', [NAVM]),
             wbInteger('Triangle', itS16)
           ])
         , -1).IncludeFlag(dfNotAlignable),
@@ -8114,16 +8114,20 @@ Can't properly represent that with current record definition methods.
         , -1).IncludeFlag(dfNotAlignable),
         wbArray('Edge Links',
           wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4, cpIgnore),
-            wbFormIDCk('Mesh', [NAVM], False, cpIgnore),
+            wbInteger('Type', itU32, wbEnum([], [
+              0, 'Normal',
+              $01, 'Dropdown Top',
+              $02, 'Dropdown Bottom'
+            ]), cpIgnore),
+            wbFormIDCk('Navmesh', [NAVM], False, cpIgnore),
             wbInteger('Triangle', itS16, nil, cpIgnore)
           ], cpIgnore)
         , -1, cpIgnore).IncludeFlag(dfNotAlignable),
         wbArrayS('Door Triangles',
           wbStructSK([0, 2], 'Door Triangle', [
             wbInteger('Triangle before door', itS16).SetLinksToCallback(wbTriangleLinksTo),
-            wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
-            wbFormIDCk('Door', [REFR])
+            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
+            wbFormIDCk('Door Ref', [REFR])
           ])
         , -1),
         wbArray('Cover Triangles',
@@ -8145,7 +8149,7 @@ Can't properly represent that with current record definition methods.
         ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
       ]);
 
-  wbRecord(NAVM, 'Navigation Mesh',
+  wbRecord(NAVM, 'Navmesh',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00040000} 18, 'Compressed',
       {0x04000000} 26, 'AutoGen',
@@ -8163,8 +8167,8 @@ Can't properly represent that with current record definition methods.
     wbNAVIslandData :=
       wbStruct('Island Data', [
         wbByteArray('Unknown', 24),
-        wbArray('Triangles', wbByteArray('Triangle', 6), -1),
-        wbArray('Vertices', wbByteArray('Vertex', 12), -1)
+        wbArray('Triangles', wbByteArray('Triangle', 6), -1).IncludeFlag(dfCollapsed),
+        wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfCollapsed)
       ])
   else
     wbNAVIslandData :=
@@ -8177,33 +8181,37 @@ Can't properly represent that with current record definition methods.
         wbFloat('Max Z'),
         wbArray('Triangles',
           wbStruct('Triangle', [
-            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable)
-          ])
-        , -1).IncludeFlag(dfNotAlignable),
+            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed)
+          ]).IncludeFlag(dfCollapsed)
+        , -1).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed),
         wbArray('Vertices', wbStruct('Vertex', [
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed)
       ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+  wbRecord(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
-    wbRArray('Navigation Map Infos',
-      wbStruct(NVMI, 'Navigation Map Info', [
-        wbFormIDCk('Navigation Mesh', [NAVM]),
-        wbByteArray('Unknown', 4),
+    wbRArrayS('Navmesh Infos',
+      wbStructSK(NVMI,[0], 'Navmesh Info', [
+        wbFormIDCk('Navmesh', [NAVM]),
+        wbInteger('Category', itU32, wbEnum([], [
+          0, 'Is Edited and Not Island',
+          $20, 'Is Edited and Is Island',
+          $40, 'Not Edited and Not Island'
+        ])),
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
-        wbInteger('Preferred Merges Flag', itU32),
-        wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Linked Doors', wbStruct('Door', [
-          wbByteArray('Unknown', 4),
+        wbByteArray('Preferred Merges Flag', 4),
+        wbArrayS('Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Preferred Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Door Links', wbStructSK([1],'Door', [
+          wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
           wbFormIDCk('Door Ref', [REFR])
-        ]), -1),
+        ]), -1).IncludeFlag(dfCollapsed),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
         wbUnion('Island', wbNAVIIslandDataDecider, [
           wbNull,
@@ -8218,18 +8226,18 @@ Can't properly represent that with current record definition methods.
               wbInteger('Grid X', itS16)
             ]),
             wbFormIDCk('Parent Cell', [CELL])
-          ])
-        ])
-      ])
-    ),
+          ]).IncludeFlag(dfCollapsed)
+        ]).IncludeFlag(dfCollapsed)
+      ]).IncludeFlag(dfCollapsed)
+    ).IncludeFlag(dfCollapsed),
     wbStruct(NVPP, 'Preferred Pathing', [
-      wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-      wbArray('NavMesh Tree?', wbStruct('', [
-        wbFormIDCk('NavMesh', [NAVM]),
+      wbArray('Perferred Paths', wbArray('Path', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
+      wbArray('Path Index?', wbStruct('', [
+        wbFormIDCk('Navmesh', [NAVM]),
         wbInteger('Index/Node', itU32)
-      ]), -1)
-    ]),
-    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+      ]).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed)
+    ]).IncludeFlag(dfCollapsed),
+    wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
   ]);
 
 end;
@@ -12343,8 +12351,8 @@ begin
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Generated Data ---}
-    wbStruct(XNDP, 'Navigation Door Link', [
-      wbFormIDCk('Navigation Mesh', [NAVM]),
+    wbStruct(XNDP, 'Navmesh Door Link', [
+      wbFormIDCk('Navmeshesh', [NAVM]),
       wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
       wbByteArray('Unused', 2, cpIgnore)
     ]),
