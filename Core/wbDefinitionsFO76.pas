@@ -10299,42 +10299,9 @@ begin
             wbRStructSK([0], 'Bone Weight Scale Set', [
               wbString(BSMB, 'Name'),
               wbStruct(BSMS, 'Scale Set', [
-                wbStruct('Thin', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
-                .SetSummaryKey([0,1,2])
-                .SetSummaryMemberPrefixSuffix(0, '[', '')
-                .SetSummaryMemberPrefixSuffix(1, ' ', '')
-                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
-                .SetSummaryDelimiter(',')
-                .IncludeFlag(dfSummaryNoName)
-                .includeFlag(dfCollapsed, wbCollapseVec3),
-                wbStruct('Muscular', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
-                .SetSummaryKey([0,1,2])
-                .SetSummaryMemberPrefixSuffix(0, '[', '')
-                .SetSummaryMemberPrefixSuffix(1, ' ', '')
-                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
-                .SetSummaryDelimiter(',')
-                .IncludeFlag(dfSummaryNoName)
-                .includeFlag(dfCollapsed, wbCollapseVec3),
-                wbStruct('Fat', [
-                  wbFloat('X'),
-                  wbFloat('Y'),
-                  wbFloat('Z')
-                ])
-                .SetSummaryKey([0,1,2])
-                .SetSummaryMemberPrefixSuffix(0, '[', '')
-                .SetSummaryMemberPrefixSuffix(1, ' ', '')
-                .SetSummaryMemberPrefixSuffix(2, ' ', ']')
-                .SetSummaryDelimiter(',')
-                .IncludeFlag(dfSummaryNoName)
-                .includeFlag(dfCollapsed, wbCollapseVec3)
+                wbVec3('Thin'),
+                wbVec3('Muscular'),
+                wbVec3('Fat')
               ])
               .SetSummaryKeyOnValue([0,1,2])
               .SetSummaryPrefixSuffixOnValue(0, 'Thin: ', '')
@@ -10697,10 +10664,10 @@ begin
     wbFTAGs,
     wbFULL,
     wbEITM,
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMODC, wbMO2S, wbENLT, wbENLS, wbAUUV]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMODC, wbMO2S, wbENLT, wbENLS, wbAUUV]),
     wbString(ICON, 'Male Inventory Image'),
     wbString(MICO, 'Male Message Icon'),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMODC, wbMO4S, wbENLT, wbENLS, wbAUUV]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMODC, wbMO4S, wbENLT, wbENLS, wbAUUV]),
     wbString(ICO2, 'Female Inventory Image'),
     wbString(MIC2, 'Female Message Icon'),
     wbBOD2,
@@ -10774,10 +10741,10 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO3F]),
-    wbTexturedModel('Male 1st person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbENLT, wbENLS, wbAUUV, wbMO4F]),
-    wbTexturedModel('Female 1st person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbENLT, wbENLS, wbAUUV, wbMO5F]),
+    wbTexturedModel('Male Biped Model', [MOD2, MO2T], [wbMO2C, wbMO2S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO2F]),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMO3C, wbMO3S, wbModelXFLG, wbENLT, wbENLS, wbAUUV, wbMO3F]),
+    wbTexturedModel('Male 1st Person', [MOD4, MO4T], [wbMO4C, wbMO4S, wbENLT, wbENLS, wbAUUV, wbMO4F]),
+    wbTexturedModel('Female 1st Person', [MOD5, MO5T], [wbMO5C, wbMO5S, wbENLT, wbENLS, wbAUUV, wbMO5F]),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM1, 'Female Skin Texture', [TXST, NULL]),
     wbFormIDCK(NAM2, 'Male Skin Texture Swap List', [FLST, NULL]),
@@ -15133,13 +15100,26 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      //Adding this here for consistency. Does FO76 even have LAND records anymore?
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
       wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
+      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
     ]);
 
   end else begin
@@ -15148,13 +15128,25 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Has Vertex Normals/Height Map',
+        'Has Vertex Colours',
+        'Has Layers?',
+        'Unknown 4',
+        'Unknown 5',
+        'Has Hi-Res Heightfield',
+        '',
+        '',
+        '',
+        '',
+        'Unknown 11'
+      ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
       wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Unknown', wbUnknown(MPCD))
+      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
     ]);
 
   end;
@@ -17550,7 +17542,13 @@ begin
     // not seen in FO4 vanilla files, but can be added in CK
     wbSizePosRot(XPTL, 'Room Portal'),
 
-    wbByteArray(XORD, 'Occlusion Plane Ref Data', 16),
+    // Copied from FO3; assuming that the order is the same
+    wbArray(XORD, 'Linked Occlusion References', wbFormIDCk('Reference', [REFR, NULL]), [
+      'Right',
+      'Left',
+      'Bottom',
+      'Top'
+    ]),
 
     wbSizePosRot(XOCP, 'Occlusion Plane Data'),
 
