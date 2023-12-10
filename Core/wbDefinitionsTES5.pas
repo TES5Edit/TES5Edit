@@ -6251,9 +6251,9 @@ begin
     wbFULL,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbTexturedModel('Male world model', [MOD2, MO2T], wbMO2S),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], wbMO2S),
     wbICON,
-    wbTexturedModel('Female world model', [MOD4, MO4T], wbMO4S),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], wbMO4S),
     wbICO2,
     wbBODTBOD2,
     wbDEST,
@@ -6267,7 +6267,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbRArray('Armature', wbFormIDCK(MODL, 'Model FileName', [ARMA, NULL])),
+    wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -6297,8 +6297,8 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbTexturedModel('Male world model', [MOD2, MO2T], wbMO2S),
-    wbTexturedModel('Female world model', [MOD3, MO3T], wbMO3S),
+    wbTexturedModel('Male Biped Model', [MOD2, MO2T], wbMO2S),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], wbMO3S),
     wbTexturedModel('Male 1st Person', [MOD4, MO4T], wbMO4S),
     wbTexturedModel('Female 1st Person', [MOD5, MO5T], wbMO5S),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),

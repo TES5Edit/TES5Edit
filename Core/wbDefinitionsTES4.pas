@@ -2263,12 +2263,12 @@ begin
       ])),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbTexturedModel('Male biped model', [MODL, MODB, MODT]),
-    wbTexturedModel('Male world model', [MOD2, MO2B, MO2T]),
-    wbString(ICON, 'Male icon FileName'),
-    wbTexturedModel('Female biped model', [MOD3, MO3B, MO3T]),
-    wbTexturedModel('Female world model', [MOD4, MO4B, MO4T]),
-    wbString(ICO2, 'Female icon FileName'),
+    wbTexturedModel('Male Biped Model', [MODL, MODB, MODT]),
+    wbTexturedModel('Male World Model', [MOD2, MO2B, MO2T]),
+    wbString(ICON, 'Male Icon Filename'),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3B, MO3T]),
+    wbTexturedModel('Female World Model', [MOD4, MO4B, MO4T]),
+    wbString(ICO2, 'Female Icon Filename'),
     wbStruct(DATA, '', [
       wbInteger('Armor', itU16, wbDiv(100)),
       wbInteger('Value', itU32),

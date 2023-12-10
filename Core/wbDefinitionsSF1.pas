@@ -9239,8 +9239,8 @@ end;
     wbBaseFormComponents,
     wbFULL,
     wbEITM,
-    wbTexturedModel('Male world model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
     wbBO64,
     wbPUSH,
     wbPDSH,
@@ -9332,17 +9332,17 @@ end;
       wbFloat('Weapon Adjust')
       *)
     ], cpNormal, True),
-    wbTexturedModel('Male world model',   [MOD2, MO2T], [wbMOLM(MLM1), wbMO2C, wbMO2S, wbMO2F]),
-    wbTexturedModel('Female world model', [MOD3, MO3T], [wbMOLM(MLM2), wbMO3C, wbMO3S, wbMO3F]),
-    wbTexturedModel('Male 1st person',    [MOD4, MO4T], [wbMOLM(MLM3), wbMO4C, wbMO4S, wbMO4F]),
-    wbTexturedModel('Female 1st person',  [MOD5, MO5T], [wbMOLM(MLM4), wbMO5C, wbMO5S, wbMO5F]),
+    wbTexturedModel('Male Biped Model',   [MOD2, MO2T], [wbMOLM(MLM1), wbMO2C, wbMO2S, wbMO2F]),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMOLM(MLM2), wbMO3C, wbMO3S, wbMO3F]),
+    wbTexturedModel('Male 1st Person',    [MOD4, MO4T], [wbMOLM(MLM3), wbMO4C, wbMO4S, wbMO4F]),
+    wbTexturedModel('Female 1st Person',  [MOD5, MO5T], [wbMOLM(MLM4), wbMO5C, wbMO5S, wbMO5F]),
     wbTexturedModel('Skeleton',           [MOD6, MO6T], [wbMOLM(MLM5), wbMO6F]),
     //wbTexturedModel('Unknown',  [MOD7, MO7T], [wbMOLM(MLM6), wbMO7F]), does not occur in Starfield.esm, but the code support loading it
 
-    wbFormIDCk(NAM4, 'Male world Morph', [MRPH]),
-    wbFormIDCk(NAM5, 'Male 1st person Morph', [MRPH]),
-    wbFormIDCk(NAM6, 'Female world Morph', [MRPH]),
-    wbFormIDCk(NAM7, 'Female 1st person Morph', [MRPH]),
+    wbFormIDCk(NAM4, 'Male World Morph', [MRPH]),
+    wbFormIDCk(NAM5, 'Male 1st Person Morph', [MRPH]),
+    wbFormIDCk(NAM6, 'Female World Morph', [MRPH]),
+    wbFormIDCk(NAM7, 'Female 1st Person Morph', [MRPH]),
 
     wbRArrayS('Additional Races', wbFormIDCK(MODL, 'Race', [RACE, NULL])),
     wbFormIDCk(SNDD, 'Footstep Sound', [FSTS, NULL]),
