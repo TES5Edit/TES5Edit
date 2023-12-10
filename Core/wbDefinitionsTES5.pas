@@ -8227,11 +8227,11 @@ Can't properly represent that with current record definition methods.
       ]).IncludeFlag(dfCollapsed)
     ).IncludeFlag(dfCollapsed),
     wbStruct(NVPP, 'Preferred Pathing', [
-      wbArray('NavMeshes', wbArrayS('Set', wbFormIDCk('', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
+      wbArray('NavMeshes', wbArrayS('Set', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
       wbArrayS('NavMesh Tree?', wbStructSK([1],'', [
         wbFormIDCk('NavMesh', [NAVM]),
         wbInteger('Index/Node', itU32)
-      ]), -1).IncludeFlag(dfCollapsed)
+      ]).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed)
     ]).IncludeFlag(dfCollapsed),
     wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
   ]);
