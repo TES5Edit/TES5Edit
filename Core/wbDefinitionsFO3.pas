@@ -7434,9 +7434,9 @@ begin
 
     wbRecord(LAND, 'Landscape', [
       wbInteger(DATA, 'Flags', itU32, wbFlags([
-        'Vertex Normals / Height Map',
-        'Vertex Colours',
-        'Layers',
+        'Has Vertex Normals / Height Map',
+        'Has Vertex Colours',
+        'Has Layers',
         'Unknown 4',
         'Unknown 5',
         '',
