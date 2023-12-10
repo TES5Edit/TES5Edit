@@ -6251,9 +6251,9 @@ begin
     wbFULL,
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbTexturedModel('Male world model', [MOD2, MO2T], wbMO2S),
+    wbTexturedModel('Male World Model', [MOD2, MO2T], wbMO2S),
     wbICON,
-    wbTexturedModel('Female world model', [MOD4, MO4T], wbMO4S),
+    wbTexturedModel('Female World Model', [MOD4, MO4T], wbMO4S),
     wbICO2,
     wbBODTBOD2,
     wbDEST,
@@ -6267,7 +6267,7 @@ begin
     wbKSIZ,
     wbKWDAs,
     wbDESC,
-    wbRArray('Armature', wbFormIDCK(MODL, 'Model FileName', [ARMA, NULL])),
+    wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -6297,8 +6297,8 @@ begin
       wbByteArray('Unknown', 1),
       wbFloat('Weapon Adjust')
     ], cpNormal, True),
-    wbTexturedModel('Male world model', [MOD2, MO2T], wbMO2S),
-    wbTexturedModel('Female world model', [MOD3, MO3T], wbMO3S),
+    wbTexturedModel('Male Biped Model', [MOD2, MO2T], wbMO2S),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3T], wbMO3S),
     wbTexturedModel('Male 1st Person', [MOD4, MO4T], wbMO4S),
     wbTexturedModel('Female 1st Person', [MOD5, MO5T], wbMO5S),
     wbFormIDCK(NAM0, 'Male Skin Texture', [TXST, NULL]),
@@ -10318,12 +10318,25 @@ begin
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed'
       ]), [18]), [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'MPCD'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
+      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
+      wbRArray('Unknown', wbUnknown(MPCD)) // Handling is present in the EXE, not seen in the base game
     ]);
 
   end else begin
@@ -12184,7 +12197,13 @@ begin
         'Unknown 4'
       ]))
     ]),
-    wbUnknown(XORD),
+    // Copied from FO3; assuming that the order is the same
+    wbArray(XORD, 'Linked Occlusion References', wbFormIDCk('Reference', [REFR, NULL]), [
+      'Right',
+      'Left',
+      'Bottom',
+      'Top'
+    ]),
     wbSizePosRot(XOCP, 'Occlusion Plane Data'),
 
     wbArray(XPOD, 'Portal Data', wbStruct('References', [

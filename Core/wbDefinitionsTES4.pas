@@ -2263,12 +2263,12 @@ begin
       ])),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
-    wbTexturedModel('Male biped model', [MODL, MODB, MODT]),
-    wbTexturedModel('Male world model', [MOD2, MO2B, MO2T]),
-    wbString(ICON, 'Male icon FileName'),
-    wbTexturedModel('Female biped model', [MOD3, MO3B, MO3T]),
-    wbTexturedModel('Female world model', [MOD4, MO4B, MO4T]),
-    wbString(ICO2, 'Female icon FileName'),
+    wbTexturedModel('Male Biped Model', [MODL, MODB, MODT]),
+    wbTexturedModel('Male World Model', [MOD2, MO2B, MO2T]),
+    wbString(ICON, 'Male Icon Filename'),
+    wbTexturedModel('Female Biped Model', [MOD3, MO3B, MO3T]),
+    wbTexturedModel('Female World Model', [MOD4, MO4B, MO4T]),
+    wbString(ICO2, 'Female Icon Filename'),
     wbStruct(DATA, '', [
       wbInteger('Armor', itU16, wbDiv(100)),
       wbInteger('Value', itU32),
@@ -3386,7 +3386,19 @@ var  wbSoundTypeSoundsOld :=
   if wbSimpleRecords then begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        {0x00000001} 'Has Vertex Normals/Height Map',
+        {0x00000002} 'Has Vertex Colours',
+        {0x00000004} 'Has Layers',
+        {0x00000008} 'Unknown 4',
+        {0x00000010} 'Unknown 5',
+        {0x00000020} '',
+        {0x00000040} '',
+        {0x00000080} '',
+        {0x00000100} '',
+        {0x00000200} '',
+        {0x00000400} 'Unknown 11'
+      ])),
       wbByteArray(VNML, 'Vertex Normals'),
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
@@ -3397,11 +3409,19 @@ var  wbSoundTypeSoundsOld :=
   end else begin
 
     wbRecord(LAND, 'Landscape', [
-      wbByteArray(DATA, 'Unknown'),
-//      wbStruct(DATA, '', [
-//        wbInteger('Flags', itU8, wbFlags([])),
-//        wbByteArray('Unknown')
-//      ]),
+      wbInteger(DATA, 'Flags', itU32, wbFlags([
+        'Has Vertex Normals/Height Map',
+        'Has Vertex Colours',
+        'Has Layers',
+        'Unknown 4',
+        'Unknown 5',
+        '',
+        '',
+        '',
+        '',
+        '',
+        'Unknown 11'
+      ])),
       wbVertexColumns(VNML, 'Vertex Normals'),
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
