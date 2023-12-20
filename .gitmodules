@@ -1,48 +1,48 @@
 [submodule "delphi-detours-library"]
 	path = External/delphi-detours-library
-	url = ../../ElminsterAU/delphi-detours-library.git
+	url = https://github.com/ElminsterAU/delphi-detours-library.git
 	branch = xEdit-4.1.x
 [submodule "vcl-styles-utils"]
 	path = External/vcl-styles-utils
-	url = ../../ElminsterAU/vcl-styles-utils.git
+	url = https://github.com/ElminsterAU/vcl-styles-utils.git
 	branch = xEdit-4.1.x
 [submodule "VirtualTrees"]
 	path = External/VirtualTrees
-	url = ../../ElminsterAU/Virtual-TreeView.git
+	url = https://github.com/ElminsterAU/Virtual-TreeView.git
 	branch = xEdit-4.1.x
 [submodule "jcl"]
 	path = External/jcl
-	url = ../../ElminsterAU/jcl.git
+	url = https://github.com/ElminsterAU/jcl.git
 	branch = xEdit-4.1.x
 [submodule "jvcl"]
 	path = External/jvcl
-	url = ../../ElminsterAU/jvcl.git
+	url = https://github.com/ElminsterAU/jvcl.git
 	branch = xEdit-4.1.x
 [submodule "DWScript"]
 	path = External/DWScript
-	url = ../../ElminsterAU/DWScript.git
+	url = https://github.com/ElminsterAU/DWScript.git
 	branch = xEdit-4.1.x
 [submodule "JsonDataObjects"]
 	path = External/JsonDataObjects
-	url = ../../ElminsterAU/JsonDataObjects.git
+	url = https://github.com/ElminsterAU/JsonDataObjects.git
 	branch = xEdit-4.1.x
 [submodule "imaginglib"]
 	path = External/ImagingLib
-	url = ../../ElminsterAU/imaginglib.git
+	url = https://github.com/ElminsterAU/imaginglib.git
 	branch = xEdit-4.1.x
 [submodule "LZ4Delphi"]
 	path = External/lz4
-	url = ../../ElminsterAU/LZ4Delphi.git
+	url = https://github.com/ElminsterAU/LZ4Delphi.git
 	branch = xEdit-4.1.x
 [submodule "tforge"]
 	path = External/TForge
-	url = ../../ElminsterAU/tforge.git
+	url = https://github.com/ElminsterAU/tforge.git
 	branch = xEdit-4.1.x
 [submodule "External/FileContainer"]
 	path = External/FileContainer
-	url = ../../ElminsterAU/FileContainer.git
+	url = https://github.com/ElminsterAU/FileContainer.git
 	branch = xEdit-4.1.x
 [submodule "External/SynEdit"]
 	path = External/SynEdit
-	url = ../../ElminsterAU/SynEdit.git
+	url = https://github.com/ElminsterAU/SynEdit.git
 	branch = xEdit-4.1.x
