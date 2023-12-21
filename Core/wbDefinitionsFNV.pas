@@ -1667,7 +1667,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..393] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..399] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -1919,7 +1919,7 @@ const
     (Index: 614; Name: 'GetChallengeCompleted'; ParamType1: ptChallenge),
     (Index: 619; Name: 'IsAlwaysHardcore'),
 
-    // Added by (x)NVSE
+    // Added by (x)NVSE - up to v6.3.4
     (Index: 1024; Name: 'GetNVSEVersion'; ),
     (Index: 1025; Name: 'GetNVSERevision'; ),
     (Index: 1026; Name: 'GetNVSEBeta'; ),
@@ -2003,13 +2003,18 @@ const
     (Index: 1541; Name: 'GetActorFIKstatus'; ),
     (Index: 1587; Name: 'GetWeaponRegenRate'; ParamType1: ptInventoryObject; ),
     (Index: 1590; Name: 'CallFunctionCond'; ParamType1: ptFormList; ParamType2: ptInteger;),
+    (Index: 1623; Name: 'HasAmmoEquipped'; ParamType1: ptInventoryObject; ),
+    (Index: 1624; Name: 'GetEquippedWeaponCanUseAmmo'; ParamType1: ptInventoryObject; ),
+    (Index: 1625; Name: 'IsEquippedAmmoInList'; ParamType1: ptFormList; ),
+    (Index: 1626; Name: 'GetEquippedWeaponUsesAmmoList'; ParamType1: ptFormList; ),
+    (Index: 1631; Name: 'GetWeaponCanUseAmmo'; ParamType1: ptInventoryObject; ParamType2: ptInventoryObject;),
 
-    // Added by nvse_plugin_ExtendedActorVariables
+    // Added by nvse_plugin_ExtendedActorVariables - obsolete & unreleased
     (Index: 4352; Name: 'GetExtendedActorVariable'; ParamType1: ptInventoryObject; ),
     (Index: 4353; Name: 'GetBaseExtendedActorVariable'; ParamType1: ptInventoryObject; ),
     (Index: 4355; Name: 'GetModExtendedActorVariable'; ParamType1: ptInventoryObject; ),
 
-    // Added by nvse_extender
+    // Added by nvse_extender - up to v19
     (Index: 4420; Name: 'NX_GetEVFl'; ParamType1: ptNone; ),  // Actually ptString, but it cannot be used in GECK
     (Index: 4426; Name: 'NX_GetQVEVFl'; ParamType1: ptQuest; ParamType2: ptInteger;),
 
@@ -2033,7 +2038,7 @@ const
     (Index: 4843; Name: 'PlayerHasKey'; ),
     (Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
 
-    // Added by JIP NVSE Plugin - up to v56.76
+    // Added by JIP NVSE Plugin - up to v57.21
     (Index: 5637; Name: 'GetIsPoisoned'; ),
     (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
     (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
@@ -2069,10 +2074,11 @@ const
     (Index: 6391; Name: 'EquippedWeaponHasModType'; ParamType1: ptInteger; ),
     (Index: 6426; Name: 'IsSpellTargetList'; ParamType1: ptFormList; ),
 
-    // Added by JohnnyGuitar NVSE - up to v4.85
+    // Added by JohnnyGuitar NVSE - up to v4.98
     (Index: 8501; Name: 'GetBaseScale'; ),
     (Index: 8549; Name: 'GetQuestFailed'; ParamType1: ptQuest; ),
     (Index: 8623; Name: 'GetLocationSpecificLoadScreensOnly'; ),
+    (Index: 8684; Name: 'GetPlayerCamFOV'; ParamType1: ptInteger; ),
 
     // Added by TTW nvse plugin
     (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; )
