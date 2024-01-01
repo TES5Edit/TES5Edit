@@ -8930,7 +8930,7 @@ begin
       wbInteger('Flags', itU8, wbFlags([
       'Set Enable State to Opposite of Parent',
       'Pop In'
-    ])),
+    ]), cpBenign),
     wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
     wbArrayS(LCEP,'Master Enable Parent References', wbStructSK([0],'Reference', [
@@ -8939,7 +8939,7 @@ begin
       wbInteger('Flags', itU8, wbFlags([
       'Set Enable State to Opposite of Parent',
       'Pop In'
-    ])),
+    ]), cpBenign),
     wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
 
