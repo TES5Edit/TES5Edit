@@ -8927,14 +8927,20 @@ begin
     wbArrayS(ACEP,'Added Enable Point References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Enable Parent', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Flags', itU8, wbFlags([
+      'Set Enable State to Opposite of Parent',
+      'Pop In'
+    ])),
+    wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
     wbArrayS(LCEP,'Master Enable Parent References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Enable Parent', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Flags', itU8, wbFlags([
+      'Set Enable State to Opposite of Parent',
+      'Pop In'
+    ])),
+    wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
 
     wbFULL,
