@@ -8230,11 +8230,11 @@ Can't properly represent that with current record definition methods.
         ]).IncludeFlag(dfCollapsed)
       ]).IncludeFlag(dfCollapsed)
     ).IncludeFlag(dfCollapsed),
-    wbStruct(NVPP, 'Preferred Pathing', [
-      wbArray('Perferred Paths', wbArray('Path', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
-      wbArray('Path Index?', wbStruct('', [
+    wbStruct(NVPP, 'Precomputed Pathing', [
+      wbArray('Precomputed Paths', wbArray('Path', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
+      wbArrayS('Road Marker Index', wbStructSK([1],'Road Marker', [
         wbFormIDCk('Navmesh', [NAVM]),
-        wbInteger('Index/Node', itU32)
+        wbInteger('Index', itU32)
       ]).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed)
     ]).IncludeFlag(dfCollapsed),
     wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
