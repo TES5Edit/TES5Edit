@@ -8198,9 +8198,14 @@ Can't properly represent that with current record definition methods.
       wbStructSK(NVMI,[0], 'Navmesh Info', [
         wbFormIDCk('Navmesh', [NAVM]),
         wbInteger('Category', itU32, wbEnum([], [
-          0, 'Is Edited and Not Island',
-          $20, 'Is Edited and Is Island',
-          $40, 'Not Edited and Not Island'
+          0, 'Is Edited',
+          //All navmesh records, that are not islands and are directly edited by the given plugin, receive an NVMI entry where this Integer is 0
+          $20, 'Is Island',
+          //All navmesh records, that are islands and are present in cells where the given plugin makes navmesh edits, receive an NVMI entry where this Integer is 20.
+          //Whether the given plugin actually contains these islands navmeshes or not, does not matter.
+          $40, 'Not Edited'
+          //NVMI entries are generated for navmeshes that are not edited by the given plugin, but their NVMI entry in one of the given plugins' masters contains wrong data or is nonexistent
+          //Also NVMI entries are generated for navmeshes on which a RoadMarker sits in all plugins as "ITM" entries.  Probably used for computing the precomputed paths
         ])),
         wbFloat('X'),
         wbFloat('Y'),
