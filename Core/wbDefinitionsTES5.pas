@@ -10319,7 +10319,7 @@ begin
         {0x00000002} 'Has Vertex Colours',
         {0x00000004} 'Has Layers',
         {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5', // added by the CK to all land records when you run World > World Test > Recalc Normals
+        {0x00000010} 'Auto-Calc Normals', // Present on every LAND after running Recalc Normals in the CK.
         {0x00000020} '',
         {0x00000040} '',
         {0x00000080} '',
@@ -10345,7 +10345,7 @@ begin
         'Has Vertex Colours',
         'Has Layers',
         'Unknown 4',
-        'Unknown 5',
+        'Auto-Calc Normals',
         '',
         '',
         '',
@@ -10357,7 +10357,6 @@ begin
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
       wbRArray('Unknown', wbUnknown(MPCD))
     ]);
 
