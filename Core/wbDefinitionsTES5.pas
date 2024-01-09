@@ -532,7 +532,7 @@ begin
           Exit;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
           Exit;
 
         aInt := EdgeLink.ElementNativeValues['Triangle'];
@@ -566,7 +566,7 @@ begin
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
           Exit;
 
         if Assigned(MainRecord) then
@@ -627,7 +627,7 @@ begin
     EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
     MainRecord := nil;
-    if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
+    if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
       Exit;
 
     aInt := EdgeLink.ElementNativeValues['Triangle'];
