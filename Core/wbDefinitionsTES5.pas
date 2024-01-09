@@ -10331,7 +10331,6 @@ begin
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
       wbRArray('Unknown', wbUnknown(MPCD)) // Handling is present in the EXE, not seen in the base game
     ]);
 
