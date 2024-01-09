@@ -10319,7 +10319,7 @@ begin
         {0x00000002} 'Has Vertex Colours',
         {0x00000004} 'Has Layers',
         {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
+        {0x00000010} 'Unknown 5', // added by the CK to all land records when you run World > World Test > Recalc Normals
         {0x00000020} '',
         {0x00000040} '',
         {0x00000080} '',
