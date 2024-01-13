@@ -8151,6 +8151,7 @@ Can't properly represent that with current record definition methods.
 
   wbRecord(NAVM, 'Navmesh',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000800} 11, 'Initially Disabled',
       {0x00040000} 18, 'Compressed',
       {0x04000000} 26, 'AutoGen',
       {0x80000000} 31, 'NavmeshGenCell'
