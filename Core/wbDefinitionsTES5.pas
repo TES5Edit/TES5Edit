@@ -8158,9 +8158,9 @@ Can't properly represent that with current record definition methods.
     ]), [18]), [
     wbEDID,
     wbNVNM,
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
+    wbArray(ONAM,'Base Objects', wbFormIDCk('Base Object', [CONT, FURN, TREE, STAT, NULL])),
+    wbArray(PNAM, 'Preferred Connectors', wbInteger('Vertex', itU16)),
+    wbArray(NNAM, 'Non Connectors', wbInteger('Vertex', itU16))
   ], False, wbNAVMAddInfo);
 
 
