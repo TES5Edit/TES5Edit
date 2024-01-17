@@ -8931,7 +8931,7 @@ begin
       'Set Enable State to Opposite of Parent',
       'Pop In'
     ]), cpBenign),
-    wbByteArray('Unused', 3, cpBenign)
+    wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
     wbArrayS(LCEP,'Master Enable Parent References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
@@ -8940,7 +8940,7 @@ begin
       'Set Enable State to Opposite of Parent',
       'Pop In'
     ]), cpBenign),
-    wbByteArray('Unused', 3, cpBenign)
+    wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
 
     wbFULL,
