@@ -8115,9 +8115,10 @@ Can't properly represent that with current record definition methods.
         wbArray('Edge Links',
           wbStruct('Edge Link', [
             wbInteger('Type', itU32, wbEnum([], [
-              0, 'Normal',
-              $01, 'Dropdown Top',
-              $02, 'Dropdown Bottom'
+              0, 'Portal',
+              $01, 'Ledge Up',
+              $02, 'Ledge Down',
+              $03, 'Enable/Disable Portal'
             ]), cpIgnore),
             wbFormIDCk('Navmesh', [NAVM], False, cpIgnore),
             wbInteger('Triangle', itS16, nil, cpIgnore)
