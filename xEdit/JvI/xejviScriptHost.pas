@@ -17,6 +17,7 @@ implementation
 uses
   Classes,
   SysUtils,
+  StrUtils,
   System.Generics.Collections,
   Variants,
   Forms,
@@ -70,8 +71,6 @@ var
   MainRecord          : IwbMainRecord;
   Container           : IwbContainerElementRef;
   _File               : IwbFile;
-  Node                : PVirtualNode;
-  NodeData            : PNavNodeData;
   NodeDatas           : TDynViewNodeDatas;
   ConflictThis        : TConflictThis;
   ConflictAll         : TConflictAll;
@@ -182,10 +181,11 @@ begin
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
   end
-  else if SameText(Identifier, 'FileByLoadOrder') then begin
+  else if SameText(Identifier, 'FileByLoadOrderFileID') then begin
     if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
+      var aLoadOrderFileID := TwbFileID.Create(Integer(Args.Values[0]));
       for i := Low(Files) to High(Files) do
-        if Files[i].LoadOrder = Integer(Args.Values[0]) then begin
+        if Files[i].LoadOrderFileID = aLoadOrderFileID then begin
           Value := Files[i];
           Break;
         end;
@@ -257,9 +257,9 @@ begin
   else if SameText(Identifier, 'RemoveNode') and (Args.Count = 1) then begin
     Value := False;
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-      Node := FindNodeForElement(Element);
+      var Node: PVirtualNode := FindNodeForElement(Element);
       if Assigned(Node) then begin
-        NodeData := vstNav.GetNodeData(Node);
+        var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
         if Supports(Element, IwbMainRecord, MainRecord) then begin
           CheckHistoryRemove(BackHistory, MainRecord);
           CheckHistoryRemove(ForwardHistory, MainRecord);
@@ -297,9 +297,9 @@ begin
   end
   else if SameText(Identifier, 'ConflictThisForNode') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-      Node := FindNodeForElement(Element);
+      var Node: PVirtualNode := FindNodeForElement(Element);
       if Assigned(Node) then begin
-        NodeData := vstNav.GetNodeData(Node);
+        var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
         Value := NodeData.ConflictThis;
       end;
       Done := True;
@@ -308,9 +308,9 @@ begin
   end
   else if SameText(Identifier, 'ConflictAllForNode') and (Args.Count = 1) then begin
     if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-      Node := FindNodeForElement(Element);
+      var Node: PVirtualNode := FindNodeForElement(Element);
       if Assigned(Node) then begin
-        NodeData := vstNav.GetNodeData(Node);
+        var NodeData: PNavNodeData := vstNav.GetNodeData(Node);
         Value := NodeData.ConflictAll;
       end;
       Done := True;
