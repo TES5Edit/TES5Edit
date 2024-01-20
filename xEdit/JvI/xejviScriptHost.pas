@@ -442,6 +442,28 @@ begin
   else if SameText(Identifier, 'dfFloatDecimalDigits') and (Args.Count = 0) then begin
     Value := dfFloatDecimalDigits;
     Done := True;
+  end
+  else if SameText(Identifier, 'wbSelectedFilesToFileNames') then begin
+    if (Args.Count = 1) then
+    begin
+      var Nodes: TNodeArray := vstNav.GetSortedSelection(True);
+
+      for i := Low(Nodes) to High(Nodes) do begin
+        var NodeData: PNavNodeData := vstNav.GetNodeData(Nodes[i]);
+        if not Assigned(NodeData) then
+          Continue;
+        Element := NodeData.Element;
+        if Supports(Element, IwbFile, _File) then
+          if TStrings(V2O(Args.Values[0])).IndexOf(_File.FileName) = -1 then
+            TStrings(V2O(Args.Values[0])).Add(_File.FileName)
+        else if Supports(Element, IwbMainRecord, MainRecord) then
+          if TStrings(V2O(Args.Values[0])).IndexOf(MainRecord._File.FileName) = -1 then
+            TStrings(V2O(Args.Values[0])).Add(MainRecord._File.FileName);
+      end;
+
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0); // or  ieNotEnoughParams, ieIncompatibleTypes or others.
   end;
 end;
 
