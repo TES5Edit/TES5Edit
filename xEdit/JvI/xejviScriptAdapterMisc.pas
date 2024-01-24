@@ -279,16 +279,16 @@ end;
 procedure JvInterpreter_ArcCos(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   case VarType(Args.Values[0]) of
-    varSingle : Value := Single(Math.ArcCos(Single(Args.Values[0])));
-    varDouble : Value := Double(Math.ArcCos(Double(Args.Values[0])));
+    varSingle  : Value := Single(Math.ArcCos(Single(Args.Values[0])));
+    varDouble  : Value := Double(Math.ArcCos(Double(Args.Values[0])));
   end;
 end;
 
 procedure JvInterpreter_ArcCot(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   case VarType(Args.Values[0]) of
-    varSingle : Value := Single(Math.ArcCot(Single(Args.Values[0])));
-    varDouble : Value := Double(Math.ArcCot(Double(Args.Values[0])));
+    varSingle  : Value := Single(Math.ArcCot(Single(Args.Values[0])));
+    varDouble  : Value := Double(Math.ArcCot(Double(Args.Values[0])));
   end;
 end;
 
@@ -394,6 +394,14 @@ begin
   case VarType(Args.Values[0]) of
     varSingle : Value := Math.Floor(Single(Args.Values[0]));
     varDouble : Value := Math.Floor(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_FMod(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.FMod(Single(Args.Values[0]), Single(Args.Values[1]));
+    varDouble : Value := Math.FMod(Double(Args.Values[0]), Double(Args.Values[1]));
   end;
 end;
 
@@ -2289,6 +2297,7 @@ begin
     AddFunction('Math', 'DegToRad', JvInterpreter_DegToRad, 1, [varEmpty], varEmpty);
     AddFunction('Math', 'EnsureRange', JvInterpreter_EnsureRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'Floor', JvInterpreter_Floor, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'FMod', JvInterpreter_FMod, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'GetPrecisionMode', JvInterpreter_GetPrecisionMode, 0, [varEmpty], varEmpty);
     AddFunction('Math', 'GetRoundMode', JvInterpreter_GetRoundMode, 0, [varEmpty], varEmpty);
     AddFunction('Math', 'InRange', JvInterpreter_InRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
