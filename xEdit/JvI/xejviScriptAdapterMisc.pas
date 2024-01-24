@@ -557,6 +557,14 @@ begin
   Value := Extended(Math.RoundTo(Extended(Args.Values[0]), Math.TRoundToEXRangeExtended(Args.Values[1])));
 end;
 
+procedure JvInterpreter_SameValue(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.SameValue(Single(Args.Values[0]), Single(Args.Values[1]));
+    varDouble : Value := Math.SameValue(Double(Args.Values[0]), Double(Args.Values[1]));
+  end;
+end;
+
 procedure JvInterpreter_Sec(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   case VarType(Args.Values[0]) of
@@ -599,7 +607,6 @@ begin
     varDouble : Value := Double(Math.SimpleRoundTo(Double(Args.Values[0]), Math.TRoundToEXRangeExtended(Args.Values[1])));
   end;
 end;
-
 
 { TStrings }
 
@@ -644,8 +651,6 @@ procedure TStrings_Write_ValueFromIndex(const Value: Variant; Args: TJvInterpret
 begin
   TStrings(Args.Obj).ValueFromIndex[Args.Values[0]] := Value;
 end;
-
-
 
 { TStringList }
 
@@ -753,16 +758,9 @@ begin
   StringSetOp(TSetOperation.U, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
-
-
 procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
-end;
-
-procedure JvInterpreter_SameValue(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := SameValue(Single(Args.Values[0]), Single(Args.Values[1]));
 end;
 
 procedure JvInterpreter_StringReplace(var Value: Variant; Args: TJvInterpreterArgs);
@@ -920,15 +918,12 @@ begin
     Value := aDir;
 end;
 
-
 { TBytesStream }
 
 procedure TBytesStream_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TBytesStream.Create(TBytes(Args.Values[0])));
 end;
-
-
 
 { TBinaryReader }
 
@@ -1002,7 +997,6 @@ begin
   Value := TBinaryReader(Args.Obj).ReadString;
 end;
 
-
 { TBinaryWriter }
 
 procedure TBinaryWriter_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1035,7 +1029,6 @@ begin
   TBinaryWriter(Args.Obj).Write(Single(Args.Values[0]));
 end;
 
-
 { TWinControl }
 
 procedure TWinControl_Read_DoubleBuffered(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1047,7 +1040,6 @@ procedure TWinControl_Write_DoubleBuffered(const Value: Variant; Args: TJvInterp
 begin
   TWinControl(Args.Obj).DoubleBuffered := Boolean(Value);
 end;
-
 
 { TCustomForm }
 
@@ -1070,7 +1062,6 @@ procedure TCustomForm_Write_PopupParent(const Value: Variant; Args: TJvInterpret
 begin
   TCustomForm(Args.Obj).PopupParent := TCustomForm(V2O(Value));
 end;
-
 
 { TCheckListBox }
 
@@ -1145,7 +1136,6 @@ begin
   TCheckListBox(Args.Obj).AllowGrayed := Value;
 end;
 
-
 { TComboBox }
 
 procedure TComboBox_Read_DropDownCount(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1157,7 +1147,6 @@ procedure TComboBox_Write_DropDownCount(const Value: Variant; Args: TJvInterpret
 begin
   TComboBox(Args.Obj).DropDownCount := Value;
 end;
-
 
 { TCustomLabeledEdit }
 
@@ -1191,14 +1180,12 @@ begin
   TCustomLabeledEdit(Args.Obj).LabelSpacing := Value;
 end;
 
-
 { TLabeledEdit }
 
 procedure TLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
 end;
-
 
 { TListItem }
 
@@ -1212,14 +1199,12 @@ begin
   TListItem(Args.Obj).SubItems := V2O(Value) as TStrings;
 end;
 
-
 { TListItems }
 
 procedure TListItems_Write_Count(const Value: Variant; Args: TJvInterpreterArgs);
 begin
   TListItems(Args.Obj).Count := Value;
 end;
-
 
 { TListView }
 
@@ -1241,7 +1226,6 @@ begin
   CallFunction(nil, [O2V(Sender), O2V(Item), Selected]);
 end;
 
-
 { TMenu }
 
 procedure TMenu_Read_AutoHotKeys(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1254,14 +1238,12 @@ begin
   TMenu(Args.Obj).AutoHotKeys := Value;
 end;
 
-
 { TMenuItem }
 
 procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TMenuItem(Args.Obj).Clear;
 end;
-
 
 { TBitmap }
 
@@ -1270,14 +1252,12 @@ begin
   TBitmap(Args.Obj).SetSize(Args.Values[0], Args.Values[1]);
 end;
 
-
 { THashedStringList }
 
 procedure THashedStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(THashedStringList.Create);
 end;
-
 
 { TCustomIniFile }
 
@@ -1361,14 +1341,12 @@ begin
   TCustomIniFile(Args.Obj).UpdateFile;
 end;
 
-
 { TIniFile }
 
 procedure TIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TIniFile.Create(String(Args.Values[0])));
 end;
-
 
 { TMemIniFile }
 
@@ -1387,14 +1365,12 @@ begin
   TMemIniFile(Args.Obj).SetStrings(TStrings(V2O(Args.Values[0])));
 end;
 
-
 { TRegistryIniFile }
 
 procedure TRegistryIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TRegistryIniFile.Create(String(Args.Values[0])));
 end;
-
 
 { TDirectory }
 
@@ -1408,7 +1384,6 @@ begin
   Value := TDirectory.GetFiles(Args.Values[0], Args.Values[1], Args.Values[2]);
 end;
 
-
 { TFile }
 
 procedure TFile_ReadAllText(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1420,7 +1395,6 @@ procedure TFile_WriteAllText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TFile.WriteAllText(Args.Values[0], Args.Values[1]);
 end;
-
 
 { TPerlRegEx }
 
@@ -1621,7 +1595,6 @@ begin
   TPerlRegEx(Args.Obj).Replacement := String(Value);
 end;
 
-
 { JsonDataObjects }
 
 procedure JsonDataObjects_Write_LineBreak(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1643,7 +1616,6 @@ procedure JsonDataObjects_Write_NullConvertsToValueTypes(var Value: Variant; Arg
 begin
   JsonSerializationConfig.NullConvertsToValueTypes := Args.Values[0];
 end;
-
 
 { TJsonBaseObject }
 
@@ -1750,7 +1722,6 @@ procedure TJsonBaseObject_ToString(var Value: Variant; Args: TJvInterpreterArgs)
 begin
   Value := TJsonBaseObject(Args.Obj).ToString;
 end;
-
 
 { TJsonArray }
 
@@ -1950,8 +1921,6 @@ begin
   TJsonArray(Args.Obj).V[Args.Values[0]] := Value;
 end;
 
-
-
 { TJsonObject }
 
 procedure TJsonObject_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -2129,9 +2098,7 @@ begin
   TJsonObject(Args.Obj).Values[Args.Values[0]].VariantValue := Value;
 end;
 
-
-
-
+{ Registration }
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -2399,7 +2366,7 @@ begin
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
     AddHandler('CheckLst', 'TNotifyEvent', TJvInterpreterCheckListBoxEvents, @TJvInterpreterCheckListBoxEvents.OnClickCheck);
 
-   { TComboBox }
+    { TComboBox }
     AddGet(TComboBox, 'DropDownCount', TComboBox_Read_DropDownCount, 0, [varEmpty], varEmpty);
     AddSet(TComboBox, 'DropDownCount', TComboBox_Write_DropDownCount, 0, [varEmpty]);
 
