@@ -761,7 +761,12 @@ begin
   if wbSimpleRecords then
     wbOFST := wbByteArray(OFST, 'Offset Data')
   else
-    wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter).IncludeFlag(dfCollapsed), 0);
+    wbOFST := wbArray(OFST, 'Offset Data',
+                wbArray('Row',
+                  wbInteger('Column', itU32, nil, cpIgnore),
+                  wbOffsetDataColsCounter, cpIgnore)
+                .IncludeFlag(dfCollapsed)
+                .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);

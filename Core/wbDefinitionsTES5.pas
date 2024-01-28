@@ -13158,7 +13158,7 @@ begin
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-    wbOFST
+    wbOFST.IncludeFlag(dfCollapsed)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
