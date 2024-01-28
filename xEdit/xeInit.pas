@@ -927,6 +927,7 @@ begin
       wbLoadBSAs            := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbCanSortINFO         := True;
+      wbHasAddedESLSupport := (wbGameMode = gmTES5VR) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
     end;
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary      := True;

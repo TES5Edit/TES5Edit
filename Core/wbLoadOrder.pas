@@ -928,14 +928,12 @@ var
     end;
   end;
 
-var
-  i: Integer;
 begin
   if _SimulatedLoadDisabled then
     raise Exception.Create('Simulated Load has been disabled');
 
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do begin
+  for var lModuleIdx := Low(_Modules) to High(_Modules) do
+    with _Modules[lModuleIdx] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
       miFileID := TwbFileID.Create(-1);
@@ -945,11 +943,20 @@ begin
   _NextLightSlot := 0;
   SetLength(NewLoadOrder, Length(_Modules));
   NewLoadOrderCount := 0;
-  for i := Low(Self) to High(Self) do
-    with Self[i]^ do
+  for var lSelfIdx := Low(Self) to High(Self) do
+    with Self[lSelfIdx]^ do
       if miFlags * [mfActive, mfForceLoad] <> [] then
-        Load(Self[i]);
+        Load(Self[lSelfIdx]);
   SetLength(NewLoadOrder, NewLoadOrderCount);
+
+  var lActiveCount := 0;
+  for var lNewLoadOrderIdx := Low(NewLoadOrder) to High(NewLoadOrder) do
+    with NewLoadOrder[lNewLoadOrderIdx]^ do
+      if miFlags * [mfActive] <> [] then
+        Inc(lActiveCount);
+  if lActiveCount < 1 then
+    Exit(nil);
+
   Result := NewLoadOrder;
 end;
 

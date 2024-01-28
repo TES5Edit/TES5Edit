@@ -4,6 +4,20 @@ If you share you mods on Nexus Mods and use xEdit as a major component in develo
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5c?
+
+## ESL supported in Skyrim VR
+
+When using TES5VREdit, if the installed "Skyrim VR ESL Support" SKSE plugin is detected, xEdit activates now ESL support.
+
+## Bugfixes
+
+* (reported on discord) - spurious access violations
+
+## Minor Changes
+
+* #1277 - FNV: Update CTDA data for newest NVSE plugins
+
 # What's New in xEdit 4.1.5b?
 
 ## Extended FormID Range in Skyrim Special Edition
@@ -13,7 +27,7 @@ This works exactly the same as Extended FormID Range support for Fallout 4 with 
 
 ### Important
 
-Modules that have masters with version 1.71 should themselves be version 1.71 modules, otherwise there will be errors when trying to refernce or override any records with a FormID that falls into the Extended Range (001-7FF).
+Modules that have masters with version 1.71 should themselves be version 1.71 modules, otherwise there will be errors when trying to reference or override any records with a FormID that falls into the Extended Range (001-7FF).
 
 ## Bugfixes
 

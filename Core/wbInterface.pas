@@ -171,6 +171,7 @@ var
   wbCopyIsRunning                    : Integer    = 0;
   wbIgnoreESL                        : Boolean    = False;
   wbPseudoESL                        : Boolean    = False;
+  wbHasAddedESLSupport               : Boolean    = False;
   wbIgnoreOverlay                    : Boolean    = False;
   wbPseudoOverlay                    : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
@@ -5397,7 +5398,7 @@ end;
 
 function wbIsEslSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]);
+  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or wbHasAddedESLSupport;
 end;
 
 function wbIsOverlaySupported: Boolean; inline;

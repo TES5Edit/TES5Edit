@@ -8580,7 +8580,7 @@ begin
         if Assigned(aElement) then begin
           for i := 0 to Pred(Container.ElementCount) do begin
             Element := Container.Elements[i];
-            if dfNoCopyAsOverride in Element.Def.DefFlags then
+            if Assigned(Element.Def) and (dfNoCopyAsOverride in Element.Def.DefFlags) then
               if GetMasterOrSelf.Equals(Element.ContainingMainRecord.MasterOrSelf) then
                 Continue;
             Assign(Element.SortOrder, Element, aOnlySK);
