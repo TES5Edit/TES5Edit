@@ -17377,6 +17377,8 @@ end;
     .IncludeFlag(dfExcludeFromBuildRef)
     .IncludeFlag(dfCollapsed),
 
+    wbUnknown(BNAM),
+
     wbInteger(INTV, 'Unknown', itU32),                                // Ignored by the runtime, 4 bytes loaded in CK
 
     wbInteger(INCC, 'Internal Cell Count', itU32),                    // Size of some array of 12 bytes elements
