@@ -12708,7 +12708,7 @@ begin
       0, nil, nil, cpNormal, False{, wbTES4ONAMDontShow}),
     wbByteArray(SCRN, 'Screenshot'),
     wbUnknown(INTV),
-    wbUnknown(INCC)
+    wbInteger(INCC, 'Interior Cell Count', itU32)
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(PLYR, 'Player Reference', [
