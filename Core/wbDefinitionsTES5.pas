@@ -8012,7 +8012,12 @@ begin
         wbArray('Triangles', wbByteArray('Triangle', 16), -1).IncludeFlag(dfNotAlignable),
         wbArray('Edge Links',
           wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4),
+            wbInteger('Type', itU32, wbEnum([], [
+              0, 'Portal',
+              $01, 'Ledge Up',
+              $02, 'Ledge Down',
+              $03, 'Enable/Disable Portal'
+            ]), cpIgnore),
             wbFormIDCk('Navmesh', [NAVM]),
             wbInteger('Triangle', itS16)
           ])
