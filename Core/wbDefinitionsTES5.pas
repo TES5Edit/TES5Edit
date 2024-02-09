@@ -6510,8 +6510,8 @@ begin
     wbString(XNAM, 'Water Noise Texture'),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
-    wbInteger(XWCN, 'Water Current Count', itU32, nil, cpBenign), // leftover
-    wbInteger(XWCS, 'Water Current Count (Old)', itU32, nil, cpBenign), // leftover
+    wbInteger(XWCN, 'Water Current Count', itU32, nil, cpBenign),
+    wbInteger(XWCS, 'Water Current Count (Old)', itU32, nil, cpBenign),
     wbArray(XWCU, 'Water Currents',
       wbStruct('Water Velocities', [
         wbVec3('Unknown Velocity'),
