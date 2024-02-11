@@ -366,7 +366,7 @@ begin
     StrictDelimiter := True;
     DelimitedText := aSignatures;
     for i := 0 to Pred(Count) do begin
-      s := AnsiString(Strings[i]);
+      s := Trim(AnsiString(Strings[i]));
       if Length(s) >= SizeOf(TwbSignature) then begin
         SetLength(Result, Succ(Length(Result)));
         System.Move(s[1], Result[Pred(Length(Result))][0], SizeOf(TwbSignature));
