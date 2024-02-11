@@ -12812,7 +12812,6 @@ begin
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
       wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
     ]);
 
@@ -12839,7 +12838,6 @@ begin
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
       wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
     ]);
 
