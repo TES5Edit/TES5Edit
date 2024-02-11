@@ -8783,7 +8783,7 @@ begin
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000040}  6, 'No Underarmor Scaling',
-      {0x00000200}  9, 'Unknown 9',
+      {0x00000200}  9, 'Has Sculpt Data',
       {0x40000000} 30, 'Hi-Res 1st Person Only'
     ])), [
     wbEDID,
@@ -11922,11 +11922,11 @@ begin
       {0x00000004} 'Show All Text',
       {0x00000008} 'Repeat Conditions While True',
       {0x00000010} 'Interruptible',
-      {0x00000020} 'Unknown 5',
+      {0x00000020} 'Has Player Dialogue',
       {0x00000040} 'Prevent Player Exit Dialogue',
       {0x00000080} 'Unknown 7',
       {0x00000100} 'Unknown 8',
-      {0x00000200} 'Unknown 9',
+      {0x00000200} 'Pause Actors Current Scenes',
       {0x00000400} 'Unknown 10',
       {0x00000800} 'Disable Dialogue Camera',
       {0x00001000} 'No Follower Idle Chatter'
@@ -15286,7 +15286,7 @@ begin
       wbArray('Unknown', wbFormID('Unknown'))
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
-    wbInteger(INCC, 'Internal Cell Count', itU32)                     // Size of some array of 12 bytes elements
+    wbInteger(INCC, 'Interior Cell Count', itU32)                     // Size of some array of 12 bytes elements
   ], True, nil, cpNormal, True, wbRemoveOFST);
 
   wbRecord(PLYR, 'Player Reference', [
@@ -16291,7 +16291,7 @@ begin
     wbEDID,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
-    wbUnknown(PNAM)
+    wbFormIDCk(PNAM, 'Pack-In', [PKIN])
   ]);
 
   {wbRecord(RGDL, 'RGDL', [
@@ -16301,20 +16301,28 @@ begin
   wbRecord(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
-    wbRArray('Scenes',
+    wbRArray('Scene Layout',
       wbRStruct('Scene', [
         wbFormIDCk(SNAM, 'Scene', [SCEN]),
-        wbStruct(XNAM, 'Unknown', [
-          wbInteger('Unknown', itS32),
-          wbInteger('Unknown', itS32)
+        wbStruct(XNAM, 'Coordinates', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
         ])
+        .SetSummaryKeyOnValue([0, 1])
+        .SetRequired
       ], [])
+      .SetSummaryKey([0, 1])
+      .IncludeFlag(dfCollapsed)
     ),
     wbUnknown(VNAM, cpNormal, True),
-    wbRArray('Unknown', wbStruct(XNAM, 'Unknown', [
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS32)
-    ])),
+    wbRArray('Original Coordinates?',
+      wbStruct(XNAM, 'Coordinates', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
+      ])
+      .SetSummaryKeyOnValue([0, 1])
+      .IncludeFlag(dfCollapsed)
+    ),
     wbUnknown(VNAM, cpNormal, True)
   ]);
 
@@ -16349,7 +16357,7 @@ begin
     wbEDID,
     wbInteger(PNAM, 'Priority', itU16),
     wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
-      wbFormIDCk('Categoty', [SNCT]),
+      wbFormIDCk('Category', [SNCT]),
       wbFloat('Multiplier')
     ]))
   ]);
