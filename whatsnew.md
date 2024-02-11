@@ -10,13 +10,23 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 When using TES5VREdit, if the installed "Skyrim VR ESL Support" SKSE plugin is detected, xEdit activates now ESL support.
 
-## Bugfixes
+## Bugfixes / Minor Changes
 
-* (reported on discord) - spurious access violations
-
-## Minor Changes
-
+* #1273 - [TES5/SSE] Update Navmesh/NAVI definitions/decoding
 * #1277 - FNV: Update CTDA data for newest NVSE plugins
+* #1279 - [TES5/SSE] Update Offset Data 
+* #1280 - [TES5/SSE] Update Location LCEP/ACEP 
+* #1282 - [TES5/SSE,FO4] Update Landscape 
+* #1283 - Scripting: Added more math functions 
+* #1284 - Miscellaneous scripting changes
+* #1285 - [SF] new BNAM subrecord on header from patch 1.9.51 
+* #1286 - Misc Flag, Unknown Decodes; Typo Fixes
+ * [FO4] ARMA Flag Unknown 9 -> Has Sculpt Data
+ * [FO4] SCEN Flags Unknown 5, 9 -> Has Player Dialogue, Pause Actors Current Scenes [FO4] RFGP PNAM ? Pack-In
+ * [FO4/76] SCCO XNAM -> Coordinates for use in the CK's visual layout [TES5, FO4/76] Misc typo fixes
+* #1287 - [SSE] Update XCLC in CELL
+* #1290 - [TES5/SSE] Water currents 
+* (reported on discord) - spurious access violations
 
 # What's New in xEdit 4.1.5b?
 
