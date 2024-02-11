@@ -21,9 +21,9 @@ When using TES5VREdit, if the installed "Skyrim VR ESL Support" SKSE plugin is d
 * #1284 - Miscellaneous scripting changes
 * #1285 - [SF] new BNAM subrecord on header from patch 1.9.51 
 * #1286 - Misc Flag, Unknown Decodes; Typo Fixes
- * [FO4] ARMA Flag Unknown 9 -> Has Sculpt Data
- * [FO4] SCEN Flags Unknown 5, 9 -> Has Player Dialogue, Pause Actors Current Scenes [FO4] RFGP PNAM ? Pack-In
- * [FO4/76] SCCO XNAM -> Coordinates for use in the CK's visual layout [TES5, FO4/76] Misc typo fixes
+  * [FO4] ARMA Flag Unknown 9 -> Has Sculpt Data
+  * [FO4] SCEN Flags Unknown 5, 9 -> Has Player Dialogue, Pause Actors Current Scenes [FO4] RFGP PNAM ? Pack-In
+  * [FO4/76] SCCO XNAM -> Coordinates for use in the CK's visual layout [TES5, FO4/76] Misc typo fixes
 * #1287 - [SSE] Update XCLC in CELL
 * #1290 - [TES5/SSE] Water currents 
 * (reported on discord) - spurious access violations
