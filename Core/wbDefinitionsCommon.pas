@@ -503,6 +503,21 @@ begin
     .IncludeFlagOnValue(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 
+  if wbGameMode in [gmSSE] then
+    wbCellGrid :=
+      wbStruct(XCLC, 'Grid', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32),
+        wbInteger('Land Flags', itU8, wbLandFlags),
+        wbByteArray('Unused', 3, cpIgnore)
+      ], cpNormal, False, nil, 2)
+      .SetSummaryKeyOnValue([0, 1, 2])
+      .SetSummaryPrefixSuffixOnValue(0, '(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryPrefixSuffixOnValue(2, ' {Land: ', '}')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed);
+
   if wbGameMode <= gmFNV then
     wbCinematicIMAD :=
       wbRStruct('Cinematic', [
