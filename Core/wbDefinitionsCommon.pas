@@ -342,9 +342,10 @@ end;
 
 function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
-  Container : IwbDataContainer;
-  Element   : IwbElement;
-  fResult   : Extended;
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  fResult: Extended;
+  MinX, MaxX: Integer;
 begin
   Result := 0;
 
@@ -357,25 +358,20 @@ begin
   if not Supports(Container.Container, IwbDataContainer, Container) then
     Exit;
 
+  // Retrieve the minimum X value
   Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
   if not Assigned(Element) then
     Exit;
+  MinX := Element.NativeValue;
 
-  fResult :=  Element.NativeValue;
-  if (fResult >= MaxInt) or (fResult <= 0) then
-    Result := 0
-  else
-    Result := Trunc(fResult);
-
+  // Retrieve the maximum X value
   Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
   if not Assigned(Element) then
     Exit;
+  MaxX := Element.NativeValue;
 
-  fResult :=  Element.NativeValue;
-  if (fResult >= (MaxInt - Result + 1)) or (fResult <= 1) then
-    Result := 1
-  else
-    Result := Trunc(fResult) - Result + 1;
+  // Calculate the total number of columns
+  Result := MaxX - MinX + 1;
 end;
 
 function wbTimeInterpolators(const aSignature: TwbSignature; const aName: string): IwbRecordMemberDef;
@@ -765,7 +761,12 @@ begin
   if wbSimpleRecords then
     wbOFST := wbByteArray(OFST, 'Offset Data')
   else
-    wbOFST := wbArray(OFST, 'Offset Data', wbArray('Rows', wbInteger('Offset', itU32), wbOffsetDataColsCounter), 0);
+    wbOFST := wbArray(OFST, 'Offset Data',
+                wbArray('Row',
+                  wbInteger('Column', itU32, nil, cpIgnore),
+                  wbOffsetDataColsCounter, cpIgnore)
+                .IncludeFlag(dfCollapsed)
+                .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
