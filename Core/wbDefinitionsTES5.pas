@@ -6510,18 +6510,15 @@ begin
     wbString(XNAM, 'Water Noise Texture'),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
-    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbFloat('X Offset'),
-      wbFloat('Y Offset'),
-      wbFloat('Z Offset'),
-      wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
-      wbFloat('Y Angle'),
-      wbFloat('Z Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
+    wbInteger(XWCN, 'Water Current Count', itU32, nil, cpBenign),
+    wbInteger(XWCS, 'Water Current Count (Old)', itU32, nil, cpBenign),
+    wbArray(XWCU, 'Water Currents',
+      wbStruct('Water Velocities', [
+        wbVec3('Unknown Velocity'),
+        wbByteArray('Unknown', 4)
+      ]))
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfNotAlignable),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbOwnership(wbXOWN, [XRGD]),
     wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
@@ -12302,27 +12299,30 @@ begin
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
-    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbFloat('X Offset'),
-      wbFloat('Y Offset'),
-      wbFloat('Z Offset'),
+    wbInteger(XWCN, 'Water Current Count', itU32, nil, cpBenign),
+    wbInteger(XWCS, 'Water Current Count (Old)', itU32, nil, cpBenign),
+    wbStruct(XWCU, 'Water Currents', [
+      wbVec3('Linear Velocity'),
       wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
-      wbFloat('Y Angle'),
-      wbFloat('Z Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
-
-    wbStruct(XCVL, 'Unknown', [
+      wbVec3('Angular Velocity'),
       wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
+      wbVec3('Unknown Velocity'),
       wbByteArray('Unknown', 4)
+    ])
+    .IncludeFlag(dfCollapsed),
+    wbStruct(XCVL,'Water Current Linear Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
     ]),
-    wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-    wbUnknown(XCZA),
-    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
+    wbStruct(XCVR,'Water Current Rotational Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ]),
+    wbFormIDCk(XCZC, 'Water Current Zone Cell', [CELL, NULL]),
+    wbFormIDCk(XCZR, 'Water Current Zone Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+    wbByteArray(XCZA, 'Water Current Zone Action', 4),
     wbXSCL,
     wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
 
