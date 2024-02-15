@@ -1,10 +1,17 @@
 {
   Search for references in selected records and check their load order.
+  
+  When searching for ESL flagged file use 'FE nnn' with a space between FE and
+  the file index nnn. If searching for a non ESL flagged file you must also
+  include leading zeros.
+  
+  The game master would be '00', the next non ESL would be '01'. The first ESL
+  flagged file would be 'FE 000'. Then 'FE 001' and so forth.
 }
 unit UserScript;
 
 var
-  ModLoadOrder: integer;
+  ModLoadOrder: string;
 
 function Initialize: integer;
 var
@@ -14,7 +21,7 @@ begin
     Exit;
   if s = '' then
     Exit;
-  ModLoadOrder := StrToInt64('$' + s);
+  ModLoadOrder := UpperCase(s);
 end;
 
 function Process(e: IInterface): integer;
@@ -24,12 +31,12 @@ var
 begin
   Result := 0;
 
-  if (ElementType(e) = etMainRecord) and (GetLoadOrder(GetFile(MasterOrSelf(e))) = ModLoadOrder) then
+  if (ElementType(e) = etMainRecord) and (SameText(GetLoadOrderFileID(GetFile(MasterOrSelf(e))), ModLoadOrder)) then
     AddMessage(FullPath(e) + ' is override');
   
   ref := LinksTo(e);
   if Assigned(ref) then
-    if GetLoadOrder(GetFile(ref)) = ModLoadOrder then
+    if SameText(GetLoadOrderFileID(GetFile(ref)), ModLoadOrder) then
       AddMessage(FullPath(e) + ' = ' + Name(ref));
   
   if CanContainFormIDs(e) then
