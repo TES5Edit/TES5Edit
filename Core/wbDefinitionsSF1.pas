@@ -12639,6 +12639,7 @@ end;
     }
     wbSoundReference(MTSH),
     wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
+    wbUnknown(MSTF),
     wbConditions,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);

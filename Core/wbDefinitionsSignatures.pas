@@ -807,6 +807,7 @@ const
   MSSA : TwbSignature = 'MSSA'; { New To Starfield }
   MSSI : TwbSignature = 'MSSI'; { New To Starfield }
   MSSS : TwbSignature = 'MSSS'; { New To Starfield }
+  MSTF : TwbSignature = 'MSTF'; { New To Starfield }
   MSTT : TwbSignature = 'MSTT';
   MSWP : TwbSignature = 'MSWP'; { New to Fallout 4 }
   MTNM : TwbSignature = 'MTNM'; { New to Skyrim }
