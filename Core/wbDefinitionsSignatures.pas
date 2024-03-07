@@ -522,6 +522,7 @@ const
   FURN : TwbSignature = 'FURN';
   FVLD : TwbSignature = 'FVLD'; { New To Starfield }
   FVPA : TwbSignature = 'FVPA'; { New To Fallout 4 }
+  FXPD : TwbSignature = 'FXPD'; { New To Starfield }
   G0TX : TwbSignature = 'G0TX';
   GBFM : TwbSignature = 'GBFM'; { New To Starfield }
   GBFT : TwbSignature = 'GBFT'; { New To Starfield }

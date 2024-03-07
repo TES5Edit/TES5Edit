@@ -19036,6 +19036,15 @@ end;
     wbBaseFormComponents
   ]);
 
+  wbRecord(FXPD, 'Facial Expression', [
+    wbEDID,
+    wbFULL,
+    wbRArray('Unknown', wbRStruct('Unknown', [
+        wbString(MNAM),
+        wbFloat(MWGT)
+    ], []))
+  ]);
+
   {subrecords checked against Starfield.esm}
   wbRecord(CNDF, 'Condition Form', [
     wbEDID,
@@ -20495,6 +20504,7 @@ end;
   wbAddGroupOrder(TODD); {SF1Dump: no errors} {Reflection and BFCs only}
   wbAddGroupOrder(AVMD); {SF1Dump: no errors}
   wbAddGroupOrder(CHAL); {SF1Dump: no errors}
+  wbAddGroupOrder(FXPD); {SF1Dump: no errors}
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
