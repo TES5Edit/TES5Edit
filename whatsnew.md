@@ -4,6 +4,24 @@ If you share you mods on Nexus Mods and use xEdit as a major component in develo
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5d?
+
+## Bugfixes / Minor Changes
+
+* #1301 - [SF] Update TMLM to restrict UNAM/TNAM based on terminal menu type
+* #1302 - [SF] Update for new FXPD record and MUST/MSTF subrecord
+* #1303 - [ALL] Added Steam VDF parsing to find installation paths for supported games
+* #1294 - Scripting: Restored previously replaced script functions
+* #1296 - [FNV] Update CTDA data for SUP & ShowOff
+* #1293 - [TES5/SSE] Additional decoding for Dialogue View
+
+## Steam VDF Parsing
+
+Support for detecting the Steam libraries and reading installation paths for supported games directly from Steam. This will
+only work for games purchased through Steam. Not shortcuts for games added to the Steam game list. This should alleviate
+most occurrences where xEdit will fail to locate a game if it was moved after install, or if an update removed the registry
+entries.
+
 # What's New in xEdit 4.1.5c?
 
 ## ESL supported in Skyrim VR
