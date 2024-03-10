@@ -4748,6 +4748,7 @@ var
   wbToolName         : string;
   wbSourceName       : string;
   wbLanguage         : string;
+  wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
     tmOnamUpdate,
