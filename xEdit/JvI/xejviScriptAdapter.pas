@@ -1450,6 +1450,15 @@ begin
     Value := _File.LoadOrderFileID.ToString;
 end;
 
+procedure IwbFile_GetLoadOrder(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := -1;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.LoadOrder;
+end;
+
 procedure IwbFile_GetNewFormID(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
@@ -2195,6 +2204,7 @@ begin
     { IwbFile }
     AddFunction(cUnit, 'GetFileName', IwbFile_GetFileName, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetLoadOrderFileID', IwbFile_GetLoadOrderFileID, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetLoadOrder', IwbFile_GetLoadOrder, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);

@@ -193,6 +193,17 @@ begin
     end else
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
+  else if SameText(Identifier, 'FileByLoadOrder') then begin
+    if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
+      for i := Low(Files) to High(Files) do
+        if Files[i].LoadOrder = Integer(Args.Values[0]) then begin
+          Value := Files[i];
+          Break;
+        end;
+      Done := True;
+    end else
+      JvInterpreterError(ieDirectInvalidArgument, 0);
+  end
   else if SameText(Identifier, 'FileByName') then begin
     if (Args.Count = 1) and VarIsStr(Args.Values[0]) then begin
       Value := Null;
