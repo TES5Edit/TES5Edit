@@ -20208,6 +20208,8 @@ end;
             {0} wbLStringKC(UNAM, 'Display Text', 0, cpTranslate).SetRequired,
             {1} wbFormIDCk(TNAM, 'Submenu - Terminal', [NULL, TMLM]).SetRequired,
             {2} wbEmpty(UNAM) // placeholder - can't actually be set
+                .IncludeFlag(dfInternalEditOnly)
+                .IncludeFlag(dfDontSave)
           ], [], cpNormal, False, {Don't show callback}
             function(const aElement: IwbElement): Boolean
             var
