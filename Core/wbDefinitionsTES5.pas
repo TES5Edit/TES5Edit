@@ -9688,12 +9688,20 @@ begin
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
+    wbRArray('Branches',
+      wbFormIDCk(BNAM, 'Branch', [DLBR])),
+    wbRArray('Topics',
+      wbFormIDCK(TNAM, 'Topic', [DIAL])),
+    wbInteger(ENAM, 'View Category', itu32,
+      wbEnum([], [
+        $00, 'Dialogue Branches',
+        $07, 'Dialogue Topics'
+      ])),
+    wbInteger(DNAM, 'Show All Text', itU8,
+      wbEnum([], [
+        $00, 'False',
+        $01, 'True'
+      ]))
   ]);
 
   wbRecord(WOOP, 'Word of Power', [
