@@ -18529,7 +18529,7 @@ end;
       wbInteger(csIncludeCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbUnknown(2),
-      wbLenString('Name', 4),
+      wbLenString('Name', 4).IncludeFlag(dfHasZeroTerminator),
       wbUnknown(2),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
