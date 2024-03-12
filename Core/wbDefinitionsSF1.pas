@@ -18529,7 +18529,14 @@ end;
       wbInteger(csIncludeCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbUnknown(2),
-      wbLenString('Name', 4).IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Name').SetFormater(wbStringEnum([
+          'Spaceship_InstanceData',
+          'TESFlora_InstanceData',
+          'TESNPC_InstanceData',
+          'TESObjectARMOR_InstanceData',
+          'TESObjectWEAP_InstanceData',
+          'NONE'
+        ])).IncludeFlag(dfHasZeroTerminator),
       wbUnknown(2),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
