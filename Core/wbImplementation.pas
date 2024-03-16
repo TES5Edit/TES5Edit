@@ -9805,7 +9805,7 @@ begin
 
   Include(cntStates, csInitOnce);
 
-  if wbCanSortINFO and wbSortINFO then
+  if not wbBuildingRefsParallel and wbCanSortINFO and wbSortINFO then
     if not (GetIsDeleted or GetIsPartialForm) and wbBeginInternalEdit(False) then try
       if wbFillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
@@ -17651,7 +17651,7 @@ begin
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
 
-    if wbCanSortINFO and (grStruct.grsGroupType = 7) then begin
+    if not wbBuildingRefsParallel and wbCanSortINFO and (grStruct.grsGroupType = 7) then begin
 
       if not wbSortINFO then
         Exit;

@@ -59,7 +59,7 @@ var
     Minor   : 1;
     Release : 5;
     Build   : 'd';
-    Title   : '';
+    Title   : 'DIAL Hotfix';
   );
 
 const
