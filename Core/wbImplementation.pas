@@ -3777,7 +3777,7 @@ begin
     (
       (wbGameMode = gmTES3)
       or
-      ((wbGameMode in [gmSSE, gmEnderalSE]) and (GetVersion >= 1.709))
+      (((wbGameMode in [gmSSE, gmEnderalSE]) or ((wbGameMode = gmTES5VR) and wbHasAddedESLSupport)) and (GetVersion >= 1.709))
       or
       ((wbGameMode = gmFO4) and (GetVersion >= 1.0))
       or
