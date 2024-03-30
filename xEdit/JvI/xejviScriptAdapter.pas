@@ -37,7 +37,7 @@ uses
   JvInterpreter_Classes,
   JvInterpreter_Dialogs,
   JvInterpreter_Windows,
-  //JvInterpreter_Math,
+  JvInterpreter_Math,
   //JvInterpreter_JvEditor,
   JvInterpreter_Buttons,
   JvInterpreter_Comctrls,
@@ -2299,6 +2299,7 @@ begin
   JvInterpreter_Forms.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Dialogs.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   JvInterpreter_Menus.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
+  JvInterpreter_Math.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   //JvInterpreter_JvEditor.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   xejviScriptAdapterMisc.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
   xejviScriptAdapterDF.RegisterJvInterpreterAdapter(GlobalJvInterpreterAdapter);
