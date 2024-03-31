@@ -1897,11 +1897,7 @@ begin
     AddConst('System', 'varByRef', Ord(varByRef));
     AddConst('System', 'MaxInt', Ord(MaxInt));
     AddConst('System', 'MinInt', Low(Integer));
-    AddConst('System', 'Pi', Single(Pi));
-    AddConst('Math', 'Infinity', Infinity);
-    AddConst('Math', 'NaN', NaN);
     AddConst('Math', 'NegativeValue', Ord(NegativeValue));
-    AddConst('Math', 'NegInfinity', NegInfinity);
     AddConst('Math', 'pmDouble', Ord(pmDouble));
     AddConst('Math', 'pmExtended', Ord(pmExtended));
     AddConst('Math', 'pmReserved', Ord(pmReserved));
