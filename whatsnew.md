@@ -1,8 +1,26 @@
-# Request for Mod Authors using xEdit
+ï»¿# Request for Mod Authors using xEdit
 
 If you share you mods on Nexus Mods and use xEdit as a major component in development, please consider donating a small share of your Donation Points (DP) to `ElminsterAU` to support the ongoing development of this tool. The recommended donation is ~10%.
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
+
+# What's New in xEdit 4.1.5d?
+
+## Bugfixes / Minor Changes
+
+* #1301 - [SF] Update TMLM to restrict UNAM/TNAM based on terminal menu type
+* #1302 - [SF] Update for new FXPD record and MUST/MSTF subrecord
+* #1303 - [ALL] Added Steam VDF parsing to find installation paths for supported games
+* #1294 - Scripting: Restored previously replaced script functions
+* #1296 - [FNV] Update CTDA data for SUP & ShowOff
+* #1293 - [TES5/SSE] Additional decoding for Dialogue View
+
+## Steam VDF Parsing
+
+Support for detecting the Steam libraries and reading installation paths for supported games directly from Steam. This will
+only work for games purchased through Steam. Not shortcuts for games added to the Steam game list. This should alleviate
+most occurrences where xEdit will fail to locate a game if it was moved after install, or if an update removed the registry
+entries.
 
 # What's New in xEdit 4.1.5c?
 
@@ -10,13 +28,23 @@ xEdit is crucial to our shared modding community and your contribution - no matt
 
 When using TES5VREdit, if the installed "Skyrim VR ESL Support" SKSE plugin is detected, xEdit activates now ESL support.
 
-## Bugfixes
+## Bugfixes / Minor Changes
 
-* (reported on discord) - spurious access violations
-
-## Minor Changes
-
+* #1273 - [TES5/SSE] Update Navmesh/NAVI definitions/decoding
 * #1277 - FNV: Update CTDA data for newest NVSE plugins
+* #1279 - [TES5/SSE] Update Offset Data 
+* #1280 - [TES5/SSE] Update Location LCEP/ACEP 
+* #1282 - [TES5/SSE,FO4] Update Landscape 
+* #1283 - Scripting: Added more math functions 
+* #1284 - Miscellaneous scripting changes
+* #1285 - [SF] new BNAM subrecord on header from patch 1.9.51 
+* #1286 - Misc Flag, Unknown Decodes; Typo Fixes
+  * [FO4] ARMA Flag Unknown 9 -> Has Sculpt Data
+  * [FO4] SCEN Flags Unknown 5, 9 -> Has Player Dialogue, Pause Actors Current Scenes [FO4] RFGP PNAM ? Pack-In
+  * [FO4/76] SCCO XNAM -> Coordinates for use in the CK's visual layout [TES5, FO4/76] Misc typo fixes
+* #1287 - [SSE] Update XCLC in CELL
+* #1290 - [TES5/SSE] Water currents 
+* (reported on discord) - spurious access violations
 
 # What's New in xEdit 4.1.5b?
 
@@ -132,7 +160,7 @@ Various record types contain FormID fields that lack the necessary engine code t
 
 #### Pack-Ins (PKIN) Anomalies
 
-Overriding Pack-Ins (`PKIN`)—even with an exact byte-for-byte copy—results in unpredictable behavior.
+Overriding Pack-Ins (`PKIN`)â€”even with an exact byte-for-byte copyâ€”results in unpredictable behavior.
 
 #### Generic Base Form (GBFM) Crashes
 
@@ -140,7 +168,7 @@ If `GBFM` records overridden in `BlueprintShips-Starfield.esm` are copied as an 
 
 #### Fragility in FormID Formats with ESL Flagging
 
-Compared to previous games, changes in the format of file-specific FormIDs have been observed when any masters are flagged as ESL. This alteration significantly compromises the internal structure of all affected modules. Should the ESL flag status of a master change in either direction, dependent modules will become misreadable—unless all masters revert to their original ESL state.
+Compared to previous games, changes in the format of file-specific FormIDs have been observed when any masters are flagged as ESL. This alteration significantly compromises the internal structure of all affected modules. Should the ESL flag status of a master change in either direction, dependent modules will become misreadableâ€”unless all masters revert to their original ESL state.
 
 To elaborate on the term "misreadable": While the file remains structurally valid, allowing the game, CK, and other tools to read it, the association between the contained records and their respective modules becomes scrambled. As a result, a FormID that once referenced, or a record that overrode a record in ModA, may unexpectedly appear to belong to ModB. This shift could potentially lead to overriding or referencing entirely different records of completely different types.
 
@@ -166,7 +194,7 @@ To navigate around the array of engine bugs and less-than-ideal design decisions
 
 #### Reflection-Based Data Streams
 
-Records that contain data streams reliant on reflection—a programming technique unrelated to in-game visual reflections—cannot be copied as overrides. This limitation stems from the fact that these data streams are yet to be fully decoded. They may contain FormIDs that would require remapping when copied to a different module.
+Records that contain data streams reliant on reflectionâ€”a programming technique unrelated to in-game visual reflectionsâ€”cannot be copied as overrides. This limitation stems from the fact that these data streams are yet to be fully decoded. They may contain FormIDs that would require remapping when copied to a different module.
 
 #### Unmapped FormID Fields
 
@@ -196,7 +224,7 @@ When you create a new module, SF1Edit will automatically add `Starfield.esm` and
 
 #### Official Game Modules Are Read-Only
 
-Be aware that the official game modules—namely `Starfield.esm`, `OldMars.esm`, `Constellation.esm`, and `BlueprintShips-Starfield.esm`—are read-only. You will not be able to make modifications to these modules.
+Be aware that the official game modulesâ€”namely `Starfield.esm`, `OldMars.esm`, `Constellation.esm`, and `BlueprintShips-Starfield.esm`â€”are read-only. You will not be able to make modifications to these modules.
 
 ### The Case for Exclusively Supporting .esm Files in Starfield
 
@@ -250,7 +278,7 @@ To access this feature, launch xEdit in Morrowind game mode using the `-tes3` an
 
 ### Accommodating FormID Differences
 
-Morrowind's file structure diverges significantly from the architectures of later Bethesda games, particularly concerning the absence of FormIDs—a core element in xEdit's design. To bridge this gap, xEdit generates "virtual" FormIDs for all TES3 records, enabling coherent interaction within the xEdit environment.
+Morrowind's file structure diverges significantly from the architectures of later Bethesda games, particularly concerning the absence of FormIDsâ€”a core element in xEdit's design. To bridge this gap, xEdit generates "virtual" FormIDs for all TES3 records, enabling coherent interaction within the xEdit environment.
 
 ### Virtual Groups for Easier Display
 
@@ -268,7 +296,7 @@ Within the View tab, each node provides a collapsible interface. You can toggle 
 
 ### Bulk Operations with Ctrl Key
 
-For bulk operations, hold down the `Ctrl` key while toggling a node. This action will collapse or expand all nodes of the same type—useful for handling array elements, for example. This state is temporarily remembered and will be applied when navigating to other records. However, this setting is session-specific and will be lost upon restarting the program.
+For bulk operations, hold down the `Ctrl` key while toggling a node. This action will collapse or expand all nodes of the same typeâ€”useful for handling array elements, for example. This state is temporarily remembered and will be applied when navigating to other records. However, this setting is session-specific and will be lost upon restarting the program.
 
 ### Default Settings and User Customization
 
@@ -290,7 +318,7 @@ Where a summary represents color attributes, a visual sample of the color is ren
 
 ### Understanding MODT Subrecords
 
-The `MODT` subrecords, along with other subrecords sharing the same format, are now fully decoded. These subrecords primarily contain model-related information extracted from the .nif files. While the presence of this information doesn't appear to be critical for the game's operation—meaning that missing or incorrect `MODT` data doesn't seem to cause in-game issues—it is believed to serve optimization and read-ahead purposes.
+The `MODT` subrecords, along with other subrecords sharing the same format, are now fully decoded. These subrecords primarily contain model-related information extracted from the .nif files. While the presence of this information doesn't appear to be critical for the game's operationâ€”meaning that missing or incorrect `MODT` data doesn't seem to cause in-game issuesâ€”it is believed to serve optimization and read-ahead purposes.
 
 ### Texture File Hashing
 
@@ -308,7 +336,7 @@ To mitigate such issues, xEdit now automates the conversion of Model Information
 
 ### Introduction to Virtual Subrecords: INOM and INOA
 
-The `DIAL` record now features two new, virtual subrecords—`INOM` and `INOA`. It's crucial to understand that these subrecords are not part of the actual file format. They are neither saved by xEdit nor can they be modified by users.
+The `DIAL` record now features two new, virtual subrecordsâ€”`INOM` and `INOA`. It's crucial to understand that these subrecords are not part of the actual file format. They are neither saved by xEdit nor can they be modified by users.
 
 ### Importance of INFO Order
 

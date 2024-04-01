@@ -89,6 +89,7 @@ uses
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves,
   wbDefinitionsSF1,
+  wbSteamVDFParser,
   xeScriptHost;
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
@@ -358,6 +359,14 @@ begin
 
   if not wbFindCmdLineParam('D', wbDataPath) then begin
     wbDataPath := CheckAppPath;
+
+    if (wbDataPath = '') then
+      for var lID in wbGameSteamID.Split([',']) do
+        begin
+          wbDataPath := GetInstallPathBySteamID(lID);
+          if wbDataPath <> '' then
+            break;
+        end;
 
     if (wbDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
@@ -712,6 +721,7 @@ begin
     wbGameMode         := gmFNV;
     wbAppName          := 'FNV';
     wbGameName         := 'FalloutNV';
+    wbGameSteamID      := '22380,22490';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -720,6 +730,7 @@ begin
     wbGameMode         := gmFO3;
     wbAppName          := 'FO3';
     wbGameName         := 'Fallout3';
+    wbGameSteamID      := '22370,22300';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     ToolSources        := [tsPlugins];
   end
@@ -728,6 +739,7 @@ begin
     wbGameMode         := gmTES3;
     wbAppName          := 'TES3';
     wbGameName         := 'Morrowind';
+    wbGameSteamID      := '22320';
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
     ToolSources        := [tsPlugins];
@@ -738,6 +750,7 @@ begin
     wbGameMode         := gmTES4;
     wbAppName          := 'TES4';
     wbGameName         := 'Oblivion';
+    wbGameSteamID      := '22330,900883';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
   end
@@ -747,6 +760,7 @@ begin
     wbAppName          := 'TES5';
     wbGameName         := 'Skyrim';
     wbGameExeName      := 'TESV';
+    wbGameSteamID      := '72850';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -759,6 +773,7 @@ begin
     wbGameName2        := 'Enderal Special Edition';
     wbGameNameReg      := 'EnderalSE';
     wbGameMasterEsm    := 'Skyrim.esm';
+    wbGameSteamID      := '976620';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -769,6 +784,7 @@ begin
     wbGameName         := 'Enderal';
     wbGameExeName      := 'TESV';
     wbGameMasterEsm    := 'Skyrim.esm';
+    wbGameSteamID      := '933480';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -779,7 +795,7 @@ begin
     wbGameName         := 'Skyrim';
     wbGameName2        := 'Skyrim VR';
     wbGameExeName      := 'SkyrimVR';
-
+    wbGameSteamID      := '611670';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins];
   end
@@ -790,6 +806,7 @@ begin
     wbGameName         := 'Skyrim';
     wbGameExeName      := 'SkyrimSE';
     wbGameName2        := 'Skyrim Special Edition';
+    wbGameSteamID      := '489830';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -800,6 +817,7 @@ begin
     wbGameName         := 'Fallout4';
     wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
+    wbGameSteamID      := '377160';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins, tsSaves];
   end
@@ -813,6 +831,7 @@ begin
     wbGameNameReg      := 'Fallout 4 VR';
     wbLanguage         := 'En';
     wbArchiveExtension := '.ba2';
+    wbGameSteamID      := '611660';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
   end
@@ -826,6 +845,7 @@ begin
     wbGameMasterEsm    := 'SeventySix.esm';
     wbLanguage         := 'En';
     wbArchiveExtension := '.ba2';
+    wbGameSteamID      := '1151340';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
   end
@@ -837,6 +857,7 @@ begin
     wbGameNameReg      := 'Steam App 1716740';
     wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
+    wbGameSteamID      := '1716740';
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     ToolSources        := [tsPlugins];
   end

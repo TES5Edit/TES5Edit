@@ -1655,7 +1655,8 @@ type
     ptRegion,             //REGN
     ptChallenge,          //CHAL
     ptCasino,             //CSNO
-    ptAnyForm             // Any form
+    ptAnyForm,             // Any form
+    ptFloat
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -1667,7 +1668,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..399] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..440] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2081,7 +2082,52 @@ const
     (Index: 8684; Name: 'GetPlayerCamFOV'; ParamType1: ptInteger; ),
 
     // Added by TTW nvse plugin
-    (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; )
+    (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; ),
+
+    // Added by SUP NVSE - up to v8.55
+    (Index: 10648; Name: 'IsPlayerOverencumbered'; ),
+    (Index: 10758; Name: 'SUPGetConditionVarFloat'; ParamType1: ptInteger; ),
+
+    // Added by ShowOff xNVSE Plugin - up to v1.75
+    (Index: 11414; Name: 'GetPlayerCanPickpocketEquippedItems'; ),
+    (Index: 11415; Name: 'GetPCHasSleepWaitOverride'; ),
+    (Index: 11419; Name: 'GetNumActorsInRangeFromRef'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11420; Name: 'GetNumCombatActorsFromActor'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11421; Name: 'IsWeaponMelee'; ParamType1: ptWeapon; ),
+    (Index: 11422; Name: 'IsEquippedWeaponMelee'; ),
+    (Index: 11423; Name: 'IsWeaponRanged'; ParamType1: ptWeapon; ),
+    (Index: 11424; Name: 'IsEquippedWeaponRanged'; ),
+    (Index: 11425; Name: 'GetChallengeProgress'; ParamType1: ptChallenge; ),
+    (Index: 11426; Name: 'ConditionPrint'; ),
+    (Index: 11428; Name: 'GetNumQueuedCornerMessages'; ),
+    (Index: 11429; Name: 'GetCreatureTurningSpeed'; ParamType1: ptActorBase; ),
+    (Index: 11431; Name: 'GetCreatureFootWeight'; ParamType1: ptActorBase; ),
+    (Index: 11438; Name: 'IsAnimPlayingExCond'; ParamType1: ptInteger; ParamType2: ptInteger;),
+    (Index: 11439; Name: 'GetNumCompassHostiles'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11459; Name: 'PlayerHasNightVisionActive'; ),
+    (Index: 11460; Name: 'PlayerIsDrinkingPlacedWater'; ),
+    (Index: 11462; Name: 'IsNight'; ),
+    (Index: 11463; Name: 'IsLimbCrippled'; ParamType1: ptInteger; ParamType2: ptInteger;),
+    (Index: 11464; Name: 'GetNumCrippledLimbs'; ParamType1: ptInteger; ),
+    (Index: 11465; Name: 'GetCrippledLimbsAsBitMask'; ParamType1: ptInteger; ),
+    (Index: 11466; Name: 'GetNumBrokenEquippedItems'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11467; Name: 'GetEquippedItemsAsBitMask'; ),
+    (Index: 11468; Name: 'GetEquippedWeaponType'; ),
+    (Index: 11469; Name: 'GetBaseEquippedWeight'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11470; Name: 'GetCalculatedEquippedWeight'; ParamType1: ptFloat; ParamType2: ptInteger;),
+    (Index: 11471; Name: 'GetCalculatedMaxCarryWeight'; ),
+    (Index: 11482; Name: 'IsReferenceCloned'; ),
+    (Index: 11484; Name: 'IsTemporaryReference'; ),
+    (Index: 11485; Name: 'GetPCHasScriptedFastTravelOverride'; ),
+    (Index: 11486; Name: 'GetPCCanFastTravel'; ),
+    (Index: 11487; Name: 'GetWeaponHasFlag'; ParamType1: ptInteger; ParamType2: ptWeapon;),
+    (Index: 11488; Name: 'GetActorHasBaseFlag'; ParamType1: ptInteger; ParamType2: ptActorBase;),
+    (Index: 11493; Name: 'GetCalculatedSkillPoints'; ParamType1: ptInteger; ),
+    (Index: 11496; Name: 'GetCalculatedPerkPoints'; ParamType1: ptInteger; ),
+    (Index: 11509; Name: 'GetActorValueDamage'; ParamType1: ptActorValue; ),
+    (Index: 11524; Name: 'GetItemCanHaveHealth'; ),
+    (Index: 11557; Name: 'GetCalculatedItemValue'; ParamType1: ptInteger; ParamType2: ptInventoryObject;),
+    (Index: 11580; Name: 'GetIsPlayerOverencumbered'; ParamType1: ptInteger; )
 );
 
 var
@@ -4815,7 +4861,8 @@ begin
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {51} wbFormID('Form'),
+        {52} wbFloat('Float')
       ]),
    {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -4909,7 +4956,8 @@ begin
         {48} wbFormIDCkNoReach('Region', [REGN]),
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
-        {51} wbFormID('Form')
+        {51} wbFormID('Form'),
+        {52} wbFloat('Float')
       ]),
    {7}wbUnion('Run On', wbCTDARunOnDecider, [
         wbInteger('Run On', itU32, wbEnum([

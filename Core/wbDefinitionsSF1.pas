@@ -12639,6 +12639,7 @@ end;
     }
     wbSoundReference(MTSH),
     wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
+    wbUnknown(MSTF),
     wbConditions,
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
@@ -17377,6 +17378,8 @@ end;
     .IncludeFlag(dfExcludeFromBuildRef)
     .IncludeFlag(dfCollapsed),
 
+    wbUnknown(BNAM),
+
     wbInteger(INTV, 'Unknown', itU32),                                // Ignored by the runtime, 4 bytes loaded in CK
 
     wbInteger(INCC, 'Internal Cell Count', itU32),                    // Size of some array of 12 bytes elements
@@ -19033,6 +19036,15 @@ end;
     wbBaseFormComponents
   ]);
 
+  wbRecord(FXPD, 'Facial Expression', [
+    wbEDID,
+    wbFULL,
+    wbRArray('Unknown', wbRStruct('Unknown', [
+        wbString(MNAM),
+        wbFloat(MWGT)
+    ], []))
+  ]);
+
   {subrecords checked against Starfield.esm}
   wbRecord(CNDF, 'Condition Form', [
     wbEDID,
@@ -20150,7 +20162,7 @@ end;
       wbInteger(ISIZ, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbRStructs('Items', 'Item', [
         wbLStringKC(ITXT, 'Text', 0, cpTranslate, True),
-        wbLStringKC(ISTX, 'Short Text', 0, cpTranslate, False), // sometimes icon label, sometimes debug text... weird
+        wbLStringKC(ISTX, 'Short Text', 0, cpTranslate, True), // sometimes icon label, sometimes debug text... weird
         wbStruct(ISET, 'Settings', [
           wbInteger('Type', itU16, wbEnum([
             'Display Text',
@@ -20158,7 +20170,28 @@ end;
             'Unknown 2', // not present in starfield.esm
             'Submenu - Return to Top Level',
             'Submenu - Force Redraw'
-          ])),
+          ])).SetDefaultEditValue('Submenu - Terminal')
+          .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
+          var
+            lContainer: IwbContainerElementRef;
+            lTemplate: TwbTemplateElements;
+            lElement: IwbElement;
+          begin
+            if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+              Exit;
+            if not Assigned(lContainer.Container)  then
+              Exit;
+            var lSettingData := lContainer.Container.ElementBySortOrder[5];
+            if Assigned(lSettingData) then
+              lSettingData.Remove;
+
+            if (aElement.NativeValue = 0) or (aElement.NativeValue = 1) then
+            begin
+              lTemplate := lContainer.Container.GetAssignTemplates(5);
+              Supports(IInterface(lTemplate[0]), IwbElement, lElement);
+              lContainer.Container.Assign(5, lElement, False);
+            end;
+          end),
           wbUnused(2),
           wbInteger('Flags', itU8, wbFlags([
             {0x01} 'Unknown 0',
@@ -20167,11 +20200,38 @@ end;
             {0x08} 'Unknown 3'
           ])),
           wbUnused(3)
-        ]),
-        wbInteger(ITID, 'ID', itU16),
+        ]).SetRequired(True),
+        wbInteger(ITID, 'ID', itU16).SetRequired,
         wbXLOC,
-        wbFormIDCk(TNAM, 'Submenu', [NULL, TMLM]),
-        wbLStringKC(UNAM, 'Display Text', 0, cpTranslate),
+        wbRUnion('Text/Submenu', {Decider callback}
+          function(const aContainer: IwbContainerElementRef): Integer
+          begin
+            Result := 0;
+            var lType := aContainer.ElementEditValues['...\ISET\Type'];
+            if lType = 'Display Text' then
+              Result := 0
+            else if lType = 'Submenu - Terminal' then
+              Result := 1
+            else // unknown 2+
+              Result := 2;
+          end, [
+            {0} wbLStringKC(UNAM, 'Display Text', 0, cpTranslate).SetRequired,
+            {1} wbFormIDCk(TNAM, 'Submenu - Terminal', [NULL, TMLM]).SetRequired,
+            {2} wbEmpty(UNAM) // placeholder - can't actually be set
+                .IncludeFlag(dfInternalEditOnly)
+                .IncludeFlag(dfDontSave)
+          ], [], cpNormal, False, {Don't show callback}
+            function(const aElement: IwbElement): Boolean
+            var
+              lContainer: IwbContainerElementRef;
+            begin
+              Result := True;
+              if not Supports(aElement, IwbContainerElementRef, lContainer) then
+                Exit;
+              var lType := lContainer.ElementEditValues['ISET\Type'];
+              if (lType = 'Display Text') or (lType = 'Submenu - Terminal') then
+                Result := False;
+            end),
         wbCTDAs
       ], []).SetCountPath(ISIZ)
     ],[])
@@ -20492,6 +20552,7 @@ end;
   wbAddGroupOrder(TODD); {SF1Dump: no errors} {Reflection and BFCs only}
   wbAddGroupOrder(AVMD); {SF1Dump: no errors}
   wbAddGroupOrder(CHAL); {SF1Dump: no errors}
+  wbAddGroupOrder(FXPD); {SF1Dump: no errors}
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 

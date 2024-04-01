@@ -532,7 +532,7 @@ begin
           Exit;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
           Exit;
 
         aInt := EdgeLink.ElementNativeValues['Triangle'];
@@ -566,7 +566,7 @@ begin
         EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
         MainRecord := nil;
-        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
+        if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
           Exit;
 
         if Assigned(MainRecord) then
@@ -627,7 +627,7 @@ begin
     EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
 
     MainRecord := nil;
-    if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
+    if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
       Exit;
 
     aInt := EdgeLink.ElementNativeValues['Triangle'];
@@ -6510,18 +6510,15 @@ begin
     wbString(XNAM, 'Water Noise Texture'),
     wbArrayS(XCLR, 'Regions', wbFormIDCk('Region', [REGN])),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
-    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbFloat('X Offset'),
-      wbFloat('Y Offset'),
-      wbFloat('Z Offset'),
-      wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
-      wbFloat('Y Angle'),
-      wbFloat('Z Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
+    wbInteger(XWCN, 'Water Current Count', itU32, nil, cpBenign),
+    wbInteger(XWCS, 'Water Current Count (Old)', itU32, nil, cpBenign),
+    wbArray(XWCU, 'Water Currents',
+      wbStruct('Water Velocities', [
+        wbVec3('Unknown Velocity'),
+        wbByteArray('Unknown', 4)
+      ]))
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfNotAlignable),
     wbFormIDCk(XCWT, 'Water', [WATR]),
     wbOwnership(wbXOWN, [XRGD]),
     wbFormIDCk(XILL, 'Lock List', [FLST, NPC_]),
@@ -8012,8 +8009,13 @@ begin
         wbArray('Triangles', wbByteArray('Triangle', 16), -1).IncludeFlag(dfNotAlignable),
         wbArray('Edge Links',
           wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Mesh', [NAVM]),
+            wbInteger('Type', itU32, wbEnum([], [
+              0, 'Portal',
+              $01, 'Ledge Up',
+              $02, 'Ledge Down',
+              $03, 'Enable/Disable Portal'
+            ]), cpIgnore),
+            wbFormIDCk('Navmesh', [NAVM]),
             wbInteger('Triangle', itS16)
           ])
         , -1).IncludeFlag(dfNotAlignable),
@@ -8114,16 +8116,21 @@ Can't properly represent that with current record definition methods.
         , -1).IncludeFlag(dfNotAlignable),
         wbArray('Edge Links',
           wbStruct('Edge Link', [
-            wbByteArray('Unknown', 4, cpIgnore),
-            wbFormIDCk('Mesh', [NAVM], False, cpIgnore),
+            wbInteger('Type', itU32, wbEnum([], [
+              0, 'Portal',
+              $01, 'Ledge Up',
+              $02, 'Ledge Down',
+              $03, 'Enable/Disable Portal'
+            ]), cpIgnore),
+            wbFormIDCk('Navmesh', [NAVM], False, cpIgnore),
             wbInteger('Triangle', itS16, nil, cpIgnore)
           ], cpIgnore)
         , -1, cpIgnore).IncludeFlag(dfNotAlignable),
         wbArrayS('Door Triangles',
           wbStructSK([0, 2], 'Door Triangle', [
             wbInteger('Triangle before door', itS16).SetLinksToCallback(wbTriangleLinksTo),
-            wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
-            wbFormIDCk('Door', [REFR])
+            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
+            wbFormIDCk('Door Ref', [REFR])
           ])
         , -1),
         wbArray('Cover Triangles',
@@ -8145,17 +8152,18 @@ Can't properly represent that with current record definition methods.
         ).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
       ]);
 
-  wbRecord(NAVM, 'Navigation Mesh',
+  wbRecord(NAVM, 'Navmesh',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000800} 11, 'Initially Disabled',
       {0x00040000} 18, 'Compressed',
       {0x04000000} 26, 'AutoGen',
       {0x80000000} 31, 'NavmeshGenCell'
     ]), [18]), [
     wbEDID,
     wbNVNM,
-    wbUnknown(ONAM),
-    wbUnknown(PNAM),
-    wbUnknown(NNAM)
+    wbArray(ONAM,'Base Objects', wbFormIDCk('Base Object', [CONT, FURN, TREE, STAT, NULL])),
+    wbArray(PNAM, 'Preferred Connectors', wbInteger('Vertex', itU16)),
+    wbArray(NNAM, 'Non Connectors', wbInteger('Vertex', itU16))
   ], False, wbNAVMAddInfo);
 
 
@@ -8163,8 +8171,8 @@ Can't properly represent that with current record definition methods.
     wbNAVIslandData :=
       wbStruct('Island Data', [
         wbByteArray('Unknown', 24),
-        wbArray('Triangles', wbByteArray('Triangle', 6), -1),
-        wbArray('Vertices', wbByteArray('Vertex', 12), -1)
+        wbArray('Triangles', wbByteArray('Triangle', 6), -1).IncludeFlag(dfCollapsed),
+        wbArray('Vertices', wbByteArray('Vertex', 12), -1).IncludeFlag(dfCollapsed)
       ])
   else
     wbNAVIslandData :=
@@ -8177,38 +8185,47 @@ Can't properly represent that with current record definition methods.
         wbFloat('Max Z'),
         wbArray('Triangles',
           wbStruct('Triangle', [
-            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable)
-          ])
-        , -1).IncludeFlag(dfNotAlignable),
+            wbArray('Vertices', wbInteger('Vertex', itS16), 3).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed)
+          ]).IncludeFlag(dfCollapsed)
+        , -1).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed),
         wbArray('Vertices', wbStruct('Vertex', [
           wbFloat('X'),
           wbFloat('Y'),
           wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable)
+        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1).IncludeFlag(dfNotAlignable).IncludeFlag(dfCollapsed)
       ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+  wbRecord(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
-    wbRArray('Navigation Map Infos',
-      wbStruct(NVMI, 'Navigation Map Info', [
-        wbFormIDCk('Navigation Mesh', [NAVM]),
-        wbByteArray('Unknown', 4),
+    wbRArrayS('Navmesh Infos',
+      wbStructSK(NVMI,[0], 'Navmesh Info', [
+        wbFormIDCk('Navmesh', [NAVM]),
+        wbInteger('Category', itU32, wbEnum([], [
+          0, 'Is Edited',
+          //All navmesh records, that are not islands and are directly edited by the given plugin, receive an NVMI entry where this Integer is 0
+          $20, 'Is Island',
+          //All navmesh records, that are islands and are present in cells where the given plugin makes navmesh edits, receive an NVMI entry where this Integer is 20.
+          //Whether the given plugin actually contains these islands navmeshes or not, does not matter.
+          $40, 'Not Edited'
+          //NVMI entries are generated for navmeshes that are not edited by the given plugin, but their NVMI entry in one of the given plugins' masters contains wrong data or is nonexistent
+          //Also NVMI entries are generated for navmeshes on which a RoadMarker sits in all plugins as "ITM" entries.  Probably used for computing the precomputed paths
+        ])),
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
-        wbInteger('Preferred Merges Flag', itU32),
-        wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-        wbArray('Linked Doors', wbStruct('Door', [
-          wbByteArray('Unknown', 4),
+        wbByteArray('Preferred Merges Flag', 4),
+        wbArrayS('Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Preferred Edge Links', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Door Links', wbStructSK([1],'Door', [
+          wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
           wbFormIDCk('Door Ref', [REFR])
-        ]), -1),
+        ]), -1).IncludeFlag(dfCollapsed),
         wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
         wbUnion('Island', wbNAVIIslandDataDecider, [
           wbNull,
           wbNAVIslandData
-        ]),
+        ]).IncludeFlag(dfCollapsed),
         wbStruct('PathingCell', [
           wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
           wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
@@ -8216,20 +8233,20 @@ Can't properly represent that with current record definition methods.
             wbStruct('Coordinates', [
               wbInteger('Grid Y', itS16),
               wbInteger('Grid X', itS16)
-            ]),
+            ]).IncludeFlag(dfCollapsed),
             wbFormIDCk('Parent Cell', [CELL])
-          ])
-        ])
-      ])
-    ),
-    wbStruct(NVPP, 'Preferred Pathing', [
-      wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-      wbArray('NavMesh Tree?', wbStruct('', [
-        wbFormIDCk('NavMesh', [NAVM]),
-        wbInteger('Index/Node', itU32)
-      ]), -1)
-    ]),
-    wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
+          ]).IncludeFlag(dfCollapsed)
+        ]).IncludeFlag(dfCollapsed)
+      ]).IncludeFlag(dfCollapsed)
+    ).IncludeFlag(dfCollapsed),
+    wbStruct(NVPP, 'Precomputed Pathing', [
+      wbArray('Precomputed Paths', wbArray('Path', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed),
+      wbArrayS('Road Marker Index', wbStructSK([1],'Road Marker', [
+        wbFormIDCk('Navmesh', [NAVM]),
+        wbInteger('Index', itU32)
+      ]).IncludeFlag(dfCollapsed), -1).IncludeFlag(dfCollapsed)
+    ]).IncludeFlag(dfCollapsed),
+    wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
   ]);
 
 end;
@@ -8927,14 +8944,20 @@ begin
     wbArrayS(ACEP,'Added Enable Point References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Enable Parent', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Flags', itU8, wbFlags([
+      'Set Enable State to Opposite of Parent',
+      'Pop In'
+    ]), cpBenign),
+    wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
     wbArrayS(LCEP,'Master Enable Parent References', wbStructSK([0],'Reference', [
       wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
       wbFormIDCk('Enable Parent', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
-      wbInteger('Grid Y', itS16, nil, cpBenign),
-      wbInteger('Grid X', itS16, nil, cpBenign)
+      wbInteger('Flags', itU8, wbFlags([
+      'Set Enable State to Opposite of Parent',
+      'Pop In'
+    ]), cpBenign),
+    wbByteArray('Unused', 3, cpIgnore)
     ]), 0, cpBenign),
 
     wbFULL,
@@ -9665,12 +9688,20 @@ begin
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
+    wbRArray('Branches',
+      wbFormIDCk(BNAM, 'Branch', [DLBR])),
+    wbRArray('Topics',
+      wbFormIDCK(TNAM, 'Topic', [DIAL])),
+    wbInteger(ENAM, 'View Category', itu32,
+      wbEnum([], [
+        $00, 'Dialogue Branches',
+        $07, 'Dialogue Topics'
+      ])),
+    wbInteger(DNAM, 'Show All Text', itU8,
+      wbEnum([], [
+        $00, 'False',
+        $01, 'True'
+      ]))
   ]);
 
   wbRecord(WOOP, 'Word of Power', [
@@ -10319,7 +10350,7 @@ begin
         {0x00000002} 'Has Vertex Colours',
         {0x00000004} 'Has Layers',
         {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
+        {0x00000010} 'Auto-Calc Normals', // Present on every LAND after running Recalc Normals in the CK.
         {0x00000020} '',
         {0x00000040} '',
         {0x00000080} '',
@@ -10331,7 +10362,6 @@ begin
       wbByteArray(VHGT, 'Vertex Height Map'),
       wbByteArray(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
       wbRArray('Unknown', wbUnknown(MPCD)) // Handling is present in the EXE, not seen in the base game
     ]);
 
@@ -10346,7 +10376,7 @@ begin
         'Has Vertex Colours',
         'Has Layers',
         'Unknown 4',
-        'Unknown 5',
+        'Auto-Calc Normals',
         '',
         '',
         '',
@@ -10358,7 +10388,6 @@ begin
       wbVertexHeightMap,
       wbVertexColumns(VCLR, 'Vertex Colours'),
       wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
       wbRArray('Unknown', wbUnknown(MPCD))
     ]);
 
@@ -12278,27 +12307,30 @@ begin
     {--- MultiBound ---}
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
-    wbByteArray(XWCN, 'Unknown', 0, cpIgnore), // leftover
-    wbByteArray(XWCS, 'Unknown', 0, cpIgnore), // leftover
-    wbStruct(XWCU, 'Water Velocity', [
-      wbFloat('X Offset'),
-      wbFloat('Y Offset'),
-      wbFloat('Z Offset'),
+    wbInteger(XWCN, 'Water Current Count', itU32, nil, cpBenign),
+    wbInteger(XWCS, 'Water Current Count (Old)', itU32, nil, cpBenign),
+    wbStruct(XWCU, 'Water Currents', [
+      wbVec3('Linear Velocity'),
       wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
-      wbFloat('Y Angle'),
-      wbFloat('Z Angle'),
-      wbByteArray('Unknown', 0)
-    ]),
-
-    wbStruct(XCVL, 'Unknown', [
+      wbVec3('Angular Velocity'),
       wbByteArray('Unknown', 4),
-      wbFloat('X Angle'),
+      wbVec3('Unknown Velocity'),
       wbByteArray('Unknown', 4)
+    ])
+    .IncludeFlag(dfCollapsed),
+    wbStruct(XCVL,'Water Current Linear Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
     ]),
-    wbFormIDCk(XCZR, 'Unknown', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
-    wbUnknown(XCZA),
-    wbFormIDCk(XCZC, 'Unknown', [CELL, NULL]),
+    wbStruct(XCVR,'Water Current Rotational Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ]),
+    wbFormIDCk(XCZC, 'Water Current Zone Cell', [CELL, NULL]),
+    wbFormIDCk(XCZR, 'Water Current Zone Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
+    wbByteArray(XCZA, 'Water Current Zone Action', 4),
     wbXSCL,
     wbFormIDCk(XSPC, 'Spawn Container', [REFR]),
 
@@ -12343,8 +12375,8 @@ begin
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Generated Data ---}
-    wbStruct(XNDP, 'Navigation Door Link', [
-      wbFormIDCk('Navigation Mesh', [NAVM]),
+    wbStruct(XNDP, 'Navmesh Door Link', [
+      wbFormIDCk('Navmesh', [NAVM]),
       wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
       wbByteArray('Unused', 2, cpIgnore)
     ]),
@@ -13159,6 +13191,8 @@ begin
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
     wbOFST
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfNoCopyAsOverride)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 

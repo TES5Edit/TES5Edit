@@ -34,8 +34,8 @@ begin
     if elT = GetElementNativeValues(EdgeLink, 'Triangle') then begin
       //AddMessage(Format('%d = %d', [elT, GetElementNativeValues(EdgeLink, 'Triangle')]));
       //AddMessage(elM);
-      //AddMessage(GetElementEditValues(EdgeLink, 'Mesh'));
-      if CompareStr(elM, GetElementEditValues(EdgeLink, 'Mesh')) = 0 then begin
+      //AddMessage(GetElementEditValues(EdgeLink, 'Navmesh'));
+      if CompareStr(elM, GetElementEditValues(EdgeLink, 'Navmesh')) = 0 then begin
         //AddMessage(Format('found %d', [k]));
         Result := k;
         Exit;
@@ -100,9 +100,9 @@ begin
   SetNativeValue(havePath, GetNativeValue(swapPath));
   SetNativeValue(swapPath, saveValue);
 
-  havePath := ElementByPath(haveLink, 'Mesh');
+  havePath := ElementByPath(haveLink, 'Navmesh');
   saveString := GetEditValue(havePath);
-  swapPath := ElementByPath(swapLink, 'Mesh');
+  swapPath := ElementByPath(swapLink, 'Navmesh');
   SetEditValue(havePath, GetEditValue(swapPath));
   SetEditValue(swapPath, saveString);
 
@@ -262,7 +262,7 @@ begin
         else begin
           // search old Edge Links for possible match...
           haveLink := ElementByIndex(newLinks, newLinkIndex);
-          saveString := GetElementEditValues(haveLink, 'Mesh');
+          saveString := GetElementEditValues(haveLink, 'Navmesh');
           saveValue := GetElementNativeValues(haveLink, 'Triangle');
           oldLinkIndex := FindEdgeLink(oldLinks, saveString, saveValue);
           if oldLinkIndex < 0 then begin
@@ -310,7 +310,7 @@ begin
       end
       else if oldLinkIndex >= 0 then begin
         haveLink := ElementByIndex(oldLinks, oldLinkIndex);
-        saveString := GetElementEditValues(haveLink, 'Mesh');
+        saveString := GetElementEditValues(haveLink, 'Navmesh');
         saveValue := GetElementNativeValues(haveLink, 'Triangle');
         AddMessage(Format('Want match for triangle %d in %s', [saveValue, saveString]));
         AddMessage(Format('via old %s link %d', [arEdge[j], oldLinkIndex]));

@@ -58,13 +58,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'b';
-    Title   : 'EXTREMELY EXPERIMENTAL';
+    Build   : 'd';
+    Title   : 'DIAL Hotfix';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010502;
-  wbDeveloperMessageVersion : Integer = 04010500;
+  wbWhatsNewVersion : Integer = 04010504;
+  wbDeveloperMessageVersion : Integer = 04010504;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
@@ -4748,6 +4748,7 @@ var
   wbToolName         : string;
   wbSourceName       : string;
   wbLanguage         : string;
+  wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
     tmOnamUpdate,

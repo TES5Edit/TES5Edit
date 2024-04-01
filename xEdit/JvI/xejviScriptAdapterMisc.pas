@@ -39,6 +39,7 @@ uses
   IniFiles,
   Registry,
   Math,
+  Types,
   Vcl.Clipbrd,
   RegularExpressionsCore,
   RegularExpressionsConsts,
@@ -243,28 +244,13 @@ end;
 
 procedure JvInterpreter_Frac(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Extended(Frac(Args.Values[0]));
+  Value := Single(Frac(Args.Values[0]));
 end;
 
 procedure JvInterpreter_Int(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Extended(Int(Args.Values[0]));
+  Value := Single(Int(Args.Values[0]));
 end;
-
-procedure JvInterpreter_Floor(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := Floor(Extended(Args.Values[0]));
-end;
-
-procedure JvInterpreter_Ceil(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := Ceil(Extended(Args.Values[0]));
-end;
-
-{ Strings }
-
-
-
 
 { TEncoding }
 
@@ -288,16 +274,276 @@ begin
   Value := O2V(TEncoding.UTF8);
 end;
 
+{ Math: System.Math }
 
+procedure JvInterpreter_ArcCos(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle  : Value := Single(Math.ArcCos(Single(Args.Values[0])));
+    varDouble  : Value := Double(Math.ArcCos(Double(Args.Values[0])));
+  end;
+end;
 
-{ Math }
+procedure JvInterpreter_ArcCot(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle  : Value := Single(Math.ArcCot(Single(Args.Values[0])));
+    varDouble  : Value := Double(Math.ArcCot(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_ArcCsc(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.ArcCsc(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.ArcCsc(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_ArcSec(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.ArcSec(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.ArcSec(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_ArcSin(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.ArcSin(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.ArcSin(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_ArcTan2(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.ArcTan2(Single(Args.Values[0]), Single(Args.Values[1])));
+    varDouble : Value := Double(Math.ArcTan2(Double(Args.Values[0]), Double(Args.Values[1])));
+  end;
+end;
+
+procedure JvInterpreter_Ceil(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.Ceil(Single(Args.Values[0]));
+    varDouble : Value := Math.Ceil(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_CompareValue(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := CompareValue(Single(Args.Values[0]), Single(Args.Values[1]), Single(Args.Values[2]));
+    varDouble : Value := CompareValue(Double(Args.Values[0]), Double(Args.Values[1]), Double(Args.Values[2]));
+  end;
+end;
+
+procedure JvInterpreter_Cosecant(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Cosecant(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.Cosecant(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_Cot(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Cot(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.Cot(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_Cotan(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Cotan(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.Cotan(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_Csc(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Csc(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.Csc(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_DegToRad(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.DegToRad(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.DegToRad(Double(Args.Values[0])));
+  end;
+end;
+
+procedure JvInterpreter_EnsureRange(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varInteger : Value := Integer(Math.EnsureRange(Integer(Args.Values[0]), Integer(Args.Values[1]), Integer(Args.Values[2])));
+    varSingle : Value := Single(Math.EnsureRange(Single(Args.Values[0]), Single(Args.Values[1]), Single(Args.Values[2])));
+    varDouble : Value := Double(Math.EnsureRange(Double(Args.Values[0]), Double(Args.Values[1]), Double(Args.Values[2])));
+  end;
+end;
+
+procedure JvInterpreter_Floor(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.Floor(Single(Args.Values[0]));
+    varDouble : Value := Math.Floor(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_FMod(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.FMod(Single(Args.Values[0]), Single(Args.Values[1]));
+    varDouble : Value := Math.FMod(Double(Args.Values[0]), Double(Args.Values[1]));
+  end;
+end;
+
+procedure JvInterpreter_GetPrecisionMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Math.GetPrecisionMode();
+end;
+
+procedure JvInterpreter_GetRoundMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Math.GetRoundMode();
+end;
 
 procedure JvInterpreter_InRange(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   case VarType(Args.Values[0]) of
     varInteger : Value := Math.InRange(Integer(Args.Values[0]), Integer(Args.Values[1]), Integer(Args.Values[2]));
-    varSingle  : Value := Math.InRange(Single(Args.Values[0]), Single(Args.Values[1]), Single(Args.Values[2]));
-    varDouble  : Value := Math.InRange(Double(Args.Values[0]), Double(Args.Values[1]), Double(Args.Values[2]));
+    varSingle : Value := Math.InRange(Single(Args.Values[0]), Single(Args.Values[1]), Single(Args.Values[2]));
+    varDouble : Value := Math.InRange(Double(Args.Values[0]), Double(Args.Values[1]), Double(Args.Values[2]));
+  end;
+end;
+
+procedure JvInterpreter_IsInfinite(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.IsInfinite(Single(Args.Values[0]));
+    varDouble : Value := Math.IsInfinite(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_IsNaN(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.IsNaN(Single(Args.Values[0]));
+    varDouble : Value := Math.IsNaN(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_IsZero(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.IsZero(Single(Args.Values[0]), Single(Args.Values[1]));
+    varDouble : Value := Math.IsZero(Double(Args.Values[0]), Double(Args.Values[1]));
+  end;
+end;
+
+procedure JvInterpreter_Lerp(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  var a := Single(Args.Values[0]);
+  var b := Single(Args.Values[1]);
+  var t := Single(Args.Values[2]);
+
+  Value := a + (b - a) * EnsureRange(t, 0.000000, 1.000000);
+end;
+
+procedure JvInterpreter_LerpInverse(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  var a := Single(Args.Values[0]);
+  var b := Single(Args.Values[1]);
+  var v := Single(Args.Values[2]);
+
+  if SameValue(a, b) then
+    Value := 0.000000
+  else begin
+    var x := Single(v - a);
+    var y := Single(b - a);
+    Value := EnsureRange(Single(x / y), 0.000000, 1.000000);
+  end;
+end;
+
+procedure JvInterpreter_LerpUnclamped(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  var a := Single(Args.Values[0]);
+  var b := Single(Args.Values[1]);
+  var t := Single(Args.Values[2]);
+
+  Value := a + (b - a) * t;
+end;
+
+procedure JvInterpreter_Log2(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.Log2(Single(Args.Values[0]));
+    varDouble : Value := Math.Log2(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_Log10(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.Log10(Single(Args.Values[0]));
+    varDouble : Value := Math.Log10(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_LogN(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.LogN(Single(Args.Values[0]), Single(Args.Values[1]));
+    varDouble : Value := Math.LogN(Double(Args.Values[0]), Double(Args.Values[1]));
+  end;
+end;
+
+procedure JvInterpreter_Max(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varInteger : Value := Integer(Math.Max(Integer(Args.Values[0]), Integer(Args.Values[1])));
+    varSingle : Value := Single(Math.Max(Single(Args.Values[0]), Single(Args.Values[1])));
+    varDouble : Value := Double(Math.Max(Double(Args.Values[0]), Double(Args.Values[1])));
+  end;
+end;
+
+procedure JvInterpreter_Min(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varInteger : Value := Integer(Math.Min(Integer(Args.Values[0]), Integer(Args.Values[1])));
+    varSingle : Value := Single(Math.Min(Single(Args.Values[0]), Single(Args.Values[1])));
+    varDouble : Value := Double(Math.Min(Double(Args.Values[0]), Double(Args.Values[1])));
+  end;
+end;
+
+procedure JvInterpreter_IntPower(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.IntPower(Single(Args.Values[0]), Integer(Args.Values[1])));
+    varDouble : Value := Double(Math.IntPower(Double(Args.Values[0]), Integer(Args.Values[1])));
+  end;
+end;
+
+procedure JvInterpreter_Power(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Power(Single(Args.Values[0]), Single(Args.Values[1])));
+    varDouble : Value := Double(Math.Power(Double(Args.Values[0]), Double(Args.Values[1])));
+  end;
+end;
+
+procedure JvInterpreter_RadToDeg(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.RadToDeg(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.RadToDeg(Double(Args.Values[0])));
   end;
 end;
 
@@ -308,29 +554,59 @@ end;
 
 procedure JvInterpreter_RoundTo(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Math.RoundTo(Extended(Args.Values[0]), Math.TRoundToEXRangeExtended(Args.Values[1]));
+  Value := Extended(Math.RoundTo(Extended(Args.Values[0]), Math.TRoundToEXRangeExtended(Args.Values[1])));
 end;
 
-procedure JvInterpreter_Max(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_SameValue(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Max(Integer(Args.Values[0]), Integer(Args.Values[1]));
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Math.SameValue(Single(Args.Values[0]), Single(Args.Values[1]));
+    varDouble : Value := Math.SameValue(Double(Args.Values[0]), Double(Args.Values[1]));
+  end;
 end;
 
-procedure JvInterpreter_Min(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_Sec(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Min(Integer(Args.Values[0]), Integer(Args.Values[1]));
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Sec(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.Sec(Double(Args.Values[0])));
+  end;
 end;
 
-procedure JvInterpreter_IntPower(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_Secant(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Extended(Math.IntPower(Extended(Args.Values[0]), Integer(Args.Values[1])));
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.Secant(Single(Args.Values[0])));
+    varDouble : Value := Double(Math.Secant(Double(Args.Values[0])));
+  end;
 end;
 
-procedure JvInterpreter_Power(var Value: Variant; Args: TJvInterpreterArgs);
+procedure JvInterpreter_SetPrecisionMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := Extended(Math.Power(Extended(Args.Values[0]), Extended(Args.Values[1])));
+  Value := Math.SetPrecisionMode(TFPUPrecisionMode(Args.Values[0]));
 end;
 
+procedure JvInterpreter_SetRoundMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := Math.SetRoundMode(Math.TRoundingMode(Args.Values[0]));
+end;
+
+procedure JvInterpreter_Sign(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varInteger : Value := Math.Sign(Integer(Args.Values[0]));
+    varSingle : Value := Math.Sign(Single(Args.Values[0]));
+    varDouble : Value := Math.Sign(Double(Args.Values[0]));
+  end;
+end;
+
+procedure JvInterpreter_SimpleRoundTo(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  case VarType(Args.Values[0]) of
+    varSingle : Value := Single(Math.SimpleRoundTo(Single(Args.Values[0]), Math.TRoundToEXRangeExtended(Args.Values[1])));
+    varDouble : Value := Double(Math.SimpleRoundTo(Double(Args.Values[0]), Math.TRoundToEXRangeExtended(Args.Values[1])));
+  end;
+end;
 
 { TStrings }
 
@@ -375,8 +651,6 @@ procedure TStrings_Write_ValueFromIndex(const Value: Variant; Args: TJvInterpret
 begin
   TStrings(Args.Obj).ValueFromIndex[Args.Values[0]] := Value;
 end;
-
-
 
 { TStringList }
 
@@ -484,16 +758,9 @@ begin
   StringSetOp(TSetOperation.U, TStringList(Args.Obj), TStringList(V2O(Args.Values[0])));
 end;
 
-
-
 procedure JvInterpreter_SameText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := SameText(string(Args.Values[0]), string(Args.Values[1]));
-end;
-
-procedure JvInterpreter_SameValue(var Value: Variant; Args: TJvInterpreterArgs);
-begin
-  Value := SameValue(Single(Args.Values[0]), Single(Args.Values[1]));
 end;
 
 procedure JvInterpreter_StringReplace(var Value: Variant; Args: TJvInterpreterArgs);
@@ -651,15 +918,12 @@ begin
     Value := aDir;
 end;
 
-
 { TBytesStream }
 
 procedure TBytesStream_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TBytesStream.Create(TBytes(Args.Values[0])));
 end;
-
-
 
 { TBinaryReader }
 
@@ -733,7 +997,6 @@ begin
   Value := TBinaryReader(Args.Obj).ReadString;
 end;
 
-
 { TBinaryWriter }
 
 procedure TBinaryWriter_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -766,7 +1029,6 @@ begin
   TBinaryWriter(Args.Obj).Write(Single(Args.Values[0]));
 end;
 
-
 { TWinControl }
 
 procedure TWinControl_Read_DoubleBuffered(var Value: Variant; Args: TJvInterpreterArgs);
@@ -778,7 +1040,6 @@ procedure TWinControl_Write_DoubleBuffered(const Value: Variant; Args: TJvInterp
 begin
   TWinControl(Args.Obj).DoubleBuffered := Boolean(Value);
 end;
-
 
 { TCustomForm }
 
@@ -801,7 +1062,6 @@ procedure TCustomForm_Write_PopupParent(const Value: Variant; Args: TJvInterpret
 begin
   TCustomForm(Args.Obj).PopupParent := TCustomForm(V2O(Value));
 end;
-
 
 { TCheckListBox }
 
@@ -876,7 +1136,6 @@ begin
   TCheckListBox(Args.Obj).AllowGrayed := Value;
 end;
 
-
 { TComboBox }
 
 procedure TComboBox_Read_DropDownCount(var Value: Variant; Args: TJvInterpreterArgs);
@@ -888,7 +1147,6 @@ procedure TComboBox_Write_DropDownCount(const Value: Variant; Args: TJvInterpret
 begin
   TComboBox(Args.Obj).DropDownCount := Value;
 end;
-
 
 { TCustomLabeledEdit }
 
@@ -922,14 +1180,12 @@ begin
   TCustomLabeledEdit(Args.Obj).LabelSpacing := Value;
 end;
 
-
 { TLabeledEdit }
 
 procedure TLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
 end;
-
 
 { TListItem }
 
@@ -943,14 +1199,12 @@ begin
   TListItem(Args.Obj).SubItems := V2O(Value) as TStrings;
 end;
 
-
 { TListItems }
 
 procedure TListItems_Write_Count(const Value: Variant; Args: TJvInterpreterArgs);
 begin
   TListItems(Args.Obj).Count := Value;
 end;
-
 
 { TListView }
 
@@ -972,7 +1226,6 @@ begin
   CallFunction(nil, [O2V(Sender), O2V(Item), Selected]);
 end;
 
-
 { TMenu }
 
 procedure TMenu_Read_AutoHotKeys(var Value: Variant; Args: TJvInterpreterArgs);
@@ -985,14 +1238,12 @@ begin
   TMenu(Args.Obj).AutoHotKeys := Value;
 end;
 
-
 { TMenuItem }
 
 procedure TMenuItem_Clear(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TMenuItem(Args.Obj).Clear;
 end;
-
 
 { TBitmap }
 
@@ -1001,14 +1252,12 @@ begin
   TBitmap(Args.Obj).SetSize(Args.Values[0], Args.Values[1]);
 end;
 
-
 { THashedStringList }
 
 procedure THashedStringList_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(THashedStringList.Create);
 end;
-
 
 { TCustomIniFile }
 
@@ -1092,14 +1341,12 @@ begin
   TCustomIniFile(Args.Obj).UpdateFile;
 end;
 
-
 { TIniFile }
 
 procedure TIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TIniFile.Create(String(Args.Values[0])));
 end;
-
 
 { TMemIniFile }
 
@@ -1118,14 +1365,12 @@ begin
   TMemIniFile(Args.Obj).SetStrings(TStrings(V2O(Args.Values[0])));
 end;
 
-
 { TRegistryIniFile }
 
 procedure TRegistryIniFile_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := O2V(TRegistryIniFile.Create(String(Args.Values[0])));
 end;
-
 
 { TDirectory }
 
@@ -1139,7 +1384,6 @@ begin
   Value := TDirectory.GetFiles(Args.Values[0], Args.Values[1], Args.Values[2]);
 end;
 
-
 { TFile }
 
 procedure TFile_ReadAllText(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1151,7 +1395,6 @@ procedure TFile_WriteAllText(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   TFile.WriteAllText(Args.Values[0], Args.Values[1]);
 end;
-
 
 { TPerlRegEx }
 
@@ -1352,7 +1595,6 @@ begin
   TPerlRegEx(Args.Obj).Replacement := String(Value);
 end;
 
-
 { JsonDataObjects }
 
 procedure JsonDataObjects_Write_LineBreak(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1374,7 +1616,6 @@ procedure JsonDataObjects_Write_NullConvertsToValueTypes(var Value: Variant; Arg
 begin
   JsonSerializationConfig.NullConvertsToValueTypes := Args.Values[0];
 end;
-
 
 { TJsonBaseObject }
 
@@ -1481,7 +1722,6 @@ procedure TJsonBaseObject_ToString(var Value: Variant; Args: TJvInterpreterArgs)
 begin
   Value := TJsonBaseObject(Args.Obj).ToString;
 end;
-
 
 { TJsonArray }
 
@@ -1681,8 +1921,6 @@ begin
   TJsonArray(Args.Obj).V[Args.Values[0]] := Value;
 end;
 
-
-
 { TJsonObject }
 
 procedure TJsonObject_Create(var Value: Variant; Args: TJvInterpreterArgs);
@@ -1860,9 +2098,7 @@ begin
   TJsonObject(Args.Obj).Values[Args.Values[0]].VariantValue := Value;
 end;
 
-
-
-
+{ Registration }
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 begin
@@ -1895,6 +2131,24 @@ begin
     AddConst('System', 'varByRef', Ord(varByRef));
     AddConst('System', 'MaxInt', Ord(MaxInt));
     AddConst('System', 'MinInt', Low(Integer));
+    AddConst('System', 'Pi', Single(Pi));
+    AddConst('Math', 'Infinity', Infinity);
+    AddConst('Math', 'NaN', NaN);
+    AddConst('Math', 'NegativeValue', Ord(NegativeValue));
+    AddConst('Math', 'NegInfinity', NegInfinity);
+    AddConst('Math', 'pmDouble', Ord(pmDouble));
+    AddConst('Math', 'pmExtended', Ord(pmExtended));
+    AddConst('Math', 'pmReserved', Ord(pmReserved));
+    AddConst('Math', 'pmSingle', Ord(pmSingle));
+    AddConst('Math', 'PositiveValue', Ord(PositiveValue));
+    AddConst('Math', 'rmDown', Ord(rmDown));
+    AddConst('Math', 'rmNearest', Ord(rmNearest));
+    AddConst('Math', 'rmTruncate', Ord(rmTruncate));
+    AddConst('Math', 'rmUp', Ord(rmUp));
+    AddConst('Math', 'ZeroValue', Ord(ZeroValue));
+    AddConst('Types', 'EqualsValue', Ord(EqualsValue));
+    AddConst('Types', 'GreaterThanValue', Ord(GreaterThanValue));
+    AddConst('Types', 'LessThanValue', Ord(LessThanValue));
     AddConst('SysUtils', 'rfReplaceAll', Ord(rfReplaceAll));
     AddConst('SysUtils', 'rfIgnoreCase', Ord(rfIgnoreCase));
     AddConst('SysUtils', 'fmCreate', Ord(fmCreate));
@@ -1965,8 +2219,7 @@ begin
     AddFunction('SysUtils', 'Pred', JvInterpreter_Pred, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'Frac', JvInterpreter_Frac, 1, [varEmpty], varEmpty);
     AddFunction('SysUtils', 'Int', JvInterpreter_Int, 1, [varEmpty], varEmpty);
-    AddFunction('Math', 'Floor', JvInterpreter_Floor, 1, [varEmpty], varEmpty);
-    AddFunction('Math', 'Ceil', JvInterpreter_Ceil, 1, [varEmpty], varEmpty);
+
     AddFunction('SysUtils', 'SameText', JvInterpreter_SameText, 2, [varString, varString], varEmpty);
     AddFunction('SysUtils', 'SameValue', JvInterpreter_SameValue, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('SysUtils', 'StringReplace', JvInterpreter_StringReplace, 4, [varString, varString, varString, varEmpty], varEmpty);
@@ -1995,15 +2248,48 @@ begin
     AddGet(TEncoding, 'Unicode', TEncoding_Unicode, 0, [varEmpty], varEmpty);
     AddGet(TEncoding, 'UTF8', TEncoding_UTF8, 0, [varEmpty], varEmpty);
 
-    { Math }
+    { Math: System.Math }
+    AddFunction('Math', 'ArcCos', JvInterpreter_ArcCos, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'ArcCot', JvInterpreter_ArcCot, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'ArcCsc', JvInterpreter_ArcCsc, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'ArcSec', JvInterpreter_ArcSec, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'ArcSin', JvInterpreter_ArcSin, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'ArcTan2', JvInterpreter_ArcTan2, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Ceil', JvInterpreter_Ceil, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'CompareValue', JvInterpreter_CompareValue, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Cosecant', JvInterpreter_Cosecant, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Cot', JvInterpreter_Cot, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Cotan', JvInterpreter_Cotan, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Csc', JvInterpreter_Csc, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'DegToRad', JvInterpreter_DegToRad, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'EnsureRange', JvInterpreter_EnsureRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Floor', JvInterpreter_Floor, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'FMod', JvInterpreter_FMod, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'GetPrecisionMode', JvInterpreter_GetPrecisionMode, 0, [varEmpty], varEmpty);
+    AddFunction('Math', 'GetRoundMode', JvInterpreter_GetRoundMode, 0, [varEmpty], varEmpty);
     AddFunction('Math', 'InRange', JvInterpreter_InRange, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
-    AddFunction('Math', 'RandomRange', JvInterpreter_RandomRange, 2, [varEmpty, varEmpty], varEmpty);
-    AddFunction('Math', 'RoundTo', JvInterpreter_RoundTo, 2, [varEmpty, varEmpty], varEmpty);
-
+    AddFunction('Math', 'IsInfinite', JvInterpreter_IsInfinite, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'IsNaN', JvInterpreter_IsNaN, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'IsZero', JvInterpreter_IsZero, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'InverseLerp', JvInterpreter_LerpInverse, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Lerp', JvInterpreter_Lerp, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'LerpUnclamped', JvInterpreter_LerpUnclamped, 3, [varEmpty, varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Log2', JvInterpreter_Log2, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Log10', JvInterpreter_Log10, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'LogN', JvInterpreter_LogN, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'Max', JvInterpreter_Max, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'Min', JvInterpreter_Min, 2, [varEmpty, varEmpty], varEmpty);
-    AddFunction('Math', 'IntPower', JvInterpreter_IntPower, 2, [varEmpty,varEmpty], varEmpty);
+    AddFunction('Math', 'IntPower', JvInterpreter_IntPower, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction('Math', 'Power', JvInterpreter_Power, 2, [varEmpty,varEmpty], varEmpty);
+    AddFunction('Math', 'RadToDeg', JvInterpreter_RadToDeg, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'RandomRange', JvInterpreter_RandomRange, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'RoundTo', JvInterpreter_RoundTo, 2, [varEmpty, varEmpty], varEmpty);
+    AddFunction('Math', 'Sec', JvInterpreter_Sec, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Secant', JvInterpreter_Secant, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'SetPrecisionMode', JvInterpreter_SetPrecisionMode, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'SetRoundMode', JvInterpreter_SetRoundMode, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'Sign', JvInterpreter_Sign, 1, [varEmpty], varEmpty);
+    AddFunction('Math', 'SimpleRoundTo', JvInterpreter_SimpleRoundTo, 2, [varEmpty, varEmpty], varEmpty);
 
     { TStrings }
     AddGet(TStrings, 'Delimiter', TStrings_Read_Delimiter, 0, [varEmpty], varEmpty);
@@ -2080,7 +2366,7 @@ begin
     AddSet(TCheckListBox, 'AllowGrayed', TCheckListBox_Write_AllowGrayed, 0, [varEmpty]);
     AddHandler('CheckLst', 'TNotifyEvent', TJvInterpreterCheckListBoxEvents, @TJvInterpreterCheckListBoxEvents.OnClickCheck);
 
-   { TComboBox }
+    { TComboBox }
     AddGet(TComboBox, 'DropDownCount', TComboBox_Read_DropDownCount, 0, [varEmpty], varEmpty);
     AddSet(TComboBox, 'DropDownCount', TComboBox_Write_DropDownCount, 0, [varEmpty]);
 

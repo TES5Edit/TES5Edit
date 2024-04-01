@@ -9805,7 +9805,7 @@ begin
 
   Include(cntStates, csInitOnce);
 
-  if wbCanSortINFO and wbSortINFO then
+  if not wbBuildingRefsParallel and wbCanSortINFO and wbSortINFO then
     if not (GetIsDeleted or GetIsPartialForm) and wbBeginInternalEdit(False) then try
       if wbFillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
@@ -17651,7 +17651,7 @@ begin
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
 
-    if wbCanSortINFO and (grStruct.grsGroupType = 7) then begin
+    if not wbBuildingRefsParallel and wbCanSortINFO and (grStruct.grsGroupType = 7) then begin
 
       if not wbSortINFO then
         Exit;
@@ -23260,19 +23260,19 @@ begin
   begin
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
       if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
-        Result := Result + ' {' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) + '}'
+        Result := Result + ' {' + IntToStr(NativeUInt(GetDataBasePtr) - wbBaseOffset) + '}'
       else
-        Result := Result + ' {{' + IntToHex64(NativeUInt(GetDataBasePtr), 8) + '}}';
+        Result := Result + ' {{' + IntToStr(NativeUInt(GetDataBasePtr)) + '}}';
     // something for Dump: Displaying the size in {} and the array count in []
     //  Triggers a lot of pre calculations
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
       if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
-        Result := Result + ' {' + IntToHex64(NativeUInt(GetDataEndPtr) - wbBaseOffset, 8) +
-          '-' + IntToHex64(NativeUInt(GetDataBasePtr) - wbBaseOffset, 8) +
+        Result := Result + ' {' + IntToStr(NativeUInt(GetDataEndPtr) - wbBaseOffset) +
+          '-' + IntToStr(NativeUInt(GetDataBasePtr) - wbBaseOffset) +
           ' = ' + IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}'
       else
-        Result := Result + ' {{' + IntToHex64(NativeUInt(GetDataEndPtr), 8) +
-          '-' + IntToHex64(NativeUInt(GetDataBasePtr), 8) +
+        Result := Result + ' {{' + IntToStr(NativeUInt(GetDataEndPtr)) +
+          '-' + IntToStr(NativeUInt(GetDataBasePtr)) +
           ' = ' + IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}}';
     if (Resolved.DefType = dtArray) and (wbDumpOffset>1) and Supports(Self, IwbDataContainer, Container) then
       Result := Result + ' [' + IntToStr(Container.GetElementCount) + ']';

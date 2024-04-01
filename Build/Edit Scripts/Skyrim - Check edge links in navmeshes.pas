@@ -87,7 +87,7 @@ begin
       end
       else begin
         EdgeLink := ElementByIndex(EdgeLinks, EdgeValue);
-        if (FormID(LinksTo(ElementByName(EdgeLink, 'Mesh'))) = FormID(navm2)) and (GetElementNativeValues(EdgeLink, 'Triangle') = tri2) then begin
+        if Equals(MasterOrSelf(LinksTo(ElementByName(EdgeLink, 'Navmesh'))), MasterOrSelf(navm2)) and (GetElementNativeValues(EdgeLink, 'Triangle') = tri2) then begin
           Result := True;
           Exit;
         end;
@@ -139,7 +139,7 @@ begin
         else begin
           Inc(EdgeLinkFound);
           EdgeLink := ElementByIndex(EdgeLinks, EdgeValue);
-          if not CheckEdgeLink(WinningOverride(LinksTo(ElementByName(EdgeLink, 'Mesh'))), e, GetElementNativeValues(EdgeLink, 'Triangle'), i) then begin
+          if not CheckEdgeLink(WinningOverride(LinksTo(ElementByName(EdgeLink, 'Navmesh'))), e, GetElementNativeValues(EdgeLink, 'Triangle'), i) then begin
             AddMessage(Format('via %s link %d', [arEdge[j], EdgeValue]));
             Inc(warnings);
           end;
