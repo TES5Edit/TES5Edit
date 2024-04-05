@@ -17617,9 +17617,6 @@ var
   NodeDatas                   : PViewNodeDatas;
 begin
   NodeDatas := Sender.GetNodeData(Node);
-  if NodeDatas[0].ConflictAll = caUnknown then
-    Assert(False);
-
   if NodeDatas[0].ConflictAll >= caNoConflict then
     ItemColor := wbLighter(ConflictAllToColor(NodeDatas[0].ConflictAll), 0.85)
   else
