@@ -9825,12 +9825,28 @@ begin
         'OBS_COM End'
       ]), cpNormal, True, false, nil, nil, 26)
     ], [])),
-    wbRArray('Actions', wbRStruct('Action', [
+    wbRArray('Actions', wbRStructSK([0, 1, 3, 4], 'Action', [
       wbInteger(ANAM, 'Type', itU16, wbEnum([
-        'Dialogue',
-        'Package',
-        'Timer'
-      ]), cpNormal, True),
+        {0} 'Dialogue',
+        {1} 'Package',
+        {2} 'Timer'
+      ]), cpNormal, True)
+      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
+        begin
+          if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+            Exit;
+          if aOldValue = aNewValue then
+            Exit;
+          if not Assigned(aElement) then
+            Exit;
+          var lContainer: IwbContainerElementRef;
+          if not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+            Exit;
+          var lDataElement := lContainer.ElementBySortOrder[7]; //'Type Specific Action'
+          if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
+            lDataElement.Remove;
+        end)
+      .IncludeFlag(dfIncludeValueInDisplaySignature),
       wbString(NAM0, 'Name'),
       wbInteger(ALID, 'Actor ID', itS32),
       wbUnknown(LNAM),
@@ -9857,14 +9873,37 @@ begin
       ])),
       wbInteger(SNAM, 'Start Phase', itU32),
       wbInteger(ENAM, 'End Phase', itU32),
-      wbFloat(SNAM, 'Timer Seconds'),
-      wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK])),
-      wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
-      wbInteger(HTID, 'Headtrack Actor ID', itS32),
-      wbFloat(DMAX, 'Looping - Max'),
-      wbFloat(DMIN, 'Looping - Min'),
-      wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
-      wbInteger(DEVA, 'Emotion Value', itU32),
+      wbRUnion('Type Specific Action', function(const aContainer: IwbContainerElementRef): Integer
+        begin
+          Result := -1;
+          if not Assigned(aContainer) then
+            Exit;
+          var lType := aContainer.ElementNativeValues[ANAM];
+          if not VarIsOrdinal(lType) then
+            Exit;
+          Result := lType;
+        end,
+      [
+        {0 Dialogue}
+        wbRStruct('Dialogue', [
+          wbFormIDCk(DATA, 'Topic', [DIAL, NULL]),
+          wbInteger(HTID, 'Headtrack Actor ID', itS32),
+          wbFloat(DMAX, 'Looping - Max'),
+          wbFloat(DMIN, 'Looping - Min'),
+          wbInteger(DEMO, 'Emotion Type', itU32, wbEmotionTypeEnum),
+          wbInteger(DEVA, 'Emotion Value', itU32)
+        ], []),
+
+        {1 Package}
+        wbRStruct('Package', [
+          wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK]))
+        ], []),
+
+        {2 Timer}
+        wbRStruct('Timer', [
+          wbFloat(SNAM, 'Duration (Seconds)')
+        ], [])
+      ], []),
       {>>> BEGIN leftover from earlier CK versions <<<}
       wbRStruct('Unused', [
         wbUnknown(SCHR),
@@ -9874,7 +9913,7 @@ begin
         wbUnknown(SCRO)
       ], [], cpIgnore, false, wbNeverShow),
       {>>> END leftover from earlier CK versions <<<}
-      wbEmpty(ANAM, 'End Marker', cpNormal, True)
+      wbMarkerReq(ANAM)
     ], [])),
     {>>> BEGIN leftover from earlier CK versions <<<}
     wbRStruct('Unused', [
@@ -9895,7 +9934,32 @@ begin
     {>>> END leftover from earlier CK versions <<<}
     wbFormIDCk(PNAM, 'Quest', [QUST]),
     wbInteger(INAM, 'Last Action Index', itU32),
-    wbUnknown(VNAM),
+    wbStruct(VNAM, 'Actor Behavior Settings', [
+      wbInteger('Death', itU32, wbEnum([
+        'Set All Normal',
+        '',
+        'Set All End',
+        'Don''t Set All'
+      ])),
+      wbInteger('Combat', itU32, wbEnum([
+        'Set All Normal',
+        'Set All Pause',
+        'Set All End',
+        'Don''t Set All'
+      ])),
+      wbInteger('Dialogue', itU32, wbEnum([
+        'Set All Normal',
+        'Set All Pause',
+        'Set All End',
+        'Don''t Set All'
+      ])),
+      wbInteger('Observe Combat', itU32, wbEnum([
+        'Set All Normal',
+        'Set All Pause',
+        'Set All End',
+        'Don''t Set All'
+      ]))
+    ]),
     wbCTDAs
   ]);
 

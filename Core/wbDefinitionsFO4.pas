@@ -24,6 +24,7 @@ var
   wbSMNodeFlags: IwbFlagsDef;
 
   wbCRCValuesEnum: IwbEnumDef;
+  wbActorBehaviorEnum: IwbEnumDef;
   wbActorPropertyEnum: IwbEnumDef;
   wbAdvanceActionEnum: IwbEnumDef;
   wbStaggerEnum: IwbEnumDef;
@@ -12079,7 +12080,7 @@ begin
           wbRArray('Packages', wbFormIDCk(PNAM, 'Package', [PACK]))
         ], []),
 
-        {2 'Timer}
+        {2 Timer}
         wbRStruct('Timer', [
           wbFloat(SNAM, 'Timer - Max Seconds'),
           wbInteger(SCQS, 'Set Parent Quest Stage', itS16),
