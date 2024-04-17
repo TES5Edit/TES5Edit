@@ -7088,7 +7088,8 @@ begin
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
-      {0x00800000} 23, 'Is Marker'
+      {0x00800000} 23, 'Is Marker',
+      {0x02000000} 25, 'Obstacle'
     ])), [
     wbEDID,
     wbVMAD,
@@ -7420,6 +7421,7 @@ begin
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x00800000} 23, 'Is Marker',
+      {0x02000000} 25, 'Obstacle',
       {0x10000000} 28, 'Must Exit To Talk',
       {0x20000000} 29, 'Child Can Use'
     ])), [
@@ -12754,7 +12756,8 @@ begin
 
   wbRecord(TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} 15, 'Has Distant LOD'
+      {0x00008000} 15, 'Has Distant LOD',
+      {0x02000000} 25, 'Obstacle'
     ])), [
     wbEDID,
     wbVMAD,
