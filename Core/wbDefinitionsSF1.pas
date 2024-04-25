@@ -9724,33 +9724,33 @@ end;
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Rotation Velocity'),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Particle Size X'),
-      wbFloat('Center Offset Min'),
+      wbUnused(4),
       wbFloat('Particle Size Y'),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Center Offset Min'),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Center Offset Max'),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Initial Rotation'),
-      wbUnknown(4),
+      wbUnused(4),
       wbInteger('# of Subtextures X', itU32),
-      wbUnknown(4),
+      wbUnused(4),
       wbInteger('# of Subtextures Y', itU32),
-      wbUnknown(4),
+      wbUnused(4),
       wbInteger('Type', itU32, wbEnum([
         'Rain',
         'Snow',
         'Unknown 2'
       ])),
-      wbUnknown(4),
+      wbUnused(4),
       wbInteger('Box Size', itU32),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Particle Density'),
-      wbUnknown
+      wbUnused(4)
     ], cpNormal, True, nil, 10),
     wbString(MNAM, 'Particle Texture')
   ]);
@@ -13825,14 +13825,23 @@ end;
     wbKSIZ,
     wbKWDAs,
     wbStruct(DAT2, 'Data', [
-      { 0} wbUnknown(16),
-      {16} wbFloat,
-      {20} wbUnknown(12),
-      {32} wbFloat,
-      {36} wbFloat,
+      { 0} wbInteger('Time', itS32),
+      { 4} wbFloat('Radius'),
+      { 8} wbByteColors('Color'),
+      {12} wbUnknown(4), // probably flags
+      {16} wbFloat('Falloff Exponent'),
+      {20} wbFloat('FOV'),
+      {24} wbFloat('Near Clip'),
+           wbStruct('Flicker Effect', [
+      {28}   wbFloat('Period'),
+      {32}   wbFloat('Intensity Amplitude'),
+      {36}   wbFloat('Movement Amplitude')
+           ]),
       {40} wbUnknown(4),
       {44} wbFloat,
-      {48} wbUnknown(12),
+      {48} wbFloat('God Rays - Near Clip'),
+      {52} wbFloat,
+      {56} wbUnknown(4), // probably flags
       {60} wbFloat,
       {64} wbFloat,
       {68} wbFloat,
@@ -13898,33 +13907,41 @@ end;
       { 8} wbFloat,
       {12} wbFloat,
       {16} wbFloat,
-      {20} wbUnknown(4)
+      {20} wbUnknown(4) // may be 2 single byte bool and 2 unused bytes of garbage
     ]),
     wbStruct(FLRD, 'Unknown', [
       { 0} wbFloat,
       { 4} wbFloat,
       { 8} wbFloat,
       {12} wbFloat,
-      {16} wbUnknown(4)
+      {16} wbUnknown(4) // probably a bool - only values seen in Starfield.esm is 00 00 00 00 and 01 00 00 00
     ]),
+    // FLGD appears to be God Rays data placed directly in main record instead of a separate record
     wbStruct(FLGD, 'Unknown', [
       { 0} wbFloat,
       { 4} wbFloat,
       { 8} wbFloat,
       {12} wbFloat,
-      {16} wbUnknown(16),
+      {16} wbUnknown(4),
+      {20} wbFloat,
+      {24} wbFloat,
+      {28} wbFloat,
       {32} wbFloat,
       {36} wbFloat,
-      {40} wbUnknown(16),
+      {40} wbFloat,
+      {44} wbFloat,
+      {48} wbFloat,
+      {42} wbFloat,
       {56} wbFloat,
       {60} wbFloat,
-      {64} wbUnknown(4),
+      {64} wbFloat,
       {68} wbFloat,
-      {72} wbUnknown(8),
+      {72} wbFloat,
+      {76} wbFloat,
       {80} wbFloat,
       {84} wbUnknown(4)
     ]),
-    wbUnknown(LLLD),
+    wbUnknown(LLLD), // proably flags
     wbStruct(FLAD, 'Unknown', [
       { 0} wbFloat,
       { 4} wbFloat,
@@ -18529,7 +18546,14 @@ end;
       wbInteger(csIncludeCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbUnknown(2),
-      wbLenString('Name', 4),
+      wbLenString('Name').SetFormater(wbStringEnum([
+          'Spaceship_InstanceData',
+          'TESFlora_InstanceData',
+          'TESNPC_InstanceData',
+          'TESObjectARMOR_InstanceData',
+          'TESObjectWEAP_InstanceData',
+          'NONE'
+        ])).IncludeFlag(dfHasZeroTerminator),
       wbUnknown(2),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
