@@ -58,13 +58,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'd';
-    Title   : 'DIAL Hotfix';
+    Build   : 'e';
+    Title   : '';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010504;
-  wbDeveloperMessageVersion : Integer = 04010504;
+  wbWhatsNewVersion : Integer = 04010505;
+  wbDeveloperMessageVersion : Integer = 04010505;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
