@@ -271,6 +271,7 @@ function wbByteColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 function wbFloatColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbFloatColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+function wbRFloatColors(const aName: string = 'Color'; const aSigs: TwbSignatures = []): IwbRecordMemberDef;
 function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
 function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
@@ -2890,6 +2891,17 @@ begin
     wbFloat('Green', cpNormal, True, 255, 0),
     wbFloat('Blue', cpNormal, True, 255, 0)
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbRFloatColors(const aName: string = 'Color'; const aSigs: TwbSignatures = []): IwbRecordMemberDef;
+begin
+  Assert(Length(aSigs) = 3, 'wbRFloatColors called with incorrect number of signatures.');
+
+  Result := wbRStruct(aName, [
+    wbFloat(aSigs[0], 'Red', cpNormal, False, 255, 0).SetRequired(True),
+    wbFloat(aSigs[1], 'Green', cpNormal, False, 255, 0).SetRequired(True),
+    wbFloat(aSigs[2], 'Blue', cpNormal, False, 255, 0).SetRequired(True)
+  ], []).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
 function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
