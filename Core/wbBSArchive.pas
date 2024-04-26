@@ -2194,7 +2194,7 @@ begin
         end;
       end;
 
-      baFO4dds, baSFdds: begin
+      baFO4dds, baFO4NGdds, baSFdds: begin
         FileFO4 := aFileRecord;
 
         TexSize := SizeOf(TDDSHeader);
