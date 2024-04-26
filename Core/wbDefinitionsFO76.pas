@@ -162,6 +162,7 @@ var
   wbCTDAsReq: IwbSubRecordArrayDef;
   wbCTDAsCount: IwbSubRecordArrayDef;
   wbXESP: IwbSubRecordDef;
+  wbXLWT: IwbSubRecordDef;
   wbICON: IwbSubRecordDef;
   wbMICO: IwbSubRecordDef;
   wbActorValue: IwbUnionDef;
@@ -7797,6 +7798,8 @@ begin
     wbByteArray('Unused', 3, cpIgnore)
   ]);
 
+  wbXLWT := wbFloat(XLWT, 'Light Weight');
+
   wbPDTO :=
     wbStruct(PDTO, 'Topic Data', [
       wbInteger('Type', itU32, wbEnum([
@@ -8335,6 +8338,8 @@ begin
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+
+    wbXLWT,
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
@@ -10471,6 +10476,7 @@ begin
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbQSTI,
+    wbUnknown(AIID),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -10528,6 +10534,7 @@ begin
     wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbQSTI,
+    wbUnknown(AIID),
     wbInteger(FNAM, 'Flags (Unused)', itU16),
     wbCNDCs,
     wbFloat(PAHD, 'Unknown Float'),
@@ -10549,6 +10556,7 @@ begin
     wbOPDSs,
     wbPTRN,
     wbSNTP,
+    wbPHST,
     wbXALG,
     wbFULL,
     wbKeywords,
@@ -10858,6 +10866,7 @@ procedure DefineFO76c;
       wbXRGD,
       wbFormIDCk(XLYR, 'Layer', [LAYR]),
       wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+      wbXLWT,
       wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
       wbStruct(XCVR,'Water Current Zone Data', [
         wbFloat('Unknown'),
@@ -11358,7 +11367,12 @@ begin
       {0x08} 'Charging',
       {0x10} 'Retarget Any Nearby Melee Target',
       {0x20} 'Unknown 5'
-    ]), cpNormal, True)
+    ]), cpNormal, True),
+    wbStruct(CSTG, '', [
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ])
   ]);
 end;
 
@@ -11856,6 +11870,7 @@ begin
     wbByteRGBA(PNAM, 'Marker Color'),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
     wbQSTI,
+    wbUnknown(AIID),
     wbATTX,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
@@ -13375,6 +13390,8 @@ begin
     wbFloat(RNAM, 'World Location Radius'),
     //wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbFloat(ANAM, 'Actor Fade Mult'),
+    wbUnknown(NAM5),
+    wbUnknown(NAM6),
     wbCNAM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
@@ -15086,6 +15103,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -15726,6 +15744,7 @@ begin
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -17398,7 +17417,8 @@ begin
     wbString(HLTX, 'Hair Color Extended Lookup Texture'),
     wbFormIDCk(QSTI, 'Dialogue Quest', [QUST]),
     wbBSMPSequence,
-    wbLString(SNAM, 'Comments')
+    wbLString(SNAM, 'Comments'),
+    wbUnknown(TSLT)
   ], False, nil, cpNormal, False, nil, wbRACEAfterSet);
 
 
@@ -17626,6 +17646,7 @@ begin
     wbEmpty(XLKT, 'Linked Ref Transient'),
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
     wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+    wbXLWT,
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbStruct(XRDO, 'Radio', [
       wbFloat('Frequency'),
@@ -18231,6 +18252,7 @@ begin
     ])), [
     wbEDID,
     wbOBND(True),
+    wbPHST,
     wbOPDSs,
     wbDEFL,
     wbFULL,
@@ -18415,6 +18437,7 @@ begin
     wbNAM1LODP,
     wbByteRGBA(PNAM, 'Marker Color'),
     wbQSTI,
+    wbUnknown(AIID),
     wbATTX,
     wbLStringKC(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -18512,6 +18535,7 @@ begin
       wbFloat('Unknown 4'),
       wbFloat('Unknown 5')
     ], cpNormal, True, nil, 4),
+    wbUnknown(AWSD),
     wbByteArray(GNAM, 'Unused', 0),
     wbStruct(NAM0, 'Linear Velocity', [
       wbFloat('X'),
@@ -18527,7 +18551,8 @@ begin
     wbString(NAM3, 'Layer 2 Noise Texture'),
     wbString(NAM4, 'Layer 3 Noise Texture'),
     wbString(NAM5, 'Flow Normals Noise Texture'),
-    wbUnknown(NAM6)
+    wbUnknown(NAM6),
+    wbUnknown(NAM7)
   ]);
 
   wbRecord(WEAP, 'Weapon',
@@ -18626,6 +18651,7 @@ begin
         {0x80000000} 'Unknown 32'
       ])),
       wbInteger('Capacity', itU16),
+      wbFromVersion(200, wbInteger('Ammo used per shot', itU16)),
       wbInteger('Weapon Type', itU8, wbEnum([
         'HandToHandMelee',
         'OneHandSword',
@@ -18670,7 +18696,8 @@ begin
         wbByteArray('Unused', 4),
         wbFloat('Color Remapping Index')
       ]),
-      wbFromVersion(146, wbInteger('Health',itU32))
+      wbFromVersion(146, wbInteger('Health',itU32)),
+      wbFromVersion(201, wbUnknown)
     ]),
     wbStruct(FNAM, '', [
       wbFloat('Animation Fire Seconds'),
@@ -18751,6 +18778,7 @@ begin
     wbFormIDCk(CVT2, 'Condition Loss Scale', [CURV]),
     wbFormIDCk(CVT3, 'Bash Condition Loss Scale', [CURV]),
     wbFormIDCk(CVT4, 'Max Durability Curve', [CURV]),
+    wbFormIDCk(CVT5, 'Unknown Curve', [CURV]),
     wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
       'Very Slow',
       'Slow',
@@ -18847,8 +18875,8 @@ begin
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbArray(XCLW,'Cell Water Height Locations',
       wbStruct('Cell Water Height Location', [
-        wbInteger('Cell X',itS16),
-        wbInteger('Cell Y',itS16)
+        wbInteger('Cell Y',itS16),
+        wbInteger('Cell X',itS16)
       ])
     ),
     wbArray(WHGT, 'Water Heights',
@@ -19057,7 +19085,11 @@ begin
     ], cpNormal, False, nil, 3),
     wbFloat(VNAM, 'Volatility Mult'),
     wbFloat(WNAM, 'Visibility Mult'),
-    wbFloat(XNAM)
+    wbFloat(XNAM),
+    wbFloat(ZNAM),
+    wbFloat(YNAM),
+    wbFloat(KNAM),
+    wbFloat(INAM)
   ]);
 end;
 
@@ -19389,6 +19421,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -19715,6 +19748,7 @@ begin
     wbNAM1LODP,
     wbPRPS,
     wbByteRGBA(PNAM, 'Marker Color'),
+    wbUnknown(AIID),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'Unknown 0',
@@ -19787,7 +19821,8 @@ begin
         wbCTDAs
       ], []),
       cpNormal, False, nil, wbTERMMenuItemsAfterSet
-    )
+    ),
+    wbString(SCFC, 'Comments')
   ]);
 
   {wbRecord(TLOD, 'TLOD', [
@@ -19961,6 +19996,7 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
+    wbDESC,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -20168,6 +20204,7 @@ begin
     ], [])),
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
+    wbByteArray(UNAM, 'Unknown', 1),
     wbInteger(INAM, 'Next Node ID', itU32),
     wbUnknown(STPT),
     wbUnknown(SNFG)
@@ -20514,6 +20551,8 @@ begin
     wbEDID,
     wbFULL,
     wbDESC,
+    wbSPCT,
+    wbSPLOs,
     wbFormID(LIPC, 'Bonus Cards'),
     wbFormID(LEPC, 'Perk Card List'),
     wbFormID(LINV, 'Inventory'),
@@ -20547,6 +20586,21 @@ begin
     wbByteArray(DCGS, 'DCGS - Unknown 4 bytes', 4),
     wbFormID(DCGL, 'Location'),
     wbByteArray(DCGB, 'DCGB - Unknown 4 bytes', 4)
+  ]);
+
+  wbRecord(DIST, 'District', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbFormID(DPRT, 'Parent District'),
+    wbFormID(DQST, 'Quest'),
+    wbFormID(DCLL, 'Cell'),
+    wbString(DIMG, 'Image'),
+    wbStruct(DPOS, 'Position', [
+      wbFloat,
+      wbFloat
+    ]),
+    wbUnknown(DICO)
   ]);
 end;
 
@@ -20752,6 +20806,7 @@ begin
   wbAddGroupOrder(DCGF); //new in Fallout 76
   wbAddGroupOrder(QMDL); //new in Fallout 76
   wbAddGroupOrder(LOUT); //new in Fallout 76
+  wbAddGroupOrder(DIST); //new in Fallout 76
 end;
 
 
