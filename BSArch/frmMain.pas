@@ -169,7 +169,7 @@ begin
     baTES4, baFO3, baSSE: Compressed := PwbBSFileTES4(aFileRecord).Compressed(bsa);
     baFO4, baFO4dds,
     baFO4NG, baFO4NGdds,
-    baFO4NG2:             Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
+    baFO4NG2, baFO4NG2dds:Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
     baSF, baSFdds:        Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
     else                  Compressed := False;
   end;
@@ -1271,7 +1271,7 @@ begin
         FileTES4.RawSize
       ]));
     end;
-    baFO4, baFO4dds: begin
+    baFO4, baFO4dds, baFO4NGdds, baFO4NG2dds: begin
       FileFO4 := aFileRecord;
       txt.Add(Format('  DirHash: %s  NameHash: %s  Ext: %s', [
         IntToHex(FileFO4.DirHash, 8),
@@ -1280,7 +1280,7 @@ begin
       ]));
       if bsa.ArchiveType = baFO4 then
         txt.Add(Format('  Size: %d  PackedSize: %d', [FileFO4.Size, FileFO4.PackedSize]))
-      else if bsa.ArchiveType = baFO4dds then begin
+      else if bsa.ArchiveType in [baFO4dds, baFO4NGdds, baFO4NG2dds] then begin
         txt.Add(Format('  Width: %04d  Height: %04d  CubeMap: %s  Format: %s', [
           FileFO4.Width,
           FileFO4.Height,
@@ -1525,7 +1525,7 @@ begin
       );
       Result := False;
     end;
-    baFO4, baFO4dds, baSF, baSFdds: if aSize > High(Cardinal) then begin
+    baFO4, baFO4dds, baFO4NGdds, baFO4NG2dds, baSF, baSFdds: if aSize > High(Cardinal) then begin
       DialogMessage(
         Format('Created archive size %.2n MB is too large:'#13'%s'#13#13, [aSize / (1024*1024), aArchiveName]) +
         'The game itself has no size limit, however Creation Kit''s limit ' +
@@ -1591,7 +1591,7 @@ begin
   var pc: TPackingCompression;
   for var asset in Assets do begin
     // FO4 dds archives must be compressed or CTD
-    if asset.Compressed or (Options.ArchiveType in [baFO4dds, baSFdds]) then
+    if asset.Compressed or (Options.ArchiveType in [baFO4dds, baFO4NGdds, baFO4NG2dds, baSFdds]) then
       pc := pcCompress
     else begin
       pc := pcUncompress;
@@ -1607,7 +1607,7 @@ begin
   try
 
   // additional preparation for FO4 dds archive
-  if Options.ArchiveType in [baFO4dds, baSFdds]  then begin
+  if Options.ArchiveType in [baFO4dds, baFO4NGdds, baFO4NG2dds, baSFdds]  then begin
 
     // caching DDS files information
     var ProcDDSInfo: TProcessProc :=

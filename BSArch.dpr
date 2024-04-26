@@ -100,20 +100,20 @@ begin
       WriteLn(s);
     end;
 
-    baFO4, baFO4dds: begin
+    baFO4, baFO4dds, baFO4NG, baFO4NGdds, baFO4NG2, baFO4NG2dds: begin
       FileFO4 := aFileRecord;
       s := Format('  DirHash: %s  NameHash: %s  Ext: %s', [
         IntToHex(FileFO4.DirHash, 8),
         IntToHex(FileFO4.NameHash, 8),
         string(FileFO4.Ext)
       ]);
-      if bsa.ArchiveType = baFO4 then
+      if bsa.ArchiveType in [baFO4, baFO4NG, baFO4NG2] then
         s := s + Format('  Unknown: 0x%s'#13#10'  Size: %d  PackedSize: %d', [
           IntToHex(FileFO4.Unknown, 8),
           FileFO4.Size,
           FileFO4.PackedSize
         ])
-      else if bsa.ArchiveType = baFO4dds then begin
+      else if bsa.ArchiveType in [baFO4dds, baFO4NGdds, baFO4NG2dds] then begin
         s := s + Format(#13#10'  Width: %04d  Height: %04d  CubeMap: %s  Format: %s', [
           FileFO4.Width,
           FileFO4.Height,
@@ -275,6 +275,10 @@ begin
   if FindCmdLineSwitch('sse')  then atype := baSSE else
   if FindCmdLineSwitch('fo4')  then atype := baFO4 else
   if FindCmdLineSwitch('fo4dds') then atype := baFO4dds else
+  if FindCmdLineSwitch('fo4ng')  then atype := baFO4NG else
+  if FindCmdLineSwitch('fo4ngdds') then atype := baFO4NGdds else
+  if FindCmdLineSwitch('fo4ng2')  then atype := baFO4NG2 else
+  if FindCmdLineSwitch('fo4ng2dds') then atype := baFO4NG2dds else
   if FindCmdLineSwitch('sf1')  then atype := baSF else
   if FindCmdLineSwitch('sf1dds') then atype := baSFdds
   else
@@ -287,7 +291,7 @@ begin
     bsa.ShareData := FindCmdLineSwitch('share', s);
     bsa.Multithreaded := FindCmdLineSwitch('mt');
 
-    if atype in [baFO4dds, baSFdds] then begin
+    if atype in [baFO4dds, baFO4NGdds, baFO4NG2dds, baSFdds] then begin
       mask := '*.dds';
       bsa.DDSInfoProc := GetDDSFileInfo;
       DDSRoot := root;
@@ -529,6 +533,10 @@ begin
     WriteLn('  -sse        Skyrim Special Edition archive format');
     WriteLn('  -fo4        Fallout 4 General archive format');
     WriteLn('  -fo4dds     Fallout 4 DDS archive format (streamed DDS textures mipmaps)');
+    WriteLn('  -fo4ng      Fallout 4 NG General archive format v7');
+    WriteLn('  -fo4ngdds   Fallout 4 NG DDS archive format v7 (streamed DDS textures mipmaps)');
+    WriteLn('  -fo4ng2     Fallout 4 NG General archive format v8');
+    WriteLn('  -fo4ng2dds  Fallout 4 NG DDS archive format v8 (streamed DDS textures mipmaps)');
     WriteLn('  -sf1        Starfield General archive format');
     WriteLn('  -sf1dds     Starfield DDS archive format (streamed DDS textures mipmaps)');
     WriteLn('  -af:value   Override archive flags with a hex value');

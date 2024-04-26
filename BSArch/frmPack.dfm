@@ -3,7 +3,7 @@ object FormPack: TFormPack
   Top = 0
   BorderStyle = bsDialog
   Caption = 'Packing Options'
-  ClientHeight = 480
+  ClientHeight = 580
   ClientWidth = 634
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -12,7 +12,6 @@ object FormPack: TFormPack
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   OnClose = FormClose
   OnCreate = FormCreate
@@ -20,8 +19,7 @@ object FormPack: TFormPack
   OnShow = FormShow
   DesignSize = (
     634
-    480)
-  PixelsPerInch = 96
+    580)
   TextHeight = 13
   object lblTip: TLabel
     Left = 296
@@ -34,7 +32,7 @@ object FormPack: TFormPack
   end
   object Label1: TLabel
     Left = 32
-    Top = 272
+    Top = 376
     Width = 580
     Height = 35
     Anchors = [akLeft, akTop, akRight]
@@ -48,7 +46,7 @@ object FormPack: TFormPack
   end
   object Label2: TLabel
     Left = 32
-    Top = 336
+    Top = 440
     Width = 580
     Height = 27
     Anchors = [akLeft, akTop, akRight]
@@ -59,11 +57,10 @@ object FormPack: TFormPack
       'the same file is copied under different names and folders. Reduc' +
       'es packing speed.'
     WordWrap = True
-    ExplicitWidth = 609
   end
   object Label3: TLabel
     Left = 16
-    Top = 383
+    Top = 488
     Width = 100
     Height = 13
     Caption = 'Archive File Name'
@@ -85,7 +82,7 @@ object FormPack: TFormPack
     Left = 16
     Top = 27
     Width = 249
-    Height = 206
+    Height = 310
     Alignment = taLeftJustify
     AutoWrap = False
     BevelOuter = bvNone
@@ -140,7 +137,7 @@ object FormPack: TFormPack
   end
   object chkMultiThreaded: TCheckBox
     Left = 16
-    Top = 249
+    Top = 354
     Width = 161
     Height = 17
     Caption = 'Multithreaded Packing'
@@ -154,7 +151,7 @@ object FormPack: TFormPack
   end
   object chkSharedData: TCheckBox
     Left = 16
-    Top = 313
+    Top = 418
     Width = 161
     Height = 17
     Caption = 'Shared Data'
@@ -168,7 +165,7 @@ object FormPack: TFormPack
   end
   object edFileName: TEdit
     Left = 16
-    Top = 402
+    Top = 506
     Width = 556
     Height = 21
     ReadOnly = True
@@ -176,7 +173,7 @@ object FormPack: TFormPack
   end
   object btnBrowse: TButton
     Left = 578
-    Top = 400
+    Top = 504
     Width = 34
     Height = 25
     Caption = '...'
@@ -185,7 +182,7 @@ object FormPack: TFormPack
   end
   object btnPack: TButton
     Left = 426
-    Top = 441
+    Top = 542
     Width = 90
     Height = 25
     Anchors = [akRight, akBottom]
@@ -193,9 +190,9 @@ object FormPack: TFormPack
     ModalResult = 1
     TabOrder = 8
   end
-  object Button1: TButton
+  object btnCancel: TButton
     Left = 522
-    Top = 441
+    Top = 542
     Width = 90
     Height = 25
     Anchors = [akRight, akBottom]

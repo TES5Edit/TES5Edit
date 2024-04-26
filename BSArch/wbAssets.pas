@@ -267,7 +267,7 @@ begin
 
     if ArchiveName <> '' then begin
       var i := ArchiveManager.IndexOf(ArchiveName);
-      if (i <> -1) and (ArchiveManager[i].ArchiveType in [baFO4dds, baSFdds]) then begin
+      if (i <> -1) and (ArchiveManager[i].ArchiveType in [baFO4dds, baFO4NGdds, baFO4NG2dds, baSFdds]) then begin
         var r: PwbBSFileFO4 := ArchiveManager[i].FindFileRecord(FileName);
         if not Assigned(r) then
           raise Exception.Create('Error reading texture parameters from DDS archive');

@@ -29,7 +29,7 @@ type
     edFileName: TEdit;
     btnBrowse: TButton;
     btnPack: TButton;
-    Button1: TButton;
+    btnCancel: TButton;
     lblTip: TLabel;
     lblPack: TLabel;
     procedure FormCreate(Sender: TObject);
@@ -67,7 +67,7 @@ begin
   edFileName.Text := TPath.ChangeExtension(edFileName.Text, cArchiveTypeExtensions[po.ArchiveType]);
   lblTip.Visible := not chkAutodetectFlags.Visible;
   case po.ArchiveType of
-    baFO4dds, baSFdds: lblTip.Caption :=
+    baFO4dds, baFO4NGdds, baFO4NG2dds, baSFdds: lblTip.Caption :=
       'A special type of archive optimized for textures which can''t contain anything else.'#13 +
       'Due to the game engine bug it must be compressed (the game might crash otherwise). ' +
       'All textures will be compressed regardless of their compression status in the list.';
