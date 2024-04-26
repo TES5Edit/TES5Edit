@@ -3883,25 +3883,6 @@ begin
     Result := 7;
 end;
 
-function wbByteColors(const aName: string = 'Color'): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbInteger('Red', itU8),
-    wbInteger('Green', itU8),
-    wbInteger('Blue', itU8),
-    wbByteArray('Unused', 1)
-  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
-end;
-
-function wbFloatColors(const aName: string = 'Color'): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbFloat('Red', cpNormal, True, 255, 0),
-    wbFloat('Green', cpNormal, True, 255, 0),
-    wbFloat('Blue', cpNormal, True, 255, 0)
-  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
-end;
-
 function wbWeatherColors(const aName: string): IwbStructDef;
 begin
   Result := wbStruct(aName, [
@@ -13405,9 +13386,7 @@ begin
       wbEDID,
       wbFloat(CNAM, 'Intensity'),
       wbFloat(DNAM, 'Custom Color - Contribution'),
-      wbFloat(ENAM, 'Red', cpNormal, False, 255, 0),
-      wbFloat(FNAM, 'Green', cpNormal, False, 255, 0),
-      wbFloat(GNAM, 'Blue', cpNormal, False, 255, 0),
+      wbRFloatColors('Colors', [ENAM, FNAM, GNAM]),
       wbFloat(HNAM, 'Density - Contribution'),
       wbFloat(INAM, 'Density - Size'),
       wbFloat(JNAM, 'Density - Wind Speed'),

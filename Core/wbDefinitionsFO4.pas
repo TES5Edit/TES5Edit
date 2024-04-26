@@ -4974,25 +4974,6 @@ begin
     Result := 7;
 end;
 
-function wbByteColors(const aName: string = 'Color'): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbInteger('Red', itU8),
-    wbInteger('Green', itU8),
-    wbInteger('Blue', itU8),
-    wbByteArray('Unused', 1)
-  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
-end;
-
-function wbFloatColors(const aName: string = 'Color'): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbFloat('Red', cpNormal, True, 255, 0),
-    wbFloat('Green', cpNormal, True, 255, 0),
-    wbFloat('Blue', cpNormal, True, 255, 0)
-  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
-end;
-
 function wbWeatherColors(const aName: string): IwbValueDef;
 begin
   Result := wbStruct(aName, [
