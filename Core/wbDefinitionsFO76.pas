@@ -11368,7 +11368,11 @@ begin
       {0x10} 'Retarget Any Nearby Melee Target',
       {0x20} 'Unknown 5'
     ]), cpNormal, True),
-    wbUnknown(CSTG)
+    wbStruct(CSTG, '', [
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ])
   ]);
 end;
 
@@ -18647,7 +18651,7 @@ begin
         {0x80000000} 'Unknown 32'
       ])),
       wbInteger('Capacity', itU16),
-      wbFromVersion(200, wbByteArray('Unknown',2)),
+      wbFromVersion(200, wbInteger('Ammo used per shot', itU16)),
       wbInteger('Weapon Type', itU8, wbEnum([
         'HandToHandMelee',
         'OneHandSword',
@@ -18693,10 +18697,7 @@ begin
         wbFloat('Color Remapping Index')
       ]),
       wbFromVersion(146, wbInteger('Health',itU32)),
-      wbFromVersion(201, wbByteArray('Unknown',4)),
-      wbFromVersion(201, wbByteArray('Unknown',4)),
-      wbFromVersion(201, wbByteArray('Unknown',4)),
-      wbFromVersion(201, wbByteArray('Unknown',4))
+      wbFromVersion(201, wbUnknown)
     ]),
     wbStruct(FNAM, '', [
       wbFloat('Animation Fire Seconds'),
