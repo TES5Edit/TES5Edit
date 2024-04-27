@@ -14,7 +14,7 @@ Added support to archive handling to read and extract from v7 and v8 BA2 files.
 
 * #1304 - Multiple Definition Updates
     * [SF] LIGH - mark fields unused instead of unknown, 
-    * [SF ]OMOD - fix extraneous null character on name, add enum for types
+    * [SF] OMOD - fix extraneous null character on name, add enum for types
     * [FO4/FO76] SPGD - Mark fields as unused instead of unknown
 * #1306 - [TES5VR] Fix TES5VR Backported ESL not correctly allowing extended low form range.
 * #1307 - Scripting: Fixed math functions
