@@ -229,7 +229,7 @@ type
 
   TwbResourceDict = TDictionary<string, TwbNothing>;
 
-  TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NGdds, baFO4NG2);
+  TBSArchiveType = (baNone, baTES3, baTES4, baFO3, baSSE, baFO4, baFO4dds, baSF, baSFdds);
   TBSArchiveState = (stReading, stWriting);
   TBSArchiveStates = set of TBSArchiveState;
   TBSFileIterationProc = function(aArchive: TwbBSArchive; const aFileName: string;
@@ -452,10 +452,7 @@ const
     'Fallout 4',
     'Fallout 4 DDS',
     'Starfield',
-    'Starfield DDS',
-    'Fallout 4 NG',
-    'Fallout 4 NG DDS',
-    'Fallout 4 NG2'
+    'Starfield DDS'
   );
 
   cArchiveTypeExtensions: array[TBSArchiveType] of string = (
@@ -464,9 +461,6 @@ const
     '.bsa',
     '.bsa',
     '.bsa',
-    '.ba2',
-    '.ba2',
-    '.ba2',
     '.ba2',
     '.ba2',
     '.ba2',
@@ -526,14 +520,14 @@ const
   { https://github.com/jonwd7/bae/blob/master/src/bsa.h }
 
   // header versions
-  HEADER_VERSION_TES4 = $67; // Oblivion
-  HEADER_VERSION_FO3  = $68; // FO3, FNV, TES5
-  HEADER_VERSION_SSE  = $69; // SSE
-  HEADER_VERSION_FO4  = $01; // FO4
-  HEADER_VERSION_SF2   = $02; // SF
-  HEADER_VERSION_SF3   = $03; // SF
-  HEADER_VERSION_FO4NG = $07; // FO4NG
-  HEADER_VERSION_FO4NG2 = $08; // FO4NG2
+  HEADER_VERSION_TES4    = $67; // Oblivion
+  HEADER_VERSION_FO3     = $68; // FO3, FNV, TES5
+  HEADER_VERSION_SSE     = $69; // SSE
+  HEADER_VERSION_FO4v1   = $01; // FO4
+  HEADER_VERSION_SF2     = $02; // SF
+  HEADER_VERSION_SF3     = $03; // SF
+  HEADER_VERSION_FO4NGv7 = $07; // FO4NG
+  HEADER_VERSION_FO4NGv8 = $08; // FO4NG2
 
 
   // archive flags
@@ -842,7 +836,7 @@ end;
 
 function TwbBSFileFO4.Compressed(bsa: TwbBSArchive): Boolean;
 begin
-  if bsa.ArchiveType in [baFO4, baFO4NG, baFO4NG2] then
+  if bsa.ArchiveType = baFO4 then
     Result := PackedSize <> 0
   else
     Result := (Length(TexChunks) <> 0) and (TexChunks[0].PackedSize <> 0);
@@ -877,7 +871,7 @@ begin
       Result := fHeaderTES3.FileCount;
     baTES4, baFO3, baSSE:
       Result := fHeaderTES4.FileCount;
-    baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds:
+    baFO4, baFO4dds, baSF, baSFdds:
       Result := fHeaderFO4.FileCount;
     else
       Result := 0;
@@ -988,7 +982,7 @@ begin
       if FindFileRecordTES3(aFileName, i) then Result := @fFilesTES3[i];
     baTES4, baFO3, baSSE:
       if FindFileRecordTES4(aFileName, i, j) then Result := @fFoldersTES4[i].Files[j];
-    baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds:
+    baFO4, baFO4dds, baSF, baSFdds:
       if FindFileRecordFO4(aFileName, i) then Result := @fFilesFO4[i];
   end;
 end;
@@ -1040,12 +1034,12 @@ begin
           PwbBSFileTES4(aFileRecord).Size := PwbBSFileTES4(fPackedData[i].FileRecord).Size;
           PwbBSFileTES4(aFileRecord).Offset := PwbBSFileTES4(fPackedData[i].FileRecord).Offset;
         end;
-        baFO4, baSF, baFO4NG, baFO4NG2: begin
+        baFO4, baSF: begin
           PwbBSFileFO4(aFileRecord).Size := PwbBSFileFO4(fPackedData[i].FileRecord).Size;
           PwbBSFileFO4(aFileRecord).PackedSize := PwbBSFileFO4(fPackedData[i].FileRecord).PackedSize;
           PwbBSFileFO4(aFileRecord).Offset := PwbBSFileFO4(fPackedData[i].FileRecord).Offset;
         end;
-        baFO4dds, baSFdds, baFO4NGdds: begin
+        baFO4dds, baSFdds: begin
           PwbBSTexChunkRec(aFileRecord).Size := PwbBSTexChunkRec(fPackedData[i].FileRecord).Size;
           PwbBSTexChunkRec(aFileRecord).PackedSize := PwbBSTexChunkRec(fPackedData[i].FileRecord).PackedSize;
           PwbBSTexChunkRec(aFileRecord).Offset := PwbBSTexChunkRec(fPackedData[i].FileRecord).Offset;
@@ -1094,13 +1088,19 @@ begin
     fVersion := fStream.ReadCardinal;
     fCompressionType := ctZlib; // default compression type
     case fVersion of
-      HEADER_VERSION_TES4: fType := baTES4;
-      HEADER_VERSION_FO3 : fType := baFO3;
-      HEADER_VERSION_SSE : fType := baSSE;
-      HEADER_VERSION_FO4 : fType := baFO4;
-      HEADER_VERSION_SF2, HEADER_VERSION_SF3 : fType := baSF;
-      HEADER_VERSION_FO4NG : fType := baFO4NG;
-      HEADER_VERSION_FO4NG2 : fType := baFO4NG2;
+      HEADER_VERSION_TES4:
+        fType := baTES4;
+      HEADER_VERSION_FO3 :
+        fType := baFO3;
+      HEADER_VERSION_SSE :
+        fType := baSSE;
+      HEADER_VERSION_FO4v1,
+      HEADER_VERSION_FO4NGv7,
+      HEADER_VERSION_FO4NGv8 :
+        fType := baFO4;
+      HEADER_VERSION_SF2,
+      HEADER_VERSION_SF3:
+        fType := baSF;
     else
       raise Exception.Create('Unknown archive version 0x' + IntToHex(fVersion, 8));
     end;
@@ -1131,7 +1131,7 @@ begin
 
     //--------------------------------------------------
     // Fallout 4, Starfield
-    baFO4, baSF, baFO4NG, baFO4NG2: begin
+    baFO4, baSF: begin
       // read header
       fStream.ReadBuffer(fHeaderFO4, SizeOf(fHeaderFO4));
       // SF header
@@ -1162,8 +1162,6 @@ begin
       else if fHeaderFO4.Magic = MAGIC_DX10 then begin
         if fType = baFO4 then
           fType := baFO4dds
-        else if fType = baFO4NG then
-          fType := baFO4NGdds
         else if fType = baSF then
           fType := baSFdds;
         SetLength(fFilesFO4, fHeaderFO4.FileCount);
@@ -1321,13 +1319,13 @@ begin
     baFO4: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_GNRL;
-      fVersion := HEADER_VERSION_FO4;
+      fVersion := HEADER_VERSION_FO4v1;
       fCompressionType := ctZlib;
     end;
     baFO4dds: begin
       fMagic := MAGIC_BTDX;
       fHeaderFO4.Magic := MAGIC_DX10;
-      fVersion := HEADER_VERSION_FO4;
+      fVersion := HEADER_VERSION_FO4v1;
       fCompressionType := ctZlib;
     end;
     baSF: begin
@@ -1341,24 +1339,6 @@ begin
       fHeaderFO4.Magic := MAGIC_DX10;
       fVersion := HEADER_VERSION_SF3;
       fCompressionType := ctLZ4Block;
-    end;
-    baFO4NG: begin
-      fMagic := MAGIC_BTDX;
-      fHeaderFO4.Magic := MAGIC_GNRL;
-      fVersion := HEADER_VERSION_FO4NG;
-      fCompressionType := ctZlib;
-    end;
-    baFO4NGdds: begin
-      fMagic := MAGIC_BTDX;
-      fHeaderFO4.Magic := MAGIC_DX10;
-      fVersion := HEADER_VERSION_FO4NG;
-      fCompressionType := ctZlib;
-    end;
-    baFO4NG2: begin
-      fMagic := MAGIC_BTDX;
-      fHeaderFO4.Magic := MAGIC_GNRL;
-      fVersion := HEADER_VERSION_FO4NG2;
-      fCompressionType := ctZlib;
     end;
   else
     raise Exception.Create('Unsupported archive type');
@@ -1545,7 +1525,7 @@ begin
       fHeaderTES4.Flags := fHeaderTES4.Flags or ARCHIVE_COMPRESS;
   end
 
-  else if fType in [baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds] then begin
+  else if fType in [baFO4, baFO4dds, baSF, baSFdds] then begin
     if not Assigned(aFilesList) or (aFilesList.Count = 0) then
       raise Exception.Create('Archive requires predefined files list');
 
@@ -1572,11 +1552,11 @@ begin
       Inc(fDataOffset, SizeOf(fHeaderSFv3));
 
     // file records have fixed length in general archive
-    if fType in [baFO4, baSF, baFO4NG, baFO4NG2] then
+    if fType in [baFO4, baSF] then
       fDataOffset := fDataOffset + 36 * Length(fFilesFO4)
 
     // variable file record length depending on DDS chunks number
-    else if fType in [baFO4dds, baSFdds, baFO4NGdds] then begin
+    else if fType in [baFO4dds, baSFdds] then begin
       if not Assigned(fDDSInfoProc) then
         raise Exception.Create('DDS archive requires DDS file information callback');
 
@@ -1674,7 +1654,7 @@ begin
           fStream.WriteStringTerm(fFoldersTES4[i].Files[j].Name);
     end;
 
-    baFO4, baSF, baFO4NG, baFO4NG2: begin
+    baFO4, baSF: begin
       for i := Low(fFilesFO4) to High(fFilesFO4) do
         if fFilesFO4[i].Offset = 0 then
          raise Exception.Create('Archived file has no data: ' + fFilesFO4[i].Name);
@@ -1904,13 +1884,13 @@ begin
         if Self.fCompress xor aCompress then
           Size := Size or FILE_SIZE_COMPRESS;
       end;
-      baFO4, baSF, baFO4NG, baFO4NG2: with PwbBSFileFO4(aFileRecord)^ do begin
+      baFO4, baSF: with PwbBSFileFO4(aFileRecord)^ do begin
         Offset := Position;
         Size := DataSize;
         if aCompress then
           PackedSize := aSize;
       end;
-      baFO4dds, baSFdds, baFO4NGdds: with PwbBSTexChunkRec(aFileRecord)^ do begin
+      baFO4dds, baSFdds: with PwbBSTexChunkRec(aFileRecord)^ do begin
         Offset := Position;
         Size := DataSize;
         if aCompress then
@@ -1963,7 +1943,7 @@ begin
         );
       end;
 
-      baFO4, baSF, baFO4NG, baFO4NG2: begin
+      baFO4, baSF: begin
         if not FindFileRecordFO4(aFileName, i) then
           raise Exception.Create('File not found in files table: ' + aFileName);
 
@@ -2174,7 +2154,7 @@ begin
         end;
       end;
 
-      baFO4, baSF, baFO4NG, baFO4NG2: begin
+      baFO4, baSF: begin
         FileFO4 := aFileRecord;
         fStream.Position := FileFO4.Offset;
         if FileFO4.PackedSize <> 0 then begin
@@ -2194,7 +2174,7 @@ begin
         end;
       end;
 
-      baFO4dds, baFO4NGdds, baSFdds: begin
+      baFO4dds, baSFdds: begin
         FileFO4 := aFileRecord;
 
         TexSize := SizeOf(TDDSHeader);
@@ -2486,7 +2466,7 @@ begin
             end;
           end);
         end);
-      baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds:
+      baFO4, baFO4dds, baSF, baSFdds:
         TParallel.&For(Low(fFilesFO4), High(fFilesFO4), procedure(i: Integer; LoopState: TParallel.TLoopState) begin
           if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil, aData) then
             LoopState.Stop;
@@ -2503,7 +2483,7 @@ begin
           for j := Low(fFoldersTES4[i].Files) to High(fFoldersTES4[i].Files) do
             if aProc(Self, fFoldersTES4[i].Name + '\' + fFoldersTES4[i].Files[j].Name, @fFoldersTES4[i].Files[j], @fFoldersTES4[i], aData) then
               Break;
-      baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds:
+      baFO4, baFO4dds, baSF, baSFdds:
         for i := Low(fFilesFO4) to High(fFilesFO4) do
           if aProc(Self, fFilesFO4[i].Name, @fFilesFO4[i], nil, aData) then
             Break;
@@ -2576,7 +2556,7 @@ begin
               aDict.TryAdd(lName, wbNothing);
             end;
         end;
-    baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds:
+    baFO4, baFO4dds, baSF, baSFdds:
       for i := Low(fFilesFO4) to High(fFilesFO4) do
         with fFilesFO4[i] do
           if (Folder = '') or Name.StartsWith(Folder, True) then
@@ -2606,7 +2586,7 @@ begin
             for j := Low(Files) to High(Files) do
               aList.Add(Name + '\' + Files[j].Name);
         end;
-    baFO4, baFO4dds, baSF, baSFdds, baFO4NG, baFO4NG2, baFO4NGdds:
+    baFO4, baFO4dds, baSF, baSFdds:
       for i := Low(fFilesFO4) to High(fFilesFO4) do
         with fFilesFO4[i] do
           if (Folder = '') or Name.StartsWith(Folder, True) then

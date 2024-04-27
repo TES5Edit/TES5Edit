@@ -4,6 +4,27 @@ If you share you mods on Nexus Mods and use xEdit as a major component in develo
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5f?
+
+## Fallout 4 NG support
+
+Added support to archive handling to read and extract from v7 and v8 BA2 files.
+
+## Bugfixes / Minor Changes
+
+* #1304 - Multiple Definition Updates
+    * [SF] LIGH - mark fields unused instead of unknown, 
+    * [SF ]OMOD - fix extraneous null character on name, add enum for types
+    * [FO4/FO76] SPGD - Mark fields as unused instead of unknown
+* #1306 - [TES5VR] Fix TES5VR Backported ESL not correctly allowing extended low form range.
+* #1307 - Scripting: Fixed math functions
+* #1309 - [FNV] NPC Assertion Fix
+* #1314 - [TES5/SSE] Add Obstacle Flag to DOOR, FURN, TREE
+* #1316 - [TES5/FO4] Overhaul SCEN Definition
+* #1318 - [TES5/FO76] VOLI - Show color when the rgb values are collapsed
+* #1319 - [FO76] Definition updates for recent game update.
+* #1320 - [FO3] Spelling correction
+
 # What's New in xEdit 4.1.5d?
 
 ## Bugfixes / Minor Changes

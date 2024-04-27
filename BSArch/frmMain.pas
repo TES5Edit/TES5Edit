@@ -167,9 +167,7 @@ var
 begin
   case bsa.ArchiveType of
     baTES4, baFO3, baSSE: Compressed := PwbBSFileTES4(aFileRecord).Compressed(bsa);
-    baFO4, baFO4dds,
-    baFO4NG, baFO4NGdds,
-    baFO4NG2:             Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
+    baFO4, baFO4dds:      Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
     baSF, baSFdds:        Compressed := PwbBSFileFO4(aFileRecord).Compressed(bsa);
     else                  Compressed := False;
   end;
