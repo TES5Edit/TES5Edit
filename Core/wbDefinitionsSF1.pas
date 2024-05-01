@@ -4704,7 +4704,10 @@ begin
     {247} 'Enable Scanning Targeted Ship''s Health Values',
     {248} 'Enable Scanning Targeted Ship''s Damage Rating',
     {249} 'Enable Scanning Targeted Ship''s Weapon Stats',
-    {250} 'Mod Armor Resistance'
+    {250} 'Mod Armor Resistance',
+    {251} 'Mod Ship Linear Acceleration',
+    {252} 'Mod Final Player Ground Combat Damage',
+    {253} 'Mod Final Player Ship Combat Damage'
   ]);
 
   var wbEquipType := wbFlags([
@@ -8210,6 +8213,7 @@ end;
         'BGSStarDataComponent_Component',
         'BGSStoredTraversals_Component',
         'BGSWorkshopItemColor',
+        'BGSWorldSpaceOverlay_Component',
         'BlockHeightAdjustment_Component',
         'Blueprint_Component',
         'HoudiniData_Component',
@@ -17020,7 +17024,8 @@ end;
         {0x0040} 'Unknown 6',
         {0x0080} 'Unknown 7',
         {0x0100} '',
-        {0x0200} 'Unknown 9'
+        {0x0200} 'Unknown 9',
+        {0x0400} 'Unknown 10'
       ]), cpNormal, True),
       wbFULLReq,
       wbStruct(TNAM, 'Type', [
@@ -17030,7 +17035,7 @@ end;
           '',
           'Unknown 3',
           'Unknown 4',
-          '',
+          'Unknown 5',
           '',
           'Unknown 7',
           'Unknown 8',
@@ -17075,7 +17080,18 @@ end;
           'Unknown 47',
           'Unknown 48',
           '',
-          'Unknown 50'
+          'Unknown 50',
+          'Unknown 51',
+          'Unknown 52',
+          'Unknown 53',
+          'Unknown 54',
+          'Unknown 55',
+          'Unknown 56',
+          'Unknown 57',
+          'Unknown 58',
+          'Unknown 59',
+          'Unknown 60',
+          'Unknown 61'
         ])),
         wbUnused(1)
       ], cpNormal, True),
@@ -17832,6 +17848,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000002}  2, 'Unknown 2',
       {0x00004000} 14, 'Partial Form',
       {0x00080000} 19, 'Can''t Wait'
     ]), [14]), [
@@ -20382,6 +20399,7 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
+  // TESDataHandlerPersistentCreatedUtil::BGSPersistentIDsForm
   wbRecord(PERS, 'Unknown', [
     wbInteger(DATA, 'Unknown', itU32),
     wbRArray('Unknown', wbStructs(DAT2, 'Unknown', 'Unknown', [
