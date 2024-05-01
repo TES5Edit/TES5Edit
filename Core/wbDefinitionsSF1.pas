@@ -8175,6 +8175,7 @@ end;
         'SurfaceTreePatternSwapInfo_Component',
         'BGSBlockEditorMetaData_Component',
         'BGSBodyPartInfo_Component',
+        'BGSCityMapsUsage_Component',
         'BGSContactShadowComponent_Component',
         'BGSCrowdComponent_Component',
         'BGSDestructibleObject_Component',
@@ -8284,6 +8285,11 @@ end;
           wbInteger(BLUF, 'Unknown', itU8),
           wbInteger(BOID, 'Next Part ID', itU32)
         ], []),
+        //BGSCityMapsUsage_Component
+        wbRStruct('Component Data - City Map', [
+          wbString(MOD2, 'Model Path', 260).IncludeFlag(dfHasZeroTerminator)
+        ], []),
+
         //BGSCrowdComponent_Component
         wbRStruct('Component Data - Crowd', [
           wbFloat(CDND),
@@ -11336,7 +11342,8 @@ end;
       wbInteger(INAM, 'Index', itU32),
       wbCITCReq,
       wbCTDAsCountReq
-    ], [])
+    ], []),
+    wbFormIDCk(ANAM, '', [FLST, NULL])
   ]);
 
   var wbPerkConditions :=
@@ -11925,27 +11932,47 @@ end;
     wbEDID,
     wbPRPS,
 
-    wbArray(LCPR, 'Location Cell Persistent Reference', wbStruct('', [
+    wbArrayS(ACPR, 'Added Persist Location References', wbStructSK([0], '', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
       wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
       wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
+    wbArrayS(LCPR, 'Master Persist Location References', wbStructSK([0], '', [
+      wbFormIDCk('Actor', sigReferences, False, cpBenign),
+      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Unknown', itS32, nil, cpBenign)
+    ])),
+    wbArrayS(RCPR,'Removed Persist Location References', wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign), 0, cpBenign),
 
-    wbArray(LCUR, 'Location Cell Unique Reference', wbStruct('', [
+    wbArrayS(ACUR, 'Added Unique Base Forms', wbStructSK([0], '', [
      wbFormIDCk('Generic Base Form', [GBFM]),
      wbFormIDCk('Placed Object', [REFR]),
      wbFormIDCk('Location', [LCTN])
     ])),
+    wbArrayS(LCUR, 'Master Unique Base Forms', wbStructSK([0], '', [
+     wbFormIDCk('Generic Base Form', [GBFM]),
+     wbFormIDCk('Placed Object', [REFR]),
+     wbFormIDCk('Location', [LCTN])
+    ])),
+    wbArrayS(RCUR, 'Removed Unique Base Forms', wbFormIDCk('Generic Base Form', [GBFM], False, cpBenign), 0, cpBenign),
 
-    wbArray(LCUN, 'Location Cell Unique', wbStruct('', [
+    wbArrayS(ACUN, 'Added Unique NPCs', wbStructSK([0], '', [
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
       wbFormIDCk('Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
+    wbArrayS(LCUN, 'Master Unique NPCs', wbStructSK([0], '', [
+      wbFormIDCk('Actor', [NPC_], False, cpBenign),
+      wbFormIDCk('Ref', [ACHR], False, cpBenign),
+      wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
+    ])),
+    wbArrayS(RCUN, 'Removed Unique NPCs', wbFormIDCk('Actor', [NPC_], False, cpBenign), 0, cpBenign),
 
-    wbArray(LCSR, 'Location Cell Static Reference', wbStruct('', [
+    wbArrayS(ACSR, 'Added Special References', wbStructSK([0], '', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
       wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
@@ -11953,18 +11980,34 @@ end;
       wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
       wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
+    wbArrayS(LCSR, 'Master Special References', wbStructSK([0], '', [
+      wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
+      wbFormIDCk('Marker', sigReferences, False, cpBenign),
+      wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
+      wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
+      wbInteger('Unknown', itS32, nil, cpBenign)
+    ])),
+    wbArrayS(RCSR,'Removed Special References', wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign), 0, cpBenign),
 
-    wbRArray('Location Cell Encounter Cell',
-      wbStruct(LCEC, 'Unknown', [
+    wbRArrayS('Master Worldspace Cells',
+      wbStructSK(LCEC, [0], 'Unknown', [
         wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
         wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
         wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation)
       ])
     ),
 
-    wbArray(LCID, 'Location Cell Marker Reference', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
+    wbArray(ACID, 'Master Initially Disabled References', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
+    wbArray(LCID, 'Master Initially Disabled References', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
 
-    wbArray(LCEP, 'Location Cell Enable Point', wbStruct('', [
+    wbArray(ACEP, 'Added Enable Point References', wbStruct('', [
+      wbFormIDCk('Actor', sigReferences, False, cpBenign),
+      wbFormIDCk('Ref', sigReferences, False, cpBenign),
+      wbInteger('Set Enable State to Opposite of Parent', itU8, wbBoolEnum),
+      wbUnused(3)
+    ])),
+    wbArray(LCEP, 'Master Enable Point References', wbStruct('', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
       wbInteger('Set Enable State to Opposite of Parent', itU8, wbBoolEnum),
@@ -17395,7 +17438,7 @@ end;
     .IncludeFlag(dfExcludeFromBuildRef)
     .IncludeFlag(dfCollapsed),
 
-    wbUnknown(BNAM),
+    wbString(BNAM, 'Branch'),
 
     wbInteger(INTV, 'Unknown', itU32),                                // Ignored by the runtime, 4 bytes loaded in CK
 
@@ -20261,6 +20304,33 @@ end;
     ],[])
   ]);
 
+  wbRecord(GPOF, 'Gameplay Options', [
+    wbEDID,
+    wbLStringKC(NNAM, 'Title'),
+    wbLStringKC(DNAM, 'Description'),
+    wbUnknown(TNAM),
+    wbFloat(VNAM, 'Default Index'),
+    wbFloat(WNAM),
+    wbStruct(GPOD, '', [
+      wbFloat,
+      wbFloat,
+      wbFloat
+    ]),
+    wbRStructs('Slider Entries', 'Slider Entry', [
+      wbLStringKC(VOVS, 'Description'),
+      wbFloat(VORV, 'Slider Index'),
+      wbLStringKC(RESN, 'Name'),
+      wbFloat(VORN, 'XP Multiplier')
+    ], [])
+  ]);
+
+  wbRecord(GPOG, 'Gameplay Options Group', [
+    wbEDID,
+    wbUnknown(NNAM),
+    wbUnknown(BNAM),
+    wbArray(GOGL, '', wbFormIDCk('', [GPOF]))
+  ]);
+
   {subrecords checked against Starfield.esm}
   wbRecord(TODD, 'Time Of Day Data', [
     wbEDID,
@@ -20577,6 +20647,8 @@ end;
   wbAddGroupOrder(AVMD); {SF1Dump: no errors}
   wbAddGroupOrder(CHAL); {SF1Dump: no errors}
   wbAddGroupOrder(FXPD); {SF1Dump: no errors}
+  wbAddGroupOrder(GPOF); {SF1Dump: no errors}
+  wbAddGroupOrder(GPOG); {SF1Dump: no errors}
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
