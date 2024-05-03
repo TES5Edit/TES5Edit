@@ -20343,7 +20343,7 @@ end;
 
   wbRecord(GPOG, 'Gameplay Options Group', [
     wbEDID,
-    wbUnknown(NNAM),
+    wbLStringKC(NNAM, ''),
     wbUnknown(BNAM),
     wbArray(GOGL, '', wbFormIDCk('', [GPOF]))
   ]);
