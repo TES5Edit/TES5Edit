@@ -443,6 +443,10 @@ begin
     else
       wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
     end;
+
+    if (wbGameMode in [gmFNV]) and wbDataPath.Contains('FalloutNewVegas\Fallout New Vegas ') then begin
+        wbMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
+    end;
   end;
 
   if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
