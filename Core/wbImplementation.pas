@@ -15981,16 +15981,14 @@ var
       if not (lResult.IsPartialForm or lResult.IsDeleted) then
         Result.Assign(wbAssignThis, aElement, False);
 
-      if (aPrefix <> '') or (aSuffix <> '') or lResult.IsPartialForm then begin
+      if not lResult.IsDeleted and (aSource.EditorID <> '') then begin
         var lEditorID := aSource.EditorID;
         lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
         lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
-        if lEditorID <> lResult.EditorID then begin
-          if wbBeginInternalEdit(True) then try
-            lResult.EditorID := aPrefix + lEditorID + aSuffix;
-          finally
-            wbEndInternalEdit;
-          end;
+        if wbBeginInternalEdit(True) then try
+          lResult.EditorID := aPrefix + lEditorID + aSuffix;
+        finally
+          wbEndInternalEdit;
         end;
       end;
     end;
