@@ -16535,7 +16535,10 @@ begin
     end else
       lvReferencedBy.Tag := 0;
 
+    var lCurrentPage := pgMain.ActivePage;
     tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Tag > 0);
+    if lCurrentPage = tbsReferencedBy then
+      pgMain.ActivePage := tbsReferencedBy;
     if tbsReferencedBy.TabVisible then
       tbsReferencedBy.Caption := Format('Referenced By (%d)', [lvReferencedBy.Tag]);
   finally
