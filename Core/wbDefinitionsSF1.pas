@@ -8538,9 +8538,10 @@ end;
             wbInteger('Weapon Slot 3', itS32).SetLinksToCallback(wbLinksToBluePrintComponent).SetToStr(wbToStringFromLinksToSummary)
           ])
         ], []),
+        //BGSWorldSpaceOverlay_Component
         wbRStruct('Component Data - SNAM', [
           wbUnknown(SNAM),
-          wbUnknown(PNAM),
+          wbUnknown(PNAM), // looks to be integer, possible enum
           wbFormIDCk(BNAM, 'Surface Block', [SFBK])
         ], []),
         //BGSSpawnOnDestroy_Component
@@ -10582,7 +10583,7 @@ end;
     wbKeywords,
     wbPRPS,
     wbFTYP,
-    wbUnknown(PNAM),
+    wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbATTX,
     wbALSH,
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
@@ -17482,7 +17483,7 @@ end;
     wbDEST,
     wbKeywords,
     wbPRPS,
-    wbUnknown(PNAM),
+    wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbATTX,
     wbUnknown(FNAM),
     wbUnknown(JNAM),
@@ -18813,7 +18814,7 @@ end;
     wbKeywords,
     wbPRPS,
     wbFTYP,
-    wbUnknown(PNAM),
+    wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbUnknown(FNAM),
     wbUnknown(JNAM),
     wbMNAMFurnitureMarker,
@@ -20674,6 +20675,9 @@ end;
   wbOfficialDLC[0] := 'Constellation.esm';
   wbOfficialDLC[1] := 'OldMars.esm';
   wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
+//  wbOfficialDLC[3] := 'SFBGS006.esm';
+//  wbOfficialDLC[4] := 'SFBGS008.esm';
+//  wbOfficialDLC[5] := 'SFBGS007.esm';
 
   {
   if wbGameMode = gmSF1VR then begin
