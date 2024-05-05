@@ -1668,7 +1668,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..440] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..445] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2088,7 +2088,7 @@ const
     (Index: 10648; Name: 'IsPlayerOverencumbered'; ),
     (Index: 10758; Name: 'SUPGetConditionVarFloat'; ParamType1: ptInteger; ),
 
-    // Added by ShowOff xNVSE Plugin - up to v1.75
+    // Added by ShowOff xNVSE Plugin - up to v1.80
     (Index: 11414; Name: 'GetPlayerCanPickpocketEquippedItems'; ),
     (Index: 11415; Name: 'GetPCHasSleepWaitOverride'; ),
     (Index: 11419; Name: 'GetNumActorsInRangeFromRef'; ParamType1: ptFloat; ParamType2: ptInteger;),
@@ -2127,7 +2127,12 @@ const
     (Index: 11509; Name: 'GetActorValueDamage'; ParamType1: ptActorValue; ),
     (Index: 11524; Name: 'GetItemCanHaveHealth'; ),
     (Index: 11557; Name: 'GetCalculatedItemValue'; ParamType1: ptInteger; ParamType2: ptInventoryObject;),
-    (Index: 11580; Name: 'GetIsPlayerOverencumbered'; ParamType1: ptInteger; )
+    (Index: 11580; Name: 'GetIsPlayerOverencumbered'; ParamType1: ptInteger; ),
+    (Index: 11604; Name: 'GetIsActivationPromptShown'; ),
+    (Index: 11605; Name: 'GetHitLocationLingering'; ),
+    (Index: 11611; Name: 'GetVATSTargetable'; ),
+    (Index: 11615; Name: 'IsPlayerLookingAround'; ),
+    (Index: 11617; Name: 'IsActorInvisibleToPlayer'; )
 );
 
 var
