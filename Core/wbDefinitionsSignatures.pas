@@ -34,6 +34,7 @@ const
   ACTI : TwbSignature = 'ACTI';
   ACTV : TwbSignature = 'ACTV'; { New To Fallout 4 }
   ACUN : TwbSignature = 'ACUN'; { New To Dawnguard }
+  ACUR : TwbSignature = 'ACUR'; { New To Starfield }
   ADBO : TwbSignature = 'ADBO';
   ADCR : TwbSignature = 'ADCR';
   ADDN : TwbSignature = 'ADDN';
@@ -546,6 +547,10 @@ const
   GNAM : TwbSignature = 'GNAM';
   GRAS : TwbSignature = 'GRAS';
   GREE : TwbSignature = 'GREE'; { New to Fallout 4 }
+  GOGL : TwbSignature = 'GOGL'; { New To Starfield }
+  GPOD : TwbSignature = 'GPOD'; { New To Starfield }
+  GPOF : TwbSignature = 'GPOF'; { New To Starfield }
+  GPOG : TwbSignature = 'GPOG'; { New To Starfield }
   GRPH : TwbSignature = 'GRPH'; { New To Starfield }
   GWOR : TwbSignature = 'GWOR'; { New to Skyrim }
   H0TX : TwbSignature = 'H0TX';
@@ -1114,6 +1119,7 @@ const
   RCQY : TwbSignature = 'RCQY';
   RCSR : TwbSignature = 'RCSR'; { New To Skyrim }
   RCUN : TwbSignature = 'RCUN'; { New To Skyrim }
+  RCUR : TwbSignature = 'RCUR'; { New To Starfield }
   RDAT : TwbSignature = 'RDAT';
   RDES : TwbSignature = 'RDES'; { New To Fallout 76 }
   RDGS : TwbSignature = 'RDGS';
@@ -1142,6 +1148,7 @@ const
   REPR : TwbSignature = 'REPR'; { New To Fallout 76 }
   REPT : TwbSignature = 'REPT'; { New To Fallout 4 }
   REPU : TwbSignature = 'REPU';
+  RESN : TwbSignature = 'RESN'; { New To Starfield }
   RESO : TwbSignature = 'RESO'; { New To Fallout 76 }
   REVB : TwbSignature = 'REVB';
   RFCT : TwbSignature = 'RFCT';
@@ -1386,6 +1393,9 @@ const
   VNML : TwbSignature = 'VNML';
   VOLI : TwbSignature = 'VOLI'; { New To Fallout 76 }
   VONL : TwbSignature = 'VONL'; { New To Fallout 76 }
+  VORN : TwbSignature = 'VORN'; { New To Starfield }
+  VORV : TwbSignature = 'VORV'; { New To Starfield }
+  VOVS : TwbSignature = 'VOVS'; { New To Starfield }
   VREN : TwbSignature = 'VREN'; { New To Fallout 76 }
   VTCK : TwbSignature = 'VTCK';
   VTEX : TwbSignature = 'VTEX';
