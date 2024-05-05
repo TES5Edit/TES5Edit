@@ -2323,24 +2323,9 @@ begin
       wbInteger('Y', itS32)
     ]),
     wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -2781,12 +2766,7 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
       wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Fill/Texture Effect - Color'),
       wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
       wbFloat('Fill/Texture Effect - Full Alpha Time'),
       wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -2796,12 +2776,7 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
       wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
       wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Edge Effect - Color'),
       wbFloat('Edge Effect - Alpha Fade In Time'),
       wbFloat('Edge Effect - Full Alpha Time'),
       wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -2834,24 +2809,9 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Particle Shader - Scale Key 2'),
       wbFloat('Particle Shader - Scale Key 1 Time'),
       wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Color Key 1 - Color'),
+      wbByteColors('Color Key 2 - Color'),
+      wbByteColors('Color Key 3 - Color'),
       wbFloat('Color Key 1 - Color Alpha'),
       wbFloat('Color Key 2 - Color Alpha'),
       wbFloat('Color Key 3 - Color Alpha'),
@@ -3440,12 +3400,7 @@ var  wbSoundTypeSoundsOld :=
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unused', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Color'),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Dynamic',
         {0x00000002} 'Can be Carried',
@@ -3830,12 +3785,7 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(HNAM, 'Hair', [HAIR]),
     wbFloat(LNAM, 'Hair length'),
     wbArray(ENAM, 'Eyes', wbFormIDCk('Eyes', [EYES])),
-    wbStruct(HCLR, 'Hair color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(HCLR, 'Hair color').SetRequired(True),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY]),
     wbFaceGen,
     wbByteArray(FNAM, 'Unknown', 0, cpBenign)
@@ -4238,12 +4188,7 @@ var  wbSoundTypeSoundsOld :=
   wbRecord(REGN, 'Region', [
     wbEDID,
     wbICON,
-    wbStruct(RCLR, 'Map Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(RCLR, 'Map Color').SetRequired(True),
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
 
     wbRArray('Region Areas', wbRStruct('Region Area', [
@@ -4581,24 +4526,9 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Scroll Y Speed'),
       wbFloat('Fog Distance - Near Plane'),
       wbFloat('Fog Distance - Far Plane'),
-      wbStruct('Shallow Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Deep Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Reflection Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Shallow Color'),
+      wbByteColors('Deep Color'),
+      wbByteColors('Reflection Color'),
       wbInteger('Texture Blend', itU8),
       wbByteArray('Unused', 3),
       wbFloat('Rain Simulator - Force'),
@@ -4733,12 +4663,7 @@ var  wbSoundTypeSoundsOld :=
     wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbArray(NAM0, 'Colors by Types/Times',
       wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbByteColors('Time'),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
       ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
