@@ -344,10 +344,12 @@ const
   sSureAIRegKey           = '\Software\SureAI\';
 
 var
-  s, regPath, regKey, client: string;
+  s, regPath, regKey, client, gamePath: string;
+  isEpicNV : Boolean;
   IniFile : TMemIniFile;
 begin
   wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
+  isEpicNV := false;
 
   if not wbFindCmdLineParam('S', wbScriptsPath) then
     wbScriptsPath := wbProgramPath + 'Edit Scripts\';
@@ -403,10 +405,10 @@ begin
       gmFO76, gmSF1:     regKey := 'InstallLocation';
       end;
 
-      wbDataPath := ReadString(regKey);
-      wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
+      gamePath := ReadString(regKey);
+      gamePath := StringReplace(gamePath, '"', '', [rfReplaceAll]);
 
-      if (wbDataPath = '') then begin
+      if (gamePath = '') then begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
         wbDontSave := True;
@@ -414,10 +416,10 @@ begin
     finally
       Free;
     end;
-    if wbDataPath <> '' then
-      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + DataName[wbGameMode = gmTES3] + '\';
+    if gamePath <> '' then
+      wbDataPath := IncludeTrailingPathDelimiter(gamePath) + DataName[wbGameMode = gmTES3] + '\';
   end else
-    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
+    wbDataPath := IncludeTrailingPathDelimiter(gamePath);
 
   wbOutputPath := wbDataPath;
   if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
@@ -442,6 +444,11 @@ begin
         wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
     else
       wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
+    end;
+
+    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(gamePath) + 'EOSSDK-Win32-Shipping.dll') then begin
+        wbMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
+        isEpicNV := true;
     end;
   end;
 
@@ -504,6 +511,8 @@ begin
 
       if wbGameMode = gmFO76 then
         wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt'
+      else if (wbGameMode = gmFNV) and isEpicNV then
+        wbPluginsFileName := wbPluginsFileName + wbGameName + '_Epic' + '\Plugins.txt'
       else
         wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
     end;
