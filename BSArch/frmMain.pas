@@ -427,17 +427,16 @@ end;
 procedure TFormMain.vtAssetsBeforeCellPaint(Sender: TBaseVirtualTree;
   TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
   CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
-const
-  cArchHighlight: array [Boolean, 0..1] of TColor = (
-    ($00D9FFFF, $00EBFFFF),
-    ($00002929, $00002424)
-  );
 begin
   var Asset := PAssetNode(Sender.GetNodeData(Node)).Asset;
   if Asset.ArchiveName = '' then
     Exit;
 
-  TargetCanvas.Brush.Color := cArchHighlight[Theme <> 'Windows'][Succ(Column) mod 2];
+  var bgColor := TStyleManager.ActiveStyle.GetSystemColor(clWindow);
+  if (Succ(Column) mod 2) = 0 then
+    TargetCanvas.Brush.Color := bgColor - $D0D0D
+  else
+    TargetCanvas.Brush.Color := bgColor;
   TargetCanvas.FillRect(CellRect);
 end;
 
