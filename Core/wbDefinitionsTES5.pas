@@ -5346,12 +5346,7 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbStruct(PNAM, 'Marker Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Unused', itU8)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
@@ -7414,7 +7409,7 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PNAM),
+    wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
       {0x0002} 'Ignored By Sandbox'
@@ -8768,11 +8763,7 @@ begin
     wbEDID,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
     wbString(MNAM, 'Material Name'),
-    wbStruct(CNAM, 'Havok Display Color', [
-      wbFloat('Red', cpNormal, True, 255, 0),
-      wbFloat('Green', cpNormal, True, 255, 0),
-      wbFloat('Blue', cpNormal, True, 255, 0)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbFloatColors(CNAM, 'Havok Display Color'),
     wbFloat(BNAM, 'Buoyancy'),
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Stair Material',
@@ -10149,12 +10140,7 @@ begin
     wbEDID,
     wbDESCReq,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
-    wbStruct(FNAM, 'Debug Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbInteger('Unused', itU8)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(FNAM, 'Debug Color'),
     wbInteger(GNAM, 'Flags', itU32, wbFlags([
       {0x00000001} 'Trigger Volume',
       {0x00000002} 'Sensor',
@@ -11033,11 +11019,7 @@ begin
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
     wbFormIDCk(CRIF, 'Crime faction', [FACT], False, cpNormal, False),
     wbFormIDCk(FTST, 'Head texture', [TXST], False, cpNormal, False),
-    wbStruct(QNAM, 'Texture lighting', [
-      wbFloat('Red', cpNormal, True, 255, 0),
-      wbFloat('Green', cpNormal, True, 255, 0),
-      wbFloat('Blue', cpNormal, True, 255, 0)
-    ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbFloatColors(QNAM, 'Texture lighting'),
     wbStruct(NAM9, 'Face morph', [
       wbFloat('Nose Long/Short'),
       wbFloat('Nose Up/Down'),
@@ -11068,12 +11050,7 @@ begin
     wbRArrayS('Tint Layers',
       wbRStructSK([0], 'Layer', [
         wbInteger(TINI, 'Tint Index', itU16, wbTintLayerToStr, wbStrToInt),
-        wbStruct(TINC, 'Tint Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbInteger('Alpha', itU8)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbByteRGBA(TINC, 'Tint Color'),
         wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
         wbInteger(TIAS, 'Preset', itS16)
       ], []))
@@ -12255,11 +12232,7 @@ begin
         wbFloat('Y', cpNormal, True, 2, 4),
         wbFloat('Z', cpNormal, True, 2, 4)
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Color', [
-        {84} wbFloat('Red', cpNormal, False, 255, 0),
-        {88} wbFloat('Green', cpNormal, False, 255, 0),
-        {92} wbFloat('Blue', cpNormal, False, 255, 0)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      wbFloatColors('Color'),
       wbFloat('Unknown'),
       wbInteger('Type', itU32, wbEnum([
         'None',
@@ -12486,12 +12459,7 @@ begin
       {0x00000040} 6, 'Border Region'
     ])), [
     wbEDID,
-    wbStruct(RCLR, 'Map Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unknown', 1)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(RCLR, 'Map Color'),
     {>>> Skyrim.esm has some incorrect FormIDs here, probably leftover <<<}
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
     wbRArray('Region Areas', wbRStruct('Region Area', [
@@ -12842,7 +12810,7 @@ begin
     wbDEST,
     wbKSIZ,
     wbKWDAs,
-    wbUnknown(PNAM),
+    wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),

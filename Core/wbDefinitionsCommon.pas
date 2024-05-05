@@ -272,7 +272,8 @@ function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Col
 function wbFloatColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbFloatColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 function wbRFloatColors(const aName: string = 'Color'; const aSigs: TwbSignatures = []): IwbRecordMemberDef;
-function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
+function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef; overload;
+function wbFloatRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 
@@ -2907,6 +2908,16 @@ end;
 function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef;
 begin
   Result := wbStruct(aName, [
+    wbFloat('Red', cpNormal, True, 255, 0),
+    wbFloat('Green', cpNormal, True, 255, 0),
+    wbFloat('Blue', cpNormal, True, 255, 0),
+    wbFloat('Alpha', cpNormal, True, 255, 0)
+  ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbFloatRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
     wbFloat('Red', cpNormal, True, 255, 0),
     wbFloat('Green', cpNormal, True, 255, 0),
     wbFloat('Blue', cpNormal, True, 255, 0),

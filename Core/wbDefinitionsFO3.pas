@@ -3893,18 +3893,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -3981,18 +3971,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -4807,24 +4787,9 @@ begin
     ]), cpNormal, True),
     wbCellGrid,
     wbStruct(XCLL, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -5532,12 +5497,7 @@ begin
       wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
       wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
-      wbStruct('Fill/Texture Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Fill/Texture Effect - Color'),
       wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
       wbFloat('Fill/Texture Effect - Full Alpha Time'),
       wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -5547,12 +5507,7 @@ begin
       wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
       wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
       wbFloat('Edge Effect - Fall Off'),
-      wbStruct('Edge Effect - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Edge Effect - Color'),
       wbFloat('Edge Effect - Alpha Fade In Time'),
       wbFloat('Edge Effect - Full Alpha Time'),
       wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -5585,24 +5540,9 @@ begin
       wbFloat('Particle Shader - Scale Key 2'),
       wbFloat('Particle Shader - Scale Key 1 Time'),
       wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbStruct('Color Key 1 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Color Key 2 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Color Key 3 - Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Color Key 1 - Color'),
+      wbByteColors('Color Key 2 - Color'),
+      wbByteColors('Color Key 3 - Color'),
       wbFloat('Color Key 1 - Color Alpha'),
       wbFloat('Color Key 2 - Color Alpha'),
       wbFloat('Color Key 3 - Color Alpha'),
@@ -5620,12 +5560,7 @@ begin
       wbFloat('Holes - Start Val'),
       wbFloat('Holes - End Val'),
       wbFloat('Edge Width (alpha units)'),
-      wbStruct('Edge Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Edge Color'),
       wbFloat('Explosion Wind Speed'),
       wbInteger('Texture Count U', itU32),
       wbInteger('Texture Count V', itU32),
@@ -5747,12 +5682,7 @@ begin
                 'Alpha - Testing'
               ], True)),
               wbByteArray('Unused', 2),
-              wbStruct('Color', [
-                wbInteger('Red', itU8),
-                wbInteger('Green', itU8),
-                wbInteger('Blue', itU8),
-                wbByteArray('Unused', 1)
-              ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+              wbByteColors('Color')
             ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -6306,18 +6236,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -6397,18 +6317,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -6488,18 +6398,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -6605,11 +6505,7 @@ begin
         {80} wbFloat('Damping Constant')
       ]),
       wbStruct('Night Eye', [
-        wbStruct('Tint Color', [
-          {84} wbFloat('Red', cpNormal, False, 255, 0),
-          {88} wbFloat('Green', cpNormal, False, 255, 0),
-          {92} wbFloat('Blue', cpNormal, False, 255, 0)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbFloatColors('Tint Color'),
       {96} wbFloat('Brightness')
       ]),
       wbStruct('Cinematic', [
@@ -6620,11 +6516,7 @@ begin
         ]),
         {112} wbFloat('Cinematic - Brightness - Value'),
         wbStruct('Tint', [
-          wbStruct('Color', [
-            {116} wbFloat('Red', cpNormal, False, 255, 0),
-            {120} wbFloat('Green', cpNormal, False, 255, 0),
-            {124} wbFloat('Blue', cpNormal, False, 255, 0)
-          ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+          wbFloatColors('Color'),
         {128} wbFloat('Value')
         ])
       ]),
@@ -7188,24 +7080,9 @@ begin
   wbRecord(LGTM, 'Lighting Template', [
     wbEDIDReq,
     wbStruct(DATA, 'Lighting', [
-      wbStruct('Ambient Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Directional Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Fog Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Directional Color'),
+      wbByteColors('Fog Color'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -7466,12 +7343,7 @@ begin
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
-      wbStruct('Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbInteger('Unused', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbByteColors('Color'),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Dynamic',
         {0x00000002} 'Can be Carried',
@@ -7956,12 +7828,7 @@ begin
     wbFormIDCk(HNAM, 'Hair', [HAIR], False, cpNormal, False, wbActorTemplateUseModelAnimation),
     wbFloat(LNAM, 'Hair length', cpNormal, False, 1, -1, wbActorTemplateUseModelAnimation),
     wbFormIDCk(ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
-    wbStruct(HCLR, 'Hair color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True, wbActorTemplateUseModelAnimation).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(HCLR, 'Hair color').SetRequired(True).SetDontShow(wbActorTemplateUseModelAnimation),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
     wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbFaceGenNPC,
@@ -8613,11 +8480,7 @@ begin
         wbFloat('Y', cpNormal, True, 2, 4),
         wbFloat('Z', cpNormal, True, 2, 4)
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbStruct('Color', [
-        {84} wbFloat('Red', cpNormal, False, 255, 0),
-        {88} wbFloat('Green', cpNormal, False, 255, 0),
-        {92} wbFloat('Blue', cpNormal, False, 255, 0)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbFloatColors('Color'),
       wbFloat('Unknown'),
       wbInteger('Type', itU32, wbEnum([
         'None',
@@ -8809,18 +8672,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbStruct('Link Start Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbStruct('Link End Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8),
-        wbByteArray('Unused', 1)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbByteColors('Link Start Color'),
+      wbByteColors('Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -8891,12 +8744,7 @@ begin
   wbRecord(REGN, 'Region', [
     wbEDID,
     wbICON,
-    wbStruct(RCLR, 'Map Color', [
-      wbInteger('Red', itU8),
-      wbInteger('Green', itU8),
-      wbInteger('Blue', itU8),
-      wbByteArray('Unused', 1)
-    ], cpNormal, True).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbByteColors(RCLR, 'Map Color').SetRequired(True),
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
 
     wbRArray('Region Areas', wbRStruct('Region Area', [
@@ -9163,24 +9011,9 @@ begin
         wbByteArray('Unused', 4),
         wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
         wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-        wbStruct('Shallow Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-        wbStruct('Deep Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-        wbStruct('Reflection Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbByteColors('Shallow Color'),
+        wbByteColors('Deep Color'),
+        wbByteColors('Reflection Color'),
         wbByteArray('Unused', 4),
         wbFloat('Rain Simulator - Force'),
         wbFloat('Rain Simulator - Velocity'),
@@ -9229,24 +9062,9 @@ begin
         wbByteArray('Unused', 4),
         wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
         wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-        wbStruct('Shallow Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-        wbStruct('Deep Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-        wbStruct('Reflection Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbByteColors('Shallow Color'),
+        wbByteColors('Deep Color'),
+        wbByteColors('Reflection Color'),
         wbByteArray('Unused', 4),
         wbFloat('Rain Simulator - Force'),
         wbFloat('Rain Simulator - Velocity'),
@@ -9658,23 +9476,13 @@ begin
     wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
     wbArray(PNAM, 'Cloud Layer Colors',
       wbArray('Layer',
-        wbStruct('Color', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbByteColors('Color'),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
     4),
     wbArray(NAM0, 'Colors by Types/Times',
       wbArray('Type',
-        wbStruct('Time', [
-          wbInteger('Red', itU8),
-          wbInteger('Green', itU8),
-          wbInteger('Blue', itU8),
-          wbByteArray('Unused', 1)
-        ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+        wbByteColors('Time'),
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
       ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
