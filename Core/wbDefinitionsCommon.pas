@@ -745,7 +745,7 @@ begin
   var lScaleFactor := 1/wbCellSizeFactor;
 
   wbWorldspaceOBND :=
-    wbRStruct('Object Bounds', [
+    wbRStruct('Worldspace Bounds', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, lScaleFactor),
         wbFloat('Y', cpNormal, False, lScaleFactor)
