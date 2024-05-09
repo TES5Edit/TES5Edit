@@ -1668,7 +1668,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..445] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..448] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2075,11 +2075,14 @@ const
     (Index: 6391; Name: 'EquippedWeaponHasModType'; ParamType1: ptInteger; ),
     (Index: 6426; Name: 'IsSpellTargetList'; ParamType1: ptFormList; ),
 
-    // Added by JohnnyGuitar NVSE - up to v4.98
+    // Added by JohnnyGuitar NVSE - up to v5.07
     (Index: 8501; Name: 'GetBaseScale'; ),
     (Index: 8549; Name: 'GetQuestFailed'; ParamType1: ptQuest; ),
     (Index: 8623; Name: 'GetLocationSpecificLoadScreensOnly'; ),
     (Index: 8684; Name: 'GetPlayerCamFOV'; ParamType1: ptInteger; ),
+    (Index: 8692; Name: 'AudioMarkerGetController'; ),
+    (Index: 8701; Name: 'AudioMarkerGetCurrent'; ),
+    (Index: 8706; Name: 'GameGetSecondsPassed'; ),
 
     // Added by TTW nvse plugin
     (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; ),
