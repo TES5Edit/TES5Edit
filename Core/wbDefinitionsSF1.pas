@@ -4152,7 +4152,7 @@ begin
   var wbACSH := wbSoundReference(ACSH, 'Activate Sound');
   var wbCUSH := wbSoundReference(CUSH, 'Crafting Sound');
   var wbPUSH := wbSoundReference(PUSH, 'Pickup Sound');
-  var wbPDSH := wbSoundReference(PDSH, 'Dropdown Sound');
+  var wbPDSH := wbSoundReference(PDSH, 'Putdown Sound');
 
   {>>> When NAME is user defined these will be incorrect <<<}
   var wbBipedObjectEnum := wbEnum([
@@ -9251,9 +9251,9 @@ end;
     wbGenericModel(),
     wbPUSH,
     wbPDSH,
-    wbDESC,
+    wbDESC.SetRequired,
     wbKeywords,
-//    wbDEST,
+    wbDEST,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -9288,7 +9288,6 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbGenericModel()
-    //wbString(BNAM, 'Unload Event')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -13711,23 +13710,10 @@ end;
     wbString(ENAM, 'Animation Event'),
     wbArray(ANAM, 'Related Animations', wbFormIDCk('Related Animation', [AACT, IDLE, NULL]),
       ['Parent', 'Previous Sibling'], cpNormal, True),
-    wbUnknown(FNAM),
-    (*
-    wbStruct(DATA, '', [
-      wbStruct('Looping seconds (both 255 forever)', [
-        wbInteger('Min', itU8),
-        wbInteger('Max', itU8)
-      ]),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Parent',
-        {0x02} 'Sequence',
-        {0x04} 'No Attacking',
-        {0x04} 'Blocking'
-      ], True)),
-      wbInteger('Animation Group Section', itU8{, wbIdleAnam}),
-      wbInteger('Replay Delay', itU16)
-    ], cpNormal, True),
-    *)
+    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+      'Loose',
+      'Preview'
+    ]), cpNormal, True),
     wbString(GNAM, 'Animation File'),
     wbFULL
   ]);
