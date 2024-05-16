@@ -74,11 +74,11 @@ function wbTexturedModel(aSubRecordName: string; const aSignatures: TwbSignature
 var
   Members: array of IwbRecordMemberDef;
 begin
-  SetLength(Members, Length(aTextureSubRecords) + 2);
+  SetLength(Members, Length(aTextureSubRecords) + 1);
   Members[0] := wbString(aSignatures[0], 'Model FileName');
-  Members[1] := wbModelInfo(aSignatures[1]);
+  //Members[1] := wbModelInfo(aSignatures[1]);
   for var i := Low(aTextureSubRecords) to High(aTextureSubRecords) do
-    Members[2 + i] := aTextureSubRecords[i];
+    Members[1 + i] := aTextureSubRecords[i];
 
   Result :=
     wbRStruct(aSubRecordName, Members, [])
@@ -5705,16 +5705,17 @@ begin
 
   var wbEITM := wbFormIDCk(EITM, 'Object Effect', [ENCH, SPEL]);
 
-  var wbMODS := wbFormIDCk(MODS, 'Material Swap', [NULL, MSWP]);
-  var wbMO2S := wbFormIDCk(MO2S, 'Material Swap', [NULL, MSWP]);
-  var wbMO3S := wbFormIDCk(MO3S, 'Material Swap', [NULL, MSWP]);
-  var wbMO4S := wbFormIDCk(MO4S, 'Material Swap', [NULL, MSWP]);
-  var wbMO5S := wbFormIDCk(MO5S, 'Material Swap', [NULL, MSWP]);
+  var wbMODS := wbFloat(MODS, 'Color Remapping Index');
+  var wbMO2S := wbFloat(MO2S, 'Color Remapping Index');
+  var wbMO3S := wbFloat(MO3S, 'Color Remapping Index');
+  var wbMO4S := wbFloat(MO4S, 'Color Remapping Index');
+  var wbMO5S := wbFloat(MO5S, 'Color Remapping Index');
 
   var wbModelFlags := wbFlags([
     'Has FaceBones Model',
-    'Has 1stPerson Model'
+    'Support Model Only Swap'
   ]);
+
   var wbMODF := wbInteger(MODF, 'Flags', itU8, wbModelFlags);
   var wbMO2F := wbInteger(MO2F, 'Flags', itU8, wbModelFlags);
   var wbMO3F := wbInteger(MO3F, 'Flags', itU8, wbModelFlags);
@@ -9306,15 +9307,14 @@ end;
     wbBaseFormComponents,
     wbFULL,
     wbEITM,
-    wbTexturedModel('Male World Model', [MOD2, MO2T], [wbMOLM(MLM2), wbMO2C, wbMO2S, wbMO2F]),
-    wbTexturedModel('Female World Model', [MOD4, MO4T], [wbMOLM(MLM4), wbMO4C, wbMO4S, wbMO4F]),
+    wbTexturedModel('Male World Model', [MOD2], [wbMOLM(MLM2), wbMO2S, wbMO2F]),
+    wbTexturedModel('Female World Model', [MOD4], [wbMOLM(MLM4), wbMO4S, wbMO4F]),
     wbBO64,
+    wbDEST,
     wbPUSH,
     wbPDSH,
-//    wbDEST,
-//    ,
-//    wbETYP,
-//    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
+    wbETYP,
+    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
@@ -9342,18 +9342,18 @@ end;
     wbAPPR,
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker', cpNormal, True),
-    wbStructSK(AVSG, [0,1], 'Voice', [
+    wbStructSK(AVSG, [0,1], 'Voice Switch', [
       wbWwiseGuid('Category'),
-      wbWwiseGuid('Value')
+      wbWwiseGuid('Variant')
     ]).IncludeFlag(dfCollapsed, wbCollapseSounds),
-    wbStructSK(AFSG, [0,1], 'Footstep', [
+    wbStructSK(AFSG, [0,1], 'Foley Switch', [
       wbWwiseGuid('Category'),
-      wbWwiseGuid('Value')
+      wbWwiseGuid('Variant')
     ]).IncludeFlag(dfCollapsed, wbCollapseSounds)
   ], False, nil, cpNormal, False).SetIgnoreList([FLLD, XFLG]);
 
   var wbAVMDMNAMReq :=
-    wbInteger(MNAM, 'Type', itU32, wbEnumSummary([
+    wbInteger(MNAM, 'AVM Group Type', itU32, wbEnumSummary([
       'None'          , 'None',
       'Simple Group'  , 'Simple',
       'Complex Group' , 'Complex',
@@ -9363,48 +9363,39 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'No Underarmor Scaling', //need to confirm
+      {0x00000040}  6, 'No Underarmor Scaling',
       {0x00000080}  7, 'Is Skin',
-      {0x00000100}  8, 'Unknown 8',
-      {0x00000200}  9, 'Unknown 9',
-      {0x40000000} 30, 'Hi-Res 1st Person Only' //need to confirm
+      {0x00000100}  8, 'Is Skin Hands',
+      {0x00000400} 10, 'No Model',
+      {0x40000000} 30, 'Hi-Res 1st Person Only'
     ])), [
     wbEDID,
+//    wbSNTP, // available through CK inspector not normal ARMA UI
+//    wbSNBH,
     wbBaseFormComponents,
     wbBO64,
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbStruct(DNAM, 'Data', [
-      wbUnknown(4),
-      wbInteger('Unknown', itU8),
-      wbInteger('Unknown', itU8),
-      wbInteger('Unknown', itU8),
-      wbInteger('Unknown', itU8),
-      wbInteger('Unknown', itU8),
-      wbFloat
-      (*
+      wbFloat('Weapon Adjust'),
       wbInteger('Male Priority', itU8),
       wbInteger('Female Priority', itU8),
-      // essentialy a number of world models for different weights (Enabled = 2 models _0.nif and _1.nif)
-      wbInteger('Weight slider - Male', itU8, wbFlags([
-        {0x01} 'Unknown 0',
-        {0x02} 'Enabled'
-      ])),
-      wbInteger('Weight slider - Female', itU8, wbFlags([
-        {0x01} 'Unknown 0',
-        {0x02} 'Enabled'
-      ])),
-      wbByteArray('Unknown', 2),
+      wbInteger('Unknown', itU8),
+      wbInteger('Unknown', itU8),
       wbInteger('Detection Sound Value', itU8),
-      wbByteArray('Unknown', 2),
-      wbFloat('Weapon Adjust')
-      *)
+      wbFloat('Health Bar Offset')
     ], cpNormal, True),
-    wbTexturedModel('Male Biped Model',   [MOD2, MO2T], [wbMOLM(MLM1), wbMO2C, wbMO2S, wbMO2F]),
-    wbTexturedModel('Female Biped Model', [MOD3, MO3T], [wbMOLM(MLM2), wbMO3C, wbMO3S, wbMO3F]),
-    wbTexturedModel('Male 1st Person',    [MOD4, MO4T], [wbMOLM(MLM3), wbMO4C, wbMO4S, wbMO4F]),
-    wbTexturedModel('Female 1st Person',  [MOD5, MO5T], [wbMOLM(MLM4), wbMO5C, wbMO5S, wbMO5F]),
-    wbTexturedModel('Skeleton',           [MOD6, MO6T], [wbMOLM(MLM5), wbMO6F]),
-    //wbTexturedModel('Unknown',  [MOD7, MO7T], [wbMOLM(MLM6), wbMO7F]), does not occur in Starfield.esm, but the code support loading it
+    wbTexturedModel('Male Biped Model',   [MOD2], [wbMOLM(MLM1), wbMO2C, wbMO2F]),
+    wbTexturedModel('Female Biped Model', [MOD3], [wbMOLM(MLM2), wbMO3C, wbMO3F]),
+    wbTexturedModel('Male 1st Person',    [MOD4], [wbMOLM(MLM3), wbMO4C, wbMO4F]),
+    wbTexturedModel('Female 1st Person',  [MOD5], [wbMOLM(MLM4), wbMO5C, wbMO5F]),
+
+    wbString(MOD6, 'Male Alt Skeleton'),
+    wbString(MOD7, 'Female Alt Skeleton'),
+
+    wbFormIDCk(NAM0, 'Male Skin Texture', [TXST]),
+    wbFormIDCk(NAM1, 'Female Skin Texture', [TXST]),
+    wbFormIDCk(NAM2, 'Male Skin Texture Swap List', [FLST]),
+    wbFormIDCk(NAM3, 'Female Skin Texture Swap List', [FLST]),
 
     wbFormIDCk(NAM4, 'Male World Morph', [MRPH]),
     wbFormIDCk(NAM5, 'Male 1st Person Morph', [MRPH]),
@@ -9417,7 +9408,7 @@ end;
     wbFormIDCk(PNAM, 'Body Part Data', [BPTD]),
     wbRStruct('AVM Data',[
       wbAVMDMNAMReq,
-      wbString(TNAM, 'Color Mapping')
+      wbString(TNAM, 'Entry Type')
         .SetLinksToCallbackOnValue(function(const aElement: IwbElement): IwbElement
         begin
           Result := nil;
@@ -9442,12 +9433,12 @@ end;
             Result := lFile.RecordFromIndexByKey[wbIdxAVMByType[lType], lAVMDName];
         end)
         .SetToStr(wbToStringFromLinksToMainRecordName),
-       wbString(SNAM, 'Entry Name'),
+       wbString(SNAM, 'Entry Sub Type'),
        wbString(VNAM, 'Entry Value')
     ], []),
     wbRStructs('Bone Datas', 'Bone Data', [
       wbInteger(BSMP, 'Gender', itU32, wbEnum(['Male', 'Female'])),
-      wbRArray('Modifiers', wbFormIDCk(BNAM, 'Modifier', [BMOD]))
+      wbRArrayS('Modifiers', wbFormIDCk(BNAM, 'Modifier', [BMOD]))
     ], [])
   ], False, nil, cpNormal, False).SetIgnoreList([FLLD, XFLG]);
 
@@ -18861,7 +18852,7 @@ end;
     wbEDID,
     wbInteger(STMS, 'Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbRStructsSK('Entries', 'Entry', [0], [
-      wbString(STAE, 'Name'),
+      wbString(STAE, 'Tag').SetRequired,
       wbSoundReference(STAD).SetRequired
     ], []).SetCountPath(STMS)
   ]);
