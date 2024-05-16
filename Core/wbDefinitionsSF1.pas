@@ -4027,22 +4027,16 @@ function wbSoundReference(const aName: string = 'Sound'): IwbValueDef; overload;
 begin
   Result :=
     wbStruct(aName, [
-      wbStruct('Event', [
+      wbStruct('Event Set', [
         wbWwiseGuid('Start Event/Form'), // GUID 1
         wbWwiseGuid('Stop'), // GUID 2
         wbFormIDCk('Condition', [NULL, CNDF]).IncludeFlag(dfSummaryExcludeNULL)
-      ]),
-      wbStruct('Form', [
-        wbFormIDCk('Start Form WWED', [NULL, WWED]).IncludeFlag(dfSummaryExcludeNULL)
-      ])
+      ]).SetSummaryKey([0, 1, 2]),
+      wbStruct('Form Only', [
+        wbFormIDCk('Start Form', [NULL, WWED]).IncludeFlag(dfSummaryExcludeNULL)
+      ]).SetSummaryKey([0])
     ])
-      .SetSummaryKey([0, 1, 2, 3])
-{      .SetSummaryMemberPrefixSuffix(0, 'Start: ', '')
-      .SetSummaryMemberPrefixSuffix(1, 'Stop: ', '')
-      .SetSummaryMemberPrefixSuffix(2, 'Cond: ', '')
-      .SetSummaryMemberPrefixSuffix(3, 'Event: ', '')
-      .SetSummaryDelimiter(' ')
-      .IncludeFlag(dfSummaryMembersNoName)}
+      .SetSummaryKey([0, 1])
       .IncludeFlag(dfCollapsed);
 end;
 {------------------------------------------------------------------------------}
@@ -19496,20 +19490,42 @@ end;
     wbEDID,
     wbRStruct('Ambient Sounds', [
       wbInteger(ASAS, 'Count', itU32, nil, cpBenign, True).IncludeFlag(dfSkipImplicitEdit), //count
-      wbRArray('Sounds', wbStruct(ASAE, 'Unknown', [
-      { 0} wbSoundReference,
-      {40} wbUnknown(8),
-      {48} wbWwiseGuid('Variation'),
-      {64} wbInteger('Unknown', itU8, wbBoolEnum),
-      {65} wbFloat,
-      {69} wbUnknown(4)
-      {73}
+      wbRArray('Sounds', wbStruct(ASAE, 'Sound Events', [ // DO NOT SORT - this array appears deliberately ordered in CK
+        wbSoundReference('Sound Event/Form'),
+        wbArrayS('Weather Keywords', wbFormIDCk('Keyword', [KYWD]), -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Marker Keywords', wbFormIDCk('Keyword', [KYWD]), -1).IncludeFlag(dfCollapsed),
+        wbWwiseGuid('Switch Group'),
+        wbStruct('Re-evaluate Interval', [
+          wbInteger('Use Custom Interval', itU8, wbBoolEnum),
+          wbFloat('Interval (Seonds)')
+        ])
+          .SetSummaryKey([0, 1])
+          .SetSummaryMemberPrefixSuffix(0, 'Use:(', ')')
+          .SetSummaryMemberPrefixSuffix(1, 'Secs:(', ')')
+          .SetSummaryDelimiter(', ')
+          .IncludeFlag(dfCollapsed),
+        wbArrayS('Planet Customization', wbStructSK([0, 1], 'Planet Data', [
+          wbFormIDCk('Planet', [PNDT]),
+          wbLenString('Switch State', 4)
+            .SetFormater(wbStringEnum([
+              'aggressive_rumble',
+              'medium_rumble',
+              'soft_rumble'
+            ]))
+            .IncludeFlag(dfHasZeroTerminator)
+        ])
+          .SetSummaryKey([0, 1])
+          .SetSummaryDelimiter(', '), -1)
+          .IncludeFlag(dfCollapsed)
       ]))
         .SetCountPath(ASAS)
         .SetRequired
     ], []),
-    wbInteger(ASMB, 'Unknown', itU8, wbBoolEnum),
-    wbSoundReference(WED0, 'Walla')
+    wbInteger(ASMB, 'Merge Behavior', itU8, wbEnum([
+      'Override Parent',
+      'Merge with Parent'
+    ])).SetRequired,
+    wbSoundReference(WED0, 'Walla Exterior')
   ]);
 
   {subrecords checked against Starfield.esm}
