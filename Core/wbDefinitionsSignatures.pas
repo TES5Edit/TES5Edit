@@ -670,6 +670,8 @@ const
   LLCT : TwbSignature = 'LLCT'; { New to Skyrim, part of LVLI 'Count' }
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LLLD : TwbSignature = 'LLLD'; { New To Starfield }
+  LLRB : TwbSignature = 'LLRB'; { New To Starfield }
+  LLRV : TwbSignature = 'LLRV'; { New To Starfield }
   LLVL : TwbSignature = 'LLVL'; { New To Fallout 76 }
   LMSW : TwbSignature = 'LMSW'; { New To Starfield }
   LNA2 : TwbSignature = 'LNA2'; { New To Starfield }

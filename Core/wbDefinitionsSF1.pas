@@ -103,6 +103,36 @@ begin
   )
 end;
 
+procedure wbBIOMScaleToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  tValue: Float32;
+begin
+  case aType of
+    ctToStr:
+      begin
+      if aElement.NativeValue <> 0.0 then
+        aValue := FloatToStrF(0.01 / aElement.NativeValue, ffFixed, 99, 1);
+      end;
+    ctFromEditValue:
+      begin
+        try
+          tValue := StrToFloat(aValue);
+          if tValue < 0.0 then
+            tValue := 0.0
+          else if tValue > 10.0 then
+            tValue := 10.0;
+          aElement.NativeValue := tValue;
+          if tValue <> 0.0 then
+          begin
+            aElement.NativeValue := 0.01 / tValue;
+            aValue := FloatToStr(aElement.NativeValue);
+          end;
+        except
+        end;
+      end ;
+  end;
+end;
+
 function wbQuestStageToStr(aStageIndex : Int64;
                      const aElement    : IwbElement;
                            aType       : TwbCallbackType;
@@ -5131,7 +5161,7 @@ begin
     {0x00000080} 'Unknown 8',
     {0x00000100} 'High Cost Path',
     {0x00000200} 'Non-Interactive',
-    {0x00000400} 'Unknown 11',
+    {0x00000400} 'References Are Moveable (BGSEffectSequenceComponent)',
     {0x00000800} 'Disable Loop Sound',
     {0x00001000} 'Unknown 13',
     {0x00002000} 'Unknown 14',
@@ -5865,27 +5895,34 @@ begin
   var wbODTY := wbFloat(ODTY, 'Unknown');
   var wbOPDS :=
     wbStruct(OPDS, 'Object Palette Defaults', [
-      wbFloat('Unknown'),
-      wbFloat('Sink'),
-      wbFloat('Sink Variance'),
-      wbFloat('X/Y Position Variance'),
-      wbInteger('Footprint', itU32, wbEnum([], [ // looks like stored integer value but in CK is displayed as a float value but only allows certain values
-        $0, '51.0',
-        $1, '27.0',
-        $2, '11.0',
-        $3, '7.0',
-        $5, '0.0'
+      wbInteger('Flags', itU32, wbFlags([
+        'Conform To Slope',
+        '',
+        'Rotate Z To Slope',
+        'Slope Limit Is Min Slope',
+        'Place As Marker',
+        'Outside Water Height'
       ])),
-      wbFloat('Scale'),
-      wbFloat('Scale Variance'),
-      wbFloatAngle('Angle X'),
-      wbFloatAngle('Angle X Variance'),
-      wbFloatAngle('Angle Y'),
-      wbFloatAngle('Angle Y Variance'),
-      wbFloatAngle('Angle Z'),
-      wbFloatAngle('Angle Z Variance'),
-      wbFloat('Slope Pct'),
-      wbFloat('Slope Pct Variance'),
+      wbFloat('Sink (Meters)'),
+      wbFloat('Sink Variance +/-'),
+      wbFloat('X/Y Offset Variance +/-'),
+      wbInteger('Footprint (Meters)', itU32, wbEnum([], [ // looks like stored integer value but in CK is displayed as a float value but only allows certain values
+        0, 'X-Large 51.0',
+        1, 'Large 27.0',
+        2, 'Medium 11.0',
+        3, 'Small 7.0',
+        5, 'None 0.0'
+      ])),
+      wbFloat('Scale % +/-'),
+      wbFloat('Scale Variance +/-'),
+      wbFloatAngle('Angle X (Deg)'),
+      wbFloatAngle('Angle X Variance +/-'),
+      wbFloatAngle('Angle Y (Deg)'),
+      wbFloatAngle('Angle Y Variance +/-'),
+      wbFloatAngle('Angle Z (Deg)'),
+      wbFloatAngle('Angle Z Variance +/-'),
+      wbFloat('Slope %'),
+      wbFloat('Slope % Variance +/-'),
       wbFloat('Density'),
       wbFloat('Frequency %', cpNormal, False, 100),
       wbFloatAngle('Slope Limit'),
@@ -9080,11 +9117,11 @@ end;
       Result :=
         wbRStructSK([0], 'Model', [
           wbString(MODL, 'Model FileName'),
-          wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
+    //      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
           wbMOLM(MOLM),
           wbFLLD,
-          wbUnknown(XFLG),
-          wbMODC
+          wbMODC,
+          wbInteger(XFLG, 'Flags', itU8, wbModelFlags)
     //      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
     //      wbMODF  // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
         ], [], cpNormal, aRequired, aDontShow)
@@ -9354,7 +9391,7 @@ end;
 
   var wbAVMDMNAMReq :=
     wbInteger(MNAM, 'AVM Group Type', itU32, wbEnumSummary([
-      'None'          , 'None',
+      ''              , 'Invalid Group',  // None - Cannot be set in CK
       'Simple Group'  , 'Simple',
       'Complex Group' , 'Complex',
       'Modulation'    , 'Modulation'
@@ -13499,9 +13536,14 @@ end;
         'Magic Casting',
         'Magic Hit Effect',
         'Enchantment Effect',
-        'Unknown 3'
+        'Misc Art Object'
       ])),
-      wbUnknown(4)
+      wbInteger('Flags', itU32, wbFlags(nil, wbFlagsList([
+        0, 'Rotate To Face Target',
+        1, 'Attach To Camera',
+        2, 'Inherit Rotation',
+        31, 'Reference Effect'
+      ])))
     ]),
     wbFormIDCK(ENAM, 'Effect Shader', [EFSH])
   ]);
@@ -14106,6 +14148,7 @@ end;
       .SetSummaryDelimiterOnValue(' ')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlagOnValue(dfSummaryNoSortKey),
+      wbCOED,
       wbCTDAs
     ], [])
     .SetSummaryMemberMaxDepth(0, 1)
@@ -14181,13 +14224,13 @@ end;
       wbStructSK([0], 'Filter', [
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
-        wbUnknown(4)
+        wbUnused(4) // UI shows curve box but disabled
       ]));
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLN, 'Leveled NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000}  15, 'Unknown 15'
+      {0x00008000}  15, 'Calculate All (Still picks just one)'
     ])), [
     wbEDID,
     wbVMAD,
@@ -14201,14 +14244,14 @@ end;
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
       {0x0002} 'Calculate for each item in count',
-      {0x0004} 'Calculate All', {Still picks just one}
-      {0x0008} 'Unknown 3',
-      {0x0010} 'Unknown 4',
-      {0x0020} 'Unknown 5',
-      {0x0040} 'Unknown 6',
+      {0x0004} 'Calculate All (Still picks just one)',
+      {0x0008} 'Disable If Does Not Resolve 1',
+      {0x0010} 'Disable If Does Not Resolve 2',
+      {0x0020} 'Eval As Stack',
+      {0x0040} 'Allow Shift Up',
       {0x0080} '',
-      {0x0100} 'Unknown 8'
-    ]), cpNormal, True),
+      {0x0100} 'Do All Before Repeating'
+    ], True), cpNormal, True),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
@@ -14221,37 +14264,39 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(LVLI, 'Leveled Item',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000}  15, 'Unknown 15'
+      {0x00008000}  15, 'Use All'
     ])), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
     wbODTY,
+    wbXALG,
     wbOPDS,
     wbBaseFormComponents,
-    wbXALG,
     wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
       {0x0002} 'Calculate for each item in count',
       {0x0004} 'Use All',
-      {0x0008} 'Unknown 3',
-      {0x0010} 'Unknown 4',
-      {0x0020} 'Unknown 5',
+      {0x0008} 'Show as Marker 1',
+      {0x0010} 'Show as Marker 2',
+      {0x0020} 'Eval As Stack',
       {0x0040} '',
-      {0x0080} '',
-      {0x0100} 'Unknown 8'
-    ]), cpNormal, True),
+      {0x0080} 'Get Chance From Required Biome',
+      {0x0100} 'Do All Before Repeating'
+    ], True), cpNormal, True),
     wbCTDAs,
-    wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbFormIDCk(LVLG, 'Use Chance None Global', [GLOB]),
+    wbFormIDCk(LLRB, 'Required Biome', [BIOM]),
+    wbFormIDCk(LLRV, 'Required Resource Vein', [IRES]),
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
-    //wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
-    wbUnknown(LVLL),                                  //Likely ENUM (value is either 01, 02, or 03)
+    wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
     wbUnknown(LIMC),
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
+    wbInteger(LVLL, 'Legendary Item Default List Rank', itU8),
     wbGenericModel(),
     wbFTYP
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
@@ -14259,8 +14304,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(LVLP, 'Leveled Pack In',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000080}   7, 'Unknown 7',
-      {0x00008000}  15, 'Unknown 15'
+      {0x00000080}   7, 'Apply LRT To All But Pivot'
     ])), [
     wbEDID,
     wbVMAD,
@@ -14272,16 +14316,16 @@ end;
     wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
-      {0x0001} 'Calculate from all levels <= player''s level',
+      {0x0001} '',
       {0x0002} 'Calculate for each item in count',
-      {0x0004} 'Use All',
-      {0x0008} 'Unknown 3',
-      {0x0010} 'Unknown 4',
-      {0x0020} 'Unknown 5',
-      {0x0040} 'Unknown 6',
+      {0x0004} '',
+      {0x0008} '',
+      {0x0010} '',
+      {0x0020} 'Eval As Stack',
+      {0x0040} '',
       {0x0080} '',
-      {0x0100} 'Unknown 8'
-    ]), cpNormal, True),
+      {0x0100} 'Do All Before Repeating'
+    ], True), cpNormal, True),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
@@ -14293,7 +14337,9 @@ end;
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   (* still exists in game code, but not in Starfield.esm * )
-  wbRecord(LVSP, 'Leveled Spell', [
+  wbRecord(LVSP, 'Leveled Spell', wbFlagsList([
+      {0x00008000}  15, 'Use All'
+    ])), [
     wbEDID,
     wbOBND(True),
     wbLVLD,
@@ -19222,8 +19268,8 @@ end;
     wbEDID,
     wbOBND(True),
     wbODTY,
-    wbFloat(OBSV),
-    wbFloat(OCCV)
+    wbFloat(OBSV, 'Obstruction'),
+    wbFloat(OCCV, 'Occlusion')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19255,7 +19301,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(BMMO, 'Biome Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00100000} 20, 'Unknown 20' //all occurences on prey/preditor BMMOs
+      {0x00100000} 20, 'Calculate Once Per Location' //all occurences on prey/preditor BMMOs
     ])), [
     wbEDID,
     wbVMAD,
@@ -19266,8 +19312,8 @@ end;
     wbKeywords,
     wbCTDAs,
     wbFormIDCk(KNAM, 'Marker Type', [NULL, KYWD]).SetRequired,
-    wbFormIDCk(LNAM, 'Flora List', [NULL, LVLI]).SetRequired,
-    wbFormIDCk(LNA2, 'Unknown', [NULL, FLOR, PKIN, STAT]).SetRequired //probably any type of non-actor reference?
+    wbFormIDCk(LNAM, 'Fallback List', [NULL, LVLI]).SetRequired,
+    wbFormIDCk(LNA2, 'Navmesh Object', [NULL, FLOR, PKIN, STAT]).SetRequired //probably any type of non-actor reference?
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19320,7 +19366,10 @@ end;
     .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LVLB, 'Leveled Base Form', [
+  wbRecord(LVLB, 'Leveled Base Form',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00008000}  15, 'Calculate All (Still picks just one)'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -19330,15 +19379,15 @@ end;
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
       {0x0002} 'Calculate for each item in count',
-      {0x0004} 'Calculate All',
-      {0x0008} 'Unknown 3',
-      {0x0010} 'Unknown 4',
+      {0x0004} 'Calculate All (Still picks just one)',
+      {0x0008} 'Disable If Does Not Resolve 1',
+      {0x0010} 'Disable If Does Not Resolve 2',
       {0x0020} '',
-      {0x0040} 'Unknown 6',
+      {0x0040} 'Allow Shift Up',
       {0x0080} '',
-      {0x0100} '',
+      {0x0100} 'Do All Before Repeating',
       {0x0200} 'Unknown 9'
-    ]), cpNormal, True),
+    ], True), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbCTDAs,
     wbLLCT,
@@ -19394,72 +19443,163 @@ end;
     wbFormIDCK(NAM3, 'Interval', [NULL, GLOB])
   ]);
 
+  var wbBIOMMaskNameStringEnum := wbStringEnum([
+    'Base',
+    'Solid',
+    'FlatOuter',
+    'FlatInner',
+    'Talus',
+    'Flow',
+    'Path'
+  ]);
+
+  var wbBIOMMaskNamesEnum := wbEnum([
+    'Base',
+    'Solid',
+    'FlatOuter',
+    'FlatInner',
+    'Talus',
+    'Flow',
+    'Path'
+  ]);
+
+  var wbBIOMBTPSStruct := function(aName: string = 'Unknown'): IwbValueDef
+  begin
+    Result := wbStruct(aName, [
+      wbFloat('Noise Offset U'),
+      wbFloat('Noise Offset V'),
+      wbFloat('Noise Scale U').SetToStr(wbBIOMScaleToStr),
+      wbFloat('Noise Scale V ').SetToStr(wbBIOMScaleToStr),
+      wbFloat('Noise Contrast'),
+      wbFloat('Alt Texture Coverage'),
+      wbFloat('Alternate Data Contribution Min'),
+      wbFloat('Alternate Data Contribution Max')
+    ]);
+  end;
+
   {subrecords checked against Starfield.esm}
   wbRecord(BIOM, 'Biome', [
-    wbEDID,
+    wbEDID.SetRequired,
     wbFULL,
     wbKeywords,
-    wbString(SNAM, 'Biome Type'),
-    wbArray(PNAM, 'Plants', wbFormIDCk('Flora', [FLOR])),
-    wbFormIDCk(RNAM, 'Resource Generation Data', [RSGD]),
-    wbRStructs('Unknown', 'Unknown', [
-      wbString(FNAM),
-      wbUnknown(BNAM),       //Always 01 00 00 00 if it exists
-      wbRArray('Unknown', wbStruct(GNAM, 'Unknown', [
+    wbString(SNAM, 'Filter String'),
+    wbArrayS(PNAM, 'Flora', wbFormIDCk('Flora', [FLOR])).IncludeFlag(dfCollapsed),
+    wbRArrayS('Resource Generation', wbFormIDCk(RNAM, 'Resource Generation Data', [RSGD])),
+    wbRStructsSK('Procedural Object Generation', 'Mask', [0], [
+      wbString(FNAM, 'Mask Name', 0, cpNormal, True)
+        .SetFormaterOnValue(wbBIOMMaskNameStringEnum),
+      wbUnknown(BNAM, cpNormal, True).SetDefaultEditValue('01 00 00 00'),  //Always 01 00 00 00 if it exists, probably a bool flag to load this mask. Only ever present if the mask is as well.
+      wbRArrayS('Objects', wbStructSK(GNAM, [0], 'Object', [
         wbFormIDCk('Pack-In', [PKIN, LVLP]),
-        wbArray('Unknown', wbUnknown(4), 20)
-      ])),
-      wbArray(DNAM,'Unknown', wbFloat(), 4)
+        wbStruct('Data', [
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbFloat,
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbFloat,
+          wbUnknown(4),
+          wbFloat('Object Density'),
+          wbFloat,
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4),
+          wbUnknown(4)
+        ])
+      ]), cpNormal, True),
+      wbStruct(DNAM,'Footprints', [
+        wbFloat('Giant'),
+        wbFloat('Large'),
+        wbFloat('Medium'),
+        wbFloat('Small')
+      ], cpNormal, True)
     ], []),
-    wbFormIDCk(ONAM, 'Biome Swap', [OSWP]),
-    wbRArray('Material Swaps', wbFormIDCk(NAM1, 'Material Swap', [LMSW])),
+    wbRArrayS('Object Swaps', wbFormIDCk(ONAM, 'Object Swap', [OSWP])),
+    wbRArrayS('Material Swaps', wbFormIDCk(NAM1, 'Material Swap', [LMSW])),
     wbFormIDCk(ENAM, 'Climate', [CLMT]),
     wbRStruct('Water Data', [
       wbInteger(MNAM, 'Has Water', itU8, wbBoolEnum), //implicit required
       wbFormIDCk(INAM, 'Water', [WATR]),
-      wbString(JNAM, 'Water Material')
-    ], []),
-    wbFloat(WNAM, 'Unknown'),
-    wbFloat(YNAM, 'Unknown'),
-    wbFloat(UNAM, 'Unknown'),
-    wbFormIDCk(BIAS, 'Ambient Set', [AMBS]),
-    wbFormIDCk(BIMT, 'Music', [MUSC]),
-    wbFormIDCk(NAM0,'Unknown', [TODD]),
+      wbString(JNAM, 'Water Material').SetRequired
+    ], []).SetRequired,
+    wbFloat(WNAM, 'Block Density Mult').SetDefaultEditValue('1.0').SetRequired,
+    wbFloat(YNAM, 'Cell Density Mult').SetDefaultEditValue('1.0').SetRequired,
+    wbFloat(UNAM, 'Scan Worldspace Mult').SetDefaultEditValue('1.0').SetRequired,
+    wbFormIDCk(ZNAM, 'Child', [BIOM]),
+    wbFormIDCk(BIAS, 'Ambience Set', [AMBS]),
+    wbFormIDCk(BIMT, 'Music Type', [MUSC]),
+    wbFormIDCk(NAM0,'Time of Day Data', [TODD]),
     wbFormIDCk(NNAM, 'Pattern Style', [PTST]),
-    wbByteRGBA(CNAM),
-    wbByteRGBA(BMC1, 'Biome Color 1'),
-    wbByteRGBA(BMC2, 'Biome Color 2'),
-    wbByteRGBA(BMC3, 'Biome Color 3'),
-    wbInteger(TNAM, 'Unknown', itU32),
-    wbRStructs('Marker Type', 'Type', [
-      wbFormIDCk(KNAM, 'Keyword', [KYWD]),
+    wbByteBGRA(CNAM, 'Color').SetRequired,
+    wbByteBGRA(BMC1, 'Surface Color 1').SetRequired,
+    wbByteBGRA(BMC2, 'Surface Color 2').SetRequired,
+    wbByteBGRA(BMC3, 'Rock Tint').SetRequired,
+    wbInteger(TNAM, 'Unknown', itU32, wbEnum([
+      'Default',
+      'Ocean',
+      'Polar',
+      'Mountain',
+      'Swamp',
+      'Archipelago',
+      'Gas Giant'
+    ])).SetRequired,
+    wbRStructs('Marker Objects Keywords', 'Marker Data', [
+      wbFormIDCk(KNAM, 'Marker Type', [KYWD]),
       wbKeywords
     ], []),
-    wbRStructs('Unknown', 'Unknown', [
-      wbStruct(LNAM, 'Unknown', [
-        wbInteger('Unknown', itU32),
+//    wbRStructs('Terrain Data', 'Terrain Data', [
+    wbRArrayS('Terrain Data', wbRUnion('Terrain Data', [
+      wbStructSK(LNAM, [0, 1, 2], 'Main Data', [
+        wbInteger('Mask', itU32, wbBIOMMaskNamesEnum),
         wbFormIDCk('Land Texture', [LTEX]),
         wbFormIDCk('Ground Cover', [NULL, GCVR])
       ]),
-      wbStruct(ANAM, 'Unknown', [
-        wbInteger('Unknown', itU32),
+      wbStructSK(ANAM, [0, 1, 2], 'Alternate Data', [
+        wbInteger('Mask', itU32, wbBIOMMaskNamesEnum),
         wbFormIDCk('Land Texture', [LTEX]),
         wbFormIDCk('Ground Cover', [GCVR, NULL])
       ]),
-      wbString(TX00, 'Mask - Type 0'),
-      wbString(UX00, 'Mask - Type 1'),
-      wbString(VX00, 'Mask - Type 2'),
-      wbString(WX00, 'Mask - Type 3'),
-      wbString(XX00, 'Mask - Type 4'),
-      wbString(YX00, 'Mask - Type 5')
-    ], []),
+      wbString(TX00, 'Base - Noise Data Texture'),
+      wbString(UX00, 'Flow - Noise Data Texture'),
+      wbString(VX00, 'FlatOuter - Noise Data Texture'),
+      wbString(WX00, 'FlatIn - Noise Data Texture'),
+      wbString(XX00, 'Talus - Noise Data Texture'),
+      wbString(YX00, 'Solid - Noise Data Texture')
+    ], [])),
     wbString(TX16, 'Ground Layer Normal'),
-    wbArray(BTPS, 'Unknown', wbUnknown(4), 56),
-    wbArray(BDFS, 'Unknown', wbUnknown(4), 11),
-    wbString(EFSD, 'Ground Layer Material'),
-    wbFormIDCk(NAM2, 'Unknown', [NULL, GLOB]),
-    wbFormIDCk(NAM3, 'Unknown', [GLOB]),
-    wbFormIDCk(NAM4, 'Unknown', [GLOB])
+    wbStruct(BTPS, 'Unknown Terrain Settings', [
+      wbBIOMBTPSStruct('Base'),
+      wbBIOMBTPSStruct('Flow'),
+      wbBIOMBTPSStruct('FlatOut'),
+      wbBIOMBTPSStruct('FlatIn'),
+      wbBIOMBTPSStruct('Talus'),
+      wbBIOMBTPSStruct('Solid'),
+      wbBIOMBTPSStruct('Path?')
+     ]).SetRequired,
+    wbStruct(BDFS, 'Distant View', [
+      wbFloat('Texture Offset U'),
+      wbFloat('Texture Offset V'),
+      wbFloat('Texture Scale U').SetToStr(wbBIOMScaleToStr),
+      wbFloat('Texture Scale V').SetToStr(wbBIOMScaleToStr),
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat,
+      wbFloat('Normal Strength'),
+      wbFloat('Slope Start'),
+      wbFloat('Slope Range')
+      ], cpNormal, True),
+    wbString(EFSD, 'Global Layer Material'),
+    wbFormIDCk(NAM2, 'Block Density Mult Global', [NULL, GLOB]).SetRequired,
+    wbFormIDCk(NAM3, 'Cell Density Mult Global', [NULL, GLOB]).SetRequired,
+    wbFormIDCk(NAM4, 'Scan Worldspace Mult Global', [NULL, GLOB]).SetRequired
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19540,7 +19680,7 @@ end;
     wbEDID,
     wbBaseFormComponents,
     wbAVMDMNAMReq,
-    wbString(YNAM).SetRequired,
+    wbString(YNAM, 'Name').SetRequired,
     wbString(TNAM, 'Name').SetRequired,
     wbInteger(ITMC, 'Entry Count', itU32, nil, cpBenign).SetRequired.IncludeFlag(dfSkipImplicitEdit),
     wbRArray('Entries',
@@ -19651,7 +19791,7 @@ end;
               Exit(False);
             Result := lContainer.ElementValues['...\MNAM'] = 'Modulation';
           end),
-        wbByteRGBA(NNAM, 'Color')
+        wbByteABGR(NNAM, 'Color')
           .SetDontShow(function(const aElement: IwbElement): Boolean
           begin
             var lContainer: IwbContainer;
@@ -19668,15 +19808,15 @@ end;
       .IncludeFlag(dfCollapsed)
     ).SetCountPath(ITMC),
     wbInteger(MODT, 'Texture Type', itU32, wbFlags([
-          {0} 'None',
+          {0} '',
           {1} 'Rough',
           {2} 'Opacity',
           {3} 'Normal',
           {4} 'AO',
           {5} 'Metal',
-          {6} 'Conditions',
+          {6} 'Biome Conditions',
           {7} 'Emissive'
-        ])
+        ], True)
     )
   ])
   .SetSummaryKey([2, 4, 6])
@@ -19850,9 +19990,15 @@ end;
     wbLVLD,
     wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Calculate All' {Still picks just one}
+      {0x0001} '',
+      {0x0002} '',
+      {0x0004} '',
+      {0x0008} '',
+      {0x0010} '',
+      {0x0020} '',
+      {0x0040} '',
+      {0x0080} '',
+      {0x0100} 'Do All Before Repeating'
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
@@ -19876,8 +20022,12 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(OSWP, 'Biome Swap', [ //OSWP -> EDID  (3)
-    wbEDID
+  wbRecord(OSWP, 'Object Swap', [ //OSWP -> EDID  (3)
+    wbEDID,
+    wbRArrayS('Swap Map', wbRStructSK([0,1], 'Item', [
+      wbFormID(KNAM, 'Original Object'),
+      wbFormID(VNAM, 'Replacement Object')
+    ], []))
   ]);
 
   {subrecords checked against Starfield.esm}

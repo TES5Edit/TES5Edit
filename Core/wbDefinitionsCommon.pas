@@ -276,6 +276,10 @@ function wbFloatRGBA(const aName: string = 'Color'): IwbValueDef; overload;
 function wbFloatRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteRGBA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+function wbByteABGR(const aName: string = 'Color'): IwbValueDef; overload;
+function wbByteABGR(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+function wbByteBGRA(const aName: string = 'Color'): IwbValueDef; overload;
+function wbByteBGRA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 
 const
   wbVec3Prefix = '';//'Vec3';
@@ -2041,6 +2045,60 @@ begin
     aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
 end;
 
+procedure wbABGRToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container: IwbContainerElementRef;
+  A: IwbElement;
+  R, G, B: string;
+begin
+  if not wbTrySetContainer(aElement, aType, Container) then
+    Exit;
+
+    A := Container.Elements[0];
+    B := Container.Elements[1].Summary;
+    G := Container.Elements[2].Summary;
+    R := Container.Elements[3].Summary;
+
+  if Assigned(A) then
+    if (A.ConflictPriority <= cpIgnore) or (A.Def.DefType = dtByteArray) then
+      A := nil;
+
+  if Assigned(A) then
+    aValue := 'RGBA(' + R + ', ' + G + ', ' + B + ', ' + A.Summary + ')'
+  else
+    aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
+end;
+
+procedure wbBGRAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+var
+  Container: IwbContainerElementRef;
+  A: IwbElement;
+  R, G, B: string;
+begin
+  if not wbTrySetContainer(aElement, aType, Container) then
+    Exit;
+
+  if Container.ElementCount >= 3 then begin
+    B := Container.Elements[0].Summary;
+    G := Container.Elements[1].Summary;
+    R := Container.Elements[2].Summary;
+  end else
+    Exit;
+
+  if Container.ElementCount >= 4 then
+    A := Container.Elements[3]
+  else
+    A := nil;
+
+  if Assigned(A) then
+    if (A.ConflictPriority <= cpIgnore) or (A.Def.DefType = dtByteArray) then
+      A := nil;
+
+  if Assigned(A) then
+    aValue := 'RGBA(' + R + ', ' + G + ', ' + B + ', ' + A.Summary + ')'
+  else
+    aValue := 'RGB(' + R + ', ' + G + ', ' + B + ')';
+end;
 
 // TODO: used in too many places to replace with summary callbacks
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -2925,6 +2983,26 @@ begin
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
+function wbByteABGR(const aName: string = 'Color'): IwbValueDef; overload;
+begin
+  Result := wbStruct(aName, [
+    wbInteger('Alpha', itU8),
+    wbInteger('Blue', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Red', itU8)
+  ]).SetToStr(wbABGRToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbByteABGR(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
+    wbInteger('Alpha', itU8),
+    wbInteger('Blue', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Red', itU8)
+  ]).SetToStr(wbABGRToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
 function wbByteRGBA(const aName: string = 'Color'): IwbValueDef; overload;
 begin
   Result := wbStruct(aName, [
@@ -2943,6 +3021,26 @@ begin
     wbInteger('Blue', itU8),
     wbInteger('Alpha', itU8)
   ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbByteBGRA(const aName: string = 'Color'): IwbValueDef; overload;
+begin
+  Result := wbStruct(aName, [
+    wbInteger('Blue', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Red', itU8),
+    wbInteger('Alpha', itU8)
+  ]).SetToStr(wbBGRAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
+end;
+
+function wbByteBGRA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
+    wbInteger('Blue', itU8),
+    wbInteger('Green', itU8),
+    wbInteger('Red', itU8),
+    wbInteger('Alpha', itU8)
+  ]).SetToStr(wbBGRAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA);
 end;
 
 function wbVec3(const aName: string; const aPrefix: string): IwbValueDef; overload;
