@@ -1416,6 +1416,42 @@ begin
   end;
 end;
 
+procedure wbGPOFTypeAfterSetCallback(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  lContainer: IwbContainerElementRef;
+  lTemplate: TwbTemplateElements;
+  lElement: IwbElement;
+begin
+  if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+    Exit;
+  var lSettingData := lContainer.ElementBySortOrder[1];
+  if Assigned(lSettingData) then
+    lSettingData.Remove;
+
+  lTemplate := aElement.Container.GetAssignTemplates(1);
+  if Length(lTemplate) > 0 then
+  Supports(IInterface(lTemplate[0]), IwbElement, lElement);
+  lContainer.Assign(1, lElement, False);
+end;
+
+procedure wbGPOGTypeAfterSetCallback(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  lContainer: IwbContainerElementRef;
+  lTemplate: TwbTemplateElements;
+  lElement: IwbElement;
+begin
+  if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+    Exit;
+  var lSettingData := lContainer.ElementBySortOrder[1];
+  if Assigned(lSettingData) then
+    lSettingData.Remove;
+
+  lTemplate := aElement.Container.GetAssignTemplates(1);
+  if Length(lTemplate) > 0 then
+  Supports(IInterface(lTemplate[0]), IwbElement, lElement);
+  lContainer.Assign(1, lElement, False);
+end;
+
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 var
   OldValue, NewValue : Integer;
@@ -11626,6 +11662,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
+    wbBaseFormComponents, // beta ck is adding random garbage here
     wbGenericModel(),
     wbRArrayS('Body Parts',
       wbRStructSK([1], 'Body Part', [
@@ -14251,7 +14288,7 @@ end;
       {0x0040} 'Allow Shift Up',
       {0x0080} '',
       {0x0100} 'Do All Before Repeating'
-    ], True), cpNormal, True),
+    ]), cpNormal, True),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
@@ -14285,7 +14322,7 @@ end;
       {0x0040} '',
       {0x0080} 'Get Chance From Required Biome',
       {0x0100} 'Do All Before Repeating'
-    ], True), cpNormal, True),
+    ]), cpNormal, True),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Chance None Global', [GLOB]),
     wbFormIDCk(LLRB, 'Required Biome', [BIOM]),
@@ -14325,7 +14362,7 @@ end;
       {0x0040} '',
       {0x0080} '',
       {0x0100} 'Do All Before Repeating'
-    ], True), cpNormal, True),
+    ]), cpNormal, True),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
@@ -19387,7 +19424,7 @@ end;
       {0x0080} '',
       {0x0100} 'Do All Before Repeating',
       {0x0200} 'Unknown 9'
-    ], True), cpNormal, True),
+    ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbCTDAs,
     wbLLCT,
@@ -19839,6 +19876,12 @@ end;
   end)
   .IncludeFlag(dfSummaryMembersNoName);
 
+  var wbBoneModAxisEnum := wbEnum([
+    'X',
+    'Y',
+    'Z'
+  ]);
+
   {subrecords checked against Starfield.esm}
   wbRecord(BMOD, 'Bone Modifier', [
     wbEDID,
@@ -19853,8 +19896,9 @@ end;
         ]))
         .SetAfterSet(wbUpdateSameParentUnions)
         .IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Unknown').IncludeFlag(dfHasZeroTerminator),
-      wbLenString('Unknown').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Driver').IncludeFlag(dfHasZeroTerminator),
+      wbLenString('Target').IncludeFlag(dfHasZeroTerminator),
+      wbFloat('Max Anim Distance'),
       wbUnion('Type Dependant Data', function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
       begin
         Result := 0;
@@ -19875,55 +19919,73 @@ end;
           wbUnknown
         ]),
         wbStruct('LookAtChain Data', [
-          wbFloat,
-          wbLenString('Unknown').IncludeFlag(dfHasZeroTerminator)
+          wbLenString('Chain End').IncludeFlag(dfHasZeroTerminator)
         ]),
         wbStruct('MorphDriver Data', [
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbUnknown(1)
+          wbStruct('Vector', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbStruct('Radius', [
+            wbFloat('Inner'),
+            wbFloat('Outer')
+          ]),
+          wbInteger('Axis', itU8, wbBoneModAxisEnum)
         ]),
         wbStruct('PoseDeformer Data', [
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbUnknown(1)
+          wbStruct('Vector', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbStruct('Position', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbStruct('Angle', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbStruct('Scale', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbStruct('Radius', [
+            wbFloat('Inner'),
+            wbFloat('Outer')
+          ]),
+          wbInteger('Axis', itU8, wbBoneModAxisEnum)
         ]),
         wbStruct('SpringBone Data', [
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbFloat,
-          wbUnknown(1)
+          wbStruct('Strength', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbFloat, // not listed in inspector
+          wbStruct('Damp', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbFloat, // not listed in inspector
+          wbStruct('Scale', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbFloat, // not listed in inspector
+          wbStruct('MaxDist', [
+            wbFloat('X'),
+            wbFloat('Y'),
+            wbFloat('Z')
+          ]),
+          wbUnknown(4), // not listed in inspector
+          wbInteger('Look At Parent', itU8, wbBoolEnum)
         ])
       ])
       .IncludeFlag(dfMustBeUnion)
@@ -20022,7 +20084,7 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(OSWP, 'Object Swap', [ //OSWP -> EDID  (3)
+  wbRecord(OSWP, 'Object Swap', [
     wbEDID,
     wbRArrayS('Swap Map', wbRStructSK([0,1], 'Item', [
       wbFormID(KNAM, 'Original Object'),
@@ -20538,31 +20600,75 @@ end;
     ],[])
   ]);
 
-  wbRecord(GPOF, 'Gameplay Options', [
-    wbEDID,
-    wbLStringKC(NNAM, 'Title'),
-    wbLStringKC(DNAM, 'Description'),
-    wbUnknown(TNAM),
-    wbFloat(VNAM, 'Default Index'),
-    wbFloat(WNAM),
-    wbStruct(GPOD, '', [
-      wbFloat,
-      wbFloat,
-      wbFloat
-    ]),
-    wbRStructs('Slider Entries', 'Slider Entry', [
+  wbRecord(GPOF, 'Gameplay Option', [
+    wbEDID.SetRequired,
+    wbLStringKC(NNAM, 'Name').SetRequired,
+    wbLStringKC(DNAM, 'Description').SetRequired,
+    wbRStruct('Type Data', [
+      wbInteger(TNAM, 'Type', itU8, wbEnum([
+        'Bool',
+        'Float'
+      ]))
+        .SetAfterSet(wbGPOFTypeAfterSetCallback)
+        .SetRequired,
+      wbRUnion('Type Dependent Data', function(const aContainer: IwbContainerElementRef): Integer
+        begin
+          Result := -1;
+          if not Assigned(aContainer) then
+            Exit;
+          var lType := aContainer.ElementNativeValues[TNAM];
+          if not VarIsOrdinal(lType) then
+            Exit;
+          Result := lType;
+        end,
+        [
+          wbRStruct('Bool Data', [
+            wbInteger(VNAM, 'Default Value', itU8, wbBoolEnum).SetRequired,
+            wbInteger(WNAM, 'Default Value', itU8, wbBoolEnum).SetRequired,
+            wbUnused(GPOD).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave) // only here to allow comparison alignment
+          ], [], cpNormal, True),
+          wbRStruct('Float Data', [
+            wbFloat(VNAM, 'Default Value').SetRequired,
+            wbFloat(WNAM, 'Default Value').SetRequired,
+            wbStruct(GPOD, 'Data Range', [
+              wbFloat('Min'),
+              wbFloat('Max'),
+              wbFloat('Step')
+            ], cpNormal, True)
+          ], [], cpNormal, True)
+        ], [], cpNormal, True)
+      ], [], cpNormal, True),
+    wbRStructs('Rewards', 'Reward', [
       wbLStringKC(VOVS, 'Description'),
-      wbFloat(VORV, 'Slider Index'),
+      wbFloat(VORV, 'Setting Value'),
       wbLStringKC(RESN, 'Name'),
-      wbFloat(VORN, 'XP Multiplier')
-    ], [])
+      wbFloat(VORN, 'Reward Value')
+    ], []),
+    wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD])) // no size and no null entries
   ]);
 
   wbRecord(GPOG, 'Gameplay Options Group', [
-    wbEDID,
-    wbLStringKC(NNAM, ''),
-    wbUnknown(BNAM),
-    wbArray(GOGL, '', wbFormIDCk('', [GPOF]))
+    wbEDID.SetRequired,
+    wbLStringKC(NNAM, 'Name').SetRequired,
+    wbRStruct('Type Data', [
+      wbInteger(BNAM, 'Root Group', itU8, wbBoolEnum)
+        .SetAfterSet(wbGPOGTypeAfterSetCallback)
+        .SetRequired,
+      wbRUnion('Type Dependent Options', function(const aContainer: IwbContainerElementRef): Integer
+        begin
+          Result := -1;
+          if not Assigned(aContainer) then
+            Exit;
+          var lType := aContainer.ElementNativeValues[BNAM];
+          if not VarIsOrdinal(lType) then
+            Exit;
+          Result := lType;
+        end,
+        [
+          wbArray(GOGL, 'Gameplay Options', wbFormIDCk('Gameplay Option', [GPOF])), // intentionally not sorted as CK allows deliberate ordering
+          wbArray(GOGL, 'Gameplay Option Groups', wbFormIDCk('Gameplay Option Gropu', [GPOG])) // intentionally not sorted as CK allows deliberate ordering
+        ], [], cpNormal, True)
+    ], [], cpNormal, True)
   ]);
 
   {subrecords checked against Starfield.esm}
