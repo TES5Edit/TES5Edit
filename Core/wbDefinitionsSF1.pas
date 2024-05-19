@@ -9173,7 +9173,7 @@ end;
           wbString(MODL, 'Model FileName'),
     //      wbMODT, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
           wbMOLM(MOLM),
-          wbFLLD,
+          wbFLLD.SetRequired(True),
           wbMODC,
           wbInteger(XFLG, 'Flags', itU8, wbModelFlags)
     //      wbMODS, // can still be read, might not be properly supported anymore, doesn't occur in Starfield.esm
@@ -17690,18 +17690,19 @@ end;
     wbOBND(True),
     wbODTY,
     wbOPDS,
+    wbPTT2,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbKeywords,
     wbPRPS,
     wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbATTX,
-    wbUnknown(FNAM),
-    wbUnknown(JNAM),
+    wbUnknown(FNAM).SetRequired(True),                               // FNAM/JNAM look like remnants from ACTI struct
+    wbUnknown(JNAM).SetDefaultEditValue('68 01').SetRequired(True),
     wbFormIDCk(PFIG, 'Ingredient', sigBaseObjects),
-    wbSoundReference(PFHS),
+    wbSoundReference(PFHS, 'Harvest Sound'),
     wbStruct(PFPC, 'Ingredient Production', [
       wbInteger('Spring', itU8),
       wbInteger('Summer ', itU8),
@@ -17712,13 +17713,13 @@ end;
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker').SetRequired,
     wbFormIDCk(ANAM, 'Action Keyword', [KYWD]),
-    wbFloat(BNAM),
-    wbFloat(FMAH),
-    wbFloat(FMIH),
+    wbFloat(BNAM, 'Damage Required To Harvest').SetRequired,
+    wbFloat(FMAH, 'Max Harvest Count').SetRequired,
+    wbFloat(FMIH, 'Min Harvest Count').SetRequired,
     wbFormIDCk(FMAG, 'Max Global', [GLOB]),
     wbFormIDCk(FMIG, 'Min Global', [GLOB]),
     wbFormIDCk(FLXP, 'Explosion', [EXPL]),
-    wbSoundReference(FHLS)
+    wbSoundReference(FHLS, 'Harvest Looping Sound')
   ], False, nil, cpNormal, False, nil, nil);
 
   {subrecords checked against Starfield.esm}
