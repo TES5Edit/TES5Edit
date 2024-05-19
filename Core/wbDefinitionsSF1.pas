@@ -2149,7 +2149,7 @@ begin
   if i and 2 <> 0 then
     s := FloatToStrF(PSingle(@aInt)^, ffFixed, 99, wbFloatDigits)
   else
-    s := 'rgba(' + IntToStr(aInt and $FF) + ', ' +
+    s := 'RGBA(' + IntToStr(aInt and $FF) + ', ' +
                    IntToStr(aInt shr 8 and $FF) + ', ' +
                    IntToStr(aInt shr 16 and $FF) + ', ' +
                    IntToStr(aInt shr 24 and $FF) + ')';
@@ -2217,7 +2217,8 @@ begin
     13: Result := 10;
     14: Result := 11;
     15: Result := 12;
-    17: Result := 13;
+    16: Result := 13;
+    17: Result := 14;
   end;
 end;
 
@@ -5179,12 +5180,18 @@ begin
   ]);
 
   var wbEDID := wbStringKC(EDID, 'Editor ID', 0, cpOverride);
-  var wbNLDT := wbString(NLDT, 'Context'); // localization note, explanation of variable, etc.
+  var wbNLDT := wbString(NLDT, 'Context Notes'); // localization note, explanation of variable, etc.
   var wbFULL := wbLStringKC(FULL, 'Name', 0, cpTranslate);
   var wbFULLActor := wbLStringKC(FULL, 'Name', 0, cpTranslate, False, nil{wbActorTemplateUseBaseData});
   var wbFULLReq := wbLStringKC(FULL, 'Name', 0, cpTranslate, True);
-  var wbDESC := wbLStringKC(DESC, 'Description', 0, cpTranslate);
-  var wbDESCReq := wbLStringKC(DESC, 'Description', 0, cpTranslate, True);
+  var wbDESC := function(aName: string = 'Description'):IwbSubRecordWithBaseStringDef
+  begin
+    Result := wbLStringKC(DESC, aName, 0, cpTranslate);
+  end;
+  var wbDESCReq := function(aName: string = 'Description'):IwbSubRecordWithBaseStringDef
+  begin
+    Result := wbLStringKC(DESC, aName, 0, cpTranslate, True);
+  end;
   var wbXSCL := wbFloat(XSCL, 'Scale');
   var wbXALGFlags := wbFlags([ //copied from FO76, probably wrong
     {0x00000001} 'Disallow Permanent Projected Decals',
@@ -5193,7 +5200,7 @@ begin
     {0x00000008} 'Disable Physics Sim',
     {0x00000010} 'Unknown 5',
     {0x00000020} 'Unknown 6', //Unused
-    {0x00000040} 'Unknown 7',
+    {0x00000040} 'Ignore Audio Obstruction Hits',
     {0x00000080} 'Unknown 8',
     {0x00000100} 'High Cost Path',
     {0x00000200} 'Non-Interactive',
@@ -5295,13 +5302,14 @@ begin
         {03} wbInteger('Int32', itS32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbBoolEnum),
-        {06} wbRecursive('Struct', 3), // Variable. No idea if possible or how to decode, leaving like that for the moment
+        {06} wbNull,
         {07} wbRecursive('Struct', 3),
         {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
         {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
         {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
+        {16} wbStruct('Array of Variable', [wbInteger('Element Count', itU32)]),
         {17} wbArray('Array of Struct', wbRecursive('Struct', 4), -1)
       ])
     ]), -1, cpNormal, False);
@@ -5323,13 +5331,14 @@ begin
        {03} wbInteger('Int32', itS32),
        {04} wbFloat('Float'),
        {05} wbInteger('Bool', itU8, wbBoolEnum),
-       {06} wbScriptPropertyStruct, // Variable. No idea if possible or how to decode, leaving like that for the moment
+       {06} wbNull,
        {07} wbScriptPropertyStruct,
        {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
        {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
        {14} wbArray('Array of Float', wbFloat('Element'), -1),
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
+       {16} wbStruct('Array of Variable', [wbInteger('Element Count', itU32)]),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
     ])
@@ -5928,7 +5937,7 @@ begin
 
   var wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   var wbSNBH := wbFormIDCk(SNBH, 'Snap Behavior', [STBH]);
-  var wbODTY := wbFloat(ODTY, 'Unknown');
+  var wbODTY := wbFloat(ODTY, 'Dirtiness Scale', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 1.0));
   var wbOPDS :=
     wbStruct(OPDS, 'Object Palette Defaults', [
       wbInteger('Flags', itU32, wbFlags([
@@ -9278,7 +9287,7 @@ end;
     wbPUSH,
     wbPDSH,
     wbCUSH,
-    wbDESC,
+    wbDESC(),
     wbCVPA,
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8)),
     wbFloat(DATA, 'Weight', cpNormal, True),
@@ -9325,7 +9334,7 @@ end;
     wbGenericModel(),
     wbPUSH,
     wbPDSH,
-    wbDESC.SetRequired,
+    wbDESC().SetRequired,
     wbKeywords,
     wbDEST,
     wbStruct(DATA, 'Data', [
@@ -9391,7 +9400,7 @@ end;
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
-    wbDESC,
+    wbDESC(),
     wbINRD,
     wbRArray('Models',
       wbRStructSK([1], 'Model', [
@@ -9522,14 +9531,15 @@ end;
     wbOBND(True),
     wbODTY,
     wbPTT2,
+    wbDEFL,
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(),
-    wbDESCreq,
+    wbDESCreq('Book Text'),
+    wbDEST,
     wbPUSH,
     wbPDSH,
-//    wbDEST,
     wbKeywords,
     wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
     wbStructSK(DATA, [0,1], 'Data', [
@@ -9555,11 +9565,18 @@ end;
         wbInteger('X', itU32),
         wbInteger('Y', itU32)
       ]),
-      wbUnknown
+      wbInteger('Data Slate Type', itU32, wbEnum([
+        'None (normal book)',
+        'Text',
+        'Image',
+        'Audio'
+      ]))
     ], cpNormal, True),
     wbLStringKC(CNAM, 'Description', 0, cpTranslate),
-    wbLStringKC(ENAM, 'Unknown', 0, cpTranslate),
-    wbLStringKC(FNAM, 'Unknown', 0, cpTranslate),
+    wbRStruct('Data Slate Headers', [
+      wbLStringKC(ENAM, 'Left (2 lines)', 0, cpTranslate),
+      wbLStringKC(FNAM, 'Right (2 lines)', 0, cpTranslate)
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbFormIDCk(GNAM, 'Scene', [SCEN])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
@@ -9827,7 +9844,8 @@ end;
   wbRecord(CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
-    wbDESCReq,
+    wbDESCReq(),
+    wbICON,
     wbPRPS,
     wbStruct(DATA, 'Data', [
       wbUnknown(4)
@@ -9993,9 +10011,9 @@ end;
       wbFloat('Avoid Threat Chance'),
       wbFloat('Dodge Threat Chance'),
       wbFloat('Evade Threat Chance'),
-      wbFloat,
-      wbFloat,
-      wbFloat
+      wbFloat('Heal Ally Distance'),
+      wbFloat('Jump Cost Mult'),
+      wbFloat('Taunt Delay Mult')
     ], cpNormal, True),
 //    wbUnknown(CSMD, cpIgnore),
     wbStruct(CSME, 'Melee', [
@@ -10010,13 +10028,13 @@ end;
       wbFloat('Block When Staggered Mult'),
       wbFloat('Attack When Staggered Mult')
     ], cpNormal, True, nil, 9),
-    wbStruct(CSRA, 'Ranged Accuracy', [
-      wbFloat('Ranged Accuracy Mult', cpNormal, True),
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+    wbStruct(CSRA, 'Ranged', [
+      wbFloat('Ranged Accuracy Mult'),
+      wbFloat('Throw Mult'),
+      wbFloat('Grenade - Advanced Throwing Mult'),
+      wbFloat('Grenade - Flash Target Mult'),
+      wbFloat('Grenade - Throw At Group Mult'),
+      wbFloat('Grenade - Close Range Attack Chance Mult')
     ], cpNormal, True),
     wbStruct(CSCR, 'Close Range', [
       wbFloat('Dueling - Circle Mult'),
@@ -10030,8 +10048,8 @@ end;
       wbFloat('Charging - Disengane Probability'),
       wbInteger('Charging - Throw Max Targets', itU32),
       wbFloat('Flanking - Flank Variance'),
-      wbFloat,
-      wbFloat
+      wbFloat('Retreat - Chance'),
+      wbFloat('Retreat - Distance Mult')
     ], cpNormal, True),
     wbStruct(CSLR, 'Long Range', [
       wbFloat('Strafe Mult'),
@@ -10039,14 +10057,14 @@ end;
       wbFloat('Crouch Mult'),
       wbFloat('Wait Mult'),
       wbFloat('Range Mult'),
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+      wbFloat('Provide Suppressive Fire Mult'),
+      wbFloat('Retreat - Chance'),
+      wbFloat('Retreat - Hide Time Mult'),
+      wbFloat('Retreat - Distance Mult')
     ], cpNormal, True, nil, 3),
     wbStruct(CSCV, 'Cover Search', [
       wbFloat('Cover Search Distance Mult', cpNormal, True),
-      wbFloat
+      wbFloat('Suppression Sensitivity')
     ], cpNormal, True),
     wbStruct(CSFL, 'Flight', [
       wbFloat('Hover Chance'),
@@ -10058,106 +10076,111 @@ end;
       wbFloat('Perch Attack Time'),
       wbFloat('Flying Attack Chance')
     ], cpNormal, True),
-    wbStruct(CSTN, 'Unknown', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+    wbStruct(CSTN, 'Tunnel', [
+      wbFloat('Cost Mult'),
+      wbFloat('Chance'),
+      wbFloat('Max Distance'),
+      wbFloat('Speed Mult'),
+      wbFloat('Min Time'),
+      wbFloat('Max Time'),
+      wbFloat('Maximum Time'),
+      wbFloat('Cooldown')
     ]),
-    wbStruct(CSSG, 'Unknown', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbInteger('Unknown', itU8, wbBoolEnum),
-      wbInteger('Unknown', itU8, wbBoolEnum),
+    wbStruct(CSSG, 'Space General', [
+      wbFloat('Pilot Skill'),
+      wbFloat('Accuracy'),
+      wbFloat('Target Shield'),
+      wbFloat('Adjustment'),
+      wbFloat('Engage Maneuver Chance - Direct Attack'),
+      wbFloat('Engage Maneuver Chance - Pass'),
+      wbFloat('Engage Maneuver Chance - Lead Turn'),
+      wbFloat('Engage Maneuver Chance - Slide Turn'),
+      wbFloat('Engage Maneuver Chance - Barrel Roll'),
+      wbFloat('Evade Maneuver Chance - Break'),
+      wbFloat('Evade Maneuver Chance - Scissors'),
+      wbFloat('Evade Maneuver Chance - Cut'),
+      wbFloat('Evade Maneuver Chance - Boost'),
+      wbFloat('Acquire Maneuver Chance - Sliceback'),
+      wbFloat('Acquire Maneuver Chance - Strafe Turn'),
+      wbFloat('Acquire Maneuver Chance - Acquire'),
+      wbFloat('Acquire Maneuver Chance - Turn'),
+      wbFloat('Disengage Maneuver Chance'),
+      wbFloat('Missile Seeking Strength'),
+      wbFloat('Min Time Between Boosts'),
+      wbInteger('Combat Strafing', itU8, wbBoolEnum),
+      wbInteger('Rolls During Boost', itU8, wbBoolEnum),
       wbUnknown(2),
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+      wbFloat('Power Weighting - Engines'),
+      wbFloat('Power Weighting - Shields'),
+      wbFloat('Power Weighting - Guns'),
+      wbFloat('Power Weighting Shield Based Guns - EM'),
+      wbFloat('Power Weighting Shield Based Guns - Hull'),
+      wbFloat('Power Weighting Shield Based Guns - Shield'),
+      wbFloat('Power Weighting Hull Based Guns - EM'),
+      wbFloat('Power Weighting Hull Based Guns - Hull'),
+      wbFloat('Power Weighting Hull Based Guns - Shield')
     ]),
-    wbStruct(CSSM, 'Unknown', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
+    wbStruct(CSSM, 'Space Manneuver Types', [
+      wbFloat('Max Time - Engage'),
+      wbFloat('Max Time - Evade'),
+      wbFloat('Max Time - Acquire'),
+      wbFloat('Max Time - Persue'),
+      wbFloat('Max Time - Disengage'),
+      wbFloat('Max Time - Surround'),
       wbUnknown(4),
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbUnknown(8),
-      wbFloat
+      wbFloat('Max Time - Break Stalemate'),
+      wbFloat('Reentry Delay - Engage'),
+      wbFloat('Reentry Delay - Evade'),
+      wbFloat('Reentry Delay - Acquire'),
+      wbFloat('Reentry Delay - Persue'),
+      wbFloat('Reentry Delay - Disengage'),
+      wbFloat('Reentry Delay - Surround'),
+      wbUnknown(4),
+      wbFloat('Reentry Delay - Break Stalemate')
     ]),
-    wbStruct(CSSR, 'Unknown', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+    wbStruct(CSSR, 'Space Repair', [
+      wbFloat('Damage Threshold'),
+      wbFloat('Faraway Distance %'),
+      wbFloat('Power to Use'),
+      wbStruct('In Close Power Weighting Tables', [
+        wbFloat('Power Weighting - Engines'),
+        wbFloat('Power Weighting - Shields'),
+        wbFloat('Power Weighting - Guns'),
+        wbFloat('Power Weighting Shield Based Guns - EM'),
+        wbFloat('Power Weighting Shield Based Guns - Hull'),
+        wbFloat('Power Weighting Shield Based Guns - Shield'),
+        wbFloat('Power Weighting Hull Based Guns - EM'),
+        wbFloat('Power Weighting Hull Based Guns - Hull'),
+        wbFloat('Power Weighting Hull Based Guns - Shield')
+      ]),
+      wbStruct('Faraway Power Weighting Tables', [
+        wbFloat('Power Weighting - Engines'),
+        wbFloat('Power Weighting - Shields'),
+        wbFloat('Power Weighting - Guns'),
+        wbFloat('Power Weighting Shield Based Guns - EM'),
+        wbFloat('Power Weighting Shield Based Guns - Hull'),
+        wbFloat('Power Weighting Shield Based Guns - Shield'),
+        wbFloat('Power Weighting Hull Based Guns - EM'),
+        wbFloat('Power Weighting Hull Based Guns - Hull'),
+        wbFloat('Power Weighting Hull Based Guns - Shield')
+      ])
     ]),
-    wbStruct(CSSA, 'Unknown', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat
+    wbStruct(CSSA, 'Space Approaching', [
+      wbFloat('Min Distance'),
+      wbFloat('Power Weighting - Engines'),
+      wbFloat('Power Weighting - Shields'),
+      wbFloat('Power Weighting - Guns'),
+      wbFloat('Power Weighting Shield Based Guns - EM'),
+      wbFloat('Power Weighting Shield Based Guns - Hull'),
+      wbFloat('Power Weighting Shield Based Guns - Shield'),
+      wbFloat('Power Weighting Hull Based Guns - EM'),
+      wbFloat('Power Weighting Hull Based Guns - Hull'),
+      wbFloat('Power Weighting Hull Based Guns - Shield')
     ]),
-    wbStruct(CSSD, 'Unknown', [
-      wbFloat,
-      wbFloat,
-      wbFloat
+    wbStruct(CSSD, 'Space Detection', [
+      wbFloat('Detection Rating 1'),
+      wbFloat('Detection Rating 2'),
+      wbFloat('Detection Rating 3')
     ]),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
@@ -10165,13 +10188,31 @@ end;
       {0x04} 'Allow Dual Wielding',
       {0x08} 'Charging',
       {0x10} 'Retarget Any Nearby Melee Target',
-      {0x20} 'Unknown 5',
-      {0x40} 'Unknown 6',
-      {0x80} 'Unknown 7'
+      {0x20} 'Prefer Walking While Strafing',
+      {0x40} 'Use Group Cohesion',
+      {0x80} 'Maintain Attack From Cover Until Suppressed'
     ]), cpNormal, True),
     wbUnknown(FNAM),
-    wbFormIDCk(TNAM, 'Unknown', [CSTY]),
-    wbArray(UNAM, 'Unknown', wbFormIDCk('Unknown', [NULL, CSTY]), 17)
+    wbFormIDCk(TNAM, 'Template Default Combat Style', [CSTY]),
+    wbStruct(UNAM, 'Templates', [
+      wbFormIDCk('Offsensive Defensive Mults', [NULL, CSTY]),
+      wbFormIDCk('Avoid Threats', [NULL, CSTY]),
+      wbFormIDCk('Equipment Score Mults', [NULL, CSTY]),
+      wbFormIDCk('Melee', [NULL, CSTY]),
+      wbFormIDCk('Ranged', [NULL, CSTY]),
+      wbFormIDCk('Close Range', [NULL, CSTY]),
+      wbFormIDCk('Long Range', [NULL, CSTY]),
+      wbFormIDCk('Cover', [NULL, CSTY]),
+      wbFormIDCk('Flight', [NULL, CSTY]),
+      wbFormIDCk('Tunnel', [NULL, CSTY]),
+      wbFormIDCk('Space General', [NULL, CSTY]),
+      wbFormIDCk('Space Power', [NULL, CSTY]),
+      wbFormIDCk('Space Repair', [NULL, CSTY]),
+      wbFormIDCk('Space Approaching', [NULL, CSTY]),
+      wbFormIDCk('Space Detection', [NULL, CSTY]),
+      wbFormIDCk('Misc', [NULL, CSTY]),
+      wbFormIDCk('Space Maneuver Types', [NULL, CSTY])
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -11609,7 +11650,7 @@ end;
     wbEDID,
     wbVMADFragmentedPERK,
     wbFULL,
-    wbDESCReq,
+    wbDESCReq(),
     wbStruct(DATA, 'Data', [
       wbInteger('Perk Category', itU8, wbPerkCategoryEnum),
       wbInteger('Perk Skill Group', itU8, wbPerkSkillGroupEnum),
@@ -11895,7 +11936,7 @@ end;
     wbEDID,
     wbGenericModel(),
     wbKeywords,
-    wbNLDT, //unknown if before or after CTDAs
+    wbNLDT,
     wbCTDAs,
     wbStruct(DATA, 'Data', [
       wbInteger('Action', itU32, wbEnum([
@@ -11925,8 +11966,8 @@ end;
         {0x00000020} 'Start At Time Zero',
         {0x00000040} 'Don''t Reset Location Spring',
         {0x00000080} 'Don''t Reset Target Spring',
-        {0x00000100} 'Unknown 8',
-        {0x00000200} 'Unknown 9',
+        {0x00000100} 'Selectable Scene Camera',
+        {0x00000200} 'Free Cam',
         {0x00000400} 'Unknown 10'
       ])),
       wbStruct('Time Multipliers', [
@@ -12200,7 +12241,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(MESG, 'Message', [
     wbEDID,
-    wbDESCReq,
+    wbDESCReq(),
     wbFULL,
     wbFormIDCk(INAM, 'Icon (unused)', [NULL], False, cpIgnore, True), // leftover
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
@@ -13693,8 +13734,8 @@ end;
       'Playable',
       'Remapping Index',
       'Extended LUT'
-    ]), cpNormal, True)
-//    wbCTDAs
+    ]), cpNormal, True),
+    wbCTDAs
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -14133,7 +14174,7 @@ end;
       {0x00008000} 15, 'No Rotation'
     ])), [
     wbEDID,
-    wbDESCReq,
+    wbDESCReq(),
     wbCTDAs,
     wbString(ICON, 'Loadscreen')
     {
@@ -14644,7 +14685,7 @@ end;
     ])), [
     wbEDID,
     wbBaseFormComponents,
-    wbDESC,
+    wbDESC(),
     wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [NULL, KYWD]),
     wbCTDAs,
     wbComponents,
@@ -16335,7 +16376,7 @@ end;
     ])), [
     wbEDID,
     wbFULL,
-    wbDESCReq,
+    wbDESCReq(),
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBO64,
@@ -17501,7 +17542,7 @@ end;
     wbETYP,
     wbPUSH,
     wbPDSH,
-    wbDESCReq,
+    wbDESCReq(),
     wbSPIT,
     wbEffects
   ], False, nil, cpNormal, False, nil, nil);
@@ -17787,7 +17828,7 @@ end;
     wbPUSH,
     wbPDSH,
     wbKeywords,
-    wbDESC,
+    wbDESC(),
     wbFormIDCk(INRD, 'Instance Naming', [INNR]),
     wbAPPR,
     wbObjectTemplate,
@@ -18734,7 +18775,7 @@ end;
     wbEDID,
     wbBaseFormComponents,
     wbFULL,
-    wbDESC,
+    wbDESC(),
     wbGenericModel(),
     wbUnknown(XFLG),
 //    wbStruct(DATA, 'Data', [
@@ -18826,10 +18867,11 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(PKIN, 'Pack-In',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Prefab',
-      {0x00000400} 10, 'Unknown 10',
-      {0x00000800} 11, 'Unknown 11',
-      {0x02000000} 25, 'Unknown 25'
+      {0x00000200}  9, 'Instanced',
+      {0x00000400} 10, 'Calc LPIs',
+      {0x00000800} 11, 'Instanced Static',
+      {0x00002000} 13, 'Pack-In Use Only',
+      {0x02000000} 25, 'Obstacle'
     ])), [
     wbEDID,
     wbVMAD,
@@ -18843,14 +18885,23 @@ end;
     wbBaseFormComponents,
     wbFLTR,
     wbOPDS,
-    //wbUnknown(CNAM),
     wbFormIDCk(CNAM, 'Cell', [CELL]),
     wbInteger(VNAM, 'Version', itU32),
-    wbUnknown(FNAM),
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      'Unknown 0',
+      'Grouped Workshop Object',
+      'Fixed',
+      'Grouped',
+      'One Motion',
+      'User-defined Primitives',
+      'Unknown 6',
+      'Unknown 7',
+      'Unknown 8'
+    ])),
     wbKeywords,
-    wbNTRM,
     wbFTYP,
     wbPRPS,
+    wbNTRM,
     wbStruct(MOLM, 'Material Swaps', [
       wbArrayS('Material Swaps', wbFormIDCk('Layered Material Swap', [LMSW]), -2),
       wbByteArray('Unused', 0, cpIgnore).SetDontShow(wbNeverShow).IncludeFlag(dfDontAssign)
@@ -20318,7 +20369,7 @@ end;
   wbRecord(RSPJ, 'Research Project', [
     wbEDID,
     wbFULL,
-    wbDESC,
+    wbDESC(),
     wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
     wbStructs(FVPA, 'Resources', 'Resource', [
       wbFormIDCk('Resource', [IRES, ALCH]),

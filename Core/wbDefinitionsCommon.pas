@@ -281,6 +281,8 @@ function wbByteABGR(const aSignature: TwbSignature; const aName: string = 'Color
 function wbByteBGRA(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteBGRA(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 
+function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
+
 const
   wbVec3Prefix = '';//'Vec3';
   wbPosPrefix  = 'Pos:';
@@ -417,6 +419,19 @@ function wbBoolEnumSummary(const aTrueSummary: string; const aFalseSummary: stri
           'True',  aTrueSummary
         ]);
     end;
+
+function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
+begin
+  Result := function(const aElement: IwbElement; aFloat: Extended): Extended
+  begin
+    if aFloat < aMin then
+      Result := aMin
+    else if aFloat > aMax then
+      Result := aMax
+    else
+      Result := aFloat;
+  end;
+end;
 
 procedure DefineCommon;
 begin
