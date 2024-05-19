@@ -5696,9 +5696,9 @@ begin
   ]);
 
   var wbLocation :=
-    function(aSignature : TwbSignature): IwbSubRecordDef
+    function(aSignature : TwbSignature; aName: string = 'Location'): IwbSubRecordDef
     begin
-      Result := wbStruct(aSignature, 'Location', [
+      Result := wbStruct(aSignature, aName, [
         wbInteger('Type', itS32, wbLocationEnum),
         wbUnion('Location Value', wbTypeDecider, [
           {0} wbFormIDCkNoReach('Reference', sigReferences),
@@ -5729,7 +5729,7 @@ begin
     end;
 
   var wbPLDT := wbLocation(PLDT);
-  var wbPLVD := wbLocation(PLVD);
+  var wbPLVD := wbLocation(PLVD, 'Vendor Location');
 
   var wbPTDA := wbStruct(PTDA, 'Target Data', [
     wbInteger('Type', itS32, wbEnum([
@@ -9940,14 +9940,12 @@ end;
     wbUnknown(XFLG),
     wbContainerItems,
     wbDEST,
-    wbStructSK(DATA, [0], '', [
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Allow Sounds When Animation',
-        {0x02} 'Respawns',
-        {0x04} 'Show Owner',
-        {0x08} 'Unknown 3'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
-    ], cpNormal, True),
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01} 'Allow Sounds When Animation',
+      {0x02} 'Respawns',
+      {0x04} 'Show Owner',
+      {0x08} 'Unknown 3'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbKeywords,
     wbFTYP,
     wbNTRM,
@@ -10439,10 +10437,10 @@ end;
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbXALG,
     wbPTT2,
     wbSNTP,
 //    wbSNBH,
+    wbXALG,
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(),
@@ -10517,21 +10515,59 @@ end;
     wbFormIDCk(ENAM, 'Effect Sequence', [EFSQ]),
     wbEmpty(DATA, 'Empty', cpIgnore),
     wbStruct(DNAM, 'Data', [
-      wbFloat,
-      wbByteColors,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
+      wbStruct('Edge Effect', [
+        wbFloat('Fall Off'),
+        wbByteColors,
+        wbFloat('Alpha Fade In Time'),
+        wbFloat('Full Alpha Time'),
+        wbFloat('Alpha Fade Out Time'),
+        wbFloat('Persistent Alpha Ratio [0-1]'),
+        wbFloat('Alpha Pulse Amplitude'),
+        wbFloat('Alpha Pulse Frequency'),
+        wbFloat('Full Alpha Ratio [0-1]')
+      ]),
+      wbStruct('Holes - Alpha Test Animation', [
+        wbFloat('Start Time'),
+        wbFloat('Stop Time'),
+        wbFloat('Start Val'),
+        wbFloat('Stop Val')
+      ]),
       wbSoundReference('Sounds'),
-      wbUnknown(5)                                                       //Flags?
+      wbInteger('Bone Depth', itU8),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} { 0} 'Membrane Shader Off',
+        {0x00000002} { 1} '',
+        {0x00000004} { 2} '',
+        {0x00000008} { 3} 'Unknown 3', // doesn't appear to have a UI element and every record gets it set, including new ones
+        {0x00000010} { 4} 'Edge Effect - Inverse',
+        {0x00000020} { 4} 'Affect Skin Only',
+        {0x00000040} { 6} '',
+        {0x00000080} { 7} '',
+        {0x00000100} { 8} '',
+        {0x00000200} { 9} 'Ignore Base Geometry Texture Alpha',
+        {0x00000400} {10} '',
+        {0x00000800} {11} 'Use Alpha Sorting',
+        {0x00001000} {12} '',
+        {0x00002000} {13} 'Dither Shields',
+        {0x00004000} {14} '',
+        {0x00008000} {15} '',
+        {0x00010000} {16} '',
+        {0x00020000} {17} '',
+        {0x00040000} {18} '',
+        {0x00080000} {19} '',
+        {0x00100000} {20} '',
+        {0x00200000} {21} '',
+        {0x00400000} {22} '',
+        {0x00800000} {23} '',
+        {0x01000000} {24} 'Use Blood Geometry (Weapons Only)',
+        {0x02000000} {25} '',
+        {0x04000000} {26} '',
+        {0x08000000} {27} '',
+        {0x10000000} {28} '',
+        {0x20000000} {29} '',
+        {0x40000000} {30} '',
+        {0x80000000} {31} ''
+      ]))
     ]),
     wbGenericModel()
   ]);
@@ -10616,17 +10652,12 @@ end;
         {0x00002000} 'Ignore Crimes: Pickpocket',
         {0x00004000} 'Vendor',
         {0x00008000} 'Can Be Owner',
-        {0x00010000} 'Unknown 16',
-        {0x00020000} 'Unknown 17',
-        {0x00040000} 'Unknown 18'
+        {0x00010000} 'Ignore Crimes: Piracy',
+        {0x00020000} 'Ignore Crimes: Smuggling',
+        {0x00040000} 'Report Crimes By Members Against Members'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], cpNormal, True, nil, 1).SetSummaryKeyOnValue([0]),
-//    wbFormIDCk(JAIL, 'Exterior Jail Marker', [REFR]),
-//    wbFormIDCk(WAIT, 'Follower Wait Marker', [REFR]),
-//    wbFormIDCk(STOL, 'Stolen Goods Container', [REFR]),
-//    wbFormIDCk(PLCN, 'Player Inventory Container', [REFR]),
     wbFormIDCk(CRGR, 'Shared Crime Faction List', [FLST]),
-//    wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
     wbStruct(CRVA, 'Crime Values', [
       wbInteger('Arrest', itU8, wbBoolEnum),
       wbInteger('Attack On Sight', itU8, wbBoolEnum),
@@ -10637,12 +10668,10 @@ end;
       wbInteger('Unknown', itU16),
       wbFloat('Steal Multiplier'),
       wbInteger('Escape', itU16),
-      wbUnknown
+      wbInteger('Piracy', itU16),
+      wbFloat('Smuggle Multiplier')
     ], cpNormal, False, nil, 7)
     .SetSummaryKeyOnValue([0,1]),
-//    wbRArrayS('Ranks', wbFactionRank),
-    wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
-    wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbArray(PRIS, 'Prisons',
       wbStruct('Prison Location', [
         wbFormIDCk('Prison Door Marker', [NULL, REFR]),
@@ -10655,34 +10684,38 @@ end;
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseLocations)
     ),
-
+    wbRArrayS('Ranks', wbFactionRank),
+    wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
+    wbFormIDCk(VENC, 'Merchant Container', [REFR]),
     wbStruct(VENV, 'Vendor Values', [
       wbInteger('Start Hour', itU16),
       wbInteger('End Hour', itU16),
-//     wbInteger('Radius', itU16),
-//      wbByteArray('Unknown 1', 2),
-      wbFloat,
+      wbFloat('Radius'),
       wbInteger('Buys Stolen Items', itU8, wbBoolEnumSummary('Fence,')),
       wbInteger('Buy/Sell Everything Not In List?', itU8, wbBoolEnumSummary('Specialized Inventory')),
       wbInteger('Buys NonStolen Items', itU8, wbBoolEnum),
-      wbInteger('Unknown', itU8)
+      wbUnused(1) // padding
     ])
     .SetSummaryKeyOnValue([0,1,3,4])
     .SetSummaryPrefixSuffixOnValue(0,'',':00')
     .SetSummaryPrefixSuffixOnValue(1,'to ',':00,')
     .IncludeFlagOnValue(dfSummaryMembersNoName),
     wbPLVD,
+    wbConditions,
     wbFormIDCk(VTCK, 'Voice', [FLST, VTYP]),
-    wbRStruct('Unknown', [
+    wbRStruct('Herd', [
       wbMarkerReq(CRHR),
       wbStruct(HERD, 'Unknown', [
-        wbFloat,
-        wbUnknown
+        wbFloat('Search Radius'),
+        wbInteger('Min Herd Members', itU16),
+        wbInteger('Max Herd Members', itU16),
+        wbFloat('Idle Chatter Min Time'),
+        wbFloat('Idle Chatter Max Time')
       ]).SetRequired
     ], []),
-    wbRStruct('Unknown', [
+    wbRStruct('Create Group', [
       wbMarkerReq(CRGP),
-      wbFloat(GRPH).SetRequired
+      wbFloat(GRPH, 'Formation Radius').SetRequired
     ], [])
   ]);
 
@@ -11409,56 +11442,29 @@ end;
     wbOBND(True),
     wbODTY,
     wbOPDS,
-    wbXALG,
     wbDEFL,
+    wbXALG,
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(),
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(ENAM, 'Data', [
-      wbFormIDCk('Light', [LIGH, NULL]),                  //formid // +0x28   //+0x28 is expected to be LIGH
-      wbSoundReference,                                   //struct // +0x38   //same struct as STAT's STLS, could be optimization reusing same reading code or the same struct
-      wbSoundReference,                                   //struct unused     //same struct as STAT's STLS, could be optimization reusing same reading code or the same struct
-      wbFormIDCk('Impact Data Set', [IPDS, NULL]),        //formid // +0x10   //+0x10 is expected to be IDPS
-      wbFormIDCk('Placed Object', sigBaseObjects),        //formid? // +0x20  //+0x20 has a check of some kind, but it's not form type, but a function on the class vftable, if it returns non-zero then it's not allowed
-      wbFormIDCk('Spawn Projectile', [PROJ, NULL]),       //formid // +0x18   //+0x18 is expected to be PRO
-      wbFormIDCk('Condition', [CNDF, NULL]),              //if form_version >= 507 formid? // +0x30  +0x30 is expected to be CNDF
-      wbFloat,                                            //uint32 // +0x84
-      wbFloat,                                            //uint32 // +0x88
-      wbFloat,                                            //uint32 // +0x90   // +0x90, +0x94 are floats
-      wbFloat,                                            //uint32 // +0x94   // it's basically doing +0x94 = max(+0x90, +0x94)
-      wbFloat,                                            //uint32 // +0x98
-      wbFloat,                                            //uint32 // +0x9C
-      wbUnknown(4),                                       //uint32 // +0x78
-      wbInteger('Unknown Enum', itU32),                   //uint32 unknown_70 // +0x70
-                                                          //if form_version < 295  unknown_70 += 1
-      wbFloat,                                            //uint32 // +0xA0
-      wbInteger('Unknown', itU32),                        //uint32 // +0x74
-      wbUnknown(4),                                       //uint32 // +0x00
-      wbFloat,                                            //uint32 // +0x04
-      wbFloat,                                            //uint32 // +0x08
-      wbFloat,                                            //uint32 // +0x80
-      wbUnknown(4),                                       //uint32 // +0x7C
-      wbFloat                                             //if form_version >= 250 uint32 // +0x8C
-    ]),
-    wbDamageTypeArray('Damage Type')
-    (*
-    wbStruct(DATA, 'Data', [
       wbFormIDCk('Light', [LIGH, NULL]),
-      wbFormIDCk('Sound 1', [SNDR, NULL]),
-      wbFormIDCk('Sound 2', [SNDR, NULL]),
+      wbSoundReference,                                   //struct // +0x38   //same struct as STAT's STLS, could be optimization reusing same reading code or the same struct
+      wbSoundReference('Unused'),                         //struct unused     //same struct as STAT's STLS, could be optimization reusing same reading code or the same struct
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
-      wbFormID('Placed Object'),
+      wbFormIDCk('Placed Object', sigBaseObjects),
       wbFormIDCk('Spawn Projectile', [PROJ, NULL]),
+      wbFormIDCk('Condition Form', [CNDF, NULL]),
       wbFloat('Force'),
       wbFloat('Damage'),
-      wbFromVersion(97, wbFloat('Inner Radius')),
+      wbFloat('Inner Radius'),
       wbFloat('Outer Radius'),
       wbFloat('IS Radius'),
       wbFloat('Vertical Offset Mult'),
       wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Unknown 0',
+        {0x00000001} 'Taper Effectiveness',
         {0x00000002} 'Always Uses World Orientation',
         {0x00000004} 'Knock Down - Always',
         {0x00000008} 'Knock Down - By Formula',
@@ -11471,23 +11477,24 @@ end;
         {0x00000400} 'Skip Underwater Tests'
       ])),
       wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbFromVersion(70, wbFloat('Placed Object AutoFade Delay')),
-      wbFromVersion(91, wbInteger('Stagger', itU32, wbEnum([
+      wbFloat('Placed Object AutoFade Delay'),
+      wbInteger('Stagger', itU32, wbEnum([
         'None',
         'Small',
         'Medium',
         'Large',
         'Extra Large'
-      ]))),
-      wbFromVersion(112, wbStruct('Spawn', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z'),
-        wbFloat('Spread Degrees'),
+      ])),
+      wbStruct('Spawn', [
+        wbFloat('X', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Y', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Z', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Spread Degrees', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0, 180)),
         wbInteger('Count', itU32)
-      ]))
-    ], cpNormal, True, nil, 13)
-    *)
+      ]),
+      wbFloat('Duration')
+    ]),
+    wbDamageTypeArray('Damage Type')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -12894,8 +12901,8 @@ end;
       'Use All Parents',
       'Parents Optional',
       'Item Slot'
-    ])),
-    wbFormIDCk(ANAM, 'Condition Actor Value', [AVIF, NULL, FFFF])
+    ])).SetRequired,
+    wbFormIDCk(ANAM, 'Condition Actor Value', [AVIF, NULL, FFFF]).SetRequired
   ]);
 
   (*
@@ -18384,15 +18391,9 @@ end;
   wbRecord(DMGT, 'Damage Type', [
     wbEDID,
     wbFULL,
-    wbUnion(DNAM, 'Data', wbFormVersionDecider(78), [
-      wbArray('Damage Types', wbInteger('Actor Value Index', itU32)),
-      wbArray('Damage Types', wbStruct('Damage Type', [
-        wbFormIDck('Actor Value', [AVIF, NULL]),
-        wbFormIDck('Spell', [SPEL, NULL])
-      ])
-      .SetSummaryKey([0,1])
-      .IncludeFlag(dfSummaryExcludeNULL)
-      )
+    wbStruct(DNAM, 'Damage Type', [
+      wbFormIDck('Resistance Actor Value', [AVIF, NULL]),
+      wbFormIDck('Spell', [SPEL, NULL])
     ])
   ]);
 
@@ -19349,9 +19350,9 @@ end;
   wbRecord(FXPD, 'Facial Expression', [
     wbEDID,
     wbFULL,
-    wbRArray('Unknown', wbRStruct('Unknown', [
-        wbString(MNAM),
-        wbFloat(MWGT)
+    wbRArray('Morphs', wbRStruct('Morph Data', [
+        wbString(MNAM, 'Morph'),
+        wbFloat(MWGT, 'Value')
     ], []))
   ]);
 
