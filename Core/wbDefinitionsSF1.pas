@@ -5935,9 +5935,12 @@ begin
 
   var wbPDTOs := wbRArray('Topic', wbPDTO, cpNormal, False, nil);
 
+  var wbFloatScale0to1 := wbNormalizeToRange(0.0, 1.0);
+  var wbFloatScale0to10 := wbNormalizeToRange(0.0, 10.0);
+
   var wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   var wbSNBH := wbFormIDCk(SNBH, 'Snap Behavior', [STBH]);
-  var wbODTY := wbFloat(ODTY, 'Dirtiness Scale', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 1.0));
+  var wbODTY := wbFloat(ODTY, 'Dirtiness Scale', cpNormal, True, 1, -1, nil, wbFloatScale0to1);
   var wbOPDS :=
     wbStruct(OPDS, 'Object Palette Defaults', [
       wbInteger('Flags', itU32, wbFlags([
@@ -8373,11 +8376,11 @@ end;
       wbRUnion('Component Data', [
         //BGSAnimationGraph_Component
         wbRStructSK([0,2], 'Component Data - Animation Graph', [
-          wbString(ANAM, 'Animation Root'),
-          wbString(BNAM, 'Skeleton'),
-          wbString(CNAM, 'Animations'),
-          wbString(DNAM, 'Response Handler'),
-          wbString(ENAM)
+          wbString(ANAM, 'Root Animation Graph'),
+          wbString(BNAM, 'Rig File'),
+          wbString(CNAM, 'Animations Path'),
+          wbString(DNAM, 'Response File'),
+          wbEmpty(ENAM) // bool flag whose prescense indicates true
         ], [])
         .SetSummaryDelimiter(', '),
         //BGSAttachParentArray_Component
@@ -8535,17 +8538,23 @@ end;
         ], []),
         //BGSDisplayCase
         wbRStruct('Component Data - Display Case', [
-          wbArray(DCSD, 'Unknown', wbStruct('Unknown', [
-            wbFormIDCk('Display Filter', [FLST]),
-            wbUnknown(4),
-            wbInteger('Index', itU32),
-            wbUnknown(4)
-          ])
-          .SetSummaryKey([0,2])
-          .SetSummaryMemberPrefixSuffix(2, 'Index: ','')
-          .IncludeFlag(dfSummaryMembersNoName)
-          ),
-          wbArray(DCED, 'Unknown', wbUnknown(4))
+          wbArray(DCSD, 'Display Case Slot Snap Templates', // DO NOT SORT. The later DCED exclusivity uses the same order as here
+            wbStruct('Template Slot', [
+              wbFormIDCk('Display Filter', [FLST]),
+              wbFormIDCk('Exclusion Filter Keyword', [NULL, KYWD]),
+              wbInteger('Display Slot', itU32),
+              wbInteger('Number', itU32)
+            ])
+            .SetSummaryKey([0,2,1,3])
+            .SetSummaryMemberPrefixSuffix(2, 'Slot: ','')
+            .SetSummaryMemberPrefixSuffix(1, 'Excl: ','')
+            .SetSummaryMemberPrefixSuffix(3, 'No: ','')
+            .IncludeFlag(dfSummaryMembersNoName)
+            .IncludeFlag(dfSummaryExcludeNULL)
+            ),
+          wbArray(DCED, 'Exclusivity',  // DO NOT SORT. The earlier DCSD uses the same order as here
+            wbArray('Template Slot', wbInteger('Exclusive Display Slot', itU32), -1) // DO NOT SORT this is intentionally ordered in CK
+          )
         ], []),
         wbRStruct('Component Data - Destructible', [
           wbDest
@@ -8608,8 +8617,8 @@ end;
         ], []),
         //BGSObjectWindowFilter_Component
         wbRStruct('Component Data - Object Window Filter', [
-          wbUnknown(INTV),
-          wbString(FLTR, 'Filter')
+          wbInteger(INTV, 'Count', itU32),
+          wbRArrayS('Filters', wbString(FLTR, 'Filter')).SetCountPath(INTV)
         ], []),
         //BGSFormLinkData_Component
         wbRStruct('Component Data - Form Links', [
@@ -9912,7 +9921,7 @@ end;
       {0x02000000} 25, 'Obstacle',
       {0x04000000} 26, 'NavMesh Generation - Filter',
       {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x10000000} 28, 'Unknown 28',
+      {0x10000000} 28, 'NavMesh Generation - Only Cut',
       {0x40000000} 30, 'NavMesh Generation - Ground'
     ])), [
 
@@ -9938,7 +9947,6 @@ end;
         {0x04} 'Show Owner',
         {0x08} 'Unknown 3'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
-//      wbFloat('Weight')
     ], cpNormal, True),
     wbKeywords,
     wbFTYP,
@@ -9949,7 +9957,7 @@ end;
     wbEmpty(STOP, 'Marker'),
     wbSoundReference(WED0, 'Open Sound'),
     wbSoundReference(WED1, 'Close Sound'),
-    wbFormIDCk(ONAM, 'Display Filter', [FLST])
+    wbFormIDCk(ONAM, 'Contains Only Filter', [FLST])
   ], False, nil, cpNormal, False, nil, wbContainerAfterSet);
 
   var wbAIDT :=
@@ -9992,6 +10000,37 @@ end;
           wbUnknown(1)
     ], cpNormal, True);
 
+    var wbCSTYPowerWeightingStruct := wbStruct('Power Weighting', [
+      wbFloat('Engines', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Shields', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Guns', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbStruct('Shield Based Guns', [
+        wbFloat('EM', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+        wbFloat('Hull', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+        wbFloat('Shield', cpNormal, True, 1, -1, nil, wbFloatScale0to10)
+      ]),
+        wbStruct('Hull Based Guns', [
+        wbFloat('EM', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+        wbFloat('Hull', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+        wbFloat('Shield', cpNormal, True, 1, -1, nil, wbFloatScale0to10)
+      ])
+    ]);
+
+    var wbCSTYNormalizeFloat30 := wbNormalizeToRange(0.0, 30.0);
+    var wbCSTYNormalizeFloat600 := wbNormalizeToRange(0.0, 600.0);
+    var wbCSTYManneuverTimingStruct := function(aName: string = 'Timings'):IwbStructDef
+    begin
+      Result := wbStruct(aName, [
+        wbFloat('Engage', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600),
+        wbFloat('Evade', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600),
+        wbFloat('Acquire', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600),
+        wbFloat('Persue', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600),
+        wbFloat('Disengage', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600),
+        wbFloat('Surround', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600),
+        wbUnknown(4),
+        wbFloat('Break Stalemate', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat600)
+      ]);
+    end;
   {subrecords checked against Starfield.esm}
   wbRecord(CSTY, 'Combat Style',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -9999,183 +10038,142 @@ end;
     ])), [
     wbEDID,
     wbStruct(CSGD, 'General', [
-      wbFloat('Offensive Mult'),
-      wbFloat('Defensive Mult'),
-      wbFloat('Group Offensive Mult'),
-      wbFloat('Equipment Score Mult - Melee'),
-      wbFloat('Equipment Score Mult - Magic'),
-      wbFloat('Equipment Score Mult - Ranged'),
-      wbFloat('Equipment Score Mult - Shout'),
-      wbFloat('Equipment Score Mult - Unarmed'),
-      wbFloat('Equipment Score Mult - Staff'),
-      wbFloat('Avoid Threat Chance'),
-      wbFloat('Dodge Threat Chance'),
-      wbFloat('Evade Threat Chance'),
-      wbFloat('Heal Ally Distance'),
-      wbFloat('Jump Cost Mult'),
-      wbFloat('Taunt Delay Mult')
+      wbFloat('Offensive Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Defensive Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Group Offensive Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Equipment Score Mult - Melee', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Equipment Score Mult - Magic', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Equipment Score Mult - Ranged', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Equipment Score Mult - Shout', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Equipment Score Mult - Unarmed', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Equipment Score Mult - Staff', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Avoid Threat Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Dodge Threat Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Evade Threat Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Heal Ally Distance', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 100.0)),
+      wbFloat('Jump Cost Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Taunt Delay Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10)
     ], cpNormal, True),
-//    wbUnknown(CSMD, cpIgnore),
     wbStruct(CSME, 'Melee', [
-      wbFloat('Attack Staggered Mult'),
-      wbFloat('Power Attack Staggered Mult'),
-      wbFloat('Power Attack Blocking Mult'),
-      wbFloat('Bash Mult'),
-      wbFloat('Bash Recoil Mult'),
-      wbFloat('Bash Attack Mult'),
-      wbFloat('Bash Power Attack Mult'),
-      wbFloat('Special Attack Mult'),
-      wbFloat('Block When Staggered Mult'),
-      wbFloat('Attack When Staggered Mult')
+      wbFloat('Attack Staggered Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Power Attack Staggered Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Power Attack Blocking Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Bash Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Bash Recoil Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Bash Attack Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Bash Power Attack Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Special Attack Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Block When Staggered Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Attack When Staggered Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10)
     ], cpNormal, True, nil, 9),
     wbStruct(CSRA, 'Ranged', [
-      wbFloat('Ranged Accuracy Mult'),
-      wbFloat('Throw Mult'),
-      wbFloat('Grenade - Advanced Throwing Mult'),
-      wbFloat('Grenade - Flash Target Mult'),
-      wbFloat('Grenade - Throw At Group Mult'),
-      wbFloat('Grenade - Close Range Attack Chance Mult')
+      wbFloat('Ranged Accuracy Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Throw Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Grenade - Advanced Throwing Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Grenade - Flash Target Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Grenade - Throw At Group Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Grenade - Close Range Attack Chance Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
     ], cpNormal, True),
     wbStruct(CSCR, 'Close Range', [
-      wbFloat('Dueling - Circle Mult'),
-      wbFloat('Dueling - Fallback Mult'),
-      wbFloat('Flanking - Flank Distance'),
-      wbFloat('Flanking - Stalk Time'),
-      wbFloat('Charging - Charge Distance'),
-      wbFloat('Charging - Throw Probability'),
-      wbFloat('Charging - Sprint Fast Probability'),
-      wbFloat('Charging - Sideswipe Probability'),
-      wbFloat('Charging - Disengane Probability'),
+      wbFloat('Dueling - Circle Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Dueling - Fallback Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Flanking - Flank Distance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Flanking - Stalk Time', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Charging - Charge Distance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Charging - Throw Probability', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Charging - Sprint Fast Probability', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Charging - Sideswipe Probability', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Charging - Disengane Probability', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
       wbInteger('Charging - Throw Max Targets', itU32),
-      wbFloat('Flanking - Flank Variance'),
-      wbFloat('Retreat - Chance'),
-      wbFloat('Retreat - Distance Mult')
+      wbFloat('Flanking - Flank Variance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Retreat - Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Retreat - Distance Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
     ], cpNormal, True),
     wbStruct(CSLR, 'Long Range', [
-      wbFloat('Strafe Mult'),
-      wbFloat('Adjust Range Mult'),
-      wbFloat('Crouch Mult'),
-      wbFloat('Wait Mult'),
-      wbFloat('Range Mult'),
-      wbFloat('Provide Suppressive Fire Mult'),
-      wbFloat('Retreat - Chance'),
-      wbFloat('Retreat - Hide Time Mult'),
-      wbFloat('Retreat - Distance Mult')
+      wbFloat('Strafe Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Adjust Range Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Crouch Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Wait Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Range Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Provide Suppressive Fire Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Retreat - Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Retreat - Hide Time Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Retreat - Distance Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
     ], cpNormal, True, nil, 3),
     wbStruct(CSCV, 'Cover Search', [
-      wbFloat('Cover Search Distance Mult', cpNormal, True),
-      wbFloat('Suppression Sensitivity')
+      wbFloat('Cover Search Distance Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Suppression Sensitivity', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
     ], cpNormal, True),
     wbStruct(CSFL, 'Flight', [
-      wbFloat('Hover Chance'),
-      wbFloat('Dive Bomb Chance'),
-      wbFloat('Ground Attack Chance'),
-      wbFloat('Hover Time'),
-      wbFloat('Ground Attack Time'),
-      wbFloat('Perch Attack Chance'),
-      wbFloat('Perch Attack Time'),
-      wbFloat('Flying Attack Chance')
+      wbFloat('Hover Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Dive Bomb Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Ground Attack Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Hover Time', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Ground Attack Time', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Perch Attack Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Perch Attack Time', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Flying Attack Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
     ], cpNormal, True),
     wbStruct(CSTN, 'Tunnel', [
-      wbFloat('Cost Mult'),
-      wbFloat('Chance'),
-      wbFloat('Max Distance'),
-      wbFloat('Speed Mult'),
-      wbFloat('Min Time'),
-      wbFloat('Max Time'),
-      wbFloat('Maximum Time'),
-      wbFloat('Cooldown')
+      wbFloat('Cost Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Max Distance', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 1000.0)),
+      wbFloat('Speed Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Min Time', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat30),
+      wbFloat('Max Time', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat30),
+      wbFloat('Maximum Time', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat30),
+      wbFloat('Cooldown', cpNormal, True, 1, -1, nil, wbCSTYNormalizeFloat30)
     ]),
     wbStruct(CSSG, 'Space General', [
-      wbFloat('Pilot Skill'),
-      wbFloat('Accuracy'),
-      wbFloat('Target Shield'),
-      wbFloat('Adjustment'),
-      wbFloat('Engage Maneuver Chance - Direct Attack'),
-      wbFloat('Engage Maneuver Chance - Pass'),
-      wbFloat('Engage Maneuver Chance - Lead Turn'),
-      wbFloat('Engage Maneuver Chance - Slide Turn'),
-      wbFloat('Engage Maneuver Chance - Barrel Roll'),
-      wbFloat('Evade Maneuver Chance - Break'),
-      wbFloat('Evade Maneuver Chance - Scissors'),
-      wbFloat('Evade Maneuver Chance - Cut'),
-      wbFloat('Evade Maneuver Chance - Boost'),
-      wbFloat('Acquire Maneuver Chance - Sliceback'),
-      wbFloat('Acquire Maneuver Chance - Strafe Turn'),
-      wbFloat('Acquire Maneuver Chance - Acquire'),
-      wbFloat('Acquire Maneuver Chance - Turn'),
+      wbFloat('Pilot Skill', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Accuracy', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Target Shield', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Adjustment', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 60.0)),
+      wbStruct('Engage Maneuver Chance', [
+        wbFloat('Direct Attack', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Pass', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Lead Turn', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Slide Turn', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Barrel Roll', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
+      ]),
+      wbStruct('Evade Maneuver Chance', [
+        wbFloat('Break', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Scissors', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Cut', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Boost', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
+      ]),
+      wbStruct('Acquire Maneuver Chance', [
+        wbFloat('Sliceback', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Strafe Turn', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Acquire', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+        wbFloat('Turn', cpNormal, True, 1, -1, nil, wbFloatScale0to1)
+      ]),
       wbFloat('Disengage Maneuver Chance'),
-      wbFloat('Missile Seeking Strength'),
-      wbFloat('Min Time Between Boosts'),
+      wbFloat('Missile Seeking Strength', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      wbFloat('Min Time Between Boosts', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 60.0)),
       wbInteger('Combat Strafing', itU8, wbBoolEnum),
       wbInteger('Rolls During Boost', itU8, wbBoolEnum),
-      wbUnknown(2),
-      wbFloat('Power Weighting - Engines'),
-      wbFloat('Power Weighting - Shields'),
-      wbFloat('Power Weighting - Guns'),
-      wbFloat('Power Weighting Shield Based Guns - EM'),
-      wbFloat('Power Weighting Shield Based Guns - Hull'),
-      wbFloat('Power Weighting Shield Based Guns - Shield'),
-      wbFloat('Power Weighting Hull Based Guns - EM'),
-      wbFloat('Power Weighting Hull Based Guns - Hull'),
-      wbFloat('Power Weighting Hull Based Guns - Shield')
+      wbUnused(2), //padding
+      wbCSTYPowerWeightingStruct
     ]),
     wbStruct(CSSM, 'Space Manneuver Types', [
-      wbFloat('Max Time - Engage'),
-      wbFloat('Max Time - Evade'),
-      wbFloat('Max Time - Acquire'),
-      wbFloat('Max Time - Persue'),
-      wbFloat('Max Time - Disengage'),
-      wbFloat('Max Time - Surround'),
-      wbUnknown(4),
-      wbFloat('Max Time - Break Stalemate'),
-      wbFloat('Reentry Delay - Engage'),
-      wbFloat('Reentry Delay - Evade'),
-      wbFloat('Reentry Delay - Acquire'),
-      wbFloat('Reentry Delay - Persue'),
-      wbFloat('Reentry Delay - Disengage'),
-      wbFloat('Reentry Delay - Surround'),
-      wbUnknown(4),
-      wbFloat('Reentry Delay - Break Stalemate')
+      wbCSTYManneuverTimingStruct('Max Time'),
+      wbCSTYManneuverTimingStruct('Reentry Delays')
     ]),
     wbStruct(CSSR, 'Space Repair', [
-      wbFloat('Damage Threshold'),
-      wbFloat('Faraway Distance %'),
-      wbFloat('Power to Use'),
+      wbFloat('Damage Threshold', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Faraway Distance %', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbFloat('Power to Use', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
       wbStruct('In Close Power Weighting Tables', [
-        wbFloat('Power Weighting - Engines'),
-        wbFloat('Power Weighting - Shields'),
-        wbFloat('Power Weighting - Guns'),
-        wbFloat('Power Weighting Shield Based Guns - EM'),
-        wbFloat('Power Weighting Shield Based Guns - Hull'),
-        wbFloat('Power Weighting Shield Based Guns - Shield'),
-        wbFloat('Power Weighting Hull Based Guns - EM'),
-        wbFloat('Power Weighting Hull Based Guns - Hull'),
-        wbFloat('Power Weighting Hull Based Guns - Shield')
+        wbCSTYPowerWeightingStruct
       ]),
       wbStruct('Faraway Power Weighting Tables', [
-        wbFloat('Power Weighting - Engines'),
-        wbFloat('Power Weighting - Shields'),
-        wbFloat('Power Weighting - Guns'),
-        wbFloat('Power Weighting Shield Based Guns - EM'),
-        wbFloat('Power Weighting Shield Based Guns - Hull'),
-        wbFloat('Power Weighting Shield Based Guns - Shield'),
-        wbFloat('Power Weighting Hull Based Guns - EM'),
-        wbFloat('Power Weighting Hull Based Guns - Hull'),
-        wbFloat('Power Weighting Hull Based Guns - Shield')
+        wbCSTYPowerWeightingStruct
       ])
     ]),
     wbStruct(CSSA, 'Space Approaching', [
-      wbFloat('Min Distance'),
-      wbFloat('Power Weighting - Engines'),
-      wbFloat('Power Weighting - Shields'),
-      wbFloat('Power Weighting - Guns'),
-      wbFloat('Power Weighting Shield Based Guns - EM'),
-      wbFloat('Power Weighting Shield Based Guns - Hull'),
-      wbFloat('Power Weighting Shield Based Guns - Shield'),
-      wbFloat('Power Weighting Hull Based Guns - EM'),
-      wbFloat('Power Weighting Hull Based Guns - Hull'),
-      wbFloat('Power Weighting Hull Based Guns - Shield')
+      wbFloat('Min Distance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      wbCSTYPowerWeightingStruct
     ]),
     wbStruct(CSSD, 'Space Detection', [
       wbFloat('Detection Rating 1'),
@@ -14666,7 +14664,7 @@ end;
     wbStructSK([0], 'Component', [
       wbFormIDCkNoReach('Component', sigBaseObjects),
       wbInteger('Count', itU32),
-      wbByteArray('Unknown', 4)
+      wbFormIDCk('Curve Table', [NULL, CURV])
     ])
       .SetSummaryKey([1, 0])
       .SetSummaryMemberPrefixSuffix(0, '', '')
@@ -14677,43 +14675,56 @@ end;
       .IncludeFlag(dfSummaryMembersNoName);
 
   var wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
-
+  var wbRepairComponents := wbArrayS(REPR, 'Repair Components', wbComponent);
   {subrecords checked against Starfield.esm}
   wbRecord(COBJ, 'Constructible Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x04000000}  26, 'Unknown 26'
+      {0x04000000}  26, 'List Contains Variants'
     ])), [
-    wbEDID,
+    wbEDID.SetRequired,
     wbBaseFormComponents,
-    wbDESC(),
-    wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [NULL, KYWD]),
+    wbDESC().SetRequired,
+    wbFormIDCkNoReach(BNAM, 'Workbench Keyword', [NULL, KYWD]).SetRequired,
     wbCTDAs,
     wbComponents,
-    wbStructs(RQPK, 'Required Perks', 'Required Perk', [
-      wbFormIDCk('Perk', [PERK]),
-      wbInteger('Rank', itU32),
-      wbUnknown(4)
-    ]),
-    wbFormIDCk(CNAM, 'Created Object', sigBaseObjects),
-    wbInteger(NNAM, 'Amount Produced', itU16), // req
-    wbFloat(SNAM, 'Menu Sort Order'), // req
-    wbUnknown(TNAM), // req - always 1 byte value $00
+    wbArrayS(RQPK, 'Required Perks',
+      wbStructSK([0], 'Required Perk', [
+        wbFormIDCk('Perk', [PERK]),
+        wbInteger('Rank', itU32),
+        wbUnused(4) // disable curve field
+      ])
+        .SetSummaryKey([0, 1])
+        .SetSummaryDelimiter(', ')
+        .IncludeFlag(dfCollapsed, wbCollapseConditions)
+      ),
+    wbFormIDCk(CNAM, 'Created Object', sigBaseObjects).SetRequired,
+    wbInteger(NNAM, 'Amount Produced', itU16).SetRequired,
+    wbFloat(SNAM, 'Menu Priority Order').SetRequired,
+    wbInteger(TNAM, 'Tier', itU8, wbEnum([
+      '0',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5'
+    ])).SetRequired,
     wbCUSH,
     wbPUSH,
     wbPDSH,
-    wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum),
-    wbInteger(DATA, 'Value', itU32), // req
+    wbRepairComponents,
+    wbInteger(LRNM, 'Learn Method', itU8, wbLearnMethodEnum).SetRequired,
+    wbInteger(DATA, 'Value', itU32).SetRequired,
     wbFormIDCk(ANAM, 'Menu Art Object', [ARTO]),
-    wbFormIDCk(JNAM, 'Build Limit', [GLOB]),
-    wbArrayS(FNAM, 'Category', wbFormIDCk('Keyword', [KYWD])),
-    wbStruct(RECF, 'Unknown', [
-      wbInteger('Unknown', itU32),
-      wbByteArray('Unknown', 4)
-    ])
-//    wbStruct(INTV, 'Data', [
-//      wbInteger('Created Object Count', itU16),
-//      wbInteger('Priority', itU16)
-//    ], cpNormal, False, nil, 1)
+    wbFormIDCk(GNAM, 'Learned From', sigBaseObjects),
+    wbFormIDCk(CVT0, 'Base Return Scale Table', [CURV]),
+    wbFormIDCk(LRNC, 'Learn Chance', [GLOB]),
+    wbFormIDCk(JNAM, 'Max Build Count Global', [GLOB]),
+    wbArrayS(FNAM, 'Recipe Filters', wbFormIDCk('Keyword', [KYWD])),
+    wbInteger(RECF, 'Unknown', itU64, wbFlags([
+      'Filter Not Required To Learn',
+      'Unknown 1',
+      'Exclude From Workshop LOD'
+     ]), cpNormal, True)
   ]);
 
   var wbRaceOverrideDontShow :=
@@ -19251,7 +19262,7 @@ end;
         wbVec3PosRotDegrees('Orientation', 'Offset', 'Rotation', 'Ofs:', 'Rot:'),
  //       wbVec3('Offset', 'Ofs:'),
  //       wbVec3('Rotation', 'Rot:'),
-        wbInteger('Unknown', itU32),
+        wbInteger('Display Case Slot', itU32),
         wbUnknown(4)
       ])
       .SetSummaryKeyOnValue([0,1,2,3])
@@ -19270,7 +19281,7 @@ end;
     wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
     //wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
     wbInteger(INAM, 'Next Node ID', itU32),
-    wbUnknown(STPT, 4),
+    wbUnknown(STPT, 4), // snap piece type: Invalid, Starting Foundation, Foundation, Floor, Stair, Wall, Roof
     //wbUnknown(SNFG)
     wbString(CNAM),
     wbRStructsSK('Unknown', 'Unknown', [0], [
@@ -19348,7 +19359,8 @@ end;
   wbRecord(CNDF, 'Condition Form', [
     wbEDID,
     wbCTDAs,
-    wbFormIDCk(QNAM, 'Quest', [QUST])
+    wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
+    wbFormIDCk(PNAM, 'Owner Package', [PACK])
   ]);
 
   {subrecords checked against Starfield.esm}
