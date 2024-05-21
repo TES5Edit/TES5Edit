@@ -4193,12 +4193,14 @@ begin
     wbStruct('Component', [
       wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
       wbInteger('Count', itU32),
-      wbUnknown(4)
+      wbUnused(4) // same struct used that normally carried curve table
     ])
     .SetSummaryKey([1,0])
     .SetSummaryMemberPrefixSuffix(1,'','x ')
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseItems));
+
+  var wbCDIX := wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8));
 
   //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
   var wbActorValue := wbFormIDCkNoReach('Actor Value', [AVIF, NULL]);
@@ -4237,6 +4239,8 @@ begin
     wbCOCT,
     wbCNTOs.SetRequired
   ], []);
+
+  var wbFIMD := wbFormIDCk(FIMD, 'Featured Item Message', [MESG]);
 
   var wbALSH := wbSoundReference(ALSH, 'Looping Sound');
   var wbACSH := wbSoundReference(ACSH, 'Activate Sound');
@@ -4398,7 +4402,7 @@ begin
       wbFloat('Min Height'),
       wbFloat('Max Height'),
       wbFloat('Depth'),
-      wbFloat('Shininess')
+      wbFloat('Alpha')
     ]);
 
 //  wbRecordFlagsFlags := wbFlags([
@@ -9244,10 +9248,10 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
-    wbXALG,
     wbPTT2,
     wbSNTP,
     wbSNBH,
+    wbXALG,
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(),
@@ -9316,17 +9320,19 @@ end;
     wbODTYReq,
     wbOPDS,
     wbPTT2,
-    wbBaseFormComponents,
     wbXALG,
+    wbBaseFormComponents,
     wbFULL,
     wbKeywords,
     wbGenericModel(),
+    wbDEST,
     wbPUSH,
     wbPDSH,
+    wbETYP,
     wbCUSH,
     wbDESC(),
     wbCVPA,
-    wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8)),
+    wbCDIX,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
@@ -9349,7 +9355,7 @@ end;
         {0x00008000} 'Unknown 16',
         {0x00010000} 'Medicine',
         {0x00020000} 'Poison'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbFormIDCk('Addiction', [NULL, SPEL]),
       wbFloat('Addiction Chance'),
       wbSoundReference
@@ -9576,7 +9582,7 @@ end;
     wbPUSH,
     wbPDSH,
     wbKeywords,
-    wbFormIDCk(FIMD, 'Featured Item Message', [MESG]),
+    wbFIMD,
     wbStructSK(DATA, [0,1], 'Data', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -11040,7 +11046,6 @@ end;
       .SetToStr(wbToStringFromLinksToMainRecordName),
     wbString(NAM3, 'Mask'),
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
-//    wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
     wbFormIDCk(MNAM, 'Morph', [MRPH]),
     wbCTDAs
@@ -11128,16 +11133,17 @@ end;
       'Do Once',
       'Unknown 3',
       'Ignored by Sandbox',
-      'Unknown 5'
-    ]), cpNormal, False).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      'Ignore Conditions For Sandbox'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbRStruct('Animations', [
       wbInteger(IDLC, 'Animation Count', itU32, nil, cpBenign),
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True)
     ], []),
     wbGenericModel(),
+    wbFormIDCk(RNAM, 'Actor Action', [AACT]),
     wbFormIDCk(QNAM, 'Animation Flavor', [KYWD]),
-    wbFormIDCk(PNAM, 'Unknown', [KYWD])                              //Anim Archetype? Only one record uses it
+    wbFormIDCk(PNAM, 'Animation Archetype', [KYWD])
   ], False, nil, cpNormal, False);
 
   {subrecords checked against Starfield.esm}
@@ -12106,28 +12112,26 @@ end;
          {3} 'Impale',
          {4} 'Stick'
       ])),
-      wbByteArray('Unknown', 2)
+      wbUnused(2) // padding
     ], cpNormal, True),
     wbArray(GNAM, 'Projected Decals', wbFormIDCk('Projected Decal', [PDCL])),
-    wbStruct(HNAM, 'Unknown', [
-      wbFormIDCk('Unknown', [PDCL, NULL]),
-      wbFormIDCk('Unknown', [PDCL, NULL]),
-      wbFormIDCk('Unknown', [PDCL, NULL]),
-      wbFormIDCk('Unknown', [PDCL, NULL])
-    ]),
+    wbArray(HNAM, 'Scatter Projected Decals', wbFormIDCk('Projected Decal', [PDCL])),
     wbDODT,
-    wbSoundReference(IDSH),
-    wbSoundReference(IDP1),
-    wbSoundReference(IDP3),
-    wbFloat(FNAM, 'Footstep Particle Max Dist')
+    wbSoundReference(IDSH, 'Impact Sound - Default'),
+    wbSoundReference(IDP1, 'Impact Sound - Player 1st/Shooter'),
+    wbSoundReference(IDP3, 'Impact Sound - Player 3rd/Target'),
+    wbFormIDCk(NAM3, 'Footstep Explosion', [EXPL]),
+    wbFormIDCk(NAM2, 'Hazard', [HAZD]),
+    wbFloat(FNAM, 'Footstep Particle Max Dist'),
+    wbFloat(INAM, 'Decal Lifetime')
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
-      wbFormIDCk('Material', [MATT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
-      wbFormIDCk('Impact', [IPCT])
+      wbFormIDCk('Material Type', [MATT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+      wbFormIDCk('Impact Data', [IPCT])
     ]))
   ]);
 
@@ -14028,6 +14032,7 @@ end;
 
   wbRecord(KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000002} 2, 'Non-Playable',
       {0x00000800} 11, 'Calc Value From Components',
       {0x00002000} 13, 'Pack-In Use Only'
     ])), [
@@ -14035,20 +14040,28 @@ end;
     wbVMAD,
     wbOBND(True),
     wbODTYReq,
+    wbOPDS,
     wbPTT2,
     wbXALG,
     wbFULL,
     wbGenericModel(),
+    wbDEST,
+    wbCUSH,
+    wbPUSH,
+    wbPDSH,
     wbKeywords,
-//    wbDEST,
+    wbFIMD,
+    wbCVPA,
+    wbCDIX,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True),
     wbInteger(FLAG, 'Flags', itU32, wbFlags([
-      'Unknown 0',
-      'Unknown 1'
-    ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      'Allow Quest Item Crafting',
+      'Non-Instanced Key'
+    ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbLStringKC(NNAM, 'Short Name', 0, cpTranslate)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -18430,13 +18443,12 @@ end;
     wbEDID,
     wbInteger(UNAM, 'Target', itU32, wbEnum([], [
         0, 'None',
-      $1D, 'Armor',
-      $2D, 'Actor',
-      $2A, 'Furniture',
-      $2B, 'Weapon',
-      $22, 'AdjectiveArmor',
-      $30, 'AdjectiveWeapon',
-      $32, 'CreaturePrefixSuffix'
+      $22, 'Armor',
+      $24, 'Container',
+      $2E, 'Flora',
+      $2F, 'Furniture',
+      $30, 'Weapon',
+      $32, 'Actor'
     ])).SetRequired,
     wbRArray('Naming Rules',
       wbRStruct('Ruleset', [
@@ -19569,7 +19581,7 @@ end;
       ])),
     wbRArray('Next rarities', wbFormIDCk(CNAM, 'Next Rarity', [IRES])),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
-    wbLString(NNAM, 'Short Name'),
+    wbLStringKC(NNAM, 'Short Name', 0, cpTranslate),
     wbString(GNAM, 'Resource Type'),
     wbFormIDCk(NAM1, 'Actor Value', [NULL, AVIF]),
     wbFormIDCk(NAM2, 'Produce', [NULL, LVLI, COBJ]),
