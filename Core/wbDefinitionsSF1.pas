@@ -107,7 +107,7 @@ function wbGRASDirtinessToStr(aInt: Int64; const aElement: IwbElement; aType: Tw
 begin
   case aType of
     ctToStr, ctToEditValue:
-      Result := Format('%.4f', [aInt / 255]);
+      Result := FloatToStrF(aInt/ 255, ffFixed, 99, wbFloatDigits);
   end;
 end;
 
@@ -5960,10 +5960,11 @@ begin
 
   var wbFloatScale0to1 := wbNormalizeToRange(0.0, 1.0);
   var wbFloatScale0to10 := wbNormalizeToRange(0.0, 10.0);
+  var wbFloatScale0to100 := wbNormalizeToRange(0.0, 100.0);
 
   var wbSNTP := wbFormIDCk(SNTP, 'Snap Template', [STMP]);
   var wbSNBH := wbFormIDCk(SNBH, 'Snap Behavior', [STBH]);
-  var wbODTY := wbFloat(ODTY, 'Dirtiness Scale', cpNormal, True, 1, -1, nil, wbFloatScale0to1);
+  var wbODTYReq := wbFloat(ODTY, 'Dirtiness Scale', cpNormal, True, 1, -1, nil, wbFloatScale0to1); // any record which can have ODTY should always have it
   var wbOPDS :=
     wbStruct(OPDS, 'Object Palette Defaults', [
       wbInteger('Flags', itU32, wbFlags([
@@ -9241,7 +9242,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbPTT2,
@@ -9312,7 +9313,7 @@ end;
     ])), [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbBaseFormComponents,
@@ -9364,7 +9365,7 @@ end;
     ])), [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbPTT2,
     wbFULL,
     wbGenericModel(),
@@ -9420,7 +9421,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbPTT2,
     wbBaseFormComponents,
     wbFULL,
@@ -9563,7 +9564,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbPTT2,
     wbDEFL,
     wbXALG,
@@ -9954,7 +9955,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbPTT2,
@@ -10074,7 +10075,7 @@ end;
       wbFloat('Avoid Threat Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
       wbFloat('Dodge Threat Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
       wbFloat('Evade Threat Chance', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
-      wbFloat('Heal Ally Distance', cpNormal, True, 1, -1, nil, wbNormalizeToRange(0.0, 100.0)),
+      wbFloat('Heal Ally Distance', cpNormal, True, 1, -1, nil, wbFloatScale0to100),
       wbFloat('Jump Cost Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
       wbFloat('Taunt Delay Mult', cpNormal, True, 1, -1, nil, wbFloatScale0to10)
     ], cpNormal, True),
@@ -10461,7 +10462,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbSNTP,
@@ -10602,7 +10603,7 @@ end;
   wbRecord(ENCH, 'Object Effect', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbFULL,
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Enchantment Cost', itS32),
@@ -10797,7 +10798,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbSNTP,
@@ -10950,7 +10951,7 @@ end;
   wbRecord(TXST, 'Texture Set', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbRStruct('Textures (RGB/A)', [
       wbString(TX00, 'Diffuse'),
       wbString(TX01, 'Normal/Gloss'),
@@ -10993,24 +10994,30 @@ end;
       {0x10} 'Is Extra Part',
       {0x20} 'Use Solid Tint',
       {0x40} 'Uses Body Texture',
-      {0x80} 'Unknown 6'
+      {0x80} 'Hide with "HideEar" Morph'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInteger(PNAM, 'Type', itU32, wbEnum([
-      'Misc',
-      'Face',
-      'Right Eye',
-      'Hair',
-      'Facial Hair',
-      'Scar',
-      'Eyebrows',
-      'Jewelry',
-      'Teeth',
-      'Head Rear',
-      'Unknown 10',
-      'Unknown 11',             //Only used on "Buzz front" extra head parts, which are atttached to the "buzz back"  chargen option
-      'Left Eye',
-      'Eyelashes'
-    ])),
+      { 0} 'Misc',
+      { 1} 'Face',
+      { 2} 'Right Eye',
+      { 3} 'Hair',
+      { 4} 'Facial Hair',
+      { 5} 'Scar',
+      { 6} 'Eyebrows',
+      { 7} 'Jewelry',
+      { 8} 'Meatcaps',
+      { 9} 'Teeth',
+      {10} 'Head Rear',
+      {11} 'Extra Hair',
+      {12} 'Left Eye',
+      {13} 'Eyelashes',
+      {14} 'Creature Head',
+      {15} 'Creature Torso',
+      {16} 'Creature Arms',
+      {17} 'Creature Legs',
+      {18} 'Creature Tail',
+      {19} 'Creature Wings'
+    ]), cpNormal, True),
     wbRArrayS('Extra Parts',
       wbFormIDCk(HNAM, 'Part', [HDPT])
     ),
@@ -11035,15 +11042,15 @@ end;
     wbFormIDCk(TNAM, 'Texture Set', [TXST]),
 //    wbFormIDCk(CNAM, 'Color', [CLFM]),
     wbFormIDCk(RNAM, 'Valid Races', [FLST]),
-    wbFormIDCk(MNAM, 'Morph', [MRPH])
-//    wbCTDAs
+    wbFormIDCk(MNAM, 'Morph', [MRPH]),
+    wbCTDAs
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbSoundReference(ASLS, 'Looping Sound'),
     wbSoundReference(WED0, 'Interior Sound'),
     wbSoundReference(WED1, 'Exterior Sound'),
@@ -11086,7 +11093,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbSNTP,
@@ -11113,7 +11120,7 @@ end;
     ])), [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbKeywords,
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
       'Run in Sequence',
@@ -11137,7 +11144,7 @@ end;
   wbRecord(PROJ, 'Projectile', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbBaseFormComponents,
@@ -11222,7 +11229,7 @@ end;
   wbRecord(HAZD, 'Hazard', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
@@ -11245,17 +11252,17 @@ end;
       {80} wbFloat('Gravity'),
       {84} wbInteger('Limit', itU32),
       {88} wbInteger('Flags', itU32, wbFlags([
-             {0x01} 'Affects Player Only',               //copied from FO4, might be wrong
-             {0x02} 'Inherit Duration from Spawn Spell', //copied from FO4, might be wrong
-             {0x04} 'Align to Impact Normal',            //copied from FO4, might be wrong
-             {0x08} 'Inherit Radius from Spawn Spell',   //copied from FO4, might be wrong
-             {0x10} 'Drop to Ground',                    //copied from FO4, might be wrong
-             {0x20} 'Taper Effectiveness by Proximity',  //copied from FO4, might be wrong
-             {0x40} 'Increased Gravity',
-             {0x80} 'Reversed Gravity'
+             {0x01} 'Affects Player Only',
+             {0x02} 'Inherit Duration from Spawn Spell',
+             {0x04} 'Align to Impact Normal',
+             {0x08} 'Inherit Radius from Spawn Spell',
+             {0x10} 'Drop to Ground',
+             {0x20} 'Taper Effectiveness by Proximity',
+             {0x40} 'Gravity Point Source',
+             {0x80} 'Gravity Override'
            ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
       {92}
-    ]),
+    ]).SetRequired,
     wbCTDAs
   ]);
 
@@ -11475,7 +11482,7 @@ end;
   wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbDEFL,
     wbXALG,
@@ -11895,7 +11902,7 @@ end;
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbBaseFormComponents,
     wbGenericModel(),
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
@@ -13642,7 +13649,7 @@ end;
   wbRecord(ARTO, 'Art Object', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbPTT2,
@@ -13808,16 +13815,16 @@ end;
     ])), [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbBaseFormComponents,
     wbGenericModel(),
     wbStruct(DNAM, 'Data', [
-      { 0} wbFloat('Contrast'),
-      { 4} wbFloat('Cluster Scale'),
-      { 8} wbFloat('Height Range'),
-      {12} wbFloat('Color Range'),
+      { 0} wbFloat('Contrast', cpNormal, True, 1, -1, nil, wbFloatScale0to100),
+      { 4} wbFloat('Cluster Scale', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
+      { 8} wbFloat('Height Range', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
+      {12} wbFloat('Color Range', cpNormal, True, 1, -1, nil, wbFloatScale0to1),
       {16} wbFloat('Wind Frequency'),
       {20} wbFloat('Above Water Clamp - Value').SetDefaultEditValue('Default'),
       {24} wbFloat('Below Water Clamp - Value').SetDefaultEditValue('Default'),
@@ -13830,7 +13837,7 @@ end;
         'Fits Slope',
         'Apply Between'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      {32} wbFloat('Coverage'),
+      {32} wbFloat('Coverage', cpNormal, True, 1, -1, nil, wbFloatScale0to100),
       {36} wbInteger('Dirtiness Min', itU8, wbGRASDirtinessToStr, wbGRASDirtinessStrToInt),
       {37} wbInteger('Dirtiness Max', itu8, wbGRASDirtinessToStr, wbGRASDirtinessStrToInt)
     ], cpNormal, True)
@@ -14027,7 +14034,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbPTT2,
     wbXALG,
     wbFULL,
@@ -14057,7 +14064,7 @@ end;
     wbEDID,
 //    wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
 //    wbPTT2,
     wbBaseFormComponents,
     wbGenericModel(),
@@ -14336,7 +14343,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
     wbXALG,
@@ -14370,7 +14377,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbXALG,
     wbOPDS,
     wbBaseFormComponents,
@@ -14410,7 +14417,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
     wbXALG,
@@ -14663,7 +14670,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbXALG,
@@ -14865,7 +14872,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbPTT2,
@@ -17502,7 +17509,7 @@ end;
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbXALG,
     wbKeywords,
     wbSoundReference(SMLS),
@@ -17574,7 +17581,7 @@ end;
   wbRecord(SPEL, 'Spell', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbFULL,
     wbKeywords,
     wbETYP,
@@ -17628,7 +17635,7 @@ end;
     wbEDID,
 //    wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbSNTP,
@@ -17708,7 +17715,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbBaseFormComponents,
@@ -17852,7 +17859,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbBaseFormComponents,
@@ -18387,7 +18394,7 @@ end;
     ])), [
     wbEDID,
     wbOBND,
-    wbODTY,
+    wbODTYReq,
     wbBaseFormComponents,
     wbStruct(DNAM, 'Data', [
       wbFloat('Default Number of Tiles'),
@@ -18746,7 +18753,7 @@ end;
   wbRecord(LGDI, 'Legendary Item', [
     wbEDID,
     wbOBND,
-    wbODTY,
+    wbODTYReq,
     wbGenericModel(),
     wbEmpty(DATA),
     wbFormIDCk(ANAM, 'Applicable Item List', [LVLI]),
@@ -18909,7 +18916,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND,
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbPTT2,
     wbSNTP,
@@ -19004,7 +19011,7 @@ end;
     ])), [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbSNTP,
     wbBaseFormComponents,
     wbGenericModel(),
@@ -19049,7 +19056,7 @@ end;
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbPTT2,
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Menu', [TMLM]),
@@ -19194,7 +19201,7 @@ end;
   wbRecord(SECH, 'Sound Echo Marker', [
     wbEDID,
     wbOBND,
-    wbODTY,
+    wbODTYReq,
     wbXALG, //unknown if before or after NNAM
     wbString(NNAM, 'Description'),
     wbRArray('Echos',
@@ -19226,7 +19233,7 @@ end;
   wbRecord(STND, 'Snap Template Node', [
     wbEDID,
     wbOBND,
-    wbODTY,
+    wbODTYReq,
     wbBaseFormComponents,
     wbGenericModel(),
     wbKeywords,
@@ -19318,10 +19325,10 @@ end;
     wbBaseFormComponents,
     wbRArray('Grasses', wbRStruct('Grass', [
       wbFormIDCk(GNAM, 'Grass', [GRAS]),
-      wbInteger(DNAM, 'Unknown', itS16)
+      wbInteger(DNAM, 'Override Density', itS16).SetDefaultEditValue('-1')
     ], [])),
     wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
-    wbFloat(YNAM)
+    wbFloat(YNAM, 'Painted Material Threshold', cpNormal, True, 100.0, 0, nil, wbNormalizeToRange(0.1, 1.0))
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19389,7 +19396,7 @@ end;
   wbRecord(AOPF, 'Audio Occlusion Primitive', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbFloat(OBSV, 'Obstruction'),
     wbFloat(OCCV, 'Occlusion')
   ]);
@@ -19398,7 +19405,7 @@ end;
   wbRecord(PDCL, 'Projected Decal', [
     wbEDID,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
     wbPTT2,
@@ -19428,7 +19435,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY.SetRequired,
+    wbODTYReq,
     wbOPDS,
     wbGenericModel(),
     wbKeywords,
@@ -19452,7 +19459,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
     wbFLTR,
@@ -19496,7 +19503,7 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
-    wbODTY,
+    wbODTYReq,
     wbOPDS,
     wbXALG,
     wbBaseFormComponents,
