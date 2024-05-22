@@ -14240,15 +14240,13 @@ end;
       {0x00000200}  9, 'Unknown 9'
     ])), [
     wbEDID,
-    wbString(BNAM),
+    wbString(BNAM, 'Material File'),
     wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
     wbStruct(HNAM, 'Havok Data', [
       wbInteger('Friction', itU8),
       wbInteger('Restitution', itU8)
     ], cpNormal, True).SetSummaryKeyOnValue([0,1]),
-    wbFloat(QNAM)
-//    wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
-//    wbRArray('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
+    wbFloat(QNAM, 'Dirtiness', cpNormal, True, 1, -1, nil, wbFloatScale0to1).SetDefaultEditValue('1.0')
   ]).SetSummaryKey([1]);
 
   var wbLeveledListEntryItem :=
@@ -18503,11 +18501,18 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LAYR, 'Layer', [
+  wbRecord(LAYR, 'Layer',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x08000000} {27} 27, 'Starts Frozen'
+    ])), [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR]),
-    wbByteColors(XCLP),
-    wbInteger(LODB, 'Unknown', itU32)                    //Values are 0,1, and 2
+    wbByteColors(XCLP).SetRequired,
+    wbInteger(LODB, 'LOD Behavior', itU32, wbEnum([
+      'Default',
+      'Aggregate',
+      'No LODs'
+    ]), cpNormal, True)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18765,10 +18770,15 @@ end;
     wbEDID,
     wbOBND,
     wbODTYReq,
+    wbOPDS,
+    wbPTT2,
+    wbXALG,
+    wbBaseFormComponents,
     wbGenericModel(),
-    wbEmpty(DATA),
-    wbFormIDCk(ANAM, 'Applicable Item List', [LVLI]),
-    wbFormIDCk(ENAM, 'Legendary Template List', [LGDI]),
+    wbFULL,
+    wbEmpty(DATA).SetRequired,
+    wbFormIDCk(ANAM, 'Base Object List', [LVLI]),
+    wbFormIDCk(ENAM, 'Rank Template', [LGDI]),
 
     wbLGDIStarSlotArray(BNAM,
       wbStruct('Mod', [
