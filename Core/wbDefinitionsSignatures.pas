@@ -672,6 +672,7 @@ const
   LLLD : TwbSignature = 'LLLD'; { New To Starfield }
   LLRB : TwbSignature = 'LLRB'; { New To Starfield }
   LLRV : TwbSignature = 'LLRV'; { New To Starfield }
+  LLSH : TwbSignature = 'LLSH'; { New To Starfield }
   LLVL : TwbSignature = 'LLVL'; { New To Fallout 76 }
   LMSW : TwbSignature = 'LMSW'; { New To Starfield }
   LNA2 : TwbSignature = 'LNA2'; { New To Starfield }
@@ -1601,6 +1602,7 @@ const
   XRAD : TwbSignature = 'XRAD';
   XRDO : TwbSignature = 'XRDO'; { New To Fallout 4 }
   XRDS : TwbSignature = 'XRDS';
+  XRFE : TwbSignature = 'XRFE'; { New To Starfield }
   XRFG : TwbSignature = 'XRFG'; { New To Fallout 4 }
   XRGB : TwbSignature = 'XRGB';
   XRGD : TwbSignature = 'XRGD';

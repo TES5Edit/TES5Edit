@@ -4175,7 +4175,7 @@ begin
   var wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   var wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit);
   var wbCITCReq := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign, True).IncludeFlag(dfSkipImplicitEdit);
-  var wbLVLD := wbFloat(LVLD, 'Chance None', cpNormal, True);
+  var wbLVLDReq := wbFloat(LVLD, 'Chance None', cpNormal, True);
 
   var wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
   var wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, LVSP]);
@@ -4247,6 +4247,71 @@ begin
   var wbCUSH := wbSoundReference(CUSH, 'Crafting Sound');
   var wbPUSH := wbSoundReference(PUSH, 'Pickup Sound');
   var wbPDSH := wbSoundReference(PDSH, 'Putdown Sound');
+
+  var wbLightRoundnessData := function(aSignature: TwbSignature; aRequired: boolean = False): IwbSubRecordWithStructDef
+  begin
+    Result := wbStruct(aSignature, 'Roundness', [
+      { 0} wbFloat('Width'),
+      { 4} wbFloat('Height'),
+      { 8} wbFloat('Roundness'),
+      {12} wbFloat('Falloff'),
+      {16} wbInteger('Uses Roundness', itU8, wbBoolEnum),
+      {17} wbUnused(3) // padding
+    ], cpNormal, aRequired);
+  end;
+
+  var wbLightAreaLightData := function(aSignature: TwbSignature; aRequired: boolean = False): IwbSubRecordWithStructDef
+  begin
+    Result := wbStruct(aSignature, 'Area Light', [
+      { 0} wbFloat('Width'),
+      { 4} wbFloat('Height'),
+      { 8} wbFloat('Radius'),
+      {12} wbInteger('Area Light Type', itU8, wbEnum([
+            'None',
+            'Rectangle',
+            'Sphere'
+           ])),
+      {13} wbInteger('Is Diffuse', itU8, wbBoolEnum),
+      {14} wbUnused(2) // padding
+    ], cpNormal, aRequired)
+  end;
+
+
+  var wbLightGoboData := function(aSignature: TwbSignature; aRequired: boolean = False): IwbSubRecordWithStructDef
+  begin
+    Result := wbStruct(aSignature, 'Gobo Animated Properties', [
+      { 0} wbFloat('Static Offset U'),
+      { 4} wbFloat('Static Offset V'),
+      { 8} wbFloat('Rotation Pivot U'),
+      {12} wbFloat('Rotation Pivot V'),
+      {16} wbFloatAngle('Static Rotation'),
+      {20} wbFloatAngle('Animated Rotation Speed'),
+      {24} wbFloat('Animated Wave Rotation Speed'),
+      {28} wbFloatAngle('Animated Wave Rotation Amount'),
+      {32} wbFloat('Static Scale U'),
+      {36} wbFloat('Static Scale V'),
+      {40} wbFloat('Wave Scaling U Speed'),
+      {44} wbFloat('Wave Scaling V Speed'),
+      {48} wbFloat('Wave Scaling U Amount'),
+      {42} wbFloat('Wave Scaling V Amount'),
+      {56} wbFloat('Scroll Speed U'),
+      {60} wbFloat('Scroll Speed V'),
+      {64} wbFloat('Wave Scroll Speed U'),
+      {68} wbFloat('Wave Scroll Speed V'),
+      {72} wbFloat('Wave Scroll Amount U'),
+      {76} wbFloat('Wave Scroll Amount V'),
+      {80} wbFloat('Random Time Offset Range'),
+      {84} wbInteger('Is Animated', itU8, wbBoolEnum),
+      {85} wbUnused(3)
+    ], cpNormal, aRequired);
+  end;
+
+  var wbFLGDReq := wbLightGoboData(FLGD, True);
+  var wbXLGD := wbLightGoboData(XLGD);
+  var wbFLADReq := wbLightAreaLightData(FLAD, True);
+  var wbXALD := wbLightAreaLightData(XALD);
+  var wbFLRDReq := wbLightRoundnessData(FLRD, True);
+  var wbXLRD := wbLightRoundnessData(XLRD);
 
   {>>> When NAME is user defined these will be incorrect <<<}
   var wbBipedObjectEnum := wbEnum([
@@ -4901,6 +4966,22 @@ begin
     'GetValue',
     'HasKeyword',
     'GetItemValue'
+  ]);
+
+  var wbDamageCauseTypeEnum := wbEnum([
+    { 0} 'None',
+    { 1} 'Explosion',
+    { 2} 'Gun',
+    { 3} 'Blunt Weapon',
+    { 4} 'Hand to Hand',
+    { 5} 'Object Impact',
+    { 6} 'Poison',
+    { 7} 'Decapitation',
+    { 8} 'Falling',
+    { 9} 'Drowning',
+    {10} 'Trap',
+    {11} 'Ship Destroyed',
+    {12} 'Other'
   ]);
 
   var wbPerkCategoryEnum := wbEnum([
@@ -5837,7 +5918,7 @@ begin
     'Helmet Light',
     'Ship Interior',
     'Ship Exterior'
-  ])).IncludeFlag(dfCollapsed, wbCollapseFlags);
+  ])).SetDefaultNativeValue(1).IncludeFlag(dfCollapsed, wbCollapseFlags);
 
   var wbDMDS := wbFormIDCk(DMDS, 'Material Swap', [NULL, MSWP]);
   var wbDMDC := wbFloat(DMDC, 'Color Remapping Index');
@@ -6040,8 +6121,8 @@ begin
 
   var wbXEED :=
     wbStruct(XEED, 'External Emittance', [
-    { 0} wbFloat,
-    { 4} wbInteger('Unknown', itU8),
+    { 0} wbFloat('External Emittance Luminance Scale'),
+    { 4} wbInteger('Override Enabled', itU8, wbBoolEnum),
     { 5} wbUnused(3)
     { 8}
     ]);
@@ -7618,7 +7699,7 @@ end;
           {61 ptPlanet}
           wbFormIDCkNoReach('Planet', [PNDT]),
           {62 ptDamageCauseType}
-          wbByteArray('DamageCauseType', 4),
+          wbInteger('DamageCauseType', itU32, wbDamageCauseTypeEnum),
           {63 ptSpeechChallenge}
           wbFormIDCkNoReach('Speech Challenge', [SPCH]),
           {63 ptForm}
@@ -7867,13 +7948,14 @@ end;
           { 5} 'Quest Alias',
           { 6} 'Package Data',
           { 7} 'Event Data',
-          { 8} 'Unknown 8',
-          { 9} 'Command Target',
-          {10} 'Event Camera Ref',
-          {11} 'My Killer',
-          {12} 'Unknown 12',
-          {13} 'Unknown 13',
-          {14} 'Player Ship'
+          { 8} 'Command Target',
+          { 9} 'Event Camera Ref',
+          {10} 'My Killer',
+          {11} 'Self Packin',
+          {12} 'Target Packin',
+          {13} 'My Ship',
+          {14} 'Player Home Ship',
+          {15} 'Player'
         ]), cpNormal, False, nil, wbCTDARunOnAfterSet),
         wbUnion('Reference', wbCTDAReferenceDecider, [
           wbInteger('Unused', itU32, nil, cpIgnore),
@@ -8617,12 +8699,12 @@ end;
         ], []),
         //BGSContactShadowComponent_Component
         wbRStruct('Component Data - Contact Shadow', [
-          wbStruct(FLCS, 'Unknown', [
-            wbFloat,
-            wbFloat,
-            wbFloat,
-            wbFloat,
-            wbFloat
+          wbStruct(FLCS, 'Contact Shadows', [
+            wbFloat('Thickness'),
+            wbFloat('Fade Length'),
+            wbFloat('Fade Start'),
+            wbFloat('Max Distance'),
+            wbFloat('Proximity Limit')
           ])
         ], []),
         wbRStruct('Component Data - FLLD', [
@@ -8818,6 +8900,7 @@ end;
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
     ], [])
+//    .IncludeFlag(dfCollapsed, wbCollapseComponents)
   );
 
   var wbMNAMFurnitureMarker := wbInteger(MNAM, 'Active Markers / Flags', itU32, wbFlags([
@@ -9254,7 +9337,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbKeywords,
     wbPRPS,
@@ -9299,7 +9382,7 @@ end;
     wbVMAD,
     wbOBND(True),
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
@@ -9324,7 +9407,7 @@ end;
     wbBaseFormComponents,
     wbFULL,
     wbKeywords,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbPUSH,
     wbPDSH,
@@ -9374,7 +9457,7 @@ end;
     wbODTYReq,
     wbPTT2,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbPUSH,
     wbPDSH,
     wbDESC().SetRequired,
@@ -9413,7 +9496,7 @@ end;
     wbEDID,
     wbXALG,
     wbBaseFormComponents,
-    wbGenericModel()
+    wbGenericModel(True)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -9479,7 +9562,7 @@ end;
 
   var wbAVMDMNAMReq :=
     wbInteger(MNAM, 'AVM Group Type', itU32, wbEnumSummary([
-      ''              , 'Invalid Group',  // None - Cannot be set in CK
+      'None'          , 'None',  // None - Cannot be set in CK
       'Simple Group'  , 'Simple',
       'Complex Group' , 'Complex',
       'Modulation'    , 'Modulation'
@@ -9576,7 +9659,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDESCreq('Book Text'),
     wbDEST,
     wbPUSH,
@@ -9969,7 +10052,7 @@ end;
     wbSNBH,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbUnknown(XFLG),
     wbContainerItems,
     wbDEST,
@@ -10476,7 +10559,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbKeywords,
     wbNTRM,
@@ -10602,7 +10685,7 @@ end;
         {0x80000000} {31} ''
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ]),
-    wbGenericModel()
+    wbGenericModel(True)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -10812,7 +10895,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbKeywords,
     wbPRPS,
@@ -10991,7 +11074,7 @@ end;
     wbEDID,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Playable',
       {0x02} 'Male',
@@ -11107,7 +11190,7 @@ end;
     wbBaseFormComponents,
     wbPTT2,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbKeywords,
     wbPRPS,
@@ -11139,7 +11222,7 @@ end;
       wbFloat(IDLT, 'Idle Timer Setting', cpNormal, True),
       wbArray(IDLA, 'Animations', wbFormIDCk('Animation', [IDLE]), 0, nil, wbIDLAsAfterSet, cpNormal, True)
     ], []),
-    wbGenericModel(),
+    wbGenericModel(True),
     wbFormIDCk(RNAM, 'Actor Action', [AACT]),
     wbFormIDCk(QNAM, 'Animation Flavor', [KYWD]),
     wbFormIDCk(PNAM, 'Animation Archetype', [KYWD])
@@ -11154,7 +11237,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbUnused(DATA, True),
     wbStruct(PROD, 'Data', [
@@ -11238,7 +11321,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD, NULL]),
     wbStruct(DNAM, 'Data', [
       { 0} wbSoundReference,
@@ -11493,7 +11576,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbEITM,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(ENAM, 'Data', [
@@ -11706,29 +11789,20 @@ end;
     wbStruct(DATA, 'Data', [
       wbInteger('Perk Category', itU8, wbPerkCategoryEnum),
       wbInteger('Perk Skill Group', itU8, wbPerkSkillGroupEnum),
-      wbFromSize(4, wbInteger('Crew Assignment', itU8, wbEnum([
-        {0} 'None',
-        {1} 'Crew Ship',
-        {2} 'Crew Outpost'
+      wbFromSize(4, wbInteger('Crew Assignment Requirement', itU8, wbEnum([
+        {0} 'No Requirements (Any Role)',
+        {1} 'Ship',
+        {2} 'Outpost'
       ]))),
       wbInteger('Flags', itU8, wbFlags([
-        {0x0001} 'PC Trait',
-        {0x0002} 'PC Playable',
-        {0x0004} 'Unknown 2',
-        {0x0008} 'Show in crew UI',
-        {0x0010} 'PC Background',
-        {0x0020} 'Unknown 5',
-        {0x0040} 'Unused 6',
-        {0x0080} 'Unused 7'
+        {0x0001} 'Trait',
+        {0x0002} 'Playable',
+        {0x0004} 'Hidden',
+        {0x0008} 'Crew',
+        {0x0010} 'Background',
+        {0x0020} 'Hidden on Data Menu'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
-      {
-      wbInteger('Trait', itU8, wbBoolEnum),
-      wbInteger('Level', itU8),
-      wbInteger('Num Ranks', itU8),
-      wbFromSize(4, wbInteger('Playable', itU8, wbBoolEnum)),
-      wbFromSize(5, wbInteger('Hidden', itU8, wbBoolEnum)
-      }
-    ], cpNormal, True),
+     ], cpNormal, True),
     wbFormIDCk(TNAM, 'Restriction' , [KYWD]),
     wbString(GNAM, 'Perk Icon'),
     wbFormIDCk(UNAM, 'Training' , [PERK]), // unknown what order relative to TNAM and GNAM
@@ -11755,8 +11829,8 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(BPTD, 'Body Part Data', [
     wbEDID,
-    wbBaseFormComponents, // beta ck is adding random garbage here
-    wbGenericModel(),
+    wbBaseFormComponents,
+    wbGenericModel(True),
     wbRArrayS('Body Parts',
       wbRStructSK([1], 'Body Part', [
         wbLString(BPTN, 'Part Name', 0, cpTranslate), // optional
@@ -11909,7 +11983,7 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbInteger(DATA, 'Node Index', itS32, nil, cpNormal, True),
     wbFormIDCk(LNAM, 'Light', [LIGH]),
     wbReflection(PSDF),
@@ -11986,7 +12060,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(CAMS, 'Camera Shot', [
     wbEDID,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbKeywords,
     wbNLDT,
     wbCTDAs,
@@ -12090,7 +12164,7 @@ end;
   wbRecord(IPCT, 'Impact', [
     wbEDID,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbStruct(DATA, '', [
       wbFloat('Effect - Duration'),
       wbInteger('Effect - Orientation', itU32, wbEnum([
@@ -12163,14 +12237,14 @@ end;
     wbEDID,
     wbPRPS,
 
-    wbArrayS(ACPR, 'Added Persist Location References', wbStructSK([0], '', [
+    wbArrayS(ACPR, 'Added Persist Location References', wbStructSK([0], 'References', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
       wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
       wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
-    wbArrayS(LCPR, 'Master Persist Location References', wbStructSK([0], '', [
+    wbArrayS(LCPR, 'Master Persist Location References', wbStructSK([0], 'References', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
       wbInteger('Grid Y', itS16, nil, cpBenign, True, lDontShowForCellLocation),
@@ -12179,31 +12253,31 @@ end;
     ])),
     wbArrayS(RCPR,'Removed Persist Location References', wbFormIDCk('Reference', [ACHR, REFR], False, cpBenign), 0, cpBenign),
 
-    wbArrayS(ACUR, 'Added Unique Base Forms', wbStructSK([0], '', [
+    wbArrayS(ACUR, 'Added Unique Base Forms', wbStructSK([0], 'Base Form', [
      wbFormIDCk('Generic Base Form', [GBFM]),
      wbFormIDCk('Placed Object', [REFR]),
      wbFormIDCk('Location', [LCTN])
     ])),
-    wbArrayS(LCUR, 'Master Unique Base Forms', wbStructSK([0], '', [
+    wbArrayS(LCUR, 'Master Unique Base Forms', wbStructSK([0], 'Base Form', [
      wbFormIDCk('Generic Base Form', [GBFM]),
      wbFormIDCk('Placed Object', [REFR]),
      wbFormIDCk('Location', [LCTN])
     ])),
     wbArrayS(RCUR, 'Removed Unique Base Forms', wbFormIDCk('Generic Base Form', [GBFM], False, cpBenign), 0, cpBenign),
 
-    wbArrayS(ACUN, 'Added Unique NPCs', wbStructSK([0], '', [
+    wbArrayS(ACUN, 'Added Unique NPCs', wbStructSK([0], 'Actor', [
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
       wbFormIDCk('Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
-    wbArrayS(LCUN, 'Master Unique NPCs', wbStructSK([0], '', [
+    wbArrayS(LCUN, 'Master Unique NPCs', wbStructSK([0], 'Actor', [
       wbFormIDCk('Actor', [NPC_], False, cpBenign),
       wbFormIDCk('Ref', [ACHR], False, cpBenign),
       wbFormIDCk('Location', [LCTN, NULL], False, cpBenign)
     ])),
     wbArrayS(RCUN, 'Removed Unique NPCs', wbFormIDCk('Actor', [NPC_], False, cpBenign), 0, cpBenign),
 
-    wbArrayS(ACSR, 'Added Special References', wbStructSK([0], '', [
+    wbArrayS(ACSR, 'Added Special References', wbStructSK([0], 'Reference', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
       wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
@@ -12211,7 +12285,7 @@ end;
       wbInteger('Grid X', itS16, nil, cpBenign, True, lDontShowForCellLocation),
       wbInteger('Unknown', itS32, nil, cpBenign)
     ])),
-    wbArrayS(LCSR, 'Master Special References', wbStructSK([0], '', [
+    wbArrayS(LCSR, 'Master Special References', wbStructSK([0], 'Reference', [
       wbFormIDCk('Loc Ref Type', [LCRT], False, cpBenign),
       wbFormIDCk('Marker', sigReferences, False, cpBenign),
       wbFormIDCk('Location', [WRLD, CELL], False, cpBenign),
@@ -12232,13 +12306,13 @@ end;
     wbArray(ACID, 'Master Initially Disabled References', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
     wbArray(LCID, 'Master Initially Disabled References', wbFormIDCk('Ref', sigReferences, False, cpBenign)),
 
-    wbArray(ACEP, 'Added Enable Point References', wbStruct('', [
+    wbArray(ACEP, 'Added Enable Point References', wbStruct('Reference', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
       wbInteger('Set Enable State to Opposite of Parent', itU8, wbBoolEnum),
       wbUnused(3)
     ])),
-    wbArray(LCEP, 'Master Enable Point References', wbStruct('', [
+    wbArray(LCEP, 'Master Enable Point References', wbStruct('Reference', [
       wbFormIDCk('Actor', sigReferences, False, cpBenign),
       wbFormIDCk('Ref', sigReferences, False, cpBenign),
       wbInteger('Set Enable State to Opposite of Parent', itU8, wbBoolEnum),
@@ -13658,7 +13732,7 @@ end;
     wbPTT2,
     wbBaseFormComponents,
     wbKeywords,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbStruct(DNAM, 'Data', [
       wbInteger('Art Type', itU32, wbEnum([
         'Magic Casting',
@@ -13679,7 +13753,7 @@ end;
   (* still exists in game code, but not in Starfield.esm * )
   wbRecord(MATO, 'Material Object', [
     wbEDID,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbRArray('Property Data',
       wbByteArray(DNAM, 'Data', 0, cpIgnore, False, False, wbNeverShow)
     ),
@@ -13822,7 +13896,7 @@ end;
     wbOPDS,
     wbXALG,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbStruct(DNAM, 'Data', [
       { 0} wbFloat('Contrast', cpNormal, True, 1, -1, nil, wbFloatScale0to100),
       { 4} wbFloat('Cluster Scale', cpNormal, True, 1, -1, nil, wbFloatScale0to10),
@@ -13856,7 +13930,10 @@ end;
       ['Parent', 'Previous Sibling'], cpNormal, True),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       'Loose',
-      'Preview'
+      'Preview',
+      '',
+      '',
+      'Unknown 4'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbString(GNAM, 'Animation File'),
     wbFULL
@@ -14001,7 +14078,7 @@ end;
     wbFULL,
     wbKSIZ,
     wbKWDAs,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbICON,
     wbMICO,
     wbDEST,
@@ -14043,7 +14120,7 @@ end;
     wbPTT2,
     wbXALG,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbCUSH,
     wbPUSH,
@@ -14066,27 +14143,51 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable',
       {0x00000080}  7, 'Unknown 7',
-      {0x00008000} 15, 'Unknown 15',
+      {0x00000200}  9, 'Hidden From Local Map',
+      {0x00008000} 15, 'Adaptive Lighting',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Unknown 17',
+      {0x00080000} 19, 'Has Currents',
       {0x02000000} 25, 'Obstacle',
       {0x10000000} 28, 'Portal-strict'
     ])), [
     wbEDID,
-//    wbVMAD,
+    wbVMAD,
     wbOBND(True),
     wbODTYReq,
-//    wbPTT2,
+    wbOPDS,
+    wbPTT2,
+    wbDEFL,
+    wbXALG,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
+    wbDEST,
     wbKSIZ,
     wbKWDAs,
+    wbPRPS,
+    wbFULL,
     wbStruct(DAT2, 'Data', [
       { 0} wbInteger('Time', itS32),
       { 4} wbFloat('Radius'),
       { 8} wbByteColors('Color'),
-      {12} wbUnknown(4), // probably flags
+      {12} wbInteger('Flags', itU16, wbFlags([
+            'Unknown 0',
+            'Can be Carried',
+            '',
+            '',
+            'Off by Default',
+            'Disable Specular',
+            'Disable Distance Attenuation',
+            'Is Direct Spotlight',
+            'Use PBR Value',
+            'Focus Spotlight Beam',
+            'Unknown 10',
+            '',
+            'Externally Controlled'
+           ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      {14} wbUnused(2),
       {16} wbFloat('Falloff Exponent'),
       {20} wbFloat('FOV'),
       {24} wbFloat('Near Clip'),
@@ -14095,118 +14196,53 @@ end;
       {32}   wbFloat('Intensity Amplitude'),
       {36}   wbFloat('Movement Amplitude')
            ]),
-      {40} wbUnknown(4),
-      {44} wbFloat,
-      {48} wbFloat('God Rays - Near Clip'),
-      {52} wbFloat,
-      {56} wbUnknown(4), // probably flags
-      {60} wbFloat,
-      {64} wbFloat,
-      {68} wbFloat,
-      {72} wbFloat
-    ]),
-//    wbDEST,
-//    wbPRPS,
-//    wbFULL,
-//    wbICON,
-//    wbMICO,
-
-//    wbStruct(DATA, '', [
-//      wbInteger('Time', itS32),
-//      wbInteger('Radius', itU32),
-//      wbByteColors('Color'),
-//      // Omnidirectional is the default type
-//      wbInteger('Flags', itU32, wbFlags([
-//        {0x00000001} 'Unknown 0',
-//        {0x00000002} 'Can be Carried',
-//        {0x00000004} 'Unknown 2',
-//        {0x00000008} 'Flicker',
-//        {0x00000010} 'Unknown 4',
-//        {0x00000020} 'Off By Default',
-//        {0x00000040} 'Unknown 6',
-//        {0x00000080} 'Pulse',
-//        {0x00000100} 'Unknown 8',
-//        {0x00000200} 'Unknown 9',
-//        {0x00000400} 'Shadow Spotlight',
-//        {0x00000800} 'Shadow Hemisphere',
-//        {0x00001000} 'Shadow OmniDirectional',
-//        {0x00002000} 'Unknown 13',
-//        {0x00004000} 'NonShadow Spotlight',
-//        {0x00008000} 'Non Specular',
-//        {0x00010000} 'Attenuation Only',
-//        {0x00020000} 'NonShadow Box',
-//        {0x00040000} 'Ignore Roughness',
-//        {0x00080000} 'No Rim Lighting',
-//        {0x00100000} 'Ambient Only',
-//        {0x00200000} 'Unknown 21' // only in [001C7F0C] <RandomSpot01GR>
-//      ])),
-//      wbFloat('Falloff Exponent'),
-//      wbFloat('FOV'),
-//      wbFloat('Near Clip'),
-//      wbStruct('Flicker Effect', [
-//        wbFloat('Period'),
-//        wbFloat('Intensity Amplitude'),
-//        wbFloat('Movement Amplitude')
-//      ]),
-//      wbFloat('Constant'),
-//      wbFloat('Scalar'),
-//      wbFloat('Exponent'),
-//      wbFloat('God Rays - Near Clip'),
-//      wbInteger('Value', itU32),
-//      wbFloat('Weight')
-//    ], cpNormal, True, nil, 10),
-
-//    wbFloat(FNAM, 'Fade value', cpNormal, True),
+      {40} wbFloat('Shadow Offset'),
+      {44} wbFloat('Inner FOV'),
+      {48} wbInteger('PBR - Light Temperature (K)', itU32),
+      {52} wbInteger('PBR - Luminous Power (lm)', itU32),
+      {56} wbInteger('Light Type', itU8, wbEnum([
+             'Omnidirectional',
+             'Shadow Spotlight',
+             'NonShadow Spotlight'
+           ])),
+      {57} wbInteger('Flicker Effect', itU8, wbEnum([
+            'None',
+            'Flicker',
+            'Pulse'
+           ])),
+           wbStruct('Adaptive Lighting', [
+      {58}   wbInteger('Use Adaptive Lighting', itU8, wbBoolEnum),
+      {59}   wbUnused(1), // padding
+      {60}   wbFloat('Adaptive Light Ec'),
+      {64}   wbFloat('Adaptive Light Ev 100 Min'),
+      {68}   wbFloat('Adaptive Light Ev 100 Max')
+           ]),
+      {72} wbFloat('Radius Falloff Exponent')
+    ], cpNormal, True),
     wbString(NAM0, 'Gobo'),
+    wbSoundReference(LLSH),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
-    wbStruct(FLBD, 'Unknown', [
-      { 0} wbFloat,
-      { 4} wbFloat,
-      { 8} wbFloat,
-      {12} wbFloat,
-      {16} wbFloat,
-      {20} wbUnknown(4) // may be 2 single byte bool and 2 unused bytes of garbage
-    ]),
-    wbStruct(FLRD, 'Unknown', [
-      { 0} wbFloat,
-      { 4} wbFloat,
-      { 8} wbFloat,
-      {12} wbFloat,
-      {16} wbUnknown(4) // probably a bool - only values seen in Starfield.esm is 00 00 00 00 and 01 00 00 00
-    ]),
-    // FLGD appears to be God Rays data placed directly in main record instead of a separate record
-    wbStruct(FLGD, 'Unknown', [
-      { 0} wbFloat,
-      { 4} wbFloat,
-      { 8} wbFloat,
-      {12} wbFloat,
-      {16} wbUnknown(4),
-      {20} wbFloat,
-      {24} wbFloat,
-      {28} wbFloat,
-      {32} wbFloat,
-      {36} wbFloat,
-      {40} wbFloat,
-      {44} wbFloat,
-      {48} wbFloat,
-      {42} wbFloat,
-      {56} wbFloat,
-      {60} wbFloat,
-      {64} wbFloat,
-      {68} wbFloat,
-      {72} wbFloat,
-      {76} wbFloat,
-      {80} wbFloat,
-      {84} wbUnknown(4)
-    ]),
-    wbUnknown(LLLD), // proably flags
-    wbStruct(FLAD, 'Unknown', [
-      { 0} wbFloat,
-      { 4} wbFloat,
-      { 8} wbFloat,
-      {12} wbUnknown(4)
-    ]),
-    wbFloat(FVLD)
+    wbStruct(FLBD, 'Barndoors', [
+      { 0} wbFloat('Left'),
+      { 4} wbFloat('Bottom'),
+      { 8} wbFloat('Right'),
+      {12} wbFloat('Top'),
+      {16} wbFloat('Falloff Intensity'),
+      {20} wbInteger('Has Fallout', itU8, wbBoolEnum),
+      {21} wbInteger('Has Barndoors', itU8, wbBoolEnum),
+      {22} wbUnused(2) // padding
+    ], cpNormal, True),
+    wbFLRDReq,
+    wbFLGDReq,
+    wbInteger(LLLD, 'Light Layer', itU32, wbEnum([], [ // same bits as the flags except CK has a drop down list to only allow single selection
+      $01, 'Default Light Layer',
+      $02, 'Helmet Light',
+      $04, 'Ship Interior',
+      $08, 'Ship Exterior',
+      $0F, 'All Layers'
+    ]), cpNormal, True).SetDefaultNativeValue(1).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbFLADReq,
+    wbFloat(FVLD, 'Volumetric Light Intensity Scale')
   ], False, nil, cpNormal, False);
 
   {subrecords checked against Starfield.esm}
@@ -14216,6 +14252,7 @@ end;
       {0x00008000} 15, 'No Rotation'
     ])), [
     wbEDID,
+    wbBaseFormComponents,
     wbDESCReq(),
     wbCTDAs,
     wbString(ICON, 'Loadscreen')
@@ -14289,6 +14326,7 @@ end;
       .SetSummaryDelimiterOnValue(' ')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlagOnValue(dfSummaryNoSortKey),
+      wbCOED,
       wbCTDAs
     ], [])
     .SetSummaryMemberMaxDepth(0, 1)
@@ -14343,7 +14381,13 @@ end;
         wbFormIDCk('Keyword', [KYWD]),
         wbInteger('Chance', itU32),
         wbUnused(4) // UI shows curve box but disabled
-      ]));
+      ])
+        .SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(1, '{Chance:', '%}')
+        .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
+        .IncludeFlag(dfSummaryMembersNoName)
+        .IncludeFlag(dfSummaryNoSortKey)
+      );
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLN, 'Leveled NPC',
@@ -14355,10 +14399,11 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
+    wbXALG,
     wbBaseFormComponents,
     wbXALG,
-    wbLVLD,
-    wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
+    wbLVLDReq,
+    wbInteger(LVLM, 'Max Count', itU8, nil, cpNormal, True), { Always 00 } {Unavailable}
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
       {0x0002} 'Calculate for each item in count',
@@ -14376,7 +14421,7 @@ end;
     wbRArrayS('Leveled List Entries', wbLeveledListEntryNPC, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
-    wbGenericModel()
+    wbGenericModel(True)
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -14388,11 +14433,11 @@ end;
     wbVMAD,
     wbOBND(True),
     wbODTYReq,
-    wbXALG,
     wbOPDS,
+    wbXALG,
     wbBaseFormComponents,
-    wbLVLD,
-    wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
+    wbLVLDReq,
+    wbInteger(LVLM, 'Max Count', itU8, nil, cpNormal, True), { Always 00 }
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
       {0x0002} 'Calculate for each item in count',
@@ -14412,10 +14457,10 @@ end;
     wbRArrayS('Leveled List Entries', wbLeveledListEntryItem, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
     wbFormIDCk(LVSG, 'Epic Loot Chance', [GLOB]),
-    wbUnknown(LIMC),
+    wbByteColors(LIMC, 'Marker Color'),
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate),
     wbInteger(LVLL, 'Legendary Item Default List Rank', itU8),
-    wbGenericModel(),
+    wbGenericModel(True),
     wbFTYP
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
@@ -14429,10 +14474,11 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
-    wbBaseFormComponents,
+    wbPTT2,
     wbXALG,
-    wbLVLD,
-    wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
+    wbBaseFormComponents,
+    wbLVLDReq,
+    wbInteger(LVLM, 'Max Count', itU8, nil, cpNormal, True), { Always 00 }
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} '',
       {0x0002} 'Calculate for each item in count',
@@ -14450,22 +14496,34 @@ end;
     wbRArrayS('Leveled List Entries', wbLeveledListEntryPackIn, cpNormal, False, nil, wbLVLOsAfterSet),
     //wbFilterKeywordChances,
     //wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
-    wbGenericModel(),
+    wbGenericModel(True),
     wbFTYP
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
-  (* still exists in game code, but not in Starfield.esm * )
-  wbRecord(LVSP, 'Leveled Spell', wbFlagsList([
+  (* still exists in game code, but not in Starfield.esm *)
+  wbRecord(LVSP, 'Leveled Spell',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000}  15, 'Use All'
     ])), [
     wbEDID,
     wbOBND(True),
-    wbLVLD,
-    wbInteger(LVLM, 'Max Count', itU8), { Always 00 }
-    wbInteger(LVLF, 'Flags', itU8, wbFlags([
-      {0x01} 'Calculate from all levels <= player''s level',
-      {0x02} 'Calculate for each item in count',
-      {0x04} 'Use All'
+    wbODTYReq,
+    wbOPDS,
+    wbPTT2,
+    wbXALG,
+    wbBaseFormComponents,
+    wbLVLDReq,
+    wbInteger(LVLM, 'Max Count', itU8, nil, cpNormal, True), { Always 00 } {Unavailable}
+    wbInteger(LVLF, 'Flags', itU16, wbFlags([
+      {0x0001} 'Calculate from all levels <= player''s level',
+      {0x0002} 'Calculate for each item in count',
+      {0x0004} 'Use All',
+      {0x0008} '',
+      {0x0010} '',
+      {0x0020} '',
+      {0x0040} '',
+      {0x0080} '',
+      {0x0100} 'Do All Before Repeating'
     ]), cpNormal, True),
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntrySpell, cpNormal, False, nil, wbLVLOsAfterSet)
@@ -14686,7 +14744,7 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbDEST,
     wbCUSH,
     wbPUSH,
@@ -17068,11 +17126,7 @@ end;
       {81} wbFloat
     ]),
 
-    wbStruct(XALD, 'Light Area', [
-      wbFloat,
-      wbFloat,
-      wbUnknown(8)
-    ]),
+    wbXALD,
 
     wbStruct(XSAD, 'Ship Arrival', [
       wbUnknown(17)
@@ -17123,14 +17177,13 @@ end;
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
     wbStruct(XLIG, 'Light Data', [
       wbFloat('FOV 90+/-'),
-      wbFloat('Fade 1.0+/-'),
+      wbFloat('Luminous Scale'),
       wbFloat('End Distance Cap'),
-      wbFloat('Shadow Depth Bias'),
-      wbFloat('Near Clip'),
-      wbFloat('Volumetric Intensity'),
-      wbUnused(4),
-      wbInteger('Unknown', itU8),
-      wbUnused(3)
+      wbFloat('Near Clip/Cut On'),
+      wbFloat('Inner FOV'),
+      wbFloat('Shadow Offset'),
+      wbUnknown(4),
+      wbUnknown(4)
     ], cpNormal, False, nil, 4),
 
     wbFloat(XRDS, 'Radius'),
@@ -17201,14 +17254,30 @@ end;
 
     wbXRNK,
 
-    wbStruct(XLGD, 'Light Gobo', [
-    { 0} wbUnknown(4),
-    { 4} wbFloat,
-    { 8} wbUnknown(8),
-    {16} wbFloat,
-    {20} wbFloat,
-    {24} wbUnknown(64)
-    {88}
+    wbStruct(XLGD, 'Gobo Animated Properties', [
+      wbFloat('Static Rotation'),
+      wbFloat('Animated Rotation Speed'),
+      wbFloat('Animated Wave Rotation Speed'),
+      wbFloat('Animated Wave Rotation Amount'),
+      wbFloat('Static Scale U 1.0+/-'),
+      wbFloat('Static Scale V 1.0+/-'),
+      wbFloat('Wave Scaling U Speed'),
+      wbFloat('Wave Scaling V Speed'),
+      wbFloat('Wave Scaling U Amount'),
+      wbFloat('Wave Scaling V Amount'),
+      wbFloat('Static Offset U'),
+      wbFloat('Static Offset V'),
+      wbFloat('Rotation Pivot U 0.5+/-'),
+      wbFloat('Rotation Pivot V 0.5+/-'),
+      wbFloat('Scroll Speed U'),
+      wbFloat('Scroll Speed V'),
+      wbFloat('Wave Scroll Speed U'),
+      wbFloat('Wave Scroll Speed V'),
+      wbFloat('Wave Scroll Amount U'),
+      wbFloat('Wave Scroll Amount V'),
+      wbFloat('Random Time Offset Range'),
+      wbInteger('Is Animated', itU8, wbBoolEnum),
+      wbUnused(3)
     ]),
 
     wbStruct(XCOL, 'Collision', [
@@ -17242,10 +17311,14 @@ end;
     wbXFLG,
 
     wbStruct(XLFD, 'Light Flicker', [
-    { 0} wbFloat,
-    { 4} wbFloat,
-    { 8} wbUnknown(8)
-    {16}
+      wbFloat('Period'),
+      wbFloat('Intensity Amplitude'),
+      wbFloat('Movement Amplitude'),
+      wbInteger('Flicker Effect', itU8, wbEnum([
+        'None',
+        'Flicker',
+        'Pulse'
+      ]))
     ]),
 
     {--- Map Data ---}
@@ -17353,28 +17426,23 @@ end;
 
     wbFloat(XLVD, 'Light Volumetric Data'),
 
+    wbFloat(XRFE, 'Light Radius Fallout Exponent'),
+
     wbXEED,
 
     wbXOWN,
 
-    wbStruct(XLRD, 'Light Roundness', [
-    { 0} wbFloat,
-    { 4} wbFloat,
-    { 8} wbFloat,
-    {12} wbFloat,
-    {16} wbInteger('Unknown', itU8),
-    {17} wbUnused(3)
-    ]),
+    wbXLRD,
 
-    wbStruct(XLBD, 'Light Barndoor Data', [
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbFloat,
-      wbInteger('Unknown', itU8),
-      wbInteger('Unknown', itU8),
-      wbUnused(2)
+    wbStruct(XLBD, 'Barndoors', [
+      { 4} wbFloat('Bottom'),
+      { 8} wbFloat('Right 1.0+/-'),
+      { 0} wbFloat('Left'),
+      {12} wbFloat('Top 1.0+/-'),
+      {16} wbFloat('Falloff Intensity 100.0+/-'),
+      {20} wbInteger('Has Barndoors', itU8, wbBoolEnum),
+      {21} wbInteger('Has Fallout', itU8, wbBoolEnum),
+      {22} wbUnused(2) // padding
     ]),
 
     wbInteger(XLSM, 'Light Static Shadow Map', itU32, wbBoolEnum),
@@ -17654,7 +17722,7 @@ end;
     wbDEFL,
     wbBaseFormComponents,
     wbFTYP,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbPRPS,
     wbFULL,
     wbStruct(DNAM, 'Direction Material', [
@@ -17874,7 +17942,7 @@ end;
     wbPTT2,
     wbBaseFormComponents,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
 //    wbDEST,
@@ -18347,7 +18415,7 @@ end;
       wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
       wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
     ], [], cpNormal, True),
-    wbRStruct('Aurora', [wbGenericModel()], []),
+    wbRStruct('Aurora', [wbGenericModel(True)], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbStruct(UNAM, 'Magic', [
       wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
@@ -18518,12 +18586,12 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(LENS, 'Lens Flare', [
     wbEDID,
-    wbFloat(CNAM, 'Color Influence'),
-    wbFloat(DNAM, 'Fade Distance Radius Scale'),
-    wbFloat(ENAM),
-    wbFloat(MNAM),
-    wbFloat(XNAM),
-    wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
+    wbFloat(CNAM, 'Color Influence', cpNormal, True),
+    wbFloat(DNAM, 'Fade Distance Radius Scale', cpNormal, True).SetDefaultEditValue('1.0'),
+    wbFloat(ENAM, 'Exposure Influence', cpNormal, True),
+    wbFloat(MNAM, 'Min EV 100', cpNormal, True).SetDefaultEditValue('4.0'),
+    wbFloat(XNAM, 'Max EV 100', cpNormal, True).SetDefaultEditValue('6.0'),
+    wbInteger(LFSP, 'Count', itU32, nil, cpBenign, True),
     wbRArrayS('Lens Flare Sprites',
       wbRStructSK([0], 'Flare', [
         wbString(DNAM, 'Lens Flare Sprite ID'),
@@ -18538,12 +18606,12 @@ end;
           wbInteger('Flags', itU32, wbFlags([
             {0x01} 'Rotates',
             {0x02} 'Shrinks When Occluded',
-            {0x04} 'Unknown 2'
+            {0x04} 'Glare Flare'
           ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
         ])
       ], []),
-      cpNormal, False, nil, wbLENSAfterSet
-    )
+      cpNormal, False
+    ).SetCountPath(LFSP)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18774,7 +18842,7 @@ end;
     wbPTT2,
     wbXALG,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbFULL,
     wbEmpty(DATA).SetRequired,
     wbFormIDCk(ANAM, 'Base Object List', [LVLI]),
@@ -18804,7 +18872,7 @@ end;
     wbOBND,
     wbPTT2,
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbICON,
     wbInteger(DNAM, 'Type', itU8, wbEnum([
       'Sound',
@@ -18837,7 +18905,7 @@ end;
     wbBaseFormComponents,
     wbFULL,
     wbDESC(),
-    wbGenericModel(),
+    wbGenericModel(True),
     wbUnknown(XFLG),
 //    wbStruct(DATA, 'Data', [
 //      wbInteger('Include Count', itU32),
@@ -19035,7 +19103,7 @@ end;
     wbODTYReq,
     wbSNTP,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbFULL,
     wbFLTR,
     wbRArrayS('Parts', wbStaticPart, cpNormal, True)
@@ -19085,7 +19153,7 @@ end;
 //    wbLStringKC(NAM0, 'Header Text'),
 //    wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbKeywords,
     wbPRPS,
     wbFTYP,
@@ -19256,7 +19324,7 @@ end;
     wbOBND,
     wbODTYReq,
     wbBaseFormComponents,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbKeywords,
     wbByteRGBA(CNAM, 'Unknown Colors'),
     wbInteger(FNAM, 'Unknown Flags', itU32, wbFlags([
@@ -19458,7 +19526,7 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
-    wbGenericModel(),
+    wbGenericModel(True),
     wbKeywords,
     wbCTDAs,
     wbFormIDCk(KNAM, 'Marker Type', [NULL, KYWD]).SetRequired,
@@ -19526,10 +19594,11 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
+    wbPTT2,
     wbXALG,
     wbBaseFormComponents,
-    wbLVLD,
-    wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
+    wbLVLDReq,
+    wbInteger(LVLM, 'Max Count', itU8, nil, cpNormal, True), { Always 00 } {Unavailable}
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} 'Calculate from all levels <= player''s level',
       {0x0002} 'Calculate for each item in count',
@@ -19542,11 +19611,12 @@ end;
       {0x0100} 'Do All Before Repeating',
       {0x0200} 'Unknown 9'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbCTDAs,
-    wbLLCT,
+    wbFormIDCk(LVLG, 'Use Global', [GLOB]),
+    wbLLCT.IncludeFlag(dfInternalEditOnly),
     wbRArrayS('Leveled List Entries', wbLeveledListEntryBaseForm, cpNormal, False, nil, wbLVLOsAfterSet),
-    wbGenericModel()
+    wbFilterKeywordChances,
+    wbGenericModel(True)
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -20157,8 +20227,8 @@ end;
       .SetSummaryPrefixSuffixOnValue(4, '{Chance None:', '%}')
       .SetSummaryDelimiterOnValue(' ')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlagOnValue(dfSummaryNoSortKey)
-//      , wbCOED
+      .IncludeFlagOnValue(dfSummaryNoSortKey),
+      wbCTDAs
     ], [])
     .SetSummaryMemberMaxDepth(0, 1)
     .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
@@ -20166,8 +20236,8 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(LVSC, 'Leveled Space Cell', [
     wbEDID,
-    wbLVLD,
-    wbInteger(LVLM, 'Max Count', itU8), { Always 00 } {Unavailable}
+    wbLVLDReq,
+    wbInteger(LVLM, 'Max Count', itU8, nil, cpNormal, True), { Always 00 } {Unavailable}
     wbInteger(LVLF, 'Flags', itU16, wbFlags([
       {0x0001} '',
       {0x0002} '',
@@ -20179,11 +20249,10 @@ end;
       {0x0080} '',
       {0x0100} 'Do All Before Repeating'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
     wbLLCT,
     wbRArrayS('Leveled List Entries', wbLeveledListEntrySpaceCell, cpNormal, False, nil, wbLVLOsAfterSet)
-//    wbFilterKeywordChances,
-//    wbGenericModel
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
 
   {subrecords checked against Starfield.esm}
@@ -20306,16 +20375,19 @@ end;
 
     wbRStruct('Body', [
       wbMarkerReq(BDST),
-      wbString(ANAM).SetRequired,
-      wbInteger(CNAM, 'Body type', itU8, wbEnum([], [
-        2, 'Planet',
-        3, 'Moon',
-        4, 'Orbital',
-        5, 'Asteroid Belt'
+      wbString(ANAM, 'Name').SetRequired,
+      wbInteger(CNAM, 'Body type', itU8, wbEnum([
+        'Undefined',
+        'Star',
+        'Planet',
+        'Moon',
+        'Orbital',
+        'Asteroid Belt',
+        'Station'
       ])),
-      wbStruct(DNAM, 'Unknown', [
+      wbStruct(DNAM, 'Space Cell', [
         wbLenString.IncludeFlag(dfHasZeroTerminator),
-        wbInteger('Unknown', itU8)
+        wbInteger('Unique?', itU8) // unique? bool
       ]).SetRequired,
       wbStruct(ENAM, 'Movement', [
         wbDouble('Semi-Major Axis', cpNormal, False, 1, Low(Integer)),
@@ -21000,6 +21072,7 @@ end;
   wbAddGroupOrder(PACK); {SF1Dump: no errors}
   wbAddGroupOrder(CSTY); {SF1Dump: no errors}
   wbAddGroupOrder(LSCR); {SF1Dump: no errors}
+  wbAddGroupOrder(LVSP); // order checked by creating plugin in CK with preceding and succeeding types
   wbAddGroupOrder(ANIO); {SF1Dump: no errors}
   wbAddGroupOrder(WATR); {SF1Dump: no errors}
   wbAddGroupOrder(EFSH); {SF1Dump: no errors}
