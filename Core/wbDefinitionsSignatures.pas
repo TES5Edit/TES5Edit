@@ -573,6 +573,7 @@ const
   HULL : TwbSignature = 'HULL'; { New To Starfield }
   HUNG : TwbSignature = 'HUNG';
   I0TX : TwbSignature = 'I0TX';
+  IBIN : TwbSignature = 'IBIN'; { New To Starfield }
   IBSD : TwbSignature = 'IBSD'; { New To Fallout 76 }
   ICO2 : TwbSignature = 'ICO2';
   ICON : TwbSignature = 'ICON';
