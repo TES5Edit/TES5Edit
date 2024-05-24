@@ -188,6 +188,7 @@ const
   BMMP : TwbSignature = 'BMMP'; { New to Fallout 4 }
   BMOD : TwbSignature = 'BMOD'; { New To Starfield }
   BMPN : TwbSignature = 'BMPN'; { New To Starfield }
+  BMPP : TwbSignature = 'BMPP'; { New To Starfield }
   BMPV : TwbSignature = 'BMPV'; { New To Starfield }
   BNAM : TwbSignature = 'BNAM';
   BNDS : TwbSignature = 'BNDS'; { New to Fallout 4 }

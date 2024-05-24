@@ -4258,7 +4258,7 @@ begin
 
   var wbCVPA := wbArray(CVPA,'Components',
     wbStruct('Component', [
-      wbFormIDCk('Component', sigBaseObjects), // CK allows only CMPO
+      wbFormIDCk('Component', sigBaseObjects), // CK allows only IRES
       wbInteger('Count', itU32),
       wbUnused(4) // same struct used that normally carried curve table
     ])
@@ -8488,7 +8488,7 @@ end;
   var wbLongitudeDouble := wbDouble('Longitude', cpNormal, True, 1, 12).SetToStr(wbLongitudeToStr);
   var wbLatitudeDouble := wbDouble('Latitude', cpNormal, True, 1, 12).SetToStr(wbLatitudeToStr);
 
-  wbBaseFormComponents := wbRArray('Components',
+  wbBaseFormComponents := wbRArray('Base Form Components',
     wbRStructSK([0], 'Component', [
       wbString(BFCB, 'Component Type').SetFormaterOnValue(wbStringEnum([
         'BGSActivityTracker',
@@ -11243,7 +11243,7 @@ end;
       {0x02000000} 25, 'Obstacle',
       {0x04000000} 26, 'NavMesh Generation - Filter',
       {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x10000000} 28, 'Unknown 28',
+      {0x10000000} 28, 'NavMesh Generation - Only Cut',
       {0x40000000} 30, 'NavMesh Generation - Ground'
     ])), [
     wbEDID,
@@ -11263,10 +11263,13 @@ end;
     wbDEST,
     wbKeywords,
     wbPRPS,
-    //wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
-    wbInteger(DATA, 'Unknown', itU8).SetRequired,        //Values seen are 02, 04, and 06
-    wbSoundReference(MSLS),
-    wbFloat(MSMO, 'Unknown')
+    wbInteger(DATA, 'Mass Override Flags', itU8, wbFlags([
+      '',
+      'Use Mass Override',
+      'Scale'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbSoundReference(MSLS, 'Looping Sound'),
+    wbFloat(MSMO, 'Mass Override Value')
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -13529,70 +13532,127 @@ end;
   ]);
   *)
 
+  var wbSPEDRotationSpeedAngles := function(aName: string = 'Unknown'): IwbStructDef
+  begin
+    Result :=
+      wbStruct(aName, [
+        wbFloatAngle('Stand'),
+        wbFloatAngle('Walk'),
+        wbFloatAngle('Jog'),
+        wbFloatAngle('Run'),
+        wbFloatAngle('Sprint'),
+        wbFloatAngle('Acceleration'),
+        wbFloat('Unused')
+      ]);
+  end;
+
+  var wbSPEDMovementSpeeds := function(aName: string = 'Unknown'): IwbStructDef
+  begin
+    Result :=
+      wbStruct(aName, [
+        wbFloat('Unused'),
+        wbFloat('Walk'),
+        wbFloat('Jog'),
+        wbFloat('Run'),
+        wbFloat('Unused'),
+        wbFloat('Acceleration'),
+        wbFloat('Deceleration')
+      ]);
+  end;
+
   var wbSPED := wbStruct(SPED, 'Movement Data', [
-  {  0} wbFloat,
-  {  4} wbFloat,
-  {  8} wbFloat,
-  { 12} wbFloat,
-  { 16} wbFloat,
-  { 20} wbFloat,
-  { 24} wbFloat,
-  { 28} wbFloat,
-  { 32} wbFloat,
-  { 36} wbFloat,
-  { 40} wbFloat,
-  { 44} wbFloat,
-  { 48} wbFloat,
-  { 52} wbFloat,
-  { 56} wbFloat,
-  { 60} wbFloat,
-  { 64} wbFloat,
-  { 68} wbFloat,
-  { 72} wbFloat,
-  { 76} wbFloat,
-  { 80} wbFloat,
-  { 84} wbFloat{Angle},
-  { 88} wbFloat,
-  { 92} wbFloat,
-  { 96} wbFloat,
-  {100} wbFloat,
-  {104} wbFloat,
-  {108} wbFloat,
-  {112} wbFloat{Angle},
-  {116} wbFloat,
-  {120} wbFloat,
-  {124} wbFloat,
-  {128} wbFloat{Angle},
-  {132} wbFloat,
-  {136} wbFloat,
-  {140} wbFloat,
-  {144} wbFloat,
-  {148} wbFloat,
-  {152} wbFloat,
-  {156} wbFloat,
-  {160} wbFloat,
-  {164} wbFloat,
-  {168} wbFloat{Angle},
-  {172} wbFloat{Angle},
-  {176} wbFloat{Angle},
-  {180} wbFloat{Angle},
-  {184} wbFloat{Angle},
-  {188} wbFloat{Angle},
-  {192} wbFloat,
-  {196} wbFloat{Angle},
-  {200} wbFloat{Angle},
-  {204} wbFloat{Angle},
-  {208} wbFloat{Angle},
-  {212} wbFloat{Angle},
-  {216} wbFloat{Angle},
-  {220} wbFloat,
-  {224} wbFloat{Angle},
-  {228} wbFloat{Angle},
-  {232} wbFloat{Angle},
-  {236} wbFloat{Angle},
-  {240} wbFloat{Angle},
-  {244} wbFloat{Angle},
-  {248} wbFloat
+        wbStruct('Max Speed Forward', [
+  {  0}   wbFloat('Unused'),
+  {  4}   wbFloat('Walk'),
+  {  8}   wbFloat('Jog'),
+  { 12}   wbFloat('Run'),
+  { 16}   wbFloat('Sprint'),
+  { 20}   wbFloat('Acceleration'),
+  { 24}   wbFloat('Deceleration')
+        ]),
+        wbSPEDMovementSpeeds('Max Speed Left'),
+        wbSPEDMovementSpeeds('Max Speed Right'),
+        wbSPEDMovementSpeeds('Max Speed Back'),
+        wbSPEDMovementSpeeds('Max Speed Up'),
+        wbSPEDMovementSpeeds('Max Speed Down'),
+        wbSPEDRotationSpeedAngles('Max Rotation Speed Pitch'),
+        wbSPEDRotationSpeedAngles('Max Rotation Speed Roll'),
+        wbSPEDRotationSpeedAngles('Max Rotation Speed Yaw')
+
+(* * )
+        wbStruct('Max Speed Left', [
+  { 28}   wbFloat('Unused'),
+  { 32}   wbFloat('Walk'),
+  { 36}   wbFloat('Jog'),
+  { 40}   wbFloat('Run'),
+  { 44}   wbFloat('Unused'),
+  { 48}   wbFloat('Acceleration'),
+  { 52}   wbFloat('Deceleration')
+        ]),
+        wbStruct('Max Speed Right', [
+  { 56}   wbFloat('Unused'),
+  { 60}   wbFloat('Walk'),
+  { 64}   wbFloat('Jog'),
+  { 68}   wbFloat('Run'),
+  { 72}   wbFloat('Unused'),
+  { 76}   wbFloat('Acceleration'),
+  { 80}   wbFloat('Deceleration')
+        ]),
+        wbStruct('Max Speed Back', [
+  { 84}   wbFloat('Unused'),
+  { 88}   wbFloat('Walk'),
+  { 92}   wbFloat('Jog'),
+  { 96}   wbFloat('Run'),
+  {100}   wbFloat('Unused'),
+  {104}   wbFloat('Acceleration'),
+  {108}   wbFloat('Deceleration')
+        ]),
+        wbStruct('Max Speed Up', [
+  {112}   wbFloat('Unused'),
+  {116}   wbFloat('Walk'),
+  {120}   wbFloat('Jog'),
+  {124}   wbFloat('Run'),
+  {128}   wbFloat('Unused'),
+  {132}   wbFloat('Acceleration'),
+  {136}   wbFloat('Deceleration')
+        ]),
+        wbStruct('Max Speed Down', [
+  {140}   wbFloat('Unused'),
+  {144}   wbFloat('Walk'),
+  {148}   wbFloat('Jog'),
+  {152}   wbFloat('Run'),
+  {156}   wbFloat('Unused'),
+  {160}   wbFloat('Acceleration'),
+  {164}   wbFloat('Deceleration')
+        ]),
+        wbStruct('Max Rotation Speed Pitch', [
+  {168}   wbFloatAngle('Stand'),
+  {172}   wbFloatAngle('Walk'),
+  {176}   wbFloatAngle('Jog'),
+  {180}   wbFloatAngle('Run'),
+  {184}   wbFloatAngle('Sprint'),
+  {188}   wbFloatAngle('Acceleration'),
+  {192}   wbFloat('Unused')
+        ]),
+        wbStruct('Max Rotation Speed Roll', [
+  {196}   wbFloatAngle('Stand'),
+  {200}   wbFloatAngle('Walk'),
+  {204}   wbFloatAngle('Jog'),
+  {208}   wbFloatAngle('Run'),
+  {212}   wbFloatAngle('Sprint'),
+  {216}   wbFloatAngle('Acceleration'),
+  {220}   wbFloat('Unused')
+        ]),
+        wbStruct('Max Rotation Speed Yaw', [
+  {224}   wbFloatAngle('Stand'),
+  {228}   wbFloatAngle('Walk'),
+  {232}   wbFloatAngle('Jog'),
+  {236}   wbFloatAngle('Run'),
+  {240}   wbFloatAngle('Sprint'),
+  {244}   wbFloatAngle('Acceleration'),
+  {248}   wbFloat('Unused')
+        ])
+(**)
   ]);
 
   (*
@@ -13868,19 +13928,14 @@ end;
   wbRecord(MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
-    wbSPED,
-    {
-    wbStruct(INAM, 'Anim Change Thresholds (unused)', [
-      wbFloat('Directional', cpNormal, True, 180/Pi),
-      wbFloat('Movement Speed'),
-      wbFloat('Rotation Speed', cpNormal, True, 180/Pi)
-    ]),
-    wbFloat(JNAM, 'Float Height'),
-    }
-    wbFloat(LNAM, 'Flight - Angle Gain'),
-    wbFloat(KNAM),
-    wbUnknown(INTV, 4),
-    wbEmpty(BOLV, 'Unknown')
+    wbSPED.SetRequired,
+    wbFloat(LNAM, 'Flight - Angle Gain').SetDefaultNativeValue(0.1).SetRequired,
+    wbFloat(KNAM, 'Fast Walk').SetDefaultNativeValue(1.15).SetRequired,
+    wbStruct(INTV, 'Flags', [
+      wbInteger('Clamp Max Animation Speeds', itU8, wbBoolEnum),
+      wbUnused(3)
+    ]).SetRequired,
+    wbEmpty(BOLV, 'Display For Non Characters') // CK value "Display Character Only" default enabled where element is missing. Disabled means element present.
   ]);
 
   (* still exists in game code, but not in Starfield.esm * )
@@ -14800,6 +14855,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(MISC, 'Misc. Item',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable',
       {0x00000004}  11, 'Calc From Components',
       {0x00000004}  13, 'Pack-In Use Only'
     ])), [
@@ -14818,13 +14874,18 @@ end;
     wbPUSH,
     wbPDSH,
     wbKeywords,
+    wbFIMD,
     wbCVPA,
+    wbCDIX,
     wbStructSK(DATA, [0,1], 'Data', [
-      wbInteger('Value', itS32),
+      wbInteger('Value', itU32),
       wbFloat('Weight')
     ], cpNormal, True),
     // the amount of components is the same as size of CDIX, so should not be sorted probably
-    wbUnknown(FLAG),
+    wbInteger(FLAG, 'Flags', itU32, wbFlags([
+      'Allow Quest Item Crafting',
+      'Non-Instanced Key'
+    ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbLStringKC(NNAM, 'Short Name', 0, cpTranslate)
   ], False, nil, cpNormal, False);
 
@@ -20327,9 +20388,13 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(MRPH, 'Morphable Object', [
     wbEDID,
-    wbString(TMPP, 'Unknown'),
-    wbString(TCMP, 'Unknown'),
-    wbUnknown(MOBC)
+    wbString(TMPP, 'Target Morph Path'),
+    wbString(TCMP, 'Target Chargen Morph Path'),
+    wbString(BMPP, 'Bone Morph Definition File'),
+    wbStruct(MOBC, 'Base Vertex Color', [
+      wbInteger('Base Vertex Color', itU8),
+      wbUnused(3)
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
