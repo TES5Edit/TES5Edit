@@ -344,7 +344,7 @@ const
   sSureAIRegKey           = '\Software\SureAI\';
 
 var
-  s, regPath, regKey, client, gamePath: string;
+  s, regPath, regKey, client: string;
   isEpicNV : Boolean;
   IniFile : TMemIniFile;
 begin
@@ -405,10 +405,10 @@ begin
       gmFO76, gmSF1:     regKey := 'InstallLocation';
       end;
 
-      gamePath := ReadString(regKey);
-      gamePath := StringReplace(gamePath, '"', '', [rfReplaceAll]);
+      wbDataPath := ReadString(regKey);
+      wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
 
-      if (gamePath = '') then begin
+      if (wbDataPath = '') then begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
         wbDontSave := True;
@@ -416,12 +416,14 @@ begin
     finally
       Free;
     end;
-    if gamePath <> '' then
-      wbDataPath := IncludeTrailingPathDelimiter(gamePath) + DataName[wbGameMode = gmTES3] + '\';
+
+    if wbDataPath <> '' then
+      wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + DataName[wbGameMode = gmTES3] + '\';
   end else
-    wbDataPath := IncludeTrailingPathDelimiter(gamePath);
+    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
 
   wbOutputPath := wbDataPath;
+
   if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
     if s[1] = '.' then
       //assume relative path
@@ -446,7 +448,7 @@ begin
       wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
     end;
 
-    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(gamePath) + 'EOSSDK-Win32-Shipping.dll') then begin
+    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
         wbMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
         isEpicNV := true;
     end;
