@@ -287,6 +287,7 @@ const
   CS3E : TwbSignature = 'CS3E'; { New To Starfield }
   CS3F : TwbSignature = 'CS3F'; { New To Starfield }
   CS3H : TwbSignature = 'CS3H'; { New To Starfield }
+  CS3K : TwbSignature = 'CS3K'; { New To Starfield }
   CS3S : TwbSignature = 'CS3S'; { New To Starfield }
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';

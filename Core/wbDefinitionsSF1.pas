@@ -103,29 +103,6 @@ begin
   )
 end;
 
-function wbGRASDirtinessToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  case aType of
-    ctToStr, ctToEditValue:
-      Result := FloatToStrF(aInt/ 255, ffFixed, 99, wbFloatDigits);
-  end;
-end;
-
-function wbGRASDirtinessStrToInt(const aString: string; const aElement: IwbElement): Int64;
-begin
-    try
-      var lValue := StrToFloat(aString);
-      if (lValue < 0.0) then
-        Result := 0
-      else if (lValue > 1.0) then
-        Result := 255
-      else
-        Result := Trunc(255.0 * lValue);
-    except
-      Result := 0;
-    end;
-end;
-
 procedure wbBIOMScaleToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   tValue: Float32;
@@ -10180,7 +10157,7 @@ end;
             'Helps Allies',
             'Helps Friends and Allies'
           ])),
-          wbUnknown(1)
+          wbInteger('Has Reaction Radius Behavior', itU8, wbBoolEnum)
     ], cpNormal, True);
 
     var wbCSTYPowerWeightingStruct := wbStruct('Power Weighting', [
@@ -12946,18 +12923,18 @@ end;
       {0x02} 'Abrupt Transition',
       {0x04} 'Cycle Tracks',
       {0x08} 'Maintain Track Order',
-      {0x10} 'Unknown 5',
+      {0x10} '',
       {0x20} 'Ducks Current Track',
       {0x40} 'Doesn''t Queue'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbStruct(PNAM, 'Data', [
       wbInteger('Priority', itU16),
       wbInteger('Ducking (dB)', itU16, wbDiv(100))
-    ]),
-    wbFloat(WNAM, 'Fade Duration'),
-    wbUnknown(VNAM),
-    wbUnknown(UNAM),
-    wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
+    ], cpNormal, True),
+    wbFloat(WNAM, 'Fade Duration', cpNormal, True),
+    wbInteger(VNAM, 'Re-evaluate Interval', itU64, wbDiv(1000), cpNormal, True),
+    wbInteger(UNAM, 'Stability Interval', itU64, wbDiv(1000), cpNormal, True),
+    wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST]))
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -13066,23 +13043,14 @@ end;
       Int64($23F678C3), 'Palette',
       Int64($6ED7E048), 'Single Track',
       Int64($A1A9C4D5), 'Silent Track'
-    ]), cpNormal, True),
+    ]), cpNormal, True).SetDefaultEditValue('Palette'),
     wbFloat(FLTV, 'Duration'),
     wbFloat(DNAM, 'Fade-Out'),
-    {
-    wbString(ANAM, 'Track FileName'),
-    wbString(BNAM, 'Finale FileName'),
-    wbStruct(LNAM, 'Loop Data', [
-      wbFloat('Loop Begins'),
-      wbFloat('Loop Ends'),
-      wbInteger('Loop Count', itU32)
-    ]),
-    }
-    wbSoundReference(MTSH),
+    wbSoundReference(MTSH, 'Single Track Sound'),
     wbArray(FNAM, 'Cue Points', wbFloat('Point')).IncludeFlag(dfNotAlignable),
-    wbUnknown(MSTF),
+    wbInteger(MSTF, 'Conditions can''t fail after success', itU8, wbBoolEnum),
     wbConditions,
-    wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
+    wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL])) // do not sort. NULL entry acts as a divider for groups
   ]);
 
   (* still exists in game code, but not in Starfield.esm
@@ -13774,8 +13742,8 @@ end;
         'Apply Between'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
       {32} wbFloat('Coverage', cpNormal, True, 1, -1, nil, wbFloatScale0to100),
-      {36} wbInteger('Dirtiness Min', itU8, wbGRASDirtinessToStr, wbGRASDirtinessStrToInt),
-      {37} wbInteger('Dirtiness Max', itu8, wbGRASDirtinessToStr, wbGRASDirtinessStrToInt)
+      {36} wbInteger('Dirtiness Min', itU8, wbDiv(255)),
+      {37} wbInteger('Dirtiness Max', itu8, wbDiv(255))
     ], cpNormal, True)
   ]);
 
@@ -14698,7 +14666,7 @@ end;
       {0x0000000000000004} 'Child',
       {0x0000000000000008} 'Tilt Front/Back',
       {0x0000000000000010} 'Tilt Left/Right',
-      {0x0000000000000020} 'No Shadow',
+      {0x0000000000000020} 'Jumps',
       {0x0000000000000040} 'Swims',
       {0x0000000000000080} 'Flies',
       {0x0000000000000100} 'Walks',
@@ -14739,7 +14707,7 @@ end;
       {0x0000080000000000} 'Use Large Actor Pathing',
       {0x0000100000000000} 'Use Subsegmented Damage',
       {0x0000200000000000} 'Flight - Defer Kill',
-      {0x0000400000000000} 'Unknown 46',
+      {0x0000400000000000} 'Calc Character Controller Rotation Center',
       {0x0000800000000000} 'Flight - Allow Procedural Crash Land',
       {0x0001000000000000} 'Disable Weapon Culling',
       {0x0002000000000000} 'Use Optimal Speeds',
@@ -14750,8 +14718,8 @@ end;
       {0x0040000000000000} 'Cannot Use Playable Items',
       {0x0080000000000000} 'Unknown 55',
       {0x0100000000000000} 'Unknown 56',
-      {0x0200000000000000} 'Unknown 57',
-      {0x0400000000000000} 'Unknown 58',
+      {0x0200000000000000} 'Tunnels',
+      {0x0400000000000000} 'Hops',
       {0x0800000000000000} 'Unknown 59',
       {0x1000000000000000} 'Unknown 60',
       {0x2000000000000000} 'Unknown 61'
@@ -14785,9 +14753,11 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
-    wbXALG,
     wbPTT2,
     wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbXALG,
     wbBaseFormComponents,
     wbStruct(ACBS, 'Configuration', [
       wbInteger('Flags', itU32, wbFlags([
@@ -14883,17 +14853,18 @@ end;
     wbFormIDCk(RNAM, 'Race', [RACE], False, cpNormal, True, nil{wbActorTemplateUseTraits}),
 //    wbSPCT,
     wbSPLOs,
-//    wbDEST,
+    wbDEST,
     wbFormIDCk(WNAM, 'Skin', [ARMO], False, cpNormal, False),
 //    wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
-//    wbRArrayS('Attacks', wbAttackData),
     wbFormIDCk(SPOR, 'Spectator Override Package List', [FLST]),
-//    wbFormIDCk(OCOR, 'Observe Dead Body Override Package List', [FLST]),
-//    wbFormIDCk(GWOR, 'Guard Warn Override Package List', [FLST]),
+    wbFormIDCk(OCOR, 'Observe Dead Body Override Package List', [FLST]),
+    wbFormIDCk(GWOR, 'Guard Warn Override Package List', [FLST]),
     wbFormIDCk(ECOR, 'Combat Override Package List', [FLST]),
-//    wbFormIDCk(FCPL, 'Follower Command Package List', [FLST]),
-//    wbFormIDCk(RCLR, 'Follower Elevator Package List', [FLST]),
+    wbFormIDCk(FCPL, 'Follower Command Package List', [FLST]),
+    wbFormIDCk(RCLR, 'Follower Elevator Package List', [FLST]),
+    wbFormIDCk(RPLD, 'Sound Detection Package List', [FLST]),
+    wbFormIDCk(RPLI, 'Sight Detection Package List', [FLST]),
     wbRStruct('Perks', [
       wbInteger(PRKZ, 'Perk Count', itU32, nil, cpBenign),
       wbRArrayS('Perks',
@@ -14914,40 +14885,72 @@ end;
     wbContainerItems.SetSummaryKey([1]),
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
-    wbStruct(FLEE, 'Unknown', [
-      wbFormID('Unknown'),
-      wbFormID('Unknown'),
-      wbFormID('Unknown'),
-      wbFloat,
-      wbFloat,
-      wbUnknown(4)
-    ]),
-    wbArray(RDSA, 'Unknown',
-      wbStruct('Unknown', [
-        {  0} wbInteger('Unknown', itU32),
-        {  4} wbInteger('Unknown', itU32),
-        {  8} wbFormIDCk('Unknown', [NULL, FLST]),
-        { 12} wbUnknown(4),
-        { 16} wbFormIDCk('Unknown', [NULL, GLOB]),
-        { 20} wbFormIDCk('Unknown', [NULL, GLOB]),
-        { 24} wbFormIDCk('Unknown', [NULL, GLOB]),
-        { 28} wbFormIDCk('Unknown', [NULL, GLOB]),
-        { 32} wbFormIDCk('Unknown', [NULL, GLOB]),
-        { 36} wbFloat,
-        { 40} wbFloat,
-        { 44} wbFloat,
-        { 48} wbFloat,
-        { 52} wbFloat,
-        { 56} wbFormIDCk('Unknown', [NULL, KYWD]),
-        { 60} wbUnknown(4),
-        { 64} wbFormIDCk('Unknown', [NULL, GLOB]),
-        { 68} wbFloat,
-        { 72} wbUnknown(4),
-        { 76} wbFormIDCk('Unknown', [NULL, GLOB])
+    wbArray(RDSA, 'Reaction Radius Behavior',
+      wbStruct('Entry', [
+        {  0} wbInteger('Reaction Type', itU32, wbEnum([
+          'Warn',
+          'Warn and Attack',
+          'Attack',
+          'Curious',
+          'Flee',
+          'Warn and Alarm'
+        ])),
+        {  4} wbInteger('Reaction Target', itU32, wbEnum([
+          'Player',
+          'Enemies',
+          'Neutral',
+          'PlayerNeutralEnemies',
+          'PlayerNeutral',
+          'PlayerEnemies',
+          'Enemies Neutral'
+        ])),
+        {  8} wbFormIDCk('Packages', [NULL, FLST]),
+        { 12} wbInteger('Flags', itU32, wbFlags([
+                {0x00000001} { 0} 'Use GLOB Reaction Radius',
+                {0x00000002} { 1} 'Use GLOB Exit Radius',
+                {0x00000004} { 2} 'Use GLOB Max Number Of Times To React',
+                {0x00000008} { 3} 'Use GLOB Max Herd Members To Animate',
+                {0x00000010} { 4} 'Use GLOB Number of Warnings Before Attack',
+                {0x00000020} { 4} 'Reaction Center Override',
+                {0x00000040} { 6} 'Use Linked Reference',
+                {0x00000080} { 7} 'Use Specific Reference',
+                {0x00000100} { 8} 'Number of Warnings Before Attack',
+                {0x00000200} { 9} 'Warn Timer On Warn/Attack',
+                {0x00000400} {10} 'Use GLOB Warn Timer On Warn/Attack',
+                {0x00000800} {11} 'All Reaction Behavior',
+                {0x00001000} {12} 'Avoid Target',
+                {0x00002000} {13} 'Use GLOB Cool Down Timer',
+                {0x00004000} {14} 'Fight Back',
+                {0x00008000} {15} 'Disallow Threat Backdown'
+        ])),
+        { 16} wbFormIDCk('Reaction Radius GLOB', [NULL, GLOB]),
+        { 20} wbFormIDCk('Exit Radius GLOB', [NULL, GLOB]),
+        { 24} wbFormIDCk('Max Number Of Times To React GLOB', [NULL, GLOB]),
+        { 28} wbFormIDCk('Max Herd Members To Animate GLOB', [NULL, GLOB]),
+        { 32} wbFormIDCk('Number of Warnings Before Attack GLOB', [NULL, GLOB]),
+        { 36} wbFloat('Max Number Of Times To React'),
+        { 40} wbFloat('Reaction Radius'),
+        { 44} wbFloat('Exit Radius'),
+        { 48} wbFloat('Max Herd Members To Animate'),
+        { 52} wbFloat('Number of Warnings Before Attack'),
+        { 56} wbFormIDCk('Linked Ref Keyword', [NULL, KYWD]),
+        { 60} wbFormIDCk('Specific Reference', sigReferences),
+        { 64} wbFormIDCk('Warn Timer On Warn/Attack GLOB', [NULL, GLOB]),
+        { 68} wbFloat('Warn Timer On Warn/Attack'),
+        { 72} wbFloat('Cool Down Timer'),
+        { 76} wbFormIDCk('Cool Down Timer GLOB', [NULL, GLOB])
       ])
         .SetSummaryKey([14])
         .IncludeFlag(dfCollapsed, wbCollapseRDSA)
     ),
+    wbStruct(FLEE, 'Flee Settings', [
+      wbFormID('Flee Distance GLOB'),
+      wbFormID('Safe Timer GLOB'),
+      wbFormID('Chance of Diversion Animation GLOB'),
+      wbFloat('Flee Distance'),
+      wbFloat('Safe Timer'),
+      wbFloat('Chance of Diversion Animation')
+    ]),
     wbKeywords,
     wbAPPR,
     wbObjectTemplate,
@@ -14955,7 +14958,7 @@ end;
     wbFormIDCk(CNAM, 'Class', [CLAS], False),
     wbFULL,
     wbLStringKC(SHRT, 'Short Name', 0, cpTranslate),
-    wbLStringKC(LNAM, 'Long Name', 0, cpTranslate),
+    wbLStringKC(LNAM, 'Plural Name', 0, cpTranslate),
     wbMarkerReq(DATA),
     wbStruct(DNAM, '', [
       wbInteger('Calculated Health', itU16),
@@ -14991,23 +14994,23 @@ end;
       .SetSummaryDelimiterOnValue(', '),
 //    wbInteger(NAM8, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True),
     wbRStructSK([1],'Actor Sounds', [
-    {
-      wbInteger(CS2H, 'Count', itU32, nil, cpBenign, True),
-      wbActorSounds,
-      wbEmpty(CS2E, 'End Marker', cpNormal, True),
-      wbByteArray(CS2F, 'Finalize', 1, cpNormal, True)
-    }
       wbInteger(CS3H, 'Count', itU32, nil, cpBenign, True),
-      wbSoundReference(CS3S),
-      wbUnknown(CS3F),
+      wbRArray('Sounds',
+        wbRStruct('Sound', [
+          wbFormIDCk(CS3K, 'ArcheType', [KYWD]),
+          wbSoundReference(CS3S)
+        ], [])
+          .IncludeFlag(dfAllowAnyMember)
+          .IncludeFlag(dfStructFirstNotRequired),
+      cpNormal, True)
+        .SetCountPath(CS3H),
+      wbInteger(CS3F, 'Stop Concious Loop When Unconscious', itU8, wbBoolEnum, cpNormal, True),
       wbMarkerReq(CS3E)
     ], []),
     wbFormIDCk(CSCR, 'Inherits Sounds From', [NPC_], False, cpNormal, False),
 //    wbFormIDCk(PFRN, 'Power Armor Stand', [FURN]),
-    wbRStruct('Companion Info', [
-      wbFormIDCk(QSTA, 'Quest', [QUST]),
-      wbFormIDCk(BNAM, 'Dialogue', [DLBR])
-    ], []),
+    wbFormIDCk(QSTA, 'Affinity Event Quest', [QUST]),
+    wbFormIDCk(BNAM, 'Affinity Event Dialogue', [DLBR]),
     wbFormIDCk(DOFT, 'Default Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(SOFT, 'Space Outfit', [OTFT], False, cpNormal, False),
     wbFormIDCk(DPLT, 'Default Package List', [FLST], False, cpNormal, False),
@@ -15403,7 +15406,17 @@ end;
         .IncludeFlag(dfCollapsed)
     ),
     wbATTX,
-    wbInteger(STON, 'Skin Tone Index', itU8),
+    wbInteger(STON, 'Skin Tone Index', itU8, wbEnum([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9'
+    ])),
     wbString(HCOL, 'Hair Color'),
     wbString(FHCL, 'Facial Hair Color'),
     wbString(BCOL, 'Eyebrow Color'),
@@ -15414,43 +15427,43 @@ end;
     wbStruct(ONA2, 'Race Overrides', [
       wbInteger('Flags', itU32, wbFlags([
         'Size',
-        'Unknown 1',
-        'Unknown 2',
+        'Movement',
+        'Flight',
         'Unarmed Weapon',
         'Flag Overrides',
-        'Unknown 5',
+        'Bleedout',
         'General',
-        'Unknown 7'
+        'Electromagnetic'
       ]))
         .IncludeFlag(dfCollapsed, wbCollapseFlags)
         .SetAfterSet(wbUpdateSameParentUnions),
 
       wbIsFlag(0, wbStruct('Size', [
-        wbNPC_ONA2Size.SetDontShow(wbRaceOverrideDontShow(0))                   // +0x00 - flag  0 (0x00000001)  -> RACE DAT2+0x00
+        wbNPC_ONA2Size.SetDontShow(wbRaceOverrideDontShow(0))
       ])),
 
-      wbIsFlag(1, wbStruct('Unknown 1', [
-        wbFloat('Acceleration Rate')
+      wbIsFlag(1, wbStruct('Movement Accel/Decel', [
+        wbFloat('Acceleration (m)')
           .IncludeFlag(dfFloatSometimesBroken)
-          .SetDontShow(wbRaceOverrideDontShow(1)),                              // +0x04 - flag  1 (0x00000002)  -> RACE DAT2+0x04
-        wbFloat('Deceleration Rate')
+          .SetDontShow(wbRaceOverrideDontShow(1)),
+        wbFloat('Deceleration (m)')
           .IncludeFlag(dfFloatSometimesBroken)
-          .SetDontShow(wbRaceOverrideDontShow(2)),                              // +0x08 - flag  2 (0x00000004)  -> RACE DAT2+0x08
-        wbFloat
+          .SetDontShow(wbRaceOverrideDontShow(2)),
+        wbFloat('Angular Acceleration (deg)')
           .IncludeFlag(dfFloatSometimesBroken)
-          .SetDontShow(wbRaceOverrideDontShow(3)),                              // +0x0C - flag  3 (0x00000008)  -> RACE DAT2+0x0C
-        wbFloat
-          .SetDontShow(wbRaceOverrideDontShow(4))                               // +0x10 - flag  4 (0x00000010)  -> RACE DAT2+0x10
+          .SetDontShow(wbRaceOverrideDontShow(3)),
+        wbFloat('Angular Tolerance (deg)')
+          .SetDontShow(wbRaceOverrideDontShow(4))
       ])),
 
-      wbIsFlag(2, wbStruct('Unknown 2', [
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(5))                          // +0x14 - flag  5 (0x00000020)  -> RACE DAT2+0x14
+      wbIsFlag(2, wbStruct('Flight', [
+        wbFloat('Flight Radius').SetDontShow(wbRaceOverrideDontShow(5))
       ])),
 
       wbIsFlag(3, wbStruct('Unarmed Weapon', [
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(7)),                         // +0x20 - flag  7 (0x00000080)  -> RACE DAT2+0x20
+        wbFloat('Injured Health %').SetDontShow(wbRaceOverrideDontShow(7)),
         wbFormIDCk('Unarmed Weapon', [NULL, WEAP])
-          .SetDontShow(wbRaceOverrideDontShow(6))                               // +0x18 - flag  6 (0x00000040)  -> RACE DAT2+0x18 RACE's UNWP field
+          .SetDontShow(wbRaceOverrideDontShow(6))
       ])),
 
       wbIsFlag(4, wbStruct('Flag Overrides', [
@@ -15461,73 +15474,73 @@ end;
           .IncludeFlag(dfCollapsed, wbCollapseFlags)
       ])),
 
-      wbIsFlag(5, wbStruct('Unknown 5', [
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(8)),                         // +0x28 - flag  8 (0x00000100)  -> RACE DAT2+0x28
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(9)),                         // +0x2C - flag  9 (0x00000200)  -> RACE DAT2+0x2C
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(10)),                        // +0x30 - flag 10 (0x00000400)  -> RACE DAT2+0x30
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(11)),                        // +0x34 - flag 11 (0x00000800)  -> RACE DAT2+0x34
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(12)),                        // +0x38 - flag 12 (0x00001000)  -> RACE DAT2+0x38
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(13))                         // +0x3C - flag 13 (0x00002000)  -> RACE DAT2+0x3C
+      wbIsFlag(5, wbStruct('Bleedout Data', [
+        wbFloat('Health %').SetDontShow(wbRaceOverrideDontShow(8)),
+        wbFloat('Chance').SetDontShow(wbRaceOverrideDontShow(9)),
+        wbFloat('Recover Chance').SetDontShow(wbRaceOverrideDontShow(10)),
+        wbFloat('Time Min').SetDontShow(wbRaceOverrideDontShow(11)),
+        wbFloat('Time Max').SetDontShow(wbRaceOverrideDontShow(12)),
+        wbFloat('Health Drain Rate').SetDontShow(wbRaceOverrideDontShow(13))
       ])),
 
       wbIsFlag(6, wbStruct('General', [
         wbFormIDCk('Impact Material Type', [NULL, MATT])
-          .SetDontShow(wbRaceOverrideDontShow(14)),                             // +0x40 - flag 14 (0x00004000)  -> RACE+0x100 RACE's NAM4 field
-        wbSoundReference('WED0').SetDontShow(wbRaceOverrideDontShow(18)),       // +0x48 - flag 18 (0x00040000)  -> RACE+0x108 RACE's WED0 field
-        wbSoundReference('WED1').SetDontShow(wbRaceOverrideDontShow(15)),       // +0x78 - flag 15 (0x00008000)  -> RACE+0x138 RACE's WED1 field
-        wbStruct('Unknown', [                                                   // - flag 22 (0x00400000)
-          wbFormIdCk('Unknown', [NULL, EXPL]),                                  // +0xA8                         -> RACE DAT2+0xD0
-          wbFormIdCk('Unknown', [NULL, DEBR]),                                  // +0xB0                         -> RACE DAT2+0xD8
-          wbFormIdCk('Unknown', [NULL, IPDS]),                                  // +0xB8                         -> RACE DAT2+0xE0
-          wbFloat,                                                              // +0xC0                         -> RACE DAT2+0xE8
-          wbUnknown(1),                                                         // +0xC4                         -> RACE DAT2+0xEC
-          wbUnknown(1)                                                          // +0xC5                         -> RACE DAT2+0xED
+          .SetDontShow(wbRaceOverrideDontShow(14)),
+        wbSoundReference('Sound - Corpse Open').SetDontShow(wbRaceOverrideDontShow(18)),
+        wbSoundReference('Sound - Corpse Close').SetDontShow(wbRaceOverrideDontShow(19)),
+        wbStruct('OnCripple', [
+          wbFormIdCk('Explosion Type', [NULL, EXPL]),
+          wbFormIdCk('Generic Debris', [NULL, DEBR]),
+          wbFormIdCk('Blood Spurt/Decal Impact', [NULL, IPDS]),
+          wbFloat('Debris Scale'),
+          wbInteger('Debris Count', itU8),
+          wbInteger('Decal Count', itU8)
         ]).SetDontShow(wbRaceOverrideDontShow(22)),
-        wbInteger('Active Overrides', itU32, wbFlags([                          // +0xF8
+        wbInteger('Active Overrides', itU32, wbFlags([
           {0x00000001} { 0} 'Size',
-          {0x00000002} { 1} 'Unknown 1 - Acceleration Rate',
-          {0x00000004} { 2} 'Unknown 1 - Deceleration Rate',
-          {0x00000008} { 3} 'Unknown 1 - Float@2',
-          {0x00000010} { 4} 'Unknown 1 - Float@3',
-          {0x00000020} { 4} 'Unknown 2 - Float@0',
+          {0x00000002} { 1} 'Movement - Acceleration',
+          {0x00000004} { 2} 'Movement - Deceleration',
+          {0x00000008} { 3} 'Movement - Angular Acceleration',
+          {0x00000010} { 4} 'Movement - Angular Tolerance',
+          {0x00000020} { 4} 'Flight Radius',
           {0x00000040} { 6} 'Unarmed Weapon - Unarmed Weapon',
-          {0x00000080} { 7} 'Unarmed Weapon - Float@0',
-          {0x00000100} { 8} 'Unknown 5 - Float@0',
-          {0x00000200} { 9} 'Unknown 5 - Float@1',
-          {0x00000400} {10} 'Unknown 5 - Float@2',
-          {0x00000800} {11} 'Unknown 5 - Float@3',
-          {0x00001000} {12} 'Unknown 5 - Float@4',
-          {0x00002000} {13} 'Unknown 5 - Float@5',
-          {0x00004000} {14} 'General - Impact Material Type',
-          {0x00008000} {15} 'General - WED1',
+          {0x00000080} { 7} 'Unarmed Weapon - Injured Health %',
+          {0x00000100} { 8} 'Bleedout - Health %',
+          {0x00000200} { 9} 'Bleedout - Chance',
+          {0x00000400} {10} 'Bleedout - Recover Chance',
+          {0x00000800} {11} 'Bleedout - Time Min',
+          {0x00001000} {12} 'Bleedout - Time Max',
+          {0x00002000} {13} 'Bleedout - Health Drain Rate',
+          {0x00004000} {14} 'Blood Data - Impact Material Type',
+          {0x00008000} {15} '',
           {0x00010000} {16} '',
           {0x00020000} {17} '',
-          {0x00040000} {18} 'General - WED0',
-          {0x00080000} {19} '',
+          {0x00040000} {18} 'Blood Data - Sound Open Corpse',
+          {0x00080000} {19} 'Blood Data - Sound Close Corpse',
           {0x00100000} {20} '',
           {0x00200000} {21} '',
-          {0x00400000} {22} 'Unknown 6 - Struct@3',
-          {0x00800000} {23} 'Unknown 7 - Int@0',
-          {0x01000000} {24} 'Unknown 7 - Float@1',
-          {0x02000000} {25} 'Unknown 7 - Float@2',
-          {0x04000000} {26} 'Unknown 7 - Float@3',
-          {0x08000000} {27} 'Unknown 7 - Float@4',
-          {0x10000000} {28} 'Unknown 7 - Float@5',
-          {0x20000000} {29} 'Unknown 7 - Float@6',
-          {0x40000000} {30} 'Unknown 7 - Float@7',
+          {0x00400000} {22} 'Blood Data - OnCripple',
+          {0x00800000} {23} 'EM - Support Shocked',
+          {0x01000000} {24} 'EM - Recover Chance',
+          {0x02000000} {25} 'EM - Time Min',
+          {0x04000000} {26} 'EM - Time Max',
+          {0x08000000} {27} 'EM - Recover Chance on Damage',
+          {0x10000000} {28} 'EM - Health Drain Rate',
+          {0x20000000} {29} 'EM - Health After Recovery',
+          {0x40000000} {30} 'EM - Immunity Duration',
           {0x80000000} {31} ''
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
       ])),
 
-      wbIsFlag(7, wbStruct('Unknown 7', [
-        wbUnknown(1).SetDontShow(wbRaceOverrideDontShow(23)),                   // +0xC8+0x1C - flag 23 (0x00800000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(24)),                        // +0xC8+0x00 - flag 24 (0x01000000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(25)),                        // +0xC8+0x04 - flag 25 (0x02000000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(26)),                        // +0xC8+0x08 - flag 26 (0x04000000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(27)),                        // +0xC8+0x0C - flag 27 (0x08000000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(28)),                        // +0xC8+0x10 - flag 28 (0x10000000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(29)),                        // +0xC8+0x14 - flag 29 (0x20000000)
-        wbFloat.SetDontShow(wbRaceOverrideDontShow(30))                         // +0xC8+0x18 - flag 30 (0x40000000)
+      wbIsFlag(7, wbStruct('Electromagnetic Shocked Data', [
+        wbInteger('Support Electromagnetic Shocked', itU8, wbBoolEnum).SetDontShow(wbRaceOverrideDontShow(23)),
+        wbFloat('Recover Chance').SetDontShow(wbRaceOverrideDontShow(24)),
+        wbFloat('Time Min').SetDontShow(wbRaceOverrideDontShow(25)),
+        wbFloat('Time Max').SetDontShow(wbRaceOverrideDontShow(26)),
+        wbFloat('Recover Chance On Damage Received').SetDontShow(wbRaceOverrideDontShow(27)),
+        wbFloat('Health Drain Rate').SetDontShow(wbRaceOverrideDontShow(28)),
+        wbFloat('Health After Recovery').SetDontShow(wbRaceOverrideDontShow(29)),
+        wbFloat('Immunity Duration After Recovery').SetDontShow(wbRaceOverrideDontShow(30))
       ]))
     ])
   ]);
