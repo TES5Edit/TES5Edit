@@ -9184,7 +9184,7 @@ end;
     wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
     wbInteger('Level Min', itU16),
     wbInteger('Level Max', itU16),
-    wbInteger('Addon Index', itS16).SetDefaultNativeValue(-1),
+    wbInteger('Parent Combination Index', itS16).SetDefaultNativeValue(-1),
     wbInteger('Default', itU8, wbBoolEnum).SetDefaultNativeValue(1),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
     wbInteger('Min Level For Ranks', itU8),
@@ -9380,6 +9380,7 @@ end;
     wbPTT2,
     wbSNTP,
     wbSNBH,
+    wbDEFL,
     wbXALG,
     wbBaseFormComponents,
     wbFULL,
@@ -9417,7 +9418,7 @@ end;
     wbNVNM
   ]);
 
-  (* still exists in game code, but not in Starfield.esm * )
+  (* still exists in game code, but not in Starfield.esm *)
   wbRecord(TACT, 'Talking Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
@@ -9427,17 +9428,25 @@ end;
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTYReq,
+    wbOPDS,
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbXALG,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel(True),
     wbDEST,
     wbKSIZ,
     wbKWDAs,
     wbUnknown(PNAM, cpIgnore, True),
-    wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
+    wbSoundReference(ALSH, 'Looping Sound'),
     wbUnknown(FNAM, cpIgnore, True),
+    wbUnknown(JNAM, cpNormal, True).SetDefaultEditValue('68 01'),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
-  *)
 
   {subrecords checked against Starfield.esm}
   wbRecord(ALCH, 'Ingestible',
@@ -10751,12 +10760,13 @@ end;
       wbInteger('Enchantment Amount', itS32),
       wbInteger('Target Type', itU8, wbTargetEnum),
       wbInteger('Enchant Type', itU8, wbEnum([], [
-        $06, 'Enchantment'
+        $06, 'Enchantment',
+        $0C, 'Staff Enchantment'
       ])),
       wbFloat('Charge Time'),
       wbFormIDCk('Base Enchantment', [ENCH, NULL]),
       wbFormIDCk('Worn Restrictions', [FLST, NULL])
-    ], cpNormal, True, nil, 8),
+    ], cpNormal, True, nil),
     wbEffectsReq
   ]);
 
@@ -13085,7 +13095,6 @@ end;
     wbFormIDCk(ANAM, 'Condition Actor Value', [AVIF, NULL, FFFF]).SetRequired
   ]);
 
-  (*
   wbRecord(RELA, 'Relationship', [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -13102,7 +13111,7 @@ end;
         'Enemy',
         'Archnemesis'
       ])),
-      wbByteArray('Unknown', 2),
+      wbUnused(2),
       wbInteger('Flags', itU8, wbFlags([
         {0x01} 'Unknown 1',
         {0x02} 'Unknown 2',
@@ -13116,7 +13125,6 @@ end;
       wbFormIDCk('Association Type', [ASTP, NULL])
     ])
   ]);
-  *)
 
   {subrecords checked against Starfield.esm}
   wbRecord(SCEN, 'Scene', [
@@ -13487,7 +13495,7 @@ end;
     wbArray(SPKY, 'Keywords', wbFormIDCk('Keyword',[KYWD]))
   ]);
 
-  (* still exists in game code, but not in Starfield.esm
+  (* still exists in game code, but not in Starfield.esm *)
   wbRecord(ASTP, 'Association Type', [
     wbEDID,
     wbString(MPRT, 'Male Parent Title'),
@@ -13498,7 +13506,6 @@ end;
       'Family Association'
     ]))
   ]);
-  *)
 
   var wbSPEDRotationSpeedAngles := function(aName: string = 'Unknown'): IwbStructDef
   begin
@@ -18755,7 +18762,7 @@ end;
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010} 4, 'Legendary Mod',
       {0x00000080} 7, 'Mod Collection',
-      {0x00000100} 8, 'Unknown 8'
+      {0x00000100} 8, 'Property Collection'
     ])), [
     wbEDID,
     wbBaseFormComponents,
@@ -18763,48 +18770,22 @@ end;
     wbDESC(),
     wbGenericModel(True),
     wbUnknown(XFLG),
-//    wbStruct(DATA, 'Data', [
-//      wbInteger('Include Count', itU32),
-//      wbInteger('Property Count', itU32),
-//      wbInteger('Unknown Bool 1', itU8, wbBoolEnum),
-//      wbInteger('Unknown Bool 2', itU8, wbBoolEnum),
-//      wbInteger('Form Type', itU32, wbEnum([], [
-//        Sig2Int(ARMO), 'Armor',
-//        Sig2Int(NPC_), 'Non-player character',
-//        Sig2Int(WEAP), 'Weapon',
-//        Sig2Int(NONE), 'None'
-//      ])).SetDefaultEditValue('None'),
-//      wbInteger('Max Rank', itU8),
-//      wbInteger('Level Tier Scaled Offset', itU8),
-//      wbFormIDCk('Attach Point', [KYWD, NULL]),
-//      wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
-//      // no way to change these in CK, legacy data leftover?
-//      wbArray('Items', wbStruct('Item', [
-//        wbByteArray('Value 1', 4),
-//        wbByteArray('Value 2', 4)
-//      ]), -1),
-//      // should not be sorted
-//      wbArray('Includes', wbStruct('Include', [
-//        wbFormIDCk('Mod', [OMOD]),
-//        wbInteger('Minimum Level', itU8),
-//        wbInteger('Optional', itU8, wbBoolEnum),
-//        wbInteger('Don''t Use All', itU8, wbBoolEnum)
-//      ]), wbOMODDataIncludeCounter, cpNormal, False, nil, wbOMODincludeAfterSet),
-//      wbObjectModProperties
-//    ], cpNormal, False, nil, -1, nil, wbOMODdataAfterSet),
     wbStruct(DATA, 'Data', [
       wbInteger(csIncludeCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbInteger(csPropertyCount, itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
       wbUnknown(2),
       wbLenString('Name').SetFormater(wbStringEnum([
+          'Container_InstanceData',
           'Spaceship_InstanceData',
           'TESFlora_InstanceData',
+          'TESFurniture_InstanceData',
           'TESNPC_InstanceData',
           'TESObjectARMOR_InstanceData',
           'TESObjectWEAP_InstanceData',
           'NONE'
         ])).IncludeFlag(dfHasZeroTerminator),
-      wbUnknown(2),
+      wbInteger('Max Rank', itU8),
+      wbInteger('Level Tier Scaled Offset', itU8),
       wbFormIDCk('Attach Point', [KYWD, NULL]),
       wbArray('Attach Parent Slots', wbFormIDCk('Keyword', [KYWD, NULL]), -1),
       wbUnknown(4),
@@ -18818,9 +18799,11 @@ end;
     ]),
     wbArray(MNAM, 'Target OMOD Keywords', wbFormIDCk('Keyword', [KYWD])),
     wbArray(FNAM, 'Filter Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects), //not in Starfield.esm
+    wbFormIDCk(LNAM, 'Loose Mod', sigBaseObjects),
     wbInteger(NAM1, 'Priority', itU8),
-    wbFLTR
+    wbFLTR,
+    wbFormIDCk(NAM2, '3rd Person Morphable Object', [MRPH]),
+    wbFormIDCk(NAM3, '1st Person Morphable Object', [MRPH])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20884,6 +20867,7 @@ end;
   wbAddGroupOrder(ENCH); {SF1Dump: no errors}
   wbAddGroupOrder(SPEL); {SF1Dump: no errors}
   wbAddGroupOrder(ACTI); {SF1Dump: no errors}
+  wbAddGroupOrder(TACT);
   wbAddGroupOrder(CURV); {SF1Dump: no errors} {Reflection only}
   wbAddGroupOrder(CUR3); {SF1Dump: no errors} {Reflection only}
   wbAddGroupOrder(ARMO); {SF1Dump: no errors}
@@ -20967,7 +20951,9 @@ end;
   wbAddGroupOrder(DLBR); {SF1Dump: no errors}
   wbAddGroupOrder(MUST); {SF1Dump: no errors}
   wbAddGroupOrder(EQUP); {SF1Dump: no errors}
+  wbAddGroupOrder(RELA);
   wbAddGroupOrder(SCEN); {SF1Dump: no errors}
+  wbAddGroupOrder(ASTP);
   wbAddGroupOrder(OTFT); {SF1Dump: no errors}
   wbAddGroupOrder(ARTO); {SF1Dump: no errors}
   wbAddGroupOrder(MOVT); {SF1Dump: no errors}
