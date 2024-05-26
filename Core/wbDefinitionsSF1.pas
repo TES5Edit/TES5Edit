@@ -11860,7 +11860,9 @@ end;
         {0x0008} 'Crew',
         {0x0010} 'Background',
         {0x0020} 'Hidden on Data Menu'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      ]))
+        .SetDefaultEditValue('01')
+        .IncludeFlag(dfCollapsed, wbCollapseFlags)
      ], cpNormal, True),
     wbFormIDCk(TNAM, 'Restriction' , [KYWD]),
     wbFormIDCk(UNAM, 'Training' , [PERK]),
