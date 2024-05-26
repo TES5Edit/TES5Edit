@@ -11841,7 +11841,7 @@ end;
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
-    wbEDID,
+    wbEDID.SetRequired,
     wbVMADFragmentedPERK,
     wbFULL,
     wbDESCReq(),
@@ -11863,8 +11863,8 @@ end;
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
      ], cpNormal, True),
     wbFormIDCk(TNAM, 'Restriction' , [KYWD]),
+    wbFormIDCk(UNAM, 'Training' , [PERK]),
     wbString(GNAM, 'Perk Icon'),
-    wbFormIDCk(UNAM, 'Training' , [PERK]), // unknown what order relative to TNAM and GNAM
 
     wbRStructs('Ranks', 'Rank', [
       wbEmpty(PRRK, 'Header Marker').SetRequired,
@@ -11873,8 +11873,8 @@ end;
       wbActivityTracker,
       wbDESC.SetRequired,
       wbEmpty(PRRF, 'End Marker').SetRequired
-    ], []),
-    wbRArray('Background Skills', wbFormIDCk(RNAM, 'Unknown', [PERK]))
+    ], [], cpNormal, True),
+    wbRArray('Bonus Perks', wbFormIDCk(RNAM, 'Perk', [PERK]))
 
     (*
     //wbString(ICON, 'Image'), not in Starfield.esm
