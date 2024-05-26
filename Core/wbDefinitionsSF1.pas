@@ -16235,7 +16235,6 @@ end;
     wbFormIDCk(FTYP, 'Quest Faction', [KYWD]), // was FACT but now separate from FACT
     wbString(ENAM, 'Event', 4),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
-//    wbFormIDCk(XNAM, 'Quest Completion XP', [GLOB]),
     wbFormIDCk(QTLM, 'Quest Time Limit', [GLOB]),
     wbFormIDCk(QSRC, 'Source Quest', [QUST]),
     wbRArray('Text Display Globals', wbFormIDCk(QTGL, 'Global', [GLOB])),
@@ -16267,21 +16266,22 @@ end;
         wbString(NAM2, 'Note'),
         wbString(SCFC, 'Script Flag Comment'),
         wbLStringKC(CNAM, 'Log Entry', 0, cpTranslate),
-        wbRArray('Stage Complete Data', wbRStruct('Datum', [
-//          wbInteger(QSRD, 'Reward Scenario Count', itU32), // I am 100% sure of this but the empty record afterwards stumps me
-          wbUnknown(QSRD),
-          wbFormIDCk(NAM1, 'Affinity Change', [AFFE, NULL]),
-          wbRArray('Reward List', wbRStruct('Reward Data', [
-            wbFormIDCk(QRXP, 'XP Awarded', [NULL, GLOB]),
-            wbFormIDCk(QRCR, 'Bonus Credits', [NULL, GLOB]),
-            wbRArray('Rewards', wbStruct(QRRD, 'Reward', [
+        wbRStruct('Stage Complete Data', [
+          wbRStruct('Reward Data', [
+          wbInteger(QSRD, 'Count', itU32, nil, cpNormal, True),
+          wbRArray('Rewards', wbRStruct('Reward', [
+            wbFormIDCk(QRXP, 'XP', [NULL, GLOB], False, cpNormal, True),
+            wbFormIDCk(QRCR, 'Currency', [NULL, GLOB], False, cpNormal, True),
+            wbRArray('Items', wbStruct(QRRD, 'Item', [
               wbFormIDCk('Item', sigBaseObjects, False, cpNormal, True),
               wbInteger('Count', itU32)
             ])),
             wbCTDAs
-          ], []))
-        ], []))
-//        wbFormIDCk(NAM0, 'Next Quest', [QUST])
+          ], [])).SetCountPath(QSRD),
+          wbEmpty(QSRD, 'End Marker', cpNormal, True)
+          ], []),
+          wbFormIDCk(NAM1, 'Affinity Change', [AFFE, NULL])
+        ], [], cpNormal, True)
       ], []))
     ], [])),
     wbRArray('Objectives', wbRStruct('Objective', [
