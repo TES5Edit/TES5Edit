@@ -1668,7 +1668,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..448] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..449] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2039,7 +2039,7 @@ const
     (Index: 4843; Name: 'PlayerHasKey'; ),
     (Index: 4897; Name: 'ActorHasEffect'; ParamType1: ptMagicEffect; ),
 
-    // Added by JIP NVSE Plugin - up to v57.21
+    // Added by JIP NVSE Plugin - up to v57.30
     (Index: 5637; Name: 'GetIsPoisoned'; ),
     (Index: 5708; Name: 'IsEquippedWeaponSilenced'; ),
     (Index: 5709; Name: 'IsEquippedWeaponScoped'; ),
@@ -2074,6 +2074,7 @@ const
     (Index: 6368; Name: 'GetGroundMaterial'; ),
     (Index: 6391; Name: 'EquippedWeaponHasModType'; ParamType1: ptInteger; ),
     (Index: 6426; Name: 'IsSpellTargetList'; ParamType1: ptFormList; ),
+    (Index: 6462; Name: 'HasKeywordCond'; ParamType1: ptInteger; ),
 
     // Added by JohnnyGuitar NVSE - up to v5.07
     (Index: 8501; Name: 'GetBaseScale'; ),
