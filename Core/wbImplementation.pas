@@ -2957,6 +2957,8 @@ begin
         end else
           MasterFiles[i].SortOrder := $100;
 
+      var lRemovedCount := 0;
+
       k := Length(flMasters);
       if j <> k then begin
         SetLength(flMasters, j);
@@ -2978,6 +2980,7 @@ begin
 
         SetModified(True);
         IncGeneration;
+        lRemovedCount := Length(flOldMasters) - MasterFiles.ElementCount;
 
         Assert(Length(flMasters) = MasterFiles.ElementCount, '[TwbFile.CleanMasters] Length(flMasters) <> MasterFiles.ElementCount');
 
@@ -2991,10 +2994,12 @@ begin
           MastersUpdated(Old, New, k, j);
         SortRecords;
       end;
+      flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
       flOldMasters := nil;
     end;
-  end;
+  end
+  else flProgress('Has no masters.');
 
   UpdateModuleMasters;
 end;
