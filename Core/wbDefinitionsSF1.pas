@@ -5350,37 +5350,37 @@ begin
   var wbXSCL := wbFloat(XSCL, 'Scale');
   var wbXALGFlags := wbFlags([ //copied from FO76, probably wrong
     {0x00000001} 'Disallow Permanent Projected Decals',
-    {0x00000002} 'Unknown 2',
-    {0x00000004} 'Unknown 3',
+    {0x00000002} 'Unknown 1',
+    {0x00000004} 'Unknown 2',
     {0x00000008} 'Disable Physics Sim',
-    {0x00000010} 'Unknown 5',
+    {0x00000010} 'Unknown 4',
     {0x00000020} 'Disable Audio Occlusion/Obstruction', //Unused
     {0x00000040} 'Ignore Audio Obstruction Hits',
-    {0x00000080} 'Unknown 8',
+    {0x00000080} 'Unknown 7',
     {0x00000100} 'High Cost Path',
     {0x00000200} 'Non-Interactive',
     {0x00000400} 'References Are Moveable (BGSEffectSequenceComponent)',
     {0x00000800} 'Disable Loop Sound',
-    {0x00001000} 'Unknown 13',
-    {0x00002000} 'Unknown 14',
-    {0x00004000} 'Unknown 15', //Unused
-    {0x00008000} 'Unknown 16', //Unused
-    {0x00010000} 'Unknown 17', //Unused
-    {0x00020000} 'Unknown 18', //Unused
-    {0x00040000} 'Unknown 19', //Unused
-    {0x00080000} 'Unknown 20', //Unused
-    {0x00100000} 'Unknown 21', //Unused
-    {0x00200000} 'Unknown 22', //Unused
-    {0x00400000} 'Unknown 23', //Unused
-    {0x00800000} 'Unknown 24', //Unused
-    {0x01000000} 'Unknown 25', //Unused
-    {0x02000000} 'Unknown 26', //Unused
-    {0x04000000} 'Unknown 27', //Unused
-    {0x08000000} 'Unknown 28', //Unused
-    {0x10000000} 'Unknown 29', //Unused
-    {0x20000000} 'Unknown 30', //Unused
-    {0x40000000} 'Unknown 31', //Unused
-    {0x80000000} 'Unknown 32'  //Unused
+    {0x00001000} 'Unknown 12',
+    {0x00002000} 'Unknown 13',
+    {0x00004000} 'Unknown 14', //Unused
+    {0x00008000} 'Unknown 15', //Unused
+    {0x00010000} 'Unknown 16', //Unused
+    {0x00020000} 'Unknown 17', //Unused
+    {0x00040000} 'Unknown 18', //Unused
+    {0x00080000} 'Unknown 19', //Unused
+    {0x00100000} 'Unknown 20', //Unused
+    {0x00200000} 'Unknown 21', //Unused
+    {0x00400000} 'Unknown 22', //Unused
+    {0x00800000} 'Unknown 23', //Unused
+    {0x01000000} 'Unknown 24', //Unused
+    {0x02000000} 'Unknown 25', //Unused
+    {0x04000000} 'Unknown 26', //Unused
+    {0x08000000} 'Unknown 27', //Unused
+    {0x10000000} 'Unknown 28', //Unused
+    {0x20000000} 'Unknown 29', //Unused
+    {0x40000000} 'Unknown 30', //Unused
+    {0x80000000} 'Unknown 31'  //Unused
   ]);
 
   var wbXALG := wbInteger(XALG, 'Flags', itU64, wbXALGFlags).IncludeFlag(dfCollapsed, wbCollapseFlags);
@@ -15741,7 +15741,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(PACK, 'Package', [
-    wbEDID,
+    wbEDID.SetRequired,
     wbVMADFragmentedPACK,
 
     wbStruct(PKDT, 'Pack Data', [
@@ -15880,7 +15880,7 @@ end;
         35, 'ForceGreetWhileAimWeapon',
         36, 'SandboxWalk',
         37, 'Unknown 37',
-        38, 'Unknown 38',
+        38, 'SandboxAtFoundLocation',
         39, 'ForceGreet 1',
         40, 'ForceGreet 2',
         41, 'SuspiciousPatrol',
@@ -15905,7 +15905,7 @@ end;
         60, 'FollowPlayer',
         //61-65
         66, 'RangingWithPlayer',
-        67, 'Unknown 67',
+        67, 'FollowPlayer',
         //68-80
         81, 'DefaultCombatMasterTemplate',
        134, 'Master_ShootTarget',
@@ -18862,7 +18862,7 @@ end;
       'Grouped',
       'One Motion',
       'User-defined Primitives',
-      'Unknown 6',
+      'Override Dirtiness',
       'Unknown 7',
       'Unknown 8'
     ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
