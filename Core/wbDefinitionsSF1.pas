@@ -8646,10 +8646,11 @@ end;
             ]),
             //BGSOrbitedDataComponent_Component
             wbStruct('', [
-              wbUnknown(8),
+              wbDouble('Gravity Well', cpNormal, False, 1, Low(Integer)),
               wbFloat('Mass (in SM)', cpNormal, False, 1/1.98847E30, 2),
+//              wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
               wbFloat('Radius (in km)'),
-              wbFloat('Unknown')
+              wbFloat('Surface Gravity')
             ]),
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
@@ -20163,7 +20164,10 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PNDT, 'Planet', [
+  wbRecord(PNDT, 'Planet',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00040000} 18, 'Compressed'
+    ]), [18]), [
     wbEDID,
     wbBaseFormComponents,
     wbArray(CNAM, 'Worldspaces',
@@ -20214,49 +20218,49 @@ end;
       .IncludeFlagOnValue(dfSummaryMembersNoName)
     ),
     wbFormIDCk(FNAM, 'Surface Tree', [NULL, SFTR]).SetRequired,
-    wbFloat(GNAM).SetDefaultNativeValue(1.0).SetRequired,
+    wbFloat(GNAM, 'Scan Worldspace Multiplier').SetDefaultNativeValue(1.0).SetRequired,
 
     wbRStruct('Body', [
       wbMarkerReq(BDST),
-      wbString(ANAM, 'Name').SetRequired,
+      wbString(ANAM, 'Name', 0, cpNormal, True),
+      wbString(XEMP, 'Environment Map'),
       wbInteger(CNAM, 'Body type', itU8, wbEnum([
-        'Undefined',
-        'Star',
-        'Planet',
-        'Moon',
-        'Orbital',
-        'Asteroid Belt',
-        'Station'
-      ])),
+        {0} 'Undefined',
+        {1} 'Star',
+        {2} 'Planet',
+        {3} 'Moon',
+        {4} 'Orbital',
+        {5} 'Asteroid Belt',
+        {6} 'Station'
+      ]), cpNormal, True),
       wbStruct(DNAM, 'Space Cell', [
-        wbLenString.IncludeFlag(dfHasZeroTerminator),
-        wbInteger('Unique?', itU8) // unique? bool
-      ]).SetRequired,
-      wbStruct(ENAM, 'Movement', [
-        wbDouble('Semi-Major Axis', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Semi-Minor Axis', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Apoapsis', cpNormal, False, 1, Low(Integer)),
+        wbLenString('Cell EditorID').IncludeFlag(dfHasZeroTerminator),
+        wbInteger('Is Unique', itU8, wbBoolEnum)
+      ], cpNormal, True),
+      wbStruct(ENAM, 'Orbital Data', [
+        wbDouble('Major Axis', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Minor Axis', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Aphelion', cpNormal, False, 1, Low(Integer)),
         wbDouble('Eccentricity', cpNormal, False, 1, Low(Integer)),
         wbDouble('Incline', cpNormal, False, 1, Low(Integer)).SetToStr(wbAngleToStr),
         wbDouble('Mean Orbit', cpNormal, False, 1, Low(Integer)),
         wbFloat('Axial Tilt').SetToStr(wbAngleToStr),
         wbFloat('Rotation Rate'),
-        wbFloat,
-        wbFloat,
-        wbUnknown(1),
-        wbUnknown(1),
-        wbUnused(6)
-      ]),
-      wbStruct(FNAM, 'Unknown', [
-        wbUnknown(4),
-        wbFloat('Spawn-In Projection Offset'),
+        wbFloatAngle('Start Angle'),
+        wbFloatAngle('Perihelion Angle'),
+        wbInteger('Apply Orbital Velocity', itU8, wbBoolEnum),
+        wbInteger('Geostationary Orbit', itU8, wbBoolEnum),
+        wbUnused(6) // all data appears to be stored as a sequence of doubles
+      ], cpNormal, True),
+      wbStruct(FNAM, 'Orbited Data', [
+        wbDouble('Gravity Well', cpNormal, False, 1, Low(Integer)),
         wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
         wbFloat('Radius in km'),
-        wbFloat('Gravity'),
-        wbUnknown(4)
+        wbFloat('Surface Gravity'),
+        wbUnknown(4) // flags? all data appears to be stored as a sequence of doubles
       ]),
-      wbStruct(GNAM, 'Unknown', [
-        wbInteger('Star ID', itu32, wbStarIDToStr, wbStrToStarID)
+      wbStruct(GNAM, 'Galaxy Data', [
+        wbInteger('Star System ID', itu32, wbStarIDToStr, wbStrToStarID)
          .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
           begin
             Result := nil;
@@ -20271,7 +20275,7 @@ end;
 
             Result := lFile.RecordFromIndexByKey[wbIdxStarID, lStarID];
           end),
-        wbInteger('Primary planet ID', itu32),
+        wbInteger('Parent Planet ID', itu32),
         wbInteger('Planet ID', itu32)
       ]),
       wbStruct(HNAM, 'Unknown', [
@@ -20300,28 +20304,33 @@ end;
         wbInteger('Random Seed', itu32),
         wbInteger('Rings', itu32, wbBoolEnum)
       ]),
-      wbStruct(INAM, 'Unknown', [
-        wbInteger('Atmos Handle', itu32),
-        wbFloat,
-        wbFloat,
-        wbFloat
+      wbStruct(INAM, 'Atmosphere Data', [
+        wbFormIDCk('Atmosphere', [ATMO]),
+        wbFloat('Avg Density Frac.'),
+        wbFloat('Rayleight Scattering Coefficient'),
+        wbFloat('Mie Scattering Coefficient')
       ]),
-      wbStruct(KNAM, 'Unknown', [
-        wbLenString,
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbDouble('Unknown', cpNormal, False, 1, Low(Integer)),
-        wbUnknown(1),
-        wbUnknown(4),
-        wbUnknown(4)
+      wbStruct(KNAM, 'Biome Noise', [
+        wbLenString('Noise Filename').IncludeFlag(dfHasZeroTerminator),
+        wbDouble('Biome Frequency', cpNormal, False, 1, Low(Integer)),
+        wbDouble('Terrain Height Frequency', cpNormal, False, 1, Low(Integer)),
+        wbInteger('Noise Type', itU8),
+        wbInteger('Terrain Height Seed', itS32),
+        wbFloat('Terrain Max Height (m)')
       ]),
-      wbUnknown(NNAM),
+      wbInteger(NNAM, 'Player Knowlege', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
+        0, 'Initial Scan',
+        1, 'Visited',
+        2, 'Entered System',
+        31, 'Unknown 31'
+      ]))),
       wbMarkerReq(BDED)
     ], []),
 
     wbFloat(TEMP, 'Temperature in C'),
     wbFloat(DENS, 'Density'),
-    wbFloat(PHLA, 'Peri angle in deg'),
-    wbInteger(RSCS, 'Resource Creation Seed', itU32)
+    wbFloat(PHLA, 'Perihelion Angle (Deg)'),
+    wbInteger(RSCS, 'Resource Creation Seed', itS32)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20544,9 +20553,9 @@ end;
     wbBaseFormComponents,
     wbKeywords,
     wbString(ANAM, 'Name'),
-    wbVec3Pos(BNAM),
+    wbVec3Pos(BNAM, 'System Parsec Location', 'Parsecs').IncludeFlag(dfCollapsed, wbCollapseVec3),
     wbUnknown(ONAM),                                    //related to BGSOrbitalDataComponent_Component
-    wbInteger(DNAM, 'ID', itU32),
+    wbInteger(DNAM, 'System ID', itU32),
     wbByteColors(ENAM, 'Color'),
     wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
   ])
