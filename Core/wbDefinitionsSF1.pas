@@ -13627,10 +13627,17 @@ end;
     wbEmpty(BOLV, 'Display For Non Characters') // CK value "Display Character Only" default enabled where element is missing. Disabled means element present.
   ]);
 
-  (* still exists in game code, but not in Starfield.esm * )
+  (* still exists in game code, but not in Starfield.esm *)
   wbRecord(DUAL, 'Dual Cast Data', [
     wbEDID,
     wbOBND(True),
+    wbODTYReq,
+    wbOPDS,
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbXALG,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Projectile', [PROJ, NULL]),
       wbFormIDCk('Explosion', [EXPL, NULL]),
@@ -13644,7 +13651,6 @@ end;
       ]))
     ], cpNormal, True)
   ]);
-  (*)
 
   {subrecords checked against Starfield.esm}
   wbRecord(COLL, 'Collision Layer', [
@@ -20867,7 +20873,7 @@ end;
   wbAddGroupOrder(ENCH); {SF1Dump: no errors}
   wbAddGroupOrder(SPEL); {SF1Dump: no errors}
   wbAddGroupOrder(ACTI); {SF1Dump: no errors}
-  wbAddGroupOrder(TACT);
+  wbAddGroupOrder(TACT); // doesn't exist but can be created in CK
   wbAddGroupOrder(CURV); {SF1Dump: no errors} {Reflection only}
   wbAddGroupOrder(CUR3); {SF1Dump: no errors} {Reflection only}
   wbAddGroupOrder(ARMO); {SF1Dump: no errors}
@@ -20917,7 +20923,7 @@ end;
   wbAddGroupOrder(PACK); {SF1Dump: no errors}
   wbAddGroupOrder(CSTY); {SF1Dump: no errors}
   wbAddGroupOrder(LSCR); {SF1Dump: no errors}
-  wbAddGroupOrder(LVSP); // order checked by creating plugin in CK with preceding and succeeding types
+  wbAddGroupOrder(LVSP); // doesn't exist but can be created in CK
   wbAddGroupOrder(ANIO); {SF1Dump: no errors}
   wbAddGroupOrder(WATR); {SF1Dump: no errors}
   wbAddGroupOrder(EFSH); {SF1Dump: no errors}
@@ -20951,12 +20957,13 @@ end;
   wbAddGroupOrder(DLBR); {SF1Dump: no errors}
   wbAddGroupOrder(MUST); {SF1Dump: no errors}
   wbAddGroupOrder(EQUP); {SF1Dump: no errors}
-  wbAddGroupOrder(RELA);
+  wbAddGroupOrder(RELA); // doesn't exist but can be created in CK
   wbAddGroupOrder(SCEN); {SF1Dump: no errors}
-  wbAddGroupOrder(ASTP);
+  wbAddGroupOrder(ASTP); // doesn't exist but can be created in CK
   wbAddGroupOrder(OTFT); {SF1Dump: no errors}
   wbAddGroupOrder(ARTO); {SF1Dump: no errors}
   wbAddGroupOrder(MOVT); {SF1Dump: no errors}
+  wbAddGroupOrder(DUAL); // doesn't exist but can be created in CK
   wbAddGroupOrder(COLL); {SF1Dump: no errors}
   wbAddGroupOrder(CLFM); {SF1Dump: no errors}
   wbAddGroupOrder(REVB); {SF1Dump: no errors}
