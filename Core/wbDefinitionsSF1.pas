@@ -19274,33 +19274,24 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(PMFT, 'Photo Mode Feature', [
     wbEDID,
-//    wbXALG,
-//    wbFTAGs,
     wbFULL,
-//    wbICON,
-//    wbCTDAs,
-    wbStruct(FNAM, 'Unknown', [
-      wbInteger('Feature Type', itU8, wbPhotoModeEnum)          ,
+    wbCTDAs,
+    wbStruct(FNAM, 'Data', [
+      wbInteger('Type', itU8, wbPhotoModeEnum),
       wbFloat('X offset'),
       wbFloat('Y offset'),
-      wbUnknown(8),
-      wbInteger('Width', itU32),
-      wbInteger('Height', itU32),
-      wbUnknown()
-    ]),
+      wbInteger('Texture Width', itU32),
+      wbInteger('Texture Height', itU32),
+      wbInteger('Content Width', itU32),
+      wbInteger('Content Height', itU32),
+      wbInteger('Flags', itU32, wbFlags([
+        'Tile X',
+        'Tile Y',
+        'Top Most'
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+    ], cpNormal, True),
     wbString(HNAM, 'Texture'),
-    //wbStruct(FNAM, 'Unknown', [
-    //  wbInteger('Unknown 1', itU32),
-    //  wbFloat('Unknown 2'),
-    //  wbFloat('Unknown 3'),
-    //  wbByteArray('Unknown 4', 4),
-    //  wbByteArray('Unknown 5', 4),
-    //  wbByteArray('Unknown 6', 4),
-    //  wbByteArray('Unknown 7', 4),
-    //  wbByteArray('Unknown 8', 4)
-    //]),
     wbFormIDCk(INAM, 'Image Space', [IMAD])
-    //wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
   {subrecords checked against Starfield.esm}
