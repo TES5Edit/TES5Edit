@@ -19335,9 +19335,12 @@ end;
     wbOBND(True),
     wbODTYReq,
     wbOPDS,
-    wbBaseFormComponents,
     wbPTT2,
+    wbSNTP,
     wbSNBH,
+    wbDEFL,
+    wbXALG,
+    wbBaseFormComponents,
     wbFormIDCk(DODT, 'Material', [MTPT]),
     wbStruct(DATA, 'Data', [
       { 0} wbFloat('Min Width'),
