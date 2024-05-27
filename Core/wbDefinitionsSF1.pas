@@ -8927,20 +8927,20 @@ end;
         //BGSPlanetContentManagerContentProperties_Component
         wbRStruct('Component Data - Planet Content Manager Content Properties', [
           wbUnknown(ZNAM, 4),
-          wbUnknown(YNAM, 1),
-          wbUnknown(XNAM, 4),
-          wbUnknown(WNAM, 4),
-          wbUnknown(VNAM, 1),
-          wbUnknown(UNAM, 4),
-          wbFloat(NAM1),
-          wbFormIDCk(NAM2, 'Unknown', [NULL, GLOB]),
-          wbUnknown(NAM3, 4),
-          wbUnknown(NAM4).IncludeFlag(dfNoReport),
-          wbUnknown(NAM5, 4),
+          wbInteger(YNAM, 'Do All Before Repeating', itU8, wbBoolEnum),
+          wbInteger(XNAM, 'Number of Times Allowed (Global)', itU32),
+          wbInteger(WNAM, 'Number of Times Allowed (per system)', itU32),
+          wbInteger(VNAM, 'Save Placement', itU8, wbBoolEnum),
+          wbFormIDCk(UNAM, 'Days Until Reset GLOB', [NULL, GLOB]),
+          wbFloat(NAM1, 'Minimum Density Chance'),
+          wbFormIDCk(NAM2, 'Minimum Density Chance GLOB', [NULL, GLOB]),
+          wbInteger(NAM3, 'Number of Times Allowed (per planet)', itU32),
+          wbByteColors(NAM4, 'Debug Color'),
+          wbFormIDCk(NAM5, 'Number of Times Per Request Curve', [CURV, NULL]),
           wbUnknown(NAM6, 4),
           wbUnknown(NAM7, 4),
-          wbUnknown(NAM8, 1),
-          wbUnknown(NAM9, 4),
+          wbInteger(NAM8, 'Allow Invalid Biome Markers', itU8, wbBoolEnum),
+          wbInteger(NAM9, 'Number of Times Allowed (per planet world)', itU32),
           wbCITCReq,
           wbCTDAsCount
         ], [])
@@ -20126,17 +20126,18 @@ end;
   wbRecord(PCBN, 'Planet Content Manager Branch Node', [
     wbEDID,
     wbBaseFormComponents,
-    wbInteger(NAM1, 'Unknown', itU32, wbFlags([
-      'Unknown 0',
-      'Unknown 1'
-    ])).IncludeFlag(dfCollapsed, wbCollapseFlags).SetRequired,
-    wbInteger(NAM2, 'Unknown', itU32, wbEnum([
-      'Unknown 0',
-      'Unknown 1'
-    ])).SetRequired,
+    wbInteger(NAM1, 'Node Type', itU32, wbEnum([
+      '', // Root only for PCMT
+      'Branch Node',
+      'Content Node'
+    ]), cpNormal, True),
+    wbInteger(NAM2, 'Child Selection', itU32, wbEnum([
+      'Random',
+      'Stacked'
+    ]), cpNormal, True),
     wbFormIDCk(NAM3, 'Count Curve', [CURV]),
     wbFormIDCk(NAM4, 'Distribution Curve', [CURV]),
-    wbInteger(NAM5, 'Unknown', itU8, wbBoolEnum).SetRequired,
+    wbInteger(NAM5, 'Consume request even on failure', itU8, wbBoolEnum, cpNormal, True),
     wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN, PCCN])),
     wbCITCReq,
     wbCTDAsCount,
@@ -20147,20 +20148,25 @@ end;
   wbRecord(PCCN, 'Planet Content Manager Content Node', [
     wbEDID,
     wbBaseFormComponents,
-    wbFormIDCk(PCCC, 'Content', [WRLD, LVLP, PKIN]),
-    wbEmpty(IOVR),
+    wbFormIDCk(PCCC, 'Content', [WRLD, LVLP, PKIN], False, cpNormal, True),
+    wbEmpty(IOVR, 'Override Content Placement Properties and Conditions'),
     wbKWDAs
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(PCMT, 'Planet Content Manager Tree', [
-    wbEDID,
-    wbUnknown(NAM1), //req
-    wbUnknown(NAM2), //req
-    wbUnknown(NAM5), //req
+    wbEDID.SetRequired,
+    wbInteger(NAM1, 'Node Type', itU32, wbEnum(['Root']), cpIgnore, True)
+      .IncludeFlag(dfInternalEditOnly), // PCMT only has root type
+    wbInteger(NAM2, 'Child Selection', itU32, wbEnum(['','Stacked']), cpNormal, True)
+      .SetDefaultNativeValue(1)
+      .IncludeFlag(dfInternalEditOnly), // PCMT only allows stacked node
+    wbInteger(NAM5, 'Consume request even on failure', itU8, wbBoolEnum, cpNormal, True)
+      .IncludeFlag(dfInternalEditOnly), // PCMT does not allow changing flag to true
     wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN])),
     wbCITCReq,
-    wbCTDAsCount
+    wbCTDAsCount,
+    wbKWDAs
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20245,7 +20251,7 @@ end;
         wbDouble('Incline', cpNormal, False, 1, Low(Integer)).SetToStr(wbAngleToStr),
         wbDouble('Mean Orbit', cpNormal, False, 1, Low(Integer)),
         wbFloat('Axial Tilt').SetToStr(wbAngleToStr),
-        wbFloat('Rotation Rate'),
+        wbFloat('Rotational Velocity'),
         wbFloatAngle('Start Angle'),
         wbFloatAngle('Perihelion Angle'),
         wbInteger('Apply Orbital Velocity', itU8, wbBoolEnum),
@@ -20257,7 +20263,7 @@ end;
         wbFloat('Mass (in Earth Masses)', cpNormal, False, 1/5.972E24, 3),
         wbFloat('Radius in km'),
         wbFloat('Surface Gravity'),
-        wbUnknown(4) // flags? all data appears to be stored as a sequence of doubles
+        wbUnknown(4) // all data appears to be stored as a sequence of doubles
       ]),
       wbStruct(GNAM, 'Galaxy Data', [
         wbInteger('Star System ID', itu32, wbStarIDToStr, wbStrToStarID)
@@ -20546,8 +20552,8 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(STDT, 'Star',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([  {flags not checked against Starfield}
-      {0x10000000} 28, 'Unknown 28',
-      {0x20000000} 29, 'Unknown 29'
+      {0x10000000} 28, 'Starts Hidden',
+      {0x20000000} 29, 'Always Display Name'
     ])), [
     wbEDID,
     wbBaseFormComponents,
@@ -20557,7 +20563,9 @@ end;
     wbUnknown(ONAM),                                    //related to BGSOrbitalDataComponent_Component
     wbInteger(DNAM, 'System ID', itU32),
     wbByteColors(ENAM, 'Color'),
-    wbFormIDCk(PNAM, 'Sun Preset', [SUNP])
+    wbFormIDCk(PNAM, 'Sun Preset', [SUNP]),
+    wbFormIDCk(HNAM, 'Time of Day Data', [TODD]),
+    wbSoundReference(WED0, 'Star Sound')
   ])
   .SetBuildIndexKeys(procedure(const aMainRecord: IwbMainRecord; var aIndexKeys: TwbIndexKeys)
   begin
