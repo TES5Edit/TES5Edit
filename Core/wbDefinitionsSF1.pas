@@ -5147,6 +5147,50 @@ begin
                   6, 'Layered Material Swap 6'       //Applied directly to NPC_ records
   ]);
 
+  var wbQuestEventTypeEnum := wbEnum([],[
+    Sig2Int('ADIA'), 'Actor Dialogue',
+    Sig2Int('AHEL'), 'Actor Hello',
+    Sig2Int('ARRT'), 'Arrest',
+    Sig2Int('ASSU'), 'Assault Actor',
+    Sig2Int('AOBJ'), 'Attraction Object',
+    Sig2Int('BRIB'), 'Bribe',
+    Sig2Int('CAST'), 'Cast Magic',
+    Sig2Int('CLOC'), 'Change Location',
+    Sig2Int('CHRR'), 'Change Relationship',
+    Sig2Int('XPLL'), 'Clear Location',
+    Sig2Int('CRFT'), 'Craft Item',
+    Sig2Int('ADCR'), 'Crime Gold',
+    Sig2Int('DEAD'), 'Dead Body',
+    Sig2Int('ESJA'), 'Escape Jail',
+    Sig2Int('FLAT'), 'Flatter',
+    Sig2Int('HACK'), 'Hack Computer',
+    Sig2Int('LEVL'), 'Increase Level',
+    Sig2Int('INTM'), 'Intimidate',
+    Sig2Int('IRON'), 'Iron Sights',
+    Sig2Int('JAIL'), 'Jail',
+    Sig2Int('KILL'), 'Kill Actor',
+    Sig2Int('LCLD'), 'Location Loaded',
+    Sig2Int('LOCK'), 'Lock Pick',
+    Sig2Int('NVPE'), 'New Voice Power',
+    Sig2Int('OAAT'), 'On Actor Attach',
+    Sig2Int('OSCC'), 'On Speech Challenge Completion',
+    Sig2Int('PFIN'), 'Pay Fine',
+    Sig2Int('PICK'), 'Pick Pocket',
+    Sig2Int('PIRA'), 'Piracy Actor',
+    Sig2Int('AFAV'), 'Player Activate Actor',
+    Sig2Int('AIPL'), 'Player Add Item',
+    Sig2Int('CURE'), 'Player Cured',
+    Sig2Int('INFC'), 'Player Infected',
+    Sig2Int('PRFV'), 'Player Receives Favor',
+    Sig2Int('REMP'), 'Player Remove Item',
+    Sig2Int('SCPT'), 'Script Event',
+    Sig2Int('STIJ'), 'Served Time',
+    Sig2Int('DOCK'), 'Ship Docking',
+    Sig2Int('LAND'), 'Ship Landing',
+    Sig2Int('TRES'), 'Tresspass Actor',
+    Sig2Int('TMEE'), 'Trigger Mine Explosion'
+  ]);
+
   var wbObjectModPropertiesEnum := wbEnum([],[
     Sig2Int('AACT'), 'Armor - Actor Value',
     Sig2Int('ADMG'), 'Armor - Damage Resistance',
@@ -15983,7 +16027,79 @@ end;
     ], [], cpNormal, True)
   ], False, nil, cpNormal, False, nil {wbPACKAfterLoad});
 
-  var wbQUSTAliasFlags :=
+  var wbQUSTLocationAliasFlags :=
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      {0x00000001} {01} 'Reserves Location',
+      {0x00000002} {02} 'Optional',
+      {0x00000004} {03} 'Unknown 2',
+      {0x00000008} {04} 'Allow Reuse in Quest',
+      {0x00000010} {05} 'Unknown 4',
+      {0x00000020} {06} 'Unknown 5',
+      {0x00000040} {07} 'Unknown 6',
+      {0x00000080} {08} 'Unknown 7',
+      {0x00000100} {09} 'Stores Text',
+      {0x00000200} {10} 'Allow Reserved',
+      {0x00000400} {11} 'Unknown 10',
+      {0x00000800} {12} 'Unknown 11',
+      {0x00001000} {13} 'Unknown 12',
+      {0x00002000} {14} 'Unknown 13',
+      {0x00004000} {15} 'Unknown 14',
+      {0x00008000} {16} 'Unknown 15',
+      {0x00010000} {17} 'Allow Explored',
+      {0x00020000} {18} 'Unknown 17',
+      {0x00040000} {19} 'Unknown 18',
+      {0x00080000} {20} 'Unknown 19',
+      {0x00100000} {21} 'Unknown 20',
+      {0x00200000} {22} 'Unknown 21',
+      {0x00400000} {23} 'Unknown 22',
+      {0x00800000} {24} 'Discard on shutdown if unused',
+      {0x01000000} {25} 'Unknown 24',
+      {0x02000000} {26} 'Unknown 25',
+      {0x04000000} {27} 'Unknown 26',
+      {0x08000000} {28} 'Search Ship Locations',
+      {0x10000000} {29} 'Matching Loc - Planets And Systems Only',
+      {0x20000000} {30} 'Current Alias System',
+      {0x40000000} {31} 'Current Alias Planet',
+      {0x80000000} {32} 'Unknown 31'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags);
+
+  var wbQUSTReferenceAliasFlags :=
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      {0x00000001} {01} 'Reserves Reference',
+      {0x00000002} {02} 'Optional',
+      {0x00000004} {03} 'Quest Object',
+      {0x00000008} {04} 'Allow Reuse in Quest',
+      {0x00000010} {05} 'Allow Dead',
+      {0x00000020} {06} 'Matching Ref - In Loaded Area',
+      {0x00000040} {07} 'Essential',
+      {0x00000080} {08} 'Allow Disabled',
+      {0x00000100} {09} 'Stores Text',
+      {0x00000200} {10} 'Allow Reserved',
+      {0x00000400} {11} 'Protected',
+      {0x00000800} {12} 'Forced by Aliases',
+      {0x00001000} {13} 'Allow Destroyed',
+      {0x00002000} {14} 'Matching Ref - Closest',
+      {0x00004000} {15} 'Uses Stored Text',
+      {0x00008000} {16} 'Initially Disabled',
+      {0x00010000} {17} 'Unknown 16',
+      {0x00020000} {18} 'Clear Names When Removed',
+      {0x00040000} {19} 'Matching Ref - Actors Only',
+      {0x00080000} {20} 'Create Ref - Temp',
+      {0x00100000} {21} 'External Alias - Linked',
+      {0x00200000} {22} 'No Pickpocket',
+      {0x00400000} {23} 'Can Apply Data To Non-Aliased Refs',
+      {0x00800000} {24} 'Is Companion',
+      {0x01000000} {25} 'Optional All Scenes',
+      {0x02000000} {26} 'Matching Ref - From Crowd',
+      {0x04000000} {27} 'Quest Object Cargo',
+      {0x08000000} {28} 'Unknown 27',
+      {0x10000000} {29} 'Unknown 28',
+      {0x20000000} {30} 'Unknown 29',
+      {0x40000000} {31} 'Unknown 30',
+      {0x80000000} {32} 'Consumable'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags);
+
+(*  var wbQUSTAliasFlags :=
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       {0x00000001} 'Reserves Location/Reference',
       {0x00000002} 'Optional',
@@ -16001,29 +16117,30 @@ end;
       {0x00002000} 'Matching Ref - Closest',
       {0x00004000} 'Uses Stored Text',
       {0x00008000} 'Initially Disabled',
-      {0x00010000} 'Allow Cleared',
+      {0x00010000} 'Allow Explored',
       {0x00020000} 'Clear Names When Removed',
       {0x00040000} 'Matching Ref - Actors Only',
       {0x00080000} 'Create Ref - Temp',
       {0x00100000} 'External Alias - Linked',
       {0x00200000} 'No Pickpocket',
       {0x00400000} 'Can Apply Data To Non-Aliased Refs',
-      {0x00800000} 'Is Companion',
+      {0x00800000} 'Is Companion/Discard on shutdown if unused',
       {0x01000000} 'Optional All Scenes',
-      {0x02000000} 'Unknown 26',
-      {0x04000000} 'Unknown 27',
-      {0x08000000} 'Unknown 28',
-      {0x10000000} 'Unknown 29',
-      {0x20000000} 'Unknown 30',
-      {0x40000000} 'Unknown 31',
-      {0x80000000} 'Unknown 32'
-    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags);
+      {0x02000000} 'Matching Ref - From Crowd',
+      {0x04000000} 'Quest Object Cargo',
+      {0x08000000} 'Search Ship Locations',
+      {0x10000000} 'Matching Loc - Planets And Systems Only',
+      {0x20000000} 'Current Alias System',
+      {0x40000000} 'Current Alias Planet',
+      {0x80000000} 'Consumable'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags); *)
 
   var lReferenceAlias :=
     wbRStructSK([0], 'Reference Alias', [
       wbInteger(ALST, 'Reference Alias ID', itU32, nil, cpNormal, True),
       wbString(ALID, 'Alias Name', 0, cpNormal, True),
-      wbQUSTAliasFlags,
+//      wbQUSTAliasFlags,
+      wbQUSTReferenceAliasFlags,
       wbUnknown(ALFG,4).SetDefaultEditValue('00 00 00 00').SetRequired,
 
       wbInteger(ALLR, 'Legendary Rank', itU8, wbEnum([], [
@@ -16088,9 +16205,9 @@ end;
             wbInteger(ALNT, 'Type', itU32, wbEnum([
               'Linked Form',
               'Linked Ref',
-              'Unknown 3',  // DebugMQ101HelperQuest
-              'Unknown 4',  // BE series 1 - quests & derelicts (10)
-              'Unknown 5'   // BE series 2 - mostly generic derelicts (10)
+              'Linked Interior Cell',
+              'Linked Exterior Cell',
+              'Same Module'
             ])).SetRequired,
             wbFormIDCk(ALNR, 'Ref Type', [LCRT, NULL])
           ], []),
@@ -16127,7 +16244,7 @@ end;
       wbRArray('Alias Package Data', wbFormIDCk(ALPC, 'Package', [PACK])),
       wbString(SCCM, 'Script Comment'),
       wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]).SetRequired,
-      wbFormIDCk(ALTM, 'Terminal Menu', [TMLM]),
+      wbRArrayS('Alias Terminals', wbFormIDCk(ALTM, 'Terminal Menu', [TMLM])),
       wbEmpty(ALED, 'Alias End Marker', cpNormal, True)
     ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet);
 
@@ -16135,7 +16252,8 @@ end;
     wbRStructSK([0], 'Location Alias', [
       wbInteger(ALLS, 'Location Alias ID', itU32),
       wbString(ALID, 'Alias Name'),
-      wbQUSTAliasFlags,
+//      wbQUSTAliasFlags,
+      wbQUSTLocationAliasFlags,
       wbUnknown(ALFG, 4),
 
       wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias)
@@ -16172,8 +16290,8 @@ end;
       wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
         .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
 
-      wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
       wbInteger(ALSY, 'System Location Alias ID', itS32),        // need a new alias to str routine for this
+      wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
 
       wbFormIDCk(ALKF, 'Location Type Keyword', [KYWD]),
       wbFormIDCk(ALDN, 'Display Name', [MESG]),
@@ -16223,11 +16341,11 @@ end;
         {0x008000} 'Has Dialogue Data',
         {0x010000} 'Unknown 16',
         {0x020000} 'Unknown 17',
-        {0x040000} 'Unknown 18',
-        {0x080000} 'Unknown 19',
-        {0x100000} 'Unknown 20',
-        {0x200000} 'Unknown 21',
-        {0x400000} 'Unknown 22'
+        {0x040000} 'Ship Dialogue Only',
+        {0x080000} 'Can Be Rejected',
+        {0x100000} 'Audio Log Only',
+        {0x200000} 'Don''t Stop Interrupt Packages On Alias Fill',
+        {0x400000} 'Don''t Dump Old Location Event Parameter'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbInteger('Priority', itU8),
       wbUnused(3),
@@ -16252,7 +16370,7 @@ end;
     ]),
     wbFormIDCk(QTYP, 'Quest Type', [KYWD]),
     wbFormIDCk(FTYP, 'Quest Faction', [KYWD]), // was FACT but now separate from FACT
-    wbString(ENAM, 'Event', 4),
+    wbInteger(ENAM, 'Event', itU32, wbQuestEventTypeEnum),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
     wbFormIDCk(QTLM, 'Quest Time Limit', [GLOB]),
     wbFormIDCk(QSRC, 'Source Quest', [QUST]),
@@ -16261,20 +16379,20 @@ end;
     wbString(NAM3, 'Summary'),
     wbRStruct('Quest Dialogue Conditions', [wbCTDAs], [], cpNormal, False),
     wbMarkerReq(NEXT),
-    wbCTDAs, {>>> Unknown, doesn't show up in CK <<<}
+    wbRStruct('Story Manager Conditions', [wbCTDAs], [], cpNormal, False),
     wbRArrayS('Stages', wbRStructSK([0], 'Stage', [
       wbStructSK(INDX, [0], 'Stage Index', [
         wbInteger('Stage Index', itU16),
         wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Unknown 1',
+          {0x01} '',
           {0x02} 'Run On Start',
           {0x04} 'Run On Stop',
           {0x08} 'Keep Instance Data From Here On',
-          'Unknown 4',
-          'Unknown 5',
-          'Unknown 6'
+          {0x10} 'Run On Timer End',
+          {0x20} 'Start Quest Timer',
+          {0x40} 'Ready To Display On UI'
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Unknown', itU8)
+        wbUnused(1)
       ]),
       wbRArray('Log Entries', wbRStruct('Log Entry', [
         wbInteger(QSDT, 'Stage Flags', itU8, wbFlags([
@@ -16324,7 +16442,7 @@ end;
       ], []))
     ], [])),
 
-    wbInteger(ANAM, 'Next Alias ID', itU32),
+    wbInteger(ANAM, 'Next Alias ID', itU32, nil, cpNormal, True),
 
     wbRArray('Aliases',
       wbRUnion('Alias', [
@@ -16336,19 +16454,19 @@ end;
 
 //    wbString(NNAM, 'Description', 0, cpTranslate, False),
     wbFormIDCk(GNAM, 'Quest Group', [KYWD]),
-//    wbString(SNAM, 'SWF File'),
+    wbString(SNAM, 'SWF File'),
 
     wbRStruct('Mission Board Info', [
       wbFormIDCk(QMTY, 'Mission Type Keyword', [KYWD, NULL]),
-      wbLStringKC(QMSU, 'Description', 0, cpTranslate),
-      wbRArray('Info Panel', wbRStruct('Panel Item', [
-        wbLStringKC(QMDT, 'Header', 0, cpTranslate),
-        wbLStringKC(QMDP, 'Line 1', 0, cpTranslate),
-        wbLStringKC(QMDS, 'Line 2', 0, cpTranslate)
-      ], []))
+      wbLStringKC(QMSU, 'Mission Summary', 0, cpTranslate),
+      wbRArray('Details', wbRStruct('Detail Item', [
+        wbLStringKC(QMDT, 'Title', 0, cpTranslate),
+        wbLStringKC(QMDP, 'Primary', 0, cpTranslate),
+        wbLStringKC(QMDS, 'Secondary', 0, cpTranslate)
+      ], []), 6),
+      wbKeywords
     ], []),
 
-    wbKeywords,
     wbString(SCCM, 'Script Comment')
   ]);
 
