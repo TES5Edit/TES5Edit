@@ -925,6 +925,7 @@ const
   PAHD : TwbSignature = 'PAHD'; { New To Fallout 76 }
   PAPI : TwbSignature = 'PAPI'; { New To Starfield }
   PAPN : TwbSignature = 'PAPN'; { New To Starfield }
+  PAQO : TwbSignature = 'PAQO'; { New To Starfield }
   PARW : TwbSignature = 'PARW'; { New to Skyrim }
   PASP : TwbSignature = 'PASP'; { New To Starfield }
   PBAR : TwbSignature = 'PBAR'; { New to Skyrim }

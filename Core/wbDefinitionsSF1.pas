@@ -664,6 +664,10 @@ begin
           Result := 'None';
       end else if aInt = -2 then
         Result := 'Player'
+      else if aInt = -3 then
+        Result := 'Non-Actor Track'
+      else if aInt = -4 then
+        Result := 'Play Audio At Player(Voice Note)'
       else begin
         Result := aInt.ToString;
         if aType = ctToStr then
@@ -675,13 +679,13 @@ begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: if (aInt = -1) or (aInt = -2) then Result := '' else
+    ctCheck: if (aInt = -1) or (aInt = -2) or (aInt = -3) or (aInt = -4) then Result := '' else
       Result := '<Warning: Could not resolve alias>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
 
-  if ((aInt = -1) or (aInt = -2)) and (aType <> ctEditType) and (aType <> ctEditInfo) then
+  if ((aInt = -1) or (aInt = -2) or (aInt = -3) or (aInt = -4)) and (aType <> ctEditType) and (aType <> ctEditInfo) then
     Exit;
 
   if not Assigned(aQuestRef) then
@@ -816,6 +820,11 @@ begin
           if j = aInt then
             Exit(Alias);
         end;
+
+    if Assigned(Aliases) then
+      Exit(Aliases);
+
+    Exit(MainRecord);
 end;
 
 function wbStrToAlias(const aString: string; const aElement: IwbElement): Int64;
@@ -988,6 +997,52 @@ begin
     Exit;
 
   Result := wbAliasToStr(aInt, Container.ElementBySignature['ALEQ'] , aType);
+end;
+
+function wbSCENQuestAliasToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainer;
+begin
+  if not wbResolveAlias then begin
+    case aType of
+      ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
+      ctToSortKey: Result := IntToHex64(aInt, 8);
+    else
+      Result := '';
+    end;
+    Exit;
+  end;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := aElement.ContainingMainRecord;
+
+  if not Assigned(Container) then
+    Exit;
+
+  Result := wbAliasToStr(aInt, Container.ElementBySignature['PNAM'] , aType);
+end;
+
+function wbSCENAliasLinksTo(const aElement: IwbElement): IwbElement;
+var
+  Container  : IwbContainer;
+begin
+  Result := nil;
+
+  if not wbResolveAlias then
+    Exit;
+
+  Container := aElement.ContainingMainRecord;
+
+  if not Assigned(Container) then
+    Exit;
+
+  var lAlias := aElement.NativeValue;
+  if not VarIsOrdinal(lAlias) then
+    Exit;
+
+  Result := wbAliasLinksTo(lAlias, Container.ElementBySignature['PNAM']);
 end;
 
 function wbCTDAParam1StringToInt(const aString: string; const aElement: IwbElement): Int64;
@@ -1450,6 +1505,24 @@ begin
   if Length(lTemplate) > 0 then
   Supports(IInterface(lTemplate[0]), IwbElement, lElement);
   lContainer.Assign(1, lElement, False);
+end;
+
+procedure wbSCENTimelineTypeAfterSetCallback(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  lContainer: IwbContainerElementRef;
+  lTemplate: TwbTemplateElements;
+  lElement: IwbElement;
+begin
+  if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
+    Exit;
+  var lSettingData := lContainer.ElementBySortOrder[2];
+  if Assigned(lSettingData) then
+    lSettingData.Remove;
+
+  lTemplate := aElement.Container.GetAssignTemplates(2);
+  if Length(lTemplate) > 0 then
+  Supports(IInterface(lTemplate[0]), IwbElement, lElement);
+  lContainer.Assign(2, lElement, False);
 end;
 
 procedure wbMESGDNAMAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -6704,11 +6777,12 @@ begin
     wbArrayS('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
   ]));
 
-  var wbHNAMHNAM := wbRStruct('Unknown', [
+  var wbHNAMHNAM := wbRStruct('Head Tracking', [
     wbMarker(HNAM).SetRequired,
-    wbArray(HTID, 'Unknown', wbInteger('Reference Alias ID', itS32)),
-    wbEmpty(FNAM, 'Unknown'),
-    wbEmpty(PNAM, 'Unknown'),
+    wbArray(HTID, ' Aliases', wbInteger('Alias ID', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+      .SetLinksToCallback(wbSCENAliasLinksTo)),
+    wbEmpty(FNAM, 'Force Rotate'),
+    wbEmpty(PNAM, 'Force Rotate Must Complete'),
     wbMarker(HNAM).SetRequired
   ], []).IncludeFlag(dfTemplate);
 {
@@ -13224,19 +13298,20 @@ end;
           {0x0001} 'Start - WalkAway Phase',
           {0x0002} 'Don''t Run End Scripts on Scene Jump',
           {0x0004} 'Start - Inherit In Templated Scenes',
-          {0x0008} 'Unknown 3',
-          {0x0010} 'Unknown 4'
+          {0x0008} 'FX Actions - Random',
+          {0x0010} 'FX Actions - Do All Once'
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
         wbStruct(SCQS, 'Set Parent Quest Stage', [
           wbInteger('On Start', itS16),
           wbInteger('On Completion', itS16)
         ]),
-        wbEmpty(SPMV, 'Unknown'),
+        wbEmpty(SPMV, 'Phase Visibility Marker'),
         wbEmpty(HNAM, 'Marker Phase End', cpNormal, True)
       ], [])
     ),
     wbRArray('Actors', wbRStruct('Actor', [
-      wbInteger(ALID, 'Alias ID', itS32, nil, cpNormal, True),
+      wbInteger(ALID, 'Alias ID', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+        .SetLinksToCallbackOnValue(wbSCENAliasLinksTo),
       wbInteger(LNAM, 'Flags', itU32, wbFlags([
         'No Player Activation',
         'Optional',
@@ -13288,11 +13363,17 @@ end;
           var lDataElement := lContainer.ElementBySortOrder[8]; //'Type Specific Action' is the member with index 8 in this struct, be sure to adjust if adding more members before
           if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
             lDataElement.Remove;
+
+          var lTemplate := aElement.Container.GetAssignTemplates(8);
+          if Length(lTemplate) > 0 then
+          Supports(IInterface(lTemplate[0]), IwbElement, lDataElement);
+          lContainer.Assign(8, lDataElement, False);
         end)
       .IncludeFlag(dfIncludeValueInDisplaySignature),
       wbString(NAM0, 'Name').SetRequired,
       wbString(SNOT, 'Scene Notes'),
-      wbInteger(ALID, 'Alias ID', itS32).SetRequired(),                         //ALID  uint32 // +0x08 - only used if the value is not 0xFFFFFFFB (-5)
+      wbInteger(ALID, 'Alias ID', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+        .SetLinksToCallbackOnValue(wbSCENAliasLinksTo),                         //ALID  uint32 // +0x08 - only used if the value is not 0xFFFFFFFB (-5)
       wbInteger(INAM, 'Index', itU32).SetRequired,                              //INAM  uint32 // +0x10
       wbInteger(FNAM, 'Flags', itU32, wbFlags([                                 //FNAM  uint32 // +0x0C
         {0x00000001} 'Unknown 0',
@@ -13316,9 +13397,9 @@ end;
         {0x00040000} 'Unknown 18',
         {0x00080000} 'Ignore For Completion',
         {0x00100000} 'Unknown 20',
-        {0x00200000} 'Camera Speaker Target',
+        {0x00200000} 'Disable Camera Speaker Target',
         {0x00400000} 'Complete Face Target',
-        {0x00800000} 'Unknown 23',
+        {0x00800000} 'Animation Only Movement',
         {0x01000000} 'Unknown 24',
         {0x02000000} 'Unknown 25',
         {0x04000000} 'Unknown 26',
@@ -13349,7 +13430,7 @@ end;
           wbFloat(DMIN, 'Looping - Min').SetRequired,                           //DMIN  uint32 // +0x84
           wbHNAMHNAM.SetRequired,                                               //HNAM  none   // +0x50; probably formid; kicks off component-style read (see HNAM fields)
           wbFormIDCk(VENC, 'Dialogue Subtype', [KYWD]),                         //VENC  uint32 // +0x78
-          wbSoundReference(WED0)                                                //WED0  SoundReference // +0x20
+          wbSoundReference(WED0, 'Voice Override')                              //WED0  SoundReference // +0x20
         ], []),
         {1 Package}
         wbRStruct('Package', [
@@ -13358,28 +13439,34 @@ end;
         {2 Timer}
         wbRStruct('Timer', [
           wbFloat(SNAM, 'Max Seconds'),                                         //SNAM  uint32 // +0x20, +0x24
+          wbInteger(SCQS, 'Set Parent Quest Stage', itS16),                     //SCQS  int16 // if not -1, registers the timer action in some list with the value //never seen in Starfield.esm
           wbFloat(TNAM, 'Min Seconds'),                                         //TNAM  uint32 // +0x24
-          wbEmpty(HNAM),                                                        //not documented by gibbed, always (4x) empty in Starfield.esm
-          wbInteger(SCQS, 'Unknown', itS16),                                    //SCQS  int16 // if not -1, registers the timer action in some list with the value //never seen in Starfield.esm
-          wbInteger(INTV, 'Unknown', itS16)                                     //INTV  int16 // same as SCQS //never seen in Starfield.esm
+          wbEmpty(HNAM, 'Hold For Animation Event')                             //not documented by gibbed, always (4x) empty in Starfield.esm
+//          wbInteger(INTV, 'Unknown', itS16)                                     //INTV  int16 // same as SCQS //never seen in Starfield.esm
         ], []),
         {3 Player Dialogue}
         wbRStruct('Player Dialogue', [
           wbSoundReference(WED0).SetRequired(False),                            //WED0  SoundReference // +0x40
           wbHNAMHNAM.SetRequired,                                               //HNAM  none // +0x20; probably formid; kicks off component-style read (see HNAM fields)
-          wbInteger(DTGT, 'Dialogue Target Actor', itS32).SetRequired,          //DTGT  uint32 // +0x90 // as an alias ID
-          wbRStructs('Dialogue List', 'Item', [
+          wbInteger(DTGT, 'Dialogue Target Actor', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+            .SetLinksToCallbackOnValue(wbSCENAliasLinksTo),                     //DTGT  uint32 // +0x90 // as an alias ID
+          wbRStructs('Dialogue Topics', 'Choice', [
             wbFormIDCk(ESCE, 'Player Choice', [DIAL, NULL]),                    //ESCE  uint32 // +0x88 array; repeated; appears to allocate a new item into the array, with the value set to item+0x00 and item+0x08; likely acts as start marker for an item in this array
-            wbFormIDCk(PPST, 'Unknown', [NULL, KYWD]),                          //PPST  uint32 // +0x88 array; repeated; stored in item+0x10, also sets item+0x24 to 1 (uint8/byte)
-            wbFormIDCk(PNST, 'Unknown', [NULL, KYWD]),                          //PNST  uint32 // +0x88 array; repeated; stored in item+0x18, also sets item+0x25 to 1 (uint8/byte)
-            wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),                      //PASP  uint32 // +0x88 array; repeated; stored in item+0x28
-            wbInteger(PAPI, 'Phase Index', itU32),                              //PAPI  uint32 // +0x88 array; repeated; stored in item+0x20; some sort of parenting/hierarchy index with the items in the array
-            wbString(PAPN),
+            wbFormIDCk(PPST, 'Player Dialogue Subtype', [KYWD]),                //PPST  uint32 // +0x88 array; repeated; stored in item+0x10, also sets item+0x24 to 1 (uint8/byte)
+            wbRStruct('NPC Dialogue Subtype', [
+              wbFormIDCk(PNST, 'Subtype', [KYWD], False, cpNormal, True),       //PNST  uint32 // +0x88 array; repeated; stored in item+0x18, also sets item+0x25 to 1 (uint8/byte)
+              wbFormIDCk(PASP, 'Start Scene', [NULL, SCEN]),                    //PASP  uint32 // +0x88 array; repeated; stored in item+0x28
+              wbInteger(PAPI, 'Phase Index', itU32),                            //PAPI  uint32 // +0x88 array; repeated; stored in item+0x20; some sort of parenting/hierarchy index with the items in the array
+              wbString(PAPN, 'Phase Name'),
+              wbUnknown(PAQO)                                                   //PAQO  uint32 // Seems to get set if a NPC dialogue subtype is present and the 'Only Parent Quest Scenes' box is unchecked. But has 4 bytes of zero.
+            ], []),
             wbFormIDCk(ESCS, 'NPC Response', [DIAL, NULL]).SetRequired          //ESCS  uint32 // +0x88 array; repeated; each item is 0x30 bytes; stored in item+0x08; increases +0x88 index *after* storing the value, likely acts as end marker for an item in this array
           ], []),
-          wbUnknown(ATTR),                                                      //ATTR  uint32 // +0x94
-          wbEmpty(ACBS, 'Unknown'),                                             //ACBS  nothing // +0x98 set to 1 (uint8/bool)
-          wbEmpty(JAIL, 'Unknown')                                              //JAIL  none // +0x99 set to 1 (uint8/bool) // never seen in Starfield.esm
+          wbRStruct('NPC Reaction', [
+            wbInteger(ATTR, 'React to Action', itU32, nil, cpNormal, True),  //ATTR  uint32 // +0x94
+            wbEmpty(ACBS, 'NPC Reaction flag', cpNormal, True)                  //ACBS  nothing // +0x98 set to 1 (uint8/bool)
+          ], [])
+//          wbEmpty(JAIL, 'Unknown')                                              //JAIL  none // +0x99 set to 1 (uint8/bool) // never seen in Starfield.esm
         ], [])
         .IncludeFlag(dfAllowAnyMember)
         .IncludeFlag(dfStructFirstNotRequired),
@@ -13515,17 +13602,71 @@ end;
         ], []),
         {10 Timeline}
         wbRStruct('Timeline', [
-          wbUnknown(TNAM, 4),                                                   //TNAM  uint32 // +0x20
-          wbUnknown(SNAM, 4),                                                   //SNAM  uint32 // +0x24
-          wbUnknown(UNAM, 4),                                                   //UNAM  uint32 // +0x2C
-          wbUnknown(LNAM, 4),                                                   //LNAM  uint32 // +0x30
-          wbUnknown(CNAM, 4)                                                    //CNAM  uint32 // +0x34
+          wbInteger(TNAM, 'Type', itU32, wbEnum([
+            {0} 'Headtrack',
+            {1} 'Headtrack Stop',
+            {2} 'Camera',
+            {3} 'Phase Time',
+            {4} 'Headtrack Angles',
+            {5} 'Eyetrack Angles',
+            {6} 'Headtrack Disable',
+            {7} 'Headtrack Enable'
+          ])).SetAfterSet(wbSCENTimelineTypeAfterSetCallback),
+          wbFloat(SNAM, 'Start Time', cpNormal, True),
+          wbRUnion('Data', function(const aContainer: IwbContainerElementRef): Integer
+            begin
+              Result := -1;
+              if not Assigned(aContainer) then
+                Exit;
+              var lType := aContainer.ElementNativeValues[TNAM];
+              if not VarIsOrdinal(lType) then
+                Exit;
+
+              case lType of
+                2:      // Camera
+                  Result := 1;
+                4, 5:   // Headtrack/Eyetrack Angles
+                  Result := 2;
+                0, 7:   // Headtrack/Headtrack Enable
+                  Result := 3;
+                else
+                 Result := 0;
+              end;
+            end, [
+          {0} wbRStruct('Data', [
+                wbByteArray(UNAM, 'Unused', 4, cpIgnore, True),
+                wbByteArray(LNAM, 'Unused', 4, cpIgnore, True),
+                wbByteArray(CNAM, 'Unused', 4, cpIgnore, True)
+              ], []),
+          {1} wbRStruct('Data', [  //  Camera
+                wbInteger(UNAM, 'Target Alias ID', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+                  .SetLinksToCallbackOnValue(wbSCENAliasLinksTo)
+                  .SetDefaultNativeValue(-1),
+                wbInteger(LNAM, 'Location Alias ID', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+                  .SetLinksToCallbackOnValue(wbSCENAliasLinksTo)
+                  .SetDefaultNativeValue(-1),
+                wbFormIDCk(CNAM, 'Unknown', [CAMS], False, cpNormal, True)
+              ], [], cpNormal, True),
+          {2} wbRStruct('Data', [  // Headtrack/Eyetrack Angles
+                wbInteger(UNAM, 'Track Angle X', itS32, nil, cpNormal, True),
+                wbInteger(LNAM, 'Track Angle Y', itS32, nil, cpNormal, True),
+                wbByteArray(CNAM, 'Unused', 4, cpIgnore, True)
+              ], [], cpNormal, True),
+          {3} wbRStruct('Data', [  // Headtrack/Headtrack Enable
+                wbInteger(UNAM, 'Target Alias ID', itS32, wbSCENQuestAliasToStr, wbStrToAlias, cpNormal, True)
+                  .SetLinksToCallbackOnValue(wbSCENAliasLinksTo)
+                  .SetDefaultNativeValue(-1),
+                wbByteArray(LNAM, 'Unused', 4, cpIgnore, True),
+                wbByteArray(CNAM, 'Unused', 4, cpIgnore, True)
+              ], [], cpNormal, True)
+           ], [], cpNormal, True).IncludeFlag(dfMustBeUnion)
+           {end Runion Data}
         ], [])
       ], []),
       wbMarkerReq(ANAM)
     ], [])),
 
-    wbFormIDCk(PNAM, 'Quest', [QUST]),
+    wbFormIDCk(PNAM, 'Quest', [QUST], False, cpNormal, True),
     wbInteger(INAM, 'Last Action Index', itU32),
     wbUnknown(VNAM),
     wbCTDAs,
@@ -16261,7 +16402,11 @@ end;
       wbFormIDCk(VTCK, 'Voice Types', [NPC_, FACT, FLST, VTYP, NULL]).SetRequired,
       wbRArrayS('Alias Terminals', wbFormIDCk(ALTM, 'Terminal Menu', [TMLM])),
       wbEmpty(ALED, 'Alias End Marker', cpNormal, True)
-    ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet);
+    ], [], cpNormal, False, nil, False, nil, wbContainerAfterSet)
+      .SetSummaryKey([0, 1])
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfSummaryMembersNoName);
 
   var lLocationAlias :=
     wbRStructSK([0], 'Location Alias', [
@@ -16305,14 +16450,21 @@ end;
       wbInteger(ALCC, 'Closest To Alias', itS32, wbQuestAliasToStr, wbStrToAlias)
         .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
 
-      wbInteger(ALSY, 'System Location Alias ID', itS32),        // need a new alias to str routine for this
-      wbInteger(ALPN, 'Parent System Location Alias ID', itS32), // ALPN points to the alias who's ALSY matches the value
+      wbInteger(ALSY, 'Current Alias System ID', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
+
+      wbInteger(ALPN, 'Current Alias Planet ID', itS32, wbQuestAliasToStr, wbStrToAlias)
+              .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo),
 
       wbFormIDCk(ALKF, 'Location Type Keyword', [KYWD]),
       wbFormIDCk(ALDN, 'Display Name', [MESG]),
 
       wbEmpty(ALED, 'Alias End Marker', cpNormal, True)
-    ], []);
+    ], [])
+      .SetSummaryKey([0, 1])
+      .SetSummaryDelimiter(' ')
+      .IncludeFlag(dfSummaryNoSortKey)
+      .IncludeFlag(dfSummaryMembersNoName);
 
   var lRefCollectionAlias :=
     wbRStructSK([0], 'Collection Alias', [
