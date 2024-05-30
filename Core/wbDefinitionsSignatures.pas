@@ -401,6 +401,7 @@ const
   ECAT : TwbSignature = 'ECAT'; { New To Fallout 76 }
   ECHD : TwbSignature = 'ECHD'; { New To Fallout 76 }
   ECHE : TwbSignature = 'ECHE'; { New To Fallout 76 }
+  ECHL : TwbSignature = 'ECHL'; { New To Starfield }
   ECHO : TwbSignature = 'ECHO'; { New To Fallout 76 }
   ECIL : TwbSignature = 'ECIL'; { New To Fallout 76 }
   ECOL : TwbSignature = 'ECOL'; { New To Starfield }

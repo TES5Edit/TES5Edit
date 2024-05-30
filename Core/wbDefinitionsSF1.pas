@@ -19386,8 +19386,9 @@ end;
     wbEDID,
     wbOBND,
     wbODTYReq,
-    wbXALG, //unknown if before or after NNAM
+    wbXALG,
     wbString(NNAM, 'Description'),
+    wbSoundReference(ECHL, 'Looping Sound'),
     wbRArray('Echos',
       wbRStruct('Echo', [
         wbRUnion('Echo Marker', [
@@ -19396,12 +19397,19 @@ end;
         ], []),
         wbWwiseGuid(ECTE),
         wbSoundReference(ECSH),
-        wbUnknown(ANAM),
-        wbFloat(BNAM),
-        wbUnknown(CNAM),
-        wbUnknown(DNAM),
-        wbUnknown(ENAM),
+        wbInteger(ANAM, 'Voice Count', itU32),
+        wbFloat(BNAM, 'Duration'),
+        wbInteger(CNAM, 'Action At Limit', itU8, wbEnum([
+          'Steal',
+          'Skip'
+        ])),
+        wbInteger(DNAM, 'Use', itU8, wbEnum([
+          'On Each Playback',
+          'On Limit Reached'
+        ])),
+        wbInteger(ENAM, 'Trigger Release', itU8, wbBoolEnum),
         wbString(NNAM, 'Description'),
+        wbCTDAs,
         wbEmpty(ECHE, 'Echo End Marker')
       ], []).SetSummaryKey([1,2])
     )
