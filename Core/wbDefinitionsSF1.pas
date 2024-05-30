@@ -18680,8 +18680,16 @@ end;
     wbEDID,
     wbSoundReference(WED0),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
-    wbRStructs('Unknown', 'Unknown', [
-      wbInteger(RSMC, 'Unknown', itU32),
+    wbInteger(RSMC, 'Marker', itU32).IncludeFlagOnValue(dfInternalEditOnly).SetRequired,
+    wbRStructs('Reverb Sounds', 'Entry', [
+      wbInteger(RSMC, 'Class', itU32, wbEnum([
+        'Default',
+        'Class A',
+        'Class B',
+        'Class C',
+        'Class D',
+        'Class E'
+      ])),
       wbSoundReference(RSMH)
     ], [])
   ]);
