@@ -8238,6 +8238,29 @@ end;
   var wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
   var wbFTYP := wbArray(FTYP, 'Forced Location Ref Types', wbFormIDCk('Forced Location Ref Type', [LCRT]));
   var wbATTX := wbLStringKC(ATTX, 'Activate Text Override', 0, cpTranslate);
+
+  var wbBNAMAnimation := wbRStruct('Animation', [
+    wbFormIDCk(BNAM, 'NPC Anim', [NULL, IDLE]).SetRequired,             //BNAM  uint32 // +0x28 array; repeated; allocates new item for the array; value set to item+0x28 probably formid; kicks off component-style read
+    wbString(STRV, 'Animation Subgraph'),                               //STRV  string
+    wbFormIDCk(VCLR, 'Anim Body Archetype', [NULL, KYWD]).SetRequired,  //VCLR  uint32 // +0x30  probably formid
+    wbFormIDCk(FLMV, 'Anim Face Archetype', [NULL, KYWD]).SetRequired,  //FLMV  uint32 // +0x38  probably formid
+    wbFormIDCk(FLAV, 'Anim Flavor', [NULL, KYWD]).SetRequired,          //FALV  uint32 // +0x40  probably formid
+    wbEmpty(QUAL, 'Use Dialogue Animation'),                            //QUAL  none // sets +0x58 to 1 (uint8/bool)
+    wbEmpty(DOFT, 'Use Anim Body Archetype'),                           //DOFT  none // sets +0x59 to 1 (uint8/bool)
+    wbEmpty(SOFT, 'Has Anim Face Archetype'),                           //SOFT  none // sets +0x5A to 1 (uint8/bool)
+    wbEmpty(DPLT, 'Animation Complete Ends Phase'),                     //DPLT  none // sets +0x5B to 1 (uint8/bool) //does not occur in Starfield.esm
+    wbEmpty(SPOR, 'Animation Only Movement'),                           //SPOR  none // sets +0x5C to 1 (uint8/bool)
+    wbEmpty(OCOR, 'Use Flavor Anim'),                                   //not documented by gibbed, occurs in Starfield.esm
+    wbFloat(LVCR, 'Delay Start Time Action').SetRequired,               //LVCR  uint32 // +0x50
+    wbCTDAs,                                                            //CTDA  standard CTDA reading // +0x08
+    wbFormIDCk(ATAC, 'Action', [NULL, AACT]).SetRequired,               //ATAC  uint32 // +0x48  probably formid
+    wbEmpty(SHRT, 'Use Actor Anim Action'),                             //SHRT  none // sets +0x5F to 1 (uint8/bool)
+    wbEmpty(PLRL, 'Animation Hold Event'),                              //PLRL  none // sets +0x5D to 1 (uint8/bool)
+    wbUnknown(DTGT, 4),                                                 //DTGT  uint32 // +0x54 //does not occur in Starfield.esm
+    wbEmpty(ACEP, 'Unknown'),                                           //ACEP  none // sets +0x5E to 1 (uint8/bool) //does not occur in Starfield.esm
+    wbMarkerReq(XNAM)                                                   //XNAM  end marker for BNAM fields
+  ], []);
+
 {
   _ReflectionChunkSignatures := [NULL];
   _ReflectionChunkStructs    := [wbEmpty('Empty')];
@@ -13632,27 +13655,7 @@ end;
         ], []),
         {9 Animation}
         wbRStruct('Animation', [
-          wbRStructs('Animations', 'Animation', [
-            wbFormIDCk(BNAM, 'NPC Anim', [NULL, IDLE]).SetRequired,             //BNAM  uint32 // +0x28 array; repeated; allocates new item for the array; value set to item+0x28 probably formid; kicks off component-style read
-            wbString(STRV, 'Animation Subgraph'),                               //STRV  string
-            wbFormIDCk(VCLR, 'Anim Body Archetype', [NULL, KYWD]).SetRequired,  //VCLR  uint32 // +0x30  probably formid
-            wbFormIDCk(FLMV, 'Anim Face Archetype', [NULL, KYWD]).SetRequired,  //FLMV  uint32 // +0x38  probably formid
-            wbFormIDCk(FLAV, 'Anim Flavor', [NULL, KYWD]).SetRequired,          //FALV  uint32 // +0x40  probably formid
-            wbEmpty(QUAL, 'Use Dialogue Animation'),                            //QUAL  none // sets +0x58 to 1 (uint8/bool)
-            wbEmpty(DOFT, 'Use Anim Body Archetype'),                           //DOFT  none // sets +0x59 to 1 (uint8/bool)
-            wbEmpty(SOFT, 'Has Anim Face Archetype'),                           //SOFT  none // sets +0x5A to 1 (uint8/bool)
-            wbEmpty(DPLT, 'Animation Complete Ends Phase'),                     //DPLT  none // sets +0x5B to 1 (uint8/bool) //does not occur in Starfield.esm
-            wbEmpty(SPOR, 'Animation Only Movement'),                           //SPOR  none // sets +0x5C to 1 (uint8/bool)
-            wbEmpty(OCOR, 'Use Flavor Anim'),                                   //not documented by gibbed, occurs in Starfield.esm
-            wbFloat(LVCR, 'Delay Start Time Action').SetRequired,               //LVCR  uint32 // +0x50
-            wbCTDAs,                                                            //CTDA  standard CTDA reading // +0x08
-            wbFormIDCk(ATAC, 'Action', [NULL, AACT]).SetRequired,               //ATAC  uint32 // +0x48  probably formid
-            wbEmpty(SHRT, 'Use Actor Anim Action'),                             //SHRT  none // sets +0x5F to 1 (uint8/bool)
-            wbEmpty(PLRL, 'Animation Hold Event'),                              //PLRL  none // sets +0x5D to 1 (uint8/bool)
-            wbUnknown(DTGT, 4),                                                 //DTGT  uint32 // +0x54 //does not occur in Starfield.esm
-            wbEmpty(ACEP, 'Unknown'),                                           //ACEP  none // sets +0x5E to 1 (uint8/bool) //does not occur in Starfield.esm
-            wbMarkerReq(XNAM)                                                   //XNAM  end marker for BNAM fields
-          ], [])
+          wbRArray('Animations', wbBNAMAnimation)
         ], []),
         {10 Timeline}
         wbRStruct('Timeline', [
@@ -14067,12 +14070,12 @@ end;
           {0x0010} 'Unknown 4',
           {0x0020} 'Random End',
           {0x0040} 'End Running Scene',
-          {0x0080} 'ForceGreet Hello',
+          {0x0080} 'Needs Review',
           {0x0100} 'Player Address',
-          {0x0200} 'Force Subtitle',
+          {0x0200} 'Unknown 9',
           {0x0400} 'Can Move While Greeting',
           {0x0800} 'No LIP File',
-          {0x1000} 'Requires post-processing',
+          {0x1000} 'Don''t Gray Out',
           {0x2000} 'Audio Output Override',
           {0x4000} 'Has Capture',
           {0x8000} 'Unknown 15'
@@ -14098,44 +14101,25 @@ end;
       ]),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
-//    wbFormIDCk(TPIC, 'Topic', [DIAL]),
-//    wbFormIDCkNoReach(PNAM, 'Previous INFO', [INFO, NULL], False, cpBenign),
     wbFormIDCk(DNAM, 'Shared INFO', [INFO]),
     wbFormIDCk(GNAM, 'INFO group', [INFO]),
 
     wbRArray('Responses', wbRStruct('Response', [
       wbStruct(TRDA, 'Response Data', [
         wbFormIDCk('Emotion', [KYWD, FFFF]),
-        // wbInteger('Response number', itU8),
         wbInteger('WEM File', itU32, wbIntToHexStr, wbHexStrToInt),
-        wbFloat('Unknown') // Interrupt Percentage?
-        // wbByteArray('Unknown', 1),
-        // wbInteger('Interrupt Percentage', itU16)
-        // wbInteger('Camera Target Alias', itS32),
-        // wbInteger('Camera Location Alias', itS32)
+        wbFloat('Emotion Out') // Interrupt Percentage?
       ]),
       wbRArray('Unknown', wbStruct(TROT, 'Unknown', [
-        wbFormIDCk('Unknown', [VTYP]),
-        wbFloat('Unknown')
+        wbFormIDCk('Voice Type', [VTYP]),
+        wbFloat('Emotion Out')
       ])),
       wbLStringKC(NAM1, 'Response Text', 0, cpTranslate, True),
       wbString(NAM2, 'Script Notes', 0, cpNormal, True),
       wbString(NAM3, 'Edits', 0, cpNormal, True),
       wbString(NAM4, 'Alternate LIP Text', 0, cpNormal, True),
       wbByteArray(NAM9, 'Text Hash'),
-      wbFormIDCk(BNAM, 'Unknown', [NULL, IDLE]),
-      wbString(STRV),
-      wbFormIDCk(VCLR, 'Unknown', [NULL, KYWD]),
-      wbUnknown(FLMV),
-      wbUnknown(FLAV),
-      wbEmpty(QUAL, 'Unknown'), // order between QUAL
-      wbEmpty(DOFT, 'Unknown'), // and DOFT is unknown
-      wbEmpty(DPLT, 'Unknown'),
-      wbEmpty(OCOR, 'Unknown'),
-      wbFloat(LVCR),
-      wbUnknown(ATAC),
-      wbEmpty(PLRL, 'Unknown'),
-      wbEmpty(XNAM, 'Unknown'),
+      wbBNAMAnimation,
       wbHNAMHNAM,
       wbSoundReference(RVSH)
     ], [])),
@@ -14145,14 +14129,11 @@ end;
     wbFormIDCk(TSCE, 'Start Scene', [SCEN]),
     wbUnknown(INTV),
     wbSoundReference(WED0),
-//    wbInteger(ALFA, 'Forced Alias', itS32),
-//    wbFormIDCk(ONAM, 'Audio Output Override', [SOPM]),
-//    wbInteger(GREE, 'Greet Distance', itU32),
     wbStruct(TIQS, 'Set Parent Quest Stage', [
       wbInteger('On Begin', itS16),
       wbInteger('On End', itS16)
     ]),
-    wbString(NAM0, 'Start Scene Phase'),
+    wbString(NAM0, 'Start Scene Phase').SetRequired,
     (*
     wbInteger(INCC, 'Challenge', itU32, wbEnum([
       {0} 'None',
@@ -14169,13 +14150,13 @@ end;
     wbInteger(INAM, 'Subtitle Priority', itU32, wbEnum([
       'Low',
       'Normal',
-      'Unknown 2',
+      'High',
       'Force'
     ])),
     wbEmpty(COCT, 'Unknown'), // container count? never followed by CNTO in Starfield.esm
-    wbFormIDCk(NAM8, 'Unknown', [AFFE]), // order between COCT and NAM8 unknown
-    wbFormIDCk(PERK, 'Perk', [PERK]),             // order between PERK
-    wbFormIDCk(SCSP, 'Speech Challenge', [SPCH])  // and SCSP unknown
+    wbFormIDCk(NAM8, 'Affinity Event', [AFFE]),
+    wbFormIDCk(SCSP, 'Speech Challenge', [SPCH]),
+    wbFormIDCk(PERK, 'Skill/Perk', [PERK])
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
   (* still exists in game code, but not in Starfield.esm * )
