@@ -473,6 +473,7 @@ const
   FCPL : TwbSignature = 'FCPL'; { New To Fallout 4 }
   FCTF : TwbSignature = 'FCTF'; { New To Starfield }
   FCTP : TwbSignature = 'FCTP'; { New To Starfield }
+  FDDS : TwbSignature = 'FDDS'; { New To Starfield }
   FDSI : TwbSignature = 'FDSI'; { New To Starfield }
   FDSL : TwbSignature = 'FDSL'; { New To Starfield }
   FEVA : TwbSignature = 'FEVA'; { New To Fallout 76 }

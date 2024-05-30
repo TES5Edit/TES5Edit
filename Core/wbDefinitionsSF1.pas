@@ -5929,13 +5929,19 @@ begin
         {0x80000000} 'Override Data'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbFloat('Attack Angle'),
-      wbFloat('Strike Angle'),
-      wbFloat('Stagger'),
+      wbFloat('Hit Cone'),
+      wbFloat('Stagger'),  // not visible in CK
       wbFloat('Knockdown'),
       wbFloat('Recovery Time'),
       wbFloat('Action Points Mult'),
-      wbInteger('Stagger Offset', itS32),
-      wbFloat
+      wbInteger('Stagger Offset', itS32, wbEnum([], [
+        -2, '-2',
+        -1, '-1',
+         0, '0',
+         1, '1',
+         2, '2'
+      ])),
+      wbFloat('Strike Angle')
     ]),
     wbString(ATKE, 'Attack Event'),
     wbFormIDCk(ATKW, 'Weapon Slot', [EQUP]),
@@ -14960,19 +14966,19 @@ end;
       {0x0000000400000000} 'Floats',
       {0x0000000800000000} 'Unknown 35',
       {0x0000001000000000} 'Unknown 36',
-      {0x0000002000000000} 'Head Axis Bit 0',
-      {0x0000004000000000} 'Head Axis Bit 1',
+      {0x0000002000000000} 'Head Axis Bit - Y',
+      {0x0000004000000000} 'Head Axis Bit - Z',
       {0x0000008000000000} 'Can Melee When Knocked Down',
       {0x0000010000000000} 'Use Idle Chatter During Combat',
       {0x0000020000000000} 'Ungendered',
       {0x0000040000000000} 'Can Move When Knocked Down',
       {0x0000080000000000} 'Use Large Actor Pathing',
-      {0x0000100000000000} 'Use Subsegmented Damage',
+      {0x0000100000000000} 'Unknown 44',
       {0x0000200000000000} 'Flight - Defer Kill',
-      {0x0000400000000000} 'Calc Character Controller Rotation Center',
+      {0x0000400000000000} 'Calc Character Controller Rotation Center OFF',
       {0x0000800000000000} 'Flight - Allow Procedural Crash Land',
       {0x0001000000000000} 'Disable Weapon Culling',
-      {0x0002000000000000} 'Use Optimal Speeds',
+      {0x0002000000000000} 'Simulate Cloth On Down',
       {0x0004000000000000} 'Has Facial Rig',
       {0x0008000000000000} 'Can Use Crippled Limbs',
       {0x0010000000000000} 'Use Quadruped Controller',
@@ -14984,7 +14990,9 @@ end;
       {0x0400000000000000} 'Hops',
       {0x0800000000000000} 'Unknown 59',
       {0x1000000000000000} 'Unknown 60',
-      {0x2000000000000000} 'Unknown 61'
+      {0x2000000000000000} 'Unknown 61',
+      {0x4000000000000000} 'Unknown 62',
+      {0x8000000000000000} 'Unknown 63'
     ]);
 
   var wbRaceSizeEnum :=
@@ -14995,8 +15003,10 @@ end;
       'Extra Large'
     ]);
 
-  var wbRACEDAT2Size :=
-    wbInteger('Size', itU32, wbRaceSizeEnum);
+  var wbRACEDAT2Size := function(aName: string = 'Size'): IwbIntegerDef
+  begin
+    Result := wbInteger(aName, itU32, wbRaceSizeEnum);
+  end;
 
   var wbNPC_ONA2Size :=
     wbInteger('Size', itU8, wbRaceSizeEnum);
@@ -15723,7 +15733,7 @@ end;
       ])),
 
       wbIsFlag(3, wbStruct('Unarmed Weapon', [
-        wbFloat('Injured Health %').SetDontShow(wbRaceOverrideDontShow(7)),
+        wbFloat('Injured Health Pct').SetDontShow(wbRaceOverrideDontShow(7)),
         wbFormIDCk('Unarmed Weapon', [NULL, WEAP])
           .SetDontShow(wbRaceOverrideDontShow(6))
       ])),
@@ -16695,6 +16705,7 @@ end;
       {0x00080000} 19, 'Unknown 19'
     ])), [
     wbEDID,
+    wbBaseFormComponents,
     wbFULL,
     wbDESCReq(),
     wbSPLOs,
@@ -16702,6 +16713,7 @@ end;
     wbBO64,
     wbKeywords,
     wbPRPS,
+    wbAPPR,
     wbFormIDCk(GNAM, 'Body Part Data', [BPTD]),
     wbStruct(DAT2, 'Data', [
       {  0} wbFloat('Male Height'),                                             // +0x60
@@ -16719,17 +16731,17 @@ end;
       { 32} wbInteger('Flags', itU64, wbRACEDAT2Flags).IncludeFlag(dfCollapsed, wbCollapseFlags),                         // +0x80
       { 40} wbFloat('Acceleration Rate'),                                       // +0x04
       { 44} wbFloat('Deceleration Rate'),                                       // +0x08
-      { 48} wbRACEDAT2Size,                                                     // +0x00
-      { 52} wbUnknown(4),                                                       // +0x88
-      { 56} wbUnknown(4),                                                       // +0x8C
-      { 60} wbFloat,                                                            // +0x20 must have to do with unarmed weapon
+      { 48} wbRACEDAT2Size(),                                                   // +0x00
+      { 52} wbInteger('Head Biped Object', itS32, wbBipedObjectEnum),           // +0x88
+      { 56} wbInteger('Hair Biped Object', itS32, wbBipedObjectEnum),           // +0x8C
+      { 60} wbFloat('Injured Health Pct'),                                      // +0x20 must have to do with unarmed weapon
       { 64} wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),         // +0x94
       { 68} wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum),          // +0x90
       { 72} wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),           // +0x98
-      { 76} wbFloat,                                                            // +0x9C
-      { 80} wbUnknown(4),                                                       // +0x14
-      { 84} wbFloat,                                                            // +0x0C
-      { 88} wbFloat,                                                            // +0x10
+      { 76} wbFloat('Aim Angle Tolerance'),                                     // +0x9C
+      { 80} wbFloat('Flight Radius'),                                           // +0x14
+      { 84} wbFloat('Angular Acceleration Rate'),                               // +0x0C
+      { 88} wbFloat('Angular Tolerance'),                                       // +0x10
       { 92} wbUnknown(4),                                                       // +0xA0
       { 96} wbUnknown(4),                                                       // +0xA4
       {100} wbUnknown(4),                                                       // +0xA8
@@ -16739,137 +16751,48 @@ end;
       {116} wbUnknown(4),                                                       // +0xB8
       {120} wbFloat,                                                            // +0xBC
       {124} wbUnknown(4),                                                       // +0xC0
-      {128} wbUnknown(4),                                                       // +0xC4
-      {132} wbUnknown(2),                                                       // +0xC8
-      {134} wbUnknown(4),                                                       // +0xE8
-      {138} wbUnknown(1),                                                       // +0xEC
-      {139} wbUnknown(1),                                                       // +0xED
-      {140} wbFormIDCk('Explosion', [NULL, EXPL]),                              // +0xD0  expected to be EXPL
-      {144} wbFormIDCk('Debris', [NULL, DEBR]),                                 // +0xD8  expected to be DEBR
-      {148} wbFormIDCk('Impact Data Set', [NULL, IPDS]),                        // +0xE0  expected to be IPDS
+      {128} wbInteger('Pipboy Biped Object', itS32, wbBipedObjectEnum),         // +0xC4
+      {132} wbInteger('XP Value', itS16),                                       // +0xC8
+            wbStruct('OnCripple', [
+      {134}   wbFloat('Debris Scale'),                                          // +0xE8
+      {138}   wbInteger('Debris Count', itU8),                                  // +0xEC
+      {139}   wbInteger('Decal Count', itU8),                                   // +0xED
+      {140}   wbFormIDCk('Explosion', [NULL, EXPL]),                            // +0xD0  expected to be EXPL
+      {144}   wbFormIDCk('Debris', [NULL, DEBR]),                               // +0xD8  expected to be DEBR
+      {148}   wbFormIDCk('Impact Data Set', [NULL, IPDS])                       // +0xE0  expected to be IPDS
+            ]),
       {152} wbFloat('Orientation Limits - Pitch'),                              // +0xF0
       {156} wbFloat('Orientation Limits - Roll'),                               // +0xF4
-      {160} wbFloat,                                                            // +0x28
-      {164} wbFloat,                                                            // +0x2C
-      {168} wbFloat,                                                            // +0x30
-      {172} wbFloat,                                                            // +0x34
-      {176} wbFloat,                                                            // +0x38
-      {180} wbFloat,                                                            // +0x3C
-      {184} wbUnknown(4),                                                       // +0xF8
-      {188} wbUnknown(4),                                                       // +0x24
-      {192} wbStruct('Unknown', [                                               // Same as NPC_ -> ONA2 - Unknown 7
-      {192}   wbUnknown(1),                                                     // +0x5C
-      {193}   wbFloat,                                                          // +0x40
-      {197}   wbFloat,                                                          // +0x44
-      {201}   wbFloat,                                                          // +0x48
-      {205}   wbFloat,                                                          // +0x4C
-      {209}   wbFloat,                                                          // +0x50
-      {213}   wbFloat,                                                          // +0x54
-      {217}   wbFloat                                                           // +0x58
+            wbStruct('Bleedout', [
+      {160}   wbFloat('Health %'),                                              // +0x28
+      {164}   wbFloat('Chance'),                                                // +0x2C
+      {168}   wbFloat('Recover Chance'),                                        // +0x30
+      {172}   wbFloat('Time Min'),                                              // +0x34
+      {176}   wbFloat('Time Max'),                                              // +0x38
+      {180}   wbFloat('Health Drain Rate')                                      // +0x3C
+            ]),
+      {184} wbRACEDAT2Size('Max Size'),                                         // +0xF8
+      {188} wbInteger('Intelligence Level', itU32, wbEnum([                     // +0x24
+              'None',
+              'Moderate',
+              'Normal',
+              'High'
+            ])),
+      {192} wbStruct('Electromagnetic Shocked', [                               // Same as NPC_ -> ONA2 - Unknown 7
+      {192}   wbInteger('Support EM Shock', itU8, wbBoolEnum),                  // +0x5C
+      {193}   wbFloat('Recover Chance'),                                        // +0x40
+      {197}   wbFloat('Time Min'),                                              // +0x44
+      {201}   wbFloat('Time Max'),                                              // +0x48
+      {205}   wbFloat('Recover Chance On Damage Received'),                     // +0x4C
+      {209}   wbFloat('Health Drain Rate'),                                     // +0x50
+      {213}   wbFloat('Health After Recovery'),                                 // +0x54
+      {217}   wbFloat('Immunity Duration After Recovery')                       // +0x58
       {221} ])
     ]),
     (*
-    wbStruct(DATA, 'Data', [
-      wbFloat('Male Height'),
-      wbFloat('Female Height'),
-      wbFromVersion(109, wbStruct('Male Default Weight', [
-        wbFloat('Thin'),
-        wbFloat('Muscular'),
-        wbFloat('Fat')
-      ])),
-      wbFromVersion(109, wbStruct('Female Default Weight', [
-        wbFloat('Thin'),
-        wbFloat('Muscular'),
-        wbFloat('Fat')
-      ])),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Playable',
-        {0x00000002} 'FaceGen Head',
-        {0x00000004} 'Child',
-        {0x00000008} 'Tilt Front/Back',
-        {0x00000010} 'Tilt Left/Right',
-        {0x00000020} 'No Shadow',
-        {0x00000040} 'Swims',
-        {0x00000080} 'Flies',
-        {0x00000100} 'Walks',
-        {0x00000200} 'Immobile',
-        {0x00000400} 'Not Pushable',
-        {0x00000800} 'No Combat In Water',
-        {0x00001000} 'No Rotating to Head-Track',
-        {0x00002000} 'Don''t Show Blood Spray',
-        {0x00004000} 'Don''t Show Blood Decal',
-        {0x00008000} 'Uses Head Track Anims',
-        {0x00010000} 'Spells Align w/Magic Node',
-        {0x00020000} 'Use World Raycasts For FootIK',
-        {0x00040000} 'Allow Ragdoll Collision',
-        {0x00080000} 'Regen HP In Combat',
-        {0x00100000} 'Can''t Open Doors',
-        {0x00200000} 'Allow PC Dialogue',
-        {0x00400000} 'No Knockdowns',
-        {0x00800000} 'Allow Pickpocket',
-        {0x01000000} 'Always Use Proxy Controller',
-        {0x02000000} 'Don''t Show Weapon Blood',
-        {0x04000000} 'Overlay Head Part List', {>>>Only one can be active<<<}
-        {0x08000000} 'Override Head Part List', {>>>Only one can be active<<<}
-        {0x10000000} 'Can Pickup Items',
-        {0x20000000} 'Allow Multiple Membrane Shaders',
-        {0x40000000} 'Can Dual Wield',
-        {0x80000000} 'Avoids Roads'
-      ])),
-      wbFloat('Acceleration Rate'),
-      wbFloat('Deceleration Rate'),
-      wbInteger('Size', itU32, wbEnum([
-        'Small',
-        'Medium',
-        'Large',
-        'Extra Large'
-      ])),
-      wbByteArray('Unknown Bytes1', 4),
-      wbByteArray('Unknown Bytes2', 4),
-      wbFloat('Injured Health Pct'),
-      wbInteger('Shield Biped Object', itS32, wbBipedObjectEnum),
-      wbFromVersion(124, wbInteger('Beard Biped Object', itS32, wbBipedObjectEnum)),
-      wbInteger('Body Biped Object', itS32, wbBipedObjectEnum),
-      wbFloat('Aim Angle Tolerance'),
-      wbFloat('Flight Radius'),
-      wbFloat('Angular Acceleration Rate'),
-      wbFloat('Angular Tolerance'),
-      wbInteger('Flags 2', itU32, wbFlags([
-        {0x00000001} 'Use Advanced Avoidance',
-        {0x00000002} 'Non-Hostile',
-        {0x00000004} 'Floats',
-        {0x00000008} 'Unknown 3',
-        {0x00000010} 'Unknown 4',
-        {0x00000020} 'Head Axis Bit 0',
-        {0x00000040} 'Head Axis Bit 1',
-        {0x00000080} 'Can Melee When Knocked Down',
-        {0x00000100} 'Use Idle Chatter During Combat',
-        {0x00000200} 'Ungendered',
-        {0x00000400} 'Can Move When Knocked Down',
-        {0x00000800} 'Use Large Actor Pathing',
-        {0x00001000} 'Use Subsegmented Damage',
-        {0x00002000} 'Flight - Defer Kill',
-        {0x00004000} 'Unknown 14',
-        {0x00008000} 'Flight - Allow Procedural Crash Land',
-        {0x00010000} 'Disable Weapon Culling',
-        {0x00020000} 'Use Optimal Speeds',
-        {0x00040000} 'Has Facial Rig',
-        {0x00080000} 'Can Use Crippled Limbs',
-        {0x00100000} 'Use Quadruped Controller',
-        {0x00200000} 'Low Priority Pushable',
-        {0x00400000} 'Cannot Use Playable Items'
-      ])),
-      wbFloat('Unknown Float1'),
-      wbFloat('Unknown Float2'),
-      wbByteArray('Unknown Bytes3',4),
-      wbByteArray('Unknown Bytes4',4),
-      wbByteArray('Unknown Bytes5',4),
-      wbByteArray('Unknown Bytes6',4),
-      wbByteArray('Unknown Bytes7',4),
-      wbFloat('Unknown Float3'),
-      wbByteArray('Unknown Bytes8',4),
-      wbInteger('Pipboy Biped Object', itS32, wbBipedObjectEnum),
-      wbInteger('XP Value', itS16),
+      Likely related data to the "unknowns" above.
+      Though not exposed in CK and appear to be unused in game.
+
       wbFloat('Severable - Debris Scale'),
       wbInteger('Severable - Debris Count', itU8),
       wbInteger('Severable - Decal Count', itU8),
@@ -16882,18 +16805,6 @@ end;
       wbFormIDCk('Explodable - Explosion', [EXPL, NULL]),
       wbFormIDCk('Explodable - Debris', [DEBR, NULL]),
       wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
-      wbFromVersion(96, wbStruct('OnCripple', [
-        wbFloat('Debris Scale'),
-        wbInteger('Debris Count', itU8),
-        wbInteger('Decal Count', itU8),
-        wbFormIDCk('Explosion', [EXPL, NULL]),
-        wbFormIDCk('Debris', [DEBR, NULL]),
-        wbFormIDCk('Impact DataSet', [IPDS, NULL])
-      ])),
-      wbFromVersion(118, wbFormIDCk('Explodable - Subsegment Explosion', [EXPL, NULL])),
-      wbFromVersion(98, wbFloat('Orientation Limits - Pitch')),
-      wbFromVersion(101, wbFloat('Orientation Limits - Roll'))
-    ], cpNormal, True),
     *)
 
     wbRStruct('Skeleton Data', [
@@ -16922,7 +16833,6 @@ end;
     wbFloat(PNAM, 'FaceGen - Main clamp', cpNormal, True),
     wbFloat(UNAM, 'FaceGen - Face clamp', cpNormal, True),
 
-//    wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArrayS('Attacks', wbAttackData),
 
     wbRStruct('Junk Data', [
@@ -16942,8 +16852,11 @@ end;
     wbFormIDCk(ENAM, 'Aim Assist Pose Data', [AAPD]),
     wbMarkerReq(NAM3),
     wbFormIDCk(NAM4, 'Impact Material Type', [MATT]),
-    wbSoundReference(WED0),
-    wbSoundReference(WED1),
+
+    wbRStruct('Sounds made when looted', [
+      wbSoundReference(WED0, 'Open Corpse'),
+      wbSoundReference(WED1, 'Close Corpse')
+    ], []),
 
     wbRArray('Biped Object Names', wbString(NAME, 'Name'), 64).IncludeFlag(dfNotAlignable),
     wbArray(RBPC, 'Biped Object Conditions', wbFormIDCk('Condition', [AVIF, NULL]), 64).IncludeFlag(dfNotAlignable),
@@ -16968,7 +16881,7 @@ end;
     wbFormIDCk(WKMV, 'Base Movement Defaults - Default', [MOVT]),
     wbFormIDCk(SWMV, 'Base Movement Defaults - Swim', [MOVT]),
     wbFormIDCk(FLMV, 'Base Movement Defaults - Fly', [MOVT]),
-//    wbFormIDCk(SNMV, 'Base Movement Defaults - Sneak', [MOVT]),
+    wbFormIDCk(SNMV, 'Base Movement Defaults - Sneak', [MOVT]),
 
     wbRStruct('Chargen and Skintones', [
       wbRStruct('Male', [
@@ -16979,6 +16892,7 @@ end;
           wbRArray('Race Presets', wbFormIDCk(RPRM, 'Preset NPC', [NPC_, NULL])),
           wbMorphGroups('Morph Groups'),
           wbFaceMorphs('Face Morph Phenotypes'),
+          wbString(FDDS, 'Skin Tone AVMS Subtype'),
           wbRStructs('Face Dials', 'Face Dial', [
             wbInteger(FDSI, 'Skin Index', itU32),
             wbLString(FDSL, 'Label', 0, cpTranslate)
@@ -16986,7 +16900,7 @@ end;
         ], []),
         wbString(BSTT, 'Body Skin Tones'),
         wbString(HSTT, 'Hand Skin Tones'),
-        wbString(FCTP),
+        wbString(FCTP, 'Face Custom Textures Base Path'),
         wbString(FSTT, 'Face Skin Tones')
       ], [], cpNormal, True),
       wbRStruct('Female', [
@@ -16997,6 +16911,7 @@ end;
           wbRArray('Race Presets', wbFormIDCk(RPRF, 'Preset NPC', [NPC_, NULL])),
           wbMorphGroups('Morph Groups'),
           wbFaceMorphs('Face Morph Phenotypes'),
+          wbString(FDDS, 'Skin Tone AVMS Subtype'),
           wbRStructs('Face Dials', 'Face Dial', [
             wbInteger(FDSI, 'Skin Index', itU32),
             wbLString(FDSL, 'Label', 0, cpTranslate)
@@ -17004,15 +16919,15 @@ end;
         ], []),
         wbString(BSTT, 'Body Skin Tones'),
         wbString(HSTT, 'Hand Skin Tones'),
-        wbString(FCTP),
+        wbString(FCTP, 'Face Custom Textures Base Path'),
         wbString(FSTT, 'Face Skin Tones')
       ], [], cpNormal, True)
     ], []),
 
+    wbFormIDCk(NAM8, 'Morph Race', [RACE]),
     wbFormIDCk(RNAM, 'Armor Race', [RACE]),
 
     wbFormIDCk(SRAC, 'Subgraph Template Race', [RACE]),
-
 
     wbRArray('Subgraph Data',
       wbRStruct('Data', [
@@ -17068,10 +16983,16 @@ end;
       ], [], cpNormal, True)
     ], []),
 
-    wbRStructs('Mannequin Skin Swaps', 'Skin Swap', [
-      wbUnknown(MSSS),
-      wbRStructs('Unknown', 'Unknown', [
-        wbUnknown(MSSI),
+    wbRStructs('Mannequin Skin Swaps', 'Gender Selection', [
+      wbInteger(MSSS, 'Gender', itU32, wbEnum([
+        'Male',
+        'Female'
+      ])),
+      wbRStructs('Skin Swaps', 'Swap Entry', [
+        wbInteger(MSSI, 'Skin Swap Index', itU32, wbEnum([
+          'Body',
+          'Hands'
+        ])),
         wbFormIDCk(MSSA, 'Material Swap', [LMSW]).SetRequired
       ], [])
     ], []),
