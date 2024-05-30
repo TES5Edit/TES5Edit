@@ -668,6 +668,8 @@ begin
         Result := 'Non-Actor Track'
       else if aInt = -4 then
         Result := 'Play Audio At Player(Voice Note)'
+      else if aInt = -5 then
+        Result := 'Dialogue For Scene'
       else begin
         Result := aInt.ToString;
         if aType = ctToStr then
@@ -679,13 +681,13 @@ begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: if (aInt = -1) or (aInt = -2) or (aInt = -3) or (aInt = -4) then Result := '' else
+    ctCheck: if (aInt = -1) or (aInt = -2) or (aInt = -3) or (aInt = -4) or (aInt = -5) then Result := '' else
       Result := '<Warning: Could not resolve alias [' + aInt.ToString + ']>';
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
 
-  if ((aInt = -1) or (aInt = -2) or (aInt = -3) or (aInt = -4)) and (aType <> ctEditType) and (aType <> ctEditInfo) then
+  if ((aInt = -1) or (aInt = -2) or (aInt = -3) or (aInt = -4) or (aInt = -5)) and (aType <> ctEditType) and (aType <> ctEditInfo) then
     Exit;
 
   if not Assigned(aQuestRef) then
@@ -17465,84 +17467,85 @@ end;
         {0x0080} 'Allow Grav Jump',
         {0x0100} 'Unknown 8', // does not appear in any existing records and cannot set in CK UI
         {0x0200} 'Suppress Discovery',
-        {0x0400} 'Unknown 10' // exists in SFBGS008 but in CK beta UI
+        {0x0400} 'Use Accurate Z-Height'
       ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbFULLReq,
       wbInteger(TNAM, 'Type', itU16, wbEnum([
-        'Akila City',
-        'Cydonia',
-        'Dazra',
-        'Neon',
-        'New Atlantis',
-        'Ryujin Industries',
-        'Scaled Citadel',
-        'The Lodge',
-        'The MAST',
-        'The Rock',
-        'Cave',
-        'Mining Base',
-        'Outpost',
-        'Science Lab',
-        'Natural Landmark',
-        'Mech Graveyard',
-        'Fractured Earth',
-        'Mountain Peak',
-        'Crystal Grotto',
-        'Crashed Starship',
-        'Farm',
-        'Industrial',
-        'Military Base',
-        'NASA',
-        'Starborn Temple',
-        'Coral Colony',
-        'Fossil Outcropping',
-        'Animal Den',
-        'Frozen Watersource',
-        'Geysers',
-        'Boiling Hotsprings',
-        'Acid Fog',
-        'Radiation Zone',
-        'Star Station',
-        'Star Yard',
-        'Settlement',
-        'Legendary Ship',
-        'The Vigilance',
-        'Derelict Ship',
-        'Space Graveyard',
-        'Icy Asteroids',
-        'Rocky Asteroids',
-        'The Unity',
-        'The Eye',
-        'The Key',
-        'POI',
-        'Debris Field',
-        'Ship',
-        'Surface Settlement',
-        'Distress Call',
-        'Starborn Temple Obelisk',
-        'Bar',
-        'Food',
-        'Vendor',
-        'Armor Vendor',
-        'Weapon Vendor',
-        'Aid Vendor',
-        'Surgery',
-        'Realtor',
-        'Player House',
-        'Transit',
-        'The Well'
+        { 0} 'Akila City',
+        { 1} 'Cydonia',
+        { 2} 'Dazra',
+        { 3} 'Neon',
+        { 4} 'New Atlantis',
+        { 5} 'Ryujin Industries',
+        { 6} 'Scaled Citadel',
+        { 7} 'The Lodge',
+        { 8} 'The MAST',
+        { 9} 'The Rock',
+        {10} 'Cave',
+        {11} 'Mining Base',
+        {12} 'Outpost',
+        {13} 'Science Lab',
+        {14} 'Natural Landmark',
+        {15} 'Mech Graveyard',
+        {16} 'Fractured Earth',
+        {17} 'Mountain Peak',
+        {18} 'Crystal Grotto',
+        {19} 'Crashed Starship',
+        {20} 'Farm',
+        {21} 'Industrial',
+        {22} 'Military Base',
+        {23} 'NASA',
+        {24} 'Starborn Temple',
+        {25} 'Coral Colony',
+        {26} 'Fossil Outcropping',
+        {27} 'Animal Den',
+        {28} 'Frozen Watersource',
+        {29} 'Geysers',
+        {30} 'Boiling Hotsprings',
+        {31} 'Acid Fog',
+        {32} 'Radiation Zone',
+        {33} 'Star Station',
+        {34} 'Star Yard',
+        {35} 'Settlement',
+        {36} 'Legendary Ship',
+        {37} 'The Vigilance',
+        {38} 'Derelict Ship',
+        {39} 'Space Graveyard',
+        {40} 'Icy Asteroids',
+        {41} 'Rocky Asteroids',
+        {42} 'The Unity',
+        {43} 'The Eye',
+        {44} 'The Key',
+        {45} 'POI',
+        {46} 'Debris Field',
+        {47} 'Ship',
+        {48} 'Surface Settlement',
+        {49} 'Distress Call',
+        {50} 'Starborn Temple Obelisk',
+        {51} 'Bar',
+        {52} 'Food',
+        {53} 'Vendor',
+        {54} 'Armor Vendor',
+        {55} 'Weapon Vendor',
+        {56} 'Aid Vendor',
+        {57} 'Surgery',
+        {58} 'Realtor',
+        {59} 'Player House',
+        {60} 'Transit',
+        {61} 'The Well',
+        {62} 'Trackers Alliance'
       ]), cpNormal, True),
       wbInteger(VNAM, 'Category', itU16, wbEnum([
-        'None',
-        'Landmark',
-        'Structure',
-        'Life Signs',
-        'Hazard',
-        'Space Landmark',
-        'Ship',
-        'Station',
-        'Asteroids',
-        'Simple'
+        {0}'None',
+        {1}'Landmark',
+        {2}'Structure',
+        {3}'Life Signs',
+        {4}'Hazard',
+        {5}'Space Landmark',
+        {6}'Ship',
+        {7}'Station',
+        {8}'Asteroids',
+        {9}'Simple'
       ]), cpNormal, True),
       wbLString(UNAM, 'Unexplored Name', 0, cpTranslate),
       wbInteger(VISI, 'Undiscovered Visibility', itU8, wbEnum([
@@ -20627,23 +20630,32 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(RSPJ, 'Research Project', [
     wbEDID,
+    wbBaseFormComponents,
     wbFULL,
     wbDESC(),
     wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
-    wbStructs(FVPA, 'Resources', 'Resource', [
+    wbCTDAs,
+    wbStructs(FVPA, 'Required Resources', 'Resource', [
       wbFormIDCk('Resource', [IRES, ALCH]),
       wbInteger('Required Count', itU32),
-      wbUnknown(4)
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ]),
     wbStructs(RQPK, 'Required Perks', 'Perk', [
       wbFormIDCk('Perk', [PERK]),
       wbInteger('Rank', itU32),
-      wbUnknown(4)
+      wbFormIDCk('Curve Table', [CURV, NULL])
     ]),
-    wbFormID(CNAM, 'Icon Source'),
-    wbUnknown(NNAM,2), // always 2 byte $0000
+    wbFormID(CNAM, 'Created Item'),
+    wbInteger(NNAM, 'Number Created', itU16),
     wbFloat(SNAM, 'Menu Sort Order'),
-    wbUnknown(TNAM,1), // always 1 byte $00
+    wbInteger(TNAM, 'Tier', itU8, wbEnum([
+      '0',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5'
+    ])).SetRequired,
     wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
     wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
   ]);
