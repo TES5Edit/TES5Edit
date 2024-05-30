@@ -13984,23 +13984,8 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
-    wbWwiseGUID(RABG, 'Audio Bus'),
-    {
-    wbStruct(DATA, 'Data', [
-      wbInteger('Decay Time (ms)', itU16),
-      wbInteger('HF Reference (Hz)', itU16),
-      wbInteger('Room Filter', itS8),
-      wbInteger('Room HF Filter', itS8),
-      wbInteger('Reflections', itS8),
-      wbInteger('Reverb Amp', itS8),
-      wbInteger('Decay HF Ratio', itU8, wbDiv(100)),
-      wbInteger('Reflect Delay (ms), scaled', itU8),
-      wbInteger('Reverb Delay (ms)', itU8),
-      wbInteger('Diffusion %', itU8),
-      wbInteger('Density %', itU8),
-      wbInteger('Unknown', itU8)
-    ], cpNormal, True),
-    }
+    wbBaseFormComponents,
+    wbWwiseGUID(RABG, 'Aux Bus'),
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
@@ -19436,44 +19421,24 @@ end;
     wbBaseFormComponents,
     wbGenericModel(True),
     wbKeywords,
-    wbByteRGBA(CNAM, 'Unknown Colors'),
-    wbInteger(FNAM, 'Unknown Flags', itU32, wbFlags([
-      {0x00000001} 'Unknown 0',
-      {0x00000002} 'Unknown 1',
-      {0x00000004} 'Unknown 2',
-      {0x00000008} 'Unknown 3',
-      {0x00000010} 'Unknown 4',
-      {0x00000020} 'Unknown 5',
-      {0x00000040} 'Unknown 6',
-      {0x00000080} 'Unknown 7',
-      {0x00000100} 'Unknown 8',
-      {0x00000200} 'Unknown 9',
-      {0x00000400} 'Unknown 10',
-      {0x00000800} 'Unknown 11',
-      {0x00001000} 'Unknown 12',
-      {0x00002000} 'Unknown 13',
-      {0x00004000} 'Unknown 14',
-      {0x00008000} 'Unknown 15',
-      {0x00010000} 'Unknown 16',
-      {0x00020000} 'Unknown 17',
-      {0x00040000} 'Unknown 18',
-      {0x00080000} 'Unknown 19',
-      {0x00100000} 'Unknown 20',
-      {0x00200000} 'Unknown 21',
-      {0x00400000} 'Unknown 22',
-      {0x00800000} 'Unknown 23',
-      {0x01000000} 'Unknown 24',
-      {0x02000000} 'Unknown 25',
-      {0x04000000} 'Unknown 26',
-      {0x08000000} 'Unknown 27',
-      {0x10000000} 'Unknown 28',
-      {0x20000000} 'Unknown 29',
-      {0x40000000} 'Unknown 30',
-      {0x80000000} 'Unknown 31'
+    wbByteRGBA(CNAM),
+    wbInteger(FNAM, 'Flags', itU32, wbFlags([
+      {0x00000001} 'Snaps To Self',
+      {0x00000002} 'Is Hinge',
+      {0x00000004} 'Display Node',
+      {0x00000008} 'Run Behaviors When Not Snapped'
     ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbInteger(SNST, 'Unknown', itU32),
+    wbInteger(SNST, 'Stairway Type', itU32, wbEnum([
+      'None',
+      'Upstairs',
+      'Downstairs'
+    ])),
     wbRArray('Adjacent Snap Nodes', wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
-    wbRArray('Snap Angles', wbFloat(FLTV, 'Snap Angle'), 3),
+    wbRStruct('Angles', [
+      wbFloat(FLTV, 'Min'),
+      wbFloat(FLTV, 'Max'),
+      wbFloat(FLTV, 'Step')
+    ], []),
     wbFormIDCk(ANAM, 'Art Object', [ARTO])
   ]);
 
@@ -19481,15 +19446,14 @@ end;
   wbRecord(STMP, 'Snap Template', [
     wbEDID,
     wbBaseFormComponents,
-    //wbPTT2,
+    wbPTT2,
     wbFormIDCk(PNAM, 'Parent', [STMP]),
-    wbRArray('Nodes',
-      wbStruct(ENAM, 'Node', [
-        wbInteger('Node ID', itU32),
-        wbFormIDCk('Node', [STND]),
+    wbFormIDCk(HNAM, 'Snap Template Behavior', [STBH]),
+    wbRArray('Node Instancess',
+      wbStruct(ENAM, 'Instance', [
+        wbInteger('Instance ID', itU32),
+        wbFormIDCk('Template Node', [STND]),
         wbVec3PosRotDegrees('Orientation', 'Offset', 'Rotation', 'Ofs:', 'Rot:'),
- //       wbVec3('Offset', 'Ofs:'),
- //       wbVec3('Rotation', 'Rot:'),
         wbInteger('Display Case Slot', itU32),
         wbUnknown(4)
       ])
@@ -19502,20 +19466,35 @@ end;
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed)
     ),
-    wbRArray('Parent Nodes', wbRStruct('Parent Node', [
-      wbInteger(ONAM, 'Node ID', itU32),
-      wbVec3PosRotDegrees(TNAM, 'Unknown')
+    wbRArray('Inherited Overrides', wbRStruct('Parent Instance', [
+      wbInteger(ONAM, 'Instance ID', itU32),
+      wbVec3PosRotDegrees(TNAM, 'Transform Data')
     ], [])),
-    wbArray(BNAM, 'Unknown', wbFloat('Unknown'), 6),
-    //wbArray(GNAM, 'Unknown', wbFloat('Unknown'), 3),
+    wbStruct(BNAM, 'Bound Override', [
+      wbVec3('Override -'),
+      wbVec3('Override +')
+    ])
+      .SetSummaryKeyOnValue([0, 1])
+      .IncludeFlag(dfCollapsed),
+    wbVec3(GNAM, 'Origin Override'),
     wbInteger(INAM, 'Next Node ID', itU32),
-    wbUnknown(STPT, 4), // snap piece type: Invalid, Starting Foundation, Foundation, Floor, Stair, Wall, Roof
+    wbInteger(STPT, 'Snap Piece Type', itU32, wbEnum([
+      'Invalid',
+      'Starting Foundation',
+      'Foundation',
+      'Floor',
+      'Stair',
+      'Wall',
+      'Roof'
+    ])), // snap piece type: Invalid, Starting Foundation, Foundation, Floor, Stair, Wall, Roof
     //wbUnknown(SNFG)
-    wbString(CNAM),
-    wbRStructsSK('Unknown', 'Unknown', [0], [
-      wbFormIDCk(RNAM, 'Traversal', [TRAV]),
-      wbRArrayS('Unknown', wbInteger(SNAM, 'Node ID', itU32))
-    ], [])
+    wbRArray('Traversal Categories', wbRStruct('Category', [
+      wbString(CNAM, 'Name'),
+      wbRStructsSK('Traversal Nodes', 'Node', [0], [
+        wbFormIDCk(RNAM, 'Traversal', [TRAV]),
+        wbRArrayS('Instances', wbInteger(SNAM, 'Instance ID', itU32))
+      ], [])
+    ], []))
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19751,26 +19730,28 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(IRES, 'Resource', [
     wbEDID,
+    wbBaseFormComponents,
     wbFULL,
     wbKeywords,
     wbCUSH,
-    wbFormIDCk(FNAM, 'Item List', [LVLI]),
+    wbFormIDCk(FNAM, 'Surface Item', [LVLI]),
     wbInteger(SNAM, 'Rarity', itU32, wbEnum ([], [
         0, 'Common',
         1, 'Uncommon',
         2, 'Rare',
         3, 'Exotic',
         4, 'Unique',
-        5, 'Unique to He-3',
-        6, 'Unique to H2O'
+        5, 'Special',
+        6, 'Everywhere'
       ])),
-    wbRArray('Next rarities', wbFormIDCk(CNAM, 'Next Rarity', [IRES])),
+    wbEmpty(ENAM, 'Veins have rounded end points'),
+    wbRArray('Child Resources', wbFormIDCk(CNAM, 'Resource', [IRES])),
     wbByteColors(TINC, 'Surface color'), // not the color in the icons but that on the surface
     wbLStringKC(NNAM, 'Short Name', 0, cpTranslate),
-    wbString(GNAM, 'Resource Type'),
-    wbFormIDCk(NAM1, 'Actor Value', [NULL, AVIF]),
-    wbFormIDCk(NAM2, 'Produce', [NULL, LVLI, COBJ]),
-    wbFormIDCK(NAM3, 'Interval', [NULL, GLOB])
+    wbString(GNAM, 'Art Name'),
+    wbFormIDCk(NAM1, 'Resource AV', [NULL, AVIF]),
+    wbFormIDCk(NAM2, 'Resource Item', [NULL, LVLI, COBJ]),
+    wbFormIDCK(NAM3, 'Production Interval (hours)', [NULL, GLOB])
   ]);
 
   var wbBIOMMaskNameStringEnum := wbStringEnum([
@@ -20616,15 +20597,81 @@ end;
     wbEDID
   ]);
 
+  var wbRSGDBiomeDataCommon := function(aName: string = 'Unknown'): IwbStructDef
+  begin
+    Result := wbStruct(aName, [
+      wbFloat('Vein Nodes Min'),
+      wbFloat('Vein Nodes Max'),
+      wbFloat('Node Size Min'),
+      wbFloat('Node Size Max'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Max Angle Offset'),
+      wbFloat('Chance to Appear'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]);
+  end;
+
+  var wbRSGDBiomeDataNotcommon := function(aName: string = 'Unknown'): IwbStructDef
+  begin
+    Result := wbStruct(aName, [
+      wbFloat('Vein Nodes Min'),
+      wbFloat('Vein Nodes Max'),
+      wbFloat('Node Size Min'),
+      wbFloat('Node Size Max'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown'),
+      wbFloat('Max Node Offset'),
+      wbFloat('Chance per Node'),
+      wbFloat('Unknown'),
+      wbFloat('Unknown')
+    ]);
+  end;
+
+  var wbRSGDBCellData := function(aName: string = 'Unknown'): IwbStructDef
+  begin
+    Result := wbStruct(aName, [
+      wbFloat('Vein Nodes Min'),
+      wbFloat('Vein Nodes Max'),
+      wbFloat('Node Size Min'),
+      wbFloat('Node Size Max'),
+      wbFloat('Segment Length Min'),
+      wbFloat('Segment Length Max'),
+      wbFloat('Max Angle Offset'),
+      wbFloat('Chance to Appear'),
+      wbFloat('Surface Item Chance None'),
+      wbFloat('Blobbiness')
+    ]);
+  end;
+
   {subrecords checked against Starfield.esm}
   wbRecord(RSGD, 'Resource Generation Data', [
     wbEDID,
-    wbRStructs('Unknown', 'Unknown', [
-      wbFormIDCk(RNAM, 'Resource', [IRES]), //req
-      wbArray(DNAM, 'Unknown',                // req
-        wbArray('Unknown',
-          wbFloat('Unknown'), 10), 14) // structure appears to fixed size
-    ], [])
+    wbRArray('Resources',
+      wbRStruct('Resource', [
+        wbFormIDCk(RNAM, 'Resource', [IRES], False, cpNormal, True),
+        wbStruct(DNAM, 'Generation Data', [
+          wbStruct('Biome', [
+            wbRSGDBiomeDataCommon('Common'),
+            wbRSGDBiomeDataNotcommon('Uncommon'),
+            wbRSGDBiomeDataNotcommon('Rare'),
+            wbRSGDBiomeDataNotcommon('Exotic'),
+            wbRSGDBiomeDataNotcommon('Unique'),
+            wbRSGDBiomeDataNotcommon('Special'),
+            wbRSGDBiomeDataNotcommon('Everywhere')
+          ]),
+          wbStruct('Cell', [
+            wbRSGDBCellData('Common'),
+            wbRSGDBCellData('Uncommon'),
+            wbRSGDBCellData('Rare'),
+            wbRSGDBCellData('Exotic'),
+            wbRSGDBCellData('Unique'),
+            wbRSGDBCellData('Special'),
+            wbRSGDBCellData('Everywhere')
+          ])
+        ], cpNormal, True) // structure appears to fixed size
+      ], []))
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20841,16 +20888,19 @@ end;
   wbRecord(STBH, 'Snap Template Behavior', [
     wbEDID,
     wbBaseFormComponents,
-    wbRStructs('Unknown', 'Unknown', [
-      wbInteger(ENAM, 'Unknown', itU32, wbFlags([
-        'Unknown 0',
-        'Unknown 1'
+    wbRStructs('Behaviors', 'Behavior', [
+      wbInteger(ENAM, 'Operation', itU32, wbEnum([
+        'Replace',
+        'Remove',
+        'Add',
+        'Foundation',
+        'Disable Node'
       ])).SetRequired,
-      wbFormIDCk(PNAM, 'Base Object', sigBaseObjects + [FLST], sigBaseObjects).SetRequired,
+      wbFormIDCk(PNAM, 'Payload', sigBaseObjects + [FLST], sigBaseObjects).SetRequired,
       wbCITCReq,
       wbCTDAsCount,
       wbFormIDCk(UNAM, 'Snap Template Node', [NULL, STND]).SetRequired,
-      wbFormIDCk(VNAM, 'Keyword', [NULL, KYWD]).SetRequired
+      wbFormIDCk(VNAM, 'Group Keyword', [NULL, KYWD]).SetRequired
     ], [])
   ]);
 
