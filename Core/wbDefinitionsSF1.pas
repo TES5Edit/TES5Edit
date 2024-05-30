@@ -17709,9 +17709,9 @@ end;
     wbXALG,
     wbKeywords,
     wbSoundReference(SMLS),
-    wbStruct(DEVT, 'Unknown', [
-      wbUnknown(4),
-      wbFloat
+    wbStruct(DEVT, 'Sound Detection', [
+      wbInteger('Level', itU32, wbSoundLevelEnum),
+      wbFloat('Radius')
     ])
   ]).SetSummaryKey([5]);
 
@@ -20892,12 +20892,16 @@ end;
     wbEDID,
     wbSPCHQuestStage(SPWI, 'Quest Stage on Win'),
     wbSPCHQuestStage(SPLO, 'Quest Stage on Loss'),
-    wbEmpty(SRAN, 'Unknown'),
-    wbEmpty(SGEN, 'Unknown'),
+    wbEmpty(SRAN, 'Sequential Scenes'),
+    wbEmpty(SGEN, 'Don''t Allow No Keyword Scenes'),
     wbFormIDCk(SPQU, 'Quest', [QUST], False, cpNormal, True),
     wbKeywords,
     wbArray(SPMA, 'Scenes', wbFormIDCk('Scene', [SCEN])),
-    wbUnknown(DIFF) //req - 0, 1, 2 - difficulty of check?
+    wbInteger(DIFF, 'Difficulty', itU16, wbEnum([
+      'Easy',
+      'Medium',
+      'Hard'
+    ]))
   ]);
 
   {subrecords checked against Starfield.esm}
