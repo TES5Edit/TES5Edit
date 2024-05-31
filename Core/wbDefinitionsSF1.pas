@@ -18075,7 +18075,7 @@ end;
     wbGenericModel(True),
     wbEITM,
     wbInteger(EAMT, 'Enchantment Amount', itU16),
-//    wbDEST,
+    wbDEST,
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
@@ -18088,7 +18088,7 @@ end;
     wbObjectTemplate,
     wbEmpty(STOP, 'Marker', cpNormal, True),
     wbFormIDCk(NNAM, 'Embedded Weapon Mod', [NULL, OMOD]),
-    wbEmpty(BNAM, 'Unknown'),
+    wbEmpty(BNAM, 'Is Embedded Weapon'),
     wbStruct(WAIM, 'Aim', [
       wbFloat('Sighted Transition (Seconds)'),
       wbFormIDCk('Aim Down Sight Template', [NULL, ZOOM]),
@@ -18113,8 +18113,7 @@ end;
       ])),                                                //enum
       wbInteger('Inverse Reticle Spread', itU8, wbBoolEnum),
       wbInteger('Displayed Reticle on UI Ignores Player Movement', itU8, wbBoolEnum)
-
-    ]),
+     ]),
     wbStruct(WAM2, 'Ammunition', [
       wbFormIDCk('Ammo Type', [NULL, AMMO]),
       wbInteger('Ammo Capacity', itu32),
@@ -18200,7 +18199,7 @@ end;
       wbInteger('Bolt Action', itU8, wbBoolEnum),
       wbInteger('Disable ShellCase Eject', itU8, wbBoolEnum),
       wbFloat('Shots Per Second'),
-      wbFloat, // contains same value as Attack Delay Seconds
+      wbFloat('Weapon Attack Animation Duration'), // contains same value as Attack Delay Seconds CK matches both values as updated
       wbInteger('Override Rate of Fire', itU8, wbBoolEnum),
       wbFloat('Trigger Threshold - Primary Trigger'),
       wbInteger('Override Trigger Threshold', itU8, wbBoolEnum),
@@ -18212,18 +18211,18 @@ end;
     wbStruct(WFLG, 'Flags', [
       wbInteger('Non-Playable', itU8, wbBoolEnum),
       wbInteger('Player Only', itU8, wbBoolEnum),
-      wbInteger('Prevent Use In Normal Combat', itU8, wbBoolEnum),                                          //0x12
-      wbInteger('Is Secondary', itU8, wbBoolEnum),                                          //0x13
+      wbInteger('Prevent Use In Normal Combat', itU8, wbBoolEnum),
+      wbInteger('Is Secondary', itU8, wbBoolEnum),
 
       wbInteger('Can''t Drop', itU8, wbBoolEnum),
       wbInteger('Minor Crime', itU8, wbBoolEnum),
       wbInteger('Non-Hostile', itU8, wbBoolEnum),
-      wbInteger('Bound', itU8, wbBoolEnum),                                          //0x17
+      wbInteger('Bound', itU8, wbBoolEnum),
 
-      wbInteger('NPC Prefers Long Bursts', itU8, wbBoolEnum),                                          //0x18
-      wbInteger('NPCs Only Fire When Magazine Full', itU8, wbBoolEnum),                                          //0x19
-      wbInteger('Use Sequential Fire Nodes', itU8, wbBoolEnum),                                          //0x1A
-      wbInteger('Use Random Fire Nodes', itU8, wbBoolEnum)                                           //0x1B
+      wbInteger('NPC Prefers Long Bursts', itU8, wbBoolEnum),
+      wbInteger('NPCs Only Fire When Magazine Full', itU8, wbBoolEnum),
+      wbInteger('Use Sequential Fire Nodes', itU8, wbBoolEnum),
+      wbInteger('Use Random Fire Nodes', itU8, wbBoolEnum)
     ]),
     wbStruct(WGEN, 'General', [
       wbInteger('Type', itu32, wbTypeEnum),
