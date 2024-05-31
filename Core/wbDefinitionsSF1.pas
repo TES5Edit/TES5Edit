@@ -17967,53 +17967,46 @@ end;
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       {0x01} 'Dangerous',
       {0x02} 'Unknown 1',
-      {0x04} 'Directional Sound'
+      {0x04} 'Directional Sound',
+      {0x08} 'Enable Flowmap',
+      {0x10} 'Blend Normals'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbSoundReference(WASH),
     wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
     wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
-//    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbUnused(DATA, True),
     wbStruct(DNAM, 'Visual Data', [
-      wbStruct('Fog Properties', [
-        wbFloat('Depth Amount'),
-        wbByteColors('Shallow Color'),
-        wbByteColors('Deep Color'),
-        wbFloat('Color Shallow Range'),
-        wbFloat('Color Deep Range'),
-        wbFloat('Shallow Alpha'),
-        wbFloat('Deep Alpha'),
-        wbFloat('Alpha Shallow Range'),
-        wbFloat('Alpha Deep Range'),
-        wbByteColors('Underwater Color'),
-        wbFloat('Underwater Fog Amount'),
-        wbFloat('Underwater Near Fog'),
-        wbFloat('Underwater Far Fog')
+      wbFloat('Depth Amount'),
+      wbStruct('Color Absorbtion Ranges', [
+        wbFloat('Red'),
+        wbFloat('Green'),
+        wbFloat('Blue')
       ]),
-      wbStruct('Physical Properties', [
+      wbStruct('Concentration Properties', [
+        wbFloat('Phytoplankton'),
+        wbFloat('Sediment'),
+        wbFloat('Yellow Matter'),
+        wbFloat('Oceanness')
+      ]),
+      wbStruct('Underwater Properties', [
+        wbByteColors('Color'),
+        wbFloat('Fog Amount'),
+        wbFloat('Near Fog'),
+        wbFloat('Far Fog')
+      ]),
+      wbStruct('Surface Effects', [
         wbFloat('Normal Magnitude'),
         wbFloat('Shallow Normal Falloff'),
         wbFloat('Deep Normal Falloff'),
-        wbFloat('Reflectivity Amount'),
-        wbFloat('Fresnel Amount'),
-        wbFloat('Surface Effect Falloff'),
-        wbStruct('Displacement Simulator', [
-          wbFloat('Force'),
-          wbFloat('Velocity'),
-          wbFloat('Falloff'),
-          wbFloat('Dampener'),
-          wbFloat('Starting Size')
-        ]),
-        wbByteColors('Reflection Color')
+        wbFloat('Surface Effect Falloff')
       ]),
-      wbStruct('Specular Properties', [
-        wbFloat('Sun Specular Power'),
-        wbFloat('Sun Specular Magnitude'),
-        wbFloat('Sun Sparkle Power'),
-        wbFloat('Sun Sparkle Magnitude'),
-        wbFloat('Interior Specular Radius'),
-        wbFloat('Interior Specular Brightness'),
-        wbFloat('Interior Specular Power')
+      wbStruct('Displacement Simulator', [
+        wbFloat('Force'),
+        wbFloat('Velocity'),
+        wbFloat('Falloff'),
+        wbFloat('Dampener'),
+        wbFloat('Starting Size')
       ]),
       wbStruct('Noise Properties', [
         wbFloat('Layer 1 - Wind Direction'),
@@ -18021,15 +18014,20 @@ end;
         wbFloat('Layer 3 - Wind Direction'),
         wbFloat('Layer 1 - Wind Speed'),
         wbFloat('Layer 2 - Wind Speed'),
-        wbFloat('Layer 3 - Wind Speed')
+        wbFloat('Layer 3 - Wind Speed'),
+        wbFloat('Layer 1 - Amplitude Scale'),
+        wbFloat('Layer 2 - Amplitude Scale'),
+        wbFloat('Layer 3 - Amplitude Scale'),
+        wbFloat('Layer 1 - UV Scale'),
+        wbFloat('Layer 2 - UV Scale'),
+        wbFloat('Layer 3 - UV Scale'),
+        wbFloat('Layer 1 - Noise Falloff'),
+        wbFloat('Layer 2 - Noise Falloff'),
+        wbFloat('Layer 3 - Noise Falloff')
       ]),
-      wbStruct('Silt Properties', [
-        wbFloat('Silt Amount'),
-        wbByteColors('Light Color'),
-        wbByteColors('Dark Color')
-      ]),
-      wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
-    ], cpNormal, True, nil, 4),
+      wbFloat('Flowmap Scale'),
+      wbFloat('Roughnes')
+    ], cpNormal, True),
     wbUnused(GNAM, 12),
     wbVec3(NAM0, 'Linear Velocity'),
     wbVec3(NAM1, 'Angular Velocity'),
