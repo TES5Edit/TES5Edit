@@ -1876,12 +1876,10 @@ begin
     Exit(2);
   if lComponentName = 'BGSOrbitalDataComponent_Component' then
     Exit(3);
-  if lComponentName = 'BGSBlockEditorMetaData_Component' then
-    Exit(4);
   if lComponentName = 'UniqueOverlayList_Component' then
-    Exit(5);
+    Exit(4);
   if lComponentName = 'UniquePatternPlacementInfo_Component' then
-    Exit(6);
+    Exit(5);
 end;
 
 function wbBFCDAT2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1911,9 +1909,11 @@ begin
   lComponentName := lBFCB.EditValue;
 
   if lComponentName = 'BlockHeightAdjustment_Component' then
-    Exit(1)
-  else if lComponentName = 'SurfaceTreePatternSwapInfo_Component' then
+    Exit(1);
+  if lComponentName = 'SurfaceTreePatternSwapInfo_Component' then
     Exit(2);
+  if lComponentName = 'BGSBlockEditorMetaData_Component' then
+    Exit(3);
 end;
 
 
@@ -6253,7 +6253,7 @@ begin
   var wbODTYReq := wbFloat(ODTY, 'Dirtiness Scale', cpNormal, True, 1, -1, nil, wbFloatScale0to1); // any record which can have ODTY should always have it
   var wbOPDS :=
     wbStruct(OPDS, 'Object Palette Defaults', [
-      wbInteger('Flags', itU32, wbFlags([
+      wbInteger('Flags', itU8, wbFlags([
         'Conform To Slope',
         '',
         'Rotate Z To Slope',
@@ -6261,6 +6261,7 @@ begin
         'Place As Marker',
         'Outside Water Height'
       ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbUnused(3),
       wbFloat('Sink (Meters)'),
       wbFloat('Sink Variance +/-'),
       wbFloat('X/Y Offset Variance +/-'),
@@ -8792,9 +8793,9 @@ end;
 
         wbRStruct('Component Data - DAT2', [
           wbUnion(DAT2, 'Data', wbBFCDAT2Decider, [
-            wbUnknown,
+        {0} wbUnknown,
             //BlockHeightAdjustment_Component
-            wbStruct('Block Height Adjustments', [
+        {1} wbStruct('Block Height Adjustments', [
               wbArray('Rows',
                 wbArray('Columns',
                   wbStruct('Block Height Adjustment', [
@@ -8808,14 +8809,33 @@ end;
             .IncludeFlag(dfSummaryMembersNoName)
             .IncludeFlag(dfCollapsed),
             // SurfaceTreePatternSwapInfo_Component
-            wbStruct('Surface Tree Pattern Swap', [
+        {2} wbStruct('Surface Tree Pattern Swap', [
               wbUnknown
               {wbArray('Forms', wbStruct('Form', [
                 wbFormIDCk('Pattern', [SFPT]),
                 wbInteger('Unknown', itS8),
                 wbUnknown(4)
               ]), -1)}
-            ])
+            ]),
+            //BGSBlockEditorMetaData_Component
+        {3} wbStruct('Block Creation Meta Data', [
+              wbLenString('Created Time'),
+              wbUnknown(1),
+              wbLenString('Unknown'),
+              wbLenString('Source Editor ID'),
+              wbArray('Unknown', wbStruct('Unknown', [
+//                wbFormIDCk('Source Block', [SFBK]),
+                wbUnknown(4), // Appears to usually point at the same FormID of the source block. Though sometimes a random REFR or a broken ID. Inconsistent, but it's a read only reference data point not used in gameplay.
+                wbUnknown(1)
+              ]), -1).IncludeFlag(dfNotAlignable),
+
+              wbInteger('Location X', itS32),
+              wbInteger('Location Y', itS32),
+              wbInteger('Planet System ID', itS32),
+              wbInteger('Satellite ID', itS32),
+              wbLongitudeDouble,
+              wbLatitudeDouble    // There is one vanilla record which has a very old date where the data structure is 8 bytes short. Possibly they used 2 floats instead of 2 doubles for lon/lat.
+            ], cpNormal, False, nil, 9)
 
           ]).IncludeFlag(dfUnionStaticResolve)
         ], []),
@@ -8847,19 +8867,6 @@ end;
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
               wbUnknown()
-            ]),
-            //BGSBlockEditorMetaData_Component
-            wbStruct('', [
-              wbLenString('Unknown'),
-              wbUnknown(1),
-              wbLenString('Unknown'),
-              wbLenString('Unknown'),
-              wbArray('Unknown', wbUnknown(4), -1).IncludeFlag(dfNotAlignable),
-              wbInteger('Unknown', itS32),
-              wbInteger('Unknown', itS32),
-              wbInteger('Unknown', itS32),
-              wbInteger('Unknown', itS32),
-              wbUnknown
             ]),
             //UniqueOverlayList_Component
             wbStruct('', [
@@ -13217,7 +13224,7 @@ end;
   var lQuestEventVarRecsSF1 := wbMakeVarRecs([
     Sig2Int(LAND), 'Ship Landing',
     Sig2Int(DOCK), 'Ship Docking',
-    Sig2Int(XPLL), 'Unknown XPLL'
+    Sig2Int(XPLL), 'Clear Location (SF)'
   ]);
 
   var wbQuestEventEnumSF1 := wbEnum([], wbCombineVarRecs(wbQuestEventVarRecs, lQuestEventVarRecsSF1));
@@ -16078,7 +16085,7 @@ end;
           wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
             {0} wbByteArray(''),
             {1} wbInteger('', itU8, wbBoolEnum),
-            {2} wbInteger('', itU32),
+            {2} wbInteger('', itS32),
             {3} wbFloat('')
           ]).IncludeFlag(dfUnionStaticResolve),
           wbPLDT,
@@ -17802,8 +17809,8 @@ end;
       {0x00000008} { 3} '',
       {0x00000010} { 4} 'Non Occluder',
       {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Has Tree LOD', // Used in Fallout 4 ?
-      {0x00000080} { 7} 'Add-On LOD Object',
+      {0x00000040} { 6} '',
+      {0x00000080} { 7} '',
       {0x00000100} { 8} '',
       {0x00000200} { 9} 'Hidden From Local Map',
       {0x00000400} {10} 'Headtrack Marker',
@@ -17824,7 +17831,7 @@ end;
       {0x02000000} {25} 'Obstacle',
       {0x04000000} {26} 'NavMesh Generation - Filter',
       {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} 'Show In World Map (Sky Cell Only)',
+      {0x10000000} {28} 'NavMesh Generation - Only Cut',
       {0x20000000} {29} 'Unknown 29',
       {0x40000000} {30} 'NavMesh Generation - Ground',
       {0x80000000} {31} ''
@@ -17836,9 +17843,9 @@ end;
     wbOPDS,
     wbPTT2,
     wbSNTP,
-    wbSNBH, //order between SNBH
-    wbXALG, //and XALG unknown
+    wbSNBH,
     wbDEFL,
+    wbXALG,
     wbBaseFormComponents,
     wbFTYP,
     wbGenericModel(True),
@@ -19254,24 +19261,26 @@ end;
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Menu', [TMLM]),
     wbInteger(NAM1, 'Terminal Background', itU8, wbTerminalBackgroundEnum),
-//    wbLStringKC(NAM0, 'Header Text'),
-//    wbLStringKC(WNAM, 'Welcome Text'),
     wbFULL,
     wbGenericModel(True),
+    wbDEST,
     wbKeywords,
     wbPRPS,
     wbFTYP,
     wbByteColors(PNAM, 'Marker Color (Unused)'),
-    wbUnknown(FNAM),
-    wbUnknown(JNAM),
+    wbALSH,
+    wbInteger(FNAM, 'Flags', itU16, wbFlags([
+      '',
+      'Ignored By Sandbox'
+    ])),
+    wbInteger(JNAM, 'Activation Angle - For Player', itU16, nil, cpNormal, True).SetDefaultNativeValue(360),
     wbMNAMFurnitureMarker,
-    wbUnknown(GNAM),
+    wbInteger(GNAM, 'Activation Angle - For Sitting Actor', itU16, nil, cpNormal, True).SetDefaultNativeValue(360),
     wbByteArray(WBDT, 'Workbench Data (unused)', 0),
     wbFormIDCk(FTMP, 'Furniture Template', [FURN]),
-    wbUnknown(FNPR),
+    wbUnknown(FNPR),     // only used by one official record CY_GlenHurst_CondoTerminal and unable to find corresponding data in CK
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
-    //wbObjectTemplate, not in Starfield.esm, but likely given STOP marker
     wbMarkerReq(STOP)
   ]);
 
@@ -20739,33 +20748,84 @@ end;
   wbRecord(SFBK, 'Surface Block', [
     wbEDID,
     wbBaseFormComponents,
-    wbString(ANAM),
-    wbArray(DNAM, 'Unknown', wbInteger('Unknown', itU32), 2), //req
-    wbArray(ENAM, 'Unknown', wbFloat('Unknown'), 2), //req
-    wbUnknown(FNAM),
-    wbUnknown(GNAM), //req always 1 byte $00
-    wbInteger(HNAM, 'Unknown', itS16), //req
-    wbUnknown(INAM), //req boolean?
-    wbUnknown(JNAM), //req boolean?
-    wbInteger(KNAM, 'Unknown', itU8), //req
-    wbFloat(WHGT), //req
-    wbString(NAM0),
+    wbString(ANAM, 'Data File'),
+    wbStruct(DNAM, 'Size', [
+      wbInteger('X', itU32),
+      wbInteger('Y', itU32)
+    ], cpNormal, True)
+    .SetSummaryKeyOnValue([0, 1])
+    .IncludeFlag(dfCollapsed),
+    wbStruct(ENAM, 'Height', [
+      wbFloat('Min'),
+      wbFloat('Max')
+    ], cpNormal, True)
+    .SetSummaryKeyOnValue([0, 1])
+    .IncludeFlag(dfCollapsed),
+    wbArray(FNAM, 'Connections', wbInteger('Unknown', itS16)),
+    wbInteger(GNAM, 'Rarity', itU8, wbEnum([
+      'Common',
+      'Uncommon',
+      'Rare'
+    ]), cpNormal, True),
+    wbRStruct('Placement', [
+      wbInteger(HNAM, 'Manual Alignment Value', itS16, nil, cpNormal, True),
+      wbInteger(INAM, 'Manual Alignment Mode', itU8, wbEnum([
+        'Relative',
+        'Absolute'
+      ]), cpNormal, True),
+      wbInteger(JNAM, 'Grid Alignment Override', itU8, wbEnum([
+        'Default (INI: Median)',
+        'Min',
+        'Max',
+        'Average',
+        'Median',
+        'Percent'
+      ])),
+      wbInteger(KNAM, 'Grid Sampling Override', itU8, wbEnum([
+        'Default (INI: Borders)',
+        'Legacy',
+        'Full',
+        'Borders',
+        'Corners'
+      ]), cpNormal, True)
+    ], [], cpNormal, True),
+    wbFloat(WHGT, 'Water Height', cpNormal, True),
+    wbString(NAM0, 'Source File'),
     wbString(NAM1),
-    wbUnknown(NAM2), // always 8 bytes zero
-    wbArray(NAM3, 'Unknown', wbInteger('Unknown', itU32), 2),
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown'), 2),
-    wbFormIDCk(NAM5, 'Surface Block', [SFBK, NULL] )
+    wbStruct(NAM2, 'Cell Min', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32)
+    ], cpNormal, True)
+    .SetSummaryKeyOnValue([0, 1])
+    .IncludeFlag(dfCollapsed, wbCollapsePlacement),
+    wbStruct(NAM3, 'Cell Max', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32)
+    ], cpNormal, True)
+    .SetSummaryKeyOnValue([0, 1])
+    .IncludeFlag(dfCollapsed, wbCollapsePlacement),
+    wbStruct(NAM4, 'Height Range', [
+      wbFloat('Min'),
+      wbFloat('Max')
+    ], cpNormal, True)
+    .SetSummaryKeyOnValue([0, 1])
+    .IncludeFlag(dfCollapsed, wbCollapsePlacement),
+    wbFormIDCk(NAM5, 'Source Block', [SFBK, NULL] )
   ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(SFPC, 'Surface Pattern Config', [
     wbEDID,
     wbFormIDCk(ENAM, 'Surface Pattern Style', [NULL, PTST]).SetRequired,
-    wbRStructs('Unknown', 'Unknown', [
-      wbString(BNAM, 'Type'),
-      wbFloat(CNAM, 'Chance') // chance or weight?
+    wbRStructs('Styles', 'Style', [
+      wbString(BNAM, 'Style'),
+      wbFloat(CNAM, 'Weight')
     ], []),
-    wbArray(DNAM, 'Unknown', wbFloat('Unknown'), 3).SetRequired  // seems to be fixed length
+    wbStruct(DNAM, 'Rarity', [
+      wbFloat('Common'),
+      wbFloat('Uncommon'),
+      wbFloat('Rare')
+    ]).SetRequired
   ]);
 
   {subrecords checked against Starfield.esm}
