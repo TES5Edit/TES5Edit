@@ -11296,6 +11296,7 @@ end;
     wbEDID,
     wbOBND(True),
     wbODTYReq,
+    wbOPDS,
     wbRStruct('Textures (RGB/A)', [
       wbString(TX00, 'Diffuse'),
       wbString(TX01, 'Normal/Gloss'),
@@ -11317,7 +11318,7 @@ end;
       {0x0001} 'No Specular Map',
       {0x0002} 'Facegen Textures',
       {0x0004} 'Has Model Space Normal Map',
-      {0x0010} 'Unknown 3'
+      {0x0010} 'Default To Box Decal'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbString(MNAM, 'Material')
   ]).SetSummaryKey([3, 4]);
@@ -12410,7 +12411,12 @@ end;
       'Female'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbFormIDCk(ANAM, 'Animation Face Archetype', [KYWD]),
-    wbUnknown(PNAM)
+    wbInteger(PNAM, 'Pronoun Override', itU8, wbEnum([
+      'Unselected',
+      'He/Him',
+      'She/Her',
+      'They/Them'
+    ]))
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19296,7 +19302,7 @@ end;
   wbRecord(TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00008000} 16, 'Around Origin',
-      {0x00010000} 17, 'Unknown'
+      {0x00010000} 17, 'Apply Translation'
     ])), [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -19310,8 +19316,15 @@ end;
     .SetSummaryPrefixSuffixOnValue(2, 'From ','')
     .SetSummaryPrefixSuffixOnValue(3, 'to ',' ')
     .IncludeFlagOnValue(dfSummaryMembersNoName),
-    wbUnknown(BNAM),
-    wbUnknown(ENAM)
+    wbInteger(BNAM, 'Basis', itU8, wbEnum([
+      'World Bound',
+      'Object Origin'
+    ])),
+    wbInteger(ENAM, 'Color Mode Flags', itU32, wbFlags([
+      'Normal',
+      'Monochromatic',
+      'Alpha Fill'
+    ]))
   ]).SetSummaryKey([1]);
 
   {subrecords checked against Starfield.esm}
@@ -21166,7 +21179,20 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(TRAV, 'Traversal', [
     wbEDID,
-    wbUnknown(DNAM)
+    wbStruct(DNAM, 'Data', [
+      wbInteger('Type', itU32, wbEnum([
+        {0} 'Jump',
+        {1} 'Jump Up',
+        {2} 'Jump Down',
+        {3} 'Vault',
+        {4} 'Ladder',
+        {5} 'Doorway',
+        {6} 'Activate'
+      ])),
+      wbFloat('Min Height'),
+      wbFloat('Max Height'),
+      wbInteger('Unknown', itU32)
+    ])
   ]);
 
   {subrecords checked against Starfield.esm}
