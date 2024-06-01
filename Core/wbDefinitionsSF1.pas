@@ -10195,12 +10195,13 @@ end;
     { 92} wbFloat('Fog High Far Scale'),
     { 96} wbFloat('Far Height Mid'),
     {100} wbFloat('Far Height Range'),
-    {104} wbInteger('Interior Type', itU8, wbEnum([], [                         {checked via ck}
-            0, 'Interior',
-            1, 'Ship Cell',
-            2, 'Space Cell',
-            4, 'Instanceable Interior'
-          ])){.IncludeFlag(dfCollapsed, wbCollapseFlags)},
+    {104} wbInteger('Interior Type', itU8, wbEnum([                             {checked via ck}
+            'Interior',
+            'Ship Cell',
+            'Space Cell',
+            'PackIn',
+            'Instanceable Interior'
+          ])),
     {105} wbUnused(3)
     {108}
     ]),
