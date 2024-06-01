@@ -10159,10 +10159,10 @@ end;
       {0x00002000} 'Player Followers Can''t Travel Here',
       {0x00004000} 'Unknown 14',
       {0x00008000} 'Unknown 15',
-      {0x00010000} 'Unknown 16',
-      {0x00020000} 'Unknown 17',
+      {0x00010000} 'Is Unique',
+      {0x00020000} 'Use Planet Gravity',
       {0x00040000} '',
-      {0x00080000} 'Unknown 19'
+      {0x00080000} 'Use IS Volumes Interior Criteria'
     ]), cpNormal, True, False, nil, wbCELLDATAAfterSet)
       .IncludeFlag(dfCollapsed, wbCollapseFlags),
 
@@ -10176,7 +10176,7 @@ end;
     { 16} wbFloat('Fog Far'),
     { 20} wbInteger('Directional Rotation XY', itS32),
     { 24} wbInteger('Directional Rotation Z', itS32),
-    { 28} wbFloat('Directional Fade'),
+    { 28} wbFloat('Gravity Scale'),                                             {checked via ck}
     { 32} wbFloat('Fog Clip Distance'),
     { 36} wbFloat('Fog Power'),
     { 40} wbByteColors('Fog Color Far'),
@@ -10195,11 +10195,12 @@ end;
     { 92} wbFloat('Fog High Far Scale'),
     { 96} wbFloat('Far Height Mid'),
     {100} wbFloat('Far Height Range'),
-    {104} wbInteger('Flags', itU8, wbFlags([
-            'Unknown 0',
-            'Unknown 1',
-            'Unknown 2'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    {104} wbInteger('Interior Type', itU8, wbEnum([], [                         {checked via ck}
+            0, 'Interior',
+            1, 'Ship Cell',
+            2, 'Space Cell',
+            4, 'Instanceable Interior'
+          ])){.IncludeFlag(dfCollapsed, wbCollapseFlags)},
     {105} wbUnused(3)
     {108}
     ]),
@@ -10253,12 +10254,16 @@ end;
 
     wbString(XWEM, 'Water Environment Map'),
 
+    wbFormIDCk(XILL, 'Lock List', [FLST]),
+
     wbFormIDCk(XCMO, 'Music Type', [MUSC]),
 
     wbRStruct('Global Dirt Layer', [
       wbString(XCGD, 'Material'),
-      wbInteger(XCIB, 'Unknown', itU8, wbBoolEnum)
-    ], []),
+      wbInteger(XCIB, 'Inherit Biome Layer', itU8, wbBoolEnum)
+    ], [])
+      .IncludeFlag(dfAllowAnyMember)
+      .IncludeFlag(dfStructFirstNotRequired),
 
     wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
 
@@ -17310,7 +17315,19 @@ end;
     wbXALD,
 
     wbStruct(XSAD, 'Ship Arrival', [
-      wbUnknown(17)
+      wbFormIDCk('Target', sigReferences),
+      wbInteger('Location', itU32, wbEnum([
+        'Editor Location',
+        'Target - Above',
+        'Target - Below',
+        'Target - Behind',
+        'Target - Front',
+        'Target - Left',
+        'Target - Right'
+      ])),
+      wbFloat('Distance (m)'),
+      wbFloat('Delay (s)'),
+      wbInteger('GravJump FX', itU8, wbBoolEnum)
     ]),
 
     wbXLCM,
