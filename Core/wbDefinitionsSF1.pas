@@ -1484,6 +1484,10 @@ var
   lTemplate: TwbTemplateElements;
   lElement: IwbElement;
 begin
+  if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+    Exit;
+  if aOldValue = aNewValue then
+    Exit;
   if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
     Exit;
   if not Assigned(lContainer.Container)  then
@@ -1506,6 +1510,10 @@ var
   lTemplate: TwbTemplateElements;
   lElement: IwbElement;
 begin
+  if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+    Exit;
+  if aOldValue = aNewValue then
+    Exit;
   if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
     Exit;
   var lSettingData := lContainer.ElementBySortOrder[1];
@@ -1524,6 +1532,10 @@ var
   lTemplate: TwbTemplateElements;
   lElement: IwbElement;
 begin
+  if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+    Exit;
+  if aOldValue = aNewValue then
+    Exit;
   if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
     Exit;
   var lSettingData := lContainer.ElementBySortOrder[1];
@@ -1542,6 +1554,10 @@ var
   lTemplate: TwbTemplateElements;
   lElement: IwbElement;
 begin
+  if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+    Exit;
+  if aOldValue = aNewValue then
+    Exit;
   if not Assigned(aElement) or not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
     Exit;
   var lSettingData := lContainer.ElementBySortOrder[2];
@@ -4354,6 +4370,24 @@ begin
   var wbActorValue := function(aName: string = 'Actor Value'): IwbIntegerDef
   begin
     Result := wbFormIDCkNoReach(aName, [AVIF, NULL]);
+  end;
+
+  var wbStarSystemLookupCallback := function(): TwbLinksToCallback
+  begin
+    Result := function(const aElement: IwbElement): IwbElement
+    begin
+      Result := nil;
+
+      var lStarID := aElement.NativeValue;
+      if not VarIsOrdinal(lStarID) then
+        Exit;
+
+      var lFile := aElement._File;
+      if not Assigned(lFile) then
+        Exit;
+
+      Result := lFile.RecordFromIndexByKey[wbIdxStarID, lStarID];
+    end;
   end;
 
   var wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
@@ -8235,13 +8269,13 @@ end;
   var wbPRPS := wbArrayS(PRPS, 'Properties', wbObjectProperty);
 
   var wbCrowdProperty :=
-    wbStructSK([0], 'Property', [
+    wbStructSK([0], 'Actor Data', [
       wbFormIDCk('Actor', [NPC_]),
       wbFloat('Value'),
       wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]).SetToStr(wbCrowdPropertyToStr).IncludeFlag(dfCollapsed, wbCollapseObjectProperties);
 
-  var wbCrowdPRPS := wbArrayS(PRPS, 'Properties', wbCrowdProperty);
+  var wbCrowdPRPS := wbArrayS(PRPS, 'Proportions', wbCrowdProperty);
 
   var wbFLTR := wbString(FLTR, 'Filter');
   var wbAPPR := wbArray(APPR, 'Attach Parent Slots', wbFormIDCk('Keyword', [KYWD]));
@@ -8732,6 +8766,7 @@ end;
         wbRStruct('Component Data - Activity Tracker', [
           wbActivityTracker
         ], []),
+        //Blueprint_Component
         wbRStruct('Component Data - Blue Print Components', [
           wbArray(BUO4, 'Blue Print Components',
             wbStruct('Item', [
@@ -8769,7 +8804,7 @@ end;
           ], []).SetRequired,
           wbInteger(BLUF, 'Unknown', itU8),
           wbInteger(BOID, 'Next Part ID', itU32)
-        ], []),
+        ], []).IncludeFlag(dfAllowAnyMember).IncludeFlag(dfStructFirstNotRequired),
         //BGSCityMapsUsage_Component
         wbRStruct('Component Data - City Map', [
           wbString(MOD2, 'Model Path', 260).IncludeFlag(dfHasZeroTerminator)
@@ -8777,15 +8812,15 @@ end;
 
         //BGSCrowdComponent_Component
         wbRStruct('Component Data - Crowd', [
-          wbFloat(CDND),
-          wbUnknown(CDNS),
-          wbRStructs('Unknown', 'Unknown', [
+          wbFloat(CDND, 'Density'),
+          wbInteger(CDNS, 'Populations Count', itU32),
+          wbRStructs('Population Proportions', 'Population Proportion', [
             wbCrowdPRPS,
             wbCITCReq,
             wbCTDAsCount,
-            wbString(STRV),
-            wbFloat(FLTV)
-          ], [])
+            wbString(STRV, 'Name'),
+            wbFloat(FLTV, 'Population Scale')
+          ], []).SetCountPath(CDNS)
         ], []),
         wbRStruct('Component Data - Container Items', [
           wbContainerItems
@@ -8820,8 +8855,11 @@ end;
             //BGSBlockEditorMetaData_Component
         {3} wbStruct('Block Creation Meta Data', [
               wbLenString('Created Time'),
-              wbUnknown(1),
-              wbLenString('Unknown'),
+              wbInteger('Source Type', itU8, wbEnum([], [
+                1, 'Block',
+                6, 'Planet'
+              ])),
+              wbLenString('Also Created Time'),
               wbLenString('Source Editor ID'),
               wbArray('Unknown', wbStruct('Unknown', [
 //                wbFormIDCk('Source Block', [SFBK]),
@@ -8866,7 +8904,16 @@ end;
             ]),
             //BGSOrbitalDataComponent_Component
             wbStruct('', [
-              wbUnknown()
+              wbDouble('Major Axis', cpNormal, False, 1, Low(Integer)),
+              wbDouble('Minor Axis', cpNormal, False, 1, Low(Integer)),
+              wbDouble('Aphelion', cpNormal, False, 1, Low(Integer)),
+              wbDouble('Eccentricity', cpNormal, False, 1, Low(Integer)),
+              wbDouble('Incline', cpNormal, False, 1, Low(Integer)).SetToStr(wbAngleToStr),
+              wbDouble('Mean Orbit', cpNormal, False, 1, Low(Integer)),
+              wbFloat('Axial Tilt').SetToStr(wbAngleToStr),
+              wbFloat('Rotational Velocity'),
+              wbInteger('Apply Orbital Velocity', itU8, wbBoolEnum),
+              wbInteger('Geostationary Orbit', itU8, wbBoolEnum)
             ]),
             //UniqueOverlayList_Component
             wbStruct('', [
@@ -8914,6 +8961,7 @@ end;
             wbArray('Template Slot', wbInteger('Exclusive Display Slot', itU32), -1) // DO NOT SORT this is intentionally ordered in CK
           )
         ], []),
+        //BGSDestructibleObject_Component
         wbRStruct('Component Data - Destructible', [
           wbDest
         ], []),
@@ -8959,6 +9007,7 @@ end;
         wbRStruct('Component Data - FTYP', [
           wbFTYP
         ], []),
+        //TESFullName_Component
         wbRStruct('Component Data - Fullname', [
           wbFULL
         ], []),
@@ -8993,6 +9042,7 @@ end;
         wbRStructSK([0],'Component Data - Image Space Adapter', [
           wbFormIDCk(MNAM, 'Image Space Adapter', [IMAD])
         ], []),
+        //TESPlanetModel_Component
         wbRStruct('Component Data - Planet Model', [
           wbString(MODL, 'Model'),
           wbFLLD,
@@ -9043,9 +9093,10 @@ end;
           ])
         ], []),
         //BGSWorldSpaceOverlay_Component
-        wbRStruct('Component Data - SNAM', [
-          wbUnknown(SNAM),
-          wbUnknown(PNAM), // looks to be integer, possible enum
+        wbRStruct('Component Data - Worldspace Overlay', [
+          wbInteger(SNAM, 'Star System ID', itS32, wbStarIDToStr, wbStrToStarID)
+            .SetLinksToCallbackOnValue(wbStarSystemLookupCallback()),
+          wbInteger(PNAM, 'Planet ID', itS32),
           wbFormIDCk(BNAM, 'Surface Block', [SFBK])
         ], []),
         //BGSSpawnOnDestroy_Component
@@ -9125,7 +9176,7 @@ end;
         ], []),
         //BGSPlanetContentManagerContentProperties_Component
         wbRStruct('Component Data - Planet Content Manager Content Properties', [
-          wbUnknown(ZNAM, 4),
+          wbUnknown(ZNAM, 4), // presume this is the Days Until Reset manual value but CK doesn't save when putting one in
           wbInteger(YNAM, 'Do All Before Repeating', itU8, wbBoolEnum),
           wbInteger(XNAM, 'Number of Times Allowed (Global)', itU32),
           wbInteger(WNAM, 'Number of Times Allowed (per system)', itU32),
@@ -9136,8 +9187,8 @@ end;
           wbInteger(NAM3, 'Number of Times Allowed (per planet)', itU32),
           wbByteColors(NAM4, 'Debug Color'),
           wbFormIDCk(NAM5, 'Number of Times Per Request Curve', [CURV, NULL]),
-          wbUnknown(NAM6, 4),
-          wbUnknown(NAM7, 4),
+          wbFormIDCk(NAM6, 'Spawn Groups Limit Curve', [CURV, NULL]),
+          wbFormIDCk(NAM7, 'Spawn Group Distance Override Curve', [CURV, NULL]),
           wbInteger(NAM8, 'Allow Invalid Biome Markers', itU8, wbBoolEnum),
           wbInteger(NAM9, 'Number of Times Allowed (per planet world)', itU32),
           wbCITCReq,
@@ -18329,11 +18380,11 @@ end;
       .IncludeFlag(dfNotAlignable)
       .IncludeFlag(dfFastAssign),
     wbFULL,
-    {
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
       wbInteger('Y', itS16)
     ]),
+    {
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     }
     wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
@@ -18356,7 +18407,7 @@ end;
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbString(NAM7),
+    wbString(NAM7, 'Water Material Path'),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
     wbStruct(DNAM, 'Land Data', [
@@ -18381,9 +18432,9 @@ end;
     ]),
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
+      wbFloat('Cell X Offset', cpNormal, False, 0.01),
+      wbFloat('Cell Y Offset', cpNormal, False, 0.01),
+      wbFloat('Cell Z Offset', cpNormal, False, 0.01)
     ], cpNormal, True),
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
@@ -18397,13 +18448,18 @@ end;
       {0x80} 'No Grass'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     {>>> Object Bounds doesn't show up in CK <<<}
-    wbUnknown(FNAM),
+    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+      'Player Followers Can''t Warp Here',
+      'Show Space',
+      'Unknown 2',
+      'Allow ProcGen'
+    ])),
     wbWorldspaceOBND,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP, 'Environment Map'),
     wbString(XWEM, 'Water Environment Map'),
-    wbFloat(GNAM),
+    wbFloat(GNAM, 'Gravity Scale'),
     wbRArray('Unknown', wbFormIDCk(LNAM, 'Unknown', [LTEX])),
     wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
     wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
@@ -20550,20 +20606,7 @@ end;
       ]),
       wbStruct(GNAM, 'Galaxy Data', [
         wbInteger('Star System ID', itu32, wbStarIDToStr, wbStrToStarID)
-         .SetLinksToCallback(function(const aElement: IwbElement): IwbElement
-          begin
-            Result := nil;
-
-            var lStarID := aElement.NativeValue;
-            if not VarIsOrdinal(lStarID) then
-              Exit;
-
-            var lFile := aElement._File;
-            if not Assigned(lFile) then
-              Exit;
-
-            Result := lFile.RecordFromIndexByKey[wbIdxStarID, lStarID];
-          end),
+         .SetLinksToCallback(wbStarSystemLookupCallback()),
         wbInteger('Parent Planet ID', itu32),
         wbInteger('Planet ID', itu32)
       ]),
@@ -21162,7 +21205,7 @@ end;
         [
           wbArray(GOGL, 'Gameplay Options', wbFormIDCk('Gameplay Option', [GPOF])), // intentionally not sorted as CK allows deliberate ordering
           wbArray(GOGL, 'Gameplay Option Groups', wbFormIDCk('Gameplay Option Gropu', [GPOG])) // intentionally not sorted as CK allows deliberate ordering
-        ], [], cpNormal, True)
+        ], [], cpNormal, True).IncludeFlag(dfUnionStaticResolve)
     ], [], cpNormal, True)
   ]);
 
@@ -21195,30 +21238,109 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WBAR, 'Weapon Barrel Model', [
     wbEDID,
+    wbBaseFormComponents,
     wbStruct(ZNAM, 'Data', [
-      wbInteger('Allow Cover State', itU8, wbBoolEnum),
-      wbFloat('Cover Detection Distance'),
-      wbFloat('Enter Cover Animation Time S'),
-      wbFloat('Hipfire During Cover Animation Time S')
+      wbInteger('Support Gun Down State', itU8, wbBoolEnum),
+      wbFloat('Distance From Wall'),
+      wbFloat('GunUp to GunDown Transition Duration (s)'),
+      wbFloat('GunDown to GunUp Transition Duration (s)')
     ])
   ]);
+
+
+  var wbWMKFDecider := function:TwbRUnionDecider
+  begin
+    Result := function(const aContainer: IwbContainerElementRef): Integer
+    begin
+      Result := -1;
+        var lContainer := aContainer.ContainingMainRecord;
+        var lType := lContainer.ElementBySignature[WMTI];
+        if Assigned(lType) then
+          Result := lType.NativeValue;
+    end;
+  end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(WKMF, 'Wwise Keyword Mapping', [
     wbEDID,
-    wbInteger(WMTI, 'Unknown', itU16),
-    wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD])),
-    wbInteger(WMSS, 'Unknown', itU32),
-    wbRStructs('Unknown', 'Unknown', [
-      wbInteger(WMSI, 'Unknown', itU16),
+    wbInteger(WMTI, 'Mapping Template', itU16, wbEnum([
+      'Ship Engine',
+      'Cockpit',
+      'Grav Drive',
+      'Creature Anim'
+    ]), cpNormal, True)
+      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
+      begin
+        if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+          Exit;
+        if aOldValue = aNewValue then
+          Exit;
+        if not Assigned(aElement) then
+          Exit;
+        var lContainer := aElement.Container;
+        var lSounds := lContainer.ElementByPath['Sound Item Details'];
+        if Assigned(lSounds) then
+          lSounds.Remove;
+        lContainer.Add('WMSS', True);
+      end),
+    wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True), // requires at least 1
+    wbInteger(WMSS, 'Count', itU32, nil, cpNormal, True).IncludeFlag(dfSkipImplicitEdit),
+    wbRStructs('Sound Item Details', 'Item Detail', [
+(** )  wbInteger('', itU16, wbEnum([], [
+          {0} 'Main Loop',
+          {1} 'Interior',
+          {2} 'Afterburner',
+          {3} 'Cockpit',
+          {4} 'Grav Jump Pending',
+          {5} 'Grav Jump Anim Started',
+          {6} 'Grav Jump Complete',
+          {7} 'Grav Jump Warmup',
+          {8} 'Creature Anim',
+          {9} 'Grav Jump Initiate'
+      ]), (**)
+(**)  wbUnion(WMSI, 'Sound ID', function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+        {decider}
+        begin
+          Result := -1;
+          if not Assigned(aElement) then
+            Exit;
+          var lContainer := aElement.ContainingMainRecord;
+          var lType := lContainer.ElementNativeValues[WMTI];
+          if not VarIsOrdinal(lType) then
+            Exit;
+          Result := lType;
+        end, [
+        // 0 Ship Engine
+        wbInteger('', itU16, wbEnum([], [
+          0, 'Main Loop',
+          1, 'Interior',
+          2, 'Afterburner'
+        ]), cpNormal, True),
+        // 1 Cockpit
+        wbInteger('', itU16, wbEnum([], [
+          3, 'Cockpit'
+        ]), cpNormal, True).SetDefaultNativeValue(3),
+        // 2 Grav Drive
+        wbInteger('', itU16, wbEnum([], [
+          4, 'Grav Jump Pending',
+          5, 'Grav Jump Anim Started',
+          6, 'Grav Jump Complete',
+          7, 'Grav Jump Warmup',
+          9, 'Grav Jump Initiate'
+        ]), cpNormal, True).SetDefaultNativeValue(4),
+        // 3 Creature Anim
+        wbInteger('', itU16, wbEnum([], [
+          8, 'Creature Anim'
+        ]), cpNormal, True).SetDefaultNativeValue(8)
+      ]).IncludeFlag(dfUnionStaticResolve), (**)
       wbStruct(WMSD, 'Unknown', [
-        wbSoundReference('Unknown'),
-        wbArray('Unknown', wbStruct('Unknown', [
-          wbWwiseGuid('Unknown'),
-          wbWwiseGuid('Unknown')
+        wbSoundReference('Event/Conditions'),
+        wbArray('Switch Data List', wbStruct('Data', [
+          wbWwiseGuid('Switch Group'),
+          wbWwiseGuid('Switch State')
         ]), -1)
-      ])
-    ], [])
+      ], cpNormal, True)
+    ], []).SetCountPath(WMSS)
   ]);
 
   {subrecords checked against Starfield.esm}
