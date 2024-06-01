@@ -1656,7 +1656,8 @@ type
     ptChallenge,          //CHAL
     ptCasino,             //CSNO
     ptAnyForm,             // Any form
-    ptFloat
+    ptFloat,
+    ptArmor               //ARMO
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -1668,7 +1669,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..449] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..451] of TCTDAFunction = (
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   5; Name: 'GetLocked'),
     (Index:   6; Name: 'GetPos'; ParamType1: ptAxis),
@@ -2084,6 +2085,10 @@ const
     (Index: 8692; Name: 'AudioMarkerGetController'; ),
     (Index: 8701; Name: 'AudioMarkerGetCurrent'; ),
     (Index: 8706; Name: 'GameGetSecondsPassed'; ),
+
+    // Added by AnhNVSE - up to v1.3.1
+    (Index: 9732; Name: 'GetQuestCompletedAlt'; ParamType1: ptQuest; ),
+    (Index: 9753; Name: 'GetArmorARAlt'; ParamType1: ptArmor; ),
 
     // Added by TTW nvse plugin
     (Index: 10247; Name: 'TTW_GetEquippedWeaponSkill'; ),
@@ -4851,7 +4856,8 @@ begin
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
         {51} wbFormID('Form'),
-        {52} wbFloat('Float')
+        {52} wbFloat('Float'),
+        {53} wbFormIDCkNoReach('Armor', [ARMO])
       ]),
    {6}wbUnion('Parameter #2', wbCTDAParam2Decider, [
         {00} wbByteArray('Unknown', 4),
@@ -4946,7 +4952,8 @@ begin
         {49} wbFormIDCkNoReach('Challenge', [CHAL]),
         {50} wbFormIDCkNoReach('Casino', [CSNO]),
         {51} wbFormID('Form'),
-        {52} wbFloat('Float')
+        {52} wbFloat('Float'),
+        {53} wbFormIDCkNoReach('Armor', [ARMO])
       ]),
    {7}wbUnion('Run On', wbCTDARunOnDecider, [
         wbInteger('Run On', itU32, wbEnum([
