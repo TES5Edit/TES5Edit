@@ -149,6 +149,8 @@ function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: 
 
 function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
 
+function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -864,6 +866,18 @@ begin
 
   if aType in [ctToStr, ctToSummary] then
     Result := aInt.ToString + ' -> ' + IntToStr(aInt div 17) + ':' + IntToStr(aInt mod 17);
+end;
+
+function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container     : IwbContainer;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  if Integer(Container.ElementNativeValues['Run On']) = 4 then
+    Result := 1;
 end;
 
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;

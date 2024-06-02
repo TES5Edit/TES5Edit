@@ -8210,7 +8210,10 @@ end;
             if lContainer.ElementValues['..\Run On'] = 'Reference' then
               Exit(False);
           end),
-        wbInteger('Parameter #3', itS32, nil, cpNormal, False, nil, nil, -1)
+        wbUnion('Parameter #3', wbCTDAParam3Decider, [
+          wbInteger('Parameter #3', itS32, nil, cpNormal, False, nil, nil, -1),
+          wbFormIDCk('Linked Keyword', [KYWD, NULL])
+        ])
       ], cpNormal, False{, nil, 0, wbCTDAAfterLoad}),
       wbString(CIS1, 'Parameter #1'),
       wbString(CIS2, 'Parameter #2')
@@ -18765,9 +18768,10 @@ end;
     wbEDID,
     wbSoundReference(WED0),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
-    wbInteger(RSMC, 'Marker', itU32).IncludeFlagOnValue(dfInternalEditOnly).SetRequired,
+    wbInteger(RSMC, 'Count', itU32, nil, cpNormal, True)                        // yes they use the same signature for count and other data below
+      .IncludeFlag(dfSkipImplicitEdit),
     wbRStructs('Reverb Sounds', 'Entry', [
-      wbInteger(RSMC, 'Class', itU32, wbEnum([
+      wbInteger(RSMC, 'Class', itU32, wbEnum([                                  // yes same signature as count
         'Default',
         'Class A',
         'Class B',
@@ -18776,7 +18780,7 @@ end;
         'Class E'
       ])),
       wbSoundReference(RSMH)
-    ], [])
+    ], []).SetCountPath(RSMC)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -19807,7 +19811,7 @@ end;
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
-    wbLLCT.IncludeFlag(dfInternalEditOnly),
+    wbLLCT.IncludeFlag(dfSkipImplicitEdit),
     wbRArrayS('Leveled List Entries', wbLeveledListEntryBaseForm, cpNormal, False, nil, wbLVLOsAfterSet),
     wbFilterKeywordChances,
     wbGenericModel(True)
@@ -20513,13 +20517,10 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(PCMT, 'Planet Content Manager Tree', [
     wbEDID.SetRequired,
-    wbInteger(NAM1, 'Node Type', itU32, wbEnum(['Root']), cpIgnore, True)
-      .IncludeFlag(dfInternalEditOnly), // PCMT only has root type
+    wbInteger(NAM1, 'Node Type', itU32, wbEnum(['Root']), cpIgnore, True),      // PCMT only has root type
     wbInteger(NAM2, 'Child Selection', itU32, wbEnum(['','Stacked']), cpNormal, True)
-      .SetDefaultNativeValue(1)
-      .IncludeFlag(dfInternalEditOnly), // PCMT only allows stacked node
-    wbInteger(NAM5, 'Consume request even on failure', itU8, wbBoolEnum, cpNormal, True)
-      .IncludeFlag(dfInternalEditOnly), // PCMT does not allow changing flag to true
+      .SetDefaultNativeValue(1),                                                // PCMT only allows stacked node
+    wbInteger(NAM5, 'Consume request even on failure', itU8, wbBoolEnum, cpNormal, True), // PCMT does not allow changing flag to true
     wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN])),
     wbCITCReq,
     wbCTDAsCount,
@@ -21147,8 +21148,8 @@ end;
             {0} wbLStringKC(UNAM, 'Display Text', 0, cpTranslate).SetRequired(True),
             {1} wbFormIDCk(TNAM, 'Submenu - TerminalMenu', [TMLM]).SetRequired(True),
             {2} wbFormIDCk(BNAM, 'DataSlate - BOOK', [BOOK]).SetRequired(True),
-            {3} wbEmpty(UNAM) // placeholder - can't actually be set
-                .IncludeFlag(dfInternalEditOnly)
+            {3} wbEmpty(NULL) // placeholder - can't actually be set
+                .IncludeFlag(dfDontAssign)
                 .IncludeFlag(dfDontSave)
           ], [], cpNormal, False, wbTMLMTypeDontShowCallback),
         wbCTDAs
@@ -21181,7 +21182,7 @@ end;
           wbRStruct('Bool Data', [
             wbInteger(VNAM, 'Default Value', itU8, wbBoolEnum).SetRequired,
             wbInteger(WNAM, 'Default Value', itU8, wbBoolEnum).SetRequired,
-            wbUnused(GPOD).IncludeFlag(dfInternalEditOnly).IncludeFlag(dfDontSave) // only here to allow comparison alignment
+            wbUnused(GPOD).IncludeFlag(dfDontAssign).IncludeFlag(dfDontSave) // only here to allow comparison alignment
           ], [], cpNormal, True),
           wbRStruct('Float Data', [
             wbFloat(VNAM, 'Default Value').SetRequired,
