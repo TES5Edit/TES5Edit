@@ -1349,8 +1349,14 @@ begin
       Result := IntToHex64(aInt, 8);
       Exit;
     end;
-    ctCheck: if (aInt = -1) then Result := '' else
-      Result := '<Warning: Could not resolve Star>';
+    ctCheck: begin
+      if (aInt = -1) or Assigned(aElement.LinksTo) then
+        Result := ''
+      else
+        Result := '<Warning: Could not resolve Star [' + aInt.ToString + ']>';
+
+      Exit;
+    End;
     ctEditType: Result := '';
     ctEditInfo: Result := '';
   end;
