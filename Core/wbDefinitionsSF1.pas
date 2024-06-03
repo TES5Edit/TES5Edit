@@ -253,7 +253,7 @@ begin;
         if aType = ctToStr then
           Result := Result + ' <Warning: Quest Stage not found in "' + aQuest.Name + '">';
       end;
-      ctCheck: Result := '<Warning: Quest Stage not found in "' + aQuest.Name + '">';
+      ctCheck: Result := '<Warning: Quest Stage [' + aStageIndex.ToString + '] not found in "' + aQuest.Name + '">';
       ctEditInfo: begin
         lEditInfos.Sort;
         Result := lEditInfos.CommaText;
@@ -13311,7 +13311,8 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
+    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True)
+      .IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
     wbInteger(TNAM, 'Category', itU32, wbEnum([
         {0} 'Player',
         {1} 'Command'
@@ -13625,7 +13626,7 @@ end;
           wbRStructs('Start Scenes', 'Start Scene', [
             wbRUnion('Scene', [
               wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),  //LCEP same as STSC
-              wbFormIDCk(STSC, 'Scene', [SCEN])                                 //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
+              wbFormIDCk(STSC, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)   //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
             ],[]),
             wbRUnion('Phase Index', [
               wbInteger(INTT, 'Phase Index', itU16).SetRequired,                //INTT  uint16 // +0x28 array; repeated; sets to item+0x0E
@@ -16160,7 +16161,7 @@ end;
             wbCITCReq,
             wbCTDAsCount
           ], []),
-          wbFormIDCk(STSC, 'Scene', [SCEN])
+          wbFormIDCk(STSC, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)
         ], [])
       ], [], cpNormal, False)),
       wbUNAMs
@@ -17520,7 +17521,8 @@ end;
         'None',
         'Flicker',
         'Pulse'
-      ]))
+      ])),
+      wbUnused(3)
     ]),
 
     {--- Map Data ---}
@@ -18400,6 +18402,7 @@ end;
       .IncludeFlag(dfNoCopyAsOverride)
       .IncludeFlag(dfNotAlignable)
       .IncludeFlag(dfFastAssign),
+    wbUnused(MHDT, 0, False).IncludeFlag(dfNoCopyAsOverride),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
@@ -19270,7 +19273,7 @@ end;
   var wbStaticPart :=
     wbRStructSK([0], 'Part', [
       wbStructSK(ONAM, [0], 'Unknown', [
-        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]),
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
         wbUnknown(4)
       ]),
       wbStaticPartPlacements
@@ -19616,7 +19619,7 @@ end;
     wbEDID,
     wbBaseFormComponents,
     wbRArray('Grasses', wbRStruct('Grass', [
-      wbFormIDCk(GNAM, 'Grass', [GRAS]),
+      wbFormIDCk(GNAM, 'Grass', [GRAS]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
       wbInteger(DNAM, 'Override Density', itS16).SetDefaultEditValue('-1')
     ], [])),
     wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
@@ -19807,7 +19810,7 @@ end;
       {0x0040} 'Allow Shift Up',
       {0x0080} '',
       {0x0100} 'Do All Before Repeating',
-      {0x0200} 'Unknown 9'
+      {0x0200} 'Contains Only Spaceship Base Forms'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbCTDAs,
     wbFormIDCk(LVLG, 'Use Global', [GLOB]),
@@ -19976,7 +19979,7 @@ end;
       'Gas Giant'
     ])).SetRequired,
     wbRStructs('Marker Objects Keywords', 'Marker Data', [
-      wbFormIDCk(KNAM, 'Marker Type', [KYWD]),
+      wbFormIDCk(KNAM, 'Marker Type', [KYWD]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
       wbKeywords
     ], []),
 //    wbRStructs('Terrain Data', 'Terrain Data', [
