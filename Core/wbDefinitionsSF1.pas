@@ -6692,12 +6692,12 @@ begin
 
     wbNavmeshTriangles := wbArray('Triangles',
       wbStruct('Triangle', [
-        wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
-        wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
-        wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
-        wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo(0)),
-        wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo(1)),
-        wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo(2)),
+        wbInteger('Vertex 0', itU16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 1', itU16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Vertex 2', itU16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
+        wbInteger('Edge 0-1', itU16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo(0)),
+        wbInteger('Edge 1-2', itU16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo(1)),
+        wbInteger('Edge 2-0', itU16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo(2)),
         wbFloat('Height'), // this and next if form ver > 57
         wbInteger('Unknown', itU8), // flags
         wbInteger('Flags', itU16, wbFlags([
@@ -6784,7 +6784,7 @@ begin
         wbFloat('X'),
         wbFloat('Y'),
         wbFloat('Z'),
-        wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo),
+        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
         wbInteger('Flags', itU32)
       ])
     , -1);
@@ -6802,7 +6802,7 @@ begin
     wbFloat('Max Z'),
     wbArray('NavMesh Grid Arrays',
       wbArray('NavMeshGridCell',
-        wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+        wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
       , -1).IncludeFlag(dfNotAlignable)
     , function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal
       begin
