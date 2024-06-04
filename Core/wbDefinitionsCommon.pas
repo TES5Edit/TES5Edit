@@ -818,7 +818,7 @@ begin
   var lScaleFactor := 1/wbCellSizeFactor;
 
   wbWorldspaceOBND :=
-    wbRStruct('Object Bounds', [
+    wbRStruct('Worldspace Bounds', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, lScaleFactor),
         wbFloat('Y', cpNormal, False, lScaleFactor)
@@ -853,23 +853,26 @@ begin
                            wbByteArray(RNAM, 'Large Reference'),
                          cpIgnore, False, nil, nil, wbNeverShow)
   else
-    wbLargeReferences := wbRArrayS('Large References',
-                           wbStructSK(RNAM, [1,0], 'Grid', [
+    wbLargeReferences := wbRArray('Large References',
+                           wbStruct(RNAM, 'Grid', [
                              wbInteger('Y', itS16, nil, cpIgnore),
                              wbInteger('X', itS16, nil, cpIgnore),
-                             wbArrayS('References',
-                               wbStructSK([0], 'Reference', [
+                             wbArray('References',
+                               wbStruct('Reference', [
                                  wbFormIDCk('Ref', [REFR], False, cpIgnore),
                                  wbInteger('Y', itS16, nil, cpIgnore),
                                  wbInteger('X', itS16, nil, cpIgnore)
-                               ]).IncludeFlag(dfCollapsed),
+                               ]).IncludeFlag(dfCollapsed)
+                               .IncludeFlag(dfFastAssign),
                              -1).IncludeFlag(dfCollapsed)
+                             .IncludeFlag(dfFastAssign)
                              .IncludeFlag(dfNotAlignable)
                            ]).SetSummaryKeyOnValue([1,0])
                            .SetSummaryPrefixSuffixOnValue(1, 'X: ', '')
                            .SetSummaryPrefixSuffixOnValue(0, 'Y: ', '')
                            .SetSummaryDelimiterOnValue(' ')
-                           .IncludeFlag(dfCollapsed),
+                           .IncludeFlag(dfCollapsed)
+                           .IncludeFlag(dfFastAssign),
                          cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
@@ -902,8 +905,10 @@ begin
           wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
           wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
         wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        .IncludeFlag(dfCollapsed))
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfFastAssign))
       .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfFastAssign)
       .IncludeFlag(dfNotAlignable)
     ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
 
@@ -915,6 +920,7 @@ begin
                   wbInteger('Column', itU32, nil, cpIgnore),
                   wbOffsetDataColsCounter, cpIgnore)
                 .IncludeFlag(dfCollapsed)
+                .IncludeFlag(dfFastAssign)
                 .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore, False, wbNeverShow);
 
   if wbSimpleRecords then
@@ -925,6 +931,7 @@ begin
                   wbInteger('Column', itU32, nil, cpIgnore),
                   wbCellSizeDataColsCounter, cpIgnore)
                 .IncludeFlag(dfCollapsed)
+                .IncludeFlag(dfFastAssign)
                 .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore, False, wbNeverShow);
 
   if wbSimpleRecords then
@@ -936,9 +943,11 @@ begin
                     wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
                   wbVisibleCellIndexColsCounter, cpIgnore)
                   .IncludeFlag(dfCollapsed)
+                  .IncludeFlag(dfFastAssign)
                   .IncludeFlag(dfNotAlignable),
                 nil, cpIgnore)
                 .IncludeFlag(dfCollapsed)
+                .IncludeFlag(dfFastAssign)
                 .IncludeFlag(dfNotAlignable),
                 wbStruct('Dimensions', [
                   wbInteger('Min Y', itS16, nil, cpIgnore),

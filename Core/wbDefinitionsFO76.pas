@@ -4456,7 +4456,32 @@ end;
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
   Container: IwbContainer;
-  rOFST: IwbRecord;
+  rOFST, rCLSZ: IwbRecord;
+begin
+  if not wbRemoveOffsetData then
+    Exit;
+
+  if not Supports(aElement, IwbContainer, Container) then
+    Exit;
+
+    if wbBeginInternalEdit then try
+    Container.RemoveElement(OFST);
+    Container.RemoveElement(CLSZ);
+  finally
+    wbEndInternalEdit;
+  end else begin
+    rOFST := Container.RecordBySignature[OFST];
+    rCLSZ := Container.RecordBySignature[CLSZ];
+    if Assigned(rOFST) or Assigned(rCLSZ) then
+      Container.RemoveElement(rOFST);
+      Container.RemoveElement(rCLSZ);
+  end;
+end;
+
+procedure wbRemoveCLSZ(const aElement: IwbElement);
+var
+  Container: IwbContainer;
+  rCLSZ: IwbRecord;
 begin
   if not wbRemoveOffsetData then
     Exit;
@@ -4465,17 +4490,39 @@ begin
     Exit;
 
   if wbBeginInternalEdit then try
-    Container.RemoveElement(OFST);
+    Container.RemoveElement(CLSZ);
   finally
     wbEndInternalEdit;
   end else begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
+    rCLSZ := Container.RecordBySignature[CLSZ];
+    if Assigned(rCLSZ) then
+      Container.RemoveElement(rCLSZ);
   end;
 end;
 
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
+procedure wbRemoveVISI(const aElement: IwbElement);
+var
+  Container: IwbContainer;
+  rVISI: IwbRecord;
+begin
+  if not wbRemoveOffsetData then
+    Exit;
+
+  if not Supports(aElement, IwbContainer, Container) then
+    Exit;
+
+  if wbBeginInternalEdit then try
+    Container.RemoveElement(VISI);
+  finally
+    wbEndInternalEdit;
+  end else begin
+    rVISI := Container.RecordBySignature[VISI];
+    if Assigned(rVISI) then
+      Container.RemoveElement(rVISI);
+  end;
+end;
+
+procedure wbFixWorldOBND(const aElement: IwbElement);
   function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
   begin
     Result := (aValue < -aRange) or (aValue > aRange);
@@ -4491,16 +4538,24 @@ begin
 
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
-    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
+    if Supports(MainRecord.ElementByName['Worldspace Bounds'], IwbContainer, Container) then
       if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
       then
-        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
+        wbProgressCallback('<Warning: Worldspace Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
   finally
     wbEndInternalEdit;
   end;
+end;
+
+procedure wbWRLDAfterLoad(const aElement: IwbElement);
+begin
+  wbRemoveOFST(aElement);
+  wbRemoveCLSZ(aElement);
+  wbRemoveVISI(aElement);
+  wbFixWorldOBND(aElement);
 end;
 
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
@@ -18825,7 +18880,7 @@ begin
       {0x40} 'Fixed Dimensions',
       {0x80} 'No Grass'
     ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
+    {>>> Worldspace Bounds doesn't show up in CK <<<}
     wbWorldspaceOBND,
     wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
     wbString(NAM5, 'Map Image'),

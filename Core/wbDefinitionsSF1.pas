@@ -17950,7 +17950,7 @@ end;
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
     .IncludeFlag(dfNotAlignable)
-  ], False, nil, cpNormal, False {wbWRLDAfterLoad});
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
