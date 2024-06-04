@@ -180,8 +180,6 @@ var
   wbNull: IwbValueDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
-  wbMaxHeightDataCELL: IwbSubRecordDef;
-  wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbTVDT: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbNAVIslandData: IwbStructDef;
@@ -3066,15 +3064,6 @@ begin
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
 
-    // not used in Skyrim
-    if MainRecord.ElementExists['Unused RNAM'] then
-      MainRecord.RemoveElement('Unused RNAM');
-
-    // used in SSE but remove from the game master to speed up worldspace browsing since it is huge
-    // and the game master is never saved anyway
-    if IsSSE and (MainRecord._File.LoadOrder = 0) then
-      MainRecord.RemoveElement('Large References');
-
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
     if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
@@ -5186,39 +5175,6 @@ begin
   wbTVDT := wbByteArray(TVDT, 'Occlusion Data', 0, cpNormal);
 //  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
 
-  if wbSimpleRecords then begin
-    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-  end
-  else begin
-    wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
-      wbFloat('Offset'),
-      wbArray('Rows',
-        wbByteArray('Columns', 32)
-        // way too verbose for no practical use
-        //wbStruct('Row', [ wbArray('Columns', wbInteger('Column', itU8), 32) ])
-      , 32)
-    ]);
-    wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
-      wbStruct('Min', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbStruct('Max', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbByteArray('Cell Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      // way too verbose for no practical use
-      {wbArray('Cell Data', wbStruct('Quad Height', [
-        wbInteger('Bottom Left', itU8),
-        wbInteger('Bottom Right', itU8),
-        wbInteger('Top Left', itU8),
-        wbInteger('Top Right', itU8)
-      ]))}
-    ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-  end;
-
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
 end;
 
@@ -6476,7 +6432,8 @@ begin
     ], cpNormal, False, nil, 11),
 
     wbTVDT,
-    wbMaxHeightDataCELL,
+    wbMaxHeightDataCELL
+    .IncludeFlag(dfCollapsed),
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
@@ -13110,23 +13067,16 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
-    wbRArray(IsSSE('Large References', 'Unused RNAM'),
-      wbStruct(RNAM, 'Grid', [
-        wbInteger('Y', itS16, nil, cpIgnore),
-        wbInteger('X', itS16, nil, cpIgnore),
-        wbArray('References', wbStruct('Reference', [
-          wbFormIDCk('Ref', [REFR], False, cpIgnore),
-          wbInteger('Y', itS16, nil, cpIgnore),
-          wbInteger('X', itS16, nil, cpIgnore)
-        ]), -1).IncludeFlag(dfNotAlignable)
-      ]),
-      cpIgnore, False, nil, nil, wbNeverShow
-    )
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfNoCopyAsOverride)
-      .IncludeFlag(dfNotAlignable)
-      .IncludeFlag(dfFastAssign),
-    wbMaxHeightDataWRLD,
+    wbRNAM
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbMaxHeightDataWRLD
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
@@ -13208,7 +13158,9 @@ begin
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
     wbOFST
     .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 

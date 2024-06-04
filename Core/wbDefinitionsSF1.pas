@@ -17855,22 +17855,11 @@ end;
     ]), [14]), [
     wbEDID,
     wbBaseFormComponents,
-    wbRArray('Large References',
-      wbStruct(RNAM, 'Grid', [
-        wbInteger('Y', itS16, nil, cpIgnore),
-        wbInteger('X', itS16, nil, cpIgnore),
-        wbArray('References', wbStruct('Reference', [
-          wbFormIDCk('Ref', [REFR], False, cpIgnore),
-          wbInteger('Y', itS16, nil, cpIgnore),
-          wbInteger('X', itS16, nil, cpIgnore)
-        ]), -1).IncludeFlag(dfNotAlignable)
-      ]),
-      cpIgnore, False, nil, nil, wbNeverShow
-    )
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfNoCopyAsOverride)
-      .IncludeFlag(dfNotAlignable)
-      .IncludeFlag(dfFastAssign),
+    wbRNAM
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
     wbFULL,
     {
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
@@ -17951,9 +17940,17 @@ end;
     wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
     wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
     wbUnknown(HNAM),
-    wbOFST,
-    wbByteArray(CLSZ, 'Cell Size Data')
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+    wbOFST
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbCLSZ
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ], False, nil, cpNormal, False {wbWRLDAfterLoad});
 
   {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
