@@ -4538,13 +4538,13 @@ begin
 
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
-    if Supports(MainRecord.ElementByName['Worldspace Bounds'], IwbContainer, Container) then
+    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
       if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
          OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
       then
-        wbProgressCallback('<Warning: Worldspace Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
+        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
   finally
     wbEndInternalEdit;
   end;
@@ -18880,7 +18880,7 @@ begin
       {0x40} 'Fixed Dimensions',
       {0x80} 'No Grass'
     ]), cpNormal, True),
-    {>>> Worldspace Bounds doesn't show up in CK <<<}
+    {>>> Object Bounds doesn't show up in CK <<<}
     wbWorldspaceOBND,
     wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
     wbString(NAM5, 'Map Image'),
