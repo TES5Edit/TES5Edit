@@ -6824,7 +6824,7 @@ begin
   ]);
 
   var wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-    wbInteger('Version', itU32).SetDefaultNativeValue(15).IncludeFlag(dfSkipImplicitEdit),  // Changes how the struct is loaded, should be 15 in FO4
+    wbInteger('Version', itU32).SetDefaultNativeValue(17).IncludeFlag(dfSkipImplicitEdit),  // Changes how the struct is loaded, should be 15 in FO4
     wbStruct('Pathing Cell', [
       wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
       wbFormIDCk('Pathing Worldspace', [WRLD, NULL]).IncludeFlag(dfSummaryExcludeNULL),
@@ -11890,7 +11890,8 @@ end;
     wbRecord(NAVM, 'Navigation Mesh',
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
         {0x00040000} 18, 'Compressed',
-        {0x04000000} 26, 'AutoGen'
+        {0x04000000} 26, 'AutoGen',
+        {0x80000000} 31, 'Unknown 31'
       ]), [18]), [
       wbEDID,
       wbVMAD,
