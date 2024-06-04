@@ -853,16 +853,23 @@ begin
                            wbByteArray(RNAM, 'Large Reference'),
                          cpIgnore, False, nil, nil, wbNeverShow)
   else
-    wbLargeReferences := wbRArray('Large References',
-                           wbStruct(RNAM, 'Grid', [
+    wbLargeReferences := wbRArrayS('Large References',
+                           wbStructSK(RNAM, [1,0], 'Grid', [
                              wbInteger('Y', itS16, nil, cpIgnore),
                              wbInteger('X', itS16, nil, cpIgnore),
-                             wbArray('References', wbStruct('Reference', [
-                               wbFormIDCk('Ref', [REFR], False, cpIgnore),
-                               wbInteger('Y', itS16, nil, cpIgnore),
-                               wbInteger('X', itS16, nil, cpIgnore)
-                             ]), -1).IncludeFlag(dfCollapsed).IncludeFlag(dfNotAlignable)
-                           ]).IncludeFlag(dfCollapsed),
+                             wbArrayS('References',
+                               wbStructSK([0], 'Reference', [
+                                 wbFormIDCk('Ref', [REFR], False, cpIgnore),
+                                 wbInteger('Y', itS16, nil, cpIgnore),
+                                 wbInteger('X', itS16, nil, cpIgnore)
+                               ]).IncludeFlag(dfCollapsed),
+                             -1).IncludeFlag(dfCollapsed)
+                             .IncludeFlag(dfNotAlignable)
+                           ]).SetSummaryKeyOnValue([1,0])
+                           .SetSummaryPrefixSuffixOnValue(1, 'X: ', '')
+                           .SetSummaryPrefixSuffixOnValue(0, 'Y: ', '')
+                           .SetSummaryDelimiterOnValue(' ')
+                           .IncludeFlag(dfCollapsed),
                          cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
@@ -872,7 +879,7 @@ begin
       wbFloat('Offset'),
       wbArray('Rows',
         wbArray('Columns',
-          wbInteger('Height', itU8),
+          wbInteger('Column', itU8),
         32).IncludeFlag(dfCollapsed),
       32).IncludeFlag(dfCollapsed)]);
 
@@ -934,8 +941,8 @@ begin
                 .IncludeFlag(dfCollapsed)
                 .IncludeFlag(dfNotAlignable),
                 wbStruct('Dimensions', [
-                  wbInteger('Min Y', itU16, nil, cpIgnore),
-                  wbInteger('Min X', itU16, nil, cpIgnore),
+                  wbInteger('Min Y', itS16, nil, cpIgnore),
+                  wbInteger('Min X', itS16, nil, cpIgnore),
                   wbInteger('Rows', itU32, nil, cpIgnore)
                 ], cpIgnore)
               ], cpIgnore, False, wbNeverShow);
