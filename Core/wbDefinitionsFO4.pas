@@ -15635,7 +15635,7 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
-    wbRNAM
+    wbLargeReferences
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)

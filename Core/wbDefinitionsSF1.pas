@@ -17855,7 +17855,7 @@ end;
     ]), [14]), [
     wbEDID,
     wbBaseFormComponents,
-    wbRNAM
+    wbLargeReferences
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)

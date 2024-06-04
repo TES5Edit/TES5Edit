@@ -48,7 +48,7 @@ var
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
   wbXLOD: IwbSubRecordDef;
-  wbRNAM: IwbRecordMemberDef;
+  wbLargeReferences: IwbRecordMemberDef;
   wbMaxHeightDataCELL: IwbSubRecordDef;
   wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
@@ -849,21 +849,21 @@ begin
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
   if wbSimpleRecords then
-    wbRNAM := wbRArray('Large References',
-                wbByteArray(RNAM, 'Large Reference'),
-              cpIgnore, False, nil, nil, wbNeverShow)
+    wbLargeReferences := wbRArray('Large References',
+                           wbByteArray(RNAM, 'Large Reference'),
+                         cpIgnore, False, nil, nil, wbNeverShow)
   else
-    wbRNAM := wbRArray('Large References',
-                wbStruct(RNAM, 'Grid', [
-                  wbInteger('Y', itS16, nil, cpIgnore),
-                  wbInteger('X', itS16, nil, cpIgnore),
-                  wbArray('References', wbStruct('Reference', [
-                    wbFormIDCk('Ref', [REFR], False, cpIgnore),
-                    wbInteger('Y', itS16, nil, cpIgnore),
-                    wbInteger('X', itS16, nil, cpIgnore)
-                  ]), -1).IncludeFlag(dfCollapsed).IncludeFlag(dfNotAlignable)
-                ]).IncludeFlag(dfCollapsed),
-              cpIgnore, False, nil, nil, wbNeverShow);
+    wbLargeReferences := wbRArray('Large References',
+                           wbStruct(RNAM, 'Grid', [
+                             wbInteger('Y', itS16, nil, cpIgnore),
+                             wbInteger('X', itS16, nil, cpIgnore),
+                             wbArray('References', wbStruct('Reference', [
+                               wbFormIDCk('Ref', [REFR], False, cpIgnore),
+                               wbInteger('Y', itS16, nil, cpIgnore),
+                               wbInteger('X', itS16, nil, cpIgnore)
+                             ]), -1).IncludeFlag(dfCollapsed).IncludeFlag(dfNotAlignable)
+                           ]).IncludeFlag(dfCollapsed),
+                         cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
     wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data')
