@@ -10018,87 +10018,6 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ], True, nil, cpNormal, False, wbWEAPAfterLoad);
 
-  if wbSimpleRecords then
-    wbRecord(WRLD, 'Worldspace', [
-      wbEDIDReq,
-      wbFULL,
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbInteger(PNAM, 'Flags', itU16, wbFlags([
-          {0x00000001}'Use Land Data',
-          {0x00000002}'Use LOD Data',
-          {0x00000004}'Use Map Data',
-          {0x00000008}'Use Water Data',
-          {0x00000010}'Use Climate Data',
-          {0x00000020}'Use Image Space Data'
-          ], True), cpNormal, True)
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
-      ]),
-      wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]),
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset')
-      ], cpNormal, True),
-      wbFormIDCk(INAM, 'Image Space', [IMGS]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([  // LoadForm supports a DWord here, but only first byte would be used.
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} '',
-        {0x08} '',
-        {0x10} 'No LOD Water',
-        {0x20} 'No LOD Noise',
-        {0x40} 'Don''t Allow NPC Fall Damage',
-        {0x80} 'Needs Water Adjustment'
-      ]), cpNormal, True),
-      wbWorldspaceOBND,
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-        wbFormIDCkNoReach('Old', [IPCT]),
-        wbFormIDCk('New', [IPCT, NULL])
-      ])),
-      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-        'ConcSolid',
-        'ConcBroken',
-        'MetalSolid',
-        'MetalHollow',
-        'MetalSheet',
-        'Wood',
-        'Sand',
-        'Dirt',
-        'Grass',
-        'Water'
-      ]),
-      wbByteArray(OFST, 'Offset Data')
-    ])
-  else
     wbRecord(WRLD, 'Worldspace', [
       wbEDIDReq,
       wbFULL,
@@ -10178,6 +10097,10 @@ begin
         'Water'
       ]),
       wbOFST
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfFastAssign)
+      .IncludeFlag(dfNoCopyAsOverride)
+      .IncludeFlag(dfNotAlignable)
     ]);
 
   wbRecord(WTHR, 'Weather', [
