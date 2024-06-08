@@ -850,7 +850,7 @@ begin
 
   if wbSimpleRecords then
     wbLargeReferences := wbRArray('Large References',
-                           wbByteArray(RNAM, 'Large Reference'),
+                           wbByteArray(RNAM, 'Large Reference', 0, cpIgnore),
                          cpIgnore, False, nil, nil, wbNeverShow)
   else
     wbLargeReferences := wbRArray('Large References',
