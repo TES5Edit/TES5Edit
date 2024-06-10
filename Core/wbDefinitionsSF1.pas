@@ -17951,11 +17951,12 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000001}  0, 'ESM',
+      {0x00000001}  0, 'Master',
       {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
-      {0x00000100}  8, 'ESL',
-      {0x00000200}  9, 'Overlay'
+      {0x00000100}  8, 'Small',
+      {0x00000200}  9, 'Overlay',
+      {0x00000400} 10, 'Medium'
     ], False), True), [
     wbHEDR,
 
@@ -21469,191 +21470,191 @@ end;
       wbProgress('Warning: Could not find Wwise Soundbank Info.');
   end);
 
-  wbAddGroupOrder(GMST); {SF1Dump: no errors}
-  wbAddGroupOrder(KYWD); {SF1Dump: no errors}
-  wbAddGroupOrder(FFKW); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(LCRT); {SF1Dump: no errors}
-  wbAddGroupOrder(AACT); {SF1Dump: no errors}
-  wbAddGroupOrder(TRNS); {SF1Dump: no errors}
-  wbAddGroupOrder(TXST); {SF1Dump: no errors}
-  wbAddGroupOrder(GLOB); {SF1Dump: no errors}
-  wbAddGroupOrder(DMGT); {SF1Dump: no errors}
-  wbAddGroupOrder(CLAS); {SF1Dump: no errors}
-  wbAddGroupOrder(FACT); {SF1Dump: no errors}
-  wbAddGroupOrder(AFFE); {SF1Dump: no errors}
-  wbAddGroupOrder(HDPT); {SF1Dump: no errors}
-  wbAddGroupOrder(RACE); {SF1Dump: no errors}
-  wbAddGroupOrder(SOUN); {SF1Dump: no errors}
-  wbAddGroupOrder(SECH); {SF1Dump: no errors}
-  wbAddGroupOrder(ASPC); {SF1Dump: no errors}
-  wbAddGroupOrder(AOPF); {SF1Dump: no errors}
-  wbAddGroupOrder(MGEF); {SF1Dump: no errors}
-  wbAddGroupOrder(LTEX); {SF1Dump: no errors}
-  wbAddGroupOrder(PDCL); {SF1Dump: no errors}
-  wbAddGroupOrder(ENCH); {SF1Dump: no errors}
-  wbAddGroupOrder(SPEL); {SF1Dump: no errors}
-  wbAddGroupOrder(ACTI); {SF1Dump: no errors}
+  wbAddGroupOrder(GMST);
+  wbAddGroupOrder(KYWD);
+  wbAddGroupOrder(FFKW);
+  wbAddGroupOrder(LCRT);
+  wbAddGroupOrder(AACT);
+  wbAddGroupOrder(TRNS);
+  wbAddGroupOrder(TXST);
+  wbAddGroupOrder(GLOB);
+  wbAddGroupOrder(DMGT);
+  wbAddGroupOrder(CLAS);
+  wbAddGroupOrder(FACT);
+  wbAddGroupOrder(AFFE);
+  wbAddGroupOrder(HDPT);
+  wbAddGroupOrder(RACE);
+  wbAddGroupOrder(SOUN);
+  wbAddGroupOrder(SECH);
+  wbAddGroupOrder(ASPC);
+  wbAddGroupOrder(AOPF);
+  wbAddGroupOrder(MGEF);
+  wbAddGroupOrder(LTEX);
+  wbAddGroupOrder(PDCL);
+  wbAddGroupOrder(ENCH);
+  wbAddGroupOrder(SPEL);
+  wbAddGroupOrder(ACTI);
   wbAddGroupOrder(TACT); // doesn't exist but can be created in CK
-  wbAddGroupOrder(CURV); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(CUR3); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(ARMO); {SF1Dump: no errors}
-  wbAddGroupOrder(BOOK); {SF1Dump: no errors}
-  wbAddGroupOrder(CONT); {SF1Dump: no errors}
-  wbAddGroupOrder(DOOR); {SF1Dump: no errors}
-  wbAddGroupOrder(LIGH); {SF1Dump: no errors}
-  wbAddGroupOrder(MISC); {SF1Dump: no errors}
-  wbAddGroupOrder(STAT); {SF1Dump: no errors}
-  wbAddGroupOrder(SCOL); {SF1Dump: no errors}
-  wbAddGroupOrder(PKIN); {SF1Dump: no errors}
-  wbAddGroupOrder(MSTT); {SF1Dump: no errors}
-  wbAddGroupOrder(GRAS); {SF1Dump: no errors}
-  wbAddGroupOrder(FLOR); {SF1Dump: no errors}
-  wbAddGroupOrder(FURN); {SF1Dump: no errors}
-  wbAddGroupOrder(WEAP); {SF1Dump: no errors}
-  wbAddGroupOrder(AMMO); {SF1Dump: no errors}
-  wbAddGroupOrder(NPC_); {SF1Dump: no errors}
-  wbAddGroupOrder(PLYR); {purely internal type}
-  wbAddGroupOrder(LVLN); {SF1Dump: no errors}
-  wbAddGroupOrder(LVLP); {SF1Dump: no errors}
-  wbAddGroupOrder(KEYM); {SF1Dump: no errors}
-  wbAddGroupOrder(ALCH); {SF1Dump: no errors}
-  wbAddGroupOrder(IDLM); {SF1Dump: no errors}
-  wbAddGroupOrder(BMMO); {SF1Dump: no errors}
-  wbAddGroupOrder(PROJ); {SF1Dump: no errors}
-  wbAddGroupOrder(HAZD); {SF1Dump: no errors}
-  wbAddGroupOrder(BNDS); {SF1Dump: no errors}
-  wbAddGroupOrder(TERM); {SF1Dump: no errors}
-  wbAddGroupOrder(LVLI); {SF1Dump: no errors}
-  wbAddGroupOrder(GBFT); {SF1Dump: no errors}
-  wbAddGroupOrder(GBFM); {SF1Dump: no errors}
-  wbAddGroupOrder(LVLB); {SF1Dump: no errors}
-  wbAddGroupOrder(WTHR); {SF1Dump: no errors}
-  wbAddGroupOrder(WTHS); {SF1Dump: no errors}
-  wbAddGroupOrder(CLMT); {SF1Dump: no errors}
-  wbAddGroupOrder(SPGD); {SF1Dump: no errors}
-  wbAddGroupOrder(REGN); {SF1Dump: no errors}
-  wbAddGroupOrder(NAVI); {SF1Dump: no errors}
-  wbAddGroupOrder(CELL); {SF1Dump: no errors}
-  wbAddGroupOrder(WRLD); {SF1Dump: no errors}
-  wbAddGroupOrder(NAVM); {SF1Dump: no errors}
-  wbAddGroupOrder(DIAL); {SF1Dump: no errors}
-  wbAddGroupOrder(INFO); {SF1Dump: no errors}
-  wbAddGroupOrder(QUST); {SF1Dump: no errors}
-  wbAddGroupOrder(IDLE); {SF1Dump: no errors}
-  wbAddGroupOrder(PACK); {SF1Dump: no errors}
-  wbAddGroupOrder(CSTY); {SF1Dump: no errors}
-  wbAddGroupOrder(LSCR); {SF1Dump: no errors}
+  wbAddGroupOrder(CURV);
+  wbAddGroupOrder(CUR3);
+  wbAddGroupOrder(ARMO);
+  wbAddGroupOrder(BOOK);
+  wbAddGroupOrder(CONT);
+  wbAddGroupOrder(DOOR);
+  wbAddGroupOrder(LIGH);
+  wbAddGroupOrder(MISC);
+  wbAddGroupOrder(STAT);
+  wbAddGroupOrder(SCOL);
+  wbAddGroupOrder(PKIN);
+  wbAddGroupOrder(MSTT);
+  wbAddGroupOrder(GRAS);
+  wbAddGroupOrder(FLOR);
+  wbAddGroupOrder(FURN);
+  wbAddGroupOrder(WEAP);
+  wbAddGroupOrder(AMMO);
+  wbAddGroupOrder(NPC_);
+  wbAddGroupOrder(PLYR);
+  wbAddGroupOrder(LVLN);
+  wbAddGroupOrder(LVLP);
+  wbAddGroupOrder(KEYM);
+  wbAddGroupOrder(ALCH);
+  wbAddGroupOrder(IDLM);
+  wbAddGroupOrder(BMMO);
+  wbAddGroupOrder(PROJ);
+  wbAddGroupOrder(HAZD);
+  wbAddGroupOrder(BNDS);
+  wbAddGroupOrder(TERM);
+  wbAddGroupOrder(LVLI);
+  wbAddGroupOrder(GBFT);
+  wbAddGroupOrder(GBFM);
+  wbAddGroupOrder(LVLB);
+  wbAddGroupOrder(WTHR);
+  wbAddGroupOrder(WTHS);
+  wbAddGroupOrder(CLMT);
+  wbAddGroupOrder(SPGD);
+  wbAddGroupOrder(REGN);
+  wbAddGroupOrder(NAVI);
+  wbAddGroupOrder(CELL);
+  wbAddGroupOrder(WRLD);
+  wbAddGroupOrder(NAVM);
+  wbAddGroupOrder(DIAL);
+  wbAddGroupOrder(INFO);
+  wbAddGroupOrder(QUST);
+  wbAddGroupOrder(IDLE);
+  wbAddGroupOrder(PACK);
+  wbAddGroupOrder(CSTY);
+  wbAddGroupOrder(LSCR);
   wbAddGroupOrder(LVSP); // doesn't exist but can be created in CK
-  wbAddGroupOrder(ANIO); {SF1Dump: no errors}
-  wbAddGroupOrder(WATR); {SF1Dump: no errors}
-  wbAddGroupOrder(EFSH); {SF1Dump: no errors}
-  wbAddGroupOrder(EXPL); {SF1Dump: no errors}
-  wbAddGroupOrder(DEBR); {SF1Dump: no errors}
-  wbAddGroupOrder(IMGS); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(IMAD); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(FLST); {SF1Dump: no errors}
-  wbAddGroupOrder(PERK); {SF1Dump: no errors}
-  wbAddGroupOrder(BPTD); {SF1Dump: no errors}
-  wbAddGroupOrder(ADDN); {SF1Dump: no errors} {contains Reflection}
-  wbAddGroupOrder(AVIF); {SF1Dump: no errors}
-  wbAddGroupOrder(CAMS); {SF1Dump: no errors}
-  wbAddGroupOrder(CPTH); {SF1Dump: no errors}
-  wbAddGroupOrder(VTYP); {SF1Dump: no errors}
-  wbAddGroupOrder(MATT); {SF1Dump: no errors}
-  wbAddGroupOrder(IPCT); {SF1Dump: no errors}
-  wbAddGroupOrder(IPDS); {SF1Dump: no errors}
-  wbAddGroupOrder(ARMA); {SF1Dump: no errors}
-  wbAddGroupOrder(LCTN); {SF1Dump: no errors}
-  wbAddGroupOrder(MESG); {SF1Dump: no errors}
-  wbAddGroupOrder(DOBJ); {SF1Dump: only errors are from the incomplete Use enum }
-  wbAddGroupOrder(DFOB); {SF1Dump: no errors}
-  wbAddGroupOrder(LGTM); {SF1Dump: no errors}
-  wbAddGroupOrder(MUSC); {SF1Dump: no errors}
-  wbAddGroupOrder(FSTP); {SF1Dump: no errors}
-  wbAddGroupOrder(FSTS); {SF1Dump: no errors}
-  wbAddGroupOrder(SMBN); {SF1Dump: no errors}
-  wbAddGroupOrder(SMQN); {SF1Dump: no errors}
-  wbAddGroupOrder(SMEN); {SF1Dump: no errors}
-  wbAddGroupOrder(DLBR); {SF1Dump: no errors}
-  wbAddGroupOrder(MUST); {SF1Dump: no errors}
-  wbAddGroupOrder(EQUP); {SF1Dump: no errors}
+  wbAddGroupOrder(ANIO);
+  wbAddGroupOrder(WATR);
+  wbAddGroupOrder(EFSH);
+  wbAddGroupOrder(EXPL);
+  wbAddGroupOrder(DEBR);
+  wbAddGroupOrder(IMGS);
+  wbAddGroupOrder(IMAD);
+  wbAddGroupOrder(FLST);
+  wbAddGroupOrder(PERK);
+  wbAddGroupOrder(BPTD);
+  wbAddGroupOrder(ADDN);
+  wbAddGroupOrder(AVIF);
+  wbAddGroupOrder(CAMS);
+  wbAddGroupOrder(CPTH);
+  wbAddGroupOrder(VTYP);
+  wbAddGroupOrder(MATT);
+  wbAddGroupOrder(IPCT);
+  wbAddGroupOrder(IPDS);
+  wbAddGroupOrder(ARMA);
+  wbAddGroupOrder(LCTN);
+  wbAddGroupOrder(MESG);
+  wbAddGroupOrder(DOBJ);
+  wbAddGroupOrder(DFOB);
+  wbAddGroupOrder(LGTM);
+  wbAddGroupOrder(MUSC);
+  wbAddGroupOrder(FSTP);
+  wbAddGroupOrder(FSTS);
+  wbAddGroupOrder(SMBN);
+  wbAddGroupOrder(SMQN);
+  wbAddGroupOrder(SMEN);
+  wbAddGroupOrder(DLBR);
+  wbAddGroupOrder(MUST);
+  wbAddGroupOrder(EQUP);
   wbAddGroupOrder(RELA); // doesn't exist but can be created in CK
-  wbAddGroupOrder(SCEN); {SF1Dump: no errors}
+  wbAddGroupOrder(SCEN);
   wbAddGroupOrder(ASTP); // doesn't exist but can be created in CK
-  wbAddGroupOrder(OTFT); {SF1Dump: no errors}
-  wbAddGroupOrder(ARTO); {SF1Dump: no errors}
-  wbAddGroupOrder(MOVT); {SF1Dump: no errors}
+  wbAddGroupOrder(OTFT);
+  wbAddGroupOrder(ARTO);
+  wbAddGroupOrder(MOVT);
   wbAddGroupOrder(DUAL); // doesn't exist but can be created in CK
-  wbAddGroupOrder(COLL); {SF1Dump: no errors}
-  wbAddGroupOrder(CLFM); {SF1Dump: no errors}
-  wbAddGroupOrder(REVB); {SF1Dump: no errors}
-  wbAddGroupOrder(RFGP); {SF1Dump: no errors}
-  wbAddGroupOrder(PERS); {SF1Dump: no errors}
-  wbAddGroupOrder(AMDL); {SF1Dump: no errors}
-  wbAddGroupOrder(AAMD); {SF1Dump: no errors}
-  wbAddGroupOrder(MAAM); {SF1Dump: no errors}
-  wbAddGroupOrder(LAYR); {SF1Dump: no errors}
-  wbAddGroupOrder(COBJ); {SF1Dump: no errors}
-  wbAddGroupOrder(OMOD); {SF1Dump: no errors}
-  wbAddGroupOrder(ZOOM); {SF1Dump: no errors}
-  wbAddGroupOrder(INNR); {SF1Dump: no errors}
-  wbAddGroupOrder(KSSM); {SF1Dump: no errors}
-  wbAddGroupOrder(AORU); {SF1Dump: no errors}
-  wbAddGroupOrder(STAG); {SF1Dump: no errors}
-  wbAddGroupOrder(IRES); {SF1Dump: no errors}
-  wbAddGroupOrder(BIOM); {SF1Dump: no errors}
-  wbAddGroupOrder(NOCM); {SF1Dump: no errors}
-  wbAddGroupOrder(LENS); {SF1Dump: no errors}
-  wbAddGroupOrder(OVIS); {SF1Dump: no errors}
-  wbAddGroupOrder(STND); {SF1Dump: no errors}
-  wbAddGroupOrder(STMP); {SF1Dump: no errors}
-  wbAddGroupOrder(GCVR); {SF1Dump: no errors}
-  wbAddGroupOrder(MRPH); {SF1Dump: no errors}
-  wbAddGroupOrder(TRAV); {SF1Dump: no errors}
-  wbAddGroupOrder(RSGD); {SF1Dump: no errors}
-  wbAddGroupOrder(OSWP); {SF1Dump: no errors}
-  wbAddGroupOrder(ATMO); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(LVSC); {SF1Dump: no errors}
-  wbAddGroupOrder(SPCH); {SF1Dump: no errors}
-  wbAddGroupOrder(AAPD); {SF1Dump: no errors}
-  wbAddGroupOrder(VOLI); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(SFBK); {SF1Dump: no errors}
-  wbAddGroupOrder(SFPC); {SF1Dump: no errors}
-  wbAddGroupOrder(SFPT); {SF1Dump: no errors}
-  wbAddGroupOrder(SFTR); {SF1Dump: no errors}
-  wbAddGroupOrder(PCMT); {SF1Dump: no errors}
-  wbAddGroupOrder(BMOD); {SF1Dump: no errors}
-  wbAddGroupOrder(STBH); {SF1Dump: no errors}
-  wbAddGroupOrder(PNDT); {SF1Dump: no errors}
-  wbAddGroupOrder(CNDF); {SF1Dump: no errors}
-  wbAddGroupOrder(PCBN); {SF1Dump: no errors}
-  wbAddGroupOrder(PCCN); {SF1Dump: no errors except real ones}
-  wbAddGroupOrder(STDT); {SF1Dump: no errors}
-  wbAddGroupOrder(WWED); {SF1Dump: no errors}
-  wbAddGroupOrder(RSPJ); {SF1Dump: no errors}
-  wbAddGroupOrder(AOPS); {SF1Dump: no errors}
-  wbAddGroupOrder(AMBS); {SF1Dump: no errors}
-  wbAddGroupOrder(WBAR); {SF1Dump: no errors}
-  wbAddGroupOrder(PTST); {SF1Dump: no errors}
-  wbAddGroupOrder(LMSW); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(FORC); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(TMLM); {SF1Dump: remaining errors are, I think, real}
-  wbAddGroupOrder(EFSQ); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(SDLT); {SF1Dump: no errors}
-  wbAddGroupOrder(MTPT); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(CLDF); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(FOGV); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(WKMF); {SF1Dump: no errors}
-  wbAddGroupOrder(LGDI); {SF1Dump: no errors}
-  wbAddGroupOrder(PSDC); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(SUNP); {SF1Dump: no errors} {Reflection only}
-  wbAddGroupOrder(PMFT); {SF1Dump: no errors}
-  wbAddGroupOrder(TODD); {SF1Dump: no errors} {Reflection and BFCs only}
-  wbAddGroupOrder(AVMD); {SF1Dump: no errors}
-  wbAddGroupOrder(CHAL); {SF1Dump: no errors}
-  wbAddGroupOrder(FXPD); {SF1Dump: no errors}
-  wbAddGroupOrder(GPOF); {SF1Dump: no errors}
-  wbAddGroupOrder(GPOG); {SF1Dump: no errors}
+  wbAddGroupOrder(COLL);
+  wbAddGroupOrder(CLFM);
+  wbAddGroupOrder(REVB);
+  wbAddGroupOrder(RFGP);
+  wbAddGroupOrder(PERS);
+  wbAddGroupOrder(AMDL);
+  wbAddGroupOrder(AAMD);
+  wbAddGroupOrder(MAAM);
+  wbAddGroupOrder(LAYR);
+  wbAddGroupOrder(COBJ);
+  wbAddGroupOrder(OMOD);
+  wbAddGroupOrder(ZOOM);
+  wbAddGroupOrder(INNR);
+  wbAddGroupOrder(KSSM);
+  wbAddGroupOrder(AORU);
+  wbAddGroupOrder(STAG);
+  wbAddGroupOrder(IRES);
+  wbAddGroupOrder(BIOM);
+  wbAddGroupOrder(NOCM);
+  wbAddGroupOrder(LENS);
+  wbAddGroupOrder(OVIS);
+  wbAddGroupOrder(STND);
+  wbAddGroupOrder(STMP);
+  wbAddGroupOrder(GCVR);
+  wbAddGroupOrder(MRPH);
+  wbAddGroupOrder(TRAV);
+  wbAddGroupOrder(RSGD);
+  wbAddGroupOrder(OSWP);
+  wbAddGroupOrder(ATMO);
+  wbAddGroupOrder(LVSC);
+  wbAddGroupOrder(SPCH);
+  wbAddGroupOrder(AAPD);
+  wbAddGroupOrder(VOLI);
+  wbAddGroupOrder(SFBK);
+  wbAddGroupOrder(SFPC);
+  wbAddGroupOrder(SFPT);
+  wbAddGroupOrder(SFTR);
+  wbAddGroupOrder(PCMT);
+  wbAddGroupOrder(BMOD);
+  wbAddGroupOrder(STBH);
+  wbAddGroupOrder(PNDT);
+  wbAddGroupOrder(CNDF);
+  wbAddGroupOrder(PCBN);
+  wbAddGroupOrder(PCCN);
+  wbAddGroupOrder(STDT);
+  wbAddGroupOrder(WWED);
+  wbAddGroupOrder(RSPJ);
+  wbAddGroupOrder(AOPS);
+  wbAddGroupOrder(AMBS);
+  wbAddGroupOrder(WBAR);
+  wbAddGroupOrder(PTST);
+  wbAddGroupOrder(LMSW);
+  wbAddGroupOrder(FORC);
+  wbAddGroupOrder(TMLM);
+  wbAddGroupOrder(EFSQ);
+  wbAddGroupOrder(SDLT);
+  wbAddGroupOrder(MTPT);
+  wbAddGroupOrder(CLDF);
+  wbAddGroupOrder(FOGV);
+  wbAddGroupOrder(WKMF);
+  wbAddGroupOrder(LGDI);
+  wbAddGroupOrder(PSDC);
+  wbAddGroupOrder(SUNP);
+  wbAddGroupOrder(PMFT);
+  wbAddGroupOrder(TODD);
+  wbAddGroupOrder(AVMD);
+  wbAddGroupOrder(CHAL);
+  wbAddGroupOrder(FXPD);
+  wbAddGroupOrder(GPOF);
+  wbAddGroupOrder(GPOG);
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 

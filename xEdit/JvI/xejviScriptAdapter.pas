@@ -1513,7 +1513,7 @@ begin
     _File.IsESM := Args.Values[1];
 end;
 
-procedure IwbFile_CanBeESL(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbFile_CanBeLight(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
@@ -1523,26 +1523,58 @@ begin
         Value :=  true;
 end;
 
-procedure Misc_wbIsPseudoESLMode(var Value: Variant; Args: TJvInterpreterArgs);
+procedure Misc_wbIsPseudoLightMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbIsEslSupported and wbPseudoESL;
+  Value := wbIsLightSupported and wbPseudoLight;
 end;
 
-procedure IwbFile_GetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbFile_GetIsLight(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
   Value := False;
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    Value := _File.IsESL;
+    Value := _File.IsLight;
 end;
 
-procedure IwbFile_SetIsESL(var Value: Variant; Args: TJvInterpreterArgs);
+procedure IwbFile_SetIsLight(var Value: Variant; Args: TJvInterpreterArgs);
 var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.IsESL := Args.Values[1];
+    _File.IsLight := Args.Values[1];
+end;
+
+procedure IwbFile_CanBeMedium(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    if (_File.LoadOrderFileID.IsMediumSlot = true) then
+        Value :=  true;
+end;
+
+procedure Misc_wbIsPseudoMediumMode(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  Value := wbIsMediumSupported and wbPseudoMedium;
+end;
+
+procedure IwbFile_GetIsMedium(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  Value := False;
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    Value := _File.IsMedium;
+end;
+
+procedure IwbFile_SetIsMedium(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  _File: IwbFile;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
+    _File.IsMedium := Args.Values[1];
 end;
 
 procedure IwbFile_SortMasters(var Value: Variant; Args: TJvInterpreterArgs);
@@ -2237,9 +2269,18 @@ begin
     AddFunction(cUnit, 'GetNewFormID', IwbFile_GetNewFormID, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'GetIsESM', IwbFile_GetIsESM, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SetIsESM', IwbFile_SetIsESM, 2, [varEmpty, varBoolean], varEmpty);
-    AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsESL, 1, [varEmpty], varEmpty);
-    AddFunction(cUnit, 'SetIsESL', IwbFile_SetIsESL, 2, [varEmpty, varBoolean], varEmpty);
-    AddFunction(cUnit, 'CanBeESL', IwbFile_CanBeESL, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsESL', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsESL', IwbFile_SetIsLight, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'CanBeESL', IwbFile_CanBeLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsLight', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsLight', IwbFile_SetIsLight, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'CanBeLight', IwbFile_CanBeLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsSmall', IwbFile_GetIsLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsSmall', IwbFile_SetIsLight, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'CanBeSmall', IwbFile_CanBeLight, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'GetIsMedium', IwbFile_GetIsMedium, 1, [varEmpty], varEmpty);
+    AddFunction(cUnit, 'SetIsMedium', IwbFile_SetIsMedium, 2, [varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'CanBeMedium', IwbFile_CanBeMedium, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'SortMasters', IwbFile_SortMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CleanMasters', IwbFile_CleanMasters, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'MasterCount', IwbFile_MasterCount, 1, [varEmpty], varEmpty);
@@ -2305,8 +2346,10 @@ begin
     AddFunction(cUnit, 'LocalizationGetStringsFromFile', Misc_LocalizationGetStringsFromFile, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'wbFormIDErrorCheckLock', Misc_wbFormIDErrorCheckLock, 0, [], varEmpty);
     AddFunction(cUnit, 'wbFormIDErrorCheckUnlock', Misc_wbFormIDErrorCheckUnlock, 0, [], varEmpty);
-    AddFunction(cUnit, 'wbIsPseudoESLMode', Misc_wbIsPseudoESLMode, 0, [], varEmpty);
-
+    AddFunction(cUnit, 'wbIsPseudoESLMode', Misc_wbIsPseudoLightMode, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbIsPseudoLightMode', Misc_wbIsPseudoLightMode, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbIsPseudoSmallMode', Misc_wbIsPseudoLightMode, 0, [], varEmpty);
+    AddFunction(cUnit, 'wbIsPseudoMediumMode', Misc_wbIsPseudoMediumMode, 0, [], varEmpty);
   end;
 end;
 

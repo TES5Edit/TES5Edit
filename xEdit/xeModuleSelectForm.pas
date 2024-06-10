@@ -389,13 +389,19 @@ begin
       MenuCaption := 'Theme';
     end;
 
-  if not wbIsEslSupported then
-    with vstModules.Header.Columns[3] do
+  with vstModules.Header.Columns[3] do begin
+    if not wbIsLightSupported then
+      Options := Options - [coVisible]
+    else
+      Text := wbLightName;
+  end;
+  if not wbIsMediumSupported then
+    with vstModules.Header.Columns[7] do
       Options := Options - [coVisible];
   if not wbIsOverlaySupported then
     with vstModules.Header.Columns[6] do
       Options := Options - [coVisible];
-  if wbPseudoESL or wbPseudoOverlay then
+  if wbPseudoLight or wbPseudoMedium or wbPseudoOverlay then
     with vstModules.Header.Columns[5] do
       Options := Options - [coVisible];
 
@@ -806,7 +812,7 @@ begin
       case Column of
         0: Result := CompareText(NodeData1.mndName, NodeData2.mndName);
         2: Result := CmpBool(mfHasESMFlag in Module1.miFlags, mfHasESMFlag in Module2.miFlags);
-        3: Result := CmpBool(mfHasESLFlag in Module1.miFlags, mfHasESLFlag in Module2.miFlags);
+        3: Result := CmpBool(mfHasLightFlag in Module1.miFlags, mfHasLightFlag in Module2.miFlags);
         4: Result := CmpI32(Module1.miLoadOrder, Module2.miLoadOrder);
         5: Result := CompareText(Module1.miFileID.ToString, Module2.miFileID.ToString);
         6: Result := CmpBool(mfHasOverlayFlag in Module1.miFlags, mfHasOverlayFlag in Module2.miFlags);
@@ -842,10 +848,11 @@ begin
           0 : CellText := miName;
           1 : CellText := LoadOrderDescription;
           2 : if mfHasESMFlag in miFlags then Celltext := 'ESM';
-          3 : if mfHasESLFlag in miFlags then Celltext := 'ESL';
+          3 : if mfHasLightFlag in miFlags then Celltext := wbLightName;
           4 : if miLoadOrder < 10000 then Celltext := miLoadOrder.ToString;
           5 : if miLoadOrder < 10000 then Celltext := miFileID.ToString;
           6 : if mfHasOverlayFlag in miFlags then Celltext := 'Overlay';
+          7 : if mfHasMediumFlag in miFlags then Celltext := 'Med';
         end
     else
       if Column = 0 then

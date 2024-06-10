@@ -871,6 +871,7 @@ begin
     wbGameSteamID      := '1716740';
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     ToolSources        := [tsPlugins];
+    wbLightName        := 'Small';
   end
 
   else begin
@@ -959,7 +960,7 @@ begin
       wbLoadBSAs            := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbCanSortINFO         := True;
-      wbHasAddedESLSupport := (wbGameMode = gmTES5VR) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
+      wbHasAddedLightSupport := (wbGameMode = gmTES5VR) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
     end;
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary      := True;
@@ -1277,11 +1278,17 @@ begin
     wbTrackAllEditorID := True;
 
   if not (wbIsStarfield and wbStarfieldIsABugInfestedHellhole) then begin
-    if FindCmdLineSwitch('IgnoreESL') then
-      wbIgnoreESL := True
+    if FindCmdLineSwitch('IgnoreESL') or FindCmdLineSwitch('IgnoreLight') or FindCmdLineSwitch('IgnoreSmall') then
+      wbIgnoreLight := True
     else
-      if FindCmdLineSwitch('PseudoESL') then
-        wbPseudoESL := True;
+      if FindCmdLineSwitch('PseudoESL') or FindCmdLineSwitch('PseudoLight') or FindCmdLineSwitch('PseudoSmall') then
+        wbPseudoLight := True;
+
+    if FindCmdLineSwitch('IgnoreMedium') then
+      wbIgnoreMedium := True
+    else
+      if FindCmdLineSwitch('PseudoMedium') then
+        wbPseudoMedium := True;
 
     if FindCmdLineSwitch('IgnoreOverlay') then
       wbIgnoreOverlay := True

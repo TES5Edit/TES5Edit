@@ -183,7 +183,7 @@ begin
   end
   else if SameText(Identifier, 'FileByLoadOrderFileID') then begin
     if (Args.Count = 1) and VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(Files)) then begin
-      var aLoadOrderFileID := TwbFileID.Create(Integer(Args.Values[0]));
+      var aLoadOrderFileID := TwbFileID.CreateFull(Integer(Args.Values[0]));
       for i := Low(Files) to High(Files) do
         if Files[i].LoadOrderFileID = aLoadOrderFileID then begin
           Value := Files[i];
@@ -237,21 +237,30 @@ begin
       JvInterpreterError(ieDirectInvalidArgument, 0);
   end
   else if SameText(Identifier, 'AddNewFile') and (Args.Count = 0) then begin
-    AddNewFile(_File, False);
+    AddNewFile(_File, False, False);
     Value := _File;
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFile') and (Args.Count = 1) then begin
-    AddNewFile(_File, Args.Values[0]);
+    AddNewFile(_File, Args.Values[0], False);
+    Value := _File;
+    Done := True;
+  end
+  else if SameText(Identifier, 'AddNewFile') and (Args.Count = 2) then begin
+    AddNewFile(_File, Args.Values[0], Args.Values[1]);
     Value := _File;
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 1) then begin
-    Value := AddNewFileName(Args.Values[0], False);
+    Value := AddNewFileName(Args.Values[0], False, False);
     Done := True;
   end
   else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 2) then begin
-    Value := AddNewFileName(Args.Values[0], Args.Values[1]);
+    Value := AddNewFileName(Args.Values[0], Args.Values[1], False);
+    Done := True;
+  end
+  else if SameText(Identifier, 'AddNewFileName') and (Args.Count = 3) then begin
+    Value := AddNewFileName(Args.Values[0], Args.Values[1], Args.Values[2]);
     Done := True;
   end
   else if SameText(Identifier, 'AddRequiredElementMasters') and (Args.Count in [3, 4]) then begin

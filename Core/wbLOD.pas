@@ -2655,7 +2655,7 @@ begin
         else if REFRs[i].IsMaster then
           RefFormID := REFRs[i].FixedFormID
         else
-          RefFormID := REFRs[i].FixedFormID.ChangeFileID(TwbFileID.Create(1));
+          RefFormID := REFRs[i].FixedFormID.ChangeFileID(TwbFileID.CreateFull(1));
 
         if LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale) then
           Inc(TreesCount)

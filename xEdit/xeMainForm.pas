@@ -855,9 +855,9 @@ type
     function CheckForErrors(const aIndent: Integer; const aElement: IwbElement): Boolean;
 
   public
-    function AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile; overload;
+    function AddNewFileName(aFileName: string; aIsLight, aIsMedium: Boolean): IwbFile; overload;
     function AddNewFileName(aFileName: string; aTemplate: PwbModuleInfo): IwbFile; overload;
-    function AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean; overload;
+    function AddNewFile(out aFile: IwbFile; aIsLight, aIsMedium: Boolean): Boolean; overload;
     function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
     function SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
@@ -1800,7 +1800,7 @@ begin
     tbsMessages.Highlighted := True;
 end;
 
-function TfrmMain.AddNewFileName(aFileName: string; aIsESL: Boolean): IwbFile;
+function TfrmMain.AddNewFileName(aFileName: string; aIsLight, aIsMedium: Boolean): IwbFile;
 var
   LoadOrder : Integer;
 begin
@@ -1820,7 +1820,7 @@ begin
     Exit;
   end;
 }
-  Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aIsESL);
+  Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aIsLight, aIsMedium);
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   vstNav.AddChild(nil, Pointer(Result));
@@ -1854,7 +1854,7 @@ begin
   Result._AddRef;
 end;
 
-function TfrmMain.AddNewFile(out aFile: IwbFile; aIsESL: Boolean): Boolean;
+function TfrmMain.AddNewFile(out aFile: IwbFile; aIsLight, aIsMedium: Boolean): Boolean;
 var
   s: string;
 begin
@@ -1864,11 +1864,11 @@ begin
   if InputQuery('New Module File', 'Filename without extension:', s) then begin
     if s = '' then
       Exit;
-    if aIsESL then
+    if aIsLight then
       s := s + '.esl'
     else
       s := s + '.esp';
-    aFile := AddNewFileName(s, aIsESL);
+    aFile := AddNewFileName(s, aIsLight, aIsMedium);
     Result := Assigned(aFile);
   end;
 end;
@@ -3950,7 +3950,7 @@ begin
   TargetFile := nil;
 
   while not Assigned(TargetFile) do
-    if not AddNewFile(TargetFile, False) then
+    if not AddNewFile(TargetFile, False, False) then
       Exit;
 
   sl := TStringList.Create;
@@ -5757,7 +5757,7 @@ begin
         Inc(j);
       end;
       while Assigned(_File) do begin
-        FormID.FileID := TwbFileID.Create(_File.MasterCount[True]);
+        FormID.FileID := TwbFileID.CreateFull(_File.MasterCount[True]);
         MainRecord := _File.RecordByFormID[FormID, True, True];
         if Assigned(MainRecord) then begin
           Node := FindNodeForElement(MainRecord);
@@ -9965,7 +9965,7 @@ var
   EditorID                    : string;
   LeveledListEntries          : IwbContainerElementRef;
   LeveledListEntry            : IwbContainerElementRef;
-  IsESL                       : Boolean;
+  IsLight                       : Boolean;
 begin
   if not wbEditAllowed then
     Exit;
@@ -12479,7 +12479,7 @@ var
     PreserveObjectID : Boolean;
     AllOrNothing     : Boolean;
     AnyDelayed       : Boolean;
-    TargetIsESL      : Boolean;
+    TargetIsLight      : Boolean;
     PreservedCount   : Integer;
 
     Signatures       : TStringList;
@@ -12565,24 +12565,24 @@ var
       StartFormID := TwbFormID.FromCardinal(LowestFormID)
     else begin
       s := '';
-      TargetIsESL := TargetFile.IsESL or TargetFile.LoadOrderFileID.IsLightSlot;
+      TargetIsLight := TargetFile.IsLight or TargetFile.LoadOrderFileID.IsLightSlot;
       repeat
         if s <> '' then
           ShowMessage('"'+s+'" is not a valid start FormID.')
         else begin
           c := TargetFile.NextObjectID and $FFFFFF;
-          if TargetIsESL then
+          if TargetIsLight then
             c := c and $FFF;
           if c < LowestFormID then
             c := LowestFormID;
-          if TargetIsESL then
+          if TargetIsLight then
             s := IntToHex(c, 3)
           else
             s := IntToHex(c, 6);
         end;
 
-        if TargetIsESL then begin
-          if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 800. Specify only the last 3 digits. (Target is ESL)', s) then
+        if TargetIsLight then begin
+          if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 800. Specify only the last 3 digits. (Target is Light)', s) then
             Exit;
         end else begin
           if not InputQuery('Start from...', 'Please enter the new module specific start FormID in hex. e.g. 200000. Specify only the last 6 digits.', s) then
@@ -12590,7 +12590,7 @@ var
         end;
 
         StartFormID := TwbFormID.FromStrDef(s, 0);
-      until (StartFormID.FileID.FullSlot = 0) and not (StartFormID.ToCardinal < LowestFormID) and (not TargetIsESL or (StartFormID.ObjectID <= $FFF));
+      until (StartFormID.FileID.FullSlot = 0) and not (StartFormID.ToCardinal < LowestFormID) and (not TargetIsLight or (StartFormID.ObjectID <= $FFF));
     end;
 
     SetLength(MainRecords, SourceFile.RecordCount);
@@ -12615,7 +12615,7 @@ var
     if Sender = mniNavCompactFormIDs then
       EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
     else if not TargetFile.Equals(SourceFile) then begin
-      if TargetFile.IsESL then
+      if TargetFile.IsLight then
         EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
       else
         EndFormID := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(TargetFile.LoadOrderFileID);
@@ -14753,9 +14753,9 @@ begin
 
   mniNavCompactFormIDs.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
-    wbIsEslSupported and
+    wbIsLightSupported and
     Supports(Element, IwbFile, _File) and
-    not (_File.IsESL or _File.IsOverlay);
+    not (_File.IsLight or _File.IsOverlay);
 
   mniNavRenumberFormIDsInject.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
@@ -19080,40 +19080,41 @@ begin
           Assert(SortElement2.ElementType = etGroupRecord);
           GroupRecord1 := SortElement1 as IwbGroupRecord;
           GroupRecord2 := SortElement2 as IwbGroupRecord;
-          Assert(GroupRecord1.GroupType = GroupRecord2.GroupType);
-          case GroupRecord1.GroupType of
-            0: begin
-              var lLabel1 := TwbSignature(GroupRecord1.GroupLabel);
-              var lLabel2 := TwbSignature(GroupRecord2.GroupLabel);
-              var lName1: string := lLabel1;
-              var lName2: string := lLabel2;
-              if xeSortGroupsByFullName then begin
-                var lRecordDef: PwbMainRecordDef;
-                if wbFindRecordDef(lLabel1, lRecordDef) then
-                  lName1 := lRecordDef.Name;
-                if wbFindRecordDef(lLabel2, lRecordDef) then
-                  lName2 := lRecordDef.Name;
+          Result := CmpW32(GroupRecord1.GroupType, GroupRecord2.GroupType);
+          if Result = 0 then
+            case GroupRecord1.GroupType of
+              0: begin
+                var lLabel1 := TwbSignature(GroupRecord1.GroupLabel);
+                var lLabel2 := TwbSignature(GroupRecord2.GroupLabel);
+                var lName1: string := lLabel1;
+                var lName2: string := lLabel2;
+                if xeSortGroupsByFullName then begin
+                  var lRecordDef: PwbMainRecordDef;
+                  if wbFindRecordDef(lLabel1, lRecordDef) then
+                    lName1 := lRecordDef.Name;
+                  if wbFindRecordDef(lLabel2, lRecordDef) then
+                    lName2 := lRecordDef.Name;
+                end;
+                Result := CompareText(
+                  lName1,
+                  lName2);
               end;
-              Result := CompareText(
-                lName1,
-                lName2);
-            end;
-            2, 3: Result := CmpI32(
-                Integer(GroupRecord1.GroupLabel),
-                Integer(GroupRecord2.GroupLabel));
-            4, 5: begin
-                Result := CmpI32(
-                  LongRecSmall(GroupRecord1.GroupLabel).Hi,
-                  LongRecSmall(GroupRecord2.GroupLabel).Hi);
-                if Result = 0 then
+              2, 3: Result := CmpI32(
+                  Integer(GroupRecord1.GroupLabel),
+                  Integer(GroupRecord2.GroupLabel));
+              4, 5: begin
                   Result := CmpI32(
-                    LongRecSmall(GroupRecord1.GroupLabel).Lo,
-                    LongRecSmall(GroupRecord2.GroupLabel).Lo);
-              end;
-            1, 6..10: Result := CmpW32(GroupRecord1.GroupLabel, GroupRecord2.GroupLabel);
-          else
-            Assert(False);
-          end;
+                    LongRecSmall(GroupRecord1.GroupLabel).Hi,
+                    LongRecSmall(GroupRecord2.GroupLabel).Hi);
+                  if Result = 0 then
+                    Result := CmpI32(
+                      LongRecSmall(GroupRecord1.GroupLabel).Lo,
+                      LongRecSmall(GroupRecord2.GroupLabel).Lo);
+                end;
+              1, 6..10: Result := CmpW32(GroupRecord1.GroupLabel, GroupRecord2.GroupLabel);
+            else
+              Assert(False);
+            end;
         end;
       etMainRecord: begin
           Assert(SortElement2.ElementType = etMainRecord);
@@ -19270,8 +19271,10 @@ begin
             if wbShowFileFlags and Assigned(_File.Header) then begin
               if _File.Header.IsESM then
                 s := '<ESM>';
-              if _File.Header.IsESL then
-                s := s + '<ESL>';
+              if _File.Header.IsLight then
+                s := s + '<' + wbLightName + '>';
+              if _File.Header.IsMedium then
+                s := s + '<Medium>';
               if _File.Header.IsOverlay then
                 s := s + '<Overlay>';
               if _File.Header.IsLocalized then
@@ -20773,7 +20776,7 @@ begin
     Exit;
 
   FileID := FormID.FileID;
-  if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
+  if wbIsLightSupported or wbPseudoLight or wbPseudoOverlay then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrderFileID = FileID then begin

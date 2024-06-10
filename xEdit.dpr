@@ -101,7 +101,8 @@ uses
   xeScriptHost in 'xEdit\xeScriptHost.pas',
   xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas',
   wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas',
-  wbDefinitionsSignatures in 'Core\wbDefinitionsSignatures.pas';
+  wbDefinitionsSignatures in 'Core\wbDefinitionsSignatures.pas',
+  wbLoadOrder in 'Core\wbLoadOrder.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

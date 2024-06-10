@@ -44,11 +44,11 @@ var
   ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsESL: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil; aIsMedium: PBoolean = nil): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsOverlay: PBoolean = nil; aIsMedium: PBoolean = nil): Boolean; overload;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile; overload;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 procedure wbFileForceClosed;
 
@@ -809,9 +809,23 @@ type
     function GetModuleInfo: Pointer;
     function GetUnsavedSince: TDateTime; inline;
     function HasMaster(const aFileName: string): Boolean;
+
     function GetMaster(aIndex: Integer; aNew: Boolean): IwbFile; inline;
     function GetMasterCount(aNew: Boolean): Integer; inline;
     function GetAllMasters: TwbFiles;
+
+    function GetFullMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+    function GetFullMasterCount(aNew: Boolean): Integer;
+
+    function GetMediumMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+    function GetMediumMasterCount(aNew: Boolean): Integer;
+
+    function GetLightMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+    function GetLightMasterCount(aNew: Boolean): Integer;
+
+    function GetMasterForFileID(const aFileID: TwbFileID; aNew, aAllowSelf: Boolean): IwbFile;
+    function GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
+
     procedure UpdateAllMasters;
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
@@ -845,6 +859,7 @@ type
     procedure AddMasters(aMasters: TStrings); overload;
     procedure AddMasters(const aMasters: array of string); overload;
     procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True);
+
     procedure SortMasters;
     procedure CleanMasters;
 
@@ -856,9 +871,16 @@ type
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
 
-    function GetIsESL: Boolean;
-    function GetIsESLDirect: Boolean;
-    procedure SetIsESL(Value: Boolean);
+    function GetIsFull: Boolean;
+    function GetIsFullDirect: Boolean;
+
+    function GetIsLight: Boolean;
+    function GetIsLightDirect: Boolean;
+    procedure SetIsLight(Value: Boolean);
+
+    function GetIsMedium: Boolean;
+    function GetIsMediumDirect: Boolean;
+    procedure SetIsMedium(Value: Boolean);
 
     function GetIsOverlay: Boolean;
     function GetIsOverlayDirect: Boolean;
@@ -886,6 +908,9 @@ type
     function GetCompareToFile: IwbFile;
     procedure RemoveIdenticalDeltaFast;
 
+    function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
+    function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
+
     {---IwbFileInternal---}
     procedure AddMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
@@ -907,7 +932,7 @@ type
     procedure UpdateModuleMasters;
 
     constructor Create(const aFileName: string; aLoadOrder: Integer; aCompareTo: string; aStates: TwbFileStates; aData: TBytes);
-    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsEsl: Boolean); overload;
+    constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean); overload;
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
     destructor Destroy; override;
@@ -1330,8 +1355,10 @@ type
     function GetPrecombinedMesh: string;
     function GetIsInitiallyDisabled: Boolean;
     procedure SetIsInitiallyDisabled(aValue: Boolean);
-    function GetIsESL: Boolean;
-    procedure SetIsESL(aValue: Boolean);
+    function GetIsLight: Boolean;
+    procedure SetIsLight(aValue: Boolean);
+    function GetIsMedium: Boolean;
+    procedure SetIsMedium(aValue: Boolean);
     function GetIsOverlay: Boolean;
     procedure SetIsOverlay(aValue: Boolean);
 
@@ -2323,7 +2350,6 @@ var
   s         : string;
   i         : Integer;
   Master    : IwbMainRecord;
-  FileID    : Byte;
   Signature : TwbSignature;
   GameMasterFile : IwbFileInternal;
 begin
@@ -2368,14 +2394,21 @@ begin
 
     end;
 
-    FileID := FormID.FileID.FullSlot;
-    if (FileID >= Cardinal(GetMasterCount(True))) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
+    var lFileID := FormID.FileID;
+    if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
 
       if (FormID.ToCardinal and $00FFF000) <> 0 then begin
-        Exclude(flStates, fsESLCompatible);
+        Exclude(flStates, fsLightCompatible);
         if wbHasProgressCallback then
-          if GetIsESL or flLoadOrderFileID.IsLightSlot then
-              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the ESL flag active.>');
+          if GetIsLight or flLoadOrderFileID.IsLightSlot then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
+      end;
+
+      if (FormID.ToCardinal and $00FF0000) <> 0 then begin
+        Exclude(flStates, fsMediumCompatible);
+        if wbHasProgressCallback then
+          if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
+            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
       end;
 
       Exclude(flStates, fsOverlayCompatible);
@@ -2393,7 +2426,7 @@ begin
           if Supports(wbGetGameMasterFile, IwbFileInternal, GameMasterFile) then
             GameMasterFile.InjectMainRecord(aRecord);
         end else
-          (GetMaster(FileID, True) as IwbFileInternal).InjectMainRecord(aRecord);
+          (GetMasterForFileID(lFileId, True, False) as IwbFileInternal).InjectMainRecord(aRecord);
       end;
     except
       on E: Exception do
@@ -2411,8 +2444,8 @@ end;
 procedure TwbFile.AddMaster(const aFile: IwbFile);
 begin
   if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-    if aFile.IsESL or aFile.IsOverlay then
-      raise Exception.Create('ESL or Overlay flagged modules can''t be masters of other modules in Starfield');
+    if aFile.IsLight or aFile.IsMedium or aFile.IsOverlay then
+      raise Exception.Create('Light, Medium, or Overlay flagged modules can''t be masters of other modules in Starfield');
 
   SetLength(flMasters, Succ(Length(flMasters)));
   flMasters[High(flMasters)] := aFile;
@@ -2484,10 +2517,7 @@ var
       IsNew := True;
     end;
 
-    if wbIsEslSupported or wbPseudoESL then
-      MaxMasterCount := $FD
-    else
-      MaxMasterCount := $FF;
+    MaxMasterCount := Succ(TwbFileID.MaxFullSlot);
 
     if wbBeginInternalEdit(True) then try
       for i := 0 to Pred(lMasters.Count) do begin
@@ -2538,7 +2568,7 @@ begin;
       for i := 0 to Pred(aMasters.Count) do begin
         s := Trim(aMasters[i]);
         t := ExtractFileExt(s);
-        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsEslSupported and SameText(t, '.esl')) then
+        if SameText(t, '.esm') or SameText(t, '.esp') or (wbIsLightSupported and SameText(t, '.esl')) then
           lMasters.Add(s);
       end;
 
@@ -2949,9 +2979,9 @@ begin
 
             MasterFiles[i].SortOrder := j;
             SetLength(Old, Succ(Length(Old)));
-            Old[High(Old)] := TwbFileID.Create(i);
+            Old[High(Old)] := TwbFileID.CreateFull(i);
             SetLength(New, Succ(Length(New)));
-            New[High(New)] := TwbFileID.Create(j);
+            New[High(New)] := TwbFileID.CreateFull(j);
           end;
           Inc(j);
         end else
@@ -3007,6 +3037,7 @@ end;
 var
   _NextFullSlot: Integer;
   _NextLightSlot: Integer;
+  _NextMediumSlot: Integer;
   _NextLoadOrder: Integer;
   Files : array of IwbFile;
   FilesMap: TStringList;
@@ -3017,7 +3048,7 @@ var
 begin
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
-  flLoadOrderFileID := TwbFileID.Create(-1, -1);
+  flLoadOrderFileID := TwbFileID.Invalid;
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
     if SameText(ExtractFileName(aFileName), wbGameExeName) then
@@ -3102,8 +3133,10 @@ begin
 
       if GetIsESM then
         Include(flModule.miFlags, mfHasESMFlag);
-      if GetIsESLDirect then
-        Include(flModule.miFlags, mfHasESLFlag);
+      if GetIsLightDirect then
+        Include(flModule.miFlags, mfHasLightFlag);
+      if GetIsMediumDirect then
+        Include(flModule.miFlags, mfHasMediumFlag);
       if GetIsOverlayDirect then
         Include(flModule.miFlags, mfHasOverlayFlag);
       if GetIsLocalized then
@@ -3118,11 +3151,16 @@ begin
   end;
 end;
 
-constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsESl: Boolean);
+constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean);
 var
   Header : IwbMainRecord;
 begin
-  flLoadOrderFileID := TwbFileID.Create(-1, -1);
+  Assert(not (aIsLight and aIsMedium));
+
+  Assert((not aIsLight) or wbPseudoLight or wbIsLightSupported);
+  Assert((not aIsMedium) or wbPseudoMedium or wbIsMediumSupported);
+
+  flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -3138,9 +3176,14 @@ begin
   if wbGameMode >= gmTES4 then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
-  if aIsESL then begin
-    Header.IsESL := True;
-    Include(flModule.miFlags, mfHasESLFlag);
+  if aIsLight then begin
+    Header.IsLight := True;
+    Include(flModule.miFlags, mfHasLightFlag);
+  end;
+
+  if aIsMedium then begin
+    Header.IsMedium := True;
+    Include(flModule.miFlags, mfHasMediumFlag);
   end;
 
   flLoadFinished := True;
@@ -3148,24 +3191,29 @@ begin
   flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
-      if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot > $FFF then
+    if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbPseudoOverlay then begin
+      if Header.IsLight and not wbIgnoreLight then begin
+        if _NextLightSlot > TwbFileID.MaxLightSlot then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+        flLoadOrderFileID := TwbFileID.CreateLight(_NextLightSlot);
         Inc(_NextLightSlot);
+      end else if Header.IsMedium and not wbIgnoreMedium then begin
+        if _NextMediumSlot > TwbFileID.MaxMediumSlot then
+          raise Exception.Create('Too many medium modules');
+        flLoadOrderFileID := TwbFileID.CreateMedium(_NextMediumSlot);
+        Inc(_NextMediumSlot);
       end else begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else begin
-          if _NextFullSlot >= $FE then
+          if _NextFullSlot >= TwbFileID.MaxFullSlot then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.CreateFull(_NextFullSlot);
           Inc(_NextFullSlot);
         end;
       end;
     end else
-      flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+      flLoadOrderFileID := TwbFileID.CreateFull(flLoadOrder);
 
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
       flModule.miFile := Self;
@@ -3187,7 +3235,7 @@ var
   Header : IwbMainRecord;
   i      : Integer;
 begin
-  flLoadOrderFileID := TwbFileID.Create(-1, -1);
+  flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -3208,9 +3256,15 @@ begin
     Include(flModule.miFlags, mfHasOverlayFlag);
   end;
 
-  if (mfHasESLFlag in aTemplate.miFlags) and (wbIsESLSupported or wbPseudoESL) then begin
-    Header.IsESL := True;
-    Include(flModule.miFlags, mfHasESLFlag);
+  if (mfHasLightFlag in aTemplate.miFlags) and (wbIsLightSupported or wbPseudoLight) then begin
+    Header.IsLight := True;
+    Include(flModule.miFlags, mfHasLightFlag);
+    Exclude(flModule.miFlags, mfHasOverlayFlag);
+  end;
+
+  if (mfHasMediumFlag in aTemplate.miFlags) and (wbIsMediumSupported or wbPseudoMedium) then begin
+    Header.IsMedium := True;
+    Include(flModule.miFlags, mfHasMediumFlag);
     Exclude(flModule.miFlags, mfHasOverlayFlag);
   end;
 
@@ -3227,24 +3281,29 @@ begin
   flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
-      if Header.IsESL and not wbIgnoreESL then begin
-        if _NextLightSlot > $FFF then
+    if wbIsLightSupported or wbPseudoLight or wbPseudoOverlay then begin
+      if Header.IsLight and not wbIgnoreLight then begin
+        if _NextLightSlot > TwbFileID.MaxLightSlot then
           raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+        flLoadOrderFileID := TwbFileID.CreateLight(_NextLightSlot);
         Inc(_NextLightSlot);
+      end else if Header.IsMedium and not wbIgnoreMedium then begin
+        if _NextMediumSlot > TwbFileID.MaxMediumSlot then
+          raise Exception.Create('Too many medium modules');
+        flLoadOrderFileID := TwbFileID.CreateMedium(_NextMediumSlot);
+        Inc(_NextMediumSlot);
       end else begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and Header.IsOverlay and not wbIgnoreOverlay then begin
           flLoadOrderFileID := TwbFileID.Invalid;
         end else begin
-          if _NextFullSlot >= $FE then
+          if _NextFullSlot > TwbFileID.MaxFullSlot then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.CreateFull(_NextFullSlot);
           Inc(_NextFullSlot);
         end;
       end;
     end else
-      flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+      flLoadOrderFileID := TwbFileID.CreateFull(flLoadOrder);
 
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
       flModule.miFile := Self;
@@ -3279,19 +3338,26 @@ begin
 end;
 
 function TwbFile.FileFileIDtoLoadOrderFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
-var
-  MasterCount : Integer;
 begin
-  MasterCount := GetMasterCount(aNew);
+  if wbGameMode = gmSF1 then begin
+    if aFileID.IsLightSlot then begin
+      if aFileID.LightSlot < GetLightMasterCount(aNew) then
+        Exit(GetLightMaster(aFileID.LightSlot, aNew).LoadOrderFileID);
+    end else if aFileID.IsMediumSlot then begin
+      if aFileID.MediumSlot < GetMediumMasterCount(aNew) then
+        Exit(GetMediumMaster(aFileID.MediumSlot, aNew).LoadOrderFileID);
+    end else begin
+      if aFileID.FullSlot < GetFullMasterCount(aNew) then
+        Exit(GetFullMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
+    end;
+  end else begin
+    if aFileID.FullSlot < GetMasterCount(aNew) then
+      Exit(GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID);
+  end;
 
-  if aFileID.FullSlot >= MasterCount then begin
-    Result := GetResolvedLoadOrderFileID(aNew);
-
-    if Result.FullSlot < 0 then
-      raise EFileNoSlotExecption.Create('File has no slot assigned');
-
-  end else
-    Result := GetMaster(aFileID.FullSlot, aNew).LoadOrderFileID;
+  Result := GetResolvedLoadOrderFileID(aNew);
+  if not Result.IsValid then
+    raise EFileNoSlotExecption.Create('File has no slot assigned');
 end;
 
 function TwbFile.FileFormIDtoLoadOrderFormID(aFormID: TwbFormID; aNew: Boolean): TwbFormID;
@@ -3342,9 +3408,12 @@ begin
     flRecordNeedCompactFrom := High(Integer);
   end;
 
-  i := GetMasterCount(aNewMasters);
-  if aFormID.FileID.FullSlot > i then
-    aFormID.FileID := TwbFileID.Create(i);
+
+  if IsNewRecord(aFormID, aNewMasters) then begin
+    var lFileFileID := GetFileFileID(aNewMasters);
+    if aFormID.FileID <> lFileFileID then
+      aFormID.FileID := lFileFileID;
+  end;
 
   if (fsMastersUpdating in flStates) and aNewMasters then begin
     //FormID is based on new masters, but list is still sorted based on old masters
@@ -3400,13 +3469,13 @@ var
   L, H, I, C: Integer;
 begin
   Result := False;
-  aFormID.FileID := TwbFileID.Create(0);
+  aFormID.FileID := TwbFileID.CreateFull(0);
 
   L := Low(flInjectedRecords);
   H := High(flInjectedRecords);
   while L <= H do begin
     I := (L + H) shr 1;
-    C := TwbFormID.Compare(flInjectedRecords[I].FormID.ChangeFileID(TwbFileID.Create(0)), aFormID);
+    C := TwbFormID.Compare(flInjectedRecords[I].FormID.ChangeFileID(TwbFileID.CreateFull(0)), aFormID);
     if C < 0 then
       L := I + 1
     else begin
@@ -3782,7 +3851,7 @@ begin
     (
       (wbGameMode = gmTES3)
       or
-      (((wbGameMode in [gmSSE, gmEnderalSE]) or ((wbGameMode = gmTES5VR) and wbHasAddedESLSupport)) and (GetVersion >= 1.709))
+      (((wbGameMode in [gmSSE, gmEnderalSE]) or ((wbGameMode = gmTES5VR) and wbHasAddedLightSupport)) and (GetVersion >= 1.709))
       or
       ((wbGameMode = gmFO4) and (GetVersion >= 1.0))
       or
@@ -3828,18 +3897,45 @@ end;
 function TwbFile.GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
 
   function LoadOrderToFile(const aFileID: TwbFileID): TwbFileID;
-  var
-    i: Integer;
   begin
-    if aFileID = flLoadOrderFileID then
-      if fsIsCompareLoad in flStates then
-        Exit(TwbFileID.Create(Pred(GetMasterCount(False))))
+    if wbGameMode = gmSF1 then begin
+      if aFileID = flLoadOrderFileID then
+        Exit(GetFileFileID(False));
+
+      var lFullIndex := 0;
+      var lLightIndex := 0;
+      var lMediumIndex := 0;
+
+      for var lIndex := 0 to Pred(GetMasterCount(False)) do begin
+        var lMaster := GetMaster(lIndex, False);
+        if lMaster.LoadOrderFileID = aFileID then begin
+          if lMaster.GetIsLightDirect then
+            Exit(TwbFileID.CreateLight(lLightIndex))
+          else if lMaster.GetIsMediumDirect then
+            Exit(TwbFileID.CreateMedium(lMediumIndex))
+          else
+            Exit(TwbFileID.CreateFull(lFullIndex));
+        end else begin
+          if lMaster.GetIsLightDirect then
+            Inc(lLightIndex)
+          else if lMaster.GetIsMediumDirect then
+            Inc(lMediumIndex)
+          else
+            Inc(lFullIndex);
+        end;
+      end;
+    end else begin
+      if aFileID = flLoadOrderFileID then
+        if fsIsCompareLoad in flStates then
+          Exit(TwbFileID.CreateFull(Pred(GetMasterCount(False))))
+        else
+          Exit(GetFileFileID(False))
       else
-        Exit(TwbFileID.Create(GetMasterCount(False)))
-    else
-      for i := Pred(GetMasterCount(False)) downto 0 do
-        if GetMaster(i, False).LoadOrderFileID = aFileID then
-          Exit(TwbFileID.Create(i));
+        for var i := Pred(GetMasterCount(False)) downto 0 do
+          if GetMaster(i, False).LoadOrderFileID = aFileID then
+            Exit(TwbFileID.CreateFull(i));
+    end;
+
     Result := TwbFileID.Invalid;
   end;
 
@@ -3857,7 +3953,7 @@ begin
 
   if FindFormID(aFormID, i, False) then
     Result := flRecords[i]
-  else if aAllowInjected and (FileID.FullSlot >= GetMasterCount(False)) and FindInjectedID(aFormID, i) then
+  else if aAllowInjected and IsNewRecord(FileID, False) and FindInjectedID(aFormID, i) then
     Result := flInjectedRecords[i];
 end;
 
@@ -3917,7 +4013,17 @@ end;
 
 function TwbFile.GetFileFileID(aNewMasters : Boolean): TwbFileID;
 begin
-  Result := TwbFileID.Create(GetMasterCount(aNewMasters));
+  var SelfRef := Self as IwbContainerElementRef;
+
+  if wbGameMode = gmSF1 then begin
+    if GetIsLightDirect then
+      Result := TwbFileID.CreateLight(GetLightMasterCount(aNewMasters))
+    else if GetIsMediumDirect then
+      Result := TwbFileID.CreateMedium(GetMediumMasterCount(aNewMasters))
+    else
+      Result := TwbFileID.CreateFull(GetFullMasterCount(aNewMasters));
+  end else
+    Result := TwbFileID.CreateFull(GetMasterCount(aNewMasters));
 end;
 
 function TwbFile.GetFileGeneration: Integer;
@@ -3938,6 +4044,32 @@ end;
 function TwbFile.GetFileStates: TwbFileStates;
 begin
   Result := flStates;
+end;
+
+function TwbFile.GetFullMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+begin
+  //not very optimized... but should work for now
+  Result := nil;
+  for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
+  begin
+    Result := GetMaster(lMasterIndex, aNew);
+    if Result.GetIsFullDirect then begin
+      Dec(aIndex);
+      if aIndex < 0 then
+        Exit;
+    end else
+      Result := nil;
+  end;
+end;
+
+function TwbFile.GetFullMasterCount(aNew: Boolean): Integer;
+begin
+  //not very optimized... but should work for now
+  Result := GetMasterCount(aNew);
+  for var lMasterIndex := 0 to Pred(Result) do
+    with GetMaster(lMasterIndex, aNew) do
+      if not GetIsFullDirect then
+        Dec(Result);
 end;
 
 function TwbFile.GetGroupBySignature(const aSignature: TwbSignature): IwbGroupRecord;
@@ -4002,7 +4134,7 @@ begin
 
   if Length(flRecords) > 0 then begin
     FormID := flRecords[High(flRecords)].FixedFormID;
-    if FormID.FileID.FullSlot >= GetMasterCount(True) then
+    if IsNewRecord(FormID, True) then
       Result := FormID.ObjectID;
   end;
 end;
@@ -4037,33 +4169,70 @@ begin
       Exit(False);
 end;
 
-function TwbFile.GetIsESL: Boolean;
+function TwbFile.GetIsMedium: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if wbPseudoESL then
-    Exit(fsPseudoESL in flStates);
+  if wbPseudoMedium then
+    Exit(fsPseudoMedium in flStates);
 
-  if not wbIsEslSupported or GetIsNotPlugin then
+  if not wbIsMediumSupported or GetIsNotPlugin then
     Exit(False);
+
+  var SelfRef := Self as IwbContainerElementRef;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  Result := Header.IsESL;
+  Result := Header.IsMedium;
 end;
 
-function TwbFile.GetIsESLDirect: Boolean;
+function TwbFile.GetIsMediumDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not wbIsEslSupported or GetIsNotPlugin then
+  if not wbIsMediumSupported or GetIsNotPlugin then
     Exit(False);
+
+  var SelfRef := Self as IwbContainerElementRef;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  Result := Header.IsESL;
+  Result := Header.IsMedium;
+end;
+
+function TwbFile.GetIsLight: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if wbPseudoLight then
+    Exit(fsPseudoLight in flStates);
+
+  if not wbIsLightSupported or GetIsNotPlugin then
+    Exit(False);
+
+  var SelfRef := Self as IwbContainerElementRef;
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsLight;
+end;
+
+function TwbFile.GetIsLightDirect: Boolean;
+var
+  Header         : IwbMainRecord;
+begin
+  if not wbIsLightSupported or GetIsNotPlugin then
+    Exit(False);
+
+  var SelfRef := Self as IwbContainerElementRef;
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  Result := Header.IsLight;
 end;
 
 function TwbFile.GetIsOverlay: Boolean;
@@ -4075,6 +4244,8 @@ begin
 
   if not wbIsOverlaySupported or GetIsNotPlugin then
     Exit(False);
+
+  var SelfRef := Self as IwbContainerElementRef;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -4088,6 +4259,8 @@ var
 begin
   if not wbIsOverlaySupported or GetIsNotPlugin then
     Exit(False);
+
+  var SelfRef := Self as IwbContainerElementRef;
 
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
@@ -4109,6 +4282,16 @@ begin
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
   Result := Header.IsESM;
+end;
+
+function TwbFile.GetIsFull: Boolean;
+begin
+  Result := not (GetIsLight or GetIsMedium);
+end;
+
+function TwbFile.GetIsFullDirect: Boolean;
+begin
+  Result := not (GetIsLightDirect or GetIsMediumDirect);
 end;
 
 function TwbFile.GetIsLocalized: Boolean;
@@ -4164,6 +4347,32 @@ begin
   Result := False;
 end;
 
+function TwbFile.GetLightMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+begin
+  //not very optimized... but should work for now
+  Result := nil;
+  for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
+  begin
+    Result := GetMaster(lMasterIndex, aNew);
+    if Result.GetIsLightDirect then begin
+      Dec(aIndex);
+      if aIndex < 0 then
+        Exit;
+    end else
+      Result := nil;
+  end;
+end;
+
+function TwbFile.GetLightMasterCount(aNew: Boolean): Integer;
+begin
+  //not very optimized... but should work for now
+  Result := GetMasterCount(aNew);
+  for var lMasterIndex := 0 to Pred(Result) do
+    with GetMaster(lMasterIndex, aNew) do
+      if not GetIsLightDirect then
+        Dec(Result);
+end;
+
 function TwbFile.GetLoadOrder: Integer;
 begin
   Result := flLoadOrder;
@@ -4185,6 +4394,54 @@ begin
     Result := Length(flMasters);
 end;
 
+function TwbFile.GetMasterForFileID(const aFileID: TwbFileID; aNew, aAllowSelf: Boolean): IwbFile;
+begin
+  if aAllowSelf and IsNewRecord(aFileID, aNew) then
+    Exit(Self);
+
+  if wbGameMode = gmSF1 then begin
+    if aFileID.IsLightSlot then
+      Exit(GetLightMaster(aFileID.LightSlot, True))
+    else if aFileID.IsMediumSlot then
+      Exit(GetMediumMaster(aFileID.MediumSlot, True))
+    else
+      Exit(GetFullMaster(aFileID.FullSlot, True))
+  end else
+    Exit(GetMaster(aFileID.FullSlot, True));
+end;
+
+function TwbFile.GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
+begin
+  if wbGameMode = gmSF1 then begin
+    var lFullIndex := -1;
+    var lLightIndex := -1;
+    var lMediumIndex := -1;
+
+    for var lIndex := 0 to Pred(GetMasterCount(False)) do begin
+      var lMaster := GetMaster(lIndex, False);
+      if lMaster.GetIsLightDirect then begin
+        Inc(lLightIndex);
+        if aFileID.IsLightSlot and (aFileID.LightSlot = lLightIndex) then
+          Exit(lIndex);
+      end else if lMaster.GetIsMediumDirect then begin
+        Inc(lMediumIndex);
+        if aFileID.IsMediumSlot and (aFileID.MediumSlot = lMediumIndex) then
+          Exit(lIndex);
+      end else begin
+        Inc(lFullIndex);
+        if aFileID.IsFullSlot and (aFileID.FullSlot = lFullIndex) then
+          Exit(lIndex);
+      end;
+    end;
+  end else begin
+    Result := aFileID.FullSlot;
+    if Result < GetMasterCount(aNew) then
+      Exit;
+  end;
+
+  Result := -1;
+end;
+
 function TwbFile.GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 begin
   var lMaster: IwbFile;
@@ -4202,16 +4459,46 @@ begin
   end;
 
   if not Assigned(lMaster) then begin
-    var lFullSlot := aFormID.FileID.FullSlot;
+    if wbGameMode = gmSF1 then begin
+      var lFileID := aFormID.FileID;
+      if lFileID.IsLightSlot then begin
+        var lLightSlot := lFileID.LightSlot;
 
-    var lMasterCount := GetMasterCount(aNewMasters);
-    if lFullSlot >= lMasterCount then
-      if fsIsCompareLoad in flStates then
-        lMaster := GetMaster(Pred(lMasterCount), aNewMasters)
-      else
-        lMaster := nil
-    else
-      lMaster := GetMaster(lFullSlot, aNewMasters);
+        var lLightMasterCount := GetLightMasterCount(aNewMasters);
+        if lLightSlot >= lLightMasterCount then begin
+          if fsIsCompareLoad in flStates then
+            lMaster := GetMaster(Pred(GetMasterCount(aNewMasters)), aNewMasters);
+        end else
+          lMaster := GetLightMaster(lLightSlot, aNewMasters);
+      end else if lFileID.IsMediumSlot then begin
+        var lMediumSlot := lFileID.MediumSlot;
+
+        var lMediumMasterCount := GetMediumMasterCount(aNewMasters);
+        if lMediumSlot >= lMediumMasterCount then begin
+          if fsIsCompareLoad in flStates then
+            lMaster := GetMaster(Pred(GetMasterCount(aNewMasters)), aNewMasters);
+        end else
+          lMaster := GetMediumMaster(lMediumSlot, aNewMasters);
+      end else begin
+        var lFullSlot := lFileID.FullSlot;
+
+        var lFullMasterCount := GetFullMasterCount(aNewMasters);
+        if lFullSlot >= lFullMasterCount then begin
+          if fsIsCompareLoad in flStates then
+            lMaster := GetMaster(Pred(GetMasterCount(aNewMasters)), aNewMasters);
+        end else
+          lMaster := GetFullMaster(lFullSlot, aNewMasters);
+      end;
+    end else begin
+      var lSlot := aFormID.FileID.FullSlot;
+
+      var lMasterCount := GetMasterCount(aNewMasters);
+      if lSlot >= lMasterCount then begin
+        if fsIsCompareLoad in flStates then
+          lMaster := GetMaster(Pred(lMasterCount), aNewMasters);
+      end else
+        lMaster := GetMaster(lSlot, aNewMasters);
+    end;
   end;
 
   if Assigned(lMaster) and not Equals(lMaster) then begin
@@ -4258,6 +4545,32 @@ begin
       aMasters.AddObject(flMasters[i].FileName, Pointer(flMasters[i]));
 end;
 
+function TwbFile.GetMediumMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+begin
+  //not very optimized... but should work for now
+  Result := nil;
+  for var lMasterIndex := 0 to Pred(GetMasterCount(aNew)) do
+  begin
+    Result := GetMaster(lMasterIndex, aNew);
+    if Result.GetIsMediumDirect then begin
+      Dec(aIndex);
+      if aIndex < 0 then
+        Exit;
+    end else
+      Result := nil;
+  end;
+end;
+
+function TwbFile.GetMediumMasterCount(aNew: Boolean): Integer;
+begin
+  //not very optimized... but should work for now
+  Result := GetMasterCount(aNew);
+  for var lMasterIndex := 0 to Pred(Result) do
+    with GetMaster(lMasterIndex, aNew) do
+      if not GetIsMediumDirect then
+        Dec(Result);
+end;
+
 function TwbFile.GetModuleInfo: Pointer;
 begin
   Result := flModule;
@@ -4298,7 +4611,7 @@ begin
   if FindFormID(aFormID, i, aNewMasters) then begin
     Result := flRecords[i];
     Exit;
-  end else if aAllowInjected and (aFormID.FileID.FullSlot >= GetMasterCount(aNewMasters)) and FindInjectedID(aFormID, i) then begin
+  end else if aAllowInjected and IsNewRecord(aFormID, aNewMasters) and FindInjectedID(aFormID, i) then begin
     Result := flInjectedRecords[i];
     Exit;
   end;
@@ -4477,19 +4790,63 @@ begin
     end;
 end;
 
-function TwbFile.LoadOrderFileIDtoFileFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
-var
-  i         : Integer;
+function TwbFile.IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean;
 begin
-  if aFileID = flLoadOrderFileID then
-    if fsIsCompareLoad in flStates then
-      Exit(TwbFileID.Create(Pred(GetMasterCount(aNew))))
+  Result := IsNewRecord(aFormID.FileID, aNew);
+end;
+
+function TwbFile.IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean;
+begin
+  if wbGameMode = gmSF1 then begin
+    if aFileID.IsLightSlot then
+      Result := aFileID.LightSlot >= GetLightMasterCount(aNew)
+    else if aFileID.IsMediumSlot then
+      Result := aFileID.MediumSlot >= GetMediumMasterCount(aNew)
     else
-      Exit(TwbFileID.Create(GetMasterCount(aNew)))
-  else
-    for i := Pred(GetMasterCount(aNew)) downto 0 do
-      if GetMaster(i, aNew).LoadOrderFileID = aFileID then
-        Exit(TwbFileID.Create(i));
+      Result := aFileID.FullSlot >= GetFullMasterCount(aNew);
+  end else
+    Result := aFileID.FullSlot >= GetMasterCount(aNew);
+end;
+
+function TwbFile.LoadOrderFileIDtoFileFileID(aFileID: TwbFileID; aNew: Boolean): TwbFileID;
+begin
+  if wbGameMode = gmSF1 then begin
+    if aFileID = flLoadOrderFileID then
+      Exit(GetFileFileID(aNew));
+
+    var lFullIndex := 0;
+    var lLightIndex := 0;
+    var lMediumIndex := 0;
+
+    for var lIndex := 0 to Pred(GetMasterCount(aNew)) do begin
+      var lMaster := GetMaster(lIndex, aNew);
+      if lMaster.LoadOrderFileID = aFileID then begin
+        if lMaster.GetIsLightDirect then
+          Exit(TwbFileID.CreateLight(lLightIndex))
+        else if lMaster.GetIsMediumDirect then
+          Exit(TwbFileID.CreateMedium(lMediumIndex))
+        else
+          Exit(TwbFileID.CreateFull(lFullIndex));
+      end else begin
+        if lMaster.GetIsLightDirect then
+          Inc(lLightIndex)
+        else if lMaster.GetIsMediumDirect then
+          Inc(lMediumIndex)
+        else
+          Inc(lFullIndex);
+      end;
+    end;
+  end else begin
+    if aFileID = flLoadOrderFileID then
+      if fsIsCompareLoad in flStates then
+        Exit(TwbFileID.CreateFull(Pred(GetMasterCount(aNew))))
+      else
+        Exit(GetFileFileID(aNew))
+    else
+      for var i := Pred(GetMasterCount(aNew)) downto 0 do
+        if GetMaster(i, aNew).LoadOrderFileID = aFileID then
+          Exit(TwbFileID.CreateFull(i));
+  end;
 
   raise Exception.Create('Load order FileID [' + aFileID.ToString + '] can not be mapped to file FileID for file "' + GetFileName + '"');
 end;
@@ -4546,7 +4903,7 @@ var
   HEDR         : IwbRecord;
   NextObjectID : Cardinal;
   First        : TwbFormID;
-  IsESL        : Boolean;
+  IsLight        : Boolean;
   Mask         : Cardinal;
 begin
   if GetIsOverlay then
@@ -4571,8 +4928,8 @@ begin
   if not Assigned(HEDR) then
     raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
-  IsESL := GetIsESL or flLoadOrderFileID.IsLightSlot;
-  if IsESL then
+  IsLight := GetIsLight or flLoadOrderFileID.IsLightSlot;
+  if IsLight then
     Mask := $FFF
   else
     Mask := $FFFFFF;
@@ -4660,16 +5017,16 @@ begin
       raise Exception.Create('File ' + GetFileName + ' has a file header with missing HEDR subrecord');
 
     if wbIsStarfield then begin
-      if GetIsOverlayDirect and GetIsESLDirect then begin
+      if GetIsOverlayDirect and GetIsLightDirect then begin
         SetIsOverlay(False);
-        SetIsESL(True);
+        SetIsLight(True);
       end;
 
       if flModule.miExtension in [meESM, meESL] then
         SetIsESM(True);
       if not GetIsOverlayDirect then begin
         if flModule.miExtension = meESL then
-          SetIsESL(True);
+          SetIsLight(True);
       end;
 
       if flModule.miExtension = meESP then
@@ -4718,6 +5075,7 @@ begin
         while FileHeader.RemoveElement('ONAM') <> nil do
           ;
 
+        {!!!!! SF1 support? }
         if Supports(FileHeader.ElementByName['Master Files'], IwbContainerElementRef, MasterFiles) then
           for i := 0 to Pred(MasterFiles.ElementCount) do begin
             if Supports(MasterFiles.Elements[i], IwbContainerElementRef, MasterFile) then begin
@@ -4831,51 +5189,72 @@ begin
     if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
       for var lMasterIdx := 0 to Pred(GetMasterCount(True)) do begin
         var lMaster := GetMaster(lMasterIdx, True);
-        if lMaster.IsESL or lMaster.IsOverlay or (PwbModuleInfo(lMaster.ModuleInfo).miFlags * [mfHasESLFlag, mfHasOverlayFlag] <> []) then
-          raise Exception.Create('No ESL or Overlay flagged modules can be masters in Starfield.');
+        if lMaster.IsLight or lMaster.IsOverlay or (PwbModuleInfo(lMaster.ModuleInfo).miFlags * [mfHasLightFlag, mfHasMediumFlag, mfHasOverlayFlag] <> []) then
+          raise Exception.Create('No Small, Medium, or Overlay flagged modules can''t be masters in ' + wbAppName + wbToolName);
       end;
 
-    if FileHeader.IsESL then begin
-      if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-        raise Exception.Create('ESL flagged files can''t be saved for Starfield.');
+    if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then begin
+      if FileHeader.IsLight <> (mfHasLightFlag in flModule.miFlags) then
+        raise Exception.Create('Small flag can''t be added or removed from existing files in ' + wbAppName + wbToolName);
+      if FileHeader.IsMedium <> (mfHasMediumFlag in flModule.miFlags) then
+        raise Exception.Create('Medium flag can''t be added or removed from existing files in ' + wbAppName + wbToolName);
+      if FileHeader.IsOverlay <> (mfHasOverlayFlag in flModule.miFlags) then
+        raise Exception.Create('Overlay flag can''t be added or removed from existing files in ' + wbAppName + wbToolName);
+    end;
 
-      FileFileID := GetFileFileID(true);
-      for i := High(flRecords) downto Low(flRecords) do begin
-        Current := flRecords[i];
-        FormID := Current.FixedFormID;
-        if FormID.FileID = FileFileID then begin
-          if (FormID.ToCardinal and $00FFF000) <> 0 then
-            raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with ESL flag active');
-        end else
-          Break;
+    if FileHeader.IsLight then begin
+      if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+        raise Exception.Create('Small flagged files can''t be saved in ' + wbAppName + wbToolName);
+
+      if not wbIsStarfield then begin
+        FileFileID := GetFileFileID(true);
+        for i := High(flRecords) downto Low(flRecords) do begin
+          Current := flRecords[i];
+          FormID := Current.FixedFormID;
+          if FormID.FileID = FileFileID then begin
+            if (FormID.ToCardinal and $00FFF000) <> 0 then
+              raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a Light module. You will not be able to save this file with Light flag active');
+          end else
+            Break;
+        end;
       end;
     end;
 
-    if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-      if FileHeader.IsESL <> (mfHasESLFlag in flModule.miFlags) then
-        raise Exception.Create('ESL flag can''t be added or removed from existing files in Starfield.');
+    if FileHeader.IsMedium then begin
+      if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
+        raise Exception.Create('Medium flagged files can''t be saved in ' + wbAppName + wbToolName);
+
+      if not wbIsStarfield then begin
+        FileFileID := GetFileFileID(true);
+        for i := High(flRecords) downto Low(flRecords) do begin
+          Current := flRecords[i];
+          FormID := Current.FixedFormID;
+          if FormID.FileID = FileFileID then begin
+            if (FormID.ToCardinal and $00FF0000) <> 0 then
+              raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a Medium module. You will not be able to save this file with Medium flag active');
+          end else
+            Break;
+        end;
+      end;
+    end;
 
     if FileHeader.IsOverlay then begin
       if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-        raise Exception.Create('Overlay flagged files can''t be saved for Starfield.');
+        raise Exception.Create('Overlay flagged files can''t be saved in ' + wbAppName + wbToolName);
 
       FileFileID := GetFileFileID(true);
-      if FileFileID.FullSlot = 0 then
-          raise Exception.Create('File ' + Self.GetName + ' is an overlay module with no masters. You will not be able to save this file with Overlay flag active');
+      if FileFileID.FullSlot <= 0 then
+        raise Exception.Create('File ' + Self.GetName + ' is an overlay module with no masters. You will not be able to save this file with Overlay flag active');
+
       for i := High(flRecords) downto Low(flRecords) do begin
         Current := flRecords[i];
         FormID := Current.FormID;
-        if FormID.FileID.FullSlot >= FileFileID.FullSlot then begin
+        if IsNewRecord(FormID, True) then begin
           raise Exception.Create('Record ' + Current.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for an overlay module. You will not be able to save this file with Overlay flag active');
         end else
           Break;
       end;
     end;
-
-    if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-      if FileHeader.IsOverlay <> (mfHasOverlayFlag in flModule.miFlags) then
-        raise Exception.Create('Overlay flag can''t be added or removed from existing files in Starfield.');
-
   end else
     inherited;
 end;
@@ -5003,21 +5382,23 @@ var
   i      : Integer;
   Master : IwbMainRecord;
   FormID : TwbFormID;
-  FileID : Byte;
 begin
   if not Assigned(aRecord) then
     Exit;
-  if not aRecord.FormID.IsNull then begin
+
+  var lFormID := aRecord.FormID;
+
+  if not lFormID.IsNull then begin
     Assert(flLoadFinished);
     Assert(not (fsMastersUpdating in flStates));
 
     if not aRecord.Equals(flRecordProcessing) then begin
       Assert(not Assigned(flRecordProcessing));
 
-      FormID := aRecord.FixedFormID;
+      lFormID := aRecord.FixedFormID;
 
-      if (Length(flRecords) < 1) or not FindFormID(FormID, i, True) then
-        raise Exception.Create('Can''t remove FormID [' + FormID.ToString(True) + '] from file ' + GetName + ': FormID not registered');
+      if (Length(flRecords) < 1) or not FindFormID(lFormID, i, True) then
+        raise Exception.Create('Can''t remove FormID [' + lFormID.ToString(True) + '] from file ' + GetName + ': FormID not registered');
 
       flRecords[i] := nil;
       if i < High(flRecords) then begin
@@ -5027,24 +5408,24 @@ begin
       SetLength(flRecords, Pred(Length(flRecords)));
     end;
 
-    var lIsHardcoded := FormID.ObjectID < $800;
+    var lIsHardcoded := lFormID.ObjectID < $800;
     if lIsHardcoded then
       if GetAllowHardcodedRangeUse then
-        lIsHardcoded := FormID.IsHardcoded;
+        lIsHardcoded := lFormID.IsHardcoded;
 
     if lIsHardcoded and (flLoadOrderFileID.FullSlot = 0) then
       lIsHardcoded := False;
 
-    FileID := FormID.FileID.FullSlot;
+    var lFileID := lFormID.FileID;
 
-    if not lIsHardcoded and (FileID >= Cardinal(GetMasterCount(True))) then begin
+    if not lIsHardcoded and IsNewRecord(lFileID, True) then begin
       {record for this file}
     end else try
-      Master := GetMasterRecordByFormID(FormID, True, True);
+      Master := GetMasterRecordByFormID(lFormID, True, True);
       if Assigned(Master) and ((Master as IwbElement) <> (aRecord as IwbElement)) then
         (Master as IwbMainRecordInternal).RemoveOverride(aRecord)
       else
-        (GetMaster(FileID, True) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
+        (GetMasterForFileID(lFileID, True, False) as IwbFileInternal).RemoveInjectedMainRecord(aRecord);
     except
       on E: Exception do
         if wbHasProgressCallback then
@@ -5072,24 +5453,29 @@ var
 
     if flLoadOrder >= 0 then begin
       _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
-      if wbIsEslSupported or wbPseudoESL or wbPseudoOverlay then begin
+      if wbIsLightSupported or wbPseudoLight or wbPseudoOverlay then begin
         if (wbIsOverlaySupported or wbPseudoOverlay) and ((fsPseudoOverlay in flStates) or ((Header.IsOverlay) and not wbIgnoreOverlay)) then begin
           flLoadOrderFileID := TwbFileID.Invalid;
-        end else if (fsPseudoESL in flStates) or ((Header.IsESL or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreESL) then begin
-          if _NextLightSlot > $FFF then
+        end else if (fsPseudoLight in flStates) or ((Header.IsLight or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreLight) then begin
+          if _NextLightSlot > TwbFileID.MaxLightSlot then
             raise Exception.Create('Too many light modules');
-          flLoadOrderFileID := TwbFileID.Create($FE, _NextLightSlot);
+          flLoadOrderFileID := TwbFileID.CreateLight(_NextLightSlot);
           Inc(_NextLightSlot);
+        end else if (fsPseudoMedium in flStates) or (Header.IsMedium and not wbIgnoreMedium) then begin
+          if _NextMediumSlot > TwbFileID.MaxMediumSlot then
+            raise Exception.Create('Too many medium modules');
+          flLoadOrderFileID := TwbFileID.CreateMedium(_NextMediumSlot);
+          Inc(_NextMediumSlot);
         end else begin
-          if _NextFullSlot >= $FE then
+          if _NextFullSlot > TwbFileID.MaxFullSlot then
             raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.Create(_NextFullSlot);
+          flLoadOrderFileID := TwbFileID.CreateFull(_NextFullSlot);
           Inc(_NextFullSlot);
         end;
       end else begin
-        if flLoadOrder > $FF then
+        if flLoadOrder > TwbFileID.MaxFullSlot then
           raise Exception.Create('Too many modules');
-        flLoadOrderFileID := TwbFileID.Create(flLoadOrder);
+        flLoadOrderFileID := TwbFileID.CreateFull(flLoadOrder);
       end;
 
       flModule := wbModuleByName(GetFileName);
@@ -5157,7 +5543,7 @@ begin
       if Assigned(flCompareToFile) then begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
-        flLoadOrderFileID := TwbFileID.Create($FF);
+        flLoadOrderFileID := TwbFileID.CreateFull($FF);
     end;
 
     if wbGameMode = gmTES3 then
@@ -5237,8 +5623,10 @@ begin
       AddMaster(flCompareTo);
     end;
 
-    if wbPseudoESL then
-      Include(flStates, fsESLCompatible);
+    if wbPseudoLight then
+      Include(flStates, fsLightCompatible);
+    if wbPseudoMedium then
+      Include(flStates, fsMediumCompatible);
     if wbPseudoOverlay then
       Include(flStates, fsOverlayCompatible);
 
@@ -5247,14 +5635,20 @@ begin
         Include(flStates, fsPseudoOverlay);
       AssignSlot;
     end else begin
-      if Header.IsESL then begin
+      if Header.IsLight then begin
         if not wbPseudoOverlay then begin
-          if wbPseudoESL then
-            Include(flStates, fsPseudoESL);
+          if wbPseudoLight then
+            Include(flStates, fsPseudoLight);
+          AssignSlot;
+        end;
+      end else if Header.IsMedium then begin
+        if not (wbPseudoOverlay or wbPseudoLight) then begin
+          if wbPseudoMedium then
+            Include(flStates, fsPseudoMedium);
           AssignSlot;
         end;
       end else
-        if not (wbPseudoESL or wbPseudoOverlay) then
+        if not (wbPseudoLight or wbPseudoMedium or wbPseudoOverlay) then
           AssignSlot;
     end;
 
@@ -5387,9 +5781,16 @@ begin
         Include(flStates, fsPseudoOverlay);
 
     if not (fsPseudoOverlay in flStates) then
-      if wbPseudoESL then
-        if fsESLCompatible in flStates then
-          Include(flStates, fsPseudoESL);
+    begin
+      if wbPseudoLight then
+        if fsLightCompatible in flStates then
+          Include(flStates, fsPseudoLight);
+
+      if not (fsPseudoLight in flStates) then
+        if wbPseudoMedium then
+          if fsMediumCompatible in flStates then
+            Include(flStates, fsPseudoMedium);
+    end;
 
     AssignSlot;
   finally
@@ -5499,11 +5900,11 @@ begin
     Exclude(flStates, fsHasNoFormID);
 end;
 
-procedure TwbFile.SetIsESL(Value: Boolean);
+procedure TwbFile.SetIsMedium(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not wbIsEslSupported then
+  if not wbIsMediumSupported then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -5511,11 +5912,31 @@ begin
   if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Value <> Header.IsESL then begin
+  if Value <> Header.IsMedium then begin
     if not IsElementEditable(nil) then
       raise Exception.Create('File "' + GetFileName + '" is not editable');
 
-    Header.IsESL := Value;
+    Header.IsMedium := Value;
+  end;
+end;
+
+procedure TwbFile.SetIsLight(Value: Boolean);
+var
+  Header         : IwbMainRecord;
+begin
+  if not wbIsLightSupported then
+    Exit;
+  if GetIsNotPlugin then
+    Exit;
+
+  if (GetElementCount < 1) or not Supports(GetElement(0), IwbMainRecord, Header) then
+    raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
+
+  if Value <> Header.IsLight then begin
+    if not IsElementEditable(nil) then
+      raise Exception.Create('File "' + GetFileName + '" is not editable');
+
+    Header.IsLight := Value;
   end;
 end;
 
@@ -5663,9 +6084,9 @@ begin
           if i <> j then begin
             MasterFiles[j].SortOrder := i;
             SetLength(Old, Succ(Length(Old)));
-            Old[High(Old)] := TwbFileID.Create(j);
+            Old[High(Old)] := TwbFileID.CreateFull(j);
             SetLength(New, Succ(Length(New)));
-            New[High(New)] := TwbFileID.Create(i);
+            New[High(New)] := TwbFileID.CreateFull(i);
           end;
         end;
         if Length(Old) > 0 then begin
@@ -6125,10 +6546,12 @@ end;
 
 procedure TwbContainer.BeforeDestruction;
 begin
+  {???
   if csConstructionCompleted in cntStates then
     Assert(cntElementRefs = 0)
   else
     Assert(cntElementRefs = 1);
+  }
 
   inherited BeforeDestruction;
 
@@ -8750,35 +9173,115 @@ end;
 
 function TwbMainRecord.DoBuildRef(aRemove: Boolean): Boolean;
 var
-  _File         : IwbFile;
-  Files         : array of IwbFile;
-  FilesCount    : Integer;
+  _File          : IwbFile;
+
+  Files          : array of IwbFile;
+  FilesCount     : Integer;
+
+  FullFiles      : array of IwbFile;
+  FullFilesCount : Integer;
+
+  MediumFiles      : array of IwbFile;
+  MediumFilesCount : Integer;
+
+  LightFiles      : array of IwbFile;
+  LightFilesCount : Integer;
+
   SelfIntf      : IwbMainRecord;
 
   procedure ProcessRef(aFormID: TwbFormID; aAdd: Boolean);
-  var
-    FileID     : Integer;
-    MainRecord : IwbMainRecord;
   begin
     Result := True;
+    var MainRecord: IwbMainRecord := nil;
 
-    if not Assigned(_File) then begin
-      _File := GetFile;
-      FilesCount := _File.MasterCount[GetMastersUpdated];
-      SetLength(Files, Succ(FilesCount));
-      Files[FilesCount] := _File;
-      SelfIntf := Self as IwbMainRecord;
+    if wbGameMode = gmSF1 then begin
+
+      var lFileID := aFormID.FileID;
+      var lFileIndex: Integer;
+
+      if not lFileID.IsValid or (lFileID.IsFullSlot and (lFileID.FullSlot > lFileID.MaxFullSlot)) then
+        Exit;
+
+      if not Assigned(_File) then begin
+        _File := GetFile;
+        SelfIntf := Self as IwbMainRecord;
+      end;
+
+      if lFileID.IsLightSlot then begin
+
+        if LightFilesCount < 0 then begin
+          LightFilesCount := _File.LightMasterCount[GetMastersUpdated];
+          SetLength(LightFiles, Succ(LightFilesCount));
+          LightFiles[LightFilesCount] := _File;
+        end;
+
+        lFileIndex := lFileID.LightSlot;
+        if lFileIndex > LightFilesCount then
+          lFileIndex := LightFilesCount;
+
+        if not Assigned(LightFiles[lFileIndex]) then
+          LightFiles[lFileIndex] := _File.LightMasters[lFileIndex, GetMastersUpdated];
+
+        aFormID.FileID := LightFiles[lFileIndex].FileFileID[True];
+        MainRecord := LightFiles[lFileIndex].RecordByFormID[aFormID, True, True];
+
+      end else if lFileID.IsMediumSlot then begin
+
+        if MediumFilesCount < 0 then begin
+          MediumFilesCount := _File.MediumMasterCount[GetMastersUpdated];
+          SetLength(MediumFiles, Succ(MediumFilesCount));
+          MediumFiles[MediumFilesCount] := _File;
+        end;
+
+        lFileIndex := lFileID.MediumSlot;
+
+        if lFileIndex > MediumFilesCount then
+          lFileIndex := MediumFilesCount;
+
+        if not Assigned(MediumFiles[lFileIndex]) then
+          MediumFiles[lFileIndex] := _File.MediumMasters[lFileIndex, GetMastersUpdated];
+
+        aFormID.FileID := MediumFiles[lFileIndex].FileFileID[True];
+        MainRecord := MediumFiles[lFileIndex].RecordByFormID[aFormID, True, True];
+
+      end else begin
+        if FullFilesCount < 0 then begin
+          FullFilesCount := _File.FullMasterCount[GetMastersUpdated];
+          SetLength(FullFiles, Succ(FullFilesCount));
+          FullFiles[FullFilesCount] := _File;
+        end;
+
+        lFileIndex := lFileID.FullSlot;
+        if lFileIndex > FullFilesCount then
+          lFileIndex := FullFilesCount;
+
+        if not Assigned(FullFiles[lFileIndex]) then
+          FullFiles[lFileIndex] := _File.FullMasters[lFileIndex, GetMastersUpdated];
+
+        aFormID.FileID := FullFiles[lFileIndex].FileFileID[True];
+        MainRecord := FullFiles[lFileIndex].RecordByFormID[aFormID, True, True];
+
+      end;
+    end else begin
+      if not Assigned(_File) then begin
+        _File := GetFile;
+        FilesCount := _File.MasterCount[GetMastersUpdated];
+        SetLength(Files, Succ(FilesCount));
+        Files[FilesCount] := _File;
+        SelfIntf := Self as IwbMainRecord;
+      end;
+
+      var FileID := aFormID.FileID.FullSlot;
+      if FileID > FilesCount then
+        FileID := FilesCount;
+
+      if not Assigned(Files[FileID]) then
+        Files[FileID] := _File.Masters[FileID, GetMastersUpdated];
+
+      aFormID.FileID := Files[FileID].FileFileID[True];
+      MainRecord := Files[FileID].RecordByFormID[aFormID, True, True];
     end;
 
-    FileID := aFormID.FileID.FullSlot;
-    if FileID > FilesCount then
-      FileID := FilesCount;
-
-    if not Assigned(Files[FileID]) then
-      Files[FileID] := _File.Masters[FileID, GetMastersUpdated];
-
-    aFormID.FileID := Files[FileID].FileFileID[True];
-    MainRecord := Files[FileID].RecordByFormID[aFormID, True, True];
     if Assigned(MainRecord) then
       if aAdd then
         MainRecord.AddReferencedBy(SelfIntf)
@@ -8787,10 +9290,6 @@ var
   end;
 
 var
-{  LastFormID    : TwbFormID;
-  i, j          : Integer;
-  NewCount      : integer;
-  Cmp           : Integer;}
   SelfRef       : IwbContainerElementRef;
 begin
   Result := False;
@@ -8802,6 +9301,10 @@ begin
     Exit;
 
   SelfRef := Self as IwbContainerElementRef;
+
+  FullFilesCount := -1;
+  MediumFilesCount := -1;
+  LightFilesCount := -1;
 
   Assert(not (mrsBuildingRef in mrStates));
   Include(mrStates, mrsBuildingRef);
@@ -8876,8 +9379,21 @@ begin
         Exit;
       end;
 
-    if Result.FileID.FullSlot > lFile.MasterCount[GetMastersUpdated] then
-      Result.FileID := lFile.FileFileID[GetMastersUpdated];
+    if wbGameMode = gmSF1 then begin
+      var lFileID := Result.FileID;
+      if lFileID.IsLightSlot then begin
+        if lFileID.LightSlot > lFile.LightMasterCount[GetMastersUpdated] then
+          Result.FileID := lFile.FileFileID[GetMastersUpdated];
+      end else if lFileID.IsMediumSlot then begin
+        if lFileID.MediumSlot > lFile.MediumMasterCount[GetMastersUpdated] then
+          Result.FileID := lFile.FileFileID[GetMastersUpdated];
+      end else begin
+        if lFileID.FullSlot > lFile.FullMasterCount[GetMastersUpdated] then
+          Result.FileID := lFile.FileFileID[GetMastersUpdated];
+      end;
+    end else
+      if Result.FileID.FullSlot > lFile.MasterCount[GetMastersUpdated] then
+        Result.FileID := lFile.FileFileID[GetMastersUpdated];
   end;
   mrFixedFormID := Result;
 end;
@@ -9870,6 +10386,8 @@ var
   SelfRef : IwbContainerElementRef;
   KAR     : IwbKeepAliveRoot;
 
+  lFile: IwbFile;
+
   lCheckedMasterZero      : Boolean;
   lMasterZeroIsGameMaster : Boolean;
   lAllowHardcodedRangeUse : Boolean;
@@ -9878,7 +10396,8 @@ var
   begin
     if not lCheckedMasterZero then begin
       lCheckedMasterZero := True;
-      var lFile := GetFile;
+      if not Assigned(lFile) then
+        lFile := GetFile;
       if Assigned(lFile) then begin
         lAllowHardcodedRangeUse := lFile.GetAllowHardcodedRangeUse;
         if lFile.MasterCount[True] > 0 then begin
@@ -9891,6 +10410,28 @@ var
     Result := lMasterZeroIsGameMaster;
   end;
 
+  procedure MarkMaster(aFormID: TwbFormID);
+  begin
+    if aFormID.IsNull then
+      Exit;
+
+    if aFormID.ObjectID < $800 then begin
+      MasterZeroIsGameMaster;
+      if not lAllowHardcodedRangeUse then
+        aFormID.FileID := TwbFileID.Null;
+    end;
+
+    if aFormID.IsHardcoded then begin
+      if lMasterZeroIsGameMaster then
+        aMasters[0] := True;
+      Exit;
+    end;
+
+    var lMasterIndex := lFile.GetMasterIndexForFileID(aFormID.FileID, False);
+    if lMasterIndex >= 0 then
+      aMasters[lMasterIndex] := True;
+  end;
+
 begin
   lCheckedMasterZero      := False;
   lMasterZeroIsGameMaster := False;
@@ -9900,30 +10441,13 @@ begin
   DoInit(False);
 
   var lFormID := GetFixedFormID;
-  if not lFormID.IsNull then begin
-    if lFormID.IsHardcoded then begin
-      if MasterZeroIsGameMaster then
-        aMasters[0] := True;
-    end else
-      aMasters[lFormID.FileID.FullSlot] := True;
-  end;
+  MarkMaster(lFormID);
 
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then begin
 
     for var lReferenceIdx := High(mrReferences) downto Low(mrReferences) do begin
       lFormID := mrReferences[lReferenceIdx];
-
-      if lFormID.ObjectID < $800 then begin
-        MasterZeroIsGameMaster;
-        if not lAllowHardcodedRangeUse then
-          lFormID.FileID := TwbFileID.Null;
-      end;
-
-      if lFormID.IsHardcoded then begin
-        if lMasterZeroIsGameMaster then
-          aMasters[0] := True;
-      end else
-        aMasters[lFormID.FileID.FullSlot] := True;
+      MarkMaster(lFormID);
     end;
 
   end else
@@ -10162,14 +10686,15 @@ begin
   if Assigned(_File) then begin
     if _File.IsOverlay then begin
       FormID := GetFormID;
-      if FormID.FileID.FullSlot >= _File.FileFileID[True].FullSlot then
+      if _File.IsNewRecord(FormID, True) then
         Result := 'An overlay module can not contain new records.';
     end;
 
     if Result = '' then begin
+      {!!!!! SF1 support?}
       FormID := GetFormID;
       FixedFormID := GetFixedFormID;
-      if _File.IsESL and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
+      if _File.IsLight and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
         Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
       else begin
         if FormID <> FixedFormID then
@@ -10521,11 +11046,19 @@ begin
   if not Assigned(_File) then
     Exit;
   var MasterCount := _File.MasterCount[GetMastersUpdated];
-  for var FormID in mrReferences do
-    if FormID.FileID.FullSlot >= MasterCount then
-      Exit
-    else
-      Inc(Result);
+  if MasterCount < 1 then
+    Exit;
+
+  for var FormID in mrReferences do begin
+    if wbGameMode = gmSF1 then begin
+      if _File.IsNewRecord(FormID, GetMastersUpdated) then
+        Continue;
+    end else begin
+      if FormID.FileID.FullSlot >= MasterCount then
+        Exit;
+    end;
+    Inc(Result);
+  end;
 end;
 
 function TwbMainRecord.GetFixedFormID: TwbFormID;
@@ -10677,12 +11210,12 @@ end;
 
 procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
-  if wbGameMode = gmTES3 then
+  if wbGameMode in [gmTES3, gmSF1] then
     Exit;
 
   if mrStruct.mrsFormID.FileID.FullSlot > aIndex then begin
     MakeHeaderWriteable;
-    mrStruct.mrsFormID.FileID := TwbFileID.Create(aIndex);
+    mrStruct.mrsFormID.FileID := TwbFileID.CreateFull(aIndex);
     if Assigned(mrGroup) or (GetChildGroup <> nil) then
       mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
   end else
@@ -11019,9 +11552,14 @@ begin
   Result := True;
 end;
 
-function TwbMainRecord.GetIsESL: Boolean;
+function TwbMainRecord.GetIsMedium: Boolean;
 begin
-  Result := GetFlags.IsESL;
+  Result := GetFlags.IsMedium;
+end;
+
+function TwbMainRecord.GetIsLight: Boolean;
+begin
+  Result := GetFlags.IsLight;
 end;
 
 function TwbMainRecord.GetIsOverlay: Boolean;
@@ -11053,7 +11591,7 @@ begin
     if Assigned(_File) and
        not Assigned(mrMaster) and
        not FormID.IsNull and
-           (FormID.FileID.FullSlot < _File.MasterCount[GetMastersUpdated]) and
+           (not _File.IsNewRecord(FormID, GetMastersUpdated)) and
        not (fsIsHardcoded in _File.FileStates) and
        ((wbGameMode > gmTES3) or (FormID.FileID.FullSlot > 0)) then
       Include(mrStates, mrsIsInjected)
@@ -11442,13 +11980,10 @@ begin
 end;
 
 function TwbMainRecord.GetReferenceFile: IwbFile;
-var
-  FileID: Integer;
 begin
   Result := GetFile;
-  FileID := GetFormID.FileID.FullSlot;
-  if FileID < Result.MasterCount[GetMastersUpdated] then
-    Result := Result.Masters[FileID, GetMastersUpdated];
+  if Assigned(Result) then
+    Result := Result.GetMasterForFileID(GetFormID.FileID, GetMastersUpdated, True);
 end;
 
 function TwbMainRecord.GetReference(aIndex: Integer): IwbMainRecord;
@@ -11851,33 +12386,114 @@ end;
 
 procedure TwbMainRecord.LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
 var
-  _File         : IwbFile;
-  Files         : array of IwbFile;
-  FilesCount    : Integer;
+  _File          : IwbFile;
+
+  Files          : array of IwbFile;
+  FilesCount     : Integer;
+
+  FullFiles      : array of IwbFile;
+  FullFilesCount : Integer;
+
+  MediumFiles      : array of IwbFile;
+  MediumFilesCount : Integer;
+
+  LightFiles      : array of IwbFile;
+  LightFilesCount : Integer;
+
   SelfIntf      : IwbMainRecord;
 
   procedure ProcessRef(aFormID: TwbFormID);
-  var
-    FileID     : Integer;
-    MainRecord : IwbMainRecord;
   begin
-    if not Assigned(_File) then begin
-      _File := GetFile;
-      FilesCount := _File.MasterCount[True];
-      SetLength(Files, Succ(FilesCount));
-      Files[FilesCount] := _File;
-      SelfIntf := Self as IwbMainRecord;
+    var MainRecord: IwbMainRecord := nil;
+
+    if wbGameMode = gmSF1 then begin
+
+      var lFileID := aFormID.FileID;
+      var lFileIndex: Integer;
+
+      if not lFileID.IsValid or (lFileID.IsFullSlot and (lFileID.FullSlot > lFileID.MaxFullSlot)) then
+        Exit;
+
+      if not Assigned(_File) then begin
+        _File := GetFile;
+        SelfIntf := Self as IwbMainRecord;
+      end;
+
+      if lFileID.IsLightSlot then begin
+
+        if LightFilesCount < 0 then begin
+          LightFilesCount := _File.LightMasterCount[GetMastersUpdated];
+          SetLength(LightFiles, Succ(LightFilesCount));
+          LightFiles[LightFilesCount] := _File;
+        end;
+
+        lFileIndex := lFileID.LightSlot;
+        if lFileIndex > LightFilesCount then
+          lFileIndex := LightFilesCount;
+
+        if not Assigned(LightFiles[lFileIndex]) then
+          LightFiles[lFileIndex] := _File.LightMasters[lFileIndex, GetMastersUpdated];
+
+        aFormID.FileID := LightFiles[lFileIndex].FileFileID[True];
+        MainRecord := LightFiles[lFileIndex].RecordByFormID[aFormID, True, True];
+
+      end else if lFileID.IsMediumSlot then begin
+
+        if MediumFilesCount < 0 then begin
+          MediumFilesCount := _File.MediumMasterCount[GetMastersUpdated];
+          SetLength(MediumFiles, Succ(MediumFilesCount));
+          MediumFiles[MediumFilesCount] := _File;
+        end;
+
+        lFileIndex := lFileID.MediumSlot;
+
+        if lFileIndex > MediumFilesCount then
+          lFileIndex := MediumFilesCount;
+
+        if not Assigned(MediumFiles[lFileIndex]) then
+          MediumFiles[lFileIndex] := _File.MediumMasters[lFileIndex, GetMastersUpdated];
+
+        aFormID.FileID := MediumFiles[lFileIndex].FileFileID[True];
+        MainRecord := MediumFiles[lFileIndex].RecordByFormID[aFormID, True, True];
+
+      end else begin
+        if FullFilesCount < 0 then begin
+          FullFilesCount := _File.FullMasterCount[GetMastersUpdated];
+          SetLength(FullFiles, Succ(FullFilesCount));
+          FullFiles[FullFilesCount] := _File;
+        end;
+
+        lFileIndex := lFileID.FullSlot;
+        if lFileIndex > FullFilesCount then
+          lFileIndex := FullFilesCount;
+
+        if not Assigned(FullFiles[lFileIndex]) then
+          FullFiles[lFileIndex] := _File.FullMasters[lFileIndex, GetMastersUpdated];
+
+        aFormID.FileID := FullFiles[lFileIndex].FileFileID[True];
+        MainRecord := FullFiles[lFileIndex].RecordByFormID[aFormID, True, True];
+
+      end;
+    end else begin
+      if not Assigned(_File) then begin
+        _File := GetFile;
+        FilesCount := _File.MasterCount[GetMastersUpdated];
+        SetLength(Files, Succ(FilesCount));
+        Files[FilesCount] := _File;
+        SelfIntf := Self as IwbMainRecord;
+      end;
+
+      var FileID := aFormID.FileID.FullSlot;
+      if FileID > FilesCount then
+        FileID := FilesCount;
+
+      if not Assigned(Files[FileID]) then
+        Files[FileID] := _File.Masters[FileID, GetMastersUpdated];
+
+      aFormID.FileID := Files[FileID].FileFileID[True];
+      MainRecord := Files[FileID].RecordByFormID[aFormID, True, True];
     end;
 
-    FileID := aFormID.FileID.FullSlot;
-    if FileID > FilesCount then
-      FileID := FilesCount;
-
-    if not Assigned(Files[FileID]) then
-      Files[FileID] := _File.Masters[FileID, True];
-
-    aFormID.FileID := Files[FileID].FileFileID[True];
-    MainRecord := Files[FileID].RecordByFormID[aFormID, True, True];
     if Assigned(MainRecord) then
       MainRecord.AddReferencedBy(SelfIntf)
   end;
@@ -11942,6 +12558,10 @@ begin
       aStream.Read(mrDisplayName[1], SizeOf(Char) * i);
     (**)
   end;
+
+  FullFilesCount := -1;
+  MediumFilesCount := -1;
+  LightFilesCount := -1;
 
   for i := Low(mrReferences) to High(mrReferences) do
     ProcessRef(mrReferences[i]);
@@ -13051,11 +13671,19 @@ begin
   end;
 end;
 
-procedure TwbMainRecord.SetIsESL(aValue: Boolean);
+procedure TwbMainRecord.SetIsMedium(aValue: Boolean);
 begin
-  if aValue <> GetIsESL then begin
+  if aValue <> GetIsMedium then begin
     MakeHeaderWriteable;
-    GetFlagsPtr.SetESL(aValue);
+    GetFlagsPtr.SetMedium(aValue);
+  end;
+end;
+
+procedure TwbMainRecord.SetIsLight(aValue: Boolean);
+begin
+  if aValue <> GetIsLight then begin
+    MakeHeaderWriteable;
+    GetFlagsPtr.SetLight(aValue);
   end;
 end;
 
@@ -13222,14 +13850,14 @@ begin
       Exit;
 
     if (aFormID.ObjectID < $800) and not aFormID.IsHardcoded then begin
-      if _File.MasterCount[True] < 1 then
+      if _File.MasterCount[GetMastersUpdated] < 1 then
         raise Exception.Create('Using FormID [' + aFormID.ToString(True) + '] requires "' + _File.Name + '" to have at least 1 master' );
     end;
 
     FileFormID := _File.LoadOrderFormIDtoFileFormID(aFormID, True);
 
     if GetFormID.ObjectID = FileFormID.ObjectID then
-      if (GetFormID.FileID.FullSlot >= _File.MasterCount[GetMastersUpdated]) and (FileFormID.FileID.FullSlot >= _File.MasterCount[True]) then begin
+      if _File.IsNewRecord(GetFormID, GetMastersUpdated) and _File.IsNewRecord(FileFormID, GetMastersUpdated) then begin
         // we can do this relatively quietly and quickly...
         if Assigned(mrGroup) or (GetChildGroup <> nil)  then
           Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
@@ -13882,10 +14510,6 @@ begin
 end;
 
 procedure TwbMainRecord.YouAreTheMaster(const aOverrides, aReferencedBy: TDynMainRecords; aReferencedByCount: Integer);
-var
-  i: Integer;
-  FileID: Integer;
-  _File: IwbFile;
 begin
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   Assert(not wbBuildingRefsParallel);
@@ -13899,8 +14523,8 @@ begin
 
   mrMaster := nil;
   mrOverrides := Copy(aOverrides, 1, High(Integer));
-  for i := Low(mrOverrides) to High(mrOverrides) do
-    (mrOverrides[i] as IwbMainRecordInternal).SetMaster(Self);
+  for var lOverrideIndex := Low(mrOverrides) to High(mrOverrides) do
+    (mrOverrides[lOverrideIndex] as IwbMainRecordInternal).SetMaster(Self);
   Exclude(mrStates, mrsOverridesSorted);
   mrMasterAndLeafs := nil;
 
@@ -13908,14 +14532,18 @@ begin
   mrReferencedBySize := Length(mrReferencedBy);
   mrReferencedByCount := aReferencedByCount;
 
-  for i := 0 to Pred(mrReferencedByCount) do
-    (mrReferencedBy[i] as IwbMainRecordInternal).SetReferencesInjected(True);
+  for var lReferenceByIndex := 0 to Pred(mrReferencedByCount) do
+    (mrReferencedBy[lReferenceByIndex] as IwbMainRecordInternal).SetReferencesInjected(True);
 
-  FileID := GetFormID.FileID.FullSlot;
-  _File := GetFile;
-  Assert(FileID < _File.MasterCount[GetMastersUpdated]);
+  var lFile := GetFile;
+  if not Assigned(lFile) then
+    Exit;
 
-  (_File.Masters[FileID, GetMastersUpdated] as IwbFileInternal).InjectMainRecord(Self);
+  var lMasterFile := lFile.GetMasterForFileID(GetFormID.FileID, GetMastersUpdated, False);
+  if not Assigned(lMasterFile) then
+    Exit;
+  (lMasterFile as IwbFileInternal).InjectMainRecord(Self);
+
   Include(mrStates, mrsIsInjectedChecked);
   Include(mrStates, mrsIsInjected);
 end;
@@ -15805,7 +16433,7 @@ begin
     if _File.Equals(MainRecord._File) then
       raise Exception.Create('FormID [' + FormID.ToString(True) + '] is already defined in file "' + _File.Name + '"');
 
-    IsInjected := FormID.FileID.FullSlot = _File.MasterCount[True];
+    IsInjected := _File.IsNewRecord(FormID, True);
 
     if MainRecord.Signature <> Signature then
       raise Exception.Create('Existing record ' + MainRecord.Name + ' has different signature');
@@ -16653,11 +17281,11 @@ begin
     if grStruct.grsLabel <> 0 then begin
       var lFormID := TwbFormID.FromCardinal(GetGroupLabel);
 
+      var lFile := GetFile;
 
       if lFormID.ObjectID < $800 then begin
         var lMasterZeroIsGameMaster := False;
         var lAllowHardcodedRangeUse := False;
-        var lFile := GetFile;
         if Assigned(lFile) then begin
           lAllowHardcodedRangeUse := lFile.GetAllowHardcodedRangeUse;
           if lFile.MasterCount[True] > 0 then begin
@@ -16680,7 +17308,11 @@ begin
         end;
       end;
 
-      aMasters[lFormID.FileID.FullSlot] := True;
+      if Assigned(lFile) then begin
+        var lMasterIndex := lFile.GetMasterIndexForFileID(lFormID.FileID, True);
+        if lMasterIndex >= 0 then
+          aMasters[lMasterIndex] := True;
+      end;
     end;
   end;
 end;
@@ -16758,20 +17390,18 @@ begin
 end;
 
 function TwbGroupRecord.GetGroupLabel: Cardinal;
-var
-  _File      : IwbFile;
-  FileFileID : TwbFileID;
-  FormID     : TwbFormID;
 begin
   Result := grStruct.grsLabel;
   if grStruct.grsGroupType in [1, 6..10] then begin
-    _File := GetFile;
-    if Assigned(_File) then begin
-      FileFileID := _File.FileFileID[GetMastersUpdated];
-      FormID := TwbFormID.FromCardinal(Result);
-      if FormID.FileID.FullSlot > FileFileID.FullSlot then begin
-        FormID.FileID := FileFileID;
-        Result := FormID.ToCardinal;
+    var lFile := GetFile;
+    if Assigned(lFile) then begin
+      var lFormID := TwbFormID.FromCardinal(Result);
+      if lFile.IsNewRecord(lFormID, GetMastersUpdated) then begin
+        var lFileFileID := lFile.FileFileID[GetMastersUpdated];
+        if lFormID.FileID <> lFileFileID then begin
+          lFormID.FileID := lFileFileID;
+          Result := lFormID.ToCardinal;
+        end;
       end;
     end;
   end;
@@ -17132,19 +17762,8 @@ begin
 end;
 
 procedure TwbGroupRecord.SetGroupLabel(aLabel: Cardinal);
-var
-  _File       : IwbFile;
-  FileFileID  : TwbFileID;
-  FormID      : TwbFormID;
-  i           : Integer;
-  GroupRecord : IwbGroupRecord;
-
-  SelfPtr     : IwbContainerElementRef;
-  ContainedIn : IwbContainedIn;
-  Element     : IwbElement;
-  Changed     : Boolean;
 begin
-  SelfPtr := Self as IwbContainerElementRef;
+  var SelfPtr := Self as IwbContainerElementRef;
 
   case grStruct.grsGroupType of
     1: ;//Result := Result + ' World Children of ';
@@ -17157,37 +17776,44 @@ begin
     raise Exception.Create('Can not set Label of ' + GetName);
   end;
 
-  _File := GetFile;
-  if Assigned(_File) then begin
-    FileFileID := _File.FileFileID[True];
-    FormID := TwbFormID.FromCardinal(aLabel);
-    if FormID.FileID.FullSlot > FileFileID.FullSlot then begin
-      FormID.FileID := FileFileID;
-      aLabel := FormID.ToCardinal;
+  var lFile := GetFile;
+  if Assigned(lFile) then begin
+    var lFormID := TwbFormID.FromCardinal(aLabel);
+    if lFile.IsNewRecord(lFormID, GetMastersUpdated) then begin
+      var lFileFileID := lFile.FileFileID[GetMastersUpdated];
+      if lFormID.FileID <> lFileFileID then begin
+        lFormID.FileID := lFileFileID;
+        aLabel := lFormID.ToCardinal;
+      end;
     end;
   end;
 
-  Changed := False;
+  var lChanged := False;
   if aLabel <> grStruct.grsLabel then begin
     MakeHeaderWriteable;
     grStruct.grsLabel := aLabel;
     SetMastersUpdated(True);
-    Changed := True;
+    lChanged := True;
   end;
 
-  for i := 0 to Pred(GetElementCount) do begin
+  for var lElementIndex := 0 to Pred(GetElementCount) do begin
 
-    Element := GetElement(i);
+    var lElement := GetElement(lElementIndex);
 
-    if Supports(Element, IwbGroupRecord, GroupRecord) then
-      if GroupRecord.GroupType in [8..10] then begin
-        GroupRecord.GroupLabel := aLabel;
-        Continue;
-      end;
+    if lElement.ElementType = etGroupRecord then begin
+      var lGroupRecord : IwbGroupRecord;
+      if Supports(lElement, IwbGroupRecord, lGroupRecord) then
+        if lGroupRecord.GroupType in [8..10] then begin
+          lGroupRecord.GroupLabel := aLabel;
+          Continue;
+        end;
+    end;
 
-    if Changed then
-      if Supports(Element, IwbContainedIn, ContainedIn) then
-        ContainedIn.ContainerChanged;
+    if lChanged then begin
+      var lContainedIn : IwbContainedIn;
+      if Supports(lElement, IwbContainedIn, lContainedIn) then
+        lContainedIn.ContainerChanged;
+    end;
 
   end;
 end;
@@ -22164,6 +22790,7 @@ begin
   Files := nil;
   FilesMap.Clear;
   _NextFullSlot := 0;
+  _NextMediumSlot := 0;
   _NextLightSlot := 0;
 end;
 
@@ -22190,7 +22817,7 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean;
+function wbMastersForFile(const aFileName: string; aMasters: TStrings; aIsESM, aIsLight, aIsLocalized, aIsOverlay, aIsMedium: PBoolean): Boolean;
 var
   FileName : string;
   i        : Integer;
@@ -22201,10 +22828,12 @@ begin
     aMasters.Clear;
   if Assigned(aIsESM) then
     aIsESM^ := False;
-  if Assigned(aIsESL) then
-    aIsESL^ := False;
+  if Assigned(aIsLight) then
+    aIsLight^ := False;
   if Assigned(aIsOverlay) then
     aIsOverlay^ := False;
+  if Assigned(aIsMedium) then
+    aIsMedium^ := False;
   wbProgressLock;
   try
     FileName := wbExpandFileName(aFileName);
@@ -22220,12 +22849,14 @@ begin
         _File.GetMasters(aMasters);
       if Assigned(aIsESM) then
         aIsESM^ := _File.IsESM;
-      if Assigned(aIsESL) then
-        aIsESL^ := _File.IsESL;
+      if Assigned(aIsLight) then
+        aIsLight^ := _File.IsLight;
       if Assigned(aIsOverlay) then
         aIsOverlay^ := _File.IsOverlay;
       if Assigned(aIsLocalized) then
         aIsLocalized^ := _File.IsLocalized;
+      if Assigned(aIsMedium) then
+        aIsMedium^ := _File.IsMedium;
       Result := True;
     except
       // File neither found nor replaced, ignore if in xDump
@@ -22236,14 +22867,14 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsESL, aIsLocalized, aIsOverlay: PBoolean): Boolean; overload;
+function wbMastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM, aIsLight, aIsLocalized, aIsOverlay, aIsMedium: PBoolean): Boolean; overload;
 var
   sl : TStringList;
 begin
   aMasters := nil;
   sl := TStringList.Create;
   try
-    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsESL, aIsLocalized, aIsOverlay);
+    Result := wbMastersForFile(aFileName, sl, aIsESM, aIsLight, aIsLocalized, aIsOverlay, aIsMedium);
     if Result then
       aMasters := sl.ToStringArray;
   finally
@@ -22251,18 +22882,22 @@ begin
   end;
 end;
 
-function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsESL: Boolean): IwbFile;
+function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile;
 var
   FileName: string;
   i: Integer;
 begin
+  Assert( not (aIsLight and aIsMedium) );
+  Assert( (not aIsLight) or wbIsLightSupported or wbPseudoLight);
+  Assert( (not aIsMedium) or wbIsMediumSupported or wbPseudoMedium);
+
   wbInitRecords;
 
   FileName := wbExpandFileName(aFileName);
   if FilesMap.Find(FileName, i) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsESL);
+    Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsLight, aIsMedium);
     SetLength(Files, Succ(Length(Files)));
     Files[High(Files)] := Result;
     FilesMap.AddObject(FileName, Pointer(Result));
@@ -24185,7 +24820,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
-  flLoadOrderFileID := TwbFileID.Create($FF);
+  flLoadOrderFileID := TwbFileID.CreateFull($FF);
 
   wbBaseOffset := NativeUInt(flView);
 
