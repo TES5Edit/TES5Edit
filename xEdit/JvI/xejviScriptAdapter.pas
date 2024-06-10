@@ -585,6 +585,34 @@ begin
       Value := Element.Assign(Args.Values[1], Element2, Args.Values[3]);
 end;
 
+procedure IwbElement_TemplateAssign(var Value: Variant; Args: TJvInterpreterArgs);
+var
+  Element: IwbElement;
+begin
+  if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
+    var TemplateName := String(Args.Values[1]);
+
+    var TargetIndex := High(Integer);
+
+    var lTemplates := Element.GetAssignTemplates(TargetIndex);
+
+    for var i := Low(lTemplates) to High(lTemplates) do begin
+      var TemplateElement: IwbTemplateElement := lTemplates[i];
+
+      if SameText(TemplateName, TemplateElement.Name) then begin
+        var NewElement: IwbElement := Element.Assign(TargetIndex, TemplateElement, False);
+
+        if Assigned(NewElement) then
+          NewElement.SetToDefaultIfAsCreatedEmpty;
+
+        Value := NewElement;
+
+        Break;
+      end;
+    end;
+  end;
+end;
+
 procedure IwbElement_Equals(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element, Element2: IwbElement;
@@ -2101,6 +2129,7 @@ begin
     AddFunction(cUnit, 'LinksTo', IwbElement_LinksTo, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'Check', IwbElement_Check, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'ElementAssign', IwbElement_Assign, 4, [varEmpty, varEmpty, varEmpty, varBoolean], varEmpty);
+    AddFunction(cUnit, 'TemplateAssign', IwbElement_TemplateAssign, 2, [varEmpty, varString], varEmpty);
     AddFunction(cUnit, 'Equals', IwbElement_Equals, 2, [varEmpty, varEmpty], varEmpty);
     AddFunction(cUnit, 'CanContainFormIDs', IwbElement_CanContainFormIDs, 1, [varEmpty], varEmpty);
     AddFunction(cUnit, 'CanMoveUp', IwbElement_CanMoveUp, 1, [varEmpty], varEmpty);

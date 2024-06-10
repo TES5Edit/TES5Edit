@@ -58,13 +58,13 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'f';
+    Build   : 'g';
     Title   : '';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010506;
-  wbDeveloperMessageVersion : Integer = 04010506;
+  wbWhatsNewVersion : Integer = 04010507;
+  wbDeveloperMessageVersion : Integer = 04010507;
   wbDevCRC32App : Cardinal = $FFFFFFE7;
 
   clOrange       = $004080FF;
@@ -4706,6 +4706,7 @@ var
   wbGetCellDetailsForWorldspaceCallback : function (aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 
 function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
+function wbSparseFlags(aFlags: array of const; aUnknowns: Boolean = False; aSize: Cardinal = 32): TDynStrings;
 function wbGetFormID(const aElement: IwbElement): TwbFormID;
 
 function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
@@ -5570,6 +5571,24 @@ begin
     Result := CmpI32(
       MainRecord1._File.LoadOrder,
       MainRecord2._File.LoadOrder);
+end;
+
+function wbSparseFlags(aFlags: array of const; aUnknowns: Boolean = False; aSize: Cardinal = 32): TDynStrings;
+var
+  e: IwbEnumDef;
+  i: integer;
+  s: string;
+begin
+  e := wbEnum([], aFlags);
+  SetLength(Result, aSize);
+  for i := 0 to Pred(aSize) do
+    begin
+      s := e.ToString(i, nil, False);
+      if Pos('<', s) <> 1 then
+        Result[i] := s
+      else if aUnknowns then
+        Result[i] := 'Unknown ' + IntToStr(i);
+    end
 end;
 
 function wbFlagsList(aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;

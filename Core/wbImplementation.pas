@@ -2957,6 +2957,8 @@ begin
         end else
           MasterFiles[i].SortOrder := $100;
 
+      var lRemovedCount := 0;
+
       k := Length(flMasters);
       if j <> k then begin
         SetLength(flMasters, j);
@@ -2978,6 +2980,7 @@ begin
 
         SetModified(True);
         IncGeneration;
+        lRemovedCount := Length(flOldMasters) - MasterFiles.ElementCount;
 
         Assert(Length(flMasters) = MasterFiles.ElementCount, '[TwbFile.CleanMasters] Length(flMasters) <> MasterFiles.ElementCount');
 
@@ -2991,10 +2994,12 @@ begin
           MastersUpdated(Old, New, k, j);
         SortRecords;
       end;
+      flProgress(Format('Removed %d unused masters.', [lRemovedCount]));
     finally
       flOldMasters := nil;
     end;
-  end;
+  end
+  else flProgress('Has no masters.');
 
   UpdateModuleMasters;
 end;
@@ -4832,7 +4837,7 @@ begin
 
     if FileHeader.IsESL then begin
       if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-        raise Exception.Create('ESL flagged files can''te be saved for Starfield.');
+        raise Exception.Create('ESL flagged files can''t be saved for Starfield.');
 
       FileFileID := GetFileFileID(true);
       for i := High(flRecords) downto Low(flRecords) do begin
@@ -4852,7 +4857,7 @@ begin
 
     if FileHeader.IsOverlay then begin
       if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-        raise Exception.Create('Overlay flagged files can''te be saved for Starfield.');
+        raise Exception.Create('Overlay flagged files can''t be saved for Starfield.');
 
       FileFileID := GetFileFileID(true);
       if FileFileID.FullSlot = 0 then
@@ -15981,16 +15986,14 @@ var
       if not (lResult.IsPartialForm or lResult.IsDeleted) then
         Result.Assign(wbAssignThis, aElement, False);
 
-      if (aPrefix <> '') or (aSuffix <> '') or lResult.IsPartialForm then begin
+      if not lResult.IsDeleted and (aSource.EditorID <> '') then begin
         var lEditorID := aSource.EditorID;
         lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
         lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
-        if lEditorID <> lResult.EditorID then begin
-          if wbBeginInternalEdit(True) then try
-            lResult.EditorID := aPrefix + lEditorID + aSuffix;
-          finally
-            wbEndInternalEdit;
-          end;
+        if wbBeginInternalEdit(True) then try
+          lResult.EditorID := aPrefix + lEditorID + aSuffix;
+        finally
+          wbEndInternalEdit;
         end;
       end;
     end;

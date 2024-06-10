@@ -188,6 +188,7 @@ const
   BMMP : TwbSignature = 'BMMP'; { New to Fallout 4 }
   BMOD : TwbSignature = 'BMOD'; { New To Starfield }
   BMPN : TwbSignature = 'BMPN'; { New To Starfield }
+  BMPP : TwbSignature = 'BMPP'; { New To Starfield }
   BMPV : TwbSignature = 'BMPV'; { New To Starfield }
   BNAM : TwbSignature = 'BNAM';
   BNDS : TwbSignature = 'BNDS'; { New to Fallout 4 }
@@ -286,6 +287,7 @@ const
   CS3E : TwbSignature = 'CS3E'; { New To Starfield }
   CS3F : TwbSignature = 'CS3F'; { New To Starfield }
   CS3H : TwbSignature = 'CS3H'; { New To Starfield }
+  CS3K : TwbSignature = 'CS3K'; { New To Starfield }
   CS3S : TwbSignature = 'CS3S'; { New To Starfield }
   CSAD : TwbSignature = 'CSAD';
   CSCR : TwbSignature = 'CSCR';
@@ -399,6 +401,7 @@ const
   ECAT : TwbSignature = 'ECAT'; { New To Fallout 76 }
   ECHD : TwbSignature = 'ECHD'; { New To Fallout 76 }
   ECHE : TwbSignature = 'ECHE'; { New To Fallout 76 }
+  ECHL : TwbSignature = 'ECHL'; { New To Starfield }
   ECHO : TwbSignature = 'ECHO'; { New To Fallout 76 }
   ECIL : TwbSignature = 'ECIL'; { New To Fallout 76 }
   ECOL : TwbSignature = 'ECOL'; { New To Starfield }
@@ -471,6 +474,7 @@ const
   FCPL : TwbSignature = 'FCPL'; { New To Fallout 4 }
   FCTF : TwbSignature = 'FCTF'; { New To Starfield }
   FCTP : TwbSignature = 'FCTP'; { New To Starfield }
+  FDDS : TwbSignature = 'FDDS'; { New To Starfield }
   FDSI : TwbSignature = 'FDSI'; { New To Starfield }
   FDSL : TwbSignature = 'FDSL'; { New To Starfield }
   FEVA : TwbSignature = 'FEVA'; { New To Fallout 76 }
@@ -573,6 +577,7 @@ const
   HULL : TwbSignature = 'HULL'; { New To Starfield }
   HUNG : TwbSignature = 'HUNG';
   I0TX : TwbSignature = 'I0TX';
+  IBIN : TwbSignature = 'IBIN'; { New To Starfield }
   IBSD : TwbSignature = 'IBSD'; { New To Fallout 76 }
   ICO2 : TwbSignature = 'ICO2';
   ICON : TwbSignature = 'ICON';
@@ -670,6 +675,9 @@ const
   LLCT : TwbSignature = 'LLCT'; { New to Skyrim, part of LVLI 'Count' }
   LLKC : TwbSignature = 'LLKC'; { New to Fallout 4 }
   LLLD : TwbSignature = 'LLLD'; { New To Starfield }
+  LLRB : TwbSignature = 'LLRB'; { New To Starfield }
+  LLRV : TwbSignature = 'LLRV'; { New To Starfield }
+  LLSH : TwbSignature = 'LLSH'; { New To Starfield }
   LLVL : TwbSignature = 'LLVL'; { New To Fallout 76 }
   LMSW : TwbSignature = 'LMSW'; { New To Starfield }
   LNA2 : TwbSignature = 'LNA2'; { New To Starfield }
@@ -919,6 +927,7 @@ const
   PAHD : TwbSignature = 'PAHD'; { New To Fallout 76 }
   PAPI : TwbSignature = 'PAPI'; { New To Starfield }
   PAPN : TwbSignature = 'PAPN'; { New To Starfield }
+  PAQO : TwbSignature = 'PAQO'; { New To Starfield }
   PARW : TwbSignature = 'PARW'; { New to Skyrim }
   PASP : TwbSignature = 'PASP'; { New To Starfield }
   PBAR : TwbSignature = 'PBAR'; { New to Skyrim }
@@ -1599,6 +1608,7 @@ const
   XRAD : TwbSignature = 'XRAD';
   XRDO : TwbSignature = 'XRDO'; { New To Fallout 4 }
   XRDS : TwbSignature = 'XRDS';
+  XRFE : TwbSignature = 'XRFE'; { New To Starfield }
   XRFG : TwbSignature = 'XRFG'; { New To Fallout 4 }
   XRGB : TwbSignature = 'XRGB';
   XRGD : TwbSignature = 'XRGD';
