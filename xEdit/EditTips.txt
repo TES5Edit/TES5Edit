@@ -38,7 +38,7 @@ Pressing Alt+F3 brings up Worldspace Browser which allows to overlay different i
 Pressing Ctrl+W when a weather record is selected brings up visual weather editor
 Holding Shift while clicking OK in plugins selection window disables building of references for all plugins, this speeds up loading but several functions won't work properly like changing FormIDs for example. Cleaning plugins will work though
 xEdit has Options window accessible with [Hamburger Menu] -> Options menu, where you can change colors, fonts and other settings
-xEdit stores all of it's settings in Plugins.XXXviewsettings file located in the same folder as plugins.txt, but if you create ini file with the same name as executable in the same folder (FO4Edit.ini for example), xEdit will use it instead
+xEdit stores all of its settings in Plugins.XXXviewsettings file located in the same folder as plugins.txt, but if you create ini file with the same name as executable in the same folder (FO4Edit.ini for example), xEdit will use it instead
 You can reset ALL settings by holding Ctrl + Shift + Alt while starting
 If you don't see xEdit window after launching, hold Shift next time to reset window position
 Italic font in the left pane means that those records or other record(s) deeper in the tree are injected. They have FormID load order index of a master file but don't override any records from it
@@ -48,13 +48,13 @@ xEdit can't load more than 256 modules (games without ESL support) or 253 full m
 You can't reorder plugins in xEdit. Games prior to Skyrim (TES4, FO3, FNV) use plugin files dates for ordering, Skyrim and later games use order defined in the plugins.txt file
 You can't edit the game master file loaded at index 00. Use "Copy as override" right click menu to create a plugin and make your changes there
 "Copy as new" will still add masters to destination plugin if record references anything else from master file(s) or original plugin
-Double clicking on a plugin in the plugins selection window loads only this plugin and it's masters
+Double clicking on a plugin in the plugins selection window loads only this plugin and its masters
 Right click in the plugins selection window to clear selection, invert it or select all
 If you don't see anything when browsing records, you forgot to disable "Hide no conflicts rows" right click menu in the right pane
 "Stick to" right click menu in the right pane allows to focus on specified data node by default when browsing records instead of the top Record Header
 There are left and right arrow buttons in the right upper corner for your browsing history
 "Referenced by" tab shows records that link to the selected one
-[Placed Object] in square brackets in the left pane means that this object is a part of precombined meshes of it's cell
+[Placed Object] in square brackets in the left pane means that this object is a part of precombined meshes of its cell
 All exterior persistent references are located in a single persistent cell of a worldspace, however if you double click on FormID field of a reference in the right pane, the real world grid (X,Y) coordinates are shown at the end of description
 Records override each other using "Rule of one", which means the winning record from the last loaded plugin fully discards all data from the previous ones (except for a few rare occasions)
 Modgroups feature allows to hide conflicts in selected plugins combinations for easier conflicts resolution. Google "reddit tes5dit modgroups" for more information and examples
