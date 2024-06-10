@@ -3028,6 +3028,23 @@ begin
     Result := True;
 end;
 
+procedure wbRemoveLargeReferences(const aElement: IwbElement);
+var
+  MainRecord: IwbMainRecord;
+begin
+ if not wbRemoveOffsetData then
+    Exit;
+
+  if not Supports(aElement, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if wbBeginInternalEdit and (MainRecord._File.LoadOrder = 0) then try
+    MainRecord.RemoveElement('Large References');
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
   Container: IwbContainer;
@@ -3080,6 +3097,7 @@ end;
 
 procedure wbWRLDAfterLoad(const aElement: IwbElement);
 begin
+  wbRemoveLargeReferences(aElement);
   wbRemoveOFST(aElement);
   wbFixWorldOBND(aElement);
 end;
