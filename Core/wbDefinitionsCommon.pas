@@ -862,9 +862,7 @@ begin
                                  wbFormIDCk('Ref', [REFR], False, cpIgnore),
                                  wbInteger('Y', itS16, nil, cpIgnore),
                                  wbInteger('X', itS16, nil, cpIgnore)
-                               ])//.SetSummaryKeyOnValue([0])
-                               //.SetSummaryPrefixSuffixOnValue(0, '', '')
-                               //.SetSummaryDelimiterOnValue('')
+                               ]).SetSummaryKey([0])
                                .IncludeFlag(dfCollapsed)
                                .IncludeFlag(dfFastAssign),
                              -1).IncludeFlag(dfCollapsed)
