@@ -4837,7 +4837,7 @@ begin
 
     if FileHeader.IsESL then begin
       if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-        raise Exception.Create('ESL flagged files can''te be saved for Starfield.');
+        raise Exception.Create('ESL flagged files can''t be saved for Starfield.');
 
       FileFileID := GetFileFileID(true);
       for i := High(flRecords) downto Low(flRecords) do begin
@@ -4857,7 +4857,7 @@ begin
 
     if FileHeader.IsOverlay then begin
       if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-        raise Exception.Create('Overlay flagged files can''te be saved for Starfield.');
+        raise Exception.Create('Overlay flagged files can''t be saved for Starfield.');
 
       FileFileID := GetFileFileID(true);
       if FileFileID.FullSlot = 0 then
