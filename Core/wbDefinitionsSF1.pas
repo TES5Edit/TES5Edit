@@ -18398,7 +18398,11 @@ end;
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
     .IncludeFlag(dfNotAlignable),
-    wbUnused(MHDT, 0, False).IncludeFlag(dfNoCopyAsOverride),
+    wbMaxHeightDataWRLD
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
