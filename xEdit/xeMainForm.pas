@@ -5179,6 +5179,12 @@ begin
         Stream := fcWhatsNew.CreateReadStream;
         try
           reMain.Lines.LoadFromStream(Stream);
+          if wbThemesSupported then begin
+            reMain.SelectAll;
+            reMain.SelAttributes.Color := clWindowText;
+            reMain.SelStart := 0;
+            reMain.SelLength := 0;
+          end;
         finally
           Stream.Free;
         end;

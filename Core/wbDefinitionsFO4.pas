@@ -2589,7 +2589,8 @@ begin
     13: Result := 10;
     14: Result := 11;
     15: Result := 12;
-    17: Result := 13;
+    16: Result := 13;
+    17: Result := 14;
   end;
 end;
 
@@ -6203,13 +6204,14 @@ begin
         {03} wbInteger('Int32', itS32),
         {04} wbFloat('Float'),
         {05} wbInteger('Bool', itU8, wbBoolEnum),
-        {06} wbRecursive('Struct', 3), // Variable. No idea if possible or how to decode, leaving like that for the moment
+        {06} wbNull,
         {07} wbRecursive('Struct', 3),
         {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
         {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
         {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
         {14} wbArray('Array of Float', wbFloat('Element'), -1),
         {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
+        {16} wbStruct('Array of Variable', [wbInteger('Element Count', itU32)]),
         {17} wbArray('Array of Struct', wbRecursive('Struct', 4), -1)
       ])
     ]), -1, cpNormal, False);
@@ -6231,13 +6233,14 @@ begin
        {03} wbInteger('Int32', itS32),
        {04} wbFloat('Float'),
        {05} wbInteger('Bool', itU8, wbBoolEnum),
-       {06} wbScriptPropertyStruct, // Variable. No idea if possible or how to decode, leaving like that for the moment
+       {06} wbNull,
        {07} wbScriptPropertyStruct,
        {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
        {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
        {14} wbArray('Array of Float', wbFloat('Element'), -1),
        {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1),
+       {16} wbStruct('Array of Variable', [wbInteger('Element Count', itU32)]),
        {17} wbArray('Array of Struct', wbScriptPropertyStruct, -1)
       ])
     ])
@@ -8428,7 +8431,7 @@ begin
     wbByteArray('Unused', 1),
     wbInteger('Level Max', itU8),
     wbByteArray('Unused', 1),
-    wbInteger('Addon Index', itS16{, wbOBTEAddonIndexToStr, nil, cpNormal, True, nil, nil, -1}),
+    wbInteger('Parent Combination Index', itS16{, wbOBTEAddonIndexToStr, nil, cpNormal, True, nil, nil, -1}),
     wbInteger('Default', itU8, wbBoolEnum),
     wbArray('Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), -4),
     wbInteger('Min Level For Ranks', itU8),
