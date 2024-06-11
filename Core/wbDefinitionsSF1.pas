@@ -10215,7 +10215,13 @@ end;
     {108}
     ]),
 
-    wbUnused(MHDT, 2504, False).SetDontShow(wbNeverShow),
+    wbStruct(MHDT, 'Max Height Data', [
+      wbFloat('Offset'),
+      wbArray('Rows',
+        wbArray('Columns',
+          wbInteger('Column', itU8),
+        50).IncludeFlag(dfCollapsed),
+      50).IncludeFlag(dfCollapsed)]),
 
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
