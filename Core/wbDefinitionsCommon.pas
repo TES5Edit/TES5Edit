@@ -899,14 +899,24 @@ begin
 
   if wbSimpleRecords then
     wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data')
-  else
-    wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
+  else begin
+    if wbGameMode in [gmSF1] then
+      wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
+      wbFloat('Offset'),
+      wbArray('Rows',
+        wbArray('Columns',
+          wbInteger('Column', itU8),
+        50).IncludeFlag(dfCollapsed),
+      50).IncludeFlag(dfCollapsed)])
+    else
+     wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
       wbFloat('Offset'),
       wbArray('Rows',
         wbArray('Columns',
           wbInteger('Column', itU8),
         32).IncludeFlag(dfCollapsed),
-      32).IncludeFlag(dfCollapsed)]);
+      32).IncludeFlag(dfCollapsed)])
+  end;
 
     if wbSimpleRecords then
       wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
