@@ -184,6 +184,10 @@ var
   wbNVNM: IwbSubRecordDef;
   wbNAVIslandData: IwbStructDef;
   wbXOWN: IwbSubRecordDef;
+  wbLeveledListEntryItem: IwbRecordMemberDef;
+  wbLeveledListEntryNPC: IwbRecordMemberDef;
+  wbLeveledListEntrySpell: IwbRecordMemberDef;
+  wbStaticPart: IwbRecordMemberDef;
 
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
@@ -4092,9 +4096,35 @@ end;
 var
   wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
-procedure DefineTES5a;
+{this is required to prevent XE6 compiler error}
+type
+  TVarRecs = array of TVarRec;
 
+function CombineVarRecs(const a, b : array of const)
+                                   : TVarRecs;
 begin
+  SetLength(Result, Length(a) + Length(b));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+  if Length(b) > 0 then
+    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
+end;
+
+function MakeVarRecs(const a : array of const)
+                             : TVarRecs;
+begin
+  SetLength(Result, Length(a));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+end;
+
+procedure DefineTES5;
+var
+  a, b, c : TVarRecs;
+  s: string;
+  wbMenuButton: IwbRecordMemberDef;
+begin
+  DefineCommon;
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
@@ -5200,10 +5230,7 @@ begin
 //  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
 
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
-end;
 
-procedure DefineTES5b;
-begin
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
@@ -6304,11 +6331,9 @@ begin
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbLString(CNAM, 'Description', 0, cpTranslate)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
-end;
 
-procedure DefineTES5c;
 
-  procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
+  var ReferenceRecord := Procedure(aSignature: TwbSignature; const aName: string)
   begin
     wbRefRecord(aSignature, aName,
       wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -6362,7 +6387,7 @@ procedure DefineTES5c;
     ], True, wbPlacedAddInfo);
   end;
 
-begin
+
 {>>>
   Skrim has its own ref record for every projectile type
   PARW 'Arrow'
@@ -6777,12 +6802,10 @@ begin
       {0x04} 'Allow Dual Wielding'
     ]), cpNormal, False)
   ]);
-end;
 
-procedure DefineTES5d;
 var
   wbFactionRank: IwbRecordMemberDef;
-begin
+
   var wbSubtypeNamesEnum := wbEnum([], [
     Sig2Int('ACAC'), 'ActorCollidewithActor',
     Sig2Int('ACYI'), 'AcceptYield',
@@ -7491,10 +7514,7 @@ begin
     wbEDID,
     wbCNAM
   ]);
-end;
 
-procedure DefineTES5e;
-begin
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
     wbCNAM
@@ -7597,10 +7617,7 @@ begin
     ]), cpNormal, True),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
-end;
 
-procedure DefineTES5f;
-begin
   wbRecord(IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
@@ -8208,10 +8225,6 @@ Can't properly represent that with current record definition methods.
     wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
   ]);
 
-end;
-
-procedure DefineTES5g;
-begin
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbVMAD,
@@ -8636,10 +8649,7 @@ begin
       ]))
     ], cpNormal, True)
   ]).SetSummaryKey([2]);
-end;
 
-procedure DefineTES5h;
-begin
   wbRecord(AVIF, 'Actor Value Information', [
     wbEDID,
     wbFULL,
@@ -8927,37 +8937,6 @@ begin
     wbCNAM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-end;
-
-{this is required to prevent XE6 compiler error}
-type
-  TVarRecs = array of TVarRec;
-
-function CombineVarRecs(const a, b : array of const)
-                                   : TVarRecs;
-begin
-  SetLength(Result, Length(a) + Length(b));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-  if Length(b) > 0 then
-    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
-end;
-
-function MakeVarRecs(const a : array of const)
-                             : TVarRecs;
-begin
-  SetLength(Result, Length(a));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-end;
-
-
-procedure DefineTES5i;
-var
-  a, b, c : TVarRecs;
-  s: string;
-  wbMenuButton: IwbRecordMemberDef;
-begin
   // load map markes list from external file if present
   s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
   if FileExists(s) then try
@@ -9599,10 +9578,7 @@ begin
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
     .SetSummaryKey([7]);
-end;
 
-procedure DefineTES5j;
-begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST], False, cpNormal, True),
@@ -9928,10 +9904,6 @@ begin
       'Family Association'
     ]))
   ]);
-end;
-
-procedure DefineTES5k;
-begin
 
   wbRecord(OTFT, 'Outfit', [
     wbEDID,
@@ -10141,10 +10113,7 @@ begin
     wbCNAM(True),
     wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
   ]);
-end;
 
-procedure DefineTES5l;
-begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -10456,14 +10425,6 @@ begin
     // SSE
     wbFormIDCk(LNAM, 'Lens', [LENS])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
-end;
-
-procedure DefineTES5m;
-var
-  wbLeveledListEntryItem: IwbRecordMemberDef;
-  wbLeveledListEntryNPC: IwbRecordMemberDef;
-  wbLeveledListEntrySpell: IwbRecordMemberDef;
-begin
 
   wbRecord(LSCR, 'Load Screen',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -11124,10 +11085,6 @@ begin
     {0x4000}'Unknown 15',
     {0x8000}'Unknown 16'
   ]);
-end;
-
-procedure DefineTES5n;
-begin
 
   wbUNAMs:= wbRArray('Data Inputs', wbRStruct('Data Input', [
     wbInteger(UNAM, 'Index', itS8),
@@ -12743,10 +12700,6 @@ begin
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
-end;
-
-procedure DefineTES5o;
-begin
 
   wbRecord(TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -13367,13 +13320,9 @@ begin
     ]);
 
   end;
-end;
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
-procedure DefineTES5p;
-var
-  wbStaticPart: IwbRecordMemberDef;
-begin
+
   wbRecord(CLDC, 'CLDC', [
     wbEDID
   ]);
@@ -13408,10 +13357,7 @@ begin
   wbRecord(SCPT, 'SCPT', [
     wbEDID
   ]);
-end;
 
-procedure DefineTES5q;
-begin
    wbAddGroupOrder(GMST);
    wbAddGroupOrder(KYWD);
    wbAddGroupOrder(LCRT);
@@ -13532,11 +13478,8 @@ begin
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
    if IsSSE then wbAddGroupOrder(LENS); {New to SSE}
-end;
 
-procedure DefineTES5;
-begin
-  DefineCommon;
+
   if IsSSE then begin
     wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
     if wbToolMode = tmLODgen then
@@ -13551,24 +13494,6 @@ begin
     gmEnderal: wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
     gmEnderalSE: wbNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
   end;
-
-  DefineTES5a;
-  DefineTES5b;
-  DefineTES5c;
-  DefineTES5d;
-  DefineTES5e;
-  DefineTES5f;
-  DefineTES5g;
-  DefineTES5h;
-  DefineTES5i;
-  DefineTES5j;
-  DefineTES5k;
-  DefineTES5l;
-  DefineTES5m;
-  DefineTES5n;
-  DefineTES5o;
-  DefineTES5p;
-  DefineTES5q;
 
   if IsSSE then begin
     SetLength(wbOfficialDLC, 3);
