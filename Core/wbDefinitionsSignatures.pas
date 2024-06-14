@@ -36,6 +36,7 @@ const
   ACTV : TwbSignature = 'ACTV'; { New To Fallout 4 }
   ACUN : TwbSignature = 'ACUN'; { New To Dawnguard }
   ACUR : TwbSignature = 'ACUR'; { New To Starfield }
+  ACVA : TwbSignature = 'ACVA';
   ADBO : TwbSignature = 'ADBO';
   ADCR : TwbSignature = 'ADCR';
   ADDN : TwbSignature = 'ADDN';
@@ -433,13 +434,18 @@ const
   ECTE : TwbSignature = 'ECTE'; { New To Starfield }
   ECZN : TwbSignature = 'ECZN';
   EDCT : TwbSignature = 'EDCT'; { New To Starfield }
+  EDDX : TwbSignature = 'EDDX';
   EDID : TwbSignature = 'EDID';
   EFID : TwbSignature = 'EFID';
   EFIF : TwbSignature = 'EFIF'; { New To Starfield }
+  EFII : TwbSignature = 'EFII';
   EFIT : TwbSignature = 'EFIT';
+  EFIX : TwbSignature = 'EFIX';
+  EFME : TwbSignature = 'EFME';
   EFSD : TwbSignature = 'EFSD';
   EFSH : TwbSignature = 'EFSH';
   EFSQ : TwbSignature = 'EFSQ'; { New To Starfield }
+  EFXX : TwbSignature = 'EFXX';
   EIES : TwbSignature = 'EIES'; { New To Fallout 76 0.2.626.7 }
   EILV : TwbSignature = 'EILV'; { New To Fallout 76 }
   EITM : TwbSignature = 'EITM';
@@ -943,6 +949,7 @@ const
   NVVX : TwbSignature = 'NVVX';
   O0TX : TwbSignature = 'O0TX';
   OAAT : TwbSignature = 'OAAT';
+  OBME : TwbSignature = 'OBME';
   OBND : TwbSignature = 'OBND';
   OBST : TwbSignature = 'OBST'; { New to Fallout 76 }
   OBSV : TwbSignature = 'OBSV'; { New To Starfield }
@@ -1220,6 +1227,7 @@ const
   RLDM : TwbSignature = 'RLDM'; { New to Fallout 4 }
   RNAM : TwbSignature = 'RNAM';
   RNMV : TwbSignature = 'RNMV'; { New to Skyrim }
+  ROAD : TwbSignature = 'ROAD';
   RPLD : TwbSignature = 'RPLD';
   RPLI : TwbSignature = 'RPLI';
   RPRF : TwbSignature = 'RPRF'; { New To Skyrim }
@@ -1237,6 +1245,7 @@ const
   SAIA : TwbSignature = 'SAIA'; { New To Starfield }
   SAKD : TwbSignature = 'SAKD'; { New To Fallout 4 }
   SAPT : TwbSignature = 'SAPT'; { New To Fallout 4 }
+  SBSP : TwbSignature = 'SBSP';
   SCCM : TwbSignature = 'SCCM'; { New To Fallout 76 }
   SCCO : TwbSignature = 'SCCO'; { New To Fallout 4 }
   SCDA : TwbSignature = 'SCDA';
@@ -1247,6 +1256,7 @@ const
   SCHD : TwbSignature = 'SCHD';
   SCHR : TwbSignature = 'SCHR';
   SCIP : TwbSignature = 'SCIP';
+  SCIT : TwbSignature = 'SCIT';
   SCOL : TwbSignature = 'SCOL'; { Unused in Skyrim, but contained in Skyrim.esm }
   SCPI : TwbSignature = 'SCPI'; { New To Starfield }
   SCPP : TwbSignature = 'SCPP'; { New To Starfield }
@@ -1271,6 +1281,7 @@ const
   SFTR : TwbSignature = 'SFTR'; { New To Starfield }
   SGEN : TwbSignature = 'SGEN'; { New To Starfield }
   SGNM : TwbSignature = 'SGNM'; { New to Fallout 4 }
+  SGST : TwbSignature = 'SGST';
   SHOU : TwbSignature = 'SHOU';
   SHRT : TwbSignature = 'SHRT'; { New to Skyrim }
   SHWB : TwbSignature = 'SHWB'; { New To Starfield }
@@ -1606,6 +1617,7 @@ const
   XHLP : TwbSignature = 'XHLP';
   XHLT : TwbSignature = 'XHLT'; { New To Fallout 4 }
   XHOR : TwbSignature = 'XHOR'; { New To Skyrim. EXTRA_HORSE. 4 bytes }
+  XHRS : TwbSignature = 'XHRS';
   XHTW : TwbSignature = 'XHTW'; { New To Skyrim }
   XIBS : TwbSignature = 'XIBS';
   XILL : TwbSignature = 'XILL'; { New To Skyrim }
@@ -1651,6 +1663,7 @@ const
   XOCP : TwbSignature = 'XOCP';
   XORD : TwbSignature = 'XORD';
   XOWN : TwbSignature = 'XOWN';
+  XPCI : TwbSignature = 'XPCI';
   XPCK : TwbSignature = 'XPCK'; { New To Fallout 76 }
   XPCS : TwbSignature = 'XPCS'; { New To Starfield }
   XPDD : TwbSignature = 'XPDD'; { New To Fallout 4 }
