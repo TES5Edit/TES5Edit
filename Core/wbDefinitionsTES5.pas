@@ -9553,12 +9553,6 @@ Can't properly represent that with current record definition methods.
       ]))
   ]);
 
-  wbRecord(WOOP, 'Word of Power', [
-    wbEDID,
-    wbFULL,
-    wbLString(TNAM, 'Translation', 0, cpTranslate, True)
-  ]);
-
   wbRecord(SHOU, 'Shout',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000080}  7, 'Treat spells as powers'
@@ -12956,143 +12950,6 @@ Can't properly represent that with current record definition methods.
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
-    wbRecord(WTHR, 'Weather', [
-    wbEDID,
-    wbString(_30_0TX, 'Cloud Texture Layer #0'),
-    wbString(_31_0TX, 'Cloud Texture Layer #1'),
-    wbString(_32_0TX, 'Cloud Texture Layer #2'),
-    wbString(_33_0TX, 'Cloud Texture Layer #3'),
-    wbString(_34_0TX, 'Cloud Texture Layer #4'),
-    wbString(_35_0TX, 'Cloud Texture Layer #5'),
-    wbString(_36_0TX, 'Cloud Texture Layer #6'),
-    wbString(_37_0TX, 'Cloud Texture Layer #7'),
-    wbString(_38_0TX, 'Cloud Texture Layer #8'),
-    wbString(_39_0TX, 'Cloud Texture Layer #9'),
-    wbString(_3A_0TX, 'Cloud Texture Layer #10'),
-    wbString(_3B_0TX, 'Cloud Texture Layer #11'),
-    wbString(_3C_0TX, 'Cloud Texture Layer #12'),
-    wbString(_3D_0TX, 'Cloud Texture Layer #13'),
-    wbString(_3E_0TX, 'Cloud Texture Layer #14'),
-    wbString(_3F_0TX, 'Cloud Texture Layer #15'),
-    wbString(_40_0TX, 'Cloud Texture Layer #16'),
-    wbString(A0TX, 'Cloud Texture Layer #17'),
-    wbString(B0TX, 'Cloud Texture Layer #18'),
-    wbString(C0TX, 'Cloud Texture Layer #19'),
-    wbString(D0TX, 'Cloud Texture Layer #20'),
-    wbString(E0TX, 'Cloud Texture Layer #21'),
-    wbString(F0TX, 'Cloud Texture Layer #22'),
-    wbString(G0TX, 'Cloud Texture Layer #23'),
-    wbString(H0TX, 'Cloud Texture Layer #24'),
-    wbString(I0TX, 'Cloud Texture Layer #25'),
-    wbString(J0TX, 'Cloud Texture Layer #26'),
-    wbString(K0TX, 'Cloud Texture Layer #27'),
-    wbString(L0TX, 'Cloud Texture Layer #28'),
-    wbByteArray(DNAM, 'Unused', 0, cpIgnore),
-    wbByteArray(CNAM, 'Unused', 0, cpIgnore),
-    wbByteArray(ANAM, 'Unused', 0, cpIgnore),
-    wbByteArray(BNAM, 'Unused', 0, cpIgnore),
-    wbUnknown(LNAM),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
-    wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
-    ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise'),
-      wbFloat('Day'),
-      wbFloat('Sunset'),
-      wbFloat('Night')
-    ])).IncludeFlag(dfNotAlignable),
-    {>>> not as an array since last entries are omitted in skyrim.esm <<<}
-    wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherColors('Sky-Upper'),
-      wbWeatherColors('Fog Near'),
-      wbWeatherColors('Unknown'),
-      wbWeatherColors('Ambient'),
-      wbWeatherColors('Sunlight'),
-      wbWeatherColors('Sun'),
-      wbWeatherColors('Stars'),
-      wbWeatherColors('Sky-Lower'),
-      wbWeatherColors('Horizon'),
-      wbWeatherColors('Effect Lighting'),
-      wbWeatherColors('Cloud LOD Diffuse'),
-      wbWeatherColors('Cloud LOD Ambient'),
-      wbWeatherColors('Fog Far'),
-      wbWeatherColors('Sky Statics'),
-      wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glare'),
-      wbWeatherColors('Moon Glare')
-    ], cpNormal, True, nil, 13),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Power'),
-      wbFloat('Day - Max'),
-      wbFloat('Night - Max')
-    ], cpNormal, True),
-    wbStruct(DATA, 'Data', [
-      wbInteger('Wind Speed', itU8), // scaled 0..1
-      wbByteArray('Unknown', 2),
-      wbInteger('Trans Delta', itU8), // scaled 0..0,25
-      wbInteger('Sun Glare', itU8), // scaled 0..1
-      wbInteger('Sun Damage', itU8), // scaled 0..1
-      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
-      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Weather - Pleasant',
-        {0x02} 'Weather - Cloudy',
-        {0x04} 'Weather - Rainy',
-        {0x08} 'Weather - Snow',
-        {0x10} 'Sky Statics - Always Visible',
-        {0x20} 'Sky Statics - Follows Sun Position'
-      ])),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
-      wbInteger('Visual Effect - End', itU8), // scaled 0..1
-      wbInteger('Wind Direction', itU8), // scaled 0..360
-      wbInteger('Wind Direction Range', itU8) // scaled 0..180
-    ], cpNormal, True),
-    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
-    wbWeatherSounds,
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL])
-    ]),
-    // SSE
-    wbStruct(HNAM, 'Volumetric Lighting', [
-      wbFormIDCK('Sunrise', [VOLI, NULL]),
-      wbFormIDCK('Day', [VOLI, NULL]),
-      wbFormIDCK('Sunset', [VOLI, NULL]),
-      wbFormIDCK('Night', [VOLI, NULL])
-    ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night')
-    ], [], cpNormal, True),
-    wbByteArray(NAM2, 'Unused', 0, cpIgnore),
-    wbByteArray(NAM3, 'Unused', 0, cpIgnore),
-    wbRStruct('Aurora', [wbGenericModel], []),
-    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
-  ]);
-
   if IsSSE then begin
     wbRecord(VOLI, 'Volumetric Lighting', [
       wbEDID,
@@ -13173,185 +13030,343 @@ Can't properly represent that with current record definition methods.
     wbEDID
   ]);
 
-//Worldspace Functions
 
-var wbRemoveLargeReferences := procedure(const aElement: IwbElement)
-var
-  MainRecord: IwbMainRecord;
-begin
- if not wbRemoveOffsetData then
-    Exit;
 
-  if not Supports(aElement, IwbMainRecord, MainRecord) then
-    Exit;
 
-  if wbBeginInternalEdit and (MainRecord._File.LoadOrder = 0) then try
-    MainRecord.RemoveElement('Large References');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
 
-var wbRemoveOFST := procedure(const aElement: IwbElement)
-var
-  Container: IwbContainer;
-  rOFST: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
+wbRecord(WTHR, 'Weather', [
+  wbEDID,
+  wbString(_30_0TX, 'Cloud Texture Layer #0'),
+  wbString(_31_0TX, 'Cloud Texture Layer #1'),
+  wbString(_32_0TX, 'Cloud Texture Layer #2'),
+  wbString(_33_0TX, 'Cloud Texture Layer #3'),
+  wbString(_34_0TX, 'Cloud Texture Layer #4'),
+  wbString(_35_0TX, 'Cloud Texture Layer #5'),
+  wbString(_36_0TX, 'Cloud Texture Layer #6'),
+  wbString(_37_0TX, 'Cloud Texture Layer #7'),
+  wbString(_38_0TX, 'Cloud Texture Layer #8'),
+  wbString(_39_0TX, 'Cloud Texture Layer #9'),
+  wbString(_3A_0TX, 'Cloud Texture Layer #10'),
+  wbString(_3B_0TX, 'Cloud Texture Layer #11'),
+  wbString(_3C_0TX, 'Cloud Texture Layer #12'),
+  wbString(_3D_0TX, 'Cloud Texture Layer #13'),
+  wbString(_3E_0TX, 'Cloud Texture Layer #14'),
+  wbString(_3F_0TX, 'Cloud Texture Layer #15'),
+  wbString(_40_0TX, 'Cloud Texture Layer #16'),
+  wbString(A0TX, 'Cloud Texture Layer #17'),
+  wbString(B0TX, 'Cloud Texture Layer #18'),
+  wbString(C0TX, 'Cloud Texture Layer #19'),
+  wbString(D0TX, 'Cloud Texture Layer #20'),
+  wbString(E0TX, 'Cloud Texture Layer #21'),
+  wbString(F0TX, 'Cloud Texture Layer #22'),
+  wbString(G0TX, 'Cloud Texture Layer #23'),
+  wbString(H0TX, 'Cloud Texture Layer #24'),
+  wbString(I0TX, 'Cloud Texture Layer #25'),
+  wbString(J0TX, 'Cloud Texture Layer #26'),
+  wbString(K0TX, 'Cloud Texture Layer #27'),
+  wbString(L0TX, 'Cloud Texture Layer #28'),
+  wbByteArray(DNAM, 'Unused', 0, cpIgnore),
+  wbByteArray(CNAM, 'Unused', 0, cpIgnore),
+  wbByteArray(ANAM, 'Unused', 0, cpIgnore),
+  wbByteArray(BNAM, 'Unused', 0, cpIgnore),
+  wbUnknown(LNAM),
+  wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
+  wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
+  wbByteArray(ONAM, 'Unused', 0, cpIgnore),
+  wbRStruct('Cloud Speed', [
+    wbArray(RNAM, 'Y Speed',
+      wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
+    .IncludeFlag(dfNotAlignable),
+    wbArray(QNAM, 'X Speed',
+      wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt))
+    .IncludeFlag(dfNotAlignable)
+  ], []),
+  wbArray(PNAM, 'Cloud Colors',
+    wbWeatherColors('Layer'))
+  .IncludeFlag(dfNotAlignable),
+  wbArray(JNAM, 'Cloud Alphas',
+    wbStruct('Layer', [
+      wbFloat('Sunrise'),
+      wbFloat('Day'),
+      wbFloat('Sunset'),
+      wbFloat('Night')
+    ]))
+  .IncludeFlag(dfNotAlignable),
+    {>>> not as an array since last entries are omitted in skyrim.esm <<<}
+  wbStruct(NAM0, 'Weather Colors', [
+    wbWeatherColors('Sky-Upper'),
+    wbWeatherColors('Fog Near'),
+    wbWeatherColors('Unknown'),
+    wbWeatherColors('Ambient'),
+    wbWeatherColors('Sunlight'),
+    wbWeatherColors('Sun'),
+    wbWeatherColors('Stars'),
+    wbWeatherColors('Sky-Lower'),
+    wbWeatherColors('Horizon'),
+    wbWeatherColors('Effect Lighting'),
+    wbWeatherColors('Cloud LOD Diffuse'),
+    wbWeatherColors('Cloud LOD Ambient'),
+    wbWeatherColors('Fog Far'),
+    wbWeatherColors('Sky Statics'),
+    wbWeatherColors('Water Multiplier'),
+    wbWeatherColors('Sun Glare'),
+    wbWeatherColors('Moon Glare')
+  ], cpNormal, True, nil, 13),
+  wbStruct(FNAM, 'Fog Distance', [
+    wbFloat('Day - Near'),
+    wbFloat('Day - Far'),
+    wbFloat('Night - Near'),
+    wbFloat('Night - Far'),
+    wbFloat('Day - Power'),
+    wbFloat('Night - Power'),
+    wbFloat('Day - Max'),
+    wbFloat('Night - Max')
+  ], cpNormal, True),
+  wbStruct(DATA, 'Data', [
+    wbInteger('Wind Speed', itU8), // scaled 0..1
+    wbByteArray('Unknown', 2),
+    wbInteger('Trans Delta', itU8), // scaled 0..0,25
+    wbInteger('Sun Glare', itU8), // scaled 0..1
+    wbInteger('Sun Damage', itU8), // scaled 0..1
+    wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
+    wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
+    wbInteger('Thunder/Lightning - Begin Fade In', itU8),
+    wbInteger('Thunder/Lightning - End Fade Out', itU8),
+    wbInteger('Thunder/Lightning - Frequency', itU8),
+    wbInteger('Weather Flags', itU8, wbFlags([
+      {0x01} 'Weather - Pleasant',
+      {0x02} 'Weather - Cloudy',
+      {0x04} 'Weather - Rainy',
+      {0x08} 'Weather - Snow',
+      {0x10} 'Sky Statics - Always Visible',
+      {0x20} 'Sky Statics - Follows Sun Position'
+    ])),
+    wbStruct('Lightning Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8)
+    ]).SetToStr(wbRGBAToStr)
+    .IncludeFlag(dfCollapsed, wbCollapseRGBA),
+    wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
+    wbInteger('Visual Effect - End', itU8), // scaled 0..1
+    wbInteger('Wind Direction', itU8), // scaled 0..360
+    wbInteger('Wind Direction Range', itU8) // scaled 0..180
+    ], cpNormal, True),
+  wbInteger(NAM1, 'Disabled Cloud Layers', itU32,
+    wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
+  wbWeatherSounds,
+  wbRArrayS('Sky Statics',
+    wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+  wbStruct(IMSP, 'Image Spaces', [
+    wbFormIDCK('Sunrise', [IMGS, NULL]),
+    wbFormIDCK('Day', [IMGS, NULL]),
+    wbFormIDCK('Sunset', [IMGS, NULL]),
+    wbFormIDCK('Night', [IMGS, NULL])
+  ]),
+  // SSE
+  wbStruct(HNAM, 'Volumetric Lighting', [
+    wbFormIDCK('Sunrise', [VOLI, NULL]),
+    wbFormIDCK('Day', [VOLI, NULL]),
+    wbFormIDCK('Sunset', [VOLI, NULL]),
+    wbFormIDCK('Night', [VOLI, NULL])
+  ]),
+  wbRStruct('Directional Ambient Lighting Colors', [
+    wbAmbientColors(DALC, 'Sunrise'),
+    wbAmbientColors(DALC, 'Day'),
+    wbAmbientColors(DALC, 'Sunset'),
+    wbAmbientColors(DALC, 'Night')
+  ], [], cpNormal, True),
+  wbByteArray(NAM2, 'Unused', 0, cpIgnore),
+  wbByteArray(NAM3, 'Unused', 0, cpIgnore),
+  wbRStruct('Aurora', [wbGenericModel], []),
+  wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
+]);
 
-  if not Supports(aElement, IwbContainer, Container) then
-    Exit;
+//Word of Power Functions and Definition
 
-  if wbBeginInternalEdit then try
-    Container.RemoveElement(OFST);
-  finally
-    wbEndInternalEdit;
-  end else begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
-  end;
-end;
+wbRecord(WOOP, 'Word of Power', [
+  wbEDID,
+  wbFULL,
+  wbLString(TNAM, 'Translation', 0, cpTranslate, True)
+]);
 
-var wbFixWorldOBND := procedure(const aElement: IwbElement)
-  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
-  begin
-    Result := (aValue < -aRange) or (aValue > aRange);
-  end;
-var
-  MainRecord: IwbMainRecord;
-  Container: IwbContainer;
-begin
-  if wbBeginInternalEdit then try
+//Worldspace Functions and Defintion
 
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
+var wbRemoveRNAM :=
+  procedure(const aElement: IwbElement)
+    var
+      MainRecord: IwbMainRecord;
+    begin
+      if not wbRemoveOffsetData then
+        Exit;
+      if not Supports(aElement, IwbMainRecord, MainRecord) then
+        Exit;
+      if wbBeginInternalEdit and (MainRecord._File.LoadOrder = 0) then try
+        MainRecord.RemoveElement('Large References');
+      finally
+        wbEndInternalEdit;
+      end;
+    end;
 
-    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
-    // CK can occasionally set them wrong, so make a warning
-    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
-      if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
-      then
-        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
+var wbRemoveOFST :=
+  procedure(const aElement: IwbElement)
+    var
+      Container: IwbContainer;
+      rOFST: IwbRecord;
+    begin
+      if not wbRemoveOffsetData then
+        Exit;
+      if not Supports(aElement, IwbContainer, Container) then
+        Exit;
+      if wbBeginInternalEdit then try
+        Container.RemoveElement(OFST);
+      finally
+        wbEndInternalEdit;
+      end else begin
+        rOFST := Container.RecordBySignature[OFST];
+        if Assigned(rOFST) then
+          Container.RemoveElement(rOFST);
+      end;
+    end;
 
-var wbWRLDAfterLoad: TwbAfterLoadCallback := procedure(const aElement: IwbElement)
-begin
-  wbRemoveLargeReferences(aElement);
-  wbRemoveOFST(aElement);
-  wbFixWorldOBND(aElement);
-end;
+var wbFixWorldOBND :=
+  procedure(const aElement: IwbElement)
+    function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
+      begin
+        Result := (aValue < -aRange) or (aValue > aRange);
+      end;
+    var
+      MainRecord: IwbMainRecord;
+      Container: IwbContainer;
+    begin
+      if wbBeginInternalEdit then try
+        if not Supports(aElement, IwbMainRecord, MainRecord) then
+          Exit;
+        // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
+        // CK can occasionally set them wrong, so make a warning
+        if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
+          if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
+             OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
+             OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
+             OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
+          then
+            wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
+      finally
+        wbEndInternalEdit;
+      end;
+    end;
+
+var wbWRLDAfterLoad: TwbAfterLoadCallback :=
+  procedure(const aElement: IwbElement)
+    begin
+      wbRemoveRNAM(aElement);
+      wbRemoveOFST(aElement);
+      wbFixWorldOBND(aElement);
+    end;
 
 wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form',
-      {0x00080000} 19, 'Can''t Wait'
-    ]), [14]), [
-    wbEDID,
-    wbLargeReferences
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbMaxHeightDataWRLD
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
+  wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {0x00004000} 14, 'Partial Form',
+    {0x00080000} 19, 'Can''t Wait'
+  ]), [14]), [
+  wbEDID,
+  wbLargeReferences
+  .IncludeFlag(dfCollapsed)
+  .IncludeFlag(dfFastAssign)
+  .IncludeFlag(dfNoCopyAsOverride)
+  .IncludeFlag(dfNotAlignable),
+  wbMaxHeightDataWRLD
+  .IncludeFlag(dfCollapsed)
+  .IncludeFlag(dfFastAssign)
+  .IncludeFlag(dfNoCopyAsOverride)
+  .IncludeFlag(dfNotAlignable),
+  wbFULL,
+  wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+    wbInteger('X', itS16),
+    wbInteger('Y', itS16)
+  ]),
+  wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+  wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+  wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+  wbRStruct('Parent', [
+    wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+    wbStruct(PNAM, '', [
+      wbInteger('Flags', itU8, wbFlags([
+        {0x0001}'Use Land Data',
+        {0x0002}'Use LOD Data',
+        {0x0004}'Use Map Data',
+        {0x0008}'Use Water Data',
+        {0x0010}'Use Climate Data',
+        {0x0020}'Use Image Space Data (unused)',
+        {0x0040}'Use Sky Cell'
+      ], [5])),
+      wbByteArray('Unknown', 1)
+    ], cpNormal, True)
+  ], []),
+  wbFormIDCk(CNAM, 'Climate', [CLMT]),
+  wbFormIDCk(NAM2, 'Water', [WATR]),
+  wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+  wbFloat(NAM4, 'LOD Water Height'),
+  wbStruct(DNAM, 'Land Data', [
+    wbFloat('Default Land Height'),
+    wbFloat('Default Water Height')
+  ]),
+  wbString(ICON, 'Map Image'),
+  wbRStruct('Cloud Model', [wbGenericModel], []),
+  wbStruct(MNAM, 'Map Data', [
+    wbStruct('Usable Dimensions', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32)
     ]),
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
-          {0x0001}'Use Land Data',
-          {0x0002}'Use LOD Data',
-          {0x0004}'Use Map Data',
-          {0x0008}'Use Water Data',
-          {0x0010}'Use Climate Data',
-          {0x0020}'Use Image Space Data (unused)',
-          {0x0040}'Use Sky Cell'
-        ], [5])),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbGenericModel], []),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
+    wbStruct('Cell Coordinates', [
+      wbStruct('NW Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
       ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ]),
-      wbStruct('Camera Data', [
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Initial Pitch')
+      wbStruct('SE Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
       ])
-    ], cpNormal, False, nil, 2),
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
-    ], cpNormal, True),
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
-    wbWorldspaceOBND,
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-    wbString(XNAM, 'Water Noise Texture'),
-    wbString(TNAM, 'HD LOD Diffuse Texture'),
-    wbString(UNAM, 'HD LOD Normal Texture'),
-    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-    wbOFST
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+    ]),
+    wbStruct('Camera Data', [
+      wbFloat('Min Height'),
+      wbFloat('Max Height'),
+      wbFloat('Initial Pitch')
+    ])
+  ], cpNormal, False, nil, 2),
+  wbStruct(ONAM, 'World Map Offset Data', [
+    wbFloat('World Map Scale'),
+    wbFloat('Cell X Offset'),
+    wbFloat('Cell Y Offset'),
+    wbFloat('Cell Z Offset')
+  ], cpNormal, True),
+  wbFloat(NAMA, 'Distant LOD Multiplier'),
+  wbInteger(DATA, 'Flags', itU8, wbFlags([
+    {0x01} 'Small World',
+    {0x02} 'Can''t Fast Travel',
+    {0x04} 'Unknown 3',
+    {0x08} 'No LOD Water',
+    {0x10} 'No Landscape',
+    {0x20} 'No Sky',
+    {0x40} 'Fixed Dimensions',
+    {0x80} 'No Grass'
+  ]), cpNormal, True),
+  {>>> Worldspace Bounds doesn't show up in CK <<<}
+  wbWorldspaceOBND,
+  wbFormIDCk(ZNAM, 'Music', [MUSC]),
+  wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+  wbString(XNAM, 'Water Noise Texture'),
+  wbString(TNAM, 'HD LOD Diffuse Texture'),
+  wbString(UNAM, 'HD LOD Normal Texture'),
+  wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+  wbOFST
+  .IncludeFlag(dfCollapsed)
+  .IncludeFlag(dfFastAssign)
+  .IncludeFlag(dfNoCopyAsOverride)
+  .IncludeFlag(dfNotAlignable)
+], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
-//End of record definitions
+//End of TES5 Record Definitions
 
    wbAddGroupOrder(GMST);
    wbAddGroupOrder(KYWD);
@@ -13473,7 +13488,6 @@ wbRecord(WRLD, 'Worldspace',
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
    if IsSSE then wbAddGroupOrder(LENS); {New to SSE}
-
 
   if IsSSE then begin
     wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
