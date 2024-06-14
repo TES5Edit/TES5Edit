@@ -17,10 +17,13 @@ uses
 
 var
   wbBipedObjectFlags: IwbFlagsDef;
+  wbCtdaTypeFlags : IwbFlagsDef;
+  wbEmptyBaseFlags: IwbFlagsDef;
   wbEquipType: IwbFlagsDef;
   wbFurnitureEntryTypeFlags: IwbFlagsDef;
   wbPKDTFlags: IwbFlagsDef;
   wbPKDTInterruptFlags: IwbFlagsDef;
+  wbRecordFlagsFlags: IwbFlagsDef;
   wbSMNodeFlags: IwbFlagsDef;
 
   wbCRCValuesEnum: IwbEnumDef;
@@ -188,7 +191,6 @@ var
   wbLeveledListEntryNPC: IwbRecordMemberDef;
   wbLeveledListEntrySpell: IwbRecordMemberDef;
   wbStaticPart: IwbRecordMemberDef;
-
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -1213,10 +1215,6 @@ begin
   else
     Result := '';
 end;
-
-
-var
-  wbCtdaTypeFlags : IwbFlagsDef;
 
 function wbCtdaTypeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -3032,88 +3030,12 @@ begin
     Result := True;
 end;
 
-procedure wbRemoveLargeReferences(const aElement: IwbElement);
-var
-  MainRecord: IwbMainRecord;
-begin
- if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbMainRecord, MainRecord) then
-    Exit;
-
-  if wbBeginInternalEdit and (MainRecord._File.LoadOrder = 0) then try
-    MainRecord.RemoveElement('Large References');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbRemoveOFST(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rOFST: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbContainer, Container) then
-    Exit;
-
-  if wbBeginInternalEdit then try
-    Container.RemoveElement(OFST);
-  finally
-    wbEndInternalEdit;
-  end else begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
-  end;
-end;
-
-procedure wbFixWorldOBND(const aElement: IwbElement);
-  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
-  begin
-    Result := (aValue < -aRange) or (aValue > aRange);
-  end;
-var
-  MainRecord: IwbMainRecord;
-  Container: IwbContainer;
-begin
-  if wbBeginInternalEdit then try
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
-    // CK can occasionally set them wrong, so make a warning
-    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
-      if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
-      then
-        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
-begin
-  wbRemoveLargeReferences(aElement);
-  wbRemoveOFST(aElement);
-  wbFixWorldOBND(aElement);
-end;
-
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
 var
   ObjectsContainer : IwbContainerElementRef;
   i                : Integer;
   ObjectContainer  : IwbContainerElementRef;
 begin
-  wbRemoveOFST(aElement);
-
   if wbBeginInternalEdit then try
 
     if not Supports(aElement, IwbContainerElementRef, ObjectsContainer) then
@@ -4091,10 +4013,6 @@ begin
     end;
   end;
 end;
-
-
-var
-  wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
 
 {this is required to prevent XE6 compiler error}
 type
@@ -12694,7 +12612,7 @@ Can't properly represent that with current record definition methods.
     wbByteArray(SCRN, 'Screenshot'),
     wbUnknown(INTV),
     wbInteger(INCC, 'Interior Cell Count', itU32)
-  ], True, nil, cpNormal, True, wbRemoveOFST);
+  ], True, nil, cpNormal, True);
 
   wbRecord(PLYR, 'Player Reference', [
     wbEDID,
@@ -13038,110 +12956,7 @@ Can't properly represent that with current record definition methods.
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
-  wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form',
-      {0x00080000} 19, 'Can''t Wait'
-    ]), [14]), [
-    wbEDID,
-    wbLargeReferences
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbMaxHeightDataWRLD
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
-    ]),
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
-          {0x0001}'Use Land Data',
-          {0x0002}'Use LOD Data',
-          {0x0004}'Use Map Data',
-          {0x0008}'Use Water Data',
-          {0x0010}'Use Climate Data',
-          {0x0020}'Use Image Space Data (unused)',
-          {0x0040}'Use Sky Cell'
-        ], [5])),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbGenericModel], []),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ]),
-      wbStruct('Camera Data', [
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Initial Pitch')
-      ])
-    ], cpNormal, False, nil, 2),
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
-    ], cpNormal, True),
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
-    wbWorldspaceOBND,
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-    wbString(XNAM, 'Water Noise Texture'),
-    wbString(TNAM, 'HD LOD Diffuse Texture'),
-    wbString(UNAM, 'HD LOD Normal Texture'),
-    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
-    wbOFST
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
-
-
-  wbRecord(WTHR, 'Weather', [
+    wbRecord(WTHR, 'Weather', [
     wbEDID,
     wbString(_30_0TX, 'Cloud Texture Layer #0'),
     wbString(_31_0TX, 'Cloud Texture Layer #1'),
@@ -13357,6 +13172,186 @@ Can't properly represent that with current record definition methods.
   wbRecord(SCPT, 'SCPT', [
     wbEDID
   ]);
+
+//Worldspace Functions
+
+var wbRemoveLargeReferences := procedure(const aElement: IwbElement)
+var
+  MainRecord: IwbMainRecord;
+begin
+ if not wbRemoveOffsetData then
+    Exit;
+
+  if not Supports(aElement, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if wbBeginInternalEdit and (MainRecord._File.LoadOrder = 0) then try
+    MainRecord.RemoveElement('Large References');
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+var wbRemoveOFST := procedure(const aElement: IwbElement)
+var
+  Container: IwbContainer;
+  rOFST: IwbRecord;
+begin
+  if not wbRemoveOffsetData then
+    Exit;
+
+  if not Supports(aElement, IwbContainer, Container) then
+    Exit;
+
+  if wbBeginInternalEdit then try
+    Container.RemoveElement(OFST);
+  finally
+    wbEndInternalEdit;
+  end else begin
+    rOFST := Container.RecordBySignature[OFST];
+    if Assigned(rOFST) then
+      Container.RemoveElement(rOFST);
+  end;
+end;
+
+var wbFixWorldOBND := procedure(const aElement: IwbElement)
+  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
+  begin
+    Result := (aValue < -aRange) or (aValue > aRange);
+  end;
+var
+  MainRecord: IwbMainRecord;
+  Container: IwbContainer;
+begin
+  if wbBeginInternalEdit then try
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
+    // CK can occasionally set them wrong, so make a warning
+    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
+      if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
+         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
+         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
+         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
+      then
+        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
+var wbWRLDAfterLoad: TwbAfterLoadCallback := procedure(const aElement: IwbElement)
+begin
+  wbRemoveLargeReferences(aElement);
+  wbRemoveOFST(aElement);
+  wbFixWorldOBND(aElement);
+end;
+
+wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00004000} 14, 'Partial Form',
+      {0x00080000} 19, 'Can''t Wait'
+    ]), [14]), [
+    wbEDID,
+    wbLargeReferences
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbMaxHeightDataWRLD
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbFULL,
+    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
+    ]),
+    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x0001}'Use Land Data',
+          {0x0002}'Use LOD Data',
+          {0x0004}'Use Map Data',
+          {0x0008}'Use Water Data',
+          {0x0010}'Use Climate Data',
+          {0x0020}'Use Image Space Data (unused)',
+          {0x0040}'Use Sky Cell'
+        ], [5])),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+    wbFloat(NAM4, 'LOD Water Height'),
+    wbStruct(DNAM, 'Land Data', [
+      wbFloat('Default Land Height'),
+      wbFloat('Default Water Height')
+    ]),
+    wbString(ICON, 'Map Image'),
+    wbRStruct('Cloud Model', [wbGenericModel], []),
+    wbStruct(MNAM, 'Map Data', [
+      wbStruct('Usable Dimensions', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
+      ]),
+      wbStruct('Cell Coordinates', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
+        ]),
+        wbStruct('SE Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
+        ])
+      ]),
+      wbStruct('Camera Data', [
+        wbFloat('Min Height'),
+        wbFloat('Max Height'),
+        wbFloat('Initial Pitch')
+      ])
+    ], cpNormal, False, nil, 2),
+    wbStruct(ONAM, 'World Map Offset Data', [
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset'),
+      wbFloat('Cell Z Offset')
+    ], cpNormal, True),
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01} 'Small World',
+      {0x02} 'Can''t Fast Travel',
+      {0x04} 'Unknown 3',
+      {0x08} 'No LOD Water',
+      {0x10} 'No Landscape',
+      {0x20} 'No Sky',
+      {0x40} 'Fixed Dimensions',
+      {0x80} 'No Grass'
+    ]), cpNormal, True),
+    {>>> Object Bounds doesn't show up in CK <<<}
+    wbWorldspaceOBND,
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+    wbString(XNAM, 'Water Noise Texture'),
+    wbString(TNAM, 'HD LOD Diffuse Texture'),
+    wbString(UNAM, 'HD LOD Normal Texture'),
+    wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
+    wbOFST
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+
+//End of record definitions
 
    wbAddGroupOrder(GMST);
    wbAddGroupOrder(KYWD);
