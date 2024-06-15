@@ -20,37 +20,42 @@ type
   TwbVarRecs = TArray<TVarRec>;
 
 var
-  wbActionFlag: IwbSubRecordDef;
-  wbAlternateTexture: IwbValueDef;
   wbAxisEnum: IwbEnumDef;
+  wbQuadrantEnum: IwbEnumDef;
+  wbQuestEventEnum: IwbEnumDef;
+  wbSexEnum: IwbEnumDef;
+
+  wbEmptyBaseFlags: IwbFlagsDef;
+  wbRecordFlagsFlags: IwbFlagsDef;
+
+  wbNextSpeaker: IwbIntegerDef;
+
+  wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
-  wbCinematicIMAD: IwbSubRecordStructDef;
-  wbColorInterpolator: IwbStructDef;
   wbDATAPosRot: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
-  wbHEDR: IwbSubRecordDef;
-  wbMDOB: IwbSubRecordDef;
-  wbNextSpeaker: IwbIntegerDef;
-  wbPosRot: IwbValueDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbSeasons: IwbRecordMemberDef;
-  wbSexEnum: IwbEnumDef;
-  wbActorSounds: IwbRecordMemberDef;
+  wbLargeReferences: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
-  wbQuestEventVarRecs: TwbVarRecs;
-  wbQuestEventEnum: IwbEnumDef;
   wbRegionSounds: IwbRecordMemberDef;
+  wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
-  wbTimeInterpolator: IwbValueDef;
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
+
+  wbColorInterpolator: IwbStructDef;
+
+  wbActionFlag: IwbSubRecordDef;
+  wbHEDR: IwbSubRecordDef;
+  wbMHDTCELL: IwbSubRecordDef;
+  wbMHDTWRLD: IwbSubRecordDef;
+  wbMDOB: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
-  wbLargeReferences: IwbRecordMemberDef;
-  wbMaxHeightDataCELL: IwbSubRecordDef;
-  wbMaxHeightDataWRLD: IwbSubRecordDef;
+
+  wbCinematicIMAD: IwbSubRecordStructDef;
+
   wbOFST: IwbSubRecordDef;
   wbCLSZ: IwbSubRecordDef;
   wbVISI: IwbSubRecordDef;
@@ -62,6 +67,11 @@ var
   wbINOM: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
 
+  wbAlternateTexture: IwbValueDef;
+  wbPosRot: IwbValueDef;
+  wbTimeInterpolator: IwbValueDef;
+
+  wbQuestEventVarRecs: TwbVarRecs;
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
 
@@ -510,6 +520,76 @@ end;
 
 procedure DefineCommon;
 begin
+  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
+    {0x00000001} { 0} 'Unknown 0',
+    {0x00000002} { 1} 'Unknown 1',
+    {0x00000004} { 2} 'Unknown 2',
+    {0x00000008} { 3} 'Unknown 3',
+    {0x00000010} { 4} 'Unknown 4',
+    {0x00000020} { 4} 'Unknown 5',
+    {0x00000040} { 6} 'Unknown 6',
+    {0x00000080} { 7} 'Unknown 7',
+    {0x00000100} { 8} 'Unknown 8',
+    {0x00000200} { 9} 'Unknown 9',
+    {0x00000400} {10} 'Unknown 10',
+    {0x00000800} {11} 'Unknown 11',
+    {0x00001000} {12} 'Unknown 12',
+    {0x00002000} {13} 'Unknown 13',
+    {0x00004000} {14} 'Unknown 14',
+    {0x00008000} {15} 'Unknown 15',
+    {0x00010000} {16} 'Unknown 16',
+    {0x00020000} {17} 'Unknown 17',
+    {0x00040000} {18} 'Unknown 18',
+    {0x00080000} {19} 'Unknown 19',
+    {0x00100000} {20} 'Unknown 20',
+    {0x00200000} {21} 'Unknown 21',
+    {0x00400000} {22} 'Unknown 22',
+    {0x00800000} {23} 'Unknown 23',
+    {0x01000000} {24} 'Unknown 24',
+    {0x02000000} {25} 'Unknown 25',
+    {0x04000000} {26} 'Unknown 26',
+    {0x08000000} {27} 'Unknown 27',
+    {0x10000000} {28} 'Unknown 28',
+    {0x20000000} {29} 'Unknown 29',
+    {0x40000000} {30} 'Unknown 30',
+    {0x80000000} {31} 'Unknown 31'
+  ]);
+
+  wbEmptyBaseFlags := wbFlags(wbEmptyBaseFlags, [
+    {0x00000001} { 0} 'Unknown 0',
+    {0x00000002} { 1} 'Unknown 1',
+    {0x00000004} { 2} 'Unknown 2',
+    {0x00000008} { 3} 'Unknown 3',
+    {0x00000010} { 4} 'Unknown 4',
+    {0x00000020} { 4} 'Unknown 5',
+    {0x00000040} { 6} 'Unknown 6',
+    {0x00000080} { 7} 'Unknown 7',
+    {0x00000100} { 8} 'Unknown 8',
+    {0x00000200} { 9} 'Unknown 9',
+    {0x00000400} {10} 'Unknown 10',
+    {0x00000800} {11} 'Unknown 11',
+    {0x00001000} {12} 'Unknown 12',
+    {0x00002000} {13} 'Unknown 13',
+    {0x00004000} {14} 'Unknown 14',
+    {0x00008000} {15} 'Unknown 15',
+    {0x00010000} {16} 'Unknown 16',
+    {0x00020000} {17} 'Unknown 17',
+    {0x00040000} {18} 'Unknown 18',
+    {0x00080000} {19} 'Unknown 19',
+    {0x00100000} {20} 'Unknown 20',
+    {0x00200000} {21} 'Unknown 21',
+    {0x00400000} {22} 'Unknown 22',
+    {0x00800000} {23} 'Unknown 23',
+    {0x01000000} {24} 'Unknown 24',
+    {0x02000000} {25} 'Unknown 25',
+    {0x04000000} {26} 'Unknown 26',
+    {0x08000000} {27} 'Unknown 27',
+    {0x10000000} {28} 'Unknown 28',
+    {0x20000000} {29} 'Unknown 29',
+    {0x40000000} {30} 'Unknown 30',
+    {0x80000000} {31} 'Unknown 31'
+  ]);
+
   wbBoolEnum := wbEnum(['False', 'True']);
 
   wbHEDR :=
@@ -897,11 +977,11 @@ begin
       cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
-    wbMaxHeightDataCELL :=
+    wbMHDTCELL :=
       wbByteArray(MHDT, 'Max Height Data')
   else begin
     if wbGameMode in [gmSF1] then
-      wbMaxHeightDataCELL :=
+      wbMHDTCELL :=
         wbStruct(MHDT, 'Max Height Data', [
           wbFloat('Offset'),
           wbArray('Max Heights',
@@ -910,7 +990,7 @@ begin
             50).IncludeFlag(dfCollapsed),
           50).IncludeFlag(dfCollapsed)])
     else
-      wbMaxHeightDataCELL :=
+      wbMHDTCELL :=
         wbStruct(MHDT, 'Max Height Data', [
           wbFloat('Offset'),
           wbArray('Max Heights',
@@ -921,10 +1001,10 @@ begin
     end;
 
   if wbSimpleRecords then
-    wbMaxHeightDataWRLD :=
+    wbMHDTWRLD :=
       wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
   else
-    wbMaxHeightDataWRLD :=
+    wbMHDTWRLD :=
       wbStruct(MHDT, 'Max Height Data', [
         wbStruct('Min', [
           wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),

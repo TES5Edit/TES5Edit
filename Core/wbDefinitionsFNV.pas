@@ -18,7 +18,6 @@ uses
 var
   wbAggroRadiusFlags: IwbFlagsDef;
   wbPKDTFlags: IwbFlagsDef;
-  wbRecordFlagsFlags: IwbFlagsDef;
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 

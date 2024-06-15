@@ -6438,9 +6438,6 @@ begin
   end;
 end;
 
-var
-  wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
-
 procedure DefineFO76a;
 begin
   wbNull := wbByteArray('Unused', -255);
@@ -6655,147 +6652,6 @@ begin
       {11} wbEmpty('Unused'), //Alpha Threshold?
       {12} wbEmpty('Unused') //Color
     ], [0, 1, 2, 3, 4, 5, 6, 9, 7, 11, 12, 8, 10])
-  ]);
-
-//  wbRecordFlagsFlags := wbFlags([
-//    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
-//    {0x00000001}'ESM',
-//    {0x00000002}'Unknown 2',
-//    {>>> 0x00000004 ARMO: Not playable <<<}
-//    {0x00000004}'NotPlayable',
-//    {0x00000008}'Unknown 4',
-//    {0x00000010}'Unknown 5',
-//    {0x00000020}'Deleted',
-//    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-//    {>>> 0x00000040 REGN: Border Region <<<}
-//    {>>> 0x00000040 STAT: Has Tree LOD <<<}
-//    {>>> 0x00000040 REFR: Hidden From Local Map <<<}
-//    {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
-//    {>>> 0x00000080 TES4: Localized <<<}
-//    {>>> 0x00000080 PHZD: Turn Off Fire <<<}
-//    {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
-//    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
-//    {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
-//    {>>> 0x00000100 ACTI: Must Update Anims <<<}
-//    {>>> 0x00000100 REFR: Inaccessible <<<}
-//    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
-//    {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
-//    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-//    {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
-//    {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
-//    {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
-//    {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
-//    {0x00000800}'InitiallyDisabled',
-//    {0x00001000}'Ignored',
-//    {0x00002000}'ActorChanged',
-//    {0x00004000}'Unknown 15',
-//    {>>> 0x00008000 STAT: Has Distant LOD <<<}
-//    {0x00008000}'VWD',
-//    {>>> 0x00010000 ACTI: Random Animation Start <<<}
-//    {>>> 0x00010000 REFR light: Never fades <<<}
-//    {0x00010000}'RandomAnimationStart NeverFades',
-//    {>>> 0x00020000 ACTI: Dangerous <<<}
-//    {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
-//    {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
-//    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
-//    {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
-//    {0x00040000}'Compressed',
-//    {>>> 0x00080000 STAT: Has Currents <<<}
-//    {0x00080000}'CantWait HasCurrents',
-//    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
-//    {0x00100000}'IgnoreObjectInteraction',
-//    {0x00200000}'(Used in Memory Changed Form)',
-//    {0x00400000}'Unknown 23',
-//    {>>> 0x00800000 ACTI: Is Marker <<<}
-//    {0x00800000}'IsMarker',
-//    {0x01000000}'Unknown 25',
-//    {>>> 0x02000000 ACTI: Obstacle <<<}
-//    {>>> 0x02000000 REFR: No AI Acquire <<<}
-//    {0x02000000}'Obstacle NoAIAcquire',
-//    {>>> 0x04000000 ACTI: Filter <<<}
-//    {0x04000000}'NavMeshFilter',
-//    {>>> 0x08000000 ACTI: Bounding Box <<<}
-//    {0x08000000}'NavMeshBoundingBox',
-//    {>>> 0x10000000 STAT: Show in World Map <<<}
-//    {0x10000000}'MustExitToTalk ShowInWorldMap',
-//    {>>> 0x20000000 ACTI: Child Can Use <<<}
-//    {>>> 0x20000000 REFR: Don't Havok Settle <<<}
-//    {0x20000000}'ChildCanUse DontHavokSettle',
-//    {>>> 0x40000000 ACTI: GROUND <<<}
-//    {>>> 0x40000000 REFR: NoRespawn <<<}
-//    {0x40000000}'NavMeshGround NoRespawn',
-//    {>>> 0x80000000 REFR: MultiBound <<<}
-//    {0x80000000}'MultiBound'
-//  ], [18]);
-
-  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
-    {0x00000001} { 0} 'Unknown 0',
-    {0x00000002} { 1} 'Unknown 1',
-    {0x00000004} { 2} 'Unknown 2',
-    {0x00000008} { 3} 'Unknown 3',
-    {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 4} 'Unknown 5',
-    {0x00000040} { 6} 'Unknown 6',
-    {0x00000080} { 7} 'Unknown 7',
-    {0x00000100} { 8} 'Unknown 8',
-    {0x00000200} { 9} 'Unknown 9',
-    {0x00000400} {10} 'Unknown 10',
-    {0x00000800} {11} 'Unknown 11',
-    {0x00001000} {12} 'Unknown 12',
-    {0x00002000} {13} 'Unknown 13',
-    {0x00004000} {14} 'Unknown 14',
-    {0x00008000} {15} 'Unknown 15',
-    {0x00010000} {16} 'Unknown 16',
-    {0x00020000} {17} 'Unknown 17',
-    {0x00040000} {18} 'Compressed',
-    {0x00080000} {19} 'Unknown 19',
-    {0x00100000} {20} 'Unknown 20',
-    {0x00200000} {21} 'Unknown 21',
-    {0x00400000} {22} 'Unknown 22',
-    {0x00800000} {23} 'Unknown 23',
-    {0x01000000} {24} 'Unknown 24',
-    {0x02000000} {25} 'Unknown 25',
-    {0x04000000} {26} 'Unknown 26',
-    {0x08000000} {27} 'Unknown 27',
-    {0x10000000} {28} 'Unknown 28',
-    {0x20000000} {29} 'Unknown 29',
-    {0x40000000} {30} 'Unknown 30',
-    {0x80000000} {31} 'Unknown 31'
-  ]);
-
-  wbEmptyBaseFlags := wbFlags(wbEmptyBaseFlags, [
-    {0x00000001} { 0} 'Unknown 0',
-    {0x00000002} { 1} 'Unknown 1',
-    {0x00000004} { 2} 'Unknown 2',
-    {0x00000008} { 3} 'Unknown 3',
-    {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 4} 'Unknown 5',
-    {0x00000040} { 6} 'Unknown 6',
-    {0x00000080} { 7} 'Unknown 7',
-    {0x00000100} { 8} 'Unknown 8',
-    {0x00000200} { 9} 'Unknown 9',
-    {0x00000400} {10} 'Unknown 10',
-    {0x00000800} {11} 'Unknown 11',
-    {0x00001000} {12} 'Unknown 12',
-    {0x00002000} {13} 'Unknown 13',
-    {0x00004000} {14} 'Unknown 14',
-    {0x00008000} {15} 'Unknown 15',
-    {0x00010000} {16} 'Unknown 16',
-    {0x00020000} {17} 'Unknown 17',
-    {0x00040000} {18} 'Unknown 18',
-    {0x00080000} {19} 'Unknown 19',
-    {0x00100000} {20} 'Unknown 20',
-    {0x00200000} {21} 'Unknown 21',
-    {0x00400000} {22} 'Unknown 22',
-    {0x00800000} {23} 'Unknown 23',
-    {0x01000000} {24} 'Unknown 24',
-    {0x02000000} {25} 'Unknown 25',
-    {0x04000000} {26} 'Unknown 26',
-    {0x08000000} {27} 'Unknown 27',
-    {0x10000000} {28} 'Unknown 28',
-    {0x20000000} {29} 'Unknown 29',
-    {0x40000000} {30} 'Unknown 30',
-    {0x80000000} {31} 'Unknown 31'
   ]);
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
@@ -11052,7 +10908,7 @@ begin
     wbInteger(CNAM, 'Precombined Object Level XY', itU8),
     wbInteger(ZNAM, 'Precombined Object Level Z', itU8),
     wbByteArray(TVDT, 'Unknown', 0, cpNormal),
-    wbMaxHeightDataCELL
+    wbMHDTCELL
     .IncludeFlag(dfCollapsed),
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
@@ -18804,7 +18660,7 @@ begin
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
     .IncludeFlag(dfNotAlignable),
-    wbMaxHeightDataWRLD
+    wbMHDTWRLD
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
