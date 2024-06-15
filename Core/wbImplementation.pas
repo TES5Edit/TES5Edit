@@ -10427,6 +10427,9 @@ var
       Exit;
     end;
 
+    if not Assigned(lFile) then
+      lFile := GetFile;
+
     var lMasterIndex := lFile.GetMasterIndexForFileID(aFormID.FileID, False);
     if lMasterIndex >= 0 then
       aMasters[lMasterIndex] := True;
