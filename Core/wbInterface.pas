@@ -921,7 +921,7 @@ type
     procedure SetFileID(const Value: TwbFileID);
 
     function GetObjectID: Cardinal;
-    procedure SetObjectID(const Value: Cardinal);
+    procedure SetObjectID(const Value: Cardinal); overload; inline;
   public
     class function FromCardinal(const aValue: Cardinal): TwbFormID; static; inline;
     class function FromStr(aValue: string): TwbFormID; static;
@@ -953,6 +953,8 @@ type
     function IsNone   : Boolean; inline;
 
     function IsHardcoded: Boolean; inline;
+
+    procedure SetObjectID(const Value: Cardinal; aSilent: Boolean); overload;
 
     property ToCardinal: Cardinal
       read _FormID;
@@ -22503,7 +22505,7 @@ begin
 
     _FormID := Value.BaseFormID;
 
-    ObjectID := lObjectID;
+    SetObjectID(lObjectID, True);
   except
     _FormID := lFormID;
     raise;
@@ -22511,6 +22513,11 @@ begin
 end;
 
 procedure TwbFormID.SetObjectID(const Value: Cardinal);
+begin
+  SetObjectID(Value, False);
+end;
+
+procedure TwbFormID.SetObjectID(const Value: Cardinal; aSilent: Boolean);
 var
   Mask: Cardinal;
 begin
@@ -22523,8 +22530,9 @@ begin
   else
     Mask := $FFFFFF;
 
-  if Value <> (Value and Mask) then
-    raise ERangeError.Create('ObjectID out of bounds');
+  if not aSilent then
+    if Value <> (Value and Mask) then
+      raise ERangeError.Create('ObjectID out of bounds');
 
   _FormID := (_FormID and (not Mask)) or Value;
 end;
