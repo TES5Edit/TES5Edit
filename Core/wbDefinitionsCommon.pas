@@ -870,123 +870,129 @@ begin
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
   if wbSimpleRecords then
-    wbLargeReferences := wbRArray('Large References',
-                           wbByteArray(RNAM, 'Large Reference', 0, cpIgnore),
-                         cpIgnore, False, nil, nil, wbNeverShow)
+    wbLargeReferences :=
+      wbRArray('Large References',
+        wbByteArray(RNAM, 'Large Reference', 0, cpIgnore),
+      cpIgnore, False, nil, nil, wbNeverShow)
   else
-    wbLargeReferences := wbRArray('Large References',
-                           wbStruct(RNAM, 'Grid', [
-                             wbInteger('Y', itS16, nil, cpIgnore),
-                             wbInteger('X', itS16, nil, cpIgnore),
-                             wbArray('References',
-                               wbStruct('Reference', [
-                                 wbFormIDCk('Ref', [REFR], False, cpIgnore),
-                                 wbInteger('Y', itS16, nil, cpIgnore),
-                                 wbInteger('X', itS16, nil, cpIgnore)
-                               ]).SetSummaryKey([0])
-                               .IncludeFlag(dfCollapsed)
-                               .IncludeFlag(dfFastAssign),
-                             -1).IncludeFlag(dfCollapsed)
-                             .IncludeFlag(dfFastAssign)
-                             .IncludeFlag(dfNotAlignable)
-                           ]).SetSummaryKeyOnValue([1,0])
-                           .SetSummaryPrefixSuffixOnValue(1, 'X: ', '')
-                           .SetSummaryPrefixSuffixOnValue(0, 'Y: ', '')
-                           .SetSummaryDelimiterOnValue(' ')
-                           .IncludeFlag(dfCollapsed)
-                           .IncludeFlag(dfFastAssign),
-                         cpIgnore, False, nil, nil, wbNeverShow);
+    wbLargeReferences :=
+      wbRArray('Large References',
+        wbStruct(RNAM, 'Cell Grid', [
+          wbInteger('Y', itS16, nil, cpIgnore),
+          wbInteger('X', itS16, nil, cpIgnore),
+          wbArrayS('References',
+            wbStructSK([0], 'References', [
+              wbFormIDCk('Ref', [REFR], False, cpIgnore),
+              wbInteger('Y', itS16, nil, cpIgnore),
+              wbInteger('X', itS16, nil, cpIgnore)
+            ]).SetSummaryKey([0])
+            .IncludeFlag(dfCollapsed)
+          ).IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfNotAlignable)
+        ]).SetSummaryKeyOnValue([1,0])
+        .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
+        .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
+        .SetSummaryDelimiterOnValue(' ')
+        .IncludeFlag(dfCollapsed),
+      cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
-    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data')
+    wbMaxHeightDataCELL :=
+      wbByteArray(MHDT, 'Max Height Data')
   else begin
     if wbGameMode in [gmSF1] then
-      wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
-      wbFloat('Offset'),
-      wbArray('Rows',
-        wbArray('Columns',
-          wbInteger('Column', itU8),
-        50).IncludeFlag(dfCollapsed),
-      50).IncludeFlag(dfCollapsed)])
+      wbMaxHeightDataCELL :=
+        wbStruct(MHDT, 'Max Height Data', [
+          wbFloat('Offset'),
+          wbArray('Max Heights',
+            wbArray('Row',
+              wbInteger('Column', itU8),
+            50).IncludeFlag(dfCollapsed),
+          50).IncludeFlag(dfCollapsed)])
     else
-     wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
-      wbFloat('Offset'),
-      wbArray('Rows',
-        wbArray('Columns',
-          wbInteger('Column', itU8),
-        32).IncludeFlag(dfCollapsed),
-      32).IncludeFlag(dfCollapsed)])
-  end;
+      wbMaxHeightDataCELL :=
+        wbStruct(MHDT, 'Max Height Data', [
+          wbFloat('Offset'),
+          wbArray('Max Heights',
+            wbArray('Row',
+              wbInteger('Column', itU8),
+            32).IncludeFlag(dfCollapsed),
+          32).IncludeFlag(dfCollapsed)])
+    end;
 
-    if wbSimpleRecords then
-      wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-    else
-      wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
-      wbStruct('Min', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbStruct('Max', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbArray('Cell Data',
-        wbStruct('Quad Height', [
-          wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
-        wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+  if wbSimpleRecords then
+    wbMaxHeightDataWRLD :=
+      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+  else
+    wbMaxHeightDataWRLD :=
+      wbStruct(MHDT, 'Max Height Data', [
+        wbStruct('Min', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbStruct('Max', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbArray('Cell Heights',
+          wbStruct('Quads', [
+            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
+          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+          .IncludeFlag(dfCollapsed))
         .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfFastAssign))
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfFastAssign)
-      .IncludeFlag(dfNotAlignable)
-    ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
+        .IncludeFlag(dfNotAlignable)
+      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
 
   if wbSimpleRecords then
-    wbOFST := wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
+    wbOFST :=
+      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
   else
-    wbOFST := wbArray(OFST, 'Offset Data',
-                wbArray('Row',
-                  wbInteger('Column', itU32, nil, cpIgnore),
-                  wbOffsetDataColsCounter, cpIgnore)
-                .IncludeFlag(dfCollapsed)
-                .IncludeFlag(dfFastAssign)
-                .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore, False, wbNeverShow);
+    wbOFST :=
+      wbArray(OFST, 'Offset Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+          wbOffsetDataColsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow);
 
   if wbSimpleRecords then
-    wbCLSZ := wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
+    wbCLSZ :=
+      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
   else
-    wbCLSZ := wbArray(CLSZ, 'Cell Size Data',
-                wbArray('Row',
-                  wbInteger('Column', itU32, nil, cpIgnore),
-                  wbCellSizeDataColsCounter, cpIgnore)
-                .IncludeFlag(dfCollapsed)
-                .IncludeFlag(dfFastAssign)
-                .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore, False, wbNeverShow);
+    wbCLSZ :=
+      wbArray(CLSZ, 'Cell Size Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+        wbCellSizeDataColsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow);
 
   if wbSimpleRecords then
-    wbVISI := wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
+    wbVISI :=
+      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
   else
-    wbVISI := wbStruct(VISI, 'Visible Cell Index Data', [
-                wbArray('Visible Cell Index',
-                  wbArray('Row',
-                    wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
-                  wbVisibleCellIndexColsCounter, cpIgnore)
-                  .IncludeFlag(dfCollapsed)
-                  .IncludeFlag(dfFastAssign)
-                  .IncludeFlag(dfNotAlignable),
-                nil, cpIgnore)
-                .IncludeFlag(dfCollapsed)
-                .IncludeFlag(dfFastAssign)
-                .IncludeFlag(dfNotAlignable),
-                wbStruct('Dimensions', [
-                  wbInteger('Min Y', itS16, nil, cpIgnore),
-                  wbInteger('Min X', itS16, nil, cpIgnore),
-                  wbInteger('Rows', itU32, nil, cpIgnore)
-                ], cpIgnore)
-              ], cpIgnore, False, wbNeverShow);
+    wbVISI :=
+      wbStruct(VISI, 'Visible Cell Index Data', [
+        wbArray('Visible Cells',
+          wbArray('Row',
+            wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
+          wbVisibleCellIndexColsCounter, cpIgnore)
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfNotAlignable),
+        nil, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+        wbStruct('Dimensions', [
+          wbInteger('Min Y', itS16, nil, cpIgnore),
+          wbInteger('Min X', itS16, nil, cpIgnore),
+          wbInteger('Rows', itU32, nil, cpIgnore)
+        ], cpIgnore)
+      ], cpIgnore, False, wbNeverShow);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);

@@ -3601,23 +3601,6 @@ begin
     Result := True;
 end;
 
-procedure wbRemoveLargeReferences(const aElement: IwbElement);
-var
-  MainRecord: IwbMainRecord;
-begin
- if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbMainRecord, MainRecord) then
-    Exit;
-
-  if wbBeginInternalEdit and (MainRecord._File.LoadOrder = 0) then try
-    MainRecord.RemoveElement('Large References');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
   Container: IwbContainer;
@@ -3662,7 +3645,7 @@ begin
   end;
 end;
 
-procedure wbFixWorldOBND(const aElement: IwbElement);
+procedure wbFixWorldspaceBounds(const aElement: IwbElement);
   function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
   begin
     Result := (aValue < -aRange) or (aValue > aRange);
@@ -3693,10 +3676,9 @@ end;
 
 procedure wbWRLDAfterLoad(const aElement: IwbElement);
 begin
-  wbRemoveLargeReferences(aElement);
   wbRemoveOFST(aElement);
   wbRemoveCLSZ(aElement);
-  wbFixWorldOBND(aElement);
+  wbFixWorldspaceBounds(aElement);
 end;
 
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
@@ -3705,8 +3687,6 @@ var
   i                : Integer;
   ObjectContainer  : IwbContainerElementRef;
 begin
-  wbRemoveOFST(aElement);
-
   if wbBeginInternalEdit then try
 
     if not Supports(aElement, IwbContainerElementRef, ObjectsContainer) then

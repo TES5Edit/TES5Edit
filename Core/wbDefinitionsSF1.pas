@@ -3514,8 +3514,6 @@ var
   i                : Integer;
   ObjectContainer  : IwbContainerElementRef;
 begin
-  wbRemoveOFST(aElement);
-
   if wbBeginInternalEdit then try
 
     if not Supports(aElement, IwbContainerElementRef, ObjectsContainer) then
@@ -10215,7 +10213,8 @@ end;
     {108}
     ]),
 
-    wbMaxHeightDataCELL,
+    wbMaxHeightDataCELL
+    .IncludeFlag(dfCollapsed),
 
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
