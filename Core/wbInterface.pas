@@ -65,7 +65,7 @@ var
 const
   wbWhatsNewVersion : Integer = 04010507;
   wbDeveloperMessageVersion : Integer = 04010507;
-  wbDevCRC32App : Cardinal = $FFFFFFE7;
+  wbDevCRC32App : Cardinal = $FFFFFFE5;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
@@ -85,6 +85,9 @@ const
 
   csDotFos   = '.fos';
   csDotEss   = '.ess';
+
+var
+  wbLightName: string = 'Light';
 
 type
   TwbProgressCallback = procedure(const aStatus: string);
@@ -169,9 +172,12 @@ var
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
-  wbIgnoreESL                        : Boolean    = False;
-  wbPseudoESL                        : Boolean    = False;
-  wbHasAddedESLSupport               : Boolean    = False;
+  wbIgnoreLight                        : Boolean    = False;
+  wbPseudoLight                        : Boolean    = False;
+  wbIgnoreMedium                        : Boolean    = False;
+  wbPseudoMedium                        : Boolean    = False;
+  wbHasAddedLightSupport               : Boolean    = False;
+  wbHasAddedMediumSupport               : Boolean    = False;
   wbIgnoreOverlay                    : Boolean    = False;
   wbPseudoOverlay                    : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
@@ -245,7 +251,7 @@ var
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
-  wbExtendedESL                      : Boolean    = False;
+  wbExtendedLight                      : Boolean    = False;
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
   wbCompareRawData                   : Boolean    = False;
@@ -864,21 +870,39 @@ type
   TwbFileID = record
   private
     _LightSlot : SmallInt;
+    _MediumSlot : SmallInt;
     _FullSlot  : SmallInt;
   public
-    class function Create(aFullSlot: SmallInt; aLightSlot: SmallInt = -1): TwbFileID; inline; static;
+    class function CreateFull(aFullSlot: SmallInt): TwbFileID; inline; static;
+    class function CreateMedium(aMediumSlot: SmallInt): TwbFileID; inline; static;
+    class function CreateLight(aLightSlot: SmallInt): TwbFileID; inline; static;
+
+    class function CreateFromFormID(aFormID: Cardinal): TwbFileID; inline; static;
+
     class function Null: TwbFileID; static; inline;
     class function Invalid: TwbFileID; static; inline;
 
+    class function MaxFullSlot: SmallInt; static;
+    class function MaxMediumSlot: SmallInt; static;
+    class function MaxLightSlot: SmallInt; static;
+
+    class function LightFullSlot: SmallInt; static; inline;
+    class function MediumFullSlot: SmallInt; static; inline;
+
     class operator Equal(const A, B: TwbFileID): Boolean; inline;
+    class operator NotEqual(const A, B: TwbFileID): Boolean; inline;
 
     function ToString: string;
 
     function IsLightSlot: Boolean; inline;
+    function IsMediumSlot: Boolean; inline;
     function IsFullSlot: Boolean; inline;
     function IsValid: Boolean; inline;
 
+    function BaseFormID: Cardinal;
+
     property FullSlot: SmallInt read _FullSlot;
+    property MediumSlot: SmallInt read _MediumSlot;
     property LightSlot: SmallInt read _LightSlot;
   end;
 
@@ -897,7 +921,7 @@ type
     procedure SetFileID(const Value: TwbFileID);
 
     function GetObjectID: Cardinal;
-    procedure SetObjectID(const Value: Cardinal);
+    procedure SetObjectID(const Value: Cardinal); overload; inline;
   public
     class function FromCardinal(const aValue: Cardinal): TwbFormID; static; inline;
     class function FromStr(aValue: string): TwbFormID; static;
@@ -905,6 +929,7 @@ type
     class function FromVar(const aValue: Variant): TwbFormID; static;
 
     class function Null: TwbFormID; static; inline;
+    class function None: TwbFormID; static; inline;
 
     class function Compare(const A, B: TwbFormID): Integer; static; inline;
 
@@ -928,6 +953,8 @@ type
     function IsNone   : Boolean; inline;
 
     function IsHardcoded: Boolean; inline;
+
+    procedure SetObjectID(const Value: Cardinal; aSilent: Boolean); overload;
 
     property ToCardinal: Cardinal
       read _FormID;
@@ -1439,8 +1466,10 @@ type
     fsIsGhost,
     fsMemoryMapped,
     fsScanning,
-    fsPseudoESL,
-    fsESLCompatible,
+    fsPseudoLight,
+    fsLightCompatible,
+    fsPseudoMedium,
+    fsMediumCompatible,
     fsPseudoOverlay,
     fsOverlayCompatible,
     fsIsOfficial,
@@ -1463,9 +1492,23 @@ type
     function GetFileNameOnDisk: string;
     function GetModuleInfo: Pointer;
     function GetUnsavedSince: TDateTime;
+
     function GetMaster(aIndex: Integer; aNew: Boolean): IwbFile;
     function GetMasterCount(aNew: Boolean): Integer;
     function GetAllMasters: TwbFiles;
+
+    function GetFullMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+    function GetFullMasterCount(aNew: Boolean): Integer;
+
+    function GetMediumMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+    function GetMediumMasterCount(aNew: Boolean): Integer;
+
+    function GetLightMaster(aIndex: Integer; aNew: Boolean): IwbFile;
+    function GetLightMasterCount(aNew: Boolean): Integer;
+
+    function GetMasterForFileID(const aFileID: TwbFileID; aNew, aAllowSelf: Boolean): IwbFile;
+    function GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
+
     function GetRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
     function GetRecordByEditorID(const aEditorID: string): IwbMainRecord;
     function GetContainedRecordByLoadOrderFormID(aFormID: TwbFormID; aAllowInjected: Boolean): IwbMainRecord;
@@ -1509,10 +1552,19 @@ type
     function GetIsESM: Boolean;
     procedure SetIsESM(Value: Boolean);
 
-    function GetIsESL: Boolean;
-    procedure SetIsESL(Value: Boolean);
+    function GetIsFull: Boolean;
+    function GetIsFullDirect: Boolean;
+
+    function GetIsLight: Boolean;
+    function GetIsLightDirect: Boolean;
+    procedure SetIsLight(Value: Boolean);
+
+    function GetIsMedium: Boolean;
+    function GetIsMediumDirect: Boolean;
+    procedure SetIsMedium(Value: Boolean);
 
     function GetIsOverlay: Boolean;
+    function GetIsOverlayDirect: Boolean;
     procedure SetIsOverlay(Value: Boolean);
 
     function GetIsLocalized: Boolean;
@@ -1536,6 +1588,9 @@ type
 
     procedure RemoveIdenticalDeltaFast;
 
+    function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
+    function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
+
     property FileName: string
       read GetFileName;
     property FileNameOnDisk: string
@@ -1554,6 +1609,21 @@ type
       read GetMasterCount;
     property AllMasters: TwbFiles
       read GetAllMasters;
+
+    property FullMasters[aIndex: Integer; aNew: Boolean]: IwbFile
+      read GetFullMaster;
+    property FullMasterCount[aNew: Boolean]: Integer
+      read GetFullMasterCount;
+
+    property MediumMasters[aIndex: Integer; aNew: Boolean]: IwbFile
+      read GetMediumMaster;
+    property MediumMasterCount[aNew: Boolean]: Integer
+      read GetMediumMasterCount;
+
+    property LightMasters[aIndex: Integer; aNew: Boolean]: IwbFile
+      read GetLightMaster;
+    property LightMasterCount[aNew: Boolean]: Integer
+      read GetLightMasterCount;
 
     property RecordByFormID[aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean]: IwbMainRecord
       read GetRecordByFormID;
@@ -1599,9 +1669,13 @@ type
       read GetIsESM
       write SetIsESM;
 
-    property IsESL: Boolean
-      read GetIsESL
-      write SetIsESL;
+    property IsLight: Boolean
+      read GetIsLight
+      write SetIsLight;
+
+    property IsMedium: Boolean
+      read GetIsMedium
+      write SetIsMedium;
 
     property IsOverlay: Boolean
       read GetIsOverlay
@@ -1712,7 +1786,8 @@ type
     function IsVisibleWhenDistant: Boolean; inline;
     function IsDangerous: Boolean; inline;
     function IsCompressed: Boolean; inline;
-    function IsESL: Boolean; inline;
+    function IsLight: Boolean; inline;
+    function IsMedium: Boolean; inline;
     function IsOverlay: Boolean; inline;
     function CantWait: Boolean; inline;
     function HasLODtree: Boolean; inline;
@@ -1725,7 +1800,8 @@ type
     procedure SetCompressed(aValue: Boolean);
     procedure SetInitiallyDisabled(aValue: Boolean);
     procedure SetVisibleWhenDistant(aValue: Boolean);
-    procedure SetESL(aValue: Boolean);
+    procedure SetLight(aValue: Boolean);
+    procedure SetMedium(aValue: Boolean);
     procedure SetOverlay(aValue: Boolean);
   end;
 
@@ -1860,8 +1936,10 @@ type
     function GetPrecombinedMesh: string;
     function GetIsInitiallyDisabled: Boolean;
     procedure SetIsInitiallyDisabled(aValue: Boolean);
-    function GetIsESL: Boolean;
-    procedure SetIsESL(aValue: Boolean);
+    function GetIsLight: Boolean;
+    procedure SetIsLight(aValue: Boolean);
+    function GetIsMedium: Boolean;
+    procedure SetIsMedium(aValue: Boolean);
     function GetIsOverlay: Boolean;
     procedure SetIsOverlay(aValue: Boolean);
 
@@ -2017,9 +2095,12 @@ type
     property IsInitiallyDisabled: Boolean
       read GetIsInitiallyDisabled
       write SetIsInitiallyDisabled;
-    property IsESL: Boolean
-      read GetIsESL
-      write SetIsESL;
+    property IsLight: Boolean
+      read GetIsLight
+      write SetIsLight;
+    property IsMedium: Boolean
+      read GetIsMedium
+      write SetIsMedium;
     property IsOverlay: Boolean
       read GetIsOverlay
       write SetIsOverlay;
@@ -4814,7 +4895,8 @@ function wbIsSkyrim: Boolean; inline;
 function wbIsFallout3: Boolean; inline;
 function wbIsFallout4: Boolean; inline;
 function wbIsFallout76: Boolean; inline;
-function wbIsEslSupported: Boolean; inline;
+function wbIsLightSupported: Boolean; inline;
+function wbIsMediumSupported: Boolean; inline;
 function wbIsStarfield: Boolean; inline;
 function wbIsOverlaySupported: Boolean; inline;
 
@@ -4875,6 +4957,7 @@ type
   end;
 
 function wbNormalizeRadians(const aElement: IwbElement; aFloat: Extended): Extended;
+function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
 
 function wbBeginInternalEdit(aForce: Boolean = False): Boolean;
 procedure wbEndInternalEdit;
@@ -5319,6 +5402,19 @@ begin
     Result := 0.0;
 end;
 
+function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
+begin
+  Result := function(const aElement: IwbElement; aFloat: Extended): Extended
+  begin
+    if aFloat < aMin then
+      Result := aMin
+    else if aFloat > aMax then
+      Result := aMax
+    else
+      Result := aFloat;
+  end;
+end;
+
 type
   TwbNullWaitForm = class(TInterfacedObject, IwbWaitForm)
   protected
@@ -5398,9 +5494,14 @@ begin
   Result := wbGameMode in [gmSF1];
 end;
 
-function wbIsEslSupported: Boolean; inline;
+function wbIsLightSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or wbHasAddedESLSupport;
+  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or wbHasAddedLightSupport;
+end;
+
+function wbIsMediumSupported: Boolean; inline;
+begin
+  Result := (wbGameMode in [gmSF1]) or wbHasAddedMediumSupport;
 end;
 
 function wbIsOverlaySupported: Boolean; inline;
@@ -17815,7 +17916,7 @@ begin
 
   if aNewCount > aOldCount then
     if FileID.FullSlot >= aOldCount then begin
-      FileID := TwbFileID.Create(aNewCount, -1);
+      FileID := TwbFileID.CreateFull(aNewCount);
       Result.FileID := FileID;
       Exit;
     end;
@@ -17828,7 +17929,7 @@ begin
 
   if aNewCount < aOldCount then
     if FileID.FullSlot >= aOldCount then begin
-      FileID := TwbFileID.Create(aNewCount, -1);
+      FileID := TwbFileID.CreateFull(aNewCount);
       Result.FileID := FileID;
       Exit;
     end;
@@ -20524,13 +20625,19 @@ begin
   Result := (_Flags and $00000080) <> 0;
 end;
 
-function TwbMainRecordStructFlags.IsESL: Boolean;
+function TwbMainRecordStructFlags.IsMedium: Boolean;
+begin
+  Result := wbIsMediumSupported and
+    ((_Flags and $00000400) <> 0);
+end;
+
+function TwbMainRecordStructFlags.IsLight: Boolean;
 begin
   if wbIsStarfield then
-    Result := wbIsEslSupported and
+    Result := wbIsLightSupported and
       ((_Flags and $00000100) <> 0)
   else
-    Result := wbIsEslSupported and
+    Result := wbIsLightSupported and
       ((_Flags and $00000200) <> 0);
 end;
 
@@ -20586,12 +20693,24 @@ begin
     _Flags := _Flags and not $00000020;
 end;
 
-procedure TwbMainRecordStructFlags.SetESL(aValue: Boolean);
+procedure TwbMainRecordStructFlags.SetMedium(aValue: Boolean);
 begin
-  if wbIsEslSupported then
+  if wbIsMediumSupported then
+    if aValue then begin
+      _Flags := _Flags or $00000400;
+      SetLight(False);
+      SetOverlay(False);
+    end else
+      _Flags := _Flags and not $00000400;
+end;
+
+procedure TwbMainRecordStructFlags.SetLight(aValue: Boolean);
+begin
+  if wbIsLightSupported then
     if wbIsStarfield then begin
       if aValue then begin
         _Flags := _Flags or $00000100;
+        SetMedium(False);
         SetOverlay(False);
       end else
         _Flags := _Flags and not $00000100;
@@ -20607,7 +20726,8 @@ begin
   if wbIsOverlaySupported then
     if aValue then begin
       _Flags := _Flags or $00000200;
-      SetESL(False);
+      SetLight(False);
+      SetMedium(False);
     end else
       _Flags := _Flags and not $00000200;
 end;
@@ -21244,7 +21364,7 @@ begin
           if FileID = $FF then
             FileID := _File.MasterCount[aElement.MastersUpdated]
           else
-            FileID := _File.LoadOrderFileIDtoFileFileID(TwbFileID.Create(FileID), aElement.MastersUpdated).FullSlot;
+            FileID := _File.LoadOrderFileIDtoFileFileID(TwbFileID.CreateFull(FileID), aElement.MastersUpdated).FullSlot;
       end;
     end;
 
@@ -22293,17 +22413,15 @@ end;
 
 function TwbFormID.GetFileID: TwbFileID;
 begin
-  Result._FullSlot := _FormID shr 24;
-  if (Result._FullSlot = $FE) and (wbPseudoESL or wbIsEslSupported) then
-    Result._LightSlot := (_FormID shr 12) and $FFF
-  else
-    Result._LightSlot := -1;
+  Result := TwbFileID.CreateFromFormID(_FormID);
 end;
 
 function TwbFormID.GetObjectID: Cardinal;
 begin
-  if FileID._LightSlot >= 0 then
+  if FileID.IsLightSlot then
     Result := _FormID and $FFF
+  else if FileID.IsMediumSlot then
+    Result := _FormID and $FFFF
   else
     Result := _FormID and $FFFFFF;
 end;
@@ -22322,9 +22440,13 @@ class operator TwbFormID.Inc(const A: TwbFormID): TwbFormID;
 var
   Mask: Cardinal;
 begin
-  if A.FileID.LightSlot >= 0 then begin
+  var lFileID := a.FileID;
+
+  if lFileID.IsLightSlot then
     Mask := $FFF
-  end else
+  else if lFileID.IsMediumSlot then
+    Mask := $FFFF
+  else
     Mask := $FFFFFF;
 
   Result._FormID := (A._FormID and (not Mask)) or Max(Succ(A._FormID and Mask) and Mask, 2048);
@@ -22360,6 +22482,11 @@ begin
   Result := A._FormID <= B._FormID;
 end;
 
+class function TwbFormID.None: TwbFormID;
+begin
+  Result := TwbFormID.FromCardinal($FFFFFFFF);
+end;
+
 class operator TwbFormID.NotEqual(const A, B: TwbFormID): Boolean;
 begin
   Result := A._FormID <> B._FormID;
@@ -22372,28 +22499,40 @@ end;
 
 procedure TwbFormID.SetFileID(const Value: TwbFileID);
 begin
-  if Value.LightSlot >= 0 then
-    _FormID := (_FormID and $FFF) or (Cardinal(Value.LightSlot) shl 12) or $FE000000
-  else begin
-    if FileID.LightSlot >= 0 then
-      _FormID := _FormID and $FFF
-    else
-      _FormID := _FormID and $FFFFFF;
-    _FormID := _FormID or (Cardinal(Value.FullSlot) shl 24);
+  var lFormID := _FormID;
+  try
+    var lObjectID := ObjectID;
+
+    _FormID := Value.BaseFormID;
+
+    SetObjectID(lObjectID, True);
+  except
+    _FormID := lFormID;
+    raise;
   end;
 end;
 
 procedure TwbFormID.SetObjectID(const Value: Cardinal);
+begin
+  SetObjectID(Value, False);
+end;
+
+procedure TwbFormID.SetObjectID(const Value: Cardinal; aSilent: Boolean);
 var
   Mask: Cardinal;
 begin
-  if FileID.LightSlot >= 0 then begin
+  var lFileID := FileID;
+
+  if lFileID.IsLightSlot then
     Mask := $FFF
-  end else
+  else if lFileID.IsMediumSlot then
+    Mask := $FFFF
+  else
     Mask := $FFFFFF;
 
-  if Value <> (Value and Mask) then
-    raise ERangeError.Create('ObjectID out of bounds');
+  if not aSilent then
+    if Value <> (Value and Mask) then
+      raise ERangeError.Create('ObjectID out of bounds');
 
   _FormID := (_FormID and (not Mask)) or Value;
 end;
@@ -22412,29 +22551,98 @@ end;
 function TwbFormID.ToString(aForDisplay: Boolean): string;
 begin
   Result := IntToHex64(_FormID, 8);
+
   if wbPrettyFormID and aForDisplay then begin
     Insert(' ', Result, 3);
-    if FileID.LightSlot >= 0 then
+
+    var lFileID := FileID;
+    if lFileID.IsLightSlot then
       Insert(' ', Result, 7)
+    else if lFileID.IsMediumSlot then
+      Insert(' ', Result, 6);
   end;
 end;
 
 { TwbFileID }
 
-class function TwbFileID.Create(aFullSlot, aLightSlot: SmallInt): TwbFileID;
+function TwbFileID.BaseFormID: Cardinal;
+begin
+  if IsLightSlot then
+    Result := (Cardinal(LightFullSlot) shl 24) or (Cardinal(_LightSlot) shl 12)
+  else if IsMediumSlot then
+    Result := (Cardinal(MediumFullSlot) shl 24) or (Cardinal(_MediumSlot) shl 16)
+  else if IsFullSlot then
+    Result := Cardinal(_FullSlot) shl 24
+  else
+    Result := $FFFFFFFF;
+end;
+
+class function TwbFileID.CreateFromFormID(aFormID: Cardinal): TwbFileID;
+begin
+  Result._FullSlot := aFormID shr 24;
+
+  if (Result._FullSlot = LightFullSlot) and (wbPseudoLight or wbIsLightSupported) then
+    Result._LightSlot := (aFormID shr 12) and $FFF
+  else
+    Result._LightSlot := -1;
+
+  if (Result._FullSlot = MediumFullSlot) and (wbPseudoMedium or wbIsMediumSupported) then
+    Result._MediumSlot := (aFormID shr 16) and $FF
+  else
+    Result._MediumSlot := -1;
+end;
+
+class function TwbFileID.CreateFull(aFullSlot: SmallInt): TwbFileID;
 begin
   with Result do begin
     _FullSlot := aFullSlot;
+    _MediumSlot := -1;
+    _LightSlot := -1;
+  end;
+end;
+
+class function TwbFileID.CreateMedium(aMediumSlot: SmallInt): TwbFileID;
+begin
+  Assert(wbIsMediumSupported or wbPseudoMedium);
+  with Result do begin
+    _FullSlot := MediumFullSlot;
+    _MediumSlot := aMediumSlot;
+    _LightSlot := -1;
+  end;
+end;
+
+class function TwbFileID.CreateLight(aLightSlot: SmallInt): TwbFileID;
+begin
+  Assert(wbIsLightSupported or wbPseudoLight);
+  with Result do begin
+    _FullSlot := LightFullSlot;
+    _MediumSlot := -1;
     _LightSlot := aLightSlot;
   end;
 end;
 
 class operator TwbFileID.Equal(const A, B: TwbFileID): Boolean;
 begin
+  Result := (A._FullSlot = B._FullSlot)
+        and (A._MediumSlot = B._MediumSlot)
+        and (A._LightSlot = B._LightSlot);
+  {
   if (A._LightSlot < 0) or (B._LightSlot < 0) then
-    Result := A._FullSlot = B._FullSlot
+    if (A._MediumSlot < 0) or (B._MediumSlot < 0) then
+      Result := A._FullSlot = B._FullSlot
+    else
+      Result := A._MediumSlot = B._MediumSlot
   else
     Result := A._LightSlot = B._LightSlot;
+    }
+end;
+
+class function TwbFileID.MediumFullSlot: SmallInt;
+begin
+  if wbPseudoMedium or wbIsMediumSupported then
+    Result := $FD
+  else
+    Result := -1;
 end;
 
 function TwbFileID.IsLightSlot: Boolean;
@@ -22444,23 +22652,71 @@ end;
 
 function TwbFileID.IsValid: Boolean;
 begin
-  Result := (_LightSlot >= 0) or (_FullSlot >= 0);
+  Result := (_LightSlot >= 0) or (_MediumSlot >= 0) or (_FullSlot >= 0);
+end;
+
+class function TwbFileID.LightFullSlot: SmallInt;
+begin
+  if wbPseudoLight or wbIsLightSupported then
+    Result := $FE
+  else
+    Result := -1;
+end;
+
+class function TwbFileID.MaxFullSlot: SmallInt;
+begin
+  Result := $FE;
+  if wbPseudoLight or wbIsLightSupported then begin
+    Dec(Result); //$FD
+    if wbPseudoMedium or wbIsMediumSupported then
+      Dec(Result); //$FC
+  end;
+end;
+
+class function TwbFileID.MaxMediumSlot: SmallInt;
+begin
+ if wbPseudoMedium or wbIsMediumSupported then
+   Result := $FF
+ else
+   Result := -1;
+end;
+
+class function TwbFileID.MaxLightSlot: SmallInt;
+begin
+ if wbPseudoLight or wbIsLightSupported then
+   Result := $FFF
+ else
+   Result := -1;
 end;
 
 class function TwbFileID.Invalid: TwbFileID;
 begin
   Result._LightSlot := -1;
+  Result._MediumSlot := -1;
   Result._FullSlot := -1;
 end;
 
 function TwbFileID.IsFullSlot: Boolean;
 begin
-  Result := (not IsLightSlot) and (_FullSlot >= 0);
+  Result := (not IsLightSlot) and (not IsMediumSlot) and (_FullSlot >= 0);
+end;
+
+function TwbFileID.IsMediumSlot: Boolean;
+begin
+  Result := _MediumSlot >= 0;
+end;
+
+class operator TwbFileID.NotEqual(const A, B: TwbFileID): Boolean;
+begin
+  Result := (A._FullSlot <> B._FullSlot)
+         or (A._MediumSlot <> B._MediumSlot)
+         or (A._LightSlot <> B._LightSlot);
 end;
 
 class function TwbFileID.Null: TwbFileID;
 begin
   Result._LightSlot := -1;
+  Result._MediumSlot := -1;
   Result._FullSlot := 0;
 end;
 
@@ -22469,10 +22725,13 @@ begin
   if _LightSlot >= 0 then
     Result := 'FE ' + IntToHex(_LightSlot, 3)
   else
-    if _FullSlot >= 0 then
-      Result := IntToHex(_FullSlot, 2)
+    if _MediumSlot >= 0 then
+      Result := 'FD ' + IntToHex(_MediumSlot, 2)
     else
-      Result := 'XX';
+      if _FullSlot >= 0 then
+        Result := IntToHex(_FullSlot, 2)
+      else
+        Result := 'XX';
 end;
 
 { TwbCRC32Helper }

@@ -37,7 +37,8 @@ type
     mfGhost,
     mfMastersMissing,
     mfHasESMFlag,
-    mfHasESLFlag,
+    mfHasLightFlag,
+    mfHasMediumFlag,
     mfHasOverlayFlag,
     mfHasLocalizedFlag,
     mfHasESMExtension,
@@ -254,7 +255,8 @@ var
   i, j, k    : Integer;
   s          : string;
   IsESM      ,
-  IsESL      ,
+  IsLight      ,
+  IsMedium      ,
   IsOverlay  ,
   IsLocalized: Boolean;
   lIsActive  : Boolean;
@@ -305,7 +307,7 @@ begin
           miExtension := meESP
         else if miName.EndsWith(csDotEsu, True) then
           miExtension := meESU
-        else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
+        else if miName.EndsWith(csDotEsl, True) and wbIsLightSupported then
           miExtension := meESL;
         if miExtension = meUnknown then
           Continue;
@@ -318,7 +320,7 @@ begin
 
         miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
 
-        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsESL, @IsLocalized, @IsOverlay) then
+        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsLight, @IsLocalized, @IsOverlay, @IsMedium) then
           Continue;
 
         if IsESM then begin
@@ -338,17 +340,20 @@ begin
             force 0x100 flag
         }
         if IsOverlay then begin
-          if {(Length(miMasterNames) < 1) or} IsESL then
+          if {(Length(miMasterNames) < 1) or} IsLight then
             IsOverlay := False;
         end else
           if miExtension in [meESL] then
-            Include(miFlags, mfHasESLFlag);
+            Include(miFlags, mfHasLightFlag);
 
         if IsOverlay then
           Include(miFlags, mfHasOverlayFlag);
 
-        if IsESL then
-          Include(miFlags, mfHasESLFlag);
+        if IsLight then
+          Include(miFlags, mfHasLightFlag);
+
+        if IsMedium then
+          Include(miFlags, mfHasMediumFlag);
 
         if IsLocalized then
           Include(miFlags, mfHasLocalizedFlag);
@@ -540,12 +545,12 @@ begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfIsESM);
     end;
-    if wbIsEslSupported then begin
+    if wbIsLightSupported then begin
       with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
-        Include(miFlags, mfHasESLFlag);
+        Include(miFlags, mfHasLightFlag);
       with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
         Include(miFlags, mfHasESMFlag);
-        Include(miFlags, mfHasESLFlag);
+        Include(miFlags, mfHasLightFlag);
         Include(miFlags, mfIsESM);
       end;
     end;
@@ -564,9 +569,9 @@ begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
     if not (wbStarfieldIsABugInfestedHellhole and wbIsStarfield) then begin
-      if wbIsEslSupported then begin
+      if wbIsLightSupported then begin
         with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
-          Include(miFlags, mfHasESLFlag);
+          Include(miFlags, mfHasLightFlag);
           Include(miFlags, mfHasESMFlag);
           Include(miFlags, mfIsESM);
         end;
@@ -582,10 +587,10 @@ begin
   end;
 
   if wbGameMode <> gmSF1 then begin
-    if wbIsEslSupported then begin
+    if wbIsLightSupported then begin
       with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
         Include(miFlags, mfHasESMFlag);
-        Include(miFlags, mfHasESLFlag);
+        Include(miFlags, mfHasLightFlag);
         Include(miFlags, mfIsESM);
       end;
       if wbIsOverlaySupported then begin
@@ -657,7 +662,7 @@ begin
       miExtension := meESP
     else if miName.EndsWith(csDotEsu, True) then
       miExtension := meESU
-    else if miName.EndsWith(csDotEsl, True) and wbIsEslSupported then
+    else if miName.EndsWith(csDotEsl, True) and wbIsLightSupported then
       miExtension := meESL;
 
     if miExtension in [meESM, meESL] then
@@ -676,7 +681,7 @@ begin
     miLoadOrderTxtIndex := High(Integer);
     miCombinedIndex := High(Integer);
 
-    miFileID := TwbFileID.Create(-1);
+    miFileID := TwbFileID.Invalid;
     miLoadOrder := High(Integer);
   end;
   if aTemplate then begin
@@ -702,8 +707,8 @@ begin
     Result := Result + '<Ghost>';
   if mfHasESMFlag in miFlags then
     Result := Result + '<ESM>';
-  if mfHasESLFlag in miFlags then
-    Result := Result + '<ESL>';
+  if mfHasLightFlag in miFlags then
+    Result := Result + '<Light>';
   if mfHasOverlayFlag in miFlags then
     Result := Result + '<Overlay>';
   if mfHasLocalizedFlag in miFlags then
@@ -816,6 +821,7 @@ end;
 
 var
   _NextFullSlot: Integer;
+  _NextMediumSlot: Integer;
   _NextLightSlot: Integer;
   _SimulatedLoadDisabled: Boolean;
 
@@ -830,11 +836,12 @@ begin
     with _Modules[i] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
-      miFileID := TwbFileID.Create(-1);
+      miFileID := TwbFileID.Invalid;
       miLoadOrder := High(Integer);
     end;
   _NextFullSlot := 0;
   _NextLightSlot := 0;
+  _NextMediumSlot := 0;
 end;
 
 procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
@@ -908,18 +915,23 @@ var
         miLoadOrder := NewLoadOrderCount;
         NewLoadOrder[NewLoadOrderCount] := aModule;
         Inc(NewLoadOrderCount);
-        if not (wbPseudoESL or wbPseudoOverlay) then
+        if not (wbPseudoLight or wbPseudoOverlay) then
           if (mfHasOverlayFlag in miFlags) and not wbIgnoreOverlay then begin
             miFileID := TwbFileID.Invalid;
-          end else if (mfHasESLFlag in miFlags) and not wbIgnoreESL then begin
-            if _NextLightSlot > $FFF then
+          end else if (mfHasLightFlag in miFlags) and not wbIgnoreLight then begin
+            if _NextLightSlot > TwbFileID.MaxLightSlot then
               raise Exception.Create('Too many light modules');
-            miFileID := TwbFileID.Create($FE, _NextLightSlot);
+            miFileID := TwbFileID.CreateLight(_NextLightSlot);
             Inc(_NextLightSlot);
+          end else if (mfHasMediumFlag in miFlags) and not wbIgnoreMedium then begin
+            if _NextMediumSlot > TwbFileID.MaxMediumSlot then
+              raise Exception.Create('Too many heavy modules');
+            miFileID := TwbFileID.CreateMedium(_NextMediumSlot);
+            Inc(_NextMediumSlot);
           end else begin
-            if _NextFullSlot > $FD then
+            if _NextFullSlot > TwbFileID.MaxFullSlot then
               raise Exception.Create('Too many full modules');
-            miFileID := TwbFileID.Create(_NextFullSlot);
+            miFileID := TwbFileID.CreateFull(_NextFullSlot);
             Inc(_NextFullSlot);
           end;
       finally
@@ -936,10 +948,11 @@ begin
     with _Modules[lModuleIdx] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
-      miFileID := TwbFileID.Create(-1);
+      miFileID := TwbFileID.Invalid;
       miLoadOrder := High(Integer);
     end;
   _NextFullSlot := 0;
+  _NextMediumSlot := 0;
   _NextLightSlot := 0;
   SetLength(NewLoadOrder, Length(_Modules));
   NewLoadOrderCount := 0;

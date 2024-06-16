@@ -18,17 +18,16 @@ object frmModuleSelect: TfrmModuleSelect
     615)
   TextHeight = 15
   object lblPreset: TLabel
-    Left = 371
+    Left = 363
     Top = 11
     Width = 35
     Height = 15
     Anchors = [akTop, akRight]
     Caption = '&Preset:'
     FocusControl = cbPreset
-    ExplicitLeft = 375
   end
   object btnOK: TButton
-    Left = 777
+    Left = 769
     Top = 582
     Width = 75
     Height = 25
@@ -37,13 +36,11 @@ object frmModuleSelect: TfrmModuleSelect
     ModalResult = 1
     TabOrder = 8
     OnClick = btnOKClick
-    ExplicitLeft = 773
-    ExplicitTop = 581
   end
   object vstModules: TVirtualStringTree
     Left = 8
-    Top = 35
-    Width = 844
+    Top = 37
+    Width = 836
     Height = 541
     Anchors = [akLeft, akTop, akRight, akBottom]
     Header.AutoSizeIndex = 0
@@ -72,7 +69,7 @@ object frmModuleSelect: TfrmModuleSelect
         MinWidth = 300
         Position = 0
         Text = 'Filename'
-        Width = 340
+        Width = 300
       end
       item
         Alignment = taRightJustify
@@ -90,7 +87,6 @@ object frmModuleSelect: TfrmModuleSelect
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 2
         Text = 'ESM'
-        Width = 50
       end
       item
         Alignment = taCenter
@@ -98,15 +94,14 @@ object frmModuleSelect: TfrmModuleSelect
         MinWidth = 50
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
         Position = 3
-        Text = 'ESL'
-        Width = 50
+        Text = 'Light'
       end
       item
         Alignment = taRightJustify
         CaptionAlignment = taCenter
         MinWidth = 75
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
-        Position = 5
+        Position = 6
         Text = 'Load Order'
         Width = 75
       end
@@ -114,7 +109,7 @@ object frmModuleSelect: TfrmModuleSelect
         CaptionAlignment = taCenter
         MinWidth = 90
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
-        Position = 6
+        Position = 7
         Text = 'FormID Prefix'
         Width = 90
       end
@@ -123,27 +118,34 @@ object frmModuleSelect: TfrmModuleSelect
         CaptionAlignment = taCenter
         MinWidth = 70
         Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
-        Position = 4
+        Position = 5
         Text = 'Overlay'
         Width = 70
+      end
+      item
+        Alignment = taCenter
+        CaptionAlignment = taCenter
+        MinWidth = 50
+        Options = [coAllowClick, coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAllowFocus, coUseCaptionAlignment, coEditable, coStyleColor]
+        Position = 4
+        Text = 'Med'
       end>
   end
   object pnlError: TPanel
     Left = 8
     Top = 582
-    Width = 677
+    Width = 669
     Height = 25
     Alignment = taLeftJustify
     Anchors = [akLeft, akTop, akRight]
     BevelOuter = bvLowered
     BorderWidth = 3
     TabOrder = 6
-    ExplicitWidth = 673
   end
   object edFilter: TLabeledEdit
     Left = 39
     Top = 8
-    Width = 326
+    Width = 318
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 29
@@ -154,10 +156,9 @@ object frmModuleSelect: TfrmModuleSelect
     Text = ''
     OnChange = edFilterChange
     OnKeyDown = edFilterKeyDown
-    ExplicitWidth = 322
   end
   object btnCancel: TButton
-    Left = 696
+    Left = 688
     Top = 582
     Width = 75
     Height = 25
@@ -166,31 +167,27 @@ object frmModuleSelect: TfrmModuleSelect
     ModalResult = 2
     TabOrder = 7
     Visible = False
-    ExplicitLeft = 692
-    ExplicitTop = 581
   end
   object bnDelete: TButton
-    Left = 777
+    Left = 769
     Top = 4
     Width = 75
     Height = 25
     Action = acPresetDelete
     Anchors = [akTop, akRight]
     TabOrder = 4
-    ExplicitLeft = 773
   end
   object bnSave: TButton
-    Left = 696
+    Left = 688
     Top = 4
     Width = 75
     Height = 25
     Action = acPresetSave
     Anchors = [akTop, akRight]
     TabOrder = 3
-    ExplicitLeft = 692
   end
   object bnLoad: TButton
-    Left = 615
+    Left = 607
     Top = 4
     Width = 75
     Height = 25
@@ -199,17 +196,15 @@ object frmModuleSelect: TfrmModuleSelect
     BiDiMode = bdRightToLeft
     ParentBiDiMode = False
     TabOrder = 2
-    ExplicitLeft = 611
   end
   object cbPreset: TComboBox
-    Left = 412
+    Left = 404
     Top = 8
     Width = 197
     Height = 23
     Anchors = [akTop, akRight]
     TabOrder = 1
     OnKeyPress = cbPresetKeyPress
-    ExplicitLeft = 408
   end
   object pmuModules: TPopupMenu
     OnPopup = pmuModulesPopup

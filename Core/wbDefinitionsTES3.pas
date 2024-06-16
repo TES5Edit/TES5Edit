@@ -602,7 +602,7 @@ begin
     if Result then begin
       aFormID := TwbFormID.FromCardinal(lFRMR.NativeValue);
       if aFormID.FileID.FullSlot = 0 then
-        aFormID.FileID := TwbFileID.Create($FF);
+        aFormID.FileID := TwbFileID.CreateFull($FF);
     end;
   end);
 
@@ -1759,6 +1759,8 @@ begin
   wbAddGroupOrder(INFO);
 
   wbHEDRVersion := 1.30;
+
+  wbNexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
 end;
 
 initialization
