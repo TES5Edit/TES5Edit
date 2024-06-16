@@ -4341,49 +4341,6 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ]);
 
-  wbRecord(WRLD, 'Worldspace', [
-      wbEDID,
-      wbFULL,
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD])
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small world',
-        {0x02} 'Can''t fast travel',
-        {0x04} 'Oblivion worldspace',
-        {0x08} '',
-        {0x10} 'No LOD water'
-      ]), cpNormal, True),
-      //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      wbWorldspaceOBND,
-      wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-      wbOFST
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfFastAssign)
-      .IncludeFlag(dfNoCopyAsOverride)
-      .IncludeFlag(dfNotAlignable)
-    ]);
-
   wbRecord(WTHR, 'Weather', [
     wbEDID,
     wbString(CNAM, 'Texture Lower Layer'),
@@ -4439,6 +4396,45 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True),
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
+
+wbRecord(WRLD, 'Worldspace', [
+  wbEDID,
+  wbFULL,
+  wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+  wbFormIDCk(CNAM, 'Climate', [CLMT]),
+  wbFormIDCk(NAM2, 'Water', [WATR]),
+  wbICON,
+  wbStruct(MNAM, 'Map Data', [
+    wbStruct('Usable Dimensions', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32)
+    ]),
+    wbStruct('Cell Coordinates', [
+      wbStruct('NW Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ]),
+      wbStruct('SE Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ])
+    ])
+  ]),
+  wbInteger(DATA, 'Flags', itU8, wbFlags([
+    {0x01} 'Small world',
+    {0x02} 'Can''t fast travel',
+    {0x04} 'Oblivion worldspace',
+    {0x08} '',
+    {0x10} 'No LOD water'
+  ]), cpNormal, True),
+  wbWorldspaceOBND,
+  wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
+  wbOFST
+  .IncludeFlag(dfCollapsed)
+  .IncludeFlag(dfFastAssign)
+  .IncludeFlag(dfNoCopyAsOverride)
+  .IncludeFlag(dfNotAlignable)
+]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);
