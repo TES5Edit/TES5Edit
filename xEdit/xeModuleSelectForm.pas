@@ -816,6 +816,7 @@ begin
         4: Result := CmpI32(Module1.miLoadOrder, Module2.miLoadOrder);
         5: Result := CompareText(Module1.miFileID.ToString, Module2.miFileID.ToString);
         6: Result := CmpBool(mfHasOverlayFlag in Module1.miFlags, mfHasOverlayFlag in Module2.miFlags);
+        7: Result := CmpBool(mfHasMediumFlag in Module1.miFlags, mfHasMediumFlag in Module2.miFlags);
       end;
     end else
       Result := -1;

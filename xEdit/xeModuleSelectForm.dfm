@@ -3,8 +3,8 @@ object frmModuleSelect: TfrmModuleSelect
   Top = 0
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Module Selection'
-  ClientHeight = 615
-  ClientWidth = 864
+  ClientHeight = 604
+  ClientWidth = 860
   Color = clBtnFace
   ParentFont = True
   KeyPreview = True
@@ -14,11 +14,11 @@ object frmModuleSelect: TfrmModuleSelect
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   DesignSize = (
-    864
-    615)
+    860
+    604)
   TextHeight = 15
   object lblPreset: TLabel
-    Left = 363
+    Left = 355
     Top = 11
     Width = 35
     Height = 15
@@ -27,8 +27,8 @@ object frmModuleSelect: TfrmModuleSelect
     FocusControl = cbPreset
   end
   object btnOK: TButton
-    Left = 769
-    Top = 582
+    Left = 761
+    Top = 571
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -40,8 +40,8 @@ object frmModuleSelect: TfrmModuleSelect
   object vstModules: TVirtualStringTree
     Left = 8
     Top = 37
-    Width = 836
-    Height = 541
+    Width = 828
+    Height = 530
     Anchors = [akLeft, akTop, akRight, akBottom]
     Header.AutoSizeIndex = 0
     Header.Options = [hoAutoResize, hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -134,7 +134,7 @@ object frmModuleSelect: TfrmModuleSelect
   object pnlError: TPanel
     Left = 8
     Top = 582
-    Width = 669
+    Width = 661
     Height = 25
     Alignment = taLeftJustify
     Anchors = [akLeft, akTop, akRight]
@@ -145,7 +145,7 @@ object frmModuleSelect: TfrmModuleSelect
   object edFilter: TLabeledEdit
     Left = 39
     Top = 8
-    Width = 318
+    Width = 310
     Height = 23
     Anchors = [akLeft, akTop, akRight]
     EditLabel.Width = 29
@@ -158,8 +158,8 @@ object frmModuleSelect: TfrmModuleSelect
     OnKeyDown = edFilterKeyDown
   end
   object btnCancel: TButton
-    Left = 688
-    Top = 582
+    Left = 680
+    Top = 571
     Width = 75
     Height = 25
     Anchors = [akRight, akBottom]
@@ -169,7 +169,7 @@ object frmModuleSelect: TfrmModuleSelect
     Visible = False
   end
   object bnDelete: TButton
-    Left = 769
+    Left = 761
     Top = 4
     Width = 75
     Height = 25
@@ -178,7 +178,7 @@ object frmModuleSelect: TfrmModuleSelect
     TabOrder = 4
   end
   object bnSave: TButton
-    Left = 688
+    Left = 680
     Top = 4
     Width = 75
     Height = 25
@@ -187,7 +187,7 @@ object frmModuleSelect: TfrmModuleSelect
     TabOrder = 3
   end
   object bnLoad: TButton
-    Left = 607
+    Left = 599
     Top = 4
     Width = 75
     Height = 25
@@ -198,7 +198,7 @@ object frmModuleSelect: TfrmModuleSelect
     TabOrder = 2
   end
   object cbPreset: TComboBox
-    Left = 404
+    Left = 396
     Top = 8
     Width = 197
     Height = 23

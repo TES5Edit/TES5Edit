@@ -65,7 +65,7 @@ var
 const
   wbWhatsNewVersion : Integer = 04010507;
   wbDeveloperMessageVersion : Integer = 04010507;
-  wbDevCRC32App : Cardinal = $FFFFFFE5;
+  wbDevCRC32App : Cardinal = $FFFFFFE4;
 
   clOrange       = $004080FF;
   wbFloatDigits  = 6;
@@ -172,12 +172,12 @@ var
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
-  wbIgnoreLight                        : Boolean    = False;
-  wbPseudoLight                        : Boolean    = False;
-  wbIgnoreMedium                        : Boolean    = False;
-  wbPseudoMedium                        : Boolean    = False;
-  wbHasAddedLightSupport               : Boolean    = False;
-  wbHasAddedMediumSupport               : Boolean    = False;
+  wbIgnoreLight                      : Boolean    = False;
+  wbPseudoLight                      : Boolean    = False;
+  wbIgnoreMedium                     : Boolean    = False;
+  wbPseudoMedium                     : Boolean    = False;
+  wbHasAddedLightSupport             : Boolean    = False;
+  wbHasAddedMediumSupport            : Boolean    = False;
   wbIgnoreOverlay                    : Boolean    = False;
   wbPseudoOverlay                    : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
@@ -251,11 +251,12 @@ var
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;
-  wbExtendedLight                      : Boolean    = False;
+  wbExtendedLight                    : Boolean    = False;
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
   wbCompareRawData                   : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
+  wbComplexFileFileID                : Boolean    = False;
 
   wbAllowMakePartial                 : Boolean    = False;
 
@@ -867,6 +868,12 @@ type
     procedure SortByReverseLoadOrder;
   end;
 
+  TwbModuleType = (
+    mtFull,
+    mtMedium,
+    mtLight
+  );
+
   TwbFileID = record
   private
     _LightSlot : SmallInt;
@@ -898,12 +905,15 @@ type
     function IsMediumSlot: Boolean; inline;
     function IsFullSlot: Boolean; inline;
     function IsValid: Boolean; inline;
+    function GetModuleType: TwbModuleType;
 
     function BaseFormID: Cardinal;
 
     property FullSlot: SmallInt read _FullSlot;
     property MediumSlot: SmallInt read _MediumSlot;
     property LightSlot: SmallInt read _LightSlot;
+
+    property ModuleType: TwbModuleType read GetModuleType;
   end;
 
   TwbFileIDs = array of TwbFileID;
@@ -1491,6 +1501,7 @@ type
     function GetFileName: string;
     function GetFileNameOnDisk: string;
     function GetModuleInfo: Pointer;
+    function GetModuleType: TwbModuleType;
     function GetUnsavedSince: TDateTime;
 
     function GetMaster(aIndex: Integer; aNew: Boolean): IwbFile;
@@ -1598,6 +1609,8 @@ type
 
     property ModuleInfo: Pointer
       read GetModuleInfo;
+    property ModuleType: TwbModuleType
+      read GetModuleType;
 
     property UnsavedSince: TDateTime
       read GetUnsavedSince;
@@ -22626,15 +22639,16 @@ begin
   Result := (A._FullSlot = B._FullSlot)
         and (A._MediumSlot = B._MediumSlot)
         and (A._LightSlot = B._LightSlot);
-  {
-  if (A._LightSlot < 0) or (B._LightSlot < 0) then
-    if (A._MediumSlot < 0) or (B._MediumSlot < 0) then
-      Result := A._FullSlot = B._FullSlot
-    else
-      Result := A._MediumSlot = B._MediumSlot
+end;
+
+function TwbFileID.GetModuleType: TwbModuleType;
+begin
+  if _LightSlot >= 0 then
+    Result := mtLight
+  else if _MediumSlot >= 0 then
+    Result := mtMedium
   else
-    Result := A._LightSlot = B._LightSlot;
-    }
+    Result := mtFull;
 end;
 
 class function TwbFileID.MediumFullSlot: SmallInt;
