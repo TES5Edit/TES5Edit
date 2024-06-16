@@ -2397,18 +2397,22 @@ begin
     var lFileID := FormID.FileID;
     if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
 
-      if (FormID.ToCardinal and $00FFF000) <> 0 then begin
-        Exclude(flStates, fsLightCompatible);
-        if wbHasProgressCallback then
-          if GetIsLight or flLoadOrderFileID.IsLightSlot then
-            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
-      end;
+      if not wbIsStarfield then begin
 
-      if (FormID.ToCardinal and $00FF0000) <> 0 then begin
-        Exclude(flStates, fsMediumCompatible);
-        if wbHasProgressCallback then
-          if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
-            wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
+        if (FormID.ToCardinal and $00FFF000) <> 0 then begin
+          Exclude(flStates, fsLightCompatible);
+          if wbHasProgressCallback then
+            if GetIsLight or flLoadOrderFileID.IsLightSlot then
+              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a light module. You will not be able to save this file with the Light flag active.>');
+        end;
+
+        if (FormID.ToCardinal and $00FF0000) <> 0 then begin
+          Exclude(flStates, fsMediumCompatible);
+          if wbHasProgressCallback then
+            if GetIsMedium or flLoadOrderFileID.IsMediumSlot then
+              wbProgressCallback('<Error: ' + aRecord.Name + ' has invalid ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' for a medium module. You will not be able to save this file with the Medium flag active.>');
+        end;
+
       end;
 
       Exclude(flStates, fsOverlayCompatible);
@@ -10699,6 +10703,8 @@ begin
       FixedFormID := GetFixedFormID;
       if _File.IsLight and (FormID.ObjectID > $FFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
         Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a light module.'
+      else if _File.IsMedium and (FormID.ObjectID > $FFFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
+        Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a medium module.'
       else begin
         if FormID <> FixedFormID then
           Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
