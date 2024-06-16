@@ -16527,7 +16527,7 @@ begin
         vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
-    if wbLoaderDone and Assigned(ActiveMaster) and not wbBuildingRefsParallel then begin
+    if wbLoaderDone and Assigned(ActiveMaster) {$IFDEF USE_PARALLEL_BUILD_REFS}and not wbBuildingRefsParallel{$ENDIF} then begin
       lvReferencedBy.Tag := ActiveMaster.ReferencedByCount;
       if pgMain.ActivePage = tbsReferencedBy then begin
         for i := 0 to Pred(ActiveMaster.ReferencedByCount) do
@@ -20894,8 +20894,10 @@ var
   t: string;
   lNow: TDateTime;
 begin
+  {$IFDEF USE_PARALLEL_BUILD_REFS}
   _LoaderProgressLock.Enter;
   try
+  {$ENDIF}
     lNow := Now;
     if _LoaderProgressLastShown = 0 then
       _LoaderProgressLastShown := lNow;
@@ -20908,9 +20910,11 @@ begin
       frmMain.PostAddMessage('[' + wbFormatElapsedTime( lNow - wbStartTime) + '] Background Loader: ' + t);
       _LoaderProgressLastShown := lNow;
     end;
+  {$IFDEF USE_PARALLEL_BUILD_REFS}
   finally
     _LoaderProgressLock.Leave;
   end;
+  {$ENDIF}
 end;
 
 procedure LoaderProgress(const s: string);
@@ -21114,7 +21118,7 @@ begin
               wbCurrentTick := GetTickCount64;
               try
                 {$ELSE}
-                for lLoadListIdx := Low(ltFiles) to High(ltFiles) do
+                for {$IFNDEF USE_PARALLEL_BUILD_REFS}var {$ENDIF}lLoadListIdx := Low(ltFiles) to High(ltFiles) do
                 {$ENDIF}
                 begin
                   _File := ltFiles[lLoadListIdx];
@@ -21816,7 +21820,9 @@ initialization
   wbLockProcessMessages := LockProcessMessages;
   wbUnLockProcessMessages := UnLockProcessMessages;
 
+  {$IFDEF USE_PARALLEL_BUILD_REFS}
   _LoaderProgressLock.Initialize;
+  {$ENDIF}
 
   with TWinControlProtectedHacker(TWinControl.Create(nil)) do try
     CodePointer_TWinControl_MainWndProc := MainWndProc;
@@ -21842,7 +21848,9 @@ initialization
 
 
 finalization
+  {$IFDEF USE_PARALLEL_BUILD_REFS}
   _LoaderProgressLock.Free;
+  {$ENDIF}
 
   var Handle := BeginTransaction;
   try
