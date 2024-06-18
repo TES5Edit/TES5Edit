@@ -949,32 +949,26 @@ begin
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
-  if wbSimpleRecords then
-    wbLargeReferences :=
-      wbRArray('Large References',
-        wbByteArray(RNAM, 'Large Reference', 0, cpIgnore),
-      cpIgnore, False, nil, nil, wbNeverShow)
-  else
-    wbLargeReferences :=
-      wbRArray('Large References',
-        wbStruct(RNAM, 'Cell Grid', [
-          wbInteger('Y', itS16, nil, cpIgnore),
-          wbInteger('X', itS16, nil, cpIgnore),
-          wbArrayS('References',
-            wbStructSK([0], 'References', [
-              wbFormIDCk('Ref', [REFR], False, cpIgnore),
-              wbInteger('Y', itS16, nil, cpIgnore),
-              wbInteger('X', itS16, nil, cpIgnore)
-            ]).SetSummaryKey([0])
-            .IncludeFlag(dfCollapsed)
-          ).IncludeFlag(dfCollapsed)
-          .IncludeFlag(dfNotAlignable)
-        ]).SetSummaryKeyOnValue([1,0])
-        .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
-        .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
-        .SetSummaryDelimiterOnValue(' ')
-        .IncludeFlag(dfCollapsed),
-      cpIgnore, False, nil, nil, wbNeverShow);
+  wbLargeReferences :=
+    wbRArray('Large References',
+      wbStruct(RNAM, 'Cell Grid', [
+        wbInteger('Y', itS16, nil, cpIgnore),
+        wbInteger('X', itS16, nil, cpIgnore),
+        wbArrayS('References',
+          wbStructSK([0], 'References', [
+            wbFormIDCk('Ref', [REFR], False, cpIgnore),
+            wbInteger('Y', itS16, nil, cpIgnore),
+            wbInteger('X', itS16, nil, cpIgnore)
+          ]).SetSummaryKey([0])
+          .IncludeFlag(dfCollapsed)
+        ).IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ]).SetSummaryKeyOnValue([1,0])
+      .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
+      .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlag(dfCollapsed),
+    cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
     wbMHDTCELL :=
