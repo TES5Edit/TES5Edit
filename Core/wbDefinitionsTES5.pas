@@ -10760,7 +10760,7 @@ begin
     wbSPCT,
     wbSPLOs,
     wbDEST,
-    wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
+    wbFormIDCk(WNAM, 'Skin', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArrayS('Attacks', wbAttackData),
