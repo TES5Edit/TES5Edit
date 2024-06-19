@@ -954,14 +954,14 @@ begin
       wbStruct(RNAM, 'Cell Grid', [
         wbInteger('Y', itS16, nil, cpIgnore),
         wbInteger('X', itS16, nil, cpIgnore),
-        wbArrayS('References',
-          wbStructSK([0], 'References', [
+        wbArray('References',
+          wbStruct('Reference', [
             wbFormIDCk('Ref', [REFR], False, cpIgnore),
             wbInteger('Y', itS16, nil, cpIgnore),
             wbInteger('X', itS16, nil, cpIgnore)
           ]).SetSummaryKey([0])
-          .IncludeFlag(dfCollapsed)
-        ).IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfCollapsed),
+        -1).IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable)
       ]).SetSummaryKeyOnValue([1,0])
       .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
