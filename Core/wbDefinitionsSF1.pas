@@ -2645,7 +2645,8 @@ type
     {69} ptPerkSkillGroup,
     {70} ptReactionType,
     {71} ptLimbCategory,
-    {72} ptFactionOpt         // NULL, FACT
+    {72} ptFactionOpt,         // NULL, FACT
+    {73} ptGamePlayOption
   );
 
   PCTDAFunction = ^TCTDAFunction;
@@ -2659,7 +2660,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..606] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..607] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),                                                                                                                  //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),                                                                                       //   1
     (Index:   5; Name: 'GetLocked'),                                                                                                                        //   2
@@ -3266,7 +3267,8 @@ const
     (Index: 955; Name: 'BodyHasResourceWithKeyword'; ParamType1: ptKeyword; ParamType2: ptInteger; Desc: 'Does the ref object''s current planetary body have a resource with the given keyword? Optional integer 1 to include atmospheric resources.'),                                                         //   603
     (Index: 957; Name: 'GetShipReactorClass'; Desc: 'Gets a value representing the ship reactor class (based on its index in the ShipClassOrder form list)'),                                                                                                              //   604
     (Index: 958; Name: 'ShipReactorHasClassKeyword'; ParamType1: ptKeyword; Desc: 'Check if the reactor of the supplied ship has the provided reactor class keyword (keywords in ShipClassOrder form list)'),                                                                                //   605
-    (Index: 960; Name: 'EPIsResistanceActorValue'; ParamType1: ptActorValue; Desc: 'Is a specific resistance actor value passed into this check?')                                                                                //   606
+    (Index: 960; Name: 'EPIsResistanceActorValue'; ParamType1: ptActorValue; Desc: 'Is a specific resistance actor value passed into this check?'),                                                                                //   606
+    (Index: 961; Name: 'GetGamePlayOptionCurrentValue'; ParamType1: ptGamePlayOption; Desc: 'Gets the current value of a Gameplay Option form.')                                                                                //   607
   );
 
 var
@@ -7961,7 +7963,9 @@ end;
           {71 ptLimbCategory}
           wbByteArray('Limb Category', 4),
           {72 ptFactionOpt}
-          wbFormIDCkNoReach('Faction', [NULL, FACT])
+          wbFormIDCkNoReach('Faction', [NULL, FACT]),
+          {73 ptGamePlayOption}
+          wbFormIDCk('GamePlayOption', [GPOF])
         ]),
 
         wbUnion('Parameter #2', wbCTDAParam2Decider, [
@@ -8177,7 +8181,9 @@ end;
           {71 ptLimbCategory}
           wbByteArray('Limb Category', 4),
           {72 ptFactionOpt}
-          wbFormIDCkNoReach('Faction', [NULL, FACT])
+          wbFormIDCkNoReach('Faction', [NULL, FACT]),
+          {73 ptGamePlayOption}
+          wbFormIDCk('GamePlayOption', [GPOF])
         ]),
         wbInteger('Run On', itU32, wbEnum([
           { 0} 'Subject',
