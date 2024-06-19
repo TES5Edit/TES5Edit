@@ -110,6 +110,8 @@ type
     function _File: IwbFile;
     class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
 
+    function GetModuleType: TwbModuleType;
+
     function HasCRC32(aCRC32: TwbCRC32): Boolean;
     function GetCRC32(out aCRC32: TwbCRC32): Boolean;
   end;
@@ -255,8 +257,8 @@ var
   i, j, k    : Integer;
   s          : string;
   IsESM      ,
-  IsLight      ,
-  IsMedium      ,
+  IsLight    ,
+  IsMedium   ,
   IsOverlay  ,
   IsLocalized: Boolean;
   lIsActive  : Boolean;
@@ -340,7 +342,7 @@ begin
             force 0x100 flag
         }
         if IsOverlay then begin
-          if {(Length(miMasterNames) < 1) or} IsLight then
+          if {(Length(miMasterNames) < 1) or} IsLight or IsMedium then
             IsOverlay := False;
         end else
           if miExtension in [meESL] then
@@ -727,6 +729,16 @@ begin
     aCRC32 := miCRC32;
   end;
   Result := aCRC32.IsValid;
+end;
+
+function TwbModuleInfo.GetModuleType: TwbModuleType;
+begin
+  if mfHasLightFlag in miFlags then
+    Result := mtLight
+  else if mfHasMediumFlag in miFlags then
+    Result := mtMedium
+  else
+    Result := mtFull;
 end;
 
 function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;

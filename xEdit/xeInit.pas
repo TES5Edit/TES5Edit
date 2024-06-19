@@ -979,6 +979,7 @@ begin
       wbAlwaysSaveOnamForce := True;
     end;
     gmSF1: begin
+	  wbComplexFileFileID   := True;
       wbVWDInTemporary      := True;
       wbVWDAsQuestChildren  := True;
       wbLoadBSAs            := True;  // localization won't work otherwise
@@ -1277,24 +1278,32 @@ begin
   if FindCmdLineSwitch('TrackAllEditorID') then
     wbTrackAllEditorID := True;
 
-  if not (wbIsStarfield and wbStarfieldIsABugInfestedHellhole) then begin
-    if FindCmdLineSwitch('IgnoreESL') or FindCmdLineSwitch('IgnoreLight') or FindCmdLineSwitch('IgnoreSmall') then
-      wbIgnoreLight := True
-    else
-      if FindCmdLineSwitch('PseudoESL') or FindCmdLineSwitch('PseudoLight') or FindCmdLineSwitch('PseudoSmall') then
-        wbPseudoLight := True;
 
-    if FindCmdLineSwitch('IgnoreMedium') then
-      wbIgnoreMedium := True
-    else
-      if FindCmdLineSwitch('PseudoMedium') then
-        wbPseudoMedium := True;
+  if FindCmdLineSwitch('IgnoreESL') or FindCmdLineSwitch('IgnoreLight') or FindCmdLineSwitch('IgnoreSmall') then
+    wbIgnoreLight := True
+  else
+    if FindCmdLineSwitch('PseudoESL') or FindCmdLineSwitch('PseudoLight') or FindCmdLineSwitch('PseudoSmall') then
+      wbPseudoLight := True;
 
-    if FindCmdLineSwitch('IgnoreOverlay') then
-      wbIgnoreOverlay := True
-    else
-      if FindCmdLineSwitch('PseudoOverlay') then
-        wbPseudoOverlay := True;
+  if FindCmdLineSwitch('IgnoreMedium') then
+    wbIgnoreMedium := True
+  else
+    if FindCmdLineSwitch('PseudoMedium') then
+      wbPseudoMedium := True;
+
+  if FindCmdLineSwitch('IgnoreOverlay') then
+    wbIgnoreOverlay := True
+  else
+    if FindCmdLineSwitch('PseudoOverlay') then
+      wbPseudoOverlay := True;
+	  
+  if wbComplexFileFileID then begin
+    wbIgnoreLight := False;
+	wbPseudoLight := False;
+	wbIgnoreMedium := False;
+	wbPseudoMedium := False;
+	wbIgnoreOverlay := False;
+    wbPseudoOverlay := False;
   end;
 
   if FindCmdLineSwitch('SimpleFormIDs') then
