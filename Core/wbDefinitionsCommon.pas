@@ -21,6 +21,7 @@ type
 
 var
   wbAxisEnum: IwbEnumDef;
+  wbBoolEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
   wbQuestEventEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
@@ -33,14 +34,19 @@ var
   wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
   wbDATAPosRot: IwbRecordMemberDef;
+  wbDMDT: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
+  wbINOA: IwbRecordMemberDef;
+  wbINOM: IwbRecordMemberDef;
   wbLargeReferences: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
+  wbMODT: IwbRecordMemberDef;
   wbRegionSounds: IwbRecordMemberDef;
   wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
+  wbStaticPartPlacements: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
@@ -48,24 +54,16 @@ var
   wbColorInterpolator: IwbStructDef;
 
   wbActionFlag: IwbSubRecordDef;
+  wbCLSZ: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
   wbMHDTCELL: IwbSubRecordDef;
   wbMHDTWRLD: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
+  wbOFST: IwbSubRecordDef;
+  wbVISI: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
 
   wbCinematicIMAD: IwbSubRecordStructDef;
-
-  wbOFST: IwbSubRecordDef;
-  wbCLSZ: IwbSubRecordDef;
-  wbVISI: IwbSubRecordDef;
-  wbMODT: IwbRecordMemberDef;
-  wbDMDT: IwbRecordMemberDef;
-  wbBoolEnum: IwbEnumDef;
-  wbStaticPartPlacements: IwbRecordMemberDef;
-
-  wbINOM: IwbRecordMemberDef;
-  wbINOA: IwbRecordMemberDef;
 
   wbAlternateTexture: IwbValueDef;
   wbPosRot: IwbValueDef;
