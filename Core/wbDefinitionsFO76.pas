@@ -4447,6 +4447,22 @@ begin
     Result := True;
 end;
 
+procedure wbRemoveRNAM(const aElement: IwbElement);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if not wbRemoveOffsetData then
+    Exit;
+  if not Supports(aElement, IwbMainRecord, MainRecord) then
+    Exit;
+  if wbBeginInternalEdit then try
+    if MainRecord._File.LoadOrder = 0 then
+	  MainRecord.RemoveElement('Large References');
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
   Container: IwbContainer;
@@ -4543,6 +4559,7 @@ end;
 
 procedure wbWRLDAfterLoad(const aElement: IwbElement);
 begin
+  wbRemoveRNAM(aElement);
   wbRemoveOFST(aElement);
   wbRemoveCLSZ(aElement);
   wbRemoveVISI(aElement);
