@@ -12978,8 +12978,8 @@ begin
     wbFloat(FNAM, 'Fade value', cpNormal, True),
     wbString(NAM0, 'Gobo'),
     wbFormIDCk(LNAM, 'Lens', [LENS]),
-    wbFormIDCk(WGDR, 'God Rays', [GDRY]),
-    wbFormIDCk(SNAM, 'Sound', [SNDR])
+    wbFormIDCk(SNAM, 'Sound', [SNDR]),
+    wbFormIDCk(WGDR, 'God Rays', [GDRY])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 end;
 
