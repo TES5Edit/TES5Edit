@@ -158,6 +158,7 @@ const
   AVIF : TwbSignature = 'AVIF';
   AVMD : TwbSignature = 'AVMD'; { New To Starfield }
   AVMG : TwbSignature = 'AVMG'; { New To Fallout 76 }
+  AVMP : TwbSignature = 'AVMP'; { New To Starfield }
   AVSG : TwbSignature = 'AVSG'; { New To Starfield }
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
   AVTR : TwbSignature = 'AVTR'; { New To Fallout 76 }

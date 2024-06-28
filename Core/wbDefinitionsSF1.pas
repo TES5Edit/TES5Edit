@@ -20114,7 +20114,7 @@ end;
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AVMD, 'AVM Data', [
+  wbRecord(AVMD, 'AVMS Data', [
     wbEDID,
     wbBaseFormComponents,
     wbAVMDMNAMReq,
@@ -20255,7 +20255,8 @@ end;
           {6} 'Biome Conditions',
           {7} 'Emissive'
         ], True)
-    ).IncludeFlag(dfCollapsed, wbCollapseFlags)
+    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbFormIDCk(AVMP, 'AVMS Parent', [AVMD])
   ])
   .SetSummaryKey([2, 4, 6])
   .SetSummaryMemberPrefixSuffix(2, '[', ']')
