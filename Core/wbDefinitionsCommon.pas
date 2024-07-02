@@ -367,7 +367,6 @@ function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEle
 var
   Container: IwbDataContainer;
   Element: IwbElement;
-  fResult: Extended;
   MinX, MaxX: Integer;
 begin
   Result := 0;
@@ -401,7 +400,6 @@ function wbCellSizeDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aE
 var
   Container: IwbDataContainer;
   Element: IwbElement;
-  fResult: Extended;
   MinX, MaxX: Integer;
 begin
   Result := 0;
@@ -435,7 +433,6 @@ function wbVisibleCellIndexColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; cons
 var
   Container: IwbDataContainer;
   Element: IwbElement;
-  fResult: Extended;
   MinX, MaxX: Integer;
 begin
   Result := 0;
