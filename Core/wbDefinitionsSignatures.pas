@@ -226,6 +226,7 @@ const
   CAMS : TwbSignature = 'CAMS';
   CARD : TwbSignature = 'CARD';
   CAST : TwbSignature = 'CAST';
+  CBGN : TwbSignature = 'CBGN'; { New to Fallout 76 }
   CCRD : TwbSignature = 'CCRD';
   CDCK : TwbSignature = 'CDCK';
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
