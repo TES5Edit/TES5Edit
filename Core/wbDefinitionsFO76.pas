@@ -645,12 +645,14 @@ begin
     Exit;
 
   Element := nil;
-  if (MainRecord.Signature = ACTI) or (MainRecord.Signature = TACT) then
+  if (MainRecord.Signature = ACTI) or (MainRecord.Signature = TACT) or (MainRecord.Signature = FURN) then
     Element := MainRecord.ElementBySignature[QSTI]
   else if MainRecord.Signature = SCEN then
     Element := MainRecord.ElementBySignature[PNAM]
   else if (MainRecord.Signature = PACK) or (MainRecord.Signature = TERM) then
     Element := MainRecord.ElementBySignature[QNAM]
+  else if (MainRecord.Signature = GMRW) then
+    Element := MainRecord.ElementBySignature[ANAM]
   else if (MainRecord.Signature = INFO) then begin
     // get DIAL for INFO
     if Supports(MainRecord.Container, IwbGroupRecord, GroupRecord) then
@@ -2977,6 +2979,18 @@ begin
     if aElement.DataSize < 8 then Result := 1;
 end;
 
+function wbEPF2Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container: IwbContainerElementRef;
+begin
+    Result := 0;
+    if not Assigned(aElement) then
+      Exit;
+    if not Supports(aElement.Container, IwbContainerElementRef, Container) then
+      Exit;
+    if Container.ElementNativeValues['EPFT'] = 1 then Result := 1;
+end;
+
 function wbEPF3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainerElementRef;
@@ -3543,7 +3557,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..610] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..617] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),
     (Index:   2; Name: 'AddItem'), { ObjID (Form ID), Count, Flag (Opt), Level (Opt), Equip (Opt) }
@@ -4090,7 +4104,7 @@ const
     (Index: 890; Name: 'HasPerkCardEquipped'; ParamType1: ptPerkCard; ParamType2: ptInteger),
     (Index: 891; Name: 'HasPerkCardFromListEquipped'; ParamType1: ptFormList),
     (Index: 892; Name: 'GetLastCompletedCheckpointStage'),
-    (Index: 893; Name: 'IsPreviousMeleeAttackEvent'; ParamType1: ptAttackData; ParamType2: ptLegendaryItem; ParamType3: ptInteger), //Has data that I still need to figure out
+    (Index: 893; Name: 'IsPreviousMeleeAttackEvent'; ParamType1: ptAttackData), //Has data that I still need to figure out
     (Index: 894; Name: 'HasCompletedCheckpointStage'; ParamType1: ptQuestStage),
     (Index: 895; Name: 'DoesRecipeContainObject'; ParamType1: ptReferencableObject),
     (Index: 896; Name: 'IsDailyCooldownExpired'; ParamType1: ptActorValue),
@@ -4124,16 +4138,22 @@ const
     (Index: 926; Name: 'GetPlayerSeasonRank'),
     (Index: 927; Name: 'IsInWorkshopFreeCameraMode'),
     (Index: 928; Name: 'IsVendor'),
+    (Index: 929; Name: 'GetLanguage'),
+    (Index: 930; Name: 'IsNextClipLastShot'),
+    (Index: 931; Name: 'WornInOrOutOfPowerArmorHasKeyword'; ParamType1: ptKeyword),
+    (Index: 932; Name: 'IsPlayerInBestBuildCamp'),
     (Index: 5000; Name: 'IsInAirOrFloating'; Desc: 'Is the Havok state InAir or IsFloating?'),
     (Index: 5001; Name: 'GetIsForm'),
     (Index: 5002; Name: 'GetIsInDailyOps'),
     (Index: 5003; Name: 'GetRadsHealthPercentage'),
     (Index: 5004; Name: 'PlayerHasQuest'; ParamType1: ptQuest),
     (Index: 5005; Name: 'IsBackpackVisible'),
+    (Index: 5006; Name: 'GetIsInExpedition'),
     (Index: 6000; Name: 'GetSecondsSinceLastAttack'),
     (Index: 8000; Name: 'IsDailyContentAvailable'), //Param1: ptDailyContentGroup
     (Index: 8001; Name: 'StartDailyContent'),   //Param1: ptDailyContentGroup //Does nothing on the client
     (Index: 8002; Name: 'GetRemainingQuestTimeSeconds'),
+    (Index: 8003; Name: 'IsCaravanAvailable'; ParamType1: ptFormList),
     (Index: 9000; Name: 'RemoveAchievement'; ParamType1: ptInteger),
     (Index: 9001; Name: 'IsPlayerInShelterOwned'),
     (Index: 9002; Name: 'IsPlayerInShelter'),
@@ -4154,6 +4174,7 @@ const
     (Index: 10011; Name: 'ResumeExpedition'; ParamType1: ptQuest),    //Does nothing on the client
     (Index: 10012; Name: 'JoinExpedition'),    //Does nothing on the client
     (Index: 10013; Name: 'GetPublicEventHasMutation'; ParamType1: ptSpell),
+    (Index: 10014; Name: 'IsUsingAltCurveTable'),
     (Index: 12000; Name: 'IsFOWPersonalEWSEnabled'; Desc: 'Is the personal EWS enabled?')
   );
 
@@ -6984,7 +7005,8 @@ begin
    {194} 'Apply On Death Spell',
    {195} 'Mod Max Barter Currency',
    {196} 'Mod Body Part Damage Mult',
-   {197} 'Apply On Kill Participation Spell'
+   {197} 'Apply On Kill Participation Spell',
+   {198} 'Is Next Clip Last Shot'
   ]);
 
   wbEquipType := wbFlags([
@@ -7056,8 +7078,9 @@ begin
     $314B, 'Keyword1',      { K1: GameModeKeyword, Keyword }
     $324B, 'Keyword2',      { K2: (Exists but unused) }
     $334B, 'Keyword3',      { K3: (Exists but unused) }
-    $314C, 'Location',      { L1: Location, Old Location, BenchLocation }
-    $324C, 'New Location',  { L2: New Location }
+    $314C, 'Location1',     { L1: Location, Old Location, BenchLocation, EncounterPointA }
+    $324C, 'Location2',     { L2: New Location, EncounterPointB }
+    $334C, 'Location3',     { L3: EncounterPointC }
     $314F, 'CreatedObject', { O1: CreatedObject }
     $3150, 'Player1',       { P1: Player, Victim }
     $3250, 'Player2',       { P2: Criminal }
@@ -8220,28 +8243,31 @@ begin
 		])
 	end;
 
-	wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
-	  wbStruct('Pathing Cell', [
-      wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
-      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
-        wbStruct('Coordinates', [
-          wbInteger('Grid Y', itS16),
-          wbInteger('Grid X', itS16)
-        ]),
-        wbFormIDCk('Parent Cell', [CELL])
-      ])
-	  ]),
-	  wbNavmeshVertices.IncludeFlag(dfNotAlignable),
-	  wbNavmeshTriangles.IncludeFlag(dfNotAlignable),
-	  wbNavmeshEdgeLinks.IncludeFlag(dfNotAlignable),
-	  wbNavmeshDoorTriangles.IncludeFlag(dfNotAlignable),
-	  wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
-	  wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
-	  wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
-	  wbNavmeshGrid
-	]);
+	wbNVNM :=  wbUnion(NVNM, '', wbRecordSizeDecider([0]), [
+    wbEmpty('Navmesh Marker'),
+    wbStruct('Navmesh Geometry', [
+      wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
+      wbStruct('Pathing Cell', [
+        wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
+        wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+        wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
+      ]),
+      wbNavmeshVertices.IncludeFlag(dfNotAlignable),
+      wbNavmeshTriangles.IncludeFlag(dfNotAlignable),
+      wbNavmeshEdgeLinks.IncludeFlag(dfNotAlignable),
+      wbNavmeshDoorTriangles.IncludeFlag(dfNotAlignable),
+      wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
+      wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
+      wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
+      wbNavmeshGrid
+    ])
+  ]);
 
 
 	wbNVNMRecordVal := wbStruct('Navmesh Geometry', [
@@ -8709,7 +8735,8 @@ begin
       {26} 'Photomode Category',
       {27} 'Atomic Shop Filter',
       {28} 'Event Header',
-      {29} 'Loot Bag'
+      {29} 'Loot Bag',
+      {30} 'Item Rarity'
     ]);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
@@ -9505,7 +9532,7 @@ begin
         {68 ptDailyContentGroup }
         wbFormIDCkNoReach('Daily Content Group', [DCGF, QUST]),
         {69 ptSpell }
-        wbFormIDCkNoReach('Spell', [SPEL]),
+        wbFormIDCkNoReach('Spell (Optional)', [SPEL, NULL]),
         {70 ptFactionOpt}
         wbFormIDCkNoReach('Faction', [NULL, FACT])
       ]),
@@ -9695,7 +9722,7 @@ begin
         {68 ptDailyContentGroup }
         wbFormIDCkNoReach('Daily Content Group', [DCGF, QUST]),
         {69 ptSpell }
-        wbFormIDCkNoReach('Spell', [SPEL]),
+        wbFormIDCkNoReach('Spell (Optional)', [SPEL, NULL]),
         {70 ptFactionOpt}
         wbFormIDCkNoReach('Faction', [NULL, FACT])
       ]),
@@ -9792,7 +9819,8 @@ begin
             {0x08} 'Ignore External Damage',
             {0x10} 'Becomes Dynamic',
             {0x20} 'Unknown 5',
-            {0x40} 'Disable Collision'
+            {0x40} 'Disable Collision',
+            {0x80} 'Unknown 7'
           ])),
           wbInteger('Self Damage per Second', itS32),
           wbFormIDCk('Explosion', [EXPL, NULL]),
@@ -10081,7 +10109,8 @@ begin
     {13} 'Material Swaps',
     {14} 'Durability',
     {15} 'Biped World Model',
-    {16} 'Model Swap'
+    {16} 'Model Swap',
+    {17} 'Weight Mult'
   ]);
 
   wbActorPropertyEnum := wbEnum([
@@ -10201,7 +10230,12 @@ begin
    {104} 'MinChargeTime',
    {105} 'PowerAffectsProjectileSpeed',
    {106} 'DamageBonusMult',
-   {107} 'AimAssistModel'
+   {107} 'AimAssistModel',
+   {108} 'WeightMult',
+   {109} 'AmmoConsumption',
+   {110} 'Overheating',
+   {111} 'OverheatRateUp',
+   {112} 'OverheatRateDown'
   ]);
 
   wbStorefrontData :=
@@ -10711,6 +10745,7 @@ begin
     wbFormIDCk(CVT2, 'Condition Damage Scale Factor', [CURV]),
     wbFormIDCk(CVT3, 'Durability Max', [CURV]),
     wbFormIDCk(ABPO, 'Armor Backpack Position Offset', [NULL, TRNS]),
+    wbDIQO,
     wbVCRY
   ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
 
@@ -11360,7 +11395,8 @@ begin
       {0x04} 'Allow Dual Wielding',
       {0x08} 'Charging',
       {0x10} 'Retarget Any Nearby Melee Target',
-      {0x20} 'Unknown 5'
+      {0x20} 'Unknown 5',   //006A063C
+      {0x40} 'Unknown 6'    //006FB700
     ]), cpNormal, True),
     wbStruct(CSTG, '', [
       wbFloat,
@@ -11397,7 +11433,8 @@ begin
         {3} 'Combat',
         {4} 'Detection',
         {5} 'Miscellaneous',
-        {6} 'Unknown'
+        {6} 'Unknown 6',
+        {7} 'Unknown 7'
       ])),
       wbInteger('Subtype', itU16, wbEnum([
         { 0} 'Custom',
@@ -11833,6 +11870,7 @@ begin
       {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
       {0x00000200}  9, 'Unknown 9',
+      {0x00000400} 10, 'Unknown 10',
       {0x00002000} 13, 'Unknown 13',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
@@ -11922,10 +11960,10 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbStruct(FNMU, 'Music Instrument', [
-      wbFormIDCk('Intro', [SNDR]),
+      wbFormIDCk('Intro', [SNDR, NULL]),
       wbFormIDCk('Rhythm', [SNDR]),
       wbFormIDCk('Lead', [SNDR]),
-      wbFormIDCk('Outro', [SNDR])
+      wbFormIDCk('Outro', [SNDR, NULL])
     ]),
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
@@ -11937,12 +11975,14 @@ begin
     wbAPPR,
     wbObjectTemplate,
     wbUnknown(FFEF),
-    wbEmpty(NVNM, 'Navmesh Marker')
+    wbUnknown(NVNM)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
   wbRecord(GLOB, 'Global',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Constant'
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000040}  6, 'Constant',
+      {0x00000200}  9, 'Unknown 9'
     ])), [
     wbEDID,
     wbXALG,
@@ -12197,7 +12237,8 @@ begin
         {0x00800} 'Penetrates Geometry',
         {0x01000} 'Continuous Update',
         {0x02000} 'Seeks Target',
-        {0x04000} 'Unknown 14'
+        {0x04000} 'Unknown 14',
+        {0x08000} 'Unknown 15'
       ])),
       wbInteger('Type', itU16, wbEnum([], [
         $01, 'Missile',
@@ -12511,7 +12552,8 @@ begin
       wbFloat('Sky Scale'),
       wbFloat('Middle Gray'),
       wbFloat('Fog Scale'),
-      wbFloat('Tonemap White Point')
+      wbFloat('Tonemap White Point'),
+      wbUnknown
     ], cpNormal),
     wbStruct(HNAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
@@ -12737,7 +12779,11 @@ begin
     wbString(FULL, 'Name')
   ]);
 
-  wbRecord(FLST, 'FormID List', [
+  wbRecord(FLST, 'FormID List',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+          {0x00000002} 2, 'Unknown 2',   //0066CD08
+          {0x00000200} 9, 'Unknown 9'    //0066CD08
+    ])), [
     wbString(EDID, 'Editor ID', 0, cpBenign, True, nil, wbFLSTEDIDAfterSet),
     wbXALG,
     wbFULL,
@@ -12819,7 +12865,10 @@ begin
         // 9: EPFD=ALCH
 
         wbInteger(EPFB, 'Perk Entry ID (unique)', itU16),
-        wbLString(EPF2, 'Button Label', 0, cpTranslate),
+        wbUnion(EPF2, '', wbEPF2Decider, [
+          wbLString('Button Label', 0, cpTranslate),
+          wbFormID('Curve Table')
+        ]),
         // keeping as struct to be similar to tes5 format
         wbUnion(EPF3, '', wbEPF3Decider, [
           wbStruct('Script Flags', [
@@ -15430,7 +15479,11 @@ begin
     wbGenericModel
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
-  wbRecord(LVLI , 'Leveled Item', [
+  wbRecord(LVLI , 'Leveled Item',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbOBND(True),
     wbPTRN,
@@ -16059,7 +16112,8 @@ begin
     wbFormIDCk(CVT0, 'Health Curve Table', [CURV]),
     wbFormIDCk(CVT1, 'Tier Curve Table', [CURV]),
     wbFormIDCk(CVT2, 'XP Curve Table', [CURV]),
-    wbFormIDCk(CVT3, 'EWS Actor Cost Curve Table', [CURV])
+    wbFormIDCk(CVT3, 'EWS Actor Cost Curve Table', [CURV]),
+    wbFormIDCk(UNWP, 'Unarmed Weapon', [WEAP])
   ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
 
   wbPKDTSpecificFlagsUnused := False;
@@ -16671,7 +16725,8 @@ begin
           {0x08000000} 'Event Quest',
           {0x10000000} 'Raid Quest',
           {0x20000000} 'Unknown 29',
-          {0x40000000} 'Unknown 30'
+          {0x40000000} 'Unknown 30',
+          {0x80000000} 'Unknown 31'
         ])),
         wbInteger('Priority',itU8), //0xE8
         wbByteArray('Unused',3),
@@ -16688,7 +16743,8 @@ begin
           'Event',
           'Daily Ops',
           'Expedition',
-          'Module'
+          'Module',
+          'Caravan'
         ])),  //0xE9
         wbByteArray('Unused',3)
       ]),
@@ -16723,7 +16779,8 @@ begin
           'Event',
           'Daily Ops',
           'Expedition',
-          'Module'
+          'Module',
+          'Caravan'
         ])),  //0xE9
         wbByteArray('Unused',3)
       ])
@@ -16846,7 +16903,7 @@ begin
           wbQUSTAliasFlags,
           wbInteger(ALFI, 'Force Into Alias When Filled', itS32, wbQuestAliasToStr, wbStrToAlias),
           //wbFormIDCk(ALFL, 'Specific Location', [LCTN]),
-          wbFormIDCk(ALFR, 'Forced Reference', [ACHR, REFR, PLYR]),
+          wbFormIDCk(ALFR, 'Forced Reference', [ACHR, REFR, PLYR, NULL]),
           wbFormIDCk(ALUA, 'Unique Actor', [NPC_]),
           wbRStruct('Location Alias Reference', [
             wbInteger(ALFA, 'Alias', itS32, wbQuestAliasToStr, wbStrToAlias),
@@ -16982,7 +17039,7 @@ begin
       ],[])
     ),
     wbByteArray(QTFS, 'QTFS - Unknown 2 bytes', 2),
-    wbEmpty(QMDE, 'Unknown - QMDE')
+    wbUnknown(QMDE)
   ]);
 
   wbBodyPartIndexEnum := wbEnum([
@@ -19245,7 +19302,11 @@ procedure DefineFO76r;
 var
   wbUITE, wbUITO : IwbEnumDef;
 begin
-  wbRecord(INNR, 'Instance Naming Rules', [
+  wbRecord(INNR, 'Instance Naming Rules',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
     wbEDID,
     wbString(INRF, 'Instance Naming Filter'),
     wbInteger(UNAM, 'Target', itU32, wbEnum([], [
@@ -19657,7 +19718,7 @@ begin
   var wbStaticPart :=
     wbRStruct('Part', [
       wbStruct(ONAM, 'Static', [
-        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL]),
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, CNCY, SCOL, FLOR]),
         wbFromSize(8, wbFormIDCK('Material Swap', [MSWP, REFR, NULL]))
       ]),
       wbStaticPartPlacements
@@ -19829,6 +19890,8 @@ begin
 
   wbRecord(TRNS, 'Transform',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Unknown 2',
+      {0x00000200}  9, 'Unknown 9',
       {0x00008000} 16, 'Around Origin'
     ])), [
     wbEDID,
@@ -19958,6 +20021,8 @@ begin
 
   wbRecord(RESO, 'Resource',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
+       2, 'Unknown 2',
+       9, 'Unknown 9',
       28, 'Unknown 28'
     ])), [
     wbEDID,
