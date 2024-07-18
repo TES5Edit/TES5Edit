@@ -5061,6 +5061,7 @@ begin
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00008000} 15, 'Visible When Distant',
       {0x02000000} 25, 'No AI Acquire',
       {0x20000000} 29, 'Don''t Havok Settle'
     ], True, True)), [
@@ -5125,7 +5126,7 @@ begin
       wbByteColors('Link Start Color'),
       wbByteColors('Link End Color')
     ]),
-
+    wbXLOD,
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
@@ -6051,7 +6052,7 @@ begin
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
       {0x00000400} 10, 'Unknown 10',
-      {0x00008000} 15, 'Unknown 15'
+      {0x00008000} 15, 'Visible When Distant'
     ])), [
     wbEDID,
     wbVMAD,
@@ -7887,20 +7888,20 @@ begin
             ])),
 { Flags below are wrong. The first 4 bit are an enum as follows:
 0000 = Open Edge No Cover
-1000 = wall no cover
-0100 = ledge cover
-1100 = UNUSED
-0010 = cover  64
-1010 = cover  80
+0001 = wall no cover
+0010 = ledge cover
+0011 = UNUSED
+0100 = cover  64
+0101 = cover  80
 0110 = cover  96
-1110 = cover 112
-0001 = cover 128
+0111 = cover 112
+1000 = cover 128
 1001 = cover 144
-0101 = cover 160
-1101 = cover 176
-0011 = cover 192
-1011 = cover 208
-0111 = cover 224
+1010 = cover 160
+1011 = cover 176
+1100 = cover 192
+1101 = cover 208
+1110 = cover 224
 1111 = max cover
 then 2 bit flags, then another such enum, and the rest is probably flags.
 Can't properly represent that with current record definition methods.
