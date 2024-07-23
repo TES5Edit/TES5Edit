@@ -4160,9 +4160,9 @@ end;
 
 function TwbFile.GetIsEditable: Boolean;
 begin
-  if wbIsStarfield and Assigned(flModule) then
+  {if wbIsStarfield and Assigned(flModule) then
    if flModule.miExtension = meESP then
-     Exit(False);
+     Exit(False);}
 
   Result :=
     wbIsInternalEdit or
@@ -5065,8 +5065,8 @@ begin
           SetIsLight(True);
       end;
 
-      if flModule.miExtension = meESP then
-        raise Exception.Create('".esp" modules can not be saved in ' + wbAppName + wbToolName);
+      {if flModule.miExtension = meESP then
+        raise Exception.Create('".esp" modules can not be saved in ' + wbAppName + wbToolName);}
     end;
 
     inherited;
