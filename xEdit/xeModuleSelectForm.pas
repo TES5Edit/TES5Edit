@@ -709,8 +709,8 @@ begin
 
         if lForceLoadStarfieldMasters and
            (
-             SameText(lModule.miName, 'Starfield.esm') or
-             SameText(lModule.miName, 'BlueprintShips-Starfield.esm')
+             SameText(lModule.miName, 'Starfield.esm') {or
+             SameText(lModule.miName, 'BlueprintShips-Starfield.esm')}
            )
         then
           Include(lModule.miFlags, mfForceLoad);
