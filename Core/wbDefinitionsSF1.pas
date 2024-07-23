@@ -21654,13 +21654,14 @@ end;
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
-  SetLength(wbOfficialDLC, 3);
+  SetLength(wbOfficialDLC, 7);
   wbOfficialDLC[0] := 'Constellation.esm';
   wbOfficialDLC[1] := 'OldMars.esm';
   wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
-//  wbOfficialDLC[3] := 'SFBGS006.esm';
-//  wbOfficialDLC[4] := 'SFBGS008.esm';
-//  wbOfficialDLC[5] := 'SFBGS007.esm';
+  wbOfficialDLC[3] := 'SFBGS007.esm';
+  wbOfficialDLC[4] := 'SFBGS008.esm';
+  wbOfficialDLC[5] := 'SFBGS006.esm';
+  wbOfficialDLC[6] := 'SFBGS003.esm';
 
   {
   if wbGameMode = gmSF1VR then begin
