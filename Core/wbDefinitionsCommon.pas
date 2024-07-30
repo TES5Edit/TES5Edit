@@ -20,43 +20,56 @@ type
   TwbVarRecs = TArray<TVarRec>;
 
 var
-  wbActionFlag: IwbSubRecordDef;
-  wbAlternateTexture: IwbValueDef;
   wbAxisEnum: IwbEnumDef;
+  wbBoolEnum: IwbEnumDef;
+  wbQuadrantEnum: IwbEnumDef;
+  wbQuestEventEnum: IwbEnumDef;
+  wbSexEnum: IwbEnumDef;
+
+  wbEmptyBaseFlags: IwbFlagsDef;
+  wbRecordFlagsFlags: IwbFlagsDef;
+
+  wbNextSpeaker: IwbIntegerDef;
+
+  wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
-  wbCinematicIMAD: IwbSubRecordStructDef;
-  wbColorInterpolator: IwbStructDef;
   wbDATAPosRot: IwbRecordMemberDef;
+  wbDMDT: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
-  wbHEDR: IwbSubRecordDef;
-  wbMDOB: IwbSubRecordDef;
-  wbNextSpeaker: IwbIntegerDef;
-  wbPosRot: IwbValueDef;
-  wbQuadrantEnum: IwbEnumDef;
-  wbSeasons: IwbRecordMemberDef;
-  wbSexEnum: IwbEnumDef;
-  wbActorSounds: IwbRecordMemberDef;
+  wbINOA: IwbRecordMemberDef;
+  wbINOM: IwbRecordMemberDef;
+  wbLargeReferences: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
-  wbQuestEventVarRecs: TwbVarRecs;
-  wbQuestEventEnum: IwbEnumDef;
+  wbMODT: IwbRecordMemberDef;
   wbRegionSounds: IwbRecordMemberDef;
+  wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
+  wbStaticPartPlacements: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
-  wbTimeInterpolator: IwbValueDef;
   wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
-  wbXLOD: IwbSubRecordDef;
+
+  wbColorInterpolator: IwbStructDef;
+
+  wbActionFlag: IwbSubRecordDef;
+  wbCLSZ: IwbSubRecordDef;
+  wbHEDR: IwbSubRecordDef;
+  wbMHDTCELL: IwbSubRecordDef;
+  wbMHDTWRLD: IwbSubRecordDef;
+  wbMDOB: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
-  wbMODT: IwbRecordMemberDef;
-  wbDMDT: IwbRecordMemberDef;
-  wbBoolEnum: IwbEnumDef;
-  wbStaticPartPlacements: IwbRecordMemberDef;
+  wbVISI: IwbSubRecordDef;
+  wbXLOD: IwbSubRecordDef;
 
-  wbINOM: IwbRecordMemberDef;
-  wbINOA: IwbRecordMemberDef;
+  wbCinematicIMAD: IwbSubRecordStructDef;
 
+  wbAlternateTexture: IwbValueDef;
+  wbPosRot: IwbValueDef;
+  wbTimeInterpolator: IwbValueDef;
+
+  wbQuestEventVarRecs: TwbVarRecs;
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
 
@@ -354,7 +367,6 @@ function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEle
 var
   Container: IwbDataContainer;
   Element: IwbElement;
-  fResult: Extended;
   MinX, MaxX: Integer;
 begin
   Result := 0;
@@ -363,6 +375,72 @@ begin
     Exit;
 
   if not (Container.Name = 'OFST - Offset Data') then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  // Retrieve the minimum X value
+  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+  if not Assigned(Element) then
+    Exit;
+  MinX := Element.NativeValue;
+
+  // Retrieve the maximum X value
+  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+  if not Assigned(Element) then
+    Exit;
+  MaxX := Element.NativeValue;
+
+  // Calculate the total number of columns
+  Result := MaxX - MinX + 1;
+end;
+
+function wbCellSizeDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  MinX, MaxX: Integer;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not (Container.Name = 'CLSZ - Cell Size Data') then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  // Retrieve the minimum X value
+  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+  if not Assigned(Element) then
+    Exit;
+  MinX := Element.NativeValue;
+
+  // Retrieve the maximum X value
+  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+  if not Assigned(Element) then
+    Exit;
+  MaxX := Element.NativeValue;
+
+  // Calculate the total number of columns
+  Result := MaxX - MinX + 1;
+end;
+
+function wbVisibleCellIndexColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  MinX, MaxX: Integer;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not (Container.Name = 'VISI - Visible Cell Index') then
     Exit;
 
   if not Supports(Container.Container, IwbDataContainer, Container) then
@@ -437,6 +515,76 @@ end;
 
 procedure DefineCommon;
 begin
+  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
+    {0x00000001} { 0} 'Unknown 0',
+    {0x00000002} { 1} 'Unknown 1',
+    {0x00000004} { 2} 'Unknown 2',
+    {0x00000008} { 3} 'Unknown 3',
+    {0x00000010} { 4} 'Unknown 4',
+    {0x00000020} { 5} 'Unknown 5',
+    {0x00000040} { 6} 'Unknown 6',
+    {0x00000080} { 7} 'Unknown 7',
+    {0x00000100} { 8} 'Unknown 8',
+    {0x00000200} { 9} 'Unknown 9',
+    {0x00000400} {10} 'Unknown 10',
+    {0x00000800} {11} 'Unknown 11',
+    {0x00001000} {12} 'Unknown 12',
+    {0x00002000} {13} 'Unknown 13',
+    {0x00004000} {14} 'Unknown 14',
+    {0x00008000} {15} 'Unknown 15',
+    {0x00010000} {16} 'Unknown 16',
+    {0x00020000} {17} 'Unknown 17',
+    {0x00040000} {18} 'Unknown 18',
+    {0x00080000} {19} 'Unknown 19',
+    {0x00100000} {20} 'Unknown 20',
+    {0x00200000} {21} 'Unknown 21',
+    {0x00400000} {22} 'Unknown 22',
+    {0x00800000} {23} 'Unknown 23',
+    {0x01000000} {24} 'Unknown 24',
+    {0x02000000} {25} 'Unknown 25',
+    {0x04000000} {26} 'Unknown 26',
+    {0x08000000} {27} 'Unknown 27',
+    {0x10000000} {28} 'Unknown 28',
+    {0x20000000} {29} 'Unknown 29',
+    {0x40000000} {30} 'Unknown 30',
+    {0x80000000} {31} 'Unknown 31'
+  ]);
+
+  wbEmptyBaseFlags := wbFlags(wbEmptyBaseFlags, [
+    {0x00000001} { 0} 'Unknown 0',
+    {0x00000002} { 1} 'Unknown 1',
+    {0x00000004} { 2} 'Unknown 2',
+    {0x00000008} { 3} 'Unknown 3',
+    {0x00000010} { 4} 'Unknown 4',
+    {0x00000020} { 5} 'Unknown 5',
+    {0x00000040} { 6} 'Unknown 6',
+    {0x00000080} { 7} 'Unknown 7',
+    {0x00000100} { 8} 'Unknown 8',
+    {0x00000200} { 9} 'Unknown 9',
+    {0x00000400} {10} 'Unknown 10',
+    {0x00000800} {11} 'Unknown 11',
+    {0x00001000} {12} 'Unknown 12',
+    {0x00002000} {13} 'Unknown 13',
+    {0x00004000} {14} 'Unknown 14',
+    {0x00008000} {15} 'Unknown 15',
+    {0x00010000} {16} 'Unknown 16',
+    {0x00020000} {17} 'Unknown 17',
+    {0x00040000} {18} 'Unknown 18',
+    {0x00080000} {19} 'Unknown 19',
+    {0x00100000} {20} 'Unknown 20',
+    {0x00200000} {21} 'Unknown 21',
+    {0x00400000} {22} 'Unknown 22',
+    {0x00800000} {23} 'Unknown 23',
+    {0x01000000} {24} 'Unknown 24',
+    {0x02000000} {25} 'Unknown 25',
+    {0x04000000} {26} 'Unknown 26',
+    {0x08000000} {27} 'Unknown 27',
+    {0x10000000} {28} 'Unknown 28',
+    {0x20000000} {29} 'Unknown 29',
+    {0x40000000} {30} 'Unknown 30',
+    {0x80000000} {31} 'Unknown 31'
+  ]);
+
   wbBoolEnum := wbEnum(['False', 'True']);
 
   wbHEDR :=
@@ -797,15 +945,124 @@ begin
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
+  wbLargeReferences :=
+    wbRArray('Large References',
+      wbStruct(RNAM, 'Cell Grid', [
+        wbInteger('Y', itS16, nil, cpIgnore),
+        wbInteger('X', itS16, nil, cpIgnore),
+        wbArray('References',
+          wbStruct('Reference', [
+            wbFormIDCk('Ref', [REFR], False, cpIgnore),
+            wbInteger('Y', itS16, nil, cpIgnore),
+            wbInteger('X', itS16, nil, cpIgnore)
+          ]).SetSummaryKey([0])
+          .IncludeFlag(dfCollapsed),
+        -1).IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ]).SetSummaryKeyOnValue([1,0])
+      .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
+      .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlag(dfCollapsed),
+    cpIgnore, False, nil, nil, wbNeverShow);
+
   if wbSimpleRecords then
-    wbOFST := wbByteArray(OFST, 'Offset Data')
+    wbMHDTCELL :=
+      wbByteArray(MHDT, 'Max Height Data')
+  else begin
+    if wbGameMode in [gmSF1] then
+      wbMHDTCELL :=
+        wbStruct(MHDT, 'Max Height Data', [
+          wbFloat('Offset'),
+          wbArray('Max Heights',
+            wbArray('Row',
+              wbInteger('Column', itU8),
+            50).IncludeFlag(dfCollapsed),
+          50).IncludeFlag(dfCollapsed)])
+    else
+      wbMHDTCELL :=
+        wbStruct(MHDT, 'Max Height Data', [
+          wbFloat('Offset'),
+          wbArray('Max Heights',
+            wbArray('Row',
+              wbInteger('Column', itU8),
+            32).IncludeFlag(dfCollapsed),
+          32).IncludeFlag(dfCollapsed)])
+    end;
+
+  if wbSimpleRecords then
+    wbMHDTWRLD :=
+      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
   else
-    wbOFST := wbArray(OFST, 'Offset Data',
-                wbArray('Row',
-                  wbInteger('Column', itU32, nil, cpIgnore),
-                  wbOffsetDataColsCounter, cpIgnore)
-                .IncludeFlag(dfCollapsed)
-                .IncludeFlag(dfNotAlignable), 0, nil, nil, cpIgnore);
+    wbMHDTWRLD :=
+      wbStruct(MHDT, 'Max Height Data', [
+        wbStruct('Min', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbStruct('Max', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbArray('Cell Heights',
+          wbStruct('Quads', [
+            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
+          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+          .IncludeFlag(dfCollapsed))
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
+
+  if wbSimpleRecords then
+    wbOFST :=
+      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
+  else
+    wbOFST :=
+      wbArray(OFST, 'Offset Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+          wbOffsetDataColsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow);
+
+  if wbSimpleRecords then
+    wbCLSZ :=
+      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
+  else
+    wbCLSZ :=
+      wbArray(CLSZ, 'Cell Size Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+        wbCellSizeDataColsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow);
+
+  if wbSimpleRecords then
+    wbVISI :=
+      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
+  else
+    wbVISI :=
+      wbStruct(VISI, 'Visible Cell Index Data', [
+        wbArray('Visible Cells',
+          wbArray('Row',
+            wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
+          wbVisibleCellIndexColsCounter, cpIgnore)
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfNotAlignable),
+        nil, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+        wbStruct('Dimensions', [
+          wbInteger('Min Y', itS16, nil, cpIgnore),
+          wbInteger('Min X', itS16, nil, cpIgnore),
+          wbInteger('Rows', itU32, nil, cpIgnore)
+        ], cpIgnore)
+      ], cpIgnore, False, wbNeverShow);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);

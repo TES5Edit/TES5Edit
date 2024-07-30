@@ -47,242 +47,6 @@ uses
   wbDefinitionsCommon,
   wbDefinitionsSignatures;
 
-const
-  ACBS : TwbSignature = 'ACBS';
-  ACHR : TwbSignature = 'ACHR';
-  ACRE : TwbSignature = 'ACRE';
-  TRGT : TwbSignature = 'TRGT';
-  ACTI : TwbSignature = 'ACTI';
-  AIDT : TwbSignature = 'AIDT';
-  ALCH : TwbSignature = 'ALCH';
-  AMMO : TwbSignature = 'AMMO';
-  ANAM : TwbSignature = 'ANAM';
-  ANIO : TwbSignature = 'ANIO';
-  APPA : TwbSignature = 'APPA';
-  ARMO : TwbSignature = 'ARMO';
-  ATTR : TwbSignature = 'ATTR';
-  ATXT : TwbSignature = 'ATXT';
-  BMDT : TwbSignature = 'BMDT';
-  BNAM : TwbSignature = 'BNAM';
-  BOOK : TwbSignature = 'BOOK';
-  BSGN : TwbSignature = 'BSGN';
-  BTXT : TwbSignature = 'BTXT';
-  CELL : TwbSignature = 'CELL';
-  CLAS : TwbSignature = 'CLAS';
-  CLMT : TwbSignature = 'CLMT';
-  CLOT : TwbSignature = 'CLOT';
-  CNAM : TwbSignature = 'CNAM';
-  CNTO : TwbSignature = 'CNTO';
-  CONT : TwbSignature = 'CONT';
-  CREA : TwbSignature = 'CREA';
-  CSAD : TwbSignature = 'CSAD';
-  CSCR : TwbSignature = 'CSCR';
-  CSDC : TwbSignature = 'CSDC';
-  CSDI : TwbSignature = 'CSDI';
-  CSDT : TwbSignature = 'CSDT';
-  CSTD : TwbSignature = 'CSTD';
-  CSTY : TwbSignature = 'CSTY';
-  CTDA : TwbSignature = 'CTDA';
-  CTDT : TwbSignature = 'CTDT';
-  DATA : TwbSignature = 'DATA';
-  DATX : TwbSignature = 'DATX';
-  DELE : TwbSignature = 'DELE';
-  DESC : TwbSignature = 'DESC';
-  DIAL : TwbSignature = 'DIAL';
-  DNAM : TwbSignature = 'DNAM';
-  DOOR : TwbSignature = 'DOOR';
-  EDID : TwbSignature = 'EDID';
-  EDDX : TwbSignature = 'EDDX';
-  EFID : TwbSignature = 'EFID';
-  EFIT : TwbSignature = 'EFIT';
-  ACVA : TwbSignature = 'ACVA';
-  EFII : TwbSignature = 'EFII';
-  EFXX : TwbSignature = 'EFXX';
-  EFIX : TwbSignature = 'EFIX';
-  EFME : TwbSignature = 'EFME';
-  EFSH : TwbSignature = 'EFSH';
-  ENAM : TwbSignature = 'ENAM';
-  ENCH : TwbSignature = 'ENCH';
-  ENIT : TwbSignature = 'ENIT';
-  ESCE : TwbSignature = 'ESCE';
-  EYES : TwbSignature = 'EYES';
-  FACT : TwbSignature = 'FACT';
-  FGGA : TwbSignature = 'FGGA';
-  FGGS : TwbSignature = 'FGGS';
-  FGTS : TwbSignature = 'FGTS';
-  FLOR : TwbSignature = 'FLOR';
-  FLTV : TwbSignature = 'FLTV';
-  FNAM : TwbSignature = 'FNAM';
-  FULL : TwbSignature = 'FULL';
-  FURN : TwbSignature = 'FURN';
-  GLOB : TwbSignature = 'GLOB';
-  GMST : TwbSignature = 'GMST';
-  GNAM : TwbSignature = 'GNAM';
-  GRAS : TwbSignature = 'GRAS';
-  HAIR : TwbSignature = 'HAIR';
-  HCLR : TwbSignature = 'HCLR';
-  HEDR : TwbSignature = 'HEDR';
-  HNAM : TwbSignature = 'HNAM';
-  ICO2 : TwbSignature = 'ICO2';
-  ICON : TwbSignature = 'ICON';
-  IDLE : TwbSignature = 'IDLE';
-  NULL : TwbSignature = 'NULL';
-  INAM : TwbSignature = 'INAM';
-  INDX : TwbSignature = 'INDX';
-  INFO : TwbSignature = 'INFO';
-  INGR : TwbSignature = 'INGR';
-  JNAM : TwbSignature = 'JNAM';
-  KEYM : TwbSignature = 'KEYM';
-  KFFZ : TwbSignature = 'KFFZ';
-  LAND : TwbSignature = 'LAND';
-  LIGH : TwbSignature = 'LIGH';
-  LNAM : TwbSignature = 'LNAM';
-  LSCR : TwbSignature = 'LSCR';
-  LTEX : TwbSignature = 'LTEX';
-  LVLC : TwbSignature = 'LVLC';
-  LVLD : TwbSignature = 'LVLD';
-  LVLF : TwbSignature = 'LVLF';
-  LVLI : TwbSignature = 'LVLI';
-  LVLO : TwbSignature = 'LVLO';
-  LVSP : TwbSignature = 'LVSP';
-  MAST : TwbSignature = 'MAST';
-  MGEF : TwbSignature = 'MGEF';
-  MISC : TwbSignature = 'MISC';
-  MNAM : TwbSignature = 'MNAM';
-  MO2B : TwbSignature = 'MO2B';
-  MO2T : TwbSignature = 'MO2T';
-  MO3B : TwbSignature = 'MO3B';
-  MO3T : TwbSignature = 'MO3T';
-  MO4B : TwbSignature = 'MO4B';
-  MO4T : TwbSignature = 'MO4T';
-  MOD2 : TwbSignature = 'MOD2';
-  MOD3 : TwbSignature = 'MOD3';
-  MOD4 : TwbSignature = 'MOD4';
-  MODB : TwbSignature = 'MODB';
-  MODL : TwbSignature = 'MODL';
-  NAM0 : TwbSignature = 'NAM0';
-  NAM1 : TwbSignature = 'NAM1';
-  NAM2 : TwbSignature = 'NAM2';
-  NAM9 : TwbSignature = 'NAM9';
-  NAME : TwbSignature = 'NAME';
-  NIFT : TwbSignature = 'NIFT';
-  NIFZ : TwbSignature = 'NIFZ';
-  NPC_ : TwbSignature = 'NPC_';
-  OBME : TwbSignature = 'OBME';
-  ONAM : TwbSignature = 'ONAM';
-  PACK : TwbSignature = 'PACK';
-  PFIG : TwbSignature = 'PFIG';
-  PFPC : TwbSignature = 'PFPC';
-  PGAG : TwbSignature = 'PGAG';
-  PGRD : TwbSignature = 'PGRD';
-  PGRI : TwbSignature = 'PGRI';
-  PGRL : TwbSignature = 'PGRL';
-  PGRP : TwbSignature = 'PGRP';
-  PGRR : TwbSignature = 'PGRR';
-  PKDT : TwbSignature = 'PKDT';
-  PKID : TwbSignature = 'PKID';
-  PLDT : TwbSignature = 'PLDT';
-  PNAM : TwbSignature = 'PNAM';
-  PSDT : TwbSignature = 'PSDT';
-  PTDT : TwbSignature = 'PTDT';
-  QNAM : TwbSignature = 'QNAM';
-  QSDT : TwbSignature = 'QSDT';
-  QSTA : TwbSignature = 'QSTA';
-  QSTI : TwbSignature = 'QSTI';
-  QSTR : TwbSignature = 'QSTR';
-  TPIC : TwbSignature = 'TPIC';
-  QUST : TwbSignature = 'QUST';
-  RACE : TwbSignature = 'RACE';
-  RCLR : TwbSignature = 'RCLR';
-  RDAT : TwbSignature = 'RDAT';
-  RDGS : TwbSignature = 'RDGS';
-  RDMD : TwbSignature = 'RDMD';
-  RDMP : TwbSignature = 'RDMP';
-  RDOT : TwbSignature = 'RDOT';
-  RDSD : TwbSignature = 'RDSD';
-  RDWT : TwbSignature = 'RDWT';
-  REFR : TwbSignature = 'REFR';
-  PLYR : TwbSignature = 'PLYR';
-  REGN : TwbSignature = 'REGN';
-  RNAM : TwbSignature = 'RNAM';
-  ROAD : TwbSignature = 'ROAD';
-  RPLD : TwbSignature = 'RPLD';
-  RPLI : TwbSignature = 'RPLI';
-  SBSP : TwbSignature = 'SBSP';
-  SCHD : TwbSignature = 'SCHD';
-  SCHR : TwbSignature = 'SCHR';
-  SCIT : TwbSignature = 'SCIT';
-  SCPT : TwbSignature = 'SCPT';
-  SCRI : TwbSignature = 'SCRI';
-  SCRO : TwbSignature = 'SCRO';
-  SCRV : TwbSignature = 'SCRV';
-  SCVR : TwbSignature = 'SCVR';
-  SGST : TwbSignature = 'SGST';
-  SKIL : TwbSignature = 'SKIL';
-  SLCP : TwbSignature = 'SLCP';
-  SLGM : TwbSignature = 'SLGM';
-  SLSD : TwbSignature = 'SLSD';
-  SNAM : TwbSignature = 'SNAM';
-  SNDD : TwbSignature = 'SNDD';
-  SNDX : TwbSignature = 'SNDX';
-  SOUL : TwbSignature = 'SOUL';
-  SOUN : TwbSignature = 'SOUN';
-  SPEL : TwbSignature = 'SPEL';
-  SPIT : TwbSignature = 'SPIT';
-  SPLO : TwbSignature = 'SPLO';
-  STAT : TwbSignature = 'STAT';
-  TCLF : TwbSignature = 'TCLF';
-  TCLT : TwbSignature = 'TCLT';
-  TES4 : TwbSignature = 'TES4';
-  TNAM : TwbSignature = 'TNAM';
-  TRDT : TwbSignature = 'TRDT';
-  TREE : TwbSignature = 'TREE';
-  UNAM : TwbSignature = 'UNAM';
-  VCLR : TwbSignature = 'VCLR';
-  VHGT : TwbSignature = 'VHGT';
-  VNAM : TwbSignature = 'VNAM';
-  VNML : TwbSignature = 'VNML';
-  VTEX : TwbSignature = 'VTEX';
-  VTXT : TwbSignature = 'VTXT';
-  WATR : TwbSignature = 'WATR';
-  WEAP : TwbSignature = 'WEAP';
-  WLST : TwbSignature = 'WLST';
-  WNAM : TwbSignature = 'WNAM';
-  WRLD : TwbSignature = 'WRLD';
-  WTHR : TwbSignature = 'WTHR';
-  XACT : TwbSignature = 'XACT';
-  XCCM : TwbSignature = 'XCCM';
-  XCHG : TwbSignature = 'XCHG';
-  XCLC : TwbSignature = 'XCLC';
-  XCLL : TwbSignature = 'XCLL';
-  XCLR : TwbSignature = 'XCLR';
-  XCLW : TwbSignature = 'XCLW';
-  XCMT : TwbSignature = 'XCMT';
-  XCNT : TwbSignature = 'XCNT';
-  XCWT : TwbSignature = 'XCWT';
-  XESP : TwbSignature = 'XESP';
-  XGLB : TwbSignature = 'XGLB';
-  XHLT : TwbSignature = 'XHLT';
-  XHRS : TwbSignature = 'XHRS';
-  XLCM : TwbSignature = 'XLCM';
-  XLOC : TwbSignature = 'XLOC';
-  XLOD : TwbSignature = 'XLOD';
-  XMRC : TwbSignature = 'XMRC';
-  XMRK : TwbSignature = 'XMRK';
-  XNAM : TwbSignature = 'XNAM';
-  XOWN : TwbSignature = 'XOWN';
-  XPCI : TwbSignature = 'XPCI';
-  XRGD : TwbSignature = 'XRGD';
-  XRNK : TwbSignature = 'XRNK';
-  XRTM : TwbSignature = 'XRTM';
-  XSCL : TwbSignature = 'XSCL';
-  XSED : TwbSignature = 'XSED';
-  XSOL : TwbSignature = 'XSOL';
-  XTEL : TwbSignature = 'XTEL';
-  XTRG : TwbSignature = 'XTRG';
-  XXXX : TwbSignature = 'XXXX';
-  ZNAM : TwbSignature = 'ZNAM';
-
 var
   wbEDID: IwbSubRecordDef;
   wbXOWN: IwbSubRecordDef;
@@ -4577,85 +4341,6 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ]);
 
-  if wbSimpleRecords then
-    wbRecord(WRLD, 'Worldspace', [
-      wbEDID,
-      wbFULL,
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD])
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small world',
-        {0x02} 'Can''t fast travel',
-        {0x04} 'Oblivion worldspace',
-        {0x08} '',
-        {0x10} 'No LOD water'
-      ]), cpNormal, True),
-      //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      wbWorldspaceOBND,
-      wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-      wbByteArray(OFST, 'Offset Data')
-    ])
-  else
-  wbRecord(WRLD, 'Worldspace', [
-      wbEDID,
-      wbFULL,
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD])
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small world',
-        {0x02} 'Can''t fast travel',
-        {0x04} 'Oblivion worldspace',
-        {0x08} '',
-        {0x10} 'No LOD water'
-      ]), cpNormal, True),
-      //wbArray(NAM0, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      //wbArray(NAM9, 'Unknown', wbFloat(''), 0, nil, nil, cpNormal, True),
-      wbWorldspaceOBND,
-      wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-      wbOFST
-    ]);
-
   wbRecord(WTHR, 'Weather', [
     wbEDID,
     wbString(CNAM, 'Texture Lower Layer'),
@@ -4711,6 +4396,45 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True),
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
+
+wbRecord(WRLD, 'Worldspace', [
+  wbEDID,
+  wbFULL,
+  wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+  wbFormIDCk(CNAM, 'Climate', [CLMT]),
+  wbFormIDCk(NAM2, 'Water', [WATR]),
+  wbICON,
+  wbStruct(MNAM, 'Map Data', [
+    wbStruct('Usable Dimensions', [
+      wbInteger('X', itS32),
+      wbInteger('Y', itS32)
+    ]),
+    wbStruct('Cell Coordinates', [
+      wbStruct('NW Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ]),
+      wbStruct('SE Cell', [
+        wbInteger('X', itS16),
+        wbInteger('Y', itS16)
+      ])
+    ])
+  ]),
+  wbInteger(DATA, 'Flags', itU8, wbFlags([
+    {0x01} 'Small world',
+    {0x02} 'Can''t fast travel',
+    {0x04} 'Oblivion worldspace',
+    {0x08} '',
+    {0x10} 'No LOD water'
+  ]), cpNormal, True),
+  wbWorldspaceOBND,
+  wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
+  wbOFST
+  .IncludeFlag(dfCollapsed)
+  .IncludeFlag(dfFastAssign)
+  .IncludeFlag(dfNoCopyAsOverride)
+  .IncludeFlag(dfNotAlignable)
+]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);

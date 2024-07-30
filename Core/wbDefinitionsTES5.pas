@@ -180,8 +180,6 @@ var
   wbNull: IwbValueDef;
   wbYNAM: IwbSubRecordDef;
   wbZNAM: IwbSubRecordDef;
-  wbMaxHeightDataCELL: IwbSubRecordDef;
-  wbMaxHeightDataWRLD: IwbSubRecordDef;
   wbTVDT: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
   wbNAVIslandData: IwbStructDef;
@@ -3030,6 +3028,22 @@ begin
     Result := True;
 end;
 
+procedure wbRemoveRNAM(const aElement: IwbElement);
+var
+  MainRecord: IwbMainRecord;
+begin
+  if not wbRemoveOffsetData then
+    Exit;
+  if not Supports(aElement, IwbMainRecord, MainRecord) then
+    Exit;
+  if wbBeginInternalEdit then try
+    if MainRecord._File.LoadOrder = 0 then
+	  MainRecord.RemoveElement('Large References');
+  finally
+    wbEndInternalEdit;
+  end;
+end;
+
 procedure wbRemoveOFST(const aElement: IwbElement);
 var
   Container: IwbContainer;
@@ -3052,7 +3066,7 @@ begin
   end;
 end;
 
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
+procedure wbFixWorldspaceBounds(const aElement: IwbElement);
   function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
   begin
     Result := (aValue < -aRange) or (aValue > aRange);
@@ -3065,15 +3079,6 @@ begin
 
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
-
-    // not used in Skyrim
-    if MainRecord.ElementExists['Unused RNAM'] then
-      MainRecord.RemoveElement('Unused RNAM');
-
-    // used in SSE but remove from the game master to speed up worldspace browsing since it is huge
-    // and the game master is never saved anyway
-    if IsSSE and (MainRecord._File.LoadOrder = 0) then
-      MainRecord.RemoveElement('Large References');
 
     // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
     // CK can occasionally set them wrong, so make a warning
@@ -3089,14 +3094,19 @@ begin
   end;
 end;
 
+procedure wbWRLDAfterLoad(const aElement: IwbElement);
+begin
+  wbRemoveRNAM(aElement);
+  wbRemoveOFST(aElement);
+  wbFixWorldspaceBounds(aElement);
+end;
+
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
 var
   ObjectsContainer : IwbContainerElementRef;
   i                : Integer;
   ObjectContainer  : IwbContainerElementRef;
 begin
-  wbRemoveOFST(aElement);
-
   if wbBeginInternalEdit then try
 
     if not Supports(aElement, IwbContainerElementRef, ObjectsContainer) then
@@ -4075,10 +4085,6 @@ begin
   end;
 end;
 
-
-var
-  wbRecordFlagsFlags, wbEmptyBaseFlags : IwbFlagsDef;
-
 procedure DefineTES5a;
 
 begin
@@ -4296,147 +4302,6 @@ begin
     ], True)),
     wbByteArray('Unknown', 2),
     wbByteColors('Color')
-  ]);
-
-//  wbRecordFlagsFlags := wbFlags([
-//    {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
-//    {0x00000001}'ESM',
-//    {0x00000002}'Unknown 2',
-//    {>>> 0x00000004 ARMO: Not playable <<<}
-//    {0x00000004}'NotPlayable',
-//    {0x00000008}'Unknown 4',
-//    {0x00000010}'Unknown 5',
-//    {0x00000020}'Deleted',
-//    {>>> 0x00000040 ACTI: Has Tree LOD <<<}
-//    {>>> 0x00000040 REGN: Border Region <<<}
-//    {>>> 0x00000040 STAT: Has Tree LOD <<<}
-//    {>>> 0x00000040 REFR: Hidden From Local Map <<<}
-//    {0x00000040}'Constant HiddenFromLocalMap BorderRegion HasTreeLOD',
-//    {>>> 0x00000080 TES4: Localized <<<}
-//    {>>> 0x00000080 PHZD: Turn Off Fire <<<}
-//    {>>> 0x00000080 SHOU: Treat Spells as Powers <<<}
-//    {>>> 0x00000080 STAT: Add-on LOD Object <<<}
-//    {0x00000080}'Localized IsPerch AddOnLODObject TurnOffFire TreatSpellsAsPowers',
-//    {>>> 0x00000100 ACTI: Must Update Anims <<<}
-//    {>>> 0x00000100 REFR: Inaccessible <<<}
-//    {>>> 0x00000100 REFR for LIGH: Doesn't light water <<<}
-//    {0x00000100}'MustUpdateAnims Inaccessible DoesntLightWater',
-//    {>>> 0x00000200 ACTI: Local Map - Turns Flag Off, therefore it is Hidden <<<}
-//    {>>> 0x00000200 REFR: MotionBlurCastsShadows <<<}
-//    {0x00000200}'HiddenFromLocalMap StartsDead MotionBlurCastsShadows',
-//    {>>> 0x00000400 LSCR: Displays in Main Menu <<<}
-//    {0x00000400}'PersistentReference QuestItem DisplaysInMainMenu',
-//    {0x00000800}'InitiallyDisabled',
-//    {0x00001000}'Ignored',
-//    {0x00002000}'ActorChanged',
-//    {0x00004000}'Unknown 15',
-//    {>>> 0x00008000 STAT: Has Distant LOD <<<}
-//    {0x00008000}'VWD',
-//    {>>> 0x00010000 ACTI: Random Animation Start <<<}
-//    {>>> 0x00010000 REFR light: Never fades <<<}
-//    {0x00010000}'RandomAnimationStart NeverFades',
-//    {>>> 0x00020000 ACTI: Dangerous <<<}
-//    {>>> 0x00020000 REFR light: Doesn't light landscape <<<}
-//    {>>> 0x00020000 SLGM: Can hold NPC's soul <<<}
-//    {>>> 0x00020000 STAT: Use High-Detail LOD Texture <<<}
-//    {0x00020000}'Dangerous OffLimits DoesntLightLandscape HighDetailLOD CanHoldNPC',
-//    {0x00040000}'Compressed',
-//    {>>> 0x00080000 STAT: Has Currents <<<}
-//    {0x00080000}'CantWait HasCurrents',
-//    {>>> 0x00100000 ACTI: Ignore Object Interaction <<<}
-//    {0x00100000}'IgnoreObjectInteraction',
-//    {0x00200000}'(Used in Memory Changed Form)',
-//    {0x00400000}'Unknown 23',
-//    {>>> 0x00800000 ACTI: Is Marker <<<}
-//    {0x00800000}'IsMarker',
-//    {0x01000000}'Unknown 25',
-//    {>>> 0x02000000 ACTI: Obstacle <<<}
-//    {>>> 0x02000000 REFR: No AI Acquire <<<}
-//    {0x02000000}'Obstacle NoAIAcquire',
-//    {>>> 0x04000000 ACTI: Filter <<<}
-//    {0x04000000}'NavMeshFilter',
-//    {>>> 0x08000000 ACTI: Bounding Box <<<}
-//    {0x08000000}'NavMeshBoundingBox',
-//    {>>> 0x10000000 STAT: Show in World Map <<<}
-//    {0x10000000}'MustExitToTalk ShowInWorldMap',
-//    {>>> 0x20000000 ACTI: Child Can Use <<<}
-//    {>>> 0x20000000 REFR: Don't Havok Settle <<<}
-//    {0x20000000}'ChildCanUse DontHavokSettle',
-//    {>>> 0x40000000 ACTI: GROUND <<<}
-//    {>>> 0x40000000 REFR: NoRespawn <<<}
-//    {0x40000000}'NavMeshGround NoRespawn',
-//    {>>> 0x80000000 REFR: MultiBound <<<}
-//    {0x80000000}'MultiBound'
-//  ], [18]);
-
-  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
-    {0x00000001} { 0} 'Unknown 0',
-    {0x00000002} { 1} 'Unknown 1',
-    {0x00000004} { 2} 'Unknown 2',
-    {0x00000008} { 3} 'Unknown 3',
-    {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 4} 'Unknown 5',
-    {0x00000040} { 6} 'Unknown 6',
-    {0x00000080} { 7} 'Unknown 7',
-    {0x00000100} { 8} 'Unknown 8',
-    {0x00000200} { 9} 'Unknown 9',
-    {0x00000400} {10} 'Unknown 10',
-    {0x00000800} {11} 'Unknown 11',
-    {0x00001000} {12} 'Unknown 12',
-    {0x00002000} {13} 'Unknown 13',
-    {0x00004000} {14} 'Unknown 14',
-    {0x00008000} {15} 'Unknown 15',
-    {0x00010000} {16} 'Unknown 16',
-    {0x00020000} {17} 'Unknown 17',
-    {0x00040000} {18} 'Unknown 18',
-    {0x00080000} {19} 'Unknown 19',
-    {0x00100000} {20} 'Unknown 20',
-    {0x00200000} {21} 'Unknown 21',
-    {0x00400000} {22} 'Unknown 22',
-    {0x00800000} {23} 'Unknown 23',
-    {0x01000000} {24} 'Unknown 24',
-    {0x02000000} {25} 'Unknown 25',
-    {0x04000000} {26} 'Unknown 26',
-    {0x08000000} {27} 'Unknown 27',
-    {0x10000000} {28} 'Unknown 28',
-    {0x20000000} {29} 'Unknown 29',
-    {0x40000000} {30} 'Unknown 30',
-    {0x80000000} {31} 'Unknown 31'
-  ]);
-
-  wbEmptyBaseFlags := wbFlags(wbEmptyBaseFlags, [
-    {0x00000001} { 0} 'Unknown 0',
-    {0x00000002} { 1} 'Unknown 1',
-    {0x00000004} { 2} 'Unknown 2',
-    {0x00000008} { 3} 'Unknown 3',
-    {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 4} 'Unknown 5',
-    {0x00000040} { 6} 'Unknown 6',
-    {0x00000080} { 7} 'Unknown 7',
-    {0x00000100} { 8} 'Unknown 8',
-    {0x00000200} { 9} 'Unknown 9',
-    {0x00000400} {10} 'Unknown 10',
-    {0x00000800} {11} 'Unknown 11',
-    {0x00001000} {12} 'Unknown 12',
-    {0x00002000} {13} 'Unknown 13',
-    {0x00004000} {14} 'Unknown 14',
-    {0x00008000} {15} 'Unknown 15',
-    {0x00010000} {16} 'Unknown 16',
-    {0x00020000} {17} 'Unknown 17',
-    {0x00040000} {18} 'Unknown 18',
-    {0x00080000} {19} 'Unknown 19',
-    {0x00100000} {20} 'Unknown 20',
-    {0x00200000} {21} 'Unknown 21',
-    {0x00400000} {22} 'Unknown 22',
-    {0x00800000} {23} 'Unknown 23',
-    {0x01000000} {24} 'Unknown 24',
-    {0x02000000} {25} 'Unknown 25',
-    {0x04000000} {26} 'Unknown 26',
-    {0x08000000} {27} 'Unknown 27',
-    {0x10000000} {28} 'Unknown 28',
-    {0x20000000} {29} 'Unknown 29',
-    {0x40000000} {30} 'Unknown 30',
-    {0x80000000} {31} 'Unknown 31'
   ]);
 
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
@@ -5186,39 +5051,6 @@ begin
   wbTVDT := wbByteArray(TVDT, 'Occlusion Data', 0, cpNormal);
 //  wbTVDT := wbArray(TVDT, 'Occlusion Data', wbInteger('Unknown', itS32)),
 
-  if wbSimpleRecords then begin
-    wbMaxHeightDataCELL := wbByteArray(MHDT, 'Max Height Data', 0, cpNormal);
-    wbMaxHeightDataWRLD := wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-  end
-  else begin
-    wbMaxHeightDataCELL := wbStruct(MHDT, 'Max Height Data', [
-      wbFloat('Offset'),
-      wbArray('Rows',
-        wbByteArray('Columns', 32)
-        // way too verbose for no practical use
-        //wbStruct('Row', [ wbArray('Columns', wbInteger('Column', itU8), 32) ])
-      , 32)
-    ]);
-    wbMaxHeightDataWRLD := wbStruct(MHDT, 'Max Height Data', [
-      wbStruct('Min', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbStruct('Max', [
-        wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-        wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      ]),
-      wbByteArray('Cell Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-      // way too verbose for no practical use
-      {wbArray('Cell Data', wbStruct('Quad Height', [
-        wbInteger('Bottom Left', itU8),
-        wbInteger('Bottom Right', itU8),
-        wbInteger('Top Left', itU8),
-        wbInteger('Top Right', itU8)
-      ]))}
-    ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-  end;
-
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
 end;
 
@@ -5229,6 +5061,7 @@ begin
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
+      {0x00008000} 15, 'Visible When Distant',
       {0x02000000} 25, 'No AI Acquire',
       {0x20000000} 29, 'Don''t Havok Settle'
     ], True, True)), [
@@ -5293,7 +5126,7 @@ begin
       wbByteColors('Link Start Color'),
       wbByteColors('Link End Color')
     ]),
-
+    wbXLOD,
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
     wbEmpty(XIS2, 'Ignored by Sandbox'),
@@ -6219,7 +6052,7 @@ begin
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
       {0x00000400} 10, 'Unknown 10',
-      {0x00008000} 15, 'Unknown 15'
+      {0x00008000} 15, 'Visible When Distant'
     ])), [
     wbEDID,
     wbVMAD,
@@ -6476,7 +6309,8 @@ begin
     ], cpNormal, False, nil, 11),
 
     wbTVDT,
-    wbMaxHeightDataCELL,
+    wbMHDTCELL
+    .IncludeFlag(dfCollapsed),
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
     wbByteArray(LNAM, 'Unknown', 0, cpIgnore), // leftover flags, they are now in XCLC
 
@@ -8054,20 +7888,20 @@ begin
             ])),
 { Flags below are wrong. The first 4 bit are an enum as follows:
 0000 = Open Edge No Cover
-1000 = wall no cover
-0100 = ledge cover
-1100 = UNUSED
-0010 = cover  64
-1010 = cover  80
+0001 = wall no cover
+0010 = ledge cover
+0011 = UNUSED
+0100 = cover  64
+0101 = cover  80
 0110 = cover  96
-1110 = cover 112
-0001 = cover 128
+0111 = cover 112
+1000 = cover 128
 1001 = cover 144
-0101 = cover 160
-1101 = cover 176
-0011 = cover 192
-1011 = cover 208
-0111 = cover 224
+1010 = cover 160
+1011 = cover 176
+1100 = cover 192
+1101 = cover 208
+1110 = cover 224
 1111 = max cover
 then 2 bit flags, then another such enum, and the rest is probably flags.
 Can't properly represent that with current record definition methods.
@@ -10927,7 +10761,7 @@ begin
     wbSPCT,
     wbSPLOs,
     wbDEST,
-    wbFormIDCk(WNAM, 'Worn Armor', [ARMO], False, cpNormal, False),
+    wbFormIDCk(WNAM, 'Skin', [ARMO], False, cpNormal, False),
     wbFormIDCk(ANAM, 'Far away model', [ARMO], False, cpNormal, False, nil{wbActorTemplateUseTraits}),
     wbFormIDCk(ATKR, 'Attack Race', [RACE], False, cpNormal, False),
     wbRArrayS('Attacks', wbAttackData),
@@ -13110,23 +12944,16 @@ begin
       {0x00080000} 19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
-    wbRArray(IsSSE('Large References', 'Unused RNAM'),
-      wbStruct(RNAM, 'Grid', [
-        wbInteger('Y', itS16, nil, cpIgnore),
-        wbInteger('X', itS16, nil, cpIgnore),
-        wbArray('References', wbStruct('Reference', [
-          wbFormIDCk('Ref', [REFR], False, cpIgnore),
-          wbInteger('Y', itS16, nil, cpIgnore),
-          wbInteger('X', itS16, nil, cpIgnore)
-        ]), -1).IncludeFlag(dfNotAlignable)
-      ]),
-      cpIgnore, False, nil, nil, wbNeverShow
-    )
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfNoCopyAsOverride)
-      .IncludeFlag(dfNotAlignable)
-      .IncludeFlag(dfFastAssign),
-    wbMaxHeightDataWRLD,
+    wbLargeReferences
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+    .IncludeFlag(dfFastAssign),
+    wbMHDTWRLD
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+    .IncludeFlag(dfFastAssign),
     wbFULL,
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
@@ -13209,6 +13036,8 @@ begin
     wbOFST
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+    .IncludeFlag(dfFastAssign)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 
