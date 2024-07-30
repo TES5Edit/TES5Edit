@@ -769,6 +769,7 @@ begin
     Sig2Int(ASSU), 'Assault Actor Event',
     Sig2Int(BRIB), 'Bribe',
     Sig2Int(CAST), 'Cast Magic Event',
+    Sig2Int(CBGN), 'Caravan Begin Event',
     Sig2Int(CHRR), 'Change Relationship Rank',
     Sig2Int(CLOC), 'Change Location Event',
     Sig2Int(CLRL), 'Clear Location Event',

@@ -170,6 +170,7 @@ const
   AVIF : TwbSignature = 'AVIF';
   AVMD : TwbSignature = 'AVMD'; { New To Starfield }
   AVMG : TwbSignature = 'AVMG'; { New To Fallout 76 }
+  AVMP : TwbSignature = 'AVMP'; { New To Starfield }
   AVSG : TwbSignature = 'AVSG'; { New To Starfield }
   AVSK : TwbSignature = 'AVSK'; { New to Skyrim }
   AVTR : TwbSignature = 'AVTR'; { New To Fallout 76 }
@@ -244,6 +245,7 @@ const
   CAMS : TwbSignature = 'CAMS';
   CARD : TwbSignature = 'CARD';
   CAST : TwbSignature = 'CAST';
+  CBGN : TwbSignature = 'CBGN'; { New to Fallout 76 }
   CCRD : TwbSignature = 'CCRD';
   CDCK : TwbSignature = 'CDCK';
   CDIX : TwbSignature = 'CDIX'; { New to Fallout 4 }
