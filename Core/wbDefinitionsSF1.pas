@@ -2160,6 +2160,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
+  i           : Integer;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
 
@@ -2172,9 +2173,9 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
 
   if not Assigned(Parent) then
     Exit;
-
+  i := Parent.NativeValue;
   // is interior cell?
-  if (Parent.NativeValue = 0) then
+  if i = 0 then
     Result := 1;
 end;
 
@@ -2182,6 +2183,7 @@ function wbDoorTriangleDoorTriangleDecider(aBasePtr: Pointer; aEndPtr: Pointer; 
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
+  i           : Int64;
 begin
   Result := 0;
 
@@ -2194,9 +2196,9 @@ begin
 
   if not Assigned(Parent) then
     Exit;
-
+  i := Parent.NativeValue;
   // not sure if it would be an error in the file or if it really possible
-  if (Parent.NativeValue = 0) then
+  if i <> 0 then
     Result := 1;
 end;
 
