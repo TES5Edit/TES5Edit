@@ -40,6 +40,7 @@ var
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
   wbLargeReferences: IwbRecordMemberDef;
+  wbLayers: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
   wbRegionSounds: IwbRecordMemberDef;
@@ -48,19 +49,24 @@ var
   wbSoundTypeSounds: IwbRecordMemberDef;
   wbStaticPartPlacements: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
-  wbVertexHeightMap: IwbRecordMemberDef;
   wbWorldspaceOBND: IwbRecordMemberDef;
 
   wbColorInterpolator: IwbStructDef;
 
   wbActionFlag: IwbSubRecordDef;
+  wbATXT: IwbSubRecordDef;
+  wbBTXT: IwbSubRecordDef;
   wbCLSZ: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
   wbMHDTCELL: IwbSubRecordDef;
   wbMHDTWRLD: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
+  wbVCLR: IwbSubRecordDef;
+  wbVHGT: IwbSubRecordDef;
   wbVISI: IwbSubRecordDef;
+  wbVNML: IwbSubRecordDef;
+  wbVTXT: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
 
   wbCinematicIMAD: IwbSubRecordStructDef;
@@ -211,8 +217,6 @@ function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberD
 
 function wbHeadPart(aHeadPartIndexEnum: IwbEnumDef = nil; aModel: IwbRecordMemberDef = nil; aHeadPartsAfterSet: TwbAfterSetCallback = nil): IwbRecordMemberDef;
 
-function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
-
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 
 function wbOwnership(aOwner: IwbSubRecordDef; aSkipSigs: TwbSignatures; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
@@ -220,8 +224,6 @@ function wbOwnership(aOwner: IwbSubRecordDef; aSkipSigs: TwbSignatures; aGlobal:
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 
 function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
-
-function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
 
 function wbModelInfo(aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
 function wbModelInfos(aSignature: TwbSignature; aName: string = ''; aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
@@ -903,15 +905,6 @@ begin
       .IncludeFlag(dfCollapsed)
     );
 
-  wbVertexHeightMap :=
-    wbStruct(VHGT, 'Vertex Height Map', [
-      wbFloat('Offset'),
-      wbArray('Rows', wbStruct('Row', [
-        wbArray('Columns', wbInteger('Column', itS8), 33)
-      ]), 33),
-      wbByteArray('Unused', 3)
-    ]);
-
   var lScaleFactor := 1/wbCellSizeFactor;
 
   wbWorldspaceOBND :=
@@ -1079,6 +1072,101 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapsePlacement)
     , 0, cpNormal, True);
+
+  if wbSimpleRecords then
+    wbVNML :=
+      wbByteArray(VNML, 'Vertex Normals', -1, cpIgnore)
+  else
+    wbVNML :=
+      wbArray(VNML, 'Vertex Normals',
+        wbArray('Row',
+          wbStruct('Column', [
+            wbInteger('X', itU8, nil, cpIgnore),
+            wbInteger('Y', itU8, nil, cpIgnore),
+            wbInteger('Z', itU8, nil, cpIgnore)
+          ], cpIgnore)
+          .SetSummaryKey([0, 1, 2])
+          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
+          .SetSummaryMemberPrefixSuffix(2, '', ')')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+        33, cpIgnore),
+      33, nil, nil, cpIgnore);
+
+  if wbSimpleRecords then
+    wbVHGT :=
+      wbByteArray(VHGT, 'Vertex Height Map')
+  else
+    wbVHGT :=
+      wbStruct(VHGT, 'Vertex Height Map', [
+        wbFloat('Offset'),
+        wbArray('Height Data',
+          wbArray('Row',
+            wbInteger('Column', itS8),
+          33),
+        33),
+        wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow)
+      ]);
+
+  if wbSimpleRecords then
+    wbVCLR :=
+      wbByteArray(VCLR, 'Vertex Colors')
+  else
+    wbVCLR :=
+      wbArray(VCLR, 'Vertex Colors',
+        wbArray('Columns',
+          wbStruct('Column', [
+            wbInteger('R', itU8),
+            wbInteger('G', itU8),
+            wbInteger('B', itU8)
+          ])
+          .SetSummaryKey([0, 1, 2])
+          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
+          .SetSummaryMemberPrefixSuffix(2, '', ')')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+        33),
+      33);
+
+  wbATXT :=
+    wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
+      wbFormIDCk('Texture', [LTEX, NULL]),
+      wbInteger('Quadrant', itU8, wbQuadrantEnum),
+      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+      wbInteger('Layer', itU16)
+    ]);
+
+  wbBTXT :=
+    wbStructSK(BTXT, [1, 3], 'Base Layer', [
+      wbFormIDCk('Texture', [LTEX, NULL]),
+      wbInteger('Quadrant', itU8, wbQuadrantEnum),
+      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+      wbInteger('Layer', itU16)
+    ]);
+
+  if wbSimpleRecords then
+    wbVTXT :=
+      wbByteArray(VTXT, 'Alpha Layer Data')
+  else
+    wbVTXT :=
+      wbArrayS(VTXT, 'Alpha Layer Data',
+        wbStructSK([0], 'Cell', [
+          wbInteger('Position', itU16, wbATXTPosition),
+          wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+          wbFloat('Opacity')
+        ]));
+
+  wbLayers :=
+    wbRArrayS('Layers',
+      wbRUnion('Layer', [
+        wbRStructSK([0], 'Base Layer', [
+          wbBTXT
+        ], []),
+        wbRStructSK([0], 'Alpha Lyaer', [
+          wbATXT,
+          wbVTXT
+        ], [])
+      ], []));
 
   wbINOM :=
     wbArray(INOM, 'INFO Order (Masters only)',
@@ -1660,42 +1748,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseHeadParts);
 end;
 
-function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
-var
-  alphaLayerData: IwbSubRecordDef;
-begin
-  if aSimpleRecords then
-    alphaLayerData := wbByteArray(VTXT, 'Alpha Layer Data')
-  else
-    alphaLayerData :=
-      wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
-        wbInteger('Position', itU16, wbAtxtPosition),
-        wbByteArray('Unused', 2),
-        wbFloat('Opacity')
-      ]));
-
-  Result :=
-    wbRArrayS('Layers', wbRUnion('Layer', [
-      wbRStructSK([0],'Base Layer', [
-        wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-          wbFormIDCk('Texture', [LTEX, NULL]),
-          wbInteger('Quadrant', itU8, wbQuadrantEnum),
-          wbByteArray('Unused', 1),
-          wbInteger('Layer', itS16)
-        ])
-      ], []),
-      wbRStructSK([0],'Alpha Layer', [
-        wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-          wbFormIDCk('Texture', [LTEX, NULL]),
-          wbInteger('Quadrant', itU8, wbQuadrantEnum),
-          wbByteArray('Unused', 1),
-          wbInteger('Layer', itS16)
-        ]),
-        alphaLayerData
-      ], [])
-    ], []));
-end;
-
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
   Result :=
@@ -1773,23 +1825,6 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed)
     ], aPriority);
-end;
-
-function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
-begin
-  Result :=
-    wbArray(aSignature, aName, wbStruct('Row', [
-      wbArray('Columns', wbStruct('Column', [
-        wbInteger('X', itU8),
-        wbInteger('Y', itU8),
-        wbInteger('Z', itU8)
-      ])
-      .SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
-      .SetSummaryMemberPrefixSuffix(2, '', ')')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
-    ]), 33);
 end;
 
 {>>> For Collapsible Fields <<<}

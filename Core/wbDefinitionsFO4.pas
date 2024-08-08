@@ -12714,59 +12714,30 @@ begin
     ], cpNormal, True)
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  if wbSimpleRecords then begin
-
-    wbRecord(LAND, 'Landscape',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
-      ]), [18]), [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([       // Could be itU16 with two unused/padding bytes
-        {0x00000001} 'Has Vertex Normals/Height Map', // Only present with VNML and VHGT
-        {0x00000002} 'Has Vertex Colours',            // Only present with VCLR
-        {0x00000004} 'Has Layers?',                   // Always present with VTEX, sometimes present without VTEX
-        {0x00000008} 'Unknown 4',                     // Present on every LAND record
-        {0x00000010} 'Unknown 5',                     // Almost always present
-        {0x00000020} 'Has Hi-Res Heightfield',        // Only present with MPCD
-        {0x00000040} '',                              // Never present
-        {0x00000080} '',                              // Never present
-        {0x00000100} '',                              // Never present
-        {0x00000200} '',                              // Never present
-        {0x00000400} 'Unknown 11'                     // Rarely present; no correlation to other subrecords
-      ])),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertex Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
-    ]);
-
-  end else begin
-
-    wbRecord(LAND, 'Landscape',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
-      ]), [18]), [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        'Has Vertex Normals/Height Map',
-        'Has Vertex Colours',
-        'Has Layers?',
-        'Unknown 4',
-        'Unknown 5',
-        'Has Hi-Res Heightfield',
-        '',
-        '',
-        '',
-        '',
-        'Unknown 11'
-      ])),
-      wbVertexColumns(VNML, 'Vertex Normals'),
-      wbVertexHeightMap,
-      wbVertexColumns(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
-    ]);
-
-  end;
+  wbRecord(LAND, 'Landscape',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x40000} 18, 'Compressed'
+    ]), [18]), [
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      {0x001} 'Has Vertex Normals/Height Map',
+      {0x002} 'Has Vertex Colours',
+      {0x004} 'Has Layers',
+      {0x008} 'Unknown 4',
+      {0x010} 'Auto-Calc Normals',
+      {0x020} 'Has Hi-Res Heightfield',
+      {0x040} '',
+      {0x080} '',
+      {0x100} '',
+      {0x200} '',
+      {0x400} 'Ignored'
+    ])),
+    wbVNML,
+    wbVHGT,
+    wbVCLR,
+    wbLayers,
+    wbRArray('Hi-Res Heightfield',
+      wbByteArray(MPCD, 'Heightfield Data'))
+  ]);
 
   wbRecord(LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
