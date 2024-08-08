@@ -15546,12 +15546,7 @@ begin
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
     wbMNAM,
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
-    ], cpNormal, True),
+    wbONAMWRLD,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',

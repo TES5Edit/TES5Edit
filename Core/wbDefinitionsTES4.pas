@@ -4372,29 +4372,29 @@ var  wbSoundTypeSoundsOld :=
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
 
-wbRecord(WRLD, 'Worldspace', [
-  wbEDID,
-  wbFULL,
-  wbFormIDCk(WNAM, 'Parent World', [WRLD]),
-  wbFormIDCk(CNAM, 'Climate', [CLMT]),
-  wbFormIDCk(NAM2, 'Water', [WATR]),
-  wbICON,
-  wbMNAM,
-  wbInteger(DATA, 'Flags', itU8, wbFlags([
-    {0x01} 'Small world',
-    {0x02} 'Can''t fast travel',
-    {0x04} 'Oblivion worldspace',
-    {0x08} '',
-    {0x10} 'No LOD water'
-  ]), cpNormal, True),
-  wbOBNDWRLD,
-  wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-  wbOFST
-  .IncludeFlag(dfCollapsed)
-  .IncludeFlag(dfFastAssign)
-  .IncludeFlag(dfNoCopyAsOverride)
-  .IncludeFlag(dfNotAlignable)
-]);
+  wbRecord(WRLD, 'Worldspace', [
+    wbEDID,
+    wbFULL,
+    wbFormIDCk(WNAM, 'Parent World', [WRLD]),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbICON,
+    wbMNAM,
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01} 'Small world',
+      {0x02} 'Can''t fast travel',
+      {0x04} 'Oblivion worldspace',
+      {0x08} '',
+      {0x10} 'No LOD water'
+    ]), cpNormal, True),
+    wbOBNDWRLD,
+    wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
+    wbOFST
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);

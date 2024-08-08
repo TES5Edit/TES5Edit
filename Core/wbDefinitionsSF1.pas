@@ -18294,12 +18294,7 @@ end;
       wbFloat('Default Water Height')
     ]),
     wbMNAM,
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset', cpNormal, False, 0.01),
-      wbFloat('Cell Y Offset', cpNormal, False, 0.01),
-      wbFloat('Cell Z Offset', cpNormal, False, 0.01)
-    ], cpNormal, True),
+    wbONAMWRLD,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',

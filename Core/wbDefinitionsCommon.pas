@@ -58,11 +58,13 @@ var
   wbBTXT: IwbSubRecordDef;
   wbCLSZ: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
+  wbIMPF: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbMHDTCELL: IwbSubRecordDef;
   wbMHDTWRLD: IwbSubRecordDef;
   wbMNAM: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
+  wbONAMWRLD: IwbSubRecordDef;
   wbVCLR: IwbSubRecordDef;
   wbVHGT: IwbSubRecordDef;
   wbVISI: IwbSubRecordDef;
@@ -1067,6 +1069,7 @@ begin
 
 {>>>Worldspace Common Definitions<<<}
 
+  //TES5,SSE,FO4,FO76,SF1
   wbLargeReferences :=
     wbRArray('Large References',
       wbStruct(RNAM, 'Cell Grid', [
@@ -1088,6 +1091,7 @@ begin
       .IncludeFlag(dfCollapsed),
     cpIgnore, False, nil, nil, wbNeverShow);
 
+  //TES5,SSE,FO4,FO76,SF1
   if wbSimpleRecords then
     wbMHDTWRLD :=
       wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
@@ -1114,12 +1118,14 @@ begin
         .IncludeFlag(dfNotAlignable)
       ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
 
+  //TES5,SSE,FO4,FO76,SF1
   wbWCTR :=
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
       wbInteger('Y', itS16)
     ]);
 
+  //TES4,FO3,FNV,TES4,SSE,FO4,FO76,SF1
   if wbIsSkyrim then
     wbMNAM :=
       wbStruct(MNAM, 'Map Data', [
@@ -1162,6 +1168,32 @@ begin
         ])
       ]);
 
+  //FO3,FNV,TES5,SSE,FO4,FO76,SF1
+  if wbGameMode in [gmFO3,gmFNV] then
+  wbONAMWRLD :=
+    wbStruct(ONAM, 'World Map Offset Data', [
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset')
+    ], cpNormal, True);
+  if wbGameMode in [gmTES5,gmEnderal,gmFO4,gmSSE,gmTES5VR,gmEnderalSE,gmFO4VR,gmFO76] then
+  wbONAMWRLD :=
+    wbStruct(ONAM, 'World Map Offset Data', [
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset'),
+      wbFloat('Cell Y Offset'),
+      wbFloat('Cell Z Offset')
+    ], cpNormal, True);
+  if wbGameMode in [gmSF1] then
+  wbONAMWRLD :=
+    wbStruct(ONAM, 'World Map Offset Data', [
+      wbFloat('World Map Scale'),
+      wbFloat('Cell X Offset', cpNormal, True, 0.01),
+      wbFloat('Cell Y Offset', cpNormal, True, 0.01),
+      wbFloat('Cell Z Offset', cpNormal, True, 0.01)
+    ], cpNormal, True);
+
+  //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
   wbOBNDWRLD :=
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
@@ -1191,6 +1223,23 @@ begin
     .SetSummaryDelimiter(', ')
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
+  //FO3,FNV
+  wbIMPF :=
+    wbArray(IMPF, 'FootStep Materials',
+      wbString('Unknown', 30), [
+    'ConcSolid',
+    'ConcBroken',
+    'MetalSolid',
+    'MetalHollow',
+    'MetalSheet',
+    'Wood',
+    'Sand',
+    'Dirt',
+    'Grass',
+    'Water'
+    ]);
+
+  //FO4,FO76,SF1
   wbWLEV :=
     wbRStruct('World Default Level Data', [
       wbStruct(WLEV, 'Dimension', [
@@ -1206,6 +1255,7 @@ begin
       wbByteArray(WLEV, 'Cell Data')
     ], []);
 
+  //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
   if wbSimpleRecords then
     wbOFST :=
       wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
@@ -1219,6 +1269,7 @@ begin
         .IncludeFlag(dfNotAlignable),
       0, nil, nil, cpIgnore, False, wbNeverShow);
 
+  //FO4,FO76,SF1
   if wbSimpleRecords then
     wbCLSZ :=
       wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
@@ -1232,6 +1283,7 @@ begin
         .IncludeFlag(dfNotAlignable),
       0, nil, nil, cpIgnore, False, wbNeverShow);
 
+  //FO76
   if wbSimpleRecords then
     wbVISI :=
       wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)

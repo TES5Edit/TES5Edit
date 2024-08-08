@@ -9261,80 +9261,6 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
-    wbRecord(WRLD, 'Worldspace', [
-      wbEDIDReq,
-      wbFULL,
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbStruct(PNAM, '', [
-          wbInteger('Flags', itU8, wbFlags([
-            {0x01}'Use Land Data',
-            {0x02}'Use LOD Data',
-            {0x04}'Use Map Data',
-            {0x08}'Use Water Data',
-            {0x10}'Use Climate Data',
-            {0x20}'Use Image Space Data',
-            {0x40}'',
-            {0x80}'Needs Water Adjustment'
-          ], True)),
-          wbByteArray('Unknown', 1)
-        ], cpNormal, True)
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
-      ]),
-      wbICON,
-      wbMNAM,
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset')
-      ], cpNormal, True),
-      wbFormIDCk(INAM, 'Image Space', [IMGS]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} '',
-        {0x08} '',
-        {0x10} 'No LOD Water',
-        {0x20} 'No LOD Noise',
-        {0x40} 'Don''t Allow NPC Fall Damage',
-        {0x80} 'Needs Water Adjustment'
-      ]), cpNormal, True),
-      wbOBNDWRLD,
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-        wbFormIDCkNoReach('Old', [IPCT]),
-        wbFormIDCk('New', [IPCT, NULL])
-      ])),
-      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-        'ConcSolid',
-        'ConcBroken',
-        'MetalSolid',
-        'MetalHollow',
-        'MetalSheet',
-        'Wood',
-        'Sand',
-        'Dirt',
-        'Grass',
-        'Water'
-      ]),
-      wbOFST
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfFastAssign)
-      .IncludeFlag(dfNoCopyAsOverride)
-      .IncludeFlag(dfNotAlignable)
-    ]);
-
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
     wbFormIDCk(_00_IAD, 'Sunrise Image Space Modifier', [IMAD]),
@@ -9390,6 +9316,66 @@ begin
       ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
     wbWeatherSounds
+  ]);
+
+  wbRecord(WRLD, 'Worldspace', [
+    wbEDIDReq,
+    wbFULL,
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01}'Use Land Data',
+          {0x02}'Use LOD Data',
+          {0x04}'Use Map Data',
+          {0x08}'Use Water Data',
+          {0x10}'Use Climate Data',
+          {0x20}'Use Image Space Data',
+          {0x40}'',
+          {0x80}'Needs Water Adjustment'
+        ], True)),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+    wbFloat(NAM4, 'LOD Water Height'),
+    wbStruct(DNAM, 'Land Data', [
+      wbFloat('Default Land Height'),
+      wbFloat('Default Water Height')
+    ]),
+    wbICON,
+    wbMNAM,
+    wbONAMWRLD,
+    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01} 'Small World',
+      {0x02} 'Can''t Fast Travel',
+      {0x04} '',
+      {0x08} '',
+      {0x10} 'No LOD Water',
+      {0x20} 'No LOD Noise',
+      {0x40} 'Don''t Allow NPC Fall Damage',
+      {0x80} 'Needs Water Adjustment'
+    ]), cpNormal, True),
+    wbOBNDWRLD,
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
+    wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
+    wbRArrayS('Swapped Impacts',
+      wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
+        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
+        wbFormIDCkNoReach('Old', [IPCT]),
+        wbFormIDCk('New', [IPCT, NULL])
+      ])),
+    wbIMPF,
+    wbOFST
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
   ]);
 
   wbAddGroupOrder(GMST);

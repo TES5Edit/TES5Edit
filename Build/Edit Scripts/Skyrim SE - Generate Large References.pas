@@ -137,6 +137,10 @@ begin
   // skipping wierd stuff or data
   if (Dimensions.z = 0) or (Dimensions.y = 0) or (Dimensions.x = 0) then
     Exit;
+  
+  if (Dimensions.z = 65535) or (Dimensions.y = 65535) or (Dimensions.x = 65535) then
+    Exit;  
+    
 
   // rule based on debugging thanks to aers
   if SQRT(Power(Dimensions.x, 2) + Power(Dimensions.y, 2) + Power(Dimensions.z, 2)) * 0.5 * fscale >= fLargeRefMinSize then begin
@@ -387,8 +391,8 @@ begin
   frm := TForm.Create(nil);
   try
     frm.Caption := 'Generate Large References';
-    frm.Width := 400;
-    frm.Height := 200;
+    frm.Width := 1000;
+    frm.Height := 1000;
     frm.Position := poMainFormCenter;
     frm.BorderStyle := bsDialog;
     frm.KeyPreview := True;
@@ -396,7 +400,7 @@ begin
     cbPlugin := TComboBox.Create(frm); cbPlugin.Parent := frm;
     cbPlugin.Left := 54;
     cbPlugin.Top := 12;
-    cbPlugin.Width := 260;
+    cbPlugin.Width := 500;
     cbPlugin.Style := csDropDownList;
     cbPlugin.DropDownCount := 20;
     cbPlugin.OnSelect := UpdatecbWorld;
@@ -408,8 +412,8 @@ begin
     
     cbWorld := TComboBox.Create(frm); cbWorld.Parent := frm;
     cbWorld.Left := 54;
-    cbWorld.Top := cbPlugin.Top + cbPlugin.Height + 4;
-    cbWorld.Width := 260;
+    cbWorld.Top := cbPlugin.Top + cbPlugin.Height + 16;
+    cbWorld.Width := 500;
     cbWorld.Style := csDropDownList;
     cbWorld.DropDownCount := 20;
     CreateLabel(frm, 16, cbWorld.Top + 4, 'World');
@@ -430,7 +434,7 @@ begin
     btnOk.Top := btnCancel.Top;
 
     frm.Width := cbWorld.Left + cbWorld.Width + 32;
-    frm.Height := btnOk.Top + btnOk.Height + 32;
+    frm.Height := btnOk.Top + btnOk.Height + 64;
 
     if frm.ShowModal <> mrOk then
       Exit;
