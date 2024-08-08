@@ -4375,26 +4375,11 @@ var  wbSoundTypeSoundsOld :=
 wbRecord(WRLD, 'Worldspace', [
   wbEDID,
   wbFULL,
-  wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+  wbFormIDCk(WNAM, 'Parent World', [WRLD]),
   wbFormIDCk(CNAM, 'Climate', [CLMT]),
   wbFormIDCk(NAM2, 'Water', [WATR]),
   wbICON,
-  wbStruct(MNAM, 'Map Data', [
-    wbStruct('Usable Dimensions', [
-      wbInteger('X', itS32),
-      wbInteger('Y', itS32)
-    ]),
-    wbStruct('Cell Coordinates', [
-      wbStruct('NW Cell', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
-      ]),
-      wbStruct('SE Cell', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
-      ])
-    ])
-  ]),
+  wbMNAM,
   wbInteger(DATA, 'Flags', itU8, wbFlags([
     {0x01} 'Small world',
     {0x02} 'Can''t fast travel',
@@ -4402,7 +4387,7 @@ wbRecord(WRLD, 'Worldspace', [
     {0x08} '',
     {0x10} 'No LOD water'
   ]), cpNormal, True),
-  wbWorldspaceOBND,
+  wbOBNDWRLD,
   wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
   wbOFST
   .IncludeFlag(dfCollapsed)

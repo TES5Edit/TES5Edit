@@ -18247,9 +18247,9 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000002}  2, 'Unknown 2',
-      {0x00004000} 14, 'Partial Form',
-      {0x00080000} 19, 'Can''t Wait'
+      {0x00002}  2, 'Unknown 2',
+      {0x04000} 14, 'Partial Form',
+      {0x80000} 19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
     wbBaseFormComponents,
@@ -18264,13 +18264,8 @@ end;
     .IncludeFlag(dfNoCopyAsOverride)
     .IncludeFlag(dfNotAlignable),
     wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
-    ]),
-    {
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    }
+    wbWCTR,
+    {wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),}
     wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
     wbFormIDCk(BNAM, 'Biome', [BIOM]),
@@ -18278,13 +18273,13 @@ end;
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
         wbInteger('Flags', itU8, wbFlags([
-          {0x0001} 'Use Land Data',
-          {0x0002} 'Use LOD Data',
-          {0x0004} 'Use Map Data',
-          {0x0008} 'Use Water Data',
-          {0x0010} 'Use Climate Data',
-          {0x0020} 'Use Image Space Data (unused)',
-          {0x0040} 'Use Sky Cell'
+          {0x01} 'Use Land Data',
+          {0x02} 'Use LOD Data',
+          {0x04} 'Use Map Data',
+          {0x08} 'Use Water Data',
+          {0x10} 'Use Climate Data',
+          {0x20} 'Use Image Space Data (unused)',
+          {0x40} 'Use Sky Cell'
         ], [5])).IncludeFlag(dfCollapsed, wbCollapseFlags),
         wbByteArray('Unknown', 1)
       ], cpNormal, True)
@@ -18298,22 +18293,7 @@ end;
       wbFloat('Default Land Height'),
       wbFloat('Default Water Height')
     ]),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ])
-    ]),
+    wbMNAM,
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
       wbFloat('Cell X Offset', cpNormal, False, 0.01),
@@ -18338,7 +18318,7 @@ end;
       'Unknown 2',
       'Allow ProcGen'
     ])),
-    wbWorldspaceOBND,
+    wbOBNDWRLD,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP, 'Environment Map'),
@@ -18348,6 +18328,7 @@ end;
     wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
     wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
     wbUnknown(HNAM),
+    wbWLEV,
     wbOFST
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)

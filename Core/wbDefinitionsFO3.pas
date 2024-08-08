@@ -9269,14 +9269,14 @@ begin
         wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
         wbStruct(PNAM, '', [
           wbInteger('Flags', itU8, wbFlags([
-            {0x00000001}'Use Land Data',
-            {0x00000002}'Use LOD Data',
-            {0x00000004}'Use Map Data',
-            {0x00000008}'Use Water Data',
-            {0x00000010}'Use Climate Data',
-            {0x00000020}'Use Image Space Data',
-            {0x00000040}'',
-            {0x00000080}'Needs Water Adjustment'
+            {0x01}'Use Land Data',
+            {0x02}'Use LOD Data',
+            {0x04}'Use Map Data',
+            {0x08}'Use Water Data',
+            {0x10}'Use Climate Data',
+            {0x20}'Use Image Space Data',
+            {0x40}'',
+            {0x80}'Needs Water Adjustment'
           ], True)),
           wbByteArray('Unknown', 1)
         ], cpNormal, True)
@@ -9290,22 +9290,7 @@ begin
         wbFloat('Default Water Height')
       ]),
       wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]),
+      wbMNAM,
       wbStruct(ONAM, 'World Map Offset Data', [
         wbFloat('World Map Scale'),
         wbFloat('Cell X Offset'),
@@ -9322,7 +9307,7 @@ begin
         {0x40} 'Don''t Allow NPC Fall Damage',
         {0x80} 'Needs Water Adjustment'
       ]), cpNormal, True),
-      wbWorldspaceOBND,
+      wbOBNDWRLD,
       wbFormIDCk(ZNAM, 'Music', [MUSC]),
       wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
       wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),

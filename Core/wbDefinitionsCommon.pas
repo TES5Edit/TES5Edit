@@ -43,13 +43,13 @@ var
   wbLayers: IwbRecordMemberDef;
   wbMagicEffectSounds: IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
+  wbOBNDWRLD: IwbRecordMemberDef;
   wbRegionSounds: IwbRecordMemberDef;
   wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
   wbStaticPartPlacements: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
-  wbWorldspaceOBND: IwbRecordMemberDef;
 
   wbColorInterpolator: IwbStructDef;
 
@@ -58,9 +58,10 @@ var
   wbBTXT: IwbSubRecordDef;
   wbCLSZ: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
+  wbMDOB: IwbSubRecordDef;
   wbMHDTCELL: IwbSubRecordDef;
   wbMHDTWRLD: IwbSubRecordDef;
-  wbMDOB: IwbSubRecordDef;
+  wbMNAM: IwbSubRecordDef;
   wbOFST: IwbSubRecordDef;
   wbVCLR: IwbSubRecordDef;
   wbVHGT: IwbSubRecordDef;
@@ -68,8 +69,10 @@ var
   wbVNML: IwbSubRecordDef;
   wbVTXT: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
+  wbWCTR: IwbSubRecordDef;
 
   wbCinematicIMAD: IwbSubRecordStructDef;
+  wbWLEV: IwbSubRecordStructDef;
 
   wbAlternateTexture: IwbValueDef;
   wbPosRot: IwbValueDef;
@@ -907,57 +910,7 @@ begin
 
   var lScaleFactor := 1/wbCellSizeFactor;
 
-  wbWorldspaceOBND :=
-    wbRStruct('Object Bounds', [
-      wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, lScaleFactor),
-        wbFloat('Y', cpNormal, False, lScaleFactor)
-      ], cpIgnore, True)
-      .SetSummaryKeyOnValue([0, 1])
-      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
-      .SetSummaryPrefixSuffixOnValue(1, '', ')')
-      .SetSummaryDelimiterOnValue(', ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
-      wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, lScaleFactor),
-        wbFloat('Y', cpNormal, False, lScaleFactor)
-      ], cpIgnore, True)
-      .SetSummaryKeyOnValue([0, 1])
-      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
-      .SetSummaryPrefixSuffixOnValue(1, '', ')')
-      .SetSummaryDelimiterOnValue(', ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
-    ], [])
-    .SetSummaryKey([0, 1])
-    .SetSummaryMemberPrefixSuffix(0, '[', '')
-    .SetSummaryMemberPrefixSuffix(1, '', ']')
-    .SetSummaryDelimiter(', ')
-    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
-
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
-
-  wbLargeReferences :=
-    wbRArray('Large References',
-      wbStruct(RNAM, 'Cell Grid', [
-        wbInteger('Y', itS16, nil, cpIgnore),
-        wbInteger('X', itS16, nil, cpIgnore),
-        wbArray('References',
-          wbStruct('Reference', [
-            wbFormIDCk('Ref', [REFR], False, cpIgnore),
-            wbInteger('Y', itS16, nil, cpIgnore),
-            wbInteger('X', itS16, nil, cpIgnore)
-          ]).SetSummaryKey([0])
-          .IncludeFlag(dfCollapsed),
-        -1).IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable)
-      ]).SetSummaryKeyOnValue([1,0])
-      .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
-      .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
-      .SetSummaryDelimiterOnValue(' ')
-      .IncludeFlag(dfCollapsed),
-    cpIgnore, False, nil, nil, wbNeverShow);
 
   if wbSimpleRecords then
     wbMHDTCELL :=
@@ -982,80 +935,6 @@ begin
             32).IncludeFlag(dfCollapsed),
           32).IncludeFlag(dfCollapsed)])
     end;
-
-  if wbSimpleRecords then
-    wbMHDTWRLD :=
-      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-  else
-    wbMHDTWRLD :=
-      wbStruct(MHDT, 'Max Height Data', [
-        wbStruct('Min', [
-          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        ]),
-        wbStruct('Max', [
-          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        ]),
-        wbArray('Cell Heights',
-          wbStruct('Quads', [
-            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
-          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-          .IncludeFlag(dfCollapsed))
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable)
-      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-
-  if wbSimpleRecords then
-    wbOFST :=
-      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbOFST :=
-      wbArray(OFST, 'Offset Data',
-        wbArray('Row',
-          wbInteger('Column', itU32, nil, cpIgnore),
-          wbOffsetDataColsCounter, cpIgnore)
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow);
-
-  if wbSimpleRecords then
-    wbCLSZ :=
-      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbCLSZ :=
-      wbArray(CLSZ, 'Cell Size Data',
-        wbArray('Row',
-          wbInteger('Column', itU32, nil, cpIgnore),
-        wbCellSizeDataColsCounter, cpIgnore)
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow);
-
-  if wbSimpleRecords then
-    wbVISI :=
-      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbVISI :=
-      wbStruct(VISI, 'Visible Cell Index Data', [
-        wbArray('Visible Cells',
-          wbArray('Row',
-            wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
-          wbVisibleCellIndexColsCounter, cpIgnore)
-          .IncludeFlag(dfCollapsed)
-          .IncludeFlag(dfNotAlignable),
-        nil, cpIgnore)
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable),
-        wbStruct('Dimensions', [
-          wbInteger('Min Y', itS16, nil, cpIgnore),
-          wbInteger('Min X', itS16, nil, cpIgnore),
-          wbInteger('Rows', itU32, nil, cpIgnore)
-        ], cpIgnore)
-      ], cpIgnore, False, wbNeverShow);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
@@ -1185,6 +1064,197 @@ begin
       .IncludeFlag(dfInternalEditOnly)
       .IncludeFlag(dfDontSave)
       .IncludeFlag(dfDontAssign);
+
+{>>>Worldspace Common Definitions<<<}
+
+  wbLargeReferences :=
+    wbRArray('Large References',
+      wbStruct(RNAM, 'Cell Grid', [
+        wbInteger('Y', itS16, nil, cpIgnore),
+        wbInteger('X', itS16, nil, cpIgnore),
+        wbArray('References',
+          wbStruct('Reference', [
+            wbFormIDCk('Ref', [REFR], False, cpIgnore),
+            wbInteger('Y', itS16, nil, cpIgnore),
+            wbInteger('X', itS16, nil, cpIgnore)
+          ]).SetSummaryKey([0])
+          .IncludeFlag(dfCollapsed),
+        -1).IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ]).SetSummaryKeyOnValue([1,0])
+      .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
+      .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlag(dfCollapsed),
+    cpIgnore, False, nil, nil, wbNeverShow);
+
+  if wbSimpleRecords then
+    wbMHDTWRLD :=
+      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+  else
+    wbMHDTWRLD :=
+      wbStruct(MHDT, 'Max Height Data', [
+        wbStruct('Min', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbStruct('Max', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbArray('Cell Heights',
+          wbStruct('Quads', [
+            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
+          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+          .IncludeFlag(dfCollapsed))
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
+
+  wbWCTR :=
+    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
+    ]);
+
+  if wbIsSkyrim then
+    wbMNAM :=
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
+        ]),
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
+        ]),
+      wbStruct('Camera Data', [
+        wbFloat('Min Height'),
+        wbFloat('Max Height'),
+        wbFloat('Initial Pitch')
+      ])
+    ], cpNormal, False, nil, 2)
+  else
+    wbMNAM :=
+      wbStruct(MNAM, 'Map Data', [
+        wbStruct('Usable Dimensions', [
+          wbInteger('X', itS32),
+          wbInteger('Y', itS32)
+        ]),
+        wbStruct('Cell Coordinates', [
+          wbStruct('NW Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ]),
+          wbStruct('SE Cell', [
+            wbInteger('X', itS16),
+            wbInteger('Y', itS16)
+          ])
+        ])
+      ]);
+
+  wbOBNDWRLD :=
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, False, lScaleFactor),
+        wbFloat('Y', cpNormal, False, lScaleFactor)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryDelimiterOnValue(', ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, False, lScaleFactor),
+        wbFloat('Y', cpNormal, False, lScaleFactor)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryDelimiterOnValue(', ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
+    ], [])
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(0, '[', '')
+    .SetSummaryMemberPrefixSuffix(1, '', ']')
+    .SetSummaryDelimiter(', ')
+    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+
+  wbWLEV :=
+    wbRStruct('World Default Level Data', [
+      wbStruct(WLEV, 'Dimension', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS8),
+          wbInteger('Y', itS8)
+        ]),
+        wbStruct('Size', [
+          wbInteger('Width', itU8),
+          wbInteger('Height', itU8)
+        ])
+      ]),
+      wbByteArray(WLEV, 'Cell Data')
+    ], []);
+
+  if wbSimpleRecords then
+    wbOFST :=
+      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
+  else
+    wbOFST :=
+      wbArray(OFST, 'Offset Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+          wbOffsetDataColsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow);
+
+  if wbSimpleRecords then
+    wbCLSZ :=
+      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
+  else
+    wbCLSZ :=
+      wbArray(CLSZ, 'Cell Size Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+        wbCellSizeDataColsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow);
+
+  if wbSimpleRecords then
+    wbVISI :=
+      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
+  else
+    wbVISI :=
+      wbStruct(VISI, 'Visible Cell Index Data', [
+        wbArray('Visible Cells',
+          wbArray('Row',
+            wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
+          wbVisibleCellIndexColsCounter, cpIgnore)
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfNotAlignable),
+        nil, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+        wbStruct('Dimensions', [
+          wbInteger('Min Y', itS16, nil, cpIgnore),
+          wbInteger('Min X', itS16, nil, cpIgnore),
+          wbInteger('Rows', itU32, nil, cpIgnore)
+        ], cpIgnore)
+      ], cpIgnore, False, wbNeverShow);
+
+{>>>End Common Definitions<<<}
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;

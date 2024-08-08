@@ -12910,8 +12910,8 @@ begin
 
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form',
-      {0x00080000} 19, 'Can''t Wait'
+      {0x04000} 14, 'Partial Form',
+      {0x80000} 19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
     wbLargeReferences
@@ -12925,10 +12925,7 @@ begin
     .IncludeFlag(dfNotAlignable)
     .IncludeFlag(dfFastAssign),
     wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
-    ]),
+    wbWCTR,
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
@@ -12936,13 +12933,13 @@ begin
       wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
       wbStruct(PNAM, '', [
         wbInteger('Flags', itU8, wbFlags([
-          {0x0001}'Use Land Data',
-          {0x0002}'Use LOD Data',
-          {0x0004}'Use Map Data',
-          {0x0008}'Use Water Data',
-          {0x0010}'Use Climate Data',
-          {0x0020}'Use Image Space Data (unused)',
-          {0x0040}'Use Sky Cell'
+          {0x01}'Use Land Data',
+          {0x02}'Use LOD Data',
+          {0x04}'Use Map Data',
+          {0x08}'Use Water Data',
+          {0x10}'Use Climate Data',
+          {0x20}'Use Image Space Data (unused)',
+          {0x40}'Use Sky Cell'
         ], [5])),
         wbByteArray('Unknown', 1)
       ], cpNormal, True)
@@ -12957,27 +12954,7 @@ begin
     ]),
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ]),
-      wbStruct('Camera Data', [
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Initial Pitch')
-      ])
-    ], cpNormal, False, nil, 2),
+    wbMNAM,
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
       wbFloat('Cell X Offset'),
@@ -12996,7 +12973,7 @@ begin
       {0x80} 'No Grass'
     ]), cpNormal, True),
     {>>> Object Bounds doesn't show up in CK <<<}
-    wbWorldspaceOBND,
+    wbOBNDWRLD,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
     wbString(XNAM, 'Water Noise Texture'),
