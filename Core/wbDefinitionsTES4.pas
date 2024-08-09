@@ -3121,10 +3121,10 @@ var  wbSoundTypeSoundsOld :=
       {0x200} '',
       {0x400} 'Ignored'
     ])),
-    wbVNML,
-    wbVHGT,
-    wbVCLR,
-    wbLayers,
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers,
     wbArray(VTEX, 'Landscape Textures',
       wbFormIDCk('Texture', [LTEX, NULL]))
   ]);

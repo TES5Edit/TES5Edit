@@ -10187,10 +10187,10 @@ Can't properly represent that with current record definition methods.
       {0x200} '',
       {0x400} 'Ignored'
     ])),
-    wbVNML,
-    wbVHGT,
-    wbVCLR,
-    wbLayers,
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers,
     wbRArray('Unknown', wbUnknown(MPCD))
   ]);
 

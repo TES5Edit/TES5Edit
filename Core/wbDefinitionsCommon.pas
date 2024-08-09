@@ -40,15 +40,12 @@ var
   wbFactionRelations: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
-  wbLayers: IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
 
   wbActionFlag: IwbSubRecordDef;
-  wbATXT: IwbSubRecordDef;
-  wbBTXT: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
   wbMagicEffectSounds: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
@@ -56,10 +53,6 @@ var
   wbRegionSounds: IwbSubRecordDef;
   wbSeasons: IwbSubRecordDef;
   wbStaticPartPlacements: IwbSubRecordDef;
-  wbVCLR: IwbSubRecordDef;
-  wbVHGT: IwbSubRecordDef;
-  wbVNML: IwbSubRecordDef;
-  wbVTXT: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
 
   wbAlternateTexture: IwbValueDef;
@@ -69,6 +62,14 @@ var
   wbTimeInterpolator: IwbValueDef;
 
   wbQuestEventVarRecs: TwbVarRecs;
+
+  wbLandNormals: IwbRecordMemberDef;
+  wbLandHeights: IwbRecordMemberDef;
+  wbLandColors: IwbRecordMemberDef;
+  wbLandBaseLayer: IwbRecordMemberDef;
+  wbLandAlphaLayer: IwbRecordMemberDef;
+  wbLandVertexLayer: IwbRecordMemberDef;
+  wbLandLayers: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
@@ -167,7 +168,7 @@ procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 
 {>>> Common Function Callbacks <<<}
 
-function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
 function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: IwbElement): Int64;
 
@@ -238,6 +239,7 @@ function wbTimeInterpolatorsMultAdd(const aSignatureMult, aSignatureAdd: TwbSign
 
 function wbFloatColorRGBA(const aName: string): IwbValueDef;
 
+function wbWeatherColors(const aName: string): IwbValueDef;
 
 {>>> Common Functions <<<}
 
@@ -880,99 +882,24 @@ begin
     , 0, cpNormal, True);
 
   if wbSimpleRecords then
-    wbVNML :=
-      wbByteArray(VNML, 'Vertex Normals', -1, cpIgnore)
+    wbLandNormals :=
+      wbByteArray(VNML, 'Vertex Normals', 3267, cpBenign)
   else
-    wbVNML :=
+    wbLandNormals :=
       wbArray(VNML, 'Vertex Normals',
         wbArray('Row',
           wbStruct('Column', [
-            wbInteger('X', itU8, nil, cpIgnore),
-            wbInteger('Y', itU8, nil, cpIgnore),
-            wbInteger('Z', itU8, nil, cpIgnore)
+            wbInteger('X', itU8, nil, cpBenign),
+            wbInteger('Y', itU8, nil, cpBenign),
+            wbInteger('Z', itU8, nil, cpBenign)
           ], cpIgnore)
           .SetSummaryKey([0, 1, 2])
           .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
           .SetSummaryMemberPrefixSuffix(2, '', ')')
           .IncludeFlag(dfSummaryMembersNoName)
           .IncludeFlag(dfCollapsed, wbCollapseVec3),
-        33, cpIgnore),
-      33, nil, nil, cpIgnore);
-
-  if wbSimpleRecords then
-    wbVHGT :=
-      wbByteArray(VHGT, 'Vertex Height Map')
-  else
-    wbVHGT :=
-      wbStruct(VHGT, 'Vertex Height Map', [
-        wbFloat('Offset'),
-        wbArray('Height Data',
-          wbArray('Row',
-            wbInteger('Column', itS8),
-          33),
-        33),
-        wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow)
-      ]);
-
-  if wbSimpleRecords then
-    wbVCLR :=
-      wbByteArray(VCLR, 'Vertex Colors')
-  else
-    wbVCLR :=
-      wbArray(VCLR, 'Vertex Colors',
-        wbArray('Columns',
-          wbStruct('Column', [
-            wbInteger('R', itU8),
-            wbInteger('G', itU8),
-            wbInteger('B', itU8)
-          ])
-          .SetSummaryKey([0, 1, 2])
-          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
-          .SetSummaryMemberPrefixSuffix(2, '', ')')
-          .IncludeFlag(dfSummaryMembersNoName)
-          .IncludeFlag(dfCollapsed, wbCollapseVec3),
-        33),
-      33);
-
-  wbATXT :=
-    wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-      wbFormIDCk('Texture', [LTEX, NULL]),
-      wbInteger('Quadrant', itU8, wbQuadrantEnum),
-      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
-      wbInteger('Layer', itU16)
-    ]);
-
-  wbBTXT :=
-    wbStructSK(BTXT, [1, 3], 'Base Layer', [
-      wbFormIDCk('Texture', [LTEX, NULL]),
-      wbInteger('Quadrant', itU8, wbQuadrantEnum),
-      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
-      wbInteger('Layer', itU16)
-    ]);
-
-  if wbSimpleRecords then
-    wbVTXT :=
-      wbByteArray(VTXT, 'Alpha Layer Data')
-  else
-    wbVTXT :=
-      wbArrayS(VTXT, 'Alpha Layer Data',
-        wbStructSK([0], 'Cell', [
-          wbInteger('Position', itU16, wbATXTPosition),
-          wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
-          wbFloat('Opacity')
-        ]));
-
-  wbLayers :=
-    wbRArrayS('Layers',
-      wbRUnion('Layer', [
-        wbRStructSK([0], 'Base Layer', [
-          wbBTXT
-        ], []),
-        wbRStructSK([0], 'Alpha Lyaer', [
-          wbATXT,
-          wbVTXT
-        ], [])
-      ], []));
+        33, cpBenign),
+      33, nil, nil, cpBenign);
 
   wbINOM :=
     wbArray(INOM, 'INFO Order (Masters only)',
@@ -992,7 +919,84 @@ begin
       .IncludeFlag(dfDontSave)
       .IncludeFlag(dfDontAssign);
 
-{>>>Worldspace Common Definitions<<<}
+{>>>Landscape Common Defs<<<}
+
+  if wbSimpleRecords then
+    wbLandHeights :=
+      wbByteArray(VHGT, 'Vertex Height Map')
+  else
+    wbLandHeights :=
+      wbStruct(VHGT, 'Vertex Height Map', [
+        wbFloat('Offset'),
+        wbArray('Height Data',
+          wbArray('Row',
+            wbInteger('Column', itS8),
+          33),
+        33),
+        wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow)
+      ]);
+
+  if wbSimpleRecords then
+    wbLandColors :=
+      wbByteArray(VCLR, 'Vertex Colors')
+  else
+    wbLandColors :=
+      wbArray(VCLR, 'Vertex Colors',
+        wbArray('Columns',
+          wbStruct('Column', [
+            wbInteger('R', itU8),
+            wbInteger('G', itU8),
+            wbInteger('B', itU8)
+          ])
+          .SetSummaryKey([0, 1, 2])
+          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
+          .SetSummaryMemberPrefixSuffix(2, '', ')')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+        33),
+      33);
+
+  wbLandBaseLayer :=
+    wbStructSK(BTXT, [1, 3], 'Base Layer', [
+      wbFormIDCk('Texture', [LTEX, NULL]),
+      wbInteger('Quadrant', itU8, wbQuadrantEnum),
+      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+      wbInteger('Layer', itU16)
+    ]);
+
+  wbLandAlphaLayer :=
+    wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
+      wbFormIDCk('Texture', [LTEX, NULL]),
+      wbInteger('Quadrant', itU8, wbQuadrantEnum),
+      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+      wbInteger('Layer', itU16)
+    ]);
+
+  if wbSimpleRecords then
+    wbLandVertexLayer :=
+      wbByteArray(VTXT, 'Alpha Layer Data')
+  else
+    wbLandVertexLayer :=
+      wbArrayS(VTXT, 'Alpha Layer Data',
+        wbStructSK([0], 'Cell', [
+          wbInteger('Position', itU16, wbVTXTPosition),
+          wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+          wbFloat('Opacity')
+        ]));
+
+  wbLandLayers :=
+    wbRArrayS('Layers',
+      wbRUnion('Layer', [
+        wbRStructSK([0], 'Base Layer', [
+          wbLandBaseLayer
+        ], []),
+        wbRStructSK([0], 'Alpha Layer', [
+          wbLandAlphaLayer,
+          wbLandVertexLayer
+        ], [])
+      ], []));
+
+{>>>Worldspace Common Defs<<<}
 
   //TES5,SSE,FO4,FO76,SF1
   wbWorldLargeRefs :=
@@ -1241,7 +1245,7 @@ end;
 
 {>>> Common Callbacks <<<}
 
-function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
 

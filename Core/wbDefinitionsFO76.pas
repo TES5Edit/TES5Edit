@@ -15115,10 +15115,10 @@ begin
       {0x200} '',
       {0x400} 'Ignored'
     ])),
-    wbVNML,
-    wbVHGT,
-    wbVCLR,
-    wbLayers,
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers,
     wbRArray('Hi-Res Heightfield',
       wbByteArray(MPCD, 'Heightfield Data'))
   ]);

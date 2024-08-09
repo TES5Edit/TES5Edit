@@ -7852,10 +7852,10 @@ var  wbSoundTypeSoundsOld :=
       {0x200} '',
       {0x400} 'Ignored'
     ])),
-    wbVNML,
-    wbVHGT,
-    wbVCLR,
-    wbLayers
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers
   ]);
 
   wbRecord(LIGH, 'Light', [
