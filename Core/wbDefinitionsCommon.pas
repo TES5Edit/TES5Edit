@@ -20,6 +20,8 @@ type
   TwbVarRecs = TArray<TVarRec>;
 
 var
+  wbMHDTCELLSize: Integer;
+
   wbAxisEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
@@ -29,58 +31,56 @@ var
   wbEmptyBaseFlags: IwbFlagsDef;
   wbRecordFlagsFlags: IwbFlagsDef;
 
-  wbNextSpeaker: IwbIntegerDef;
-
   wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
+  wbCinematicIMAD: IwbRecordMemberDef;
   wbDATAPosRot: IwbRecordMemberDef;
   wbDMDT: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
-  wbLargeReferences: IwbRecordMemberDef;
   wbLayers: IwbRecordMemberDef;
-  wbMagicEffectSounds: IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
-  wbOBNDWRLD: IwbRecordMemberDef;
-  wbRegionSounds: IwbRecordMemberDef;
-  wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
-  wbStaticPartPlacements: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
-
-  wbColorInterpolator: IwbStructDef;
 
   wbActionFlag: IwbSubRecordDef;
   wbATXT: IwbSubRecordDef;
   wbBTXT: IwbSubRecordDef;
-  wbCLSZ: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
-  wbIMPF: IwbSubRecordDef;
+  wbMagicEffectSounds: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
   wbMHDTCELL: IwbSubRecordDef;
-  wbMHDTWRLD: IwbSubRecordDef;
-  wbMNAM: IwbSubRecordDef;
-  wbOFST: IwbSubRecordDef;
-  wbONAMWRLD: IwbSubRecordDef;
+  wbRegionSounds: IwbSubRecordDef;
+  wbSeasons: IwbSubRecordDef;
+  wbStaticPartPlacements: IwbSubRecordDef;
   wbVCLR: IwbSubRecordDef;
   wbVHGT: IwbSubRecordDef;
-  wbVISI: IwbSubRecordDef;
   wbVNML: IwbSubRecordDef;
   wbVTXT: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
-  wbWCTR: IwbSubRecordDef;
-
-  wbCinematicIMAD: IwbSubRecordStructDef;
-  wbWLEV: IwbSubRecordStructDef;
 
   wbAlternateTexture: IwbValueDef;
+  wbColorInterpolator: IwbValueDef;
+  wbNextSpeaker: IwbValueDef;
   wbPosRot: IwbValueDef;
   wbTimeInterpolator: IwbValueDef;
 
   wbQuestEventVarRecs: TwbVarRecs;
+
+  wbWorldLargeRefs: IwbRecordMemberDef;
+  wbWorldMaxHeight: IwbRecordMemberDef;
+  wbWorldFixedCenter: IwbRecordMemberDef;
+  wbWorldMapBounds: IwbRecordMemberDef;
+  wbWorldMapOffset: IwbRecordMemberDef;
+  wbWorldObjectBounds: IwbRecordMemberDef;
+  wbWorldFootStepMaterials: IwbRecordMemberDef;
+  wbWorldLevelData: IwbRecordMemberDef;
+  wbWorldOffsetData: IwbRecordMemberDef;
+  wbWorldCellSizeData: IwbRecordMemberDef;
+  wbWorldVisibleCellsData: IwbRecordMemberDef;
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
 
@@ -370,7 +370,7 @@ begin
     Result := aTrue;
 end;
 
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container: IwbDataContainer;
   Element: IwbElement;
@@ -381,86 +381,17 @@ begin
   if not Supports(aElement.Container, IwbDataContainer, Container) then
     Exit;
 
-  if not (Container.Name = 'OFST - Offset Data') then
-    Exit;
-
   if not Supports(Container.Container, IwbDataContainer, Container) then
     Exit;
 
   // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
+  Element := Container.ElementByPath['Object Bounds\NAM0\X'];
   if not Assigned(Element) then
     Exit;
   MinX := Element.NativeValue;
 
   // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-  MaxX := Element.NativeValue;
-
-  // Calculate the total number of columns
-  Result := MaxX - MinX + 1;
-end;
-
-function wbCellSizeDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container: IwbDataContainer;
-  Element: IwbElement;
-  MinX, MaxX: Integer;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'CLSZ - Cell Size Data') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-  MinX := Element.NativeValue;
-
-  // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-  MaxX := Element.NativeValue;
-
-  // Calculate the total number of columns
-  Result := MaxX - MinX + 1;
-end;
-
-function wbVisibleCellIndexColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container: IwbDataContainer;
-  Element: IwbElement;
-  MinX, MaxX: Integer;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'VISI - Visible Cell Index') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-  MinX := Element.NativeValue;
-
-  // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
+  Element := Container.ElementByPath['Object Bounds\NAM9\X'];
   if not Assigned(Element) then
     Exit;
   MaxX := Element.NativeValue;
@@ -667,7 +598,7 @@ begin
         'No Collision - Quad 3',
         'No Collision - Quad 4'
       ], True);
-      
+
   wbCellGrid :=
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
@@ -914,29 +845,23 @@ begin
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
+  if wbGameMode in [gmSF1] then
+    wbMHDTCELLSize := 50
+  else
+    wbMHDTCELLSize := 32;
+
   if wbSimpleRecords then
     wbMHDTCELL :=
       wbByteArray(MHDT, 'Max Height Data')
-  else begin
-    if wbGameMode in [gmSF1] then
-      wbMHDTCELL :=
-        wbStruct(MHDT, 'Max Height Data', [
-          wbFloat('Offset'),
-          wbArray('Max Heights',
-            wbArray('Row',
-              wbInteger('Column', itU8),
-            50).IncludeFlag(dfCollapsed),
-          50).IncludeFlag(dfCollapsed)])
-    else
-      wbMHDTCELL :=
-        wbStruct(MHDT, 'Max Height Data', [
-          wbFloat('Offset'),
-          wbArray('Max Heights',
-            wbArray('Row',
-              wbInteger('Column', itU8),
-            32).IncludeFlag(dfCollapsed),
-          32).IncludeFlag(dfCollapsed)])
-    end;
+  else
+    wbMHDTCELL :=
+      wbStruct(MHDT, 'Max Height Data', [
+        wbFloat('Offset'),
+        wbArray('Max Heights',
+          wbArray('Row',
+            wbInteger('Column', itU8),
+          wbMHDTCELLSize).IncludeFlag(dfCollapsed),
+        wbMHDTCELLSize).IncludeFlag(dfCollapsed)]);
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
@@ -1070,7 +995,7 @@ begin
 {>>>Worldspace Common Definitions<<<}
 
   //TES5,SSE,FO4,FO76,SF1
-  wbLargeReferences :=
+  wbWorldLargeRefs :=
     wbRArray('Large References',
       wbStruct(RNAM, 'Cell Grid', [
         wbInteger('Y', itS16, nil, cpIgnore),
@@ -1093,10 +1018,10 @@ begin
 
   //TES5,SSE,FO4,FO76,SF1
   if wbSimpleRecords then
-    wbMHDTWRLD :=
+    wbWorldMaxHeight :=
       wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
   else
-    wbMHDTWRLD :=
+    wbWorldMaxHeight :=
       wbStruct(MHDT, 'Max Height Data', [
         wbStruct('Min', [
           wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
@@ -1119,16 +1044,16 @@ begin
       ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
 
   //TES5,SSE,FO4,FO76,SF1
-  wbWCTR :=
+  wbWorldFixedCenter :=
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
       wbInteger('Y', itS16)
     ]);
 
-  //TES4,FO3,FNV,TES4,SSE,FO4,FO76,SF1
+  //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
   if wbIsSkyrim then
-    wbMNAM :=
-      wbStruct(MNAM, 'Map Data', [
+    wbWorldMapBounds :=
+      wbStruct(MNAM, 'World Map Bounds', [
         wbStruct('Usable Dimensions', [
           wbInteger('X', itS32),
           wbInteger('Y', itS32)
@@ -1143,15 +1068,15 @@ begin
             wbInteger('Y', itS16)
           ])
         ]),
-      wbStruct('Camera Data', [
-        wbFloat('Min Height'),
-        wbFloat('Max Height'),
-        wbFloat('Initial Pitch')
+        wbStruct('Camera Data', [
+          wbFloat('Min Height'),
+          wbFloat('Max Height'),
+          wbFloat('Initial Pitch')
+        ])
       ])
-    ], cpNormal, False, nil, 2)
   else
-    wbMNAM :=
-      wbStruct(MNAM, 'Map Data', [
+    wbWorldMapBounds :=
+      wbStruct(MNAM, 'World Map Bounds', [
         wbStruct('Usable Dimensions', [
           wbInteger('X', itS32),
           wbInteger('Y', itS32)
@@ -1169,23 +1094,23 @@ begin
       ]);
 
   //FO3,FNV,TES5,SSE,FO4,FO76,SF1
-  if wbGameMode in [gmFO3,gmFNV] then
-  wbONAMWRLD :=
+  if wbIsFallout3 then
+  wbWorldMapOffset :=
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
       wbFloat('Cell X Offset'),
       wbFloat('Cell Y Offset')
     ], cpNormal, True);
-  if wbGameMode in [gmTES5,gmEnderal,gmFO4,gmSSE,gmTES5VR,gmEnderalSE,gmFO4VR,gmFO76] then
-  wbONAMWRLD :=
+  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then
+  wbWorldMapOffset :=
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
       wbFloat('Cell X Offset'),
       wbFloat('Cell Y Offset'),
       wbFloat('Cell Z Offset')
     ], cpNormal, True);
-  if wbGameMode in [gmSF1] then
-  wbONAMWRLD :=
+  if wbIsStarfield then
+  wbWorldMapOffset :=
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
       wbFloat('Cell X Offset', cpNormal, True, 0.01),
@@ -1194,7 +1119,7 @@ begin
     ], cpNormal, True);
 
   //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
-  wbOBNDWRLD :=
+  wbWorldObjectBounds :=
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
         wbFloat('X', cpNormal, False, lScaleFactor),
@@ -1224,7 +1149,7 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   //FO3,FNV
-  wbIMPF :=
+  wbWorldFootStepMaterials :=
     wbArray(IMPF, 'FootStep Materials',
       wbString('Unknown', 30), [
     'ConcSolid',
@@ -1240,7 +1165,7 @@ begin
     ]);
 
   //FO4,FO76,SF1
-  wbWLEV :=
+  wbWorldLevelData :=
     wbRStruct('World Default Level Data', [
       wbStruct(WLEV, 'Dimension', [
         wbStruct('NW Cell', [
@@ -1257,43 +1182,43 @@ begin
 
   //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
   if wbSimpleRecords then
-    wbOFST :=
+    wbWorldOffsetData :=
       wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
   else
-    wbOFST :=
+    wbWorldOffsetData :=
       wbArray(OFST, 'Offset Data',
         wbArray('Row',
           wbInteger('Column', itU32, nil, cpIgnore),
-          wbOffsetDataColsCounter, cpIgnore)
+          wbWorldColumnsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
       0, nil, nil, cpIgnore, False, wbNeverShow);
 
   //FO4,FO76,SF1
   if wbSimpleRecords then
-    wbCLSZ :=
+    wbWorldCellSizeData :=
       wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
   else
-    wbCLSZ :=
+    wbWorldCellSizeData :=
       wbArray(CLSZ, 'Cell Size Data',
         wbArray('Row',
           wbInteger('Column', itU32, nil, cpIgnore),
-        wbCellSizeDataColsCounter, cpIgnore)
+        wbWorldColumnsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
       0, nil, nil, cpIgnore, False, wbNeverShow);
 
   //FO76
   if wbSimpleRecords then
-    wbVISI :=
+    wbWorldVisibleCellsData :=
       wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
   else
-    wbVISI :=
+    wbWorldVisibleCellsData :=
       wbStruct(VISI, 'Visible Cell Index Data', [
         wbArray('Visible Cells',
           wbArray('Row',
             wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
-          wbVisibleCellIndexColsCounter, cpIgnore)
+          wbWorldColumnsCounter, cpIgnore)
           .IncludeFlag(dfCollapsed)
           .IncludeFlag(dfNotAlignable),
         nil, cpIgnore)

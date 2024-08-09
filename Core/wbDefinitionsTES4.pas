@@ -4379,7 +4379,7 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbICON,
-    wbMNAM,
+    wbWorldMapBounds,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small world',
       {0x02} 'Can''t fast travel',
@@ -4387,9 +4387,9 @@ var  wbSoundTypeSoundsOld :=
       {0x08} '',
       {0x10} 'No LOD water'
     ]), cpNormal, True),
-    wbOBNDWRLD,
+    wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-    wbOFST
+    wbWorldOffsetData
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
@@ -4456,7 +4456,6 @@ var  wbSoundTypeSoundsOld :=
   wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
-
   wbHEDRVersion := 1.0;
 end;
 

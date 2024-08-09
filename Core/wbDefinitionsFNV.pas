@@ -3817,8 +3817,9 @@ begin
   end;
 end;
 
-procedure DefineFNVa;
+procedure DefineFNV;
 begin
+  DefineCommon;
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
@@ -4664,10 +4665,7 @@ begin
       1059, 'Specific: Tutorial',
       1060, 'Specific: You''re SPECIAL book'
     ]);
-end;
 
-procedure DefineFNVb;
-begin
   wbMiscStatEnum :=
     wbEnum([
       'Quests Completed',
@@ -5322,10 +5320,7 @@ begin
       'Luck'
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFNVc;
-begin
   wbRecord(CLMT, 'Climate', [
     wbEDIDReq,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
@@ -5748,10 +5743,6 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(LNAM, 'Melee Weapon List', [FLST], False, cpNormal, False, wbActorTemplateUseTraits)
   ], True);
 
-end;
-
-procedure DefineFNVd;
-begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
     wbStruct(CSTD, 'Advanced - Standard', [
@@ -6422,10 +6413,6 @@ begin
     ])
   ]);
 
-end;
-
-procedure DefineFNVe;
-begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
     wbOBND(True),
@@ -9609,10 +9596,7 @@ begin
       wbFloat('Height')
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFNVf;
-begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
@@ -10510,8 +10494,8 @@ begin
       wbFloat('Default Water Height')
     ]),
     wbICON,
-    wbMNAM,
-    wbONAMWRLD,
+    wbWorldMapBounds,
+    wbWorldMapOffset,
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbInteger(DATA, 'Flags', itU8, wbFlags([  // LoadForm supports a DWord here, but only first byte would be used.
       {0x01} 'Small World',
@@ -10523,7 +10507,7 @@ begin
       {0x40} 'Don''t Allow NPC Fall Damage',
       {0x80} 'Needs Water Adjustment'
     ]), cpNormal, True),
-    wbOBNDWRLD,
+    wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
@@ -10533,8 +10517,8 @@ begin
         wbFormIDCkNoReach('Old', [IPCT]),
         wbFormIDCk('New', [IPCT, NULL])
       ])),
-    wbIMPF,
-    wbOFST
+    wbWorldFootStepMaterials,
+    wbWorldOffsetData
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
@@ -10644,22 +10628,11 @@ begin
   // Forced at the end.
   wbAddGroupOrder(CELL);
   wbAddGroupOrder(WRLD);
-end;
-
-procedure DefineFNV;
-begin
-  DefineCommon;
   wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
-  DefineFNVa;
-  DefineFNVb;
-  DefineFNVc;
-  DefineFNVd;
-  DefineFNVe;
-  DefineFNVf;
-
   wbHEDRVersion := 1.34;
 end;
 
 end.
+

@@ -3531,8 +3531,9 @@ begin
   end;
 end;
 
-procedure DefineFO3a;
+procedure DefineFO3;
 begin
+  DefineCommon;
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
@@ -4312,10 +4313,7 @@ begin
       1059, 'Specific: Tutorial',
       1060, 'Specific: You''re SPECIAL book'
     ]);
-end;
 
-procedure DefineFO3b;
-begin
   wbMiscStatEnum :=
     wbEnum([
       'Quests Completed',
@@ -4884,10 +4882,7 @@ begin
       'Luck'
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFO3c;
-begin
   wbRecord(CLMT, 'Climate', [
     wbEDIDReq,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
@@ -5298,10 +5293,6 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(LNAM, 'Melee Weapon List', [FLST], False, cpNormal, False, wbActorTemplateUseTraits)
   ], True);
 
-end;
-
-procedure DefineFO3d;
-begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
     wbStruct(CSTD, 'Advanced - Standard', [
@@ -5946,10 +5937,6 @@ begin
     ])
   ]);
 
-end;
-
-procedure DefineFO3e;
-begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
     wbOBND(True),
@@ -8953,10 +8940,7 @@ begin
       wbFloat('Height')
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFO3f;
-begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
@@ -9347,8 +9331,8 @@ begin
       wbFloat('Default Water Height')
     ]),
     wbICON,
-    wbMNAM,
-    wbONAMWRLD,
+    wbWorldMapBounds,
+    wbWorldMapOffset,
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Small World',
@@ -9360,7 +9344,7 @@ begin
       {0x40} 'Don''t Allow NPC Fall Damage',
       {0x80} 'Needs Water Adjustment'
     ]), cpNormal, True),
-    wbOBNDWRLD,
+    wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
@@ -9370,8 +9354,8 @@ begin
         wbFormIDCkNoReach('Old', [IPCT]),
         wbFormIDCk('New', [IPCT, NULL])
       ])),
-    wbIMPF,
-    wbOFST
+    wbWorldFootStepMaterials,
+    wbWorldOffsetData
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
@@ -9463,21 +9447,9 @@ begin
   wbAddGroupOrder(DOBJ);
   wbAddGroupOrder(LGTM);
   wbAddGroupOrder(MUSC);
-end;
-
-procedure DefineFO3;
-begin
-  DefineCommon;
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
-  DefineFO3a;
-  DefineFO3b;
-  DefineFO3c;
-  DefineFO3d;
-  DefineFO3e;
-  DefineFO3f;
-
   wbHEDRVersion := 0.94;
 end;
 

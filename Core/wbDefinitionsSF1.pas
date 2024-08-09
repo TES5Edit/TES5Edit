@@ -18245,98 +18245,6 @@ end;
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00002}  2, 'Unknown 2',
-      {0x04000} 14, 'Partial Form',
-      {0x80000} 19, 'Can''t Wait'
-    ]), [14]), [
-    wbEDID,
-    wbBaseFormComponents,
-    wbLargeReferences
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbMHDTWRLD
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbFULL,
-    wbWCTR,
-    {wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),}
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbFormIDCk(BNAM, 'Biome', [BIOM]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Use Land Data',
-          {0x02} 'Use LOD Data',
-          {0x04} 'Use Map Data',
-          {0x08} 'Use Water Data',
-          {0x10} 'Use Climate Data',
-          {0x20} 'Use Image Space Data (unused)',
-          {0x40} 'Use Sky Cell'
-        ], [5])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbString(NAM7, 'Water Material Path'),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbMNAM,
-    wbONAMWRLD,
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    {>>> Object Bounds doesn't show up in CK <<<}
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      'Player Followers Can''t Warp Here',
-      'Show Space',
-      'Unknown 2',
-      'Allow ProcGen'
-    ])),
-    wbOBNDWRLD,
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
-    wbString(XEMP, 'Environment Map'),
-    wbString(XWEM, 'Water Environment Map'),
-    wbFloat(GNAM, 'Gravity Scale'),
-    wbRArray('Unknown', wbFormIDCk(LNAM, 'Unknown', [LTEX])),
-    wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
-    wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
-    wbUnknown(HNAM),
-    wbWLEV,
-    wbOFST
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbCLSZ
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
-
-  {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
@@ -21306,6 +21214,99 @@ end;
     end else
       wbProgress('Warning: Could not find Wwise Soundbank Info.');
   end);
+
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00002}  2, 'Unknown 2',
+      {0x04000} 14, 'Partial Form',
+      {0x80000} 19, 'Can''t Wait'
+    ]), [14]), [
+    wbEDID,
+    wbBaseFormComponents,
+    wbWorldLargeRefs
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldMaxHeight
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbFULL,
+    wbWorldFixedCenter,
+    {wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),}
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbFormIDCk(BNAM, 'Biome', [BIOM]),
+    wbRStruct('Parent', [
+      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
+      wbStruct(PNAM, '', [
+        wbInteger('Flags', itU8, wbFlags([
+          {0x01} 'Use Land Data',
+          {0x02} 'Use LOD Data',
+          {0x04} 'Use Map Data',
+          {0x08} 'Use Water Data',
+          {0x10} 'Use Climate Data',
+          {0x20} 'Use Image Space Data (unused)',
+          {0x40} 'Use Sky Cell'
+        ], [5])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        wbByteArray('Unknown', 1)
+      ], cpNormal, True)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbString(NAM7, 'Water Material Path'),
+    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
+    wbFloat(NAM4, 'LOD Water Height'),
+    wbStruct(DNAM, 'Land Data', [
+      wbFloat('Default Land Height'),
+      wbFloat('Default Water Height')
+    ]),
+    wbWorldMapBounds,
+    wbWorldMapOffset,
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
+    wbInteger(DATA, 'Flags', itU8, wbFlags([
+      {0x01} 'Small World',
+      {0x02} 'Can''t Fast Travel',
+      {0x04} 'Unknown 3',
+      {0x08} 'No LOD Water',
+      {0x10} 'No Landscape',
+      {0x20} 'No Sky',
+      {0x40} 'Fixed Dimensions',
+      {0x80} 'No Grass'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+      'Player Followers Can''t Warp Here',
+      'Show Space',
+      'Unknown 2',
+      'Allow ProcGen'
+    ])),
+    {>>> Object Bounds doesn't show up in CK <<<}
+    wbWorldObjectBounds,
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
+    wbString(XEMP, 'Environment Map'),
+    wbString(XWEM, 'Water Environment Map'),
+    wbFloat(GNAM, 'Gravity Scale'),
+    wbRArray('Unknown', wbFormIDCk(LNAM, 'Unknown', [LTEX])),
+    wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
+    wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
+    wbUnknown(HNAM),
+    wbWorldLevelData,
+    wbWorldOffsetData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldCellSizeData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
