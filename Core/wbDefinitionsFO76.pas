@@ -5913,20 +5913,6 @@ begin
     Result := 7;
 end;
 
-function wbWeatherColors(const aName: string): IwbStructDef;
-begin
-  Result := wbStruct(aName, [
-    wbByteColors('Sunrise'),
-    wbByteColors('Day'),
-    wbByteColors('Sunset'),
-    wbByteColors('Night'),
-    wbByteColors('EarlySunrise'),
-    wbByteColors('LateSunrise'),
-    wbByteColors('EarlySunset'),
-    wbByteColors('LateSunset')
-  ], cpNormal, True, nil, 4);
-end;
-
 function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'; const bOnlyColors: Boolean = False): IwbSubRecordDef; overload;
 begin
   if bOnlyColors then
@@ -18676,7 +18662,7 @@ begin
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer')).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
@@ -18687,27 +18673,7 @@ begin
       wbFloat('EarlySunset'),
       wbFloat('LateSunset')
     ])).IncludeFlag(dfNotAlignable),
-    wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherColors('Sky-Upper'),
-      wbWeatherColors('Fog Near'),
-      wbWeatherColors('Unknown'),
-      wbWeatherColors('Ambient'),
-      wbWeatherColors('Sunlight'),
-      wbWeatherColors('Sun'),
-      wbWeatherColors('Stars'),
-      wbWeatherColors('Sky-Lower'),
-      wbWeatherColors('Horizon'),
-      wbWeatherColors('Effect Lighting'),
-      wbWeatherColors('Cloud LOD Diffuse'),
-      wbWeatherColors('Cloud LOD Ambient'),
-      wbWeatherColors('Fog Far'),
-      wbWeatherColors('Sky Statics'),
-      wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glare'),
-      wbWeatherColors('Moon Glare'),
-      wbWeatherColors('Fog Near High'),
-      wbWeatherColors('Fog Far High')
-    ], cpNormal, True, nil, 8),
+    wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),

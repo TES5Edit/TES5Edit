@@ -4321,13 +4321,7 @@ var  wbSoundTypeSoundsOld :=
     wbString(CNAM, 'Texture Lower Layer'),
     wbString(DNAM, 'Texture Upper Layer'),
     wbTexturedModel('Model', [MODL, MODB, MODT]),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbByteColors('Time'),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
-    , cpNormal, True),
+    wbWeatherColors,
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day Near'),
       wbFloat('Day Far'),

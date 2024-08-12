@@ -9264,13 +9264,7 @@ var  wbSoundTypeSoundsOld :=
         ['Sunrise', 'Day', 'Sunset', 'Night']
       ),
     4),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbByteColors('Time'),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
-    , cpNormal, True),
+    wbWeatherColors,
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
       wbFloat('Day - Far'),

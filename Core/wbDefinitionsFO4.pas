@@ -5006,31 +5006,6 @@ begin
     Result := 7;
 end;
 
-function wbWeatherColors(const aName: string): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbByteColors('Sunrise'),      //0
-    wbByteColors('Day'),          //1
-    wbByteColors('Sunset'),       //2
-    wbByteColors('Night'),        //3
-    wbFromVersion(111, wbByteColors('EarlySunrise')), //4
-    wbFromVersion(111, wbByteColors('LateSunrise')),  //5
-    wbFromVersion(111, wbByteColors('EarlySunset')),  //6
-    wbFromVersion(111, wbByteColors('LateSunset'))    //7
-  ], cpNormal, True)
-    .SetSummaryKey([4, 0, 5, 1, 6, 2, 7, 3])
-    .SetSummaryMemberPrefixSuffix(4, 'ESR:', '')
-    .SetSummaryMemberPrefixSuffix(0, 'SR:', '')
-    .SetSummaryMemberPrefixSuffix(5, 'LSR:', '')
-    .SetSummaryMemberPrefixSuffix(1, 'D:', '')
-    .SetSummaryMemberPrefixSuffix(6, 'ESS:', '')
-    .SetSummaryMemberPrefixSuffix(2, 'SS:', '')
-    .SetSummaryMemberPrefixSuffix(7, 'LSS:', '')
-    .SetSummaryMemberPrefixSuffix(3, 'N:', '')
-    .IncludeFlag(dfSummaryMembersNoName)
-    .IncludeFlag(dfHideText);
-end;
-
 function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
 begin
   Result := wbStruct(aName, [
@@ -15495,7 +15470,7 @@ begin
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer'), 32).IncludeFlag(dfNotAlignable),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer'), 32).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise').SetDefaultNativeValue(1.0),
       wbFloat('Day').SetDefaultNativeValue(1.0),
@@ -15506,27 +15481,7 @@ begin
       wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
       wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
     ]), 32).IncludeFlag(dfNotAlignable),
-    wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherColors('Sky-Upper'),
-      wbWeatherColors('Fog Near'),
-      wbWeatherColors('Unknown'),
-      wbWeatherColors('Ambient'),
-      wbWeatherColors('Sunlight'),
-      wbWeatherColors('Sun'),
-      wbWeatherColors('Stars'),
-      wbWeatherColors('Sky-Lower'),
-      wbWeatherColors('Horizon'),
-      wbWeatherColors('Effect Lighting'),
-      wbWeatherColors('Cloud LOD Diffuse'),
-      wbWeatherColors('Cloud LOD Ambient'),
-      wbWeatherColors('Fog Far'),
-      wbWeatherColors('Sky Statics'),
-      wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glare'),
-      wbWeatherColors('Moon Glare'),
-      wbFromVersion(119, wbWeatherColors('Fog Near High')),
-      wbFromVersion(119, wbWeatherColors('Fog Far High'))
-    ], cpNormal, True),
+    wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),

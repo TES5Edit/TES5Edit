@@ -43,7 +43,6 @@ var
   wbMODT: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
-  wbWeatherSounds: IwbRecordMemberDef;
 
   wbActionFlag: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
@@ -70,6 +69,9 @@ var
   wbLandAlphaLayer: IwbRecordMemberDef;
   wbLandVertexLayer: IwbRecordMemberDef;
   wbLandLayers: IwbRecordMemberDef;
+
+  wbWeatherColors: IwbRecordMemberDef;
+  wbWeatherSounds: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
@@ -239,7 +241,7 @@ function wbTimeInterpolatorsMultAdd(const aSignatureMult, aSignatureAdd: TwbSign
 
 function wbFloatColorRGBA(const aName: string): IwbValueDef;
 
-function wbWeatherColors(const aName: string): IwbValueDef;
+function wbWeatherTimeOfDay(const aName: string): IwbStructDef;
 
 {>>> Common Functions <<<}
 
@@ -372,36 +374,6 @@ begin
     Result := aTrue;
 end;
 
-function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container: IwbDataContainer;
-  Element: IwbElement;
-  MinX, MaxX: Integer;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0\X'];
-  if not Assigned(Element) then
-    Exit;
-  MinX := Element.NativeValue;
-
-  // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9\X'];
-  if not Assigned(Element) then
-    Exit;
-  MaxX := Element.NativeValue;
-
-  // Calculate the total number of columns
-  Result := MaxX - MinX + 1;
-end;
-
 function wbTimeInterpolators(const aSignature: TwbSignature; const aName: string): IwbRecordMemberDef;
 begin
   Result :=
@@ -451,6 +423,63 @@ begin
     else
       Result := aFloat;
   end;
+end;
+
+function wbWeatherTimeOfDay(const aName: string): IwbStructDef;
+Begin
+  wbWeatherTimeOfDay :=
+    wbStruct(aName, [
+	    wbByteColors('Sunrise'),
+	    wbByteColors('Day'),
+	    wbByteColors('Sunset'),
+	    wbByteColors('Night'),
+	    IfThen(wbGameMode in [gmFNV],
+        wbByteColors('High Noon'),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(119, wbByteColors('Early Sunrise')),
+          Nil)),
+	    IfThen(wbGameMode in [gmFNV],
+        wbByteColors('Midnight'),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(119, wbByteColors('Late Sunrise')),
+          Nil)),
+	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbByteColors('Early Sunset')),
+        Nil),
+	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbByteColors('Late Sunset')),
+        Nil)
+	  ], cpNormal, True, Nil, 4);
+End;
+
+function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  MinX, MaxX: Integer;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  // Retrieve the minimum X value
+  Element := Container.ElementByPath['Object Bounds\NAM0\X'];
+  if not Assigned(Element) then
+    Exit;
+  MinX := Element.NativeValue;
+
+  // Retrieve the maximum X value
+  Element := Container.ElementByPath['Object Bounds\NAM9\X'];
+  if not Assigned(Element) then
+    Exit;
+  MaxX := Element.NativeValue;
+
+  // Calculate the total number of columns
+  Result := MaxX - MinX + 1;
 end;
 
 procedure DefineCommon;
@@ -881,26 +910,6 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapsePlacement)
     , 0, cpNormal, True);
 
-  if wbSimpleRecords then
-    wbLandNormals :=
-      wbByteArray(VNML, 'Vertex Normals', 3267, cpBenign)
-  else
-    wbLandNormals :=
-      wbArray(VNML, 'Vertex Normals',
-        wbArray('Row',
-          wbStruct('Column', [
-            wbInteger('X', itU8, nil, cpBenign),
-            wbInteger('Y', itU8, nil, cpBenign),
-            wbInteger('Z', itU8, nil, cpBenign)
-          ], cpIgnore)
-          .SetSummaryKey([0, 1, 2])
-          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
-          .SetSummaryMemberPrefixSuffix(2, '', ')')
-          .IncludeFlag(dfSummaryMembersNoName)
-          .IncludeFlag(dfCollapsed, wbCollapseVec3),
-        33, cpBenign),
-      33, nil, nil, cpBenign);
-
   wbINOM :=
     wbArray(INOM, 'INFO Order (Masters only)',
       wbFormIDCk('INFO', [INFO], False, cpBenign)
@@ -920,6 +929,26 @@ begin
       .IncludeFlag(dfDontAssign);
 
 {>>>Landscape Common Defs<<<}
+
+  if wbSimpleRecords then
+    wbLandNormals :=
+      wbByteArray(VNML, 'Vertex Normals', 3267, cpBenign)
+  else
+    wbLandNormals :=
+      wbArray(VNML, 'Vertex Normals',
+        wbArray('Row',
+          wbStruct('Column', [
+            wbInteger('X', itU8, nil, cpBenign),
+            wbInteger('Y', itU8, nil, cpBenign),
+            wbInteger('Z', itU8, nil, cpBenign)
+          ], cpBenign)
+          .SetSummaryKey([0, 1, 2])
+          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
+          .SetSummaryMemberPrefixSuffix(2, '', ')')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+        33, cpBenign),
+      33, nil, nil, cpBenign);
 
   if wbSimpleRecords then
     wbLandHeights :=
@@ -995,6 +1024,48 @@ begin
           wbLandVertexLayer
         ], [])
       ], []));
+
+{>>>Weather Common Defs<<<}
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherColors :=
+    wbStruct(NAM0, 'Weather Colors', [
+      wbWeatherTimeOfDay('Sky-Upper'),
+      IfThen(wbGameMode in [gmTES4,gmFO3,gmFNV],
+        wbWeatherTimeOfDay('Fog'),
+        wbWeatherTimeOfDay('Fog Near')),
+      IfThen(wbGameMode in [gmTES4],
+        wbWeatherTimeOfDay('Clouds-Lower'),
+        wbWeatherTimeOfDay('Unused')),
+      wbWeatherTimeOfDay('Ambient'),
+      wbWeatherTimeOfDay('Sunlight'),
+      wbWeatherTimeOfDay('Sun'),
+      wbWeatherTimeOfDay('Stars'),
+      wbWeatherTimeOfDay('Sky-Lower'),
+      wbWeatherTimeOfDay('Horizon'),
+      IfThen(wbGameMode in [gmTES4],
+        wbWeatherTimeOfDay('Clouds-Upper'),
+        IfThen(wbIsFallout3,
+          wbWeatherTimeOfDay('Clouds (Unused)'),
+          wbWeatherTimeOfDay('Effect Lighting'))),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')), Nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')), Nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')), Nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')), Nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')), Nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')), Nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')), Nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbWeatherTimeOfDay('Fog Near High')), Nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')), Nil)
+    ], cpNormal, True, nil, 10);
 
 {>>>Worldspace Common Defs<<<}
 

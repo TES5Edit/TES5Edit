@@ -3905,16 +3905,6 @@ begin
     Result := 7;
 end;
 
-function wbWeatherColors(const aName: string): IwbStructDef;
-begin
-  Result := wbStruct(aName, [
-    wbByteColors('Sunrise'),
-    wbByteColors('Day'),
-    wbByteColors('Sunset'),
-    wbByteColors('Night')
-  ], cpNormal, True);
-end;
-
 function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
 begin
   Result := wbStruct(aSignature, aName, [
@@ -12899,33 +12889,14 @@ Can't properly represent that with current record definition methods.
       wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
       wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
     ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
+    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer')).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),
       wbFloat('Sunset'),
       wbFloat('Night')
     ])).IncludeFlag(dfNotAlignable),
-    {>>> not as an array since last entries are omitted in skyrim.esm <<<}
-    wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherColors('Sky-Upper'),
-      wbWeatherColors('Fog Near'),
-      wbWeatherColors('Unknown'),
-      wbWeatherColors('Ambient'),
-      wbWeatherColors('Sunlight'),
-      wbWeatherColors('Sun'),
-      wbWeatherColors('Stars'),
-      wbWeatherColors('Sky-Lower'),
-      wbWeatherColors('Horizon'),
-      wbWeatherColors('Effect Lighting'),
-      wbWeatherColors('Cloud LOD Diffuse'),
-      wbWeatherColors('Cloud LOD Ambient'),
-      wbWeatherColors('Fog Far'),
-      wbWeatherColors('Sky Statics'),
-      wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glare'),
-      wbWeatherColors('Moon Glare')
-    ], cpNormal, True, nil, 13),
+    wbWeatherColors,
     wbStruct(FNAM, 'Fog Distance', [
       wbFloat('Day - Near'),
       wbFloat('Day - Far'),
