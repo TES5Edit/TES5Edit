@@ -4322,12 +4322,7 @@ var  wbSoundTypeSoundsOld :=
     wbString(DNAM, 'Texture Upper Layer'),
     wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbWeatherColors,
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day Near'),
-      wbFloat('Day Far'),
-      wbFloat('Night Near'),
-      wbFloat('Night Far')
-    ], cpNormal, True),
+    wbWeatherFogDistance,
     wbStruct(HNAM, 'HDR Data', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Blur Radius'),

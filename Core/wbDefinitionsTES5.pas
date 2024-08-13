@@ -12897,16 +12897,7 @@ Can't properly represent that with current record definition methods.
       wbFloat('Night')
     ])).IncludeFlag(dfNotAlignable),
     wbWeatherColors,
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Power'),
-      wbFloat('Day - Max'),
-      wbFloat('Night - Max')
-    ], cpNormal, True),
+    wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
       wbByteArray('Unknown', 2),

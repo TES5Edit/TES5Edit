@@ -68,6 +68,7 @@ var
   wbLandLayers: IwbRecordMemberDef;
 
   wbWeatherColors: IwbRecordMemberDef;
+  wbWeatherFogDistance: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
@@ -433,20 +434,16 @@ Begin
 	    IfThen(wbGameMode in [gmFNV],
         wbByteColors('High Noon'),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(119, wbByteColors('Early Sunrise')),
-          Nil)),
+          wbFromVersion(119, wbByteColors('Early Sunrise')), Nil)),
 	    IfThen(wbGameMode in [gmFNV],
         wbByteColors('Midnight'),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(119, wbByteColors('Late Sunrise')),
-          Nil)),
+          wbFromVersion(119, wbByteColors('Late Sunrise')), Nil)),
 	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbByteColors('Early Sunset')),
-        Nil),
+        wbFromVersion(119, wbByteColors('Early Sunset')), Nil),
 	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbByteColors('Late Sunset')),
-        Nil)
-	  ], cpNormal, True, Nil, 4);
+        wbFromVersion(119, wbByteColors('Late Sunset')), Nil)
+	  ], cpNormal, True, Nil, 3);
 End;
 
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -996,18 +993,18 @@ begin
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherColors :=
     wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherTimeOfDay('Sky-Upper'),
+      wbWeatherTimeOfDay('Sky Upper'),
       IfThen(wbGameMode in [gmTES4,gmFO3,gmFNV],
         wbWeatherTimeOfDay('Fog'),
         wbWeatherTimeOfDay('Fog Near')),
       IfThen(wbGameMode in [gmTES4],
-        wbWeatherTimeOfDay('Clouds-Lower'),
+        wbWeatherTimeOfDay('Clouds Lower'),
         wbWeatherTimeOfDay('Unused')),
       wbWeatherTimeOfDay('Ambient'),
       wbWeatherTimeOfDay('Sunlight'),
       wbWeatherTimeOfDay('Sun'),
       wbWeatherTimeOfDay('Stars'),
-      wbWeatherTimeOfDay('Sky-Lower'),
+      wbWeatherTimeOfDay('Sky Lower'),
       wbWeatherTimeOfDay('Horizon'),
       IfThen(wbGameMode in [gmTES4],
         wbWeatherTimeOfDay('Clouds-Upper'),
@@ -1015,24 +1012,62 @@ begin
           wbWeatherTimeOfDay('Clouds (Unused)'),
           wbWeatherTimeOfDay('Effect Lighting'))),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')), Nil),
+        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')), nil),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')), Nil),
+        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')), nil),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')), Nil),
+        wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')), nil),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')), Nil),
+        wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')), nil),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')), Nil),
+        wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')), nil),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')), Nil),
+        wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')), nil),
       IfThen(wbGameMode > gmFNV,
-        wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')), Nil),
+        wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')), nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbWeatherTimeOfDay('Fog Near High')), Nil),
+        wbFromVersion(119, wbWeatherTimeOfDay('Fog Near High')), nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')), Nil)
+        wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')), nil)
     ], cpNormal, True, nil, 10);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherFogDistance :=
+    wbStruct(FNAM, 'Fog Distance', [
+      wbFloat('Day - Near'),
+      wbFloat('Day - Far'),
+      wbFloat('Night - Near'),
+      wbFloat('Night - Far'),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmTES4,
+        wbFloat('Day - Power'), nil),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmTES4,
+        wbFloat('Night - Power'), nil),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmFNV,
+        wbFloat('Day - Max'), nil),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmFNV,
+        wbFloat('Night - Max'), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Day - Near Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Day - Near Height Range')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Night - Near Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Night - Near Height Range')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Day - High Density Scale')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Night - High Density Scale')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Day - Far Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Day - Far Height Range')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Night - Far Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Night - Far Height Range')), nil)
+    ], cpNormal, True, nil, 3);
+
 
   wbWeatherSounds :=
     wbRArray('Sounds',
@@ -1052,7 +1087,6 @@ begin
     );
 
 {>>>Worldspace Common Defs<<<}
-
   //TES5,SSE,FO4,FO76,SF1
   wbWorldLargeRefs :=
     wbRArray('Large References',

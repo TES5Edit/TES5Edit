@@ -9265,14 +9265,7 @@ var  wbSoundTypeSoundsOld :=
       ),
     4),
     wbWeatherColors,
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Fower')
-    ], cpNormal, True),
+    wbWeatherFogDistance,
     wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
     wbStruct(DATA, '', [
       wbInteger('Wind Speed', itU8),

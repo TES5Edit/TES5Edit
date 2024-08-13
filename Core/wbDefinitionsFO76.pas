@@ -18675,26 +18675,7 @@ begin
     ])).IncludeFlag(dfNotAlignable),
     wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Power'),
-      wbFloat('Day - Max'),
-      wbFloat('Night - Max'),
-      wbFloat('Day - Near Height Mid'),
-      wbFloat('Day - Near Height Range'),
-      wbFloat('Night - Near Height Mid'),
-      wbFloat('Night - Near Height Range'),
-      wbFloat('Day - High Density Scale'),
-      wbFloat('Night - High Density Scale'),
-      wbFloat('Day - Far Height Mid'),
-      wbFloat('Day - Far Height Range'),
-      wbFloat('Night - Far Height Mid'),
-      wbFloat('Night - Far Height Range')
-    ], cpNormal, True, nil, 8),
+    wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
       wbByteArray('Unknown', 2),

@@ -15483,26 +15483,7 @@ begin
     ]), 32).IncludeFlag(dfNotAlignable),
     wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Power'),
-      wbFloat('Day - Max'),
-      wbFloat('Night - Max'),
-      wbFromVersion(119, wbFloat('Day - Near Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(119, wbFloat('Day - Near Height Range').SetDefaultNativeValue(10000.0)),
-      wbFromVersion(119, wbFloat('Night - Near Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(119, wbFloat('Night - Near Height Range').SetDefaultNativeValue(10000.0)),
-      wbFromVersion(119, wbFloat('Day - High Density Scale').SetDefaultNativeValue(1.0)),
-      wbFromVersion(119, wbFloat('Night - High Density Scale').SetDefaultNativeValue(1.0)),
-      wbFromVersion(120, wbFloat('Day - Far Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(120, wbFloat('Day - Far Height Range').SetDefaultNativeValue(10000.0)),
-      wbFromVersion(120, wbFloat('Night - Far Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(120, wbFloat('Night - Far Height Range').SetDefaultNativeValue(10000.0))
-    ], cpNormal, True),
+    wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
       wbByteArray('Unknown', 2),
