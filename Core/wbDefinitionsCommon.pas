@@ -65,9 +65,6 @@ var
   wbLandNormals: IwbRecordMemberDef;
   wbLandHeights: IwbRecordMemberDef;
   wbLandColors: IwbRecordMemberDef;
-  wbLandBaseLayer: IwbRecordMemberDef;
-  wbLandAlphaLayer: IwbRecordMemberDef;
-  wbLandVertexLayer: IwbRecordMemberDef;
   wbLandLayers: IwbRecordMemberDef;
 
   wbWeatherColors: IwbRecordMemberDef;
@@ -855,23 +852,6 @@ begin
       .IncludeFlag(dfCollapsed)
     , cpNormal, True);
 
-  wbWeatherSounds :=
-    wbRArray('Sounds',
-      wbStruct(SNAM, 'Sound', [
-        wbFormIDCK('Sound', [SNDR, SOUN, NULL]),
-        wbInteger('Type', itU32, wbEnum([
-          {0x01} 'Default',
-          {0x02} 'Precipitation',
-          {0x04} 'Wind',
-          {0x08} 'Thunder'
-        ]))
-      ]).SetSummaryKeyOnValue([1, 0])
-      .SetSummaryPrefixSuffixOnValue(1, '[', ']')
-      .SetSummaryDelimiterOnValue(' ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed)
-    );
-
   var lScaleFactor := 1/wbCellSizeFactor;
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
@@ -930,11 +910,10 @@ begin
 
 {>>>Landscape Common Defs<<<}
 
-  if wbSimpleRecords then
-    wbLandNormals :=
-      wbByteArray(VNML, 'Vertex Normals', 3267, cpBenign)
-  else
-    wbLandNormals :=
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbLandNormals :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VNML, 'Vertex Normals', 3267, cpBenign),
       wbArray(VNML, 'Vertex Normals',
         wbArray('Row',
           wbStruct('Column', [
@@ -948,13 +927,12 @@ begin
           .IncludeFlag(dfSummaryMembersNoName)
           .IncludeFlag(dfCollapsed, wbCollapseVec3),
         33, cpBenign),
-      33, nil, nil, cpBenign);
+      33, nil, nil, cpBenign));
 
-  if wbSimpleRecords then
-    wbLandHeights :=
-      wbByteArray(VHGT, 'Vertex Height Map')
-  else
-    wbLandHeights :=
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbLandHeights :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VHGT, 'Vertex Height Map'),
       wbStruct(VHGT, 'Vertex Height Map', [
         wbFloat('Offset'),
         wbArray('Height Data',
@@ -963,13 +941,12 @@ begin
           33),
         33),
         wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow)
-      ]);
+      ]));
 
-  if wbSimpleRecords then
-    wbLandColors :=
-      wbByteArray(VCLR, 'Vertex Colors')
-  else
-    wbLandColors :=
+  //TES4,FO3,FNV,TES5,FO4,FO76
+  wbLandColors :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VCLR, 'Vertex Colors'),
       wbArray(VCLR, 'Vertex Colors',
         wbArray('Columns',
           wbStruct('Column', [
@@ -983,45 +960,35 @@ begin
           .IncludeFlag(dfSummaryMembersNoName)
           .IncludeFlag(dfCollapsed, wbCollapseVec3),
         33),
-      33);
+      33));
 
-  wbLandBaseLayer :=
-    wbStructSK(BTXT, [1, 3], 'Base Layer', [
-      wbFormIDCk('Texture', [LTEX, NULL]),
-      wbInteger('Quadrant', itU8, wbQuadrantEnum),
-      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
-      wbInteger('Layer', itU16)
-    ]);
-
-  wbLandAlphaLayer :=
-    wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-      wbFormIDCk('Texture', [LTEX, NULL]),
-      wbInteger('Quadrant', itU8, wbQuadrantEnum),
-      wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
-      wbInteger('Layer', itU16)
-    ]);
-
-  if wbSimpleRecords then
-    wbLandVertexLayer :=
-      wbByteArray(VTXT, 'Alpha Layer Data')
-  else
-    wbLandVertexLayer :=
-      wbArrayS(VTXT, 'Alpha Layer Data',
-        wbStructSK([0], 'Cell', [
-          wbInteger('Position', itU16, wbVTXTPosition),
-          wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
-          wbFloat('Opacity')
-        ]));
-
+  //TES4,FO3,FNV,TES5,FO4,FO76
   wbLandLayers :=
     wbRArrayS('Layers',
       wbRUnion('Layer', [
         wbRStructSK([0], 'Base Layer', [
-          wbLandBaseLayer
+          wbStructSK(BTXT, [1, 3], 'Base Layer', [
+            wbFormIDCk('Texture', [LTEX, NULL]),
+            wbInteger('Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+            wbInteger('Layer', itU16)
+          ])
         ], []),
         wbRStructSK([0], 'Alpha Layer', [
-          wbLandAlphaLayer,
-          wbLandVertexLayer
+          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
+            wbFormIDCk('Texture', [LTEX, NULL]),
+            wbInteger('Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+            wbInteger('Layer', itU16)
+          ]),
+          IfThen(wbSimpleRecords,
+            wbByteArray(VTXT, 'Alpha Layer Data'),
+            wbArrayS(VTXT, 'Alpha Layer Data',
+              wbStructSK([0], 'Cell', [
+                wbInteger('Position', itU16, wbVTXTPosition),
+                wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+                wbFloat('Opacity')
+              ])))
         ], [])
       ], []));
 
@@ -1067,6 +1034,23 @@ begin
         wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')), Nil)
     ], cpNormal, True, nil, 10);
 
+  wbWeatherSounds :=
+    wbRArray('Sounds',
+      wbStruct(SNAM, 'Sound', [
+        wbFormIDCK('Sound', [SNDR, SOUN, NULL]),
+        wbInteger('Type', itU32, wbEnum([
+          {0x1} 'Default',
+          {0x2} 'Precipitation',
+          {0x4} 'Wind',
+          {0x8} 'Thunder'
+        ]))
+      ]).SetSummaryKeyOnValue([1, 0])
+      .SetSummaryPrefixSuffixOnValue(1, '[', ']')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    );
+
 {>>>Worldspace Common Defs<<<}
 
   //TES5,SSE,FO4,FO76,SF1
@@ -1092,11 +1076,9 @@ begin
     cpIgnore, False, nil, nil, wbNeverShow);
 
   //TES5,SSE,FO4,FO76,SF1
-  if wbSimpleRecords then
-    wbWorldMaxHeight :=
-      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-  else
-    wbWorldMaxHeight :=
+  wbWorldMaxHeight :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
       wbStruct(MHDT, 'Max Height Data', [
         wbStruct('Min', [
           wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
@@ -1116,7 +1098,7 @@ begin
           .IncludeFlag(dfCollapsed))
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable)
-      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
+      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]));
 
   //TES5,SSE,FO4,FO76,SF1
   wbWorldFixedCenter :=
@@ -1126,71 +1108,45 @@ begin
     ]);
 
   //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
-  if wbIsSkyrim then
-    wbWorldMapBounds :=
-      wbStruct(MNAM, 'World Map Bounds', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
+  wbWorldMapBounds :=
+    wbStruct(MNAM, 'World Map Bounds', [
+      wbStruct('Usable Dimensions', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
+      ]),
+      wbStruct('Cell Coordinates', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
         ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ]),
+        wbStruct('SE Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
+        ])
+      ]),
+      IfThen(wbIsSkyrim,
         wbStruct('Camera Data', [
           wbFloat('Min Height'),
           wbFloat('Max Height'),
           wbFloat('Initial Pitch')
-        ])
-      ])
-  else
-    wbWorldMapBounds :=
-      wbStruct(MNAM, 'World Map Bounds', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]);
+        ]), Nil)
+    ]);
 
   //FO3,FNV,TES5,SSE,FO4,FO76,SF1
-  if wbIsFallout3 then
   wbWorldMapOffset :=
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset')
-    ], cpNormal, True);
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 then
-  wbWorldMapOffset :=
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
-    ], cpNormal, True);
-  if wbIsStarfield then
-  wbWorldMapOffset :=
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset', cpNormal, True, 0.01),
-      wbFloat('Cell Y Offset', cpNormal, True, 0.01),
-      wbFloat('Cell Z Offset', cpNormal, True, 0.01)
+      IfThen(wbIsStarfield,
+        wbFloat('Cell X Offset', cpNormal, True, 0.01),
+        wbFloat('Cell X Offset')),
+      IfThen(wbIsStarfield,
+        wbFloat('Cell Y Offset', cpNormal, True, 0.01),
+        wbFloat('Cell Y Offset')),
+      IfThen(wbIsFallout3,
+        Nil,
+        IfThen(wbIsStarfield,
+          wbFloat('Cell Z Offset', cpNormal, True, 0.01),
+          wbFloat('Cell Z Offset')))
     ], cpNormal, True);
 
   //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
@@ -1256,39 +1212,33 @@ begin
     ], []);
 
   //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
-  if wbSimpleRecords then
-    wbWorldOffsetData :=
-      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbWorldOffsetData :=
+  wbWorldOffsetData :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow),
       wbArray(OFST, 'Offset Data',
         wbArray('Row',
           wbInteger('Column', itU32, nil, cpIgnore),
           wbWorldColumnsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow);
+      0, nil, nil, cpIgnore, False, wbNeverShow));
 
   //FO4,FO76,SF1
-  if wbSimpleRecords then
-    wbWorldCellSizeData :=
-      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbWorldCellSizeData :=
+  wbWorldCellSizeData :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow),
       wbArray(CLSZ, 'Cell Size Data',
         wbArray('Row',
           wbInteger('Column', itU32, nil, cpIgnore),
         wbWorldColumnsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow);
+      0, nil, nil, cpIgnore, False, wbNeverShow));
 
   //FO76
-  if wbSimpleRecords then
-    wbWorldVisibleCellsData :=
-      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbWorldVisibleCellsData :=
+  wbWorldVisibleCellsData :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow),
       wbStruct(VISI, 'Visible Cell Index Data', [
         wbArray('Visible Cells',
           wbArray('Row',
@@ -1304,7 +1254,7 @@ begin
           wbInteger('Min X', itS16, nil, cpIgnore),
           wbInteger('Rows', itU32, nil, cpIgnore)
         ], cpIgnore)
-      ], cpIgnore, False, wbNeverShow);
+      ], cpIgnore, False, wbNeverShow));
 
 {>>>End Common Definitions<<<}
 end;

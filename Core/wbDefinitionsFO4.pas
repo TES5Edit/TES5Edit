@@ -8670,11 +8670,11 @@ begin
     wbGenericModel,
     wbICON,
     wbMICO,
+    wbDEST,
     wbYNAM,
     wbZNAM,
     wbETYP,
     wbCUSD,
-    wbDEST,
     wbDESC,
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
