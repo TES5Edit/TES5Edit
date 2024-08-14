@@ -9257,7 +9257,7 @@ var  wbSoundTypeSoundsOld :=
     wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
     wbGenericModel,
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
-    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
+    wbWeatherCloudSpeed,
     wbArray(PNAM, 'Cloud Layer Colors',
       wbArray('Layer',
         wbByteColors('Color'),

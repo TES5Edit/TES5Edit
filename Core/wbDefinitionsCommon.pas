@@ -67,6 +67,7 @@ var
   wbLandColors: IwbRecordMemberDef;
   wbLandLayers: IwbRecordMemberDef;
 
+  wbWeatherCloudSpeed: IwbRecordMemberDef;
   wbWeatherColors: IwbRecordMemberDef;
   wbWeatherFogDistance: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
@@ -423,6 +424,24 @@ begin
   end;
 end;
 
+function wbWeatherCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbWeatherCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  f: Extended;
+begin
+  f := StrToFloat(aString);
+  f := f*10*127 + 127;
+  Result := Min(Round(f), 254);
+end;
+
 function wbWeatherTimeOfDay(const aName: string): IwbStructDef;
 Begin
   wbWeatherTimeOfDay :=
@@ -434,16 +453,20 @@ Begin
 	    IfThen(wbGameMode in [gmFNV],
         wbByteColors('High Noon'),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(119, wbByteColors('Early Sunrise')), Nil)),
+          wbFromVersion(111, wbByteColors('Early Sunrise')),
+          Nil)),
 	    IfThen(wbGameMode in [gmFNV],
         wbByteColors('Midnight'),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(119, wbByteColors('Late Sunrise')), Nil)),
+          wbFromVersion(111, wbByteColors('Late Sunrise')),
+          Nil)),
 	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbByteColors('Early Sunset')), Nil),
+        wbFromVersion(111, wbByteColors('Early Sunset')),
+        Nil),
 	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbByteColors('Late Sunset')), Nil)
-	  ], cpNormal, True, Nil, 3);
+        wbFromVersion(111, wbByteColors('Late Sunset')),
+        Nil)
+	  ], cpNormal, True, Nil, 4);
 End;
 
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -905,8 +928,7 @@ begin
       .IncludeFlag(dfDontSave)
       .IncludeFlag(dfDontAssign);
 
-{>>>Landscape Common Defs<<<}
-
+{{>>>Landscape Common Defs<<<}
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbLandNormals :=
     IfThen(wbSimpleRecords,
@@ -990,6 +1012,20 @@ begin
       ], []));
 
 {>>>Weather Common Defs<<<}
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherCloudSpeed :=
+    IfThen(wbIsFallout3,
+	    wbArray(ONAM, 'Cloud Speeds',
+		    wbInteger('Layer', itU8), 4, nil, nil, cpNormal, True),
+	    wbRStruct('Cloud Speeds', [
+	      wbArray(RNAM, 'Y Speeds',
+		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
+		    ).IncludeFlag(dfNotAlignable),
+		    wbArray(QNAM, 'X Speeds',
+		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
+	    	).IncludeFlag(dfNotAlignable)
+	    ], []));
+
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherColors :=
     wbStruct(NAM0, 'Weather Colors', [
@@ -1068,7 +1104,7 @@ begin
         wbFromVersion(120, wbFloat('Night - Far Height Range')), nil)
     ], cpNormal, True, nil, 3);
 
-
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherSounds :=
     wbRArray('Sounds',
       wbStruct(SNAM, 'Sound', [

@@ -9984,52 +9984,6 @@ var  wbSoundTypeSoundsOld :=
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ], True, nil, cpNormal, False, wbWEAPAfterLoad);
 
-  wbRecord(WTHR, 'Weather', [
-    wbEDIDReq,
-    wbFormIDCk(_00_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-    wbFormIDCk(_01_IAD, 'Day Image Space Modifier', [IMAD]),
-    wbFormIDCk(_02_IAD, 'Sunset Image Space Modifier', [IMAD]),
-    wbFormIDCk(_03_IAD, 'Night Image Space Modifier', [IMAD]),
-    wbFormIDCk(_04_IAD, 'High Noon Image Space Modifier', [IMAD]),
-    wbFormIDCk(_05_IAD, 'Midnight Image Space Modifier', [IMAD]),
-    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
-    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
-    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
-    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-    wbGenericModel,
-    wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
-    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbArray(PNAM, 'Cloud Layer Colors',
-      wbArray('Layer',
-        wbByteColors('Color'),
-        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
-      ),
-    4),
-    wbWeatherColors,
-    wbWeatherFogDistance,
-    wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
-    wbStruct(DATA, '', [
-      wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
-      wbInteger('Trans Delta', itU8),
-      wbInteger('Sun Glare', itU8),
-      wbInteger('Sun Damage', itU8),
-      wbInteger('Precipitation - Begin Fade In', itU8),
-      wbInteger('Precipitation - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
-    ], cpNormal, True),
-    wbWeatherSounds
-  ]);
-
   wbRecord(IMOD, 'Item Mod', [
     wbEDIDReq,
     wbOBND(True),
@@ -10454,6 +10408,52 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Trigger Threshold', itU32),
       wbFormIDCk('Actor Effect', [SPEL])
     ], cpNormal, True)
+  ]);
+
+  wbRecord(WTHR, 'Weather', [
+    wbEDIDReq,
+    wbFormIDCk(_00_IAD, 'Sunrise Image Space Modifier', [IMAD]),
+    wbFormIDCk(_01_IAD, 'Day Image Space Modifier', [IMAD]),
+    wbFormIDCk(_02_IAD, 'Sunset Image Space Modifier', [IMAD]),
+    wbFormIDCk(_03_IAD, 'Night Image Space Modifier', [IMAD]),
+    wbFormIDCk(_04_IAD, 'High Noon Image Space Modifier', [IMAD]),
+    wbFormIDCk(_05_IAD, 'Midnight Image Space Modifier', [IMAD]),
+    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
+    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
+    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
+    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+    wbGenericModel,
+    wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
+    wbWeatherCloudSpeed,
+    wbArray(PNAM, 'Cloud Layer Colors',
+      wbArray('Layer',
+        wbByteColors('Color'),
+        ['Sunrise', 'Day', 'Sunset', 'Night', 'High Noon', 'Midnight']
+      ),
+    4),
+    wbWeatherColors,
+    wbWeatherFogDistance,
+    wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
+    wbStruct(DATA, '', [
+      wbInteger('Wind Speed', itU8),
+      wbInteger('Cloud Speed (Lower)', itU8),
+      wbInteger('Cloud Speed (Upper)', itU8),
+      wbInteger('Trans Delta', itU8),
+      wbInteger('Sun Glare', itU8),
+      wbInteger('Sun Damage', itU8),
+      wbInteger('Precipitation - Begin Fade In', itU8),
+      wbInteger('Precipitation - End Fade Out', itU8),
+      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
+      wbInteger('Thunder/Lightning - End Fade Out', itU8),
+      wbInteger('Thunder/Lightning - Frequency', itU8),
+      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbStruct('Lightning Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+    ], cpNormal, True),
+    wbWeatherSounds
   ]);
 
   wbRecord(WRLD, 'Worldspace', [

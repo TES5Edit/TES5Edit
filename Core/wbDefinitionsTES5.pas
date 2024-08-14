@@ -1608,24 +1608,6 @@ end;
 //  end;
 //end;
 
-function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
-    ctCheck: Result := '';
-  end;
-end;
-
-function wbCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  f: Extended;
-begin
-  f := StrToFloat(aString);
-  f := f*10*127 + 127;
-  Result := Min(Round(f), 254);
-end;
-
 function wbShortXYtoStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   x, y: SmallInt;
@@ -12846,6 +12828,49 @@ Can't properly represent that with current record definition methods.
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
+  if IsSSE then begin
+    wbRecord(VOLI, 'Volumetric Lighting', [
+      wbEDID,
+      wbFloat(CNAM, 'Intensity'),
+      wbFloat(DNAM, 'Custom Color - Contribution'),
+      wbRFloatColors('Colors', [ENAM, FNAM, GNAM]),
+      wbFloat(HNAM, 'Density - Contribution'),
+      wbFloat(INAM, 'Density - Size'),
+      wbFloat(JNAM, 'Density - Wind Speed'),
+      wbFloat(KNAM, 'Density - Falling Speed'),
+      wbFloat(LNAM, 'Phase Function - Contribution'),
+      wbFloat(MNAM, 'Phase Function - Scattering'),
+      wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
+    ]);
+
+    wbRecord(LENS, 'Lens Flare', [
+      wbEDID,
+      wbFloat(CNAM, 'Color Influence'),
+      wbFloat(DNAM, 'Fade Distance Radius Scale'),
+      wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
+      wbRArray('Lens Flare Sprites',
+        wbRStruct('Flare', [
+          wbString(DNAM, 'Lens Flare Sprite ID'),
+          wbString(FNAM, 'Texture'),
+          wbStruct(LFSD, 'Lens Flare Data', [
+            wbFloatColors('Tint'),
+            wbFloat('Width'),
+            wbFloat('Height'),
+            wbFloat('Position'),
+            wbFloat('Angular Fade'),
+            wbFloat('Opacity'),
+            wbInteger('Flags', itU32, wbFlags([
+              {0x01} 'Rotates',
+              {0x02} 'Shrinks When Occluded'
+            ]))
+          ])
+        ], []),
+        cpNormal, False, nil, wbLENSAfterSet
+      )
+    ]);
+
+  end;
+
   wbRecord(WTHR, 'Weather', [
     wbEDID,
     wbString(_30_0TX, 'Cloud Texture Layer #0'),
@@ -12885,10 +12910,7 @@ Can't properly represent that with current record definition methods.
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbByteArray(ONAM, 'Unused', 0, cpIgnore),
-    wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
-    ], []),
+    wbWeatherCloudSpeed,
     wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer')).IncludeFlag(dfNotAlignable),
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
@@ -12954,49 +12976,6 @@ Can't properly represent that with current record definition methods.
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
   ]);
-
-  if IsSSE then begin
-    wbRecord(VOLI, 'Volumetric Lighting', [
-      wbEDID,
-      wbFloat(CNAM, 'Intensity'),
-      wbFloat(DNAM, 'Custom Color - Contribution'),
-      wbRFloatColors('Colors', [ENAM, FNAM, GNAM]),
-      wbFloat(HNAM, 'Density - Contribution'),
-      wbFloat(INAM, 'Density - Size'),
-      wbFloat(JNAM, 'Density - Wind Speed'),
-      wbFloat(KNAM, 'Density - Falling Speed'),
-      wbFloat(LNAM, 'Phase Function - Contribution'),
-      wbFloat(MNAM, 'Phase Function - Scattering'),
-      wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
-    ]);
-
-    wbRecord(LENS, 'Lens Flare', [
-      wbEDID,
-      wbFloat(CNAM, 'Color Influence'),
-      wbFloat(DNAM, 'Fade Distance Radius Scale'),
-      wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
-      wbRArray('Lens Flare Sprites',
-        wbRStruct('Flare', [
-          wbString(DNAM, 'Lens Flare Sprite ID'),
-          wbString(FNAM, 'Texture'),
-          wbStruct(LFSD, 'Lens Flare Data', [
-            wbFloatColors('Tint'),
-            wbFloat('Width'),
-            wbFloat('Height'),
-            wbFloat('Position'),
-            wbFloat('Angular Fade'),
-            wbFloat('Opacity'),
-            wbInteger('Flags', itU32, wbFlags([
-              {0x01} 'Rotates',
-              {0x02} 'Shrinks When Occluded'
-            ]))
-          ])
-        ], []),
-        cpNormal, False, nil, wbLENSAfterSet
-      )
-    ]);
-
-  end;
 
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([

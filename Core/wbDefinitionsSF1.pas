@@ -1714,24 +1714,6 @@ end;
 //  end;
 //end;
 
-function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
-    ctCheck: Result := '';
-  end;
-end;
-
-function wbCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  f: Extended;
-begin
-  f := StrToFloat(aString);
-  f := f*10*127 + 127;
-  Result := Min(Round(f), 254);
-end;
-
 function wbPlacedAddInfo(const aMainRecord: IwbMainRecord): string;
 var
   Rec: IwbRecord;
@@ -18220,113 +18202,6 @@ end;
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(WTHR, 'Weather',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9'
-    ])), [
-    wbEDID,
-    wbKeywords,
-    wbUnknown(LNAM),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
-    wbUnknown(CLDC),
-    wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
-    ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer'), 32).IncludeFlag(dfNotAlignable),
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise').SetDefaultNativeValue(1.0),
-      wbFloat('Day').SetDefaultNativeValue(1.0),
-      wbFloat('Sunset').SetDefaultNativeValue(1.0),
-      wbFloat('Night').SetDefaultNativeValue(1.0),
-      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
-    ]), 32).IncludeFlag(dfNotAlignable),
-    wbWeatherColors,
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
-    wbWeatherFogDistance,
-    wbStruct(DATA, 'Data', [
-      wbInteger('Wind Speed', itU8), // scaled 0..1
-      wbByteArray('Unknown', 2),
-      wbInteger('Trans Delta', itU8), // scaled 0..0,25
-      wbInteger('Sun Glare', itU8), // scaled 0..1
-      wbInteger('Sun Damage', itU8), // scaled 0..1
-      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
-      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Weather - Pleasant',
-        {0x02} 'Weather - Cloudy',
-        {0x04} 'Weather - Rainy',
-        {0x08} 'Weather - Snow',
-        {0x10} 'Sky Statics - Always Visible',
-        {0x20} 'Sky Statics - Follows Sun Position',
-        {0x40} 'Rain Occlusion',
-        {0x80} 'HUD Rain Effects'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
-      wbInteger('Visual Effect - End', itU8), // scaled 0..1
-      wbInteger('Wind Direction', itU8), // scaled 0..360
-      wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
-    ], cpNormal, True),
-    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
-      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('LateSunrise', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
-    ], cpNormal, True),
-    wbStruct(HNAM, 'Volumetric Lighting', [
-      wbFormIDCK('Sunrise',[VOLI, NULL]),
-      wbFormIDCK('Day',[VOLI, NULL]),
-      wbFormIDCK('Sunset',[VOLI, NULL]),
-      wbFormIDCK('Night',[VOLI, NULL]),
-      wbFormIDCK('EarlySunrise',[VOLI, NULL]),
-      wbFormIDCK('LateSunrise',[VOLI, NULL]),
-      wbFormIDCK('EarlySunset',[VOLI, NULL]),
-      wbFormIDCK('EarlySunrise',[VOLI, NULL])
-    ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
-      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
-    ], [], cpNormal, True),
-    wbRStruct('Aurora', [wbGenericModel(True)], []),
-    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
-    wbStruct(UNAM, 'Magic', [
-      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
-      wbFloat('On Lightning Strike - Threshold'),
-      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbUnused(4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbFloat('Unused'))
-    ], cpNormal, False),
-    wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
-    wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
-  ]);
-
-  {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
     wbStruct(ANAM, 'Data', [
@@ -21151,6 +21026,109 @@ end;
       wbProgress('Warning: Could not find Wwise Soundbank Info.');
   end);
 
+  {subrecords checked against Starfield.esm}
+  wbRecord(WTHR, 'Weather',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000200}  9, 'Unknown 9'
+    ])), [
+    wbEDID,
+    wbKeywords,
+    wbUnknown(LNAM),
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
+    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
+    wbUnknown(CLDC),
+    wbWeatherCloudSpeed,
+    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer'), 32).IncludeFlag(dfNotAlignable),
+    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
+      wbFloat('Sunrise').SetDefaultNativeValue(1.0),
+      wbFloat('Day').SetDefaultNativeValue(1.0),
+      wbFloat('Sunset').SetDefaultNativeValue(1.0),
+      wbFloat('Night').SetDefaultNativeValue(1.0),
+      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
+    ]), 32).IncludeFlag(dfNotAlignable),
+    wbWeatherColors,
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
+    wbWeatherFogDistance,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Wind Speed', itU8), // scaled 0..1
+      wbByteArray('Unknown', 2),
+      wbInteger('Trans Delta', itU8), // scaled 0..0,25
+      wbInteger('Sun Glare', itU8), // scaled 0..1
+      wbInteger('Sun Damage', itU8), // scaled 0..1
+      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
+      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
+      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
+      wbInteger('Thunder/Lightning - End Fade Out', itU8),
+      wbInteger('Thunder/Lightning - Frequency', itU8),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Weather - Pleasant',
+        {0x02} 'Weather - Cloudy',
+        {0x04} 'Weather - Rainy',
+        {0x08} 'Weather - Snow',
+        {0x10} 'Sky Statics - Always Visible',
+        {0x20} 'Sky Statics - Follows Sun Position',
+        {0x40} 'Rain Occlusion',
+        {0x80} 'HUD Rain Effects'
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbStruct('Lightning Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
+      wbInteger('Visual Effect - End', itU8), // scaled 0..1
+      wbInteger('Wind Direction', itU8), // scaled 0..360
+      wbInteger('Wind Direction Range', itU8), // scaled 0..180
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
+    ], cpNormal, True),
+    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbStruct(IMSP, 'Image Spaces', [
+      wbFormIDCK('Sunrise', [IMGS, NULL]),
+      wbFormIDCK('Day', [IMGS, NULL]),
+      wbFormIDCK('Sunset', [IMGS, NULL]),
+      wbFormIDCK('Night', [IMGS, NULL]),
+      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('LateSunrise', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
+    ], cpNormal, True),
+    wbStruct(HNAM, 'Volumetric Lighting', [
+      wbFormIDCK('Sunrise',[VOLI, NULL]),
+      wbFormIDCK('Day',[VOLI, NULL]),
+      wbFormIDCK('Sunset',[VOLI, NULL]),
+      wbFormIDCK('Night',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL]),
+      wbFormIDCK('LateSunrise',[VOLI, NULL]),
+      wbFormIDCK('EarlySunset',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL])
+    ]),
+    wbRStruct('Directional Ambient Lighting Colors', [
+      wbAmbientColors(DALC, 'Sunrise'),
+      wbAmbientColors(DALC, 'Day'),
+      wbAmbientColors(DALC, 'Sunset'),
+      wbAmbientColors(DALC, 'Night'),
+      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
+      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
+      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
+      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
+    ], [], cpNormal, True),
+    wbRStruct('Aurora', [wbGenericModel(True)], []),
+    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
+    wbStruct(UNAM, 'Magic', [
+      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
+      wbFloat('On Lightning Strike - Threshold'),
+      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
+      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
+      wbFromVersion(130, wbUnused(4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbFloat('Unused'))
+    ], cpNormal, False),
+    wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
+    wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
+  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
