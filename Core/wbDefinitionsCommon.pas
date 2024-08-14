@@ -443,7 +443,7 @@ begin
 end;
 
 function wbWeatherTimeOfDay(const aName: string): IwbStructDef;
-Begin
+begin
   wbWeatherTimeOfDay :=
     wbStruct(aName, [
 	    wbByteColors('Sunrise'),
@@ -454,20 +454,20 @@ Begin
         wbByteColors('High Noon'),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
           wbFromVersion(111, wbByteColors('Early Sunrise')),
-          Nil)),
+          nil)),
 	    IfThen(wbGameMode in [gmFNV],
         wbByteColors('Midnight'),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
           wbFromVersion(111, wbByteColors('Late Sunrise')),
-          Nil)),
+          nil)),
 	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(111, wbByteColors('Early Sunset')),
-        Nil),
+        nil),
 	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(111, wbByteColors('Late Sunset')),
-        Nil)
-	  ], cpNormal, True, Nil, 4);
-End;
+        nil)
+	  ], cpNormal, True, nil, 4);
+end;
 
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
