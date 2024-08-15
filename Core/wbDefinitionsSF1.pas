@@ -21133,7 +21133,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00002}  2, 'Unknown 2',
+      {0x00002}  2, 'Unique',
       {0x04000} 14, 'Partial Form',
       {0x80000} 19, 'Can''t Wait'
     ]), [14]), [
@@ -21151,14 +21151,13 @@ end;
     .IncludeFlag(dfNotAlignable),
     wbFULL,
     wbWorldFixedCenter,
-    {wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),}
     wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
     wbFormIDCk(BNAM, 'Biome', [BIOM]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
           {0x01} 'Use Land Data',
           {0x02} 'Use LOD Data',
           {0x04} 'Use Map Data',
@@ -21166,48 +21165,71 @@ end;
           {0x10} 'Use Climate Data',
           {0x20} 'Use Image Space Data (unused)',
           {0x40} 'Use Sky Cell'
-        ], [5])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
+        ], [5]),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbString(NAM7, 'Water Material Path'),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
+    wbWorldLandData,
+    wbString(ICON, 'Map Image'),
     wbWorldMapBounds,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      'Player Followers Can''t Warp Here',
-      'Show Space',
-      'Unknown 2',
-      'Allow ProcGen'
-    ])),
-    {>>> Object Bounds doesn't show up in CK <<<}
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel From Here',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'No Sky',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbInteger(FNAM, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Player Followers Can''t Warp Here',
+        {0x02} 'Show Space',
+        {0x04} 'Prevent Merge Cell Content',
+        {0x08} 'Allow ProcGen',
+        {0x10} 'Allow Cell Content'
+      ])
+    ),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP, 'Environment Map'),
     wbString(XWEM, 'Water Environment Map'),
     wbFloat(GNAM, 'Gravity Scale'),
-    wbRArray('Unknown', wbFormIDCk(LNAM, 'Unknown', [LTEX])),
-    wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
-    wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
+    wbRArray('Ordered Landscape Textures',
+      wbFormIDCk(LNAM, 'Land Texture', [LTEX])
+    ),
+    wbRStruct('Region Editor Map', [
+      wbString(NAM5, 'Texture'),
+      wbStruct(NAM6, 'Bounds', [
+        wbInteger('NW Cell X', itS16),
+        wbInteger('SE Cell Y', itS16),
+        wbInteger('SE Cell X', itS16),
+        wbInteger('NW Cell Y', itS16)
+      ])
+    ], []),
+    wbRStruct('Water Height Data', [
+      wbArray(XCLW,'Cell Water Height Locations',
+        wbStruct('Cell Water Height Location', [
+          wbInteger('Cell Y', itS16),
+          wbInteger('Cell X', itS16)
+        ])
+      ),
+      wbArray(WHGT, 'Water Heights',
+        wbFloat('Water Height')
+      )
+    ], []),
     wbUnknown(HNAM),
     wbWorldLevelData,
     wbWorldOffsetData

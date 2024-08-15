@@ -24,9 +24,11 @@ var
 
   wbAxisEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
+  wbActorImpactMaterialEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
   wbQuestEventEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
+  wbWorldImpactMaterialEnum: IwbEnumDef;
 
   wbEmptyBaseFlags: IwbFlagsDef;
   wbRecordFlagsFlags: IwbFlagsDef;
@@ -75,10 +77,11 @@ var
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
   wbWorldFixedCenter: IwbRecordMemberDef;
+  wbWorldLandData: IwbRecordMemberDef;
   wbWorldMapBounds: IwbRecordMemberDef;
   wbWorldMapOffset: IwbRecordMemberDef;
   wbWorldObjectBounds: IwbRecordMemberDef;
-  wbWorldFootStepMaterials: IwbRecordMemberDef;
+  wbWorldSwapsImpactData: IwbRecordMemberDef;
   wbWorldLevelData: IwbRecordMemberDef;
   wbWorldOffsetData: IwbRecordMemberDef;
   wbWorldCellSizeData: IwbRecordMemberDef;
@@ -501,6 +504,59 @@ end;
 
 procedure DefineCommon;
 begin
+  wbAxisEnum :=
+    wbEnum([], [
+      88, 'X',
+      89, 'Y',
+      90, 'Z'
+    ]);
+
+  wbBoolEnum :=
+    wbEnum(['False', 'True']);
+
+  wbActorImpactMaterialEnum :=
+    wbEnum([
+      'Stone',
+      'Dirt',
+      'Grass',
+      'Glass',
+      'Metal',
+      'Wood',
+      'Organic',
+      'Cloth',
+      'Water',
+      'Hollow Metal',
+      'Organic Bug',
+      'Organic Glow'
+    ]);
+
+  wbQuadrantEnum :=
+    wbEnum([
+      {0} 'Bottom Left',
+      {1} 'Bottom Right',
+      {2} 'Top Left',
+      {3} 'Top Right'
+    ]);
+
+  wbQuestEventEnum := wbEnum([], wbQuestEventVarRecs);
+
+  wbSexEnum :=
+    wbEnum(['Male','Female']);
+
+  wbWorldImpactMaterialEnum :=
+    wbEnum([
+      'ConcSolid',
+      'ConcBroken',
+      'MetalSolid',
+      'MetalHollow',
+      'MetalSheet',
+      'Wood',
+      'Sand',
+      'Dirt',
+      'Grass',
+      'Water'
+    ]);
+
   wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
     {0x00000001} { 0} 'Unknown 0',
     {0x00000002} { 1} 'Unknown 1',
@@ -571,8 +627,6 @@ begin
     {0x80000000} {31} 'Unknown 31'
   ]);
 
-  wbBoolEnum := wbEnum(['False', 'True']);
-
   wbHEDR :=
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
@@ -619,13 +673,6 @@ begin
     .IncludeFlag(dfSummaryNoSortKey)
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
-
-  wbAxisEnum :=
-    wbEnum([], [
-      88, 'X',
-      89, 'Y',
-      90, 'Z'
-    ]);
 
   var wbLandFlags :=
     wbFlags([
@@ -735,14 +782,6 @@ begin
   wbPosRot :=
     wbVec3PosRot;
 
-  wbQuadrantEnum :=
-    wbEnum([
-      {0} 'Bottom Left',
-      {1} 'Bottom Right',
-      {2} 'Top Left',
-      {3} 'Top Right'
-    ]);
-
   wbQuestEventVarRecs := wbMakeVarRecs([
     Sig2Int(ADBO), 'Bounty Event',
     Sig2Int(ADCR), 'Crime Gold Event',
@@ -790,8 +829,6 @@ begin
     Sig2Int(TRES), 'Trespass Actor Event'
   ]);
 
-  wbQuestEventEnum := wbEnum([], wbQuestEventVarRecs);
-
   wbSeasons :=
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
@@ -799,9 +836,6 @@ begin
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
     ], cpNormal, True);
-
-  wbSexEnum :=
-    wbEnum(['Male','Female']);
 
   wbActorSounds :=
     wbRArrayS('Sounds',
@@ -1123,7 +1157,7 @@ begin
     );
 
 {>>>Worldspace Common Defs<<<}
-  //TES5,SSE,FO4,FO76,SF1
+  //TES5,FO4,FO76,SF1
   wbWorldLargeRefs :=
     wbRArray('Large References',
       wbStruct(RNAM, 'Cell Grid', [
@@ -1145,7 +1179,7 @@ begin
       .IncludeFlag(dfCollapsed),
     cpIgnore, False, nil, nil, wbNeverShow);
 
-  //TES5,SSE,FO4,FO76,SF1
+  //TES5,FO4,FO76,SF1
   wbWorldMaxHeight :=
     IfThen(wbSimpleRecords,
       wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
@@ -1170,14 +1204,21 @@ begin
         .IncludeFlag(dfNotAlignable)
       ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]));
 
-  //TES5,SSE,FO4,FO76,SF1
+  //TES5,FO4,FO76,SF1
   wbWorldFixedCenter :=
     wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
       wbInteger('X', itS16),
       wbInteger('Y', itS16)
     ]);
 
-  //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbWorldLandData :=
+    wbStruct(DNAM, 'Land Data', [
+      wbFloat('Default Land Height'),
+      wbFloat('Default Water Height')
+    ]);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldMapBounds :=
     wbStruct(MNAM, 'World Map Bounds', [
       wbStruct('Usable Dimensions', [
@@ -1250,20 +1291,28 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   //FO3,FNV
-  wbWorldFootStepMaterials :=
-    wbArray(IMPF, 'FootStep Materials',
-      wbString('Unknown', 30), [
-    'ConcSolid',
-    'ConcBroken',
-    'MetalSolid',
-    'MetalHollow',
-    'MetalSheet',
-    'Wood',
-    'Sand',
-    'Dirt',
-    'Grass',
-    'Water'
-    ]);
+  wbWorldSwapsImpactData :=
+    wbRStruct('Swaps Impact Data', [
+      wbRArrayS('Impact Data',
+        wbStructExSK(IMPS, [0, 1], [2], 'Impact Swap Data', [
+          wbInteger('Material Type', itU32, wbWorldImpactMaterialEnum),
+          wbFormIDCkNoReach('Original Data', [IPCT]),
+          wbFormIDCk('New Data', [IPCT, NULL])
+        ])
+      ).IncludeFlag(dfCollapsed),
+      wbStruct(IMPF, 'Footstep Materials', [
+        wbString('ConcSolid', 30),
+        wbString('ConcBroken', 30),
+        wbString('MetalSolid', 30),
+        wbString('MetalHollow', 30),
+        wbString('MetalSheet', 30),
+        wbString('Wood', 30),
+        wbString('Sand', 30),
+        wbString('Dirt', 30),
+        wbString('Grass', 30),
+        wbString('Water', 30)
+      ], cpNormal, True).IncludeFlag(dfCollapsed)
+    ], []).IncludeFlag(dfCollapsed);
 
   //FO4,FO76,SF1
   wbWorldLevelData :=

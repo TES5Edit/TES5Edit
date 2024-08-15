@@ -4356,7 +4356,8 @@ var  wbSoundTypeSoundsOld :=
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      ]).SetToStr(wbRGBAToStr)
+      .IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
@@ -4364,18 +4365,21 @@ var  wbSoundTypeSoundsOld :=
   wbRecord(WRLD, 'Worldspace', [
     wbEDID,
     wbFULL,
-    wbFormIDCk(WNAM, 'Parent World', [WRLD]),
+    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbICON,
     wbWorldMapBounds,
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small world',
-      {0x02} 'Can''t fast travel',
-      {0x04} 'Oblivion worldspace',
-      {0x08} '',
-      {0x10} 'No LOD water'
-    ]), cpNormal, True),
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small world',
+        {0x02} 'Can''t fast travel',
+        {0x04} 'Oblivion worldspace',
+        {0x08} '',
+        {0x10} 'No LOD water'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbWorldOffsetData

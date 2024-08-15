@@ -38,7 +38,6 @@ var
   wbFormTypeEnum: IwbEnumDef;
   wbFunctionsEnum: IwbEnumDef;
   wbHeadPartIndexEnum: IwbEnumDef;
-  wbImpactMaterialTypeEnum: IwbEnumDef;
   wbMenuModeEnum: IwbEnumDef;
   wbMiscStatEnum: IwbEnumDef;
   wbModEffectEnum: IwbEnumDef;
@@ -5131,22 +5130,6 @@ var  wbSoundTypeSoundsOld :=
       255, ' ANY'
     ]);
 
-  wbImpactMaterialTypeEnum :=
-    wbEnum([
-      'Stone',
-      'Dirt',
-      'Grass',
-      'Glass',
-      'Metal',
-      'Wood',
-      'Organic',
-      'Cloth',
-      'Water',
-      'Hollow Metal',
-      'Organic Bug',
-      'Organic Glow'
-    ]);
-
   wbTemplateFlags := wbFlags([
     'Use Traits',
     'Use Stats',
@@ -5285,7 +5268,7 @@ var  wbSoundTypeSoundsOld :=
     wbFloat(TNAM, 'Turning Speed', cpNormal, True, 1, -1, wbActorTemplateUseStats),
     wbFloat(BNAM, 'Base Scale', cpNormal, True, 1, -1, wbActorTemplateUseStats),
     wbFloat(WNAM, 'Foot Weight', cpNormal, True, 1, -1, wbActorTemplateUseStats),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbInteger(NAM4, 'Impact Material Type', itU32, wbActorImpactMaterialEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbInteger(NAM5, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbFormIDCk(CSCR, 'Inherits Sounds from', [CREA], False, cpNormal, False, wbActorTemplateUseModelAnimation),
     wbCSDTs,
@@ -7788,7 +7771,7 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
     wbByteColors(HCLR, 'Hair color').SetRequired(True).SetDontShow(wbActorTemplateUseModelAnimation),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbInteger(NAM4, 'Impact Material Type', itU32, wbActorImpactMaterialEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbFaceGenNPC,
     wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
     wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
@@ -9255,7 +9238,7 @@ var  wbSoundTypeSoundsOld :=
     wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
     wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
     wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-    wbGenericModel,
+    wbRStruct('Precipitation', [wbGenericModel], []),
     wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
     wbWeatherCloudSpeed,
     wbArray(PNAM, 'Cloud Layer Colors',
@@ -9284,7 +9267,8 @@ var  wbSoundTypeSoundsOld :=
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      ]).SetToStr(wbRGBAToStr)
+      .IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
     wbWeatherSounds
   ]);
@@ -9293,10 +9277,10 @@ var  wbSoundTypeSoundsOld :=
     wbEDIDReq,
     wbFULL,
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
           {0x01}'Use Land Data',
           {0x02}'Use LOD Data',
           {0x04}'Use Map Data',
@@ -9305,43 +9289,37 @@ var  wbSoundTypeSoundsOld :=
           {0x20}'Use Image Space Data',
           {0x40}'',
           {0x80}'Needs Water Adjustment'
-        ], True)),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
+        ], True),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
+    wbWorldLandData,
     wbICON,
     wbWorldMapBounds,
     wbWorldMapOffset,
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} '',
-      {0x08} '',
-      {0x10} 'No LOD Water',
-      {0x20} 'No LOD Noise',
-      {0x40} 'Don''t Allow NPC Fall Damage',
-      {0x80} 'Needs Water Adjustment'
-    ]), cpNormal, True),
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} '',
+        {0x08} '',
+        {0x10} 'No LOD Water',
+        {0x20} 'No LOD Noise',
+        {0x40} 'Don''t Allow NPC Fall Damage',
+        {0x80} 'Needs Water Adjustment'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-    wbRArrayS('Swapped Impacts',
-      wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-        wbFormIDCkNoReach('Old', [IPCT]),
-        wbFormIDCk('New', [IPCT, NULL])
-      ])),
-    wbWorldFootStepMaterials,
+    wbWorldSwapsImpactData,
     wbWorldOffsetData
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfFastAssign)

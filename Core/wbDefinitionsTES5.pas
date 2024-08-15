@@ -12911,13 +12911,17 @@ Can't properly represent that with current record definition methods.
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbByteArray(ONAM, 'Unused', 0, cpIgnore),
     wbWeatherCloudSpeed,
-    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer')).IncludeFlag(dfNotAlignable),
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise'),
-      wbFloat('Day'),
-      wbFloat('Sunset'),
-      wbFloat('Night')
-    ])).IncludeFlag(dfNotAlignable),
+    wbArray(PNAM, 'Cloud Colors',
+      wbWeatherTimeOfDay('Layer')
+    ).IncludeFlag(dfNotAlignable),
+    wbArray(JNAM, 'Cloud Alphas',
+      wbStruct('Layer', [
+        wbFloat('Sunrise'),
+        wbFloat('Day'),
+        wbFloat('Sunset'),
+        wbFloat('Night')
+      ])
+    ).IncludeFlag(dfNotAlignable),
     wbWeatherColors,
     wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
@@ -12931,19 +12935,22 @@ Can't properly represent that with current record definition methods.
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Weather - Pleasant',
-        {0x02} 'Weather - Cloudy',
-        {0x04} 'Weather - Rainy',
-        {0x08} 'Weather - Snow',
-        {0x10} 'Sky Statics - Always Visible',
-        {0x20} 'Sky Statics - Follows Sun Position'
-      ])),
+      wbInteger('Flags', itU8,
+        wbFlags([
+          {0x01} 'Weather - Pleasant',
+          {0x02} 'Weather - Cloudy',
+          {0x04} 'Weather - Rainy',
+          {0x08} 'Weather - Snow',
+          {0x10} 'Sky Statics - Always Visible',
+          {0x20} 'Sky Statics - Follows Sun Position'
+        ])
+      ),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      ]).SetToStr(wbRGBAToStr)
+      .IncludeFlag(dfCollapsed, wbCollapseRGBA),
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
@@ -12998,10 +13005,10 @@ Can't properly represent that with current record definition methods.
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
           {0x01}'Use Land Data',
           {0x02}'Use LOD Data',
           {0x04}'Use Map Data',
@@ -13009,34 +13016,33 @@ Can't properly represent that with current record definition methods.
           {0x10}'Use Climate Data',
           {0x20}'Use Image Space Data (unused)',
           {0x40}'Use Sky Cell'
-        ], [5])),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
+        ], [5]),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
+    wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
     wbWorldMapBounds,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'No Sky',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),

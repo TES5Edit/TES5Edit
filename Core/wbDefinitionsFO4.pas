@@ -16148,10 +16148,10 @@ begin
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN, NULL]),
     wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
           {0x01} 'Use Land Data',
           {0x02} 'Use LOD Data',
           {0x04} 'Use Map Data',
@@ -16159,34 +16159,33 @@ begin
           {0x10} 'Use Climate Data',
           {0x20} 'Use Image Space Data (unused)',
           {0x40} 'Use Sky Cell'
-        ], [5])),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
+        ], [5]),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
     wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
+    wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
     wbWorldMapBounds,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'No Sky',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
