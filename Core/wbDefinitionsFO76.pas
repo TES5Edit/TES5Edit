@@ -20287,7 +20287,7 @@ begin
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
-    wbWorldMapBounds,
+    wbWorldMapData,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8,
@@ -20304,23 +20304,16 @@ begin
     cpNormal, True)
     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
-    wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
-    wbString(NAM5, 'Map Image'),
-    wbUnknown(NAM6),
+    wbRArray('Ordered Landscape Textures',
+      wbFormIDCk(LNAM, 'Land Texture', [LTEX])
+    ),
+    wbWorldRegionEditorMap,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
     wbString(XWEM, 'Water Environment Map'),
     wbString(TNAM, 'HD LOD Diffuse Texture'),
     wbString(UNAM, 'HD LOD Normal Texture'),
-    wbArray(XCLW,'Cell Water Height Locations',
-      wbStruct('Cell Water Height Location', [
-        wbInteger('Cell Y',itS16),
-        wbInteger('Cell X',itS16)
-      ])
-    ),
-    wbArray(WHGT, 'Water Heights',
-      wbFloat('Water Height')
-    ),
+    wbWorldWaterHeightData,
     wbWorldLevelData,
     wbWorldOffsetData
     .IncludeFlag(dfCollapsed)

@@ -12992,14 +12992,14 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbWorldLargeRefs
     .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-    .IncludeFlag(dfFastAssign),
+    .IncludeFlag(dfNotAlignable),
     wbWorldMaxHeight
     .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-    .IncludeFlag(dfFastAssign),
+    .IncludeFlag(dfNotAlignable),
     wbFULL,
     wbWorldFixedCenter,
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
@@ -13009,13 +13009,13 @@ Can't properly represent that with current record definition methods.
       wbFormIDCk(WNAM, 'World', [WRLD]),
       wbInteger(PNAM, 'Flags', itU16,
         wbFlags([
-          {0x01}'Use Land Data',
-          {0x02}'Use LOD Data',
-          {0x04}'Use Map Data',
-          {0x08}'Use Water Data',
-          {0x10}'Use Climate Data',
-          {0x20}'Use Image Space Data (unused)',
-          {0x40}'Use Sky Cell'
+          {0x01} 'Use Land Data',
+          {0x02} 'Use LOD Data',
+          {0x04} 'Use Map Data',
+          {0x08} 'Use Water Data',
+          {0x10} 'Use Climate Data',
+          {0x20} 'Use Image Space Data (unused)',
+          {0x40} 'Use Sky Cell'
         ], [5]),
       cpNormal, True)
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
@@ -13027,7 +13027,7 @@ Can't properly represent that with current record definition methods.
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
-    wbWorldMapBounds,
+    wbWorldMapData,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8,
@@ -13052,9 +13052,9 @@ Can't properly represent that with current record definition methods.
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
     wbWorldOffsetData
     .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
     .IncludeFlag(dfNoCopyAsOverride)
     .IncludeFlag(dfNotAlignable)
-    .IncludeFlag(dfFastAssign)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}

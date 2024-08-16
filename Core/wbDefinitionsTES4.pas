@@ -4369,13 +4369,13 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
     wbICON,
-    wbWorldMapBounds,
+    wbWorldMapData,
     wbInteger(DATA, 'Flags', itU8,
       wbFlags([
         {0x01} 'Small world',
         {0x02} 'Can''t fast travel',
         {0x04} 'Oblivion worldspace',
-        {0x08} '',
+        {0x08} 'Unknown 4',
         {0x10} 'No LOD water'
       ]),
     cpNormal, True)

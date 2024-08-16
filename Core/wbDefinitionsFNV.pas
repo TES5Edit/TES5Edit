@@ -10453,8 +10453,8 @@ var  wbSoundTypeSoundsOld :=
           {0x04}'Use Map Data',
           {0x08}'Use Water Data',
           {0x10}'Use Climate Data',
-          {0x20}'Use Image Space Data'  // in order to use this "Image Space" needs to be NULL.
-        ], True),                       //  Other parent flags are checked before the form value.
+          {0x20}'Use Image Space Data'
+        ], True),
       cpNormal, True)
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
@@ -10464,15 +10464,15 @@ var  wbSoundTypeSoundsOld :=
     wbFloat(NAM4, 'LOD Water Height'),
     wbWorldLandData,
     wbICON,
-    wbWorldMapBounds,
+    wbWorldMapData,
     wbWorldMapOffset,
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbInteger(DATA, 'Flags', itU16,  // LoadForm supports a DWord here, but only first byte would be used.
+    wbInteger(DATA, 'Flags', itU8,
       wbFlags([
         {0x01} 'Small World',
         {0x02} 'Can''t Fast Travel',
-        {0x04} '',
-        {0x08} '',
+        {0x04} 'Unknown 3',
+        {0x08} 'Unknown 4',
         {0x10} 'No LOD Water',
         {0x20} 'No LOD Noise',
         {0x40} 'Don''t Allow NPC Fall Damage',

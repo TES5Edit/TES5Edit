@@ -21176,7 +21176,7 @@ end;
     wbFloat(NAM4, 'LOD Water Height'),
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
-    wbWorldMapBounds,
+    wbWorldMapData,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8,
@@ -21210,26 +21210,8 @@ end;
     wbRArray('Ordered Landscape Textures',
       wbFormIDCk(LNAM, 'Land Texture', [LTEX])
     ),
-    wbRStruct('Region Editor Map', [
-      wbString(NAM5, 'Texture'),
-      wbStruct(NAM6, 'Bounds', [
-        wbInteger('NW Cell X', itS16),
-        wbInteger('SE Cell Y', itS16),
-        wbInteger('SE Cell X', itS16),
-        wbInteger('NW Cell Y', itS16)
-      ])
-    ], []),
-    wbRStruct('Water Height Data', [
-      wbArray(XCLW,'Cell Water Height Locations',
-        wbStruct('Cell Water Height Location', [
-          wbInteger('Cell Y', itS16),
-          wbInteger('Cell X', itS16)
-        ])
-      ),
-      wbArray(WHGT, 'Water Heights',
-        wbFloat('Water Height')
-      )
-    ], []),
+    wbWorldRegionEditorMap,
+    wbWorldWaterHeightData,
     wbUnknown(HNAM),
     wbWorldLevelData,
     wbWorldOffsetData

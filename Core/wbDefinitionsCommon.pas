@@ -78,10 +78,12 @@ var
   wbWorldMaxHeight: IwbRecordMemberDef;
   wbWorldFixedCenter: IwbRecordMemberDef;
   wbWorldLandData: IwbRecordMemberDef;
-  wbWorldMapBounds: IwbRecordMemberDef;
+  wbWorldMapData: IwbRecordMemberDef;
   wbWorldMapOffset: IwbRecordMemberDef;
   wbWorldObjectBounds: IwbRecordMemberDef;
   wbWorldSwapsImpactData: IwbRecordMemberDef;
+  wbWorldRegionEditorMap: IwbRecordMemberDef;
+  wbWorldWaterHeightData: IwbRecordMemberDef;
   wbWorldLevelData: IwbRecordMemberDef;
   wbWorldOffsetData: IwbRecordMemberDef;
   wbWorldCellSizeData: IwbRecordMemberDef;
@@ -486,19 +488,16 @@ begin
   if not Supports(Container.Container, IwbDataContainer, Container) then
     Exit;
 
-  // Retrieve the minimum X value
   Element := Container.ElementByPath['Object Bounds\NAM0\X'];
   if not Assigned(Element) then
     Exit;
   MinX := Element.NativeValue;
 
-  // Retrieve the maximum X value
   Element := Container.ElementByPath['Object Bounds\NAM9\X'];
   if not Assigned(Element) then
     Exit;
   MaxX := Element.NativeValue;
 
-  // Calculate the total number of columns
   Result := MaxX - MinX + 1;
 end;
 
@@ -1219,8 +1218,8 @@ begin
     ]);
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
-  wbWorldMapBounds :=
-    wbStruct(MNAM, 'World Map Bounds', [
+  wbWorldMapData :=
+    wbStruct(MNAM, 'World Map Data', [
       wbStruct('Usable Dimensions', [
         wbInteger('X', itS32),
         wbInteger('Y', itS32)
@@ -1313,6 +1312,32 @@ begin
         wbString('Water', 30)
       ], cpNormal, True).IncludeFlag(dfCollapsed)
     ], []).IncludeFlag(dfCollapsed);
+
+  //FO76,SF1
+  wbWorldRegionEditorMap :=
+    wbRStruct('Region Editor Map', [
+      wbString(NAM5, 'Texture'),
+      wbStruct(NAM6, 'Bounds', [
+        wbInteger('NW Cell X', itS16),
+        wbInteger('SE Cell Y', itS16),
+        wbInteger('SE Cell X', itS16),
+        wbInteger('NW Cell Y', itS16)
+      ])
+    ], []);
+
+  //FO76,SF1
+  wbWorldWaterHeightData :=
+    wbRStruct('Water Height Data', [
+      wbArray(XCLW,'Cell Water Height Locations',
+        wbStruct('Cell Water Height Location', [
+          wbInteger('Cell Y', itS16),
+          wbInteger('Cell X', itS16)
+        ])
+      ),
+      wbArray(WHGT, 'Water Heights',
+        wbFloat('Water Height')
+      )
+    ], []);
 
   //FO4,FO76,SF1
   wbWorldLevelData :=
