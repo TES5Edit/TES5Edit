@@ -4318,9 +4318,13 @@ var  wbSoundTypeSoundsOld :=
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
-    wbString(CNAM, 'Texture Lower Layer'),
-    wbString(DNAM, 'Texture Upper Layer'),
-    wbTexturedModel('Model', [MODL, MODB, MODT]),
+    wbRStruct('Cloud Textures', [
+      wbString(CNAM, 'Lower Layer'),
+      wbString(DNAM, 'Upper Layer')
+    ], []),
+    wbRStruct('Precipitation', [
+      wbTexturedModel('Model', [MODL, MODB, MODT])
+    ], []),
     wbWeatherColors,
     wbWeatherFogDistance,
     wbStruct(HNAM, 'HDR Data', [
@@ -4339,7 +4343,7 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Grass Dimmer'),
       wbFloat('Tree Dimmer')
     ], cpNormal, True),
-    wbStruct(DATA, '', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
       wbInteger('Cloud Speed (Lower)', itU8),
       wbInteger('Cloud Speed (Upper)', itU8),
@@ -4351,7 +4355,14 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbInteger('Flags ', itU8,
+        wbFlags([
+          {0x01} 'Weather - Pleasant',
+          {0x02} 'Weather - Cloudy',
+          {0x04} 'Weather - Rainy',
+          {0x08} 'Weather - Snow'
+        ], True)
+      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
@@ -4368,7 +4379,7 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbICON,
+    wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbInteger(DATA, 'Flags', itU8,
       wbFlags([

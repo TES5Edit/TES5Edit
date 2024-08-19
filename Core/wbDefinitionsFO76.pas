@@ -20098,7 +20098,7 @@ begin
 
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9'
+      {0x200}  9, 'Unknown 9'
     ])), [
     wbEDID,
     wbKeywords,
@@ -20131,7 +20131,7 @@ begin
     wbString(J0TX, 'Cloud Texture Layer #26'),
     wbString(K0TX, 'Cloud Texture Layer #27'),
     wbString(L0TX, 'Cloud Texture Layer #28'),
-    wbUnknown(LNAM),
+    wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbByteArray(ONAM, 'Unused', 0, cpIgnore),

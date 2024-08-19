@@ -21029,11 +21029,11 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9'
+      {0x200} 9, 'Unknown 9'
     ])), [
     wbEDID,
     wbKeywords,
-    wbUnknown(LNAM),
+    wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
     wbUnknown(CLDC),
@@ -21200,7 +21200,7 @@ end;
         {0x08} 'Allow ProcGen',
         {0x10} 'Allow Cell Content'
       ])
-    ),
+    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),

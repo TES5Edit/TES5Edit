@@ -1062,18 +1062,18 @@ begin
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherColors :=
     wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherTimeOfDay('Sky Upper'),
+      wbWeatherTimeOfDay('Sky-Upper'),
       IfThen(wbGameMode in [gmTES4,gmFO3,gmFNV],
         wbWeatherTimeOfDay('Fog'),
         wbWeatherTimeOfDay('Fog Near')),
       IfThen(wbGameMode in [gmTES4],
-        wbWeatherTimeOfDay('Clouds Lower'),
+        wbWeatherTimeOfDay('Clouds-Lower'),
         wbWeatherTimeOfDay('Unused')),
       wbWeatherTimeOfDay('Ambient'),
       wbWeatherTimeOfDay('Sunlight'),
       wbWeatherTimeOfDay('Sun'),
       wbWeatherTimeOfDay('Stars'),
-      wbWeatherTimeOfDay('Sky Lower'),
+      wbWeatherTimeOfDay('Sky-Lower'),
       wbWeatherTimeOfDay('Horizon'),
       IfThen(wbGameMode in [gmTES4],
         wbWeatherTimeOfDay('Clouds-Upper'),
@@ -1263,8 +1263,8 @@ begin
   wbWorldObjectBounds :=
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, lScaleFactor),
-        wbFloat('Y', cpNormal, False, lScaleFactor)
+        wbFloat('X', cpNormal, True, lScaleFactor),
+        wbFloat('Y', cpNormal, True, lScaleFactor)
       ], cpIgnore, True)
       .SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
@@ -1273,8 +1273,8 @@ begin
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, lScaleFactor),
-        wbFloat('Y', cpNormal, False, lScaleFactor)
+        wbFloat('X', cpNormal, True, lScaleFactor),
+        wbFloat('Y', cpNormal, True, lScaleFactor)
       ], cpIgnore, True)
       .SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
@@ -1282,7 +1282,7 @@ begin
       .SetSummaryDelimiterOnValue(', ')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
-    ], [])
+    ], [],cpNormal, True)
     .SetSummaryKey([0, 1])
     .SetSummaryMemberPrefixSuffix(0, '[', '')
     .SetSummaryMemberPrefixSuffix(1, '', ']')

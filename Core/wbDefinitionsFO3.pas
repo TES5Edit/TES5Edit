@@ -9230,27 +9230,26 @@ var  wbSoundTypeSoundsOld :=
 
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
-    wbFormIDCk(_00_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-    wbFormIDCk(_01_IAD, 'Day Image Space Modifier', [IMAD]),
-    wbFormIDCk(_02_IAD, 'Sunset Image Space Modifier', [IMAD]),
-    wbFormIDCk(_03_IAD, 'Night Image Space Modifier', [IMAD]),
-    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
-    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
-    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
-    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
+    wbFormIDCk(_00_IAD, 'Sunrise', [IMAD]),
+    wbFormIDCk(_01_IAD, 'Day', [IMAD]),
+    wbFormIDCk(_02_IAD, 'Sunset', [IMAD]),
+    wbFormIDCk(_03_IAD, 'Night', [IMAD]),
+    wbRStruct('Cloud Textures', [
+      wbString(DNAM, 'Layer #0', 0),
+      wbString(CNAM, 'Layer #1', 0),
+      wbString(ANAM, 'Layer #2', 0),
+      wbString(BNAM, 'Layer #3', 0)
+    ], []).IncludeFlag(dfAllowAnyMember),
     wbRStruct('Precipitation', [wbGenericModel], []),
-    wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
+    wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbWeatherCloudSpeed,
-    wbArray(PNAM, 'Cloud Layer Colors',
-      wbArray('Layer',
-        wbByteColors('Color'),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-    4),
+    wbArray(PNAM, 'Cloud Colors',
+      wbWeatherTimeOfDay('Layer'),
+    4).IncludeFlag(dfNotAlignable),
     wbWeatherColors,
     wbWeatherFogDistance,
     wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
-    wbStruct(DATA, '', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
       wbInteger('Cloud Speed (Lower)', itU8),
       wbInteger('Cloud Speed (Upper)', itU8),
@@ -9262,7 +9261,14 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbInteger('Flags', itU8,
+        wbFlags([
+          {0x01} 'Weather - Pleasant',
+          {0x02} 'Weather - Cloudy',
+          {0x04} 'Weather - Rainy',
+          {0x08} 'Weather - Snow'
+        ], True)
+      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
