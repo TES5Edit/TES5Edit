@@ -9021,7 +9021,7 @@ end;
         wbRStruct('Component Data - Vehicle Config', [
           wbUnknown(VCSB),
           wbUnknown(VCCD),
-          wbUnknown(VCMT),
+          wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
           wbUnknown(VCTT),
           wbUnknown(VWWD),
           wbUnknown(VMRT)
