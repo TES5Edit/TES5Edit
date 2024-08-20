@@ -9019,7 +9019,9 @@ end;
         ], []),
         //BGSVehicleConfig
         wbRStruct('Component Data - Vehicle Config', [
-          wbUnknown(VCSB),
+          wbArray(VCSB, 'Bone Modifiers',
+            wbFormIDCk('Bone', [BMOD])
+          ),
           wbUnknown(VCCD),
           wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
           wbUnknown(VCTT),
