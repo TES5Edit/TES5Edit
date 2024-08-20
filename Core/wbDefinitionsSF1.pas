@@ -8512,7 +8512,6 @@ end;
         'BGSAnimationGraph_Component',
         'BGSAttachParentArray_Component',
         'BGSBlockCellHeighGrid_Component',
-        'SurfaceTreePatternSwapInfo_Component',
         'BGSBlockEditorMetaData_Component',
         'BGSBodyPartInfo_Component',
         'BGSCityMapsUsage_Component',
@@ -8549,6 +8548,7 @@ end;
         'BGSSpawnOnDestroy_Component',
         'BGSStarDataComponent_Component',
         'BGSStoredTraversals_Component',
+        'BGSVehicleConfig',
         'BGSWorkshopItemColor',
         'BGSWorldSpaceOverlay_Component',
         'BlockHeightAdjustment_Component',
@@ -8559,6 +8559,7 @@ end;
         'LightAttachmentFormComponent',
         'ParticleSystem_Component',
         'ReflectionProbes_Component',
+        'SurfaceTreePatternSwapInfo_Component',
         'TESContainer_Component',
         'TESFullName_Component',
         'TESImageSpaceModifiableForm_Component',
@@ -9015,6 +9016,15 @@ end;
           wbInteger(NAM9, 'Number of Times Allowed (per planet world)', itU32),
           wbCITCReq,
           wbCTDAsCount
+        ], []),
+        //BGSVehicleConfig
+        wbRStruct('Component Data - Vehicle Config', [
+          wbUnknown(VCSB),
+          wbUnknown(VCCD),
+          wbUnknown(VCMT),
+          wbUnknown(VCTT),
+          wbUnknown(VWWD),
+          wbUnknown(VMRT)
         ], [])
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
@@ -20069,7 +20079,9 @@ end;
     wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN, PCCN])),
     wbCITCReq,
     wbCTDAsCount,
-    wbKWDAs
+    wbKWDAs,
+    wbFormIDCk(PRTN, 'Parent Node', [PCBN, PCMT, NULL]),
+    wbFormIDCk(PRVN, 'Previous Node', [PCBN, NULL])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20078,7 +20090,9 @@ end;
     wbBaseFormComponents,
     wbFormIDCk(PCCC, 'Content', [WRLD, LVLP, PKIN], False, cpNormal, True),
     wbEmpty(IOVR, 'Override Content Placement Properties and Conditions'),
-    wbKWDAs
+    wbKWDAs,
+    wbFormIDCk(PRTN, 'Parent Node', [PCBN, NULL]),
+    wbFormIDCk(PRVN, 'Previous Node', [PCCN, NULL])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -21198,6 +21212,7 @@ end;
         {0x10} 'Allow Cell Content'
       ])
     ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbWorldRegionEditorMap,
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
@@ -21207,7 +21222,6 @@ end;
     wbRArray('Ordered Landscape Textures',
       wbFormIDCk(LNAM, 'Land Texture', [LTEX])
     ).IncludeFlag(dfNotAlignable),
-    wbWorldRegionEditorMap,
     wbWorldWaterHeightData,
     wbUnknown(HNAM),
     wbWorldLevelData,

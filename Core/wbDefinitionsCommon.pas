@@ -1261,10 +1261,10 @@ begin
   wbWorldWaterData :=
     wbRStruct('Water Data', [
       wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water', [WATR]),
       IfThen(wbGameMode in [gmSF1],
         wbString(NAM7, 'Water Material Path'),
         nil),
+      wbFormIDCk(NAM3, 'LOD Water', [WATR]),
       wbFloat(NAM4, 'LOD Water Height')
     ], []).IncludeFlag(dfAllowAnyMember)
     .IncludeFlag(dfStructFirstNotRequired);
