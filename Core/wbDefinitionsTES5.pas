@@ -12873,47 +12873,18 @@ Can't properly represent that with current record definition methods.
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
-    wbRStruct('Cloud Textures', [
-      wbString(_30_0TX, 'Layer #0'),
-      wbString(_31_0TX, 'Layer #1'),
-      wbString(_32_0TX, 'Layer #2'),
-      wbString(_33_0TX, 'Layer #3'),
-      wbString(_34_0TX, 'Layer #4'),
-      wbString(_35_0TX, 'Layer #5'),
-      wbString(_36_0TX, 'Layer #6'),
-      wbString(_37_0TX, 'Layer #7'),
-      wbString(_38_0TX, 'Layer #8'),
-      wbString(_39_0TX, 'Layer #9'),
-      wbString(_3A_0TX, 'Layer #10'),
-      wbString(_3B_0TX, 'Layer #11'),
-      wbString(_3C_0TX, 'Layer #12'),
-      wbString(_3D_0TX, 'Layer #13'),
-      wbString(_3E_0TX, 'Layer #14'),
-      wbString(_3F_0TX, 'Layer #15'),
-      wbString(_40_0TX, 'Layer #16'),
-      wbString(A0TX, 'Layer #17'),
-      wbString(B0TX, 'Layer #18'),
-      wbString(C0TX, 'Layer #19'),
-      wbString(D0TX, 'Layer #20'),
-      wbString(E0TX, 'Layer #21'),
-      wbString(F0TX, 'Layer #22'),
-      wbString(G0TX, 'Layer #23'),
-      wbString(H0TX, 'Layer #24'),
-      wbString(I0TX, 'Layer #25'),
-      wbString(J0TX, 'Layer #26'),
-      wbString(K0TX, 'Layer #27'),
-      wbString(L0TX, 'Layer #28')
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbRStruct('Cloud Textures (Old)', [
-      wbString(DNAM, 'Layer #0', 0, cpIgnore),
-      wbString(CNAM, 'Layer #1', 0, cpIgnore),
-      wbString(ANAM, 'Layer #2', 0, cpIgnore),
-      wbString(BNAM, 'Layer #3', 0, cpIgnore)
-    ], [], cpIgnore).IncludeFlag(dfCollapsed),
+    wbWeatherCloudTextures,
+    wbRStruct('Unused', [
+      wbUnknown(DNAM, cpIgnore, False, wbNeverShow),
+      wbUnknown(CNAM, cpIgnore, False, wbNeverShow),
+      wbUnknown(ANAM, cpIgnore, False, wbNeverShow),
+      wbUnknown(BNAM, cpIgnore, False, wbNeverShow)
+    ], [], cpIgnore, False, wbNeverShow)
+    .IncludeFlag(dfCollapsed),
     wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
+    wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbArray(PNAM, 'Cloud Colors',
       wbWeatherTimeOfDay('Layer')
@@ -12962,7 +12933,9 @@ Can't properly represent that with current record definition methods.
     ], cpNormal, True),
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbWeatherSounds,
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbRArrayS('Sky Statics',
+      wbFormIDCk(TNAM, 'Static', [STAT, NULL])
+    ),
     wbStruct(IMSP, 'Image Spaces', [
       wbFormIDCK('Sunrise', [IMGS, NULL]),
       wbFormIDCK('Day', [IMGS, NULL]),
@@ -13025,9 +12998,7 @@ Can't properly represent that with current record definition methods.
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
+    wbWorldWaterData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),

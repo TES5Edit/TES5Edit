@@ -69,6 +69,7 @@ var
   wbLandColors: IwbRecordMemberDef;
   wbLandLayers: IwbRecordMemberDef;
 
+  wbWeatherCloudTextures: IwbRecordMemberDef;
   wbWeatherCloudSpeed: IwbRecordMemberDef;
   wbWeatherColors: IwbRecordMemberDef;
   wbWeatherFogDistance: IwbRecordMemberDef;
@@ -77,6 +78,7 @@ var
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
   wbWorldFixedCenter: IwbRecordMemberDef;
+  wbWorldWaterData: IwbRecordMemberDef;
   wbWorldLandData: IwbRecordMemberDef;
   wbWorldMapData: IwbRecordMemberDef;
   wbWorldMapOffset: IwbRecordMemberDef;
@@ -1045,6 +1047,51 @@ begin
       ], []));
 
 {>>>Weather Common Defs<<<}
+  //TES4,FO3,FNV,TES5,FO4,FO76
+  wbWeatherCloudTextures :=
+    IfThen(wbIsFallout3,
+      wbRStruct('Cloud Textures', [
+        wbString(DNAM, 'Layer #0'),
+        wbString(CNAM, 'Layer #1'),
+        wbString(ANAM, 'Layer #2'),
+        wbString(BNAM, 'Layer #3')
+      ], []).IncludeFlag(dfAllowAnyMember)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfStructFirstNotRequired),
+        wbRStruct('Cloud Textures', [
+        wbString(_30_0TX, 'Layer #0'),
+        wbString(_31_0TX, 'Layer #1'),
+        wbString(_32_0TX, 'Layer #2'),
+        wbString(_33_0TX, 'Layer #3'),
+        wbString(_34_0TX, 'Layer #4'),
+        wbString(_35_0TX, 'Layer #5'),
+        wbString(_36_0TX, 'Layer #6'),
+        wbString(_37_0TX, 'Layer #7'),
+        wbString(_38_0TX, 'Layer #8'),
+        wbString(_39_0TX, 'Layer #9'),
+        wbString(_3A_0TX, 'Layer #10'),
+        wbString(_3B_0TX, 'Layer #11'),
+        wbString(_3C_0TX, 'Layer #12'),
+        wbString(_3D_0TX, 'Layer #13'),
+        wbString(_3E_0TX, 'Layer #14'),
+        wbString(_3F_0TX, 'Layer #15'),
+        wbString(_40_0TX, 'Layer #16'),
+        wbString(A0TX, 'Layer #17'),
+        wbString(B0TX, 'Layer #18'),
+        wbString(C0TX, 'Layer #19'),
+        wbString(D0TX, 'Layer #20'),
+        wbString(E0TX, 'Layer #21'),
+        wbString(F0TX, 'Layer #22'),
+        wbString(G0TX, 'Layer #23'),
+        wbString(H0TX, 'Layer #24'),
+        wbString(I0TX, 'Layer #25'),
+        wbString(J0TX, 'Layer #26'),
+        wbString(K0TX, 'Layer #27'),
+        wbString(L0TX, 'Layer #28')
+      ], []).IncludeFlag(dfAllowAnyMember)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfStructFirstNotRequired));
+
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherCloudSpeed :=
     IfThen(wbIsFallout3,
@@ -1209,6 +1256,18 @@ begin
       wbInteger('X', itS16),
       wbInteger('Y', itS16)
     ]);
+
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbWorldWaterData :=
+    wbRStruct('Water Data', [
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      wbFormIDCk(NAM3, 'LOD Water', [WATR]),
+      IfThen(wbGameMode in [gmSF1],
+        wbString(NAM7, 'Water Material Path'),
+        nil),
+      wbFloat(NAM4, 'LOD Water Height')
+    ], []).IncludeFlag(dfAllowAnyMember)
+    .IncludeFlag(dfStructFirstNotRequired);
 
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldLandData :=

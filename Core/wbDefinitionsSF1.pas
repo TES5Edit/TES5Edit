@@ -21170,10 +21170,7 @@ end;
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbString(NAM7, 'Water Material Path'),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
+    wbWorldWaterData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
@@ -21209,7 +21206,7 @@ end;
     wbFloat(GNAM, 'Gravity Scale'),
     wbRArray('Ordered Landscape Textures',
       wbFormIDCk(LNAM, 'Land Texture', [LTEX])
-    ),
+    ).IncludeFlag(dfNotAlignable),
     wbWorldRegionEditorMap,
     wbWorldWaterHeightData,
     wbUnknown(HNAM),

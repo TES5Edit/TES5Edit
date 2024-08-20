@@ -9234,12 +9234,7 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(_01_IAD, 'Day', [IMAD]),
     wbFormIDCk(_02_IAD, 'Sunset', [IMAD]),
     wbFormIDCk(_03_IAD, 'Night', [IMAD]),
-    wbRStruct('Cloud Textures', [
-      wbString(DNAM, 'Layer #0', 0),
-      wbString(CNAM, 'Layer #1', 0),
-      wbString(ANAM, 'Layer #2', 0),
-      wbString(BNAM, 'Layer #3', 0)
-    ], []).IncludeFlag(dfAllowAnyMember),
+    wbWeatherCloudTextures,
     wbRStruct('Precipitation', [wbGenericModel], []),
     wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbWeatherCloudSpeed,
@@ -9298,9 +9293,7 @@ var  wbSoundTypeSoundsOld :=
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
+    wbWorldWaterData,
     wbWorldLandData,
     wbICON,
     wbWorldMapData,
