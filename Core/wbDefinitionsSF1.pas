@@ -16928,6 +16928,8 @@ end;
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
+    wbFormIDCk(XLRL, 'Location Reference', [LCTN]),
+
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
     wbXRNK,
