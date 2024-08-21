@@ -9021,8 +9021,8 @@ end;
         wbRStruct('Component Data - Vehicle Config', [
           wbArray(VCSB, 'Suspension Bone Modifiers',
             wbFormIDCk('Bone', [BMOD])
-          wbUnknown(VCCD),
           ).IncludeFlag(dfCollapsed),
+          wbUnknown(VCCD),
           wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
           wbUnknown(VCTT),
           wbStruct(VWWD, 'Vehicle Sounds', [
@@ -9087,7 +9087,7 @@ end;
               wbFormIDCk('Start Form', [WWED])
             ])
           ]),
-          wbArray(VMRT, 'Unknown',
+          wbUnknown(VMRT)
         ], [])
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
