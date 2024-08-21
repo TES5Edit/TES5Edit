@@ -9025,7 +9025,7 @@ end;
           wbUnknown(VCCD),
           wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
           wbUnknown(VCTT),
-          wbStruct(VWWD, 'Vehicle Sounds', [
+          wbStruct(VWWD, 'Vehicle Config - Audio', [
             wbStruct('Motor Sound', [
               wbWWiseGUID('Start Event'),
               wbWWiseGUID('Stop Event'),
