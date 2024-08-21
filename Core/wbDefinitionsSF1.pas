@@ -9025,7 +9025,6 @@ end;
           ).IncludeFlag(dfCollapsed),
           wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
           wbUnknown(VCTT),
-          wbUnknown(VMRT)
           wbStruct(VWWD, 'Vehicle Sounds', [
             wbStruct('Motor Sound', [
               wbWWiseGUID('Start Event'),
