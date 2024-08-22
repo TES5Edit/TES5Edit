@@ -9022,72 +9022,28 @@ end;
           wbArray(VCSB, 'Suspension Bone Modifiers',
             wbFormIDCk('Bone', [BMOD])
           ).IncludeFlag(dfCollapsed),
-          wbUnknown(VCCD),
+          wbArray(VCCD, 'Unknown',
+            wbByteArray('Unknown', 1)
+          ).IncludeFlag(dfNotAlignable),
           wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
-          wbUnknown(VCTT),
+          wbArray(VCTT, 'Unknown',
+            wbByteArray('Unknown', 1)
+          ).IncludeFlag(dfNotAlignable),
           wbStruct(VWWD, 'Vehicle Config - Audio', [
-            wbStruct('Motor Sound', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Tire Sound Front Left', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Tire Sound Front Right', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Tire Sound Rear Left', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Tire Sound Rear Right', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Headlight On', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Headlight Off', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Landing Sound - Ground', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Landing Sound - Water', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ]),
-            wbStruct('Horn Sound', [
-              wbWWiseGUID('Start Event'),
-              wbWWiseGUID('Stop Event'),
-              wbFormIDCk('Condition', [CNDF]),
-              wbFormIDCk('Start Form', [WWED])
-            ])
-          ]),
-          wbUnknown(VMRT)
+            wbSoundReference('Motor Sound'),
+            wbSoundReference('Tire Sound Front Left'),
+            wbSoundReference('Tire Sound Front Right'),
+            wbSoundReference('Tire Sound Rear Left'),
+            wbSoundReference('Tire Sound Rear Right'),
+            wbSoundReference('Headlight On'),
+            wbSoundReference('Headlight Off'),
+            wbSoundReference('Landing Sound - Ground'),
+            wbSoundReference('Landing Sound - Water'),
+            wbSoundReference('Horn Sound')
+          ]).IncludeFlag(dfCollapsed),
+          wbArray(VMRT, 'Unknown',
+            wbByteArray('Unknown', 1)
+          ).IncludeFlag(dfNotAlignable)
         ], [])
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
