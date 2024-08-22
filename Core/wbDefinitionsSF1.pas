@@ -9020,16 +9020,248 @@ end;
         //BGSVehicleConfig
         wbRStruct('Component Data - Vehicle Config', [
           wbArray(VCSB, 'Suspension Bone Modifiers',
-            wbFormIDCk('Bone', [BMOD])
+            wbFormIDCk('Bone Modifier', [BMOD])
           ).IncludeFlag(dfCollapsed),
-          wbArray(VCCD, 'Unknown',
-            wbByteArray('Unknown', 1)
-          ).IncludeFlag(dfNotAlignable),
+          wbStruct(VCCD, 'Vehicle Config Data', [
+            wbStruct('Node Names', [
+              wbStruct('Suspension', [
+                wbLenString('Front Left'),
+                wbLenString('Front Right'),
+                wbLenString('Rear Left'),
+                wbLenString('Rear Right')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Wheel', [
+                wbLenString('Front Left'),
+                wbLenString('Front Right'),
+                wbLenString('Rear Left'),
+                wbLenString('Rear Right')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Chassis', [
+              wbInteger('Forward Axis', itU32),
+              wbInteger('Up Axis', itU32),
+              wbFloat('Vehicle Mass'),
+              wbFloat('Friction Equalizer'),
+              wbStruct('Torque', [
+                wbFloat('Roll'),
+                wbFloat('Pitch'),
+                wbFloat('Yaw')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Inertia', [
+                wbFloat('Yaw'),
+                wbFloat('Roll'),
+                wbFloat('Pitch')
+              ]).IncludeFlag(dfCollapsed),
+              wbFloat('Extra Torque'),
+              wbFloat('Max Velocity Positional Friction'),
+              wbFloat('Friction'),
+              wbFloat('Restitution'),
+              wbFloat('COM Offset Forward'),
+              wbFloat('COM Offset Up')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Wheel', [
+              wbFloat('Slip Angle'),
+              wbFloat('Friction'),
+              wbFloat('Scale'),
+              wbFloat('Mass'),
+              wbFloat('Viscosity Friction')
+            ]).IncludeFlag(dfCollapsed),
+            wbFloat,
+            wbStruct('Suspension', [
+              wbFloat('Strength'),
+              wbFloat('Damping Compression'),
+              wbFloat('Damping Relaxation'),
+              wbFloat('Length'),
+              wbStruct('Offsets', [
+                wbFloat('Up Front'),
+                wbFloat('Up Back'),
+                wbFloat('Front'),
+                wbFloat('Back'),
+                wbFloat('Lateral')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Steering', [
+              wbFloat('Max Angle'),
+              wbFloat('Max Angle at Max Speed')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Engine', [
+              wbFloat('Max Speed'),
+              wbFloat('Max Torque'),
+              wbFloat('Min RPM'),
+              wbFloat('Max RPM'),
+              wbFloat('Opt RPM'),
+              wbStruct('Torque', [
+                wbFloat('Min RPM'),
+                wbFloat('Max RPM')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Resistance', [
+                wbFloat('Min RPM'),
+                wbFloat('Max RPM'),
+                wbFloat('Opt RPM')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Transmission', [
+              wbFloat('Downshift RPM'),
+              wbFloat('Upshift RPM'),
+              wbFloat('Clutch Delay Time'),
+              wbStruct('Gear Ratios', [
+                wbFloat('Reverse'),
+                wbFloat('First'),
+                wbFloat('Second'),
+                wbFloat('Third'),
+                wbFloat('Fourth')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Torque Ratios', [
+                wbFloat('Front Wheels'),
+                wbFloat('Back Wheels')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Brakes', [
+              wbFloat('Max Torque'),
+              wbFloat('Min Pedal Input To Block'),
+              wbFloat('Wheels Min Time To Block')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Aerodynamics', [
+              wbFloat('Air Density'),
+              wbFloat('Front Area'),
+              wbFloat('Drag Coefficient'),
+              wbFloat('Lift Coefficient'),
+              wbFloat('Extra Gravity Multiplier')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Velocity Damping', [
+              wbFloat('Normal Spin'),
+              wbFloat('Collision Spin'),
+              wbFloat('Collision Threshold')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Handling', [
+              wbFloat('Reorient Strength'),
+              wbFloat('Reorient Damping'),
+              wbFloat('Vertical Boost Force'),
+              wbFloat('Forward Boost Force'),
+              wbFloat('Boost Max Velocity'),
+              wbFloat('Boost Duration'),
+              wbFloat('Vertical Boost Duration'),
+              wbFloat('Boost Recharge Delay'),
+              wbFloat('Boost Recharge Duration')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Water', [
+              wbFloat('Strength Front'),
+              wbFloat('Strength Back'),
+              wbFloat('Damp Front'),
+              wbFloat('Damp Back'),
+              wbFloat('Drive'),
+              wbFloat('Rotation Damp')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Bumper', [
+              wbInteger('Enable Bumper', itU8, wbBoolEnum),
+              wbFloat('Forward'),
+              wbFloat('Up'),
+              wbFloat('Width'),
+              wbFloat('Radius')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Collision Damping', [
+              wbFloat('Angular'),
+              wbFloat('Min Slope Cos')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Controls', [
+              wbStruct('Steering PID Third Person', [
+                wbFloat('P-Value'),
+                wbFloat('I-Value'),
+                wbFloat('D-Value')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Steering PID First Person', [
+                wbFloat('P-Value'),
+                wbFloat('I-Value'),
+                wbFloat('D-Value')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Unknown', [
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Camera', [
+              wbStruct('Base Zoom', [
+                wbFloat('First Person'),
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Base Height', [
+                wbFloat('First Person'),
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Base FOV', [
+                wbFloat('First Person'),
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+                wbStruct('Boost FOV Offset', [
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Speed Ratio Zoom Offset', [
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Speed PID', [
+                wbFloat('P-Value'),
+                wbFloat('I-Value'),
+                wbFloat('D-Value')
+              ]).IncludeFlag(dfCollapsed),
+                wbStruct('FOV Blend Factor', [
+                wbFloat('Aiming'),
+                wbFloat('Boosting')
+              ]).IncludeFlag(dfCollapsed),
+                wbStruct('Position', [
+                wbFloat('Blend Filtering Factor'),
+                wbFloat('R/L Offset for First Person')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbFloat('Handling Forward Boost Force In Water'),
+            wbFloat('Water Lin Damp'),
+            wbFloat('Wheel Max Friction'),
+            wbStruct('Water Bob', [
+              wbStruct('Acceleration', [
+                wbFloat('DeadZone'),
+                wbFloat('Pitch'),
+                wbFloat('Roll')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Natural', [
+                wbFloat('Pitch Period'),
+                wbFloat('Roll Period'),
+                wbFloat('Amplitude')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Torque', [
+              wbFloat('Pitch'),
+              wbFloat('Roll')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbFloat('Chassis Linear Damping'),
+            wbFloat('Suspension Max Visual Speed Compression'),
+            wbFloat('Suspension Max Visual Speed Relaxation'),
+            wbStruct('Slide Factor', [
+              wbFloat('Gain/S > Threshold'),
+              wbFloat('Lost/S <= Threshold'),
+              wbFloat('Threshold'),
+              wbFloat('Friction At Max Slide Factor'),
+              wbFloat('Viscosity Friction At Max Slide Factor')
+            ]).IncludeFlag(dfCollapsed)
+          ]).IncludeFlag(dfCollapsed),
           wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
-          wbArray(VCTT, 'Unknown',
-            wbByteArray('Unknown', 1)
-          ).IncludeFlag(dfNotAlignable),
-          wbStruct(VWWD, 'Vehicle Config - Audio', [
+          wbStruct(VCTT, 'Weapon Data', [
+            wbFloat('Offset X'),
+            wbFloat('Offset Y'),
+            wbFloat('Offset Z'),
+            wbFloat('Pitch'),
+            wbFloat('Yaw'),
+            wbFloat('Roll'),
+            wbFloat('Scale')
+          ]).IncludeFlag(dfCollapsed),
+          wbStruct(VWWD, 'Vehicle WWise Data', [
             wbSoundReference('Motor Sound'),
             wbSoundReference('Tire Sound Front Left'),
             wbSoundReference('Tire Sound Front Right'),
@@ -9041,7 +9273,7 @@ end;
             wbSoundReference('Landing Sound - Water'),
             wbSoundReference('Horn Sound')
           ]).IncludeFlag(dfCollapsed),
-          wbStruct(VMRT, 'Material Table', [
+          wbStruct(VMRT, 'Vehicle Material Table', [
             wbWWiseGUID('Material ID'),
             wbStruct('Audio', [
               wbInteger('Count', itU32),
@@ -9050,9 +9282,9 @@ end;
                 wbStructSK([0], 'Rules', [
                   wbLenString('Rule', 1),
                   wbWWiseGUID('Sound')
-                ])
+                ]).IncludeFlag(dfCollapsed)
               ).SetCountPath('Count', True)
-            ]),
+            ]).IncludeFlag(dfCollapsed),
             wbStruct('VFX', [
               wbInteger('Count', itU32),
               wbUnused(4),
@@ -9060,9 +9292,9 @@ end;
                 wbStructSK([0], 'Rules', [
                   wbLenString('Rule', 1),
                   wbFormID('Bound Object')
-                ])
+                ]).IncludeFlag(dfCollapsed)
               ).SetCountPath('Count', True)
-            ]),
+            ]).IncludeFlag(dfCollapsed),
             wbStruct('Friction', [
               wbInteger('Count', itU32),
               wbUnused(4),
@@ -9070,9 +9302,9 @@ end;
                 wbStructSK([0], 'Rules', [
                   wbLenString('Rule', 1),
                   wbFloat('Friction')
-                ])
+                ]).IncludeFlag(dfCollapsed)
               ).SetCountPath('Count', True)
-            ])
+            ]).IncludeFlag(dfCollapsed)
           ]).IncludeFlag(dfCollapsed)
         ], [])
       ], []),
