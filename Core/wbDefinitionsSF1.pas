@@ -9041,9 +9041,39 @@ end;
             wbSoundReference('Landing Sound - Water'),
             wbSoundReference('Horn Sound')
           ]).IncludeFlag(dfCollapsed),
-          wbArray(VMRT, 'Unknown',
-            wbByteArray('Unknown', 1)
-          ).IncludeFlag(dfNotAlignable)
+          wbStruct(VMRT, 'Material Table', [
+            wbWWiseGUID('Material ID'),
+            wbStruct('Audio', [
+              wbInteger('Count', itU32),
+              wbUnused(4),
+              wbArrayS('Audio Rules',
+                wbStructSK([0], 'Rules', [
+                  wbLenString('Rule', 1),
+                  wbWWiseGUID('Sound')
+                ])
+              ).SetCountPath('Count', True)
+            ]),
+            wbStruct('VFX', [
+              wbInteger('Count', itU32),
+              wbUnused(4),
+              wbArrayS('VFX Rules',
+                wbStructSK([0], 'Rules', [
+                  wbLenString('Rule', 1),
+                  wbFormID('Bound Object')
+                ])
+              ).SetCountPath('Count', True)
+            ]),
+            wbStruct('Friction', [
+              wbInteger('Count', itU32),
+              wbUnused(4),
+              wbArrayS('Friction Rules',
+                wbStructSK([0], 'Rules', [
+                  wbLenString('Rule', 1),
+                  wbFloat('Friction')
+                ])
+              ).SetCountPath('Count', True)
+            ])
+          ]).IncludeFlag(dfCollapsed)
         ], [])
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
