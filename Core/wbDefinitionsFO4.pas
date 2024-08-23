@@ -15036,10 +15036,10 @@ begin
     wbPRPS,
     wbFULL,
     wbStruct(DNAM, 'Direction Material', [
-      wbFloat('Max Angle (30-120)'),
+      wbFloat('Max Angle (30-120)').SetDefaultNativeValue(90),
       wbFormIDCk('Material', [MATO, NULL]),
-      wbFloat('Leaf Amplitude'),
-      wbFloat('Leaf Frequency')
+      wbFloat('Leaf Amplitude').SetDefaultNativeValue(1),
+      wbFloat('Leaf Frequency').SetDefaultNativeValue(1)
     ], cpNormal, True, nil, 2),
     wbNVNM,
     wbArray(MNAM, 'Distant LOD',
