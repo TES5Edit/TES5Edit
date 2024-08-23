@@ -8551,6 +8551,7 @@ end;
         'BGSStarDataComponent_Component',
         'BGSStoredTraversals_Component',
         'BGSVehicleConfig',
+        'BGSVehicleManagement',
         'BGSWorkshopItemColor',
         'BGSWorldSpaceOverlay_Component',
         'BlockHeightAdjustment_Component',
