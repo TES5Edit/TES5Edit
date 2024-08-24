@@ -38,7 +38,6 @@ var
   wbFormTypeEnum: IwbEnumDef;
   wbFunctionsEnum: IwbEnumDef;
   wbHeadPartIndexEnum: IwbEnumDef;
-  wbImpactMaterialTypeEnum: IwbEnumDef;
   wbMenuModeEnum: IwbEnumDef;
   wbMiscStatEnum: IwbEnumDef;
   wbModEffectEnum: IwbEnumDef;
@@ -3531,8 +3530,9 @@ begin
   end;
 end;
 
-procedure DefineFO3a;
+procedure DefineFO3;
 begin
+  DefineCommon;
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
     {0x00000001}'ESM',
     {0x00000002}'',
@@ -4312,10 +4312,7 @@ begin
       1059, 'Specific: Tutorial',
       1060, 'Specific: You''re SPECIAL book'
     ]);
-end;
 
-procedure DefineFO3b;
-begin
   wbMiscStatEnum :=
     wbEnum([
       'Quests Completed',
@@ -4884,10 +4881,7 @@ begin
       'Luck'
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFO3c;
-begin
   wbRecord(CLMT, 'Climate', [
     wbEDIDReq,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
@@ -5136,22 +5130,6 @@ var  wbSoundTypeSoundsOld :=
       255, ' ANY'
     ]);
 
-  wbImpactMaterialTypeEnum :=
-    wbEnum([
-      'Stone',
-      'Dirt',
-      'Grass',
-      'Glass',
-      'Metal',
-      'Wood',
-      'Organic',
-      'Cloth',
-      'Water',
-      'Hollow Metal',
-      'Organic Bug',
-      'Organic Glow'
-    ]);
-
   wbTemplateFlags := wbFlags([
     'Use Traits',
     'Use Stats',
@@ -5290,7 +5268,7 @@ var  wbSoundTypeSoundsOld :=
     wbFloat(TNAM, 'Turning Speed', cpNormal, True, 1, -1, wbActorTemplateUseStats),
     wbFloat(BNAM, 'Base Scale', cpNormal, True, 1, -1, wbActorTemplateUseStats),
     wbFloat(WNAM, 'Foot Weight', cpNormal, True, 1, -1, wbActorTemplateUseStats),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbInteger(NAM4, 'Impact Material Type', itU32, wbActorImpactMaterialEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbInteger(NAM5, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbFormIDCk(CSCR, 'Inherits Sounds from', [CREA], False, cpNormal, False, wbActorTemplateUseModelAnimation),
     wbCSDTs,
@@ -5298,10 +5276,6 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(LNAM, 'Melee Weapon List', [FLST], False, cpNormal, False, wbActorTemplateUseTraits)
   ], True);
 
-end;
-
-procedure DefineFO3d;
-begin
   wbRecord(CSTY, 'Combat Style', [
     wbEDIDReq,
     wbStruct(CSTD, 'Advanced - Standard', [
@@ -5946,10 +5920,6 @@ begin
     ])
   ]);
 
-end;
-
-procedure DefineFO3e;
-begin
   wbRecord(PROJ, 'Projectile', [
     wbEDIDReq,
     wbOBND(True),
@@ -7283,53 +7253,25 @@ begin
     ], cpNormal, True)
   ]);
 
-  if wbSimpleRecords then begin
-
-    wbRecord(LAND, 'Landscape', [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        {0x00000001} 'Has Vertex Normals/Height Map',
-        {0x00000002} 'Has Vertex Colours',
-        {0x00000004} 'Has Layers',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} '',
-        {0x00000040} '',
-        {0x00000080} '',
-        {0x00000100} '',
-        {0x00000200} '',
-        {0x00000400} 'Unknown 11'
-      ])),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertex Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
-    ]);
-
-  end else begin
-
-    wbRecord(LAND, 'Landscape', [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        'Has Vertex Normals / Height Map',
-        'Has Vertex Colours',
-        'Has Layers',
-        'Unknown 4',
-        'Unknown 5',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Unknown 11'
-      ])),
-      wbVertexColumns(VNML, 'Vertex Normals'),
-      wbVertexHeightMap,
-      wbVertexColumns(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
-    ]);
-
-  end;
+  wbRecord(LAND, 'Landscape', [
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      {0x001} 'Has Vertex Normals/Height Map',
+      {0x002} 'Has Vertex Colours',
+      {0x004} 'Has Layers',
+      {0x008} 'Unknown 4',
+      {0x010} 'Auto-Calc Normals',
+      {0x020} '',
+      {0x040} '',
+      {0x080} '',
+      {0x100} '',
+      {0x200} '',
+      {0x400} 'Ignored'
+    ])),
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers
+  ]);
 
   wbRecord(LIGH, 'Light', [
     wbEDIDReq,
@@ -7829,7 +7771,7 @@ begin
     wbFormIDCk(ENAM, 'Eyes', [EYES], False, cpNormal, False, wbActorTemplateUseModelAnimation),
     wbByteColors(HCLR, 'Hair color').SetRequired(True).SetDontShow(wbActorTemplateUseModelAnimation),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
-    wbInteger(NAM4, 'Impact Material Type', itU32, wbImpactMaterialTypeEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
+    wbInteger(NAM4, 'Impact Material Type', itU32, wbActorImpactMaterialEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
     wbFaceGenNPC,
     wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
     wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
@@ -8981,10 +8923,7 @@ begin
       wbFloat('Height')
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFO3f;
-begin
   wbRecord(WATR, 'Water', [
     wbEDIDReq,
     wbFULL,
@@ -9289,131 +9228,21 @@ begin
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
-    wbRecord(WRLD, 'Worldspace', [
-      wbEDIDReq,
-      wbFULL,
-      wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
-      wbRStruct('Parent', [
-        wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-        wbStruct(PNAM, '', [
-          wbInteger('Flags', itU8, wbFlags([
-            {0x00000001}'Use Land Data',
-            {0x00000002}'Use LOD Data',
-            {0x00000004}'Use Map Data',
-            {0x00000008}'Use Water Data',
-            {0x00000010}'Use Climate Data',
-            {0x00000020}'Use Image Space Data',
-            {0x00000040}'',
-            {0x00000080}'Needs Water Adjustment'
-          ], True)),
-          wbByteArray('Unknown', 1)
-        ], cpNormal, True)
-      ], []),
-      wbFormIDCk(CNAM, 'Climate', [CLMT]),
-      wbFormIDCk(NAM2, 'Water', [WATR]),
-      wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height'),
-      wbStruct(DNAM, 'Land Data', [
-        wbFloat('Default Land Height'),
-        wbFloat('Default Water Height')
-      ]),
-      wbICON,
-      wbStruct(MNAM, 'Map Data', [
-        wbStruct('Usable Dimensions', [
-          wbInteger('X', itS32),
-          wbInteger('Y', itS32)
-        ]),
-        wbStruct('Cell Coordinates', [
-          wbStruct('NW Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ]),
-          wbStruct('SE Cell', [
-            wbInteger('X', itS16),
-            wbInteger('Y', itS16)
-          ])
-        ])
-      ]),
-      wbStruct(ONAM, 'World Map Offset Data', [
-        wbFloat('World Map Scale'),
-        wbFloat('Cell X Offset'),
-        wbFloat('Cell Y Offset')
-      ], cpNormal, True),
-      wbFormIDCk(INAM, 'Image Space', [IMGS]),
-      wbInteger(DATA, 'Flags', itU8, wbFlags([
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} '',
-        {0x08} '',
-        {0x10} 'No LOD Water',
-        {0x20} 'No LOD Noise',
-        {0x40} 'Don''t Allow NPC Fall Damage',
-        {0x80} 'Needs Water Adjustment'
-      ]), cpNormal, True),
-      wbWorldspaceOBND,
-      wbFormIDCk(ZNAM, 'Music', [MUSC]),
-      wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
-      wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
-      wbRArrayS('Swapped Impacts', wbStructExSK(IMPS, [0, 1], [2], 'Swapped Impact', [
-        wbInteger('Material Type', itU32, wbImpactMaterialTypeEnum),
-        wbFormIDCkNoReach('Old', [IPCT]),
-        wbFormIDCk('New', [IPCT, NULL])
-      ])),
-      wbArray(IMPF, 'Footstep Materials', wbString('Unknown', 30), [
-        'ConcSolid',
-        'ConcBroken',
-        'MetalSolid',
-        'MetalHollow',
-        'MetalSheet',
-        'Wood',
-        'Sand',
-        'Dirt',
-        'Grass',
-        'Water'
-      ]),
-      wbOFST
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfFastAssign)
-      .IncludeFlag(dfNoCopyAsOverride)
-      .IncludeFlag(dfNotAlignable)
-    ]);
-
   wbRecord(WTHR, 'Weather', [
     wbEDIDReq,
-    wbFormIDCk(_00_IAD, 'Sunrise Image Space Modifier', [IMAD]),
-    wbFormIDCk(_01_IAD, 'Day Image Space Modifier', [IMAD]),
-    wbFormIDCk(_02_IAD, 'Sunset Image Space Modifier', [IMAD]),
-    wbFormIDCk(_03_IAD, 'Night Image Space Modifier', [IMAD]),
-    wbString(DNAM, 'Cloud Textures - Layer 0', 0, cpNormal, True),
-    wbString(CNAM, 'Cloud Textures - Layer 1', 0, cpNormal, True),
-    wbString(ANAM, 'Cloud Textures - Layer 2', 0, cpNormal, True),
-    wbString(BNAM, 'Cloud Textures - Layer 3', 0, cpNormal, True),
-    wbGenericModel,
-    wbByteArray(LNAM, 'Unknown', 4, cpNormal, True),
-    wbArray(ONAM, 'Cloud Speed', wbInteger('Layer', itU8{, wbDiv(2550)}), 4, nil, nil, cpNormal, True),
-    wbArray(PNAM, 'Cloud Layer Colors',
-      wbArray('Layer',
-        wbByteColors('Color'),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-    4),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbByteColors('Time'),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      ['Sky-Upper','Fog','Unused','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Unused']
-    , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Fower')
-    ], cpNormal, True),
+    wbFormIDCk(_00_IAD, 'Sunrise', [IMAD]),
+    wbFormIDCk(_01_IAD, 'Day', [IMAD]),
+    wbFormIDCk(_02_IAD, 'Sunset', [IMAD]),
+    wbFormIDCk(_03_IAD, 'Night', [IMAD]),
+    wbWeatherCloudTextures,
+    wbRStruct('Precipitation', [wbGenericModel], []),
+    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbWeatherCloudSpeed,
+    wbWeatherCloudColors,
+    wbWeatherColors,
+    wbWeatherFogDistance,
     wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
-    wbStruct(DATA, '', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
       wbInteger('Cloud Speed (Lower)', itU8),
       wbInteger('Cloud Speed (Upper)', itU8),
@@ -9425,14 +9254,72 @@ begin
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbInteger('Flags', itU8,
+        wbFlags([
+          {0x01} 'Weather - Pleasant',
+          {0x02} 'Weather - Cloudy',
+          {0x04} 'Weather - Rainy',
+          {0x08} 'Weather - Snow'
+        ], True)
+      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      ]).SetToStr(wbRGBAToStr)
+      .IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
     wbWeatherSounds
+  ]);
+
+  wbRecord(WRLD, 'Worldspace', [
+    wbEDIDReq,
+    wbFULL,
+    wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
+          {0x01}'Use Land Data',
+          {0x02}'Use LOD Data',
+          {0x04}'Use Map Data',
+          {0x08}'Use Water Data',
+          {0x10}'Use Climate Data',
+          {0x20}'Use Image Space Data'
+        ], True),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbWorldWaterData,
+    wbWorldLandData,
+    wbICON,
+    wbWorldMapData,
+    wbWorldMapOffset,
+    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} 'Unknown 3',
+        {0x08} 'Unknown 4',
+        {0x10} 'No LOD Water',
+        {0x20} 'No LOD Noise',
+        {0x40} 'Don''t Allow NPC Fall Damage',
+        {0x80} 'Needs Water Adjustment'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbWorldObjectBounds,
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbString(NNAM, 'Canopy Shadow', 0, cpNormal, True),
+    wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
+    wbWorldSwapsImpactData,
+    wbWorldOffsetData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
   ]);
 
   wbAddGroupOrder(GMST);
@@ -9520,21 +9407,9 @@ begin
   wbAddGroupOrder(DOBJ);
   wbAddGroupOrder(LGTM);
   wbAddGroupOrder(MUSC);
-end;
-
-procedure DefineFO3;
-begin
-  DefineCommon;
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
-  DefineFO3a;
-  DefineFO3b;
-  DefineFO3c;
-  DefineFO3d;
-  DefineFO3e;
-  DefineFO3f;
-
   wbHEDRVersion := 0.94;
 end;
 

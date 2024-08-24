@@ -20,56 +20,77 @@ type
   TwbVarRecs = TArray<TVarRec>;
 
 var
+  wbMHDTCELLSize: Integer;
+
   wbAxisEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
+  wbActorImpactMaterialEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
   wbQuestEventEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
+  wbWorldImpactMaterialEnum: IwbEnumDef;
 
   wbEmptyBaseFlags: IwbFlagsDef;
   wbRecordFlagsFlags: IwbFlagsDef;
 
-  wbNextSpeaker: IwbIntegerDef;
-
   wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
+  wbCinematicIMAD: IwbRecordMemberDef;
   wbDATAPosRot: IwbRecordMemberDef;
   wbDMDT: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
-  wbLargeReferences: IwbRecordMemberDef;
-  wbMagicEffectSounds: IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
-  wbRegionSounds: IwbRecordMemberDef;
-  wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
-  wbStaticPartPlacements: IwbRecordMemberDef;
-  wbWeatherSounds: IwbRecordMemberDef;
-  wbVertexHeightMap: IwbRecordMemberDef;
-  wbWorldspaceOBND: IwbRecordMemberDef;
-
-  wbColorInterpolator: IwbStructDef;
 
   wbActionFlag: IwbSubRecordDef;
-  wbCLSZ: IwbSubRecordDef;
   wbHEDR: IwbSubRecordDef;
-  wbMHDTCELL: IwbSubRecordDef;
-  wbMHDTWRLD: IwbSubRecordDef;
+  wbMagicEffectSounds: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
-  wbOFST: IwbSubRecordDef;
-  wbVISI: IwbSubRecordDef;
+  wbMHDTCELL: IwbRecordMemberDef;
+  wbRegionSounds: IwbSubRecordDef;
+  wbSeasons: IwbSubRecordDef;
+  wbStaticPartPlacements: IwbSubRecordDef;
   wbXLOD: IwbSubRecordDef;
 
-  wbCinematicIMAD: IwbSubRecordStructDef;
-
   wbAlternateTexture: IwbValueDef;
+  wbColorInterpolator: IwbValueDef;
+  wbNextSpeaker: IwbValueDef;
   wbPosRot: IwbValueDef;
   wbTimeInterpolator: IwbValueDef;
 
   wbQuestEventVarRecs: TwbVarRecs;
+
+  wbLandNormals: IwbRecordMemberDef;
+  wbLandHeights: IwbRecordMemberDef;
+  wbLandColors: IwbRecordMemberDef;
+  wbLandLayers: IwbRecordMemberDef;
+
+  wbWeatherCloudTextures: IwbRecordMemberDef;
+  wbWeatherCloudSpeed: IwbRecordMemberDef;
+  wbWeatherCloudColors: IwbRecordMemberDef;
+  wbWeatherColors: IwbRecordMemberDef;
+  wbWeatherFogDistance: IwbRecordMemberDef;
+  wbWeatherSounds: IwbRecordMemberDef;
+
+  wbWorldLargeRefs: IwbRecordMemberDef;
+  wbWorldMaxHeight: IwbRecordMemberDef;
+  wbWorldFixedCenter: IwbRecordMemberDef;
+  wbWorldWaterData: IwbRecordMemberDef;
+  wbWorldLandData: IwbRecordMemberDef;
+  wbWorldMapData: IwbRecordMemberDef;
+  wbWorldMapOffset: IwbRecordMemberDef;
+  wbWorldObjectBounds: IwbRecordMemberDef;
+  wbWorldSwapsImpactData: IwbRecordMemberDef;
+  wbWorldRegionEditorMap: IwbRecordMemberDef;
+  wbWorldWaterHeightData: IwbRecordMemberDef;
+  wbWorldLevelData: IwbRecordMemberDef;
+  wbWorldOffsetData: IwbRecordMemberDef;
+  wbWorldCellSizeData: IwbRecordMemberDef;
+  wbWorldVisibleCellsData: IwbRecordMemberDef;
 const
   wbWorldMHDTConflictPriority : array[Boolean] of TwbConflictPriority = (cpNormalIgnoreEmpty, cpIgnore);
 
@@ -156,7 +177,7 @@ procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 
 {>>> Common Function Callbacks <<<}
 
-function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
 function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: IwbElement): Int64;
 
@@ -211,8 +232,6 @@ function wbDebrisModel(aTextureFileHashes: IwbRecordMemberDef): IwbRecordMemberD
 
 function wbHeadPart(aHeadPartIndexEnum: IwbEnumDef = nil; aModel: IwbRecordMemberDef = nil; aHeadPartsAfterSet: TwbAfterSetCallback = nil): IwbRecordMemberDef;
 
-function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
-
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 
 function wbOwnership(aOwner: IwbSubRecordDef; aSkipSigs: TwbSignatures; aGlobal: IwbSubRecordDef = nil): IwbRecordMemberDef;
@@ -220,8 +239,6 @@ function wbOwnership(aOwner: IwbSubRecordDef; aSkipSigs: TwbSignatures; aGlobal:
 function wbPerkEffectType(aAfterSetCallback: TwbAfterSetCallback): IwbIntegerDef;
 
 function wbSizePosRot(aSignature: TwbSignature; aName: string; aPriority: TwbConflictPriority = cpNormal): IwbSubRecordDef;
-
-function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
 
 function wbModelInfo(aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
 function wbModelInfos(aSignature: TwbSignature; aName: string = ''; aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
@@ -231,6 +248,7 @@ function wbTimeInterpolatorsMultAdd(const aSignatureMult, aSignatureAdd: TwbSign
 
 function wbFloatColorRGBA(const aName: string): IwbValueDef;
 
+function wbWeatherTimeOfDay(const aName: string): IwbStructDef;
 
 {>>> Common Functions <<<}
 
@@ -363,105 +381,6 @@ begin
     Result := aTrue;
 end;
 
-function wbOffsetDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container: IwbDataContainer;
-  Element: IwbElement;
-  MinX, MaxX: Integer;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'OFST - Offset Data') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-  MinX := Element.NativeValue;
-
-  // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-  MaxX := Element.NativeValue;
-
-  // Calculate the total number of columns
-  Result := MaxX - MinX + 1;
-end;
-
-function wbCellSizeDataColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container: IwbDataContainer;
-  Element: IwbElement;
-  MinX, MaxX: Integer;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'CLSZ - Cell Size Data') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-  MinX := Element.NativeValue;
-
-  // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-  MaxX := Element.NativeValue;
-
-  // Calculate the total number of columns
-  Result := MaxX - MinX + 1;
-end;
-
-function wbVisibleCellIndexColsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
-var
-  Container: IwbDataContainer;
-  Element: IwbElement;
-  MinX, MaxX: Integer;
-begin
-  Result := 0;
-
-  if not Supports(aElement.Container, IwbDataContainer, Container) then
-    Exit;
-
-  if not (Container.Name = 'VISI - Visible Cell Index') then
-    Exit;
-
-  if not Supports(Container.Container, IwbDataContainer, Container) then
-    Exit;
-
-  // Retrieve the minimum X value
-  Element := Container.ElementByPath['Object Bounds\NAM0 - Min\X'];
-  if not Assigned(Element) then
-    Exit;
-  MinX := Element.NativeValue;
-
-  // Retrieve the maximum X value
-  Element := Container.ElementByPath['Object Bounds\NAM9 - Max\X'];
-  if not Assigned(Element) then
-    Exit;
-  MaxX := Element.NativeValue;
-
-  // Calculate the total number of columns
-  Result := MaxX - MinX + 1;
-end;
-
 function wbTimeInterpolators(const aSignature: TwbSignature; const aName: string): IwbRecordMemberDef;
 begin
   Result :=
@@ -513,8 +432,133 @@ begin
   end;
 end;
 
+function wbWeatherCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := '';
+  case aType of
+    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
+    ctCheck: Result := '';
+  end;
+end;
+
+function wbWeatherCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
+var
+  f: Extended;
+begin
+  f := StrToFloat(aString);
+  f := f*10*127 + 127;
+  Result := Min(Round(f), 254);
+end;
+
+function wbWeatherTimeOfDay(const aName: string): IwbStructDef;
+begin
+  wbWeatherTimeOfDay :=
+    wbStruct(aName, [
+	    wbByteColors('Sunrise'),
+	    wbByteColors('Day'),
+	    wbByteColors('Sunset'),
+	    wbByteColors('Night'),
+	    IfThen(wbGameMode in [gmFNV],
+        wbByteColors('High Noon'),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(111, wbByteColors('Early Sunrise')),
+          nil)),
+	    IfThen(wbGameMode in [gmFNV],
+        wbByteColors('Midnight'),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(111, wbByteColors('Late Sunrise')),
+          nil)),
+	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, wbByteColors('Early Sunset')),
+        nil),
+	    IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, wbByteColors('Late Sunset')),
+        nil)
+	  ], cpNormal, True, nil, 4);
+end;
+
+function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  MinX, MaxX: Integer;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  Element := Container.ElementByPath['Object Bounds\NAM0\X'];
+  if not Assigned(Element) then
+    Exit;
+  MinX := Element.NativeValue;
+
+  Element := Container.ElementByPath['Object Bounds\NAM9\X'];
+  if not Assigned(Element) then
+    Exit;
+  MaxX := Element.NativeValue;
+
+  Result := MaxX - MinX + 1;
+end;
+
 procedure DefineCommon;
 begin
+  wbAxisEnum :=
+    wbEnum([], [
+      88, 'X',
+      89, 'Y',
+      90, 'Z'
+    ]);
+
+  wbBoolEnum :=
+    wbEnum(['False', 'True']);
+
+  wbActorImpactMaterialEnum :=
+    wbEnum([
+      'Stone',
+      'Dirt',
+      'Grass',
+      'Glass',
+      'Metal',
+      'Wood',
+      'Organic',
+      'Cloth',
+      'Water',
+      'Hollow Metal',
+      'Organic Bug',
+      'Organic Glow'
+    ]);
+
+  wbQuadrantEnum :=
+    wbEnum([
+      {0} 'Bottom Left',
+      {1} 'Bottom Right',
+      {2} 'Top Left',
+      {3} 'Top Right'
+    ]);
+
+  wbQuestEventEnum := wbEnum([], wbQuestEventVarRecs);
+
+  wbSexEnum :=
+    wbEnum(['Male','Female']);
+
+  wbWorldImpactMaterialEnum :=
+    wbEnum([
+      'ConcSolid',
+      'ConcBroken',
+      'MetalSolid',
+      'MetalHollow',
+      'MetalSheet',
+      'Wood',
+      'Sand',
+      'Dirt',
+      'Grass',
+      'Water'
+    ]);
+
   wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
     {0x00000001} { 0} 'Unknown 0',
     {0x00000002} { 1} 'Unknown 1',
@@ -585,8 +629,6 @@ begin
     {0x80000000} {31} 'Unknown 31'
   ]);
 
-  wbBoolEnum := wbEnum(['False', 'True']);
-
   wbHEDR :=
     wbStruct(HEDR, 'Header', [
       wbFloat('Version'),
@@ -634,13 +676,6 @@ begin
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed);
 
-  wbAxisEnum :=
-    wbEnum([], [
-      88, 'X',
-      89, 'Y',
-      90, 'Z'
-    ]);
-
   var wbLandFlags :=
     wbFlags([
       'Hide - Quad 1',
@@ -660,7 +695,7 @@ begin
         'No Collision - Quad 3',
         'No Collision - Quad 4'
       ], True);
-      
+
   wbCellGrid :=
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
@@ -749,14 +784,6 @@ begin
   wbPosRot :=
     wbVec3PosRot;
 
-  wbQuadrantEnum :=
-    wbEnum([
-      {0} 'Bottom Left',
-      {1} 'Bottom Right',
-      {2} 'Top Left',
-      {3} 'Top Right'
-    ]);
-
   wbQuestEventVarRecs := wbMakeVarRecs([
     Sig2Int(ADBO), 'Bounty Event',
     Sig2Int(ADCR), 'Crime Gold Event',
@@ -804,8 +831,6 @@ begin
     Sig2Int(TRES), 'Trespass Actor Event'
   ]);
 
-  wbQuestEventEnum := wbEnum([], wbQuestEventVarRecs);
-
   wbSeasons :=
     wbStruct(PFPC, 'Seasonal ingredient production', [
       wbInteger('Spring', itU8),
@@ -813,9 +838,6 @@ begin
       wbInteger('Fall', itU8),
       wbInteger('Winter', itU8)
     ], cpNormal, True);
-
-  wbSexEnum :=
-    wbEnum(['Male','Female']);
 
   wbActorSounds :=
     wbRArrayS('Sounds',
@@ -886,183 +908,23 @@ begin
       .IncludeFlag(dfCollapsed)
     , cpNormal, True);
 
-  wbWeatherSounds :=
-    wbRArray('Sounds',
-      wbStruct(SNAM, 'Sound', [
-        wbFormIDCK('Sound', [SNDR, SOUN, NULL]),
-        wbInteger('Type', itU32, wbEnum([
-          {0x01} 'Default',
-          {0x02} 'Precipitation',
-          {0x04} 'Wind',
-          {0x08} 'Thunder'
-        ]))
-      ]).SetSummaryKeyOnValue([1, 0])
-      .SetSummaryPrefixSuffixOnValue(1, '[', ']')
-      .SetSummaryDelimiterOnValue(' ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed)
-    );
-
-  wbVertexHeightMap :=
-    wbStruct(VHGT, 'Vertex Height Map', [
-      wbFloat('Offset'),
-      wbArray('Rows', wbStruct('Row', [
-        wbArray('Columns', wbInteger('Column', itS8), 33)
-      ]), 33),
-      wbByteArray('Unused', 3)
-    ]);
-
   var lScaleFactor := 1/wbCellSizeFactor;
-
-  wbWorldspaceOBND :=
-    wbRStruct('Object Bounds', [
-      wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, False, lScaleFactor),
-        wbFloat('Y', cpNormal, False, lScaleFactor)
-      ], cpIgnore, True)
-      .SetSummaryKeyOnValue([0, 1])
-      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
-      .SetSummaryPrefixSuffixOnValue(1, '', ')')
-      .SetSummaryDelimiterOnValue(', ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
-      wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, False, lScaleFactor),
-        wbFloat('Y', cpNormal, False, lScaleFactor)
-      ], cpIgnore, True)
-      .SetSummaryKeyOnValue([0, 1])
-      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
-      .SetSummaryPrefixSuffixOnValue(1, '', ')')
-      .SetSummaryDelimiterOnValue(', ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
-    ], [])
-    .SetSummaryKey([0, 1])
-    .SetSummaryMemberPrefixSuffix(0, '[', '')
-    .SetSummaryMemberPrefixSuffix(1, '', ']')
-    .SetSummaryDelimiter(', ')
-    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
-  wbLargeReferences :=
-    wbRArray('Large References',
-      wbStruct(RNAM, 'Cell Grid', [
-        wbInteger('Y', itS16, nil, cpIgnore),
-        wbInteger('X', itS16, nil, cpIgnore),
-        wbArray('References',
-          wbStruct('Reference', [
-            wbFormIDCk('Ref', [REFR], False, cpIgnore),
-            wbInteger('Y', itS16, nil, cpIgnore),
-            wbInteger('X', itS16, nil, cpIgnore)
-          ]).SetSummaryKey([0])
-          .IncludeFlag(dfCollapsed),
-        -1).IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable)
-      ]).SetSummaryKeyOnValue([1,0])
-      .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
-      .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
-      .SetSummaryDelimiterOnValue(' ')
-      .IncludeFlag(dfCollapsed),
-    cpIgnore, False, nil, nil, wbNeverShow);
+  wbMHDTCELLSize :=
+  IfThen(wbIsStarfield, 50, 32);
 
-  if wbSimpleRecords then
-    wbMHDTCELL :=
-      wbByteArray(MHDT, 'Max Height Data')
-  else begin
-    if wbGameMode in [gmSF1] then
-      wbMHDTCELL :=
-        wbStruct(MHDT, 'Max Height Data', [
-          wbFloat('Offset'),
-          wbArray('Max Heights',
-            wbArray('Row',
-              wbInteger('Column', itU8),
-            50).IncludeFlag(dfCollapsed),
-          50).IncludeFlag(dfCollapsed)])
-    else
-      wbMHDTCELL :=
-        wbStruct(MHDT, 'Max Height Data', [
-          wbFloat('Offset'),
-          wbArray('Max Heights',
-            wbArray('Row',
-              wbInteger('Column', itU8),
-            32).IncludeFlag(dfCollapsed),
-          32).IncludeFlag(dfCollapsed)])
-    end;
-
-  if wbSimpleRecords then
-    wbMHDTWRLD :=
-      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-  else
-    wbMHDTWRLD :=
+  wbMHDTCELL :=
+    IfThen(wbGameMode in [gmSF1],
+      wbByteArray(MHDT, 'Max Height Data'),
       wbStruct(MHDT, 'Max Height Data', [
-        wbStruct('Min', [
-          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        ]),
-        wbStruct('Max', [
-          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        ]),
-        wbArray('Cell Heights',
-          wbStruct('Quads', [
-            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
-          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-          .IncludeFlag(dfCollapsed))
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable)
-      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]);
-
-  if wbSimpleRecords then
-    wbOFST :=
-      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbOFST :=
-      wbArray(OFST, 'Offset Data',
-        wbArray('Row',
-          wbInteger('Column', itU32, nil, cpIgnore),
-          wbOffsetDataColsCounter, cpIgnore)
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow);
-
-  if wbSimpleRecords then
-    wbCLSZ :=
-      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbCLSZ :=
-      wbArray(CLSZ, 'Cell Size Data',
-        wbArray('Row',
-          wbInteger('Column', itU32, nil, cpIgnore),
-        wbCellSizeDataColsCounter, cpIgnore)
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow);
-
-  if wbSimpleRecords then
-    wbVISI :=
-      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow)
-  else
-    wbVISI :=
-      wbStruct(VISI, 'Visible Cell Index Data', [
-        wbArray('Visible Cells',
+        wbFloat('Offset'),
+        wbArray('Max Heights',
           wbArray('Row',
-            wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
-          wbVisibleCellIndexColsCounter, cpIgnore)
-          .IncludeFlag(dfCollapsed)
-          .IncludeFlag(dfNotAlignable),
-        nil, cpIgnore)
-        .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable),
-        wbStruct('Dimensions', [
-          wbInteger('Min Y', itS16, nil, cpIgnore),
-          wbInteger('Min X', itS16, nil, cpIgnore),
-          wbInteger('Rows', itU32, nil, cpIgnore)
-        ], cpIgnore)
-      ], cpIgnore, False, wbNeverShow);
+            wbInteger('Column', itU8),
+          wbMHDTCELLSize).IncludeFlag(dfCollapsed),
+        wbMHDTCELLSize).IncludeFlag(dfCollapsed)]));
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
@@ -1097,6 +959,510 @@ begin
       .IncludeFlag(dfInternalEditOnly)
       .IncludeFlag(dfDontSave)
       .IncludeFlag(dfDontAssign);
+
+{{>>>Landscape Common Defs<<<}
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbLandNormals :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VNML, 'Vertex Normals', 3267, cpBenign),
+      wbArray(VNML, 'Vertex Normals',
+        wbArray('Row',
+          wbStruct('Column', [
+            wbInteger('X', itU8, nil, cpBenign),
+            wbInteger('Y', itU8, nil, cpBenign),
+            wbInteger('Z', itU8, nil, cpBenign)
+          ], cpBenign)
+          .SetSummaryKey([0, 1, 2])
+          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
+          .SetSummaryMemberPrefixSuffix(2, '', ')')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+        33, cpBenign),
+      33, nil, nil, cpBenign));
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbLandHeights :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VHGT, 'Vertex Height Map'),
+      wbStruct(VHGT, 'Vertex Height Map', [
+        wbFloat('Offset'),
+        wbArray('Height Data',
+          wbArray('Row',
+            wbInteger('Column', itS8),
+          33),
+        33),
+        wbByteArray('Unused', 3, cpIgnore, False, wbNeverShow)
+      ]));
+
+  //TES4,FO3,FNV,TES5,FO4,FO76
+  wbLandColors :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VCLR, 'Vertex Colors'),
+      wbArray(VCLR, 'Vertex Colors',
+        wbArray('Columns',
+          wbStruct('Column', [
+            wbInteger('R', itU8),
+            wbInteger('G', itU8),
+            wbInteger('B', itU8)
+          ])
+          .SetSummaryKey([0, 1, 2])
+          .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
+          .SetSummaryMemberPrefixSuffix(2, '', ')')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+        33),
+      33));
+
+  //TES4,FO3,FNV,TES5,FO4,FO76
+  wbLandLayers :=
+    wbRArrayS('Layers',
+      wbRUnion('Layer', [
+        wbRStructSK([0], 'Base Layer', [
+          wbStructSK(BTXT, [1, 3], 'Base Layer', [
+            wbFormIDCk('Texture', [LTEX, NULL]),
+            wbInteger('Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+            wbInteger('Layer', itU16)
+          ])
+        ], []),
+        wbRStructSK([0], 'Alpha Layer', [
+          wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
+            wbFormIDCk('Texture', [LTEX, NULL]),
+            wbInteger('Quadrant', itU8, wbQuadrantEnum),
+            wbByteArray('Unused', 1, cpIgnore, False, wbNeverShow),
+            wbInteger('Layer', itU16)
+          ]),
+          IfThen(wbSimpleRecords,
+            wbByteArray(VTXT, 'Alpha Layer Data'),
+            wbArrayS(VTXT, 'Alpha Layer Data',
+              wbStructSK([0], 'Cell', [
+                wbInteger('Position', itU16, wbVTXTPosition),
+                wbByteArray('Unused', 2, cpIgnore, False, wbNeverShow),
+                wbFloat('Opacity')
+              ])))
+        ], [])
+      ], []));
+
+{>>>Weather Common Defs<<<}
+  //TES4,FO3,FNV,TES5,FO4,FO76
+  wbWeatherCloudTextures :=
+    IfThen(wbIsFallout3,
+      wbRStruct('Cloud Textures', [
+        wbString(DNAM, 'Layer #0'),
+        wbString(CNAM, 'Layer #1'),
+        wbString(ANAM, 'Layer #2'),
+        wbString(BNAM, 'Layer #3')
+      ], []).IncludeFlag(dfAllowAnyMember)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfStructFirstNotRequired),
+        wbRStruct('Cloud Textures', [
+        wbString(_30_0TX, 'Layer #0'),
+        wbString(_31_0TX, 'Layer #1'),
+        wbString(_32_0TX, 'Layer #2'),
+        wbString(_33_0TX, 'Layer #3'),
+        wbString(_34_0TX, 'Layer #4'),
+        wbString(_35_0TX, 'Layer #5'),
+        wbString(_36_0TX, 'Layer #6'),
+        wbString(_37_0TX, 'Layer #7'),
+        wbString(_38_0TX, 'Layer #8'),
+        wbString(_39_0TX, 'Layer #9'),
+        wbString(_3A_0TX, 'Layer #10'),
+        wbString(_3B_0TX, 'Layer #11'),
+        wbString(_3C_0TX, 'Layer #12'),
+        wbString(_3D_0TX, 'Layer #13'),
+        wbString(_3E_0TX, 'Layer #14'),
+        wbString(_3F_0TX, 'Layer #15'),
+        wbString(_40_0TX, 'Layer #16'),
+        wbString(A0TX, 'Layer #17'),
+        wbString(B0TX, 'Layer #18'),
+        wbString(C0TX, 'Layer #19'),
+        wbString(D0TX, 'Layer #20'),
+        wbString(E0TX, 'Layer #21'),
+        wbString(F0TX, 'Layer #22'),
+        wbString(G0TX, 'Layer #23'),
+        wbString(H0TX, 'Layer #24'),
+        wbString(I0TX, 'Layer #25'),
+        wbString(J0TX, 'Layer #26'),
+        wbString(K0TX, 'Layer #27'),
+        wbString(L0TX, 'Layer #28')
+      ], []).IncludeFlag(dfAllowAnyMember)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfStructFirstNotRequired));
+
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherCloudSpeed :=
+    IfThen(wbIsFallout3,
+	    wbArray(ONAM, 'Cloud Speeds',
+		    wbInteger('Layer', itU8), 4, nil, nil, cpNormal, True),
+	    wbRStruct('Cloud Speeds', [
+	      wbArray(RNAM, 'Y Speeds',
+		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
+		    ).IncludeFlag(dfNotAlignable),
+		    wbArray(QNAM, 'X Speeds',
+		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
+	    	).IncludeFlag(dfNotAlignable)
+	    ], []));
+
+  //FO3,FNV,TES4,FO4,FO76,SF1
+  wbWeatherCloudColors :=
+    wbArray(PNAM, 'Cloud Colors',
+      wbWeatherTimeOfDay('Layer')
+    ).IncludeFlag(dfNotAlignable);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherColors :=
+    wbStruct(NAM0, 'Weather Colors', [
+      wbWeatherTimeOfDay('Sky-Upper'),
+      IfThen(wbGameMode in [gmTES4,gmFO3,gmFNV],
+        wbWeatherTimeOfDay('Fog'),
+        wbWeatherTimeOfDay('Fog Near')),
+      IfThen(wbGameMode in [gmTES4],
+        wbWeatherTimeOfDay('Clouds-Lower'),
+        wbWeatherTimeOfDay('Unused')),
+      wbWeatherTimeOfDay('Ambient'),
+      wbWeatherTimeOfDay('Sunlight'),
+      wbWeatherTimeOfDay('Sun'),
+      wbWeatherTimeOfDay('Stars'),
+      wbWeatherTimeOfDay('Sky-Lower'),
+      wbWeatherTimeOfDay('Horizon'),
+      IfThen(wbGameMode in [gmTES4],
+        wbWeatherTimeOfDay('Clouds-Upper'),
+        IfThen(wbIsFallout3,
+          wbWeatherTimeOfDay('Clouds (Unused)'),
+          wbWeatherTimeOfDay('Effect Lighting'))),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')), nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')), nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')), nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')), nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')), nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')), nil),
+      IfThen(wbGameMode > gmFNV,
+        wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbWeatherTimeOfDay('Fog Near High')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')), nil)
+    ], cpNormal, True, nil, 10);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherFogDistance :=
+    wbStruct(FNAM, 'Fog Distance', [
+      wbFloat('Day - Near'),
+      wbFloat('Day - Far'),
+      wbFloat('Night - Near'),
+      wbFloat('Night - Far'),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmTES4,
+        wbFloat('Day - Power'), nil),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmTES4,
+        wbFloat('Night - Power'), nil),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmFNV,
+        wbFloat('Day - Max'), nil),
+      wb<IwbFloatDef>.Iff(wbGameMode > gmFNV,
+        wbFloat('Night - Max'), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Day - Near Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Day - Near Height Range')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Night - Near Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Night - Near Height Range')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Day - High Density Scale')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(119, wbFloat('Night - High Density Scale')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Day - Far Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Day - Far Height Range')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Night - Far Height Mid')), nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(120, wbFloat('Night - Far Height Range')), nil)
+    ], cpNormal, True, nil, 4);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherSounds :=
+    wbRArray('Sounds',
+      wbStruct(SNAM, 'Sound', [
+        wbFormIDCK('Sound', [SNDR, SOUN, NULL]),
+        wbInteger('Type', itU32, wbEnum([
+          {0x1} 'Default',
+          {0x2} 'Precipitation',
+          {0x4} 'Wind',
+          {0x8} 'Thunder'
+        ]))
+      ]).SetSummaryKeyOnValue([1, 0])
+      .SetSummaryPrefixSuffixOnValue(1, '[', ']')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed)
+    );
+
+{>>>Worldspace Common Defs<<<}
+  //TES5,FO4,FO76,SF1
+  wbWorldLargeRefs :=
+    wbRArray('Large References',
+      wbStruct(RNAM, 'Cell Grid', [
+        wbInteger('Y', itS16, nil, cpIgnore),
+        wbInteger('X', itS16, nil, cpIgnore),
+        wbArray('References',
+          wbStruct('Reference', [
+            wbFormIDCk('Ref', [REFR], False, cpIgnore),
+            wbInteger('Y', itS16, nil, cpIgnore),
+            wbInteger('X', itS16, nil, cpIgnore)
+          ]).SetSummaryKey([0])
+          .IncludeFlag(dfCollapsed),
+        -1).IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ]).SetSummaryKeyOnValue([1,0])
+      .SetSummaryPrefixSuffixOnValue(0, 'Y: ','')
+      .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
+      .SetSummaryDelimiterOnValue(' ')
+      .IncludeFlag(dfCollapsed),
+    cpIgnore, False, nil, nil, wbNeverShow);
+
+  //TES5,FO4,FO76,SF1
+  wbWorldMaxHeight :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+      wbStruct(MHDT, 'Max Height Data', [
+        wbStruct('Min', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbStruct('Max', [
+          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+        ]),
+        wbArray('Cell Heights',
+          wbStruct('Quads', [
+            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
+          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+          .IncludeFlag(dfCollapsed))
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable)
+      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]));
+
+  //TES5,FO4,FO76,SF1
+  wbWorldFixedCenter :=
+    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
+      wbInteger('X', itS16),
+      wbInteger('Y', itS16)
+    ]);
+
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbWorldWaterData :=
+    wbRStruct('Water Data', [
+      wbFormIDCk(NAM2, 'Water', [WATR]),
+      IfThen(wbGameMode in [gmSF1],
+        wbString(NAM7, 'Water Material Path'),
+        nil),
+      wbFormIDCk(NAM3, 'LOD Water', [WATR]),
+      wbFloat(NAM4, 'LOD Water Height')
+    ], []).IncludeFlag(dfAllowAnyMember)
+    .IncludeFlag(dfStructFirstNotRequired);
+
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbWorldLandData :=
+    wbStruct(DNAM, 'Land Data', [
+      wbFloat('Default Land Height'),
+      wbFloat('Default Water Height')
+    ]);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWorldMapData :=
+    wbStruct(MNAM, 'World Map Data', [
+      wbStruct('Usable Dimensions', [
+        wbInteger('X', itS32),
+        wbInteger('Y', itS32)
+      ]),
+      wbStruct('Cell Coordinates', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
+        ]),
+        wbStruct('SE Cell', [
+          wbInteger('X', itS16),
+          wbInteger('Y', itS16)
+        ])
+      ]),
+      IfThen(wbIsSkyrim,
+        wbStruct('Camera Data', [
+          wbFloat('Min Height'),
+          wbFloat('Max Height'),
+          wbFloat('Initial Pitch')
+        ]), Nil)
+    ]);
+
+  //FO3,FNV,TES5,SSE,FO4,FO76,SF1
+  wbWorldMapOffset :=
+    wbStruct(ONAM, 'World Map Offset Data', [
+      wbFloat('World Map Scale'),
+      IfThen(wbIsStarfield,
+        wbFloat('Cell X Offset', cpNormal, True, 0.01),
+        wbFloat('Cell X Offset')),
+      IfThen(wbIsStarfield,
+        wbFloat('Cell Y Offset', cpNormal, True, 0.01),
+        wbFloat('Cell Y Offset')),
+      IfThen(wbIsFallout3,
+        Nil,
+        IfThen(wbIsStarfield,
+          wbFloat('Cell Z Offset', cpNormal, True, 0.01),
+          wbFloat('Cell Z Offset')))
+    ], cpNormal, True);
+
+  //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
+  wbWorldObjectBounds :=
+    wbRStruct('Object Bounds', [
+      wbStruct(NAM0, 'Min', [
+        wbFloat('X', cpNormal, True, lScaleFactor),
+        wbFloat('Y', cpNormal, True, lScaleFactor)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Min(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryDelimiterOnValue(', ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
+      wbStruct(NAM9, 'Max', [
+        wbFloat('X', cpNormal, True, lScaleFactor),
+        wbFloat('Y', cpNormal, True, lScaleFactor)
+      ], cpIgnore, True)
+      .SetSummaryKeyOnValue([0, 1])
+      .SetSummaryPrefixSuffixOnValue(0, 'Max(', '')
+      .SetSummaryPrefixSuffixOnValue(1, '', ')')
+      .SetSummaryDelimiterOnValue(', ')
+      .IncludeFlagOnValue(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
+    ], [],cpNormal, True)
+    .SetSummaryKey([0, 1])
+    .SetSummaryMemberPrefixSuffix(0, '[', '')
+    .SetSummaryMemberPrefixSuffix(1, '', ']')
+    .SetSummaryDelimiter(', ')
+    .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
+
+  //FO3,FNV
+  wbWorldSwapsImpactData :=
+    wbRStruct('Swaps Impact Data', [
+      wbRArrayS('Impact Data',
+        wbStructExSK(IMPS, [0, 1], [2], 'Impact Swap Data', [
+          wbInteger('Material Type', itU32, wbWorldImpactMaterialEnum),
+          wbFormIDCkNoReach('Original Data', [IPCT]),
+          wbFormIDCk('New Data', [IPCT, NULL])
+        ])
+      ).IncludeFlag(dfCollapsed),
+      wbStruct(IMPF, 'Footstep Materials', [
+        wbString('ConcSolid', 30),
+        wbString('ConcBroken', 30),
+        wbString('MetalSolid', 30),
+        wbString('MetalHollow', 30),
+        wbString('MetalSheet', 30),
+        wbString('Wood', 30),
+        wbString('Sand', 30),
+        wbString('Dirt', 30),
+        wbString('Grass', 30),
+        wbString('Water', 30)
+      ], cpNormal, True).IncludeFlag(dfCollapsed)
+    ], []).IncludeFlag(dfCollapsed);
+
+  //FO76,SF1
+  wbWorldRegionEditorMap :=
+    wbRStruct('Region Editor Map', [
+      wbString(NAM5, 'Texture'),
+      wbStruct(NAM6, 'Bounds', [
+        wbInteger('NW Cell X', itS16),
+        wbInteger('SE Cell Y', itS16),
+        wbInteger('SE Cell X', itS16),
+        wbInteger('NW Cell Y', itS16)
+      ])
+    ], []);
+
+  //FO76,SF1
+  wbWorldWaterHeightData :=
+    wbRStruct('Water Height Data', [
+      wbArray(XCLW,'Cell Water Height Locations',
+        wbStruct('Cell Water Height Location', [
+          wbInteger('Cell Y', itS16),
+          wbInteger('Cell X', itS16)
+        ])
+      ),
+      wbArray(WHGT, 'Water Heights',
+        wbFloat('Water Height')
+      )
+    ], []);
+
+  //FO4,FO76,SF1
+  wbWorldLevelData :=
+    wbRStruct('World Default Level Data', [
+      wbStruct(WLEV, 'Dimension', [
+        wbStruct('NW Cell', [
+          wbInteger('X', itS8),
+          wbInteger('Y', itS8)
+        ]),
+        wbStruct('Size', [
+          wbInteger('Width', itU8),
+          wbInteger('Height', itU8)
+        ])
+      ]),
+      wbByteArray(WLEV, 'Cell Data')
+    ], []);
+
+  //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
+  wbWorldOffsetData :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow),
+      wbArray(OFST, 'Offset Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+          wbWorldColumnsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow));
+
+  //FO4,FO76,SF1
+  wbWorldCellSizeData :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow),
+      wbArray(CLSZ, 'Cell Size Data',
+        wbArray('Row',
+          wbInteger('Column', itU32, nil, cpIgnore),
+        wbWorldColumnsCounter, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+      0, nil, nil, cpIgnore, False, wbNeverShow));
+
+  //FO76
+  wbWorldVisibleCellsData :=
+    IfThen(wbSimpleRecords,
+      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow),
+      wbStruct(VISI, 'Visible Cell Index Data', [
+        wbArray('Visible Cells',
+          wbArray('Row',
+            wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
+          wbWorldColumnsCounter, cpIgnore)
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfNotAlignable),
+        nil, cpIgnore)
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfNotAlignable),
+        wbStruct('Dimensions', [
+          wbInteger('Min Y', itS16, nil, cpIgnore),
+          wbInteger('Min X', itS16, nil, cpIgnore),
+          wbInteger('Rows', itU32, nil, cpIgnore)
+        ], cpIgnore)
+      ], cpIgnore, False, wbNeverShow));
+
+{>>>End Common Definitions<<<}
 end;
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
@@ -1106,7 +1472,7 @@ end;
 
 {>>> Common Callbacks <<<}
 
-function wbAtxtPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
 
@@ -1660,42 +2026,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseHeadParts);
 end;
 
-function wbLandscapeLayers(aSimpleRecords: Boolean = True): IwbRecordMemberDef;
-var
-  alphaLayerData: IwbSubRecordDef;
-begin
-  if aSimpleRecords then
-    alphaLayerData := wbByteArray(VTXT, 'Alpha Layer Data')
-  else
-    alphaLayerData :=
-      wbArrayS(VTXT, 'Alpha Layer Data', wbStructSK([0], 'Cell', [
-        wbInteger('Position', itU16, wbAtxtPosition),
-        wbByteArray('Unused', 2),
-        wbFloat('Opacity')
-      ]));
-
-  Result :=
-    wbRArrayS('Layers', wbRUnion('Layer', [
-      wbRStructSK([0],'Base Layer', [
-        wbStructSK(BTXT, [1, 3], 'Base Layer Header', [
-          wbFormIDCk('Texture', [LTEX, NULL]),
-          wbInteger('Quadrant', itU8, wbQuadrantEnum),
-          wbByteArray('Unused', 1),
-          wbInteger('Layer', itS16)
-        ])
-      ], []),
-      wbRStructSK([0],'Alpha Layer', [
-        wbStructSK(ATXT, [1, 3], 'Alpha Layer Header', [
-          wbFormIDCk('Texture', [LTEX, NULL]),
-          wbInteger('Quadrant', itU8, wbQuadrantEnum),
-          wbByteArray('Unused', 1),
-          wbInteger('Layer', itS16)
-        ]),
-        alphaLayerData
-      ], [])
-    ], []));
-end;
-
 function wbOBND(aRequired: Boolean = False): IwbRecordMemberDef;
 begin
   Result :=
@@ -1773,23 +2103,6 @@ begin
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed)
     ], aPriority);
-end;
-
-function wbVertexColumns(aSignature: TwbSignature; aName: string): IwbRecordMemberDef;
-begin
-  Result :=
-    wbArray(aSignature, aName, wbStruct('Row', [
-      wbArray('Columns', wbStruct('Column', [
-        wbInteger('X', itU8),
-        wbInteger('Y', itU8),
-        wbInteger('Z', itU8)
-      ])
-      .SetSummaryKey([0, 1, 2])
-      .SetSummaryMemberPrefixSuffix(0, wbVec3Prefix + '(', '')
-      .SetSummaryMemberPrefixSuffix(2, '', ')')
-      .IncludeFlag(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed, wbCollapseVec3), 33)
-    ]), 33);
 end;
 
 {>>> For Collapsible Fields <<<}

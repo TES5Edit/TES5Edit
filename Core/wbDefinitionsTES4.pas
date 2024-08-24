@@ -3107,53 +3107,28 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ]);
 
-  if wbSimpleRecords then begin
+  wbRecord(LAND, 'Landscape', [
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      {0x001} 'Has Vertex Normals/Height Map',
+      {0x002} 'Has Vertex Colours',
+      {0x004} 'Has Layers',
+      {0x008} 'Unknown 4',
+      {0x010} 'Auto-Calc Normals',
+      {0x020} '',
+      {0x040} '',
+      {0x080} '',
+      {0x100} '',
+      {0x200} '',
+      {0x400} 'Ignored'
+    ])),
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers,
+    wbArray(VTEX, 'Landscape Textures',
+      wbFormIDCk('Texture', [LTEX, NULL]))
+  ]);
 
-    wbRecord(LAND, 'Landscape', [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        {0x00000001} 'Has Vertex Normals/Height Map',
-        {0x00000002} 'Has Vertex Colours',
-        {0x00000004} 'Has Layers',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} '',
-        {0x00000040} '',
-        {0x00000080} '',
-        {0x00000100} '',
-        {0x00000200} '',
-        {0x00000400} 'Unknown 11'
-      ])),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertex Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
-    ]);
-
-  end else begin
-
-    wbRecord(LAND, 'Landscape', [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        'Has Vertex Normals/Height Map',
-        'Has Vertex Colours',
-        'Has Layers',
-        'Unknown 4',
-        'Unknown 5',
-        '',
-        '',
-        '',
-        '',
-        '',
-        'Unknown 11'
-      ])),
-      wbVertexColumns(VNML, 'Vertex Normals'),
-      wbVertexHeightMap,
-      wbVertexColumns(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL]))
-    ]);
-
-  end;
 
   wbRecord(LIGH, 'Light', [
     wbEDID,
@@ -4343,22 +4318,13 @@ var  wbSoundTypeSoundsOld :=
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
-    wbString(CNAM, 'Texture Lower Layer'),
-    wbString(DNAM, 'Texture Upper Layer'),
-    wbTexturedModel('Model', [MODL, MODB, MODT]),
-    wbArray(NAM0, 'Colors by Types/Times',
-      wbArray('Type',
-        wbByteColors('Time'),
-        ['Sunrise', 'Day', 'Sunset', 'Night']
-      ),
-      ['Sky-Upper','Fog','Clouds-Lower','Ambient','Sunlight','Sun','Stars','Sky-Lower','Horizon','Clouds-Upper']
-    , cpNormal, True),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day Near'),
-      wbFloat('Day Far'),
-      wbFloat('Night Near'),
-      wbFloat('Night Far')
-    ], cpNormal, True),
+    wbString(CNAM, 'Cloud Texture Lower Layer'),
+    wbString(DNAM, 'Cloud Texture Upper Layer'),
+    wbRStruct('Precipitation', [
+      wbTexturedModel('Model', [MODL, MODB, MODT])
+    ], []),
+    wbWeatherColors,
+    wbWeatherFogDistance,
     wbStruct(HNAM, 'HDR Data', [
       wbFloat('Eye Adapt Speed'),
       wbFloat('Blur Radius'),
@@ -4375,7 +4341,7 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Grass Dimmer'),
       wbFloat('Tree Dimmer')
     ], cpNormal, True),
-    wbStruct(DATA, '', [
+    wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
       wbInteger('Cloud Speed (Lower)', itU8),
       wbInteger('Cloud Speed (Upper)', itU8),
@@ -4387,54 +4353,50 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Weather Classification', itU8, wbWthrDataClassification),
+      wbInteger('Flags ', itU8,
+        wbFlags([
+          {0x01} 'Weather - Pleasant',
+          {0x02} 'Weather - Cloudy',
+          {0x04} 'Weather - Rainy',
+          {0x08} 'Weather - Snow'
+        ], True)
+      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbStruct('Lightning Color', [
         wbInteger('Red', itU8),
         wbInteger('Green', itU8),
         wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      ]).SetToStr(wbRGBAToStr)
+      .IncludeFlag(dfCollapsed, wbCollapseRGBA)
     ], cpNormal, True),
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
 
-wbRecord(WRLD, 'Worldspace', [
-  wbEDID,
-  wbFULL,
-  wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-  wbFormIDCk(CNAM, 'Climate', [CLMT]),
-  wbFormIDCk(NAM2, 'Water', [WATR]),
-  wbICON,
-  wbStruct(MNAM, 'Map Data', [
-    wbStruct('Usable Dimensions', [
-      wbInteger('X', itS32),
-      wbInteger('Y', itS32)
-    ]),
-    wbStruct('Cell Coordinates', [
-      wbStruct('NW Cell', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
+  wbRecord(WRLD, 'Worldspace', [
+    wbEDID,
+    wbFULL,
+    wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbString(ICON, 'Map Image'),
+    wbWorldMapData,
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small world',
+        {0x02} 'Can''t fast travel',
+        {0x04} 'Oblivion worldspace',
+        {0x08} 'Unknown 4',
+        {0x10} 'No LOD water'
       ]),
-      wbStruct('SE Cell', [
-        wbInteger('X', itS16),
-        wbInteger('Y', itS16)
-      ])
-    ])
-  ]),
-  wbInteger(DATA, 'Flags', itU8, wbFlags([
-    {0x01} 'Small world',
-    {0x02} 'Can''t fast travel',
-    {0x04} 'Oblivion worldspace',
-    {0x08} '',
-    {0x10} 'No LOD water'
-  ]), cpNormal, True),
-  wbWorldspaceOBND,
-  wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
-  wbOFST
-  .IncludeFlag(dfCollapsed)
-  .IncludeFlag(dfFastAssign)
-  .IncludeFlag(dfNoCopyAsOverride)
-  .IncludeFlag(dfNotAlignable)
-]);
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbWorldObjectBounds,
+    wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
+    wbWorldOffsetData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);
@@ -4496,7 +4458,6 @@ wbRecord(WRLD, 'Worldspace', [
   wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
-
   wbHEDRVersion := 1.0;
 end;
 

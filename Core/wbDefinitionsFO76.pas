@@ -69,7 +69,7 @@ var
   wbSpecialTypeEnum: IwbEnumDef;
   wbLGDIStarSlot: IwbEnumDef;
   wbMapMarkerEnum: IwbEnumDef;
-
+  wbCellFlags: IwbFlagsDef;
   wbLVLFFlags : IwbFlagsDef;
   wbLVLNLVLFFlags : IwbFlagsDef;
 
@@ -87,6 +87,9 @@ uses
   wbHelpers,
   wbDefinitionsCommon,
   wbDefinitionsSignatures;
+
+type
+  TVarRecs = array of TVarRec;
 
 const
     // signatures of reference records
@@ -314,6 +317,10 @@ var
   wbPerkEffect: IwbSubRecordStructDef;
   wbReward: IwbRecordMemberDef;
   wbCTRN: IwbSubRecordDef;
+  wbUITE, wbUITO : IwbEnumDef;
+  wbBlendOperationEnum: IwbEnumDef;
+  s: String;
+  a, b, c : TVarRecs;
 
 function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
@@ -2441,24 +2448,6 @@ end; // WIP }
 //  end;
 //end;
 
-function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
-    ctCheck: Result := '';
-  end;
-end;
-
-function wbCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  f: Extended;
-begin
-  f := StrToFloat(aString);
-  f := f*10*127 + 127;
-  Result := Min(Round(f), 254);
-end;
-
 function wbShortXYtoStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   x, y: SmallInt;
@@ -2798,6 +2787,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
+  i           : Integer;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
   if not Assigned(aElement) then
@@ -2809,9 +2799,9 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
 
   if not Assigned(Parent) then
     Exit;
-
+  i := Parent.NativeValue;
   // is interior cell?
-  if (Parent.NativeValue = 0) then
+  if i = 0 then
     Result := 1;
 end;
 
@@ -2819,6 +2809,7 @@ function wbDoorTriangleDoorTriangleDecider(aBasePtr: Pointer; aEndPtr: Pointer; 
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
+  i           : int64;
 begin
   Result := 0;
 
@@ -2831,9 +2822,9 @@ begin
 
   if not Assigned(Parent) then
     Exit;
-
+  i := Parent.NativeValue;
   // not sure if it would be an error in the file or if it really possible
-  if (Parent.NativeValue = 0) then
+  if i <> 0 then
     Result := 1;
 end;
 
@@ -5904,20 +5895,6 @@ begin
     Result := 7;
 end;
 
-function wbWeatherColors(const aName: string): IwbStructDef;
-begin
-  Result := wbStruct(aName, [
-    wbByteColors('Sunrise'),
-    wbByteColors('Day'),
-    wbByteColors('Sunset'),
-    wbByteColors('Night'),
-    wbByteColors('EarlySunrise'),
-    wbByteColors('LateSunrise'),
-    wbByteColors('EarlySunset'),
-    wbByteColors('LateSunset')
-  ], cpNormal, True, nil, 4);
-end;
-
 function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'; const bOnlyColors: Boolean = False): IwbSubRecordDef; overload;
 begin
   if bOnlyColors then
@@ -6470,8 +6447,193 @@ begin
   end;
 end;
 
-procedure DefineFO76a;
+  function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
+  var
+    wbTintTemplateGroup: IwbSubRecordStructDef;
+    wbTintTemplateOption: IwbSubRecordStructDef;
+  begin
+    wbTintTemplateOption :=
+      wbRStruct('Option', [
+        wbStruct(TETI, 'Index', [
+          wbInteger('Slot', itU16, wbEnum([
+            'Forehead Mask',
+            'Eyes Mask',
+            'Nose Mask',
+            'Ears Mask',
+            'Cheeks Mask',
+            'Mouth Mask',
+            'Neck Mask',
+            'Lip Color',
+            'Cheek Color',
+            'Eyeliner',
+            'Eye Socket Upper',
+            'Eye Socket Lower',
+            'Skin Tone',
+            'Paint',
+            'Laugh Lines',
+            'Cheek Color Lower',
+            'Nose',
+            'Chin',
+            'Neck',
+            'Forehead',
+            'Dirt',
+            'Scars',
+            'Face Detail',
+            'Brows',
+            'Wrinkles',
+            'Beards'
+          ])),
+          wbInteger('Index', itU16)
+        ]),
+        wbLString(TTGP, 'Name', 0, cpTranslate),
+        wbInteger(TTEF, 'Flags', itU16, wbFlags([
+          'On/Off only',
+          'Chargen Detail',
+          'Takes Skin Tone',
+          'Unknown 3' { Added in patch 1.2.5.8 }
+        ])),
+        wbCTDAs,
+        wbRArray('Textures', wbString(TTET, 'Texture')),
+        wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
+        wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
+          wbFormIDCk('Color', [CLFM]),
+          wbFloat('Alpha'),
+          wbInteger('Template Index', itU16),
+          wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
+        ])),
+        wbFloat(TTED, 'Default')
+      ], []);
+
+    wbTintTemplateGroup :=
+      wbRStruct('Group', [
+        wbLString(TTGP, 'Group Name', 0, cpTranslate),
+        wbRArray('Options', wbTintTemplateOption),
+        wbInteger(TTGE, 'Category Index', itU32)
+      ], []);
+
+    Result := wbRArray(aName, wbTintTemplateGroup);
+  end;
+
+  function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
+  begin
+    Result :=
+      wbRArray(aName,
+        wbRStruct('Morph Group', [
+          wbString(MPGN, 'Name'),
+          wbInteger(MPPC, 'Count', itU32, nil, cpBenign),
+          wbRArray('Morph Presets',
+            wbRStruct('Morph Preset', [
+              wbInteger(MPPI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
+              wbLString(MPPN, 'Name', 0, cpTranslate),
+              wbString(MPPM, 'Morph Type'),
+              wbFormIDCk(MPPT, 'Texture', [TXST]),
+              wbInteger(MPPF, 'Playable', itU8, wbBoolEnum)
+            ], []),
+            cpNormal, False, nil, wbMorphPresetsAfterSet
+          ),
+          wbInteger(MPPK, 'Tint Layer Face Region Index', itU16),
+          wbArray(MPGS, 'Morph Value Indexs', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
+        ], [])
+      );
+  end;
+
+  function wbFaceMorphs(const aName: string): IwbSubRecordArrayDef;
+  begin
+    Result :=
+      wbRArray(aName,
+        wbRStruct('Face Morph', [
+          wbInteger(FMRI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
+          wbLString(FMRN, 'Name')
+        ], [])
+      );
+  end;
+
+function CombineVarRecs(const a, b : array of const)
+                                   : TVarRecs;
 begin
+  SetLength(Result, Length(a) + Length(b));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+  if Length(b) > 0 then
+    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
+end;
+
+function MakeVarRecs(const a : array of const)
+                             : TVarRecs;
+begin
+  SetLength(Result, Length(a));
+  if Length(a) > 0 then
+    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
+end;
+
+  procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
+  begin
+    wbRefRecord(aSignature, aName,
+      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        {0x00000080}  7, 'Turn Off Fire',
+        {0x00000400} 10, 'Persistent',
+        {0x00000800} 11, 'Initially Disabled',
+        {0x10000000} 28, 'Reflected By Auto Water',
+        {0x20000000} 29, 'Don''t Havok Settle',
+        {0x40000000} 30, 'No Respawn'
+      ], True, True)), [
+      wbEDID,
+      wbVMAD,
+      wbXALG,
+      wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
+      wbXEZN,
+      wbFloat(XHTW, 'Head-Tracking Weight'),
+      wbFloat(XFVC, 'Favor Cost'),
+      wbRArrayS('Reflected/Refracted By',
+        wbFormIDCk(XPWR, 'Reflector Reference', [REFR])
+      ),
+      wbXLKR,
+      wbRStruct('Activate Parents', [
+        wbInteger(XAPD, 'Flags', itU8, wbFlags([
+          'Parent Activate Only'
+        ], True)),
+        wbRArrayS('Activate Parent Refs',
+          wbStructSK(XAPR, [0], 'Activate Parent Ref', [
+            wbFormIDCk('Reference', sigReferences),
+            wbFloat('Delay')
+          ])
+        )
+      ], []),
+
+      wbFormIDCk(XASP, 'Acoustic Parent', [REFR]),
+      wbXATP,
+      wbInteger(XAMC, 'Ammo Count', itU32),
+      wbEmpty(XLKT, 'Linked Ref Transient'),
+      wbXRGD,
+      wbFormIDCk(XLYR, 'Layer', [LAYR]),
+      wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
+      wbXLWT,
+      wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
+      wbStruct(XCVR,'Water Current Zone Data', [
+        wbFloat('Unknown'),
+        wbFloat('Unknown'),
+        wbFloat('Unknown')
+      ]),
+      wbXESP,
+      wbXOWN,
+      wbXRNK,
+      wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
+      wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
+      wbEmpty(XIS2, 'Ignored by Sandbox'),
+      wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
+      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
+      wbXWPK,
+      wbXPCK,
+      wbXSCL,
+      wbXLOD,
+      wbDataPosRot,
+      wbString(MNAM, 'Comments')
+    ], True, wbPlacedAddInfo);
+  end;
+
+procedure DefineFO76;
+begin
+  DefineCommon;
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCNDC := wbInteger(CNDC, 'Condition Position', itU32, nil, cpBenign);
@@ -8173,10 +8335,7 @@ begin
     wbFormID('Reference'),
     wbArrayS('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
   ]));
-end;
 
-procedure DefineFO76b;
-begin
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
@@ -10726,78 +10885,7 @@ begin
       ])),
     wbFormId(BVGO, 'Gold Bullion Value')
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
-end;
 
-procedure DefineFO76c;
-
-  procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
-  begin
-    wbRefRecord(aSignature, aName,
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00000080}  7, 'Turn Off Fire',
-        {0x00000400} 10, 'Persistent',
-        {0x00000800} 11, 'Initially Disabled',
-        {0x10000000} 28, 'Reflected By Auto Water',
-        {0x20000000} 29, 'Don''t Havok Settle',
-        {0x40000000} 30, 'No Respawn'
-      ], True, True)), [
-      wbEDID,
-      wbVMAD,
-      wbXALG,
-      wbFormIDCk(NAME, 'Projectile', [PROJ, HAZD]),
-      wbXEZN,
-      wbFloat(XHTW, 'Head-Tracking Weight'),
-      wbFloat(XFVC, 'Favor Cost'),
-      wbRArrayS('Reflected/Refracted By',
-        wbFormIDCk(XPWR, 'Reflector Reference', [REFR])
-      ),
-      wbXLKR,
-      wbRStruct('Activate Parents', [
-        wbInteger(XAPD, 'Flags', itU8, wbFlags([
-          'Parent Activate Only'
-        ], True)),
-        wbRArrayS('Activate Parent Refs',
-          wbStructSK(XAPR, [0], 'Activate Parent Ref', [
-            wbFormIDCk('Reference', sigReferences),
-            wbFloat('Delay')
-          ])
-        )
-      ], []),
-
-      wbFormIDCk(XASP, 'Acoustic Parent', [REFR]),
-      wbXATP,
-      wbInteger(XAMC, 'Ammo Count', itU32),
-      wbEmpty(XLKT, 'Linked Ref Transient'),
-      wbXRGD,
-      wbFormIDCk(XLYR, 'Layer', [LAYR]),
-      wbFormIDCk(XMSP, 'Material Swap', [MSWP]),
-      wbXLWT,
-      wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
-      wbStruct(XCVR,'Water Current Zone Data', [
-        wbFloat('Unknown'),
-        wbFloat('Unknown'),
-        wbFloat('Unknown')
-      ]),
-      wbXESP,
-      wbXOWN,
-      wbXRNK,
-      wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
-      wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
-      wbEmpty(XIS2, 'Ignored by Sandbox'),
-      wbArray(XLRT, 'Location Ref Type', wbFormIDCk('Ref', [LCRT, NULL])),
-      wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
-      wbXWPK,
-      wbXPCK,
-      wbXSCL,
-      wbXLOD,
-      wbDataPosRot,
-      wbString(MNAM, 'Comments')
-    ], True, wbPlacedAddInfo);
-  end;
-var
-  wbCellFlags: IwbFlagsDef;
-
-begin
 {>>>
   Skrim has its own ref record for every projectile type
   PARW 'Arrow'
@@ -11281,10 +11369,7 @@ begin
       wbFloat
     ])
   ]);
-end;
 
-procedure DefineFO76d;
-begin
   wbRecord(DIAL, 'Dialog Topic',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00004000} 14, 'Partial Form'
@@ -11906,10 +11991,7 @@ begin
     wbFULL,
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
-end;
 
-procedure DefineFO76e;
-begin
   wbRecord(LCRT, 'Location Reference Type',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000010} { 4}  4, 'Unknown 4'
@@ -12059,10 +12141,7 @@ begin
     wbInteger(DATA, 'On Local Map', itU8, wbBoolEnum, cpNormal, True),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
-end;
 
-procedure DefineFO76f;
-begin
   wbRecord(IDLM, 'Idle Marker',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
@@ -12328,10 +12407,6 @@ begin
 
   end;
 
-end;
-
-procedure DefineFO76g;
-begin
    wbRecord(EXPL, 'Explosion', [
     wbEDID,
     wbOBND(True),
@@ -12950,10 +13025,7 @@ begin
       ]))
     ], cpNormal, True)
   ]);
-end;
 
-procedure DefineFO76h;
-begin
   wbRecord(AVIF, 'Actor Value Information' ,
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
@@ -13315,35 +13387,6 @@ begin
     wbCNAM
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-end;
-
-{this is required to prevent XE6 compiler error}
-type
-  TVarRecs = array of TVarRec;
-
-function CombineVarRecs(const a, b : array of const)
-                                   : TVarRecs;
-begin
-  SetLength(Result, Length(a) + Length(b));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-  if Length(b) > 0 then
-    Move(b[0], Result[Length(a)], SizeOf(TVarRec) * Length(b));
-end;
-
-function MakeVarRecs(const a : array of const)
-                             : TVarRecs;
-begin
-  SetLength(Result, Length(a));
-  if Length(a) > 0 then
-    Move(a[0], Result[0], SizeOf(TVarRec) * Length(a));
-end;
-
-
-procedure DefineFO76i;
-var
-  a, b, c : TVarRecs;
-begin
   var wbMenuButton :=
     wbRStruct('Menu Button', [
       wbLStringKC(ITXT, 'Button Text', 0, cpTranslate),
@@ -13920,10 +13963,7 @@ begin
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet)
     .SetSummaryKey([7]);
-end;
 
-procedure DefineFO76j;
-begin
   wbRecord(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
@@ -14281,10 +14321,7 @@ begin
       'Family Association'
     ]))
   ]);
-end;
 
-procedure DefineFO76k;
-begin
   wbSPED := wbUnion(SPED, 'Movement Data', wbFormVersionDecider([28, 60, 104]), [
  {0}wbStruct('', [
       wbStruct('Left', [
@@ -14733,10 +14770,7 @@ begin
     ]), cpNormal, True),
     wbCTDAs
   ]);
-end;
 
-procedure DefineFO76l;
-begin
   wbRecord(REVB, 'Reverb Parameters', [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -15032,62 +15066,30 @@ begin
     wbDIQO
   ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
 
-  if wbSimpleRecords then begin
-
-    wbRecord(LAND, 'Landscape',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
-      ]), [18]), [
-      //Adding this here for consistency. Does FO76 even have LAND records anymore?
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        {0x00000001} 'Has Vertex Normals/Height Map',
-        {0x00000002} 'Has Vertex Colours',
-        {0x00000004} 'Has Layers',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} '',
-        {0x00000040} '',
-        {0x00000080} '',
-        {0x00000100} '',
-        {0x00000200} '',
-        {0x00000400} 'Unknown 11'
-      ])),
-      wbByteArray(VNML, 'Vertex Normals'),
-      wbByteArray(VHGT, 'Vertex Height Map'),
-      wbByteArray(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
-    ]);
-
-  end else begin
-
-    wbRecord(LAND, 'Landscape',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00040000} 18, 'Compressed'
-      ]), [18]), [
-      wbInteger(DATA, 'Flags', itU32, wbFlags([
-        'Has Vertex Normals/Height Map',
-        'Has Vertex Colours',
-        'Has Layers?',
-        'Unknown 4',
-        'Unknown 5',
-        'Has Hi-Res Heightfield',
-        '',
-        '',
-        '',
-        '',
-        'Unknown 11'
-      ])),
-      wbVertexColumns(VNML, 'Vertex Normals'),
-      wbVertexHeightMap,
-      wbVertexColumns(VCLR, 'Vertex Colours'),
-      wbLandscapeLayers(wbSimpleRecords),
-      wbArray(VTEX, 'Textures', wbFormIDCk('Texture', [LTEX, NULL])),
-      wbRArray('Hi-Res Heightfield Data', wbByteArray(MPCD, 'Data'))
-    ]);
-
-  end;
+  wbRecord(LAND, 'Landscape',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x40000} 18, 'Compressed'
+    ]), [18]), [
+    wbInteger(DATA, 'Flags', itU32, wbFlags([
+      {0x001} 'Has Vertex Normals/Height Map',
+      {0x002} 'Has Vertex Colours',
+      {0x004} 'Has Layers',
+      {0x008} 'Unknown 4',
+      {0x010} 'Auto-Calc Normals',
+      {0x020} 'Has Hi-Res Heightfield',
+      {0x040} '',
+      {0x080} '',
+      {0x100} '',
+      {0x200} '',
+      {0x400} 'Ignored'
+    ])),
+    wbLandNormals,
+    wbLandHeights,
+    wbLandColors,
+    wbLandLayers,
+    wbRArray('Hi-Res Heightfield',
+      wbByteArray(MPCD, 'Heightfield Data'))
+  ]);
 
   wbRecord(LIGH, 'Light',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -15165,10 +15167,6 @@ begin
     wbFormIDCk(WGDR, 'God Rays', [GDRY]),
     wbFormIDCk(SNAM, 'Sound', [SNDR])
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
-end;
-
-procedure DefineFO76m;
-begin
 
   wbRecord(LSCR, 'Load Screen',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -16048,116 +16046,6 @@ begin
     {0x4000} 'Unknown 14',
     {0x8000} 'Unknown 15'
   ]);
-end;
-
-
-procedure DefineFO76n;
-var
-  wbBlendOperationEnum: IwbEnumDef;
-  s: String;
-
-  function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
-  var
-    wbTintTemplateGroup: IwbSubRecordStructDef;
-    wbTintTemplateOption: IwbSubRecordStructDef;
-  begin
-    wbTintTemplateOption :=
-      wbRStruct('Option', [
-        wbStruct(TETI, 'Index', [
-          wbInteger('Slot', itU16, wbEnum([
-            'Forehead Mask',
-            'Eyes Mask',
-            'Nose Mask',
-            'Ears Mask',
-            'Cheeks Mask',
-            'Mouth Mask',
-            'Neck Mask',
-            'Lip Color',
-            'Cheek Color',
-            'Eyeliner',
-            'Eye Socket Upper',
-            'Eye Socket Lower',
-            'Skin Tone',
-            'Paint',
-            'Laugh Lines',
-            'Cheek Color Lower',
-            'Nose',
-            'Chin',
-            'Neck',
-            'Forehead',
-            'Dirt',
-            'Scars',
-            'Face Detail',
-            'Brows',
-            'Wrinkles',
-            'Beards'
-          ])),
-          wbInteger('Index', itU16)
-        ]),
-        wbLString(TTGP, 'Name', 0, cpTranslate),
-        wbInteger(TTEF, 'Flags', itU16, wbFlags([
-          'On/Off only',
-          'Chargen Detail',
-          'Takes Skin Tone',
-          'Unknown 3' { Added in patch 1.2.5.8 }
-        ])),
-        wbCTDAs,
-        wbRArray('Textures', wbString(TTET, 'Texture')),
-        wbInteger(TTEB, 'Blend Operation', itU32, wbBlendOperationEnum),
-        wbArray(TTEC, 'Template Colors', wbStruct('Template Color', [
-          wbFormIDCk('Color', [CLFM]),
-          wbFloat('Alpha'),
-          wbInteger('Template Index', itU16),
-          wbInteger('Blend Operation', itU32, wbBlendOperationEnum)
-        ])),
-        wbFloat(TTED, 'Default')
-      ], []);
-
-    wbTintTemplateGroup :=
-      wbRStruct('Group', [
-        wbLString(TTGP, 'Group Name', 0, cpTranslate),
-        wbRArray('Options', wbTintTemplateOption),
-        wbInteger(TTGE, 'Category Index', itU32)
-      ], []);
-
-    Result := wbRArray(aName, wbTintTemplateGroup);
-  end;
-
-  function wbMorphGroups(const aName: string): IwbSubRecordArrayDef;
-  begin
-    Result :=
-      wbRArray(aName,
-        wbRStruct('Morph Group', [
-          wbString(MPGN, 'Name'),
-          wbInteger(MPPC, 'Count', itU32, nil, cpBenign),
-          wbRArray('Morph Presets',
-            wbRStruct('Morph Preset', [
-              wbInteger(MPPI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
-              wbLString(MPPN, 'Name', 0, cpTranslate),
-              wbString(MPPM, 'Morph Type'),
-              wbFormIDCk(MPPT, 'Texture', [TXST]),
-              wbInteger(MPPF, 'Playable', itU8, wbBoolEnum)
-            ], []),
-            cpNormal, False, nil, wbMorphPresetsAfterSet
-          ),
-          wbInteger(MPPK, 'Tint Layer Face Region Index', itU16),
-          wbArray(MPGS, 'Morph Value Indexs', wbInteger('Index', itU32, wbIntToHexStr, wbHexStrToInt))
-        ], [])
-      );
-  end;
-
-  function wbFaceMorphs(const aName: string): IwbSubRecordArrayDef;
-  begin
-    Result :=
-      wbRArray(aName,
-        wbRStruct('Face Morph', [
-          wbInteger(FMRI, 'Index', itU32, wbIntToHexStr, wbHexStrToInt),
-          wbLString(FMRN, 'Name')
-        ], [])
-      );
-  end;
-
-begin
 
   s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
   if FileExists(s) then try
@@ -18307,10 +18195,6 @@ begin
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
-end;
-
-procedure DefineFO76o;
-begin
 
   wbRecord(TREE, 'Tree',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -18717,341 +18601,12 @@ begin
     wbDAMS
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
 
-  wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form',
-      {0x00080000} 19, 'Can''t Wait'
-    ]), [14]), [
-    wbEDID,
-    wbLargeReferences
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbMHDTWRLD
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
-    ]),
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    wbXEZN,
-    wbXLCN,
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
-          {0x0001} 'Use Land Data',
-          {0x0002} 'Use LOD Data',
-          {0x0004} 'Use Map Data',
-          {0x0008} 'Use Water Data',
-          {0x0010} 'Use Climate Data',
-          {0x0020} 'Use Image Space Data (unused)',
-          {0x0040} 'Use Sky Cell'
-        ], [5])),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbGenericModel], []),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ])
-    ]),
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset'),
-      wbFloat('Cell Y Offset'),
-      wbFloat('Cell Z Offset')
-    ], cpNormal, True),
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True),
-    {>>> Object Bounds doesn't show up in CK <<<}
-    wbWorldspaceOBND,
-    wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
-    wbString(NAM5, 'Map Image'),
-    wbUnknown(NAM6),
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
-    wbString(XWEM, 'Water Environment Map'),
-    wbString(TNAM, 'HD LOD Diffuse Texture'),
-    wbString(UNAM, 'HD LOD Normal Texture'),
-    wbArray(XCLW,'Cell Water Height Locations',
-      wbStruct('Cell Water Height Location', [
-        wbInteger('Cell Y',itS16),
-        wbInteger('Cell X',itS16)
-      ])
-    ),
-    wbArray(WHGT, 'Water Heights',
-      wbFloat('Water Height')
-    ),
-    //wbUnknown(WHGT),
-    wbRStruct('World Default Level Data', [
-      wbStruct(WLEV, 'Dimension', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS8),
-          wbInteger('Y', itS8)
-        ]),
-        wbStruct('Size', [
-          wbInteger('Width', itU8),
-          wbInteger('Height', itU8)
-        ])
-      ]),
-      wbByteArray(WLEV, 'Cell Data')
-    ], []),
-    wbOFST
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbCLSZ
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbVISI
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
-
-
-  wbRecord(WTHR, 'Weather',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9'
-    ])), [
-    wbEDID,
-    wbKeywords,
-    wbString(_30_0TX, 'Cloud Texture Layer #0'),
-    wbString(_31_0TX, 'Cloud Texture Layer #1'),
-    wbString(_32_0TX, 'Cloud Texture Layer #2'),
-    wbString(_33_0TX, 'Cloud Texture Layer #3'),
-    wbString(_34_0TX, 'Cloud Texture Layer #4'),
-    wbString(_35_0TX, 'Cloud Texture Layer #5'),
-    wbString(_36_0TX, 'Cloud Texture Layer #6'),
-    wbString(_37_0TX, 'Cloud Texture Layer #7'),
-    wbString(_38_0TX, 'Cloud Texture Layer #8'),
-    wbString(_39_0TX, 'Cloud Texture Layer #9'),
-    wbString(_3A_0TX, 'Cloud Texture Layer #10'),
-    wbString(_3B_0TX, 'Cloud Texture Layer #11'),
-    wbString(_3C_0TX, 'Cloud Texture Layer #12'),
-    wbString(_3D_0TX, 'Cloud Texture Layer #13'),
-    wbString(_3E_0TX, 'Cloud Texture Layer #14'),
-    wbString(_3F_0TX, 'Cloud Texture Layer #15'),
-    wbString(_40_0TX, 'Cloud Texture Layer #16'),
-    wbString(A0TX, 'Cloud Texture Layer #17'),
-    wbString(B0TX, 'Cloud Texture Layer #18'),
-    wbString(C0TX, 'Cloud Texture Layer #19'),
-    wbString(D0TX, 'Cloud Texture Layer #20'),
-    wbString(E0TX, 'Cloud Texture Layer #21'),
-    wbString(F0TX, 'Cloud Texture Layer #22'),
-    wbString(G0TX, 'Cloud Texture Layer #23'),
-    wbString(H0TX, 'Cloud Texture Layer #24'),
-    wbString(I0TX, 'Cloud Texture Layer #25'),
-    wbString(J0TX, 'Cloud Texture Layer #26'),
-    wbString(K0TX, 'Cloud Texture Layer #27'),
-    wbString(L0TX, 'Cloud Texture Layer #28'),
-    wbUnknown(LNAM),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
-    wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
-    ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer')).IncludeFlag(dfNotAlignable),
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise'),
-      wbFloat('Day'),
-      wbFloat('Sunset'),
-      wbFloat('Night'),
-      wbFloat('EarlySunrise'),
-      wbFloat('LateSunrise'),
-      wbFloat('EarlySunset'),
-      wbFloat('LateSunset')
-    ])).IncludeFlag(dfNotAlignable),
-    wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherColors('Sky-Upper'),
-      wbWeatherColors('Fog Near'),
-      wbWeatherColors('Unknown'),
-      wbWeatherColors('Ambient'),
-      wbWeatherColors('Sunlight'),
-      wbWeatherColors('Sun'),
-      wbWeatherColors('Stars'),
-      wbWeatherColors('Sky-Lower'),
-      wbWeatherColors('Horizon'),
-      wbWeatherColors('Effect Lighting'),
-      wbWeatherColors('Cloud LOD Diffuse'),
-      wbWeatherColors('Cloud LOD Ambient'),
-      wbWeatherColors('Fog Far'),
-      wbWeatherColors('Sky Statics'),
-      wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glare'),
-      wbWeatherColors('Moon Glare'),
-      wbWeatherColors('Fog Near High'),
-      wbWeatherColors('Fog Far High')
-    ], cpNormal, True, nil, 8),
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Power'),
-      wbFloat('Day - Max'),
-      wbFloat('Night - Max'),
-      wbFloat('Day - Near Height Mid'),
-      wbFloat('Day - Near Height Range'),
-      wbFloat('Night - Near Height Mid'),
-      wbFloat('Night - Near Height Range'),
-      wbFloat('Day - High Density Scale'),
-      wbFloat('Night - High Density Scale'),
-      wbFloat('Day - Far Height Mid'),
-      wbFloat('Day - Far Height Range'),
-      wbFloat('Night - Far Height Mid'),
-      wbFloat('Night - Far Height Range')
-    ], cpNormal, True, nil, 8),
-    wbStruct(DATA, 'Data', [
-      wbInteger('Wind Speed', itU8), // scaled 0..1
-      wbByteArray('Unknown', 2),
-      wbInteger('Trans Delta', itU8), // scaled 0..0,25
-      wbInteger('Sun Glare', itU8), // scaled 0..1
-      wbInteger('Sun Damage', itU8), // scaled 0..1
-      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
-      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Weather - Pleasant',
-        {0x02} 'Weather - Cloudy',
-        {0x04} 'Weather - Rainy',
-        {0x08} 'Weather - Snow',
-        {0x10} 'Sky Statics - Always Visible',
-        {0x20} 'Sky Statics - Follows Sun Position',
-        {0x40} 'Rain Occlusion',
-        {0x80} 'HUD Rain Effects'
-      ])),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
-      wbInteger('Visual Effect - End', itU8), // scaled 0..1
-      wbInteger('Wind Direction', itU8), // scaled 0..360
-      wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
-    ], cpNormal, True, nil, 16),
-    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
-    wbWeatherSounds,
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
-      wbFormIDCK('EarlySunrise', [IMGS, NULL]),
-      wbFormIDCK('LateSunrise', [IMGS, NULL]),
-      wbFormIDCK('EarlySunset', [IMGS, NULL]),
-      wbFormIDCK('LateSunset', [IMGS, NULL])
-    ], cpNormal, True, nil, 4),
-    wbStruct(WGDR, 'God Rays', [
-      wbFormIDCK('Sunrise', [GDRY, NULL]),
-      wbFormIDCK('Day', [GDRY, NULL]),
-      wbFormIDCK('Sunset', [GDRY, NULL]),
-      wbFormIDCK('Night', [GDRY, NULL]),
-      wbFormIDCK('EarlySunrise', [GDRY, NULL]),
-      wbFormIDCK('LateSunrise', [GDRY, NULL]),
-      wbFormIDCK('EarlySunset', [GDRY, NULL]),
-      wbFormIDCK('LateSunset', [GDRY, NULL])
-    ]),
-    wbStruct(HNAM, 'God Rays', [
-      wbFormIDCK('Sunrise', [VOLI, NULL]),
-      wbFormIDCK('Day', [VOLI, NULL]),
-      wbFormIDCK('Sunset', [VOLI, NULL]),
-      wbFormIDCK('Night', [VOLI, NULL]),
-      wbFormIDCK('EarlySunrise', [VOLI, NULL]),
-      wbFormIDCK('LateSunrise', [VOLI, NULL]),
-      wbFormIDCK('EarlySunset', [VOLI, NULL]),
-      wbFormIDCK('LateSunset', [VOLI, NULL])
-    ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise', True),
-      wbAmbientColors(DALC, 'Day', True),
-      wbAmbientColors(DALC, 'Sunset', True),
-      wbAmbientColors(DALC, 'Night', True),
-      wbAmbientColors(DALC, 'EarlySunrise', True),
-      wbAmbientColors(DALC, 'LateSunrise', True),
-      wbAmbientColors(DALC, 'EarlySunset', True),
-      wbAmbientColors(DALC, 'LateSunset', True)
-    ], [], cpNormal, True),
-    wbRStruct('Aurora', [wbGenericModel], []),
-    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
-    wbStruct(UNAM, 'Magic', [
-      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
-      wbFloat('On Lightning Strike - Threshold'),
-      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbByteArray('Unused', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbByteArray('Unused', 4))
-    ], cpNormal, False, nil, 3),
-    wbFloat(VNAM, 'Volatility Mult'),
-    wbFloat(WNAM, 'Visibility Mult'),
-    wbFloat(XNAM),
-    wbFloat(ZNAM),
-    wbFloat(YNAM),
-    wbFloat(KNAM),
-    wbFloat(INAM)
-  ]);
-end;
-
-procedure DefineFO76p;
-begin
   {wbRecord(SCPT, 'SCPT', [
     wbEDID
   ]);}
-end;
 
 {>>> Start of new Fallout 4 Records <<<}
 
-procedure DefineFO76q;
-begin
   wbRecord(AECH, 'Audio Effect Chain', [
     wbEDID,
     wbRArray('Effects',
@@ -19193,12 +18748,6 @@ begin
     ])
   ]);
 
-end;
-
-procedure DefineFO76r;
-var
-  wbUITE, wbUITO : IwbEnumDef;
-begin
   wbRecord(INNR, 'Instance Naming Rules',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
@@ -19422,10 +18971,6 @@ begin
     wbFormID(ENAM, 'Legendary Template List')
   ]);
 
-end;
-
-procedure DefineFO76s;
-begin
   wbRecord(NOTE, 'Note', [
     wbEDID,
     wbVMAD,
@@ -19659,10 +19204,6 @@ begin
     ]))
   ]);
 
-end;
-
-procedure DefineFO76t;
-begin
   {wbRecord(SKIL, 'SKIL', [
     wbEDID
   ]);}
@@ -19840,15 +19381,11 @@ begin
     ])
   ]);
 
-end;
-
 {>>> Start of new Fallout 76 Records <<<}
 
 // AAPD\RADR starts with two 0 bytes, a multiple of 16 (or 0xC8), and then either 0x40 or 0x41.
 // AAPD\WTMX is always either 00 00 00 00 or 00 00 80 3F
 
-procedure DefineFO76u;
-begin
   wbRecord(AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbRStruct('Attach Point', [
@@ -20558,10 +20095,213 @@ begin
     ]),
     wbUnknown(DICO)
   ]);
-end;
 
-procedure DefineFO76Groups;
-begin
+  wbRecord(WTHR, 'Weather',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x200}  9, 'Unknown 9'
+    ])), [
+    wbEDID,
+    wbKeywords,
+    wbWeatherCloudTextures,
+    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
+    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
+    wbUnused(ONAM),
+    wbWeatherCloudSpeed,
+    wbWeatherCloudColors,
+    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
+      wbFloat('Sunrise'),
+      wbFloat('Day'),
+      wbFloat('Sunset'),
+      wbFloat('Night'),
+      wbFloat('EarlySunrise'),
+      wbFloat('LateSunrise'),
+      wbFloat('EarlySunset'),
+      wbFloat('LateSunset')
+    ])).IncludeFlag(dfNotAlignable),
+    wbWeatherColors,
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
+    wbWeatherFogDistance,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Wind Speed', itU8), // scaled 0..1
+      wbByteArray('Unknown', 2),
+      wbInteger('Trans Delta', itU8), // scaled 0..0,25
+      wbInteger('Sun Glare', itU8), // scaled 0..1
+      wbInteger('Sun Damage', itU8), // scaled 0..1
+      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
+      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
+      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
+      wbInteger('Thunder/Lightning - End Fade Out', itU8),
+      wbInteger('Thunder/Lightning - Frequency', itU8),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Weather - Pleasant',
+        {0x02} 'Weather - Cloudy',
+        {0x04} 'Weather - Rainy',
+        {0x08} 'Weather - Snow',
+        {0x10} 'Sky Statics - Always Visible',
+        {0x20} 'Sky Statics - Follows Sun Position',
+        {0x40} 'Rain Occlusion',
+        {0x80} 'HUD Rain Effects'
+      ])),
+      wbStruct('Lightning Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
+      wbInteger('Visual Effect - End', itU8), // scaled 0..1
+      wbInteger('Wind Direction', itU8), // scaled 0..360
+      wbInteger('Wind Direction Range', itU8), // scaled 0..180
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
+    ], cpNormal, True, nil, 16),
+    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
+    wbWeatherSounds,
+    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbStruct(IMSP, 'Image Spaces', [
+      wbFormIDCK('Sunrise', [IMGS, NULL]),
+      wbFormIDCK('Day', [IMGS, NULL]),
+      wbFormIDCK('Sunset', [IMGS, NULL]),
+      wbFormIDCK('Night', [IMGS, NULL]),
+      wbFormIDCK('EarlySunrise', [IMGS, NULL]),
+      wbFormIDCK('LateSunrise', [IMGS, NULL]),
+      wbFormIDCK('EarlySunset', [IMGS, NULL]),
+      wbFormIDCK('LateSunset', [IMGS, NULL])
+    ], cpNormal, True, nil, 4),
+    wbStruct(WGDR, 'God Rays', [
+      wbFormIDCK('Sunrise', [GDRY, NULL]),
+      wbFormIDCK('Day', [GDRY, NULL]),
+      wbFormIDCK('Sunset', [GDRY, NULL]),
+      wbFormIDCK('Night', [GDRY, NULL]),
+      wbFormIDCK('EarlySunrise', [GDRY, NULL]),
+      wbFormIDCK('LateSunrise', [GDRY, NULL]),
+      wbFormIDCK('EarlySunset', [GDRY, NULL]),
+      wbFormIDCK('LateSunset', [GDRY, NULL])
+    ]),
+    wbStruct(HNAM, 'God Rays', [
+      wbFormIDCK('Sunrise', [VOLI, NULL]),
+      wbFormIDCK('Day', [VOLI, NULL]),
+      wbFormIDCK('Sunset', [VOLI, NULL]),
+      wbFormIDCK('Night', [VOLI, NULL]),
+      wbFormIDCK('EarlySunrise', [VOLI, NULL]),
+      wbFormIDCK('LateSunrise', [VOLI, NULL]),
+      wbFormIDCK('EarlySunset', [VOLI, NULL]),
+      wbFormIDCK('LateSunset', [VOLI, NULL])
+    ]),
+    wbRStruct('Directional Ambient Lighting Colors', [
+      wbAmbientColors(DALC, 'Sunrise', True),
+      wbAmbientColors(DALC, 'Day', True),
+      wbAmbientColors(DALC, 'Sunset', True),
+      wbAmbientColors(DALC, 'Night', True),
+      wbAmbientColors(DALC, 'EarlySunrise', True),
+      wbAmbientColors(DALC, 'LateSunrise', True),
+      wbAmbientColors(DALC, 'EarlySunset', True),
+      wbAmbientColors(DALC, 'LateSunset', True)
+    ], [], cpNormal, True),
+    wbRStruct('Aurora', [wbGenericModel], []),
+    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
+    wbStruct(UNAM, 'Magic', [
+      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
+      wbFloat('On Lightning Strike - Threshold'),
+      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
+      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
+      wbFromVersion(130, wbByteArray('Unused', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbByteArray('Unused', 4))
+    ], cpNormal, False, nil, 3),
+    wbFloat(VNAM, 'Volatility Mult'),
+    wbFloat(WNAM, 'Visibility Mult'),
+    wbFloat(XNAM),
+    wbFloat(ZNAM),
+    wbFloat(YNAM),
+    wbFloat(KNAM),
+    wbFloat(INAM)
+  ]);
+
+  wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x04000} 14, 'Partial Form',
+      {0x80000} 19, 'Can''t Wait'
+    ]), [14]), [
+    wbEDID,
+    wbWorldLargeRefs
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldMaxHeight
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbFULL,
+    wbWorldFixedCenter,
+    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
+    wbXEZN,
+    wbXLCN,
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
+          {0x01} 'Use Land Data',
+          {0x02} 'Use LOD Data',
+          {0x04} 'Use Map Data',
+          {0x08} 'Use Water Data',
+          {0x10} 'Use Climate Data',
+          {0x20} 'Use Image Space Data (unused)',
+          {0x40} 'Use Sky Cell'
+        ], [5]),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbWorldWaterData,
+    wbWorldLandData,
+    wbString(ICON, 'Map Image'),
+    wbRStruct('Cloud Model', [wbGenericModel], []),
+    wbWorldMapData,
+    wbWorldMapOffset,
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'No Sky',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbWorldObjectBounds,
+    wbRArray('Ordered Landscape Textures',
+      wbFormIDCk(LNAM, 'Land Texture', [LTEX])
+    ).IncludeFlag(dfNotAlignable),
+    wbWorldRegionEditorMap,
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
+    wbString(XWEM, 'Water Environment Map'),
+    wbString(TNAM, 'HD LOD Diffuse Texture'),
+    wbString(UNAM, 'HD LOD Normal Texture'),
+    wbWorldWaterHeightData,
+    wbWorldLevelData,
+    wbWorldOffsetData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldCellSizeData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldVisibleCellsData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
   wbAddGroupOrder(ENTM); //new in Fallout 76
@@ -20763,55 +20503,9 @@ begin
   wbAddGroupOrder(QMDL); //new in Fallout 76
   wbAddGroupOrder(LOUT); //new in Fallout 76
   wbAddGroupOrder(DIST); //new in Fallout 76
-end;
-
-
-procedure DefineFO76;
-begin
-  DefineCommon;
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  DefineFO76a;
-  DefineFO76b;
-  DefineFO76c;
-  DefineFO76d;
-  DefineFO76e;
-  DefineFO76f;
-  DefineFO76g;
-  DefineFO76h;
-  DefineFO76i;
-  DefineFO76j;
-  DefineFO76k;
-  DefineFO76l;
-  DefineFO76m;
-  DefineFO76n;
-  DefineFO76o;
-  DefineFO76p;
-  DefineFO76q;
-  DefineFO76r;
-  DefineFO76s;
-  DefineFO76t;
-  DefineFO76u;
-
-  DefineFO76Groups;
-
-  //SetLength(wbOfficialDLC, 7);
-  //wbOfficialDLC[0] := 'DLCRobot.esm';
-  //wbOfficialDLC[1] := 'DLCworkshop01.esm';
-  //wbOfficialDLC[2] := 'DLCCoast.esm';
-  //wbOfficialDLC[3] := 'DLCworkshop02.esm';
-  //wbOfficialDLC[4] := 'DLCworkshop03.esm';
-  //wbOfficialDLC[5] := 'DLCNukaWorld.esm';
-  //wbOfficialDLC[6] := 'DLCUltraHighResolution.esm';
-
-  //if wbGameMode = gmFO4VR then begin
-  //  // new VR esm is loaded after DLCs
-  //  SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
-  //  wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
-  //end else
-  //  wbCreationClubContentFileName := 'Fallout4.ccc';
-
   wbHEDRVersion := 68.0;
 end;
 

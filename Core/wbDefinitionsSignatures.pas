@@ -1082,6 +1082,8 @@ const
   PRPS : TwbSignature = 'PRPS'; { New to Fallout 4 }
   PRRF : TwbSignature = 'PRRF'; { New To Starfield }
   PRRK : TwbSignature = 'PRRK'; { New To Starfield }
+  PRTN : TwbSignature = 'PRTN'; { New To Starfield }
+  PRVN : TwbSignature = 'PRVN'; { New To Starfield }
   PSDC : TwbSignature = 'PSDC'; { New To Starfield }
   PSDF : TwbSignature = 'PSDF'; { New To Starfield }
   PSDT : TwbSignature = 'PSDT';
@@ -1458,8 +1460,12 @@ const
   VANM : TwbSignature = 'VANM';
   VATS : TwbSignature = 'VATS';
   VBCY : TwbSignature = 'VBCY'; { New To Fallout 76 }
+  VCCD : TwbSignature = 'VCCD'; { New To Starfield }
   VCLR : TwbSignature = 'VCLR';
+  VCMT : TwbSignature = 'VCMT'; { New To Starfield }
   VCRY : TwbSignature = 'VCRY'; { New To Fallout 76 }
+  VCSB : TwbSignature = 'VCSB'; { New To Starfield }
+  VCTT : TwbSignature = 'VCTT'; { New To Starfield }
   VENC : TwbSignature = 'VENC'; { New To Skyrim }
   VEND : TwbSignature = 'VEND'; { New To Skyrim }
   VENG : TwbSignature = 'VENG'; { New To Fallout 76 }
@@ -1470,6 +1476,7 @@ const
   VISI : TwbSignature = 'VISI'; { New To Fallout 4 }
   VLMS : TwbSignature = 'VLMS'; { New To Starfield }
   VMAD : TwbSignature = 'VMAD';
+  VMRT : TwbSignature = 'VMRT'; { New To Starfield }
   VNAM : TwbSignature = 'VNAM';
   VNML : TwbSignature = 'VNML';
   VOLI : TwbSignature = 'VOLI'; { New To Fallout 76 }
@@ -1482,6 +1489,7 @@ const
   VTEX : TwbSignature = 'VTEX';
   VTXT : TwbSignature = 'VTXT';
   VTYP : TwbSignature = 'VTYP';
+  VWWD : TwbSignature = 'VWWD'; { New To Starfield }
   VX00 : TwbSignature = 'VX00'; { New To Starfield }
   WAAM : TwbSignature = 'WAAM'; { New To Fallout 76 }
   WABB : TwbSignature = 'WABB'; { New To Starfield }

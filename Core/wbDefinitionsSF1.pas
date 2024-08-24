@@ -1714,24 +1714,6 @@ end;
 //  end;
 //end;
 
-function wbCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary, ctToEditValue: Result := FloatToStrF((aInt - 127)/127/10, ffFixed, 99, 4);
-    ctCheck: Result := '';
-  end;
-end;
-
-function wbCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  f: Extended;
-begin
-  f := StrToFloat(aString);
-  f := f*10*127 + 127;
-  Result := Min(Round(f), 254);
-end;
-
 function wbPlacedAddInfo(const aMainRecord: IwbMainRecord): string;
 var
   Rec: IwbRecord;
@@ -2160,6 +2142,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
+  i           : Integer;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
 
@@ -2172,9 +2155,9 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
 
   if not Assigned(Parent) then
     Exit;
-
+  i := Parent.NativeValue;
   // is interior cell?
-  if (Parent.NativeValue = 0) then
+  if i = 0 then
     Result := 1;
 end;
 
@@ -2182,6 +2165,7 @@ function wbDoorTriangleDoorTriangleDecider(aBasePtr: Pointer; aEndPtr: Pointer; 
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
+  i           : Int64;
 begin
   Result := 0;
 
@@ -2194,9 +2178,9 @@ begin
 
   if not Assigned(Parent) then
     Exit;
-
+  i := Parent.NativeValue;
   // not sure if it would be an error in the file or if it really possible
-  if (Parent.NativeValue = 0) then
+  if i <> 0 then
     Result := 1;
 end;
 
@@ -2660,7 +2644,7 @@ type
   end;
 
 const
-  wbCTDAFunctions : array[0..607] of TCTDAFunction = (
+  wbCTDAFunctions : array[0..609] of TCTDAFunction = (
     (Index:   0; Name: 'GetWantBlocking'),                                                                                                                  //   0
     (Index:   1; Name: 'GetDistance'; ParamType1: ptObjectReference),                                                                                       //   1
     (Index:   5; Name: 'GetLocked'),                                                                                                                        //   2
@@ -2686,13 +2670,13 @@ const
     (Index:  44; Name: 'SameSex'; ParamType1: ptActor),                                                                                                     //   22
     (Index:  45; Name: 'GetDetected'; ParamType1: ptActor),                                                                                                 //   23
     (Index:  46; Name: 'GetDead'),                                                                                                                          //   24
-    (Index:  47; Name: 'GetItemCount'; ParamType1: ptReferencableObject),                                                                                      //   25
+    (Index:  47; Name: 'GetItemCount'; ParamType1: ptReferencableObject),                                                                                   //   25
     (Index:  48; Name: 'GetGold'),                                                                                                                          //   26
     (Index:  49; Name: 'GetSleeping'),                                                                                                                      //   27
     (Index:  50; Name: 'GetTalkedToPC'),                                                                                                                    //   28
     (Index:  56; Name: 'GetQuestRunning'; ParamType1: ptQuest),                                                                                             //   29
     (Index:  58; Name: 'GetStage'; ParamType1: ptQuest),                                                                                                    //   30
-    (Index:  59; Name: 'GetStageDone'; ParamType1: ptQuest; ParamType2: ptQuestStage),                                                                           //   31
+    (Index:  59; Name: 'GetStageDone'; ParamType1: ptQuest; ParamType2: ptQuestStage),                                                                      //   31
     (Index:  60; Name: 'GetFactionRankDifference'; ParamType1: ptFaction; ParamType2: ptActor),                                                             //   32
     (Index:  61; Name: 'GetAlarmed'),                                                                                                                       //   33
     (Index:  62; Name: 'IsRaining'),                                                                                                                        //   34
@@ -2705,7 +2689,7 @@ const
     (Index:  69; Name: 'GetIsRace'; ParamType1: ptRace),                                                                                                    //   41
     (Index:  70; Name: 'GetIsSex'; ParamType1: ptSex),                                                                                                      //   42
     (Index:  71; Name: 'GetInFaction'; ParamType1: ptFaction),                                                                                              //   43
-    (Index:  72; Name: 'GetIsID'; ParamType1: ptReferencableObject),                                                                                                    //   44
+    (Index:  72; Name: 'GetIsID'; ParamType1: ptReferencableObject),                                                                                        //   44
     (Index:  73; Name: 'GetFactionRank'; ParamType1: ptFaction),                                                                                            //   45
     (Index:  74; Name: 'GetGlobalValue'; ParamType1: ptGlobal),                                                                                             //   46
     (Index:  75; Name: 'IsSnowing'),                                                                                                                        //   47
@@ -2743,7 +2727,7 @@ const
     (Index: 135; Name: 'SameSexAsPC'),                                                                                                                      //   79
     (Index: 136; Name: 'GetIsReference'; ParamType1: ptObjectReference),                                                                                    //   80
     (Index: 141; Name: 'IsTalking'),                                                                                                                        //   81
-    (Index: 142; Name: 'GetComponentCount'; ParamType1: ptReferencableObject),                                                                                            //   82
+    (Index: 142; Name: 'GetComponentCount'; ParamType1: ptReferencableObject),                                                                              //   82
     (Index: 143; Name: 'GetCurrentAIProcedure'),                                                                                                            //   83
     (Index: 144; Name: 'GetTrespassWarningLevel'),                                                                                                          //   84
     (Index: 145; Name: 'IsTrespassing'),                                                                                                                    //   85
@@ -2765,8 +2749,8 @@ const
     (Index: 175; Name: 'IsPCSleeping'),                                                                                                                     //   101
     (Index: 176; Name: 'IsPCAMurderer'),                                                                                                                    //   102
     (Index: 180; Name: 'HasSameEditorLocationAsRef'; ParamType1: ptObjectReference; ParamType2: ptKeyword),                                                 //   103
-    (Index: 181; Name: 'HasSameEditorLocationAsRefAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                 //   104
-    (Index: 182; Name: 'GetEquipped'; ParamType1: ptReferencableObject),                                                                                       //   105
+    (Index: 181; Name: 'HasSameEditorLocationAsRefAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                      //   104
+    (Index: 182; Name: 'GetEquipped'; ParamType1: ptReferencableObject),                                                                                    //   105
     (Index: 185; Name: 'IsSwimming'),                                                                                                                       //   106
     (Index: 190; Name: 'GetAmountSoldStolen'),                                                                                                              //   107
     (Index: 192; Name: 'GetIgnoreCrime'),                                                                                                                   //   108
@@ -2775,7 +2759,7 @@ const
     (Index: 197; Name: 'GetPCEnemyofFaction'; ParamType1: ptFaction),                                                                                       //   111
     (Index: 199; Name: 'GetPCFactionAttack'; ParamType1: ptFaction),                                                                                        //   112
     (Index: 203; Name: 'GetDestroyed'),                                                                                                                     //   113
-    (Index: 214; Name: 'HasMagicEffect'; ParamType1: ptMagicEffect),                                                                                      //   114
+    (Index: 214; Name: 'HasMagicEffect'; ParamType1: ptMagicEffect),                                                                                        //   114
     (Index: 215; Name: 'GetDefaultOpen'),                                                                                                                   //   115
     (Index: 223; Name: 'IsSpellTarget'; ParamType1: ptMagicItem),                                                                                           //   116
     (Index: 224; Name: 'GetVATSMode'),                                                                                                                      //   117
@@ -2790,7 +2774,7 @@ const
     (Index: 237; Name: 'GetIsGhost'),                                                                                                                       //   126
     (Index: 242; Name: 'GetUnconscious'),                                                                                                                   //   127
     (Index: 244; Name: 'GetRestrained'),                                                                                                                    //   128
-    (Index: 246; Name: 'GetIsUsedItem'; ParamType1: ptReferencableObject),                                                                                            //   129
+    (Index: 246; Name: 'GetIsUsedItem'; ParamType1: ptReferencableObject),                                                                                  //   129
     (Index: 247; Name: 'GetIsUsedItemType'; ParamType1: ptFormType),                                                                                        //   130
     (Index: 248; Name: 'IsScenePlaying'; ParamType1: ptScene),                                                                                              //   131
     (Index: 249; Name: 'IsInDialogueWithPlayer'),                                                                                                           //   132
@@ -2822,15 +2806,15 @@ const
     (Index: 305; Name: 'GetPlayerAction'),                                                                                                                  //   158
     (Index: 306; Name: 'IsActorUsingATorch'),                                                                                                               //   159
     (Index: 309; Name: 'IsXBox'),                                                                                                                           //   160
-    (Index: 310; Name: 'GetInWorldspace'; ParamType1: ptWorldSpace),                                                                                    //   161
-    (Index: 312; Name: 'GetPCMiscStat'; ParamType1: ptMiscStat),                                                                                   //   162
+    (Index: 310; Name: 'GetInWorldspace'; ParamType1: ptWorldSpace),                                                                                        //   161
+    (Index: 312; Name: 'GetPCMiscStat'; ParamType1: ptMiscStat),                                                                                            //   162
     (Index: 313; Name: 'GetPairedAnimation'),                                                                                                               //   163
     (Index: 314; Name: 'IsActorAVictim'),                                                                                                                   //   164
     (Index: 315; Name: 'GetTotalPersuasionNumber'),                                                                                                         //   165
     (Index: 318; Name: 'GetIdleDoneOnce'),                                                                                                                  //   166
     (Index: 320; Name: 'GetNoRumors'),                                                                                                                      //   167
     (Index: 323; Name: 'GetCombatState'),                                                                                                                   //   168
-    (Index: 325; Name: 'GetWithinPackageLocation'; ParamType1: ptPackdata),                                                                     //   169
+    (Index: 325; Name: 'GetWithinPackageLocation'; ParamType1: ptPackdata),                                                                                 //   169
     (Index: 327; Name: 'IsRidingMount'),                                                                                                                    //   170
     (Index: 329; Name: 'IsFleeing'),                                                                                                                        //   171
     (Index: 332; Name: 'IsInDangerousWater'),                                                                                                               //   172
@@ -2840,7 +2824,7 @@ const
     (Index: 354; Name: 'IsEssential'),                                                                                                                      //   176
     (Index: 358; Name: 'IsPlayerMovingIntoNewSpace'),                                                                                                       //   177
     (Index: 359; Name: 'GetIsCurrentLocation'; ParamType1: ptLocation),                                                                                     //   178
-    (Index: 360; Name: 'GetIsCurrentLocationAlias'; ParamType1: ptAlias),                                                                              //   179
+    (Index: 360; Name: 'GetIsCurrentLocationAlias'; ParamType1: ptAlias),                                                                                   //   179
     (Index: 361; Name: 'GetTimeDead'),                                                                                                                      //   180
     (Index: 362; Name: 'HasLinkedRef'; ParamType1: ptKeyword),                                                                                              //   181
     (Index: 365; Name: 'IsChild'),                                                                                                                          //   182
@@ -2863,7 +2847,7 @@ const
     (Index: 403; Name: 'GetRelationshipRank'; ParamType1: ptActor),                                                                                         //   199
     (Index: 406; Name: 'GetStrongestEnemyHasKeyword'; ParamType1: ptKeyword),                                                                               //   200
     (Index: 407; Name: 'GetVATSValue'; ParamType1: ptInteger; ParamType2: ptInteger),                                                                       //   201
-    (Index: 408; Name: 'IsKiller'; ParamType1: ptActor),                                                                                          //   202
+    (Index: 408; Name: 'IsKiller'; ParamType1: ptActor),                                                                                                    //   202
     (Index: 409; Name: 'IsPlayerInShipTargetingMode'),                                                                                                      //   203
     (Index: 410; Name: 'GetFactionCombatReaction'; ParamType1: ptFaction; ParamType2: ptFaction),                                                           //   204
     (Index: 411; Name: 'IsShipTargetInShipTargetingMode'),                                                                                                  //   205
@@ -2880,13 +2864,13 @@ const
     (Index: 435; Name: 'PlayerAudioDetection'),                                                                                                             //   216
     (Index: 437; Name: 'GetIsCreatureType'; ParamType1: ptInteger),                                                                                         //   217
     (Index: 438; Name: 'HasKey'; ParamType1: ptObjectReference),                                                                                            //   218
-    (Index: 439; Name: 'IsFurnitureEntryType'; ParamType1: ptFurnitureEntry),                                                                           //   219
+    (Index: 439; Name: 'IsFurnitureEntryType'; ParamType1: ptFurnitureEntry),                                                                               //   219
     (Index: 444; Name: 'GetInCurrentLocationFormList'; ParamType1: ptFormList),                                                                             //   220
     (Index: 445; Name: 'GetInZone'; ParamType1: ptLocation),                                                                                                //   221
     (Index: 446; Name: 'GetVelocity'; ParamType1: ptAxis),                                                                                                  //   222
     (Index: 447; Name: 'GetGraphVariableFloat'; ParamType1: ptString),                                                                                      //   223
     (Index: 448; Name: 'HasPerk'; ParamType1: ptPerk),                                                                                                      //   224
-    (Index: 449; Name: 'GetFactionRelation'; ParamType1: ptActor),                                                                                //   225
+    (Index: 449; Name: 'GetFactionRelation'; ParamType1: ptActor),                                                                                          //   225
     (Index: 450; Name: 'IsLastIdlePlayed'; ParamType1: ptIdleForm),                                                                                         //   226
     (Index: 453; Name: 'GetPlayerTeammate'),                                                                                                                //   227
     (Index: 454; Name: 'GetPlayerTeammateCount'),                                                                                                           //   228
@@ -2898,14 +2882,14 @@ const
     (Index: 473; Name: 'GetIsAlignment'; ParamType1: ptAlignment),                                                                                          //   234
     (Index: 476; Name: 'IsProtected'),                                                                                                                      //   235
     (Index: 477; Name: 'GetThreatRatio'; ParamType1: ptActor),                                                                                              //   236
-    (Index: 479; Name: 'GetIsUsedItemEquipType'; ParamType1: ptEquipType{ptEquipSlot}),                                                                                  //   237
+    (Index: 479; Name: 'GetIsUsedItemEquipType'; ParamType1: ptEquipType{ptEquipSlot}),                                                                     //   237
     (Index: 483; Name: 'GetPlayerActivated'),                                                                                                               //   238
     (Index: 485; Name: 'GetFullyEnabledActorsInHigh'),                                                                                                      //   239
     (Index: 487; Name: 'IsCarryable'),                                                                                                                      //   240
     (Index: 488; Name: 'GetConcussed'),                                                                                                                     //   241
-    (Index: 490; Name: 'GetBiomeScanPercent'; Desc:'Returns the biome scan percentage of this object type. 0 if it''s not part of this biome.'),                                                                                                              //   242
+    (Index: 490; Name: 'GetBiomeScanPercent'; Desc:'Returns the biome scan percentage of this object type. 0 if it''s not part of this biome.'),            //   242                                                                                                  //   242
     (Index: 491; Name: 'GetMapMarkerVisible'),                                                                                                              //   243
-    (Index: 493; Name: 'PlayerKnows'; ParamType1: ptReferencableObject),                                                                                          //   244
+    (Index: 493; Name: 'PlayerKnows'; ParamType1: ptReferencableObject),                                                                                    //   244
     (Index: 494; Name: 'GetPermanentValue'; ParamType1: ptActorValue),                                                                                      //   245
     (Index: 495; Name: 'EPMagic_EffectIsDetrimental'),                                                                                                      //   246
     (Index: 497; Name: 'CanPayCrimeGold'; ParamType1: ptFaction),                                                                                           //   247
@@ -2941,43 +2925,43 @@ const
     (Index: 554; Name: 'GetActorsInHigh'),                                                                                                                  //   277
     (Index: 555; Name: 'HasLoaded3D'),                                                                                                                      //   278
     (Index: 560; Name: 'HasKeyword'; ParamType1: ptKeyword),                                                                                                //   279
-    (Index: 561; Name: 'HasRefType'; ParamType1: ptRefType),                                                                                        //   280
+    (Index: 561; Name: 'HasRefType'; ParamType1: ptRefType),                                                                                                //   280
     (Index: 562; Name: 'LocationHasKeyword'; ParamType1: ptKeyword),                                                                                        //   281
-    (Index: 563; Name: 'LocationHasRefType'; ParamType1: ptRefType),                                                                                //   282
+    (Index: 563; Name: 'LocationHasRefType'; ParamType1: ptRefType),                                                                                        //   282
     (Index: 565; Name: 'GetIsEditorLocation'; ParamType1: ptLocation),                                                                                      //   283
-    (Index: 566; Name: 'GetIsAliasRef'; ParamType1: ptAlias),                                                                                          //   284
-    (Index: 567; Name: 'GetIsEditorLocationAlias'; ParamType1: ptAlias),                                                                               //   285
+    (Index: 566; Name: 'GetIsAliasRef'; ParamType1: ptAlias),                                                                                               //   284
+    (Index: 567; Name: 'GetIsEditorLocationAlias'; ParamType1: ptAlias),                                                                                    //   285
     (Index: 568; Name: 'IsSprinting'),                                                                                                                      //   286
     (Index: 569; Name: 'IsBlocking'),                                                                                                                       //   287
     (Index: 570; Name: 'HasEquippedSpell'; ParamType1: ptCastingSource),                                                                                    //   288
     (Index: 571; Name: 'GetCurrentCastingType'; ParamType1: ptCastingSource),                                                                               //   289
     (Index: 572; Name: 'GetCurrentDeliveryType'; ParamType1: ptCastingSource),                                                                              //   290
     (Index: 574; Name: 'GetAttackState'),                                                                                                                   //   291
-    (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent {and EventMember in the same DWORD}; ParamType2: ptEventData),                                    //   292
+    (Index: 576; Name: 'GetEventData'; ParamType1: ptEvent {and EventMember in the same DWORD}; ParamType2: ptEventData),                                   //   292
     (Index: 577; Name: 'IsCloserToAThanB'; ParamType1: ptObjectReference; ParamType2: ptObjectReference),                                                   //   293
     (Index: 578; Name: 'LevelMinusPCLevel'),                                                                                                                //   294
     (Index: 580; Name: 'IsBleedingOut'),                                                                                                                    //   295
     (Index: 584; Name: 'GetRelativeAngle'; ParamType1: ptObjectReference; ParamType2: ptAxis),                                                              //   296
     (Index: 589; Name: 'GetMovementDirection'),                                                                                                             //   297
     (Index: 590; Name: 'IsInScene'),                                                                                                                        //   298
-    (Index: 591; Name: 'GetRefTypeDeadCount'; ParamType1: ptLocation; ParamType2: ptRefType),                                                       //   299
-    (Index: 592; Name: 'GetRefTypeAliveCount'; ParamType1: ptLocation; ParamType2: ptRefType),                                                      //   300
+    (Index: 591; Name: 'GetRefTypeDeadCount'; ParamType1: ptLocation; ParamType2: ptRefType),                                                               //   299
+    (Index: 592; Name: 'GetRefTypeAliveCount'; ParamType1: ptLocation; ParamType2: ptRefType),                                                              //   300
     (Index: 594; Name: 'GetIsFlying'),                                                                                                                      //   301
     (Index: 595; Name: 'IsCurrentSpell'; ParamType1: ptMagicItem; ParamType2: ptCastingSource),                                                             //   302
     (Index: 596; Name: 'SpellHasKeyword'; ParamType1: ptCastingSource; ParamType2: ptKeyword),                                                              //   303
     (Index: 597; Name: 'GetEquippedItemType'; ParamType1: ptCastingSource),                                                                                 //   304
-    (Index: 598; Name: 'GetLocationAliasExplored'; ParamType1: ptAlias),                                                                               //   305
-    (Index: 600; Name: 'GetLocationAliasRefTypeDeadCount'; ParamType1: ptAlias; ParamType2: ptRefType),                                        //   306
-    (Index: 601; Name: 'GetLocationAliasRefTypeAliveCount'; ParamType1: ptAlias; ParamType2: ptRefType),                                       //   307
+    (Index: 598; Name: 'GetLocationAliasExplored'; ParamType1: ptAlias),                                                                                    //   305
+    (Index: 600; Name: 'GetLocationAliasRefTypeDeadCount'; ParamType1: ptAlias; ParamType2: ptRefType),                                                     //   306
+    (Index: 601; Name: 'GetLocationAliasRefTypeAliveCount'; ParamType1: ptAlias; ParamType2: ptRefType),                                                    //   307
     (Index: 602; Name: 'IsWardState'; ParamType1: ptWardState),                                                                                             //   308
     (Index: 603; Name: 'IsInSameCurrentLocationAsRef'; ParamType1: ptObjectReference; ParamType2: ptKeyword),                                               //   309
-    (Index: 604; Name: 'IsInSameCurrentLocationAsAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                  //   310
-    (Index: 605; Name: 'LocationAliasIsLocation'; ParamType1: ptAlias; ParamType2: ptLocation),                                                        //   311
+    (Index: 604; Name: 'IsInSameCurrentLocationAsAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                       //   310
+    (Index: 605; Name: 'LocationAliasIsLocation'; ParamType1: ptAlias; ParamType2: ptLocation),                                                             //   311
     (Index: 606; Name: 'GetKeywordDataForLocation'; ParamType1: ptLocation; ParamType2: ptKeyword),                                                         //   312
-    (Index: 608; Name: 'GetKeywordDataForAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                          //   313
-    (Index: 610; Name: 'LocationAliasHasKeyword'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                         //   314
-    (Index: 611; Name: 'IsNullPackageData'; ParamType1: ptPackdata),                                                                        //   315
-    (Index: 612; Name: 'GetNumericPackageData'; ParamType1: ptPackdata),                                                                         //   316
+    (Index: 608; Name: 'GetKeywordDataForAlias'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                               //   313
+    (Index: 610; Name: 'LocationAliasHasKeyword'; ParamType1: ptAlias; ParamType2: ptKeyword),                                                              //   314
+    (Index: 611; Name: 'IsNullPackageData'; ParamType1: ptPackdata),                                                                                        //   315
+    (Index: 612; Name: 'GetNumericPackageData'; ParamType1: ptPackdata),                                                                                    //   316
     (Index: 613; Name: 'IsPlayerRadioOn'),                                                                                                                  //   317
     (Index: 614; Name: 'GetPlayerRadioFrequency'),                                                                                                          //   318
     (Index: 615; Name: 'GetHighestRelationshipRank'),                                                                                                       //   319
@@ -2991,16 +2975,16 @@ const
     (Index: 623; Name: 'GetMovementSpeed'),                                                                                                                 //   327
     (Index: 624; Name: 'GetInContainer'; ParamType1: ptObjectReference),                                                                                    //   328
     (Index: 625; Name: 'IsLocationLoaded'; ParamType1: ptLocation),                                                                                         //   329
-    (Index: 626; Name: 'IsLocationAliasLoaded'; ParamType1: ptAlias),                                                                                  //   330
+    (Index: 626; Name: 'IsLocationAliasLoaded'; ParamType1: ptAlias),                                                                                       //   330
     (Index: 627; Name: 'IsDualCasting'),                                                                                                                    //   331
-    (Index: 629; Name: 'GetVMQuestVariable'; ParamType1: ptQuest; ParamType2: ptString),                                                       //   332
+    (Index: 629; Name: 'GetVMQuestVariable'; ParamType1: ptQuest; ParamType2: ptString),                                                                    //   332
     (Index: 630; Name: 'GetCombatAudioDetection'),                                                                                                          //   333
     (Index: 631; Name: 'GetCombatVisualDetection'),                                                                                                         //   334
     (Index: 632; Name: 'IsCasting'),                                                                                                                        //   335
     (Index: 633; Name: 'GetFlyingState'),                                                                                                                   //   336
     (Index: 635; Name: 'IsInFavorState'),                                                                                                                   //   337
     (Index: 636; Name: 'HasTwoHandedWeaponEquipped'),                                                                                                       //   338
-    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptFurnitureEntry),                                                                            //   339
+    (Index: 637; Name: 'IsFurnitureExitType'; ParamType1: ptFurnitureEntry),                                                                                //   339
     (Index: 638; Name: 'IsInFriendStatewithPlayer'),                                                                                                        //   340
     (Index: 639; Name: 'GetWithinDistance'; ParamType1: ptObjectReference; ParamType2: ptFloat),                                                            //   341
     (Index: 640; Name: 'GetValuePercent'; ParamType1: ptActorValue),                                                                                        //   342
@@ -3017,8 +3001,8 @@ const
     (Index: 655; Name: 'GetIntimidateSuccess'),                                                                                                             //   353
     (Index: 656; Name: 'GetArrestedState'),                                                                                                                 //   354
     (Index: 657; Name: 'GetArrestingActor'),                                                                                                                //   355
-    (Index: 659; Name: 'HasVMScript'; ParamType1: ptString),                                                                                         //   356
-    (Index: 660; Name: 'GetVMScriptVariable'; ParamType1: ptString; ParamType2: ptString),                                              //   357
+    (Index: 659; Name: 'HasVMScript'; ParamType1: ptString),                                                                                                //   356
+    (Index: 660; Name: 'GetVMScriptVariable'; ParamType1: ptString; ParamType2: ptString),                                                                  //   357
     (Index: 661; Name: 'GetWorkshopResourceDamage'; ParamType1: ptActorValue),                                                                              //   358
     (Index: 664; Name: 'HasValidRumorTopic'; ParamType1: ptQuest),                                                                                          //   359
     (Index: 672; Name: 'IsAttacking'),                                                                                                                      //   360
@@ -3029,10 +3013,10 @@ const
     (Index: 678; Name: 'ShouldAttackKill'; ParamType1: ptActor),                                                                                            //   365
     (Index: 680; Name: 'GetActivationHeight'),                                                                                                              //   366
     (Index: 681; Name: 'SSLPI_ReplacePayloadHasKeyword'; ParamType1: ptKeyword),                                                                            //   367
-    (Index: 682; Name: 'WornHasKeyword'; ParamType1: ptKeyword),                                                                                        //   368
+    (Index: 682; Name: 'WornHasKeyword'; ParamType1: ptKeyword),                                                                                            //   368
     (Index: 683; Name: 'GetPathingCurrentSpeed'),                                                                                                           //   369
     (Index: 684; Name: 'GetPathingCurrentSpeedAngle'; ParamType1: ptAxis),                                                                                  //   370
-    (Index: 691; Name: 'GetWorkshopObjectCount'; ParamType1: ptReferencableObject),                                                                                     //   371
+    (Index: 691; Name: 'GetWorkshopObjectCount'; ParamType1: ptReferencableObject),                                                                         //   371
     (Index: 693; Name: 'EPMagic_SpellHasKeyword'; ParamType1: ptKeyword),                                                                                   //   372
     (Index: 694; Name: 'GetNoBleedoutRecovery'),                                                                                                            //   373
     (Index: 696; Name: 'EPMagic_SpellHasSkill'; ParamType1: ptActorValue),                                                                                  //   374
@@ -3044,7 +3028,7 @@ const
     (Index: 702; Name: 'IsRecoiling'),                                                                                                                      //   380
     (Index: 703; Name: 'HasScopeWeaponEquipped'),                                                                                                           //   381
     (Index: 704; Name: 'IsPathing'),                                                                                                                        //   382
-    (Index: 705; Name: 'GetShouldHelp'; ParamType1: ptActor),                                                                                     //   383
+    (Index: 705; Name: 'GetShouldHelp'; ParamType1: ptActor),                                                                                               //   383
     (Index: 706; Name: 'HasBoundWeaponEquipped'; ParamType1: ptCastingSource),                                                                              //   384
     (Index: 707; Name: 'GetCombatTargetHasKeyword'; ParamType1: ptKeyword),                                                                                 //   385
     (Index: 709; Name: 'GetCombatGroupMemberCount'),                                                                                                        //   386
@@ -3065,7 +3049,7 @@ const
     (Index: 726; Name: 'DoesNotExist'),                                                                                                                     //   401
     (Index: 728; Name: 'GetSpeechChallengeSuccessGame'),                                                                                                    //   402
     (Index: 729; Name: 'GetActorStance'),                                                                                                                   //   403
-    (Index: 730; Name: 'SpeechScenarioHasKeyword'; ParamType1: ptKeyword; Desc:'See if Keyword is in current speech challenge game.'),                                                                                  //   404
+    (Index: 730; Name: 'SpeechScenarioHasKeyword'; ParamType1: ptKeyword; Desc:'See if Keyword is in current speech challenge game.'),                      //   404                                                             //   404
     (Index: 734; Name: 'CanProduceForWorkshop'),                                                                                                            //   405
     (Index: 735; Name: 'CanFlyHere'),                                                                                                                       //   406
     (Index: 736; Name: 'EPIsDamageType'; ParamType1: ptDamageType),                                                                                         //   407
@@ -3075,7 +3059,7 @@ const
     (Index: 741; Name: 'ObjectTemplateItem_HasKeyword'; ParamType1: ptKeyword),                                                                             //   411
     (Index: 742; Name: 'ObjectTemplateItem_HasUniqueKeyword'; ParamType1: ptKeyword),                                                                       //   412
     (Index: 743; Name: 'ObjectTemplateItem_GetLevel'),                                                                                                      //   413
-    (Index: 744; Name: 'MovementIdleMatches'; ParamType1: ptInteger{ptMovementSelectIdleFromState}; ParamType2: ptInteger{ptMovementSelectIdleToState}),                          //   414
+    (Index: 744; Name: 'MovementIdleMatches'; ParamType1: ptInteger{ptMovementSelectIdleFromState}; ParamType2: ptInteger{ptMovementSelectIdleToState}),    //   414
     (Index: 745; Name: 'GetActionData'),                                                                                                                    //   415
     (Index: 746; Name: 'GetActionDataShort'; ParamType1: ptInteger),                                                                                        //   416
     (Index: 747; Name: 'GetActionDataByte'; ParamType1: ptInteger),                                                                                         //   417
@@ -3268,7 +3252,9 @@ const
     (Index: 957; Name: 'GetShipReactorClass'; Desc: 'Gets a value representing the ship reactor class (based on its index in the ShipClassOrder form list)'),                                                                                                              //   604
     (Index: 958; Name: 'ShipReactorHasClassKeyword'; ParamType1: ptKeyword; Desc: 'Check if the reactor of the supplied ship has the provided reactor class keyword (keywords in ShipClassOrder form list)'),                                                                                //   605
     (Index: 960; Name: 'EPIsResistanceActorValue'; ParamType1: ptActorValue; Desc: 'Is a specific resistance actor value passed into this check?'),                                                                                //   606
-    (Index: 961; Name: 'GetGamePlayOptionCurrentValue'; ParamType1: ptGamePlayOption; Desc: 'Gets the current value of a Gameplay Option form.')                                                                                //   607
+    (Index: 961; Name: 'GetGamePlayOptionCurrentValue'; ParamType1: ptGamePlayOption; Desc: 'Gets the current value of a Gameplay Option form.'),                                                                                //   607
+    (Index: 965; Name: 'IsInVehicle';),
+    (Index: 966; Name: 'AreVehiclesUnlocked';)
   );
 
 var
@@ -4030,31 +4016,6 @@ begin
      (MainRecord.Signature = ALCH)
   then
     Result := 7;
-end;
-
-function wbWeatherColors(const aName: string): IwbValueDef;
-begin
-  Result := wbStruct(aName, [
-    wbByteColors('Sunrise'),      //0
-    wbByteColors('Day'),          //1
-    wbByteColors('Sunset'),       //2
-    wbByteColors('Night'),        //3
-    wbFromVersion(111, wbByteColors('EarlySunrise')), //4
-    wbFromVersion(111, wbByteColors('LateSunrise')),  //5
-    wbFromVersion(111, wbByteColors('EarlySunset')),  //6
-    wbFromVersion(111, wbByteColors('LateSunset'))    //7
-  ], cpNormal, True)
-    .SetSummaryKey([4, 0, 5, 1, 6, 2, 7, 3])
-    .SetSummaryMemberPrefixSuffix(4, 'ESR:', '')
-    .SetSummaryMemberPrefixSuffix(0, 'SR:', '')
-    .SetSummaryMemberPrefixSuffix(5, 'LSR:', '')
-    .SetSummaryMemberPrefixSuffix(1, 'D:', '')
-    .SetSummaryMemberPrefixSuffix(6, 'ESS:', '')
-    .SetSummaryMemberPrefixSuffix(2, 'SS:', '')
-    .SetSummaryMemberPrefixSuffix(7, 'LSS:', '')
-    .SetSummaryMemberPrefixSuffix(3, 'N:', '')
-    .IncludeFlag(dfSummaryMembersNoName)
-    .IncludeFlag(dfHideText);
 end;
 
 function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
@@ -8553,7 +8514,6 @@ end;
         'BGSAnimationGraph_Component',
         'BGSAttachParentArray_Component',
         'BGSBlockCellHeighGrid_Component',
-        'SurfaceTreePatternSwapInfo_Component',
         'BGSBlockEditorMetaData_Component',
         'BGSBodyPartInfo_Component',
         'BGSCityMapsUsage_Component',
@@ -8590,6 +8550,8 @@ end;
         'BGSSpawnOnDestroy_Component',
         'BGSStarDataComponent_Component',
         'BGSStoredTraversals_Component',
+        'BGSVehicleConfig',
+        'BGSVehicleManagement',
         'BGSWorkshopItemColor',
         'BGSWorldSpaceOverlay_Component',
         'BlockHeightAdjustment_Component',
@@ -8600,6 +8562,7 @@ end;
         'LightAttachmentFormComponent',
         'ParticleSystem_Component',
         'ReflectionProbes_Component',
+        'SurfaceTreePatternSwapInfo_Component',
         'TESContainer_Component',
         'TESFullName_Component',
         'TESImageSpaceModifiableForm_Component',
@@ -9056,6 +9019,296 @@ end;
           wbInteger(NAM9, 'Number of Times Allowed (per planet world)', itU32),
           wbCITCReq,
           wbCTDAsCount
+        ], []),
+        //BGSVehicleConfig
+        wbRStruct('Component Data - Vehicle Config', [
+          wbArray(VCSB, 'Suspension Bone Modifiers',
+            wbFormIDCk('Bone Modifier', [BMOD])
+          ).IncludeFlag(dfCollapsed),
+          wbStruct(VCCD, 'Vehicle Config Data', [
+            wbStruct('Node Names', [
+              wbStruct('Suspension', [
+                wbLenString('Front Left'),
+                wbLenString('Front Right'),
+                wbLenString('Rear Left'),
+                wbLenString('Rear Right')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Wheel', [
+                wbLenString('Front Left'),
+                wbLenString('Front Right'),
+                wbLenString('Rear Left'),
+                wbLenString('Rear Right')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Chassis', [
+              wbInteger('Forward Axis', itU32),
+              wbInteger('Up Axis', itU32),
+              wbFloat('Vehicle Mass'),
+              wbFloat('Friction Equalizer'),
+              wbStruct('Torque', [
+                wbFloat('Roll'),
+                wbFloat('Pitch'),
+                wbFloat('Yaw')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Inertia', [
+                wbFloat('Yaw'),
+                wbFloat('Roll'),
+                wbFloat('Pitch')
+              ]).IncludeFlag(dfCollapsed),
+              wbFloat('Extra Torque'),
+              wbFloat('Max Velocity Positional Friction'),
+              wbFloat('Friction'),
+              wbFloat('Restitution'),
+              wbFloat('COM Offset Forward'),
+              wbFloat('COM Offset Up')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Wheel', [
+              wbFloat('Slip Angle'),
+              wbFloat('Friction'),
+              wbFloat('Scale'),
+              wbFloat('Mass'),
+              wbFloat('Viscosity Friction'),
+              wbInteger('Wheel Cast Type', itS32)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Suspension', [
+              wbFloat('Strength'),
+              wbFloat('Damping Compression'),
+              wbFloat('Damping Relaxation'),
+              wbFloat('Length'),
+              wbStruct('Offsets', [
+                wbFloat('Up Front'),
+                wbFloat('Up Back'),
+                wbFloat('Front'),
+                wbFloat('Back'),
+                wbFloat('Lateral')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Steering', [
+              wbFloat('Max Angle'),
+              wbFloat('Max Angle at Max Speed')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Engine', [
+              wbFloat('Max Speed'),
+              wbFloat('Max Torque'),
+              wbFloat('Min RPM'),
+              wbFloat('Max RPM'),
+              wbFloat('Opt RPM'),
+              wbStruct('Torque', [
+                wbFloat('Min RPM'),
+                wbFloat('Max RPM')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Resistance', [
+                wbFloat('Min RPM'),
+                wbFloat('Max RPM'),
+                wbFloat('Opt RPM')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Transmission', [
+              wbFloat('Downshift RPM'),
+              wbFloat('Upshift RPM'),
+              wbFloat('Clutch Delay Time'),
+              wbStruct('Gear Ratios', [
+                wbFloat('Reverse'),
+                wbFloat('First'),
+                wbFloat('Second'),
+                wbFloat('Third'),
+                wbFloat('Fourth')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Torque Ratios', [
+                wbFloat('Front Wheels'),
+                wbFloat('Back Wheels')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Brakes', [
+              wbFloat('Max Torque'),
+              wbFloat('Min Pedal Input To Block'),
+              wbFloat('Wheels Min Time To Block')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Aerodynamics', [
+              wbFloat('Air Density'),
+              wbFloat('Front Area'),
+              wbFloat('Drag Coefficient'),
+              wbFloat('Lift Coefficient'),
+              wbFloat('Extra Gravity Multiplier')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Velocity Damping', [
+              wbFloat('Normal Spin'),
+              wbFloat('Collision Spin'),
+              wbFloat('Collision Threshold')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Handling', [
+              wbFloat('Reorient Strength'),
+              wbFloat('Reorient Damping'),
+              wbFloat('Vertical Boost Force'),
+              wbFloat('Forward Boost Force'),
+              wbFloat('Boost Max Velocity'),
+              wbFloat('Boost Duration'),
+              wbFloat('Vertical Boost Duration'),
+              wbFloat('Boost Recharge Delay'),
+              wbFloat('Boost Recharge Duration')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Water', [
+              wbFloat('Strength Front'),
+              wbFloat('Strength Back'),
+              wbFloat('Damp Front'),
+              wbFloat('Damp Back'),
+              wbFloat('Drive'),
+              wbFloat('Rotation Damp')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Bumper', [
+              wbInteger('Enable Bumper', itU8, wbBoolEnum),
+              wbFloat('Forward'),
+              wbFloat('Up'),
+              wbFloat('Width'),
+              wbFloat('Radius')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Collision Damping', [
+              wbFloat('Angular'),
+              wbFloat('Min Slope Cos')
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Controls', [
+              wbStruct('Steering PID Third Person', [
+                wbFloat('P-Value'),
+                wbFloat('I-Value'),
+                wbFloat('D-Value')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Steering PID First Person', [
+                wbFloat('P-Value'),
+                wbFloat('I-Value'),
+                wbFloat('D-Value')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Unknown', [
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat,
+              wbFloat
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Camera', [
+              wbStruct('Base Zoom', [
+                wbFloat('First Person'),
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Base Height', [
+                wbFloat('First Person'),
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Base FOV', [
+                wbFloat('First Person'),
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+                wbStruct('Boost FOV Offset', [
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Speed Ratio Zoom Offset', [
+                wbFloat('Third Person Near'),
+                wbFloat('Third Person Far')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Speed PID', [
+                wbFloat('P-Value'),
+                wbFloat('I-Value'),
+                wbFloat('D-Value')
+              ]).IncludeFlag(dfCollapsed),
+                wbStruct('FOV Blend Factor', [
+                wbFloat('Aiming'),
+                wbFloat('Boosting')
+              ]).IncludeFlag(dfCollapsed),
+                wbStruct('Position', [
+                wbFloat('Blend Filtering Factor'),
+                wbFloat('R/L Offset for First Person')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbFloat('Handling Forward Boost Force In Water'),
+            wbFloat('Water Lin Damp'),
+            wbFloat('Wheel Max Friction'),
+            wbStruct('Water Bob', [
+              wbStruct('Acceleration', [
+                wbFloat('DeadZone'),
+                wbFloat('Pitch'),
+                wbFloat('Roll')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Natural', [
+                wbFloat('Pitch Period'),
+                wbFloat('Roll Period'),
+                wbFloat('Amplitude')
+              ]).IncludeFlag(dfCollapsed),
+              wbStruct('Torque', [
+              wbFloat('Pitch'),
+              wbFloat('Roll')
+              ]).IncludeFlag(dfCollapsed)
+            ]).IncludeFlag(dfCollapsed),
+            wbFloat('Chassis Linear Damping'),
+            wbFloat('Suspension Max Visual Speed Compression'),
+            wbFloat('Suspension Max Visual Speed Relaxation'),
+            wbStruct('Slide Factor', [
+              wbFloat('Gain/S > Threshold'),
+              wbFloat('Lost/S <= Threshold'),
+              wbFloat('Threshold'),
+              wbFloat('Friction At Max Slide Factor'),
+              wbFloat('Viscosity Friction At Max Slide Factor')
+            ]).IncludeFlag(dfCollapsed)
+          ]).IncludeFlag(dfCollapsed),
+          wbFormIDCk(VCMT, 'Mounted Weapon', [WEAP]),
+          wbStruct(VCTT, 'Weapon Data', [
+            wbFloat('Offset X'),
+            wbFloat('Offset Y'),
+            wbFloat('Offset Z'),
+            wbFloat('Pitch'),
+            wbFloat('Yaw'),
+            wbFloat('Roll'),
+            wbFloat('Scale')
+          ]).IncludeFlag(dfCollapsed),
+          wbStruct(VWWD, 'Vehicle WWise Data', [
+            wbSoundReference('Motor Sound'),
+            wbSoundReference('Tire Sound Front Left'),
+            wbSoundReference('Tire Sound Front Right'),
+            wbSoundReference('Tire Sound Rear Left'),
+            wbSoundReference('Tire Sound Rear Right'),
+            wbSoundReference('Headlight On'),
+            wbSoundReference('Headlight Off'),
+            wbSoundReference('Landing Sound - Ground'),
+            wbSoundReference('Landing Sound - Water'),
+            wbSoundReference('Horn Sound')
+          ]).IncludeFlag(dfCollapsed),
+          wbStruct(VMRT, 'Vehicle Material Table', [
+            wbWWiseGUID('Material ID'),
+            wbStruct('Audio', [
+              wbInteger('Count', itU32),
+              wbUnused(4),
+              wbArrayS('Audio Rules',
+                wbStructSK([0], 'Rules', [
+                  wbLenString('Rule', 1),
+                  wbWWiseGUID('Sound')
+                ]).IncludeFlag(dfCollapsed)
+              ).SetCountPath('Count', True)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('VFX', [
+              wbInteger('Count', itU32),
+              wbUnused(4),
+              wbArrayS('VFX Rules',
+                wbStructSK([0], 'Rules', [
+                  wbLenString('Rule', 1),
+                  wbFormID('Bound Object')
+                ]).IncludeFlag(dfCollapsed)
+              ).SetCountPath('Count', True)
+            ]).IncludeFlag(dfCollapsed),
+            wbStruct('Friction', [
+              wbInteger('Count', itU32),
+              wbUnused(4),
+              wbArrayS('Friction Rules',
+                wbStructSK([0], 'Rules', [
+                  wbLenString('Rule', 1),
+                  wbFloat('Friction')
+                ]).IncludeFlag(dfCollapsed)
+              ).SetCountPath('Count', True)
+            ]).IncludeFlag(dfCollapsed)
+          ]).IncludeFlag(dfCollapsed)
         ], [])
       ], []),
       wbEmpty(BFCE, 'End Marker', cpIgnore, True)
@@ -16957,6 +17210,8 @@ end;
 
     wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
 
+    wbFormIDCk(XLRL, 'Location Reference', [LCTN]),
+
     wbEmpty(XIS2, 'Ignored by Sandbox'),
 
     wbXRNK,
@@ -18241,268 +18496,6 @@ end;
       {13} wbFloat('AI Firing Arc')
     ])
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
-
-  {subrecords checked against Starfield.esm}
-  wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000002}  2, 'Unknown 2',
-      {0x00004000} 14, 'Partial Form',
-      {0x00080000} 19, 'Can''t Wait'
-    ]), [14]), [
-    wbEDID,
-    wbBaseFormComponents,
-    wbLargeReferences
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbMHDTWRLD
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbFULL,
-    wbStruct(WCTR, 'Fixed Dimensions Center Cell', [
-      wbInteger('X', itS16),
-      wbInteger('Y', itS16)
-    ]),
-    {
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
-    }
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
-    wbFormIDCk(BNAM, 'Biome', [BIOM]),
-    wbRStruct('Parent', [
-      wbFormIDCk(WNAM, 'Worldspace', [WRLD]),
-      wbStruct(PNAM, '', [
-        wbInteger('Flags', itU8, wbFlags([
-          {0x0001} 'Use Land Data',
-          {0x0002} 'Use LOD Data',
-          {0x0004} 'Use Map Data',
-          {0x0008} 'Use Water Data',
-          {0x0010} 'Use Climate Data',
-          {0x0020} 'Use Image Space Data (unused)',
-          {0x0040} 'Use Sky Cell'
-        ], [5])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbByteArray('Unknown', 1)
-      ], cpNormal, True)
-    ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbString(NAM7, 'Water Material Path'),
-    wbFormIDCk(NAM3, 'LOD Water Type', [WATR]),
-    wbFloat(NAM4, 'LOD Water Height'),
-    wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
-    ]),
-    wbStruct(MNAM, 'Map Data', [
-      wbStruct('Usable Dimensions', [
-        wbInteger('X', itS32),
-        wbInteger('Y', itS32)
-      ]),
-      wbStruct('Cell Coordinates', [
-        wbStruct('NW Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ]),
-        wbStruct('SE Cell', [
-          wbInteger('X', itS16),
-          wbInteger('Y', itS16)
-        ])
-      ])
-    ]),
-    wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
-      wbFloat('Cell X Offset', cpNormal, False, 0.01),
-      wbFloat('Cell Y Offset', cpNormal, False, 0.01),
-      wbFloat('Cell Z Offset', cpNormal, False, 0.01)
-    ], cpNormal, True),
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
-    wbInteger(DATA, 'Flags', itU8, wbFlags([
-      {0x01} 'Small World',
-      {0x02} 'Can''t Fast Travel',
-      {0x04} 'Unknown 3',
-      {0x08} 'No LOD Water',
-      {0x10} 'No Landscape',
-      {0x20} 'No Sky',
-      {0x40} 'Fixed Dimensions',
-      {0x80} 'No Grass'
-    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    {>>> Object Bounds doesn't show up in CK <<<}
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      'Player Followers Can''t Warp Here',
-      'Show Space',
-      'Unknown 2',
-      'Allow ProcGen'
-    ])),
-    wbWorldspaceOBND,
-    wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
-    wbString(XEMP, 'Environment Map'),
-    wbString(XWEM, 'Water Environment Map'),
-    wbFloat(GNAM, 'Gravity Scale'),
-    wbRArray('Unknown', wbFormIDCk(LNAM, 'Unknown', [LTEX])),
-    wbArray(XCLW, 'Unknown', wbFloat()), // seems to always have the same
-    wbArray(WHGT, 'Unknown', wbFloat()), // length of both XCLW and WHGT?
-    wbUnknown(HNAM),
-    wbOFST
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbCLSZ
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
-
-  {subrecords checked against Starfield.esm}
-  wbRecord(WTHR, 'Weather',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9'
-    ])), [
-    wbEDID,
-    wbKeywords,
-    wbUnknown(LNAM),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
-    wbUnknown(CLDC),
-    wbRStruct('Cloud Speed', [
-      wbArray(RNAM, 'Y Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable),
-      wbArray(QNAM, 'X Speed', wbInteger('Layer', itU8, wbCloudSpeedToStr, wbCloudSpeedToInt)).IncludeFlag(dfNotAlignable)
-    ], []),
-    wbArray(PNAM, 'Cloud Colors', wbWeatherColors('Layer'), 32).IncludeFlag(dfNotAlignable),
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise').SetDefaultNativeValue(1.0),
-      wbFloat('Day').SetDefaultNativeValue(1.0),
-      wbFloat('Sunset').SetDefaultNativeValue(1.0),
-      wbFloat('Night').SetDefaultNativeValue(1.0),
-      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
-    ]), 32).IncludeFlag(dfNotAlignable),
-    wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherColors('Sky-Upper'),
-      wbWeatherColors('Fog Near'),
-      wbWeatherColors('Unknown'),
-      wbWeatherColors('Ambient'),
-      wbWeatherColors('Sunlight'),
-      wbWeatherColors('Sun'),
-      wbWeatherColors('Stars'),
-      wbWeatherColors('Sky-Lower'),
-      wbWeatherColors('Horizon'),
-      wbWeatherColors('Effect Lighting'),
-      wbWeatherColors('Cloud LOD Diffuse'),
-      wbWeatherColors('Cloud LOD Ambient'),
-      wbWeatherColors('Fog Far'),
-      wbWeatherColors('Sky Statics'),
-      wbWeatherColors('Water Multiplier'),
-      wbWeatherColors('Sun Glare'),
-      wbWeatherColors('Moon Glare'),
-      wbFromVersion(119, wbWeatherColors('Fog Near High')),
-      wbFromVersion(119, wbWeatherColors('Fog Far High'))
-    ], cpNormal, True),
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
-    wbStruct(FNAM, 'Fog Distance', [
-      wbFloat('Day - Near'),
-      wbFloat('Day - Far'),
-      wbFloat('Night - Near'),
-      wbFloat('Night - Far'),
-      wbFloat('Day - Power'),
-      wbFloat('Night - Power'),
-      wbFloat('Day - Max'),
-      wbFloat('Night - Max'),
-      wbFromVersion(119, wbFloat('Day - Near Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(119, wbFloat('Day - Near Height Range').SetDefaultNativeValue(10000.0)),
-      wbFromVersion(119, wbFloat('Night - Near Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(119, wbFloat('Night - Near Height Range').SetDefaultNativeValue(10000.0)),
-      wbFromVersion(119, wbFloat('Day - High Density Scale').SetDefaultNativeValue(1.0)),
-      wbFromVersion(119, wbFloat('Night - High Density Scale').SetDefaultNativeValue(1.0)),
-      wbFromVersion(120, wbFloat('Day - Far Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(120, wbFloat('Day - Far Height Range').SetDefaultNativeValue(10000.0)),
-      wbFromVersion(120, wbFloat('Night - Far Height Mid').SetDefaultNativeValue(0.0)),
-      wbFromVersion(120, wbFloat('Night - Far Height Range').SetDefaultNativeValue(10000.0))
-    ], cpNormal, True),
-    wbStruct(DATA, 'Data', [
-      wbInteger('Wind Speed', itU8), // scaled 0..1
-      wbByteArray('Unknown', 2),
-      wbInteger('Trans Delta', itU8), // scaled 0..0,25
-      wbInteger('Sun Glare', itU8), // scaled 0..1
-      wbInteger('Sun Damage', itU8), // scaled 0..1
-      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
-      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
-      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
-      wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Weather - Pleasant',
-        {0x02} 'Weather - Cloudy',
-        {0x04} 'Weather - Rainy',
-        {0x08} 'Weather - Snow',
-        {0x10} 'Sky Statics - Always Visible',
-        {0x20} 'Sky Statics - Follows Sun Position',
-        {0x40} 'Rain Occlusion',
-        {0x80} 'HUD Rain Effects'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
-      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
-      wbInteger('Visual Effect - End', itU8), // scaled 0..1
-      wbInteger('Wind Direction', itU8), // scaled 0..360
-      wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
-    ], cpNormal, True),
-    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
-      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('LateSunrise', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
-    ], cpNormal, True),
-    wbStruct(HNAM, 'Volumetric Lighting', [
-      wbFormIDCK('Sunrise',[VOLI, NULL]),
-      wbFormIDCK('Day',[VOLI, NULL]),
-      wbFormIDCK('Sunset',[VOLI, NULL]),
-      wbFormIDCK('Night',[VOLI, NULL]),
-      wbFormIDCK('EarlySunrise',[VOLI, NULL]),
-      wbFormIDCK('LateSunrise',[VOLI, NULL]),
-      wbFormIDCK('EarlySunset',[VOLI, NULL]),
-      wbFormIDCK('EarlySunrise',[VOLI, NULL])
-    ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
-      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
-    ], [], cpNormal, True),
-    wbRStruct('Aurora', [wbGenericModel(True)], []),
-    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
-    wbStruct(UNAM, 'Magic', [
-      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
-      wbFloat('On Lightning Strike - Threshold'),
-      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbUnused(4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbFloat('Unused'))
-    ], cpNormal, False),
-    wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
-    wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
-  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
@@ -20372,7 +20365,9 @@ end;
     wbRArray('Nodes', wbFormIDCk(PCCB, 'Node', [PCBN, PCCN])),
     wbCITCReq,
     wbCTDAsCount,
-    wbKWDAs
+    wbKWDAs,
+    wbFormIDCk(PRTN, 'Parent Node', [PCBN, PCMT, NULL]),
+    wbFormIDCk(PRVN, 'Previous Node', [PCBN, NULL])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -20381,7 +20376,9 @@ end;
     wbBaseFormComponents,
     wbFormIDCk(PCCC, 'Content', [WRLD, LVLP, PKIN], False, cpNormal, True),
     wbEmpty(IOVR, 'Override Content Placement Properties and Conditions'),
-    wbKWDAs
+    wbKWDAs,
+    wbFormIDCk(PRTN, 'Parent Node', [PCBN, NULL]),
+    wbFormIDCk(PRVN, 'Previous Node', [PCCN, NULL])
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -21328,6 +21325,203 @@ end;
     end else
       wbProgress('Warning: Could not find Wwise Soundbank Info.');
   end);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WTHR, 'Weather',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x200} 9, 'Unknown 9'
+    ])), [
+    wbEDID,
+    wbKeywords,
+    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
+    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
+    wbUnknown(CLDC),
+    wbWeatherCloudSpeed,
+    wbWeatherCloudColors,
+    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
+      wbFloat('Sunrise').SetDefaultNativeValue(1.0),
+      wbFloat('Day').SetDefaultNativeValue(1.0),
+      wbFloat('Sunset').SetDefaultNativeValue(1.0),
+      wbFloat('Night').SetDefaultNativeValue(1.0),
+      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
+      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
+    ]), 32).IncludeFlag(dfNotAlignable),
+    wbWeatherColors,
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
+    wbWeatherFogDistance,
+    wbStruct(DATA, 'Data', [
+      wbInteger('Wind Speed', itU8), // scaled 0..1
+      wbByteArray('Unknown', 2),
+      wbInteger('Trans Delta', itU8), // scaled 0..0,25
+      wbInteger('Sun Glare', itU8), // scaled 0..1
+      wbInteger('Sun Damage', itU8), // scaled 0..1
+      wbInteger('Precipitation - Begin Fade In', itU8), // scaled 0..1
+      wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
+      wbInteger('Thunder/Lightning - Begin Fade In', itU8),
+      wbInteger('Thunder/Lightning - End Fade Out', itU8),
+      wbInteger('Thunder/Lightning - Frequency', itU8),
+      wbInteger('Flags', itU8, wbFlags([
+        {0x01} 'Weather - Pleasant',
+        {0x02} 'Weather - Cloudy',
+        {0x04} 'Weather - Rainy',
+        {0x08} 'Weather - Snow',
+        {0x10} 'Sky Statics - Always Visible',
+        {0x20} 'Sky Statics - Follows Sun Position',
+        {0x40} 'Rain Occlusion',
+        {0x80} 'HUD Rain Effects'
+      ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbStruct('Lightning Color', [
+        wbInteger('Red', itU8),
+        wbInteger('Green', itU8),
+        wbInteger('Blue', itU8)
+      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
+      wbInteger('Visual Effect - End', itU8), // scaled 0..1
+      wbInteger('Wind Direction', itU8), // scaled 0..360
+      wbInteger('Wind Direction Range', itU8), // scaled 0..180
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
+    ], cpNormal, True),
+    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbStruct(IMSP, 'Image Spaces', [
+      wbFormIDCK('Sunrise', [IMGS, NULL]),
+      wbFormIDCK('Day', [IMGS, NULL]),
+      wbFormIDCK('Sunset', [IMGS, NULL]),
+      wbFormIDCK('Night', [IMGS, NULL]),
+      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('LateSunrise', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
+      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
+    ], cpNormal, True),
+    wbStruct(HNAM, 'Volumetric Lighting', [
+      wbFormIDCK('Sunrise',[VOLI, NULL]),
+      wbFormIDCK('Day',[VOLI, NULL]),
+      wbFormIDCK('Sunset',[VOLI, NULL]),
+      wbFormIDCK('Night',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL]),
+      wbFormIDCK('LateSunrise',[VOLI, NULL]),
+      wbFormIDCK('EarlySunset',[VOLI, NULL]),
+      wbFormIDCK('EarlySunrise',[VOLI, NULL])
+    ]),
+    wbRStruct('Directional Ambient Lighting Colors', [
+      wbAmbientColors(DALC, 'Sunrise'),
+      wbAmbientColors(DALC, 'Day'),
+      wbAmbientColors(DALC, 'Sunset'),
+      wbAmbientColors(DALC, 'Night'),
+      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
+      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
+      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
+      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
+    ], [], cpNormal, True),
+    wbRStruct('Aurora', [wbGenericModel(True)], []),
+    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
+    wbStruct(UNAM, 'Magic', [
+      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
+      wbFloat('On Lightning Strike - Threshold'),
+      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
+      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
+      wbFromVersion(130, wbUnused(4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
+      wbFromVersion(130, wbFloat('Unused'))
+    ], cpNormal, False),
+    wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
+    wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00002}  2, 'Unique',
+      {0x04000} 14, 'Partial Form',
+      {0x80000} 19, 'Can''t Wait'
+    ]), [14]), [
+    wbEDID,
+    wbBaseFormComponents,
+    wbWorldLargeRefs
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldMaxHeight
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbFULL,
+    wbWorldFixedCenter,
+    wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbFormIDCk(BNAM, 'Biome', [BIOM]),
+    wbRStruct('Parent Worldspace', [
+      wbFormIDCk(WNAM, 'World', [WRLD]),
+      wbInteger(PNAM, 'Flags', itU16,
+        wbFlags([
+          {0x01} 'Use Land Data',
+          {0x02} 'Use LOD Data',
+          {0x04} 'Use Map Data',
+          {0x08} 'Use Water Data',
+          {0x10} 'Use Climate Data',
+          {0x20} 'Use Image Space Data (unused)',
+          {0x40} 'Use Sky Cell'
+        ], [5]),
+      cpNormal, True)
+      .IncludeFlag(dfCollapsed, wbCollapseFlags)
+    ], []),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]),
+    wbWorldWaterData,
+    wbWorldLandData,
+    wbString(ICON, 'Map Image'),
+    wbWorldMapData,
+    wbWorldMapOffset,
+    wbFloat(NAMA, 'Distant LOD Multiplier'),
+    wbInteger(DATA, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Small World',
+        {0x02} 'Can''t Fast Travel From Here',
+        {0x04} 'Unknown 3',
+        {0x08} 'No LOD Water',
+        {0x10} 'No Landscape',
+        {0x20} 'No Sky',
+        {0x40} 'Fixed Dimensions',
+        {0x80} 'No Grass'
+      ]),
+    cpNormal, True)
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbInteger(FNAM, 'Flags', itU8,
+      wbFlags([
+        {0x01} 'Player Followers Can''t Warp Here',
+        {0x02} 'Show Space',
+        {0x04} 'Prevent Merge Cell Content',
+        {0x08} 'Allow ProcGen',
+        {0x10} 'Allow Cell Content'
+      ])
+    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbWorldRegionEditorMap,
+    wbWorldObjectBounds,
+    wbFormIDCk(ZNAM, 'Music', [MUSC]),
+    wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
+    wbString(XEMP, 'Environment Map'),
+    wbString(XWEM, 'Water Environment Map'),
+    wbFloat(GNAM, 'Gravity Scale'),
+    wbRArray('Ordered Landscape Textures',
+      wbFormIDCk(LNAM, 'Land Texture', [LTEX])
+    ).IncludeFlag(dfNotAlignable),
+    wbWorldWaterHeightData,
+    wbUnknown(HNAM),
+    wbWorldLevelData,
+    wbWorldOffsetData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable),
+    wbWorldCellSizeData
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable)
+  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
