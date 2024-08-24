@@ -21338,7 +21338,7 @@ end;
     wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
     wbUnknown(CLDC),
     wbWeatherCloudSpeed,
-    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer'), 32).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudColors,
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise').SetDefaultNativeValue(1.0),
       wbFloat('Day').SetDefaultNativeValue(1.0),

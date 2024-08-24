@@ -20108,7 +20108,7 @@ begin
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbUnused(ONAM),
     wbWeatherCloudSpeed,
-    wbArray(PNAM, 'Cloud Colors', wbWeatherTimeOfDay('Layer')).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudColors,
     wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
       wbFloat('Sunrise'),
       wbFloat('Day'),

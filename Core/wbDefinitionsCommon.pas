@@ -71,6 +71,7 @@ var
 
   wbWeatherCloudTextures: IwbRecordMemberDef;
   wbWeatherCloudSpeed: IwbRecordMemberDef;
+  wbWeatherCloudColors: IwbRecordMemberDef;
   wbWeatherColors: IwbRecordMemberDef;
   wbWeatherFogDistance: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
@@ -1105,6 +1106,12 @@ begin
 		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
 	    	).IncludeFlag(dfNotAlignable)
 	    ], []));
+
+  //FO3,FNV,TES4,FO4,FO76,SF1
+  wbWeatherCloudColors :=
+    wbArray(PNAM, 'Cloud Colors',
+      wbWeatherTimeOfDay('Layer')
+    ).IncludeFlag(dfNotAlignable);
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherColors :=
