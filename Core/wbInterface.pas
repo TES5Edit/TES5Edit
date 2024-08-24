@@ -58,7 +58,7 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'g';
+    Build   : 'h';
     Title   : '';
   );
 

@@ -2981,8 +2981,8 @@ begin
              wbStarfieldIsABugInfestedHellhole and
              wbIsStarfield and
              (
-               SameText(flMasters[i].FileName, 'Starfield.esm') or
-               SameText(flMasters[i].FileName, 'BlueprintShips-Starfield.esm')
+                  SameText(flMasters[i].FileName, 'Starfield.esm')
+//             or SameText(flMasters[i].FileName, 'BlueprintShips-Starfield.esm')
              )
            )
         then begin
@@ -3240,7 +3240,7 @@ begin
   end;
 
   if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-    AddMasters(['Starfield.esm', 'BlueprintShips-Starfield.esm']);
+    AddMasters(['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}]);
 
   BuildOrLoadRef(False);
 end;
@@ -3341,7 +3341,7 @@ begin
             AddMaster(_File);
 
   if wbStarfieldIsABugInfestedHellhole and wbIsStarfield then
-    AddMasters(['Starfield.esm', 'BlueprintShips-Starfield.esm']);
+    AddMasters(['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}]);
 
   BuildOrLoadRef(False);
 end;
