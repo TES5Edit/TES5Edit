@@ -4318,8 +4318,8 @@ var  wbSoundTypeSoundsOld :=
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
-    wbString(CNAM, 'Cloud Textures Lower Layer'),
-    wbString(DNAM, 'Cloud Textures Upper Layer'),
+    wbString(CNAM, 'Cloud Texture Lower Layer'),
+    wbString(DNAM, 'Cloud Texture Upper Layer'),
     wbRStruct('Precipitation', [
       wbTexturedModel('Model', [MODL, MODB, MODT])
     ], []),

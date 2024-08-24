@@ -12875,10 +12875,10 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbWeatherCloudTextures,
     wbRStruct('Unused', [
-      wbUnknown(DNAM, cpIgnore, False, wbNeverShow),
-      wbUnknown(CNAM, cpIgnore, False, wbNeverShow),
-      wbUnknown(ANAM, cpIgnore, False, wbNeverShow),
-      wbUnknown(BNAM, cpIgnore, False, wbNeverShow)
+      wbUnused(DNAM),
+      wbUnused(CNAM),
+      wbUnused(ANAM),
+      wbUnused(BNAM)
     ], [], cpIgnore, False, wbNeverShow)
     .IncludeFlag(dfCollapsed),
     wbInteger(LNAM, 'Cloud Layer Count', itU32),

@@ -16001,7 +16001,7 @@ begin
     wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbByteArray(ONAM, 'Unused', 0, cpIgnore),
+    wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbArray(PNAM, 'Cloud Colors',
       wbWeatherTimeOfDay('Layer'),
