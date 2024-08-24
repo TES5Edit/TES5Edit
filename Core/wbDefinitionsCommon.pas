@@ -50,7 +50,7 @@ var
   wbHEDR: IwbSubRecordDef;
   wbMagicEffectSounds: IwbSubRecordDef;
   wbMDOB: IwbSubRecordDef;
-  wbMHDTCELL: IwbSubRecordDef;
+  wbMHDTCELL: IwbRecordMemberDef;
   wbRegionSounds: IwbSubRecordDef;
   wbSeasons: IwbSubRecordDef;
   wbStaticPartPlacements: IwbSubRecordDef;
@@ -912,23 +912,19 @@ begin
 
   wbXLOD := wbArray(XLOD, 'Distant LOD Data', wbFloat('Unknown'), 3);
 
-  if wbGameMode in [gmSF1] then
-    wbMHDTCELLSize := 50
-  else
-    wbMHDTCELLSize := 32;
+  wbMHDTCELLSize :=
+  IfThen(wbIsStarfield, 50, 32);
 
-  if wbSimpleRecords then
-    wbMHDTCELL :=
-      wbByteArray(MHDT, 'Max Height Data')
-  else
-    wbMHDTCELL :=
+  wbMHDTCELL :=
+    IfThen(wbGameMode in [gmSF1],
+      wbByteArray(MHDT, 'Max Height Data'),
       wbStruct(MHDT, 'Max Height Data', [
         wbFloat('Offset'),
         wbArray('Max Heights',
           wbArray('Row',
             wbInteger('Column', itU8),
           wbMHDTCELLSize).IncludeFlag(dfCollapsed),
-        wbMHDTCELLSize).IncludeFlag(dfCollapsed)]);
+        wbMHDTCELLSize).IncludeFlag(dfCollapsed)]));
 
   wbMODT := wbModelInfo(MODT);
   wbDMDT := wbModelInfo(DMDT);
@@ -1189,7 +1185,7 @@ begin
         wbFromVersion(120, wbFloat('Night - Far Height Mid')), nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(120, wbFloat('Night - Far Height Range')), nil)
-    ], cpNormal, True, nil, 3);
+    ], cpNormal, True, nil, 4);
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherSounds :=
