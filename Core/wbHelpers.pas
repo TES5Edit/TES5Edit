@@ -1295,6 +1295,10 @@ var
   F: TSearchRec;
 begin
   Result := 0;
+
+  if modIni then
+    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
+
   j := 0;
   if Assigned(bsaNames) then
     j := bsaNames.Count;
@@ -1321,9 +1325,6 @@ begin
   finally
     FindClose(F);
   end;
-
-  if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
 end;
 
 function wbDDSDataToBitmap(aData: TBytes; Bitmap: TBitmap): Boolean;
