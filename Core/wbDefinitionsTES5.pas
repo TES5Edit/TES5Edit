@@ -9445,11 +9445,16 @@ Can't properly represent that with current record definition methods.
     wbRArray('Topics',
       wbFormIDCK(TNAM, 'Topic', [DIAL])
     ),
-    wbInteger(ENAM, 'View Category', itu32,
+    wbInteger(ENAM, 'Topic Type', itU32,
       wbEnum([], [
-        0, 'Dialogue Branches',
-        3, 'Unknown',
-        7, 'Dialogue Topics'
+        0, 'None',
+        1, 'Player Dialogue',
+        2, 'Favor Dialogue',
+        3, 'Combat',
+        4, 'Favors',
+        5, 'Detection',
+        6, 'Service',
+        7, 'Misc'
       ])),
     wbInteger(DNAM, 'Show All Text', itU8, wbBoolEnum)
   ]);
