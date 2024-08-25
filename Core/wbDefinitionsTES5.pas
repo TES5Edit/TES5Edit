@@ -9440,19 +9440,18 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbRArray('Branches',
-      wbFormIDCk(BNAM, 'Branch', [DLBR])),
+      wbFormIDCk(BNAM, 'Branch', [DLBR])
+    ),
     wbRArray('Topics',
-      wbFormIDCK(TNAM, 'Topic', [DIAL])),
+      wbFormIDCK(TNAM, 'Topic', [DIAL])
+    ),
     wbInteger(ENAM, 'View Category', itu32,
       wbEnum([], [
-        $00, 'Dialogue Branches',
-        $07, 'Dialogue Topics'
+        0, 'Dialogue Branches',
+        3, 'Unknown',
+        7, 'Dialogue Topics'
       ])),
-    wbInteger(DNAM, 'Show All Text', itU8,
-      wbEnum([], [
-        $00, 'False',
-        $01, 'True'
-      ]))
+    wbInteger(DNAM, 'Show All Text', itU8, wbBoolEnum)
   ]);
 
   wbRecord(WOOP, 'Word of Power', [
