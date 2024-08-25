@@ -226,35 +226,6 @@ begin
   end;
 end;
 
-function wbWthrDataClassification(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := '';
-  case aType of
-    ctToStr, ctToSummary: begin
-      case aInt and not 192 of
-        0: Result := 'None';
-        1: Result := 'Pleasant';
-        2: Result := 'Cloudy';
-        3: Result := 'Unknown 3';
-        4: Result := 'Rainy';
-        8: Result := 'Snow';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
-      end;
-    end;
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 2)
-    end;
-    ctCheck: begin
-      case aInt and not 192 of
-        0..4, 8: Result := '';
-      else
-        Result := '<Unknown: '+IntToStr(aInt and not 192)+'>';
-      end;
-    end;
-  end;
-end;
-
 function wbGLOBFNAM(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
