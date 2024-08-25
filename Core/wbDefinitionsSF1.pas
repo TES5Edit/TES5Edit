@@ -13459,18 +13459,9 @@ end;
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL])) // do not sort. NULL entry acts as a divider for groups
   ]);
 
-  (* still exists in game code, but not in Starfield.esm
-  wbRecord(DLVW, 'Dialog View', [
-    wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
-  ]);
-  *)
+  //still exists in game code, but not in Starfield.esm
+  wbRecord(DLVW, 'Dialog View', []);
+
   {wbRecord(WOOP, 'Word of Power', [
     wbEDID
   ]);}

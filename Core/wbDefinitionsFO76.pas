@@ -14001,16 +14001,8 @@ begin
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(DLVW, 'Dialog View', [
-    wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
-  ]);
+  //still exists in game code, but not in Fallout76.esm
+  wbRecord(DLVW, 'Dialog View', []);
 
   {wbRecord(WOOP, 'Word of Power', [
     wbEDID

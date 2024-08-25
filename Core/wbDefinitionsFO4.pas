@@ -11735,13 +11735,10 @@ begin
 
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
+    wbFormIDCk(QNAM, 'Quest', [QUST]),
+    wbFormIDCk(BNAM, 'Branch', [DLBR]),
+    wbUnused(ENAM),
+    wbUnused(DNAM)
   ]);
 
   {wbRecord(WOOP, 'Word of Power', [

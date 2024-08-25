@@ -9447,9 +9447,9 @@ Can't properly represent that with current record definition methods.
     ),
     wbInteger(ENAM, 'Topic Type', itU32,
       wbEnum([], [
-        0, 'None',
-        1, 'Player Dialogue',
-        2, 'Favor Dialogue',
+        0, 'Player Dialogue',
+        1, 'Favor Dialogue',
+        2, 'Custom',
         3, 'Combat',
         4, 'Favors',
         5, 'Detection',
