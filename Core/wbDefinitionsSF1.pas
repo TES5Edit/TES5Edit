@@ -2142,7 +2142,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : Integer;
+  i           : Int64;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
 
@@ -2151,7 +2151,7 @@ begin  // Could be simplified by checking if Parent Worldspace is NULL, that's w
 
   Container := aElement.Container;
 
-  Parent := Container.ElementByName['Pathing Worldspace'];
+  Parent := Container.ElementByName['Parent Worldspace'];
 
   if not Assigned(Parent) then
     Exit;
@@ -6638,8 +6638,8 @@ begin
     wbInteger('Version', itU32).SetDefaultNativeValue(17).IncludeFlag(dfSkipImplicitEdit),  // Changes how the struct is loaded, should be 15 in FO4
     wbStruct('Pathing Cell', [
       wbInteger('Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
-      wbFormIDCk('Pathing Worldspace', [WRLD, NULL]).IncludeFlag(dfSummaryExcludeNULL),
-      wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]).IncludeFlag(dfSummaryExcludeNULL),
+      wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
         wbStruct('Coordinates', [
           wbInteger('Grid Y', itS16),
           wbInteger('Grid X', itS16)

@@ -1942,7 +1942,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : integer;
+  i           : int64;
 begin
   Result := 0;
   if not Assigned(aElement) then

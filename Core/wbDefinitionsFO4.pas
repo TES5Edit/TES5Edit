@@ -2194,7 +2194,7 @@ begin
   if not Supports(Container, IwbSubRecord, SubRecord) then
     Exit;
 
-  Element := SubRecord.ElementByName['Pathing Worldspace'];
+  Element := SubRecord.ElementByName['Parent Worldspace'];
   if not Assigned(Element) then
     Exit;
 
@@ -2206,7 +2206,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : Integer;
+  i           : Int64;
 begin
   Result := 0;
   if not Assigned(aElement) then
@@ -2214,7 +2214,7 @@ begin
 
   Container := aElement.Container;
 
-  Parent := Container.ElementByName['Pathing Worldspace'];
+  Parent := Container.ElementByName['Parent Worldspace'];
 
   if not Assigned(Parent) then
     Exit;
@@ -7217,8 +7217,8 @@ begin
 	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
 	  wbStruct('Pathing Cell', [
       wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
-      wbFormIDCk('Pathing Worldspace', [WRLD, NULL]),
-      wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
         wbStruct('Coordinates', [
           wbInteger('Grid Y', itS16),
           wbInteger('Grid X', itS16)

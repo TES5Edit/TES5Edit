@@ -2787,7 +2787,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : Integer;
+  i           : Int64;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
   if not Assigned(aElement) then
