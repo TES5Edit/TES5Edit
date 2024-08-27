@@ -77,6 +77,7 @@ var
   wbWeatherFogDistance: IwbRecordMemberDef;
   wbWeatherLightningColor: IwbValueDef;
   wbWeatherSounds: IwbRecordMemberDef;
+  wbWeatherImageSpaces: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
@@ -1120,16 +1121,16 @@ begin
         wbFloat('Sunset').SetDefaultNativeValue(1.0),
         wbFloat('Night').SetDefaultNativeValue(1.0),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Early Sunrise').SetDefaultNativeValue(1.0)),
           nil),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Late Sunrise').SetDefaultNativeValue(1.0)),
           nil),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Early Sunset').SetDefaultNativeValue(1.0)),
           nil),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Early Sunrise').SetDefaultNativeValue(1.0)),
           nil)
       ])
     ).IncludeFlag(dfNotAlignable);
@@ -1238,6 +1239,27 @@ begin
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed)
     );
+
+  //TES5,FO4,FO76,SF1
+  wbWeatherImageSpaces :=
+    wbStruct(IMSP, 'Image Spaces', [
+      wbFormIDCK('Sunrise', [IMGS, NULL]),
+      wbFormIDCK('Day', [IMGS, NULL]),
+      wbFormIDCK('Sunset', [IMGS, NULL]),
+      wbFormIDCK('Night', [IMGS, NULL]),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, wbFormIDCK('Early Sunrise', [IMGS, NULL])),
+        nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, wbFormIDCK('Late Sunrise', [IMGS, NULL])),
+        nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, wbFormIDCK('Early Sunset', [IMGS, NULL])),
+        nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, wbFormIDCK('Late Sunset', [IMGS, NULL])),
+        nil)
+    ], cpNormal, True, nil, 4);
 
 {>>>Worldspace Common Defs<<<}
   //TES5,FO4,FO76,SF1

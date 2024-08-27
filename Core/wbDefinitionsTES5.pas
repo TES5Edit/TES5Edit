@@ -12926,12 +12926,7 @@ Can't properly represent that with current record definition methods.
     wbRArrayS('Sky Statics',
       wbFormIDCk(TNAM, 'Static', [STAT, NULL])
     ),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL])
-    ]),
+    wbWeatherImageSpaces,
     // SSE
     wbStruct(HNAM, 'Volumetric Lighting', [
       wbFormIDCK('Sunrise', [VOLI, NULL]),
