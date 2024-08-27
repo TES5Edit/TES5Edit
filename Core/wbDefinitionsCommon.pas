@@ -74,6 +74,7 @@ var
   wbWeatherCloudColors: IwbRecordMemberDef;
   wbWeatherColors: IwbRecordMemberDef;
   wbWeatherFogDistance: IwbRecordMemberDef;
+  wbWeatherLightningColor: IwbValueDef;
   wbWeatherSounds: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
@@ -1186,6 +1187,15 @@ begin
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(120, wbFloat('Night - Far Height Range')), nil)
     ], cpNormal, True, nil, 4);
+
+  //TES4,FO3,FNV,TES5,FO4,FO76,SF1
+  wbWeatherLightningColor :=
+    wbStruct('Lightning Color', [
+      wbInteger('Red', itU8),
+      wbInteger('Green', itU8),
+      wbInteger('Blue', itU8)
+    ]).SetToStr(wbRGBAToStr)
+    .IncludeFlag(dfCollapsed, wbCollapseRGBA);
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherSounds :=

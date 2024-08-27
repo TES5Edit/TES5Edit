@@ -10401,12 +10401,7 @@ var  wbSoundTypeSoundsOld :=
           {0x08} 'Weather - Snow'
         ], True)
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr)
-      .IncludeFlag(dfCollapsed, wbCollapseRGBA)
+      wbWeatherLightningColor
     ], cpNormal, True),
     wbWeatherSounds
   ]);

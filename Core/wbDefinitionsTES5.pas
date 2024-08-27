@@ -12879,16 +12879,16 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbWeatherCloudTextures,
     wbRStruct('Unused', [
-      wbUnused(DNAM),
-      wbUnused(CNAM),
-      wbUnused(ANAM),
-      wbUnused(BNAM)
+      wbUnused(DNAM, 0),
+      wbUnused(CNAM, 0),
+      wbUnused(ANAM, 0),
+      wbUnused(BNAM, 0)
     ], [], cpIgnore, False, wbNeverShow)
     .IncludeFlag(dfCollapsed),
     wbInteger(LNAM, 'Cloud Layer Count', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbUnused(ONAM),
+    wbUnused(ONAM, 0),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
     wbArray(JNAM, 'Cloud Alphas',
@@ -12922,12 +12922,7 @@ Can't properly represent that with current record definition methods.
           {0x20} 'Aurora - Follows Sun Position'
         ])
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr)
-      .IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbWeatherLightningColor,
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
