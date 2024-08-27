@@ -21330,16 +21330,7 @@ end;
     wbUnknown(CLDC),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise').SetDefaultNativeValue(1.0),
-      wbFloat('Day').SetDefaultNativeValue(1.0),
-      wbFloat('Sunset').SetDefaultNativeValue(1.0),
-      wbFloat('Night').SetDefaultNativeValue(1.0),
-      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
-      wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
-    ]), 32).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudAlphas,
     wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown').SetDefaultNativeValue(1.0), 32).IncludeFlag(dfNotAlignable),
     wbWeatherFogDistance,

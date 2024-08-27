@@ -12891,14 +12891,7 @@ Can't properly represent that with current record definition methods.
     wbUnused(ONAM, 0),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
-    wbArray(JNAM, 'Cloud Alphas',
-      wbStruct('Layer', [
-        wbFloat('Sunrise'),
-        wbFloat('Day'),
-        wbFloat('Sunset'),
-        wbFloat('Night')
-      ])
-    ).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudAlphas,
     wbWeatherColors,
     wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [

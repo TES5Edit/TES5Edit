@@ -72,6 +72,7 @@ var
   wbWeatherCloudTextures: IwbRecordMemberDef;
   wbWeatherCloudSpeed: IwbRecordMemberDef;
   wbWeatherCloudColors: IwbRecordMemberDef;
+  wbWeatherCloudAlphas: IwbRecordMemberDef;
   wbWeatherColors: IwbRecordMemberDef;
   wbWeatherFogDistance: IwbRecordMemberDef;
   wbWeatherLightningColor: IwbValueDef;
@@ -1108,6 +1109,29 @@ begin
   wbWeatherCloudColors :=
     wbArray(PNAM, 'Cloud Colors',
       wbWeatherTimeOfDay('Layer')
+    ).IncludeFlag(dfNotAlignable);
+
+  //TES5,FO4,FO76,SF1
+  wbWeatherCloudAlphas :=
+    wbArray(JNAM, 'Cloud Alphas',
+      wbStruct('Layer', [
+        wbFloat('Sunrise').SetDefaultNativeValue(1.0),
+        wbFloat('Day').SetDefaultNativeValue(1.0),
+        wbFloat('Sunset').SetDefaultNativeValue(1.0),
+        wbFloat('Night').SetDefaultNativeValue(1.0),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+          nil),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
+          nil),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
+          nil),
+        IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+          wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
+          nil)
+      ])
     ).IncludeFlag(dfNotAlignable);
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1

@@ -20101,16 +20101,7 @@ begin
     wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise'),
-      wbFloat('Day'),
-      wbFloat('Sunset'),
-      wbFloat('Night'),
-      wbFloat('EarlySunrise'),
-      wbFloat('LateSunrise'),
-      wbFloat('EarlySunset'),
-      wbFloat('LateSunset')
-    ])).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudAlphas,
     wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
     wbWeatherFogDistance,
