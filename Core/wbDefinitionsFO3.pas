@@ -9208,7 +9208,7 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(_03_IAD, 'Night', [IMAD]),
     wbWeatherCloudTextures,
     wbRStruct('Precipitation', [wbGenericModel], []),
-    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
     wbWeatherColors,

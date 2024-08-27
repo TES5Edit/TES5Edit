@@ -20095,7 +20095,7 @@ begin
     wbEDID,
     wbKeywords,
     wbWeatherCloudTextures,
-    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbUnused(ONAM),

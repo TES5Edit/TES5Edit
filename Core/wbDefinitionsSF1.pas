@@ -21324,7 +21324,7 @@ end;
     ])), [
     wbEDID,
     wbKeywords,
-    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
     wbUnknown(CLDC),
