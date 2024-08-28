@@ -1942,7 +1942,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : integer;
+  i           : int64;
 begin
   Result := 0;
   if not Assigned(aElement) then
@@ -3885,38 +3885,6 @@ begin
      (MainRecord.Signature = ALCH)
   then
     Result := 7;
-end;
-
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
-begin
-  Result := wbStruct(aSignature, aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale')
-  ], cpNormal, False, nil, 1)
-end;
-
-function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
-begin
-  Result := wbStruct(aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale', cpIgnore)
-  ], cpNormal, False, nil, 1);
 end;
 
 type
@@ -9299,14 +9267,14 @@ Can't properly represent that with current record definition methods.
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbAmbientColors('Ambient Colors'), // WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
+      wbUnused(32), // WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbStruct('Light Fade Distances', [
         wbFloat('Start'),
         wbFloat('End')
       ]),
-      wbByteArray('Unknown', 4)
+      wbUnused(4)
     ], cpNormal, True, nil, 11),
     wbAmbientColors(DALC)
   ]);
@@ -9440,19 +9408,23 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
     wbRArray('Branches',
-      wbFormIDCk(BNAM, 'Branch', [DLBR])),
+      wbFormIDCk(BNAM, 'Branch', [DLBR])
+    ),
     wbRArray('Topics',
-      wbFormIDCK(TNAM, 'Topic', [DIAL])),
-    wbInteger(ENAM, 'View Category', itu32,
+      wbFormIDCK(TNAM, 'Topic', [DIAL])
+    ),
+    wbInteger(ENAM, 'Topic Type', itU32,
       wbEnum([], [
-        $00, 'Dialogue Branches',
-        $07, 'Dialogue Topics'
+        0, 'Player Dialogue',
+        1, 'Favor Dialogue',
+        2, 'Custom',
+        3, 'Combat',
+        4, 'Favors',
+        5, 'Detection',
+        6, 'Service',
+        7, 'Misc'
       ])),
-    wbInteger(DNAM, 'Show All Text', itU8,
-      wbEnum([], [
-        $00, 'False',
-        $01, 'True'
-      ]))
+    wbInteger(DNAM, 'Show All Text', itU8, wbBoolEnum)
   ]);
 
   wbRecord(WOOP, 'Word of Power', [
@@ -12875,26 +12847,19 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbWeatherCloudTextures,
     wbRStruct('Unused', [
-      wbUnused(DNAM),
-      wbUnused(CNAM),
-      wbUnused(ANAM),
-      wbUnused(BNAM)
+      wbUnused(DNAM, 0),
+      wbUnused(CNAM, 0),
+      wbUnused(ANAM, 0),
+      wbUnused(BNAM, 0)
     ], [], cpIgnore, False, wbNeverShow)
     .IncludeFlag(dfCollapsed),
-    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
-    wbUnused(ONAM),
+    wbUnused(ONAM, 0),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
-    wbArray(JNAM, 'Cloud Alphas',
-      wbStruct('Layer', [
-        wbFloat('Sunrise'),
-        wbFloat('Day'),
-        wbFloat('Sunset'),
-        wbFloat('Night')
-      ])
-    ).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudAlphas,
     wbWeatherColors,
     wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
@@ -12918,12 +12883,7 @@ Can't properly represent that with current record definition methods.
           {0x20} 'Aurora - Follows Sun Position'
         ])
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr)
-      .IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbWeatherLightningColor,
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
@@ -12934,12 +12894,7 @@ Can't properly represent that with current record definition methods.
     wbRArrayS('Sky Statics',
       wbFormIDCk(TNAM, 'Static', [STAT, NULL])
     ),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL])
-    ]),
+    wbWeatherImageSpaces,
     // SSE
     wbStruct(HNAM, 'Volumetric Lighting', [
       wbFormIDCK('Sunrise', [VOLI, NULL]),
@@ -12947,12 +12902,7 @@ Can't properly represent that with current record definition methods.
       wbFormIDCK('Sunset', [VOLI, NULL]),
       wbFormIDCK('Night', [VOLI, NULL])
     ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night')
-    ], [], cpNormal, True),
+    wbWeatherDirectionalLighting,
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
     wbRStruct('Aurora', [wbGenericModel], []),

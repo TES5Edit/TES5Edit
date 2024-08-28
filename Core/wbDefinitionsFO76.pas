@@ -2787,7 +2787,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : Integer;
+  i           : Int64;
 begin  // Could be simplified by checking if Parent Worldspace is NULL, that's what the runtime does :)
   Result := 0;
   if not Assigned(aElement) then
@@ -5893,53 +5893,6 @@ begin
      (MainRecord.Signature = LVLI)
   then
     Result := 7;
-end;
-
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'; const bOnlyColors: Boolean = False): IwbSubRecordDef; overload;
-begin
-  if bOnlyColors then
-
-    Result := wbStruct(aSignature, aName, [
-      wbStruct('Directional', [
-        wbByteColors('X+'),
-        wbByteColors('X-'),
-        wbByteColors('Y+'),
-        wbByteColors('Y-'),
-        wbByteColors('Z+'),
-        wbByteColors('Z-')
-      ]),
-      wbByteArray('Unused',4),
-      wbByteArray('Unused',4)
-    ])
-  else
-    Result := wbStruct(aSignature, aName, [
-      wbStruct('Directional', [
-        wbByteColors('X+'),
-        wbByteColors('X-'),
-        wbByteColors('Y+'),
-        wbByteColors('Y-'),
-        wbByteColors('Z+'),
-        wbByteColors('Z-')
-      ]),
-      wbByteColors('Specular'),
-      wbFloat('Scale')
-    ])
-end;
-
-function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
-begin
-  Result := wbStruct(aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale', cpIgnore)
-  ]);
 end;
 
 function wbIntToHexStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -10982,7 +10935,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbAmbientColors,
+      wbAmbientColors('Ambient Colors'),
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
@@ -13849,12 +13802,12 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbByteArray('Unused', 32, cpIgnore),
+      wbUnused(32),
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
-      wbByteArray('Unused', 4, cpIgnore),
+      wbUnused(4),
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
       wbByteColors('Fog Color High Near'),
@@ -14001,16 +13954,8 @@ begin
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
 
-  wbRecord(DLVW, 'Dialog View', [
-    wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
-  ]);
+  //still exists in game code, but not in Fallout76.esm
+  wbRecord(DLVW, 'Dialog View', []);
 
   {wbRecord(WOOP, 'Word of Power', [
     wbEDID
@@ -20103,22 +20048,13 @@ begin
     wbEDID,
     wbKeywords,
     wbWeatherCloudTextures,
-    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
-    wbArray(JNAM, 'Cloud Alphas', wbStruct('Layer', [
-      wbFloat('Sunrise'),
-      wbFloat('Day'),
-      wbFloat('Sunset'),
-      wbFloat('Night'),
-      wbFloat('EarlySunrise'),
-      wbFloat('LateSunrise'),
-      wbFloat('EarlySunset'),
-      wbFloat('LateSunset')
-    ])).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudAlphas,
     wbWeatherColors,
     wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
     wbWeatherFogDistance,
@@ -20143,11 +20079,7 @@ begin
         {0x40} 'Rain Occlusion',
         {0x80} 'HUD Rain Effects'
       ])),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbWeatherLightningColor,
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
@@ -20157,16 +20089,7 @@ begin
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
-      wbFormIDCK('EarlySunrise', [IMGS, NULL]),
-      wbFormIDCK('LateSunrise', [IMGS, NULL]),
-      wbFormIDCK('EarlySunset', [IMGS, NULL]),
-      wbFormIDCK('LateSunset', [IMGS, NULL])
-    ], cpNormal, True, nil, 4),
+    wbWeatherImageSpaces,
     wbStruct(WGDR, 'God Rays', [
       wbFormIDCK('Sunrise', [GDRY, NULL]),
       wbFormIDCK('Day', [GDRY, NULL]),
@@ -20187,16 +20110,7 @@ begin
       wbFormIDCK('EarlySunset', [VOLI, NULL]),
       wbFormIDCK('LateSunset', [VOLI, NULL])
     ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise', True),
-      wbAmbientColors(DALC, 'Day', True),
-      wbAmbientColors(DALC, 'Sunset', True),
-      wbAmbientColors(DALC, 'Night', True),
-      wbAmbientColors(DALC, 'EarlySunrise', True),
-      wbAmbientColors(DALC, 'LateSunrise', True),
-      wbAmbientColors(DALC, 'EarlySunset', True),
-      wbAmbientColors(DALC, 'LateSunset', True)
-    ], [], cpNormal, True),
+    wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbStruct(UNAM, 'Magic', [

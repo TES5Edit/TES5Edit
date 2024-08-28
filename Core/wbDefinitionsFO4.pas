@@ -2194,7 +2194,7 @@ begin
   if not Supports(Container, IwbSubRecord, SubRecord) then
     Exit;
 
-  Element := SubRecord.ElementByName['Pathing Worldspace'];
+  Element := SubRecord.ElementByName['Parent Worldspace'];
   if not Assigned(Element) then
     Exit;
 
@@ -2206,7 +2206,7 @@ function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement
 var
   Container   : IwbContainer;
   Parent      : IwbElement;
-  i           : Integer;
+  i           : Int64;
 begin
   Result := 0;
   if not Assigned(aElement) then
@@ -2214,7 +2214,7 @@ begin
 
   Container := aElement.Container;
 
-  Parent := Container.ElementByName['Pathing Worldspace'];
+  Parent := Container.ElementByName['Parent Worldspace'];
 
   if not Assigned(Parent) then
     Exit;
@@ -4988,28 +4988,6 @@ begin
     Result := 7;
 end;
 
-function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
-begin
-  Result := wbStruct(aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale', cpIgnore).SetDefaultNativeValue(1.0)
-  ]);
-end;
-
-
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbAmbientColors(aName));
-end;
-
 function wbIntToHexStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   case aType of
@@ -7217,8 +7195,8 @@ begin
 	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
 	  wbStruct('Pathing Cell', [
       wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
-      wbFormIDCk('Pathing Worldspace', [WRLD, NULL]),
-      wbUnion('Pathing Cell Data', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
+      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
+      wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
         wbStruct('Coordinates', [
           wbInteger('Grid Y', itS16),
           wbInteger('Grid X', itS16)
@@ -8954,7 +8932,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbAmbientColors,
+      wbAmbientColors('Ambient Colors'),
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
@@ -11585,12 +11563,12 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbByteArray('Unused', 32, cpIgnore),
+      wbUnused(32),
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
-      wbByteArray('Unused', 4, cpIgnore),
+      wbUnused(4),
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
       wbByteColors('Fog Color High Near'),
@@ -11735,13 +11713,10 @@ begin
 
   wbRecord(DLVW, 'Dialog View', [
     wbEDID,
-    wbFormIDCk(QNAM, 'Quest', [QUST], False, cpNormal, True),
-    wbRArray('Branches', wbFormIDCk(BNAM, 'Branch', [DLBR])),
-    wbRArray('Unknown TNAM', wbRStruct('Unknown', [
-      wbUnknown(TNAM)
-    ], [])),
-    wbUnknown(ENAM),
-    wbUnknown(DNAM)
+    wbFormIDCk(QNAM, 'Quest', [QUST]),
+    wbFormIDCk(BNAM, 'Branch', [DLBR]),
+    wbUnused(ENAM),
+    wbUnused(DNAM)
   ]);
 
   {wbRecord(WOOP, 'Word of Power', [
@@ -15998,24 +15973,13 @@ begin
     ])), [
     wbEDID,
     wbWeatherCloudTextures,
-    wbInteger(LNAM, 'Cloud Layer Count', itU32),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32),
     wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
     wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
-    wbArray(JNAM, 'Cloud Alphas',
-      wbStruct('Layer', [
-        wbFloat('Sunrise').SetDefaultNativeValue(1.0),
-        wbFloat('Day').SetDefaultNativeValue(1.0),
-        wbFloat('Sunset').SetDefaultNativeValue(1.0),
-        wbFloat('Night').SetDefaultNativeValue(1.0),
-        wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0)),
-        wbFromVersion(111, wbFloat('LateSunrise').SetDefaultNativeValue(1.0)),
-        wbFromVersion(111, wbFloat('EarlySunset').SetDefaultNativeValue(1.0)),
-        wbFromVersion(111, wbFloat('EarlySunrise').SetDefaultNativeValue(1.0))
-      ]),
-    32).IncludeFlag(dfNotAlignable),
+    wbWeatherCloudAlphas,
     wbWeatherColors,
     wbArray(NAM4, 'Unknown',
       wbFloat('Unknown').SetDefaultNativeValue(1.0),
@@ -16042,11 +16006,7 @@ begin
         {0x40} 'Rain Occlusion',
         {0x80} 'HUD Rain Effects'
       ])),
-      wbStruct('Lightning Color', [
-        wbInteger('Red', itU8),
-        wbInteger('Green', itU8),
-        wbInteger('Blue', itU8)
-      ]).SetToStr(wbRGBAToStr).IncludeFlag(dfCollapsed, wbCollapseRGBA),
+      wbWeatherLightningColor,
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
@@ -16056,16 +16016,7 @@ begin
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
     wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
-    wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
-      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('LateSunrise', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('EarlySunset', [IMGS, NULL])),
-      wbFromVersion(111, wbFormIDCK('EarlySunrise', [IMGS, NULL]))
-    ], cpNormal, True),
+    wbWeatherImageSpaces,
     wbStruct(WGDR, 'God Rays', [ //Form Version 120+
       wbFormIDCK('Sunrise', [GDRY, NULL]),
       wbFormIDCK('Day', [GDRY, NULL]),
@@ -16076,16 +16027,7 @@ begin
       wbFormIDCK('EarlySunset', [GDRY, NULL]),
       wbFormIDCK('LateSunset', [GDRY, NULL])
     ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
-      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
-    ], [], cpNormal, True),
+    wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbStruct(UNAM, 'Magic', [
