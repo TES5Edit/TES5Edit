@@ -4018,26 +4018,6 @@ begin
     Result := 7;
 end;
 
-function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
-begin
-  Result := wbStruct(aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ])
-  ]);
-end;
-
-
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
-begin
-  Result := wbSubRecord(aSignature, aName, wbAmbientColors(aName));
-end;
-
 function wbIntToHexStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   case aType of
@@ -13303,7 +13283,7 @@ end;
       wbFLoat('Fog Max'),
       wbFloat('Light Fade Distance Start'),
       wbFloat('Light Fade Distance Stop'),
-      wbUnknown(4),
+      wbUnused(4),
       wbFloat('Height Mid'),
       wbFloat('Height Range'),
       wbByteColors('Fog Color High Near'),
@@ -21375,16 +21355,7 @@ end;
       wbFormIDCK('EarlySunset',[VOLI, NULL]),
       wbFormIDCK('EarlySunrise',[VOLI, NULL])
     ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night'),
-      wbAmbientColors(DALC, 'EarlySunrise'), //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunrise'),  //Form Version 111+
-      wbAmbientColors(DALC, 'EarlySunset'),  //Form Version 111+
-      wbAmbientColors(DALC, 'LateSunset')    //Form Version 111+
-    ], [], cpNormal, True),
+    wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel(True)], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbStruct(UNAM, 'Magic', [

@@ -3887,38 +3887,6 @@ begin
     Result := 7;
 end;
 
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
-begin
-  Result := wbStruct(aSignature, aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale')
-  ], cpNormal, False, nil, 1)
-end;
-
-function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
-begin
-  Result := wbStruct(aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale', cpIgnore)
-  ], cpNormal, False, nil, 1);
-end;
-
 type
   TFaceGenFeature = record
     RaceID  : String;
@@ -9299,14 +9267,14 @@ Can't properly represent that with current record definition methods.
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
-      wbAmbientColors('Ambient Colors'), // WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
+      wbUnused(32), // WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbStruct('Light Fade Distances', [
         wbFloat('Start'),
         wbFloat('End')
       ]),
-      wbByteArray('Unknown', 4)
+      wbUnused(4)
     ], cpNormal, True, nil, 11),
     wbAmbientColors(DALC)
   ]);
@@ -12934,12 +12902,7 @@ Can't properly represent that with current record definition methods.
       wbFormIDCK('Sunset', [VOLI, NULL]),
       wbFormIDCK('Night', [VOLI, NULL])
     ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night')
-    ], [], cpNormal, True),
+    wbWeatherDirectionalLighting,
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
     wbRStruct('Aurora', [wbGenericModel], []),

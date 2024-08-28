@@ -5895,53 +5895,6 @@ begin
     Result := 7;
 end;
 
-function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'; const bOnlyColors: Boolean = False): IwbSubRecordDef; overload;
-begin
-  if bOnlyColors then
-
-    Result := wbStruct(aSignature, aName, [
-      wbStruct('Directional', [
-        wbByteColors('X+'),
-        wbByteColors('X-'),
-        wbByteColors('Y+'),
-        wbByteColors('Y-'),
-        wbByteColors('Z+'),
-        wbByteColors('Z-')
-      ]),
-      wbByteArray('Unused',4),
-      wbByteArray('Unused',4)
-    ])
-  else
-    Result := wbStruct(aSignature, aName, [
-      wbStruct('Directional', [
-        wbByteColors('X+'),
-        wbByteColors('X-'),
-        wbByteColors('Y+'),
-        wbByteColors('Y-'),
-        wbByteColors('Z+'),
-        wbByteColors('Z-')
-      ]),
-      wbByteColors('Specular'),
-      wbFloat('Scale')
-    ])
-end;
-
-function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
-begin
-  Result := wbStruct(aName, [
-    wbStruct('Directional', [
-      wbByteColors('X+'),
-      wbByteColors('X-'),
-      wbByteColors('Y+'),
-      wbByteColors('Y-'),
-      wbByteColors('Z+'),
-      wbByteColors('Z-')
-    ]),
-    wbByteColors('Specular'),
-    wbFloat('Scale', cpIgnore)
-  ]);
-end;
-
 function wbIntToHexStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   case aType of
@@ -10982,7 +10935,7 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbAmbientColors,
+      wbAmbientColors('Ambient Colors'),
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
@@ -13849,12 +13802,12 @@ begin
       wbFloat('Directional Fade'),
       wbFloat('Fog Clip Distance'),
       wbFloat('Fog Power'),
-      wbByteArray('Unused', 32, cpIgnore),
+      wbUnused(32),
       wbByteColors('Fog Color Far'),
       wbFloat('Fog Max'),
       wbFloat('Light Fade Begin'),
       wbFloat('Light Fade End'),
-      wbByteArray('Unused', 4, cpIgnore),
+      wbUnused(4),
       wbFloat('Near Height Mid'),
       wbFloat('Near Height Range'),
       wbByteColors('Fog Color High Near'),
@@ -20157,16 +20110,7 @@ begin
       wbFormIDCK('EarlySunset', [VOLI, NULL]),
       wbFormIDCK('LateSunset', [VOLI, NULL])
     ]),
-    wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise', True),
-      wbAmbientColors(DALC, 'Day', True),
-      wbAmbientColors(DALC, 'Sunset', True),
-      wbAmbientColors(DALC, 'Night', True),
-      wbAmbientColors(DALC, 'EarlySunrise', True),
-      wbAmbientColors(DALC, 'LateSunrise', True),
-      wbAmbientColors(DALC, 'EarlySunset', True),
-      wbAmbientColors(DALC, 'LateSunset', True)
-    ], [], cpNormal, True),
+    wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbStruct(UNAM, 'Magic', [

@@ -78,6 +78,7 @@ var
   wbWeatherLightningColor: IwbValueDef;
   wbWeatherSounds: IwbRecordMemberDef;
   wbWeatherImageSpaces: IwbRecordMemberDef;
+  wbWeatherDirectionalLighting: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
@@ -303,6 +304,8 @@ function wbHasNoFlags(const aValue: IwbValueDef; aIsUnused: Boolean = True): Iwb
 
 procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
+function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
+function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
 function wbByteColors(const aName: string = 'Color'): IwbValueDef; overload;
 function wbByteColors(const aSignature: TwbSignature; const aName: string = 'Color'): IwbRecordMemberDef; overload;
 function wbFloatColors(const aName: string = 'Color'): IwbValueDef; overload;
@@ -1260,6 +1263,27 @@ begin
         wbFromVersion(111, wbFormIDCK('Late Sunset', [IMGS, NULL])),
         nil)
     ], cpNormal, True, nil, 4);
+
+  //TES5,FO4,FO76,SF1
+  wbWeatherDirectionalLighting :=
+    wbRStruct('Directional Ambient Lighting Colors', [
+      wbAmbientColors(DALC, 'Sunrise'),
+      wbAmbientColors(DALC, 'Day'),
+      wbAmbientColors(DALC, 'Sunset'),
+      wbAmbientColors(DALC, 'Night'),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, DALC, wbAmbientColors('Early Sunrise')),
+        nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, DALC, wbAmbientColors('Late Sunrise')),
+        nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, DALC, wbAmbientColors('Early Sunset')),
+        nil),
+      IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
+        wbFromVersion(111, DALC, wbAmbientColors('Late Sunset')),
+        nil)
+    ], [], cpNormal, True);
 
 {>>>Worldspace Common Defs<<<}
   //TES5,FO4,FO76,SF1
@@ -3567,6 +3591,56 @@ begin
   for var lElementIdx := 0 to Pred(lContainer.ElementCount) do
     //will trigger Unions to re-evaluate their type and fix themselves
     var lResolvedDef := lContainer.Elements[lElementIdx].ResolvedValueDef;
+end;
+
+function wbAmbientColors(const aName: string = 'Directional Ambient Lighting Colors'): IwbStructDef; overload;
+begin
+  Result := wbStruct(aName, [
+    wbStruct('Directional', [
+      wbByteColors('X+'),
+      wbByteColors('X-'),
+      wbByteColors('Y+'),
+      wbByteColors('Y-'),
+      wbByteColors('Z+'),
+      wbByteColors('Z-')
+    ]),
+    IfThen(wbIsStarfield,
+      nil,
+      wbFromVersion(34, wbByteColors('Specular'))
+    ),
+    IfThen(wbIsFallout76,
+      wbByteArray('Fresnel Power', 4),
+      IfThen(wbIsStarfield,
+        nil,
+        wbFromVersion(34, wbFloat('Fresnel Power'))
+      )
+    )
+  ]);
+end;
+
+function wbAmbientColors(const aSignature: TwbSignature; const aName: string = 'Directional Ambient Lighting Colors'): IwbSubRecordDef; overload;
+begin
+  Result := wbStruct(aSignature, aName, [
+    wbStruct('Directional', [
+      wbByteColors('X+'),
+      wbByteColors('X-'),
+      wbByteColors('Y+'),
+      wbByteColors('Y-'),
+      wbByteColors('Z+'),
+      wbByteColors('Z-')
+    ]),
+    IfThen(wbIsStarfield,
+      nil,
+      wbFromVersion(34, wbByteColors('Specular'))
+    ),
+    IfThen(wbIsFallout76,
+      wbByteArray('Fresnel Power', 4),
+      IfThen(wbIsStarfield,
+        nil,
+        wbFromVersion(34, wbFloat('Fresnel Power'))
+      )
+    )
+  ]);
 end;
 
 function wbByteColors(const aName: string = 'Color'): IwbValueDef;
