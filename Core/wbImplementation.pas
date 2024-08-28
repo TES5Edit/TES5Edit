@@ -9426,17 +9426,17 @@ begin
       var lFileID := Result.FileID;
       case lFileID.ModuleType of
         mtLight:
-          if lFileID.LightSlot > lFile.LightMasterCount[GetMastersUpdated] then
+          if lFileID.LightSlot >= lFile.LightMasterCount[GetMastersUpdated] then
             Result.FileID := lFile.FileFileID[GetMastersUpdated];
         mtMedium:
-          if lFileID.MediumSlot > lFile.MediumMasterCount[GetMastersUpdated] then
+          if lFileID.MediumSlot >= lFile.MediumMasterCount[GetMastersUpdated] then
             Result.FileID := lFile.FileFileID[GetMastersUpdated];
         mtFull:
-          if lFileID.FullSlot > lFile.FullMasterCount[GetMastersUpdated] then
+          if lFileID.FullSlot >= lFile.FullMasterCount[GetMastersUpdated] then
             Result.FileID := lFile.FileFileID[GetMastersUpdated];
       end;
     end else
-      if Result.FileID.FullSlot > lFile.MasterCount[GetMastersUpdated] then
+      if Result.FileID.FullSlot >= lFile.MasterCount[GetMastersUpdated] then
         Result.FileID := lFile.FileFileID[GetMastersUpdated];
   end;
   mrFixedFormID := Result;
