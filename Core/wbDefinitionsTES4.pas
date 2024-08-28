@@ -4325,12 +4325,12 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
       wbInteger('Flags ', itU8,
-        wbFlags([
-          {0x01} 'Weather - Pleasant',
-          {0x02} 'Weather - Cloudy',
-          {0x04} 'Weather - Rainy',
-          {0x08} 'Weather - Snow'
-        ], True)
+        wbFlags(wbSparseFlags([
+          0, 'Weather - Pleasant',
+          1, 'Weather - Cloudy',
+          2, 'Weather - Rainy',
+          3, 'Weather - Snow'
+        ], False, 4), True)
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbWeatherLightningColor
     ], cpNormal, True),
@@ -4346,13 +4346,12 @@ var  wbSoundTypeSoundsOld :=
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbInteger(DATA, 'Flags', itU8,
-      wbFlags([
-        {0x01} 'Small world',
-        {0x02} 'Can''t fast travel',
-        {0x04} 'Oblivion worldspace',
-        {0x08} 'Unknown 4',
-        {0x10} 'No LOD water'
-      ]),
+      wbFlags(wbSparseFlags([
+        0, 'Small world',
+        1, 'Can''t fast travel',
+        2, 'Oblivion worldspace',
+        4, 'No LOD water'
+      ], False, 5)),
     cpNormal, True)
     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
