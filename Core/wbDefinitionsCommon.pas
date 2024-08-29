@@ -78,7 +78,10 @@ var
   wbWeatherLightningColor: IwbValueDef;
   wbWeatherSounds: IwbRecordMemberDef;
   wbWeatherImageSpaces: IwbRecordMemberDef;
+  wbWeatherGodRays: IwbRecordMemberDef;
+  wbWeatherVolumetricLighting: IwbRecordMemberDef;
   wbWeatherDirectionalLighting: IwbRecordMemberDef;
+  wbWeatherMagic: IwbRecordMemberDef;
 
   wbWorldLargeRefs: IwbRecordMemberDef;
   wbWorldMaxHeight: IwbRecordMemberDef;
@@ -1264,6 +1267,40 @@ begin
         nil)
     ], cpNormal, True, nil, 4);
 
+  //FO4,FO76
+  wbWeatherGodRays :=
+    wbStruct(WGDR, 'God Rays', [
+      wbFormIDCK('Sunrise', [GDRY, NULL]),
+      wbFormIDCK('Day', [GDRY, NULL]),
+      wbFormIDCK('Sunset', [GDRY, NULL]),
+      wbFormIDCK('Night', [GDRY, NULL]),
+      wbFormIDCK('Early Sunrise', [GDRY, NULL]),
+      wbFormIDCK('Late Sunrise', [GDRY, NULL]),
+      wbFormIDCK('Early Sunset', [GDRY, NULL]),
+      wbFormIDCK('Late Sunset', [GDRY, NULL])
+    ]);
+
+  //TES5,FO76,SF1
+  wbWeatherVolumetricLighting :=
+    wbStruct(HNAM, 'Volumetric Lighting', [
+      wbFormIDCK('Sunrise',[VOLI, NULL]),
+      wbFormIDCK('Day',[VOLI, NULL]),
+      wbFormIDCK('Sunset',[VOLI, NULL]),
+      wbFormIDCK('Night',[VOLI, NULL]),
+      IfThen(wbGameMode in [gmFO76,gmSF1],
+        wbFormIDCK('Early Sunrise',[VOLI, NULL]),
+        nil),
+      IfThen(wbGameMode in [gmFO76,gmSF1],
+        wbFormIDCK('Late Sunrise',[VOLI, NULL]),
+        nil),
+      IfThen(wbGameMode in [gmFO76,gmSF1],
+        wbFormIDCK('Early Sunset',[VOLI, NULL]),
+        nil),
+      IfThen(wbGameMode in [gmFO76,gmSF1],
+        wbFormIDCK('Early Sunrise',[VOLI, NULL]),
+        nil)
+    ]);
+
   //TES5,FO4,FO76,SF1
   wbWeatherDirectionalLighting :=
     wbRStruct('Directional Ambient Lighting Colors', [
@@ -1284,6 +1321,20 @@ begin
         wbFromVersion(111, DALC, wbAmbientColors('Late Sunset')),
         nil)
     ], [], cpNormal, True);
+
+  //FO4,FO76,SF1
+  wbWeatherMagic :=
+    wbStruct(UNAM, 'Magic', [
+      wbStruct('Lighting Strike', [
+        wbFormIDCk('Spell', [SPEL, NULL]),
+        wbFloat('Threshold')
+      ]),
+      wbStruct('Weather Activate', [
+        wbFormIDCk('Spell', [SPEL, NULL]),
+        wbFromVersion(130, wbFloat('Threshold'))
+      ]),
+        wbFromVersion(130, wbUnused(8))
+    ], cpNormal, False, nil, 3);
 
 {>>>Worldspace Common Defs<<<}
   //TES5,FO4,FO76,SF1

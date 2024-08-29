@@ -20098,16 +20098,7 @@ begin
     wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbWeatherImageSpaces,
-    wbStruct(WGDR, 'God Rays', [
-      wbFormIDCK('Sunrise', [GDRY, NULL]),
-      wbFormIDCK('Day', [GDRY, NULL]),
-      wbFormIDCK('Sunset', [GDRY, NULL]),
-      wbFormIDCK('Night', [GDRY, NULL]),
-      wbFormIDCK('Early Sunrise', [GDRY, NULL]),
-      wbFormIDCK('Late Sunrise', [GDRY, NULL]),
-      wbFormIDCK('Early Sunset', [GDRY, NULL]),
-      wbFormIDCK('Late Sunset', [GDRY, NULL])
-    ]),
+    wbWeatherGodRays,
     wbStruct(HNAM, 'God Rays', [
       wbFormIDCK('Sunrise', [VOLI, NULL]),
       wbFormIDCK('Day', [VOLI, NULL]),
@@ -20121,14 +20112,7 @@ begin
     wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
-    wbStruct(UNAM, 'Magic', [
-      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
-      wbFloat('On Lightning Strike - Threshold'),
-      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbByteArray('Unused', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbByteArray('Unused', 4))
-    ], cpNormal, False, nil, 3),
+    wbWeatherMagic,
     wbFloat(VNAM, 'Volatility Mult'),
     wbFloat(WNAM, 'Visibility Mult'),
     wbFloat(XNAM),

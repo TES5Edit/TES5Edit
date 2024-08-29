@@ -9216,8 +9216,7 @@ var  wbSoundTypeSoundsOld :=
     wbUnused(INAM, 304, True),
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
+      wbUnused(2),
       wbInteger('Trans Delta', itU8),
       wbInteger('Sun Glare', itU8),
       wbInteger('Sun Damage', itU8),

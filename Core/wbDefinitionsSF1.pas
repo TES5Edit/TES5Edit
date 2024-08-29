@@ -21353,27 +21353,11 @@ end;
     ).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbWeatherImageSpaces,
-    wbStruct(HNAM, 'Volumetric Lighting', [
-      wbFormIDCK('Sunrise',[VOLI, NULL]),
-      wbFormIDCK('Day',[VOLI, NULL]),
-      wbFormIDCK('Sunset',[VOLI, NULL]),
-      wbFormIDCK('Night',[VOLI, NULL]),
-      wbFormIDCK('Early Sunrise',[VOLI, NULL]),
-      wbFormIDCK('Late Sunrise',[VOLI, NULL]),
-      wbFormIDCK('Early Sunset',[VOLI, NULL]),
-      wbFormIDCK('Early Sunrise',[VOLI, NULL])
-    ]),
+    wbWeatherVolumetricLighting,
     wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel(True)], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
-    wbStruct(UNAM, 'Magic', [
-      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
-      wbFloat('On Lightning Strike - Threshold'),
-      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbUnused(4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbFloat('Unused'))
-    ], cpNormal, False),
+    wbWeatherMagic,
     wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
     wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
   ]);
