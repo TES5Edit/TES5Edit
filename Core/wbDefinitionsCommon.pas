@@ -490,7 +490,7 @@ function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEleme
 var
   Container: IwbDataContainer;
   Element: IwbElement;
-  MinX, MaxX: Integer;
+  MinX, MaxX: Single;
 begin
   Result := 0;
 
@@ -500,17 +500,58 @@ begin
   if not Supports(Container.Container, IwbDataContainer, Container) then
     Exit;
 
+  if not Assigned(Container.ElementByPath['Object Bounds\NAM0\X']) then
+    if not Supports(Container.Container, IwbDataContainer, Container) then
+      Exit;
+
   Element := Container.ElementByPath['Object Bounds\NAM0\X'];
   if not Assigned(Element) then
     Exit;
+
   MinX := Element.NativeValue;
+
+  if (MinX = Single.MaxValue) or (MinX = Single.MinValue) then
+     MinX := 0;
 
   Element := Container.ElementByPath['Object Bounds\NAM9\X'];
   if not Assigned(Element) then
     Exit;
   MaxX := Element.NativeValue;
+  if (MaxX = Single.MaxValue) or (MaxX = Single.MinValue) then
+     MaxX := 0;
 
-  Result := MaxX - MinX + 1;
+  Result := Round(MaxX) - Round(MinX) + 1;
+end;
+
+function wbWorldRowsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  MinY, MaxY: Single;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  Element := Container.ElementByPath['Object Bounds\NAM0\Y'];
+  if not Assigned(Element) then
+    Exit;
+  MinY := Element.NativeValue;
+  if (MinY = Single.MaxValue) or (MinY = Single.MinValue) then
+     MinY := 0;
+
+  Element := Container.ElementByPath['Object Bounds\NAM9\Y'];
+  if not Assigned(Element) then
+    Exit;
+  MaxY := Element.NativeValue;
+  if (MaxY = Single.MaxValue) or (MaxY = Single.MinValue) then
+     MaxY := 0;
+
+  Result := Round(MaxY) - Round(MinY) + 1;
 end;
 
 procedure DefineCommon;
@@ -1551,8 +1592,8 @@ begin
   //TES4,FO3,FNV,TES5,SSE,FO4,FO76,SF1
   wbWorldOffsetData :=
     IfThen(wbSimpleRecords,
-      wbByteArray(OFST, 'Offset Data', 0, cpIgnore, False, False, wbNeverShow),
-      wbArray(OFST, 'Offset Data',
+      wbByteArray(OFST, 'Offsets', 0, cpIgnore, False, False, wbNeverShow),
+      wbArray(OFST, 'Offsets',
         wbArray('Row',
           wbInteger('Column', itU32, nil, cpIgnore),
           wbWorldColumnsCounter, cpIgnore)
@@ -1563,8 +1604,8 @@ begin
   //FO4,FO76,SF1
   wbWorldCellSizeData :=
     IfThen(wbSimpleRecords,
-      wbByteArray(CLSZ, 'Cell Size Data', 0, cpIgnore, False, False, wbNeverShow),
-      wbArray(CLSZ, 'Cell Size Data',
+      wbByteArray(CLSZ, 'Cell Sizes', 0, cpIgnore, False, False, wbNeverShow),
+      wbArray(CLSZ, 'Cell Sizes',
         wbArray('Row',
           wbInteger('Column', itU32, nil, cpIgnore),
         wbWorldColumnsCounter, cpIgnore)
@@ -1575,15 +1616,15 @@ begin
   //FO76
   wbWorldVisibleCellsData :=
     IfThen(wbSimpleRecords,
-      wbByteArray(VISI, 'Visible Cell Index Data', 0, cpIgnore, False, False, wbNeverShow),
-      wbStruct(VISI, 'Visible Cell Index Data', [
-        wbArray('Visible Cells',
+      wbByteArray(VISI, 'Visible Cells', 0, cpIgnore, False, False, wbNeverShow),
+      wbStruct(VISI, 'Visible Cells', [
+        wbArray('Cells',
           wbArray('Row',
             wbFormIDCK('Cell', [CELL, NULL], false, cpIgnore),
           wbWorldColumnsCounter, cpIgnore)
           .IncludeFlag(dfCollapsed)
           .IncludeFlag(dfNotAlignable),
-        nil, cpIgnore)
+        wbWorldRowsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
         wbStruct('Dimensions', [
