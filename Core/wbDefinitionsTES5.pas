@@ -12889,23 +12889,16 @@ Can't properly represent that with current record definition methods.
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8) // scaled 0..180
     ], cpNormal, True),
-    wbInteger(NAM1, 'Disabled Cloud Layers', itU32,
-      wbFlags([
-        '0','1','2','3','4','5','6','7','8','9','10','11',
-        '12','13','14','15','16','17','18','19','20','21',
-        '22','23','24','25','26','27','28','29','30','31'
-      ])
-    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbWeatherDisabledLayers,
     wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbWeatherImageSpaces,
-    // SSE
-    wbWeatherVolumetricLighting,
+    wbWeatherVolumetricLighting, //SSE
     wbWeatherDirectionalLighting,
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
     wbRStruct('Aurora', [wbGenericModel], []),
-    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS])
+    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]) //SSE
   ]);
 
   wbRecord(WRLD, 'Worldspace',

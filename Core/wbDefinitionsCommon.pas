@@ -76,6 +76,7 @@ var
   wbWeatherColors: IwbRecordMemberDef;
   wbWeatherFogDistance: IwbRecordMemberDef;
   wbWeatherLightningColor: IwbValueDef;
+  wbWeatherDisabledLayers: IwbRecordMemberDef;
   wbWeatherSounds: IwbRecordMemberDef;
   wbWeatherImageSpaces: IwbRecordMemberDef;
   wbWeatherGodRays: IwbRecordMemberDef;
@@ -1269,6 +1270,16 @@ begin
     ]).SetToStr(wbRGBAToStr)
     .IncludeFlag(dfCollapsed, wbCollapseRGBA);
 
+  //TES5,FO4,FO76,SF1
+  wbWeatherDisabledLayers :=
+    wbInteger(NAM1, 'Disabled Cloud Layers', itU32,
+      wbFlags([
+        '0','1','2','3','4','5','6','7','8','9','10','11',
+        '12','13','14','15','16','17','18','19','20','21',
+        '22','23','24','25','26','27','28','29','30','31'
+      ])
+    ).IncludeFlag(dfCollapsed, wbCollapseFlags);
+
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherSounds :=
     wbRArray('Sounds',
@@ -1324,21 +1335,21 @@ begin
   //TES5,FO76,SF1
   wbWeatherVolumetricLighting :=
     wbStruct(HNAM, 'Volumetric Lighting', [
-      wbFormIDCK('Sunrise',[VOLI, NULL]),
-      wbFormIDCK('Day',[VOLI, NULL]),
-      wbFormIDCK('Sunset',[VOLI, NULL]),
-      wbFormIDCK('Night',[VOLI, NULL]),
+      wbFormIDCK('Sunrise', [VOLI, NULL]),
+      wbFormIDCK('Day', [VOLI, NULL]),
+      wbFormIDCK('Sunset', [VOLI, NULL]),
+      wbFormIDCK('Night', [VOLI, NULL]),
       IfThen(wbGameMode in [gmFO76,gmSF1],
-        wbFormIDCK('Early Sunrise',[VOLI, NULL]),
+        wbFormIDCK('Early Sunrise', [VOLI, NULL]),
         nil),
       IfThen(wbGameMode in [gmFO76,gmSF1],
-        wbFormIDCK('Late Sunrise',[VOLI, NULL]),
+        wbFormIDCK('Late Sunrise', [VOLI, NULL]),
         nil),
       IfThen(wbGameMode in [gmFO76,gmSF1],
-        wbFormIDCK('Early Sunset',[VOLI, NULL]),
+        wbFormIDCK('Early Sunset', [VOLI, NULL]),
         nil),
       IfThen(wbGameMode in [gmFO76,gmSF1],
-        wbFormIDCK('Early Sunrise',[VOLI, NULL]),
+        wbFormIDCK('Early Sunrise', [VOLI, NULL]),
         nil)
     ]);
 
