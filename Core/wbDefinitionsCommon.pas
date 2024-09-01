@@ -967,7 +967,7 @@ begin
   IfThen(wbIsStarfield, 50, 32);
 
   wbMHDTCELL :=
-    IfThen(wbGameMode in [gmSF1],
+    IfThen(wbSimpleRecords,
       wbByteArray(MHDT, 'Max Height Data'),
       wbStruct(MHDT, 'Max Height Data', [
         wbFloat('Offset'),
