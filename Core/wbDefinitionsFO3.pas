@@ -9213,11 +9213,10 @@ var  wbSoundTypeSoundsOld :=
     wbWeatherCloudColors,
     wbWeatherColors,
     wbWeatherFogDistance,
-    wbByteArray(INAM, 'Unused', 304, cpIgnore, True),
+    wbUnused(INAM, 304, True),
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
-      wbInteger('Cloud Speed (Lower)', itU8),
-      wbInteger('Cloud Speed (Upper)', itU8),
+      wbUnused(2),
       wbInteger('Trans Delta', itU8),
       wbInteger('Sun Glare', itU8),
       wbInteger('Sun Damage', itU8),
@@ -9227,12 +9226,12 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
       wbInteger('Flags', itU8,
-        wbFlags([
-          {0x01} 'Weather - Pleasant',
-          {0x02} 'Weather - Cloudy',
-          {0x04} 'Weather - Rainy',
-          {0x08} 'Weather - Snow'
-        ], True)
+        wbFlags(wbSparseFlags([
+          0, 'Weather - Pleasant',
+          1, 'Weather - Cloudy',
+          2, 'Weather - Rainy',
+          3, 'Weather - Snow'
+        ], False, 4), True)
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbWeatherLightningColor
     ], cpNormal, True),
@@ -9246,14 +9245,14 @@ var  wbSoundTypeSoundsOld :=
     wbRStruct('Parent Worldspace', [
       wbFormIDCk(WNAM, 'World', [WRLD]),
       wbInteger(PNAM, 'Flags', itU16,
-        wbFlags([
-          {0x01}'Use Land Data',
-          {0x02}'Use LOD Data',
-          {0x04}'Use Map Data',
-          {0x08}'Use Water Data',
-          {0x10}'Use Climate Data',
-          {0x20}'Use Image Space Data'
-        ], True),
+        wbFlags(wbSparseFlags([
+          0, 'Use Land Data',
+          1, 'Use LOD Data',
+          2, 'Use Map Data',
+          3, 'Use Water Data',
+          4, 'Use Climate Data',
+          5, 'Use Image Space Data'
+        ], False, 6), True),
       cpNormal, True)
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
@@ -9265,16 +9264,14 @@ var  wbSoundTypeSoundsOld :=
     wbWorldMapOffset,
     wbFormIDCk(INAM, 'Image Space', [IMGS]),
     wbInteger(DATA, 'Flags', itU8,
-      wbFlags([
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} 'Unknown 3',
-        {0x08} 'Unknown 4',
-        {0x10} 'No LOD Water',
-        {0x20} 'No LOD Noise',
-        {0x40} 'Don''t Allow NPC Fall Damage',
-        {0x80} 'Needs Water Adjustment'
-      ]),
+      wbFlags(wbSparseFlags([
+        0, 'Small World',
+        1, 'Can''t Fast Travel',
+        4, 'No LOD Water',
+        5, 'No LOD Noise',
+        6, 'Don''t Allow NPC Fall Damage',
+        7, 'Needs Water Adjustment'
+      ], False, 8)),
     cpNormal, True)
     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,

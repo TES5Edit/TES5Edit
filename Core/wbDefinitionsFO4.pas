@@ -15969,7 +15969,7 @@ begin
 
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x200}  9, 'Unknown 9'
+      9, 'Unknown 9'
     ])), [
     wbEDID,
     wbWeatherCloudTextures,
@@ -15981,13 +15981,11 @@ begin
     wbWeatherCloudColors,
     wbWeatherCloudAlphas,
     wbWeatherColors,
-    wbArray(NAM4, 'Unknown',
-      wbFloat('Unknown').SetDefaultNativeValue(1.0),
-    32).IncludeFlag(dfNotAlignable),
+    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
     wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
-      wbByteArray('Unknown', 2),
+      wbUnused(2),
       wbInteger('Trans Delta', itU8), // scaled 0..0,25
       wbInteger('Sun Glare', itU8), // scaled 0..1
       wbInteger('Sun Damage', itU8), // scaled 0..1
@@ -15996,16 +15994,18 @@ begin
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
       wbInteger('Thunder/Lightning - Frequency', itU8),
-      wbInteger('Flags', itU8, wbFlags([
-        {0x01} 'Weather - Pleasant',
-        {0x02} 'Weather - Cloudy',
-        {0x04} 'Weather - Rainy',
-        {0x08} 'Weather - Snow',
-        {0x10} 'Aurora - Always Visible',
-        {0x20} 'Aurora - Follows Sun Position',
-        {0x40} 'Rain Occlusion',
-        {0x80} 'HUD Rain Effects'
-      ])),
+      wbInteger('Flags', itU8,
+        wbFlags(wbSparseFlags([
+          0, 'Weather - Pleasant',
+          1, 'Weather - Cloudy',
+          2, 'Weather - Rainy',
+          3, 'Weather - Snow',
+          4, 'Aurora - Always Visible',
+          5, 'Aurora - Follows Sun Position',
+          6, 'Rain Occlusion',
+          7, 'HUD Rain Effects'
+        ], False, 8))
+      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbWeatherLightningColor,
       wbInteger('Visual Effect - Begin', itU8), // scaled 0..1
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
@@ -16013,39 +16013,23 @@ begin
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
       wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
     ], cpNormal, True),
-    wbInteger(NAM1, 'Disabled Cloud Layers', itU32, wbFlags(['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'])),
+    wbWeatherDisabledLayers,
     wbWeatherSounds,
     wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
     wbWeatherImageSpaces,
-    wbStruct(WGDR, 'God Rays', [ //Form Version 120+
-      wbFormIDCK('Sunrise', [GDRY, NULL]),
-      wbFormIDCK('Day', [GDRY, NULL]),
-      wbFormIDCK('Sunset', [GDRY, NULL]),
-      wbFormIDCK('Night', [GDRY, NULL]),
-      wbFormIDCK('EarlySunrise', [GDRY, NULL]),
-      wbFormIDCK('LateSunrise', [GDRY, NULL]),
-      wbFormIDCK('EarlySunset', [GDRY, NULL]),
-      wbFormIDCK('LateSunset', [GDRY, NULL])
-    ]),
+    wbWeatherGodRays,
     wbWeatherDirectionalLighting,
     wbRStruct('Aurora', [wbGenericModel], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
-    wbStruct(UNAM, 'Magic', [
-      wbFormIDCk('On Lightning Strike - Spell', [SPEL, NULL]),
-      wbFloat('On Lightning Strike - Threshold'),
-      wbFormIDCk('On Weather Activate - Spell', [SPEL, NULL]),
-      wbFromVersion(130, wbFloat('On Weather Activate - Threshold')),
-      wbFromVersion(130, wbByteArray('Unused', 4)), // SPEL FormID for another context but unresolved in Fallout4.esm, legacy data
-      wbFromVersion(130, wbFloat('Unused'))
-    ], cpNormal, False),
+    wbWeatherMagic,
     wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
     wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
   ]);
 
   wbRecord(WRLD, 'Worldspace',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x04000} 14, 'Partial Form',
-      {0x80000} 19, 'Can''t Wait'
+      14, 'Partial Form',
+      19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
     wbWorldLargeRefs
@@ -16066,15 +16050,15 @@ begin
     wbRStruct('Parent Worldspace', [
       wbFormIDCk(WNAM, 'World', [WRLD]),
       wbInteger(PNAM, 'Flags', itU16,
-        wbFlags([
-          {0x01} 'Use Land Data',
-          {0x02} 'Use LOD Data',
-          {0x04} 'Use Map Data',
-          {0x08} 'Use Water Data',
-          {0x10} 'Use Climate Data',
-          {0x20} 'Use Image Space Data (unused)',
-          {0x40} 'Use Sky Cell'
-        ], [5]),
+        wbFlags(wbSparseFlags([
+          0, 'Use Land Data',
+          1, 'Use LOD Data',
+          2, 'Use Map Data',
+          3, 'Use Water Data',
+          4, 'Use Climate Data',
+          5, 'Use Image Space Data (unused)',
+          6, 'Use Sky Cell'
+        ], False, 7), [5]),
       cpNormal, True)
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
@@ -16087,16 +16071,15 @@ begin
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier'),
     wbInteger(DATA, 'Flags', itU8,
-      wbFlags([
-        {0x01} 'Small World',
-        {0x02} 'Can''t Fast Travel',
-        {0x04} 'Unknown 3',
-        {0x08} 'No LOD Water',
-        {0x10} 'No Landscape',
-        {0x20} 'No Sky',
-        {0x40} 'Fixed Dimensions',
-        {0x80} 'No Grass'
-      ]),
+      wbFlags(wbSparseFlags([
+        0, 'Small World',
+        1, 'Can''t Fast Travel',
+        3, 'No LOD Water',
+        4, 'No Landscape',
+        5, 'No Sky',
+        6, 'Fixed Dimensions',
+        7, 'No Grass'
+      ], False, 8)),
     cpNormal, True)
     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
