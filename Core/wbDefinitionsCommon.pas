@@ -1424,16 +1424,18 @@ begin
           wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
           wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
         ]),
-        wbArray('Cell Heights',
-          wbStruct('Quads', [
-            wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-            wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
-          wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-          .IncludeFlag(dfCollapsed))
+        IfThen(wbRemoveOffsetData,
+          wbByteArray('Cell Heights', 0),
+          wbArray('Cell Heights',
+            wbStruct('Quads', [
+              wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+              wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+              wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
+              wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
+            wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
+            .IncludeFlag(dfCollapsed))
         .IncludeFlag(dfCollapsed)
-        .IncludeFlag(dfNotAlignable)
+        .IncludeFlag(dfNotAlignable))
       ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]));
 
   //TES5,FO4,FO76,SF1
