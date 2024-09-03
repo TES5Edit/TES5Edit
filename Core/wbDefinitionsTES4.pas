@@ -4357,10 +4357,6 @@ var  wbSoundTypeSoundsOld :=
     wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbWorldOffsetData
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
   ]);
 
   wbAddGroupOrder(GMST);

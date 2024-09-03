@@ -20122,16 +20122,8 @@ begin
       19, 'Can''t Wait'
     ]), [14]), [
     wbEDID,
-    wbWorldLargeRefs
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbWorldMaxHeight
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
+    wbWorldLargeRefs,
+    wbWorldMaxHeight,
     wbFULL,
     wbWorldFixedCenter,
     wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]),
@@ -20184,21 +20176,9 @@ begin
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbWorldWaterHeightData,
     wbWorldLevelData,
-    wbWorldOffsetData
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
-    wbWorldCellSizeData
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable),
+    wbWorldOffsetData,
+    wbWorldCellSizeData,
     wbWorldVisibleCellsData
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
   ], False, nil, cpNormal, False, wbWRLDAfterLoad);
 
   wbAddGroupOrder(GMST);

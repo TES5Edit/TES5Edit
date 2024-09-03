@@ -487,6 +487,37 @@ begin
 	  ], cpNormal, True, nil, 4);
 end;
 
+function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  Container: IwbDataContainer;
+  Element: IwbElement;
+  MinX, MaxX: Integer;
+begin
+  Result := 0;
+
+  if not Supports(aElement.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not Supports(Container.Container, IwbDataContainer, Container) then
+    Exit;
+
+  if not Assigned(Container.ElementByPath['Dimensions\Min\X']) then
+    if not Supports(Container.Container, IwbDataContainer, Container) then
+      Exit;
+
+  Element := Container.ElementByPath['Dimensions\Min\X'];
+  if not Assigned(Element) then
+    Exit;
+  MinX := Element.NativeValue;
+
+  Element := Container.ElementByPath['Dimensions\Max\X'];
+  if not Assigned(Element) then
+    Exit;
+  MaxX := Element.NativeValue;
+
+  Result := MaxX - MinX + 1;
+end;
+
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Container: IwbDataContainer;
@@ -1409,34 +1440,67 @@ begin
       .SetSummaryPrefixSuffixOnValue(1, 'X: ','')
       .SetSummaryDelimiterOnValue(' ')
       .IncludeFlag(dfCollapsed),
-    cpIgnore, False, nil, nil, wbNeverShow);
+    cpIgnore, False, nil, nil, wbNeverShow)
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride)
+    .IncludeFlag(dfNotAlignable);
 
   //TES5,FO4,FO76,SF1
   wbWorldMaxHeight :=
-    IfThen(wbSimpleRecords,
-      wbByteArray(MHDT, 'Max Height Data', 0, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-      wbStruct(MHDT, 'Max Height Data', [
+    wbStruct(MHDT, 'Max Height Data', [
+      wbStruct('Dimensions', [
         wbStruct('Min', [
-          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        ]),
+          wbInteger('X', itS16, nil, nil, cpBenign),
+          wbInteger('Y', itS16, nil, nil, cpBenign)
+        ], cpBenign, True)
+        .SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(0, 'Min(', '')
+        .SetSummaryMemberPrefixSuffix(1, '', ')')
+        .SetSummaryDelimiter(', ')
+        .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
         wbStruct('Max', [
-          wbInteger('X', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-          wbInteger('Y', itS16, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-        ]),
-        IfThen(wbRemoveOffsetData,
-          wbByteArray('Cell Heights', 0),
-          wbArray('Cell Heights',
-            wbStruct('Quads', [
-              wbInteger('Bottom Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-              wbInteger('Bottom Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-              wbInteger('Top Left', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]),
-              wbInteger('Top Right', itU8, nil, nil, wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])],
-            wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT])
-            .IncludeFlag(dfCollapsed))
+          wbInteger('X', itS16, nil, nil, cpBenign),
+          wbInteger('Y', itS16, nil, nil, cpBenign)
+        ], cpBenign, True)
+        .SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(0, 'Max(', '')
+        .SetSummaryMemberPrefixSuffix(1, '', ')')
+        .SetSummaryDelimiter(', ')
+        .IncludeFlag(dfCollapsed, wbCollapseObjectBounds)
+      ], cpBenign, True)
+      .SetSummaryKey([0, 1])
+      .SetSummaryMemberPrefixSuffix(0, '[', '')
+      .SetSummaryMemberPrefixSuffix(1, '', ']')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
+      IfThen(wbRemoveOffsetData,
+        wbByteArray('Cell Heights', 0, cpBenign, True),
+        wbArray('Cell Heights',
+          wbArray('Columns',
+            wbStruct('Cell', [
+              wbInteger('Bottom Left', itU8, nil, nil, cpBenign, True),
+              wbInteger('Bottom Right', itU8, nil, nil, cpBenign, True),
+              wbInteger('Top Left', itU8, nil, nil, cpBenign, True),
+              wbInteger('Top Right', itU8, nil, nil, cpBenign, True)
+            ], cpBenign, True)
+            .SetSummaryKey([0, 1, 2, 3])
+            .SetSummaryMemberPrefixSuffix(0, 'BL: ','')
+            .SetSummaryMemberPrefixSuffix(1, 'BR: ','')
+            .SetSummaryMemberPrefixSuffix(2, 'TL: ','')
+            .SetSummaryMemberPrefixSuffix(3, 'TR: ','')
+            .SetSummaryDelimiter(', ')
+            .IncludeFlag(dfCollapsed),
+          wbMHDTColumnsCounter, cpBenign, True)
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfNotAlignable),
+        0, cpBenign, True)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable))
-      ], wbWorldMHDTConflictPriority[wbIgnoreWorldMHDT]));
+    ], cpBenign)
+    .IncludeFlag(dfCollapsed)
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNoCopyAsOverride);
 
   //TES5,FO4,FO76,SF1
   wbWorldFixedCenter :=
@@ -1612,7 +1676,12 @@ begin
           wbWorldColumnsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow));
+      0, nil, nil, cpIgnore, False, wbNeverShow)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfFastAssign)
+      .IncludeFlag(dfNoCopyAsOverride)
+      .IncludeFlag(dfNotAlignable)
+    );
 
   //FO4,FO76,SF1
   wbWorldCellSizeData :=
@@ -1624,7 +1693,12 @@ begin
         wbWorldColumnsCounter, cpIgnore)
         .IncludeFlag(dfCollapsed)
         .IncludeFlag(dfNotAlignable),
-      0, nil, nil, cpIgnore, False, wbNeverShow));
+      0, nil, nil, cpIgnore, False, wbNeverShow)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfFastAssign)
+      .IncludeFlag(dfNoCopyAsOverride)
+      .IncludeFlag(dfNotAlignable)
+    );
 
   //FO76
   wbWorldVisibleCellsData :=
@@ -1645,7 +1719,11 @@ begin
           wbInteger('Min X', itS16, nil, cpIgnore),
           wbInteger('Rows', itU32, nil, cpIgnore)
         ], cpIgnore)
-      ], cpIgnore, False, wbNeverShow));
+      ], cpIgnore, False, wbNeverShow)
+      .IncludeFlag(dfCollapsed)
+      .IncludeFlag(dfFastAssign)
+      .IncludeFlag(dfNoCopyAsOverride)
+    );
 
 {>>>End Common Definitions<<<}
 end;

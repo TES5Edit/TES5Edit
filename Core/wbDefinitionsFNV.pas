@@ -10447,10 +10447,6 @@ var  wbSoundTypeSoundsOld :=
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
     wbWorldSwapsImpactData,
     wbWorldOffsetData
-    .IncludeFlag(dfCollapsed)
-    .IncludeFlag(dfFastAssign)
-    .IncludeFlag(dfNoCopyAsOverride)
-    .IncludeFlag(dfNotAlignable)
   ]);
 
   wbAddGroupOrder(GMST);
