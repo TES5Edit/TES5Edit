@@ -10424,7 +10424,8 @@ var  wbSoundTypeSoundsOld :=
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbWorldWaterData,
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbWorldLODData,
     wbWorldLandData,
     wbICON,
     wbWorldMapData,

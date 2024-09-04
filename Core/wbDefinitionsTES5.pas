@@ -12930,7 +12930,8 @@ Can't properly represent that with current record definition methods.
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbWorldWaterData,
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),

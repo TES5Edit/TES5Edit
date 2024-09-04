@@ -21388,7 +21388,9 @@ end;
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbWorldWaterData,
+    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbString(NAM7, 'Water Material Path'),
+    wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
