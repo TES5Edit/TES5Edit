@@ -58,7 +58,7 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Build   : 'i';
+    Build   : 'j';
     Title   : '';
   );
 
@@ -248,6 +248,7 @@ var
   wbCollapseDestruction              : Boolean    = True;
   wbCollapseLocations                : Boolean    = True;
   wbCollapseNavmesh                  : Boolean    = True;
+  wbDontDrawColorText                : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
   wbNoIndexInAliasSummary            : Boolean    = True;

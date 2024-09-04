@@ -18007,6 +18007,9 @@ begin
   Dec(Column);
   if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
     if FindColors(Text, Colors) then begin
+      if wbDontDrawColorText then
+        DefaultDraw := False;
+
       var OldBrushColor := TargetCanvas.Brush.Color;
       try
         var r := CellRect;
