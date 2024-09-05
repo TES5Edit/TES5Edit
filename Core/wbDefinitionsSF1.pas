@@ -20568,8 +20568,8 @@ end;
     wbDESC(),
     wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
     wbCTDAs,
-    wbStructs(FVPA, 'Required Resources', 'Resource', [
-      wbFormIDCk('Resource', [ALCH,AMMO,ARMO,BOOK,COBJ,IRES,KEYM,LIGH,LVLI,MISC,WEAP]),
+    wbStructs(FVPA, 'Required Items', 'Item', [
+      wbFormIDCk('Item', [ALCH,AMMO,ARMO,BOOK,COBJ,IRES,KEYM,LIGH,LVLI,MISC,WEAP]),
       wbInteger('Required Count', itU32),
       wbFormIDCk('Curve Table', [CURV, NULL])
     ]),
@@ -20580,17 +20580,14 @@ end;
     ]),
     wbFormID(CNAM, 'Created Item'),
     wbInteger(NNAM, 'Number Created', itU16),
-    wbFloat(SNAM, 'Menu Sort Order'),
-    wbInteger(TNAM, 'Tier', itU8, wbEnum([
-      '0',
-      '1',
-      '2',
-      '3',
-      '4',
-      '5'
-    ])).SetRequired,
+    wbFloat(SNAM, 'Sorting Priority'),
+    wbInteger(TNAM, 'Tier', itU8,
+      wbEnum([
+        '0', '1', '2', '3', '4', '5'
+      ])
+    ).SetRequired,
     wbFormIDCk(KNAM,'Category Keyword', [KYWD]),
-    wbRArray('Required Projects', wbFormIDCk(RNAM, 'Required Project', [RSPJ]))
+    wbRArray('Required Researches', wbFormIDCk(RNAM, 'Research', [RSPJ]))
   ]);
 
   {subrecords checked against Starfield.esm}
