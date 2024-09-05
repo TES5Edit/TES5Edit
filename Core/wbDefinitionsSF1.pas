@@ -3440,56 +3440,6 @@ begin
     Result := True;
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rOFST: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbContainer, Container) then
-    Exit;
-
-  if wbBeginInternalEdit then try
-    Container.RemoveElement(OFST);
-  finally
-    wbEndInternalEdit;
-  end else begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
-  end;
-end;
-
-procedure wbRemoveCLSZ(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rCLSZ: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbContainer, Container) then
-    Exit;
-
-  if wbBeginInternalEdit then try
-    Container.RemoveElement(CLSZ);
-  finally
-    wbEndInternalEdit;
-  end else begin
-    rCLSZ := Container.RecordBySignature[CLSZ];
-    if Assigned(rCLSZ) then
-      Container.RemoveElement(rCLSZ);
-  end;
-end;
-
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
-begin
-  wbRemoveOFST(aElement);
-  wbRemoveCLSZ(aElement);
-end;
-
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
 var
   ObjectsContainer : IwbContainerElementRef;
@@ -18077,7 +18027,7 @@ end;
     wbInteger(INCC, 'Internal Cell Count', itU32),                    // Size of some array of 12 bytes elements
 
     wbUnknown(CHGL)
-  ], True, nil, cpNormal, True, wbRemoveOFST);
+  ], True, nil, cpNormal, True);
 
   {xEdit internal subrecord type}
   wbRecord(PLYR, 'Player Reference', [
@@ -21432,7 +21382,7 @@ end;
     wbWorldLevelData,
     wbWorldOffsetData,
     wbWorldCellSizeData
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+  ], False, nil, cpNormal, False, wbWorldAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);

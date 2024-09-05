@@ -108,7 +108,9 @@ procedure DefineCommon;
 {>>> Add Info Callbacks <<<} //1
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 
-{>>> After Load Callbacks <<<} //0
+{>>> After Load Callbacks <<<} //1
+
+procedure wbWorldAfterLoad(const aElement: IwbElement);
 
 {>>> After Set Callbacks <<<} //30
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -271,8 +273,8 @@ function wbFromVersion(aVersion: Integer; const aSignature: TwbSignature; const 
 function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
 
 {>>> Vec3 Defs <<<} //11
-function wbVec3(const aName   : string = 'Unknown'; const aPrefix : string = ''): IwbValueDef; overload;
-function wbVec3(const aSignature : TwbSignature; const aName      : string = 'Unknown'; const aPrefix    : string = ''): IwbRecordMemberDef; overload;
+function wbVec3(const aName: string = 'Unknown'; const aPrefix: string = ''): IwbValueDef; overload;
+function wbVec3(const aSignature: TwbSignature; const aName: string = 'Unknown'; const aPrefix: string = ''): IwbRecordMemberDef; overload;
 function wbVec3Pos(const aName: string = 'Position'; const aPrefix: string = 'Pos'): IwbValueDef; overload;
 function wbVec3Pos(const aSignature: TwbSignature; const aName: string = 'Position'; const aPrefix: string = 'Pos'): IwbRecordMemberDef; overload;
 function wbVec3Rot(const aName: string = 'Rotation'; const aPrefix: string = 'Rot'): IwbValueDef; overload;
@@ -378,7 +380,63 @@ begin
   Result := 'in ' + s + Result;
 end;
 
-{>>> After Load Callbacks <<<} //0
+{>>> After Load Callbacks <<<} //1
+
+procedure wbWorldAfterLoad(const aElement: IwbElement);
+  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
+    begin
+      Result := (aValue < -aRange) or (aValue > aRange);
+    end;
+var
+  MainRecord: IwbMainRecord;
+  Container: IwbContainer;
+  rCLSZ: IwbRecord;
+  rVISI: IwbRecord;
+begin
+  if wbBeginInternalEdit then try
+
+    if not Supports(aElement, IwbMainRecord, MainRecord) then
+      Exit;
+
+    if wbRemoveOffsetData then
+      if not wbIsStarfield then
+        if MainRecord._File.LoadOrder = 0 then
+	        MainRecord.RemoveElement('Large References');
+
+    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
+    // CK can occasionally set them wrong, so make a warning
+    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
+      if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
+         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
+         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
+         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
+      then
+        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
+  finally
+    wbEndInternalEdit;
+  end;
+
+  if wbBeginInternalEdit then try
+
+    if not wbRemoveOffsetData then
+      Exit;
+
+    if not Supports(aElement, IwbContainer, Container) then
+      Exit;
+
+    Container.RemoveElement(CLSZ);
+    Container.RemoveElement(VISI);
+  finally
+    wbEndInternalEdit;
+  end else begin
+    rCLSZ := Container.RecordBySignature[CLSZ];
+    rVISI := Container.RecordBySignature[VISI];
+    if Assigned(rCLSZ) then
+      Container.RemoveElement(rCLSZ);
+    if Assigned(rVISI) then
+      Container.RemoveElement(rVISI);
+  end;
+end;
 
 {>>> After Set Callbacks <<<} //30
 
@@ -4100,11 +4158,15 @@ begin
         wbStruct('Cell Water Height Location', [
           wbInteger('Cell Y', itS16),
           wbInteger('Cell X', itS16)
-        ])
-      ),
+        ]).SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(0, '(X: ', '')
+        .SetSummaryMemberPrefixSuffix(1, 'Y: ', ')')
+        .SetSummaryDelimiter(', ')
+        .IncludeFlag(dfCollapsed)
+      ).IncludeFlag(dfNotAlignable),
       wbArray(WHGT, 'Water Heights',
         wbFloat('Water Height')
-      )
+      ).IncludeFlag(dfNotAlignable)
     ], []);
 
   //FO4,FO76,SF1
@@ -4114,11 +4176,17 @@ begin
         wbStruct('NW Cell', [
           wbInteger('X', itS8),
           wbInteger('Y', itS8)
-        ]),
+        ]).SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(0, '(X: ', '')
+        .SetSummaryMemberPrefixSuffix(1, 'Y: ', ')')
+        .SetSummaryDelimiter(', '),
         wbStruct('Size', [
           wbInteger('Width', itU8),
           wbInteger('Height', itU8)
-        ])
+        ]).SetSummaryKey([0, 1])
+        .SetSummaryMemberPrefixSuffix(0, 'Width: ', '')
+        .SetSummaryMemberPrefixSuffix(1, 'Height: ', '')
+        .SetSummaryDelimiter(', ')
       ]),
       wbByteArray(WLEV, 'Cell Data')
     ], []);

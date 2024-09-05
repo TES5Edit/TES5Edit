@@ -1070,21 +1070,6 @@ begin
   end;
 end;
 
-procedure wbRemoveOFST(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rOFST: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-
-  if Supports(aElement, IwbContainer, Container) then begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
-  end;
-end;
-
 procedure wbCELLAfterLoad(const aElement: IwbElement);
 var
   Container    : IwbContainerElementRef;
@@ -4186,7 +4171,7 @@ var  wbSoundTypeSoundsOld :=
       wbStringForward(MAST, 'FileName', 0, cpNormal, True),
       wbByteArray(DATA, 'Unused', 8, cpIgnore, True)
     ], [])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit)
-  ], False, nil, cpNormal, True, wbRemoveOFST);
+  ], False, nil, cpNormal, True);
 
   wbRecord(PLYR, 'Player Reference', [
     wbEDID,
@@ -4357,7 +4342,7 @@ var  wbSoundTypeSoundsOld :=
     wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbWorldOffsetData
-  ]);
+  ], False, nil, cpNormal, False, wbWorldAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);

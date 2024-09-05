@@ -3584,103 +3584,6 @@ begin
     Result := True;
 end;
 
-procedure wbRemoveRNAM(const aElement: IwbElement);
-var
-  MainRecord: IwbMainRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-  if not Supports(aElement, IwbMainRecord, MainRecord) then
-    Exit;
-  if wbBeginInternalEdit then try
-    if MainRecord._File.LoadOrder = 0 then
-	  MainRecord.RemoveElement('Large References');
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbRemoveOFST(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rOFST: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbContainer, Container) then
-    Exit;
-
-  if wbBeginInternalEdit then try
-    Container.RemoveElement(OFST);
-  finally
-    wbEndInternalEdit;
-  end else begin
-    rOFST := Container.RecordBySignature[OFST];
-    if Assigned(rOFST) then
-      Container.RemoveElement(rOFST);
-  end;
-end;
-
-procedure wbRemoveCLSZ(const aElement: IwbElement);
-var
-  Container: IwbContainer;
-  rCLSZ: IwbRecord;
-begin
-  if not wbRemoveOffsetData then
-    Exit;
-
-  if not Supports(aElement, IwbContainer, Container) then
-    Exit;
-
-  if wbBeginInternalEdit then try
-    Container.RemoveElement(CLSZ);
-  finally
-    wbEndInternalEdit;
-  end else begin
-    rCLSZ := Container.RecordBySignature[CLSZ];
-    if Assigned(rCLSZ) then
-      Container.RemoveElement(rCLSZ);
-  end;
-end;
-
-procedure wbFixWorldspaceBounds(const aElement: IwbElement);
-  function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
-  begin
-    Result := (aValue < -aRange) or (aValue > aRange);
-  end;
-var
-  MainRecord: IwbMainRecord;
-  Container: IwbContainer;
-begin
-  if wbBeginInternalEdit then try
-
-    if not Supports(aElement, IwbMainRecord, MainRecord) then
-      Exit;
-
-    // large values in object bounds cause stutter and performance issues in game (reported by Arthmoor)
-    // CK can occasionally set them wrong, so make a warning
-    if Supports(MainRecord.ElementByName['Object Bounds'], IwbContainer, Container) then
-      if OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM0\Y'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\X'], 0)) or
-         OutOfRange(StrToIntDef(Container.ElementEditValues['NAM9\Y'], 0))
-      then
-        wbProgressCallback('<Warning: Object Bounds in ' + MainRecord.Name + ' are abnormally large and can cause performance issues in game>');
-
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
-procedure wbWRLDAfterLoad(const aElement: IwbElement);
-begin
-  wbRemoveRNAM(aElement);
-  wbRemoveOFST(aElement);
-  wbRemoveCLSZ(aElement);
-  wbFixWorldspaceBounds(aElement);
-end;
-
 procedure wbDOBJObjectsAfterLoad(const aElement: IwbElement);
 var
   ObjectsContainer : IwbContainerElementRef;
@@ -15059,7 +14962,7 @@ begin
     ])),          // Ignored by the runtime
     wbInteger(INTV, 'Unknown', itU32),                    // Ignored by the runtime, 4 bytes loaded in CK
     wbInteger(INCC, 'Interior Cell Count', itU32)                     // Size of some array of 12 bytes elements
-  ], True, nil, cpNormal, True, wbRemoveOFST);
+  ], True, nil, cpNormal, True);
 
   wbRecord(PLYR, 'Player Reference', [
     wbEDID,
@@ -16084,7 +15987,7 @@ begin
     wbWorldLevelData,
     wbWorldOffsetData,
     wbWorldCellSizeData
-  ], False, nil, cpNormal, False, wbWRLDAfterLoad);
+  ], False, nil, cpNormal, False, wbWorldAfterLoad);
 
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
