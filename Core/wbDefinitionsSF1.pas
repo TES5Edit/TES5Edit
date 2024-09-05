@@ -20569,7 +20569,7 @@ end;
     wbFormIDCk(BNAM,'Workbench Keyword', [KYWD]),
     wbCTDAs,
     wbStructs(FVPA, 'Required Resources', 'Resource', [
-      wbFormIDCk('Resource', [IRES, ALCH]),
+      wbFormIDCk('Resource', [ALCH,AMMO,ARMO,BOOK,COBJ,IRES,KEYM,LIGH,LVLI,MISC,WEAP]),
       wbInteger('Required Count', itU32),
       wbFormIDCk('Curve Table', [CURV, NULL])
     ]),
