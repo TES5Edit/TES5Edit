@@ -3037,7 +3037,7 @@ begin
           wbFromVersion(111, wbByteColors('Early Sunrise').IncludeFlag(dfSummaryNoName)),
           nil)),
 	    IfThen(wbGameMode in [gmFNV],
-        wbByteColors('Midnight').IncludeFlag(dfHideText).IncludeFlag(dfSummaryNoName),
+        wbByteColors('Midnight').IncludeFlag(dfSummaryNoName),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
           wbFromVersion(111, wbByteColors('Late Sunrise').IncludeFlag(dfSummaryNoName)),
           nil)),
