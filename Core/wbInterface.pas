@@ -4905,13 +4905,17 @@ var
 
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
-function wbIsSkyrim: Boolean; inline;
+
+function wbIsOblivion: Boolean; inline;
 function wbIsFallout3: Boolean; inline;
+function wbIsFalloutNV: Boolean; inline;
+function wbIsSkyrim: Boolean; inline;
+function wbIsSkyrimSE: Boolean; inline;
 function wbIsFallout4: Boolean; inline;
 function wbIsFallout76: Boolean; inline;
+function wbIsStarfield: Boolean; inline;
 function wbIsLightSupported: Boolean; inline;
 function wbIsMediumSupported: Boolean; inline;
-function wbIsStarfield: Boolean; inline;
 function wbIsOverlaySupported: Boolean; inline;
 
 procedure ReportDefs;
@@ -5483,14 +5487,29 @@ begin
     wbRecordDefs[i].rdeDef.Report(nil);
 end;
 
-function wbIsSkyrim: Boolean; inline;
+function wbIsOblivion: Boolean; inline;
 begin
-  Result := wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
+  Result := wbGameMode in [gmTES4];
 end;
 
 function wbIsFallout3: Boolean; inline;
 begin
   Result := wbGameMode in [gmFO3, gmFNV];
+end;
+
+function wbIsFalloutNV: Boolean; inline;
+begin
+  Result := wbGameMode in [gmFNV];
+end;
+
+function wbIsSkyrim: Boolean; inline;
+begin
+  Result := wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
+end;
+
+function wbIsSkyrimSE: Boolean; inline;
+begin
+  Result := wbGameMode in [gmTES5VR, gmSSE, gmEnderalSE];
 end;
 
 function wbIsFallout4: Boolean; inline;

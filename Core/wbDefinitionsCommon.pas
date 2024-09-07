@@ -244,13 +244,11 @@ function wbMakeVarRecs(const a : array of const): TwbVarRecs;
 
 {>>> Common Function Definitions <<<}
 
-{>>> IfThens Defs <<<} //5
-function IfThen(aBoolean: Boolean; const aTrue: IwbFloatDef; const aFalse: IwbFloatDef): IwbFloatDef; overload;
+{>>> IfThens Defs <<<} //4
 function IfThen(aBoolean: Boolean; const aTrue: IwbRecordMemberDef; const aFalse: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IfThen(aBoolean: Boolean; const aTrue: IwbStructDef; const aFalse: IwbStructDef): IwbStructDef; overload;
+function IfThen(aBoolean: Boolean; const aTrue: IwbValueDef; const aFalse: IwbValueDef): IwbValueDef; overload;
 function IfThen(aBoolean: Boolean; const aTrue: TwbSignature; const aFalse: TwbSignature): TwbSignature; overload;
 function IfThen(aBoolean: Boolean; const aTrue: TwbToStrCallback; const aFalse: TwbToStrCallback): TwbToStrCallback; overload;
-function IfThen(aBoolean: Boolean; const aTrue: IwbValueDef; const aFalse: IwbValueDef): IwbValueDef; overload;
 
 {>>> Flag IfThen Defs <<<} //6
 function wbHasNoFlags(const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
@@ -259,6 +257,18 @@ function wbIsFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: 
 function wbIsFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 function wbIsNotFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbIsNotFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
+
+{>>> Game Mode IfThen Defs <<<} //10
+function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
+function IsTES4(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsSSE(const aDef1, aDef2: String): String; Overload;
+function IsSSE(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
+function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef; Overload;
+function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef;
 
 {>>> Size IfThen Defs <<<} //4
 function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
@@ -1327,7 +1337,7 @@ begin
 
     var RunOnInt: Integer := RunOn.NativeValue;
 
-    if wbGameMode = gmFNV then begin
+    if wbIsFalloutNV then begin
       var FuncInt: Integer := Func.NativeValue;
       if (FuncInt = 106) or (FuncInt = 285) then
         RunOnInt := 0;
@@ -1427,7 +1437,7 @@ begin
 
   aValue := Faction.Value;
 
-  if wbGameMode = gmTES4 then begin
+  if wbIsOblivion then begin
     var NativeRank := Rank.NativeValue;
 
     aValue := IntToStr(NativeRank) + ' ' + aValue;
@@ -1853,7 +1863,7 @@ begin
   if not wbTryGetContainerFromUnion(aElement, Container) then
     Exit;
 
-  if wbGameMode = gmFNV then begin
+  if wbIsFalloutNV then begin
     // IsFacingUp, IsLeftUp
     var i := Container.ElementNativeValues['Function'];
     if (i = 106) or (i = 285) then
@@ -2126,14 +2136,14 @@ end;
 
 {>>> IfThen Defs <<<} //4
 
-function IfThen(aBoolean: Boolean; const aTrue: IwbFloatDef; const aFalse: IwbFloatDef): IwbFloatDef;
+function IfThen(aBoolean: Boolean; const aTrue: IwbRecordMemberDef; const aFalse: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
   Result := aFalse;
   if aBoolean then
     Result := aTrue;
 end;
 
-function IfThen(aBoolean: Boolean; const aTrue: IwbRecordMemberDef; const aFalse: IwbRecordMemberDef): IwbRecordMemberDef;
+function IfThen(aBoolean: Boolean; const aTrue: IwbValueDef; const aFalse: IwbValueDef): IwbValueDef;
 begin
   Result := aFalse;
   if aBoolean then
@@ -2147,21 +2157,7 @@ begin
     Result := aTrue;
 end;
 
-function IfThen(aBoolean: Boolean; const aTrue: IwbStructDef; const aFalse: IwbStructDef): IwbStructDef;
-begin
-  Result := aFalse;
-  if aBoolean then
-    Result := aTrue;
-end;
-
 function IfThen(aBoolean: Boolean; const aTrue: TwbToStrCallback; const aFalse: TwbToStrCallback): TwbToStrCallback;
-begin
-  Result := aFalse;
-  if aBoolean then
-    Result := aTrue;
-end;
-
-function IfThen(aBoolean: Boolean; const aTrue: IwbValueDef; const aFalse: IwbValueDef): IwbValueDef;
 begin
   Result := aFalse;
   if aBoolean then
@@ -2264,6 +2260,88 @@ begin
         aValue,
         wbEmpty(aValue.Name)
       ]).IncludeFlag(dfMustBeUnion);
+end;
+
+{>>> wbGameMode IfThen Defs <<<} //9
+
+function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
+begin
+  if wbIsOblivion then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsTES4(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsOblivion then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsFallout3 then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsFalloutNV then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsSkyrim then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSSE(const aDef1, aDef2: String): String;
+begin
+  if wbIsSkyrimSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSSE(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
+begin
+  if wbIsSkyrimSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsSkyrimSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsFallout76 then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsStarfield then
+    Result := aDef1
+  else
+    Result := aDef2;
 end;
 
 {>>> Size IfThen Defs <<<} //4
@@ -2506,13 +2584,16 @@ begin
       wbByteColors('Z-').IncludeFlag(dfSummaryNoName)
     ]).SetSummaryKey([0, 1, 2, 3, 4, 5])
     .IncludeFlag(dfCollapsed),
-    IfThen(wbIsStarfield,
-      nil,
-      wbFromVersion(34, wbByteColors('Specular'))
+    IsFO76(
+      wbUnused(4),
+      IsSF1(
+        nil,
+        wbFromVersion(34, wbByteColors('Specular'))
+      )
     ),
-    IfThen(wbIsFallout76,
-      wbByteArray('Fresnel Power', 4),
-      IfThen(wbIsStarfield,
+    IsFO76(
+      wbUnused(4),
+      IsSF1(
         nil,
         wbFromVersion(34, wbFloat('Fresnel Power'))
       )
@@ -2532,13 +2613,16 @@ begin
       wbByteColors('Z-').IncludeFlag(dfSummaryNoName)
     ]).SetSummaryKey([0, 1, 2, 3, 4, 5])
     .IncludeFlag(dfCollapsed),
-    IfThen(wbIsStarfield,
-      nil,
-      wbFromVersion(34, wbByteColors('Specular'))
+    IsFO76(
+      wbUnused(4),
+      IsSF1(
+        nil,
+        wbFromVersion(34, wbByteColors('Specular'))
+      )
     ),
-    IfThen(wbIsFallout76,
-      wbByteArray('Fresnel Power', 4),
-      IfThen(wbIsStarfield,
+    IsFO76(
+      wbUnused(4),
+      IsSF1(
         nil,
         wbFromVersion(34, wbFloat('Fresnel Power'))
       )
@@ -2823,7 +2907,7 @@ begin
     wbRStruct('Ownership', [
       aOwner,
       wbInteger(XRNK, 'Faction rank', itS32),
-      IfThen(wbGameMode = gmTES4, aGlobal, nil)
+      IsTES4(aGlobal, nil)
     ], aSkipSigs)
     .SetSummaryKey([0, 1])
     .SetSummaryMemberPrefixSuffix(1, '{Rank: ', '}')
@@ -3007,11 +3091,11 @@ begin
     ], []);
 
   Result :=
-    wbRStructSK([0], IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], 'Part', 'Head Part'), [
-      wbInteger(INDX, IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], 'Index', 'Head Part Number'), itU32, aHeadPartIndexEnum),
-      IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], aModel, nil),
-      IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], nil, wbFormIDCk(HEAD, 'Head', [HDPT, NULL])),
-      IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], wbICON, nil)
+    wbRStructSK([0], IfThen(wbGameMode < gmTES5, 'Part', 'Head Part'), [
+      wbInteger(INDX, IfThen(wbGameMode < gmTES5, 'Index', 'Head Part Number'), itU32, aHeadPartIndexEnum),
+      IfThen(wbGameMode < gmTES5, aModel, nil),
+      IfThen(wbGameMode < gmTES5, nil, wbFormIDCk(HEAD, 'Head', [HDPT, NULL])),
+      IfThen(wbGameMode < gmTES5, wbICON, nil)
     ], [], cpNormal, False, nil, False, nil, aHeadPartsAfterSet)
     .SetSummaryKey([0, 1])
     .SetSummaryMemberPrefixSuffix(0, '[', ']')
@@ -3031,12 +3115,12 @@ begin
 	    wbByteColors('Day').IncludeFlag(dfSummaryNoName),
 	    wbByteColors('Sunset').IncludeFlag(dfSummaryNoName),
 	    wbByteColors('Night').IncludeFlag(dfSummaryNoName),
-	    IfThen(wbGameMode in [gmFNV],
+	    IsFNV(
         wbByteColors('High Noon').IncludeFlag(dfSummaryNoName),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
           wbFromVersion(111, wbByteColors('Early Sunrise').IncludeFlag(dfSummaryNoName)),
           nil)),
-	    IfThen(wbGameMode in [gmFNV],
+	    IsFNV(
         wbByteColors('Midnight').IncludeFlag(dfSummaryNoName),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
           wbFromVersion(111, wbByteColors('Late Sunrise').IncludeFlag(dfSummaryNoName)),
@@ -3309,7 +3393,7 @@ begin
       wbStructSK(XNAM, [0], 'Relation', [
         wbFormIDCkNoReach('Faction', [FACT, RACE]),
         wbInteger('Modifier', itS32),
-        IfThen(wbGameMode = gmTES4,
+        IsTES4(
           nil,
           wbInteger('Group Combat Reaction', itU32, wbEnum([
             {0x00000001} 'Neutral',
@@ -3423,7 +3507,7 @@ begin
     );
 
   wbRegionSounds :=
-    wbArrayS(IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], RDSD, RDSA), 'Sounds', wbStructSK([0], 'Sound', [
+    wbArrayS(IfThen(wbGameMode < gmTES5, RDSD, RDSA), 'Sounds', wbStructSK([0], 'Sound', [
         wbFormIDCk('Sound', [SNDR, SOUN, NULL]),
         wbInteger('Flags', itU32, wbFlags([
           'Pleasant',
@@ -3431,7 +3515,7 @@ begin
           'Rainy',
           'Snowy'
         ])),
-        IfThen(wbGameMode in [gmTES4, gmFO3, gmFNV], wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt), wbFloat('Chance'))
+        IfThen(wbGameMode < gmTES5, wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt), wbFloat('Chance'))
       ]), 0, cpNormal, False, nil, nil, wbREGNSoundDontShow);
 
   wbSoundDescriptorSounds :=
@@ -3685,10 +3769,10 @@ begin
   wbWeatherColors :=
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherTimeOfDay('Sky-Upper'),
-      IfThen(wbGameMode in [gmTES4,gmFO3,gmFNV],
+      IfThen(wbGameMode < gmTES5,
         wbWeatherTimeOfDay('Fog'),
         wbWeatherTimeOfDay('Fog Near')),
-      IfThen(wbGameMode in [gmTES4],
+      IsTES4(
         wbWeatherTimeOfDay('Clouds-Lower'),
         wbWeatherTimeOfDay('Unused')),
       wbWeatherTimeOfDay('Ambient'),
@@ -3697,7 +3781,7 @@ begin
       wbWeatherTimeOfDay('Stars'),
       wbWeatherTimeOfDay('Sky-Lower'),
       wbWeatherTimeOfDay('Horizon'),
-      IfThen(wbGameMode in [gmTES4],
+      IsTES4(
         wbWeatherTimeOfDay('Clouds-Upper'),
         IfThen(wbIsFallout3,
           wbWeatherTimeOfDay('Clouds (Unused)'),
@@ -3906,8 +3990,8 @@ begin
         wbFormIDCk('Spell', [SPEL, NULL]),
         wbFromVersion(130, wbFloat('Threshold'))
       ]),
-        wbFromVersion(130, wbUnused(8))
-    ], cpNormal, False, nil, 3);
+      wbFromVersion(130, wbUnused(8))
+    ], cpNormal, False, nil, 2);
 
 {>>>Worldspace Common Defs<<<}
   //TES5,FO4,FO76,SF1
@@ -4055,27 +4139,28 @@ begin
       .SetSummaryMemberPrefixSuffix(1, 'SE', ']')
       .SetSummaryDelimiter(', ')
       .IncludeFlag(dfCollapsed),
-      IfThen(wbIsSkyrim,
+      IsTES5(
         wbStruct('Camera Data', [
           wbFloat('Min Height'),
           wbFloat('Max Height'),
           wbFloat('Initial Pitch')
-        ]), Nil)
+        ]),
+        Nil)
     ]);
 
   //FO3,FNV,TES5,SSE,FO4,FO76,SF1
   wbWorldMapOffset :=
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale'),
-      IfThen(wbIsStarfield,
+      IsSF1(
         wbFloat('Cell X Offset', cpNormal, True, 0.01),
         wbFloat('Cell X Offset')),
-      IfThen(wbIsStarfield,
+      IsSF1(
         wbFloat('Cell Y Offset', cpNormal, True, 0.01),
         wbFloat('Cell Y Offset')),
-      IfThen(wbIsFallout3,
+      IsFO3(
         Nil,
-        IfThen(wbIsStarfield,
+        IsSF1(
           wbFloat('Cell Z Offset', cpNormal, True, 0.01),
           wbFloat('Cell Z Offset')))
     ], cpNormal, True);

@@ -228,27 +228,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
-function IsSSE: Boolean; inline; overload;
-begin
-  Result := wbGameMode in [gmSSE, gmTES5VR, gmEnderalSE];
-end;
-
-function IsSSE(const aDef1, aDef2: String): String; inline; overload;
-begin
-  if IsSSE then
-    Result := aDef1
-  else
-    Result := aDef2;
-end;
-
-function IsSSE(const aDef1, aDef2: IwbSubRecordDef): IwbSubRecordDef; inline; overload;
-begin
-  if IsSSE then
-    Result := aDef1
-  else
-    Result := aDef2;
-end;
-
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -12743,7 +12722,7 @@ Can't properly represent that with current record definition methods.
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
 
-  if IsSSE then begin
+  if wbIsSkyrimSE then begin
     wbRecord(VOLI, 'Volumetric Lighting', [
       wbEDID,
       wbFloat(CNAM, 'Intensity'),
@@ -13050,7 +13029,7 @@ Can't properly represent that with current record definition methods.
    wbAddGroupOrder(OTFT);
    wbAddGroupOrder(ARTO);
    wbAddGroupOrder(MATO);
-   if IsSSE then wbAddGroupOrder(VOLI); {New to SSE}
+   if wbIsSkyrimSE then wbAddGroupOrder(VOLI); {New to SSE}
    wbAddGroupOrder(MOVT);
    wbAddGroupOrder(SNDR);
    wbAddGroupOrder(DUAL);
@@ -13059,8 +13038,8 @@ Can't properly represent that with current record definition methods.
    wbAddGroupOrder(COLL);
    wbAddGroupOrder(CLFM);
    wbAddGroupOrder(REVB);
-   if IsSSE then wbAddGroupOrder(LENS); {New to SSE}
-  if IsSSE then begin
+   if wbIsSkyrimSE then wbAddGroupOrder(LENS); {New to SSE}
+  if wbIsSkyrimSE then begin
     wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
     if wbToolMode = tmLODgen then
       wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
@@ -13073,7 +13052,7 @@ Can't properly represent that with current record definition methods.
     gmEnderal: wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
     gmEnderalSE: wbNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
   end;
-  if IsSSE then begin
+  if wbIsSkyrimSE then begin
     SetLength(wbOfficialDLC, 3);
     wbOfficialDLC[0] := 'Dawnguard.esm';
     wbOfficialDLC[1] := 'HearthFires.esm';
