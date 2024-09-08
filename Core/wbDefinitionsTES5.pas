@@ -154,10 +154,6 @@ var
   wbVMADFragmentedSCEN: IwbSubRecordDef;
   wbVMADFragmentedINFO: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
-  wbKSIZ: IwbSubRecordDef;
-  wbKWDAs: IwbSubRecordDef;
-  wbReqKWDAs: IwbSubRecordDef;
-  wbKeywords: IwbSubRecordStructDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
   wbMGEFData: IwbSubRecordStructDef;
@@ -3262,25 +3258,6 @@ begin
   Result := (i and $00000200) <> 0;
 end;
 
-procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if Assigned(Container.ElementBySignature['KSIZ']) then
-      Exit;
-
-    if Assigned(Container.ElementBySignature['KWDA']) then
-      Container.ElementBySignature['KWDA'].Remove;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbReplaceBODTwithBOD2(const aElement: IwbElement);
 var
   MainRecord    : IwbMainRecord;
@@ -3309,7 +3286,6 @@ end;
 
 procedure wbARMOAfterLoad(const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
   wbReplaceBODTwithBOD2(aElement);
 end;
 
@@ -3328,11 +3304,6 @@ begin
   finally
     wbEndInternalEdit;
   end;}
-end;
-
-procedure wbNPCAfterLoad(const aElement: IwbElement);
-begin
-  wbRemoveEmptyKWDA(aElement);
 end;
 
 procedure wbREFRAfterLoad(const aElement: IwbElement);
@@ -3367,8 +3338,6 @@ var
   MainRecord : IwbMainRecord;
   Flags      : Cardinal;
 begin
-  wbRemoveEmptyKWDA(aElement);
-
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
@@ -4043,15 +4012,6 @@ begin
   wbSPCT := wbInteger(SPCT, 'Count', itU32, nil, cpBenign);
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, SHOU, LVSP]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
-
-  wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
-  wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True, nil, wbKWDAsAfterSet);
-
-  wbKeywords := wbRStruct('Keywords', [
-    wbKSIZ,
-    wbReqKWDAs
-  ], []);
 
   wbCOED := wbStructExSK(COED, [2], [0, 1], 'Extra Data', [
     {00} wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -5120,8 +5080,7 @@ begin
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbByteColors(PNAM, 'Marker Color'),
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
@@ -5132,7 +5091,7 @@ begin
       'Ignored by Sandbox'
     ])),
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(TACT, 'Talking Activator',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -5146,13 +5105,12 @@ begin
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbUnknown(PNAM, cpIgnore, True),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
     wbUnknown(FNAM, cpIgnore, True),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbICON := wbRStruct('Icon', [
     wbString(ICON, 'Large Icon FileName', 0, cpNormal, True),
@@ -5901,8 +5859,7 @@ begin
     wbEDID,
     wbOBND(True),
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbDESC,
     wbGenericModel,
     wbDEST,
@@ -5938,7 +5895,7 @@ begin
       wbFormIDCk('Sound - Consume', [SNDR, NULL])
     ], cpNormal, True),
     wbEffectsReq
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(AMMO, 'Ammunition',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -5953,8 +5910,7 @@ begin
     wbYNAM,
     wbZNAM,
     wbDESC,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     IsSSE(
       wbStruct(DATA, 'Data', [
         wbFormIDCk('Projectile', [PROJ, NULL]),
@@ -5979,7 +5935,7 @@ begin
       ], cpNormal, True)
     ),
     wbString(ONAM, 'Short Name')
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(ANIO, 'Animated Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -6016,8 +5972,7 @@ begin
     wbFormIDCk(BIDS, 'Bash Impact Data Set', [IPDS]),
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbDESC,
     wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
     wbStruct(DATA, 'Data', [
@@ -6026,7 +5981,7 @@ begin
     ], cpNormal, True),
     wbInteger(DNAM, 'Armor Rating', itS32, wbDiv(100), cpNormal, True),
     wbFormIDCk(TNAM, 'Template Armor', [ARMO])
-  ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, wbARMOAfterLoad);
 
   wbRecord(ARMA, 'Armor Addon', [
     wbEDID,
@@ -6073,8 +6028,7 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbStruct(DATA, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
        {0x01} 'Teaches Skill',
@@ -6099,7 +6053,7 @@ begin
     ], cpNormal, True),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbLString(CNAM, 'Description', 0, cpTranslate)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
 {>>>
   Skrim has its own ref record for every projectile type
@@ -7121,8 +7075,7 @@ begin
     wbFULL,
     wbGenericModel,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       {0x0001} 'Unknown 0',
@@ -7190,7 +7143,7 @@ begin
       wbInteger('Entry Points', itU16, wbFurnitureEntryTypeFlags)
     ])),
     wbString(XMRK, 'Model FileName')
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
 //----------------------------------------------------------------------------
 // For expansion to use wbGLOBUnionDecider to display Short, Long, Float
@@ -7454,8 +7407,7 @@ begin
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itU32),
       wbFloat('Weight')
@@ -7463,7 +7415,7 @@ begin
     wbInteger(SOUL, 'Contained Soul', itU8, wbSoulGemEnum, cpNormal, True),
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum, cpNormal, True),
     wbFormIDCk(NAM0, 'Linked To', [SLGM])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
    wbCRCValuesEnum :=
     wbEnum([],[
@@ -8636,8 +8588,7 @@ Can't properly represent that with current record definition methods.
     ]), 0, cpBenign),
 
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbFormIDCk(PNAM, 'Parent Location', [LCTN, NULL]),
     wbFormIDCk(NAM1, 'Music', [MUSC, NULL]),
     wbFormIDCk(FNAM, 'Unreported Crime Faction', [FACT]),
@@ -8645,7 +8596,7 @@ Can't properly represent that with current record definition methods.
     wbFloat(RNAM, 'World Location Radius'),
     wbFormIDCk(NAM0, 'Horse Marker Ref', [REFR]),
     wbCNAM
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   // load map markes list from external file if present
   s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
@@ -9986,8 +9937,7 @@ Can't properly represent that with current record definition methods.
     wbVMAD,
     wbOBND(True),
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbGenericModel,
     wbICON,
     wbDEST,
@@ -10013,7 +9963,7 @@ Can't properly represent that with current record definition methods.
       ]))
     ], cpNormal, True),
     wbEffectsReq
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10028,13 +9978,12 @@ Can't properly represent that with current record definition methods.
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbStruct(DATA, '', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(LAND, 'Landscape',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10402,8 +10351,7 @@ Can't properly represent that with current record definition methods.
     wbVMAD,
     wbFULL,
     wbMDOB,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbMGEFData,
     wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet),
     wbMagicEffectSounds,
@@ -10424,13 +10372,12 @@ Can't properly represent that with current record definition methods.
     wbDEST,
     wbYNAM,
     wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
     ], cpNormal, True)
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(APPA, 'Alchemical Apparatus', [
     wbEDID,
@@ -10573,8 +10520,7 @@ Can't properly represent that with current record definition methods.
     wbCNTOs,
     wbAIDT,
     wbRArray('Packages', wbFormIDCk(PKID, 'Package', [PACK]), cpNormal, False, nil{wbActorTemplateUseAIPackages}),
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbFormIDCk(CNAM, 'Class', [CLAS], False, cpNormal, True),
     wbFULL,
     wbLString(SHRT, 'Short Name', 0, cpTranslate),
@@ -10680,7 +10626,7 @@ Can't properly represent that with current record definition methods.
         wbInteger(TINV, 'Interpolation Value', itU32, wbDiv(100)),
         wbInteger(TIAS, 'Preset', itS16)
       ], []))
-  ], False, nil, cpNormal, False, wbNPCAfterLoad, wbNPCAfterSet);
+  ], False, nil, cpNormal, False, nil, wbNPCAfterSet);
 
   wbObjectTypeEnum := wbEnum([
     ' NONE',
@@ -11100,8 +11046,7 @@ Can't properly represent that with current record definition methods.
             wbByteArray(ALFD, 'Event Data')
           ], []),
           wbCTDAs,
-          wbKSIZ,
-          wbKWDAs,
+          wbKeywords,
           wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -11169,8 +11114,7 @@ Can't properly represent that with current record definition methods.
             wbByteArray(ALFD, 'Event Data')
           ], []),
           wbCTDAs,
-          wbKSIZ,
-          wbKWDAs,
+          wbKeywords,
           wbCOCT,
           wbCNTOs,
           wbFormIDCk(SPOR, 'Spectator override package list', [FLST], False, cpNormal, False),
@@ -11560,8 +11504,7 @@ Can't properly represent that with current record definition methods.
     wbSPLOs,
     wbFormIDCk(WNAM, 'Skin', [ARMO, NULL]),
     wbBODTBOD2,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
         wbInteger('Skill', itS8, wbActorValueEnum),
@@ -12252,21 +12195,19 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbOBND(True),
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbMDOB,
     wbETYP,
     wbDESCReq,
     wbSPIT,
     wbEffectsReq
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(SCRL, 'Scroll', [
     wbEDID,
     wbOBND(True),
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbMDOB,
     wbETYP,
     wbDESC,
@@ -12280,7 +12221,7 @@ Can't properly represent that with current record definition methods.
     ], cpNormal, True),
     wbSPIT,
     wbEffectsReq
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(STAT, 'Static',
     wbFlags(wbRecordFlagsFlags, [
@@ -12426,15 +12367,14 @@ Can't properly represent that with current record definition methods.
     wbFULLReq,
     wbGenericModel,
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
     wbUnknown(FNAM),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
     wbSeasons
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
@@ -12618,8 +12558,7 @@ Can't properly represent that with current record definition methods.
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
     wbYNAM,
     wbZNAM,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbDESC,
     wbTexturedModel('Has Scope', [MOD3, MO3T], wbMO3S),
     wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
@@ -12720,7 +12659,7 @@ Can't properly represent that with current record definition methods.
     ),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
-  ], False, nil, cpNormal, False, wbWEAPAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, wbWEAPAfterLoad);
 
   if wbIsSkyrimSE then begin
     wbRecord(VOLI, 'Volumetric Lighting', [

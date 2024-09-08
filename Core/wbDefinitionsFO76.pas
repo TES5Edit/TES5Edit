@@ -200,11 +200,6 @@ var
   wbVMADFragmentedSCEN: IwbSubRecordDef;
   wbVMADFragmentedINFO: IwbSubRecordDef;
   wbCOCT: IwbSubRecordDef;
-  wbKSIZ: IwbSubRecordDef;
-  wbKWDAs: IwbSubRecordDef;
-  wbReqKWDAs: IwbSubRecordDef;
-  wbKeywords: IwbSubRecordStructDef;
-  wbKeywordsNoReq: IwbSubRecordStructDef;
   wbCNDC: IwbSubRecordDef;
   wbCITC: IwbSubRecordDef;
   wbCITCReq: IwbSubRecordDef;
@@ -4883,25 +4878,6 @@ begin
   Result := Cardinal(MainRecord.ElementNativeValues['ACBS\Use Template Actors']) = 0;
 end;
 
-procedure wbRemoveEmptyKWDA(const aElement: IwbElement);
-var
-  Container  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  if wbBeginInternalEdit then try
-    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
-      Exit;
-
-    if Assigned(Container.ElementBySignature['KSIZ']) then
-      Exit;
-
-    if Assigned(Container.ElementBySignature['KWDA']) then
-      Container.ElementBySignature['KWDA'].Remove;
-  finally
-    wbEndInternalEdit;
-  end;
-end;
-
 procedure wbReplaceBODTwithBOD2(const aElement: IwbElement);
 var
   MainRecord    : IwbMainRecord;
@@ -4930,7 +4906,6 @@ end;
 
 procedure wbARMOAfterLoad(const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
   wbReplaceBODTwithBOD2(aElement);
 end;
 
@@ -5028,7 +5003,6 @@ end;
 
 procedure wbNPCAfterLoad(const aElement: IwbElement);
 begin
-  wbRemoveEmptyKWDA(aElement);
   wbCheckMorphKeyOrder(aElement);
 end;
 
@@ -5057,8 +5031,6 @@ var
   MainRecord : IwbMainRecord;
   Flags      : Cardinal;
 begin
-  wbRemoveEmptyKWDA(aElement);
-
   if wbBeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
@@ -6500,21 +6472,7 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, LVSP]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
-  wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign);
-  wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, False, nil, wbKWDAsAfterSet);
-  wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL]), 0, cpNormal, True, nil, wbKWDAsAfterSet);
-
   wbXPCK := wbFormIDCk(XPCK, 'Reference Group', [RFGP]);
-
-  wbKeywords := wbRStruct('Keywords', [
-    wbKSIZ,
-    wbReqKWDAs
-  ], []);
-
-  wbKeywordsNoReq := wbRStruct('Keywords', [
-    wbKSIZ,
-    wbKWDAs
-  ], []);
 
   //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
   wbActorValue := wbUnion('Actor Value', wbFormVersionDecider(77), [
@@ -10407,7 +10365,7 @@ begin
     wbFromSize(1, NVNM, wbNVNMRecordVal, False),
     wbUnknown(MNAM),
     wbNAM1LODP
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   { Inherits from ACTI }
   wbRecord(TACT, 'Talking Activator',
@@ -10436,7 +10394,7 @@ begin
     wbFormIDCk(GCDA, 'Clobal Cooldown Timer', [GLOB]),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP]),
     wbFormIDCk(FNAM, 'Faction', [FACT])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbMIID := wbInteger(MIID, 'Max Item ID', itU32);
 
@@ -10497,7 +10455,7 @@ begin
     wbLStringKC(DNAM, 'Addiction Name', 0, cpTranslate),
     wbEffectsReq,
     wbMIID
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(AMMO, 'Ammunition',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10535,7 +10493,7 @@ begin
     wbLStringKC(ONAM, 'Short Name', 0, cpTranslate),
     wbString(NAM1, 'Casing Model'),
     wbModelInfo(NAM2)
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(ANIO, 'Animated Object',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10613,7 +10571,7 @@ begin
     wbFormIDCk(ABPO, 'Armor Backpack Position Offset', [NULL, TRNS]),
     wbDIQO,
     wbVCRY
-  ], False, nil, cpNormal, False, wbARMOAfterLoad, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, wbARMOAfterLoad);
 
   wbRecord(ARMA, 'Armor Addon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -10715,7 +10673,7 @@ begin
         {0x20} 'Unknown 6'
       ])),
     wbFormId(BVGO, 'Gold Bullion Value')
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
 {>>>
   Skrim has its own ref record for every projectile type
@@ -11769,7 +11727,7 @@ begin
     wbObjectTemplate,
     wbUnknown(FFEF),
     wbUnknown(NVNM)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(GLOB, 'Global',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -13216,7 +13174,7 @@ begin
     wbUnknown(NAM5),
     wbUnknown(NAM6),
     wbCNAM
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   var wbMenuButton :=
     wbRStruct('Menu Button', [
@@ -14858,7 +14816,7 @@ begin
     ], cpNormal, True),
     wbEffectsReq,
     wbMIID
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -14887,7 +14845,7 @@ begin
     ], cpNormal, True),
     wbUnknown(AQIC),
     wbDIQO
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(LAND, 'Landscape',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
@@ -15507,7 +15465,7 @@ begin
       wbFromVersion(152, wbFormIDCk('Curve Table', [CURV, NULL]))
     ]),
     wbArray(CDIX, 'Component Display Indices', wbInteger('Display Index', itU8))
-  ], False, nil, cpNormal, False, wbRemoveEmptyKWDA, wbKeywordsAfterSet);
+  ]);
 
   wbComponent :=
     wbStructSK([0], 'Component', [
@@ -17902,7 +17860,7 @@ begin
     wbSPIT,
     wbEffectsReq,
     wbMIID
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   {wbRecord(SCRL, 'Scroll', [
     wbEDID
@@ -18102,7 +18060,7 @@ begin
     wbFloat(FMIH, 'Min Harvest'),
     wbFormIDCk(FMAG, 'Max Harvest Global', [GLOB]),
     wbFormIDCk(FMIG, 'Min Harvest Global', [GLOB])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   wbRecord(WATR, 'Water', [
     wbEDID,
@@ -18422,7 +18380,7 @@ begin
       'Very Fast'
     ])),
     wbDAMS
-  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad});
 
   {wbRecord(SCPT, 'SCPT', [
     wbEDID
@@ -18935,7 +18893,7 @@ begin
       wbFormIDCk(HNAM, 'Child Pack-In', [PKIN]),
       wbArray(INAM, 'References', wbFormIDCk('Reference', [REFR]))
     ], []),
-    wbKeywordsNoReq,
+    wbKeywords,
     wbPRPS,
     wbLString(FULL, 'Name')
   ]);
@@ -19547,7 +19505,7 @@ begin
     wbXFLG,
     wbFormID(CNAM, 'Category'),
     wbFormID(DNAM, 'Animation'),
-    wbKeywordsNoReq
+    wbKeywords
   ]);
 
   wbRecord(STHD, 'Spell Threshold Data', [

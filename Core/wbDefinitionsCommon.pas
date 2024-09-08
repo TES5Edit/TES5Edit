@@ -45,6 +45,8 @@ var
   wbFactionRelations: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
+  wbKWDAs: IwbSubRecordDef;
+  wbKeywords :IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
@@ -108,11 +110,11 @@ procedure DefineCommon;
 {>>> Add Info Callbacks <<<} //1
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 
-{>>> After Load Callbacks <<<} //1
-
+{>>> After Load Callbacks <<<} //2
+procedure wbKeywordsAfterLoad(const aElement: IwbElement);
 procedure wbWorldAfterLoad(const aElement: IwbElement);
 
-{>>> After Set Callbacks <<<} //30
+{>>> After Set Callbacks <<<} //28
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbBODCsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbBODSsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -122,8 +124,6 @@ procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewV
 procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbCTDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbCTDARunOnAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbLLEAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbLVLOsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -390,7 +390,26 @@ begin
   Result := 'in ' + s + Result;
 end;
 
-{>>> After Load Callbacks <<<} //1
+{>>> After Load Callbacks <<<} //2
+
+procedure wbKeywordsAfterLoad(const aElement: IwbElement);
+var
+  Container  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+begin
+  if wbBeginInternalEdit then try
+    if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
+      Exit;
+
+    if Assigned(Container.ElementBySignature['KSIZ']) then
+      Exit;
+
+    if Assigned(Container.ElementBySignature['KWDA']) then
+      Container.ElementBySignature['KWDA'].Remove;
+  finally
+    wbEndInternalEdit;
+  end;
+end;
 
 procedure wbWorldAfterLoad(const aElement: IwbElement);
   function OutOfRange(aValue: Integer; aRange: Integer = 256): Boolean;
@@ -448,7 +467,7 @@ begin
   end;
 end;
 
-{>>> After Set Callbacks <<<} //30
+{>>> After Set Callbacks <<<} //28
 
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
@@ -478,7 +497,6 @@ end;
 procedure wbContainerAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
 end;
 
 procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -499,16 +517,6 @@ begin
       aElement.Container.ElementNativeValues['Reference'] := 0;
 end;
 
-procedure wbKeywordsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
-end;
-
-procedure wbKWDAsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterAfterSet('KSIZ - Keyword Count', aElement);
-end;
-
 procedure wbLENSAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterAfterSet('LFSP - Count', aElement);
@@ -526,7 +534,6 @@ end;
 
 procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  wbKeywordsAfterSet(aElement, aOldValue, aNewValue);
   wbCounterContainerByPathAfterSet('Magic Effect Data\DATA - Data\Counter effect count', 'Counter Effects', aElement);
 end;
 
@@ -591,7 +598,6 @@ begin
   wbCounterContainerAfterSet('COCT - Count', 'Items', aElement);
   wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
   wbCounterContainerAfterSet('LLCT - Count', 'Leveled List Entries', aElement);
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
   wbCounterContainerAfterSet('PRKZ - Perk Count', 'Perks', aElement);
 end;
 
@@ -633,7 +639,6 @@ end;
 procedure wbRaceAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
   wbCounterContainerAfterSet('SPCT - Count', 'Actor Effects', aElement);
-  wbCounterContainerAfterSet('KSIZ - Keyword Count', 'KWDA - Keywords', aElement);
 end;
 
 procedure wbSDLTListAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -3268,6 +3273,18 @@ begin
       wbInteger('Number of Records', itU32),
       wbInteger('Next Object ID', itU32, wbNextObjectIDToString, wbNextObjectIDToInt)
     ], cpNormal, True);
+
+  wbKWDAs :=
+    wbArrayS(KWDA, 'Keywords',
+      wbFormIDCk('Keyword', [KYWD, NULL]));
+
+  wbKeywords :=
+    wbRStruct('Keywords', [
+      wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
+      wbArrayS(KWDA, 'Keywords',
+        wbFormIDCk('Keyword', [KYWD,NULL])
+      ).SetCountPathOnValue(KSIZ, False).SetRequired
+    ], []).SetSummaryKey([1]);
 
   wbColorInterpolator :=
     wbStructSK([0], 'Data', [

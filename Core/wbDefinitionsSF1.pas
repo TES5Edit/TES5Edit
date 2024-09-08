@@ -4233,14 +4233,6 @@ begin
   var wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL, LVSP]);
   var wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, wbSPLOsAfterSet, nil{wbActorTemplateUseActorEffectList});
 
-  var wbKSIZ := wbInteger(KSIZ, 'Keyword Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit);
-  var wbKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL])).SetCountPathOnValue(KSIZ, False);
-  var wbReqKWDAs := wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD, NULL])).SetCountPathOnValue(KSIZ, False).SetRequired;
-  var wbKeywords := wbRStruct('Keywords', [
-    wbKSIZ,
-    wbReqKWDAs
-  ], []).SetSummaryKey([1]);
-
   var wbCVPA := wbArray(CVPA,'Components',
     wbStruct('Component', [
       wbFormIDCk('Component', sigBaseObjects), // CK allows only IRES
@@ -9736,14 +9728,13 @@ end;
     wbFULL,
     wbGenericModel(True),
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbUnknown(PNAM, cpIgnore, True),
     wbSoundReference(ALSH, 'Looping Sound'),
     wbUnknown(FNAM, cpIgnore, True),
     wbUnknown(JNAM, cpNormal, True).SetDefaultEditValue('68 01'),
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(ALCH, 'Ingestible',
@@ -10055,7 +10046,7 @@ end;
     ], []).IncludeFlag(dfAllowAnyMember),
     wbFormIDCk(INAM, 'Inventory Art', [STAT]),
     wbFormIDCk(GNAM, 'Scene', [SCEN])
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   var wbXLKRs :=
     wbRArrayS('Linked References', wbStruct(XLKR, 'Linked Reference', [
@@ -11310,7 +11301,7 @@ end;
       ),
     //wbObjectTemplate, not in Starfield.esm, but based on the STOP below likely...
     wbEmpty(STOP, 'Marker', cpNormal, True)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(GLOB, 'Global',
@@ -12746,7 +12737,7 @@ end;
           Result := lFile.RecordFromIndexByKey[wbIdxStarID, lStarID];
         end),
     wbInteger(YNAM, 'Planet ID', itS32)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
 
   var wbMenuButton :=
@@ -14270,8 +14261,7 @@ end;
     wbVMAD,
     wbOBND(True),
     wbFULL,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbGenericModel(True),
     wbICON,
     wbMICO,
@@ -14297,7 +14287,7 @@ end;
       wbUnknown
     ], cpNormal, True),
     wbEffectsReq
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
   (**)
 
   wbRecord(KEYM, 'Key',
@@ -14332,7 +14322,7 @@ end;
       'Non-Instanced Key'
     ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbLStringKC(NNAM, 'Short Name', 0, cpTranslate)
-  ], False, nil, cpNormal, False, nil, wbKeywordsAfterSet);
+  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(LIGH, 'Light',
@@ -14358,8 +14348,7 @@ end;
     wbBaseFormComponents,
     wbGenericModel(True),
     wbDEST,
-    wbKSIZ,
-    wbKWDAs,
+    wbKeywords,
     wbPRPS,
     wbFULL,
     wbStruct(DAT2, 'Data', [
@@ -18416,7 +18405,7 @@ end;
       { 9} wbFloat('Firing Camera Shake Duration'),
       {13} wbFloat('AI Firing Arc')
     ])
-  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad}, wbKeywordsAfterSet);
+  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad});
 
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
@@ -20986,7 +20975,7 @@ end;
       wbLStringKC(RESN, 'Name'),
       wbFloat(VORN, 'Reward Value')
     ], []),
-    wbArrayS(KWDA, 'Keywords', wbFormIDCk('Keyword', [KYWD])) // no size and no null entries
+    wbKWDAs
   ]);
 
   wbRecord(GPOG, 'Gameplay Options Group', [
