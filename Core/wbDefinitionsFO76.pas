@@ -20016,7 +20016,7 @@ begin
     wbWorldOffsetData,
     wbWorldCellSizeData,
     wbWorldVisibleCellsData
-  ], False, nil, cpNormal, False, wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);

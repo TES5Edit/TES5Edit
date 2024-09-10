@@ -15923,7 +15923,7 @@ begin
     wbWorldLevelData,
     wbWorldOffsetData,
     wbWorldCellSizeData
-  ], False, nil, cpNormal, False, wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad);
 
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,

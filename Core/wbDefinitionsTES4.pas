@@ -4342,7 +4342,7 @@ var  wbSoundTypeSoundsOld :=
     wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbWorldOffsetData
-  ], False, nil, cpNormal, False, wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);

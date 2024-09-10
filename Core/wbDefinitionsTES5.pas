@@ -12819,7 +12819,7 @@ Can't properly represent that with current record definition methods.
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
     wbWorldOffsetData
-  ], False, nil, cpNormal, False, wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad);
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 

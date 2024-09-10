@@ -9260,7 +9260,7 @@ var  wbSoundTypeSoundsOld :=
     wbString(XNAM, 'Water Noise Texture', 0, cpNormal, True),
     wbWorldSwapsImpactData,
     wbWorldOffsetData
-  ], False, nil, cpNormal, False, wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(TXST);

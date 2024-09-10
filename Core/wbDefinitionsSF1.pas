@@ -21370,7 +21370,7 @@ end;
     wbWorldLevelData,
     wbWorldOffsetData,
     wbWorldCellSizeData
-  ], False, nil, cpNormal, False, wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
