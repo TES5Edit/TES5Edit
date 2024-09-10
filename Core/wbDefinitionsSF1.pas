@@ -21562,9 +21562,7 @@ end;
   wbOfficialDLC[0] := 'Constellation.esm';
   wbOfficialDLC[1] := 'OldMars.esm';
   wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
-//  wbOfficialDLC[3] := 'SFBGS006.esm';
-//  wbOfficialDLC[4] := 'SFBGS008.esm';
-//  wbOfficialDLC[5] := 'SFBGS007.esm';
+  wbCreationClubContentFileName := 'Starfield.ccc';
 
   {
   if wbGameMode = gmSF1VR then begin
