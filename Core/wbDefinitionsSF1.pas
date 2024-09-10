@@ -17973,12 +17973,13 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(TES4, 'Main File Header',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000001}  0, 'Master',
-      {0x00000010}  4, 'Optimized File',
-      {0x00000080}  7, 'Localized',
-      {0x00000100}  8, 'Small',
-      {0x00000200}  9, 'Overlay',
-      {0x00000400} 10, 'Medium'
+      {0x001}  0, 'Master',
+      {0x010}  4, 'Optimized',
+      {0x080}  7, 'Localized',
+      {0x100}  8, 'Small',
+      {0x200}  9, 'Update',
+      {0x400} 10, 'Medium',
+      {0x800} 11, 'Blueprint'
     ], False), True), [
     wbHEDR,
 
