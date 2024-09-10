@@ -10148,7 +10148,8 @@ end;
     .SetWronglyAssumedFixedSizePerElementOnValue(56)
     .IncludeFlag(dfCollapsed)
     .IncludeFlag(dfExcludeFromBuildRef)
-    .IncludeFlag(dfFastAssign);
+    .IncludeFlag(dfFastAssign)
+    .IncludeFlag(dfNotAlignable);
 
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
