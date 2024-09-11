@@ -10105,7 +10105,7 @@ end;
 
         wbXOWN,
 
-        wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+        wbFormIDCk(XEZN, 'Location Override', [LCTN]),
 
         wbFormIDCk(XLYR, 'Layer', [LAYR]),
 
@@ -10306,8 +10306,6 @@ end;
       .IncludeFlag(dfStructFirstNotRequired),
 
     wbFormIDCk(TODD, 'Time Of Day Data', [TODD]),
-
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
 
     wbLinkedReferences,
 
@@ -17119,7 +17117,7 @@ end;
 
     wbXPCS,
 
-    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
+    wbFormIDCk(XLCN, 'Persist Location', [LCTN]),
 
     wbFormIDCk(XLRL, 'Location Reference', [LCTN]),
 
@@ -17138,7 +17136,7 @@ end;
     {--- Ownership ---}
     wbXOWN,
 
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+    wbFormIDCk(XEZN, 'Location Override', [LCTN]),
 
     wbFormIDCk(XLYR, 'Layer', [LAYR]),
 
@@ -17467,7 +17465,7 @@ end;
 
     wbXPCS,
 
-    wbFormIDCk(XLCN, 'Persistent Location', [LCTN]),
+    wbFormIDCk(XLCN, 'Persist Location', [LCTN]),
 
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
 
@@ -17690,7 +17688,7 @@ end;
 
     wbArray(XLMS, 'Layered Material Swaps', wbFormIDCk('Layered Material Swap', [LMSW])),
 
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN]),
+    wbFormIDCk(XEZN, 'Location Override', [LCTN]),
 
     wbFloat(XGDS, 'Geometry Dirtyness Scale'),
 
@@ -21307,8 +21305,7 @@ end;
     wbWorldMaxHeight,
     wbFULL,
     wbWorldFixedCenter,
-    wbFormIDCk(XEZN, 'Encounter Location', [LCTN, NULL]),
-    wbFormIDCk(XLCN, 'Location', [LCTN, NULL]),
+    wbFormIDCk(XLCN, 'Location', [LCTN]),
     wbFormIDCk(BNAM, 'Biome', [BIOM]),
     wbRStruct('Parent Worldspace', [
       wbFormIDCk(WNAM, 'World', [WRLD]),
@@ -21319,21 +21316,20 @@ end;
           2, 'Use Map Data',
           3, 'Use Water Data',
           4, 'Use Climate Data',
-          5, 'Use Image Space Data (unused)',
           6, 'Use Sky Cell'
-        ], False, 7), [5]),
-      cpNormal, True)
+        ], False, 7))
+      ).SetRequired
       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
-    wbString(NAM7, 'Water Material Path'),
+    wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
+    wbString(NAM7, 'Material'),
     wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbWorldMapOffset,
-    wbFloat(NAMA, 'Distant LOD Multiplier'),
+    wbFloat(NAMA, 'Distant LOD Multiplier').SetDefaultNativeValue(1).SetRequired,
     wbInteger(DATA, 'Flags', itU8,
       wbFlags(wbSparseFlags([
         0, 'Small World',
@@ -21343,8 +21339,8 @@ end;
         5, 'No Sky',
         6, 'Fixed Dimensions',
         7, 'No Grass'
-      ], False, 8)),
-    cpNormal, True)
+      ], False, 8))
+    ).SetDefaultNativeValue(1).SetRequired
     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInteger(FNAM, 'Flags', itU8,
       wbFlags(wbSparseFlags([
@@ -21354,19 +21350,20 @@ end;
         3, 'Allow ProcGen',
         4, 'Allow Cell Content'
       ], False, 5))
-    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    ).SetRequired
+    .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldRegionEditorMap,
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP, 'Environment Map'),
     wbString(XWEM, 'Water Environment Map'),
-    wbFloat(GNAM, 'Gravity Scale'),
-    wbRArray('Ordered Landscape Textures',
+    wbFloat(GNAM, 'Gravity Scale').SetDefaultNativeValue(1).SetRequired,
+    wbRArray('Ordered Land Textures',
       wbFormIDCk(LNAM, 'Land Texture', [LTEX])
     ).IncludeFlag(dfNotAlignable),
-    wbWorldWaterHeightData,
-    wbUnknown(HNAM),
+    wbWorldWaterHeightData.SetRequired,
+    wbByteArray(HNAM, 'Unknown', 1).SetRequired,
     wbWorldLevelData,
     wbWorldOffsetData,
     wbWorldCellSizeData

@@ -258,7 +258,7 @@ function wbIsFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean 
 function wbIsNotFlag(aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbIsNotFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
 
-{>>> Game Mode IfThen Defs <<<} //10
+{>>> Game Mode IfThen Defs <<<} //11
 function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsTES4(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
@@ -268,7 +268,8 @@ function IsSSE(const aDef1, aDef2: String): String; Overload;
 function IsSSE(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef; Overload;
 function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsSF1(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
+function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 
 {>>> Size IfThen Defs <<<} //4
 function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
@@ -2267,7 +2268,7 @@ begin
       ]).IncludeFlag(dfMustBeUnion);
 end;
 
-{>>> wbGameMode IfThen Defs <<<} //9
+{>>> wbGameMode IfThen Defs <<<} //11
 
 function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
@@ -2336,6 +2337,14 @@ end;
 function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef;
 begin
   if wbIsFallout76 then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSF1(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
+begin
+  if wbIsStarfield then
     Result := aDef1
   else
     Result := aDef2;
@@ -4108,15 +4117,18 @@ begin
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldLODData :=
     wbRStruct('LOD Data', [
-      wbFormIDCk(NAM3, 'LOD Water', [WATR]),
-      wbFloat(NAM4, 'LOD Water Height')
+      wbFormIDCk(NAM3, 'LOD Water', [WATR]).SetDefaultNativeValue(24),
+      wbFloat(NAM4, 'LOD Water Height').SetRequired
     ], []);
 
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldLandData :=
     wbStruct(DNAM, 'Land Data', [
-      wbFloat('Default Land Height'),
-      wbFloat('Default Water Height')
+      wbFloat('Default Land Height').SetDefaultNativeValue(-2048),
+      IsSF1(
+        wbFloat('Default Water Height').SetDefaultNativeValue(-200),
+        wbFloat('Default Water Height')
+      )
     ]).SetSummaryKeyOnValue([0, 1])
     .SetSummaryPrefixSuffixOnValue(0, 'Land: ', '')
     .SetSummaryPrefixSuffixOnValue(1, 'Water: ', '')
@@ -4158,9 +4170,9 @@ begin
       .IncludeFlag(dfCollapsed),
       IsTES5(
         wbStruct('Camera Data', [
-          wbFloat('Min Height'),
-          wbFloat('Max Height'),
-          wbFloat('Initial Pitch')
+          wbFloat('Min Height').SetDefaultNativeValue(50000),
+          wbFloat('Max Height').SetDefaultNativeValue(80000),
+          wbFloat('Initial Pitch').SetDefaultNativeValue(50)
         ]),
         Nil)
     ]);
@@ -4168,7 +4180,7 @@ begin
   //FO3,FNV,TES5,SSE,FO4,FO76,SF1
   wbWorldMapOffset :=
     wbStruct(ONAM, 'World Map Offset Data', [
-      wbFloat('World Map Scale'),
+      wbFloat('World Map Scale').SetDefaultNativeValue(1),
       IsSF1(
         wbFloat('Cell X Offset', cpNormal, True, 0.01),
         wbFloat('Cell X Offset')),
@@ -4186,8 +4198,14 @@ begin
   wbWorldObjectBounds :=
     wbRStruct('Object Bounds', [
       wbStruct(NAM0, 'Min', [
-        wbFloat('X', cpNormal, True, lScaleFactor),
-        wbFloat('Y', cpNormal, True, lScaleFactor)
+        IsSF1(
+          wbFloat('X', cpNormal, True, lScaleFactor).SetDefaultNativeValue(1073741824),
+          wbFloat('X', cpNormal, True, lScaleFactor).SetDefaultEditValue('Default')
+        ),
+        IsSF1(
+          wbFloat('Y', cpNormal, True, lScaleFactor).SetDefaultNativeValue(1073741824),
+          wbFloat('Y', cpNormal, True, lScaleFactor).SetDefaultEditValue('Default')
+        )
       ], cpIgnore, True)
       .SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, 'X: (', '')
@@ -4196,8 +4214,14 @@ begin
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
       wbStruct(NAM9, 'Max', [
-        wbFloat('X', cpNormal, True, lScaleFactor),
-        wbFloat('Y', cpNormal, True, lScaleFactor)
+        IsSF1(
+          wbFloat('X', cpNormal, True, lScaleFactor).SetDefaultNativeValue(-1073741824),
+          wbFloat('X', cpNormal, True, lScaleFactor).SetDefaultEditValue('Min')
+        ),
+        IsSF1(
+          wbFloat('Y', cpNormal, True, lScaleFactor).SetDefaultNativeValue(-1073741824),
+          wbFloat('Y', cpNormal, True, lScaleFactor).SetDefaultEditValue('Min')
+        )
       ], cpIgnore, True)
       .SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, '(X: ', '')
@@ -4265,10 +4289,13 @@ begin
         .SetSummaryMemberPrefixSuffix(1, 'Y: ', ')')
         .SetSummaryDelimiter(', ')
         .IncludeFlag(dfCollapsed)
-      ).IncludeFlag(dfNotAlignable),
+      ).IncludeFlagOnValue(dfArrayCanBeEmpty)
+      .IncludeFlag(dfNotAlignable),
       wbArray(WHGT, 'Water Heights',
         wbFloat('Water Height')
-      ).IncludeFlag(dfNotAlignable)
+      ).IncludeFlagOnValue(dfArrayCanBeEmpty)
+      .SetRequired
+      .IncludeFlag(dfNotAlignable)
     ], []);
 
   //FO4,FO76,SF1

@@ -4326,8 +4326,8 @@ var  wbSoundTypeSoundsOld :=
     wbEDID,
     wbFULL,
     wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]),
+    wbFormIDCk(CNAM, 'Climate', [CLMT]).SetDefaultNativeValue(351),
+    wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbInteger(DATA, 'Flags', itU8,
@@ -4336,8 +4336,9 @@ var  wbSoundTypeSoundsOld :=
         1, 'Can''t fast travel',
         2, 'Oblivion worldspace',
         4, 'No LOD water'
-      ], False, 5)),
-    cpNormal, True)
+      ], False, 5))
+    ).SetDefaultNativeValue(1)
+    .SetRequired
     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
