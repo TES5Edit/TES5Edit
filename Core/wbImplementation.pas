@@ -15801,7 +15801,8 @@ begin
   Result := IsElementEditable(aElement)
     and (srsIsArray in srStates)
     and Assigned(srValueDef)
-    and ((srValueDef as IwbArrayDef).ElementCount <= 0) and (Length(cntElements)>1);
+    and ( (srValueDef as IwbArrayDef).ElementCount <= 0 )
+    and ( (dfArrayCanBeEmpty in srValueDef.DefFlags) or (Length(cntElements) > 1) );
 
   if Result and (dfRemoveLastOnly in srValueDef.DefFlags) then
     Result := cntElements[High(cntElements)].Equals(aElement);
