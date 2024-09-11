@@ -21323,7 +21323,7 @@ end;
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT]),
     wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
-    wbString(NAM7, 'Material'),
+    wbString(NAM7, 'Water Material'),
     wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
