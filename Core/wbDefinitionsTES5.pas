@@ -8442,8 +8442,14 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbFULL,
     wbDESCReq,
+    wbString(ICON, 'Image FileName', 0, cpNormal, True),
     wbString(ANAM, 'Abbreviation'),
-    wbUnknown(CNAM),
+    wbInteger(CNAM, 'Skill Category', itU32, wbEnum([
+      'None',
+      'Combat',
+      'Magic',
+      'Stealth'
+    ])),
     wbStruct(AVSK, 'Skill', [
       wbFloat('Skill Use Mult'),
       wbFloat('Skill Offset Mult'),
