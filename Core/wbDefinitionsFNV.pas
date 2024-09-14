@@ -10400,16 +10400,19 @@ var  wbSoundTypeSoundsOld :=
           5, 'Use Image Space Data'
         ], False, 6))
       ).SetRequired
-      .IncludeFlag(dfCollapsed, wbCollapseFlags)
+       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]).SetDefaultNativeValue(351),
-    wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
+    wbFormIDCk(CNAM, 'Climate', [CLMT])
+      .SetDefaultNativeValue(351),
+    wbFormIDCk(NAM2, 'Water', [WATR])
+      .SetDefaultNativeValue(24),
     wbWorldLODData,
     wbWorldLandData,
     wbICON,
     wbWorldMapData,
     wbWorldMapOffset,
-    wbFormIDCk(INAM, 'Image Space', [IMGS]).SetDefaultNativeValue(353),
+    wbFormIDCk(INAM, 'Image Space', [IMGS])
+      .SetDefaultNativeValue(353),
     wbInteger(DATA, 'Flags', itU8,
       wbFlags(wbSparseFlags([
         0, 'Small World',
@@ -10418,17 +10421,20 @@ var  wbSoundTypeSoundsOld :=
         5, 'No LOD Noise',
         6, 'Don''t Allow NPC Fall Damage',
         7, 'Needs Water Adjustment'
-      ], False, 8))
+      ], False, 8), True)
     ).SetDefaultNativeValue(1)
-    .SetRequired
-    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+     .SetRequired
+     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
-    wbString(NNAM, 'Canopy Shadow').SetRequired,
-    wbString(XNAM, 'Water Noise Texture').SetRequired,
+    wbString(NNAM, 'Canopy Shadow')
+      .SetRequired,
+    wbString(XNAM, 'Water Noise Texture')
+      .SetRequired,
     wbWorldSwapsImpactData,
     wbWorldOffsetData
-  ]).SetAfterLoad(wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad)
+    .SetAfterSet(wbWorldAfterSet);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(TXST);

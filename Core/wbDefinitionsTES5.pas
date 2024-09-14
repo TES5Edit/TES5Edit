@@ -12772,7 +12772,8 @@ Can't properly represent that with current record definition methods.
     wbWorldMaxHeight,
     wbFULL,
     wbWorldFixedCenter,
-    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM]).SetDefaultNativeValue(196834),
+    wbFormIDCk(LTMP, 'Interior Lighting', [LGTM])
+      .SetDefaultNativeValue(196834),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
     wbFormIDCk(XLCN, 'Location', [LCTN]),
     wbRStruct('Parent Worldspace', [
@@ -12785,19 +12786,23 @@ Can't properly represent that with current record definition methods.
           3, 'Use Water Data',
           4, 'Use Climate Data',
           6, 'Use Sky Cell'
-        ], False, 7))
+        ], False, 7), True)
       ).SetRequired
-      .IncludeFlag(dfCollapsed, wbCollapseFlags)
+       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]).SetDefaultNativeValue(351),
-    wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
+    wbFormIDCk(CNAM, 'Climate', [CLMT])
+      .SetDefaultNativeValue(351),
+    wbFormIDCk(NAM2, 'Water', [WATR])
+      .SetDefaultNativeValue(24),
     wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbRStruct('Cloud Model', [wbGenericModel], []),
     wbWorldMapData,
     wbWorldMapOffset,
-    wbFloat(NAMA, 'Distant LOD Multiplier').SetDefaultNativeValue(1).SetRequired,
+    wbFloat(NAMA, 'Distant LOD Multiplier')
+      .SetDefaultNativeValue(1)
+      .SetRequired,
     wbInteger(DATA, 'Flags', itU8,
       wbFlags(wbSparseFlags([
         0, 'Small World',
@@ -12807,10 +12812,10 @@ Can't properly represent that with current record definition methods.
         5, 'No Sky',
         6, 'Fixed Dimensions',
         7, 'No Grass'
-      ], False, 8))
+      ], False, 8), True)
     ).SetDefaultNativeValue(1)
-    .SetRequired
-    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+     .SetRequired
+     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow (unused)', 0, cpIgnore),
@@ -12819,7 +12824,8 @@ Can't properly represent that with current record definition methods.
     wbString(UNAM, 'HD LOD Normal Texture'),
     wbString(XWEM, 'Water Environment Map (unused)', 0, cpIgnore),
     wbWorldOffsetData
-  ]).SetAfterLoad(wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad)
+    .SetAfterSet(wbWorldAfterSet);
 
 {>>> Unused records, they have empty GRUP in skyrim.esm <<<}
 

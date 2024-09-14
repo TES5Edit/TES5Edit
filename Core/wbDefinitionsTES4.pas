@@ -4296,7 +4296,7 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Sunlight Dimmer'),
       wbFloat('Grass Dimmer'),
       wbFloat('Tree Dimmer')
-    ], cpNormal, True),
+    ]).SetRequired,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8),
       wbInteger('Cloud Speed (Lower)', itU8),
@@ -4315,10 +4315,10 @@ var  wbSoundTypeSoundsOld :=
           1, 'Weather - Cloudy',
           2, 'Weather - Rainy',
           3, 'Weather - Snow'
-        ], False, 4), True)
+        ], False, 4))
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbWeatherLightningColor
-    ], cpNormal, True),
+    ]).SetRequired,
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
 
@@ -4326,8 +4326,10 @@ var  wbSoundTypeSoundsOld :=
     wbEDID,
     wbFULL,
     wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]).SetDefaultNativeValue(351),
-    wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
+    wbFormIDCk(CNAM, 'Climate', [CLMT])
+      .SetDefaultNativeValue(351),
+    wbFormIDCk(NAM2, 'Water', [WATR])
+      .SetDefaultNativeValue(24),
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbInteger(DATA, 'Flags', itU8,
@@ -4336,14 +4338,15 @@ var  wbSoundTypeSoundsOld :=
         1, 'Can''t fast travel',
         2, 'Oblivion worldspace',
         4, 'No LOD water'
-      ], False, 5))
+      ], False, 5), True)
     ).SetDefaultNativeValue(1)
-    .SetRequired
-    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+     .SetRequired
+     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldObjectBounds,
     wbInteger(SNAM, 'Music', itU32, wbMusicEnum),
     wbWorldOffsetData
-  ]).SetAfterLoad(wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad)
+    .SetAfterSet(wbWorldAfterSet);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(GLOB);

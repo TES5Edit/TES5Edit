@@ -114,7 +114,7 @@ function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 procedure wbKeywordsAfterLoad(const aElement: IwbElement);
 procedure wbWorldAfterLoad(const aElement: IwbElement);
 
-{>>> After Set Callbacks <<<} //28
+{>>> After Set Callbacks <<<} //29
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbBODCsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbBODSsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -143,6 +143,7 @@ procedure wbTERMCNTOsAfterSet(const aElement: IwbElement; const aOldValue, aNewV
 procedure wbTERMDisplayItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbTERMMenuItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbWorldAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 {>>> Count Callbacks <<<} //6
 function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -423,6 +424,8 @@ var
   rCLSZ: IwbRecord;
   rVISI: IwbRecord;
 begin
+  wbWorldAfterSet(aElement, 0, 0);
+
   if wbBeginInternalEdit then try
 
     if not Supports(aElement, IwbMainRecord, MainRecord) then
@@ -468,7 +471,7 @@ begin
   end;
 end;
 
-{>>> After Set Callbacks <<<} //28
+{>>> After Set Callbacks <<<} //29
 
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
@@ -686,6 +689,79 @@ begin
   for var lElementIdx := 0 to Pred(lContainer.ElementCount) do
     //will trigger Unions to re-evaluate their type and fix themselves
     var lResolvedDef := lContainer.Elements[lElementIdx].ResolvedValueDef;
+end;
+
+procedure wbWorldAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  PNAM      : Variant;
+begin
+  if wbBeginInternalEdit then try
+    if not Supports(aElement, IwbContainer, Container) then
+      Exit;
+    if wbIsOblivion then begin
+	    if Assigned(Container.RecordBySignature[WNAM]) then begin
+	      Container.RemoveElement(CNAM);
+		    Container.RemoveElement(NAM2);
+		    Container.RemoveElement(ICON);
+		    Container.RemoveElement(MNAM);
+	    end else begin
+        Container.Add(CNAM);
+	      Container.Add(NAM2);
+		    Container.Add(MNAM);
+	    end;
+    end else begin
+      if Assigned(Container.ElementByName['Parent Worldspace']) then begin
+      PNAM := Container.ElementNativeValues['Parent Worldspace\PNAM'];
+        if PNAM and $01 = 1 then begin
+          Container.RemoveElement(DNAM)
+        end else begin
+          Container.Add(DNAM)
+        end;
+        if PNAM and $02 = 2 then begin
+          Container.RemoveElement('LOD Data')
+        end else begin
+          Container.Add('LOD Data')
+        end;
+        if PNAM and $04 = 4 then begin
+          if wbIsFallout3 then
+            Container.RemoveElement('Icon')
+          else
+            Container.RemoveElement(ICON);
+          Container.RemoveElement(MNAM)
+        end else begin
+          Container.Add(MNAM)
+        end;
+        if PNAM and $08 = 8 then begin
+          Container.RemoveElement(NAM2)
+        end else begin
+          Container.Add(NAM2)
+        end;
+        if PNAM and $10 = 16 then begin
+          Container.RemoveElement(CNAM)
+        end else begin
+          Container.Add(CNAM)
+        end;
+        if wbIsFallout3 then begin
+          if PNAM and $20 = 32 then begin
+            Container.RemoveElement(INAM)
+          end else begin
+            Container.Add(INAM)
+          end;
+        end;
+      end else begin
+        Container.Add(DNAM);
+        Container.Add('LOD Data');
+        Container.Add(MNAM);
+        Container.Add(NAM2);
+        Container.Add(CNAM);
+        if wbIsFallout3 then
+          Container.Add(INAM);
+      end;
+    end;
+  finally
+    wbEndInternalEdit
+  end;
 end;
 
 {>>> Counter Callbacks <<<} //6

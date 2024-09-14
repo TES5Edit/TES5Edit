@@ -21317,19 +21317,23 @@ end;
           3, 'Use Water Data',
           4, 'Use Climate Data',
           6, 'Use Sky Cell'
-        ], False, 7))
+        ], False, 7), True)
       ).SetRequired
-      .IncludeFlag(dfCollapsed, wbCollapseFlags)
+       .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
-    wbFormIDCk(CNAM, 'Climate', [CLMT]),
-    wbFormIDCk(NAM2, 'Water', [WATR]).SetDefaultNativeValue(24),
+    wbFormIDCk(CNAM, 'Climate', [CLMT])
+      .SetDefaultNativeValue(351),
+    wbFormIDCk(NAM2, 'Water', [WATR])
+      .SetDefaultNativeValue(24),
     wbString(NAM7, 'Water Material'),
     wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbWorldMapOffset,
-    wbFloat(NAMA, 'Distant LOD Multiplier').SetDefaultNativeValue(1).SetRequired,
+    wbFloat(NAMA, 'Distant LOD Multiplier')
+      .SetDefaultNativeValue(1)
+      .SetRequired,
     wbInteger(DATA, 'Flags', itU8,
       wbFlags(wbSparseFlags([
         0, 'Small World',
@@ -21339,9 +21343,10 @@ end;
         5, 'No Sky',
         6, 'Fixed Dimensions',
         7, 'No Grass'
-      ], False, 8))
-    ).SetDefaultNativeValue(1).SetRequired
-    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ], False, 8), True)
+    ).SetDefaultNativeValue(1)
+     .SetRequired
+     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInteger(FNAM, 'Flags', itU8,
       wbFlags(wbSparseFlags([
         0, 'Player Followers Can''t Warp Here',
@@ -21351,23 +21356,27 @@ end;
         4, 'Allow Cell Content'
       ], False, 5))
     ).SetRequired
-    .IncludeFlag(dfCollapsed, wbCollapseFlags),
+     .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldRegionEditorMap,
     wbWorldObjectBounds,
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP, 'Environment Map'),
     wbString(XWEM, 'Water Environment Map'),
-    wbFloat(GNAM, 'Gravity Scale').SetDefaultNativeValue(1).SetRequired,
+    wbFloat(GNAM, 'Gravity Scale')
+      .SetDefaultNativeValue(1)
+      .SetRequired,
     wbRArray('Ordered Land Textures',
       wbFormIDCk(LNAM, 'Land Texture', [LTEX])
     ).IncludeFlag(dfNotAlignable),
     wbWorldWaterHeightData.SetRequired,
-    wbByteArray(HNAM, 'Unknown', 1).SetRequired,
+    wbByteArray(HNAM, 'Unknown', 1)
+      .SetRequired,
     wbWorldLevelData,
     wbWorldOffsetData,
     wbWorldCellSizeData
-  ]).SetAfterLoad(wbWorldAfterLoad);
+  ]).SetAfterLoad(wbWorldAfterLoad)
+    .SetAfterSet(wbWorldAfterSet);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
