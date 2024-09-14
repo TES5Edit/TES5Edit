@@ -8373,7 +8373,7 @@ var  wbSoundTypeSoundsOld :=
         wbFloat('Z', cpNormal, True, 2, 4)
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
       wbFloatColors('Color'),
-      wbFloat('Unknown'),
+      wbUnknown(4),
       wbInteger('Type', itU32, wbEnum([
         'None',
         'Box',

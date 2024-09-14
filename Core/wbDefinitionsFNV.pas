@@ -8988,14 +8988,9 @@ var  wbSoundTypeSoundsOld :=
         wbFloat('Y', cpNormal, True, 2, 4),
         wbFloat('Z', cpNormal, True, 2, 4)
       ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbByteColors('Color'),
-      wbFloat('Unknown'),
-      wbInteger('Type', itU32, wbEnum([
-        'None',
-        'Box',
-        'Sphere',
-        'Portal Box'
-      ]))
+      wbUnknown(4),
+      wbUnknown(4),
+      wbUnknown(4)
     ]),
     wbInteger(XTRI, 'Collision Layer', itU32, wbEnum([
       'Unidentified',
