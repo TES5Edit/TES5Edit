@@ -20230,7 +20230,7 @@ begin
   wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  wbHEDRVersion := 68.0;
+  wbHEDRVersion := 216.0;
 end;
 
 initialization
