@@ -9411,7 +9411,7 @@ Can't properly represent that with current record definition methods.
         'Optional'
       ]), cpNormal, True),
       wbInteger(DNAM, 'Behaviour Flags', itU32, wbFlags([
-        'Death Pause (unsused)',
+        'Death Pause (unused)',
         'Death End',
         'Combat Pause',
         'Combat End',
