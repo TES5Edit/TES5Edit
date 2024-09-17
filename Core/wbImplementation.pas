@@ -15799,6 +15799,7 @@ end;
 function TwbSubRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement)
+    and not (dfArrayStaticSize in srValueDef.DefFlags)
     and (srsIsArray in srStates)
     and Assigned(srValueDef)
     and ( (srValueDef as IwbArrayDef).ElementCount <= 0 )
@@ -20692,7 +20693,9 @@ var
   MinCount: Integer;
 begin
   MinCount := Max(1, arcDef.Count);
-  Result := IsElementEditable(aElement) and (Length(cntElements) > MinCount);
+  Result := IsElementEditable(aElement)
+    and not (dfArrayStaticSize in arcDef.DefFlags)
+    and (Length(cntElements) > MinCount);
 
   if Result and (dfRemoveLastOnly in arcDef.DefFlags) then
     Result := cntElements[High(cntElements)].Equals(aElement);
@@ -22009,7 +22012,10 @@ end;
 
 function TwbArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and ((vbValueDef as IwbArrayDef).ElementCount <= 0) { and (Length(cntElements)>1)};
+  Result := IsElementEditable(aElement)
+    and not (dfArrayStaticSize in vbValueDef.DefFlags)
+    and ((vbValueDef as IwbArrayDef).ElementCount <= 0)
+    { and (Length(cntElements)>1)};
 
   if Result and (dfRemoveLastOnly in vbValueDef.DefFlags) then
     Result := cntElements[High(cntElements)].Equals(aElement);

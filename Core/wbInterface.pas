@@ -641,48 +641,51 @@ type
 
 type
   TwbDefFlag = (
-    dfInternalEditOnly,
-    dfZeroSortKey, // not implemented for all Defs!!!
-    dfNotAlignable,
-    dfCollapsed,
-    dfNoReport,
-    dfTranslatable,
     dfAllowAnyMember,
-    dfStructFirstNotRequired,
-    dfDontSave,
+    dfArrayCanBeEmpty,
+    dfArrayStaticSize,
+    dfCollapsed,
     dfDontAssign,
-    dfUseLoadOrder,
-    dfMustBeUnion,
-    dfMergeIfMultiple,
+    dfDontSave,
     dfExcludeFromBuildRef,
     dfFastAssign,
-    dfIndexEditorID,
-    dfSummaryMembersNoName,
-    dfSummaryNoName,
-    dfSummaryNoSortKey,
-    dfSummaryNoPassthrough,
-    dfSummarySelfAsShortName,
-    dfSummaryMembersShowIgnore,
-    dfSummaryShowIgnore,
-    dfSummaryExcludeNULL,
-    dfUnionStaticResolve,
+    dfFloatSometimesBroken,
     dfHideText,
-    dfRemoveLastOnly,
+    dfIncludeValueInDisplaySignature,
+    dfIndexEditorID,
+    dfInternalEditOnly,
+    dfIsRecordFlags,
+    dfMergeIfMultiple,
+    dfMustBeUnion,
+    dfNoCopyAsOverride,
     dfNoMove,
+    dfNoReport,
+    dfNotAlignable,
+    dfRemoveLastOnly,
+    dfSkipImplicitEdit,
+    dfStructFirstNotRequired,
+    dfSummaryExcludeNULL,
+    dfSummaryMembersNoName,
+    dfSummaryMembersShowIgnore,
+    dfSummaryNoName,
+    dfSummaryNoPassthrough,
+    dfSummaryNoSortKey,
+    dfSummarySelfAsShortName,
+    dfSummaryShowIgnore,
+    dfTemplate,
+    dfTranslatable,
+    dfUnionStaticResolve,
+    dfUseLoadOrder,
+    dfZeroSortKey, // not implemented for all Defs!!!
+
     dfTerminator,
     dfHasZeroTerminator,
     dfNoZeroTerminator,
-    dfArrayCanBeEmpty,
-    dfFloatSometimesBroken,
-    dfTemplate,
+
     dfCanContainFormID,
     dfCanContainReflection,
-    dfUnmappedFormID,
     dfCanContainUnmappedFormID,
-    dfIncludeValueInDisplaySignature,
-    dfSkipImplicitEdit,
-    dfNoCopyAsOverride,
-    dfIsRecordFlags
+    dfUnmappedFormID
   );
 
   TwbDefFlags = set of TwbDefFlag;
@@ -13649,7 +13652,8 @@ end;
 
 function TwbArrayDef.GetCanAddTo: Boolean;
 begin
-  Result := arCanAddTo;
+  Result := arCanAddTo
+    and not (dfArrayStaticSize in DefFlags);
 end;
 
 function TwbArrayDef.GetCanBeZeroSize: Boolean;
@@ -13739,7 +13743,12 @@ end;
 
 function TwbArrayDef.GetIsVariableSizeInternal: Boolean;
 begin
-  Result := (arCount <= 0) or arElement.IsVariableSize;
+  Result :=
+    not (dfArrayStaticSize in DefFlags)
+    and (
+            (arCount <= 0)
+         or arElement.IsVariableSize
+        );
 end;
 
 function TwbArrayDef.GetPrefixCount(aBasePtr: Pointer): Cardinal;
