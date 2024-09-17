@@ -17419,8 +17419,24 @@ end;
 
     wbFloat(XRDS, 'Radius'),
 
-    wbFormIDCk(XCZC, 'Current Zone Cell', [CELL, NULL]),
-    wbUnknown(XCZA),
+    wbRArray('Water Current Data',
+      wbRStruct('Current', [
+        wbRUnion('', [
+          wbFormIDCk(XCZR, 'Reference', [REFR]),
+          wbFormIDCk(XCZC, 'Cell', [CELL])
+        ], []),
+        wbUnknown(XCZA)
+      ], [])
+    ),
+    wbRStruct('Water Current Velocities', [
+      wbInteger(XWCN, 'Velocity Count', itU32, nil, cpBenign),
+      wbArray(XWCU, 'Velocities',
+        wbStruct('Current', [
+          wbVec3('Velocity'),
+          wbInteger('Unknown', itU32)
+        ])
+      ).SetCountPathOnValue(XWCN, False)
+    ], []),
 
     wbRArray('Patrol', wbRStruct('Data', [
       wbFloat(XPRD, 'Idle Time', cpNormal, True),
