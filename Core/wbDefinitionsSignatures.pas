@@ -1548,6 +1548,8 @@ const
   WRLD : TwbSignature = 'WRLD';
   WRLO : TwbSignature = 'WRLO'; { New To Starfield }
   WSED : TwbSignature = 'WSED'; { New To Starfield }
+  WSLD : TwbSignature = 'WSLD'; { New To Starfield }
+  WSLS : TwbSignature = 'WSLS'; { New To Starfield }
   WSLT : TwbSignature = 'WSLT'; { New To Starfield }
   WSPR : TwbSignature = 'WSPR'; { New To Fallout 76 }
   WTED : TwbSignature = 'WTED'; { New To Starfield }

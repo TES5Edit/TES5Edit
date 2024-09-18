@@ -4176,9 +4176,9 @@ begin
       ]).SetSummaryKey([0, 1, 2]),
       wbStruct('Form Only', [
         wbFormIDCk('Start Form', [NULL, WWED]).IncludeFlag(dfSummaryExcludeNULL)
-      ]).SetSummaryKey([0])
-    ])
-      .SetSummaryKey([0, 1])
+      ]).SetSummaryKey([0]),
+      wbUnknown(4)
+    ], cpNormal, False, nil, 2).SetSummaryKey([0, 1])
       .IncludeFlag(dfCollapsed);
 end;
 {------------------------------------------------------------------------------}
@@ -21297,7 +21297,15 @@ end;
       wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
     ], cpNormal, True),
     wbWeatherDisabledLayers,
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbRStruct('Sounds', [
+      wbInteger(WSLS, 'Sounds Count', itU32),
+      wbRArray('Sounds',
+        wbSoundReference(WSLD)
+      ).SetCountPath(WSLS)
+    ], []),
+    wbRArrayS('Sky Statics',
+      wbFormIDCk(TNAM, 'Static', [STAT, NULL])
+    ),
     wbWeatherImageSpaces,
     wbWeatherVolumetricLighting,
     wbWeatherDirectionalLighting,
