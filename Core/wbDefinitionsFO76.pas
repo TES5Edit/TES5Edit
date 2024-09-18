@@ -19884,15 +19884,23 @@ begin
     wbEDID,
     wbKeywords,
     wbWeatherCloudTextures,
-    wbInteger(LNAM, 'Max Cloud Layers', itU32),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32)
+      .SetDefaultNativeValue(16)
+      .SetRequired,
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL])
+      .SetRequired,
+    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL])
+      .SetRequired,
     wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
     wbWeatherCloudAlphas,
     wbWeatherColors,
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
+    wbArray(NAM4, 'Unknown',
+      wbFloat('Unknown')
+        .SetDefaultNativeValue(1),
+    32).IncludeFlag(dfNotAlignable)
+       .SetRequired,
     wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
@@ -19904,7 +19912,8 @@ begin
       wbInteger('Precipitation - End Fade Out', itU8), // scaled 0..1
       wbInteger('Thunder/Lightning - Begin Fade In', itU8),
       wbInteger('Thunder/Lightning - End Fade Out', itU8),
-      wbInteger('Thunder/Lightning - Frequency', itU8),
+      wbInteger('Thunder/Lightning - Frequency', itU8)
+        .SetDefaultNativeValue(255),
       wbInteger('Flags', itU8,
         wbFlags(wbSparseFlags([
           0, 'Weather - Pleasant',
@@ -19922,29 +19931,28 @@ begin
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
-    ], cpNormal, True, nil, 16),
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8))
+    ]).SetRequired,
     wbWeatherDisabledLayers,
     wbWeatherSounds,
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbRArrayS('Sky Statics',
+      wbFormIDCk(TNAM, 'Static', [STAT, NULL])
+    ),
     wbWeatherImageSpaces,
     wbWeatherGodRays,
-    wbStruct(HNAM, 'God Rays', [
-      wbFormIDCK('Sunrise', [VOLI, NULL]),
-      wbFormIDCK('Day', [VOLI, NULL]),
-      wbFormIDCK('Sunset', [VOLI, NULL]),
-      wbFormIDCK('Night', [VOLI, NULL]),
-      wbFormIDCK('Early Sunrise', [VOLI, NULL]),
-      wbFormIDCK('Late Sunrise', [VOLI, NULL]),
-      wbFormIDCK('Early Sunset', [VOLI, NULL]),
-      wbFormIDCK('Late Sunset', [VOLI, NULL])
-    ]),
+    wbWeatherVolumetricLighting,
     wbWeatherDirectionalLighting,
-    wbRStruct('Aurora', [wbGenericModel], []),
+    wbRStruct('Aurora', [
+      wbGenericModel
+    ], []),
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbWeatherMagic,
-    wbFloat(VNAM, 'Volatility Mult'),
-    wbFloat(WNAM, 'Visibility Mult'),
+    wbFloat(VNAM, 'Volatility Mult')
+      .SetDefaultNativeValue(1)
+      .SetRequired,
+    wbFloat(WNAM, 'Visibility Mult')
+      .SetDefaultNativeValue(1)
+      .SetRequired,
     wbFloat(XNAM),
     wbFloat(ZNAM),
     wbFloat(YNAM),

@@ -9186,8 +9186,12 @@ var  wbSoundTypeSoundsOld :=
     wbFormIDCk(_02_IAD, 'Sunset', [IMAD]),
     wbFormIDCk(_03_IAD, 'Night', [IMAD]),
     wbWeatherCloudTextures,
-    wbRStruct('Precipitation', [wbGenericModel], []),
-    wbInteger(LNAM, 'Max Cloud Layers', itU32),
+    wbRStruct('Precipitation', [
+      wbGenericModel
+    ], []),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32)
+      .SetDefaultNativeValue(4)
+      .SetRequired,
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
     wbWeatherColors,
@@ -9213,7 +9217,7 @@ var  wbSoundTypeSoundsOld :=
         ], False, 4), True)
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbWeatherLightningColor
-    ], cpNormal, True),
+    ]).SetRequired,
     wbWeatherSounds
   ]);
 

@@ -21254,17 +21254,26 @@ end;
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       9, 'Unknown 9'
     ])), [
-    wbEDID,
+    wbEDID.SetRequired,
     wbKeywords,
-    wbInteger(LNAM, 'Max Cloud Layers', itU32),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL], False, cpNormal, True),
-    wbFormIDCK(CLDC, 'Cloud Type', [CLDF, NULL], False, cpNormal, True),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32)
+      .SetDefaultNativeValue(0)
+      .SetRequired,
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL])
+      .SetRequired,
+    wbFormIDCK(NNAM, 'Visual Effect', [ARTO, NULL])
+      .SetRequired,
+    wbFormIDCK(CLDC, 'Cloud Type', [CLDF, NULL])
+      .SetRequired,
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
     wbWeatherCloudAlphas,
     wbWeatherColors,
-    wbArray(NAM4, 'Unknown', wbFloat('Unknown')).IncludeFlag(dfNotAlignable),
+    wbArray(NAM4, 'Unknown',
+      wbFloat('Unknown')
+        .SetDefaultNativeValue(1),
+    32).IncludeFlag(dfNotAlignable)
+       .SetRequired,
     wbWeatherFogDistance,
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
@@ -21294,8 +21303,8 @@ end;
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
-      wbFromVersion(119, wbInteger('Wind Turbulance', itU8).SetDefaultNativeValue(51))
-    ], cpNormal, True),
+      wbFromVersion(119, wbInteger('Wind Turbulance', itU8))
+    ]).SetRequired,
     wbWeatherDisabledLayers,
     wbRStruct('Sounds', [
       wbInteger(WSLS, 'Sounds Count', itU32),
@@ -21307,13 +21316,20 @@ end;
       wbFormIDCk(TNAM, 'Static', [STAT, NULL])
     ),
     wbWeatherImageSpaces,
-    wbWeatherVolumetricLighting,
+    wbWeatherVolumetricLighting
+      .SetRequired,
     wbWeatherDirectionalLighting,
-    wbRStruct('Aurora', [wbGenericModel(True)], []),
+    wbRStruct('Aurora', [
+      wbGenericModel(True)
+    ], []).SetRequired,
     wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
     wbWeatherMagic,
-    wbFloat(VNAM, 'Volatility Mult'), //Form Version 126+
-    wbFloat(WNAM, 'Visibility Mult')  //Form Version 126+
+    wbFloat(VNAM, 'Volatility Mult')
+      .SetDefaultNativeValue(1)
+      .SetRequired, //Form Version 126+
+    wbFloat(WNAM, 'Visibility Mult')
+      .SetDefaultNativeValue(1)
+      .SetRequired  //Form Version 126+
   ]);
 
   {subrecords checked against Starfield.esm}

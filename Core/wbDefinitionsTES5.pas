@@ -12713,10 +12713,14 @@ Can't properly represent that with current record definition methods.
       wbUnused(ANAM, 0),
       wbUnused(BNAM, 0)
     ], [], cpIgnore, False, wbNeverShow)
-    .IncludeFlag(dfCollapsed),
-    wbInteger(LNAM, 'Max Cloud Layers', itU32),
-    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL]),
-    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL], False, cpNormal, True),
+      .IncludeFlag(dfCollapsed),
+    wbInteger(LNAM, 'Max Cloud Layers', itU32)
+      .SetDefaultNativeValue(29)
+      .SetRequired,
+    wbFormIDCK(MNAM, 'Precipitation Type', [SPGD, NULL])
+      .SetRequired,
+    wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL])
+      .SetRequired,
     wbUnused(ONAM, 0),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
@@ -12749,17 +12753,28 @@ Can't properly represent that with current record definition methods.
       wbInteger('Visual Effect - End', itU8), // scaled 0..1
       wbInteger('Wind Direction', itU8), // scaled 0..360
       wbInteger('Wind Direction Range', itU8) // scaled 0..180
-    ], cpNormal, True),
+    ]).SetRequired,
     wbWeatherDisabledLayers,
     wbWeatherSounds,
-    wbRArrayS('Sky Statics', wbFormIDCk(TNAM, 'Static', [STAT, NULL])),
+    wbRArrayS('Sky Statics',
+      wbFormIDCk(TNAM, 'Static', [STAT, NULL])
+    ),
     wbWeatherImageSpaces,
-    wbWeatherVolumetricLighting, //SSE
+    IsSSE(
+      wbWeatherVolumetricLighting
+        .SetRequired,
+      nil
+     ),
     wbWeatherDirectionalLighting,
     wbByteArray(NAM2, 'Unused', 0, cpIgnore),
     wbByteArray(NAM3, 'Unused', 0, cpIgnore),
-    wbRStruct('Aurora', [wbGenericModel], []),
-    wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]) //SSE
+    wbRStruct('Aurora', [
+      wbGenericModel
+    ], []),
+    IsSSE(
+      wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
+      nil
+    )
   ]);
 
   wbRecord(WRLD, 'Worldspace',
@@ -12787,8 +12802,7 @@ Can't properly represent that with current record definition methods.
           4, 'Use Climate Data',
           6, 'Use Sky Cell'
         ], False, 7), True)
-      ).SetRequired
-       .IncludeFlag(dfCollapsed, wbCollapseFlags)
+      ).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
       .SetDefaultNativeValue(351),

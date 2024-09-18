@@ -145,11 +145,12 @@ procedure wbTERMMenuItemsAfterSet(const aElement: IwbElement; const aOldValue, a
 procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbWorldAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
-{>>> Count Callbacks <<<} //6
+{>>> Count Callbacks <<<} //7
 function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbModelInfoAddonCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbModelInfoMaterialFileCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbModelInfoTextureFileCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWorldRowsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 
@@ -262,9 +263,12 @@ function wbIsNotFlag(aFlag: Integer; const aValue: IwbValueDef; aIsUnused: Boole
 {>>> Game Mode IfThen Defs <<<} //11
 function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsTES4(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsFO3(const aDef1, aDef2: Integer): Integer; overload;
+function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
+function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsTES5(const aDef1, aDef2: Integer): Integer; overload;
+function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsSSE(const aDef1, aDef2: String): String; Overload;
 function IsSSE(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef; Overload;
@@ -764,7 +768,7 @@ begin
   end;
 end;
 
-{>>> Counter Callbacks <<<} //6
+{>>> Count Callbacks <<<} //7
 
 function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
@@ -861,6 +865,25 @@ begin
     Exit;
 
   Result := Headers.Elements[0].NativeValue;
+end;
+
+function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+var
+  PNAM : IwbElement;
+  MainRecord : IwbMainRecord;
+  Version : Cardinal;
+begin
+  if Assigned(aElement) then begin
+    MainRecord := aElement.ContainingMainRecord;
+    if Assigned(MainRecord) then begin
+      Version := MainRecord.Version;
+      if Version >= 35 then begin
+        Result := 32
+      end else begin
+        Result := 4
+      end;
+    end;
+  end;
 end;
 
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -2362,6 +2385,14 @@ begin
     Result := aDef2;
 end;
 
+function IsFO3(const aDef1, aDef2: Integer): Integer;
+begin
+  if wbIsFallout3 then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
 function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
 begin
   if wbIsFallout3 then
@@ -2370,9 +2401,25 @@ begin
     Result := aDef2;
 end;
 
+function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
+begin
+  if wbIsFalloutNV then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
 function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef;
 begin
   if wbIsFalloutNV then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsTES5(const aDef1, aDef2: Integer): Integer;
+begin
+  if wbIsSkyrim then
     Result := aDef1
   else
     Result := aDef2;
@@ -2685,7 +2732,8 @@ begin
       wbUnused(4),
       IsSF1(
         nil,
-        wbFromVersion(34, wbFloat('Fresnel Power'))
+        wbFromVersion(34, wbFloat('Fresnel Power')
+          .SetDefaultNativeValue(1))
       )
     )
   ]);
@@ -2714,7 +2762,8 @@ begin
       wbUnused(4),
       IsSF1(
         nil,
-        wbFromVersion(34, wbFloat('Fresnel Power'))
+        wbFromVersion(34, wbFloat('Fresnel Power')
+          .SetDefaultNativeValue(1))
       )
     )
   ]);
@@ -3786,10 +3835,16 @@ begin
         wbString(DNAM, 'Layer #0'),
         wbString(CNAM, 'Layer #1'),
         wbString(ANAM, 'Layer #2'),
-        wbString(BNAM, 'Layer #3')
+        IsFNV(
+          wbString(BNAM, 'Layer #3')
+            .SetDefaultEditValue('Sky\WastelandCloudCloudyLower01.dds'),
+          wbString(BNAM, 'Layer #3')
+            .SetDefaultEditValue('Sky\Alpha.dds')
+        ).SetRequired
       ], []).IncludeFlag(dfAllowAnyMember)
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfStructFirstNotRequired),
+            .IncludeFlag(dfCollapsed)
+            .IncludeFlag(dfStructFirstNotRequired)
+            .SetRequired,
         wbRStruct('Cloud Textures', [
         wbString(_30_0TX, 'Layer #0'),
         wbString(_31_0TX, 'Layer #1'),
@@ -3821,51 +3876,78 @@ begin
         wbString(K0TX, 'Layer #27'),
         wbString(L0TX, 'Layer #28')
       ], []).IncludeFlag(dfAllowAnyMember)
-      .IncludeFlag(dfCollapsed)
-      .IncludeFlag(dfStructFirstNotRequired));
+            .IncludeFlag(dfCollapsed)
+            .IncludeFlag(dfStructFirstNotRequired)
+    );
 
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherCloudSpeed :=
     IfThen(wbIsFallout3,
 	    wbArray(ONAM, 'Cloud Speeds',
-		    wbInteger('Layer', itU8), 4, nil, nil, cpNormal, True),
+		    wbInteger('Layer', itU8),
+      4),
 	    wbRStruct('Cloud Speeds', [
 	      wbArray(RNAM, 'Y Speeds',
 		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
-		    ).IncludeFlag(dfNotAlignable),
+            .SetDefaultEditValue('0'),
+		    32).IncludeFlag(dfNotAlignable),
 		    wbArray(QNAM, 'X Speeds',
 		      wbInteger('Layer', itU8, wbWeatherCloudSpeedToStr, wbWeatherCloudSpeedToInt)
-	    	).IncludeFlag(dfNotAlignable)
-	    ], []));
+            .SetDefaultEditValue('0'),
+	    	32).IncludeFlag(dfNotAlignable)
+           .SetRequired
+	    ], [])
+    ).SetRequired;
 
   //FO3,FNV,TES4,FO4,FO76,SF1
   wbWeatherCloudColors :=
     wbArray(PNAM, 'Cloud Colors',
-      wbWeatherTimeOfDay('Layer')
-    ).IncludeFlag(dfNotAlignable);
+      wbWeatherTimeOfDay('Layer'),
+    [], wbWeatherCloudColorsCounter)
+      .IncludeFlagOnValue(dfArrayStaticSize)
+      .IncludeFlagOnValue(dfNotAlignable)
+      .SetRequired;
 
   //TES5,FO4,FO76,SF1
   wbWeatherCloudAlphas :=
     wbArray(JNAM, 'Cloud Alphas',
       wbStruct('Layer', [
-        wbFloat('Sunrise').SetDefaultNativeValue(1.0),
-        wbFloat('Day').SetDefaultNativeValue(1.0),
-        wbFloat('Sunset').SetDefaultNativeValue(1.0),
-        wbFloat('Night').SetDefaultNativeValue(1.0),
+        wbFloat('Sunrise')
+          .SetDefaultNativeValue(1.0)
+          .IncludeFlag(dfSummaryNoName),
+        wbFloat('Day')
+          .SetDefaultNativeValue(1.0)
+          .IncludeFlag(dfSummaryNoName),
+        wbFloat('Sunset')
+          .SetDefaultNativeValue(1.0)
+          .IncludeFlag(dfSummaryNoName),
+        wbFloat('Night')
+          .SetDefaultNativeValue(1.0)
+          .IncludeFlag(dfSummaryNoName),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('Early Sunrise').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Early Sunrise')
+            .SetDefaultNativeValue(1.0)
+            .IncludeFlag(dfSummaryNoName)),
           nil),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('Late Sunrise').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Late Sunrise')
+            .SetDefaultNativeValue(1.0)
+            .IncludeFlag(dfSummaryNoName)),
           nil),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('Early Sunset').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Early Sunset')
+            .SetDefaultNativeValue(1.0)
+            .IncludeFlag(dfSummaryNoName)),
           nil),
         IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-          wbFromVersion(111, wbFloat('Early Sunrise').SetDefaultNativeValue(1.0)),
+          wbFromVersion(111, wbFloat('Early Sunrise')
+            .SetDefaultNativeValue(1.0)
+            .IncludeFlag(dfSummaryNoName)),
           nil)
-      ])
-    ).IncludeFlag(dfNotAlignable);
+      ]).SetSummaryKey([0,1,2,3,4,5,6,7])
+        .IncludeFlag(dfCollapsed),
+    32).IncludeFlag(dfNotAlignable)
+       .SetRequired;
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherColors :=
@@ -3885,7 +3967,7 @@ begin
       wbWeatherTimeOfDay('Horizon'),
       IsTES4(
         wbWeatherTimeOfDay('Clouds-Upper'),
-        IfThen(wbIsFallout3,
+        IsFO3(
           wbWeatherTimeOfDay('Clouds (Unused)'),
           wbWeatherTimeOfDay('Effect Lighting'))),
       IfThen(wbGameMode > gmFNV,
@@ -3915,7 +3997,7 @@ begin
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')),
         nil)
-    ], cpNormal, True, nil, 10);
+    ]).SetRequired;
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherFogDistance :=
@@ -3925,34 +4007,42 @@ begin
       wbFloat('Night - Near'),
       wbFloat('Night - Far'),
       IfThen(wbGameMode > gmTES4,
-        wbFloat('Day - Power'),
+        wbFloat('Day - Power')
+          .SetDefaultNativeValue(1),
         nil),
       IfThen(wbGameMode > gmTES4,
-        wbFloat('Night - Power'),
+        wbFloat('Night - Power')
+          .SetDefaultNativeValue(1),
         nil),
       IfThen(wbGameMode > gmFNV,
-        wbFloat('Day - Max'),
+        wbFloat('Day - Max')
+          .SetDefaultNativeValue(1),
         nil),
       IfThen(wbGameMode > gmFNV,
-        wbFloat('Night - Max'),
+        wbFloat('Night - Max')
+          .SetDefaultNativeValue(1),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(119, wbFloat('Day - Near Height Mid')),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbFloat('Day - Near Height Range')),
+        wbFromVersion(119, wbFloat('Day - Near Height Range')
+          .SetDefaultNativeValue(10000)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(119, wbFloat('Night - Near Height Mid')),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbFloat('Night - Near Height Range')),
+        wbFromVersion(119, wbFloat('Night - Near Height Range')
+          .SetDefaultNativeValue(10000)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbFloat('Day - High Density Scale')),
+        wbFromVersion(119, wbFloat('Day - High Density Scale')
+          .SetDefaultNativeValue(1)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(119, wbFloat('Night - High Density Scale')),
+        wbFromVersion(119, wbFloat('Night - High Density Scale')
+          .SetDefaultNativeValue(1)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(120, wbFloat('Day - Far Height Mid')),
@@ -3966,7 +4056,7 @@ begin
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
         wbFromVersion(120, wbFloat('Night - Far Height Range')),
         nil)
-    ], cpNormal, True, nil, 4);
+    ]).SetRequired;
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherLightningColor :=
@@ -3975,7 +4065,7 @@ begin
       wbInteger('Green', itU8),
       wbInteger('Blue', itU8)
     ]).SetToStr(wbRGBAToStr)
-    .IncludeFlag(dfCollapsed, wbCollapseRGBA);
+      .IncludeFlag(dfCollapsed, wbCollapseRGBA);
 
   //TES5,FO4,FO76,SF1
   wbWeatherDisabledLayers :=
@@ -3985,7 +4075,9 @@ begin
         '12','13','14','15','16','17','18','19','20','21',
         '22','23','24','25','26','27','28','29','30','31'
       ])
-    ).IncludeFlag(dfCollapsed, wbCollapseFlags);
+    ).SetDefaultNativeValue(IsTES5(0, 4294967295))
+     .IncludeFlag(dfCollapsed, wbCollapseFlags)
+     .SetRequired;
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWeatherSounds :=
@@ -3999,32 +4091,40 @@ begin
           {0x8} 'Thunder'
         ]))
       ]).SetSummaryKeyOnValue([1, 0])
-      .SetSummaryPrefixSuffixOnValue(1, '[', ']')
-      .SetSummaryDelimiterOnValue(' ')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
-      .IncludeFlag(dfCollapsed)
+        .SetSummaryPrefixSuffixOnValue(1, '[', ']')
+        .SetSummaryDelimiterOnValue(' ')
+        .IncludeFlagOnValue(dfSummaryMembersNoName)
+        .IncludeFlag(dfCollapsed)
     );
 
   //TES5,FO4,FO76,SF1
   wbWeatherImageSpaces :=
     wbStruct(IMSP, 'Image Spaces', [
-      wbFormIDCK('Sunrise', [IMGS, NULL]),
-      wbFormIDCK('Day', [IMGS, NULL]),
-      wbFormIDCK('Sunset', [IMGS, NULL]),
-      wbFormIDCK('Night', [IMGS, NULL]),
+      wbFormIDCK('Sunrise', [IMGS, NULL])
+        .SetDefaultNativeValue(359),
+      wbFormIDCK('Day', [IMGS, NULL])
+        .SetDefaultNativeValue(359),
+      wbFormIDCK('Sunset', [IMGS, NULL])
+        .SetDefaultNativeValue(359),
+      wbFormIDCK('Night', [IMGS, NULL])
+        .SetDefaultNativeValue(359),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, wbFormIDCK('Early Sunrise', [IMGS, NULL])),
+        wbFromVersion(111, wbFormIDCK('Early Sunrise', [IMGS, NULL])
+          .SetDefaultNativeValue(359)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, wbFormIDCK('Late Sunrise', [IMGS, NULL])),
+        wbFromVersion(111, wbFormIDCK('Late Sunrise', [IMGS, NULL])
+          .SetDefaultNativeValue(359)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, wbFormIDCK('Early Sunset', [IMGS, NULL])),
+        wbFromVersion(111, wbFormIDCK('Early Sunset', [IMGS, NULL])
+          .SetDefaultNativeValue(359)),
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, wbFormIDCK('Late Sunset', [IMGS, NULL])),
+        wbFromVersion(111, wbFormIDCK('Late Sunset', [IMGS, NULL])
+          .SetDefaultNativeValue(359)),
         nil)
-    ], cpNormal, True, nil, 4);
+    ]).SetRequired;
 
   //FO4,FO76
   wbWeatherGodRays :=
@@ -4056,7 +4156,7 @@ begin
         wbFormIDCK('Early Sunset', [VOLI, NULL]),
         nil),
       IfThen(wbGameMode in [gmFO76,gmSF1],
-        wbFormIDCK('Early Sunrise', [VOLI, NULL]),
+        wbFormIDCK('Late Sunset', [VOLI, NULL]),
         nil)
     ]);
 
@@ -4064,22 +4164,29 @@ begin
   wbWeatherDirectionalLighting :=
     wbRStruct('Directional Ambient Lighting Colors', [
       wbAmbientColors(DALC, 'Sunrise'),
-      wbAmbientColors(DALC, 'Day'),
-      wbAmbientColors(DALC, 'Sunset'),
-      wbAmbientColors(DALC, 'Night'),
+      wbAmbientColors(DALC, 'Day')
+        .SetRequired,
+      wbAmbientColors(DALC, 'Sunset')
+        .SetRequired,
+      wbAmbientColors(DALC, 'Night')
+        .SetRequired,
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, DALC, wbAmbientColors('Early Sunrise')),
+        wbFromVersion(111, DALC, wbAmbientColors('Early Sunrise'))
+          .SetRequired,
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, DALC, wbAmbientColors('Late Sunrise')),
+        wbFromVersion(111, DALC, wbAmbientColors('Late Sunrise'))
+          .SetRequired,
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, DALC, wbAmbientColors('Early Sunset')),
+        wbFromVersion(111, DALC, wbAmbientColors('Early Sunset'))
+          .SetRequired,
         nil),
       IfThen(wbGameMode in [gmFO4,gmFO4VR,gmFO76,gmSF1],
-        wbFromVersion(111, DALC, wbAmbientColors('Late Sunset')),
+        wbFromVersion(111, DALC, wbAmbientColors('Late Sunset'))
+          .SetRequired,
         nil)
-    ], [], cpNormal, True);
+    ], []).SetRequired;
 
   //FO4,FO76,SF1
   wbWeatherMagic :=
@@ -4093,7 +4200,7 @@ begin
         wbFromVersion(130, wbFloat('Threshold'))
       ]),
       wbFromVersion(130, wbUnused(8))
-    ], cpNormal, False, nil, 2);
+    ]).SetRequired;
 
 {>>>Worldspace Common Defs<<<}
   //TES5,FO4,FO76,SF1
