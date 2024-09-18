@@ -12803,6 +12803,7 @@ Can't properly represent that with current record definition methods.
           6, 'Use Sky Cell'
         ], False, 7), True)
       ).IncludeFlag(dfCollapsed, wbCollapseFlags)
+       .SetRequired
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
       .SetDefaultNativeValue(351),
