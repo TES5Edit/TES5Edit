@@ -19891,7 +19891,6 @@ begin
       .SetRequired,
     wbFormIDCK(NNAM, 'Visual Effect', [RFCT, NULL])
       .SetRequired,
-    wbUnused(ONAM),
     wbWeatherCloudSpeed,
     wbWeatherCloudColors,
     wbWeatherCloudAlphas,
@@ -19989,9 +19988,11 @@ begin
        .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
-      .SetDefaultNativeValue(351),
+      .SetDefaultNativeValue(351)
+      .SetIsRemovable(wbWorldClimateIsRemovable),
     wbFormIDCk(NAM2, 'Water', [WATR])
-      .SetDefaultNativeValue(24),
+      .SetDefaultNativeValue(24)
+      .SetIsRemovable(wbWorldWaterIsRemovable),
     wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),

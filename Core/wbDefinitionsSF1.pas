@@ -21362,9 +21362,11 @@ end;
        .IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
-      .SetDefaultNativeValue(351),
+      .SetDefaultNativeValue(351)
+      .SetIsRemovable(wbWorldClimateIsRemovable),
     wbFormIDCk(NAM2, 'Water', [WATR])
-      .SetDefaultNativeValue(24),
+      .SetDefaultNativeValue(24)
+      .SetIsRemovable(wbWorldWaterIsRemovable),
     wbString(NAM7, 'Water Material'),
     wbWorldLODData,
     wbWorldLandData,

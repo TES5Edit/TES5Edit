@@ -4327,9 +4327,11 @@ var  wbSoundTypeSoundsOld :=
     wbFULL,
     wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
-      .SetDefaultNativeValue(351),
+      .SetDefaultNativeValue(351)
+      .SetIsRemovable(wbWorldClimateIsRemovable),
     wbFormIDCk(NAM2, 'Water', [WATR])
-      .SetDefaultNativeValue(24),
+      .SetDefaultNativeValue(24)
+      .SetIsRemovable(wbWorldWaterIsRemovable),
     wbString(ICON, 'Map Image'),
     wbWorldMapData,
     wbInteger(DATA, 'Flags', itU8,

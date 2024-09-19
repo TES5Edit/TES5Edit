@@ -180,8 +180,14 @@ procedure wbModelInfoUnknownGetCP(const aElement: IwbElement; var aConflictPrior
 {>>> Integer Formaters <<<} //1
 function wbBoolEnumSummary(const aTrueSummary: string; const aFalseSummary: string = ''): IwbEnumDef;
 
-{>>> Is Removeable Callbacks <<<} //1
-function wbModelInfoHeaderIsRemoveable(const aElement: IwbElement): Boolean;
+{>>> Is Removable Callbacks <<<} //7
+function wbModelInfoHeaderIsRemovable(const aElement: IwbElement): Boolean;
+function wbWorldLandDataIsRemovable(const aElement: IwbElement): Boolean;
+function wbWorldLODDataIsRemovable(const aElement: IwbElement): Boolean;
+function wbWorldMapDataIsRemovable(const aElement: IwbElement): Boolean;
+function wbWorldWaterIsRemovable(const aElement: IwbElement): Boolean;
+function wbWorldClimateIsRemovable(const aElement: IwbElement): Boolean;
+function wbWorldImageSpaceIsRemovable(const aElement: IwbElement): Boolean;
 
 {>>> Links To Callbacks <<<} //1
 function wbConditionSummaryLinksTo(const aElement: IwbElement): IwbElement;
@@ -1169,11 +1175,50 @@ begin
     ]);
 end;
 
-{>>> Is Removeable Callbacks <<<} //1
+{>>> Is Removable Callbacks <<<} //7
 
-function wbModelInfoHeaderIsRemoveable(const aElement: IwbElement): Boolean;
+function wbModelInfoHeaderIsRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := Assigned(aElement) and (aElement.NativeValue = 0);
+end;
+
+function wbWorldLandDataIsRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
+        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $01 = 1);
+end;
+
+function wbWorldLODDataIsRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
+        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $02 = 2);
+end;
+
+function wbWorldMapDataIsRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
+        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $04 = 4)
+         or Assigned(aElement.ContainingMainRecord.ElementBySignature[WNAM]);
+end;
+
+function wbWorldWaterIsRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
+        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $08 = 8)
+         or Assigned(aElement.ContainingMainRecord.ElementBySignature[WNAM]);
+end;
+
+function wbWorldClimateIsRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
+        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $10 = 16)
+         or Assigned(aElement.ContainingMainRecord.ElementBySignature[WNAM]);
+end;
+
+function wbWorldImageSpaceIsRemovable(const aElement: IwbElement): Boolean;
+begin
+  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
+        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $20 = 32);
 end;
 
 {>>> Links To Callbacks <<<} //1
@@ -2941,7 +2986,7 @@ begin
 
     var NewModelInfo := wbStruct('', [
       wbArray('Headers',
-        wbInteger('Header', itU32, nil, nil, cpIgnore).SetIsRemovable(wbModelInfoHeaderIsRemoveable)
+        wbInteger('Header', itU32, nil, nil, cpIgnore).SetIsRemovable(wbModelInfoHeaderIsRemovable)
       , arcU32, ['Textures Count', 'Addons Count', 'TextureSets', 'Materials Count'], cpIgnore)
         .IncludeFlag(dfNotAlignable)
         .IncludeFlag(dfRemoveLastOnly)
@@ -4300,9 +4345,10 @@ begin
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldLODData :=
     wbRStruct('LOD Data', [
-      wbFormIDCk(NAM3, 'LOD Water', [WATR]).SetDefaultNativeValue(24),
+      wbFormIDCk(NAM3, 'LOD Water', [WATR])
+        .SetDefaultNativeValue(24),
       wbFloat(NAM4, 'LOD Water Height').SetRequired
-    ], []);
+    ], []).SetIsRemovable(wbWorldLODDataIsRemovable);
 
   //FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldLandData :=
@@ -4313,10 +4359,11 @@ begin
         wbFloat('Default Water Height')
       )
     ]).SetSummaryKeyOnValue([0, 1])
-    .SetSummaryPrefixSuffixOnValue(0, 'Land: ', '')
-    .SetSummaryPrefixSuffixOnValue(1, 'Water: ', '')
-    .SetSummaryDelimiterOnValue(', ')
-    .IncludeFlag(dfCollapsed);
+      .SetSummaryPrefixSuffixOnValue(0, 'Land: ', '')
+      .SetSummaryPrefixSuffixOnValue(1, 'Water: ', '')
+      .SetSummaryDelimiterOnValue(', ')
+      .SetIsRemovable(wbWorldLandDataIsRemovable)
+      .IncludeFlag(dfCollapsed);
 
   //TES4,FO3,FNV,TES5,FO4,FO76,SF1
   wbWorldMapData :=
@@ -4358,7 +4405,7 @@ begin
           wbFloat('Initial Pitch').SetDefaultNativeValue(50)
         ]),
         Nil)
-    ]);
+    ]).SetIsRemovable(wbWorldMapDataIsRemovable);
 
   //FO3,FNV,TES5,SSE,FO4,FO76,SF1
   wbWorldMapOffset :=

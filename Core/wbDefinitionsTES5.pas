@@ -12806,13 +12806,17 @@ Can't properly represent that with current record definition methods.
        .SetRequired
     ], []),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
-      .SetDefaultNativeValue(351),
+      .SetDefaultNativeValue(351)
+      .SetIsRemovable(wbWorldClimateIsRemovable),
     wbFormIDCk(NAM2, 'Water', [WATR])
-      .SetDefaultNativeValue(24),
+      .SetDefaultNativeValue(24)
+      .SetIsRemovable(wbWorldWaterIsRemovable),
     wbWorldLODData,
     wbWorldLandData,
     wbString(ICON, 'Map Image'),
-    wbRStruct('Cloud Model', [wbGenericModel], []),
+    wbRStruct('Cloud Model', [
+      wbGenericModel
+    ], []),
     wbWorldMapData,
     wbWorldMapOffset,
     wbFloat(NAMA, 'Distant LOD Multiplier')
