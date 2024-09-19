@@ -18062,326 +18062,6 @@ begin
     wbFormIDCk(FMIG, 'Min Harvest Global', [GLOB])
   ]);
 
-  wbRecord(WATR, 'Water', [
-    wbEDID,
-    wbFULL,
-    wbInteger(ANAM, 'Opacity (unused)', itU8),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0x01} 'Dangerous',
-      {0x02} 'Unknown 1',
-      {0x04} 'Directional Sound',
-      {0x08} 'Unknown 3',
-      {0x10} 'Unknown 4',
-      {0x20} 'Unknown 5',
-      {0x40} 'Unknown 6'
-    ]), cpNormal, True),
-    wbFormIDCk(TNAM, 'Material', [MATT]),
-    wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
-    wbFormIDCk(XNAM, 'Consume Spell', [SPEL, ALCH]),
-    wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
-    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbEmpty(DATA, 'Unused'),
-    wbStruct(DNAM, 'Visual Data', [
-      wbStruct('Fog Properties', [
-        wbFloat('Depth Amount'),
-        wbByteColors('Shallow Color'),
-        wbByteColors('Deep Color'),
-        wbFloat('Color Shallow Range'),
-        wbFloat('Color Deep Range'),
-        wbFloat('Shallow Alpha'),
-        wbFloat('Deep Alpha'),
-        wbFloat('Alpha Shallow Range'),
-        wbFloat('Alpha Deep Range'),
-        wbByteColors('Underwater Color'),
-        wbFloat('Underwater Fog Amount'),
-        wbFloat('Underwater Near Fog'),
-        wbFloat('Underwater Far Fog')
-      ]),
-      wbStruct('Physical Properties', [
-        wbFloat('Normal Magnitude'),
-        wbFloat('Shallow Normal Falloff'),
-        wbFloat('Deep Normal Falloff'),
-        wbFloat('Reflectivity Amount'),
-        wbFloat('Fresnel Amount'),
-        wbFloat('Surface Effect Falloff'),
-        wbStruct('Displacement Simulator', [
-          wbFloat('Force'),
-          wbFloat('Velocity'),
-          wbFloat('Falloff'),
-          wbFloat('Dampener'),
-          wbFloat('Starting Size')
-        ]),
-        wbByteColors('Reflection Color')
-      ]),
-      wbStruct('Specular Properties', [
-        wbFloat('Sun Specular Power'),
-        wbFloat('Sun Specular Magnitude'),
-        wbFloat('Sun Sparkle Power'),
-        wbFloat('Sun Sparkle Magnitude'),
-        wbFloat('Interior Specular Radius'),
-        wbFloat('Interior Specular Brightness'),
-        wbFloat('Interior Specular Power')
-      ]),
-      wbFloat('Unknown 1'),
-      wbFloat('Unknown 2'),
-      wbFloat('Unknown 3'),
-      wbFloat('Unknown 4'),
-      wbFloat('Unknown 5')
-    ], cpNormal, True, nil, 4),
-    wbUnknown(AWSD),
-    wbByteArray(GNAM, 'Unused', 0),
-    wbStruct(NAM0, 'Linear Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    wbStruct(NAM1, 'Angular Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    wbString(NAM2, 'Layer 1 Noise Texture'),
-    wbString(NAM3, 'Layer 2 Noise Texture'),
-    wbString(NAM4, 'Layer 3 Noise Texture'),
-    wbString(NAM5, 'Flow Normals Noise Texture'),
-    wbUnknown(NAM6),
-    wbUnknown(NAM7)
-  ]);
-
-  wbRecord(WEAP, 'Weapon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable',
-      {0x20000000} 30, 'High-Res 1st Person Only'
-    ])), [
-    wbEDID,
-    wbVMAD,
-    wbOBND(True),
-    wbOPDSs,
-    wbPTRN,
-    wbOPDSs,
-    wbSTCP,
-    wbSNTP,
-    wbPHST,
-    wbXALG,
-    wbFULL,
-    wbGenericModel,
-    wbICON,
-    wbMICO,
-    wbEITM,
-    wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbDEST,
-    wbETYP,
-    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
-    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbYNAM,
-    wbZNAM,
-    wbKeywords,
-    wbDESC,
-    wbFormIDCk(INRD, 'Instance Naming', [INNR]),
-    wbEILV,
-    wbIBSD,
-    wbAPPR,
-    wbObjectTemplate,
-    wbFromVersion(76, NNAM, wbFormIDCk('Embedded Weapon Mod', [OMOD])),
-    wbRStruct('1st Person Model', [
-      wbString(MOD4, 'Model FileName'),
-      wbModelInfo(MO4T),
-      wbMO4S,
-      wbMO4C,
-      wbMO4F,
-      wbENLT,
-      wbENLS,
-      wbAUUV
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbStruct(DNAM, 'Data', [
-      wbFormIDCk('Ammo', [AMMO, NULL]),
-      wbFloat('Speed'),
-      wbFromVersion(61, wbFloat('Reload Speed')),
-      wbFromVersion(177, wbFloat('NPC Reload Delay')),
-      wbFloat('Reach'),
-      wbFromVersion(140,  wbFloat('Reach Engagement Mult')),
-      wbFloat('Min Range'),
-      wbFloat('Max Range'),
-      wbFromVersion(139, wbFloat('Unknown')),
-      wbFloat('Attack Delay Seconds'),
-      wbFloat('Unused'),
-      wbFloat('Damage - OutOfRangeMult'),
-      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
-      wbFormIDCk('Skill', [AVIF, NULL]),
-      wbFormIDCk('Resist', [AVIF, NULL]),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'Player Only',
-        {0x00000002} 'NPCs Use Ammo',
-        {0x00000004} 'No Jam After Reload',
-        {0x00000008} 'Charging Reload',
-        {0x00000010} 'Minor Crime',
-        {0x00000020} 'Fixed Range',
-        {0x00000040} 'Not Used In Normal Combat',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'Crit Effect - on Death',
-        {0x00000200} 'Charging Attack',
-        {0x00000400} 'Alternate Rumble',
-        {0x00000800} 'Hold Input To Power',
-        {0x00001000} 'Non Hostile',
-        {0x00002000} 'Bound Weapon',
-        {0x00004000} 'Ignores Normal Weapon Resistance',
-        {0x00008000} 'Automatic',
-        {0x00010000} 'Repeatable Single Fire',
-        {0x00020000} 'Can''t Drop',
-        {0x00040000} 'Hide Backpack',
-        {0x00080000} 'Embedded Weapon',
-        {0x00100000} 'Not Playable',
-        {0x00200000} 'Has Scope',
-        {0x00400000} 'Bolt Action',
-        {0x00800000} 'Secondary Weapon',
-        {0x01000000} 'Disable Shells',
-        {0x02000000} 'Unknown 26',
-        {0x04000000} 'Unknown 27',
-        {0x08000000} 'Unknown 28',
-        {0x10000000} 'Unknown 29',
-        {0x20000000} 'Unknown 30',
-        {0x40000000} 'Unknown 31',
-        {0x80000000} 'Unknown 32'
-      ])),
-      wbInteger('Capacity', itU16),
-      wbFromVersion(200, wbInteger('Ammo used per shot', itU16)),
-      wbInteger('Weapon Type', itU8, wbEnum([
-        'HandToHandMelee',
-        'OneHandSword',
-        'OneHandDagger',
-        'OneHandAxe',
-        'OneHandMace',
-        'TwoHandSword',
-        'TwoHandAxe',
-        'Bow',
-        'Staff',
-        'Gun',
-        'Grenade',
-        'Mine'
-      ])),
-      wbFloat('Secondary Damage'),
-      wbFromVersion(54, wbFloat('Weight')),
-      wbFromVersion(54, wbInteger('Value', itU32)),
-      wbFromVersion(54, wbInteger('Base Damage', itU16)),
-      wbFromVersion(55, wbStruct('Sound Data', [
-        wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-        wbFormIDCk('Sound - Attack', [SNDR, NULL]),
-        wbFormIDCk('Sound - Throwable Primed', [SNDR, NULL]),
-        wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
-        wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
-        wbFormIDCk('Sound - Idle', [SNDR, NULL]),
-        wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
-        wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
-        wbFromVersion(123, wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]))
-      ])),
-
-      wbFromVersion(67, wbUnion('AccuracyBonus', wbFormVersionDecider(108), [
-        wbInteger('Accuracy Bonus', itU32),
-        wbInteger('Accuracy Bonus', itU8)
-      ])),
-      wbFromVersion(74, wbFloat('Animation Attack Seconds')),
-      wbFromVersion(75, wbInteger('Rank', itU16)),
-      wbFromVersion(77, wbFloat('Action Point Cost')),
-      wbFromVersion(103, wbFloat('Full Power Seconds')),
-      wbFromVersion(105, wbFloat('Min Power Per Shot')),
-      wbFromVersion(87, wbInteger('Stagger', itU32, wbStaggerEnum)),
-      wbUnion('', wbFormVersionDecider(146), [
-        wbByteArray('Unused', 4),
-        wbFloat('Color Remapping Index')
-      ]),
-      wbFromVersion(146, wbInteger('Health',itU32)),
-      wbFromVersion(201, wbUnknown)
-    ]),
-    wbStruct(FNAM, '', [
-      wbFloat('Animation Fire Seconds'),
-      wbFloat('Rumble - Left Motor Strength'),
-      wbFloat('Rumble - Right Motor Strength'),
-      wbFloat('Rumble - Duration'),
-      wbFloat('Animation Reload Seconds'),
-      wbFromVersion(55, wbFloat('Bolt Anim Seconds')),
-      wbFromVersion(66, wbFloat('Sighted Transition Seconds')),
-      wbInteger('# Projectiles', itU8),
-      wbFromVersion(80, wbFormIDCk('Override Projectile', [PROJ, NULL])),
-      wbFromVersion(126, wbInteger('Rumble Pattern', itU32, wbEnum([
-        'Constant',
-        'Square',
-        'Triangle',
-        'Sawtooth'
-      ]))),
-      wbFromVersion(126, wbInteger('Rumble - Period (ms)', itU32))
-    ]),
-    wbStruct(RGW2, '', [
-      wbFormIDCk('Override Projectile', [PROJ, NULL]),
-      wbFloat('Animation Fire Seconds'),
-      wbFloat('Rumble - Left Motor Strength'),
-      wbFloat('Rumble - Right Motor Strength'),
-      wbFloat('Rumble - Duration'),
-      wbFloat('Animation Reload Seconds'),
-      wbFloat('Bolt Anim Seconds'),
-      wbFloat('Sighted Transition Seconds'),
-      wbFloat('Unsighted Transition Seconds'),
-      wbFloat('Min Weapon Draw Time'),
-      wbInteger('Rumble - Period (ms)', itU32),
-      wbInteger('Rumble Pattern', itU32, wbEnum([
-        'Constant',
-        'Square',
-        'Triangle',
-        'Sawtooth'
-      ])),
-      wbInteger('# Projectiles', itU8)
-    ]),
-    wbStruct(RGW3, '', [
-      wbFormIDCk('Override Projectile', [PROJ, NULL]),
-      wbFloat('Animation Fire Seconds'),
-      wbFloat('Rumble - Left Motor Strength'),
-      wbFloat('Rumble - Right Motor Strength'),
-      wbFloat('Rumble - Duration'),
-      wbFloat('Animation Reload Seconds'),
-      wbFloat('Bolt Draw Speed'),
-      wbFloat('Sighted Transition Seconds'),
-      wbFloat('Unsighted Transition Seconds'),
-      wbFloat('Min Weapon Draw Time'),
-      wbFloat('Damage Bonus Multiplier'),
-      wbInteger('Rumble - Period (ms)', itU32),
-      wbInteger('Rumble Pattern', itU32, wbEnum([
-        'Constant',
-        'Square',
-        'Triangle',
-        'Sawtooth'
-      ])),
-      wbInteger('# Projectiles', itU8)
-    ]),
-    wbStruct(CRDT, 'Critical Data', [
-      wbFloat('Crit Damage Mult'),
-      wbFloat('Crit Charge Bonus'),
-      wbFormIDCk('Crit Effect', [SPEL, NULL])
-    ]),
-    wbFormIDCk(INAM, 'Impact Data Set', [IPDS]),
-    wbFormIDCk(LNAM, 'NPC Add Ammo List', [LVLI]),
-    wbFormIDCk(WAMD, 'Aim Model', [AMDL]),
-    wbFormIDCk(WAAM, 'Aim Assist Model', [AAMD]),
-    wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
-    wbFormIDCk(CNAM, 'Template', [WEAP]),
-    wbDamageTypeArray('Damage Type'),
-    wbFLTR,
-    wbVCRY,
-    wbFloat(WMCT, 'Minimum Charge Time'),
-    wbFormIDCk(CVT0, 'Damage Curve', [CURV]),
-    wbFormIDCk(CVT1, 'Min Durability Curve', [CURV]),
-    wbFormIDCk(CVT2, 'Condition Loss Scale', [CURV]),
-    wbFormIDCk(CVT3, 'Bash Condition Loss Scale', [CURV]),
-    wbFormIDCk(CVT4, 'Max Durability Curve', [CURV]),
-    wbFormIDCk(CVT5, 'Unknown Curve', [CURV]),
-    wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
-      'Very Slow',
-      'Slow',
-      'Medium',
-      'Fast',
-      'Very Fast'
-    ])),
-    wbDAMS
-  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad});
-
   {wbRecord(SCPT, 'SCPT', [
     wbEDID
   ]);}
@@ -19123,45 +18803,6 @@ begin
     ], cpNormal, True, nil, 2)
   ]);
 
-  wbRecord(ZOOM, 'Zoom', [
-    wbEDID,
-    wbStruct(GNAM, 'Data', [
-      wbFloat('FOV Mult'),
-      wbInteger('Overlay', itU32, wbEnum([
-        { 0} 'Default',
-        { 1} 'Fine',
-        { 2} 'Duplex',
-        { 3} 'German',
-        { 4} 'Dot',
-        { 5} 'Mil-Dot',
-        { 6} 'Circle',
-        { 7} 'Old Rangefind',
-        { 8} 'Modern Rangefind',
-        { 9} 'SVD',
-        {10} 'Hand Painted',
-        {11} 'Binoculars',
-        {12} 'Cross',
-        {13} 'Double Zero',
-        {14} 'Rangefinder 1',
-        {15} 'Rangefinder 2',
-        {16} 'Rectangle',
-        {17} 'Camera',
-        {18} 'Camera Medium Zoom',
-        {19} 'Camera Long Zoom',
-        {20} 'Camera Night Vision',
-        {21} 'Camera Targeting'
-      ])),
-      wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
-      wbStruct('Camera Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbFromVersion(187, wbFloat('FOVMultB')),
-      wbFromVersion(187, wbFloat('FOVMultC'))
-    ])
-  ]);
-
 {>>> Start of new Fallout 76 Records <<<}
 
 // AAPD\RADR starts with two 0 bytes, a multiple of 16 (or 0xC8), and then either 0x40 or 0x41.
@@ -19877,6 +19518,326 @@ begin
     wbUnknown(DICO)
   ]);
 
+  wbRecord(WATR, 'Water', [
+    wbEDID,
+    wbFULL,
+    wbInteger(ANAM, 'Opacity (unused)', itU8),
+    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+      {0x01} 'Dangerous',
+      {0x02} 'Unknown 1',
+      {0x04} 'Directional Sound',
+      {0x08} 'Unknown 3',
+      {0x10} 'Unknown 4',
+      {0x20} 'Unknown 5',
+      {0x40} 'Unknown 6'
+    ]), cpNormal, True),
+    wbFormIDCk(TNAM, 'Material', [MATT]),
+    wbFormIDCk(SNAM, 'Open Sound', [SNDR, NULL]),
+    wbFormIDCk(XNAM, 'Consume Spell', [SPEL, ALCH]),
+    wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
+    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbEmpty(DATA, 'Unused'),
+    wbStruct(DNAM, 'Visual Data', [
+      wbStruct('Fog Properties', [
+        wbFloat('Depth Amount'),
+        wbByteColors('Shallow Color'),
+        wbByteColors('Deep Color'),
+        wbFloat('Color Shallow Range'),
+        wbFloat('Color Deep Range'),
+        wbFloat('Shallow Alpha'),
+        wbFloat('Deep Alpha'),
+        wbFloat('Alpha Shallow Range'),
+        wbFloat('Alpha Deep Range'),
+        wbByteColors('Underwater Color'),
+        wbFloat('Underwater Fog Amount'),
+        wbFloat('Underwater Near Fog'),
+        wbFloat('Underwater Far Fog')
+      ]),
+      wbStruct('Physical Properties', [
+        wbFloat('Normal Magnitude'),
+        wbFloat('Shallow Normal Falloff'),
+        wbFloat('Deep Normal Falloff'),
+        wbFloat('Reflectivity Amount'),
+        wbFloat('Fresnel Amount'),
+        wbFloat('Surface Effect Falloff'),
+        wbStruct('Displacement Simulator', [
+          wbFloat('Force'),
+          wbFloat('Velocity'),
+          wbFloat('Falloff'),
+          wbFloat('Dampener'),
+          wbFloat('Starting Size')
+        ]),
+        wbByteColors('Reflection Color')
+      ]),
+      wbStruct('Specular Properties', [
+        wbFloat('Sun Specular Power'),
+        wbFloat('Sun Specular Magnitude'),
+        wbFloat('Sun Sparkle Power'),
+        wbFloat('Sun Sparkle Magnitude'),
+        wbFloat('Interior Specular Radius'),
+        wbFloat('Interior Specular Brightness'),
+        wbFloat('Interior Specular Power')
+      ]),
+      wbFloat('Unknown 1'),
+      wbFloat('Unknown 2'),
+      wbFloat('Unknown 3'),
+      wbFloat('Unknown 4'),
+      wbFloat('Unknown 5')
+    ], cpNormal, True, nil, 4),
+    wbUnknown(AWSD),
+    wbByteArray(GNAM, 'Unused', 0),
+    wbStruct(NAM0, 'Linear Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbStruct(NAM1, 'Angular Velocity', [
+      wbFloat('X'),
+      wbFloat('Y'),
+      wbFloat('Z')
+    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbString(NAM2, 'Layer 1 Noise Texture'),
+    wbString(NAM3, 'Layer 2 Noise Texture'),
+    wbString(NAM4, 'Layer 3 Noise Texture'),
+    wbString(NAM5, 'Flow Normals Noise Texture'),
+    wbUnknown(NAM6),
+    wbUnknown(NAM7)
+  ]);
+
+  wbRecord(WEAP, 'Weapon',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable',
+      {0x20000000} 30, 'High-Res 1st Person Only'
+    ])), [
+    wbEDID,
+    wbVMAD,
+    wbOBND(True),
+    wbOPDSs,
+    wbPTRN,
+    wbOPDSs,
+    wbSTCP,
+    wbSNTP,
+    wbPHST,
+    wbXALG,
+    wbFULL,
+    wbGenericModel,
+    wbICON,
+    wbMICO,
+    wbEITM,
+    wbInteger(EAMT, 'Enchantment Amount', itU16),
+    wbDEST,
+    wbETYP,
+    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
+    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
+    wbYNAM,
+    wbZNAM,
+    wbKeywords,
+    wbDESC,
+    wbFormIDCk(INRD, 'Instance Naming', [INNR]),
+    wbEILV,
+    wbIBSD,
+    wbAPPR,
+    wbObjectTemplate,
+    wbFromVersion(76, NNAM, wbFormIDCk('Embedded Weapon Mod', [OMOD])),
+    wbRStruct('1st Person Model', [
+      wbString(MOD4, 'Model FileName'),
+      wbModelInfo(MO4T),
+      wbMO4S,
+      wbMO4C,
+      wbMO4F,
+      wbENLT,
+      wbENLS,
+      wbAUUV
+    ], []).IncludeFlag(dfAllowAnyMember),
+    wbStruct(DNAM, 'Data', [
+      wbFormIDCk('Ammo', [AMMO, NULL]),
+      wbFloat('Speed'),
+      wbFromVersion(61, wbFloat('Reload Speed')),
+      wbFromVersion(177, wbFloat('NPC Reload Delay')),
+      wbFloat('Reach'),
+      wbFromVersion(140,  wbFloat('Reach Engagement Mult')),
+      wbFloat('Min Range'),
+      wbFloat('Max Range'),
+      wbFromVersion(139, wbFloat('Unknown')),
+      wbFloat('Attack Delay Seconds'),
+      wbFloat('Unused'),
+      wbFloat('Damage - OutOfRangeMult'),
+      wbInteger('On Hit', itU32, wbHitBehaviourEnum),
+      wbFormIDCk('Skill', [AVIF, NULL]),
+      wbFormIDCk('Resist', [AVIF, NULL]),
+      wbInteger('Flags', itU32, wbFlags([
+        {0x00000001} 'Player Only',
+        {0x00000002} 'NPCs Use Ammo',
+        {0x00000004} 'No Jam After Reload',
+        {0x00000008} 'Charging Reload',
+        {0x00000010} 'Minor Crime',
+        {0x00000020} 'Fixed Range',
+        {0x00000040} 'Not Used In Normal Combat',
+        {0x00000080} 'Unknown 8',
+        {0x00000100} 'Crit Effect - on Death',
+        {0x00000200} 'Charging Attack',
+        {0x00000400} 'Alternate Rumble',
+        {0x00000800} 'Hold Input To Power',
+        {0x00001000} 'Non Hostile',
+        {0x00002000} 'Bound Weapon',
+        {0x00004000} 'Ignores Normal Weapon Resistance',
+        {0x00008000} 'Automatic',
+        {0x00010000} 'Repeatable Single Fire',
+        {0x00020000} 'Can''t Drop',
+        {0x00040000} 'Hide Backpack',
+        {0x00080000} 'Embedded Weapon',
+        {0x00100000} 'Not Playable',
+        {0x00200000} 'Has Scope',
+        {0x00400000} 'Bolt Action',
+        {0x00800000} 'Secondary Weapon',
+        {0x01000000} 'Disable Shells',
+        {0x02000000} 'Unknown 26',
+        {0x04000000} 'Unknown 27',
+        {0x08000000} 'Unknown 28',
+        {0x10000000} 'Unknown 29',
+        {0x20000000} 'Unknown 30',
+        {0x40000000} 'Unknown 31',
+        {0x80000000} 'Unknown 32'
+      ])),
+      wbInteger('Capacity', itU16),
+      wbFromVersion(200, wbInteger('Ammo used per shot', itU16)),
+      wbInteger('Weapon Type', itU8, wbEnum([
+        'HandToHandMelee',
+        'OneHandSword',
+        'OneHandDagger',
+        'OneHandAxe',
+        'OneHandMace',
+        'TwoHandSword',
+        'TwoHandAxe',
+        'Bow',
+        'Staff',
+        'Gun',
+        'Grenade',
+        'Mine'
+      ])),
+      wbFloat('Secondary Damage'),
+      wbFromVersion(54, wbFloat('Weight')),
+      wbFromVersion(54, wbInteger('Value', itU32)),
+      wbFromVersion(54, wbInteger('Base Damage', itU16)),
+      wbFromVersion(55, wbStruct('Sound Data', [
+        wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+        wbFormIDCk('Sound - Attack', [SNDR, NULL]),
+        wbFormIDCk('Sound - Throwable Primed', [SNDR, NULL]),
+        wbFormIDCk('Sound - Attack Loop', [SNDR, NULL]),
+        wbFormIDCk('Sound - Attack Fail', [SNDR, NULL]),
+        wbFormIDCk('Sound - Idle', [SNDR, NULL]),
+        wbFormIDCk('Sound - Equip Sound', [SNDR, NULL]),
+        wbFormIDCk('Sound - UnEquip Sound', [SNDR, NULL]),
+        wbFromVersion(123, wbFormIDCk('Sound - Fast Equip Sound', [SNDR, NULL]))
+      ])),
+
+      wbFromVersion(67, wbUnion('AccuracyBonus', wbFormVersionDecider(108), [
+        wbInteger('Accuracy Bonus', itU32),
+        wbInteger('Accuracy Bonus', itU8)
+      ])),
+      wbFromVersion(74, wbFloat('Animation Attack Seconds')),
+      wbFromVersion(75, wbInteger('Rank', itU16)),
+      wbFromVersion(77, wbFloat('Action Point Cost')),
+      wbFromVersion(103, wbFloat('Full Power Seconds')),
+      wbFromVersion(105, wbFloat('Min Power Per Shot')),
+      wbFromVersion(87, wbInteger('Stagger', itU32, wbStaggerEnum)),
+      wbUnion('', wbFormVersionDecider(146), [
+        wbByteArray('Unused', 4),
+        wbFloat('Color Remapping Index')
+      ]),
+      wbFromVersion(146, wbInteger('Health',itU32)),
+      wbFromVersion(201, wbUnknown)
+    ]),
+    wbStruct(FNAM, '', [
+      wbFloat('Animation Fire Seconds'),
+      wbFloat('Rumble - Left Motor Strength'),
+      wbFloat('Rumble - Right Motor Strength'),
+      wbFloat('Rumble - Duration'),
+      wbFloat('Animation Reload Seconds'),
+      wbFromVersion(55, wbFloat('Bolt Anim Seconds')),
+      wbFromVersion(66, wbFloat('Sighted Transition Seconds')),
+      wbInteger('# Projectiles', itU8),
+      wbFromVersion(80, wbFormIDCk('Override Projectile', [PROJ, NULL])),
+      wbFromVersion(126, wbInteger('Rumble Pattern', itU32, wbEnum([
+        'Constant',
+        'Square',
+        'Triangle',
+        'Sawtooth'
+      ]))),
+      wbFromVersion(126, wbInteger('Rumble - Period (ms)', itU32))
+    ]),
+    wbStruct(RGW2, '', [
+      wbFormIDCk('Override Projectile', [PROJ, NULL]),
+      wbFloat('Animation Fire Seconds'),
+      wbFloat('Rumble - Left Motor Strength'),
+      wbFloat('Rumble - Right Motor Strength'),
+      wbFloat('Rumble - Duration'),
+      wbFloat('Animation Reload Seconds'),
+      wbFloat('Bolt Anim Seconds'),
+      wbFloat('Sighted Transition Seconds'),
+      wbFloat('Unsighted Transition Seconds'),
+      wbFloat('Min Weapon Draw Time'),
+      wbInteger('Rumble - Period (ms)', itU32),
+      wbInteger('Rumble Pattern', itU32, wbEnum([
+        'Constant',
+        'Square',
+        'Triangle',
+        'Sawtooth'
+      ])),
+      wbInteger('# Projectiles', itU8)
+    ]),
+    wbStruct(RGW3, '', [
+      wbFormIDCk('Override Projectile', [PROJ, NULL]),
+      wbFloat('Animation Fire Seconds'),
+      wbFloat('Rumble - Left Motor Strength'),
+      wbFloat('Rumble - Right Motor Strength'),
+      wbFloat('Rumble - Duration'),
+      wbFloat('Animation Reload Seconds'),
+      wbFloat('Bolt Draw Speed'),
+      wbFloat('Sighted Transition Seconds'),
+      wbFloat('Unsighted Transition Seconds'),
+      wbFloat('Min Weapon Draw Time'),
+      wbFloat('Damage Bonus Multiplier'),
+      wbInteger('Rumble - Period (ms)', itU32),
+      wbInteger('Rumble Pattern', itU32, wbEnum([
+        'Constant',
+        'Square',
+        'Triangle',
+        'Sawtooth'
+      ])),
+      wbInteger('# Projectiles', itU8)
+    ]),
+    wbStruct(CRDT, 'Critical Data', [
+      wbFloat('Crit Damage Mult'),
+      wbFloat('Crit Charge Bonus'),
+      wbFormIDCk('Crit Effect', [SPEL, NULL])
+    ]),
+    wbFormIDCk(INAM, 'Impact Data Set', [IPDS]),
+    wbFormIDCk(LNAM, 'NPC Add Ammo List', [LVLI]),
+    wbFormIDCk(WAMD, 'Aim Model', [AMDL]),
+    wbFormIDCk(WAAM, 'Aim Assist Model', [AAMD]),
+    wbFormIDCk(WZMD, 'Zoom', [ZOOM]),
+    wbFormIDCk(CNAM, 'Template', [WEAP]),
+    wbDamageTypeArray('Damage Type'),
+    wbFLTR,
+    wbVCRY,
+    wbFloat(WMCT, 'Minimum Charge Time'),
+    wbFormIDCk(CVT0, 'Damage Curve', [CURV]),
+    wbFormIDCk(CVT1, 'Min Durability Curve', [CURV]),
+    wbFormIDCk(CVT2, 'Condition Loss Scale', [CURV]),
+    wbFormIDCk(CVT3, 'Bash Condition Loss Scale', [CURV]),
+    wbFormIDCk(CVT4, 'Max Durability Curve', [CURV]),
+    wbFormIDCk(CVT5, 'Unknown Curve', [CURV]),
+    wbInteger(MASE, 'Melee Speed', itU32, wbEnum([
+      'Very Slow',
+      'Slow',
+      'Medium',
+      'Fast',
+      'Very Fast'
+    ])),
+    wbDAMS
+  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad});
+
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       9, 'Unknown 9'
@@ -20034,6 +19995,45 @@ begin
     wbWorldVisibleCellsData
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
+
+  wbRecord(ZOOM, 'Zoom', [
+    wbEDID,
+    wbStruct(GNAM, 'Data', [
+      wbFloat('FOV Mult'),
+      wbInteger('Overlay', itU32, wbEnum([
+        { 0} 'Default',
+        { 1} 'Fine',
+        { 2} 'Duplex',
+        { 3} 'German',
+        { 4} 'Dot',
+        { 5} 'Mil-Dot',
+        { 6} 'Circle',
+        { 7} 'Old Rangefind',
+        { 8} 'Modern Rangefind',
+        { 9} 'SVD',
+        {10} 'Hand Painted',
+        {11} 'Binoculars',
+        {12} 'Cross',
+        {13} 'Double Zero',
+        {14} 'Rangefinder 1',
+        {15} 'Rangefinder 2',
+        {16} 'Rectangle',
+        {17} 'Camera',
+        {18} 'Camera Medium Zoom',
+        {19} 'Camera Long Zoom',
+        {20} 'Camera Night Vision',
+        {21} 'Camera Targeting'
+      ])),
+      wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
+      wbStruct('Camera Offset', [
+        wbFloat('X'),
+        wbFloat('Y'),
+        wbFloat('Z')
+      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      wbFromVersion(187, wbFloat('FOVMultB')),
+      wbFromVersion(187, wbFloat('FOVMultC'))
+    ])
+  ]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);

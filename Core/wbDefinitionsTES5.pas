@@ -9300,12 +9300,6 @@ Can't properly represent that with current record definition methods.
     wbInteger(DNAM, 'Show All Text', itU8, wbBoolEnum)
   ]);
 
-  wbRecord(WOOP, 'Word of Power', [
-    wbEDID,
-    wbFULL,
-    wbLString(TNAM, 'Translation', 0, cpTranslate, True)
-  ]);
-
   wbRecord(SHOU, 'Shout',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000080}  7, 'Treat spells as powers'
@@ -12376,6 +12370,49 @@ Can't properly represent that with current record definition methods.
     wbSeasons
   ]);
 
+  if wbIsSkyrimSE then begin
+    wbRecord(VOLI, 'Volumetric Lighting', [
+      wbEDID,
+      wbFloat(CNAM, 'Intensity'),
+      wbFloat(DNAM, 'Custom Color - Contribution'),
+      wbRFloatColors('Colors', [ENAM, FNAM, GNAM]),
+      wbFloat(HNAM, 'Density - Contribution'),
+      wbFloat(INAM, 'Density - Size'),
+      wbFloat(JNAM, 'Density - Wind Speed'),
+      wbFloat(KNAM, 'Density - Falling Speed'),
+      wbFloat(LNAM, 'Phase Function - Contribution'),
+      wbFloat(MNAM, 'Phase Function - Scattering'),
+      wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
+    ]);
+
+    wbRecord(LENS, 'Lens Flare', [
+      wbEDID,
+      wbFloat(CNAM, 'Color Influence'),
+      wbFloat(DNAM, 'Fade Distance Radius Scale'),
+      wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
+      wbRArray('Lens Flare Sprites',
+        wbRStruct('Flare', [
+          wbString(DNAM, 'Lens Flare Sprite ID'),
+          wbString(FNAM, 'Texture'),
+          wbStruct(LFSD, 'Lens Flare Data', [
+            wbFloatColors('Tint'),
+            wbFloat('Width'),
+            wbFloat('Height'),
+            wbFloat('Position'),
+            wbFloat('Angular Fade'),
+            wbFloat('Opacity'),
+            wbInteger('Flags', itU32, wbFlags([
+              {0x01} 'Rotates',
+              {0x02} 'Shrinks When Occluded'
+            ]))
+          ])
+        ], []),
+        cpNormal, False, nil, wbLENSAfterSet
+      )
+    ]);
+
+  end;
+
   wbRecord(WATR, 'Water', [
     wbEDID,
     wbFULL,
@@ -12634,75 +12671,24 @@ Can't properly represent that with current record definition methods.
       wbByteArray('Unknown', 4),
       wbFloat('Stagger')
     ]),
-    IsSSE(
-      wbStruct(CRDT, 'Critical Data', [
-        wbInteger('Damage', itU16),
-        wbByteArray('Unused', 2, cpIgnore),
-        wbFloat('% Mult'),
-        wbInteger('Flags', itU8, wbFlags([
-          'On Death'
-        ])),
-        wbByteArray('Unused', 7, cpIgnore),
-        wbFormIDCk('Effect', [SPEL, NULL]),
-        wbByteArray('Unused', 4, cpIgnore)
-      ]),
-      wbStruct(CRDT, 'Critical Data', [
-        wbInteger('Damage', itU16),
-        wbByteArray('Unused', 2, cpIgnore),
-        wbFloat('% Mult'),
-        wbInteger('Flags', itU8, wbFlags([
-          'On Death'
-        ])),
-        wbByteArray('Unused', 3, cpIgnore),
-        wbFormIDCk('Effect', [SPEL, NULL])
-      ])
-    ),
+    wbStruct(CRDT, 'Critical Data', [
+      wbInteger('Damage', itU16),
+      wbUnused(2),
+      wbFloat('% Mult'),
+      wbInteger('On Death', itU8, wbBoolEnum),
+      IsSSE(
+        wbUnused(7),
+        wbUnused(3)
+      ),
+      wbFormIDCk('Effect', [SPEL, NULL]),
+      IsSSE(
+        wbUnused(4),
+        nil
+      )
+    ]),
     wbInteger(VNAM, 'Detection Sound Level', itU32, wbSoundlevelEnum),
     wbFormIDCk(CNAM, 'Template', [WEAP])
   ], False, nil, cpNormal, False, wbWEAPAfterLoad);
-
-  if wbIsSkyrimSE then begin
-    wbRecord(VOLI, 'Volumetric Lighting', [
-      wbEDID,
-      wbFloat(CNAM, 'Intensity'),
-      wbFloat(DNAM, 'Custom Color - Contribution'),
-      wbRFloatColors('Colors', [ENAM, FNAM, GNAM]),
-      wbFloat(HNAM, 'Density - Contribution'),
-      wbFloat(INAM, 'Density - Size'),
-      wbFloat(JNAM, 'Density - Wind Speed'),
-      wbFloat(KNAM, 'Density - Falling Speed'),
-      wbFloat(LNAM, 'Phase Function - Contribution'),
-      wbFloat(MNAM, 'Phase Function - Scattering'),
-      wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
-    ]);
-
-    wbRecord(LENS, 'Lens Flare', [
-      wbEDID,
-      wbFloat(CNAM, 'Color Influence'),
-      wbFloat(DNAM, 'Fade Distance Radius Scale'),
-      wbInteger(LFSP, 'Count', itU32, nil, cpBenign),
-      wbRArray('Lens Flare Sprites',
-        wbRStruct('Flare', [
-          wbString(DNAM, 'Lens Flare Sprite ID'),
-          wbString(FNAM, 'Texture'),
-          wbStruct(LFSD, 'Lens Flare Data', [
-            wbFloatColors('Tint'),
-            wbFloat('Width'),
-            wbFloat('Height'),
-            wbFloat('Position'),
-            wbFloat('Angular Fade'),
-            wbFloat('Opacity'),
-            wbInteger('Flags', itU32, wbFlags([
-              {0x01} 'Rotates',
-              {0x02} 'Shrinks When Occluded'
-            ]))
-          ])
-        ], []),
-        cpNormal, False, nil, wbLENSAfterSet
-      )
-    ]);
-
-  end;
 
   wbRecord(WTHR, 'Weather', [
     wbEDID,
@@ -12775,6 +12761,12 @@ Can't properly represent that with current record definition methods.
       wbFormIDCk(GNAM, 'Sun Glare Lens Flare', [LENS]),
       nil
     )
+  ]);
+
+  wbRecord(WOOP, 'Word of Power', [
+    wbEDID,
+    wbFULL,
+    wbLString(TNAM, 'Translation', 0, cpTranslate, True)
   ]);
 
   wbRecord(WRLD, 'Worldspace',

@@ -18079,88 +18079,6 @@ end;
     wbSoundReference(FHLS, 'Harvest Looping Sound')
   ], False, nil, cpNormal, False, nil, nil);
 
-  {subrecords checked against Starfield.esm}
-  wbRecord(WATR, 'Water', [
-    wbEDID,
-    wbFULL,
-    wbInteger(ANAM, 'Opacity (unused)', itU8),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0x01} 'Dangerous',
-      {0x02} 'Unknown 1',
-      {0x04} 'Directional Sound',
-      {0x08} 'Enable Flowmap',
-      {0x10} 'Blend Normals'
-    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbSoundReference(WASH),
-    wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
-    wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
-    wbFormIDCk(INAM, 'Image Space', [IMGS]),
-    wbUnused(DATA, True),
-    wbStruct(DNAM, 'Visual Data', [
-      wbFloat('Depth Amount'),
-      wbStruct('Color Absorbtion Ranges', [
-        wbFloat('Red'),
-        wbFloat('Green'),
-        wbFloat('Blue')
-      ]),
-      wbStruct('Concentration Properties', [
-        wbFloat('Phytoplankton'),
-        wbFloat('Sediment'),
-        wbFloat('Yellow Matter'),
-        wbFloat('Oceanness')
-      ]),
-      wbStruct('Underwater Properties', [
-        wbByteColors('Color'),
-        wbFloat('Fog Amount'),
-        wbFloat('Near Fog'),
-        wbFloat('Far Fog')
-      ]),
-      wbStruct('Surface Effects', [
-        wbFloat('Normal Magnitude'),
-        wbFloat('Shallow Normal Falloff'),
-        wbFloat('Deep Normal Falloff'),
-        wbFloat('Surface Effect Falloff')
-      ]),
-      wbStruct('Displacement Simulator', [
-        wbFloat('Force'),
-        wbFloat('Velocity'),
-        wbFloat('Falloff'),
-        wbFloat('Dampener'),
-        wbFloat('Starting Size')
-      ]),
-      wbStruct('Noise Properties', [
-        wbFloat('Layer 1 - Wind Direction'),
-        wbFloat('Layer 2 - Wind Direction'),
-        wbFloat('Layer 3 - Wind Direction'),
-        wbFloat('Layer 1 - Wind Speed'),
-        wbFloat('Layer 2 - Wind Speed'),
-        wbFloat('Layer 3 - Wind Speed'),
-        wbFloat('Layer 1 - Amplitude Scale'),
-        wbFloat('Layer 2 - Amplitude Scale'),
-        wbFloat('Layer 3 - Amplitude Scale'),
-        wbFloat('Layer 1 - UV Scale'),
-        wbFloat('Layer 2 - UV Scale'),
-        wbFloat('Layer 3 - UV Scale'),
-        wbFloat('Layer 1 - Noise Falloff'),
-        wbFloat('Layer 2 - Noise Falloff'),
-        wbFloat('Layer 3 - Noise Falloff')
-      ]),
-      wbFloat('Flowmap Scale'),
-      wbFloat('Roughnes')
-    ], cpNormal, True),
-    wbUnused(GNAM, 12),
-    wbVec3(NAM0, 'Linear Velocity'),
-    wbVec3(NAM1, 'Angular Velocity'),
-    wbFormIDCk(ENAM, 'River Absorption Curve', [CUR3]),
-    wbFormIDCk(HNAM, 'Ocean Absorption Curve', [CUR3]),
-    wbFormIDCk(JNAM, 'River Scattering Curve', [CUR3]),
-    wbFormIDCk(LNAM, 'Ocean Scattering Curve', [CUR3]),
-    wbFormIDCk(MNAM, 'Phytoplankton Curve', [CUR3]),
-    wbFormIDCk(QNAM, 'Sediment Curve', [CUR3]),
-    wbFormIDCk(UNAM, 'Yellow-Matter Curve', [CUR3])
-  ]);
-
-
   var wbTypeEnum := wbEnum([
     { 0} 'Unarmed',
     { 1} 'One Hand Sword',
@@ -18176,252 +18094,6 @@ end;
     {11} 'Mine',
     {12} 'Mounted'
   ]);
-
-
-  {subrecords checked against Starfield.esm}
-  wbRecord(WEAP, 'Weapon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable',
-      {0x20000000} 30, 'High-Res 1st Person Only'
-    ])), [
-    wbEDID,
-    wbVMAD,
-    wbOBND(True),
-    wbODTYReq,
-    wbOPDS,
-    wbPTT2,
-    wbBaseFormComponents,
-    wbFULL,
-    wbGenericModel(True),
-    wbEITM,
-    wbInteger(EAMT, 'Enchantment Amount', itU16),
-    wbDEST,
-    wbETYP,
-    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
-    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
-    wbPUSH,
-    wbPDSH,
-    wbKeywords,
-    wbDESC(),
-    wbFormIDCk(INRD, 'Instance Naming', [INNR]),
-    wbAPPR,
-    wbObjectTemplate,
-    wbEmpty(STOP, 'Marker', cpNormal, True),
-    wbFormIDCk(NNAM, 'Embedded Weapon Mod', [NULL, OMOD]),
-    wbEmpty(BNAM, 'Is Embedded Weapon'),
-    wbStruct(WAIM, 'Aim', [
-      wbFloat('Sighted Transition (Seconds)'),
-      wbFormIDCk('Aim Down Sight Template', [NULL, ZOOM]),
-      wbFormIDCk('Aim Model', [NULL, AMDL]),
-      wbInteger('Accuracy Bonus', itS8),
-      wbInteger('Has Scope', itU8, wbBoolEnum),
-      wbFormIDCk('Aim Assist Template', [NULL, AAMD]),
-      wbFormIDCk('Aim Optical Sight Model', [NULL, AOPS]),
-      wbFormIDCk('Melee Aim Assist Model', [NULL, MAAM]),
-      wbInteger('Update Advanced Aim Info', itU8, wbBoolEnum),
-      wbInteger('Enable Orient Fire Nodes To Aiming Direction', itU8, wbBoolEnum),
-      wbInteger('Enable Marking Targets', itU8, wbBoolEnum),
-      wbInteger('Reticle Type', itU32, wbEnum([
-        'None',
-        'Unarmed',
-        'Pistol',
-        'Shotgun',
-        'Rifle',
-        'Laser',
-        'Tool',
-        'Custom Crosshair 1'
-      ])),                                                //enum
-      wbInteger('Inverse Reticle Spread', itU8, wbBoolEnum),
-      wbInteger('Displayed Reticle on UI Ignores Player Movement', itU8, wbBoolEnum)
-     ]),
-    wbStruct(WAM2, 'Ammunition', [
-      wbFormIDCk('Ammo Type', [NULL, AMMO]),
-      wbInteger('Ammo Capacity', itu32),
-      wbFormIDCk('Ammo List', [NULL, LVLI]),
-      wbFormIDCk('Override Projectile', [NULL, PROJ]),
-      wbFormIDCk('Override Shell Casing', [NULL, ARTO]),
-      wbInteger('Projectiles Count', itU8),
-      wbInteger('NPCs Use Ammo', itU8, wbBoolEnum),
-      wbInteger('Number of Impact Sounds', itU8)
-    ]),
-    wbStruct(WAUD, 'Audio', [
-      wbSoundReference('Attack Sound'),
-      wbSoundReference('Throwable Primed Sound'),
-      wbSoundReference('Attack Fail Sound'),
-      wbSoundReference('Idle Sound'),
-      wbSoundReference('Equip Sound'),
-      wbSoundReference('Unequip Sound'),
-      wbSoundReference('Fast Equip Sound'),
-      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
-      wbInteger('Melee Detection Sound Level', itU32, wbSoundLevelEnum)
-    ]),
-    wbStruct(WTUR, 'Turret', [
-      wbInteger('Enabled', itU8, wbBoolEnum),
-      wbStruct('Heading', [
-        wbFloat('Min'),
-        wbFloat('Max')
-      ]),
-      wbStruct('Pitch', [
-        wbFloat('Min'),
-        wbFloat('Max')
-      ]),
-      wbFloat('Heading Speed'),
-      wbFloat('Pitch Speed'),
-      wbFloat('Accuracy')
-    ]),
-    wbStruct(WCHG, 'Charge Data', [
-      wbFloat('Full Power (Seconds)'),
-      wbFloat('Min Power Per Shot'),
-      wbFloat('Crit Charge Bonus'),
-      wbInteger('Hold Input', itU8, wbBoolEnum),
-      wbInteger('Charging Attack Enabled', itU8, wbBoolEnum)
-    ]),
-    wbStruct(WDMG, 'Damage', [
-      wbFloat('Base Damage'),
-      wbFloat('Range - Min'),
-      wbFloat('Range - Max'),
-      wbFloat('Out of Range Damage Mult'),
-      wbFloat('Crit Damage Mult'),
-      wbFormIDCk('Crit Effect (Spell)', [NULL, SPEL]),
-      wbInteger('Crit Effect on Death Only', itU8, wbBoolEnum),
-      wbInteger('Hit Behavior', itU8, wbHitBehaviourEnum),
-      wbFormIDCk('Resistance', [NULL, AVIF]),
-      wbFormIDCk('Skill', [NULL, AVIF]),
-      wbStruct('Low Gravity', [
-        wbFloat('Scale Control Point'),
-        wbStruct('Range Multipler at Control Point', [
-          wbFloat('Min'),
-          wbFloat('Max')
-        ])
-      ]),
-      wbStruct('High Gravity', [
-        wbFloat('Scale Control Point'),
-        wbStruct('Range Multipler at Control Point', [
-          wbFloat('Min'),
-          wbFloat('Max')
-        ])
-      ]),
-      wbFloat('Crit Chance Inc Mult')
-    ]),
-    wbDamageTypeArray('Damage Type'),
-    wbStruct(WFIR, 'Firing', [
-      wbInteger('Firing Type', itU8, wbEnum([
-        {0} 'Single or Binary',
-        {1} 'Burst',
-        {2} 'Automatic'
-      ])),
-      wbInteger('Burst count', itU8),
-      wbInteger('Repeatable Fire', itU8, wbBoolEnum),
-      wbFloat('Attack (Seconds)'),
-      wbFloat('Fire (Seconds)'),
-      wbFloat('Attack Delay (Seconds)'),
-      wbFloat('Bolt Charge (Seconds)'),
-      wbInteger('Bolt Action', itU8, wbBoolEnum),
-      wbInteger('Disable ShellCase Eject', itU8, wbBoolEnum),
-      wbFloat('Shots Per Second'),
-      wbFloat('Weapon Attack Animation Duration'), // contains same value as Attack Delay Seconds CK matches both values as updated
-      wbInteger('Override Rate of Fire', itU8, wbBoolEnum),
-      wbFloat('Trigger Threshold - Primary Trigger'),
-      wbInteger('Override Trigger Threshold', itU8, wbBoolEnum),
-      wbFloat('Trigger Threshold - Second Stage'),
-      wbInteger('Use Staged Trigger', itU8, wbBoolEnum),
-      wbInteger('Has Dual Trigger', itU8, wbBoolEnum),
-      wbFloat('Burst Delay (Seconds)')
-    ]),
-    wbStruct(WFLG, 'Flags', [
-      wbInteger('Non-Playable', itU8, wbBoolEnum),
-      wbInteger('Player Only', itU8, wbBoolEnum),
-      wbInteger('Prevent Use In Normal Combat', itU8, wbBoolEnum),
-      wbInteger('Is Secondary', itU8, wbBoolEnum),
-
-      wbInteger('Can''t Drop', itU8, wbBoolEnum),
-      wbInteger('Minor Crime', itU8, wbBoolEnum),
-      wbInteger('Non-Hostile', itU8, wbBoolEnum),
-      wbInteger('Bound', itU8, wbBoolEnum),
-
-      wbInteger('NPC Prefers Long Bursts', itU8, wbBoolEnum),
-      wbInteger('NPCs Only Fire When Magazine Full', itU8, wbBoolEnum),
-      wbInteger('Use Sequential Fire Nodes', itU8, wbBoolEnum),
-      wbInteger('Use Random Fire Nodes', itU8, wbBoolEnum)
-    ]),
-    wbStruct(WGEN, 'General', [
-      wbInteger('Type', itu32, wbTypeEnum),
-      wbFloat('Base weight'),
-      wbInteger('Base value', itu32),
-      wbFloat('Base Speed'),
-      wbFloat('Attack Oxygen Cost'),
-      wbFormIDCk('Weapon Barrel', [NULL, WBAR])
-    ]),
-    wbLStringKC(WABB, 'Abbreviation', 0, cpTranslate),
-    wbStruct(WMEL, 'Melee', [
-      wbInteger('Attack Speed', itU8, wbAttackSpeedEnum),
-      wbFloat('Bash Damage'),
-      wbFloat('Reach'),
-      wbInteger('Stagger', itU32, wbStaggerEnum)
-    ]),
-    wbStruct(QNAM, 'Power', [
-      { 0} wbFormIDCK('Power', [NULL, AVIF]),
-      { 4} wbFloat('Recharge time'),
-      { 8} wbFloat('Recharge delay'),
-      {12} wbInteger('Consume Ammo', itU8, wbBoolEnum),
-      {13} wbFormIDCK('Power - Bonus', [NULL, AVIF]),
-      {17} wbInteger('Use Power', itU8, wbBoolEnum),
-      {18} wbInteger('Variable Power Enabled', itU8, wbBoolEnum),
-      {19} wbFloat('Variable Power Transition Duration'),
-      {23} wbInteger('Use Charge Only In Focus Mode', itU8, wbBoolEnum),
-      {24} wbFormIDCK('Power Intensity Curve', [NULL, CURV]),
-      {28} wbFloat('Power Damage Multiplier'),
-      {32} wbFormIDCK('Power Consumption Multiplier Curve', [NULL, CURV])
-    ]),
-    wbStruct(WRLO, 'Reload', [
-      wbFloat('Reload Seconds'),
-      wbFloat('Reload Speed'),
-      wbInteger('Charging', itU8, wbBoolEnum),
-      wbInteger('Single', itU8, wbBoolEnum)
-    ]),
-    wbStruct(WVAR, 'Variable Range', [
-        wbStruct('Aperture', [
-          { 0} wbFloat('Value - Min'),
-          { 4} wbFloat('Value - Max'),
-          { 8} wbFloat('Input - Min'),
-          {12} wbFloat('Input - Max'),
-          {16} wbFloat('Acceleration'),
-          {20} wbFloat('Deceleration')
-        ]),
-        wbStruct('Distance', [
-          {24} wbFloat('Value - Min'),
-          {28} wbFloat('Value - Max'),
-          {32} wbFloat('Input - Min'),
-          {36} wbFloat('Input - Max'),
-          {40} wbFloat('Acceleration'),
-          {44} wbFloat('Deceleration')
-      ]),
-        {48} wbInteger('Use Variable Range', itU8, wbBoolEnum)
-    ]),
-    wbRStruct('1st Person Model', [
-      wbString(MOD4, 'Model FileName'),
-      wbUnknown(MO4C),
-      wbFLLD,
-      wbFloat(MO4S, 'Color Remapping Index')
-    ], []).IncludeFlag(dfAllowAnyMember),
-    wbStruct(WVIS, 'Art Visuals Data', [
-      wbStruct('First Person Offset', [                        //Data where used looks like three sets of 4, but this is speculation. Only ever has a value in the 4th of each set, and that value is always 128
-        { 0} wbFloat('X'),
-        { 4} wbFloat('Y'),
-        { 8} wbFloat('Z')
-      ]),
-      {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
-      {16} wbFloat('Color Remapping Index'),
-      {20} wbFormIDCK('Image Space Adapter', [NULL, IMAD])
-    ]),                 // impact colour, maybe? if so it's the same for all weaps in Starfield.esm
-    wbStruct(WTRM, 'Ship Weapon', [
-      { 0} wbFloat('Attack Action Point Cost'),
-      { 4} wbInteger('Override Default Camera Shake', itU8, wbBoolEnum),
-      { 5} wbFloat('Firing Camera Shake Intensity'),
-      { 9} wbFloat('Firing Camera Shake Duration'),
-      {13} wbFloat('AI Firing Arc')
-    ])
-  ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad});
 
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
@@ -19191,43 +18863,6 @@ end;
   ]).SetSummaryKey([1]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ZOOM, 'Zoom', [
-    wbEDID,
-    wbStruct(ZNAM, 'Data', [
-      wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
-      wbVec3('Camera Offset'),
-      wbFloat('FOV Mult'),
-      wbInteger('Overlay', itU8, wbEnum([
-        { 0} 'Default',
-        { 1} 'Fine',
-        { 2} 'Duplex',
-        { 3} 'German',
-        { 4} 'Dot',
-        { 5} 'Mil-Dot',
-        { 6} 'Circle',
-        { 7} 'Old Rangefind',
-        { 8} 'Modern Rangefind',
-        { 9} 'SVD',
-        {10} 'Hand Painted',
-        {11} 'Binoculars',
-        {12} 'Cross',
-        {13} 'Double Zero',
-        {14} 'Rangefinder 1',
-        {15} 'Rangefinder 2',
-        {16} 'Rectangle',
-        {17} 'Tactical 4x',
-        {18} 'Tactical 2x'
-      ])),
-      wbFloat('ADS Distance from Camera Offset'),
-      wbInteger('ADS Height Delay Enabled', itU8, wbBoolEnum),
-      wbFloat('ADS Height Delay S'),
-      wbInteger('ADS Depth Enabled', itU8, wbBoolEnum),
-      wbFloat('ADS Depth Delay S')
-    ])
-  ]);
-
-
-  {subrecords checked against Starfield.esm}
   wbRecord(AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbRStruct('Aim Assist Pill', [
@@ -19604,14 +19239,6 @@ end;
     wbFilterKeywordChances,
     wbGenericModel(True)
   ], False, nil, cpNormal, False, nil, wbLLEAfterSet);
-
-  {subrecords checked against Starfield.esm}
-  wbRecord(WTHS, 'Weather Settings', [
-    wbEDID,
-    wbREFL,
-    wbFormIDCk(RFDP, 'Reflection Parent', [WTHS]),
-    wbRDIF
-  ]);
 
   {subrecords checked against Starfield.esm}
   wbRecord(MAAM, 'Melee Aim Assist Model', [
@@ -21044,19 +20671,6 @@ end;
     ])
   ]);
 
-  {subrecords checked against Starfield.esm}
-  wbRecord(WBAR, 'Weapon Barrel Model', [
-    wbEDID,
-    wbBaseFormComponents,
-    wbStruct(ZNAM, 'Data', [
-      wbInteger('Support Gun Down State', itU8, wbBoolEnum),
-      wbFloat('Distance From Wall'),
-      wbFloat('GunUp to GunDown Transition Duration (s)'),
-      wbFloat('GunDown to GunUp Transition Duration (s)')
-    ])
-  ]);
-
-
   var wbWMKFDecider := function:TwbRUnionDecider
   begin
     Result := function(const aContainer: IwbContainerElementRef): Integer
@@ -21068,97 +20682,6 @@ end;
           Result := lType.NativeValue;
     end;
   end;
-
-  {subrecords checked against Starfield.esm}
-  wbRecord(WKMF, 'Wwise Keyword Mapping', [
-    wbEDID,
-    wbInteger(WMTI, 'Mapping Template', itU16, wbEnum([
-      'Ship Engine',
-      'Cockpit',
-      'Grav Drive',
-      'Creature Anim'
-    ]), cpNormal, True)
-      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
-      begin
-        if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
-          Exit;
-        if aOldValue = aNewValue then
-          Exit;
-        if not Assigned(aElement) then
-          Exit;
-        var lContainer := aElement.Container;
-        var lSounds := lContainer.ElementByPath['Sound Item Details'];
-        if Assigned(lSounds) then
-          lSounds.Remove;
-        lContainer.Add('WMSS', True);
-      end),
-    wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True), // requires at least 1
-    wbInteger(WMSS, 'Count', itU32, nil, cpNormal, True).IncludeFlag(dfSkipImplicitEdit),
-    wbRStructs('Sound Item Details', 'Item Detail', [
-(** )  wbInteger('', itU16, wbEnum([], [
-          {0} 'Main Loop',
-          {1} 'Interior',
-          {2} 'Afterburner',
-          {3} 'Cockpit',
-          {4} 'Grav Jump Pending',
-          {5} 'Grav Jump Anim Started',
-          {6} 'Grav Jump Complete',
-          {7} 'Grav Jump Warmup',
-          {8} 'Creature Anim',
-          {9} 'Grav Jump Initiate'
-      ]), (**)
-(**)  wbUnion(WMSI, 'Sound ID', function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
-        {decider}
-        begin
-          Result := -1;
-          if not Assigned(aElement) then
-            Exit;
-          var lContainer := aElement.ContainingMainRecord;
-          var lType := lContainer.ElementNativeValues[WMTI];
-          if not VarIsOrdinal(lType) then
-            Exit;
-          Result := lType;
-        end, [
-        // 0 Ship Engine
-        wbInteger('', itU16, wbEnum([], [
-          0, 'Main Loop',
-          1, 'Interior',
-          2, 'Afterburner'
-        ]), cpNormal, True),
-        // 1 Cockpit
-        wbInteger('', itU16, wbEnum([], [
-          3, 'Cockpit'
-        ]), cpNormal, True).SetDefaultNativeValue(3),
-        // 2 Grav Drive
-        wbInteger('', itU16, wbEnum([], [
-          4, 'Grav Jump Pending',
-          5, 'Grav Jump Anim Started',
-          6, 'Grav Jump Complete',
-          7, 'Grav Jump Warmup',
-          9, 'Grav Jump Initiate'
-        ]), cpNormal, True).SetDefaultNativeValue(4),
-        // 3 Creature Anim
-        wbInteger('', itU16, wbEnum([], [
-          8, 'Creature Anim'
-        ]), cpNormal, True).SetDefaultNativeValue(8)
-      ]).IncludeFlag(dfUnionStaticResolve), (**)
-      wbStruct(WMSD, 'Unknown', [
-        wbSoundReference('Event/Conditions'),
-        wbArray('Switch Data List', wbStruct('Data', [
-          wbWwiseGuid('Switch Group'),
-          wbWwiseGuid('Switch State')
-        ]), -1)
-      ], cpNormal, True)
-    ], []).SetCountPath(WMSS)
-  ]);
-
-  {subrecords checked against Starfield.esm}
-  wbRecord(WWED, 'Wwise Event Data', [
-    wbEDID,
-    wbWwiseGuid(WSED, 'Start'),
-    wbFormIDCk(CNAM, 'Condition', [CNDF]),
-    wbWwiseGuid(WTED, 'End')
-  ]);
 
   {subrecords checked against Starfield.esm}
   // TESDataHandlerPersistentCreatedUtil::BGSPersistentIDsForm
@@ -21250,6 +20773,344 @@ end;
   end);
 
   {subrecords checked against Starfield.esm}
+  wbRecord(WATR, 'Water', [
+    wbEDID,
+    wbFULL,
+    wbInteger(ANAM, 'Opacity (unused)', itU8),
+    wbInteger(FNAM, 'Flags', itU8, wbFlags([
+      {0x01} 'Dangerous',
+      {0x02} 'Unknown 1',
+      {0x04} 'Directional Sound',
+      {0x08} 'Enable Flowmap',
+      {0x10} 'Blend Normals'
+    ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    wbSoundReference(WASH),
+    wbFormIDCk(XNAM, 'Consume Spell', [SPEL]),
+    wbFormIDCk(YNAM, 'Contact Spell', [SPEL]),
+    wbFormIDCk(INAM, 'Image Space', [IMGS]),
+    wbUnused(DATA, True),
+    wbStruct(DNAM, 'Visual Data', [
+      wbFloat('Depth Amount'),
+      wbStruct('Color Absorbtion Ranges', [
+        wbFloat('Red'),
+        wbFloat('Green'),
+        wbFloat('Blue')
+      ]),
+      wbStruct('Concentration Properties', [
+        wbFloat('Phytoplankton'),
+        wbFloat('Sediment'),
+        wbFloat('Yellow Matter'),
+        wbFloat('Oceanness')
+      ]),
+      wbStruct('Underwater Properties', [
+        wbByteColors('Color'),
+        wbFloat('Fog Amount'),
+        wbFloat('Near Fog'),
+        wbFloat('Far Fog')
+      ]),
+      wbStruct('Surface Effects', [
+        wbFloat('Normal Magnitude'),
+        wbFloat('Shallow Normal Falloff'),
+        wbFloat('Deep Normal Falloff'),
+        wbFloat('Surface Effect Falloff')
+      ]),
+      wbStruct('Displacement Simulator', [
+        wbFloat('Force'),
+        wbFloat('Velocity'),
+        wbFloat('Falloff'),
+        wbFloat('Dampener'),
+        wbFloat('Starting Size')
+      ]),
+      wbStruct('Noise Properties', [
+        wbFloat('Layer 1 - Wind Direction'),
+        wbFloat('Layer 2 - Wind Direction'),
+        wbFloat('Layer 3 - Wind Direction'),
+        wbFloat('Layer 1 - Wind Speed'),
+        wbFloat('Layer 2 - Wind Speed'),
+        wbFloat('Layer 3 - Wind Speed'),
+        wbFloat('Layer 1 - Amplitude Scale'),
+        wbFloat('Layer 2 - Amplitude Scale'),
+        wbFloat('Layer 3 - Amplitude Scale'),
+        wbFloat('Layer 1 - UV Scale'),
+        wbFloat('Layer 2 - UV Scale'),
+        wbFloat('Layer 3 - UV Scale'),
+        wbFloat('Layer 1 - Noise Falloff'),
+        wbFloat('Layer 2 - Noise Falloff'),
+        wbFloat('Layer 3 - Noise Falloff')
+      ]),
+      wbFloat('Flowmap Scale'),
+      wbFloat('Roughnes')
+    ], cpNormal, True),
+    wbUnused(GNAM, 12),
+    wbVec3(NAM0, 'Linear Velocity'),
+    wbVec3(NAM1, 'Angular Velocity'),
+    wbFormIDCk(ENAM, 'River Absorption Curve', [CUR3]),
+    wbFormIDCk(HNAM, 'Ocean Absorption Curve', [CUR3]),
+    wbFormIDCk(JNAM, 'River Scattering Curve', [CUR3]),
+    wbFormIDCk(LNAM, 'Ocean Scattering Curve', [CUR3]),
+    wbFormIDCk(MNAM, 'Phytoplankton Curve', [CUR3]),
+    wbFormIDCk(QNAM, 'Sediment Curve', [CUR3]),
+    wbFormIDCk(UNAM, 'Yellow-Matter Curve', [CUR3])
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WEAP, 'Weapon',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      {0x00000004}  2, 'Non-Playable',
+      {0x20000000} 30, 'High-Res 1st Person Only'
+    ])), [
+    wbEDID,
+    wbVMAD,
+    wbOBND(True),
+    wbODTYReq,
+    wbOPDS,
+    wbPTT2,
+    wbBaseFormComponents,
+    wbFULL,
+    wbGenericModel(True),
+    wbEITM,
+    wbInteger(EAMT, 'Enchantment Amount', itU16),
+    wbDEST,
+    wbETYP,
+    wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
+    wbFormIDCk(BAMT, 'Alternate Block Material', [MATT, NULL]),
+    wbPUSH,
+    wbPDSH,
+    wbKeywords,
+    wbDESC(),
+    wbFormIDCk(INRD, 'Instance Naming', [INNR]),
+    wbAPPR,
+    wbObjectTemplate,
+    wbEmpty(STOP, 'Marker', cpNormal, True),
+    wbFormIDCk(NNAM, 'Embedded Weapon Mod', [NULL, OMOD]),
+    wbEmpty(BNAM, 'Is Embedded Weapon'),
+    wbStruct(WAIM, 'Aim', [
+      wbFloat('Sighted Transition (Seconds)'),
+      wbFormIDCk('Aim Down Sight Template', [NULL, ZOOM]),
+      wbFormIDCk('Aim Model', [NULL, AMDL]),
+      wbInteger('Accuracy Bonus', itS8),
+      wbInteger('Has Scope', itU8, wbBoolEnum),
+      wbFormIDCk('Aim Assist Template', [NULL, AAMD]),
+      wbFormIDCk('Aim Optical Sight Model', [NULL, AOPS]),
+      wbFormIDCk('Melee Aim Assist Model', [NULL, MAAM]),
+      wbInteger('Update Advanced Aim Info', itU8, wbBoolEnum),
+      wbInteger('Enable Orient Fire Nodes To Aiming Direction', itU8, wbBoolEnum),
+      wbInteger('Enable Marking Targets', itU8, wbBoolEnum),
+      wbInteger('Reticle Type', itU32, wbEnum([
+        'None',
+        'Unarmed',
+        'Pistol',
+        'Shotgun',
+        'Rifle',
+        'Laser',
+        'Tool',
+        'Custom Crosshair 1'
+      ])),                                                //enum
+      wbInteger('Inverse Reticle Spread', itU8, wbBoolEnum),
+      wbInteger('Displayed Reticle on UI Ignores Player Movement', itU8, wbBoolEnum)
+     ]),
+    wbStruct(WAM2, 'Ammunition', [
+      wbFormIDCk('Ammo Type', [NULL, AMMO]),
+      wbInteger('Ammo Capacity', itu32),
+      wbFormIDCk('Ammo List', [NULL, LVLI]),
+      wbFormIDCk('Override Projectile', [NULL, PROJ]),
+      wbFormIDCk('Override Shell Casing', [NULL, ARTO]),
+      wbInteger('Projectiles Count', itU8),
+      wbInteger('NPCs Use Ammo', itU8, wbBoolEnum),
+      wbInteger('Number of Impact Sounds', itU8)
+    ]),
+    wbStruct(WAUD, 'Audio', [
+      wbSoundReference('Attack Sound'),
+      wbSoundReference('Throwable Primed Sound'),
+      wbSoundReference('Attack Fail Sound'),
+      wbSoundReference('Idle Sound'),
+      wbSoundReference('Equip Sound'),
+      wbSoundReference('Unequip Sound'),
+      wbSoundReference('Fast Equip Sound'),
+      wbInteger('Sound Level', itU32, wbSoundLevelEnum),
+      wbInteger('Melee Detection Sound Level', itU32, wbSoundLevelEnum)
+    ]),
+    wbStruct(WTUR, 'Turret', [
+      wbInteger('Enabled', itU8, wbBoolEnum),
+      wbStruct('Heading', [
+        wbFloat('Min'),
+        wbFloat('Max')
+      ]),
+      wbStruct('Pitch', [
+        wbFloat('Min'),
+        wbFloat('Max')
+      ]),
+      wbFloat('Heading Speed'),
+      wbFloat('Pitch Speed'),
+      wbFloat('Accuracy')
+    ]),
+    wbStruct(WCHG, 'Charge Data', [
+      wbFloat('Full Power (Seconds)'),
+      wbFloat('Min Power Per Shot'),
+      wbFloat('Crit Charge Bonus'),
+      wbInteger('Hold Input', itU8, wbBoolEnum),
+      wbInteger('Charging Attack Enabled', itU8, wbBoolEnum)
+    ]),
+    wbStruct(WDMG, 'Damage', [
+      wbFloat('Base Damage'),
+      wbFloat('Range - Min'),
+      wbFloat('Range - Max'),
+      wbFloat('Out of Range Damage Mult'),
+      wbFloat('Crit Damage Mult'),
+      wbFormIDCk('Crit Effect (Spell)', [NULL, SPEL]),
+      wbInteger('Crit Effect on Death Only', itU8, wbBoolEnum),
+      wbInteger('Hit Behavior', itU8, wbHitBehaviourEnum),
+      wbFormIDCk('Resistance', [NULL, AVIF]),
+      wbFormIDCk('Skill', [NULL, AVIF]),
+      wbStruct('Low Gravity', [
+        wbFloat('Scale Control Point'),
+        wbStruct('Range Multipler at Control Point', [
+          wbFloat('Min'),
+          wbFloat('Max')
+        ])
+      ]),
+      wbStruct('High Gravity', [
+        wbFloat('Scale Control Point'),
+        wbStruct('Range Multipler at Control Point', [
+          wbFloat('Min'),
+          wbFloat('Max')
+        ])
+      ]),
+      wbFloat('Crit Chance Inc Mult')
+    ]),
+    wbDamageTypeArray('Damage Type'),
+    wbStruct(WFIR, 'Firing', [
+      wbInteger('Firing Type', itU8, wbEnum([
+        {0} 'Single or Binary',
+        {1} 'Burst',
+        {2} 'Automatic'
+      ])),
+      wbInteger('Burst count', itU8),
+      wbInteger('Repeatable Fire', itU8, wbBoolEnum),
+      wbFloat('Attack (Seconds)'),
+      wbFloat('Fire (Seconds)'),
+      wbFloat('Attack Delay (Seconds)'),
+      wbFloat('Bolt Charge (Seconds)'),
+      wbInteger('Bolt Action', itU8, wbBoolEnum),
+      wbInteger('Disable ShellCase Eject', itU8, wbBoolEnum),
+      wbFloat('Shots Per Second'),
+      wbFloat('Weapon Attack Animation Duration'), // contains same value as Attack Delay Seconds CK matches both values as updated
+      wbInteger('Override Rate of Fire', itU8, wbBoolEnum),
+      wbFloat('Trigger Threshold - Primary Trigger'),
+      wbInteger('Override Trigger Threshold', itU8, wbBoolEnum),
+      wbFloat('Trigger Threshold - Second Stage'),
+      wbInteger('Use Staged Trigger', itU8, wbBoolEnum),
+      wbInteger('Has Dual Trigger', itU8, wbBoolEnum),
+      wbFloat('Burst Delay (Seconds)')
+    ]),
+    wbStruct(WFLG, 'Flags', [
+      wbInteger('Non-Playable', itU8, wbBoolEnum),
+      wbInteger('Player Only', itU8, wbBoolEnum),
+      wbInteger('Prevent Use In Normal Combat', itU8, wbBoolEnum),
+      wbInteger('Is Secondary', itU8, wbBoolEnum),
+
+      wbInteger('Can''t Drop', itU8, wbBoolEnum),
+      wbInteger('Minor Crime', itU8, wbBoolEnum),
+      wbInteger('Non-Hostile', itU8, wbBoolEnum),
+      wbInteger('Bound', itU8, wbBoolEnum),
+
+      wbInteger('NPC Prefers Long Bursts', itU8, wbBoolEnum),
+      wbInteger('NPCs Only Fire When Magazine Full', itU8, wbBoolEnum),
+      wbInteger('Use Sequential Fire Nodes', itU8, wbBoolEnum),
+      wbInteger('Use Random Fire Nodes', itU8, wbBoolEnum)
+    ]),
+    wbStruct(WGEN, 'General', [
+      wbInteger('Type', itu32, wbTypeEnum),
+      wbFloat('Base weight'),
+      wbInteger('Base value', itu32),
+      wbFloat('Base Speed'),
+      wbFloat('Attack Oxygen Cost'),
+      wbFormIDCk('Weapon Barrel', [NULL, WBAR])
+    ]),
+    wbLStringKC(WABB, 'Abbreviation', 0, cpTranslate),
+    wbStruct(WMEL, 'Melee', [
+      wbInteger('Attack Speed', itU8, wbAttackSpeedEnum),
+      wbFloat('Bash Damage'),
+      wbFloat('Reach'),
+      wbInteger('Stagger', itU32, wbStaggerEnum)
+    ]),
+    wbStruct(QNAM, 'Power', [
+      { 0} wbFormIDCK('Power', [NULL, AVIF]),
+      { 4} wbFloat('Recharge time'),
+      { 8} wbFloat('Recharge delay'),
+      {12} wbInteger('Consume Ammo', itU8, wbBoolEnum),
+      {13} wbFormIDCK('Power - Bonus', [NULL, AVIF]),
+      {17} wbInteger('Use Power', itU8, wbBoolEnum),
+      {18} wbInteger('Variable Power Enabled', itU8, wbBoolEnum),
+      {19} wbFloat('Variable Power Transition Duration'),
+      {23} wbInteger('Use Charge Only In Focus Mode', itU8, wbBoolEnum),
+      {24} wbFormIDCK('Power Intensity Curve', [NULL, CURV]),
+      {28} wbFloat('Power Damage Multiplier'),
+      {32} wbFormIDCK('Power Consumption Multiplier Curve', [NULL, CURV])
+    ]),
+    wbStruct(WRLO, 'Reload', [
+      wbFloat('Reload Seconds'),
+      wbFloat('Reload Speed'),
+      wbInteger('Charging', itU8, wbBoolEnum),
+      wbInteger('Single', itU8, wbBoolEnum)
+    ]),
+    wbStruct(WVAR, 'Variable Range', [
+        wbStruct('Aperture', [
+          { 0} wbFloat('Value - Min'),
+          { 4} wbFloat('Value - Max'),
+          { 8} wbFloat('Input - Min'),
+          {12} wbFloat('Input - Max'),
+          {16} wbFloat('Acceleration'),
+          {20} wbFloat('Deceleration')
+        ]),
+        wbStruct('Distance', [
+          {24} wbFloat('Value - Min'),
+          {28} wbFloat('Value - Max'),
+          {32} wbFloat('Input - Min'),
+          {36} wbFloat('Input - Max'),
+          {40} wbFloat('Acceleration'),
+          {44} wbFloat('Deceleration')
+      ]),
+        {48} wbInteger('Use Variable Range', itU8, wbBoolEnum)
+    ]),
+    wbRStruct('1st Person Model', [
+      wbString(MOD4, 'Model FileName'),
+      wbUnknown(MO4C),
+      wbFLLD,
+      wbFloat(MO4S, 'Color Remapping Index')
+    ], []).IncludeFlag(dfAllowAnyMember),
+    wbStruct(WVIS, 'Art Visuals Data', [
+      wbStruct('First Person Offset', [                        //Data where used looks like three sets of 4, but this is speculation. Only ever has a value in the 4th of each set, and that value is always 128
+        { 0} wbFloat('X'),
+        { 4} wbFloat('Y'),
+        { 8} wbFloat('Z')
+      ]),
+      {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
+      {16} wbFloat('Color Remapping Index'),
+      {20} wbFormIDCK('Image Space Adapter', [NULL, IMAD])
+    ]),                 // impact colour, maybe? if so it's the same for all weaps in Starfield.esm
+    wbStruct(WTRM, 'Ship Weapon', [
+      { 0} wbFloat('Attack Action Point Cost'),
+      { 4} wbInteger('Override Default Camera Shake', itU8, wbBoolEnum),
+      { 5} wbFloat('Firing Camera Shake Intensity'),
+      { 9} wbFloat('Firing Camera Shake Duration'),
+      {13} wbFloat('AI Firing Arc')
+    ])
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WBAR, 'Weapon Barrel Model', [
+    wbEDID,
+    wbBaseFormComponents,
+    wbStruct(ZNAM, 'Data', [
+      wbInteger('Support Gun Down State', itU8, wbBoolEnum),
+      wbFloat('Distance From Wall'),
+      wbFloat('GunUp to GunDown Transition Duration (s)'),
+      wbFloat('GunDown to GunUp Transition Duration (s)')
+    ])
+  ]);
+
+  {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       9, 'Unknown 9'
@@ -21330,6 +21191,14 @@ end;
     wbFloat(WNAM, 'Visibility Mult')
       .SetDefaultNativeValue(1)
       .SetRequired  //Form Version 126+
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WTHS, 'Weather Settings', [
+    wbEDID,
+    wbREFL,
+    wbFormIDCk(RFDP, 'Reflection Parent', [WTHS]),
+    wbRDIF
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -21419,6 +21288,133 @@ end;
     wbWorldCellSizeData
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WWED, 'Wwise Event Data', [
+    wbEDID,
+    wbWwiseGuid(WSED, 'Start'),
+    wbFormIDCk(CNAM, 'Condition', [CNDF]),
+    wbWwiseGuid(WTED, 'End')
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(WKMF, 'Wwise Keyword Mapping', [
+    wbEDID,
+    wbInteger(WMTI, 'Mapping Template', itU16, wbEnum([
+      'Ship Engine',
+      'Cockpit',
+      'Grav Drive',
+      'Creature Anim'
+    ]), cpNormal, True)
+      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
+      begin
+        if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
+          Exit;
+        if aOldValue = aNewValue then
+          Exit;
+        if not Assigned(aElement) then
+          Exit;
+        var lContainer := aElement.Container;
+        var lSounds := lContainer.ElementByPath['Sound Item Details'];
+        if Assigned(lSounds) then
+          lSounds.Remove;
+        lContainer.Add('WMSS', True);
+      end),
+    wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True), // requires at least 1
+    wbInteger(WMSS, 'Count', itU32, nil, cpNormal, True).IncludeFlag(dfSkipImplicitEdit),
+    wbRStructs('Sound Item Details', 'Item Detail', [
+(** )  wbInteger('', itU16, wbEnum([], [
+          {0} 'Main Loop',
+          {1} 'Interior',
+          {2} 'Afterburner',
+          {3} 'Cockpit',
+          {4} 'Grav Jump Pending',
+          {5} 'Grav Jump Anim Started',
+          {6} 'Grav Jump Complete',
+          {7} 'Grav Jump Warmup',
+          {8} 'Creature Anim',
+          {9} 'Grav Jump Initiate'
+      ]), (**)
+(**)  wbUnion(WMSI, 'Sound ID', function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
+        {decider}
+        begin
+          Result := -1;
+          if not Assigned(aElement) then
+            Exit;
+          var lContainer := aElement.ContainingMainRecord;
+          var lType := lContainer.ElementNativeValues[WMTI];
+          if not VarIsOrdinal(lType) then
+            Exit;
+          Result := lType;
+        end, [
+        // 0 Ship Engine
+        wbInteger('', itU16, wbEnum([], [
+          0, 'Main Loop',
+          1, 'Interior',
+          2, 'Afterburner'
+        ]), cpNormal, True),
+        // 1 Cockpit
+        wbInteger('', itU16, wbEnum([], [
+          3, 'Cockpit'
+        ]), cpNormal, True).SetDefaultNativeValue(3),
+        // 2 Grav Drive
+        wbInteger('', itU16, wbEnum([], [
+          4, 'Grav Jump Pending',
+          5, 'Grav Jump Anim Started',
+          6, 'Grav Jump Complete',
+          7, 'Grav Jump Warmup',
+          9, 'Grav Jump Initiate'
+        ]), cpNormal, True).SetDefaultNativeValue(4),
+        // 3 Creature Anim
+        wbInteger('', itU16, wbEnum([], [
+          8, 'Creature Anim'
+        ]), cpNormal, True).SetDefaultNativeValue(8)
+      ]).IncludeFlag(dfUnionStaticResolve), (**)
+      wbStruct(WMSD, 'Unknown', [
+        wbSoundReference('Event/Conditions'),
+        wbArray('Switch Data List', wbStruct('Data', [
+          wbWwiseGuid('Switch Group'),
+          wbWwiseGuid('Switch State')
+        ]), -1)
+      ], cpNormal, True)
+    ], []).SetCountPath(WMSS)
+  ]);
+
+  {subrecords checked against Starfield.esm}
+  wbRecord(ZOOM, 'Zoom', [
+    wbEDID,
+    wbStruct(ZNAM, 'Data', [
+      wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
+      wbVec3('Camera Offset'),
+      wbFloat('FOV Mult'),
+      wbInteger('Overlay', itU8, wbEnum([
+        { 0} 'Default',
+        { 1} 'Fine',
+        { 2} 'Duplex',
+        { 3} 'German',
+        { 4} 'Dot',
+        { 5} 'Mil-Dot',
+        { 6} 'Circle',
+        { 7} 'Old Rangefind',
+        { 8} 'Modern Rangefind',
+        { 9} 'SVD',
+        {10} 'Hand Painted',
+        {11} 'Binoculars',
+        {12} 'Cross',
+        {13} 'Double Zero',
+        {14} 'Rangefinder 1',
+        {15} 'Rangefinder 2',
+        {16} 'Rectangle',
+        {17} 'Tactical 4x',
+        {18} 'Tactical 2x'
+      ])),
+      wbFloat('ADS Distance from Camera Offset'),
+      wbInteger('ADS Height Delay Enabled', itU8, wbBoolEnum),
+      wbFloat('ADS Height Delay S'),
+      wbInteger('ADS Depth Enabled', itU8, wbBoolEnum),
+      wbFloat('ADS Depth Delay S')
+    ])
+  ]);
 
   wbAddGroupOrder(GMST);
   wbAddGroupOrder(KYWD);
