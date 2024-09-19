@@ -19183,39 +19183,6 @@ begin
     wbString(SNAM, 'SWF Class Name')
   ]);
 
-  wbRecord(WSPR, 'Workshop Permissions', [
-    wbEDID,
-    wbFULL,
-    wbDESC,
-    wbStruct(DATA, 'Workshop Permissions', [
-      wbInteger('PermissionFlags', itU32, wbFlags([
-        'ACCESS_LOCKED_CONTAINERS',
-        'ACCESS_LOCKED_DOORS',
-        'ACCESS_LOCKED_TERMINALS',
-        'ACCESS_WORKSHOP_INVENTORY_WHEN_BUILDING',
-        'ACCESS_WORKSHOP_INVENTORY_WHEN_CRAFTING',
-        'ACCESS_WORKSHOP_INVENTORY_IN_TRANSFER_MENU',
-        'ACCESS_STORED_ITEMS_FOR_BUILDING',
-        'BUILD',
-        'LOCK_OWNED',
-        'LOCK_UNOWNED',
-        'MOVE_OWNED',
-        'MOVE_UNOWNED',
-        'REPAIR_OWNED',
-        'REPAIR_UNOWNED',
-        'SCRAP_OWNED',
-        'SCRAP_UNOWNED',
-        'STORE_OWNED',
-        'STORE_UNOWNED',
-        'REPLACE_OWNED',
-        'REPLACE_UNOWNED',
-        'WORKSHOP_AI_ARE_ALLIES',
-        'WORKSHOP_TRAPS_ARE_ALLIES'
-      ])),
-      wbByteArray('Unused', 4)
-    ])
-  ]);
-
   wbRecord(ENTM, 'Entitlement',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
@@ -19250,17 +19217,6 @@ begin
     wbFULL,
     wbDESC,
     wbKeywords
-  ]);
-
-  wbRecord(WAVE, 'Wave Encounter', [
-    wbEDID,
-    wbKeywords,
-    wbArray(WAVD, 'Wave Encounter Definitions', wbStruct('Wave Encounter Definition', [
-      wbInteger('Spawn Order', itU32),
-      wbFormID('Spawn Reference'),
-      wbInteger('Unknown', itU32)
-    ])),
-    wbUnknown(DNAM)
   ]);
 
   wbRecord(PMFT, 'Photo Mode Feature', [
@@ -19604,6 +19560,17 @@ begin
     wbUnknown(NAM7)
   ]);
 
+  wbRecord(WAVE, 'Wave Encounter', [
+    wbEDID,
+    wbKeywords,
+    wbArray(WAVD, 'Wave Encounter Definitions', wbStruct('Wave Encounter Definition', [
+      wbInteger('Spawn Order', itU32),
+      wbFormID('Spawn Reference'),
+      wbInteger('Unknown', itU32)
+    ])),
+    wbUnknown(DNAM)
+  ]);
+
   wbRecord(WEAP, 'Weapon',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
@@ -19918,6 +19885,39 @@ begin
     wbFloat(YNAM),
     wbFloat(KNAM),
     wbFloat(INAM)
+  ]);
+
+  wbRecord(WSPR, 'Workshop Permissions', [
+    wbEDID,
+    wbFULL,
+    wbDESC,
+    wbStruct(DATA, 'Workshop Permissions', [
+      wbInteger('PermissionFlags', itU32, wbFlags([
+        'ACCESS_LOCKED_CONTAINERS',
+        'ACCESS_LOCKED_DOORS',
+        'ACCESS_LOCKED_TERMINALS',
+        'ACCESS_WORKSHOP_INVENTORY_WHEN_BUILDING',
+        'ACCESS_WORKSHOP_INVENTORY_WHEN_CRAFTING',
+        'ACCESS_WORKSHOP_INVENTORY_IN_TRANSFER_MENU',
+        'ACCESS_STORED_ITEMS_FOR_BUILDING',
+        'BUILD',
+        'LOCK_OWNED',
+        'LOCK_UNOWNED',
+        'MOVE_OWNED',
+        'MOVE_UNOWNED',
+        'REPAIR_OWNED',
+        'REPAIR_UNOWNED',
+        'SCRAP_OWNED',
+        'SCRAP_UNOWNED',
+        'STORE_OWNED',
+        'STORE_UNOWNED',
+        'REPLACE_OWNED',
+        'REPLACE_UNOWNED',
+        'WORKSHOP_AI_ARE_ALLIES',
+        'WORKSHOP_TRAPS_ARE_ALLIES'
+      ])),
+      wbByteArray('Unused', 4)
+    ])
   ]);
 
   wbRecord(WRLD, 'Worldspace',
