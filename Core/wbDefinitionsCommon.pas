@@ -3442,8 +3442,8 @@ begin
       14, 'Rangefinder 1',
       15, 'Rangefinder 2',
       16, 'Rectangle',
-      17, IsFO76('Camera', IsSF1('Tactical 4x', '')),
-      18, IsFO76('Camera Medium Zoom', IsSF1('Tactical 2x', '')),
+      17, IsFO76('Camera', IsSF1('Standard Scope Circle', '')),
+      18, IsFO76('Camera Medium Zoom', ''),
       19, IsFO76('Camera Long Zoom', ''),
       20, IsFO76('Camera Night Vision', ''),
       21, IsFO76('Camera Targeting', '')

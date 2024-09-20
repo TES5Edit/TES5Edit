@@ -21407,17 +21407,22 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
+    wbBaseFormComponents,
     wbStruct(ZNAM, 'Data', [
       wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
-      wbVec3('Camera Offset'),
+      wbVec3('Geometry Offset'),
       wbFloat('FOV Mult')
         .SetDefaultNativeValue(1),
       wbInteger('Overlay', itU8, wbZoomOverlayEnum),
-      wbFloat('ADS Distance from Camera Offset'),
-      wbInteger('ADS Height Delay Enabled', itU8, wbBoolEnum),
-      wbFloat('ADS Height Delay S'),
-      wbInteger('ADS Depth Enabled', itU8, wbBoolEnum),
-      wbFloat('ADS Depth Delay S')
+      wbFloat('FOV Offset'),
+      wbStruct('Geometry', [
+        wbInteger('Override Offset', itU8, wbBoolEnum),
+        wbFloat('Offset Duration')
+      ]),
+      wbStruct('FOV', [
+        wbInteger('Override Offset', itU8, wbBoolEnum),
+        wbFloat('Offset Duration')
+      ])
     ]).SetRequired
   ]);
 
