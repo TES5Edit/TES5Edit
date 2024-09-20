@@ -14254,40 +14254,41 @@ end;
     wbFormIDCk(PERK, 'Skill/Perk', [PERK])
   ], False, wbINFOAddInfo, cpNormal, False, nil{wbINFOAfterLoad});
 
-  (* still exists in game code, but not in Starfield.esm * )
+  (*{still exists in game code, but not in Starfield.esm}
   wbRecord(INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
     wbOBND(True),
+    wbODTYReq,
+    wbOPDS,
+    wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbXALG,
+    wbBaseFormComponents,
     wbFULL,
     wbKeywords,
     wbGenericModel(True),
-    wbICON,
-    wbMICO,
-    wbDEST,
     wbETYP,
-    wbStruct(DATA, '', [
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
+    wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
       wbFloat('Weight')
-    ], cpNormal, True),
+    ]).SetRequired,
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Ingredient Value', itS32),
-      wbInteger('Flags', itU32, wbFlags([
-        {0x00000001} 'No auto-calculation',
-        {0x00000002} 'Food item',
-        {0x00000004} 'Unknown 3',
-        {0x00000008} 'Unknown 4',
-        {0x00000010} 'Unknown 5',
-        {0x00000020} 'Unknown 6',
-        {0x00000040} 'Unknown 7',
-        {0x00000080} 'Unknown 8',
-        {0x00000100} 'References Persist'
-      ])),
-      wbUnknown
-    ], cpNormal, True),
-    wbEffectsReq
-  ]);
-  (**)
+      wbInteger('Flags', itU32,
+        wbFlags(wbSparseFlags([
+          0, 'No auto-calculation',
+          1, 'Food item',
+          8, 'References Persist'
+        ], False, 9))
+      )
+    ]).SetRequired,
+    wbEffects
+  ]);*)
 
   wbRecord(KEYM, 'Key',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
