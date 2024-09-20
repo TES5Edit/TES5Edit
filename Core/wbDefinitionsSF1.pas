@@ -19959,8 +19959,7 @@ end;
         wbStruct('Position', [
           wbLatitudeDouble,
           wbLongitudeDouble
-        ])
-          .SetSummaryKey([0, 1])
+        ]).SetSummaryKey([0, 1])
           .SetSummaryMemberPrefixSuffix(0, '(', '')
           .SetSummaryMemberPrefixSuffix(1, '', ')')
           .SetSummaryDelimiter(', ')
@@ -19969,6 +19968,21 @@ end;
         wbFormIDCk('Worldspace', [WRLD])
       ])
     ).SetRequired,
+    wbArray(EOVR, 'Worldspaces',
+      wbStruct('Worldspace', [
+        wbStruct('Position', [
+          wbLatitudeDouble,
+          wbLongitudeDouble
+        ]).SetSummaryKey([0, 1])
+          .SetSummaryMemberPrefixSuffix(0, '(', '')
+          .SetSummaryMemberPrefixSuffix(1, '', ')')
+          .SetSummaryDelimiter(', ')
+          .IncludeFlag(dfSummaryMembersNoName)
+          .IncludeFlag(dfCollapsed, wbCollapsePosRot),
+        wbFormIDCk('Worldspace', [WRLD]),
+        wbByteArray('Unknown', 1)
+      ])
+    ),
     wbRArray('Biomes',
       wbStructSK(PPBD, [0], 'Biome', [
         wbFormIDCK('Biome', [BIOM]),

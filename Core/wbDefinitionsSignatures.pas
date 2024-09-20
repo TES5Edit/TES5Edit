@@ -460,6 +460,7 @@ const
   ENLS : TwbSignature = 'ENLS'; { New To Fallout 76 }
   ENLT : TwbSignature = 'ENLT'; { New To Fallout 76 }
   ENTM : TwbSignature = 'ENTM'; { New To Fallout 76 }
+  EOVR : TwbSignature = 'EOVR'; { New to Starfield }
   EPCD : TwbSignature = 'EPCD'; { New To Fallout 76 0.2.782.0 }
   EPEG : TwbSignature = 'EPEG'; { New To Fallout 76 0.2.782.0 }
   EPF2 : TwbSignature = 'EPF2';
