@@ -3146,33 +3146,6 @@ begin
   Result := PInteger(@value)^;
 end;
 
-function wbNOTEDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container  : IwbContainer;
-  rDNAM      : IwbElement;
-  i          : Integer;
-begin
-  Result := 0;
-  if not wbTryGetContainerFromUnion(aElement, Container) then
-    Exit;
-
-  Container := Container.Container;
-  if not Assigned(Container) then
-    Exit;
-
-  rDNAM := Container.ElementBySignature['DNAM'];
-  if not Assigned(rDNAM) then
-    Exit;
-
-  i := rDNAM.NativeValue;
-
-  case i of
-    0: Result := 1;
-    1: Result := 2;
-    3: Result := 3;
-  end;
-end;
-
 function wbSNDRDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container  : IwbContainer;

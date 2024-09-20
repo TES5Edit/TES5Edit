@@ -231,7 +231,7 @@ procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbWeatherCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-{>>> Union Deciders <<<} //13
+{>>> Union Deciders <<<} //14
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
@@ -240,6 +240,7 @@ function wbFormVersionDecider(aMinVersion, aMaxVersion: Integer): TwbUnionDecide
 function wbFormVersionDecider(const aVersions: array of Integer): TwbUnionDecider; overload;
 function wbModelInfoDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbNoFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbNoteTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
@@ -1991,7 +1992,7 @@ begin
   end;
 end;
 
-{>>> Union Deciders <<<} //13
+{>>> Union Deciders <<<} //14
 
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -2171,6 +2172,33 @@ begin
     Exit(1);
 
   Exit(0);
+end;
+
+function wbNoteTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  rDNAM      : IwbElement;
+  i          : Integer;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  Container := Container.Container;
+  if not Assigned(Container) then
+    Exit;
+
+  rDNAM := Container.ElementBySignature['DNAM'];
+  if not Assigned(rDNAM) then
+    Exit;
+
+  i := rDNAM.NativeValue;
+
+  case i of
+    0: Result := 1;
+    1: Result := 2;
+    3: Result := 3;
+  end;
 end;
 
 function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
