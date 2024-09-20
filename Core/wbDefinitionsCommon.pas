@@ -32,6 +32,7 @@ var
   wbQuestEventEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
   wbWorldImpactMaterialEnum: IwbEnumDef;
+  wbZoomOverlayEnum: IwbEnumDef;
 
   wbEmptyBaseFlags: IwbFlagsDef;
   wbRecordFlagsFlags: IwbFlagsDef;
@@ -276,12 +277,14 @@ function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; over
 function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsTES5(const aDef1, aDef2: Integer): Integer; overload;
 function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsSSE(const aDef1, aDef2: String): String; Overload;
+function IsSSE(const aDef1, aDef2: string): string; overload;
 function IsSSE(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef; Overload;
-function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsFO76(const aDef1, aDef2: string): string; overload;
 function IsSF1(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsSF1(const aDef1, aDef2: string): string; overload;
 
 {>>> Size IfThen Defs <<<} //4
 function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
@@ -2538,6 +2541,14 @@ begin
     Result := aDef2;
 end;
 
+function IsFO76(const aDef1, aDef2: string): string;
+begin
+  if wbIsFallout76 then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
 function IsSF1(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
   if wbIsStarfield then
@@ -2547,6 +2558,14 @@ begin
 end;
 
 function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef;
+begin
+  if wbIsStarfield then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
+function IsSF1(const aDef1, aDef2: string): string;
 begin
   if wbIsStarfield then
     Result := aDef1
@@ -3402,6 +3421,32 @@ begin
       'Dirt',
       'Grass',
       'Water'
+    ]);
+
+  wbZoomOverlayEnum :=
+    wbEnum([], [
+       0, 'Default',
+       1, 'Fine',
+       2, 'Duplex',
+       3, 'German',
+       4, 'Dot',
+       5, 'Mil-Dot',
+       6, 'Circle',
+       7, 'Old Rangefind',
+       8, 'Modern Rangefind',
+       9, 'SVD',
+      10, 'Hand Painted',
+      11, 'Binoculars',
+      12, 'Cross',
+      13, 'Double Zero',
+      14, 'Rangefinder 1',
+      15, 'Rangefinder 2',
+      16, 'Rectangle',
+      17, IsFO76('Camera', IsSF1('Tactical 4x', '')),
+      18, IsFO76('Camera Medium Zoom', IsSF1('Tactical 2x', '')),
+      19, IsFO76('Camera Long Zoom', ''),
+      20, IsFO76('Camera Night Vision', ''),
+      21, IsFO76('Camera Targeting', '')
     ]);
 
   wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [

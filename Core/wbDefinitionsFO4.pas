@@ -15932,25 +15932,7 @@ begin
     wbStruct(GNAM, 'Data', [
       wbFloat('FOV Mult')
         .SetDefaultNativeValue(1),
-      wbInteger('Overlay', itU32, wbEnum([
-        { 0} 'Default',
-        { 1} 'Fine',
-        { 2} 'Duplex',
-        { 3} 'German',
-        { 4} 'Dot',
-        { 5} 'Mil-Dot',
-        { 6} 'Circle',
-        { 7} 'Old Rangefind',
-        { 8} 'Modern Rangefind',
-        { 9} 'SVD',
-        {10} 'Hand Painted',
-        {11} 'Binoculars',
-        {12} 'Cross',
-        {13} 'Double Zero',
-        {14} 'Rangefinder 1',
-        {15} 'Rangefinder 2',
-        {16} 'Rectangle'
-      ])),
+      wbInteger('Overlay', itU32, wbZoomOverlayEnum),
       wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
       wbVec3('Camera Offset')
     ]).SetRequired
