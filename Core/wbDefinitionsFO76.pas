@@ -18419,18 +18419,20 @@ begin
     wbZNAM,
     wbKeywords,
     wbVCRY,
-    wbInteger(DNAM, 'Type', itU8, wbEnum([
-      'Sound',
-      'Voice',
-      'Program',
-      'Terminal'
-    ]), cpNormal, True),
-    wbStruct(DATA, '', [      // was DNAM before form version 65. Now holds value and weight
+    wbInteger(DNAM, 'Type', itU8,
+      wbEnum([
+        'Sound',
+        'Voice',
+        'Program',
+        'Terminal'
+      ])
+    ).SetRequired,
+    wbStruct(DATA, 'Attributes', [      // was DNAM before form version 65. Now holds value and weight
       wbInteger('Value', itU32),
       wbFloat('Weight')
     ]),
-    wbUnion(SNAM, 'Data', wbNOTEDataDecider, [
-      wbByteArray('Unused', 4),
+    wbUnion(SNAM, '', wbNoteTypeDecider, [
+      wbUnused(4),
       wbFormIDCk('Sound', [SNDR]),
       wbFormIDCk('Scene', [SCEN]),
       wbFormIDCk('Terminal', [TERM])
