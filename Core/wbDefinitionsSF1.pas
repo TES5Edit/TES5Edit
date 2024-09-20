@@ -18542,26 +18542,36 @@ end;
     wbLGDIFilter(DNAM, 'Exclude Filter')
   ]);
 
-  (* still exists in game code, but not in Starfield.esm * )
+  { still exists in game code, but not in Starfield.esm }
   wbRecord(NOTE, 'Note', [
     wbEDID,
     wbVMAD,
     wbOBND,
+    wbODTYReq,
+    wbOPDS,
     wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbDEFL,
+    wbXALG,
+    wbBaseFormComponents,
     wbFULL,
     wbGenericModel(True),
-    wbICON,
-    wbInteger(DNAM, 'Type', itU8, wbEnum([
-      'Sound',
-      'Voice',
-      'Program',
-      'Terminal'
-    ]), cpNormal, True),
-    wbStruct(DATA, '', [      // was DNAM before form version 65. Now holds value and weight
+    wbSoundReference(PUSH),
+    wbSoundReference(PDSH),
+    wbInteger(DNAM, 'Type', itU8,
+      wbEnum([
+        'Sound',
+        'Voice',
+        'Program',
+        'Terminal'
+      ])
+    ).SetRequired,
+    wbStruct(DATA, 'Attributes', [      // was DNAM before form version 65. Now holds value and weight
       wbInteger('Value', itU32),
       wbFloat('Weight')
     ]),
-    wbUnion(SNAM, 'Data', wbNOTEDataDecider, [
+    wbUnion(SNAM, 'Data', wbNoteTypeDecider, [
       wbUnused(4),
       wbFormIDCk('Sound', [SNDR]),
       wbFormIDCk('Scene', [SCEN]),
@@ -18569,7 +18579,6 @@ end;
     ]),
     wbString(PNAM, 'Program File')
   ]);
-  (**)
 
   {subrecords checked against Starfield.esm}
   wbRecord(OMOD, 'Object Modification',
