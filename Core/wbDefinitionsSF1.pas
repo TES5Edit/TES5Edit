@@ -21400,7 +21400,8 @@ end;
     wbStruct(ZNAM, 'Data', [
       wbFormIDCk('Image Space Modifier', [IMAD, NULL]),
       wbVec3('Camera Offset'),
-      wbFloat('FOV Mult'),
+      wbFloat('FOV Mult')
+        .SetDefaultNativeValue(1),
       wbInteger('Overlay', itU8, wbEnum([
         { 0} 'Default',
         { 1} 'Fine',
@@ -21427,7 +21428,7 @@ end;
       wbFloat('ADS Height Delay S'),
       wbInteger('ADS Depth Enabled', itU8, wbBoolEnum),
       wbFloat('ADS Depth Delay S')
-    ])
+    ]).SetRequired
   ]);
 
   wbAddGroupOrder(GMST);

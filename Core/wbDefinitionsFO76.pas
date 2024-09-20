@@ -19999,7 +19999,8 @@ begin
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
     wbStruct(GNAM, 'Data', [
-      wbFloat('FOV Mult'),
+      wbFloat('FOV Mult')
+        .SetDefaultNativeValue(1),
       wbInteger('Overlay', itU32, wbEnum([
         { 0} 'Default',
         { 1} 'Fine',
@@ -20025,14 +20026,12 @@ begin
         {21} 'Camera Targeting'
       ])),
       wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
-      wbStruct('Camera Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbFromVersion(187, wbFloat('FOVMultB')),
-      wbFromVersion(187, wbFloat('FOVMultC'))
-    ])
+      wbVec3('Camera Offset'),
+      wbFromVersion(187, wbFloat('FOVMultB')
+        .SetDefaultNativeValue(1)),
+      wbFromVersion(187, wbFloat('FOVMultC')
+        .SetDefaultNativeValue(1))
+    ]).SetRequired
   ]);
 
   wbAddGroupOrder(GMST);

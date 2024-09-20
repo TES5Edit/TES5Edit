@@ -15955,7 +15955,8 @@ begin
   wbRecord(ZOOM, 'Zoom', [
     wbEDID,
     wbStruct(GNAM, 'Data', [
-      wbFloat('FOV Mult'),
+      wbFloat('FOV Mult')
+        .SetDefaultNativeValue(1),
       wbInteger('Overlay', itU32, wbEnum([
         { 0} 'Default',
         { 1} 'Fine',
@@ -15976,12 +15977,8 @@ begin
         {16} 'Rectangle'
       ])),
       wbFormIDCk('Imagespace Modifier', [IMAD, NULL]),
-      wbStruct('Camera Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-    ])
+      wbVec3('Camera Offset')
+    ]).SetRequired
   ]);
 
    wbAddGroupOrder(GMST);
