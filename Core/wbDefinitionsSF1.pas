@@ -21324,83 +21324,58 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(WKMF, 'Wwise Keyword Mapping', [
     wbEDID,
-    wbInteger(WMTI, 'Mapping Template', itU16, wbEnum([
-      'Ship Engine',
-      'Cockpit',
-      'Grav Drive',
-      'Creature Anim'
-    ]), cpNormal, True)
-      .SetAfterSet(procedure(const aElement: IwbElement; const aOldValue, aNewValue: Variant)
-      begin
-        if not (VarIsOrdinal(aOldValue) and VarIsOrdinal(aNewValue)) then
-          Exit;
-        if aOldValue = aNewValue then
-          Exit;
-        if not Assigned(aElement) then
-          Exit;
-        var lContainer := aElement.Container;
-        var lSounds := lContainer.ElementByPath['Sound Item Details'];
-        if Assigned(lSounds) then
-          lSounds.Remove;
-        lContainer.Add('WMSS', True);
-      end),
-    wbArrayS(WMKA, 'Keywords', wbFormIDCk('Keyword', [KYWD]), 0, cpNormal, True), // requires at least 1
-    wbInteger(WMSS, 'Count', itU32, nil, cpNormal, True).IncludeFlag(dfSkipImplicitEdit),
-    wbRStructs('Sound Item Details', 'Item Detail', [
-(** )  wbInteger('', itU16, wbEnum([], [
-          {0} 'Main Loop',
-          {1} 'Interior',
-          {2} 'Afterburner',
-          {3} 'Cockpit',
-          {4} 'Grav Jump Pending',
-          {5} 'Grav Jump Anim Started',
-          {6} 'Grav Jump Complete',
-          {7} 'Grav Jump Warmup',
-          {8} 'Creature Anim',
-          {9} 'Grav Jump Initiate'
-      ]), (**)
-(**)  wbUnion(WMSI, 'Sound ID', function(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer
-        {decider}
-        begin
-          Result := -1;
-          if not Assigned(aElement) then
-            Exit;
-          var lContainer := aElement.ContainingMainRecord;
-          var lType := lContainer.ElementNativeValues[WMTI];
-          if not VarIsOrdinal(lType) then
-            Exit;
-          Result := lType;
-        end, [
-        // 0 Ship Engine
-        wbInteger('', itU16, wbEnum([], [
-          0, 'Main Loop',
-          1, 'Interior',
-          2, 'Afterburner'
-        ]), cpNormal, True),
-        // 1 Cockpit
-        wbInteger('', itU16, wbEnum([], [
-          3, 'Cockpit'
-        ]), cpNormal, True).SetDefaultNativeValue(3),
-        // 2 Grav Drive
-        wbInteger('', itU16, wbEnum([], [
-          4, 'Grav Jump Pending',
-          5, 'Grav Jump Anim Started',
-          6, 'Grav Jump Complete',
-          7, 'Grav Jump Warmup',
-          9, 'Grav Jump Initiate'
-        ]), cpNormal, True).SetDefaultNativeValue(4),
-        // 3 Creature Anim
-        wbInteger('', itU16, wbEnum([], [
-          8, 'Creature Anim'
-        ]), cpNormal, True).SetDefaultNativeValue(8)
-      ]).IncludeFlag(dfUnionStaticResolve), (**)
-      wbStruct(WMSD, 'Unknown', [
-        wbSoundReference('Event/Conditions'),
-        wbArray('Switch Data List', wbStruct('Data', [
-          wbWwiseGuid('Switch Group'),
-          wbWwiseGuid('Switch State')
-        ]), -1)
-      ], cpNormal, True)
+    wbInteger(WMTI, 'Mapping Template', itU16,
+      wbEnum([
+        'Ship Engine',
+        'Cockpit',
+        'Grav Drive',
+        'Creature Anim'
+      ])
+    ).SetAfterSet(wbWwiseKeywordMappingTemplateAfterSet)
+     .SetRequired,
+    wbArrayS(WMKA, 'Keywords',
+      wbFormIDCk('Keyword', [KYWD])
+    ).SetRequired,
+    wbInteger(WMSS, 'Count', itU32)
+      .IncludeFlag(dfSkipImplicitEdit),
+    wbRStructs('Sound Mappings', 'Sound Mapping', [
+      wbUnion(WMSI, 'Sound ID', wbWwiseKeywordMappingSoundDecider, [
+        wbInteger('', itU16,
+          wbEnum([], [ // 0 Ship Engine
+            0, 'Main Loop',
+            1, 'Interior',
+            2, 'Afterburner'
+          ])
+        ),
+        wbInteger('', itU16,
+          wbEnum([], [ // 1 Cockpit
+            3, 'Cockpit'
+          ])
+        ).SetDefaultNativeValue(3),
+        wbInteger('', itU16,
+          wbEnum([], [ // 2 Grav Drive
+            4, 'Grav Jump Pending',
+            5, 'Grav Jump Anim Started',
+            6, 'Grav Jump Complete',
+            7, 'Grav Jump Warmup',
+            9, 'Grav Jump Initiate'
+          ])
+        ).SetDefaultNativeValue(4),
+        wbInteger('', itU16,
+          wbEnum([], [ // 3 Creature Anim
+            8, 'Creature Anim'
+          ])
+        ).SetDefaultNativeValue(8)
+      ]).IncludeFlag(dfUnionStaticResolve),
+      wbStruct(WMSD, 'Sounds', [
+        wbSoundReference,
+        wbArray('Switch Data List',
+          wbStruct('Data', [
+            wbWwiseGuid('Switch Group'),
+            wbWwiseGuid('Switch State')
+          ]),
+        -1)
+      ]).SetRequired
     ], []).SetCountPath(WMSS)
   ]);
 

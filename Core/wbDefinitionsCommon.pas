@@ -115,7 +115,7 @@ function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 procedure wbKeywordsAfterLoad(const aElement: IwbElement);
 procedure wbWorldAfterLoad(const aElement: IwbElement);
 
-{>>> After Set Callbacks <<<} //29
+{>>> After Set Callbacks <<<} //30
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbBODCsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbBODSsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -145,6 +145,7 @@ procedure wbTERMDisplayItemsAfterSet(const aElement: IwbElement; const aOldValue
 procedure wbTERMMenuItemsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbWorldAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+procedure wbWwiseKeywordMappingTemplateAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
 {>>> Count Callbacks <<<} //7
 function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -232,7 +233,7 @@ procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; c
 function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbWeatherCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-{>>> Union Deciders <<<} //14
+{>>> Union Deciders <<<} //15
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
@@ -247,6 +248,7 @@ function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(const aSizes: array of Integer): TwbUnionDecider; overload;
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbWwiseKeywordMappingSoundDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
 {>>> VarRecs <<<} //2
 function wbCombineVarRecs(const a, b : array of const): TwbVarRecs;
@@ -485,7 +487,7 @@ begin
   end;
 end;
 
-{>>> After Set Callbacks <<<} //29
+{>>> After Set Callbacks <<<} //30
 
 procedure wbATANsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
@@ -776,6 +778,21 @@ begin
   finally
     wbEndInternalEdit
   end;
+end;
+
+procedure wbWwiseKeywordMappingTemplateAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
+var
+  Container : IwbContainer;
+  Sounds : IwbElement;
+begin
+  if not Assigned(aElement) then
+    Exit;
+  if aOldValue = aNewValue then
+    Exit;
+  Container := aElement.Container;
+  Sounds := Container.ElementByPath['Sound Mappings'];
+  if Assigned(Sounds) then
+    Sounds.Remove;
 end;
 
 {>>> Count Callbacks <<<} //7
@@ -1995,7 +2012,7 @@ begin
   end;
 end;
 
-{>>> Union Deciders <<<} //14
+{>>> Union Deciders <<<} //15
 
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -2293,6 +2310,13 @@ end;
 function wbScriptObjFormatDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := wbGetScriptObjFormat(aElement);
+end;
+
+function wbWwiseKeywordMappingSoundDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  If not Assigned(aElement) then
+    Exit;
+  Result := aElement.ContainingMainRecord.ElementNativeValues[WMTI];
 end;
 
 {>>> VarRecs <<<} //2
