@@ -18099,23 +18099,25 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(AMDL, 'Aim Model', [
     wbEDID,
+    wbBaseFormComponents,
     wbStruct(ANAM, 'Data', [
-       wbFloat('Cone of Fire - Min Angle'),
-       wbFloat('Cone of Fire - Max Angle'),
+       wbFloat('Cone of Fire - Degrees X'),
+       wbFloat('Cone of Fire - Degrees Y'),
        wbFloat('Cone of Fire - Increase Per Shot'),
        wbFloat('Cone of Fire - Decrease Per Sec'),
        wbFloat('Cone of Fire - Decrease Delay in Sec'),
        wbFloat('Cone of Fire - Sneak Mult'),
        wbFloat('Recoil - Diminish Spring Force'),
        wbFloat('Recoil - Diminish Sights Mult'),
-       wbFloat('Recoil - Min Per Shot'),
-       wbFloat('Recoil - Max Per Shot'),
+       wbFloat('Recoil - Degrees Per Shot X'),
+       wbFloat('Recoil - Degrees Per Shot Y'),
        wbFloat('Recoil - Hip Mult'),
-       wbInteger('Runaway - Recoil Shots', itU32),
+       wbInteger('Recoil - Shots for Runaway', itU32),
        wbFloat('Recoil - Arc'),
        wbFloat('Recoil - Arc Rotate'),
        wbFloat('Cone of Fire - Iron Sights Mult'),
-       wbFloat('Stability - Base Stability')
+       wbFloat('Recoil - Base Stability'),
+       wbInteger('Cone of Fire Ignores Movement', itU8, wbBoolEnum)
     ])
   ]);
 
