@@ -8442,7 +8442,7 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbFULL,
     wbDESCReq,
-    wbString(ICON, 'Image FileName', 0, cpNormal, True),
+    wbString(ICON, 'Image FileName'),
     wbString(ANAM, 'Abbreviation'),
     wbInteger(CNAM, 'Skill Category', itU32, wbEnum([
       'None',
@@ -8458,17 +8458,17 @@ Can't properly represent that with current record definition methods.
     ]),
     wbRArray('Perk Tree',
       wbRStruct('Node', [
-        wbFormIDCk(PNAM, 'Perk', [PERK, NULL]),
-        wbUnknown(FNAM),
-        wbInteger(XNAM, 'Perk-Grid X', itU32),
-        wbInteger(YNAM, 'Perk-Grid Y', itU32),
-        wbFloat(HNAM, 'Horizontal Position'),
-        wbFloat(VNAM, 'Vertical Position'),
-        wbFormIDCk(SNAM, 'Associated Skill', [AVIF, NULL]),
+        wbFormIDCk(PNAM, 'Perk', [PERK, NULL], False, cpNormal, True),
+        wbUnknown(FNAM).SetRequired,
+        wbInteger(XNAM, 'Perk-Grid X', itU32, nil, cpNormal, True),
+        wbInteger(YNAM, 'Perk-Grid Y', itU32, nil, cpNormal, True),
+        wbFloat(HNAM, 'Horizontal Position', cpNormal, True),
+        wbFloat(VNAM, 'Vertical Position', cpNormal, True),
+        wbFormIDCk(SNAM, 'Associated Skill', [AVIF, NULL], False, cpNormal, True),
         wbRArray('Connections', wbInteger(CNAM, 'Line to Index', itU32)),
-        wbInteger(INAM, 'Index', itU32)
+        wbInteger(INAM, 'Index', itU32, nil, cpNormal, True)
       ], [])
-    )
+    ).IncludeFlag(dfNoMove)
   ]);
 
   wbRecord(CAMS, 'Camera Shot', [
