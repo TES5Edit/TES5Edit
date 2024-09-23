@@ -4047,6 +4047,7 @@ begin
       wbWeatherTimeOfDay('Layer'),
     [], wbWeatherCloudColorsCounter)
       .IncludeFlagOnValue(dfArrayStaticSize)
+      .IncludeFlagOnValue(dfFastAssign)
       .IncludeFlagOnValue(dfNotAlignable)
       .SetRequired;
 
