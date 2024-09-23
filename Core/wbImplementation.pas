@@ -15450,6 +15450,8 @@ begin
 
   if not Assigned(srDef) then
     Exit;
+  if GetDontShow then
+    Exit;
   DoInit(False);
 
   if Assigned(srValueDef) then

@@ -8468,13 +8468,6 @@ Can't properly represent that with current record definition methods.
               // only worry about the root array node where the INAM index is 0 and the PNAM is NULL
               if (lContainer.Container.Elements[0].Equals(lContainer)) and (lContainer.ElementByPath['PNAM'].NativeValue = 0) and (lContainer.ElementByPath['INAM'].NativeValue = 0) then
                 Result := True;
-            end)
-          .SetToStr(procedure(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType)
-            begin
-              if not Assigned(aElement) then exit;
-              case aType of
-                ctCheck: if aElement.DontShow then aValue := '';
-              end;
             end),
         wbInteger(XNAM, 'Perk-Grid X', itU32, nil, cpNormal, True),
         wbInteger(YNAM, 'Perk-Grid Y', itU32, nil, cpNormal, True),
