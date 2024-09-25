@@ -37,6 +37,7 @@ var
   wbEmptyBaseFlags: IwbFlagsDef;
   wbRecordFlagsFlags: IwbFlagsDef;
 
+  wbActionFlag: IwbRecordMemberDef;
   wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
   wbCinematicIMAD: IwbRecordMemberDef;
@@ -44,23 +45,21 @@ var
   wbDMDT: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
+  wbHEDR: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
-  wbKWDAs: IwbSubRecordDef;
+  wbKWDAs: IwbRecordMemberDef;
   wbKeywords :IwbRecordMemberDef;
+  wbMagicEffectSounds: IwbRecordMemberDef;
+  wbMDOB: IwbRecordMemberDef;
+  wbMHDTCELL: IwbRecordMemberDef;
   wbMODT: IwbRecordMemberDef;
+  wbRegionSounds: IwbRecordMemberDef;
+  wbSeasons: IwbRecordMemberDef;
   wbSoundDescriptorSounds: IwbRecordMemberDef;
   wbSoundTypeSounds: IwbRecordMemberDef;
-
-  wbActionFlag: IwbSubRecordDef;
-  wbHEDR: IwbSubRecordDef;
-  wbMagicEffectSounds: IwbSubRecordDef;
-  wbMDOB: IwbSubRecordDef;
-  wbMHDTCELL: IwbRecordMemberDef;
-  wbRegionSounds: IwbSubRecordDef;
-  wbSeasons: IwbSubRecordDef;
-  wbStaticPartPlacements: IwbSubRecordDef;
-  wbXLOD: IwbSubRecordDef;
+  wbStaticPartPlacements: IwbRecordMemberDef;
+  wbXLOD: IwbRecordMemberDef;
 
   wbAlternateTexture: IwbValueDef;
   wbColorInterpolator: IwbValueDef;
