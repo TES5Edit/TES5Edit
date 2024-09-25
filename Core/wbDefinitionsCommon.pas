@@ -1205,41 +1205,42 @@ end;
 
 function wbWorldLandDataIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
-        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $01 = 1);
+  Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $01 = 1);
 end;
 
 function wbWorldLODDataIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
-        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $02 = 2);
+  Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $02 = 2);
 end;
 
 function wbWorldMapDataIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
-        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $04 = 4)
-         or Assigned(aElement.ContainingMainRecord.ElementBySignature[WNAM]);
+  if wbIsOblivion then
+    Result := Assigned(aElement.ContainingMainRecord.RecordBySignature[WNAM])
+  else
+    Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $04 = 4);
 end;
 
 function wbWorldWaterIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
-        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $08 = 8)
-         or Assigned(aElement.ContainingMainRecord.ElementBySignature[WNAM]);
+  if wbIsOblivion then
+    Result := Assigned(aElement.ContainingMainRecord.RecordBySignature[WNAM])
+  else
+    Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $08 = 8);
 end;
 
 function wbWorldClimateIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
-        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $10 = 16)
-         or Assigned(aElement.ContainingMainRecord.ElementBySignature[WNAM]);
+  if wbIsOblivion then
+    Result := Assigned(aElement.ContainingMainRecord.RecordBySignature[WNAM])
+  else
+    Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $10 = 16);
 end;
 
 function wbWorldImageSpaceIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := Assigned(aElement.ContainingMainRecord.ElementByPath['Parent Worldspace'])
-        and (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $20 = 32);
+  Result :=
+    (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $20 = 32);
 end;
 
 {>>> Links To Callbacks <<<} //1
