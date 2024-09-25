@@ -45,6 +45,7 @@ var
   wbDMDT: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
+  wbEnchantment : IwbRecordMemberDef;
   wbHEDR: IwbRecordMemberDef;
   wbINOA: IwbRecordMemberDef;
   wbINOM: IwbRecordMemberDef;
@@ -3542,6 +3543,18 @@ begin
     {0x40000000} {30} 'Unknown 30',
     {0x80000000} {31} 'Unknown 31'
   ]);
+
+  wbEnchantment :=
+    wbRStruct('Enchantment', [
+      IsTES4(
+        wbFormIDCk(ENAM, 'Effect', [ENCH]),
+        wbFormIDCK(EITM, 'Effect', [ENCH])
+      ),
+      IsTES4(
+        wbInteger(ANAM, 'Capacity', itU16),
+        wbInteger(EAMT, 'Capacity', itU16)
+      )
+    ], []).IncludeFlag(dfAllowAnyMember);
 
   wbHEDR :=
     wbStruct(HEDR, 'Header', [
