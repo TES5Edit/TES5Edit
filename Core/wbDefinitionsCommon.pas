@@ -71,8 +71,6 @@ var
   wbPosRot: IwbValueDef;
   wbTimeInterpolator: IwbValueDef;
 
-  wbQuestEventVarRecs: TwbVarRecs;
-
   wbLandNormals: IwbRecordMemberDef;
   wbLandHeights: IwbRecordMemberDef;
   wbLandColors: IwbRecordMemberDef;
@@ -280,6 +278,7 @@ function IsFO3(const aDef1, aDef2: Integer): Integer; overload;
 function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsTES5(const aDef1, aDef2: String): string; overload;
 function IsTES5(const aDef1, aDef2: Integer): Integer; overload;
 function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsSSE(const aDef1, aDef2: string): string; overload;
@@ -2521,6 +2520,14 @@ begin
     Result := aDef2;
 end;
 
+function IsTES5(const aDef1, aDef2: String): string;
+begin
+  if wbIsSkyrimSE then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
 function IsTES5(const aDef1, aDef2: Integer): Integer;
 begin
   if wbIsSkyrim then
@@ -3668,7 +3675,57 @@ begin
       {3} 'Top Right'
     ]);
 
-  wbQuestEventEnum := wbEnum([], wbQuestEventVarRecs);
+  wbQuestEventEnum :=
+    wbEnum([], [                                                      //Confirmed Exists in the following games
+      Sig2Int('ADBO'), IsFO76('Bounty Event', ''),                    //        ,FO76
+      Sig2Int('ADCR'), 'Crime Gold Event',                            //TES5,FO4     ,SF1
+      Sig2Int('ADIA'), 'Actor Dialogue Event',                        //TES5,FO4,FO76,SF1
+      Sig2Int('AFAV'), 'Player Activate Actor',                       //TES5,FO4
+      Sig2Int('AHEL'), 'Actor Hello Event',                           //TES5,FO4     ,SF1
+      Sig2Int('AIPL'), 'Player Add Item',                             //TES5,FO4     ,SF1
+      Sig2Int('AOBJ'), IsTES5('', 'Attraction Object Event'),         //    ,FO4     ,SF1
+      Sig2Int('ARRT'), 'Arrest Event',                                //TES5,FO4
+      Sig2Int('ASSU'), 'Assault Actor Event',                         //TES5,FO4     ,SF1
+      Sig2Int('BRIB'), 'Bribe',                                       //TES5,FO4
+      Sig2Int('CAST'), 'Cast Magic Event',                            //TES5,FO4
+      Sig2Int('CBGN'), IsFO76('Caravan Begin Event', ''),             //        ,FO76
+      Sig2Int('CHRR'), 'Change Relationship Rank',                    //TES5,FO4
+      Sig2Int('CLOC'), 'Change Location Event',                       //TES5,FO4,FO76,SF1
+      Sig2Int('CLRL'), IsTES5('', 'Clear Location Event'),            //    ,FO4
+      Sig2Int('CRFT'), 'Craft Item',                                  //TES5,FO4
+      Sig2Int('CURE'), 'Player Cured',                                //TES5,FO4
+      Sig2Int('DEAD'), 'Dead Body',                                   //TES5,FO4
+      Sig2Int('DOCK'), IsSF1('Ship Docking', ''),                     //             ,SF1
+      Sig2Int('ESJA'), 'Escape Jail',                                 //TES5,FO4
+      Sig2Int('FLAT'), 'Flatter',                                     //TES5,FO4
+      Sig2Int('HACK'), IsTES5('', 'Hack Computer'),                   //    ,FO4,FO76,SF1
+      Sig2Int('ILOC'), IsFO76('Instanced Location Created Event', ''),//        ,FO76
+      Sig2Int('INFC'), 'Player Infected',                             //TES5,FO4
+      Sig2Int('INTM'), 'Intimidate',                                  //TES5,FO4
+      Sig2Int('IRON'), IsTES5('', 'Iron Sights'),                     //    ,FO4     ,SF1
+      Sig2Int('JAIL'), 'Jail Event',                                  //TES5,FO4
+      Sig2Int('KILL'), 'Kill Actor Event',                            //TES5,FO4,FO76
+      Sig2Int('LAND'), IsSF1('Ship Landing', ''),                     //             ,SF1
+      Sig2Int('LCLD'), IsTES5('','Location Loaded'),                  //    ,FO4,FO76,SF1
+      Sig2Int('LCPG'), IsFO76('LCP Global Value Event', ''),          //        ,FO76
+      Sig2Int('LEVL'), 'Increase Level',                              //TES5,FO4,FO76,SF1
+      Sig2Int('LOCK'), 'Lock Pick',                                   //TES5,FO4,FO76,SF1
+      Sig2Int('NVPE'), 'New Voice Power',                             //TES5,FO4
+      Sig2Int('OAAT'), IsTES5('', 'On Actor Attach'),                 //    ,FO4     ,SF1
+      Sig2Int('PCON'), IsFO76('Player Connect', ''),                  //        ,FO76
+      Sig2Int('PFIN'), 'Pay Fine Event',                              //TES5,FO4
+      Sig2Int('PICK'), IsTES5('', 'Pickpocket'),                      //    ,FO4
+      Sig2Int('PRFV'), 'Player Recieves Favor',                       //TES5,FO4
+      Sig2Int('QPMT'), IsFO76('QuickPlay Match Event', ''),           //        ,FO76
+      Sig2Int('QSTR'), 'Quest Start',                                 //TES5
+      Sig2Int('REMP'), 'Player Remove Item',                          //TES5,FO4,FO76,SF1
+      Sig2Int('SCPT'), 'Script Event',                                //TES5,FO4,FO76,SF1
+      Sig2Int('SKIL'), IsTES5('Skill Increase', ''),                  //TES5
+      Sig2Int('STIJ'), 'Served Time',                                 //TES5,FO4
+      Sig2Int('TMEE'), IsTES5('', 'Trigger Mine Explosion Event'),    //    ,FO4,FO76,SF1
+      Sig2Int('TRES'), 'Trespass Actor Event',                        //TES5,FO4
+      Sig2Int('XPLL'), IsSF1('Clear Location (SF)', '')               //             ,SF1
+    ]);
 
   wbSexEnum :=
     wbEnum(['Male','Female']);
@@ -3961,53 +4018,6 @@ begin
 
   wbPosRot :=
     wbVec3PosRot;
-
-  wbQuestEventVarRecs := wbMakeVarRecs([
-    Sig2Int(ADBO), 'Bounty Event',
-    Sig2Int(ADCR), 'Crime Gold Event',
-    Sig2Int(ADIA), 'Actor Dialogue Event',
-    Sig2Int(AFAV), 'Player Activate Actor',
-    Sig2Int(AHEL), 'Actor Hello Event',
-    Sig2Int(AIPL), 'Player Add Item',
-    Sig2Int(AOBJ), 'Attraction Object Event',
-    Sig2Int(ARRT), 'Arrest Event',
-    Sig2Int(ASSU), 'Assault Actor Event',
-    Sig2Int(BRIB), 'Bribe',
-    Sig2Int(CAST), 'Cast Magic Event',
-    Sig2Int(CBGN), 'Caravan Begin Event',
-    Sig2Int(CHRR), 'Change Relationship Rank',
-    Sig2Int(CLOC), 'Change Location Event',
-    Sig2Int(CLRL), 'Clear Location Event',
-    Sig2Int(CRFT), 'Craft Item',
-    Sig2Int(CURE), 'Player Cured',
-    Sig2Int(DEAD), 'Dead Body',
-    Sig2Int(ESJA), 'Escape Jail',
-    Sig2Int(FLAT), 'Flatter',
-    Sig2Int(HACK), 'Hack Computer',
-    Sig2Int(ILOC), 'Instanced Location Created Event',
-    Sig2Int(INFC), 'Player Infected',
-    Sig2Int(INTM), 'Intimidate',
-    Sig2Int(IRON), 'Iron Sights',
-    Sig2Int(JAIL), 'Jail Event',
-    Sig2Int(KILL), 'Kill Actor Event',
-    Sig2Int(LCLD), 'Location Loaded',
-    Sig2Int(LCPG), 'LCP Global Value Event',
-    Sig2Int(LEVL), 'Increase Level',
-    Sig2Int(LOCK), 'Lock Pick',
-    Sig2Int(NVPE), 'New Voice Power',
-    Sig2Int(OAAT), 'On Actor Attach',
-    Sig2Int(PCON), 'Player Connect',
-    Sig2Int(PFIN), 'Pay Fine Event',
-    Sig2Int(PRFV), 'Player Recieves Favor',
-    Sig2Int(QPMT), 'QuickPlay Match Event',
-    Sig2Int(QSTR), 'Quest Start',
-    Sig2Int(REMP), 'Player Remove Item',
-    Sig2Int(SCPT), 'Script Event',
-    Sig2Int(SKIL), 'Skill Increase',
-    Sig2Int(STIJ), 'Served Time',
-    Sig2Int(TMEE), 'Trigger Mine Explosion Event',
-    Sig2Int(TRES), 'Trespass Actor Event'
-  ]);
 
   wbSeasons :=
     wbStruct(PFPC, 'Seasonal ingredient production', [

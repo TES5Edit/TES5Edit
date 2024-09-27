@@ -13088,14 +13088,6 @@ end;
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ]);
 
-  var lQuestEventVarRecsSF1 := wbMakeVarRecs([
-    Sig2Int(LAND), 'Ship Landing',
-    Sig2Int(DOCK), 'Ship Docking',
-    Sig2Int(XPLL), 'Clear Location (SF)'
-  ]);
-
-  var wbQuestEventEnumSF1 := wbEnum([], wbCombineVarRecs(wbQuestEventVarRecs, lQuestEventVarRecsSF1));
-
   {subrecords checked against Starfield.esm}
   wbRecord(SMEN, 'Story Manager Event Node', [
     wbEDID,
@@ -13105,7 +13097,7 @@ end;
     wbCTDAsCount,
     wbInteger(DNAM, 'Flags', itU32, wbSMNodeFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
-    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnumSF1)
+    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
   ])
     .SetSummaryKey([7]);
 
@@ -16220,7 +16212,7 @@ end;
             wbFormIDCk(ALRT, 'Ref Type', [LCRT]).SetRequired
           ], []),
       {3} wbRStruct('Find Matching Reference From Event', [
-            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnumSF1),
+            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum).SetRequired
           ], []),
       {4} wbRStruct('Create Reference to Object', [
@@ -16327,7 +16319,7 @@ end;
             wbFormIDCk(KNAM, 'Keyword', [KYWD])
           ], []),
       {3} wbRStruct('Find Matching Location From Event', [
-            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnumSF1),
+            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
             wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
           ], []),
       {5} wbRStruct('External Alias Location', [
