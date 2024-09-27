@@ -34,7 +34,6 @@ var
   wbCriticalStageEnum: IwbEnumDef;
   wbEquipTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbHeadPartIndexEnum: IwbEnumDef;
   wbMenuModeEnum: IwbEnumDef;
   wbMiscStatEnum: IwbEnumDef;

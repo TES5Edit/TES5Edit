@@ -37,7 +37,6 @@ var
   wbEventFunctionEnum: IwbEnumDef;
   wbEventMemberEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbFurnitureAnimTypeEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
   wbMapMarkerEnum: IwbEnumDef;
@@ -105,11 +104,6 @@ var
   wbMO2S: IwbSubRecordDef;
   wbMO3S: IwbSubRecordDef;
   wbMO4S: IwbSubRecordDef;
-  wbMaleWorldModel: IwbRecordMemberDef;
-  wbARMOFemaleWorldModel: IwbRecordMemberDef;
-  wbARMAFemaleWorldModel: IwbRecordMemberDef;
-  wbARMAMale1stPersonModel: IwbRecordMemberDef;
-  wbARMAFemale1stPersonModel: IwbRecordMemberDef;
   wbCTDA: IwbRecordMemberDef;
   wbCTDAs: IwbSubRecordArrayDef;
   wbCTDAsReq: IwbSubRecordArrayDef;

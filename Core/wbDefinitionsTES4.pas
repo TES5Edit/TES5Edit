@@ -21,7 +21,6 @@ var
 
   wbCrimeTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
-  wbFunctionsEnum: IwbEnumDef;
   wbMagicSchoolEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbOBMEResolutionInfo: IwbEnumDef;
