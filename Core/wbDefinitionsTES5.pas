@@ -5078,7 +5078,7 @@ begin
     wbGenericModel,
     wbDEST,
     wbKeywords,
-    wbByteColors(PNAM, 'Marker Color'),
+    wbByteColors(PNAM, 'Marker Color').SetRequired,
     wbFormIDCk(SNAM, 'Sound - Looping', [SNDR]),
     wbFormIDCk(VNAM, 'Sound - Activation', [SNDR]),
     wbFormIDCk(WNAM, 'Water Type', [WATR]),
@@ -5086,7 +5086,7 @@ begin
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox'
-    ])),
+    ])).SetRequired,
     wbFormIDCk(KNAM, 'Interaction Keyword', [KYWD])
   ]);
 
@@ -5970,7 +5970,7 @@ begin
     wbFormIDCk(BAMT, 'Alternate Block Material', [MATT]),
     wbFormIDCk(RNAM, 'Race', [RACE]),
     wbKeywords,
-    wbDESC,
+    wbDESC.SetRequired,
     wbRArray('Armature', wbFormIDCK(MODL, 'Model Filename', [ARMA, NULL])),
     wbStruct(DATA, 'Data', [
       wbInteger('Value', itS32),
@@ -6440,16 +6440,16 @@ begin
       wbFloat('Bash Attack Mult'),
       wbFloat('Bash Power Attack Mult'),
       wbFloat('Special Attack Mult')
-    ], cpNormal, False, nil, 0),
+    ], cpNormal, True, nil, 0),
     wbStruct(CSCR, 'Close Range', [
       wbFloat('Circle Mult'),
       wbFloat('Fallback Mult'),
       wbFloat('Flank Distance'),
       wbFloat('Stalk Time')
-    ], cpNormal, False, nil, 0),
+    ], cpNormal, True, nil, 0),
     wbStruct(CSLR, 'Long Range', [
       wbFloat('Strafe Mult')
-    ], cpNormal, False),
+    ]).SetRequired,
     wbStruct(CSFL, 'Flight', [
       wbFloat('Hover Chance'),
       wbFloat('Dive Bomb Chance'),
@@ -6459,12 +6459,12 @@ begin
       wbFloat('Perch Attack Chance'),
       wbFloat('Perch Attack Time'),
       wbFloat('Flying Attack Chance')
-    ], cpNormal, False, nil, 0),
+    ], cpNormal, True, nil, 0),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x01} 'Dueling',
       {0x02} 'Flanking',
       {0x04} 'Allow Dual Wielding'
-    ]), cpNormal, False)
+    ])).SetRequired
   ]);
 
   wbSubtypeNamesEnum := wbEnum([], [
@@ -7014,7 +7014,7 @@ begin
       {02} wbFloat('Steal Multiplier'),
       {02} wbInteger('Escape', itU16),
       {02} wbInteger('Werewolf', itU16)
-      ], cpNormal, False, nil, 7),
+      ], cpNormal, False, nil, 7).SetRequired,
     wbRArrayS('Ranks', wbFactionRank),
     wbFormIDCk(VEND, 'Vendor Buy/Sell List', [FLST]),
     wbFormIDCk(VENC, 'Merchant Container', [REFR]),
@@ -7026,7 +7026,7 @@ begin
            wbInteger('Only Buys Stolen Items', itU8, wbBoolEnum),
            wbInteger('Not/Sell Buy', itU8, wbBoolEnum),
       {02} wbByteArray('Unknown 2', 2)
-      ]),
+      ]).SetRequired,
     wbPLVD,
     wbCITC,
     wbCTDAsCount
@@ -7148,17 +7148,17 @@ begin
 
   wbRecord(KYWD, 'Keyword', [
     wbEDID,
-    wbCNAM
+    wbCNAM.SetRequired
   ]);
 
   wbRecord(LCRT, 'Location Reference Type', [
     wbEDID,
-    wbCNAM
+    wbCNAM.SetRequired
   ]);
 
   wbRecord(AACT, 'Action', [
     wbEDID,
-    wbCNAM
+    wbCNAM.SetRequired
   ]);
 
   wbRecord(TXST, 'Texture Set', [
@@ -8907,14 +8907,14 @@ Can't properly represent that with current record definition methods.
       wbFloat('Fog Clip Dist'),
       wbFloat('Fog Power'),
       wbUnused(32), // WindhelmLightingTemplate [LGTM:0007BA87] only find 24 !
-      wbByteColors('Fog Color Far'),
-      wbFloat('Fog Max'),
-      wbStruct('Light Fade Distances', [
+      wbFromVersion(34, wbByteColors('Fog Color Far')),
+      wbFromVersion(34, wbFloat('Fog Max')),
+      wbFromVersion(34, wbStruct('Light Fade Distances', [
         wbFloat('Start'),
         wbFloat('End')
-      ]),
-      wbUnused(4)
-    ], cpNormal, True, nil, 11),
+      ])),
+      wbFromVersion(34, wbUnused(4))
+    ]).SetRequired,
     wbAmbientColors(DALC)
   ]);
 
@@ -9062,8 +9062,9 @@ Can't properly represent that with current record definition methods.
         5, 'Detection',
         6, 'Service',
         7, 'Misc'
-      ])),
+      ])).SetRequired,
     wbInteger(DNAM, 'Show All Text', itU8, wbBoolEnum)
+      .SetRequired
   ]);
 
   wbRecord(SHOU, 'Shout',
@@ -9382,13 +9383,13 @@ Can't properly represent that with current record definition methods.
       wbFloat('Back Run'),
       wbFloatAngle('Rotate in Place Walk'),
       wbFloatAngle('Rotate in Place Run'),
-      wbFloatAngle('Rotate while Moving Run')
-    ], cpNormal, True, nil, 10),
+      wbFromVersion(28, wbFloatAngle('Rotate while Moving Run'))
+    ]).SetRequired,
     wbStruct(INAM, 'Anim Change Thresholds', [
       wbFloat('Directional', cpNormal, True, 180/Pi),
       wbFloat('Movement Speed'),
       wbFloat('Rotation Speed', cpNormal, True, 180/Pi)
-    ])
+    ]).SetRequired
   ]);
 
   wbRecord(SNDR, 'Sound Descriptor', [
@@ -9412,7 +9413,7 @@ Can't properly represent that with current record definition methods.
       ])),
       wbByteArray('Unknown', 1),
       wbInteger('Rumble Send Value = (Small / 7) + ((Big / 7) * 16)', itU8)
-    ]),
+    ]).SetRequired,
     wbStruct(BNAM, 'Values', [
       wbInteger('% Frequency Shift', itS8),
       wbInteger('% Frequency Variance', itS8),
@@ -9659,7 +9660,7 @@ Can't properly represent that with current record definition methods.
       'Small',
       'Medium',
       'Large'
-    ])),
+    ])).SetRequired,
 
     wbRArray('Link To', wbFormIDCk(TCLT, 'Response', [DIAL, INFO, NULL])),
     wbFormID(DNAM, 'Response Data'),
@@ -9867,9 +9868,10 @@ Can't properly represent that with current record definition methods.
     wbInteger(SNAM, 'Texture Specular Exponent', itU8, nil, cpNormal, True),
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS])),
     // SSE
-    wbInteger(INAM, IsSSE('Flags', 'Unused'), itU32, wbFlags([
-      {0x01} 'Is Snow'
-    ]))
+    IsSSE(
+      wbInteger(INAM, 'Is Snow', itU32, wbBoolEnum).SetRequired,
+      nil
+    )
   ]);
 
   wbLeveledListEntryItem :=
@@ -10585,7 +10587,7 @@ Can't properly represent that with current record definition methods.
         wbPDTOs,
         wbPLDT,
         wbStruct(PTDA, 'Target', [wbTargetData]),
-        wbUnknown(TPIC)
+        wbFormIDCK(TPIC, 'Dialogue Topic', [DIAL])
       ], [], cpNormal, False)),
       wbUNAMs
     ], []),
