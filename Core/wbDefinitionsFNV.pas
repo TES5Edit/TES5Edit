@@ -26,7 +26,6 @@ var
   wbArchtypeEnum: IwbEnumDef;
   wbAssistanceEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
-  wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
   wbBodyLocationEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
@@ -5832,21 +5831,6 @@ var  wbSoundTypeSoundsOld :=
       'Minimal Use',
       'Sliding Door'
     ]), cpNormal, True)
-  ]);
-
-  wbBlendModeEnum := wbEnum([
-    '',
-    'Zero',
-    'One',
-    'Source Color',
-    'Source Inverse Color',
-    'Source Alpha',
-    'Source Inverted Alpha',
-    'Dest Alpha',
-    'Dest Inverted Alpha',
-    'Dest Color',
-    'Dest Inverse Color',
-    'Source Alpha SAT'
   ]);
 
   wbBlendOpEnum := wbEnum([

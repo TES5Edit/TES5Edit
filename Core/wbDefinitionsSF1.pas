@@ -10726,21 +10726,6 @@ end;
     wbNVNM
   ]);
 
-  var wbBlendModeEnum := wbEnum([
-    '',
-    'Zero',
-    'One',
-    'Source Color',
-    'Source Inverse Color',
-    'Source Alpha',
-    'Source Inverted Alpha',
-    'Dest Alpha',
-    'Dest Inverted Alpha',
-    'Dest Color',
-    'Dest Inverse Color',
-    'Source Alpha SAT'
-  ]);
-
   var wbBlendOpEnum := wbEnum([
     '',
     'Add',

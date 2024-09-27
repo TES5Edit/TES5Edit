@@ -19,7 +19,6 @@ var
   wbPKDTFlags: IwbFlagsDef;
   wbServiceFlags: IwbFlagsDef;
 
-  wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
@@ -2432,21 +2431,6 @@ var  wbSoundTypeSoundsOld :=
       {0x08} 'Minimal use'
     ]), cpNormal, True),
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
-  ]);
-
-  wbBlendModeEnum := wbEnum([
-    '',
-    'Zero',
-    'One',
-    'Source Color',
-    'Source Inverse Color',
-    'Source Alpha',
-    'Source Inverted Alpha',
-    'Dest Alpha',
-    'Dest Inverted Alpha',
-    'Dest Color',
-    'Dest Inverse Color',
-    'Source Alpha SAT'
   ]);
 
   wbBlendOpEnum := wbEnum([
