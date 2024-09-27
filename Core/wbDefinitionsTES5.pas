@@ -52,7 +52,6 @@ var
   wbVatsValueFunctionEnum: IwbEnumDef;
   wbWardStateEnum: IwbEnumDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
 
 procedure DefineTES5;
 
@@ -6742,18 +6741,6 @@ begin
       'Do Not Open in Combat Search'
     ]), cpNormal, True),
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
-  ]);
-
-  wbZTestFuncEnum := wbEnum([
-    '',
-    '',
-    '',
-    'Equal To',
-    'Normal',
-    'Greater Than',
-    '',
-    'Greater Than or Equal To',
-    'Always Show'
   ]);
 
   wbRecord(EFSH, 'Effect Shader', [

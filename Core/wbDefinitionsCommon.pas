@@ -37,6 +37,7 @@ var
   wbSexEnum: IwbEnumDef;
   wbWorldImpactMaterialEnum: IwbEnumDef;
   wbZoomOverlayEnum: IwbEnumDef;
+  wbZTestFuncEnum: IwbEnumDef;
 
   wbEmptyBaseFlags: IwbFlagsDef;
   wbRecordFlagsFlags: IwbFlagsDef;
@@ -3775,6 +3776,15 @@ begin
       19, IsFO76('Camera Long Zoom', ''),
       20, IsFO76('Camera Night Vision', ''),
       21, IsFO76('Camera Targeting', '')
+    ]);
+
+  wbZTestFuncEnum :=
+    wbEnum([], [
+      3, 'Equal To',
+      4, 'Normal',
+      5, 'Greater Than',
+      7, 'Greater Than or Equal Than',
+      8, 'Always Show'
     ]);
 
   wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [

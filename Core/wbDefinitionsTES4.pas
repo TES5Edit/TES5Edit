@@ -27,7 +27,6 @@ var
   wbSkillEnum: IwbEnumDef;
   wbSoulGemEnum: IwbEnumDef;
   wbSpecializationEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
 
 procedure DefineTES4;
 
@@ -2426,18 +2425,6 @@ var  wbSoundTypeSoundsOld :=
       {0x08} 'Minimal use'
     ]), cpNormal, True),
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
-  ]);
-
-  wbZTestFuncEnum := wbEnum([
-    '',
-    '',
-    '',
-    'Equal To',
-    'Normal',
-    'Greater Than',
-    '',
-    'Greater Than or Equal Than',
-    'Always Show'
   ]);
 
   wbRecord(EFSH, 'Effect Shader', [

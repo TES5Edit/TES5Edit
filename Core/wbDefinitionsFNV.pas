@@ -45,10 +45,8 @@ var
   wbReloadAnimEnum: IwbEnumDef;
   wbSkillEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
-  wbSpecializationEnum: IwbEnumDef;
   wbVatsValueFunctionEnum: IwbEnumDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
 
 function wbCreaLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 
@@ -5240,8 +5238,6 @@ begin
       {0x00020000} 'Repair'
     ]);
 
-  wbSpecializationEnum := wbEnum(['Combat', 'Magic', 'Stealth']);
-
   wbRecord(CLAS, 'Class', [
     wbEDIDReq,
     wbFULLReq,
@@ -5827,18 +5823,6 @@ var  wbSoundTypeSoundsOld :=
       'Minimal Use',
       'Sliding Door'
     ]), cpNormal, True)
-  ]);
-
-  wbZTestFuncEnum := wbEnum([
-    '',
-    '',
-    '',
-    'Equal To',
-    'Normal',
-    'Greater Than',
-    '',
-    'Greater Than or Equal Than',
-    'Always Show'
   ]);
 
   wbRecord(EFSH, 'Effect Shader', [

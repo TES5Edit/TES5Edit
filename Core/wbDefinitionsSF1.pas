@@ -10725,17 +10725,6 @@ end;
     wbNVNM
   ]);
 
-  var wbZTestFuncEnum := wbEnum([
-    '',
-    '',
-    '',
-    'Equal To',
-    '',
-    'Greater Than',
-    '',
-    'Greater Than or Equal To'
-  ]);
-
   {subrecords checked against Starfield.esm}
   wbRecord(EFSH, 'Effect Shader', [
     wbEDID,
