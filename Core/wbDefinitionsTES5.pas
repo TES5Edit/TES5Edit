@@ -9599,26 +9599,57 @@ Can't properly represent that with current record definition methods.
     ])), [
     wbEDID,
     wbVMADFragmentedINFO,
-    wbUnknown(DATA),
-    wbStruct(ENAM, 'Response flags', [
-      wbInteger('Flags', itU16, wbFlags([
-        {0x0001} 'Goodbye',
-        {0x0002} 'Random',
-        {0x0004} 'Say once',
-        {0x0008} 'Requires Player Activation',
-        {0x0010} 'Info Refusal',
-        {0x0020} 'Random end',
-        {0x0040} 'Invisible continue',
-        {0x0080} 'Walk Away',
-        {0x0100} 'Walk Away Invisible in Menu',
-        {0x0200} 'Force subtitle',
-        {0x0400} 'Can move while greeting',
-        {0x0800} 'No LIP File',
-        {0x1000} 'Requires post-processing',
-        {0x2000} 'Audio Output Override',
-        {0x4000} 'Spends favor points',
-        {0x8000} 'Unknown 16'
-      ])),
+    wbStruct(DATA, 'Data', [
+      wbInteger('Quest Dialogue Tab', itU16,
+        wbEnum([], [
+          0, 'Player Dialogue',
+          1, 'Favor Dialogue',
+          2, 'Scenes',
+          3, 'Combat',
+          4, 'Favors',
+          5, 'Detection',
+          6, 'Service',
+          7, 'Misc'
+        ])),
+      wbInteger('Response Flags', itU16,
+        wbFlags(wbSparseFlags([
+          0, 'Goodbye',
+          1, 'Random',
+          2, 'Say Once',
+          3, 'Requires Player Activation',
+          4, 'Info Refusal',
+          5, 'Random End',
+          6, 'Invisible Continue',
+          7, 'Walk Away',
+          8, 'Walk Away Invisible In Menu',
+          9, 'Force Subtitle',
+         10, 'Can Move While Greeting',
+         11, 'No LIP File',
+         12, 'Requires Post-Processing',
+         13, 'Audio Output Override',
+         14, 'Spends Favor Points'
+        ], False, 15))),
+      wbFloat('Reset Days')
+    ]),
+    wbStruct(ENAM, 'Data', [
+      wbInteger('Response Flags', itU16,
+        wbFlags(wbSparseFlags([
+          0, 'Goodbye',
+          1, 'Random',
+          2, 'Say once',
+          3, 'Requires Player Activation',
+          4, 'Info Refusal',
+          5, 'Random end',
+          6, 'Invisible continue',
+          7, 'Walk Away',
+          8, 'Walk Away Invisible in Menu',
+          9, 'Force subtitle',
+         10, 'Can move while greeting',
+         11, 'No LIP File',
+         12, 'Requires post-processing',
+         13, 'Audio Output Override',
+         14, 'Spends favor points'
+      ], False, 15))),
       wbInteger('Reset Hours', itU16, wbDiv(2730))
     ]),
     wbFormIDCk(TPIC, 'Topic', [DIAL]),
