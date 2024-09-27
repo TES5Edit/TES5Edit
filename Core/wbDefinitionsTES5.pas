@@ -4497,12 +4497,12 @@ begin
        {02} wbLenString('String', 2).OverrideEncoding(wbEncodingVMAD),
        {03} wbInteger('Int32', itS32),
        {04} wbFloat('Float'),
-       {05} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+       {05} wbInteger('Bool', itU8, wbBoolEnum),
        {11} wbArray('Array of Object', wbScriptPropertyObject, -1),
        {12} wbArray('Array of String', wbLenString('Element', 2).OverrideEncoding(wbEncodingVMAD), -1),
        {13} wbArray('Array of Int32', wbInteger('Element', itS32), -1),
        {14} wbArray('Array of Float', wbFloat('Element'), -1),
-       {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbEnum(['False', 'True'])), -1)
+       {15} wbArray('Array of Bool', wbInteger('Element', itU8, wbBoolEnum), -1)
       ])
     ])
     .SetSummaryKey([1, 3])
@@ -4861,7 +4861,7 @@ begin
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('DEST Count', itU8),
-      wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
+      wbInteger('VATS Targetable', itU8, wbBoolEnum),
       wbByteArray('Unknown', 2)
     ]),
     wbRArray('Stages',
@@ -4895,7 +4895,7 @@ begin
     wbStruct(DEST, 'Header', [
       wbInteger('Health', itS32),
       wbInteger('Count', itU8),
-      wbInteger('VATS Targetable', itU8, wbEnum(['False', 'True'])),
+      wbInteger('VATS Targetable', itU8, wbBoolEnum),
       wbByteArray('Unknown', 2)
     ]),
     wbRArray('Stages',  // Begin Stage Array
@@ -6385,7 +6385,7 @@ begin
             'Helps Friends and Allies'
           ])),
           wbStruct('Aggro', [
-            wbInteger('Aggro Radius Behavior', itU8, wbEnum(['False', 'True'])),
+            wbInteger('Aggro Radius Behavior', itU8, wbBoolEnum),
             wbInteger('Unused', itU8, nil, nil, cpIgnore),
             wbInteger('Warn', itU32),
             wbInteger('Warn/Attack', itU32),
@@ -7031,8 +7031,8 @@ begin
     wbFormIDCk(CRGR, 'Shared Crime Faction List', [FLST]),
     wbFormIDCk(JOUT, 'Jail Outfit', [OTFT]),
     wbStruct(CRVA, 'Crime Values', [
-      {01} wbInteger('Arrest', itU8, wbEnum(['False', 'True'])),
-      {02} wbInteger('Attack On Sight', itU8, wbEnum(['False', 'True'])),
+      {01} wbInteger('Arrest', itU8, wbBoolEnum),
+      {02} wbInteger('Attack On Sight', itU8, wbBoolEnum),
       {02} wbInteger('Murder', itU16),
       {02} wbInteger('Assault', itU16),
       {02} wbInteger('Trespass', itU16),
@@ -7050,8 +7050,8 @@ begin
       {02} wbInteger('End Hour', itU16),
       {02} wbInteger('Radius', itU16),
       {02} wbByteArray('Unknown 1', 2),
-           wbInteger('Only Buys Stolen Items', itU8, wbEnum(['False', 'True'])),
-           wbInteger('Not/Sell Buy', itU8, wbEnum(['False', 'True'])),
+           wbInteger('Only Buys Stolen Items', itU8, wbBoolEnum),
+           wbInteger('Not/Sell Buy', itU8, wbBoolEnum),
       {02} wbByteArray('Unknown 2', 2)
       ]),
     wbPLVD,
@@ -7168,7 +7168,7 @@ begin
       wbLString('Name', 0, cpTranslate),
       wbInteger('Int', itS32),
       wbFloat('Float'),
-      wbInteger('Bool', itU32, wbEnum(['False', 'True']))
+      wbInteger('Bool', itU32, wbBoolEnum)
     ], cpNormal, True)
   ])
   .IncludeFlag(dfIndexEditorID);
@@ -7859,7 +7859,7 @@ Can't properly represent that with current record definition methods.
           wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
           wbFormIDCk('Door Ref', [REFR])
         ]), -1).IncludeFlag(dfCollapsed),
-        wbInteger('Is Island', itU8, wbEnum(['False', 'True'])),
+        wbInteger('Is Island', itU8, wbBoolEnum),
         wbUnion('Island', wbNAVIIslandDataDecider, [
           wbNull,
           wbNAVIslandData
@@ -7994,7 +7994,7 @@ Can't properly represent that with current record definition methods.
   wbRecord(IMAD, 'Image Space Adapter', [
     wbEDID,
     wbStruct(DNAM, 'Data Count', [
-      wbInteger('Animatable', itU32, wbEnum(['False', 'True'])),
+      wbInteger('Animatable', itU32, wbBoolEnum),
       wbFloat('Duration'),
       wbStruct('HDR', [
         wbInteger('Eye Adapt Speed Mult', itU32),
@@ -8227,11 +8227,11 @@ Can't properly represent that with current record definition methods.
     wbICON,
     wbCTDAs,
     wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Trait', itU8, wbBoolEnum),
       wbInteger('Level', itU8),
       wbInteger('Num Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['False', 'True'])),
-      wbInteger('Hidden', itU8, wbEnum(['False', 'True']))
+      wbInteger('Playable', itU8, wbBoolEnum),
+      wbInteger('Hidden', itU8, wbBoolEnum)
     ], cpNormal, True),
     wbFormIDCK(NNAM, 'Next Perk', [PERK, NULL]),
     wbRArrayS('Effects', wbPerkEffect)
@@ -9321,7 +9321,7 @@ Can't properly represent that with current record definition methods.
   wbRecord(EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormID('Can Be Equipped'), 0, nil, nil, cpNormal, False),
-    wbInteger(DATA, 'Use All Parents', itU32, wbEnum(['False', 'True']))
+    wbInteger(DATA, 'Use All Parents', itU32, wbBoolEnum)
   ]);
 
   wbRecord(RELA, 'Relationship',
@@ -9770,7 +9770,7 @@ Can't properly represent that with current record definition methods.
     wbEDID,
     wbFULL,
     wbCNAM(True),
-    wbInteger(FNAM, 'Playable', itU32, wbEnum(['False', 'True']), cpNormal, True)
+    wbInteger(FNAM, 'Playable', itU32, wbBoolEnum, cpNormal, True)
   ]);
 
   wbRecord(REVB, 'Reverb Parameters', [
@@ -10801,7 +10801,7 @@ Can't properly represent that with current record definition methods.
         wbString(ANAM, 'Type').SetAfterSet(wbPackageDataInputValueTypeAfterSet),
         wbUnion(CNAM, 'Value', wbPubPackCNAMDecider, [
           {0} wbByteArray('Unknown'),
-          {1} wbInteger('Bool', itU8, wbEnum(['False', 'True'])),
+          {1} wbInteger('Bool', itU8, wbBoolEnum),
           {2} wbInteger('Integer', itU32),
           {3} wbFloat('Float')
         ]),
