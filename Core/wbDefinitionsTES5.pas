@@ -7691,20 +7691,24 @@ Can't properly represent that with current record definition methods.
 
   wbRecord(IMGS, 'Image Space', [
     wbEDID,
-    wbUnion(ENAM, '', wbFormVersionDecider(15, 19), [
-      wbUnknown(cpIgnore),
-      wbStruct('unknown', [
+    wbStruct(ENAM, 'Data', [
+      wbStruct('HDR', [
         wbFloat('Eye Adapt Speed'),
         wbFloat('Bloom Blur Radius'),
         wbFloat('Bloom Threshold'),
         wbFloat('Bloom Scale'),
         wbFloat('Receive Bloom Threshold'),
         wbFloat('Sunlight Scale'),
-        wbFloat('Sky Scale'),
+        wbFloat('Sky Scale')
+      ]),
+      wbStruct('Cinematic', [
         wbFloat('Saturation'),
         wbFloat('Brightness'),
-        wbFloat('Contrast'),
-        wbUnknown
+        wbFloat('Contrast')
+      ]),
+      wbStruct('Tint', [
+        wbFloat('Amount'),
+        wbFloatColors
       ])
     ]),
     wbStruct(HNAM, 'HDR', [
@@ -7725,13 +7729,13 @@ Can't properly represent that with current record definition methods.
     ]),
     wbStruct(TNAM, 'Tint', [
       wbFloat('Amount'),
-      wbFloatColors('Color')
+      wbFloatColors
     ]),
     wbStruct(DNAM, 'Depth of Field', [
       wbFloat('Strength'),
       wbFloat('Distance'),
       wbFloat('Range'),
-      wbByteArray('Unknown', 2),
+      wbUnused(2),
       wbInteger('Sky / Blur Radius', itU16, wbEnum([], [
         16384, 'Radius 0',
         16672, 'Radius 1',
