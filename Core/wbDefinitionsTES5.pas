@@ -28,7 +28,6 @@ var
   wbArmorTypeEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbBipedObjectEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
   wbCastEnum: IwbEnumDef;
   wbCastingSourceEnum: IwbEnumDef;
   wbCrimeTypeEnum: IwbEnumDef;
@@ -6751,15 +6750,6 @@ begin
       'Do Not Open in Combat Search'
     ]), cpNormal, True),
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
-  ]);
-
-  wbBlendOpEnum := wbEnum([
-    '',
-    'Add',
-    'Subtract',
-    'Reverse Subtract',
-    'Minimum',
-    'Maximum'
   ]);
 
   wbZTestFuncEnum := wbEnum([

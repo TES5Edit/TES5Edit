@@ -32,7 +32,6 @@ var
   wbAlignmentEnum: IwbEnumDef;
   wbArmorPropertyEnum: IwbEnumDef;
   wbBipedObjectEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbCastEnum: IwbEnumDef;
   wbCastingSourceEnum: IwbEnumDef;
@@ -11122,15 +11121,6 @@ begin
     wbLStringKC(CNAM, 'Alternate Text - Close', 0, cpTranslate),
     wbUnknown(PAHD),
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
-  ]);
-
-  wbBlendOpEnum := wbEnum([
-    '',
-    'Add',
-    'Subtract',
-    'Reverse Subtract',
-    'Minimum',
-    'Maximum'
   ]);
 
   wbZTestFuncEnum := wbEnum([

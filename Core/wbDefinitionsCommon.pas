@@ -28,6 +28,7 @@ var
   wbActorImpactMaterialEnum: IwbEnumDef;
   wbAxisEnum: IwbEnumDef;
   wbBlendModeEnum: IwbEnumDef;
+  wbBlendOpEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
   wbCRCValuesEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
@@ -3433,6 +3434,15 @@ begin
     'Dest Color',
     'Dest Inverse Color',
     'Source Alpha SAT'
+  ]);
+
+  wbBlendOpEnum := wbEnum([
+    '',
+    'Add',
+    'Subtract',
+    'Reverse Subtract',
+    'Minimum',
+    'Maximum'
   ]);
 
   wbBoolEnum :=

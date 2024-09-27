@@ -26,7 +26,6 @@ var
   wbArchtypeEnum: IwbEnumDef;
   wbAssistanceEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
-  wbBlendOpEnum: IwbEnumDef;
   wbBodyLocationEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbConfidenceEnum: IwbEnumDef;
@@ -5367,14 +5366,6 @@ var  wbSoundTypeSoundsOld :=
     ]), cpNormal, True)
   ]);
 
-  wbBlendOpEnum := wbEnum([
-    '',
-    'Add',
-    'Subtract',
-    'Reverse Subtract',
-    'Minimum',
-    'Maximum'
-  ]);
   wbZTestFuncEnum := wbEnum([
     '',
     '',

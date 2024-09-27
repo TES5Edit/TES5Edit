@@ -10726,15 +10726,6 @@ end;
     wbNVNM
   ]);
 
-  var wbBlendOpEnum := wbEnum([
-    '',
-    'Add',
-    'Subtract',
-    'Reverse Subtract',
-    'Minimum',
-    'Maximum'
-  ]);
-
   var wbZTestFuncEnum := wbEnum([
     '',
     '',

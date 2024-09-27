@@ -19,7 +19,6 @@ var
   wbPKDTFlags: IwbFlagsDef;
   wbServiceFlags: IwbFlagsDef;
 
-  wbBlendOpEnum: IwbEnumDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
   wbFunctionsEnum: IwbEnumDef;
@@ -2433,14 +2432,6 @@ var  wbSoundTypeSoundsOld :=
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
 
-  wbBlendOpEnum := wbEnum([
-    '',
-    'Add',
-    'Subtract',
-    'Reverse Subtract',
-    'Minimum',
-    'Maximum'
-  ]);
   wbZTestFuncEnum := wbEnum([
     '',
     '',
