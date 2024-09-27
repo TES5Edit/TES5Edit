@@ -9352,41 +9352,20 @@ Can't properly represent that with current record definition methods.
     wbRArray('Property Data',
       wbByteArray(DNAM, 'Data', 0, cpIgnore, False, False, wbNeverShow)
     ),
-    IsSSE(
-      wbStruct(DATA, 'Directional Material Data', [
-        wbFloat('Falloff Scale'),
-        wbFloat('Falloff Bias'),
-        wbFloat('Noise UV Scale'),
-        wbFloat('Material UV Scale'),
-        wbStruct('Projection Vector', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbFloat('Normal Dampener'),
-        wbFloatColors('Single Pass Color'),
-        wbInteger('Flags', itU32, wbFlags(['Single Pass'])),
-        // SSE
-        wbInteger('Flags', itU8, wbFlags([
-          {0x01} 'Snow'
-        ])),
-        wbByteArray('Unused', 3, cpIgnore)
-      ], cpNormal, True, nil, 5),
-      wbStruct(DATA, 'Directional Material Data', [
-        wbFloat('Falloff Scale'),
-        wbFloat('Falloff Bias'),
-        wbFloat('Noise UV Scale'),
-        wbFloat('Material UV Scale'),
-        wbStruct('Projection Vector', [
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z')
-        ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-        wbFloat('Normal Dampener'),
-        wbFloatColors('Single Pass Color'),
-        wbInteger('Flags', itU32, wbFlags(['Single Pass']))
-      ], cpNormal, True, nil, 5)
-    )
+    wbStruct(DATA, 'Directional Material Data', [
+      wbFloat('Falloff Scale'),
+      wbFloat('Falloff Bias'),
+      wbFloat('Noise UV Scale'),
+      wbFloat('Material UV Scale'),
+      wbVec3('Projection Vector'),
+      wbFromVersion(19, wbFloat('Normal Dampener')),
+      wbFromVersion(25, wbFloatColors('Single Pass Color')),
+      wbFromVersion(25, wbInteger('Single Pass', itU32, wbBoolEnum)),
+      IsSSE(
+        wbFromVersion(44, wbInteger('Is Snow', itU32, wbBoolEnum)),
+        nil
+      )
+    ]).SetRequired
   ]);
 
   wbRecord(MOVT, 'Movement Type', [
