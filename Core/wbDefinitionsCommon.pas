@@ -31,6 +31,7 @@ var
   wbBlendOpEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
   wbCRCValuesEnum: IwbEnumDef;
+  wbMusicEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
   wbQuestEventEnum: IwbEnumDef;
   wbSexEnum: IwbEnumDef;
@@ -898,7 +899,6 @@ end;
 
 function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
-  PNAM : IwbElement;
   MainRecord : IwbMainRecord;
   Version : Cardinal;
 begin
@@ -3665,6 +3665,13 @@ begin
       Int64($C5B58C0B), 'PathingStreamSaveGame',
       Int64($6AF11190), 'QuestPathingRequest',
       Int64($FCD0CCC3), 'Water'
+    ]);
+
+  wbMusicEnum :=
+    wbEnum([], [
+      0, 'Default',
+      1, 'Public',
+      2, 'Dungeon'
     ]);
 
   wbQuadrantEnum :=

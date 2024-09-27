@@ -22,7 +22,6 @@ var
   wbCrimeTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
   wbMagicSchoolEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
   wbOBMEResolutionInfo: IwbEnumDef;
   wbPKDTType: IwbEnumDef;
   wbSkillEnum: IwbEnumDef;
@@ -1571,8 +1570,6 @@ begin
   wbIgnoreRecords.Add(XXXX);
 
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
-
-  wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
 
   wbEDID := wbString(EDID, 'Editor ID', 0, cpNormal); // not cpBenign according to Arthmoor
   wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);

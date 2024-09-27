@@ -42,7 +42,6 @@ var
   wbFurnitureAnimTypeEnum: IwbEnumDef;
   wbLocationEnum: IwbEnumDef;
   wbMiscStatEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
   wbObjectModProperties: IwbArrayDef;
   wbObjectTypeEnum: IwbEnumDef;
   wbPropTypeEnum: IwbEnumDef;
@@ -5698,7 +5697,6 @@ begin
     wbFloat('Z')
   ]);
 
-  wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
   wbSoundLevelEnum := wbEnum([
      'Loud',
      'Normal',

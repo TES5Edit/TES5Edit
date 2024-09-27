@@ -41,7 +41,6 @@ var
   wbLocationEnum: IwbEnumDef;
   wbMapMarkerEnum: IwbEnumDef;
   wbMiscStatEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
   wbObjectTypeEnum: IwbEnumDef;
   wbPropTypeEnum: IwbEnumDef;
   wbQuestTypeEnum: IwbEnumDef;
@@ -4212,7 +4211,6 @@ begin
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
   wbXRGB := wbByteArray(XRGB, 'Ragdoll Biped Data');
 
-  wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
   wbSoundLevelEnum := wbEnum([
      'Loud',
      'Normal',

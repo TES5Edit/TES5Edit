@@ -39,7 +39,6 @@ var
   wbMiscStatEnum: IwbEnumDef;
   wbModEffectEnum: IwbEnumDef;
   wbMoodEnum: IwbEnumDef;
-  wbMusicEnum: IwbEnumDef;
   wbObjectTypeEnum: IwbEnumDef;
   wbPKDTType: IwbEnumDef;
   wbPlayerActionEnum: IwbEnumDef;
@@ -3846,7 +3845,6 @@ begin
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
   wbXRGB := wbByteArray(XRGB, 'Ragdoll Biped Data');
 
-  wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
   wbSoundLevelEnum := wbEnum([
      'Loud',
      'Normal',

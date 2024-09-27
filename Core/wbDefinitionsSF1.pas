@@ -4566,7 +4566,6 @@ begin
     wbFloat('Z')
   ]);
 
-  var wbMusicEnum := wbEnum(['Default', 'Public', 'Dungeon']);
   var wbSoundLevelEnum := wbEnum([
      'None',
      'Silent',
