@@ -4158,7 +4158,7 @@ begin
   ]);
 
   wbUnionCHANGE_ACTOR_BASE_AIDATA := wbUnion('AI Data', ChangedFlag03Decider, [wbNull, wbStruct('Data', [
-    {00} wbInteger('Aggression', itU8, wbAgressionEnum),
+    {00} wbInteger('Aggression', itU8, wbAggressionEnum),
     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
     {02} wbInteger('Energy Level', itU8),
     {03} wbInteger('Responsibility', itU8),
@@ -4168,7 +4168,7 @@ begin
     {0C} wbInteger('Teaches', itS8, wbSkillEnum),
     {0D} wbInteger('Maximum training level', itU8),
     {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
-    {0F} wbInteger('Aggro Radius Behavior', itU8, wbAggroRadiusFlags),
+    {0F} wbInteger('Aggro Radius Behavior', itU8, wbBoolEnum),
          wbIntegerT('Aggro Radius', itS32)
   ])]);
 
