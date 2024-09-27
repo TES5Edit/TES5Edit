@@ -4238,8 +4238,7 @@ var  wbSoundTypeSoundsOld :=
     wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbICON,
     wbSCRI,
-    wbENAM,
-    wbInteger(ANAM, 'Enchantment Points', itU16),
+    wbEnchantment,
     wbStruct(DATA, '', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Blade One Hand',
@@ -4251,12 +4250,12 @@ var  wbSoundTypeSoundsOld :=
       ])),
       wbFloat('Speed'),
       wbFloat('Reach'),
-      wbInteger('Flags', itU32, wbFlags(['Ignores Normal Weapon Resistance'])),
+      wbInteger('Ignores Normal Weapon Resistance', itU32, wbBoolEnum),
       wbInteger('Value', itU32),
       wbInteger('Health', itU32),
       wbFloat('Weight'),
       wbInteger('Damage', itU16)
-    ], cpNormal, True)
+    ]).SetRequired
   ]);
 
   wbRecord(WTHR, 'Weather', [
