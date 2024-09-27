@@ -4176,48 +4176,60 @@ var  wbSoundTypeSoundsOld :=
 
   wbRecord(WATR, 'Water', [
     wbEDID,
-    wbString(TNAM, 'Texture', 0, cpNormal, True),
-    wbInteger(ANAM, 'Opacity', itU8, nil, cpNormal, True),
-    wbInteger(FNAM, 'Flags', itU8, wbFlags([
-      {0}'Causes Damage',
-      {1}'Reflective'
-    ]), cpNormal, True),
-    wbString(MNAM, 'Material ID'{>>>}, 0, cpNormal, True{<<<}),
+    wbString(TNAM, 'Texture')
+      .SetRequired,
+    wbInteger(ANAM, 'Opacity', itU8)
+      .SetDefaultNativeValue(75)
+      .SetRequired,
+    wbInteger(FNAM, 'Flags', itU8,
+      wbFlags(wbSparseFlags([
+        0, 'Causes Damage',
+        1, 'Reflective'
+     ], False, 2))
+    ).SetRequired,
+    wbString(MNAM, 'Material ID')
+      .SetRequired,
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbStruct(DATA, '', [
-      wbFloat('Wind Velocity'),
-      wbFloat('Wind Direction'),
-      wbFloat('Wave Amplitude'),
-      wbFloat('Wave Frequency'),
-      wbFloat('Sun Power'),
-      wbFloat('Reflectivity Amount'),
-      wbFloat('Fresnel Amount'),
+      wbFloat('Wind Velocity').SetDefaultNativeValue(0.1),
+      wbFloat('Wind Direction').SetDefaultNativeValue(90),
+      wbFloat('Wave Amplitude').SetDefaultNativeValue(0.5),
+      wbFloat('Wave Frequency').SetDefaultNativeValue(1),
+      wbFloat('Sun Power').SetDefaultNativeValue(50),
+      wbFloat('Reflectivity Amount').SetDefaultNativeValue(0.5),
+      wbFloat('Fresnel Amount').SetDefaultNativeValue(0.025),
       wbFloat('Scroll X Speed'),
       wbFloat('Scroll Y Speed'),
-      wbFloat('Fog Distance - Near Plane'),
-      wbFloat('Fog Distance - Far Plane'),
+      wbStruct('Fog Distance', [
+        wbFloat('Near').SetDefaultNativeValue(27852.800782),
+        wbFloat('Far').SetDefaultNativeValue(163840)
+      ]),
       wbByteColors('Shallow Color'),
       wbByteColors('Deep Color'),
       wbByteColors('Reflection Color'),
-      wbInteger('Texture Blend', itU8),
-      wbByteArray('Unused', 3),
-      wbFloat('Rain Simulator - Force'),
-      wbFloat('Rain Simulator - Velocity'),
-      wbFloat('Rain Simulator - Falloff'),
-      wbFloat('Rain Simulator - Dampner'),
-      wbFloat('Rain Simulator - Starting Size'),
-      wbFloat('Displacement Simulator - Force'),
-      wbFloat('Displacement Simulator - Velocity'),
-      wbFloat('Displacement Simulator - Falloff'),
-      wbFloat('Displacement Simulator - Dampner'),
-      wbFloat('Displacement Simulator - Starting Size'),
+      wbInteger('Texture Blend', itU8).SetDefaultNativeValue(50),
+      wbUnused(3),
+      wbStruct('Rain Simulator', [
+        wbFloat('Force').SetDefaultNativeValue(0.1),
+        wbFloat('Velocity').SetDefaultNativeValue(0.6),
+        wbFloat('Falloff').SetDefaultNativeValue(0.985),
+        wbFloat('Dampner').SetDefaultNativeValue(2),
+        wbFloat('Starting Size').SetDefaultNativeValue(0.01)
+      ], cpNormal, True, nil, 0),
+      wbStruct('Displacement Simulator', [
+        wbFloat('Force').SetDefaultNativeValue(0.4),
+        wbFloat('Velocity').SetDefaultNativeValue(0.6),
+        wbFloat('Falloff').SetDefaultNativeValue(0.985),
+        wbFloat('Dampner').SetDefaultNativeValue(10),
+        wbFloat('Starting Size').SetDefaultNativeValue(0.05)
+      ], cpNormal, True, nil, 0),
       wbInteger('Damage', itU16)
     ], cpNormal, True, nil, 0),
     wbStruct(GNAM, 'Related Waters', [
       wbFormIDCk('Daytime', [WATR, NULL]),
       wbFormIDCk('Nighttime', [WATR, NULL]),
       wbFormIDCk('Underwater', [WATR, NULL])
-    ], cpNormal{>>>, True<<<})
+    ]).SetRequired
   ]).SetSummaryKey([1]);
 
   wbRecord(WEAP, 'Weapon', [
