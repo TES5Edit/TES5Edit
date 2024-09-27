@@ -2683,7 +2683,7 @@ begin
   Result :=
     wbUnion(aSignature, aValue.Name, wbFormVersionDecider(aVersion), [
       aValue,
-      wbUnused()
+      wbEmpty(aValue.Name, cpIgnore)
     ]).IncludeFlagOnValue(dfUnionStaticResolve);
 end;
 
@@ -2692,7 +2692,7 @@ begin
   Result :=
     wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
       aValue,
-      wbUnused()
+      wbEmpty(aValue.Name, cpIgnore)
     ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
@@ -2700,7 +2700,7 @@ function wbFromVersion(aVersion: Integer; const aSignature: TwbSignature; const 
 begin
   Result :=
     wbUnion(aSignature, aValue.Name, wbFormVersionDecider(aVersion), [
-      wbUnused,
+      wbEmpty(aValue.Name, cpIgnore),
       aValue
     ]).IncludeFlagOnValue(dfUnionStaticResolve);
 end;
@@ -2709,7 +2709,7 @@ function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDe
 begin
   Result :=
     wbUnion(aValue.Name, wbFormVersionDecider(aVersion), [
-      wbUnused(),
+      wbEmpty(aValue.Name, cpIgnore),
       aValue
     ]).IncludeFlag(dfUnionStaticResolve);
 end;
