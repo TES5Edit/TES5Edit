@@ -26,6 +26,7 @@ var
   _RecordSizeDeciders : array of TwbUnionDecider;
 
   wbActorImpactMaterialEnum: IwbEnumDef;
+  wbAggressionEnum: IwbEnumDef;
   wbAxisEnum: IwbEnumDef;
   wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
@@ -3420,6 +3421,14 @@ begin
       'Hollow Metal',
       'Organic Bug',
       'Organic Glow'
+    ]);
+
+  wbAggressionEnum :=
+    wbEnum([], [
+      0, 'Unaggressive',
+      1, 'Aggressive',
+      2, 'Very Aggressive',
+      3, 'Frenzied'
     ]);
 
   wbAxisEnum :=

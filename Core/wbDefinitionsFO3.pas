@@ -16,12 +16,10 @@ uses
   wbInterface;
 
 var
-  wbAggroRadiusFlags: IwbFlagsDef;
   wbPKDTFlags: IwbFlagsDef;
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 
-  wbAgressionEnum: IwbEnumDef;
   wbAlignmentEnum: IwbEnumDef;
   wbArchtypeEnum: IwbEnumDef;
   wbAssistanceEnum: IwbEnumDef;
@@ -4897,13 +4895,6 @@ var  wbSoundTypeSoundsOld :=
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
 
-  wbAgressionEnum := wbEnum([
-    'Unaggressive',
-    'Aggressive',
-    'Very Aggressive',
-    'Frenzied'
-  ]);
-
   wbConfidenceEnum := wbEnum([
     'Cowardly',
     'Cautious',
@@ -4929,13 +4920,9 @@ var  wbSoundTypeSoundsOld :=
     'Helps Friends and Allies'
   ]);
 
-  wbAggroRadiusFlags := wbFlags([
-    'Aggro Radius Behavior'
-  ]);
-
   wbAIDT :=
     wbStruct(AIDT, 'AI Data', [
-     {00} wbInteger('Aggression', itU8, wbAgressionEnum),
+     {00} wbInteger('Aggression', itU8, wbAggressionEnum),
      {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
      {02} wbInteger('Energy Level', itU8),
      {03} wbInteger('Responsibility', itU8),
@@ -4945,7 +4932,7 @@ var  wbSoundTypeSoundsOld :=
      {0C} wbInteger('Teaches', itS8, wbSkillEnum),
      {0D} wbInteger('Maximum training level', itU8),
      {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
-     {0F} wbInteger('Aggro Radius Behavior', itU8, wbAggroRadiusFlags),
+     {0F} wbInteger('Aggro Radius Behavior', itU8, wbBoolEnum),
      {10} wbInteger('Aggro Radius', itS32)
     ], cpNormal, True, wbActorTemplateUseAIData);
 
