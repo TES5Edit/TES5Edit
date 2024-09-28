@@ -20,7 +20,6 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 
-  wbAlignmentEnum: IwbEnumDef;
   wbArchtypeEnum: IwbEnumDef;
   wbAssistanceEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
@@ -4652,15 +4651,6 @@ begin
       'Roulette Games Played',
       'Blackjack Games Played',
       'Slots Games Played'
-    ]);
-
-  wbAlignmentEnum :=
-    wbEnum([
-      'Good',
-      'Neutral',
-      'Evil',
-      'Very Good',
-      'Very Evil'
     ]);
 
   wbCriticalStageEnum :=

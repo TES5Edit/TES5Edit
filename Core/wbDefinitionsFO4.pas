@@ -27,7 +27,6 @@ var
   wbActorPropertyEnum: IwbEnumDef;
   wbAdvanceActionEnum: IwbEnumDef;
   wbStaggerEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
   wbArmorPropertyEnum: IwbEnumDef;
   wbBipedObjectEnum: IwbEnumDef;
   wbCastEnum: IwbEnumDef;
@@ -7435,15 +7434,6 @@ begin
     'Lockpick Success',
     'Lockpick Broken'
   ]);
-
-  wbAlignmentEnum :=
-    wbEnum([
-      'Good',
-      'Neutral',
-      'Evil',
-      'Very Good',
-      'Very Evil'
-    ]);
 
   wbCriticalStageEnum :=
     wbEnum([

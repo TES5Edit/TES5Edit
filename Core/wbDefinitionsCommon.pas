@@ -27,6 +27,7 @@ var
 
   wbActorImpactMaterialEnum: IwbEnumDef;
   wbAggressionEnum: IwbEnumDef;
+  wbAlignmentEnum: IwbEnumDef;
   wbAxisEnum: IwbEnumDef;
   wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
@@ -3429,6 +3430,15 @@ begin
       1, 'Aggressive',
       2, 'Very Aggressive',
       3, 'Frenzied'
+    ]);
+
+  wbAlignmentEnum :=
+    wbEnum([], [
+      0, 'Good',
+      1, 'Neutral',
+      2, 'Evil',
+      3, 'Very Good',
+      4, 'Very Evil'
     ]);
 
   wbAxisEnum :=

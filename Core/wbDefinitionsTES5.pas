@@ -24,7 +24,6 @@ var
   wbSMNodeFlags: IwbFlagsDef;
 
   wbAdvanceActionEnum: IwbEnumDef;
-  wbAlignmentEnum: IwbEnumDef;
   wbArmorTypeEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbBipedObjectEnum: IwbEnumDef;
@@ -5599,15 +5598,6 @@ begin
     'Lockpick Success',
     'Lockpick Broken'
   ]);
-
-  wbAlignmentEnum :=
-    wbEnum([
-      'Good',
-      'Neutral',
-      'Evil',
-      'Very Good',
-      'Very Evil'
-    ]);
 
   wbCriticalStageEnum :=
     wbEnum([

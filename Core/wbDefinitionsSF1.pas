@@ -7163,15 +7163,6 @@ end;
     'Lockpick Broken'
   ]);
 
-  var wbAlignmentEnum :=
-    wbEnum([
-      'Good',
-      'Neutral',
-      'Evil',
-      'Very Good',
-      'Very Evil'
-    ]);
-
   var wbCriticalStageEnum :=
     wbEnum([
       'None',

@@ -20,7 +20,6 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 
-  wbAlignmentEnum: IwbEnumDef;
   wbArchtypeEnum: IwbEnumDef;
   wbAssistanceEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
@@ -4283,15 +4282,6 @@ begin
       'Contracts Completed',
       'Corpses Eaten',
       'Mysterious Stranger Visits'
-    ]);
-
-  wbAlignmentEnum :=
-    wbEnum([
-      'Good',
-      'Neutral',
-      'Evil',
-      'Very Good',
-      'Very Evil'
     ]);
 
   wbCriticalStageEnum :=
