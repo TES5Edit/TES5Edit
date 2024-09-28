@@ -29,6 +29,7 @@ var
   wbAggressionEnum: IwbEnumDef;
   wbAlignmentEnum: IwbEnumDef;
   wbArchtypeEnum: IwbEnumDef;
+  wbAssistanceEnum: IwbEnumDef;
   wbAxisEnum: IwbEnumDef;
   wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
@@ -3472,6 +3473,13 @@ begin
      34, 'Value And Parts',
      35, IsFNV('Limb Condition', ''),
      36, IsFNV('Turbo', '')
+    ]);
+
+  wbAssistanceEnum :=
+    wbEnum([], [
+      0, 'Helps Nobody',
+      1, 'Helps Allies',
+      2, 'Helps Friends and Allies'
     ]);
 
   wbAxisEnum :=

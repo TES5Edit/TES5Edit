@@ -10803,11 +10803,7 @@ begin
             'Puzzled',
             'Disgusted'
           ])),
-          wbInteger('Assistance', itU8, wbEnum([
-            'Helps Nobody',
-            'Helps Allies',
-            'Helps Friends and Allies'
-          ])),
+          wbInteger('Assistance', itU8, wbAssistanceEnum),
           wbStruct('Aggro', [
             wbInteger('Aggro Radius Behavior', itU8, wbBoolEnum),
             wbInteger('Unused', itU8),

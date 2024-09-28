@@ -10228,11 +10228,7 @@ end;
             'Puzzled',
             'Disgusted'
           ])),
-          wbInteger('Assistance', itU8, wbEnum([
-            'Helps Nobody',
-            'Helps Allies',
-            'Helps Friends and Allies'
-          ])),
+          wbInteger('Assistance', itU8, wbAssistanceEnum),
           wbInteger('Has Reaction Radius Behavior', itU8, wbBoolEnum)
     ], cpNormal, True);
 

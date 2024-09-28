@@ -20,7 +20,6 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 
-  wbAssistanceEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbBodyLocationEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
@@ -5351,12 +5350,6 @@ var  wbSoundTypeSoundsOld :=
     'Pleasant',
     'Angry',
     'Sad'
-  ]);
-
-  wbAssistanceEnum := wbEnum([
-    'Helps Nobody',
-    'Helps Allies',
-    'Helps Friends and Allies'
   ]);
 
   wbAIDT :=
