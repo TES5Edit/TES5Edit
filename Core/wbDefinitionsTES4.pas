@@ -1153,16 +1153,6 @@ begin
   end;
 end;
 
-procedure wbCounterEffectsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterByPathAfterSet('DATA - Data\Counter effect count', aElement);
-end;
-
-procedure wbMGEFAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
-begin
-  wbCounterContainerByPathAfterSet('DATA - Data\Counter effect count', 'ESCE - Counter Effects', aElement);
-end;
-
 procedure wbEFITAfterLoad(const aElement: IwbElement);
 var
   Container : IwbContainerElementRef;
@@ -3310,9 +3300,10 @@ var  wbSoundTypeSoundsOld :=
       wbFloat('Constant Effect enchantment factor'),
       wbFloat('Constant Effect barter factor')
     ], cpNormal, True, nil, 10),
-    wbArrayS(ESCE, 'Counter Effects', wbStringMgefCode('Counter Effect Code', 4),
-      0, cpNormal, False, nil, wbCounterEffectsAfterSet)
-  ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet)
+    wbArrayS(ESCE, 'Counter Effects',
+      wbStringMgefCode('Counter Effect Code', 4)
+    ).SetCountPathOnValue('DATA\Counter Effect Count', False)
+  ], False, nil, cpNormal, False, wbMGEFAfterLoad)
   .IncludeFlag(dfIndexEditorID);;
 
   wbRecord(MISC, 'Misc. Item', [
