@@ -4,6 +4,128 @@ If you share you mods on Nexus Mods and use xEdit as a major component in develo
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
+# What's New in xEdit 4.1.5k?
+
+## Bugfixes / Minor Changes
+
+* #1384 - [TES5] AVIF definition updates. Scripts may need updates.
+    * CNAM decoded for Skill category
+    * ICON decoded for Image Filename as listed in CK
+    * Perk Tree\FNAM decoded as boolean for Parent Required
+* #1377 - Multiple Definition updates
+    * [ALL] WRLD - Updated Required Tags and Default Values
+    * [ALL] WTHR - Updated default values and set Required where applicable from the CKs
+    * [FO76] PERK\DATA - Resolves crash
+    * [FO4/FO76] NOTE - Cleaned up definition
+    * [SF1] RSPJ names updated to match CK
+    * [SF1] RSPJ\FVPA Updated allowed signatures.
+    * [SF1] Add .ccc file support
+    * [SF1] WRLD\NAM7 - Fix typo in name
+    * [SF1] REFR\Water Current Sub-Records Decoded
+    * [SF1] WTHR - WSLS/WSLD Decoded
+    * [SF1] PNDT\EOVR - Decoded new sub-record
+    * [SF1] INGR - Decoded Ingredient Record
+    * [SF1] NOTE - Decoded Note Record
+    * [SF1] ZOOM - Update field names to better match CK
+    * [SF1] AMDL - Added BaseFormComponents, New Flag, and Updated field names
+    * [SF1] PROJ - Added new Flags
+    * [SF1] AFFE - Support Add to Event
+    * [SF1] DIAL - Add additional vehicle support
+    * [SF1] PACK\PDTA - update for new target types
+    * [SF1] TERM - Fully decoded. May affect scripts.
+    * [TES5] SCEN\DNAM - Fixed Typo
+    * [TES4] WEAP - Small tidy-up
+    * [TES5] IMGS/MATO - Definitions updated
+    * [TES5] INFO - DATA Decoded sub-record
+    * BSArchPro - Fix files in Music folder being erroneously moved to Sound + Compressed Check
+
+# What's New in xEdit 4.1.5j?
+
+## Bugfixes / Minor Changes
+
+* #1373 General Definition Cleanup
+    * [ALL] WRLD and WTHR definition updates. Names changed, may affect some scripts.
+    * [ALL] OFST\CLSZ\VISI - Updated the World Columns\Rows Counter functions to better handle floats
+    * [SF1] WTHR\CLDC - Decoded
+
+# What's New in xEdit 4.1.5i?
+
+## Bugfixes / Minor Changes
+
+* corrected fixup for broken internal FileFormIDs in Starfield
+* #1372 - Multiple Definition Updates
+    * [TES5] DLVW\ENAM - Decoded full Enum
+    * [TES5/FO4/FO76/SF1] DLVW - Cleaned up the record across the games
+    * [TES5/FO4/FO76/SF1] NAVM/NAVI - Exception Fix
+    * [ALL] WTHR definition update - names changed, may affect some scripts.
+
+# What's New in xEdit 4.1.5h?
+
+## Bugfixes / Minor Changes
+
+* Initial support added for medium Masters
+* Navmesh code integer overflow fix.
+* [SF1] - Multiple Definition Updates
+    * LCTN\LCEC definition update
+    * Add GetGamePlayOptionCurrentValue to CTDA conditions.
+    * add AVMP parent subrecord to AVMD and correct group name to match CK AVMS instead of just AVM
+* [FO4] Correct LIGHT\WGDR - SNAM order
+* [FO76] - Multiple Definition Updates
+    * Added new event CBGN: Caravan Begin Event
+    * Added FURN and GMRW to the quest stage decider
+    * Fixed IsPreviousMeleeAttackEvent condition function.
+    * Added GetLanguage, IsNextClipLastShot, WornInOrOutOfPowerArmorHasKeyword, IsPlayerInBestBuildCamp, GetIsInExpedition, IsCaravanAvailable, and IsUsingAltCurveTable condition functions
+    * Added IsNextClipLastShot entry point.
+    * L1 is Location1, L2 is Location2, L3 is Location3
+    * Modify NVNM to check for length and if it's empty it's a marker.
+    * Added Item Rarity category for keywords.
+    * Added Weight Mult armor property
+    * Added WeightMult, AmmoConsumption, Overheating, OverheatRateUp, and OverheatRateDown weapon properties
+    * Added Quest to ARMO
+    * EPF2 can be a curve table if the type is Float
+    * Added Caravan quest type.
+* #1367 - Multiple Definition Updates
+    * Spurious VTEX removed from games that don't support it.
+    * [SF1] Vehicle data decoded
+    * [FO4] Fix sub record order of ALCH\DEST position.
+    * [FO4] MSTT\DATA and STAT\DNAM have default values set.
+    * [ALL] WRLD definitions updated
+    * [ALL] Put better/more readable names on the various WRLD sub-record common defs.
+    * [ALL] Weather record definition changed to using a shared definition so some names may have changed.
+    * [ALL] LAND Definition Complete Cleanup/Refactor, some  names changed for better readability
+* #1353 - Overhaul code refactor to move duplicated code into common shared functions.
+    * Updated Worldspace Arrays
+    * Decoded/Defined CLSZ, and VISI.
+    * Cleaned up the definitions for Large Refs, MHDT, OFST, CLSZ, VISI across the games.
+    * [FO4/FO76/TES5/SF1] NPC_\WNAM renamed "Skin" to match the CK.
+    * [TES5] ARMO and ACHR: Add Visible When Distant flag
+    * [TES5] ACHR: Add XLOD sub-record
+* #1368 - Fixed not finding ModName ini
+
+# What's New in xEdit 4.1.5g?
+
+## Bugfixes / Minor Changes
+
+* #1325 - [SF1] GPOG/GPOF decoding for Game Play options
+* #1326 - [FNV] Additional code to handle Epic release of Fallout New Vegas with special folder naming.
+* #1328 - Internal code update to use generic shared color functions. May affect some scripts.
+* #1330 - Allow Referenced By view to remain while quickly scrolling records.
+* #1331 - [FNV] Update CTDA data for ShowOff v1.80
+* #1332 - Multiple Definition Updates
+    * Adjust RTF Whats New document text to match current theme at time of loading editor.
+    * multi select copy as new will observe all prefix/suffix add/remove requests
+    * Provide message log for number of masters removed.
+    * [FO4/FO76] update Object Template "Addon Index" element name to be less ambiguous as "Parent Combination Index"
+    * [FO4] Fix Variable type properties on scripts causing corrupted view on VMAD
+    * [SF1] fix StarID lookup check code
+* #1337 - Multiple Definition Updates
+    * [FNV] Update CTDA data for JIP LN NVSE Plugin v51.30
+    * [FNV] Add CTDA data for AnhNVSE v1.3.1
+    * [FNV] Update CTDA data for JohnnyGuitar v5.07
+    * [FNV] GetArmorARAlt technically accepts any item FormID, but only makes sense with ARMO.
+    * [SF1] Fix typos in SF ESL/Overlay errors
+* #1351 - Scripting: New TemplateAssign function assigns templates by name
+
 # What's New in xEdit 4.1.5f?
 
 ## Fallout 4 NG support
