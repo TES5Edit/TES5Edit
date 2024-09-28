@@ -3843,7 +3843,7 @@ begin
       3, 'Equal To',
       4, 'Normal',
       5, 'Greater Than',
-      7, 'Greater Than or Equal Than',
+      7, 'Greater Than or Equal To',
       8, 'Always Show'
     ]);
 
