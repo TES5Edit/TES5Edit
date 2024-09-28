@@ -35,6 +35,7 @@ var
   wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
   wbBoolEnum: IwbEnumDef;
+  wbConfidenceEnum: IwbEnumDef;
   wbCRCValuesEnum: IwbEnumDef;
   wbMusicEnum: IwbEnumDef;
   wbQuadrantEnum: IwbEnumDef;
@@ -3636,6 +3637,15 @@ begin
 
   wbBoolEnum :=
     wbEnum(['False', 'True']);
+
+  wbConfidenceEnum :=
+    wbEnum([], [
+      0, 'Cowardly',
+      1, 'Cautious',
+      2, 'Average',
+      3, 'Brave',
+      4, 'Foolhardy'
+    ]);
 
   wbCRCValuesEnum :=
     wbEnum([],[

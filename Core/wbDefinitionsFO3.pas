@@ -22,7 +22,6 @@ var
 
   wbBodyLocationEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
-  wbConfidenceEnum: IwbEnumDef;
   wbCreatureTypeEnum: IwbEnumDef;
   wbCrimeTypeEnum: IwbEnumDef;
   wbCriticalStageEnum: IwbEnumDef;
@@ -4881,14 +4880,6 @@ var  wbSoundTypeSoundsOld :=
   ], []);
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT, cpNormal, False, nil, nil, wbActorTemplateUseModelAnimation);
-
-  wbConfidenceEnum := wbEnum([
-    'Cowardly',
-    'Cautious',
-    'Average',
-    'Brave',
-    'Foolhardy'
-  ]);
 
   wbMoodEnum := wbEnum([
     'Neutral',

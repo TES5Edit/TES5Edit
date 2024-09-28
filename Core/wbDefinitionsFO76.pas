@@ -10779,13 +10779,7 @@ begin
   wbAIDT :=
     wbStruct(AIDT, 'AI Data', [
      {00} wbInteger('Aggression', itU8, wbAggressionEnum),
-     {01} wbInteger('Confidence', itU8, wbEnum([
-            'Cowardly',
-            'Cautious',
-            'Average',
-            'Brave',
-            'Foolhardy'
-          ])),
+     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
      {02} wbInteger('Energy Level', itU8),
      {03} wbInteger('Morality', itU8, wbEnum([
             'Any crime',
