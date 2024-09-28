@@ -5061,7 +5061,7 @@ begin
       ])),
       wbByteArray('Unused', 2)
     ], cpNormal, True, nil, 2),
-    wbInteger(BNAM, 'Overrides Animation Sounds', itU32, wbEnum(['No', 'Yes'])),
+    wbInteger(BNAM, 'Overrides Animation Sounds', itU32, wbBoolEnum),
     wbRArray('Animation Sounds',
       wbStruct(SNAM, 'Animation Sound', [
         wbFormIDCk('Sound', [SOUN]),
@@ -5947,7 +5947,7 @@ var  wbSoundTypeSoundsOld :=
       'Large Hall',
       'Plate'
     ]), cpNormal, True),
-    wbInteger(INAM, 'Is Interior', itU32, wbEnum(['No', 'Yes']), cpNormal, True)
+    wbInteger(INAM, 'Is Interior', itU32, wbBoolEnum, cpNormal, True)
   ]);
 
   wbRecord(TACT, 'Talking Activator', [
@@ -6999,11 +6999,11 @@ var  wbSoundTypeSoundsOld :=
     wbICON,
     wbCTDAs,
     wbStruct(DATA, 'Data', [
-      wbInteger('Trait', itU8, wbEnum(['No', 'Yes'])),
+      wbInteger('Trait', itU8, wbBoolEnum),
       wbInteger('Min Level', itU8),
       wbInteger('Ranks', itU8),
-      wbInteger('Playable', itU8, wbEnum(['No', 'Yes'])),
-      wbInteger('Hidden', itU8, wbEnum(['No', 'Yes']))
+      wbInteger('Playable', itU8, wbBoolEnum),
+      wbInteger('Hidden', itU8, wbBoolEnum)
     ], cpNormal, True, nil, 4),
     wbRArrayS('Effects', wbPerkEffect)
   ]);
@@ -7262,11 +7262,11 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Dynamic Bone Count', itU32),
       wbByteArray('Unused', 4),
       wbStruct('Enabled', [
-        wbInteger('Feedback', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Foot IK (broken, don''t use)', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Look IK (broken, don''t use)', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Grab IK (broken, don''t use)', itU8, wbEnum(['No', 'Yes'])),
-        wbInteger('Pose Matching', itU8, wbEnum(['No', 'Yes']))
+        wbInteger('Feedback', itU8, wbBoolEnum),
+        wbInteger('Foot IK (broken, don''t use)', itU8, wbBoolEnum),
+        wbInteger('Look IK (broken, don''t use)', itU8, wbBoolEnum),
+        wbInteger('Grab IK (broken, don''t use)', itU8, wbBoolEnum),
+        wbInteger('Pose Matching', itU8, wbBoolEnum)
       ]),
       wbByteArray('Unused', 1)
     ], cpNormal, True),
@@ -8400,7 +8400,7 @@ var  wbSoundTypeSoundsOld :=
     wbInteger(PKE2, 'Escort Distance', itU32),
     wbFloat(PKFD, 'Follow - Start Location - Trigger Radius'),
     wbStruct(PKPT, 'Patrol Flags', [
-      wbInteger('Repeatable', itU8, wbEnum(['No', 'Yes']), cpNormal, False, nil, nil, 1),
+      wbInteger('Repeatable', itU8, wbBoolEnum, cpNormal, False, nil, nil, 1),
       wbByteArray('Unused', 1)
     ], cpNormal, False, nil, 1),
     wbStruct(PKW3, 'Use Weapon Data', [
@@ -10084,8 +10084,8 @@ var  wbSoundTypeSoundsOld :=
      wbFloat('Skill'),
      wbFloat('Dam. Mult'),
      wbFloat('AP'),
-     wbInteger('Silent', itU8, wbEnum(['No', 'Yes'])),
-     wbInteger('Mod Required', itU8, wbEnum(['No', 'Yes'])),
+     wbInteger('Silent', itU8, wbBoolEnum),
+     wbInteger('Mod Required', itU8, wbBoolEnum),
      wbByteArray('Unused', 2)
     ]),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
