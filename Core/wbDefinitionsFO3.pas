@@ -20,7 +20,6 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 
-  wbArchtypeEnum: IwbEnumDef;
   wbAssistanceEnum: IwbEnumDef;
   wbAttackAnimationEnum: IwbEnumDef;
   wbBodyLocationEnum: IwbEnumDef;
@@ -7345,44 +7344,6 @@ var  wbSoundTypeSoundsOld :=
     ]), cpNormal, True),
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbRArrayS('Leveled List Entries', wbLeveledListEntryItem)
-  ]);
-
-  wbArchtypeEnum := wbEnum([
-    {00} 'Value Modifier',
-    {01} 'Script',
-    {02} 'Dispel',
-    {03} 'Cure Disease',
-    {04} '',
-    {05} '',
-    {06} '',
-    {07} '',
-    {08} '',
-    {09} '',
-    {10} '',
-    {11} 'Invisibility',
-    {12} 'Chameleon',
-    {13} 'Light',
-    {14} '',
-    {15} '',
-    {16} 'Lock',
-    {17} 'Open',
-    {18} 'Bound Item',
-    {19} 'Summon Creature',
-    {20} '',
-    {21} '',
-    {22} '',
-    {23} '',
-    {24} 'Paralysis',
-    {25} '',
-    {26} '',
-    {27} '',
-    {28} '',
-    {29} '',
-    {30} 'Cure Paralysis',
-    {31} 'Cure Addiction',
-    {32} 'Cure Poison',
-    {33} 'Concussion',
-    {34} 'Value And Parts'
   ]);
 
   wbRecord(MGEF, 'Base Effect', [

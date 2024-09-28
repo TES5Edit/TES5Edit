@@ -28,6 +28,7 @@ var
   wbActorImpactMaterialEnum: IwbEnumDef;
   wbAggressionEnum: IwbEnumDef;
   wbAlignmentEnum: IwbEnumDef;
+  wbArchtypeEnum: IwbEnumDef;
   wbAxisEnum: IwbEnumDef;
   wbBlendModeEnum: IwbEnumDef;
   wbBlendOpEnum: IwbEnumDef;
@@ -280,6 +281,7 @@ function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; ove
 function IsTES4(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsFO3(const aDef1, aDef2: Integer): Integer; overload;
 function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
+function IsFNV(const aDef1, aDef2: string): string; overload;
 function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
 function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
 function IsTES5(const aDef1, aDef2: String): string; overload;
@@ -2507,6 +2509,14 @@ begin
     Result := aDef2;
 end;
 
+function IsFNV(const aDef1, aDef2: string): string;
+begin
+  if wbIsFalloutNV then
+    Result := aDef1
+  else
+    Result := aDef2;
+end;
+
 function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
 begin
   if wbIsFalloutNV then
@@ -2525,7 +2535,7 @@ end;
 
 function IsTES5(const aDef1, aDef2: String): string;
 begin
-  if wbIsSkyrimSE then
+  if wbIsSkyrim then
     Result := aDef1
   else
     Result := aDef2;
@@ -3439,6 +3449,29 @@ begin
       2, 'Evil',
       3, 'Very Good',
       4, 'Very Evil'
+    ]);
+
+  wbArchtypeEnum :=
+    wbEnum([],[
+      0, 'Value Modifier',
+      1, 'Script',
+      2, 'Dispel',
+      3, 'Cure Disease',
+     11, 'Invisibility',
+     12, 'Chameleon',
+     13, 'Light',
+     16, 'Lock',
+     17, 'Open',
+     18, 'Bound Item',
+     19, 'Summon Creature',
+     24, 'Paralysis',
+     30, 'Cure Paralysis',
+     31, 'Cure Addiction',
+     32, 'Cure Poison',
+     33, 'Concussion',
+     34, 'Value And Parts',
+     35, IsFNV('Limb Condition', ''),
+     36, IsFNV('Turbo', '')
     ]);
 
   wbAxisEnum :=
