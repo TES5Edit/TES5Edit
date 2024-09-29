@@ -5410,13 +5410,27 @@ end;
 
 //===========================================================================
 { bhkConvexVerticesShape }
-procedure wbDefinebhkConvexVerticesShape;
+procedure wbDefinebhkConvexVerticesShape
+;
 begin
   wbNiObject(wbNifBlock('bhkConvexVerticesShape', [
     wbhkWorldObjCinfoProperty('Vertices Property', []),
     wbhkWorldObjCinfoProperty('Normals Property', []),
     dfArray('Vertices', wbVector4('Vertices'), -4),
     dfArray('Normals', wbVector4('Normals'), -4)
+  ]), 'bhkConvexShape', False);
+end;
+
+//===========================================================================
+{ bhkCylinderShape }
+procedure wbDefinebhkCylinderShape;
+begin
+  wbNiObject(wbNifBlock('bhkCylinderShape', [
+    dfBytes('Unused', 8),
+    wbVector4('Vertex A'),
+    wbVector4('Vertex B'),
+    dfFloat('Cylinder Radius'),
+    dfBytes('Unused', 12)
   ]), 'bhkConvexShape', False);
 end;
 
@@ -8026,6 +8040,7 @@ begin
   wbDefinebhkBoxShape;
   wbDefinebhkCapsuleShape;
   wbDefinebhkConvexVerticesShape;
+  wbDefinebhkCylinderShape;
   wbDefinebhkCompressedMeshShape;
   wbDefinebhkCompressedMeshShapeData;
   wbDefinebhkBvTreeShape;
