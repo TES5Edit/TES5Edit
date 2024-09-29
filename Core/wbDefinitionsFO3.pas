@@ -20,7 +20,6 @@ var
   wbServiceFlags: IwbFlagsDef;
   wbTemplateFlags: IwbFlagsDef;
 
-  wbBodyLocationEnum: IwbEnumDef;
   wbBodyPartIndexEnum: IwbEnumDef;
   wbCreatureTypeEnum: IwbEnumDef;
   wbCrimeTypeEnum: IwbEnumDef;
@@ -30,7 +29,6 @@ var
   wbHeadPartIndexEnum: IwbEnumDef;
   wbMenuModeEnum: IwbEnumDef;
   wbMiscStatEnum: IwbEnumDef;
-  wbModEffectEnum: IwbEnumDef;
   wbMoodEnum: IwbEnumDef;
   wbObjectTypeEnum: IwbEnumDef;
   wbPKDTType: IwbEnumDef;
@@ -4316,27 +4314,6 @@ begin
       'Destroying Object'
     ]);
 
-  wbBodyLocationEnum :=
-    wbEnum([
-      'Torso',
-      'Head 1',
-      'Head 2',
-      'Left Arm 1',
-      'Left Arm 2',
-      'Right Arm 1',
-      'Right Arm 2',
-      'Left Leg 1',
-      'Left Leg 2',
-      'Left Leg 3',
-      'Right Leg 1',
-      'Right Leg 2',
-      'Right Leg 3',
-      'Brain'
-    ], [
-      -1, 'None'
-    ]);
-
-
   wbEFID := wbFormIDCk(EFID, 'Base Effect', [MGEF]);
 
   wbEFIT :=
@@ -6480,23 +6457,7 @@ var  wbSoundTypeSoundsOld :=
       'IK Data - Headtracking',
       'To Hit Chance - Absolute'
     ])),
-    {05} wbInteger('Part Type', itU8, wbEnum([
-           'Torso',
-           'Head 1',
-           'Head 2',
-           'Left Arm 1',
-           'Left Arm 2',
-           'Right Arm 1',
-           'Right Arm 2',
-           'Left Leg 1',
-           'Left Leg 2',
-           'Left Leg 3',
-           'Right Leg 1',
-           'Right Leg 2',
-           'Right Leg 3',
-           'Brain',
-           'Weapon'
-         ])),
+    {05} wbInteger('Part Type', itS8, wbBodyLocationEnum),
     {06} wbInteger('Health Percent', itU8),
     {07} wbInteger('Actor Value', itS8, wbActorValueEnum),
     {08} wbInteger('To Hit Chance', itU8),
