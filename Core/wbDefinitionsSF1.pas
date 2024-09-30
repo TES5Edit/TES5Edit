@@ -4176,9 +4176,8 @@ begin
       ]).SetSummaryKey([0, 1, 2]),
       wbStruct('Form Only', [
         wbFormIDCk('Start Form', [NULL, WWED]).IncludeFlag(dfSummaryExcludeNULL)
-      ]).SetSummaryKey([0]),
-      wbUnknown(4)
-    ], cpNormal, False, nil, 2).SetSummaryKey([0, 1])
+      ]).SetSummaryKey([0])
+    ]).SetSummaryKey([0, 1])
       .IncludeFlag(dfCollapsed);
 end;
 {------------------------------------------------------------------------------}
@@ -20914,7 +20913,10 @@ end;
     wbRStruct('Sounds', [
       wbInteger(WSLS, 'Sounds Count', itU32),
       wbRArray('Sounds',
-        wbSoundReference(WSLD)
+        wbStruct(WSLD, 'Sound', [
+          wbSoundReference,
+          wbUnknown(4)
+        ])
       ).SetCountPath(WSLS)
     ], []),
     wbRArrayS('Sky Statics',
