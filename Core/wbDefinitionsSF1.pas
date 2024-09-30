@@ -8283,7 +8283,8 @@ end;
           wbString(DNAM, 'Response File'),
           wbEmpty(ENAM) // bool flag whose prescense indicates true
         ], [])
-        .SetSummaryDelimiter(', '),
+        .SetSummaryDelimiter(', ')
+        .IncludeFlag(dfAllowAnyMember),
         //BGSAttachParentArray_Component
         wbRStruct('Component Data - Attach Parent', [
           wbAPPR
@@ -9459,10 +9460,10 @@ end;
     wbNTRM,
     wbByteColors(PNAM, 'Marker Color'),
     wbString(WMAT, 'Water Material'),
-    wbFormIDCk(WTFM, 'Water', [WATR]),
     wbALSH,
     wbACSH,
     wbATTX,
+    wbFormIDCk(WTFM, 'Water', [WATR]),
     wbInteger(FNAM, 'Flags', itU16, wbFlags([
       'No Displacement',
       'Ignored by Sandbox',
@@ -10932,7 +10933,8 @@ end;
     wbFormIDCk(ENAM, 'Event Size', [GLOB]),
     wbFormIDCk(DNAM, 'Distance to Player', [GLOB]),
     wbFormIDCk(CNAM, 'Cooldown in Minutes', [GLOB]),
-    wbFormIDCk(BNAM, 'Required Faction', [FACT])
+    wbFormIDCk(BNAM, 'Required Faction', [FACT]),
+    wbFormIDCK(PNAM, 'Parent Affinity Event', [AFFE])
   ])
   .SetSummaryKey([2])
   .IncludeFlag(dfSummaryMembersNoName)
@@ -12305,7 +12307,8 @@ end;
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
       wbFormIDCk('Material Type', [MATT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
       wbFormIDCk('Impact Data', [IPCT])
-    ]))
+    ])),
+    wbFormIDCk(ENAM, 'Parent Impact Data Set', [IPDS])
   ]);
 
   var lDontShowForCellLocation: TwbDontShowCallback :=
@@ -13574,8 +13577,6 @@ end;
       'Force'
     ])),
     wbFormIDCk(SCPP, 'Unknown', [NULL, SCEN]),
-    wbEmpty(DEVT, 'Show One Dialogue Track Flag'),
-
     wbRStruct('Speech Challenge Data', [
       wbEmpty(SCSP, 'Marker', cpNormal, True),
       wbArray(SPMA, 'Mandatory Next Challenges', wbFormIDCk('Challenge Scene', [SCEN])),
@@ -13593,7 +13594,8 @@ end;
       wbArray(SPKW, 'AND - Keywords', wbFormIDCk('Keyword',[KYWD])),
       wbArray(SPKY, 'OR - Keywords', wbFormIDCk('Keyword',[KYWD])),
       wbArray(SPPK, 'Perks', wbFormIDCk('Perk', [PERK]))
-    ], [])
+    ], []),
+    wbEmpty(DEVT, 'Show One Dialogue Track Flag')
   ]);
 
   (* still exists in game code, but not in Starfield.esm *)
@@ -15582,7 +15584,7 @@ end;
           {0x00000004} { 2} 'Movement - Deceleration',
           {0x00000008} { 3} 'Movement - Angular Acceleration',
           {0x00000010} { 4} 'Movement - Angular Tolerance',
-          {0x00000020} { 4} 'Flight Radius',
+          {0x00000020} { 5} 'Flight Radius',
           {0x00000040} { 6} 'Unarmed Weapon - Unarmed Weapon',
           {0x00000080} { 7} 'Unarmed Weapon - Injured Health %',
           {0x00000100} { 8} 'Bleedout - Health %',
@@ -15592,13 +15594,13 @@ end;
           {0x00001000} {12} 'Bleedout - Time Max',
           {0x00002000} {13} 'Bleedout - Health Drain Rate',
           {0x00004000} {14} 'Blood Data - Impact Material Type',
-          {0x00008000} {15} '',
+          {0x00008000} {15} 'Unknown 15',
           {0x00010000} {16} '',
-          {0x00020000} {17} '',
+          {0x00020000} {17} 'Unknown 17',
           {0x00040000} {18} 'Blood Data - Sound Open Corpse',
           {0x00080000} {19} 'Blood Data - Sound Close Corpse',
-          {0x00100000} {20} '',
-          {0x00200000} {21} '',
+          {0x00100000} {20} 'Unknown 20',
+          {0x00200000} {21} 'Unknown 21',
           {0x00400000} {22} 'Blood Data - OnCripple',
           {0x00800000} {23} 'EM - Support Shocked',
           {0x01000000} {24} 'EM - Recover Chance',
@@ -15608,7 +15610,7 @@ end;
           {0x10000000} {28} 'EM - Health Drain Rate',
           {0x20000000} {29} 'EM - Health After Recovery',
           {0x40000000} {30} 'EM - Immunity Duration',
-          {0x80000000} {31} ''
+          {0x80000000} {31} 'Unknown 31'
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
       ])),
 
@@ -17274,6 +17276,8 @@ end;
 
     wbLinkedReferences,
 
+    wbFormIDCk(XLIB, 'Leveled Item Base Object', [LVLI]),
+
     wbInteger(XCNT, 'Item Count', itS32),
 
     wbXFLG,
@@ -18437,7 +18441,6 @@ end;
     wbEDID
   ]);}
 
-  (* still exists in game code, but not in Starfield.esm * )
   wbRecord(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
@@ -18450,14 +18453,8 @@ end;
         ])
       ], [])
     ),
-    wbUnknown(VNAM, cpNormal, True),
-    wbRArray('Unknown', wbStruct(XNAM, 'Unknown', [
-      wbInteger('Unknown', itS32),
-      wbInteger('Unknown', itS32)
-    ])),
-    wbUnknown(VNAM, cpNormal, True)
+    wbUnknown(VNAM)
   ]);
-  (**)
 
   var wbStaticPart :=
     wbRStructSK([0], 'Part', [
@@ -20611,6 +20608,7 @@ end;
     wbODTYReq,
     wbOPDS,
     wbPTT2,
+    wbXALG,
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(True),
@@ -21275,7 +21273,7 @@ end;
   wbAddGroupOrder(ZOOM);
   wbAddGroupOrder(INNR);
   wbAddGroupOrder(KSSM);
-  //wbAddGroupOrder(SCCO);
+  wbAddGroupOrder(SCCO);
   wbAddGroupOrder(AORU);
   wbAddGroupOrder(STAG);
   wbAddGroupOrder(IRES);
