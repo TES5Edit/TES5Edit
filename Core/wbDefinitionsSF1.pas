@@ -19058,7 +19058,7 @@ end;
         .SetFormaterOnValue(wbBIOMMaskNameStringEnum),
       wbUnknown(BNAM, cpNormal, True).SetDefaultEditValue('01 00 00 00'),  //Always 01 00 00 00 if it exists, probably a bool flag to load this mask. Only ever present if the mask is as well.
       wbRArrayS('Objects', wbStructSK(GNAM, [0], 'Object', [
-        wbFormIDCk('Pack-In', [PKIN, LVLP]),
+        wbFormIDCk('Pack-In/Ref', [LVLP, PKIN, REFR]),
         wbStruct('Data', [
           wbUnknown(4),
           wbUnknown(4),
