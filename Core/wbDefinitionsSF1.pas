@@ -10792,10 +10792,10 @@ end;
     wbEffectsReq
   ]);
 
-  (* still exists in game code, but not in Starfield.esm
+  {still exists in game code, but not in Starfield.esm}
   wbRecord(EYES, 'Eyes',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbFULLReq,
@@ -10811,7 +10811,7 @@ end;
       {0x80}'Unknown 8'
     ]), cpNormal, True)
   ]);
-  *)
+
 
   var wbFactionRank :=
     wbRStructSK([0], 'Rank', [
@@ -21136,7 +21136,7 @@ end;
   wbAddGroupOrder(FACT);
   wbAddGroupOrder(AFFE);
   wbAddGroupOrder(HDPT);
-  //wbAddGroupOrder(EYES);
+  wbAddGroupOrder(EYES);
   wbAddGroupOrder(RACE);
   wbAddGroupOrder(SOUN);
   wbAddGroupOrder(SECH);
