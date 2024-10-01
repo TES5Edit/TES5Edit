@@ -10933,7 +10933,7 @@ end;
     wbFormIDCk(DNAM, 'Distance to Player', [GLOB]),
     wbFormIDCk(CNAM, 'Cooldown in Minutes', [GLOB]),
     wbFormIDCk(BNAM, 'Required Faction', [FACT]),
-    wbFormIDCK(PNAM, 'Parent Affinity Event', [AFFE])
+    wbFormIDCK(PNAM, 'Add to Event', [AFFE])
   ])
   .SetSummaryKey([2])
   .IncludeFlag(dfSummaryMembersNoName)
