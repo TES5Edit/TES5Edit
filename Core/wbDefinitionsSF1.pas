@@ -5825,8 +5825,8 @@ begin
         5, 'Interrupt Data',
         6, 'Self',
         7, 'Keyword',
-        8, 'Unknown 8',
-        9, 'Unknown 9'
+        8, 'Ref Collection Alias',
+        9, 'Scene Primary Actor'
       ]),
     cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
@@ -5836,12 +5836,12 @@ begin
       {3} wbFormIDCk('Keyword', [KYWD, NULL]),
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {5} wbInteger('Interrupt Data', itU32),
-      {6} wbByteArray('Unknown', 4, cpIgnore),
+      {6} wbByteArray('Unused', 4, cpIgnore), // padding unused by Self reference
       {7} wbFormIDCk('Keyword', [KYWD, NULL]),
-      {8} wbByteArray('Unknown', 4, cpIgnore),
-      {9} wbByteArray('Unknown', 4, cpIgnore)
+      {8} wbInteger('Alias Collection', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+      {9} wbByteArray('Unused', 4, cpIgnore) // padding unused by Scene Primary Actor
     ]),
-    wbInteger('Count / Distance', itS32)
+    wbInteger('Count / Distance / Index', itS32)
   ]);
 
   var wbXLOC := wbStruct(XLOC, 'Lock Data', [
