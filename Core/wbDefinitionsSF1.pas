@@ -11340,7 +11340,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(PROJ, 'Projectile',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      15, 'Unknown 15'
+      15, 'Apply Charge Multiplier'
     ])), [
     wbEDID,
     wbOBND(True),
@@ -11377,7 +11377,7 @@ end;
             {0x10000} 'Continuous Impacts',
             {0x20000} 'No Explosive Indicator',
             {0x40000} 'Variable Intensity',
-            {0x80000} 'Unknown 19'
+            {0x80000} 'Apply Charge Multiplier'
           ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     {  4} wbFloat('Gravity'),
     {  8} wbFloat('Speed'),
