@@ -18500,15 +18500,16 @@ end;
     ], []).SetCountPath(STMS)
   ]);
 
-  var wbTerminalBackgroundEnum := wbEnum([
-    'Constellation',
-    'Freestar Collective',
-    'Default',
-    'NASA',
-    'Ryujin Industries',
-    'Slayton Aerospace',
-    'United Colonies',
-    'Crimson Fleet'
+  var wbTerminalArtThemeEnum := wbEnum([], [
+    0, 'Constellation',
+    1, 'Freestar Collective',
+    2, 'Generic',
+    3, 'NASA',
+    4, 'Ryujin Industries',
+    5, 'Slayton Aerospace',
+    6, 'United Colonies',
+    7, 'Crimson Fleet',
+    9, 'House Varuun'
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -18529,7 +18530,7 @@ end;
     wbPTT2,
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Menu', [TMLM]),
-    wbInteger(NAM1, 'Terminal Background', itU8, wbTerminalBackgroundEnum),
+    wbInteger(NAM1, 'Art Theme', itU8, wbTerminalArtThemeEnum),
     wbFULL,
     wbGenericModel(True),
     wbDEST,
