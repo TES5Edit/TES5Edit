@@ -19682,7 +19682,7 @@ end;
     ]), [18]), [
     wbEDID,
     wbBaseFormComponents,
-    wbArray(CNAM, 'Worldspaces',
+    wbArray(CNAM, 'Master Worldspaces',
       wbStruct('Worldspace', [
         wbStruct('Position', [
           wbLatitudeDouble,
@@ -19696,7 +19696,7 @@ end;
         wbFormIDCk('Worldspace', [WRLD])
       ])
     ).SetRequired,
-    wbArray(EOVR, 'Worldspaces',
+    wbArray(EOVR, 'Added Worldspaces',
       wbStruct('Worldspace', [
         wbStruct('Position', [
           wbLatitudeDouble,
@@ -19709,8 +19709,8 @@ end;
           .IncludeFlag(dfCollapsed, wbCollapsePosRot),
         wbFormIDCk('Worldspace', [WRLD]),
         wbByteArray('Unknown', 1)
-      ])
-    ),
+      ]),
+    0, nil, nil, cpBenign),
     wbRArray('Biomes',
       wbStructSK(PPBD, [0], 'Biome', [
         wbFormIDCK('Biome', [BIOM]),
@@ -19718,7 +19718,7 @@ end;
         wbUnknown(4),
         wbFormIDCk('Resource Generation', [NULL, RSGD]).IncludeFlag(dfSummaryExcludeNULL),
         wbArray('Fauna', wbFormIDCk('Fauna', [NPC_]), -1),
-        wbUnknown(4),
+        wbArray('Keywords', wbFormIDCk('Keyword', [KYWD]), -1),
         wbStruct('Flora', [
           wbInteger('Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
           wbInteger('Entry Size', itU32).SetDefaultNativeValue(9).IncludeFlag(dfSkipImplicitEdit),
@@ -19728,20 +19728,24 @@ end;
               wbFormIDCk('Resource', [MISC]),
               wbInteger('Frequency', itU8)
             ])
-          )
-            .SetCountPath('Count', True)
-            .SetSummaryName('Flora')
-        ])
-          .SetSummaryKey([2]),
-        wbUnknown()
-      ])
-      .SetSummaryKeyOnValue([1, 3, 4, 6])
-      .SetSummaryPrefixSuffixOnValue(0, '', '')
-      .SetSummaryPrefixSuffixOnValue(1, 'Chance: ', '%')
-      .SetSummaryPrefixSuffixOnValue(3, '', '')
-      .SetSummaryPrefixSuffixOnValue(4, '', '')
-      .SetSummaryPrefixSuffixOnValue(6, '', '')
-      .IncludeFlagOnValue(dfSummaryMembersNoName)
+          ).SetCountPath('Count', True)
+           .SetSummaryName('Flora')
+        ]).SetSummaryKey([2]),
+        wbArray('Unknown',
+          wbStruct('Unknown', [
+            wbUnknown(4),
+            wbUnknown(4),
+            wbUnknown(4),
+            wbUnknown(4)
+          ]),
+        -1)
+      ]).SetSummaryKeyOnValue([1, 3, 4, 6])
+        .SetSummaryPrefixSuffixOnValue(0, '', '')
+        .SetSummaryPrefixSuffixOnValue(1, 'Chance: ', '%')
+        .SetSummaryPrefixSuffixOnValue(3, '', '')
+        .SetSummaryPrefixSuffixOnValue(4, '', '')
+        .SetSummaryPrefixSuffixOnValue(6, '', '')
+        .IncludeFlagOnValue(dfSummaryMembersNoName)
     ),
     wbFormIDCk(FNAM, 'Surface Tree', [NULL, SFTR]).SetRequired,
     wbFloat(GNAM, 'Scan Worldspace Multiplier').SetDefaultNativeValue(1.0).SetRequired,
@@ -19831,12 +19835,14 @@ end;
         wbInteger('Terrain Height Seed', itS32),
         wbFloat('Terrain Max Height (m)')
       ]),
-      wbInteger(NNAM, 'Player Knowlege', itU32, wbFlags(nil, wbSparseFlags([
-        0, 'Initial Scan',
-        1, 'Visited',
-        2, 'Entered System',
-        31, 'Unknown 31'
-      ]))),
+      wbInteger(NNAM, 'Player Knowlege', itU32,
+        wbFlags(wbSparseFlags([
+          0, 'Initial Scan',
+          1, 'Visited',
+          2, 'Entered System',
+         31, 'Unknown 31'
+        ]))
+      ),
       wbMarkerReq(BDED)
     ], []),
 
