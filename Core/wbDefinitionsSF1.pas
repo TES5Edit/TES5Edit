@@ -21335,10 +21335,16 @@ end;
 
   wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
-  SetLength(wbOfficialDLC, 3);
-  wbOfficialDLC[0] := 'Constellation.esm';
-  wbOfficialDLC[1] := 'OldMars.esm';
-  wbOfficialDLC[2] := 'BlueprintShips-Starfield.esm';
+  SetLength(wbOfficialDLC, 9);
+  wbOfficialDLC[0] := 'ShatteredSpace.esm';
+  wbOfficialDLC[1] := 'Constellation.esm';
+  wbOfficialDLC[2] := 'OldMars.esm';
+  wbOfficialDLC[3] := 'SFBGS003.esm';
+  wbOfficialDLC[4] := 'SFBGS004.esm';
+  wbOfficialDLC[5] := 'SFBGS006.esm';
+  wbOfficialDLC[6] := 'SFBGS007.esm';
+  wbOfficialDLC[7] := 'SFBGS008.esm';
+  wbOfficialDLC[8] := 'BlueprintShips-Starfield.esm';
   wbCreationClubContentFileName := 'Starfield.ccc';
 
   {
