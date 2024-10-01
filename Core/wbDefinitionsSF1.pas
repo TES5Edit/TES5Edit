@@ -10642,7 +10642,18 @@ end;
        {168} 'Player Activate Container',
        {169} 'Player Aquire Featured Item',
        {170} 'Max Carbon Dioxide',
-       {171} 'Blocking Hellos'
+       {171} 'Blocking Hellos',
+       {172} 'Unknown 172',
+       {173} 'Unknown 173',
+       {174} 'Unknown 174',
+       {175} 'Unknown 175',
+       {176} 'Unknown 176',
+       {177} 'Unknown 177',
+       {178} 'Unknown 178',
+       {179} 'Unknown 179',
+       {180} 'Unknown 180',
+       {181} 'Unknown 181',
+       {182} 'Unknown 182'
       ]))
     ]),
     wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
