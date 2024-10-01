@@ -11312,7 +11312,10 @@ end;
   ], False, nil, cpNormal, False);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PROJ, 'Projectile', [
+  wbRecord(PROJ, 'Projectile',
+    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbOBND(True),
     wbODTYReq,
@@ -11347,7 +11350,8 @@ end;
             {0x08000} 'Align On Projectile',
             {0x10000} 'Continuous Impacts',
             {0x20000} 'No Explosive Indicator',
-            {0x40000} 'Variable Intensity'
+            {0x40000} 'Variable Intensity',
+            {0x80000} 'Unknown 19'
           ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     {  4} wbFloat('Gravity'),
     {  8} wbFloat('Speed'),
