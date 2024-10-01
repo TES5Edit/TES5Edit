@@ -5825,8 +5825,8 @@ begin
         5, 'Interrupt Data',
         6, 'Self',
         7, 'Keyword',
-        8, 'Unknown 8',
-        9, 'Unknown 9'
+        8, 'Ref Collection Alias',
+        9, 'Scene Primary Actor'
       ]),
     cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
@@ -5836,12 +5836,12 @@ begin
       {3} wbFormIDCk('Keyword', [KYWD, NULL]),
       {4} wbInteger('Alias', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
       {5} wbInteger('Interrupt Data', itU32),
-      {6} wbByteArray('Unknown', 4, cpIgnore),
+      {6} wbByteArray('Unused', 4, cpIgnore), // padding unused by Self reference
       {7} wbFormIDCk('Keyword', [KYWD, NULL]),
-      {8} wbByteArray('Unknown', 4, cpIgnore),
-      {9} wbByteArray('Unknown', 4, cpIgnore)
+      {8} wbInteger('Alias Collection', itS32, wbPackageLocationAliasToStr, wbStrToAlias),
+      {9} wbByteArray('Unused', 4, cpIgnore) // padding unused by Scene Primary Actor
     ]),
-    wbInteger('Count / Distance', itS32)
+    wbInteger('Count / Distance / Index', itS32)
   ]);
 
   var wbXLOC := wbStruct(XLOC, 'Lock Data', [
@@ -7149,21 +7149,21 @@ end;
     Sig2Int('TREX'), 'Training Exit',
     Sig2Int('TRNV'), 'Tresspass No Visual',
     Sig2Int('USMG'), 'Use Magic',
-    Sig2Int('VPAW'), 'Unknown - VPAW',
-    Sig2Int('VPEB'), 'Unknown - VPEB',
+    Sig2Int('VPAW'), 'Vehicle Passenger Aim Mounted Weapon',
+    Sig2Int('VPEB'), 'Vehicle Passenger Engage Boost',
     Sig2Int('VPEL'), 'Voice Power End Long',
     Sig2Int('VPES'), 'Voice Power End Short',
-    Sig2Int('VPEV'), 'Unknown - VPEW',
-    Sig2Int('VPEW'), 'Unknown - VPEW',
-    Sig2Int('VPHC'), 'Unknown - VPHC',
-    Sig2Int('VPLV'), 'Unknown - VPLV',
-    Sig2Int('VPKC'), 'Unknown - VPKC',
-    Sig2Int('VPKW'), 'Unknown - VPKW',
-    Sig2Int('VPNM'), 'Unknown - VPNM',
+    Sig2Int('VPEV'), 'Vehicle Passenger Enter Vehicle',
+    Sig2Int('VPEW'), 'Vehicle Passenger Enter Water',
+    Sig2Int('VPHC'), 'Vehicle Passenger Horizontal Collision',
+    Sig2Int('VPLV'), 'Vehicle Passenger Vertical Collision Low Velocity',
+    Sig2Int('VPKC'), 'Vehicle Passenger Kill With Collision',
+    Sig2Int('VPKW'), 'Vehicle Passenger Kill With Weapon',
+    Sig2Int('VPNM'), 'Vehicle Passenger Non Moving Idle',
     Sig2Int('VPSL'), 'Voice Power Start Long',
     Sig2Int('VPSS'), 'Voice Power Start Short',
-    Sig2Int('VPTM'), 'Unknown - VPTM',
-    Sig2Int('VPVC'), 'Unknown - VPVC',
+    Sig2Int('VPTM'), 'Vehicle Passenger Trigger Mine',
+    Sig2Int('VPVC'), 'Vehicle Passenger Vertical Collision',
     Sig2Int('WFPI'), 'Waiting For Player Input',
     Sig2Int('WTCR'), 'Curious',
     Sig2Int('YIEL'), 'Yield',
@@ -9948,7 +9948,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2',
+      {0x00000004}  2, 'Is Unique',
       {0x00000400}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
       {0x00004000} 14, 'Partial Form',
@@ -9990,10 +9990,10 @@ end;
        13, 'Player Followers Can''t Travel Here',
        14, 'Unknown 14',
        15, 'Unknown 15',
-       16, 'Is Unique',
+       16, 'Use Location as Name',
        17, 'Use Planet Gravity',
        19, 'Use IS Volumes Interior Criteria',
-       20, 'Unknown 20'
+       20, 'Do Not Apply Biome Layered Material Swaps'
     ])), cpNormal, True, False, nil, wbCELLDATAAfterSet)
       .IncludeFlag(dfCollapsed, wbCollapseFlags),
 
@@ -10658,17 +10658,17 @@ end;
        {169} 'Player Aquire Featured Item',
        {170} 'Max Carbon Dioxide',
        {171} 'Blocking Hellos',
-       {172} 'Unknown 172',
-       {173} 'Unknown 173',
-       {174} 'Unknown 174',
-       {175} 'Unknown 175',
-       {176} 'Unknown 176',
-       {177} 'Unknown 177',
-       {178} 'Unknown 178',
-       {179} 'Unknown 179',
-       {180} 'Unknown 180',
-       {181} 'Unknown 181',
-       {182} 'Unknown 182'
+       {172} 'Vehicle Passenger Enter Vehicle',
+       {173} 'Vehicle Passenger Engage Boost',
+       {174} 'Vehicle Passenger Horizontal Collision',
+       {175} 'Vehicle Passenger Vertical Collision',
+       {176} 'Vehicle Passenger Enter Water',
+       {177} 'Vehicle Passenger Non Moving Idle',
+       {178} 'Vehicle Passenger Trigger Mine',
+       {179} 'Vehicle Passenger Aim Mounted Weapon',
+       {180} 'Vehicle Passenger Kill With Collision',
+       {181} 'Vehicle Passenger Kill With Weapon',
+       {182} 'Vehicle Passenger Vertical Collision Low Velocity'
       ]))
     ]),
     wbInteger(SNAM, 'Subtype Name', itU32, wbDialogueSubtypeEnum),
@@ -11340,7 +11340,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(PROJ, 'Projectile',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      15, 'Unknown 15'
+      15, 'Apply Charge Multiplier'
     ])), [
     wbEDID,
     wbOBND(True),
@@ -11377,7 +11377,7 @@ end;
             {0x10000} 'Continuous Impacts',
             {0x20000} 'No Explosive Indicator',
             {0x40000} 'Variable Intensity',
-            {0x80000} 'Unknown 19'
+            {0x80000} 'Apply Charge Multiplier'
           ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     {  4} wbFloat('Gravity'),
     {  8} wbFloat('Speed'),
