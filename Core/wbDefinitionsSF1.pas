@@ -8642,7 +8642,7 @@ end;
             .IncludeFlag(dfNotAlignable),
             wbArray('Unknown',
               wbStruct('Unknown', [
-                wbFormIDCk('Unknown', [ACTI]),
+                wbFormIDCk('Unknown', [ACTI, REFR]),
                 wbVec3,
                 wbArray('Unknown', wbTraversalData, -1)
                 .IncludeFlag(dfCollapsed)
