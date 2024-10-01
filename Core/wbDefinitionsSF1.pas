@@ -20397,6 +20397,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(TRAV, 'Traversal', [
     wbEDID,
+    wbBaseFormComponents,
     wbStruct(DNAM, 'Data', [
       wbInteger('Type', itU32, wbEnum([
         {0} 'Jump',
