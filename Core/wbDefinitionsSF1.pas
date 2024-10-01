@@ -9948,7 +9948,7 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Unknown 2',
+      {0x00000004}  2, 'Is Unique',
       {0x00000400}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
       {0x00004000} 14, 'Partial Form',
@@ -9990,10 +9990,10 @@ end;
        13, 'Player Followers Can''t Travel Here',
        14, 'Unknown 14',
        15, 'Unknown 15',
-       16, 'Is Unique',
+       16, 'Use Location as Name',
        17, 'Use Planet Gravity',
        19, 'Use IS Volumes Interior Criteria',
-       20, 'Unknown 20'
+       20, 'Do Not Apply Biome Layered Material Swaps'
     ])), cpNormal, True, False, nil, wbCELLDATAAfterSet)
       .IncludeFlag(dfCollapsed, wbCollapseFlags),
 
