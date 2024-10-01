@@ -20226,10 +20226,11 @@ end;
     wbBaseFormComponents,
     wbKeywords,
     wbString(ANAM, 'Name'),
-    wbVec3Pos(BNAM, 'System Parsec Location', 'Parsecs').IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3Pos(BNAM, 'System Parsec Location', 'Parsecs'),
     wbUnknown(ONAM),                                    //related to BGSOrbitalDataComponent_Component
     wbInteger(DNAM, 'System ID', itU32),
     wbByteColors(ENAM, 'Color'),
+    wbFormIDCk(SNAM, 'Binary Star', [STDT]),
     wbFormIDCk(PNAM, 'Sun Preset', [SUNP]),
     wbFormIDCk(HNAM, 'Time of Day Data', [TODD]),
     wbSoundReference(WED0, 'Star Sound')
