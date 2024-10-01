@@ -17296,19 +17296,22 @@ end;
     {--- Map Data ---}
     wbRStruct('Map Marker', [
       wbMarkerReq(XMRK),
-      wbInteger(FNAM, 'Map Flags', itU32, wbFlags([
-        {0x0001} 'Visible',
-        {0x0002} 'Can Travel To',
-        {0x0004} '"Show All" Hidden',
-        {0x0008} 'Use Location Name',
-        {0x0010} 'Visible on Star Map',
-        {0x0020} 'Discovered',
-        {0x0040} 'Requires Scanning',
-        {0x0080} 'Allow Grav Jump',
-        {0x0100} 'Unknown 8', // does not appear in any existing records and cannot set in CK UI
-        {0x0200} 'Suppress Discovery',
-        {0x0400} 'Use Accurate Z-Height'
-      ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbInteger(FNAM, 'Map Flags', itU32,
+        wbFlags(wbSparseFlags([
+          0, 'Visible',
+          1, 'Can Travel To',
+          2, '"Show All" Hidden',
+          3, 'Use Location Name',
+          4, 'Visible on Star Map',
+          5, 'Discovered',
+          6, 'Requires Scanning',
+          7, 'Allow Grav Jump',
+          9, 'Suppress Discovery',
+         10, 'Use Accurate Z-Height',
+         11, 'Limit Map Visibility To Compass Range'
+        ], False, 12))
+      ).SetRequired
+       .IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbFULLReq,
       wbInteger(TNAM, 'Type', itU16, wbEnum([
         { 0} 'Akila City',
@@ -17373,7 +17376,14 @@ end;
         {59} 'Player House',
         {60} 'Transit',
         {61} 'The Well',
-        {62} 'Trackers Alliance'
+        {62} 'Trackers Alliance',
+        {63} '',
+        {64} 'Shrine - Devotion',
+        {65} 'Shrine - Obedience',
+        {66} 'Shrine - Perseverance',
+        {67} 'Shrine - Redemption',
+        {68} 'Shrine - Strength',
+        {69} 'Shrine - Generic'
       ]), cpNormal, True),
       wbInteger(VNAM, 'Category', itU16, wbEnum([
         {0}'None',
