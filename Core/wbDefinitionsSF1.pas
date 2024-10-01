@@ -4330,10 +4330,13 @@ begin
       { 0} wbFloat('Width'),
       { 4} wbFloat('Height'),
       { 8} wbFloat('Radius'),
-      {12} wbInteger('Area Light Type', itU8, wbEnum([
-            'None',
-            'Rectangle',
-            'Sphere'
+      {12} wbInteger('Area Light Type', itU8,
+             wbEnum([], [
+              0, 'None',
+              1, 'Rectangle',
+              2, 'Sphere',
+             51, 'Unknown 51',
+            102, 'Unknown 102'
            ])),
       {13} wbInteger('Is Diffuse', itU8, wbBoolEnum),
       {14} wbUnused(2) // padding
