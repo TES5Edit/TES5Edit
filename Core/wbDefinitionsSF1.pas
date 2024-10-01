@@ -20521,7 +20521,7 @@ end;
     wbInteger(ANAM, 'Opacity (unused)', itU8),
     wbInteger(FNAM, 'Flags', itU8, wbFlags([
       {0x01} 'Dangerous',
-      {0x02} 'Unknown 1',
+      {0x02} '',
       {0x04} 'Directional Sound',
       {0x08} 'Enable Flowmap',
       {0x10} 'Blend Normals'
