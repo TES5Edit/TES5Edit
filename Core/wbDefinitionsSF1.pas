@@ -14805,20 +14805,18 @@ end;
     ]);
 
   var wbRaceSizeEnum :=
-    wbEnum([
-      'Small',
-      'Medium',
-      'Large',
-      'Extra Large'
+    wbEnum([], [
+     -1, 'Unknown',
+      0, 'Small',
+      1, 'Medium',
+      2, 'Large',
+      3, 'Extra Large'
     ]);
 
   var wbRACEDAT2Size := function(aName: string = 'Size'): IwbIntegerDef
   begin
-    Result := wbInteger(aName, itU32, wbRaceSizeEnum);
+    Result := wbInteger(aName, itS32, wbRaceSizeEnum);
   end;
-
-  var wbNPC_ONA2Size :=
-    wbInteger('Size', itU8, wbRaceSizeEnum);
 
   {subrecords checked against Starfield.esm}
   wbRecord(NPC_, 'Non-Player Character (Actor)',
@@ -15520,7 +15518,8 @@ end;
         .SetAfterSet(wbUpdateSameParentUnions),
 
       wbIsFlag(0, wbStruct('Size', [
-        wbNPC_ONA2Size.SetDontShow(wbRaceOverrideDontShow(0))
+        wbInteger('Size', itS8, wbRaceSizeEnum)
+          .SetDontShow(wbRaceOverrideDontShow(0))
       ])),
 
       wbIsFlag(1, wbStruct('Movement Accel/Decel', [
@@ -15593,13 +15592,13 @@ end;
           {0x00001000} {12} 'Bleedout - Time Max',
           {0x00002000} {13} 'Bleedout - Health Drain Rate',
           {0x00004000} {14} 'Blood Data - Impact Material Type',
-          {0x00008000} {15} 'Unknown 15',
+          {0x00008000} {15} '',
           {0x00010000} {16} '',
-          {0x00020000} {17} 'Unknown 17',
+          {0x00020000} {17} '',
           {0x00040000} {18} 'Blood Data - Sound Open Corpse',
           {0x00080000} {19} 'Blood Data - Sound Close Corpse',
-          {0x00100000} {20} 'Unknown 20',
-          {0x00200000} {21} 'Unknown 21',
+          {0x00100000} {20} '',
+          {0x00200000} {21} '',
           {0x00400000} {22} 'Blood Data - OnCripple',
           {0x00800000} {23} 'EM - Support Shocked',
           {0x01000000} {24} 'EM - Recover Chance',
@@ -15609,7 +15608,7 @@ end;
           {0x10000000} {28} 'EM - Health Drain Rate',
           {0x20000000} {29} 'EM - Health After Recovery',
           {0x40000000} {30} 'EM - Immunity Duration',
-          {0x80000000} {31} 'Unknown 31'
+          {0x80000000} {31} ''
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
       ])),
 
