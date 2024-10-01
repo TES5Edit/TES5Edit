@@ -5812,17 +5812,20 @@ begin
   var wbPLVD := wbLocation(PLVD, 'Vendor Location');
 
   var wbPTDA := wbStruct(PTDA, 'Target Data', [
-    wbInteger('Type', itS32, wbEnum([
-      {0} 'Specific Reference',
-      {1} 'Object ID',
-      {2} 'Object Type',
-      {3} 'Linked Reference',
-      {4} 'Ref Alias',
-      {5} 'Interrupt Data',
-      {6} 'Self',
-      {7} 'Keyword',
-      {8} 'Unknown 8'
-    ]), cpNormal, False, nil, nil, 2),
+    wbInteger('Type', itS32,
+      wbEnum([], [
+        0, 'Specific Reference',
+        1, 'Object ID',
+        2, 'Object Type',
+        3, 'Linked Reference',
+        4, 'Ref Alias',
+        5, 'Interrupt Data',
+        6, 'Self',
+        7, 'Keyword',
+        8, 'Unknown 8',
+        9, 'Unknown 9'
+      ]),
+    cpNormal, False, nil, nil, 2),
     wbUnion('Target', wbTypeDecider, [
       {0} wbFormIDCkNoReach('Reference', sigReferences, True),
       {1} wbFormIDCkNoReach('Object ID', [NULL, ACTI, DOOR, STAT, MSTT, FURN, SPEL, NPC_, CONT, ARMO, AMMO, MISC, WEAP, OMOD, BOOK, NOTE, KEYM, ALCH, INGR, LIGH, FACT, FLST, IDLM, TXST, PROJ, PKIN]),
@@ -5832,7 +5835,8 @@ begin
       {5} wbInteger('Interrupt Data', itU32),
       {6} wbByteArray('Unknown', 4, cpIgnore),
       {7} wbFormIDCk('Keyword', [KYWD, NULL]),
-      {8} wbByteArray('Unknown', 4, cpIgnore)
+      {8} wbByteArray('Unknown', 4, cpIgnore),
+      {9} wbByteArray('Unknown', 4, cpIgnore)
     ]),
     wbInteger('Count / Distance', itS32)
   ]);
