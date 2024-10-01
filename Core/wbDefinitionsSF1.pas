@@ -19058,7 +19058,7 @@ end;
         .SetFormaterOnValue(wbBIOMMaskNameStringEnum),
       wbUnknown(BNAM, cpNormal, True).SetDefaultEditValue('01 00 00 00'),  //Always 01 00 00 00 if it exists, probably a bool flag to load this mask. Only ever present if the mask is as well.
       wbRArrayS('Objects', wbStructSK(GNAM, [0], 'Object', [
-        wbFormIDCk('Pack-In/Ref', [LVLP, PKIN, REFR]),
+        wbFormIDCk('Pack-In/Ref', [CONT, LVLP, PKIN, REFR]),
         wbStruct('Data', [
           wbUnknown(4),
           wbUnknown(4),
@@ -19109,7 +19109,7 @@ end;
     wbByteBGRA(BMC1, 'Surface Color 1').SetRequired,
     wbByteBGRA(BMC2, 'Surface Color 2').SetRequired,
     wbByteBGRA(BMC3, 'Rock Tint').SetRequired,
-    wbInteger(TNAM, 'Unknown', itU32, wbEnum([
+    wbInteger(TNAM, 'Biome Type', itU32, wbEnum([
       'Default',
       'Ocean',
       'Polar',
