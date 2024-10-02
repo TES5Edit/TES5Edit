@@ -18609,6 +18609,7 @@ end;
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Terminal Menu', [TMLM]),
     wbInteger(NAM1, 'Art Theme', itU8, wbTerminalArtThemeEnum)
+      .SetDefaultNativeValue(2)
       .SetRequired,
     wbFULL,
     wbGenericModel(True),
