@@ -18608,7 +18608,8 @@ end;
     wbXALG,
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Terminal Menu', [TMLM]),
-    wbInteger(NAM1, 'Art Theme', itU8, wbTerminalArtThemeEnum),
+    wbInteger(NAM1, 'Art Theme', itU8, wbTerminalArtThemeEnum)
+      .SetRequired,
     wbFULL,
     wbGenericModel(True),
     wbDEST,
@@ -18616,7 +18617,8 @@ end;
     wbPRPS,
     wbFTYP,
     wbNTRM,
-    wbByteColors(PNAM, 'Default Primitive Color'),
+    wbByteColors(PNAM, 'Default Primitive Color')
+      .SetRequired,
     wbALSH,
     wbACSH,
     wbFormIDCk(WTFM, 'Water', [WATR]),
@@ -18628,7 +18630,8 @@ end;
         2, 'Unknown 2',
         4, 'Is A Radio',
         5, 'Allow Water Displacements'
-      ], False, 6))),
+      ], False, 6))
+    ).SetRequired,
     wbInteger(JNAM, 'Activation Angle - For Player', itU16)
       .SetDefaultNativeValue(360)
       .SetRequired,
@@ -18639,11 +18642,12 @@ end;
       wbInteger('No Signal Static', itU8, wbBoolEnum)
     ]),
     wbConditions,
-    wbMNAMFurnitureMarker,
+    wbMNAMFurnitureMarker.SetRequired,
     wbInteger(GNAM, 'Activation Angle - For Sitting Actor', itU16)
       .SetDefaultNativeValue(360)
       .SetRequired,
-    wbUnused(WBDT, 0),
+    wbUnused(WBDT, 0)
+      .SetRequired,
     wbFormIDCk(FTMP, 'Furniture Template', [FURN]),
     wbUnknown(FNPR),     // only used by one official record CY_GlenHurst_CondoTerminal and unable to find corresponding data in CK
     wbString(XMRK, 'Marker Model'),
