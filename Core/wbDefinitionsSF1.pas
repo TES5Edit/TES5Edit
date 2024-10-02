@@ -18587,6 +18587,7 @@ end;
      15, 'Has Distant LOD',
      16, 'Random Anim Start',
      17, 'Dangerous',
+     19, 'Unknown 19',
      20, 'Ignore Object Interaction',
      23, 'Is Marker',
      25, 'Obstacle',
@@ -18654,6 +18655,8 @@ end;
     wbUnknown(FNPR),     // only used by one official record CY_GlenHurst_CondoTerminal and unable to find corresponding data in CK
     wbString(XMRK, 'Marker Model'),
     wbSNAMMarkerParams,
+    wbRArray('Object Template Instance Data', wbString(STRV)),
+    wbObjectTemplate,
     wbMarkerReq(STOP)
   ]);
 
