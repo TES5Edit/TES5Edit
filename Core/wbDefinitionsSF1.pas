@@ -18605,6 +18605,7 @@ end;
     wbPTT2,
     wbSNTP,
     wbSNBH,
+    wbDEFL,
     wbXALG,
     wbBaseFormComponents,
     wbFormIDCk(DNAM, 'Terminal Menu', [TMLM]),
