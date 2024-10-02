@@ -5281,7 +5281,7 @@ begin
     {0x00000080} 'Unknown 7',
     {0x00000100} 'High Cost Path',
     {0x00000200} 'Non-Interactive',
-    {0x00000400} 'References Are Moveable (BGSEffectSequenceComponent)',
+    {0x00000400} 'References Are Moveable',
     {0x00000800} 'Disable Loop Sound',
     {0x00001000} 'Unknown 12',
     {0x00002000} 'Unknown 13',
@@ -18576,21 +18576,38 @@ end;
   {subrecords checked against Starfield.esm}
   wbRecord(TERM, 'Terminal',
     wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  4, 'Unknown 4',
-      {0x00002000} 13, 'Unknown 13',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x08000000} 27, 'Unknown 27',
-      {0x20000000} 29, 'Unknown 29',
-      {0x40000000} 30, 'Unknown 30'
+      2, 'Heading Marker',
+      4, 'Non Occluder',
+      6, 'Never Fades',
+      8, 'Must Update Anims',
+      9, 'Hidden From Local Map',
+     10, 'Headtrack Marker',
+     11, 'Used As Platform',
+     13, 'Pack-In Use Only',
+     15, 'Has Distant LOD',
+     16, 'Random Anim Start',
+     17, 'Dangerous',
+     20, 'Ignore Object Interaction',
+     23, 'Is Marker',
+     25, 'Obstacle',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
+     28, 'Navmesh - Cut Only',
+     29, 'Navmesh - Ignore Erosion',
+     30, 'Navmesh - Ground',
+     31, 'Must Be Unique'
     ])), [
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
     wbOBND(True),
     wbODTYReq,
+    wbOPDS,
     wbPTT2,
+    wbSNTP,
+    wbSNBH,
+    wbXALG,
     wbBaseFormComponents,
-    wbFormIDCk(DNAM, 'Menu', [TMLM]),
+    wbFormIDCk(DNAM, 'Terminal Menu', [TMLM]),
     wbInteger(NAM1, 'Art Theme', itU8, wbTerminalArtThemeEnum),
     wbFULL,
     wbGenericModel(True),
@@ -18598,16 +18615,35 @@ end;
     wbKeywords,
     wbPRPS,
     wbFTYP,
-    wbByteColors(PNAM, 'Marker Color (Unused)'),
+    wbNTRM,
+    wbByteColors(PNAM, 'Default Primitive Color'),
     wbALSH,
-    wbInteger(FNAM, 'Flags', itU16, wbFlags([
-      '',
-      'Ignored By Sandbox'
-    ])),
-    wbInteger(JNAM, 'Activation Angle - For Player', itU16, nil, cpNormal, True).SetDefaultNativeValue(360),
+    wbACSH,
+    wbFormIDCk(WTFM, 'Water', [WATR]),
+    wbATTX,
+    wbInteger(FNAM, 'Flags', itU16,
+      wbFlags(wbSparseFlags([
+        0, 'Non-Planar',
+        1, 'Ignored By Sandbox',
+        2, 'Unknown 2',
+        4, 'Is A Radio',
+        5, 'Allow Water Displacements'
+      ], False, 6))),
+    wbInteger(JNAM, 'Activation Angle - For Player', itU16)
+      .SetDefaultNativeValue(360)
+      .SetRequired,
+    wbStruct(RADR, 'Radio Receiver', [
+      wbFloat('Frequency'),
+      wbFloat('Volume'),
+      wbInteger('Starts Active', itU8, wbBoolEnum),
+      wbInteger('No Signal Static', itU8, wbBoolEnum)
+    ]),
+    wbConditions,
     wbMNAMFurnitureMarker,
-    wbInteger(GNAM, 'Activation Angle - For Sitting Actor', itU16, nil, cpNormal, True).SetDefaultNativeValue(360),
-    wbByteArray(WBDT, 'Workbench Data (unused)', 0),
+    wbInteger(GNAM, 'Activation Angle - For Sitting Actor', itU16)
+      .SetDefaultNativeValue(360)
+      .SetRequired,
+    wbUnused(WBDT, 0),
     wbFormIDCk(FTMP, 'Furniture Template', [FURN]),
     wbUnknown(FNPR),     // only used by one official record CY_GlenHurst_CondoTerminal and unable to find corresponding data in CK
     wbString(XMRK, 'Marker Model'),
