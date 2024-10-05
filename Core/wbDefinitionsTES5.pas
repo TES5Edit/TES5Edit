@@ -3937,13 +3937,13 @@ end;
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
     wbRefRecord(aSignature, aName,
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
-        {0x00000080}  7, 'Turn Off Fire',
-        {0x00000400} 10, 'Persistent',
-        {0x00000800} 11, 'Initially Disabled',
-        {0x10000000} 28, 'Reflected By Auto Water',
-        {0x20000000} 29, 'Don''t Havok Settle',
-        {0x40000000} 30, 'No Respawn'
+      wbFlags(wbFlagsList([
+        7, 'Turn Off Fire',
+       10, 'Persistent',
+       11, 'Initially Disabled',
+       28, 'Reflected By Auto Water',
+       29, 'Don''t Havok Settle',
+       30, 'No Respawn'
       ], True, True)), [
       wbEDID,
       wbVMAD,
@@ -3991,6 +3991,13 @@ end;
 procedure DefineTES5;
 begin
   DefineCommon;
+
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+
+  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+
+  wbSizeOfMainRecordStruct := 24;
+
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCITC := wbInteger(CITC, 'Condition Count', itU32, nil, cpBenign);
@@ -4197,12 +4204,6 @@ begin
     wbByteArray('Unknown', 2),
     wbByteColors('Color')
   ]);
-
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
-
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
-
-  wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 
@@ -4947,13 +4948,13 @@ begin
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, NPC_]);
 
   wbRefRecord(ACHR, 'Placed NPC',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Starts Dead',
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00008000} 15, 'Visible When Distant',
-      {0x02000000} 25, 'No AI Acquire',
-      {0x20000000} 29, 'Don''t Havok Settle'
+    wbFlags(wbFlagsList([
+      9, 'Starts Dead',
+     10, 'Persistent',
+     11, 'Initially Disabled',
+     15, 'Visible When Distant',
+     25, 'No AI Acquire',
+     29, 'Don''t Havok Settle'
     ], True, True)), [
     wbEDID,
     wbVMAD,
@@ -5046,21 +5047,23 @@ begin
   ], True, wbPlacedAddInfo);
 
   wbRecord(ACTI, 'Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Has Tree LOD',
-      {0x00000100}  8, 'Must Update Anims',
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00020000} 17, 'Dangerous',
-      {0x00100000} 20, 'Ignore Object Interaction',
-      {0x00800000} 23, 'Is Marker',
-      {0x02000000} 25, 'Obstacle',
-      {0x04000000} 26, 'NavMesh Generation - Filter',
-      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x20000000} 29, 'Child Can Use',
-      {0x40000000} 30, 'NavMesh Generation - Ground'
-    ])), [
+    wbFlags(wbFlagsList([
+      6, 'Has Tree LOD',
+      8, 'Must Update Anims',
+      9, 'Hidden From Local Map',
+     15, 'Has Distant LOD',
+     16, 'Random Anim Start',
+     17, 'Dangerous',
+     20, 'Ignore Object Interaction',
+     23, 'Is Marker',
+     25, 'Obstacle',
+     26, 'NavMesh Generation - Filter',
+     27, 'NavMesh Generation - Bounding Box',
+     29, 'Child Can Use',
+     30, 'NavMesh Generation - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -5081,10 +5084,10 @@ begin
   ]);
 
   wbRecord(TACT, 'Talking Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00020000} 17, 'Radio Station'
+    wbFlags(wbFlagsList([
+      9, 'Hidden From Local Map',
+     16, 'Random Anim Start',
+     17, 'Radio Station'
     ]), [17]), [
     wbEDID,
     wbVMAD,
@@ -5831,8 +5834,8 @@ begin
     wbRArray('Effects', wbEffect, cpNormal, True);
 
   wbRecord(ALCH, 'Ingestible',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x20000000} 29, 'Medicine'
+    wbFlags(wbFlagsList([
+      29, 'Medicine'
     ])), [
     wbEDID,
     wbOBND(True),
@@ -5876,8 +5879,8 @@ begin
   ]);
 
   wbRecord(AMMO, 'Ammunition',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbOBND(True),
@@ -5916,8 +5919,8 @@ begin
   ]);
 
   wbRecord(ANIO, 'Animated Object',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Unknown 9' // always present in updated records, not in Skyrim.esm
+    wbFlags(wbFlagsList([
+      9, 'Unknown 9' // always present in updated records, not in Skyrim.esm
     ]), [9]), [
     wbEDID,
     wbGenericModel,
@@ -5925,11 +5928,11 @@ begin
   ]).SetSummaryKey([1]);
 
   wbRecord(ARMO, 'Armor',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable',
-      {0x00000040}  6, 'Shield',
-      {0x00000400} 10, 'Unknown 10',
-      {0x00008000} 15, 'Visible When Distant'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable',
+      6, 'Shield',
+     10, 'Unknown 10',
+     15, 'Visible When Distant'
     ])), [
     wbEDID,
     wbVMAD,
@@ -6054,26 +6057,14 @@ begin
   ReferenceRecord(PMIS, 'Placed Missile');
 
   wbRecord(CELL, 'Cell',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Persistent',
-      {0x00004000} 14, 'Partial Form',
-      {0x00020000} 17, 'Off Limits',
-      {0x00040000} 18, 'Compressed',
-      {0x00080000} 19, 'Can''t Wait'
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      14, 'Partial Form',
+      17, 'Off Limits',
+      18, 'Compressed',
+      19, 'Can''t Wait'
     ]), [14, 18])
-      .SetFlagHasDontShow(14,
-        function(const aElement: IwbElement): Boolean
-        begin
-          Result := False;
-          if not Assigned(aElement) then
-            Exit;
-          var lMainRecord := aElement.ContainingMainRecord;
-          if not Assigned(lMainRecord) then
-            Exit;
-          if lMainRecord.IsPartialForm then
-            Exit;
-          Result := not lMainRecord.CanBePartial;
-        end),
+      .SetFlagHasDontShow(14, wbFlagPartialFormDontShow),
   [
     wbEDID,
     wbFULL,
@@ -6266,13 +6257,13 @@ begin
   ]);
 
   wbRecord(CONT, 'Container',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x02000000} 25, 'Obstacle',
-      {0x04000000} 26, 'NavMesh Generation - Filter',
-      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x40000000} 30, 'NavMesh Generation - Ground'
+    wbFlags(wbFlagsList([
+      15, 'Has Distant LOD',
+      16, 'Random Anim Start',
+      25, 'Obstacle',
+      26, 'NavMesh Generation - Filter',
+      27, 'NavMesh Generation - Bounding Box',
+      30, 'NavMesh Generation - Ground'
     ])), [
     wbEDID,
     wbVMAD,
@@ -6379,8 +6370,8 @@ begin
   ]);
 
   wbRecord(CSTY, 'Combat Style',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00080000} 19, 'Allow Dual Wielding'
+    wbFlags(wbFlagsList([
+      19, 'Allow Dual Wielding'
     ])), [
     wbEDID,
     wbStruct(CSGD, 'General', [
@@ -6540,8 +6531,8 @@ begin
   ]);
 
   wbRecord(DIAL, 'Dialog Topic',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00004000} 14, 'Partial Form'
+    wbFlags(wbFlagsList([
+      14, 'Partial Form'
     ]), [14]), [
     wbEDID,
     wbFULL,
@@ -6692,11 +6683,11 @@ begin
   ]);
 
   wbRecord(DOOR, 'Door',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00800000} 23, 'Is Marker',
-      {0x02000000} 25, 'Obstacle'
+    wbFlags(wbFlagsList([
+      15, 'Has Distant LOD',
+      16, 'Random Anim Start',
+      23, 'Is Marker',
+      25, 'Obstacle'
     ])), [
     wbEDID,
     wbVMAD,
@@ -6885,8 +6876,8 @@ begin
   ]);
 
   wbRecord(EYES, 'Eyes',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbFULLReq,
@@ -6987,14 +6978,14 @@ begin
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   wbRecord(FURN, 'Furniture',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000080}  7, 'Is Perch',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00800000} 23, 'Is Marker',
-      {0x02000000} 25, 'Obstacle',
-      {0x10000000} 28, 'Must Exit To Talk',
-      {0x20000000} 29, 'Child Can Use'
+    wbFlags(wbFlagsList([
+      7, 'Is Perch',
+     15, 'Has Distant LOD',
+     16, 'Random Anim Start',
+     23, 'Is Marker',
+     25, 'Obstacle',
+     28, 'Must Exit To Talk',
+     29, 'Child Can Use'
     ])), [
     wbEDID,
     wbVMAD,
@@ -7077,8 +7068,8 @@ begin
 // correctly without making a signed float by default
 //----------------------------------------------------------------------------
   wbRecord(GLOB, 'Global',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Constant'
+    wbFlags(wbFlagsList([
+      6, 'Constant'
     ])), [
     wbEDID,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
@@ -7137,8 +7128,8 @@ begin
   ]).SetSummaryKey([2, 3]);
 
   wbRecord(HDPT, 'Head Part',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbFULL,
@@ -7184,16 +7175,16 @@ begin
   ]);
 
   wbRecord(MSTT, 'Moveable Static',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000100}  8, 'Must Update Anims',
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00080000} 19, 'Has Currents',
-      {0x02000000} 25, 'Obstacle',
-      {0x04000000} 26, 'NavMesh Generation - Filter',
-      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x40000000} 30, 'NavMesh Generation - Ground'
+    wbFlags(wbFlagsList([
+      8, 'Must Update Anims',
+      9, 'Hidden From Local Map',
+     15, 'Has Distant LOD',
+     16, 'Random Anim Start',
+     19, 'Has Currents',
+     25, 'Obstacle',
+     26, 'NavMesh Generation - Filter',
+     27, 'NavMesh Generation - Bounding Box',
+     30, 'NavMesh Generation - Ground'
     ])), [
     wbEDID,
     wbOBND(True),
@@ -7209,8 +7200,8 @@ begin
   ]);
 
   wbRecord(IDLM, 'Idle Marker',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x20000000} 29, 'Child Can Use'
+    wbFlags(wbFlagsList([
+      29, 'Child Can Use'
     ])), [
     wbEDID,
     wbOBND(True),
@@ -7323,8 +7314,8 @@ begin
   ]);
 
   wbRecord(SLGM, 'Soul Gem',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00020000} 17, 'Can Hold NPC Soul'
+    wbFlags(wbFlagsList([
+      17, 'Can Hold NPC Soul'
     ])), [
     wbEDID,
     wbOBND,
@@ -7507,11 +7498,11 @@ Can't properly represent that with current record definition methods.
       ]);
 
   wbRecord(NAVM, 'Navmesh',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00040000} 18, 'Compressed',
-      {0x04000000} 26, 'AutoGen',
-      {0x80000000} 31, 'NavmeshGenCell'
+    wbFlags(wbFlagsList([
+      11, 'Initially Disabled',
+      18, 'Compressed',
+      26, 'AutoGen',
+      31, 'NavmeshGenCell'
     ]), [18]), [
     wbEDID,
     wbNVNM,
@@ -7937,8 +7928,8 @@ Can't properly represent that with current record definition methods.
     ], []);
 
   wbRecord(PERK, 'Perk',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbVMADFragmentedPERK,
@@ -8943,7 +8934,7 @@ Can't properly represent that with current record definition methods.
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST], False),
-      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
+      wbInteger(FNAM, 'Flags', itU32, wbFlags(wbSparseFlags([]))),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ], False, nil, cpNormal, False, nil, wbConditionsAfterSet);
@@ -9022,8 +9013,8 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(SHOU, 'Shout',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000080}  7, 'Treat spells as powers'
+    wbFlags(wbFlagsList([
+      7, 'Treat spells as powers'
     ])), [
     wbEDID,
     wbFULL,
@@ -9046,8 +9037,8 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(RELA, 'Relationship',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Secret'
+    wbFlags(wbFlagsList([
+      6, 'Secret'
     ])), [
     wbEDID,
     wbStruct(DATA, 'Data', [
@@ -9464,8 +9455,8 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(CLFM, 'Color',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbFULL,
@@ -9549,8 +9540,8 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(INFO, 'Dialog response',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00002000} 13, 'Actor Changed'
+    wbFlags(wbFlagsList([
+      13, 'Actor Changed'
     ])), [
     wbEDID,
     wbVMADFragmentedINFO,
@@ -9691,8 +9682,8 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(KEYM, 'Key',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbVMAD,
@@ -9711,8 +9702,8 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(LAND, 'Landscape',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x40000} 18, 'Compressed'
+    wbFlags(wbFlagsList([
+      18, 'Compressed'
     ]), [18]), [
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x001} 'Has Vertex Normals/Height Map',
@@ -9735,10 +9726,10 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(LIGH, 'Light',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00020000} 17, 'Portal-strict',
-      {0x02000000} 25, 'Obstacle'
+    wbFlags(wbFlagsList([
+      16, 'Random Anim Start',
+      17, 'Portal-strict',
+      25, 'Obstacle'
     ])), [
     wbEDID,
     wbVMAD,
@@ -9785,8 +9776,8 @@ Can't properly represent that with current record definition methods.
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
   wbRecord(LSCR, 'Load Screen',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Displays In Main Menu'
+    wbFlags(wbFlagsList([
+      10, 'Displays In Main Menu'
     ])), [
     wbEDID,
     wbICON,
@@ -10086,8 +10077,8 @@ Can't properly represent that with current record definition methods.
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbVMAD,
@@ -10146,11 +10137,11 @@ Can't properly represent that with current record definition methods.
     .SetSummaryMemberPrefixSuffix(5, 'at (', ')');
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Unknown 10',
-      {0x00040000} 18, 'Compressed',
-      {0x00080000} 19, 'Unknown 19',
-      {0x20000000} 29, 'Bleedout Override'
+    wbFlags(wbFlagsList([
+      10, 'Unknown 10',
+      18, 'Compressed',
+      19, 'Unknown 19',
+      29, 'Bleedout Override'
     ]), [18]), [
     wbEDID,
     wbVMAD,
@@ -11220,8 +11211,8 @@ Can't properly represent that with current record definition methods.
     , cpNormal, True);
 
   wbRecord(RACE, 'Race',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00080000} 19, 'Critter?'
+    wbFlags(wbFlagsList([
+      19, 'Critter?'
     ])), [
     wbEDID,
     wbFULL,
@@ -11405,99 +11396,98 @@ Can't properly represent that with current record definition methods.
   ], False, nil, cpNormal, False, wbRACEAfterLoad, wbRACEAfterSet);
 
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x04000000} 26, 'Filter (Collision Geometry)',
-      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x40000000} 30, 'Ground',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      16, 'Is Full LOD',
+      26, 'Filter (Collision Geometry)',
+      27, 'Bounding Box (Collision Geometry)',
+      28, 'Reflected By Auto Water',
+      30, 'Ground',
+      31, 'Multibound'
     ], True, True)),
-    {ACTI STAT TREE FLOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00002000} 13, 'Sky Marker',
-      {0x00008000} 15, 'Visible when distant',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x04000000} 26, 'Filter (Collision Geometry)',
-      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {ACTI STAT TREE FLOR}
+      9, 'Hidden From Local Map',
+     10, 'Persistent',
+     11, 'Initially Disabled',
+     13, 'Sky Marker',
+     15, 'Visible when distant',
+     16, 'Is Full LOD',
+     26, 'Filter (Collision Geometry)',
+     27, 'Bounding Box (Collision Geometry)',
+     28, 'Reflected By Auto Water',
+     29, 'Don''t Havok Settle',
+     30, 'No Respawn',
+     31, 'Multibound'
     ], True, True)),
-    {CONT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x02000000} 25, 'No AI Acquire',
-      {0x04000000} 26, 'Filter (Collision Geometry)',
-      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'Ground',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {CONT}
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      16, 'Is Full LOD',
+      25, 'No AI Acquire',
+      26, 'Filter (Collision Geometry)',
+      27, 'Bounding Box (Collision Geometry)',
+      28, 'Reflected By Auto Water',
+      29, 'Don''t Havok Settle',
+      30, 'Ground',
+      31, 'Multibound'
     ], True, True)),
-    {DOOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040}  6, 'Hidden From Local Map',
-      {0x00000100}  8, 'Inaccessible',
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x04000000} 26, 'Filter (Collision Geometry)',
-      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {DOOR}
+      6, 'Hidden From Local Map',
+      8, 'Inaccessible',
+     10, 'Persistent',
+     11, 'Initially Disabled',
+     16, 'Is Full LOD',
+     26, 'Filter (Collision Geometry)',
+     27, 'Bounding Box (Collision Geometry)',
+     28, 'Reflected By Auto Water',
+     29, 'Don''t Havok Settle',
+     30, 'No Respawn',
+     31, 'Multibound'
     ], True, True)),
-    {LIGH} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000100}  8, 'Doesn''t Light Water',
-      {0x00000200}  9, 'Casts Shadows',
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Never Fades',
-      {0x00020000} 17, 'Doesn''t Light Landscape',
-      {0x02000000} 25, 'No AI Acquire',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {LIGH}
+      8, 'Doesn''t Light Water',
+      9, 'Casts Shadows',
+     10, 'Persistent',
+     11, 'Initially Disabled',
+     16, 'Never Fades',
+     17, 'Doesn''t Light Landscape',
+     25, 'No AI Acquire',
+     28, 'Reflected By Auto Water',
+     29, 'Don''t Havok Settle',
+     30, 'No Respawn',
+     31, 'Multibound'
     ], True, True)),
-    {MSTT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000200}  9, 'Motion Blur',
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x04000000} 26, 'Filter (Collision Geometry)',
-      {0x08000000} 27, 'Bounding Box (Collision Geometry)',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {MSTT}
+      9, 'Motion Blur',
+     10, 'Persistent',
+     11, 'Initially Disabled',
+     16, 'Is Full LOD',
+     26, 'Filter (Collision Geometry)',
+     27, 'Bounding Box (Collision Geometry)',
+     28, 'Reflected By Auto Water',
+     29, 'Don''t Havok Settle',
+     30, 'No Respawn',
+     31, 'Multibound'
     ], True, True)),
-    {ADDN} wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {ADDN}
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      16, 'Is Full LOD',
+      28, 'Reflected By Auto Water',
+      29, 'Don''t Havok Settle',
+      30, 'No Respawn',
+      31, 'Multibound'
     ], True, True)),
-    {ALCH SCRL AMMO ARMO INGR KEYM MISC SLGM WEAP}
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Persistent',
-      {0x00000800} 11, 'Initially Disabled',
-      {0x00010000} 16, 'Is Full LOD',
-      {0x02000000} 25, 'No AI Acquire',
-      {0x10000000} 28, 'Reflected By Auto Water',
-      {0x20000000} 29, 'Don''t Havok Settle',
-      {0x40000000} 30, 'No Respawn',
-      {0x80000000} 31, 'Multibound'
+    wbFlags(wbFlagsList([ {ALCH SCRL AMMO ARMO INGR KEYM MISC SLGM WEAP}
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      16, 'Is Full LOD',
+      25, 'No AI Acquire',
+      28, 'Reflected By Auto Water',
+      29, 'Don''t Havok Settle',
+      30, 'No Respawn',
+      31, 'Multibound'
     ], True, True))
   ]), [
     wbEDID,
@@ -11746,8 +11736,8 @@ Can't properly represent that with current record definition methods.
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000040} 6, 'Border Region'
+    wbFlags(wbFlagsList([
+      6, 'Border Region'
     ])), [
     wbEDID,
     wbByteColors(RCLR, 'Map Color'),
@@ -11950,40 +11940,23 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(STAT, 'Static',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Never Fades',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} '',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Has Tree LOD',
-      {0x00000080} { 7} 'Add-On LOD Object',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} '',
-      {0x00000800} {11} 'Unknown 11', // present in Skyrim.esm but can't be set
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} 'Has Distant LOD',
-      {0x00010000} {16} 'Unknown 16', // present in Skyrim.esm but can't be set
-      {0x00020000} {17} 'Uses HD LOD Texture',
-      {0x00040000} {18} '',
-      {0x00080000} {19} 'Has Currents',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} 'Is Marker',
-      {0x01000000} {24} '',
-      {0x02000000} {25} 'Obstacle',
-      {0x04000000} {26} 'NavMesh Generation - Filter',
-      {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} 'Show In World Map',
-      {0x20000000} {29} '',
-      {0x40000000} {30} 'NavMesh Generation - Ground',
-      {0x80000000} {31} ''
-    ], [11, 16]), [
+    wbFlags(wbFlagsList([
+      2, 'Never Fades',
+      6, 'Has Tree LOD',
+      7, 'Add-On LOD Object',
+      9, 'Hidden From Local Map',
+     11, 'Unknown 11', // present in Skyrim.esm but can't be set
+     15, 'Has Distant LOD',
+     16, 'Unknown 16', // present in Skyrim.esm but can't be set
+     17, 'Uses HD LOD Texture',
+     19, 'Has Currents',
+     23, 'Is Marker',
+     25, 'Obstacle',
+     26, 'NavMesh Generation - Filter',
+     27, 'NavMesh Generation - Bounding Box',
+     28, 'Show In World Map',
+     30, 'NavMesh Generation - Ground'
+    ]), [11, 16]), [
     wbEDID,
     wbOBND(True),
     wbGenericModel,
@@ -12019,16 +11992,16 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(TES4, 'Main File Header',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000001}  0, 'ESM',
-      {0x00000002}  1, 'Altered',
-      {0x00000004}  2, 'Checked',
-      {0x00000008}  3, 'Active',
-      {0x00000010}  4, 'Optimized File',
-      {0x00000020}  5, 'Temp ID Owner',
-      {0x00000080}  7, 'Localized',
-      {0x00000100}  8, 'Precalc Data Only',
-      {0x00000200}  9, IsSSE('ESL', '')
+    wbFlags(wbFlagsList([
+      0, 'ESM',
+      1, 'Altered',
+      2, 'Checked',
+      3, 'Active',
+      4, 'Optimized File',
+      5, 'Temp ID Owner',
+      7, 'Localized',
+      8, 'Precalc Data Only',
+      9, IsSSE('ESL', '')
     ], False), True), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
@@ -12053,9 +12026,9 @@ Can't properly represent that with current record definition methods.
   ]).IncludeFlag(dfInternalEditOnly);
 
   wbRecord(TREE, 'Tree',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x02000000} 25, 'Obstacle'
+    wbFlags(wbFlagsList([
+      15, 'Has Distant LOD',
+      25, 'Obstacle'
     ])), [
     wbEDID,
     wbVMAD,
@@ -12310,8 +12283,8 @@ Can't properly represent that with current record definition methods.
   ], False, nil, cpNormal, False);
 
   wbRecord(WEAP, 'Weapon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000004}  2, 'Non-Playable'
+    wbFlags(wbFlagsList([
+      2, 'Non-Playable'
     ])), [
     wbEDID,
     wbVMAD,
@@ -12502,7 +12475,7 @@ Can't properly represent that with current record definition methods.
   ]);
 
   wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       14, 'Partial Form',
       19, 'Can''t Wait'
     ]), [14]), [

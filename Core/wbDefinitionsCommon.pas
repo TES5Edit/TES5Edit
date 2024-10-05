@@ -46,9 +46,6 @@ var
   wbZoomOverlayEnum: IwbEnumDef;
   wbZTestFuncEnum: IwbEnumDef;
 
-  wbEmptyBaseFlags: IwbFlagsDef;
-  wbRecordFlagsFlags: IwbFlagsDef;
-
   wbActionFlag: IwbRecordMemberDef;
   wbActorSounds: IwbRecordMemberDef;
   wbCellGrid: IwbRecordMemberDef;
@@ -166,7 +163,11 @@ function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const 
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWorldRowsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 
-{>>> Don't Show Callbacks <<<} //8
+{>>> Don't Show Callbacks <<<} //12
+function wbFlagNavmeshFilterDontSHow(const aElement: IwbElement): Boolean;
+function wbFlagNavmeshBoundingBoxDontSHow(const aElement: IwbElement): Boolean;
+function wbFlagNavmeshGroundDontSHow(const aElement: IwbElement): Boolean;
+function wbFlagPartialFormDontShow(const aElement: IwbElement): Boolean;
 function wbModelInfoDontShow(const aElement: IwbElement): Boolean;
 function wbREGNGrassDontShow(const aElement: IwbElement): Boolean;
 function wbREGNImposterDontShow(const aElement: IwbElement): Boolean;
@@ -992,7 +993,38 @@ begin
   Result := Round(MaxY) - Round(MinY) + 1;
 end;
 
-{>>> Don't Show Callbacks <<<} //8
+{>>> Don't Show Callbacks <<<} //12
+
+function wbFlagNavmeshFilterDontSHow(const aElement: IwbElement): Boolean;
+begin
+  Result := (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+end;
+
+function wbFlagNavmeshBoundingBoxDontSHow(const aElement: IwbElement): Boolean;
+begin
+  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+end;
+
+function wbFlagNavmeshGroundDontSHow(const aElement: IwbElement): Boolean;
+begin
+  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0);
+end;
+
+function wbFlagPartialFormDontShow(const aElement: IwbElement): Boolean;
+begin
+  Result := False;
+  if not Assigned(aElement) then
+    Exit;
+  var lMainRecord := aElement.ContainingMainRecord;
+  if not Assigned(lMainRecord) then
+    Exit;
+  if lMainRecord.IsPartialForm then
+    Exit;
+  Result := not lMainRecord.CanBePartial;
+end;
 
 function wbModelInfoDontShow(const aElement: IwbElement): Boolean;
 begin
@@ -3998,76 +4030,6 @@ begin
       7, 'Greater Than or Equal To',
       8, 'Always Show'
     ]);
-
-  wbRecordFlagsFlags := wbFlags(wbRecordFlagsFlags, [
-    {0x00000001} { 0} 'Unknown 0',
-    {0x00000002} { 1} 'Unknown 1',
-    {0x00000004} { 2} 'Unknown 2',
-    {0x00000008} { 3} 'Unknown 3',
-    {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 5} 'Unknown 5',
-    {0x00000040} { 6} 'Unknown 6',
-    {0x00000080} { 7} 'Unknown 7',
-    {0x00000100} { 8} 'Unknown 8',
-    {0x00000200} { 9} 'Unknown 9',
-    {0x00000400} {10} 'Unknown 10',
-    {0x00000800} {11} 'Unknown 11',
-    {0x00001000} {12} 'Unknown 12',
-    {0x00002000} {13} 'Unknown 13',
-    {0x00004000} {14} 'Unknown 14',
-    {0x00008000} {15} 'Unknown 15',
-    {0x00010000} {16} 'Unknown 16',
-    {0x00020000} {17} 'Unknown 17',
-    {0x00040000} {18} 'Unknown 18',
-    {0x00080000} {19} 'Unknown 19',
-    {0x00100000} {20} 'Unknown 20',
-    {0x00200000} {21} 'Unknown 21',
-    {0x00400000} {22} 'Unknown 22',
-    {0x00800000} {23} 'Unknown 23',
-    {0x01000000} {24} 'Unknown 24',
-    {0x02000000} {25} 'Unknown 25',
-    {0x04000000} {26} 'Unknown 26',
-    {0x08000000} {27} 'Unknown 27',
-    {0x10000000} {28} 'Unknown 28',
-    {0x20000000} {29} 'Unknown 29',
-    {0x40000000} {30} 'Unknown 30',
-    {0x80000000} {31} 'Unknown 31'
-  ]);
-
-  wbEmptyBaseFlags := wbFlags(wbEmptyBaseFlags, [
-    {0x00000001} { 0} 'Unknown 0',
-    {0x00000002} { 1} 'Unknown 1',
-    {0x00000004} { 2} 'Unknown 2',
-    {0x00000008} { 3} 'Unknown 3',
-    {0x00000010} { 4} 'Unknown 4',
-    {0x00000020} { 5} 'Unknown 5',
-    {0x00000040} { 6} 'Unknown 6',
-    {0x00000080} { 7} 'Unknown 7',
-    {0x00000100} { 8} 'Unknown 8',
-    {0x00000200} { 9} 'Unknown 9',
-    {0x00000400} {10} 'Unknown 10',
-    {0x00000800} {11} 'Unknown 11',
-    {0x00001000} {12} 'Unknown 12',
-    {0x00002000} {13} 'Unknown 13',
-    {0x00004000} {14} 'Unknown 14',
-    {0x00008000} {15} 'Unknown 15',
-    {0x00010000} {16} 'Unknown 16',
-    {0x00020000} {17} 'Unknown 17',
-    {0x00040000} {18} 'Unknown 18',
-    {0x00080000} {19} 'Unknown 19',
-    {0x00100000} {20} 'Unknown 20',
-    {0x00200000} {21} 'Unknown 21',
-    {0x00400000} {22} 'Unknown 22',
-    {0x00800000} {23} 'Unknown 23',
-    {0x01000000} {24} 'Unknown 24',
-    {0x02000000} {25} 'Unknown 25',
-    {0x04000000} {26} 'Unknown 26',
-    {0x08000000} {27} 'Unknown 27',
-    {0x10000000} {28} 'Unknown 28',
-    {0x20000000} {29} 'Unknown 29',
-    {0x40000000} {30} 'Unknown 30',
-    {0x80000000} {31} 'Unknown 31'
-  ]);
 
   wbEnchantment :=
     wbRStruct('Enchantment', [

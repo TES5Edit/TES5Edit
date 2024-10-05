@@ -1519,28 +1519,8 @@ var
   wbLeveledListEntrySpell: IwbRecordMemberDef;
 begin
   DefineCommon;
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
-    {0x00000001}'ESM',
-    {0x00000002}'',
-    {0x00000004}'',
-    {0x00000008}'',
-    {0x00000010}'',
-    {0x00000020}'Deleted',
-    {0x00000040}'Border Region / Actor Value',
-    {0x00000080}'Turn Off Fire / Actor Value',
-    {0x00000100}'',
-    {0x00000200}'Casts shadows',
-    {0x00000400}'Quest item / Persistent reference / Show in Menu',
-    {0x00000800}'Initially disabled',
-    {0x00001000}'Ignored',
-    {0x00002000}'',
-    {0x00004000}'',
-    {0x00008000}'Visible when distant',
-    {0x00010000}'',
-    {0x00020000}'Dangerous / Off limits (Interior cell)',
-    {0x00040000}'Compressed',
-    {0x00080000}'Can''t wait'
-  ]));
+
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
   wbMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
@@ -1548,15 +1528,15 @@ begin
     wbRecordFlags,
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
-  ])
-  .SetSummaryKey([3, 2])
-  .SetSummaryMemberPrefixSuffix(2, '{', '}')
-  .IncludeFlag(dfSummaryMembersNoName)
-  .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
+  ]).SetSummaryKey([3, 2])
+    .SetSummaryMemberPrefixSuffix(2, '{', '}')
+    .IncludeFlag(dfSummaryMembersNoName)
+    .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
   wbSizeOfMainRecordStruct := 20;
 
   wbIgnoreRecords.Add(XXXX);
+
 
   wbXRGD := wbByteArray(XRGD, 'Ragdoll Data');
 
@@ -1577,7 +1557,12 @@ begin
     wbByteArray('Unused', 3)
   ]);
 
-  wbRefRecord(ACHR, 'Placed NPC', [
+  wbRefRecord(ACHR, 'Placed NPC',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      15, 'Visible When Distant'
+    ])), [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbRStruct('Unused', [
@@ -1598,7 +1583,12 @@ begin
   // TES4 only
   wbXGLB := wbFormIDCk(XGLB, 'Global variable', [GLOB]);
 
-  wbRefRecord(ACRE, 'Placed Creature', [
+  wbRefRecord(ACRE, 'Placed Creature',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      15, 'Visible When Distant'
+    ])), [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbOwnership(wbXOWN, [], wbXGLB),
@@ -1609,7 +1599,11 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(ACTI, 'Activator', [
+  wbRecord(ACTI, 'Activator',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      17, 'Dangerous'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -1872,7 +1866,10 @@ begin
 //      ], [])
 //    ], []);
 
-  wbRecord(ALCH, 'Potion', [
+  wbRecord(ALCH, 'Potion',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -1892,7 +1889,10 @@ begin
     wbEffects
   ]);
 
-  wbRecord(AMMO, 'Ammunition', [
+  wbRecord(AMMO, 'Ammunition',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -1929,7 +1929,10 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(ARMO, 'Armor', [
+  wbRecord(ARMO, 'Armor',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbSCRI,
@@ -1980,7 +1983,10 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BOOK, 'Book', [
+  wbRecord(BOOK, 'Book',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -2008,16 +2014,21 @@ begin
     wbSPLOs
   ]);
 
-  wbRecord(CELL, 'Cell', [
+  wbRecord(CELL, 'Cell',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      17, 'Off Limits',
+      19, 'Can''t Wait'
+    ])), [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Is Interior Cell',
       {0x02} 'Has water',
-      {0x04} 'Invert Fast Travel behavior',
+      {0x04} 'Can''t Travel From Here',
       {0x08} 'Force hide land (exterior cell) / Oblivion interior (interior cell)',
       {0x10} '',
-      {0x20} 'Public place',
+      {0x20} 'Public Area',
       {0x40} 'Hand changed',
       {0x80} 'Behave like exterior'
     ]), cpNormal, True),
@@ -2097,7 +2108,10 @@ begin
     wbClimateTiming(wbClmtTime, wbClmtMoonsPhaseLength)
   ]);
 
-  wbRecord(CLOT, 'Clothing', [
+  wbRecord(CLOT, 'Clothing',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbSCRI,
@@ -2154,7 +2168,10 @@ begin
 
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
-  wbRecord(CONT, 'Container', [
+  wbRecord(CONT, 'Container',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -2208,7 +2225,11 @@ var  wbSoundTypeSoundsOld :=
     {5} 'Grand'
   ]);
 
-  wbRecord(CREA, 'Creature', [
+  wbRecord(CREA, 'Creature',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      19, 'Unknown 19'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -2400,7 +2421,10 @@ var  wbSoundTypeSoundsOld :=
     wbINOA
   ], True);
 
-  wbRecord(DOOR, 'Door', [
+  wbRecord(DOOR, 'Door',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -2545,7 +2569,10 @@ var  wbSoundTypeSoundsOld :=
     wbSeasons
   ]);
 
-  wbRecord(FURN, 'Furniture', [
+  wbRecord(FURN, 'Furniture',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -2979,7 +3006,10 @@ var  wbSoundTypeSoundsOld :=
     wbResultScript
   ]);
 
-  wbRecord(INGR, 'Ingredient', [
+  wbRecord(INGR, 'Ingredient',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbStruct(OBME, 'Oblivion Magic Extender', [
       wbInteger('Record Version', itU8),
@@ -2999,7 +3029,10 @@ var  wbSoundTypeSoundsOld :=
     wbEffects
   ]);
 
-  wbRecord(KEYM, 'Key', [
+  wbRecord(KEYM, 'Key',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -3011,7 +3044,10 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ]);
 
-  wbRecord(LAND, 'Landscape', [
+  wbRecord(LAND, 'Landscape',
+    wbFlags(wbFlagsList([
+      18, 'Compressed'
+    ])), [
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x001} 'Has Vertex Normals/Height Map',
       {0x002} 'Has Vertex Colours',
@@ -3034,7 +3070,10 @@ var  wbSoundTypeSoundsOld :=
   ]);
 
 
-  wbRecord(LIGH, 'Light', [
+  wbRecord(LIGH, 'Light',
+    wbFlags(wbFlagsList([
+      10, 'Quest'
+    ])), [
     wbEDID,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
     wbSCRI,
@@ -3306,7 +3345,10 @@ var  wbSoundTypeSoundsOld :=
   ], False, nil, cpNormal, False, wbMGEFAfterLoad)
   .IncludeFlag(dfIndexEditorID);;
 
-  wbRecord(MISC, 'Misc. Item', [
+  wbRecord(MISC, 'Misc. Item',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -3339,7 +3381,12 @@ var  wbSoundTypeSoundsOld :=
     wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
   ], [], cpNormal, True);
 
-  wbRecord(NPC_, 'Non-Player Character', [
+  wbRecord(NPC_, 'Non-Player Character',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      18, 'Compressed',
+      19, 'Unknown 19'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -3485,7 +3532,11 @@ var  wbSoundTypeSoundsOld :=
           {11} 'Cast magic', 'Cast'
         ]);
 
-  wbRecord(PACK, 'AI Package', [
+  wbRecord(PACK, 'AI Package',
+    wbFlags(wbFlagsList([
+      14, 'Unknown 14',
+      15, 'Unknown 15'
+    ])), [
     wbEDID,
     wbUnion(PKDT, 'General', wbPACKPKDTDecider, [
       wbStruct('', [
@@ -3580,7 +3631,10 @@ var  wbSoundTypeSoundsOld :=
        the next 4 of point 3 and so on..., this can currently not be represented
        declaratively }
 
-  wbRecord(PGRD, 'Path Grid', [
+  wbRecord(PGRD, 'Path Grid',
+    wbFlags(wbFlagsList([
+      18, 'Compressed'
+    ])), [
     wbInteger(DATA, 'Point Count', itU16, nil, cpNormal, True),
     wbPGRP,
     wbByteArray(PGAG, 'Unknown'),
@@ -3757,7 +3811,14 @@ var  wbSoundTypeSoundsOld :=
     wbByteArray(SNAM, 'Unknown', 2, cpNormal, True)
   ], True);
 
-  wbRefRecord(REFR, 'Placed Object', [
+  wbRefRecord(REFR, 'Placed Object',
+    wbFlags(wbFlagsList([
+       7, 'Turn Off Fire',
+       9, 'Cast Shadows',
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      15, 'Visible When Distant'
+    ])), [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [TREE, SBSP, LVLC, SOUN, ACTI, DOOR, FLOR, STAT, FURN, CONT, ARMO, AMMO, MISC, WEAP, INGR, SLGM, SGST, BOOK, KEYM, CLOT, ALCH, APPA, LIGH, GRAS], False, cpNormal, True),
     wbStruct(XTEL, 'Teleport Destination', [
@@ -3829,7 +3890,10 @@ var  wbSoundTypeSoundsOld :=
     wbDATAPosRot
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region', [
+  wbRecord(REGN, 'Region',
+    wbFlags(wbFlagsList([
+      6, 'Border Region'
+    ])), [
     wbEDID,
     wbICON,
     wbByteColors(RCLR, 'Map Color').SetRequired(True),
@@ -4004,7 +4068,10 @@ var  wbSoundTypeSoundsOld :=
     wbString(MNAM, 'Master Text', 0, cpTranslate, True)
   ]).SetSummaryKey([2]);
 
-  wbRecord(SLGM, 'Soul Gem', [
+  wbRecord(SLGM, 'Soul Gem',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -4105,12 +4172,18 @@ var  wbSoundTypeSoundsOld :=
     wbEffects
   ]);
 
-  wbRecord(STAT, 'Static', [
+  wbRecord(STAT, 'Static',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbTexturedModel('Model', [MODL, MODB, MODT])
   ]).SetSummaryKey([1]);
 
-  wbRecord(TES4, 'Main File Header', [
+  wbRecord(TES4, 'Main File Header',
+    wbFlags(wbFlagsList([
+      0, 'ESM'
+    ])), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
     wbByteArray(DELE, 'Unknown', 0, cpIgnore),
@@ -4206,7 +4279,10 @@ var  wbSoundTypeSoundsOld :=
     ]).SetRequired
   ]).SetSummaryKey([1]);
 
-  wbRecord(WEAP, 'Weapon', [
+  wbRecord(WEAP, 'Weapon',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDID,
     wbFULL,
     wbTexturedModel('Model', [MODL, MODB, MODT]),
@@ -4282,7 +4358,10 @@ var  wbSoundTypeSoundsOld :=
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
 
-  wbRecord(WRLD, 'Worldspace', [
+  wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbFlagsList([
+      19, 'Can''t Wait'
+    ])), [
     wbEDID,
     wbFULL,
     wbFormIDCk(WNAM, 'Parent Worldspace', [WRLD]),

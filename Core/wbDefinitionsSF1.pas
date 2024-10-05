@@ -4205,12 +4205,17 @@ const
 
 procedure DefineSF1;
 begin
+  DefineCommon;
+
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+
+  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+
+  wbSizeOfMainRecordStruct := 24;
+
   wbKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
   wbHEDRVersion := 0.96;
   wbCellSizeFactor := 100;
-
-  DefineCommon;
-
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);
@@ -4536,12 +4541,6 @@ begin
       wbFloat('Depth'),
       wbFloat('Alpha')
     ]);
-
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
-
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
-
-  wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 
@@ -9434,7 +9433,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(ACTI, 'Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Heading Marker',
       {0x00000010}  4, 'Non Occluder',
       {0x00000040}  6, 'Never Fades',
@@ -9503,7 +9502,7 @@ end;
 
   (* still exists in game code, but not in Starfield.esm *)
   wbRecord(TACT, 'Talking Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Radio Station'
@@ -9532,7 +9531,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(ALCH, 'Ingestible',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x20000000} 29, 'Medicine'
     ])), [
     wbEDID,
@@ -9586,7 +9585,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(AMMO, 'Ammunition',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -9627,7 +9626,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(ANIO, 'Animated Object',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
     wbEDID,
@@ -9638,7 +9637,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(ARMO, 'Armor',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
       {0x00000400} 10, 'Unknown 10',
@@ -9707,7 +9706,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(ARMA, 'Armor Addon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000040}  6, 'No Underarmor Scaling',
       {0x00000080}  7, 'Is Skin',
       {0x00000100}  8, 'Is Skin Hands',
@@ -9871,7 +9870,7 @@ end;
     begin
       {subrecords checked against Starfield.esm}
       wbRefRecord(aSignature, aName,
-        wbFlags(wbRecordFlagsFlags, wbFlagsList([
+        wbFlags(wbFlagsList([
           {0x00000080}  7, 'Turn Off Fire',
           {0x00000400} 10, 'Persistent',
           {0x00000800} 11, 'Initially Disabled',
@@ -9947,7 +9946,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(CELL, 'Cell',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Is Unique',
       {0x00000400}  7, 'No Pre Vis',
       {0x00000400} 10, 'Persistent',
@@ -9957,19 +9956,7 @@ end;
       {0x00080000} 19, 'Can''t Wait',
       {0x00400000} 22, 'Unknown 22'
     ]), [14, 18])
-      .SetFlagHasDontShow(14,
-        function(const aElement: IwbElement): Boolean
-        begin
-          Result := False;
-          if not Assigned(aElement) then
-            Exit;
-          var lMainRecord := aElement.ContainingMainRecord;
-          if not Assigned(lMainRecord) then
-            Exit;
-          if lMainRecord.IsPartialForm then
-            Exit;
-          Result := not lMainRecord.CanBePartial;
-        end),
+      .SetFlagHasDontShow(14, wbFlagPartialFormDontShow),
   [
     wbEDID,
     wbBaseFormComponents,
@@ -10173,7 +10160,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(CONT, 'Container',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x02000000} 25, 'Obstacle',
@@ -10274,7 +10261,7 @@ end;
     end;
   {subrecords checked against Starfield.esm}
   wbRecord(CSTY, 'Combat Style',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
     ])), [
     wbEDID,
@@ -10456,7 +10443,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(DIAL, 'Dialog Topic',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00004000} 14, 'Partial Form'
     ]), [14]), [
     wbEDID,
@@ -10680,7 +10667,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(DOOR, 'Door',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010}  4, 'Non Occluder',
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
@@ -10820,7 +10807,7 @@ end;
 
   {still exists in game code, but not in Starfield.esm}
   wbRecord(EYES, 'Eyes',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -10967,7 +10954,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(FURN, 'Furniture',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Heading Marker',
       {0x00000010}  4, 'Non Occluder',
       {0x00000040}  6, 'Never Fades',
@@ -11059,7 +11046,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(GLOB, 'Global',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000040}  6, 'Constant'
     ])), [
     wbEDID,
@@ -11093,7 +11080,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(KYWD, 'Keyword',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
@@ -11127,7 +11114,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(AACT, 'Action',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
@@ -11174,7 +11161,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(HDPT, 'Head Part',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -11269,7 +11256,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(MSTT, 'Moveable Static',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000800} 11, 'Used As Platform',
@@ -11311,7 +11298,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(IDLM, 'Idle Marker',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
     ])), [
     wbEDID,
@@ -11339,7 +11326,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(PROJ, 'Projectile',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       15, 'Apply Charge Multiplier'
     ])), [
     wbEDID,
@@ -11529,7 +11516,7 @@ end;
 
     {subrecords checked against Starfield.esm}
     wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      wbFlags(wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen',
         {0x80000000} 31, 'Unknown 31'
@@ -11675,7 +11662,7 @@ end;
 
     {subrecords checked against Starfield.esm}
     wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      wbFlags(wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen',
         {0x80000000} 31, 'Unknown 31'
@@ -11903,7 +11890,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(PERK, 'Perk',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID.SetRequired,
@@ -12360,7 +12347,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LCTN, 'Location',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
       {0x00020000} 17, 'Off Limits',
       {0x00080000} 19, 'Can''t Wait',
@@ -13079,7 +13066,7 @@ end;
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
-      //wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
+      //wbInteger(FNAM, 'Flags', itU32, wbFlags(wbSparseFlags([]))),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24)
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
   ]);
@@ -13814,7 +13801,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(CLFM, 'Color',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -13844,7 +13831,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(GRAS, 'Grass',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000} 15, 'Unknown 15'
     ])), [
     wbEDID,
@@ -13898,7 +13885,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(INFO, 'Dialog response',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000040}  6, 'Info Group',
       {0x00000080}  7, 'Exclude From Export',
       {0x00002000} 13, 'Actor Changed'
@@ -14042,7 +14029,7 @@ end;
   ]);*)
 
   wbRecord(KEYM, 'Key',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000002} 2, 'Non-Playable',
       {0x00000800} 11, 'Calc Value From Components',
       {0x00002000} 13, 'Pack-In Use Only'
@@ -14077,7 +14064,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LIGH, 'Light',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000080}  7, 'Unknown 7',
       {0x00000200}  9, 'Hidden From Local Map',
@@ -14181,7 +14168,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LSCR, 'Load Screen',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu',
       {0x00008000} 15, 'No Rotation'
     ])), [
@@ -14207,7 +14194,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LTEX, 'Landscape Texture',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ])), [
     wbEDID,
@@ -14325,7 +14312,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLN, 'Leveled NPC',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000}  15, 'Calculate All (Still picks just one)'
     ])), [
     wbEDID,
@@ -14360,7 +14347,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLI, 'Leveled Item',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000}  15, 'Use All'
     ])), [
     wbEDID,
@@ -14400,7 +14387,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLP, 'Leveled Pack In',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000080}   7, 'Apply LRT To All But Pivot'
     ])), [
     wbEDID,
@@ -14436,7 +14423,7 @@ end;
 
   (* still exists in game code, but not in Starfield.esm *)
   wbRecord(LVSP, 'Leveled Spell',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000}  15, 'Use All'
     ])), [
     wbEDID,
@@ -14643,7 +14630,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(MISC, 'Misc. Item',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000004}  11, 'Calc From Components',
       {0x00000004}  13, 'Pack-In Use Only'
@@ -14696,7 +14683,7 @@ end;
   var wbRepairComponents := wbArrayS(REPR, 'Repair Components', wbComponent);
   {subrecords checked against Starfield.esm}
   wbRecord(COBJ, 'Constructible Object',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x04000000}  26, 'List Contains Variants'
     ])), [
     wbEDID.SetRequired,
@@ -14850,7 +14837,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(NPC_, 'Non-Player Character (Actor)',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000400} 10, 'Unknown 10',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Unknown 19',
@@ -16365,7 +16352,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(QUST, 'Quest',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00004000} 14, 'Partial Form'
     ]), [14]), [
     wbEDID,
@@ -16539,7 +16526,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(RACE, 'Race',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
     wbEDID,
@@ -16841,7 +16828,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRefRecord(ACHR, 'Placed NPC',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([ {not checked for Starfield}
+    wbFlags(wbFlagsList([ {not checked for Starfield}
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -16961,7 +16948,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
       {0x00000400} 10, 'Persistent',
@@ -16973,7 +16960,7 @@ end;
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ACTI STAT SCOL TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ACTI STAT SCOL TREE} wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000080}  7, 'Turn Off Fire',
       {0x00000100}  8, 'LOD Respects Enable State',
@@ -16989,7 +16976,7 @@ end;
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {CONT TERM} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {CONT TERM} wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000080}  7, 'Turn Off Fire',
       {0x00000400} 10, 'Persistent',
@@ -17002,7 +16989,7 @@ end;
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {DOOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {DOOR} wbFlags(wbFlagsList([
       {0x00000004}  2, 'Minimal Use Door',
       {0x00000040}  6, 'Hidden From Local Map',
       {0x00000080}  7, 'Turn Off Fire',
@@ -17016,7 +17003,7 @@ end;
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {LIGH} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {LIGH} wbFlags(wbFlagsList([
       {0x00000100}  8, 'Doesn''t Light Water',
       {0x00000200}  9, 'Casts Shadows',
       {0x00000400} 10, 'Persistent',
@@ -17029,7 +17016,7 @@ end;
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {MSTT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {MSTT} wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000080}  7, 'Turn Off Fire',
       {0x00000200}  9, 'Motion Blur',
@@ -17043,7 +17030,7 @@ end;
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ADDN} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ADDN} wbFlags(wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
       {0x00010000} 16, 'Is Full LOD',
@@ -17053,7 +17040,7 @@ end;
       {0x80000000} 31, 'Multibound'
     ], True, True)),
     {ALCH BOOK SCRL AMMO ARMO INGR KEYM MISC FURN WEAP}
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000080}  7, 'Turn Off Fire',
       {0x00000400} 10, 'Persistent',
@@ -17546,7 +17533,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(REGN, 'Region',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000040} 6, 'Border Region'
     ])), [
     wbEDID,
@@ -17689,40 +17676,24 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(STAT, 'Static',
-    wbFlags(wbRecordFlagsFlags, [ //flags not checked aginst Starfield
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Heading Marker',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} 'Non Occluder',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} 'Headtrack Marker',
-      {0x00000800} {11} 'Used as Platform',
-      {0x00001000} {12} '',
-      {0x00002000} {13} 'Pack-In Use Only',
-      {0x00004000} {14} '',
-      {0x00008000} {15} 'Has Distant LOD',
-      {0x00010000} {16} '',
-      {0x00020000} {17} 'Uses HD LOD Texture',
-      {0x00040000} {18} '',
-      {0x00080000} {19} 'Has Currents',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} 'Is Marker',
-      {0x01000000} {24} '',
-      {0x02000000} {25} 'Obstacle',
-      {0x04000000} {26} 'NavMesh Generation - Filter',
-      {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} 'NavMesh Generation - Only Cut',
-      {0x20000000} {29} 'Unknown 29',
-      {0x40000000} {30} 'NavMesh Generation - Ground',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbFlagsList([
+      2,'Heading Marker',
+      4, 'Non Occluder',
+      9, 'Hidden From Local Map',
+     10,'Headtrack Marker',
+     11, 'Used as Platform',
+     13, 'Pack-In Use Only',
+     15, 'Has Distant LOD',
+     16, 'Uses HD LOD Texture',
+     19, 'Has Currents',
+     23,'Is Marker',
+     25,'Obstacle',
+     26, 'NavMesh Generation - Filter',
+     27, 'NavMesh Generation - Bounding Box',
+     28, 'NavMesh Generation - Only Cut',
+     29, 'Unknown 29',
+     30, 'NavMesh Generation - Ground'
+    ])), [
     wbEDID,
 //    wbVMAD,
     wbOBND(True),
@@ -17750,7 +17721,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(TES4, 'Main File Header',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x001}  0, 'Master',
       {0x010}  4, 'Optimized',
       {0x080}  7, 'Localized',
@@ -17898,7 +17869,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(BNDS, 'Bendable Spline',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00800000} 23, 'Unknown 23'
     ])), [
     wbEDID,
@@ -18010,7 +17981,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LAYR, 'Layer',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x08000000} {27} 27, 'Starts Frozen'
     ])), [
     wbEDID,
@@ -18346,7 +18317,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(OMOD, 'Object Modification',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010} 4, 'Legendary Mod',
       {0x00000080} 7, 'Mod Collection',
       {0x00000100} 8, 'Property Collection'
@@ -18421,7 +18392,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(PKIN, 'Pack-In',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Instanced',
       {0x00000400} 10, 'Calc LPIs',
       {0x00000800} 11, 'Instanced Static',
@@ -18528,7 +18499,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(SCOL, 'Static Collection',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Loadscreen',
@@ -18575,7 +18546,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(TERM, 'Terminal',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       2, 'Heading Marker',
       4, 'Non Occluder',
       6, 'Never Fades',
@@ -18670,7 +18641,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(TRNS, 'Transform',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000} 16, 'Around Origin',
       {0x00010000} 17, 'Apply Translation'
     ])), [
@@ -18973,7 +18944,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(BMMO, 'Biome Marker',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00100000} 20, 'Calculate Once Per Location' //all occurences on prey/preditor BMMOs
     ])), [
     wbEDID,
@@ -18998,7 +18969,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(GBFM, 'Generic Base Form',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unique'
     ])), [
     wbEDID,
@@ -19042,7 +19013,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(LVLB, 'Leveled Base Form',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000}  15, 'Calculate All (Still picks just one)'
     ])), [
     wbEDID,
@@ -19784,7 +19755,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(PNDT, 'Planet',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00040000} 18, 'Compressed'
     ]), [18]), [
     wbEDID,
@@ -20220,40 +20191,10 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(SFTR, 'Surface Tree',
-  wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} '',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} 'Unknown 4',
-      {0x00000020} { 5} '',
-      {0x00000040} { 6} '',
-      {0x00000080} { 7} '',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} '',
-      {0x00000400} {10} '',
-      {0x00000800} {11} '',
-      {0x00001000} {12} '',
-      {0x00002000} {13} '',
-      {0x00004000} {14} '',
-      {0x00008000} {15} '',
-      {0x00010000} {16} '',
-      {0x00020000} {17} '',
-      {0x00040000} {18} 'Compressed',
-      {0x00080000} {19} '',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} '',
-      {0x01000000} {24} '',
-      {0x02000000} {25} '',
-      {0x04000000} {26} '',
-      {0x08000000} {27} '',
-      {0x10000000} {28} '',
-      {0x20000000} {29} '',
-      {0x40000000} {30} '',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbFlagsList([
+      4, 'Unknown 4',
+     18, 'Compressed'
+    ])), [
     wbEDID,
     wbBaseFormComponents,
     wbUnknown(CNAM).SetRequired,
@@ -20331,7 +20272,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(STDT, 'Star',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([  {flags not checked against Starfield}
+    wbFlags(wbFlagsList([  {flags not checked against Starfield}
       {0x10000000} 28, 'Starts Hidden',
       {0x20000000} 29, 'Always Display Name'
     ])), [
@@ -20712,7 +20653,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(WEAP, 'Weapon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x20000000} 30, 'High-Res 1st Person Only'
     ])), [
@@ -20970,7 +20911,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(WTHR, 'Weather',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       9, 'Unknown 9'
     ])), [
     wbEDID.SetRequired,
@@ -21064,7 +21005,7 @@ end;
 
   {subrecords checked against Starfield.esm}
   wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
        2, 'Unique',
       14, 'Partial Form',
       19, 'Can''t Wait'

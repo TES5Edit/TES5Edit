@@ -3469,75 +3469,8 @@ end;
 procedure DefineFO3;
 begin
   DefineCommon;
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags([
-    {0x00000001}'ESM',
-    {0x00000002}'',
-    {0x00000004}'',   // Plugin selected (Editor)
-    {0x00000008}'',   // Form cannot be saved (Runtime)/Plugin active (Editor)
-    {0x00000010}'Form initialized (Runtime only)',  // Plugin cannot be active or selected (Editor)
-    {0x00000020}'Deleted',
-    {0x00000040}'Border Region / Has Tree LOD / Constant / Hidden From Local Map',
-    {0x00000080}'Turn Off Fire',
-    {0x00000100}'Inaccessible',
-    {0x00000200}'Casts shadows / On Local Map / Motion Blur',
-    {0x00000400}'Quest item / Persistent reference',
-    {0x00000800}'Initially disabled',
-    {0x00001000}'Ignored',
-    {0x00002000}'No Voice Filter',
-    {0x00004000}'Cannot Save (Runtime only)',
-    {0x00008000}'Visible when distant',
-    {0x00010000}'Random Anim Start / High Priority LOD',
-    {0x00020000}'Dangerous / Off limits (Interior cell) / Radio Station (Talking Activator)',
-    {0x00040000}'Compressed',
-    {0x00080000}'Can''t wait / Platform Specific Texture / Dead',
-    {0x00100000}'Unknown 21',
-    {0x00200000}'Load Started', // set when beginning to load the form from save
-    {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
-    {0x01000000}'Destructible (Runtime only)',
-    {0x02000000}'Obstacle / No AI Acquire',
-    {0x03000000}'NavMesh Generation - Filter',
-    {0x08000000}'NavMesh Generation - Bounding Box',
-    {0x10000000}'Non-Pipboy / Reflected by Auto Water',
-    {0x20000000}'Child Can Use / Refracted by Auto Water',
-    {0x40000000}'NavMesh Generation - Ground',
-    {0x80000000}'Multibound'
-  ]));
 
-(*   wbInteger('Record Flags 2', itU32, wbFlags([
-    {0x00000001}'Unknown 1',
-    {0x00000002}'Unknown 2',
-    {0x00000004}'Unknown 3',
-    {0x00000008}'Unknown 4',
-    {0x00000010}'Unknown 5',
-    {0x00000020}'Unknown 6',
-    {0x00000040}'Unknown 7',
-    {0x00000080}'Unknown 8',
-    {0x00000100}'Unknown 9',
-    {0x00000200}'Unknown 10',
-    {0x00000400}'Unknown 11',
-    {0x00000800}'Unknown 12',
-    {0x00001000}'Unknown 13',
-    {0x00002000}'Unknown 14',
-    {0x00004000}'Unknown 15',
-    {0x00008000}'Unknown 16',
-    {0x00010000}'Unknown 17',
-    {0x00020000}'Unknown 18',
-    {0x00040000}'Unknown 19',
-    {0x00080000}'Unknown 20',
-    {0x00100000}'Unknown 21',
-    {0x00200000}'Unknown 22',
-    {0x00400000}'Unknown 23',
-    {0x00800000}'Unknown 24',
-    {0x01000000}'Unknown 25',
-    {0x02000000}'Unknown 26',
-    {0x03000000}'Unknown 27',
-    {0x08000000}'Unknown 28',
-    {0x10000000}'Unknown 29',
-    {0x20000000}'Unknown 30',
-    {0x40000000}'Unknown 31',
-    {0x80000000}'Unknown 32'
-  ]));                (**)
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
   wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
 
@@ -3787,7 +3720,12 @@ begin
 
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
 
-  wbRefRecord(ACHR, 'Placed NPC', [
+  wbRefRecord(ACHR, 'Placed NPC',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      25, 'No AI Acquire'
+    ])), [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [NPC_], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -3863,7 +3801,13 @@ begin
 
   wbXOWN := wbFormIDCkNoReach(XOWN, 'Owner', [FACT, ACHR, CREA, NPC_]); // Ghouls can own too aparently !
 
-  wbRefRecord(ACRE, 'Placed Creature', [
+  wbRefRecord(ACRE, 'Placed Creature',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      15, 'Visible When Distant',
+      25, 'No AI Acquire'
+    ])), [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [CREA], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -3939,7 +3883,21 @@ begin
     wbDATAPosRot
   ], True, wbPlacedAddInfo);
 
-  wbRecord(ACTI, 'Activator', [
+  wbRecord(ACTI, 'Activator',
+    wbFlags(wbFlagsList([
+      6, 'Has Tree LOD',
+      9, 'On Local Map',
+     10, 'Quest Item',
+     15, 'Visible When Distant',
+     16, 'Random Anim Start',
+     17, 'Dangerous',
+     19, 'Has Platform Specific Textures',
+     25, 'Obstacle',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
+     29, 'Child Can Use',
+     30, 'Navmesh - Ground'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -4495,7 +4453,11 @@ begin
   wbEffectsReq :=
     wbRArray('Effects', wbEffect, cpNormal, True);
 
-  wbRecord(ALCH, 'Ingestible', [
+  wbRecord(ALCH, 'Ingestible',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      29, 'Unknown 29'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULLReq,
@@ -4509,8 +4471,8 @@ begin
     wbFloat(DATA, 'Weight', cpNormal, True),
     wbStruct(ENIT, 'Effect Data', [
       wbInteger('Value', itS32),
-      wbInteger('Flags?', itU8, wbFlags([
-        'No Auto-Calc (Unused)',
+      wbInteger('Flags', itU8, wbFlags([
+        'No Auto-Calc',
         'Food Item',
         'Medicine'
       ])),
@@ -4586,7 +4548,11 @@ begin
       wbByteArray('Unused', 3)
     ], cpNormal, True);
 
-  wbRecord(ARMO, 'Armor', [
+  wbRecord(ARMO, 'Armor',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      19, 'Has Platform Specific Textures'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -4648,7 +4614,10 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BOOK, 'Book', [
+  wbRecord(BOOK, 'Book',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -4673,16 +4642,21 @@ begin
   wbSPLO := wbFormIDCk(SPLO, 'Actor Effect', [SPEL]);
   wbSPLOs := wbRArrayS('Actor Effects', wbSPLO, cpNormal, False, nil, nil, wbActorTemplateUseActorEffectList);
 
-  wbRecord(CELL, 'Cell', [
+  wbRecord(CELL, 'Cell',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      17, 'Off Limits',
+      19, 'Can''t Wait'
+    ])), [
     wbEDID,
     wbFULL,
     wbInteger(DATA, 'Flags', itU8, wbFlags([
       {0x01} 'Is Interior Cell',
       {0x02} 'Has water',
-      {0x04} 'Invert Fast Travel behavior',
+      {0x04} 'Can Travel From Here',
       {0x08} 'No LOD Water',
       {0x10} '',
-      {0x20} 'Public place',
+      {0x20} 'Public Area',
       {0x40} 'Hand changed',
       {0x80} 'Behave like exterior'
     ]), cpNormal, True),
@@ -4809,7 +4783,15 @@ begin
 
   wbCNTOs := wbRArrayS('Items', wbCNTO);
 
-  wbRecord(CONT, 'Container', [
+  wbRecord(CONT, 'Container',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      16, 'Random Anim Start',
+      25, 'Obstacle',
+      26, 'Navmesh - Filter',
+      27, 'Navmesh - Bounding Box',
+      30, 'Navmesh - Ground'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -4898,7 +4880,12 @@ var  wbSoundTypeSoundsOld :=
     'Use Script'
   ]);
 
-  wbRecord(CREA, 'Creature', [
+  wbRecord(CREA, 'Creature',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      19, 'Unknown 19',
+      29, 'Unknown 29'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULLActor,
@@ -5153,7 +5140,12 @@ var  wbSoundTypeSoundsOld :=
     wbINOA
   ], True);
 
-  wbRecord(DOOR, 'Door', [
+  wbRecord(DOOR, 'Door',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      15, 'Visible When Distant',
+      16, 'Random Anim Start'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5280,7 +5272,7 @@ var  wbSoundTypeSoundsOld :=
       wbByteArray('Unused', 4),
       wbInteger('Flags', itU8, wbFlags([
         'No Auto-Calc',
-        '',
+        'Unknown 1',
         'Hide Effect'
       ])),
       wbByteArray('Unused', 3)
@@ -5327,7 +5319,12 @@ var  wbSoundTypeSoundsOld :=
     wbRArrayS('Ranks', wbFactionRank)
   ], False, nil, cpNormal, False, wbFACTAfterLoad);
 
-  wbRecord(FURN, 'Furniture', [
+  wbRecord(FURN, 'Furniture',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      16, 'Random Anim Start',
+      29, 'Child Can Use'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5337,7 +5334,10 @@ var  wbSoundTypeSoundsOld :=
     wbByteArray(MNAM, 'Marker Flags', 0, cpNormal, True)
   ]);
 
-  wbRecord(GLOB, 'Global', [
+  wbRecord(GLOB, 'Global',
+    wbFlags(wbFlagsList([
+      6, 'Constant'
+    ])), [
     wbEDIDReq,
     wbInteger(FNAM, 'Type', itU8, wbEnum([], [
       Ord('s'), 'Short',
@@ -5452,7 +5452,16 @@ var  wbSoundTypeSoundsOld :=
     ]), cpNormal, True)
   ]);
 
-  wbRecord(TACT, 'Talking Activator', [
+  wbRecord(TACT, 'Talking Activator',
+    wbFlags(wbFlagsList([
+      9, 'On Local Map',
+     10, 'Quest Item',
+     13, 'No Voice Filter',
+     16, 'Random Anim Start',
+     17, 'Radio Station',
+     28, 'Non-Pipboy',     //Requires Radio Station
+     30, 'Cont. Broadcast' //Requires Radio Station
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5475,7 +5484,11 @@ var  wbSoundTypeSoundsOld :=
     wbSCROs
   ]).SetToStr(wbScriptToStr);
 
-  wbRecord(TERM, 'Terminal', [
+  wbRecord(TERM, 'Terminal',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      16, 'Random Anim Start'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5536,14 +5549,30 @@ var  wbSoundTypeSoundsOld :=
       wbStaticPartPlacements
     ], [], cpNormal, True);
 
-  wbRecord(SCOL, 'Static Collection', [
+  wbRecord(SCOL, 'Static Collection',
+    wbFlags(wbFlagsList([
+      6, 'Has Tree LOD',
+      9, 'On Local Map',
+     10, 'Quest Item',
+     15, 'Visible When Distant',
+     25, 'Obstacle',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
+     30, 'Navmesh - Ground'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbGenericModel(True),
     wbRArray('Parts', wbStaticPart, cpNormal, True)
   ]);
 
-  wbRecord(MSTT, 'Moveable Static', [
+  wbRecord(MSTT, 'Moveable Static',
+    wbFlags(wbFlagsList([
+       9, 'On Local Map',
+      10, 'Quest Item',
+      16, 'Random Anim Start',
+      25, 'Obstacle'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5596,7 +5625,11 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ]);
 
-  wbRecord(IDLM, 'Idle Marker', [
+  wbRecord(IDLM, 'Idle Marker',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      29, 'Child Can Use'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbInteger(IDLF, 'Flags', itU8, wbFlags([
@@ -5640,7 +5673,10 @@ var  wbSoundTypeSoundsOld :=
     ])
   ]);
 
-  wbRecord(PROJ, 'Projectile', [
+  wbRecord(PROJ, 'Projectile',
+    wbFlags(wbFlagsList([
+      27, 'Unknown 27'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5742,7 +5778,11 @@ var  wbSoundTypeSoundsOld :=
 
   if wbSimpleRecords then begin
 
-    wbRecord(NAVM, 'Navigation Mesh', [
+    wbRecord(NAVM, 'Navigation Mesh',
+      wbFlags(wbFlagsList([
+        11, 'Initially Disabled',
+        26, 'AutoGen'
+      ])), [
       wbEDID,
       wbInteger(NVER, 'Version', itU32),
       wbStruct(DATA, '', [
@@ -5771,7 +5811,11 @@ var  wbSoundTypeSoundsOld :=
 
   end else begin
 
-    wbRecord(NAVM, 'Navigation Mesh', [
+    wbRecord(NAVM, 'Navigation Mesh',
+      wbFlags(wbFlagsList([
+        11, 'Initially Disabled',
+        26, 'AutoGen'
+      ])), [
       wbEDID,
       wbInteger(NVER, 'Version', itU32),
       wbStruct(DATA, '', [
@@ -5878,7 +5922,11 @@ var  wbSoundTypeSoundsOld :=
 
   end;
 
-  wbRefRecord(PGRE, 'Placed Grenade', [
+  wbRefRecord(PGRE, 'Placed Grenade',
+    wbFlags(wbFlagsList([
+      10, 'Persistent',
+      11, 'Initially Disabled'
+    ])), [
     wbEDID,
     wbFormIDCk(NAME, 'Base', [PROJ], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -6838,7 +6886,10 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True, nil, 4)
   ]);
 
-  wbRecord(INFO, 'Dialog response', [
+  wbRecord(INFO, 'Dialog response',
+    wbFlags(wbFlagsList([
+      13, 'Unknown 13'
+    ])), [
     wbStruct(DATA, '', [
       wbInteger('Type', itU8, wbEnum([
         {0} 'Topic',
@@ -6941,7 +6992,10 @@ var  wbSoundTypeSoundsOld :=
     wbEffectsReq
   ]);
 
-  wbRecord(KEYM, 'Key', [
+  wbRecord(KEYM, 'Key',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULLReq,
@@ -6957,7 +7011,10 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ]);
 
-  wbRecord(LAND, 'Landscape', [
+  wbRecord(LAND, 'Landscape',
+    wbFlags(wbFlagsList([
+      18, 'Compressed'
+    ])), [
     wbInteger(DATA, 'Flags', itU32, wbFlags([
       {0x001} 'Has Vertex Normals/Height Map',
       {0x002} 'Has Vertex Colours',
@@ -6977,7 +7034,12 @@ var  wbSoundTypeSoundsOld :=
     wbLandLayers
   ]);
 
-  wbRecord(LIGH, 'Light', [
+  wbRecord(LIGH, 'Light',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      16, 'Random Anim Start',
+      25, 'Obstacle'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbGenericModel,
@@ -6991,10 +7053,10 @@ var  wbSoundTypeSoundsOld :=
       wbByteColors('Color'),
       wbInteger('Flags', itU32, wbFlags([
         {0x00000001} 'Dynamic',
-        {0x00000002} 'Can be Carried',
+        {0x00000002} 'Can Carry',
         {0x00000004} 'Negative',
         {0x00000008} 'Flicker',
-        {0x00000010} 'Unused',
+        {0x00000010} '',
         {0x00000020} 'Off By Default',
         {0x00000040} 'Flicker Slow',
         {0x00000080} 'Pulse',
@@ -7012,8 +7074,8 @@ var  wbSoundTypeSoundsOld :=
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
   wbRecord(LSCR, 'Load Screen',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
-      {0x00000400} 10, 'Displays In Main Menu'
+    wbFlags(wbFlagsList([
+      10, 'Displays In Main Menu'
     ])), [
     wbEDIDReq,
     wbICONReq,
@@ -7237,7 +7299,10 @@ var  wbSoundTypeSoundsOld :=
     wbRArrayS('Counter Effects', wbFormIDCk(ESCE, 'Effect', [MGEF]), cpNormal, False, nil, wbCounterEffectsAfterSet)
   ], False, nil, cpNormal, False, wbMGEFAfterLoad, wbMGEFAfterSet);
 
-  wbRecord(MISC, 'Misc. Item', [
+  wbRecord(MISC, 'Misc. Item',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -7281,7 +7346,12 @@ var  wbSoundTypeSoundsOld :=
   ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
 
 
-  wbRecord(NPC_, 'Non-Player Character', [
+  wbRecord(NPC_, 'Non-Player Character',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      18, 'Compressed',
+      19, 'Unknown 19'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULLActor,
@@ -7535,7 +7605,10 @@ var  wbSoundTypeSoundsOld :=
 
   wbPKDTSpecificFlagsUnused := True;
 
-  wbRecord(PACK, 'Package', [
+  wbRecord(PACK, 'Package',
+    wbFlags(wbFlagsList([
+      27, 'Unknown 27'
+    ])), [
     wbEDIDReq,
     wbStruct(PKDT, 'General', [
       wbInteger('General Flags', itU32, wbPKDTFlags),
@@ -8053,7 +8126,24 @@ var  wbSoundTypeSoundsOld :=
     ], [], cpNormal, True)
   ]);
 
-  wbRefRecord(REFR, 'Placed Object', [
+  wbRefRecord(REFR, 'Placed Object',
+    wbFlags(wbFlagsList([
+       6, 'Hidden From Local Map',
+       7, 'Turn Off Fire',  //Only MSTT placing FXSmokeMed01 [00071FED]?
+       8, 'Inaccessible',
+       9, 'Casts Shadows/Motion Blur',
+      10, 'Persistent',
+      11, 'Initially Disabled',
+      15, 'Visible When Distant',
+      16, 'High Priority LOD',  //Requires Visible When Distant
+      25, 'No AI Acquire',
+      26, 'Navmesh - Filter',
+      27, 'Navmesh - Bounding Box',  //Both 26 + 27 set = Navmesh - Collision Geometry on REFR.
+      28, 'Reflected By Auto Water', //Only REFRs placed in Exterior?
+      29, 'Refracted by Auto Water', //Only REFRs placed in Exterior?
+      30, 'Navmesh - Ground',
+      31, 'Multibound'
+    ])), [
     wbEDID,
     {
     wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [
@@ -8073,7 +8163,7 @@ var  wbSoundTypeSoundsOld :=
     wbByteArray(RCLR, 'Unused', 0, cpIgnore),
     wbFormIDCk(NAME, 'Base', [TREE, SOUN, ACTI, DOOR, STAT, FURN, CONT, ARMO, AMMO, LVLN, LVLC,
                               MISC, WEAP, BOOK, KEYM, ALCH, LIGH, GRAS, ASPC, IDLM, ARMA,
-                              MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST], False, cpNormal, True),
+                              MSTT, NOTE, PWAT, SCOL, TACT, TERM, TXST, ADDN], False, cpNormal, True),
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- ?? ---}
@@ -8348,7 +8438,10 @@ var  wbSoundTypeSoundsOld :=
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
 
-  wbRecord(REGN, 'Region', [
+  wbRecord(REGN, 'Region',
+    wbFlags(wbFlagsList([
+      6, 'Border Region'
+    ])), [
     wbEDID,
     wbICON,
     wbByteColors(RCLR, 'Map Color').SetRequired(True),
@@ -8543,13 +8636,26 @@ var  wbSoundTypeSoundsOld :=
     wbEffectsReq
   ]);
 
-  wbRecord(STAT, 'Static', [
+  wbRecord(STAT, 'Static',
+    wbFlags(wbFlagsList([
+      6, 'Has Tree LOD',
+      9, 'On Local Map',
+      10, 'Quest Item',
+      15, 'Visible When Distant',
+      25, 'Obstacle',
+      26, 'Navmesh - Filter',
+      27, 'Navmesh - Bounding Box',
+      30, 'Navmesh - Ground'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbGenericModel
   ]);
 
-  wbRecord(TES4, 'Main File Header', [
+  wbRecord(TES4, 'Main File Header',
+    wbFlags(wbFlagsList([
+      0, 'ESM'
+    ])), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
     wbByteArray(DELE, 'Unknown', 0, cpIgnore),
@@ -8715,7 +8821,12 @@ var  wbSoundTypeSoundsOld :=
     ], cpNormal, True)
   ], False, nil, cpNormal, False, wbWATRAfterLoad);
 
-  wbRecord(WEAP, 'Weapon', [
+  wbRecord(WEAP, 'Weapon',
+    wbFlags(wbFlagsList([
+      10, 'Quest Item',
+      27, 'Unknown 27',
+      29, 'Unknown 29'
+    ])), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -8777,7 +8888,7 @@ var  wbSoundTypeSoundsOld :=
       {08} wbFloat('Reach'),
       {12} wbInteger('Flags 1', itU8, wbFlags([
         'Ignores Normal Weapon Resistance',
-        'Is Automatic',
+        'Automatic',
         'Has Scope',
         'Can''t Drop',
         'Hide Backpack',
@@ -8936,7 +9047,10 @@ var  wbSoundTypeSoundsOld :=
     wbWeatherSounds
   ]);
 
-  wbRecord(WRLD, 'Worldspace', [
+  wbRecord(WRLD, 'Worldspace',
+    wbFlags(wbFlagsList([
+      19, 'Can''t Wait'
+    ])), [
     wbEDIDReq,
     wbFULL,
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
@@ -9002,6 +9116,7 @@ var  wbSoundTypeSoundsOld :=
   wbAddGroupOrder(RACE);
   wbAddGroupOrder(SOUN);
   wbAddGroupOrder(ASPC);
+  //wbAddGroupOrder(SKIL);
   wbAddGroupOrder(MGEF);
   wbAddGroupOrder(SCPT);
   wbAddGroupOrder(LTEX);
@@ -9012,6 +9127,7 @@ var  wbSoundTypeSoundsOld :=
   wbAddGroupOrder(TERM);
   wbAddGroupOrder(ARMO);
   wbAddGroupOrder(BOOK);
+  //wbAddGroupOrder(CLOT);
   wbAddGroupOrder(CONT);
   wbAddGroupOrder(DOOR);
   wbAddGroupOrder(INGR);
@@ -9023,6 +9139,7 @@ var  wbSoundTypeSoundsOld :=
   wbAddGroupOrder(PWAT);
   wbAddGroupOrder(GRAS);
   wbAddGroupOrder(TREE);
+  //wbAddGroupOrder(FLOR);
   wbAddGroupOrder(FURN);
   wbAddGroupOrder(WEAP);
   wbAddGroupOrder(AMMO);
@@ -9035,24 +9152,37 @@ var  wbSoundTypeSoundsOld :=
   wbAddGroupOrder(ALCH);
   wbAddGroupOrder(IDLM);
   wbAddGroupOrder(NOTE);
+  wbAddGroupOrder(COBJ);
   wbAddGroupOrder(PROJ);
   wbAddGroupOrder(LVLI);
   wbAddGroupOrder(WTHR);
   wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(COBJ);
   wbAddGroupOrder(REGN);
   wbAddGroupOrder(NAVI);
   wbAddGroupOrder(CELL);
+  //wbAddGroupOrder(REFR);
+  //wbAddGroupOrder(ACHR);
+  //wbAddGroupOrder(ACRE);
+  //wbAddGroupOrder(PMIS);
+  //wbAddGroupOrder(PGRE);
+  //wbAddGroupOrder(PBEA);
+  //wbAddGroupOrder(PFLA);
   wbAddGroupOrder(WRLD);
+  //wbAddGroupOrder(LAND);
+  //wbAddGroupOrder(NAVM);
+  //wbAddGroupOrder(TLOD);
   wbAddGroupOrder(DIAL);
+  //wbAddGroupOrder(INFO);
   wbAddGroupOrder(QUST);
   wbAddGroupOrder(IDLE);
   wbAddGroupOrder(PACK);
   wbAddGroupOrder(CSTY);
   wbAddGroupOrder(LSCR);
+  //wbAddGroupOrder(LVSP);
   wbAddGroupOrder(ANIO);
   wbAddGroupOrder(WATR);
   wbAddGroupOrder(EFSH);
+  //wbAddGroupOrder(TOFT);
   wbAddGroupOrder(EXPL);
   wbAddGroupOrder(DEBR);
   wbAddGroupOrder(IMGS);

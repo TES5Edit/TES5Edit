@@ -6343,7 +6343,7 @@ end;
   procedure ReferenceRecord(aSignature: TwbSignature; const aName: string);
   begin
     wbRefRecord(aSignature, aName,
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      wbFlags(wbFlagsList([
         {0x00000080}  7, 'Turn Off Fire',
         {0x00000400} 10, 'Persistent',
         {0x00000800} 11, 'Initially Disabled',
@@ -6408,6 +6408,13 @@ end;
 procedure DefineFO76;
 begin
   DefineCommon;
+
+  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+
+  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+
+  wbSizeOfMainRecordStruct := 24;
+
   wbNull := wbByteArray('Unused', -255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
   wbCNDC := wbInteger(CNDC, 'Condition Position', itU32, nil, cpBenign);
@@ -6604,12 +6611,6 @@ begin
       {12} wbEmpty('Unused') //Color
     ], [0, 1, 2, 3, 4, 5, 6, 9, 7, 11, 12, 8, 10])
   ]);
-
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbRecordFlagsFlags, wbFlagsList([])));
-
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
-
-  wbSizeOfMainRecordStruct := 24;
 
   wbIgnoreRecords.Add(XXXX);
 
@@ -7882,7 +7883,7 @@ begin
   ]));
 
   wbRefRecord(ACHR, 'Placed NPC',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -10025,7 +10026,7 @@ begin
     wbRArray('Effects', wbEffect, cpNormal); { Change this before pushing }
 
   wbRecord(ACTI, 'Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Never Fades',
       {0x00000010}  4, 'Non Occluder',
       {0x00000040}  6, 'Unknown 6',
@@ -10116,7 +10117,7 @@ begin
 
   { Inherits from ACTI }
   wbRecord(TACT, 'Talking Activator',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Radio Station'
@@ -10146,7 +10147,7 @@ begin
   wbMIID := wbInteger(MIID, 'Max Item ID', itU32);
 
   wbRecord(ALCH, 'Ingestible',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000002}  2, 'Unknown 1',
       {0x20000000} 29, 'Medicine'
     ])), [
@@ -10205,7 +10206,7 @@ begin
   ]);
 
   wbRecord(AMMO, 'Ammunition',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -10243,7 +10244,7 @@ begin
   ]);
 
   wbRecord(ANIO, 'Animated Object',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
     wbEDID,
@@ -10252,7 +10253,7 @@ begin
   ]);
 
   wbRecord(ARMO, 'Armor',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
       {0x00000200}  9, 'Unknown 9',
@@ -10321,7 +10322,7 @@ begin
   ], False, nil, cpNormal, False, wbARMOAfterLoad);
 
   wbRecord(ARMA, 'Armor Addon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000040}  6, 'No Underarmor Scaling',
       {0x00000200}  9, 'Unknown 9',
@@ -10468,7 +10469,7 @@ begin
     ]);
 
   wbRecord(CELL, 'Cell',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Is Instancable',
       {0x00000040}  6, 'Unknown 6',
       {0x00000080}  7, 'No Pre Vis',
@@ -10478,19 +10479,7 @@ begin
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Can''t Wait'
     ]), [14, 18])
-      .SetFlagHasDontShow(14,
-        function(const aElement: IwbElement): Boolean
-        begin
-          Result := False;
-          if not Assigned(aElement) then
-            Exit;
-          var lMainRecord := aElement.ContainingMainRecord;
-          if not Assigned(lMainRecord) then
-            Exit;
-          if lMainRecord.IsPartialForm then
-            Exit;
-          Result := not lMainRecord.CanBePartial;
-        end),
+      .SetFlagHasDontShow(14, wbFlagPartialFormDontShow),
   [
     wbEDID,
     wbDURL,
@@ -10731,7 +10720,7 @@ begin
   ]);
 
   wbRecord(CONT, 'Container',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD',
       {0x00010000} 16, 'Random Anim Start',
       {0x02000000} 25, 'Obstacle',
@@ -10809,7 +10798,7 @@ begin
     ], cpNormal, True, nil{wbActorTemplateUseAIData});
 
   wbRecord(CSTY, 'Combat Style',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
     ])), [
     wbEDID,
@@ -10892,7 +10881,7 @@ begin
   ]);
 
   wbRecord(DIAL, 'Dialog Topic',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00004000} 14, 'Partial Form'
     ]), [14]), [
     wbEDID,
@@ -11054,7 +11043,7 @@ begin
   ]);
 
   wbRecord(DOOR, 'Door',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000010}  4, 'Non Occluder',
       {0x00000200}  9, 'Unknown 9',
@@ -11212,7 +11201,7 @@ begin
   ]);
 
   wbRecord(EYES, 'Eyes',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -11313,7 +11302,7 @@ begin
   ], False, nil, cpNormal, False, nil {wbFACTAfterLoad}, wbConditionsAfterSet);
 
   wbRecord(FURN, 'Furniture',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
       {0x00000080}  7, 'Is Perch',
@@ -11427,7 +11416,7 @@ begin
   ]);
 
   wbRecord(GLOB, 'Global',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000040}  6, 'Constant',
       {0x00000200}  9, 'Unknown 9'
@@ -11457,7 +11446,7 @@ begin
   .IncludeFlag(dfIndexEditorID);
 
   wbRecord(KYWD, 'Keyword',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000010}  4, 'Unknown 4',
       {0x00000200}  9, 'Unknown 9',
@@ -11479,7 +11468,7 @@ begin
   ]);
 
   wbRecord(LCRT, 'Location Reference Type',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010} { 4}  4, 'Unknown 4'
     ])), [
     wbEDID,
@@ -11491,7 +11480,7 @@ begin
   ]);
 
   wbRecord(AACT, 'Action',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
     wbEDID,
@@ -11532,7 +11521,7 @@ begin
   ]);
 
   wbRecord(HDPT, 'Head Part',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -11592,7 +11581,7 @@ begin
   ]);
 
   wbRecord(MSTT, 'Moveable Static',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000100}  8, 'Must Update Anims',
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000800} 11, 'Used As Platform',
@@ -11629,7 +11618,7 @@ begin
   ]);
 
   wbRecord(IDLM, 'Idle Marker',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x20000000} 29, 'Child Can Use'
     ])), [
     wbEDID,
@@ -11804,7 +11793,7 @@ begin
     ]);
 
     wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      wbFlags(wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen',
         {0x80000000} 31, 'Unknown 31'
@@ -11879,7 +11868,7 @@ begin
     ]);
 
     wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbRecordFlagsFlags, wbFlagsList([
+      wbFlags(wbFlagsList([
         {0x00040000} 18, 'Compressed',
         {0x04000000} 26, 'AutoGen',
         {0x80000000} 31, 'Unknown 31'
@@ -12092,7 +12081,7 @@ begin
 
 
   wbRecord(IMAD, 'Image Space Adapter',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
           {0x00000800} 11, 'Unknown' // something to do with Photo Mode
         ])), [
     wbEDID,
@@ -12218,7 +12207,7 @@ begin
   ]);
 
   wbRecord(FLST, 'FormID List',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
           {0x00000002} 2, 'Unknown 2',   //0066CD08
           {0x00000200} 9, 'Unknown 9'    //0066CD08
     ])), [
@@ -12363,7 +12352,7 @@ begin
     ], []);
 
   wbRecord(PERK, 'Perk',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -12513,7 +12502,7 @@ begin
   ]);
 
   wbRecord(AVIF, 'Actor Value Information' ,
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -12574,16 +12563,17 @@ begin
       'Reputation',
       'Unknown'
     ])),
-    wbInteger(NAM2, 'Networking Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
-      {0x00000001}  0, 'Unknown 0',
-      {0x00000002}  1, 'Replicate all',
-      {0x00000004}  2, 'Replicate one',
-      {0x00000008}  3, 'Network Float Value',
-      {0x00000010}  4, 'Only Modified Value',
-      {0x00000020}  5, 'Unknown 5',
-      {0x00000040}  6, 'Only Base Value',
-      {0x00000080}  7, 'Low Priority'
-    ]))),
+    wbInteger(NAM2, 'Networking Flags', itU32,
+      wbFlags(wbFlagsList([
+        0, 'Unknown 0',
+        1, 'Replicate all',
+        2, 'Replicate one',
+        3, 'Network Float Value',
+        4, 'Only Modified Value',
+        5, 'Unknown 5',
+        6, 'Only Base Value',
+        7, 'Low Priority'
+      ]))),
     wbFormIDCk(NAM3, 'Actor Value Keyword', [KYWD]), // always a KYWD
     wbFormIDCk(NAM4, 'Associated List', [FLST]),
     wbString(CNAM, 'Description')
@@ -12751,7 +12741,7 @@ begin
   ]);
 
   wbRecord(LCTN, 'Location',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Interior Location',
       {0x00000100}  8, 'Unknown 8',
       {0x00000800} 11, 'Interior Cells Use Ref Location for world map player marker',
@@ -13432,7 +13422,7 @@ begin
     wbInteger(QNAM, 'Quest Count', itU32, nil, cpBenign, True),
     wbRArray('Quests', wbRStructSK([0], 'Quest', [
       wbFormIDCk(NNAM, 'Quest', [QUST]),
-      wbInteger(FNAM, 'Flags', itU32, wbEmptyBaseFlags),
+      wbInteger(FNAM, 'Flags', itU32, wbFlags(wbSparseFlags([]))),
       wbFloat(RNAM, 'Hours until reset', cpNormal, False, 1/24),
       wbInteger(UNAM, 'Priority', itU32)
     ], []), cpNormal, False, nil, wbSMQNQuestsAfterSet)
@@ -14016,7 +14006,7 @@ begin
   ]);
 
   wbRecord(ARTO, 'Art Object',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -14229,7 +14219,7 @@ begin
   ]);
 
   wbRecord(CLFM, 'Color',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -14269,7 +14259,7 @@ begin
   ]);
 
   wbRecord(GRAS, 'Grass',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000}  15, 'Unknown 15'
     ])), [
     wbEDID,
@@ -14329,7 +14319,7 @@ begin
   ]);
 
   wbRecord(IDLE, 'Idle Animation',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       11, 'Photomode'
     ], True, True)), [
     wbEDID,
@@ -14359,7 +14349,7 @@ begin
   ]);
 
   wbRecord(INFO, 'Dialog response',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000040}  6, 'Info Group',
       {0x00000080}  7, 'Exclude From Export',
       {0x00002000} 13, 'Actor Changed'
@@ -14516,7 +14506,7 @@ begin
   ]);
 
   wbRecord(KEYM, 'Key',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000800} 11, 'Calc Value From Components',
       {0x00002000} 13, 'Pack-In Use Only'
     ])), [
@@ -14545,7 +14535,7 @@ begin
   ]);
 
   wbRecord(LAND, 'Landscape',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x40000} 18, 'Compressed'
     ]), [18]), [
     wbInteger(DATA, 'Flags', itU32, wbFlags([
@@ -14570,7 +14560,7 @@ begin
   ]);
 
   wbRecord(LIGH, 'Light',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Unknown 17',
       {0x00020000} 25, 'Obstacle',
@@ -14647,7 +14637,7 @@ begin
   ], False, nil, cpNormal, False, wbLIGHAfterLoad);
 
   wbRecord(LSCR, 'Load Screen',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu',
       {0x00008000} 15, 'No Rotation'
     ])), [
@@ -14833,7 +14823,7 @@ begin
   ], False, nil, cpNormal, False, wbLLEAfterLoad, wbLLEAfterSet);
 
   wbRecord(LVLI , 'Leveled Item',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -15117,7 +15107,7 @@ begin
   ], False, nil, cpNormal, False, nil {wbMGEFAfterLoad}, wbMGEFAfterSet);
 
   wbRecord(MISC, 'Misc. Item',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000800}  11, 'Calc From Components',
       {0x00002000}  13, 'Pack-In Use Only',
       {0x00008000}  15, 'Unknown 15'
@@ -15182,7 +15172,7 @@ begin
       ]);
 
   wbRecord(COBJ, 'Constructible Object',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9',
       {0x00000800} 11, 'Unknown 11',
@@ -15228,7 +15218,7 @@ begin
   ]);
 
   wbRecord(NPC_, 'Non-Player Character (Actor)',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000400} 10, 'Unknown 10',
       {0x00040000} 18, 'Compressed',
       {0x00080000} 19, 'Unknown 19',
@@ -15926,7 +15916,7 @@ begin
     ], cpNormal, True);
 
   wbRecord(QUST, 'Quest',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00004000} 14, 'Partial Form'
     ]), [14]), [
     wbEDID,
@@ -16396,7 +16386,7 @@ begin
     , cpNormal, True);
 
   wbRecord(RACE, 'Race',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
     wbEDID,
@@ -16717,7 +16707,7 @@ begin
 
 
   wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
       {0x00000400} 10, 'Persistent',
@@ -16729,7 +16719,7 @@ begin
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ACTI STAT SCOL TREE} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ACTI STAT SCOL TREE} wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
       {0x00000200}  9, 'Hidden From Local Map',
@@ -16744,7 +16734,7 @@ begin
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {CONT TERM} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {CONT TERM} wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -16756,7 +16746,7 @@ begin
       {0x40000000} 30, 'Ground',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {DOOR} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {DOOR} wbFlags(wbFlagsList([
       {0x00000004}  2, 'Minimal Use Door',
       {0x00000040}  6, 'Hidden From Local Map',
       {0x00000100}  8, 'Inaccessible',
@@ -16769,7 +16759,7 @@ begin
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {LIGH} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {LIGH} wbFlags(wbFlagsList([
       {0x00000100}  8, 'Doesn''t Light Water',
       {0x00000200}  9, 'Casts Shadows',
       {0x00000400} 10, 'Persistent',
@@ -16782,7 +16772,7 @@ begin
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {MSTT} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {MSTT} wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000200}  9, 'Motion Blur',
       {0x00000400} 10, 'Persistent',
@@ -16795,7 +16785,7 @@ begin
       {0x40000000} 30, 'No Respawn',
       {0x80000000} 31, 'Multibound'
     ], True, True)),
-    {ADDN} wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    {ADDN} wbFlags(wbFlagsList([
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
       {0x00010000} 16, 'Is Full LOD',
@@ -16805,7 +16795,7 @@ begin
       {0x80000000} 31, 'Multibound'
     ], True, True)),
     {ALCH BOOK SCRL AMMO ARMO INGR KEYM MISC FURN WEAP}
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000400} 10, 'Persistent',
       {0x00000800} 11, 'Initially Disabled',
@@ -16946,11 +16936,14 @@ begin
       wbFloat('Frequency'),
       wbFloat('Min Weak Distance'),
       wbFloat('Max Weak Distance'),
-      wbInteger('Flags', itU32, wbFlags(wbEmptyBaseFlags, wbFlagsList([
-        {0x00000200}  1, 'Ignores Distance Checks',
-        {0x00000400}  8, 'Unknown 8',
-        {0x00000800} 16, 'Unknown 16'
-      ], True, True)))]),
+      wbInteger('Flags', itU32,
+        wbFlags(wbFlagsList([
+          1, 'Ignores Distance Checks',
+          8, 'Unknown 8',
+         16, 'Unknown 16'
+        ], True, True))
+      )
+    ]),
     wbXFLG,
     wbByteArray(XKPD, 'Keypad Data', 5),
     wbStruct(XBSD, 'Bendable Spline Data', [
@@ -17293,7 +17286,7 @@ begin
   ], True, wbPlacedAddInfo, cpNormal, False, wbREFRAfterLoad);
 
   wbRecord(REGN, 'Region',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000040}  6, 'Border Region',
       {0x00000080}  7, 'Unknown 7 ',
       {0x00000400} 10, 'Unknown 10'
@@ -17541,7 +17534,7 @@ begin
   ], cpNormal, True);
 
   wbRecord(SPEL, 'Spell',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000} 15, 'Unknown 15'
     ])), [
     wbEDID,
@@ -17564,40 +17557,25 @@ begin
   ]);}
 
   wbRecord(STAT, 'Static',
-    wbFlags(wbRecordFlagsFlags, [
-      {0x00000001} { 0} '',
-      {0x00000002} { 1} '',
-      {0x00000004} { 2} 'Heading Marker',
-      {0x00000008} { 3} '',
-      {0x00000010} { 4} 'Non Occluder',
-      {0x00000020} { 5} 'Deleted',
-      {0x00000040} { 6} 'Has Tree LOD', // Used in Fallout 4 ?
-      {0x00000080} { 7} 'Add-On LOD Object',
-      {0x00000100} { 8} '',
-      {0x00000200} { 9} 'Hidden From Local Map',
-      {0x00000400} {10} 'Headtrack Marker',
-      {0x00000800} {11} 'Used as Platform',
-      {0x00001000} {12} '',
-      {0x00002000} {13} 'Pack-In Use Only',
-      {0x00004000} {14} '',
-      {0x00008000} {15} 'Has Distant LOD',
-      {0x00010000} {16} '',
-      {0x00020000} {17} 'Uses HD LOD Texture',
-      {0x00040000} {18} '',
-      {0x00080000} {19} 'Has Currents',
-      {0x00100000} {20} '',
-      {0x00200000} {21} '',
-      {0x00400000} {22} '',
-      {0x00800000} {23} 'Is Marker',
-      {0x01000000} {24} '',
-      {0x02000000} {25} 'Obstacle',
-      {0x04000000} {26} 'NavMesh Generation - Filter',
-      {0x08000000} {27} 'NavMesh Generation - Bounding Box',
-      {0x10000000} {28} 'Show In World Map (Sky Cell Only)',
-      {0x20000000} {29} '',
-      {0x40000000} {30} 'NavMesh Generation - Ground',
-      {0x80000000} {31} ''
-    ]), [
+    wbFlags(wbFlagsList([
+      2, 'Heading Marker',
+      4, 'Non Occluder',
+      6, 'Has Tree LOD', // Used in Fallout 4 ?
+      7, 'Add-On LOD Object',
+      9, 'Hidden From Local Map',
+     10, 'Headtrack Marker',
+     11, 'Used as Platform',
+     13, 'Pack-In Use Only',
+     15, 'Has Distant LOD',
+     17, 'Uses HD LOD Texture',
+     19, 'Has Currents',
+     23, 'Is Marker',
+     25, 'Obstacle',
+     26, 'NavMesh Generation - Filter',
+     27, 'NavMesh Generation - Bounding Box',
+     28, 'Show In World Map (Sky Cell Only)',
+     30, 'NavMesh Generation - Ground'
+    ])), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -17639,7 +17617,7 @@ begin
   ], True);  // unordered, NVNM can be before or after MNAM
 
   wbRecord(TES4, 'Main File Header',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000001}  0, 'ESM',
       {0x00000010}  4, 'Optimized File',
       {0x00000080}  7, 'Localized',
@@ -17675,7 +17653,7 @@ begin
   ]).IncludeFlag(dfInternalEditOnly);
 
   wbRecord(TREE, 'Tree',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD'
     ])), [
     wbEDID,
@@ -17907,7 +17885,7 @@ begin
   ]);
 
   wbRecord(INNR, 'Instance Naming Rules',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -17978,7 +17956,7 @@ begin
   ]);
 
   wbRecord(LAYR, 'Layer',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x08000000} 27, 'Unknown 27'
     ])), [
     wbEDID,
@@ -18021,7 +17999,7 @@ begin
   ]); }
 
   wbRecord(MSWP, 'Material Swap',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9',
       {0x00010000} 16, 'Custom Swap',
@@ -18166,7 +18144,7 @@ begin
   ]);
 
   wbRecord(OMOD, 'Object Modification',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004} 2, 'Unknown 2',
       {0x00000010} 4, 'Legendary Mod',
       {0x00000040} 6, 'Unknown 6',
@@ -18251,7 +18229,7 @@ begin
   ]);
 
   wbRecord(PKIN, 'Pack-In',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000200}  9, 'Prefab',
       {0x00000400}  10, 'Unknown 10'
     ])), [
@@ -18327,7 +18305,7 @@ begin
     ], [], cpNormal);
 
   wbRecord(SCOL, 'Static Collection',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00000400} 10, 'Unknown 10',
@@ -18378,7 +18356,7 @@ begin
   ]);
 
   wbRecord(TERM, 'Terminal',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00002000} 13, 'Pack-In Use Only',
       {0x00008000} 15, 'Has Distant LOD',
@@ -18487,7 +18465,7 @@ begin
   ]);}
 
   wbRecord(TRNS, 'Transform',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9',
       {0x00008000} 16, 'Around Origin'
@@ -18575,7 +18553,7 @@ begin
   ]);
 
   wbRecord(RESO, 'Resource',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
        2, 'Unknown 2',
        9, 'Unknown 9',
       28, 'Unknown 28'
@@ -18623,7 +18601,7 @@ begin
   ]);
 
   wbRecord(PPAK, 'Perk Card Pack',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000002} 2, 'Unknown: 2'
     ])), [
     wbEDID,
@@ -18675,7 +18653,7 @@ begin
   ]);
 
   wbRecord(PCRD, 'Perk Card',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
     wbEDID,
@@ -18883,7 +18861,7 @@ begin
   ]);
 
   wbRecord(ENTM, 'Entitlement',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -18941,7 +18919,7 @@ begin
   ]);
 
   wbRecord(CHAL, 'Challenge',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])),[
@@ -19012,7 +18990,7 @@ begin
   ]);
 
   wbRecord(MDSP, 'Model Swap' ,
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -19049,7 +19027,7 @@ begin
   ]);
 
   wbRecord(GMRW, 'Gameplay Reward',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -19061,7 +19039,7 @@ begin
   ]);
 
   wbRecord(PEPF, 'Event Playlist' ,
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -19080,7 +19058,7 @@ begin
   ]);
 
   wbRecord(QMDL, 'Quest Module' ,
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -19145,7 +19123,7 @@ begin
   ]);
 
   wbRecord(DCGF, 'Daily Content Group',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -19271,7 +19249,7 @@ begin
   ]);
 
   wbRecord(WEAP, 'Weapon',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x20000000} 30, 'High-Res 1st Person Only'
     ])), [
@@ -19505,7 +19483,7 @@ begin
   ], False, nil, cpNormal, False, nil{wbWEAPAfterLoad});
 
   wbRecord(WTHR, 'Weather',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       9, 'Unknown 9'
     ])), [
     wbEDID,
@@ -19620,7 +19598,7 @@ begin
   ]);
 
   wbRecord(WRLD, 'Worldspace',
-    wbFlags(wbRecordFlagsFlags, wbFlagsList([
+    wbFlags(wbFlagsList([
       14, 'Partial Form',
       19, 'Can''t Wait'
     ]), [14]), [
