@@ -15067,7 +15067,7 @@ begin
         else
           s :=  wbGetUnknownIntString(i);
       if GetFlagDontShow(aElement, i) then
-        s := '(' + s + ')';
+        s := '<Unknown: ' + IntToStr(i) + '>';
       if wbShowFlagEnumValue then
         s := s + ' (0x' + IntToHex(Int64(1) shl i, 8) + ')';
       Add(s);
