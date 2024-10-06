@@ -3965,7 +3965,7 @@ begin
     wbIntegerT('Set kEvent_OnLoad', itU8)  // only if form version is 0x15 or greater
   ]);
 
-  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbIntegerT('Flags', itu32, wbRecordFlagsFlags)]);
+  wbUnionCHANGE_FORM_FLAGS := wbUnion('Flags', ChangedFlag00Decider, [wbNull, wbIntegerT('Flags', itu32, wbFlags(wbFlagsList([])))]);
 
 // no actual data    wbUnionCHANGE_REFR_MOVE := wbUnion('Moved', ChangedFlag01Decider, [wbNull, wbNull]);
 

@@ -5057,10 +5057,10 @@ begin
      20, 'Ignore Object Interaction',
      23, 'Is Marker',
      25, 'Obstacle',
-     26, 'NavMesh Generation - Filter',
-     27, 'NavMesh Generation - Bounding Box',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
      29, 'Child Can Use',
-     30, 'NavMesh Generation - Ground'
+     30, 'Navmesh - Ground'
     ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
        .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
@@ -6261,10 +6261,12 @@ begin
       15, 'Has Distant LOD',
       16, 'Random Anim Start',
       25, 'Obstacle',
-      26, 'NavMesh Generation - Filter',
-      27, 'NavMesh Generation - Bounding Box',
-      30, 'NavMesh Generation - Ground'
-    ])), [
+      26, 'Navmesh - Filter',
+      27, 'Navmesh - Bounding Box',
+      30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -7182,10 +7184,12 @@ begin
      16, 'Random Anim Start',
      19, 'Has Currents',
      25, 'Obstacle',
-     26, 'NavMesh Generation - Filter',
-     27, 'NavMesh Generation - Bounding Box',
-     30, 'NavMesh Generation - Ground'
-    ])), [
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
+     30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbOBND(True),
     wbFULL,
@@ -11952,11 +11956,13 @@ Can't properly represent that with current record definition methods.
      19, 'Has Currents',
      23, 'Is Marker',
      25, 'Obstacle',
-     26, 'NavMesh Generation - Filter',
-     27, 'NavMesh Generation - Bounding Box',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
      28, 'Show In World Map',
-     30, 'NavMesh Generation - Ground'
-    ]), [11, 16]), [
+     30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbOBND(True),
     wbGenericModel,

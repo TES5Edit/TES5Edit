@@ -3897,7 +3897,9 @@ begin
      27, 'Navmesh - Bounding Box',
      29, 'Child Can Use',
      30, 'Navmesh - Ground'
-    ])), [
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -4791,7 +4793,9 @@ begin
       26, 'Navmesh - Filter',
       27, 'Navmesh - Bounding Box',
       30, 'Navmesh - Ground'
-    ])), [
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDIDReq,
     wbOBND(True),
     wbFULL,
@@ -5559,7 +5563,9 @@ var  wbSoundTypeSoundsOld :=
      26, 'Navmesh - Filter',
      27, 'Navmesh - Bounding Box',
      30, 'Navmesh - Ground'
-    ])), [
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDIDReq,
     wbOBND(True),
     wbGenericModel(True),
@@ -8138,12 +8144,14 @@ var  wbSoundTypeSoundsOld :=
       16, 'High Priority LOD',  //Requires Visible When Distant
       25, 'No AI Acquire',
       26, 'Navmesh - Filter',
-      27, 'Navmesh - Bounding Box',  //Both 26 + 27 set = Navmesh - Collision Geometry on REFR.
+      27, 'Navmesh - Bounding Box',
       28, 'Reflected By Auto Water', //Only REFRs placed in Exterior?
       29, 'Refracted by Auto Water', //Only REFRs placed in Exterior?
       30, 'Navmesh - Ground',
       31, 'Multibound'
-    ])), [
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     {
     wbStruct(RCLR, 'Linked Reference Color (Old Format?)', [
@@ -8646,7 +8654,9 @@ var  wbSoundTypeSoundsOld :=
       26, 'Navmesh - Filter',
       27, 'Navmesh - Bounding Box',
       30, 'Navmesh - Ground'
-    ])), [
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDIDReq,
     wbOBND(True),
     wbGenericModel

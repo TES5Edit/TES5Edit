@@ -163,9 +163,11 @@ function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const 
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWorldRowsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 
-{>>> Don't Show Callbacks <<<} //12
+{>>> Don't Show Callbacks <<<} //14
 function wbFlagNavmeshFilterDontSHow(const aElement: IwbElement): Boolean;
 function wbFlagNavmeshBoundingBoxDontSHow(const aElement: IwbElement): Boolean;
+function wbFlagNavmeshOnlyCutDontSHow(const aElement: IwbElement): Boolean;
+function wbFlagNavmeshIgnoreErosionDontSHow(const aElement: IwbElement): Boolean;
 function wbFlagNavmeshGroundDontSHow(const aElement: IwbElement): Boolean;
 function wbFlagPartialFormDontShow(const aElement: IwbElement): Boolean;
 function wbModelInfoDontShow(const aElement: IwbElement): Boolean;
@@ -993,24 +995,46 @@ begin
   Result := Round(MaxY) - Round(MinY) + 1;
 end;
 
-{>>> Don't Show Callbacks <<<} //12
+{>>> Don't Show Callbacks <<<} //14
 
 function wbFlagNavmeshFilterDontSHow(const aElement: IwbElement): Boolean;
 begin
   Result := (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
+         or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and wbIsStarfield)
+         or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and wbIsStarfield)
          or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
 end;
 
 function wbFlagNavmeshBoundingBoxDontSHow(const aElement: IwbElement): Boolean;
 begin
   Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
+         or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and wbIsStarfield)
+         or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and wbIsStarfield)
+         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+end;
+
+function wbFlagNavmeshOnlyCutDontSHow(const aElement: IwbElement): Boolean;
+begin
+  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
+end;
+
+function wbFlagNavmeshIgnoreErosionDontSHow(const aElement: IwbElement): Boolean;
+begin
+  Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
+         or (aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0)
          or (aElement.ContainingMainRecord.Flags._Flags and $40000000 <> 0);
 end;
 
 function wbFlagNavmeshGroundDontSHow(const aElement: IwbElement): Boolean;
 begin
   Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
-         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0);
+         or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
+         or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and wbIsStarfield)
+         or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and wbIsStarfield);
 end;
 
 function wbFlagPartialFormDontShow(const aElement: IwbElement): Boolean;

@@ -8167,11 +8167,13 @@ begin
      20, 'Ignore Object Interaction',
      23, 'Is Marker',
      25, 'Obstacle',
-     26, 'NavMesh Generation - Filter',
-     27, 'NavMesh Generation - Bounding Box',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
      29, 'Child Can Use',
-     30, 'NavMesh Generation - Ground'
-    ])), [
+     30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -8696,7 +8698,9 @@ begin
       26, 'Navmesh - Filter',
       27, 'Navmesh - Bounding Box',
       30, 'Navmesh - Ground'
-    ])), [
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -9561,18 +9565,20 @@ begin
 
   wbRecord(MSTT, 'Moveable Static',
     wbFlags(wbFlagsList([
-      {0x00000100}  8, 'Must Update Anims',
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00000800} 11, 'Used As Platform',
-      {0x00002000} 13, 'Pack-In Use Only',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x00010000} 16, 'Random Anim Start',
-      {0x00080000} 19, 'Has Currents',
-      {0x02000000} 25, 'Obstacle',
-      {0x04000000} 26, 'NavMesh Generation - Filter',
-      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x40000000} 30, 'NavMesh Generation - Ground'
-    ])), [
+       8, 'Must Update Anims',
+       9, 'Hidden From Local Map',
+      11, 'Used As Platform',
+      13, 'Pack-In Use Only',
+      15, 'Has Distant LOD',
+      16, 'Random Anim Start',
+      19, 'Has Currents',
+      25, 'Obstacle',
+      26, 'Navmesh - Filter',
+      27, 'Navmesh - Bounding Box',
+      30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -14510,11 +14516,13 @@ begin
      19, 'Has Currents',
      23, 'Is Marker',
      25, 'Obstacle',
-     26, 'NavMesh Generation - Filter',
-     27, 'NavMesh Generation - Bounding Box',
+     26, 'NavMesh - Filter',
+     27, 'NavMesh - Bounding Box',
      28, 'Show In World Map (Sky Cell Only)',
-     30, 'NavMesh Generation - Ground'
-    ])), [
+     30, 'NavMesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
     wbOBND(True),
@@ -15069,16 +15077,18 @@ begin
 
   wbRecord(SCOL, 'Static Collection',
     wbFlags(wbFlagsList([
-      {0x00000004}  4, 'Non Occluder',
-      {0x00000200}  9, 'Hidden From Local Map',
-      {0x00000400} 10, 'Loadscreen',
-      {0x00000800} 11, 'Used as Platform',
-      {0x00008000} 15, 'Has Distant LOD',
-      {0x02000000} 25, 'Obstacle',
-      {0x04000000} 26, 'NavMesh Generation - Filter',
-      {0x08000000} 27, 'NavMesh Generation - Bounding Box',
-      {0x40000000} 30, 'NavMesh Generation - Ground'
-    ])), [
+       4, 'Non Occluder',
+       9, 'Hidden From Local Map',
+     10, 'Loadscreen',
+     11, 'Used as Platform',
+     15, 'Has Distant LOD',
+     25, 'Obstacle',
+     26, 'Navmesh - Filter',
+     27, 'Navmesh - Bounding Box',
+     30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbOBND(True),
     wbPTRN,
