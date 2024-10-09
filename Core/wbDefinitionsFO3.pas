@@ -6833,9 +6833,9 @@ var  wbSoundTypeSoundsOld :=
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
       wbInteger('Max Slope', itU8),
-      wbByteArray('Unused', 1),
+      wbUnused(1),
       wbInteger('Unit from water amount', itU16),
-      wbByteArray('Unused', 2),
+      wbUnused(2),
       wbInteger('Unit from water type', itU32, wbEnum([
         'Above - At Least',
         'Above - At Most',
@@ -6855,7 +6855,7 @@ var  wbSoundTypeSoundsOld :=
         'Uniform Scaling',
         'Fit to Slope'
       ])),
-      wbByteArray('Unused', 3)
+      wbUnused(3)
     ], cpNormal, True)
   ]);
 

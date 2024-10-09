@@ -12054,9 +12054,9 @@ begin
       wbInteger('Density', itU8),
       wbInteger('Min Slope', itU8),
       wbInteger('Max Slope', itU8),
-      wbByteArray('Unknown', 1),
+      wbUnused(1),
       wbInteger('Units From Water', itU16),
-      wbByteArray('Unknown', 2),
+      wbUnused(2),
       wbInteger('Units From Water Type', itU32, wbEnum([
         'Above - At Least',
         'Above - At Most',
@@ -12076,7 +12076,7 @@ begin
         'Uniform Scaling',
         'Fit to Slope'
       ])),
-      wbByteArray('Unknown', 3)
+      wbUnused(3)
     ], cpNormal, True)
   ]);
 
