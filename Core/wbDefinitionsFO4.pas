@@ -213,16 +213,6 @@ var
   //wbRaceFRMI: IwbSubrecordArrayDef;
   wbRaceRBPC: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
-  wbNavmeshVertices: IwbArrayDef;
-  wbNavmeshTriangles: IwbArrayDef;
-  wbNavmeshEdgeLinks: IwbArrayDef;
-  wbNavmeshDoorTypeEnum: IwbEnumDef;
-  wbNavmeshDoorTriangles: IwbArrayDef;
-  wbNavmeshCoverArray: IwbArrayDef;
-  wbNavmeshCoverTriangleMap: IwbArrayDef;
-  wbNavmeshWaypoints: IwbArrayDef;
-  wbNavmeshGrid: IwbStructDef;
-  wbMNAMNAVM: IwbSubRecordDef;
   wbBlendOperationEnum: IwbEnumDef;
   a, b, c : TVarRecs;
 
@@ -550,480 +540,9 @@ begin
     ResolveOverlay;
 end;
 
-function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Container  : IwbContainerElementRef;
-  Navmesh    : IwbElement;
-  MainRecord : IwbMainRecord;
-  Triangles  : IwbContainerElementRef;
-begin
-  case aType of
-    ctToStr, ctToSummary: Result := aInt.ToString;
-    ctToEditValue: Result := aInt.ToString;
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 8);
-      Exit;
-    end;
-    ctCheck: Result := '';
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-
-  if not wbTryGetContainerRefFromUnionOrValue(aElement, Container) then
-    Exit;
-
-  Navmesh := Container.Elements[0];
-  if not wbTryGetMainRecord(Navmesh, MainRecord) then
-    Exit;
-
-  MainRecord := MainRecord.WinningOverride;
-
-  if MainRecord.Signature <> NAVM then begin
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if aType = ctToStr then
-          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
-      end;
-      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
-    end;
-    Exit;
-  end;
-
-  if Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) and (aType = ctCheck) then
-    if aInt >= Triangles.ElementCount then
-      Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
-end;
-
 function wbStringToInt(const aString: string; const aElement: IwbElement): Int64;
 begin
   Result := StrToIntDef(aString, 0);
-end;
-
-function wbEdgeToStr(aEdge: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Triangle   : IwbContainerElementRef;
-  Flags      : Int64;
-  MainRecord : IwbMainRecord;
-  EdgeLinks  : IwbContainerElementRef;
-  EdgeLink   : IwbContainerElementRef;
-  FormID     : TwbFormID;
-begin
-  case aType of
-    ctToStr, ctToSummary: begin
-      if aInt < 0 then
-        Exit('None');
-
-      Result := aInt.ToString;
-
-      if not Assigned(aElement) then
-        Exit;
-
-      Triangle := aElement.Container as IwbContainerElementRef;
-      if not Assigned(Triangle) then
-        Exit;
-
-      MainRecord := aElement.ContainingMainRecord;
-      if not Assigned(MainRecord) then
-        Exit;
-
-      Flags := Triangle.ElementNativeValues['Flags'];
-      if Flags and (1 shl aEdge) <> 0 then begin
-        if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
-          Exit;
-
-        if aInt >= EdgeLinks.ElementCount then
-          Exit;
-
-        if aInt < 0 then
-          Exit;
-
-        EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
-
-        MainRecord := nil;
-        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
-          Exit;
-
-        aInt := EdgeLink.ElementNativeValues['Triangle'];
-
-        Result := Result + ' (#' + aInt.ToString + ' in ' + MainRecord.Name + ')';
-      end;
-    end;
-    ctToSortKey: begin
-      Result := '00000000' + IntToHex(aInt, 4);
-      if not Assigned(aElement) then
-        Exit;
-
-      Triangle := aElement.Container as IwbContainerElementRef;
-      if not Assigned(Triangle) then
-        Exit;
-
-      MainRecord := aElement.ContainingMainRecord;
-      if not Assigned(MainRecord) then
-        Exit;
-
-      FormID := MainRecord.LoadOrderFormID;
-
-      Flags := Triangle.ElementNativeValues['Flags'];
-      if Flags and (1 shl aEdge) <> 0 then begin
-        if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
-          Exit;
-        if aInt >= EdgeLinks.ElementCount then
-          Exit;
-        if aInt < 0 then
-          Exit;
-        EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
-        if not Assigned(EdgeLink) then
-          Exit;
-
-        MainRecord := nil;
-        if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
-          Exit;
-        if Assigned(MainRecord) then
-          FormID := MainRecord.LoadOrderFormID
-        else
-          FormID := TwbFormID.Null;
-        aInt := EdgeLink.ElementNativeValues['Triangle'];
-      end;
-
-      Result := FormID.ToString + IntToHex(aInt, 4);
-    end;
-    ctCheck: Result := '';
-    ctToEditValue: if aInt < 0 then
-                     Result := ''
-                   else
-                     Result := aInt.ToString;
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-end;
-
-function wbEdgeLinksTo(aEdge: Integer; const aElement: IwbElement): IwbElement;
-var
-  aInt       : Int64;
-  Triangle   : IwbContainerElementRef;
-  Triangles  : IwbContainerElementRef;
-  Flags      : Int64;
-  MainRecord : IwbMainRecord;
-  EdgeLinks  : IwbContainerElementRef;
-  EdgeLink   : IwbContainerElementRef;
-begin
-  Result := nil;
-  if not Assigned(aElement) then
-    Exit;
-
-  Triangle := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Triangle) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then
-    Exit;
-
-  aInt := aElement.NativeValue;
-
-  Flags := Triangle.ElementNativeValues['Flags'];
-  if Flags and (1 shl aEdge) <> 0 then begin
-    if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
-      Exit;
-
-    if aInt >= EdgeLinks.ElementCount then
-      Exit;
-
-    if aInt < 0 then
-      Exit;
-
-    EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
-
-    MainRecord := nil;
-    if not Supports(EdgeLink.ElementLinksTo['Mesh'], IwbMainRecord, MainRecord) then
-      Exit;
-
-    aInt := EdgeLink.ElementNativeValues['Triangle'];
-  end;
-
-  if not Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) then
-    Exit;
-
-  if aInt >= Triangles.ElementCount then
-    Exit;
-
-  if aInt < 0 then
-    Exit;
-
-  Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
-
-  Result := Triangle;
-end;
-
-function wbEdgeLinksTo0(const aElement: IwbElement): IwbElement;
-begin
-  Result := wbEdgeLinksTo(0, aElement);
-end;
-
-function wbEdgeLinksTo1(const aElement: IwbElement): IwbElement;
-begin
-  Result := wbEdgeLinksTo(1, aElement);
-end;
-
-function wbEdgeLinksTo2(const aElement: IwbElement): IwbElement;
-begin
-  Result := wbEdgeLinksTo(2, aElement);
-end;
-
-function wbTriangleLinksTo(const aElement: IwbElement): IwbElement;
-var
-  aInt       : Int64;
-  Triangle   : IwbContainerElementRef;
-  Triangles  : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-begin
-  Result := nil;
-  if not Assigned(aElement) then
-    Exit;
-
-  Triangle := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Triangle) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then
-    Exit;
-
-  aInt := aElement.NativeValue;
-
-  if not Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) then
-    Exit;
-
-  if aInt >= Triangles.ElementCount then
-    Exit;
-
-  if aInt < 0 then
-    Exit;
-
-  Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
-
-  Result := Triangle;
-end;
-
-function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Triangle   : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  Vertices  : IwbContainerElementRef;
-  Vertex   : IwbContainerElementRef;
-begin
-  case aType of
-    ctToStr, ctToSummary: begin
-      Result := aInt.ToString;
-      if not Assigned(aElement) then
-        Exit;
-
-      Triangle := aElement.Container as IwbContainerElementRef;
-      if not Assigned(Triangle) then
-        Exit;
-
-      MainRecord := aElement.ContainingMainRecord;
-      if not Assigned(MainRecord) then
-        Exit;
-
-      if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
-        Exit;
-
-      if aInt >= Vertices.ElementCount then
-        Exit;
-
-      if aInt < 0 then
-        Exit;
-
-      Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
-
-      with Vertex do try
-        Result := Result + Format(' (%s, %s, %s)', [ElementEditValues['X'], ElementEditValues['Y'], ElementEditValues['Z']]);
-      except
-        // TODO: yikes, suppressing exceptions?
-      end;
-    end;
-    ctToSortKey: begin
-      Result := IntToHex(aInt, 4);
-      if not Assigned(aElement) then
-        Exit;
-
-      Triangle := aElement.Container as IwbContainerElementRef;
-      if not Assigned(Triangle) then
-        Exit;
-
-      MainRecord := aElement.ContainingMainRecord;
-      if not Assigned(MainRecord) then
-        Exit;
-
-      if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
-        Exit;
-
-      if aInt >= Vertices.ElementCount then
-        Exit;
-
-      Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
-
-      with Vertex do try
-        Result := SortKey[False];
-      except
-        // yikes, suppressing exceptions?
-      end;
-    end;
-    ctCheck: Result := '';
-    ctToEditValue: Result := aInt.ToString;
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-end;
-
-
-function wbVertexLinksTo(const aElement: IwbElement): IwbElement;
-var
-  aInt       : Int64;
-  Triangle   : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  Vertices   : IwbContainerElementRef;
-  Vertex     : IwbContainerElementRef;
-begin
-  Result := nil;
-  if not Assigned(aElement) then
-    Exit;
-
-  Triangle := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Triangle) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then
-    Exit;
-
-  if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
-    Exit;
-
-  aInt := aElement.NativeValue;
-
-  if aInt >= Vertices.ElementCount then
-    Exit;
-  if aInt < 0 then
-    Exit;
-
-  Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
-
-  Result := Vertex;
-end;
-
-function wbCoverLinksTo(const aElement: IwbElement): IwbElement;
-var
-  aInt       : Int64;
-  Triangle   : IwbContainerElementRef;
-  MainRecord : IwbMainRecord;
-  CoverArray   : IwbContainerElementRef;
-  Cover     : IwbContainerElementRef;
-begin
-  Result := nil;
-  if not Assigned(aElement) then
-    Exit;
-
-  Triangle := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Triangle) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then
-    Exit;
-
-  if not Supports(MainRecord.ElementByPath['NVNM\Cover Array'], IwbContainerElementRef, CoverArray) then
-    Exit;
-
-  aInt := aElement.NativeValue;
-
-  if aInt >= CoverArray.ElementCount then
-    Exit;
-  if aInt < 0 then
-    Exit;
-
-  Cover := CoverArray.Elements[aInt] as IwbContainerElementRef;
-
-  Result := Cover;
-end;
-
-function wbVertexToInt(aVertex: Integer; const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := StrToIntDef(aString, 0);
-end;
-
-function wbVertexToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := wbVertexToStr(0, aInt, aElement, aType);
-end;
-
-function wbVertexToInt0(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := wbVertexToInt(0, aString, aElement);
-end;
-
-function wbVertexToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := wbVertexToStr(1, aInt, aElement, aType);
-end;
-
-function wbVertexToInt1(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := wbVertexToInt(1, aString, aElement);
-end;
-
-function wbVertexToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := wbVertexToStr(2, aInt, aElement, aType);
-end;
-
-function wbVertexToInt2(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := wbVertexToInt(2, aString, aElement);
-end;
-
-
-function wbEdgeToInt(aEdge: Integer; const aString: string; const aElement: IwbElement): Int64;
-var
-  s: string;
-begin
-  s := Trim(aString);
-  if (s = '')  or SameText(s, 'None') then
-    Result := -1
-  else
-    Result := StrToIntDef(aString, 0);
-end;
-
-function wbEdgeToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := wbEdgeToStr(0, aInt, aElement, aType);
-end;
-
-function wbEdgeToInt0(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := wbEdgeToInt(0, aString, aElement);
-end;
-
-function wbEdgeToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := wbEdgeToStr(1, aInt, aElement, aType);
-end;
-
-function wbEdgeToInt1(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := wbEdgeToInt(1, aString, aElement);
-end;
-
-function wbEdgeToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  Result := wbEdgeToStr(2, aInt, aElement, aType);
-end;
-
-function wbEdgeToInt2(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := wbEdgeToInt(2, aString, aElement);
 end;
 
 { Alias to string conversion, requires quest reference or quest record specific to record that references alias }
@@ -1967,48 +1486,6 @@ begin
   end;
 end;
 
-function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
-var
-  Container: IwbContainer;
-  s: string;
-begin
-  Result := '';
-
-  Container := aMainRecord.Container;
-  while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
-    Container := Container.Container;
-
-  if not Assigned(Container) then
-    Exit;
-
-  s := Trim(Container.Name);
-    if s <> '' then begin
-    if Result <> '' then
-      Result := Result + ' ';
-    Result := Result + 'in ' + s;
-  end;
-end;
-
-//function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
-//var
-//  Rec        : IwbRecord;
-//  Element    : IwbElement;
-//  s          : string;
-//begin
-//  Result := '';
-//
-//  Rec := aMainRecord.RecordBySignature['DATA'];
-//  if Assigned(Rec) then begin
-//    Element := Rec.ElementByName['Cell'];
-//    if Assigned(Element) then
-//      Element := Element.LinksTo;
-//    if Assigned(Element) then
-//      s := Trim(Element.Name);
-//    if s <> '' then
-//      Result := 'for ' + s;
-//  end;
-//end;
-
 function wbNPCLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainer;
@@ -2141,99 +1618,6 @@ begin
     Container.ElementNativeValues['..\Second Actor Value'] := -1;
     Container.ElementNativeValues['..\Second AV Weight'] := 0.0;
   end;
-end;
-
-function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  SubRecord   : IwbMainRecord;
-  Element     : IwbElement;
-begin
-  Result := 0;
-
-  if not Assigned(aElement) then
-    Exit;
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etSubRecord) do
-    Container := Container.Container;
-
-  if not Supports(Container, IwbSubRecord, SubRecord) then
-    Exit;
-
-  Element := SubRecord.ElementByName['Is Island'];
-  if not Assigned(Element) then
-    Exit;
-
-  Result := Element.NativeValue;
-end;
-
-function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  SubRecord   : IwbMainRecord;
-  Element     : IwbElement;
-begin
-  Result := 0;
-
-  if not Assigned(aElement) then
-    Exit;
-  Container := aElement.Container;
-  while Assigned(Container) and (Container.ElementType <> etsubRecord) do
-    Container := Container.Container;
-
-  if not Supports(Container, IwbSubRecord, SubRecord) then
-    Exit;
-
-  Element := SubRecord.ElementByName['Parent Worldspace'];
-  if not Assigned(Element) then
-    Exit;
-
-  if (Element.NativeValue = 0) then
-    Result := 1;
-end;
-
-function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  Parent      : IwbElement;
-  i           : Int64;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  Container := aElement.Container;
-
-  Parent := Container.ElementByName['Parent Worldspace'];
-
-  if not Assigned(Parent) then
-    Exit;
-  i := Parent.NativeValue;
-  // is interior cell?
-  if i = 0 then
-    Result := 1;
-end;
-
-function wbDoorTriangleDoorTriangleDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container   : IwbContainer;
-  Parent      : IwbElement;
-  i           : int64;
-begin
-  Result := 0;
-  if not Assigned(aElement) then
-    Exit;
-
-  Container := aElement.Container;
-
-  Parent := Container.ElementByName['Door Type'];
-
-  if not Assigned(Parent) then
-    Exit;
-  i := Parent.NativeValue;
-  // not sure if it would be an error in the file or if it really possible
-  if i <> 0 then
-    Result := 1;
 end;
 
 function wbSubrecordSizeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -6661,185 +6045,126 @@ begin
   ]);
   wbXRNK := wbInteger(XRNK, 'Owner Faction Rank', itS32);
 
-  wbNavmeshEdgeLinks := wbArray('Edge Links',
-		wbStruct('Edge Link', [
-			wbInteger('Type', itU32,
-				wbEnum([
-					'Portal',
-					'Ledge Up',
-					'Ledge Down',
-					'Enable/Disable Portal'
-				])
-			),
-			wbFormIDCk('Mesh', [NAVM], False, cpIgnore), // those last three are a structure
-			wbInteger('Triangle Index', itS16, nil, cpIgnore),
-			wbByteArray('Edge Index', 1, cpIgnore) // if form ver > 127
-		], cpIgnore)
-	, -1, cpIgnore);
-
-	wbNavmeshDoorTriangles := wbArrayS('Door Triangles',
-		wbStructSK([0, 2], 'Door Triangle', [
-			wbInteger('Triangle before door', itU16).SetLinksToCallback(wbTriangleLinksTo),
-			wbInteger('Door Type', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'), //contains 0 or the CRC of "PathingDoor" = F3 73 8B E4
-			wbUnion('Door', wbDoorTriangleDoorTriangleDecider, [wbNull, wbFormIDCk('Door', [REFR])])
-		])
-	, -1);
-
-	if wbSimpleRecords then begin
-		wbNavmeshVertices := wbArray('Vertices', wbByteArray('Vertex', 12), -1);
-		wbNavmeshTriangles := wbArray('Triangles', wbByteArray('Triangle', 21), -1);
-		wbNavmeshCoverArray := wbArray('Cover Array', wbByteArray('Cover', 16), -1);
-		wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings', wbByteArray('Cover Triangle', 8), -1);
-		wbNavmeshWaypoints := wbArray('Waypoints', wbByteArray('Waypoint', 18), -1);
-		wbNavmeshGrid := wbStruct('Navmesh Grid', [wbUnknown])
-	end else begin
-		wbNavmeshVertices := wbArray('Vertices',
-			wbStruct('Vertex', [
-				wbFloat('X'),
-				wbFloat('Y'),
-				wbFloat('Z')
-			]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
-		, -1);
-
-		wbNavmeshTriangles := wbArray('Triangles',
-			wbStruct('Triangle', [
-				wbInteger('Vertex 0', itS16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Vertex 1', itS16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Vertex 2', itS16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
-				wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
-				wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo2),
-				wbFloat('Height'), // this and next if form ver > 57
-				wbInteger('Unknown', itU8), // flags
-				wbInteger('Flags', itU16, wbFlags([
-					'Edge 0-1 link',      //$0001 1
-					'Edge 1-2 link',      //$0002 2
-					'Edge 2-0 link',      //$0004 4
-					'',                   //$0008 8
-					'No Large Creatures',          //$0010 16   used in CK source according to Nukem
-					'Overlapping',        //$0020 32
-					'Preferred',          //$0040 64
-					'',                   //$0080 128
-					'Unknown 9',          //$0100 256  used in CK source according to Nukem
-					'Water',              //$0200 512
-					'Door',               //$0400 1024
-					'Found',              //$0800 2048
-					'Unknown 13',         //$1000 4096 used in CK source according to Nukem
-					'',                   //$2000 \
-					'',                   //$4000  |-- used as 3 bit counter inside CK, probably stripped before save
-					''                    //$8000 /
-				])),
-				{ Flags below are wrong. The first 4 bit are an enum as follows:
-				0000 = Open Edge No Cover
-				1000 = wall no cover
-				0100 = ledge cover
-				1100 = UNUSED
-				0010 = cover  64
-				1010 = cover  80
-				0110 = cover  96
-				1110 = cover 112
-				0001 = cover 128
-				1001 = cover 144
-				0101 = cover 160
-				1101 = cover 176
-				0011 = cover 192
-				1011 = cover 208
-				0111 = cover 224
-				1111 = max cover
-				then 2 bit flags, then another such enum, and the rest is probably flags.
-				Can't properly represent that with current record definition methods.
-				}
-				wbInteger('Cover Flags', itU16, wbFlags([
-					'Edge 0-1 Cover Value 1/4',
-					'Edge 0-1 Cover Value 2/4',
-					'Edge 0-1 Cover Value 3/4',
-					'Edge 0-1 Cover Value 4/4',
-					'Edge 0-1 Left',
-					'Edge 0-1 Right',
-					'Edge 1-2 Cover Value 1/4',
-					'Edge 1-2 Cover Value 2/4',
-					'Edge 1-2 Cover Value 3/4',
-					'Edge 1-2 Cover Value 4/4',
-					'Edge 1-2 Left',
-					'Edge 1-2 Right',
-					'Unknown 13',
-					'Unknown 14',
-					'Unknown 15',
-					'Unknown 16'
-				]))
-			])
-		, -1);
-
-		wbNavmeshCoverArray := wbArray('Cover Array',  // if navmesh version gt 12
-			wbStruct('Cover', [
-				wbInteger('Vertex 1', itU16).SetLinksToCallback(wbVertexLinksTo),
-				wbInteger('Vertex 2', itU16).SetLinksToCallback(wbVertexLinksTo),
-				wbByteArray('Data', 4 {, wbFlags([]) ? })
-			])
-		, -1);
-
-		wbNavmeshCoverTriangleMap := wbArray('Cover Triangle Mappings',
-			wbStruct('Cover Triangle Map', [
-				wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
-				wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo)
-			])
-		, -1);
-
-		wbNavmeshWaypoints := wbArray('Waypoints',  // if navmesh version gt 11
-			wbStruct('Waypoint', [
-				wbFloat('X'),
-				wbFloat('Y'),
-				wbFloat('Z'),
-				wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
-				wbInteger('Flags', itU32)
-			])
-		, -1);
-
-		wbNavmeshGrid := wbStruct('Navmesh Grid', [
-			wbInteger('Navmesh Grid Size', itU32),  // max 12
-			wbFloat('Max X Distance'),
-			wbFloat('Max Y Distance'),
-			wbFloat('Min X'),
-			wbFloat('Min Y'),
-			wbFloat('Min Z'),
-			wbFloat('Max X'),
-			wbFloat('Max Y'),
-			wbFloat('Max Z'),
-			wbArray('NavMesh Grid Arrays',
-				wbArray('NavMeshGridCell',
-					wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
-				, -1).IncludeFlag(dfNotAlignable)
-			).IncludeFlag(dfNotAlignable) // There are NavMeshGridSize^2 arrays to load
-		])
-	end;
-
-	wbNVNM := wbStruct(NVNM, 'Navmesh Geometry', [
-	  wbInteger('Version', itU32).SetDefaultNativeValue(15),  // Changes how the struct is loaded, should be 15 in FO4
-	  wbStruct('Pathing Cell', [
-      wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),  // This looks like a magic number (always $A5E9A03C), loaded with the parents
-      wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-      wbUnion('Parent', wbNVNMParentDecider, [  // same as TES5 cell if worldspace is null or Grid X Y
-        wbStruct('Coordinates', [
-          wbInteger('Grid Y', itS16),
-          wbInteger('Grid X', itS16)
+	wbNVNM :=
+    wbStruct(NVNM, 'Navmesh Geometry', [
+	    wbInteger('Version', itU32).SetDefaultNativeValue(15),
+	    wbStruct('Pathing Cell', [
+        wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingCell'),
+        wbFormIDCk('Parent World', [WRLD, NULL]).IncludeFlag(dfSummaryExcludeNULL),
+        wbUnion('Parent', wbNVNMParentDecider, [
+          wbStruct('Coordinates', [
+            wbInteger('Grid Y', itS16),
+            wbInteger('Grid X', itS16)
+          ]),
+          wbFormIDCk('Parent Cell', [CELL])
+        ])
+	    ]).SetSummaryKey([2,1])
+        .IncludeFlag(dfSummaryMembersNoName),
+	    IfThen(wbSimpleRecords,
+        wbArray('Vertices',
+          wbByteArray('Vertex', 12),
+        -1).IncludeFlag(dfNotAlignable),
+        wbArray('Vertices',
+          wbVec3('Vertex'),
+        -1).IncludeFlag(dfNotAlignable)
+      ),
+	    IfThen(wbSimpleRecords,
+        wbArray('Triangles',
+          wbByteArray('Triangle', 21),
+        -1).IncludeFlag(dfNotAlignable),
+        wbArray('Triangles',
+			    wbStruct('Triangle', [
+				    wbInteger('Vertex 0', itU16, wbVertexToStr0, wbVertexToInt0).SetLinksToCallback(wbVertexLinksTo),
+				    wbInteger('Vertex 1', itU16, wbVertexToStr1, wbVertexToInt1).SetLinksToCallback(wbVertexLinksTo),
+				    wbInteger('Vertex 2', itU16, wbVertexToStr2, wbVertexToInt2).SetLinksToCallback(wbVertexLinksTo),
+				    wbInteger('Edge 0-1', itS16, wbEdgeToStr0, wbEdgeToInt0).SetLinksToCallback(wbEdgeLinksTo0),
+				    wbInteger('Edge 1-2', itS16, wbEdgeToStr1, wbEdgeToInt1).SetLinksToCallback(wbEdgeLinksTo1),
+				    wbInteger('Edge 2-0', itS16, wbEdgeToStr2, wbEdgeToInt2).SetLinksToCallback(wbEdgeLinksTo2),
+				    wbFloat('Height'),
+				    wbInteger('Unknown', itU8),
+				    wbInteger('Flags', itU16, wbNavmeshTriangleFlags)
+              .IncludeFlag(dfCollapsed, wbCollapseFlags),
+				    wbInteger('Cover Flags', itU16, wbNavmeshCoverFlags)
+              .IncludeFlag(dfCollapsed, wbCollapseFlags)
+			    ]),
+        -1).IncludeFlag(dfNotAlignable)
+      ),
+	    wbArray('Edge Links',
+		    wbStruct('Edge Link', [
+			    wbInteger('Type', itU32, wbNavmeshEdgeLinkEnum),
+			    wbFormIDCk('Navmesh', [NAVM], False, cpIgnore),
+			    wbInteger('Triangle', itS16, nil, cpIgnore),
+			    wbByteArray('Edge Index', 1, cpIgnore)
+		    ], cpIgnore),
+      -1, cpIgnore).IncludeFlag(dfNotAlignable),
+	    wbArrayS('Door Links',
+		    wbStructSK([0, 2], 'Door Link', [
+			    wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo),
+			    wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('PathingDoor'),
+			    wbFormIDCk('Door Ref', [REFR])
+		    ]),
+      -1),
+	    IfThen(wbSimpleRecords,
+        wbArray('Cover Array',
+          wbByteArray('Cover', 16),
+        -1).IncludeFlag(dfNotAlignable),
+        wbArray('Cover Array',  // if navmesh version gt 12
+			    wbStruct('Cover', [
+				    wbInteger('Vertex 1', itU16).SetLinksToCallback(wbVertexLinksTo),
+				    wbInteger('Vertex 2', itU16).SetLinksToCallback(wbVertexLinksTo),
+				    wbByteArray('Data', 4 {, wbFlags([]) ? })
+			    ]),
+        -1).IncludeFlag(dfNotAlignable)
+      ),
+	    IfThen(wbSimpleRecords,
+        wbArray('Cover Triangle Mappings',
+          wbByteArray('Cover Triangle', 8),
+        -1).IncludeFlag(dfNotAlignable),
+        wbArray('Cover Triangle Mappings',
+			    wbStruct('Cover Triangle Map', [
+				    wbInteger('Cover', itU16).SetLinksToCallback(wbCoverLinksTo),
+				    wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo)
+			    ]),
+        -1).IncludeFlag(dfNotAlignable)
+      ),
+	    IfThen(wbSimpleRecords,
+        wbArray('Waypoints',
+          wbByteArray('Waypoint', 18),
+        -1).IncludeFlag(dfNotAlignable),
+        wbArray('Waypoints',  // if navmesh version gt 11
+			    wbStruct('Waypoint', [
+				    wbFloat('X'),
+				    wbFloat('Y'),
+			   	  wbFloat('Z'),
+			   	  wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo),
+			   	  wbInteger('Flags', itU32)
+			    ]),
+        -1).IncludeFlag(dfNotAlignable)
+      ),
+      wbStruct('Navmesh Grid', [
+        wbInteger('Divisor', itU32),
+        wbStruct('Grid Size', [
+          wbFloat('X'),
+          wbFloat('Y')
         ]),
-        wbFormIDCk('Pathing Cell', [CELL])
+        wbVec3('Min'),
+        wbVec3('Max'),
+        IfThen(wbSimpleRecords,
+          wbArray('Cells',
+            wbArray('Cell',
+              wbByteArray('Triangle', 2),
+            -1).SetSummaryName('Triangles')
+               .IncludeFlag(dfNotAlignable),
+          wbNavmeshGridCounter).IncludeFlag(dfNotAlignable),
+          wbArray('Cells',
+            wbArray('Cell',
+              wbInteger('Triangle', itS16).SetLinksToCallback(wbTriangleLinksTo),
+            -1).SetSummaryName('Triangles')
+               .IncludeFlag(dfNotAlignable),
+          wbNavmeshGridCounter).IncludeFlag(dfNotAlignable)
+        )
       ])
-	  ]),
-	  wbNavmeshVertices.IncludeFlag(dfNotAlignable),
-	  wbNavmeshTriangles.IncludeFlag(dfNotAlignable),
-	  wbNavmeshEdgeLinks.IncludeFlag(dfNotAlignable),
-	  wbNavmeshDoorTriangles.IncludeFlag(dfNotAlignable),
-	  wbNavmeshCoverArray.IncludeFlag(dfNotAlignable),
-	  wbNavmeshCoverTriangleMap.IncludeFlag(dfNotAlignable),
-	  wbNavmeshWaypoints.IncludeFlag(dfNotAlignable),
-	  wbNavmeshGrid
-	]);
-
-  wbMNAMNAVM := wbArrayS(MNAM, 'PreCut Map Entries', wbStructSK([0], 'PreCut Map Entry', [
-    wbFormID('Reference'),
-    wbArrayS('Triangles', wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo), -2)
-  ]));
+	  ]);
 
   wbRefRecord(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
@@ -9709,145 +9034,135 @@ begin
     ])
   ]);
 
-  if wbSimpleRecords then begin
+  wbRecord(NAVM, 'Navmesh',
+    wbFlags(wbFlagsList([
+      11, 'Initially Disabled',
+      18, 'Compressed',
+      26, 'AutoGen',
+      31, 'Navmesh Gen Cell'
+    ]), [18]), [
+    wbEDID,
+    wbNVNM,
+    wbArray(ONAM,'Base Objects',
+      wbFormID('Base Object')),
+    wbArray(PNAM, 'Preferred Connectors',
+      wbInteger('Vertex', itU16)),
+    wbArray(NNAM, 'Non Connectors',
+      wbInteger('Vertex', itU16)),
+    IfThen(wbSimpleRecords,
+      wbByteArray(MNAM),
+      wbArrayS(MNAM, 'PreCut Map Entries',
+        wbStructSK([0], 'PreCut Map Entry', [
+          wbFormID('Reference'),
+          wbArrayS('Triangles',
+            wbInteger('Triangle', itU16).SetLinksToCallback(wbTriangleLinksTo),
+          -2).IncludeFlag(dfCollapsed)
+        ]).IncludeFlag(dfCollapsed)
+      ).IncludeFlag(dfCollapsed)
+    )
+  ], False, wbNAVMAddInfo);
 
-    wbRecord(NAVI, 'Navigation Mesh Info Map', [
-      wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbRArray('Navigation Map Infos',
-        wbStruct(NVMI, 'Navigation Map Info', [
-          wbFormIDCk('Navigation Mesh', [NAVM]),
-          wbByteArray('Data', 20),
-          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Linked Doors', wbStruct('Door', [
-            wbByteArray('Unknown', 4),
-            wbFormIDCk('Door Ref', [REFR])
-          ]), -1),
-          wbInteger('Is Island', itU8, wbBoolEnum),
-          wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbNull,
-            wbStruct('Island Data', [
-              wbByteArray('Unknown', 24),
-              wbArray('Triangles', wbByteArray('Triangle', 6), -1),
-              wbArray('Vertices', wbByteArray('Vertex', 12), -1)
-            ])
-          ]),
-          wbStruct('Pathing Cell', [
-            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
-            wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-            wbUnion('Parent', wbNAVIParentDecider, [
-              wbStruct('Coordinates', [
-                wbInteger('Grid Y', itS16),
-                wbInteger('Grid X', itS16)
-              ]),
-              wbFormIDCk('Parent Cell', [CELL])
-            ])
+  wbRecord(NAVI, 'Navmesh Info Map', [
+    wbEDID,
+    wbInteger(NVER, 'Version', itU32),
+    wbRArrayS('Navmesh Infos',
+      wbStructSK(NVMI, [0], 'Navmesh Info', [
+        wbFormIDCk('Navmesh', [NAVM])
+          .IncludeFlag(dfSummaryNoName),
+        wbInteger('Category', itU32,
+          wbEnum([], [
+            0, 'Is Edited',
+           32, 'Is Island',
+           64, 'Not Edited'
           ])
-        ])
-      ),
-      wbStruct(NVPP, 'Preferred Pathing', [
-        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-        wbArray('NavMesh Tree?', wbStruct('', [
-          wbFormIDCk('NavMesh', [NAVM]),
-          wbInteger('Index/Node', itU32)
-        ]), -1)
-      ]),
-      //wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-      wbUnknown(NVSI)
-    ]);
-
-    wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbFlagsList([
-        {0x00040000} 18, 'Compressed',
-        {0x04000000} 26, 'AutoGen',
-        {0x80000000} 31, 'Unknown 31'
-      ]), [18]), [
-      wbEDID,
-      wbNVNM,
-      wbFormID(ONAM),
-      wbUnknown(NNAM),
-      wbMNAMNAVM
-    ], False, wbNAVMAddInfo);
-
-  end else begin
-
-    wbRecord(NAVI, 'Navigation Mesh Info Map', [
-      wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbRArray('Navigation Map Infos',
-        wbStruct(NVMI, 'Navigation Map Info', [
-          wbFormIDCk('Navigation Mesh', [NAVM]),
-          wbByteArray('Unknown 1', 4), //Only the first byte is used
-          wbFloat('X'),
-          wbFloat('Y'),
-          wbFloat('Z'),
-          wbFloat('Unknown float 2'),
-          //wbInteger('Preferred Merges Flag', itU32),
-          wbArray('Merged To', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Preferred Merges', wbFormIDCk('Mesh', [NAVM]), -1),
-          wbArray('Linked Doors', wbStruct('Door', [
-            wbInteger('Door Type', itu32, wbNavmeshDoorTypeEnum),
+        ),
+        wbArray('Unknown', wbFloat, 4),
+        wbArrayS('Edge Links',
+          wbFormIDCk('Navmesh', [NAVM]),
+        -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Preferred Edge Links',
+          wbFormIDCk('Navmesh', [NAVM]),
+        -1).IncludeFlag(dfCollapsed),
+        wbArrayS('Door Links',
+          wbStructSK([1], 'Door Link', [
+            wbInteger('CRC Hash', itU32, wbCRCValuesEnum)
+              .SetDefaultEditValue('PathingDoor'),
             wbFormIDCk('Door Ref', [REFR])
-          ]), -1),
-          wbInteger('Is Island', itU8, wbBoolEnum),
-          wbUnion('Island', wbNAVIIslandDataDecider, [
-            wbNull,
+          ]).SetSummaryKey([1])
+            .IncludeFlag(dfCollapsed)
+            .IncludeFlag(dfSummaryMembersNoName),
+        -1).IncludeFlag(dfCollapsed),
+        wbStruct('Optional Island Data', [
+          wbInteger('Has Island Data', itU8, wbBoolEnum)
+            .SetAfterSet(wbUpdateSameParentUnions),
+          wbUnion('', wbNAVIIslandDataDecider, [
+            wbEmpty('Island Data'),
             wbStruct('Island Data', [
-              wbFloat('Min X'),
-              wbFloat('Min Y'),
-              wbFloat('Min Z'),
-              wbFloat('Max X'),
-              wbFloat('Max Y'),
-              wbFloat('Max Z'),
+              wbVec3('Min'),
+              wbVec3('Max'),
               wbArray('Triangles',
                 wbStruct('Triangle', [
-                  wbArray('Vertices', wbInteger('Vertex', itS16), 3)
-                ])
-              , -1),
-              wbArray('Vertices', wbStruct('Vertex', [
-                wbFloat('X'),
-                wbFloat('Y'),
-                wbFloat('Z')
-              ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), -1)
-            ])
-          ]),
-          wbStruct('Pathing Cell', [
-            wbInteger('CRC Hash', itU32, wbCRCValuesEnum).SetDefaultEditValue('3C A0 E9 A5'),
-            wbFormIDCk('Parent Worldspace', [WRLD, NULL]),
-            wbUnion('Parent', wbNAVIParentDecider, [
-              wbStruct('Coordinates', [
-                wbInteger('Grid Y', itS16),
-                wbInteger('Grid X', itS16)
-              ]),
-              wbFormIDCk('Parent Cell', [CELL])
-            ])
-          ])
-        ])
-      ),
-      wbStruct(NVPP, 'Preferred Pathing', [
-        wbArray('NavMeshes', wbArray('Set', wbFormIDCk('', [NAVM]), -1), -1),
-        wbArray('NavMesh Tree?', wbStruct('', [
-          wbFormIDCk('NavMesh', [NAVM]),
-          wbInteger('Index/Node', itU32)
-        ]), -1)
-      ]),
-      wbArray(NVSI, 'Unknown', wbFormIDCk('Navigation Mesh', [NAVM]))
-    ]);
-
-    wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbFlagsList([
-        {0x00040000} 18, 'Compressed',
-        {0x04000000} 26, 'AutoGen'
-      ]), [18]), [
-      wbEDID,
-      wbNVNM,
-      wbFormID(ONAM),
-      wbArray(NNAM, 'Unknown', wbInteger('Unknown', itU16)),
-      wbMNAMNAVM
-    ], False, wbNAVMAddInfo);
-
-  end;
+                  wbInteger('Vertex 0', itU16),
+                  wbInteger('Vertex 1', itU16),
+                  wbInteger('Vertex 2', itU16)
+                ]).IncludeFlag(dfCollapsed),
+              -1).IncludeFlag(dfCollapsed),
+              wbArray('Vertices',
+                wbVec3('Vertex'),
+              -1).IncludeFlag(dfCollapsed)
+            ]).SetSummaryKey([2])
+              .IncludeFlag(dfCollapsed)
+              .IncludeFlag(dfSummaryMembersNoName)
+          ]).IncludeFlag(dfCollapsed)
+            .IncludeFlag(dfUnionStaticResolve)
+        ]).SetSummaryKey([1])
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfSummaryMembersNoName),
+        wbStruct('Pathing Cell', [
+          wbInteger('CRC Hash', itU32, wbCRCValuesEnum)
+            .SetDefaultEditValue('PathingCell'),
+          wbFormIDCk('Parent World', [WRLD, NULL])
+            .IncludeFlag(dfSummaryExcludeNull),
+          wbUnion('', wbNAVIParentDecider, [
+            wbStruct('Coordinates', [
+              wbInteger('Grid Y', itS16),
+              wbInteger('Grid X', itS16)
+            ]).SetSummaryKey([0, 1])
+              .SetSummaryMemberPrefixSuffix(0, '<X: ', '')
+              .SetSummaryMemberPrefixSuffix(1, 'Y: ', '>')
+              .SetSummaryDelimiter(', ')
+              .IncludeFlag(dfCollapsed)
+              .IncludeFlag(dfSummaryMembersNoName),
+            wbFormIDCk('Parent Cell', [CELL])
+          ]).IncludeFlag(dfCollapsed)
+            .IncludeFlag(dfUnionStaticResolve)
+        ]).SetSummaryKey([1, 2])
+          .IncludeFlag(dfCollapsed)
+          .IncludeFlag(dfSummaryMembersNoName)
+      ]).SetSummaryKeyOnValue([0, 7, 6])
+        .SetSummaryPrefixSuffixOnValue(0, '', '')
+        .SetSummaryPrefixSuffixOnValue(7, 'in ', '')
+        .SetSummaryPrefixSuffixOnValue(6, 'is island with ', '')
+        .IncludeFlag(dfCollapsed)
+        .IncludeFlag(dfSummaryMembersNoName)
+    ).IncludeFlag(dfCollapsed),
+    wbStruct(NVPP, 'Precomputed Pathing', [
+      wbArray('Precomputed Paths',
+        wbArray('Path',
+          wbFormIDCk('Navmesh', [NAVM]),
+        -1).IncludeFlag(dfCollapsed),
+      -1).IncludeFlag(dfCollapsed),
+      wbArrayS('Road Marker Index',
+        wbStructSK([1], 'Road Marker', [
+          wbFormIDCk('Navmesh', [NAVM]),
+          wbInteger('Index', itU32)
+        ]).IncludeFlag(dfCollapsed),
+      -1).IncludeFlag(dfCollapsed)
+    ]).IncludeFlag(dfCollapsed),
+    wbArrayS(NVSI, 'Deleted Navmeshes',
+      wbFormIDCk('Navmesh', [NAVM])
+    ).IncludeFlag(dfCollapsed)
+  ]).IncludeFlag(dfExcludeFromBuildRef);
 
   wbRecord(EXPL, 'Explosion', [
     wbEDID,
@@ -14122,10 +13437,10 @@ begin
     wbFormIDCk(XEZN, 'Encounter Zone', [ECZN]),
 
     {--- Generated Data ---}
-    wbStruct(XNDP, 'Navigation Door Link', [
-      wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
-      wbByteArray('Unused', 2, cpIgnore)
+    wbStruct(XNDP, 'Navmesh Door Link', [
+      wbFormIDCk('Navmesh', [NAVM]),
+      wbInteger('Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
+      wbUnused(2)
     ]),
 
     wbFormIDCk(XLRL, 'Location Reference', [LCRT, LCTN, NULL], False, cpBenignIfAdded),
@@ -14900,7 +14215,7 @@ begin
     )
   ]);
 
-  wbRecord(NOCM, 'Navigation Mesh Obstacle Manager', [
+  wbRecord(NOCM, 'Navmesh Obstacle Manager', [
     wbEDID,
     wbRArray('Unknown',
       wbRStruct('Unknown', [

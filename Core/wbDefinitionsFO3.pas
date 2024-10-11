@@ -155,58 +155,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
-function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Index      : Integer;
-  Flags      : Cardinal;
-  IsExternal : Boolean;
-  Container  : IwbContainerElementRef;
-begin
-  Result := '';
-  IsExternal := False;
-  if Supports(aElement, IwbContainerElementRef, Container) then begin
-    Index := StrToIntDef(Copy(Container.Name, 11, 1), -1);
-    if (Index >= 0) and (Index <= 2) then begin
-      Flags := Container.ElementNativeValues['..\..\Flags'];
-      IsExternal := Flags and (Cardinal(1) shl Index) <> 0;
-    end;
-  end;
-
-  if IsExternal then begin
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + aInt.ToString] then
-          Result := Result + ' (Triangle #' +
-            Container.ElementValues['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Triangle'] + ' in ' +
-            Container.ElementValues['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Navigation Mesh'] + ')'
-        else
-          if aType = ctToStr then
-            Result := Result + ' <Error: NVEX\Connection #' + aInt.ToString + ' is missing>';
-      end;
-      ctToSortKey:
-        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + aInt.ToString] then
-          Result :=
-            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Navigation Mesh', True] + '|' +
-            Container.ElementSortKeys['..\..\..\..\NVEX\Connection #' + aInt.ToString + '\Triangle', True];
-      ctCheck:
-        if Container.ElementExists['..\..\..\..\NVEX\Connection #' + aInt.ToString] then
-          Result := ''
-        else
-          Result := 'NVEX\Connection #' + aInt.ToString + ' is missing';
-    end
-  end else
-    case aType of
-      ctToStr, ctToSummary: Result := aInt.ToString;
-    end;
-end;
-
-function wbNVTREdgeToInt(const aString: string; const aElement: IwbElement): Int64;
-begin
-  Result := StrToInt64(aString);
-end;
-
-
 function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
@@ -761,51 +709,6 @@ begin
     Result := '';
 end;
 
-function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  Container  : IwbContainerElementRef;
-  Navmesh    : IwbElement;
-  MainRecord : IwbMainRecord;
-  Triangles  : IwbContainerElementRef;
-begin
-  case aType of
-    ctToStr, ctToSummary: Result := aInt.ToString;
-    ctToEditValue: Result := aInt.ToString;
-    ctToSortKey: begin
-      Result := IntToHex64(aInt, 8);
-      Exit;
-    end;
-    ctCheck: Result := '';
-    ctEditType: Result := '';
-    ctEditInfo: Result := '';
-  end;
-
-  if not wbTryGetContainerRefFromUnionOrValue(aElement, Container) then
-    Exit;
-
-  Navmesh := Container.Elements[0];
-  if not wbTryGetMainRecord(Navmesh, MainRecord) then
-    Exit;
-
-  MainRecord := MainRecord.WinningOverride;
-
-  if MainRecord.Signature <> NAVM then begin
-    case aType of
-      ctToStr, ctToSummary: begin
-        Result := aInt.ToString;
-        if aType = ctToStr then
-          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
-      end;
-      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
-    end;
-    Exit;
-  end;
-
-  if not wbSimpleRecords and (aType = ctCheck) and Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles) then
-    if aInt >= Triangles.ElementCount then
-      Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
-end;
-
 function wbStringToInt(const aString: string; const aElement: IwbElement): Int64;
 begin
   Result := StrToIntDef(aString, 0);
@@ -1187,27 +1090,6 @@ begin
       Result := Result + ' ';
     Result := Result + 'for ' + s;
   end;
-end;
-
-function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
-var
-  Rec        : IwbRecord;
-  Element    : IwbElement;
-  s          : string;
-begin
-  Result := '';
-
-  Rec := aMainRecord.RecordBySignature['DATA'];
-  if not Assigned(Rec) then
-    Exit;
-
-  Element := Rec.ElementByName['Cell'];
-  if Assigned(Element) then
-    Element := Element.LinksTo;
-  if Assigned(Element) then
-    s := Trim(Element.Name);
-  if s <> '' then
-    Result := 'for ' + s;
 end;
 
 function wbNOTETNAMDecide(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -4140,7 +4022,7 @@ begin
       $3E, 'Placed Grenade',
       $41, 'Worldspace',
       $42, 'Landscape',
-      $43, 'Navigation Mesh',
+      $43, 'Navmesh',
       $45, 'Dialog Topic',
       $46, 'Dialog Response',
       $47, 'Quest',
@@ -5738,13 +5620,13 @@ var  wbSoundTypeSoundsOld :=
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum, cpNormal, True)
   ]);
 
-  wbRecord(NAVI, 'Navigation Mesh Info Map', [
+  wbRecord(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
-    wbRArray('Navigation Map Infos',
-      wbStruct(NVMI, 'Navigation Map Info', [
+    wbRArray('Navmesh Infos',
+      wbStruct(NVMI, 'Navmesh Info', [
         wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM]),
+        wbFormIDCk('Navmesh', [NAVM]),
         wbFormIDCk('Location', [CELL, WRLD]),
         wbStruct('Grid', [
           wbInteger('X', itS16),
@@ -5772,161 +5654,108 @@ var  wbSoundTypeSoundsOld :=
         ])}
       ])
     ),
-    wbRArray('Navigation Connection Infos',
-      wbStruct(NVCI, 'Navigation Connection Info', [
-        wbFormIDCk('Unknown', [NAVM]),
-        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Unknown', wbFormIDCk('Unknown', [NAVM]), -1),
-        wbArray('Doors', wbFormIDCk('Door', [REFR]), -1)
+    wbRArray('Navmesh Connection Infos',
+      wbStruct(NVCI, 'Navmesh Connection Info', [
+        wbFormIDCk('Navmesh', [NAVM]),
+        wbArray('Unknown', wbFormIDCk('Navmesh', [NAVM]), -1),
+        wbArray('Unknown', wbFormIDCk('Navmesh', [NAVM]), -1),
+        wbArray('Door Links', wbFormIDCk('Door', [REFR]), -1)
       ])
     )
   ]);
 
-  if wbSimpleRecords then begin
-
-    wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbFlagsList([
-        11, 'Initially Disabled',
-        26, 'AutoGen'
-      ])), [
-      wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbStruct(DATA, '', [
-        wbFormIDCk('Cell', [CELL]),
-        wbInteger('Vertex Count', itU32),
-        wbInteger('Triangle Count', itU32),
-        wbInteger('External Connections Count', itU32),
-        wbInteger('Cover Triangle Count', itU32),
-        wbInteger('Doors Count', itU32)
-      ]),
-      wbByteArray(NVVX, 'Vertices'),
-      wbByteArray(NVTR, 'Triangles'),
-      wbByteArray(NVCA, 'Cover Triangles'),
-      wbArray(NVDP, 'Doors', wbStruct('Door', [
-        wbFormIDCk('Reference', [REFR]),
+  wbRecord(NAVM, 'Navmesh',
+    wbFlags(wbFlagsList([
+      11, 'Initially Disabled',
+      26, 'Autogen'
+    ])), [
+    wbEDID,
+    wbInteger(NVER, 'Version', itU32),
+    wbStruct(DATA, 'Data', [
+      wbFormIDCk('Cell', [CELL]),
+      wbInteger('Vertex Count', itU32),
+      wbInteger('Triangle Count', itU32),
+      wbInteger('Edge Link Count', itU32),
+      wbInteger('Cover Triangle Count', itU32),
+      wbInteger('Door Link Count', itU32)
+    ]),
+    IfThen(wbSimpleRecords,
+      wbArray(NVVX, 'Vertices',
+        wbByteArray('Vertex', 12)
+      ).SetCountPathOnValue('DATA\Vertex Count', False)
+       .IncludeFlag(dfNotAlignable),
+      wbArray(NVVX, 'Vertices',
+        wbVec3('Vertex')
+      ).SetCountPathOnValue('DATA\Vertex Count', False)
+       .IncludeFlag(dfNotAlignable)
+    ),
+    IfThen(wbSimpleRecords,
+      wbArray(NVTR, 'Triangles',
+        wbByteArray('Triangle', 16)
+      ).SetCountPathOnValue('DATA\Triangle Count', False)
+       .IncludeFlag(dfNotAlignable),
+      wbArray(NVTR, 'Triangles',
+        wbStruct('Triangle', [
+          wbInteger('Vertex 0', itU16),
+          wbInteger('Vertex 1', itU16),
+          wbInteger('Vertex 2', itU16),
+          wbInteger('Edge 0-1', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt),
+          wbInteger('Edge 1-2', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt),
+          wbInteger('Edge 2-0', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt),
+          wbInteger('Flags', itU16, wbNavmeshTriangleFlags)
+            .IncludeFlag(dfCollapsed, wbCollapseFlags),
+          wbInteger('Cover Flags', itU16, wbNavmeshCoverFlags)
+            .IncludeFlag(dfCollapsed, wbCollapseFlags)
+        ])
+      ).SetCountPathOnValue('DATA\Triangle Count', False)
+       .IncludeFlag(dfNotAlignable)
+    ),
+    IfThen(wbSimpleRecords,
+      wbArray(NVCA, 'Cover Triangles',
+        wbByteArray('Cover Triangle', 2)
+      ).SetCountPathOnValue('DATA\Cover Triangle Count', False)
+       .IncludeFlag(dfNotAlignable),
+      wbArray(NVCA, 'Cover Triangles',
+        wbInteger('Cover Triangle', itU16)
+      ).SetCountPathOnValue('DATA\Cover Triangle Count', False)
+       .IncludeFlag(dfNotAlignable)
+    ),
+    wbArrayS(NVDP, 'Door Links',
+      wbStructSK([1, 0], 'Door Link', [
+        wbFormIDCk('Door Ref', [REFR]),
         wbInteger('Triangle', itU16),
-        wbByteArray('Unused', 2)
-      ])).IncludeFlag(dfNotAlignable),
-      wbByteArray(NVGD, 'NavMesh Grid'),
-      wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
-        wbInteger('Triangle', itU16, nil, cpNormal)
-      ])).IncludeFlag(dfNotAlignable)
-    ], False, wbNAVMAddInfo);
-
-  end else begin
-
-    wbRecord(NAVM, 'Navigation Mesh',
-      wbFlags(wbFlagsList([
-        11, 'Initially Disabled',
-        26, 'AutoGen'
-      ])), [
-      wbEDID,
-      wbInteger(NVER, 'Version', itU32),
-      wbStruct(DATA, '', [
-        wbFormIDCk('Cell', [CELL]),
-        wbInteger('Vertex Count', itU32),
-        wbInteger('Triangle Count', itU32),
-        wbInteger('External Connections Count', itU32),
-        wbInteger('Cover Triangle Count', itU32),
-        wbInteger('Doors Count', itU32) // as of version = 5 (earliest NavMesh version I saw (Fallout3 1.7) is already 11)
-      ]),
-      wbArray(NVVX, 'Vertices', wbStruct('Vertex', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)).IncludeFlag(dfNotAlignable),
-      wbArray(NVTR, 'Triangles', wbStruct('Triangle', [
-        wbArray('Vertices', wbInteger('Vertex', itS16), 3),
-        wbArray('Edges', wbInteger('Triangle', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt), [
-          '0 <-> 1',
-          '1 <-> 2',
-          '2 <-> 0'
-        ]),
-        wbInteger('Flags', itU16, wbFlags([
-          'Edge 0 <-> 1 external',  // 0 $0001 1
-          'Edge 1 <-> 2 external',  // 1 $0002 2
-          'Edge 2 <-> 0 external',  // 2 $0004 4
-          '',                       // 3 $0008 8
-          'No Large Creatures',     // 4 $0010 16
-          'Overlapping',            // 5 $0020 32
-          'Preferred',              // 6 $0040 64
-          '',                       // 7 $0080 128
-          'Unknown 9',              // 8 $0100 256  used in SSE CK source according to Nukem
-          'Water',                  // 9 $0200 512
-          'Door',                   //10 $0400 1024
-          'Found',                  //11 $0800 2048
-          'Unknown 13',             //12 $1000 4096 used in SSE CK source according to Nukem
-          '',                       //13 $2000 \
-          '',                       //14 $4000  |-- used as 3 bit counter inside CK, probably stripped before save
-          ''                        //15 $8000 /
-        ])),
-        { Flags below are wrong. The first 4 bit are an enum as follows:
-        0000 = Open Edge No Cover
-        1000 = wall no cover
-        0100 = ledge cover
-        1100 = UNUSED
-        0010 = cover  64
-        1010 = cover  80
-        0110 = cover  96
-        1110 = cover 112
-        0001 = cover 128
-        1001 = cover 144
-        0101 = cover 160
-        1101 = cover 176
-        0011 = cover 192
-        1011 = cover 208
-        0111 = cover 224
-        1111 = max cover
-        then 2 bit flags, then another such enum, and the rest is probably flags.
-        Can't properly represent that with current record definition methods.
-        }
-        wbInteger('Cover Flags', itU16, wbFlags([
-          'Edge 0 <-> 1 Cover Value 1/4',
-          'Edge 0 <-> 1 Cover Value 2/4',
-          'Edge 0 <-> 1 Cover Value 3/4',
-          'Edge 0 <-> 1 Cover Value 4/4',
-          'Edge 0 <-> 1 Left',
-          'Edge 0 <-> 1 Right',
-          'Edge 1 <-> 2 Cover Value 1/4',
-          'Edge 1 <-> 2 Cover Value 2/4',
-          'Edge 1 <-> 2 Cover Value 3/4',
-          'Edge 1 <-> 2 Cover Value 4/4',
-          'Edge 1 <-> 2 Left',
-          'Edge 1 <-> 2 Right',
-          'Unknown 13',
-          'Unknown 14',
-          'Unknown 15',
-          'Unknown 16'
-        ]))
-      ])).IncludeFlag(dfNotAlignable),
-      wbArray(NVCA, 'Cover Triangles', wbInteger('Cover Triangle', itS16)).IncludeFlag(dfNotAlignable),
-      wbArray(NVDP, 'Doors', wbStruct('Door', [
-        wbFormIDCk('Reference', [REFR]),
-        wbInteger('Triangle', itU16),
-        wbByteArray('Unused', 2)
-      ])).IncludeFlag(dfNotAlignable),
-      wbStruct(NVGD, 'NavMesh Grid', [
-        wbInteger('NavMeshGrid Divisor', itU32),
-        wbFloat('Max X Distance'),                // Floats named after TES5 definition
-        wbFloat('Max Y Distance'),
-        wbFloat('Min X'),
-        wbFloat('Min Y'),
-        wbFloat('Min Z'),
-        wbFloat('Max X'),
-        wbFloat('Max Y'),
-        wbFloat('Max Z'),
-        wbArray('Cells', wbArray('Cell', wbInteger('Triangle', itS16).IncludeFlag(dfNotAlignable), -2)).IncludeFlag(dfNotAlignable) // Divisor is row count? , assumed triangle as the values fit the triangle id's
-      ]),
-      wbArray(NVEX, 'External Connections', wbStruct('Connection', [
-        wbByteArray('Unknown', 4),
-        wbFormIDCk('Navigation Mesh', [NAVM], False, cpNormal),
-        wbInteger('Triangle', itU16, nil, cpNormal)
-      ])).IncludeFlag(dfNotAlignable)
-    ], False, wbNAVMAddInfo);
-
-  end;
+        wbUnused(2)
+      ])
+    ).SetCountPathOnValue('DATA\Door Link Count', False)
+     .IncludeFlag(dfNotAlignable),
+    wbStruct(NVGD, 'Navmesh Grid', [
+      wbInteger('Divisor', itU32),
+      wbFloat('Max X Distance'),
+      wbFloat('Max Y Distance'),
+      wbVec3('Min'),
+      wbVec3('Max'),
+      IfThen(wbSimpleRecords,
+        wbArray('Cells',
+          wbArray('Cell',
+            wbByteArray('Triangle', 2),
+          -2).IncludeFlag(dfNotAlignable)
+        ).IncludeFlag(dfNotAlignable),
+        wbArray('Cells',
+          wbArray('Cell',
+            wbInteger('Triangle', itU16),
+          -2).IncludeFlag(dfNotAlignable)
+        ).IncludeFlag(dfNotAlignable)
+      )
+    ]),
+    wbArray(NVEX, 'Edge Links',
+      wbStruct('Edge Link', [
+        wbInteger('Type', itU32, wbNavmeshEdgeLinkEnum, cpIgnore),
+        wbFormIDCk('Navmesh', [NAVM]),
+        wbInteger('Triangle', itU16)
+      ])
+    ).SetCountPathOnValue('DATA\Edge Link Count', False)
+     .IncludeFlag(dfNotAlignable)
+  ], False, wbNAVMAddInfo);
 
   wbRefRecord(PGRE, 'Placed Grenade',
     wbFlags(wbFlagsList([
@@ -8409,9 +8238,9 @@ var  wbSoundTypeSoundsOld :=
     wbEmpty(XIBS, 'Ignored By Sandbox'),
 
     {--- Generated Data ---}
-    wbStruct(XNDP, 'Navigation Door Link', [
-      wbFormIDCk('Navigation Mesh', [NAVM]),
-      wbInteger('Teleport Marker Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
+    wbStruct(XNDP, 'Navmesh Door Link', [
+      wbFormIDCk('Navmesh', [NAVM]),
+      wbInteger('Triangle', itS16, wbREFRNavmeshTriangleToStr, wbStringToInt),
       wbByteArray('Unused', 2)
     ]),
 

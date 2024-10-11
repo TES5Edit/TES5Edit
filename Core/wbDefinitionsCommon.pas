@@ -82,6 +82,10 @@ var
   wbLandColors: IwbRecordMemberDef;
   wbLandLayers: IwbRecordMemberDef;
 
+  wbNavmeshTriangleFlags: IwbFlagsDef;
+  wbNavmeshCoverFlags: IwbFlagsDef;
+  wbNavmeshEdgeLinkEnum: IwbEnumDef;
+
   wbWeatherCloudTextures: IwbRecordMemberDef;
   wbWeatherCloudSpeed: IwbRecordMemberDef;
   wbWeatherCloudColors: IwbRecordMemberDef;
@@ -115,8 +119,9 @@ var
 
 procedure DefineCommon;
 
-{>>> Add Info Callbacks <<<} //1
+{>>> Add Info Callbacks <<<} //2
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
+function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
 
 {>>> After Load Callbacks <<<} //2
 procedure wbKeywordsAfterLoad(const aElement: IwbElement);
@@ -154,11 +159,12 @@ procedure wbUpdateSameParentUnions(const aElement: IwbElement; const aOldValue, 
 procedure wbWorldAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 procedure wbWwiseKeywordMappingTemplateAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 
-{>>> Count Callbacks <<<} //7
+{>>> Count Callbacks <<<} //8
 function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbModelInfoAddonCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbModelInfoMaterialFileCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbModelInfoTextureFileCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+function wbNavmeshGridCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWorldColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 function wbWorldRowsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -204,8 +210,15 @@ function wbWorldWaterIsRemovable(const aElement: IwbElement): Boolean;
 function wbWorldClimateIsRemovable(const aElement: IwbElement): Boolean;
 function wbWorldImageSpaceIsRemovable(const aElement: IwbElement): Boolean;
 
-{>>> Links To Callbacks <<<} //1
+{>>> Links To Callbacks <<<} //8
 function wbConditionSummaryLinksTo(const aElement: IwbElement): IwbElement;
+function wbCoverLinksTo(const aElement: IwbElement): IwbElement;
+function wbEdgeLinksTo(aEdge: Integer; const aElement: IwbElement): IwbElement;
+function wbEdgeLinksTo0(const aElement: IwbElement): IwbElement;
+function wbEdgeLinksTo1(const aElement: IwbElement): IwbElement;
+function wbEdgeLinksTo2(const aElement: IwbElement): IwbElement;
+function wbTriangleLinksTo(const aElement: IwbElement): IwbElement;
+function wbVertexLinksTo(const aElement: IwbElement): IwbElement;
 
 {>>> Try Functions <<<} //6
 function wbTryGetContainerFromUnion(const aElement: IwbElement; out aContainer: IwbContainer): Boolean;
@@ -215,25 +228,40 @@ function wbTryGetContainingMainRecord(const aElement: IwbElement; out aMainRecor
 function wbTryGetMainRecord(const aElement: IwbElement; out aMainRecord: IwbMainRecord; aSignature: string = ''): Boolean;
 function wbTrySetContainer(const aElement: IwbElement; aType: TwbCallbackType; out aContainer: IwbContainerElementRef): Boolean;
 
-{>>> To Integer Callbacks <<<} //6
+{>>> To Integer Callbacks <<<} //15
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 function wbCTDAParam2QuestObjectiveToInt(const aString: string; const aElement: IwbElement): Int64;
 function wbCTDAParam2QuestStageToInt(const aString: string; const aElement: IwbElement): Int64;
+function wbEdgeToInt(aEdge: Integer; const aString: string; const aElement: IwbElement): Int64;
+function wbEdgeToInt0(const aString: string; const aElement: IwbElement): Int64;
+function wbEdgeToInt1(const aString: string; const aElement: IwbElement): Int64;
+function wbEdgeToInt2(const aString: string; const aElement: IwbElement): Int64;
+function wbNVTREdgeToInt(const aString: string; const aElement: IwbElement): Int64;
 function wbScaledInt4ToInt(const aString: string; const aElement: IwbElement): Int64;
 function wbStrToInt(const aString: string; const aElement: IwbElement): Int64;
+function wbVertexToInt(aVertex: Integer; const aString: string; const aElement: IwbElement): Int64;
+function wbVertexToInt0(const aString: string; const aElement: IwbElement): Int64;
+function wbVertexToInt1(const aString: string; const aElement: IwbElement): Int64;
+function wbVertexToInt2(const aString: string; const aElement: IwbElement): Int64;
 function wbWeatherCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
 
-{>>> To String Callbacks <<<} //21
+{>>> To String Callbacks <<<} //31
 procedure wbABGRToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbBGRAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbConditionToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbCrowdPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+function wbEdgeToStr(aEdge: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbEdgeToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbEdgeToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbEdgeToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 function wbFileHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbFolderHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbHideFFFF(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 procedure wbItemToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 function wbScaledInt4ToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 procedure wbScriptToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -243,10 +271,14 @@ procedure wbScriptPropertyObjectToStr(const aContainer: IwbContainerElementRef; 
 procedure wbToStringFromLinksToSummary(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbToStringFromLinksToMainRecordName(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 procedure wbVec3ToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
+function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVertexToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVertexToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function wbVertexToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbWeatherCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-{>>> Union Deciders <<<} //15
+{>>> Union Deciders <<<} //18
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
@@ -256,6 +288,9 @@ function wbFormVersionDecider(const aVersions: array of Integer): TwbUnionDecide
 function wbModelInfoDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbNoFlagsDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbNoteTypeDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbRecordSizeDecider(aSize: Integer): TwbUnionDecider; overload;
 function wbRecordSizeDecider(aMinSize, aMaxSize: Integer): TwbUnionDecider; overload;
@@ -388,7 +423,7 @@ uses
   SysUtils,
   wbHelpers;
 
-{>>> Add Info Callbacks <<<} //1
+{>>> Add Info Callbacks <<<} //2
 
 function wbCellAddInfo(const aMainRecord: IwbMainRecord): string;
 var
@@ -421,6 +456,46 @@ begin
     s := s + ' ';
 
   Result := 'in ' + s + Result;
+end;
+
+function wbNAVMAddInfo(const aMainRecord: IwbMainRecord): string;
+var
+  Rec       : IwbRecord;
+  Element   : IwbElement;
+  Container : IwbContainer;
+  s         : string;
+begin
+  if wbIsFallout3 then begin
+    Result := '';
+
+    Rec := aMainRecord.RecordBySignature['DATA'];
+    if not Assigned(Rec) then
+      Exit;
+
+    Element := Rec.ElementByName['Cell'];
+    if Assigned(Element) then
+      Element := Element.LinksTo;
+    if Assigned(Element) then
+      s := Trim(Element.Name);
+    if s <> '' then
+      Result := 'for ' + s;
+  end else begin
+    Result := '';
+
+    Container := aMainRecord.Container;
+    while Assigned(Container) and (Container.ElementType <> etGroupRecord) do
+      Container := Container.Container;
+
+    if not Assigned(Container) then
+      Exit;
+
+    s := Trim(Container.Name);
+    if s <> '' then begin
+      if Result <> '' then
+        Result := Result + ' ';
+      Result := Result + 'in ' + s;
+    end;
+  end;
 end;
 
 {>>> After Load Callbacks <<<} //2
@@ -810,7 +885,7 @@ begin
     Sounds.Remove;
 end;
 
-{>>> Count Callbacks <<<} //7
+{>>> Count Callbacks <<<} //8
 
 function wbMHDTColumnsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
@@ -908,6 +983,24 @@ begin
 
   Result := Headers.Elements[0].NativeValue;
 end;
+
+function wbNavmeshGridCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
+begin
+  var lContainer := aElement.Container;
+  if not Assigned(lContainer) then
+    Exit(0);
+
+  var lGridSizeElement := lContainer.ElementByName['Divisor'];
+  if not Assigned(lGridSizeElement) then
+    Exit(0);
+
+  var lGridSize: Integer := lGridSizeElement.NativeValue;
+  if (lGridSize < 0) or (lGridSize > 12) then
+    Exit(0);
+
+  Result := lGridSize * lGridSize;
+end;
+
 
 function wbWeatherCloudColorsCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
@@ -1310,7 +1403,7 @@ begin
     (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $20 = 32);
 end;
 
-{>>> Links To Callbacks <<<} //1
+{>>> Links To Callbacks <<<} //8
 
 function wbConditionSummaryLinksTo(const aElement: IwbElement): IwbElement;
 var
@@ -1335,6 +1428,184 @@ begin
     Exit;
 
   Result := cerCTDA.Elements[2].LinksTo;
+end;
+
+function wbCoverLinksTo(const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  CoverArray   : IwbContainerElementRef;
+  Cover     : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Cover Array'], IwbContainerElementRef, CoverArray) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  if aInt >= CoverArray.ElementCount then
+    Exit;
+  if aInt < 0 then
+    Exit;
+
+  Cover := CoverArray.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Cover;
+end;
+
+function wbEdgeLinksTo(aEdge: Integer; const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  Triangles  : IwbContainerElementRef;
+  Flags      : Int64;
+  MainRecord : IwbMainRecord;
+  EdgeLinks  : IwbContainerElementRef;
+  EdgeLink   : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  Flags := Triangle.ElementNativeValues['Flags'];
+  if Flags and (1 shl aEdge) <> 0 then begin
+    if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
+      Exit;
+
+    if aInt >= EdgeLinks.ElementCount then
+      Exit;
+
+    if aInt < 0 then
+      Exit;
+
+    EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+
+    MainRecord := nil;
+    if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
+      Exit;
+
+    aInt := EdgeLink.ElementNativeValues['Triangle'];
+  end;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) then
+    Exit;
+
+  if aInt >= Triangles.ElementCount then
+    Exit;
+
+  if aInt < 0 then
+    Exit;
+
+  Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Triangle;
+end;
+
+function wbEdgeLinksTo0(const aElement: IwbElement): IwbElement;
+begin
+  Result := wbEdgeLinksTo(0, aElement);
+end;
+
+function wbEdgeLinksTo1(const aElement: IwbElement): IwbElement;
+begin
+  Result := wbEdgeLinksTo(1, aElement);
+end;
+
+function wbEdgeLinksTo2(const aElement: IwbElement): IwbElement;
+begin
+  Result := wbEdgeLinksTo(2, aElement);
+end;
+
+function wbTriangleLinksTo(const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  Triangles  : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles) then
+    Exit;
+
+  if aInt >= Triangles.ElementCount then
+    Exit;
+
+  if aInt < 0 then
+    Exit;
+
+  Triangle := Triangles.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Triangle;
+end;
+
+function wbVertexLinksTo(const aElement: IwbElement): IwbElement;
+var
+  aInt       : Int64;
+  Triangle   : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  Vertices   : IwbContainerElementRef;
+  Vertex     : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  Triangle := aElement.Container as IwbContainerElementRef;
+  if not Assigned(Triangle) then
+    Exit;
+
+  MainRecord := aElement.ContainingMainRecord;
+  if not Assigned(MainRecord) then
+    Exit;
+
+  if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
+    Exit;
+
+  aInt := aElement.NativeValue;
+
+  if aInt >= Vertices.ElementCount then
+    Exit;
+  if aInt < 0 then
+    Exit;
+
+  Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
+
+  Result := Vertex;
 end;
 
 {>>> Try Functions <<<} //6
@@ -1420,7 +1691,7 @@ begin
   Result := (aType = ctToSummary) and Supports(aElement, IwbContainerElementRef, aContainer);
 end;
 
-{>>> To Integer Callbacks <<<} //6
+{>>> To Integer Callbacks <<<} //15
 
 function Sig2Int(aSignature: TwbSignature): Cardinal; inline;
 begin
@@ -1455,6 +1726,37 @@ begin
   Result := StrToInt(s);
 end;
 
+function wbEdgeToInt(aEdge: Integer; const aString: string; const aElement: IwbElement): Int64;
+var
+  s: string;
+begin
+  s := Trim(aString);
+  if (s = '')  or SameText(s, 'None') then
+    Result := -1
+  else
+    Result := StrToIntDef(aString, 0);
+end;
+
+function wbEdgeToInt0(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbEdgeToInt(0, aString, aElement);
+end;
+
+function wbEdgeToInt1(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbEdgeToInt(1, aString, aElement);
+end;
+
+function wbEdgeToInt2(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbEdgeToInt(2, aString, aElement);
+end;
+
+function wbNVTREdgeToInt(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := StrToInt64(aString);
+end;
+
 function wbScaledInt4ToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   f: Extended;
@@ -1486,6 +1788,26 @@ begin
   end;
 end;
 
+function wbVertexToInt(aVertex: Integer; const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := StrToIntDef(aString, 0);
+end;
+
+function wbVertexToInt0(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbVertexToInt(0, aString, aElement);
+end;
+
+function wbVertexToInt1(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbVertexToInt(1, aString, aElement);
+end;
+
+function wbVertexToInt2(const aString: string; const aElement: IwbElement): Int64;
+begin
+  Result := wbVertexToInt(2, aString, aElement);
+end;
+
 function wbWeatherCloudSpeedToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   f: Extended;
@@ -1495,7 +1817,7 @@ begin
   Result := Min(Round(f), 254);
 end;
 
-{>>> To String Callbacks <<<} //21
+{>>> To String Callbacks <<<} //31
 
 procedure wbABGRToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
@@ -1661,6 +1983,123 @@ begin
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
 end;
 
+function wbEdgeToStr(aEdge: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Triangle   : IwbContainerElementRef;
+  Flags      : Int64;
+  MainRecord : IwbMainRecord;
+  EdgeLinks  : IwbContainerElementRef;
+  EdgeLink   : IwbContainerElementRef;
+  FormID     : TwbFormID;
+begin
+  case aType of
+    ctToStr, ctToSummary: begin
+      if aInt < 0 then
+        Exit('None');
+
+      Result := aInt.ToString;
+
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      Flags := Triangle.ElementNativeValues['Flags'];
+      if Flags and (1 shl aEdge) <> 0 then begin
+        if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
+          Exit;
+
+        if aInt >= EdgeLinks.ElementCount then
+          Exit;
+
+        if aInt < 0 then
+          Exit;
+
+        EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+        if not Assigned(EdgeLink) then
+          Exit;
+
+        MainRecord := nil;
+        if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
+          Exit;
+
+        aInt := EdgeLink.ElementNativeValues['Triangle'];
+
+        Result := Result + ' (#' + aInt.ToString + ' in ' + MainRecord.Name + ')';
+      end;
+    end;
+    ctToSortKey: begin
+      Result := '00000000' + IntToHex(aInt, 4);
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      FormID := MainRecord.LoadOrderFormID;
+
+      Flags := Triangle.ElementNativeValues['Flags'];
+      if Flags and (1 shl aEdge) <> 0 then begin
+        if not Supports(MainRecord.ElementByPath['NVNM\Edge Links'], IwbContainerElementRef, EdgeLinks) then
+          Exit;
+        if aInt >= EdgeLinks.ElementCount then
+          Exit;
+        if aInt < 0 then
+          Exit;
+        EdgeLink := EdgeLinks.Elements[aInt] as IwbContainerElementRef;
+        if not Assigned(EdgeLink) then
+          Exit;
+
+        MainRecord := nil;
+        if not Supports(EdgeLink.ElementLinksTo['Navmesh'], IwbMainRecord, MainRecord) then
+          Exit;
+
+        if Assigned(MainRecord) then
+          FormID := MainRecord.LoadOrderFormID
+        else
+          FormID := TwbFormID.Null;
+
+        aInt := EdgeLink.ElementNativeValues['Triangle'];
+      end;
+
+      Result := FormID.ToString + IntToHex(aInt, 4);
+    end;
+    ctCheck: Result := '';
+    ctToEditValue: if aInt < 0 then
+                     Result := ''
+                   else
+                     Result := aInt.ToString;
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+end;
+
+function wbEdgeToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbEdgeToStr(0, aInt, aElement, aType);
+end;
+
+function wbEdgeToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbEdgeToStr(1, aInt, aElement, aType);
+end;
+
+function wbEdgeToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbEdgeToStr(2, aInt, aElement, aType);
+end;
+
 procedure wbFactionRelationToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
@@ -1768,6 +2207,52 @@ begin
   aValue := ItemString;
 end;
 
+function wbNVTREdgeToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Index      : Integer;
+  Flags      : Cardinal;
+  IsExternal : Boolean;
+  Container  : IwbContainerElementRef;
+begin
+  Result := '';
+  IsExternal := False;
+  if Supports(aElement, IwbContainerElementRef, Container) then begin
+    Index := StrToIntDef(Copy(Container.Name, 11, 1), -1);
+    if (Index >= 0) and (Index <= 2) then begin
+      Flags := Container.ElementNativeValues['..\..\Flags'];
+      IsExternal := Flags and (Cardinal(1) shl Index) <> 0;
+    end;
+  end;
+
+  if IsExternal then begin
+    case aType of
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if Container.ElementExists['..\..\..\..\NVEX\Edge Link #' + aInt.ToString] then
+          Result := Result + ' (Triangle #' +
+            Container.ElementValues['..\..\..\..\NVEX\Edge Link #' + aInt.ToString + '\Triangle'] + ' in ' +
+            Container.ElementValues['..\..\..\..\NVEX\Edge Link #' + aInt.ToString + '\Navmesh'] + ')'
+        else
+          if aType = ctToStr then
+            Result := Result + ' <Error: NVEX\Edge Link #' + aInt.ToString + ' is missing>';
+      end;
+      ctToSortKey:
+        if Container.ElementExists['..\..\..\..\NVEX\Edge Link #' + aInt.ToString] then
+          Result :=
+            Container.ElementSortKeys['..\..\..\..\NVEX\Edge Link #' + aInt.ToString + '\Navmesh', True] + '|' +
+            Container.ElementSortKeys['..\..\..\..\NVEX\Edge Link #' + aInt.ToString + '\Triangle', True];
+      ctCheck:
+        if Container.ElementExists['..\..\..\..\NVEX\Edge Link #' + aInt.ToString] then
+          Result := ''
+        else
+          Result := 'NVEX\Edge Link #' + aInt.ToString + ' is missing';
+    end
+  end else
+    case aType of
+      ctToStr, ctToSummary: Result := aInt.ToString;
+    end;
+end;
+
 procedure wbObjectPropertyToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
   Container: IwbContainerElementRef;
@@ -1796,6 +2281,55 @@ begin
     Exit;
 
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
+end;
+
+function wbREFRNavmeshTriangleToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Container  : IwbContainerElementRef;
+  Navmesh    : IwbElement;
+  MainRecord : IwbMainRecord;
+  Triangles  : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr, ctToSummary: Result := aInt.ToString;
+    ctToEditValue: Result := aInt.ToString;
+    ctToSortKey: begin
+      Result := IntToHex64(aInt, 8);
+      Exit;
+    end;
+    ctCheck: Result := '';
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+
+  if not wbTryGetContainerRefFromUnionOrValue(aElement, Container) then
+    Exit;
+
+  Navmesh := Container.Elements[0];
+  if not wbTryGetMainRecord(Navmesh, MainRecord) then
+    Exit;
+
+  MainRecord := MainRecord.WinningOverride;
+
+  if MainRecord.Signature <> NAVM then begin
+    case aType of
+      ctToStr, ctToSummary: begin
+        Result := aInt.ToString;
+        if aType = ctToStr then
+          Result := Result + ' <Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+      end;
+      ctCheck: Result := '<Warning: "'+MainRecord.ShortName+'" is not a Navmesh record>';
+    end;
+    Exit;
+  end;
+
+  if (aType = ctCheck) and
+     (
+      Supports(MainRecord.ElementByPath['NVTR'], IwbContainerElementRef, Triangles)
+   or Supports(MainRecord.ElementByPath['NVNM\Triangles'], IwbContainerElementRef, Triangles)
+     ) then
+    if aInt >= Triangles.ElementCount then
+      Result := '<Warning: Navmesh triangle not found in "' + MainRecord.Name + '">';
 end;
 
 procedure wbRGBAToStr(var aValue: string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
@@ -2051,6 +2585,96 @@ begin
   aValue := '' + '(' + X + ', ' + Y + ', ' + Z + ')';
 end;
 
+function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  Triangle   : IwbContainerElementRef;
+  MainRecord : IwbMainRecord;
+  Vertices   : IwbContainerElementRef;
+  Vertex     : IwbContainerElementRef;
+begin
+  case aType of
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
+        Exit;
+
+      if aInt >= Vertices.ElementCount then
+        Exit;
+
+      if aInt < 0 then
+        Exit;
+
+      Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
+
+      with Vertex do try
+        Result := Result + Format(' (%s, %s, %s)', [ElementEditValues['X'], ElementEditValues['Y'], ElementEditValues['Z']]);
+      except
+        // TODO: yikes, suppressing exceptions?
+      end;
+    end;
+    ctToSortKey: begin
+      Result := IntToHex(aInt, 4);
+      if not Assigned(aElement) then
+        Exit;
+
+      Triangle := aElement.Container as IwbContainerElementRef;
+      if not Assigned(Triangle) then
+        Exit;
+
+      MainRecord := aElement.ContainingMainRecord;
+      if not Assigned(MainRecord) then
+        Exit;
+
+      if not Supports(MainRecord.ElementByPath['NVNM\Vertices'], IwbContainerElementRef, Vertices) then
+        Exit;
+
+      if aInt >= Vertices.ElementCount then
+        Exit;
+
+      if aInt < 0 then
+        Exit;
+
+      Vertex := Vertices.Elements[aInt] as IwbContainerElementRef;
+
+      with Vertex do try
+        Result := SortKey[False];
+      except
+        // TODO: yikes, suppressing exceptions?
+      end;
+    end;
+    ctCheck: Result := '';
+    ctToEditValue: Result := aInt.ToString;
+    ctEditType: Result := '';
+    ctEditInfo: Result := '';
+  end;
+end;
+
+function wbVertexToStr0(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbVertexToStr(0, aInt, aElement, aType);
+end;
+
+function wbVertexToStr1(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbVertexToStr(1, aInt, aElement, aType);
+end;
+
+function wbVertexToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbVertexToStr(2, aInt, aElement, aType);
+end;
+
 function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
@@ -2080,7 +2704,7 @@ begin
   end;
 end;
 
-{>>> Union Deciders <<<} //15
+{>>> Union Deciders <<<} //18
 
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -2287,6 +2911,71 @@ begin
     1: Result := 2;
     3: Result := 3;
   end;
+end;
+
+function wbNAVIIslandDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  var lContainer: IwbContainer;
+  if not Supports(aElement, IwbContainer, lContainer) then
+    lContainer := aElement.Container;
+
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElement := lContainer.ElementByPath['...\Has Island Data'];
+  if not Assigned(lElement) then
+    Exit;
+
+  Result := lElement.NativeValue;
+end;
+
+function wbNAVIParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+begin
+  Result := 0;
+
+  if not Assigned(aElement) then
+    Exit;
+
+  var lContainer: IwbContainer;
+  if not Supports(aElement, IwbContainer, lContainer) then
+    lContainer := aElement.Container;
+
+  if not Assigned(lContainer) then
+    Exit;
+
+  var lElement := lContainer.ElementByPath['...\Parent World'];
+  if not Assigned(lElement) then
+    Exit;
+
+  if (lElement.NativeValue = 0) then
+    Result := 1;
+end;
+
+function wbNVNMParentDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container   : IwbContainer;
+  Parent      : IwbElement;
+  i           : Int64;
+begin
+  Result := 0;
+  if not Assigned(aElement) then
+    Exit;
+
+  Container := aElement.Container;
+
+  Parent := Container.ElementByName['Parent World'];
+
+  if not Assigned(Parent) then
+    Exit;
+  i := Parent.NativeValue;
+  // is interior cell?
+  if i = 0 then
+    Result := 1;
 end;
 
 function wbPxDTLocationDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -4445,6 +5134,71 @@ begin
               ])))
         ], [])
       ], []));
+
+
+{>>>Navmesh Common Defs<<<}
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbNavmeshTriangleFlags :=
+    wbFlags(wbSparseFlags([
+      0, 'Edge 0-1 Link',
+      1, 'Edge 1-2 Link',
+      2, 'Edge 2-0 Link',
+      3, 'Deleted',
+      4, 'No Large Creatures',
+      5, 'Overlapping',
+      6, 'Preferred',
+      9, 'Water',
+     10, 'Door',
+     11, 'Found'
+    ], False, 12));
+
+{ Flags below are wrong. The first 4 bit are an enum as follows:
+0000 = Open Edge No Cover
+0001 = wall no cover
+0010 = ledge cover
+0011 = UNUSED
+0100 = cover  64
+0101 = cover  80
+0110 = cover  96
+0111 = cover 112
+1000 = cover 128
+1001 = cover 144
+1010 = cover 160
+1011 = cover 176
+1100 = cover 192
+1101 = cover 208
+1110 = cover 224
+1111 = max cover
+then 2 bit flags, then another such enum, and the rest is probably flags.
+Can't properly represent that with current record definition methods.
+}
+
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbNavmeshCoverFlags :=
+    wbFlags(wbSparseFlags([
+      0, 'Edge 0-1 Cover Value 1/4',
+      1, 'Edge 0-1 Cover Value 2/4',
+      2, 'Edge 0-1 Cover Value 3/4',
+      3, 'Edge 0-1 Cover Value 4/4',
+      4, 'Edge 0-1 Left',
+      5, 'Edge 0-1 Right',
+      6, 'Edge 1-2 Cover Value 1/4',
+      7, 'Edge 1-2 Cover Value 2/4',
+      8, 'Edge 1-2 Cover Value 3/4',
+      9, 'Edge 1-2 Cover Value 4/4',
+     10, 'Edge 1-2 Left',
+     11, 'Edge 1-2 Right',
+     14, 'Autogen Cover'
+    ], False, 15));
+
+  //FO3,FNV,TES5,FO4,FO76,SF1
+  wbNavmeshEdgeLinkEnum :=
+    wbEnum([], [
+      0, 'Portal',
+      1, 'Ledge Up',
+      2, 'Ledge Down',
+      3, 'Enable/Disable Portal'
+    ]);
 
 {>>>Weather Common Defs<<<}
   //TES4,FO3,FNV,TES5,FO4,FO76
