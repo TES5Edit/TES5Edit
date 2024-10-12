@@ -9114,7 +9114,6 @@ begin
               .IncludeFlag(dfCollapsed)
               .IncludeFlag(dfSummaryMembersNoName)
           ]).IncludeFlag(dfCollapsed)
-            .IncludeFlag(dfUnionStaticResolve)
         ]).SetSummaryKey([1])
           .IncludeFlag(dfCollapsed)
           .IncludeFlag(dfSummaryMembersNoName),
@@ -9135,7 +9134,6 @@ begin
               .IncludeFlag(dfSummaryMembersNoName),
             wbFormIDCk('Parent Cell', [CELL])
           ]).IncludeFlag(dfCollapsed)
-            .IncludeFlag(dfUnionStaticResolve)
         ]).SetSummaryKey([1, 2])
           .IncludeFlag(dfCollapsed)
           .IncludeFlag(dfSummaryMembersNoName)
