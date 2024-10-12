@@ -6943,7 +6943,7 @@ begin
         wbStruct('Optional Island Data', [
           wbInteger('Has Island Data', itU8, wbBoolEnum)
             .SetAfterSet(wbUpdateSameParentUnions),
-          wbUnion('', wbNAVIIslandDataDecider, [
+          wbUnion('Island Data', wbNAVIIslandDataDecider, [
             wbEmpty('Island Data'),
             wbStruct('Island Data', [
               wbVec3('Min'),
