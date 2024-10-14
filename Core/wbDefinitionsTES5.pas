@@ -7433,7 +7433,7 @@ begin
       wbInteger('Master Particle System Cap', itU16),
       wbInteger('Flags', itU16, wbEnum([], [
         {>>> Value Must be 1 or 3 <<<}
-        1, 'Unknown 1',    // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
+        1, 'Master Particle System',    // {0x0001}'Unknown 0', : The Check-Box is Unchecked in the CK
         3, 'Always Loaded' // {0x0002}'Always Loaded' : The Check-Box is Unchecked in the CK
       ]))
     ], cpNormal, True)
