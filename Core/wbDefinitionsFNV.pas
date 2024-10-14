@@ -8413,7 +8413,7 @@ var  wbSoundTypeSoundsOld :=
         {0x02} '',
         {0x04} 'Allow repeated conversation topics',
         {0x08} 'Allow repeated stages',
-        {0x10} 'Unknown 4'
+        {0x10} 'Default Script Processing Delay'
       ])),
       wbInteger('Priority', itU8),
       wbByteArray('Unused', 2),
