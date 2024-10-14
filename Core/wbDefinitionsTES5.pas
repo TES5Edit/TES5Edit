@@ -11488,7 +11488,11 @@ begin
     wbKeywords,
     wbByteColors(PNAM, 'Marker Color (Unused)'),
     wbLString(RNAM, 'Activate Text Override', 0, cpTranslate),
-    wbUnknown(FNAM),
+    wbInteger(FNAM, 'Flags', itU16,
+      wbFlags(wbSparseFlags([
+        0, 'No Displacement',
+        1, 'Ignored by Sandbox'
+    ],False, 2))),
     wbFormIDCk(PFIG, 'Ingredient', [INGR, ALCH, LVLI, MISC, NULL]),
     wbFormIDCK(SNAM, 'Sound', [SNDR, NULL]),
     wbSeasons
