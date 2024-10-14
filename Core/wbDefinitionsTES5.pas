@@ -9745,7 +9745,7 @@ begin
       wbFloat('Chin Up/Down'),
       wbFloat('Chin Underbite/Overbite'),
       wbFloat('Eyes Farward/Back'),
-      wbFloat('Unknown')
+      wbFloat('VampireMorph')
     ], cpNormal, False),
     wbStruct(NAMA, 'Face parts', [
       wbInteger('Nose', itU32),
