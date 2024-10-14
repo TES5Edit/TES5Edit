@@ -7016,7 +7016,7 @@ begin
     wbOBND(True),
     wbFULL,
     wbGenericModel,
-    wbEITM,
+    wbEnchantment,
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(DATA, 'Data', [  // Contradicted by FireStormExplosion02 [EXPL:000877F9]
       wbFormIDCk('Light', [LIGH, NULL]),
