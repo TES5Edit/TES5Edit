@@ -8435,6 +8435,7 @@ begin
     wbEDID,
     wbFULL,
     wbMDOB,
+    wbETYP,
     wbDESC,
     {>>> Don't sort <<<}
     wbRArray('Words of Power',
