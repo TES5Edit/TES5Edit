@@ -11052,7 +11052,7 @@ end;
       -1).IncludeFlag(dfCollapsed)
     ]).IncludeFlag(dfCollapsed)
     //wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed)
-  ]).IncludeFlag(dfExcludeFromBuildRef);
+  ]);
 
 
   {subrecords checked against Starfield.esm}

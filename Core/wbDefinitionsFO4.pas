@@ -9160,7 +9160,7 @@ begin
     wbArrayS(NVSI, 'Deleted Navmeshes',
       wbFormIDCk('Navmesh', [NAVM])
     ).IncludeFlag(dfCollapsed)
-  ]).IncludeFlag(dfExcludeFromBuildRef);
+  ]);
 
   wbRecord(EXPL, 'Explosion', [
     wbEDID,
