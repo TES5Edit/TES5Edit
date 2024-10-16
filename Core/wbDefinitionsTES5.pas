@@ -11726,6 +11726,7 @@ begin
     wbKeywords,
     wbDESC,
     wbTexturedModel('Has Scope', [MOD3, MO3T], wbMO3S),
+    wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
     wbByteArray(NNAM, 'Unused', 0, cpIgnore, False), // leftover
     wbFormIDCk(INAM, 'Impact Data Set', [IPDS, NULL]),
     wbFormIDCk(WNAM, '1st Person Model Object', [STAT, NULL]),
