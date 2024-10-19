@@ -7443,8 +7443,14 @@ begin
     wbEDID,
     wbFULL,
     wbDESCReq,
+    wbString(ICON, 'Image FileName'),
     wbString(ANAM, 'Abbreviation'),
-    wbUnknown(CNAM),
+    wbInteger(CNAM, 'Skill Category', itU32, wbEnum([
+      'None',
+      'Combat',
+      'Magic',
+      'Stealth'
+    ])),
     wbStruct(AVSK, 'Skill', [
       wbFloat('Skill Use Mult'),
       wbFloat('Skill Offset Mult'),
@@ -7453,17 +7459,26 @@ begin
     ]),
     wbRArray('Perk Tree',
       wbRStruct('Node', [
-        wbFormIDCk(PNAM, 'Perk', [PERK, NULL]),
-        wbUnknown(FNAM),
-        wbInteger(XNAM, 'Perk-Grid X', itU32),
-        wbInteger(YNAM, 'Perk-Grid Y', itU32),
-        wbFloat(HNAM, 'Horizontal Position'),
-        wbFloat(VNAM, 'Vertical Position'),
-        wbFormIDCk(SNAM, 'Associated Skill', [AVIF, NULL]),
+        wbFormIDCk(PNAM, 'Perk', [PERK, NULL], False, cpNormal, True),
+        wbInteger(FNAM, 'Parent Required', itU32, wbBoolEnum, cpNormal, True)
+          .SetDefaultNativeValue(1)
+          .SetDontShow(function(const aElement: IwbElement): Boolean
+            begin
+              if not Assigned(aElement) then exit;
+              var lContainer := aElement.Container;
+              // only worry about the root array node where the INAM index is 0 and the PNAM is NULL
+              if (lContainer.Container.Elements[0].Equals(lContainer)) and (lContainer.ElementByPath['PNAM'].NativeValue = 0) and (lContainer.ElementByPath['INAM'].NativeValue = 0) then
+                Result := True;
+            end),
+        wbInteger(XNAM, 'Perk-Grid X', itU32, nil, cpNormal, True),
+        wbInteger(YNAM, 'Perk-Grid Y', itU32, nil, cpNormal, True),
+        wbFloat(HNAM, 'Horizontal Position', cpNormal, True),
+        wbFloat(VNAM, 'Vertical Position', cpNormal, True),
+        wbFormIDCk(SNAM, 'Associated Skill', [AVIF, NULL], False, cpNormal, True),
         wbRArray('Connections', wbInteger(CNAM, 'Line to Index', itU32)),
-        wbInteger(INAM, 'Index', itU32)
+        wbInteger(INAM, 'Index', itU32, nil, cpNormal, True)
       ], [])
-    )
+    ).IncludeFlag(dfNoMove)
   ]);
 
   wbRecord(CAMS, 'Camera Shot', [
