@@ -77,29 +77,29 @@ const
   ];
   cDataFolders: TArray<String> = ['Data', 'Data Files'];
 
-  cAssetMesh:       TAssetType = (Root: 'meshes';       Ext: ['.nif', '.kf', '.kfm', '.egm', '.egt', '.tri', '.hkt', '.hkx', '.ssf', '.btr', '.bto', '.btt', '.dtl']);
-  cAssetTexture:    TAssetType = (Root: 'textures';     Ext: ['.dds', '.tga']);
-  cAssetMaterial:   TAssetType = (Root: 'materials';    Ext: ['.bgsm', '.bgem']);
-  cAssetSound:      TAssetType = (Root: 'sound';        Ext: ['.lip', '.wav', '.xwm', '.mp3', '.ogg', '.fuz']);
-  cAssetMusic:      TAssetType = (Root: 'sound';        Ext: ['.xwm', '.mp3']);
-  cAssetScript:     TAssetType = (Root: 'scripts';      Ext: ['.pex', '.psc']);
-  cAssetStrings:    TAssetType = (Root: 'strings';      Ext: ['.strings', '.ilstrings', '.dlstrings']);
-  cAssetSpeedTree:  TAssetType = (Root: 'trees';        Ext: ['.spt']);
-  cAssetVideo:      TAssetType = (Root: 'video';        Ext: ['.bik', '.bk2']);
-  cAssetLODSettings:TAssetType = (Root: 'lodsettings';  Ext: ['.lodsettings', '.dlodsettings', '.lod']);
-  cAssetDistantLOD: TAssetType = (Root: 'distantlod';   Ext: ['.cmp', '.lod']); // TES4
-  cAssetInterface:  TAssetType = (Root: 'interface';    Ext: ['.swf']);
-  cAssetPrograms:   TAssetType = (Root: 'programs';     Ext: ['.swf']);
-  cAssetMenu:       TAssetType = (Root: 'menus';        Ext: ['.xml', '.txt', '.scc']); // TES4
-  cAssetFont:       TAssetType = (Root: 'fonts';        Ext: ['.fnt']); // TES4
-  cAssetFacegen:    TAssetType = (Root: 'facegen';      Ext: ['.ctl']); // TES4
-  cAssetLSData:     TAssetType = (Root: 'lsdata';       Ext: ['.dat']); // TES4
-  cAssetGrass:      TAssetType = (Root: 'grass';        Ext: ['.gid']);
-  cAssetPreVis:     TAssetType = (Root: 'vis';          Ext: ['.uvd']);
-  cAssetSeq:        TAssetType = (Root: 'seq';          Ext: ['.seq']);
-  cAssetDialogueViews:TAssetType = (Root: 'dialogueviews'; Ext: ['.xml']);
-  cAssetBookArt:    TAssetType = (Root: 'bookart';      Ext: ['.dds', '.tga']); // TES3
-  cAssetIcon:       TAssetType = (Root: 'icons';        Ext: ['.dds', '.tga']); // TES3
+  cAssetMesh:          TAssetType = (Root: 'meshes';        Ext: ['.nif', '.kf', '.kfm', '.egm', '.egt', '.tri', '.hkt', '.hkx', '.ssf', '.btr', '.bto', '.btt', '.dtl']);
+  cAssetTexture:       TAssetType = (Root: 'textures';      Ext: ['.dds', '.tga']);
+  cAssetMaterial:      TAssetType = (Root: 'materials';     Ext: ['.bgsm', '.bgem']);
+  cAssetSound:         TAssetType = (Root: 'sound';         Ext: ['.lip', '.wav', '.xwm', '.mp3', '.ogg', '.fuz']);
+  cAssetMusic:         TAssetType = (Root: 'music';         Ext: ['.xwm', '.mp3']);
+  cAssetScript:        TAssetType = (Root: 'scripts';       Ext: ['.pex', '.psc']);
+  cAssetStrings:       TAssetType = (Root: 'strings';       Ext: ['.strings', '.ilstrings', '.dlstrings']);
+  cAssetSpeedTree:     TAssetType = (Root: 'trees';         Ext: ['.spt']);
+  cAssetVideo:         TAssetType = (Root: 'video';         Ext: ['.bik', '.bk2']);
+  cAssetLODSettings:   TAssetType = (Root: 'lodsettings';   Ext: ['.lodsettings', '.dlodsettings', '.lod']);
+  cAssetDistantLOD:    TAssetType = (Root: 'distantlod';    Ext: ['.cmp', '.lod']); // TES4
+  cAssetInterface:     TAssetType = (Root: 'interface';     Ext: ['.swf']);
+  cAssetPrograms:      TAssetType = (Root: 'programs';      Ext: ['.swf']);
+  cAssetMenu:          TAssetType = (Root: 'menus';         Ext: ['.xml', '.txt', '.scc']); // TES4
+  cAssetFont:          TAssetType = (Root: 'fonts';         Ext: ['.fnt']); // TES4
+  cAssetFacegen:       TAssetType = (Root: 'facegen';       Ext: ['.ctl']); // TES4
+  cAssetLSData:        TAssetType = (Root: 'lsdata';        Ext: ['.dat']); // TES4
+  cAssetGrass:         TAssetType = (Root: 'grass';         Ext: ['.gid']);
+  cAssetPreVis:        TAssetType = (Root: 'vis';           Ext: ['.uvd']);
+  cAssetSeq:           TAssetType = (Root: 'seq';           Ext: ['.seq']);
+  cAssetDialogueViews: TAssetType = (Root: 'dialogueviews'; Ext: ['.xml']);
+  cAssetBookArt:       TAssetType = (Root: 'bookart';       Ext: ['.dds', '.tga']); // TES3
+  cAssetIcon:          TAssetType = (Root: 'icons';         Ext: ['.dds', '.tga']); // TES3
 
 var
   ArchiveManager: TArchiveManager;

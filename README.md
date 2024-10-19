@@ -71,7 +71,10 @@ If you don't already have a Delphi environment, we recommend using [Delphi 11 Co
 - Download and install [Project Magician](https://www.uweraabe.de/Blog/downloads/download-info/project-magician/).
 - Download and install [DDevExtensions](https://github.com/DelphiPraxis/DDevExtensions/releases).
 - Launch Delphi and navigate to Tools &rarr; DDevExtensions Options.
-- Under Extended IDE Settings, **enable** the _Disable Package Cache_ option.
+- Under Extended IDE Settings, 
+  - **enable** the _Disable Package Cache_ option.
+- Under Form Designer,
+  - **enable** the _Do not store the Explicit properties into the DFM_ option.
 - Exit Delphi.
 - Clone the xEdit repo (if you haven't already) and initialize submodules (run `git submodule update --init --recursive` from the git root).
 - Navigate to the _External\jcl\jcl\source\include\\_ directory and copy **jcl.template.inc** to **jcld28win32.inc**. To build xEdit 64 bit, copy **jcl.template.inc** again, to **jcld28win64.inc**

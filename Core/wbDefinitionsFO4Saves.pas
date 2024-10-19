@@ -2951,7 +2951,7 @@ begin
       wbInteger('String', itU16, wbVMType),
       wbInteger('Int32', itU32),
       wbFloat('Float'),
-      wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
+      wbInteger('Bool', itU32, wbBoolEnum),
       wbNull, // avoid recursive variable
       wbStruct('Struct', [
         wbInteger('Struct Type', itU16, wbVMType),
@@ -2984,7 +2984,7 @@ begin
       wbInteger('String', itU16, wbVMType),
       wbInteger('Int32', itU32),
       wbFloat('Float'),
-      wbInteger('Bool', itU32, wbEnum(['False', 'True'])),
+      wbInteger('Bool', itU32, wbBoolEnum),
       wbNonRecursiveVariable,
       wbStruct('Struct', [
         wbInteger('Struct Type', itU16, wbVMType),
@@ -3087,7 +3087,7 @@ begin
       wbInteger('String', itU16, wbVMType),
       wbInteger('Unsigned Integer', itU32),
       wbFloat('Float'),
-      wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Boolean', itU8, wbBoolEnum),
       wbInteger('Unknown 6', itU32),  // Guess and/or placeholder
       wbInteger('Unknown 7', itU32),  // Guess and/or placeholder
       wbInteger('Unknown 8', itU16, wbVMType)  // Guess
@@ -3273,7 +3273,7 @@ begin
     wbStruct('Function Call/Return Message', [
       wbInteger('Unknown', itU8, wbDumpInteger),  // lower than 3
       wbInteger('Unknown', itU32),
-      wbInteger('Has UnknownS1', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Has UnknownS1', itU8, wbBoolEnum),
       wbUnion('Unknown', HasFunctionUnknownS1Decider, [
         wbNull,
         wbUnknownS1
@@ -3283,7 +3283,7 @@ begin
 
   wbSuspendedStackDataEntry := wbStruct('Suspended Stack', [
     wbInteger('Unknown', itU32),
-    wbInteger('Has UnknownS1', itU8, wbEnum(['False', 'True'])),
+    wbInteger('Has UnknownS1', itU8, wbBoolEnum),
     wbUnion('Unknown', HasStackUnknownS1Decider, [
       wbNull,
       wbUnknownS1
@@ -3503,7 +3503,7 @@ begin
   ]);
 
   wbUnknown0900 := wbArray('Unknown0900', wbStruct('Unknown', [
-    wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
+    wbInteger('Boolean', itU8, wbBoolEnum),
     wbInteger('Unknown', itU32),
     wbInteger('Unknown', itU32)
    ]), -1);
@@ -4109,7 +4109,7 @@ begin
 //        wbArray('Anim Objects', wbStruct('Anim Object', [
 //          wbRefID('REFR'),
 //          wbRefID('ANIO'),
-//          wbInteger('Boolean', itU8, wbEnum(['False', 'True'])),
+//          wbInteger('Boolean', itU8, wbBoolEnum),
 //          wbUnion('Unknown', wbGlobalData1002BooleanDecider, [wbNull,
 //            wbArray('Unknown', wbStruct('Unknown', [
 //              wbLenString('Unknown', 2),
@@ -4149,7 +4149,7 @@ begin
 //          wbArray('Anim Objects', wbStruct('Anim Object', [
 //            wbRefID('REFR'),
 //            wbRefID('ANIO'),
-//            wbInteger('Boolean', itU8, wbEnum(['False', 'True']))
+//            wbInteger('Boolean', itU8, wbBoolEnum)
 //          ]), -1)
 //        ])
       ]),
@@ -6216,7 +6216,7 @@ begin
   wbUnionCHANGE_QUEST_SCRIPT_DELAY := wbUnion('Quest Script Delay', ChangedFlag02Decider, [wbNull, wbInteger('Script Delay', itU32)]);
 
   wbUnionCHANGE_QUEST_ALREADY_RUN := wbUnion('Quest Already Run', ChangedFlag26Decider, [wbNull,
-    wbInteger('Already Run', itU8, wbEnum(['False', 'True']))
+    wbInteger('Already Run', itU8, wbBoolEnum)
   ]);
 
   wbUnionCHANGE_QUEST_INSTANCES := wbUnion('Quest Instance Data', ChangedFlag27Decider, [wbNull,
@@ -6259,7 +6259,7 @@ begin
         wbInteger('Location ID', itU32),
         wbRefID('Location')
       ]), -1),
-      wbInteger('Has Event', itU8, wbEnum(['False', 'True'])),
+      wbInteger('Has Event', itU8, wbBoolEnum),
       wbUnion('Event', QuestRuntimeHasEventDecider, [
         wbNull,
         wbStruct('Event Data', [
@@ -6296,7 +6296,7 @@ begin
     wbStruct('Stages Data', [
       wbArray('Stages', wbStruct('Stage', [
         wbInteger('Stage ID', itU16),
-        wbInteger('Sets Flag bit 0', itU8, wbEnum(['False', 'True']))
+        wbInteger('Sets Flag bit 0', itU8, wbBoolEnum)
       ]), -254)
     ])
   ]);

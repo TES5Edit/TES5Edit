@@ -460,6 +460,7 @@ const
   ENLS : TwbSignature = 'ENLS'; { New To Fallout 76 }
   ENLT : TwbSignature = 'ENLT'; { New To Fallout 76 }
   ENTM : TwbSignature = 'ENTM'; { New To Fallout 76 }
+  EOVR : TwbSignature = 'EOVR'; { New to Starfield }
   EPCD : TwbSignature = 'EPCD'; { New To Fallout 76 0.2.782.0 }
   EPEG : TwbSignature = 'EPEG'; { New To Fallout 76 0.2.782.0 }
   EPF2 : TwbSignature = 'EPF2';
@@ -1548,6 +1549,8 @@ const
   WRLD : TwbSignature = 'WRLD';
   WRLO : TwbSignature = 'WRLO'; { New To Starfield }
   WSED : TwbSignature = 'WSED'; { New To Starfield }
+  WSLD : TwbSignature = 'WSLD'; { New To Starfield }
+  WSLS : TwbSignature = 'WSLS'; { New To Starfield }
   WSLT : TwbSignature = 'WSLT'; { New To Starfield }
   WSPR : TwbSignature = 'WSPR'; { New To Fallout 76 }
   WTED : TwbSignature = 'WTED'; { New To Starfield }

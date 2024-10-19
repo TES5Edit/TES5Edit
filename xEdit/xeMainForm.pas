@@ -866,7 +866,7 @@ type
     function FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
     function FindNodeForElementIn(aParent: PVirtualNode; const aElement: IwbElement): PVirtualNode;
     function EditWarn: Boolean;
-    function RemoveableSelection(ContainsChilds: PBoolean): TNodeArray;
+    function RemovableSelection(ContainsChilds: PBoolean): TNodeArray;
     function EditableSelection(ContainsChilds: PBoolean): TNodeArray;
 
     function SelectionIncludesNonCopyNewRecords: Boolean;
@@ -8180,7 +8180,7 @@ begin
                 if Assigned(Element) then begin
                   TargetMainRecord := Element.ContainingMainRecord;
                   if Assigned(TargetMainRecord) and MainRecords[k].Equals(TargetMainRecord) then begin
-                    if Element.IsRemoveable then begin
+                    if Element.IsRemovable then begin
                       if not EditWarn then
                         Exit;
                       Element.Remove;
@@ -9866,7 +9866,10 @@ begin
           Caption := 'Edit Value';
 
           for i := 0 to Pred(Flags.FlagCount) do begin
-            CheckListBox1.AddItem(Flags.Flags[i, False], nil);
+            if Flags.FlagDontShow[Element, i] then
+              CheckListBox1.AddItem('', nil)
+            else
+              CheckListBox1.AddItem(Flags.Flags[i, False], nil);
             CheckListBox1.Checked[i] := (i < Length(EditValue)) and (EditValue[i+1] = '1');
           end;
 
@@ -10492,7 +10495,7 @@ begin
 
   UserWasActive := True;
 
-  Selection := RemoveableSelection(@ContainsChilds);
+  Selection := RemovableSelection(@ContainsChilds);
 
   if Length(Selection) < 1 then
     Exit;
@@ -10510,9 +10513,9 @@ begin
   end
   else begin
     if ContainsChilds then
-      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' removeable selected records and all other records they contain?', mtWarning, [mbYes, mbNo], 0)
+      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' Removable selected records and all other records they contain?', mtWarning, [mbYes, mbNo], 0)
     else
-      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' removeable selected records?', mtConfirmation, [mbYes, mbNo], 0);
+      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' Removable selected records?', mtConfirmation, [mbYes, mbNo], 0);
   end;
 
   if DialogResult <> mrYes then
@@ -11656,7 +11659,7 @@ begin
                   PluginCRC32 := CRC32;
                 end;
 
-              if not NodeData.Element.IsRemoveable then
+              if not NodeData.Element.IsRemovable then
                 PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
               else begin
                 if not AutoModeCheckForITM then begin
@@ -11923,7 +11926,7 @@ begin
   if Assigned(NodeDatas) then
     for i := Low(ActiveRecords) to High(ActiveRecords) do begin
       Element := NodeDatas[i].Element;
-      if Assigned(Element) and Element.IsRemoveable then begin
+      if Assigned(Element) and Element.IsRemovable then begin
         if not EditWarn then
           Exit;
         Element.Remove;
@@ -14806,7 +14809,7 @@ begin
   mniNavRemove.Visible :=
     not wbTranslationMode and
     wbEditAllowed and
-    (Length(RemoveableSelection(nil)) > 0);
+    (Length(RemovableSelection(nil)) > 0);
   mniNavMarkModified.Visible :=
     not wbTranslationMode and
     wbEditAllowed and
@@ -15183,7 +15186,7 @@ begin
       mniViewEdit.Visible := Assigned(Element) and Element.IsEditable;
       mniViewSetToDefault.Visible := not wbTranslationMode and Assigned(Element) and Element._File.IsEditable and
         (Supports(Element.ValueDef, IwbStructDef, StructDef) and (StructDef.OptionalFromElement <> -1));
-      mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemoveable;
+      mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemovable;
       mniViewClear.Visible := not wbTranslationMode and Assigned(Element) and Element.IsClearable;
       mniViewMoveUp.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
       mniViewMoveDown.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
@@ -15344,7 +15347,7 @@ begin
   end;
 end;
 
-function TfrmMain.RemoveableSelection(ContainsChilds: PBoolean): TNodeArray;
+function TfrmMain.RemovableSelection(ContainsChilds: PBoolean): TNodeArray;
 var
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
@@ -15368,7 +15371,7 @@ begin
     Element := NodeData.Element;
     if not Assigned(Element) then
       Continue;
-    if not Element.IsRemoveable then
+    if not Element.IsRemovable then
       Continue;
 
     if Assigned(ContainsChilds) then
@@ -18007,6 +18010,9 @@ begin
   Dec(Column);
   if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
     if FindColors(Text, Colors) then begin
+      if wbDontDrawColorText then
+        DefaultDraw := False;
+
       var OldBrushColor := TargetCanvas.Brush.Color;
       try
         var r := CellRect;

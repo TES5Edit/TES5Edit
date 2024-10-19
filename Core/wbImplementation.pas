@@ -365,7 +365,7 @@ type
     procedure AddReferencedFromID(aFormID: TwbFormID); virtual;
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; virtual;
     function GetIsEditable: Boolean; virtual;
-    function GetIsRemoveable: Boolean; virtual;
+    function GetIsRemovable: Boolean; virtual;
     function GetIsClearable: Boolean; virtual;
     function GetEditValue: string; virtual;
     procedure SetEditValue(const aValue: string); virtual;
@@ -632,7 +632,7 @@ type
     function GetAddList: TDynStrings; virtual;
     function Add(const aName: string; aSilent: Boolean): IwbElement; virtual;
 
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; virtual;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; virtual;
     function IsElementEditable(const aElement: IwbElement): Boolean; virtual;
 
     function IndexOf(const aElement: IwbElement): Integer; virtual;
@@ -778,10 +778,10 @@ type
     function GetAddList: TDynStrings; override;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
 
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     function IsElementEditable(const aElement: IwbElement): Boolean; override;
     function GetIsEditable: Boolean; override;
-    function GetIsRemoveable: Boolean; override;
+    function GetIsRemovable: Boolean; override;
 
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
@@ -1257,7 +1257,7 @@ type
     procedure SetEditValue(const aValue: string); override;
     function GetNativeValue: Variant; override;
     procedure SetNativeValue(const aValue: Variant); override;
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     procedure SetContainer(const aContainer: IwbContainer); override;
 
     function FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
@@ -1531,7 +1531,7 @@ type
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     procedure SetModified(aValue: Boolean); override;
     function CanContainFormIDs: Boolean; override;
     function CanElementReset: Boolean; override;
@@ -1644,7 +1644,7 @@ type
     procedure UpdateCountViaPath;
 
     function GetElementType: TwbElementType; override;
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     procedure SetModified(aValue: Boolean); override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
 
@@ -1839,7 +1839,7 @@ type
     procedure InvalidateParentStorage; override;
 
     function GetIsEditable: Boolean; override;
-    function GetIsRemoveable: Boolean; override;
+    function GetIsRemovable: Boolean; override;
 
     procedure Remove; override;
 
@@ -1909,7 +1909,7 @@ type
     function GetShortName: string; override;
     function GetElementType: TwbElementType; override;
     function GetSortKeyInternal(aExtended: Boolean): string; override;
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     procedure Remove; override;
     procedure NotifyChangedInternal(aContainer: Pointer); override;
 
@@ -1991,7 +1991,7 @@ type
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
     function GetElementType: TwbElementType; override;
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     procedure SetModified(aValue: Boolean); override;
     function CanContainFormIDs: Boolean; override;
     function CanElementReset: Boolean; override;
@@ -2037,7 +2037,7 @@ type
     function GetName: string; override;
     function GetDef: IwbNamedDef; override;
     function GetElementType: TwbElementType; override;
-    function IsElementRemoveable(const aElement: IwbElement): Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
     function CanContainFormIDs: Boolean; override;
     function CanElementReset: Boolean; override;
     function RemoveInjected(aCanRemove: Boolean): Boolean; override;
@@ -4351,7 +4351,7 @@ begin
   Result := not wbIsModule(flFileName);
 end;
 
-function TwbFile.GetIsRemoveable: Boolean;
+function TwbFile.GetIsRemovable: Boolean;
 begin
   Result := False;
 end;
@@ -4803,7 +4803,7 @@ begin
   Result := wbIsInternalEdit or GetIsEditable;
 end;
 
-function TwbFile.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbFile.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := False;
 
@@ -6405,7 +6405,7 @@ begin
     Result := True;
 end;
 
-function TwbContainer.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbContainer.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := False;
 end;
@@ -8027,7 +8027,7 @@ begin
         if Result and aCanRemove then
           Break;
       end;
-  if Result and aCanRemove and GetIsRemoveable then begin
+  if Result and aCanRemove and GetIsRemovable then begin
     Result := False;
     Remove;
   end;
@@ -9785,8 +9785,8 @@ var
 
     if wbGameMode >= gmFO3 then begin
       case wbGameMode of
-        gmSF1                        : BasePtr.mrsVersion^ := 555;
-        gmFO76                       : BasePtr.mrsVersion^ := 184;
+        gmSF1                        : BasePtr.mrsVersion^ := 576;
+        gmFO76                       : BasePtr.mrsVersion^ := 201;
         gmFO4, gmFO4VR               : BasePtr.mrsVersion^ := 131;
         gmSSE, gmTES5VR, gmEnderalSE : BasePtr.mrsVersion^ := 44;
         gmTES5, gmEnderal            : BasePtr.mrsVersion^ := 43;
@@ -12347,7 +12347,7 @@ begin
   end;
 end;
 
-function TwbMainRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbMainRecord.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and not aElement.Def.Required;
 end;
@@ -13357,7 +13357,7 @@ begin
     end;
   end;
   Exclude(mrStates, mrsReferencesInjectedChecked);
-  if Result and aCanRemove and GetIsRemoveable then begin
+  if Result and aCanRemove and GetIsRemovable then begin
     Result := False;
     Remove;
   end;
@@ -15796,12 +15796,14 @@ begin
   end;
 end;
 
-function TwbSubRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbSubRecord.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement)
+    and not (dfArrayStaticSize in srValueDef.DefFlags)
     and (srsIsArray in srStates)
     and Assigned(srValueDef)
-    and ((srValueDef as IwbArrayDef).ElementCount <= 0) and (Length(cntElements)>1);
+    and ( (srValueDef as IwbArrayDef).ElementCount <= 0 )
+    and ( (dfArrayCanBeEmpty in srValueDef.DefFlags) or (Length(cntElements) > 1) );
 
   if Result and (dfRemoveLastOnly in srValueDef.DefFlags) then
     Result := cntElements[High(cntElements)].Equals(aElement);
@@ -15971,7 +15973,7 @@ begin
           Break;
       end;
   end;
-  if Result and aCanRemove and GetIsRemoveable then begin
+  if Result and aCanRemove and GetIsRemovable then begin
     Result := False;
     Remove;
   end;
@@ -17637,7 +17639,7 @@ begin
   grDuplicateOf := aGroup;
 end;
 
-function TwbGroupRecord.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbGroupRecord.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement);
 end;
@@ -19294,17 +19296,17 @@ begin
   Result := esReachable in eStates;
 end;
 
-function TwbElement.GetIsRemoveable: Boolean;
+function TwbElement.GetIsRemovable: Boolean;
 begin
   var Def := GetDef;
-  if Assigned(Def) and not Def.IsRemoveable(Self) then
+  if Assigned(Def) and not Def.IsRemovable(Self) then
     Exit(False);
 
   var ValueDef := GetValueDef;
-  if Assigned(ValueDef) and (ValueDef <> Def) and not ValueDef.IsRemoveable(Self) then
+  if Assigned(ValueDef) and (ValueDef <> Def) and not ValueDef.IsRemovable(Self) then
     Exit(False);
 
-  Result := not Assigned(eContainer) or IwbContainer(eContainer).IsElementRemoveable(Self);
+  Result := not Assigned(eContainer) or IwbContainer(eContainer).IsElementRemovable(Self);
 end;
 
 function TwbElement.InternalGetLinksTo: IwbElement;
@@ -19790,7 +19792,7 @@ end;
 function TwbElement.RemoveInjected(aCanRemove: Boolean): Boolean;
 begin
   Result := GetReferencesInjected;
-  if Result and GetIsRemoveable then begin
+  if Result and GetIsRemovable then begin
     Result := False;
     Remove;
   end;
@@ -20686,12 +20688,14 @@ begin
   arcDef.ToString(Result, Self, ctToStr);
 end;
 
-function TwbSubRecordArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbSubRecordArray.IsElementRemovable(const aElement: IwbElement): Boolean;
 var
   MinCount: Integer;
 begin
   MinCount := Max(1, arcDef.Count);
-  Result := IsElementEditable(aElement) and (Length(cntElements) > MinCount);
+  Result := IsElementEditable(aElement)
+    and not (dfArrayStaticSize in arcDef.DefFlags)
+    and (Length(cntElements) > MinCount);
 
   if Result and (dfRemoveLastOnly in arcDef.DefFlags) then
     Result := cntElements[High(cntElements)].Equals(aElement);
@@ -21340,7 +21344,7 @@ begin
   RMD.ToString(Result, Self, ctToStr);
 end;
 
-function TwbSubRecordStruct.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbSubRecordStruct.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
   Result := IsElementEditable(aElement) and (Length(cntElements) > 1) and ((srcDef.AllowUnordered or (dfStructFirstNotRequired in srcDef.DefFlags)) or not cntElements[0].Equals(aElement));
   if Result and Assigned(aElement.Def) then
@@ -21909,7 +21913,7 @@ begin
 
   for var lElementIdx := Pred(GetElementCount) downto 0 do begin
     var lElement := GetElement(lElementIdx);
-    if lElement.IsRemoveable then
+    if lElement.IsRemovable then
       lElement.Remove;
   end;
 end;
@@ -21994,7 +21998,7 @@ begin
     Exit(False);
 
   for var lElementIdx := Pred(lElementCount) downto 0 do
-    if not GetElement(lElementIdx).IsRemoveable then
+    if not GetElement(lElementIdx).IsRemovable then
       Exit(False);
 end;
 
@@ -22006,9 +22010,12 @@ begin
   Result := arrSorted;
 end;
 
-function TwbArray.IsElementRemoveable(const aElement: IwbElement): Boolean;
+function TwbArray.IsElementRemovable(const aElement: IwbElement): Boolean;
 begin
-  Result := IsElementEditable(aElement) and ((vbValueDef as IwbArrayDef).ElementCount <= 0) { and (Length(cntElements)>1)};
+  Result := IsElementEditable(aElement)
+    and not (dfArrayStaticSize in vbValueDef.DefFlags)
+    and ((vbValueDef as IwbArrayDef).ElementCount <= 0)
+    { and (Length(cntElements)>1)};
 
   if Result and (dfRemoveLastOnly in vbValueDef.DefFlags) then
     Result := cntElements[High(cntElements)].Equals(aElement);
@@ -23138,7 +23145,7 @@ begin
       Result := False;
 end;
 
-function TwbFlag.GetIsRemoveable: Boolean;
+function TwbFlag.GetIsRemovable: Boolean;
 begin
   Result := wbIsInternalEdit or GetContainer.IsEditable;
 end;

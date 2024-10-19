@@ -1443,14 +1443,15 @@ begin
   for var asset in Assets do
     if asset.Compressed and
       (asset.AssetName.StartsWith(cAssetSound.Root + '\', True) or
+       asset.AssetName.StartsWith(cAssetMusic.Root + '\', True) or
        asset.AssetName.StartsWith(cAssetStrings.Root + '\', True)) then
       BadAssets := BadAssets + [asset];
 
   if Length(BadAssets) <> 0 then begin
     dlgPackingCheck.Text :=
-      'Compressed sound/string file:'#13 +
+      'Compressed music/sound/string file:'#13 +
       BadAssets[Low(BadAssets)].AssetName + #13#13 +
-      'Sound/String files don''t work in the game when compressed. Press "Continue" ' +
+      'Music/Sound/String files don''t work in the game when compressed. Press "Continue" ' +
       'to compress anyway if you have some sort of a bugfix mod installed to amend that.';
     // enable Continue because this can be ignored
     dlgPackingCheck.Buttons[1].Enabled := True;
