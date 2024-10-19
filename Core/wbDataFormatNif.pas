@@ -5410,8 +5410,7 @@ end;
 
 //===========================================================================
 { bhkConvexVerticesShape }
-procedure wbDefinebhkConvexVerticesShape
-;
+procedure wbDefinebhkConvexVerticesShape;
 begin
   wbNiObject(wbNifBlock('bhkConvexVerticesShape', [
     wbhkWorldObjCinfoProperty('Vertices Property', []),

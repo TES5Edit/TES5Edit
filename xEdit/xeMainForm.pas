@@ -10513,9 +10513,9 @@ begin
   end
   else begin
     if ContainsChilds then
-      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' Removable selected records and all other records they contain?', mtWarning, [mbYes, mbNo], 0)
+      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' removable selected records and all other records they contain?', mtWarning, [mbYes, mbNo], 0)
     else
-      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' Removable selected records?', mtConfirmation, [mbYes, mbNo], 0);
+      DialogResult := MessageDlg('Are you sure you want to permanently remove the ' + IntToStr(Length(Selection)) + ' removable selected records?', mtConfirmation, [mbYes, mbNo], 0);
   end;
 
   if DialogResult <> mrYes then

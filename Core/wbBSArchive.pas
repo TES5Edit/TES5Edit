@@ -23,7 +23,7 @@ uses
   tfMD5;
 
 const
-  csBSAVersion = '0.9d';
+  csBSAVersion = '0.9e';
 
 type
   // per file compression options

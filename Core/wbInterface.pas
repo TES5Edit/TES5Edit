@@ -58,12 +58,12 @@ var
     Major   : 4;
     Minor   : 1;
     Release : 5;
-    Title   : '';
     Build   : 'k';
+    Title   : '';
   );
 
 const
-  wbWhatsNewVersion : Integer = 04010507;
+  wbWhatsNewVersion : Integer = 04010511;
   wbDeveloperMessageVersion : Integer = 04010507;
   wbDevCRC32App : Cardinal = $FFFFFFE4;
 
@@ -360,6 +360,7 @@ var
   wbMOHookFile                       : string;
 
   wbStarfieldIsABugInfestedHellhole  : Boolean    = True;
+  wbRedPill                          : Boolean    = False;
   wbAlwaysLoadGameMaster             : Boolean    = True;
 
   wbSpeedOverMemory                  : Boolean    = False;

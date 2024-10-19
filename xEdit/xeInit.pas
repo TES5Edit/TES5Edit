@@ -872,6 +872,16 @@ begin
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     ToolSources        := [tsPlugins];
     wbLightName        := 'Small';
+
+    if    wbStarfieldIsABugInfestedHellhole
+      and FindCmdLineSwitch('ItJustWorksTM')
+      and FindCmdLineSwitch('ThisIsFine')
+      and FindCmdLineSwitch('GiveMeTheRedPill')
+    then begin
+      VersionString.Title := 'ItJustWorks[TM] Edition';
+      wbRedPill := True;
+      wbStarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
+    end;
   end
 
   else begin

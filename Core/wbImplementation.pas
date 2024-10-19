@@ -5065,8 +5065,11 @@ begin
           SetIsLight(True);
       end;
 
-      if flModule.miExtension = meESP then
+      if (flModule.miExtension = meESP) and not wbRedPill then
         raise Exception.Create('".esp" modules can not be saved in ' + wbAppName + wbToolName);
+
+      if wbRedPill then
+        FileHeader.ElementEditValues['CNAM'] := 'RedPill';
     end;
 
     inherited;

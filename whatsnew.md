@@ -1,6 +1,6 @@
 ﻿# Request for Mod Authors using xEdit
 
-If you share you mods on Nexus Mods and use xEdit as a major component in development, please consider donating a small share of your Donation Points (DP) to `ElminsterAU` to support the ongoing development of this tool. The recommended donation is ~10%.
+If you share your mods on Nexus Mods and use xEdit as a major component in development, please consider donating a small share of your Donation Points (DP) to `ElminsterAU` to support the ongoing development of this tool. The recommended donation is ~10%.
 
 xEdit is crucial to our shared modding community and your contribution - no matter the size - is invaluable and deeply appreciated.
 
