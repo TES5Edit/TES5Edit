@@ -6106,7 +6106,7 @@ begin
       -1),
 	    IfThen(wbSimpleRecords,
         wbArray('Cover Array',
-          wbByteArray('Cover', 16),
+          wbByteArray('Cover', 8),
         -1).IncludeFlag(dfNotAlignable),
         wbArray('Cover Array',  // if navmesh version gt 12
 			    wbStruct('Cover', [
@@ -6118,7 +6118,7 @@ begin
       ),
 	    IfThen(wbSimpleRecords,
         wbArray('Cover Triangle Mappings',
-          wbByteArray('Cover Triangle', 8),
+          wbByteArray('Cover Triangle', 4),
         -1).IncludeFlag(dfNotAlignable),
         wbArray('Cover Triangle Mappings',
 			    wbStruct('Cover Triangle Map', [
