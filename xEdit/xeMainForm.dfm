@@ -476,7 +476,7 @@ object frmMain: TfrmMain
               
                 '-<gamemode> [Specifies which game mode to use. <gamemode> can be' +
                 ' any of the following: '#39'tes5vr'#39', '#39'fo4vr'#39', '#39'tes4'#39', '#39'tes5'#39', '#39'ender' +
-                'al'#39', '#39'sse'#39', '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39', '#39'fo76'#39', '#39'sf1'#39']'
+                'al'#39', '#39'enderalse'#39', '#39'sse'#39', '#39'fo3'#39', '#39'fnv'#39', '#39'fo4'#39', '#39'fo76'#39', '#39'sf1'#39']'
               
                 '-moprofile:<profilename> Opens the plugin selection from the MO ' +
                 'profile named in the switch.'
