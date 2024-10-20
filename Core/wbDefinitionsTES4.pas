@@ -25,7 +25,6 @@ var
   wbOBMEResolutionInfo: IwbEnumDef;
   wbPKDTType: IwbEnumDef;
   wbSkillEnum: IwbEnumDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbSpecializationEnum: IwbEnumDef;
 
 procedure DefineTES4;
@@ -2216,15 +2215,6 @@ var  wbSoundTypeSoundsOld :=
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT);
 
-  wbSoulGemEnum := wbEnum([
-    {0} 'None',
-    {1} 'Petty',
-    {2} 'Lesser',
-    {3} 'Common',
-    {4} 'Greater',
-    {5} 'Grand'
-  ]);
-
   wbRecord(CREA, 'Creature',
     wbFlags(wbFlagsList([
       10, 'Quest Item',
@@ -3996,20 +3986,13 @@ var  wbSoundTypeSoundsOld :=
        of point 0, then next 5 are the connections of point 1, the next 2 of point 2,
        the next 4 of point 3 and so on..., this can currently not be represented
        declaratively }
-      wbStruct('Point', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3), 0, nil, nil, cpNormal, True)
+      wbVec3('Point'),
+    0, nil, nil, cpNormal, True)
   ]);
 
   wbRecord(SBSP, 'Subspace', [
     wbEDID,
-    wbStruct(DNAM, '', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, True).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
+    wbVec3(DNAM, '').SetRequired
   ]).SetSummaryKey([1]);
 
   wbSLSD := wbStructSK(SLSD, [0], 'Local Variable Data', [
