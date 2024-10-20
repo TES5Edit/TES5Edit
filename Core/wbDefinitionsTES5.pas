@@ -9226,11 +9226,7 @@ begin
       wbInteger('Min', itS16),
       wbInteger('Max', itS16)
     ]),
-    wbStruct(XNAM, 'Initial Translation Offset', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(XNAM, 'Initial Translation Offset'),
     wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
@@ -10932,11 +10928,7 @@ begin
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
-    wbStruct(XMBO, 'Bound Half Extents', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(XMBO, 'Bound Half Extents'),
 
     {--- Primitive ---}
     wbStruct(XPRM, 'Primitive', [
@@ -11051,16 +11043,8 @@ begin
       wbByteArray('Unknown', 4)
     ])
     .IncludeFlag(dfCollapsed),
-    wbStruct(XCVL,'Water Current Linear Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]),
-    wbStruct(XCVR,'Water Current Rotational Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]),
+    wbVec3(XCVL,'Water Current Linear Velocity'),
+    wbVec3(XCVR,'Water Current Rotational Velocity'),
     wbFormIDCk(XCZC, 'Water Current Zone Cell', [CELL, NULL]),
     wbFormIDCk(XCZR, 'Water Current Zone Reference', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA, NULL]),
     wbByteArray(XCZA, 'Water Current Zone Action', 4),
@@ -11703,16 +11687,8 @@ begin
       ])
     ),
     wbByteArray(GNAM, 'Unused', 0, cpNormal, True),  // leftover
-    wbStruct(NAM0, 'Linear Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    wbStruct(NAM1, 'Angular Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(NAM0, 'Linear Velocity'),
+    wbVec3(NAM1, 'Angular Velocity'),
     wbString(NAM2, 'Noise Layer One - Noise Texture', 0, cpNormal, False),
     wbString(NAM3, 'Noise Layer Two - Noise Texture', 0, cpNormal, False),
     wbString(NAM4, 'Noise Layer Three - Noise Texture', 0, cpNormal, False),

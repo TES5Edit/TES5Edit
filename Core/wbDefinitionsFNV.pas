@@ -6097,11 +6097,7 @@ var  wbSoundTypeSoundsOld :=
       {56} wbFormIDCk('Sound - Countdown', [SOUN, NULL]),
       {60} wbFormIDCk('Sound - Disable', [SOUN, NULL]),
       {64} wbFormIDCk('Default Weapon Source', [WEAP, NULL]),
-      {68} wbStruct('Rotation', [
-      {68}   wbFloat('X'),
-      {72}   wbFloat('Y'),
-      {76}   wbFloat('Z')
-           ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      {68} wbVec3('Rotation'),
       {80} wbFloat('Bouncy Mult')
     ], cpNormal, True, nil, 18),
     wbRStructSK([0], 'Muzzle Flash Model', [
@@ -8688,11 +8684,7 @@ var  wbSoundTypeSoundsOld :=
     {--- Bound Contents ---}
 
     {--- Bound Data ---}
-    wbStruct(XMBO, 'Bound Half Extents', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(XMBO, 'Bound Half Extents'),
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [

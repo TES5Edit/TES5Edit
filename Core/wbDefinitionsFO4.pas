@@ -102,7 +102,7 @@ var
   wbDESTActor: IwbSubRecordStructDef;
   wbDODT: IwbSubRecordDef;
   wbXRGD: IwbSubRecordDef;
-  wbXRGB: IwbSubRecordDef;
+  wbXRGB: IwbRecordMemberDef;
   wbSPLO: IwbSubRecordDef;
   wbSPLOs: IwbSubRecordArrayDef;
   wbCNTO: IwbRecordMemberDef;
@@ -5074,11 +5074,7 @@ begin
     wbPosRot
   ]));
 
-  wbXRGB := wbStruct(XRGB, 'Ragdoll Biped Rotation', [
-    wbFloat('X'),
-    wbFloat('Y'),
-    wbFloat('Z')
-  ]);
+  wbXRGB := wbVec3(XRGB, 'Ragdoll Biped Rotation');
 
   wbSoundLevelEnum := wbEnum([
      'Loud',
@@ -7440,19 +7436,8 @@ begin
         wbRArrayS('Bone Scale Modifiers',
           wbRStructSK([0], 'Bone Scale Modifier', [
             wbString(BSMB, 'Bone Name'),
-            wbStruct(BSMS, 'Bone Scale Delta', [
-              wbFloat('X'),
-              wbFloat('Y'),
-              wbFloat('Z')
-            ])
-            .SetSummaryKeyOnValue([0,1,2])
-            .SetSummaryPrefixSuffixOnValue(0, '[', '')
-            .SetSummaryPrefixSuffixOnValue(1, ' ', '')
-            .SetSummaryPrefixSuffixOnValue(2, ' ', ']')
-            .SetSummaryDelimiterOnValue(',')
-            .IncludeFlag(dfSummaryNoName)
-            .includeFlag(dfCollapsed, wbCollapseVec3)
-            .SetRequired
+            wbVec3(BSMS, 'Bone Scale Delta')
+              .SetRequired
           ], [])
           .SetSummaryKey([1])
           .IncludeFlag(dfCollapsed, wbCollapseARMABoneData)
@@ -9749,11 +9734,7 @@ begin
       wbFloat('Near Target Distance'),
       wbFloat('Location Spring'),
       wbFloat('Target Spring'),
-      wbStruct('Rotation Offset', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3)
+      wbVec3('Rotation Offset')
     ], cpNormal, True, nil, 9),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
@@ -11138,11 +11119,7 @@ begin
       wbFloat('Falloff Bias'),
       wbFloat('Noise UV Scale'),
       wbFloat('Material UV Scale'),
-      wbStruct('Projection Vector', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      wbVec3('Projection Vector'),
       wbFloat('Normal Dampener'),
       wbFloatColors('Single Pass Color'),
       wbInteger('Flags', itU32, wbFlags(['Single Pass']))
@@ -13230,11 +13207,7 @@ begin
 
     {--- Bound Contents ---}
     {--- Bound Data ---}
-    wbStruct(XMBO, 'Bound Half Extents', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(XMBO, 'Bound Half Extents'),
 
     {--- Primitive ---}
     wbStruct(XPRM, 'Primitive', [
@@ -13366,11 +13339,7 @@ begin
     wbStruct(XBSD, 'Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
-      wbStruct('Half Extents', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]),
+      wbVec3('Half Extents'),
       wbInteger('Wind - Detached End', itU8, wbBoolEnum),
       wbByteArray('Unused', 0) // junk data?
     ], cpNormal, False, nil, 5),
@@ -14625,16 +14594,8 @@ begin
       wbInteger('Screen Space Reflections', itU8, wbBoolEnum)
     ], cpNormal, True, nil, 4),
     wbByteArray(GNAM, 'Unused', 0),
-    wbStruct(NAM0, 'Linear Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
-    wbStruct(NAM1, 'Angular Velocity', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ], cpNormal, False).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(NAM0, 'Linear Velocity'),
+    wbVec3(NAM1, 'Angular Velocity'),
     wbString(NAM2, 'Layer 1 Noise Texture'),
     wbString(NAM3, 'Layer 2 Noise Texture'),
     wbString(NAM4, 'Layer 3 Noise Texture')

@@ -8073,11 +8073,7 @@ var  wbSoundTypeSoundsOld :=
     {--- Bound Contents ---}
 
     {--- Bound Data ---}
-    wbStruct(XMBO, 'Bound Half Extents', [
-      wbFloat('X'),
-      wbFloat('Y'),
-      wbFloat('Z')
-    ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+    wbVec3(XMBO, 'Bound Half Extents'),
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [

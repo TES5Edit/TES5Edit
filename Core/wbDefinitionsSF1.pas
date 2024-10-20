@@ -4117,11 +4117,7 @@ begin
       {0x40} 'Unknown 6'
     ]));
 
-  var wbXRGB := wbStruct(XRGB, 'Ragdoll Biped Rotation', [
-    wbFloat('X'),
-    wbFloat('Y'),
-    wbFloat('Z')
-  ]);
+  var wbXRGB := wbVec3(XRGB, 'Ragdoll Biped Rotation');
 
   var wbSoundLevelEnum := wbEnum([
      'None',
@@ -8769,19 +8765,8 @@ end;
         wbRArray('Bone Scale Modifiers',
           wbRStructSK([0], 'Bone Scale Modifier', [
             wbString(BSMB, 'Bone Name'),
-            wbStruct(BSMS, 'Bone Scale Delta', [
-              wbFloat('X'),
-              wbFloat('Y'),
-              wbFloat('Z')
-            ])
-            .SetSummaryKeyOnValue([0,1,2])
-            .SetSummaryPrefixSuffixOnValue(0, '[', '')
-            .SetSummaryPrefixSuffixOnValue(1, ' ', '')
-            .SetSummaryPrefixSuffixOnValue(2, ' ', ']')
-            .SetSummaryDelimiterOnValue(',')
-            .IncludeFlag(dfSummaryNoName)
-            .includeFlag(dfCollapsed, wbCollapseVec3)
-            .SetRequired
+            wbVec3(BSMS, 'Bone Scale Delta')
+              .SetRequired
           ], [])
           .SetSummaryKey([1])
           .IncludeFlag(dfCollapsed, wbCollapseARMABoneData)
@@ -13098,11 +13083,7 @@ end;
       wbFloat('Falloff Bias'),
       wbFloat('Noise UV Scale'),
       wbFloat('Material UV Scale'),
-      wbStruct('Projection Vector', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]).SetToStr(wbVec3ToStr).IncludeFlag(dfCollapsed, wbCollapseVec3),
+      wbVec3('Projection Vector'),
       wbFloat('Normal Dampener'),
       wbFloatColors('Single Pass Color'),
       wbInteger('Flags', itU32, wbFlags(['Single Pass']))
@@ -16820,11 +16801,7 @@ end;
     wbStruct(XBSD, 'Bendable Spline', [
       wbFloat('Slack'),
       wbFloat('Thickness'),
-      wbStruct('Half Extents', [
-        wbFloat('X'),
-        wbFloat('Y'),
-        wbFloat('Z')
-      ]),
+      wbVec3('Half Extents'),
       wbInteger('Wind - Detached End', itU8, wbBoolEnum),
       wbUnused(3)
     ], cpNormal, False, nil, 5),
@@ -18878,11 +18855,7 @@ end;
           wbLenString('Chain End').IncludeFlag(dfHasZeroTerminator)
         ]),
         wbStruct('MorphDriver Data', [
-          wbStruct('Vector', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
+          wbVec3('Vector'),
           wbStruct('Radius', [
             wbFloat('Inner'),
             wbFloat('Outer')
@@ -18890,26 +18863,10 @@ end;
           wbInteger('Axis', itU8, wbBoneModAxisEnum)
         ]),
         wbStruct('PoseDeformer Data', [
-          wbStruct('Vector', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
-          wbStruct('Position', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
-          wbStruct('Angle', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
-          wbStruct('Scale', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
+          wbVec3('Vector'),
+          wbVec3('Position'),
+          wbVec3('Angle'),
+          wbVec3('Scale'),
           wbStruct('Radius', [
             wbFloat('Inner'),
             wbFloat('Outer')
@@ -18917,29 +18874,13 @@ end;
           wbInteger('Axis', itU8, wbBoneModAxisEnum)
         ]),
         wbStruct('SpringBone Data', [
-          wbStruct('Strength', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
+          wbVec3('Strength'),
           wbFloat, // not listed in inspector
-          wbStruct('Damp', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
+          wbVec3('Damp'),
           wbFloat, // not listed in inspector
-          wbStruct('Scale', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
+          wbVec3('Scale'),
           wbFloat, // not listed in inspector
-          wbStruct('MaxDist', [
-            wbFloat('X'),
-            wbFloat('Y'),
-            wbFloat('Z')
-          ]),
+          wbVec3('MaxDist'),
           wbUnknown(4), // not listed in inspector
           wbInteger('Look At Parent', itU8, wbBoolEnum)
         ])
@@ -20225,11 +20166,7 @@ end;
       wbFloat(MO4S, 'Color Remapping Index')
     ], []).IncludeFlag(dfAllowAnyMember),
     wbStruct(WVIS, 'Art Visuals Data', [
-      wbStruct('First Person Offset', [                        //Data where used looks like three sets of 4, but this is speculation. Only ever has a value in the 4th of each set, and that value is always 128
-        { 0} wbFloat('X'),
-        { 4} wbFloat('Y'),
-        { 8} wbFloat('Z')
-      ]),
+      { 0} wbVec3('First Person Offset'),                        //Data where used looks like three sets of 4, but this is speculation. Only ever has a value in the 4th of each set, and that value is always 128
       {12} wbFormIDCk('Impact Data Set', [NULL, IPDS]),
       {16} wbFloat('Color Remapping Index'),
       {20} wbFormIDCK('Image Space Adapter', [NULL, IMAD])
