@@ -1303,26 +1303,6 @@ begin
   end;
 end;
 
-function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
-var
-  Container  : IwbContainer;
-  LinksTo    : IwbElement;
-  MainRecord : IwbMainRecord;
-begin
-  Result := 0;
-  if not wbTryGetContainerFromUnion(aElement, Container) then
-    Exit;
-
-  LinksTo := Container.ElementLinksTo['Owner'];
-  if not Supports(LinksTo, IwbMainRecord, MainRecord) then
-    Exit;
-
-  if MainRecord.Signature = 'NPC_' then
-    Result := 1
-  else if MainRecord.Signature = 'FACT' then
-    Result := 2;
-end;
-
 function wbCreaLevelDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Container: IwbContainer;

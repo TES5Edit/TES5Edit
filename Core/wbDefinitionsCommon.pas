@@ -279,7 +279,8 @@ function wbVertexToStr2(aInt: Int64; const aElement: IwbElement; aType: TwbCallb
 function wbVTXTPosition(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbWeatherCloudSpeedToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-{>>> Union Deciders <<<} //18
+{>>> Union Deciders <<<} //19
+function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbCTDAReferenceDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 function wbFlagDecider(aFlag: Byte): TwbUnionDecider;
@@ -2705,7 +2706,27 @@ begin
   end;
 end;
 
-{>>> Union Deciders <<<} //18
+{>>> Union Deciders <<<} //19
+
+function wbCOEDOwnerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+var
+  Container  : IwbContainer;
+  LinksTo    : IwbElement;
+  MainRecord : IwbMainRecord;
+begin
+  Result := 0;
+  if not wbTryGetContainerFromUnion(aElement, Container) then
+    Exit;
+
+  LinksTo := Container.ElementLinksTo['Owner'];
+  if not Supports(LinksTo, IwbMainRecord, MainRecord) then
+    Exit;
+
+  if MainRecord.Signature = 'NPC_' then
+    Result := 1
+  else if MainRecord.Signature = 'FACT' then
+    Result := 2;
+end;
 
 function wbCTDAParam3Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
