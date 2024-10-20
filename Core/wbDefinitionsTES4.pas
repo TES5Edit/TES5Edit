@@ -25,7 +25,6 @@ var
   wbOBMEResolutionInfo: IwbEnumDef;
   wbPKDTType: IwbEnumDef;
   wbSkillEnum: IwbEnumDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbSpecializationEnum: IwbEnumDef;
 
 procedure DefineTES4;
@@ -2215,15 +2214,6 @@ var  wbSoundTypeSoundsOld :=
   ], []);
 
   wbCSDTs := wbRArrayS('Sound Types', wbCSDT);
-
-  wbSoulGemEnum := wbEnum([
-    {0} 'None',
-    {1} 'Petty',
-    {2} 'Lesser',
-    {3} 'Common',
-    {4} 'Greater',
-    {5} 'Grand'
-  ]);
 
   wbRecord(CREA, 'Creature',
     wbFlags(wbFlagsList([

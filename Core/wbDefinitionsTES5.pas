@@ -44,7 +44,6 @@ var
   wbPropTypeEnum: IwbEnumDef;
   wbQuestTypeEnum: IwbEnumDef;
   wbSkillEnum: IwbEnumDef;
-  wbSoulGemEnum: IwbEnumDef;
   wbSoundLevelEnum: IwbEnumDef;
   wbTargetEnum: IwbEnumDef;
   wbTintMaskTypeEnum: IwbEnumDef;
@@ -6764,15 +6763,6 @@ begin
       wbFormIDCk('Impact Data Set', [IPDS, NULL]),
       wbFormIDCk('Sound', [SNDR, NULL])
     ])
-  ]);
-
-  wbSoulGemEnum := wbEnum([
-    {0} 'None',
-    {1} 'Petty',
-    {2} 'Lesser',
-    {3} 'Common',
-    {4} 'Greater',
-    {5} 'Grand'
   ]);
 
   wbRecord(SLGM, 'Soul Gem',
