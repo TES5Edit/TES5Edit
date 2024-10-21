@@ -4161,7 +4161,7 @@ end;
 function TwbFile.GetIsEditable: Boolean;
 begin
   if wbIsStarfield and Assigned(flModule) then
-   if flModule.miExtension = meESP then
+   if (flModule.miExtension = meESP) and not wbRedPill then
      Exit(False);
 
   Result :=

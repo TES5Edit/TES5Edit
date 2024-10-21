@@ -7182,10 +7182,44 @@ end;
     wbCTDAsCountReq
   ], []);
 
+  var wbPerkActivityTypes := [
+    'Actor Value',
+    'Apply Magic Effect',
+    'Barter',
+    'Bleedout',
+    'Build Workshop Item',
+    'Consume',
+    'Craft',
+    'Cripple Limb',
+    'Destroy Ship',
+    'Dock Ship',
+    'Grav Jump',
+    'Harvest',
+    'Kill',
+    'Land Planet',
+    'Location Discovered',
+    'Lockpick',
+    'LootContainer',
+    'Lose Enemy',
+    'Player Pickpocket',
+    'Produce',
+    'Reload Weapon',
+    'Research Completed',
+    'Scan Planet',
+    'Scan Surface',
+    'ShipBuilder',
+    'ShipCollection',
+    'Speech Challenge',
+    'Sprint',
+    'Take Actor Damage',
+    'Take Hit Damage'
+    ];
   var wbATCP := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit);
   var wbATCPReq := wbInteger(ATCP, 'Activity Count', itU32, nil, cpBenign, True).IncludeFlag(dfSkipImplicitEdit);
   var wbATAN := wbRStruct('Activity', [
-      wbString(ATAN),
+      wbString(ATAN, 'Activity Type')
+        .SetFormaterOnValue(wbStringEnum(wbPerkActivityTypes))
+        .SetRequired,
       wbFULL,
       wbDESC.SetRequired,
       wbRStructs('Progression Evaluator', 'Argument', [
@@ -7195,7 +7229,9 @@ end;
       ], []).SetRequired,
       wbRStruct('Progression Configuration', [
         wbString(ANAM).SetRequired,
-        wbString(ATAV, 'Configuration').IncludeFlag(dfNoZeroTerminator).SetRequired,
+        wbString(ATAV, 'Configuration')
+          .IncludeFlag(dfNoZeroTerminator)
+          .SetRequired,
         wbEmpty(ATAF, 'Unknown').SetRequired // always empty
       ], []).SetRequired], []);
   var wbATANs := wbRArray('Activities', wbATAN, cpNormal, False);
