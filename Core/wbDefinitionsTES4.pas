@@ -1873,10 +1873,10 @@ begin
     wbTexturedModel('Female World Model', [MOD4, MO4B, MO4T], []),
     wbString(ICO2, 'Female Icon Filename'),
     wbStruct(DATA, 'Data', [
-      wbInteger('Armor', itU16, wbDiv(100)),
+      wbInteger('Armor Rating', itU16, wbDiv(100, 2)),
       wbInteger('Value', itU32),
       wbInteger('Health', itU32),
-      wbFloat('Weight')
+      wbFloat('Weight', cpNormal, False, 1, 4)
     ]).SetRequired
   ]);
 
@@ -1895,11 +1895,11 @@ begin
       wbInteger('Flags', itU8,
         wbFlags([
           {0} 'Scroll',
-          {1} 'Can''t be taken'
+          {1} 'Can''t Be taken'
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbInteger('Teaches', itS8, wbSkillEnum).SetDefaultNativeValue(255),
       wbInteger('Value', itU32),
-      wbFloat('Weight')
+      wbFloat('Weight', cpNormal, False, 1, 4)
     ]).SetRequired
   ], True);
 
@@ -1986,9 +1986,9 @@ begin
           {0} 'Playable',
           {1} 'Guard'
         ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+      wbInteger('Buys/Sells & Services', itU32, wbServiceFlags),
       wbInteger('Teaches', itS8, wbSkillEnum),
-      wbInteger('Maximum training level', itU8),
+      wbInteger('Maximum Training Level', itU8),
       wbInteger('Unused', itU16)
     ], cpNormal, True, nil, 5)
   ]);
