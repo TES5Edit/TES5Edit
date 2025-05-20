@@ -66,7 +66,6 @@ var
   wbCinematicIMAD: IwbRecordMemberDef;
   wbDATAPosRot: IwbRecordMemberDef;
   wbDMDT: IwbRecordMemberDef;
-  wbFaceGen: IwbRecordMemberDef;
   wbFaction: IwbRecordMemberDef;
   wbFactionRelations: IwbRecordMemberDef;
   wbHEDR: IwbRecordMemberDef;
@@ -7165,20 +7164,6 @@ Can't properly represent that with current record definition methods.
         .IncludeFlag(dfCollapsed, wbCollapseOther)
         .IncludeFlag(dfFastAssign)
         .IncludeFlag(dfNoCopyAsOverride));
-
-  //TES4,FO3,FNV
-  wbFaceGen :=
-    IfThen(wbSimpleRecords,
-      wbRStruct('FaceGen Data', [
-        wbByteArray(FGGS, 'FaceGen Symmetric Geometry', 200).SetRequired,
-        wbByteArray(FGGA, 'FaceGen Asymmetric Geometry', 120).SetRequired,
-        wbByteArray(FGTS, 'FaceGen Symmetric Texture', 200).SetRequired
-      ]).SetRequired,
-      wbRStruct('FaceGen Data', [
-        wbArray(FGGS, 'FaceGen Symmetric Geometry', wbFloat('Bone Morph Key'), 50).SetRequired,
-        wbArray(FGGA, 'FaceGen Asymmetric Geometry', wbFloat('Bone Morph Key'), 30).SetRequired,
-        wbArray(FGTS, 'FaceGen Symmetric Texture', wbFloat('Color Morph Key'), 50).SetRequired
-      ]).SetRequired).IncludeFlag(dfCollapsed, wbCollapseFlags);
 end;
 
 end.

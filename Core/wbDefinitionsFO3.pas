@@ -64,6 +64,7 @@ var
   wbEmbeddedScriptReq: IwbRecordMemberDef;
   wbETYP: IwbRecordMemberDef;
   wbETYPReq: IwbRecordMemberDef;
+  wbFaceGen: IwbRecordMemberDef;
   wbFULL: IwbRecordMemberDef;
   wbFULLReq: IwbRecordMemberDef;
   wbICON: IwbRecordMemberDef;
@@ -3255,6 +3256,12 @@ begin
 
   wbEffectsReq :=
     wbRArray('Effects', wbEffect).SetRequired;
+
+  wbFaceGen := wbRStruct('FaceGen Data', [
+    wbByteArray(FGGS, 'FaceGen Geometry-Symmetric').SetRequired,
+    wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric').SetRequired,
+    wbByteArray(FGTS, 'FaceGen Texture-Symmetric').SetRequired
+  ]).SetRequired;
 
   var wbHeadParts :=
     wbRArrayS('Parts',
