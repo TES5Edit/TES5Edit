@@ -91,8 +91,6 @@ var
   wbEmbeddedScriptReq: IwbRecordMemberDef;
   wbSCRI: IwbSubRecordDef;
   wbSCRIActor: IwbSubRecordDef;
-  wbFaceGen: IwbSubRecordStructDef;
-  wbFaceGenNPC: IwbSubRecordStructDef;
   wbENAM: IwbSubRecordDef;
 //  wbFGGS: IwbSubRecordDef;
   wbXESP: IwbSubRecordDef;
@@ -6950,33 +6948,6 @@ begin
     ], cpNormal, True)
   ]);
 
-  // floats are reported to change faces after copying
-  if True {wbSimpleRecords} then begin
-    wbFaceGen := wbRStruct('FaceGen Data', [
-      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-    ], [], cpNormal, True);
-
-    wbFaceGenNPC := wbRStruct('FaceGen Data', [  // Arrays of 4bytes elements
-      wbByteArray(FGGS, 'FaceGen Geometry-Symmetric', 0, cpNormal, True),
-      wbByteArray(FGGA, 'FaceGen Geometry-Asymmetric', 0, cpNormal, True),
-      wbByteArray(FGTS, 'FaceGen Texture-Symmetric', 0, cpNormal, True)
-    ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
-  end else begin
-    wbFaceGen := wbRStruct('FaceGen Data', [
-      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
-    ], [], cpNormal, True);
-
-    wbFaceGenNPC := wbRStruct('FaceGen Data', [
-      wbArray(FGGS, 'FaceGen Geometry-Symmetric',  wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGGA, 'FaceGen Geometry-Asymmetric', wbFloat('Value'), [], cpNormal, True),
-      wbArray(FGTS, 'FaceGen Texture-Symmetric',   wbFloat('Value'), [], cpNormal, True)
-    ], [], cpNormal, True, wbActorTemplateUseModelAnimation);
-  end;
-
   wbRecord(NPC_, 'Non-Player Character',
     wbFlags(wbFlagsList([
       10, 'Quest Item',
@@ -7142,7 +7113,7 @@ begin
     wbByteColors(HCLR, 'Hair color').SetRequired.SetDontShow(wbActorTemplateUseModelAnimation),
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY], False, cpNormal, False, wbActorTemplateUseTraits),
     wbInteger(NAM4, 'Impact Material Type', itU32, wbActorImpactMaterialEnum, cpNormal, True, False, wbActorTemplateUseModelAnimation),
-    wbFaceGenNPC,
+    wbFaceGen.SetDontShow(wbActorTemplateUseModelAnimation),
     wbInteger(NAM5, 'Unknown', itU16, nil, cpNormal, True, False, nil, nil, 255),
     wbFloat(NAM6, 'Height', cpNormal, True, 1, -1, wbActorTemplateUseTraits),
     wbFloat(NAM7, 'Weight', cpNormal, True, 1, -1, wbActorTemplateUseTraits)
