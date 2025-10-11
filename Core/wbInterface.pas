@@ -283,6 +283,7 @@ var
   wbCompareRawData                   : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
   wbComplexFileFileID                : Boolean    = False;
+  wbAllowCompareNAVI                 : Boolean    = False;
 
   wbCS                               : Boolean    = False;
   wbOBME                             : Boolean    = False;

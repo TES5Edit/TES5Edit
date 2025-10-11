@@ -458,10 +458,14 @@ function wbBelowVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueD
 function wbFromVersion(aVersion: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef): IwbRecordMemberDef; overload;
 function wbFromVersion(aVersion: Integer; const aValue: IwbValueDef): IwbValueDef; overload;
 
-{>>> Vec3 Defs <<<} //11
+{>>> Vec3 Defs <<<} //12
 function wbVec3(const aName   : string = 'Unknown';
                 const aPrefix : string = '')
                               : IwbValueDef; overload;
+
+function wbVec3IgnoreEmpty(const aName   : string = 'Unknown';
+                           const aPrefix : string = '')
+                                         : IwbValueDef; overload;
 
 function wbVec3(const aSignature : TwbSignature;
                 const aName      : string = 'Unknown';
@@ -5063,7 +5067,7 @@ begin
     ]).IncludeFlag(dfUnionStaticResolve);
 end;
 
-{>>> Vec3 Defs <<<} //11
+{>>> Vec3 Defs <<<} //12
 
 function wbVec3(const aName   : string = 'Unknown';
                 const aPrefix : string = '')
@@ -5074,6 +5078,23 @@ begin
       wbFloat('X'),
       wbFloat('Y'),
       wbFloat('Z')
+    ]).SetSummaryKey([0, 1, 2])
+      .SetSummaryMemberPrefixSuffix(0, aPrefix + '(', '')
+      .SetSummaryMemberPrefixSuffix(2, '', ')')
+      .SetSummaryDelimiter(', ')
+      .IncludeFlag(dfSummaryMembersNoName)
+      .IncludeFlag(dfCollapsed, wbCollapseVec3);
+end;
+
+function wbVec3IgnoreEmpty(const aName   : string = 'Unknown';
+                const aPrefix : string = '')
+                              : IwbValueDef;
+begin
+  Result :=
+    wbStruct(aName, [
+      wbFloat('X', cpNormalIgnoreEmpty),
+      wbFloat('Y', cpNormalIgnoreEmpty),
+      wbFloat('Z', cpNormalIgnoreEmpty)
     ]).SetSummaryKey([0, 1, 2])
       .SetSummaryMemberPrefixSuffix(0, aPrefix + '(', '')
       .SetSummaryMemberPrefixSuffix(2, '', ')')

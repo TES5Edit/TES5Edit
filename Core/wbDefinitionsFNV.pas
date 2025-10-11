@@ -5294,49 +5294,49 @@ begin
           wbFlags(wbSparseFlags([
             4, 'Initially Disabled',
             5, 'Is Island'
-          ], False, 6))).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbFormIDCk('Navmesh', [NAVM]).IncludeFlag(dfSummaryNoName),
-        wbFormIDCk('Location', [CELL, WRLD]),
+          ], False, 6)), cpNormalIgnoreEmpty).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        wbFormIDCk('Navmesh', [NAVM], false, cpNormalIgnoreEmpty).IncludeFlag(dfSummaryNoName),
+        wbFormIDCk('Location', [CELL, WRLD], false, cpNormalIgnoreEmpty),
         wbStruct('Coordinates', [
-          wbInteger('Grid Y', itS16),
-          wbInteger('Grid X', itS16)
+          wbInteger('Grid Y', itS16, nil, cpNormalIgnoreEmpty),
+          wbInteger('Grid X', itS16, nil, cpNormalIgnoreEmpty)
         ]).SetSummaryKey([1, 0])
           .SetSummaryMemberPrefixSuffix(0, 'Y: ', '>')
           .SetSummaryMemberPrefixSuffix(1, '<X: ', '')
           .SetSummaryDelimiter(', ')
           .IncludeFlag(dfCollapsed, wbCollapsePlacement)
           .IncludeFlag(dfSummaryMembersNoName),
-        wbVec3('Approx Location'),
+        wbVec3IgnoreEmpty('Approx Location'),
         wbUnion('Island Data', wbNAVINVMIDecider, [
           wbStruct('Unused', [wbEmpty('Unused')])
             .SetDontShow(wbNeverShow)
             .IncludeFlag(dfCollapsed, wbCollapseOther),
           wbStruct('Island Data', [
             wbStruct('Navmesh Bounds', [
-              wbVec3('Min'),
-              wbVec3('Max')
+              wbVec3IgnoreEmpty('Min'),
+              wbVec3IgnoreEmpty('Max')
             ]),
-            wbInteger('Vertex Count', itU16),
-            wbInteger('Triangle Count', itU16),
+            wbInteger('Vertex Count', itU16, nil, cpNormalIgnoreEmpty),
+            wbInteger('Triangle Count', itU16, nil, cpNormalIgnoreEmpty),
             wbArray('Vertices',
-              wbVec3('Vertex')
-            ).SetCountPath('Vertex Count', True)
+              wbVec3IgnoreEmpty('Vertex'),
+            -1, nil, cpNormalIgnoreEmpty).SetCountPath('Vertex Count', True)
              .IncludeFlag(dfCollapsed, wbCollapseVertices)
              .IncludeFlag(dfNotAlignable),
             wbArray('Triangles',
               wbStruct('Triangle', [
-                wbInteger('Vertex 0', itU16),
-                wbInteger('Vertex 1', itU16),
-                wbInteger('Vertex 2', itU16)
-              ]).IncludeFlag(dfCollapsed, wbCollapseVertices)
-            ).SetCountPath('Triangle Count', True)
+                wbInteger('Vertex 0', itU16, nil, cpNormalIgnoreEmpty),
+                wbInteger('Vertex 1', itU16, nil, cpNormalIgnoreEmpty),
+                wbInteger('Vertex 2', itU16, nil, cpNormalIgnoreEmpty)
+              ]).IncludeFlag(dfCollapsed, wbCollapseVertices),
+            -1, cpNormalIgnoreEmpty).SetCountPath('Triangle Count', True)
              .IncludeFlag(dfCollapsed, wbCollapseVertices)
              .IncludeFlag(dfNotAlignable)
           ]).SetSummaryKey([4])
             .IncludeFlag(dfCollapsed, wbCollapseNavmesh)
         ]).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
-        wbFloat('Preferred %')
-      ]).SetSummaryKeyOnValue([1,2,5])
+        wbFloat('Preferred %', cpNormalIgnoreEmpty)
+      ], cpNormalIgnoreEmpty).SetSummaryKeyOnValue([1,2,5])
         .SetSummaryPrefixSuffixOnValue(1, '', '')
         .SetSummaryPrefixSuffixOnValue(2, 'in ', '')
         .SetSummaryPrefixSuffixOnValue(5, 'is island with ', '')
@@ -5345,10 +5345,10 @@ begin
     wbRArrayS('Navmesh Connections',
       wbStructSK(NVCI, [0], 'Connection', [
         wbFormIDCk('Navmesh', [NAVM]),
-        wbArrayS('Standard', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
-        wbArrayS('Preferred', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
-        wbArrayS('Door Links', wbFormIDCk('Door', [REFR]), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
-      ]).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
+        wbArrayS('Standard', wbFormIDCk('Navmesh', [NAVM], false, cpNormalIgnoreEmpty), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
+        wbArrayS('Preferred', wbFormIDCk('Navmesh', [NAVM], false, cpNormalIgnoreEmpty), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
+        wbArrayS('Door Links', wbFormIDCk('Door', [REFR], false, cpNormalIgnoreEmpty), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
+      ], cpNormalIgnoreEmpty).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
     ).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
   ]);
 

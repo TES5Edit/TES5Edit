@@ -1147,6 +1147,9 @@ begin
   begin
     wbIKnowWhatImDoing := True;
 
+    if FIndCmdLineSwitch('CompareNAVI') then
+      wbAllowCompareNAVI := True;
+
     if FindCmdLineSwitch('AllowMakePartial') then
       wbAllowMakePartial := True;
 

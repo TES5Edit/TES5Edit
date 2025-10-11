@@ -14525,7 +14525,7 @@ begin
     end;
     SetLength(MainRecords, j);
 
-  end else if (aMainRecord.Signature = 'NAVI') (* or (aMainRecord.Signature = 'TES4') *) then begin
+  end else if (aMainRecord.Signature = 'NAVI') and (wbAllowCompareNAVI = False) then begin
     Signature := aMainRecord.Signature;
     FormID := aMainRecord.FormID;
     LoadOrder := aMainRecord.GetFile.LoadOrder;
