@@ -3069,8 +3069,10 @@ begin
             New[High(New)] := TwbFileID.CreateFull(j);
           end;
           Inc(j);
-        end else
+        end else begin
+          flProgress('  Removing unused master: ' + flMasters[i].FileName);
           MasterFiles[i].SortOrder := $100;
+        end;
 
       var lRemovedCount := 0;
 
