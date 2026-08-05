@@ -95,6 +95,18 @@ begin
   Value := wbProgramPath;
 end;
 
+procedure _ScriptsPath(var Value: Variant; Args: TJvInterpreterArgs);
+begin
+  // the directory of the running script, so scripts in subdirectories find
+  // their own data files
+  if frmMain.ScriptPath <> '' then
+    Value := frmMain.ScriptPath
+  else
+    Value := wbScriptsPath;
+end;
+
+// mirrors the global, which stays the scripts root even while a script in a
+// subdirectory is running
 procedure _wbScriptsPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   Value := wbScriptsPath;
@@ -662,7 +674,7 @@ begin
     AddFunction(cUnit, 'wbRecordDefMap', _wbRecordDefMap, 0, [], varEmpty);
     AddFunction(cUnit, 'ProgramPath', _wbProgramPath, 0, [], varEmpty);
     AddFunction(cUnit, 'wbProgramPath', _wbProgramPath, 0, [], varEmpty);
-    AddFunction(cUnit, 'ScriptsPath', _wbScriptsPath, 0, [], varEmpty);
+    AddFunction(cUnit, 'ScriptsPath', _ScriptsPath, 0, [], varEmpty);
     AddFunction(cUnit, 'wbScriptsPath', _wbScriptsPath, 0, [], varEmpty);
     AddFunction(cUnit, 'DataPath', _wbDataPath, 0, [], varEmpty);
     AddFunction(cUnit, 'wbDataPath', _wbDataPath, 0, [], varEmpty);

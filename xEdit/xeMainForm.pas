@@ -906,7 +906,7 @@ type
     function ScriptCanProcessElement(const aElement: IwbElement): Boolean;
     procedure ApplyScriptToSelection(const aSelection: TNodeArray; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScriptToSelection(const aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
-    procedure ApplyScript(const aScriptName: string; const aScript: string; aRefByMode: Boolean = False);
+    procedure ApplyScript(const aScriptFile: string; const aScript: string; aRefByMode: Boolean = False);
     procedure CreateActionsForScripts;
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
@@ -1032,6 +1032,7 @@ type
 
     Script: IxeScript;
   public
+    ScriptPath: string;
     ScriptProcessElements: TwbElementTypes;
     ScriptProcessSignatures: string;
     MonospaceFontName: string;
@@ -1795,7 +1796,6 @@ begin
     Free;
   end;
 
-  t := ChangeFileExt(ExtractFileName(t), '');
   ApplyScript(t, s);
 end;
 
@@ -5072,11 +5072,10 @@ begin
     end;
 
   if FileExists(xeScriptToRun) then begin
-    wbScriptsPath := ExtractFilePath(xeScriptToRun);
     with TStringList.Create do try
       LoadFromFile(xeScriptToRun);
       SelectRootNodes(vstNav);
-      ApplyScript(ChangeFileExt(ExtractFileName(xeScriptToRun),''), Text);
+      ApplyScript(xeScriptToRun, Text);
     finally
       Free;
     end;
@@ -8752,7 +8751,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.ApplyScript(const aScriptName: string; const aScript: string; aRefByMode: Boolean);
+procedure TfrmMain.ApplyScript(const aScriptFile: string; const aScript: string; aRefByMode: Boolean);
 const
   sJustWait                   = 'Applying script. Please wait...';
 var
@@ -8781,7 +8780,11 @@ begin
   ScriptProcessElements := [etMainRecord];
   ScriptProcessSignatures := '';
 
-  Script := TxeScriptHost.CreateScript(aScriptName, aScript);
+  ScriptPath := ExtractFilePath(aScriptFile);
+  if ScriptPath = '' then
+    ScriptPath := wbScriptsPath;
+
+  Script := TxeScriptHost.CreateScript(aScriptFile, aScript);
   try
     ScriptRunning := True;
     UserWasActive := True;
@@ -8799,8 +8802,9 @@ begin
     if not bShowMessages then
       wbProgressLock;
     try
-      if aScriptName <> '' then
-        s := 'Applying script "'+aScriptName+'"'
+      s := ChangeFileExt(ExtractFileName(aScriptFile), '');
+      if s <> '' then
+        s := 'Applying script "'+s+'"'
       else
         s := 'Applying script';
       PerformLongAction(s, '', procedure
@@ -8872,6 +8876,7 @@ begin
       CheckViewForChange;
   finally
     Script := nil;
+    ScriptPath := '';
     ScriptRunning := False;
   end;
 end;
@@ -9179,7 +9184,7 @@ end;
 
 procedure TfrmMain.mniNavApplyScriptClick(Sender: TObject);
 var
-  ScriptName: string;
+  ScrFile: string;
   Scr: string;
 begin
   with TfrmScript.Create(Self) do try
@@ -9189,7 +9194,7 @@ begin
     if ShowModal <> mrOK then
       Exit;
     Scr := Script;
-    ScriptName := LastUsedScript;
+    ScrFile := ScriptFile;
     Settings.WriteString('View', 'LastUsedScript', LastUsedScript);
     Settings.WriteBool('View', 'IncludeScriptsFromSubDir', chkScriptsSubDir.Checked);
     Settings.UpdateFile;
@@ -9197,7 +9202,7 @@ begin
   finally
     Free;
   end;
-  ApplyScript(ScriptName, Scr, Sender = mniRefByApplyScript);
+  ApplyScript(ScrFile, Scr, Sender = mniRefByApplyScript);
 end;
 
 procedure TfrmMain.CreateActionsForScripts;
@@ -9205,7 +9210,6 @@ const
   HotkeyToken = 'Hotkey: ';
 var
   scr, s               : string;
-  F                    : TSearchRec;
   slScript             : TStringList;
   i                    : integer;
   ShortCut             : TShortCut;
@@ -9219,10 +9223,12 @@ begin
     if ActionList1.Actions[i].Tag > 0 then
       ActionList1.Actions[i].Free;
 
-  if FindFirst(wbScriptsPath + '*.pas', faAnyFile, F) = 0 then try
-    slScript := TStringList.Create;
-    repeat
-      scr := wbScriptsPath + F.Name;
+  if not TDirectory.Exists(wbScriptsPath) then
+    Exit;
+
+  slScript := TStringList.Create;
+  try
+    for scr in TDirectory.GetFiles(wbScriptsPath, '*.pas', TSearchOption.soAllDirectories) do begin
       slScript.LoadFromFile(scr);
       for i := 0 to Pred(slScript.Count) do begin
         s := Trim(slScript[i]);
@@ -9240,9 +9246,8 @@ begin
           Break;
         end;
       end;
-    until FindNext(F) <> 0;
+    end;
   finally
-    System.SysUtils.FindClose(F);
     FreeAndNil(slScript);
   end;
 end;

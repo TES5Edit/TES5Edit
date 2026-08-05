@@ -33,10 +33,10 @@ type
     constructor Create; virtual;
 
     class function CreateForName(const aName: string): TxeScriptHost;
-    function CreateScriptInternal(const aScriptName, aScript: string): IxeScript; virtual; abstract;
+    function CreateScriptInternal(const aScriptFile, aScript: string): IxeScript; virtual; abstract;
   public
     class procedure Init(const aName: string);
-    class function CreateScript(const aScriptName, aScript: string): IxeScript;
+    class function CreateScript(const aScriptFile, aScript: string): IxeScript;
   end;
   TxeScriptHostClass = class of TxeScriptHost;
 
@@ -75,11 +75,11 @@ end;
 var
   _ScriptHost: TxeScriptHost;
 
-class function TxeScriptHost.CreateScript(const aScriptName, aScript: string): IxeScript;
+class function TxeScriptHost.CreateScript(const aScriptFile, aScript: string): IxeScript;
 begin
   if not Assigned(_ScriptHost) then
     raise Exception.Create('TxeScriptHost has not been initialized');
-  Result := _ScriptHost.CreateScriptInternal(aScriptName, aScript);
+  Result := _ScriptHost.CreateScriptInternal(aScriptFile, aScript);
 end;
 
 class procedure TxeScriptHost.Init(const aName: string);

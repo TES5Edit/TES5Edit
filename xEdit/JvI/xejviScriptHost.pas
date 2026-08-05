@@ -30,7 +30,7 @@ uses
 type
   TxejviScript = class(TInterfacedObject, IxeScript)
   protected {private}
-    FScriptName : string;
+    FScriptPath : string;
     FScript     : string;
     FProgram    : TJvInterpreterProgram;
 
@@ -38,7 +38,7 @@ type
     procedure JvInterpreterProgramStatement(Sender: TObject);
     procedure JvInterpreterProgramSetValue(Sender: TObject; Identifier: string; const Value: Variant; Args: TJvInterpreterArgs; var Done: Boolean);
   protected
-    constructor Create(const aScriptName: string; aScript: string);
+    constructor Create(const aScriptFile: string; aScript: string);
 
     { IxeScript }
     function CallFunction(const aName: string; const aParams: array of Variant): Variant;
@@ -52,7 +52,7 @@ type
   TxejviScriptHost = class(TxeScriptHost)
   protected
     class function GetName: string; override;
-    function CreateScriptInternal(const aScriptName, aScript: string): IxeScript; override;
+    function CreateScriptInternal(const aScriptFile, aScript: string): IxeScript; override;
   public
     constructor Create; override;
   end;
@@ -334,7 +334,7 @@ begin
   Result := FProgram.VResult;
 end;
 
-constructor TxejviScript.Create(const aScriptName: string; aScript: string);
+constructor TxejviScript.Create(const aScriptFile: string; aScript: string);
 begin
   inherited Create;
   // Try to remove namespaces from unit names in uses clause if script is written in newer Delphi version
@@ -361,7 +361,9 @@ begin
     Free;
   end;
 
-  FScriptName := aScriptName;
+  FScriptPath := ExtractFilePath(aScriptFile);
+  if FScriptPath = '' then
+    FScriptPath := wbScriptsPath;
   FScript := aScript;
 
   FProgram := TJvInterpreterProgram.Create(nil);
@@ -447,7 +449,14 @@ begin
     Exit;
   end;
 
-  UnitFile := wbScriptsPath + UnitName + '.pas';
+  // look next to the script first so scripts in subdirectories can ship their own units
+  UnitFile := FScriptPath + UnitName + '.pas';
+  if not FileExists(UnitFile) then begin
+    UnitFile := wbScriptsPath + UnitName + '.pas';
+    if not FileExists(UnitFile) then
+      raise Exception.CreateFmt('Cannot find unit "%s" in "%s" or "%s"', [UnitName, FScriptPath, wbScriptsPath]);
+  end;
+
   with TStringList.Create do try
     LoadFromFile(UnitFile);
     Source := Text;
@@ -466,9 +475,9 @@ begin
   wbVarPointer := varPointer;
 end;
 
-function TxejviScriptHost.CreateScriptInternal(const aScriptName, aScript: string): IxeScript;
+function TxejviScriptHost.CreateScriptInternal(const aScriptFile, aScript: string): IxeScript;
 begin
-  Result := TxejviScript.Create(aScriptName, aScript);
+  Result := TxejviScript.Create(aScriptFile, aScript);
 end;
 
 class function TxejviScriptHost.GetName: string;

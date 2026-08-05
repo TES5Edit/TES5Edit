@@ -95,6 +95,7 @@ type
     { Public declarations }
     Path: string;
     LastUsedScript: string;
+    ScriptFile: string;
     Script: string;
     procedure UpdateCaretPos;
     procedure ReadScriptsList;
@@ -433,6 +434,11 @@ begin
         btnSaveClick(Sender);
     Script := Editor.Lines.Text;
     LastUsedScript := cmbScripts.Items[cmbScripts.ItemIndex];
+
+    var s := LastUsedScript;
+    if s = sNewScript then
+      s := sNewScriptName;
+    ScriptFile := Path + s + sScriptExt;
   end;
 end;
 
