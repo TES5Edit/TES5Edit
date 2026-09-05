@@ -8055,6 +8055,8 @@ begin
 
       ResetMemoryOrder(i, Succ(i));
 
+      NotifyChanged(eContainer);
+
       Exit;
     end;
 end;
@@ -8080,6 +8082,8 @@ begin
       cntElements[Pred(i)] := aElement as IwbElementInternal;
 
       ResetMemoryOrder(Pred(i), i);
+
+      NotifyChanged(eContainer);
 
       Exit;
     end;
@@ -8630,11 +8634,15 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  SetModified(True);
+  InvalidateStorage;
   SetLength(Temp, Length(cntElements));
   for i := Low(cntElements) to High(cntElements) do
     Temp[High(cntElements)-i] := cntElements[i];
   cntElements := Temp;
   Exclude(cntStates, csSortedBySortOrder);
+  ResetMemoryOrder;
+  NotifyChanged(eContainer);
 end;
 
 procedure TwbContainer.SetCollapsed(const aValue: TwbTriBool);
