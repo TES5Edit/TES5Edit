@@ -4742,6 +4742,7 @@ function wbIsLightSupported: Boolean; inline;
 function wbIsMediumSupported: Boolean; inline;
 function wbIsBlueprintSupported: Boolean; inline;
 function wbIsUpdateSupported: Boolean; inline;
+function wbCurrentCapabilities: TwbGameCapabilities; inline;
 
 procedure ReportDefs;
 
@@ -5420,24 +5421,37 @@ begin
   Result := wbGameMode in [gmSF1];
 end;
 
+function wbCurrentCapabilities: TwbGameCapabilities; inline;
+begin
+  Result := [];
+  if (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or wbHasAddedLightSupport then
+    Include(Result, gcLightPlugins);
+  if (wbGameMode in [gmSF1]) or wbHasAddedMediumSupport then
+    Include(Result, gcMediumPlugins);
+  if wbGameMode in [gmSF1] then
+    Include(Result, gcBlueprintPlugins);
+  if (wbGameMode in [gmSF1]) or wbHasAddedUpdateSupport then
+    Include(Result, gcUpdatePlugins);
+end;
+
 function wbIsLightSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or wbHasAddedLightSupport;
+  Result := gcLightPlugins in wbCurrentCapabilities;
 end;
 
 function wbIsMediumSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSF1]) or wbHasAddedMediumSupport;
+  Result := gcMediumPlugins in wbCurrentCapabilities;
 end;
 
 function wbIsBlueprintSupported: Boolean; inline;
 begin
-  Result := wbGameMode in [gmSF1];
+  Result := gcBlueprintPlugins in wbCurrentCapabilities;
 end;
 
 function wbIsUpdateSupported: Boolean; inline;
 begin
-  Result := (wbGameMode in [gmSF1]) or wbHasAddedUpdateSupport;
+  Result := gcUpdatePlugins in wbCurrentCapabilities;
 end;
 
 function wbDefToName(const aDef: IwbDef): string;

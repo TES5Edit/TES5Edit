@@ -26396,15 +26396,7 @@ end;
 
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
 begin
-  Result := [];
-  if wbIsLightSupported then
-    Include(Result, gcLightPlugins);
-  if wbIsMediumSupported then
-    Include(Result, gcMediumPlugins);
-  if wbIsBlueprintSupported then
-    Include(Result, gcBlueprintPlugins);
-  if wbIsUpdateSupported then
-    Include(Result, gcUpdatePlugins);
+  Result := wbCurrentCapabilities;
 end;
 
 constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
