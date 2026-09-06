@@ -21168,8 +21168,18 @@ begin
           LoaderProgress('...resources cache finished building');
         end;
 
-        if wbGameMode in [gmSF1] then
-          wbBuildSoundBankCache(ltLoadList);
+        if wbGameMode in [gmSF1] then begin
+          var lModules := TStringList.Create;
+          try
+            for var lFile in frmMain.Files do
+              if not (fsIsHardcoded in lFile.FileStates) then
+                lModules.Add(lFile.FileName);
+            lModules.AddStrings(ltLoadList);
+            wbBuildSoundBankCache(lModules);
+          finally
+            lModules.Free;
+          end;
+        end;
 
         wbResourcesLoaded;
 
