@@ -23757,48 +23757,43 @@ begin
 end;
 
 procedure TwbGuidDef.FromStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
+var
+  lIntA, lIntB: Int64;
 begin
-  //var lLength := 0;
-  //if Assigned(aBasePtr) and Assigned(aEndPtr) then
-  //  lLength := NativeInt(aEndPtr) - NativeInt(aBasePtr);
+  if aValue = '' then begin
+    lIntA := 0;
+    lIntB := 0;
+  end else begin
+    if Length(aValue) <> 38 then
+      raise Exception.Create('Not a valid GUID: ' + aValue);
+
+    if (aValue[1] <> '{') or
+       (aValue[10] <> '-') or
+       (aValue[15] <> '-') or
+       (aValue[20] <> '-') or
+       (aValue[25] <> '-') or
+       (aValue[38] <> '}')
+    then
+      raise Exception.Create('Not a valid GUID: ' + aValue);
+
+    var lValue := aValue;
+    Delete(lValue, 38, 1);
+    Delete(lValue, 25, 1);
+    Delete(lValue, 20, 1);
+    Delete(lValue, 15, 1);
+    Delete(lValue, 10, 1);
+    Delete(lValue,  1, 1);
+
+    if not (TryStrToInt64('$'+Copy(lValue, 1, 16), lIntA) and TryStrToInt64('$'+Copy(lValue, 17, 16), lIntB)) then
+      raise Exception.Create('Not a valid GUID: ' + aValue);
+  end;
 
   aElement.RequestStorageChange(aBasePtr, aEndPtr, 16);
 
-  var lValue := aValue;
-
-  if aValue = '' then begin
-    var pInt: PInt64 := PInt64(aBasePtr);
-    pInt^ := 0;
-    Inc(pInt);
-    pInt^ := 0;
-    Exit;
-  end;
-
-  if Length(aValue) <> 38 then
-    raise Exception.Create('Not a valid GUID: ' + aValue);
-
-  if (aValue[1] <> '{') or
-     (aValue[10] <> '-') or
-     (aValue[15] <> '-') or
-     (aValue[20] <> '-') or
-     (aValue[25] <> '-') or
-     (aValue[38] <> '}')
-  then
-    raise Exception.Create('Not a valid GUID: ' + aValue);
-
-  Delete(lValue, 38, 1);
-  Delete(lValue, 25, 1);
-  Delete(lValue, 20, 1);
-  Delete(lValue, 15, 1);
-  Delete(lValue, 10, 1);
-  Delete(lValue,  1, 1);
-
-  var lIntA:PInt64 := PInt64(aBasePtr);
-  var lIntB := lIntA;
-  Inc(lIntB);
-
-  if not (TryStrToInt64('$'+Copy(lValue, 1, 16), lIntA^) and TryStrToInt64('$'+Copy(lValue, 17, 16), lIntB^)) then
-    raise Exception.Create('Not a valid GUID: ' + aValue);
+  var pInt: PInt64 := PInt64(aBasePtr);
+  pInt^ := lIntA;
+  Inc(pInt);
+  pInt^ := lIntB;
 end;
 
 function TwbGuidDef.GetDefaultSize(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Integer;
