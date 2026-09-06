@@ -6315,7 +6315,7 @@ begin
         wbInteger('Grid X', itS16, nil, cpBenign).SetDontShow(wbLCTNCellDontShow)
       ], cpBenign),
     0, cpBenign),
-    wbArrayS(LCPR, 'Location Persist Location References',
+    wbArrayS(LCPR, 'Master Persist Location References',
       wbStructSK([0], 'Reference', [
         wbFormIDCk('Ref', [PLYR, ACHR, REFR, PGRE, PHZD, PMIS, PARW, PBAR, PBEA, PCON, PFLA], False, cpBenign),
         wbFormIDCk('World/Cell', [WRLD, CELL], False, cpBenign),
