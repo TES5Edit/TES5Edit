@@ -1567,9 +1567,17 @@ begin
   if not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
     Exit;
 
-  var lDataElement := lContainer.ElementBySortOrder[8]; //'Type Specific Action'
-  if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
-    lDataElement.Remove;
+  var lStructDef: IwbSubRecordStructDef;
+  if not Supports(lContainer.Def, IwbSubRecordStructDef, lStructDef) then
+    Exit;
+
+  for var lIndex := 0 to Pred(lStructDef.MemberCount) do
+    if SameText(lStructDef.Members[lIndex].Name, 'Type Specific Action') then begin
+      var lDataElement := lContainer.ElementBySortOrder[lIndex];
+      if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
+        lDataElement.Remove;
+      Exit;
+    end;
 end;
 
 procedure wbScriptFragmentsQuestScriptNameAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
