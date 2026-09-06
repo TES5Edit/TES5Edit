@@ -41,10 +41,12 @@ begin
   if not Assigned(aElement) then
     Exit('');
 
-  if not (aType in [ctToEditValue, ctToSortKey, ctToStr, ctToSummary]) then
+  if not (aType in [ctToEditValue, ctToSortKey, ctToStr, ctToSummary, ctCheck]) then
     Exit('');
 
-  if aInt < 0 then
+  if aInt < 0 then begin
+    if aType = ctCheck then
+      Exit('');
     case aInt of
       Integer($FFFFFF01): Exit('Null');
       Integer($FFFFFF02): Exit('String');
@@ -65,18 +67,31 @@ begin
       Integer($FFFFFF13): Exit('Diff');
     else
       Exit('<Warning: Unknown Type>');
-    end else begin
-      var lSubRecord := aElement.ContainingSubRecord;
-      if not Assigned(lSubRecord) then
-        Exit('');
-
-      var lStringTable := lSubRecord.ElementByPath['String Table\Strings'] as IwbDataContainer;
-      if not Assigned(lStringTable) then
-        Exit('');
-
-      var lBasePtr : PAnsiChar := lStringTable.DataBasePtr;
-        Result := PAnsiChar(@lBasePtr[aInt]);
     end;
+  end else begin
+    var lSubRecord := aElement.ContainingSubRecord;
+    if not Assigned(lSubRecord) then
+      Exit('');
+
+    var lStringTable := lSubRecord.ElementByPath['String Table\Strings'] as IwbDataContainer;
+    if not Assigned(lStringTable) then
+      Exit('');
+
+    var lBasePtr : PAnsiChar := lStringTable.DataBasePtr;
+    var lEndPtr  : PAnsiChar := lStringTable.DataEndPtr;
+    if aInt >= lEndPtr - lBasePtr then
+      Exit('<Warning: Offset outside String Table>');
+    if aType = ctCheck then
+      Exit('');
+
+    var lStringPtr : PAnsiChar := @lBasePtr[aInt];
+    var lLength := 0;
+    while (lStringPtr + lLength < lEndPtr) and (lStringPtr[lLength] <> #0) do
+      Inc(lLength);
+    var lString : AnsiString;
+    SetString(lString, lStringPtr, lLength);
+    Result := string(lString);
+  end;
 end;
 
 function wbREFLStringToInt(const aString: string; const aElement: IwbElement): Int64;
@@ -258,7 +273,7 @@ begin
           wbString('String')
         ).SetShouldInclude(function(aBasePtr: Pointer; aEndPtr: Pointer; const aArray: IwbElement): Boolean
          begin
-           Result := (PLongWord(aBasePtr)^ <> $45505954);
+           Result := (NativeUInt(aEndPtr) - NativeUInt(aBasePtr) < 4) or (PLongWord(aBasePtr)^ <> $45505954);
          end)
       ]).SetSummaryKey([2])
         .IncludeFlag(dfCollapsed)
