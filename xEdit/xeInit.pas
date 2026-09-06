@@ -1221,6 +1221,14 @@ begin
       wbAllowESPMasters := True;
   end;
 
+  if wbToolMode in [tmEdit, tmScript] then begin
+    if FindCmdLineSwitch('autoload') then
+      xeAutoLoad := True;
+
+    if FindCmdLineSwitch('autoexit') then
+      xeAutoExit := True;
+  end;
+
   if wbToolMode = tmEdit then begin
     if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
       or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
@@ -1232,12 +1240,6 @@ begin
       xeVeryQuickShowConflicts := True;
       xeAutoLoad := True;
     end;
-
-    if FindCmdLineSwitch('autoload') then
-      xeAutoLoad := True;
-
-    if FindCmdLineSwitch('autoexit') then
-      xeAutoExit := True;
 
     if wbFindCmdLineParam('testconflicts', xeTestConflictsFile) then begin
       if xeTestConflictsFile = '' then begin
