@@ -7561,7 +7561,7 @@ type
 var
   _NamedIndices: TStringList;
   _NamedIndicesNames: TwbStringArray;
-  _NamedIndicesCaseSensitive: TArray<Boolean>;
+  _NamedIndicesCaseSensitive: set of Byte;
 
 function wbNamedIndex(const aName: string; aCaseSensitive: Boolean): TwbNamedIndex;
 begin
@@ -7573,11 +7573,13 @@ begin
     Exit(TwbNamedIndex(_NamedIndices.Objects[lIndex]));
 
   Result := _NamedIndices.Count;
+  if Result > High(Byte) then
+    raise Exception.Create('More than ' + IntToStr(Succ(High(Byte))) + ' named indices, registering "' + aName + '"');
   _NamedIndices.AddObject(aName, TObject(Result));
+  if aCaseSensitive then
+    Include(_NamedIndicesCaseSensitive, Result);
   SetLength(_NamedIndicesNames, Succ(Result));
   _NamedIndicesNames[Result] := aName;
-  SetLength(_NamedIndicesCaseSensitive, Succ(Result));
-  _NamedIndicesCaseSensitive[Result] := aCaseSensitive;
 end;
 
 function wbNamedIndexName(aIndex : TwbNamedIndex)
@@ -7588,17 +7590,9 @@ begin
   Result := '';
 end;
 
-function wbNamedIndexCaseSensitive(aIndex: TwbNamedIndex): Boolean;
-begin
-  Result :=
-    (aIndex >= Low(_NamedIndicesCaseSensitive)) and
-    (aIndex <= High(_NamedIndicesCaseSensitive)) and
-    _NamedIndicesCaseSensitive[aIndex];
-end;
-
 function wbNamedIndexComparer(aIndex: TwbNamedIndex): IwbNamedIndexEqualityComparer;
 begin
-  if (aIndex >=0) and (aIndex < _NamedIndices.Count) and not wbNamedIndexCaseSensitive(aIndex) then
+  if (aIndex >=0) and (aIndex < _NamedIndices.Count) and not (aIndex in _NamedIndicesCaseSensitive) then
     Result := TIStringComparer.Ordinal
   else
     Result := TStringComparer.Ordinal;
@@ -23586,10 +23580,10 @@ begin
   var lResultIdx := 0;
   for var lIdx := 0 to lMinHigh do
     if (
-         wbNamedIndexCaseSensitive(lIdx) and
+         (lIdx in _NamedIndicesCaseSensitive) and
          (ikKeys[lIdx] <> aOldKeys.ikKeys[lIdx])
        ) or (
-         (not wbNamedIndexCaseSensitive(lIdx)) and
+         (not (lIdx in _NamedIndicesCaseSensitive)) and
          (not SameText(ikKeys[lIdx], aOldKeys.ikKeys[lIdx]))
        )
     then begin
