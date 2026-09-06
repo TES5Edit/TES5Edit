@@ -86,6 +86,8 @@ end;
 
 procedure TPerlRegEx_Read_Groups(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  if Args.Values[0] < 0 then
+    JvInterpreterError(ieArrayIndexOutOfBounds, -1);
   Value := String(TPerlRegEx(Args.Obj).Groups[Args.Values[0]]);
 end;
 

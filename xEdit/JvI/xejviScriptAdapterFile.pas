@@ -227,7 +227,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if Args.Values[1] < _File.MasterCount[True] then
+    if (Args.Values[1] >= 0) and (Args.Values[1] < _File.MasterCount[True]) then
       Value := _File.Masters[Args.Values[1], True];
 end;
 
@@ -261,7 +261,7 @@ var
   _File: IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    if Args.Values[1] < _File.RecordCount then
+    if (Args.Values[1] >= 0) and (Args.Values[1] < _File.RecordCount) then
       Value := _File.Records[Args.Values[1]];
 end;
 

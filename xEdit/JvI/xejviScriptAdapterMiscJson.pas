@@ -512,6 +512,8 @@ end;
 
 procedure TJsonObject_Read_Names(var Value: Variant; Args: TJvInterpreterArgs);
 begin
+  if (Args.Values[0] < 0) or (Args.Values[0] >= TJsonObject(Args.Obj).Count) then
+    JvInterpreterError(ieArrayIndexOutOfBounds, -1);
   Value := TJsonObject(Args.Obj).Names[Args.Values[0]]
 end;
 
