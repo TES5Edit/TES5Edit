@@ -285,7 +285,7 @@ begin
     prop.Width := aFile.FileEntry.DDS.Width;
     prop.Height := aFile.FileEntry.DDS.Height;
     prop.Size := SizeOf(TDDSHeader);
-    for var c in aFile.FileEntry.DDS.TexChunks do Inc(prop.Size, c.Size);
+    for var c in aFile.FileEntry.TexChunks do Inc(prop.Size, c.Size);
     prop.BitsPerPixel := TwbDDS.GetBitsPerPixel(prop.DXGIFormat);
     prop.MipMaps := aFile.FileEntry.DDS.NumMips > 1;
     prop.CubeMap := aFile.FileEntry.IsCubeMap;
