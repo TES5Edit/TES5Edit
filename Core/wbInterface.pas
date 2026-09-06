@@ -7561,7 +7561,7 @@ type
 var
   _NamedIndices: TStringList;
   _NamedIndicesNames: TwbStringArray;
-  _NamedIndicesCaseSensitive: set of Byte;
+  _NamedIndicesCaseSensitive: TArray<Boolean>;
 
 function wbNamedIndex(const aName: string; aCaseSensitive: Boolean): TwbNamedIndex;
 begin
@@ -7574,10 +7574,10 @@ begin
 
   Result := _NamedIndices.Count;
   _NamedIndices.AddObject(aName, TObject(Result));
-  if aCaseSensitive then
-    Include(_NamedIndicesCaseSensitive, Result);
   SetLength(_NamedIndicesNames, Succ(Result));
   _NamedIndicesNames[Result] := aName;
+  SetLength(_NamedIndicesCaseSensitive, Succ(Result));
+  _NamedIndicesCaseSensitive[Result] := aCaseSensitive;
 end;
 
 function wbNamedIndexName(aIndex : TwbNamedIndex)
@@ -7588,9 +7588,17 @@ begin
   Result := '';
 end;
 
+function wbNamedIndexCaseSensitive(aIndex: TwbNamedIndex): Boolean;
+begin
+  Result :=
+    (aIndex >= Low(_NamedIndicesCaseSensitive)) and
+    (aIndex <= High(_NamedIndicesCaseSensitive)) and
+    _NamedIndicesCaseSensitive[aIndex];
+end;
+
 function wbNamedIndexComparer(aIndex: TwbNamedIndex): IwbNamedIndexEqualityComparer;
 begin
-  if (aIndex >=0) and (aIndex < _NamedIndices.Count) and not (aIndex in _NamedIndicesCaseSensitive) then
+  if (aIndex >=0) and (aIndex < _NamedIndices.Count) and not wbNamedIndexCaseSensitive(aIndex) then
     Result := TIStringComparer.Ordinal
   else
     Result := TStringComparer.Ordinal;
@@ -23578,10 +23586,10 @@ begin
   var lResultIdx := 0;
   for var lIdx := 0 to lMinHigh do
     if (
-         (lIdx in _NamedIndicesCaseSensitive) and
+         wbNamedIndexCaseSensitive(lIdx) and
          (ikKeys[lIdx] <> aOldKeys.ikKeys[lIdx])
        ) or (
-         (not (lIdx in _NamedIndicesCaseSensitive)) and
+         (not wbNamedIndexCaseSensitive(lIdx)) and
          (not SameText(ikKeys[lIdx], aOldKeys.ikKeys[lIdx]))
        )
     then begin
