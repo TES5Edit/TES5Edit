@@ -154,6 +154,7 @@ var
 procedure wbLoadModGroups;
 var
   ModGroupFilesByName : TStringList;
+  ModGroupFiles       : TwbModGroupsFiles;
   Modules             : TwbModuleInfos;
   i, j, k             : Integer;
   ModGroupFileName    : string;
@@ -161,16 +162,15 @@ var
 begin
   if _ModGroupFilesLoaded then
     Exit;
-  _ModGroupFilesLoaded := True;
 
-  _ModGroupFiles := nil;
+  ModGroupFiles := nil;
   try
     ModGroupFilesByName := TStringList.Create;
     try
       ModGroupFilesByName.Sorted := True;
       ModGroupFilesByName.Duplicates := dupError;
       Modules := wbModulesByLoadOrder{.FilteredByFlag(mfHasFile)};
-      SetLength(_ModGroupFiles, Succ(Length(Modules)));
+      SetLength(ModGroupFiles, Succ(Length(Modules)));
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
         if i > High(Modules) then
@@ -183,7 +183,7 @@ begin
           ModGroupFile := Pointer(ModGroupFilesByName.Objects[k])
         else
           if FileExists(ModGroupFileName) then begin
-            ModGroupFile := @_ModGroupFiles[j];
+            ModGroupFile := @ModGroupFiles[j];
             with ModGroupFile^ do begin
               mgfFileName := ModGroupFileName;
               mgfLoad;
@@ -200,13 +200,15 @@ begin
     finally
       ModGroupFilesByName.Free;
     end;
-    SetLength(_ModGroupFiles, j);
+    SetLength(ModGroupFiles, j);
+    for i := Low(ModGroupFiles) to High(ModGroupFiles) do
+      ModGroupFiles[i].mgfCheckValid(True);
   except
     _ModGroupFiles := nil;
     raise;
   end;
-  for i := Low(_ModGroupFiles) to High(_ModGroupFiles) do
-    _ModGroupFiles[i].mgfCheckValid(True);
+  _ModGroupFiles := ModGroupFiles;
+  _ModGroupFilesLoaded := True;
 end;
 
 procedure wbReloadModGroups;
