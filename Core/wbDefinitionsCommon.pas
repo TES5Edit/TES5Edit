@@ -1527,6 +1527,7 @@ begin
     lContainerElementRef.Add('DATA', True);
     lContainerElementRef.RemoveElement('Perk Conditions');
     lContainerElementRef.RemoveElement('Entry Point Function Parameters');
+    lContainerElementRef.RemoveElement('Function Parameters');
 
     if not (aNewValue = 2) then
       Exit;
