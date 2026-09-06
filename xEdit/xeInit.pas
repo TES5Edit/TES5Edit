@@ -92,6 +92,7 @@ uses
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves,
   wbHelpers,
+  wbImplementation,
   wbInterface,
   wbSteamVDFParser,
 
@@ -1409,6 +1410,8 @@ begin
       tsPlugins: DefineSF1;
     end;
   end;
+
+  wbCurrentContext := wbCreateGameContext(wbCreateGameDef);
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;

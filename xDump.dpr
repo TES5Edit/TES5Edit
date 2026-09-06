@@ -1196,6 +1196,8 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
+      wbCurrentContext := wbCreateGameContext(wbCreateGameDef);
+
       if not (wbToolMode in tms) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
         Exit;
