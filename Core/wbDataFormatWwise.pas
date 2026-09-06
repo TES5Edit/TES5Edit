@@ -99,7 +99,6 @@ type
 
   TwbSoundBank = class(TwbWwiseObject)
   public
-    FSoundBankArray: TwbSoundBankArray;
     FFilename: string;
     FIncludedEvents: TArray<TwbIncludedEvent>;
     FGameParameters: TArray<TwbGameParameter>;
@@ -109,6 +108,12 @@ type
     FExternalSources: TArray<TwbExternalSource>;
 
     procedure BuildSoundBank(const aSoundBank: TJSONObject; var aCount: Integer; const aBankFilename: string);
+  end;
+
+  TwbPendingNode = record
+    NodeType: TwbWwiseNodeType;
+    Node: TwbWwiseObject;
+    BankFilename: string;
   end;
 
   TwbSoundBankArray = class(TInterfacedObject, IwbSoundBankArray)
@@ -140,10 +145,12 @@ type
     var FGuidMap: TDictionary<TwbWwiseNodeType, TDictionary<TGUID, TwbWwiseObject>>;
     var FSoundBanks: TArray<TwbSoundBank>;
     var FOwned: TObjectDictionary<TwbWwiseObject, Boolean>;
+    var FPending: TList<TwbPendingNode>;
 
     procedure BuildIndexFile(const aFileName, aModuleName: string);
     procedure BuildIndexFiles(const aFileNames: TStringList; const aModuleName: string = '');
     procedure BuildSoundBanks(const aJSON: TJSONObject; const aModuleName: string; var aCount: Integer);
+    procedure IndexNode(const aNodeType: TwbWwiseNodeType; const aObject: TwbWwiseObject; const aBankFileName: string);
 
   public
     {---TwbSoundBankArray---}
@@ -174,12 +181,14 @@ begin
   for var I := 0 to Pred(aSwitchGroup.Count) do
   begin
     var lObject := aSwitchGroup[I];
+    var lGUID := StringToGUID(lObject.S['GUID']);
+    var lName := lObject.S['Name'];
     FSwitches[I] := TwbSwitch.Create;
 
     with FSwitches[I] do
     begin
-      FGUID := StringToGUID(lObject.S['GUID']);
-      FName := lObject.S['Name'];
+      FGUID := lGUID;
+      FName := lName;
       FParent := Self;
       FRoot := FParent.FRoot;
 
@@ -203,12 +212,14 @@ begin
   for var I := 0 to Pred(aStateGroup.Count) do
   begin
     var lObject := aStateGroup[I];
+    var lGUID := StringToGUID(lObject.S['GUID']);
+    var lName := lObject.S['Name'];
     FStates[I] := TwbState.Create;
 
     with FStates[I] do
     begin
-      FGUID := StringToGUID(lObject.S['GUID']);
-      FName := lObject.S['Name'];
+      FGUID := lGUID;
+      FName := lName;
       FParent := Self;
       FRoot := FParent.FRoot;
 
@@ -247,12 +258,14 @@ begin
     for var I := 0 to Pred(lArrayCount) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FActionSetStates[I] := TwbActionSetState.Create;
 
       with FActionSetStates[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -273,12 +286,14 @@ begin
     for var I := 0 to Pred(lArrayCount) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FActionPostEvents[I] := TwbActionPostEvent.Create;
 
       with FActionPostEvents[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -299,12 +314,14 @@ begin
     for var I := 0 to Pred(lArrayCount) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FAuxBusSends[I] := TwbAuxBusSend.Create;
 
       with FAuxBusSends[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -329,12 +346,14 @@ begin
     for var I := 0 to Pred(lArray.Count) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FIncludedEvents[I] := TwbIncludedEvent.Create;
 
       with FIncludedEvents[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -356,12 +375,14 @@ begin
     for var I := 0 to Pred(lArray.Count) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FGameParameters[I] := TwbGameParameter.Create;
 
       with FGameParameters[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -381,12 +402,14 @@ begin
     for var I := 0 to Pred(lArray.Count) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FStateGroups[I] := TwbStateGroup.Create;
 
       with FStateGroups[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -408,12 +431,14 @@ begin
     for var I := 0 to Pred(lArray.Count) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FSwitchGroups[I] := TwbSwitchGroup.Create;
 
       with FSwitchGroups[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -435,12 +460,14 @@ begin
     for var I := 0 to Pred(lArray.Count) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FIncludedAuxBusses[I] := TwbIncludedAuxBuss.Create;
 
       with FIncludedAuxBusses[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -460,12 +487,14 @@ begin
     for var I := 0 to Pred(lArray.Count) do
     begin
       var lObject := lArray[I];
+      var lGUID := StringToGUID(lObject.S['GUID']);
+      var lName := lObject.S['Name'];
       FExternalSources[I] := TwbExternalSource.Create;
 
       with FExternalSources[I] do
       begin
-        FGUID := StringToGUID(lObject.S['GUID']);
-        FName := lObject.S['Name'];
+        FGUID := lGUID;
+        FName := lName;
         FParent := Self;
         FRoot := FParent.FRoot;
 
@@ -564,17 +593,33 @@ begin
       Exit;
     end;
 
+    var lSoundBankCount := Length(FSoundBanks);
+    FPending := TList<TwbPendingNode>.Create;
     var lJSON := TJSONObject.Create;
     try
-      var lCount := 0;
+      try
+        var lCount := 0;
 
-      lJSON.FromUtf8JSON(PByte(@lFile[0]), Length(lFile));
+        lJSON.FromUtf8JSON(PByte(@lFile[0]), Length(lFile));
 
-      BuildSoundBanks(lJSON, aModuleName, lCount);
+        BuildSoundBanks(lJSON, aModuleName, lCount);
 
-      wbProgress('[%s] Indexed %d GUIDs', [aModuleName, lCount]);
+        for var lNode in FPending do
+          IndexNode(lNode.NodeType, lNode.Node, lNode.BankFilename);
+
+        wbProgress('[%s] Indexed %d GUIDs', [aModuleName, lCount]);
+      except
+        on E: Exception do
+        begin
+          for var lNode in FPending do
+            lNode.Node.Free;
+          SetLength(FSoundBanks, lSoundBankCount);
+          wbProgress('[%s] Skipped %s: %s', [aModuleName, aFileName, E.Message]);
+        end;
+      end;
     finally
       lJSON.Free;
+      FreeAndNil(FPending);
     end;
   end;
 end;
@@ -620,6 +665,8 @@ begin
     for var I := 0 to Pred(lSoundBanksCount) do
     begin
       var lSoundBank := lSoundBanks[I];
+      var lGUID := StringToGUID(lSoundBank.S['GUID']);
+      var lName := lSoundBank.S['ShortName'];
       SetLength(FSoundBanks, Succ(Length(FSoundBanks)));
 
       var lIdx := High(FSoundBanks);
@@ -628,8 +675,8 @@ begin
       with FSoundBanks[lIdx] do
       begin
         FFilename := aModuleName;
-        FGUID := StringToGUID(lSoundBank.S['GUID']);
-        FName := lSoundBank.S['ShortName'];
+        FGUID := lGUID;
+        FName := lName;
         FRoot := Self;
 
         RegisterNode(wntSoundBank, FSoundBanks[lIdx], FFilename);
@@ -700,25 +747,29 @@ begin
     aList.Sorted := True;
     aList.Duplicates := dupIgnore;
 
-    var lParentObject: TwbWwiseObject;
-    if FGuidMap[wntSwitchGroup].TryGetValue(aParentGUID, lParentObject) then
-    begin
-      var lWalk := lParentObject;
-      while not (lWalk is TwbSoundBank) do
-        lWalk := lWalk.FParent;
-
-      var lBank := TwbSoundBank(lWalk);
-
-      if lParentObject is TwbSwitchGroup then
-      begin
-        var lGroup := TwbSwitchGroup(lParentObject);
-        
-        for var I := 0 to Pred(Length(lGroup.FSwitches)) do
-        begin
-          aList.Add(Format('%s [%s]', [lGroup.FSwitches[I].DisplayName, lBank.FFilename]));
-        end;
-      end;
+    var lParentType: TwbWwiseNodeType;
+    case aChildType of
+      wntSwitch: lParentType := wntSwitchGroup;
+      wntState:  lParentType := wntStateGroup;
+    else
+      Exit;
     end;
+
+    var lParentObject: TwbWwiseObject;
+    if not FGuidMap[lParentType].TryGetValue(aParentGUID, lParentObject) then
+      Exit;
+
+    var lWalk := lParentObject;
+    while not (lWalk is TwbSoundBank) do
+      lWalk := lWalk.FParent;
+    var lBankFilename := TwbSoundBank(lWalk).FFilename;
+
+    if lParentObject is TwbSwitchGroup then
+      for var lSwitch in TwbSwitchGroup(lParentObject).FSwitches do
+        aList.Add(Format('%s [%s]', [lSwitch.DisplayName, lBankFilename]))
+    else if lParentObject is TwbStateGroup then
+      for var lState in TwbStateGroup(lParentObject).FStates do
+        aList.Add(Format('%s [%s]', [lState.DisplayName, lBankFilename]));
   finally
     aList.EndUpdate;
   end;
@@ -751,9 +802,9 @@ begin
   end;
 end;
 
-procedure TwbSoundBankArray.RegisterNode(const aNodeType     : TwbWwiseNodeType;
-                                         const aObject       : TwbWwiseObject;
-                                         const aBankFilename : string);
+procedure TwbSoundBankArray.IndexNode(const aNodeType     : TwbWwiseNodeType;
+                                      const aObject       : TwbWwiseObject;
+                                      const aBankFilename : string);
 begin
   var lDisplayString := Format('%s [%s]', [aObject.DisplayName, aBankFileName]);
   FDisplayMap[aNodeType].TryAdd(lDisplayString, aObject.FGUID);
@@ -780,24 +831,22 @@ begin
   lTargetList.Add(lDisplayString);
 end;
 
+procedure TwbSoundBankArray.RegisterNode(const aNodeType     : TwbWwiseNodeType;
+                                         const aObject       : TwbWwiseObject;
+                                         const aBankFilename : string);
+begin
+  var lNode: TwbPendingNode;
+  lNode.NodeType := aNodeType;
+  lNode.Node := aObject;
+  lNode.BankFilename := aBankFilename;
+  FPending.Add(lNode);
+end;
+
 function TwbSoundBankArray.TryLookupDisplay(const aNodeType     : TwbWwiseNodeType;
                                             const aDisplayStr   : string;
                                               var aGUID: TGUID) : Boolean;
 begin
-  Result := False;
-
-  if FDisplayMap[aNodeType].TryGetValue(aDisplayStr, aGUID) then
-    Exit(True);
-
-  var lString1: string;
-  for lString1 in FDisplayMap[aNodeType].Keys do
-  begin
-    if SameText (lString1, aDisplayStr) then
-    begin
-      aGUID := FDisplayMap[aNodeType][lString1];
-      Exit(True);
-    end;
-  end;
+  Result := FDisplayMap[aNodeType].TryGetValue(aDisplayStr, aGUID);
 end;
 
 function TwbSoundBankArray.TryLookupGUID(const aNodeType : TwbWwiseNodeType;
