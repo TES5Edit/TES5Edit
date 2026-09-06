@@ -1650,99 +1650,133 @@ begin
   Result := StrToIntDef(aString, 0);
 end;
 
-function wbLGDIFiltersLinksTo(const aElement: IwbElement): IwbElement;
+function wbLGDIFilterStarSlotMods(const aElement: IwbElement; out aMods: IwbContainerElementRef; out aFirst, aCount: Integer): Boolean;
 var
-  LegendaryIndex : Integer;
-  Filter         : IwbContainerElementRef;
-  MainRecord     : IwbMainRecord;
-  LegendaryMods  : IwbContainerElementRef;
-  LegendaryMod   : IwbContainerElementRef;
-  BaseStarSlot   : Integer;
-  ModIndex       : Integer;
-  ModBase        : IwbContainerElementRef;
+  Filter       : IwbContainerElementRef;
+  MainRecord   : IwbMainRecord;
+  LegendaryMod : IwbContainerElementRef;
+  StarSlot     : Variant;
 begin
-  Result := nil;
+  Result := False;
+  aFirst := -1;
+  aCount := 0;
+
   if not Assigned(aElement) then
     Exit;
 
-  Filter := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Filter) then
+  if not Supports(aElement.Container, IwbContainerElementRef, Filter) then
     Exit;
 
   MainRecord := aElement.ContainingMainRecord;
   if not Assigned(MainRecord) then
     Exit;
 
-  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
+  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, aMods) then
     Exit;
 
-  BaseStarSlot := Filter.Elements[0].NativeValue;
+  StarSlot := Filter.Elements[0].NativeValue;
+  for var i := 0 to Pred(aMods.ElementCount) do
+    if Supports(aMods.Elements[i], IwbContainerElementRef, LegendaryMod) and (LegendaryMod[0].NativeValue = StarSlot) then begin
+      if aFirst < 0 then
+        aFirst := i;
+      Inc(aCount);
+    end else if aFirst >= 0 then
+      Break;
+
+  Result := aFirst >= 0;
+end;
+
+function wbLGDIFiltersLinksTo(const aElement: IwbElement): IwbElement;
+var
+  Mods         : IwbContainerElementRef;
+  SlotFirst    : Integer;
+  SlotCount    : Integer;
+  ModIndex     : Variant;
+  LegendaryMod : IwbContainerElementRef;
+begin
+  Result := nil;
+  if not wbLGDIFilterStarSlotMods(aElement, Mods, SlotFirst, SlotCount) then
+    Exit;
+
   ModIndex := aElement.NativeValue;
-  LegendaryIndex := -1;
-
-  for var i := 0 to Pred(LegendaryMods.ElementCount) do
-  begin
-    LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
-    if LegendaryMod[0].NativeValue = BaseStarSlot then
-    begin
-       LegendaryIndex := i + ModIndex;
-       Break;
-    end;
-  end;
-
-  if LegendaryIndex = -1 then
+  if not VarIsOrdinal(ModIndex) or (ModIndex < 0) or (ModIndex >= SlotCount) then
     Exit;
 
-  if not Supports(LegendaryMods.Elements[LegendaryIndex], IwbContainerElementRef, ModBase) then
-    Exit;
-
-  Result := ModBase.Elements[1].LinksTo;
+  if Supports(Mods.Elements[SlotFirst + Integer(ModIndex)], IwbContainerElementRef, LegendaryMod) then
+    Result := LegendaryMod[1].LinksTo;
 end;
 
 function wbLGDIFiltersToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
-  LegendaryIndex : Integer;
-  Filter         : IwbContainerElementRef;
-  MainRecord     : IwbMainRecord;
-  LegendaryMods  : IwbContainerElementRef;
-  LegendaryMod   : IwbContainerElementRef;
-  BaseStarSlot   : Integer;
-  ModIndex       : Integer;
+  Mods         : IwbContainerElementRef;
+  SlotFirst    : Integer;
+  SlotCount    : Integer;
+  LegendaryMod : IwbContainerElementRef;
+  ModName      : string;
 begin
-  Result := 'Unknown Ref';
-  if not Assigned(aElement) then
-    Exit;
-
-  Filter := aElement.Container as IwbContainerElementRef;
-  if not Assigned(Filter) then
-    Exit;
-
-  MainRecord := aElement.ContainingMainRecord;
-  if not Assigned(MainRecord) then
-    Exit;
-
-  if not Supports(MainRecord.ElementBySignature[BNAM], IwbContainerElementRef, LegendaryMods) then
-    Exit;
-
-  BaseStarSlot := Filter.Elements[0].NativeValue;
-  ModIndex := aElement.NativeValue;
-  LegendaryIndex := -1;
-
-  for var i := 0 to Pred(LegendaryMods.ElementCount) do
-  begin
-    LegendaryMod := LegendaryMods.Elements[i] as IwbContainerElementRef;
-    if LegendaryMod[0].NativeValue = BaseStarSlot then
-    begin
-       LegendaryIndex := i + ModIndex;
-       Break;
+  Result := '';
+  case aType of
+    ctToStr, ctToSummary: begin
+      Result := aInt.ToString;
+      if aType = ctToStr then
+        Result := Result + ' <Warning: Could not resolve mod index>';
     end;
+    ctToEditValue: Result := aInt.ToString;
+    ctToSortKey: Exit(IntToHex64(aInt, 8));
+    ctCheck: Result := '<Warning: Could not resolve mod index>';
+    ctEditType: Exit('ComboBox');
+    ctEditInfo: ;
+  else
+    Exit;
   end;
-  if LegendaryIndex = -1 then
+
+  if not wbLGDIFilterStarSlotMods(aElement, Mods, SlotFirst, SlotCount) then
     Exit;
 
-  LegendaryMod := LegendaryMods.Elements[LegendaryIndex] as IwbContainerElementRef;
+  if aType = ctEditInfo then
+    with TwbFastStringListIC.Create do try
+      for var i := 0 to Pred(SlotCount) do
+        if Supports(Mods.Elements[SlotFirst + i], IwbContainerElementRef, LegendaryMod) then begin
+          var lIndexString := IntToStr(i);
+          while Length(lIndexString) < 2 do
+            lIndexString := '0' + lIndexString;
+          Add(lIndexString + ' ' + LegendaryMod[1].EditValue);
+        end;
+      Sort;
+      Exit(CommaText);
+    finally
+      Free;
+    end;
 
-  Result := LegendaryMod[1].EditValue;
+  if (aInt < 0) or (aInt >= SlotCount) then
+    Exit;
+
+  if not Supports(Mods.Elements[SlotFirst + Integer(aInt)], IwbContainerElementRef, LegendaryMod) then
+    Exit;
+
+  ModName := LegendaryMod[1].EditValue;
+  if ModName = '' then
+    Exit;
+
+  case aType of
+    ctCheck: Exit('');
+    ctToSummary: begin
+      var lOMOD: IwbMainRecord;
+      if Supports(LegendaryMod[1].LinksTo, IwbMainRecord, lOMOD) then begin
+        ModName := lOMOD.EditorID;
+        if ModName = '' then
+          ModName := lOMOD.ShortName;
+        Exit(ModName);
+      end else
+        Exit('');
+    end;
+  else
+    Result := IntToStr(aInt);
+    while Length(Result) < 2 do
+      Result := '0' + Result;
+  end;
+
+  Result := Result + ' ' + ModName;
 end;
 
 {function wbXRTIFiltersToStr(const aElement: IwbElement): IwbElement;
@@ -15868,13 +15902,13 @@ begin
 
     wbArray(CNAM, 'Include Filters', wbStruct('Include Filter', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
     ])),
 
     wbArray(DNAM, 'Exclude Filters', wbStruct('Exclude Filter', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
     ])),
     wbFormID(ENAM, 'Legendary Template List')
