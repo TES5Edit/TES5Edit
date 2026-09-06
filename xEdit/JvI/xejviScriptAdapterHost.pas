@@ -634,7 +634,7 @@ var
   Nodes: TNodeArray;
   i: Integer;
 begin
-  if not (V2O(Args.Values[0]) is TStrings) or not (V2O(Args.Values[0]) is TStringList) then begin
+  if not (V2O(Args.Values[0]) is TStrings) then begin
     JvInterpreterErrorN(ieDirectInvalidArgument, 0, 'Expected a TStrings or TStringsList'); // or ieNotEnoughParams, ieIncompatibleTypes or others.
   end;
   
