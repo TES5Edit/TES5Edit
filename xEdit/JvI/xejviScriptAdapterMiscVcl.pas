@@ -209,12 +209,12 @@ end;
 
 procedure TCheckListBox_Read_ItemEnabled(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := TCheckListBox(Args.Obj).State[Args.Values[0]];
+  Value := TCheckListBox(Args.Obj).ItemEnabled[Args.Values[0]];
 end;
 
 procedure TCheckListBox_Write_ItemEnabled(const Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TCheckListBox(Args.Obj).State[Args.Values[0]] := Value;
+  TCheckListBox(Args.Obj).ItemEnabled[Args.Values[0]] := Value;
 end;
 
 procedure TCheckListBox_Read_State(var Value: Variant; Args: TJvInterpreterArgs);

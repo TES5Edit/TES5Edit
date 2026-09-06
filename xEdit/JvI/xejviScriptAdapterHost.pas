@@ -180,7 +180,7 @@ end;
 
 procedure _FileByIndex(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  if VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(frmMain.Files)) then
+  if VarIsNumeric(Args.Values[0]) and (Args.Values[0] >= 0) and (Args.Values[0] < Length(frmMain.Files)) then
     Value := frmMain.Files[Integer(Args.Values[0])]
   else
     JvInterpreterError(ieDirectInvalidArgument, 0);
@@ -257,7 +257,9 @@ begin
       if VarIsStr(Args.Values[1]) then
         lFormID := TwbFormID.FromStr(string(Args.Values[1]))
       else if VarIsNumeric(Args.Values[1]) then
-        lFormID := TwbFormID.FromVar(Args.Values[1]);
+        lFormID := TwbFormID.FromVar(Args.Values[1])
+      else
+        JvInterpreterError(ieTypeMistmatch, -1);
 
       if lFile.IsLight then
         lFormID.ObjectID := lFormID.ObjectID and $FFF
@@ -632,7 +634,7 @@ var
   Nodes: TNodeArray;
   i: Integer;
 begin
-  if not (V2O(Args.Values[0]) is TStrings) or not (V2O(Args.Values[0]) is TStringList) then begin
+  if not (V2O(Args.Values[0]) is TStrings) then begin
     JvInterpreterErrorN(ieDirectInvalidArgument, 0, 'Expected a TStrings or TStringsList'); // or ieNotEnoughParams, ieIncompatibleTypes or others.
   end;
   

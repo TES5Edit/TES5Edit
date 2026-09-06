@@ -7560,9 +7560,9 @@ begin
   SelfRef := Self as IwbContainerElementRef;
 
   DoInit(True);
-  if not Assigned(cntElements) or (aIndex>=Length(cntElements)) then begin // Using the wrong contained array at the time
+  if not Assigned(cntElements) or (aIndex < 0) or (aIndex >= Length(cntElements)) then begin // Using the wrong contained array at the time
     if wbMoreInfoForIndex and (DebugHook <> 0) and wbHasProgressCallback then
-      wbProgressCallback('Debugger: [' + (Self as IwbElement).Path + '] Index ' + IntToStr(aIndex) + ' greater than max ' +
+      wbProgressCallback('Debugger: [' + (Self as IwbElement).Path + '] Index ' + IntToStr(aIndex) + ' outside 0..' +
         IntToStr(Length(cntElements)-1));
     Result := nil
   end else begin
@@ -12288,6 +12288,9 @@ end;
 
 function TwbMainRecord.GetOverride(aIndex: Integer): IwbMainRecord;
 begin
+  if (aIndex < 0) or (aIndex >= Length(mrOverrides)) then
+    Exit(nil);
+
   if not (mrsOverridesSorted in mrStates) then begin
     wbMergeSortPtr(@mrOverrides[0], Length(mrOverrides), CompareOverrides);
     Include(mrStates, mrsOverridesSorted);
@@ -12384,7 +12387,10 @@ begin
 {$ENDIF}
   if mrsReferencedByUnsorted in mrStates then
     SortReferencedBy;
-  Result := mrReferencedBy[aIndex];
+  if (aIndex < 0) or (aIndex >= Length(mrReferencedBy)) then
+    Result := nil
+  else
+    Result := mrReferencedBy[aIndex];
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   finally
     if wbBuildingRefsParallel then
@@ -12423,6 +12429,8 @@ end;
 function TwbMainRecord.GetReference(aIndex: Integer): IwbMainRecord;
 begin
   Result := nil;
+  if (aIndex < 0) or (aIndex >= Length(mrReferences)) then
+    Exit;
   var _File := GetFile;
   if Assigned(_File) then
     Result := _File.RecordByFormID[mrReferences[aIndex], True, GetMastersUpdated];

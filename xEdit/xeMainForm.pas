@@ -7904,8 +7904,14 @@ begin
     Exit;
 
   // check for the Silent mode keyword
-  p := Pos('Mode:', aScript);
-  bShowMessages := not ContainsText(Copy(aScript, p, PosEx(#10, aScript, p) - p), 'Silent');
+  bShowMessages := True;
+  p := Pos('mode:', LowerCase(aScript));
+  if p > 0 then begin
+    var e := PosEx(#10, aScript, p);
+    if e = 0 then
+      e := Succ(Length(aScript));
+    bShowMessages := not ContainsText(Copy(aScript, p, e - p), 'Silent');
+  end;
 
   Count := 0;
   ScriptProcessElements := [etMainRecord];
@@ -21178,8 +21184,18 @@ begin
           LoaderProgress('...resources cache finished building');
         end;
 
-        if wbGameMode in [gmSF1] then
-          wbBuildSoundBankCache(ltLoadList);
+        if wbGameMode in [gmSF1] then begin
+          var lModules := TStringList.Create;
+          try
+            for var lFile in frmMain.Files do
+              if not (fsIsHardcoded in lFile.FileStates) then
+                lModules.Add(lFile.FileName);
+            lModules.AddStrings(ltLoadList);
+            wbBuildSoundBankCache(lModules);
+          finally
+            lModules.Free;
+          end;
+        end;
 
         wbResourcesLoaded;
 

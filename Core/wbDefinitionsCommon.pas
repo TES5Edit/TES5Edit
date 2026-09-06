@@ -1537,6 +1537,7 @@ begin
     lContainerElementRef.Add('DATA', True);
     lContainerElementRef.RemoveElement('Perk Conditions');
     lContainerElementRef.RemoveElement('Entry Point Function Parameters');
+    lContainerElementRef.RemoveElement('Function Parameters');
 
     if not (aNewValue = 2) then
       Exit;
@@ -1576,9 +1577,17 @@ begin
   if not Supports(aElement.Container, IwbContainerElementRef, lContainer) then
     Exit;
 
-  var lDataElement := lContainer.ElementBySortOrder[8]; //'Type Specific Action'
-  if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
-    lDataElement.Remove;
+  var lStructDef: IwbSubRecordStructDef;
+  if not Supports(lContainer.Def, IwbSubRecordStructDef, lStructDef) then
+    Exit;
+
+  for var lIndex := 0 to Pred(lStructDef.MemberCount) do
+    if SameText(lStructDef.Members[lIndex].Name, 'Type Specific Action') then begin
+      var lDataElement := lContainer.ElementBySortOrder[lIndex];
+      if Assigned(lDataElement) and (lDataElement.Name <> aElement.Value) then
+        lDataElement.Remove;
+      Exit;
+    end;
 end;
 
 procedure wbScriptFragmentsQuestScriptNameAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
@@ -5438,14 +5447,57 @@ begin
   aValue := '' + '(' + X + ', ' + Y + ', ' + Z + ')';
 end;
 
+function wbWwiseSwitchGroupByDisplay(const aElement: IwbElement; const aDisplay: string; out aGUID: TGUID): Boolean;
+var
+  lMasters, lGroups : TStringList;
+  lName             : string;
+  lPos, lMatches    : Integer;
+  lCandidate        : TGUID;
+  lFile             : IwbFile;
+begin
+  Result := wbSoundBankCache.TryLookupDisplay(wntSwitchGroup, aDisplay, aGUID);
+  if Result then
+    Exit;
+
+  lPos := Pos(' [', aDisplay);
+  if lPos > 0 then
+    lName := Copy(aDisplay, 1, lPos - 1)
+  else
+    lName := aDisplay;
+
+  lMasters := TStringList.Create;
+  lGroups := TStringList.Create;
+  try
+    lFile := aElement._File;
+    if Assigned(lFile) then begin
+      lFile.GetMasters(lMasters);
+      lMasters.Add(lFile.FileName);
+    end;
+
+    wbSoundBankCache.GetStrings(wntSwitchGroup, lMasters, lGroups);
+
+    lMatches := 0;
+    for var I := 0 to Pred(lGroups.Count) do
+      if StartsText(lName + ' [', lGroups[I]) and wbSoundBankCache.TryLookupDisplay(wntSwitchGroup, lGroups[I], lCandidate) then
+      begin
+        Inc(lMatches);
+        aGUID := lCandidate;
+      end;
+
+    Result := lMatches = 1;
+  finally
+    lGroups.Free;
+    lMasters.Free;
+  end;
+end;
+
 procedure wbWwiseGuidToStr(var aValue:string; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement; aType: TwbCallbackType);
 var
-  lBool: Boolean;
   lIndex, lPos: Integer;
   lGUID: TGUID;
   lNodeType: TwbWwiseNodeType;
-  lList1, lList2, lList3: TStringList;
-  lString1, lString2, lString3: string;
+  lList1, lList2: TStringList;
+  lString1, lString2: string;
   lDef: IwbNamedDef;
   lElement: IwbElement;
   lFile: IwbFile;
@@ -5545,45 +5597,8 @@ begin
           end;
 
           if lString2 <> '' then
-          begin
-            lPos := Pos(' [', lString2);
-            if lPos > 0 then
-              lString3 := Copy(lString2, 1, lPos - 1)
-            else
-              lString3 := lString2;
-
-            lList2 := TStringList.Create;
-            lList3 := TStringList.Create;
-            try
-              lFile := aElement._File;
-              if Assigned(lFile) then begin
-                lFile.GetMasters(lList2);
-                lList2.Add(lFile.FileName);
-              end;
-
-              wbSoundBankCache.GetStrings(wntSwitchGroup, lList2, lList3);
-
-              lBool := False;
-              for lIndex := 0 to Pred(lList3.Count) do
-              begin
-                if StartsText(lString3 + ' [', lList3[lIndex]) then
-                begin
-                  if wbSoundBankCache.TryLookupDisplay(wntSwitchGroup, lList3[lIndex], lGUID) then
-                  begin
-                    lBool := True;
-                    Break;
-                  end;
-                end;
-              end;
-
-              if lBool then
-                wbSoundBankCache.GetChildStrings(lGUID, wntSwitch, lList1);
-
-            finally
-              lList2.Free;
-              lList3.Free;
-            end;
-          end;
+            if wbWwiseSwitchGroupByDisplay(aElement, lString2, lGUID) then
+              wbSoundBankCache.GetChildStrings(lGUID, wntSwitch, lList1);
         end
         else
         begin
@@ -5633,46 +5648,8 @@ begin
             lElement := aElement.Container.ElementByPath[lParentNodePath];
 
           if Assigned(lElement) and (lElement.EditValue <> '') then
-          begin
-            lString1 := lElement.EditValue;
-            lPos := Pos(' [', lString1);
-            if lPos > 0 then
-            begin
-              lString2 := Copy(lString1, 1, lPos - 1);
-
-              lList2 := TStringList.Create;
-              lList3 := TStringList.Create;
-              try
-                lFile := aElement._File;
-                if Assigned(lFile) then begin
-                  lFile.GetMasters(lList2);
-                  lList2.Add(lFile.FileName);
-                end;
-
-                wbSoundBankCache.GetStrings(wntSwitchGroup, lList2, lList3);
-
-                lBool := False;
-                for lIndex := 0 to Pred(lList3.Count) do
-                begin
-                  if StartsText(lString2 + ' [', lList3[lIndex]) then
-                  begin
-                    if wbSoundBankCache.TryLookupDisplay(wntSwitchGroup, lList3[lIndex], lGUID) then
-                    begin
-                      lBool := True;
-                      Break;
-                    end;
-                  end;
-                end;
-
-                if lBool then
-                  wbSoundBankCache.GetChildStrings(lGUID, wntSwitch, lList1);
-
-              finally
-                lList2.Free;
-                lList3.Free;
-              end;
-            end;
-          end;
+            if wbWwiseSwitchGroupByDisplay(aElement, lElement.EditValue, lGUID) then
+              wbSoundBankCache.GetChildStrings(lGUID, wntSwitch, lList1);
         end
         else
         begin
