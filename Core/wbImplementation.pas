@@ -55,6 +55,9 @@ function wbMastersForFile(const aFileName    : string;
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
+
+function wbCreateGameDef: IwbGameDef;
+function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 procedure wbFileForceClosed;
 
 function StartsWith(const s, t: string): Boolean;
@@ -756,6 +759,7 @@ type
     flInjectedRecords        : array of IwbMainRecord;
 
     flModule                 : PwbModuleInfo;
+    [weak] flContext         : IwbGameContext;
 
     flCachedEditInfos        : TwbCachedEditInfos;
     flGeneration             : Integer;
@@ -776,6 +780,7 @@ type
 
     function GetElementType: TwbElementType; override;
     function GetFile: IwbFile; override;
+    function GetContext: IwbGameContext;
     function GetReferenceFile: IwbFile; override;
     function GetName: string; override;
     function GetBaseName: string; override;
@@ -968,6 +973,33 @@ type
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
+  end;
+
+  TwbGameDef = class(TInterfacedObject, IwbGameDef)
+  protected
+    function GetGameMode: TwbGameMode;
+    function GetGameName: string;
+    function GetGameExeName: string;
+    function GetGameMasterEsm: string;
+    function GetGameName2: string;
+    function GetGameNameReg: string;
+    function GetGameSteamID: string;
+    function GetAppName: string;
+    function GetArchiveExtension: string;
+    function GetCapabilities: TwbGameCapabilities;
+  end;
+
+  TwbGameContext = class(TInterfacedObject, IwbGameContext)
+  protected
+    geGameDef : IwbGameDef;
+
+    function GetGameDef: IwbGameDef;
+    function GetDataPath: string;
+    function GetFileCount: Integer;
+    function GetFile(aIndex: Integer): IwbFile;
+    function GetContainerHandler: IwbContainerHandler;
+  public
+    constructor Create(const aGameDef: IwbGameDef);
   end;
 
   TwbDataContainerFlag = (
@@ -3267,6 +3299,7 @@ constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; const a
 var
   s: string;
 begin
+  flContext := wbCurrentContext;
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Invalid;
@@ -3378,6 +3411,7 @@ constructor TwbFile.CreateNew(const aFileName: string; aLoadOrder: Integer; aIsL
 var
   Header : IwbMainRecord;
 begin
+  flContext := wbCurrentContext;
   Assert(not (aIsLight and aIsMedium));
 
   Assert((not aIsLight) or wbIsLightSupported);
@@ -3461,6 +3495,7 @@ var
   Header : IwbMainRecord;
   i      : Integer;
 begin
+  flContext := wbCurrentContext;
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
   Include(flStates, fsLightCompatible);
@@ -4228,6 +4263,11 @@ end;
 function TwbFile.GetFile: IwbFile;
 begin
   Result := Self;
+end;
+
+function TwbFile.GetContext: IwbGameContext;
+begin
+  Result := flContext;
 end;
 
 function TwbFile.GetLoadOrderFileID: TwbFileID;
@@ -25848,6 +25888,7 @@ const
 
 constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
 begin
+  flContext := wbCurrentContext;
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -26306,6 +26347,105 @@ end;
 function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
 begin
   Result := TwbMultipleElements.Create(aElements);
+end;
+
+function TwbGameDef.GetGameMode: TwbGameMode;
+begin
+  Result := wbGameMode;
+end;
+
+function TwbGameDef.GetGameName: string;
+begin
+  Result := wbGameName;
+end;
+
+function TwbGameDef.GetGameExeName: string;
+begin
+  Result := wbGameExeName;
+end;
+
+function TwbGameDef.GetGameMasterEsm: string;
+begin
+  Result := wbGameMasterEsm;
+end;
+
+function TwbGameDef.GetGameName2: string;
+begin
+  Result := wbGameName2;
+end;
+
+function TwbGameDef.GetGameNameReg: string;
+begin
+  Result := wbGameNameReg;
+end;
+
+function TwbGameDef.GetGameSteamID: string;
+begin
+  Result := wbGameSteamID;
+end;
+
+function TwbGameDef.GetAppName: string;
+begin
+  Result := wbAppName;
+end;
+
+function TwbGameDef.GetArchiveExtension: string;
+begin
+  Result := wbArchiveExtension;
+end;
+
+function TwbGameDef.GetCapabilities: TwbGameCapabilities;
+begin
+  Result := [];
+  if wbIsLightSupported then
+    Include(Result, gcLightPlugins);
+  if wbIsMediumSupported then
+    Include(Result, gcMediumPlugins);
+  if wbIsBlueprintSupported then
+    Include(Result, gcBlueprintPlugins);
+  if wbIsUpdateSupported then
+    Include(Result, gcUpdatePlugins);
+end;
+
+constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
+begin
+  inherited Create;
+  geGameDef := aGameDef;
+end;
+
+function TwbGameContext.GetGameDef: IwbGameDef;
+begin
+  Result := geGameDef;
+end;
+
+function TwbGameContext.GetDataPath: string;
+begin
+  Result := wbDataPath;
+end;
+
+function TwbGameContext.GetFileCount: Integer;
+begin
+  Result := Length(Files);
+end;
+
+function TwbGameContext.GetFile(aIndex: Integer): IwbFile;
+begin
+  Result := Files[aIndex];
+end;
+
+function TwbGameContext.GetContainerHandler: IwbContainerHandler;
+begin
+  Result := wbContainerHandler;
+end;
+
+function wbCreateGameDef: IwbGameDef;
+begin
+  Result := TwbGameDef.Create;
+end;
+
+function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
+begin
+  Result := TwbGameContext.Create(aGameDef);
 end;
 
 initialization

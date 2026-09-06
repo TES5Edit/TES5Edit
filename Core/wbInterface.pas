@@ -753,6 +753,20 @@ const
   wbAssignAdd = High(Integer);
 
 type
+  //keep ordered by release date
+  TwbGameMode   = (gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
+  TwbGameModes  = set of TwbGameMode;
+
+  TwbGameCapability = (gcLightPlugins, gcMediumPlugins, gcBlueprintPlugins, gcUpdatePlugins);
+  TwbGameCapabilities = set of TwbGameCapability;
+
+  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
+                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
+                    tmCheckForErrors, tmCheckForITM, tmCheckForDR, tmGenerateSEQ);
+  TwbToolSource = (tsPlugins, tsSaves);
+  TwbSetOfMode  = set of TwbToolMode;
+  TwbSetOfSource  = set of TwbToolSource;
+
   IwbDef = interface;
 
   TwbDefs = array of IwbDef;
@@ -858,6 +872,8 @@ type
   end;
 
   IwbContainer = interface;
+  IwbGameDef = interface;
+  IwbGameContext = interface;
   IwbFile = interface;
   IwbNamedDef = interface;
   IwbValueDef = interface;
@@ -1670,6 +1686,7 @@ type
     function GetEncoding(aTranslatable: Boolean): TEncoding;
 
     function GetCompareToFile: IwbFile;
+    function GetContext: IwbGameContext;
 
     procedure RemoveIdenticalDeltaFast;
 
@@ -1688,6 +1705,9 @@ type
 
     property UnsavedSince: TDateTime
       read GetUnsavedSince;
+
+    property Context: IwbGameContext
+      read GetContext;
 
     function HasMaster(const aFileName: string): Boolean;
     property Masters[aIndex: Integer; aNew: Boolean]: IwbFile
@@ -3351,6 +3371,61 @@ type
     function ResolveFileHash(const aHash: Int64): string;
   end;
 
+  IwbGameDef = interface(IwbInterface)
+    ['{A42F48ED-EAF9-4F5A-9CEE-13E73B96E2DF}']
+    function GetGameMode: TwbGameMode;
+    function GetGameName: string;
+    function GetGameExeName: string;
+    function GetGameMasterEsm: string;
+    function GetGameName2: string;
+    function GetGameNameReg: string;
+    function GetGameSteamID: string;
+    function GetAppName: string;
+    function GetArchiveExtension: string;
+    function GetCapabilities: TwbGameCapabilities;
+
+    property GameMode: TwbGameMode
+      read GetGameMode;
+    property GameName: string
+      read GetGameName;
+    property GameExeName: string
+      read GetGameExeName;
+    property GameMasterEsm: string
+      read GetGameMasterEsm;
+    property GameName2: string
+      read GetGameName2;
+    property GameNameReg: string
+      read GetGameNameReg;
+    property GameSteamID: string
+      read GetGameSteamID;
+    property AppName: string
+      read GetAppName;
+    property ArchiveExtension: string
+      read GetArchiveExtension;
+    property Capabilities: TwbGameCapabilities
+      read GetCapabilities;
+  end;
+
+  IwbGameContext = interface(IwbInterface)
+    ['{BA650F2A-0ADF-4157-8D8D-63D0A49F3660}']
+    function GetGameDef: IwbGameDef;
+    function GetDataPath: string;
+    function GetFileCount: Integer;
+    function GetFile(aIndex: Integer): IwbFile;
+    function GetContainerHandler: IwbContainerHandler;
+
+    property GameDef: IwbGameDef
+      read GetGameDef;
+    property DataPath: string
+      read GetDataPath;
+    property FileCount: Integer
+      read GetFileCount;
+    property Files[aIndex: Integer]: IwbFile
+      read GetFile;
+    property ContainerHandler: IwbContainerHandler
+      read GetContainerHandler;
+  end;
+
 const
   arcU32 = -1;
   arcU16 = -2;
@@ -4573,18 +4648,6 @@ var
   wbMainRecordHeader       : IwbValueDef;
   wbSizeOfMainRecordStruct : Integer;
 
-type
-  //keep ordered by release date
-  TwbGameMode   = (gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
-  TwbGameModes  = set of TwbGameMode;
-
-  TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
-                    tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
-                    tmCheckForErrors, tmCheckForITM, tmCheckForDR, tmGenerateSEQ);
-  TwbToolSource = (tsPlugins, tsSaves);
-  TwbSetOfMode  = set of TwbToolMode;
-  TwbSetOfSource  = set of TwbToolSource;
-
 var
   wbGameMode         : TwbGameMode;
   wbToolMode         : TwbToolMode;
@@ -4871,6 +4934,8 @@ var
   wbFileByReverseSortOrderComparer : IComparer<IwbFile>;
 
   Files : array of IwbFile;
+
+  wbCurrentContext : IwbGameContext;
 
 function wbGetGameMasterFile: IwbFile;
 function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
