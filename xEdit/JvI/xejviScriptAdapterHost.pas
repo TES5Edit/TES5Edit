@@ -257,7 +257,9 @@ begin
       if VarIsStr(Args.Values[1]) then
         lFormID := TwbFormID.FromStr(string(Args.Values[1]))
       else if VarIsNumeric(Args.Values[1]) then
-        lFormID := TwbFormID.FromVar(Args.Values[1]);
+        lFormID := TwbFormID.FromVar(Args.Values[1])
+      else
+        JvInterpreterError(ieTypeMistmatch, -1);
 
       if lFile.IsLight then
         lFormID.ObjectID := lFormID.ObjectID and $FFF
