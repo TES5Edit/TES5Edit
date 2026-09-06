@@ -180,7 +180,7 @@ end;
 
 procedure _FileByIndex(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  if VarIsNumeric(Args.Values[0]) and (Args.Values[0] < Length(frmMain.Files)) then
+  if VarIsNumeric(Args.Values[0]) and (Args.Values[0] >= 0) and (Args.Values[0] < Length(frmMain.Files)) then
     Value := frmMain.Files[Integer(Args.Values[0])]
   else
     JvInterpreterError(ieDirectInvalidArgument, 0);
