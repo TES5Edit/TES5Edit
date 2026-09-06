@@ -1650,7 +1650,7 @@ begin
   Result := StrToIntDef(aString, 0);
 end;
 
-function wbLGDIFilterStarSlotMods(const aElement: IwbElement; out aMods: IwbContainerElementRef; out aFirst, aCount: Integer): Boolean;
+function wbLGDIFilterStarSlotStart(const aElement: IwbElement; out aMods: IwbContainerElementRef; out aFirst: Integer): Boolean;
 var
   Filter       : IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
@@ -1659,7 +1659,6 @@ var
 begin
   Result := False;
   aFirst := -1;
-  aCount := 0;
 
   if not Assigned(aElement) then
     Exit;
@@ -1677,11 +1676,9 @@ begin
   StarSlot := Filter.Elements[0].NativeValue;
   for var i := 0 to Pred(aMods.ElementCount) do
     if Supports(aMods.Elements[i], IwbContainerElementRef, LegendaryMod) and (LegendaryMod[0].NativeValue = StarSlot) then begin
-      if aFirst < 0 then
-        aFirst := i;
-      Inc(aCount);
-    end else if aFirst >= 0 then
+      aFirst := i;
       Break;
+    end;
 
   Result := aFirst >= 0;
 end;
@@ -1690,16 +1687,15 @@ function wbLGDIFiltersLinksTo(const aElement: IwbElement): IwbElement;
 var
   Mods         : IwbContainerElementRef;
   SlotFirst    : Integer;
-  SlotCount    : Integer;
   ModIndex     : Variant;
   LegendaryMod : IwbContainerElementRef;
 begin
   Result := nil;
-  if not wbLGDIFilterStarSlotMods(aElement, Mods, SlotFirst, SlotCount) then
+  if not wbLGDIFilterStarSlotStart(aElement, Mods, SlotFirst) then
     Exit;
 
   ModIndex := aElement.NativeValue;
-  if not VarIsOrdinal(ModIndex) or (ModIndex < 0) or (ModIndex >= SlotCount) then
+  if not VarIsOrdinal(ModIndex) or (ModIndex < 0) or (ModIndex >= Mods.ElementCount - SlotFirst) then
     Exit;
 
   if Supports(Mods.Elements[SlotFirst + Integer(ModIndex)], IwbContainerElementRef, LegendaryMod) then
@@ -1710,7 +1706,6 @@ function wbLGDIFiltersToStr(aInt: Int64; const aElement: IwbElement; aType: TwbC
 var
   Mods         : IwbContainerElementRef;
   SlotFirst    : Integer;
-  SlotCount    : Integer;
   LegendaryMod : IwbContainerElementRef;
   ModName      : string;
 begin
@@ -1730,12 +1725,12 @@ begin
     Exit;
   end;
 
-  if not wbLGDIFilterStarSlotMods(aElement, Mods, SlotFirst, SlotCount) then
+  if not wbLGDIFilterStarSlotStart(aElement, Mods, SlotFirst) then
     Exit;
 
   if aType = ctEditInfo then
     with TwbFastStringListIC.Create do try
-      for var i := 0 to Pred(SlotCount) do
+      for var i := 0 to Pred(Mods.ElementCount - SlotFirst) do
         if Supports(Mods.Elements[SlotFirst + i], IwbContainerElementRef, LegendaryMod) then begin
           var lIndexString := IntToStr(i);
           while Length(lIndexString) < 2 do
@@ -1748,7 +1743,7 @@ begin
       Free;
     end;
 
-  if (aInt < 0) or (aInt >= SlotCount) then
+  if (aInt < 0) or (aInt >= Mods.ElementCount - SlotFirst) then
     Exit;
 
   if not Supports(Mods.Elements[SlotFirst + Integer(aInt)], IwbContainerElementRef, LegendaryMod) then
@@ -15902,13 +15897,13 @@ begin
 
     wbArray(CNAM, 'Include Filters', wbStruct('Include Filter', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter).SetLinksToCallback(wbLGDIFiltersLinksTo),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
     ])),
 
     wbArray(DNAM, 'Exclude Filters', wbStruct('Exclude Filter', [
       wbInteger('Star Slot', itU32, wbLGDIStarSlot),
-      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr, wbStrToLGDIFilter).SetLinksToCallback(wbLGDIFiltersLinksTo),
+      wbInteger('Referenced Mod', itU32, wbLGDIFiltersToStr).SetLinksToCallback(wbLGDIFiltersLinksTo),
       wbFormIDCk('Keyword', [KYWD])
     ])),
     wbFormID(ENAM, 'Legendary Template List')
