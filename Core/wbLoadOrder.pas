@@ -329,7 +329,7 @@ begin
         if miExtension = meUnknown then
           Continue;
 
-        if wbGameMode >= gmFO4 then
+        if gcMasterFlagFromExtension in wbCurrentCapabilities then
           if miExtension in [meESM, meESL] then begin
             Include(miFlags, mfHasESMExtension);
             Include(miFlags, mfIsESM);

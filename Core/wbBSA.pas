@@ -227,7 +227,7 @@ const
 procedure TwbContainerHandler.BuildCache;
   function CalcHash(const aStr: string): Int64;
   begin
-    if wbGameMode >= gmTES5 then
+    if gcResourceKeyCRC32NoExtension in wbCurrentCapabilities then
       Result := TwbHash.BSCRC32(aStr)
     else
       Result := TwbHash.TES4(aStr, True);
@@ -267,13 +267,13 @@ begin
       end;
 
       var lFile := ExtractFileName(lFullName).ToLowerInvariant;
-      if wbGameMode >= gmTES5 then
+      if gcResourceKeyCRC32NoExtension in wbCurrentCapabilities then
         lFile := ChangeFileExt(lFile, '');
 
       if ccFiles.TryAdd(lFile, wbNothing) then begin
         ccFileHashes.TryAdd(CalcHash(lFile), lFile);
 
-        if wbGameMode < gmTES5 then
+        if gcTextureDDXAlias in wbCurrentCapabilities then
           if ExtractFileExt(lFile) = '.dds' then
             lFile := ChangeFileExt(lFile, '.ddx');
             if ccFiles.TryAdd(lFile, wbNothing) then begin

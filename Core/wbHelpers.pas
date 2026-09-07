@@ -839,7 +839,7 @@ begin
         if wbIsOblivion or wbIsFallout3 then begin
           s := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll]);
           // Update.bsa is hardcoded to load in FNV
-          if wbGameMode = gmFNV then begin
+          if gcUpdateArchiveAlwaysLoaded in wbCurrentCapabilities then begin
             if s <> '' then s := s + #10;
             s := s + 'Update.bsa';
           end;
@@ -907,7 +907,7 @@ begin
             if wbIsOblivion or wbIsFallout3 then begin
               s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sArchiveList');
               // Update.bsa is hardcoded to load in FNV
-              if wbGameMode = gmFNV then begin
+              if gcUpdateArchiveAlwaysLoaded in wbCurrentCapabilities then begin
                 if s <> '' then s := s + #10;
                 s := s + 'Update.bsa';
               end;
