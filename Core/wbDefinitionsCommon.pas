@@ -2630,7 +2630,7 @@ begin
   if not wbTrySetContainer(aElement, ctToSummary, Container) then
     Exit;
 
-  if wbGameMode > gmFNV then begin
+  if gcConditionWrapsCTDA in wbCurrentCapabilities then begin
     if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
       Exit;
   end else
@@ -4586,7 +4586,7 @@ begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  if wbGameMode > gmFNV then begin
+  if gcConditionWrapsCTDA in wbCurrentCapabilities then begin
     if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
       Exit;
   end else
@@ -5887,7 +5887,7 @@ begin
           'i': Result := 1; {intS32}
           'f': Result := 2; {Float}
           else begin
-            if wbGameMode >= gmTES5 then
+            if gcBoolGameSettings in wbCurrentCapabilities then
               if lEditorID[1] = 'b' then
                 Exit(3);
             if gcUnsignedGameSettings in wbCurrentCapabilities then

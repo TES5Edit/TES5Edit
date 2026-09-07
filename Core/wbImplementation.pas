@@ -9221,7 +9221,7 @@ begin
 
   if GetIsDeleted then begin
     var lHasSignature: IwbHasSignature;
-    if (wbGameMode >= gmFO4) and
+    if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and
        Supports(aElement, IwbHasSignature, lHasSignature) and
        Assigned(mrDef) and
        (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -9366,7 +9366,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lDeleteShouldExit := True;
-      if (wbGameMode >= gmFO4) and Assigned(mrDef) then begin
+      if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and Assigned(mrDef) then begin
         lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
 
         if not lDeleteShouldExit and Assigned(aElement) then begin
@@ -9955,7 +9955,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lHasSignature: IwbHasSignature;
-      if (wbGameMode >= gmFO4) and
+      if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and
          Supports(aElement, IwbHasSignature, lHasSignature) and
          Assigned(mrDef) and
          (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -10417,7 +10417,7 @@ begin
       _AddRef; _Release;
     end;
 
-    if (wbGameMode >= gmFO4) and Assigned(lBaseRecord) then begin
+    if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and Assigned(lBaseRecord) then begin
       var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord];
       if lMemberIndex >= 0 then begin
         var lBaseRecordElement := Assign(lMemberIndex, nil, False);
@@ -11101,7 +11101,7 @@ begin
 
   // only interior cells get here
 
-  if wbGameMode = gmFO4 then begin
+  if gcPartialCellsFromGameMasterOnly in wbCurrentCapabilities then begin
     var lFile := lMasterOrSelf._File;
     if not (fsIsGameMaster in lFile.FileStates) then
       //no partial for interior cells in FO4 if they are not defined in Fallout4.esm
@@ -11833,7 +11833,7 @@ begin
       PrecombinedCacheFileName := s;
       SetLength(PrecombinedCache, 0);
 
-      if wbGameMode = gmFO76 then begin
+      if gcPrecombinedMeshPerCell in wbCurrentCapabilities then begin
         if Supports(Cell.ElementByPath['XCRP\References'], IwbContainerElementRef, CombinedRefs) then begin
           cnt := CombinedRefs.ElementCount;
           SetLength(PrecombinedCache, cnt);
@@ -11868,7 +11868,7 @@ begin
 
   if mrsHasPrecombinedMesh in mrStates then begin
 
-    if wbGameMode = gmFO76 then begin
+    if gcPrecombinedMeshPerCell in wbCurrentCapabilities then begin
       Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '\' + IntToHex(Self.mrPrecombinedCellID, 8) + 'nif';
     end else begin
       MasterFolder := '';
@@ -13954,7 +13954,7 @@ begin
                     (RefRecord as IwbElementInternal).Reached;
             end;
           end else if Signature = 'FURN' then begin
-            if wbGameMode >= gmTES5 then begin
+            if gcWorkbenchRecipes in wbCurrentCapabilities then begin
               if GetElementNativeValue('WBDT\Bench Type') > 0 then
                 if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
                   for i := 0 to Pred(Keywords.ElementCount) do
@@ -13971,7 +13971,7 @@ begin
                     end;
             end;
           end else if Signature = 'NPC_' then begin
-            if wbGameMode >= gmTES5 then begin
+            if gcNPCRelationships in wbCurrentCapabilities then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -13981,7 +13981,7 @@ begin
               end;
             end;
           end else if Signature = 'QUST' then begin
-            if wbGameMode >= gmTES5 then begin
+            if gcQuestScenesAndDialogue in wbCurrentCapabilities then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -18364,7 +18364,7 @@ begin
     0: Result.Add(TwbSignature(grStruct.grsLabel));
     1: begin
          Result.Add('CELL');
-         if wbGameMode = gmTES4 then
+         if gcWorldspaceRoads in wbCurrentCapabilities then
            Result.Add('ROAD');
        end;
     7: Result.Add('INFO');
