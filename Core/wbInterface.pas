@@ -761,7 +761,13 @@ type
     gcLightPlugins, gcMediumPlugins, gcBlueprintPlugins, gcUpdatePlugins,
     gcCurveTableProperties, gcUnsignedGameSettings, gcLargeReferenceLOD,
     gcPluginsTxtAllActive, gcOrderFromPluginsTxt, gcOrderFromLoadOrderTxt, gcMastersLoadFirst,
-    gcWwiseSoundBanks, gcArchiveExactNameMatch, gcArchivePrivateIni
+    gcWwiseSoundBanks, gcArchiveExactNameMatch, gcArchivePrivateIni,
+    gcFormIDInRecordHeader, gcMasterSlotsInFormID, gcFormVersionInRecordHeader, gcHeaderNextObjectID,
+    gcSubrecordSize32Bit, gcUngroupedRecordStream, gcReferencesEmbeddedInCell, gcGridCellInLandAndPathgrid,
+    gcHardcodedFileIsFirstMaster, gcHardcodedPlayerRef, gcDeletedRecordKeepsBaseRecord,
+    gcWorkbenchRecipes, gcNPCRelationships, gcQuestScenesAndDialogue, gcPartialCellsFromGameMasterOnly,
+    gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
+    gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -4725,7 +4731,7 @@ function wbIsLightSupported: Boolean; inline;
 function wbIsMediumSupported: Boolean; inline;
 function wbIsBlueprintSupported: Boolean; inline;
 function wbIsUpdateSupported: Boolean; inline;
-function wbCurrentCapabilities: TwbGameCapabilities; inline;
+function wbCurrentCapabilities: TwbGameCapabilities;
 
 procedure ReportDefs;
 
@@ -5404,7 +5410,15 @@ begin
   Result := wbGameMode in [gmSF1];
 end;
 
-function wbCurrentCapabilities: TwbGameCapabilities; inline;
+var
+  _CapabilitiesGameMode      : TwbGameMode;
+  _CapabilitiesLightSupport  : Boolean;
+  _CapabilitiesMediumSupport : Boolean;
+  _CapabilitiesUpdateSupport : Boolean;
+  _CapabilitiesValid         : Boolean;
+  _Capabilities              : TwbGameCapabilities;
+
+function wbComputeCurrentCapabilities: TwbGameCapabilities;
 begin
   Result := [];
   if (wbGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or wbHasAddedLightSupport then
@@ -5435,6 +5449,69 @@ begin
     Include(Result, gcArchiveExactNameMatch);
   if wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE] then
     Include(Result, gcArchivePrivateIni);
+  if not (wbGameMode in [gmTES3]) then
+    Include(Result, gcFormIDInRecordHeader);
+  if not (wbGameMode in [gmTES3]) then
+    Include(Result, gcMasterSlotsInFormID);
+  if wbGameMode in [gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcFormVersionInRecordHeader);
+  if not (wbGameMode in [gmTES3]) then
+    Include(Result, gcHeaderNextObjectID);
+  if wbGameMode in [gmTES3] then
+    Include(Result, gcSubrecordSize32Bit);
+  if wbGameMode in [gmTES3] then
+    Include(Result, gcUngroupedRecordStream);
+  if wbGameMode in [gmTES3] then
+    Include(Result, gcReferencesEmbeddedInCell);
+  if wbGameMode in [gmTES3] then
+    Include(Result, gcGridCellInLandAndPathgrid);
+  if wbGameMode in [gmTES3] then
+    Include(Result, gcHardcodedFileIsFirstMaster);
+  if not (wbGameMode in [gmTES3]) then
+    Include(Result, gcHardcodedPlayerRef);
+  if wbGameMode in [gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcDeletedRecordKeepsBaseRecord);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcWorkbenchRecipes);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcNPCRelationships);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcQuestScenesAndDialogue);
+  if wbGameMode in [gmFO4] then
+    Include(Result, gcPartialCellsFromGameMasterOnly);
+  if wbGameMode in [gmFO76] then
+    Include(Result, gcPrecombinedMeshPerCell);
+  if wbGameMode in [gmTES4] then
+    Include(Result, gcWorldspaceRoads);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcConditionWrapsCTDA);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcBoolGameSettings);
+  if wbGameMode in [gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcMasterFlagFromExtension);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcResourceKeyCRC32NoExtension);
+  if wbGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV] then
+    Include(Result, gcTextureDDXAlias);
+  if wbGameMode in [gmFNV] then
+    Include(Result, gcUpdateArchiveAlwaysLoaded);
+end;
+
+function wbCurrentCapabilities: TwbGameCapabilities;
+begin
+  if not _CapabilitiesValid or
+     (_CapabilitiesGameMode <> wbGameMode) or
+     (_CapabilitiesLightSupport <> wbHasAddedLightSupport) or
+     (_CapabilitiesMediumSupport <> wbHasAddedMediumSupport) or
+     (_CapabilitiesUpdateSupport <> wbHasAddedUpdateSupport) then begin
+    _CapabilitiesGameMode := wbGameMode;
+    _CapabilitiesLightSupport := wbHasAddedLightSupport;
+    _CapabilitiesMediumSupport := wbHasAddedMediumSupport;
+    _CapabilitiesUpdateSupport := wbHasAddedUpdateSupport;
+    _Capabilities := wbComputeCurrentCapabilities;
+    _CapabilitiesValid := True;
+  end;
+  Result := _Capabilities;
 end;
 
 function wbIsLightSupported: Boolean; inline;

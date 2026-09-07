@@ -2467,7 +2467,7 @@ begin
 
     end else begin
 
-      if wbGameMode > gmTES3 then begin
+      if gcFormIDInRecordHeader in wbCurrentCapabilities then begin
         var lFixedFormID := aRecord.FixedFormID;
         if flSetContainsFixedFormID(lFixedFormID) then
           raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + GetName);
@@ -2726,7 +2726,7 @@ begin;
 
     Inner;
 
-    if wbGameMode >= gmTES4 then
+    if gcMasterSlotsInFormID in wbCurrentCapabilities then
       if Length(flOldMasters) <> Length(flMasters) then begin
         var lOldCount := TwbSlotCounts.Create(flOldMasters);
         var lNewCount := TwbSlotCounts.Create(flMasters);
@@ -3269,7 +3269,7 @@ begin
           Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         end;
 
-        if wbGameMode >= gmTES4 then
+        if gcMasterSlotsInFormID in wbCurrentCapabilities then
         begin
           var lOldCount := TwbSlotCounts.Create(flOldMasters);
           var lNewCount := TwbSlotCounts.Create(flMasters);
@@ -3433,7 +3433,7 @@ begin
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if wbGameMode >= gmTES4 then
+  if gcHeaderNextObjectID in wbCurrentCapabilities then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if aIsLight then begin
@@ -3512,7 +3512,7 @@ begin
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if wbGameMode >= gmTES4 then
+  if gcHeaderNextObjectID in wbCurrentCapabilities then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if (mfHasUpdateFlag in aTemplate.miFlags) and wbIsUpdateSupported then begin
@@ -3966,7 +3966,7 @@ end;
 
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
-  if wbGameMode <= gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Exit(False);
 
   var ID := aFormID.ToCardinal;
@@ -4616,7 +4616,7 @@ var
   V              : Variant;
   i              : Int64;
 begin
-  if (wbGameMode >= gmTES4) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+  if (gcHeaderNextObjectID in wbCurrentCapabilities) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
     V := Header.ElementNativeValues['HEDR\Next Object ID'];
     i := V;
     Result := i;
@@ -4628,7 +4628,7 @@ procedure TwbFile.SetNextObjectID(aObjectID: Cardinal);
 var
   Header         : IwbMainRecord;
 begin
-  if wbGameMode >= gmTES4 then
+  if gcHeaderNextObjectID in wbCurrentCapabilities then
     if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
       Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
 end;
@@ -5065,7 +5065,7 @@ begin
   if Length(flInjectedRecords) > 0 then begin
     if FindInjectedID(aRecord.FixedFormID, i) then begin
       if wbHasProgressCallback then
-        if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
+        if (gcFormIDInRecordHeader in wbCurrentCapabilities) or not (fsIsHardcoded in flStates) then
           if ([fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = []) then
             wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with ' + flInjectedRecords[i].Name + ' from ' + flInjectedRecords[i]._File.FileName + ' >');
       (flInjectedRecords[i] as IwbMainRecordInternal).AddOverride(aRecord);
@@ -5075,7 +5075,7 @@ begin
     i := 0;
 
   if wbHasProgressCallback then
-    if (wbGameMode > gmTES3) or not (fsIsHardcoded in flStates) then
+    if (gcFormIDInRecordHeader in wbCurrentCapabilities) or not (fsIsHardcoded in flStates) then
       if [fsIsHardcoded, fsIsCompareLoad] * aRecord._File.FileStates = [] then
         if wbReportInjected then
           wbProgressCallback('<Note: ' + aRecord.Name + ' was injected into ' + GetFileName + '>');
@@ -5905,7 +5905,7 @@ begin
         flLoadOrderFileID := TwbFileID.CreateFull($FF);
     end;
 
-    if wbGameMode = gmTES3 then
+    if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then
       if flLoadOrder > 0 then
         AddMaster(wbGameName + csDotExe, False, False);
 
@@ -6029,13 +6029,13 @@ begin
 
     var WasEditAllowed := wbEditAllowed;
     try
-      if wbGameMode = gmTES3 then
+      if gcUngroupedRecordStream in wbCurrentCapabilities then
         wbEditAllowed := True;
 
       EndPtr := flEndPtr;
       GroupType := 0;
       while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-        if wbGameMode = gmTES3 then begin
+        if gcUngroupedRecordStream in wbCurrentCapabilities then begin
           Signature := PwbSignature(CurrentPtr)^;
 
           Container := nil;
@@ -6109,7 +6109,7 @@ begin
         Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
 
         if Assigned(Rec) then
-          if wbGameMode = gmTES3 then begin
+          if gcUngroupedRecordStream in wbCurrentCapabilities then begin
             if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
               EndPtr := flEndPtr;
 
@@ -6227,7 +6227,7 @@ begin
     end;
   end;
 
-  if (fsIsHardcoded in flStates) and (wbGameMode > gmTES3) then
+  if (fsIsHardcoded in flStates) and (gcHardcodedPlayerRef in wbCurrentCapabilities) then
     if wbBeginInternalEdit(True) then try
       ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
     finally
@@ -6532,7 +6532,7 @@ begin
             wbEndInternalEdit;
           end else
             Assert(False);
-          if wbGameMode >= gmTES4 then
+          if gcMasterSlotsInFormID in wbCurrentCapabilities then
           begin
             var lOldCount := TwbSlotCounts.Create(flOldMasters);
             var lNewCount := TwbSlotCounts.Create(flMasters);
@@ -8997,7 +8997,7 @@ begin
   InformPrevMainRecord(aPrevMainRecord);
   ScanData;
   if aBasePtr <> dcDataEndPtr then begin
-    Assert( (wbGameMode = gmTES3) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
+    Assert( (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
     if GetSignature = 'CELL' then
       aEndPtr := aBasePtr;
     aBasePtr := dcDataEndPtr;
@@ -9017,7 +9017,7 @@ begin
       if PwbSignature(aPtr)^ = 'GRUP' then
         Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
       else begin
-        if (wbGameMode = gmTES3) and ((PwbSignature(aPtr)^ = 'NAM0') or (PwbSignature(aPtr)^ = 'MVRF')) then
+        if (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and ((PwbSignature(aPtr)^ = 'NAM0') or (PwbSignature(aPtr)^ = 'MVRF')) then
           Result := TwbSubRecord.Create(nil, aPtr, aEndPtr, nil)
         else
           Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
@@ -9430,7 +9430,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags^ := mrStruct.mrsFlags^;
               Self.mrStruct.mrsVCS1^ := DefaultVCS1;
-              if wbGameMode >= gmFO3 then begin
+              if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
                 Self.mrStruct.mrsVersion^ := mrStruct.mrsVersion^;
                 Self.mrStruct.mrsVCS2^ := DefaultVCS2;
               end;
@@ -9818,7 +9818,7 @@ end;
 
 function TwbMainRecord.DoGetFixedFormID: TwbFormID;
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Result := GetFormID
   else
     Result := PwbMainRecordStruct(dcBasePtr).mrsFormID^;
@@ -10181,11 +10181,11 @@ var
     BasePtr.mrsSignature := aSignature;
     BasePtr.mrsDataSize := 0;
     BasePtr.mrsFlags._Flags := 0;
-    if wbGameMode >= gmTES4 then
+    if gcFormIDInRecordHeader in wbCurrentCapabilities then
       BasePtr.mrsFormID^ := aFormID;
     BasePtr.mrsVCS1^ := DefaultVCS1;
 
-    if wbGameMode >= gmFO3 then begin
+    if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
       case wbGameMode of
         gmSF1                        : BasePtr.mrsVersion^ := 582;
         gmFO76                       : BasePtr.mrsVersion^ := 209;
@@ -10526,8 +10526,8 @@ begin
     end;
   end;
 
-  IsTES3CELL := (wbGameMode = gmTES3) and (GetSignature = 'CELL');
-  IsTES3REFR := (wbGameMode = gmTES3) and (GetSignature = 'REFR');
+  IsTES3CELL := (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and (GetSignature = 'CELL');
+  IsTES3REFR := (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and (GetSignature = 'REFR');
   FRMRCount := 0;
 
   {$IFDEF DBGSUBREC}
@@ -11396,10 +11396,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'LAND') then begin
+    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'PGRD') then begin
+    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'PGRD') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
     end else if (GetSignature = 'INFO') then begin
@@ -11448,10 +11448,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := GridCell.SortKey;
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'LAND') then begin
+    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
-    end else if (wbGameMode = gmTES3) and (GetSignature = 'PGRD') then
+    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'PGRD') then
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
 
@@ -11545,7 +11545,7 @@ end;
 
 function TwbMainRecord.GetFormID: TwbFormID;
 begin
-  if wbGameMode = gmTES3 then begin
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then begin
     if not Assigned(mrDef) then
       Result := TwbFormID.Null
     else if not mrDef.GetFormID(Self, Result) then
@@ -11591,7 +11591,7 @@ end;
 
 function TwbMainRecord.GetFormVersion: Cardinal;
 begin
-  if wbGameMode >= gmFO3 then
+  if gcFormVersionInRecordHeader in wbCurrentCapabilities then
     Result := mrStruct.mrsVersion^
   else
     Result := 0;
@@ -11599,7 +11599,7 @@ end;
 
 procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
-  if wbGameMode >= gmFO3 then begin
+  if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
     MakeHeaderWriteable;
     mrStruct.mrsVersion^ := aFormVersion;
   end;
@@ -11655,7 +11655,7 @@ end;
 
 function TwbMainRecord.GetFormVCS2: Cardinal;
 begin
-  if wbGameMode >= gmFO3 then
+  if gcFormVersionInRecordHeader in wbCurrentCapabilities then
     Result := mrStruct.mrsVCS2^
   else
     Result := 0;
@@ -11663,7 +11663,7 @@ end;
 
 procedure TwbMainRecord.SetFormVCS2(aVCS: Cardinal);
 begin
-  if wbGameMode >= gmFO3 then begin
+  if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
     MakeHeaderWriteable;
     mrStruct.mrsVCS2^ := aVCS;
   end;
@@ -11677,7 +11677,7 @@ end;
 
 procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Exit;
   if wbComplexFileFileID then 
     Exit;
@@ -12067,7 +12067,7 @@ begin
        not FormID.IsNull and
            (not _File.IsNewRecord(FormID, GetMastersUpdated)) and
        not (fsIsHardcoded in _File.FileStates) and
-       ((wbGameMode > gmTES3) or (FormID.FileID.FullSlot > 0)) then
+       ((gcFormIDInRecordHeader in wbCurrentCapabilities) or (FormID.FileID.FullSlot > 0)) then
       Include(mrStates, mrsIsInjected)
     else
       Exclude(mrStates, mrsIsInjected);
@@ -12679,7 +12679,7 @@ var
   p         : PwbMainRecordStruct;
 begin
   if Assigned(dcEndPtr) then
-    if (wbGameMode = gmTES3) and ((PwbSignature(dcBasePtr)^ = 'FRMR') or (PwbSignature(dcBasePtr)^ = 'CNDT')) then begin
+    if (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and ((PwbSignature(dcBasePtr)^ = 'FRMR') or (PwbSignature(dcBasePtr)^ = 'CNDT')) then begin
       Assert(not (mrsBasePtrAllocated in mrStates));
       dcDataBasePtr := dcBasePtr;
       dcDataEndPtr := dcEndPtr;
@@ -12993,7 +12993,7 @@ var
   lFormID: TwbFormID;
   i: Integer;
 begin
-  Assert(wbGameMode > gmTES3);
+  Assert(gcFormIDInRecordHeader in wbCurrentCapabilities);
 
   Assert(Length(mrReferences)=0);
   aStream.Read(lFormID, SizeOf(TwbFormID));
@@ -14343,7 +14343,7 @@ procedure TwbMainRecord.SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
 var
   i            : Integer;
 begin
-  Assert(wbGameMode > gmTES3);
+  Assert(gcFormIDInRecordHeader in wbCurrentCapabilities);
 
   aStream.Write(mrStruct.mrsFormID^, SizeOf(TwbFormID));
 
@@ -14404,7 +14404,7 @@ procedure TwbMainRecord.ScanData;
 var
   SelfRef : IwbContainerElementRef;
 begin
-  if (not wbDelayLoadRecords) or ((wbGameMode = gmTES3) and ((GetSignature = 'CELL') or (GetSignature = 'REFR')) ) then begin
+  if (not wbDelayLoadRecords) or ((gcReferencesEmbeddedInCell in wbCurrentCapabilities) and ((GetSignature = 'CELL') or (GetSignature = 'REFR')) ) then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(True);
   end;
@@ -14761,7 +14761,7 @@ begin
   if GetLoadOrderFormID = aFormID then
     Exit;
 
-  if wbGameMode = gmTES3 then begin
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then begin
     Exit; //|||
   end else begin
     _File := GetFile as IwbFileInternal;
@@ -15140,7 +15140,7 @@ var
 begin
   SelfRef := Self as IwbElement;
 
-  if wbGameMode = gmTES3 then
+  if gcUngroupedRecordStream in wbCurrentCapabilities then
     Exit;
 
   if GetSignature <> 'CELL' then
@@ -16885,7 +16885,7 @@ begin
     Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
-  if (lDataSize <= High(Word)) or (wbGameMode = gmTES3) then
+  if (lDataSize <= High(Word)) or (gcSubrecordSize32Bit in wbCurrentCapabilities) then
     srStruct.srsDataSize := lDataSize
   else
     //will need to write XXXX subrecord on save
@@ -17223,7 +17223,7 @@ begin
       end;
 
       BigDataSize := GetDataSize;
-      if (BigDataSize > High(Word)) and (wbGameMode <> gmTES3) then begin
+      if (BigDataSize > High(Word)) and not (gcSubrecordSize32Bit in wbCurrentCapabilities) then begin
         SubHeader.srsSignature := 'XXXX';
         SubHeader.srsDataSize := SizeOf(Cardinal);
         aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
@@ -26212,7 +26212,7 @@ end;
 }
 class function TwbSubRecordHeaderStruct.SizeOf: NativeInt;
 begin
-  if wbGameMode = gmTES3 then
+  if gcSubrecordSize32Bit in wbCurrentCapabilities then
     Result := System.SizeOf(TwbSignature) + System.SizeOf(Cardinal)
   else
     Result := System.SizeOf(TwbSignature) + System.SizeOf(Word);
@@ -26220,7 +26220,7 @@ end;
 
 function TwbSubRecordHeaderStruct.srsGetDataSize: Cardinal;
 begin
-  if wbGameMode = gmTES3 then
+  if gcSubrecordSize32Bit in wbCurrentCapabilities then
     Result := _DataSizeCardinal
   else
     Result := _DataSizeWord;
@@ -26228,7 +26228,7 @@ end;
 
 procedure TwbSubRecordHeaderStruct.srsSetDataSize(const Value: Cardinal);
 begin
-  if wbGameMode = gmTES3 then
+  if gcSubrecordSize32Bit in wbCurrentCapabilities then
     _DataSizeCardinal := Value
   else
     _DataSizeWord := Value;
@@ -26238,7 +26238,7 @@ end;
 
 function TwbMainRecordStruct.mrsFlags: PwbMainRecordStructFlags;
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Result := @_TES3_Flags
   else
     Result := @_Flags;
@@ -26246,7 +26246,7 @@ end;
 
 function TwbMainRecordStruct.mrsFormID: PwbFormID;
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Result := nil
   else
     Result := @_FormID;
@@ -26254,7 +26254,7 @@ end;
 
 function TwbMainRecordStruct.mrsVCS1: PCardinal;
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Result := @_TES3_VCS1
   else
     Result := @_VCS1;
@@ -26262,7 +26262,7 @@ end;
 
 function TwbMainRecordStruct.mrsVCS2: PWord;
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Result := nil
   else
     Result := @_VCS2;
@@ -26270,7 +26270,7 @@ end;
 
 function TwbMainRecordStruct.mrsVersion: PWord;
 begin
-  if wbGameMode = gmTES3 then
+  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
     Result := nil
   else
     Result := @_Version;
@@ -26284,7 +26284,7 @@ function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: str
 var
   i: Cardinal;
 begin
-  Assert(wbGameMode = gmTES3);
+  Assert(not (gcFormIDInRecordHeader in wbCurrentCapabilities));
   aIdentity := aIdentity.ToLowerInvariant;
 
   if not Assigned(_Identitys[aFormIDNameBase]) then

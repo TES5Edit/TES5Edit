@@ -1737,7 +1737,7 @@ begin
 
       wbResourcesLoaded;
 
-      if wbGameMode = gmTES3 then begin
+      if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then begin
         b := TwbHardcodedContainer.GetHardCodedDat;
         if Length(b) > 0 then
           wbFile(wbGameExeName, 0, '', [fsIsHardcoded], b);
@@ -1746,7 +1746,7 @@ begin
       if wbToolMode in [tmDump] then
         _File := wbFile(s, High(Integer));
 
-      if wbGameMode <> gmTES3 then
+      if not (gcHardcodedFileIsFirstMaster in wbCurrentCapabilities) then
         with wbModuleByName(wbGameMasterEsm)^ do
           if mfHasFile in miFlags then begin
             b := TwbHardcodedContainer.GetHardCodedDat;

@@ -21194,7 +21194,7 @@ begin
         for var
         lLoadListIdx := 0 to Pred(ltLoadList.Count) do begin
 
-          if wbGameMode = gmTES3 then
+          if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then
             if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
               b := TwbHardcodedContainer.GetHardCodedDat;
               if Length(b) > 0 then begin
