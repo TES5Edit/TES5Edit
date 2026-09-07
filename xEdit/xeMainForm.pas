@@ -1626,7 +1626,7 @@ begin
     Exit;
   end;
 
-  if not (wbGameMode in wbOrderFromPluginsTxt) then
+  if not (gcOrderFromPluginsTxt in wbCurrentCapabilities) then
     if OldDateTime <> 0 then
       if wbIsModule(lTo) then try
       TFile.SetLastWriteTime(lTo, OldDateTime);

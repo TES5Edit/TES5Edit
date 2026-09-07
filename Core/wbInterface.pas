@@ -757,7 +757,12 @@ type
   TwbGameMode   = (gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1);
   TwbGameModes  = set of TwbGameMode;
 
-  TwbGameCapability = (gcLightPlugins, gcMediumPlugins, gcBlueprintPlugins, gcUpdatePlugins);
+  TwbGameCapability = (
+    gcLightPlugins, gcMediumPlugins, gcBlueprintPlugins, gcUpdatePlugins,
+    gcCurveTableProperties, gcUnsignedGameSettings, gcLargeReferenceLOD,
+    gcPluginsTxtAllActive, gcOrderFromPluginsTxt, gcOrderFromLoadOrderTxt, gcMastersLoadFirst,
+    gcWwiseSoundBanks, gcArchiveExactNameMatch, gcArchivePrivateIni
+  );
   TwbGameCapabilities = set of TwbGameCapability;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -4703,28 +4708,6 @@ var
     tmCheckForErrors
   ];
 
-  wbSimplePluginsTxt: TwbGameModes = [ //plugins.txt contains only the active plugins
-    gmTES3,
-    gmTES4,
-    gmTES4R,
-    gmFO3,
-    gmFNV,
-    gmTES5,
-    gmEnderal];
-
-  wbOrderFromPluginsTxt: TwbGameModes = [ //load order given by order in plugins.txt
-    gmTES4R,
-    gmTES5,
-    gmEnderal,
-    gmSSE,
-    gmEnderalSE,
-    gmTES5VR,
-    gmFO4,
-    gmFO4VR,
-    gmFO76,
-    gmSF1
-  ];
-
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
 
@@ -5432,6 +5415,26 @@ begin
     Include(Result, gcBlueprintPlugins);
   if (wbGameMode in [gmSF1]) or wbHasAddedUpdateSupport then
     Include(Result, gcUpdatePlugins);
+  if wbGameMode in [gmFO76, gmSF1] then
+    Include(Result, gcCurveTableProperties);
+  if wbGameMode in [gmFO76, gmSF1] then
+    Include(Result, gcUnsignedGameSettings);
+  if wbGameMode in [gmSSE, gmTES5VR] then
+    Include(Result, gcLargeReferenceLOD);
+  if wbGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal] then
+    Include(Result, gcPluginsTxtAllActive);
+  if wbGameMode in [gmTES4R, gmTES5, gmEnderal, gmSSE, gmEnderalSE, gmTES5VR, gmFO4, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcOrderFromPluginsTxt);
+  if wbGameMode in [gmTES4R, gmTES5, gmEnderal] then
+    Include(Result, gcOrderFromLoadOrderTxt);
+  if not (wbGameMode in [gmTES4R]) then
+    Include(Result, gcMastersLoadFirst);
+  if wbGameMode in [gmSF1] then
+    Include(Result, gcWwiseSoundBanks);
+  if wbGameMode in [gmTES5, gmEnderal] then
+    Include(Result, gcArchiveExactNameMatch);
+  if wbGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE] then
+    Include(Result, gcArchivePrivateIni);
 end;
 
 function wbIsLightSupported: Boolean; inline;
