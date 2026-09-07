@@ -5900,7 +5900,7 @@ begin
             if wbGameMode >= gmTES5 then
               if lEditorID[1] = 'b' then
                 Exit(3);
-            if (wbGameMode in [gmFO76, gmSF1]) then
+            if gcUnsignedGameSettings in wbCurrentCapabilities then
               if lEditorID[1] = 'u' then
                 Exit(4);
           end;

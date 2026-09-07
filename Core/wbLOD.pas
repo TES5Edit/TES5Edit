@@ -2757,7 +2757,7 @@ begin
     end;
 
     // gather large references if LOD level 4 is generated
-    if (wbGameMode in [gmSSE, gmTES5VR]) then
+    if gcLargeReferenceLOD in wbCurrentCapabilities then
       if (Settings.ReadString(Section, 'LODLevel', '') = '') or (Settings.ReadString(Section, 'LODLevel', '') = '4') then
         GetLargeReferences(Master, slLargeReferences, ChunkSW, ChunkNE);
 
@@ -2922,7 +2922,7 @@ begin
 
         // SSE adds -LargeRef to shape name and adds BSDistantObjectLargeRefExtraData with 1 byte = 1 in BTO for new uLargeRefLODGridSize
         // add -LargeRef to material for LODGen.exe
-        if (wbGameMode in [gmSSE, gmTES5VR]) and (slLargeReferences.IndexOfObject(Pointer(REFRs[i].MasterOrSelf)) <> -1) then begin
+        if (gcLargeReferenceLOD in wbCurrentCapabilities) and (slLargeReferences.IndexOfObject(Pointer(REFRs[i].MasterOrSelf)) <> -1) then begin
           sl := TStringList.Create;
           sl.Delimiter := #9;
           sl.StrictDelimiter := True;

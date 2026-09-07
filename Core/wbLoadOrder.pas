@@ -811,7 +811,7 @@ begin
     Exit('[Template]');
 
   Result := '';
-  if (mfHasBlueprintFlag in miFlags) and (wbGameMode in [gmSF1]) then
+  if (mfHasBlueprintFlag in miFlags) and (gcBlueprintPlugins in wbCurrentCapabilities) then
     Result := Result + '[BP]';
   if miOfficialIndex = Low(Integer) then
     Result := Result + '[GameMaster]'
