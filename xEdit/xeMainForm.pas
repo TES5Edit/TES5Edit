@@ -21134,7 +21134,7 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
-                    wbGameMode in [gmTES5, gmEnderal], wbIsSkyrim, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
+                    gcArchiveExactNameMatch in wbCurrentCapabilities, gcArchivePrivateIni in wbCurrentCapabilities, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
                       for var lFoundPluginIdx := 0 to Pred(lFoundPluginArchives.Count) do
                         if wbLoadBSAs then begin
                           LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Loading Resources.');
@@ -21174,7 +21174,7 @@ begin
           LoaderProgress('...resources cache finished building');
         end;
 
-        if wbGameMode in [gmSF1] then begin
+        if gcWwiseSoundBanks in wbCurrentCapabilities then begin
           var lModules := TStringList.Create;
           try
             for var lFile in frmMain.Files do

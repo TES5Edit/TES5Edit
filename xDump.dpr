@@ -1724,7 +1724,7 @@ begin
           ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
           wbContainerHandler.AddFolder(wbDataPath);
 
-          if wbGameMode in [gmSF1] then
+          if gcWwiseSoundBanks in wbCurrentCapabilities then
             wbBuildSoundBankCache(Masters);
 
         finally
