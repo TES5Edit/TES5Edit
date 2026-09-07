@@ -5419,7 +5419,7 @@ begin
     Include(Result, gcCurveTableProperties);
   if wbGameMode in [gmFO76, gmSF1] then
     Include(Result, gcUnsignedGameSettings);
-  if wbGameMode in [gmSSE, gmTES5VR] then
+  if wbGameMode in [gmSSE, gmTES5VR, gmEnderalSE] then
     Include(Result, gcLargeReferenceLOD);
   if wbGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal] then
     Include(Result, gcPluginsTxtAllActive);
