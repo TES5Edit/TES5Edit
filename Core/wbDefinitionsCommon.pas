@@ -4690,12 +4690,7 @@ begin
   if not (gcCurveTableProperties in wbCurrentCapabilities) then
     Exit;
 
-  var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
-  if not Assigned(CurveTable) then
-    Exit;
-
-  var CurveTableForm := CurveTable.ElementByName['Curve Table'];
-  if not wbTryGetMainRecord(CurveTableForm, MainRecord) then
+  if not wbTryGetMainRecord(Container.ElementByName['Curve Table'], MainRecord) then
     Exit;
 
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
@@ -4879,12 +4874,7 @@ begin
   if not (gcCurveTableProperties in wbCurrentCapabilities) then
     Exit;
 
-  var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
-  if not Assigned(CurveTable) then
-    Exit;
-
-  var CurveTableForm := CurveTable.ElementByName['Curve Table'];
-  if not wbTryGetMainRecord(CurveTableForm, MainRecord) then
+  if not wbTryGetMainRecord(Container.ElementByName['Curve Table'], MainRecord) then
     Exit;
 
   aValue := aValue + ' {Curve Table: ' + MainRecord.ShortName + '}';
