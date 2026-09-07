@@ -1373,7 +1373,7 @@ begin
       wbRStructSK([0], 'Relation', [
         wbString(ANAM, 'Faction'), //[FACT]
         wbInteger(INTV, 'Reaction', itS32)
-      ])).SetToStr(wbFactionReactionToStr)
+      ]).SetToStr(wbFactionReactionToStr))
   ]).SetFormIDBase($1C);
 
   wbRecord(GLOB, 'Global', @wbKnownSubRecordSignaturesNoFNAM,  [
