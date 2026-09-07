@@ -4687,7 +4687,7 @@ begin
 
   aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
 
-  if not (wbGameMode in [gmFO76, gmSF1]) then
+  if not (gcCurveTableProperties in wbCurrentCapabilities) then
     Exit;
 
   var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
@@ -4876,7 +4876,7 @@ begin
 
   aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
 
-  if not (wbGameMode in [gmFO76, gmSF1]) then
+  if not (gcCurveTableProperties in wbCurrentCapabilities) then
     Exit;
 
   var CurveTable := Container.ElementByName['Curve Table'] as IwbContainerElementRef;
