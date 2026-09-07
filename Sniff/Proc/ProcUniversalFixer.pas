@@ -755,7 +755,7 @@ begin
     if not Assigned(Rigid) then
       Exit;
 
-    if Rigid.NativeValues['Havok Filter\Layer'] = 2 then begin
+    if Integer(Rigid.NativeValues['Havok Filter\Layer']) in [2, 28] then begin
       if Collision.NativeValues['Flags\SET_LOCAL'] = False then
       begin
         Collision.NativeValues['Flags\SET_LOCAL'] := True;
@@ -903,7 +903,7 @@ begin
           Continue;
         end;
 
-        if lFilters[I].NativeValues['Layer'] = 0 then begin
+        if lFilters[I].NativeValues['Layer'] <> layer then begin
           lFilters[I].NativeValues['Layer'] := layer;
           lUpdated := True;
         end;
@@ -919,6 +919,9 @@ begin
     begin
       var lSubShape := TwbNifBlock(lShape.Elements['Shape'].LinksTo);
       if not Assigned(lSubShape) then
+        Continue;
+
+      if lSubShape.BlockType <> 'bhkCompressedMeshShape' then
         Continue;
 
       var lData := TwbNifBlock(lSubShape.Elements['Data'].LinksTo);
