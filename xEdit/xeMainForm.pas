@@ -14611,7 +14611,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR, gmSF1]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
