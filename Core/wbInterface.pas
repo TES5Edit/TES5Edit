@@ -382,7 +382,6 @@ var
 
   wbCreationClubContentFileName      : string;
   wbCreationClubContent              : array of string;
-  wbOfficialDLC                      : array of string;
 
   wbShouldLoadMOHookFile             : Boolean;
   wbMOProfile                        : string;
@@ -3453,6 +3452,7 @@ type
     gdFileChapters     : IwbStructDef;
     gdExtractInfo      : PByteSet;
     gdFilePluginNames  : TwbFilePluginNames;
+    gdOfficialDLC      : TArray<string>;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3514,6 +3514,9 @@ type
     property FilePluginNames: TwbFilePluginNames
       read gdFilePluginNames
       write gdFilePluginNames;
+    property OfficialDLC: TArray<string>
+      read gdOfficialDLC
+      write gdOfficialDLC;
   end;
 
   TwbGameDefClass = class of TwbGameDef;

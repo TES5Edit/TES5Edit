@@ -10904,15 +10904,11 @@ begin
     gmEnderalSE: NexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
   end;
   if wbIsSkyrimSE then begin
-    SetLength(wbOfficialDLC, 3);
-    wbOfficialDLC[0] := 'Dawnguard.esm';
-    wbOfficialDLC[1] := 'HearthFires.esm';
-    wbOfficialDLC[2] := 'Dragonborn.esm';
+    OfficialDLC := ['Dawnguard.esm', 'HearthFires.esm', 'Dragonborn.esm'];
 
     if wbGameMode = gmTES5VR then begin
       // new VR esm is loaded after DLCs
-      SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
-      wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'SkyrimVR.esm';
+      OfficialDLC := OfficialDLC + ['SkyrimVR.esm'];
     end else
       wbCreationClubContentFileName := 'Skyrim.ccc';
   end;

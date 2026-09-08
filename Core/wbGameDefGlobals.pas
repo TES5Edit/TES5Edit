@@ -18,6 +18,7 @@ function wbActorValueEnum: IwbEnumDef; inline;
 function wbFileHeader: IwbStructDef; inline;
 function wbFileChapters: IwbStructDef; inline;
 function wbExtractInfo: PByteSet; inline;
+function wbOfficialDLC: TArray<string>; inline;
 
 implementation
 
@@ -79,6 +80,11 @@ end;
 function wbExtractInfo: PByteSet;
 begin
   Result := _CurrentGameDef.ExtractInfo;
+end;
+
+function wbOfficialDLC: TArray<string>;
+begin
+  Result := _CurrentGameDef.OfficialDLC;
 end;
 
 end.
