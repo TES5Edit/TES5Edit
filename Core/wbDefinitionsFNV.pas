@@ -9120,9 +9120,9 @@ begin
   wbAddGroupOrder(DEHY);
   wbAddGroupOrder(HUNG);
   wbAddGroupOrder(SLPD);
-  wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
+  NexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
   if wbToolMode = tmLODgen then
-    wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
+    NexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
   HEDRVersion := 1.34;
 end;
 

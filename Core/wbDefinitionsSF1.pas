@@ -19350,7 +19350,7 @@ begin
   wbAddGroupOrder(GWED);
   wbAddGroupOrder(TDED);
 
-  wbNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
+  NexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
   SetLength(wbOfficialDLC, 13);
   wbOfficialDLC[0]  := 'ShatteredSpace.esm';

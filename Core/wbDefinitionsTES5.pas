@@ -10890,17 +10890,17 @@ begin
    //wbAddGroupOrder(LSPR);
    if wbIsSkyrimSE then wbAddGroupOrder(VOLI); {New to SSE}
   if wbIsSkyrimSE then begin
-    wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
+    NexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
     if wbToolMode = tmLODgen then
-      wbNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
+      NexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
   end else begin
-    wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/25859';
+    NexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/25859';
     if wbToolMode = tmLODgen then
-      wbNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
+      NexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
   case wbGameMode of
-    gmEnderal: wbNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
-    gmEnderalSE: wbNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
+    gmEnderal: NexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+    gmEnderalSE: NexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
   end;
   if wbIsSkyrimSE then begin
     SetLength(wbOfficialDLC, 3);

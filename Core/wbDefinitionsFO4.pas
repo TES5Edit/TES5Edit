@@ -13351,7 +13351,7 @@ begin
    //wbAddGroupOrder(LSPR);
    wbAddGroupOrder(GDRY);
    wbAddGroupOrder(OVIS);
-  wbNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
+  NexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
   SetLength(wbOfficialDLC, 7);
@@ -13372,7 +13372,7 @@ begin
     HEDRVersion := 0.95
   else begin
     HEDRVersion := 1.0;
-    wbHEDRNextObjectID := 1;
+    HEDRNextObjectID := 1;
   end;
 end;
 

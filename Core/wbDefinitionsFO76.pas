@@ -17827,7 +17827,7 @@ begin
   wbAddGroupOrder(CMPT);
   wbAddGroupOrder(CMPI);
   wbAddGroupOrder(TEPF);
-  wbNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
+  NexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
   HEDRVersion := 266.0;

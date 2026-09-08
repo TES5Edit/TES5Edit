@@ -882,7 +882,7 @@ end;
 
 procedure TwbGameDefTES3.Define;
 begin
-  wbHeaderSignature := 'TES3';
+  HeaderSignature := 'TES3';
 
   wbRecordFlags :=
     wbInteger('Record Flags', itU32,
@@ -2516,7 +2516,7 @@ begin
   wbAddGroupOrder(SNDG);
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(INFO);
-  wbNexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
+  NexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
   HEDRVersion := 1.30;
 end;
 

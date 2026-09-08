@@ -7881,9 +7881,9 @@ begin
   wbAddGroupOrder(DOBJ);
   wbAddGroupOrder(LGTM);
   wbAddGroupOrder(MUSC);
-  wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
+  NexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
   if wbToolMode = tmLODgen then
-    wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
+    NexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
   HEDRVersion := 0.94;
 end;
 

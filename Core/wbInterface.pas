@@ -297,8 +297,6 @@ var
 
   wbAllowMakePartial                 : Boolean    = False;
 
-  wbHEDRNextObjectID                 : Integer    = $800;
-
   wbCellSizeFactor                   : Single     = 4096.0;
 
   wbGlobalModifedGeneration          : UInt64;
@@ -404,7 +402,6 @@ var
 
   wbHelpUrl                          : string     = 'https://tes5edit.github.io/docs';
   wbVideosUrl                        : string     = 'https://www.youtube.com/playlist?list=PLlN8weLk86XiGXJI4DaRa1QIq1zhDpD8V';
-  wbNexusModsUrl                     : string;
   wbGitHubUrl                        : string     = 'https://github.com/TES5Edit/TES5Edit/releases';
   wbDiscordUrl                       : string     = 'https://discord.gg/5t8RnNQ';
   wbPatreonUrl                       : string     = 'https://www.patreon.com/ElminsterAU';
@@ -3441,7 +3438,10 @@ type
 
   TwbGameDef = class(TInterfacedObject, IwbGameDef)
   protected
-    gdHEDRVersion : Double;
+    gdHEDRVersion      : Double;
+    gdHEDRNextObjectID : Integer;
+    gdHeaderSignature  : TwbSignature;
+    gdNexusModsUrl     : string;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3462,6 +3462,15 @@ type
     property HEDRVersion: Double
       read gdHEDRVersion
       write gdHEDRVersion;
+    property HEDRNextObjectID: Integer
+      read gdHEDRNextObjectID
+      write gdHEDRNextObjectID;
+    property HeaderSignature: TwbSignature
+      read gdHeaderSignature
+      write gdHeaderSignature;
+    property NexusModsUrl: string
+      read gdNexusModsUrl
+      write gdNexusModsUrl;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4840,7 +4849,6 @@ threadvar
 var
   wbActorValueEnum: IwbEnumDef;
 
-  wbHeaderSignature   : TwbSignature = 'TES4';
   wbNullSignature     : TwbSignature = #0#0#0#0;
   wbFileMagic         : TwbFileMagic;
   wbFilePlugins       : string = 'Master Files';
@@ -5590,6 +5598,8 @@ constructor TwbGameDef.Create;
 begin
   inherited Create;
   gdHEDRVersion := 1.0;
+  gdHEDRNextObjectID := $800;
+  gdHeaderSignature := 'TES4';
 end;
 
 function TwbGameDef.GetGameMode: TwbGameMode;

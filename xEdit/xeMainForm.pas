@@ -1330,6 +1330,7 @@ uses
   wbBetterStringList,
   wbBSA,
   wbDataFormatWwise,
+  wbGameDefGlobals,
   wbHardcoded,
   wbHelpers,
   wbImplementation,

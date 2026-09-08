@@ -3731,9 +3731,9 @@ begin
   wbAddGroupOrder(WATR);
   wbAddGroupOrder(EFSH);
   //wbAddGroupOrder(TOFT);
-  wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
+  NexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
   if wbToolMode = tmLODgen then
-    wbNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
+    NexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
   HEDRVersion := 1.0;
 end;
 

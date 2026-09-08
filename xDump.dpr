@@ -35,6 +35,7 @@ uses
   wbCommandLine in 'Core\wbCommandLine.pas',
   wbSort in 'Core\wbSort.pas',
   wbInterface in 'Core\wbInterface.pas',
+  wbGameDefGlobals in 'Core\wbGameDefGlobals.pas',
   wbSaveInterface in 'Core\wbSaveInterface.pas',
   wbImplementation in 'Core\wbImplementation.pas',
   wbLocalization in 'Core\wbLocalization.pas',
