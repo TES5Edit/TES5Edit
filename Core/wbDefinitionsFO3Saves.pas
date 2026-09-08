@@ -17,6 +17,7 @@ uses
 type
   TwbGameDefFO3Saves = class(TwbGameDefFO3)
   protected
+    procedure DefineFO3SavesS;
     procedure Define; override;
     procedure SwitchToCoSave; override;
   end;
@@ -1826,7 +1827,7 @@ begin
   Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z']);
 end;
 
-procedure DefineFO3SavesS;  // This is all based on the Runtime
+procedure TwbGameDefFO3Saves.DefineFO3SavesS;  // This is all based on the Runtime
 var
   wbHeader                   : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
@@ -6250,7 +6251,7 @@ begin
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayPT(wbFilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(FilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 
@@ -6346,9 +6347,9 @@ var
 
 procedure TwbGameDefFO3Saves.Define;
 begin
-  wbFileMagic := 'FO3SAVEGAME';
+  FileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
-  wbFilePlugins := 'Plugins';
+  FilePlugins := 'Plugins';
   inherited;
   DefineFO3SavesA;
   DefineFO3SavesS;
@@ -6356,9 +6357,9 @@ end;
 
 procedure TwbGameDefFO3Saves.SwitchToCoSave;
 begin
-  wbFileMagic := 'FOSE';
+  FileMagic := 'FOSE';
   wbExtractInfo := @ExtractInfoCoSave;
-  wbFilePlugins := 'Absolute:44';
+  FilePlugins := 'Absolute:44';
   wbFileChapters := wbCoSaveChapters;
   wbFileHeader := wbCoSaveHeader;
 end;

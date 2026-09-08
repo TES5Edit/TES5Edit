@@ -17,6 +17,7 @@ uses
 type
   TwbGameDefFO4Saves = class(TwbGameDefFO4)
   protected
+    procedure DefineFO4SavesS;
     procedure Define; override;
     procedure SwitchToCoSave; override;
   end;
@@ -28,6 +29,7 @@ uses
   System.SysUtils,
 
   wbDefinitionsCommon,
+  wbGameDefGlobals,
   wbImplementation,
   wbSaveInterface;
 
@@ -2682,7 +2684,7 @@ begin
   end;
 end;
 
-procedure DefineFO4SavesS;  // This is all based on current UESP, and HexDump, Triria TESSaveLib and the Runtime
+procedure TwbGameDefFO4Saves.DefineFO4SavesS;  // This is all based on current UESP, and HexDump, Triria TESSaveLib and the Runtime
 var
   wbHeader                       : IwbStructDef;
   wbFileLocationTable            : IwbStructDef;
@@ -7310,7 +7312,7 @@ begin
     ,wbInteger('Form Version', itU8)
     ,wbLenString('Runtime version', 2)
     ,wbInteger('PluginInfo Size (?)', itU32)
-    ,wbArray(wbFilePlugins, wbLenString('PluginName', 2), -4)
+    ,wbArray(FilePlugins, wbLenString('PluginName', 2), -4)
     ,wbUnion('', SaveVersionGreaterThan14Decider, [wbNull, wbArray('Light plugins', wbLenString('LightPluginName', 2), -2)])
     ,wbFileLocationTable
   ]);
@@ -7424,9 +7426,9 @@ end;
 
 procedure TwbGameDefFO4Saves.Define;
 begin
-  wbFileMagic := 'FO4_SAVEGAME';
+  FileMagic := 'FO4_SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
-  wbFilePlugins := 'Plugins';
+  FilePlugins := 'Plugins';
   wbFilePluginNames := SavePluginNames;
   inherited;
   DefineFO4SavesA;
@@ -7435,9 +7437,9 @@ end;
 
 procedure TwbGameDefFO4Saves.SwitchToCoSave;
 begin
-  wbFileMagic := 'F4SE';
+  FileMagic := 'F4SE';
   wbExtractInfo := @ExtractInfoCoSave;
-  wbFilePlugins := 'Absolute:44';
+  FilePlugins := 'Absolute:44';
   wbFilePluginNames := nil;
   wbFileChapters := wbCoSaveChapters;
   wbFileHeader := wbCoSaveHeader;

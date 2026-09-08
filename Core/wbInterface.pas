@@ -3443,6 +3443,8 @@ type
     gdNexusModsUrl     : string;
     gdIgnoreRecords    : TStringList;
     gdGroupOrder       : TStringList;
+    gdFileMagic        : TwbFileMagic;
+    gdFilePlugins      : string;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3483,6 +3485,12 @@ type
       read gdIgnoreRecords;
     property GroupOrder: TStringList
       read gdGroupOrder;
+    property FileMagic: TwbFileMagic
+      read gdFileMagic
+      write gdFileMagic;
+    property FilePlugins: string
+      read gdFilePlugins
+      write gdFilePlugins;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4860,8 +4868,6 @@ var
   wbActorValueEnum: IwbEnumDef;
 
   wbNullSignature     : TwbSignature = #0#0#0#0;
-  wbFileMagic         : TwbFileMagic;
-  wbFilePlugins       : string = 'Master Files';
   wbFilePluginNames   : TwbFilePluginNames = nil;
   wbUseFalsePlugins   : Boolean = False;
   wbFileHeader        : IwbStructDef;
@@ -5614,6 +5620,7 @@ begin
   gdIgnoreRecords := TStringList.Create;
   gdIgnoreRecords.Sorted := True;
   gdIgnoreRecords.Duplicates := dupIgnore;
+  gdFilePlugins := 'Master Files';
 end;
 
 destructor TwbGameDef.Destroy;

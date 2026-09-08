@@ -17,6 +17,7 @@ uses
 type
   TwbGameDefTES4Saves = class(TwbGameDefTES4)
   protected
+    procedure DefineTES4SavesS;
     procedure Define; override;
     procedure SwitchToCoSave; override;
   end;
@@ -1822,7 +1823,7 @@ end;
 //  Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z'], nil);
 //end;
 
-procedure DefineTES4SavesS;  // This is all based on the Runtime
+procedure TwbGameDefTES4Saves.DefineTES4SavesS;  // This is all based on the Runtime
 var
   wbHeader                   : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
@@ -6771,7 +6772,7 @@ begin
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayPT(wbFilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(FilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 
@@ -6871,9 +6872,9 @@ var
 
 procedure TwbGameDefTES4Saves.Define;
 begin
-  wbFileMagic := 'FO3SAVEGAME';
+  FileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
-  wbFilePlugins := 'Plugins';
+  FilePlugins := 'Plugins';
   inherited;
   DefineTES4SavesA;
   DefineTES4SavesS;
@@ -6881,9 +6882,9 @@ end;
 
 procedure TwbGameDefTES4Saves.SwitchToCoSave;
 begin
-  wbFileMagic := 'OBSE';
+  FileMagic := 'OBSE';
   wbExtractInfo := @ExtractInfoCoSave;
-  wbFilePlugins := 'Absolute:44';
+  FilePlugins := 'Absolute:44';
   wbFileChapters := wbCoSaveChapters;
   wbFileHeader := wbCoSaveHeader;
 end;

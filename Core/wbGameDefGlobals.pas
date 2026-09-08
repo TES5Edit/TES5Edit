@@ -12,6 +12,8 @@ function wbHeaderSignature: TwbSignature; inline;
 function wbNexusModsUrl: string; inline;
 function wbIgnoreRecords: TStringList; inline;
 function wbGroupOrder: TStringList; inline;
+function wbFileMagic: TwbFileMagic; inline;
+function wbFilePlugins: string; inline;
 
 implementation
 
@@ -43,6 +45,16 @@ end;
 function wbGroupOrder: TStringList;
 begin
   Result := _CurrentGameDef.GroupOrder;
+end;
+
+function wbFileMagic: TwbFileMagic;
+begin
+  Result := _CurrentGameDef.FileMagic;
+end;
+
+function wbFilePlugins: string;
+begin
+  Result := _CurrentGameDef.FilePlugins;
 end;
 
 end.
