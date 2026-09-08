@@ -9123,7 +9123,7 @@ begin
   wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
   if wbToolMode = tmLODgen then
     wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
-  wbHEDRVersion := 1.34;
+  HEDRVersion := 1.34;
 end;
 
 initialization

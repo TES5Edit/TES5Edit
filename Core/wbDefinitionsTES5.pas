@@ -10915,9 +10915,9 @@ begin
     end else
       wbCreationClubContentFileName := 'Skyrim.ccc';
   end;
-  wbHEDRVersion := 1.7;
+  HEDRVersion := 1.7;
   if wbGameMode in [gmSSE, gmEnderalSE] then
-    wbHEDRVersion := 1.71;
+    HEDRVersion := 1.71;
 end;
 
 initialization

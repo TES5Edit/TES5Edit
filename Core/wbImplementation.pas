@@ -93,6 +93,7 @@ uses
 {$ENDIF}
 
   wbCompression,
+  wbGameDefGlobals,
   wbHash,
   wbHelpers,
   wbLocalization,

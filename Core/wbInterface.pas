@@ -297,7 +297,6 @@ var
 
   wbAllowMakePartial                 : Boolean    = False;
 
-  wbHEDRVersion                      : Double     = 1.0;
   wbHEDRNextObjectID                 : Integer    = $800;
 
   wbCellSizeFactor                   : Single     = 4096.0;
@@ -3442,6 +3441,8 @@ type
 
   TwbGameDef = class(TInterfacedObject, IwbGameDef)
   protected
+    gdHEDRVersion : Double;
+
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
     function GetGameExeName: string;
@@ -3455,6 +3456,12 @@ type
 
     procedure Define; virtual;
     procedure SwitchToCoSave; virtual;
+  public
+    constructor Create;
+
+    property HEDRVersion: Double
+      read gdHEDRVersion
+      write gdHEDRVersion;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4948,6 +4955,7 @@ var
   Files : array of IwbFile;
 
   wbCurrentContext : IwbGameContext;
+  _CurrentGameDef  : TwbGameDef;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
@@ -5578,6 +5586,12 @@ begin
   Result := gcUpdatePlugins in wbCurrentCapabilities;
 end;
 
+constructor TwbGameDef.Create;
+begin
+  inherited Create;
+  gdHEDRVersion := 1.0;
+end;
+
 function TwbGameDef.GetGameMode: TwbGameMode;
 begin
   Result := wbGameMode;
@@ -5637,7 +5651,14 @@ begin
 end;
 
 var
-  _GameDefClasses : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
+  _GameDefClasses    : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
+  _CurrentGameDefRef : IwbGameDef;
+
+procedure wbMakeCurrentGameDef(aGameDef: TwbGameDef);
+begin
+  _CurrentGameDef := aGameDef;
+  _CurrentGameDefRef := aGameDef;
+end;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 begin
@@ -5655,6 +5676,7 @@ begin
       GetEnumName(TypeInfo(TwbToolSource), Ord(aToolSource)));
   var lGameDef := lGameDefClass.Create;
   Result := lGameDef;
+  wbMakeCurrentGameDef(lGameDef);
   lGameDef.Define;
 end;
 
@@ -24375,7 +24397,11 @@ initialization
   SetLength(wbSaveExtensions, 2);
   wbSaveExtensions[0] := csDotFos;
   wbSaveExtensions[1] := csDotEss;
+
+  wbMakeCurrentGameDef(TwbGameDef.Create);
 finalization
+  _CurrentGameDef := nil;
+  _CurrentGameDefRef := nil;
   FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);
   FreeAndNil(wbRecordDefMap);

@@ -13369,9 +13369,9 @@ begin
   end else
     wbCreationClubContentFileName := 'Fallout4.ccc';
   if wbGameMode = gmFO4VR then
-    wbHEDRVersion := 0.95
+    HEDRVersion := 0.95
   else begin
-    wbHEDRVersion := 1.0;
+    HEDRVersion := 1.0;
     wbHEDRNextObjectID := 1;
   end;
 end;

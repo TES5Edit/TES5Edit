@@ -2517,7 +2517,7 @@ begin
   wbAddGroupOrder(DIAL);
   wbAddGroupOrder(INFO);
   wbNexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
-  wbHEDRVersion := 1.30;
+  HEDRVersion := 1.30;
 end;
 
 initialization

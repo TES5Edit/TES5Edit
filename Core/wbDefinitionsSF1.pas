@@ -2241,7 +2241,7 @@ begin
   wbSizeOfMainRecordStruct := 24;
 
   wbKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
-  wbHEDRVersion := 0.96;
+  HEDRVersion := 0.96;
   wbCellSizeFactor := 100;
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
