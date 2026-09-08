@@ -767,7 +767,8 @@ type
     gcHardcodedFileIsFirstMaster, gcHardcodedPlayerRef, gcDeletedRecordKeepsBaseRecord,
     gcWorkbenchRecipes, gcNPCRelationships, gcQuestScenesAndDialogue, gcPartialCellsFromGameMasterOnly,
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
-    gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded
+    gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
+    gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -5415,6 +5416,8 @@ var
   _CapabilitiesLightSupport  : Boolean;
   _CapabilitiesMediumSupport : Boolean;
   _CapabilitiesUpdateSupport : Boolean;
+  _CapabilitiesCS            : Boolean;
+  _CapabilitiesHNVSE         : Boolean;
   _CapabilitiesValid         : Boolean;
   _Capabilities              : TwbGameCapabilities;
 
@@ -5495,6 +5498,18 @@ begin
     Include(Result, gcTextureDDXAlias);
   if wbGameMode in [gmFNV] then
     Include(Result, gcUpdateArchiveAlwaysLoaded);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcWeatherExtendedColors);
+  if wbGameMode in [gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcWeatherFogPower);
+  if wbGameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcWeatherFogMax);
+  if wbGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV] then
+    Include(Result, gcModelTextureFileHashList);
+  if wbCS then
+    Include(Result, gcCommunityShaders);
+  if wbHNVSE then
+    Include(Result, gcHNVSE);
 end;
 
 function wbCurrentCapabilities: TwbGameCapabilities;
@@ -5503,11 +5518,15 @@ begin
      (_CapabilitiesGameMode <> wbGameMode) or
      (_CapabilitiesLightSupport <> wbHasAddedLightSupport) or
      (_CapabilitiesMediumSupport <> wbHasAddedMediumSupport) or
-     (_CapabilitiesUpdateSupport <> wbHasAddedUpdateSupport) then begin
+     (_CapabilitiesUpdateSupport <> wbHasAddedUpdateSupport) or
+     (_CapabilitiesCS <> wbCS) or
+     (_CapabilitiesHNVSE <> wbHNVSE) then begin
     _CapabilitiesGameMode := wbGameMode;
     _CapabilitiesLightSupport := wbHasAddedLightSupport;
     _CapabilitiesMediumSupport := wbHasAddedMediumSupport;
     _CapabilitiesUpdateSupport := wbHasAddedUpdateSupport;
+    _CapabilitiesCS := wbCS;
+    _CapabilitiesHNVSE := wbHNVSE;
     _Capabilities := wbComputeCurrentCapabilities;
     _CapabilitiesValid := True;
   end;

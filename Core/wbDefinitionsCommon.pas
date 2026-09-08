@@ -313,10 +313,8 @@ function wbIsFlag(const aFlag: Integer; const aValue: IwbValueDef; const aIsUnus
 function wbIsNotFlag(const aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; const aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbIsNotFlag(const aFlag: Integer; const aValue: IwbValueDef; const aIsUnused: Boolean = True): IwbValueDef; overload;
 
-{>>> DLL Mode IfThen Defs <<<} //4
+{>>> DLL Mode IfThen Defs <<<} //2
 function IsCS    (const aDef1, aDef2: string): string;
-function IsVR    (const aDef1, aDef2: string): string;
-function IsVRESL (const aDef1, aDef2: string): string;
 function IsHNVSE (const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority;
 
 {>>> Game Mode IfThen Defs <<<} //36
@@ -2154,7 +2152,7 @@ end;
 
 function wbModelInfoDontShow(const aElement: IwbElement): Boolean;
 begin
-  if wbGameMode < gmTES5 then
+  if gcModelTextureFileHashList in wbCurrentCapabilities then
     Exit(False);
 
   Result := True;
@@ -2332,7 +2330,7 @@ procedure wbModelInfoGetCP(const aElement: IwbElement; var aConflictPriority: Tw
 begin
   aConflictPriority := cpNormal;
 
-  if wbGameMode < gmTES5 then
+  if gcModelTextureFileHashList in wbCurrentCapabilities then
     Exit;
 
   if not Assigned(aElement) then
@@ -6304,33 +6302,19 @@ begin
       ]).IncludeFlag(dfMustBeUnion);
 end;
 
-{>>> DLL Mod IfThen Defs <<<} //4
+{>>> DLL Mod IfThen Defs <<<} //2
 
 function IsCS(const aDef1, aDef2: string): string;
 begin
   Result := aDef2;
-  if wbCS then
-    Result := aDef1;
-end;
-
-function IsVR(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbGameMode in [gmTES5VR, gmFO4VR] then
-    Result := aDef1;
-end;
-
-function IsVRESL(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbVRESL then
+  if gcCommunityShaders in wbCurrentCapabilities then
     Result := aDef1;
 end;
 
 function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority;
 begin
   Result := aDef2;
-  if wbHNVSE then
+  if gcHNVSE in wbCurrentCapabilities then
     Result := aDef1;
 end;
 
@@ -9181,7 +9165,7 @@ end;
 
 function wbModelInfo(const aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
 begin
-  if wbGameMode < gmTES5 then begin
+  if gcModelTextureFileHashList in wbCurrentCapabilities then begin
     if aName = '' then
       aName := 'Textures';
 
@@ -9306,7 +9290,7 @@ end;
 
 function wbModelInfos(const aSignature: TwbSignature; aName: string = ''; const aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
-  if wbGameMode >= gmTES5 then
+  if not (gcModelTextureFileHashList in wbCurrentCapabilities) then
     raise Exception.Create('Not Supported');
 
   if aName = '' then
@@ -9699,7 +9683,7 @@ begin
   Result :=
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherTimeOfDay('Sky-Upper'),
-      IfThen(wbGameMode < gmTES5,
+      IfThen(not (gcWeatherExtendedColors in wbCurrentCapabilities),
         wbWeatherTimeOfDay('Fog'),
         wbWeatherTimeOfDay('Fog Near')),
       IsTES4(
@@ -9716,25 +9700,25 @@ begin
         IsFO3(
           wbWeatherTimeOfDay('Clouds (Unused)'),
           wbWeatherTimeOfDay('Effect Lighting'))),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
         wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')),
         nil),
       IsFO4Plus(
@@ -9790,16 +9774,16 @@ begin
       wbFloat('Day - Far'),
       wbFloat('Night - Near'),
       wbFloat('Night - Far'),
-      IfThen((wbGameMode > gmTES4R),
+      IfThen((gcWeatherFogPower in wbCurrentCapabilities),
         wbFloat('Day - Power').SetDefaultNativeValue(1),
         nil),
-      IfThen((wbGameMode > gmTES4R),
+      IfThen((gcWeatherFogPower in wbCurrentCapabilities),
         wbFloat('Night - Power').SetDefaultNativeValue(1),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherFogMax in wbCurrentCapabilities,
         wbFloat('Day - Max').SetDefaultNativeValue(1),
         nil),
-      IfThen(wbGameMode > gmFNV,
+      IfThen(gcWeatherFogMax in wbCurrentCapabilities,
         wbFloat('Night - Max').SetDefaultNativeValue(1),
         nil),
       IsFO4Plus(

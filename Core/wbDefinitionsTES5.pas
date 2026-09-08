@@ -10123,8 +10123,8 @@ begin
       5,  'Temp ID Owner',
       7,  'Localized',
       8,  'Precalc Data Only',
-      9,  IsSSE(IsVR(IsVRESL('ESL', ''),'ESL'),''),
-      20, IsVRESL('Update', '')
+      9,  wb<string>.Iff(gcLightPlugins in wbCurrentCapabilities, 'ESL', ''),
+      20, wb<string>.Iff(gcUpdatePlugins in wbCurrentCapabilities, 'Update', '')
     ], False), True), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),

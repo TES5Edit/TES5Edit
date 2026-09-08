@@ -12093,8 +12093,8 @@ begin
       0,  'ESM',
       4,  'Optimized',
       7,  'Localized',
-      9,  IsVR(IsVRESL('ESL',''), 'ESL'),
-      20, IsVRESL('Update', '')
+      9,  wb<string>.Iff(gcLightPlugins in wbCurrentCapabilities, 'ESL', ''),
+      20, wb<string>.Iff(gcUpdatePlugins in wbCurrentCapabilities, 'Update', '')
     ], False), True), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),            // If possible then ignored by the runtime. Neither from the CK
