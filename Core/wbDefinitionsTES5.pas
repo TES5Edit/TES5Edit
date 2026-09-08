@@ -10910,7 +10910,7 @@ begin
       // new VR esm is loaded after DLCs
       OfficialDLC := OfficialDLC + ['SkyrimVR.esm'];
     end else
-      wbCreationClubContentFileName := 'Skyrim.ccc';
+      CreationClubContentFileName := 'Skyrim.ccc';
   end;
   HEDRVersion := 1.7;
   if wbGameMode in [gmSSE, gmEnderalSE] then

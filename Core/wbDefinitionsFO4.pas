@@ -13361,7 +13361,7 @@ begin
     // new VR esm is loaded after DLCs
     OfficialDLC := OfficialDLC + ['Fallout4_VR.esm'];
   end else
-    wbCreationClubContentFileName := 'Fallout4.ccc';
+    CreationClubContentFileName := 'Fallout4.ccc';
   if wbGameMode = gmFO4VR then
     HEDRVersion := 0.95
   else begin

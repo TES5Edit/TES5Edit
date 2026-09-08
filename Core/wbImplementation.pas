@@ -26340,6 +26340,7 @@ constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
 begin
   inherited Create;
   geGameDef := aGameDef;
+  wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
 end;
 
 function TwbGameContext.GetGameDef: IwbGameDef;

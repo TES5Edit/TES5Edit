@@ -3388,6 +3388,7 @@ type
     function GetGameSteamID: string;
     function GetAppName: string;
     function GetArchiveExtension: string;
+    function GetCreationClubContentFileName: string;
     function GetCapabilities: TwbGameCapabilities;
 
     procedure SwitchToCoSave;
@@ -3410,6 +3411,8 @@ type
       read GetAppName;
     property ArchiveExtension: string
       read GetArchiveExtension;
+    property CreationClubContentFileName: string
+      read GetCreationClubContentFileName;
     property Capabilities: TwbGameCapabilities
       read GetCapabilities;
   end;
@@ -3453,6 +3456,7 @@ type
     gdExtractInfo      : PByteSet;
     gdFilePluginNames  : TwbFilePluginNames;
     gdOfficialDLC      : TArray<string>;
+    gdCreationClubContentFileName : string;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3463,6 +3467,7 @@ type
     function GetGameSteamID: string;
     function GetAppName: string;
     function GetArchiveExtension: string;
+    function GetCreationClubContentFileName: string;
     function GetCapabilities: TwbGameCapabilities;
 
     procedure Define; virtual;
@@ -3517,6 +3522,9 @@ type
     property OfficialDLC: TArray<string>
       read gdOfficialDLC
       write gdOfficialDLC;
+    property CreationClubContentFileName: string
+      read gdCreationClubContentFileName
+      write gdCreationClubContentFileName;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -5708,6 +5716,11 @@ end;
 function TwbGameDef.GetArchiveExtension: string;
 begin
   Result := wbArchiveExtension;
+end;
+
+function TwbGameDef.GetCreationClubContentFileName: string;
+begin
+  Result := gdCreationClubContentFileName;
 end;
 
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
