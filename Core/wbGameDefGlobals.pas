@@ -22,6 +22,7 @@ function wbOfficialDLC: TArray<string>; inline;
 function wbRecordFlags: IwbIntegerDef; inline;
 function wbMainRecordHeader: IwbValueDef; inline;
 function wbSizeOfMainRecordStruct: Integer; inline;
+function wbRecordDefs: TwbRecordDefEntries; inline;
 
 implementation
 
@@ -103,6 +104,11 @@ end;
 function wbSizeOfMainRecordStruct: Integer;
 begin
   Result := _CurrentGameDef.SizeOfMainRecordStruct;
+end;
+
+function wbRecordDefs: TwbRecordDefEntries;
+begin
+  Result := _CurrentGameDef.RecordDefs;
 end;
 
 end.

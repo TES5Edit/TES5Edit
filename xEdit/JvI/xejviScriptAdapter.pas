@@ -38,6 +38,7 @@ uses
   wbBSArchive,
   wbHelpers,
   wbInterface,
+  wbGameDefGlobals,
 
   xejviScriptAdapterContainer,
   xejviScriptAdapterDF,

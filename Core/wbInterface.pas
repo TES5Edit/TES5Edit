@@ -3383,6 +3383,7 @@ type
     function GetCapabilities: TwbGameCapabilities;
 
     procedure SwitchToCoSave;
+    function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean;
 
     property GameMode: TwbGameMode
       read GetGameMode;
@@ -3430,6 +3431,26 @@ type
 
   TwbFilePluginNames = procedure(const aHeader: IwbContainer; aNames: TStrings);
 
+  PwbRecordDefEntry = ^TwbRecordDefEntry;
+  TwbRecordDefEntry = record
+    rdeSignature : TwbSignature;
+    rdeHash      : Integer;
+    rdeDef       : IwbMainRecordDef;
+    rdeNext      : Integer;
+  end;
+
+  TwbRecordDefEntries = array of TwbRecordDefEntry;
+
+  TwbMainRecordDefs = TArray<IwbMainRecordDef>;
+
+  TwbMainRecordDefsHelper = record helper for TwbMainRecordDefs
+    procedure Add(const aMainRecordDef: IwbMainRecordDef);
+  end;
+
+const
+  RecordDefHashMapSize = 1546;
+
+type
   TwbGameDef = class(TInterfacedObject, IwbGameDef)
   protected
     gdHEDRVersion      : Double;
@@ -3452,6 +3473,11 @@ type
     gdRecordFlags            : IwbIntegerDef;
     gdMainRecordHeader       : IwbValueDef;
     gdSizeOfMainRecordStruct : Integer;
+    gdRecordDefs       : TwbRecordDefEntries;
+    gdRefRecordDefs    : TwbMainRecordDefs;
+    gdRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
+    gdRecordDefMap     : TStringList;
+    gdRecordsInit      : Boolean;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3535,8 +3561,27 @@ type
     property SizeOfMainRecordStruct: Integer
       read gdSizeOfMainRecordStruct
       write gdSizeOfMainRecordStruct;
+    property RecordDefs: TwbRecordDefEntries
+      read gdRecordDefs;
+    property RefRecordDefs: TwbMainRecordDefs
+      read gdRefRecordDefs;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
+
+    function RegisterRecordDef(const aSignature   : TwbSignature;
+                               const aName        : string;
+                               const aKnownSRs    : PwbKnownSubRecordSignatures;
+                               const aRecordFlags : IwbIntegerDefFormater;
+                               const aMembers     : array of IwbRecordMemberDef;
+                                     aPriority    : TwbConflictPriority;
+                                     aRequired    : Boolean;
+                                     aIsReference : Boolean)
+                                                  : IwbMainRecordDef;
+    procedure AddRefRecordDef(const aRecordDef: IwbMainRecordDef);
+    function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean;
+    function RecordDefMap: TStringList;
+    procedure InitRecords;
+    procedure ReportDefs;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4685,31 +4730,7 @@ function wbIsSave(const aFileName: string): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
 
-type
-  PwbRecordDefEntry = ^TwbRecordDefEntry;
-  TwbRecordDefEntry = record
-    rdeSignature : TwbSignature;
-    rdeHash      : Integer;
-    rdeDef       : IwbMainRecordDef;
-    rdeNext      : Integer;
-  end;
-
-  TwbRecordDefEntries = array of TwbRecordDefEntry;
-
-  TwbMainRecordDefs = TArray<IwbMainRecordDef>;
-
-  TwbMainRecordDefsHelper = record helper for TwbMainRecordDefs
-    procedure Add(const aMainRecordDef: IwbMainRecordDef);
-  end;
-
-const
-  RecordDefHashMapSize = 1546;
-
 var
-  wbRecordDefs       : TwbRecordDefEntries;
-  wbRefRecordDefs    : TwbMainRecordDefs;
-  wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
-
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
   wbArchiveExtension : string = '.bsa';
@@ -4926,7 +4947,7 @@ procedure InitializeRefIDArray(const anArray: TwbRefIDArray);
 
 function wbFindRecordDef(const aSignature : TwbSignature;
                            out aRecordDef : PwbMainRecordDef)
-                                          : Boolean; overload;
+                                          : Boolean; overload; inline;
 
 function wbFindRecordDef(const aSignature : AnsiString;
                            out aRecordDef : PwbMainRecordDef)
@@ -5444,11 +5465,8 @@ begin
 end;
 
 procedure ReportDefs;
-var
-  i: Integer;
 begin
-  for i:= Low(wbRecordDefs) to High(wbRecordDefs) do
-    wbRecordDefs[i].rdeDef.Report(nil);
+  _CurrentGameDef.ReportDefs;
 end;
 
 function wbIsMorrowind: Boolean; inline;
@@ -5678,6 +5696,7 @@ end;
 
 destructor TwbGameDef.Destroy;
 begin
+  FreeAndNil(gdRecordDefMap);
   FreeAndNil(gdGroupOrder);
   FreeAndNil(gdIgnoreRecords);
   inherited;
@@ -6204,6 +6223,7 @@ type
     recDefFlags           : TwbRecordDefFlags;
     recBaseRecordFormID   : IwbFormIDChecked;
     recReferences         : TStringList;
+    recGameDef            : TwbGameDef;
     recKnownSRs           : PwbKnownSubRecordSignatures;
     recKnownSRMembers     : TwbKnownSubRecordIndices;
     recGetFormIDCallback  : TwbMainRecordGetFormIDCallback;
@@ -8016,6 +8036,116 @@ begin
     Result := TStringComparer.Ordinal;
 end;
 
+function TwbGameDef.RegisterRecordDef(const aSignature   : TwbSignature;
+                                      const aName        : string;
+                                      const aKnownSRs    : PwbKnownSubRecordSignatures;
+                                      const aRecordFlags : IwbIntegerDefFormater;
+                                      const aMembers     : array of IwbRecordMemberDef;
+                                            aPriority    : TwbConflictPriority;
+                                            aRequired    : Boolean;
+                                            aIsReference : Boolean)
+                                                         : IwbMainRecordDef;
+var
+  Hash     : Integer;
+  Index    : Integer;
+  RDE      : PwbRecordDefEntry;
+  NewIndex : Integer;
+begin
+  Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
+  Index := Pred(gdRecordDefHashMap[Hash]);
+  if Index >= 0 then begin
+    RDE := @gdRecordDefs[Index];
+    while Assigned(RDE) do begin
+      if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
+        raise Exception.CreateFmt('Duplicated record definition for signature %s', [string(aSignature)]);
+      if RDE.rdeNext >= 0 then
+        RDE := @gdRecordDefs[RDE.rdeNext]
+      else
+        RDE := nil;
+    end;
+  end;
+
+  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aIsReference);
+  NewIndex := Length(gdRecordDefs);
+  SetLength(gdRecordDefs, Succ(NewIndex));
+  with gdRecordDefs[NewIndex] do begin
+    rdeDef := Result;
+    rdeSignature := aSignature;
+    rdeHash := Hash;
+    rdeNext := Index;
+  end;
+  gdRecordDefHashMap[Hash] := Succ(NewIndex);
+end;
+
+procedure TwbGameDef.AddRefRecordDef(const aRecordDef: IwbMainRecordDef);
+begin
+  gdRefRecordDefs.Add(aRecordDef);
+end;
+
+function TwbGameDef.FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean;
+var
+  Hash     : Integer;
+  Index    : Integer;
+  RDE      : PwbRecordDefEntry;
+begin
+  Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
+  Index := Pred(gdRecordDefHashMap[Hash]);
+  if Index >= 0 then begin
+    RDE := @gdRecordDefs[Index];
+    while Assigned(RDE) do begin
+      if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then begin
+        aRecordDef := @RDE.rdeDef;
+        Exit(True);
+      end;
+      if RDE.rdeNext >= 0 then
+        RDE := @gdRecordDefs[RDE.rdeNext]
+      else
+        RDE := nil;
+    end;
+  end;
+  aRecordDef := nil;
+  Result := False;
+end;
+
+function TwbGameDef.RecordDefMap: TStringList;
+var
+  i: Integer;
+begin
+  if not Assigned(gdRecordDefMap) then begin
+    gdRecordDefMap := TwbFastStringList.Create;
+    for i := Low(gdRecordDefs) to High(gdRecordDefs) do
+      with gdRecordDefs[i] do
+        gdRecordDefMap.AddObject(rdeSignature, Pointer(rdeDef));
+    gdRecordDefMap.Sorted := True;
+  end;
+  Result := gdRecordDefMap;
+end;
+
+procedure TwbGameDef.InitRecords;
+begin
+  if gdRecordsInit then
+    Exit;
+  gdRecordsInit := True;
+
+  for var Looped := False to True do begin
+    for var lRecordIdx := Low(gdRecordDefs) to High(gdRecordDefs) do begin
+      var lDef: IwbDefInternal;
+      if Supports(gdRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
+        lDef.InitFromParent(nil);
+    end;
+    if gdMainRecordHeader <> nil then
+      (gdMainRecordHeader as IwbDefInternal).InitFromParent(nil);
+  end;
+end;
+
+procedure TwbGameDef.ReportDefs;
+var
+  i: Integer;
+begin
+  for i:= Low(gdRecordDefs) to High(gdRecordDefs) do
+    gdRecordDefs[i].rdeDef.Report(nil);
+end;
+
 function wbRecord(const aSignature       : TwbSignature;
                   const aName            : string;
                   const aKnownSRs        : PwbKnownSubRecordSignatures;
@@ -8025,36 +8155,8 @@ function wbRecord(const aSignature       : TwbSignature;
                         aRequired        : Boolean;
                         aIsReference     : Boolean)
                                          : IwbMainRecordDef; overload;
-var
-  Hash     : Integer;
-  Index    : Integer;
-  RDE      : PwbRecordDefEntry;
-  NewIndex : Integer;
 begin
-  Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
-  if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
-    while Assigned(RDE) do begin
-      if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then
-        raise Exception.CreateFmt('Duplicated record definition for signature %s', [string(aSignature)]);
-      if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
-      else
-        RDE := nil;
-    end;
-  end;
-
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aIsReference);
-  NewIndex := Length(wbRecordDefs);
-  SetLength(wbRecordDefs, Succ(NewIndex));
-  with wbRecordDefs[NewIndex] do begin
-    rdeDef := Result;
-    rdeSignature := aSignature;
-    rdeHash := Hash;
-    rdeNext := Index;
-  end;
-  wbRecordDefHashMap[Hash] := Succ(NewIndex);
+  Result := _CurrentGameDef.RegisterRecordDef(aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aPriority, aRequired, aIsReference);
 end;
 
 function wbRecord(const aSignature       : TwbSignature;
@@ -8110,7 +8212,7 @@ function wbRefRecord(const aSignature       : TwbSignature;
                                             : IwbMainRecordDef;
 begin
   Result := wbRecord(aSignature, aName, nil, aRecordFlags, aMembers, aPriority, aRequired, True);
-  wbRefRecordDefs.Add(Result);
+  _CurrentGameDef.AddRefRecordDef(Result);
 end;
 
 function wbRefRecord(const aSignature       : TwbSignature;
@@ -10502,6 +10604,7 @@ constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
     Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recKnownSRs, recRecordFlags, recMembers, rdfIsReference in recDefFlags).AfterClone(aSource);
+  recGameDef := (aSource as TwbMainRecordDef).recGameDef;
 end;
 
 function TwbMainRecordDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
@@ -10528,10 +10631,11 @@ begin
   for var lKnownSubRecordInitIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
     recKnownSRMembers[lKnownSubRecordInitIdx] := -1;
 
+  recGameDef := _CurrentGameDef;
   if Assigned(aKnownSRs) then
     recKnownSRs := aKnownSRs
   else
-    recKnownSRs := _CurrentGameDef.KnownSubRecordSignaturesPtr;
+    recKnownSRs := recGameDef.KnownSubRecordSignaturesPtr;
 
   if aIsReference then
     Include(recDefFlags, rdfIsReference);
@@ -10723,9 +10827,9 @@ begin
   recReferences.Sorted := True;
   recReferences.Duplicates := dupIgnore;
 
-  for i := Low(wbRefRecordDefs) to High(wbRefRecordDefs) do
-    if wbRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
-      recReferences.Add(wbRefRecordDefs[i].DefaultSignature);
+  for i := Low(recGameDef.gdRefRecordDefs) to High(recGameDef.gdRefRecordDefs) do
+    if recGameDef.gdRefRecordDefs[i].IsValidBaseSignature(soSignatures[0]) then
+      recReferences.Add(recGameDef.gdRefRecordDefs[i].DefaultSignature);
 end;
 
 procedure TwbMainRecordDef.Report(const aParents: TwbDefPath);
@@ -22492,29 +22596,8 @@ end;
 function wbFindRecordDef(const aSignature : TwbSignature;
                            out aRecordDef : PwbMainRecordDef)
                                           : Boolean;
-var
-  Hash     : Integer;
-  Index    : Integer;
-  RDE      : PwbRecordDefEntry;
-
 begin
-  Hash := Cardinal(aSignature) mod RecordDefHashMapSize;
-  Index := Pred(wbRecordDefHashMap[Hash]);
-  if Index >= 0 then begin
-    RDE := @wbRecordDefs[Index];
-    while Assigned(RDE) do begin
-      if Cardinal(RDE.rdeSignature) = Cardinal(aSignature) then begin
-        aRecordDef := @RDE.rdeDef;
-        Exit(True);
-      end;
-      if RDE.rdeNext >= 0 then
-        RDE := @wbRecordDefs[RDE.rdeNext]
-      else
-        RDE := nil;
-    end;
-  end;
-  aRecordDef := nil;
-  Result := False;
+  Result := _CurrentGameDef.FindRecordDef(aSignature, aRecordDef);
 end;
 
 function wbFindRecordDef(const aSignature : AnsiString;
@@ -22525,21 +22608,9 @@ begin
     wbFindRecordDef(PwbSignature(@aSignature[1])^, aRecordDef);
 end;
 
-var
-  wbRecordDefMap: TStringList;
-
 function _wbRecordDefMap: TStringList;
-var
-  i: Integer;
 begin
-  if not Assigned(wbRecordDefMap) then begin
-    wbRecordDefMap := TwbFastStringList.Create;
-    for i := Low(wbRecordDefs) to High(wbRecordDefs) do
-      with wbRecordDefs[i] do
-        wbRecordDefMap.AddObject(rdeSignature, Pointer(rdeDef));
-    wbRecordDefMap.Sorted := True;
-  end;
-  Result := wbRecordDefMap;
+  Result := _CurrentGameDef.RecordDefMap;
 end;
 
 {$IFDEF USE_CODESITE}
@@ -24086,24 +24157,9 @@ begin
   ikKeys[aIndex] := aValue;
 end;
 
-var
-  _RecordsInit: Boolean = False;
-
 procedure wbInitRecords;
 begin
-  if _RecordsInit then
-    Exit;
-  _RecordsInit := True;
-
-  for var Looped := False to True do begin
-    for var lRecordIdx := Low(wbRecordDefs) to High(wbRecordDefs) do begin
-      var lDef: IwbDefInternal;
-      if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
-        lDef.InitFromParent(nil);
-    end;
-    if _CurrentGameDef.MainRecordHeader <> nil then
-      (_CurrentGameDef.MainRecordHeader as IwbDefInternal).InitFromParent(nil);
-  end;
+  _CurrentGameDef.InitRecords;
 end;
 
 function wbGetUnknownIntString(aInt: Int64): string;
@@ -24506,8 +24562,6 @@ initialization
 finalization
   _CurrentGameDef := nil;
   _CurrentGameDefRef := nil;
-  FreeAndNil(wbRecordDefMap);
-  wbRecordDefs := nil;
   wbContainerHandler := nil;
   FreeAndNil(wbLEncoding[True]);
   FreeAndNil(wbLEncoding[False]);

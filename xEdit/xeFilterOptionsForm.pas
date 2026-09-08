@@ -132,6 +132,7 @@ uses
   Winapi.Windows,
 
   wbInterface,
+  wbGameDefGlobals,
 
   xeMainForm;
 
