@@ -10884,7 +10884,7 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  if wbGameMode = gmFO4VR then begin
+  if GameMode = gmFO4VR then begin
     b := MakeVarRecs([
       Sig2Int('TUSW'), 'TUSW',
       Sig2Int('HMVW'), 'HMVW'

@@ -3511,6 +3511,8 @@ type
       read gdGameMode;
     property ToolSource: TwbToolSource
       read gdToolSource;
+    property GameMode: TwbGameMode
+      read GetGameMode;
 
     procedure AddGroupOrder(const aSignature: TwbSignature);
     function GetGroupOrder(const aSignature: TwbSignature): Integer;
@@ -6277,7 +6279,8 @@ type
     procedure recBuildReferences;
   protected
     constructor Clone(const aSource: TwbDef); override;
-    constructor Create(aPriority        : TwbConflictPriority;
+    constructor Create(aGameDef         : TwbGameDef;
+                       aPriority        : TwbConflictPriority;
                        aRequired        : Boolean;
                  const aSignature       : TwbSignature;
                  const aName            : string;
@@ -8098,7 +8101,7 @@ begin
     end;
   end;
 
-  Result := TwbMainRecordDef.Create(aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aIsReference);
+  Result := TwbMainRecordDef.Create(Self, aPriority, aRequired, aSignature, aName, aKnownSRs, aRecordFlags, aMembers, aIsReference);
   NewIndex := Length(gdRecordDefs);
   SetLength(gdRecordDefs, Succ(NewIndex));
   with gdRecordDefs[NewIndex] do begin
@@ -10636,8 +10639,7 @@ end;
 constructor TwbMainRecordDef.Clone(const aSource: TwbDef);
 begin
   with aSource as TwbMainRecordDef do
-    Self.Create(defPriority, defRequired, GetDefaultSignature, ndName, recKnownSRs, recRecordFlags, recMembers, rdfIsReference in recDefFlags).AfterClone(aSource);
-  recGameDef := (aSource as TwbMainRecordDef).recGameDef;
+    Self.Create(recGameDef, defPriority, defRequired, GetDefaultSignature, ndName, recKnownSRs, recRecordFlags, recMembers, rdfIsReference in recDefFlags).AfterClone(aSource);
 end;
 
 function TwbMainRecordDef.ContainsMemberFor(const aContainer     : IwbContainerElementRef;
@@ -10650,7 +10652,8 @@ begin
   Result := recSignatures.Find(aSignature, Dummy);
 end;
 
-constructor TwbMainRecordDef.Create(aPriority        : TwbConflictPriority;
+constructor TwbMainRecordDef.Create(aGameDef         : TwbGameDef;
+                                    aPriority        : TwbConflictPriority;
                                     aRequired        : Boolean;
                               const aSignature       : TwbSignature;
                               const aName            : string;
@@ -10664,7 +10667,7 @@ begin
   for var lKnownSubRecordInitIdx := Low(TwbKnownSubRecord) to High(TwbKnownSubRecord) do
     recKnownSRMembers[lKnownSubRecordInitIdx] := -1;
 
-  recGameDef := _CurrentGameDef;
+  recGameDef := aGameDef;
   if Assigned(aKnownSRs) then
     recKnownSRs := aKnownSRs
   else
@@ -10676,9 +10679,9 @@ begin
   recRecordFlags := aRecordFlags;
   recQuickInitLimit := -1;
 
-  if Assigned(recRecordFlags) and (_CurrentGameDef.RecordFlags <> nil) and (_CurrentGameDef.MainRecordHeader <> nil) then begin
-    recRecordHeaderStruct := (_CurrentGameDef.MainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
-    (recRecordHeaderStruct.MembersByName[_CurrentGameDef.RecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
+  if Assigned(recRecordFlags) and (recGameDef.RecordFlags <> nil) and (recGameDef.MainRecordHeader <> nil) then begin
+    recRecordHeaderStruct := (recGameDef.MainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
+    (recRecordHeaderStruct.MembersByName[recGameDef.RecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
   end;
 
   recSignatures := TwbFastStringListCS.CreateSorted(dupAccept);
@@ -10801,7 +10804,7 @@ begin
   if Assigned(recRecordHeaderStruct) then
     Result := recRecordHeaderStruct as IwbStructDef
   else
-    Result := _CurrentGameDef.MainRecordHeader as IwbStructDef;
+    Result := recGameDef.MainRecordHeader as IwbStructDef;
 end;
 
 function TwbMainRecordDef.GetReferenceSignature(const aIndex: Integer): TwbSignature;

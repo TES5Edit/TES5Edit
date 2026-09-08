@@ -6965,7 +6965,7 @@ begin
     Sig2Int('VRWS'), 'VRWS'
   ]);
 
-  if wbGameMode = gmTES5VR then
+  if GameMode = gmTES5VR then
     wbDOBJObjects := wbCombineVarRecs(wbDOBJObjectsTES5, wbDOBJObjectsTES5VR);
 
   wbRecord(DOBJ, 'Default Object Manager', [
@@ -10899,21 +10899,21 @@ begin
     if wbToolMode = tmLODgen then
       NexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
-  case wbGameMode of
+  case GameMode of
     gmEnderal: NexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
     gmEnderalSE: NexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
   end;
   if wbIsSkyrimSE then begin
     OfficialDLC := ['Dawnguard.esm', 'HearthFires.esm', 'Dragonborn.esm'];
 
-    if wbGameMode = gmTES5VR then begin
+    if GameMode = gmTES5VR then begin
       // new VR esm is loaded after DLCs
       OfficialDLC := OfficialDLC + ['SkyrimVR.esm'];
     end else
       CreationClubContentFileName := 'Skyrim.ccc';
   end;
   HEDRVersion := 1.7;
-  if wbGameMode in [gmSSE, gmEnderalSE] then
+  if GameMode in [gmSSE, gmEnderalSE] then
     HEDRVersion := 1.71;
 end;
 

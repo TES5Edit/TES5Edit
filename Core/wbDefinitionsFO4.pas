@@ -8613,7 +8613,7 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  if wbGameMode = gmFO4VR then begin
+  if GameMode = gmFO4VR then begin
     b := MakeVarRecs([
       Sig2Int('TUSW'), 'TUSW',
       Sig2Int('HMVW'), 'HMVW'
@@ -13357,12 +13357,12 @@ begin
     wbNexusModsUrl := '';}
   OfficialDLC := ['DLCRobot.esm', 'DLCworkshop01.esm', 'DLCCoast.esm', 'DLCworkshop02.esm',
     'DLCworkshop03.esm', 'DLCNukaWorld.esm', 'DLCUltraHighResolution.esm'];
-  if wbGameMode = gmFO4VR then begin
+  if GameMode = gmFO4VR then begin
     // new VR esm is loaded after DLCs
     OfficialDLC := OfficialDLC + ['Fallout4_VR.esm'];
   end else
     CreationClubContentFileName := 'Fallout4.ccc';
-  if wbGameMode = gmFO4VR then
+  if GameMode = gmFO4VR then
     HEDRVersion := 0.95
   else begin
     HEDRVersion := 1.0;

@@ -8811,13 +8811,13 @@ begin
 
   if wbIsOblivion then
     wbICON := wbString(ICON, 'Icon FileName')
-  else if wbGameMode = gmFNV then
+  else if wbCurrentGameMode = gmFNV then
     wbICON :=
       wbRStruct('Icon', [
         wbString(ICON, 'Large Icon FileName').SetRequired,
         wbString(MICO, 'Small Icon FileName')
       ]).SetUnordered
-  else if wbGameMode = gmFO3 then
+  else if wbCurrentGameMode = gmFO3 then
     wbICON :=
       wbRStruct('Icon', [
         wbString(ICON, 'Large Icon FileName'),
