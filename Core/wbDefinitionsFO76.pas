@@ -30,6 +30,7 @@ uses
   System.IOUtils,
 
   wbDefinitionsCommon,
+  wbGameDefGlobals,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -4140,7 +4141,7 @@ begin
 
   //wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
   wbActorValue := wbUnion('Actor Value', wbFormVersionDecider(77), [
-    wbInteger('Actor Value', itU32, wbActorValueEnum),
+    wbInteger('Actor Value', itU32, ActorValueEnum),
     wbFormIDCkNoReach('Actor Value', [AVIF, NULL])
   ]);
 
@@ -5725,7 +5726,7 @@ begin
       {21} 'Is Synced Anim'
     ]);
 
-  wbActorValueEnum :=
+  ActorValueEnum :=
     wbEnum([
     {00} 'Aggression',
     {01} 'Confidence',
@@ -9951,7 +9952,7 @@ begin
             ])),
           wbInteger('Health Percent', itU8),
           wbUnion('Actor Value', wbFormVersionDecider(78), [
-            wbInteger('Actor Value', itU8, wbActorValueEnum),
+            wbInteger('Actor Value', itU8, ActorValueEnum),
             wbFormIDCk('Actor Value', [AVIF, NULL])
           ]),
           wbInteger('To Hit Chance', itU8),
@@ -11117,7 +11118,7 @@ begin
       'Item Slot'
     ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbUnion(ANAM, '', wbFormVersionDecider(78), [
-      wbInteger('Condition Actor Value', itS32, wbActorValueEnum),
+      wbInteger('Condition Actor Value', itS32, ActorValueEnum),
       wbFormIDCk('Condition Actor Value', [AVIF, NULL, FFFF])
     ])
   ]);
@@ -15669,7 +15670,7 @@ begin
     wbFULL,
     wbStruct(DNAM,'Damage Type Resistance', [
       wbUnion('Actor Value', wbFormVersionDecider(78), [
-        wbInteger('Actor Value Index', itU32, wbActorValueEnum),
+        wbInteger('Actor Value Index', itU32, ActorValueEnum),
         wbFormIDck('Actor Value', [AVIF, NULL])
       ]),
       wbFormIDck('Spell', [SPEL, NULL])

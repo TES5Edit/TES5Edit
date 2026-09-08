@@ -30,6 +30,7 @@ uses
   System.Variants,
 
   wbDefinitionsCommon,
+  wbGameDefGlobals,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -2516,7 +2517,7 @@ begin
 
   {>>> Enums <<<}
 
-  wbActorValueEnum :=
+  ActorValueEnum :=
     wbEnum([
       {0}  'Aggression',
       {1}  'Confidence',
@@ -2859,7 +2860,7 @@ begin
 
   {>>> Common Defs <<<}
 
-  wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
+  wbActorValue := wbInteger('Actor Value', itS32, ActorValueEnum);
   wbBIPL := wbFormIDCk(BIPL, 'Biped Model List', [FLST]);
   wbDESC := wbStringKC(DESC, 'Description', 0, cpTranslate);
   wbDESCReq := wbStringKC(DESC, 'Description', 0, cpTranslate).SetRequired;
@@ -2897,7 +2898,7 @@ begin
     {2}  wbFormIDCkNoReach('Target', [CREA, NPC_]),
     {3}  wbFormIDCkNoReach('Target List', [FLST], [CREA, NPC_]),
     {4}  wbUnused(4),
-    {5}  wbInteger('Target Part', itS32, wbActorValueEnum),
+    {5}  wbInteger('Target Part', itS32, ActorValueEnum),
     {6}  wbInteger('VATS Action', itU32, wbVatsActionEnum),
     {7}  wbUnused(4).IncludeFlag(dfZeroSortKey),
     {8}  wbUnused(4).IncludeFlag(dfZeroSortKey),
@@ -2922,7 +2923,7 @@ begin
     {5}  wbUnion('VATS Value Param', wbConditionVATSValueParam, wbConditionVATSValueParameters),
 
     //Enums
-    {6}  wbInteger('Actor Value', itS32, wbActorValueEnum),
+    {6}  wbInteger('Actor Value', itS32, ActorValueEnum),
     {7}  wbInteger('Alignment', itU32, wbAlignmentEnum),
     {8}  wbInteger('Axis', itU32, wbAxisEnum),
     {9}  wbInteger('Body Location', itS32, wbBodyLocationEnum),
@@ -3721,7 +3722,7 @@ begin
     wbDESCReq,
     wbICON,
     wbStruct(DATA, '', [
-      wbArray('Tag Skills', wbInteger('Tag Skill', itS32, wbActorValueEnum), 4),
+      wbArray('Tag Skills', wbInteger('Tag Skill', itS32, ActorValueEnum), 4),
       wbInteger('Flags', itU32,
         wbFlags([
           {0} 'Playable',
@@ -5385,7 +5386,7 @@ begin
             ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
           wbInteger('Part Type', itS8, wbBodyLocationEnum),
           wbInteger('Health Percent', itU8),
-          wbInteger('Actor Value', itS8, wbActorValueEnum),
+          wbInteger('Actor Value', itS8, ActorValueEnum),
           wbInteger('To Hit Chance', itU8),
           wbInteger('Explodable - Explosion Chance %', itU8),
           wbInteger('Explodable - Debris Count', itU16),
@@ -6143,7 +6144,7 @@ begin
          {3} wbFormIDCk('Assoc. Creature', [CREA]) //Summon Creature
          ]),
     {3}  wbUnused(4),
-    {4}  wbInteger('Resistance Type', itS32, wbActorValueEnum),
+    {4}  wbInteger('Resistance Type', itS32, ActorValueEnum),
     {5}  wbInteger('Counter Effect Count', itU16),
     {6}  wbUnused(2),
     {7}  wbFormIDCk('Light', [LIGH, NULL]),
@@ -6698,7 +6699,7 @@ begin
     wbFactionRelations,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
-        wbInteger('Skill', itS8, wbActorValueEnum),
+        wbInteger('Skill', itS8, ActorValueEnum),
         wbInteger('Boost', itS8)
       ]).SetSummaryKey([1, 0])
         .SetSummaryMemberPrefixSuffix(1, '+', '')
@@ -7656,7 +7657,7 @@ begin
       {92} wbFloat('Reload Time'),
       {96} wbFloat('Jam Time'),
      {100} wbFloat('Aim Arc'),
-     {104} wbInteger('Skill', itS32, wbActorValueEnum),
+     {104} wbInteger('Skill', itS32, ActorValueEnum),
      {108} wbInteger('Rumble - Pattern', itU32,
              wbEnum([
                {0} 'Constant',
@@ -7666,7 +7667,7 @@ begin
              ])),
      {112} wbFloat('Rumble - Wavelength'),
      {116} wbFloat('Limb Dmg Mult'),
-     {120} wbInteger('Resist Type', itS32, wbActorValueEnum),
+     {120} wbInteger('Resist Type', itS32, ActorValueEnum),
      {124} wbFloat('Sight Usage'),
      {128} wbFloat('Semi-Automatic Fire Delay Min'),
      {132} wbFloat('Semi-Automatic Fire Delay Max')

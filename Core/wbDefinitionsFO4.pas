@@ -29,6 +29,7 @@ uses
   System.Variants,
 
   wbDefinitionsCommon,
+  wbGameDefGlobals,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -4655,7 +4656,7 @@ begin
       {20} 'Casting Type Is'
     ]);
 
-  wbActorValueEnum :=
+  ActorValueEnum :=
     wbEnum([
     {00} 'Aggression',
     {01} 'Confidence',

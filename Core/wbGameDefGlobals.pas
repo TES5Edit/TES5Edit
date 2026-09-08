@@ -14,6 +14,7 @@ function wbIgnoreRecords: TStringList; inline;
 function wbGroupOrder: TStringList; inline;
 function wbFileMagic: TwbFileMagic; inline;
 function wbFilePlugins: string; inline;
+function wbActorValueEnum: IwbEnumDef; inline;
 
 implementation
 
@@ -55,6 +56,11 @@ end;
 function wbFilePlugins: string;
 begin
   Result := _CurrentGameDef.FilePlugins;
+end;
+
+function wbActorValueEnum: IwbEnumDef;
+begin
+  Result := _CurrentGameDef.ActorValueEnum;
 end;
 
 end.

@@ -17,6 +17,7 @@ uses
 type
   TwbGameDefFNVSaves = class(TwbGameDefFNV)
   protected
+    procedure DefineFNVSavesA;
     procedure DefineFNVSavesS;
     procedure Define; override;
     procedure SwitchToCoSave; override;
@@ -41,13 +42,13 @@ var
   wbSaveHeader     : IwbStructDef;
   wbCoSaveHeader   : IwbStructDef;
 
-procedure DefineFNVSavesA;
+procedure TwbGameDefFNVSaves.DefineFNVSavesA;
 var
   i: Integer;
 begin
-  SetLength(wbActorValueLabels, wbActorValueEnum.NameCount);
-  for i := 0 to wbActorValueEnum.NameCount - 1 do
-    wbActorValueLabels[i] := wbActorValueEnum.Names[i];
+  SetLength(wbActorValueLabels, ActorValueEnum.NameCount);
+  for i := 0 to ActorValueEnum.NameCount - 1 do
+    wbActorValueLabels[i] := ActorValueEnum.Names[i];
 end;
 
 { FNVsaves }

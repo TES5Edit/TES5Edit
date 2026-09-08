@@ -3445,6 +3445,7 @@ type
     gdGroupOrder       : TStringList;
     gdFileMagic        : TwbFileMagic;
     gdFilePlugins      : string;
+    gdActorValueEnum   : IwbEnumDef;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3491,6 +3492,9 @@ type
     property FilePlugins: string
       read gdFilePlugins
       write gdFilePlugins;
+    property ActorValueEnum: IwbEnumDef
+      read gdActorValueEnum
+      write gdActorValueEnum;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4865,7 +4869,6 @@ threadvar
   _BlockInternalEdit: Boolean;
 
 var
-  wbActorValueEnum: IwbEnumDef;
 
   wbNullSignature     : TwbSignature = #0#0#0#0;
   wbFilePluginNames   : TwbFilePluginNames = nil;
@@ -17901,8 +17904,8 @@ begin
         FilesProg := nil;
 
         if ACVAIsValid then begin
-          for i := 0 to Pred(wbActorValueEnum.NameCount) do
-            Strings.Add(wbActorValueEnum.Names[i] + ' [ACVA:' + IntToHex64(i, 8) + ']');
+          for i := 0 to Pred(_CurrentGameDef.ActorValueEnum.NameCount) do
+            Strings.Add(_CurrentGameDef.ActorValueEnum.Names[i] + ' [ACVA:' + IntToHex64(i, 8) + ']');
           Strings.Add(' None [ACVA:000000FF]');
           Strings.Add(' Invalid [ACVA:00000048]');
         end else begin
@@ -18270,7 +18273,7 @@ begin
       if Assigned(MainRecord) then
         Result := MainRecord.FullName
       else
-        Result := wbActorValueEnum.ToString(aInt, aElement, aForSummary);
+        Result := _CurrentGameDef.ActorValueEnum.ToString(aInt, aElement, aForSummary);
       Result := Result + ' [ACVA:' + FormID.ToString(False) + ']';
     end;
     Exit;

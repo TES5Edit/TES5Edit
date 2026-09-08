@@ -1024,7 +1024,7 @@ begin
 
 {>>> Enums <<<}
 
-  wbActorValueEnum :=
+  ActorValueEnum :=
     wbEnum([
       {0}  'Strength',
       {1}  'Intelligence',
@@ -1330,7 +1330,7 @@ begin
   {4} wbInteger('Variable Name', itS32, wbConditionVariableNameToStr, wbConditionVariableNameToInt),
 
   //Enums
-  {5}  wbInteger('Actor Value', itS32, wbActorValueEnum),
+  {5}  wbInteger('Actor Value', itS32, ActorValueEnum),
   {6}  wbInteger('Axis', itU32, wbAxisEnum),
   {7}  wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
   {8}  wbInteger('Form Type', itU32, wbFormTypeEnum),
@@ -1507,7 +1507,7 @@ begin
           wbInteger('Area', itU32),
           wbInteger('Duration', itU32),
           wbInteger('Type', itU32, wbEffectTypeEnum),
-          wbInteger('Actor Value', itS32, wbActorValueEnum).SetDefaultNativeValue(8)
+          wbInteger('Actor Value', itS32, ActorValueEnum).SetDefaultNativeValue(8)
         ]).SetAfterLoad(wbEFITAfterLoad)
           .SetRequired,
         wbRStructSK([0], 'Script Effect', [
@@ -2717,7 +2717,7 @@ begin
         wbFormIDCk('Assoc. Weapon', [WEAP]),
         wbFormIDCk('Assoc. Armor', [ARMO, NULL{?}]),
         wbFormIDCk('Assoc. Creature', [CREA, LVLC, NPC_]),
-        wbInteger('Assoc. Actor Value', itS32, wbActorValueEnum)
+        wbInteger('Assoc. Actor Value', itS32, ActorValueEnum)
       ]),
       wbInteger('Magic School', itU32, wbMagicSchoolEnum),
       wbInteger('Resist value', itS32,

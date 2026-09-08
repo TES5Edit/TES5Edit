@@ -30,6 +30,7 @@ uses
   System.Variants,
 
   wbDefinitionsCommon,
+  wbGameDefGlobals,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -3306,7 +3307,7 @@ begin
       {20} 'Casting Type Is'
     ]);
 
-  wbActorValueEnum :=
+  ActorValueEnum :=
     wbEnum([
     {00} 'Aggression',
     {01} 'Confidence',
@@ -3520,7 +3521,7 @@ begin
     'Instant'
   ]);
 
-  wbActorValue := wbInteger('Actor Value', itS32, wbActorValueEnum);
+  wbActorValue := wbInteger('Actor Value', itS32, ActorValueEnum);
 
   wbETYP := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL]);
   wbETYPReq := wbFormIDCk(ETYP, 'Equipment Type', [EQUP, NULL], False, cpNormal, True);
@@ -3761,7 +3762,7 @@ begin
     {2}  wbFormIDCkNoReach('Target', [NPC_]),
     {3}  wbFormIDCkNoReach('Target List', [FLST], [NPC_]),
     {4}  wbByteArray('Unknown', 4, cpIgnore),
-    {5}  wbInteger('Target Part', itS32, wbActorValueEnum),
+    {5}  wbInteger('Target Part', itS32, ActorValueEnum),
     {6}  wbInteger('VATS Action', itU32,
            wbEnum([
              {0}  'Unarmed Attack',
@@ -3830,7 +3831,7 @@ begin
     {9} wbUnion('VATS Value Param', wbConditionVATSValueParamDecider, wbConditionVATSValueParameters),
 
     //Enums
-    {10} wbInteger('Actor Value', itS32, wbActorValueEnum),
+    {10} wbInteger('Actor Value', itS32, ActorValueEnum),
     {11} wbInteger('Alignment', itU32, wbAlignmentEnum),
     {12} wbInteger('Axis', itU32, wbAxisEnum),
     {13} wbInteger('Casting Source', itU32, wbCastingSourceEnum),
@@ -6050,7 +6051,7 @@ begin
               {5} 'Saddle'
             ])),
           wbInteger('Health Percent', itU8),
-          wbInteger('Actor Value', itS8, wbActorValueEnum),
+          wbInteger('Actor Value', itS8, ActorValueEnum),
           wbInteger('To Hit Chance', itU8),
           wbInteger('Explodable - Explosion Chance %', itU8),
           wbInteger('Explodable - Debris Count', itU16),
@@ -8134,8 +8135,8 @@ begin
          {7} wbFormIDCk('Assoc. Item', [ENCH, NULL]),
          {8} wbFormIDCk('Assoc. Item', [KYWD, NULL])
          ]),
-    {3}  wbInteger('Magic Skill', itS32, wbActorValueEnum),
-    {4}  wbInteger('Resist Value', itS32, wbActorValueEnum),
+    {3}  wbInteger('Magic Skill', itS32, ActorValueEnum),
+    {4}  wbInteger('Resist Value', itS32, ActorValueEnum),
     {5}  wbInteger('Counter Effect Count', itU16),
     {6}  wbUnused(2),
     {7}  wbFormIDCk('Casting Light', [LIGH, NULL]),
@@ -8205,7 +8206,7 @@ begin
     {19} wbFormIDCk('Explosion', [EXPL, NULL]),
     {20} wbInteger('Casting Type', itU32, wbCastEnum),
     {21} wbInteger('Delivery', itU32, wbDeliveryEnum),
-    {22} wbInteger('Second Actor Value', itS32, wbActorValueEnum),
+    {22} wbInteger('Second Actor Value', itS32, ActorValueEnum),
     {23} wbFormIDCk('Casting Art', [ARTO, NULL]),
     {24} wbFormIDCk('Hit Effect Art', [ARTO, NULL]),
     {25} wbFormIDCk('Impact Data', [IPDS, NULL]),
@@ -9315,7 +9316,7 @@ begin
     wbKeywords,
     wbStruct(DATA, '', [
       wbArrayS('Skill Boosts', wbStructSK([0], 'Skill Boost', [
-        wbInteger('Skill', itS8, wbActorValueEnum),
+        wbInteger('Skill', itS8, ActorValueEnum),
         wbInteger('Boost', itS8)
       ]).SetSummaryKey([1, 0])
       .SetSummaryMemberPrefixSuffix(1, '+', '')
@@ -10535,7 +10536,7 @@ begin
       wbByteArray('Unknown', 4),
       wbInteger('Skill', itS32, wbSkillEnum),
       wbByteArray('Unknown', 8),
-      wbInteger('Resist', itS32, wbActorValueEnum),
+      wbInteger('Resist', itS32, ActorValueEnum),
       wbByteArray('Unknown', 4),
       wbFloat('Stagger')
     ]),

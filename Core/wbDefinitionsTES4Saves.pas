@@ -17,6 +17,7 @@ uses
 type
   TwbGameDefTES4Saves = class(TwbGameDefTES4)
   protected
+    procedure DefineTES4SavesA;
     procedure DefineTES4SavesS;
     procedure Define; override;
     procedure SwitchToCoSave; override;
@@ -39,13 +40,13 @@ var
   wbSaveHeader     : IwbStructDef;
   wbCoSaveHeader   : IwbStructDef;
 
-procedure DefineTES4SavesA;
+procedure TwbGameDefTES4Saves.DefineTES4SavesA;
 var
   i: Integer;
 begin
-  SetLength(wbActorValueLabels, wbActorValueEnum.NameCount);
-  for i := 0 to wbActorValueEnum.NameCount - 1 do
-    wbActorValueLabels[i] := wbActorValueEnum.Names[i];
+  SetLength(wbActorValueLabels, ActorValueEnum.NameCount);
+  for i := 0 to ActorValueEnum.NameCount - 1 do
+    wbActorValueLabels[i] := ActorValueEnum.Names[i];
 end;
 
 //{ TES4saves }
