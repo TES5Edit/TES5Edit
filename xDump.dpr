@@ -909,22 +909,6 @@ begin
     Result := False;
 end;
 
-procedure SwitchToCoSave;
-begin
-  case wbGameMode of
-    gmFNV:            SwitchToFNVCoSave;
-    gmFO3:            SwitchToFO3CoSave;
-    gmFO4, gmFO4vr:   SwitchToFO4CoSave;
-    gmTES4:           SwitchToTES4CoSave;
-    gmTES5,
-    gmTES5vr,
-    gmEnderal,
-    gmEnderalSE,
-    gmSSE:            SwitchToTES5CoSave;
-    gmSF1:            {nothing};
-  end;
-end;
-
 var
   NeedsSyntaxInfo : Boolean;
   s, t            : string;
@@ -1055,67 +1039,38 @@ begin
       case wbGameMode of
         gmFNV: begin
           wbGameName := 'FalloutNV';
-          case wbToolSource of
-            tsSaves:   DefineFNVSaves;
-            tsPlugins: DefineFNV;
-          end;
         end;
         gmFO3: begin
           wbGameName := 'Fallout3';
-          case wbToolSource of
-            tsSaves:   DefineFO3Saves;
-            tsPlugins: DefineFO3;
-          end;
         end;
         gmTES3: begin
           wbGameName := 'Morrowind';
           wbLoadBSAs := false;
           tms := [tmDump];
           tss := [tsPlugins];
-          DefineTES3;
         end;
         gmTES4: begin
           wbGameName := 'Oblivion';
-          case wbToolSource of
-            tsSaves:   DefineTES4Saves;
-            tsPlugins: DefineTES4;
-          end;
         end;
         gmTES5: begin
           wbGameName    := 'Skyrim';
           wbGameExeName := 'TESV';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
         end;
         gmEnderal: begin
           wbGameName      := 'Enderal';
           wbGameExeName   := 'TESV';
           wbGameMasterEsm := 'Skyrim.esm';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
         end;
         gmTES5VR: begin
           wbGameName    := 'Skyrim';
           wbGameName2   := 'Skyrim VR';
           wbGameExeName := 'SkyrimVR';
           tss := [tsPlugins];
-          case wbToolSource of
-            //tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
         end;
         gmFO4: begin
           wbGameName           := 'Fallout4';
           wbCreateContainedIn  := False;
           wbVWDAsQuestChildren := True;
-          case wbToolSource of
-            tsSaves:   DefineFO4Saves;
-            tsPlugins: DefineFO4;
-          end;
         end;
         gmFO4VR: begin
           wbGameName           := 'Fallout4';
@@ -1125,19 +1080,11 @@ begin
           wbCreateContainedIn  := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
-          case wbToolSource of
-            //tsSaves:   DefineFO4Saves;
-            tsPlugins: DefineFO4;
-          end;
         end;
         gmSSE: begin
           wbGameName    := 'Skyrim';
           wbGameExeName := 'SkyrimSE';
           wbGameName2   := 'Skyrim Special Edition';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
         end;
         gmEnderalSE: begin
           wbAppName       := 'EnderalSE';
@@ -1146,10 +1093,6 @@ begin
           wbGameName2     := 'Enderal Special Edition';
           wbGameNameReg   := 'EnderalSE';
           wbGameMasterEsm := 'Skyrim.esm';
-          case wbToolSource of
-            tsSaves:   DefineTES5Saves;
-            tsPlugins: DefineTES5;
-          end;
         end;
         gmFO76: begin
           wbGameName           := 'Fallout76';
@@ -1158,17 +1101,11 @@ begin
           wbCreateContainedIn  := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
-          case wbToolSource of
-            tsPlugins: DefineFO76;
-          end;
         end;
         gmSF1: begin
           wbGameName           := 'Starfield';
           wbCreateContainedIn  := False;
           wbVWDAsQuestChildren := True;
-          case wbToolSource of
-            tsPlugins: DefineSF1;
-          end;
         end;
       else begin
         s := '';
@@ -1196,7 +1133,7 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
-      wbCurrentContext := wbCreateGameContext(wbCreateGameDef);
+      wbCurrentContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
 
       if not (wbToolMode in tms) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
@@ -1488,20 +1425,20 @@ begin
       end;
       if wbToolSource = tsSaves then
         case wbGameMode of
-          gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then SwitchToCoSave;
-          gmFO3:    if SameText(ExtractFileExt(s), '.fose') then SwitchToCoSave
+          gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then wbCurrentContext.GameDef.SwitchToCoSave;
+          gmFO3:    if SameText(ExtractFileExt(s), '.fose') then wbCurrentContext.GameDef.SwitchToCoSave
             else
               WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
           gmFO4,
-          gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then SwitchToCoSave;
-          gmTES4:   if SameText(ExtractFileExt(s), '.obse') then SwitchToCoSave
+          gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then wbCurrentContext.GameDef.SwitchToCoSave;
+          gmTES4:   if SameText(ExtractFileExt(s), '.obse') then wbCurrentContext.GameDef.SwitchToCoSave
             else
               WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
           gmTES5,
           gmTES5vr,
           gmEnderal,
           gmEnderalSE,
-          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then SwitchToCoSave;
+          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then wbCurrentContext.GameDef.SwitchToCoSave;
         else
             WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
         end;

@@ -10,8 +10,16 @@ unit wbDefinitionsFO3Saves;
 
 interface
 
-procedure DefineFO3Saves;
-procedure SwitchToFO3CoSave;
+uses
+  wbDefinitionsFO3,
+  wbInterface;
+
+type
+  TwbGameDefFO3Saves = class(TwbGameDefFO3)
+  protected
+    procedure Define; override;
+    procedure SwitchToCoSave; override;
+  end;
 
 implementation
 
@@ -19,9 +27,7 @@ uses
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbDefinitionsFO3,
   wbImplementation,
-  wbInterface,
   wbSaveInterface;
 
 var
@@ -6338,17 +6344,17 @@ var
   ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineFO3Saves;
+procedure TwbGameDefFO3Saves.Define;
 begin
   wbFileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineFO3;
+  inherited;
   DefineFO3SavesA;
   DefineFO3SavesS;
 end;
 
-procedure SwitchToFO3CoSave;
+procedure TwbGameDefFO3Saves.SwitchToCoSave;
 begin
   wbFileMagic := 'FOSE';
   wbExtractInfo := @ExtractInfoCoSave;
@@ -6358,5 +6364,6 @@ begin
 end;
 
 initialization
+  wbRegisterGameDef([gmFO3], tsSaves, TwbGameDefFO3Saves);
 end.
 

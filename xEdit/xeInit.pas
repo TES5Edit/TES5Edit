@@ -57,7 +57,6 @@ function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
                                                        : Boolean;
 
 function xeLoadMOHookFile: Boolean;
-procedure xeSwitchToCoSave;
 
 function xeDoInit: Boolean;
 procedure xeInitStyles;
@@ -1375,43 +1374,7 @@ begin
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
 
-  // definitions
-  case wbGameMode of
-    gmFNV: case wbToolSource of
-      tsSaves:   DefineFNVSaves;
-      tsPlugins: DefineFNV;
-    end;
-    gmFO3: case wbToolSource of
-      tsSaves:   DefineFO3Saves;
-      tsPlugins: DefineFO3;
-    end;
-    gmFO4, gmFO4VR: case wbToolSource of
-      tsSaves:   DefineFO4Saves;
-      tsPlugins: DefineFO4;
-    end;
-    gmFO76: case wbToolSource of
-      tsPlugins: DefineFO76;
-    end;
-    gmTES3: case wbToolSource of
-      tsPlugins: DefineTES3;
-    end;
-    gmTES4: case wbToolSource of
-      tsSaves:   DefineTES4Saves;
-      tsPlugins: DefineTES4;
-    end;
-    gmTES4R: case wbToolSource of
-      tsPlugins: DefineTES4;
-    end;
-    gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE: case wbToolSource of
-      tsSaves:   DefineTES5Saves;
-      tsPlugins: DefineTES5;
-    end;
-    gmSF1: case wbToolSource of
-      tsPlugins: DefineSF1;
-    end;
-  end;
-
-  wbCurrentContext := wbCreateGameContext(wbCreateGameDef);
+  wbCurrentContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;
@@ -1635,16 +1598,6 @@ begin
       if not (E is EAbort) then
         ShowMessage('Initialization failed: [' + E.ClassName + '] ' + E.Message);
     end;
-  end;
-end;
-
-procedure xeSwitchToCoSave;
-begin
-  case wbGameMode of
-    gmFNV:  SwitchToFNVCoSave;
-    gmFO3:  SwitchToFO3CoSave;
-    gmTES4: SwitchToTES4CoSave;
-    gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE:  SwitchToTES5CoSave;
   end;
 end;
 

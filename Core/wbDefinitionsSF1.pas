@@ -12,7 +12,14 @@ unit wbDefinitionsSF1;
 
 interface
 
-procedure DefineSF1;
+uses
+  wbInterface;
+
+type
+  TwbGameDefSF1 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -29,8 +36,7 @@ uses
   wbDefinitionsCommon,
   wbDefinitionsReflection,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 const
   // signatures of reference records
@@ -2226,7 +2232,7 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseSounds);
 end;
 
-procedure DefineSF1;
+procedure TwbGameDefSF1.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -19373,4 +19379,6 @@ begin
 
 end;
 
+initialization
+  wbRegisterGameDef([gmSF1], tsPlugins, TwbGameDefSF1);
 end.

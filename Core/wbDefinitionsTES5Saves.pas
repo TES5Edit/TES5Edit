@@ -10,8 +10,16 @@ unit wbDefinitionsTES5Saves;
 
 interface
 
-procedure DefineTES5Saves;
-procedure SwitchToTES5CoSave;
+uses
+  wbDefinitionsTES5,
+  wbInterface;
+
+type
+  TwbGameDefTES5Saves = class(TwbGameDefTES5)
+  protected
+    procedure Define; override;
+    procedure SwitchToCoSave; override;
+  end;
 
 implementation
 
@@ -20,9 +28,7 @@ uses
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbDefinitionsTES5,
   wbImplementation,
-  wbInterface,
   wbSaveInterface;
 
 var
@@ -6230,18 +6236,18 @@ var
   ExtractInfoSave:   TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineTES5Saves;
+procedure TwbGameDefTES5Saves.Define;
 begin
   wbFileMagic := 'TESV_SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
   wbFilePluginNames := SavePluginNames;
-  DefineTES5;
+  inherited;
   DefineTES5SavesA;
   DefineTES5SavesS;
 end;
 
-procedure SwitchToTES5CoSave;
+procedure TwbGameDefTES5Saves.SwitchToCoSave;
 begin
   wbFileMagic := 'SKSE';
   wbExtractInfo := @ExtractInfoCoSave;
@@ -6252,4 +6258,5 @@ begin
 end;
 
 initialization
+  wbRegisterGameDef([gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE], tsSaves, TwbGameDefTES5Saves);
 end.

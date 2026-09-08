@@ -12,7 +12,14 @@ unit wbDefinitionsTES5;
 
 interface
 
-procedure DefineTES5;
+uses
+  wbInterface;
+
+type
+  TwbGameDefTES5 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -24,8 +31,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 type
   TVarRecs = array of TVarRec;
@@ -2184,7 +2190,7 @@ begin
     .SetUnordered;
 end;
 
-procedure DefineTES5;
+procedure TwbGameDefTES5.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -10914,4 +10920,6 @@ begin
     wbHEDRVersion := 1.71;
 end;
 
+initialization
+  wbRegisterGameDef([gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE], tsPlugins, TwbGameDefTES5);
 end.

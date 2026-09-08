@@ -3396,6 +3396,8 @@ type
     function GetArchiveExtension: string;
     function GetCapabilities: TwbGameCapabilities;
 
+    procedure SwitchToCoSave;
+
     property GameMode: TwbGameMode
       read GetGameMode;
     property GameName: string
@@ -3450,7 +3452,12 @@ type
     function GetAppName: string;
     function GetArchiveExtension: string;
     function GetCapabilities: TwbGameCapabilities;
+
+    procedure Define; virtual;
+    procedure SwitchToCoSave; virtual;
   end;
+
+  TwbGameDefClass = class of TwbGameDef;
 
 const
   arcU32 = -1;
@@ -4942,7 +4949,9 @@ var
 
   wbCurrentContext : IwbGameContext;
 
-function wbCreateGameDef: IwbGameDef;
+procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
+function wbCreateGameDef: IwbGameDef; overload;
 
 function wbGetGameMasterFile: IwbFile;
 function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
@@ -5617,6 +5626,36 @@ end;
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
 begin
   Result := wbCurrentCapabilities;
+end;
+
+procedure TwbGameDef.Define;
+begin
+end;
+
+procedure TwbGameDef.SwitchToCoSave;
+begin
+end;
+
+var
+  _GameDefClasses : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
+
+procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
+begin
+  for var lGameMode := Low(TwbGameMode) to High(TwbGameMode) do
+    if lGameMode in aGameModes then
+      _GameDefClasses[lGameMode, aToolSource] := aGameDefClass;
+end;
+
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef;
+begin
+  var lGameDefClass := _GameDefClasses[aGameMode, aToolSource];
+  if not Assigned(lGameDefClass) then
+    raise Exception.Create('No definitions are registered for ' +
+      GetEnumName(TypeInfo(TwbGameMode), Ord(aGameMode)) + ' with ' +
+      GetEnumName(TypeInfo(TwbToolSource), Ord(aToolSource)));
+  var lGameDef := lGameDefClass.Create;
+  Result := lGameDef;
+  lGameDef.Define;
 end;
 
 function wbCreateGameDef: IwbGameDef;

@@ -10,16 +10,22 @@ unit wbDefinitionsTES4Saves;
 
 interface
 
-procedure DefineTES4Saves;
-procedure SwitchToTES4CoSave;
+uses
+  wbDefinitionsTES4,
+  wbInterface;
+
+type
+  TwbGameDefTES4Saves = class(TwbGameDefTES4)
+  protected
+    procedure Define; override;
+    procedure SwitchToCoSave; override;
+  end;
 
 implementation
 
 uses
   System.SysUtils,
 
-  wbDefinitionsTES4,
-  wbInterface,
   wbSaveInterface;
 
 var
@@ -6863,17 +6869,17 @@ var
   ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineTES4Saves;
+procedure TwbGameDefTES4Saves.Define;
 begin
   wbFileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineTES4;
+  inherited;
   DefineTES4SavesA;
   DefineTES4SavesS;
 end;
 
-procedure SwitchToTES4CoSave;
+procedure TwbGameDefTES4Saves.SwitchToCoSave;
 begin
   wbFileMagic := 'OBSE';
   wbExtractInfo := @ExtractInfoCoSave;
@@ -6883,5 +6889,6 @@ begin
 end;
 
 initialization
+  wbRegisterGameDef([gmTES4], tsSaves, TwbGameDefTES4Saves);
 end.
 

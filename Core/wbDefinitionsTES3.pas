@@ -12,7 +12,14 @@ unit wbDefinitionsTES3;
 
 interface
 
-procedure DefineTES3;
+uses
+  wbInterface;
+
+type
+  TwbGameDefTES3 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -21,8 +28,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 const
   wbKnownSubRecordSignaturesNoFNAM : TwbKnownSubRecordSignatures = (
@@ -874,7 +880,7 @@ begin
 end;
 
 
-procedure DefineTES3;
+procedure TwbGameDefTES3.Define;
 begin
   wbHeaderSignature := 'TES3';
 
@@ -2514,4 +2520,6 @@ begin
   wbHEDRVersion := 1.30;
 end;
 
+initialization
+  wbRegisterGameDef([gmTES3], tsPlugins, TwbGameDefTES3);
 end.

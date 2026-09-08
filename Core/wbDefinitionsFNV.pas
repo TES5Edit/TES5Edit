@@ -12,7 +12,14 @@ unit wbDefinitionsFNV;
 
 interface
 
-procedure DefineFNV;
+uses
+  wbInterface;
+
+type
+  TwbGameDefFNV = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -24,8 +31,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 var
   wbConditionParameters: array of IwbValueDef;
@@ -2825,7 +2831,7 @@ begin
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;
 
-procedure DefineFNV;
+procedure TwbGameDefFNV.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -9119,5 +9125,8 @@ begin
     wbNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
   wbHEDRVersion := 1.34;
 end;
+
+initialization
+  wbRegisterGameDef([gmFNV], tsPlugins, TwbGameDefFNV);
 end.
 

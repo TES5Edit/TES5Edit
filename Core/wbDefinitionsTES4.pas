@@ -12,7 +12,14 @@ unit wbDefinitionsTES4;
 
 interface
 
-procedure DefineTES4;
+uses
+  wbInterface;
+
+type
+  TwbGameDefTES4 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -23,8 +30,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 var
   wbConditionMembers: array of IwbValueDef;
@@ -997,7 +1003,7 @@ begin
       Result := 1;
 end;
 
-procedure DefineTES4;
+procedure TwbGameDefTES4.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -3731,4 +3737,6 @@ begin
   wbHEDRVersion := 1.0;
 end;
 
+initialization
+  wbRegisterGameDef([gmTES4, gmTES4R], tsPlugins, TwbGameDefTES4);
 end.

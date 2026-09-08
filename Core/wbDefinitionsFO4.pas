@@ -12,7 +12,14 @@ unit wbDefinitionsFO4;
 
 interface
 
-procedure DefineFO4;
+uses
+  wbInterface;
+
+type
+  TwbGameDefFO4 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -23,8 +30,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 var
   wbBipedObjectFlags: IwbFlagsDef;
@@ -3266,7 +3272,7 @@ begin
     .SetUnordered;
 end;
 
-procedure DefineFO4;
+procedure TwbGameDefFO4.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -13369,4 +13375,7 @@ begin
     wbHEDRNextObjectID := 1;
   end;
 end;
+
+initialization
+  wbRegisterGameDef([gmFO4, gmFO4VR], tsPlugins, TwbGameDefFO4);
 end.

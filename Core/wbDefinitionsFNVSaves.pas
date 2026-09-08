@@ -10,8 +10,16 @@ unit wbDefinitionsFNVSaves;
 
 interface
 
-procedure DefineFNVSaves;
-procedure SwitchToFNVCoSave;
+uses
+  wbDefinitionsFNV,
+  wbInterface;
+
+type
+  TwbGameDefFNVSaves = class(TwbGameDefFNV)
+  protected
+    procedure Define; override;
+    procedure SwitchToCoSave; override;
+  end;
 
 implementation
 
@@ -19,9 +27,7 @@ uses
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbDefinitionsFNV,
   wbImplementation,
-  wbInterface,
   wbSaveInterface;
 
 var
@@ -6915,17 +6921,17 @@ var
   ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure DefineFNVSaves;
+procedure TwbGameDefFNVSaves.Define;
 begin
   wbFileMagic := 'FO3SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
-  DefineFNV;
+  inherited;
   DefineFNVSavesA;
   DefineFNVSavesS;
 end;
 
-procedure SwitchToFNVCoSave;
+procedure TwbGameDefFNVSaves.SwitchToCoSave;
 begin
   wbFileMagic := 'NVSE';
   wbExtractInfo := @ExtractInfoCoSave;
@@ -6935,5 +6941,6 @@ begin
 end;
 
 initialization
+  wbRegisterGameDef([gmFNV], tsSaves, TwbGameDefFNVSaves);
 end.
 

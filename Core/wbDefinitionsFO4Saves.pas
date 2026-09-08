@@ -10,8 +10,16 @@ unit wbDefinitionsFO4Saves;
 
 interface
 
-procedure DefineFO4Saves;
-procedure SwitchToFO4CoSave;
+uses
+  wbDefinitionsFO4,
+  wbInterface;
+
+type
+  TwbGameDefFO4Saves = class(TwbGameDefFO4)
+  protected
+    procedure Define; override;
+    procedure SwitchToCoSave; override;
+  end;
 
 implementation
 
@@ -20,9 +28,7 @@ uses
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbDefinitionsFO4,
   wbImplementation,
-  wbInterface,
   wbSaveInterface;
 
 var
@@ -7416,18 +7422,18 @@ begin
       AddNames(Union.ElementByName['Light plugins']);
 end;
 
-procedure DefineFO4Saves;
+procedure TwbGameDefFO4Saves.Define;
 begin
   wbFileMagic := 'FO4_SAVEGAME';
   wbExtractInfo := @ExtractInfoSave;
   wbFilePlugins := 'Plugins';
   wbFilePluginNames := SavePluginNames;
-  DefineFO4;
+  inherited;
   DefineFO4SavesA;
   DefineFO4SavesS;
 end;
 
-procedure SwitchToFO4CoSave;
+procedure TwbGameDefFO4Saves.SwitchToCoSave;
 begin
   wbFileMagic := 'F4SE';
   wbExtractInfo := @ExtractInfoCoSave;
@@ -7438,4 +7444,5 @@ begin
 end;
 
 initialization
+  wbRegisterGameDef([gmFO4, gmFO4VR], tsSaves, TwbGameDefFO4Saves);
 end.

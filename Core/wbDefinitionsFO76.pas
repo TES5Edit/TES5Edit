@@ -12,7 +12,14 @@ unit wbDefinitionsFO76;
 
 interface
 
-procedure DefineFO76;
+uses
+  wbInterface;
+
+type
+  TwbGameDefFO76 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -24,8 +31,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 var
   wbBipedObjectFlags: IwbFlagsDef;
@@ -4090,7 +4096,7 @@ begin
     .SetUnordered;
 end;
 
-procedure DefineFO76;
+procedure TwbGameDefFO76.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -17826,5 +17832,8 @@ begin
     wbNexusModsUrl := '';}
   wbHEDRVersion := 266.0;
 end;
+
+initialization
+  wbRegisterGameDef([gmFO76], tsPlugins, TwbGameDefFO76);
 end.
 

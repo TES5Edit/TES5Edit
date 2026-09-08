@@ -12,7 +12,14 @@ unit wbDefinitionsFO3;
 
 interface
 
-procedure DefineFO3;
+uses
+  wbInterface;
+
+type
+  TwbGameDefFO3 = class(TwbGameDef)
+  protected
+    procedure Define; override;
+  end;
 
 implementation
 
@@ -24,8 +31,7 @@ uses
 
   wbDefinitionsCommon,
   wbDefinitionsSignatures,
-  wbHelpers,
-  wbInterface;
+  wbHelpers;
 
 var
   wbConditionParameters: array of IwbValueDef;
@@ -2498,7 +2504,7 @@ begin
   Result := Container.ElementByName['Type'].NativeValue + 1;
 end;
 
-procedure DefineFO3;
+procedure TwbGameDefFO3.Define;
 begin
   wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
@@ -7880,4 +7886,7 @@ begin
     wbNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
   wbHEDRVersion := 0.94;
 end;
+
+initialization
+  wbRegisterGameDef([gmFO3], tsPlugins, TwbGameDefFO3);
 end.
