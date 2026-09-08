@@ -2295,9 +2295,9 @@ begin
         if fTarget = btPS then begin
           var gnf: PGNFHeader := @Result[0];
           gnf.Magic := MAGIC_GNF;
-          gnf.Version := 2;
+          gnf.Version := GNF_VERSION_PS4;
           gnf.ContentSize := GNF_PADDED_HEADER_SIZE - SizeOf(gnf.Magic) - SizeOf(gnf.ContentSize);
-          gnf.Alignment := 8;
+          gnf.Alignment := GNF_ALIGNMENT;
           gnf.NumTextures := 1;
           gnf.StreamSize := TexSize;
           System.Move(aFile.GNF, gnf.Texture, SizeOf(aFile.GNF));

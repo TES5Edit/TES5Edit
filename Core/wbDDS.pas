@@ -539,7 +539,9 @@ const
   DDS_ALPHA_MODE_CUSTOM         = $00000004;
 
   // GNF
-  GNF_ALIGNMENT = 8;
+  GNF_VERSION_PS4        = 2;
+  GNF_VERSION_PS5        = 3;
+  GNF_ALIGNMENT          = 8;
   GNF_PADDED_HEADER_SIZE = 1 shl GNF_ALIGNMENT;
 
 
@@ -547,6 +549,9 @@ implementation
 
 uses
   System.TypInfo;
+
+
+{ TwbDDS }
 
 class function TwbDDS.IsDDS(aDDSData: Pointer; aSize: Integer): Boolean;
 begin
@@ -1155,6 +1160,9 @@ function TGNFTextureDescriptor.GetMipMapCount: Cardinal;
 begin
   Result := LastMipLevel + 1;
 end;
+
+
+{ TwbGNF }
 
 class function TwbGNF.IsGNF(aGNFData: Pointer; aSize: Integer): Boolean;
 begin
