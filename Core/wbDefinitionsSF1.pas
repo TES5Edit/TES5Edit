@@ -2234,11 +2234,11 @@ end;
 
 procedure TwbGameDefSF1.Define;
 begin
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+  MainRecordHeader := wbRecordHeader(RecordFlags);
 
-  wbSizeOfMainRecordStruct := 24;
+  SizeOfMainRecordStruct := 24;
 
   KnownSubRecordSignatures[ksrBaseFormComponents] := '____';
   HEDRVersion := 0.96;

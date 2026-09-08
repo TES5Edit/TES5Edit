@@ -884,20 +884,20 @@ procedure TwbGameDefTES3.Define;
 begin
   HeaderSignature := 'TES3';
 
-  wbRecordFlags :=
+  RecordFlags :=
     wbInteger('Record Flags', itU32,
       wbFlags([
       {0} 'ESM'
       ]));
 
-  wbMainRecordHeader := wbStruct('Record Header', [
+  MainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
-    wbRecordFlags
+    RecordFlags
   ]);
 
-  wbSizeOfMainRecordStruct := 16;
+  SizeOfMainRecordStruct := 16;
 
   KnownSubRecordSignatures[ksrEditorID] := 'NAME';
   KnownSubRecordSignatures[ksrFullName] := 'FNAM';
@@ -909,7 +909,7 @@ begin
   wbRecord(TES3, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version', cpNormal, False, 1, 2).IncludeFlag(dfInternalEditOnly, not wbAllowEditHEDRVersion),
-      wbRecordFlags,
+      RecordFlags,
       wbString('Author', 32),
       wbString('Description', 256),
       wbInteger('Number of Records', itU32)

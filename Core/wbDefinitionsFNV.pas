@@ -2834,11 +2834,11 @@ end;
 
 procedure TwbGameDefFNV.Define;
 begin
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  wbMainRecordHeader := wbRecordHeader(wbRecordFlags);
+  MainRecordHeader := wbRecordHeader(RecordFlags);
 
-  wbSizeOfMainRecordStruct := 24;
+  SizeOfMainRecordStruct := 24;
 
   IgnoreRecords.Add(XXXX);
 

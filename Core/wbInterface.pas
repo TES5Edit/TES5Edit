@@ -3449,6 +3449,9 @@ type
     gdOfficialDLC      : TArray<string>;
     gdCreationClubContentFileName : string;
     gdKnownSubRecordSignatures    : TwbKnownSubRecordSignatures;
+    gdRecordFlags            : IwbIntegerDef;
+    gdMainRecordHeader       : IwbValueDef;
+    gdSizeOfMainRecordStruct : Integer;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3523,6 +3526,15 @@ type
     property KnownSubRecordSignatures[aKind: TwbKnownSubRecord]: TwbSignature
       read GetKnownSubRecordSignature
       write SetKnownSubRecordSignature;
+    property RecordFlags: IwbIntegerDef
+      read gdRecordFlags
+      write gdRecordFlags;
+    property MainRecordHeader: IwbValueDef
+      read gdMainRecordHeader
+      write gdMainRecordHeader;
+    property SizeOfMainRecordStruct: Integer
+      read gdSizeOfMainRecordStruct
+      write gdSizeOfMainRecordStruct;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
   end;
@@ -4743,11 +4755,6 @@ function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
-
-var
-  wbRecordFlags            : IwbIntegerDef;
-  wbMainRecordHeader       : IwbValueDef;
-  wbSizeOfMainRecordStruct : Integer;
 
 var
   wbGameMode         : TwbGameMode;
@@ -10532,9 +10539,9 @@ begin
   recRecordFlags := aRecordFlags;
   recQuickInitLimit := -1;
 
-  if Assigned(recRecordFlags) and Assigned(wbRecordFlags) and Assigned(wbMainRecordHeader) then begin
-    recRecordHeaderStruct := (wbMainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
-    (recRecordHeaderStruct.MembersByName[wbRecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
+  if Assigned(recRecordFlags) and (_CurrentGameDef.RecordFlags <> nil) and (_CurrentGameDef.MainRecordHeader <> nil) then begin
+    recRecordHeaderStruct := (_CurrentGameDef.MainRecordHeader as IwbDefInternal).SetParent(Self, True) as IwbStructDef;
+    (recRecordHeaderStruct.MembersByName[_CurrentGameDef.RecordFlags.Name] as IwbIntegerDefInternal).ReplaceFormater(recRecordFlags);
   end;
 
   recSignatures := TwbFastStringListCS.CreateSorted(dupAccept);
@@ -10657,7 +10664,7 @@ begin
   if Assigned(recRecordHeaderStruct) then
     Result := recRecordHeaderStruct as IwbStructDef
   else
-    Result := wbMainRecordHeader as IwbStructDef;
+    Result := _CurrentGameDef.MainRecordHeader as IwbStructDef;
 end;
 
 function TwbMainRecordDef.GetReferenceSignature(const aIndex: Integer): TwbSignature;
@@ -12252,7 +12259,7 @@ end;
 
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader as IwbStructDef;
+  Result := _CurrentGameDef.MainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordStructDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
@@ -12657,7 +12664,7 @@ end;
 
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := wbMainRecordHeader as IwbStructDef;
+  Result := _CurrentGameDef.MainRecordHeader as IwbStructDef;
 end;
 
 function TwbSubRecordUnionDef.GetSignatureCount: Integer;
@@ -24094,8 +24101,8 @@ begin
       if Supports(wbRecordDefs[lRecordIdx].rdeDef, IwbDefInternal, lDef) then
         lDef.InitFromParent(nil);
     end;
-    if Assigned(wbMainRecordHeader) then
-      (wbMainRecordHeader as IwbDefInternal).InitFromParent(nil);
+    if _CurrentGameDef.MainRecordHeader <> nil then
+      (_CurrentGameDef.MainRecordHeader as IwbDefInternal).InitFromParent(nil);
   end;
 end;
 

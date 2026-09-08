@@ -19,6 +19,9 @@ function wbFileHeader: IwbStructDef; inline;
 function wbFileChapters: IwbStructDef; inline;
 function wbExtractInfo: PByteSet; inline;
 function wbOfficialDLC: TArray<string>; inline;
+function wbRecordFlags: IwbIntegerDef; inline;
+function wbMainRecordHeader: IwbValueDef; inline;
+function wbSizeOfMainRecordStruct: Integer; inline;
 
 implementation
 
@@ -85,6 +88,21 @@ end;
 function wbOfficialDLC: TArray<string>;
 begin
   Result := _CurrentGameDef.OfficialDLC;
+end;
+
+function wbRecordFlags: IwbIntegerDef;
+begin
+  Result := _CurrentGameDef.RecordFlags;
+end;
+
+function wbMainRecordHeader: IwbValueDef;
+begin
+  Result := _CurrentGameDef.MainRecordHeader;
+end;
+
+function wbSizeOfMainRecordStruct: Integer;
+begin
+  Result := _CurrentGameDef.SizeOfMainRecordStruct;
 end;
 
 end.

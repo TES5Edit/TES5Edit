@@ -1005,12 +1005,12 @@ end;
 
 procedure TwbGameDefTES4.Define;
 begin
-  wbRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  wbMainRecordHeader := wbStruct('Record Header', [
+  MainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
-    wbRecordFlags,
+    RecordFlags,
     wbFormID('FormID', cpFormID).IncludeFlag(dfSummarySelfAsShortName),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4)
   ]).SetSummaryKey([3, 2])
@@ -1018,7 +1018,7 @@ begin
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, wbCollapseRecordHeader);
 
-  wbSizeOfMainRecordStruct := 20;
+  SizeOfMainRecordStruct := 20;
 
   IgnoreRecords.Add(XXXX);
 
