@@ -56,7 +56,6 @@ function wbFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompar
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 
-function wbCreateGameDef: IwbGameDef;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 procedure wbFileForceClosed;
 
@@ -973,20 +972,6 @@ type
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
-  end;
-
-  TwbGameDef = class(TInterfacedObject, IwbGameDef)
-  protected
-    function GetGameMode: TwbGameMode;
-    function GetGameName: string;
-    function GetGameExeName: string;
-    function GetGameMasterEsm: string;
-    function GetGameName2: string;
-    function GetGameNameReg: string;
-    function GetGameSteamID: string;
-    function GetAppName: string;
-    function GetArchiveExtension: string;
-    function GetCapabilities: TwbGameCapabilities;
   end;
 
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
@@ -26349,56 +26334,6 @@ begin
   Result := TwbMultipleElements.Create(aElements);
 end;
 
-function TwbGameDef.GetGameMode: TwbGameMode;
-begin
-  Result := wbGameMode;
-end;
-
-function TwbGameDef.GetGameName: string;
-begin
-  Result := wbGameName;
-end;
-
-function TwbGameDef.GetGameExeName: string;
-begin
-  Result := wbGameExeName;
-end;
-
-function TwbGameDef.GetGameMasterEsm: string;
-begin
-  Result := wbGameMasterEsm;
-end;
-
-function TwbGameDef.GetGameName2: string;
-begin
-  Result := wbGameName2;
-end;
-
-function TwbGameDef.GetGameNameReg: string;
-begin
-  Result := wbGameNameReg;
-end;
-
-function TwbGameDef.GetGameSteamID: string;
-begin
-  Result := wbGameSteamID;
-end;
-
-function TwbGameDef.GetAppName: string;
-begin
-  Result := wbAppName;
-end;
-
-function TwbGameDef.GetArchiveExtension: string;
-begin
-  Result := wbArchiveExtension;
-end;
-
-function TwbGameDef.GetCapabilities: TwbGameCapabilities;
-begin
-  Result := wbCurrentCapabilities;
-end;
-
 constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
 begin
   inherited Create;
@@ -26428,11 +26363,6 @@ end;
 function TwbGameContext.GetContainerHandler: IwbContainerHandler;
 begin
   Result := wbContainerHandler;
-end;
-
-function wbCreateGameDef: IwbGameDef;
-begin
-  Result := TwbGameDef.Create;
 end;
 
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;

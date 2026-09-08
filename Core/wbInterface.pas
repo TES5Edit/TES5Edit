@@ -3438,6 +3438,20 @@ type
       read GetContainerHandler;
   end;
 
+  TwbGameDef = class(TInterfacedObject, IwbGameDef)
+  protected
+    function GetGameMode: TwbGameMode;
+    function GetGameName: string;
+    function GetGameExeName: string;
+    function GetGameMasterEsm: string;
+    function GetGameName2: string;
+    function GetGameNameReg: string;
+    function GetGameSteamID: string;
+    function GetAppName: string;
+    function GetArchiveExtension: string;
+    function GetCapabilities: TwbGameCapabilities;
+  end;
+
 const
   arcU32 = -1;
   arcU16 = -2;
@@ -4928,6 +4942,8 @@ var
 
   wbCurrentContext : IwbGameContext;
 
+function wbCreateGameDef: IwbGameDef;
+
 function wbGetGameMasterFile: IwbFile;
 function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
 
@@ -5551,6 +5567,61 @@ end;
 function wbIsUpdateSupported: Boolean; inline;
 begin
   Result := gcUpdatePlugins in wbCurrentCapabilities;
+end;
+
+function TwbGameDef.GetGameMode: TwbGameMode;
+begin
+  Result := wbGameMode;
+end;
+
+function TwbGameDef.GetGameName: string;
+begin
+  Result := wbGameName;
+end;
+
+function TwbGameDef.GetGameExeName: string;
+begin
+  Result := wbGameExeName;
+end;
+
+function TwbGameDef.GetGameMasterEsm: string;
+begin
+  Result := wbGameMasterEsm;
+end;
+
+function TwbGameDef.GetGameName2: string;
+begin
+  Result := wbGameName2;
+end;
+
+function TwbGameDef.GetGameNameReg: string;
+begin
+  Result := wbGameNameReg;
+end;
+
+function TwbGameDef.GetGameSteamID: string;
+begin
+  Result := wbGameSteamID;
+end;
+
+function TwbGameDef.GetAppName: string;
+begin
+  Result := wbAppName;
+end;
+
+function TwbGameDef.GetArchiveExtension: string;
+begin
+  Result := wbArchiveExtension;
+end;
+
+function TwbGameDef.GetCapabilities: TwbGameCapabilities;
+begin
+  Result := wbCurrentCapabilities;
+end;
+
+function wbCreateGameDef: IwbGameDef;
+begin
+  Result := TwbGameDef.Create;
 end;
 
 function wbDefToName(const aDef: IwbDef): string;
