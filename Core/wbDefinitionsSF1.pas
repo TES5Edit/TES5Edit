@@ -2242,7 +2242,7 @@ begin
 
   wbKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
   HEDRVersion := 0.96;
-  wbCellSizeFactor := 100;
+  CellSizeFactor := 100;
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);

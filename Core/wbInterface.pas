@@ -297,8 +297,6 @@ var
 
   wbAllowMakePartial                 : Boolean    = False;
 
-  wbCellSizeFactor                   : Single     = 4096.0;
-
   wbGlobalModifedGeneration          : UInt64;
 
   wbPluginsFileName                  : string;
@@ -3440,6 +3438,7 @@ type
   protected
     gdHEDRVersion      : Double;
     gdHEDRNextObjectID : Integer;
+    gdCellSizeFactor   : Single;
     gdHeaderSignature  : TwbSignature;
     gdNexusModsUrl     : string;
 
@@ -3465,6 +3464,9 @@ type
     property HEDRNextObjectID: Integer
       read gdHEDRNextObjectID
       write gdHEDRNextObjectID;
+    property CellSizeFactor: Single
+      read gdCellSizeFactor
+      write gdCellSizeFactor;
     property HeaderSignature: TwbSignature
       read gdHeaderSignature
       write gdHeaderSignature;
@@ -5599,6 +5601,7 @@ begin
   inherited Create;
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
+  gdCellSizeFactor := 4096.0;
   gdHeaderSignature := 'TES4';
 end;
 
@@ -5743,26 +5746,28 @@ end;
 
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
-  Result.x := Trunc(aPosition.x / wbCellSizeFactor);
-  if (aPosition.x < 0) and (Frac(aPosition.x / wbCellSizeFactor) <> 0) then
+  var lCellSizeFactor := _CurrentGameDef.CellSizeFactor;
+  Result.x := Trunc(aPosition.x / lCellSizeFactor);
+  if (aPosition.x < 0) and (Frac(aPosition.x / lCellSizeFactor) <> 0) then
     Dec(Result.x);
 
-  Result.y := Trunc(aPosition.y / wbCellSizeFactor);
-  if (aPosition.y < 0) and (Frac(aPosition.y / wbCellSizeFactor) <> 0) then
+  Result.y := Trunc(aPosition.y / lCellSizeFactor);
+  if (aPosition.y < 0) and (Frac(aPosition.y / lCellSizeFactor) <> 0) then
     Dec(Result.y);
 end;
 
 function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 begin
+  var lCellSizeFactor := _CurrentGameDef.CellSizeFactor;
   Result.z := 0;
   if aGridCell.x >= 0 then
-    Result.x := (Succ(aGridCell.x) * wbCellSizeFactor) - (wbCellSizeFactor/2)
+    Result.x := (Succ(aGridCell.x) * lCellSizeFactor) - (lCellSizeFactor/2)
   else
-    Result.x := (aGridCell.x * wbCellSizeFactor) + (wbCellSizeFactor/2);
+    Result.x := (aGridCell.x * lCellSizeFactor) + (lCellSizeFactor/2);
   if aGridCell.y >= 0 then
-    Result.y := (Succ(aGridCell.y) * wbCellSizeFactor) - (wbCellSizeFactor/2)
+    Result.y := (Succ(aGridCell.y) * lCellSizeFactor) - (lCellSizeFactor/2)
   else
-    Result.y := (aGridCell.y * wbCellSizeFactor) + (wbCellSizeFactor/2);
+    Result.y := (aGridCell.y * lCellSizeFactor) + (lCellSizeFactor/2);
 end;
 
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
