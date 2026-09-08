@@ -3441,6 +3441,7 @@ type
     gdCellSizeFactor   : Single;
     gdHeaderSignature  : TwbSignature;
     gdNexusModsUrl     : string;
+    gdIgnoreRecords    : TStringList;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3457,6 +3458,7 @@ type
     procedure SwitchToCoSave; virtual;
   public
     constructor Create;
+    destructor Destroy; override;
 
     property HEDRVersion: Double
       read gdHEDRVersion
@@ -3473,6 +3475,8 @@ type
     property NexusModsUrl: string
       read gdNexusModsUrl
       write gdNexusModsUrl;
+    property IgnoreRecords: TStringList
+      read gdIgnoreRecords;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4646,7 +4650,6 @@ var
   wbRefRecordDefs    : TwbMainRecordDefs;
   wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
-  wbIgnoreRecords    : TStringList;
   wbGroupOrder       : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
@@ -5603,6 +5606,15 @@ begin
   gdHEDRNextObjectID := $800;
   gdCellSizeFactor := 4096.0;
   gdHeaderSignature := 'TES4';
+  gdIgnoreRecords := TStringList.Create;
+  gdIgnoreRecords.Sorted := True;
+  gdIgnoreRecords.Duplicates := dupIgnore;
+end;
+
+destructor TwbGameDef.Destroy;
+begin
+  FreeAndNil(gdIgnoreRecords);
+  inherited;
 end;
 
 function TwbGameDef.GetGameMode: TwbGameMode;
@@ -24397,10 +24409,6 @@ initialization
   if (DebugHook = 0) then
     wbReportMode := False;
 
-  wbIgnoreRecords := TStringList.Create;
-  wbIgnoreRecords.Sorted := True;
-  wbIgnoreRecords.Duplicates := dupIgnore;
-
   wbProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
   SetLength(wbModuleExtensions, 4);
@@ -24417,7 +24425,6 @@ initialization
 finalization
   _CurrentGameDef := nil;
   _CurrentGameDefRef := nil;
-  FreeAndNil(wbIgnoreRecords);
   FreeAndNil(wbGroupOrder);
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;

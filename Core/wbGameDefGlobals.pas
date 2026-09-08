@@ -3,12 +3,14 @@ unit wbGameDefGlobals;
 interface
 
 uses
+  System.Classes,
   wbInterface;
 
 function wbHEDRVersion: Double; inline;
 function wbHEDRNextObjectID: Integer; inline;
 function wbHeaderSignature: TwbSignature; inline;
 function wbNexusModsUrl: string; inline;
+function wbIgnoreRecords: TStringList; inline;
 
 implementation
 
@@ -30,6 +32,11 @@ end;
 function wbNexusModsUrl: string;
 begin
   Result := _CurrentGameDef.NexusModsUrl;
+end;
+
+function wbIgnoreRecords: TStringList;
+begin
+  Result := _CurrentGameDef.IgnoreRecords;
 end;
 
 end.

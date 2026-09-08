@@ -2839,7 +2839,7 @@ begin
 
   wbSizeOfMainRecordStruct := 24;
 
-  wbIgnoreRecords.Add(XXXX);
+  IgnoreRecords.Add(XXXX);
 
   wbSoundLevelEnum := wbEnum([
      'Loud',

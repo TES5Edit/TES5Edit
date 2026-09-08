@@ -4298,7 +4298,7 @@ begin
     ], [0, 1, 2, 3, 4, 5, 6, 9, 7, 11, 12, 8, 10])
   ]);
 
-  wbIgnoreRecords.Add(XXXX);
+  IgnoreRecords.Add(XXXX);
 
   wbSoundLevelEnum := wbEnum([
      'Loud',

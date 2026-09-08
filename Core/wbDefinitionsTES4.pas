@@ -1020,7 +1020,7 @@ begin
 
   wbSizeOfMainRecordStruct := 20;
 
-  wbIgnoreRecords.Add(XXXX);
+  IgnoreRecords.Add(XXXX);
 
 {>>> Enums <<<}
 

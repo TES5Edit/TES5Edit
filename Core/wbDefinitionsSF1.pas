@@ -2564,7 +2564,7 @@ begin
       wbFloat('Alpha')
     ]);
 
-  wbIgnoreRecords.Add(XXXX);
+  IgnoreRecords.Add(XXXX);
 
   var wbXFLG :=
     wbInteger(XFLG, 'Extra Flags', itU32, wbFlags([
