@@ -11,6 +11,7 @@ function wbHEDRNextObjectID: Integer; inline;
 function wbHeaderSignature: TwbSignature; inline;
 function wbNexusModsUrl: string; inline;
 function wbIgnoreRecords: TStringList; inline;
+function wbGroupOrder: TStringList; inline;
 
 implementation
 
@@ -37,6 +38,11 @@ end;
 function wbIgnoreRecords: TStringList;
 begin
   Result := _CurrentGameDef.IgnoreRecords;
+end;
+
+function wbGroupOrder: TStringList;
+begin
+  Result := _CurrentGameDef.GroupOrder;
 end;
 
 end.

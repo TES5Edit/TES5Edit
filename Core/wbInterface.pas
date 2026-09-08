@@ -3442,6 +3442,7 @@ type
     gdHeaderSignature  : TwbSignature;
     gdNexusModsUrl     : string;
     gdIgnoreRecords    : TStringList;
+    gdGroupOrder       : TStringList;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3460,6 +3461,9 @@ type
     constructor Create;
     destructor Destroy; override;
 
+    procedure AddGroupOrder(const aSignature: TwbSignature);
+    function GetGroupOrder(const aSignature: TwbSignature): Integer;
+
     property HEDRVersion: Double
       read gdHEDRVersion
       write gdHEDRVersion;
@@ -3477,6 +3481,8 @@ type
       write gdNexusModsUrl;
     property IgnoreRecords: TStringList
       read gdIgnoreRecords;
+    property GroupOrder: TStringList
+      read gdGroupOrder;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4650,7 +4656,6 @@ var
   wbRefRecordDefs    : TwbMainRecordDefs;
   wbRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
 
-  wbGroupOrder       : TStringList;
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
   wbArchiveExtension : string = '.bsa';
@@ -5613,8 +5618,26 @@ end;
 
 destructor TwbGameDef.Destroy;
 begin
+  FreeAndNil(gdGroupOrder);
   FreeAndNil(gdIgnoreRecords);
   inherited;
+end;
+
+procedure TwbGameDef.AddGroupOrder(const aSignature: TwbSignature);
+begin
+  if not Assigned(gdGroupOrder) then
+    gdGroupOrder := TwbFastStringListCS.CreateSorted;
+  gdGroupOrder.AddObject(aSignature, Pointer(gdGroupOrder.Count));
+end;
+
+function TwbGameDef.GetGroupOrder(const aSignature: TwbSignature): Integer;
+begin
+  if Assigned(gdGroupOrder) then begin
+    Result := gdGroupOrder.IndexOf(aSignature);
+    if Result >= 0 then
+      Result := Integer(gdGroupOrder.Objects[Result]);
+  end else
+    Result := -1;
 end;
 
 function TwbGameDef.GetGameMode: TwbGameMode;
@@ -5841,19 +5864,12 @@ end;
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
 begin
-  if not Assigned(wbGroupOrder) then
-    wbGroupOrder := TwbFastStringListCS.CreateSorted;
-  wbGroupOrder.AddObject(aSignature, Pointer(wbGroupOrder.Count));
+  _CurrentGameDef.AddGroupOrder(aSignature);
 end;
 
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
 begin
-  if Assigned(wbGroupOrder) then begin
-    Result := wbGroupOrder.IndexOf(aSignature);
-    if Result >= 0 then
-      Result := Integer(wbGroupOrder.Objects[Result]);
-  end else
-    Result := -1;
+  Result := _CurrentGameDef.GetGroupOrder(aSignature);
 end;
 
 function CompareElementsFormIDAndLoadOrder(Item1, Item2: Pointer): Integer;
@@ -24425,7 +24441,6 @@ initialization
 finalization
   _CurrentGameDef := nil;
   _CurrentGameDefRef := nil;
-  FreeAndNil(wbGroupOrder);
   FreeAndNil(wbRecordDefMap);
   wbRecordDefs := nil;
   wbContainerHandler := nil;
