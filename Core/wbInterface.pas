@@ -496,6 +496,7 @@ type
     );
 
   TByteSet = set of Byte;
+  PByteSet = ^TByteSet;
   TConflictAllSet = set of TConflictAll;
   TConflictAllColors = array[TConflictAll] of TColor;
   TConflictAllNames = array[TConflictAll] of string;
@@ -3434,6 +3435,8 @@ type
       read GetContainerHandler;
   end;
 
+  TwbFilePluginNames = procedure(const aHeader: IwbContainer; aNames: TStrings);
+
   TwbGameDef = class(TInterfacedObject, IwbGameDef)
   protected
     gdHEDRVersion      : Double;
@@ -3446,6 +3449,10 @@ type
     gdFileMagic        : TwbFileMagic;
     gdFilePlugins      : string;
     gdActorValueEnum   : IwbEnumDef;
+    gdFileHeader       : IwbStructDef;
+    gdFileChapters     : IwbStructDef;
+    gdExtractInfo      : PByteSet;
+    gdFilePluginNames  : TwbFilePluginNames;
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3495,6 +3502,18 @@ type
     property ActorValueEnum: IwbEnumDef
       read gdActorValueEnum
       write gdActorValueEnum;
+    property FileHeader: IwbStructDef
+      read gdFileHeader
+      write gdFileHeader;
+    property FileChapters: IwbStructDef
+      read gdFileChapters
+      write gdFileChapters;
+    property ExtractInfo: PByteSet
+      read gdExtractInfo
+      write gdExtractInfo;
+    property FilePluginNames: TwbFilePluginNames
+      read gdFilePluginNames
+      write gdFilePluginNames;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -4861,9 +4880,6 @@ function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 
 function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean): TwbFormID;
 
-type
-  TwbFilePluginNames = procedure(const aHeader: IwbContainer; aNames: TStrings);
-
 threadvar
   _InternalEditCount: Integer;
   _BlockInternalEdit: Boolean;
@@ -4871,14 +4887,10 @@ threadvar
 var
 
   wbNullSignature     : TwbSignature = #0#0#0#0;
-  wbFilePluginNames   : TwbFilePluginNames = nil;
   wbUseFalsePlugins   : Boolean = False;
-  wbFileHeader        : IwbStructDef;
-  wbFileChapters      : IwbStructDef;
   wbBytesToSkip       : Cardinal = 0;
   wbBytesToDump       : Cardinal = $FFFFFFFF;
   wbBytesToGroup      : Cardinal = 4;
-  wbExtractInfo       : ^TByteSet;
   wbTerminator        : Byte = Ord('|');
   wbPlayerRefID       : Cardinal = $14;
   wbChangedFormOffset : Integer = 10000;

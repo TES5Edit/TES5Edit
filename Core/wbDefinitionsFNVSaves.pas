@@ -6911,8 +6911,8 @@ begin
     wbCoSavePlugins
   ]);
 
-  wbFileChapters := wbSaveChapters;
-  wbFileHeader := wbSaveHeader;
+  FileChapters := wbSaveChapters;
+  FileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
   wbCoSaveHeader.TreeHead := True;
 //  wbSaveHeader.TreeLeaf := True;
@@ -6926,7 +6926,7 @@ var
 procedure TwbGameDefFNVSaves.Define;
 begin
   FileMagic := 'FO3SAVEGAME';
-  wbExtractInfo := @ExtractInfoSave;
+  ExtractInfo := @ExtractInfoSave;
   FilePlugins := 'Plugins';
   inherited;
   DefineFNVSavesA;
@@ -6936,10 +6936,10 @@ end;
 procedure TwbGameDefFNVSaves.SwitchToCoSave;
 begin
   FileMagic := 'NVSE';
-  wbExtractInfo := @ExtractInfoCoSave;
+  ExtractInfo := @ExtractInfoCoSave;
   FilePlugins := 'Absolute:44';
-  wbFileChapters := wbCoSaveChapters;
-  wbFileHeader := wbCoSaveHeader;
+  FileChapters := wbCoSaveChapters;
+  FileHeader := wbCoSaveHeader;
 end;
 
 initialization

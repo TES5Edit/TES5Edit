@@ -15,6 +15,9 @@ function wbGroupOrder: TStringList; inline;
 function wbFileMagic: TwbFileMagic; inline;
 function wbFilePlugins: string; inline;
 function wbActorValueEnum: IwbEnumDef; inline;
+function wbFileHeader: IwbStructDef; inline;
+function wbFileChapters: IwbStructDef; inline;
+function wbExtractInfo: PByteSet; inline;
 
 implementation
 
@@ -61,6 +64,21 @@ end;
 function wbActorValueEnum: IwbEnumDef;
 begin
   Result := _CurrentGameDef.ActorValueEnum;
+end;
+
+function wbFileHeader: IwbStructDef;
+begin
+  Result := _CurrentGameDef.FileHeader;
+end;
+
+function wbFileChapters: IwbStructDef;
+begin
+  Result := _CurrentGameDef.FileChapters;
+end;
+
+function wbExtractInfo: PByteSet;
+begin
+  Result := _CurrentGameDef.ExtractInfo;
 end;
 
 end.

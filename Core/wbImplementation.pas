@@ -25915,8 +25915,9 @@ var
   modPtr      : Pointer;
   mods        : TwbArray;
 begin
-  if Assigned(wbFilePluginNames) then begin
-    wbFilePluginNames(aHeader, aNames);
+  var lFilePluginNames := _CurrentGameDef.FilePluginNames;
+  if Assigned(lFilePluginNames) then begin
+    lFilePluginNames(aHeader, aNames);
     Exit;
   end;
 
@@ -25991,7 +25992,7 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
-  if not Assigned(wbFileHeader) then
+  if wbFileHeader = nil then
     raise Exception.CreateFmt('Expected a module, found "%s"', [flFileName]);
 
   flLoadOrderFileID := TwbFileID.CreateFull($FF);
@@ -26033,7 +26034,7 @@ begin
   if flCompareTo <> '' then
     AddMaster(flCompareTo);
 
-  if Assigned(wbExtractInfo) then
+  if wbExtractInfo <> nil then
     ExtractInfo := wbExtractInfo^
   else
     ExtractInfo := [];

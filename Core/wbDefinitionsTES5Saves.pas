@@ -6226,8 +6226,8 @@ begin
     wbCoSavePlugins
   ]);
 
-  wbFileChapters := wbStruct('Save File Chapters', []);
-  wbFileHeader := wbSaveHeader;
+  FileChapters := wbStruct('Save File Chapters', []);
+  FileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
   wbCoSaveHeader.TreeHead := True;
 //  wbSaveHeader.TreeLeaf := True;
@@ -6241,9 +6241,9 @@ var
 procedure TwbGameDefTES5Saves.Define;
 begin
   FileMagic := 'TESV_SAVEGAME';
-  wbExtractInfo := @ExtractInfoSave;
+  ExtractInfo := @ExtractInfoSave;
   FilePlugins := 'Plugins';
-  wbFilePluginNames := SavePluginNames;
+  FilePluginNames := SavePluginNames;
   inherited;
   DefineTES5SavesA;
   DefineTES5SavesS;
@@ -6252,11 +6252,11 @@ end;
 procedure TwbGameDefTES5Saves.SwitchToCoSave;
 begin
   FileMagic := 'SKSE';
-  wbExtractInfo := @ExtractInfoCoSave;
+  ExtractInfo := @ExtractInfoCoSave;
   FilePlugins := 'Absolute:44';
-  wbFilePluginNames := nil;
-  wbFileChapters := wbCoSaveChapters;
-  wbFileHeader := wbCoSaveHeader;
+  FilePluginNames := nil;
+  FileChapters := wbCoSaveChapters;
+  FileHeader := wbCoSaveHeader;
 end;
 
 initialization
