@@ -2240,7 +2240,7 @@ begin
 
   wbSizeOfMainRecordStruct := 24;
 
-  wbKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
+  KnownSubRecordSignatures[ksrBaseFormComponents] := '____';
   HEDRVersion := 0.96;
   CellSizeFactor := 100;
 

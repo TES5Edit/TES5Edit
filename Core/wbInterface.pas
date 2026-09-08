@@ -604,15 +604,6 @@ type
 
   TwbKnownSubRecordIndices = array[TwbKnownSubRecord] of Integer;
 
-var
-  wbKnownSubRecordSignatures: TwbKnownSubRecordSignatures = (
-    'EDID',
-    'FULL',
-    'NAME',
-    'XCLC',
-    '____'
-  );
-
 type
   TwbFileMagic = string;
 
@@ -3457,6 +3448,10 @@ type
     gdFilePluginNames  : TwbFilePluginNames;
     gdOfficialDLC      : TArray<string>;
     gdCreationClubContentFileName : string;
+    gdKnownSubRecordSignatures    : TwbKnownSubRecordSignatures;
+
+    function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
+    procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
 
     function GetGameMode: TwbGameMode;
     function GetGameName: string;
@@ -3525,6 +3520,11 @@ type
     property CreationClubContentFileName: string
       read gdCreationClubContentFileName
       write gdCreationClubContentFileName;
+    property KnownSubRecordSignatures[aKind: TwbKnownSubRecord]: TwbSignature
+      read GetKnownSubRecordSignature
+      write SetKnownSubRecordSignature;
+
+    function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
   end;
 
   TwbGameDefClass = class of TwbGameDef;
@@ -5647,6 +5647,26 @@ begin
   gdIgnoreRecords.Sorted := True;
   gdIgnoreRecords.Duplicates := dupIgnore;
   gdFilePlugins := 'Master Files';
+  gdKnownSubRecordSignatures[ksrEditorID] := 'EDID';
+  gdKnownSubRecordSignatures[ksrFullName] := 'FULL';
+  gdKnownSubRecordSignatures[ksrBaseRecord] := 'NAME';
+  gdKnownSubRecordSignatures[ksrGridCell] := 'XCLC';
+  gdKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
+end;
+
+function TwbGameDef.GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
+begin
+  Result := gdKnownSubRecordSignatures[aKind];
+end;
+
+procedure TwbGameDef.SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
+begin
+  gdKnownSubRecordSignatures[aKind] := aValue;
+end;
+
+function TwbGameDef.KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
+begin
+  Result := @gdKnownSubRecordSignatures;
 end;
 
 destructor TwbGameDef.Destroy;
@@ -10504,7 +10524,7 @@ begin
   if Assigned(aKnownSRs) then
     recKnownSRs := aKnownSRs
   else
-    recKnownSRs := @wbKnownSubRecordSignatures;
+    recKnownSRs := _CurrentGameDef.KnownSubRecordSignaturesPtr;
 
   if aIsReference then
     Include(recDefFlags, rdfIsReference);

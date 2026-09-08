@@ -899,10 +899,10 @@ begin
 
   wbSizeOfMainRecordStruct := 16;
 
-  wbKnownSubRecordSignatures[ksrEditorID] := 'NAME';
-  wbKnownSubRecordSignatures[ksrFullName] := 'FNAM';
-  wbKnownSubRecordSignatures[ksrBaseRecord] := '____';
-  wbKnownSubRecordSignatures[ksrGridCell] := 'DATA';
+  KnownSubRecordSignatures[ksrEditorID] := 'NAME';
+  KnownSubRecordSignatures[ksrFullName] := 'FNAM';
+  KnownSubRecordSignatures[ksrBaseRecord] := '____';
+  KnownSubRecordSignatures[ksrGridCell] := 'DATA';
 
   {>>> Records <<<}
 
