@@ -13372,6 +13372,10 @@ begin
   QuestFlagsSignature := 'DNAM';
   DefaultLandTexture := 'LCWDefault01Grass01';
   ArchiveExtension := '.ba2';
+  if GameMode = gmFO4 then begin
+    HardcodedRangeAdmitted := True;
+    HardcodedRangeMinVersion := 1.0;
+  end;
 end;
 
 initialization

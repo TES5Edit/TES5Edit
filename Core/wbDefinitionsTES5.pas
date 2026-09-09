@@ -10922,6 +10922,10 @@ begin
   QuestFlagsSignature := 'DNAM';
   if GameMode in [gmTES5, gmTES5VR, gmSSE] then
     DefaultLandTexture := 'LDirt02';
+  if GameMode in [gmSSE, gmTES5VR, gmEnderalSE] then begin
+    HardcodedRangeAdmitted := (GameMode <> gmTES5VR) or (gcLightPlugins in wbCurrentCapabilities);
+    HardcodedRangeMinVersion := 1.709;
+  end;
 end;
 
 initialization

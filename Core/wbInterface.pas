@@ -3487,6 +3487,8 @@ type
     gdRaceFlagsSignature  : TwbSignature;
     gdDefaultLandTexture  : string;
     gdArchiveExtension    : string;
+    gdHardcodedRangeAdmitted   : Boolean;
+    gdHardcodedRangeMinVersion : Double;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3599,6 +3601,12 @@ type
     property ArchiveExtension: string
       read gdArchiveExtension
       write gdArchiveExtension;
+    property HardcodedRangeAdmitted: Boolean
+      read gdHardcodedRangeAdmitted
+      write gdHardcodedRangeAdmitted;
+    property HardcodedRangeMinVersion: Double
+      read gdHardcodedRangeMinVersion
+      write gdHardcodedRangeMinVersion;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
 

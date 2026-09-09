@@ -4100,18 +4100,11 @@ begin
   if flHardcodedGeneration = _FileGeneration then
     Exit(flAllowHardcodedRangeUse);
 
-  Result :=
-    (
-      (wbGameMode = gmTES3)
-      or
-      (((wbGameMode in [gmSSE, gmEnderalSE]) or ((wbGameMode = gmTES5VR) and wbHasAddedLightSupport)) and (GetVersion >= 1.709))
-      or
-      ((wbGameMode = gmFO4) and (GetVersion >= 1.0))
-      or
-      (wbGameMode = gmSF1)
-    )
-    and
-    (GetMasterCount(True) > 0);
+  var lGameDef := _CurrentGameDef;
+  Result := lGameDef.HardcodedRangeAdmitted;
+  if Result and (lGameDef.HardcodedRangeMinVersion > 0) then
+    Result := GetVersion >= lGameDef.HardcodedRangeMinVersion;
+  Result := Result and (GetMasterCount(True) > 0);
 
   flAllowHardcodedRangeUse := Result;
   flHardcodedGeneration := _FileGeneration;

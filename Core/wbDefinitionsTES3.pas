@@ -2518,6 +2518,7 @@ begin
   wbAddGroupOrder(INFO);
   NexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
   HEDRVersion := 1.30;
+  HardcodedRangeAdmitted := True;
 end;
 
 initialization
