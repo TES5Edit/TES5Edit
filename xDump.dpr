@@ -632,7 +632,7 @@ begin
       Exit;
     ReportProgress('Dumping: ' + aContainer.Name);
   end;
-  if (wbToolSource in [tsSaves]) and Assigned(ChaptersToSkip) and Supports(aContainer, IwbChapter, Chapter) then
+  if (wbToolSource in [tsSaves]) and (ChaptersToSkip <> nil) and Supports(aContainer, IwbChapter, Chapter) then
     if ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
       ReportProgress('Skiping: ' + Chapter.ChapterTypeName);
       Exit;
@@ -1523,16 +1523,16 @@ begin
         ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
       if Assigned(DumpRecords) then
         ReportProgress('['+s+']   Dumping records : '+DumpRecords.CommaText);
-      if Assigned(GroupToSkip) and (GroupToSkip.Count>0) then
+      if (GroupToSkip <> nil) and (GroupToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
-      if Assigned(RecordToSkip) and (RecordToSkip.Count>0) then
+      if (RecordToSkip <> nil) and (RecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
-      if Assigned(SubRecordToSkip) and (SubRecordToSkip.Count>0) then
+      if (SubRecordToSkip <> nil) and (SubRecordToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
 
       if Assigned(DumpChapters) then
         ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
-      if Assigned(ChaptersToSkip) and (ChaptersToSkip.Count>0) then
+      if (ChaptersToSkip <> nil) and (ChaptersToSkip.Count>0) then
         ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
       if wbBytesToSkip>0 then
         ReportProgress('['+s+']   BytesToSkip : '+IntToStr(wbBytesToSkip));

@@ -26,10 +26,6 @@ const
   DefaultVCS2 = 0;
 
 var
-  RecordToSkip       : TStringList;
-  SubRecordToSkip    : TStringList;
-  GroupToSkip        : TStringList;
-  ChaptersToSkip     : TStringList;
   SubRecordOrderList : TStringList;
 
 function wbMastersForFile(const aFileName    : string;
@@ -26274,29 +26270,10 @@ initialization
   SubRecordOrderList := TwbFastStringList.Create;
   SubRecordOrderList.Sorted := True;
   SubRecordOrderList.Duplicates := dupIgnore;
-
-  RecordToSkip := TwbFastStringList.Create;
-  RecordToSkip.Sorted := True;
-  RecordToSkip.Duplicates := dupIgnore;
-
-  SubRecordToSkip := TwbFastStringList.Create;
-  SubRecordToSkip.Sorted := True;
-  SubRecordToSkip.Duplicates := dupIgnore;
-
-  GroupToSkip := TwbFastStringList.Create;
-  GroupToSkip.Sorted := True;
-  GroupToSkip.Duplicates := dupIgnore;
-
-  ChaptersToSkip := TwbFastStringList.Create;
-  ChaptersToSkip.Sorted := True;
-  ChaptersToSkip.Duplicates := dupIgnore;
 finalization
   wbMakeCurrentContext(nil);
   WriteSubRecordOrderList;
   FreeAndNil(SubRecordOrderList);
-  FreeAndNil(RecordToSkip);
-  FreeAndNil(GroupToSkip);
-  FreeAndNil(ChaptersToSkip);
   wbContainedInDef[1] := nil;
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;

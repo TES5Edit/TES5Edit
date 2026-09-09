@@ -41,6 +41,12 @@ function wbAlwaysLoadGameMaster: Boolean; inline;
 function wbUseFalsePlugins: Boolean; inline;
 function wbCreateContainedIn: Boolean; inline;
 function wbDelayLoadRecords: Boolean; inline;
+function wbCreationClubContentFileName: string; inline;
+function wbCreationClubContent: TArray<string>; inline;
+function RecordToSkip: TStringList; inline;
+function SubRecordToSkip: TStringList; inline;
+function GroupToSkip: TStringList; inline;
+function ChaptersToSkip: TStringList; inline;
 
 implementation
 
@@ -217,6 +223,36 @@ end;
 function wbDelayLoadRecords: Boolean;
 begin
   Result := _CurrentContext.Settings.DelayLoadRecords;
+end;
+
+function wbCreationClubContentFileName: string;
+begin
+  Result := _CurrentContext.Settings.CreationClubContentFileName;
+end;
+
+function wbCreationClubContent: TArray<string>;
+begin
+  Result := _CurrentContext.Settings.CreationClubContent;
+end;
+
+function RecordToSkip: TStringList;
+begin
+  Result := _CurrentContext.RecordToSkip;
+end;
+
+function SubRecordToSkip: TStringList;
+begin
+  Result := _CurrentContext.SubRecordToSkip;
+end;
+
+function GroupToSkip: TStringList;
+begin
+  Result := _CurrentContext.GroupToSkip;
+end;
+
+function ChaptersToSkip: TStringList;
+begin
+  Result := _CurrentContext.ChaptersToSkip;
 end;
 
 end.

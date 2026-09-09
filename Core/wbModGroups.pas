@@ -148,12 +148,25 @@ uses
   wbHelpers,
   wbSort;
 
-var
-  _ModGroupFiles       : TwbModGroupsFiles;
-  _ModGroupFilesLoaded : Boolean;
+type
+  TwbModGroupList = class
+  private
+    mgFiles  : TwbModGroupsFiles;
+    mgLoaded : Boolean;
+  end;
+
+function wbCurrentModGroupList: TwbModGroupList;
+begin
+  Result := TwbModGroupList(_CurrentContext.ModGroupList);
+  if not Assigned(Result) then begin
+    Result := TwbModGroupList.Create;
+    _CurrentContext.ModGroupList := Result;
+  end;
+end;
 
 procedure wbLoadModGroups;
 var
+  lList               : TwbModGroupList;
   ModGroupFilesByName : TStringList;
   ModGroupFiles       : TwbModGroupsFiles;
   Modules             : TwbModuleInfos;
@@ -161,7 +174,8 @@ var
   ModGroupFileName    : string;
   ModGroupFile        : PwbModGroupsFile;
 begin
-  if _ModGroupFilesLoaded then
+  lList := wbCurrentModGroupList;
+  if lList.mgLoaded then
     Exit;
 
   ModGroupFiles := nil;
@@ -205,17 +219,17 @@ begin
     for i := Low(ModGroupFiles) to High(ModGroupFiles) do
       ModGroupFiles[i].mgfCheckValid(True);
   except
-    _ModGroupFiles := nil;
+    lList.mgFiles := nil;
     raise;
   end;
-  _ModGroupFiles := ModGroupFiles;
-  _ModGroupFilesLoaded := True;
+  lList.mgFiles := ModGroupFiles;
+  lList.mgLoaded := True;
 end;
 
 procedure wbReloadModGroups;
 
 begin
-  _ModGroupFilesLoaded := False;
+  wbCurrentModGroupList.mgLoaded := False;
   wbLoadModGroups;
 end;
 
@@ -726,7 +740,7 @@ function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
 begin
 
   wbLoadModGroups;
-  _ModGroupFiles.mgfsAddModGroupsTo(Result, aValidOnly);
+  wbCurrentModGroupList.mgFiles.mgfsAddModGroupsTo(Result, aValidOnly);
   if Length(Result) > 1 then
     wbMergeSortPtr(@Result[0], Length(Result), CompareModGroupPtrsByName);
 end;

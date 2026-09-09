@@ -367,9 +367,6 @@ var
   wbTheGameIniFileName               : string;
   wbCustomIniFileName                : string;
 
-  wbCreationClubContentFileName      : string;
-  wbCreationClubContent              : array of string;
-
   wbShouldLoadMOHookFile             : Boolean;
   wbMOProfile                        : string;
   wbMOHookFile                       : string;
@@ -3437,6 +3434,10 @@ type
     procedure SetCreateContainedIn(aValue: Boolean);
     function GetDelayLoadRecords: Boolean;
     procedure SetDelayLoadRecords(aValue: Boolean);
+    function GetCreationClubContentFileName: string;
+    procedure SetCreationClubContentFileName(const aValue: string);
+    function GetCreationClubContent: TArray<string>;
+    procedure SetCreationClubContent(const aValue: TArray<string>);
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3499,6 +3500,12 @@ type
     property DelayLoadRecords: Boolean
       read GetDelayLoadRecords
       write SetDelayLoadRecords;
+    property CreationClubContentFileName: string
+      read GetCreationClubContentFileName
+      write SetCreationClubContentFileName;
+    property CreationClubContent: TArray<string>
+      read GetCreationClubContent
+      write SetCreationClubContent;
   end;
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
@@ -3717,6 +3724,8 @@ type
     UseFalsePlugins       : Boolean;
     CreateContainedIn     : Boolean;
     DelayLoadRecords      : Boolean;
+    CreationClubContentFileName : string;
+    CreationClubContent   : TArray<string>;
     class function Defaults: TwbGameContextSettings; static;
   end;
 
@@ -3731,6 +3740,11 @@ type
     gcNextMediumSlot : Integer;
     gcNextLoadOrder  : Integer;
     gcModuleList     : TObject;
+    gcModGroupList   : TObject;
+    gcRecordToSkip    : TStringList;
+    gcSubRecordToSkip : TStringList;
+    gcGroupToSkip     : TStringList;
+    gcChaptersToSkip  : TStringList;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -3771,6 +3785,11 @@ type
     procedure SetCreateContainedIn(aValue: Boolean);
     function GetDelayLoadRecords: Boolean;
     procedure SetDelayLoadRecords(aValue: Boolean);
+    function GetCreationClubContentFileName: string;
+    procedure SetCreationClubContentFileName(const aValue: string);
+    function GetCreationClubContent: TArray<string>;
+    procedure SetCreationClubContent(const aValue: TArray<string>);
+    function CreateSkipList: TStringList;
   public
     Settings: TwbGameContextSettings;
 
@@ -3797,6 +3816,17 @@ type
     property ModuleList: TObject
       read gcModuleList
       write gcModuleList;
+    property ModGroupList: TObject
+      read gcModGroupList
+      write gcModGroupList;
+    property RecordToSkip: TStringList
+      read gcRecordToSkip;
+    property SubRecordToSkip: TStringList
+      read gcSubRecordToSkip;
+    property GroupToSkip: TStringList
+      read gcGroupToSkip;
+    property ChaptersToSkip: TStringList
+      read gcChaptersToSkip;
   end;
 
 const
@@ -6057,10 +6087,20 @@ begin
     Settings := TwbGameContextSettings.Defaults;
   gcGameDef := aGameDef;
   gcGameDefObj := aGameDef as TwbGameDef;
-  wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
+  Settings.CreationClubContentFileName := aGameDef.CreationClubContentFileName;
   gcFilesMap := TwbFastStringList.Create;
   gcFilesMap.Sorted := True;
   gcFilesMap.Duplicates := dupError;
+  gcRecordToSkip := CreateSkipList;
+  gcSubRecordToSkip := CreateSkipList;
+  gcGroupToSkip := CreateSkipList;
+  gcChaptersToSkip := CreateSkipList;
+  if Assigned(_CurrentContext) then begin
+    gcRecordToSkip.Assign(_CurrentContext.RecordToSkip);
+    gcSubRecordToSkip.Assign(_CurrentContext.SubRecordToSkip);
+    gcGroupToSkip.Assign(_CurrentContext.GroupToSkip);
+    gcChaptersToSkip.Assign(_CurrentContext.ChaptersToSkip);
+  end;
 end;
 
 destructor TwbGameContext.Destroy;
@@ -6068,7 +6108,39 @@ begin
   gcFiles := nil;
   FreeAndNil(gcFilesMap);
   FreeAndNil(gcModuleList);
+  FreeAndNil(gcModGroupList);
+  FreeAndNil(gcRecordToSkip);
+  FreeAndNil(gcSubRecordToSkip);
+  FreeAndNil(gcGroupToSkip);
+  FreeAndNil(gcChaptersToSkip);
   inherited;
+end;
+
+function TwbGameContext.CreateSkipList: TStringList;
+begin
+  Result := TwbFastStringList.Create;
+  Result.Sorted := True;
+  Result.Duplicates := dupIgnore;
+end;
+
+function TwbGameContext.GetCreationClubContentFileName: string;
+begin
+  Result := Settings.CreationClubContentFileName;
+end;
+
+procedure TwbGameContext.SetCreationClubContentFileName(const aValue: string);
+begin
+  Settings.CreationClubContentFileName := aValue;
+end;
+
+function TwbGameContext.GetCreationClubContent: TArray<string>;
+begin
+  Result := Settings.CreationClubContent;
+end;
+
+procedure TwbGameContext.SetCreationClubContent(const aValue: TArray<string>);
+begin
+  Settings.CreationClubContent := aValue;
 end;
 
 function TwbGameContext.GetGameDef: IwbGameDef;

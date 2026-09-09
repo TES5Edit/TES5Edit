@@ -4707,17 +4707,20 @@ begin
     end;
 
   if wbCreationClubContentFileName <> '' then begin
-    wbCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + wbCreationClubContentFileName;
-    if FileExists(wbCreationClubContentFileName) then begin
+    var lCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + wbCreationClubContentFileName;
+    wbCurrentContext.CreationClubContentFileName := lCreationClubContentFileName;
+    if FileExists(lCreationClubContentFileName) then begin
       with TStringList.Create do try
-        LoadFromFile(wbCreationClubContentFileName);
-        SetLength(wbCreationClubContent, Count);
+        LoadFromFile(lCreationClubContentFileName);
+        var lCreationClubContent: TArray<string>;
+        SetLength(lCreationClubContent, Count);
         for i := 0 to Pred(Count) do
-          wbCreationClubContent[i] := Strings[i];
+          lCreationClubContent[i] := Strings[i];
+        wbCurrentContext.CreationClubContent := lCreationClubContent;
       finally
         Free;
       end;
-      AddMessage('Using Creation Club Content list: ' + wbCreationClubContentFileName);
+      AddMessage('Using Creation Club Content list: ' + lCreationClubContentFileName);
     end;
   end;
 
