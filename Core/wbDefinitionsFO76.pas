@@ -17832,6 +17832,7 @@ begin
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
   HEDRVersion := 266.0;
+  DefaultFormVersion := 209;
 end;
 
 initialization

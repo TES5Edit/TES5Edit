@@ -13368,6 +13368,7 @@ begin
     HEDRVersion := 1.0;
     HEDRNextObjectID := 1;
   end;
+  DefaultFormVersion := 131;
 end;
 
 initialization

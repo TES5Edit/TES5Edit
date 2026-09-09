@@ -7886,6 +7886,7 @@ begin
   if wbToolMode = tmLODgen then
     NexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
   HEDRVersion := 0.94;
+  DefaultFormVersion := 15;
 end;
 
 initialization

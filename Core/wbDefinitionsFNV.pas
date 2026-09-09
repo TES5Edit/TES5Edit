@@ -9125,6 +9125,7 @@ begin
   if wbToolMode = tmLODgen then
     NexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
   HEDRVersion := 1.34;
+  DefaultFormVersion := 15;
 end;
 
 initialization

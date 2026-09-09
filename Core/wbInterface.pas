@@ -3482,6 +3482,7 @@ type
     gdGameMode         : TwbGameMode;
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
+    gdDefaultFormVersion : Word;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3579,6 +3580,9 @@ type
       read gdRecordDefs;
     property RefRecordDefs: TwbMainRecordDefs
       read gdRefRecordDefs;
+    property DefaultFormVersion: Word
+      read gdDefaultFormVersion
+      write gdDefaultFormVersion;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
 
@@ -5706,6 +5710,7 @@ begin
   gdIgnoreRecords.Sorted := True;
   gdIgnoreRecords.Duplicates := dupIgnore;
   gdFilePlugins := 'Master Files';
+  gdDefaultFormVersion := 15;
   gdKnownSubRecordSignatures[ksrEditorID] := 'EDID';
   gdKnownSubRecordSignatures[ksrFullName] := 'FULL';
   gdKnownSubRecordSignatures[ksrBaseRecord] := 'NAME';

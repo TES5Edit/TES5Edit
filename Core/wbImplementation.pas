@@ -10172,16 +10172,7 @@ var
     BasePtr.mrsVCS1^ := DefaultVCS1;
 
     if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
-      case wbGameMode of
-        gmSF1                        : BasePtr.mrsVersion^ := 582;
-        gmFO76                       : BasePtr.mrsVersion^ := 209;
-        gmFO4, gmFO4VR               : BasePtr.mrsVersion^ := 131;
-        gmSSE, gmTES5VR, gmEnderalSE : BasePtr.mrsVersion^ := 44;
-        gmTES5, gmEnderal            : BasePtr.mrsVersion^ := 43;
-        gmFNV                        : BasePtr.mrsVersion^ := 15;
-        gmFO3                        : BasePtr.mrsVersion^ := 15;
-        else                           BasePtr.mrsVersion^ := 15;
-      end;
+      BasePtr.mrsVersion^ := _CurrentGameDef.DefaultFormVersion;
       BasePtr.mrsVCS2^ := DefaultVCS2;
     end;
 

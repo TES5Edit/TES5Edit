@@ -10915,6 +10915,10 @@ begin
   HEDRVersion := 1.7;
   if GameMode in [gmSSE, gmEnderalSE] then
     HEDRVersion := 1.71;
+  if GameMode in [gmSSE, gmTES5VR, gmEnderalSE] then
+    DefaultFormVersion := 44
+  else
+    DefaultFormVersion := 43;
 end;
 
 initialization
