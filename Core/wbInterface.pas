@@ -158,7 +158,6 @@ var
   wbWriteOffsetData                  : Boolean    = True;
   wbEditAllowed                      : Boolean    = False;
   wbFlagsAsArray                     : Boolean    = False;
-  wbDelayLoadRecords                 : Boolean    = True;
   wbExtendedIntUnknowns              : Boolean    = True;
   wbMoreInfoForUnknown               : Boolean    = False;
   wbMoreInfoForIndex                 : Boolean    = False;
@@ -167,8 +166,6 @@ var
   wbTestWrite                        : Boolean    = False;
   wbForceNewHeader                   : Boolean    = False;          // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
   wbNewHeaderAddon                   : Cardinal   = 40;             // 4 additional bytes, 40 - new form version field
-  wbRequireLoadOrder                 : Boolean    = False;
-  wbCreateContainedIn                : Boolean    = True;
   wbVWDInTemporary                   : Boolean    = False;
   wbVWDAsQuestChildren               : Boolean    = False;
   wbResolveAlias                     : Boolean    = True;
@@ -177,18 +174,12 @@ var
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
-  wbIgnoreLight                      : Boolean    = False;
-  wbPseudoLight                      : Boolean    = False;
-  wbIgnoreMedium                     : Boolean    = False;
-  wbPseudoMedium                     : Boolean    = False;
   wbHasAddedLightSupport             : Boolean    = False;
   wbHasAddedMediumSupport            : Boolean    = False;
   wbHasAddedOptimizedSupport         : Boolean    = False;
   wbHasAddedUpdateSupport            : Boolean    = False;
   wbAllowEditHEDRVersion             : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
-  wbIgnoreUpdate                     : Boolean    = False;
-  wbPseudoUpdate                     : Boolean    = False;
   wbAllowDirectSave                  : Boolean    = False;
   wbAllowDirectSaveFor               : TStringList;
   wbAllowMasterFilesEdit             : Boolean    = False;          //must be set before DefineDefs
@@ -288,7 +279,6 @@ var
   wbCompareRawData                   : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
   wbComplexFileFileID                : Boolean    = False;
-  wbEnforceAllMasters                : Boolean    = False;  // adds all masters of masters when adding a master and prevents cleaning them
   wbAllowUnsafeScripts               : Boolean    = False;
 
   wbCS                               : Boolean    = False;
@@ -298,9 +288,6 @@ var
   wbAllowMakePartial                 : Boolean    = False;
 
   wbGlobalModifedGeneration          : UInt64;
-
-  wbPluginsFileName                  : string;
-  wbModGroupFileName                 : string;
 
   wbDontSave                         : Boolean;
 
@@ -387,11 +374,8 @@ var
   wbMOProfile                        : string;
   wbMOHookFile                       : string;
 
-  wbAllowESPMasters                  : Boolean    = False;
-  wbAllowESPMastersOnSave            : Boolean    = False;
   wbStarfieldIsABugInfestedHellhole  : Boolean    = False;
   wbRedPill                          : Boolean    = False;
-  wbAlwaysLoadGameMaster             : Boolean    = True;
 
   wbSpeedOverMemory                  : Boolean    = False;
 
@@ -3421,6 +3405,39 @@ type
     function RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
     function FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
 
+    function GetIgnoreLight: Boolean;
+    procedure SetIgnoreLight(aValue: Boolean);
+    function GetPseudoLight: Boolean;
+    procedure SetPseudoLight(aValue: Boolean);
+    function GetIgnoreMedium: Boolean;
+    procedure SetIgnoreMedium(aValue: Boolean);
+    function GetPseudoMedium: Boolean;
+    procedure SetPseudoMedium(aValue: Boolean);
+    function GetIgnoreUpdate: Boolean;
+    procedure SetIgnoreUpdate(aValue: Boolean);
+    function GetPseudoUpdate: Boolean;
+    procedure SetPseudoUpdate(aValue: Boolean);
+    function GetRequireLoadOrder: Boolean;
+    procedure SetRequireLoadOrder(aValue: Boolean);
+    function GetPluginsFileName: string;
+    procedure SetPluginsFileName(const aValue: string);
+    function GetModGroupFileName: string;
+    procedure SetModGroupFileName(const aValue: string);
+    function GetEnforceAllMasters: Boolean;
+    procedure SetEnforceAllMasters(aValue: Boolean);
+    function GetAllowESPMasters: Boolean;
+    procedure SetAllowESPMasters(aValue: Boolean);
+    function GetAllowESPMastersOnSave: Boolean;
+    procedure SetAllowESPMastersOnSave(aValue: Boolean);
+    function GetAlwaysLoadGameMaster: Boolean;
+    procedure SetAlwaysLoadGameMaster(aValue: Boolean);
+    function GetUseFalsePlugins: Boolean;
+    procedure SetUseFalsePlugins(aValue: Boolean);
+    function GetCreateContainedIn: Boolean;
+    procedure SetCreateContainedIn(aValue: Boolean);
+    function GetDelayLoadRecords: Boolean;
+    procedure SetDelayLoadRecords(aValue: Boolean);
+
     property GameDef: IwbGameDef
       read GetGameDef;
     property DataPath: string
@@ -3433,6 +3450,55 @@ type
       read GetContainerHandler;
     property GameMasterFile: IwbFile
       read GetGameMasterFile;
+
+    property IgnoreLight: Boolean
+      read GetIgnoreLight
+      write SetIgnoreLight;
+    property PseudoLight: Boolean
+      read GetPseudoLight
+      write SetPseudoLight;
+    property IgnoreMedium: Boolean
+      read GetIgnoreMedium
+      write SetIgnoreMedium;
+    property PseudoMedium: Boolean
+      read GetPseudoMedium
+      write SetPseudoMedium;
+    property IgnoreUpdate: Boolean
+      read GetIgnoreUpdate
+      write SetIgnoreUpdate;
+    property PseudoUpdate: Boolean
+      read GetPseudoUpdate
+      write SetPseudoUpdate;
+    property RequireLoadOrder: Boolean
+      read GetRequireLoadOrder
+      write SetRequireLoadOrder;
+    property PluginsFileName: string
+      read GetPluginsFileName
+      write SetPluginsFileName;
+    property ModGroupFileName: string
+      read GetModGroupFileName
+      write SetModGroupFileName;
+    property EnforceAllMasters: Boolean
+      read GetEnforceAllMasters
+      write SetEnforceAllMasters;
+    property AllowESPMasters: Boolean
+      read GetAllowESPMasters
+      write SetAllowESPMasters;
+    property AllowESPMastersOnSave: Boolean
+      read GetAllowESPMastersOnSave
+      write SetAllowESPMastersOnSave;
+    property AlwaysLoadGameMaster: Boolean
+      read GetAlwaysLoadGameMaster
+      write SetAlwaysLoadGameMaster;
+    property UseFalsePlugins: Boolean
+      read GetUseFalsePlugins
+      write SetUseFalsePlugins;
+    property CreateContainedIn: Boolean
+      read GetCreateContainedIn
+      write SetCreateContainedIn;
+    property DelayLoadRecords: Boolean
+      read GetDelayLoadRecords
+      write SetDelayLoadRecords;
   end;
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
@@ -3634,6 +3700,26 @@ type
 
   TwbGameDefClass = class of TwbGameDef;
 
+  TwbGameContextSettings = record
+    IgnoreLight           : Boolean;
+    PseudoLight           : Boolean;
+    IgnoreMedium          : Boolean;
+    PseudoMedium          : Boolean;
+    IgnoreUpdate          : Boolean;
+    PseudoUpdate          : Boolean;
+    RequireLoadOrder      : Boolean;
+    PluginsFileName       : string;
+    ModGroupFileName      : string;
+    EnforceAllMasters     : Boolean;
+    AllowESPMasters       : Boolean;
+    AllowESPMastersOnSave : Boolean;
+    AlwaysLoadGameMaster  : Boolean;
+    UseFalsePlugins       : Boolean;
+    CreateContainedIn     : Boolean;
+    DelayLoadRecords      : Boolean;
+    class function Defaults: TwbGameContextSettings; static;
+  end;
+
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
     gcGameDef        : IwbGameDef;
@@ -3652,7 +3738,42 @@ type
     function GetFile(aIndex: Integer): IwbFile;
     function GetContainerHandler: IwbContainerHandler;
     function GetGameMasterFile: IwbFile;
+
+    function GetIgnoreLight: Boolean;
+    procedure SetIgnoreLight(aValue: Boolean);
+    function GetPseudoLight: Boolean;
+    procedure SetPseudoLight(aValue: Boolean);
+    function GetIgnoreMedium: Boolean;
+    procedure SetIgnoreMedium(aValue: Boolean);
+    function GetPseudoMedium: Boolean;
+    procedure SetPseudoMedium(aValue: Boolean);
+    function GetIgnoreUpdate: Boolean;
+    procedure SetIgnoreUpdate(aValue: Boolean);
+    function GetPseudoUpdate: Boolean;
+    procedure SetPseudoUpdate(aValue: Boolean);
+    function GetRequireLoadOrder: Boolean;
+    procedure SetRequireLoadOrder(aValue: Boolean);
+    function GetPluginsFileName: string;
+    procedure SetPluginsFileName(const aValue: string);
+    function GetModGroupFileName: string;
+    procedure SetModGroupFileName(const aValue: string);
+    function GetEnforceAllMasters: Boolean;
+    procedure SetEnforceAllMasters(aValue: Boolean);
+    function GetAllowESPMasters: Boolean;
+    procedure SetAllowESPMasters(aValue: Boolean);
+    function GetAllowESPMastersOnSave: Boolean;
+    procedure SetAllowESPMastersOnSave(aValue: Boolean);
+    function GetAlwaysLoadGameMaster: Boolean;
+    procedure SetAlwaysLoadGameMaster(aValue: Boolean);
+    function GetUseFalsePlugins: Boolean;
+    procedure SetUseFalsePlugins(aValue: Boolean);
+    function GetCreateContainedIn: Boolean;
+    procedure SetCreateContainedIn(aValue: Boolean);
+    function GetDelayLoadRecords: Boolean;
+    procedure SetDelayLoadRecords(aValue: Boolean);
   public
+    Settings: TwbGameContextSettings;
+
     constructor Create(const aGameDef: IwbGameDef);
     destructor Destroy; override;
 
@@ -5018,7 +5139,6 @@ threadvar
 var
 
   wbNullSignature     : TwbSignature = #0#0#0#0;
-  wbUseFalsePlugins   : Boolean = False;
   wbBytesToSkip       : Cardinal = 0;
   wbBytesToDump       : Cardinal = $FFFFFFFF;
   wbBytesToGroup      : Cardinal = 4;
@@ -5903,7 +6023,12 @@ begin
 end;
 
 procedure wbMakeCurrentContext(const aContext: IwbGameContext);
+var
+  lPrevious: IwbGameContext;
 begin
+  lPrevious := _CurrentContextRef;
+  _CurrentContextRef := nil;
+  lPrevious := nil;
   if Assigned(aContext) then
     _CurrentContext := aContext as TwbGameContext
   else
@@ -5911,11 +6036,25 @@ begin
   _CurrentContextRef := aContext;
 end;
 
+{ TwbGameContextSettings }
+
+class function TwbGameContextSettings.Defaults: TwbGameContextSettings;
+begin
+  Result := Default(TwbGameContextSettings);
+  Result.AlwaysLoadGameMaster := True;
+  Result.CreateContainedIn := True;
+  Result.DelayLoadRecords := True;
+end;
+
 { TwbGameContext }
 
 constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
 begin
   inherited Create;
+  if Assigned(_CurrentContext) then
+    Settings := _CurrentContext.Settings
+  else
+    Settings := TwbGameContextSettings.Defaults;
   gcGameDef := aGameDef;
   gcGameDefObj := aGameDef as TwbGameDef;
   wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
@@ -5955,6 +6094,166 @@ end;
 function TwbGameContext.GetContainerHandler: IwbContainerHandler;
 begin
   Result := wbContainerHandler;
+end;
+
+function TwbGameContext.GetIgnoreLight: Boolean;
+begin
+  Result := Settings.IgnoreLight;
+end;
+
+procedure TwbGameContext.SetIgnoreLight(aValue: Boolean);
+begin
+  Settings.IgnoreLight := aValue;
+end;
+
+function TwbGameContext.GetPseudoLight: Boolean;
+begin
+  Result := Settings.PseudoLight;
+end;
+
+procedure TwbGameContext.SetPseudoLight(aValue: Boolean);
+begin
+  Settings.PseudoLight := aValue;
+end;
+
+function TwbGameContext.GetIgnoreMedium: Boolean;
+begin
+  Result := Settings.IgnoreMedium;
+end;
+
+procedure TwbGameContext.SetIgnoreMedium(aValue: Boolean);
+begin
+  Settings.IgnoreMedium := aValue;
+end;
+
+function TwbGameContext.GetPseudoMedium: Boolean;
+begin
+  Result := Settings.PseudoMedium;
+end;
+
+procedure TwbGameContext.SetPseudoMedium(aValue: Boolean);
+begin
+  Settings.PseudoMedium := aValue;
+end;
+
+function TwbGameContext.GetIgnoreUpdate: Boolean;
+begin
+  Result := Settings.IgnoreUpdate;
+end;
+
+procedure TwbGameContext.SetIgnoreUpdate(aValue: Boolean);
+begin
+  Settings.IgnoreUpdate := aValue;
+end;
+
+function TwbGameContext.GetPseudoUpdate: Boolean;
+begin
+  Result := Settings.PseudoUpdate;
+end;
+
+procedure TwbGameContext.SetPseudoUpdate(aValue: Boolean);
+begin
+  Settings.PseudoUpdate := aValue;
+end;
+
+function TwbGameContext.GetRequireLoadOrder: Boolean;
+begin
+  Result := Settings.RequireLoadOrder;
+end;
+
+procedure TwbGameContext.SetRequireLoadOrder(aValue: Boolean);
+begin
+  Settings.RequireLoadOrder := aValue;
+end;
+
+function TwbGameContext.GetPluginsFileName: string;
+begin
+  Result := Settings.PluginsFileName;
+end;
+
+procedure TwbGameContext.SetPluginsFileName(const aValue: string);
+begin
+  Settings.PluginsFileName := aValue;
+end;
+
+function TwbGameContext.GetModGroupFileName: string;
+begin
+  Result := Settings.ModGroupFileName;
+end;
+
+procedure TwbGameContext.SetModGroupFileName(const aValue: string);
+begin
+  Settings.ModGroupFileName := aValue;
+end;
+
+function TwbGameContext.GetEnforceAllMasters: Boolean;
+begin
+  Result := Settings.EnforceAllMasters;
+end;
+
+procedure TwbGameContext.SetEnforceAllMasters(aValue: Boolean);
+begin
+  Settings.EnforceAllMasters := aValue;
+end;
+
+function TwbGameContext.GetAllowESPMasters: Boolean;
+begin
+  Result := Settings.AllowESPMasters;
+end;
+
+procedure TwbGameContext.SetAllowESPMasters(aValue: Boolean);
+begin
+  Settings.AllowESPMasters := aValue;
+end;
+
+function TwbGameContext.GetAllowESPMastersOnSave: Boolean;
+begin
+  Result := Settings.AllowESPMastersOnSave;
+end;
+
+procedure TwbGameContext.SetAllowESPMastersOnSave(aValue: Boolean);
+begin
+  Settings.AllowESPMastersOnSave := aValue;
+end;
+
+function TwbGameContext.GetAlwaysLoadGameMaster: Boolean;
+begin
+  Result := Settings.AlwaysLoadGameMaster;
+end;
+
+procedure TwbGameContext.SetAlwaysLoadGameMaster(aValue: Boolean);
+begin
+  Settings.AlwaysLoadGameMaster := aValue;
+end;
+
+function TwbGameContext.GetUseFalsePlugins: Boolean;
+begin
+  Result := Settings.UseFalsePlugins;
+end;
+
+procedure TwbGameContext.SetUseFalsePlugins(aValue: Boolean);
+begin
+  Settings.UseFalsePlugins := aValue;
+end;
+
+function TwbGameContext.GetCreateContainedIn: Boolean;
+begin
+  Result := Settings.CreateContainedIn;
+end;
+
+procedure TwbGameContext.SetCreateContainedIn(aValue: Boolean);
+begin
+  Settings.CreateContainedIn := aValue;
+end;
+
+function TwbGameContext.GetDelayLoadRecords: Boolean;
+begin
+  Result := Settings.DelayLoadRecords;
+end;
+
+procedure TwbGameContext.SetDelayLoadRecords(aValue: Boolean);
+begin
+  Settings.DelayLoadRecords := aValue;
 end;
 
 function TwbGameContext.GetGameMasterFile: IwbFile;
@@ -23248,12 +23547,12 @@ class function TwbFileID.CreateFromFormID(aFormID: Cardinal): TwbFileID;
 begin
   Result._FullSlot := aFormID shr 24;
 
-  if (Result._FullSlot = LightFullSlot) and (wbPseudoLight or wbIsLightSupported) then
+  if (Result._FullSlot = LightFullSlot) and (_CurrentContext.Settings.PseudoLight or wbIsLightSupported) then
     Result._LightSlot := (aFormID shr 12) and $FFF
   else
     Result._LightSlot := -1;
 
-  if (Result._FullSlot = MediumFullSlot) and (wbPseudoMedium or wbIsMediumSupported) then
+  if (Result._FullSlot = MediumFullSlot) and (_CurrentContext.Settings.PseudoMedium or wbIsMediumSupported) then
     Result._MediumSlot := (aFormID shr 16) and $FF
   else
     Result._MediumSlot := -1;
@@ -23270,7 +23569,7 @@ end;
 
 class function TwbFileID.CreateMedium(aMediumSlot: SmallInt): TwbFileID;
 begin
-  Assert(wbIsMediumSupported or wbPseudoMedium);
+  Assert(wbIsMediumSupported or _CurrentContext.Settings.PseudoMedium);
   with Result do begin
     _FullSlot := MediumFullSlot;
     _MediumSlot := aMediumSlot;
@@ -23280,7 +23579,7 @@ end;
 
 class function TwbFileID.CreateLight(aLightSlot: SmallInt): TwbFileID;
 begin
-  Assert(wbIsLightSupported or wbPseudoLight);
+  Assert(wbIsLightSupported or _CurrentContext.Settings.PseudoLight);
   with Result do begin
     _FullSlot := LightFullSlot;
     _MediumSlot := -1;
@@ -23307,7 +23606,7 @@ end;
 
 class function TwbFileID.MediumFullSlot: SmallInt;
 begin
-  if wbPseudoMedium or wbIsMediumSupported then
+  if _CurrentContext.Settings.PseudoMedium or wbIsMediumSupported then
     Result := $FD
   else
     Result := -1;
@@ -23325,7 +23624,7 @@ end;
 
 class function TwbFileID.LightFullSlot: SmallInt;
 begin
-  if wbPseudoLight or wbIsLightSupported then
+  if _CurrentContext.Settings.PseudoLight or wbIsLightSupported then
     Result := $FE
   else
     Result := -1;
@@ -23334,16 +23633,16 @@ end;
 class function TwbFileID.MaxFullSlot: SmallInt;
 begin
   Result := $FE;
-  if wbPseudoLight or wbIsLightSupported then begin
+  if _CurrentContext.Settings.PseudoLight or wbIsLightSupported then begin
     Dec(Result); //$FD
-    if wbPseudoMedium or wbIsMediumSupported then
+    if _CurrentContext.Settings.PseudoMedium or wbIsMediumSupported then
       Dec(Result); //$FC
   end;
 end;
 
 class function TwbFileID.MaxMediumSlot: SmallInt;
 begin
- if wbPseudoMedium or wbIsMediumSupported then
+ if _CurrentContext.Settings.PseudoMedium or wbIsMediumSupported then
    Result := $FF
  else
    Result := -1;
@@ -23351,7 +23650,7 @@ end;
 
 class function TwbFileID.MaxLightSlot: SmallInt;
 begin
- if wbPseudoLight or wbIsLightSupported then
+ if _CurrentContext.Settings.PseudoLight or wbIsLightSupported then
    Result := $FFF
  else
    Result := -1;

@@ -17,6 +17,7 @@ uses
   System.SysUtils,
 
   wbHash,
+  wbGameDefGlobals,
   wbInterface,
   wbLoadOrder;
 

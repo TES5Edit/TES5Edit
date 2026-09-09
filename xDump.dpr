@@ -1070,7 +1070,7 @@ begin
         end;
         gmFO4: begin
           wbGameName           := 'Fallout4';
-          wbCreateContainedIn  := False;
+          wbCurrentContext.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
         end;
         gmFO4VR: begin
@@ -1078,7 +1078,7 @@ begin
           wbGameExeName        := 'Fallout4VR';
           wbGameName2          := 'Fallout4VR';
           wbGameNameReg        := 'Fallout 4 VR';
-          wbCreateContainedIn  := False;
+          wbCurrentContext.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
@@ -1099,13 +1099,13 @@ begin
           wbGameName           := 'Fallout76';
           wbGameNameReg        := 'Fallout 76';
           wbGameMasterEsm      := 'SeventySix.esm';
-          wbCreateContainedIn  := False;
+          wbCurrentContext.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
         gmSF1: begin
           wbGameName           := 'Starfield';
-          wbCreateContainedIn  := False;
+          wbCurrentContext.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
         end;
       else begin

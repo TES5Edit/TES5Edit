@@ -28,6 +28,7 @@ uses
   wbBSArchive,
   wbHash,
   wbHelpers,
+  wbGameDefGlobals,
   wbInterface,
   wbLocalization,
   wbNifScanner;

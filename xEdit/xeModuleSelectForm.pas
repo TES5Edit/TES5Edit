@@ -140,6 +140,7 @@ uses
 
   Winapi.Windows,
 
+  wbGameDefGlobals,
   wbInterface,
 
   xeMainForm;

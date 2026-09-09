@@ -4626,7 +4626,7 @@ begin
   wbDisplayShorterNames := True;
   wbHideUnused := True;
   wbFlagsAsArray := True;
-  wbRequireLoadOrder := not wbUseFalsePlugins;
+  wbCurrentContext.RequireLoadOrder := not wbUseFalsePlugins;
   ShowUnsavedHint := True;
   ParentedGroupRecordType := [1, 6, 7];
   if wbVWDAsQuestChildren then

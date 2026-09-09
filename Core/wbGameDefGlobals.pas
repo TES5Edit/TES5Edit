@@ -25,6 +25,22 @@ function wbSizeOfMainRecordStruct: Integer; inline;
 function wbRecordDefs: TwbRecordDefEntries; inline;
 function wbArchiveExtension: string; inline;
 function Files: TwbFiles; inline;
+function wbIgnoreLight: Boolean; inline;
+function wbPseudoLight: Boolean; inline;
+function wbIgnoreMedium: Boolean; inline;
+function wbPseudoMedium: Boolean; inline;
+function wbIgnoreUpdate: Boolean; inline;
+function wbPseudoUpdate: Boolean; inline;
+function wbRequireLoadOrder: Boolean; inline;
+function wbPluginsFileName: string; inline;
+function wbModGroupFileName: string; inline;
+function wbEnforceAllMasters: Boolean; inline;
+function wbAllowESPMasters: Boolean; inline;
+function wbAllowESPMastersOnSave: Boolean; inline;
+function wbAlwaysLoadGameMaster: Boolean; inline;
+function wbUseFalsePlugins: Boolean; inline;
+function wbCreateContainedIn: Boolean; inline;
+function wbDelayLoadRecords: Boolean; inline;
 
 implementation
 
@@ -121,6 +137,86 @@ end;
 function Files: TwbFiles;
 begin
   Result := _CurrentContext.Files;
+end;
+
+function wbIgnoreLight: Boolean;
+begin
+  Result := _CurrentContext.Settings.IgnoreLight;
+end;
+
+function wbPseudoLight: Boolean;
+begin
+  Result := _CurrentContext.Settings.PseudoLight;
+end;
+
+function wbIgnoreMedium: Boolean;
+begin
+  Result := _CurrentContext.Settings.IgnoreMedium;
+end;
+
+function wbPseudoMedium: Boolean;
+begin
+  Result := _CurrentContext.Settings.PseudoMedium;
+end;
+
+function wbIgnoreUpdate: Boolean;
+begin
+  Result := _CurrentContext.Settings.IgnoreUpdate;
+end;
+
+function wbPseudoUpdate: Boolean;
+begin
+  Result := _CurrentContext.Settings.PseudoUpdate;
+end;
+
+function wbRequireLoadOrder: Boolean;
+begin
+  Result := _CurrentContext.Settings.RequireLoadOrder;
+end;
+
+function wbPluginsFileName: string;
+begin
+  Result := _CurrentContext.Settings.PluginsFileName;
+end;
+
+function wbModGroupFileName: string;
+begin
+  Result := _CurrentContext.Settings.ModGroupFileName;
+end;
+
+function wbEnforceAllMasters: Boolean;
+begin
+  Result := _CurrentContext.Settings.EnforceAllMasters;
+end;
+
+function wbAllowESPMasters: Boolean;
+begin
+  Result := _CurrentContext.Settings.AllowESPMasters;
+end;
+
+function wbAllowESPMastersOnSave: Boolean;
+begin
+  Result := _CurrentContext.Settings.AllowESPMastersOnSave;
+end;
+
+function wbAlwaysLoadGameMaster: Boolean;
+begin
+  Result := _CurrentContext.Settings.AlwaysLoadGameMaster;
+end;
+
+function wbUseFalsePlugins: Boolean;
+begin
+  Result := _CurrentContext.Settings.UseFalsePlugins;
+end;
+
+function wbCreateContainedIn: Boolean;
+begin
+  Result := _CurrentContext.Settings.CreateContainedIn;
+end;
+
+function wbDelayLoadRecords: Boolean;
+begin
+  Result := _CurrentContext.Settings.DelayLoadRecords;
 end;
 
 end.

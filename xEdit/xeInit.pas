@@ -91,6 +91,7 @@ uses
   wbDefinitionsTES5,
   wbDefinitionsTES5Saves,
   wbHelpers,
+  wbGameDefGlobals,
   wbImplementation,
   wbInterface,
   wbSteamVDFParser,
@@ -402,7 +403,7 @@ var
   isEpicNV : Boolean;
   IniFile : TMemIniFile;
 begin
-  wbModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
+  wbCurrentContext.ModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
   isEpicNV := false;
 
   if not wbFindCmdLineParam('S', wbScriptsPath) then
@@ -565,28 +566,30 @@ begin
   wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
 
   xeParamIndex := ParamIndex;
-  if not wbFindCmdLineParam('P', wbPluginsFileName) then
-    if not (xeFindNextValidCmdLineFileName(xeParamIndex, wbPluginsFileName) and SameText(ExtractFileExt(wbPluginsFileName), '.txt'))
-       or xeCheckForValidExtension(wbPluginsFileName)
+  var lPluginsFileName: string;
+  if not wbFindCmdLineParam('P', lPluginsFileName) then
+    if not (xeFindNextValidCmdLineFileName(xeParamIndex, lPluginsFileName) and SameText(ExtractFileExt(lPluginsFileName), '.txt'))
+       or xeCheckForValidExtension(lPluginsFileName)
     then begin
       xeParamIndex := ParamIndex;
-      wbPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
-      if wbPluginsFileName = '' then begin
+      lPluginsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA);
+      if lPluginsFileName = '' then begin
         ShowMessage('Fatal: Could not determine the local application data folder');
         Exit;
       end;
 
       if wbGameMode = gmFO76 then
-        wbPluginsFileName := wbPluginsFileName + wbGameName + '\Plugins.txt'
+        lPluginsFileName := lPluginsFileName + wbGameName + '\Plugins.txt'
       else if (wbGameMode = gmFNV) and isEpicNV then
-        wbPluginsFileName := wbPluginsFileName + wbGameName + '_Epic' + '\Plugins.txt'
+        lPluginsFileName := lPluginsFileName + wbGameName + '_Epic' + '\Plugins.txt'
       else if wbIsOblivionR then
-        wbPluginsFileName :=  IncludeTrailingPathDelimiter(wbDataPath) + 'Plugins.txt'
+        lPluginsFileName :=  IncludeTrailingPathDelimiter(wbDataPath) + 'Plugins.txt'
       else
-        wbPluginsFileName := wbPluginsFileName + wbGameName2 + '\Plugins.txt';
+        lPluginsFileName := lPluginsFileName + wbGameName2 + '\Plugins.txt';
     end;
-  if ExtractFilePath(wbPluginsFileName) = '' then
-    wbPluginsFileName := ExpandFileName(wbPluginsFileName);
+  if ExtractFilePath(lPluginsFileName) = '' then
+    lPluginsFileName := ExpandFileName(lPluginsFileName);
+  wbCurrentContext.PluginsFileName := lPluginsFileName;
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
   xeSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
@@ -757,7 +760,7 @@ begin
   if isMode('Saves') then begin
     wbToolSource := tsSaves;
     wbSourceName := 'Saves';
-    wbUseFalsePlugins := True;
+    wbCurrentContext.UseFalsePlugins := True;
   end else begin // defaults to plugin
     wbToolSource := tsPlugins;
     wbSourceName := 'Plugins';
@@ -1040,16 +1043,16 @@ begin
       wbVWDInTemporary        := True;
       wbLoadBSAs              := False;
       wbCanSortINFO           := True;
-      wbAllowESPMasters       := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
       wbHNVSE                 := FileExists(wbDataPath + 'NVSE\Plugins\Hnvse.dll');
     end;
     gmFO3: begin
       wbVWDInTemporary      := True;
       wbLoadBSAs            := False;
       wbCanSortINFO         := True;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES3: begin
       wbLoadBSAs            := False;
@@ -1059,9 +1062,9 @@ begin
       wbDontCacheSave       := True;
       wbBuildRefs           := False;
       wbVWDInTemporary      := True;
-      wbCreateContainedIn   := False;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.CreateContainedIn := False;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES4: begin
       if (not FileExists(wbDataPath + 'Oblivion.esm')) and FileExists(wbDataPath + 'Nehrim.esm') then begin
@@ -1071,15 +1074,15 @@ begin
       wbLoadBSAs            := True;
       wbAllowInternalEdit   := false;
       wbCanSortINFO         := True;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES4R: begin
       wbLoadBSAs            := False;
       wbAllowInternalEdit   := False;
       wbCanSortINFO         := True;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
       wbVWDInTemporary      := True;
@@ -1090,8 +1093,8 @@ begin
       wbHasAddedLightSupport := wbVRESL;
       wbHasAddedUpdateSupport := wbVRESL;
       wbCS                  := wbIsSkyrimSE and FileExists(wbDataPath + 'SKSE\Plugins\CommunityShaders.dll');
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary      := True;
@@ -1104,8 +1107,8 @@ begin
                                                               FileExists(wbDataPath + 'F4SE\Plugins\Daytripper4.dll'));
       wbHasAddedLightSupport := wbVRESL;
       wbHasAddedUpdateSupport := wbVRESL;
-      wbAllowESPMasters     := True;
-      wbAllowESPMastersOnSave := True;
+      wbCurrentContext.AllowESPMasters := True;
+      wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmFO76: begin
       wbVWDInTemporary      := True;
@@ -1117,7 +1120,7 @@ begin
     end;
     gmSF1: begin
       wbComplexFileFileID   := True;
-      wbEnforceAllMasters   := True;
+      wbCurrentContext.EnforceAllMasters := True;
       wbVWDInTemporary      := True;
       wbVWDAsQuestChildren  := True;
       wbLoadBSAs            := True;  // localization won't work otherwise
@@ -1214,7 +1217,7 @@ begin
     end;
 
     if FindCmdLineSwitch('AllowESPMaster') then
-      wbAllowESPMasters := True;
+      wbCurrentContext.AllowESPMasters := True;
   end;
 
   if wbToolMode in [tmEdit, tmScript] then begin
@@ -1395,37 +1398,37 @@ begin
 
 
   if FindCmdLineSwitch('IgnoreESL') or FindCmdLineSwitch('IgnoreLight') or FindCmdLineSwitch('IgnoreSmall') then
-    wbIgnoreLight := True
+    wbCurrentContext.IgnoreLight := True
   else
     if FindCmdLineSwitch('PseudoESL') or FindCmdLineSwitch('PseudoLight') or FindCmdLineSwitch('PseudoSmall') then
-      wbPseudoLight := True;
+      wbCurrentContext.PseudoLight := True;
 
   if FindCmdLineSwitch('IgnoreMedium') then
-    wbIgnoreMedium := True
+    wbCurrentContext.IgnoreMedium := True
   else
     if FindCmdLineSwitch('PseudoMedium') then
-      wbPseudoMedium := True;
+      wbCurrentContext.PseudoMedium := True;
 
   if FindCmdLineSwitch('IgnoreUpdate') then
-    wbIgnoreUpdate := True
+    wbCurrentContext.IgnoreUpdate := True
   else
     if FindCmdLineSwitch('PseudoUpdate') then
-      wbPseudoUpdate := True;
+      wbCurrentContext.PseudoUpdate := True;
 
   if wbComplexFileFileID then begin
-    wbIgnoreLight := False;
-    wbPseudoLight := False;
-    wbIgnoreMedium := False;
-    wbPseudoMedium := False;
-    wbIgnoreUpdate := False;
-    wbPseudoUpdate := False;
+    wbCurrentContext.IgnoreLight := False;
+    wbCurrentContext.PseudoLight := False;
+    wbCurrentContext.IgnoreMedium := False;
+    wbCurrentContext.PseudoMedium := False;
+    wbCurrentContext.IgnoreUpdate := False;
+    wbCurrentContext.PseudoUpdate := False;
   end;
 
   if FindCmdLineSwitch('SimpleFormIDs') then
     wbPrettyFormID := False;
 
   if FindCmdLineSwitch('EnforceAllMasters') then
-    wbEnforceAllMasters := True;
+    wbCurrentContext.EnforceAllMasters := True;
 
   if wbFindCmdLineParam('quickedit', xePluginToUse) then begin
     if not (wbToolMode = tmEdit) then
