@@ -19361,16 +19361,6 @@ begin
     'SFBGS004.esm', 'SFBGS006.esm', 'SFBGS007.esm', 'SFBGS008.esm', 'SFBGS00D.esm',
     'SFBGS047.esm', 'SFBGS050.esm', 'BlueprintShips-Starfield.esm', 'BlueprintShips-SFBGS050.esm'];
   CreationClubContentFileName := 'Starfield.ccc';
-
-  {
-  if wbGameMode = gmSF1VR then begin
-    // new VR esm is loaded after DLCs
-    SetLength(wbOfficialDLC, Succ(Length(wbOfficialDLC)));
-    wbOfficialDLC[Pred(Length(wbOfficialDLC))] := 'Fallout4_VR.esm';
-  end else
-    wbCreationClubContentFileName := 'Fallout4.ccc';
-  }
-
 end;
 
 initialization

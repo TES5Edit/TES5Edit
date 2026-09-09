@@ -10884,15 +10884,6 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  if GameMode = gmFO4VR then begin
-    b := MakeVarRecs([
-      Sig2Int('TUSW'), 'TUSW',
-      Sig2Int('HMVW'), 'HMVW'
-    ]);
-
-    c := CombineVarRecs(c, b);
-  end;
-
   wbRecord(DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
