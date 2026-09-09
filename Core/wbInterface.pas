@@ -5913,10 +5913,8 @@ constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
 begin
   inherited Create;
   gcGameDef := aGameDef;
-  if Assigned(aGameDef) then begin
-    gcGameDefObj := aGameDef as TwbGameDef;
-    wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
-  end;
+  gcGameDefObj := aGameDef as TwbGameDef;
+  wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
   gcFilesMap := TwbFastStringList.Create;
   gcFilesMap.Sorted := True;
   gcFilesMap.Duplicates := dupError;
