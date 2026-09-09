@@ -18,6 +18,9 @@ uses
 type
   TwbGameDefFNV = class(TwbGameDef)
   protected
+    function EPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+    function EPFDActorValueToInt(const aString: string; const aElement: IwbElement): Int64;
+
     procedure Define; override;
   end;
 
@@ -30,7 +33,6 @@ uses
   System.Variants,
 
   wbDefinitionsCommon,
-  wbGameDefGlobals,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -1091,7 +1093,7 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
-function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbGameDefFNV.EPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   AsCardinal : Cardinal;
   AsFloat    : Single;
@@ -1100,21 +1102,21 @@ begin
   AsFloat := PSingle(@AsCardinal)^;
   aInt := Round(AsFloat);
   case aType of
-    ctToStr, ctToSummary: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
-    ctToSortKey: Result := wbActorValueEnum.ToSortKey(aInt, aElement);
-    ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
-    ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
+    ctToStr, ctToSummary: Result := ActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
+    ctToSortKey: Result := ActorValueEnum.ToSortKey(aInt, aElement);
+    ctCheck: Result := ActorValueEnum.Check(aInt, aElement);
+    ctToEditValue: Result := ActorValueEnum.ToEditValue(aInt, aElement);
     ctEditType: Result := 'ComboBox';
-    ctEditInfo: Result := wbActorValueEnum.EditInfo[aElement].ToCommaText;
+    ctEditInfo: Result := ActorValueEnum.EditInfo[aElement].ToCommaText;
   end;
 end;
 
-function wbEPFDActorValueToInt(const aString: string; const aElement: IwbElement): Int64;
+function TwbGameDefFNV.EPFDActorValueToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   AsCardinal : Cardinal;
   AsFloat    : Single;
 begin
-  AsFloat := wbActorValueEnum.FromEditValue(aString, aElement);
+  AsFloat := ActorValueEnum.FromEditValue(aString, aElement);
   PSingle(@AsCardinal)^ := AsFloat;
   Result := AsCardinal;
 end;
@@ -5946,7 +5948,7 @@ begin
             wbFormIDCk('Leveled Item', [LVLI]),
             wbEmpty('None (Script)'),
             wbStruct('Actor Value, Float', [
-              wbInteger('Actor Value', itU32, wbEPFDActorValueToStr, wbEPFDActorValueToInt),
+              wbInteger('Actor Value', itU32, EPFDActorValueToStr, EPFDActorValueToInt),
               wbFloat('Float')
             ])
           ]).SetDontShow(wbEPFDDontShow),
