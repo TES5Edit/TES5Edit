@@ -1145,9 +1145,6 @@ begin
         Exit;
       end;
 
-      if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
-        wbArchiveExtension := '.ba2';
-
       DoInitPath;
       if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
         wbDataPath := CheckParamPath;

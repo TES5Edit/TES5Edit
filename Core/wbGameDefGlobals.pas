@@ -23,6 +23,7 @@ function wbRecordFlags: IwbIntegerDef; inline;
 function wbMainRecordHeader: IwbValueDef; inline;
 function wbSizeOfMainRecordStruct: Integer; inline;
 function wbRecordDefs: TwbRecordDefEntries; inline;
+function wbArchiveExtension: string; inline;
 
 implementation
 
@@ -109,6 +110,11 @@ end;
 function wbRecordDefs: TwbRecordDefEntries;
 begin
   Result := _CurrentGameDef.RecordDefs;
+end;
+
+function wbArchiveExtension: string;
+begin
+  Result := _CurrentGameDef.ArchiveExtension;
 end;
 
 end.

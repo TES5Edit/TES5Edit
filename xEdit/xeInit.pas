@@ -931,7 +931,6 @@ begin
     wbGameMode         := gmFO4;
     wbAppName          := 'FO4';
     wbGameName         := 'Fallout4';
-    wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
     wbGameSteamID      := '377160';
     ToolModes          := wbAlwaysMode;
@@ -946,7 +945,6 @@ begin
     wbGameName2        := 'Fallout4VR';
     wbGameNameReg      := 'Fallout 4 VR';
     wbLanguage         := 'En';
-    wbArchiveExtension := '.ba2';
     wbGameSteamID      := '611660';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
@@ -960,7 +958,6 @@ begin
     wbGameNameReg      := 'Steam App 1151340';
     wbGameMasterEsm    := 'SeventySix.esm';
     wbLanguage         := 'En';
-    wbArchiveExtension := '.ba2';
     wbGameSteamID      := '1151340';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
@@ -971,7 +968,6 @@ begin
     wbAppName          := 'SF1';
     wbGameName         := 'Starfield';
     wbGameNameReg      := 'Steam App 1716740';
-    wbArchiveExtension := '.ba2';
     wbLanguage         := 'En';
     wbGameSteamID      := '1716740';
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];

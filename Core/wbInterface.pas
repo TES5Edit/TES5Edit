@@ -3486,6 +3486,7 @@ type
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
     gdDefaultLandTexture  : string;
+    gdArchiveExtension    : string;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3595,6 +3596,9 @@ type
     property DefaultLandTexture: string
       read gdDefaultLandTexture
       write gdDefaultLandTexture;
+    property ArchiveExtension: string
+      read gdArchiveExtension
+      write gdArchiveExtension;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
 
@@ -4763,7 +4767,6 @@ function wbStr4ToString(aInt: Int64): string;
 var
   wbLoadBSAs         : Boolean{} = True{};
   wbLoadAllBSAs      : Boolean{} = False{};
-  wbArchiveExtension : string = '.bsa';
   wbBuildRefs        : Boolean{} = True{};
   wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
@@ -5725,6 +5728,7 @@ begin
   gdDefaultFormVersion := 15;
   gdQuestFlagsSignature := 'DATA';
   gdRaceFlagsSignature := 'DATA';
+  gdArchiveExtension := '.bsa';
   gdKnownSubRecordSignatures[ksrEditorID] := 'EDID';
   gdKnownSubRecordSignatures[ksrFullName] := 'FULL';
   gdKnownSubRecordSignatures[ksrBaseRecord] := 'NAME';
@@ -5817,7 +5821,7 @@ end;
 
 function TwbGameDef.GetArchiveExtension: string;
 begin
-  Result := wbArchiveExtension;
+  Result := gdArchiveExtension;
 end;
 
 function TwbGameDef.GetCreationClubContentFileName: string;

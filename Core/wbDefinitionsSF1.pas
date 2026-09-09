@@ -2246,6 +2246,7 @@ begin
   DefaultFormVersion := 582;
   QuestFlagsSignature := 'DNAM';
   RaceFlagsSignature := 'DAT2';
+  ArchiveExtension := '.ba2';
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);

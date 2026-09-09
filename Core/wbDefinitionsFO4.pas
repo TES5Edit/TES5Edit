@@ -13371,6 +13371,7 @@ begin
   DefaultFormVersion := 131;
   QuestFlagsSignature := 'DNAM';
   DefaultLandTexture := 'LCWDefault01Grass01';
+  ArchiveExtension := '.ba2';
 end;
 
 initialization

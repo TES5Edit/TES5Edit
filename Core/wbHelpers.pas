@@ -140,6 +140,7 @@ uses
   Imaging,
   ImagingTypes,
 
+  wbGameDefGlobals,
   wbSort;
 
 function GetContainerFromUnion(const aElement: IwbElement): IwbContainer;
