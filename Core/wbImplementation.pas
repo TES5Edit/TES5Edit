@@ -3052,7 +3052,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(wbGameMode >= gmTES5, 'DNAM', 'DATA')], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[_CurrentGameDef.QuestFlagsSignature], IwbContainerElementRef, Cnt) then begin
             Flg := Cnt.Elements[0];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
@@ -3070,7 +3070,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[wb<TwbSignature>.Iff(wbGameMode >= gmSF1, 'DAT2', 'DATA')], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[_CurrentGameDef.RaceFlagsSignature], IwbContainerElementRef, Cnt) then begin
             if wbIsOblivion then begin
               Flg := Cnt.ElementByName['Playable'];
               if Assigned(Flg) then begin

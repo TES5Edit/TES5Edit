@@ -2244,6 +2244,8 @@ begin
   HEDRVersion := 0.96;
   CellSizeFactor := 100;
   DefaultFormVersion := 582;
+  QuestFlagsSignature := 'DNAM';
+  RaceFlagsSignature := 'DAT2';
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);

@@ -13369,6 +13369,7 @@ begin
     HEDRNextObjectID := 1;
   end;
   DefaultFormVersion := 131;
+  QuestFlagsSignature := 'DNAM';
 end;
 
 initialization

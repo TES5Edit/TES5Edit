@@ -17833,6 +17833,7 @@ begin
     wbNexusModsUrl := '';}
   HEDRVersion := 266.0;
   DefaultFormVersion := 209;
+  QuestFlagsSignature := 'DNAM';
 end;
 
 initialization

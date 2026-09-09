@@ -3483,6 +3483,8 @@ type
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
     gdDefaultFormVersion : Word;
+    gdQuestFlagsSignature : TwbSignature;
+    gdRaceFlagsSignature  : TwbSignature;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3583,6 +3585,12 @@ type
     property DefaultFormVersion: Word
       read gdDefaultFormVersion
       write gdDefaultFormVersion;
+    property QuestFlagsSignature: TwbSignature
+      read gdQuestFlagsSignature
+      write gdQuestFlagsSignature;
+    property RaceFlagsSignature: TwbSignature
+      read gdRaceFlagsSignature
+      write gdRaceFlagsSignature;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
 
@@ -5711,6 +5719,8 @@ begin
   gdIgnoreRecords.Duplicates := dupIgnore;
   gdFilePlugins := 'Master Files';
   gdDefaultFormVersion := 15;
+  gdQuestFlagsSignature := 'DATA';
+  gdRaceFlagsSignature := 'DATA';
   gdKnownSubRecordSignatures[ksrEditorID] := 'EDID';
   gdKnownSubRecordSignatures[ksrFullName] := 'FULL';
   gdKnownSubRecordSignatures[ksrBaseRecord] := 'NAME';

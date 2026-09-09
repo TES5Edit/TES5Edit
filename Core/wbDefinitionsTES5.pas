@@ -10919,6 +10919,7 @@ begin
     DefaultFormVersion := 44
   else
     DefaultFormVersion := 43;
+  QuestFlagsSignature := 'DNAM';
 end;
 
 initialization
