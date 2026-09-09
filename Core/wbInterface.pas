@@ -3429,7 +3429,7 @@ type
       read GetContainerHandler;
   end;
 
-  TwbFilePluginNames = procedure(const aHeader: IwbContainer; aNames: TStrings);
+  TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
 
   PwbRecordDefEntry = ^TwbRecordDefEntry;
   TwbRecordDefEntry = record

@@ -11,6 +11,8 @@ unit wbDefinitionsFO4Saves;
 interface
 
 uses
+  System.Classes,
+
   wbDefinitionsFO4,
   wbInterface;
 
@@ -18,6 +20,7 @@ type
   TwbGameDefFO4Saves = class(TwbGameDefFO4)
   protected
     procedure DefineFO4SavesS;
+    procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
     procedure Define; override;
     procedure SwitchToCoSave; override;
   end;
@@ -25,11 +28,9 @@ type
 implementation
 
 uses
-  System.Classes,
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbGameDefGlobals,
   wbImplementation,
   wbSaveInterface;
 
@@ -7402,7 +7403,7 @@ var
   ExtractInfoSave:   TByteSet = [4, 5]; // SaveFileChapters that should be initialized before dumping to get more information
   ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
 
-procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+procedure TwbGameDefFO4Saves.SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
 
   procedure AddNames(const aList: IwbElement);
   var
@@ -7418,7 +7419,7 @@ var
   Union : IwbContainer;
   i     : Integer;
 begin
-  AddNames(aHeader.ElementByName[wbFilePlugins]);
+  AddNames(aHeader.ElementByName[FilePlugins]);
   for i := 0 to Pred(aHeader.ElementCount) do
     if Supports(aHeader.Elements[i], IwbContainer, Union) and (Union.Name = '') then
       AddNames(Union.ElementByName['Light plugins']);

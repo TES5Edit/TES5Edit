@@ -11,6 +11,8 @@ unit wbDefinitionsTES5Saves;
 interface
 
 uses
+  System.Classes,
+
   wbDefinitionsTES5,
   wbInterface;
 
@@ -18,6 +20,7 @@ type
   TwbGameDefTES5Saves = class(TwbGameDefTES5)
   protected
     procedure DefineTES5SavesS;
+    procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
     procedure Define; override;
     procedure SwitchToCoSave; override;
   end;
@@ -25,11 +28,9 @@ type
 implementation
 
 uses
-  System.Classes,
   System.SysUtils,
 
   wbDefinitionsCommon,
-  wbGameDefGlobals,
   wbImplementation,
   wbSaveInterface;
 
@@ -396,7 +397,7 @@ begin
     end;
 end;
 
-procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+procedure TwbGameDefTES5Saves.SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
 
   procedure AddNames(const aList: IwbElement);
   var
@@ -415,7 +416,7 @@ var
 begin
   Content := SaveContent(aHeader);
   if not Assigned(Content) then Exit;
-  AddNames(Content.ElementByName[wbFilePlugins]);
+  AddNames(Content.ElementByName[FilePlugins]);
   for i := 0 to Pred(Content.ElementCount) do
     if Supports(Content.Elements[i], IwbContainer, Union) and (Union.Name = '') then
       AddNames(Union.ElementByName['Light plugins']);
