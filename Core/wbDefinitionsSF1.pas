@@ -18,6 +18,12 @@ uses
 type
   TwbGameDefSF1 = class(TwbGameDef)
   protected
+    gdEventFunctionEnum : IwbEnumDef;
+    gdEventMemberEnum   : IwbEnumDef;
+
+    function ConditionEventToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+    function ConditionEventToInt(const aString: string; const aElement: IwbElement): Int64;
+
     procedure Define; override;
   end;
 
@@ -58,10 +64,6 @@ const
     'BMMP', 'PDCL', 'PKIN', 'GBFM', 'AOPF', 'BMMO',
     'LVLB', 'LVLP', 'GRAS'
   ];
-
-var
-  wbEventFunctionEnum : IwbEnumDef;
-  wbEventMemberEnum : IwbEnumDef;
 
 type
   TConditionParameterType = (
@@ -885,7 +887,7 @@ begin
   Result := Succ(Integer(ParamType));
 end;
 
-function wbConditionEventToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbGameDefSF1.ConditionEventToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   var EventFunction := aInt and $FFFF;
@@ -894,14 +896,14 @@ begin
     ctEditType: Result := 'ComboBox';
     ctToSortKey: Result := IntToHex(aInt, 8);
     ctToStr, ctToSummary, ctToEditValue: begin
-      Result := wbEventFunctionEnum.ToEditValue(EventFunction, nil);
-      Result := Result + ':' + wbEventMemberEnum.ToEditValue(EventMember, nil);
+      Result := gdEventFunctionEnum.ToEditValue(EventFunction, nil);
+      Result := Result + ':' + gdEventMemberEnum.ToEditValue(EventMember, nil);
     end;
     ctCheck: begin
-      var s1 := wbEventFunctionEnum.Check(EventFunction, nil);
+      var s1 := gdEventFunctionEnum.Check(EventFunction, nil);
       if s1 <> '' then
         s1 := 'EventFunction' + s1;
-      var s2 := wbEventMemberEnum.Check(EventMember, nil);
+      var s2 := gdEventMemberEnum.Check(EventMember, nil);
       if s2 <> '' then
         s2 := 'EventMember' + s2;
       if (s1 <> '') or (s2 <> '') then
@@ -909,11 +911,11 @@ begin
     end;
     ctEditInfo: begin
       var slMember := TStringList.Create;
-      slMember.AddStrings(wbEventMemberEnum.EditInfo[nil]);
+      slMember.AddStrings(gdEventMemberEnum.EditInfo[nil]);
       with TStringList.Create do try
-        for var i := 0 to Pred(wbEventFunctionEnum.NameCount) do
+        for var i := 0 to Pred(gdEventFunctionEnum.NameCount) do
           for var j := 0 to Pred(slMember.Count) do
-            Add(wbEventFunctionEnum.Names[i] + ':' + slMember[j]);
+            Add(gdEventFunctionEnum.Names[i] + ':' + slMember[j]);
         Sort;
         Result := CommaText;
       finally
@@ -923,14 +925,14 @@ begin
   end;
 end;
 
-function wbConditionEventToInt(const aString: string; const aElement: IwbElement): Int64;
+function TwbGameDefSF1.ConditionEventToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   EventFunction, EventMember: Integer;
 begin
   var i := Pos(':', aString);
   if i > 0 then begin
-    EventFunction := wbEventFunctionEnum.FromEditValue(Copy(aString, 1, i-1), nil);
-    EventMember := wbEventMemberEnum.FromEditValue(Copy(aString, i+1, Length(aString)), nil);
+    EventFunction := gdEventFunctionEnum.FromEditValue(Copy(aString, 1, i-1), nil);
+    EventMember := gdEventMemberEnum.FromEditValue(Copy(aString, i+1, Length(aString)), nil);
   end
   else begin
     EventFunction := 0;
@@ -2881,7 +2883,7 @@ begin
     'Break'
   ]);
 
-  wbEventFunctionEnum := wbEnum([
+  gdEventFunctionEnum := wbEnum([
     'GetIsID',
     'IsInList',
     'GetValue',
@@ -2926,7 +2928,7 @@ begin
 
   // Event member names and availability are different depending on event type
   // Using generic names for the last 3 of them: Form, Value1, Value2
-  wbEventMemberEnum := wbEnum([], [
+  gdEventMemberEnum := wbEnum([], [
     $0000, 'None',
     $314F, 'CreatedObject', //O1
     $3146, 'Form',          //F1
@@ -4692,7 +4694,7 @@ begin
     {7}  wbInteger('Integer', itS32),
     {8}  wbInteger('String', itU32, wbConditionStringToStr, wbConditionStringToInt, cpIgnore),
     {9}  wbInteger('Alias', itS32, wbConditionAliasToStr, wbAliasToInt),
-    {10} wbInteger('Event', itU32, wbConditionEventToStr, wbConditionEventToInt),
+    {10} wbInteger('Event', itU32, ConditionEventToStr, ConditionEventToInt),
     {11} wbInteger('Packdata ID', itU32),
     {12} wbInteger('Quest Stage', itU32, wbConditionQuestStageToStr, wbIntPrefixedStrToInt),
 
@@ -8121,7 +8123,7 @@ begin
                 ]),
             {2} wbRStruct('From Event', [
                   wbInteger(ALFE, 'Event', itU32, wbQuestEventEnum),
-                  wbInteger(ALFD, 'Data', itU32, wbEventMemberEnum)
+                  wbInteger(ALFD, 'Data', itU32, gdEventMemberEnum)
                 ]),
             {3} wbRStruct('Near Alias', [
                   wbInteger(ALNA, 'Alias', itS32, wbQuestAliasToStr, wbAliasToInt)
@@ -8214,7 +8216,7 @@ begin
           ]),
       {3} wbRStruct('Find Matching Location', [
             wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
-            wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
+            wbInteger(ALFD, 'Event Data', itU32, gdEventMemberEnum)
           ])
       ]).IncludeFlag(dfUnionStaticResolve),
 
