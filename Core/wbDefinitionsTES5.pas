@@ -134,7 +134,6 @@ var
   wbZNAM: IwbSubRecordDef;
   wbTVDT: IwbSubRecordDef;
   wbNVNM: IwbSubRecordDef;
-  wbStaticPart: IwbRecordMemberDef;
   s: string;
   wbFactionRank: IwbRecordMemberDef;
   wbSubtypeNamesEnum: IwbEnumDef;
@@ -1898,10 +1897,12 @@ begin
     Result := 6
   else if lSig = MSTT then
     Result := 7
-  else if lSig = STAT then
+  else if lSig = SCOL then
     Result := 8
+  else if lSig = STAT then
+    Result := 9
   else if lSig = TREE then
-    Result := 9;
+    Result := 10;
 end;
 
 type
@@ -9588,6 +9589,19 @@ begin
     31, 'Multibound'
     ])).SetFlagHasDontShow(16, wbFlagREFRInteriorDontShow)
        .SetFlagHasDontShow(28, wbFlagREFRInteriorDontShow),
+    wbFlags(wbFlagsList([ //SCOL
+    10, 'Persistent',
+    11, 'Initially Disabled',
+    15, 'Visible When Distant',
+    16, 'Is Full LOD',
+    26, 'Navmesh - Filter (Collision Geometry)',
+    27, 'Navmesh - Bounding Box (Collision Geometry)',
+    28, 'Reflected By Auto Water',
+    29, 'Don''t Havok Settle',
+    30, 'Navmesh - Ground',
+    31, 'Multibound'
+    ])).SetFlagHasDontShow(16, wbFlagREFRInteriorDontShow)
+       .SetFlagHasDontShow(28, wbFlagREFRInteriorDontShow),
     wbFlags(wbFlagsList([ //STAT
     9,  'Hidden From Local Map',
     10, 'Persistent',
@@ -9601,7 +9615,7 @@ begin
     29, 'Don''t Havok Settle',
     30, 'Navmesh - Ground',
     31, 'Multibound'
-    ])).SetFlagHasDontShow(23, wbFlagREFRSkyMarkerDontShow)
+    ])).SetFlagHasDontShow(13, wbFlagREFRSkyMarkerDontShow)
        .SetFlagHasDontShow(16, wbFlagREFRInteriorDontShow)
        .SetFlagHasDontShow(28, wbFlagREFRInteriorDontShow),
     wbFlags
@@ -9621,7 +9635,9 @@ begin
     wbEDID,
     wbVMAD,
     wbFormIDCk(NAME, 'Base', [
-      ACTI, ADDN, ALCH, AMMO, APPA, ARMO, ARTO, ASPC, BOOK, CONT, DOOR, FLOR, FURN, IDLM, INGR, KEYM, LIGH, MISC, MSTT, SCRL, SLGM, SOUN, STAT, TACT, TREE, TXST, WEAP
+      ACTI,ADDN,ALCH,AMMO,APPA,ARMO,ARTO,ASPC,BOOK,CONT,
+      DOOR,FLOR,FURN,IDLM,INGR,KEYM,LIGH,MISC,MSTT,SCOL,
+      SCRL,SLGM,SOUN,STAT,TACT,TREE,TXST,WEAP
     ]).SetRequired,
 
     {--- Bound Contents ---}
@@ -10722,23 +10738,29 @@ begin
   wbRecord(PWAT, 'PWAT', [
     wbEDID
   ]);
-  {
-  wbRecord(SCOL, 'SCOL', [
-    wbEDID
-  ]);
-  }
 
-  wbStaticPart :=
-    wbRStruct('Part', [
-      wbFormIDCk(ONAM, 'Static', [STAT]),
-      wbStaticPartPlacements
-    ], [], cpNormal, True);
 
-  wbRecord(SCOL, 'Static Collection', [
+
+  wbRecord(SCOL, 'Static Collection',
+    wbFlags(wbFlagsList([
+    6,  'Has Tree LOD',
+    9,  'Hidden From Local Map',
+    25, 'Obstacle',
+    26, 'Navmesh - Filter',
+    27, 'Navmesh - Bounding Box',
+    30, 'Navmesh - Ground'
+    ])).SetFlagHasDontShow(26, wbFlagNavmeshFilterDontShow)
+       .SetFlagHasDontShow(27, wbFlagNavmeshBoundingBoxDontShow)
+       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbObjectBounds,
     wbGenericModel(True),
-    wbRArray('Parts', wbStaticPart)
+    wbRArray('Parts',
+      wbRStruct('Part', [
+        wbFormIDCk(ONAM, 'Static', [STAT]),
+        wbStaticPartPlacements
+      ]).SetRequired
+    )
   ]);
 
   wbRecord(SCPT, 'SCPT', [
