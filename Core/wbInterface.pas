@@ -3644,6 +3644,7 @@ type
     gcNextLightSlot  : Integer;
     gcNextMediumSlot : Integer;
     gcNextLoadOrder  : Integer;
+    gcModuleList     : TObject;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -3672,6 +3673,9 @@ type
     property NextLoadOrder: Integer
       read gcNextLoadOrder
       write gcNextLoadOrder;
+    property ModuleList: TObject
+      read gcModuleList
+      write gcModuleList;
   end;
 
 const
@@ -5924,6 +5928,7 @@ destructor TwbGameContext.Destroy;
 begin
   gcFiles := nil;
   FreeAndNil(gcFilesMap);
+  FreeAndNil(gcModuleList);
   inherited;
 end;
 

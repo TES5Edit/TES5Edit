@@ -145,8 +145,6 @@ uses
   wbImplementation,
   wbSort;
 
-var _UpdateIndex: Integer = -1;
-
 function TwbModuleExtensionHelper.ToString: string;
 begin
   case Self of
@@ -160,17 +158,72 @@ begin
 end;
 
 type
-    TwbDynModuleInfos = array of TwbModuleInfo;
+  TwbDynModuleInfos = array of TwbModuleInfo;
+
+  TwbModuleList = class
+  private
+    mlContext               : TwbGameContext;
+    mlModules               : TwbDynModuleInfos;
+    mlModulesByName         : TStringList;
+    mlModulesLoadOrder      : TwbModuleInfos;
+    mlAdditionalModules     : TwbModuleInfos;
+    mlTemplateModules       : TwbModuleInfos;
+    mlUpdateIndex           : Integer;
+    mlNextFullSlot          : Integer;
+    mlNextMediumSlot        : Integer;
+    mlNextLightSlot         : Integer;
+    mlSimulatedLoadDisabled : Boolean;
+  public
+    constructor Create(aContext: TwbGameContext);
+    destructor Destroy; override;
+
+    procedure LoadModules;
+    function ModuleByName(const aName: string): PwbModuleInfo;
+    function ModulesByLoadOrder(aIncludeTemplates: Boolean): TwbModuleInfos;
+    function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+    procedure ResetSimulatedLoad;
+    procedure DisableSimulatedLoad;
+  end;
+
 var
-  _Modules           : TwbDynModuleInfos;
-  _ModulesByName     : TStringList;
   _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
-  _ModulesLoadOrder  : TwbModuleInfos;
 
-  _AdditionalModules : TwbModuleInfos;
-  _TemplateModules   : TwbModuleInfos;
+function wbCurrentModuleList: TwbModuleList;
+begin
+  Result := TwbModuleList(_CurrentContext.ModuleList);
+  if not Assigned(Result) then begin
+    Result := TwbModuleList.Create(_CurrentContext);
+    _CurrentContext.ModuleList := Result;
+  end;
+end;
 
-function wbModuleByName(const aName: string): PwbModuleInfo;
+procedure FreeAllocatedModules(var aList: TwbModuleInfos);
+var
+  i: Integer;
+begin
+  for i := Low(aList) to High(aList) do
+    Dispose(aList[i]);
+  aList := nil;
+end;
+
+{ TwbModuleList }
+
+constructor TwbModuleList.Create(aContext: TwbGameContext);
+begin
+  inherited Create;
+  mlContext := aContext;
+  mlUpdateIndex := -1;
+end;
+
+destructor TwbModuleList.Destroy;
+begin
+  FreeAndNil(mlModulesByName);
+  FreeAllocatedModules(mlTemplateModules);
+  FreeAllocatedModules(mlAdditionalModules);
+  inherited;
+end;
+
+function TwbModuleList.ModuleByName(const aName: string): PwbModuleInfo;
 var
   i: Integer;
   s: string;
@@ -180,11 +233,16 @@ begin
     SetLength(s, Length(s) + Length(csDotGhost));
   if s = '' then
     Exit(@_InvalidModule);
-  wbLoadModules;
-  if _ModulesByName.Find(s, i) then
-    Result := Pointer(_ModulesByName.Objects[i])
+  LoadModules;
+  if mlModulesByName.Find(s, i) then
+    Result := Pointer(mlModulesByName.Objects[i])
   else
     Result := @_InvalidModule;
+end;
+
+function wbModuleByName(const aName: string): PwbModuleInfo;
+begin
+  Result := wbCurrentModuleList.ModuleByName(aName);
 end;
 
 function _ModulesLoadOrderCompare(Item1, Item2: Pointer): Integer;
@@ -266,7 +324,7 @@ begin
       Result := -1;
 end;
 
-procedure wbLoadModules;
+procedure TwbModuleList.LoadModules;
 var
   Files       : TStringDynArray;
   i, j, k     : Integer;
@@ -283,11 +341,11 @@ var
   PrevModule  : PwbModuleInfo;
   MadeAChange : Boolean;
 begin
-  if Assigned(_ModulesByName) then {already loaded}
+  if Assigned(mlModulesByName) then {already loaded}
     Exit;
 
-  if wbGameMode = gmEnderalSE then
-    _UpdateIndex := Pred(High(Integer));
+  if mlContext.GameDefObj.GameMode = gmEnderalSE then
+    mlUpdateIndex := Pred(High(Integer));
 
   if wbDataPath <> '' then begin
     Files := TDirectory.GetFiles(wbDataPath);
@@ -295,8 +353,8 @@ begin
     if i > 1 then
       wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
 
-    SetLength(_Modules, Succ(Length(Files)));
-    with _Modules[0] do begin
+    SetLength(mlModules, Succ(Length(Files)));
+    with mlModules[0] do begin
       miFlags := [];
       miOriginalName := wbGameExeName;
       miName := miOriginalName;
@@ -308,13 +366,13 @@ begin
     end;
     j := 1;
     for i := Low(Files) to High(Files) do
-      with _Modules[j] do try
+      with mlModules[j] do try
         miFlags := [];
         miOriginalName := ExtractFileName(Files[i]);
         if miOriginalName.EndsWith(csDotGhost, True) then begin
           miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
           Include(miFlags, mfGhost);
-          if (j > 0) and SameText(miName, _Modules[Pred(j)].miName) then
+          if (j > 0) and SameText(miName, mlModules[Pred(j)].miName) then
             Continue; {ignore ghost if original exists}
         end else
           miName := miOriginalName;
@@ -386,22 +444,22 @@ begin
         on E: Exception do
         wbProgress('Error loading module information for "%s": [%s] %s', [Files[i], E.ClassName, E.Message]);
       end;
-    SetLength(_Modules, j);
+    SetLength(mlModules, j);
   end;
-  {do NOT perform SetLength on _Modules after this, it could invalidate pointer into the array}
-  _ModulesByName := TStringList.Create;
-  for i := Low(_Modules) to High(_Modules) do
-    _ModulesByName.AddObject(_Modules[i].miName, @_Modules[i]);
-  _ModulesByName.Sorted := True;
+  {do NOT perform SetLength on mlModules after this, it could invalidate pointer into the array}
+  mlModulesByName := TStringList.Create;
+  for i := Low(mlModules) to High(mlModules) do
+    mlModulesByName.AddObject(mlModules[i].miName, @mlModules[i]);
+  mlModulesByName.Sorted := True;
 
-  SetLength(_ModulesLoadOrder, Length(_Modules));
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do begin
-      _ModulesLoadOrder[i] := @_Modules[i];
+  SetLength(mlModulesLoadOrder, Length(mlModules));
+  for i := Low(mlModules) to High(mlModules) do
+    with mlModules[i] do begin
+      mlModulesLoadOrder[i] := @mlModules[i];
       SetLength(miMasters, Length(miMasterNames));
       for j := Low(miMasterNames) to High(miMasterNames) do
-        if _ModulesByName.Find(miMasterNames[j], k) then
-          miMasters[j] := Pointer(_ModulesByName.Objects[k])
+        if mlModulesByName.Find(miMasterNames[j], k) then
+          miMasters[j] := Pointer(mlModulesByName.Objects[k])
         else
           Include(miFlags, mfMastersMissing);
       miOfficialIndex  := High(Integer);
@@ -410,13 +468,13 @@ begin
       miLoadOrderTxtIndex := High(Integer);
     end;
 
-  if Length(_Modules) < 1 then
+  if Length(mlModules) < 1 then
     Exit;
 
   repeat
     MadeAChange := False;
-    for i := Low(_Modules) to High(_Modules) do
-      with _Modules[i] do begin
+    for i := Low(mlModules) to High(mlModules) do
+      with mlModules[i] do begin
         if not (mfMastersMissing in miFlags) then
           for j := Low(miMasters) to High(miMasters) do
             if not Assigned(miMasters[j]) or (mfMastersMissing in miMasters[j].miFlags) then begin
@@ -443,7 +501,7 @@ begin
             Delete(s, 1, 1);
           s := Trim(s);
         end;
-        with wbModuleByName(s)^ do
+        with ModuleByName(s)^ do
           if IsValid then begin
             if gcOrderFromPluginsTxt in wbCurrentCapabilities then begin
               miPluginsTxtIndex := i;
@@ -461,33 +519,33 @@ begin
     sl.Free;
   end;
 
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do
+  for i := Low(mlModules) to High(mlModules) do
+    with mlModules[i] do
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
-  with wbModuleByName(wbGameMasterEsm)^ do
+  with ModuleByName(wbGameMasterEsm)^ do
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with wbModuleByName(wbGameExeName)^ do begin
+  with ModuleByName(wbGameExeName)^ do begin
     miOfficialIndex := Succ(Low(Integer));
     Include(miFlags, mfHasIndex);
   end;
 
   if wbIsSkyrim then
-    with wbModuleByName('Update.esm')^ do
+    with ModuleByName('Update.esm')^ do
       if IsValid then begin
-        miOfficialIndex := _UpdateIndex;
+        miOfficialIndex := mlUpdateIndex;
         Include(miFlags, mfActive);
         Include(miFlags, mfHasIndex);
       end;
 
   for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-    with wbModuleByName(wbOfficialDLC[i])^ do
+    with ModuleByName(wbOfficialDLC[i])^ do
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
@@ -495,16 +553,16 @@ begin
       end;
 
   for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
-    with wbModuleByName(wbCreationClubContent[i])^ do
+    with ModuleByName(wbCreationClubContent[i])^ do
       if IsValid then begin
         miCCIndex := Succ(i);
         Include(miFlags, mfActive);
         Include(miFlags, mfHasIndex);
       end;
 
-  i := Length(_ModulesLoadOrder);
+  i := Length(mlModulesLoadOrder);
   if i > 1 then
-    wbMergeSortPtr(@_ModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
+    wbMergeSortPtr(@mlModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
   if gcOrderFromLoadOrderTxt in wbCurrentCapabilities then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
@@ -518,7 +576,7 @@ begin
           if j > 0 then
             Delete(s, j, High(Integer));
           s := Trim(s);
-          ThisModule := wbModuleByName(s);
+          ThisModule := ModuleByName(s);
           if ThisModule.IsValid then begin
             sl[i] := s;
             sl.Objects[i] := Pointer(i);
@@ -526,18 +584,18 @@ begin
             sl.Delete(i);
         end;
         if sl.Count > 1 then begin
-          for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
-            with _ModulesLoadOrder[i]^ do
+          for i := Low(mlModulesLoadOrder) to High(mlModulesLoadOrder) do
+            with mlModulesLoadOrder[i]^ do
               miCombinedIndex := Succ(i) * 1000;
 
           for i := 1 to Pred(sl.Count) do begin
-            ThisModule := wbModuleByName(sl[i]);
+            ThisModule := ModuleByName(sl[i]);
             if ThisModule.IsValid then begin
               ThisModule.miLoadOrderTxtIndex := Integer(sl.Objects[i]);
               if not ThisModule.HasIndex then begin
                 PrevModule := @_InvalidModule;
                 for j := Pred(i) downto 0 do begin
-                  PrevModule := wbModuleByName(sl[j]);
+                  PrevModule := ModuleByName(sl[j]);
                   if PrevModule.HasIndex then
                     Break;
                 end;
@@ -549,7 +607,7 @@ begin
             end;
           end;
 
-          wbMergeSortPtr(@_ModulesLoadOrder[0], Length(_ModulesLoadOrder), _ModulesLoadOrderCompareCombined);
+          wbMergeSortPtr(@mlModulesLoadOrder[0], Length(mlModulesLoadOrder), _ModulesLoadOrderCompareCombined);
         end;
       finally
         sl.Free;
@@ -557,62 +615,62 @@ begin
     end;
   end;
 
-  for i := Low(_ModulesLoadOrder) to High(_ModulesLoadOrder) do
-    _ModulesLoadOrder[i].miCombinedIndex := i;
+  for i := Low(mlModulesLoadOrder) to High(mlModulesLoadOrder) do
+    mlModulesLoadOrder[i].miCombinedIndex := i;
 
-  TwbModuleInfo.AddNewModule('<new file>.esp', True);
+  AddNewModule('<new file>.esp', True);
   if not wbIsStarfield  then
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+    with AddNewModule('<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfIsESM);
     end;
   if wbIsLightSupported and not wbIsStarfield then begin
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+    with AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasLightFlag);
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+    with AddNewModule('<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfHasLightFlag);
       Include(miFlags, mfIsESM);
     end;
   end;
   if wbIsMediumSupported and not wbIsStarfield then begin
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+    with AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasMediumFlag);
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+    with AddNewModule('<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfHasMediumFlag);
       Include(miFlags, mfIsESM);
     end;
   end;
   if wbIsUpdateSupported and not wbIsStarfield then begin
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do
+    with AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasUpdateFlag);
-    with TwbModuleInfo.AddNewModule('<new file>.esp', True)^ do begin
+    with AddNewModule('<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfHasUpdateFlag);
       Include(miFlags, mfIsESM);
     end;
   end;
 
-  with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+  with AddNewModule('<new file>.esm', True)^ do begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
     if wbIsLightSupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+      with AddNewModule('<new file>.esm', True)^ do begin
         Include(miFlags, mfHasLightFlag);
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfIsESM);
       end;
     end;
     if wbIsMediumSupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+      with AddNewModule('<new file>.esm', True)^ do begin
         Include(miFlags, mfHasMediumFlag);
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfIsESM);
       end;
     end;
     if wbIsUpdateSupported and not wbIsStarfield then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esm', True)^ do begin
+      with AddNewModule('<new file>.esm', True)^ do begin
         Include(miFlags, mfHasUpdateFlag);
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfIsESM);
@@ -622,13 +680,13 @@ begin
 
   if not wbIsStarfield then begin
     if wbIsLightSupported then begin
-      with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+      with AddNewModule('<new file>.esl', True)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasLightFlag);
         Include(miFlags, mfIsESM);
       end;
       if wbIsUpdateSupported then begin
-        with TwbModuleInfo.AddNewModule('<new file>.esl', True)^ do begin
+        with AddNewModule('<new file>.esl', True)^ do begin
           Include(miFlags, mfHasUpdateFlag);
           Include(miFlags, mfHasESMFlag);
           Include(miFlags, mfIsESM);
@@ -638,28 +696,38 @@ begin
   end;
 end;
 
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
+function TwbModuleList.ModulesByLoadOrder(aIncludeTemplates: Boolean): TwbModuleInfos;
 var
   i, j : Integer;
 begin
-  wbLoadModules;
-  Result := Copy(_ModulesLoadOrder);
-  i := Length(_AdditionalModules);
+  LoadModules;
+  Result := Copy(mlModulesLoadOrder);
+  i := Length(mlAdditionalModules);
   if i > 0 then begin
     j := Length(Result);
     SetLength(Result, j + i);
     for i := 0 to Pred(i) do
-      Result[j + i] := _AdditionalModules[i];
+      Result[j + i] := mlAdditionalModules[i];
   end;
   if aIncludeTemplates then begin
-    i := Length(_TemplateModules);
+    i := Length(mlTemplateModules);
     if i > 0 then begin
       j := Length(Result);
       SetLength(Result, j + i);
       for i := 0 to Pred(i) do
-        Result[j + i] := _TemplateModules[i];
+        Result[j + i] := mlTemplateModules[i];
     end;
   end;
+end;
+
+procedure wbLoadModules;
+begin
+  wbCurrentModuleList.LoadModules;
+end;
+
+function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
+begin
+  Result := wbCurrentModuleList.ModulesByLoadOrder(aIncludeTemplates);
 end;
 
 { TwbModuleInfo }
@@ -683,6 +751,11 @@ begin
 end;
 
 class function TwbModuleInfo.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+begin
+  Result := wbCurrentModuleList.AddNewModule(aFileName, aTemplate);
+end;
+
+function TwbModuleList.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
 begin
   Result := AllocMem(SizeOf(TwbModuleInfo));
   with Result^ do begin
@@ -719,13 +792,13 @@ begin
     miLoadOrder := High(Integer);
   end;
   if aTemplate then begin
-    SetLength(_TemplateModules, Succ(Length(_TemplateModules)));
-    _TemplateModules[High(_TemplateModules)] := Result;
-    Result.miLoadOrder := 10000 + High(_TemplateModules);
+    SetLength(mlTemplateModules, Succ(Length(mlTemplateModules)));
+    mlTemplateModules[High(mlTemplateModules)] := Result;
+    Result.miLoadOrder := 10000 + High(mlTemplateModules);
   end else begin
-    SetLength(_AdditionalModules, Succ(Length(_AdditionalModules)));
-    _AdditionalModules[High(_AdditionalModules)] := Result;
-    _ModulesByName.AddObject(aFileName, Pointer(Result));
+    SetLength(mlAdditionalModules, Succ(Length(mlAdditionalModules)));
+    mlAdditionalModules[High(mlAdditionalModules)] := Result;
+    mlModulesByName.AddObject(aFileName, Pointer(Result));
   end;
 end;
 
@@ -818,7 +891,7 @@ begin
     Result := Result + '[GameMaster]'
   else if miOfficialIndex = Succ(Low(Integer)) then
     Result := Result + '[Hardcoded]'
-  else if miOfficialIndex = _UpdateIndex then
+  else if miOfficialIndex = wbCurrentModuleList.mlUpdateIndex then
     Result := Result + '[Update]'
   else if miOfficialIndex < High(Integer) then
     Result := Result + '[DLC:'+miOfficialIndex.ToString+']';
@@ -869,29 +942,33 @@ begin
   ExcludeAll(mfActive);
 end;
 
-var
-  _NextFullSlot: Integer;
-  _NextMediumSlot: Integer;
-  _NextLightSlot: Integer;
-  _SimulatedLoadDisabled: Boolean;
-
-procedure TwbModuleInfosHelper.DisableSimulatedLoad;
+procedure TwbModuleList.ResetSimulatedLoad;
 var
   i: Integer;
 begin
-  if _SimulatedLoadDisabled then
-    Exit;
-  _SimulatedLoadDisabled := True;
-  for i := Low(_Modules) to High(_Modules) do
-    with _Modules[i] do begin
+  for i := Low(mlModules) to High(mlModules) do
+    with mlModules[i] do begin
       Exclude(miFlags, mfLoaded);
       Exclude(miFlags, mfLoading);
       miFileID := TwbFileID.Invalid;
       miLoadOrder := High(Integer);
     end;
-  _NextFullSlot := 0;
-  _NextLightSlot := 0;
-  _NextMediumSlot := 0;
+  mlNextFullSlot := 0;
+  mlNextLightSlot := 0;
+  mlNextMediumSlot := 0;
+end;
+
+procedure TwbModuleList.DisableSimulatedLoad;
+begin
+  if mlSimulatedLoadDisabled then
+    Exit;
+  mlSimulatedLoadDisabled := True;
+  ResetSimulatedLoad;
+end;
+
+procedure TwbModuleInfosHelper.DisableSimulatedLoad;
+begin
+  wbCurrentModuleList.DisableSimulatedLoad;
 end;
 
 procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
@@ -942,6 +1019,7 @@ end;
 
 function TwbModuleInfosHelper.SimulateLoad: TwbModuleInfos;
 var
+  lList             : TwbModuleList;
   NewLoadOrder      : TwbModuleInfos;
   NewLoadOrderCount : Integer;
 
@@ -969,20 +1047,20 @@ var
           if (mfHasUpdateFlag in miFlags) and not wbIgnoreUpdate then begin
             miFileID := TwbFileID.Invalid;
           end else if (mfHasLightFlag in miFlags) and not wbIgnoreLight then begin
-            if _NextLightSlot > TwbFileID.MaxLightSlot then
+            if lList.mlNextLightSlot > TwbFileID.MaxLightSlot then
               raise Exception.Create('Too many light modules');
-            miFileID := TwbFileID.CreateLight(_NextLightSlot);
-            Inc(_NextLightSlot);
+            miFileID := TwbFileID.CreateLight(lList.mlNextLightSlot);
+            Inc(lList.mlNextLightSlot);
           end else if (mfHasMediumFlag in miFlags) and not wbIgnoreMedium then begin
-            if _NextMediumSlot > TwbFileID.MaxMediumSlot then
+            if lList.mlNextMediumSlot > TwbFileID.MaxMediumSlot then
               raise Exception.Create('Too many heavy modules');
-            miFileID := TwbFileID.CreateMedium(_NextMediumSlot);
-            Inc(_NextMediumSlot);
+            miFileID := TwbFileID.CreateMedium(lList.mlNextMediumSlot);
+            Inc(lList.mlNextMediumSlot);
           end else begin
-            if _NextFullSlot > TwbFileID.MaxFullSlot then
+            if lList.mlNextFullSlot > TwbFileID.MaxFullSlot then
               raise Exception.Create('Too many full modules');
-            miFileID := TwbFileID.CreateFull(_NextFullSlot);
-            Inc(_NextFullSlot);
+            miFileID := TwbFileID.CreateFull(lList.mlNextFullSlot);
+            Inc(lList.mlNextFullSlot);
           end;
       finally
         Exclude(miFlags, mfLoading);
@@ -991,20 +1069,12 @@ var
   end;
 
 begin
-  if _SimulatedLoadDisabled then
+  lList := wbCurrentModuleList;
+  if lList.mlSimulatedLoadDisabled then
     raise Exception.Create('Simulated Load has been disabled');
 
-  for var lModuleIdx := Low(_Modules) to High(_Modules) do
-    with _Modules[lModuleIdx] do begin
-      Exclude(miFlags, mfLoaded);
-      Exclude(miFlags, mfLoading);
-      miFileID := TwbFileID.Invalid;
-      miLoadOrder := High(Integer);
-    end;
-  _NextFullSlot := 0;
-  _NextMediumSlot := 0;
-  _NextLightSlot := 0;
-  SetLength(NewLoadOrder, Length(_Modules));
+  lList.ResetSimulatedLoad;
+  SetLength(NewLoadOrder, Length(lList.mlModules));
   NewLoadOrderCount := 0;
   for var lSelfIdx := Low(Self) to High(Self) do
     with Self[lSelfIdx]^ do
@@ -1032,19 +1102,5 @@ begin
     Result[i] := Self[i].ToString(aInclDesc);
 end;
 
-procedure FreeAllocatedModules(var aList: TwbModuleInfos);
-var
-  i: Integer;
-begin
-  for i := Low(aList) to High(aList) do
-    Dispose(aList[i]);
-  aList := nil;
-end;
-
-initialization
-finalization
-  FreeAndNil(_ModulesByName);
-  FreeAllocatedModules(_TemplateModules);
-  FreeAllocatedModules(_AdditionalModules);
 end.
 
