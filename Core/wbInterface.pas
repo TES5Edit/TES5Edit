@@ -3416,6 +3416,10 @@ type
     function GetFileCount: Integer;
     function GetFile(aIndex: Integer): IwbFile;
     function GetContainerHandler: IwbContainerHandler;
+    function GetGameMasterFile: IwbFile;
+
+    function RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+    function FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3427,6 +3431,8 @@ type
       read GetFile;
     property ContainerHandler: IwbContainerHandler
       read GetContainerHandler;
+    property GameMasterFile: IwbFile
+      read GetGameMasterFile;
   end;
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
@@ -3627,6 +3633,46 @@ type
   end;
 
   TwbGameDefClass = class of TwbGameDef;
+
+  TwbGameContext = class(TInterfacedObject, IwbGameContext)
+  protected
+    gcGameDef        : IwbGameDef;
+    gcGameDefObj     : TwbGameDef;
+    gcFiles          : TwbFiles;
+    gcFilesMap       : TStringList;
+    gcNextFullSlot   : Integer;
+    gcNextLightSlot  : Integer;
+    gcNextMediumSlot : Integer;
+    gcNextLoadOrder  : Integer;
+
+    function GetGameDef: IwbGameDef;
+    function GetDataPath: string;
+    function GetFileCount: Integer;
+    function GetFile(aIndex: Integer): IwbFile;
+    function GetContainerHandler: IwbContainerHandler;
+    function GetGameMasterFile: IwbFile;
+  public
+    constructor Create(const aGameDef: IwbGameDef);
+    destructor Destroy; override;
+
+    procedure AddFile(const aFile: IwbFile; const aFileName: string);
+    function FileByName(const aFileName: string): IwbFile;
+    function AllocateFullSlot: Integer;
+    function AllocateLightSlot: Integer;
+    function AllocateMediumSlot: Integer;
+    procedure ForceClosed;
+
+    function RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+    function FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+
+    property GameDefObj: TwbGameDef
+      read gcGameDefObj;
+    property Files: TwbFiles
+      read gcFiles;
+    property NextLoadOrder: Integer
+      read gcNextLoadOrder
+      write gcNextLoadOrder;
+  end;
 
 const
   arcU32 = -1;
@@ -5072,16 +5118,17 @@ var
   wbFileBySortOrderComparer        : IComparer<IwbFile>;
   wbFileByReverseSortOrderComparer : IComparer<IwbFile>;
 
-  Files : array of IwbFile;
-
-  wbCurrentContext : IwbGameContext;
   _CurrentGameDef  : TwbGameDef;
+  _CurrentContext  : TwbGameContext;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef;
 
-function wbGetGameMasterFile: IwbFile;
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+function wbCurrentContext: IwbGameContext;
+procedure wbMakeCurrentContext(const aContext: IwbGameContext);
+
+function wbGetGameMasterFile: IwbFile; inline;
+function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord; inline;
 
 implementation
 
@@ -5112,14 +5159,7 @@ end;
 
 function wbGetGameMasterFile: IwbFile;
 begin
-  for var lIdx := Low(Files) to High(Files) do
-    if fsIsGameMaster in Files[lIdx].FileStates then
-      Exit(Files[lIdx]);
-  for var lIdx := Low(Files) to High(Files) do
-    with Files[lIdx].LoadOrderFileID do
-      if IsFullSlot and (FullSlot = 0) then
-        Exit(Files[lIdx]);
-  Result := nil;
+  Result := _CurrentContext.GetGameMasterFile;
 end;
 
 function wbGameMasterRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
@@ -5133,18 +5173,7 @@ end;
 
 function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
 begin
-  Result := nil;
-  var lFileID := aFormID.FileID;
-  for var i:= Low(Files) to High(Files) do
-    if Files[i].LoadOrderFileID = lFileID then begin
-      Result := Files[i].ContainedRecordByLoadOrderFormID[aFormID, True];
-      if Assigned(Result) and Assigned(aSeenFromFile) then begin
-        var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
-        if Assigned(lVisibleResult) then
-          Result := lVisibleResult;
-      end;
-      Exit;
-    end;
+  Result := _CurrentContext.RecordByLoadOrderFormID(aFormID, aSeenFromFile);
 end;
 
 type
@@ -5856,11 +5885,167 @@ end;
 var
   _GameDefClasses    : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
   _CurrentGameDefRef : IwbGameDef;
+  _CurrentContextRef : IwbGameContext;
 
 procedure wbMakeCurrentGameDef(aGameDef: TwbGameDef);
 begin
   _CurrentGameDef := aGameDef;
   _CurrentGameDefRef := aGameDef;
+end;
+
+function wbCurrentContext: IwbGameContext;
+begin
+  Result := _CurrentContextRef;
+end;
+
+procedure wbMakeCurrentContext(const aContext: IwbGameContext);
+begin
+  if Assigned(aContext) then
+    _CurrentContext := aContext as TwbGameContext
+  else
+    _CurrentContext := nil;
+  _CurrentContextRef := aContext;
+end;
+
+{ TwbGameContext }
+
+constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
+begin
+  inherited Create;
+  gcGameDef := aGameDef;
+  if Assigned(aGameDef) then begin
+    gcGameDefObj := aGameDef as TwbGameDef;
+    wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
+  end;
+  gcFilesMap := TwbFastStringList.Create;
+  gcFilesMap.Sorted := True;
+  gcFilesMap.Duplicates := dupError;
+end;
+
+destructor TwbGameContext.Destroy;
+begin
+  gcFiles := nil;
+  FreeAndNil(gcFilesMap);
+  inherited;
+end;
+
+function TwbGameContext.GetGameDef: IwbGameDef;
+begin
+  Result := gcGameDef;
+end;
+
+function TwbGameContext.GetDataPath: string;
+begin
+  Result := wbDataPath;
+end;
+
+function TwbGameContext.GetFileCount: Integer;
+begin
+  Result := Length(gcFiles);
+end;
+
+function TwbGameContext.GetFile(aIndex: Integer): IwbFile;
+begin
+  Result := gcFiles[aIndex];
+end;
+
+function TwbGameContext.GetContainerHandler: IwbContainerHandler;
+begin
+  Result := wbContainerHandler;
+end;
+
+function TwbGameContext.GetGameMasterFile: IwbFile;
+begin
+  for var lIdx := Low(gcFiles) to High(gcFiles) do
+    if fsIsGameMaster in gcFiles[lIdx].FileStates then
+      Exit(gcFiles[lIdx]);
+  for var lIdx := Low(gcFiles) to High(gcFiles) do
+    with gcFiles[lIdx].LoadOrderFileID do
+      if IsFullSlot and (FullSlot = 0) then
+        Exit(gcFiles[lIdx]);
+  Result := nil;
+end;
+
+procedure TwbGameContext.AddFile(const aFile: IwbFile; const aFileName: string);
+begin
+  SetLength(gcFiles, Succ(Length(gcFiles)));
+  gcFiles[High(gcFiles)] := aFile;
+  gcFilesMap.AddObject(aFileName, Pointer(gcFiles[High(gcFiles)]));
+end;
+
+function TwbGameContext.FileByName(const aFileName: string): IwbFile;
+var
+  i: Integer;
+begin
+  if gcFilesMap.Find(aFileName, i) then
+    Result := IwbFile(Pointer(gcFilesMap.Objects[i]))
+  else
+    Result := nil;
+end;
+
+function TwbGameContext.AllocateFullSlot: Integer;
+begin
+  if gcNextFullSlot > TwbFileID.MaxFullSlot then
+    raise Exception.Create('Too many full modules');
+  Result := gcNextFullSlot;
+  Inc(gcNextFullSlot);
+end;
+
+function TwbGameContext.AllocateLightSlot: Integer;
+begin
+  if gcNextLightSlot > TwbFileID.MaxLightSlot then
+    raise Exception.Create('Too many light modules');
+  Result := gcNextLightSlot;
+  Inc(gcNextLightSlot);
+end;
+
+function TwbGameContext.AllocateMediumSlot: Integer;
+begin
+  if gcNextMediumSlot > TwbFileID.MaxMediumSlot then
+    raise Exception.Create('Too many medium modules');
+  Result := gcNextMediumSlot;
+  Inc(gcNextMediumSlot);
+end;
+
+procedure TwbGameContext.ForceClosed;
+begin
+  gcFiles := nil;
+  gcFilesMap.Clear;
+  gcNextFullSlot := 0;
+  gcNextMediumSlot := 0;
+  gcNextLightSlot := 0;
+end;
+
+function TwbGameContext.RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+begin
+  Result := nil;
+  var lFileID := aFormID.FileID;
+  for var i:= Low(gcFiles) to High(gcFiles) do
+    if gcFiles[i].LoadOrderFileID = lFileID then begin
+      Result := gcFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
+      if Assigned(Result) and Assigned(aSeenFromFile) then begin
+        var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
+        if Assigned(lVisibleResult) then
+          Result := lVisibleResult;
+      end;
+      Exit;
+    end;
+end;
+
+function TwbGameContext.FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+var
+  i     : Integer;
+  Group : IwbGroupRecord;
+begin
+  Result := nil;
+  for i := High(gcFiles) downto Low(gcFiles) do
+    if Supports(gcFiles[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
+      Result := Group.MainRecordByEditorID[aEditorID];
+      if Assigned(Result) then begin
+        Result := Result.WinningOverride;
+        Exit;
+      end;
+    end;
 end;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
@@ -24626,7 +24811,9 @@ initialization
   wbSaveExtensions[1] := csDotEss;
 
   wbMakeCurrentGameDef(TwbGameDef.Create);
+  wbMakeCurrentContext(TwbGameContext.Create(_CurrentGameDefRef));
 finalization
+  wbMakeCurrentContext(nil);
   _CurrentGameDef := nil;
   _CurrentGameDefRef := nil;
   wbContainerHandler := nil;

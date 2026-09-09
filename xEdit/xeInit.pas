@@ -1370,7 +1370,7 @@ begin
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     wbEncodingTrans :=  wbMBCSEncoding(s);
 
-  wbCurrentContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
+  wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;

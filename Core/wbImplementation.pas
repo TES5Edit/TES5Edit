@@ -699,6 +699,7 @@ type
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
     procedure ForceClosed;
+    function ContextObj: TwbGameContext;
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
@@ -760,6 +761,7 @@ type
 
     flModule                 : PwbModuleInfo;
     [weak] flContext         : IwbGameContext;
+    flContextObj             : TwbGameContext;
 
     flCachedEditInfos        : TwbCachedEditInfos;
     flGeneration             : Integer;
@@ -781,6 +783,7 @@ type
     function GetElementType: TwbElementType; override;
     function GetFile: IwbFile; override;
     function GetContext: IwbGameContext;
+    function ContextObj: TwbGameContext;
     function GetReferenceFile: IwbFile; override;
     function GetName: string; override;
     function GetBaseName: string; override;
@@ -973,19 +976,6 @@ type
     constructor CreateNew(const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
-  end;
-
-  TwbGameContext = class(TInterfacedObject, IwbGameContext)
-  protected
-    geGameDef : IwbGameDef;
-
-    function GetGameDef: IwbGameDef;
-    function GetDataPath: string;
-    function GetFileCount: Integer;
-    function GetFile(aIndex: Integer): IwbFile;
-    function GetContainerHandler: IwbContainerHandler;
-  public
-    constructor Create(const aGameDef: IwbGameDef);
   end;
 
   TwbDataContainerFlag = (
@@ -2291,7 +2281,7 @@ end;
 
 function GetLoadedFileByName(const aName: string): IwbFile;
 begin
-  for var lFile in Files do
+  for var lFile in _CurrentContext.Files do
     if SameText(lFile.FileName, aName) then
       Exit(lFile);
 end;
@@ -3274,18 +3264,12 @@ begin
   UpdateModuleMasters;
 end;
 
-var
-  _NextFullSlot: Integer;
-  _NextLightSlot: Integer;
-  _NextMediumSlot: Integer;
-  _NextLoadOrder: Integer;
-  FilesMap: TStringList;
-
 constructor TwbFile.Create(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes);
 var
   s: string;
 begin
   flContext := wbCurrentContext;
+  flContextObj := _CurrentContext;
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Invalid;
@@ -3385,11 +3369,8 @@ begin
         Include(flModule.miFlags, mfHasLocalizedFlag);
     end;
 
-    if fsAddToMap in aStates then begin
-      SetLength(Files, Succ(Length(Files)));
-      Files[High(Files)] := Self;
-      FilesMap.AddObject(flFileName, Pointer(Files[High(Files)]));
-    end;
+    if fsAddToMap in aStates then
+      flContextObj.AddFile(Self, flFileName);
   end;
 end;
 
@@ -3398,6 +3379,7 @@ var
   Header : IwbMainRecord;
 begin
   flContext := wbCurrentContext;
+  flContextObj := _CurrentContext;
   Assert(not (aIsLight and aIsMedium));
 
   Assert((not aIsLight) or wbIsLightSupported);
@@ -3438,25 +3420,15 @@ begin
 
   if flLoadOrder >= 0 then begin
     if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbPseudoUpdate then begin
-      if Header.IsLight and not wbIgnoreLight then begin
-        if _NextLightSlot > TwbFileID.MaxLightSlot then
-          raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.CreateLight(_NextLightSlot);
-        Inc(_NextLightSlot);
-      end else if Header.IsMedium and not wbIgnoreMedium then begin
-        if _NextMediumSlot > TwbFileID.MaxMediumSlot then
-          raise Exception.Create('Too many medium modules');
-        flLoadOrderFileID := TwbFileID.CreateMedium(_NextMediumSlot);
-        Inc(_NextMediumSlot);
-      end else begin
-        if (wbIsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then begin
-          flLoadOrderFileID := TwbFileID.Invalid;
-        end else begin
-          if _NextFullSlot > TwbFileID.MaxFullSlot then
-            raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.CreateFull(_NextFullSlot);
-          Inc(_NextFullSlot);
-        end;
+      if Header.IsLight and not wbIgnoreLight then
+        flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
+      else if Header.IsMedium and not wbIgnoreMedium then
+        flLoadOrderFileID := TwbFileID.CreateMedium(flContextObj.AllocateMediumSlot)
+      else begin
+        if (wbIsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then
+          flLoadOrderFileID := TwbFileID.Invalid
+        else
+          flLoadOrderFileID := TwbFileID.CreateFull(flContextObj.AllocateFullSlot);
       end;
     end else
       flLoadOrderFileID := TwbFileID.CreateFull(flLoadOrder);
@@ -3482,6 +3454,7 @@ var
   i      : Integer;
 begin
   flContext := wbCurrentContext;
+  flContextObj := _CurrentContext;
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
   Include(flStates, fsLightCompatible);
@@ -3538,25 +3511,15 @@ begin
 
   if flLoadOrder >= 0 then begin
     if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbPseudoUpdate then begin
-      if Header.IsLight and not wbIgnoreLight then begin
-        if _NextLightSlot > TwbFileID.MaxLightSlot then
-          raise Exception.Create('Too many light modules');
-        flLoadOrderFileID := TwbFileID.CreateLight(_NextLightSlot);
-        Inc(_NextLightSlot);
-      end else if Header.IsMedium and not wbIgnoreMedium then begin
-        if _NextMediumSlot > TwbFileID.MaxMediumSlot then
-          raise Exception.Create('Too many medium modules');
-        flLoadOrderFileID := TwbFileID.CreateMedium(_NextMediumSlot);
-        Inc(_NextMediumSlot);
-      end else begin
-        if (wbIsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then begin
-          flLoadOrderFileID := TwbFileID.Invalid;
-        end else begin
-          if _NextFullSlot > TwbFileID.MaxFullSlot then
-            raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.CreateFull(_NextFullSlot);
-          Inc(_NextFullSlot);
-        end;
+      if Header.IsLight and not wbIgnoreLight then
+        flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
+      else if Header.IsMedium and not wbIgnoreMedium then
+        flLoadOrderFileID := TwbFileID.CreateMedium(flContextObj.AllocateMediumSlot)
+      else begin
+        if (wbIsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then
+          flLoadOrderFileID := TwbFileID.Invalid
+        else
+          flLoadOrderFileID := TwbFileID.CreateFull(flContextObj.AllocateFullSlot);
       end;
     end else
       flLoadOrderFileID := TwbFileID.CreateFull(flLoadOrder);
@@ -4247,6 +4210,11 @@ end;
 function TwbFile.GetContext: IwbGameContext;
 begin
   Result := flContext;
+end;
+
+function TwbFile.ContextObj: TwbGameContext;
+begin
+  Result := flContextObj;
 end;
 
 function TwbFile.GetLoadOrderFileID: TwbFileID;
@@ -5787,29 +5755,19 @@ var
       Exit;
 
     if flLoadOrder = High(Integer) then
-      flLoadOrder := _NextLoadOrder;
+      flLoadOrder := flContextObj.NextLoadOrder;
 
     if flLoadOrder >= 0 then begin
-      _NextLoadOrder := Max(_NextLoadOrder, Succ(flLoadOrder));
+      flContextObj.NextLoadOrder := Max(flContextObj.NextLoadOrder, Succ(flLoadOrder));
       if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbIsUpdateSupported or wbPseudoUpdate then begin
-        if (wbIsUpdateSupported or wbPseudoUpdate) and ((fsPseudoUpdate in flStates) or ((Header.IsUpdate) and not wbIgnoreUpdate)) then begin
-          flLoadOrderFileID := TwbFileID.Invalid;
-        end else if (fsPseudoLight in flStates) or ((Header.IsLight or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreLight) then begin
-          if _NextLightSlot > TwbFileID.MaxLightSlot then
-            raise Exception.Create('Too many light modules');
-          flLoadOrderFileID := TwbFileID.CreateLight(_NextLightSlot);
-          Inc(_NextLightSlot);
-        end else if (fsPseudoMedium in flStates) or (Header.IsMedium and not wbIgnoreMedium) then begin
-          if _NextMediumSlot > TwbFileID.MaxMediumSlot then
-            raise Exception.Create('Too many medium modules');
-          flLoadOrderFileID := TwbFileID.CreateMedium(_NextMediumSlot);
-          Inc(_NextMediumSlot);
-        end else begin
-          if _NextFullSlot > TwbFileID.MaxFullSlot then
-            raise Exception.Create('Too many full modules');
-          flLoadOrderFileID := TwbFileID.CreateFull(_NextFullSlot);
-          Inc(_NextFullSlot);
-        end;
+        if (wbIsUpdateSupported or wbPseudoUpdate) and ((fsPseudoUpdate in flStates) or ((Header.IsUpdate) and not wbIgnoreUpdate)) then
+          flLoadOrderFileID := TwbFileID.Invalid
+        else if (fsPseudoLight in flStates) or ((Header.IsLight or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreLight) then
+          flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
+        else if (fsPseudoMedium in flStates) or (Header.IsMedium and not wbIgnoreMedium) then
+          flLoadOrderFileID := TwbFileID.CreateMedium(flContextObj.AllocateMediumSlot)
+        else
+          flLoadOrderFileID := TwbFileID.CreateFull(flContextObj.AllocateFullSlot);
       end else begin
         if flLoadOrder > TwbFileID.MaxFullSlot then
           raise Exception.Create('Too many modules');
@@ -5876,8 +5834,7 @@ begin
     { this one is easy, we can do it first }
     if fsIsCompareLoad in flStates then begin
       if not Assigned(flCompareToFile) then
-        if FilesMap.Find(flCompareTo, i) then
-          flCompareToFile := IwbFile(Pointer(FilesMap.Objects[i]));
+        flCompareToFile := flContextObj.FileByName(flCompareTo);
       if Assigned(flCompareToFile) then begin
         flLoadOrderFileID := flCompareToFile.LoadOrderFileID
       end else
@@ -23887,24 +23844,17 @@ begin
 end;
 
 procedure wbFileForceClosed;
-var
-  i: Integer;
 begin
-  for i := Low(Files) to High(Files) do begin
-    (Files[i] as IwbFileInternal).ForceClosed;
+  for var lFile in _CurrentContext.Files do begin
+    (lFile as IwbFileInternal).ForceClosed;
     wbProgressCallback;
   end;
-  Files := nil;
-  FilesMap.Clear;
-  _NextFullSlot := 0;
-  _NextMediumSlot := 0;
-  _NextLightSlot := 0;
+  _CurrentContext.ForceClosed;
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 var
   FileName: string;
-  i: Integer;
 begin
   wbInitRecords;
 
@@ -23914,9 +23864,8 @@ begin
   else
     FileName := ExpandFileName(aFileName);}
 
-  if FilesMap.Find(FileName, i) then
-    Result := IwbFile(Pointer(FilesMap.Objects[i]))
-  else begin
+  Result := _CurrentContext.FileByName(FileName);
+  if not Assigned(Result) then begin
     if not wbIsModule(FileName) then
       Result := TwbFileSource.Create(FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
     else
@@ -23935,7 +23884,7 @@ function wbMastersForFile(const aFileName    : string;
                                              : Boolean;
 var
   FileName : string;
-  i        : Integer;
+  lFile    : IwbFile;
   _File    : IwbFileInternal;
 begin
   Result := False;
@@ -23955,8 +23904,9 @@ begin
   try
     FileName := wbExpandFileName(aFileName);
     try
-      if FilesMap.Find(FileName, i) then
-        _File := IwbFile(Pointer(FilesMap.Objects[i])) as IwbFileInternal
+      lFile := _CurrentContext.FileByName(FileName);
+      if Assigned(lFile) then
+        _File := lFile as IwbFileInternal
       else if not wbIsModule(FileName) then
         _File := TwbFileSource.Create(FileName, -1, '', [fsOnlyHeader], nil)
       else
@@ -24010,7 +23960,6 @@ end;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile;
 var
   FileName: string;
-  i: Integer;
 begin
   Assert( not (aIsLight and aIsMedium) );
   Assert( (not aIsLight) or wbIsLightSupported or wbPseudoLight);
@@ -24019,48 +23968,32 @@ begin
   wbInitRecords;
 
   FileName := wbExpandFileName(aFileName);
-  if FilesMap.Find(FileName, i) then
+  if Assigned(_CurrentContext.FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
     Result := TwbFile.CreateNew(FileName, aLoadOrder, aIsLight, aIsMedium);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+    _CurrentContext.AddFile(Result, FileName);
   end;
 end;
 
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
 var
   FileName: string;
-  i: Integer;
 begin
   wbInitRecords;
 
   FileName := wbExpandFileName(aFileName);
-  if FilesMap.Find(FileName, i) then
+  if Assigned(_CurrentContext.FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
     Result := TwbFile.CreateNew(FileName, aLoadOrder, aTemplate);
-    SetLength(Files, Succ(Length(Files)));
-    Files[High(Files)] := Result;
-    FilesMap.AddObject(FileName, Pointer(Result));
+    _CurrentContext.AddFile(Result, FileName);
   end;
 end;
 
 function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
-var
-  i     : Integer;
-  Group : IwbGroupRecord;
 begin
-  Result := nil;
-  for i := High(Files) downto Low(Files) do
-    if Supports(Files[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
-      Result := Group.MainRecordByEditorID[aEditorID];
-      if Assigned(Result) then begin
-        Result := Result.WinningOverride;
-        Exit;
-      end;
-    end;
+  Result := _CurrentContext.FindWinningMainRecordByEditorID(aSignature, aEditorID);
 end;
 
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
@@ -25859,6 +25792,7 @@ const
 constructor TwbFileSource.CreateNew(const aFileName: string; aLoadOrder: Integer);
 begin
   flContext := wbCurrentContext;
+  flContextObj := _CurrentContext;
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
@@ -26320,41 +26254,10 @@ begin
   Result := TwbMultipleElements.Create(aElements);
 end;
 
-constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
-begin
-  inherited Create;
-  geGameDef := aGameDef;
-  wbCreationClubContentFileName := aGameDef.CreationClubContentFileName;
-end;
-
-function TwbGameContext.GetGameDef: IwbGameDef;
-begin
-  Result := geGameDef;
-end;
-
-function TwbGameContext.GetDataPath: string;
-begin
-  Result := wbDataPath;
-end;
-
-function TwbGameContext.GetFileCount: Integer;
-begin
-  Result := Length(Files);
-end;
-
-function TwbGameContext.GetFile(aIndex: Integer): IwbFile;
-begin
-  Result := Files[aIndex];
-end;
-
-function TwbGameContext.GetContainerHandler: IwbContainerHandler;
-begin
-  Result := wbContainerHandler;
-end;
-
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 begin
   Result := TwbGameContext.Create(aGameDef);
+  wbMakeCurrentContext(Result);
 end;
 
 initialization
@@ -26387,18 +26290,13 @@ initialization
   ChaptersToSkip := TwbFastStringList.Create;
   ChaptersToSkip.Sorted := True;
   ChaptersToSkip.Duplicates := dupIgnore;
-
-  FilesMap := TwbFastStringList.Create;
-  FilesMap.Sorted := True;
-  FilesMap.Duplicates := dupError;
 finalization
-  Files := nil;
+  wbMakeCurrentContext(nil);
   WriteSubRecordOrderList;
   FreeAndNil(SubRecordOrderList);
   FreeAndNil(RecordToSkip);
   FreeAndNil(GroupToSkip);
   FreeAndNil(ChaptersToSkip);
-  FreeAndNil(FilesMap);
   wbContainedInDef[1] := nil;
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;

@@ -24,6 +24,7 @@ function wbMainRecordHeader: IwbValueDef; inline;
 function wbSizeOfMainRecordStruct: Integer; inline;
 function wbRecordDefs: TwbRecordDefEntries; inline;
 function wbArchiveExtension: string; inline;
+function Files: TwbFiles; inline;
 
 implementation
 
@@ -115,6 +116,11 @@ end;
 function wbArchiveExtension: string;
 begin
   Result := _CurrentGameDef.ArchiveExtension;
+end;
+
+function Files: TwbFiles;
+begin
+  Result := _CurrentContext.Files;
 end;
 
 end.
