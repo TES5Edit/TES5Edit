@@ -230,7 +230,7 @@ var
 begin
   s := aName;
   if s.EndsWith(csDotGhost, True) then
-    SetLength(s, Length(s) + Length(csDotGhost));
+    SetLength(s, Length(s) - Length(csDotGhost));
   if s = '' then
     Exit(@_InvalidModule);
   LoadModules;
