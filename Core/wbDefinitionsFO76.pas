@@ -18,6 +18,18 @@ uses
 type
   TwbGameDefFO76 = class(TwbGameDef)
   protected
+    gdActorPropertyEnum  : IwbEnumDef;
+    gdArmorPropertyEnum  : IwbEnumDef;
+    gdWeaponPropertyEnum : IwbEnumDef;
+    gdEventFunctionEnum  : IwbEnumDef;
+    gdEventMemberEnum    : IwbEnumDef;
+
+    function ConditionEventToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+    function ConditionEventToInt(const aString: string; const aElement: IwbElement): Int64;
+    function ObjectModPropertyEnum(const aElement: IwbElement): IwbEnumDef;
+    function ObjectModPropertyToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+    function ObjectModPropertyToInt(const aString: string; const aElement: IwbElement): Int64;
+
     procedure Define; override;
   end;
 
@@ -30,7 +42,6 @@ uses
   System.IOUtils,
 
   wbDefinitionsCommon,
-  wbGameDefGlobals,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -43,17 +54,13 @@ var
   wbXFLGFlags: IwbFlagsDef;
   wbModelFlags: IwbFlagsDef;
 
-  wbActorPropertyEnum: IwbEnumDef;
   wbAdvanceActionEnum: IwbEnumDef;
   wbStaggerEnum: IwbEnumDef;
-  wbArmorPropertyEnum: IwbEnumDef;
   wbBipedObjectEnum: IwbEnumDef;
   wbCastEnum: IwbEnumDef;
   wbCastingSourceEnum: IwbEnumDef;
   wbEmotionTypeEnum: IwbEnumDef;
   wbEntryPointsEnum: IwbEnumDef;
-  wbEventFunctionEnum: IwbEnumDef;
-  wbEventMemberEnum: IwbEnumDef;
   wbConditionFormTypeEnum: IwbEnumDef;
   wbFormTypeEnum: IwbEnumDef;
   wbFurnitureAnimTypeEnum: IwbEnumDef;
@@ -67,7 +74,6 @@ var
   wbVatsValueFunctionEnum: IwbEnumDef;
   wbWardStateEnum: IwbEnumDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbWeaponPropertyEnum: IwbEnumDef;
   wbZTestFuncEnum: IwbEnumDef;
   wbDialogueSubtypeEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
@@ -1124,7 +1130,7 @@ begin
   Result := Succ(Integer(ParamType));
 end;
 
-function wbConditionEventToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbGameDefFO76.ConditionEventToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
   var EventFunction := aInt and $FFFF;
@@ -1133,14 +1139,14 @@ begin
     ctEditType: Result := 'ComboBox';
     ctToSortKey: Result := IntToHex(aInt, 8);
     ctToStr, ctToSummary, ctToEditValue: begin
-      Result := wbEventFunctionEnum.ToEditValue(EventFunction, nil);
-      Result := Result + ':' + wbEventMemberEnum.ToEditValue(EventMember, nil);
+      Result := gdEventFunctionEnum.ToEditValue(EventFunction, nil);
+      Result := Result + ':' + gdEventMemberEnum.ToEditValue(EventMember, nil);
     end;
     ctCheck: begin
-      var s1 := wbEventFunctionEnum.Check(EventFunction, nil);
+      var s1 := gdEventFunctionEnum.Check(EventFunction, nil);
       if s1 <> '' then
         s1 := 'EventFunction' + s1;
-      var s2 := wbEventMemberEnum.Check(EventMember, nil);
+      var s2 := gdEventMemberEnum.Check(EventMember, nil);
       if s2 <> '' then
         s2 := 'EventMember' + s2;
       if (s1 <> '') or (s2 <> '') then
@@ -1148,11 +1154,11 @@ begin
     end;
     ctEditInfo: begin
       var slMember := TStringList.Create;
-      slMember.AddStrings(wbEventMemberEnum.EditInfo[nil]);
+      slMember.AddStrings(gdEventMemberEnum.EditInfo[nil]);
       with TStringList.Create do try
-        for var i := 0 to Pred(wbEventFunctionEnum.NameCount) do
+        for var i := 0 to Pred(gdEventFunctionEnum.NameCount) do
           for var j := 0 to Pred(slMember.Count) do
-            Add(wbEventFunctionEnum.Names[i] + ':' + slMember[j]);
+            Add(gdEventFunctionEnum.Names[i] + ':' + slMember[j]);
         Sort;
         Result := CommaText;
       finally
@@ -1162,14 +1168,14 @@ begin
   end;
 end;
 
-function wbConditionEventToInt(const aString: string; const aElement: IwbElement): Int64;
+function TwbGameDefFO76.ConditionEventToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   EventFunction, EventMember: Integer;
 begin
   var i := Pos(':', aString);
   if i > 0 then begin
-    EventFunction := wbEventFunctionEnum.FromEditValue(Copy(aString, 1, i-1), nil);
-    EventMember := wbEventMemberEnum.FromEditValue(Copy(aString, i+1, Length(aString)), nil);
+    EventFunction := gdEventFunctionEnum.FromEditValue(Copy(aString, 1, i-1), nil);
+    EventMember := gdEventMemberEnum.FromEditValue(Copy(aString, i+1, Length(aString)), nil);
   end
   else begin
     EventFunction := 0;
@@ -1436,34 +1442,6 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseModels)
     .IncludeFlag(dfAllowAnyMember);
 end; //WIP }
-
-function wbEPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-var
-  AsCardinal : Cardinal;
-  AsFloat    : Single;
-begin
-  AsCardinal := aInt;
-  AsFloat := PSingle(@AsCardinal)^;
-  aInt := Round(AsFloat);
-  case aType of
-    ctToStr, ctToSummary: Result := wbActorValueEnum.ToString(aInt, aElement, aType = ctToSummary);
-    ctToSortKey: Result := wbActorValueEnum.ToSortKey(aInt, aElement);
-    ctCheck: Result := wbActorValueEnum.Check(aInt, aElement);
-    ctToEditValue: Result := wbActorValueEnum.ToEditValue(aInt, aElement);
-    ctEditType: Result := 'ComboBox';
-    ctEditInfo: Result := wbActorValueEnum.EditInfo[aElement].ToCommaText;
-  end;
-end;
-
-function wbEPFDActorValueToInt(const aString: string; const aElement: IwbElement): Int64;
-var
-  AsCardinal : Cardinal;
-  AsFloat    : Single;
-begin
-  AsFloat := wbActorValueEnum.FromEditValue(aString, aElement);
-  PSingle(@AsCardinal)^ := AsFloat;
-  Result := AsCardinal;
-end;
 
 function wbAVIFValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
@@ -3072,7 +3050,7 @@ begin
     wbProgressCallback('"'+Container.Name+'" does not contain an element named Type');
 end;
 
-function GetObjectModPropertyEnum(const aElement: IwbElement): IwbEnumDef;
+function TwbGameDefFO76.ObjectModPropertyEnum(const aElement: IwbElement): IwbEnumDef;
 var
   MainRecord: IwbMainRecord;
   rDATA: IwbContainer;
@@ -3095,20 +3073,20 @@ begin
     end;
 
   if Signature = ARMO then
-    Result := wbArmorPropertyEnum
+    Result := gdArmorPropertyEnum
   else if Signature = WEAP then
-    Result := wbWeaponPropertyEnum
+    Result := gdWeaponPropertyEnum
   else if Signature = NPC_ then
-    Result := wbActorPropertyEnum;
+    Result := gdActorPropertyEnum;
 end;
 
-function wbObjectModPropertyToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+function TwbGameDefFO76.ObjectModPropertyToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
   PropEnum: IwbEnumDef;
 begin
   Result := '';
 
-  PropEnum := GetObjectModPropertyEnum(aElement);
+  PropEnum := ObjectModPropertyEnum(aElement);
 
   if not Assigned(PropEnum) then begin
     case aType of
@@ -3127,11 +3105,11 @@ begin
   end;
 end;
 
-function wbObjectModPropertyToInt(const aString: string; const aElement: IwbElement): Int64;
+function TwbGameDefFO76.ObjectModPropertyToInt(const aString: string; const aElement: IwbElement): Int64;
 var
   PropEnum: IwbEnumDef;
 begin
-  PropEnum := GetObjectModPropertyEnum(aElement);
+  PropEnum := ObjectModPropertyEnum(aElement);
 
   if not Assigned(PropEnum) then begin
     Result := StrToIntDef(aString, 0);
@@ -4567,7 +4545,7 @@ begin
     'Break'
   ]);
 
-  wbEventFunctionEnum := wbEnum([
+  gdEventFunctionEnum := wbEnum([
     'GetIsID',
     'IsInList',
     'GetValue',
@@ -4577,7 +4555,7 @@ begin
 
   // Event member names and availability are different depending on event type
   // Using generic names for the last 3 of them: Form, Value1, Value2
-  wbEventMemberEnum := wbEnum([], [
+  gdEventMemberEnum := wbEnum([], [
     $0000, 'None',
     $314F, 'CreatedObject', //O1
     $3146, 'Form',          //F1
@@ -6649,7 +6627,7 @@ begin
     {5}  wbActorValue,
     {6}  wbInteger('Alias', itS32, wbConditionAliasToStr, wbAliasToInt),
     {7}  wbInteger('Attack Data', itU32, wbConditionStringToStr, wbConditionStringToInt, cpIgnore),
-    {8}  wbInteger('Event', itU32, wbConditionEventToStr, wbConditionEventToInt),
+    {8}  wbInteger('Event', itU32, ConditionEventToStr, ConditionEventToInt),
     {9}  wbInteger('Packdata ID', itU32),
     {10} wbInteger('Quest Stage', itU32, wbConditionParam1QuestStageToStr, wbQuestStageToInt),
     {11} wbInteger('Quest Stage', itU32, wbConditionParam2QuestStageToStr, wbQuestStageToInt),
@@ -7106,7 +7084,7 @@ begin
   wbSNAMMarkerParams := wbArray(SNAM, 'Marker Parameters', wbNAMMarkerParam);
   wbZNAMMarkerParams := wbArray(ZNAM, 'Marker Parameters', wbNAMMarkerParam);
 
-  wbArmorPropertyEnum := wbEnum([
+  gdArmorPropertyEnum := wbEnum([
     { 0} 'Enchantments',
     { 1} 'Bash Impact Data Set',
     { 2} 'Block Material',
@@ -7128,7 +7106,7 @@ begin
     {18} 'Perk'
   ]);
 
-  wbActorPropertyEnum := wbEnum([
+  gdActorPropertyEnum := wbEnum([
     { 0} 'Keywords',
     { 1} 'Forced Inventory',
     { 2} 'XP Offset',
@@ -7137,7 +7115,7 @@ begin
     { 5} 'Material Swaps'
   ]);
 
-  wbWeaponPropertyEnum := wbEnum([
+  gdWeaponPropertyEnum := wbEnum([
     { 0} 'Speed',
     { 1} 'Reach',
     { 2} 'MinRange',
@@ -7282,7 +7260,7 @@ begin
         { FormID } wbInteger('Function Type', itU8, wbEnum(['SET', 'REM', 'ADD']))
       ]),
       wbUnused(3),
-      wbInteger('Property', itU16, wbObjectModPropertyToStr, wbObjectModPropertyToInt),
+      wbInteger('Property', itU16, ObjectModPropertyToStr, ObjectModPropertyToInt),
       wbUnused(2),
       wbUnion('Value 1', wbOMODDataPropertyValue1Decider, [
         { 0} wbByteArray('Value 1 - Unknown', 4),
@@ -13847,7 +13825,7 @@ begin
                       ]),
                   {1} wbRStruct('From Event', [
                         wbInteger(ALFE, 'Event', itU32, wbQuestEventEnum),
-                        wbInteger(ALFD, 'Data', itU32, wbEventMemberEnum)
+                        wbInteger(ALFD, 'Data', itU32, gdEventMemberEnum)
                       ]),
                   {2} wbRStruct('Closest To', [
                         wbInteger(ALCC, 'Alias', itS32, wbQuestAliasToStr, wbAliasToInt)
@@ -13913,7 +13891,7 @@ begin
                 ]),
             {3} wbRStruct('Find Matching Location', [
                   wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
-                  wbInteger(ALFD, 'Event Data', itU32, wbEventMemberEnum)
+                  wbInteger(ALFD, 'Event Data', itU32, gdEventMemberEnum)
                 ])
             ]).IncludeFlag(dfUnionStaticResolve),
             wbRStruct('Match Conditions', [
