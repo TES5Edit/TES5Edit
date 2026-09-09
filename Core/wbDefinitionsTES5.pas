@@ -10920,6 +10920,8 @@ begin
   else
     DefaultFormVersion := 43;
   QuestFlagsSignature := 'DNAM';
+  if GameMode in [gmTES5, gmTES5VR, gmSSE] then
+    DefaultLandTexture := 'LDirt02';
 end;
 
 initialization

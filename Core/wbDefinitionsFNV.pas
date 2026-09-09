@@ -9126,6 +9126,7 @@ begin
     NexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
   HEDRVersion := 1.34;
   DefaultFormVersion := 15;
+  DefaultLandTexture := 'LDirtWasteland01';
 end;
 
 initialization

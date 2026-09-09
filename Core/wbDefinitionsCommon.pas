@@ -4791,13 +4791,7 @@ begin
   if aElement.NativeValue <> 0 then
     Exit;
 
-  var lDefaultTexture : string;
-  case wbGameMode of
-     gmTES4, gmTES4R         : lDefaultTexture := 'TerrainHDDirt01dds';
-     gmFO3,  gmFNV           : lDefaultTexture := 'LDirtWasteland01';
-     gmTES5, gmTES5VR, gmSSE : lDefaultTexture := 'LDirt02';
-     gmFO4,  gmFO4VR         : lDefaultTexture := 'LCWDefault01Grass01';
-  end;
+  var lDefaultTexture := _CurrentGameDef.DefaultLandTexture;
 
   case aType of
     ctToStr, ctToSummary : aValue := lDefaultTexture + ' [LTEX:00000000]';

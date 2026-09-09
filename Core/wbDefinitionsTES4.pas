@@ -3735,6 +3735,7 @@ begin
   if wbToolMode = tmLODgen then
     NexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
   HEDRVersion := 1.0;
+  DefaultLandTexture := 'TerrainHDDirt01dds';
 end;
 
 initialization

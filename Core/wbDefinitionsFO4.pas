@@ -13370,6 +13370,7 @@ begin
   end;
   DefaultFormVersion := 131;
   QuestFlagsSignature := 'DNAM';
+  DefaultLandTexture := 'LCWDefault01Grass01';
 end;
 
 initialization

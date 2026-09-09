@@ -3485,6 +3485,7 @@ type
     gdDefaultFormVersion : Word;
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
+    gdDefaultLandTexture  : string;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
@@ -3591,6 +3592,9 @@ type
     property RaceFlagsSignature: TwbSignature
       read gdRaceFlagsSignature
       write gdRaceFlagsSignature;
+    property DefaultLandTexture: string
+      read gdDefaultLandTexture
+      write gdDefaultLandTexture;
 
     function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
 
