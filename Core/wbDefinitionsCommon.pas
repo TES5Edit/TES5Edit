@@ -975,15 +975,16 @@ end;
 
 procedure wbLargeRefsAfterLoad(const aElement: IwbElement);
 begin
-  if not Assigned(aElement) then
+  if (not Assigned(aElement)) or (wbToolMode in [tmLodGen]) or (esModified in aElement.ElementStates) then
     Exit;
 
-  if esModified in aElement.ElementStates then
+  var lContainer := aElement as IwbContainerElementRef;
+  if not Assigned(lContainer) then
     Exit;
 
   if wbBeginInternalEdit then
   try
-    var lContainer := aElement as IwbContainerElementRef;
+    lContainer.BeginUpdate;
 
     for var lIndex := Pred(lContainer.ElementCount) downto 0 do
     begin
@@ -1000,21 +1001,24 @@ begin
     end;
 
   finally
+    lContainer.EndUpdate;
+
     wbEndInternalEdit;
   end;
 end;
 
 procedure wbLargeRefsRNAMAfterLoad(const aElement: IwbElement);
 begin
-  if not Assigned(aElement)then
+  if (not Assigned(aElement)) or (wbToolMode in [tmLodGen]) or (esModified in aElement.ElementStates) then
     Exit;
 
-  if esModified in aElement.ElementStates then
+  var lContainer := aElement as IwbContainerElementRef;
+  if not Assigned(lContainer) then
     Exit;
 
   if wbBeginInternalEdit then
   try
-    var lContainer := aElement as IwbContainerElementRef;
+    lContainer.BeginUpdate;
 
     var lX := lContainer.ElementNativeValues['X'];
     var lY := lContainer.ElementNativeValues['Y'];
@@ -1023,9 +1027,11 @@ begin
     if not Assigned(lRefs) then
       Exit;
 
-    for var lIndex := Pred(lRefs.ElementCount) downto 0 do
+    var lIndex: Integer;
+    var lRef: IwbContainerElementRef;
+    for lIndex := Pred(lRefs.ElementCount) downto 0 do
     begin
-      var lRef := lRefs.Elements[lIndex] as IwbContainerElementRef;
+      lRef := lRefs[lIndex] as IwbContainerElementRef;
       if not Assigned(lRef) then
         Continue;
 
@@ -1035,7 +1041,36 @@ begin
         lRef.Remove;
     end;
 
+    if lRefs.ElementCount > 0 then
+    begin
+      var lList := TStringList.Create;
+      try
+        for lIndex := Pred(lRefs.ElementCount) downto 0 do
+        begin
+          lRef := lRefs[lIndex] as IwbContainerElementRef;
+          if not Assigned(lRef) then
+            Continue;
+
+          var lRefElement := lRef.ElementByName['Reference'];
+          if not Assigned(lRefElement) then
+            Continue;
+
+          var lRefValue := string(lRefElement.NativeValue);
+
+          if lList.IndexOf(lRefValue) > -1 then
+            lRef.Remove
+          else
+            lList.Add(lRefValue);
+        end;
+
+      finally
+        lList.Free;
+      end;
+    end;
+
   finally
+    lContainer.EndUpdate;
+
     wbEndInternalEdit;
   end;
 end;
