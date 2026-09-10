@@ -149,14 +149,7 @@
         </DelphiCompile>
         <DCCReference Include="Core\wbBSA.pas"/>
         <DCCReference Include="Core\wbCommandLine.pas"/>
-        <DCCReference Include="Core\wbSort.pas"/>
-        <DCCReference Include="Core\wbInterface.pas"/>
-        <DCCReference Include="Core\wbSaveInterface.pas"/>
-        <DCCReference Include="Core\wbImplementation.pas"/>
-        <DCCReference Include="Core\wbLocalization.pas"/>
-        <DCCReference Include="Core\wbHelpers.pas"/>
-        <DCCReference Include="Core\wbLoadOrder.pas"/>
-        <DCCReference Include="Core\wbHardcoded.pas"/>
+        <DCCReference Include="Core\wbConflict.pas"/>
         <DCCReference Include="Core\wbDataFormatWwise.pas"/>
         <DCCReference Include="Core\wbDefinitionsCommon.pas"/>
         <DCCReference Include="Core\wbDefinitionsFNV.pas"/>
@@ -172,6 +165,15 @@
         <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
         <DCCReference Include="Core\wbDefinitionsSF1.pas"/>
+        <DCCReference Include="Core\wbDiff.pas"/>
+        <DCCReference Include="Core\wbHardcoded.pas"/>
+        <DCCReference Include="Core\wbHelpers.pas"/>
+        <DCCReference Include="Core\wbImplementation.pas"/>
+        <DCCReference Include="Core\wbInterface.pas"/>
+        <DCCReference Include="Core\wbLoadOrder.pas"/>
+        <DCCReference Include="Core\wbLocalization.pas"/>
+        <DCCReference Include="Core\wbSaveInterface.pas"/>
+        <DCCReference Include="Core\wbSort.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

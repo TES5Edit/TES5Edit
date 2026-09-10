@@ -266,6 +266,7 @@ begin
 
   cmbTarget.Items.AddObject('PC', TObject(btPC));
   cmbTarget.Items.AddObject('XBox', TObject(btXBox));
+  cmbTarget.Items.AddObject('PS', TObject(btPS));
   i := cmbTarget.Items.IndexOfObject(TObject(ArchiveTarget));
   if i = -1 then i := 0;
   cmbTarget.ItemIndex := i;

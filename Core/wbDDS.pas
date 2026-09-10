@@ -333,8 +333,157 @@ type
     ];
   end;
 
+  // PlayStation Graphics Native File Format V2
+  TGNFSurfaceFormat = (
+    { $00 } GNFFMT_INVALID,
+    { $01 } GNFFMT_8,
+    { $02 } GNFFMT_16,
+    { $03 } GNFFMT_8_8,
+    { $04 } GNFFMT_32,
+    { $05 } GNFFMT_16_16,
+    { $06 } GNFFMT_10_11_11,
+    { $07 } GNFFMT_11_11_10,
+    { $08 } GNFFMT_10_10_10_2,
+    { $09 } GNFFMT_2_10_10_10,
+    { $0A } GNFFMT_8_8_8_8,
+    { $0B } GNFFMT_32_32,
+    { $0C } GNFFMT_16_16_16_16,
+    { $0D } GNFFMT_32_32_32,
+    { $0E } GNFFMT_32_32_32_32,
+    { $0F } GNF_UNKNOWN_0F,
+    { $10 } GNFFMT_5_6_5,
+    { $11 } GNFFMT_1_5_5_5,
+    { $12 } GNFFMT_5_5_5_1,
+    { $13 } GNFFMT_4_4_4_4,
+    { $14 } GNFFMT_8_24,
+    { $15 } GNFFMT_24_8,
+    { $16 } GNFFMT_X42_8_32,
+    { $17 } GNFFMT_UNKNOWN_17,
+    { $18 } GNFFMT_UNKNOWN_18,
+    { $19 } GNFFMT_UNKNOWN_19,
+    { $1A } GNFFMT_UNKNOWN_1A,
+    { $1B } GNFFMT_UNKNOWN_1B,
+    { $1C } GNFFMT_UNKNOWN_1C,
+    { $1D } GNFFMT_UNKNOWN_1D,
+    { $1E } GNFFMT_UNKNOWN_1E,
+    { $1F } GNFFMT_UNKNOWN_1F,
+    { $20 } GNFFMT_GB_GR,
+    { $21 } GNFFMT_BG_RG,
+    { $22 } GNFFMT_5_9_9_9,
+    { $23 } GNFFMT_BC1,
+    { $24 } GNFFMT_BC2,
+    { $25 } GNFFMT_BC3,
+    { $26 } GNFFMT_BC4,
+    { $27 } GNFFMT_BC5,
+    { $28 } GNFFMT_BC6,
+    { $29 } GNFFMT_BC7,
+    { $2A } GNFFMT_UNKNOWN_2A,
+    { $2B } GNFFMT_UNKNOWN_2B,
+    { $2C } GNFFMT_FMASK8_S2_F1,
+    { $2D } GNFFMT_FMASK8_S4_F1,
+    { $2E } GNFFMT_FMASK8_S8_F1,
+    { $2F } GNFFMT_FMASK8_S2_F2,
+    { $30 } GNFFMT_FMASK8_S4_F2,
+    { $31 } GNFFMT_FMASK8_S4_F4,
+    { $32 } GNFFMT_FMASK16_S16_F1,
+    { $33 } GNFFMT_FMASK16_S8_F2,
+    { $34 } GNFFMT_FMASK32_S16_F2,
+    { $35 } GNFFMT_FMASK32_S8_F4,
+    { $36 } GNFFMT_FMASK32_S8_F8,
+    { $37 } GNFFMT_FMASK32_S16_F4,
+    { $38 } GNFFMT_FMASK32_S16_F8,
+    { $39 } GNFFMT_4_4,
+    { $3A } GNFFMT_6_5_5,
+    { $3B } GNFFMT_1,
+    { $3C } GNFFMT_1_REVERSED,
+    { $3D } GNFFMT_32_AS_8,
+    { $3E } GNFFMT_32_AS_8_8,
+    { $3F } GNFFMT_32_AS_32_32_32_32
+  );
+
+  TGNFChannelType = (
+    { $00 } GNFCHN_UNORM,
+    { $01 } GNFCHN_SNORM,
+    { $02 } GNFCHN_USCALED,
+    { $03 } GNFCHN_SSCALED,
+    { $04 } GNFCHN_UINT,
+    { $05 } GNFCHN_SINT,
+    { $06 } GNFCHN_SNORM_OGL,
+    { $07 } GNFCHN_FLOAT,
+    { $08 } GNFCHN_UNKNOWN_08,
+    { $09 } GNFCHN_SRGB,
+    { $0A } GNFCHN_UBNORM,
+    { $0B } GNFCHN_UBNORM_OGL,
+    { $0C } GNFCHN_UBINT,
+    { $0D } GNFCHN_UBSCALED
+  );
+
+  TGNFTextureType = (
+    GNF_TEXTURE_1D = $08,
+    GNF_TEXTURE_2D = $09,
+    GNF_TEXTURE_3D = $0A,
+    GNF_TEXTURE_CUBEMAP = $0B,
+    GNF_TEXTURE_1D_ARRAY = $0C,
+    GNF_TEXTURE_2D_ARRAY = $0D,
+    GNF_TEXTURE_2D_MSAA = $0E,
+    GNF_TEXTURE_2D_ARRAY_MSAA = $0F
+  );
+
+  TGNFTextureDescriptor = packed record
+    Meta1: Cardinal;
+    Meta2: Cardinal;
+    Meta3: Cardinal;
+    Meta4: Cardinal;
+    Meta5: Cardinal;
+    Meta6: Cardinal;
+    Meta7: Cardinal;
+    TextureSize: Cardinal;
+  private
+    function GetWidth: Cardinal;
+    function GetHeight: Cardinal;
+    function GetSurfaceFormat: Cardinal;
+    function GetSurfaceFormatName: string;
+    function GetChannelType: Cardinal;
+    function GetChannelTypeName: string;
+    function GetTextureType: Cardinal;
+    function GetLastMipLevel: Cardinal;
+    function GetMipMapCount: Cardinal;
+  public
+    property Width: Cardinal read GetWidth;
+    property Height: Cardinal read GetHeight;
+    property SurfaceFormat: Cardinal read GetSurfaceFormat;
+    property SurfaceFormatName: string read GetSurfaceFormatName;
+    property ChannelType: Cardinal read GetChannelType;
+    property ChannelTypeName: string read GetChannelTypeName;
+    property TextureType: Cardinal read GetTextureType;
+    property LastMipLevel: Cardinal read GetLastMipLevel;
+    property MipMapCount: Cardinal read GetMipMapCount;
+  end;
+
+  TGNFHeader = packed record
+    Magic: TMagic4;
+    ContentSize: Cardinal;
+    Version: Byte; // 2 (PS4) / 3 (PS5)
+    NumTextures: Byte;
+    Alignment: Byte;
+    Unused: Byte;
+    StreamSize: Cardinal;
+    // this should be array Textures[NumTextures], but ba2 supports single texture only
+    // so do we
+    Texture: TGNFTextureDescriptor;
+  end;
+  PGNFHeader = ^TGNFHeader;
+
+  TwbGNF = class abstract
+  public
+    class function IsGNF(aGNFData: Pointer; aSize: Integer): Boolean;
+    class function GetHeaderSize(aGNFData: Pointer): Integer;
+  end;
+
+
 const
   MAGIC_DDS : TMagic4 = 'DDS ';
+  MAGIC_GNF : TMagic4 = 'GNF ';
   MAGIC_DXT1: TMagic4 = 'DXT1';
   MAGIC_DXT3: TMagic4 = 'DXT3';
   MAGIC_DXT5: TMagic4 = 'DXT5';
@@ -389,11 +538,20 @@ const
   DDS_ALPHA_MODE_OPAQUE         = $00000003;
   DDS_ALPHA_MODE_CUSTOM         = $00000004;
 
+  // GNF
+  GNF_VERSION_PS4        = 2;
+  GNF_VERSION_PS5        = 3;
+  GNF_ALIGNMENT          = 8;
+  GNF_PADDED_HEADER_SIZE = 1 shl GNF_ALIGNMENT;
+
 
 implementation
 
 uses
   System.TypInfo;
+
+
+{ TwbDDS }
 
 class function TwbDDS.IsDDS(aDDSData: Pointer; aSize: Integer): Boolean;
 begin
@@ -953,6 +1111,73 @@ begin
     Inc(src, 3);
     Inc(dst, 4);
   end;
+end;
+
+
+{ TGNFTextureDescriptor }
+
+function TGNFTextureDescriptor.GetWidth: Cardinal;
+begin
+  Result := (Meta3 and $00003FFF) + 1;
+end;
+
+function TGNFTextureDescriptor.GetHeight: Cardinal;
+begin
+  Result := ((Meta3 and $0FFFC000) shr 14) + 1;
+end;
+
+function TGNFTextureDescriptor.GetSurfaceFormat: Cardinal;
+begin
+  Result := (Meta2 and $03F00000) shr 20;
+end;
+
+function TGNFTextureDescriptor.GetSurfaceFormatName: string;
+begin
+  Result := GetEnumName(TypeInfo(TGNFSurfaceFormat), Integer(SurfaceFormat)).Replace('GNFFMT_', '');
+end;
+
+function TGNFTextureDescriptor.GetChannelType: Cardinal;
+begin
+  Result := (Meta2 and $3C000000) shr 26;
+end;
+
+function TGNFTextureDescriptor.GetChannelTypeName: string;
+begin
+  Result := GetEnumName(TypeInfo(TGNFChannelType), Integer(ChannelType)).Replace('GNFCHN_', '');
+end;
+
+function TGNFTextureDescriptor.GetTextureType: Cardinal;
+begin
+  Result := (Meta4 and $F0000000) shr 28;
+end;
+
+function TGNFTextureDescriptor.GetLastMipLevel: Cardinal;
+begin
+  Result := (Meta4 and $F0000) shr 16;
+end;
+
+function TGNFTextureDescriptor.GetMipMapCount: Cardinal;
+begin
+  Result := LastMipLevel + 1;
+end;
+
+
+{ TwbGNF }
+
+class function TwbGNF.IsGNF(aGNFData: Pointer; aSize: Integer): Boolean;
+begin
+  Result := Assigned(aGNFData) and
+    (aSize >= SizeOf(TGNFHeader)) and
+    (PGNFHeader(aGNFData).Magic = MAGIC_GNF) and
+    (aSize >= GetHeaderSize(aGNFData));
+end;
+
+class function TwbGNF.GetHeaderSize(aGNFData: Pointer): Integer;
+var
+  GNFHeader: PGNFHeader;
+begin
+  GNFHeader := aGNFData;
+  Result := SizeOf(GNFHeader.Magic) + SizeOf(GNFHeader.ContentSize) + GNFHeader.ContentSize;
 end;
 
 

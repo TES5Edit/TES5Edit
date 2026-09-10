@@ -154,6 +154,7 @@
         <DCCReference Include="Core\wbBetterStringList.pas"/>
         <DCCReference Include="Core\wbBSA.pas"/>
         <DCCReference Include="Core\wbCommandLine.pas"/>
+        <DCCReference Include="Core\wbConflict.pas"/>
         <DCCReference Include="Core\wbDataFormat.pas"/>
         <DCCReference Include="Core\wbDataFormatMaterial.pas"/>
         <DCCReference Include="Core\wbDataFormatMisc.pas"/>
@@ -176,6 +177,7 @@
         <DCCReference Include="Core\wbDefinitionsTES4Saves.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES5.pas"/>
         <DCCReference Include="Core\wbDefinitionsTES5Saves.pas"/>
+        <DCCReference Include="Core\wbDiff.pas"/>
         <DCCReference Include="Core\wbHash.pas"/>
         <DCCReference Include="Core\wbHalfFloat.pas"/>
         <DCCReference Include="Core\wbHardcoded.pas">

@@ -3258,7 +3258,7 @@ begin
     ]));
 
   var wbScriptObjectSignatures : TwbSignatures := [
-    ACHR,ACTI,AFFE,ALCH,AMMO,ARMO,ARTO,AVIF,BOOK,CELL,CHAL,CNDF,CONT,CSTY,CURV,DIAL,EFSH,EXPL,FACT,FLST,FURN,GBFM,GLOB,GPOF,HAZD,IDLE,IMAD,INFO,INNR,IRES,KEYM,KYWD,LCRT,LCTN,LGDI,LIGH,LVLB,LVLI,LVLN,MESG,MGEF,MISC,MSTT,MUSC,NPC_,OMOD,OTFT,PACK,PERK,PHZD,PKIN,PLYR,PNDT,PROJ,QUST,RACE,REFR,RFGP,RSPJ,SCEN,SPEL,STAT,TMLM,VTYP,WEAP,WRLD,WTHS,WWED,NULL
+    ACHR,ACTI,AFFE,ALCH,AMMO,ARMO,ARTO,AVIF,BOOK,CELL,CHAL,CNDF,CONT,CSTY,CURV,DIAL,EFSH,EXPL,FACT,FLST,FURN,GBFM,GLOB,GPOF,HAZD,IDLE,IMAD,INFO,INNR,IRES,KEYM,KYWD,LCRT,LCTN,LGDI,LIGH,LVLB,LVLI,LVLN,MESG,MGEF,MISC,MSTT,MUSC,NPC_,OMOD,OTFT,PACK,PERK,PHZD,PKIN,PLYR,PNDT,PROJ,QUST,RACE,REFR,RFGP,RSPJ,SCEN,SPEL,STAT,TACT,TMLM,VTYP,WEAP,WRLD,WTHS,WWED,NULL
   ];
 
   var wbScriptPropertyObject :=
@@ -8724,7 +8724,7 @@ begin
       wbUnknown(4),
       wbUnknown(4)
     ]).SetOptionalFrom(4),
-    wbFloat(XRDS, 'Radius', cpNormal, False, 1, 2).SetToStr(wbREFRRadiusToStr),
+    wbFloat(XRDS, 'Radius', cpNormal, False, 1, 2),
     wbRArray('Water Current Data',
       wbRStruct('Current', [
         wbRUnion('', [
@@ -16356,8 +16356,8 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMADFragmentedQUST,
-    wbFULL,
     wbBaseFormComponents,
+    wbFULL,
     wbStruct(DNAM, 'General', [
       wbInteger('Flags', itU32, wbFlags([
         {0x000001} 'Start Game Enabled',

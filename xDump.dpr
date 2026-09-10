@@ -33,14 +33,7 @@ uses
 
   wbBSA in 'Core\wbBSA.pas',
   wbCommandLine in 'Core\wbCommandLine.pas',
-  wbSort in 'Core\wbSort.pas',
-  wbInterface in 'Core\wbInterface.pas',
-  wbSaveInterface in 'Core\wbSaveInterface.pas',
-  wbImplementation in 'Core\wbImplementation.pas',
-  wbLocalization in 'Core\wbLocalization.pas',
-  wbHelpers in 'Core\wbHelpers.pas',
-  wbLoadOrder in 'Core\wbLoadOrder.pas',
-  wbHardcoded in 'Core\wbHardcoded.pas',
+  wbConflict in 'Core\wbConflict.pas',
   wbDataFormatWwise in 'Core\wbDataFormatWwise.pas',
   wbDefinitionsCommon in 'Core\wbDefinitionsCommon.pas',
   wbDefinitionsFNV in 'Core\wbDefinitionsFNV.pas',
@@ -55,7 +48,16 @@ uses
   wbDefinitionsTES4Saves in 'Core\wbDefinitionsTES4Saves.pas',
   wbDefinitionsTES5 in 'Core\wbDefinitionsTES5.pas',
   wbDefinitionsTES5Saves in 'Core\wbDefinitionsTES5Saves.pas',
-  wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas';
+  wbDefinitionsSF1 in 'Core\wbDefinitionsSF1.pas',
+  wbDiff in 'Core\wbDiff.pas',
+  wbHardcoded in 'Core\wbHardcoded.pas',
+  wbHelpers in 'Core\wbHelpers.pas',
+  wbImplementation in 'Core\wbImplementation.pas',
+  wbInterface in 'Core\wbInterface.pas',
+  wbLoadOrder in 'Core\wbLoadOrder.pas',
+  wbLocalization in 'Core\wbLocalization.pas',
+  wbSaveInterface in 'Core\wbSaveInterface.pas',
+  wbSort in 'Core\wbSort.pas';
 
 {$R *.res}
 {$MAXSTACKSIZE 2097152}

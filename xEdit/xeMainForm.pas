@@ -9567,21 +9567,31 @@ begin
       end
 
       // string editor
-      else with TfrmViewElements.Create(Self) do
+      else if Assigned(Element.ResolvedValueDef) and (Element.ResolvedValueDef.DefType = dtString) then
       begin
-        Caption := vstView.Path(vstViewFocusedNode, 0, '\');
-        Settings := Self.Settings;
+        with TfrmViewElements.Create(Self) do
+        try
+          Caption := vstView.Path(vstViewFocusedNode, 0, '\');
+          Settings := Self.Settings;
 
-        if Assigned(ActiveMaster) then
-          Caption := ActiveMaster.Name + '\' + Caption;
+          if Assigned(ActiveMaster) then
+            Caption := ActiveMaster.Name + '\' + Caption;
 
-        for var lIndex := Low(ActiveRecords) to High(ActiveRecords) do begin
-          var lNodeElement := NodeDatas[lIndex].Element;
-          if Assigned(lNodeElement) then
-            AddElement(lNodeElement, vstView.FocusedColumn = Succ(lIndex), lNodeElement.IsEditable);
+          for var J := Low(ActiveRecords) to High(ActiveRecords) do
+          begin
+            var lNodeElement := NodeDatas[J].Element;
+            if Assigned(lNodeElement) then
+              AddElement(lNodeElement, vstView.FocusedColumn = Succ(J), lNodeElement.IsEditable);
+          end;
+
+          ShowModal;
+        finally
+          Free;
         end;
 
-        ShowModal;
+        PostResetActiveTree;
+        InvalidateElementsTreeView(NoNodes);
+        Exit;
       end;
 
       if wbConvertIntFormID and Element.CanContainFormIDs then
