@@ -347,8 +347,8 @@ begin
   if mlContext.GameDefObj.GameMode = gmEnderalSE then
     mlUpdateIndex := Pred(High(Integer));
 
-  if wbDataPath <> '' then begin
-    Files := TDirectory.GetFiles(wbDataPath);
+  if mlContext.Settings.DataPath <> '' then begin
+    Files := TDirectory.GetFiles(mlContext.Settings.DataPath);
     i := Length(Files);
     if i > 1 then
       wbMergeSortPtr(@Files[0], i, TListSortCompare(@CompareText));
@@ -394,9 +394,9 @@ begin
             Include(miFlags, mfIsESM);
           end;
 
-        miDateTime := wbGetLastWriteTime(wbDataPath + miOriginalName);
+        miDateTime := wbGetLastWriteTime(mlContext.Settings.DataPath + miOriginalName);
 
-        if not wbMastersForFile(wbDataPath+miOriginalName, miMasterNames, @IsESM, @IsLight, @IsLocalized, @IsUpdate, @IsMedium, @IsBlueprint) then
+        if not wbMastersForFile(mlContext.Settings.DataPath + miOriginalName, miMasterNames, @IsESM, @IsLight, @IsLocalized, @IsUpdate, @IsMedium, @IsBlueprint) then
           Continue;
 
         if IsESM then begin

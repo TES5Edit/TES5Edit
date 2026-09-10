@@ -22,6 +22,7 @@ uses
   JvInterpreter,
 
   wbDataFormat,
+  wbGameDefGlobals,
   wbInterface,
 
   xeMainForm,
@@ -91,7 +92,7 @@ begin
     Done := True;
   end else
   if SameText(Identifier, 'wbOutputPath') then begin
-    wbOutputPath := Value;
+    wbCurrentContext.OutputPath := Value;
     Done := True;
   end else
   if SameText(Identifier, 'FilterScripted') then begin

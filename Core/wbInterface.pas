@@ -356,20 +356,6 @@ var
   wbBaseOffset                       : NativeUInt = 0;
 
   wbProgramPath                      : string;
-  wbDataPath                         : string;
-  wbOutputPath                       : string;
-  wbScriptsPath                      : string;
-  wbBackupPath                       : string;
-  wbCachePath                        : string;
-  wbTempPath                         : string;
-  wbSavePath                         : string;
-  wbMyGamesTheGamePath               : string;
-  wbTheGameIniFileName               : string;
-  wbCustomIniFileName                : string;
-
-  wbShouldLoadMOHookFile             : Boolean;
-  wbMOProfile                        : string;
-  wbMOHookFile                       : string;
 
   wbStarfieldIsABugInfestedHellhole  : Boolean    = False;
   wbRedPill                          : Boolean    = False;
@@ -3438,11 +3424,37 @@ type
     procedure SetCreationClubContentFileName(const aValue: string);
     function GetCreationClubContent: TArray<string>;
     procedure SetCreationClubContent(const aValue: TArray<string>);
+    procedure SetDataPath(const aValue: string);
+    function GetOutputPath: string;
+    procedure SetOutputPath(const aValue: string);
+    function GetScriptsPath: string;
+    procedure SetScriptsPath(const aValue: string);
+    function GetBackupPath: string;
+    procedure SetBackupPath(const aValue: string);
+    function GetCachePath: string;
+    procedure SetCachePath(const aValue: string);
+    function GetTempPath: string;
+    procedure SetTempPath(const aValue: string);
+    function GetSavePath: string;
+    procedure SetSavePath(const aValue: string);
+    function GetMyGamesTheGamePath: string;
+    procedure SetMyGamesTheGamePath(const aValue: string);
+    function GetTheGameIniFileName: string;
+    procedure SetTheGameIniFileName(const aValue: string);
+    function GetCustomIniFileName: string;
+    procedure SetCustomIniFileName(const aValue: string);
+    function GetShouldLoadMOHookFile: Boolean;
+    procedure SetShouldLoadMOHookFile(aValue: Boolean);
+    function GetMOProfile: string;
+    procedure SetMOProfile(const aValue: string);
+    function GetMOHookFile: string;
+    procedure SetMOHookFile(const aValue: string);
 
     property GameDef: IwbGameDef
       read GetGameDef;
     property DataPath: string
-      read GetDataPath;
+      read GetDataPath
+      write SetDataPath;
     property FileCount: Integer
       read GetFileCount;
     property Files[aIndex: Integer]: IwbFile
@@ -3506,6 +3518,42 @@ type
     property CreationClubContent: TArray<string>
       read GetCreationClubContent
       write SetCreationClubContent;
+    property OutputPath: string
+      read GetOutputPath
+      write SetOutputPath;
+    property ScriptsPath: string
+      read GetScriptsPath
+      write SetScriptsPath;
+    property BackupPath: string
+      read GetBackupPath
+      write SetBackupPath;
+    property CachePath: string
+      read GetCachePath
+      write SetCachePath;
+    property TempPath: string
+      read GetTempPath
+      write SetTempPath;
+    property SavePath: string
+      read GetSavePath
+      write SetSavePath;
+    property MyGamesTheGamePath: string
+      read GetMyGamesTheGamePath
+      write SetMyGamesTheGamePath;
+    property TheGameIniFileName: string
+      read GetTheGameIniFileName
+      write SetTheGameIniFileName;
+    property CustomIniFileName: string
+      read GetCustomIniFileName
+      write SetCustomIniFileName;
+    property ShouldLoadMOHookFile: Boolean
+      read GetShouldLoadMOHookFile
+      write SetShouldLoadMOHookFile;
+    property MOProfile: string
+      read GetMOProfile
+      write SetMOProfile;
+    property MOHookFile: string
+      read GetMOHookFile
+      write SetMOHookFile;
   end;
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
@@ -3726,6 +3774,19 @@ type
     DelayLoadRecords      : Boolean;
     CreationClubContentFileName : string;
     CreationClubContent   : TArray<string>;
+    DataPath              : string;
+    OutputPath            : string;
+    ScriptsPath           : string;
+    BackupPath            : string;
+    CachePath             : string;
+    TempPath              : string;
+    SavePath              : string;
+    MyGamesTheGamePath    : string;
+    TheGameIniFileName    : string;
+    CustomIniFileName     : string;
+    ShouldLoadMOHookFile  : Boolean;
+    MOProfile             : string;
+    MOHookFile            : string;
     class function Defaults: TwbGameContextSettings; static;
   end;
 
@@ -3789,6 +3850,31 @@ type
     procedure SetCreationClubContentFileName(const aValue: string);
     function GetCreationClubContent: TArray<string>;
     procedure SetCreationClubContent(const aValue: TArray<string>);
+    procedure SetDataPath(const aValue: string);
+    function GetOutputPath: string;
+    procedure SetOutputPath(const aValue: string);
+    function GetScriptsPath: string;
+    procedure SetScriptsPath(const aValue: string);
+    function GetBackupPath: string;
+    procedure SetBackupPath(const aValue: string);
+    function GetCachePath: string;
+    procedure SetCachePath(const aValue: string);
+    function GetTempPath: string;
+    procedure SetTempPath(const aValue: string);
+    function GetSavePath: string;
+    procedure SetSavePath(const aValue: string);
+    function GetMyGamesTheGamePath: string;
+    procedure SetMyGamesTheGamePath(const aValue: string);
+    function GetTheGameIniFileName: string;
+    procedure SetTheGameIniFileName(const aValue: string);
+    function GetCustomIniFileName: string;
+    procedure SetCustomIniFileName(const aValue: string);
+    function GetShouldLoadMOHookFile: Boolean;
+    procedure SetShouldLoadMOHookFile(aValue: Boolean);
+    function GetMOProfile: string;
+    procedure SetMOProfile(const aValue: string);
+    function GetMOHookFile: string;
+    procedure SetMOHookFile(const aValue: string);
     function CreateSkipList: TStringList;
   public
     Settings: TwbGameContextSettings;
@@ -6143,6 +6229,131 @@ begin
   Settings.CreationClubContent := aValue;
 end;
 
+procedure TwbGameContext.SetDataPath(const aValue: string);
+begin
+  Settings.DataPath := aValue;
+end;
+
+function TwbGameContext.GetOutputPath: string;
+begin
+  Result := Settings.OutputPath;
+end;
+
+procedure TwbGameContext.SetOutputPath(const aValue: string);
+begin
+  Settings.OutputPath := aValue;
+end;
+
+function TwbGameContext.GetScriptsPath: string;
+begin
+  Result := Settings.ScriptsPath;
+end;
+
+procedure TwbGameContext.SetScriptsPath(const aValue: string);
+begin
+  Settings.ScriptsPath := aValue;
+end;
+
+function TwbGameContext.GetBackupPath: string;
+begin
+  Result := Settings.BackupPath;
+end;
+
+procedure TwbGameContext.SetBackupPath(const aValue: string);
+begin
+  Settings.BackupPath := aValue;
+end;
+
+function TwbGameContext.GetCachePath: string;
+begin
+  Result := Settings.CachePath;
+end;
+
+procedure TwbGameContext.SetCachePath(const aValue: string);
+begin
+  Settings.CachePath := aValue;
+end;
+
+function TwbGameContext.GetTempPath: string;
+begin
+  Result := Settings.TempPath;
+end;
+
+procedure TwbGameContext.SetTempPath(const aValue: string);
+begin
+  Settings.TempPath := aValue;
+end;
+
+function TwbGameContext.GetSavePath: string;
+begin
+  Result := Settings.SavePath;
+end;
+
+procedure TwbGameContext.SetSavePath(const aValue: string);
+begin
+  Settings.SavePath := aValue;
+end;
+
+function TwbGameContext.GetMyGamesTheGamePath: string;
+begin
+  Result := Settings.MyGamesTheGamePath;
+end;
+
+procedure TwbGameContext.SetMyGamesTheGamePath(const aValue: string);
+begin
+  Settings.MyGamesTheGamePath := aValue;
+end;
+
+function TwbGameContext.GetTheGameIniFileName: string;
+begin
+  Result := Settings.TheGameIniFileName;
+end;
+
+procedure TwbGameContext.SetTheGameIniFileName(const aValue: string);
+begin
+  Settings.TheGameIniFileName := aValue;
+end;
+
+function TwbGameContext.GetCustomIniFileName: string;
+begin
+  Result := Settings.CustomIniFileName;
+end;
+
+procedure TwbGameContext.SetCustomIniFileName(const aValue: string);
+begin
+  Settings.CustomIniFileName := aValue;
+end;
+
+function TwbGameContext.GetShouldLoadMOHookFile: Boolean;
+begin
+  Result := Settings.ShouldLoadMOHookFile;
+end;
+
+procedure TwbGameContext.SetShouldLoadMOHookFile(aValue: Boolean);
+begin
+  Settings.ShouldLoadMOHookFile := aValue;
+end;
+
+function TwbGameContext.GetMOProfile: string;
+begin
+  Result := Settings.MOProfile;
+end;
+
+procedure TwbGameContext.SetMOProfile(const aValue: string);
+begin
+  Settings.MOProfile := aValue;
+end;
+
+function TwbGameContext.GetMOHookFile: string;
+begin
+  Result := Settings.MOHookFile;
+end;
+
+procedure TwbGameContext.SetMOHookFile(const aValue: string);
+begin
+  Settings.MOHookFile := aValue;
+end;
+
 function TwbGameContext.GetGameDef: IwbGameDef;
 begin
   Result := gcGameDef;
@@ -6150,7 +6361,7 @@ end;
 
 function TwbGameContext.GetDataPath: string;
 begin
-  Result := wbDataPath;
+  Result := Settings.DataPath;
 end;
 
 function TwbGameContext.GetFileCount: Integer;

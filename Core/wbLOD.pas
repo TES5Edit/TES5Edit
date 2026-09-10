@@ -308,6 +308,7 @@ uses
   wbDataFormat,
   wbDataFormatMaterial,
   wbDataFormatNif,
+  wbGameDefGlobals,
   wbHash,
   wbHelpers,
   wbSort,

@@ -402,30 +402,33 @@ var
   s, regPath, regKey, client: string;
   isEpicNV : Boolean;
   IniFile : TMemIniFile;
+  lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
 begin
   wbCurrentContext.ModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
   isEpicNV := false;
 
-  if not wbFindCmdLineParam('S', wbScriptsPath) then
-    wbScriptsPath := wbProgramPath + 'Edit Scripts\';
+  if not wbFindCmdLineParam('S', s) then
+    s := wbProgramPath + 'Edit Scripts\';
+  wbCurrentContext.ScriptsPath := s;
 
-  if not wbFindCmdLineParam('T', wbTempPath) then
-    wbTempPath := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
+  if not wbFindCmdLineParam('T', s) then
+    s := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
   else
-    xeRemoveTempPath := not DirectoryExists(wbTempPath);
+    xeRemoveTempPath := not DirectoryExists(s);
+  wbCurrentContext.TempPath := s;
 
-  if not wbFindCmdLineParam('D', wbDataPath) then begin
-    wbDataPath := CheckAppPath;
+  if not wbFindCmdLineParam('D', lDataPath) then begin
+    lDataPath := CheckAppPath;
 
-    if (wbDataPath = '') then
+    if (lDataPath = '') then
       for var lID in wbGameSteamID.Split([',']) do
         begin
-          wbDataPath := GetInstallPathBySteamID(lID);
-          if wbDataPath <> '' then
+          lDataPath := GetInstallPathBySteamID(lID);
+          if lDataPath <> '' then
             break;
         end;
 
-    if (wbDataPath = '') then with TRegistry.Create do try
+    if (lDataPath = '') then with TRegistry.Create do try
       Access  := KEY_READ or KEY_WOW64_32KEY;
       RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
@@ -449,6 +452,7 @@ begin
           s := 'Fatal: Could not open registry key: ' + regPath;
           ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
           wbDontSave := True;
+          wbCurrentContext.DataPath := lDataPath;
           Exit;
         end;
       end;
@@ -460,10 +464,10 @@ begin
       gmFO76, gmSF1, gmTES4R:  regKey := 'InstallLocation';
       end;
 
-      wbDataPath := ReadString(regKey);
-      wbDataPath := StringReplace(wbDataPath, '"', '', [rfReplaceAll]);
+      lDataPath := ReadString(regKey);
+      lDataPath := StringReplace(lDataPath, '"', '', [rfReplaceAll]);
 
-      if (wbDataPath = '') then begin
+      if (lDataPath = '') then begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
         wbDontSave := True;
@@ -472,75 +476,78 @@ begin
       Free;
     end;
 
-    if wbDataPath <> '' then
+    if lDataPath <> '' then
     begin
       if wbIsOblivionR then
-        wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + 'OblivionRemastered\Content\Dev\ObvData\Data\'
+        lDataPath := IncludeTrailingPathDelimiter(lDataPath) + 'OblivionRemastered\Content\Dev\ObvData\Data\'
       else
-        wbDataPath := IncludeTrailingPathDelimiter(wbDataPath) + DataName[wbGameMode = gmTES3] + '\';
+        lDataPath := IncludeTrailingPathDelimiter(lDataPath) + DataName[wbGameMode = gmTES3] + '\';
     end;
   end else
-    wbDataPath := IncludeTrailingPathDelimiter(wbDataPath);
+    lDataPath := IncludeTrailingPathDelimiter(lDataPath);
+  wbCurrentContext.DataPath := lDataPath;
 
-  wbOutputPath := wbDataPath;
+  lOutputPath := lDataPath;
 
   if wbFindCmdLineParam('O', s) and (Length(s) > 0) then
     if s[1] = '.' then
       //assume relative path
-      wbOutputPath := IncludeTrailingPathDelimiter(wbOutputPath + s)
+      lOutputPath := IncludeTrailingPathDelimiter(lOutputPath + s)
     else
       //assume absolute path
-      wbOutputPath := IncludeTrailingPathDelimiter(s);
+      lOutputPath := IncludeTrailingPathDelimiter(s);
+  wbCurrentContext.OutputPath := lOutputPath;
 
-  wbMOHookFile := wbDataPath + '..\Mod Organizer\hook.dll';
+  wbCurrentContext.MOHookFile := lDataPath + '..\Mod Organizer\hook.dll';
 
-  if not wbFindCmdLineParam('M', wbMyGamesTheGamePath) then begin
+  if not wbFindCmdLineParam('M', lMyGamesTheGamePath) then begin
     xeMyProfileName := GetCSIDLShellFolder(CSIDL_PERSONAL);
     if xeMyProfileName = '' then begin
       ShowMessage('Fatal: Could not determine my documents folder');
+      wbCurrentContext.MyGamesTheGamePath := lMyGamesTheGamePath;
       Exit;
     end;
 
     case wbGameMode of
       gmTES3:
-        wbMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)));
+        lMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)));
     else
-      wbMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
+      lMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
     end;
 
-    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
-        wbMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
+    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
+        lMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
         isEpicNV := true;
     end;
   end;
 
-  if not wbFindCmdLineParam('I', wbTheGameIniFileName) then begin
+  if not wbFindCmdLineParam('I', lTheGameIniFileName) then begin
     if wbGameMode in [gmFO3, gmFNV] then
-      wbTheGameIniFileName := wbMyGamesTheGamePath + 'Fallout.ini'
+      lTheGameIniFileName := lMyGamesTheGamePath + 'Fallout.ini'
     else
-      wbTheGameIniFileName := wbMyGamesTheGamePath + wbGameName + '.ini';
+      lTheGameIniFileName := lMyGamesTheGamePath + wbGameName + '.ini';
 
     // VR games don't create ini file in My Games by default, use the one in the game folder
-    if (wbGameMode in [gmTES5VR, gmFO4VR, gmSF1]) and not FileExists(wbTheGameIniFileName) then
-      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + '\' + ExtractFileName(wbTheGameIniFileName)
-    else if wbIsOblivionR and not FileExists(wbTheGameIniFileName) then
-      wbTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + 'Oblivion.ini';
+    if (wbGameMode in [gmTES5VR, gmFO4VR, gmSF1]) and not FileExists(lTheGameIniFileName) then
+      lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + '\' + ExtractFileName(lTheGameIniFileName)
+    else if wbIsOblivionR and not FileExists(lTheGameIniFileName) then
+      lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + 'Oblivion.ini';
   end;
 
-  if not wbFindCmdLineParam('CustomIni', wbCustomIniFileName) then begin
+  if not wbFindCmdLineParam('CustomIni', lCustomIniFileName) then begin
     if wbGameMode in [gmFO3, gmFNV] then
-      wbCustomIniFileName := wbMyGamesTheGamePath + 'FalloutCustom.ini'
+      lCustomIniFileName := lMyGamesTheGamePath + 'FalloutCustom.ini'
     else
-      wbCustomIniFileName := wbMyGamesTheGamePath + wbGameName + 'Custom.ini';
+      lCustomIniFileName := lMyGamesTheGamePath + wbGameName + 'Custom.ini';
   end;
 
-  if not wbFindCmdLineParam('G', wbSavePath) then begin
-    if wbMyGamesTheGamePath = '' then
-      wbMyGamesTheGamePath := ExtractFilePath(wbTheGameIniFileName);
+  if not wbFindCmdLineParam('G', lSavePath) then begin
+    if lMyGamesTheGamePath = '' then
+      lMyGamesTheGamePath := ExtractFilePath(lTheGameIniFileName);
 
     s := 'Saves\';
-    if FileExists(wbTheGameIniFileName) then begin
-      IniFile := TMemIniFile.Create(wbTheGameIniFileName);
+    if FileExists(lTheGameIniFileName) then begin
+      IniFile := TMemIniFile.Create(lTheGameIniFileName);
       try
         s := IniFile.ReadString('General', 'SLocalSavePath', s);
       finally
@@ -548,8 +555,8 @@ begin
       end;
     end;
 
-    if FileExists(wbCustomIniFileName) then begin
-      with TMemIniFile.Create(wbCustomIniFileName) do try
+    if FileExists(lCustomIniFileName) then begin
+      with TMemIniFile.Create(lCustomIniFileName) do try
         if ValueExists('General', 'SLocalSavePath') then
           s := ReadString('General', 'SLocalSavePath', s);
       finally
@@ -561,9 +568,13 @@ begin
     if wbIsOblivionR then
       s := 'Saved\SaveGames\';
 
-    wbSavePath := PathRelativeToFull(wbMyGamesTheGamePath, s);
+    lSavePath := PathRelativeToFull(lMyGamesTheGamePath, s);
   end;
-  wbSavePath := IncludeTrailingPathDelimiter(wbSavePath);
+  lSavePath := IncludeTrailingPathDelimiter(lSavePath);
+  wbCurrentContext.MyGamesTheGamePath := lMyGamesTheGamePath;
+  wbCurrentContext.TheGameIniFileName := lTheGameIniFileName;
+  wbCurrentContext.CustomIniFileName := lCustomIniFileName;
+  wbCurrentContext.SavePath := lSavePath;
 
   xeParamIndex := ParamIndex;
   var lPluginsFileName: string;
@@ -601,22 +612,24 @@ begin
       xeSettingsFileName := ChangeFileExt(wbPluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
   end;
 
-  wbBackupPath := '';
-  if not (wbDontSave or wbFindCmdLineParam('B', wbBackupPath)) then
-    wbBackupPath := wbDataPath + wbAppName + 'Edit Backups\';
+  lBackupPath := '';
+  if not (wbDontSave or wbFindCmdLineParam('B', lBackupPath)) then
+    lBackupPath := lDataPath + wbAppName + 'Edit Backups\';
+  wbCurrentContext.BackupPath := lBackupPath;
 
-  wbCachePath := '';
-  if not (wbDontCache or wbFindCmdLineParam('C', wbCachePath)) then
-    if wbDataPath <> '' then
-      wbCachePath := wbDataPath + wbAppName + 'Edit Cache\';
-  if wbCachePath = '' then
+  lCachePath := '';
+  if not (wbDontCache or wbFindCmdLineParam('C', lCachePath)) then
+    if lDataPath <> '' then
+      lCachePath := lDataPath + wbAppName + 'Edit Cache\';
+  if lCachePath = '' then
     wbDontCache := True;
   if not wbDontCache then
-    if not DirectoryExists(wbCachePath) then
-      if not ForceDirectories(wbCachePath) then
+    if not DirectoryExists(lCachePath) then
+      if not ForceDirectories(lCachePath) then
         wbDontCache := True;
   if wbDontCache then
-    wbCachePath := '';
+    lCachePath := '';
+  wbCurrentContext.CachePath := lCachePath;
 
   wbFindCmdLineParam('R', xeLogFile);
 end;
@@ -1563,7 +1576,9 @@ begin
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;
 
-  wbShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', wbMOProfile);
+  var lMOProfile: string;
+  wbCurrentContext.ShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', lMOProfile);
+  wbCurrentContext.MOProfile := lMOProfile;
 
   if FindCmdLineSwitch('moreunknown') then
     wbMoreInfoForUnknown := True;

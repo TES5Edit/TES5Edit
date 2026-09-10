@@ -892,7 +892,7 @@ begin
   end else
     DataPath := IncludeTrailingPathDelimiter(DataPath);
 
-  wbDataPath := DataPath;
+  wbCurrentContext.DataPath := DataPath;
 end;
 
 function isMode(aMode: String): Boolean;
@@ -1147,7 +1147,7 @@ begin
 
       DoInitPath;
       if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
-        wbDataPath := CheckParamPath;
+        wbCurrentContext.DataPath := CheckParamPath;
 
       wbLoadModules;
 

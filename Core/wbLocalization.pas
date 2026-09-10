@@ -111,6 +111,9 @@ var
 
 implementation
 
+uses
+  wbGameDefGlobals;
+
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
   fs: TFileStream;

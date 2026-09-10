@@ -27,6 +27,7 @@ uses
   VirtualTrees,
 
   wbDataFormat,
+  wbGameDefGlobals,
   wbHelpers,
   wbInterface,
   wbLOD,

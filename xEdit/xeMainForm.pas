@@ -1564,7 +1564,7 @@ begin
 
   if not xeDontBackup and not DirectoryExists(wbBackupPath) then
     if not ForceDirectories(wbBackupPath) then
-      wbBackupPath := wbDataPath;
+      wbCurrentContext.BackupPath := wbDataPath;
 
   lFrom := wbDataPath + aFrom;
   if not FileExists(lFrom) then begin
@@ -1655,7 +1655,7 @@ begin
 
   if not xeDontBackup and not DirectoryExists(wbBackupPath) then
     if not ForceDirectories(wbBackupPath) then
-      wbBackupPath := wbDataPath;
+      wbCurrentContext.BackupPath := wbDataPath;
 
   lFrom := wbDataPath + aFrom;
   if not FileExists(lFrom) then begin
@@ -1721,7 +1721,7 @@ begin
 
   if not xeDontBackup and not DirectoryExists(wbBackupPath) then
     if not ForceDirectories(wbBackupPath) then
-      wbBackupPath := wbDataPath;
+      wbCurrentContext.BackupPath := wbDataPath;
 
   wbCurrentAction := 'Renaming previously saved files';
   wbProgress(wbCurrentAction);

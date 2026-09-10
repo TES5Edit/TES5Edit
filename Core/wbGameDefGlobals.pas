@@ -43,6 +43,19 @@ function wbCreateContainedIn: Boolean; inline;
 function wbDelayLoadRecords: Boolean; inline;
 function wbCreationClubContentFileName: string; inline;
 function wbCreationClubContent: TArray<string>; inline;
+function wbDataPath: string; inline;
+function wbOutputPath: string; inline;
+function wbScriptsPath: string; inline;
+function wbBackupPath: string; inline;
+function wbCachePath: string; inline;
+function wbTempPath: string; inline;
+function wbSavePath: string; inline;
+function wbMyGamesTheGamePath: string; inline;
+function wbTheGameIniFileName: string; inline;
+function wbCustomIniFileName: string; inline;
+function wbShouldLoadMOHookFile: Boolean; inline;
+function wbMOProfile: string; inline;
+function wbMOHookFile: string; inline;
 function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
@@ -233,6 +246,71 @@ end;
 function wbCreationClubContent: TArray<string>;
 begin
   Result := _CurrentContext.Settings.CreationClubContent;
+end;
+
+function wbDataPath: string;
+begin
+  Result := _CurrentContext.Settings.DataPath;
+end;
+
+function wbOutputPath: string;
+begin
+  Result := _CurrentContext.Settings.OutputPath;
+end;
+
+function wbScriptsPath: string;
+begin
+  Result := _CurrentContext.Settings.ScriptsPath;
+end;
+
+function wbBackupPath: string;
+begin
+  Result := _CurrentContext.Settings.BackupPath;
+end;
+
+function wbCachePath: string;
+begin
+  Result := _CurrentContext.Settings.CachePath;
+end;
+
+function wbTempPath: string;
+begin
+  Result := _CurrentContext.Settings.TempPath;
+end;
+
+function wbSavePath: string;
+begin
+  Result := _CurrentContext.Settings.SavePath;
+end;
+
+function wbMyGamesTheGamePath: string;
+begin
+  Result := _CurrentContext.Settings.MyGamesTheGamePath;
+end;
+
+function wbTheGameIniFileName: string;
+begin
+  Result := _CurrentContext.Settings.TheGameIniFileName;
+end;
+
+function wbCustomIniFileName: string;
+begin
+  Result := _CurrentContext.Settings.CustomIniFileName;
+end;
+
+function wbShouldLoadMOHookFile: Boolean;
+begin
+  Result := _CurrentContext.Settings.ShouldLoadMOHookFile;
+end;
+
+function wbMOProfile: string;
+begin
+  Result := _CurrentContext.Settings.MOProfile;
+end;
+
+function wbMOHookFile: string;
+begin
+  Result := _CurrentContext.Settings.MOHookFile;
 end;
 
 function RecordToSkip: TStringList;
