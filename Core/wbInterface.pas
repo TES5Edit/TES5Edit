@@ -3569,6 +3569,7 @@ type
     property EncodingTrans: TEncoding
       read GetEncodingTrans
       write SetEncodingTrans;
+    function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
@@ -3942,6 +3943,7 @@ type
       read gcChaptersToSkip;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
+    function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
 const
@@ -6253,6 +6255,15 @@ end;
 function TwbGameContext.GetLEncoding(aFallback: Boolean): TStringList;
 begin
   Result := gcLEncoding[aFallback];
+end;
+
+function TwbGameContext.EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
+var
+  i: Integer;
+begin
+  Result := wbLEncodingDefault[aFallback];
+  if gcLEncoding[aFallback].Find(aLanguage, i) then
+    Result := gcLEncoding[aFallback].Objects[i] as TEncoding;
 end;
 
 function TwbGameContext.GetLanguage: string;
@@ -24789,12 +24800,8 @@ begin
 end;
 
 function wbEncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
-var
-  i: Integer;
 begin
-  Result := wbLEncodingDefault[aFallback];
-  if _CurrentContext.LEncoding[aFallback].Find(aLanguage, i) then
-    Result := _CurrentContext.LEncoding[aFallback].Objects[i] as TEncoding;
+  Result := _CurrentContext.EncodingForLanguage(aLanguage, aFallback);
 end;
 
 var

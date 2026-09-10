@@ -2743,7 +2743,7 @@ begin
       '_' + GetCRC32.ToString +
       '_g' + GetEncoding(False).CodePage.ToString +
       '_t' + GetEncoding(True).CodePage.ToString +
-      '_l' + wbEncodingForLanguage(flContextObj.Settings.Language, False).CodePage.ToString +
+      '_l' + flContextObj.EncodingForLanguage(flContextObj.Settings.Language, False).CodePage.ToString +
       '_' + flContextObj.Settings.Language;
 
     CacheFileName := CacheFileName + wbRefCacheExt;
