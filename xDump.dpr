@@ -1034,7 +1034,7 @@ begin
       if FindCmdLineSwitch('sr') then
         wbSimpleRecords := True;
 
-      wbLanguage := 'English';
+      wbCurrentContext.Language := 'English';
 
       wbGameExeName := '';
       case wbGameMode of
@@ -1314,7 +1314,7 @@ begin
       end;
 
       if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
-        wbLanguage := 'En';
+        wbCurrentContext.Language := 'En';
 
       if wbGameMode <= gmEnderal then
         wbAddDefaultLEncodingsIfMissing(False)
@@ -1331,7 +1331,7 @@ begin
       wbAddDefaultLEncodingsIfMissing(True);
 
       if wbFindCmdLineParam('l', s) then begin
-        wbLanguage := s;
+        wbCurrentContext.Language := s;
       end else begin
         if FileExists(wbTheGameIniFileName) then begin
           with TMemIniFile.Create(wbTheGameIniFileName) do try
@@ -1376,16 +1376,16 @@ begin
         end;
 
         if (s <> '') and not SameText(s, wbLanguage) then
-          wbLanguage := s;
+          wbCurrentContext.Language := s;
       end;
 
-      wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
+      wbCurrentContext.EncodingTrans := wbEncodingForLanguage(wbLanguage, False);
 
       if wbFindCmdLineParam('cp-general', s) then
-        wbEncoding :=  wbMBCSEncoding(s);
+        wbCurrentContext.Encoding :=  wbMBCSEncoding(s);
 
       if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
-        wbEncodingTrans :=  wbMBCSEncoding(s);
+        wbCurrentContext.EncodingTrans :=  wbMBCSEncoding(s);
 
       if wbFindCmdLineParam('bts', s) then
         wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);

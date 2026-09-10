@@ -3449,6 +3449,12 @@ type
     procedure SetMOProfile(const aValue: string);
     function GetMOHookFile: string;
     procedure SetMOHookFile(const aValue: string);
+    function GetLanguage: string;
+    procedure SetLanguage(const aValue: string);
+    function GetEncoding: TEncoding;
+    procedure SetEncoding(aValue: TEncoding);
+    function GetEncodingTrans: TEncoding;
+    procedure SetEncodingTrans(aValue: TEncoding);
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3554,6 +3560,15 @@ type
     property MOHookFile: string
       read GetMOHookFile
       write SetMOHookFile;
+    property Language: string
+      read GetLanguage
+      write SetLanguage;
+    property Encoding: TEncoding
+      read GetEncoding
+      write SetEncoding;
+    property EncodingTrans: TEncoding
+      read GetEncodingTrans
+      write SetEncodingTrans;
   end;
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
@@ -3787,6 +3802,9 @@ type
     ShouldLoadMOHookFile  : Boolean;
     MOProfile             : string;
     MOHookFile            : string;
+    Language              : string;
+    Encoding              : TEncoding;
+    EncodingTrans         : TEncoding;
     class function Defaults: TwbGameContextSettings; static;
   end;
 
@@ -3806,6 +3824,7 @@ type
     gcSubRecordToSkip : TStringList;
     gcGroupToSkip     : TStringList;
     gcChaptersToSkip  : TStringList;
+    gcLEncoding       : array[Boolean] of TStringList;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -3875,7 +3894,15 @@ type
     procedure SetMOProfile(const aValue: string);
     function GetMOHookFile: string;
     procedure SetMOHookFile(const aValue: string);
+    function GetLanguage: string;
+    procedure SetLanguage(const aValue: string);
+    function GetEncoding: TEncoding;
+    procedure SetEncoding(aValue: TEncoding);
+    function GetEncodingTrans: TEncoding;
+    procedure SetEncodingTrans(aValue: TEncoding);
+    function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
+    function CreateLEncodingList: TStringList;
   public
     Settings: TwbGameContextSettings;
 
@@ -3913,6 +3940,8 @@ type
       read gcGroupToSkip;
     property ChaptersToSkip: TStringList
       read gcChaptersToSkip;
+    property LEncoding[aFallback: Boolean]: TStringList
+      read GetLEncoding;
   end;
 
 const
@@ -5119,7 +5148,6 @@ var
   wbGameNameReg      : string; // registry name
   wbToolName         : string;
   wbSourceName       : string;
-  wbLanguage         : string;
   wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
@@ -5325,12 +5353,9 @@ function wbNextObjectIDToString(aInt: Int64; const aElement: IwbElement; aType: 
 function wbNextObjectIDToInt(const aString: string; const aElement: IwbElement): Int64;
 
 var
-  wbEncoding         : TEncoding;
-  wbEncodingTrans    : TEncoding;
   wbEncodingVMAD     : TEncoding;
 
   wbLEncodingDefault : array[Boolean] of TEncoding;
-  wbLEncoding        : array[Boolean] of TStringList;
 
 procedure wbAddDefaultLEncodingsIfMissing(aFallback: Boolean);
 procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
@@ -6160,6 +6185,8 @@ begin
   Result.AlwaysLoadGameMaster := True;
   Result.CreateContainedIn := True;
   Result.DelayLoadRecords := True;
+  Result.Encoding := wbMBCSEncoding(1252);
+  Result.EncodingTrans := Result.Encoding;
 end;
 
 { TwbGameContext }
@@ -6181,11 +6208,15 @@ begin
   gcSubRecordToSkip := CreateSkipList;
   gcGroupToSkip := CreateSkipList;
   gcChaptersToSkip := CreateSkipList;
+  gcLEncoding[False] := CreateLEncodingList;
+  gcLEncoding[True] := CreateLEncodingList;
   if Assigned(_CurrentContext) then begin
     gcRecordToSkip.Assign(_CurrentContext.RecordToSkip);
     gcSubRecordToSkip.Assign(_CurrentContext.SubRecordToSkip);
     gcGroupToSkip.Assign(_CurrentContext.GroupToSkip);
     gcChaptersToSkip.Assign(_CurrentContext.ChaptersToSkip);
+    gcLEncoding[False].Assign(_CurrentContext.LEncoding[False]);
+    gcLEncoding[True].Assign(_CurrentContext.LEncoding[True]);
   end;
 end;
 
@@ -6199,6 +6230,8 @@ begin
   FreeAndNil(gcSubRecordToSkip);
   FreeAndNil(gcGroupToSkip);
   FreeAndNil(gcChaptersToSkip);
+  FreeAndNil(gcLEncoding[True]);
+  FreeAndNil(gcLEncoding[False]);
   inherited;
 end;
 
@@ -6207,6 +6240,49 @@ begin
   Result := TwbFastStringList.Create;
   Result.Sorted := True;
   Result.Duplicates := dupIgnore;
+end;
+
+function TwbGameContext.CreateLEncodingList: TStringList;
+begin
+  Result := TStringList.Create;
+  Result.CaseSensitive := False;
+  Result.Sorted := True;
+  Result.Duplicates := dupError;
+end;
+
+function TwbGameContext.GetLEncoding(aFallback: Boolean): TStringList;
+begin
+  Result := gcLEncoding[aFallback];
+end;
+
+function TwbGameContext.GetLanguage: string;
+begin
+  Result := Settings.Language;
+end;
+
+procedure TwbGameContext.SetLanguage(const aValue: string);
+begin
+  Settings.Language := aValue;
+end;
+
+function TwbGameContext.GetEncoding: TEncoding;
+begin
+  Result := Settings.Encoding;
+end;
+
+procedure TwbGameContext.SetEncoding(aValue: TEncoding);
+begin
+  Settings.Encoding := aValue;
+end;
+
+function TwbGameContext.GetEncodingTrans: TEncoding;
+begin
+  Result := Settings.EncodingTrans;
+end;
+
+procedure TwbGameContext.SetEncodingTrans(aValue: TEncoding);
+begin
+  Settings.EncodingTrans := aValue;
 end;
 
 function TwbGameContext.GetCreationClubContentFileName: string;
@@ -24559,9 +24635,9 @@ begin
         Exit(_File.Encoding[dfTranslatable in defFlags]);
     end;
     if dfTranslatable in defFlags then
-      Result := wbEncodingTrans
+      Result := _CurrentContext.Settings.EncodingTrans
     else
-      Result := wbEncoding;
+      Result := _CurrentContext.Settings.Encoding;
   end;
 end;
 
@@ -24672,8 +24748,8 @@ begin
     Exit;
   if not Assigned(aEncoding) then
     Exit;
-  if not wbLEncoding[aFallback].Find(aLanguage, i) then
-    wbLEncoding[aFallback].AddObject(aLanguage, aEncoding);
+  if not _CurrentContext.LEncoding[aFallback].Find(aLanguage, i) then
+    _CurrentContext.LEncoding[aFallback].AddObject(aLanguage, aEncoding);
 end;
 
 procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
@@ -24684,8 +24760,8 @@ begin
     Exit;
   if aEncoding = '' then
     Exit;
-  if not wbLEncoding[aFallback].Find(aLanguage, i) then try
-    wbLEncoding[aFallback].AddObject(aLanguage, wbMBCSEncoding(aEncoding));
+  if not _CurrentContext.LEncoding[aFallback].Find(aLanguage, i) then try
+    _CurrentContext.LEncoding[aFallback].AddObject(aLanguage, wbMBCSEncoding(aEncoding));
   except end;
 end;
 
@@ -24717,8 +24793,8 @@ var
   i: Integer;
 begin
   Result := wbLEncodingDefault[aFallback];
-  if wbLEncoding[aFallback].Find(aLanguage, i) then
-    Result := wbLEncoding[aFallback].Objects[i] as TEncoding;
+  if _CurrentContext.LEncoding[aFallback].Find(aLanguage, i) then
+    Result := _CurrentContext.LEncoding[aFallback].Objects[i] as TEncoding;
 end;
 
 var
@@ -25361,22 +25437,10 @@ initialization
   _MBCSEncodings.Duplicates := dupError;
   _MBCSEncodings.OwnsObjects := True;
 
-  wbEncoding := wbMBCSEncoding(1252);
-  wbEncodingTrans := wbEncoding;
   wbEncodingVMAD := TEncoding.UTF8;
 
   wbLEncodingDefault[False] := TEncoding.UTF8;
   wbLEncodingDefault[True] := wbMBCSEncoding(1252);
-
-  wbLEncoding[False] := TStringList.Create;
-  wbLEncoding[False].CaseSensitive := False;
-  wbLEncoding[False].Sorted := True;
-  wbLEncoding[False].Duplicates := dupError;
-
-  wbLEncoding[True] := TStringList.Create;
-  wbLEncoding[True].CaseSensitive := False;
-  wbLEncoding[True].Sorted := True;
-  wbLEncoding[True].Duplicates := dupError;
 
   TwoPi := 2 * OnePi;
 
@@ -25402,8 +25466,6 @@ finalization
   _CurrentGameDef := nil;
   _CurrentGameDefRef := nil;
   wbContainerHandler := nil;
-  FreeAndNil(wbLEncoding[True]);
-  FreeAndNil(wbLEncoding[False]);
   FreeAndNil(_MBCSEncodings);
   FreeAndNil(_NamedIndices);
 end.

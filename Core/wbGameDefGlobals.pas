@@ -4,6 +4,7 @@ interface
 
 uses
   System.Classes,
+  System.SysUtils,
   wbInterface;
 
 function wbHEDRVersion: Double; inline;
@@ -56,6 +57,9 @@ function wbCustomIniFileName: string; inline;
 function wbShouldLoadMOHookFile: Boolean; inline;
 function wbMOProfile: string; inline;
 function wbMOHookFile: string; inline;
+function wbLanguage: string; inline;
+function wbEncoding: TEncoding; inline;
+function wbEncodingTrans: TEncoding; inline;
 function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
@@ -311,6 +315,21 @@ end;
 function wbMOHookFile: string;
 begin
   Result := _CurrentContext.Settings.MOHookFile;
+end;
+
+function wbLanguage: string;
+begin
+  Result := _CurrentContext.Settings.Language;
+end;
+
+function wbEncoding: TEncoding;
+begin
+  Result := _CurrentContext.Settings.Encoding;
+end;
+
+function wbEncodingTrans: TEncoding;
+begin
+  Result := _CurrentContext.Settings.EncodingTrans;
 end;
 
 function RecordToSkip: TStringList;

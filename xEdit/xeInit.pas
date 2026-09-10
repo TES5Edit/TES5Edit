@@ -833,7 +833,7 @@ begin
   if not (wbToolMode in [tmView, tmEdit]) then
     wbPrettyFormID := False;
 
-  wbLanguage := 'English';
+  wbCurrentContext.Language := 'English';
 
   wbGameExeName        := '';
   if isMode('FNV') then begin
@@ -947,7 +947,7 @@ begin
     wbGameMode         := gmFO4;
     wbAppName          := 'FO4';
     wbGameName         := 'Fallout4';
-    wbLanguage         := 'En';
+    wbCurrentContext.Language := 'En';
     wbGameSteamID      := '377160';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins, tsSaves];
@@ -960,7 +960,7 @@ begin
     wbGameExeName      := 'Fallout4VR';
     wbGameName2        := 'Fallout4VR';
     wbGameNameReg      := 'Fallout 4 VR';
-    wbLanguage         := 'En';
+    wbCurrentContext.Language := 'En';
     wbGameSteamID      := '611660';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
@@ -973,7 +973,7 @@ begin
     wbGameName2        := 'Fallout 76';
     wbGameNameReg      := 'Steam App 1151340';
     wbGameMasterEsm    := 'SeventySix.esm';
-    wbLanguage         := 'En';
+    wbCurrentContext.Language := 'En';
     wbGameSteamID      := '1151340';
     ToolModes          := wbAlwaysMode;
     ToolSources        := [tsPlugins];
@@ -984,7 +984,7 @@ begin
     wbAppName          := 'SF1';
     wbGameName         := 'Starfield';
     wbGameNameReg      := 'Steam App 1716740';
-    wbLanguage         := 'En';
+    wbCurrentContext.Language := 'En';
     wbGameSteamID      := '1716740';
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     ToolSources        := [tsPlugins];
@@ -1330,7 +1330,7 @@ begin
   end;
 
   if wbFindCmdLineParam('l', s) then begin
-    wbLanguage := s;
+    wbCurrentContext.Language := s;
   end else begin
     if FileExists(wbTheGameIniFileName) then begin
       with TMemIniFile.Create(wbTheGameIniFileName) do try
@@ -1375,16 +1375,16 @@ begin
     end;
 
     if (s <> '') and not SameText(s, wbLanguage) then
-      wbLanguage := s;
+      wbCurrentContext.Language := s;
   end;
 
-  wbEncodingTrans := wbEncodingForLanguage(wbLanguage, False);
+  wbCurrentContext.EncodingTrans := wbEncodingForLanguage(wbLanguage, False);
 
   if wbFindCmdLineParam('cp-general', s) then
-    wbEncoding :=  wbMBCSEncoding(s);
+    wbCurrentContext.Encoding :=  wbMBCSEncoding(s);
 
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
-    wbEncodingTrans :=  wbMBCSEncoding(s);
+    wbCurrentContext.EncodingTrans :=  wbMBCSEncoding(s);
 
   wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
 

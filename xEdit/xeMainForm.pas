@@ -11983,7 +11983,7 @@ begin
   if wbLanguage = s then
     Exit;
 
-  wbLanguage := s;
+  wbCurrentContext.Language := s;
 
   wbLocalizationHandler.Clear;
   for i := Low(Files) to High(Files) do

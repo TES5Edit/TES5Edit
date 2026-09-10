@@ -2736,15 +2736,15 @@ begin
     if CacheFileName.EndsWith(csDotGhost, True) then
       SetLength(CacheFileName, Length(CacheFileName) - Length(csDotGhost));
     CacheFileName :=
-            wbCachePath +
+            flContextObj.Settings.CachePath +
             IntToHex64(wbCRC32App, 8) +
       '_' + ChangeFileExt(CacheFileName, '') +
       '_' + Copy(ExtractFileExt(CacheFileName), 2) +
       '_' + GetCRC32.ToString +
       '_g' + GetEncoding(False).CodePage.ToString +
       '_t' + GetEncoding(True).CodePage.ToString +
-      '_l' + wbEncodingForLanguage(wbLanguage, False).CodePage.ToString +
-      '_' + wbLanguage;
+      '_l' + wbEncodingForLanguage(flContextObj.Settings.Language, False).CodePage.ToString +
+      '_' + flContextObj.Settings.Language;
 
     CacheFileName := CacheFileName + wbRefCacheExt;
     if not wbDontCacheLoad and FileExists(CacheFileName) then begin
@@ -4190,11 +4190,11 @@ begin
   if aTranslatable then begin
     Result :=flEncodingTrans;
     if not Assigned(Result) then
-      Result := wbEncodingTrans
+      Result := flContextObj.Settings.EncodingTrans
   end else begin
     Result := flEncoding;
     if not Assigned(Result) then
-      Result := wbEncoding;
+      Result := flContextObj.Settings.Encoding;
   end;
 end;
 
