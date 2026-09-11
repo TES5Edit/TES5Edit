@@ -170,13 +170,11 @@ var
   wbHasAddedUpdateSupport            : Boolean    = False;
   wbAllowEditHEDRVersion             : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
-  wbAllowDirectSaveFor               : TStringList;
   wbAllowMasterFilesEdit             : Boolean    = False;          //must be set before DefineDefs
   wbCanAddScripts                    : Boolean    = True;
   wbCanAddScriptProperties           : Boolean    = True;
   wbEditInfoUseShortName             : Boolean    = False;
   wbDevMode                          : Boolean    = False;
-  wbStripMastersFileNames            : TStringList;
   wbAlwaysSorted                     : Boolean    = False;
   wbNeverSorted                      : Boolean    = False;
   wbThemesSupported                  : Boolean    = True;
@@ -4025,6 +4023,8 @@ type
     gcSubRecordToSkip : TStringList;
     gcGroupToSkip     : TStringList;
     gcChaptersToSkip  : TStringList;
+    gcAllowDirectSaveFor    : TStringList;
+    gcStripMastersFileNames : TStringList;
     gcLEncoding       : array[Boolean] of TStringList;
     gcLoaderDone      : Boolean;
     gcLoaderError     : Boolean;
@@ -4190,6 +4190,7 @@ type
     function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
+    function CreateNameList: TStringList;
   public
     Settings: TwbGameContextSettings;
 
@@ -4227,6 +4228,10 @@ type
       read gcGroupToSkip;
     property ChaptersToSkip: TStringList
       read gcChaptersToSkip;
+    property AllowDirectSaveFor: TStringList
+      read gcAllowDirectSaveFor;
+    property StripMastersFileNames: TStringList
+      read gcStripMastersFileNames;
     property LoaderDone: Boolean
       read gcLoaderDone
       write gcLoaderDone;
@@ -6517,6 +6522,8 @@ begin
   gcSubRecordToSkip := CreateSkipList;
   gcGroupToSkip := CreateSkipList;
   gcChaptersToSkip := CreateSkipList;
+  gcAllowDirectSaveFor := CreateNameList;
+  gcStripMastersFileNames := CreateNameList;
   gcLEncoding[False] := CreateLEncodingList;
   gcLEncoding[True] := CreateLEncodingList;
   if Assigned(_CurrentContext) then begin
@@ -6524,6 +6531,8 @@ begin
     gcSubRecordToSkip.Assign(_CurrentContext.SubRecordToSkip);
     gcGroupToSkip.Assign(_CurrentContext.GroupToSkip);
     gcChaptersToSkip.Assign(_CurrentContext.ChaptersToSkip);
+    gcAllowDirectSaveFor.Assign(_CurrentContext.AllowDirectSaveFor);
+    gcStripMastersFileNames.Assign(_CurrentContext.StripMastersFileNames);
     gcLEncoding[False].Assign(_CurrentContext.LEncoding[False]);
     gcLEncoding[True].Assign(_CurrentContext.LEncoding[True]);
   end;
@@ -6543,6 +6552,8 @@ begin
   FreeAndNil(gcSubRecordToSkip);
   FreeAndNil(gcGroupToSkip);
   FreeAndNil(gcChaptersToSkip);
+  FreeAndNil(gcAllowDirectSaveFor);
+  FreeAndNil(gcStripMastersFileNames);
   FreeAndNil(gcLEncoding[True]);
   FreeAndNil(gcLEncoding[False]);
   inherited;
@@ -6561,6 +6572,13 @@ begin
   Result.CaseSensitive := False;
   Result.Sorted := True;
   Result.Duplicates := dupError;
+end;
+
+function TwbGameContext.CreateNameList: TStringList;
+begin
+  Result := TStringList.Create;
+  Result.Sorted := True;
+  Result.Duplicates := dupIgnore;
 end;
 
 function TwbGameContext.GetLEncoding(aFallback: Boolean): TStringList;

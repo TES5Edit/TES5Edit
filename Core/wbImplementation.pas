@@ -3298,7 +3298,6 @@ begin
     end;
 
     if (fsMemoryMapped in flStates) and
-       Assigned(wbAllowDirectSaveFor) and
        (wbAllowDirectSaveFor.IndexOf(GetFileName) >= 0) then
       Exclude(flStates, fsMemoryMapped);
   end;

@@ -1185,14 +1185,9 @@ begin
   wbAddDefaultLEncodingsIfMissing(True);
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
-    wbAllowDirectSaveFor := TStringList.Create;
-    wbAllowDirectSaveFor.Sorted := True;
-    wbAllowDirectSaveFor.Duplicates := dupIgnore;
     wbAllowDirectSaveFor.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
-    if wbAllowDirectSaveFor.Count < 1 then begin
-      FreeAndNil(wbAllowDirectSaveFor);
+    if wbAllowDirectSaveFor.Count < 1 then
       wbCurrentContext.AllowDirectSave := True;
-    end;
   end else
     if FindCmdLineSwitch('AllowDirectSaves') then
       wbCurrentContext.AllowDirectSave := True;
@@ -1217,16 +1212,10 @@ begin
     begin
       wbCurrentContext.StripMasters := True;
 
-      wbStripMastersFileNames := TStringList.Create;
-      wbStripMastersFileNames.Sorted := True;
-      wbStripMastersFileNames.Duplicates := dupIgnore;
       wbStripMastersFileNames.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
 
       if wbStripMastersFileNames.Count < 1 then
-      begin
-        FreeAndNil(wbStripMastersFileNames);
         wbCurrentContext.StripMasters := False;
-      end;
     end;
 
     if FindCmdLineSwitch('AllowESPMaster') then
