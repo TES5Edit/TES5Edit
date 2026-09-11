@@ -763,7 +763,7 @@ begin
 
   Result        := True;
   wbReportMode  := False;
-  wbEditAllowed := True;
+  wbCurrentContext.EditAllowed := True;
   wbCurrentContext.DontSave := False;
   wbDevMode     := FindCmdLineSwitch('devmode');
 
@@ -782,7 +782,7 @@ begin
   if isMode('View') then begin
     wbToolMode    := tmView;
     wbToolName    := 'View';
-    wbEditAllowed := False;
+    wbCurrentContext.EditAllowed := False;
     wbCurrentContext.DontSave := True;
   end else if isMode('MasterUpdate') then begin
     wbToolMode    := tmMasterUpdate;
@@ -796,7 +796,7 @@ begin
   end else if isMode('LODGen') then begin
     wbToolMode    := tmLODgen;
     wbToolName    := 'LODGen';
-    wbEditAllowed := False;
+    wbCurrentContext.EditAllowed := False;
     wbCurrentContext.DontSave := True;
   end else if isMode('Script') then begin
     wbToolMode    := tmScript;

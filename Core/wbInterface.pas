@@ -149,7 +149,6 @@ var
   wbDisplayShorterNames              : Boolean    = False;
   wbSortSubRecords                   : Boolean    = False;
   wbSortFLST                         : Boolean    = False;
-  wbEditAllowed                      : Boolean    = False;
   wbFlagsAsArray                     : Boolean    = False;
   wbExtendedIntUnknowns              : Boolean    = True;
   wbMoreInfoForUnknown               : Boolean    = False;
@@ -3436,6 +3435,8 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    function GetEditAllowed: Boolean;
+    procedure SetEditAllowed(aValue: Boolean);
     function GetDontSave: Boolean;
     procedure SetDontSave(aValue: Boolean);
     function GetAllowDirectSave: Boolean;
@@ -3640,6 +3641,9 @@ type
     property BuildingRefsParallel: Boolean
       read GetBuildingRefsParallel
       write SetBuildingRefsParallel;
+    property EditAllowed: Boolean
+      read GetEditAllowed
+      write SetEditAllowed;
     property DontSave: Boolean
       read GetDontSave
       write SetDontSave;
@@ -3973,6 +3977,7 @@ type
     LoadBSAs              : Boolean;
     LoadAllBSAs           : Boolean;
     BuildRefs             : Boolean;
+    EditAllowed           : Boolean;
     DontSave              : Boolean;
     AllowDirectSave       : Boolean;
     StripMasters          : Boolean;
@@ -4122,6 +4127,8 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    function GetEditAllowed: Boolean;
+    procedure SetEditAllowed(aValue: Boolean);
     function GetDontSave: Boolean;
     procedure SetDontSave(aValue: Boolean);
     function GetAllowDirectSave: Boolean;
@@ -5977,7 +5984,7 @@ end;
 
 function wbBeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := wbEditAllowed or ((wbAllowInternalEdit or aForce) and not _BlockInternalEdit);
+  Result := _CurrentContext.Settings.EditAllowed or ((wbAllowInternalEdit or aForce) and not _BlockInternalEdit);
   if Result then
     Inc(_InternalEditCount);
 end;
@@ -6653,6 +6660,16 @@ end;
 procedure TwbGameContext.SetBuildRefs(aValue: Boolean);
 begin
   Settings.BuildRefs := aValue;
+end;
+
+function TwbGameContext.GetEditAllowed: Boolean;
+begin
+  Result := Settings.EditAllowed;
+end;
+
+procedure TwbGameContext.SetEditAllowed(aValue: Boolean);
+begin
+  Settings.EditAllowed := aValue;
 end;
 
 function TwbGameContext.GetDontSave: Boolean;

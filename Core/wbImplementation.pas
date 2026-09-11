@@ -5958,10 +5958,10 @@ begin
       flProgress('<Warning: Modules with extended FormID range should always have the Game Master as their first master.>');
 
 
-    var WasEditAllowed := wbEditAllowed;
+    var WasEditAllowed := flContextObj.Settings.EditAllowed;
     try
       if gcUngroupedRecordStream in wbCurrentCapabilities then
-        wbEditAllowed := True;
+        flContextObj.Settings.EditAllowed := True;
 
       EndPtr := flEndPtr;
       GroupType := 0;
@@ -6058,7 +6058,7 @@ begin
             flProgress(Rec.Name + ' processed');
       end;
     finally
-      wbEditAllowed := WasEditAllowed;
+      flContextObj.Settings.EditAllowed := WasEditAllowed;
     end;
 
     if flRecordsCount < Length(flRecords) then

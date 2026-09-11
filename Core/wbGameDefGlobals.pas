@@ -72,6 +72,7 @@ function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
 function ChaptersToSkip: TStringList; inline;
+function wbEditAllowed: Boolean; inline;
 function wbAllowDirectSaveFor: TStringList; inline;
 function wbStripMastersFileNames: TStringList; inline;
 function wbDontSave: Boolean; inline;
@@ -431,6 +432,11 @@ end;
 function ChaptersToSkip: TStringList;
 begin
   Result := _CurrentContext.ChaptersToSkip;
+end;
+
+function wbEditAllowed: Boolean;
+begin
+  Result := _CurrentContext.Settings.EditAllowed;
 end;
 
 function wbAllowDirectSaveFor: TStringList;
