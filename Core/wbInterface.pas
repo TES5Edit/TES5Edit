@@ -3871,6 +3871,7 @@ type
     gcFirstLoadComplete    : Boolean;
     gcBuildingRefsParallel : Boolean;
     gcContainerHandler     : IwbContainerHandler;
+    gcLocalizationHandler  : TObject;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -4016,6 +4017,8 @@ type
     property ContainerHandler: IwbContainerHandler
       read gcContainerHandler
       write gcContainerHandler;
+    property LocalizationHandler: TObject
+      read gcLocalizationHandler;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
@@ -6284,11 +6287,13 @@ begin
     gcLEncoding[False].Assign(_CurrentContext.LEncoding[False]);
     gcLEncoding[True].Assign(_CurrentContext.LEncoding[True]);
   end;
+  gcLocalizationHandler := TwbLocalizationHandler.Create(Self);
 end;
 
 destructor TwbGameContext.Destroy;
 begin
   gcFiles := nil;
+  FreeAndNil(gcLocalizationHandler);
   gcContainerHandler := nil;
   FreeAndNil(gcFilesMap);
   FreeAndNil(gcModuleList);

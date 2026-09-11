@@ -194,7 +194,7 @@ end;
 
 procedure Misc_LocalizationGetStringsFromFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  if Assigned(wbLocalizationHandler) then
+  if wbLocalizationHandler <> nil then
     wbLocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 

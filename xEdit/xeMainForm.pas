@@ -11960,7 +11960,7 @@ end;
 
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
 begin
-  if not Assigned(wbLocalizationHandler) then
+  if wbLocalizationHandler = nil then
     Exit;
 
   with TfrmLocalization.Create(Self) do try
@@ -11975,7 +11975,7 @@ var
   i: integer;
   s: string;
 begin
-  if not Assigned(wbLocalizationHandler) then
+  if wbLocalizationHandler = nil then
     Exit;
 
   s := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
@@ -15399,7 +15399,7 @@ begin
           SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
         end;
 
-      if Assigned(wbLocalizationHandler) then try
+      if wbLocalizationHandler <> nil then try
         for i := 0 to Pred(wbLocalizationHandler.Count) do try
           if wbLocalizationHandler[i].Modified or wbTestWrite then begin
             CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));

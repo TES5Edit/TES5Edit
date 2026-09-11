@@ -70,6 +70,7 @@ type
 
   TwbLocalizationHandler = class
   private
+    lhContext    : TwbGameContext;
     lFiles       : TStringList;
     fReuseDup    : Boolean;
   protected
@@ -81,7 +82,7 @@ type
     property _Files[Index: Integer]: TwbLocalizationFile read Get; default;
     property StringsPath: string read GetStringsPath;
     property ReuseDup: Boolean read fReuseDup write fReuseDup;
-    constructor Create;
+    constructor Create(aContext: TwbGameContext);
     destructor Destroy; override;
     procedure Clear;
     function Count: Integer;
@@ -106,13 +107,14 @@ const
     '.STRINGS'
   );
 
-var
-  wbLocalizationHandler: TwbLocalizationHandler;
+function wbLocalizationHandler: TwbLocalizationHandler; inline;
 
 implementation
 
-uses
-  wbGameDefGlobals;
+function wbLocalizationHandler: TwbLocalizationHandler;
+begin
+  Result := TwbLocalizationHandler(_CurrentContext.LocalizationHandler);
+end;
 
 constructor TwbLocalizationFile.Create(const aFileName: string);
 var
@@ -464,8 +466,9 @@ begin
   end;
 end;
 
-constructor TwbLocalizationHandler.Create;
+constructor TwbLocalizationHandler.Create(aContext: TwbGameContext);
 begin
+  lhContext := aContext;
   lFiles := TwbFastStringListIC.CreateSorted;
   fReuseDup := false;
   NoTranslate := false;
@@ -579,7 +582,7 @@ end;
 
 function TwbLocalizationHandler.GetStringsPath: string;
 begin
-  Result := wbDataPath + 'Strings\';
+  Result := lhContext.Settings.DataPath + 'Strings\';
 end;
 
 procedure TwbLocalizationHandler.AvailableLanguages(aLanguages : TStringList);
@@ -607,10 +610,10 @@ var
 begin
   TMonitor.Enter(Self);
   try
-    if wbContainerHandler <> nil then begin
+    if lhContext.ContainerHandler <> nil then begin
       sl := TStringList.Create;
       try
-        wbContainerHandler.ContainerResourceList('', sl, 'strings');
+        lhContext.ContainerHandler.ContainerResourceList('', sl, 'strings');
         for i := 0 to Pred(sl.Count) do begin
           s := sl[i];
           if s.EndsWith('strings', True) then begin
@@ -645,10 +648,10 @@ var
 begin
   TMonitor.Enter(Self);
   try
-    if wbContainerHandler <> nil then begin
+    if lhContext.ContainerHandler <> nil then begin
       sl := TStringList.Create;
       try
-        wbContainerHandler.ContainerResourceList('', sl, 'strings');
+        lhContext.ContainerHandler.ContainerResourceList('', sl, 'strings');
         for i := 0 to Pred(sl.Count) do begin
           s := sl[i];
           if s.EndsWith('strings', True) then
@@ -678,7 +681,7 @@ var
   s    : string;
   res  : TDynResources;
 begin
-  if wbContainerHandler = nil then
+  if lhContext.ContainerHandler = nil then
     Exit;
 
   TMonitor.Enter(Self);
@@ -686,9 +689,9 @@ begin
     for ls := Low(TwbLStringType) to High(TwbLStringType) do begin
       s := GetLocalizationFileNameByType(aFileName, ls);
       if not lFiles.Find(ExtractFileName(s), i) then begin
-        res := wbContainerHandler.OpenResource(s);
+        res := lhContext.ContainerHandler.OpenResource(s);
         if length(res) > 0 then
-          AddLocalization(wbDataPath + s, res[High(res)].GetData);
+          AddLocalization(lhContext.Settings.DataPath + s, res[High(res)].GetData);
       end;
     end;
   finally
@@ -700,7 +703,7 @@ function TwbLocalizationHandler.GetLocalizationFileNameByType(const aPluginFile:
 begin
   Result := Format('%s_%s%s', [
     ChangeFileExt(aPluginFile, ''),
-    wbLanguage,
+    lhContext.Settings.Language,
     wbLocalizationExtension[ls]
   ]);
   // relative path to Data folder
@@ -743,7 +746,7 @@ begin
       FileName := GetLocalizationFileNameByType(aElement._File.FileName, ls);
       idx := lFiles.IndexOf(ExtractFileName(FileName));
       if idx < 0 then begin
-        wblf[ls] := AddLocalization(wbDataPath + FileName, data);
+        wblf[ls] := AddLocalization(lhContext.Settings.DataPath + FileName, data);
         wblf[ls].Modified := true;
       end else
         wblf[ls] := _Files[idx];
@@ -865,8 +868,4 @@ begin
 end;
 
 
-initialization
-  wbLocalizationHandler := TwbLocalizationHandler.Create;
-finalization
-  FreeAndNil(wbLocalizationHandler);
 end.
