@@ -147,14 +147,11 @@ var
   wbShowGroupRecordCount             : Boolean    = False;
   wbShowFileFlags                    : Boolean    = False;
   wbDisplayShorterNames              : Boolean    = False;
-  wbSortSubRecords                   : Boolean    = False;
   wbSortFLST                         : Boolean    = False;
-  wbFlagsAsArray                     : Boolean    = False;
   wbExtendedIntUnknowns              : Boolean    = True;
   wbMoreInfoForUnknown               : Boolean    = False;
   wbMoreInfoForIndex                 : Boolean    = False;
   wdMakeUnknownElementsUnique        : Boolean    = False;
-  wbTranslationMode                  : Boolean    = False;
   wbTestWrite                        : Boolean    = False;
   wbVWDInTemporary                   : Boolean    = False;
   wbVWDAsQuestChildren               : Boolean    = False;
@@ -256,7 +253,6 @@ var
   wbExtendedLight                    : Boolean    = False;
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
-  wbCompareRawData                   : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
   wbComplexFileFileID                : Boolean    = False;
   wbAllowUnsafeScripts               : Boolean    = False;
@@ -3435,6 +3431,14 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    function GetSortSubRecords: Boolean;
+    procedure SetSortSubRecords(aValue: Boolean);
+    function GetFlagsAsArray: Boolean;
+    procedure SetFlagsAsArray(aValue: Boolean);
+    function GetCompareRawData: Boolean;
+    procedure SetCompareRawData(aValue: Boolean);
+    function GetTranslationMode: Boolean;
+    procedure SetTranslationMode(aValue: Boolean);
     function GetEditAllowed: Boolean;
     procedure SetEditAllowed(aValue: Boolean);
     function GetDontSave: Boolean;
@@ -3641,6 +3645,18 @@ type
     property BuildingRefsParallel: Boolean
       read GetBuildingRefsParallel
       write SetBuildingRefsParallel;
+    property SortSubRecords: Boolean
+      read GetSortSubRecords
+      write SetSortSubRecords;
+    property FlagsAsArray: Boolean
+      read GetFlagsAsArray
+      write SetFlagsAsArray;
+    property CompareRawData: Boolean
+      read GetCompareRawData
+      write SetCompareRawData;
+    property TranslationMode: Boolean
+      read GetTranslationMode
+      write SetTranslationMode;
     property EditAllowed: Boolean
       read GetEditAllowed
       write SetEditAllowed;
@@ -3977,6 +3993,10 @@ type
     LoadBSAs              : Boolean;
     LoadAllBSAs           : Boolean;
     BuildRefs             : Boolean;
+    SortSubRecords        : Boolean;
+    FlagsAsArray          : Boolean;
+    CompareRawData        : Boolean;
+    TranslationMode       : Boolean;
     EditAllowed           : Boolean;
     DontSave              : Boolean;
     AllowDirectSave       : Boolean;
@@ -4127,6 +4147,14 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    function GetSortSubRecords: Boolean;
+    procedure SetSortSubRecords(aValue: Boolean);
+    function GetFlagsAsArray: Boolean;
+    procedure SetFlagsAsArray(aValue: Boolean);
+    function GetCompareRawData: Boolean;
+    procedure SetCompareRawData(aValue: Boolean);
+    function GetTranslationMode: Boolean;
+    procedure SetTranslationMode(aValue: Boolean);
     function GetEditAllowed: Boolean;
     procedure SetEditAllowed(aValue: Boolean);
     function GetDontSave: Boolean;
@@ -5718,7 +5746,7 @@ uses
 
 class function TwbConflictConfig.Current: TwbConflictConfig;
 begin
-  Result.TranslationMode := wbTranslationMode;
+  Result.TranslationMode := _CurrentContext.Settings.TranslationMode;
   Result.AlignArrayElements := wbAlignArrayElements;
   Result.AlignArrayLimit := wbAlignArrayLimit;
 end;
@@ -6660,6 +6688,46 @@ end;
 procedure TwbGameContext.SetBuildRefs(aValue: Boolean);
 begin
   Settings.BuildRefs := aValue;
+end;
+
+function TwbGameContext.GetSortSubRecords: Boolean;
+begin
+  Result := Settings.SortSubRecords;
+end;
+
+procedure TwbGameContext.SetSortSubRecords(aValue: Boolean);
+begin
+  Settings.SortSubRecords := aValue;
+end;
+
+function TwbGameContext.GetFlagsAsArray: Boolean;
+begin
+  Result := Settings.FlagsAsArray;
+end;
+
+procedure TwbGameContext.SetFlagsAsArray(aValue: Boolean);
+begin
+  Settings.FlagsAsArray := aValue;
+end;
+
+function TwbGameContext.GetCompareRawData: Boolean;
+begin
+  Result := Settings.CompareRawData;
+end;
+
+procedure TwbGameContext.SetCompareRawData(aValue: Boolean);
+begin
+  Settings.CompareRawData := aValue;
+end;
+
+function TwbGameContext.GetTranslationMode: Boolean;
+begin
+  Result := Settings.TranslationMode;
+end;
+
+procedure TwbGameContext.SetTranslationMode(aValue: Boolean);
+begin
+  Settings.TranslationMode := aValue;
 end;
 
 function TwbGameContext.GetEditAllowed: Boolean;

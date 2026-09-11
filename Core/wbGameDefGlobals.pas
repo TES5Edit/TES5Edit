@@ -72,6 +72,10 @@ function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
 function ChaptersToSkip: TStringList; inline;
+function wbSortSubRecords: Boolean; inline;
+function wbFlagsAsArray: Boolean; inline;
+function wbCompareRawData: Boolean; inline;
+function wbTranslationMode: Boolean; inline;
 function wbEditAllowed: Boolean; inline;
 function wbAllowDirectSaveFor: TStringList; inline;
 function wbStripMastersFileNames: TStringList; inline;
@@ -432,6 +436,26 @@ end;
 function ChaptersToSkip: TStringList;
 begin
   Result := _CurrentContext.ChaptersToSkip;
+end;
+
+function wbSortSubRecords: Boolean;
+begin
+  Result := _CurrentContext.Settings.SortSubRecords;
+end;
+
+function wbFlagsAsArray: Boolean;
+begin
+  Result := _CurrentContext.Settings.FlagsAsArray;
+end;
+
+function wbCompareRawData: Boolean;
+begin
+  Result := _CurrentContext.Settings.CompareRawData;
+end;
+
+function wbTranslationMode: Boolean;
+begin
+  Result := _CurrentContext.Settings.TranslationMode;
 end;
 
 function wbEditAllowed: Boolean;

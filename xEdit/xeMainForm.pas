@@ -4622,10 +4622,10 @@ begin
   lblPath.DoubleBuffered := True;
 
   wbDisplayLoadOrderFormID := True;
-  wbSortSubRecords := True;
+  wbCurrentContext.SortSubRecords := True;
   wbDisplayShorterNames := True;
   wbHideUnused := True;
-  wbFlagsAsArray := True;
+  wbCurrentContext.FlagsAsArray := True;
   wbCurrentContext.RequireLoadOrder := not wbUseFalsePlugins;
   ShowUnsavedHint := True;
   ParentedGroupRecordType := [1, 6, 7];

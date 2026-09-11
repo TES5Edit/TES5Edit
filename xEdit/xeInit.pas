@@ -1508,7 +1508,7 @@ begin
     tmTranslate: begin
       if wbGameMode >= gmTES5 then
         wbCurrentContext.LoadBSAs := True; //needed for localization
-      wbTranslationMode        := True;
+      wbCurrentContext.TranslationMode := True;
       wbHideUnused             := True;
       wbHideIgnored            := True;
       wbHideNeverShow          := True;
