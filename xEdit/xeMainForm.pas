@@ -21086,8 +21086,8 @@ begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbCurrentContext.LoaderError := True;
       end else} begin
-        if not Assigned(wbContainerHandler) then begin
-          wbContainerHandler := wbCreateContainerHandler;
+        if wbContainerHandler = nil then begin
+          wbCurrentContext.ContainerHandler := wbCreateContainerHandler;
 
           _LoaderProgressLastShown := Now;
           _LoaderProgressAction := 'loading resources';

@@ -3479,8 +3479,10 @@ type
       read GetFileCount;
     property Files[aIndex: Integer]: IwbFile
       read GetFile;
+    procedure SetContainerHandler(const aValue: IwbContainerHandler);
     property ContainerHandler: IwbContainerHandler
-      read GetContainerHandler;
+      read GetContainerHandler
+      write SetContainerHandler;
     property GameMasterFile: IwbFile
       read GetGameMasterFile;
 
@@ -3868,6 +3870,7 @@ type
     gcLoaderError     : Boolean;
     gcFirstLoadComplete    : Boolean;
     gcBuildingRefsParallel : Boolean;
+    gcContainerHandler     : IwbContainerHandler;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -3957,6 +3960,7 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    procedure SetContainerHandler(const aValue: IwbContainerHandler);
     function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
@@ -4009,6 +4013,9 @@ type
     property BuildingRefsParallel: Boolean
       read gcBuildingRefsParallel
       write gcBuildingRefsParallel;
+    property ContainerHandler: IwbContainerHandler
+      read gcContainerHandler
+      write gcContainerHandler;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
@@ -5158,9 +5165,6 @@ function wbIsSave(const aFileName: string): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
 
-var
-  wbContainerHandler : IwbContainerHandler;
-
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
 
@@ -6285,6 +6289,7 @@ end;
 destructor TwbGameContext.Destroy;
 begin
   gcFiles := nil;
+  gcContainerHandler := nil;
   FreeAndNil(gcFilesMap);
   FreeAndNil(gcModuleList);
   FreeAndNil(gcModGroupList);
@@ -6593,7 +6598,12 @@ end;
 
 function TwbGameContext.GetContainerHandler: IwbContainerHandler;
 begin
-  Result := wbContainerHandler;
+  Result := gcContainerHandler;
+end;
+
+procedure TwbGameContext.SetContainerHandler(const aValue: IwbContainerHandler);
+begin
+  gcContainerHandler := aValue;
 end;
 
 function TwbGameContext.GetIgnoreLight: Boolean;
@@ -25602,7 +25612,6 @@ finalization
   wbMakeCurrentContext(nil);
   _CurrentGameDef := nil;
   _CurrentGameDefRef := nil;
-  wbContainerHandler := nil;
   FreeAndNil(_MBCSEncodings);
   FreeAndNil(_NamedIndices);
 end.

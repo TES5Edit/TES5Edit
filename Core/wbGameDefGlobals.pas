@@ -67,6 +67,7 @@ function wbLoaderDone: Boolean; inline;
 function wbLoaderError: Boolean; inline;
 function wbFirstLoadComplete: Boolean; inline;
 function wbBuildingRefsParallel: Boolean; inline;
+function wbContainerHandler: IwbContainerHandler; inline;
 function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
@@ -372,6 +373,11 @@ end;
 function wbBuildingRefsParallel: Boolean;
 begin
   Result := _CurrentContext.BuildingRefsParallel;
+end;
+
+function wbContainerHandler: IwbContainerHandler;
+begin
+  Result := _CurrentContext.ContainerHandler;
 end;
 
 function RecordToSkip: TStringList;

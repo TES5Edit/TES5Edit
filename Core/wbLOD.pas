@@ -3023,7 +3023,7 @@ begin
         else
           raise Exception.Create('Unsupported LODGen game');
         // list of BSAs
-        if Assigned(wbContainerHandler) then begin
+        if wbContainerHandler <> nil then begin
           sl := TStringList.Create;
           try
             wbContainerHandler.ContainerList(sl);
@@ -3601,7 +3601,7 @@ begin
       slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
 
       // list of archives
-      if Assigned(wbContainerHandler) then begin
+      if wbContainerHandler <> nil then begin
         sl := TStringList.Create;
         try
           wbContainerHandler.ContainerList(sl);

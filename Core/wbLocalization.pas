@@ -607,7 +607,7 @@ var
 begin
   TMonitor.Enter(Self);
   try
-    if Assigned(wbContainerHandler) then begin
+    if wbContainerHandler <> nil then begin
       sl := TStringList.Create;
       try
         wbContainerHandler.ContainerResourceList('', sl, 'strings');
@@ -645,7 +645,7 @@ var
 begin
   TMonitor.Enter(Self);
   try
-    if Assigned(wbContainerHandler) then begin
+    if wbContainerHandler <> nil then begin
       sl := TStringList.Create;
       try
         wbContainerHandler.ContainerResourceList('', sl, 'strings');
@@ -678,7 +678,7 @@ var
   s    : string;
   res  : TDynResources;
 begin
-  if not Assigned(wbContainerHandler) then
+  if wbContainerHandler = nil then
     Exit;
 
   TMonitor.Enter(Self);

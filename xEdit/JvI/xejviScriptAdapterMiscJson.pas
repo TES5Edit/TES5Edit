@@ -25,7 +25,8 @@ uses
 
   JsonDataObjects,
 
-  wbInterface;
+  wbInterface,
+  wbGameDefGlobals;
 
 { JsonDataObjects }
 

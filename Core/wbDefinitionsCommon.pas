@@ -3698,7 +3698,7 @@ function wbFileHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbC
 begin
   Result := '';
   if _CurrentContext.LoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
-    Result := wbContainerHandler.ResolveFileHash(aInt);
+    Result := _CurrentContext.ContainerHandler.ResolveFileHash(aInt);
 
   if Result = '' then
     case aType of
@@ -3718,7 +3718,7 @@ function wbFolderHashCallback(aInt: Int64; const aElement: IwbElement; aType: Tw
 begin
   Result := '';
   if _CurrentContext.LoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
-    Result := wbContainerHandler.ResolveFolderHash(aInt);
+    Result := _CurrentContext.ContainerHandler.ResolveFolderHash(aInt);
 
   if Result = '' then
     case aType of

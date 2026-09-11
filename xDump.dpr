@@ -1514,8 +1514,8 @@ begin
         DumpCheckReport := False;
       end;
 
-      if not Assigned(wbContainerHandler) then
-        wbContainerHandler := wbCreateContainerHandler;
+      if wbContainerHandler = nil then
+        wbCurrentContext.ContainerHandler := wbCreateContainerHandler;
 
       StartTime := Now;
       ReportProgress('Application name : ' + wbApplicationTitle);

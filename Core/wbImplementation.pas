@@ -11657,7 +11657,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasMeshChecked in mrStates) and (wbContainerHandler <> nil) then begin
     Include(mrStates, mrsHasMeshChecked);
     if GetSignature = 'TREE' then begin
       Include(mrStates, mrsHasMesh);
@@ -11815,7 +11815,7 @@ var
   MODL     : IwbContainerElementRef;
   s        : String;
 begin
-  if not (mrsHasVWDMeshChecked in mrStates) and Assigned(wbContainerHandler) then begin
+  if not (mrsHasVWDMeshChecked in mrStates) and (wbContainerHandler <> nil) then begin
     Include(mrStates, mrsHasVWDMeshChecked);
     if GetSignature = 'TREE' then begin
       SelfRef := Self as IwbContainerElementRef;
