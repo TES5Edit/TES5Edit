@@ -63,6 +63,10 @@ function wbEncodingTrans: TEncoding; inline;
 function wbLoadBSAs: Boolean; inline;
 function wbLoadAllBSAs: Boolean; inline;
 function wbBuildRefs: Boolean; inline;
+function wbLoaderDone: Boolean; inline;
+function wbLoaderError: Boolean; inline;
+function wbFirstLoadComplete: Boolean; inline;
+function wbBuildingRefsParallel: Boolean; inline;
 function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
@@ -348,6 +352,26 @@ end;
 function wbBuildRefs: Boolean;
 begin
   Result := _CurrentContext.Settings.BuildRefs;
+end;
+
+function wbLoaderDone: Boolean;
+begin
+  Result := _CurrentContext.LoaderDone;
+end;
+
+function wbLoaderError: Boolean;
+begin
+  Result := _CurrentContext.LoaderError;
+end;
+
+function wbFirstLoadComplete: Boolean;
+begin
+  Result := _CurrentContext.FirstLoadComplete;
+end;
+
+function wbBuildingRefsParallel: Boolean;
+begin
+  Result := _CurrentContext.BuildingRefsParallel;
 end;
 
 function RecordToSkip: TStringList;

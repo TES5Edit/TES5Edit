@@ -3461,6 +3461,14 @@ type
     procedure SetLoadAllBSAs(aValue: Boolean);
     function GetBuildRefs: Boolean;
     procedure SetBuildRefs(aValue: Boolean);
+    function GetLoaderDone: Boolean;
+    procedure SetLoaderDone(aValue: Boolean);
+    function GetLoaderError: Boolean;
+    procedure SetLoaderError(aValue: Boolean);
+    function GetFirstLoadComplete: Boolean;
+    procedure SetFirstLoadComplete(aValue: Boolean);
+    function GetBuildingRefsParallel: Boolean;
+    procedure SetBuildingRefsParallel(aValue: Boolean);
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3584,6 +3592,18 @@ type
     property BuildRefs: Boolean
       read GetBuildRefs
       write SetBuildRefs;
+    property LoaderDone: Boolean
+      read GetLoaderDone
+      write SetLoaderDone;
+    property LoaderError: Boolean
+      read GetLoaderError
+      write SetLoaderError;
+    property FirstLoadComplete: Boolean
+      read GetFirstLoadComplete
+      write SetFirstLoadComplete;
+    property BuildingRefsParallel: Boolean
+      read GetBuildingRefsParallel
+      write SetBuildingRefsParallel;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
@@ -3844,6 +3864,10 @@ type
     gcGroupToSkip     : TStringList;
     gcChaptersToSkip  : TStringList;
     gcLEncoding       : array[Boolean] of TStringList;
+    gcLoaderDone      : Boolean;
+    gcLoaderError     : Boolean;
+    gcFirstLoadComplete    : Boolean;
+    gcBuildingRefsParallel : Boolean;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -3925,6 +3949,14 @@ type
     procedure SetLoadAllBSAs(aValue: Boolean);
     function GetBuildRefs: Boolean;
     procedure SetBuildRefs(aValue: Boolean);
+    function GetLoaderDone: Boolean;
+    procedure SetLoaderDone(aValue: Boolean);
+    function GetLoaderError: Boolean;
+    procedure SetLoaderError(aValue: Boolean);
+    function GetFirstLoadComplete: Boolean;
+    procedure SetFirstLoadComplete(aValue: Boolean);
+    function GetBuildingRefsParallel: Boolean;
+    procedure SetBuildingRefsParallel(aValue: Boolean);
     function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
@@ -3965,6 +3997,18 @@ type
       read gcGroupToSkip;
     property ChaptersToSkip: TStringList
       read gcChaptersToSkip;
+    property LoaderDone: Boolean
+      read gcLoaderDone
+      write gcLoaderDone;
+    property LoaderError: Boolean
+      read gcLoaderError
+      write gcLoaderError;
+    property FirstLoadComplete: Boolean
+      read gcFirstLoadComplete
+      write gcFirstLoadComplete;
+    property BuildingRefsParallel: Boolean
+      read gcBuildingRefsParallel
+      write gcBuildingRefsParallel;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
@@ -5116,13 +5160,6 @@ function wbStr4ToString(aInt: Int64): string;
 
 var
   wbContainerHandler : IwbContainerHandler;
-  wbLoaderDone       : Boolean;
-  wbLoaderError      : Boolean;
-  wbFirstLoadComplete: Boolean;
-
-{$IFDEF USE_PARALLEL_BUILD_REFS}
-  wbBuildingRefsParallel : Boolean = False;
-{$ENDIF}
 
 procedure wbAddGroupOrder(const aSignature: TwbSignature);
 function wbGetGroupOrder(const aSignature: TwbSignature): Integer;
@@ -6347,6 +6384,46 @@ end;
 procedure TwbGameContext.SetBuildRefs(aValue: Boolean);
 begin
   Settings.BuildRefs := aValue;
+end;
+
+function TwbGameContext.GetLoaderDone: Boolean;
+begin
+  Result := gcLoaderDone;
+end;
+
+procedure TwbGameContext.SetLoaderDone(aValue: Boolean);
+begin
+  gcLoaderDone := aValue;
+end;
+
+function TwbGameContext.GetLoaderError: Boolean;
+begin
+  Result := gcLoaderError;
+end;
+
+procedure TwbGameContext.SetLoaderError(aValue: Boolean);
+begin
+  gcLoaderError := aValue;
+end;
+
+function TwbGameContext.GetFirstLoadComplete: Boolean;
+begin
+  Result := gcFirstLoadComplete;
+end;
+
+procedure TwbGameContext.SetFirstLoadComplete(aValue: Boolean);
+begin
+  gcFirstLoadComplete := aValue;
+end;
+
+function TwbGameContext.GetBuildingRefsParallel: Boolean;
+begin
+  Result := gcBuildingRefsParallel;
+end;
+
+procedure TwbGameContext.SetBuildingRefsParallel(aValue: Boolean);
+begin
+  gcBuildingRefsParallel := aValue;
 end;
 
 function TwbGameContext.GetCreationClubContentFileName: string;

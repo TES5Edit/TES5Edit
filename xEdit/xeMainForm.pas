@@ -3168,8 +3168,8 @@ begin
 
   vstNav.PopupMenu := nil;
   bnMainMenu.Enabled := False;
-  wbLoaderDone := False;
-  wbLoaderError := False;
+  wbCurrentContext.LoaderDone := False;
+  wbCurrentContext.LoaderError := False;
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
@@ -3226,8 +3226,8 @@ begin
 
   vstNav.PopupMenu := nil;
   bnMainMenu.Enabled := False;
-  wbLoaderDone := False;
-  wbLoaderError := False;
+  wbCurrentContext.LoaderDone := False;
+  wbCurrentContext.LoaderError := False;
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
@@ -20517,7 +20517,7 @@ var
   WasUnsaved: Boolean;
 begin
   try
-    wbLoaderDone := True;
+    wbCurrentContext.LoaderDone := True;
     wbStartTime := PDateTime(Message.WParam)^;
     LoadOrder := Message.LParam;
     if LoadOrder < 0 then begin
@@ -20594,7 +20594,7 @@ begin
         if wbFirstLoadComplete then
           Exit;
 
-        wbFirstLoadComplete := True;
+        wbCurrentContext.FirstLoadComplete := True;
 
         ModGroups := nil;
 
@@ -21084,7 +21084,7 @@ begin
     try
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
-        wbLoaderError := True;
+        wbCurrentContext.LoaderError := True;
       end else} begin
         if not Assigned(wbContainerHandler) then begin
           wbContainerHandler := wbCreateContainerHandler;
@@ -21256,7 +21256,7 @@ begin
         if wbBuildRefs then begin
           _LoaderProgressAction := 'building references';
           {$IFDEF USE_PARALLEL_BUILD_REFS}
-          wbBuildingRefsParallel := True;
+          wbCurrentContext.BuildingRefsParallel := True;
           try
             TParallel.&For(Low(ltFiles), High(ltFiles), procedure(lLoadListIdx: Integer)
             var
@@ -21309,7 +21309,7 @@ begin
                         wbForceTerminate := True;
                       on E: Exception do begin
                         LoaderProgressNoAbortCheck('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
-                        wbLoaderError := True;
+                        wbCurrentContext.LoaderError := True;
                       end;
                     end;
                     if wbLoaderError or wbForceTerminate then
@@ -21323,7 +21323,7 @@ begin
               end;
             end);
           finally
-            wbBuildingRefsParallel := False;
+            wbCurrentContext.BuildingRefsParallel := False;
           end;
           {$ENDIF}
         end;
@@ -21334,7 +21334,7 @@ begin
         wbForceTerminate := True;
       on E: Exception do begin
         LoaderProgressNoAbortCheck('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
-        wbLoaderError := True;
+        wbCurrentContext.LoaderError := True;
       end;
     end;
   finally
