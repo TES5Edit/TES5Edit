@@ -3480,9 +3480,14 @@ type
     property Files[aIndex: Integer]: IwbFile
       read GetFile;
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
+    function GetSoundBankCache: IInterface;
+    procedure SetSoundBankCache(const aValue: IInterface);
     property ContainerHandler: IwbContainerHandler
       read GetContainerHandler
       write SetContainerHandler;
+    property SoundBankCache: IInterface
+      read GetSoundBankCache
+      write SetSoundBankCache;
     property GameMasterFile: IwbFile
       read GetGameMasterFile;
 
@@ -3872,6 +3877,7 @@ type
     gcBuildingRefsParallel : Boolean;
     gcContainerHandler     : IwbContainerHandler;
     gcLocalizationHandler  : TObject;
+    gcSoundBankCache       : IInterface;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -3962,6 +3968,8 @@ type
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
+    function GetSoundBankCache: IInterface;
+    procedure SetSoundBankCache(const aValue: IInterface);
     function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
@@ -4019,6 +4027,9 @@ type
       write gcContainerHandler;
     property LocalizationHandler: TObject
       read gcLocalizationHandler;
+    property SoundBankCache: IInterface
+      read gcSoundBankCache
+      write gcSoundBankCache;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
@@ -6293,6 +6304,7 @@ end;
 destructor TwbGameContext.Destroy;
 begin
   gcFiles := nil;
+  gcSoundBankCache := nil;
   FreeAndNil(gcLocalizationHandler);
   gcContainerHandler := nil;
   FreeAndNil(gcFilesMap);
@@ -6609,6 +6621,16 @@ end;
 procedure TwbGameContext.SetContainerHandler(const aValue: IwbContainerHandler);
 begin
   gcContainerHandler := aValue;
+end;
+
+function TwbGameContext.GetSoundBankCache: IInterface;
+begin
+  Result := gcSoundBankCache;
+end;
+
+procedure TwbGameContext.SetSoundBankCache(const aValue: IInterface);
+begin
+  gcSoundBankCache := aValue;
 end;
 
 function TwbGameContext.GetIgnoreLight: Boolean;

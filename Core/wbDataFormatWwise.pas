@@ -30,8 +30,7 @@ type
                            var aList     : TStringList);
   end;
 
-var
-  wbSoundBankCache: IwbSoundBankArray;
+function wbSoundBankCache: IwbSoundBankArray;
 
 procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
 
@@ -165,9 +164,18 @@ type
     procedure RegisterNode(const aNodeType: TwbWwiseNodeType; const aObject: TwbWwiseObject; const aBankFileName: string);
   end;
 
+var
+  _EmptySoundBankCache: IwbSoundBankArray;
+
+function wbSoundBankCache: IwbSoundBankArray;
+begin
+  if not Supports(_CurrentContext.SoundBankCache, IwbSoundBankArray, Result) then
+    Result := _EmptySoundBankCache;
+end;
+
 procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
 begin
-  wbSoundBankCache := TwbSoundBankArray.Create(aLoadOrder);
+  _CurrentContext.SoundBankCache := TwbSoundBankArray.Create(aLoadOrder);
 end;
 
 { TwbSwitchGroup }
@@ -870,6 +878,6 @@ begin
 end;
 
 initialization
-  wbSoundBankCache := TwbSoundBankArray.Create;
+  _EmptySoundBankCache := TwbSoundBankArray.Create;
 
 end.
