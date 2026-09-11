@@ -1011,7 +1011,7 @@ var
   Container : IwbContainer;
   Group     : IwbGroupRecord;
 begin
-  if not wbSortINFO then
+  if not _CurrentContext.Settings.SortINFO then
     Exit;
 
   if VarSameValue(aOldValue, aNewValue) then

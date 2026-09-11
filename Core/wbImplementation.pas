@@ -15283,8 +15283,10 @@ var
 
       Stream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
 
-      if wbForceNewHeader then
-        Stream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
+      if wbForceNewHeader then begin
+        var lNewHeaderAddon := wbNewHeaderAddon;
+        Stream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
+      end;
 
       if mrStruct.mrsFlags.IsCompressed then begin
 
@@ -15306,7 +15308,7 @@ var
       end;
 
       if wbForceNewHeader then
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(wbNewHeaderAddon)
+        DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(Cardinal)
       else
         DataSize := Stream.Size - wbSizeOfMainRecordStruct;
       Stream.Position := 4;
@@ -19317,8 +19319,10 @@ begin
   CurrentPosition := aStream.Position;
   grs := grStruct^;
   aStream.WriteBuffer(grs, wbSizeOfMainRecordStruct );
-  if wbForceNewHeader then
-    aStream.WriteBuffer(wbNewHeaderAddon, SizeOf(wbNewHeaderAddon) );
+  if wbForceNewHeader then begin
+    var lNewHeaderAddon := wbNewHeaderAddon;
+    aStream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
+  end;
 
   if _OffsetData.odcActive and (_OffsetData.odcStream = aStream) and
      ((grs.grsGroupType = 1) or (grs.grsGroupType = 4) or (grs.grsGroupType = 5)) and
@@ -19365,7 +19369,7 @@ begin
 
   end else
     if wbForceNewHeader then
-      Assert(CurrentPosition + grStruct.grsGroupSize + SizeOf(wbNewHeaderAddon) = aStream.Position)
+      Assert(CurrentPosition + grStruct.grsGroupSize + SizeOf(Cardinal) = aStream.Position)
     else
       Assert(CurrentPosition + grStruct.grsGroupSize = aStream.Position);
 

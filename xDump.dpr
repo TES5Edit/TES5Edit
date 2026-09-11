@@ -936,7 +936,7 @@ begin
   SysUtils.DecimalSeparator := '.';
   {$IFEND}
   _wbProgressCallback := ReportProgress;
-  wbDontSave := True;
+  wbCurrentContext.DontSave := True;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;

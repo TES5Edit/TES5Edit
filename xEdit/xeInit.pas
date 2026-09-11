@@ -182,10 +182,10 @@ begin
       wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes); {changed name to enforce new default value}
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
-      wbAllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
-      wbSortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
-      wbFillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
-      wbWriteOffsetData := Settings.ReadBool('Options', 'WriteOffsetData2', wbWriteOffsetData); {changed name to enforce new default value}
+      wbCurrentContext.AllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', wbAllowDirectSave);
+      wbCurrentContext.SortINFO := Settings.ReadBool('Options', 'SortINFO', wbSortINFO);
+      wbCurrentContext.FillPNAM := Settings.ReadBool('Options', 'FillPNAM', wbFillPNAM);
+      wbCurrentContext.WriteOffsetData := Settings.ReadBool('Options', 'WriteOffsetData2', wbWriteOffsetData); {changed name to enforce new default value}
       wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
       wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
       wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
@@ -451,7 +451,7 @@ begin
         if not OpenKey(regPath, False) then begin
           s := 'Fatal: Could not open registry key: ' + regPath;
           ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
-          wbDontSave := True;
+          wbCurrentContext.DontSave := True;
           wbCurrentContext.DataPath := lDataPath;
           Exit;
         end;
@@ -470,7 +470,7 @@ begin
       if (lDataPath = '') then begin
         s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
-        wbDontSave := True;
+        wbCurrentContext.DontSave := True;
       end;
     finally
       Free;
@@ -622,11 +622,11 @@ begin
     if lDataPath <> '' then
       lCachePath := lDataPath + wbAppName + 'Edit Cache\';
   if lCachePath = '' then
-    wbDontCache := True;
+    wbCurrentContext.DontCache := True;
   if not wbDontCache then
     if not DirectoryExists(lCachePath) then
       if not ForceDirectories(lCachePath) then
-        wbDontCache := True;
+        wbCurrentContext.DontCache := True;
   if wbDontCache then
     lCachePath := '';
   wbCurrentContext.CachePath := lCachePath;
@@ -764,7 +764,7 @@ begin
   Result        := True;
   wbReportMode  := False;
   wbEditAllowed := True;
-  wbDontSave    := False;
+  wbCurrentContext.DontSave := False;
   wbDevMode     := FindCmdLineSwitch('devmode');
 
   CheckForcedMode;
@@ -783,7 +783,7 @@ begin
     wbToolMode    := tmView;
     wbToolName    := 'View';
     wbEditAllowed := False;
-    wbDontSave    := True;
+    wbCurrentContext.DontSave := True;
   end else if isMode('MasterUpdate') then begin
     wbToolMode    := tmMasterUpdate;
     wbToolName    := 'MasterUpdate';
@@ -797,7 +797,7 @@ begin
     wbToolMode    := tmLODgen;
     wbToolName    := 'LODGen';
     wbEditAllowed := False;
-    wbDontSave    := True;
+    wbCurrentContext.DontSave := True;
   end else if isMode('Script') then begin
     wbToolMode    := tmScript;
     wbToolName    := 'Script';
@@ -995,7 +995,7 @@ begin
       and FindCmdLineSwitch('GiveMeTheRedPill')
     then begin
       VersionString.Title := 'ItJustWorks[TM] Edition';
-      wbRedPill := True;
+      wbCurrentContext.RedPill := True;
       wbStarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
     end;
   end
@@ -1011,8 +1011,8 @@ begin
   wbGameExeName := wbGameExeName + csDotExe;
 
   if wbGameMode in [gmFO3, gmFNV] then begin
-    wbUDRSetZ := False;
-    wbUDRSetZValue := -15000;
+    wbCurrentContext.UDRSetZ := False;
+    wbCurrentContext.UDRSetZValue := -15000;
   end;
 
   if not (wbToolMode in ToolModes) then begin
@@ -1040,13 +1040,13 @@ begin
     wbGameMasterEsm := wbGameName + csDotEsm;
 
   if FindCmdLineSwitch('DontCache') then
-    wbDontCache := True;
+    wbCurrentContext.DontCache := True;
   if wbDontCache or FindCmdLineSwitch('DontCacheLoad') then
-    wbDontCacheLoad := True;
+    wbCurrentContext.DontCacheLoad := True;
   if wbDontCache or FindCmdLineSwitch('DontCacheSave') then
-    wbDontCacheSave := True;
+    wbCurrentContext.DontCacheSave := True;
   if wbDontCacheLoad and wbDontCacheSave then
-    wbDontCache := True;
+    wbCurrentContext.DontCache := True;
 
   DoInitPath(xeParamIndex);
 
@@ -1055,7 +1055,7 @@ begin
     gmFNV: begin
       wbVWDInTemporary        := True;
       wbCurrentContext.LoadBSAs := False;
-      wbCanSortINFO           := True;
+      wbCurrentContext.CanSortINFO := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
       wbHNVSE                 := FileExists(wbDataPath + 'NVSE\Plugins\Hnvse.dll');
@@ -1063,16 +1063,16 @@ begin
     gmFO3: begin
       wbVWDInTemporary      := True;
       wbCurrentContext.LoadBSAs := False;
-      wbCanSortINFO         := True;
+      wbCurrentContext.CanSortINFO := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES3: begin
       wbCurrentContext.LoadBSAs := False;
       wbAllowInternalEdit   := false;
-      wbDontCache           := True;
-      wbDontCacheLoad       := True;
-      wbDontCacheSave       := True;
+      wbCurrentContext.DontCache := True;
+      wbCurrentContext.DontCacheLoad := True;
+      wbCurrentContext.DontCacheSave := True;
       wbCurrentContext.BuildRefs := False;
       wbVWDInTemporary      := True;
       wbCurrentContext.CreateContainedIn := False;
@@ -1086,14 +1086,14 @@ begin
       end;
       wbCurrentContext.LoadBSAs := True;
       wbAllowInternalEdit   := false;
-      wbCanSortINFO         := True;
+      wbCurrentContext.CanSortINFO := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES4R: begin
       wbCurrentContext.LoadBSAs := False;
       wbAllowInternalEdit   := False;
-      wbCanSortINFO         := True;
+      wbCurrentContext.CanSortINFO := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
     end;
@@ -1101,7 +1101,7 @@ begin
       wbVWDInTemporary      := True;
       wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
-      wbCanSortINFO         := True;
+      wbCurrentContext.CanSortINFO := True;
       wbVRESL               := (wbGameMode in [gmTES5VR]) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
       wbHasAddedLightSupport := wbVRESL;
       wbHasAddedUpdateSupport := wbVRESL;
@@ -1114,8 +1114,8 @@ begin
       wbVWDAsQuestChildren  := True;
       wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
-      wbAlwaysSaveOnam      := True;
-      wbAlwaysSaveOnamForce := True;
+      wbCurrentContext.AlwaysSaveOnam := True;
+      wbCurrentContext.AlwaysSaveOnamForce := True;
       wbVRESL               := (wbGameMode in [gmFO4VR]) and (FileExists(wbDataPath + 'F4SE\Plugins\falloutvresl.dll') or
                                                               FileExists(wbDataPath + 'F4SE\Plugins\Daytripper4.dll'));
       wbHasAddedLightSupport := wbVRESL;
@@ -1128,8 +1128,8 @@ begin
       wbVWDAsQuestChildren  := True;
       wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
-      wbAlwaysSaveOnam      := True;
-      wbAlwaysSaveOnamForce := True;
+      wbCurrentContext.AlwaysSaveOnam := True;
+      wbCurrentContext.AlwaysSaveOnamForce := True;
     end;
     gmSF1: begin
       wbComplexFileFileID   := True;
@@ -1138,8 +1138,8 @@ begin
       wbVWDAsQuestChildren  := True;
       wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
-      wbAlwaysSaveOnam      := True;
-      wbAlwaysSaveOnamForce := True;
+      wbCurrentContext.AlwaysSaveOnam := True;
+      wbCurrentContext.AlwaysSaveOnamForce := True;
       wbDecodeTextureHashes := True;
     end;
   else
@@ -1147,7 +1147,7 @@ begin
     Exit(False);
   end;
 
-  wbSortINFO := wbCanSortINFO;
+  wbCurrentContext.SortINFO := wbCanSortINFO;
 
   if not ReadSettings then
     Exit(False);
@@ -1157,16 +1157,16 @@ begin
 
   if wbCanSortINFO then begin
     if FindCmdLineSwitch('sortinfo') then
-      wbSortINFO := True;
+      wbCurrentContext.SortINFO := True;
 
     if FindCmdLineSwitch('nosortinfo') then
-      wbSortINFO := False;
+      wbCurrentContext.SortINFO := False;
 
     if FindCmdLineSwitch('FillPNAM') then
-      wbFillPNAM := True;
+      wbCurrentContext.FillPNAM := True;
 
     if FindCmdLineSwitch('NoFillPNAM') then
-      wbFillPNAM := False;
+      wbCurrentContext.FillPNAM := False;
   end;
 
   // Was gmTES5, but is now gmEnderal
@@ -1191,11 +1191,11 @@ begin
     wbAllowDirectSaveFor.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
     if wbAllowDirectSaveFor.Count < 1 then begin
       FreeAndNil(wbAllowDirectSaveFor);
-      wbAllowDirectSave := True;
+      wbCurrentContext.AllowDirectSave := True;
     end;
   end else
     if FindCmdLineSwitch('AllowDirectSaves') then
-      wbAllowDirectSave := True;
+      wbCurrentContext.AllowDirectSave := True;
 
   if FindCmdLineSwitch('IKnowWhatImDoing') then
   begin
@@ -1211,11 +1211,11 @@ begin
       wbAllowEditHEDRVersion := True;
 
     if FindCmdLineSwitch('StripEmptyMasters') then
-      wbStripEmptyMasters := True;
+      wbCurrentContext.StripEmptyMasters := True;
 
     if wbFindCmdLineParam('StripMasters', s) then
     begin
-      wbStripMasters := True;
+      wbCurrentContext.StripMasters := True;
 
       wbStripMastersFileNames := TStringList.Create;
       wbStripMastersFileNames.Sorted := True;
@@ -1225,7 +1225,7 @@ begin
       if wbStripMastersFileNames.Count < 1 then
       begin
         FreeAndNil(wbStripMastersFileNames);
-        wbStripMasters := False;
+        wbCurrentContext.StripMasters := False;
       end;
     end;
 
@@ -1278,14 +1278,14 @@ begin
     if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
       or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then begin
       if wbCanSortINFO then
-        wbFillPNAM := True;
+        wbCurrentContext.FillPNAM := True;
       xeQuickClean := True;
     end;
 
     if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
       or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
       if wbCanSortINFO then
-        wbFillPNAM := True;
+        wbCurrentContext.FillPNAM := True;
       xeQuickClean := True;
       xeQuickCleanAutoSave := xeQuickClean;
     end;
@@ -1295,12 +1295,12 @@ begin
     wbHideLargeSubrecords := False;
 
   if xeQuickClean then
-    wbWriteOffsetData := True;
+    wbCurrentContext.WriteOffsetData := True;
 
   if xeQuickClean then begin
     wbIKnowWhatImDoing := True;
-    wbFillINOM := False;
-    wbFillINOA := False;
+    wbCurrentContext.FillINOM := False;
+    wbCurrentContext.FillINOA := False;
   end;
 
   if FindCmdLineSwitch('fixup') then
@@ -1324,7 +1324,7 @@ begin
     wbShowInternalEdit := False;
 
   if xeQuickClean then begin
-    wbFixupPGRD := True;
+    wbCurrentContext.FixupPGRD := True;
     wbAllowInternalEdit := True;
     wbSimpleRecords := False;
   end;
@@ -1503,10 +1503,10 @@ begin
       wbShowInternalEdit       := False;
       wbCurrentContext.LoadBSAs := False;
       wbCurrentContext.BuildRefs := False;
-      wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
+      wbCurrentContext.MasterUpdateFilterONAM := wbToolMode in [tmESMify];
       if wbToolMode = tmOnamUpdate then begin
-        wbAlwaysSaveOnam       := True;
-        wbAlwaysSaveOnamForce  := True;
+        wbCurrentContext.AlwaysSaveOnam := True;
+        wbCurrentContext.AlwaysSaveOnamForce := True;
       end;
     end;
     tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors: begin
@@ -1527,17 +1527,17 @@ begin
   end;
 
   if FindCmdLineSwitch('alwayssaveonam') then
-    wbAlwaysSaveOnam := True;
+    wbCurrentContext.AlwaysSaveOnam := True;
 
   if FindCmdLineSwitch('filteronam') then
-    wbMasterUpdateFilterONAM := True
+    wbCurrentContext.MasterUpdateFilterONAM := True
   else if FindCmdLineSwitch('noFilteronam') then
-    wbMasterUpdateFilterONAM := False;
+    wbCurrentContext.MasterUpdateFilterONAM := False;
 
   if FindCmdLineSwitch('FixPersistence') then
-    wbMasterUpdateFixPersistence := True
+    wbCurrentContext.MasterUpdateFixPersistence := True
   else if FindCmdLineSwitch('NoFixPersistence') then
-    wbMasterUpdateFixPersistence := False;
+    wbCurrentContext.MasterUpdateFixPersistence := False;
 
   if xeVeryQuickShowConflicts then
     wbSubMode := 'Very Quick Show Conflicts'
@@ -1574,7 +1574,7 @@ begin
     wbCurrentContext.BuildRefs := False;
 
   if FindCmdLineSwitch('fixuppgrd') then
-    wbFixupPGRD := True;
+    wbCurrentContext.FixupPGRD := True;
 
   var lMOProfile: string;
   wbCurrentContext.ShouldLoadMOHookFile := wbFindCmdLineParam('moprofile', lMOProfile);

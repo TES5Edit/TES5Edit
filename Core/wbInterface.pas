@@ -137,7 +137,6 @@ var
   wbPrettyFormID                     : Boolean    = False;
   wbSimpleRecords                    : Boolean    = True;
   wbDecodeTextureHashes              : Boolean    = True;
-  wbFixupPGRD                        : Boolean    = False;
   wbIKnowWhatImDoing                 : Boolean    = False;
   wbHideUnused                       : Boolean    = True;
   wbHideIgnored                      : Boolean    = True;
@@ -150,12 +149,6 @@ var
   wbDisplayShorterNames              : Boolean    = False;
   wbSortSubRecords                   : Boolean    = False;
   wbSortFLST                         : Boolean    = False;
-  wbCanSortINFO                      : Boolean    = False;
-  wbSortINFO                         : Boolean    = False;
-  wbFillPNAM                         : Boolean    = False;
-  wbFillINOM                         : Boolean    = True;
-  wbFillINOA                         : Boolean    = True;
-  wbWriteOffsetData                  : Boolean    = True;
   wbEditAllowed                      : Boolean    = False;
   wbFlagsAsArray                     : Boolean    = False;
   wbExtendedIntUnknowns              : Boolean    = True;
@@ -164,13 +157,10 @@ var
   wdMakeUnknownElementsUnique        : Boolean    = False;
   wbTranslationMode                  : Boolean    = False;
   wbTestWrite                        : Boolean    = False;
-  wbForceNewHeader                   : Boolean    = False;          // add wbNewHeaderAddon value to the headers of mainrecords and GRUP records
-  wbNewHeaderAddon                   : Cardinal   = 40;             // 4 additional bytes, 40 - new form version field
   wbVWDInTemporary                   : Boolean    = False;
   wbVWDAsQuestChildren               : Boolean    = False;
   wbResolveAlias                     : Boolean    = True;
   wbActorTemplateHide                : Boolean    = True;
-  wbClampFormID                      : Boolean    = True;
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
@@ -180,15 +170,12 @@ var
   wbHasAddedUpdateSupport            : Boolean    = False;
   wbAllowEditHEDRVersion             : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
-  wbAllowDirectSave                  : Boolean    = False;
   wbAllowDirectSaveFor               : TStringList;
   wbAllowMasterFilesEdit             : Boolean    = False;          //must be set before DefineDefs
   wbCanAddScripts                    : Boolean    = True;
   wbCanAddScriptProperties           : Boolean    = True;
   wbEditInfoUseShortName             : Boolean    = False;
   wbDevMode                          : Boolean    = False;
-  wbStripEmptyMasters                : Boolean    = False;
-  wbStripMasters                     : Boolean    = False;
   wbStripMastersFileNames            : TStringList;
   wbAlwaysSorted                     : Boolean    = False;
   wbNeverSorted                      : Boolean    = False;
@@ -198,12 +185,8 @@ var
   wbFocusAddedElement                : Boolean    = True;
   wbCheckNonCPNChars                 : Boolean    = False;
   wbShowStringBytes                  : Boolean    = False;
-  wbResetModifiedOnSave              : Boolean    = True;
-  wbAlwaysSaveOnam                   : Boolean    = False;
-  wbAlwaysSaveOnamForce              : Boolean    = False;
   wbManualCleaningAllow              : Boolean    = False;
   wbManualCleaningHide               : Boolean    = False;
-  wbConvertIntFormID                 : Boolean    = False;
   wbShrinkButtons                    : Boolean    = False;
   wbCollapseRecordHeader             : Boolean    = True;
   wbCollapseObjectBounds             : Boolean    = True;
@@ -289,27 +272,14 @@ var
 
   wbGlobalModifedGeneration          : UInt64;
 
-  wbDontSave                         : Boolean;
 
-  wbDontCache                        : Boolean    = False;
-  wbDontCacheLoad                    : Boolean    = False;
-  wbDontCacheSave                    : Boolean    = False;
 
   wbCacheRecordsThreshold            : Integer    = 500;
   wbCacheTimeThreshold               : TDateTime  = 2 * 1/24/60/60; //2 seconds
 
   wbAutoCompareSelectedLimit         : Integer    = 5;
 
-  wbUDRSetXESP                       : Boolean    = True;
-  wbUDRSetScale                      : Boolean    = False;
-  wbUDRSetScaleValue                 : Single     = 0.0;
-  wbUDRSetZ                          : Boolean    = True;
-  wbUDRSetZValue                     : Single     = -30000;
-  wbUDRSetMSTT                       : Boolean    = True;
-  wbUDRSetMSTTValue                  : Int64      = $0000001B; { AshPile01 }
 
-  wbMasterUpdateFilterONAM           : Boolean    = False;
-  wbMasterUpdateFixPersistence       : Boolean    = True;
 
   wbAllowInternalEdit                : Boolean    = True;
   wbShowInternalEdit                 : Boolean    = False;
@@ -358,7 +328,6 @@ var
   wbProgramPath                      : string;
 
   wbStarfieldIsABugInfestedHellhole  : Boolean    = False;
-  wbRedPill                          : Boolean    = False;
 
   wbSpeedOverMemory                  : Boolean    = False;
 
@@ -3469,6 +3438,68 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    function GetDontSave: Boolean;
+    procedure SetDontSave(aValue: Boolean);
+    function GetAllowDirectSave: Boolean;
+    procedure SetAllowDirectSave(aValue: Boolean);
+    function GetStripMasters: Boolean;
+    procedure SetStripMasters(aValue: Boolean);
+    function GetStripEmptyMasters: Boolean;
+    procedure SetStripEmptyMasters(aValue: Boolean);
+    function GetRedPill: Boolean;
+    procedure SetRedPill(aValue: Boolean);
+    function GetCanSortINFO: Boolean;
+    procedure SetCanSortINFO(aValue: Boolean);
+    function GetSortINFO: Boolean;
+    procedure SetSortINFO(aValue: Boolean);
+    function GetFillPNAM: Boolean;
+    procedure SetFillPNAM(aValue: Boolean);
+    function GetFillINOM: Boolean;
+    procedure SetFillINOM(aValue: Boolean);
+    function GetFillINOA: Boolean;
+    procedure SetFillINOA(aValue: Boolean);
+    function GetWriteOffsetData: Boolean;
+    procedure SetWriteOffsetData(aValue: Boolean);
+    function GetUDRSetXESP: Boolean;
+    procedure SetUDRSetXESP(aValue: Boolean);
+    function GetUDRSetScale: Boolean;
+    procedure SetUDRSetScale(aValue: Boolean);
+    function GetUDRSetScaleValue: Single;
+    procedure SetUDRSetScaleValue(aValue: Single);
+    function GetUDRSetZ: Boolean;
+    procedure SetUDRSetZ(aValue: Boolean);
+    function GetUDRSetZValue: Single;
+    procedure SetUDRSetZValue(aValue: Single);
+    function GetUDRSetMSTT: Boolean;
+    procedure SetUDRSetMSTT(aValue: Boolean);
+    function GetUDRSetMSTTValue: Int64;
+    procedure SetUDRSetMSTTValue(aValue: Int64);
+    function GetMasterUpdateFilterONAM: Boolean;
+    procedure SetMasterUpdateFilterONAM(aValue: Boolean);
+    function GetMasterUpdateFixPersistence: Boolean;
+    procedure SetMasterUpdateFixPersistence(aValue: Boolean);
+    function GetResetModifiedOnSave: Boolean;
+    procedure SetResetModifiedOnSave(aValue: Boolean);
+    function GetAlwaysSaveOnam: Boolean;
+    procedure SetAlwaysSaveOnam(aValue: Boolean);
+    function GetAlwaysSaveOnamForce: Boolean;
+    procedure SetAlwaysSaveOnamForce(aValue: Boolean);
+    function GetClampFormID: Boolean;
+    procedure SetClampFormID(aValue: Boolean);
+    function GetFixupPGRD: Boolean;
+    procedure SetFixupPGRD(aValue: Boolean);
+    function GetConvertIntFormID: Boolean;
+    procedure SetConvertIntFormID(aValue: Boolean);
+    function GetForceNewHeader: Boolean;
+    procedure SetForceNewHeader(aValue: Boolean);
+    function GetNewHeaderAddon: Cardinal;
+    procedure SetNewHeaderAddon(aValue: Cardinal);
+    function GetDontCache: Boolean;
+    procedure SetDontCache(aValue: Boolean);
+    function GetDontCacheLoad: Boolean;
+    procedure SetDontCacheLoad(aValue: Boolean);
+    function GetDontCacheSave: Boolean;
+    procedure SetDontCacheSave(aValue: Boolean);
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3611,6 +3642,99 @@ type
     property BuildingRefsParallel: Boolean
       read GetBuildingRefsParallel
       write SetBuildingRefsParallel;
+    property DontSave: Boolean
+      read GetDontSave
+      write SetDontSave;
+    property AllowDirectSave: Boolean
+      read GetAllowDirectSave
+      write SetAllowDirectSave;
+    property StripMasters: Boolean
+      read GetStripMasters
+      write SetStripMasters;
+    property StripEmptyMasters: Boolean
+      read GetStripEmptyMasters
+      write SetStripEmptyMasters;
+    property RedPill: Boolean
+      read GetRedPill
+      write SetRedPill;
+    property CanSortINFO: Boolean
+      read GetCanSortINFO
+      write SetCanSortINFO;
+    property SortINFO: Boolean
+      read GetSortINFO
+      write SetSortINFO;
+    property FillPNAM: Boolean
+      read GetFillPNAM
+      write SetFillPNAM;
+    property FillINOM: Boolean
+      read GetFillINOM
+      write SetFillINOM;
+    property FillINOA: Boolean
+      read GetFillINOA
+      write SetFillINOA;
+    property WriteOffsetData: Boolean
+      read GetWriteOffsetData
+      write SetWriteOffsetData;
+    property UDRSetXESP: Boolean
+      read GetUDRSetXESP
+      write SetUDRSetXESP;
+    property UDRSetScale: Boolean
+      read GetUDRSetScale
+      write SetUDRSetScale;
+    property UDRSetScaleValue: Single
+      read GetUDRSetScaleValue
+      write SetUDRSetScaleValue;
+    property UDRSetZ: Boolean
+      read GetUDRSetZ
+      write SetUDRSetZ;
+    property UDRSetZValue: Single
+      read GetUDRSetZValue
+      write SetUDRSetZValue;
+    property UDRSetMSTT: Boolean
+      read GetUDRSetMSTT
+      write SetUDRSetMSTT;
+    property UDRSetMSTTValue: Int64
+      read GetUDRSetMSTTValue
+      write SetUDRSetMSTTValue;
+    property MasterUpdateFilterONAM: Boolean
+      read GetMasterUpdateFilterONAM
+      write SetMasterUpdateFilterONAM;
+    property MasterUpdateFixPersistence: Boolean
+      read GetMasterUpdateFixPersistence
+      write SetMasterUpdateFixPersistence;
+    property ResetModifiedOnSave: Boolean
+      read GetResetModifiedOnSave
+      write SetResetModifiedOnSave;
+    property AlwaysSaveOnam: Boolean
+      read GetAlwaysSaveOnam
+      write SetAlwaysSaveOnam;
+    property AlwaysSaveOnamForce: Boolean
+      read GetAlwaysSaveOnamForce
+      write SetAlwaysSaveOnamForce;
+    property ClampFormID: Boolean
+      read GetClampFormID
+      write SetClampFormID;
+    property FixupPGRD: Boolean
+      read GetFixupPGRD
+      write SetFixupPGRD;
+    property ConvertIntFormID: Boolean
+      read GetConvertIntFormID
+      write SetConvertIntFormID;
+    property ForceNewHeader: Boolean
+      read GetForceNewHeader
+      write SetForceNewHeader;
+    property NewHeaderAddon: Cardinal
+      read GetNewHeaderAddon
+      write SetNewHeaderAddon;
+    property DontCache: Boolean
+      read GetDontCache
+      write SetDontCache;
+    property DontCacheLoad: Boolean
+      read GetDontCacheLoad
+      write SetDontCacheLoad;
+    property DontCacheSave: Boolean
+      read GetDontCacheSave
+      write SetDontCacheSave;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
@@ -3851,6 +3975,37 @@ type
     LoadBSAs              : Boolean;
     LoadAllBSAs           : Boolean;
     BuildRefs             : Boolean;
+    DontSave              : Boolean;
+    AllowDirectSave       : Boolean;
+    StripMasters          : Boolean;
+    StripEmptyMasters     : Boolean;
+    RedPill               : Boolean;
+    CanSortINFO           : Boolean;
+    SortINFO              : Boolean;
+    FillPNAM              : Boolean;
+    FillINOM              : Boolean;
+    FillINOA              : Boolean;
+    WriteOffsetData       : Boolean;
+    UDRSetXESP            : Boolean;
+    UDRSetScale           : Boolean;
+    UDRSetScaleValue      : Single;
+    UDRSetZ               : Boolean;
+    UDRSetZValue          : Single;
+    UDRSetMSTT            : Boolean;
+    UDRSetMSTTValue       : Int64;
+    MasterUpdateFilterONAM : Boolean;
+    MasterUpdateFixPersistence : Boolean;
+    ResetModifiedOnSave   : Boolean;
+    AlwaysSaveOnam        : Boolean;
+    AlwaysSaveOnamForce   : Boolean;
+    ClampFormID           : Boolean;
+    FixupPGRD             : Boolean;
+    ConvertIntFormID      : Boolean;
+    ForceNewHeader        : Boolean;
+    NewHeaderAddon        : Cardinal;
+    DontCache             : Boolean;
+    DontCacheLoad         : Boolean;
+    DontCacheSave         : Boolean;
     class function Defaults: TwbGameContextSettings; static;
   end;
 
@@ -3967,6 +4122,68 @@ type
     procedure SetFirstLoadComplete(aValue: Boolean);
     function GetBuildingRefsParallel: Boolean;
     procedure SetBuildingRefsParallel(aValue: Boolean);
+    function GetDontSave: Boolean;
+    procedure SetDontSave(aValue: Boolean);
+    function GetAllowDirectSave: Boolean;
+    procedure SetAllowDirectSave(aValue: Boolean);
+    function GetStripMasters: Boolean;
+    procedure SetStripMasters(aValue: Boolean);
+    function GetStripEmptyMasters: Boolean;
+    procedure SetStripEmptyMasters(aValue: Boolean);
+    function GetRedPill: Boolean;
+    procedure SetRedPill(aValue: Boolean);
+    function GetCanSortINFO: Boolean;
+    procedure SetCanSortINFO(aValue: Boolean);
+    function GetSortINFO: Boolean;
+    procedure SetSortINFO(aValue: Boolean);
+    function GetFillPNAM: Boolean;
+    procedure SetFillPNAM(aValue: Boolean);
+    function GetFillINOM: Boolean;
+    procedure SetFillINOM(aValue: Boolean);
+    function GetFillINOA: Boolean;
+    procedure SetFillINOA(aValue: Boolean);
+    function GetWriteOffsetData: Boolean;
+    procedure SetWriteOffsetData(aValue: Boolean);
+    function GetUDRSetXESP: Boolean;
+    procedure SetUDRSetXESP(aValue: Boolean);
+    function GetUDRSetScale: Boolean;
+    procedure SetUDRSetScale(aValue: Boolean);
+    function GetUDRSetScaleValue: Single;
+    procedure SetUDRSetScaleValue(aValue: Single);
+    function GetUDRSetZ: Boolean;
+    procedure SetUDRSetZ(aValue: Boolean);
+    function GetUDRSetZValue: Single;
+    procedure SetUDRSetZValue(aValue: Single);
+    function GetUDRSetMSTT: Boolean;
+    procedure SetUDRSetMSTT(aValue: Boolean);
+    function GetUDRSetMSTTValue: Int64;
+    procedure SetUDRSetMSTTValue(aValue: Int64);
+    function GetMasterUpdateFilterONAM: Boolean;
+    procedure SetMasterUpdateFilterONAM(aValue: Boolean);
+    function GetMasterUpdateFixPersistence: Boolean;
+    procedure SetMasterUpdateFixPersistence(aValue: Boolean);
+    function GetResetModifiedOnSave: Boolean;
+    procedure SetResetModifiedOnSave(aValue: Boolean);
+    function GetAlwaysSaveOnam: Boolean;
+    procedure SetAlwaysSaveOnam(aValue: Boolean);
+    function GetAlwaysSaveOnamForce: Boolean;
+    procedure SetAlwaysSaveOnamForce(aValue: Boolean);
+    function GetClampFormID: Boolean;
+    procedure SetClampFormID(aValue: Boolean);
+    function GetFixupPGRD: Boolean;
+    procedure SetFixupPGRD(aValue: Boolean);
+    function GetConvertIntFormID: Boolean;
+    procedure SetConvertIntFormID(aValue: Boolean);
+    function GetForceNewHeader: Boolean;
+    procedure SetForceNewHeader(aValue: Boolean);
+    function GetNewHeaderAddon: Cardinal;
+    procedure SetNewHeaderAddon(aValue: Cardinal);
+    function GetDontCache: Boolean;
+    procedure SetDontCache(aValue: Boolean);
+    function GetDontCacheLoad: Boolean;
+    procedure SetDontCacheLoad(aValue: Boolean);
+    function GetDontCacheSave: Boolean;
+    procedure SetDontCacheSave(aValue: Boolean);
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
     function GetSoundBankCache: IInterface;
     procedure SetSoundBankCache(const aValue: IInterface);
@@ -6267,6 +6484,18 @@ begin
   Result.EncodingTrans := Result.Encoding;
   Result.LoadBSAs := True;
   Result.BuildRefs := True;
+  Result.FillINOM := True;
+  Result.FillINOA := True;
+  Result.WriteOffsetData := True;
+  Result.UDRSetXESP := True;
+  Result.UDRSetZ := True;
+  Result.UDRSetZValue := -30000;
+  Result.UDRSetMSTT := True;
+  Result.UDRSetMSTTValue := $0000001B;
+  Result.MasterUpdateFixPersistence := True;
+  Result.ResetModifiedOnSave := True;
+  Result.ClampFormID := True;
+  Result.NewHeaderAddon := 40;
 end;
 
 { TwbGameContext }
@@ -6406,6 +6635,316 @@ end;
 procedure TwbGameContext.SetBuildRefs(aValue: Boolean);
 begin
   Settings.BuildRefs := aValue;
+end;
+
+function TwbGameContext.GetDontSave: Boolean;
+begin
+  Result := Settings.DontSave;
+end;
+
+procedure TwbGameContext.SetDontSave(aValue: Boolean);
+begin
+  Settings.DontSave := aValue;
+end;
+
+function TwbGameContext.GetAllowDirectSave: Boolean;
+begin
+  Result := Settings.AllowDirectSave;
+end;
+
+procedure TwbGameContext.SetAllowDirectSave(aValue: Boolean);
+begin
+  Settings.AllowDirectSave := aValue;
+end;
+
+function TwbGameContext.GetStripMasters: Boolean;
+begin
+  Result := Settings.StripMasters;
+end;
+
+procedure TwbGameContext.SetStripMasters(aValue: Boolean);
+begin
+  Settings.StripMasters := aValue;
+end;
+
+function TwbGameContext.GetStripEmptyMasters: Boolean;
+begin
+  Result := Settings.StripEmptyMasters;
+end;
+
+procedure TwbGameContext.SetStripEmptyMasters(aValue: Boolean);
+begin
+  Settings.StripEmptyMasters := aValue;
+end;
+
+function TwbGameContext.GetRedPill: Boolean;
+begin
+  Result := Settings.RedPill;
+end;
+
+procedure TwbGameContext.SetRedPill(aValue: Boolean);
+begin
+  Settings.RedPill := aValue;
+end;
+
+function TwbGameContext.GetCanSortINFO: Boolean;
+begin
+  Result := Settings.CanSortINFO;
+end;
+
+procedure TwbGameContext.SetCanSortINFO(aValue: Boolean);
+begin
+  Settings.CanSortINFO := aValue;
+end;
+
+function TwbGameContext.GetSortINFO: Boolean;
+begin
+  Result := Settings.SortINFO;
+end;
+
+procedure TwbGameContext.SetSortINFO(aValue: Boolean);
+begin
+  Settings.SortINFO := aValue;
+end;
+
+function TwbGameContext.GetFillPNAM: Boolean;
+begin
+  Result := Settings.FillPNAM;
+end;
+
+procedure TwbGameContext.SetFillPNAM(aValue: Boolean);
+begin
+  Settings.FillPNAM := aValue;
+end;
+
+function TwbGameContext.GetFillINOM: Boolean;
+begin
+  Result := Settings.FillINOM;
+end;
+
+procedure TwbGameContext.SetFillINOM(aValue: Boolean);
+begin
+  Settings.FillINOM := aValue;
+end;
+
+function TwbGameContext.GetFillINOA: Boolean;
+begin
+  Result := Settings.FillINOA;
+end;
+
+procedure TwbGameContext.SetFillINOA(aValue: Boolean);
+begin
+  Settings.FillINOA := aValue;
+end;
+
+function TwbGameContext.GetWriteOffsetData: Boolean;
+begin
+  Result := Settings.WriteOffsetData;
+end;
+
+procedure TwbGameContext.SetWriteOffsetData(aValue: Boolean);
+begin
+  Settings.WriteOffsetData := aValue;
+end;
+
+function TwbGameContext.GetUDRSetXESP: Boolean;
+begin
+  Result := Settings.UDRSetXESP;
+end;
+
+procedure TwbGameContext.SetUDRSetXESP(aValue: Boolean);
+begin
+  Settings.UDRSetXESP := aValue;
+end;
+
+function TwbGameContext.GetUDRSetScale: Boolean;
+begin
+  Result := Settings.UDRSetScale;
+end;
+
+procedure TwbGameContext.SetUDRSetScale(aValue: Boolean);
+begin
+  Settings.UDRSetScale := aValue;
+end;
+
+function TwbGameContext.GetUDRSetScaleValue: Single;
+begin
+  Result := Settings.UDRSetScaleValue;
+end;
+
+procedure TwbGameContext.SetUDRSetScaleValue(aValue: Single);
+begin
+  Settings.UDRSetScaleValue := aValue;
+end;
+
+function TwbGameContext.GetUDRSetZ: Boolean;
+begin
+  Result := Settings.UDRSetZ;
+end;
+
+procedure TwbGameContext.SetUDRSetZ(aValue: Boolean);
+begin
+  Settings.UDRSetZ := aValue;
+end;
+
+function TwbGameContext.GetUDRSetZValue: Single;
+begin
+  Result := Settings.UDRSetZValue;
+end;
+
+procedure TwbGameContext.SetUDRSetZValue(aValue: Single);
+begin
+  Settings.UDRSetZValue := aValue;
+end;
+
+function TwbGameContext.GetUDRSetMSTT: Boolean;
+begin
+  Result := Settings.UDRSetMSTT;
+end;
+
+procedure TwbGameContext.SetUDRSetMSTT(aValue: Boolean);
+begin
+  Settings.UDRSetMSTT := aValue;
+end;
+
+function TwbGameContext.GetUDRSetMSTTValue: Int64;
+begin
+  Result := Settings.UDRSetMSTTValue;
+end;
+
+procedure TwbGameContext.SetUDRSetMSTTValue(aValue: Int64);
+begin
+  Settings.UDRSetMSTTValue := aValue;
+end;
+
+function TwbGameContext.GetMasterUpdateFilterONAM: Boolean;
+begin
+  Result := Settings.MasterUpdateFilterONAM;
+end;
+
+procedure TwbGameContext.SetMasterUpdateFilterONAM(aValue: Boolean);
+begin
+  Settings.MasterUpdateFilterONAM := aValue;
+end;
+
+function TwbGameContext.GetMasterUpdateFixPersistence: Boolean;
+begin
+  Result := Settings.MasterUpdateFixPersistence;
+end;
+
+procedure TwbGameContext.SetMasterUpdateFixPersistence(aValue: Boolean);
+begin
+  Settings.MasterUpdateFixPersistence := aValue;
+end;
+
+function TwbGameContext.GetResetModifiedOnSave: Boolean;
+begin
+  Result := Settings.ResetModifiedOnSave;
+end;
+
+procedure TwbGameContext.SetResetModifiedOnSave(aValue: Boolean);
+begin
+  Settings.ResetModifiedOnSave := aValue;
+end;
+
+function TwbGameContext.GetAlwaysSaveOnam: Boolean;
+begin
+  Result := Settings.AlwaysSaveOnam;
+end;
+
+procedure TwbGameContext.SetAlwaysSaveOnam(aValue: Boolean);
+begin
+  Settings.AlwaysSaveOnam := aValue;
+end;
+
+function TwbGameContext.GetAlwaysSaveOnamForce: Boolean;
+begin
+  Result := Settings.AlwaysSaveOnamForce;
+end;
+
+procedure TwbGameContext.SetAlwaysSaveOnamForce(aValue: Boolean);
+begin
+  Settings.AlwaysSaveOnamForce := aValue;
+end;
+
+function TwbGameContext.GetClampFormID: Boolean;
+begin
+  Result := Settings.ClampFormID;
+end;
+
+procedure TwbGameContext.SetClampFormID(aValue: Boolean);
+begin
+  Settings.ClampFormID := aValue;
+end;
+
+function TwbGameContext.GetFixupPGRD: Boolean;
+begin
+  Result := Settings.FixupPGRD;
+end;
+
+procedure TwbGameContext.SetFixupPGRD(aValue: Boolean);
+begin
+  Settings.FixupPGRD := aValue;
+end;
+
+function TwbGameContext.GetConvertIntFormID: Boolean;
+begin
+  Result := Settings.ConvertIntFormID;
+end;
+
+procedure TwbGameContext.SetConvertIntFormID(aValue: Boolean);
+begin
+  Settings.ConvertIntFormID := aValue;
+end;
+
+function TwbGameContext.GetForceNewHeader: Boolean;
+begin
+  Result := Settings.ForceNewHeader;
+end;
+
+procedure TwbGameContext.SetForceNewHeader(aValue: Boolean);
+begin
+  Settings.ForceNewHeader := aValue;
+end;
+
+function TwbGameContext.GetNewHeaderAddon: Cardinal;
+begin
+  Result := Settings.NewHeaderAddon;
+end;
+
+procedure TwbGameContext.SetNewHeaderAddon(aValue: Cardinal);
+begin
+  Settings.NewHeaderAddon := aValue;
+end;
+
+function TwbGameContext.GetDontCache: Boolean;
+begin
+  Result := Settings.DontCache;
+end;
+
+procedure TwbGameContext.SetDontCache(aValue: Boolean);
+begin
+  Settings.DontCache := aValue;
+end;
+
+function TwbGameContext.GetDontCacheLoad: Boolean;
+begin
+  Result := Settings.DontCacheLoad;
+end;
+
+procedure TwbGameContext.SetDontCacheLoad(aValue: Boolean);
+begin
+  Settings.DontCacheLoad := aValue;
+end;
+
+function TwbGameContext.GetDontCacheSave: Boolean;
+begin
+  Result := Settings.DontCacheSave;
+end;
+
+procedure TwbGameContext.SetDontCacheSave(aValue: Boolean);
+begin
+  Settings.DontCacheSave := aValue;
 end;
 
 function TwbGameContext.GetLoaderDone: Boolean;

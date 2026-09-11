@@ -72,6 +72,37 @@ function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
 function ChaptersToSkip: TStringList; inline;
+function wbDontSave: Boolean; inline;
+function wbAllowDirectSave: Boolean; inline;
+function wbStripMasters: Boolean; inline;
+function wbStripEmptyMasters: Boolean; inline;
+function wbRedPill: Boolean; inline;
+function wbCanSortINFO: Boolean; inline;
+function wbSortINFO: Boolean; inline;
+function wbFillPNAM: Boolean; inline;
+function wbFillINOM: Boolean; inline;
+function wbFillINOA: Boolean; inline;
+function wbWriteOffsetData: Boolean; inline;
+function wbUDRSetXESP: Boolean; inline;
+function wbUDRSetScale: Boolean; inline;
+function wbUDRSetScaleValue: Single; inline;
+function wbUDRSetZ: Boolean; inline;
+function wbUDRSetZValue: Single; inline;
+function wbUDRSetMSTT: Boolean; inline;
+function wbUDRSetMSTTValue: Int64; inline;
+function wbMasterUpdateFilterONAM: Boolean; inline;
+function wbMasterUpdateFixPersistence: Boolean; inline;
+function wbResetModifiedOnSave: Boolean; inline;
+function wbAlwaysSaveOnam: Boolean; inline;
+function wbAlwaysSaveOnamForce: Boolean; inline;
+function wbClampFormID: Boolean; inline;
+function wbFixupPGRD: Boolean; inline;
+function wbConvertIntFormID: Boolean; inline;
+function wbForceNewHeader: Boolean; inline;
+function wbNewHeaderAddon: Cardinal; inline;
+function wbDontCache: Boolean; inline;
+function wbDontCacheLoad: Boolean; inline;
+function wbDontCacheSave: Boolean; inline;
 
 implementation
 
@@ -398,6 +429,161 @@ end;
 function ChaptersToSkip: TStringList;
 begin
   Result := _CurrentContext.ChaptersToSkip;
+end;
+
+function wbDontSave: Boolean;
+begin
+  Result := _CurrentContext.Settings.DontSave;
+end;
+
+function wbAllowDirectSave: Boolean;
+begin
+  Result := _CurrentContext.Settings.AllowDirectSave;
+end;
+
+function wbStripMasters: Boolean;
+begin
+  Result := _CurrentContext.Settings.StripMasters;
+end;
+
+function wbStripEmptyMasters: Boolean;
+begin
+  Result := _CurrentContext.Settings.StripEmptyMasters;
+end;
+
+function wbRedPill: Boolean;
+begin
+  Result := _CurrentContext.Settings.RedPill;
+end;
+
+function wbCanSortINFO: Boolean;
+begin
+  Result := _CurrentContext.Settings.CanSortINFO;
+end;
+
+function wbSortINFO: Boolean;
+begin
+  Result := _CurrentContext.Settings.SortINFO;
+end;
+
+function wbFillPNAM: Boolean;
+begin
+  Result := _CurrentContext.Settings.FillPNAM;
+end;
+
+function wbFillINOM: Boolean;
+begin
+  Result := _CurrentContext.Settings.FillINOM;
+end;
+
+function wbFillINOA: Boolean;
+begin
+  Result := _CurrentContext.Settings.FillINOA;
+end;
+
+function wbWriteOffsetData: Boolean;
+begin
+  Result := _CurrentContext.Settings.WriteOffsetData;
+end;
+
+function wbUDRSetXESP: Boolean;
+begin
+  Result := _CurrentContext.Settings.UDRSetXESP;
+end;
+
+function wbUDRSetScale: Boolean;
+begin
+  Result := _CurrentContext.Settings.UDRSetScale;
+end;
+
+function wbUDRSetScaleValue: Single;
+begin
+  Result := _CurrentContext.Settings.UDRSetScaleValue;
+end;
+
+function wbUDRSetZ: Boolean;
+begin
+  Result := _CurrentContext.Settings.UDRSetZ;
+end;
+
+function wbUDRSetZValue: Single;
+begin
+  Result := _CurrentContext.Settings.UDRSetZValue;
+end;
+
+function wbUDRSetMSTT: Boolean;
+begin
+  Result := _CurrentContext.Settings.UDRSetMSTT;
+end;
+
+function wbUDRSetMSTTValue: Int64;
+begin
+  Result := _CurrentContext.Settings.UDRSetMSTTValue;
+end;
+
+function wbMasterUpdateFilterONAM: Boolean;
+begin
+  Result := _CurrentContext.Settings.MasterUpdateFilterONAM;
+end;
+
+function wbMasterUpdateFixPersistence: Boolean;
+begin
+  Result := _CurrentContext.Settings.MasterUpdateFixPersistence;
+end;
+
+function wbResetModifiedOnSave: Boolean;
+begin
+  Result := _CurrentContext.Settings.ResetModifiedOnSave;
+end;
+
+function wbAlwaysSaveOnam: Boolean;
+begin
+  Result := _CurrentContext.Settings.AlwaysSaveOnam;
+end;
+
+function wbAlwaysSaveOnamForce: Boolean;
+begin
+  Result := _CurrentContext.Settings.AlwaysSaveOnamForce;
+end;
+
+function wbClampFormID: Boolean;
+begin
+  Result := _CurrentContext.Settings.ClampFormID;
+end;
+
+function wbFixupPGRD: Boolean;
+begin
+  Result := _CurrentContext.Settings.FixupPGRD;
+end;
+
+function wbConvertIntFormID: Boolean;
+begin
+  Result := _CurrentContext.Settings.ConvertIntFormID;
+end;
+
+function wbForceNewHeader: Boolean;
+begin
+  Result := _CurrentContext.Settings.ForceNewHeader;
+end;
+
+function wbNewHeaderAddon: Cardinal;
+begin
+  Result := _CurrentContext.Settings.NewHeaderAddon;
+end;
+
+function wbDontCache: Boolean;
+begin
+  Result := _CurrentContext.Settings.DontCache;
+end;
+
+function wbDontCacheLoad: Boolean;
+begin
+  Result := _CurrentContext.Settings.DontCacheLoad;
+end;
+
+function wbDontCacheSave: Boolean;
+begin
+  Result := _CurrentContext.Settings.DontCacheSave;
 end;
 
 end.

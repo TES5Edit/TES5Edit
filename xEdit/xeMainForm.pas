@@ -5105,13 +5105,13 @@ begin
   wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
   tmrPendingSetActive.Interval := Settings.ReadInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
-  wbClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
-  wbResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
-  wbAlwaysSaveOnam := Settings.ReadBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam) or wbAlwaysSaveOnamForce;
+  wbCurrentContext.ClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
+  wbCurrentContext.ResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
+  wbCurrentContext.AlwaysSaveOnam := Settings.ReadBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam) or wbAlwaysSaveOnamForce;
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
-  wbConvertIntFormID := Settings.ReadBool('Options', 'ConvertIntFormID', wbConvertIntFormID);
+  wbCurrentContext.ConvertIntFormID := Settings.ReadBool('Options', 'ConvertIntFormID', wbConvertIntFormID);
   wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
   wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
   wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
@@ -5178,13 +5178,13 @@ begin
   wbCollapseScriptEntry := Settings.ReadBool('Options', 'CollapseScriptEntry', wbCollapseScriptEntry);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
-  wbUDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
-  wbUDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
-  wbUDRSetScaleValue := Settings.ReadFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
-  wbUDRSetZ := Settings.ReadBool('Options', 'UDRSetZ', wbUDRSetZ);
-  wbUDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
-  wbUDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
-  wbUDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+  wbCurrentContext.UDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
+  wbCurrentContext.UDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
+  wbCurrentContext.UDRSetScaleValue := Settings.ReadFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
+  wbCurrentContext.UDRSetZ := Settings.ReadBool('Options', 'UDRSetZ', wbUDRSetZ);
+  wbCurrentContext.UDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
+  wbCurrentContext.UDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
+  wbCurrentContext.UDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
   for ConflictThis := Low(TConflictThis) to High(TConflictThis) do
     wbColorConflictThis[ConflictThis] := Settings.ReadInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ConflictThis)), Integer(wbColorConflictThis[ConflictThis]));
   for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
@@ -13960,9 +13960,9 @@ begin
     wbActorTemplateHide := cbActorTemplateHide.Checked;
     wbCurrentContext.LoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
-    wbSortINFO := cbSortINFO.Checked;
-    wbFillPNAM := cbFillPNAM.Checked;
-    wbWriteOffsetData := cbWriteOffsetData.Checked;
+    wbCurrentContext.SortINFO := cbSortINFO.Checked;
+    wbCurrentContext.FillPNAM := cbFillPNAM.Checked;
+    wbCurrentContext.WriteOffsetData := cbWriteOffsetData.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
@@ -13972,13 +13972,13 @@ begin
     tmrPendingSetActive.Interval := sedNavChangeDelay.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbDecodeTextureHashes := cbDecodeTexture.Checked;
-    wbClampFormID := cbClampFormID.Checked;
-    wbResetModifiedOnSave := cbResetModifiedOnSave.Checked;
-    wbAlwaysSaveOnam := cbAlwaysSaveOnam.Checked or wbAlwaysSaveOnamForce;
+    wbCurrentContext.ClampFormID := cbClampFormID.Checked;
+    wbCurrentContext.ResetModifiedOnSave := cbResetModifiedOnSave.Checked;
+    wbCurrentContext.AlwaysSaveOnam := cbAlwaysSaveOnam.Checked or wbAlwaysSaveOnamForce;
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
-    wbConvertIntFormID := cbConvertIntFormID.Checked;
+    wbCurrentContext.ConvertIntFormID := cbConvertIntFormID.Checked;
     wbCollapseRecordHeader := cbCollapseRecordHeader.Checked;
     wbCollapseObjectBounds := cbCollapseObjectBounds.Checked;
     wbCollapseModels := cbCollapseModels.Checked;
@@ -14033,13 +14033,13 @@ begin
     wbNoGitHubCheck := cbNoGitHubCheck.Checked;
     wbNoNexusModsCheck := cbNoNexusModsCheck.Checked;
     wbTrackAllEditorID := cbTrackAllEditorID.Checked;
-    wbUDRSetXESP := cbUDRSetXESP.Checked;
-    wbUDRSetScale := cbUDRSetScale.Checked;
-    wbUDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, wbUDRSetScaleValue);
-    wbUDRSetZ := cbUDRSetZ.Checked;
-    wbUDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
-    wbUDRSetMSTT := cbUDRSetMSTT.Checked;
-    wbUDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
+    wbCurrentContext.UDRSetXESP := cbUDRSetXESP.Checked;
+    wbCurrentContext.UDRSetScale := cbUDRSetScale.Checked;
+    wbCurrentContext.UDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, wbUDRSetScaleValue);
+    wbCurrentContext.UDRSetZ := cbUDRSetZ.Checked;
+    wbCurrentContext.UDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
+    wbCurrentContext.UDRSetMSTT := cbUDRSetMSTT.Checked;
+    wbCurrentContext.UDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
 
     if PatronSet then
       ShowDeveloperMessage(True);
@@ -17185,7 +17185,7 @@ begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if wbLoaderError then begin
-      wbDontSave := True;
+      wbCurrentContext.DontSave := True;
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while loading your active modules.');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
@@ -17238,7 +17238,7 @@ begin
           end else
             CheckResult := 255;
         finally
-          wbDontSave := True;
+          wbCurrentContext.DontSave := True;
         end;
       end else if wbToolMode = tmMasterUpdate then
         ChangesMade := SetAllToMaster
@@ -17268,7 +17268,7 @@ begin
           AutoDone := true;
 
     except
-      wbDontSave := True;
+      wbCurrentContext.DontSave := True;
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');

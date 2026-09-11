@@ -87,7 +87,7 @@ end;
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbTestWrite := True;
-  wbForceNewHeader := True;
+  wbCurrentContext.ForceNewHeader := True;
 end;
 
 procedure GetRecordDefNames(var Value: Variant; Args: TJvInterpreterArgs);
