@@ -60,6 +60,9 @@ function wbMOHookFile: string; inline;
 function wbLanguage: string; inline;
 function wbEncoding: TEncoding; inline;
 function wbEncodingTrans: TEncoding; inline;
+function wbLoadBSAs: Boolean; inline;
+function wbLoadAllBSAs: Boolean; inline;
+function wbBuildRefs: Boolean; inline;
 function RecordToSkip: TStringList; inline;
 function SubRecordToSkip: TStringList; inline;
 function GroupToSkip: TStringList; inline;
@@ -330,6 +333,21 @@ end;
 function wbEncodingTrans: TEncoding;
 begin
   Result := _CurrentContext.Settings.EncodingTrans;
+end;
+
+function wbLoadBSAs: Boolean;
+begin
+  Result := _CurrentContext.Settings.LoadBSAs;
+end;
+
+function wbLoadAllBSAs: Boolean;
+begin
+  Result := _CurrentContext.Settings.LoadAllBSAs;
+end;
+
+function wbBuildRefs: Boolean;
+begin
+  Result := _CurrentContext.Settings.BuildRefs;
 end;
 
 function RecordToSkip: TStringList;

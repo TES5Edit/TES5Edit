@@ -4929,7 +4929,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if not wbBuildRefs then
+  if not _CurrentContext.Settings.BuildRefs then
     Exit;
 
   var lMainRecord := aElement.ContainingMainRecord;

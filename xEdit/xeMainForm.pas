@@ -5054,12 +5054,12 @@ begin
 
       // hold shift to skip building references
       if not xeTestConflicts and (GetKeyState(VK_SHIFT) < 0) then begin
-        wbBuildRefs := False;
+        wbCurrentContext.BuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
 
       if xeQuickClean or xeQuickShowConflicts or xeQuickSEQ then
-        wbBuildRefs := False;
+        wbCurrentContext.BuildRefs := False;
 
       CleanupRefCache;
 
@@ -13958,7 +13958,7 @@ begin
       wbHideNeverShow := cbHideNeverShow.Checked;
     end;
     wbActorTemplateHide := cbActorTemplateHide.Checked;
-    wbLoadBSAs := cbLoadBSAs.Checked;
+    wbCurrentContext.LoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
     wbSortINFO := cbSortINFO.Checked;
     wbFillPNAM := cbFillPNAM.Checked;

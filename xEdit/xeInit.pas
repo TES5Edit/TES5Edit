@@ -177,7 +177,7 @@ begin
   if FileExists(xeSettingsFileName) then try
     Settings := TMemIniFile.Create(xeSettingsFileName);
     try
-      wbLoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
+      wbCurrentContext.LoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', wbLoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
       wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes); {changed name to enforce new default value}
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
@@ -1054,7 +1054,7 @@ begin
   case wbGameMode of
     gmFNV: begin
       wbVWDInTemporary        := True;
-      wbLoadBSAs              := False;
+      wbCurrentContext.LoadBSAs := False;
       wbCanSortINFO           := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
@@ -1062,18 +1062,18 @@ begin
     end;
     gmFO3: begin
       wbVWDInTemporary      := True;
-      wbLoadBSAs            := False;
+      wbCurrentContext.LoadBSAs := False;
       wbCanSortINFO         := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES3: begin
-      wbLoadBSAs            := False;
+      wbCurrentContext.LoadBSAs := False;
       wbAllowInternalEdit   := false;
       wbDontCache           := True;
       wbDontCacheLoad       := True;
       wbDontCacheSave       := True;
-      wbBuildRefs           := False;
+      wbCurrentContext.BuildRefs := False;
       wbVWDInTemporary      := True;
       wbCurrentContext.CreateContainedIn := False;
       wbCurrentContext.AllowESPMasters := True;
@@ -1084,14 +1084,14 @@ begin
         wbAppName           := 'Nehrim';
         wbGameMasterEsm     := 'Nehrim.esm';
       end;
-      wbLoadBSAs            := True;
+      wbCurrentContext.LoadBSAs := True;
       wbAllowInternalEdit   := false;
       wbCanSortINFO         := True;
       wbCurrentContext.AllowESPMasters := True;
       wbCurrentContext.AllowESPMastersOnSave := True;
     end;
     gmTES4R: begin
-      wbLoadBSAs            := False;
+      wbCurrentContext.LoadBSAs := False;
       wbAllowInternalEdit   := False;
       wbCanSortINFO         := True;
       wbCurrentContext.AllowESPMasters := True;
@@ -1099,7 +1099,7 @@ begin
     end;
     gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
       wbVWDInTemporary      := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbCanSortINFO         := True;
       wbVRESL               := (wbGameMode in [gmTES5VR]) and FileExists(wbDataPath + 'SKSE\Plugins\skyrimvresl.dll');
@@ -1112,7 +1112,7 @@ begin
     gmFO4, gmFO4VR: begin
       wbVWDInTemporary      := True;
       wbVWDAsQuestChildren  := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
@@ -1126,7 +1126,7 @@ begin
     gmFO76: begin
       wbVWDInTemporary      := True;
       wbVWDAsQuestChildren  := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
@@ -1136,7 +1136,7 @@ begin
       wbCurrentContext.EnforceAllMasters := True;
       wbVWDInTemporary      := True;
       wbVWDAsQuestChildren  := True;
-      wbLoadBSAs            := True;  // localization won't work otherwise
+      wbCurrentContext.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       wbAlwaysSaveOnam      := True;
       wbAlwaysSaveOnamForce := True;
@@ -1309,9 +1309,9 @@ begin
     wbAllowInternalEdit := False;
 
   if FindCmdLineSwitch('skipbsa') then
-    wbLoadBSAs := False
+    wbCurrentContext.LoadBSAs := False
   else if FindCmdLineSwitch('forcebsa') then
-    wbLoadBSAs := True;
+    wbCurrentContext.LoadBSAs := True;
 
   if FindCmdLineSwitch('skipInternalEditing') then
     wbAllowInternalEdit := False
@@ -1489,20 +1489,20 @@ begin
       wbIKnowWhatImDoing       := True;
       wbAllowInternalEdit      := False;
       wbShowInternalEdit       := False;
-      wbLoadBSAs               := True;
-      wbBuildRefs              := False;
+      wbCurrentContext.LoadBSAs := True;
+      wbCurrentContext.BuildRefs := False;
     end;
     tmScript: begin
       wbIKnowWhatImDoing       := True;
-      wbLoadBSAs               := True;
-      wbBuildRefs              := True;
+      wbCurrentContext.LoadBSAs := True;
+      wbCurrentContext.BuildRefs := True;
     end;
     tmOnamUpdate, tmMasterUpdate, tmESMify: begin
       wbIKnowWhatImDoing       := True;
       wbAllowInternalEdit      := False;
       wbShowInternalEdit       := False;
-      wbLoadBSAs               := False;
-      wbBuildRefs              := False;
+      wbCurrentContext.LoadBSAs := False;
+      wbCurrentContext.BuildRefs := False;
       wbMasterUpdateFilterONAM := wbToolMode in [tmESMify];
       if wbToolMode = tmOnamUpdate then begin
         wbAlwaysSaveOnam       := True;
@@ -1513,12 +1513,12 @@ begin
       wbIKnowWhatImDoing       := True;
       wbAllowInternalEdit      := False;
       wbShowInternalEdit       := False;
-      wbLoadBSAs               := False;
-      wbBuildRefs              := False;
+      wbCurrentContext.LoadBSAs := False;
+      wbCurrentContext.BuildRefs := False;
     end;
     tmTranslate: begin
       if wbGameMode >= gmTES5 then
-        wbLoadBSAs             := True; //needed for localization
+        wbCurrentContext.LoadBSAs := True; //needed for localization
       wbTranslationMode        := True;
       wbHideUnused             := True;
       wbHideIgnored            := True;
@@ -1571,7 +1571,7 @@ begin
     wbApplicationTitle := wbApplicationTitle + ' [Auto Exit]';
 
   if FindCmdLineSwitch('nobuildrefs') then
-    wbBuildRefs := False;
+    wbCurrentContext.BuildRefs := False;
 
   if FindCmdLineSwitch('fixuppgrd') then
     wbFixupPGRD := True;

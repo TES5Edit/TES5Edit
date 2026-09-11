@@ -1027,7 +1027,7 @@ begin
       wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode) );
       Delete(wbAppName, 1 ,2);
 
-      wbLoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      wbCurrentContext.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       tss := [tsPlugins, tsSaves];
       tms := [tmDump, tmExport];
 
@@ -1046,7 +1046,7 @@ begin
         end;
         gmTES3: begin
           wbGameName := 'Morrowind';
-          wbLoadBSAs := false;
+          wbCurrentContext.LoadBSAs := false;
           tms := [tmDump];
           tss := [tsPlugins];
         end;
@@ -1266,7 +1266,7 @@ begin
       end;
 
       //wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
-      wbLoadAllBSAs := True;
+      wbCurrentContext.LoadAllBSAs := True;
 
       if FindCmdLineSwitch('more') then
         wbMoreInfoForUnknown:= True
@@ -1508,7 +1508,7 @@ begin
       end;
 
       if wbToolMode in [tmExport] then begin
-        wbLoadBSAs := False;
+        wbCurrentContext.LoadBSAs := False;
         wbReportMode := False;
         wbMoreInfoForUnknown:= False;
         DumpCheckReport := False;
@@ -1558,7 +1558,7 @@ begin
             for i := 0 to Pred(Masters.Count) do begin
               t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + wbLanguage + '.STRINGS';
               if not FileExists(t) then begin
-                wbLoadBSAs := True;
+                wbCurrentContext.LoadBSAs := True;
                 Break;
               end;
             end;

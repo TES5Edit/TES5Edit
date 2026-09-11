@@ -3455,6 +3455,12 @@ type
     procedure SetEncoding(aValue: TEncoding);
     function GetEncodingTrans: TEncoding;
     procedure SetEncodingTrans(aValue: TEncoding);
+    function GetLoadBSAs: Boolean;
+    procedure SetLoadBSAs(aValue: Boolean);
+    function GetLoadAllBSAs: Boolean;
+    procedure SetLoadAllBSAs(aValue: Boolean);
+    function GetBuildRefs: Boolean;
+    procedure SetBuildRefs(aValue: Boolean);
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3569,6 +3575,15 @@ type
     property EncodingTrans: TEncoding
       read GetEncodingTrans
       write SetEncodingTrans;
+    property LoadBSAs: Boolean
+      read GetLoadBSAs
+      write SetLoadBSAs;
+    property LoadAllBSAs: Boolean
+      read GetLoadAllBSAs
+      write SetLoadAllBSAs;
+    property BuildRefs: Boolean
+      read GetBuildRefs
+      write SetBuildRefs;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
@@ -3806,6 +3821,9 @@ type
     Language              : string;
     Encoding              : TEncoding;
     EncodingTrans         : TEncoding;
+    LoadBSAs              : Boolean;
+    LoadAllBSAs           : Boolean;
+    BuildRefs             : Boolean;
     class function Defaults: TwbGameContextSettings; static;
   end;
 
@@ -3901,6 +3919,12 @@ type
     procedure SetEncoding(aValue: TEncoding);
     function GetEncodingTrans: TEncoding;
     procedure SetEncodingTrans(aValue: TEncoding);
+    function GetLoadBSAs: Boolean;
+    procedure SetLoadBSAs(aValue: Boolean);
+    function GetLoadAllBSAs: Boolean;
+    procedure SetLoadAllBSAs(aValue: Boolean);
+    function GetBuildRefs: Boolean;
+    procedure SetBuildRefs(aValue: Boolean);
     function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
@@ -5091,9 +5115,6 @@ function wbIsSave(const aFileName: string): Boolean;
 function wbStr4ToString(aInt: Int64): string;
 
 var
-  wbLoadBSAs         : Boolean{} = True{};
-  wbLoadAllBSAs      : Boolean{} = False{};
-  wbBuildRefs        : Boolean{} = True{};
   wbContainerHandler : IwbContainerHandler;
   wbLoaderDone       : Boolean;
   wbLoaderError      : Boolean;
@@ -6189,6 +6210,8 @@ begin
   Result.DelayLoadRecords := True;
   Result.Encoding := wbMBCSEncoding(1252);
   Result.EncodingTrans := Result.Encoding;
+  Result.LoadBSAs := True;
+  Result.BuildRefs := True;
 end;
 
 { TwbGameContext }
@@ -6294,6 +6317,36 @@ end;
 procedure TwbGameContext.SetEncodingTrans(aValue: TEncoding);
 begin
   Settings.EncodingTrans := aValue;
+end;
+
+function TwbGameContext.GetLoadBSAs: Boolean;
+begin
+  Result := Settings.LoadBSAs;
+end;
+
+procedure TwbGameContext.SetLoadBSAs(aValue: Boolean);
+begin
+  Settings.LoadBSAs := aValue;
+end;
+
+function TwbGameContext.GetLoadAllBSAs: Boolean;
+begin
+  Result := Settings.LoadAllBSAs;
+end;
+
+procedure TwbGameContext.SetLoadAllBSAs(aValue: Boolean);
+begin
+  Settings.LoadAllBSAs := aValue;
+end;
+
+function TwbGameContext.GetBuildRefs: Boolean;
+begin
+  Result := Settings.BuildRefs;
+end;
+
+procedure TwbGameContext.SetBuildRefs(aValue: Boolean);
+begin
+  Settings.BuildRefs := aValue;
 end;
 
 function TwbGameContext.GetCreationClubContentFileName: string;
