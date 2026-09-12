@@ -3338,6 +3338,9 @@ type
       read GetCapabilities;
   end;
 
+  TwbGetFormIDCallback = function(const aElement: IwbElement): TwbFormID;
+  TwbGetCellDetailsForWorldspaceCallback = function(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
+
   IwbGameContext = interface(IwbInterface)
     ['{BA650F2A-0ADF-4157-8D8D-63D0A49F3660}']
     function GetGameDef: IwbGameDef;
@@ -3503,6 +3506,10 @@ type
     procedure SetDontCacheLoad(aValue: Boolean);
     function GetDontCacheSave: Boolean;
     procedure SetDontCacheSave(aValue: Boolean);
+    function GetFormIDCallback: TwbGetFormIDCallback;
+    procedure SetFormIDCallback(aValue: TwbGetFormIDCallback);
+    function GetCellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback;
+    procedure SetCellDetailsForWorldspaceCallback(aValue: TwbGetCellDetailsForWorldspaceCallback);
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3753,6 +3760,12 @@ type
     property DontCacheSave: Boolean
       read GetDontCacheSave
       write SetDontCacheSave;
+    property FormIDCallback: TwbGetFormIDCallback
+      read GetFormIDCallback
+      write SetFormIDCallback;
+    property CellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback
+      read GetCellDetailsForWorldspaceCallback
+      write SetCellDetailsForWorldspaceCallback;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
@@ -4029,6 +4042,8 @@ type
     DontCache             : Boolean;
     DontCacheLoad         : Boolean;
     DontCacheSave         : Boolean;
+    FormIDCallback        : TwbGetFormIDCallback;
+    CellDetailsForWorldspaceCallback : TwbGetCellDetailsForWorldspaceCallback;
     class function Defaults: TwbGameContextSettings; static;
   end;
 
@@ -4219,6 +4234,10 @@ type
     procedure SetDontCacheLoad(aValue: Boolean);
     function GetDontCacheSave: Boolean;
     procedure SetDontCacheSave(aValue: Boolean);
+    function GetFormIDCallback: TwbGetFormIDCallback;
+    procedure SetFormIDCallback(aValue: TwbGetFormIDCallback);
+    function GetCellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback;
+    procedure SetCellDetailsForWorldspaceCallback(aValue: TwbGetCellDetailsForWorldspaceCallback);
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
     function GetSoundBankCache: IInterface;
     procedure SetSoundBankCache(const aValue: IInterface);
@@ -5452,10 +5471,6 @@ function CmpDouble(const a, b : Double) : Integer;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
 function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
-
-var
-  wbGetFormIDCallback : function(const aElement: IwbElement): TwbFormID;
-  wbGetCellDetailsForWorldspaceCallback : function (aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 
 function wbFlagsList(const aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 function wbSparseFlags(const aFlags: array of const; aUnknowns: Boolean = False; aSize: Cardinal = 32): TDynStrings;
@@ -7050,6 +7065,26 @@ begin
   Settings.DontCacheSave := aValue;
 end;
 
+function TwbGameContext.GetFormIDCallback: TwbGetFormIDCallback;
+begin
+  Result := Settings.FormIDCallback;
+end;
+
+procedure TwbGameContext.SetFormIDCallback(aValue: TwbGetFormIDCallback);
+begin
+  Settings.FormIDCallback := aValue;
+end;
+
+function TwbGameContext.GetCellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback;
+begin
+  Result := Settings.CellDetailsForWorldspaceCallback;
+end;
+
+procedure TwbGameContext.SetCellDetailsForWorldspaceCallback(aValue: TwbGetCellDetailsForWorldspaceCallback);
+begin
+  Settings.CellDetailsForWorldspaceCallback := aValue;
+end;
+
 function TwbGameContext.GetLoaderDone: Boolean;
 begin
   Result := gcLoaderDone;
@@ -7655,8 +7690,8 @@ end;
 
 function wbGetFormID(const aElement: IwbElement): TwbFormID;
 begin
-  if Assigned(wbGetFormIDCallback) then
-    Result := wbGetFormIDCallback(aElement)
+  if Assigned(_CurrentContext.Settings.FormIDCallback) then
+    Result := _CurrentContext.Settings.FormIDCallback(aElement)
   else
     Result := TwbFormID.Null;
 end;
@@ -7664,8 +7699,8 @@ end;
 function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 begin
   Result :=
-    Assigned(wbGetCellDetailsForWorldspaceCallback) and
-    wbGetCellDetailsForWorldspaceCallback(aWorldspace, aPersistent, aGridCell);
+    Assigned(_CurrentContext.Settings.CellDetailsForWorldspaceCallback) and
+    _CurrentContext.Settings.CellDetailsForWorldspaceCallback(aWorldspace, aPersistent, aGridCell);
 end;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;

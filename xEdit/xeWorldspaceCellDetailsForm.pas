@@ -69,5 +69,5 @@ begin
 end;
 
 initialization
-  wbGetCellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
+  wbCurrentContext.CellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
 end.

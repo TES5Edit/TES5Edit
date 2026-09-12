@@ -4610,7 +4610,7 @@ begin
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
 
-  wbGetFormIDCallback := GetFormIDCallback;
+  wbCurrentContext.FormIDCallback := GetFormIDCallback;
 
   tbsView.TabVisible := False;
   tbsWEAPSpreadsheet.TabVisible := False;
