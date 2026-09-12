@@ -26179,27 +26179,10 @@ begin
     Result := @_Version;
 end;
 
-var
-  _Identitys  : array[Byte] of TDictionary<string, Cardinal>;
-  _NextIDs    : array[Byte] of Cardinal;
-
 function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
-var
-  i: Cardinal;
 begin
   Assert(not (gcFormIDInRecordHeader in wbCurrentCapabilities));
-  aIdentity := aIdentity.ToLowerInvariant;
-
-  if not Assigned(_Identitys[aFormIDNameBase]) then
-    _Identitys[aFormIDNameBase] := TDictionary<string, Cardinal>.Create;
-
-  if not _Identitys[aFormIDNameBase].TryGetValue(aIdentity, i) then begin
-    i := _NextIDs[aFormIDNameBase];
-    Inc(_NextIDs[aFormIDNameBase]);
-    _Identitys[aFormIDNameBase].Add(aIdentity, i);
-  end;
-
-  Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
+  Result := _CurrentContext.FormIDFromIdentity(aFormIDBase, aFormIDNameBase, aIdentity);
 end;
 
 { TwbTemplateElement }
@@ -26280,8 +26263,6 @@ finalization
   wbContainedInDef[6] := nil;
   wbContainedInDef[7] := nil;
   wbContainedInDef[10] := nil;
-  for var i := Low(_Identitys) to High(_Identitys) do
-    FreeAndNil(_Identitys[i]);
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   _ResizeLock.Destroy;

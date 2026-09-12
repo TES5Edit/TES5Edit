@@ -4078,6 +4078,8 @@ type
     gcLocalizationHandler  : TObject;
     gcSoundBankCache       : IInterface;
     gcGlobalGeneration     : Integer;
+    gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
+    gcNextIDs              : array[Byte] of Cardinal;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -4264,6 +4266,7 @@ type
     function AllocateMediumSlot: Integer;
     procedure ForceClosed;
     procedure IncGlobalGeneration;
+    function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 
     property GlobalGeneration: Integer
       read gcGlobalGeneration;
@@ -6606,6 +6609,8 @@ begin
   gcSoundBankCache := nil;
   FreeAndNil(gcLocalizationHandler);
   gcContainerHandler := nil;
+  for var i := Low(gcIdentitys) to High(gcIdentitys) do
+    FreeAndNil(gcIdentitys[i]);
   FreeAndNil(gcFilesMap);
   FreeAndNil(gcModuleList);
   FreeAndNil(gcModGroupList);
@@ -7104,6 +7109,24 @@ end;
 procedure TwbGameContext.IncGlobalGeneration;
 begin
   Inc(gcGlobalGeneration);
+end;
+
+function TwbGameContext.FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+var
+  i: Cardinal;
+begin
+  aIdentity := aIdentity.ToLowerInvariant;
+
+  if not Assigned(gcIdentitys[aFormIDNameBase]) then
+    gcIdentitys[aFormIDNameBase] := TDictionary<string, Cardinal>.Create;
+
+  if not gcIdentitys[aFormIDNameBase].TryGetValue(aIdentity, i) then begin
+    i := gcNextIDs[aFormIDNameBase];
+    Inc(gcNextIDs[aFormIDNameBase]);
+    gcIdentitys[aFormIDNameBase].Add(aIdentity, i);
+  end;
+
+  Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
 end;
 
 function TwbGameContext.GetLoaderDone: Boolean;
