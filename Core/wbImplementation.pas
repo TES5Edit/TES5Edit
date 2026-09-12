@@ -699,6 +699,7 @@ type
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
+    function GetBaseOffset: NativeUInt;
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
     procedure AddAllMastersToSet(aMasters: TwbFilesSet);
     function flFindKeyInIndex(aIndex: TwbNamedIndex; const aKey: string; out aMainRecord: IwbMainRecord): Boolean;
@@ -732,6 +733,7 @@ type
     flView                   : Pointer;
     flSize                   : Int64;
     flEndPtr                 : Pointer;
+    flBaseOffset             : NativeUInt;
     flCRC32                  : TwbCRC32;
 
     flMasters                : TwbFiles;
@@ -948,6 +950,7 @@ type
     procedure GetMasters(aMasters: TStrings); virtual;
     procedure IncGeneration;
     function GetFileGeneration: Integer;
+    function GetBaseOffset: NativeUInt;
     procedure UpdateIndexKeys(const aMainRecord: IwbMainRecord; const aChangedKeys: TwbChangedKeys);
     procedure AddAllMastersToSet(aMasters: TwbFilesSet);
 
@@ -4199,6 +4202,11 @@ end;
 function TwbFile.GetFile: IwbFile;
 begin
   Result := Self;
+end;
+
+function TwbFile.GetBaseOffset: NativeUInt;
+begin
+  Result := flBaseOffset;
 end;
 
 function TwbFile.GetContext: IwbGameContext;
@@ -24944,6 +24952,8 @@ function TwbValueBase.GetDisplayName(aUseSuffix: Boolean): string;
 var
   Resolved: IwbValueDef;
   Container: IwbDataContainer;
+  FileInternal: IwbFileInternal;
+  BaseOffset: NativeUInt;
 begin
   Resolved := Resolve(vbValueDef, GetDataBasePtr, GetDataEndPtr, Self);
   if (not Assigned(Resolved)) or (Resolved <> vbValueDef) and (Resolved.DefType in dtNonValues) then
@@ -24952,17 +24962,20 @@ begin
     Result := Resolved.Name;
   if Assigned(Resolved) then
   begin
+    BaseOffset := 0;
+    if (Resolved.DefType in dtNonValues) and ((wbDumpOffset = 1) or (wbDumpOffset > 2)) and Supports(GetFile, IwbFileInternal, FileInternal) then
+      BaseOffset := FileInternal.GetBaseOffset;
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset=1) then // simply display starting offset.
-      if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
-        Result := Result + ' {' + IntToStr(NativeUInt(GetDataBasePtr) - wbBaseOffset) + '}'
+      if BaseOffset <= NativeUInt(GetDataBasePtr) then
+        Result := Result + ' {' + IntToStr(NativeUInt(GetDataBasePtr) - BaseOffset) + '}'
       else
         Result := Result + ' {{' + IntToStr(NativeUInt(GetDataBasePtr)) + '}}';
     // something for Dump: Displaying the size in {} and the array count in []
     //  Triggers a lot of pre calculations
     if (Resolved.DefType in dtNonValues) and (wbDumpOffset>2) then
-      if wbBaseOffset <= NativeUInt(GetDataBasePtr) then
-        Result := Result + ' {' + IntToStr(NativeUInt(GetDataEndPtr) - wbBaseOffset) +
-          '-' + IntToStr(NativeUInt(GetDataBasePtr) - wbBaseOffset) +
+      if BaseOffset <= NativeUInt(GetDataBasePtr) then
+        Result := Result + ' {' + IntToStr(NativeUInt(GetDataEndPtr) - BaseOffset) +
+          '-' + IntToStr(NativeUInt(GetDataBasePtr) - BaseOffset) +
           ' = ' + IntToStr(Resolved.Size[GetDataBasePtr, GetDataEndPtr, Self]) + '}'
       else
         Result := Result + ' {{' + IntToStr(NativeUInt(GetDataEndPtr)) +
@@ -25913,7 +25926,7 @@ begin
 
   flLoadOrderFileID := TwbFileID.CreateFull($FF);
 
-  wbBaseOffset := NativeUInt(flView);
+  flBaseOffset := NativeUInt(flView);
 
   CurrentPtr := flView;
   TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, wbFileHeader, '', False);

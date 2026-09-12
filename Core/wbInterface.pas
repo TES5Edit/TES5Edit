@@ -316,7 +316,6 @@ var
   wbAngleDigits                      : Integer    = 4;
 
   wbDumpOffset                       : Integer    = 0;              // 1= starting offset, 2 = Count, 3 = Offsets, size and count
-  wbBaseOffset                       : NativeUInt = 0;
 
   wbProgramPath                      : string;
 
