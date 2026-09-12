@@ -3356,39 +3356,11 @@ begin
   end;
 end;
 
-type
-  TFaceGenFeature = record
-    RaceID  : string;
-    Female  : Boolean;
-    Entries : array of record
-      Index: Cardinal;
-      Name : string;
-    end;
-  end;
-  PFaceGenFeature = ^TFaceGenFeature;
-
-var
-  // cache of race specific face morphs
-  FaceMorphs: array of TFaceGenFeature;
-  // cache of race specific tint layers
-  TintLayers: array of TFaceGenFeature;
-  // cache of race specific morph groups/presets and values
-  MorphValues: array of TFaceGenFeature;
-
-
 function wbMorphValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
-  var
-    i: integer;
+  function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := nil;
-    if Length(MorphValues) <> 0 then
-      for i := Low(MorphValues) to High(MorphValues) do
-        if (MorphValues[i].Female = aFemale) and (MorphValues[i].RaceID = aRaceID) then begin
-          Result := @MorphValues[i];
-          Break;
-        end;
+    Result := wbFaceGenCacheOf(aElement).Cached(fgkMorphValues, aRaceID, aFemale);
   end;
 
 var
@@ -3398,7 +3370,7 @@ var
   Container2, Entry2: IwbContainerElementRef;
   Female, Female2   : Boolean;
   RaceID, EntryName : string;
-  Cache             : PFaceGenFeature;
+  Cache             : PwbFaceGenFeature;
   Index             : Cardinal;
   i, j, k           : integer;
   slList            : TStringList;
@@ -3442,10 +3414,7 @@ begin
     for i := 0 to 1 do begin
 
       Female2 := i = 1;
-      SetLength(MorphValues, Succ(Length(MorphValues)));
-      Cache := @MorphValues[Pred(Length(MorphValues))];
-      Cache.RaceID := RaceID;
-      Cache.Female := Female2;
+      Cache := wbFaceGenCacheOf(aElement).Append(fgkMorphValues, RaceID, Female2);
 
       slList.Clear;
 
@@ -3539,17 +3508,9 @@ begin
 end;
 
 function wbFaceMorphToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
-  var
-    i: integer;
+  function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := nil;
-    if Length(FaceMorphs) <> 0 then
-      for i := Low(FaceMorphs) to High(FaceMorphs) do
-        if (FaceMorphs[i].Female = aFemale) and (FaceMorphs[i].RaceID = aRaceID) then begin
-          Result := @FaceMorphs[i];
-          Break;
-        end;
+    Result := wbFaceGenCacheOf(aElement).Cached(fgkFaceMorphs, aRaceID, aFemale);
   end;
 
 var
@@ -3558,7 +3519,7 @@ var
   Container, Entry      : IwbContainerElementRef;
   Female, Female2       : Boolean;
   RaceID, EntryName     : string;
-  Cache                 : PFaceGenFeature;
+  Cache                 : PwbFaceGenFeature;
   Index                 : Cardinal;
   i, j                  : integer;
 begin
@@ -3599,10 +3560,7 @@ begin
     for i := 0 to 1 do begin
 
       Female2 := i = 1;
-      SetLength(FaceMorphs, Succ(Length(FaceMorphs)));
-      Cache := @FaceMorphs[Pred(Length(FaceMorphs))];
-      Cache.RaceID := RaceID;
-      Cache.Female := Female2;
+      Cache := wbFaceGenCacheOf(aElement).Append(fgkFaceMorphs, RaceID, Female2);
 
       if not Female2 then
         Element := Race.ElementByPath['Head Datas\Male Head Data\Male Face Morphs']
@@ -3682,17 +3640,9 @@ end;
 
 function wbTintLayerToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-  function GetCached(const aRaceID: string; aFemale: boolean): PFaceGenFeature;
-  var
-    i: integer;
+  function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := nil;
-    if Length(TintLayers) <> 0 then
-      for i := Low(TintLayers) to High(TintLayers) do
-        if (TintLayers[i].Female = aFemale) and (TintLayers[i].RaceID = aRaceID) then begin
-          Result := @TintLayers[i];
-          Break;
-        end;
+    Result := wbFaceGenCacheOf(aElement).Cached(fgkTintLayers, aRaceID, aFemale);
   end;
 
 var
@@ -3702,7 +3652,7 @@ var
   Container2, Entry2: IwbContainerElementRef;
   Female, Female2   : Boolean;
   RaceID, EntryName : string;
-  Cache             : PFaceGenFeature;
+  Cache             : PwbFaceGenFeature;
   Index             : Cardinal;
   i, j, k           : integer;
   slList            : TStringList;
@@ -3745,10 +3695,7 @@ begin
 
     for i := 0 to 1 do begin
       Female2 := i = 1;
-      SetLength(TintLayers, Succ(Length(TintLayers)));
-      Cache := @TintLayers[Pred(Length(TintLayers))];
-      Cache.RaceID := RaceID;
-      Cache.Female := Female2;
+      Cache := wbFaceGenCacheOf(aElement).Append(fgkTintLayers, RaceID, Female2);
 
       if not Female2 then
         Element := Race.ElementByPath['Head Datas\Male Head Data\Male Tint Layers']

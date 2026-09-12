@@ -3347,6 +3347,24 @@ type
   TwbRefIDArray = array of UInt64;
   {$ENDIF WIN64}
 
+  TwbFaceGenFeature = record
+    RaceID  : string;
+    Female  : Boolean;
+    Entries : array of record
+      Index: Cardinal;
+      Name : string;
+    end;
+  end;
+  PwbFaceGenFeature = ^TwbFaceGenFeature;
+  TwbFaceGenFeatures = array of TwbFaceGenFeature;
+  TwbFaceGenKind = (fgkFaceMorphs, fgkTintLayers, fgkMorphValues);
+
+  IwbFaceGenCache = interface(IwbInterface)
+    ['{A4D17E62-3C9B-4B0F-8E25-7F1C60D9B2A8}']
+    function Cached(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
+    function Append(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
+  end;
+
   IwbSaveTables = interface(IwbInterface)
     ['{6F2D9C41-8B3A-4E57-A1C0-5D7E92B4F318}']
     procedure InitializeVMTypeArray(const aContainer: IwbContainer);
@@ -3582,6 +3600,8 @@ type
     procedure SetSoundBankCache(const aValue: IInterface);
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
+    function GetFaceGenCache: IwbFaceGenCache;
+    procedure SetFaceGenCache(const aValue: IwbFaceGenCache);
     property ContainerHandler: IwbContainerHandler
       read GetContainerHandler
       write SetContainerHandler;
@@ -3591,6 +3611,9 @@ type
     property SaveTables: IwbSaveTables
       read GetSaveTables
       write SetSaveTables;
+    property FaceGenCache: IwbFaceGenCache
+      read GetFaceGenCache
+      write SetFaceGenCache;
     property GameMasterFile: IwbFile
       read GetGameMasterFile;
 
@@ -4138,6 +4161,7 @@ type
     gcLocalizationHandler  : TObject;
     gcSoundBankCache       : IInterface;
     gcSaveTables           : IwbSaveTables;
+    gcFaceGenCache         : IwbFaceGenCache;
     gcGlobalGeneration     : Integer;
     gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
@@ -4385,6 +4409,11 @@ type
     property SaveTables: IwbSaveTables
       read gcSaveTables
       write gcSaveTables;
+    function GetFaceGenCache: IwbFaceGenCache;
+    procedure SetFaceGenCache(const aValue: IwbFaceGenCache);
+    property FaceGenCache: IwbFaceGenCache
+      read gcFaceGenCache
+      write gcFaceGenCache;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
@@ -5721,6 +5750,7 @@ var
 
 function wbReadInteger24(aBasePtr: pointer): Int64;
 function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
+function wbFaceGenCacheOf(const aElement: IwbElement): IwbFaceGenCache;
 
 function wbFindRecordDef(const aSignature : TwbSignature;
                            out aRecordDef : PwbMainRecordDef)
@@ -6663,6 +6693,7 @@ end;
 
 destructor TwbGameContext.Destroy;
 begin
+  gcFaceGenCache := nil;
   gcSaveTables := nil;
   gcFiles := nil;
   gcSoundBankCache := nil;
@@ -7423,6 +7454,16 @@ begin
   gcSaveTables := aValue;
 end;
 
+function TwbGameContext.GetFaceGenCache: IwbFaceGenCache;
+begin
+  Result := gcFaceGenCache;
+end;
+
+procedure TwbGameContext.SetFaceGenCache(const aValue: IwbFaceGenCache);
+begin
+  gcFaceGenCache := aValue;
+end;
+
 function TwbGameContext.GetIgnoreLight: Boolean;
 begin
   Result := Settings.IgnoreLight;
@@ -7638,6 +7679,7 @@ end;
 
 procedure TwbGameContext.ForceClosed;
 begin
+  gcFaceGenCache := nil;
   gcSaveTables := nil;
   gcFiles := nil;
   gcFilesMap.Clear;
@@ -23991,6 +24033,53 @@ begin
   Result := ToStringTransform(aBasePtr, aEndPtr, aElement, ttToSortKey);
   if Assigned(ndToStr) then
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToSortKey);
+end;
+
+{ TwbFaceGenCache }
+
+type
+  TwbFaceGenCache = class(TInterfacedObject, IwbFaceGenCache)
+  protected
+    fgcFeatures : array[TwbFaceGenKind] of TwbFaceGenFeatures;
+    function Cached(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
+    function Append(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
+  end;
+
+function TwbFaceGenCache.Cached(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
+begin
+  Result := nil;
+  for var i := Low(fgcFeatures[aKind]) to High(fgcFeatures[aKind]) do
+    if (fgcFeatures[aKind][i].Female = aFemale) and (fgcFeatures[aKind][i].RaceID = aRaceID) then
+      Exit(@fgcFeatures[aKind][i]);
+end;
+
+function TwbFaceGenCache.Append(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
+begin
+  SetLength(fgcFeatures[aKind], Succ(Length(fgcFeatures[aKind])));
+  Result := @fgcFeatures[aKind][High(fgcFeatures[aKind])];
+  Result.RaceID := aRaceID;
+  Result.Female := aFemale;
+end;
+
+function wbFaceGenCacheOf(const aElement: IwbElement): IwbFaceGenCache;
+var
+  lFile    : IwbFile;
+  lContext : IwbGameContext;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+  lFile := aElement._File;
+  if not Assigned(lFile) then
+    Exit;
+  lContext := lFile.Context;
+  if not Assigned(lContext) then
+    Exit;
+  Result := lContext.FaceGenCache;
+  if not Assigned(Result) then begin
+    Result := TwbFaceGenCache.Create;
+    lContext.FaceGenCache := Result;
+  end;
 end;
 
 { TwbRefID }
