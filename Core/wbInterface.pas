@@ -3369,6 +3369,7 @@ type
     ['{6F2D9C41-8B3A-4E57-A1C0-5D7E92B4F318}']
     procedure InitializeVMTypeArray(const aContainer: IwbContainer);
     procedure InitializeVMObjectArray(const aContainer: IwbContainer);
+    procedure AppendVMObjectArray(const aContainer: IwbContainer);
     procedure InitializeVMObjectDetachedArray(const aContainer: IwbContainer);
     procedure InitializeVMArrayTable(const aContainer: IwbContainer);
     procedure InitializeSaveWorldspaceArray(const aContainer: IwbContainer);

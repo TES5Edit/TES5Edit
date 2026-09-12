@@ -747,7 +747,7 @@ begin
   lTables := wbSaveTablesOf(aElement);
   if lTables.VMSupplementObjectArrayCount < 0 then begin
     lTables.VMSupplementObjectArrayCount := (aElement as IwbContainer).ElementCount;
-    lTables.InitializeVMObjectArray(aElement as IwbContainer);
+    lTables.AppendVMObjectArray(aElement as IwbContainer);
     if lTables.VMObjectArrayCount >= 0 then
       lTables.VMObjectArrayCount := lTables.VMObjectArrayCount + lTables.VMSupplementObjectArrayCount;
   end;

@@ -98,6 +98,7 @@ type
 
     procedure InitializeVMTypeArray(const aContainer: IwbContainer);
     procedure InitializeVMObjectArray(const aContainer: IwbContainer);
+    procedure AppendVMObjectArray(const aContainer: IwbContainer);
     procedure InitializeVMObjectDetachedArray(const aContainer: IwbContainer);
     procedure InitializeVMArrayTable(const aContainer: IwbContainer);
     procedure InitializeSaveWorldspaceArray(const aContainer: IwbContainer);
@@ -258,6 +259,22 @@ begin
       Container := (aContainer.Elements[i] as IwbContainer);
       stObjectHandles[i].Handle := Container.ElementByName['Object Handle'].NativeValue;
       stObjectHandles[i].VMType := Container.ElementByName['Name'].NativeValue;
+    end;
+  end;
+end;
+
+procedure TwbSaveTables.AppendVMObjectArray(const aContainer: IwbContainer);
+var
+  i, lBase  : Integer;
+  Container : IwbContainer;
+begin
+  if Assigned(aContainer) and (aContainer.ElementCount > 0) then begin
+    lBase := Length(stObjectHandles);
+    SetLength(stObjectHandles, lBase + aContainer.ElementCount);
+    for i := 0 to Pred(aContainer.ElementCount) do begin
+      Container := (aContainer.Elements[i] as IwbContainer);
+      stObjectHandles[lBase + i].Handle := Container.ElementByName['Object Handle'].NativeValue;
+      stObjectHandles[lBase + i].VMType := Container.ElementByName['Name'].NativeValue;
     end;
   end;
 end;
