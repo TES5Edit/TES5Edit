@@ -224,7 +224,7 @@ procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
   if WorldspaceTableCount < 0 then begin
     WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeSaveWorldspaceArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
   end;
 end;
 
@@ -235,7 +235,7 @@ procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
   if RefIDTableCount < 0 then begin
     RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeSaveRefIDArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
   end;
 end;
 

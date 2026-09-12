@@ -611,7 +611,7 @@ procedure VMTypeAfterLoad(const aElement: IwbElement);
 begin
   if VMTypeCount < 0 then begin
     VMTypeCount := (aElement as IwbContainer).ElementCount;
-    InitializeVMTypeArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeVMTypeArray(aElement as IwbContainer);
   end;
 end;
 
@@ -622,7 +622,7 @@ procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
   if WorldspaceTableCount < 0 then begin
     WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeSaveWorldspaceArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
   end;
 end;
 
@@ -633,7 +633,7 @@ procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
   if RefIDTableCount < 0 then begin
     RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeSaveRefIDArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
   end;
 end;
 
@@ -645,7 +645,7 @@ procedure ObjectTableAfterLoad(const aElement: IwbElement);
 begin
   if VMObjectArrayCount < 0 then begin
     VMObjectArrayCount := (aElement as IwbContainer).ElementCount;
-    InitializeVMObjectArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeVMObjectArray(aElement as IwbContainer);
   end;
 end;
 
@@ -653,7 +653,7 @@ procedure ObjectDetachedTableAfterLoad(const aElement: IwbElement);
 begin
   if VMObjectDetachedArrayCount < 0 then begin
     VMObjectDetachedArrayCount := (aElement as IwbContainer).ElementCount;
-    InitializeVMObjectDetachedArray(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeVMObjectDetachedArray(aElement as IwbContainer);
   end;
 end;
 
@@ -664,7 +664,7 @@ procedure ArrayTableAfterLoad(const aElement: IwbElement);
 begin
   if VMArrayTableCount < 0 then begin
     VMArrayTableCount := (aElement as IwbContainer).ElementCount;
-    InitializeVMArrayTable(aElement as IwbContainer);
+    wbSaveTablesOf(aElement).InitializeVMArrayTable(aElement as IwbContainer);
   end;
 end;
 
@@ -883,7 +883,7 @@ begin
             end;
     end;
   end else
-    Result := QueryCountForVMArrayHandle(Handle);
+    Result := wbSaveTablesOf(aElement).VMArrayCount(Handle);
 end;
 
 function ObjectDataTableEntryExtraDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -1983,7 +1983,7 @@ begin
       if anID > 0 then begin
         if PlayerRefIndex = 0 then
           if (anID shr 22) = 0 then
-            if GetSaveRefID(anID) = wbPlayerRefID then
+            if wbSaveTablesOf(aElement).SaveRefID(anID) = wbPlayerRefID then
                 PlayerRefIndex := anID;
         if anID = PlayerRefIndex then
           Result := 1;

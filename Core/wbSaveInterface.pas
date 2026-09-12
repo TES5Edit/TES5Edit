@@ -25,16 +25,8 @@ function wbVMObjectHandle      : IwbIntegerDefFormater;
 function wbVMArrayHandle       : IwbIntegerDefFormater;
 function wbSaveWorldspaceIndex : IwbIntegerDefFormater;
 
-procedure InitializeVMTypeArray(aContainer: IwbContainer);
-procedure InitializeVMObjectArray(aContainer: IwbContainer);
-procedure InitializeVMObjectDetachedArray(aContainer: IwbContainer);
-procedure InitializeVMArrayTable(aContainer: IwbContainer);
-
-procedure InitializeSaveWorldspaceArray(aContainer: IwbContainer);
-procedure InitializeSaveRefIDArray(aContainer: IwbContainer);
-function GetSaveRefID(aIndex: Cardinal): Cardinal;
-
-function QueryCountForVMArrayHandle(anArrayHandle: Int64): Int64;
+function wbCreateSaveTables: IwbSaveTables;
+function wbSaveTablesOf(const aElement: IwbElement): IwbSaveTables;
 
 function wbFindSaveElement(const aName: String; aElement: IwbElement): IwbElement;
 function wbDontShowBranch(const aElement: IwbElement): Boolean;
@@ -65,98 +57,159 @@ implementation
 uses
   System.SysUtils;
 
-{ wbVMType }
-
-var
-  sifVMTypeArray : array of String = nil;
-
-procedure InitializeVMTypeArray(aContainer: IwbContainer);
-var
-  i   : Integer;
-begin
-  if Assigned(aContainer) and not assigned(sifVMTypeArray) then begin
-    SetLength(sifVMTypeArray, aContainer.ElementCount);
-    for i := 0 to Pred(aContainer.ElementCount) do
-      sifVMTypeArray[i] := aContainer.Elements[i].NativeValue;
-  end;
-end;
-
-function TwbVMTypeFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
-begin
-  if aType = ctToSortKey then
-    Result := IntToHex64(aInt, 8)
-  else if (aInt >= 0) and (aInt < Length(sifVMTypeArray)) then
-    Result := '[' + IntToHex64(aInt, 8) + '] '+ sifVMTypeArray[aInt]
-  else
-    Result := '[' + IntToHex64(aInt, 8) + '] <no such string>';
-end;
-
-{ wbVMObjectHandle }
-
 type
   ohfVMObjectHandleRecord = record
     Handle: Int64;
     VMType: Integer;
   end;
 
-var
-  ohfVMObjectHandleTable : array of ohfVMObjectHandleRecord = nil;  // stores VMType
-  ohfVMObjectDetachedHandleTable : array of ohfVMObjectHandleRecord = nil;  // stores VMType
+  ahfVMArrayHandleRecord = record
+    Handle : Int64;
+    Count  : Int64;
+  end;
 
-procedure InitializeVMObjectArray(aContainer: IwbContainer);
+  TwbSaveTables = class(TInterfacedObject, IwbSaveTables)
+  protected
+    stVMTypes         : array of String;
+    stObjectHandles   : array of ohfVMObjectHandleRecord;
+    stDetachedHandles : array of ohfVMObjectHandleRecord;
+    stArrayHandles    : array of ahfVMArrayHandleRecord;
+    stWorldspaces     : array of IwbElement;
+    stRefIDs          : TwbRefIDArray;
+
+    procedure InitializeVMTypeArray(const aContainer: IwbContainer);
+    procedure InitializeVMObjectArray(const aContainer: IwbContainer);
+    procedure InitializeVMObjectDetachedArray(const aContainer: IwbContainer);
+    procedure InitializeVMArrayTable(const aContainer: IwbContainer);
+    procedure InitializeSaveWorldspaceArray(const aContainer: IwbContainer);
+    procedure InitializeSaveRefIDArray(const aContainer: IwbContainer);
+    procedure SetRefIDArray(const anArray: TwbRefIDArray);
+    function VMTypeName(aIndex: Int64): string;
+    function ObjectName(aHandle: Int64): string;
+    function VMArrayCount(aHandle: Int64): Int64;
+    function SaveWorldspaceName(aIndex: Int64): string;
+    function SaveRefID(aIndex: Cardinal): Cardinal;
+    function GetRefIDArray: TwbRefIDArray;
+  end;
+
+function wbCreateSaveTables: IwbSaveTables;
+begin
+  Result := TwbSaveTables.Create;
+end;
+
+function wbSaveTablesOf(const aElement: IwbElement): IwbSaveTables;
+var
+  lFile    : IwbFile;
+  lContext : IwbGameContext;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+  lFile := aElement._File;
+  if not Assigned(lFile) then
+    Exit;
+  lContext := lFile.Context;
+  if not Assigned(lContext) then
+    Exit;
+  Result := lContext.SaveTables;
+  if not Assigned(Result) then begin
+    Result := wbCreateSaveTables;
+    lContext.SaveTables := Result;
+  end;
+end;
+
+{ wbVMType }
+
+procedure TwbSaveTables.InitializeVMTypeArray(const aContainer: IwbContainer);
+var
+  i   : Integer;
+begin
+  if Assigned(aContainer) and not assigned(stVMTypes) then begin
+    SetLength(stVMTypes, aContainer.ElementCount);
+    for i := 0 to Pred(aContainer.ElementCount) do
+      stVMTypes[i] := aContainer.Elements[i].NativeValue;
+  end;
+end;
+
+function TwbSaveTables.VMTypeName(aIndex: Int64): string;
+begin
+  if (aIndex >= 0) and (aIndex < Length(stVMTypes)) then
+    Result := '[' + IntToHex64(aIndex, 8) + '] '+ stVMTypes[aIndex]
+  else
+    Result := '[' + IntToHex64(aIndex, 8) + '] <no such string>';
+end;
+
+function TwbVMTypeFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  lTables : IwbSaveTables;
+begin
+  if aType = ctToSortKey then
+    Result := IntToHex64(aInt, 8)
+  else begin
+    lTables := wbSaveTablesOf(aElement);
+    if Assigned(lTables) then
+      Result := lTables.VMTypeName(aInt)
+    else
+      Result := '[' + IntToHex64(aInt, 8) + '] <no such string>';
+  end;
+end;
+
+{ wbVMObjectHandle }
+
+procedure TwbSaveTables.InitializeVMObjectArray(const aContainer: IwbContainer);
 var
   i         : Integer;
   Container : IwbContainer;
 begin
-  if Assigned(aContainer) and not Assigned(ohfVMObjectHandleTable) then begin
-    SetLength(ohfVMObjectHandleTable, aContainer.ElementCount);
+  if Assigned(aContainer) and not Assigned(stObjectHandles) then begin
+    SetLength(stObjectHandles, aContainer.ElementCount);
     for i := 0 to Pred(aContainer.ElementCount) do begin
       Container := (aContainer.Elements[i] as IwbContainer);
-      ohfVMObjectHandleTable[i].Handle := Container.ElementByName['Object Handle'].NativeValue;
-      ohfVMObjectHandleTable[i].VMType := Container.ElementByName['Name'].NativeValue;
+      stObjectHandles[i].Handle := Container.ElementByName['Object Handle'].NativeValue;
+      stObjectHandles[i].VMType := Container.ElementByName['Name'].NativeValue;
     end;
   end;
 end;
 
-procedure InitializeVMObjectDetachedArray(aContainer: IwbContainer);
+procedure TwbSaveTables.InitializeVMObjectDetachedArray(const aContainer: IwbContainer);
 var
   i         : Integer;
   Container : IwbContainer;
 begin
-  if Assigned(aContainer) and not Assigned(ohfVMObjectDetachedHandleTable) and (aContainer.ElementCount>0) then begin
-    SetLength(ohfVMObjectDetachedHandleTable, aContainer.ElementCount);
+  if Assigned(aContainer) and not Assigned(stDetachedHandles) and (aContainer.ElementCount>0) then begin
+    SetLength(stDetachedHandles, aContainer.ElementCount);
     for i := 0 to Pred(aContainer.ElementCount) do begin
       Container := (aContainer.Elements[i] as IwbContainer);
-      ohfVMObjectDetachedHandleTable[i].Handle := Container.ElementByName['Object Handle'].NativeValue;
-      ohfVMObjectDetachedHandleTable[i].VMType := Container.ElementByName['Name'].NativeValue;
+      stDetachedHandles[i].Handle := Container.ElementByName['Object Handle'].NativeValue;
+      stDetachedHandles[i].VMType := Container.ElementByName['Name'].NativeValue;
     end;
   end;
 end;
 
-function ReadObjectName(aInt: Int64): String;
+function TwbSaveTables.ObjectName(aHandle: Int64): string;
 var
   VMType : Integer;
   i      : Integer;
 begin
   Result := '';
   VMType := -1;
-  for i := 0 to High(ohfVMObjectHandleTable) do
-    if ohfVMObjectHandleTable[i].Handle=aInt then begin
-      VMType := ohfVMObjectHandleTable[i].VMType;
+  for i := 0 to High(stObjectHandles) do
+    if stObjectHandles[i].Handle=aHandle then begin
+      VMType := stObjectHandles[i].VMType;
       Break;
     end;
   if VMType<0 then
-    for i := 0 to High(ohfVMObjectDetachedHandleTable) do
-      if ohfVMObjectDetachedHandleTable[i].Handle=aInt then begin
-        VMType := ohfVMObjectDetachedHandleTable[i].VMType;
+    for i := 0 to High(stDetachedHandles) do
+      if stDetachedHandles[i].Handle=aHandle then begin
+        VMType := stDetachedHandles[i].VMType;
         Break;
       end;
   if VMType < 0 then
     Exit;
-  if VMType < Length(sifVMTypeArray) then
-    Result := '[' + IntToHex64(aInt, 8) + '] '+ sifVMTypeArray[VMType]
+  if VMType < Length(stVMTypes) then
+    Result := '[' + IntToHex64(aHandle, 8) + '] '+ stVMTypes[VMType]
   else
-    Result := '[' + IntToHex64(aInt, 8) + '] <no such type>';
+    Result := '[' + IntToHex64(aHandle, 8) + '] <no such type>';
 end;
 
 function TwbHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -165,11 +218,16 @@ begin
 end;
 
 function TwbObjectHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  lTables : IwbSaveTables;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 8)
   else begin
-    Result := ReadObjectName(aInt);
+    Result := '';
+    lTables := wbSaveTablesOf(aElement);
+    if Assigned(lTables) then
+      Result := lTables.ObjectName(aInt);
     if Result = '' then
       if aInt = 0 then
         Result := '[' + IntToHex64(aInt, 8) + '] [empty]'
@@ -180,38 +238,29 @@ end;
 
 { wbVMArrayHandle }
 
-type
-  ahfVMArrayHandleRecord = record
-    Handle : Int64;
-    Count  : Int64;
-  end;
-
-var
-  ahfVMArrayHandleTable : array of ahfVMArrayHandleRecord = nil;  // stores VMType
-
-procedure InitializeVMArrayTable(aContainer: IwbContainer);
+procedure TwbSaveTables.InitializeVMArrayTable(const aContainer: IwbContainer);
 var
   i         : Integer;
   Container : IwbContainer;
 begin
-  if Assigned(aContainer) and not Assigned(ahfVMArrayHandleTable) then begin
-    SetLength(ahfVMArrayHandleTable, aContainer.ElementCount);
+  if Assigned(aContainer) and not Assigned(stArrayHandles) then begin
+    SetLength(stArrayHandles, aContainer.ElementCount);
     for i := 0 to Pred(aContainer.ElementCount) do begin
       Container := (aContainer.Elements[i] as IwbContainer);
-      ahfVMArrayHandleTable[i].Handle := Container.ElementByName['Array Handle'].NativeValue;
-      ahfVMArrayHandleTable[i].Count := Container.ElementByName['Count'].NativeValue;
+      stArrayHandles[i].Handle := Container.ElementByName['Array Handle'].NativeValue;
+      stArrayHandles[i].Count := Container.ElementByName['Count'].NativeValue;
     end;
   end;
 end;
 
-function QueryCountForVMArrayHandle(anArrayHandle: Int64): Int64;
+function TwbSaveTables.VMArrayCount(aHandle: Int64): Int64;
 var
   i : Integer;
 begin
   Result := -1;
-  for i := 0 to High(ahfVMArrayHandleTable) do
-    if ahfVMArrayHandleTable[i].Handle = anArrayHandle then begin
-      Result := ahfVMArrayHandleTable[i].Count;
+  for i := 0 to High(stArrayHandles) do
+    if stArrayHandles[i].Handle = aHandle then begin
+      Result := stArrayHandles[i].Count;
       Break;
     end;
   if result < 0 then
@@ -220,63 +269,83 @@ end;
 
 function TwbVMArrayHandleFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 var
-  Count : Int64;
+  Count   : Int64;
+  lTables : IwbSaveTables;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 8)
   else begin
-    Count := QueryCountForVMArrayHandle(aInt);
+    Count := 0;
+    lTables := wbSaveTablesOf(aElement);
+    if Assigned(lTables) then
+      Count := lTables.VMArrayCount(aInt);
     Result := '[' + IntToHex64(aInt, 8) + '] Count = '+ IntToStr(Count);
   end;
 end;
 
 { wbSaveWorldspaceIndex }
 
-var
-  sifSaveWorldspaceArray : array of IwbElement = nil;
-
-procedure InitializeSaveWorldspaceArray(aContainer: IwbContainer);
+procedure TwbSaveTables.InitializeSaveWorldspaceArray(const aContainer: IwbContainer);
 var
   i   : Integer;
 begin
-  if Assigned(aContainer) and not assigned(sifSaveWorldspaceArray) then begin
-    SetLength(sifSaveWorldspaceArray, aContainer.ElementCount);
+  if Assigned(aContainer) and not assigned(stWorldspaces) then begin
+    SetLength(stWorldspaces, aContainer.ElementCount);
     for i := 0 to Pred(aContainer.ElementCount) do
-      sifSaveWorldspaceArray[i] := aContainer.Elements[i];
+      stWorldspaces[i] := aContainer.Elements[i];
   end;
+end;
+
+function TwbSaveTables.SaveWorldspaceName(aIndex: Int64): string;
+begin
+  if (aIndex > 0) and (aIndex <= Length(stWorldspaces)) then
+    Result := '[' + IntToHex64(aIndex, 8) + '] '+ stWorldspaces[aIndex-1].Value
+  else
+    Result := '[' + IntToHex64(aIndex, 8) + '] <no such worldspace>';
 end;
 
 function TwbSaveWorldspaceIndexFormaterToString(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
+var
+  lTables : IwbSaveTables;
 begin
   if aType = ctToSortKey then
     Result := IntToHex64(aInt, 8)
-  else if (aInt > 0) and (aInt <= Length(sifSaveWorldspaceArray)) then begin
-    Result := '[' + IntToHex64(aInt, 8) + '] '+ sifSaveWorldspaceArray[aInt-1].Value
-  end else
-    Result := '[' + IntToHex64(aInt, 8) + '] <no such worldspace>';
-end;
-
-var
-  SaveRefIDArray: TwbRefIDArray = nil;
-
-procedure InitializeSaveRefIDArray(aContainer: IwbContainer);
-var
-  i : Integer;
-begin
-  if Assigned(aContainer) and not assigned(SaveRefIDArray) then begin
-    SetLength(SaveRefIDArray, aContainer.ElementCount);
-    for i := 0 to Pred(aContainer.ElementCount) do
-      SaveRefIDArray[i] := aContainer.Elements[i].NativeValue;
-    InitializeRefIDArray(SaveRefIDArray);
+  else begin
+    lTables := wbSaveTablesOf(aElement);
+    if Assigned(lTables) then
+      Result := lTables.SaveWorldspaceName(aInt)
+    else
+      Result := '[' + IntToHex64(aInt, 8) + '] <no such worldspace>';
   end;
 end;
 
-function GetSaveRefID(aIndex: Cardinal): Cardinal;
+procedure TwbSaveTables.InitializeSaveRefIDArray(const aContainer: IwbContainer);
+var
+  i : Integer;
 begin
-  if (aIndex>0) and (aIndex<=Length(SaveRefIDArray)) then
-    Result := SaveRefIDArray[aIndex-1]
+  if Assigned(aContainer) and not assigned(stRefIDs) then begin
+    SetLength(stRefIDs, aContainer.ElementCount);
+    for i := 0 to Pred(aContainer.ElementCount) do
+      stRefIDs[i] := aContainer.Elements[i].NativeValue;
+  end;
+end;
+
+procedure TwbSaveTables.SetRefIDArray(const anArray: TwbRefIDArray);
+begin
+  stRefIDs := anArray;
+end;
+
+function TwbSaveTables.SaveRefID(aIndex: Cardinal): Cardinal;
+begin
+  if (aIndex>0) and (aIndex<=Length(stRefIDs)) then
+    Result := stRefIDs[aIndex-1]
   else
     Result := 0;
+end;
+
+function TwbSaveTables.GetRefIDArray: TwbRefIDArray;
+begin
+  Result := stRefIDs;
 end;
 
 function wbVMType : IwbIntegerDefFormater;

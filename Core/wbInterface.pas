@@ -3340,6 +3340,32 @@ type
   TwbGetFormIDCallback = function(const aElement: IwbElement): TwbFormID;
   TwbGetCellDetailsForWorldspaceCallback = function(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 
+  {$IFDEF WIN32}
+  TwbRefIDArray = array of Cardinal;
+  {$ENDIF WIN32}
+  {$IFDEF WIN64}
+  TwbRefIDArray = array of UInt64;
+  {$ENDIF WIN64}
+
+  IwbSaveTables = interface(IwbInterface)
+    ['{6F2D9C41-8B3A-4E57-A1C0-5D7E92B4F318}']
+    procedure InitializeVMTypeArray(const aContainer: IwbContainer);
+    procedure InitializeVMObjectArray(const aContainer: IwbContainer);
+    procedure InitializeVMObjectDetachedArray(const aContainer: IwbContainer);
+    procedure InitializeVMArrayTable(const aContainer: IwbContainer);
+    procedure InitializeSaveWorldspaceArray(const aContainer: IwbContainer);
+    procedure InitializeSaveRefIDArray(const aContainer: IwbContainer);
+    procedure SetRefIDArray(const anArray: TwbRefIDArray);
+    function VMTypeName(aIndex: Int64): string;
+    function ObjectName(aHandle: Int64): string;
+    function VMArrayCount(aHandle: Int64): Int64;
+    function SaveWorldspaceName(aIndex: Int64): string;
+    function SaveRefID(aIndex: Cardinal): Cardinal;
+    function GetRefIDArray: TwbRefIDArray;
+    property RefIDArray: TwbRefIDArray
+      read GetRefIDArray;
+  end;
+
   IwbGameContext = interface(IwbInterface)
     ['{BA650F2A-0ADF-4157-8D8D-63D0A49F3660}']
     function GetGameDef: IwbGameDef;
@@ -3524,12 +3550,17 @@ type
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
     function GetSoundBankCache: IInterface;
     procedure SetSoundBankCache(const aValue: IInterface);
+    function GetSaveTables: IwbSaveTables;
+    procedure SetSaveTables(const aValue: IwbSaveTables);
     property ContainerHandler: IwbContainerHandler
       read GetContainerHandler
       write SetContainerHandler;
     property SoundBankCache: IInterface
       read GetSoundBankCache
       write SetSoundBankCache;
+    property SaveTables: IwbSaveTables
+      read GetSaveTables
+      write SetSaveTables;
     property GameMasterFile: IwbFile
       read GetGameMasterFile;
 
@@ -4076,6 +4107,7 @@ type
     gcContainerHandler     : IwbContainerHandler;
     gcLocalizationHandler  : TObject;
     gcSoundBankCache       : IInterface;
+    gcSaveTables           : IwbSaveTables;
     gcGlobalGeneration     : Integer;
     gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
@@ -4318,6 +4350,11 @@ type
     property SoundBankCache: IInterface
       read gcSoundBankCache
       write gcSoundBankCache;
+    function GetSaveTables: IwbSaveTables;
+    procedure SetSaveTables(const aValue: IwbSaveTables);
+    property SaveTables: IwbSaveTables
+      read gcSaveTables
+      write gcSaveTables;
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
@@ -5652,16 +5689,8 @@ var
   wbPlayerRefID       : Cardinal = $14;
   wbChangedFormOffset : Integer = 10000;
 
-type
-  {$IFDEF WIN32}
-  TwbRefIDArray = array of Cardinal;
-  {$ENDIF WIN32}
-  {$IFDEF WIN64}
-  TwbRefIDArray = array of UInt64;
-  {$ENDIF WIN64}
-
 function wbReadInteger24(aBasePtr: pointer): Int64;
-procedure InitializeRefIDArray(const anArray: TwbRefIDArray);
+function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
 
 function wbFindRecordDef(const aSignature : TwbSignature;
                            out aRecordDef : PwbMainRecordDef)
@@ -6604,6 +6633,7 @@ end;
 
 destructor TwbGameContext.Destroy;
 begin
+  gcSaveTables := nil;
   gcFiles := nil;
   gcSoundBankCache := nil;
   FreeAndNil(gcLocalizationHandler);
@@ -7353,6 +7383,16 @@ begin
   gcSoundBankCache := aValue;
 end;
 
+function TwbGameContext.GetSaveTables: IwbSaveTables;
+begin
+  Result := gcSaveTables;
+end;
+
+procedure TwbGameContext.SetSaveTables(const aValue: IwbSaveTables);
+begin
+  gcSaveTables := aValue;
+end;
+
 function TwbGameContext.GetIgnoreLight: Boolean;
 begin
   Result := Settings.IgnoreLight;
@@ -7568,6 +7608,7 @@ end;
 
 procedure TwbGameContext.ForceClosed;
 begin
+  gcSaveTables := nil;
   gcFiles := nil;
   gcFilesMap.Clear;
   gcNextFullSlot := 0;
@@ -23924,12 +23965,20 @@ end;
 
 { TwbRefID }
 
+function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
 var
-  wbRefIDArray : TwbRefIDArray = nil;
-
-procedure InitializeRefIDArray(const anArray: TwbRefIDArray);
+  lFile    : IwbFile;
+  lContext : IwbGameContext;
 begin
-  wbRefIDArray := anArray;
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+  lFile := aElement._File;
+  if not Assigned(lFile) then
+    Exit;
+  lContext := lFile.Context;
+  if Assigned(lContext) then
+    Result := lContext.SaveTables;
 end;
 
 procedure TwbRefID.AfterConstruction;
@@ -23948,16 +23997,21 @@ procedure TwbRefID.BuildRef(aInt: Int64; const aElement: IwbElement);
 var
   key        : Integer;
   val        : Integer;
+  lTables    : IwbSaveTables;
+  lArray     : TwbRefIDArray;
 begin
   if dfExcludeFromBuildRef in defFlags then
     Exit;
 
+  lTables := wbSaveTablesFor(aElement);
+  if Assigned(lTables) then
+    lArray := lTables.RefIDArray;
   // First two bits are the key:
   key := aInt shr 22;
   val := aInt and $003FFFFF;
   case key of
-    0: if (val > 0) and (val <= Length(wbRefIDArray)) then
-         inherited BuildRef(wbRefIDArray[val - 1], aElement);
+    0: if (val > 0) and (val <= Length(lArray)) then
+         inherited BuildRef(lArray[val - 1], aElement);
     1: inherited BuildRef(val, aElement); // '['+IntToHex64(val, 8)+'] Skyrim.esm FormID';
   end;
 end;
@@ -23966,15 +24020,20 @@ function TwbRefID.ToString(aInt: Int64; const aElement: IwbElement; aForSummary:
 var
   key        : Integer;
   val        : Int64;
+  lTables    : IwbSaveTables;
+  lArray     : TwbRefIDArray;
 begin
+  lTables := wbSaveTablesFor(aElement);
+  if Assigned(lTables) then
+    lArray := lTables.RefIDArray;
   // First two bits are the key:
   key := aInt shr 22;
   val := aInt and $003FFFFF;
   case key of
     0: if val = 0 then
          Result := '[00000000] NULL'
-       else if val <= Length(wbRefIDArray) then begin
-         val := wbRefIDArray[val - 1];
+       else if val <= Length(lArray) then begin
+         val := lArray[val - 1];
          Result := inherited ToString(val, aElement, aForSummary);
          Result := Copy(Result, 1, Pos('[', Result)) + IntToHex64(val, 8) + Copy(Result, Pos(']', Result), Length(Result));
        end else
