@@ -3510,6 +3510,8 @@ type
     procedure SetFormIDCallback(aValue: TwbGetFormIDCallback);
     function GetCellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback;
     procedure SetCellDetailsForWorldspaceCallback(aValue: TwbGetCellDetailsForWorldspaceCallback);
+    function GetGlobalGeneration: Integer;
+    procedure IncGlobalGeneration;
 
     property GameDef: IwbGameDef
       read GetGameDef;
@@ -3766,6 +3768,8 @@ type
     property CellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback
       read GetCellDetailsForWorldspaceCallback
       write SetCellDetailsForWorldspaceCallback;
+    property GlobalGeneration: Integer
+      read GetGlobalGeneration;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
@@ -4073,6 +4077,7 @@ type
     gcContainerHandler     : IwbContainerHandler;
     gcLocalizationHandler  : TObject;
     gcSoundBankCache       : IInterface;
+    gcGlobalGeneration     : Integer;
 
     function GetGameDef: IwbGameDef;
     function GetDataPath: string;
@@ -4238,6 +4243,7 @@ type
     procedure SetFormIDCallback(aValue: TwbGetFormIDCallback);
     function GetCellDetailsForWorldspaceCallback: TwbGetCellDetailsForWorldspaceCallback;
     procedure SetCellDetailsForWorldspaceCallback(aValue: TwbGetCellDetailsForWorldspaceCallback);
+    function GetGlobalGeneration: Integer;
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
     function GetSoundBankCache: IInterface;
     procedure SetSoundBankCache(const aValue: IInterface);
@@ -4257,6 +4263,10 @@ type
     function AllocateLightSlot: Integer;
     function AllocateMediumSlot: Integer;
     procedure ForceClosed;
+    procedure IncGlobalGeneration;
+
+    property GlobalGeneration: Integer
+      read gcGlobalGeneration;
 
     function RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
     function FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
@@ -6564,6 +6574,7 @@ begin
     Settings := TwbGameContextSettings.Defaults;
   gcGameDef := aGameDef;
   gcGameDefObj := aGameDef as TwbGameDef;
+  gcGlobalGeneration := 1;
   Settings.CreationClubContentFileName := aGameDef.CreationClubContentFileName;
   gcFilesMap := TwbFastStringList.Create;
   gcFilesMap.Sorted := True;
@@ -7083,6 +7094,16 @@ end;
 procedure TwbGameContext.SetCellDetailsForWorldspaceCallback(aValue: TwbGetCellDetailsForWorldspaceCallback);
 begin
   Settings.CellDetailsForWorldspaceCallback := aValue;
+end;
+
+function TwbGameContext.GetGlobalGeneration: Integer;
+begin
+  Result := gcGlobalGeneration;
+end;
+
+procedure TwbGameContext.IncGlobalGeneration;
+begin
+  Inc(gcGlobalGeneration);
 end;
 
 function TwbGameContext.GetLoaderDone: Boolean;
