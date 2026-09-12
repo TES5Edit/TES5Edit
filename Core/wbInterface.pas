@@ -3362,8 +3362,38 @@ type
     function SaveWorldspaceName(aIndex: Int64): string;
     function SaveRefID(aIndex: Cardinal): Cardinal;
     function GetRefIDArray: TwbRefIDArray;
+    function GetVMObjectArrayCount: Integer;
+    procedure SetVMObjectArrayCount(aValue: Integer);
+    function GetVMSupplementObjectArrayCount: Integer;
+    procedure SetVMSupplementObjectArrayCount(aValue: Integer);
+    function GetVMObjectDetachedArrayCount: Integer;
+    procedure SetVMObjectDetachedArrayCount(aValue: Integer);
+    function GetVMArrayTableCount: Integer;
+    procedure SetVMArrayTableCount(aValue: Integer);
+    function GetStackTableCount: Integer;
+    procedure SetStackTableCount(aValue: Integer);
+    function GetPlayerRefIndex: Cardinal;
+    procedure SetPlayerRefIndex(aValue: Cardinal);
     property RefIDArray: TwbRefIDArray
       read GetRefIDArray;
+    property VMObjectArrayCount: Integer
+      read GetVMObjectArrayCount
+      write SetVMObjectArrayCount;
+    property VMSupplementObjectArrayCount: Integer
+      read GetVMSupplementObjectArrayCount
+      write SetVMSupplementObjectArrayCount;
+    property VMObjectDetachedArrayCount: Integer
+      read GetVMObjectDetachedArrayCount
+      write SetVMObjectDetachedArrayCount;
+    property VMArrayTableCount: Integer
+      read GetVMArrayTableCount
+      write SetVMArrayTableCount;
+    property StackTableCount: Integer
+      read GetStackTableCount
+      write SetStackTableCount;
+    property PlayerRefIndex: Cardinal
+      read GetPlayerRefIndex
+      write SetPlayerRefIndex;
   end;
 
   IwbGameContext = interface(IwbInterface)

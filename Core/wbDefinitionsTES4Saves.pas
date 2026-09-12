@@ -217,26 +217,14 @@ end;
 //  end;
 //end;
 
-var
-  WorldspaceTableCount : Integer = -1;
-
 procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
-  if WorldspaceTableCount < 0 then begin
-    WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
 end;
-
-var
-  RefIDTableCount : Integer = -1;
 
 procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
-  if RefIDTableCount < 0 then begin
-    RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
 end;
 
 //function Unknown1000_00001Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;

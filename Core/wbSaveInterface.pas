@@ -76,6 +76,25 @@ type
     stArrayHandles    : array of ahfVMArrayHandleRecord;
     stWorldspaces     : array of IwbElement;
     stRefIDs          : TwbRefIDArray;
+    stVMObjectArrayCount           : Integer;
+    stVMSupplementObjectArrayCount : Integer;
+    stVMObjectDetachedArrayCount   : Integer;
+    stVMArrayTableCount            : Integer;
+    stStackTableCount              : Integer;
+    stPlayerRefIndex               : Cardinal;
+
+    function GetVMObjectArrayCount: Integer;
+    procedure SetVMObjectArrayCount(aValue: Integer);
+    function GetVMSupplementObjectArrayCount: Integer;
+    procedure SetVMSupplementObjectArrayCount(aValue: Integer);
+    function GetVMObjectDetachedArrayCount: Integer;
+    procedure SetVMObjectDetachedArrayCount(aValue: Integer);
+    function GetVMArrayTableCount: Integer;
+    procedure SetVMArrayTableCount(aValue: Integer);
+    function GetStackTableCount: Integer;
+    procedure SetStackTableCount(aValue: Integer);
+    function GetPlayerRefIndex: Cardinal;
+    procedure SetPlayerRefIndex(aValue: Cardinal);
 
     procedure InitializeVMTypeArray(const aContainer: IwbContainer);
     procedure InitializeVMObjectArray(const aContainer: IwbContainer);
@@ -90,7 +109,79 @@ type
     function SaveWorldspaceName(aIndex: Int64): string;
     function SaveRefID(aIndex: Cardinal): Cardinal;
     function GetRefIDArray: TwbRefIDArray;
+  public
+    constructor Create;
   end;
+
+constructor TwbSaveTables.Create;
+begin
+  inherited Create;
+  stVMObjectArrayCount := -1;
+  stVMSupplementObjectArrayCount := -1;
+  stVMObjectDetachedArrayCount := -1;
+  stVMArrayTableCount := -1;
+  stStackTableCount := -1;
+end;
+
+function TwbSaveTables.GetVMObjectArrayCount: Integer;
+begin
+  Result := stVMObjectArrayCount;
+end;
+
+procedure TwbSaveTables.SetVMObjectArrayCount(aValue: Integer);
+begin
+  stVMObjectArrayCount := aValue;
+end;
+
+function TwbSaveTables.GetVMSupplementObjectArrayCount: Integer;
+begin
+  Result := stVMSupplementObjectArrayCount;
+end;
+
+procedure TwbSaveTables.SetVMSupplementObjectArrayCount(aValue: Integer);
+begin
+  stVMSupplementObjectArrayCount := aValue;
+end;
+
+function TwbSaveTables.GetVMObjectDetachedArrayCount: Integer;
+begin
+  Result := stVMObjectDetachedArrayCount;
+end;
+
+procedure TwbSaveTables.SetVMObjectDetachedArrayCount(aValue: Integer);
+begin
+  stVMObjectDetachedArrayCount := aValue;
+end;
+
+function TwbSaveTables.GetVMArrayTableCount: Integer;
+begin
+  Result := stVMArrayTableCount;
+end;
+
+procedure TwbSaveTables.SetVMArrayTableCount(aValue: Integer);
+begin
+  stVMArrayTableCount := aValue;
+end;
+
+function TwbSaveTables.GetStackTableCount: Integer;
+begin
+  Result := stStackTableCount;
+end;
+
+procedure TwbSaveTables.SetStackTableCount(aValue: Integer);
+begin
+  stStackTableCount := aValue;
+end;
+
+function TwbSaveTables.GetPlayerRefIndex: Cardinal;
+begin
+  Result := stPlayerRefIndex;
+end;
+
+procedure TwbSaveTables.SetPlayerRefIndex(aValue: Cardinal);
+begin
+  stPlayerRefIndex := aValue;
+end;
 
 function wbCreateSaveTables: IwbSaveTables;
 begin

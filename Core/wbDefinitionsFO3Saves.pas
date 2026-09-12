@@ -222,26 +222,14 @@ begin
   end;
 end;
 
-var
-  WorldspaceTableCount : Integer = -1;
-
 procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
-  if WorldspaceTableCount < 0 then begin
-    WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
 end;
-
-var
-  RefIDTableCount : Integer = -1;
 
 procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
-  if RefIDTableCount < 0 then begin
-    RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
 end;
 
 function Unknown1000_00001Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
@@ -819,14 +807,12 @@ begin
   Result := ChangedFlagBitXXDecider($80000000, aBasePtr, aEndPtr, aElement);
 end;
 
-var
-  PlayerRefIndex : Cardinal = 0;
-
 function IsActorPlayerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   anID      : Integer;
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -838,11 +824,12 @@ begin
     if Assigned(Element) then begin
       anID := Element.NativeValue;
       if anID > 0 then begin
-        if PlayerRefIndex = 0 then
+        lTables := wbSaveTablesOf(aElement);
+        if lTables.PlayerRefIndex = 0 then
           if (anID shr 22) = 0 then
-            if wbSaveTablesOf(aElement).SaveRefID(anID) = wbPlayerRefID then
-                PlayerRefIndex := anID;
-        if anID = PlayerRefIndex then
+            if lTables.SaveRefID(anID) = wbPlayerRefID then
+                lTables.PlayerRefIndex := anID;
+        if anID = lTables.PlayerRefIndex then
           Result := 1;
       end;
     end;

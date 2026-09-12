@@ -714,78 +714,64 @@ begin
   end;
 end;
 
-var
-  VMTypeCount : Integer = -1;
-
 procedure VMTypeAfterLoad(const aElement: IwbElement);
 begin
-  if VMTypeCount < 0 then begin
-    VMTypeCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeVMTypeArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeVMTypeArray(aElement as IwbContainer);
 end;
-
-var
-  WorldspaceTableCount : Integer = -1;
 
 procedure WorldspaceTableAfterLoad(const aElement: IwbElement);
 begin
-  if WorldspaceTableCount < 0 then begin
-    WorldspaceTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveWorldspaceArray(aElement as IwbContainer);
 end;
-
-var
-  RefIDTableCount : Integer = -1;
 
 procedure RefIDTableAfterLoad(const aElement: IwbElement);
 begin
-  if RefIDTableCount < 0 then begin
-    RefIDTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
-  end;
+  wbSaveTablesOf(aElement).InitializeSaveRefIDArray(aElement as IwbContainer);
 end;
 
-var
-  VMObjectArrayCount           : Integer = -1;
-  VMSupplementObjectArrayCount : Integer = -1;
-  VMObjectDetachedArrayCount   : Integer = -1;
-
 procedure ObjectTableAfterLoad(const aElement: IwbElement);
+var
+  lTables : IwbSaveTables;
 begin
-  if VMObjectArrayCount < 0 then begin
-    VMObjectArrayCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeVMObjectArray(aElement as IwbContainer);
+  lTables := wbSaveTablesOf(aElement);
+  if lTables.VMObjectArrayCount < 0 then begin
+    lTables.VMObjectArrayCount := (aElement as IwbContainer).ElementCount;
+    lTables.InitializeVMObjectArray(aElement as IwbContainer);
   end;
 end;
 
 procedure SupplementObjectTableAfterLoad(const aElement: IwbElement);
+var
+  lTables : IwbSaveTables;
 begin
-  if VMSupplementObjectArrayCount < 0 then begin
-    VMSupplementObjectArrayCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeVMObjectArray(aElement as IwbContainer);
-    if VMObjectArrayCount >= 0 then
-      VMObjectArrayCount := VMObjectArrayCount + VMSupplementObjectArrayCount;
+  lTables := wbSaveTablesOf(aElement);
+  if lTables.VMSupplementObjectArrayCount < 0 then begin
+    lTables.VMSupplementObjectArrayCount := (aElement as IwbContainer).ElementCount;
+    lTables.InitializeVMObjectArray(aElement as IwbContainer);
+    if lTables.VMObjectArrayCount >= 0 then
+      lTables.VMObjectArrayCount := lTables.VMObjectArrayCount + lTables.VMSupplementObjectArrayCount;
   end;
 end;
 
 procedure ObjectDetachedTableAfterLoad(const aElement: IwbElement);
+var
+  lTables : IwbSaveTables;
 begin
-  if VMObjectDetachedArrayCount < 0 then begin
-    VMObjectDetachedArrayCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeVMObjectDetachedArray(aElement as IwbContainer);
+  lTables := wbSaveTablesOf(aElement);
+  if lTables.VMObjectDetachedArrayCount < 0 then begin
+    lTables.VMObjectDetachedArrayCount := (aElement as IwbContainer).ElementCount;
+    lTables.InitializeVMObjectDetachedArray(aElement as IwbContainer);
   end;
 end;
 
-var
-  VMArrayTableCount : Integer = -1;
-
 procedure ArrayTableAfterLoad(const aElement: IwbElement);
+var
+  lTables : IwbSaveTables;
 begin
-  if VMArrayTableCount < 0 then begin
-    VMArrayTableCount := (aElement as IwbContainer).ElementCount;
-    wbSaveTablesOf(aElement).InitializeVMArrayTable(aElement as IwbContainer);
+  lTables := wbSaveTablesOf(aElement);
+  if lTables.VMArrayTableCount < 0 then begin
+    lTables.VMArrayTableCount := (aElement as IwbContainer).ElementCount;
+    lTables.InitializeVMArrayTable(aElement as IwbContainer);
   end;
 end;
 
@@ -857,13 +843,13 @@ begin
   end;
 end;
 
-var
-  StackTableCount : Integer = -1;
-
 procedure StackTableAfterLoad(const aElement: IwbElement);
+var
+  lTables : IwbSaveTables;
 begin
-  if StackTableCount < 0 then begin
-    StackTableCount := (aElement as IwbContainer).ElementCount;
+  lTables := wbSaveTablesOf(aElement);
+  if lTables.StackTableCount < 0 then begin
+    lTables.StackTableCount := (aElement as IwbContainer).ElementCount;
   end;
 end;
 
@@ -942,9 +928,11 @@ var
   sElement  : IwbElement;
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 
 begin
-  if VMObjectArrayCount<0 then begin
+  lTables := wbSaveTablesOf(aElement);
+  if not Assigned(lTables) or (lTables.VMObjectArrayCount<0) then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
     sElement := wbFindSaveElement('Papyrus Struct', aElement);
@@ -956,7 +944,7 @@ begin
         Result := Container.ElementCount;
     end;
   end else
-    Result := VMObjectArrayCount;
+    Result := lTables.VMObjectArrayCount;
 end;
 
 function DetachedObjectTableDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
@@ -964,9 +952,11 @@ var
   sElement  : IwbElement;
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 
 begin
-  if VMObjectDetachedArrayCount<0 then begin
+  lTables := wbSaveTablesOf(aElement);
+  if not Assigned(lTables) or (lTables.VMObjectDetachedArrayCount<0) then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
     sElement := wbFindSaveElement('Papyrus Struct', aElement);
@@ -978,16 +968,18 @@ begin
         Result := Container.ElementCount;
     end;
   end else
-    Result := VMObjectDetachedArrayCount;
+    Result := lTables.VMObjectDetachedArrayCount;
 end;
 
 function ArrayContentTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 
 begin
-  if VMArrayTableCount<0 then begin
+  lTables := wbSaveTablesOf(aElement);
+  if not Assigned(lTables) or (lTables.VMArrayTableCount<0) then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
     Element := wbFindSaveElement('Papyrus Struct', aElement);
@@ -999,16 +991,18 @@ begin
         Result := Container.ElementCount;
     end;
   end else
-    Result := VMArrayTableCount;
+    Result := lTables.VMArrayTableCount;
 end;
 
 function StackContentTableCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
 var
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 
 begin
-  if StackTableCount<0 then begin
+  lTables := wbSaveTablesOf(aElement);
+  if not Assigned(lTables) or (lTables.StackTableCount<0) then begin
     Result := 0;
     if not Assigned(aElement) then Exit;
     Element := wbFindSaveElement('Papyrus Struct', aElement);
@@ -1020,7 +1014,7 @@ begin
         Result := Container.ElementCount;
     end;
   end else
-    Result := StackTableCount;
+    Result := lTables.StackTableCount;
 end;
 
 const
@@ -1049,7 +1043,7 @@ begin
       Exit;
   end;
 
-  if VMArrayTableCount<0 then begin
+  if wbSaveTablesOf(aElement).VMArrayTableCount<0 then begin
     Element := wbFindSaveElement('Papyrus Struct', aElement);
     Assert(Element.BaseName='Papyrus Struct');
 
@@ -2205,14 +2199,12 @@ begin
   Result := ChangedFlagBitXXDecider($80000000, aBasePtr, aEndPtr, aElement);
 end;
 
-var
-  PlayerRefIndex : Cardinal = 0;
-
 function IsActorPlayerDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   anID      : Integer;
   Element   : IwbElement;
   Container : IwbDataContainer;
+  lTables   : IwbSaveTables;
 begin
   Result := 0;
   if not Assigned(aElement) then Exit;
@@ -2224,11 +2216,12 @@ begin
     if Assigned(Element) then begin
       anID := Element.NativeValue;
       if anID > 0 then begin
-        if PlayerRefIndex = 0 then
+        lTables := wbSaveTablesOf(aElement);
+        if lTables.PlayerRefIndex = 0 then
           if (anID shr 22) = 0 then
-            if wbSaveTablesOf(aElement).SaveRefID(anID) = wbPlayerRefID then
-                PlayerRefIndex := anID;
-        if anID = PlayerRefIndex then
+            if lTables.SaveRefID(anID) = wbPlayerRefID then
+                lTables.PlayerRefIndex := anID;
+        if anID = lTables.PlayerRefIndex then
           Result := 1;
       end;
     end;
