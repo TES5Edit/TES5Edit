@@ -17,6 +17,10 @@ uses
 type
   TwbGameDefFO3Saves = class(TwbGameDefFO3)
   protected
+    gdChangeTypes : IwbEnumDef;
+
+    function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+
     procedure DefineFO3SavesA;
     procedure DefineFO3SavesS;
     procedure Define; override;
@@ -36,7 +40,6 @@ var
   wbActorValueLabels : array of string;
 
   // forward type directives
-  wbChangeTypes    : IwbEnumDef;
   wbSaveChapters   : IwbStructDef;
   wbCoSaveChapters : IwbStructDef;
   wbSaveHeader     : IwbStructDef;
@@ -493,13 +496,13 @@ begin
     Result := wbChangedFormOffset + Result;
 end;
 
-function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbGameDefFO3Saves.ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   aType : Integer;
 begin
   aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
-  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+wbChangeTypes.NameCount) then
-    Result := wbChangeTypes.Names[aType-wbChangedFormOffset];
+  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+gdChangeTypes.NameCount) then
+    Result := gdChangeTypes.Names[aType-wbChangedFormOffset];
   {
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
@@ -2351,7 +2354,7 @@ begin
     {0x1000} 'Unknown 13'
   ]));
 
-  wbChangeTypes := wbKey2Data6Enum([
+  gdChangeTypes := wbKey2Data6Enum([
     '00 (03A : REFR)',
     '01 (03B : ACHR)',
     '02 (03C : ACRE)',
@@ -6197,7 +6200,7 @@ begin
     [
       wbRefID('RefID'),
       wbChangeFlags,
-      wbInteger('Type', itU8, wbChangeTypes),
+      wbInteger('Type', itU8, gdChangeTypes),
       wbInteger('Version', itU8),
       wbUnion('Datas', ChangedFormDataLengthDecider, [
         wbStruct('CForm Data', [

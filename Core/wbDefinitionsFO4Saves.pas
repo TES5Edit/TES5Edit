@@ -19,6 +19,10 @@ uses
 type
   TwbGameDefFO4Saves = class(TwbGameDefFO4)
   protected
+    gdChangeTypes : IwbEnumDef;
+
+    function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+
     procedure DefineFO4SavesS;
     procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
     procedure Define; override;
@@ -40,7 +44,6 @@ var
   wbRecordFlagsFlags : IwbFlagsDef;
 
  // forward type directives
-  wbChangeTypes    : IwbEnumDef;
   wbQuestFlags     : IwbIntegerDef;
   wbSaveChapters   : IwbStructDef;
   wbCoSaveChapters : IwbStructDef;
@@ -1805,13 +1808,13 @@ begin
     Result := wbChangedFormOffset + (Result and $3F);
 end;
 
-function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbGameDefFO4Saves.ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   aType : Integer;
 begin
   aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
-  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+wbChangeTypes.NameCount) then
-    Result := wbChangeTypes.Names[aType-wbChangedFormOffset];
+  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+gdChangeTypes.NameCount) then
+    Result := gdChangeTypes.Names[aType-wbChangedFormOffset];
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
@@ -4181,7 +4184,7 @@ begin
     ,wbByteArray('Unknown', DataQuartetRemainderCounter)
   ]);
 
-  wbChangeTypes := wbKey2Data6Enum([
+  gdChangeTypes := wbKey2Data6Enum([
     '00 (040 : REFR)',
     '01 (041 : ACHR)',
     '02 (042 : PMIS)',
@@ -7250,7 +7253,7 @@ begin
     [
       wbRefID('RefID'),
       wbChangeFlags,
-      wbInteger('Type', itU8, wbChangeTypes),
+      wbInteger('Type', itU8, gdChangeTypes),
       wbInteger('Version', itU8),
       wbUnion('Datas', ChangedFormDataLengthDecider, [
         wbStruct('CForm Data', [
