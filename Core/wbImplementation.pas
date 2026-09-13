@@ -2837,6 +2837,7 @@ begin
   if Length(cntElements) < 1 then
     Exit;
 
+  var lGameDef := flContext.GameDef;
   cntElements[0].Reached;
 
   for i := Low(flRecords) to High(flRecords) do
@@ -2912,7 +2913,7 @@ begin
       (Group.Elements[i] as IwbElementInternal).Reached;
 
 
-  if wbIsOblivion or wbIsFallout3 then begin
+  if lGameDef.IsOblivion or lGameDef.IsFallout3 then begin
     Group := GetGroupBySignature('CLAS');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -2932,7 +2933,7 @@ begin
   end;
 
 
-  if wbIsFallout3 then begin
+  if lGameDef.IsFallout3 then begin
     Group := GetGroupBySignature('DIAL');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -2952,7 +2953,7 @@ begin
         end;
   end;
 
-  if wbIsOblivion or wbIsFallout3 then begin
+  if lGameDef.IsOblivion or lGameDef.IsFallout3 then begin
     Group := GetGroupBySignature('EYES');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -2976,7 +2977,7 @@ begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
           if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
-            if wbIsFallout3 then begin
+            if lGameDef.IsFallout3 then begin
               flg := Cnt.ElementByName['Playable'];
               if Assigned(Flg) then begin
                 if Flg.NativeValue <> 0 then
@@ -2999,7 +3000,7 @@ begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
           if Supports(Cnt.RecordBySignature['DATA'], IwbContainerElementRef, Cnt) then begin
-            if wbIsStarfield then begin
+            if lGameDef.IsStarfield then begin
               Flg := Cnt.ElementByName['Flags'];
               if Assigned(Flg) then
                 s := Flg.SortKey[False];
@@ -3017,7 +3018,7 @@ begin
         end;
       end;
 
-  if not wbIsOblivion or wbIsMorrowind then begin
+  if not lGameDef.IsOblivion or lGameDef.IsMorrowind then begin
     Group := GetGroupBySignature('NPC_');
     if Assigned(Group) then
       for i := 0 to Pred(Group.ElementCount) do
@@ -3062,7 +3063,7 @@ begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
           if Supports(Cnt.RecordBySignature[flContextObj.GameDefObj.RaceFlagsSignature], IwbContainerElementRef, Cnt) then begin
-            if wbIsOblivion then begin
+            if lGameDef.IsOblivion then begin
               Flg := Cnt.ElementByName['Playable'];
               if Assigned(Flg) then begin
                 if Flg.NativeValue <> 0 then
@@ -3380,10 +3381,11 @@ var
 begin
   flContext := wbCurrentContext;
   flContextObj := _CurrentContext;
+  var lGameDef := flContext.GameDef;
   Assert(not (aIsLight and aIsMedium));
 
-  Assert((not aIsLight) or wbIsLightSupported);
-  Assert((not aIsMedium) or wbIsMediumSupported);
+  Assert((not aIsLight) or lGameDef.IsLightSupported);
+  Assert((not aIsMedium) or lGameDef.IsMediumSupported);
 
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
@@ -3401,7 +3403,7 @@ begin
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if gcHeaderNextObjectID in wbCurrentCapabilities then
+  if gcHeaderNextObjectID in lGameDef.Capabilities then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
   if aIsLight then begin
@@ -3419,13 +3421,13 @@ begin
   flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbPseudoUpdate then begin
+    if lGameDef.IsLightSupported or wbPseudoLight or lGameDef.IsMediumSupported or wbPseudoMedium or wbPseudoUpdate then begin
       if Header.IsLight and not wbIgnoreLight then
         flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
       else if Header.IsMedium and not wbIgnoreMedium then
         flLoadOrderFileID := TwbFileID.CreateMedium(flContextObj.AllocateMediumSlot)
       else begin
-        if (wbIsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then
+        if (lGameDef.IsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then
           flLoadOrderFileID := TwbFileID.Invalid
         else
           flLoadOrderFileID := TwbFileID.CreateFull(flContextObj.AllocateFullSlot);
@@ -3442,7 +3444,7 @@ begin
     end;
   end;
 
-  if wbIsStarfield then
+  if lGameDef.IsStarfield then
     AddMasters(['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}]);
 
   BuildOrLoadRef(False);
@@ -3455,6 +3457,7 @@ var
 begin
   flContext := wbCurrentContext;
   flContextObj := _CurrentContext;
+  var lGameDef := flContext.GameDef;
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
   Include(flStates, fsLightCompatible);
@@ -3471,28 +3474,28 @@ begin
 
   Header := TwbMainRecord.Create(Self, wbHeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := wbHEDRVersion;
-  if gcHeaderNextObjectID in wbCurrentCapabilities then
+  if gcHeaderNextObjectID in lGameDef.Capabilities then
     Header.RecordBySignature['HEDR'].Elements[2].NativeValue := wbHEDRNextObjectID;
 
-  if (mfHasUpdateFlag in aTemplate.miFlags) and wbIsUpdateSupported then begin
+  if (mfHasUpdateFlag in aTemplate.miFlags) and lGameDef.IsUpdateSupported then begin
     Header.IsUpdate := True;
     Include(flModule.miFlags, mfHasUpdateFlag);
   end;
 
-  if (mfHasLightFlag in aTemplate.miFlags) and wbIsLightSupported then begin
+  if (mfHasLightFlag in aTemplate.miFlags) and lGameDef.IsLightSupported then begin
     Header.IsLight := True;
     Include(flModule.miFlags, mfHasLightFlag);
     Exclude(flModule.miFlags, mfHasUpdateFlag);
   end;
 
-  if (mfHasMediumFlag in aTemplate.miFlags) and wbIsMediumSupported then begin
+  if (mfHasMediumFlag in aTemplate.miFlags) and lGameDef.IsMediumSupported then begin
     Header.IsMedium := True;
     Include(flModule.miFlags, mfHasMediumFlag);
     Exclude(flModule.miFlags, mfHasLightFlag);
     Exclude(flModule.miFlags, mfHasUpdateFlag);
   end;
 
-  if (mfHasBlueprintFlag in aTemplate.miFlags) and wbIsBlueprintSupported then begin
+  if (mfHasBlueprintFlag in aTemplate.miFlags) and lGameDef.IsBlueprintSupported then begin
     Header.IsBlueprint := True;
     Include(flModule.miFlags, mfHasBlueprintFlag);
   end;
@@ -3510,13 +3513,13 @@ begin
   flIndicesActive := True;
 
   if flLoadOrder >= 0 then begin
-    if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbPseudoUpdate then begin
+    if lGameDef.IsLightSupported or wbPseudoLight or lGameDef.IsMediumSupported or wbPseudoMedium or wbPseudoUpdate then begin
       if Header.IsLight and not wbIgnoreLight then
         flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
       else if Header.IsMedium and not wbIgnoreMedium then
         flLoadOrderFileID := TwbFileID.CreateMedium(flContextObj.AllocateMediumSlot)
       else begin
-        if (wbIsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then
+        if (lGameDef.IsUpdateSupported or wbPseudoUpdate) and Header.IsUpdate and not wbIgnoreUpdate then
           flLoadOrderFileID := TwbFileID.Invalid
         else
           flLoadOrderFileID := TwbFileID.CreateFull(flContextObj.AllocateFullSlot);
@@ -3540,7 +3543,7 @@ begin
           if Assigned(miFile) then
             AddMaster(_File);
 
-  if wbIsStarfield then
+  if lGameDef.IsStarfield then
     AddMasters(['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}]);
 
   BuildOrLoadRef(False);
@@ -5289,6 +5292,7 @@ var
 begin
   Assert(not (fsMastersUpdating in flStates));
 
+  var lGameDef := flContext.GameDef;
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
 
@@ -5313,7 +5317,7 @@ begin
     if flModule.miExtension = meESM then
       SetIsESM(True);
 
-    if wbIsLightSupported and (flModule.miExtension = meESL) then begin
+    if lGameDef.IsLightSupported and (flModule.miExtension = meESL) then begin
       SetIsESM(True);
       SetIsLight(True);
     end;
@@ -5323,7 +5327,7 @@ begin
         if flModule.miMasters[i].miExtension = meESP then
           raise Exception.CreateFmt('%s modules must never have .esp masters.', [wbGameName]);
 
-    if wbIsStarfield then begin
+    if lGameDef.IsStarfield then begin
       if GetIsUpdateDirect and (GetIsLightDirect or GetIsMediumDirect) then
           SetIsUpdate(False);
 
@@ -5388,8 +5392,8 @@ begin
     HEDR.Elements[1].EditValue := IntToStr(Pred(RecordCount));
     j := 0;
     ONAMs := nil;
-    if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
-      if not wbIsFallout3 then begin
+    if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
+      if not lGameDef.IsFallout3 then begin
         var INCC := FileHeader.RecordBySignature['INCC'];
         var Cells := 0;
         for var R := Low(flRecords) to High(flRecords) do begin
@@ -5441,7 +5445,7 @@ begin
                        (Signature = 'PBAR') or {>>> Skyrim <<<}
                        (Signature = 'PHZD') or {>>> Skyrim <<<}
                        // Fallout 4 (and later games?)
-                       ((wbIsFallout4  or wbIsStarfield) and (
+                       ((lGameDef.IsFallout4  or lGameDef.IsStarfield) and (
                          (Signature = 'SCEN') or
                          (Signature = 'DLBR') or
                          (Signature = 'DIAL') or
@@ -5776,8 +5780,8 @@ var
 
     if flLoadOrder >= 0 then begin
       flContextObj.NextLoadOrder := Max(flContextObj.NextLoadOrder, Succ(flLoadOrder));
-      if wbIsLightSupported or wbPseudoLight or wbIsMediumSupported or wbPseudoMedium or wbIsUpdateSupported or wbPseudoUpdate then begin
-        if (wbIsUpdateSupported or wbPseudoUpdate) and ((fsPseudoUpdate in flStates) or ((Header.IsUpdate) and not wbIgnoreUpdate)) then
+      if flContext.GameDef.IsLightSupported or wbPseudoLight or flContext.GameDef.IsMediumSupported or wbPseudoMedium or flContext.GameDef.IsUpdateSupported or wbPseudoUpdate then begin
+        if (flContext.GameDef.IsUpdateSupported or wbPseudoUpdate) and ((fsPseudoUpdate in flStates) or ((Header.IsUpdate) and not wbIgnoreUpdate)) then
           flLoadOrderFileID := TwbFileID.Invalid
         else if (fsPseudoLight in flStates) or ((Header.IsLight or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreLight) then
           flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
@@ -5830,6 +5834,7 @@ var
   IsInternal  : Boolean;
   EndPtr      : Pointer;
 begin
+  var lGameDef := flContext.GameDef;
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
@@ -5858,7 +5863,7 @@ begin
         flLoadOrderFileID := TwbFileID.CreateFull($FF);
     end;
 
-    if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then
+    if gcHardcodedFileIsFirstMaster in lGameDef.Capabilities then
       if flLoadOrder > 0 then
         AddMaster(wbGameName + csDotExe, False, False);
 
@@ -5982,13 +5987,13 @@ begin
 
     var WasEditAllowed := flContextObj.Settings.EditAllowed;
     try
-      if gcUngroupedRecordStream in wbCurrentCapabilities then
+      if gcUngroupedRecordStream in lGameDef.Capabilities then
         flContextObj.Settings.EditAllowed := True;
 
       EndPtr := flEndPtr;
       GroupType := 0;
       while NativeUInt(CurrentPtr) < NativeUInt(flEndPtr) do begin
-        if gcUngroupedRecordStream in wbCurrentCapabilities then begin
+        if gcUngroupedRecordStream in lGameDef.Capabilities then begin
           Signature := PwbSignature(CurrentPtr)^;
 
           Container := nil;
@@ -6062,7 +6067,7 @@ begin
         Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
 
         if Assigned(Rec) then
-          if gcUngroupedRecordStream in wbCurrentCapabilities then begin
+          if gcUngroupedRecordStream in lGameDef.Capabilities then begin
             if (CurrentPtr = EndPtr) and (EndPtr <> flEndPtr) then
               EndPtr := flEndPtr;
 
@@ -6117,7 +6122,7 @@ begin
 
   flActivateIndices;
 
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+  if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
     IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
     try
       SetLength(Groups, wbGroupOrder.Count);
@@ -6180,7 +6185,7 @@ begin
     end;
   end;
 
-  if (fsIsHardcoded in flStates) and (gcHardcodedPlayerRef in wbCurrentCapabilities) then
+  if (fsIsHardcoded in flStates) and (gcHardcodedPlayerRef in lGameDef.Capabilities) then
     if wbBeginInternalEdit(True) then try
       ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
     finally
