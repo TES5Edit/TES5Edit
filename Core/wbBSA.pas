@@ -15,7 +15,8 @@ interface
 uses
   wbInterface;
 
-function wbCreateContainerHandler: IwbContainerHandler;
+function wbCreateContainerHandler: IwbContainerHandler; overload;
+function wbCreateContainerHandler(aGameDef: TwbGameDef): IwbContainerHandler; overload;
 
 implementation
 
@@ -47,6 +48,9 @@ type
   private
     chContainers : array of IwbResourceContainer;
     chCache      : TwbContainerCache;
+    chGameDef    : TwbGameDef;
+  public
+    constructor Create(aGameDef: TwbGameDef);
   protected
     function AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 
@@ -160,10 +164,21 @@ type
 
 function wbCreateContainerHandler: IwbContainerHandler;
 begin
-  Result := TwbContainerHandler.Create;
+  Result := wbCreateContainerHandler(_CurrentGameDef);
+end;
+
+function wbCreateContainerHandler(aGameDef: TwbGameDef): IwbContainerHandler;
+begin
+  Result := TwbContainerHandler.Create(aGameDef);
 end;
 
 { TwbContainerHandler }
+
+constructor TwbContainerHandler.Create(aGameDef: TwbGameDef);
+begin
+  inherited Create;
+  chGameDef := aGameDef;
+end;
 
 function TwbContainerHandler.AddContainer(aContainer: IwbResourceContainer): IwbResourceContainer;
 begin
@@ -227,7 +242,7 @@ const
 procedure TwbContainerHandler.BuildCache;
   function CalcHash(const aStr: string): Int64;
   begin
-    if gcResourceKeyCRC32NoExtension in wbCurrentCapabilities then
+    if gcResourceKeyCRC32NoExtension in chGameDef.Capabilities then
       Result := TwbHash.BSCRC32(aStr)
     else
       Result := TwbHash.TES4(aStr, True);
@@ -267,13 +282,13 @@ begin
       end;
 
       var lFile := ExtractFileName(lFullName).ToLowerInvariant;
-      if gcResourceKeyCRC32NoExtension in wbCurrentCapabilities then
+      if gcResourceKeyCRC32NoExtension in chGameDef.Capabilities then
         lFile := ChangeFileExt(lFile, '');
 
       if ccFiles.TryAdd(lFile, wbNothing) then begin
         ccFileHashes.TryAdd(CalcHash(lFile), lFile);
 
-        if gcTextureDDXAlias in wbCurrentCapabilities then
+        if gcTextureDDXAlias in chGameDef.Capabilities then
           if ExtractFileExt(lFile) = '.dds' then
             lFile := ChangeFileExt(lFile, '.ddx');
             if ccFiles.TryAdd(lFile, wbNothing) then begin

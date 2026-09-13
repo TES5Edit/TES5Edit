@@ -79,9 +79,12 @@ function wbExtractNameFromPath(const aPathName: String): String;
 
 function MakeDataFileName(const FileName, DataPath: String): String;
 function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; const Section, Ident: String): String;
+function FindBSAs(aGameDef: TwbGameDef; const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
+function FindBSAs(aGameDef: TwbGameDef; const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
+function HasBSAs(aGameDef: TwbGameDef; ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
 function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
 function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function HasBSAs(ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
 
 function wbStripDotGhost(const aFileName: string): string;
 
@@ -416,7 +419,7 @@ begin
   if Sig = 'LVSC' then s1 := 'Space Cell';
   if Sig = 'LVSP' then s1 := 'Spell';
 
-  if wbIsOblivion then
+  if aMainRecord._File.Context.GameDef.IsOblivion then
     RefPath := s1
   else
     RefPath := 'LVLO\' + s1;
@@ -819,6 +822,21 @@ begin
 end;
 
 function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+begin
+  Result := FindBSAs(_CurrentGameDef, IniName, DataPath, bsaNames, bsaMissing);
+end;
+
+function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+begin
+  Result := FindBSAs(_CurrentGameDef, IniName, CustomIniName, DataPath, bsaNames, bsaMissing);
+end;
+
+function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+begin
+  Result := HasBSAs(_CurrentGameDef, ModName, DataPath, Exact, modini, bsaNames, bsaMissing);
+end;
+
+function FindBSAs(aGameDef: TwbGameDef; const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 var
   i: Integer;
   j: Integer;
@@ -837,21 +855,21 @@ begin
     // TMemIniFile reads from string list directly, not supported by MO
     with TIniFile.Create(iniName) do try
       with TStringList.Create do try
-        if wbIsOblivion or wbIsFallout3 then begin
+        if aGameDef.IsOblivion or aGameDef.IsFallout3 then begin
           s := StringReplace(ReadString('Archive', 'sArchiveList', ''), ',' ,#10, [rfReplaceAll]);
           // Update.bsa is hardcoded to load in FNV
-          if gcUpdateArchiveAlwaysLoaded in wbCurrentCapabilities then begin
+          if gcUpdateArchiveAlwaysLoaded in aGameDef.Capabilities then begin
             if s <> '' then s := s + #10;
             s := s + 'Update.bsa';
           end;
           Text := s;
-        end else if wbIsSkyrim then
+        end else if aGameDef.IsSkyrim then
           Text := StringReplace(
             ReadString('Archive', 'sResourceArchiveList', '') + ',' +
             ReadString('Archive', 'sResourceArchiveList2', ''),
             ',', #10, [rfReplaceAll]
           )
-        else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
+        else if aGameDef.IsFallout4 or aGameDef.IsFallout76 or aGameDef.IsStarfield then
           Text := StringReplace(
             ReadString('Archive', 'sResourceIndexFileList', '') + ',' +
             ReadString('Archive', 'sResourceStartUpArchiveList', '') + ',' +
@@ -880,7 +898,7 @@ begin
     end;
 end;
 
-function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function FindBSAs(aGameDef: TwbGameDef; const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 var
   i: Integer;
   j: Integer;
@@ -900,25 +918,25 @@ begin
     cIni := TIniFile.Create(CustomIniName);
     try
       if not cIni.SectionExists('Archive') then
-        Result := FindBSAs(IniName, DataPath, bsaNames, bsaMissing)
+        Result := FindBSAs(aGameDef, IniName, DataPath, bsaNames, bsaMissing)
       else begin
         mIni := TIniFile.Create(IniName);
         try
           with TStringList.Create do try
-            if wbIsOblivion or wbIsFallout3 then begin
+            if aGameDef.IsOblivion or aGameDef.IsFallout3 then begin
               s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sArchiveList');
               // Update.bsa is hardcoded to load in FNV
-              if gcUpdateArchiveAlwaysLoaded in wbCurrentCapabilities then begin
+              if gcUpdateArchiveAlwaysLoaded in aGameDef.Capabilities then begin
                 if s <> '' then s := s + #10;
                 s := s + 'Update.bsa';
               end;
               Text := s;
-            end else if wbIsSkyrim then begin
+            end else if aGameDef.IsSkyrim then begin
               s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList');
               if s <> '' then s := s + #10;
               s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceArchiveList2');
               Text := s;
-            end else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+            end else if aGameDef.IsFallout4 or aGameDef.IsFallout76 or aGameDef.IsStarfield then begin
               s := CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceIndexFileList');
               if s <> '' then s := s + #10;
               s := s + CheckAddFilesToString(mIni, cIni, 'Archive', 'sResourceStartUpArchiveList');
@@ -954,7 +972,7 @@ begin
     end;
 end;
 
-function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
+function HasBSAs(aGameDef: TwbGameDef; ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 var
   j: Integer;
   t: String;
@@ -963,7 +981,7 @@ begin
   Result := 0;
 
   if modIni then
-    Result := Result + FindBSAs(DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
+    Result := Result + FindBSAs(aGameDef, DataPath+ChangeFileExt(ModName, '.ini'), DataPath, bsaNames, bsaMissing);
 
   j := 0;
   if Assigned(bsaNames) then
@@ -974,7 +992,7 @@ begin
   //   can use a private ini to specify the bsa to use.
   if not exact then
     ModName := ModName + '*';
-  if FindFirst(DataPath + ModName + wbArchiveExtension, faAnyFile, F) = 0 then try
+  if FindFirst(DataPath + ModName + aGameDef.ArchiveExtension, faAnyFile, F) = 0 then try
     repeat
       if wbContainerHandler.ContainerExists(DataPath + F.Name) then
         Continue;
