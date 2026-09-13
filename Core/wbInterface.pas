@@ -800,6 +800,7 @@ type
   IwbGameDef = interface;
   IwbGameContext = interface;
   IwbFile = interface;
+  IwbSaveTables = interface;
   IwbNamedDef = interface;
   IwbValueDef = interface;
   IwbMainRecord = interface;
@@ -1612,6 +1613,8 @@ type
 
     function GetCompareToFile: IwbFile;
     function GetContext: IwbGameContext;
+    function GetSaveTables: IwbSaveTables;
+    procedure SetSaveTables(const aValue: IwbSaveTables);
 
     procedure RemoveIdenticalDeltaFast;
 
@@ -1633,6 +1636,9 @@ type
 
     property Context: IwbGameContext
       read GetContext;
+    property SaveTables: IwbSaveTables
+      read GetSaveTables
+      write SetSaveTables;
 
     function HasMaster(const aFileName: string): Boolean;
     property Masters[aIndex: Integer; aNew: Boolean]: IwbFile
@@ -3599,8 +3605,6 @@ type
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
     function GetSoundBankCache: IInterface;
     procedure SetSoundBankCache(const aValue: IInterface);
-    function GetSaveTables: IwbSaveTables;
-    procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetFaceGenCache: IwbFaceGenCache;
     procedure SetFaceGenCache(const aValue: IwbFaceGenCache);
     property ContainerHandler: IwbContainerHandler
@@ -3609,9 +3613,6 @@ type
     property SoundBankCache: IInterface
       read GetSoundBankCache
       write SetSoundBankCache;
-    property SaveTables: IwbSaveTables
-      read GetSaveTables
-      write SetSaveTables;
     property FaceGenCache: IwbFaceGenCache
       read GetFaceGenCache
       write SetFaceGenCache;
@@ -4161,7 +4162,6 @@ type
     gcContainerHandler     : IwbContainerHandler;
     gcLocalizationHandler  : TObject;
     gcSoundBankCache       : IInterface;
-    gcSaveTables           : IwbSaveTables;
     gcFaceGenCache         : IwbFaceGenCache;
     gcGlobalGeneration     : Integer;
     gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
@@ -4405,11 +4405,6 @@ type
     property SoundBankCache: IInterface
       read gcSoundBankCache
       write gcSoundBankCache;
-    function GetSaveTables: IwbSaveTables;
-    procedure SetSaveTables(const aValue: IwbSaveTables);
-    property SaveTables: IwbSaveTables
-      read gcSaveTables
-      write gcSaveTables;
     function GetFaceGenCache: IwbFaceGenCache;
     procedure SetFaceGenCache(const aValue: IwbFaceGenCache);
     property FaceGenCache: IwbFaceGenCache
@@ -6695,7 +6690,6 @@ end;
 destructor TwbGameContext.Destroy;
 begin
   gcFaceGenCache := nil;
-  gcSaveTables := nil;
   gcFiles := nil;
   gcSoundBankCache := nil;
   FreeAndNil(gcLocalizationHandler);
@@ -7445,16 +7439,6 @@ begin
   gcSoundBankCache := aValue;
 end;
 
-function TwbGameContext.GetSaveTables: IwbSaveTables;
-begin
-  Result := gcSaveTables;
-end;
-
-procedure TwbGameContext.SetSaveTables(const aValue: IwbSaveTables);
-begin
-  gcSaveTables := aValue;
-end;
-
 function TwbGameContext.GetFaceGenCache: IwbFaceGenCache;
 begin
   Result := gcFaceGenCache;
@@ -7681,7 +7665,6 @@ end;
 procedure TwbGameContext.ForceClosed;
 begin
   gcFaceGenCache := nil;
-  gcSaveTables := nil;
   gcFiles := nil;
   gcFilesMap.Clear;
   gcNextFullSlot := 0;
@@ -24087,18 +24070,14 @@ end;
 
 function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
 var
-  lFile    : IwbFile;
-  lContext : IwbGameContext;
+  lFile : IwbFile;
 begin
   Result := nil;
   if not Assigned(aElement) then
     Exit;
   lFile := aElement._File;
-  if not Assigned(lFile) then
-    Exit;
-  lContext := lFile.Context;
-  if Assigned(lContext) then
-    Result := lContext.SaveTables;
+  if Assigned(lFile) then
+    Result := lFile.SaveTables;
 end;
 
 procedure TwbRefID.AfterConstruction;

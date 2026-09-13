@@ -760,6 +760,7 @@ type
     flModule                 : PwbModuleInfo;
     [weak] flContext         : IwbGameContext;
     flContextObj             : TwbGameContext;
+    flSaveTables             : IwbSaveTables;
 
     flCachedEditInfos        : TwbCachedEditInfos;
     flGeneration             : Integer;
@@ -782,6 +783,8 @@ type
     function GetFile: IwbFile; override;
     function GetContext: IwbGameContext;
     function ContextObj: TwbGameContext;
+    function GetSaveTables: IwbSaveTables;
+    procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetReferenceFile: IwbFile; override;
     function GetName: string; override;
     function GetBaseName: string; override;
@@ -3545,6 +3548,7 @@ end;
 
 destructor TwbFile.Destroy;
 begin
+  flSaveTables := nil;
   if Assigned(flModule) and (flModule.miFile = Self) then begin
     Exclude(flModule.miFlags, mfHasFile);
     flModule.miFile := nil;
@@ -3985,6 +3989,7 @@ procedure TwbFile.ForceClosed;
 var
   i: Integer;
 begin
+  flSaveTables := nil;
   for i := Low(flRecordsIndices) to High(flRecordsIndices) do
     FreeAndNil(flRecordsIndices[i]);
   flIndicesActive := False;
@@ -4217,6 +4222,16 @@ end;
 function TwbFile.ContextObj: TwbGameContext;
 begin
   Result := flContextObj;
+end;
+
+function TwbFile.GetSaveTables: IwbSaveTables;
+begin
+  Result := flSaveTables;
+end;
+
+procedure TwbFile.SetSaveTables(const aValue: IwbSaveTables);
+begin
+  flSaveTables := aValue;
 end;
 
 function TwbFile.GetLoadOrderFileID: TwbFileID;

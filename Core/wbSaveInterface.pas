@@ -191,8 +191,7 @@ end;
 
 function wbSaveTablesOf(const aElement: IwbElement): IwbSaveTables;
 var
-  lFile    : IwbFile;
-  lContext : IwbGameContext;
+  lFile : IwbFile;
 begin
   Result := nil;
   if not Assigned(aElement) then
@@ -200,13 +199,10 @@ begin
   lFile := aElement._File;
   if not Assigned(lFile) then
     Exit;
-  lContext := lFile.Context;
-  if not Assigned(lContext) then
-    Exit;
-  Result := lContext.SaveTables;
+  Result := lFile.SaveTables;
   if not Assigned(Result) then begin
     Result := wbCreateSaveTables;
-    lContext.SaveTables := Result;
+    lFile.SaveTables := Result;
   end;
 end;
 
