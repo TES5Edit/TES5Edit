@@ -3043,7 +3043,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[_CurrentGameDef.QuestFlagsSignature], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[flContextObj.GameDefObj.QuestFlagsSignature], IwbContainerElementRef, Cnt) then begin
             Flg := Cnt.Elements[0];
             if Assigned(Flg) then begin
               s := Flg.EditValue;
@@ -3061,7 +3061,7 @@ begin
       if Supports(Group.Elements[i], IwbMainRecord, Rec) then begin
         if Rec.IsWinningOverride then begin
           Cnt := Rec as IwbContainerElementRef;
-          if Supports(Cnt.RecordBySignature[_CurrentGameDef.RaceFlagsSignature], IwbContainerElementRef, Cnt) then begin
+          if Supports(Cnt.RecordBySignature[flContextObj.GameDefObj.RaceFlagsSignature], IwbContainerElementRef, Cnt) then begin
             if wbIsOblivion then begin
               Flg := Cnt.ElementByName['Playable'];
               if Assigned(Flg) then begin
@@ -4065,7 +4065,7 @@ begin
   if flHardcodedGeneration = _FileGeneration then
     Exit(flAllowHardcodedRangeUse);
 
-  var lGameDef := _CurrentGameDef;
+  var lGameDef := flContextObj.GameDefObj;
   Result := lGameDef.HardcodedRangeAdmitted;
   if Result and (lGameDef.HardcodedRangeMinVersion > 0) then
     Result := GetVersion >= lGameDef.HardcodedRangeMinVersion;
@@ -10134,12 +10134,13 @@ var
     BasePtr.mrsSignature := aSignature;
     BasePtr.mrsDataSize := 0;
     BasePtr.mrsFlags._Flags := 0;
-    if gcFormIDInRecordHeader in wbCurrentCapabilities then
+    var lGameDef := wbGameDefOf(aContainer);
+    if gcFormIDInRecordHeader in lGameDef.Capabilities then
       BasePtr.mrsFormID^ := aFormID;
     BasePtr.mrsVCS1^ := DefaultVCS1;
 
-    if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
-      BasePtr.mrsVersion^ := _CurrentGameDef.DefaultFormVersion;
+    if gcFormVersionInRecordHeader in lGameDef.Capabilities then begin
+      BasePtr.mrsVersion^ := lGameDef.DefaultFormVersion;
       BasePtr.mrsVCS2^ := DefaultVCS2;
     end;
 
@@ -25859,7 +25860,7 @@ var
   modPtr      : Pointer;
   mods        : TwbArray;
 begin
-  var lFilePluginNames := _CurrentGameDef.FilePluginNames;
+  var lFilePluginNames := flContextObj.GameDefObj.FilePluginNames;
   if Assigned(lFilePluginNames) then begin
     lFilePluginNames(aHeader, aNames);
     Exit;

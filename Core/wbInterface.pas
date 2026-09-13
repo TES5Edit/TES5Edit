@@ -3315,6 +3315,7 @@ type
     function GetArchiveExtension: string;
     function GetCreationClubContentFileName: string;
     function GetDefaultLandTexture: string;
+    function GetDefaultFormVersion: Word;
     function GetCapabilities: TwbGameCapabilities;
     function GetIsMorrowind: Boolean;
     function GetIsOblivion: Boolean;
@@ -3356,6 +3357,8 @@ type
       read GetCreationClubContentFileName;
     property DefaultLandTexture: string
       read GetDefaultLandTexture;
+    property DefaultFormVersion: Word
+      read GetDefaultFormVersion;
     property Capabilities: TwbGameCapabilities
       read GetCapabilities;
     property IsMorrowind: Boolean
@@ -3978,6 +3981,7 @@ type
     function GetArchiveExtension: string;
     function GetCreationClubContentFileName: string;
     function GetDefaultLandTexture: string;
+    function GetDefaultFormVersion: Word;
     function GetCapabilities: TwbGameCapabilities;
     function GetIsMorrowind: Boolean;
     function GetIsOblivion: Boolean;
@@ -6667,6 +6671,11 @@ end;
 function TwbGameDef.GetDefaultLandTexture: string;
 begin
   Result := gdDefaultLandTexture;
+end;
+
+function TwbGameDef.GetDefaultFormVersion: Word;
+begin
+  Result := gdDefaultFormVersion;
 end;
 
 function TwbGameDef.GetCreationClubContentFileName: string;
