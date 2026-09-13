@@ -94,6 +94,7 @@ type
     miLoadOrder         : Integer;
 
     miFile              : TObject;
+    miContext           : TwbGameContext;
 
     miModGroupTargets   : TwbModuleInfos;
     miModGroupSources   : TwbModuleInfos;
@@ -259,7 +260,7 @@ begin
     if Result = 0 then begin
       Result := CmpI32(a.miCCIndex, b.miCCIndex);
       if Result = 0 then begin
-        if ((mfIsESM in a.miFlags) = (mfIsESM in b.miFlags)) or not (gcMastersLoadFirst in wbCurrentCapabilities) then begin
+        if ((mfIsESM in a.miFlags) = (mfIsESM in b.miFlags)) or not (gcMastersLoadFirst in a.miContext.GameDefObj.Capabilities) then begin
           Result := CmpI32(a.miPluginsTxtIndex, b.miPluginsTxtIndex);
           if Result = 0 then begin
             Result := CmpDouble(a.miDateTime, b.miDateTime);
@@ -297,7 +298,7 @@ begin
     if Result = 0 then begin
       Result := CmpI32(a.miCCIndex, b.miCCIndex);
       if Result = 0 then begin
-          if ((mfIsESM in a.miFlags) = (mfIsESM in b.miFlags)) or not (gcMastersLoadFirst in wbCurrentCapabilities) then begin
+          if ((mfIsESM in a.miFlags) = (mfIsESM in b.miFlags)) or not (gcMastersLoadFirst in a.miContext.GameDefObj.Capabilities) then begin
             Result := CmpI32(a.miCombinedIndex, b.miCombinedIndex);
             if Result = 0 then begin
               Result := CmpI32(a.miPluginsTxtIndex, b.miPluginsTxtIndex);
@@ -340,11 +341,13 @@ var
   ThisModule  : PwbModuleInfo;
   PrevModule  : PwbModuleInfo;
   MadeAChange : Boolean;
+  lGameDef    : TwbGameDef;
 begin
   if Assigned(mlModulesByName) then {already loaded}
     Exit;
 
-  if mlContext.GameDefObj.GameMode = gmEnderalSE then
+  lGameDef := mlContext.GameDefObj;
+  if lGameDef.GameMode = gmEnderalSE then
     mlUpdateIndex := Pred(High(Integer));
 
   if mlContext.Settings.DataPath <> '' then begin
@@ -356,6 +359,7 @@ begin
     SetLength(mlModules, Succ(Length(Files)));
     with mlModules[0] do begin
       miFlags := [];
+      miContext := mlContext;
       miOriginalName := wbGameExeName;
       miName := miOriginalName;
       miExtension := meESM;
@@ -368,6 +372,7 @@ begin
     for i := Low(Files) to High(Files) do
       with mlModules[j] do try
         miFlags := [];
+        miContext := mlContext;
         miOriginalName := ExtractFileName(Files[i]);
         if miOriginalName.EndsWith(csDotGhost, True) then begin
           miName := Copy(miOriginalName, 1, Length(miOriginalName) - Length(csDotGhost));
@@ -383,12 +388,12 @@ begin
           miExtension := meESP
         else if miName.EndsWith(csDotEsu, True) then
           miExtension := meESU
-        else if miName.EndsWith(csDotEsl, True) and wbIsLightSupported then
+        else if miName.EndsWith(csDotEsl, True) and lGameDef.IsLightSupported then
           miExtension := meESL;
         if miExtension = meUnknown then
           Continue;
 
-        if gcMasterFlagFromExtension in wbCurrentCapabilities then
+        if gcMasterFlagFromExtension in lGameDef.Capabilities then
           if miExtension in [meESM, meESL] then begin
             Include(miFlags, mfHasESMExtension);
             Include(miFlags, mfIsESM);
@@ -401,7 +406,7 @@ begin
 
         if IsESM then begin
           Include(miFlags, mfHasESMFlag);
-          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and wbIsFallout3 then
+          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and lGameDef.IsFallout3 then
             {ignore header flag for load order, only extension counts}
           else
             Include(miFlags, mfIsESM);
@@ -494,7 +499,7 @@ begin
         if j > 0 then
           Delete(s, j, High(Integer));
         s := Trim(s);
-        lIsActive := gcPluginsTxtAllActive in wbCurrentCapabilities;
+        lIsActive := gcPluginsTxtAllActive in lGameDef.Capabilities;
         if not lIsActive then begin
           lIsActive := s.StartsWith('*');
           if lIsActive then
@@ -503,7 +508,7 @@ begin
         end;
         with ModuleByName(s)^ do
           if IsValid then begin
-            if gcOrderFromPluginsTxt in wbCurrentCapabilities then begin
+            if gcOrderFromPluginsTxt in lGameDef.Capabilities then begin
               miPluginsTxtIndex := i;
               Include(miFlags, mfHasIndex);
             end;
@@ -536,7 +541,7 @@ begin
     Include(miFlags, mfHasIndex);
   end;
 
-  if wbIsSkyrim then
+  if lGameDef.IsSkyrim then
     with ModuleByName('Update.esm')^ do
       if IsValid then begin
         miOfficialIndex := mlUpdateIndex;
@@ -544,8 +549,8 @@ begin
         Include(miFlags, mfHasIndex);
       end;
 
-  for i := Low(wbOfficialDLC) to High(wbOfficialDLC) do
-    with ModuleByName(wbOfficialDLC[i])^ do
+  for i := Low(lGameDef.OfficialDLC) to High(lGameDef.OfficialDLC) do
+    with ModuleByName(lGameDef.OfficialDLC[i])^ do
       if IsValid then begin
         miOfficialIndex := i;
         Include(miFlags, mfActive);
@@ -564,7 +569,7 @@ begin
   if i > 1 then
     wbMergeSortPtr(@mlModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
-  if gcOrderFromLoadOrderTxt in wbCurrentCapabilities then begin
+  if gcOrderFromLoadOrderTxt in lGameDef.Capabilities then begin
     s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
@@ -619,12 +624,12 @@ begin
     mlModulesLoadOrder[i].miCombinedIndex := i;
 
   AddNewModule('<new file>.esp', True);
-  if not wbIsStarfield  then
+  if not lGameDef.IsStarfield then
     with AddNewModule('<new file>.esp', True)^ do begin
       Include(miFlags, mfHasESMFlag);
       Include(miFlags, mfIsESM);
     end;
-  if wbIsLightSupported and not wbIsStarfield then begin
+  if lGameDef.IsLightSupported and not lGameDef.IsStarfield then begin
     with AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasLightFlag);
     with AddNewModule('<new file>.esp', True)^ do begin
@@ -633,7 +638,7 @@ begin
       Include(miFlags, mfIsESM);
     end;
   end;
-  if wbIsMediumSupported and not wbIsStarfield then begin
+  if lGameDef.IsMediumSupported and not lGameDef.IsStarfield then begin
     with AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasMediumFlag);
     with AddNewModule('<new file>.esp', True)^ do begin
@@ -642,7 +647,7 @@ begin
       Include(miFlags, mfIsESM);
     end;
   end;
-  if wbIsUpdateSupported and not wbIsStarfield then begin
+  if lGameDef.IsUpdateSupported and not lGameDef.IsStarfield then begin
     with AddNewModule('<new file>.esp', True)^ do
       Include(miFlags, mfHasUpdateFlag);
     with AddNewModule('<new file>.esp', True)^ do begin
@@ -655,21 +660,21 @@ begin
   with AddNewModule('<new file>.esm', True)^ do begin
     Include(miFlags, mfHasESMFlag);
     Include(miFlags, mfIsESM);
-    if wbIsLightSupported then begin
+    if lGameDef.IsLightSupported then begin
       with AddNewModule('<new file>.esm', True)^ do begin
         Include(miFlags, mfHasLightFlag);
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfIsESM);
       end;
     end;
-    if wbIsMediumSupported then begin
+    if lGameDef.IsMediumSupported then begin
       with AddNewModule('<new file>.esm', True)^ do begin
         Include(miFlags, mfHasMediumFlag);
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfIsESM);
       end;
     end;
-    if wbIsUpdateSupported and not wbIsStarfield then begin
+    if lGameDef.IsUpdateSupported and not lGameDef.IsStarfield then begin
       with AddNewModule('<new file>.esm', True)^ do begin
         Include(miFlags, mfHasUpdateFlag);
         Include(miFlags, mfHasESMFlag);
@@ -678,14 +683,14 @@ begin
     end;
   end;
 
-  if not wbIsStarfield then begin
-    if wbIsLightSupported then begin
+  if not lGameDef.IsStarfield then begin
+    if lGameDef.IsLightSupported then begin
       with AddNewModule('<new file>.esl', True)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasLightFlag);
         Include(miFlags, mfIsESM);
       end;
-      if wbIsUpdateSupported then begin
+      if lGameDef.IsUpdateSupported then begin
         with AddNewModule('<new file>.esl', True)^ do begin
           Include(miFlags, mfHasUpdateFlag);
           Include(miFlags, mfHasESMFlag);
@@ -759,6 +764,7 @@ function TwbModuleList.AddNewModule(const aFileName: string; aTemplate: Boolean)
 begin
   Result := AllocMem(SizeOf(TwbModuleInfo));
   with Result^ do begin
+    miContext := mlContext;
     miOriginalName := aFileName;
     miName := aFileName;
 
@@ -769,7 +775,7 @@ begin
       miExtension := meESP
     else if miName.EndsWith(csDotEsu, True) then
       miExtension := meESU
-    else if miName.EndsWith(csDotEsl, True) and wbIsLightSupported then
+    else if miName.EndsWith(csDotEsl, True) and mlContext.GameDefObj.IsLightSupported then
       miExtension := meESL;
 
     if miExtension in [meESM, meESL] then
@@ -885,7 +891,7 @@ begin
     Exit('[Template]');
 
   Result := '';
-  if (mfHasBlueprintFlag in miFlags) and (gcBlueprintPlugins in wbCurrentCapabilities) then
+  if (mfHasBlueprintFlag in miFlags) and (gcBlueprintPlugins in miContext.GameDefObj.Capabilities) then
     Result := Result + '[BP]';
   if miOfficialIndex = Low(Integer) then
     Result := Result + '[GameMaster]'
@@ -898,7 +904,7 @@ begin
   if miCCIndex < High(Integer) then
     Result := Result + '[CC:'+miCCIndex.ToString+']';
   if Result = '' then begin
-    if (mfIsESM in miFlags) and (gcMastersLoadFirst in wbCurrentCapabilities) then
+    if (mfIsESM in miFlags) and (gcMastersLoadFirst in miContext.GameDefObj.Capabilities) then
       Result := Result + '[ESM]';
 
     if miPluginsTxtIndex < High(Integer) then

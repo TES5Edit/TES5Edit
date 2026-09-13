@@ -4005,6 +4005,36 @@ type
       read gdToolSource;
     property GameMode: TwbGameMode
       read GetGameMode;
+    property Capabilities: TwbGameCapabilities
+      read GetCapabilities;
+    property IsMorrowind: Boolean
+      read GetIsMorrowind;
+    property IsOblivion: Boolean
+      read GetIsOblivion;
+    property IsOblivionR: Boolean
+      read GetIsOblivionR;
+    property IsFallout3: Boolean
+      read GetIsFallout3;
+    property IsFalloutNV: Boolean
+      read GetIsFalloutNV;
+    property IsSkyrim: Boolean
+      read GetIsSkyrim;
+    property IsSkyrimSE: Boolean
+      read GetIsSkyrimSE;
+    property IsFallout4: Boolean
+      read GetIsFallout4;
+    property IsFallout76: Boolean
+      read GetIsFallout76;
+    property IsStarfield: Boolean
+      read GetIsStarfield;
+    property IsLightSupported: Boolean
+      read GetIsLightSupported;
+    property IsMediumSupported: Boolean
+      read GetIsMediumSupported;
+    property IsBlueprintSupported: Boolean
+      read GetIsBlueprintSupported;
+    property IsUpdateSupported: Boolean
+      read GetIsUpdateSupported;
 
     procedure AddGroupOrder(const aSignature: TwbSignature);
     function GetGroupOrder(const aSignature: TwbSignature): Integer;
