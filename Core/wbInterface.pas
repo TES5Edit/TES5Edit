@@ -5747,6 +5747,7 @@ function wbIsMediumSupported: Boolean; inline;
 function wbIsBlueprintSupported: Boolean; inline;
 function wbIsUpdateSupported: Boolean; inline;
 function wbCurrentCapabilities: TwbGameCapabilities;
+function wbGameDefOf(const aElement: IwbElement): IwbGameDef;
 
 procedure ReportDefs;
 
@@ -6754,6 +6755,19 @@ var
   _GameDefClasses    : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
   _CurrentGameDefRef : IwbGameDef;
   _CurrentContextRef : IwbGameContext;
+
+function wbGameDefOf(const aElement: IwbElement): IwbGameDef;
+var
+  lFile : IwbFile;
+begin
+  Result := nil;
+  if Assigned(aElement) then
+    lFile := aElement._File;
+  if Assigned(lFile) then
+    Result := lFile.Context.GameDef;
+  if not Assigned(Result) then
+    Result := _CurrentGameDef;
+end;
 
 procedure wbMakeCurrentGameDef(aGameDef: TwbGameDef);
 begin
