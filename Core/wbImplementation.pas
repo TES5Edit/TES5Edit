@@ -25960,8 +25960,11 @@ begin
     Names.Free;
   end;
 
-  if flCompareTo <> '' then
+  if flCompareTo <> '' then begin
+    if not FileExists(flCompareTo) then
+      flCompareTo := ExtractFilePath(flFileName) + ExtractFileName(flCompareTo);
     AddMaster(flCompareTo);
+  end;
 
   if wbExtractInfo <> nil then
     ExtractInfo := wbExtractInfo^
