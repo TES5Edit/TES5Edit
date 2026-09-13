@@ -3315,6 +3315,20 @@ type
     function GetArchiveExtension: string;
     function GetCreationClubContentFileName: string;
     function GetCapabilities: TwbGameCapabilities;
+    function GetIsMorrowind: Boolean;
+    function GetIsOblivion: Boolean;
+    function GetIsOblivionR: Boolean;
+    function GetIsFallout3: Boolean;
+    function GetIsFalloutNV: Boolean;
+    function GetIsSkyrim: Boolean;
+    function GetIsSkyrimSE: Boolean;
+    function GetIsFallout4: Boolean;
+    function GetIsFallout76: Boolean;
+    function GetIsStarfield: Boolean;
+    function GetIsLightSupported: Boolean;
+    function GetIsMediumSupported: Boolean;
+    function GetIsBlueprintSupported: Boolean;
+    function GetIsUpdateSupported: Boolean;
 
     procedure SwitchToCoSave;
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean;
@@ -3341,6 +3355,34 @@ type
       read GetCreationClubContentFileName;
     property Capabilities: TwbGameCapabilities
       read GetCapabilities;
+    property IsMorrowind: Boolean
+      read GetIsMorrowind;
+    property IsOblivion: Boolean
+      read GetIsOblivion;
+    property IsOblivionR: Boolean
+      read GetIsOblivionR;
+    property IsFallout3: Boolean
+      read GetIsFallout3;
+    property IsFalloutNV: Boolean
+      read GetIsFalloutNV;
+    property IsSkyrim: Boolean
+      read GetIsSkyrim;
+    property IsSkyrimSE: Boolean
+      read GetIsSkyrimSE;
+    property IsFallout4: Boolean
+      read GetIsFallout4;
+    property IsFallout76: Boolean
+      read GetIsFallout76;
+    property IsStarfield: Boolean
+      read GetIsStarfield;
+    property IsLightSupported: Boolean
+      read GetIsLightSupported;
+    property IsMediumSupported: Boolean
+      read GetIsMediumSupported;
+    property IsBlueprintSupported: Boolean
+      read GetIsBlueprintSupported;
+    property IsUpdateSupported: Boolean
+      read GetIsUpdateSupported;
   end;
 
   TwbGetFormIDCallback = function(const aElement: IwbElement): TwbFormID;
@@ -3933,6 +3975,20 @@ type
     function GetArchiveExtension: string;
     function GetCreationClubContentFileName: string;
     function GetCapabilities: TwbGameCapabilities;
+    function GetIsMorrowind: Boolean;
+    function GetIsOblivion: Boolean;
+    function GetIsOblivionR: Boolean;
+    function GetIsFallout3: Boolean;
+    function GetIsFalloutNV: Boolean;
+    function GetIsSkyrim: Boolean;
+    function GetIsSkyrimSE: Boolean;
+    function GetIsFallout4: Boolean;
+    function GetIsFallout76: Boolean;
+    function GetIsStarfield: Boolean;
+    function GetIsLightSupported: Boolean;
+    function GetIsMediumSupported: Boolean;
+    function GetIsBlueprintSupported: Boolean;
+    function GetIsUpdateSupported: Boolean;
 
     procedure Define; virtual;
     procedure SwitchToCoSave; virtual;
@@ -6584,6 +6640,76 @@ begin
     Result := wbCurrentCapabilities
   else
     Result := gdCapabilities;
+end;
+
+function TwbGameDef.GetIsMorrowind: Boolean;
+begin
+  Result := GetGameMode in [gmTES3];
+end;
+
+function TwbGameDef.GetIsOblivion: Boolean;
+begin
+  Result := GetGameMode in [gmTES4, gmTES4R];
+end;
+
+function TwbGameDef.GetIsOblivionR: Boolean;
+begin
+  Result := GetGameMode in [gmTES4R];
+end;
+
+function TwbGameDef.GetIsFallout3: Boolean;
+begin
+  Result := GetGameMode in [gmFO3, gmFNV];
+end;
+
+function TwbGameDef.GetIsFalloutNV: Boolean;
+begin
+  Result := GetGameMode in [gmFNV];
+end;
+
+function TwbGameDef.GetIsSkyrim: Boolean;
+begin
+  Result := GetGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
+end;
+
+function TwbGameDef.GetIsSkyrimSE: Boolean;
+begin
+  Result := GetGameMode in [gmTES5VR, gmSSE, gmEnderalSE];
+end;
+
+function TwbGameDef.GetIsFallout4: Boolean;
+begin
+  Result := GetGameMode in [gmFO4, gmFO4VR];
+end;
+
+function TwbGameDef.GetIsFallout76: Boolean;
+begin
+  Result := GetGameMode in [gmFO76];
+end;
+
+function TwbGameDef.GetIsStarfield: Boolean;
+begin
+  Result := GetGameMode in [gmSF1];
+end;
+
+function TwbGameDef.GetIsLightSupported: Boolean;
+begin
+  Result := gcLightPlugins in GetCapabilities;
+end;
+
+function TwbGameDef.GetIsMediumSupported: Boolean;
+begin
+  Result := gcMediumPlugins in GetCapabilities;
+end;
+
+function TwbGameDef.GetIsBlueprintSupported: Boolean;
+begin
+  Result := gcBlueprintPlugins in GetCapabilities;
+end;
+
+function TwbGameDef.GetIsUpdateSupported: Boolean;
+begin
+  Result := gcUpdatePlugins in GetCapabilities;
 end;
 
 procedure TwbGameDef.Define;
