@@ -9179,7 +9179,7 @@ begin
 
   if GetIsDeleted then begin
     var lHasSignature: IwbHasSignature;
-    if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and
+    if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and
        Supports(aElement, IwbHasSignature, lHasSignature) and
        Assigned(mrDef) and
        (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -9324,7 +9324,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lDeleteShouldExit := True;
-      if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and Assigned(mrDef) then begin
+      if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and Assigned(mrDef) then begin
         lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
 
         if not lDeleteShouldExit and Assigned(aElement) then begin
@@ -9388,7 +9388,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags^ := mrStruct.mrsFlags^;
               Self.mrStruct.mrsVCS1^ := DefaultVCS1;
-              if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
+              if gcFormVersionInRecordHeader in wbGameDefOf(Self).Capabilities then begin
                 Self.mrStruct.mrsVersion^ := mrStruct.mrsVersion^;
                 Self.mrStruct.mrsVCS2^ := DefaultVCS2;
               end;
@@ -9913,7 +9913,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lHasSignature: IwbHasSignature;
-      if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and
+      if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and
          Supports(aElement, IwbHasSignature, lHasSignature) and
          Assigned(mrDef) and
          (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -10367,7 +10367,7 @@ begin
       _AddRef; _Release;
     end;
 
-    if (gcDeletedRecordKeepsBaseRecord in wbCurrentCapabilities) and Assigned(lBaseRecord) then begin
+    if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and Assigned(lBaseRecord) then begin
       var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord];
       if lMemberIndex >= 0 then begin
         var lBaseRecordElement := Assign(lMemberIndex, nil, False);
@@ -11051,7 +11051,7 @@ begin
 
   // only interior cells get here
 
-  if gcPartialCellsFromGameMasterOnly in wbCurrentCapabilities then begin
+  if gcPartialCellsFromGameMasterOnly in wbGameDefOf(Self).Capabilities then begin
     var lFile := lMasterOrSelf._File;
     if not (fsIsGameMaster in lFile.FileStates) then
       //no partial for interior cells in FO4 if they are not defined in Fallout4.esm
@@ -11112,7 +11112,7 @@ begin
       else if _File.IsMedium and (FormID.ObjectID > $FFFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
         Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a medium module.'
       else begin
-        if (FormID <> FixedFormID) and not wbIsMorrowind then
+        if (FormID <> FixedFormID) and not wbGameDefOf(Self).IsMorrowind then
           Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
       end;
     end;
@@ -11346,10 +11346,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'LAND') then begin
+    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'PGRD') then begin
+    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'PGRD') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
     end else if (GetSignature = 'INFO') then begin
@@ -11398,10 +11398,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := GridCell.SortKey;
-    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'LAND') then begin
+    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
-    end else if (gcGridCellInLandAndPathgrid in wbCurrentCapabilities) and (GetSignature = 'PGRD') then
+    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'PGRD') then
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
 
@@ -11549,7 +11549,7 @@ end;
 
 procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
-  if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
+  if gcFormVersionInRecordHeader in wbGameDefOf(Self).Capabilities then begin
     MakeHeaderWriteable;
     mrStruct.mrsVersion^ := aFormVersion;
   end;
@@ -11613,7 +11613,7 @@ end;
 
 procedure TwbMainRecord.SetFormVCS2(aVCS: Cardinal);
 begin
-  if gcFormVersionInRecordHeader in wbCurrentCapabilities then begin
+  if gcFormVersionInRecordHeader in wbGameDefOf(Self).Capabilities then begin
     MakeHeaderWriteable;
     mrStruct.mrsVCS2^ := aVCS;
   end;
@@ -11735,7 +11735,8 @@ var
 begin
   Result := '';
 
-  if not wbIsFallout4 and not wbIsFallout76 then
+  var lGameDef := wbGameDefOf(Self);
+  if not lGameDef.IsFallout4 and not lGameDef.IsFallout76 then
     Exit;
 
   if not (mrsHasPrecombinedMeshChecked in mrStates) then begin
@@ -11783,7 +11784,7 @@ begin
       PrecombinedCacheFileName := s;
       SetLength(PrecombinedCache, 0);
 
-      if gcPrecombinedMeshPerCell in wbCurrentCapabilities then begin
+      if gcPrecombinedMeshPerCell in lGameDef.Capabilities then begin
         if Supports(Cell.ElementByPath['XCRP\References'], IwbContainerElementRef, CombinedRefs) then begin
           cnt := CombinedRefs.ElementCount;
           SetLength(PrecombinedCache, cnt);
@@ -11818,7 +11819,7 @@ begin
 
   if mrsHasPrecombinedMesh in mrStates then begin
 
-    if gcPrecombinedMeshPerCell in wbCurrentCapabilities then begin
+    if gcPrecombinedMeshPerCell in lGameDef.Capabilities then begin
       Result := 'Precombined\' + IntToHex(Self.mrPrecombinedCellID, 8) + '\' + IntToHex(Self.mrPrecombinedCellID, 8) + 'nif';
     end else begin
       MasterFolder := '';
@@ -13904,7 +13905,7 @@ begin
                     (RefRecord as IwbElementInternal).Reached;
             end;
           end else if Signature = 'FURN' then begin
-            if gcWorkbenchRecipes in wbCurrentCapabilities then begin
+            if gcWorkbenchRecipes in wbGameDefOf(Self).Capabilities then begin
               if GetElementNativeValue('WBDT\Bench Type') > 0 then
                 if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
                   for i := 0 to Pred(Keywords.ElementCount) do
@@ -13921,7 +13922,7 @@ begin
                     end;
             end;
           end else if Signature = 'NPC_' then begin
-            if gcNPCRelationships in wbCurrentCapabilities then begin
+            if gcNPCRelationships in wbGameDefOf(Self).Capabilities then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -13931,7 +13932,7 @@ begin
               end;
             end;
           end else if Signature = 'QUST' then begin
-            if gcQuestScenesAndDialogue in wbCurrentCapabilities then begin
+            if gcQuestScenesAndDialogue in wbGameDefOf(Self).Capabilities then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -15090,7 +15091,7 @@ var
 begin
   SelfRef := Self as IwbElement;
 
-  if gcUngroupedRecordStream in wbCurrentCapabilities then
+  if gcUngroupedRecordStream in wbGameDefOf(Self).Capabilities then
     Exit;
 
   if GetSignature <> 'CELL' then
@@ -16837,7 +16838,7 @@ begin
     Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
-  if (lDataSize <= High(Word)) or (gcSubrecordSize32Bit in wbCurrentCapabilities) then
+  if (lDataSize <= High(Word)) or (gcSubrecordSize32Bit in wbGameDefOf(Self).Capabilities) then
     srStruct.srsDataSize := lDataSize
   else
     //will need to write XXXX subrecord on save
@@ -17175,7 +17176,7 @@ begin
       end;
 
       BigDataSize := GetDataSize;
-      if (BigDataSize > High(Word)) and not (gcSubrecordSize32Bit in wbCurrentCapabilities) then begin
+      if (BigDataSize > High(Word)) and not (gcSubrecordSize32Bit in wbGameDefOf(Self).Capabilities) then begin
         SubHeader.srsSignature := 'XXXX';
         SubHeader.srsDataSize := SizeOf(Cardinal);
         aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
@@ -17521,7 +17522,7 @@ var
   begin
     Result := nil;
 
-    if wbIsStarfield then begin
+    if wbGameDefOf(Self).IsStarfield then begin
       if aSource.LoadOrderFormID.ToCardinal = $25 then
         Exit;
 
@@ -18316,7 +18317,7 @@ begin
     0: Result.Add(TwbSignature(grStruct.grsLabel));
     1: begin
          Result.Add('CELL');
-         if gcWorldspaceRoads in wbCurrentCapabilities then
+         if gcWorldspaceRoads in wbGameDefOf(Self).Capabilities then
            Result.Add('ROAD');
        end;
     7: Result.Add('INFO');
@@ -19149,7 +19150,7 @@ var
                 if wbBeginInternalEdit then try
                   if not TargetRecord.ElementExists['PNAM'] then begin
                     {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                    if wbIsSkyrim then begin
+                    if wbGameDefOf(Self).IsSkyrim then begin
                       Supports(TargetRecord.Container, IwbGroupRecord, g);
                       InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                     end else
@@ -19157,7 +19158,7 @@ var
                     InsertRecord := PrevRecord;
                     Inserted := False;
                     while Assigned(InsertRecord) do begin
-                      if wbIsSkyrim then begin
+                      if wbGameDefOf(Self).IsSkyrim then begin
                         Supports(InsertRecord.Container, IwbGroupRecord, g);
                         InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                       end else
@@ -25743,7 +25744,8 @@ begin
              (GroupRecord as IwbGroupRecordInternal).Sort;
         end;
         10: begin
-             if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+             var lGameDef := wbGameDefOf(Self);
+             if lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
                OldGroup.RemoveElement(MainRecord);
                if OldGroup.ElementCount = 0 then
                  OldGroup.Remove
