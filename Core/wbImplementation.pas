@@ -375,6 +375,7 @@ type
     function GetContainingMainRecord: IwbMainRecord; virtual;
     function GetContainingSubRecord: IwbSubRecord; virtual;
     function GetFile: IwbFile; virtual;
+    function GameDefObj: TwbGameDef; virtual;
     function GetReferenceFile: IwbFile; virtual;
     function GetSortOrder: Integer;
     procedure BuildRef; virtual;
@@ -519,6 +520,7 @@ type
   IwbContainerInternal = interface(IwbContainer)
     ['{8D9AC0D3-3961-4320-A036-EB4771B081CD}']
 
+    function GameDefObj: TwbGameDef;
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer);
     procedure CreatedEmpty;
@@ -781,6 +783,7 @@ type
 
     function GetElementType: TwbElementType; override;
     function GetFile: IwbFile; override;
+    function GameDefObj: TwbGameDef; override;
     function GetContext: IwbGameContext;
     function ContextObj: TwbGameContext;
     function GetSaveTables: IwbSaveTables;
@@ -1199,6 +1202,7 @@ type
   TwbMainRecord = class(TwbRecord, IwbMainRecord, IwbMainRecordInternal, IwbMainRecordEntry, IwbContainedIn)
   protected
     mrDef               : IwbMainRecordDef;
+    mrGameDefObj        : TwbGameDef;
     mrLoadOrderFormID   : TwbFormID;
     mrFixedFormID       : TwbFormID;
     mrMaster            : Pointer{IwbMainRecord};
@@ -1328,6 +1332,7 @@ type
     function GetDef: IwbNamedDef; override;
     function GetMainRecordDef: IwbMainRecordDef;
     function GetElementType: TwbElementType; override;
+    function GameDefObj: TwbGameDef; override;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
     function DoGetFixedFormID: TwbFormID;
@@ -4210,6 +4215,11 @@ end;
 function TwbFile.GetFile: IwbFile;
 begin
   Result := Self;
+end;
+
+function TwbFile.GameDefObj: TwbGameDef;
+begin
+  Result := flContextObj.GameDefObj;
 end;
 
 function TwbFile.GetBaseOffset: NativeUInt;
@@ -8955,7 +8965,7 @@ begin
   InformPrevMainRecord(aPrevMainRecord);
   ScanData;
   if aBasePtr <> dcDataEndPtr then begin
-    Assert( (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
+    Assert( (gcReferencesEmbeddedInCell in GameDefObj.Capabilities) and (GetSignature = 'CELL') or (GetSignature = 'REFR') );
     if GetSignature = 'CELL' then
       aEndPtr := aBasePtr;
     aBasePtr := dcDataEndPtr;
@@ -8975,7 +8985,7 @@ begin
       if PwbSignature(aPtr)^ = 'GRUP' then
         Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
       else begin
-        if (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and ((PwbSignature(aPtr)^ = 'NAM0') or (PwbSignature(aPtr)^ = 'MVRF')) then
+        if ((PwbSignature(aPtr)^ = 'NAM0') or (PwbSignature(aPtr)^ = 'MVRF')) and (gcReferencesEmbeddedInCell in wbGameDefOf(aContainer).Capabilities) then
           Result := TwbSubRecord.Create(nil, aPtr, aEndPtr, nil)
         else
           Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
@@ -9179,7 +9189,7 @@ begin
 
   if GetIsDeleted then begin
     var lHasSignature: IwbHasSignature;
-    if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and
+    if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and
        Supports(aElement, IwbHasSignature, lHasSignature) and
        Assigned(mrDef) and
        (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -9324,7 +9334,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lDeleteShouldExit := True;
-      if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and Assigned(mrDef) then begin
+      if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(mrDef) then begin
         lDeleteShouldExit := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord] <> aIndex;
 
         if not lDeleteShouldExit and Assigned(aElement) then begin
@@ -9388,7 +9398,7 @@ begin
             with TwbMainRecord(MainRecord.ElementID) do begin
               Self.mrStruct.mrsFlags^ := mrStruct.mrsFlags^;
               Self.mrStruct.mrsVCS1^ := DefaultVCS1;
-              if gcFormVersionInRecordHeader in wbGameDefOf(Self).Capabilities then begin
+              if gcFormVersionInRecordHeader in GameDefObj.Capabilities then begin
                 Self.mrStruct.mrsVersion^ := mrStruct.mrsVersion^;
                 Self.mrStruct.mrsVCS2^ := DefaultVCS2;
               end;
@@ -9776,7 +9786,7 @@ end;
 
 function TwbMainRecord.DoGetFixedFormID: TwbFormID;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
     Result := GetFormID
   else
     Result := PwbMainRecordStruct(dcBasePtr).mrsFormID^;
@@ -9913,7 +9923,7 @@ begin
   if GetIsDeleted then
     if aIndex <> wbAssignThis then begin
       var lHasSignature: IwbHasSignature;
-      if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and
+      if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and
          Supports(aElement, IwbHasSignature, lHasSignature) and
          Assigned(mrDef) and
          (mrDef.KnownSubRecordSignatures[ksrBaseRecord] = lHasSignature.Signature)
@@ -10367,7 +10377,7 @@ begin
       _AddRef; _Release;
     end;
 
-    if (gcDeletedRecordKeepsBaseRecord in wbGameDefOf(Self).Capabilities) and Assigned(lBaseRecord) then begin
+    if (gcDeletedRecordKeepsBaseRecord in GameDefObj.Capabilities) and Assigned(lBaseRecord) then begin
       var lMemberIndex := mrDef.KnownSubRecordMemberIndex[ksrBaseRecord];
       if lMemberIndex >= 0 then begin
         var lBaseRecordElement := Assign(lMemberIndex, nil, False);
@@ -10476,8 +10486,9 @@ begin
     end;
   end;
 
-  IsTES3CELL := (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and (GetSignature = 'CELL');
-  IsTES3REFR := (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and (GetSignature = 'REFR');
+  var lCapabilities := GameDefObj.Capabilities;
+  IsTES3CELL := (gcReferencesEmbeddedInCell in lCapabilities) and (GetSignature = 'CELL');
+  IsTES3REFR := (gcReferencesEmbeddedInCell in lCapabilities) and (GetSignature = 'REFR');
   FRMRCount := 0;
 
   {$IFDEF DBGSUBREC}
@@ -11051,7 +11062,7 @@ begin
 
   // only interior cells get here
 
-  if gcPartialCellsFromGameMasterOnly in wbGameDefOf(Self).Capabilities then begin
+  if gcPartialCellsFromGameMasterOnly in GameDefObj.Capabilities then begin
     var lFile := lMasterOrSelf._File;
     if not (fsIsGameMaster in lFile.FileStates) then
       //no partial for interior cells in FO4 if they are not defined in Fallout4.esm
@@ -11112,7 +11123,7 @@ begin
       else if _File.IsMedium and (FormID.ObjectID > $FFFF) and (FixedFormID.FileID = _File.FileFileID[True]) then
         Result := 'ObjectID ' + IntToHex64((FormID.ToCardinal and $00FFFFFF),6) + ' is invalid for a medium module.'
       else begin
-        if (FormID <> FixedFormID) and not wbGameDefOf(Self).IsMorrowind then
+        if (FormID <> FixedFormID) and not GameDefObj.IsMorrowind then
           Result := 'Warning: internal file FormID is a HITME: ' + FormID.ToString(True) + ' (should be ' + FixedFormID.ToString(True) + ' )';
       end;
     end;
@@ -11346,10 +11357,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'LAND') then begin
+    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'PGRD') then begin
+    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'PGRD') then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
     end else if (GetSignature = 'INFO') then begin
@@ -11398,10 +11409,10 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := GridCell.SortKey;
-    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'LAND') then begin
+    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'LAND') then begin
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
-    end else if (gcGridCellInLandAndPathgrid in wbGameDefOf(Self).Capabilities) and (GetSignature = 'PGRD') then
+    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'PGRD') then
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
 
@@ -11476,6 +11487,13 @@ begin
   end;
 end;
 
+function TwbMainRecord.GameDefObj: TwbGameDef;
+begin
+  Result := mrGameDefObj;
+  if not Assigned(Result) then
+    Result := inherited GameDefObj;
+end;
+
 function TwbMainRecord.GetFixedFormID: TwbFormID;
 begin
   Result := mrFixedFormID;
@@ -11495,7 +11513,7 @@ end;
 
 function TwbMainRecord.GetFormID: TwbFormID;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then begin
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then begin
     if not Assigned(mrDef) then
       Result := TwbFormID.Null
     else if not mrDef.GetFormID(Self, Result) then
@@ -11541,7 +11559,7 @@ end;
 
 function TwbMainRecord.GetFormVersion: Cardinal;
 begin
-  if gcFormVersionInRecordHeader in wbCurrentCapabilities then
+  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then
     Result := mrStruct.mrsVersion^
   else
     Result := 0;
@@ -11549,7 +11567,7 @@ end;
 
 procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
-  if gcFormVersionInRecordHeader in wbGameDefOf(Self).Capabilities then begin
+  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then begin
     MakeHeaderWriteable;
     mrStruct.mrsVersion^ := aFormVersion;
   end;
@@ -11605,7 +11623,7 @@ end;
 
 function TwbMainRecord.GetFormVCS2: Cardinal;
 begin
-  if gcFormVersionInRecordHeader in wbCurrentCapabilities then
+  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then
     Result := mrStruct.mrsVCS2^
   else
     Result := 0;
@@ -11613,7 +11631,7 @@ end;
 
 procedure TwbMainRecord.SetFormVCS2(aVCS: Cardinal);
 begin
-  if gcFormVersionInRecordHeader in wbGameDefOf(Self).Capabilities then begin
+  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then begin
     MakeHeaderWriteable;
     mrStruct.mrsVCS2^ := aVCS;
   end;
@@ -11627,7 +11645,7 @@ end;
 
 procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
     Exit;
   if wbComplexFileFileID then 
     Exit;
@@ -11735,7 +11753,7 @@ var
 begin
   Result := '';
 
-  var lGameDef := wbGameDefOf(Self);
+  var lGameDef := GameDefObj;
   if not lGameDef.IsFallout4 and not lGameDef.IsFallout76 then
     Exit;
 
@@ -12018,7 +12036,7 @@ begin
        not FormID.IsNull and
            (not _File.IsNewRecord(FormID, GetMastersUpdated)) and
        not (fsIsHardcoded in _File.FileStates) and
-       ((gcFormIDInRecordHeader in wbCurrentCapabilities) or (FormID.FileID.FullSlot > 0)) then
+       ((gcFormIDInRecordHeader in GameDefObj.Capabilities) or (FormID.FileID.FullSlot > 0)) then
       Include(mrStates, mrsIsInjected)
     else
       Exclude(mrStates, mrsIsInjected);
@@ -12629,8 +12647,9 @@ var
   RecordDef : PwbMainRecordDef;
   p         : PwbMainRecordStruct;
 begin
+  mrGameDefObj := inherited GameDefObj;
   if Assigned(dcEndPtr) then
-    if (gcReferencesEmbeddedInCell in wbCurrentCapabilities) and ((PwbSignature(dcBasePtr)^ = 'FRMR') or (PwbSignature(dcBasePtr)^ = 'CNDT')) then begin
+    if (gcReferencesEmbeddedInCell in mrGameDefObj.Capabilities) and ((PwbSignature(dcBasePtr)^ = 'FRMR') or (PwbSignature(dcBasePtr)^ = 'CNDT')) then begin
       Assert(not (mrsBasePtrAllocated in mrStates));
       dcDataBasePtr := dcBasePtr;
       dcDataEndPtr := dcEndPtr;
@@ -12944,7 +12963,7 @@ var
   lFormID: TwbFormID;
   i: Integer;
 begin
-  Assert(gcFormIDInRecordHeader in wbCurrentCapabilities);
+  Assert(gcFormIDInRecordHeader in GameDefObj.Capabilities);
 
   Assert(Length(mrReferences)=0);
   aStream.Read(lFormID, SizeOf(TwbFormID));
@@ -13905,7 +13924,7 @@ begin
                     (RefRecord as IwbElementInternal).Reached;
             end;
           end else if Signature = 'FURN' then begin
-            if gcWorkbenchRecipes in wbGameDefOf(Self).Capabilities then begin
+            if gcWorkbenchRecipes in GameDefObj.Capabilities then begin
               if GetElementNativeValue('WBDT\Bench Type') > 0 then
                 if Supports(GetElementByPath('KWDA - Keywords'), IwbContainerElementRef, Keywords) then
                   for i := 0 to Pred(Keywords.ElementCount) do
@@ -13922,7 +13941,7 @@ begin
                     end;
             end;
           end else if Signature = 'NPC_' then begin
-            if gcNPCRelationships in wbGameDefOf(Self).Capabilities then begin
+            if gcNPCRelationships in GameDefObj.Capabilities then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -13932,7 +13951,7 @@ begin
               end;
             end;
           end else if Signature = 'QUST' then begin
-            if gcQuestScenesAndDialogue in wbGameDefOf(Self).Capabilities then begin
+            if gcQuestScenesAndDialogue in GameDefObj.Capabilities then begin
               Master := GetMasterOrSelf;
               for i := 0 to Pred(Master.ReferencedByCount) do begin
                 RefRecord := Master.ReferencedBy[i];
@@ -14294,7 +14313,7 @@ procedure TwbMainRecord.SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
 var
   i            : Integer;
 begin
-  Assert(gcFormIDInRecordHeader in wbCurrentCapabilities);
+  Assert(gcFormIDInRecordHeader in GameDefObj.Capabilities);
 
   aStream.Write(mrStruct.mrsFormID^, SizeOf(TwbFormID));
 
@@ -14355,7 +14374,7 @@ procedure TwbMainRecord.ScanData;
 var
   SelfRef : IwbContainerElementRef;
 begin
-  if (not wbDelayLoadRecords) or ((gcReferencesEmbeddedInCell in wbCurrentCapabilities) and ((GetSignature = 'CELL') or (GetSignature = 'REFR')) ) then begin
+  if (not wbDelayLoadRecords) or ((gcReferencesEmbeddedInCell in GameDefObj.Capabilities) and ((GetSignature = 'CELL') or (GetSignature = 'REFR')) ) then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(True);
   end;
@@ -14712,7 +14731,7 @@ begin
   if GetLoadOrderFormID = aFormID then
     Exit;
 
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then begin
+  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then begin
     Exit; //|||
   end else begin
     _File := GetFile as IwbFileInternal;
@@ -15091,7 +15110,7 @@ var
 begin
   SelfRef := Self as IwbElement;
 
-  if gcUngroupedRecordStream in wbGameDefOf(Self).Capabilities then
+  if gcUngroupedRecordStream in GameDefObj.Capabilities then
     Exit;
 
   if GetSignature <> 'CELL' then
@@ -16838,7 +16857,7 @@ begin
     Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
-  if (lDataSize <= High(Word)) or (gcSubrecordSize32Bit in wbGameDefOf(Self).Capabilities) then
+  if (lDataSize <= High(Word)) or (gcSubrecordSize32Bit in GameDefObj.Capabilities) then
     srStruct.srsDataSize := lDataSize
   else
     //will need to write XXXX subrecord on save
@@ -17176,7 +17195,7 @@ begin
       end;
 
       BigDataSize := GetDataSize;
-      if (BigDataSize > High(Word)) and not (gcSubrecordSize32Bit in wbGameDefOf(Self).Capabilities) then begin
+      if (BigDataSize > High(Word)) and not (gcSubrecordSize32Bit in GameDefObj.Capabilities) then begin
         SubHeader.srsSignature := 'XXXX';
         SubHeader.srsDataSize := SizeOf(Cardinal);
         aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
@@ -17522,7 +17541,7 @@ var
   begin
     Result := nil;
 
-    if wbGameDefOf(Self).IsStarfield then begin
+    if GameDefObj.IsStarfield then begin
       if aSource.LoadOrderFormID.ToCardinal = $25 then
         Exit;
 
@@ -18317,7 +18336,7 @@ begin
     0: Result.Add(TwbSignature(grStruct.grsLabel));
     1: begin
          Result.Add('CELL');
-         if gcWorldspaceRoads in wbGameDefOf(Self).Capabilities then
+         if gcWorldspaceRoads in GameDefObj.Capabilities then
            Result.Add('ROAD');
        end;
     7: Result.Add('INFO');
@@ -19150,7 +19169,8 @@ var
                 if wbBeginInternalEdit then try
                   if not TargetRecord.ElementExists['PNAM'] then begin
                     {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
-                    if wbGameDefOf(Self).IsSkyrim then begin
+                    var lIsSkyrim := GameDefObj.IsSkyrim;
+                    if lIsSkyrim then begin
                       Supports(TargetRecord.Container, IwbGroupRecord, g);
                       InfoQuest := g.ChildrenOf.ElementNativeValues['QNAM'];
                     end else
@@ -19158,7 +19178,7 @@ var
                     InsertRecord := PrevRecord;
                     Inserted := False;
                     while Assigned(InsertRecord) do begin
-                      if wbGameDefOf(Self).IsSkyrim then begin
+                      if lIsSkyrim then begin
                         Supports(InsertRecord.Container, IwbGroupRecord, g);
                         InfoQuest2 := g.ChildrenOf.ElementNativeValues['QNAM'];
                       end else
@@ -20173,6 +20193,14 @@ begin
     Result := IwbContainerInternal(eContainer)._File;
   end else
     Result := nil;
+end;
+
+function TwbElement.GameDefObj: TwbGameDef;
+begin
+  if Assigned(eContainer) then
+    Result := IwbContainerInternal(eContainer).GameDefObj
+  else
+    Result := _CurrentGameDef;
 end;
 
 function TwbElement.GetFound: Boolean;
@@ -25744,7 +25772,7 @@ begin
              (GroupRecord as IwbGroupRecordInternal).Sort;
         end;
         10: begin
-             var lGameDef := wbGameDefOf(Self);
+             var lGameDef := GameDefObj;
              if lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
                OldGroup.RemoveElement(MainRecord);
                if OldGroup.ElementCount = 0 then
