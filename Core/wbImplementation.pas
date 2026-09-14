@@ -68,7 +68,6 @@ function wbCreateKeepAliveRoot: IwbKeepAliveRoot;
 function wbBeginKeepAlive: Integer;
 function wbEndKeepAlive: Integer;
 
-function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 
 function wbMultipleElements(const aElements: IwbElements): IwbMultipleElements;
 
@@ -1088,11 +1087,11 @@ type
   TwbMainRecordStruct = packed record
     mrsSignature : TwbSignature;
     mrsDataSize  : Cardinal;
-    function mrsFlags   : PwbMainRecordStructFlags;
-    function mrsFormID  : PwbFormID;
-    function mrsVCS1    : PCardinal;
-    function mrsVersion : PWord;
-    function mrsVCS2    : PWord;
+    function mrsFlags(aFormIDInHeader: Boolean)   : PwbMainRecordStructFlags;
+    function mrsFormID(aFormIDInHeader: Boolean)  : PwbFormID;
+    function mrsVCS1(aFormIDInHeader: Boolean)    : PCardinal;
+    function mrsVersion(aFormIDInHeader: Boolean) : PWord;
+    function mrsVCS2(aFormIDInHeader: Boolean)    : PWord;
   private
     case Integer of
       0: (
@@ -1110,6 +1109,7 @@ type
 
   IwbMainRecordInternal = interface(IwbMainRecord)
     ['{405C85E0-2261-4078-B99C-199007D31544}']
+    function GetFlagsPtr: PwbMainRecordStructFlags;
     procedure AddOverride(const aMainRecord: IwbMainRecord);
     procedure RemoveOverride(const aMainRecord: IwbMainRecord);
     procedure SetMaster(const aMaster: IwbMainRecord);
@@ -1495,15 +1495,15 @@ type
   PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
   TwbSubRecordHeaderStruct = packed record
   private
-    function srsGetDataSize: Cardinal;
-    procedure srsSetDataSize(const Value: Cardinal);
+    function srsGetDataSize(a32Bit: Boolean): Cardinal;
+    procedure srsSetDataSize(a32Bit: Boolean; const Value: Cardinal);
   public
     srsSignature : TwbSignature;
-    property srsDataSize: Cardinal
+    property srsDataSize[a32Bit: Boolean]: Cardinal
       read srsGetDataSize
       write srsSetDataSize;
 
-    class function SizeOf: NativeInt; static;
+    class function SizeOf(a32Bit: Boolean): NativeInt; static;
     //not allowed, so assignments can try to copy too much data! WARNING!
     //class operator Implicit(const aSource : TwbSubRecordHeaderStruct): TwbSubRecordHeaderStruct;
   private
@@ -9395,12 +9395,14 @@ begin
 
           if Supports(aElement, IwbMainRecord, MainRecord) then begin
             MakeHeaderWriteable;
+            var lCapabilities := GameDefObj.Capabilities;
+            var lFormIDInHeader := gcFormIDInRecordHeader in lCapabilities;
             with TwbMainRecord(MainRecord.ElementID) do begin
-              Self.mrStruct.mrsFlags^ := mrStruct.mrsFlags^;
-              Self.mrStruct.mrsVCS1^ := DefaultVCS1;
-              if gcFormVersionInRecordHeader in GameDefObj.Capabilities then begin
-                Self.mrStruct.mrsVersion^ := mrStruct.mrsVersion^;
-                Self.mrStruct.mrsVCS2^ := DefaultVCS2;
+              Self.mrStruct.mrsFlags(lFormIDInHeader)^ := mrStruct.mrsFlags(lFormIDInHeader)^;
+              Self.mrStruct.mrsVCS1(lFormIDInHeader)^ := DefaultVCS1;
+              if gcFormVersionInRecordHeader in lCapabilities then begin
+                Self.mrStruct.mrsVersion(lFormIDInHeader)^ := mrStruct.mrsVersion(lFormIDInHeader)^;
+                Self.mrStruct.mrsVCS2(lFormIDInHeader)^ := DefaultVCS2;
               end;
             end;
           end;
@@ -9789,7 +9791,7 @@ begin
   if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
     Result := GetFormID
   else
-    Result := PwbMainRecordStruct(dcBasePtr).mrsFormID^;
+    Result := PwbMainRecordStruct(dcBasePtr).mrsFormID(True)^;
 
   var lFile := GetFile;
   if Assigned(lFile) then begin
@@ -10148,24 +10150,25 @@ var
     Include(mrStates, mrsBasePtrAllocated);
     BasePtr.mrsSignature := aSignature;
     BasePtr.mrsDataSize := 0;
-    BasePtr.mrsFlags._Flags := 0;
     var lGameDef := wbGameDefOf(aContainer);
-    if gcFormIDInRecordHeader in lGameDef.Capabilities then
-      BasePtr.mrsFormID^ := aFormID;
-    BasePtr.mrsVCS1^ := DefaultVCS1;
+    var lFormIDInHeader := gcFormIDInRecordHeader in lGameDef.Capabilities;
+    BasePtr.mrsFlags(lFormIDInHeader)._Flags := 0;
+    if lFormIDInHeader then
+      BasePtr.mrsFormID(lFormIDInHeader)^ := aFormID;
+    BasePtr.mrsVCS1(lFormIDInHeader)^ := DefaultVCS1;
 
     if gcFormVersionInRecordHeader in lGameDef.Capabilities then begin
-      BasePtr.mrsVersion^ := lGameDef.DefaultFormVersion;
-      BasePtr.mrsVCS2^ := DefaultVCS2;
+      BasePtr.mrsVersion(lFormIDInHeader)^ := lGameDef.DefaultFormVersion;
+      BasePtr.mrsVCS2(lFormIDInHeader)^ := DefaultVCS2;
     end;
 
     Group := nil;
     if Supports(lContainer, IwbGroupRecordInternal, Group) then
       if Group.GroupType = 8 then
-        BasePtr.mrsFlags.SetPersistent(True)
+        BasePtr.mrsFlags(lFormIDInHeader).SetPersistent(True)
       else if (Group.GroupType = 10) and not (wbVWDAsQuestChildren
                  and Supports(Group.Container, IwbGroupRecord, Group2) and (TwbSignature(Group2.GroupLabel) = 'QUST')) then
-        BasePtr.mrsFlags.SetVisibleWhenDistant(True);
+        BasePtr.mrsFlags(lFormIDInHeader).SetVisibleWhenDistant(True);
 
     if Assigned(Group) then
       if aSignature = 'CELL' then begin
@@ -10297,7 +10300,7 @@ var
 begin
   InitDataPtr; // reset...
 
-  if mrStruct.mrsFlags.IsCompressed then try
+  if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsCompressed then try
     UncompressedLength := PCardinal(dcDataBasePtr)^;
     if UncompressedLength > 0 then begin
       SetLength(mrDataStorage, UncompressedLength );
@@ -10704,7 +10707,7 @@ begin
 
   mrDef.AfterLoad(Self);
 
-  if not (mrStruct.mrsFlags.IsDeleted or GetIsPartialForm) then begin
+  if not (mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsDeleted or GetIsPartialForm) then begin
     for i := 0 to Pred(mrDef.MemberCount) do
       if mrDef.Members[i].Required then
         Include(RequiredRecords, i);
@@ -11132,7 +11135,7 @@ begin
       Exit;
   end;
 
-  if mrStruct.mrsFlags.IsDeleted then begin
+  if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsDeleted then begin
     Result := '';
 
     for i := GetAdditionalElementCount to Pred(GetElementCount) do begin
@@ -11503,12 +11506,12 @@ end;
 
 function TwbMainRecord.GetFlags: TwbMainRecordStructFlags;
 begin
-  Result := mrStruct.mrsFlags^;
+  Result := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities)^;
 end;
 
 function TwbMainRecord.GetFlagsPtr: PwbMainRecordStructFlags;
 begin
-  Result := mrStruct.mrsFlags;
+  Result := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities);
 end;
 
 function TwbMainRecord.GetFormID: TwbFormID;
@@ -11516,10 +11519,15 @@ begin
   if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then begin
     if not Assigned(mrDef) then
       Result := TwbFormID.Null
-    else if not mrDef.GetFormID(Self, Result) then
-      Result :=  wbFormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, mrDef.GetIdentity(Self))
+    else if not mrDef.GetFormID(Self, Result) then begin
+      var lContext := _CurrentContext;
+      var lFile := GetFile;
+      if Assigned(lFile) then
+        lContext := (lFile as IwbFileInternal).ContextObj;
+      Result := lContext.FormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, mrDef.GetIdentity(Self));
+    end;
   end else
-    Result := mrStruct.mrsFormID^;
+    Result := mrStruct.mrsFormID(True)^;
 end;
 
 function TwbMainRecord.GetFullName: string;
@@ -11559,17 +11567,19 @@ end;
 
 function TwbMainRecord.GetFormVersion: Cardinal;
 begin
-  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then
-    Result := mrStruct.mrsVersion^
+  var lCapabilities := GameDefObj.Capabilities;
+  if gcFormVersionInRecordHeader in lCapabilities then
+    Result := mrStruct.mrsVersion(gcFormIDInRecordHeader in lCapabilities)^
   else
     Result := 0;
 end;
 
 procedure TwbMainRecord.SetFormVersion(aFormVersion: Cardinal);
 begin
-  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then begin
+  var lCapabilities := GameDefObj.Capabilities;
+  if gcFormVersionInRecordHeader in lCapabilities then begin
     MakeHeaderWriteable;
-    mrStruct.mrsVersion^ := aFormVersion;
+    mrStruct.mrsVersion(gcFormIDInRecordHeader in lCapabilities)^ := aFormVersion;
   end;
 end;
 
@@ -11612,28 +11622,30 @@ end;
 
 function TwbMainRecord.GetFormVCS1: Cardinal;
 begin
-  Result := mrStruct.mrsVCS1^;
+  Result := mrStruct.mrsVCS1(gcFormIDInRecordHeader in GameDefObj.Capabilities)^;
 end;
 
 procedure TwbMainRecord.SetFormVCS1(aVCS: Cardinal);
 begin
   MakeHeaderWriteable;
-  mrStruct.mrsVCS1^ := aVCS;
+  mrStruct.mrsVCS1(gcFormIDInRecordHeader in GameDefObj.Capabilities)^ := aVCS;
 end;
 
 function TwbMainRecord.GetFormVCS2: Cardinal;
 begin
-  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then
-    Result := mrStruct.mrsVCS2^
+  var lCapabilities := GameDefObj.Capabilities;
+  if gcFormVersionInRecordHeader in lCapabilities then
+    Result := mrStruct.mrsVCS2(gcFormIDInRecordHeader in lCapabilities)^
   else
     Result := 0;
 end;
 
 procedure TwbMainRecord.SetFormVCS2(aVCS: Cardinal);
 begin
-  if gcFormVersionInRecordHeader in GameDefObj.Capabilities then begin
+  var lCapabilities := GameDefObj.Capabilities;
+  if gcFormVersionInRecordHeader in lCapabilities then begin
     MakeHeaderWriteable;
-    mrStruct.mrsVCS2^ := aVCS;
+    mrStruct.mrsVCS2(gcFormIDInRecordHeader in lCapabilities)^ := aVCS;
   end;
 end;
 
@@ -11645,20 +11657,21 @@ end;
 
 procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
-  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+  var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
+  if not lFormIDInHeader then
     Exit;
-  if wbComplexFileFileID then 
+  if wbComplexFileFileID then
     Exit;
- 
-  if mrStruct.mrsFormID.FileID.FullSlot > aIndex then begin
+
+  if mrStruct.mrsFormID(lFormIDInHeader).FileID.FullSlot > aIndex then begin
     MakeHeaderWriteable;
-    mrStruct.mrsFormID.FileID := TwbFileID.CreateFull(aIndex);
+    mrStruct.mrsFormID(lFormIDInHeader).FileID := TwbFileID.CreateFull(aIndex);
     if Assigned(mrGroup) or (GetChildGroup <> nil) then
-      mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
+      mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
   end else
-    if mrStruct.mrsFormID.FileID.FullSlot = aIndex then
+    if mrStruct.mrsFormID(lFormIDInHeader).FileID.FullSlot = aIndex then
       if Assigned(mrGroup) or (GetChildGroup <> nil) then
-        mrGroup.GroupLabel := mrStruct.mrsFormID.ToCardinal;
+        mrGroup.GroupLabel := mrStruct.mrsFormID(lFormIDInHeader).ToCardinal;
 end;
 
 function TwbMainRecord.GetGridCell(out aGridCell: TwbGridCell): Boolean;
@@ -12785,9 +12798,10 @@ begin
     Exit;
   if MyBase^.mrsDataSize <> OtherBase^.mrsDataSize then
     Exit;
-  if MyBase^.mrsFlags._Flags <> OtherBase^.mrsFlags._Flags then
+  var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
+  if MyBase^.mrsFlags(lFormIDInHeader)._Flags <> OtherBase^.mrsFlags(lFormIDInHeader)._Flags then
     Exit;
-  if (MyBase^.mrsFormID <> nil) and (MyBase^.mrsFormID^ <> OtherBase^.mrsFormID^) then
+  if lFormIDInHeader and (MyBase^.mrsFormID(lFormIDInHeader)^ <> OtherBase^.mrsFormID(lFormIDInHeader)^) then
     Exit;
 
   Inc(PByte(MyBase), wbSizeOfMainRecordStruct);
@@ -12967,7 +12981,7 @@ begin
 
   Assert(Length(mrReferences)=0);
   aStream.Read(lFormID, SizeOf(TwbFormID));
-  Assert(lFormID = mrStruct.mrsFormID^);
+  Assert(lFormID = mrStruct.mrsFormID(True)^);
   aStream.Read(i, SizeOf(i));
   if i>0 then begin
     SetLength(mrReferences, i);
@@ -13176,7 +13190,7 @@ var
           NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse);
           if GetFormID <> NewFormID then begin
             MakeHeaderWriteable;
-            mrStruct.mrsFormID^ := NewFormID;
+            mrStruct.mrsFormID(gcFormIDInRecordHeader in GameDefObj.Capabilities)^ := NewFormID;
             mrFixedFormID := TwbFormID.Null;
             mrLoadOrderFormID := TwbFormID.Null;
             Exclude(mrStates, mrsIsInjectedChecked);
@@ -13801,13 +13815,14 @@ var
 
             case GroupRecord.GroupType of
               8: begin
-                if not mrStruct.mrsFlags.IsPersistent then
+                if not mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsPersistent then
                   raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
               end;
               10: begin
-                if not mrStruct.mrsFlags.IsVisibleWhenDistant then
+                var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities);
+                if not lFlags.IsVisibleWhenDistant then
                   raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
-                if mrStruct.mrsFlags.IsPersistent then
+                if lFlags.IsPersistent then
                   raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
               end;
             end;
@@ -13830,9 +13845,10 @@ var
              (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
           then
             raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
-          if mrStruct.mrsFlags.IsPersistent then
+          var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities);
+          if lFlags.IsPersistent then
             raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-          if mrStruct.mrsFlags.IsVisibleWhenDistant and not wbVWDInTemporary then
+          if lFlags.IsVisibleWhenDistant and not wbVWDInTemporary then
             raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
         end;
       end;
@@ -14315,7 +14331,7 @@ var
 begin
   Assert(gcFormIDInRecordHeader in GameDefObj.Capabilities);
 
-  aStream.Write(mrStruct.mrsFormID^, SizeOf(TwbFormID));
+  aStream.Write(mrStruct.mrsFormID(True)^, SizeOf(TwbFormID));
 
   i := Length(mrReferences);
   aStream.Write(i, SizeOf(i));
@@ -14731,7 +14747,8 @@ begin
   if GetLoadOrderFormID = aFormID then
     Exit;
 
-  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then begin
+  var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
+  if not lFormIDInHeader then begin
     Exit; //|||
   end else begin
     _File := GetFile as IwbFileInternal;
@@ -14752,7 +14769,7 @@ begin
         if Assigned(mrGroup) or (GetChildGroup <> nil)  then
           Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
         MakeHeaderWriteable;
-        mrStruct.mrsFormID^ := FileFormID;
+        mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
         mrFixedFormID := TwbFormID.Null;
         mrLoadOrderFormID := TwbFormID.Null;
         SetMastersUpdated(True);
@@ -14790,7 +14807,7 @@ begin
     if Assigned(mrGroup) or (GetChildGroup <> nil)  then
       Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
     MakeHeaderWriteable;
-    mrStruct.mrsFormID^ := FileFormID;
+    mrStruct.mrsFormID(lFormIDInHeader)^ := FileFormID;
     mrFixedFormID := TwbFormID.Null;
     mrLoadOrderFormID := TwbFormID.Null;
     Exclude(mrStates, mrsIsInjectedChecked);
@@ -15335,7 +15352,7 @@ var
         Stream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
       end;
 
-      if mrStruct.mrsFlags.IsCompressed then begin
+      if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsCompressed then begin
 
         MemoryStream := TMemoryStream.Create;
         try
@@ -16196,7 +16213,7 @@ end;
 destructor TwbSubRecord.Destroy;
 begin
   if not Assigned(dcEndPtr) and Assigned(dcBasePtr) then
-    FreeMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
+    FreeMem(dcBasePtr);
   inherited;
 end;
 
@@ -16600,7 +16617,7 @@ end;
 function TwbSubRecord.GetSubRecordHeaderSize: Integer;
 begin
   if Assigned(dcBasePtr) then
-    Result := srStruct.srsDataSize
+    Result := srStruct.srsDataSize[gcSubrecordSize32Bit in GameDefObj.Capabilities]
   else
     Result := 0;
 end;
@@ -16682,7 +16699,8 @@ begin
   Assert(Assigned(dcBasePtr));
   Assert(Assigned(dcEndPtr));
 
-  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf;
+  var lSize32Bit := gcSubrecordSize32Bit in GameDefObj.Capabilities;
+  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf(lSize32Bit);
   SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -16690,7 +16708,7 @@ begin
   Inc(PByte(aBasePtr), SizeNeeded );
   inherited;
 
-  Assert(srStruct.srsDataSize = NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
+  Assert(srStruct.srsDataSize[lSize32Bit] = NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr));
 
   dcBasePtr := BasePtr;
   if dcfBasePtrInvalid in dcFlags then
@@ -16704,10 +16722,11 @@ var
   LastRecord : IwbElement;
   Container  : IwbContainer;
 begin
+  var lSize32Bit := gcSubrecordSize32Bit in GameDefObj.Capabilities;
   if Assigned(dcBasePtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + TwbSubRecordHeaderStruct.SizeOf;
+    dcDataBasePtr := PByte(dcBasePtr) + TwbSubRecordHeaderStruct.SizeOf(lSize32Bit);
 
-    lDataSize := srStruct.srsDataSize;
+    lDataSize := srStruct.srsDataSize[lSize32Bit];
 
     if lDataSize = 0 then begin
       Container := GetContainer;
@@ -16725,7 +16744,7 @@ begin
     dcDataEndPtr := PByte(dcDataBasePtr) + lDataSize;
     dcEndPtr := dcDataEndPtr;
   end else begin
-    GetMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf );
+    GetMem(dcBasePtr, TwbSubRecordHeaderStruct.SizeOf(lSize32Bit) );
     if Assigned(srDef) then
       srStruct.srsSignature := srDef.DefaultSignature
     else
@@ -16840,7 +16859,8 @@ var
   lDataSize     : Cardinal;
 begin
   Assert(Assigned(dcBasePtr));
-  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf;
+  var lSize32Bit := gcSubrecordSize32Bit in GameDefObj.Capabilities;
+  SizeNeeded := TwbSubRecordHeaderStruct.SizeOf(lSize32Bit);
   SizeAvailable := NativeUInt(aEndPtr) - NativeUInt(aBasePtr);
   Assert( SizeAvailable >= SizeNeeded );
 
@@ -16857,11 +16877,11 @@ begin
     Exclude(dcFlags, dcfBasePtrInvalid);
   dcEndPtr := dcDataEndPtr;
   lDataSize := NativeUInt(dcDataEndPtr) - NativeUInt(dcDataBasePtr);
-  if (lDataSize <= High(Word)) or (gcSubrecordSize32Bit in GameDefObj.Capabilities) then
-    srStruct.srsDataSize := lDataSize
+  if (lDataSize <= High(Word)) or lSize32Bit then
+    srStruct.srsDataSize[lSize32Bit] := lDataSize
   else
     //will need to write XXXX subrecord on save
-    srStruct.srsDataSize := 0;
+    srStruct.srsDataSize[lSize32Bit] := 0;
 end;
 
 procedure TwbSubRecord.NotifyChangedInternal(aContainer: Pointer);
@@ -17186,7 +17206,8 @@ begin
   if not (dcfDontSave in dcFlags) then begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(False);
-    if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize = 0) then begin
+    var lSize32Bit := gcSubrecordSize32Bit in GameDefObj.Capabilities;
+    if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize[lSize32Bit] = 0) then begin
       DoInit(True);
 
       if dcfStorageInvalid in dcFlags then begin
@@ -17195,19 +17216,19 @@ begin
       end;
 
       BigDataSize := GetDataSize;
-      if (BigDataSize > High(Word)) and not (gcSubrecordSize32Bit in GameDefObj.Capabilities) then begin
+      if (BigDataSize > High(Word)) and not lSize32Bit then begin
         SubHeader.srsSignature := 'XXXX';
-        SubHeader.srsDataSize := SizeOf(Cardinal);
-        aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
+        SubHeader.srsDataSize[lSize32Bit] := SizeOf(Cardinal);
+        aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf(lSize32Bit) );
         aStream.WriteBuffer(BigDataSize, SizeOf(BigDataSize) );
         SubHeader.srsSignature := srStruct.srsSignature;
-        SubHeader.srsDataSize := 0;
+        SubHeader.srsDataSize[lSize32Bit] := 0;
       end else begin
         SubHeader.srsSignature := srStruct.srsSignature;
-        SubHeader.srsDataSize := BigDataSize;
+        SubHeader.srsDataSize[lSize32Bit] := BigDataSize;
       end;
 
-      aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf );
+      aStream.WriteBuffer(SubHeader, TwbSubRecordHeaderStruct.SizeOf(lSize32Bit) );
       CurrentPosition := aStream.Position;
       NoteOffsetDataPayload;
       inherited;
@@ -17220,12 +17241,12 @@ begin
         Include(dcFlags, dcfBasePtrInvalid);
       end;
     end else begin
-      aStream.WriteBuffer(dcBasePtr^, TwbSubRecordHeaderStruct.SizeOf );
+      aStream.WriteBuffer(dcBasePtr^, TwbSubRecordHeaderStruct.SizeOf(lSize32Bit) );
       CurrentPosition := aStream.Position;
       NoteOffsetDataPayload;
       inherited;
-      if CurrentPosition + srStruct.srsDataSize <> aStream.Position then
-        Assert(CurrentPosition + srStruct.srsDataSize = aStream.Position, 'CurrentPosition + srStruct.srsDataSize <> aStream.Position');
+      if CurrentPosition + srStruct.srsDataSize[lSize32Bit] <> aStream.Position then
+        Assert(CurrentPosition + srStruct.srsDataSize[lSize32Bit] = aStream.Position, 'CurrentPosition + srStruct.srsDataSize <> aStream.Position');
     end;
   end;
 
@@ -24018,8 +24039,8 @@ var
   FileName: string;
 begin
   Assert( not (aIsLight and aIsMedium) );
-  Assert( (not aIsLight) or wbIsLightSupported or wbPseudoLight);
-  Assert( (not aIsMedium) or wbIsMediumSupported or wbPseudoMedium);
+  Assert( (not aIsLight) or _CurrentContext.GameDefObj.IsLightSupported or wbPseudoLight);
+  Assert( (not aIsMedium) or _CurrentContext.GameDefObj.IsMediumSupported or wbPseudoMedium);
 
   wbInitRecords;
 
@@ -25370,27 +25391,27 @@ begin
           if MainRecordInternal.Signature <> wbHeaderSignature then
             Flags.SetESM(False);
 
-        if Flags.IsDeleted <> MainRecordInternal.mrStruct.mrsFlags.IsDeleted then begin
-          Flags.SetDeleted(MainRecordInternal.mrStruct.mrsFlags.IsDeleted);
+        if Flags.IsDeleted <> MainRecordInternal.GetFlagsPtr.IsDeleted then begin
+          Flags.SetDeleted(MainRecordInternal.GetFlagsPtr.IsDeleted);
           ToggleDeleted := True;
         end;
 
-        if Flags.IsPartialForm <> MainRecordInternal.mrStruct.mrsFlags.IsPartialForm then begin
-          Flags.SetPartialForm(MainRecordInternal.mrStruct.mrsFlags.IsPartialForm);
+        if Flags.IsPartialForm <> MainRecordInternal.GetFlagsPtr.IsPartialForm then begin
+          Flags.SetPartialForm(MainRecordInternal.GetFlagsPtr.IsPartialForm);
           TogglePartialForm := True;
         end;
 
-        if Flags.IsPersistent <> MainRecordInternal.mrStruct.mrsFlags.IsPersistent then begin
-          Flags.SetPersistent(MainRecordInternal.mrStruct.mrsFlags.IsPersistent);
+        if Flags.IsPersistent <> MainRecordInternal.GetFlagsPtr.IsPersistent then begin
+          Flags.SetPersistent(MainRecordInternal.GetFlagsPtr.IsPersistent);
           TogglePersistent := True;
         end;
 
-        if Flags.IsVisibleWhenDistant <> MainRecordInternal.mrStruct.mrsFlags.IsVisibleWhenDistant then begin
-          Flags.SetVisibleWhenDistant(MainRecordInternal.mrStruct.mrsFlags.IsVisibleWhenDistant);
+        if Flags.IsVisibleWhenDistant <> MainRecordInternal.GetFlagsPtr.IsVisibleWhenDistant then begin
+          Flags.SetVisibleWhenDistant(MainRecordInternal.GetFlagsPtr.IsVisibleWhenDistant);
           ToggleVisibleWhenDistant := True;
         end;
 
-        MainRecordInternal.mrStruct.mrsFlags^ := Flags;
+        MainRecordInternal.GetFlagsPtr^ := Flags;
       end;
     end;
     p := MainRecordInternal.mrStruct;
@@ -26180,25 +26201,25 @@ begin
   Result.srsDataSize := aSource.srsDataSize;
 end;
 }
-class function TwbSubRecordHeaderStruct.SizeOf: NativeInt;
+class function TwbSubRecordHeaderStruct.SizeOf(a32Bit: Boolean): NativeInt;
 begin
-  if gcSubrecordSize32Bit in wbCurrentCapabilities then
+  if a32Bit then
     Result := System.SizeOf(TwbSignature) + System.SizeOf(Cardinal)
   else
     Result := System.SizeOf(TwbSignature) + System.SizeOf(Word);
 end;
 
-function TwbSubRecordHeaderStruct.srsGetDataSize: Cardinal;
+function TwbSubRecordHeaderStruct.srsGetDataSize(a32Bit: Boolean): Cardinal;
 begin
-  if gcSubrecordSize32Bit in wbCurrentCapabilities then
+  if a32Bit then
     Result := _DataSizeCardinal
   else
     Result := _DataSizeWord;
 end;
 
-procedure TwbSubRecordHeaderStruct.srsSetDataSize(const Value: Cardinal);
+procedure TwbSubRecordHeaderStruct.srsSetDataSize(a32Bit: Boolean; const Value: Cardinal);
 begin
-  if gcSubrecordSize32Bit in wbCurrentCapabilities then
+  if a32Bit then
     _DataSizeCardinal := Value
   else
     _DataSizeWord := Value;
@@ -26206,50 +26227,44 @@ end;
 
 { TwbMainRecordStruct }
 
-function TwbMainRecordStruct.mrsFlags: PwbMainRecordStructFlags;
+function TwbMainRecordStruct.mrsFlags(aFormIDInHeader: Boolean): PwbMainRecordStructFlags;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
-    Result := @_TES3_Flags
+  if aFormIDInHeader then
+    Result := @_Flags
   else
-    Result := @_Flags;
+    Result := @_TES3_Flags;
 end;
 
-function TwbMainRecordStruct.mrsFormID: PwbFormID;
+function TwbMainRecordStruct.mrsFormID(aFormIDInHeader: Boolean): PwbFormID;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
-    Result := nil
+  if aFormIDInHeader then
+    Result := @_FormID
   else
-    Result := @_FormID;
+    Result := nil;
 end;
 
-function TwbMainRecordStruct.mrsVCS1: PCardinal;
+function TwbMainRecordStruct.mrsVCS1(aFormIDInHeader: Boolean): PCardinal;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
-    Result := @_TES3_VCS1
+  if aFormIDInHeader then
+    Result := @_VCS1
   else
-    Result := @_VCS1;
+    Result := @_TES3_VCS1;
 end;
 
-function TwbMainRecordStruct.mrsVCS2: PWord;
+function TwbMainRecordStruct.mrsVCS2(aFormIDInHeader: Boolean): PWord;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
-    Result := nil
+  if aFormIDInHeader then
+    Result := @_VCS2
   else
-    Result := @_VCS2;
+    Result := nil;
 end;
 
-function TwbMainRecordStruct.mrsVersion: PWord;
+function TwbMainRecordStruct.mrsVersion(aFormIDInHeader: Boolean): PWord;
 begin
-  if not (gcFormIDInRecordHeader in wbCurrentCapabilities) then
-    Result := nil
+  if aFormIDInHeader then
+    Result := @_Version
   else
-    Result := @_Version;
-end;
-
-function wbFormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
-begin
-  Assert(not (gcFormIDInRecordHeader in wbCurrentCapabilities));
-  Result := _CurrentContext.FormIDFromIdentity(aFormIDBase, aFormIDNameBase, aIdentity);
+    Result := nil;
 end;
 
 { TwbTemplateElement }
