@@ -375,7 +375,7 @@ type
     function GetContainingSubRecord: IwbSubRecord; virtual;
     function GetFile: IwbFile; virtual;
     function GameDefObj: TwbGameDef; virtual;
-    function GetGameDef: IwbGameDef;
+    function GetGameDefObj: TwbGameDef;
     function GetReferenceFile: IwbFile; virtual;
     function GetSortOrder: Integer;
     procedure BuildRef; virtual;
@@ -20227,7 +20227,7 @@ begin
     Result := _CurrentGameDef;
 end;
 
-function TwbElement.GetGameDef: IwbGameDef;
+function TwbElement.GetGameDefObj: TwbGameDef;
 begin
   Result := GameDefObj;
 end;

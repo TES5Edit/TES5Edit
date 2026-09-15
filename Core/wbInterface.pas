@@ -664,6 +664,7 @@ var
 const
   wbAssignThis = Low(Integer);
   wbAssignAdd = High(Integer);
+  RecordDefHashMapSize = 1546;
 
 type
   //keep ordered by release date
@@ -798,6 +799,7 @@ type
 
   IwbContainer = interface;
   IwbGameDef = interface;
+  TwbGameDef = class;
   IwbGameContext = interface;
   IwbFile = interface;
   IwbSaveTables = interface;
@@ -1057,7 +1059,7 @@ type
     function GetContainingSubRecord: IwbSubRecord;
     function GetFile: IwbFile;
     function GetReferenceFile: IwbFile;
-    function GetGameDef: IwbGameDef;
+    function GetGameDefObj: TwbGameDef;
     function GetSortOrder: Integer;
     procedure SetSortOrder(aSortOrder: Integer);
     function GetMemoryOrder: Integer;
@@ -1181,8 +1183,8 @@ type
       read GetFile;
     property ReferenceFile: IwbFile
       read GetReferenceFile;
-    property GameDef: IwbGameDef
-      read GetGameDef;
+    property GameDefObj: TwbGameDef
+      read GetGameDefObj;
     property InjectionSourceFiles: TwbFiles
       read GetInjectionSourceFiles;
 
@@ -3927,10 +3929,6 @@ type
     procedure Add(const aMainRecordDef: IwbMainRecordDef);
   end;
 
-const
-  RecordDefHashMapSize = 1546;
-
-type
   TwbGameDef = class(TInterfacedObject, IwbGameDef)
   protected
     gdHEDRVersion      : Double;
@@ -5765,7 +5763,7 @@ function wbIsMediumSupported: Boolean; inline;
 function wbIsBlueprintSupported: Boolean; inline;
 function wbIsUpdateSupported: Boolean; inline;
 function wbCurrentCapabilities: TwbGameCapabilities;
-function wbGameDefOf(const aElement: IwbElement): IwbGameDef;
+function wbGameDefOf(const aElement: IwbElement): TwbGameDef;
 
 procedure ReportDefs;
 
@@ -6770,11 +6768,11 @@ var
   _CurrentGameDefRef : IwbGameDef;
   _CurrentContextRef : IwbGameContext;
 
-function wbGameDefOf(const aElement: IwbElement): IwbGameDef;
+function wbGameDefOf(const aElement: IwbElement): TwbGameDef;
 begin
   Result := nil;
   if Assigned(aElement) then
-    Result := aElement.GameDef;
+    Result := aElement.GameDefObj;
   if not Assigned(Result) then
     Result := _CurrentGameDef;
 end;
