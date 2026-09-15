@@ -313,48 +313,6 @@ function wbIsFlag(const aFlag: Integer; const aValue: IwbValueDef; const aIsUnus
 function wbIsNotFlag(const aFlag: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; const aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbIsNotFlag(const aFlag: Integer; const aValue: IwbValueDef; const aIsUnused: Boolean = True): IwbValueDef; overload;
 
-{>>> DLL Mode IfThen Defs <<<} //2
-function IsCS    (const aDef1, aDef2: string): string;
-function IsHNVSE (const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority;
-
-{>>> Game Mode IfThen Defs <<<} //36
-function IsTES3   (const aDef1, aDef2: string): string; overload;
-function IsTES3   (const aDef1, aDef2: TwbSignature): TwbSignature; overload;
-function IsTES4   (const aDef1, aDef2: Integer): Integer; overload;
-function IsTES4   (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsTES4   (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsTES4   (const aDef1, aDef2: string): string; overload;
-function IsTES4   (const aDef1, aDef2: TwbSignature): TwbSignature; overload;
-function IsTES4R  (const aDef1, aDef2: Integer): Integer; overload;
-function IsTES4R  (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsTES4FO3(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsTES4FO3(const aDef1, aDef2: string): string; overload;
-function IsFO3    (const aDef1, aDef2: Integer): Integer; overload;
-function IsFO3    (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsFO3    (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsFO3    (const aDef1, aDef2: string): string; overload;
-function IsFNV    (const aDef1, aDef2: string): string; overload;
-function IsFNV    (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsFNV    (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsTES5   (const aDef1, aDef2: string): string; overload;
-function IsTES5   (const aDef1, aDef2: Cardinal): Cardinal; overload;
-function IsTES5   (const aDef1, aDef2: Integer): Integer; overload;
-function IsTES5   (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsTES5   (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsSSE    (const aDef1, aDef2: string): string; overload;
-function IsSSE    (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsSSE    (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsFO4Plus(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsFO4Plus(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsFO4Plus(const aDef1, aDef2: string): string; overload;
-function IsFO76   (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsFO76   (const aDef1, aDef2: string): string; overload;
-function IsFO76SF1(const aDef1, aDef2: string): string;
-function IsSF1    (const aDef1, aDef2: Integer): Integer; overload;
-function IsSF1    (const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
-function IsSF1    (const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
-function IsSF1    (const aDef1, aDef2: string): string; overload;
-
 {>>> Size IfThen Defs <<<} //4
 function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef; overload;
 function wbBelowSize(aSize: Integer; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbValueDef; overload;
@@ -435,11 +393,11 @@ function wbSizePosRot(const aSignature : TwbSignature;
                                        : IwbSubRecordDef; overload;
 
 {>>> Color Defs <<<} //16
-function wbAmbientColors(const aSignature : TwbSignature;
+function wbAmbientColors(const aGameDef: TwbGameDef; const aSignature : TwbSignature;
                          const aName      : string = 'Directional Ambient Lighting Colors')
                                           : IwbSubRecordDef; overload;
 
-function wbAmbientColors(const aName : string = 'Directional Ambient Lighting Colors')
+function wbAmbientColors(const aGameDef: TwbGameDef; const aName : string = 'Directional Ambient Lighting Colors')
                                      : IwbStructDef; overload;
 
 function wbByteColors(const aSignature : TwbSignature;
@@ -546,26 +504,26 @@ function wbPACKDataInputTypeEnum: IwbStringDefFormater;
 function wbActorImpactMaterialEnum       : IwbEnumDef;
 function wbAggressionEnum                : IwbEnumDef;
 function wbAlignmentEnum                 : IwbEnumDef;
-function wbArchtypeEnum                  : IwbEnumDef;
+function wbArchtypeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbAssistanceEnum                : IwbEnumDef;
 function wbAttackAnimationEnum           : IwbEnumDef;
 function wbAxisEnum                      : IwbEnumDef;
-function wbBlendModeEnum                 : IwbEnumDef;
+function wbBlendModeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbBlendOpEnum                   : IwbEnumDef;
 function wbBodyLocationEnum              : IwbEnumDef;
-function wbBodyPartIndexEnum             : IwbEnumDef;
+function wbBodyPartIndexEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbBoolEnum                      : IwbEnumDef;
 function wbConfidenceEnum                : IwbEnumDef;
 function wbCRCValuesEnum                 : IwbEnumDef;
-function wbCriticalStageEnum             : IwbEnumDef;
-function wbCrimeTypeEnum                 : IwbEnumDef;
+function wbCriticalStageEnum(const aGameDef: TwbGameDef): IwbEnumDef;
+function wbCrimeTypeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbCreatureTypeEnum              : IwbEnumDef;
 function wbEffectTypeEnum                : IwbEnumDef;
 function wbEquipTypeEnum                 : IwbEnumDef;
 function wbLGDIRankSlotEnum              : IwbEnumDef;
 function wbLGDIQualityTierEnum           : IwbEnumDef;
-function wbMenuModeEnum                  : IwbEnumDef;
-function wbMoodEnum                      : IwbEnumDef;
+function wbMenuModeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
+function wbMoodEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbMoralityEnum                  : IwbEnumDef;
 function wbMusicEnum                     : IwbEnumDef;
 function wbNavmeshEdgeLinkEnum           : IwbEnumDef;
@@ -574,23 +532,23 @@ function wbPackageScheduleDayOfWeekEnum  : IwbEnumDef;
 function wbPackageScheduleHoursEnum      : IwbEnumDef;
 function wbPackageScheduleMinutesEnum    : IwbEnumDef;
 function wbPackageScheduleMonthEnum      : IwbEnumDef;
-function wbPackageTypeEnum               : IwbEnumDef;
+function wbPackageTypeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbQuadrantEnum                  : IwbEnumDef;
-function wbQuestEventEnum                : IwbEnumDef;
-function wbSexEnum                       : IwbEnumDef;
+function wbQuestEventEnum(const aGameDef: TwbGameDef): IwbEnumDef;
+function wbSexEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 function wbSoulGemEnum                   : IwbEnumDef;
 function wbWorldImpactMaterialEnum       : IwbEnumDef;
-function wbZoomOverlayEnum               : IwbEnumDef;
-function wbZTestFuncEnum                 : IwbEnumDef;
+function wbZoomOverlayEnum(const aGameDef: TwbGameDef): IwbEnumDef;
+function wbZTestFuncEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 
 {>>> Flags Defs <<<} //7
 function wbFurnitureEntryTypeFlags : IwbFlagsDef;
-function wbLandFlags               : IwbFlagsDef;
-function wbNavmeshTriangleFlags    : IwbFlagsDef;
-function wbNavmeshCoverFlags       : IwbFlagsDef;
-function wbPackageFlags            : IwbFlagsDef;
-function wbServiceFlags            : IwbFlagsDef;
-function wbTemplateFlags           : IwbFlagsDef;
+function wbLandFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
+function wbNavmeshTriangleFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
+function wbNavmeshCoverFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
+function wbPackageFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
+function wbServiceFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
+function wbTemplateFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 
 {>>> Value Defs <<<} //14
 function wbAlternateTexture      : IwbValueDef;
@@ -620,20 +578,20 @@ function wbRecordHeader(const aRecordFlags : IwbIntegerDef)
 function wbTimeInterpolators(const aName : string)
                                          : IwbValueDef; overload;
 
-function wbWeatherTimeOfDay(const aName : string)
+function wbWeatherTimeOfDay(const aGameDef: TwbGameDef; const aName : string)
                                         : IwbValueDef;
 
 {>>> RecordMember Defs <<<} //74
 function wbActionFlag                 : IwbRecordMemberDef;
 function wbActorSounds                : IwbRecordMemberDef;
-function wbCellGrid                   : IwbRecordMemberDef;
+function wbCellGrid(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbFaceGen                    : IwbRecordMemberDef;
-function wbFaction                    : IwbRecordMemberDef;
-function wbFactionRelations           : IwbRecordMemberDef;
+function wbFaction(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbFactionRelations(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbHEDR                       : IwbRecordMemberDef;
 function wbINOA                       : IwbRecordMemberDef;
 function wbINOM                       : IwbRecordMemberDef;
-function wbIdleAnimation              : IwbRecordMemberDef;
+function wbIdleAnimation(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbLandColors                 : IwbRecordMemberDef;
 function wbLandHeights                : IwbRecordMemberDef;
 function wbLandLayers                 : IwbRecordMemberDef;
@@ -641,40 +599,40 @@ function wbLandNormals                : IwbRecordMemberDef;
 function wbLoadScreenLocations        : IwbRecordMemberDef;
 function wbMagicEffectSounds          : IwbRecordMemberDef;
 function wbMDOB                       : IwbRecordMemberDef;
-function wbMHDTCELL                   : IwbRecordMemberDef;
-function wbObjectBounds               : IwbRecordMemberDef;
+function wbMHDTCELL(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbObjectBounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbQSTI                       : IwbRecordMemberDef;
 function wbQSTR                       : IwbRecordMemberDef;
-function wbRagdoll                    : IwbRecordMemberDef;
-function wbRegionAreas                : IwbRecordMemberDef;
-function wbRegionSounds               : IwbRecordMemberDef;
+function wbRagdoll(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbRegionAreas(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbRegionSounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbSeasons                    : IwbRecordMemberDef;
 function wbSoundDescriptorSounds      : IwbRecordMemberDef;
-function wbSoundTypeSounds            : IwbRecordMemberDef;
+function wbSoundTypeSounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbStaticPartPlacements       : IwbRecordMemberDef;
-function wbWeatherCloudAlphas         : IwbRecordMemberDef;
-function wbWeatherCloudColors         : IwbRecordMemberDef;
-function wbWeatherCloudSpeed          : IwbRecordMemberDef;
-function wbWeatherCloudTextures       : IwbRecordMemberDef;
-function wbWeatherColors              : IwbRecordMemberDef;
-function wbWeatherDirectionalLighting : IwbRecordMemberDef;
-function wbWeatherDisabledLayers      : IwbRecordMemberDef;
-function wbWeatherFogDistance         : IwbRecordMemberDef;
+function wbWeatherCloudAlphas(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherCloudColors(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherCloudSpeed(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherCloudTextures(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherColors(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherDirectionalLighting(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherDisabledLayers(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWeatherFogDistance(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbWeatherGodRays             : IwbRecordMemberDef;
-function wbWeatherImageSpaces         : IwbRecordMemberDef;
+function wbWeatherImageSpaces(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbWeatherMagic               : IwbRecordMemberDef;
 function wbWeatherSounds              : IwbRecordMemberDef;
-function wbWeatherVolumetricLighting  : IwbRecordMemberDef;
+function wbWeatherVolumetricLighting(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbWorldCellSizeData          : IwbRecordMemberDef;
 function wbWorldFixedCenter           : IwbRecordMemberDef;
 function wbWorldLODData               : IwbRecordMemberDef;
-function wbWorldLandData              : IwbRecordMemberDef;
+function wbWorldLandData(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbWorldLargeRefs             : IwbRecordMemberDef;
 function wbWorldLevelData             : IwbRecordMemberDef;
-function wbWorldMapData               : IwbRecordMemberDef;
-function wbWorldMapOffset             : IwbRecordMemberDef;
-function wbWorldMaxHeight             : IwbRecordMemberDef;
-function wbWorldObjectBounds          : IwbRecordMemberDef;
+function wbWorldMapData(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWorldMapOffset(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWorldMaxHeight(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function wbWorldObjectBounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 function wbWorldOffsetData            : IwbRecordMemberDef;
 function wbWorldRegionEditorMap       : IwbRecordMemberDef;
 function wbWorldSwapsImpactData       : IwbRecordMemberDef;
@@ -691,10 +649,10 @@ function wbDamageTypeArray(const aItemName : string)
 function wbDebrisModel(const aTextureFileHashes : IwbRecordMemberDef)
                                                 : IwbRecordMemberDef;
 
-function wbEnchantment(const aCapacity : Boolean = False)
+function wbEnchantment(const aGameDef: TwbGameDef; const aCapacity : Boolean = False)
                                        : IwbRecordMemberDef;
 
-function wbHeadPart(const aHeadPartIndexEnum : IwbEnumDef = nil;
+function wbHeadPart(const aGameDef: TwbGameDef; const aHeadPartIndexEnum : IwbEnumDef = nil;
                     const aModel             : IwbRecordMemberDef = nil;
                     const aHeadPartsAfterSet : TwbAfterSetCallback = nil)
                                              : IwbRecordMemberDef;
@@ -704,7 +662,7 @@ function wbKeywords(const aName    : string = 'Keywords';
                                    : IwbRecordMemberDef;
 
 
-function wbLeveledListEntry(const aObjectName : string;
+function wbLeveledListEntry(const aGameDef: TwbGameDef; const aObjectName : string;
                             const aSigs       : TwbSignatures)
                                               : IwbRecordMemberDef;
 
@@ -727,19 +685,19 @@ function wbLGDIRankSlotArray(const aSignature : TwbSignature;
                              const aSlotEnum  : IwbEnumDef)
                                               : IwbRecordMemberDef; overload;
 
-function wbModelInfo(const aSignature : TwbSignature;
+function wbModelInfo(const aGameDef: TwbGameDef; const aSignature : TwbSignature;
                            aName      : string = '')
                                       : IwbRecordMemberDef;
 
-function wbModelInfos(const aSignature : TwbSignature;
+function wbModelInfos(const aGameDef: TwbGameDef; const aSignature : TwbSignature;
                             aName      : string = '';
                       const aDontShow  : TwbDontShowCallback = nil)
                                        : IwbRecordMemberDef;
 
-function wbOwnership(const aSkipSigs : TwbSignatures = nil)
+function wbOwnership(const aGameDef: TwbGameDef; const aSkipSigs : TwbSignatures = nil)
                                      : IwbRecordMemberDef;
 
-function wbTexturedModel(const aSubRecordName     : string;
+function wbTexturedModel(const aGameDef: TwbGameDef; const aSubRecordName     : string;
                          const aSignatures        : TwbSignatures;
                          const aTextureSubRecords : array of IwbRecordMemberDef)
                                                   : IwbRecordMemberDef;
@@ -6308,276 +6266,6 @@ begin
       ]).IncludeFlag(dfMustBeUnion);
 end;
 
-{>>> DLL Mod IfThen Defs <<<} //2
-
-function IsCS(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if gcCommunityShaders in _CurrentGameDef.Capabilities then
-    Result := aDef1;
-end;
-
-function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority;
-begin
-  Result := aDef2;
-  if gcHNVSE in _CurrentGameDef.Capabilities then
-    Result := aDef1;
-end;
-
-{>>> wbGameMode IfThen Defs <<<} //36
-
-function IsTES3(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsMorrowind then
-    Result := aDef1;
-end;
-
-function IsTES3(const aDef1, aDef2: TwbSignature): TwbSignature;
-begin
-  Result := aDef2;
-  if wbIsOblivion then
-    Result := aDef1;
-end;
-
-function IsTES4(const aDef1, aDef2: Integer): Integer;
-begin
-  Result := aDef2;
-  if wbIsOblivion then
-    Result := aDef1;
-end;
-
-function IsTES4(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsOblivion then
-    Result := aDef1;
-end;
-
-function IsTES4(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsOblivion then
-    Result := aDef1;
-end;
-
-function IsTES4(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsOblivion then
-    Result := aDef1;
-end;
-
-function IsTES4(const aDef1, aDef2: TwbSignature): TwbSignature;
-begin
-  Result := aDef2;
-  if wbIsOblivion then
-    Result := aDef1;
-end;
-
-function IsTES4R(const aDef1, aDef2: Integer): Integer;
-begin
-  Result := aDef2;
-  if wbIsOblivionR then
-    Result := aDef1;
-end;
-
-function IsTES4R(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsOblivionR then
-    Result := aDef1;
-end;
-
-function IsTES4FO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsOblivion or wbIsFallout3 then
-    Result := aDef1;
-end;
-
-function IsTES4FO3(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsOblivion or wbIsFallout3 then
-    Result := aDef1;
-end;
-
-function IsFO3(const aDef1, aDef2: Integer): Integer;
-begin
-  Result := aDef2;
-  if wbIsFallout3 then
-    Result := aDef1;
-end;
-
-function IsFO3(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsFallout3 then
-    Result := aDef1;
-end;
-
-function IsFO3(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsFallout3 then
-    Result := aDef1;
-end;
-
-function IsFO3(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsFallout3 then
-    Result := aDef1;
-end;
-
-function IsFNV(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsFalloutNV then
-    Result := aDef1;
-end;
-
-function IsFNV(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsFalloutNV then
-    Result := aDef1;
-end;
-
-function IsFNV(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsFalloutNV then
-    Result := aDef1;
-end;
-
-function IsTES5(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsSkyrim then
-    Result := aDef1;
-end;
-
-function IsTES5(const aDef1, aDef2: Integer): Integer;
-begin
-  Result := aDef2;
-  if wbIsSkyrim then
-    Result := aDef1;
-end;
-
-function IsTES5(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsSkyrim then
-    Result := aDef1;
-end;
-
-function IsTES5(const aDef1, aDef2: Cardinal): Cardinal;
-begin
-  Result := aDef2;
-  if wbIsSkyrim then
-    Result := aDef1;
-end;
-
-function IsTES5(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsSkyrim then
-    Result := aDef1;
-end;
-
-function IsSSE(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsSkyrimSE then
-    Result := aDef1;
-end;
-
-function IsSSE(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsSkyrimSE then
-    Result := aDef1;
-end;
-
-function IsSSE(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsSkyrimSE then
-    Result := aDef1;
-end;
-
-function IsFO4Plus(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsFO4Plus(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsFO4Plus(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsFO76(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsFallout76 then
-    Result := aDef1;
-end;
-
-function IsFO76(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsFallout76 then
-    Result := aDef1;
-end;
-
-function IsFO76SF1(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsFallout76 or wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsSF1(const aDef1, aDef2: Integer): Integer;
-begin
-  Result := aDef2;
-  if wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsSF1(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef;
-begin
-  Result := aDef2;
-  if wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef;
-begin
-  Result := aDef2;
-  if wbIsStarfield then
-    Result := aDef1;
-end;
-
-function IsSF1(const aDef1, aDef2: string): string;
-begin
-  Result := aDef2;
-  if wbIsStarfield then
-    Result := aDef1;
-end;
-
 {>>> Size IfThen Defs <<<} //4
 
 function wbBelowSize(aSize: Integer; const aSignature: TwbSignature; const aValue: IwbValueDef; aIsUnused: Boolean = True): IwbRecordMemberDef;
@@ -6886,7 +6574,7 @@ end;
 
 {>>> Color Defs <<<} //16
 
-function wbAmbientColors(const aSignature : TwbSignature;
+function wbAmbientColors(const aGameDef: TwbGameDef; const aSignature : TwbSignature;
                          const aName      : string = 'Directional Ambient Lighting Colors')
                                           : IwbSubRecordDef;
 begin
@@ -6900,16 +6588,16 @@ begin
       wbByteColors('Z-').IncludeFlag(dfSummaryNoName)
     ]).SetSummaryKey([0, 1, 2, 3, 4, 5])
       .IncludeFlag(dfCollapsed, wbCollapseDirectionRotation),
-    IsSF1(
+    aGameDef.IsSF1(
       nil,
       wbFromVersion(30, wbByteColors('Specular'))),
-    IsSF1(
+    aGameDef.IsSF1(
       nil,
       wbFromVersion(30, wbFloat('Fresnel Power').SetDefaultNativeValue(1)))
   ]).SetOptionalFrom(1);
 end;
 
-function wbAmbientColors(const aName : string = 'Directional Ambient Lighting Colors')
+function wbAmbientColors(const aGameDef: TwbGameDef; const aName : string = 'Directional Ambient Lighting Colors')
                                      : IwbStructDef;
 begin
   Result := wbStruct(aName, [
@@ -6922,10 +6610,10 @@ begin
       wbByteColors('Z-').IncludeFlag(dfSummaryNoName)
     ]).SetSummaryKey([0, 1, 2, 3, 4, 5])
       .IncludeFlag(dfCollapsed, wbCollapseDirectionRotation),
-    IsSF1(
+    aGameDef.IsSF1(
       nil,
       wbFromVersion(30, wbByteColors('Specular'))),
-    IsSF1(
+    aGameDef.IsSF1(
       nil,
       wbFromVersion(30, wbFloat('Fresnel Power').SetDefaultNativeValue(1)))
   ]).SetOptionalFrom(1);
@@ -7247,7 +6935,7 @@ begin
     ]);
 end;
 
-function wbArchtypeEnum: IwbEnumDef;
+function wbArchtypeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -7269,8 +6957,8 @@ begin
       32, 'Cure Poison',
       33, 'Concussion',
       34, 'Value And Parts',
-      35, IsFNV('Limb Condition', ''),
-      36, IsFNV('Turbo', '')
+      35, aGameDef.IsFNV('Limb Condition', ''),
+      36, aGameDef.IsFNV('Turbo', '')
     ]);
 end;
 
@@ -7417,7 +7105,7 @@ begin
     ]);
 end;
 
-function wbBlendModeEnum: IwbEnumDef;
+function wbBlendModeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -7433,12 +7121,12 @@ begin
     {9}  'Dest Color',
     {10} 'Dest Inverse Color',
     {11} 'Source Alpha SAT',
-    {12} IsFO76('Both Source Alpha', ''),
-    {13} IsFO76('Both Source Inverse Alpha', ''),
-    {14} IsFO76('Blend Factor', ''),
-    {15} IsFO76('Blend Inverse Factor', ''),
-    {16} IsFO76('Source Color 2', ''),
-    {17} IsFO76('Source Color 2 Alpha', '')
+    {12} aGameDef.IsFO76('Both Source Alpha', ''),
+    {13} aGameDef.IsFO76('Both Source Inverse Alpha', ''),
+    {14} aGameDef.IsFO76('Blend Factor', ''),
+    {15} aGameDef.IsFO76('Blend Inverse Factor', ''),
+    {16} aGameDef.IsFO76('Source Color 2', ''),
+    {17} aGameDef.IsFO76('Source Color 2 Alpha', '')
     ]);
 end;
 
@@ -7479,15 +7167,15 @@ begin
     ]);
 end;
 
-function wbBodyPartIndexEnum: IwbEnumDef;
+function wbBodyPartIndexEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
       {0}        'Upper Body',
-      {1} IsTES4('Lower Body', 'Left Hand'),
-      {2} IsTES4('Hand',       'Right Hand'),
-      {3} IsTES4('Foot',       'Upper Body Texture'),
-      {4} IsTES4('Tail',       '')
+      {1} aGameDef.IsTES4('Lower Body', 'Left Hand'),
+      {2} aGameDef.IsTES4('Hand',       'Right Hand'),
+      {3} aGameDef.IsTES4('Foot',       'Upper Body Texture'),
+      {4} aGameDef.IsTES4('Tail',       '')
     ]);
 end;
 
@@ -7728,7 +7416,7 @@ begin
     ]);
 end;
 
-function wbCriticalStageEnum: IwbEnumDef;
+function wbCriticalStageEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -7737,12 +7425,12 @@ begin
       {2}           'Goo End',
       {3}           'Disintegrate Start',
       {4}           'Disintegrate End',
-      {5} IsFO4Plus('Freeze Start', ''),
-      {6} IsFO4Plus('Freeze End', '')
+      {5} aGameDef.IsFO4Plus('Freeze Start', ''),
+      {6} aGameDef.IsFO4Plus('Freeze End', '')
     ]);
 end;
 
-function wbCrimeTypeEnum: IwbEnumDef;
+function wbCrimeTypeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -7751,11 +7439,11 @@ begin
       {2} 'Trespass',
       {3} 'Attack',
       {4} 'Murder',
-      {5} IsTES4('Steal Horse',
-          IsFO3 ('', 'Escape Jail')),
-      {6} IsTES5('Werewolf Transformation',
-          IsSF1 ('Piracy', '')),
-      {7} IsSF1 ('Smuggling', '')
+      {5} aGameDef.IsTES4('Steal Horse',
+          aGameDef.IsFO3 ('', 'Escape Jail')),
+      {6} aGameDef.IsTES5('Werewolf Transformation',
+          aGameDef.IsSF1 ('Piracy', '')),
+      {7} aGameDef.IsSF1 ('Smuggling', '')
     ], [
       -1, 'None'
     ]);
@@ -7838,7 +7526,7 @@ begin
     ]);
 end;
 
-function wbMenuModeEnum: IwbEnumDef;
+function wbMenuModeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -7846,99 +7534,99 @@ begin
       {1}          'Type: Character Interface',
       {2}          'Type: Other',
       {3}          'Type: Console',
-      {4}   IsFNV ('Title Screen (JIP LN)', '')
+      {4}   aGameDef.IsFNV ('Title Screen (JIP LN)', '')
     ],[
       1001,        'Message',
       1002,        'Inventory',
       1003,        'Stats',
-      1004, IsTES4('HUD: Main',
+      1004, aGameDef.IsTES4('HUD: Main',
                    'MainMenu'),
-      1005, IsTES4('HUD: Info', ''),
-      1006, IsTES4('HUD: Reticle', ''),
+      1005, aGameDef.IsTES4('HUD: Info', ''),
+      1006, aGameDef.IsTES4('HUD: Reticle', ''),
       1007,        'Loading',
-      1008, IsTES4('Container/Barter',
+      1008, aGameDef.IsTES4('Container/Barter',
                    'Container'),
       1009,        'Dialog',
-      1010, IsTES4('HUD: Subtitle', ''),
-      1011, IsTES4('Generic', ''),
+      1010, aGameDef.IsTES4('HUD: Subtitle', ''),
+      1011, aGameDef.IsTES4('Generic', ''),
       1012,        'Sleep/Wait',
       1013,        'Pause',
       1014,        'Lockpick',
-      1015, IsTES4('Options', ''),
+      1015, aGameDef.IsTES4('Options', ''),
       1016,        'Quantity',
-      1017, IsTES4('Audio', ''),
-      1018, IsTES4('Video', ''),
-      1019, IsTES4('Video Display', ''),
-      1020, IsTES4('Gameplay', ''),
-      1021, IsTES4('Controls', ''),
-      1022, IsTES4('Magic', ''),
-      1023, IsTES4('Map',
+      1017, aGameDef.IsTES4('Audio', ''),
+      1018, aGameDef.IsTES4('Video', ''),
+      1019, aGameDef.IsTES4('Video Display', ''),
+      1020, aGameDef.IsTES4('Gameplay', ''),
+      1021, aGameDef.IsTES4('Controls', ''),
+      1022, aGameDef.IsTES4('Magic', ''),
+      1023, aGameDef.IsTES4('Map',
                    'Pipboy: Data'),
-      1024, IsTES4('Magic Popup', ''),
-      1025, IsTES4('Negotiate', ''),
-      1026, IsTES4('Book',
+      1024, aGameDef.IsTES4('Magic Popup', ''),
+      1025, aGameDef.IsTES4('Negotiate', ''),
+      1026, aGameDef.IsTES4('Book',
                    'Book Menu (LStewieAI''s Book Menu Restored)'),
       1027,        'Level Up',
-      1028, IsTES4('Training', ''),
-      1029, IsTES4('Birthsign', ''),
-      1030, IsTES4('Class', ''),
-      1031, IsTES4('Attributes', ''),
-      1032, IsTES4('Skills', ''),
-      1033, IsTES4('Specialization', ''),
-      1034, IsTES4('Persuasion', ''),
-      1035, IsTES4('Repair/Ingredient Selection',
+      1028, aGameDef.IsTES4('Training', ''),
+      1029, aGameDef.IsTES4('Birthsign', ''),
+      1030, aGameDef.IsTES4('Class', ''),
+      1031, aGameDef.IsTES4('Attributes', ''),
+      1032, aGameDef.IsTES4('Skills', ''),
+      1033, aGameDef.IsTES4('Specialization', ''),
+      1034, aGameDef.IsTES4('Persuasion', ''),
+      1035, aGameDef.IsTES4('Repair/Ingredient Selection',
                    'Pipboy: Repair'),
-      1036, IsTES4('Race Menu',
+      1036, aGameDef.IsTES4('Race Menu',
                    'Race Menu/Barber Menu/Plastic Surgery Menu'),
-      1037, IsTES4('Spell Purchase', ''),
-      1038, IsTES4('Load', ''),
-      1039, IsTES4('Save', ''),
-      1040, IsTES4('Alchemy', ''),
-      1041, IsTES4('Spellmaking', ''),
-      1042, IsTES4('Enchantment', ''),
-      1043, IsTES4('EffectSetting', ''),
-      1044, IsTES4('Main', ''),
-      1045, IsTES4('Breath', ''),
-      1046, IsTES4('QuickKeys', ''),
+      1037, aGameDef.IsTES4('Spell Purchase', ''),
+      1038, aGameDef.IsTES4('Load', ''),
+      1039, aGameDef.IsTES4('Save', ''),
+      1040, aGameDef.IsTES4('Alchemy', ''),
+      1041, aGameDef.IsTES4('Spellmaking', ''),
+      1042, aGameDef.IsTES4('Enchantment', ''),
+      1043, aGameDef.IsTES4('EffectSetting', ''),
+      1044, aGameDef.IsTES4('Main', ''),
+      1045, aGameDef.IsTES4('Breath', ''),
+      1046, aGameDef.IsTES4('QuickKeys', ''),
       1047,        'Credits',
-      1048, IsTES4('Sigil Stone',
+      1048, aGameDef.IsTES4('Sigil Stone',
                    'Character Creation'),
-      1049, IsTES4('Recharge', ''),
+      1049, aGameDef.IsTES4('Recharge', ''),
       1051,        'Text Edit',
-      1053, IsFO3 ('Barter', ''),
-      1054, IsFO3 ('Surgery', ''),
-      1055, IsFO3 ('Hacking', ''),
-      1056, IsFO3 ('VATS', ''),
-      1057, IsFO3 ('Computers', ''),
-      1058, IsFO3 ('Vendor Repair', ''),
-      1059, IsFO3 ('Tutorial', ''),
-      1060, IsFO3 ('You''re SPECIAL Book', ''),
-      1061, IsFNV ('Item Mod Menu', '') ,
-      1069, IsFNV ('Tweaks Menu (LStewieAI'' Tweaks', ''),
-      1074, IsFNV ('Love Tester', ''),
-      1075, IsFNV ('Companion Wheel', ''),
-      1076, IsFNV ('The Medical Questionnaire (Unused)', ''),
-      1077, IsFNV ('Recipe', ''),
-      1080, IsFNV ('Minigame: Slot Machine', ''),
-      1081, IsFNV ('Minigame: Blackjack', ''),
-      1082, IsFNV ('Minigame: Roulette', ''),
-      1083, IsFNV ('Minigame: Caravan', ''),
-      1084, IsFNV ('Character Creation Traits', '')
+      1053, aGameDef.IsFO3 ('Barter', ''),
+      1054, aGameDef.IsFO3 ('Surgery', ''),
+      1055, aGameDef.IsFO3 ('Hacking', ''),
+      1056, aGameDef.IsFO3 ('VATS', ''),
+      1057, aGameDef.IsFO3 ('Computers', ''),
+      1058, aGameDef.IsFO3 ('Vendor Repair', ''),
+      1059, aGameDef.IsFO3 ('Tutorial', ''),
+      1060, aGameDef.IsFO3 ('You''re SPECIAL Book', ''),
+      1061, aGameDef.IsFNV ('Item Mod Menu', '') ,
+      1069, aGameDef.IsFNV ('Tweaks Menu (LStewieAI'' Tweaks', ''),
+      1074, aGameDef.IsFNV ('Love Tester', ''),
+      1075, aGameDef.IsFNV ('Companion Wheel', ''),
+      1076, aGameDef.IsFNV ('The Medical Questionnaire (Unused)', ''),
+      1077, aGameDef.IsFNV ('Recipe', ''),
+      1080, aGameDef.IsFNV ('Minigame: Slot Machine', ''),
+      1081, aGameDef.IsFNV ('Minigame: Blackjack', ''),
+      1082, aGameDef.IsFNV ('Minigame: Roulette', ''),
+      1083, aGameDef.IsFNV ('Minigame: Caravan', ''),
+      1084, aGameDef.IsFNV ('Character Creation Traits', '')
     ]);
 end;
 
-function wbMoodEnum: IwbEnumDef;
+function wbMoodEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
       {0}       'Neutral',
-      {1} IsFO3('Afraid',   'Angry'),
-      {2} IsFO3('Annoyed',  'Fear'),
-      {3} IsFO3('Cocky',    'Happy'),
-      {4} IsFO3('Drugged',  'Sad'),
-      {5} IsFO3('Pleasant', 'Surprised'),
-      {6} IsFO3('Angry',    'Puzzled'),
-      {7} IsFO3('Sad',      'Disgusted')
+      {1} aGameDef.IsFO3('Afraid',   'Angry'),
+      {2} aGameDef.IsFO3('Annoyed',  'Fear'),
+      {3} aGameDef.IsFO3('Cocky',    'Happy'),
+      {4} aGameDef.IsFO3('Drugged',  'Sad'),
+      {5} aGameDef.IsFO3('Pleasant', 'Surprised'),
+      {6} aGameDef.IsFO3('Angry',    'Puzzled'),
+      {7} aGameDef.IsFO3('Sad',      'Disgusted')
     ]);
 end;
 
@@ -8061,7 +7749,7 @@ begin
     ]);
 end;
 
-function wbPackageTypeEnum: IwbEnumDef;
+function wbPackageTypeEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -8076,12 +7764,12 @@ begin
       {8}         'Use Item At',
       {9}         'Ambush',
       {10}        'Flee Not Combat',
-      {11} IsTES4('Cast Magic',      ''),
-      {12} IsFO3 ('Sandbox',         ''),
-      {13} IsFO3 ('Patrol',          ''),
-      {14} IsFO3 ('Guard',           ''),
-      {15} IsFO3 ('Dialogue',        ''),
-      {16} IsFO3 ('Use Weapon',      '')
+      {11} aGameDef.IsTES4('Cast Magic',      ''),
+      {12} aGameDef.IsFO3 ('Sandbox',         ''),
+      {13} aGameDef.IsFO3 ('Patrol',          ''),
+      {14} aGameDef.IsFO3 ('Guard',           ''),
+      {15} aGameDef.IsFO3 ('Dialogue',        ''),
+      {16} aGameDef.IsFO3 ('Use Weapon',      '')
     ]);
 end;
 
@@ -8096,69 +7784,69 @@ begin
     ]);
 end;
 
-function wbQuestEventEnum: IwbEnumDef;
+function wbQuestEventEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([], [                                                      //Confirmed Exists in the following games
-      Sig2Int('ADBO'), IsFO76('Bounty Event', ''),                    //        ,FO76
+      Sig2Int('ADBO'), aGameDef.IsFO76('Bounty Event', ''),                    //        ,FO76
       Sig2Int('ADCR'), 'Crime Gold Event',                            //TES5,FO4     ,SF1
       Sig2Int('ADIA'), 'Actor Dialogue Event',                        //TES5,FO4,FO76,SF1
       Sig2Int('AFAV'), 'Player Activate Actor',                       //TES5,FO4
       Sig2Int('AHEL'), 'Actor Hello Event',                           //TES5,FO4     ,SF1
       Sig2Int('AIPL'), 'Player Add Item',                             //TES5,FO4     ,SF1
-      Sig2Int('AOBJ'), IsTES5('', 'Attraction Object Event'),         //    ,FO4     ,SF1
+      Sig2Int('AOBJ'), aGameDef.IsTES5('', 'Attraction Object Event'),         //    ,FO4     ,SF1
       Sig2Int('ARRT'), 'Arrest Event',                                //TES5,FO4
       Sig2Int('ASSU'), 'Assault Actor Event',                         //TES5,FO4     ,SF1
       Sig2Int('BRIB'), 'Bribe',                                       //TES5,FO4
       Sig2Int('CAST'), 'Cast Magic Event',                            //TES5,FO4
-      Sig2Int('CBGN'), IsFO76('Caravan Begin Event', ''),             //        ,FO76
+      Sig2Int('CBGN'), aGameDef.IsFO76('Caravan Begin Event', ''),             //        ,FO76
       Sig2Int('CHRR'), 'Change Relationship Rank',                    //TES5,FO4
       Sig2Int('CLOC'), 'Change Location Event',                       //TES5,FO4,FO76,SF1
-      Sig2Int('CLRL'), IsTES5('', 'Clear Location Event'),            //    ,FO4
+      Sig2Int('CLRL'), aGameDef.IsTES5('', 'Clear Location Event'),            //    ,FO4
       Sig2Int('CRFT'), 'Craft Item',                                  //TES5,FO4
       Sig2Int('CURE'), 'Player Cured',                                //TES5,FO4
       Sig2Int('DEAD'), 'Dead Body',                                   //TES5,FO4
-      Sig2Int('DOCK'), IsSF1('Ship Docking', ''),                     //             ,SF1
+      Sig2Int('DOCK'), aGameDef.IsSF1('Ship Docking', ''),                     //             ,SF1
       Sig2Int('ESJA'), 'Escape Jail',                                 //TES5,FO4
       Sig2Int('FLAT'), 'Flatter',                                     //TES5,FO4
-      Sig2Int('HACK'), IsTES5('', 'Hack Computer'),                   //    ,FO4,FO76,SF1
-      Sig2Int('ILOC'), IsFO76('Instanced Location Created Event', ''),//        ,FO76
+      Sig2Int('HACK'), aGameDef.IsTES5('', 'Hack Computer'),                   //    ,FO4,FO76,SF1
+      Sig2Int('ILOC'), aGameDef.IsFO76('Instanced Location Created Event', ''),//        ,FO76
       Sig2Int('INFC'), 'Player Infected',                             //TES5,FO4
       Sig2Int('INTM'), 'Intimidate',                                  //TES5,FO4
-      Sig2Int('IRON'), IsTES5('', 'Iron Sights'),                     //    ,FO4     ,SF1
+      Sig2Int('IRON'), aGameDef.IsTES5('', 'Iron Sights'),                     //    ,FO4     ,SF1
       Sig2Int('JAIL'), 'Jail Event',                                  //TES5,FO4
       Sig2Int('KILL'), 'Kill Actor Event',                            //TES5,FO4,FO76
-      Sig2Int('LAND'), IsSF1('Ship Landing', ''),                     //             ,SF1
-      Sig2Int('LCLD'), IsTES5('','Location Loaded'),                  //    ,FO4,FO76,SF1
-      Sig2Int('LCPG'), IsFO76('LCP Global Value Event', ''),          //        ,FO76
+      Sig2Int('LAND'), aGameDef.IsSF1('Ship Landing', ''),                     //             ,SF1
+      Sig2Int('LCLD'), aGameDef.IsTES5('','Location Loaded'),                  //    ,FO4,FO76,SF1
+      Sig2Int('LCPG'), aGameDef.IsFO76('LCP Global Value Event', ''),          //        ,FO76
       Sig2Int('LEVL'), 'Increase Level',                              //TES5,FO4,FO76,SF1
       Sig2Int('LOCK'), 'Lock Pick',                                   //TES5,FO4,FO76,SF1
       Sig2Int('NVPE'), 'New Voice Power',                             //TES5,FO4
-      Sig2Int('OAAT'), IsTES5('', 'On Actor Attach'),                 //    ,FO4     ,SF1
-      Sig2Int('PCON'), IsFO76('Player Connect', ''),                  //        ,FO76
+      Sig2Int('OAAT'), aGameDef.IsTES5('', 'On Actor Attach'),                 //    ,FO4     ,SF1
+      Sig2Int('PCON'), aGameDef.IsFO76('Player Connect', ''),                  //        ,FO76
       Sig2Int('PFIN'), 'Pay Fine Event',                              //TES5,FO4
-      Sig2Int('PICK'), IsTES5('', 'Pickpocket'),                      //    ,FO4
+      Sig2Int('PICK'), aGameDef.IsTES5('', 'Pickpocket'),                      //    ,FO4
       Sig2Int('PRFV'), 'Player Recieves Favor',                       //TES5,FO4
-      Sig2Int('QPMT'), IsFO76('QuickPlay Match Event', ''),           //        ,FO76
+      Sig2Int('QPMT'), aGameDef.IsFO76('QuickPlay Match Event', ''),           //        ,FO76
       Sig2Int('QSTR'), 'Quest Start',                                 //TES5
       Sig2Int('REMP'), 'Player Remove Item',                          //TES5,FO4,FO76,SF1
       Sig2Int('SCPT'), 'Script Event',                                //TES5,FO4,FO76,SF1
-      Sig2Int('SKIL'), IsTES5('Skill Increase', ''),                  //TES5
+      Sig2Int('SKIL'), aGameDef.IsTES5('Skill Increase', ''),                  //TES5
       Sig2Int('STIJ'), 'Served Time',                                 //TES5,FO4
-      Sig2Int('TMEE'), IsTES5('', 'Trigger Mine Explosion Event'),    //    ,FO4,FO76,SF1
+      Sig2Int('TMEE'), aGameDef.IsTES5('', 'Trigger Mine Explosion Event'),    //    ,FO4,FO76,SF1
       Sig2Int('TRES'), 'Trespass Actor Event',                        //TES5,FO4
-      Sig2Int('XPLL'), IsSF1('Clear Location (SF)', '')               //             ,SF1
+      Sig2Int('XPLL'), aGameDef.IsSF1('Clear Location (SF)', '')               //             ,SF1
     ]);
 end;
 
-function wbSexEnum: IwbEnumDef;
+function wbSexEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
       {0} 'Male',
       {1} 'Female'
     ], [
-      -1, IsTES3('None', '')
+      -1, aGameDef.IsTES3('None', '')
     ]);
 end;
 
@@ -8192,7 +7880,7 @@ begin
     ]);
 end;
 
-function wbZoomOverlayEnum: IwbEnumDef;
+function wbZoomOverlayEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([
@@ -8213,23 +7901,23 @@ begin
       {14}        'Rangefinder 1',
       {15}        'Rangefinder 2',
       {16}        'Rectangle',
-      {17} IsFO76('Camera',
-           IsSF1 ('Standard Scope Circle', '')),
-      {18} IsFO76('Camera Medium Zoom',    ''),
-      {19} IsFO76('Camera Long Zoom',      ''),
-      {20} IsFO76('Camera Night Vision',   ''),
-      {21} IsFO76('Camera Targeting',      '')
+      {17} aGameDef.IsFO76('Camera',
+           aGameDef.IsSF1 ('Standard Scope Circle', '')),
+      {18} aGameDef.IsFO76('Camera Medium Zoom',    ''),
+      {19} aGameDef.IsFO76('Camera Long Zoom',      ''),
+      {20} aGameDef.IsFO76('Camera Night Vision',   ''),
+      {21} aGameDef.IsFO76('Camera Targeting',      '')
     ]);
 end;
 
-function wbZTestFuncEnum: IwbEnumDef;
+function wbZTestFuncEnum(const aGameDef: TwbGameDef): IwbEnumDef;
 begin
   Result :=
     wbEnum([], [
-    1, IsFO76('Never', ''),
-    2, IsFO76('Less Than', ''),
+    1, aGameDef.IsFO76('Never', ''),
+    2, aGameDef.IsFO76('Less Than', ''),
     3, 'Equal To',
-    4, IsFO76('Less Than or Equal To','Normal'),
+    4, aGameDef.IsFO76('Less Than or Equal To','Normal'),
     5, 'Greater Than',
     7, 'Greater Than or Equal To',
     8, 'Always Show'
@@ -8250,7 +7938,7 @@ begin
     ]);
 end;
 
-function wbLandFlags: IwbFlagsDef;
+function wbLandFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 begin
   Result :=
     wbFlags([
@@ -8258,14 +7946,14 @@ begin
     {1} 'Hide - Quad 2',
     {2} 'Hide - Quad 3',
     {3} 'Hide - Quad 4',
-    {4} IsFO4Plus('No Collision - Quad 1', ''),
-    {5} IsFO4Plus('No Collision - Quad 2', ''),
-    {6} IsFO4Plus('No Collision - Quad 3', ''),
-    {7} IsFO4Plus('No Collision - Quad 4', '')
+    {4} aGameDef.IsFO4Plus('No Collision - Quad 1', ''),
+    {5} aGameDef.IsFO4Plus('No Collision - Quad 2', ''),
+    {6} aGameDef.IsFO4Plus('No Collision - Quad 3', ''),
+    {7} aGameDef.IsFO4Plus('No Collision - Quad 4', '')
     ], True);
 end;
 
-function wbNavmeshTriangleFlags: IwbFlagsDef;
+function wbNavmeshTriangleFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 begin
   Result :=
     wbFlags(wbSparseFlags([
@@ -8279,11 +7967,11 @@ begin
       9, 'Water',
      10, 'Door',
      11, 'Found',
-     12, IsFO76SF1('Unknown 12', '')
+     12, aGameDef.IsFO76SF1('Unknown 12', '')
     ], False, 13));
 end;
 
-function wbNavmeshCoverFlags: IwbFlagsDef;
+function wbNavmeshCoverFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 begin
   {
   Flags below are wrong. The first 4 bit are an enum as follows:
@@ -8322,98 +8010,98 @@ begin
      10, 'Edge 1-2 Left',
      11, 'Edge 1-2 Right',
      14, 'Autogen Cover',
-     15, IsSF1('Unknown 15', '')
-    ], False, IsSF1(16, 15)));
+     15, aGameDef.IsSF1('Unknown 15', '')
+    ], False, aGameDef.IsSF1(16, 15)));
 end;
 
-function wbPackageFlags: IwbFlagsDef;
+function wbPackageFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 begin
   Result :=
     wbFlags(wbSparseFlags([
       0,           'Offers Services',
-      1, IsTES4FO3('Must Reach Location', ''),
+      1, aGameDef.IsTES4FO3('Must Reach Location', ''),
       2,           'Must Complete',
-      3, IsTES4FO3('Lock Doors At Package Start',
+      3, aGameDef.IsTES4FO3('Lock Doors At Package Start',
                    'Maintain Speed At Goal'),
-      4, IsTES4FO3('Lock Doors At Package End',
-         IsTES5   ('', 'Treat As Player Follower')),
-      5, IsTES4FO3('Lock Doors At Location',
-         IsSF1    ('After Combat Reset', '')),
+      4, aGameDef.IsTES4FO3('Lock Doors At Package End',
+         aGameDef.IsTES5   ('', 'Treat As Player Follower')),
+      5, aGameDef.IsTES4FO3('Lock Doors At Location',
+         aGameDef.IsSF1    ('After Combat Reset', '')),
       6,           'Unlock Doors At Package Start',
       7,           'Unlock Doors At Package End',
-      8, IsTES4FO3('Unlock Doors At Location',
-         IsTES5   ('', 'Request Block Idles')),
+      8, aGameDef.IsTES4FO3('Unlock Doors At Location',
+         aGameDef.IsTES5   ('', 'Request Block Idles')),
       9,           'Continue If PC Near',
      10,           'Once Per Day',
-     11, IsSF1    ('Low Priority', ''),
-     12, IsTES4FO3('Skip Fallout Behavior',
-         IsTES5   ('', 'Skip Load Into Furniture')),
-     13, IsTES4FO3('Always Run',
+     11, aGameDef.IsSF1    ('Low Priority', ''),
+     12, aGameDef.IsTES4FO3('Skip Fallout Behavior',
+         aGameDef.IsTES5   ('', 'Skip Load Into Furniture')),
+     13, aGameDef.IsTES4FO3('Always Run',
                    'Preferred Speed'),
-     16, IsSF1    ('Disable Headtracking', ''),
+     16, aGameDef.IsSF1    ('Disable Headtracking', ''),
      17,           'Always Sneak',
      18,           'Allow Swimming',
-     19, IsTES4FO3('Allow Falls',
-         IsSF1    ('Disable Advanced Traversals', '')),
-     20, IsTES4   ('Armor Unequipped',
-         IsFO3    ('Head-Tracking Off',
+     19, aGameDef.IsTES4FO3('Allow Falls',
+         aGameDef.IsSF1    ('Disable Advanced Traversals', '')),
+     20, aGameDef.IsTES4   ('Armor Unequipped',
+         aGameDef.IsFO3    ('Head-Tracking Off',
                    'Ignore Combat')),
      21,           'Weapons Unequipped',
-     22, IsTES4FO3('Defensive Combat', ''),
-     23, IsTES4   ('Use Horse',
+     22, aGameDef.IsTES4FO3('Defensive Combat', ''),
+     23, aGameDef.IsTES4   ('Use Horse',
                    'Weapon Drawn'),
-     24, IsTES4FO3('No Idle Anims', ''),
-     25, IsFO3    ('Pretend In Combat', ''),
-     26, IsFO3    ('Continue During Combat', ''),
-     27, IsTES4   ('', 'No Combat Alert'),
-     28, IsFO3    ('No Warn/Attack Behavior', ''),
-     29, IsTES4FO3('',
-         IsSF1    ('Weapon Drawn: Ready',
+     24, aGameDef.IsTES4FO3('No Idle Anims', ''),
+     25, aGameDef.IsFO3    ('Pretend In Combat', ''),
+     26, aGameDef.IsFO3    ('Continue During Combat', ''),
+     27, aGameDef.IsTES4   ('', 'No Combat Alert'),
+     28, aGameDef.IsFO3    ('No Warn/Attack Behavior', ''),
+     29, aGameDef.IsTES4FO3('',
+         aGameDef.IsSF1    ('Weapon Drawn: Ready',
                    'Wear Sleep Outfit')),
-     30, IsSF1    ('Group Package', ''),
-     31, IsSF1    ('Weapon Drawn: Alert', '')
+     30, aGameDef.IsSF1    ('Group Package', ''),
+     31, aGameDef.IsSF1    ('Weapon Drawn: Alert', '')
     ]), True);
 end;
 
-function wbServiceFlags: IwbFlagsDef;
+function wbServiceFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 begin
   Result :=
     wbFlags([
       {0}         'Weapons',
       {1}         'Armor',
-      {2}  IsFO3 ('Alcohol',
+      {2}  aGameDef.IsFO3 ('Alcohol',
                   'Clothing'),
       {3}         'Books',
-      {4}  IsFO3 ('Food',
+      {4}  aGameDef.IsFO3 ('Food',
                   'Ingredients'),
-      {5}  IsTES3('Picks',
-           IsFO3 ('Chems', '')),
-      {6}  IsTES3('Probes',
-           IsFO3 ('Stimpaks', '')),
-      {7}  IsFO3 ('', 'Lights'),
-      {8}  IsFO3 ('', 'Apparatus'),
-      {9}  IsTES3('Repair', ''),
+      {5}  aGameDef.IsTES3('Picks',
+           aGameDef.IsFO3 ('Chems', '')),
+      {6}  aGameDef.IsTES3('Probes',
+           aGameDef.IsFO3 ('Stimpaks', '')),
+      {7}  aGameDef.IsFO3 ('', 'Lights'),
+      {8}  aGameDef.IsFO3 ('', 'Apparatus'),
+      {9}  aGameDef.IsTES3('Repair', ''),
       {10}        'Miscellaneous',
-      {11} IsFO3 ('', 'Spells'),
-      {12} IsFO3 ('', 'Magic Items'),
-      {13} IsFO3 ('', 'Potions'),
+      {11} aGameDef.IsFO3 ('', 'Spells'),
+      {12} aGameDef.IsFO3 ('', 'Magic Items'),
+      {13} aGameDef.IsFO3 ('', 'Potions'),
       {14}        'Training',
-      {15} IsTES3('Spellmaking', ''),
-      {16} IsTES3('Enchanting',
+      {15} aGameDef.IsTES3('Spellmaking', ''),
+      {16} aGameDef.IsTES3('Enchanting',
                   'Recharge'),
-      {17} IsTES3('Repair Items',
+      {17} aGameDef.IsTES3('Repair Items',
                   'Repair')
     ], True);
 end;
 
-function wbTemplateFlags: IwbFlagsDef;
+function wbTemplateFlags(const aGameDef: TwbGameDef): IwbFlagsDef;
 begin
   Result :=
     wbFlags([
       {0}         'Traits',
       {1}         'Stats',
       {2}         'Factions',
-      {3}  IsFO3( 'Actor Effect List',
+      {3}  aGameDef.IsFO3( 'Actor Effect List',
                  'Spell List'),
       {4}         'AI Data',
       {5}         'AI Packages',
@@ -8421,14 +8109,14 @@ begin
       {7}         'Base Data',
       {8}         'Inventory',
       {9}         'Script',
-      {10} IsFO3 ('', 'Def Pack List'),
-      {11} IsFO3 ('', 'Attack Data'),
-      {12} IsFO3 ('', 'Keywords'),
-      {13} IsFO76('Gender',
-           IsSF1 ('Reaction Radius', '')),
-      {14} IsFO76('Sentinel End Of Flags',
-           IsSF1 ('Combat Style', '')),
-      {15} IsFO76('Unused "Game Only"', '')
+      {10} aGameDef.IsFO3 ('', 'Def Pack List'),
+      {11} aGameDef.IsFO3 ('', 'Attack Data'),
+      {12} aGameDef.IsFO3 ('', 'Keywords'),
+      {13} aGameDef.IsFO76('Gender',
+           aGameDef.IsSF1 ('Reaction Radius', '')),
+      {14} aGameDef.IsFO76('Sentinel End Of Flags',
+           aGameDef.IsSF1 ('Combat Style', '')),
+      {15} aGameDef.IsFO76('Unused "Game Only"', '')
     ]);
 end;
 
@@ -8586,11 +8274,11 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolators);
 end;
 
-function wbWeatherTimeOfDay(const aName: string): IwbValueDef;
+function wbWeatherTimeOfDay(const aGameDef: TwbGameDef; const aName: string): IwbValueDef;
 var
   Struct : IwbValueDef;
 begin
-  if wbIsFalloutNV then
+  if aGameDef.IsFalloutNV then
     Struct :=
       wbUnion('', wbWeatherTimeOfDayDecider, [
         wbStruct(aName, [
@@ -8610,7 +8298,7 @@ begin
         ]).SetSummaryKey([0,1,2,3])
           .IncludeFlag(dfCollapsed, wbCollapseWeatherTimeOfDay)
       ]).IncludeFlag(dfUnionStaticResolve)
-  else if wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
+  else if aGameDef.IsFallout4 or aGameDef.IsFallout76 or aGameDef.IsStarfield then
     Struct :=
       wbStruct(aName, [
         wbByteColors('Sunrise'),
@@ -8667,13 +8355,13 @@ begin
       ).SetCountPath(CS2H);
 end;
 
-function wbCellGrid: IwbRecordMemberDef;
+function wbCellGrid(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(XCLC, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32),
-      wbInteger('Land Flags', itU8, wbLandFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbInteger('Land Flags', itU8, wbLandFlags(aGameDef)).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbUnused(3)
     ]).SetOptionalFrom(2)
       .SetSummaryKeyOnValue([0, 1, 2])
@@ -8737,11 +8425,11 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseModels);
 end;
 
-function wbEnchantment(const aCapacity: Boolean = False): IwbRecordMemberDef;
+function wbEnchantment(const aGameDef: TwbGameDef; const aCapacity: Boolean = False): IwbRecordMemberDef;
 begin
-  var aName := IsFO3('Object Effect', 'Enchantment');
-  var aSig1 := IsTES4(ENAM, EITM);
-  var aSig2 := IsTES4(ANAM, EAMT);
+  var aName := aGameDef.IsFO3('Object Effect', 'Enchantment');
+  var aSig1 := aGameDef.IsTES4(ENAM, EITM);
+  var aSig2 := aGameDef.IsTES4(ANAM, EAMT);
 
   Result := wbFormIDCk(aSig1, aName, [ENCH]);
   if aCapacity then
@@ -8778,27 +8466,27 @@ begin
       ]).SetRequired);
 end;
 
-function wbFaction: IwbRecordMemberDef;
+function wbFaction(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStructSK(SNAM, [0], 'Faction', [
       wbFormIDCk('Faction', [FACT]),
       wbInteger('Rank', itS8),
-      IsFO4Plus(nil, wbUnused(3))
+      aGameDef.IsFO4Plus(nil, wbUnused(3))
     ]).SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(1, '{Rank: ', '}')
       .IncludeFlagOnValue(dfSummaryMembersNoName)
       .IncludeFlag(dfCollapsed, wbCollapseFactions);
 end;
 
-function wbFactionRelations: IwbRecordMemberDef;
+function wbFactionRelations(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRArrayS('Relations',
       wbStructSK(XNAM, [0], 'Relation', [
         wbFormIDCkNoReach('Faction', [FACT, RACE]),
         wbInteger('Modifier', itS32),
-        IsTES4(
+        aGameDef.IsTES4(
           nil,
           wbInteger('Group Combat Reaction', itU32,
             wbEnum([
@@ -8811,19 +8499,19 @@ begin
         .IncludeFlag(dfCollapsed, wbCollapseFactionRelations));
 end;
 
-function wbHeadPart(const aHeadPartIndexEnum: IwbEnumDef = nil; const aModel: IwbRecordMemberDef = nil; const aHeadPartsAfterSet: TwbAfterSetCallback = nil): IwbRecordMemberDef;
+function wbHeadPart(const aGameDef: TwbGameDef; const aHeadPartIndexEnum: IwbEnumDef = nil; const aModel: IwbRecordMemberDef = nil; const aHeadPartsAfterSet: TwbAfterSetCallback = nil): IwbRecordMemberDef;
 begin
   var wbICON: IwbRecordMemberDef := nil;
 
-  if wbIsOblivion then
+  if aGameDef.IsOblivion then
     wbICON := wbString(ICON, 'Icon FileName')
-  else if wbCurrentGameMode = gmFNV then
+  else if aGameDef.GameMode = gmFNV then
     wbICON :=
       wbRStruct('Icon', [
         wbString(ICON, 'Large Icon FileName').SetRequired,
         wbString(MICO, 'Small Icon FileName')
       ]).SetUnordered
-  else if wbCurrentGameMode = gmFO3 then
+  else if aGameDef.GameMode = gmFO3 then
     wbICON :=
       wbRStruct('Icon', [
         wbString(ICON, 'Large Icon FileName'),
@@ -8831,11 +8519,11 @@ begin
       ]);
 
   Result :=
-    wbRStructSK([0], IfThen(wbIsOblivion or wbIsFallout3, 'Part', 'Head Part'), [
-      wbInteger(INDX, IfThen(wbIsOblivion or wbIsFallout3, 'Index', 'Head Part Number'), itU32, aHeadPartIndexEnum),
-      IfThen(wbIsOblivion or wbIsFallout3, aModel, nil),
-      IfThen(wbIsOblivion or wbIsFallout3, nil, wbFormIDCk(HEAD, 'Head', [HDPT, NULL])),
-      IfThen(wbIsOblivion or wbIsFallout3, wbICON, nil)
+    wbRStructSK([0], IfThen(aGameDef.IsOblivion or aGameDef.IsFallout3, 'Part', 'Head Part'), [
+      wbInteger(INDX, IfThen(aGameDef.IsOblivion or aGameDef.IsFallout3, 'Index', 'Head Part Number'), itU32, aHeadPartIndexEnum),
+      IfThen(aGameDef.IsOblivion or aGameDef.IsFallout3, aModel, nil),
+      IfThen(aGameDef.IsOblivion or aGameDef.IsFallout3, nil, wbFormIDCk(HEAD, 'Head', [HDPT, NULL])),
+      IfThen(aGameDef.IsOblivion or aGameDef.IsFallout3, wbICON, nil)
     ]).SetSummaryKey([0, 1])
       .SetSummaryMemberPrefixSuffix(0, '[', ']')
       .SetSummaryDelimiter(' ')
@@ -8877,26 +8565,26 @@ begin
      .IncludeFlag(dfInternalEditOnly);
 end;
 
-function wbIdleAnimation: IwbRecordMemberDef;
+function wbIdleAnimation(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRStruct('Idle Animations', [
       wbInteger(IDLF, 'Flags', itU8,
         wbFlags([
         {0} 'Run In Sequence',
-        {1} IsFO76('Old Pick Conditions',''),
+        {1} aGameDef.IsFO76('Old Pick Conditions',''),
         {2} 'Do Once',
-        {3} IsFO76('Loose Only','Unknown 3'),
-        {4} IsFO3('','Ignored By Sandbox'),
-        {5} IsSF1('Ignore Conditions For Sandbox','Unknown 5')
+        {3} aGameDef.IsFO76('Loose Only','Unknown 3'),
+        {4} aGameDef.IsFO3('','Ignored By Sandbox'),
+        {5} aGameDef.IsSF1('Ignore Conditions For Sandbox','Unknown 5')
         ])
       ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      IsFO3(
+      aGameDef.IsFO3(
         wbStruct(IDLC, '', [
           wbInteger('Animation Count', itU8, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
           wbBelowVersion(14, wbUnused(3))
         ]),
-        IsSF1(
+        aGameDef.IsSF1(
           wbInteger(IDLC, 'Animation Count', itU32, nil, cpBenign).IncludeFlag(dfSkipImplicitEdit),
           wbInteger(IDLC, 'Animation Count', itU8,  nil, cpBenign).IncludeFlag(dfSkipImplicitEdit)
         )
@@ -8904,8 +8592,8 @@ begin
       wbFloat(IDLT, 'Idle Timer Setting'),
       wbArray(IDLA, 'Animations',
         wbFormIDCk('Animation', [IDLE,NULL])
-      ).SetCountPathOnValue(IsFO3('IDLC\Animation Count', 'IDLC'), False),
-      IsSF1(
+      ).SetCountPathOnValue(aGameDef.IsFO3('IDLC\Animation Count', 'IDLC'), False),
+      aGameDef.IsSF1(
         nil,
         wbUnknown(IDLB)
       )
@@ -9039,18 +8727,18 @@ begin
          .IncludeFlag(dfCollapsed, wbCollapseVertices));
 end;
 
-function wbLeveledListEntry(const aObjectName: string; const aSigs: TwbSignatures): IwbRecordMemberDef;
+function wbLeveledListEntry(const aGameDef: TwbGameDef; const aObjectName: string; const aSigs: TwbSignatures): IwbRecordMemberDef;
 begin
   Result :=
-    wbStructExSK(LVLO, [0, 2], [3], IsTES4('Leveled List Entry', 'Base Data'), [
+    wbStructExSK(LVLO, [0, 2], [3], aGameDef.IsTES4('Leveled List Entry', 'Base Data'), [
       wbInteger('Level', itU16),
       wbUnused(2),
       wbFormIDCk(aObjectName, aSigs),
       wbInteger('Count', itU16).SetDefaultNativeValue(1),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbInteger('Chance None', itU8),
         wbUnused(2)),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbUnused(1),
         nil)
     ]).SetOptionalFrom(3)
@@ -9131,7 +8819,7 @@ begin
   Result := wbFormID(MDOB, 'Menu Display Object');
 end;
 
-function wbMHDTCELL: IwbRecordMemberDef;
+function wbMHDTCELL(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     IfThen(wbSimpleRecords,
@@ -9141,8 +8829,8 @@ begin
         wbArray('Max Heights',
           wbArray('Row',
             wbInteger('Column', itU8),
-          IsSF1(50, 32)).IncludeFlag(dfCollapsed, wbCollapseMaxHeightData),
-        IsSF1(50, 32)).IncludeFlag(dfCollapsed, wbCollapseMaxHeightData)
+          aGameDef.IsSF1(50, 32)).IncludeFlag(dfCollapsed, wbCollapseMaxHeightData),
+        aGameDef.IsSF1(50, 32)).IncludeFlag(dfCollapsed, wbCollapseMaxHeightData)
       ]).SetSummaryKeyOnValue([0, 1])
         .IncludeFlag(dfCollapsed, wbCollapseMaxHeightData));
 end;
@@ -9169,9 +8857,9 @@ begin
         .IncludeFlag(dfCollapsed, wbCollapseSounds));
 end;
 
-function wbModelInfo(const aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
+function wbModelInfo(const aGameDef: TwbGameDef; const aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
 begin
-  if gcModelTextureFileHashList in _CurrentGameDef.Capabilities then begin
+  if gcModelTextureFileHashList in aGameDef.Capabilities then begin
     if aName = '' then
       aName := 'Textures';
 
@@ -9215,7 +8903,7 @@ begin
 
     var NewModelInfo :=
       wbStruct('', [
-        IsTES5(
+        aGameDef.IsTES5(
           wbArray('Counters',
             wbInteger('Counter', itU32, nil, nil, cpIgnore),
           -1, ['Textures', 'Addon Nodes'], cpIgnore)
@@ -9255,7 +8943,7 @@ begin
          .SetSummaryPassthroughMaxLength(80)
          .SetSummaryPassthroughMaxDepth(1)
          .IncludeFlag(dfCollapsed, wbCollapseModelInfoAddons),
-        IsTES5(
+        aGameDef.IsTES5(
           nil,
           wbArray('Materials', MaterialFile)
             .SetCountPath('Counters\[3]', True)
@@ -9294,9 +8982,9 @@ begin
   end;
 end;
 
-function wbModelInfos(const aSignature: TwbSignature; aName: string = ''; const aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
+function wbModelInfos(const aGameDef: TwbGameDef; const aSignature: TwbSignature; aName: string = ''; const aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
-  if not (gcModelTextureFileHashList in _CurrentGameDef.Capabilities) then
+  if not (gcModelTextureFileHashList in aGameDef.Capabilities) then
     raise Exception.Create('Not Supported');
 
   if aName = '' then
@@ -9325,15 +9013,15 @@ begin
     .IncludeFlag(dfCollapsed, wbCollapseModelInfo);
 end;
 
-function wbObjectBounds: IwbRecordMemberDef;
+function wbObjectBounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(OBND, 'Object Bounds', [
-      IfThen(wbIsStarfield,
+      IfThen(aGameDef.IsStarfield,
         wbVec3('Min'),
         wbVec3Int('Min')
       ),
-      IfThen(wbIsStarfield,
+      IfThen(aGameDef.IsStarfield,
         wbVec3('Max'),
         wbVec3Int('Max')
       )
@@ -9344,11 +9032,11 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseObjectBounds);
 end;
 
-function wbOwnership(const aSkipSigs: TwbSignatures = nil): IwbRecordMemberDef;
+function wbOwnership(const aGameDef: TwbGameDef; const aSkipSigs: TwbSignatures = nil): IwbRecordMemberDef;
 begin
   Result :=
     wbRStruct('Ownership', [
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbStruct(XOWN, 'Owner', [
           wbFormIDCkNoReach('Owner', [FACT, NPC_]),
           wbUnused(4),
@@ -9357,7 +9045,7 @@ begin
         ]).SetSummaryKeyOnValue([0]),
         wbFormIDCkNoReach(XOWN, 'Owner', [FACT, NPC_])),
       wbInteger(XRNK, 'Faction rank', itS32),
-      IsTES4(
+      aGameDef.IsTES4(
         wbFormIDCk(XGLB, 'Global', [GLOB]),
         nil)
     ], aSkipSigs)
@@ -9384,7 +9072,7 @@ begin
       wbFormIDCkNoReach(QSTR, 'Removed Quest', [QUST], False, cpBenign));
 end;
 
-function wbRagdoll: IwbRecordMemberDef;
+function wbRagdoll(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRStruct('Ragdoll Data', [
@@ -9396,13 +9084,13 @@ begin
         ]).SetSummaryKey([0])
           .IncludeFlag(dfCollapsed, wbCollapseRagdoll)
       ).IncludeFlag(dfNotAlignable),
-      IsTES4(
+      aGameDef.IsTES4(
         nil,
         wbVec3(XRGB, 'Biped Rotation'))
     ]);
 end;
 
-function wbRegionAreas: IwbRecordMemberDef;
+function wbRegionAreas(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRArray('Region Areas',
@@ -9413,16 +9101,16 @@ begin
             wbFloat('X'),
             wbFloat('Y')
           ])).SetAfterLoad(wbRPLDAfterLoad),
-        IfThen(wbIsFallout4 or wbIsFallout76,
+        IfThen(aGameDef.IsFallout4 or aGameDef.IsFallout76,
           wbUnknown(ANAM),
           nil)
       ]));
 end;
 
-function wbRegionSounds: IwbRecordMemberDef;
+function wbRegionSounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
-    wbArrayS(IfThen(wbIsOblivion or wbIsFallout3, RDSD, RDSA), 'Sounds',
+    wbArrayS(IfThen(aGameDef.IsOblivion or aGameDef.IsFallout3, RDSD, RDSA), 'Sounds',
       wbStructSK([0], 'Sound', [
         wbFormIDCk('Sound', [SNDR, SOUN, NULL]),
         wbInteger('Flags', itU32,
@@ -9433,7 +9121,7 @@ begin
           {3} 'Snowy'
           ])
         ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        IsTES4FO3(
+        aGameDef.IsTES4FO3(
           wbInteger('Chance', itU32, wbScaledInt4ToStr, wbScaledInt4ToInt),
           wbFloat('Chance'))
       ])).SetDontShow(wbREGNSoundDontShow)
@@ -9456,12 +9144,12 @@ begin
   Result := wbRArray('Sounds', wbString(ANAM, 'Sound'));
 end;
 
-function wbSoundTypeSounds: IwbRecordMemberDef;
+function wbSoundTypeSounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRArrayS('Sounds',
       wbRStructSK([0], 'Sound', [
-        IsTES5(
+        aGameDef.IsTES5(
           wbFormIDCk(CSDI, 'Sound', [SNDR, NULL]),
           wbFormIDCk(CSDI, 'Sound', [SOUN, NULL])
         ).SetRequired,
@@ -9489,7 +9177,7 @@ begin
     ).SetRequired;
 end;
 
-function wbTexturedModel(const aSubRecordName     : string;
+function wbTexturedModel(const aGameDef: TwbGameDef; const aSubRecordName     : string;
                          const aSignatures        : TwbSignatures;
                          const aTextureSubRecords : array of IwbRecordMemberDef)
                                                   : IwbRecordMemberDef;
@@ -9498,16 +9186,16 @@ begin
   SetLength(lMembers,
     Length(aTextureSubRecords) +
     1 +
-    IsTES4(1, 0) +
-    IsSF1(0, 1)
+    aGameDef.IsTES4(1, 0) +
+    aGameDef.IsSF1(0, 1)
   );
 
   lMembers[0] := wbString(aSignatures[0], 'Model Filename');
-  if wbIsOblivion then begin
+  if aGameDef.IsOblivion then begin
     lMembers[1] := wbFloat(aSignatures[1], 'Bound Radius', cpBenign);
-    lMembers[2] := wbModelInfo(aSignatures[2]);
-  end else if not wbIsStarfield then
-    lMembers[1] := wbModelInfo(aSignatures[1]);
+    lMembers[2] := wbModelInfo(aGameDef, aSignatures[2]);
+  end else if not aGameDef.IsStarfield then
+    lMembers[1] := wbModelInfo(aGameDef, aSignatures[1]);
 
   for var I := Low(aTextureSubRecords) to High(aTextureSubRecords) do
     lMembers[Length(lMembers) - Length(aTextureSubRecords) + I] := aTextureSubRecords[I];
@@ -9554,7 +9242,7 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseTimeInterpolatorsMultAdd);
 end;
 
-function wbWeatherCloudAlphas: IwbRecordMemberDef;
+function wbWeatherCloudAlphas(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbArray(JNAM, 'Cloud Alphas',
@@ -9571,22 +9259,22 @@ begin
         wbFloat('Night')
           .SetDefaultNativeValue(1.0)
           .IncludeFlag(dfSummaryNoName),
-        IsFO4Plus(
+        aGameDef.IsFO4Plus(
           wbFromVersion(111, wbFloat('Early Sunrise')
             .SetDefaultNativeValue(1.0)
             .IncludeFlag(dfSummaryNoName)),
           nil),
-        IsFO4Plus(
+        aGameDef.IsFO4Plus(
           wbFromVersion(111, wbFloat('Late Sunrise')
             .SetDefaultNativeValue(1.0)
             .IncludeFlag(dfSummaryNoName)),
           nil),
-        IsFO4Plus(
+        aGameDef.IsFO4Plus(
           wbFromVersion(111, wbFloat('Early Sunset')
             .SetDefaultNativeValue(1.0)
             .IncludeFlag(dfSummaryNoName)),
           nil),
-        IsFO4Plus(
+        aGameDef.IsFO4Plus(
           wbFromVersion(111, wbFloat('Late Sunset')
             .SetDefaultNativeValue(1.0)
             .IncludeFlag(dfSummaryNoName)),
@@ -9597,11 +9285,11 @@ begin
        .SetRequired;
 end;
 
-function wbWeatherCloudColors: IwbRecordMemberDef;
+function wbWeatherCloudColors(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbArray(PNAM, 'Cloud Colors',
-      wbWeatherTimeOfDay('Layer'),
+      wbWeatherTimeOfDay(aGameDef, 'Layer'),
     [], wbWeatherCloudColorsCounter)
       .IncludeFlagOnValue(dfArrayStaticSize)
       .IncludeFlagOnValue(dfFastAssign)
@@ -9609,10 +9297,10 @@ begin
       .SetRequired;
 end;
 
-function wbWeatherCloudSpeed: IwbRecordMemberDef;
+function wbWeatherCloudSpeed(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
-    IfThen(wbIsFallout3,
+    IfThen(aGameDef.IsFallout3,
 	    wbArray(ONAM, 'Cloud Speeds',
 		    wbInteger('Layer', itU8),
       4)
@@ -9630,15 +9318,15 @@ begin
 	    ])).SetRequired;
 end;
 
-function wbWeatherCloudTextures: IwbRecordMemberDef;
+function wbWeatherCloudTextures(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
-    IfThen(wbIsFallout3,
+    IfThen(aGameDef.IsFallout3,
       wbRStruct('Cloud Textures', [
         wbString(DNAM, 'Layer #0'),
         wbString(CNAM, 'Layer #1'),
         wbString(ANAM, 'Layer #2'),
-        IsFO3(
+        aGameDef.IsFO3(
           wbString(BNAM, 'Layer #3').SetDefaultEditValue('Sky\WastelandCloudCloudyLower01.dds'),
           wbString(BNAM, 'Layer #3').SetDefaultEditValue('Sky\Alpha.dds')
         ).SetRequired
@@ -9684,82 +9372,82 @@ begin
         .IncludeFlag(dfStructFirstNotRequired));
 end;
 
-function wbWeatherColors: IwbRecordMemberDef;
+function wbWeatherColors(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(NAM0, 'Weather Colors', [
-      wbWeatherTimeOfDay('Sky-Upper'),
-      IfThen(not (gcWeatherExtendedColors in _CurrentGameDef.Capabilities),
-        wbWeatherTimeOfDay('Fog'),
-        wbWeatherTimeOfDay('Fog Near')),
-      IsTES4(
-        wbWeatherTimeOfDay('Clouds-Lower'),
-        wbWeatherTimeOfDay('Unused')),
-      wbWeatherTimeOfDay('Ambient'),
-      wbWeatherTimeOfDay('Sunlight'),
-      wbWeatherTimeOfDay('Sun'),
-      wbWeatherTimeOfDay('Stars'),
-      wbWeatherTimeOfDay('Sky-Lower'),
-      wbWeatherTimeOfDay('Horizon'),
-      IsTES4(
-        wbWeatherTimeOfDay('Clouds-Upper'),
-        IsFO3(
-          wbWeatherTimeOfDay('Clouds (Unused)'),
-          wbWeatherTimeOfDay('Effect Lighting'))),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')),
+      wbWeatherTimeOfDay(aGameDef, 'Sky-Upper'),
+      IfThen(not (gcWeatherExtendedColors in aGameDef.Capabilities),
+        wbWeatherTimeOfDay(aGameDef, 'Fog'),
+        wbWeatherTimeOfDay(aGameDef, 'Fog Near')),
+      aGameDef.IsTES4(
+        wbWeatherTimeOfDay(aGameDef, 'Clouds-Lower'),
+        wbWeatherTimeOfDay(aGameDef, 'Unused')),
+      wbWeatherTimeOfDay(aGameDef, 'Ambient'),
+      wbWeatherTimeOfDay(aGameDef, 'Sunlight'),
+      wbWeatherTimeOfDay(aGameDef, 'Sun'),
+      wbWeatherTimeOfDay(aGameDef, 'Stars'),
+      wbWeatherTimeOfDay(aGameDef, 'Sky-Lower'),
+      wbWeatherTimeOfDay(aGameDef, 'Horizon'),
+      aGameDef.IsTES4(
+        wbWeatherTimeOfDay(aGameDef, 'Clouds-Upper'),
+        aGameDef.IsFO3(
+          wbWeatherTimeOfDay(aGameDef, 'Clouds (Unused)'),
+          wbWeatherTimeOfDay(aGameDef, 'Effect Lighting'))),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(31, wbWeatherTimeOfDay(aGameDef, 'Cloud LOD Diffuse')),
         nil),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(31, wbWeatherTimeOfDay(aGameDef, 'Cloud LOD Ambient')),
         nil),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(31, wbWeatherTimeOfDay(aGameDef, 'Fog Far')),
         nil),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(35, wbWeatherTimeOfDay(aGameDef, 'Sky Statics')),
         nil),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(37, wbWeatherTimeOfDay(aGameDef, 'Water Multiplier')),
         nil),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(37, wbWeatherTimeOfDay(aGameDef, 'Sun Glare')),
         nil),
-      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
-        wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')),
+      IfThen(gcWeatherExtendedColors in aGameDef.Capabilities,
+        wbFromVersion(37, wbWeatherTimeOfDay(aGameDef, 'Moon Glare')),
         nil),
-      IsFO4Plus(
-        wbFromVersion(119, wbWeatherTimeOfDay('Fog Near High')),
+      aGameDef.IsFO4Plus(
+        wbFromVersion(119, wbWeatherTimeOfDay(aGameDef, 'Fog Near High')),
         nil),
-      IsFO4Plus(
-        wbFromVersion(119, wbWeatherTimeOfDay('Fog Far High')),
+      aGameDef.IsFO4Plus(
+        wbFromVersion(119, wbWeatherTimeOfDay(aGameDef, 'Fog Far High')),
         nil)
     ]).SetRequired;
 end;
 
-function wbWeatherDirectionalLighting: IwbRecordMemberDef;
+function wbWeatherDirectionalLighting(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRStruct('Directional Ambient Lighting Colors', [
-      wbAmbientColors(DALC, 'Sunrise').SetRequired,
-      wbAmbientColors(DALC, 'Day').SetRequired,
-      wbAmbientColors(DALC, 'Sunset').SetRequired,
-      wbAmbientColors(DALC, 'Night').SetRequired,
-      IsFO4Plus(
-        wbFromVersion(111, DALC, wbAmbientColors('Early Sunrise')).SetRequired,
+      wbAmbientColors(aGameDef, DALC, 'Sunrise').SetRequired,
+      wbAmbientColors(aGameDef, DALC, 'Day').SetRequired,
+      wbAmbientColors(aGameDef, DALC, 'Sunset').SetRequired,
+      wbAmbientColors(aGameDef, DALC, 'Night').SetRequired,
+      aGameDef.IsFO4Plus(
+        wbFromVersion(111, DALC, wbAmbientColors(aGameDef, 'Early Sunrise')).SetRequired,
         nil),
-      IsFO4Plus(
-        wbFromVersion(111, DALC, wbAmbientColors('Late Sunrise')).SetRequired,
+      aGameDef.IsFO4Plus(
+        wbFromVersion(111, DALC, wbAmbientColors(aGameDef, 'Late Sunrise')).SetRequired,
         nil),
-      IsFO4Plus(
-        wbFromVersion(111, DALC, wbAmbientColors('Early Sunset')).SetRequired,
+      aGameDef.IsFO4Plus(
+        wbFromVersion(111, DALC, wbAmbientColors(aGameDef, 'Early Sunset')).SetRequired,
         nil),
-      IsFO4Plus(
-        wbFromVersion(111, DALC, wbAmbientColors('Late Sunset')).SetRequired,
+      aGameDef.IsFO4Plus(
+        wbFromVersion(111, DALC, wbAmbientColors(aGameDef, 'Late Sunset')).SetRequired,
         nil)
     ]).SetRequired;
 end;
 
-function wbWeatherDisabledLayers: IwbRecordMemberDef;
+function wbWeatherDisabledLayers(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbInteger(NAM1, 'Disabled Cloud Layers', itU32,
@@ -9767,12 +9455,12 @@ begin
         '0','1','2','3','4','5','6','7','8','9','10','11',
         '12','13','14','15','16','17','18','19','20','21',
         '22','23','24','25','26','27','28','29','30','31'
-      ])).SetDefaultNativeValue(IsTES5(0, 4294967295))
+      ])).SetDefaultNativeValue(aGameDef.IsTES5(0, 4294967295))
          .IncludeFlag(dfCollapsed, wbCollapseFlags)
          .SetRequired;
 end;
 
-function wbWeatherFogDistance: IwbRecordMemberDef;
+function wbWeatherFogDistance(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(FNAM, 'Fog Distance', [
@@ -9780,46 +9468,46 @@ begin
       wbFloat('Day - Far'),
       wbFloat('Night - Near'),
       wbFloat('Night - Far'),
-      IfThen((gcWeatherFogPower in _CurrentGameDef.Capabilities),
+      IfThen((gcWeatherFogPower in aGameDef.Capabilities),
         wbFloat('Day - Power').SetDefaultNativeValue(1),
         nil),
-      IfThen((gcWeatherFogPower in _CurrentGameDef.Capabilities),
+      IfThen((gcWeatherFogPower in aGameDef.Capabilities),
         wbFloat('Night - Power').SetDefaultNativeValue(1),
         nil),
-      IfThen(gcWeatherFogMax in _CurrentGameDef.Capabilities,
+      IfThen(gcWeatherFogMax in aGameDef.Capabilities,
         wbFloat('Day - Max').SetDefaultNativeValue(1),
         nil),
-      IfThen(gcWeatherFogMax in _CurrentGameDef.Capabilities,
+      IfThen(gcWeatherFogMax in aGameDef.Capabilities,
         wbFloat('Night - Max').SetDefaultNativeValue(1),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(119, wbFloat('Day - Near Height Mid')),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(119, wbFloat('Day - Near Height Range').SetDefaultNativeValue(10000)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(119, wbFloat('Night - Near Height Mid')),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(119, wbFloat('Night - Near Height Range').SetDefaultNativeValue(10000)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(119, wbFloat('Day - High Density Scale').SetDefaultNativeValue(1)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(119, wbFloat('Night - High Density Scale').SetDefaultNativeValue(1)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(120, wbFloat('Day - Far Height Mid')),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(120, wbFloat('Day - Far Height Range')),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(120, wbFloat('Night - Far Height Mid')),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(120, wbFloat('Night - Far Height Range')),
         nil)
     ]).SetRequired;
@@ -9840,7 +9528,7 @@ begin
     ]);
 end;
 
-function wbWeatherImageSpaces: IwbRecordMemberDef;
+function wbWeatherImageSpaces(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(IMSP, 'Image Spaces', [
@@ -9848,16 +9536,16 @@ begin
       wbFormIDCK('Day', [IMGS, NULL]).SetDefaultNativeValue(359),
       wbFormIDCK('Sunset', [IMGS, NULL]).SetDefaultNativeValue(359),
       wbFormIDCK('Night', [IMGS, NULL]).SetDefaultNativeValue(359),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(111, wbFormIDCK('Early Sunrise', [IMGS, NULL]).SetDefaultNativeValue(359)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(111, wbFormIDCK('Late Sunrise', [IMGS, NULL]).SetDefaultNativeValue(359)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(111, wbFormIDCK('Early Sunset', [IMGS, NULL]).SetDefaultNativeValue(359)),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFromVersion(111, wbFormIDCK('Late Sunset', [IMGS, NULL]).SetDefaultNativeValue(359)),
         nil)
     ]).SetRequired;
@@ -9910,7 +9598,7 @@ begin
         .IncludeFlag(dfCollapsed, wbCollapseSounds));
 end;
 
-function wbWeatherVolumetricLighting: IwbRecordMemberDef;
+function wbWeatherVolumetricLighting(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(HNAM, 'Volumetric Lighting', [
@@ -9918,16 +9606,16 @@ begin
       wbFormIDCK('Day', [VOLI, NULL]),
       wbFormIDCK('Sunset', [VOLI, NULL]),
       wbFormIDCK('Night', [VOLI, NULL]),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFormIDCK('Early Sunrise', [VOLI, NULL]),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFormIDCK('Late Sunrise', [VOLI, NULL]),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFormIDCK('Early Sunset', [VOLI, NULL]),
         nil),
-      IsFO4Plus(
+      aGameDef.IsFO4Plus(
         wbFormIDCK('Late Sunset', [VOLI, NULL]),
         nil)
     ]);
@@ -9974,12 +9662,12 @@ begin
     ]).SetIsRemovable(wbWorldLODDataIsRemovable);
 end;
 
-function wbWorldLandData: IwbRecordMemberDef;
+function wbWorldLandData(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(DNAM, 'Land Data', [
       wbFloat('Default Land Height').SetDefaultNativeValue(-2048),
-      wbFloat('Default Water Height').SetDefaultNativeValue(IsSF1(-200, 0))
+      wbFloat('Default Water Height').SetDefaultNativeValue(aGameDef.IsSF1(-200, 0))
     ]).SetSummaryKeyOnValue([0, 1])
       .SetSummaryPrefixSuffixOnValue(0, 'Land: ', '')
       .SetSummaryPrefixSuffixOnValue(1, 'Water: ', '')
@@ -10042,7 +9730,7 @@ begin
     ]);
 end;
 
-function wbWorldMapData: IwbRecordMemberDef;
+function wbWorldMapData(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(MNAM, 'World Map Data', [
@@ -10076,7 +9764,7 @@ begin
         .SetSummaryMemberPrefixSuffix(1, 'SE', ']')
         .SetSummaryDelimiter(', ')
         .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
-      IsTES5(
+      aGameDef.IsTES5(
         wbStruct('Camera Data', [
           wbFloat('Min Height').SetDefaultNativeValue(50000),
           wbFloat('Max Height').SetDefaultNativeValue(80000),
@@ -10086,26 +9774,26 @@ begin
     ]).SetIsRemovable(wbWorldMapDataIsRemovable);
 end;
 
-function wbWorldMapOffset: IwbRecordMemberDef;
+function wbWorldMapOffset(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(ONAM, 'World Map Offset Data', [
       wbFloat('World Map Scale').SetDefaultNativeValue(1),
-      IsSF1(
+      aGameDef.IsSF1(
         wbFloat('Cell X Offset', cpNormal, True, 0.01),
         wbFloat('Cell X Offset')),
-      IsSF1(
+      aGameDef.IsSF1(
         wbFloat('Cell Y Offset', cpNormal, True, 0.01),
         wbFloat('Cell Y Offset')),
-      IsFO3(
+      aGameDef.IsFO3(
         nil,
-        IsSF1(
+        aGameDef.IsSF1(
           wbFloat('Cell Z Offset', cpNormal, True, 0.01),
           wbFloat('Cell Z Offset')))
     ]).SetRequired;
 end;
 
-function wbWorldMaxHeight: IwbRecordMemberDef;
+function wbWorldMaxHeight(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(MHDT, 'Max Height Data', [
@@ -10156,18 +9844,18 @@ begin
          .IncludeFlag(dfNotAlignable))
     ]).IncludeFlag(dfCollapsed, wbCollapseOther)
       .IncludeFlag(dfFastAssign)
-      .IncludeFlag(dfNoCopyAsOverride, not wbIsFallout4);
+      .IncludeFlag(dfNoCopyAsOverride, not aGameDef.IsFallout4);
 end;
 
-function wbWorldObjectBounds: IwbRecordMemberDef;
+function wbWorldObjectBounds(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbRStruct('Worldspace Bounds', [
       wbStruct(NAM0, 'Min', [
-        IsSF1(
+        aGameDef.IsSF1(
           wbFloat('X', cpNormal, True, 1/100).SetDefaultNativeValue(1073741824),
           wbFloat('X', cpNormal, True, 1/4096).SetDefaultEditValue('Default')),
-        IsSF1(
+        aGameDef.IsSF1(
           wbFloat('Y', cpNormal, True, 1/100).SetDefaultNativeValue(1073741824),
           wbFloat('Y', cpNormal, True, 1/4096).SetDefaultEditValue('Default'))
       ]).SetSummaryKeyOnValue([0, 1])
@@ -10178,10 +9866,10 @@ begin
         .SetRequired
         .IncludeFlag(dfCollapsed, wbCollapseObjectBounds),
       wbStruct(NAM9, 'Max', [
-        IsSF1(
+        aGameDef.IsSF1(
           wbFloat('X', cpNormal, True, 1/100).SetDefaultNativeValue(-1073741824),
           wbFloat('X', cpNormal, True, 1/4096).SetDefaultEditValue('Min')),
-        IsSF1(
+        aGameDef.IsSF1(
           wbFloat('Y', cpNormal, True, 1/100).SetDefaultNativeValue(-1073741824),
           wbFloat('Y', cpNormal, True, 1/4096).SetDefaultEditValue('Min'))
       ]).SetSummaryKeyOnValue([0, 1])

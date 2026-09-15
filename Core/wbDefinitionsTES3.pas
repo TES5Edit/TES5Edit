@@ -654,7 +654,7 @@ begin
 end;
 
 
-function wbAIData: IwbRecordMemberDef;
+function wbAIData(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(AIDT, 'AI Data', [
@@ -663,7 +663,7 @@ begin
       wbInteger('Flee', itU8).SetDefaultNativeValue(30),
       wbInteger('Alarm', itU8),
       wbUnused(3),
-      wbInteger('Service Flags', itU32, wbServiceFlags).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      wbInteger('Service Flags', itU32, wbServiceFlags(aGameDef)).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ]).SetRequired;
 end;
 
@@ -772,7 +772,7 @@ begin
         .IncludeFlag(dfSummaryNoSortKey));
 end;
 
-function wbEnchantment: IwbRecordMemberDef;
+function wbEnchantment(const aGameDef: TwbGameDef): IwbRecordMemberDef;
 begin
   Result := wbString(ENAM, 'Enchantment');
 end;
@@ -1015,7 +1015,7 @@ begin
     ]).SetRequired,
     wbIcon,
     wbBipedObjects,
-    wbEnchantment //[ENCH]
+    wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
   wbRecord(BODY, 'Body Part', @wbKnownSubRecordSignaturesNoFNAM,
@@ -1086,7 +1086,7 @@ begin
     wbScript, //[SCPT]
     wbIcon,
     wbLStringKC(TEXT, 'Book Text', 0, cpTranslate),
-    wbEnchantment //[ENCH]
+    wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
   wbRecord(BSGN, 'Birthsign', [
@@ -1168,7 +1168,7 @@ begin
         ]),
       5),
       wbInteger('Playable', itU32, wbBoolEnum),
-      wbInteger('Service Flags', itU32, wbServiceFlags).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      wbInteger('Service Flags', itU32, wbServiceFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ]).SetRequired,
     wbDescription
   ]).SetFormIDBase($18);
@@ -1202,7 +1202,7 @@ begin
     wbScript, //[SCPT]
     wbIcon,
     wbBipedObjects,
-    wbEnchantment //[ENCH]
+    wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
   wbRecord(CONT, 'Container',
@@ -1294,7 +1294,7 @@ begin
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2).SetDefaultNativeValue(1),
     wbInventory,
     wbSpells,
-    wbAIData,
+    wbAIData(Self),
     wbTravelServices,
     wbPackages
   ]).SetFormIDBase($40);
@@ -1415,7 +1415,7 @@ begin
       wbInteger('Dialog Type', itU32, wbDialogTypeEnum),
       wbInteger('Disposition/Index', itU32),
       wbInteger('Speaker Faction Rank', itS8).SetDefaultNativeValue(-1),
-      wbInteger('Sex', itS8, wbSexEnum).SetDefaultNativeValue(-1),
+      wbInteger('Sex', itS8, wbSexEnum(Self)).SetDefaultNativeValue(-1),
       wbInteger('Player Faction Rank', itS8).SetDefaultNativeValue(-1),
       wbUnused(1)
     ]).SetRequired,
@@ -1987,7 +1987,7 @@ begin
      .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInventory,
     wbSpells,
-    wbAIData.SetRequired,
+    wbAIData(Self).SetRequired,
     wbTravelServices,
     wbPackages.SetRequired,
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2).SetDefaultNativeValue(1)
@@ -2471,7 +2471,7 @@ begin
     ]).SetRequired,
     wbScript, //[SCPT]
     wbIcon,
-    wbEnchantment //[ENCH]
+    wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
   wbAddGroupOrder(GMST);

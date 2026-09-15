@@ -4047,9 +4047,9 @@ begin
             wbInteger('Edge 2-0', itU16, wbEdgeToStr2, wbEdgeToInt2).SetLinksToCallback(wbEdgeLinksTo2),
             wbFloat('Height'),
             wbInteger('Unknown', itU8),
-            wbInteger('Flags', itU16, wbNavmeshTriangleFlags)
+            wbInteger('Flags', itU16, wbNavmeshTriangleFlags(Self))
               .IncludeFlag(dfCollapsed, wbCollapseFlags),
-            wbInteger('Cover Flags', itU16, wbNavmeshCoverFlags)
+            wbInteger('Cover Flags', itU16, wbNavmeshCoverFlags(Self))
               .IncludeFlag(dfCollapsed, wbCollapseFlags)
           ]),
         -1).IncludeFlag(dfNotAlignable)
@@ -4702,8 +4702,8 @@ begin
     {13} wbInteger('Alignment', itU32, wbAlignmentEnum),
     {14} wbInteger('Axis', itU32, wbAxisEnum),
     {15} wbInteger('Casting Type', itU32, wbCastingSourceEnum),
-    {16} wbInteger('Crime Type', itU32, wbCrimeTypeEnum),
-    {17} wbInteger('Critical Stage', itU32, wbCriticalStageEnum),
+    {16} wbInteger('Crime Type', itU32, wbCrimeTypeEnum(Self)),
+    {17} wbInteger('Critical Stage', itU32, wbCriticalStageEnum(Self)),
     {18} wbInteger('Damage Cause Type', itU32, wbDamageCauseTypeEnum),
     {19} wbInteger('Form Type', itU32, wbFormTypeEnum),
     {20} wbInteger('Misc Stat', itU32, wbMiscStatEnum),
@@ -4711,7 +4711,7 @@ begin
     {22} wbInteger('Perk Skill Group', itU32, wbPerkSkillGroupEnum),
     {23} wbInteger('Perk Skill Group Comparison', itU32, wbPerkSkillGroupEnum),
     {24} wbInteger('Pronoun', itU32, wbPronounEnum),
-    {25} wbInteger('Sex', itU32, wbSexEnum),
+    {25} wbInteger('Sex', itU32, wbSexEnum(Self)),
     {26} wbInteger('Ward State', itU32, wbWardStateEnum),
 
     //Flags
@@ -7094,7 +7094,7 @@ begin
 
         wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
 
-        wbRagdoll,
+        wbRagdoll(Self),
 
         wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
 
@@ -7104,7 +7104,7 @@ begin
 
         wbLinkedReferences,
 
-        wbOwnership,
+        wbOwnership(Self),
 
         wbFormIDCk(XEZN, 'Location Override', [LCTN]),
 
@@ -7160,7 +7160,7 @@ begin
      {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
      {02} wbInteger('Energy Level', itU8),
      {03} wbInteger('Morality', itU8, wbMoralityEnum),
-     {04} wbInteger('Mood', itU8, wbMoodEnum),
+     {04} wbInteger('Mood', itU8, wbMoodEnum(Self)),
           wbInteger('Assistance', itU8, wbAssistanceEnum),
           wbInteger('Has Reaction Radius Behavior', itU8, wbBoolEnum)
     ], cpNormal, True);
@@ -8122,7 +8122,7 @@ begin
                     .SetLinksToCallbackOnValue(wbSameQuestAliasLinksTo)
                 ]),
             {2} wbRStruct('From Event', [
-                  wbInteger(ALFE, 'Event', itU32, wbQuestEventEnum),
+                  wbInteger(ALFE, 'Event', itU32, wbQuestEventEnum(Self)),
                   wbInteger(ALFD, 'Data', itU32, gdEventMemberEnum)
                 ]),
             {3} wbRStruct('Near Alias', [
@@ -8215,7 +8215,7 @@ begin
               .SetLinksToCallbackOnValue(wbQuestAliasExternalAliasLinksTo)
           ]),
       {3} wbRStruct('Find Matching Location', [
-            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum),
+            wbInteger(ALFE, 'From Event', itU32, wbQuestEventEnum(Self)),
             wbInteger(ALFD, 'Event Data', itU32, gdEventMemberEnum)
           ])
       ]).IncludeFlag(dfUnionStaticResolve),
@@ -8501,7 +8501,7 @@ begin
     wbXLCM,
     wbFormIDCk(XEMI, 'Emittance', [LIGH, REGN]),
     wbFloat(XRDS, 'Radius', cpNormal, False, 1, 2),
-    wbRagdoll,
+    wbRagdoll(Self),
     wbFormIDCk(XRFG, 'Reference Group', [RFGP]),
     wbXPCS,
     wbFormIDCk(XLCN, 'Persist Location', [LCTN]).SetToStr(wbREFRPersistLocToStr),
@@ -8510,7 +8510,7 @@ begin
     wbXPLKs,
     wbLinkedReferences,
     wbXEED,
-    wbOwnership,
+    wbOwnership(Self),
     wbFormIDCk(XEZN, 'Location Override', [LCTN]),
     wbRStruct('Grouped Pack-In', [
       wbMarkerReq(XWPK),
@@ -8765,7 +8765,7 @@ begin
       wbFormIDCk(INAM, 'Idle', [IDLE, NULL], False, cpNormal, True),
       wbPDTOs
     ])),
-    wbRagdoll,
+    wbRagdoll(Self),
     wbStruct(XTEL, 'Teleport Destination', [
       wbFormIDCk('Door', [REFR], True)
         .SetFormIDFilter(wbREFRTeleportFilter)
@@ -8986,7 +8986,7 @@ begin
     wbFloat(XLVD, 'Light Volumetric Data'),
     wbFloat(XRFE, 'Light Radius Fallout Exponent'),
     wbXEED,
-    wbOwnership,
+    wbOwnership(Self),
     wbXLRD,
     wbStruct(XLBD, 'Barndoors', [
       { 4} wbFloat('Bottom'),
@@ -9239,7 +9239,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -9290,7 +9290,7 @@ begin
   wbRecord(ADDN, 'Addon Node', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbBaseFormComponents,
     wbGenericModel(True),
@@ -9348,7 +9348,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -9442,7 +9442,7 @@ begin
       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbSNTP,
     wbSNBH,
@@ -9562,7 +9562,7 @@ begin
     .SetFlagHasDontShow(29, wbFlagNavmeshIgnoreErosionDontShow)
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbODTYReq,
     wbOPDS,
@@ -9653,13 +9653,13 @@ begin
       wbFloat('Health Bar Offset')
     ], cpNormal, True),
     wbRStruct('Biped Model', [
-      wbTexturedModel('Male Biped Model',   [MOD2], [wbMOLM(MLM1), wbMO2C, wbMO2F]),
-      wbTexturedModel('Female Biped Model', [MOD3], [wbMOLM(MLM2), wbMO3C, wbMO3F])
+      wbTexturedModel(Self, 'Male Biped Model',   [MOD2], [wbMOLM(MLM1), wbMO2C, wbMO2F]),
+      wbTexturedModel(Self, 'Female Biped Model', [MOD3], [wbMOLM(MLM2), wbMO3C, wbMO3F])
     ]).IncludeFlag(dfAllowAnyMember)
       .IncludeFlag(dfStructFirstNotRequired),
     wbRStruct('1st Person', [
-      wbTexturedModel('Male',    [MOD4], [wbMOLM(MLM3), wbMO4C, wbMO4F]),
-      wbTexturedModel('Female',  [MOD5], [wbMOLM(MLM4), wbMO5C, wbMO5F])
+      wbTexturedModel(Self, 'Male',    [MOD4], [wbMOLM(MLM3), wbMO4C, wbMO4F]),
+      wbTexturedModel(Self, 'Female',  [MOD5], [wbMOLM(MLM4), wbMO5C, wbMO5F])
     ]).IncludeFlag(dfAllowAnyMember)
       .IncludeFlag(dfStructFirstNotRequired),
 
@@ -9711,7 +9711,7 @@ begin
        wbString(VNAM, 'Entry Value')
     ]),
     wbRStructs('Bone Datas', 'Bone Data', [
-      wbInteger(BSMP, 'Gender', itU32, wbSexEnum),
+      wbInteger(BSMP, 'Gender', itU32, wbSexEnum(Self)),
       wbRArrayS('Modifiers', wbFormIDCk(BNAM, 'Modifier', [BMOD]))
     ])
   ]).SetIgnoreList([FLLD, XFLG]);
@@ -9726,14 +9726,14 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbPTT2,
     wbBaseFormComponents,
     wbFULL,
-    wbEnchantment,
-    wbTexturedModel('Male World Model', [MOD2], [wbMOLM(MLM2), wbMO2S, wbMO2F]),
-    wbTexturedModel('Female World Model', [MOD4], [wbMOLM(MLM4), wbMO4S, wbMO4F]),
+    wbEnchantment(Self),
+    wbTexturedModel(Self, 'Male World Model', [MOD2], [wbMOLM(MLM2), wbMO2S, wbMO2F]),
+    wbTexturedModel(Self, 'Female World Model', [MOD4], [wbMOLM(MLM4), wbMO4S, wbMO4F]),
     wbBO64,
     wbDEST,
     wbPUSH,
@@ -9791,7 +9791,7 @@ begin
   wbRecord(ARTO, 'Art Object', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbXALG,
@@ -9820,7 +9820,7 @@ begin
   wbRecord(ASPC, 'Acoustic Space', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
@@ -10276,7 +10276,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -10390,7 +10390,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbBaseFormComponents,
     wbStruct(DNAM, 'Data', [
@@ -10408,7 +10408,7 @@ begin
   wbRecord(BOOK, 'Book', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbPTT2,
     wbDEFL,
@@ -10641,7 +10641,7 @@ begin
     ).SetAfterSet(wbCELLDATAAfterSet)
      .IncludeFlag(dfCollapsed, wbCollapseFlags),
 
-    wbCellGrid,
+    wbCellGrid(Self),
 
     wbStruct(XCLL, 'Lighting', [
     {  0} wbByteColors('Ambient Color'),
@@ -10682,7 +10682,7 @@ begin
     ]).SetDontShow(wbCellExteriorDontShow)
       .SetIsRemovable(wbCellLightingIsRemovable),
 
-    wbMHDTCELL,
+    wbMHDTCELL(Self),
 
     wbFormIDCk(LTMP, 'Lighting Template', [LGTM, NULL], False, cpNormal, True),
 
@@ -10697,7 +10697,7 @@ begin
 
     wbFormIDCk(XCCM, 'Cell Sky Region', [REGN]),
 
-    wbOwnership,
+    wbOwnership(Self),
 
     wbFormIDCk(XLCN, 'Location', [LCTN]),
 
@@ -11009,7 +11009,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbXALG,
@@ -11295,7 +11295,7 @@ begin
   wbRecord(DEBR, 'Debris', [
     wbEDID,
     wbBaseFormComponents,
-    wbRArray('Models', wbDebrisModel(wbModelInfo(MODT)), cpNormal, True)
+    wbRArray('Models', wbDebrisModel(wbModelInfo(Self, MODT)), cpNormal, True)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -11594,7 +11594,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -11637,7 +11637,7 @@ begin
   wbRecord(DUAL, 'Dual Cast Data', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -11751,7 +11751,7 @@ begin
   wbRecord(ENCH, 'Enchantment', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbBaseFormComponents,
     wbFULL,
@@ -11793,7 +11793,7 @@ begin
   {subrecords checked against Starfield.esm}
   wbRecord(EXPL, 'Explosion', [
     wbEDID,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbDEFL,
@@ -11801,7 +11801,7 @@ begin
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(True),
-    wbEnchantment,
+    wbEnchantment(Self),
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD]),
     wbStruct(ENAM, 'Data', [
       wbFormIDCk('Light', [LIGH, NULL]),
@@ -11878,7 +11878,7 @@ begin
     wbVMAD,
     wbBaseFormComponents,
     wbFULL,
-    wbFactionRelations,
+    wbFactionRelations(Self),
     wbFormIDCk(DNAM, 'Faction Type', [KYWD]),
     wbStruct(DATA, 'Flags', [
       wbInteger('Flags', itU32, wbFlags([
@@ -11997,7 +11997,7 @@ begin
   wbRecord(FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -12165,7 +12165,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -12263,7 +12263,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
@@ -12488,7 +12488,7 @@ begin
       {0x00008000} 15, 'Unknown 15'
     ])), [
     wbEDID,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbXALG,
@@ -12560,7 +12560,7 @@ begin
       .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -12704,11 +12704,11 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbBaseFormComponents,
     wbKeywords,
-    wbIdleAnimation,
+    wbIdleAnimation(Self),
     wbGenericModel(True),
     wbFormIDCk(RNAM, 'Actor Action', [AACT]),
     wbFormIDCk(QNAM, 'Animation Flavor', [KYWD]),
@@ -12733,7 +12733,7 @@ begin
   wbRecord(INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -13258,7 +13258,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -13669,7 +13669,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -13801,7 +13801,7 @@ begin
       wbUnknown(4)
     ]).SetOptionalFrom(15)
       .SetRequired,
-    wbAmbientColors(DALC)
+    wbAmbientColors(Self, DALC)
   ]);
 
   {subrecords checked against Starfield.esm}
@@ -13819,7 +13819,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -13984,7 +13984,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -14012,7 +14012,7 @@ begin
     wbLLCT.IncludeFlag(dfSkipImplicitEdit),
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbLeveledListEntry('Base Form', [GBFM, LVLB]),
+        wbLeveledListEntry(Self, 'Base Form', [GBFM, LVLB]),
         wbCOED,
         wbConditions
       ]).SetSummaryMemberMaxDepth(0, 1)
@@ -14043,7 +14043,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -14071,7 +14071,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbLeveledListEntry('Item', sigBaseObjects),
+        wbLeveledListEntry(Self, 'Item', sigBaseObjects),
         wbCOED,
         wbConditions
       ]).SetSummaryMemberMaxDepth(0, 1)
@@ -14093,7 +14093,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbXALG,
@@ -14117,7 +14117,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbLeveledListEntry('NPC', [LVLN, NPC_]),
+        wbLeveledListEntry(Self, 'NPC', [LVLN, NPC_]),
         wbCOED,
         wbConditions
       ]).SetSummaryMemberMaxDepth(0, 1)
@@ -14135,7 +14135,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -14159,7 +14159,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbLeveledListEntry('Pack In', [LVLP, PKIN]),
+        wbLeveledListEntry(Self, 'Pack In', [LVLP, PKIN]),
         wbConditions.IncludeFlag(dfSummaryMembersNoName)
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
@@ -14209,7 +14209,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
-        wbLeveledListEntry('Space Cell', [CELL, LVSC]),
+        wbLeveledListEntry(Self, 'Space Cell', [CELL, LVSC]),
         wbConditions
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
@@ -14237,7 +14237,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -14262,7 +14262,7 @@ begin
     wbLLCT,
     wbRArrayS('Leveled List Entries',
       wbRStructSK([0], 'Leveled List Entry', [
-        wbLeveledListEntry('Spell', [LVSP, SPEL])
+        wbLeveledListEntry(Self, 'Spell', [LVSP, SPEL])
       ]).SetSummaryMemberMaxDepth(0, 1)
         .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
     ).SetCountPath(LLCT)
@@ -14587,7 +14587,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -14684,7 +14684,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -14968,7 +14968,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -15013,7 +15013,7 @@ begin
     ]), [18]), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -15067,12 +15067,12 @@ begin
       wbInteger('Calc min level', itU16),
       wbInteger('Calc max level', itU16),
       wbInteger('Disposition Base', itS16),
-      wbInteger('Template Flags', itU16, wbTemplateFlags).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      wbInteger('Template Flags', itU16, wbTemplateFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ]).SetSummaryKeyOnValue([0,6])
       .SetSummaryPrefixSuffixOnValue(0, '[',']')
       .SetSummaryPrefixSuffixOnValue(1, '[',']')
       .SetRequired,
-    wbRArrayS('Factions', wbFaction),
+    wbRArrayS('Factions', wbFaction(Self)),
     wbFormIDCk(INAM, 'Death item', [LVLI]),
     wbFormIDCk(VTCK, 'Voice', [VTYP]),
     wbFormIDCk(TPLT, 'Default Template', [BMMO, LVLN, NPC_]),
@@ -15572,7 +15572,7 @@ begin
     wbBaseFormComponents,
 
     wbStruct(PKDT, 'Pack Data', [
-      wbInteger('General Flags', itU32, wbPackageFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbInteger('General Flags', itU32, wbPackageFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags),
       wbInteger('Type', itU8, wbEnum ([], [
         18, 'Package',
         19, 'Package Template'
@@ -15613,7 +15613,7 @@ begin
       wbInteger('Duration (Hours)', itU32, wbDiv(60, 4))
     ], cpNormal, True),
     wbConditions,
-    wbIdleAnimation,
+    wbIdleAnimation(Self),
     wbFormIDCk(CNAM, 'Combat Style', [CSTY]),
     wbFormIDCk(QNAM, 'Owner Quest', [QUST]),
     wbFormIDCk(FLAV, 'Anim Flavor', [KYWD]),
@@ -15739,8 +15739,8 @@ begin
         {>>> PFO2 should be single, there is only 1 PACK [00095F46] <PatrolAndHunt> in Skyrim.esm with 2xPFO2 <<<}
         wbRArray('Flags Override',
           wbStruct(PFO2, 'Data', [
-            wbInteger('Set General Flags', itU32, wbPackageFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
-            wbInteger('Clear General Flags', itU32, wbPackageFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
+            wbInteger('Set General Flags', itU32, wbPackageFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+            wbInteger('Clear General Flags', itU32, wbPackageFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags),
             wbInteger('Set Interrupt Flags', itU16, wbPKDTInterruptFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
             wbInteger('Clear Interrupt Flags', itU16, wbPKDTInterruptFlags).IncludeFlag(dfCollapsed, wbCollapseFlags),
             wbInteger('Preferred Speed Override', itU8, wbEnum([
@@ -15861,7 +15861,7 @@ begin
     .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -16001,7 +16001,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -16244,7 +16244,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -16402,7 +16402,7 @@ begin
     ]),
     wbFormIDCk(QTYP, 'Quest Type', [KYWD]),
     wbFormIDCk(FTYP, 'Quest Faction', [KYWD]), // was FACT but now separate from FACT
-    wbInteger(ENAM, 'Event', itU32, wbQuestEventEnum).SetToStr(wbQUSTEventToStr),
+    wbInteger(ENAM, 'Event', itU32, wbQuestEventEnum(Self)).SetToStr(wbQUSTEventToStr),
     wbFormIDCk(LNAM, 'Location', [LCTN]),
     wbFormIDCk(QTLM, 'Quest Time Limit', [GLOB]),
     wbFormIDCk(QSRC, 'Source Quest', [QUST]),
@@ -16831,7 +16831,7 @@ begin
     ])), [
     wbEDID,
     wbByteColors(RCLR, 'Map Color'),
-    wbRegionAreas,
+    wbRegionAreas(Self),
     wbRArrayS('Region Data Entries', wbRStructSK([0], 'Region Data Entry', [
       {always starts with an RDAT}
       wbStructSK(RDAT, [0], 'Data Header', [
@@ -17433,7 +17433,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbSNTP,
     wbBaseFormComponents,
@@ -17446,7 +17446,7 @@ begin
   wbRecord(SCRL, 'Scroll', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbBaseFormComponents,
     wbFULL,
@@ -17499,7 +17499,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -17712,7 +17712,7 @@ begin
       ])
     ).IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbInteger(XNAM, 'Max concurrent quests', itU32),
-    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum)
+    wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum(Self))
   ]);
 
   wbRecord(SMQN, 'Story Manager Quest Node', [
@@ -17745,7 +17745,7 @@ begin
   wbRecord(SOUN, 'Sound Marker', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbXALG,
     wbBaseFormComponents,
@@ -17778,7 +17778,7 @@ begin
   wbRecord(SPEL, 'Spell', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbBaseFormComponents,
     wbFULL,
@@ -17882,7 +17882,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -18038,7 +18038,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -18102,7 +18102,7 @@ begin
              .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -18195,7 +18195,7 @@ begin
        .SetFlagHasDontShow(30, wbFlagNavmeshGroundDontShow), [
     wbEDID,
     wbVMADFragmentedPERK, // same fragments format as in PERK
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -18443,7 +18443,7 @@ begin
   wbRecord(TXST, 'Texture Set', [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbBaseFormComponents,
@@ -18611,7 +18611,7 @@ begin
     ])), [
     wbEDID,
     wbVMAD,
-    wbObjectBounds,
+    wbObjectBounds(Self),
     wbODTYReq,
     wbOPDS,
     wbPTT2,
@@ -18619,7 +18619,7 @@ begin
     wbBaseFormComponents,
     wbFULL,
     wbGenericModel(True),
-    wbEnchantment(True),
+    wbEnchantment(Self, True),
     wbDEST,
     wbETYP,
     wbFormIDCk(BIDS, 'Block Bash Impact Data Set', [IPDS, NULL]),
@@ -18871,16 +18871,16 @@ begin
       .SetRequired,
     wbFormIDCK(CLDC, 'Cloud Type', [CLDF, NULL])
       .SetRequired,
-    wbWeatherCloudSpeed,
-    wbWeatherCloudColors,
-    wbWeatherCloudAlphas,
-    wbWeatherColors,
+    wbWeatherCloudSpeed(Self),
+    wbWeatherCloudColors(Self),
+    wbWeatherCloudAlphas(Self),
+    wbWeatherColors(Self),
     wbArray(NAM4, 'Unknown',
       wbFloat('Unknown')
         .SetDefaultNativeValue(1),
     32).IncludeFlag(dfNotAlignable)
        .SetRequired,
-    wbWeatherFogDistance,
+    wbWeatherFogDistance(Self),
     wbStruct(DATA, 'Data', [
       wbInteger('Wind Speed', itU8), // scaled 0..1
       wbUnused(2),
@@ -18911,7 +18911,7 @@ begin
       wbInteger('Wind Direction Range', itU8), // scaled 0..180
       wbFromVersion(119, wbInteger('Wind Turbulance', itU8))
     ]).SetRequired,
-    wbWeatherDisabledLayers,
+    wbWeatherDisabledLayers(Self),
     wbRStruct('Sounds', [
       wbInteger(WSLS, 'Sounds Count', itU32),
       wbRArray('Sounds',
@@ -18924,10 +18924,10 @@ begin
     wbRArrayS('Sky Statics',
       wbFormIDCk(TNAM, 'Static', [STAT, NULL])
     ),
-    wbWeatherImageSpaces,
-    wbWeatherVolumetricLighting
+    wbWeatherImageSpaces(Self),
+    wbWeatherVolumetricLighting(Self)
       .SetRequired,
-    wbWeatherDirectionalLighting,
+    wbWeatherDirectionalLighting(Self),
     wbRStruct('Aurora', [
       wbGenericModel(True)
     ]).SetRequired,
@@ -18971,7 +18971,7 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbWorldLargeRefs,
-    wbWorldMaxHeight,
+    wbWorldMaxHeight(Self),
     wbFULL,
     wbWorldFixedCenter,
     wbFormIDCk(XLCN, 'Location', [LCTN]),
@@ -18996,10 +18996,10 @@ begin
       .SetIsRemovable(wbWorldWaterIsRemovable),
     wbString(NAM7, 'Water Material'),
     wbWorldLODData,
-    wbWorldLandData,
+    wbWorldLandData(Self),
     wbString(ICON, 'Map Image'),
-    wbWorldMapData,
-    wbWorldMapOffset,
+    wbWorldMapData(Self),
+    wbWorldMapOffset(Self),
     wbFloat(NAMA, 'Distant LOD Multiplier')
       .SetDefaultNativeValue(1)
       .SetRequired,
@@ -19027,7 +19027,7 @@ begin
     ).SetRequired
      .IncludeFlag(dfCollapsed, wbCollapseFlags),
     wbWorldRegionEditorMap,
-    wbWorldObjectBounds,
+    wbWorldObjectBounds(Self),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbFormIDCk(WAMB, 'Ambient Set', [AMBS]),
     wbString(XEMP, 'Environment Map'),
@@ -19127,7 +19127,7 @@ begin
       wbVec3('Geometry Offset'),
       wbFloat('FOV Mult')
         .SetDefaultNativeValue(1),
-      wbInteger('Overlay', itU8, wbZoomOverlayEnum),
+      wbInteger('Overlay', itU8, wbZoomOverlayEnum(Self)),
       wbFloat('FOV Offset'),
       wbStruct('Geometry', [
         wbInteger('Override Offset', itU8, wbBoolEnum),

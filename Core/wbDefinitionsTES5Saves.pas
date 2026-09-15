@@ -51,7 +51,7 @@ var
   wbSaveHeader     : IwbStructDef;
   wbCoSaveHeader   : IwbStructDef;
 
-procedure DefineTES5SavesA;
+procedure DefineTES5SavesA(const aGameDef: TwbGameDef);
 begin
   wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -6238,7 +6238,7 @@ begin
   FilePlugins := 'Plugins';
   FilePluginNames := SavePluginNames;
   inherited;
-  DefineTES5SavesA;
+  DefineTES5SavesA(Self);
   DefineTES5SavesS;
 end;
 
