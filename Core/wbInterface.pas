@@ -6364,52 +6364,52 @@ end;
 
 function wbIsMorrowind: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmTES3];
+  Result := _CurrentGameDef.IsMorrowind;
 end;
 
 function wbIsOblivion: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmTES4, gmTES4R];
+  Result := _CurrentGameDef.IsOblivion;
 end;
 
 function wbIsOblivionR: Boolean; Inline;
 begin
-  Result := wbCurrentGameMode in [gmTES4R]
+  Result := _CurrentGameDef.IsOblivionR;
 end;
 
 function wbIsFallout3: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmFO3, gmFNV];
+  Result := _CurrentGameDef.IsFallout3;
 end;
 
 function wbIsFalloutNV: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmFNV];
+  Result := _CurrentGameDef.IsFalloutNV;
 end;
 
 function wbIsSkyrim: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
+  Result := _CurrentGameDef.IsSkyrim;
 end;
 
 function wbIsSkyrimSE: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmTES5VR, gmSSE, gmEnderalSE];
+  Result := _CurrentGameDef.IsSkyrimSE;
 end;
 
 function wbIsFallout4: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmFO4, gmFO4VR];
+  Result := _CurrentGameDef.IsFallout4;
 end;
 
 function wbIsFallout76: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmFO76];
+  Result := _CurrentGameDef.IsFallout76;
 end;
 
 function wbIsStarfield: Boolean; inline;
 begin
-  Result := wbCurrentGameMode in [gmSF1];
+  Result := _CurrentGameDef.IsStarfield;
 end;
 
 function wbComputeCapabilities(aGameMode: TwbGameMode; aLightSupport, aMediumSupport, aUpdateSupport, aCS, aHNVSE: Boolean): TwbGameCapabilities;
