@@ -42,6 +42,17 @@ var
   xeTestConflictsCompareTo : string;
   xeTestConflictsFieldsFile: string;
   xeTestConflictsModGroups : Boolean;
+  xeTestNavCopy            : Boolean;
+  xeTestNavCopyFile        : string;
+  xeTestNavCopyEach        : Boolean;
+  xeTestNavCopyTwo         : Boolean;
+  xeTestNavCopySave        : Boolean;
+  xeTestNavCopyDisk        : Boolean;
+  xeTestNavCopyNoTouch     : Boolean;
+  xeTestNavCopyEsm         : Boolean;
+  xeTestNavCopyMaster      : string = 'NavCopyA.esp';
+  xeTestNavCopyPlugin      : string = 'NavCopyB.esp';
+  xeTestNavCopyCount       : Integer = 12;
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
@@ -1252,6 +1263,30 @@ begin
       wbFindCmdLineParam('comparetofile', xeTestConflictsCompareTo);
       wbFindCmdLineParam('fieldsfile', xeTestConflictsFieldsFile);
       xeTestConflictsModGroups := FindCmdLineSwitch('modgroups');
+    end;
+
+    if wbFindCmdLineParam('testnavcopy', xeTestNavCopyFile) then begin
+      if xeTestNavCopyFile = '' then begin
+        ShowMessage('testnavcopy requires an output file, as -testnavcopy:<filename>');
+        Exit(False);
+      end;
+      xeTestNavCopy := True;
+      xeAutoLoad    := True;
+      xeTestNavCopyEach := FindCmdLineSwitch('testnavcopyeach');
+      xeTestNavCopyTwo := FindCmdLineSwitch('testnavcopytwo');
+      xeTestNavCopySave := FindCmdLineSwitch('testnavcopysave');
+      xeTestNavCopyNoTouch := FindCmdLineSwitch('testnavcopynotouch');
+      xeTestNavCopyEsm := FindCmdLineSwitch('testnavcopyesm');
+      xeTestNavCopyDisk := FindCmdLineSwitch('testnavcopydisk');
+      if xeTestNavCopySave then
+        xeTestNavCopyTwo := True;
+      var lValue: string;
+      if wbFindCmdLineParam('testnavcopymaster', lValue) and (lValue <> '') then
+        xeTestNavCopyMaster := lValue;
+      if wbFindCmdLineParam('testnavcopyplugin', lValue) and (lValue <> '') then
+        xeTestNavCopyPlugin := lValue;
+      if wbFindCmdLineParam('testnavcopycount', lValue) then
+        xeTestNavCopyCount := StrToIntDef(lValue, xeTestNavCopyCount);
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')

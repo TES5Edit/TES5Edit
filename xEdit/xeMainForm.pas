@@ -802,6 +802,31 @@ type
     NexusModsVersion  : TwbVersion;
     ShowNexusModsHint : TDateTime;
 
+    TestNavCopyPhase         : Integer;
+    TestNavCopyTimer         : TTimer;
+    TestNavCopyAnswer        : TTimer;
+    TestNavCopyFileA         : IwbFile;
+    TestNavCopyFileB         : IwbFile;
+    TestNavCopyFileC         : IwbFile;
+    TestNavCopyRecordsA      : TDynMainRecords;
+    TestNavCopyRecordsB      : TDynMainRecords;
+    TestNavCopyRecordsC      : TDynMainRecords;
+    TestNavCopyRows          : TStringList;
+    TestNavCopyStale         : Integer;
+    TestNavCopyWouldRefresh  : Integer;
+    TestNavCopyControlMisses : Integer;
+
+    procedure TestNavCopyPhaseTimer(Sender: TObject);
+    procedure TestNavCopyAnswerTimer(Sender: TObject);
+    procedure TestNavCopyBuild;
+    procedure TestNavCopyLocateOnDisk;
+    procedure TestNavCopyCopy;
+    procedure TestNavCopyVerify;
+    procedure TestNavCopyPaintAll;
+    procedure TestNavCopyCollect(const aPhase: string; aWithTruth: Boolean);
+    procedure TestNavCopyFields(const aRecord: IwbMainRecord);
+    procedure TestNavCopyWrite;
+
     function GetRefBySelectionAsMainRecords: TDynMainRecords;
     function GetRefBySelectionAsElements: TDynElements;
 
@@ -822,6 +847,7 @@ type
     function ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 
     procedure DoTestConflictsDump;
+    procedure DoTestNavCopy;
   protected
 
     function GetUniqueLinksTo(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer): TDynMainRecords;
@@ -4288,7 +4314,7 @@ var
 begin
   if not wbBuildRefs then
     Exit;
-  if xeTestConflicts then
+  if xeTestConflicts or xeTestNavCopy then
     Exit;
   if wbDontCache then
     Exit;
@@ -4806,7 +4832,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not xeTestConflicts then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy) then
       ShowDeveloperMessage;
   end;
 
@@ -6205,6 +6231,14 @@ begin
     mmoMessages.Font.Name := MonospaceFontName;
   end;
   Memo1.WordWrap := True;
+
+  if xeTestNavCopy then begin
+    UseLatestCommonDialogs := False;
+    TestNavCopyAnswer := TTimer.Create(Self);
+    TestNavCopyAnswer.Interval := 250;
+    TestNavCopyAnswer.OnTimer := TestNavCopyAnswerTimer;
+    TestNavCopyAnswer.Enabled := True;
+  end;
 
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
@@ -20490,6 +20524,517 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoTestNavCopy;
+begin
+  wbCurrentContext.DontSave := True;
+  EditWarnOk := True;
+  TestNavCopyRows := TStringList.Create;
+  TestNavCopyPhase := 0;
+  TestNavCopyTimer := TTimer.Create(Self);
+  TestNavCopyTimer.Interval := 1500;
+  TestNavCopyTimer.OnTimer := TestNavCopyPhaseTimer;
+  TestNavCopyTimer.Enabled := True;
+end;
+
+procedure TfrmMain.TestNavCopyPhaseTimer(Sender: TObject);
+begin
+  TestNavCopyTimer.Enabled := False;
+  try
+    Inc(TestNavCopyPhase);
+    case TestNavCopyPhase of
+      1: TestNavCopyBuild;
+      2: TestNavCopyCopy;
+      3: TestNavCopyVerify;
+    end;
+    if TestNavCopyPhase < 3 then
+      TestNavCopyTimer.Enabled := True
+    else if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  except
+    on E: Exception do begin
+      AddMessage(Format('[Test Nav Copy] FAILED in phase %d: %s: %s', [TestNavCopyPhase, E.ClassName, E.Message]));
+      CheckResult := 255;
+      if xeAutoExit then
+        tmrShutdown.Enabled := True;
+    end;
+  end;
+end;
+
+procedure TfrmMain.TestNavCopyAnswerTimer(Sender: TObject);
+var
+  lForm   : TCustomForm;
+  lResult : TModalResult;
+  lText   : string;
+  lExtra  : string;
+
+  function HasButton(aOwner: TComponent; aResult: TModalResult): Boolean;
+  var
+    i: Integer;
+  begin
+    Result := False;
+    for i := 0 to Pred(aOwner.ComponentCount) do begin
+      if (aOwner.Components[i] is TButton) and (TButton(aOwner.Components[i]).ModalResult = aResult) then
+        Exit(True);
+      if HasButton(aOwner.Components[i], aResult) then
+        Exit(True);
+    end;
+  end;
+
+  procedure CollectText(aOwner: TComponent);
+  var
+    i: Integer;
+  begin
+    for i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TLabel then
+        lText := lText + ' ' + TLabel(aOwner.Components[i]).Caption;
+      CollectText(aOwner.Components[i]);
+    end;
+  end;
+
+begin
+  if (TestNavCopyPhase = 2) and not xeTestNavCopyNoTouch then
+    TestNavCopyPaintAll;
+  lForm := nil;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := Screen.CustomForms[i];
+      Break;
+    end;
+  if not Assigned(lForm) then
+    Exit;
+  lResult := mrNone;
+  lExtra := '';
+  if lForm is TfrmModuleSelect then begin
+    lResult := mrOk;
+    if Assigned(TestNavCopyFileA) then
+      Include(PwbModuleInfo(TestNavCopyFileA.ModuleInfo).miFlags, mfTagged);
+    with TfrmModuleSelect(lForm) do
+      lExtra := ' modules: ' + string.Join(' | ', AllModules.ToStrings(True)) + ' error: ' + pnlError.Caption;
+  end else if xeTestNavCopyEach and HasButton(lForm, mrYes) then
+    lResult := mrYes
+  else if HasButton(lForm, mrYesToAll) then
+    lResult := mrYesToAll
+  else if HasButton(lForm, mrYes) then
+    lResult := mrYes
+  else if HasButton(lForm, mrOk) then
+    lResult := mrOk;
+  if lResult = mrNone then
+    Exit;
+  lText := '';
+  CollectText(lForm);
+  lText := lText.Replace(#13, ' ').Replace(#10, ' ');
+  if Length(lText) > 300 then
+    lText := Copy(lText, 1, 300) + '...';
+  AddMessage(Format('[Test Nav Copy] answering "%s" (%s) with %d:%s%s', [lForm.Caption, lForm.ClassName, lResult, lText, lExtra]));
+  lForm.ModalResult := lResult;
+end;
+
+procedure TfrmMain.TestNavCopyBuild;
+var
+  i           : Integer;
+  lGameMaster : IwbFile;
+  lGroup      : IwbContainerElementRef;
+  lSource     : IwbMainRecord;
+  lRecordA    : IwbMainRecord;
+  lRecordB    : IwbMainRecord;
+  lRecordC    : IwbMainRecord;
+  lNode       : PVirtualNode;
+begin
+  if not wbEditAllowed then
+    raise Exception.Create('editing is not allowed in this run');
+
+  lGameMaster := nil;
+  for i := Low(Files) to High(Files) do
+    if fsIsGameMaster in Files[i].FileStates then
+      lGameMaster := Files[i];
+  if not Assigned(lGameMaster) then
+    raise Exception.Create('no game master is loaded');
+  if not Supports(lGameMaster.GroupBySignature['QUST'], IwbContainerElementRef, lGroup) then
+    raise Exception.Create('no QUST group in ' + lGameMaster.FileName);
+
+  if xeTestNavCopyDisk then begin
+    TestNavCopyLocateOnDisk;
+    Exit;
+  end;
+
+  if xeTestNavCopyEsm then begin
+    TestNavCopyFileA := AddNewFileName('NavCopyA.esm', False, False);
+    TestNavCopyFileA.IsESM := True;
+  end else
+    TestNavCopyFileA := AddNewFileName('NavCopyA.esp', False, False);
+  TestNavCopyFileA.AddMasterIfMissing(wbGameMasterESM);
+  TestNavCopyFileB := AddNewFileName('NavCopyB.esp', False, False);
+  TestNavCopyFileB.AddMasterIfMissing(wbGameMasterESM);
+  TestNavCopyFileB.AddMasterIfMissing(TestNavCopyFileA.FileName);
+  if xeTestNavCopyTwo then
+    TestNavCopyFileC := TestNavCopyFileB
+  else begin
+    TestNavCopyFileC := AddNewFileName('NavCopyC.esp', False, False);
+    TestNavCopyFileC.AddMasterIfMissing(wbGameMasterESM);
+    TestNavCopyFileC.AddMasterIfMissing(TestNavCopyFileA.FileName);
+  end;
+
+  for i := 0 to Pred(lGroup.ElementCount) do begin
+    if Length(TestNavCopyRecordsA) >= xeTestNavCopyCount then
+      Break;
+    if not Supports(lGroup.Elements[i], IwbMainRecord, lSource) then
+      Continue;
+    if not lSource.CanCopy or not Assigned(lSource.ElementBySignature['FULL']) then
+      Continue;
+    lRecordA := wbCopyElementToFile(lSource, TestNavCopyFileA, True, True, '', '', '', '', False) as IwbMainRecord;
+    if not Assigned(lRecordA) then
+      Continue;
+    lRecordB := wbCopyElementToFile(lRecordA, TestNavCopyFileB, False, True, '', '', '', '', False) as IwbMainRecord;
+    if not Assigned(lRecordB) then
+      raise Exception.Create('no override of ' + lRecordA.Name + ' was created');
+    lRecordB.ElementEditValues['FULL'] := lRecordB.ElementEditValues['FULL'] + ' (B)';
+    if Assigned(lRecordB.ElementByPath['DATA - General\Priority']) then
+      lRecordB.ElementNativeValues['DATA - General\Priority'] := (Integer(lRecordB.ElementNativeValues['DATA - General\Priority']) + 1) and $FF;
+    if xeTestNavCopyTwo then
+      lRecordC := lRecordB
+    else begin
+      lRecordC := wbCopyElementToFile(lRecordA, TestNavCopyFileC, False, True, '', '', '', '', False) as IwbMainRecord;
+      if not Assigned(lRecordC) then
+        raise Exception.Create('no second override of ' + lRecordA.Name + ' was created');
+      lRecordC.ElementEditValues['FULL'] := lRecordC.ElementEditValues['FULL'] + ' (C)';
+      if Assigned(lRecordC.ElementByPath['DATA - General\Priority']) then
+        lRecordC.ElementNativeValues['DATA - General\Priority'] := (Integer(lRecordC.ElementNativeValues['DATA - General\Priority']) + 2) and $FF;
+    end;
+    SetLength(TestNavCopyRecordsA, Succ(Length(TestNavCopyRecordsA)));
+    TestNavCopyRecordsA[High(TestNavCopyRecordsA)] := lRecordA;
+    SetLength(TestNavCopyRecordsB, Succ(Length(TestNavCopyRecordsB)));
+    TestNavCopyRecordsB[High(TestNavCopyRecordsB)] := lRecordB;
+    SetLength(TestNavCopyRecordsC, Succ(Length(TestNavCopyRecordsC)));
+    TestNavCopyRecordsC[High(TestNavCopyRecordsC)] := lRecordC;
+  end;
+  if Length(TestNavCopyRecordsA) < 1 then
+    raise Exception.Create('no QUST record could be copied from ' + lGameMaster.FileName);
+
+  for i := Low(TestNavCopyRecordsA) to High(TestNavCopyRecordsA) do begin
+    lNode := FindNodeForElement(TestNavCopyRecordsA[i]);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + TestNavCopyRecordsA[i].Name);
+    vstNav.FullyVisible[lNode] := True;
+    lNode := FindNodeForElement(TestNavCopyRecordsB[i]);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + TestNavCopyRecordsB[i].Name);
+    vstNav.FullyVisible[lNode] := True;
+    lNode := FindNodeForElement(TestNavCopyRecordsC[i]);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + TestNavCopyRecordsC[i].Name);
+    vstNav.FullyVisible[lNode] := True;
+    if i = 0 then
+      vstNav.FocusedNode := lNode;
+  end;
+  AddMessage(Format('[Test Nav Copy] %d QUST records copied as new into %s and overridden with a changed FULL and priority in %s and again in %s',
+    [Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName, TestNavCopyFileB.FileName, TestNavCopyFileC.FileName]));
+  if xeTestNavCopySave then begin
+    wbCurrentContext.DontSave := False;
+    AddMessage('[Test Nav Copy] the fixture will be saved on shutdown; no copy in this run');
+    CheckResult := 0;
+    TestNavCopyWrite;
+    TestNavCopyPhase := 3;
+  end;
+end;
+
+procedure TfrmMain.TestNavCopyLocateOnDisk;
+var
+  i        : Integer;
+  lGroup   : IwbContainerElementRef;
+  lRecordA : IwbMainRecord;
+  lRecordB : IwbMainRecord;
+  lNode    : PVirtualNode;
+begin
+  for i := Low(Files) to High(Files) do
+    if SameText(Files[i].FileName, xeTestNavCopyMaster) then
+      TestNavCopyFileA := Files[i]
+    else if SameText(Files[i].FileName, xeTestNavCopyPlugin) then
+      TestNavCopyFileB := Files[i];
+  if not Assigned(TestNavCopyFileA) or not Assigned(TestNavCopyFileB) then
+    raise Exception.Create(xeTestNavCopyMaster + ' and ' + xeTestNavCopyPlugin + ' must both be loaded');
+  TestNavCopyFileC := TestNavCopyFileB;
+  if not Supports(TestNavCopyFileA.GroupBySignature['QUST'], IwbContainerElementRef, lGroup) then
+    raise Exception.Create('no QUST group in ' + TestNavCopyFileA.FileName);
+  for i := 0 to Pred(lGroup.ElementCount) do begin
+    if Length(TestNavCopyRecordsA) >= xeTestNavCopyCount then
+      Break;
+    if not Supports(lGroup.Elements[i], IwbMainRecord, lRecordA) then
+      Continue;
+    lRecordB := TestNavCopyFileB.ContainedRecordByLoadOrderFormID[lRecordA.LoadOrderFormID, False];
+    if not Assigned(lRecordB) then
+      Continue;
+    SetLength(TestNavCopyRecordsA, Succ(Length(TestNavCopyRecordsA)));
+    TestNavCopyRecordsA[High(TestNavCopyRecordsA)] := lRecordA;
+    SetLength(TestNavCopyRecordsB, Succ(Length(TestNavCopyRecordsB)));
+    TestNavCopyRecordsB[High(TestNavCopyRecordsB)] := lRecordB;
+    SetLength(TestNavCopyRecordsC, Succ(Length(TestNavCopyRecordsC)));
+    TestNavCopyRecordsC[High(TestNavCopyRecordsC)] := lRecordB;
+  end;
+  if Length(TestNavCopyRecordsA) < 1 then
+    raise Exception.Create('no record of ' + TestNavCopyFileA.FileName + ' is overridden by ' + TestNavCopyFileB.FileName);
+  for i := Low(TestNavCopyRecordsA) to High(TestNavCopyRecordsA) do begin
+    lNode := FindNodeForElement(TestNavCopyRecordsA[i]);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + TestNavCopyRecordsA[i].Name);
+    vstNav.FullyVisible[lNode] := True;
+    lNode := FindNodeForElement(TestNavCopyRecordsB[i]);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + TestNavCopyRecordsB[i].Name);
+    vstNav.FullyVisible[lNode] := True;
+    if i = 0 then
+      vstNav.FocusedNode := lNode;
+  end;
+  AddMessage(Format('[Test Nav Copy] %d QUST records of %s loaded from disk are overridden by %s loaded from disk',
+    [Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName, TestNavCopyFileB.FileName]));
+end;
+
+procedure TestNavCopyProgress(const s: string);
+begin
+  if Assigned(frmMain) then
+    frmMain.TestNavCopyPaintAll;
+  GeneralProgress(s);
+end;
+
+procedure TfrmMain.TestNavCopyCopy;
+var
+  i          : Integer;
+  lNode      : PVirtualNode;
+  lModified  : Integer;
+begin
+  TestNavCopyPaintAll;
+  TestNavCopyCollect('pre', False);
+  if TestNavCopyControlMisses > 0 then begin
+    AddMessage(Format('[Test Nav Copy] NO VERDICT: %d of %d overriding nodes did not show a conflict before the copy',
+      [TestNavCopyControlMisses, Length(TestNavCopyRecordsC)]));
+    CheckResult := 2;
+    TestNavCopyWrite;
+    TestNavCopyPhase := 3;
+    Exit;
+  end;
+
+  vstNav.ClearSelection;
+  for i := Low(TestNavCopyRecordsC) to High(TestNavCopyRecordsC) do begin
+    lNode := FindNodeForElement(TestNavCopyRecordsC[i]);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + TestNavCopyRecordsC[i].Name);
+    vstNav.Selected[lNode] := True;
+    if i = 0 then
+      vstNav.FocusedNode := lNode;
+  end;
+
+  SetLength(_PreviousCopyIntoSelectedModules, 1);
+  _PreviousCopyIntoSelectedModules[0] := PwbModuleInfo(TestNavCopyFileA.ModuleInfo);
+  AddMessage(Format('[Test Nav Copy] copying the %d selected records of %s as override with overwriting into %s, painting every nav node at each progress call',
+    [Length(TestNavCopyRecordsC), TestNavCopyFileC.FileName, TestNavCopyFileA.FileName]));
+  if not xeTestNavCopyNoTouch then
+    _wbProgressCallback := TestNavCopyProgress;
+  try
+    mniNavCopyIntoClick(mniNavCopyAsOverrideWithOverwrite);
+  finally
+    _wbProgressCallback := GeneralProgress;
+  end;
+
+  lModified := 0;
+  for i := Low(TestNavCopyRecordsA) to High(TestNavCopyRecordsA) do
+    if TestNavCopyRecordsA[i].ElementEditValues['FULL'] = TestNavCopyRecordsC[i].ElementEditValues['FULL'] then
+      Inc(lModified);
+  AddMessage(Format('[Test Nav Copy] copy returned; %d of %d records in %s now carry the FULL of their override', [lModified, Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName]));
+  if lModified < Length(TestNavCopyRecordsA) then begin
+    AddMessage('[Test Nav Copy] NO VERDICT: the copy did not reach every record');
+    CheckResult := 2;
+    TestNavCopyWrite;
+    TestNavCopyPhase := 3;
+  end;
+end;
+
+procedure TfrmMain.TestNavCopyVerify;
+var
+  lNode  : PVirtualNode;
+  lImage : Vcl.Graphics.TBitmap;
+begin
+  if xeTestNavCopyNoTouch then begin
+    lNode := FindNodeForElement(TestNavCopyRecordsC[0]);
+    if Assigned(lNode) then begin
+      vstNav.ScrollIntoView(lNode, True);
+      vstNav.Repaint;
+    end;
+    DoProcessMessages;
+    lImage := GetFormImage;
+    try
+      lImage.SaveToFile(ChangeFileExt(xeTestNavCopyFile, '.bmp'));
+    finally
+      lImage.Free;
+    end;
+    AddMessage('[Test Nav Copy] no explicit paint after the copy; the form image is ' + ChangeFileExt(xeTestNavCopyFile, '.bmp'));
+  end else
+    TestNavCopyPaintAll;
+  TestNavCopyCollect('post', True);
+  if TestNavCopyStale > 0 then
+    CheckResult := 1
+  else
+    CheckResult := 0;
+  AddMessage(Format('[Test Nav Copy] %d STALE, %d WOULD-REFRESH nav nodes after the copy', [TestNavCopyStale, TestNavCopyWouldRefresh]));
+  TestNavCopyWrite;
+end;
+
+procedure TfrmMain.TestNavCopyPaintAll;
+var
+  lNode   : PVirtualNode;
+  lColor  : TColor;
+  lAction : TItemEraseAction;
+begin
+  lNode := vstNav.GetFirstInitialized;
+  while Assigned(lNode) do begin
+    lColor := clNone;
+    lAction := eaDefault;
+    vstNavBeforeItemErase(vstNav, vstNav.Canvas, lNode, Default(TRect), lColor, lAction);
+    lNode := vstNav.GetNextInitialized(lNode);
+  end;
+end;
+
+procedure TfrmMain.TestNavCopyCollect(const aPhase: string; aWithTruth: Boolean);
+const
+  cTab = #9;
+var
+  lNode     : PVirtualNode;
+  lNodeData : PNavNodeData;
+  lRecord   : IwbMainRecord;
+  lRecords  : TDynMainRecords;
+  lNodes    : TNodeArray;
+  lGens     : TArray<Integer>;
+  i         : Integer;
+  lCA       : TConflictAll;
+  lCT       : TConflictThis;
+  lRow      : string;
+  lVerdict  : string;
+begin
+  lNode := vstNav.GetFirstInitialized;
+  while Assigned(lNode) do begin
+    lNodeData := vstNav.GetNodeData(lNode);
+    if Assigned(lNodeData) and Supports(lNodeData.Element, IwbMainRecord, lRecord) and (lRecord.Signature <> wbHeaderSignature) then
+      if lRecord._File.Equals(TestNavCopyFileA) or lRecord._File.Equals(TestNavCopyFileB) or lRecord._File.Equals(TestNavCopyFileC) then begin
+        SetLength(lNodes, Succ(Length(lNodes)));
+        lNodes[High(lNodes)] := lNode;
+        SetLength(lRecords, Succ(Length(lRecords)));
+        lRecords[High(lRecords)] := lRecord;
+        SetLength(lGens, Succ(Length(lGens)));
+        lGens[High(lGens)] := lRecord.ElementGeneration;
+      end;
+    lNode := vstNav.GetNextInitialized(lNode);
+  end;
+
+  if aWithTruth then
+    for i := Low(lRecords) to High(lRecords) do
+      lRecords[i].ResetConflict;
+
+  for i := Low(lRecords) to High(lRecords) do begin
+    lNodeData := vstNav.GetNodeData(lNodes[i]);
+    lRecord := lRecords[i];
+    lRow := aPhase + cTab +
+            lRecord._File.FileName + cTab +
+            string(lRecord.Signature) + cTab +
+            IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + cTab +
+            lRecord.EditorID + cTab +
+            wbNameConflictAll[lNodeData.ConflictAll] + cTab +
+            wbNameConflictThis[lNodeData.ConflictThis] + cTab +
+            IntToStr(lNodeData.ElementGen) + cTab +
+            IntToStr(lGens[i]);
+    if aWithTruth then begin
+      ConflictLevelForMainRecord(lRecord, lCA, lCT);
+      if (lCA = lNodeData.ConflictAll) and (lCT = lNodeData.ConflictThis) then
+        lVerdict := 'OK'
+      else if lNodeData.ConflictAll = caUnknown then begin
+        lVerdict := 'UNPAINTED';
+        Inc(TestNavCopyWouldRefresh);
+      end else if lNodeData.ElementGen = lGens[i] then begin
+        lVerdict := 'STALE';
+        Inc(TestNavCopyStale);
+      end else begin
+        lVerdict := 'WOULD-REFRESH';
+        Inc(TestNavCopyWouldRefresh);
+      end;
+      lRow := lRow + cTab + wbNameConflictAll[lCA] + cTab + wbNameConflictThis[lCT] + cTab + lVerdict;
+      if lRecord._File.Equals(TestNavCopyFileC) and (lCT <> ctIdenticalToMaster) then
+        TestNavCopyFields(lRecord);
+    end else
+      if lRecord._File.Equals(TestNavCopyFileC) and
+         ((lNodeData.ConflictAll <= caNoConflict) or (lNodeData.ConflictThis = ctIdenticalToMaster)) then
+        Inc(TestNavCopyControlMisses);
+    TestNavCopyRows.Add(lRow);
+  end;
+  AddMessage(Format('[Test Nav Copy] %s: %d nav nodes recorded', [aPhase, Length(lRecords)]));
+end;
+
+procedure TfrmMain.TestNavCopyFields(const aRecord: IwbMainRecord);
+const
+  cTab = #9;
+var
+  lChain : TDynViewNodeDatas;
+  lKey   : string;
+begin
+  lChain := NodeDatasForMainRecord(aRecord);
+  if Length(lChain) < 2 then
+    Exit;
+  lKey := 'field' + cTab + aRecord._File.FileName + cTab + IntToHex(aRecord.LoadOrderFormID.ToCardinal, 8) + cTab;
+  ConflictLevelForChildNodeDatas(lChain, False,
+    aRecord.MasterOrSelf.IsInjected and not ((aRecord.Signature = 'GMST') or (aRecord.Signature = 'DFOB')),
+    TwbConflictConfig.Current,
+    procedure(const aMessage: string) begin PostAddMessage(aMessage); end,
+    procedure(const aNodeDatas: TDynViewNodeDatas; aConflictAll: TConflictAll)
+    var
+      k        : Integer;
+      lElement : IwbElement;
+    begin
+      lElement := nil;
+      for k := Low(aNodeDatas) to High(aNodeDatas) do
+        if Assigned(aNodeDatas[k].Element) then begin
+          lElement := aNodeDatas[k].Element;
+          Break;
+        end;
+      if not Assigned(lElement) then
+        Exit;
+      for k := Low(aNodeDatas) to High(aNodeDatas) do
+        if (k <= High(lChain)) and Assigned(lChain[k].Element) and lChain[k].Element.Equals(aRecord) then
+          if aNodeDatas[k].ConflictThis > ctIdenticalToMaster then
+            TestNavCopyRows.Add(lKey + lElement.Path.Replace(#9, '\t', [rfReplaceAll]) + cTab +
+              wbNameConflictAll[aConflictAll] + cTab + wbNameConflictThis[aNodeDatas[k].ConflictThis]);
+    end);
+end;
+
+procedure TfrmMain.TestNavCopyWrite;
+var
+  lLines : TStringList;
+  lTmp   : string;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit nav tree copy probe');
+    lLines.Add('# ' + wbApplicationTitle);
+    lLines.Add('#');
+    lLines.Add('# Columns, tab separated: phase / file / signature / load order FormID / EditorID /');
+    lLines.Add('#   node ConflictAll / node ConflictThis / node ElementGen / record ElementGeneration');
+    lLines.Add('#   post rows add: fresh ConflictAll / fresh ConflictThis / verdict');
+    lLines.Add('# STALE = the node shows a verdict a fresh computation contradicts and its generation');
+    lLines.Add('#   equals the record''s, so a repaint would not recompute it.');
+    lLines.Add('# WOULD-REFRESH = the node is wrong but its generation differs, so a repaint recomputes it;');
+    lLines.Add('#   UNPAINTED = the node holds no verdict yet (never painted since its last reset), so a paint computes it.');
+    lLines.Add('#');
+    lLines.Add('# controlMisses = ' + IntToStr(TestNavCopyControlMisses));
+    lLines.Add('# stale = ' + IntToStr(TestNavCopyStale));
+    lLines.Add('# wouldRefresh = ' + IntToStr(TestNavCopyWouldRefresh));
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lLines.AddStrings(TestNavCopyRows);
+    lTmp := xeTestNavCopyFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestNavCopyFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+    AddMessage(Format('[Test Nav Copy] %d rows written to %s', [TestNavCopyRows.Count, xeTestNavCopyFile]));
+  finally
+    lLines.Free;
+  end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -20533,8 +21078,8 @@ begin
         end;
 
         if wbLoaderError then begin
-          if xeTestConflicts then begin
-            wbProgress('Test Conflicts mode FAILED: an error occured while loading modules');
+          if xeTestConflicts or xeTestNavCopy then begin
+            wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
               tmrShutdown.Enabled := True;
@@ -20724,6 +21269,9 @@ begin
             if xeAutoExit then
               tmrShutdown.Enabled := True;
           end;
+
+        if xeTestNavCopy then
+          DoTestNavCopy;
       finally
         Dec(wbShowStartTime);
       end;
