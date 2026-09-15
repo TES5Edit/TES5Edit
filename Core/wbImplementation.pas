@@ -1680,7 +1680,9 @@ type
   protected {private}
     arrSorted        : Boolean;
     arrSortInvalid   : Boolean;
+    arrSortedInCopy  : Boolean;
     arrSizePrefix    : Integer;
+    procedure UpdateSortedAfterCopy;
   protected
     procedure DoInit(aNeedSorted: Boolean); override;
     procedure Init; override;
@@ -22665,8 +22667,18 @@ begin
 
   BasePtr := GetDataBasePtr;
   arrSorted := ArrayDoInit(vbValueDef, Self, BasePtr, dcDataEndPtr, arrSizePrefix);
+  arrSortedInCopy := wbCopyIsRunning > 0;
 
   arrSortInvalid := arrSorted;
+end;
+
+procedure TwbArray.UpdateSortedAfterCopy;
+begin
+  if arrSortedInCopy and (wbCopyIsRunning = 0) then begin
+    arrSortedInCopy := False;
+    arrSorted := wbSortSubRecords and (vbValueDef as IwbArrayDef).Sorted;
+    arrSortInvalid := arrSorted;
+  end;
 end;
 
 function TwbArray.Add(const aName: string; aSilent: Boolean): IwbElement;
@@ -22981,6 +22993,7 @@ var
   Sorting : Boolean;
 begin
   inherited;
+  UpdateSortedAfterCopy;
   if aNeedSorted or wbAlwaysSorted then
     if arrSorted and arrSortInvalid then
       if (Length(cntElements) > 1) then begin
@@ -23053,6 +23066,7 @@ begin
   if wbCompareRawData then
     Exit(False);
 
+  UpdateSortedAfterCopy;
   Result := arrSorted;
 end;
 
@@ -23087,6 +23101,7 @@ procedure TwbArray.Reset;
 begin
   ReleaseElements;
   arrSorted := False;
+  arrSortedInCopy := False;
   arrSortInvalid := False;
   inherited;
 end;
