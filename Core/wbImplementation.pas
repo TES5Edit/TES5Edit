@@ -9419,7 +9419,7 @@ begin
         GroupRecord := nil;
 
         BasePtr := dcBasePtr;
-        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+        with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
           Include(dcFlags, dcfDontSave);
           SetSortOrder(-1);
           SetMemoryOrder(Low(Integer));
@@ -10376,7 +10376,7 @@ begin
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -10484,7 +10484,7 @@ begin
       RecordHeaderStruct := wbMainRecordHeader as IwbStructDef;
 
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + wbSizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + GameDefObj.SizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -12676,7 +12676,7 @@ begin
       dcBasePtr := p;
       dcEndPtr := nil;
     end else begin
-      dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
+      dcDataBasePtr := PByte(dcBasePtr) + mrGameDefObj.SizeOfMainRecordStruct;
       dcDataEndPtr := PByte(dcDataBasePtr) + mrStruct.mrsDataSize;
       dcEndPtr := dcDataEndPtr;
     end;
@@ -12801,15 +12801,17 @@ begin
     Exit;
   if MyBase^.mrsDataSize <> OtherBase^.mrsDataSize then
     Exit;
-  var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
+  var lGameDef := GameDefObj;
+  var lFormIDInHeader := gcFormIDInRecordHeader in lGameDef.Capabilities;
   if MyBase^.mrsFlags(lFormIDInHeader)._Flags <> OtherBase^.mrsFlags(lFormIDInHeader)._Flags then
     Exit;
   if lFormIDInHeader and (MyBase^.mrsFormID(lFormIDInHeader)^ <> OtherBase^.mrsFormID(lFormIDInHeader)^) then
     Exit;
 
-  Inc(PByte(MyBase), wbSizeOfMainRecordStruct);
-  Inc(PByte(OtherBase), wbSizeOfMainRecordStruct);
-  Dec(MySize, wbSizeOfMainRecordStruct);
+  var lSizeOfMainRecordStruct := lGameDef.SizeOfMainRecordStruct;
+  Inc(PByte(MyBase), lSizeOfMainRecordStruct);
+  Inc(PByte(OtherBase), lSizeOfMainRecordStruct);
+  Dec(MySize, lSizeOfMainRecordStruct);
 
   Result := CompareMem(MyBase, OtherBase, MySize);
 end;
@@ -13071,7 +13073,7 @@ begin
     RecordHeader := GetElementBySortOrder( (-1) + GetAdditionalElementCount );
     if Assigned(RecordHeader) then begin
       BasePtr := p;
-      RecordHeader.InformStorage(BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct);
+      RecordHeader.InformStorage(BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct);
     end;
   end;
 
@@ -13110,7 +13112,7 @@ begin
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -13372,6 +13374,7 @@ type
     odcSizePlaced   : Integer;
     odcCellSlot     : Int64;
     odcCellStart    : Int64;
+    odcSizeOfMainRecordStruct : Integer;
   end;
 
 threadvar
@@ -13666,7 +13669,7 @@ begin
 
   Value := aEnd - _OffsetData.odcCellStart;
   if aHasChildren then
-    Inc(Value, wbSizeOfMainRecordStruct);
+    Inc(Value, _OffsetData.odcSizeOfMainRecordStruct);
 
   wbWriteCellSizeEntry(_OffsetData.odcCellSlot, Value, aStream);
   _OffsetData.odcCellSlot := -1;
@@ -13746,10 +13749,11 @@ begin
           aStart + (NativeUInt(Internal.mrStruct) - NativeUInt(aBase)), True);
 
         if _OffsetData.odcCellSlot >= 0 then begin
-          CellSize := wbSizeOfMainRecordStruct + Int64(Internal.mrStruct.mrsDataSize);
+          var lSizeOfMainRecordStruct := MainRecord.GameDefObj.SizeOfMainRecordStruct;
+          CellSize := lSizeOfMainRecordStruct + Int64(Internal.mrStruct.mrsDataSize);
           ChildGroup := MainRecord.ChildGroup;
           if Assigned(ChildGroup) then
-            Inc(CellSize, wbSizeOfMainRecordStruct + Int64(ChildGroup.DataSize) + wbSizeOfMainRecordStruct);
+            Inc(CellSize, lSizeOfMainRecordStruct + Int64(ChildGroup.DataSize) + lSizeOfMainRecordStruct);
           wbWriteCellSizeEntry(_OffsetData.odcCellSlot, CellSize, aStream);
           _OffsetData.odcCellSlot := -1;
         end;
@@ -14524,7 +14528,7 @@ begin
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -14665,7 +14669,7 @@ begin
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + wbSizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -15292,6 +15296,8 @@ var
   begin
     KAR := wbCreateKeepAliveRoot;
 
+    var lGameDef := GameDefObj;
+    var lSizeOfMainRecordStruct := lGameDef.SizeOfMainRecordStruct;
     RecordPosition := aStream.Position;
     Signature := GetSignature;
 
@@ -15300,6 +15306,7 @@ var
         wbWriteWorldOffsetDataEntry(Self, aStream, RecordPosition);
     end else if Signature = 'WRLD' then begin
       _OffsetData := Default(TwbOffsetDataContext);
+      _OffsetData.odcSizeOfMainRecordStruct := lSizeOfMainRecordStruct;
       if (mrsOFSTReserved in mrStates) and (RecordPosition > 0) then begin
         Exclude(mrStates, mrsOFSTReserved);
         if not GetIsCompressed then
@@ -15348,14 +15355,14 @@ var
         Stream := MS;
       end;
 
-      Stream.WriteBuffer(mrs, wbSizeOfMainRecordStruct );
+      Stream.WriteBuffer(mrs, lSizeOfMainRecordStruct );
 
       if wbForceNewHeader then begin
         var lNewHeaderAddon := wbNewHeaderAddon;
         Stream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
       end;
 
-      if mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsCompressed then begin
+      if mrStruct.mrsFlags(gcFormIDInRecordHeader in lGameDef.Capabilities).IsCompressed then begin
 
         MemoryStream := TMemoryStream.Create;
         try
@@ -15375,9 +15382,9 @@ var
       end;
 
       if wbForceNewHeader then
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct - SizeOf(Cardinal)
+        DataSize := Stream.Size - lSizeOfMainRecordStruct - SizeOf(Cardinal)
       else
-        DataSize := Stream.Size - wbSizeOfMainRecordStruct;
+        DataSize := Stream.Size - lSizeOfMainRecordStruct;
       Stream.Position := 4;
       Stream.WriteBuffer(DataSize, SizeOf(DataSize));
 
@@ -15395,8 +15402,8 @@ var
 
       CurrentPosition := aStream.Position;
       aStream.WriteBuffer(dcBasePtr^, NativeUInt(dcEndPtr) - NativeUInt(dcBasePtr));
-      if CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
-        Assert(CurrentPosition + wbSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
+      if CurrentPosition + lSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position then
+        Assert(CurrentPosition + lSizeOfMainRecordStruct + mrStruct.mrsDataSize <> aStream.Position);
 
     end;
 
@@ -18196,7 +18203,7 @@ begin
 
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := aContainer.GameDefObj.SizeOfMainRecordStruct;
   BasePtr.grsLabel := aMainRecord.FormID.ToCardinal;
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
@@ -18242,7 +18249,7 @@ begin
 
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := aContainer.GameDefObj.SizeOfMainRecordStruct;
   BasePtr.grsLabel := aLabel;
   BasePtr.grsGroupType := aType;
   BasePtr.grsStamp := 0;
@@ -18261,7 +18268,7 @@ var
 begin
   New(BasePtr);
   BasePtr.grsSignature := 'GRUP';
-  BasePtr.grsGroupSize := wbSizeOfMainRecordStruct;
+  BasePtr.grsGroupSize := aContainer.GameDefObj.SizeOfMainRecordStruct;
   BasePtr.grsLabel := Cardinal(aSignature);
   BasePtr.grsGroupType := 0;
   BasePtr.grsStamp := 0;
@@ -18595,8 +18602,9 @@ var
   Dummy: Integer;
 begin
   if Assigned(dcEndPtr) then begin
-    dcDataBasePtr := PByte(dcBasePtr) + wbSizeOfMainRecordStruct;
-    if grStruct.grsGroupSize < wbSizeOfMainRecordStruct then
+    var lSizeOfMainRecordStruct := GameDefObj.SizeOfMainRecordStruct;
+    dcDataBasePtr := PByte(dcBasePtr) + lSizeOfMainRecordStruct;
+    if grStruct.grsGroupSize < lSizeOfMainRecordStruct then
       raise Exception.CreateFmt('[%s] %s size is invalid.', [GetFile.FileName, GetName]);
 
     dcDataEndPtr := PByte(dcBasePtr) + grStruct.grsGroupSize;
@@ -19390,7 +19398,7 @@ var
 begin
   CurrentPosition := aStream.Position;
   grs := grStruct^;
-  aStream.WriteBuffer(grs, wbSizeOfMainRecordStruct );
+  aStream.WriteBuffer(grs, GameDefObj.SizeOfMainRecordStruct );
   if wbForceNewHeader then begin
     var lNewHeaderAddon := wbNewHeaderAddon;
     aStream.WriteBuffer(lNewHeaderAddon, SizeOf(lNewHeaderAddon) );
@@ -25436,7 +25444,7 @@ begin
       end;
     end;
     p := MainRecordInternal.mrStruct;
-    InformStorage(p, PByte(p) + wbSizeOfMainRecordStruct);
+    InformStorage(p, PByte(p) + GameDefObj.SizeOfMainRecordStruct);
 
     with MainRecordInternal do begin
       if ToggleDeleted then
