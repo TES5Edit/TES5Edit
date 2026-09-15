@@ -92,7 +92,7 @@ type
     procedure Init;
     function GetSize: Integer;
     function BlockForCell(const Cell: TwbGridCell; LODLevel: Integer): TwbGridCell;
-    procedure LoadFromData(const aGameDef: IwbGameDef; const aData: TBytes);
+    procedure LoadFromData(const aGameDef: TwbGameDef; const aData: TBytes);
     property Size: Integer read GetSize;
   end;
 
@@ -147,7 +147,7 @@ type
   // handling atlas and LST file
   TwbLodTES5TreeList = class
   private
-    fGameDef: IwbGameDef;
+    fGameDef: TwbGameDef;
     fWorldspaceID: string;
     // structure for LST file
     fTreesList: array of TwbLodTES5TreeType;
@@ -165,7 +165,7 @@ type
     function GetAtlasRect(Index: Integer): TAtlasRect;
     function GetTreeByFormID(const aFormID: TwbFormID): PwbLodTES5Tree;
   public
-    constructor Create(const aGameDef: IwbGameDef; const WorldspaceID: string);
+    constructor Create(const aGameDef: TwbGameDef; const WorldspaceID: string);
     destructor Destroy; override;
     procedure LoadFromData(const aData: TBytes);
     procedure SaveToFile(const aFileName: string);
@@ -177,7 +177,7 @@ type
     function BuildAtlas(MaxAtlasSize: Integer): Boolean;
     function BillboardFileName(const aFileName, aModelName: string; const aFormID: TwbFormID): string;
     function AddTree(const aFileName, aModelName: string; const aFormID: TwbFormID; aWidth, aHeight: Single): PwbLodTES5Tree;
-    property GameDef: IwbGameDef read fGameDef;
+    property GameDef: TwbGameDef read fGameDef;
     property WorldspaceID: string read fWorldspaceID write fWorldspaceID;
     property ListFileName: string read GetListFileName;
     property AtlasFileName: string read GetAtlasFileName;
@@ -209,16 +209,16 @@ type
 
 function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
 function wbLODSettingsFileName(const WorldspaceID: string): string; overload;
-function wbLODSettingsFileName(const aGameDef: IwbGameDef; const WorldspaceID: string): string; overload;
-function wbLODTreeBlockFileExt(const aGameDef: IwbGameDef): string;
-function wbDefaultNormalTexture(const aGameDef: IwbGameDef): string;
-function wbDefaultSpecularTexture(const aGameDef: IwbGameDef): string;
+function wbLODSettingsFileName(const aGameDef: TwbGameDef; const WorldspaceID: string): string; overload;
+function wbLODTreeBlockFileExt(const aGameDef: TwbGameDef): string;
+function wbDefaultNormalTexture(const aGameDef: TwbGameDef): string;
+function wbDefaultSpecularTexture(const aGameDef: TwbGameDef): string;
 procedure wbPrepareImageAlpha(const img: TImageData; fmt: TImageFormat; threshold: Integer = 0);
 
 procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 
 procedure wbBuildAtlas(
-  const aGameDef: IwbGameDef;
+  const aGameDef: TwbGameDef;
   var Images: TSourceAtlasTextures;
   aWidth, aHeight: Integer;
   aName: string;
@@ -236,7 +236,7 @@ procedure wbBuildAtlasFromTexturesList(
 ); overload;
 
 procedure wbBuildAtlasFromTexturesList(
-  const aGameDef: IwbGameDef;
+  const aGameDef: TwbGameDef;
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -248,7 +248,7 @@ procedure wbBuildAtlasFromTexturesList(
 procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile); overload;
 
-procedure wbBuildAtlasFromAtlasMap(const aGameDef: IwbGameDef; slMap: TStrings; aBrightness: integer;
+procedure wbBuildAtlasFromAtlasMap(const aGameDef: TwbGameDef; slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile); overload;
 
 procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
@@ -341,7 +341,7 @@ begin
   Result := wbLODSettingsFileName(_CurrentGameDef, WorldspaceID);
 end;
 
-function wbLODSettingsFileName(const aGameDef: IwbGameDef; const WorldspaceID: string): string;
+function wbLODSettingsFileName(const aGameDef: TwbGameDef; const WorldspaceID: string): string;
 begin
   if aGameDef.IsOblivion then
     Result := ''
@@ -351,7 +351,7 @@ begin
     Result := 'lodsettings\' + WorldspaceID + '.lod';
 end;
 
-function wbLODTreeBlockFileExt(const aGameDef: IwbGameDef): string;
+function wbLODTreeBlockFileExt(const aGameDef: TwbGameDef): string;
 begin
   if aGameDef.IsSkyrim then
     Result := 'btt'
@@ -361,7 +361,7 @@ begin
     Result := '';
 end;
 
-function wbDefaultNormalTexture(const aGameDef: IwbGameDef): string;
+function wbDefaultNormalTexture(const aGameDef: TwbGameDef): string;
 begin
   if aGameDef.IsFallout4 then
     Result := 'textures\shared\flatflat_n.dds'
@@ -373,7 +373,7 @@ begin
     Result := '';
 end;
 
-function wbDefaultSpecularTexture(const aGameDef: IwbGameDef): string;
+function wbDefaultSpecularTexture(const aGameDef: TwbGameDef): string;
 begin
   if aGameDef.IsFallout4 then
     Result := 'textures\shared\white01_s.dds'
@@ -452,7 +452,7 @@ begin
   Result.y := SWCell.y + ((Cell.y - SWCell.y) div LODLevel) * LODLevel;
 end;
 
-procedure TwbLodSettings.LoadFromData(const aGameDef: IwbGameDef; const aData: TBytes);
+procedure TwbLodSettings.LoadFromData(const aGameDef: TwbGameDef; const aData: TBytes);
 const
   sError = 'Invalid lodsettings file';
 begin
@@ -593,7 +593,7 @@ end;
 
 { TwbLodTES5TreeList }
 
-constructor TwbLodTES5TreeList.Create(const aGameDef: IwbGameDef; const WorldspaceID: string);
+constructor TwbLodTES5TreeList.Create(const aGameDef: TwbGameDef; const WorldspaceID: string);
 begin
   fGameDef := aGameDef;
   fWorldspaceID := WorldspaceID;
@@ -1225,7 +1225,7 @@ begin
 end;
 
 procedure wbBuildAtlas(
-  const aGameDef: IwbGameDef;
+  const aGameDef: TwbGameDef;
   var Images: TSourceAtlasTextures;
   aWidth, aHeight: Integer;
   aName: string;
@@ -1438,7 +1438,7 @@ begin
 end;
 
 procedure wbBuildAtlasFromTexturesList(
-  const aGameDef: IwbGameDef;
+  const aGameDef: TwbGameDef;
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -1625,7 +1625,7 @@ begin
   wbBuildAtlasFromAtlasMap(_CurrentGameDef, slMap, aBrightness, GammaR, GammaG, GammaB, Settings);
 end;
 
-procedure wbBuildAtlasFromAtlasMap(const aGameDef: IwbGameDef; slMap: TStrings; aBrightness: integer;
+procedure wbBuildAtlasFromAtlasMap(const aGameDef: TwbGameDef; slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 var
   l, i: integer;

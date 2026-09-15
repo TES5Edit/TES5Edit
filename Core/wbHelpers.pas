@@ -419,7 +419,7 @@ begin
   if Sig = 'LVSC' then s1 := 'Space Cell';
   if Sig = 'LVSP' then s1 := 'Spell';
 
-  if aMainRecord._File.Context.GameDef.IsOblivion then
+  if aMainRecord.GameDefObj.IsOblivion then
     RefPath := s1
   else
     RefPath := 'LVLO\' + s1;

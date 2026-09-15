@@ -2452,7 +2452,7 @@ begin
 
     end else begin
 
-      if gcFormIDInRecordHeader in flContext.GameDef.Capabilities then begin
+      if gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities then begin
         var lFixedFormID := aRecord.FixedFormID;
         if flSetContainsFixedFormID(lFixedFormID) then
           raise EwbSkipLoad.Create('Duplicate FormID [' + lFixedFormID.ToString(True) + '] in file ' + GetName);
@@ -2641,7 +2641,7 @@ var
         if not Assigned(lFile) then
           raise Exception.CreateFmt('[AddMasters] Requested file to add is not loaded: "%s"', [lMasters[i]]);
 
-        if lFile.IsBlueprint and flContext.GameDef.IsStarfield then
+        if lFile.IsBlueprint and flContextObj.GameDefObj.IsStarfield then
           raise Exception.CreateFmt('[AddMasters] File [%s] not added. %s does not support blueprint files as masters to other modules.', [lMasters[i], wbGameName]);
 
         var lIsLightFile := lFile.IsLight;
@@ -2702,7 +2702,7 @@ begin;
         t := ExtractFileExt(s);
         if SameText(t, '.esp') and (not wbAllowESPMasters) then
           raise Exception.CreateFmt('[AddMasters] You cannot add a .esp as a master in %s.', [wbGameName]);
-        if SameText(t, '.esm') or SameText(t, '.esp') or (flContext.GameDef.IsLightSupported and SameText(t, '.esl')) then
+        if SameText(t, '.esm') or SameText(t, '.esp') or (flContextObj.GameDefObj.IsLightSupported and SameText(t, '.esl')) then
           lMasters.Add(s);
       end;
 
@@ -2711,7 +2711,7 @@ begin;
 
     Inner;
 
-    if gcMasterSlotsInFormID in flContext.GameDef.Capabilities then
+    if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
       if Length(flOldMasters) <> Length(flMasters) then begin
         var lOldCount := TwbSlotCounts.Create(flOldMasters);
         var lNewCount := TwbSlotCounts.Create(flMasters);
@@ -2845,7 +2845,7 @@ begin
   if Length(cntElements) < 1 then
     Exit;
 
-  var lGameDef := flContext.GameDef;
+  var lGameDef := flContextObj.GameDefObj;
   cntElements[0].Reached;
 
   for i := Low(flRecords) to High(flRecords) do
@@ -3255,7 +3255,7 @@ begin
           Assert(SameText(Rec.EditValue, flMasters[i].FileName), '[TwbFile.CleanMasters] not SameText(Rec.EditValue, flMasters[i].FileName)');
         end;
 
-        if gcMasterSlotsInFormID in flContext.GameDef.Capabilities then
+        if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
         begin
           var lOldCount := TwbSlotCounts.Create(flOldMasters);
           var lNewCount := TwbSlotCounts.Create(flMasters);
@@ -3389,7 +3389,7 @@ var
 begin
   flContext := wbCurrentContext;
   flContextObj := _CurrentContext;
-  var lGameDef := flContext.GameDef;
+  var lGameDef := flContextObj.GameDefObj;
   Assert(not (aIsLight and aIsMedium));
 
   Assert((not aIsLight) or lGameDef.IsLightSupported);
@@ -3465,7 +3465,7 @@ var
 begin
   flContext := wbCurrentContext;
   flContextObj := _CurrentContext;
-  var lGameDef := flContext.GameDef;
+  var lGameDef := flContextObj.GameDefObj;
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
   Include(flStates, fsLightCompatible);
@@ -3927,7 +3927,7 @@ end;
 
 function TwbFile.flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
 begin
-  if not (gcFormIDInRecordHeader in flContext.GameDef.Capabilities) then
+  if not (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) then
     Exit(False);
 
   var ID := aFormID.ToCardinal;
@@ -4405,7 +4405,7 @@ begin
       ((not (fsIsCompareLoad in flStates)) or (fsIsDeltaPatch in flStates))
     );
 
-  if flContext.GameDef.IsStarfield and not wbRedPill then
+  if flContextObj.GameDefObj.IsStarfield and not wbRedPill then
     if [fsIsGameMaster, fsIsHardcoded, fsIsOfficial] * flStates <> [] then
       Exit(False);
 end;
@@ -4417,7 +4417,7 @@ begin
   if wbPseudoMedium then
     Exit(fsPseudoMedium in flStates);
 
-  if not flContext.GameDef.IsMediumSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsMediumSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4432,7 +4432,7 @@ function TwbFile.GetIsMediumDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsMediumSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsMediumSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4447,7 +4447,7 @@ function TwbFile.GetIsBlueprint: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsBlueprintSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsBlueprintSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4462,7 +4462,7 @@ function TwbFile.GetIsBlueprintDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsBlueprintSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsBlueprintSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4490,7 +4490,7 @@ begin
   if wbPseudoLight then
     Exit(fsPseudoLight in flStates);
 
-  if not flContext.GameDef.IsLightSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsLightSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4505,7 +4505,7 @@ function TwbFile.GetIsLightDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsLightSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsLightSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4523,7 +4523,7 @@ begin
   if wbPseudoUpdate then
     Exit(fsPseudoUpdate in flStates);
 
-  if not flContext.GameDef.IsUpdateSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsUpdateSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4538,7 +4538,7 @@ function TwbFile.GetIsUpdateDirect: Boolean;
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsUpdateSupported or GetIsNotPlugin then
+  if not flContextObj.GameDefObj.IsUpdateSupported or GetIsNotPlugin then
     Exit(False);
 
   var SelfRef := Self as IwbContainerElementRef;
@@ -4596,7 +4596,7 @@ var
   V              : Variant;
   i              : Int64;
 begin
-  if (gcHeaderNextObjectID in flContext.GameDef.Capabilities) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
+  if (gcHeaderNextObjectID in flContextObj.GameDefObj.Capabilities) and (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then begin
     V := Header.ElementNativeValues['HEDR\Next Object ID'];
     i := V;
     Result := i;
@@ -4608,7 +4608,7 @@ procedure TwbFile.SetNextObjectID(aObjectID: Cardinal);
 var
   Header         : IwbMainRecord;
 begin
-  if gcHeaderNextObjectID in flContext.GameDef.Capabilities then
+  if gcHeaderNextObjectID in flContextObj.GameDefObj.Capabilities then
     if (GetElementCount > 0) and Supports(GetElement(0), IwbContainerElementRef, Header) then
       Header.ElementNativeValues['HEDR\Next Object ID'] := aObjectID;
 end;
@@ -5045,7 +5045,7 @@ begin
   if Length(flInjectedRecords) > 0 then begin
     if FindInjectedID(aRecord.FixedFormID, i) then begin
       if wbHasProgressCallback then
-        if (gcFormIDInRecordHeader in flContext.GameDef.Capabilities) or not (fsIsHardcoded in flStates) then
+        if (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) or not (fsIsHardcoded in flStates) then
           if ([fsIsHardcoded, fsIsCompareLoad] * flInjectedRecords[i]._File.FileStates = []) then
             wbProgressCallback('<Warning: ' + aRecord.Name + ' was injected into ' + GetFileName + ' which already has been injected with ' + flInjectedRecords[i].Name + ' from ' + flInjectedRecords[i]._File.FileName + ' >');
       (flInjectedRecords[i] as IwbMainRecordInternal).AddOverride(aRecord);
@@ -5055,7 +5055,7 @@ begin
     i := 0;
 
   if wbHasProgressCallback then
-    if (gcFormIDInRecordHeader in flContext.GameDef.Capabilities) or not (fsIsHardcoded in flStates) then
+    if (gcFormIDInRecordHeader in flContextObj.GameDefObj.Capabilities) or not (fsIsHardcoded in flStates) then
       if [fsIsHardcoded, fsIsCompareLoad] * aRecord._File.FileStates = [] then
         if wbReportInjected then
           wbProgressCallback('<Note: ' + aRecord.Name + ' was injected into ' + GetFileName + '>');
@@ -5305,7 +5305,7 @@ var
 begin
   Assert(not (fsMastersUpdating in flStates));
 
-  var lGameDef := flContext.GameDef;
+  var lGameDef := flContextObj.GameDefObj;
   SelfRef := Self as IwbContainerElementRef;
   DoInit(True);
 
@@ -5793,8 +5793,9 @@ var
 
     if flLoadOrder >= 0 then begin
       flContextObj.NextLoadOrder := Max(flContextObj.NextLoadOrder, Succ(flLoadOrder));
-      if flContext.GameDef.IsLightSupported or wbPseudoLight or flContext.GameDef.IsMediumSupported or wbPseudoMedium or flContext.GameDef.IsUpdateSupported or wbPseudoUpdate then begin
-        if (flContext.GameDef.IsUpdateSupported or wbPseudoUpdate) and ((fsPseudoUpdate in flStates) or ((Header.IsUpdate) and not wbIgnoreUpdate)) then
+      var lGameDef := flContextObj.GameDefObj;
+      if lGameDef.IsLightSupported or wbPseudoLight or lGameDef.IsMediumSupported or wbPseudoMedium or lGameDef.IsUpdateSupported or wbPseudoUpdate then begin
+        if (lGameDef.IsUpdateSupported or wbPseudoUpdate) and ((fsPseudoUpdate in flStates) or ((Header.IsUpdate) and not wbIgnoreUpdate)) then
           flLoadOrderFileID := TwbFileID.Invalid
         else if (fsPseudoLight in flStates) or ((Header.IsLight or flFileName.EndsWith(csDotEsl, True)) and not wbIgnoreLight) then
           flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot)
@@ -5847,7 +5848,7 @@ var
   IsInternal  : Boolean;
   EndPtr      : Pointer;
 begin
-  var lGameDef := flContext.GameDef;
+  var lGameDef := flContextObj.GameDefObj;
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
@@ -6232,7 +6233,7 @@ procedure TwbFile.SetIsMedium(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsMediumSupported then
+  if not flContextObj.GameDefObj.IsMediumSupported then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -6252,7 +6253,7 @@ procedure TwbFile.SetIsBlueprint(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsBlueprintSupported then
+  if not flContextObj.GameDefObj.IsBlueprintSupported then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -6272,7 +6273,7 @@ procedure TwbFile.SetIsLight(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsLightSupported then
+  if not flContextObj.GameDefObj.IsLightSupported then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -6292,7 +6293,7 @@ procedure TwbFile.SetIsUpdate(Value: Boolean);
 var
   Header         : IwbMainRecord;
 begin
-  if not flContext.GameDef.IsUpdateSupported then
+  if not flContextObj.GameDefObj.IsUpdateSupported then
     Exit;
   if GetIsNotPlugin then
     Exit;
@@ -6503,7 +6504,7 @@ begin
             wbEndInternalEdit;
           end else
             Assert(False);
-          if gcMasterSlotsInFormID in flContext.GameDef.Capabilities then
+          if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
           begin
             var lOldCount := TwbSlotCounts.Create(flOldMasters);
             var lNewCount := TwbSlotCounts.Create(flMasters);
