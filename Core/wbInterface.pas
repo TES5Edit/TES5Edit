@@ -1057,6 +1057,7 @@ type
     function GetContainingSubRecord: IwbSubRecord;
     function GetFile: IwbFile;
     function GetReferenceFile: IwbFile;
+    function GetGameDef: IwbGameDef;
     function GetSortOrder: Integer;
     procedure SetSortOrder(aSortOrder: Integer);
     function GetMemoryOrder: Integer;
@@ -1180,6 +1181,8 @@ type
       read GetFile;
     property ReferenceFile: IwbFile
       read GetReferenceFile;
+    property GameDef: IwbGameDef
+      read GetGameDef;
     property InjectionSourceFiles: TwbFiles
       read GetInjectionSourceFiles;
 
@@ -6775,14 +6778,10 @@ var
   _CurrentContextRef : IwbGameContext;
 
 function wbGameDefOf(const aElement: IwbElement): IwbGameDef;
-var
-  lFile : IwbFile;
 begin
   Result := nil;
   if Assigned(aElement) then
-    lFile := aElement._File;
-  if Assigned(lFile) then
-    Result := lFile.Context.GameDef;
+    Result := aElement.GameDef;
   if not Assigned(Result) then
     Result := _CurrentGameDef;
 end;
