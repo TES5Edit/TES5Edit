@@ -10109,8 +10109,8 @@ begin
       5,  'Temp ID Owner',
       7,  'Localized',
       8,  'Precalc Data Only',
-      9,  wb<string>.Iff(gcLightPlugins in wbCurrentCapabilities, 'ESL', ''),
-      20, wb<string>.Iff(gcUpdatePlugins in wbCurrentCapabilities, 'Update', '')
+      9,  wb<string>.Iff(gcLightPlugins in Capabilities, 'ESL', ''),
+      20, wb<string>.Iff(gcUpdatePlugins in Capabilities, 'Update', '')
     ], False), True), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
@@ -10902,7 +10902,7 @@ begin
   if GameMode in [gmTES5, gmTES5VR, gmSSE] then
     DefaultLandTexture := 'LDirt02';
   if GameMode in [gmSSE, gmTES5VR, gmEnderalSE] then begin
-    HardcodedRangeAdmitted := (GameMode <> gmTES5VR) or (gcLightPlugins in wbCurrentCapabilities);
+    HardcodedRangeAdmitted := (GameMode <> gmTES5VR) or (gcLightPlugins in Capabilities);
     HardcodedRangeMinVersion := 1.709;
   end;
 end;

@@ -3962,6 +3962,13 @@ type
     gdGameMode         : TwbGameMode;
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
+    gdLiveKeyValid         : Boolean;
+    gdLiveKeyGameMode      : TwbGameMode;
+    gdLiveKeyLightSupport  : Boolean;
+    gdLiveKeyMediumSupport : Boolean;
+    gdLiveKeyUpdateSupport : Boolean;
+    gdLiveKeyCS            : Boolean;
+    gdLiveKeyHNVSE         : Boolean;
     gdDefaultFormVersion : Word;
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
@@ -6407,16 +6414,6 @@ begin
   Result := wbCurrentGameMode in [gmSF1];
 end;
 
-var
-  _CapabilitiesGameMode      : TwbGameMode;
-  _CapabilitiesLightSupport  : Boolean;
-  _CapabilitiesMediumSupport : Boolean;
-  _CapabilitiesUpdateSupport : Boolean;
-  _CapabilitiesCS            : Boolean;
-  _CapabilitiesHNVSE         : Boolean;
-  _CapabilitiesValid         : Boolean;
-  _Capabilities              : TwbGameCapabilities;
-
 function wbComputeCapabilities(aGameMode: TwbGameMode; aLightSupport, aMediumSupport, aUpdateSupport, aCS, aHNVSE: Boolean): TwbGameCapabilities;
 begin
   Result := [];
@@ -6510,45 +6507,27 @@ end;
 
 function wbCurrentCapabilities: TwbGameCapabilities;
 begin
-  if not _CurrentGameDef.gdLive then
-    Exit(_CurrentGameDef.gdCapabilities);
-  if not _CapabilitiesValid or
-     (_CapabilitiesGameMode <> wbGameMode) or
-     (_CapabilitiesLightSupport <> wbHasAddedLightSupport) or
-     (_CapabilitiesMediumSupport <> wbHasAddedMediumSupport) or
-     (_CapabilitiesUpdateSupport <> wbHasAddedUpdateSupport) or
-     (_CapabilitiesCS <> wbCS) or
-     (_CapabilitiesHNVSE <> wbHNVSE) then begin
-    _CapabilitiesGameMode := wbGameMode;
-    _CapabilitiesLightSupport := wbHasAddedLightSupport;
-    _CapabilitiesMediumSupport := wbHasAddedMediumSupport;
-    _CapabilitiesUpdateSupport := wbHasAddedUpdateSupport;
-    _CapabilitiesCS := wbCS;
-    _CapabilitiesHNVSE := wbHNVSE;
-    _Capabilities := wbComputeCapabilities(wbGameMode, wbHasAddedLightSupport, wbHasAddedMediumSupport, wbHasAddedUpdateSupport, wbCS, wbHNVSE);
-    _CapabilitiesValid := True;
-  end;
-  Result := _Capabilities;
+  Result := _CurrentGameDef.Capabilities;
 end;
 
 function wbIsLightSupported: Boolean; inline;
 begin
-  Result := gcLightPlugins in wbCurrentCapabilities;
+  Result := gcLightPlugins in _CurrentGameDef.Capabilities;
 end;
 
 function wbIsMediumSupported: Boolean; inline;
 begin
-  Result := gcMediumPlugins in wbCurrentCapabilities;
+  Result := gcMediumPlugins in _CurrentGameDef.Capabilities;
 end;
 
 function wbIsBlueprintSupported: Boolean; inline;
 begin
-  Result := gcBlueprintPlugins in wbCurrentCapabilities;
+  Result := gcBlueprintPlugins in _CurrentGameDef.Capabilities;
 end;
 
 function wbIsUpdateSupported: Boolean; inline;
 begin
-  Result := gcUpdatePlugins in wbCurrentCapabilities;
+  Result := gcUpdatePlugins in _CurrentGameDef.Capabilities;
 end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource);
@@ -6689,9 +6668,23 @@ end;
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
 begin
   if gdLive then
-    Result := wbCurrentCapabilities
-  else
-    Result := gdCapabilities;
+    if not gdLiveKeyValid or
+       (gdLiveKeyGameMode <> wbGameMode) or
+       (gdLiveKeyLightSupport <> wbHasAddedLightSupport) or
+       (gdLiveKeyMediumSupport <> wbHasAddedMediumSupport) or
+       (gdLiveKeyUpdateSupport <> wbHasAddedUpdateSupport) or
+       (gdLiveKeyCS <> wbCS) or
+       (gdLiveKeyHNVSE <> wbHNVSE) then begin
+      gdLiveKeyGameMode := wbGameMode;
+      gdLiveKeyLightSupport := wbHasAddedLightSupport;
+      gdLiveKeyMediumSupport := wbHasAddedMediumSupport;
+      gdLiveKeyUpdateSupport := wbHasAddedUpdateSupport;
+      gdLiveKeyCS := wbCS;
+      gdLiveKeyHNVSE := wbHNVSE;
+      gdCapabilities := wbComputeCapabilities(wbGameMode, wbHasAddedLightSupport, wbHasAddedMediumSupport, wbHasAddedUpdateSupport, wbCS, wbHNVSE);
+      gdLiveKeyValid := True;
+    end;
+  Result := gdCapabilities;
 end;
 
 function TwbGameDef.GetIsMorrowind: Boolean;

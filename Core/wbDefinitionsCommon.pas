@@ -6313,14 +6313,14 @@ end;
 function IsCS(const aDef1, aDef2: string): string;
 begin
   Result := aDef2;
-  if gcCommunityShaders in wbCurrentCapabilities then
+  if gcCommunityShaders in _CurrentGameDef.Capabilities then
     Result := aDef1;
 end;
 
 function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority;
 begin
   Result := aDef2;
-  if gcHNVSE in wbCurrentCapabilities then
+  if gcHNVSE in _CurrentGameDef.Capabilities then
     Result := aDef1;
 end;
 
@@ -9171,7 +9171,7 @@ end;
 
 function wbModelInfo(const aSignature: TwbSignature; aName: string = ''): IwbRecordMemberDef;
 begin
-  if gcModelTextureFileHashList in wbCurrentCapabilities then begin
+  if gcModelTextureFileHashList in _CurrentGameDef.Capabilities then begin
     if aName = '' then
       aName := 'Textures';
 
@@ -9296,7 +9296,7 @@ end;
 
 function wbModelInfos(const aSignature: TwbSignature; aName: string = ''; const aDontShow  : TwbDontShowCallback = nil): IwbRecordMemberDef;
 begin
-  if not (gcModelTextureFileHashList in wbCurrentCapabilities) then
+  if not (gcModelTextureFileHashList in _CurrentGameDef.Capabilities) then
     raise Exception.Create('Not Supported');
 
   if aName = '' then
@@ -9689,7 +9689,7 @@ begin
   Result :=
     wbStruct(NAM0, 'Weather Colors', [
       wbWeatherTimeOfDay('Sky-Upper'),
-      IfThen(not (gcWeatherExtendedColors in wbCurrentCapabilities),
+      IfThen(not (gcWeatherExtendedColors in _CurrentGameDef.Capabilities),
         wbWeatherTimeOfDay('Fog'),
         wbWeatherTimeOfDay('Fog Near')),
       IsTES4(
@@ -9706,25 +9706,25 @@ begin
         IsFO3(
           wbWeatherTimeOfDay('Clouds (Unused)'),
           wbWeatherTimeOfDay('Effect Lighting'))),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Diffuse')),
         nil),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(31, wbWeatherTimeOfDay('Cloud LOD Ambient')),
         nil),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(31, wbWeatherTimeOfDay('Fog Far')),
         nil),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(35, wbWeatherTimeOfDay('Sky Statics')),
         nil),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(37, wbWeatherTimeOfDay('Water Multiplier')),
         nil),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(37, wbWeatherTimeOfDay('Sun Glare')),
         nil),
-      IfThen(gcWeatherExtendedColors in wbCurrentCapabilities,
+      IfThen(gcWeatherExtendedColors in _CurrentGameDef.Capabilities,
         wbFromVersion(37, wbWeatherTimeOfDay('Moon Glare')),
         nil),
       IsFO4Plus(
@@ -9780,16 +9780,16 @@ begin
       wbFloat('Day - Far'),
       wbFloat('Night - Near'),
       wbFloat('Night - Far'),
-      IfThen((gcWeatherFogPower in wbCurrentCapabilities),
+      IfThen((gcWeatherFogPower in _CurrentGameDef.Capabilities),
         wbFloat('Day - Power').SetDefaultNativeValue(1),
         nil),
-      IfThen((gcWeatherFogPower in wbCurrentCapabilities),
+      IfThen((gcWeatherFogPower in _CurrentGameDef.Capabilities),
         wbFloat('Night - Power').SetDefaultNativeValue(1),
         nil),
-      IfThen(gcWeatherFogMax in wbCurrentCapabilities,
+      IfThen(gcWeatherFogMax in _CurrentGameDef.Capabilities,
         wbFloat('Day - Max').SetDefaultNativeValue(1),
         nil),
-      IfThen(gcWeatherFogMax in wbCurrentCapabilities,
+      IfThen(gcWeatherFogMax in _CurrentGameDef.Capabilities,
         wbFloat('Night - Max').SetDefaultNativeValue(1),
         nil),
       IsFO4Plus(
