@@ -50,6 +50,8 @@ var
   xeTestNavCopyDisk        : Boolean;
   xeTestNavCopyNoTouch     : Boolean;
   xeTestNavCopyEsm         : Boolean;
+  xeTestNavCopyInject      : Boolean;
+  xeTestNavCopyStart       : string = '000001';
   xeTestNavCopyMaster      : string = 'NavCopyA.esp';
   xeTestNavCopyPlugin      : string = 'NavCopyB.esp';
   xeTestNavCopyCount       : Integer = 12;
@@ -1278,9 +1280,12 @@ begin
       xeTestNavCopyNoTouch := FindCmdLineSwitch('testnavcopynotouch');
       xeTestNavCopyEsm := FindCmdLineSwitch('testnavcopyesm');
       xeTestNavCopyDisk := FindCmdLineSwitch('testnavcopydisk');
+      xeTestNavCopyInject := FindCmdLineSwitch('testnavcopyinject');
       if xeTestNavCopySave then
         xeTestNavCopyTwo := True;
       var lValue: string;
+      if wbFindCmdLineParam('testnavcopystart', lValue) and (lValue <> '') then
+        xeTestNavCopyStart := lValue;
       if wbFindCmdLineParam('testnavcopymaster', lValue) and (lValue <> '') then
         xeTestNavCopyMaster := lValue;
       if wbFindCmdLineParam('testnavcopyplugin', lValue) and (lValue <> '') then

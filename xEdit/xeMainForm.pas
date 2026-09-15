@@ -815,11 +815,16 @@ type
     TestNavCopyStale         : Integer;
     TestNavCopyWouldRefresh  : Integer;
     TestNavCopyControlMisses : Integer;
+    TestNavCopyStartGiven    : Boolean;
 
+    function TestNavCopyLastPhase: Integer;
     procedure TestNavCopyPhaseTimer(Sender: TObject);
     procedure TestNavCopyAnswerTimer(Sender: TObject);
     procedure TestNavCopyBuild;
     procedure TestNavCopyLocateOnDisk;
+    procedure TestNavCopyShowPairs;
+    procedure TestNavCopyInject;
+    procedure TestNavCopyCacheReport(const aWhen: string);
     procedure TestNavCopyCopy;
     procedure TestNavCopyVerify;
     procedure TestNavCopyPaintAll;
@@ -20536,17 +20541,27 @@ begin
   TestNavCopyTimer.Enabled := True;
 end;
 
+function TfrmMain.TestNavCopyLastPhase: Integer;
+begin
+  Result := 3;
+  if xeTestNavCopyInject then
+    Inc(Result);
+end;
+
 procedure TfrmMain.TestNavCopyPhaseTimer(Sender: TObject);
 begin
   TestNavCopyTimer.Enabled := False;
   try
     Inc(TestNavCopyPhase);
-    case TestNavCopyPhase of
-      1: TestNavCopyBuild;
-      2: TestNavCopyCopy;
-      3: TestNavCopyVerify;
-    end;
-    if TestNavCopyPhase < 3 then
+    if TestNavCopyPhase = 1 then
+      TestNavCopyBuild
+    else if xeTestNavCopyInject and (TestNavCopyPhase = 2) then
+      TestNavCopyInject
+    else if TestNavCopyPhase = Pred(TestNavCopyLastPhase) then
+      TestNavCopyCopy
+    else if TestNavCopyPhase = TestNavCopyLastPhase then
+      TestNavCopyVerify;
+    if TestNavCopyPhase < TestNavCopyLastPhase then
       TestNavCopyTimer.Enabled := True
     else if xeAutoExit then
       tmrShutdown.Enabled := True;
@@ -20591,8 +20606,24 @@ var
     end;
   end;
 
+  function FindEdit(aOwner: TComponent): TEdit;
+  var
+    i: Integer;
+  begin
+    Result := nil;
+    for i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TEdit then
+        Exit(TEdit(aOwner.Components[i]));
+      Result := FindEdit(aOwner.Components[i]);
+      if Assigned(Result) then
+        Exit;
+    end;
+  end;
+
+var
+  lEdit : TEdit;
 begin
-  if (TestNavCopyPhase = 2) and not xeTestNavCopyNoTouch then
+  if (TestNavCopyPhase = Pred(TestNavCopyLastPhase)) and not xeTestNavCopyNoTouch then
     TestNavCopyPaintAll;
   lForm := nil;
   for var i := 0 to Pred(Screen.CustomFormCount) do
@@ -20605,12 +20636,27 @@ begin
     Exit;
   lResult := mrNone;
   lExtra := '';
+  lText := '';
+  CollectText(lForm);
   if lForm is TfrmModuleSelect then begin
     lResult := mrOk;
     if Assigned(TestNavCopyFileA) then
       Include(PwbModuleInfo(TestNavCopyFileA.ModuleInfo).miFlags, mfTagged);
     with TfrmModuleSelect(lForm) do
       lExtra := ' modules: ' + string.Join(' | ', AllModules.ToStrings(True)) + ' error: ' + pnlError.Caption;
+  end else if lText.Contains('preserve ObjectIDs') and HasButton(lForm, mrNo) then
+    lResult := mrNo
+  else if string(lForm.Caption).StartsWith('Start from') and HasButton(lForm, mrOk) then begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then begin
+      lExtra := ' offered: ' + lEdit.Text;
+      if not TestNavCopyStartGiven then begin
+        lEdit.Text := xeTestNavCopyStart;
+        TestNavCopyStartGiven := True;
+      end;
+      lExtra := lExtra + ' entered: ' + lEdit.Text;
+    end;
+    lResult := mrOk;
   end else if xeTestNavCopyEach and HasButton(lForm, mrYes) then
     lResult := mrYes
   else if HasButton(lForm, mrYesToAll) then
@@ -20621,8 +20667,6 @@ begin
     lResult := mrOk;
   if lResult = mrNone then
     Exit;
-  lText := '';
-  CollectText(lForm);
   lText := lText.Replace(#13, ' ').Replace(#10, ' ');
   if Length(lText) > 300 then
     lText := Copy(lText, 1, 300) + '...';
@@ -20734,7 +20778,7 @@ begin
     AddMessage('[Test Nav Copy] the fixture will be saved on shutdown; no copy in this run');
     CheckResult := 0;
     TestNavCopyWrite;
-    TestNavCopyPhase := 3;
+    TestNavCopyPhase := TestNavCopyLastPhase;
   end;
 end;
 
@@ -20773,6 +20817,16 @@ begin
   end;
   if Length(TestNavCopyRecordsA) < 1 then
     raise Exception.Create('no record of ' + TestNavCopyFileA.FileName + ' is overridden by ' + TestNavCopyFileB.FileName);
+  TestNavCopyShowPairs;
+  AddMessage(Format('[Test Nav Copy] %d QUST records of %s loaded from disk are overridden by %s loaded from disk',
+    [Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName, TestNavCopyFileB.FileName]));
+end;
+
+procedure TfrmMain.TestNavCopyShowPairs;
+var
+  i     : Integer;
+  lNode : PVirtualNode;
+begin
   for i := Low(TestNavCopyRecordsA) to High(TestNavCopyRecordsA) do begin
     lNode := FindNodeForElement(TestNavCopyRecordsA[i]);
     if not Assigned(lNode) then
@@ -20785,8 +20839,46 @@ begin
     if i = 0 then
       vstNav.FocusedNode := lNode;
   end;
-  AddMessage(Format('[Test Nav Copy] %d QUST records of %s loaded from disk are overridden by %s loaded from disk',
-    [Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName, TestNavCopyFileB.FileName]));
+end;
+
+procedure TfrmMain.TestNavCopyInject;
+var
+  lNode   : PVirtualNode;
+  lBefore : Integer;
+  lAfter  : Integer;
+
+  function OwnRecords(const aFile: IwbFile): Integer;
+  var
+    i: Integer;
+  begin
+    Result := 0;
+    for i := 0 to Pred(aFile.RecordCount) do
+      if aFile.Records[i].LoadOrderFormID.FileID = aFile.LoadOrderFileID then
+        Inc(Result);
+  end;
+
+begin
+  lNode := FindNodeForElement(TestNavCopyFileB);
+  if not Assigned(lNode) then
+    raise Exception.Create('no nav node for ' + TestNavCopyFileB.FileName);
+  vstNav.ClearSelection;
+  vstNav.Selected[lNode] := True;
+  vstNav.FocusedNode := lNode;
+  lBefore := OwnRecords(TestNavCopyFileB);
+  AddMessage(Format('[Test Nav Copy] injecting the %d own records of %s into %s through Inject Forms into master, start FormID %s, ObjectIDs not preserved',
+    [lBefore, TestNavCopyFileB.FileName, TestNavCopyFileA.FileName, xeTestNavCopyStart]));
+  mniNavRenumberFormIDsFromClick(mniNavRenumberFormIDsInject);
+  lAfter := OwnRecords(TestNavCopyFileB);
+  AddMessage(Format('[Test Nav Copy] inject returned; %s has %d own records now, %d before', [TestNavCopyFileB.FileName, lAfter, lBefore]));
+  if (lBefore > 0) and (lAfter = lBefore) then begin
+    AddMessage('[Test Nav Copy] NO VERDICT: the inject changed no FormID');
+    CheckResult := 2;
+    TestNavCopyWrite;
+    TestNavCopyPhase := TestNavCopyLastPhase;
+    Exit;
+  end;
+  vstNav.Expanded[lNode] := True;
+  TestNavCopyShowPairs;
 end;
 
 procedure TestNavCopyProgress(const s: string);
@@ -20809,7 +20901,7 @@ begin
       [TestNavCopyControlMisses, Length(TestNavCopyRecordsC)]));
     CheckResult := 2;
     TestNavCopyWrite;
-    TestNavCopyPhase := 3;
+    TestNavCopyPhase := TestNavCopyLastPhase;
     Exit;
   end;
 
@@ -20834,6 +20926,7 @@ begin
   finally
     _wbProgressCallback := GeneralProgress;
   end;
+  TestNavCopyCacheReport('after the copy returned');
 
   lModified := 0;
   for i := Low(TestNavCopyRecordsA) to High(TestNavCopyRecordsA) do
@@ -20844,7 +20937,44 @@ begin
     AddMessage('[Test Nav Copy] NO VERDICT: the copy did not reach every record');
     CheckResult := 2;
     TestNavCopyWrite;
-    TestNavCopyPhase := 3;
+    TestNavCopyPhase := TestNavCopyLastPhase;
+  end;
+end;
+
+procedure TfrmMain.TestNavCopyCacheReport(const aWhen: string);
+var
+  i        : Integer;
+  lNode    : PVirtualNode;
+  lNodeCA  : string;
+  lRecord  : IwbMainRecord;
+
+  function SortedFlags(const aRecord: IwbMainRecord): string;
+  var
+    lPath     : string;
+    lSortable : IwbSortableContainer;
+  begin
+    Result := '';
+    for lPath in ['VMAD - Virtual Machine Adapter\Scripts', 'Aliases'] do
+      if Supports(aRecord.ElementByPath[lPath], IwbSortableContainer, lSortable) then
+        Result := Result + ' ' + lPath.Substring(lPath.LastIndexOf('\') + 1) + '=' + BoolToStr(lSortable.Sorted, True) +
+          '/' + IntToStr(lSortable.ElementCount) + '/' + BoolToStr(lSortable.Sorted, True)
+      else
+        Result := Result + ' ' + lPath.Substring(lPath.LastIndexOf('\') + 1) + '=none';
+  end;
+
+begin
+  AddMessage(Format('[Test Nav Copy] record caches %s: wbCopyIsRunning=%d', [aWhen, wbCopyIsRunning]));
+  for i := Low(TestNavCopyRecordsC) to High(TestNavCopyRecordsC) do begin
+    lRecord := TestNavCopyRecordsC[i];
+    lNode := FindNodeForElement(lRecord);
+    if Assigned(lNode) then
+      lNodeCA := wbNameConflictAll[PNavNodeData(vstNav.GetNodeData(lNode)).ConflictAll] + ' gen ' + IntToStr(PNavNodeData(vstNav.GetNodeData(lNode)).ElementGen)
+    else
+      lNodeCA := 'no node';
+    AddMessage(Format('[Test Nav Copy]   %s: record %s / %s gen %d sorted%s; master %s / %s gen %d sorted%s; node %s',
+      [lRecord.EditorID, wbNameConflictAll[lRecord.ConflictAll], wbNameConflictThis[lRecord.ConflictThis], lRecord.ElementGeneration, SortedFlags(lRecord),
+       wbNameConflictAll[TestNavCopyRecordsA[i].ConflictAll], wbNameConflictThis[TestNavCopyRecordsA[i].ConflictThis], TestNavCopyRecordsA[i].ElementGeneration, SortedFlags(TestNavCopyRecordsA[i]),
+       lNodeCA]));
   end;
 end;
 
@@ -20853,6 +20983,7 @@ var
   lNode  : PVirtualNode;
   lImage : Vcl.Graphics.TBitmap;
 begin
+  TestNavCopyCacheReport('before the post paint');
   if xeTestNavCopyNoTouch then begin
     lNode := FindNodeForElement(TestNavCopyRecordsC[0]);
     if Assigned(lNode) then begin
@@ -20942,6 +21073,17 @@ begin
             IntToStr(lGens[i]);
     if aWithTruth then begin
       ConflictLevelForMainRecord(lRecord, lCA, lCT);
+      if lRecord._File.Equals(TestNavCopyFileC) then begin
+        var lCA2: TConflictAll;
+        var lCT2: TConflictThis;
+        lRecord.ResetConflict;
+        ConflictLevelForMainRecord(lRecord, lCA2, lCT2);
+        if (lCA2 <> lCA) or (lCT2 <> lCT) then
+          AddMessage(Format('[Test Nav Copy] SECOND fresh computation differs for %s: first %s / %s, second %s / %s',
+            [lRecord.EditorID, wbNameConflictAll[lCA], wbNameConflictThis[lCT], wbNameConflictAll[lCA2], wbNameConflictThis[lCT2]]));
+        lCA := lCA2;
+        lCT := lCT2;
+      end;
       if (lCA = lNodeData.ConflictAll) and (lCT = lNodeData.ConflictThis) then
         lVerdict := 'OK'
       else if lNodeData.ConflictAll = caUnknown then begin
