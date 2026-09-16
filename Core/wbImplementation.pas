@@ -401,6 +401,7 @@ type
     function GetContainingSubRecord: IwbSubRecord; virtual;
     function GetFile: IwbFile; virtual;
     function GameDefObj: TwbGameDef; virtual;
+    function ContextObj: TwbGameContext; virtual;
     function GetGameDefObj: TwbGameDef;
     function GetReferenceFile: IwbFile; virtual;
     function GetSortOrder: Integer;
@@ -547,6 +548,7 @@ type
     ['{8D9AC0D3-3961-4320-A036-EB4771B081CD}']
 
     function GameDefObj: TwbGameDef;
+    function ContextObj: TwbGameContext;
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer);
     procedure CreatedEmpty;
@@ -811,7 +813,7 @@ type
     function GetFile: IwbFile; override;
     function GameDefObj: TwbGameDef; override;
     function GetContext: IwbGameContext;
-    function ContextObj: TwbGameContext;
+    function ContextObj: TwbGameContext; override;
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetReferenceFile: IwbFile; override;
@@ -1230,6 +1232,7 @@ type
   protected
     mrDef               : IwbMainRecordDef;
     mrGameDefObj        : TwbGameDef;
+    mrContextObj        : TwbGameContext;
     mrLoadOrderFormID   : TwbFormID;
     mrFixedFormID       : TwbFormID;
     mrMaster            : Pointer{IwbMainRecord};
@@ -1360,6 +1363,7 @@ type
     function GetMainRecordDef: IwbMainRecordDef;
     function GetElementType: TwbElementType; override;
     function GameDefObj: TwbGameDef; override;
+    function ContextObj: TwbGameContext; override;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
     function DoGetFixedFormID: TwbFormID;
@@ -5060,7 +5064,7 @@ end;
 procedure TwbFile.IncGeneration;
 begin
   Inc(_FileGeneration);
-  _CurrentContext.IncGlobalGeneration;
+  flContextObj.IncGlobalGeneration;
   flGeneration := _FileGeneration;
 end;
 
@@ -11527,6 +11531,13 @@ begin
     Result := inherited GameDefObj;
 end;
 
+function TwbMainRecord.ContextObj: TwbGameContext;
+begin
+  Result := mrContextObj;
+  if not Assigned(Result) then
+    Result := inherited ContextObj;
+end;
+
 function TwbMainRecord.GetFixedFormID: TwbFormID;
 begin
   Result := mrFixedFormID;
@@ -11549,13 +11560,8 @@ begin
   if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then begin
     if not Assigned(mrDef) then
       Result := TwbFormID.Null
-    else if not mrDef.GetFormID(Self, Result) then begin
-      var lContext := _CurrentContext;
-      var lFile := GetFile;
-      if Assigned(lFile) then
-        lContext := (lFile as IwbFileInternal).ContextObj;
-      Result := lContext.FormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, mrDef.GetIdentity(Self));
-    end;
+    else if not mrDef.GetFormID(Self, Result) then
+      Result := ContextObj.FormIDFromIdentity(mrDef.GetFormIDBase, mrDef.GetFormIDNameBase, mrDef.GetIdentity(Self));
   end else
     Result := mrStruct.mrsFormID(True)^;
 end;
@@ -12691,6 +12697,7 @@ var
   p         : PwbMainRecordStruct;
 begin
   mrGameDefObj := inherited GameDefObj;
+  mrContextObj := inherited ContextObj;
   if Assigned(dcEndPtr) then
     if (gcReferencesEmbeddedInCell in mrGameDefObj.Capabilities) and ((PwbSignature(dcBasePtr)^ = 'FRMR') or (PwbSignature(dcBasePtr)^ = 'CNDT')) then begin
       Assert(not (mrsBasePtrAllocated in mrStates));
@@ -14327,7 +14334,7 @@ begin
       mrConflictAll := caUnknown;
       mrConflictThis := ctUnknown;
       Inc(eGeneration);
-      _CurrentContext.IncGlobalGeneration;
+      ContextObj.IncGlobalGeneration;
     end;
     if Assigned(mrMaster) then
       IwbElement(mrMaster).ResetConflict
@@ -20262,6 +20269,14 @@ begin
     Result := _CurrentGameDef;
 end;
 
+function TwbElement.ContextObj: TwbGameContext;
+begin
+  if Assigned(eContainer) then
+    Result := IwbContainerInternal(eContainer).ContextObj
+  else
+    Result := _CurrentContext;
+end;
+
 function TwbElement.GetGameDefObj: TwbGameDef;
 begin
   Result := GameDefObj;
@@ -20382,11 +20397,12 @@ end;
 
 function TwbElement.GetLinksTo: IwbElement;
 begin
-  if eLinksToGeneration = _CurrentContext.GlobalGeneration then
+  var lGeneration := ContextObj.GlobalGeneration;
+  if eLinksToGeneration = lGeneration then
     Result := eCachedLinksTo
   else begin
     Result := InternalGetLinksTo;
-    eLinksToGeneration := _CurrentContext.GlobalGeneration;
+    eLinksToGeneration := lGeneration;
     eCachedLinksTo := Result;
   end;
 end;
@@ -21034,7 +21050,7 @@ begin
     eExtendedSortKey := '';
 
     Inc(eGeneration);
-    _CurrentContext.IncGlobalGeneration;
+    ContextObj.IncGlobalGeneration;
 
     if eUpdateCount > 0 then
       Include(eStates, esModifiedUpdated)
