@@ -35,7 +35,6 @@ uses
   wbCommandLine in 'Core\wbCommandLine.pas',
   wbSort in 'Core\wbSort.pas',
   wbInterface in 'Core\wbInterface.pas',
-  wbGameDefGlobals in 'Core\wbGameDefGlobals.pas',
   wbSaveInterface in 'Core\wbSaveInterface.pas',
   wbImplementation in 'Core\wbImplementation.pas',
   wbLocalization in 'Core\wbLocalization.pas',
@@ -67,6 +66,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
+  HostContext          : TwbGameContext;
   StartTime            : TDateTime;
   DumpGroups           : TStringList;
   DumpRecords          : TStringList;
@@ -567,11 +567,11 @@ begin
   Profile := '';
   case wbToolSource of
     tsPlugins: begin
-      if _CurrentGameDef.FindRecordDef(wbHeaderSignature, RecordDef) then
+      if _CurrentGameDef.FindRecordDef(HostContext.GameDefObj.HeaderSignature, RecordDef) then
         ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
-      ProfileElement(aFormat, wbFileHeader, Profile, Pass, '');
+      ProfileElement(aFormat, HostContext.GameDefObj.FileHeader, Profile, Pass, '');
     end;
   end;
 end;
@@ -583,10 +583,10 @@ var
   Profile   : String;
 begin
   case wbToolSource of
-    tsPlugins: for i := 0 to Pred(wbGroupOrder.Count) do
-      if wbGroupOrder[i]<>wbHeaderSignature then begin
+    tsPlugins: for i := 0 to Pred(HostContext.GameDefObj.GroupOrder.Count) do
+      if HostContext.GameDefObj.GroupOrder[i]<>HostContext.GameDefObj.HeaderSignature then begin
         Profile := '';
-        if _CurrentGameDef.FindRecordDef(AnsiString(wbGroupOrder[i]), RecordDef) then
+        if _CurrentGameDef.FindRecordDef(AnsiString(HostContext.GameDefObj.GroupOrder[i]), RecordDef) then
           ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
   end;
@@ -599,8 +599,8 @@ var
 begin
   Profile := '';
   case wbToolSource of
-    tsSaves: for i := 0 to Pred(wbFileChapters.MemberCount) do begin
-      ProfileElement(aFormat, wbFileChapters.Members[i], Profile, Pass, '');
+    tsSaves: for i := 0 to Pred(HostContext.GameDefObj.FileChapters.MemberCount) do begin
+      ProfileElement(aFormat, HostContext.GameDefObj.FileChapters.Members[i], Profile, Pass, '');
     end;
   end;
 end;
@@ -632,8 +632,8 @@ begin
       Exit;
     ReportProgress('Dumping: ' + aContainer.Name);
   end;
-  if (wbToolSource in [tsSaves]) and (ChaptersToSkip <> nil) and Supports(aContainer, IwbChapter, Chapter) then
-    if ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
+  if (wbToolSource in [tsSaves]) and (HostContext.ChaptersToSkip <> nil) and Supports(aContainer, IwbChapter, Chapter) then
+    if HostContext.ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
       ReportProgress('Skiping: ' + Chapter.ChapterTypeName);
       Exit;
     end;
@@ -819,7 +819,7 @@ var
 begin
   Result := '';
   s := ParamStr(ParamCount);
-  s := ChangeFileExt(s, '*' + wbArchiveExtension);
+  s := ChangeFileExt(s, '*' + HostContext.GameDefObj.ArchiveExtension);
   if FindFirst(s, faAnyfile, F)=0 then begin
     Result := ExtractFilePath(ParamStr(ParamCount));
     System.SysUtils.FindClose(F);
@@ -892,7 +892,7 @@ begin
   end else
     DataPath := IncludeTrailingPathDelimiter(DataPath);
 
-  wbCurrentContext.DataPath := DataPath;
+  HostContext.Settings.DataPath := DataPath;
 end;
 
 function isMode(aMode: String): Boolean;
@@ -930,13 +930,14 @@ var
   Found           : Boolean;
   b               : TBytes;
 begin
+  HostContext := wbCurrentContext as TwbGameContext;
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
   {$ELSE}
   SysUtils.DecimalSeparator := '.';
   {$IFEND}
   _wbProgressCallback := ReportProgress;
-  wbCurrentContext.DontSave := True;
+  HostContext.Settings.DontSave := True;
   wbAllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;
@@ -1027,14 +1028,14 @@ begin
       wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode) );
       Delete(wbAppName, 1 ,2);
 
-      wbCurrentContext.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      HostContext.Settings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       tss := [tsPlugins, tsSaves];
       tms := [tmDump, tmExport];
 
       if FindCmdLineSwitch('sr') then
         wbSimpleRecords := True;
 
-      wbCurrentContext.Language := 'English';
+      HostContext.Settings.Language := 'English';
 
       wbGameExeName := '';
       case wbGameMode of
@@ -1046,7 +1047,7 @@ begin
         end;
         gmTES3: begin
           wbGameName := 'Morrowind';
-          wbCurrentContext.LoadBSAs := false;
+          HostContext.Settings.LoadBSAs := false;
           tms := [tmDump];
           tss := [tsPlugins];
         end;
@@ -1070,7 +1071,7 @@ begin
         end;
         gmFO4: begin
           wbGameName           := 'Fallout4';
-          wbCurrentContext.CreateContainedIn := False;
+          HostContext.Settings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
         end;
         gmFO4VR: begin
@@ -1078,7 +1079,7 @@ begin
           wbGameExeName        := 'Fallout4VR';
           wbGameName2          := 'Fallout4VR';
           wbGameNameReg        := 'Fallout 4 VR';
-          wbCurrentContext.CreateContainedIn := False;
+          HostContext.Settings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
@@ -1099,13 +1100,13 @@ begin
           wbGameName           := 'Fallout76';
           wbGameNameReg        := 'Fallout 76';
           wbGameMasterEsm      := 'SeventySix.esm';
-          wbCurrentContext.CreateContainedIn := False;
+          HostContext.Settings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
         gmSF1: begin
           wbGameName           := 'Starfield';
-          wbCurrentContext.CreateContainedIn := False;
+          HostContext.Settings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
         end;
       else begin
@@ -1134,7 +1135,7 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
-      wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
+      HostContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource)) as TwbGameContext;
 
       if not (wbToolMode in tms) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
@@ -1146,8 +1147,8 @@ begin
       end;
 
       DoInitPath;
-      if (wbToolMode in [tmDump]) and (wbDataPath = '') then // Dump can be run in any directory configuration
-        wbCurrentContext.DataPath := CheckParamPath;
+      if (wbToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
+        HostContext.Settings.DataPath := CheckParamPath;
 
       wbLoadModules;
 
@@ -1266,7 +1267,7 @@ begin
       end;
 
       //wbLoadAllBSAs := FindCmdLineSwitch('allbsa');
-      wbCurrentContext.LoadAllBSAs := True;
+      HostContext.Settings.LoadAllBSAs := True;
 
       if FindCmdLineSwitch('more') then
         wbMoreInfoForUnknown:= True
@@ -1274,29 +1275,29 @@ begin
         wbMoreInfoForUnknown:= False;
 
       if wbFindCmdLineParam('xr', s) then
-        RecordToSkip.CommaText := s;
+        HostContext.RecordToSkip.CommaText := s;
 
       if wbFindCmdLineParam('xsr', s) then
-        SubRecordToSkip.CommaText := s;
+        HostContext.SubRecordToSkip.CommaText := s;
 
       if wbFindCmdLineParam('xg', s) then
-        GroupToSkip.CommaText := s
+        HostContext.GroupToSkip.CommaText := s
       else if FindCmdLineSwitch('xbloat') then begin
-        GroupToSkip.Add('LAND');
-        GroupToSkip.Add('REGN');
-        GroupToSkip.Add('PGRD');
-        GroupToSkip.Add('SCEN');
-        GroupToSkip.Add('PACK');
-        GroupToSkip.Add('PERK');
-        GroupToSkip.Add('NAVI');
-        GroupToSkip.Add('CELL');
-        GroupToSkip.Add('WRLD');
+        HostContext.GroupToSkip.Add('LAND');
+        HostContext.GroupToSkip.Add('REGN');
+        HostContext.GroupToSkip.Add('PGRD');
+        HostContext.GroupToSkip.Add('SCEN');
+        HostContext.GroupToSkip.Add('PACK');
+        HostContext.GroupToSkip.Add('PERK');
+        HostContext.GroupToSkip.Add('NAVI');
+        HostContext.GroupToSkip.Add('CELL');
+        HostContext.GroupToSkip.Add('WRLD');
       end;
 
       if wbFindCmdLineParam('xc', s) then
-        ChaptersToSkip.CommaText := s
+        HostContext.ChaptersToSkip.CommaText := s
       else if FindCmdLineSwitch('xcbloat') then begin
-        ChaptersToSkip.Add('1001');
+        HostContext.ChaptersToSkip.Add('1001');
       end;
 
       if wbFindCmdLineParam('xf', s) then begin
@@ -1307,14 +1308,14 @@ begin
         DumpForms.Sort;
         for i := 0 to DumpForms.Count-1 do try
           c := StrToInt(DumpForms[i]);
-          ChaptersToSkip.Add(IntToStr(wbChangedFormOffset+c));
+          HostContext.ChaptersToSkip.Add(IntToStr(wbChangedFormOffset+c));
         finally
         end;
         DumpForms.Free;
       end;
 
       if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
-        wbCurrentContext.Language := 'En';
+        HostContext.Settings.Language := 'En';
 
       if wbGameMode <= gmEnderal then
         wbAddDefaultLEncodingsIfMissing(False)
@@ -1331,10 +1332,10 @@ begin
       wbAddDefaultLEncodingsIfMissing(True);
 
       if wbFindCmdLineParam('l', s) then begin
-        wbCurrentContext.Language := s;
+        HostContext.Settings.Language := s;
       end else begin
-        if FileExists(wbTheGameIniFileName) then begin
-          with TMemIniFile.Create(wbTheGameIniFileName) do try
+        if FileExists(HostContext.Settings.TheGameIniFileName) then begin
+          with TMemIniFile.Create(HostContext.Settings.TheGameIniFileName) do try
             case wbGameMode of
               gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
                 1: s := 'German';
@@ -1352,8 +1353,8 @@ begin
           end;
         end;
 
-        if FileExists(wbCustomIniFileName) then begin
-          with TMemIniFile.Create(wbCustomIniFileName) do try
+        if FileExists(HostContext.Settings.CustomIniFileName) then begin
+          with TMemIniFile.Create(HostContext.Settings.CustomIniFileName) do try
             case wbGameMode of
               gmTES4: begin
                 if ValueExists('Controls', 'iLanguage') then
@@ -1375,17 +1376,17 @@ begin
           end;
         end;
 
-        if (s <> '') and not SameText(s, wbLanguage) then
-          wbCurrentContext.Language := s;
+        if (s <> '') and not SameText(s, HostContext.Settings.Language) then
+          HostContext.Settings.Language := s;
       end;
 
-      wbCurrentContext.EncodingTrans := wbEncodingForLanguage(wbLanguage, False);
+      HostContext.Settings.EncodingTrans := wbEncodingForLanguage(HostContext.Settings.Language, False);
 
       if wbFindCmdLineParam('cp-general', s) then
-        wbCurrentContext.Encoding :=  wbMBCSEncoding(s);
+        HostContext.Settings.Encoding :=  wbMBCSEncoding(s);
 
       if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
-        wbCurrentContext.EncodingTrans :=  wbMBCSEncoding(s);
+        HostContext.Settings.EncodingTrans :=  wbMBCSEncoding(s);
 
       if wbFindCmdLineParam('bts', s) then
         wbBytesToSkip := StrToInt64Def(s, wbBytesToSkip);
@@ -1403,8 +1404,8 @@ begin
       NeedsSyntaxInfo := False;
 
       if not FileExists(s) then
-        if FileExists(wbDataPath + s) then
-          s := wbDataPath + s;
+        if FileExists(HostContext.Settings.DataPath + s) then
+          s := HostContext.Settings.DataPath + s;
 
       if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
         if s[1] in SwitchChars then
@@ -1423,20 +1424,20 @@ begin
       end;
       if wbToolSource = tsSaves then
         case wbGameMode of
-          gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then wbCurrentContext.GameDef.SwitchToCoSave;
-          gmFO3:    if SameText(ExtractFileExt(s), '.fose') then wbCurrentContext.GameDef.SwitchToCoSave
+          gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
+          gmFO3:    if SameText(ExtractFileExt(s), '.fose') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave
             else
               WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
           gmFO4,
-          gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then wbCurrentContext.GameDef.SwitchToCoSave;
-          gmTES4:   if SameText(ExtractFileExt(s), '.obse') then wbCurrentContext.GameDef.SwitchToCoSave
+          gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
+          gmTES4:   if SameText(ExtractFileExt(s), '.obse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave
             else
               WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
           gmTES5,
           gmTES5vr,
           gmEnderal,
           gmEnderalSE,
-          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then wbCurrentContext.GameDef.SwitchToCoSave;
+          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
         else
             WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
         end;
@@ -1462,7 +1463,7 @@ begin
         WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (since TES5)');
         WriteLn(ErrOutput, '             ', '  Default language is English for TES5 or SSE and En for FO4');
         WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
-        WriteLn(ErrOutput, '             ', ' (plugin'+wbArchiveExtension+' and plugin - interface.'+wbArchiveExtension+')');
+        WriteLn(ErrOutput, '             ', ' (plugin'+HostContext.GameDefObj.ArchiveExtension+' and plugin - interface.'+HostContext.GameDefObj.ArchiveExtension+')');
         WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
         WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
         WriteLn(ErrOutput, '-d:datapath  ', 'Path to the game plugins directory');
@@ -1508,14 +1509,14 @@ begin
       end;
 
       if wbToolMode in [tmExport] then begin
-        wbCurrentContext.LoadBSAs := False;
+        HostContext.Settings.LoadBSAs := False;
         wbReportMode := False;
         wbMoreInfoForUnknown:= False;
         DumpCheckReport := False;
       end;
 
-      if wbContainerHandler = nil then
-        wbCurrentContext.ContainerHandler := wbCreateContainerHandler;
+      if HostContext.ContainerHandler = nil then
+        HostContext.ContainerHandler := wbCreateContainerHandler;
 
       StartTime := Now;
       ReportProgress('Application name : ' + wbApplicationTitle);
@@ -1523,17 +1524,17 @@ begin
         ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
       if Assigned(DumpRecords) then
         ReportProgress('['+s+']   Dumping records : '+DumpRecords.CommaText);
-      if (GroupToSkip <> nil) and (GroupToSkip.Count>0) then
-        ReportProgress('['+s+']   Excluding groups : '+GroupToSkip.CommaText);
-      if (RecordToSkip <> nil) and (RecordToSkip.Count>0) then
-        ReportProgress('['+s+']   Excluding records : '+RecordToSkip.CommaText);
-      if (SubRecordToSkip <> nil) and (SubRecordToSkip.Count>0) then
-        ReportProgress('['+s+']   Excluding SubRecords : '+SubRecordToSkip.CommaText);
+      if (HostContext.GroupToSkip <> nil) and (HostContext.GroupToSkip.Count>0) then
+        ReportProgress('['+s+']   Excluding groups : '+HostContext.GroupToSkip.CommaText);
+      if (HostContext.RecordToSkip <> nil) and (HostContext.RecordToSkip.Count>0) then
+        ReportProgress('['+s+']   Excluding records : '+HostContext.RecordToSkip.CommaText);
+      if (HostContext.SubRecordToSkip <> nil) and (HostContext.SubRecordToSkip.Count>0) then
+        ReportProgress('['+s+']   Excluding SubRecords : '+HostContext.SubRecordToSkip.CommaText);
 
       if Assigned(DumpChapters) then
         ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
-      if (ChaptersToSkip <> nil) and (ChaptersToSkip.Count>0) then
-        ReportProgress('['+s+']   Excluding chapters : '+ChaptersToSkip.CommaText);
+      if (HostContext.ChaptersToSkip <> nil) and (HostContext.ChaptersToSkip.Count>0) then
+        ReportProgress('['+s+']   Excluding chapters : '+HostContext.ChaptersToSkip.CommaText);
       if wbBytesToSkip>0 then
         ReportProgress('['+s+']   BytesToSkip : '+IntToStr(wbBytesToSkip));
       if wbBytesToDump<$FFFFFFFF then
@@ -1554,34 +1555,34 @@ begin
                 Break;
             end;
           Masters.Add(ExtractFileName(s));
-          if IsLocalized and not wbLoadBSAs and not FindCmdLineSwitch('nobsa') then begin
+          if IsLocalized and not HostContext.Settings.LoadBSAs and not FindCmdLineSwitch('nobsa') then begin
             for i := 0 to Pred(Masters.Count) do begin
-              t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + wbLanguage + '.STRINGS';
+              t := ExtractFilePath(s) + 'Strings\' + ChangeFileExt(Masters[i], '') + '_' + HostContext.Settings.Language + '.STRINGS';
               if not FileExists(t) then begin
-                wbCurrentContext.LoadBSAs := True;
+                HostContext.Settings.LoadBSAs := True;
                 Break;
               end;
             end;
           end;
-          if wbLoadBSAs then begin
+          if HostContext.Settings.LoadBSAs then begin
 
-            if wbLoadAllBSAs then begin
+            if HostContext.Settings.LoadAllBSAs then begin
               n := TStringList.Create;
               try
                 m := TStringList.Create;
                 try
                   bsaCount := 0;
-                  if FileExists(wbTheGameIniFileName) then begin
-                    if FileExists(wbCustomIniFileName) then
-                      bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, wbDataPath, n, m)
+                  if FileExists(HostContext.Settings.TheGameIniFileName) then begin
+                    if FileExists(HostContext.Settings.CustomIniFileName) then
+                      bsaCount := FindBSAs(HostContext.Settings.TheGameIniFileName, HostContext.Settings.CustomIniFileName, HostContext.Settings.DataPath, n, m)
                     else
-                      bsaCount := FindBSAs(wbTheGameIniFileName, wbDataPath, n, m);
+                      bsaCount := FindBSAs(HostContext.Settings.TheGameIniFileName, HostContext.Settings.DataPath, n, m);
                   end;
 
                   if (bsaCount > 0) then begin
                     for i := 0 to Pred(n.Count) do begin
                       ReportProgress('[' + n[i] + '] Loading Resources.');
-                      wbContainerHandler.AddBSA(MakeDataFileName(n[i], wbDataPath));
+                      HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[i], HostContext.Settings.DataPath));
                     end;
                   end;
                 finally
@@ -1593,16 +1594,16 @@ begin
             end;
 
             for i := 0 to Pred(Masters.Count) do begin
-              if wbLoadAllBSAs then begin
+              if HostContext.Settings.LoadAllBSAs then begin
                 n := TStringList.Create;
                 try
                   m := TStringList.Create;
                   try
-                    if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath,
+                    if HasBSAs(ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath,
                         wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                        HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
                       end;
                     end;
                   finally
@@ -1616,34 +1617,34 @@ begin
                 try
                   m := TStringList.Create;
                   try
-                    if HasBSAs(ChangeFileExt(Masters[i], ''), wbDataPath, true, false, n, m)>0 then begin
+                    if HasBSAs(ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath, true, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                        HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
                       end;
                     end;
                     m.Clear;
                     n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', wbDataPath, true, false, n, m)>0 then begin
+                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', HostContext.Settings.DataPath, true, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                        HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
                       end;
                     end;
                     m.Clear;
                     n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Localization', wbDataPath, true, false, n, m)>0 then begin
+                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Localization', HostContext.Settings.DataPath, true, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                        HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
                       end;
                     end;
                     m.Clear;
                     n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Wwise', wbDataPath, false, false, n, m)>0 then begin
+                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Wwise', HostContext.Settings.DataPath, false, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
-                        wbContainerHandler.AddBSA(MakeDataFileName(n[j], wbDataPath));
+                        HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
                       end;
                     end;
                   finally
@@ -1656,8 +1657,8 @@ begin
             end;
           end;
 
-          ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
-          wbContainerHandler.AddFolder(wbDataPath);
+          ReportProgress('[' + HostContext.Settings.DataPath + '] Setting Resource Path.');
+          HostContext.ContainerHandler.AddFolder(HostContext.Settings.DataPath);
 
           if gcWwiseSoundBanks in wbCurrentCapabilities then
             wbBuildSoundBankCache(Masters);
@@ -1666,8 +1667,8 @@ begin
           FreeAndNil(Masters);
         end;
       end else begin
-        ReportProgress('[' + wbDataPath + '] Setting Resource Path.');
-        wbContainerHandler.AddFolder(wbDataPath);
+        ReportProgress('[' + HostContext.Settings.DataPath + '] Setting Resource Path.');
+        HostContext.ContainerHandler.AddFolder(HostContext.Settings.DataPath);
       end;
 
       wbResourcesLoaded;
