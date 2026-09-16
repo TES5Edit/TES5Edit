@@ -7077,7 +7077,7 @@ begin
     procedure(aSignature: TwbSignature; const aName: string)
     begin
       {subrecords checked against Starfield.esm}
-      wbRefRecord(aSignature, aName,
+      RegisterRefRecordDef(aSignature, aName,
         wbFlags(wbFlagsList([
           {0x00000080}  7, 'Turn Off Fire',
           {0x00000400} 10, 'Persistent',
@@ -8484,7 +8484,7 @@ begin
     end;
 
   {subrecords checked against Starfield.esm}
-  wbRefRecord(ACHR, 'Placed NPC',
+  RegisterRefRecordDef(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
     9,  'Starts Dead',
     10, 'Persistent',
@@ -8540,7 +8540,7 @@ begin
     .SetUnordered;
 
   {subrecords checked against Starfield.esm}
-  wbRefRecord(REFR, 'Placed Object',
+  RegisterRefRecordDef(REFR, 'Placed Object',
     wbFormaterUnion(wbREFRRecordFlagsDecider, [
       wbFlags(wbFlagsList([
       4, 'Ground Piece',
@@ -9055,7 +9055,7 @@ begin
     .SetUnordered;
 
   {subrecords checked against Starfield.esm}
-  wbRecord(TES4, 'Main File Header',
+  RegisterRecordDef(TES4, 'Main File Header',
     wbFlags(wbFlagsList([
       {0x001}  0, 'Master',
       {0x010}  4, 'Optimized',
@@ -9096,7 +9096,7 @@ begin
   ], cpNormal, True).SetUnordered;
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AACT, 'Action',
+  RegisterRecordDef(AACT, 'Action',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -9127,7 +9127,7 @@ begin
   ]).SetSummaryKey([2]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AAPD, 'Aim Assist Pose Data',
+  RegisterRecordDef(AAPD, 'Aim Assist Pose Data',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -9163,7 +9163,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AAMD, 'Aim Assist Model Data',
+  RegisterRecordDef(AAMD, 'Aim Assist Model Data',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -9209,7 +9209,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ACTI, 'Activator',
+  RegisterRecordDef(ACTI, 'Activator',
     wbFlags(wbFlagsList([
        2, 'Heading Marker',
        4, 'Non Occluder',
@@ -9287,7 +9287,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ADDN, 'Addon Node', [
+  RegisterRecordDef(ADDN, 'Addon Node', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -9319,7 +9319,7 @@ begin
     end);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AFFE, 'Affinity Event', [
+  RegisterRecordDef(AFFE, 'Affinity Event', [
     wbEDID.SetRequired,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       'Allow Repeated Events',
@@ -9342,7 +9342,7 @@ begin
     .IncludeFlag(dfSummaryMembersNoName);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ALCH, 'Ingestible',
+  RegisterRecordDef(ALCH, 'Ingestible',
     wbFlags(wbFlagsList([
       {0x20000000} 29, 'Medicine'
     ])), [
@@ -9397,7 +9397,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AMDL, 'Aim Model', [
+  RegisterRecordDef(AMDL, 'Aim Model', [
     wbEDID,
     wbBaseFormComponents,
     wbStruct(ANAM, 'Data', [
@@ -9422,7 +9422,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AMMO, 'Ammunition',
+  RegisterRecordDef(AMMO, 'Ammunition',
     wbFlags(wbFlagsList([
         {0x00000004}  2, 'Non-Playable',
         {0x00000010}  4, 'Ground Piece',
@@ -9483,7 +9483,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AMBS, 'Ambience Set', [
+  RegisterRecordDef(AMBS, 'Ambience Set', [
     wbEDID,
     wbBaseFormComponents,
     wbRStruct('Ambient Sounds', [
@@ -9529,7 +9529,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ANIO, 'Animated Object',
+  RegisterRecordDef(ANIO, 'Animated Object',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
@@ -9541,7 +9541,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AOPF, 'Audio Occlusion Primitive',
+  RegisterRecordDef(AOPF, 'Audio Occlusion Primitive',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -9577,7 +9577,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AOPS, 'Aim Optical Sight Marker',
+  RegisterRecordDef(AOPS, 'Aim Optical Sight Marker',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -9615,7 +9615,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AORU, 'Attraction Rule', [
+  RegisterRecordDef(AORU, 'Attraction Rule', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -9630,7 +9630,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ARMA, 'Armor Addon',
+  RegisterRecordDef(ARMA, 'Armor Addon',
     wbFlags(wbFlagsList([
       {0x00000040}  6, 'No Underarmor Scaling',
       {0x00000080}  7, 'Is Skin',
@@ -9717,7 +9717,7 @@ begin
   ]).SetIgnoreList([FLLD, XFLG]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ARMO, 'Armor',
+  RegisterRecordDef(ARMO, 'Armor',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
@@ -9788,7 +9788,7 @@ begin
   ]).SetIgnoreList([FLLD, XFLG]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ARTO, 'Art Object', [
+  RegisterRecordDef(ARTO, 'Art Object', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -9817,7 +9817,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ASPC, 'Acoustic Space', [
+  RegisterRecordDef(ASPC, 'Acoustic Space', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -9848,7 +9848,7 @@ begin
   ]);
 
   (* still exists in game code, but not in Starfield.esm *)
-  wbRecord(ASTP, 'Association Type', [
+  RegisterRecordDef(ASTP, 'Association Type', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -9862,7 +9862,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ATMO, 'Atmosphere',
+  RegisterRecordDef(ATMO, 'Atmosphere',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -9887,7 +9887,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AVIF, 'Actor Value Information',
+  RegisterRecordDef(AVIF, 'Actor Value Information',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -9964,7 +9964,7 @@ begin
   .SetSummaryKey([2]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(AVMD, 'AVMS Data', [
+  RegisterRecordDef(AVMD, 'AVMS Data', [
     wbEDID,
     wbBaseFormComponents,
     wbAVMDMNAMReq,
@@ -10129,7 +10129,7 @@ begin
   .IncludeFlag(dfSummaryMembersNoName);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BIOM, 'Biome', [
+  RegisterRecordDef(BIOM, 'Biome', [
     wbEDID.SetRequired,
     wbFULL,
     wbKeywords,
@@ -10254,7 +10254,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BMMO, 'Biome Marker',
+  RegisterRecordDef(BMMO, 'Biome Marker',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -10294,7 +10294,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BMOD, 'Bone Modifier',
+  RegisterRecordDef(BMOD, 'Bone Modifier',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -10384,7 +10384,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BNDS, 'Bendable Spline',
+  RegisterRecordDef(BNDS, 'Bendable Spline',
     wbFlags(wbFlagsList([
       {0x00800000} 23, 'Unknown 23'
     ])), [
@@ -10405,7 +10405,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BOOK, 'Book', [
+  RegisterRecordDef(BOOK, 'Book', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -10462,7 +10462,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(BPTD, 'Body Part Data', [
+  RegisterRecordDef(BPTD, 'Body Part Data', [
     wbEDID,
     wbBaseFormComponents,
     wbGenericModel(True),
@@ -10540,7 +10540,7 @@ begin
     .IncludeFlag(dfSummaryMembersNoName);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CAMS, 'Camera Shot', [
+  RegisterRecordDef(CAMS, 'Camera Shot', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -10599,7 +10599,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CELL, 'Cell',
+  RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Is Unique',
       {0x00000400}  7, 'No Pre Vis',
@@ -10757,7 +10757,7 @@ begin
     .SetUnordered;
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CHAL, 'Challenge',
+  RegisterRecordDef(CHAL, 'Challenge',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -10779,7 +10779,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CLAS, 'Class', [
+  RegisterRecordDef(CLAS, 'Class', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -10793,7 +10793,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CLDF, 'Clouds',
+  RegisterRecordDef(CLDF, 'Clouds',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -10816,7 +10816,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CLFM, 'Color',
+  RegisterRecordDef(CLFM, 'Color',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -10853,7 +10853,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CLMT, 'Climate', [
+  RegisterRecordDef(CLMT, 'Climate', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -10871,7 +10871,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CNDF, 'Condition Form',
+  RegisterRecordDef(CNDF, 'Condition Form',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -10896,7 +10896,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(COBJ, 'Constructible Object',
+  RegisterRecordDef(COBJ, 'Constructible Object',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -10963,7 +10963,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(COLL, 'Collision Layer', [
+  RegisterRecordDef(COLL, 'Collision Layer', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -10992,7 +10992,7 @@ begin
      end);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CONT, 'Container',
+  RegisterRecordDef(CONT, 'Container',
     wbFlags(wbFlagsList([
       15, 'Has Distant LOD',
       16, 'Random Anim Start',
@@ -11041,7 +11041,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CPTH, 'Camera Path', [
+  RegisterRecordDef(CPTH, 'Camera Path', [
     wbEDID,
     wbConditions,
     wbStruct(ANAM, 'Camera Paths', [
@@ -11062,7 +11062,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CSTY, 'Combat Style',
+  RegisterRecordDef(CSTY, 'Combat Style',
     wbFlags(wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
     ])), [
@@ -11246,7 +11246,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CUR3, 'Curve 3D',
+  RegisterRecordDef(CUR3, 'Curve 3D',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -11269,7 +11269,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(CURV, 'Curve Table',
+  RegisterRecordDef(CURV, 'Curve Table',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -11292,14 +11292,14 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DEBR, 'Debris', [
+  RegisterRecordDef(DEBR, 'Debris', [
     wbEDID,
     wbBaseFormComponents,
     wbRArray('Models', wbDebrisModel(wbModelInfo(Self, MODT)), cpNormal, True)
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DFOB, 'Default Object', [
+  RegisterRecordDef(DFOB, 'Default Object', [
     wbEDID,
     wbXALG,
     wbBaseFormComponents,
@@ -11307,7 +11307,7 @@ begin
   ]).IncludeFlag(dfIndexEditorID);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DIAL, 'Dialog Topic',
+  RegisterRecordDef(DIAL, 'Dialog Topic',
     wbFlags(wbFlagsList([
     10, 'Unknown 10',
     14, 'Partial Form'
@@ -11536,7 +11536,7 @@ begin
   ]).SetAddInfo(wbDIALAddInfo);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DLBR, 'Dialog Branch', [
+  RegisterRecordDef(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST])
       .SetRequired
@@ -11557,10 +11557,10 @@ begin
   ]).SetAddInfo(wbDLBRAddInfo);
 
   //still exists in game code, but not in Starfield.esm
-  wbRecord(DLVW, 'Dialog View', []);
+  RegisterRecordDef(DLVW, 'Dialog View', []);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DMGT, 'Damage Type', [
+  RegisterRecordDef(DMGT, 'Damage Type', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -11573,7 +11573,7 @@ begin
 
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DOBJ, 'Default Object Manager', [
+  RegisterRecordDef(DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
@@ -11585,7 +11585,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(DOOR, 'Door',
+  RegisterRecordDef(DOOR, 'Door',
     wbFlags(wbFlagsList([
       {0x00000010}  4, 'Non Occluder',
       {0x00008000} 15, 'Has Distant LOD',
@@ -11634,7 +11634,7 @@ begin
   ]);
 
   (* still exists in game code, but not in Starfield.esm *)
-  wbRecord(DUAL, 'Dual Cast Data', [
+  RegisterRecordDef(DUAL, 'Dual Cast Data', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -11661,7 +11661,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(EFSH, 'Effect Shader', [
+  RegisterRecordDef(EFSH, 'Effect Shader', [
     wbEDID,
     wbBaseFormComponents,
     wbFormIDCk(ENAM, 'Effect Sequence', [EFSQ]),
@@ -11725,7 +11725,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(EFSQ, 'Effect Sequence',
+  RegisterRecordDef(EFSQ, 'Effect Sequence',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -11748,7 +11748,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(ENCH, 'Enchantment', [
+  RegisterRecordDef(ENCH, 'Enchantment', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -11777,7 +11777,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(EQUP, 'Equip Type', [
+  RegisterRecordDef(EQUP, 'Equip Type', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -11791,7 +11791,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(EXPL, 'Explosion', [
+  RegisterRecordDef(EXPL, 'Explosion', [
     wbEDID,
     wbObjectBounds(Self),
     wbODTYReq,
@@ -11853,7 +11853,7 @@ begin
 
 
   {still exists in game code, but not in Starfield.esm}
-  wbRecord(EYES, 'Eyes',
+  RegisterRecordDef(EYES, 'Eyes',
     wbFlags(wbFlagsList([
       2, 'Non-Playable'
     ])), [
@@ -11873,7 +11873,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FACT, 'Faction', [
+  RegisterRecordDef(FACT, 'Faction', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -11971,7 +11971,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FFKW, 'Form Folder Keyword List',
+  RegisterRecordDef(FFKW, 'Form Folder Keyword List',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -11994,7 +11994,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FLOR, 'Flora', [
+  RegisterRecordDef(FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -12034,7 +12034,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FLST, 'FormID List',
+  RegisterRecordDef(FLST, 'FormID List',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12066,14 +12066,14 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FOGV, 'Fog Volume', [
+  RegisterRecordDef(FOGV, 'Fog Volume', [
     wbEDID,
     wbBaseFormComponents,
     wbReflection(REFL)
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FORC, 'Force Data',
+  RegisterRecordDef(FORC, 'Force Data',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12096,7 +12096,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FSTP, 'Footstep', [
+  RegisterRecordDef(FSTP, 'Footstep', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -12105,7 +12105,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FSTS, 'Footstep Set', [
+  RegisterRecordDef(FSTS, 'Footstep Set', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -12136,7 +12136,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(FURN, 'Furniture',
+  RegisterRecordDef(FURN, 'Furniture',
     wbFlags(wbFlagsList([
        2, 'Heading Marker',
        4, 'Non Occluder',
@@ -12230,7 +12230,7 @@ begin
     wbEmpty(STOP, 'Marker', cpNormal, True)
   ]);
 
-  wbRecord(FXPD, 'Facial Expression',
+  RegisterRecordDef(FXPD, 'Facial Expression',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12257,7 +12257,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GBFM, 'Generic Base Form',
+  RegisterRecordDef(GBFM, 'Generic Base Form',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unique'
     ])), [
@@ -12277,7 +12277,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GBFT, 'Generic Base Form Template',
+  RegisterRecordDef(GBFT, 'Generic Base Form Template',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12300,7 +12300,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GCVR, 'Ground Cover',
+  RegisterRecordDef(GCVR, 'Ground Cover',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12331,7 +12331,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GLOB, 'Global',
+  RegisterRecordDef(GLOB, 'Global',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -12365,7 +12365,7 @@ begin
   ]).SetSummaryKey([2]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GMST, 'Game Setting', [
+  RegisterRecordDef(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet),
     wbXALG,
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
@@ -12378,7 +12378,7 @@ begin
   ]).SetSummaryKey([2])
     .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(GPOF, 'Gameplay Option',
+  RegisterRecordDef(GPOF, 'Gameplay Option',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12442,7 +12442,7 @@ begin
     wbKeywords('Keywords', False)
   ]);
 
-  wbRecord(GPOG, 'Gameplay Options Group',
+  RegisterRecordDef(GPOG, 'Gameplay Options Group',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12483,7 +12483,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(GRAS, 'Grass',
+  RegisterRecordDef(GRAS, 'Grass',
     wbFlags(wbFlagsList([
       {0x00008000} 15, 'Unknown 15'
     ])), [
@@ -12517,7 +12517,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(GWED, 'Gravity Wielder Effect Data',
+  RegisterRecordDef(GWED, 'Gravity Wielder Effect Data',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -12541,7 +12541,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(HAZD, 'Hazard',
+  RegisterRecordDef(HAZD, 'Hazard',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -12604,7 +12604,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(HDPT, 'Head Part',
+  RegisterRecordDef(HDPT, 'Head Part',
     wbFlags(wbFlagsList([
     2, 'Non-Playable'
     ])), [
@@ -12677,7 +12677,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IDLE, 'Animation', [
+  RegisterRecordDef(IDLE, 'Animation', [
     wbEDID,
     wbConditions,
     wbString(DNAM, 'Behavior Graph'),
@@ -12698,7 +12698,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IDLM, 'Idle Marker',
+  RegisterRecordDef(IDLM, 'Idle Marker',
     wbFlags(wbFlagsList([
     29, 'Child Can Use'
     ])), [
@@ -12716,13 +12716,13 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IMAD, 'Image Space Adapter', [
+  RegisterRecordDef(IMAD, 'Image Space Adapter', [
     wbEDID,
     wbReflection(REFL)
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IMGS, 'Image Space', [
+  RegisterRecordDef(IMGS, 'Image Space', [
     wbEDID,
     wbReflection(REFL),
     wbFormIDCk(RFDP, 'Reflection Parent', [IMGS]),
@@ -12730,7 +12730,7 @@ begin
   ]);
 
   {still exists in game code, but not in Starfield.esm}
-  wbRecord(INGR, 'Ingredient', [
+  RegisterRecordDef(INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -12766,7 +12766,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(INFO, 'Dialog response',
+  RegisterRecordDef(INFO, 'Dialog response',
     wbFlags(wbFlagsList([
     6,  'Info Group',
     7,  'Exclude From Export',
@@ -12897,7 +12897,7 @@ begin
   ]).SetAddInfo(wbINFOAddInfo);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(INNR, 'Instance Naming Rules', [
+  RegisterRecordDef(INNR, 'Instance Naming Rules', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -13157,7 +13157,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IPCT, 'Impact', [
+  RegisterRecordDef(IPCT, 'Impact', [
     wbEDID,
     wbBaseFormComponents,
     wbGenericModel(True),
@@ -13196,7 +13196,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IPDS, 'Impact Data Set', [
+  RegisterRecordDef(IPDS, 'Impact Data Set', [
     wbEDID,
     wbBaseFormComponents,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
@@ -13207,7 +13207,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(IRES, 'Resource',
+  RegisterRecordDef(IRES, 'Resource',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -13250,7 +13250,7 @@ begin
     wbFormIDCK(NAM3, 'Production Interval (hours)', [NULL, GLOB])
   ]);
 
-  wbRecord(KEYM, 'Key',
+  RegisterRecordDef(KEYM, 'Key',
     wbFlags(wbFlagsList([
       {0x00000002} 2, 'Non-Playable',
       {0x00000800} 11, 'Calc Value From Components',
@@ -13285,7 +13285,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(KSSM, 'Sound Keyword Mapping', [
+  RegisterRecordDef(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbSoundReference(WED0),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD])
@@ -13307,7 +13307,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(KYWD, 'Keyword',
+  RegisterRecordDef(KYWD, 'Keyword',
     wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
@@ -13325,7 +13325,7 @@ begin
     .SetSummaryMemberPrefixSuffix(4, '[Type] ','');
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LAYR, 'Layer',
+  RegisterRecordDef(LAYR, 'Layer',
     wbFlags(wbFlagsList([
         {0x00000004}  2, 'Non-Playable',
         {0x00000010}  4, 'Ground Piece',
@@ -13354,7 +13354,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LCRT, 'Location Reference Type',
+  RegisterRecordDef(LCRT, 'Location Reference Type',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -13386,7 +13386,7 @@ begin
   ]).SetSummaryKey([3]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LCTN, 'Location',
+  RegisterRecordDef(LCTN, 'Location',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -13600,7 +13600,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LENS, 'Lens Flare',
+  RegisterRecordDef(LENS, 'Lens Flare',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -13649,7 +13649,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LGDI, 'Legendary Item',
+  RegisterRecordDef(LGDI, 'Legendary Item',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -13768,7 +13768,7 @@ begin
 
   {subrecords checked against Starfield.esm}
   // Lighting Templates are no longer used and are legacy records
-  wbRecord(LGTM, 'Lighting Template', [
+  RegisterRecordDef(LGTM, 'Lighting Template', [
     wbEDID,
     wbBaseFormComponents,
     wbStruct(DATA, 'Lighting', [
@@ -13805,7 +13805,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LIGH, 'Light',
+  RegisterRecordDef(LIGH, 'Light',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000080}  7, 'Unknown 7',
@@ -13912,7 +13912,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LMSW, 'Layered Material Swap', [
+  RegisterRecordDef(LMSW, 'Layered Material Swap', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -13920,7 +13920,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LSCR, 'Load Screen',
+  RegisterRecordDef(LSCR, 'Load Screen',
     wbFlags(wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu',
       {0x00008000} 15, 'No Rotation'
@@ -13945,7 +13945,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LTEX, 'Landscape Texture',
+  RegisterRecordDef(LTEX, 'Landscape Texture',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ])), [
@@ -13962,7 +13962,7 @@ begin
   ]).SetSummaryKey([1]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LVLB, 'Leveled Base Form',
+  RegisterRecordDef(LVLB, 'Leveled Base Form',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -14023,7 +14023,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LVLI, 'Leveled Item',
+  RegisterRecordDef(LVLI, 'Leveled Item',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -14087,7 +14087,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LVLN, 'Leveled NPC',
+  RegisterRecordDef(LVLN, 'Leveled NPC',
     wbFlags(wbFlagsList([
       {0x00008000}  15, 'Calculate All (Still picks just one)'
     ])), [
@@ -14129,7 +14129,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LVLP, 'Leveled Pack In',
+  RegisterRecordDef(LVLP, 'Leveled Pack In',
     wbFlags(wbFlagsList([
       {0x00000080}   7, 'Apply LRT To All But Pivot'
     ])), [
@@ -14171,7 +14171,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(LVSC, 'Leveled Space Cell',
+  RegisterRecordDef(LVSC, 'Leveled Space Cell',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -14217,7 +14217,7 @@ begin
   ]);
 
   (* still exists in game code, but not in Starfield.esm *)
-  wbRecord(LVSP, 'Leveled Spell',
+  RegisterRecordDef(LVSP, 'Leveled Spell',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -14269,7 +14269,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MAAM, 'Melee Aim Assist Model',
+  RegisterRecordDef(MAAM, 'Melee Aim Assist Model',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -14301,7 +14301,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MATT, 'Material Type', [
+  RegisterRecordDef(MATT, 'Material Type', [
     wbEDID,
     wbBaseFormComponents,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
@@ -14320,7 +14320,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MESG, 'Message',
+  RegisterRecordDef(MESG, 'Message',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -14370,7 +14370,7 @@ begin
       ]))
   ]).SetAfterLoad(wbMESGAfterLoad);
 
-  wbRecord(MGEF, 'Magic Effect',
+  RegisterRecordDef(MGEF, 'Magic Effect',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -14567,7 +14567,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MISC, 'Misc. Item',
+  RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -14618,7 +14618,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MOVT, 'Movement Type', [
+  RegisterRecordDef(MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
     wbSPED.SetRequired,
@@ -14632,7 +14632,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MRPH, 'Morphable Object',
+  RegisterRecordDef(MRPH, 'Morphable Object',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -14662,7 +14662,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MSTT, 'Moveable Static',
+  RegisterRecordDef(MSTT, 'Moveable Static',
     wbFlags(wbFlagsList([
        8, 'Must Update Anims',
        9, 'Hidden From Local Map',
@@ -14711,7 +14711,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MUSC, 'Music Type', [
+  RegisterRecordDef(MUSC, 'Music Type', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -14735,7 +14735,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MUST, 'Music Track', [
+  RegisterRecordDef(MUST, 'Music Track', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -14757,7 +14757,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(MTPT, 'Material Path',
+  RegisterRecordDef(MTPT, 'Material Path',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -14780,7 +14780,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(NAVI, 'Navmesh Info Map', [
+  RegisterRecordDef(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArrayS('Navmesh Infos',
@@ -14904,7 +14904,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(NAVM, 'Navmesh',
+  RegisterRecordDef(NAVM, 'Navmesh',
     wbFlags(wbFlagsList([
       10, 'Unknown 10',
       11, 'Initially Disabled',
@@ -14930,7 +14930,7 @@ begin
   ]).SetAddInfo(wbNAVMAddInfo);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(NOCM, 'Navmesh Obstacle Manager', [
+  RegisterRecordDef(NOCM, 'Navmesh Obstacle Manager', [
     wbEDID
       .SetDefaultEditValue('NavmeshObstacleCoverManager')
       .SetRequired
@@ -14948,7 +14948,7 @@ begin
   ]);
 
   { still exists in game code, but not in Starfield.esm }
-  wbRecord(NOTE, 'Note',
+  RegisterRecordDef(NOTE, 'Note',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -15003,7 +15003,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(NPC_, 'Non-Player Character',
+  RegisterRecordDef(NPC_, 'Non-Player Character',
     wbFlags(wbFlagsList([
       10, 'Unknown 10',
       18, 'Compressed',
@@ -15439,7 +15439,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(OMOD, 'Object Modification',
+  RegisterRecordDef(OMOD, 'Object Modification',
     wbFlags(wbFlagsList([
       {0x00000010} 4, 'Legendary Mod',
       {0x00000080} 7, 'Mod Collection',
@@ -15489,7 +15489,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(OSWP, 'Object Swap',
+  RegisterRecordDef(OSWP, 'Object Swap',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -15516,7 +15516,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(OTFT, 'Outfit', [
+  RegisterRecordDef(OTFT, 'Outfit', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -15524,7 +15524,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(OVIS, 'Object Visibility Manager', [
+  RegisterRecordDef(OVIS, 'Object Visibility Manager', [
     wbEDID,
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -15550,7 +15550,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PACK, 'Package',
+  RegisterRecordDef(PACK, 'Package',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -15774,7 +15774,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PCBN, 'Planet Content Manager Branch Node', [
+  RegisterRecordDef(PCBN, 'Planet Content Manager Branch Node', [
     wbEDID,
     wbBaseFormComponents,
     wbInteger(NAM1, 'Node Type', itU32, wbEnum([
@@ -15798,7 +15798,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PCCN, 'Planet Content Manager Content Node', [
+  RegisterRecordDef(PCCN, 'Planet Content Manager Content Node', [
     wbEDID,
     wbBaseFormComponents,
     wbFormIDCk(PCCC, 'Content', [WRLD, LVLP, PKIN], False, cpNormal, True),
@@ -15809,7 +15809,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PCMT, 'Planet Content Manager Tree',
+  RegisterRecordDef(PCMT, 'Planet Content Manager Tree',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -15839,7 +15839,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PDCL, 'Projected Decal',
+  RegisterRecordDef(PDCL, 'Projected Decal',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -15882,7 +15882,7 @@ begin
   ]).SetSummaryKey([7]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PERK, 'Perk',
+  RegisterRecordDef(PERK, 'Perk',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -15935,7 +15935,7 @@ begin
 
   {subrecords checked against Starfield.esm}
   // TESDataHandlerPersistentCreatedUtil::BGSPersistentIDsForm
-  wbRecord(PERS, 'Unknown - PERS', [
+  RegisterRecordDef(PERS, 'Unknown - PERS', [
     wbInteger(DATA, 'Unknown', itU32),
     wbRArray('Unknown', wbStructs(DAT2, 'Unknown', 'Unknown', [
       wbFormID('Unknown'),
@@ -15945,7 +15945,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PMFT, 'Photo Mode Feature',
+  RegisterRecordDef(PMFT, 'Photo Mode Feature',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -15985,13 +15985,13 @@ begin
   ]);
 
   {xEdit internal subrecord type}
-  wbRecord(PLYR, 'Player Reference', [
+  RegisterRecordDef(PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PKIN, 'Pack-In',
+  RegisterRecordDef(PKIN, 'Pack-In',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Instanced',
       {0x00000400} 10, 'Calc LPIs',
@@ -16058,7 +16058,7 @@ begin
   ]).SetSummaryKey([12]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PNDT, 'Planet',
+  RegisterRecordDef(PNDT, 'Planet',
     wbFlags(wbFlagsList([
       {0x00040000} 18, 'Compressed'
     ]), [18]), [
@@ -16238,7 +16238,7 @@ begin
   ]).SetAfterLoad(wbPNDTAfterLoad);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PROJ, 'Projectile',
+  RegisterRecordDef(PROJ, 'Projectile',
     wbFlags(wbFlagsList([
       15, 'Apply Charge Multiplier'
     ])), [
@@ -16338,18 +16338,18 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PSDC, 'Particle System Define Collection', [ //PSDC -> EDID REFL  (9)
+  RegisterRecordDef(PSDC, 'Particle System Define Collection', [ //PSDC -> EDID REFL  (9)
     wbEDID,
     wbReflection(REFL)
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(PTST, 'Surface Pattern Style', [ //PTST -> EDID  (46)
+  RegisterRecordDef(PTST, 'Surface Pattern Style', [ //PTST -> EDID  (46)
     wbEDID
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(QUST, 'Quest',
+  RegisterRecordDef(QUST, 'Quest',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000010}  4, 'Ground Piece',
@@ -16527,7 +16527,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(RACE, 'Race',
+  RegisterRecordDef(RACE, 'Race',
     wbFlags(wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
@@ -16825,7 +16825,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(REGN, 'Region',
+  RegisterRecordDef(REGN, 'Region',
     wbFlags(wbFlagsList([
       {0x00000040} 6, 'Border Region'
     ])), [
@@ -16859,7 +16859,7 @@ begin
     ]))
   ]).SetUnordered;
 
-  wbRecord(RELA, 'Relationship', [
+  RegisterRecordDef(RELA, 'Relationship', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -16893,7 +16893,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(REVB, 'Reverb Parameters', [
+  RegisterRecordDef(REVB, 'Reverb Parameters', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -16904,7 +16904,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(RFGP, 'Reference Group', @wbKnownSubRecordSignaturesRFGP, [
+  RegisterRecordDef(RFGP, 'Reference Group', @wbKnownSubRecordSignaturesRFGP, [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -16916,7 +16916,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(RSGD, 'Resource Generation Data', [
+  RegisterRecordDef(RSGD, 'Resource Generation Data', [
     wbEDID,
     wbBaseFormComponents,
     wbRArray('Resources',
@@ -16946,7 +16946,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(RSPJ, 'Research Project', [
+  RegisterRecordDef(RSPJ, 'Research Project', [
     wbEDID,
     wbBaseFormComponents,
     wbFULL,
@@ -16975,7 +16975,7 @@ begin
     wbRArray('Required Researches', wbFormIDCk(RNAM, 'Research', [RSPJ]))
   ]);
 
-  wbRecord(SCCO, 'Scene Collection', [
+  RegisterRecordDef(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
     wbRArray('Scenes',
@@ -16991,7 +16991,7 @@ begin
   ]);
 
   {subrecords checked against Starfield.esm}
-  wbRecord(SCEN, 'Scene',
+  RegisterRecordDef(SCEN, 'Scene',
     wbFlags(wbFlagsList([
     10, 'Unknown 10'
     ])), [
@@ -17413,7 +17413,7 @@ begin
     wbEmpty(DEVT, 'Show One Dialogue Track Flag')
   ]).SetAddInfo(wbSCENAddInfo);
 
-  wbRecord(SCOL, 'Static Collection',
+  RegisterRecordDef(SCOL, 'Static Collection',
     wbFlags(wbFlagsList([
        4, 'Non Occluder',
        9, 'Hidden From Local Map',
@@ -17443,7 +17443,7 @@ begin
     wbRArrayS('Parts', wbStaticPart).SetRequired
   ]);
 
-  wbRecord(SCRL, 'Scroll', [
+  RegisterRecordDef(SCRL, 'Scroll', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -17464,7 +17464,7 @@ begin
     wbEffects
   ]);
 
-  wbRecord(SDLT, 'Secondary Damage List', [
+  RegisterRecordDef(SDLT, 'Secondary Damage List', [
     wbEDID,
     wbBaseFormComponents,
     wbInteger(ITMC, 'Secondary List Count', itU32).SetRequired,
@@ -17477,7 +17477,7 @@ begin
      .SetRequired
   ]);
 
-  wbRecord(SECH, 'Sound Echo Marker',
+  RegisterRecordDef(SECH, 'Sound Echo Marker',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -17535,7 +17535,7 @@ begin
       ]).SetSummaryKey([1,2]))
   ]);
 
-  wbRecord(SFBK, 'Surface Block', [
+  RegisterRecordDef(SFBK, 'Surface Block', [
     wbEDID,
     wbBaseFormComponents,
     wbString(ANAM, 'Data File'),
@@ -17603,7 +17603,7 @@ begin
     wbFormIDCk(NAM5, 'Source Block', [SFBK, NULL] )
   ]);
 
-  wbRecord(SFPC, 'Surface Pattern Config', [
+  RegisterRecordDef(SFPC, 'Surface Pattern Config', [
     wbEDID,
     wbFormIDCk(ENAM, 'Surface Pattern Style', [NULL, PTST]).SetRequired,
     wbRStructs('Styles', 'Style', [
@@ -17617,7 +17617,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(SFPT, 'Surface Pattern', [
+  RegisterRecordDef(SFPT, 'Surface Pattern', [
     wbEDID,
     wbBaseFormComponents,
     wbFormIDCk(CNAM, 'Surface Pattern Style', [NULL, PTST]).SetRequired,
@@ -17666,7 +17666,7 @@ begin
     wbArray(DNAM, 'Worldspaces', wbFormIDCk('Worldspace', [WRLD]))
   ]);
 
-  wbRecord(SFTR, 'Surface Tree',
+  RegisterRecordDef(SFTR, 'Surface Tree',
     wbFlags(wbFlagsList([
      4,  'Unknown 4',
      18, 'Compressed'
@@ -17684,7 +17684,7 @@ begin
     wbString(NAM1, 'Filter').IncludeFlag(dfNoCopyAsOverride)   // CK does not copy this on overrides
   ]);
 
-  wbRecord(SMBN, 'Story Manager Branch Node', [
+  RegisterRecordDef(SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -17699,7 +17699,7 @@ begin
     wbInteger(XNAM, 'Max concurrent quests', itU32)
   ]);
 
-  wbRecord(SMEN, 'Story Manager Event Node', [
+  RegisterRecordDef(SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -17715,7 +17715,7 @@ begin
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum(Self))
   ]);
 
-  wbRecord(SMQN, 'Story Manager Quest Node', [
+  RegisterRecordDef(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -17742,7 +17742,7 @@ begin
     ).SetCountPath(QNAM)
   ]);
 
-  wbRecord(SOUN, 'Sound Marker', [
+  RegisterRecordDef(SOUN, 'Sound Marker', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -17757,7 +17757,7 @@ begin
     ])
   ]).SetSummaryKey([5]);
 
-  wbRecord(SPCH, 'Speech Challenge', [
+  RegisterRecordDef(SPCH, 'Speech Challenge', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -17775,7 +17775,7 @@ begin
     ]))
   ]);
 
-  wbRecord(SPEL, 'Spell', [
+  RegisterRecordDef(SPEL, 'Spell', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -17792,7 +17792,7 @@ begin
     wbEffects
   ]);
 
-  wbRecord(SPGD, 'Shader Particle Geometry', [
+  RegisterRecordDef(SPGD, 'Shader Particle Geometry', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -17830,7 +17830,7 @@ begin
     wbString(MNAM, 'Particle Texture')
   ]);
 
-  wbRecord(STAG, 'Animation Sound Tag Set',
+  RegisterRecordDef(STAG, 'Animation Sound Tag Set',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -17857,7 +17857,7 @@ begin
     ]).SetCountPath(STMS)
   ]);
 
-  wbRecord(STAT, 'Static',
+  RegisterRecordDef(STAT, 'Static',
     wbFlags(wbFlagsList([
       2, 'Heading Marker',
       4, 'Non Occluder',
@@ -17906,7 +17906,7 @@ begin
     wbNVNM
   ]);
 
-  wbRecord(STBH, 'Snap Template Behavior', [
+  RegisterRecordDef(STBH, 'Snap Template Behavior', [
     wbEDID,
     wbBaseFormComponents,
     wbRStructs('Behaviors', 'Behavior', [
@@ -17925,7 +17925,7 @@ begin
     ])
   ]);
 
-  wbRecord(STDT, 'Star',
+  RegisterRecordDef(STDT, 'Star',
     wbFlags(wbFlagsList([
     28, 'Starts Hidden',
     29, 'Always Display Name'
@@ -17951,7 +17951,7 @@ begin
       aIndexKeys.Keys[wbIdxStarID] := lStarID;
     end);
 
-  wbRecord(STMP, 'Snap Template',
+  RegisterRecordDef(STMP, 'Snap Template',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -18018,7 +18018,7 @@ begin
     ]))
   ]);
 
-  wbRecord(STND, 'Snap Template Node',
+  RegisterRecordDef(STND, 'Snap Template Node',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -18074,14 +18074,14 @@ begin
     wbFormIDCk(ANAM, 'Art Object', [ARTO])
   ]);
 
-  wbRecord(SUNP, 'Sun Preset', [
+  RegisterRecordDef(SUNP, 'Sun Preset', [
     wbEDID,
     wbReflection(REFL),
     wbFormIDCk(RFDP, 'Reflection Parent', [SUNP]),
     wbReflection(RDIF)
   ]);
 
-  wbRecord(TACT, 'Talking Activator',
+  RegisterRecordDef(TACT, 'Talking Activator',
     wbFlags(wbFlagsList([
     9, 'Hidden From Local Map',
     11, 'Used as Platform',
@@ -18144,7 +18144,7 @@ begin
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ]);
 
-  wbRecord(TDED, 'Track Damage Effect Data',
+  RegisterRecordDef(TDED, 'Track Damage Effect Data',
     wbFlags(wbFlagsList([
       2,  'Non-Playable',
       4,  'Ground Piece',
@@ -18165,7 +18165,7 @@ begin
     wbReflection(REFL)
   ]);
 
-  wbRecord(TERM, 'Terminal',
+  RegisterRecordDef(TERM, 'Terminal',
     wbFlags(wbFlagsList([
       2, 'Heading Marker',
       4, 'Non Occluder',
@@ -18261,13 +18261,13 @@ begin
     wbMarkerReq(STOP)
   ]);
 
-  wbRecord(TODD, 'Time Of Day Data', [
+  RegisterRecordDef(TODD, 'Time Of Day Data', [
     wbEDID,
     wbBaseFormComponents,
     wbReflection(REFL)
   ]);
 
-  wbRecord(TMLM, 'Terminal Menu',
+  RegisterRecordDef(TMLM, 'Terminal Menu',
     wbFlags(wbFlagsList([
     2, 'Non-Playable',
     4, 'Ground Piece',
@@ -18354,7 +18354,7 @@ begin
     ])
   ]);
 
-  wbRecord(TRAV, 'Traversal',
+  RegisterRecordDef(TRAV, 'Traversal',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -18391,7 +18391,7 @@ begin
     ])
   ]);
 
-  wbRecord(TRNS, 'Transform',
+  RegisterRecordDef(TRNS, 'Transform',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -18440,7 +18440,7 @@ begin
      .IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]).SetSummaryKey([1]);
 
-  wbRecord(TXST, 'Texture Set', [
+  RegisterRecordDef(TXST, 'Texture Set', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -18476,7 +18476,7 @@ begin
     wbString(MNAM, 'Material')
   ]).SetSummaryKey([3, 4]);
 
-  wbRecord(VOLI, 'Volumetric Lighting',
+  RegisterRecordDef(VOLI, 'Volumetric Lighting',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     4,  'Ground Piece',
@@ -18498,7 +18498,7 @@ begin
     wbReflection(REFL)
   ]);
 
-  wbRecord(VTYP, 'Voice Type', [
+  RegisterRecordDef(VTYP, 'Voice Type', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -18519,7 +18519,7 @@ begin
       ]))
   ]);
 
-  wbRecord(WATR, 'Water', [
+  RegisterRecordDef(WATR, 'Water', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -18604,7 +18604,7 @@ begin
     wbFormIDCk(UNAM, 'Yellow-Matter Curve', [CUR3])
   ]);
 
-  wbRecord(WEAP, 'Weapon',
+  RegisterRecordDef(WEAP, 'Weapon',
     wbFlags(wbFlagsList([
     2,  'Non-Playable',
     30, 'High-Res 1st Person Only'
@@ -18845,7 +18845,7 @@ begin
     ])
   ]);
 
-  wbRecord(WBAR, 'Weapon Barrel Model', [
+  RegisterRecordDef(WBAR, 'Weapon Barrel Model', [
     wbEDID,
     wbBaseFormComponents,
     wbStruct(ZNAM, 'Data', [
@@ -18856,7 +18856,7 @@ begin
     ])
   ]);
 
-  wbRecord(WTHR, 'Weather',
+  RegisterRecordDef(WTHR, 'Weather',
     wbFlags(wbFlagsList([
       9, 'Unknown 9'
     ])), [
@@ -18941,7 +18941,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(WTHS, 'Weather Settings', [
+  RegisterRecordDef(WTHS, 'Weather Settings', [
     wbEDID,
     wbBaseFormComponents,
     wbReflection(REFL),
@@ -18950,7 +18950,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(WRLD, 'Worldspace',
+  RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
     2, 'Unique/Non-Playable',
     4, 'Ground Piece',
@@ -19047,7 +19047,7 @@ begin
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
 
-  wbRecord(WWED, 'Wwise Event Data', [
+  RegisterRecordDef(WWED, 'Wwise Event Data', [
     wbEDID,
     wbVMAD,
     wbBaseFormComponents,
@@ -19056,7 +19056,7 @@ begin
     wbWwiseGuid(WTED, 'End').SetToStr(wbWwiseGUIDToStr)
   ]);
 
-  wbRecord(WKMF, 'Wwise Keyword Mapping', [
+  RegisterRecordDef(WKMF, 'Wwise Keyword Mapping', [
     wbEDID,
     wbInteger(WMTI, 'Mapping Template', itU16,
       wbEnum([
@@ -19119,7 +19119,7 @@ begin
     ]).SetCountPath(WMSS)
   ]);
 
-  wbRecord(ZOOM, 'Zoom', [
+  RegisterRecordDef(ZOOM, 'Zoom', [
     wbEDID,
     wbBaseFormComponents,
     wbStruct(ZNAM, 'Data', [
@@ -19140,78 +19140,78 @@ begin
     ]).SetRequired
   ]);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(KYWD);
-  wbAddGroupOrder(FFKW);
-  wbAddGroupOrder(LCRT);
-  wbAddGroupOrder(AACT);
-  wbAddGroupOrder(TRNS);
-  wbAddGroupOrder(TXST);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(DMGT);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(AFFE);
-  wbAddGroupOrder(HDPT);
-  wbAddGroupOrder(EYES);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SECH);
-  wbAddGroupOrder(ASPC);
-  wbAddGroupOrder(AOPF);
+  AddGroupOrder(GMST);
+  AddGroupOrder(KYWD);
+  AddGroupOrder(FFKW);
+  AddGroupOrder(LCRT);
+  AddGroupOrder(AACT);
+  AddGroupOrder(TRNS);
+  AddGroupOrder(TXST);
+  AddGroupOrder(GLOB);
+  AddGroupOrder(DMGT);
+  AddGroupOrder(CLAS);
+  AddGroupOrder(FACT);
+  AddGroupOrder(AFFE);
+  AddGroupOrder(HDPT);
+  AddGroupOrder(EYES);
+  AddGroupOrder(RACE);
+  AddGroupOrder(SOUN);
+  AddGroupOrder(SECH);
+  AddGroupOrder(ASPC);
+  AddGroupOrder(AOPF);
   //wbAddGroupOrder(SKIL);
-  wbAddGroupOrder(MGEF);
+  AddGroupOrder(MGEF);
   //wbAddGroupOrder(SCPT);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(PDCL);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(SCRL); // doesn't exist but can be edited in CK
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(TACT); // doesn't exist but can be created in CK
-  wbAddGroupOrder(CURV);
-  wbAddGroupOrder(CUR3);
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(INGR); // doesn't exist but can be created in CK
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(SCOL);
-  wbAddGroupOrder(PKIN);
-  wbAddGroupOrder(MSTT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(AMMO);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(PLYR);
-  wbAddGroupOrder(LVLN);
-  wbAddGroupOrder(LVLP);
-  wbAddGroupOrder(KEYM);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(IDLM);
-  wbAddGroupOrder(BMMO);
-  wbAddGroupOrder(NOTE);
-  wbAddGroupOrder(PROJ);
-  wbAddGroupOrder(HAZD);
-  wbAddGroupOrder(BNDS);
+  AddGroupOrder(LTEX);
+  AddGroupOrder(PDCL);
+  AddGroupOrder(ENCH);
+  AddGroupOrder(SPEL);
+  AddGroupOrder(SCRL); // doesn't exist but can be edited in CK
+  AddGroupOrder(ACTI);
+  AddGroupOrder(TACT); // doesn't exist but can be created in CK
+  AddGroupOrder(CURV);
+  AddGroupOrder(CUR3);
+  AddGroupOrder(ARMO);
+  AddGroupOrder(BOOK);
+  AddGroupOrder(CONT);
+  AddGroupOrder(DOOR);
+  AddGroupOrder(INGR); // doesn't exist but can be created in CK
+  AddGroupOrder(LIGH);
+  AddGroupOrder(MISC);
+  AddGroupOrder(STAT);
+  AddGroupOrder(SCOL);
+  AddGroupOrder(PKIN);
+  AddGroupOrder(MSTT);
+  AddGroupOrder(GRAS);
+  AddGroupOrder(FLOR);
+  AddGroupOrder(FURN);
+  AddGroupOrder(WEAP);
+  AddGroupOrder(AMMO);
+  AddGroupOrder(NPC_);
+  AddGroupOrder(PLYR);
+  AddGroupOrder(LVLN);
+  AddGroupOrder(LVLP);
+  AddGroupOrder(KEYM);
+  AddGroupOrder(ALCH);
+  AddGroupOrder(IDLM);
+  AddGroupOrder(BMMO);
+  AddGroupOrder(NOTE);
+  AddGroupOrder(PROJ);
+  AddGroupOrder(HAZD);
+  AddGroupOrder(BNDS);
   //wbAddGroupOrder(SLGM);
-  wbAddGroupOrder(TERM);
-  wbAddGroupOrder(LVLI);
-  wbAddGroupOrder(GBFT);
-  wbAddGroupOrder(GBFM);
-  wbAddGroupOrder(LVLB);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(WTHS);
-  wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(SPGD);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(NAVI);
-  wbAddGroupOrder(CELL);
+  AddGroupOrder(TERM);
+  AddGroupOrder(LVLI);
+  AddGroupOrder(GBFT);
+  AddGroupOrder(GBFM);
+  AddGroupOrder(LVLB);
+  AddGroupOrder(WTHR);
+  AddGroupOrder(WTHS);
+  AddGroupOrder(CLMT);
+  AddGroupOrder(SPGD);
+  AddGroupOrder(REGN);
+  AddGroupOrder(NAVI);
+  AddGroupOrder(CELL);
   //wbAddGroupOrder(REFR);
   //wbAddGroupOrder(ACHR);
   //wbAddGroupOrder(PMIS);
@@ -19224,138 +19224,138 @@ begin
   //wbAddGroupOrder(PBAR);
   //wbAddGroupOrder(PEMI);
   //wbAddGroupOrder(PHZD);
-  wbAddGroupOrder(WRLD);
-  wbAddGroupOrder(NAVM);
+  AddGroupOrder(WRLD);
+  AddGroupOrder(NAVM);
   //wbAddGroupOrder(TLOD);
-  wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(INFO);
-  wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(LVSP); // doesn't exist but can be created in CK
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
+  AddGroupOrder(DIAL);
+  AddGroupOrder(INFO);
+  AddGroupOrder(QUST);
+  AddGroupOrder(IDLE);
+  AddGroupOrder(PACK);
+  AddGroupOrder(CSTY);
+  AddGroupOrder(LSCR);
+  AddGroupOrder(LVSP); // doesn't exist but can be created in CK
+  AddGroupOrder(ANIO);
+  AddGroupOrder(WATR);
+  AddGroupOrder(EFSH);
   //wbAddGroupOrder(TOFT);
-  wbAddGroupOrder(EXPL);
-  wbAddGroupOrder(DEBR);
-  wbAddGroupOrder(IMGS);
-  wbAddGroupOrder(IMAD);
-  wbAddGroupOrder(FLST);
-  wbAddGroupOrder(PERK);
-  wbAddGroupOrder(BPTD);
-  wbAddGroupOrder(ADDN);
-  wbAddGroupOrder(AVIF);
-  wbAddGroupOrder(CAMS);
-  wbAddGroupOrder(CPTH);
-  wbAddGroupOrder(VTYP);
-  wbAddGroupOrder(MATT);
-  wbAddGroupOrder(IPCT);
-  wbAddGroupOrder(IPDS);
-  wbAddGroupOrder(ARMA);
-  wbAddGroupOrder(LCTN);
-  wbAddGroupOrder(MESG);
+  AddGroupOrder(EXPL);
+  AddGroupOrder(DEBR);
+  AddGroupOrder(IMGS);
+  AddGroupOrder(IMAD);
+  AddGroupOrder(FLST);
+  AddGroupOrder(PERK);
+  AddGroupOrder(BPTD);
+  AddGroupOrder(ADDN);
+  AddGroupOrder(AVIF);
+  AddGroupOrder(CAMS);
+  AddGroupOrder(CPTH);
+  AddGroupOrder(VTYP);
+  AddGroupOrder(MATT);
+  AddGroupOrder(IPCT);
+  AddGroupOrder(IPDS);
+  AddGroupOrder(ARMA);
+  AddGroupOrder(LCTN);
+  AddGroupOrder(MESG);
   //wbAddGroupOrder(RGDL);
-  wbAddGroupOrder(DOBJ);
-  wbAddGroupOrder(DFOB);
-  wbAddGroupOrder(LGTM);
-  wbAddGroupOrder(MUSC);
-  wbAddGroupOrder(FSTP);
-  wbAddGroupOrder(FSTS);
-  wbAddGroupOrder(SMBN);
-  wbAddGroupOrder(SMQN);
-  wbAddGroupOrder(SMEN);
-  wbAddGroupOrder(DLBR);
-  wbAddGroupOrder(MUST);
+  AddGroupOrder(DOBJ);
+  AddGroupOrder(DFOB);
+  AddGroupOrder(LGTM);
+  AddGroupOrder(MUSC);
+  AddGroupOrder(FSTP);
+  AddGroupOrder(FSTS);
+  AddGroupOrder(SMBN);
+  AddGroupOrder(SMQN);
+  AddGroupOrder(SMEN);
+  AddGroupOrder(DLBR);
+  AddGroupOrder(MUST);
   //wbAddGroupOrder(DLVW);
   //wbAddGroupOrder(WOOP);
   //wbAddGroupOrder(SHOU);
-  wbAddGroupOrder(EQUP);
-  wbAddGroupOrder(RELA); // doesn't exist but can be created in CK
-  wbAddGroupOrder(SCEN);
-  wbAddGroupOrder(ASTP); // doesn't exist but can be created in CK
-  wbAddGroupOrder(OTFT);
-  wbAddGroupOrder(ARTO);
-  wbAddGroupOrder(MOVT);
-  wbAddGroupOrder(DUAL); // doesn't exist but can be created in CK
-  wbAddGroupOrder(COLL);
-  wbAddGroupOrder(CLFM);
-  wbAddGroupOrder(REVB);
-  wbAddGroupOrder(RFGP);
-  wbAddGroupOrder(AMDL);
-  wbAddGroupOrder(AAMD);
-  wbAddGroupOrder(MAAM);
-  wbAddGroupOrder(LAYR);
-  wbAddGroupOrder(COBJ);
-  wbAddGroupOrder(OMOD);
-  wbAddGroupOrder(ZOOM);
-  wbAddGroupOrder(INNR);
-  wbAddGroupOrder(KSSM);
-  wbAddGroupOrder(SCCO);
-  wbAddGroupOrder(AORU);
-  wbAddGroupOrder(STAG);
-  wbAddGroupOrder(IRES);
-  wbAddGroupOrder(BIOM);
-  wbAddGroupOrder(NOCM);
-  wbAddGroupOrder(LENS);
+  AddGroupOrder(EQUP);
+  AddGroupOrder(RELA); // doesn't exist but can be created in CK
+  AddGroupOrder(SCEN);
+  AddGroupOrder(ASTP); // doesn't exist but can be created in CK
+  AddGroupOrder(OTFT);
+  AddGroupOrder(ARTO);
+  AddGroupOrder(MOVT);
+  AddGroupOrder(DUAL); // doesn't exist but can be created in CK
+  AddGroupOrder(COLL);
+  AddGroupOrder(CLFM);
+  AddGroupOrder(REVB);
+  AddGroupOrder(RFGP);
+  AddGroupOrder(AMDL);
+  AddGroupOrder(AAMD);
+  AddGroupOrder(MAAM);
+  AddGroupOrder(LAYR);
+  AddGroupOrder(COBJ);
+  AddGroupOrder(OMOD);
+  AddGroupOrder(ZOOM);
+  AddGroupOrder(INNR);
+  AddGroupOrder(KSSM);
+  AddGroupOrder(SCCO);
+  AddGroupOrder(AORU);
+  AddGroupOrder(STAG);
+  AddGroupOrder(IRES);
+  AddGroupOrder(BIOM);
+  AddGroupOrder(NOCM);
+  AddGroupOrder(LENS);
   //wbAddGroupOrder(LSPR);
-  wbAddGroupOrder(OVIS);
+  AddGroupOrder(OVIS);
   //wbAddGroupOrder(DLYR);
-  wbAddGroupOrder(STND);
-  wbAddGroupOrder(STMP);
-  wbAddGroupOrder(GCVR);
-  wbAddGroupOrder(MRPH);
-  wbAddGroupOrder(TRAV);
-  wbAddGroupOrder(RSGD);
-  wbAddGroupOrder(OSWP);
-  wbAddGroupOrder(ATMO);
-  wbAddGroupOrder(LVSC);
-  wbAddGroupOrder(SPCH);
-  wbAddGroupOrder(AAPD);
-  wbAddGroupOrder(VOLI);
-  wbAddGroupOrder(SFBK);
-  wbAddGroupOrder(SFPC);
-  wbAddGroupOrder(SFPT);
-  wbAddGroupOrder(SFTR);
-  wbAddGroupOrder(PCMT);
-  wbAddGroupOrder(BMOD);
-  wbAddGroupOrder(STBH);
-  wbAddGroupOrder(PNDT);
+  AddGroupOrder(STND);
+  AddGroupOrder(STMP);
+  AddGroupOrder(GCVR);
+  AddGroupOrder(MRPH);
+  AddGroupOrder(TRAV);
+  AddGroupOrder(RSGD);
+  AddGroupOrder(OSWP);
+  AddGroupOrder(ATMO);
+  AddGroupOrder(LVSC);
+  AddGroupOrder(SPCH);
+  AddGroupOrder(AAPD);
+  AddGroupOrder(VOLI);
+  AddGroupOrder(SFBK);
+  AddGroupOrder(SFPC);
+  AddGroupOrder(SFPT);
+  AddGroupOrder(SFTR);
+  AddGroupOrder(PCMT);
+  AddGroupOrder(BMOD);
+  AddGroupOrder(STBH);
+  AddGroupOrder(PNDT);
   //wbAddGroupOrder(IUTF);
-  wbAddGroupOrder(CNDF);
-  wbAddGroupOrder(PCBN);
-  wbAddGroupOrder(PCCN);
-  wbAddGroupOrder(STDT);
-  wbAddGroupOrder(WWED);
-  wbAddGroupOrder(RSPJ);
-  wbAddGroupOrder(AOPS);
-  wbAddGroupOrder(AMBS);
-  wbAddGroupOrder(WBAR);
-  wbAddGroupOrder(PTST);
-  wbAddGroupOrder(LMSW);
-  wbAddGroupOrder(FORC);
-  wbAddGroupOrder(TMLM);
-  wbAddGroupOrder(EFSQ);
-  wbAddGroupOrder(SDLT);
-  wbAddGroupOrder(MTPT);
-  wbAddGroupOrder(CLDF);
-  wbAddGroupOrder(FOGV);
-  wbAddGroupOrder(WKMF);
-  wbAddGroupOrder(LGDI);
-  wbAddGroupOrder(PSDC);
-  wbAddGroupOrder(SUNP);
-  wbAddGroupOrder(PMFT);
-  wbAddGroupOrder(TODD);
-  wbAddGroupOrder(AVMD);
-  wbAddGroupOrder(PERS);
-  wbAddGroupOrder(CHAL);
-  wbAddGroupOrder(FXPD);
-  wbAddGroupOrder(GPOF);
-  wbAddGroupOrder(GPOG);
-  wbAddGroupOrder(GWED);
-  wbAddGroupOrder(TDED);
+  AddGroupOrder(CNDF);
+  AddGroupOrder(PCBN);
+  AddGroupOrder(PCCN);
+  AddGroupOrder(STDT);
+  AddGroupOrder(WWED);
+  AddGroupOrder(RSPJ);
+  AddGroupOrder(AOPS);
+  AddGroupOrder(AMBS);
+  AddGroupOrder(WBAR);
+  AddGroupOrder(PTST);
+  AddGroupOrder(LMSW);
+  AddGroupOrder(FORC);
+  AddGroupOrder(TMLM);
+  AddGroupOrder(EFSQ);
+  AddGroupOrder(SDLT);
+  AddGroupOrder(MTPT);
+  AddGroupOrder(CLDF);
+  AddGroupOrder(FOGV);
+  AddGroupOrder(WKMF);
+  AddGroupOrder(LGDI);
+  AddGroupOrder(PSDC);
+  AddGroupOrder(SUNP);
+  AddGroupOrder(PMFT);
+  AddGroupOrder(TODD);
+  AddGroupOrder(AVMD);
+  AddGroupOrder(PERS);
+  AddGroupOrder(CHAL);
+  AddGroupOrder(FXPD);
+  AddGroupOrder(GPOF);
+  AddGroupOrder(GPOG);
+  AddGroupOrder(GWED);
+  AddGroupOrder(TDED);
 
   NexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 

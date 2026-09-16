@@ -12979,7 +12979,7 @@ begin
         Signatures.Duplicates := dupIgnore;
         for i := Pred(BaseSignatures.Count) downto 0 do
           {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
-          if wbFindRecordDef(BaseSignatures[i], MainRecordDef) then
+          if _CurrentGameDef.FindRecordDef(BaseSignatures[i], MainRecordDef) then
           {$WARN IMPLICIT_STRING_CAST_LOSS ON}
             for j := 0 to Pred(MainRecordDef^.ReferenceSignatureCount) do
               Signatures.Add(MainRecordDef^.ReferenceSignatures[j]);
@@ -12987,7 +12987,7 @@ begin
         for i := Pred(Signatures.Count) downto 0 do begin
           FoundAny := False;
           {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
-          if wbFindRecordDef(Signatures[i], MainRecordDef) then
+          if _CurrentGameDef.FindRecordDef(Signatures[i], MainRecordDef) then
           {$WARN IMPLICIT_STRING_CAST_LOSS ON}
             for j := 0 to Pred(MainRecordDef^.BaseSignatureCount) do
               if BaseSignatures.Find(MainRecordDef^.BaseSignatures[j], Dummy) then begin
@@ -13042,7 +13042,7 @@ begin
 
     for i := Pred(TopLevelGroups.Count) downto 0 do
       {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
-      if wbFindRecordDef(TopLevelGroups[i], MainRecordDef) then begin
+      if _CurrentGameDef.FindRecordDef(TopLevelGroups[i], MainRecordDef) then begin
       {$WARN IMPLICIT_STRING_CAST_LOSS ON}
         if MainRecordDef^.IsReference then
           PotentiallyUnfilteredRefs := True;
@@ -18990,9 +18990,9 @@ begin
                 var lName2: string := lLabel2;
                 if xeSortGroupsByFullName then begin
                   var lRecordDef: PwbMainRecordDef;
-                  if wbFindRecordDef(lLabel1, lRecordDef) then
+                  if _CurrentGameDef.FindRecordDef(lLabel1, lRecordDef) then
                     lName1 := lRecordDef.Name;
-                  if wbFindRecordDef(lLabel2, lRecordDef) then
+                  if _CurrentGameDef.FindRecordDef(lLabel2, lRecordDef) then
                     lName2 := lRecordDef.Name;
                 end;
                 Result := CompareText(

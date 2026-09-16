@@ -906,7 +906,7 @@ begin
 
   {>>> Records <<<}
 
-  wbRecord(TES3, 'Main File Header', [
+  RegisterRecordDef(TES3, 'Main File Header', [
     wbStruct(HEDR, 'Header', [
       wbFloat('Version', cpNormal, False, 1, 2).IncludeFlag(dfInternalEditOnly, not wbAllowEditHEDRVersion),
       RecordFlags,
@@ -926,7 +926,7 @@ begin
      end)
      .SetAfterLoad(wbTES3AfterLoad);
 
-  wbRecord(ACTI, 'Activator',
+  RegisterRecordDef(ACTI, 'Activator',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -938,7 +938,7 @@ begin
     wbScript //[SCPT]
   ]).SetFormIDBase($40);
 
-  wbRecord(ALCH, 'Alchemy',
+  RegisterRecordDef(ALCH, 'Alchemy',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -957,7 +957,7 @@ begin
     wbEffects
   ]).SetFormIDBase($40);
 
-  wbRecord(APPA, 'Apparatus',
+  RegisterRecordDef(APPA, 'Apparatus',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -982,7 +982,7 @@ begin
     wbIcon
   ]).SetFormIDBase($40);
 
-  wbRecord(ARMO, 'Armor',
+  RegisterRecordDef(ARMO, 'Armor',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1018,7 +1018,7 @@ begin
     wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
-  wbRecord(BODY, 'Body Part', @wbKnownSubRecordSignaturesNoFNAM,
+  RegisterRecordDef(BODY, 'Body Part', @wbKnownSubRecordSignaturesNoFNAM,
     wbFlags(wbFlagsList([
     13, 'Blocked'
     ])), [
@@ -1067,7 +1067,7 @@ begin
   ]).SetFormIDBase($20)
     .SetSummaryKey([2]);
 
-  wbRecord(BOOK, 'Book',
+  RegisterRecordDef(BOOK, 'Book',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1089,7 +1089,7 @@ begin
     wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
-  wbRecord(BSGN, 'Birthsign', [
+  RegisterRecordDef(BSGN, 'Birthsign', [
     wbDeleted,
     wbEditorID,
     wbFullName,
@@ -1098,7 +1098,7 @@ begin
     wbSpells
   ]).SetFormIDBase($10);
 
-  wbRecord(CELL, 'Cell', [
+  RegisterRecordDef(CELL, 'Cell', [
     wbString(NAME, 'Location').SetRequired,
     wbDeleted,
     wbStruct(DATA, 'Data', [
@@ -1152,7 +1152,7 @@ begin
     end)
     .SetAfterLoad(wbCELLAfterLoad);
 
-  wbRecord(CLAS, 'Class', [
+  RegisterRecordDef(CLAS, 'Class', [
     wbEditorID,
     wbDeleted,
     wbFullName.SetRequired,
@@ -1173,7 +1173,7 @@ begin
     wbDescription
   ]).SetFormIDBase($18);
 
-  wbRecord(CLOT, 'Clothing',
+  RegisterRecordDef(CLOT, 'Clothing',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1205,7 +1205,7 @@ begin
     wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
-  wbRecord(CONT, 'Container',
+  RegisterRecordDef(CONT, 'Container',
     wbFlags(wbFlagsList([
     10, 'Corpses Persist',
     13, 'Blocked'
@@ -1228,7 +1228,7 @@ begin
     wbInventory
   ]).SetFormIDBase($40);
 
-  wbRecord(CREA, 'Creature',
+  RegisterRecordDef(CREA, 'Creature',
     wbFlags(wbFlagsList([
     10, 'Corpses Persist',
     13, 'Blocked'
@@ -1299,7 +1299,7 @@ begin
     wbPackages
   ]).SetFormIDBase($40);
 
-  wbRecord(DIAL, 'Dialog Topic', [
+  RegisterRecordDef(DIAL, 'Dialog Topic', [
     wbEditorID,
     wbStruct(DATA, 'Data', [
       wbInteger('Dialog Type', itU8, wbDialogTypeEnum),
@@ -1309,7 +1309,7 @@ begin
   ]).SetFormIDBase($80)
     .SetSummaryKey([1]);
 
-  wbRecord(DOOR, 'Door',
+  RegisterRecordDef(DOOR, 'Door',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1323,7 +1323,7 @@ begin
     wbString(ANAM, 'Close Sound') //[SOUN]
   ]).SetFormIDBase($40);
 
-  wbRecord(ENCH, 'Enchantment',
+  RegisterRecordDef(ENCH, 'Enchantment',
     wbFlags(wbFlagsList([
     13, 'Blocked'
     ])), [
@@ -1349,7 +1349,7 @@ begin
   ]).SetFormIDBase($04)
     .SetSummaryKey([3]);
 
-  wbRecord(FACT, 'Faction', [
+  RegisterRecordDef(FACT, 'Faction', [
     wbEditorID,
     wbDeleted,
     wbFullName.SetRequired,
@@ -1382,7 +1382,7 @@ begin
       ]).SetToStr(wbFactionReactionToStr))
   ]).SetFormIDBase($1C);
 
-  wbRecord(GLOB, 'Global', @wbKnownSubRecordSignaturesNoFNAM,  [
+  RegisterRecordDef(GLOB, 'Global', @wbKnownSubRecordSignaturesNoFNAM,  [
     wbEditorID,
     wbDeleted,
     wbInteger(FNAM, 'Variable Type', itU8,
@@ -1396,7 +1396,7 @@ begin
     .SetSummaryKey([3])
     .SetAfterLoad(wbGlobalAfterLoad);
 
-  wbRecord(GMST, 'Game Setting', [
+  RegisterRecordDef(GMST, 'Game Setting', [
     wbEditorID,
     wbRUnion('Value', [
       wbString(STRV, 'String Value'),
@@ -1407,7 +1407,7 @@ begin
     .SetSummaryKey([1])
     .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(INFO, 'Dialog Response', @wbKnownSubRecordSignaturesINFO, [
+  RegisterRecordDef(INFO, 'Dialog Response', @wbKnownSubRecordSignaturesINFO, [
     wbString(INAM, 'Response ID').SetRequired,
     wbString(PNAM, 'Previous Response ID').SetRequired,
     wbString(NNAM, 'Next Response ID').SetRequired,
@@ -1596,7 +1596,7 @@ begin
     wbString(BNAM, 'Result')
   ]).SetFormIDBase($90);
 
-  wbRecord(INGR, 'Ingredient',
+  RegisterRecordDef(INGR, 'Ingredient',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1625,7 +1625,7 @@ begin
   ]).SetFormIDBase($40)
     .SetAfterLoad(wbIngredientAfterLoad);
 
-  wbRecord(LAND, 'Landscape', @wbKnownSubRecordSignaturesLAND, [
+  RegisterRecordDef(LAND, 'Landscape', @wbKnownSubRecordSignaturesLAND, [
     wbStruct(INTV, 'Grid', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32)
@@ -1717,7 +1717,7 @@ begin
         Result := GridCell.SortKey;
     end);
 
-  wbRecord(LEVC, 'Leveled Creature',
+  RegisterRecordDef(LEVC, 'Leveled Creature',
     wbFlags(wbFlagsList([
     13, 'Blocked'
     ])), [
@@ -1742,7 +1742,7 @@ begin
   ]).SetFormIDBase($40)
     .SetSummaryKey([5]);
 
-  wbRecord(LEVI, 'Leveled Item',
+  RegisterRecordDef(LEVI, 'Leveled Item',
     wbFlags(wbFlagsList([
     13, 'Blocked'
     ])), [
@@ -1767,7 +1767,7 @@ begin
   ]).SetFormIDBase($40)
     .SetSummaryKey([5]);
 
-  wbRecord(LIGH, 'Light',
+  RegisterRecordDef(LIGH, 'Light',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1800,7 +1800,7 @@ begin
     wbString(SNAM, 'Looping Sound') //[SOUN]
   ]).SetFormIDBase($40);
 
-  wbRecord(LOCK, 'Lockpick',
+  RegisterRecordDef(LOCK, 'Lockpick',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1819,7 +1819,7 @@ begin
     wbIcon
   ]).SetFormIDBase($40);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  RegisterRecordDef(LTEX, 'Landscape Texture', [
     wbDeleted,
     wbEditorID,
     wbInteger(INTV, 'Texture ID', itU32).SetRequired,
@@ -1827,7 +1827,7 @@ begin
   ]).SetFormIDBase($60)
     .SetSummaryKey([3]);
 
-  wbRecord(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
+  RegisterRecordDef(MGEF, 'Magic Effect', @wbKnownSubRecordSignaturesINDX, [
     wbInteger(INDX, 'Effect', itU32, wbMagicEffectEnum),
     wbDeleted,
     wbStruct(MEDT, 'Data', [
@@ -1870,7 +1870,7 @@ begin
     wbDescription
   ]).SetFormIDBase($02);
 
-  wbRecord(MISC, 'Misc. Item',
+  RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -1889,7 +1889,7 @@ begin
     wbIcon
   ]).SetFormIDBase($40);
 
-  wbRecord(NPC_, 'Non-Player Character',
+  RegisterRecordDef(NPC_, 'Non-Player Character',
     wbFlags(wbFlagsList([
     10, 'Corpses Persist',
     13, 'Blocked'
@@ -1993,7 +1993,7 @@ begin
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2).SetDefaultNativeValue(1)
   ]).SetFormIDBase($40);
 
-  wbRecord(PGRD, 'Path Grid', [
+  RegisterRecordDef(PGRD, 'Path Grid', [
     wbStruct(DATA, 'Data', [
       wbStruct('Grid', [
         wbInteger('X', itS32),
@@ -2052,7 +2052,7 @@ begin
         Result := aMainRecord.EditorID;
     end);
 
-  wbRecord(PROB, 'Probe',
+  RegisterRecordDef(PROB, 'Probe',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -2071,7 +2071,7 @@ begin
     wbIcon
   ]).SetFormIDBase($40);
 
-  wbRecord(RACE, 'Race', [
+  RegisterRecordDef(RACE, 'Race', [
     wbEditorID,
     wbDeleted,
     wbFullName.SetRequired,
@@ -2139,7 +2139,7 @@ begin
     wbDescription
   ]).SetFormIDBase($14);
 
-  wbRecord(REFR, 'Placed Object', @wbKnownSubRecordSignaturesREFR, [
+  RegisterRecordDef(REFR, 'Placed Object', @wbKnownSubRecordSignaturesREFR, [
     wbStruct(CNDT, 'New Cell Cell', [
       wbInteger('X', itS32),
       wbInteger('Y', itS32)
@@ -2185,7 +2185,7 @@ begin
     end)
     .SetAfterLoad(wbDeletedAfterLoad);
 
-  wbRecord(REGN, 'Region', [
+  RegisterRecordDef(REGN, 'Region', [
     wbDeleted,
     wbEditorID,
     wbFullName.SetRequired,
@@ -2214,7 +2214,7 @@ begin
         .IncludeFlag(dfCollapsed, wbCollapseSounds))
   ]).SetFormIDBase($70);
 
-  wbRecord(REPA, 'Repair Item',
+  RegisterRecordDef(REPA, 'Repair Item',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -2233,7 +2233,7 @@ begin
     wbIcon
   ]).SetFormIDBase($40);
 
-  wbRecord(SCPT, 'Script', @wbKnownSubRecordSignaturesSCPT, [
+  RegisterRecordDef(SCPT, 'Script', @wbKnownSubRecordSignaturesSCPT, [
     wbStruct(SCHD, 'Script Header', [
       //Name can be saved with 36 characters in the CS, but it collides with Number of Shorts.
       wbString('Name', 32),
@@ -2264,7 +2264,7 @@ begin
     end)
     .SetToStr(wbScriptToStr);
 
-  wbRecord(SKIL, 'Skill', @wbKnownSubRecordSignaturesINDX, [
+  RegisterRecordDef(SKIL, 'Skill', @wbKnownSubRecordSignaturesINDX, [
     wbInteger(INDX, 'Name', itU32, wbSkillEnum).SetRequired,
     wbDeleted,
     wbStruct(SKDT, 'Data', [
@@ -2337,7 +2337,7 @@ begin
     wbDescription
   ]).SetFormIDBase($01);
 
-  wbRecord(SNDG, 'Sound Generator', [
+  RegisterRecordDef(SNDG, 'Sound Generator', [
     wbEditorID,
     wbInteger(DATA, 'Type', itU32,
       wbEnum([
@@ -2359,7 +2359,7 @@ begin
   ]).SetFormIDBase($28)
     .SetSummaryKey([3]);
 
-  wbRecord(SOUN, 'Sound', @wbKnownSubRecordSignaturesNoFNAM, [
+  RegisterRecordDef(SOUN, 'Sound', @wbKnownSubRecordSignaturesNoFNAM, [
     wbEditorID,
     wbDeleted,
     wbString(FNAM, 'Sound Filename').SetRequired,
@@ -2370,7 +2370,7 @@ begin
     ]).SetRequired
   ]).SetFormIDBase($40);
 
-  wbRecord(SPEL, 'Spellmaking',
+  RegisterRecordDef(SPEL, 'Spellmaking',
     wbFlags(wbFlagsList([
     13, 'Blocked'
     ])), [
@@ -2398,14 +2398,14 @@ begin
     wbEffects
   ]).SetFormIDBase($0A);
 
-  wbRecord(SSCR, 'Start Script', @wbKnownSubRecordSignaturesSSCR, [
+  RegisterRecordDef(SSCR, 'Start Script', @wbKnownSubRecordSignaturesSSCR, [
     wbDeleted,
     wbString(DATA, 'Numerical ID').SetRequired,
     wbString(NAME, 'Script').SetRequired //[SCPT]
   ]).SetFormIDBase($3F)
     .SetAfterLoad(wbDeletedAfterLoad);
 
-  wbRecord(STAT, 'Static',
+  RegisterRecordDef(STAT, 'Static',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -2416,7 +2416,7 @@ begin
   ]).SetFormIDBase($40)
     .SetSummaryKey([2]);
 
-  wbRecord(WEAP, 'Weapon',
+  RegisterRecordDef(WEAP, 'Weapon',
     wbFlags(wbFlagsList([
     10, 'References Persist',
     13, 'Blocked'
@@ -2474,48 +2474,48 @@ begin
     wbEnchantment(Self) //[ENCH]
   ]).SetFormIDBase($40);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SKIL);
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(SCPT);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(SSCR);
-  wbAddGroupOrder(BSGN);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(CREA);
-  wbAddGroupOrder(BODY);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(CLOT);
-  wbAddGroupOrder(REPA);
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(APPA);
-  wbAddGroupOrder(LOCK);
-  wbAddGroupOrder(PROB);
-  wbAddGroupOrder(INGR);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(LEVI);
-  wbAddGroupOrder(LEVC);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(LAND);
-  wbAddGroupOrder(PGRD);
-  wbAddGroupOrder(SNDG);
-  wbAddGroupOrder(DIAL);
-  wbAddGroupOrder(INFO);
+  AddGroupOrder(GMST);
+  AddGroupOrder(GLOB);
+  AddGroupOrder(CLAS);
+  AddGroupOrder(FACT);
+  AddGroupOrder(RACE);
+  AddGroupOrder(SOUN);
+  AddGroupOrder(SKIL);
+  AddGroupOrder(MGEF);
+  AddGroupOrder(SCPT);
+  AddGroupOrder(REGN);
+  AddGroupOrder(SSCR);
+  AddGroupOrder(BSGN);
+  AddGroupOrder(LTEX);
+  AddGroupOrder(STAT);
+  AddGroupOrder(DOOR);
+  AddGroupOrder(MISC);
+  AddGroupOrder(WEAP);
+  AddGroupOrder(CONT);
+  AddGroupOrder(SPEL);
+  AddGroupOrder(CREA);
+  AddGroupOrder(BODY);
+  AddGroupOrder(LIGH);
+  AddGroupOrder(ENCH);
+  AddGroupOrder(NPC_);
+  AddGroupOrder(ARMO);
+  AddGroupOrder(CLOT);
+  AddGroupOrder(REPA);
+  AddGroupOrder(ACTI);
+  AddGroupOrder(APPA);
+  AddGroupOrder(LOCK);
+  AddGroupOrder(PROB);
+  AddGroupOrder(INGR);
+  AddGroupOrder(BOOK);
+  AddGroupOrder(ALCH);
+  AddGroupOrder(LEVI);
+  AddGroupOrder(LEVC);
+  AddGroupOrder(CELL);
+  AddGroupOrder(LAND);
+  AddGroupOrder(PGRD);
+  AddGroupOrder(SNDG);
+  AddGroupOrder(DIAL);
+  AddGroupOrder(INFO);
   NexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
   HEDRVersion := 1.30;
   HardcodedRangeAdmitted := True;

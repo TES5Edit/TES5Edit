@@ -3896,7 +3896,7 @@ end;
 
 procedure ReferenceRecord(const aGameDef: TwbGameDef; const aSignature: TwbSignature; const aName: string);
 begin
-  wbRefRecord(aSignature, aName,
+  aGameDef.RegisterRefRecordDef(aSignature, aName,
     wbFlags(wbFlagsList([
       {0x00000080}  7, 'Turn Off Fire',
       {0x00000400} 10, 'Persistent',
@@ -5468,7 +5468,7 @@ begin
     wbNVNMRecordVal
   ]);
 
-  wbRefRecord(ACHR, 'Placed NPC',
+  RegisterRefRecordDef(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Starts Dead',
       {0x00000400} 10, 'Persistent',
@@ -7388,7 +7388,7 @@ begin
 
   wbAIID := wbInteger(AIID, 'Activator Can Be Instanced', itU8, wbBoolEnum);
 
-  wbRecord(ACTI, 'Activator',
+  RegisterRecordDef(ACTI, 'Activator',
     wbFlags(wbFlagsList([
        2, 'Never Fades',
        4, 'Non Occluder',
@@ -7483,7 +7483,7 @@ begin
   ]);
 
   { Inherits from ACTI }
-  wbRecord(TACT, 'Talking Activator',
+  RegisterRecordDef(TACT, 'Talking Activator',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Hidden From Local Map',
       {0x00010000} 16, 'Random Anim Start',
@@ -7514,7 +7514,7 @@ begin
 
   wbMIID := wbInteger(MIID, 'Max Item ID', itU32);
 
-  wbRecord(ALCH, 'Ingestible',
+  RegisterRecordDef(ALCH, 'Ingestible',
     wbFlags(wbFlagsList([
       {0x00000002}  2, 'Unknown 1',
       {0x20000000} 29, 'Medicine'
@@ -7576,7 +7576,7 @@ begin
     wbMIID
   ]);
 
-  wbRecord(AMMO, 'Ammunition',
+  RegisterRecordDef(AMMO, 'Ammunition',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -7616,7 +7616,7 @@ begin
     wbModelInfo(Self, NAM2)
   ]);
 
-  wbRecord(ANIO, 'Animated Object',
+  RegisterRecordDef(ANIO, 'Animated Object',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Unknown 9'
     ]), [9]), [
@@ -7625,7 +7625,7 @@ begin
     wbString(BNAM, 'Unload Event')
   ]);
 
-  wbRecord(ARMO, 'Armor',
+  RegisterRecordDef(ARMO, 'Armor',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x00000040}  6, 'Shield',
@@ -7700,7 +7700,7 @@ begin
     wbVCRY
   ]).SetAfterLoad(wbARMOAfterLoad);
 
-  wbRecord(ARMA, 'Armor Addon',
+  RegisterRecordDef(ARMA, 'Armor Addon',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000040}  6, 'No Underarmor Scaling',
@@ -7750,7 +7750,7 @@ begin
     wbInteger(VONL, 'Unknown Bool', itU8, wbBoolEnum)
   ]).SetAfterLoad(wbARMAAfterLoad);
 
-  wbRecord(BOOK, 'Book',
+  RegisterRecordDef(BOOK, 'Book',
     wbFlags(wbFlagsList([
       2, 'Unknown 2',
       9, 'Unknown 9'
@@ -7857,7 +7857,7 @@ begin
     {21} 'Is Prime Instance'
   ]);
 
-  wbRecord(CELL, 'Cell',
+  RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Is Instancable',
       {0x00000040}  6, 'Unknown 6',
@@ -8026,7 +8026,7 @@ begin
   ]).SetAddInfo(wbCellAddInfo)
     .SetUnordered;
 
-  wbRecord(CLAS, 'Class', [
+  RegisterRecordDef(CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
     wbDESCReq,
@@ -8038,7 +8038,7 @@ begin
     ])
   ]);
 
-  wbRecord(CLMT, 'Climate', [
+  RegisterRecordDef(CLMT, 'Climate', [
     wbEDID,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
       wbFormIDCk('Weather', [WTHR, NULL]),
@@ -8051,7 +8051,7 @@ begin
     wbClimateTiming(wbClmtTime, wbClmtMoonsPhaseLength)
   ]);
 
-  wbRecord(SPGD, 'Shader Particle Geometry', [
+  RegisterRecordDef(SPGD, 'Shader Particle Geometry', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
@@ -8086,7 +8086,7 @@ begin
     wbString(MNAM, 'Particle Texture')
   ]);
 
-  wbRecord(RFCT, 'Visual Effect', [
+  RegisterRecordDef(RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
       wbFormIDCK('Effect Art', [ARTO, NULL]),
@@ -8115,7 +8115,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CONT, 'Container',
+  RegisterRecordDef(CONT, 'Container',
     wbFlags(wbFlagsList([
       15, 'Has Distant LOD',
       16, 'Random Anim Start',
@@ -8181,7 +8181,7 @@ begin
           wbFromVersion(29, wbInteger('No Slow Approach', itU32, wbBoolEnum))
     ]).SetRequired;
 
-  wbRecord(CSTY, 'Combat Style',
+  RegisterRecordDef(CSTY, 'Combat Style',
     wbFlags(wbFlagsList([
       {0x00080000} 19, 'Allow Dual Wielding'
     ])), [
@@ -8268,7 +8268,7 @@ begin
     wbFloat(CSTD)
   ]);
 
-  wbRecord(DIAL, 'Dialog Topic',
+  RegisterRecordDef(DIAL, 'Dialog Topic',
     wbFlags(wbFlagsList([
     14, 'Partial Form'
     ]), [14]), [
@@ -8434,7 +8434,7 @@ begin
     wbINOA
   ]).SetAddInfo(wbDIALAddInfo);
 
-  wbRecord(DOOR, 'Door',
+  RegisterRecordDef(DOOR, 'Door',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000010}  4, 'Non Occluder',
@@ -8477,7 +8477,7 @@ begin
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  RegisterRecordDef(EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture'),
     wbString(ICO2, 'Particle Shader Texture'),
@@ -8565,7 +8565,7 @@ begin
     wbGenericModel(Self)
   ]);
 
-  wbRecord(ENCH, 'Enchantment', [
+  RegisterRecordDef(ENCH, 'Enchantment', [
     wbEDID,
     wbObjectBounds(Self),
     wbOPDSs,
@@ -8593,7 +8593,7 @@ begin
     wbMIID
   ]);
 
-  wbRecord(EYES, 'Eyes',
+  RegisterRecordDef(EYES, 'Eyes',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -8626,7 +8626,7 @@ begin
       .IncludeFlag(dfSummaryNoSortKey)
       .IncludeFlag(dfCollapsed, wbCollapseFactionRanks);
 
-  wbRecord(FACT, 'Faction', [
+  RegisterRecordDef(FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbFactionRelations(Self),
@@ -8718,7 +8718,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(FISH, 'Fish',
+  RegisterRecordDef(FISH, 'Fish',
     //wbFlags(wb
   [
     wbEDID,
@@ -8741,7 +8741,7 @@ begin
     wbFormID(FISU, 'Fanfare UI Sound Override')
   ]);
 
-  wbRecord(FURN, 'Furniture',
+  RegisterRecordDef(FURN, 'Furniture',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
@@ -8856,7 +8856,7 @@ begin
     wbNVNM
   ]);
 
-  wbRecord(GLOB, 'Global',
+  RegisterRecordDef(GLOB, 'Global',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000040}  6, 'Constant',
@@ -8875,7 +8875,7 @@ begin
     wbNTWK
   ]);
 
-  wbRecord(GMST, 'Game Setting', [
+  RegisterRecordDef(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
@@ -8887,7 +8887,7 @@ begin
   ]).SetSummaryKey([1])
     .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(KYWD, 'Keyword',
+  RegisterRecordDef(KYWD, 'Keyword',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000010}  4, 'Unknown 4',
@@ -8909,7 +8909,7 @@ begin
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
 
-  wbRecord(LCRT, 'Location Reference Type',
+  RegisterRecordDef(LCRT, 'Location Reference Type',
     wbFlags(wbFlagsList([
       {0x00000010} { 4}  4, 'Unknown 4'
     ])), [
@@ -8921,7 +8921,7 @@ begin
     wbUnknown(FNAM)
   ]);
 
-  wbRecord(AACT, 'Action',
+  RegisterRecordDef(AACT, 'Action',
     wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
@@ -8934,7 +8934,7 @@ begin
     wbFULL
   ]);
 
-  wbRecord(TXST, 'Texture Set', [
+  RegisterRecordDef(TXST, 'Texture Set', [
     wbEDID,
     wbObjectBounds(Self),
     wbOPDSs,
@@ -8964,7 +8964,7 @@ begin
     wbString(MNAM, 'Material')
   ]);
 
-  wbRecord(HDPT, 'Head Part',
+  RegisterRecordDef(HDPT, 'Head Part',
     wbFlags(wbFlagsList([
     2, 'Non-Playable'
     ])), [
@@ -9016,7 +9016,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(ASPC, 'Acoustic Space', [
+  RegisterRecordDef(ASPC, 'Acoustic Space', [
     wbEDID,
     wbObjectBounds(Self),
     wbOPDSs,
@@ -9031,7 +9031,7 @@ begin
     wbFEVA
   ]);
 
-  wbRecord(MSTT, 'Moveable Static',
+  RegisterRecordDef(MSTT, 'Moveable Static',
     wbFlags(wbFlagsList([
        8, 'Must Update Anims',
        9, 'Hidden From Local Map',
@@ -9073,7 +9073,7 @@ begin
     wbUnknown(ANLD)
   ]);
 
-  wbRecord(IDLM, 'Idle Marker',
+  RegisterRecordDef(IDLM, 'Idle Marker',
     wbFlags(wbFlagsList([
     29, 'Child Can Use'
     ])), [
@@ -9087,7 +9087,7 @@ begin
     wbGenericModel(Self)
   ]);
 
-  wbRecord(PROJ, 'Projectile', [
+  RegisterRecordDef(PROJ, 'Projectile', [
     wbEDID,
     wbObjectBounds(Self),
     wbPHST,
@@ -9161,7 +9161,7 @@ begin
     wbFloat(PFDZ, 'Z-Axis Drag')
   ]);
 
-  wbRecord(HAZD, 'Hazard', [
+  RegisterRecordDef(HAZD, 'Hazard', [
     wbEDID,
     wbObjectBounds(Self),
     wbOPDSs,
@@ -9196,7 +9196,7 @@ begin
     ])
   ]);
 
-  wbRecord(NAVM, 'Navmesh',
+  RegisterRecordDef(NAVM, 'Navmesh',
     wbFlags(wbFlagsList([
       11, 'Initially Disabled',
       18, 'Compressed',
@@ -9224,7 +9224,7 @@ begin
     )
   ]).SetAddInfo(wbNAVMAddInfo);
 
-  wbRecord(NAVI, 'Navmesh Info Map', [
+  RegisterRecordDef(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArrayS('Navmesh Infos',
@@ -9318,7 +9318,7 @@ begin
     wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM]) ).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
   ]);
 
-   wbRecord(EXPL, 'Explosion', [
+   RegisterRecordDef(EXPL, 'Explosion', [
     wbEDID,
     wbObjectBounds(Self),
     wbPHST,
@@ -9400,12 +9400,12 @@ begin
     wbDamageTypeArray('Damage Type')
   ]);
 
-  wbRecord(DEBR, 'Debris', [
+  RegisterRecordDef(DEBR, 'Debris', [
     wbEDID,
     wbRArray('Models', wbDebrisModel(wbModelInfo(Self, MODT)))
   ]);
 
-  wbRecord(IMGS, 'Image Space', [
+  RegisterRecordDef(IMGS, 'Image Space', [
     wbEDID,
     wbStruct(ENAM, 'HDR', [
       wbFloat('Eye Adapt Speed'),
@@ -9520,7 +9520,7 @@ begin
   ]);
 
 
-  wbRecord(IMAD, 'Image Space Adapter',
+  RegisterRecordDef(IMAD, 'Image Space Adapter',
     wbFlags(wbFlagsList([
       11, 'Unknown' // something to do with Photo Mode
     ])), [
@@ -9631,7 +9631,7 @@ begin
     wbString(FULL, 'Name')
   ]);
 
-  wbRecord(FLST, 'FormID List',
+  RegisterRecordDef(FLST, 'FormID List',
     wbFlags(wbFlagsList([
           {0x00000002} 2, 'Unknown 2',   //0066CD08
           {0x00000200} 9, 'Unknown 9'    //0066CD08
@@ -9778,7 +9778,7 @@ begin
       wbEmpty(PRKF, 'End Marker', cpIgnore, True)
     ]);
 
-  wbRecord(PERK, 'Perk',
+  RegisterRecordDef(PERK, 'Perk',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -9810,7 +9810,7 @@ begin
     wbRArrayS('Effects', wbPerkEffect)
   ]);
 
-  wbRecord(BPTD, 'Body Part Data', [
+  RegisterRecordDef(BPTD, 'Body Part Data', [
     wbEDID,
     wbGenericModel(Self),
     wbRArrayS('Body Parts',
@@ -9925,7 +9925,7 @@ begin
   ]).SetSummaryKey([1])
     .IncludeFlag(dfSummaryMembersNoName);
 
-  wbRecord(ADDN, 'Addon Node',
+  RegisterRecordDef(ADDN, 'Addon Node',
     wbFlags(wbFlagsList([
       2, 'Unknown 2',
       9, 'Unknown 9'
@@ -9971,7 +9971,7 @@ begin
       aIndexKeys.Keys[wbIdxAddonNode] := lIndex;
     end);
 
-  wbRecord(AVIF, 'Actor Value Information' ,
+  RegisterRecordDef(AVIF, 'Actor Value Information' ,
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -10050,7 +10050,7 @@ begin
     wbString(CNAM, 'Description')
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
-  wbRecord(CAMS, 'Camera Shot', [
+  RegisterRecordDef(CAMS, 'Camera Shot', [
     wbEDID,
     wbGenericModel(Self),
     wbConditions,
@@ -10100,7 +10100,7 @@ begin
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
-  wbRecord(CPTH, 'Camera Path', [
+  RegisterRecordDef(CPTH, 'Camera Path', [
     wbEDID,
     wbConditions,
     wbStruct(ANAM, 'Camera Paths', [
@@ -10120,7 +10120,7 @@ begin
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
 
-  wbRecord(VTYP, 'Voice Type',
+  RegisterRecordDef(VTYP, 'Voice Type',
     wbFlags(wbFlagsList([
     2, 'Unknown 2',
     9, 'Unknown 9'
@@ -10138,7 +10138,7 @@ begin
     wbString(ENAM, 'TTS voice name')
   ]);
 
-  wbRecord(MATT, 'Material Type', [
+  RegisterRecordDef(MATT, 'Material Type', [
     wbEDID,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
     wbString(MNAM, 'Material Name'),
@@ -10154,7 +10154,7 @@ begin
     wbModelInfo(Self, MODT)
   ]);
 
-  wbRecord(IPCT, 'Impact', [
+  RegisterRecordDef(IPCT, 'Impact', [
     wbEDID,
     wbGenericModel(Self),
     wbStruct(DATA, '', [
@@ -10190,7 +10190,7 @@ begin
     wbFloat(FNAM, 'Footstep Particle Max Dist')
   ]);
 
-  wbRecord(IPDS, 'Impact Data Set', [
+  RegisterRecordDef(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
       wbFormIDCk('Material', [MATT]),
@@ -10198,7 +10198,7 @@ begin
     ]))
   ]);
 
-  wbRecord(ECZN, 'Encounter Zone', [
+  RegisterRecordDef(ECZN, 'Encounter Zone', [
     wbEDID,
     wbStruct(DATA, '', [
       wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -10215,7 +10215,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(LCTN, 'Location',
+  RegisterRecordDef(LCTN, 'Location',
     wbFlags(wbFlagsList([
     2,  'Interior Location',
     8,  'Unknown 8',
@@ -10373,7 +10373,7 @@ begin
     wbByteRGBA(CNAM)
   ]);
 
-  wbRecord(MESG, 'Message', [
+  RegisterRecordDef(MESG, 'Message', [
     wbEDID,
     wbDESCReq,
     wbFULL,
@@ -10809,7 +10809,7 @@ begin
 
   c := CombineVarRecs(a, b);
 
-  wbRecord(DOBJ, 'Default Object Manager', [
+  RegisterRecordDef(DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
@@ -10820,7 +10820,7 @@ begin
      .SetRequired
   ]);
 
-  wbRecord(LGTM, 'Lighting Template', [
+  RegisterRecordDef(LGTM, 'Lighting Template', [
     wbEDID,
     wbStruct(DATA, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -10860,7 +10860,7 @@ begin
     wbFormIDCk(WGDR, 'God Rays', [GDRY])
   ]);
 
-  wbRecord(MUSC, 'Music Type', [
+  RegisterRecordDef(MUSC, 'Music Type', [
     wbEDID,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Plays One Selection',
@@ -10881,13 +10881,13 @@ begin
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
-  wbRecord(FSTP, 'Footstep', [
+  RegisterRecordDef(FSTP, 'Footstep', [
     wbEDID,
     wbFormIDCk(DATA, 'Impact Data Set', [IPDS, NULL], False, cpNormal, True),
     wbString(ANAM, 'Tag', 0, cpNormal, True)
   ]);
 
-  wbRecord(FSTS, 'Footstep Set', [
+  RegisterRecordDef(FSTS, 'Footstep Set', [
     wbEDID,
     wbStruct(XCNT, 'Footstep Counts', [
       wbInteger('Walking Count', itU32),
@@ -10915,7 +10915,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(SMBN, 'Story Manager Branch Node', [
+  RegisterRecordDef(SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -10930,7 +10930,7 @@ begin
     wbInteger(XNAM, 'Max concurrent quests', itU32)
   ]);
 
-  wbRecord(SMQN, 'Story Manager Quest Node', [
+  RegisterRecordDef(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -10958,7 +10958,7 @@ begin
     ).SetCountPath(QNAM)
   ]);
 
-  wbRecord(SMEN, 'Story Manager Event Node', [
+  RegisterRecordDef(SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -10974,7 +10974,7 @@ begin
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum(Self))
   ]).SetSummaryKey([7]);
 
-  wbRecord(DLBR, 'Dialog Branch', [
+  RegisterRecordDef(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST]).SetRequired,
     wbInteger(TNAM, 'Category', itU32,
@@ -10992,7 +10992,7 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL]).SetRequired
   ]).SetAddInfo(wbDLBRAddInfo);
 
-  wbRecord(MUST, 'Music Track', [
+  RegisterRecordDef(MUST, 'Music Track', [
     wbEDID,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette',
@@ -11015,7 +11015,7 @@ begin
   ]);
 
   //still exists in game code, but not in Fallout76.esm
-  wbRecord(DLVW, 'Dialog View', []);
+  RegisterRecordDef(DLVW, 'Dialog View', []);
 
   {wbRecord(WOOP, 'Word of Power', [
     wbEDID
@@ -11025,7 +11025,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(EQUP, 'Equip Type', [
+  RegisterRecordDef(EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormIDCk('Parent', [EQUP])),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
@@ -11039,7 +11039,7 @@ begin
     ])
   ]);
 
-  wbRecord(RELA, 'Relationship', [
+  RegisterRecordDef(RELA, 'Relationship', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Parent', [NPC_, NULL]),
@@ -11070,7 +11070,7 @@ begin
     ])
   ]);
 
-  wbRecord(SCEN, 'Scene', [
+  RegisterRecordDef(SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32,
@@ -11323,7 +11323,7 @@ begin
     wbFormIDCk(ONAM, 'Sound Output', [SOPM])
   ]).SetAddInfo(wbSCENAddInfo);
 
-  wbRecord(ASTP, 'Association Type', [
+  RegisterRecordDef(ASTP, 'Association Type', [
     wbEDID,
     wbString(MPRT, 'Male Parent Title'),
     wbString(FPRT, 'Female Parent Title'),
@@ -11544,7 +11544,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(OTFT, 'Outfit',
+  RegisterRecordDef(OTFT, 'Outfit',
     wbFlags(wbFlagsList([
       2, 'Unknown 2',
       9, 'Unknown 9'
@@ -11554,7 +11554,7 @@ begin
     wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
-  wbRecord(ARTO, 'Art Object',
+  RegisterRecordDef(ARTO, 'Art Object',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -11574,7 +11574,7 @@ begin
     ]))
   ]);
 
-  wbRecord(MATO, 'Material Object', [
+  RegisterRecordDef(MATO, 'Material Object', [
     wbEDID,
     wbGenericModel(Self),
     wbRArray('Property Data',
@@ -11592,7 +11592,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(MOVT, 'Movement Type', [
+  RegisterRecordDef(MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
     wbSPED,
@@ -11605,7 +11605,7 @@ begin
     wbFloat(LNAM, 'Flight - Angle Gain')
   ]);
 
-  wbRecord(SNDR, 'Sound Descriptor', [
+  RegisterRecordDef(SNDR, 'Sound Descriptor', [
     wbEDID,
     wbXALG,
     wbString(NNAM, 'Notes'),
@@ -11658,11 +11658,11 @@ begin
     wbUnknown(QNAM)
   ]);
 
-  wbRecord(DUAL, 'Dual Cast Data', [
+  RegisterRecordDef(DUAL, 'Dual Cast Data', [
     wbEDID
   ]);
 
-  wbRecord(SNCT, 'Sound Category', [
+  RegisterRecordDef(SNCT, 'Sound Category', [
     wbEDID,
     wbFULL,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -11682,7 +11682,7 @@ begin
     wbFloat(CNAM, 'Sidechain Target Multiplier')
   ]);
 
-  wbRecord(SOPM, 'Sound Output Model', [
+  RegisterRecordDef(SOPM, 'Sound Output Model', [
     wbEDID,
     wbStruct(NAM1, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
@@ -11742,7 +11742,7 @@ begin
     wbFormIDCk(ENAM, 'Effect Chain', [AECH])
   ]);
 
-  wbRecord(COLL, 'Collision Layer', [
+  RegisterRecordDef(COLL, 'Collision Layer', [
     wbEDID,
     wbDESCReq,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
@@ -11767,7 +11767,7 @@ begin
        aIndexKeys.Keys[wbIdxCollisionLayer] := lBNAM;
      end);
 
-  wbRecord(CLFM, 'Color',
+  RegisterRecordDef(CLFM, 'Color',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -11788,7 +11788,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(REVB, 'Reverb Parameters', [
+  RegisterRecordDef(REVB, 'Reverb Parameters', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16),
@@ -11807,7 +11807,7 @@ begin
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass',
+  RegisterRecordDef(GRAS, 'Grass',
     wbFlags(wbFlagsList([
       {0x00008000}  15, 'Unknown 15'
     ])), [
@@ -11868,7 +11868,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(IDLE, 'Idle Animation',
+  RegisterRecordDef(IDLE, 'Idle Animation',
     wbFlags(wbFlagsList([
       11, 'Photomode'
     ], True, True)), [
@@ -11900,7 +11900,7 @@ begin
     wbFULL
   ]);
 
-  wbRecord(INFO, 'Dialog response',
+  RegisterRecordDef(INFO, 'Dialog response',
     wbFlags(wbFlagsList([
     6, 'Info Group',
     7, 'Exclude From Export',
@@ -12028,7 +12028,7 @@ begin
     wbUnknown(NAM8)
   ]).SetAddInfo(wbINFOAddInfo);
 
-  wbRecord(INGR, 'Ingredient', [
+  RegisterRecordDef(INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -12066,7 +12066,7 @@ begin
     wbMIID
   ]);
 
-  wbRecord(KEYM, 'Key',
+  RegisterRecordDef(KEYM, 'Key',
     wbFlags(wbFlagsList([
       {0x00000800} 11, 'Calc Value From Components',
       {0x00002000} 13, 'Pack-In Use Only'
@@ -12095,7 +12095,7 @@ begin
     wbDIQO
   ]);
 
-  wbRecord(LAND, 'Landscape',
+  RegisterRecordDef(LAND, 'Landscape',
     wbFlags(wbFlagsList([
       {0x40000} 18, 'Compressed'
     ]), [18]), [
@@ -12120,7 +12120,7 @@ begin
       wbByteArray(MPCD, 'Heightfield Data'))
   ]).SetAddInfo(wbLANDAddInfo);
 
-  wbRecord(LIGH, 'Light',
+  RegisterRecordDef(LIGH, 'Light',
     wbFlags(wbFlagsList([
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Unknown 17',
@@ -12200,7 +12200,7 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SNDR])
   ]);
 
-  wbRecord(LSCR, 'Load Screen',
+  RegisterRecordDef(LSCR, 'Load Screen',
     wbFlags(wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu',
       {0x00008000} 15, 'No Rotation'
@@ -12224,7 +12224,7 @@ begin
     wbLStringKC(LSST, 'Loading Screen Text', 0, cpTranslate)
   ]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  RegisterRecordDef(LTEX, 'Landscape Texture', [
     wbEDID,
     wbString(BNAM, 'Texture'),
     wbFormIDCk(TNAM, 'Unused', [TXST], False, cpIgnore, False),
@@ -12358,7 +12358,7 @@ begin
     wbInteger('Flags', itU16, wbLVLFFlags).IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]).SetRequired;
 
-  wbRecord(LVLN, 'Leveled NPC', [
+  RegisterRecordDef(LVLN, 'Leveled NPC', [
     wbEDID,
     wbObjectBounds(Self),
     wbOPDSs,
@@ -12383,7 +12383,7 @@ begin
     wbGenericModel(Self)
   ]).SetAfterLoad(wbLLEAfterLoad);
 
-  wbRecord(LVLI , 'Leveled Item',
+  RegisterRecordDef(LVLI , 'Leveled Item',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -12423,7 +12423,7 @@ begin
   ]).SetUnordered
     .SetAfterLoad(wbLLEAfterLoad);
 
-  wbRecord(LVLP, 'Leveled Pack In', [
+  RegisterRecordDef(LVLP, 'Leveled Pack In', [
     wbEDID,
     wbObjectBounds(Self),
     //wbOPDSs,
@@ -12459,11 +12459,11 @@ begin
     //wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ]).SetAfterLoad(wbLLEAfterLoad);
 
-  wbRecord(LVSP, 'Leveled Spell', [
+  RegisterRecordDef(LVSP, 'Leveled Spell', [
     wbEDID
   ]);
 
-  wbRecord(MGEF, 'Magic Effect', [
+  RegisterRecordDef(MGEF, 'Magic Effect', [
     wbEDID,
     wbVMAD,
     wbFULL,
@@ -12665,7 +12665,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(MISC, 'Misc. Item',
+  RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
     9,  'Unknown 9',
     11, 'Calc From Components',
@@ -12748,7 +12748,7 @@ begin
       {5} 'Learned From Challenge'
       ]);
 
-  wbRecord(COBJ, 'Constructible Object',
+  RegisterRecordDef(COBJ, 'Constructible Object',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9',
@@ -12794,7 +12794,7 @@ begin
     ]).SetOptionalFrom(1)
   ]);
 
-  wbRecord(NPC_, 'Non-Player Character',
+  RegisterRecordDef(NPC_, 'Non-Player Character',
     wbFlags(wbFlagsList([
     9,  'Unknown 9',
     10, 'Unknown 10',
@@ -13211,7 +13211,7 @@ begin
     ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]));
 
-  wbRecord(PACK, 'Package', [
+  RegisterRecordDef(PACK, 'Package', [
     wbEDID,
     wbVMADFragmentedPACK,
     wbFTAGs,
@@ -13426,7 +13426,7 @@ begin
       wbInteger('Flags', itU64, wbQUSTAliasFlagsActual).IncludeFlag(dfCollapsed, wbCollapseFlags)
     ], cpNormal, True);
 
-  wbRecord(QUST, 'Quest',
+  RegisterRecordDef(QUST, 'Quest',
     wbFlags(wbFlagsList([
       {0x00004000} 14, 'Partial Form'
     ]), [14]), [
@@ -14019,7 +14019,7 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
     , cpNormal, True);
 
-  wbRecord(RACE, 'Race',
+  RegisterRecordDef(RACE, 'Race',
     wbFlags(wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
@@ -14341,7 +14341,7 @@ begin
   ]);
 
 
-  wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  RegisterRefRecordDef(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
@@ -15003,7 +15003,7 @@ begin
     .SetUnordered
     .SetAfterLoad(wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region',
+  RegisterRecordDef(REGN, 'Region',
     wbFlags(wbFlagsList([
       {0x00000040}  6, 'Border Region',
       {0x00000080}  7, 'Unknown 7 ',
@@ -15162,7 +15162,7 @@ begin
     wbInteger(RCBN, 'Region Can''t be Nuked', itU8, wbBoolEnum)
   ]).SetUnordered;
 
-  wbRecord(SOUN, 'Sound Marker', [
+  RegisterRecordDef(SOUN, 'Sound Marker', [
     wbEDID,
     wbObjectBounds(Self),
     wbOPDSs,
@@ -15236,7 +15236,7 @@ begin
     wbFormIDCk('Casting Perk', [NULL, PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Spell',
+  RegisterRecordDef(SPEL, 'Spell',
     wbFlags(wbFlagsList([
       {0x00008000} 15, 'Unknown 15'
     ])), [
@@ -15259,7 +15259,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(STAT, 'Static',
+  RegisterRecordDef(STAT, 'Static',
     wbFlags(wbFlagsList([
       2, 'Heading Marker',
       4, 'Non Occluder',
@@ -15315,7 +15315,7 @@ begin
     ])
   ]).SetUnordered; // unordered, NVNM can be before or after MNAM
 
-  wbRecord(TES4, 'Main File Header',
+  RegisterRecordDef(TES4, 'Main File Header',
     wbFlags(wbFlagsList([
       {0x00000001}  0, 'ESM',
       {0x00000010}  4, 'Optimized',
@@ -15354,14 +15354,14 @@ begin
     wbInteger(INCC, 'Interior Cell Count', itU32).SetRequired
   ], cpNormal, True).SetUnordered;
 
-  wbRecord(PLYR, 'Player Reference', [
+  RegisterRecordDef(PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7),
     wbFormIDCk(NAME, 'Base', sigBaseObjects).SetRequired,
     wbVec3PosRot(DATA).SetRequired
   ]).IncludeFlag(dfInternalEditOnly);
 
-  wbRecord(TREE, 'Tree',
+  RegisterRecordDef(TREE, 'Tree',
     wbFlags(wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD'
     ])), [
@@ -15396,7 +15396,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(FLOR, 'Flora', [
+  RegisterRecordDef(FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -15453,7 +15453,7 @@ begin
 
 {>>> Start of new Fallout 4 Records <<<}
 
-  wbRecord(AECH, 'Audio Effect Chain', [
+  RegisterRecordDef(AECH, 'Audio Effect Chain', [
     wbEDID,
     wbRArray('Effects',
       wbRStruct('Effect', [
@@ -15493,7 +15493,7 @@ begin
     )
   ]);
 
-  wbRecord(AMDL, 'Aim Model', [
+  RegisterRecordDef(AMDL, 'Aim Model', [
     wbEDID,
     wbStruct(DNAM, 'Data', [
       wbFloat('Cone of Fire - Min Angle'),
@@ -15517,7 +15517,7 @@ begin
     wbFloat(AMRS, 'Unknown')
   ]);
 
-  wbRecord(AORU, 'Attraction Rule', [
+  RegisterRecordDef(AORU, 'Attraction Rule', [
     wbEDID,
     wbStruct(AOR2, 'Data', [
       wbFloat('Radius'),
@@ -15529,7 +15529,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BNDS, 'Bendable Spline', [
+  RegisterRecordDef(BNDS, 'Bendable Spline', [
     wbEDID,
     wbObjectBounds(Self),
     wbStruct(DNAM, 'Data', [
@@ -15543,7 +15543,7 @@ begin
     wbFormIDCk(TNAM, 'Texture', [TXST])
   ]);
 
-  wbRecord(CMPO, 'Component', [
+  RegisterRecordDef(CMPO, 'Component', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -15562,7 +15562,7 @@ begin
     ]))
   ]);
 
-  wbRecord(CMPT, 'Camp Title',
+  RegisterRecordDef(CMPT, 'Camp Title',
     wbFlags(wbFlagsList([
     9, 'Unknown 9'
     ]), [9]), [
@@ -15575,13 +15575,13 @@ begin
     wbConditions
   ]);
 
-  wbRecord(DFOB, 'Default Object', [
+  RegisterRecordDef(DFOB, 'Default Object', [
     wbEDID,
     wbFormID(DATA, 'Object')
   ])
   .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(DMGT, 'Damage Type Resist', [
+  RegisterRecordDef(DMGT, 'Damage Type Resist', [
     wbEDID,
     wbFULL,
     wbStruct(DNAM,'Damage Type Resistance', [
@@ -15597,7 +15597,7 @@ begin
     wbFormIDCk(DSEA, 'Status Spell', [SPEL,NULL])
   ]);
 
-  wbRecord(GDRY, 'God Rays', [
+  RegisterRecordDef(GDRY, 'God Rays', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloatColors('Back Color'),
@@ -15612,7 +15612,7 @@ begin
     ])
   ]);
 
-  wbRecord(INNR, 'Instance Naming Rules',
+  RegisterRecordDef(INNR, 'Instance Naming Rules',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -15668,7 +15668,7 @@ begin
     )
   ]);
 
-  wbRecord(KSSM, 'Sound Keyword Mapping', [
+  RegisterRecordDef(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbFormIDCk(DNAM, 'Primary Descriptor', [SNDR]),
     wbFormIDCk(FNAM, 'Trigger Sound', [SNDR]),
@@ -15682,7 +15682,7 @@ begin
     ])).IncludeFlag(dfCollapsed, wbCollapseSounds)
   ]);
 
-  wbRecord(LAYR, 'Layer',
+  RegisterRecordDef(LAYR, 'Layer',
     wbFlags(wbFlagsList([
       {0x08000000} 27, 'Unknown 27'
     ])), [
@@ -15691,7 +15691,7 @@ begin
     wbByteRGBA(XCLP, 'Color')
   ]);
 
-  wbRecord(LENS, 'Lens Flare', [
+  RegisterRecordDef(LENS, 'Lens Flare', [
     wbEDID,
     wbFloat(CNAM, 'Color Influence'),
     wbFloat(DNAM, 'Fade Distance Radius Scale'),
@@ -15723,7 +15723,7 @@ begin
     wbEDID
   ]); }
 
-  wbRecord(MSWP, 'Material Swap',
+  RegisterRecordDef(MSWP, 'Material Swap',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9',
@@ -15744,7 +15744,7 @@ begin
     )
   ]);
 
-  wbRecord(NOCM, 'Navmesh Obstacle Manager', [
+  RegisterRecordDef(NOCM, 'Navmesh Obstacle Manager', [
     wbEDID
       .SetDefaultEditValue('NavmeshObstacleCoverManager')
       .SetRequired
@@ -15772,7 +15772,7 @@ begin
     'None'
   ]);
 
-  wbRecord(UTIL, 'Utility', [
+  RegisterRecordDef(UTIL, 'Utility', [
     wbEDID,
     wbObjectBounds(Self),
     wbPTRN,
@@ -15801,7 +15801,7 @@ begin
     ])
   ]);
 
-  wbRecord(LGDI, 'Legendary Item', [
+  RegisterRecordDef(LGDI, 'Legendary Item', [
     wbEDID,
     wbObjectBounds(Self),
     wbPTRN,
@@ -15832,7 +15832,7 @@ begin
     wbFormID(ENAM, 'Legendary Template List')
   ]);
 
-  wbRecord(NOTE, 'Note', [
+  RegisterRecordDef(NOTE, 'Note', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -15868,7 +15868,7 @@ begin
     wbString(PNAM, 'Program File')
   ]);
 
-  wbRecord(OMOD, 'Object Modification',
+  RegisterRecordDef(OMOD, 'Object Modification',
     wbFlags(wbFlagsList([
       {0x00000004} 2, 'Unknown 2',
       {0x00000010} 4, 'Legendary Mod',
@@ -15929,7 +15929,7 @@ begin
     wbString(OBST, 'Obstacle')
   ]);
 
-  wbRecord(OVIS, 'Object Visibility Manager', [
+  RegisterRecordDef(OVIS, 'Object Visibility Manager', [
     wbRArray('Static Objects',
       wbRStruct('Static Object', [
         wbFormIDCk(INDX, 'Object', [STAT]),
@@ -15953,7 +15953,7 @@ begin
     )
   ]);
 
-  wbRecord(PKIN, 'Pack-In',
+  RegisterRecordDef(PKIN, 'Pack-In',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Prefab',
       {0x00000400}  10, 'Unknown 10'
@@ -15980,7 +15980,7 @@ begin
     wbLString(FULL, 'Name')
   ]);
 
-  wbRecord(RFGP, 'Reference Group', [
+  RegisterRecordDef(RFGP, 'Reference Group', [
     wbEDID,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
@@ -15992,7 +15992,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(SCCO, 'Scene Collection', [
+  RegisterRecordDef(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
     wbRArray('Scene Layout',
@@ -16029,7 +16029,7 @@ begin
       wbStaticPartPlacements
     ], [], cpNormal);
 
-  wbRecord(SCOL, 'Static Collection',
+  RegisterRecordDef(SCOL, 'Static Collection',
     wbFlags(wbFlagsList([
        4, 'Non Occluder',
        9, 'Hidden From Local Map',
@@ -16060,7 +16060,7 @@ begin
     wbRArray('Parts', wbStaticPart)
   ]);
 
-  wbRecord(SCSN, 'Sound Category Snapshot', [
+  RegisterRecordDef(SCSN, 'Sound Category Snapshot', [
     wbEDID,
     wbInteger(PNAM, 'Priority', itU16),
     wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
@@ -16073,7 +16073,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(STAG, 'Animation Sound Tag Set', [
+  RegisterRecordDef(STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbXALG,
     wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
@@ -16082,7 +16082,7 @@ begin
     ]))
   ]);
 
-  wbRecord(TERM, 'Terminal',
+  RegisterRecordDef(TERM, 'Terminal',
     wbFlags(wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00002000} 13, 'Pack-In Use Only',
@@ -16174,7 +16174,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(TRNS, 'Transform',
+  RegisterRecordDef(TRNS, 'Transform',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9',
@@ -16196,7 +16196,7 @@ begin
 // AAPD\RADR starts with two 0 bytes, a multiple of 16 (or 0xC8), and then either 0x40 or 0x41.
 // AAPD\WTMX is always either 00 00 00 00 or 00 00 80 3F
 
-  wbRecord(AAPD, 'Aim Assist Pose Data', [
+  RegisterRecordDef(AAPD, 'Aim Assist Pose Data', [
     wbEDID,
     wbRStruct('Attach Point', [
       wbEmpty(AAAP, 'Attach Point Marker'),
@@ -16214,7 +16214,7 @@ begin
     ])
   ]);
 
-  wbRecord(AAMD, 'Aim Assist Model Data', [
+  RegisterRecordDef(AAMD, 'Aim Assist Model Data', [
     wbEDID,
     wbFloat(ANAM, 'Inner Cone Angle Degrees'),
     wbFloat(BNAM, 'Outer Cone Angle Degrees'),
@@ -16240,7 +16240,7 @@ begin
     wbFloat(VNAM, 'Aim Assist Enabled')
   ]);
 
-  wbRecord(SECH, 'Sound Echo Marker', [
+  RegisterRecordDef(SECH, 'Sound Echo Marker', [
     wbEDID,
     wbObjectBounds(Self),
     wbString(NNAM, 'Description'),
@@ -16263,7 +16263,7 @@ begin
     )
   ]);
 
-  wbRecord(RESO, 'Resource',
+  RegisterRecordDef(RESO, 'Resource',
     wbFlags(wbFlagsList([
        2, 'Unknown 2',
        9, 'Unknown 9',
@@ -16276,20 +16276,20 @@ begin
     wbUnknown(NAM5)
   ]);
 
-  wbRecord(CURV, 'Curve Table', [
+  RegisterRecordDef(CURV, 'Curve Table', [
     wbEDID,
     wbString(CRVE, 'JSON File Path'),
     wbString(JASF, 'JSON File Path')
   ]);
 
-  wbRecord(MSCS, 'Misc Item Spawner', [
+  RegisterRecordDef(MSCS, 'Misc Item Spawner', [
     wbEDID,
     wbObjectBounds(Self),
     wbUnknown(DATA),
     wbRArray('Spawns', wbFormIDCk(SPWN, 'Spawn', [MISC]))
   ]);
 
-  wbRecord(CNCY, 'Currency', [
+  RegisterRecordDef(CNCY, 'Currency', [
     wbEDID,
     wbString(DURL, 'Singular Name'),
     wbObjectBounds(Self),
@@ -16312,7 +16312,7 @@ begin
     wbInteger(FNAM, 'Unknown Int', itU32)
   ]);
 
-  wbRecord(PPAK, 'Perk Card Pack',
+  RegisterRecordDef(PPAK, 'Perk Card Pack',
     wbFlags(wbFlagsList([
       {0x00000002} 2, 'Unknown: 2'
     ])), [
@@ -16342,7 +16342,7 @@ begin
     wbUnknown(PPAD)
   ]);
 
-  wbRecord(PACH, 'Power Armor Chassis', [
+  RegisterRecordDef(PACH, 'Power Armor Chassis', [
     wbEDID,
     wbObjectBounds(Self),
     wbStruct(DATA, 'Data', [
@@ -16366,7 +16366,7 @@ begin
     {7} 'Unknown'
   ]);
 
-  wbRecord(PCRD, 'Perk Card',
+  RegisterRecordDef(PCRD, 'Perk Card',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -16432,7 +16432,7 @@ begin
     .SetSummaryKey([0])
     .IncludeFlag(dfCollapsed, wbCollapseLeveledItems);
 
-  wbRecord(LVPC, 'Leveled Perk Card', [
+  RegisterRecordDef(LVPC, 'Leveled Perk Card', [
     wbEDID,
     wbLVLD,
     wbLStringKC(ONAM, 'Display Name', 0, cpTranslate),
@@ -16446,7 +16446,7 @@ begin
     wbUnknown(LVUO)
   ]);
 
-  wbRecord(STND, 'Snap Template Node', [
+  RegisterRecordDef(STND, 'Snap Template Node', [
     wbEDID,
     wbObjectBounds(Self),
     wbPHST,
@@ -16493,7 +16493,7 @@ begin
     wbFormIDCk(LNAM, 'Illumination Light', [LIGH,NULL])
   ]);
 
-  wbRecord(STMP, 'Snap Template', [
+  RegisterRecordDef(STMP, 'Snap Template', [
     wbEDID,
     wbPTRN,
     wbXALG,
@@ -16522,7 +16522,7 @@ begin
     wbUnknown(SNFG)
   ]);
 
-  wbRecord(GCVR, 'Ground Cover', [
+  RegisterRecordDef(GCVR, 'Ground Cover', [
     wbEDID,
     wbRArray('Grasses', wbRStruct('Grass', [
       wbFormID(GNAM, 'Grass Texture'),
@@ -16533,7 +16533,7 @@ begin
     wbFloat(ZNAM, 'Unused Float')
   ]);
 
-  wbRecord(EMOT, 'Emote', [
+  RegisterRecordDef(EMOT, 'Emote', [
     wbEDID,
     wbObjectBounds(Self),
     wbXALG,
@@ -16548,7 +16548,7 @@ begin
     wbKeywords
   ]);
 
-  wbRecord(STHD, 'Spell Threshold Data', [
+  RegisterRecordDef(STHD, 'Spell Threshold Data', [
     wbEDID,
     wbFormID(SPIT, 'Spell Item'),
     wbFormID(SPLO, 'Spell Magic Effect'),
@@ -16561,7 +16561,7 @@ begin
     ]))
   ]);
 
-  wbRecord(VOLI, 'Volumetric Lighting', [
+  RegisterRecordDef(VOLI, 'Volumetric Lighting', [
     wbEDID,
     wbFloat(CNAM, 'Intensity'),
     wbFloat(DNAM, 'Custom Color - Contribution'),
@@ -16575,14 +16575,14 @@ begin
     wbFloat(NNAM, 'Sampling Repartition - Range Factor') { max 1.0 }
   ]);
 
-  wbRecord(ECAT, 'Emote Category', [
+  RegisterRecordDef(ECAT, 'Emote Category', [
     wbEDID,
     wbFULL,
     wbKeywords,
     wbString(SNAM, 'SWF Class Name')
   ]);
 
-  wbRecord(ENTM, 'Entitlement',
+  RegisterRecordDef(ENTM, 'Entitlement',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16599,7 +16599,7 @@ begin
     wbStorefrontData
   ]);
 
-  wbRecord(COEN, 'Consumable Entitlement', [
+  RegisterRecordDef(COEN, 'Consumable Entitlement', [
     wbEDID,
     wbXALG,
     wbFULL,
@@ -16611,14 +16611,14 @@ begin
     wbStorefrontData
   ]);
 
-  wbRecord(CSEN, 'Crate Service Entitlement', [
+  RegisterRecordDef(CSEN, 'Crate Service Entitlement', [
     wbEDID,
     wbFULL,
     wbDESC,
     wbKeywords
   ]);
 
-  wbRecord(PMFT, 'Photo Mode Feature', [
+  RegisterRecordDef(PMFT, 'Photo Mode Feature', [
     wbEDID,
     wbXALG,
     wbFTAGs,
@@ -16640,7 +16640,7 @@ begin
     wbFormIDCk(KNAM, 'Keyword', [KYWD])
   ]);
 
-  wbRecord(CHAL, 'Challenge',
+  RegisterRecordDef(CHAL, 'Challenge',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16696,7 +16696,7 @@ begin
     wbString(RNAM, 'Reward Icon')
   ]);
 
-  wbRecord(AVTR, 'Avatar', [
+  RegisterRecordDef(AVTR, 'Avatar', [
     wbEDID,
     wbXALG,
     wbFULL,
@@ -16704,17 +16704,17 @@ begin
     wbFormID(RENT, 'Required Entitlement')
   ]);
 
-  wbRecord(CNDF, 'Condition Form', [
+  RegisterRecordDef(CNDF, 'Condition Form', [
     wbEDID,
     wbConditions
   ]);
 
-  wbRecord(AUVF, 'AUVF - Unknown', [
+  RegisterRecordDef(AUVF, 'AUVF - Unknown', [
     wbEDID,
     wbAUUV
   ]);
 
-  wbRecord(MDSP, 'Model Swap' ,
+  RegisterRecordDef(MDSP, 'Model Swap' ,
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16727,10 +16727,10 @@ begin
     ]))
   ]);
 
-  wbRecord(EQWG, 'Event Quest Widget', [
+  RegisterRecordDef(EQWG, 'Event Quest Widget', [
   ]);
 
-  wbRecord(CPRD, 'Challenge Pass Reward Data', [
+  RegisterRecordDef(CPRD, 'Challenge Pass Reward Data', [
     wbEDID,
     wbXALG,
     wbDESC,
@@ -16744,14 +16744,14 @@ begin
     )
   ]);
 
-  wbRecord(ASTM, 'Unknown - ASTM', [
+  RegisterRecordDef(ASTM, 'Unknown - ASTM', [
     wbEDID,
     wbDESC,
     wbByteArray(ATAT, 'Unknown', 4),
     wbByteArray(ATSI, 'Unknown', 4)
   ]);
 
-  wbRecord(GMRW, 'Gameplay Reward',
+  RegisterRecordDef(GMRW, 'Gameplay Reward',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16763,7 +16763,7 @@ begin
     wbRArray('Rewards List', wbReward)
   ]);
 
-  wbRecord(PEPF, 'Event Playlist' ,
+  RegisterRecordDef(PEPF, 'Event Playlist' ,
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16782,7 +16782,7 @@ begin
     wbInteger(EPFL, 'Unknown Byte', itU8)
   ]);
 
-  wbRecord(QMDL, 'Quest Module' ,
+  RegisterRecordDef(QMDL, 'Quest Module' ,
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16820,7 +16820,7 @@ begin
     )
   ]);
 
-  wbRecord(LOUT, 'Loadout', [
+  RegisterRecordDef(LOUT, 'Loadout', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -16843,12 +16843,12 @@ begin
     wbUnknown(NAM0)
   ]);
 
-  wbRecord(ATXO, 'ATX Default Object', [
+  RegisterRecordDef(ATXO, 'ATX Default Object', [
     wbEDID,
     wbFormID(DATA, 'Object')
   ]);
 
-  wbRecord(DCGF, 'Daily Content Group',
+  RegisterRecordDef(DCGF, 'Daily Content Group',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16862,7 +16862,7 @@ begin
     wbByteArray(DCGB, 'DCGB - Unknown 4 bytes', 4)
   ]);
 
-  wbRecord(DIST, 'District', [
+  RegisterRecordDef(DIST, 'District', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -16877,7 +16877,7 @@ begin
     wbUnknown(DICO)
   ]);
 
-  wbRecord(PLYT, 'Player Title',
+  RegisterRecordDef(PLYT, 'Player Title',
     wbFlags(wbFlagsList([
       2, 'Unknown 2',
       9, 'Unknown 9'
@@ -16892,7 +16892,7 @@ begin
     wbConditions
   ]).SetSummaryKey([2]).IncludeFlag(dfSummaryNoName);
 
-  wbRecord(TEPF, 'Infestation Event Playlist',
+  RegisterRecordDef(TEPF, 'Infestation Event Playlist',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Unknown 2',
       {0x00000200}  9, 'Unknown 9'
@@ -16913,7 +16913,7 @@ begin
     wbFormID(EPQT, 'Master Quest')
   ]);
 
-  wbRecord(TRAP, 'Trap', [
+  RegisterRecordDef(TRAP, 'Trap', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -16987,7 +16987,7 @@ begin
     wbLODLevelOverride
   ]);
 
-  wbRecord(WATR, 'Water', [
+  RegisterRecordDef(WATR, 'Water', [
     wbEDID,
     wbFULL,
     wbInteger(ANAM, 'Opacity (unused)', itU8),
@@ -17070,7 +17070,7 @@ begin
     wbUnknown(NAM7)
   ]);
 
-  wbRecord(WAVE, 'Wave Encounter', [
+  RegisterRecordDef(WAVE, 'Wave Encounter', [
     wbEDID,
     wbKeywords,
     wbArray(WAVD, 'Wave Encounter Definitions', wbStruct('Wave Encounter Definition', [
@@ -17081,7 +17081,7 @@ begin
     wbUnknown(DNAM)
   ]);
 
-  wbRecord(WEAP, 'Weapon',
+  RegisterRecordDef(WEAP, 'Weapon',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x20000000} 30, 'High-Res 1st Person Only'
@@ -17326,7 +17326,7 @@ begin
     wbFloat(WSAM, 'Sneak Attack Multiplier')
   ]);
 
-  wbRecord(WTHR, 'Weather',
+  RegisterRecordDef(WTHR, 'Weather',
     wbFlags(wbFlagsList([
       9, 'Unknown 9'
     ])), [
@@ -17409,7 +17409,7 @@ begin
     wbFloat(INAM)
   ]);
 
-  wbRecord(WSPR, 'Workshop Permissions', [
+  RegisterRecordDef(WSPR, 'Workshop Permissions', [
     wbEDID,
     wbFULL,
     wbDESC,
@@ -17442,7 +17442,7 @@ begin
     ])
   ]);
 
-  wbRecord(WRLD, 'Worldspace',
+  RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
       14, 'Partial Form',
       19, 'Can''t Wait'
@@ -17518,7 +17518,7 @@ begin
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
 
-  wbRecord(ZOOM, 'Zoom', [
+  RegisterRecordDef(ZOOM, 'Zoom', [
     wbEDID,
     wbStruct(GNAM, 'Data', [
       wbFloat('FOV Mult')
@@ -17533,217 +17533,217 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(CMPI, 'Camp Icon', [
+  RegisterRecordDef(CMPI, 'Camp Icon', [
     wbEDID
   ]);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(KYWD);
-  wbAddGroupOrder(ENTM); //new in Fallout 76
-  wbAddGroupOrder(COEN); //new in Fallout 76
-  wbAddGroupOrder(PCEN); //Unused after 1.0.0.2
-  wbAddGroupOrder(CSEN); //new in Fallout 76
-  wbAddGroupOrder(ECAT); //new in Fallout 76
-  wbAddGroupOrder(EMOT); //new in Fallout 76
-  wbAddGroupOrder(AVTR); //new in Fallout 76
-  wbAddGroupOrder(CPRD); //new in Fallout 76
-  wbAddGroupOrder(ASTM);
-  wbAddGroupOrder(ATXO); //new in Fallout 76
-  wbAddGroupOrder(LCRT);
-  wbAddGroupOrder(AACT);
-  wbAddGroupOrder(TRNS);
-  wbAddGroupOrder(CMPO);
-  wbAddGroupOrder(TXST);
-  wbAddGroupOrder(MICN); //new in Fallout 76. Currently unused in esm
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(DMGT);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(HDPT);
-  wbAddGroupOrder(EYES); //Unused in ESM. Used in EXE
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SECH); //new in Fallout 76
-  wbAddGroupOrder(ASPC);
-  wbAddGroupOrder(RESO); //new in Fallout 76
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(SCPT); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(SCRL); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(TRAP);
-  wbAddGroupOrder(TACT);
-  wbAddGroupOrder(CURV); //new in Fallout 76
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(INGR);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(MSCS); //new in Fallout 76
-  wbAddGroupOrder(MISI); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(CNCY); //new in Fallout 76
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(SCOL);
-  wbAddGroupOrder(MSTT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(TREE); // Currently an empty GRUP record
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(AMMO);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(LVLN);
-  wbAddGroupOrder(LVLP); //new in Fallout 76
-  wbAddGroupOrder(KEYM);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(UTIL); //new in Fallout 76
-  wbAddGroupOrder(IDLM);
-  wbAddGroupOrder(NOTE);
-  wbAddGroupOrder(PROJ);
-  wbAddGroupOrder(HAZD);
-  wbAddGroupOrder(BNDS);
-  wbAddGroupOrder(SLGM); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(TERM);
-  wbAddGroupOrder(PPAK); //new in Fallout 76
-  wbAddGroupOrder(PACH); //new in Fallout 76
-  wbAddGroupOrder(LVLI);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(SPGD);
-  wbAddGroupOrder(RFCT);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(NAVI);
-  wbAddGroupOrder(CELL);
-  wbAddGroupOrder(REFR); //new in Fallout 76
-  wbAddGroupOrder(ACHR); //new in Fallout 76
-  wbAddGroupOrder(PMIS); //new in Fallout 76
-  wbAddGroupOrder(PARW); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(PGRE); //new in Fallout 76
-  wbAddGroupOrder(PBEA); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(PFLA); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(PCON); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(PBAR); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(PHZD); //new in Fallout 76
-  wbAddGroupOrder(WRLD);
-  wbAddGroupOrder(LAND); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(NAVM); //new in Fallout 76
-  wbAddGroupOrder(TLOD); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(DIAL); //new in Fallout 76
-  wbAddGroupOrder(INFO); //new in Fallout 76
-  wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(LVSP); //not contained in ESM but exists in exe load order
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
-  wbAddGroupOrder(TOFT); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(EXPL);
-  wbAddGroupOrder(DEBR);
-  wbAddGroupOrder(IMGS);
-  wbAddGroupOrder(IMAD);
-  wbAddGroupOrder(FLST);
-  wbAddGroupOrder(PERK);
-  wbAddGroupOrder(PCRD); //new in Fallout 76
-  wbAddGroupOrder(LVPC); //new in Fallout 76
-  wbAddGroupOrder(BPTD);
-  wbAddGroupOrder(ADDN);
-  wbAddGroupOrder(AVIF);
-  wbAddGroupOrder(CAMS);
-  wbAddGroupOrder(CPTH);
-  wbAddGroupOrder(VTYP);
-  wbAddGroupOrder(MATT);
-  wbAddGroupOrder(IPCT);
-  wbAddGroupOrder(IPDS);
-  wbAddGroupOrder(ARMA);
-  wbAddGroupOrder(ECZN); //not contained in ESM but exists in exe load order
-  wbAddGroupOrder(LCTN);
-  wbAddGroupOrder(MESG);
-  wbAddGroupOrder(RGDL); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(DOBJ);
-  wbAddGroupOrder(DFOB);
-  wbAddGroupOrder(LGTM);
-  wbAddGroupOrder(MUSC);
-  wbAddGroupOrder(FSTP);
-  wbAddGroupOrder(FSTS);
-  wbAddGroupOrder(SMBN);
-  wbAddGroupOrder(SMQN);
-  wbAddGroupOrder(SMEN);
-  wbAddGroupOrder(DLBR);
-  wbAddGroupOrder(MUST);
-  wbAddGroupOrder(DLVW); // Currently an empty GRUP record
-  wbAddGroupOrder(WOOP); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(SHOU); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(EQUP);
-  wbAddGroupOrder(RELA);
-  wbAddGroupOrder(SCEN);
-  wbAddGroupOrder(ASTP);
-  wbAddGroupOrder(OTFT);
-  wbAddGroupOrder(ARTO);
-  wbAddGroupOrder(MATO);
-  wbAddGroupOrder(MOVT);
-  wbAddGroupOrder(SNDR);
-  wbAddGroupOrder(DUAL); //not contained in ESM but exists in exe load order
-  wbAddGroupOrder(SNCT);
-  wbAddGroupOrder(SOPM);
-  wbAddGroupOrder(COLL);
-  wbAddGroupOrder(CLFM);
-  wbAddGroupOrder(REVB);
-  wbAddGroupOrder(PKIN);
-  wbAddGroupOrder(RFGP);
-  wbAddGroupOrder(AMDL);
-  wbAddGroupOrder(AAMD); //not contained in ESM but exists in exe load order. Added in version 1.2.7.27
-  wbAddGroupOrder(LAYR);
-  wbAddGroupOrder(COBJ);
-  wbAddGroupOrder(OMOD);
-  wbAddGroupOrder(MSWP);
-  wbAddGroupOrder(MDSP); //new in Fallout 76. Added in version 1.2.3.9
-  wbAddGroupOrder(ZOOM);
-  wbAddGroupOrder(INNR);
-  wbAddGroupOrder(KSSM);
-  wbAddGroupOrder(AECH);
-  wbAddGroupOrder(SCCO);
-  wbAddGroupOrder(AORU);
-  wbAddGroupOrder(SCSN);
-  wbAddGroupOrder(STAG);
-  wbAddGroupOrder(NOCM);
-  wbAddGroupOrder(LENS);
-  wbAddGroupOrder(LSPR); //Currently unused in ESM
-  wbAddGroupOrder(GDRY); //Currently empty GRUP in ESM and unused in exe load order
-  wbAddGroupOrder(OVIS);
-  wbAddGroupOrder(DLYR); //new in Fallout 76. Currently unused in ESM
-  wbAddGroupOrder(STND); //new in Fallout 76
-  wbAddGroupOrder(STMP); //new in Fallout 76
-  wbAddGroupOrder(GCVR); //new in Fallout 76
-  wbAddGroupOrder(PLYR); //Currently unused in ESM
-  wbAddGroupOrder(STHD); //new in Fallout 76
-  wbAddGroupOrder(VOLI); //new in Fallout 76
-  wbAddGroupOrder(WSPR); //new in Fallout 76
-  wbAddGroupOrder(WAVE); //new in Fallout 76
-  wbAddGroupOrder(AAPD); //new in Fallout 76
-  wbAddGroupOrder(PMFT); //new in Fallout 76
-  wbAddGroupOrder(CHAL); //new in Fallout 76
-  wbAddGroupOrder(CNDF); //new in Fallout 76
-  wbAddGroupOrder(AUVF); //new in Fallout 76
-  wbAddGroupOrder(LGDI); //new in Fallout 76
-  wbAddGroupOrder(EQWG); //new in Fallout 76
-  wbAddGroupOrder(PEPF); //new in Fallout 76 0.2.782.0
-  wbAddGroupOrder(GMRW); //new in Fallout 76 0.2.782.0
-  wbAddGroupOrder(DCGF); //new in Fallout 76
-  wbAddGroupOrder(QMDL); //new in Fallout 76
-  wbAddGroupOrder(LOUT); //new in Fallout 76
-  wbAddGroupOrder(DIST); //new in Fallout 76
-  wbAddGroupOrder(PLYT);
-  wbAddGroupOrder(FISH);
-  wbAddGroupOrder(CMPT);
-  wbAddGroupOrder(CMPI);
-  wbAddGroupOrder(TEPF);
+  AddGroupOrder(GMST);
+  AddGroupOrder(KYWD);
+  AddGroupOrder(ENTM); //new in Fallout 76
+  AddGroupOrder(COEN); //new in Fallout 76
+  AddGroupOrder(PCEN); //Unused after 1.0.0.2
+  AddGroupOrder(CSEN); //new in Fallout 76
+  AddGroupOrder(ECAT); //new in Fallout 76
+  AddGroupOrder(EMOT); //new in Fallout 76
+  AddGroupOrder(AVTR); //new in Fallout 76
+  AddGroupOrder(CPRD); //new in Fallout 76
+  AddGroupOrder(ASTM);
+  AddGroupOrder(ATXO); //new in Fallout 76
+  AddGroupOrder(LCRT);
+  AddGroupOrder(AACT);
+  AddGroupOrder(TRNS);
+  AddGroupOrder(CMPO);
+  AddGroupOrder(TXST);
+  AddGroupOrder(MICN); //new in Fallout 76. Currently unused in esm
+  AddGroupOrder(GLOB);
+  AddGroupOrder(DMGT);
+  AddGroupOrder(CLAS);
+  AddGroupOrder(FACT);
+  AddGroupOrder(HDPT);
+  AddGroupOrder(EYES); //Unused in ESM. Used in EXE
+  AddGroupOrder(RACE);
+  AddGroupOrder(SOUN);
+  AddGroupOrder(SECH); //new in Fallout 76
+  AddGroupOrder(ASPC);
+  AddGroupOrder(RESO); //new in Fallout 76
+  AddGroupOrder(MGEF);
+  AddGroupOrder(SCPT); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(LTEX);
+  AddGroupOrder(ENCH);
+  AddGroupOrder(SPEL);
+  AddGroupOrder(SCRL); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(ACTI);
+  AddGroupOrder(TRAP);
+  AddGroupOrder(TACT);
+  AddGroupOrder(CURV); //new in Fallout 76
+  AddGroupOrder(ARMO);
+  AddGroupOrder(BOOK);
+  AddGroupOrder(CONT);
+  AddGroupOrder(DOOR);
+  AddGroupOrder(INGR);
+  AddGroupOrder(LIGH);
+  AddGroupOrder(MISC);
+  AddGroupOrder(MSCS); //new in Fallout 76
+  AddGroupOrder(MISI); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(CNCY); //new in Fallout 76
+  AddGroupOrder(STAT);
+  AddGroupOrder(SCOL);
+  AddGroupOrder(MSTT);
+  AddGroupOrder(GRAS);
+  AddGroupOrder(TREE); // Currently an empty GRUP record
+  AddGroupOrder(FLOR);
+  AddGroupOrder(FURN);
+  AddGroupOrder(WEAP);
+  AddGroupOrder(AMMO);
+  AddGroupOrder(NPC_);
+  AddGroupOrder(LVLN);
+  AddGroupOrder(LVLP); //new in Fallout 76
+  AddGroupOrder(KEYM);
+  AddGroupOrder(ALCH);
+  AddGroupOrder(UTIL); //new in Fallout 76
+  AddGroupOrder(IDLM);
+  AddGroupOrder(NOTE);
+  AddGroupOrder(PROJ);
+  AddGroupOrder(HAZD);
+  AddGroupOrder(BNDS);
+  AddGroupOrder(SLGM); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(TERM);
+  AddGroupOrder(PPAK); //new in Fallout 76
+  AddGroupOrder(PACH); //new in Fallout 76
+  AddGroupOrder(LVLI);
+  AddGroupOrder(WTHR);
+  AddGroupOrder(CLMT);
+  AddGroupOrder(SPGD);
+  AddGroupOrder(RFCT);
+  AddGroupOrder(REGN);
+  AddGroupOrder(NAVI);
+  AddGroupOrder(CELL);
+  AddGroupOrder(REFR); //new in Fallout 76
+  AddGroupOrder(ACHR); //new in Fallout 76
+  AddGroupOrder(PMIS); //new in Fallout 76
+  AddGroupOrder(PARW); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(PGRE); //new in Fallout 76
+  AddGroupOrder(PBEA); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(PFLA); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(PCON); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(PBAR); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(PHZD); //new in Fallout 76
+  AddGroupOrder(WRLD);
+  AddGroupOrder(LAND); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(NAVM); //new in Fallout 76
+  AddGroupOrder(TLOD); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(DIAL); //new in Fallout 76
+  AddGroupOrder(INFO); //new in Fallout 76
+  AddGroupOrder(QUST);
+  AddGroupOrder(IDLE);
+  AddGroupOrder(PACK);
+  AddGroupOrder(CSTY);
+  AddGroupOrder(LSCR);
+  AddGroupOrder(LVSP); //not contained in ESM but exists in exe load order
+  AddGroupOrder(ANIO);
+  AddGroupOrder(WATR);
+  AddGroupOrder(EFSH);
+  AddGroupOrder(TOFT); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(EXPL);
+  AddGroupOrder(DEBR);
+  AddGroupOrder(IMGS);
+  AddGroupOrder(IMAD);
+  AddGroupOrder(FLST);
+  AddGroupOrder(PERK);
+  AddGroupOrder(PCRD); //new in Fallout 76
+  AddGroupOrder(LVPC); //new in Fallout 76
+  AddGroupOrder(BPTD);
+  AddGroupOrder(ADDN);
+  AddGroupOrder(AVIF);
+  AddGroupOrder(CAMS);
+  AddGroupOrder(CPTH);
+  AddGroupOrder(VTYP);
+  AddGroupOrder(MATT);
+  AddGroupOrder(IPCT);
+  AddGroupOrder(IPDS);
+  AddGroupOrder(ARMA);
+  AddGroupOrder(ECZN); //not contained in ESM but exists in exe load order
+  AddGroupOrder(LCTN);
+  AddGroupOrder(MESG);
+  AddGroupOrder(RGDL); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(DOBJ);
+  AddGroupOrder(DFOB);
+  AddGroupOrder(LGTM);
+  AddGroupOrder(MUSC);
+  AddGroupOrder(FSTP);
+  AddGroupOrder(FSTS);
+  AddGroupOrder(SMBN);
+  AddGroupOrder(SMQN);
+  AddGroupOrder(SMEN);
+  AddGroupOrder(DLBR);
+  AddGroupOrder(MUST);
+  AddGroupOrder(DLVW); // Currently an empty GRUP record
+  AddGroupOrder(WOOP); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(SHOU); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(EQUP);
+  AddGroupOrder(RELA);
+  AddGroupOrder(SCEN);
+  AddGroupOrder(ASTP);
+  AddGroupOrder(OTFT);
+  AddGroupOrder(ARTO);
+  AddGroupOrder(MATO);
+  AddGroupOrder(MOVT);
+  AddGroupOrder(SNDR);
+  AddGroupOrder(DUAL); //not contained in ESM but exists in exe load order
+  AddGroupOrder(SNCT);
+  AddGroupOrder(SOPM);
+  AddGroupOrder(COLL);
+  AddGroupOrder(CLFM);
+  AddGroupOrder(REVB);
+  AddGroupOrder(PKIN);
+  AddGroupOrder(RFGP);
+  AddGroupOrder(AMDL);
+  AddGroupOrder(AAMD); //not contained in ESM but exists in exe load order. Added in version 1.2.7.27
+  AddGroupOrder(LAYR);
+  AddGroupOrder(COBJ);
+  AddGroupOrder(OMOD);
+  AddGroupOrder(MSWP);
+  AddGroupOrder(MDSP); //new in Fallout 76. Added in version 1.2.3.9
+  AddGroupOrder(ZOOM);
+  AddGroupOrder(INNR);
+  AddGroupOrder(KSSM);
+  AddGroupOrder(AECH);
+  AddGroupOrder(SCCO);
+  AddGroupOrder(AORU);
+  AddGroupOrder(SCSN);
+  AddGroupOrder(STAG);
+  AddGroupOrder(NOCM);
+  AddGroupOrder(LENS);
+  AddGroupOrder(LSPR); //Currently unused in ESM
+  AddGroupOrder(GDRY); //Currently empty GRUP in ESM and unused in exe load order
+  AddGroupOrder(OVIS);
+  AddGroupOrder(DLYR); //new in Fallout 76. Currently unused in ESM
+  AddGroupOrder(STND); //new in Fallout 76
+  AddGroupOrder(STMP); //new in Fallout 76
+  AddGroupOrder(GCVR); //new in Fallout 76
+  AddGroupOrder(PLYR); //Currently unused in ESM
+  AddGroupOrder(STHD); //new in Fallout 76
+  AddGroupOrder(VOLI); //new in Fallout 76
+  AddGroupOrder(WSPR); //new in Fallout 76
+  AddGroupOrder(WAVE); //new in Fallout 76
+  AddGroupOrder(AAPD); //new in Fallout 76
+  AddGroupOrder(PMFT); //new in Fallout 76
+  AddGroupOrder(CHAL); //new in Fallout 76
+  AddGroupOrder(CNDF); //new in Fallout 76
+  AddGroupOrder(AUVF); //new in Fallout 76
+  AddGroupOrder(LGDI); //new in Fallout 76
+  AddGroupOrder(EQWG); //new in Fallout 76
+  AddGroupOrder(PEPF); //new in Fallout 76 0.2.782.0
+  AddGroupOrder(GMRW); //new in Fallout 76 0.2.782.0
+  AddGroupOrder(DCGF); //new in Fallout 76
+  AddGroupOrder(QMDL); //new in Fallout 76
+  AddGroupOrder(LOUT); //new in Fallout 76
+  AddGroupOrder(DIST); //new in Fallout 76
+  AddGroupOrder(PLYT);
+  AddGroupOrder(FISH);
+  AddGroupOrder(CMPT);
+  AddGroupOrder(CMPI);
+  AddGroupOrder(TEPF);
   NexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}

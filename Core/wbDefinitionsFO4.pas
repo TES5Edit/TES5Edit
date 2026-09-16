@@ -3131,7 +3131,7 @@ end;
 
 procedure ReferenceRecord(const aGameDef: TwbGameDef; const aSignature: TwbSignature; const aName: string);
 begin
-  wbRefRecord(aSignature, aName,
+  aGameDef.RegisterRefRecordDef(aSignature, aName,
     wbFlags(wbFlagsList([
       {0x00000080}  7, 'Turn Off Fire',
       {0x00000400} 10, 'Persistent',
@@ -4412,7 +4412,7 @@ begin
       ])
 	  ]);
 
-  wbRefRecord(ACHR, 'Placed NPC',
+  RegisterRefRecordDef(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
       9, 'Starts Dead',
      10, 'Persistent',
@@ -5540,7 +5540,7 @@ begin
   wbEffectsReq :=
     wbRArrayS('Effects', wbEffect, cpNormal, True);
 
-  wbRecord(ACTI, 'Activator',
+  RegisterRecordDef(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       2, 'Never Fades',
       4, 'Non Occluder',
@@ -5601,7 +5601,7 @@ begin
     wbNVNM
   ]);
 
-  wbRecord(TACT, 'Talking Activator',
+  RegisterRecordDef(TACT, 'Talking Activator',
     wbFlags(wbFlagsList([
       9, 'Hidden From Local Map',
      16, 'Random Anim Start',
@@ -5620,7 +5620,7 @@ begin
     wbFormIDCk(VNAM, 'Voice Type', [VTYP])
   ]);
 
-  wbRecord(ALCH, 'Ingestible',
+  RegisterRecordDef(ALCH, 'Ingestible',
     wbFlags(wbFlagsList([
       29, 'Medicine'
     ])), [
@@ -5670,7 +5670,7 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(AMMO, 'Ammunition',
+  RegisterRecordDef(AMMO, 'Ammunition',
     wbFlags(wbFlagsList([
       2, 'Non-Playable'
     ])), [
@@ -5706,7 +5706,7 @@ begin
     wbModelInfo(Self, NAM2)
   ]);
 
-  wbRecord(ANIO, 'Animated Object',
+  RegisterRecordDef(ANIO, 'Animated Object',
     wbFlags(wbFlagsList([
       9, 'Unknown 9'
     ]), [9]), [
@@ -5715,7 +5715,7 @@ begin
     wbString(BNAM, 'Unload Event')
   ]);
 
-  wbRecord(ARMO, 'Armor',
+  RegisterRecordDef(ARMO, 'Armor',
     wbFlags(wbFlagsList([
       2, 'Non-Playable',
       6, 'Shield',
@@ -5774,7 +5774,7 @@ begin
     wbObjectTemplate
   ]).SetAfterLoad(wbARMOAfterLoad);
 
-  wbRecord(ARMA, 'Armor Addon',
+  RegisterRecordDef(ARMA, 'Armor Addon',
     wbFlags(wbFlagsList([
       6, 'No Underarmor Scaling',
       9, 'Has Sculpt Data',
@@ -5820,7 +5820,7 @@ begin
     wbArmorAddonBSMPSequence
   ]).SetAfterLoad(wbARMAAfterLoad);
 
-  wbRecord(BOOK, 'Book', [
+  RegisterRecordDef(BOOK, 'Book', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -5882,7 +5882,7 @@ begin
   ReferenceRecord(Self, PHZD, 'Placed Hazard');
   ReferenceRecord(Self, PMIS, 'Placed Missile');
 
-  wbRecord(CELL, 'Cell',
+  RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
       7, 'No Pre Vis',
      10, 'Persistent',
@@ -6031,7 +6031,7 @@ begin
   ]).SetAddInfo(wbCellAddInfo)
     .SetUnordered;
 
-  wbRecord(CLAS, 'Class', [
+  RegisterRecordDef(CLAS, 'Class', [
     wbEDID,
     wbFULLReq,
     wbDESCReq,
@@ -6044,7 +6044,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(CLMT, 'Climate', [
+  RegisterRecordDef(CLMT, 'Climate', [
     wbEDID,
     wbArrayS(WLST, 'Weather Types', wbStructSK([0], 'Weather Type', [
       wbFormIDCk('Weather', [WTHR, NULL]),
@@ -6057,7 +6057,7 @@ begin
     wbClimateTiming(wbClmtTime, wbClmtMoonsPhaseLength)
   ]);
 
-  wbRecord(SPGD, 'Shader Particle Geometry', [
+  RegisterRecordDef(SPGD, 'Shader Particle Geometry', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloat('Gravity Velocity'),
@@ -6092,7 +6092,7 @@ begin
     wbString(MNAM, 'Particle Texture')
   ]);
 
-  wbRecord(RFCT, 'Visual Effect', [
+  RegisterRecordDef(RFCT, 'Visual Effect', [
     wbEDID,
     wbStruct(DATA, 'Effect Data', [
       wbFormIDCK('Effect Art', [ARTO, NULL]),
@@ -6105,7 +6105,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(CONT, 'Container',
+  RegisterRecordDef(CONT, 'Container',
     wbFlags(wbFlagsList([
       15, 'Has Distant LOD',
       16, 'Random Anim Start',
@@ -6162,7 +6162,7 @@ begin
           wbFromVersion(29, wbByteArray('Unknown', 3))
     ]).SetRequired;
 
-  wbRecord(CSTY, 'Combat Style',
+  RegisterRecordDef(CSTY, 'Combat Style',
     wbFlags(wbFlagsList([
       19, 'Allow Dual Wielding'
     ])), [
@@ -6238,7 +6238,7 @@ begin
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]);
 
-  wbRecord(DIAL, 'Dialog Topic',
+  RegisterRecordDef(DIAL, 'Dialog Topic',
     wbFlags(wbFlagsList([
     14, 'Partial Form'
     ]), [14]), [
@@ -6406,7 +6406,7 @@ begin
     wbINOA
   ]).SetAddInfo(wbDIALAddInfo);
 
-  wbRecord(DOOR, 'Door',
+  RegisterRecordDef(DOOR, 'Door',
     wbFlags(wbFlagsList([
       {0x00000010}  4, 'Non Occluder',
       {0x00008000} 15, 'Has Distant LOD',
@@ -6439,7 +6439,7 @@ begin
     wbRArrayS('Random teleport destinations', wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  RegisterRecordDef(EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture').SetRequired,
     wbString(ICO2, 'Particle Shader Texture'),
@@ -6655,7 +6655,7 @@ begin
     wbGenericModel(Self)
   ]);
 
-  wbRecord(ENCH, 'Enchantment', [
+  RegisterRecordDef(ENCH, 'Enchantment', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -6681,7 +6681,7 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(EYES, 'Eyes',
+  RegisterRecordDef(EYES, 'Eyes',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -6714,7 +6714,7 @@ begin
       .IncludeFlag(dfSummaryNoSortKey)
       .IncludeFlag(dfCollapsed, wbCollapseFactionRanks);
 
-  wbRecord(FACT, 'Faction', [
+  RegisterRecordDef(FACT, 'Faction', [
     wbEDID,
     wbFULL,
     wbFactionRelations(Self),
@@ -6777,7 +6777,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(FURN, 'Furniture',
+  RegisterRecordDef(FURN, 'Furniture',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Has Container',
       {0x00000010}  4, 'Unknown 4',
@@ -6850,7 +6850,7 @@ begin
     wbNVNM
   ]);
 
-  wbRecord(GLOB, 'Global',
+  RegisterRecordDef(GLOB, 'Global',
     wbFlags(wbFlagsList([
       {0x00000040}  6, 'Constant'
     ])), [
@@ -6865,7 +6865,7 @@ begin
     wbFloat(FLTV, 'Value', cpNormal, True)
   ]);
 
-  wbRecord(GMST, 'Game Setting', [
+  RegisterRecordDef(GMST, 'Game Setting', [
     wbString(EDID, 'Editor ID', 0, cpCritical, True).SetAfterSet(wbGMSTEDIDAfterSet),
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbLString('Name', 0, cpTranslate),
@@ -6876,7 +6876,7 @@ begin
   ]).SetSummaryKey([1])
     .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(KYWD, 'Keyword',
+  RegisterRecordDef(KYWD, 'Keyword',
     wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
@@ -6891,7 +6891,7 @@ begin
     wbString(NNAM, 'Display Name') {Legacy record replaced with FULL}
   ]);
 
-  wbRecord(LCRT, 'Location Reference Type', [
+  RegisterRecordDef(LCRT, 'Location Reference Type', [
     wbEDID,
     wbByteRGBA(CNAM).SetRequired,
     wbInteger(TNAM, 'Type', itU32, wbKeywordTypeEnum)
@@ -6899,7 +6899,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(AACT, 'Action',
+  RegisterRecordDef(AACT, 'Action',
     wbFlags(wbFlagsList([
       {0x00080000} {15} 15, 'Restricted'
     ])), [
@@ -6913,7 +6913,7 @@ begin
     wbFULL
   ]);
 
-  wbRecord(TXST, 'Texture Set', [
+  RegisterRecordDef(TXST, 'Texture Set', [
     wbEDID,
     wbObjectBounds(Self),
     wbRStruct('Textures (RGB/A)', [
@@ -6935,7 +6935,7 @@ begin
     wbString(MNAM, 'Material')
   ]).SetSummaryKey([2, 3]);
 
-  wbRecord(HDPT, 'Head Part',
+  RegisterRecordDef(HDPT, 'Head Part',
     wbFlags(wbFlagsList([
     2, 'Non-Playable'
     ])), [
@@ -6986,7 +6986,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(ASPC, 'Acoustic Space', [
+  RegisterRecordDef(ASPC, 'Acoustic Space', [
     wbEDID,
     wbObjectBounds(Self),
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR]),
@@ -6996,7 +6996,7 @@ begin
     wbInteger(WNAM, 'Weather Attenuation (dB)', itU16, wbDiv(100)).SetRequired
   ]);
 
-  wbRecord(MSTT, 'Moveable Static',
+  RegisterRecordDef(MSTT, 'Moveable Static',
     wbFlags(wbFlagsList([
        8, 'Must Update Anims',
        9, 'Hidden From Local Map',
@@ -7027,7 +7027,7 @@ begin
     wbFormIDCk(SNAM, 'Looping Sound', [SNDR])
   ]);
 
-  wbRecord(IDLM, 'Idle Marker',
+  RegisterRecordDef(IDLM, 'Idle Marker',
     wbFlags(wbFlagsList([
     29, 'Child Can Use'
     ])), [
@@ -7044,7 +7044,7 @@ begin
       .SetDontShow(wbIdleMarkerQNAMDontShow)
   ]);
 
-  wbRecord(PROJ, 'Projectile', [
+  RegisterRecordDef(PROJ, 'Projectile', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -7109,7 +7109,7 @@ begin
       .SetDefaultEditValue('Normal')
   ]);
 
-  wbRecord(HAZD, 'Hazard', [
+  RegisterRecordDef(HAZD, 'Hazard', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -7141,7 +7141,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(NAVM, 'Navmesh',
+  RegisterRecordDef(NAVM, 'Navmesh',
     wbFlags(wbFlagsList([
       11, 'Initially Disabled',
       18, 'Compressed',
@@ -7169,7 +7169,7 @@ begin
     )
   ]).SetAddInfo(wbNAVMAddInfo);
 
-  wbRecord(NAVI, 'Navmesh Info Map', [
+  RegisterRecordDef(NAVI, 'Navmesh Info Map', [
     wbEDID,
     wbInteger(NVER, 'Version', itU32),
     wbRArrayS('Navmesh Infos',
@@ -7263,7 +7263,7 @@ begin
     wbArrayS(NVSI, 'Deleted Navmeshes', wbFormIDCk('Navmesh', [NAVM])).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
   ]);
 
-  wbRecord(EXPL, 'Explosion', [
+  RegisterRecordDef(EXPL, 'Explosion', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -7317,12 +7317,12 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(DEBR, 'Debris', [
+  RegisterRecordDef(DEBR, 'Debris', [
     wbEDID,
     wbRArray('Models', wbDebrisModel(wbModelInfo(Self, MODT)), cpNormal, True)
   ]);
 
-  wbRecord(IMGS, 'Image Space', [
+  RegisterRecordDef(IMGS, 'Image Space', [
     wbEDID,
     wbStruct(ENAM, 'Image Space Data', [
       wbStruct('HDR', [
@@ -7395,7 +7395,7 @@ begin
     wbString(TX00, 'LUT')
   ]);
 
-  wbRecord(IMAD, 'Image Space Adapter', [
+  RegisterRecordDef(IMAD, 'Image Space Adapter', [
     wbEDID.SetRequired,
     wbStruct(DNAM, 'Data', [
       wbInteger('Animatable', itU32, wbBoolEnum),
@@ -7503,7 +7503,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(FLST, 'FormID List', [
+  RegisterRecordDef(FLST, 'FormID List', [
     wbString(EDID, 'Editor ID', 0, cpBenign, True).SetAfterSet(wbFLSTEDIDAfterSet),
     wbFULL,
     wbRArrayS('FormIDs',
@@ -7511,7 +7511,7 @@ begin
     ).SetIsSorted(wbFLSTLNAMIsSorted)
   ]);
 
-  wbRecord(PERK, 'Perk',
+  RegisterRecordDef(PERK, 'Perk',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -7622,7 +7622,7 @@ begin
       ]))
   ]);
 
-  wbRecord(BPTD, 'Body Part Data', [
+  RegisterRecordDef(BPTD, 'Body Part Data', [
     wbEDID,
     wbGenericModel(Self),
     wbRArrayS('Body Parts',
@@ -7725,7 +7725,7 @@ begin
   ]).SetSummaryKey([1])
     .IncludeFlag(dfSummaryMembersNoName);
 
-  wbRecord(ADDN, 'Addon Node', [
+  RegisterRecordDef(ADDN, 'Addon Node', [
     wbEDID,
     wbObjectBounds(Self),
     wbGenericModel(Self),
@@ -7755,7 +7755,7 @@ begin
       aIndexKeys.Keys[wbIdxAddonNode] := lDATA;
     end);
 
-  wbRecord(AVIF, 'Actor Value Information', [
+  RegisterRecordDef(AVIF, 'Actor Value Information', [
     wbEDID,
     wbFULL,
     wbDESCReq,
@@ -7809,7 +7809,7 @@ begin
     ])).SetDefaultEditValue('Variable')
   ]); // S.P.E.C.I.A.L start at index 5, so FormID 0x2bc+5 to 0x2bc+11, RadResistIngestion at index 0x29
 
-  wbRecord(CAMS, 'Camera Shot', [
+  RegisterRecordDef(CAMS, 'Camera Shot', [
     wbEDID,
     wbGenericModel(Self),
     wbConditions,
@@ -7859,7 +7859,7 @@ begin
     wbFormIDCk(MNAM, 'Image Space Modifier', [IMAD])
   ]);
 
-  wbRecord(CPTH, 'Camera Path', [
+  RegisterRecordDef(CPTH, 'Camera Path', [
     wbEDID,
     wbConditions,
     wbStruct(ANAM, 'Camera Paths', [
@@ -7879,7 +7879,7 @@ begin
     wbRArray('Camera Shots', wbFormIDCk(SNAM, 'Camera Shot', [CAMS]))
   ]);
 
-  wbRecord(VTYP, 'Voice Type', [
+  RegisterRecordDef(VTYP, 'Voice Type', [
     wbEDID,
     wbInteger(DNAM, 'Flags', itU8, wbFlags([
       'Allow Default Dialog',
@@ -7887,7 +7887,7 @@ begin
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]);
 
-  wbRecord(MATT, 'Material Type', [
+  RegisterRecordDef(MATT, 'Material Type', [
     wbEDID,
     wbFormIDCk(PNAM, 'Material Parent', [MATT, NULL]),
     wbString(MNAM, 'Material Name'),
@@ -7907,7 +7907,7 @@ begin
     wbModelInfo(Self, MODT)
   ]);
 
-  wbRecord(IPCT, 'Impact', [
+  RegisterRecordDef(IPCT, 'Impact', [
     wbEDID,
     wbGenericModel(Self),
     wbStruct(DATA, '', [
@@ -7943,7 +7943,7 @@ begin
     wbFloat(FNAM, 'Footstep Particle Max Dist').SetDefaultEditValue('800.0')
   ]);
 
-  wbRecord(IPDS, 'Impact Data Set', [
+  RegisterRecordDef(IPDS, 'Impact Data Set', [
     wbEDID,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
       wbFormIDCk('Material', [MATT]),
@@ -7951,7 +7951,7 @@ begin
     ]))
   ]);
 
-  wbRecord(ECZN, 'Encounter Zone', [
+  RegisterRecordDef(ECZN, 'Encounter Zone', [
     wbEDID,
     wbStruct(DATA, '', [
       wbFormIDCkNoReach('Owner', [NPC_, FACT, NULL]),
@@ -7968,7 +7968,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(LCTN, 'Location',
+  RegisterRecordDef(LCTN, 'Location',
     wbFlags(wbFlagsList([
     11, 'Interior Cells Use Ref Location for world map player marker',
     14, 'Unknown 14' //Partial Form
@@ -8108,7 +8108,7 @@ begin
     wbByteRGBA(CNAM)
   ]);
 
-  wbRecord(MESG, 'Message', [
+  RegisterRecordDef(MESG, 'Message', [
     wbEDID,
     wbDESCReq,
     wbFULL,
@@ -8547,7 +8547,7 @@ begin
     c := CombineVarRecs(c, b);
   end;
 
-  wbRecord(DOBJ, 'Default Object Manager', [
+  RegisterRecordDef(DOBJ, 'Default Object Manager', [
     wbEDID,
     wbArrayS(DNAM, 'Objects',
       wbStructSK([0], 'Object', [
@@ -8558,7 +8558,7 @@ begin
      .SetRequired
   ]);
 
-  wbRecord(LGTM, 'Lighting Template', [
+  RegisterRecordDef(LGTM, 'Lighting Template', [
     wbEDID,
     wbStruct(DATA, 'Lighting', [
       wbByteColors('Ambient Color'),
@@ -8594,7 +8594,7 @@ begin
     wbFormIDCk(WGDR, 'God Rays', [GDRY])
   ]);
 
-  wbRecord(MUSC, 'Music Type', [
+  RegisterRecordDef(MUSC, 'Music Type', [
     wbEDID,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
       {0x01} 'Plays One Selection',
@@ -8615,13 +8615,13 @@ begin
     wbArray(TNAM, 'Music Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
-  wbRecord(FSTP, 'Footstep', [
+  RegisterRecordDef(FSTP, 'Footstep', [
     wbEDID,
     wbFormIDCk(DATA, 'Impact Data Set', [IPDS, NULL], False, cpNormal, True),
     wbString(ANAM, 'Tag', 0, cpNormal, True)
   ]);
 
-  wbRecord(FSTS, 'Footstep Set', [
+  RegisterRecordDef(FSTS, 'Footstep Set', [
     wbEDID,
     wbStruct(XCNT, 'Footstep Counts', [
       wbInteger('Walking Count', itU32),
@@ -8649,7 +8649,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(SMBN, 'Story Manager Branch Node', [
+  RegisterRecordDef(SMBN, 'Story Manager Branch Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -8664,7 +8664,7 @@ begin
     wbInteger(XNAM, 'Max concurrent quests', itU32)
   ]);
 
-  wbRecord(SMQN, 'Story Manager Quest Node', [
+  RegisterRecordDef(SMQN, 'Story Manager Quest Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -8691,7 +8691,7 @@ begin
     ).SetCountPath(QNAM)
   ]);
 
-  wbRecord(SMEN, 'Story Manager Event Node', [
+  RegisterRecordDef(SMEN, 'Story Manager Event Node', [
     wbEDID,
     wbFormIDCkNoReach(PNAM, 'Parent Node', [SMQN, SMBN, SMEN, NULL]),
     wbFormIDCkNoReach(SNAM, 'Previous Node', [SMQN, SMBN, SMEN, NULL], False, cpBenign),
@@ -8707,7 +8707,7 @@ begin
     wbInteger(ENAM, 'Type', itU32, wbQuestEventEnum(Self))
   ]).SetSummaryKey([7]);
 
-  wbRecord(DLBR, 'Dialog Branch', [
+  RegisterRecordDef(DLBR, 'Dialog Branch', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST]).SetRequired,
     wbInteger(TNAM, 'Category', itU32,
@@ -8724,7 +8724,7 @@ begin
     wbFormIDCk(SNAM, 'Starting Topic', [DIAL]).SetRequired
   ]).SetAddInfo(wbDLBRAddInfo);
 
-  wbRecord(MUST, 'Music Track', [
+  RegisterRecordDef(MUST, 'Music Track', [
     wbEDID,
     wbInteger(CNAM, 'Track Type', itU32, wbEnum([], [
       Int64($23F678C3), 'Palette Track',
@@ -8748,7 +8748,7 @@ begin
     wbArray(SNAM, 'Tracks', wbFormIDCk('Track', [MUST, NULL]))
   ]);
 
-  wbRecord(DLVW, 'Dialog View', [
+  RegisterRecordDef(DLVW, 'Dialog View', [
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST]),
     wbFormIDCkNoReach(BNAM, 'Branch', [DLBR]),
@@ -8764,7 +8764,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(EQUP, 'Equip Type', [
+  RegisterRecordDef(EQUP, 'Equip Type', [
     wbEDID,
     wbArray(PNAM, 'Slot Parents', wbFormIDCk('Parent', [EQUP])),
     wbInteger(DATA, 'Flags', itU32, wbFlags([
@@ -8777,7 +8777,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(RELA, 'Relationship', [
+  RegisterRecordDef(RELA, 'Relationship', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFormIDCk('Parent', [NPC_, NULL]),
@@ -8808,7 +8808,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(SCEN, 'Scene', [
+  RegisterRecordDef(SCEN, 'Scene', [
     wbEDID,
     wbVMADFragmentedSCEN,
     wbInteger(FNAM, 'Flags', itU32,
@@ -9064,7 +9064,7 @@ begin
     wbInteger(XNAM, 'Index', itU32)
   ]).SetAddInfo(wbSCENAddInfo);
 
-  wbRecord(ASTP, 'Association Type', [
+  RegisterRecordDef(ASTP, 'Association Type', [
     wbEDID,
     wbString(MPRT, 'Male Parent Title'),
     wbString(FPRT, 'Female Parent Title'),
@@ -9286,12 +9286,12 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(OTFT, 'Outfit', [
+  RegisterRecordDef(OTFT, 'Outfit', [
     wbEDID,
     wbArrayS(INAM, 'Items', wbFormIDCk('Item', [ARMO, LVLI]))
   ]);
 
-  wbRecord(ARTO, 'Art Object', [
+  RegisterRecordDef(ARTO, 'Art Object', [
     wbEDID,
     wbObjectBounds(Self),
     wbPTRN,
@@ -9304,7 +9304,7 @@ begin
     ]))
   ]);
 
-  wbRecord(MATO, 'Material Object', [
+  RegisterRecordDef(MATO, 'Material Object', [
     wbEDID,
     wbGenericModel(Self),
     wbRArray('Property Data',
@@ -9322,7 +9322,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(MOVT, 'Movement Type', [
+  RegisterRecordDef(MOVT, 'Movement Type', [
     wbEDID,
     wbString(MNAM, 'Name'),
     wbSPED,
@@ -9335,7 +9335,7 @@ begin
     wbFloat(LNAM, 'Flight - Angle Gain').SetDefaultEditValue('0.1')
   ]);
 
-  wbRecord(SNDR, 'Sound Descriptor', [
+  RegisterRecordDef(SNDR, 'Sound Descriptor', [
     wbEDID,
     wbString(NNAM, 'Notes'),
     wbInteger(CNAM, 'Descriptor Type', itU32, wbEnum([], [
@@ -9381,7 +9381,7 @@ begin
     ).SetCountPath(ITMC)
   ]);
 
-  wbRecord(DUAL, 'Dual Cast Data', [
+  RegisterRecordDef(DUAL, 'Dual Cast Data', [
     wbEDID,
     wbObjectBounds(Self),
     wbStruct(DATA, 'Data', [
@@ -9398,7 +9398,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(SNCT, 'Sound Category', [
+  RegisterRecordDef(SNCT, 'Sound Category', [
     wbEDID,
     wbFULL,
     wbInteger(FNAM, 'Flags', itU32, wbFlags([
@@ -9418,7 +9418,7 @@ begin
     wbFloat(CNAM, 'Sidechain Target Multiplier').SetDefaultEditValue('1.0')
   ]);
 
-  wbRecord(SOPM, 'Sound Output Model', [
+  RegisterRecordDef(SOPM, 'Sound Output Model', [
     wbEDID,
     wbStruct(NAM1, 'Data', [
       wbInteger('Flags', itU8, wbFlags([
@@ -9476,7 +9476,7 @@ begin
     wbFormIDCk(ENAM, 'Effect Chain', [AECH])
   ]);
 
-  wbRecord(COLL, 'Collision Layer', [
+  RegisterRecordDef(COLL, 'Collision Layer', [
     wbEDID,
     wbDESCReq,
     wbInteger(BNAM, 'Index', itU32, nil, cpNormal, True),
@@ -9501,7 +9501,7 @@ begin
        aIndexKeys.Keys[wbIdxCollisionLayer] := lBNAM;
      end);
 
-  wbRecord(CLFM, 'Color',
+  RegisterRecordDef(CLFM, 'Color',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable'
     ])), [
@@ -9522,7 +9522,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(REVB, 'Reverb Parameters', [
+  RegisterRecordDef(REVB, 'Reverb Parameters', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbInteger('Decay Time (ms)', itU16).SetDefaultEditValue('1250'),
@@ -9541,7 +9541,7 @@ begin
     wbInteger(ANAM, 'Reverb Class', itU32, wbReverbClassEnum, cpNormal, True)
   ]);
 
-  wbRecord(GRAS, 'Grass', [
+  RegisterRecordDef(GRAS, 'Grass', [
     wbEDID,
     wbObjectBounds(Self),
     wbGenericModel(Self),
@@ -9575,7 +9575,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation', [
+  RegisterRecordDef(IDLE, 'Idle Animation', [
     wbEDID,
     wbConditions,
     wbString(DNAM, 'Behavior Graph'),
@@ -9601,7 +9601,7 @@ begin
     wbString(GNAM, 'Animation File')
   ]);
 
-  wbRecord(INFO, 'Dialog response',
+  RegisterRecordDef(INFO, 'Dialog response',
     wbFlags(wbFlagsList([
     6, 'Info Group',
     7, 'Exclude From Export',
@@ -9717,7 +9717,7 @@ begin
       ]))
   ]).SetAddInfo(wbINFOAddInfo);
 
-  wbRecord(INGR, 'Ingredient', [
+  RegisterRecordDef(INGR, 'Ingredient', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -9752,7 +9752,7 @@ begin
     wbEffectsReq
   ]);
 
-  wbRecord(KEYM, 'Key',
+  RegisterRecordDef(KEYM, 'Key',
     wbFlags(wbFlagsList([
       {0x00000800} 11, 'Calc Value From Components',
       {0x00002000} 13, 'Pack-In Use Only'
@@ -9775,7 +9775,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(LAND, 'Landscape',
+  RegisterRecordDef(LAND, 'Landscape',
     wbFlags(wbFlagsList([
       {0x40000} 18, 'Compressed'
     ]), [18]), [
@@ -9800,7 +9800,7 @@ begin
       wbByteArray(MPCD, 'Heightfield Data'))
   ]).SetAddInfo(wbLANDAddInfo);
 
-  wbRecord(LIGH, 'Light',
+  RegisterRecordDef(LIGH, 'Light',
     wbFlags(wbFlagsList([
       {0x00010000} 16, 'Random Anim Start',
       {0x00020000} 17, 'Unknown 17',
@@ -9875,7 +9875,7 @@ begin
     wbFormIDCk(WGDR, 'God Rays', [GDRY])
   ]);
 
-  wbRecord(LSCR, 'Load Screen',
+  RegisterRecordDef(LSCR, 'Load Screen',
     wbFlags(wbFlagsList([
       {0x00000400} 10, 'Displays In Main Menu',
       {0x00008000} 15, 'No Rotation'
@@ -9896,7 +9896,7 @@ begin
     wbString(MOD2, 'Camera Path', 0, cpNormal, False)
   ]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  RegisterRecordDef(LTEX, 'Landscape Texture', [
     wbEDID,
     wbFormIDCk(TNAM, 'Texture Set', [TXST], False, cpNormal, False),
     wbFormIDCk(MNAM, 'Material Type', [MATT, NULL], False, cpNormal, True),
@@ -9915,7 +9915,7 @@ begin
         wbInteger('Chance', itU32)
       ]));
 
-  wbRecord(LVLN, 'Leveled NPC', [
+  RegisterRecordDef(LVLN, 'Leveled NPC', [
     wbEDID,
     wbObjectBounds(Self),
     wbLVLD,
@@ -9938,7 +9938,7 @@ begin
     wbGenericModel(Self)
   ]).SetAfterLoad(wbLLEAfterLoad);
 
-  wbRecord(LVLI, 'Leveled Item', [
+  RegisterRecordDef(LVLI, 'Leveled Item', [
     wbEDID,
     wbObjectBounds(Self),
     wbLVLD,
@@ -9962,7 +9962,7 @@ begin
     wbLStringKC(ONAM, 'Override Name', 0, cpTranslate)
   ]).SetAfterLoad(wbLLEAfterLoad);
 
-  wbRecord(LVSP, 'Leveled Spell', [
+  RegisterRecordDef(LVSP, 'Leveled Spell', [
     wbEDID,
     wbObjectBounds(Self),
     wbLVLD,
@@ -9981,7 +9981,7 @@ begin
     ).SetCountPath(LLCT)
   ]);
 
-  wbRecord(MGEF, 'Magic Effect', [
+  RegisterRecordDef(MGEF, 'Magic Effect', [
     wbEDID,
     wbVMAD,
     wbFULL,
@@ -10141,7 +10141,7 @@ begin
     wbConditions
   ]);
 
-  wbRecord(MISC, 'Misc. Item',
+  RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
       {0x00000004}  11, 'Calc From Components',
       {0x00000004}  13, 'Pack-In Use Only'
@@ -10195,7 +10195,7 @@ begin
 
   wbComponents := wbArrayS(FVPA, 'Components', wbComponent);
 
-  wbRecord(COBJ, 'Constructible Object', [
+  RegisterRecordDef(COBJ, 'Constructible Object', [
     wbEDID,
     wbYNAM,
     wbZNAM,
@@ -10215,7 +10215,7 @@ begin
     ]).SetOptionalFrom(1)
   ]);
 
-  wbRecord(NPC_, 'Non-Player Character',
+  RegisterRecordDef(NPC_, 'Non-Player Character',
     wbFlags(wbFlagsList([
       {0x00000400} 10, 'Unknown 10',
       {0x00040000} 18, 'Compressed',
@@ -10455,7 +10455,7 @@ begin
     ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]));
 
-  wbRecord(PACK, 'Package', [
+  RegisterRecordDef(PACK, 'Package', [
     wbEDID,
     wbVMADFragmentedPACK,
 
@@ -10613,7 +10613,7 @@ begin
       {0x01000000} 'Optional All Scenes'
     ]), cpNormal, True).IncludeFlag(dfCollapsed, wbCollapseFlags);
 
-  wbRecord(QUST, 'Quest',
+  RegisterRecordDef(QUST, 'Quest',
     wbFlags(wbFlagsList([
       {0x00004000} 14, 'Partial Form'
     ]), [14]), [
@@ -10983,7 +10983,7 @@ begin
       .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
     , cpNormal, True);
 
-  wbRecord(RACE, 'Race',
+  RegisterRecordDef(RACE, 'Race',
     wbFlags(wbFlagsList([
       {0x00080000} 19, 'Unknown 19'
     ])), [
@@ -11276,7 +11276,7 @@ begin
   ]);
 
 
-  wbRefRecord(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
+  RegisterRefRecordDef(REFR, 'Placed Object', wbFormaterUnion(wbREFRRecordFlagsDecider, [
     wbFlags(wbFlagsList([
       {0x00000010}  4, 'Ground Piece',
       {0x00000100}  8, 'LOD Respects Enable State',
@@ -11799,7 +11799,7 @@ begin
     .SetUnordered
     .SetAfterLoad(wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region',
+  RegisterRecordDef(REGN, 'Region',
     wbFlags(wbFlagsList([
       {0x00000040} 6, 'Border Region'
     ])), [
@@ -11890,7 +11890,7 @@ begin
     ]))
   ]).SetUnordered;
 
-  wbRecord(SOUN, 'Sound Marker', [
+  RegisterRecordDef(SOUN, 'Sound Marker', [
     wbEDID,
     wbObjectBounds(Self),
     wbFormIDCk(SDSC, 'Sound Descriptor', [SNDR]).SetRequired,
@@ -11959,7 +11959,7 @@ begin
     wbFormIDCk('Casting Perk', [NULL, PERK])
   ], cpNormal, True);
 
-  wbRecord(SPEL, 'Spell', [
+  RegisterRecordDef(SPEL, 'Spell', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -11974,7 +11974,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(STAT, 'Static',
+  RegisterRecordDef(STAT, 'Static',
     wbFlags(wbFlagsList([
       2, 'Heading Marker',
       4, 'Non Occluder',
@@ -12020,7 +12020,7 @@ begin
     ])
   ]).SetUnordered;  // unordered, NVNM can be before or after MNAM
 
-  wbRecord(TES4, 'Main File Header',
+  RegisterRecordDef(TES4, 'Main File Header',
     wbFlags(wbFlagsList([
       0,  'ESM',
       4,  'Optimized',
@@ -12058,12 +12058,12 @@ begin
     wbInteger(INCC, 'Interior Cell Count', itU32).SetRequired
   ], cpNormal, True).SetUnordered;
 
-  wbRecord(PLYR, 'Player Reference', [
+  RegisterRecordDef(PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player', cpNormal, True).SetDefaultNativeValue($7)
   ]).IncludeFlag(dfInternalEditOnly);
 
-  wbRecord(TREE, 'Tree',
+  RegisterRecordDef(TREE, 'Tree',
     wbFlags(wbFlagsList([
       {0x00008000} 15, 'Has Distant LOD'
     ])), [
@@ -12096,7 +12096,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(FLOR, 'Flora', [
+  RegisterRecordDef(FLOR, 'Flora', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -12135,7 +12135,7 @@ begin
 
 {>>> Start of new Fallout 4 Records <<<}
 
-  wbRecord(AECH, 'Audio Effect Chain', [
+  RegisterRecordDef(AECH, 'Audio Effect Chain', [
     wbEDID,
     wbRArray('Effects',
       wbRStruct('Effect', [
@@ -12175,7 +12175,7 @@ begin
     )
   ]);
 
-  wbRecord(AMDL, 'Aim Model', [
+  RegisterRecordDef(AMDL, 'Aim Model', [
     wbEDID,
     wbStruct(DNAM, 'Data', [
       wbFloat('Cone of Fire - Min Angle').SetDefaultEditValue('2.0'),
@@ -12197,7 +12197,7 @@ begin
     ])
   ]);
 
-  wbRecord(AORU, 'Attraction Rule', [
+  RegisterRecordDef(AORU, 'Attraction Rule', [
     wbEDID,
     wbStruct(AOR2, 'Data', [
       wbFloat('Radius').SetDefaultEditValue('600'),
@@ -12209,7 +12209,7 @@ begin
     ], cpNormal, True)
   ]);
 
-  wbRecord(BNDS, 'Bendable Spline', [
+  RegisterRecordDef(BNDS, 'Bendable Spline', [
     wbEDID,
     wbObjectBounds(Self),
     wbStruct(DNAM, 'Data', [
@@ -12223,7 +12223,7 @@ begin
     wbFormIDCk(TNAM, 'Texture', [TXST])
   ]);
 
-  wbRecord(CMPO, 'Component', [
+  RegisterRecordDef(CMPO, 'Component', [
     wbEDID,
     wbObjectBounds(Self),
     wbFULL,
@@ -12233,13 +12233,13 @@ begin
     wbFormIDCk(GNAM, 'Mod Scrap Scalar', [GLOB])
   ]);
 
-  wbRecord(DFOB, 'Default Object', [
+  RegisterRecordDef(DFOB, 'Default Object', [
     wbEDID,
     wbFormID(DATA, 'Object')
   ])
   .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(DMGT, 'Damage Type', [
+  RegisterRecordDef(DMGT, 'Damage Type', [
     wbEDID,
     // Before form version 78, it was an array of AVIF index, since then array of AVIF formID, coupled with a SPEL formID
     wbUnion(DNAM, 'Data', wbFormVersionDecider(78), [
@@ -12251,7 +12251,7 @@ begin
     ])
   ]);
 
-  wbRecord(GDRY, 'God Rays', [
+  RegisterRecordDef(GDRY, 'God Rays', [
     wbEDID,
     wbStruct(DATA, 'Data', [
       wbFloatColors('Back Color'),
@@ -12266,7 +12266,7 @@ begin
     ])
   ]);
 
-  wbRecord(INNR, 'Instance Naming Rules', [
+  RegisterRecordDef(INNR, 'Instance Naming Rules', [
     wbEDID,
     wbInteger(UNAM, 'Target', itU32, wbEnum([], [
         0, 'None',
@@ -12316,7 +12316,7 @@ begin
     )
   ]);
 
-  wbRecord(KSSM, 'Sound Keyword Mapping', [
+  RegisterRecordDef(KSSM, 'Sound Keyword Mapping', [
     wbEDID,
     wbFormIDCk(DNAM, 'Primary Descriptor', [SNDR]),
     wbFormIDCk(ENAM, 'Exterior Tail', [SNDR]),
@@ -12329,12 +12329,12 @@ begin
     ])).IncludeFlag(dfCollapsed, wbCollapseSounds)
   ]);
 
-  wbRecord(LAYR, 'Layer', [
+  RegisterRecordDef(LAYR, 'Layer', [
     wbEDID,
     wbFormIDCk(PNAM, 'Parent', [LAYR])
   ]);
 
-  wbRecord(LENS, 'Lens Flare', [
+  RegisterRecordDef(LENS, 'Lens Flare', [
     wbEDID,
     wbFloat(CNAM, 'Color Influence'),
     wbFloat(DNAM, 'Fade Distance Radius Scale').SetDefaultEditValue('1.0'),
@@ -12366,7 +12366,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(MSWP, 'Material Swap',
+  RegisterRecordDef(MSWP, 'Material Swap',
     wbFlags(wbFlagsList([
       {0x00010000} 16, 'Custom Swap'
     ])), [
@@ -12382,7 +12382,7 @@ begin
     )
   ]);
 
-  wbRecord(NOCM, 'Navmesh Obstacle Manager', [
+  RegisterRecordDef(NOCM, 'Navmesh Obstacle Manager', [
     wbEDID
       .SetDefaultEditValue('NavmeshObstacleCoverManager')
       .SetRequired
@@ -12399,7 +12399,7 @@ begin
       ]))
   ]);
 
-  wbRecord(NOTE, 'Note', [
+  RegisterRecordDef(NOTE, 'Note', [
     wbEDID,
     wbVMAD,
     wbObjectBounds(Self),
@@ -12430,7 +12430,7 @@ begin
     wbString(PNAM, 'Program File')
   ]);
 
-  wbRecord(OMOD, 'Object Modification',
+  RegisterRecordDef(OMOD, 'Object Modification',
     wbFlags(wbFlagsList([
       {0x00000008} 4, 'Legendary Mod',
       {0x00000040} 7, 'Mod Collection'
@@ -12475,7 +12475,7 @@ begin
     wbFLTR
   ]);
 
-  wbRecord(OVIS, 'Object Visibility Manager', [
+  RegisterRecordDef(OVIS, 'Object Visibility Manager', [
     wbEDID,
     wbRArray('Unknown',
       wbRStruct('Unknown', [
@@ -12500,7 +12500,7 @@ begin
     )
   ]);
 
-  wbRecord(PKIN, 'Pack-In',
+  RegisterRecordDef(PKIN, 'Pack-In',
     wbFlags(wbFlagsList([
       {0x00000200}  9, 'Prefab'
     ])), [
@@ -12511,7 +12511,7 @@ begin
     wbInteger(VNAM, 'Version', itU32)
   ]);
 
-  wbRecord(RFGP, 'Reference Group', [
+  RegisterRecordDef(RFGP, 'Reference Group', [
     wbEDID,
     wbString(NNAM, 'Name'),
     wbFormIDCk(RNAM, 'Reference', sigReferences),
@@ -12522,7 +12522,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(SCCO, 'Scene Collection', [
+  RegisterRecordDef(SCCO, 'Scene Collection', [
     wbEDID,
     wbFormIDCk(QNAM, 'Quest', [QUST]),
     wbRArray('Scene Layout',
@@ -12556,7 +12556,7 @@ begin
       wbStaticPartPlacements
     ], [], cpNormal, True);
 
-  wbRecord(SCOL, 'Static Collection',
+  RegisterRecordDef(SCOL, 'Static Collection',
     wbFlags(wbFlagsList([
        4, 'Non Occluder',
        9, 'Hidden From Local Map',
@@ -12579,7 +12579,7 @@ begin
     wbRArrayS('Parts', wbStaticPart, cpNormal, True)
   ]);
 
-  wbRecord(SCSN, 'Audio Category Snapshot', [
+  RegisterRecordDef(SCSN, 'Audio Category Snapshot', [
     wbEDID,
     wbInteger(PNAM, 'Priority', itU16),
     wbRArray('Category Multipliers', wbStruct(CNAM, 'Category Multiplier', [
@@ -12592,7 +12592,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(STAG, 'Animation Sound Tag Set', [
+  RegisterRecordDef(STAG, 'Animation Sound Tag Set', [
     wbEDID,
     wbRArray('Sounds', wbStruct(TNAM, 'Sound', [
       wbFormIDCk('Sound', [SNDR, NULL]),
@@ -12600,7 +12600,7 @@ begin
     ]))
   ]);
 
-  wbRecord(TERM, 'Terminal',
+  RegisterRecordDef(TERM, 'Terminal',
     wbFlags(wbFlagsList([
       {0x00000004}  4, 'Non Occluder',
       {0x00002000} 13, 'Pack-In Use Only',
@@ -12703,7 +12703,7 @@ begin
     wbEDID
   ]);}
 
-  wbRecord(TRNS, 'Transform',
+  RegisterRecordDef(TRNS, 'Transform',
     wbFlags(wbFlagsList([
       {0x00008000} 16, 'Around Origin'
     ])), [
@@ -12717,7 +12717,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(WATR, 'Water', [
+  RegisterRecordDef(WATR, 'Water', [
     wbEDID,
     wbFULL,
     wbInteger(ANAM, 'Opacity (unused)', itU8),
@@ -12806,7 +12806,7 @@ begin
     wbString(NAM4, 'Layer 3 Noise Texture')
   ]);
 
-  wbRecord(WEAP, 'Weapon',
+  RegisterRecordDef(WEAP, 'Weapon',
     wbFlags(wbFlagsList([
       {0x00000004}  2, 'Non-Playable',
       {0x20000000} 30, 'High-Res 1st Person Only'
@@ -12963,7 +12963,7 @@ begin
     ]))
   ]);
 
-  wbRecord(WTHR, 'Weather',
+  RegisterRecordDef(WTHR, 'Weather',
     wbFlags(wbFlagsList([
       9, 'Unknown 9'
     ])), [
@@ -13039,7 +13039,7 @@ begin
       .SetRequired  //Form Version 126+
   ]);
 
-  wbRecord(WRLD, 'Worldspace',
+  RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
       14, 'Partial Form',
       19, 'Can''t Wait'
@@ -13109,7 +13109,7 @@ begin
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
 
-  wbRecord(ZOOM, 'Zoom', [
+  RegisterRecordDef(ZOOM, 'Zoom', [
     wbEDID,
     wbStruct(GNAM, 'Data', [
       wbFloat('FOV Mult')
@@ -13120,68 +13120,68 @@ begin
     ]).SetRequired
   ]);
 
-   wbAddGroupOrder(GMST);
-   wbAddGroupOrder(KYWD);
-   wbAddGroupOrder(LCRT);
-   wbAddGroupOrder(AACT);
-   wbAddGroupOrder(TRNS);
-   wbAddGroupOrder(CMPO);
-   wbAddGroupOrder(TXST);
+   AddGroupOrder(GMST);
+   AddGroupOrder(KYWD);
+   AddGroupOrder(LCRT);
+   AddGroupOrder(AACT);
+   AddGroupOrder(TRNS);
+   AddGroupOrder(CMPO);
+   AddGroupOrder(TXST);
    //wbAddGroupOrder(MICN);
-   wbAddGroupOrder(GLOB);
-   wbAddGroupOrder(DMGT);
-   wbAddGroupOrder(CLAS);
-   wbAddGroupOrder(FACT);
-   wbAddGroupOrder(HDPT);
-   wbAddGroupOrder(EYES);
-   wbAddGroupOrder(RACE);
-   wbAddGroupOrder(SOUN);
-   wbAddGroupOrder(ASPC);
+   AddGroupOrder(GLOB);
+   AddGroupOrder(DMGT);
+   AddGroupOrder(CLAS);
+   AddGroupOrder(FACT);
+   AddGroupOrder(HDPT);
+   AddGroupOrder(EYES);
+   AddGroupOrder(RACE);
+   AddGroupOrder(SOUN);
+   AddGroupOrder(ASPC);
    //wbAddGroupOrder(SKIL);
-   wbAddGroupOrder(MGEF);
+   AddGroupOrder(MGEF);
    //wbAddGroupOrder(SCPT);
-   wbAddGroupOrder(LTEX);
-   wbAddGroupOrder(ENCH);
-   wbAddGroupOrder(SPEL);
+   AddGroupOrder(LTEX);
+   AddGroupOrder(ENCH);
+   AddGroupOrder(SPEL);
    //wbAddGroupOrder(SCRL);
-   wbAddGroupOrder(ACTI);
-   wbAddGroupOrder(TACT);
-   wbAddGroupOrder(ARMO);
-   wbAddGroupOrder(BOOK);
-   wbAddGroupOrder(CONT);
-   wbAddGroupOrder(DOOR);
-   wbAddGroupOrder(INGR);
-   wbAddGroupOrder(LIGH);
-   wbAddGroupOrder(MISC);
-   wbAddGroupOrder(STAT);
-   wbAddGroupOrder(SCOL);
-   wbAddGroupOrder(MSTT);
-   wbAddGroupOrder(GRAS);
-   wbAddGroupOrder(TREE);
-   wbAddGroupOrder(FLOR);
-   wbAddGroupOrder(FURN);
-   wbAddGroupOrder(WEAP);
-   wbAddGroupOrder(AMMO);
-   wbAddGroupOrder(NPC_);
-   wbAddGroupOrder(PLYR);
-   wbAddGroupOrder(LVLN);
-   wbAddGroupOrder(KEYM);
-   wbAddGroupOrder(ALCH);
-   wbAddGroupOrder(IDLM);
-   wbAddGroupOrder(NOTE);
-   wbAddGroupOrder(PROJ);
-   wbAddGroupOrder(HAZD);
-   wbAddGroupOrder(BNDS);
+   AddGroupOrder(ACTI);
+   AddGroupOrder(TACT);
+   AddGroupOrder(ARMO);
+   AddGroupOrder(BOOK);
+   AddGroupOrder(CONT);
+   AddGroupOrder(DOOR);
+   AddGroupOrder(INGR);
+   AddGroupOrder(LIGH);
+   AddGroupOrder(MISC);
+   AddGroupOrder(STAT);
+   AddGroupOrder(SCOL);
+   AddGroupOrder(MSTT);
+   AddGroupOrder(GRAS);
+   AddGroupOrder(TREE);
+   AddGroupOrder(FLOR);
+   AddGroupOrder(FURN);
+   AddGroupOrder(WEAP);
+   AddGroupOrder(AMMO);
+   AddGroupOrder(NPC_);
+   AddGroupOrder(PLYR);
+   AddGroupOrder(LVLN);
+   AddGroupOrder(KEYM);
+   AddGroupOrder(ALCH);
+   AddGroupOrder(IDLM);
+   AddGroupOrder(NOTE);
+   AddGroupOrder(PROJ);
+   AddGroupOrder(HAZD);
+   AddGroupOrder(BNDS);
    //wbAddGroupOrder(SLGM);
-   wbAddGroupOrder(TERM);
-   wbAddGroupOrder(LVLI);
-   wbAddGroupOrder(WTHR);
-   wbAddGroupOrder(CLMT);
-   wbAddGroupOrder(SPGD);
-   wbAddGroupOrder(RFCT);
-   wbAddGroupOrder(REGN);
-   wbAddGroupOrder(NAVI);
-   wbAddGroupOrder(CELL);
+   AddGroupOrder(TERM);
+   AddGroupOrder(LVLI);
+   AddGroupOrder(WTHR);
+   AddGroupOrder(CLMT);
+   AddGroupOrder(SPGD);
+   AddGroupOrder(RFCT);
+   AddGroupOrder(REGN);
+   AddGroupOrder(NAVI);
+   AddGroupOrder(CELL);
    //wbAddGroupOrder(REFR);
    //wbAddGroupOrder(ACHR);
    //wbAddGroupOrder(PMIS);
@@ -13192,91 +13192,91 @@ begin
    //wbAddGroupOrder(PCON);
    //wbAddGroupOrder(PBAR);
    //wbAddGroupOrder(PHZD);
-   wbAddGroupOrder(WRLD);
+   AddGroupOrder(WRLD);
    //wbAddGroupOrder(LAND);
    //wbAddGroupOrder(NAVM);
    //wbAddGroupOrder(TLOD);
    //wbAddGroupOrder(DIAL);
    //wbAddGroupOrder(INFO);
-   wbAddGroupOrder(QUST);
-   wbAddGroupOrder(IDLE);
-   wbAddGroupOrder(PACK);
-   wbAddGroupOrder(CSTY);
-   wbAddGroupOrder(LSCR);
-   wbAddGroupOrder(LVSP);
-   wbAddGroupOrder(ANIO);
-   wbAddGroupOrder(WATR);
-   wbAddGroupOrder(EFSH);
+   AddGroupOrder(QUST);
+   AddGroupOrder(IDLE);
+   AddGroupOrder(PACK);
+   AddGroupOrder(CSTY);
+   AddGroupOrder(LSCR);
+   AddGroupOrder(LVSP);
+   AddGroupOrder(ANIO);
+   AddGroupOrder(WATR);
+   AddGroupOrder(EFSH);
    //wbAddGroupOrder(TOFT);
-   wbAddGroupOrder(EXPL);
-   wbAddGroupOrder(DEBR);
-   wbAddGroupOrder(IMGS);
-   wbAddGroupOrder(IMAD);
-   wbAddGroupOrder(FLST);
-   wbAddGroupOrder(PERK);
-   wbAddGroupOrder(BPTD);
-   wbAddGroupOrder(ADDN);
-   wbAddGroupOrder(AVIF);
-   wbAddGroupOrder(CAMS);
-   wbAddGroupOrder(CPTH);
-   wbAddGroupOrder(VTYP);
-   wbAddGroupOrder(MATT);
-   wbAddGroupOrder(IPCT);
-   wbAddGroupOrder(IPDS);
-   wbAddGroupOrder(ARMA);
-   wbAddGroupOrder(ECZN);
-   wbAddGroupOrder(LCTN);
-   wbAddGroupOrder(MESG);
+   AddGroupOrder(EXPL);
+   AddGroupOrder(DEBR);
+   AddGroupOrder(IMGS);
+   AddGroupOrder(IMAD);
+   AddGroupOrder(FLST);
+   AddGroupOrder(PERK);
+   AddGroupOrder(BPTD);
+   AddGroupOrder(ADDN);
+   AddGroupOrder(AVIF);
+   AddGroupOrder(CAMS);
+   AddGroupOrder(CPTH);
+   AddGroupOrder(VTYP);
+   AddGroupOrder(MATT);
+   AddGroupOrder(IPCT);
+   AddGroupOrder(IPDS);
+   AddGroupOrder(ARMA);
+   AddGroupOrder(ECZN);
+   AddGroupOrder(LCTN);
+   AddGroupOrder(MESG);
    //wbAddGroupOrder(RGDL);
-   wbAddGroupOrder(DOBJ);
-   wbAddGroupOrder(DFOB);
-   wbAddGroupOrder(LGTM);
-   wbAddGroupOrder(MUSC);
-   wbAddGroupOrder(FSTP);
-   wbAddGroupOrder(FSTS);
-   wbAddGroupOrder(SMBN);
-   wbAddGroupOrder(SMQN);
-   wbAddGroupOrder(SMEN);
-   wbAddGroupOrder(DLBR);
-   wbAddGroupOrder(MUST);
-   wbAddGroupOrder(DLVW);
+   AddGroupOrder(DOBJ);
+   AddGroupOrder(DFOB);
+   AddGroupOrder(LGTM);
+   AddGroupOrder(MUSC);
+   AddGroupOrder(FSTP);
+   AddGroupOrder(FSTS);
+   AddGroupOrder(SMBN);
+   AddGroupOrder(SMQN);
+   AddGroupOrder(SMEN);
+   AddGroupOrder(DLBR);
+   AddGroupOrder(MUST);
+   AddGroupOrder(DLVW);
    //wbAddGroupOrder(WOOP);
    //wbAddGroupOrder(SHOU);
-   wbAddGroupOrder(EQUP);
-   wbAddGroupOrder(RELA);
-   wbAddGroupOrder(SCEN);
-   wbAddGroupOrder(ASTP);
-   wbAddGroupOrder(OTFT);
-   wbAddGroupOrder(ARTO);
-   wbAddGroupOrder(MATO);
-   wbAddGroupOrder(MOVT);
-   wbAddGroupOrder(SNDR);
-   wbAddGroupOrder(DUAL);
-   wbAddGroupOrder(SNCT);
-   wbAddGroupOrder(SOPM);
-   wbAddGroupOrder(COLL);
-   wbAddGroupOrder(CLFM);
-   wbAddGroupOrder(REVB);
-   wbAddGroupOrder(PKIN);
-   wbAddGroupOrder(RFGP);
-   wbAddGroupOrder(AMDL);
-   wbAddGroupOrder(LAYR);
-   wbAddGroupOrder(COBJ);
-   wbAddGroupOrder(OMOD);
-   wbAddGroupOrder(MSWP);
-   wbAddGroupOrder(ZOOM);
-   wbAddGroupOrder(INNR);
-   wbAddGroupOrder(KSSM);
-   wbAddGroupOrder(AECH);
-   wbAddGroupOrder(SCCO);
-   wbAddGroupOrder(AORU);
-   wbAddGroupOrder(SCSN);
-   wbAddGroupOrder(STAG);
-   wbAddGroupOrder(NOCM);
-   wbAddGroupOrder(LENS);
+   AddGroupOrder(EQUP);
+   AddGroupOrder(RELA);
+   AddGroupOrder(SCEN);
+   AddGroupOrder(ASTP);
+   AddGroupOrder(OTFT);
+   AddGroupOrder(ARTO);
+   AddGroupOrder(MATO);
+   AddGroupOrder(MOVT);
+   AddGroupOrder(SNDR);
+   AddGroupOrder(DUAL);
+   AddGroupOrder(SNCT);
+   AddGroupOrder(SOPM);
+   AddGroupOrder(COLL);
+   AddGroupOrder(CLFM);
+   AddGroupOrder(REVB);
+   AddGroupOrder(PKIN);
+   AddGroupOrder(RFGP);
+   AddGroupOrder(AMDL);
+   AddGroupOrder(LAYR);
+   AddGroupOrder(COBJ);
+   AddGroupOrder(OMOD);
+   AddGroupOrder(MSWP);
+   AddGroupOrder(ZOOM);
+   AddGroupOrder(INNR);
+   AddGroupOrder(KSSM);
+   AddGroupOrder(AECH);
+   AddGroupOrder(SCCO);
+   AddGroupOrder(AORU);
+   AddGroupOrder(SCSN);
+   AddGroupOrder(STAG);
+   AddGroupOrder(NOCM);
+   AddGroupOrder(LENS);
    //wbAddGroupOrder(LSPR);
-   wbAddGroupOrder(GDRY);
-   wbAddGroupOrder(OVIS);
+   AddGroupOrder(GDRY);
+   AddGroupOrder(OVIS);
   NexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}

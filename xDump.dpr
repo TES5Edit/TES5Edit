@@ -567,7 +567,7 @@ begin
   Profile := '';
   case wbToolSource of
     tsPlugins: begin
-      if wbFindRecordDef(wbHeaderSignature, RecordDef) then
+      if _CurrentGameDef.FindRecordDef(wbHeaderSignature, RecordDef) then
         ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
@@ -586,7 +586,7 @@ begin
     tsPlugins: for i := 0 to Pred(wbGroupOrder.Count) do
       if wbGroupOrder[i]<>wbHeaderSignature then begin
         Profile := '';
-        if wbFindRecordDef(AnsiString(wbGroupOrder[i]), RecordDef) then
+        if _CurrentGameDef.FindRecordDef(AnsiString(wbGroupOrder[i]), RecordDef) then
           ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
   end;
@@ -1709,7 +1709,7 @@ begin
           end;
 
           if not DontWriteReport then
-            ReportDefs;
+            _CurrentGameDef.ReportDefs;
         end;
       end else if wbToolMode in [tmExport] then begin
         for Pass := epRead to epRemaining do begin

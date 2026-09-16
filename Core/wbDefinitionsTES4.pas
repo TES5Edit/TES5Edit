@@ -1545,7 +1545,7 @@ begin
 
 {>>> Record Defs <<<}
 
-  wbRecord(TES4, 'Main File Header',
+  RegisterRecordDef(TES4, 'Main File Header',
     wbFlags(wbFlagsList([
       0, 'ESM',
       4, 'Optimized'
@@ -1570,7 +1570,7 @@ begin
       ])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit)
   ], cpNormal, True);
 
-  wbRefRecord(ACHR, 'Placed NPC',
+  RegisterRefRecordDef(ACHR, 'Placed NPC',
     wbFlags(wbFlagsList([
       10, 'Persistent',
       11, 'Initially Disabled',
@@ -1593,7 +1593,7 @@ begin
     .SetUnordered
     .SetAfterLoad(wbREFRAfterLoad);
 
-  wbRefRecord(ACRE, 'Placed Creature',
+  RegisterRefRecordDef(ACRE, 'Placed Creature',
     wbFlags(wbFlagsList([
       10, 'Persistent',
       11, 'Initially Disabled',
@@ -1610,7 +1610,7 @@ begin
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered;
 
-  wbRecord(ACTI, 'Activator',
+  RegisterRecordDef(ACTI, 'Activator',
     wbFlags(wbFlagsList([
       10, 'Quest Item',
       17, 'Dangerous'
@@ -1622,7 +1622,7 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
 
-  wbRecord(ALCH, 'Potion',
+  RegisterRecordDef(ALCH, 'Potion',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -1644,7 +1644,7 @@ begin
     wbEffects.SetRequired
   ]);
 
-  wbRecord(AMMO, 'Ammunition',
+  RegisterRecordDef(AMMO, 'Ammunition',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -1663,7 +1663,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(ANIO, 'Animated Object', [
+  RegisterRecordDef(ANIO, 'Animated Object', [
     wbEDID,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []),
     wbFormIDCk(DATA, 'Idle Animation', [IDLE])
@@ -1672,7 +1672,7 @@ begin
   ]).SetSummaryKey([1, 2])
     .IncludeFlag(dfSummaryMembersNoName);
 
-  wbRecord(APPA, 'Apparatus', [
+  RegisterRecordDef(APPA, 'Apparatus', [
     wbEDID,
     wbFULL,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []),
@@ -1692,7 +1692,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(ARMO, 'Armor',
+  RegisterRecordDef(ARMO, 'Armor',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -1732,7 +1732,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(BOOK, 'Book',
+  RegisterRecordDef(BOOK, 'Book',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -1755,7 +1755,7 @@ begin
     ]).SetRequired
   ]).SetUnordered;
 
-  wbRecord(BSGN, 'Birthsign', [
+  RegisterRecordDef(BSGN, 'Birthsign', [
     wbEDID.SetRequired,
     wbFULL,
     wbString(ICON, 'Constellation Filename'),
@@ -1763,7 +1763,7 @@ begin
     wbSPLOs
   ]);
 
-  wbRecord(CELL, 'Cell',
+  RegisterRecordDef(CELL, 'Cell',
     wbFlags(wbFlagsList([
       10, 'Persistent',
       17, 'Off Limits',
@@ -1838,7 +1838,7 @@ begin
     .SetUnordered
     .SetAfterLoad(wbCELLAfterLoad);
 
-  wbRecord(CLAS, 'Class', [
+  RegisterRecordDef(CLAS, 'Class', [
     wbEDID.SetRequired,
     wbFULL,
     wbDESC.SetRequired,
@@ -1871,7 +1871,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(CLMT, 'Climate', [
+  RegisterRecordDef(CLMT, 'Climate', [
     wbEDID.SetRequired,
     wbArrayS(WLST, 'Weather Types',
       wbStructSK([0], 'Weather Type', [
@@ -1884,7 +1884,7 @@ begin
     wbClimateTiming(wbClmtTime, wbClmtMoonsPhaseLength)
   ]);
 
-  wbRecord(CLOT, 'Clothing',
+  RegisterRecordDef(CLOT, 'Clothing',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -1921,7 +1921,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(CONT, 'Container',
+  RegisterRecordDef(CONT, 'Container',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -1942,7 +1942,7 @@ begin
     wbFormIDCk(QNAM, 'Close Sound', [SOUN])
   ]);
 
-  wbRecord(CREA, 'Creature',
+  RegisterRecordDef(CREA, 'Creature',
     wbFlags(wbFlagsList([
       10, 'Quest Item',
       19, 'Starts Dead'
@@ -2059,7 +2059,7 @@ begin
       ]))
   ]).SetUnordered;
 
-  wbRecord(CSTY, 'Combat Style', [
+  RegisterRecordDef(CSTY, 'Combat Style', [
     wbEDID,
     wbStruct(CSTD, 'Standard', [
       wbInteger('Dodge % Chance', itU8).SetDefaultNativeValue(75),
@@ -2152,7 +2152,7 @@ begin
     ])
   ]);
 
-  wbRecord(DIAL, 'Dialog Topic', [
+  RegisterRecordDef(DIAL, 'Dialog Topic', [
     wbEDID,
     wbQSTI,
     wbQSTR,
@@ -2162,7 +2162,7 @@ begin
     wbINOA
   ]);
 
-  wbRecord(DOOR, 'Door',
+  RegisterRecordDef(DOOR, 'Door',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -2185,7 +2185,7 @@ begin
       wbFormIDCk(TNAM, 'Destination', [CELL, WRLD]))
   ]);
 
-  wbRecord(EFSH, 'Effect Shader', [
+  RegisterRecordDef(EFSH, 'Effect Shader', [
     wbEDID,
     wbString(ICON, 'Fill Texture').SetRequired,
     wbString(ICO2, 'Particle Shader Texture').SetRequired,
@@ -2266,7 +2266,7 @@ begin
       .SetRequired
   ]);
 
-  wbRecord(ENCH, 'Enchantment', [
+  RegisterRecordDef(ENCH, 'Enchantment', [
     wbEDID,
     wbFULL,
     wbStruct(ENIT, 'Data', [
@@ -2285,14 +2285,14 @@ begin
     wbEffects
   ]);
 
-  wbRecord(EYES, 'Eyes', [
+  RegisterRecordDef(EYES, 'Eyes', [
     wbEDID.SetRequired,
     wbFULL,
     wbString(ICON, 'Texture').SetRequired,
     wbInteger(DATA, 'Playable', itU8, wbBoolEnum).SetRequired
   ]);
 
-  wbRecord(FACT, 'Faction', [
+  RegisterRecordDef(FACT, 'Faction', [
     wbEDID.SetRequired,
     wbFULL,
     wbFactionRelations(Self),
@@ -2315,7 +2315,7 @@ begin
       ]))
   ]);
 
-  wbRecord(FLOR, 'Flora', [
+  RegisterRecordDef(FLOR, 'Flora', [
     wbEDID,
     wbFULL,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []),
@@ -2324,7 +2324,7 @@ begin
     wbSeasons
   ]);
 
-  wbRecord(FURN, 'Furniture',
+  RegisterRecordDef(FURN, 'Furniture',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -2335,7 +2335,7 @@ begin
     wbByteArray(MNAM, 'Marker Flags', 4).SetRequired
   ]);
 
-  wbRecord(GLOB, 'Global', [
+  RegisterRecordDef(GLOB, 'Global', [
     wbEDID.SetRequired,
     wbInteger(FNAM, 'Type', itU8,
       wbEnum([], [
@@ -2347,7 +2347,7 @@ begin
     wbFloat(FLTV, 'Value').SetRequired
   ]).SetSummaryKey([2]);
 
-  wbRecord(GMST, 'Game Setting', [
+  RegisterRecordDef(GMST, 'Game Setting', [
     wbEDID.SetRequired,
     wbUnion(DATA, 'Value', wbGMSTUnionDecider, [
       wbString('Name', 0, cpTranslate),
@@ -2357,7 +2357,7 @@ begin
   ]).SetSummaryKey([1])
     .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(GRAS, 'Grass', [
+  RegisterRecordDef(GRAS, 'Grass', [
     wbEDID,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []),
     wbStruct(DATA, 'Data', [
@@ -2393,7 +2393,7 @@ begin
     ]).SetRequired
   ]).SetSummaryKey([1]);
 
-  wbRecord(HAIR, 'Hair', [
+  RegisterRecordDef(HAIR, 'Hair', [
     wbEDID.SetRequired,
     wbFULL,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []),
@@ -2409,7 +2409,7 @@ begin
      .IncludeFlag(dfCollapsed, wbCollapseFlags)
   ]);
 
-  wbRecord(IDLE, 'Idle Animation', [
+  RegisterRecordDef(IDLE, 'Idle Animation', [
     wbEDID.SetRequired,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []).SetRequired,
     wbConditions,
@@ -2420,7 +2420,7 @@ begin
     ]).SetRequired
   ]).SetSummaryKey([1]);
 
-  wbRecord(INFO, 'Dialog response', [
+  RegisterRecordDef(INFO, 'Dialog response', [
     wbStruct(DATA, 'Data', [
       wbInteger('Type', itU8, wbDialogueTypeEnum),
       wbNextSpeaker,
@@ -2472,7 +2472,7 @@ begin
     wbResultScript
   ]).SetAddInfo(wbINFOAddInfo);
 
-  wbRecord(INGR, 'Ingredient',
+  RegisterRecordDef(INGR, 'Ingredient',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -2494,7 +2494,7 @@ begin
     wbEffects
   ]);
 
-  wbRecord(KEYM, 'Key',
+  RegisterRecordDef(KEYM, 'Key',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -2509,7 +2509,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(LAND, 'Landscape',
+  RegisterRecordDef(LAND, 'Landscape',
     wbFlags(wbFlagsList([
       18, 'Compressed'
     ])), [
@@ -2530,7 +2530,7 @@ begin
     wbArray(VTEX, 'Landscape Textures', wbFormIDCk('Texture', [LTEX, NULL]))
   ]).SetAddInfo(wbLANDAddInfo);
 
-  wbRecord(LIGH, 'Light',
+  RegisterRecordDef(LIGH, 'Light',
     wbFlags(wbFlagsList([
       10, 'Quest'
     ])), [
@@ -2570,14 +2570,14 @@ begin
     wbFormIDCk(SNAM, 'Sound', [SOUN])
   ]);
 
-  wbRecord(LSCR, 'Load Screen', [
+  RegisterRecordDef(LSCR, 'Load Screen', [
     wbEDID,
     wbICON,
     wbDESC.SetRequired,
     wbLoadScreenLocations
   ]).SetSummaryKey([2]);
 
-  wbRecord(LTEX, 'Landscape Texture', [
+  RegisterRecordDef(LTEX, 'Landscape Texture', [
     wbEDID.SetRequired,
     wbICON,
     wbStruct(HNAM, 'Havok Data', [
@@ -2624,7 +2624,7 @@ begin
     wbRArrayS('Grasses', wbFormIDCk(GNAM, 'Grass', [GRAS]))
   ]).SetSummaryKey([1]);
 
-  wbRecord(LVLC, 'Leveled Creature', [
+  RegisterRecordDef(LVLC, 'Leveled Creature', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8).SetRequired,
     wbInteger(LVLF, 'Flags', itU8,
@@ -2642,7 +2642,7 @@ begin
     .SetUnordered
     .SetAfterLoad(wbLVLAfterLoad);
 
-  wbRecord(LVLI, 'Leveled Item', [
+  RegisterRecordDef(LVLI, 'Leveled Item', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8).SetRequired,
     wbInteger(LVLF, 'Flags', itU8,
@@ -2658,7 +2658,7 @@ begin
   ]).SetSummaryKey([3])
     .SetAfterLoad(wbLVLAfterLoad);
 
-  wbRecord(LVSP, 'Leveled Spell', [
+  RegisterRecordDef(LVSP, 'Leveled Spell', [
     wbEDID,
     wbInteger(LVLD, 'Chance none', itU8).SetRequired,
     wbInteger(LVLF, 'Flags', itU8,
@@ -2674,7 +2674,7 @@ begin
   ]).SetSummaryKey([3])
     .SetAfterLoad(wbLVLAfterLoad);
 
-  wbRecord(MGEF, 'Magic Effect', [
+  RegisterRecordDef(MGEF, 'Magic Effect', [
     wbStringMgefCode(EDID, 'Magic Effect Code', 4)
       .IncludeFlagOnValue(dfHasZeroTerminator)
       .IncludeFlagOnValue(dfNeedsPrepareSave)
@@ -2751,7 +2751,7 @@ begin
   ]).SetAfterLoad(wbMGEFAfterLoad)
     .IncludeFlag(dfIndexEditorID);
 
-  wbRecord(MISC, 'Misc. Item',
+  RegisterRecordDef(MISC, 'Misc. Item',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -2782,7 +2782,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(NPC_, 'Non-Player Character',
+  RegisterRecordDef(NPC_, 'Non-Player Character',
     wbFlags(wbFlagsList([
       10, 'Quest Item',
       18, 'Compressed',
@@ -2876,7 +2876,7 @@ begin
     wbByteArray(FNAM, 'Unknown', 2, cpBenign).SetRequired
   ]).SetUnordered;
 
-  wbRecord(PACK, 'Package',
+  RegisterRecordDef(PACK, 'Package',
     wbFlags(wbFlagsList([
       14, 'Unknown 14',
       15, 'Unknown 15'
@@ -2990,7 +2990,7 @@ begin
     .SetSummaryMemberPrefixSuffix(5, 'if ', '')
     .IncludeFlag(dfSummaryMembersNoName);
 
-  wbRecord(PGRD, 'Path Grid',
+  RegisterRecordDef(PGRD, 'Path Grid',
     wbFlags(wbFlagsList([
       18, 'Compressed'
     ])), [
@@ -3017,14 +3017,14 @@ begin
   ]).SetAddInfo(wbPGRDAddInfo)
     .SetAfterLoad(wbPGRDAfterLoad);
 
-  wbRecord(PLYR, 'Player Reference', [
+  RegisterRecordDef(PLYR, 'Player Reference', [
     wbEDID,
     wbFormID(PLYR, 'Player')
       .SetDefaultNativeValue($7)
       .SetRequired
   ]).IncludeFlag(dfInternalEditOnly);
 
-  wbRecord(QUST, 'Quest', [
+  RegisterRecordDef(QUST, 'Quest', [
     wbEDID.SetRequired,
     wbSCRI,
     wbFULL,
@@ -3062,7 +3062,7 @@ begin
       ]).SetSummaryKey([0, 1]))
   ]);
 
-  wbRecord(RACE, 'Race', [
+  RegisterRecordDef(RACE, 'Race', [
     wbEDID.SetRequired,
     wbFULL,
     wbDESC.SetRequired,
@@ -3155,7 +3155,7 @@ begin
     wbByteArray(SNAM, 'Unknown', 2).SetRequired
   ]).SetUnordered;
 
-  wbRefRecord(REFR, 'Placed Object',
+  RegisterRefRecordDef(REFR, 'Placed Object',
     wbFlags(wbFlagsList([
        7, 'Turn Off Fire',
        9, 'Cast Shadows',
@@ -3244,7 +3244,7 @@ begin
     .SetUnordered
     .SetAfterLoad(wbREFRAfterLoad);
 
-  wbRecord(REGN, 'Region',
+  RegisterRecordDef(REGN, 'Region',
     wbFlags(wbFlagsList([
       6, 'Border Region'
     ])), [
@@ -3324,13 +3324,13 @@ begin
     .SetUnordered
     .IncludeFlag(dfSummaryMembersNoName);
 
-  wbRecord(ROAD, 'Road', [
+  RegisterRecordDef(ROAD, 'Road', [
     wbPGRP,
     wbArray(PGRR, 'Point-to-Point Connections',
       wbArray('Point', wbVec3('Point'), wbCalcPGRRSize)).SetRequired
   ]).SetAddInfo(wbROADAddInfo);
 
-  wbRecord(SBSP, 'Subspace', [
+  RegisterRecordDef(SBSP, 'Subspace', [
     wbEDID,
     wbStruct(DNAM, 'Bounds', [
       wbFloat('X').SetDefaultNativeValue(400),
@@ -3339,7 +3339,7 @@ begin
     ]).SetRequired
   ]).SetSummaryKey([1]);
 
-  wbRecord(SCPT, 'Script', [
+  RegisterRecordDef(SCPT, 'Script', [
     wbEDID.SetRequired,
     wbByteArray(SCHD, 'Unknown (Script Header?)'),
     wbSCHR.SetRequired,
@@ -3359,7 +3359,7 @@ begin
     wbSCROs
   ]).SetToStr(wbScriptToStr);
 
-  wbRecord(SGST, 'Sigil Stone', [
+  RegisterRecordDef(SGST, 'Sigil Stone', [
     wbEDID,
     wbFULL,
     wbTexturedModel(Self, 'Model', [MODL, MODB, MODT], []),
@@ -3373,7 +3373,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(SKIL, 'Skill', [
+  RegisterRecordDef(SKIL, 'Skill', [
     wbEDID.SetRequired,
     wbInteger(INDX, 'Skill', itS32, wbMajorSkillEnum).SetRequired,
     wbDESC.SetRequired,
@@ -3390,7 +3390,7 @@ begin
     wbString(MNAM, 'Master Text', 0, cpTranslate).SetRequired
   ]).SetSummaryKey([2]);
 
-  wbRecord(SLGM, 'Soul Gem',
+  RegisterRecordDef(SLGM, 'Soul Gem',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -3407,7 +3407,7 @@ begin
     wbInteger(SLCP, 'Maximum Capacity', itU8, wbSoulGemEnum).SetRequired
   ]);
 
-  wbRecord(SOUN, 'Sound', [
+  RegisterRecordDef(SOUN, 'Sound', [
     wbEDID,
     wbString(FNAM, 'Sound Filename'),
     wbStruct(SNDX, 'Sound Data', wbSoundDataMembers).SetRequired,
@@ -3417,7 +3417,7 @@ begin
   ]).SetSummaryKey([1])
     .SetAfterLoad(wbSOUNAfterLoad);
 
-  wbRecord(SPEL, 'Spell', [
+  RegisterRecordDef(SPEL, 'Spell', [
     wbEDID,
     wbFULL,
     wbStruct(SPIT, 'Data', [
@@ -3457,7 +3457,7 @@ begin
     wbEffects.SetRequired
   ]);
 
-  wbRecord(STAT, 'Static',
+  RegisterRecordDef(STAT, 'Static',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -3471,7 +3471,7 @@ begin
       ]))
   ]).SetSummaryKey([1]);
 
-  wbRecord(TREE, 'Tree',
+  RegisterRecordDef(TREE, 'Tree',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -3495,7 +3495,7 @@ begin
     ]).SetRequired
   ]).SetSummaryKey([1]);
 
-  wbRecord(WATR, 'Water',
+  RegisterRecordDef(WATR, 'Water',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -3555,7 +3555,7 @@ begin
     ]).SetRequired
   ]).SetSummaryKey([1]);
 
-  wbRecord(WEAP, 'Weapon',
+  RegisterRecordDef(WEAP, 'Weapon',
     wbFlags(wbFlagsList([
       10, 'Quest Item'
     ])), [
@@ -3586,7 +3586,7 @@ begin
     ]).SetRequired
   ]);
 
-  wbRecord(WTHR, 'Weather', [
+  RegisterRecordDef(WTHR, 'Weather', [
     wbEDID.SetRequired,
     wbString(CNAM, 'Cloud Texture Lower Layer'),
     wbString(DNAM, 'Cloud Texture Upper Layer'),
@@ -3634,7 +3634,7 @@ begin
     wbWeatherSounds
   ]).SetSummaryKey([1,2,3]);
 
-  wbRecord(WRLD, 'Worldspace',
+  RegisterRecordDef(WRLD, 'Worldspace',
     wbFlags(wbFlagsList([
       19, 'Can''t Wait'
     ])), [
@@ -3665,71 +3665,71 @@ begin
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
 
-  wbAddGroupOrder(GMST);
-  wbAddGroupOrder(GLOB);
-  wbAddGroupOrder(CLAS);
-  wbAddGroupOrder(FACT);
-  wbAddGroupOrder(HAIR);
-  wbAddGroupOrder(EYES);
-  wbAddGroupOrder(RACE);
-  wbAddGroupOrder(SOUN);
-  wbAddGroupOrder(SKIL);
-  wbAddGroupOrder(MGEF);
-  wbAddGroupOrder(SCPT);
-  wbAddGroupOrder(LTEX);
-  wbAddGroupOrder(ENCH);
-  wbAddGroupOrder(SPEL);
-  wbAddGroupOrder(BSGN);
-  wbAddGroupOrder(ACTI);
-  wbAddGroupOrder(APPA);
-  wbAddGroupOrder(ARMO);
-  wbAddGroupOrder(BOOK);
-  wbAddGroupOrder(CLOT);
-  wbAddGroupOrder(CONT);
-  wbAddGroupOrder(DOOR);
-  wbAddGroupOrder(INGR);
-  wbAddGroupOrder(LIGH);
-  wbAddGroupOrder(MISC);
-  wbAddGroupOrder(STAT);
-  wbAddGroupOrder(GRAS);
-  wbAddGroupOrder(TREE);
-  wbAddGroupOrder(FLOR);
-  wbAddGroupOrder(FURN);
-  wbAddGroupOrder(WEAP);
-  wbAddGroupOrder(AMMO);
-  wbAddGroupOrder(NPC_);
-  wbAddGroupOrder(PLYR);
-  wbAddGroupOrder(CREA);
-  wbAddGroupOrder(LVLC);
-  wbAddGroupOrder(SLGM);
-  wbAddGroupOrder(KEYM);
-  wbAddGroupOrder(ALCH);
-  wbAddGroupOrder(SBSP);
-  wbAddGroupOrder(SGST);
-  wbAddGroupOrder(LVLI);
-  wbAddGroupOrder(WTHR);
-  wbAddGroupOrder(CLMT);
-  wbAddGroupOrder(REGN);
-  wbAddGroupOrder(CELL);
+  AddGroupOrder(GMST);
+  AddGroupOrder(GLOB);
+  AddGroupOrder(CLAS);
+  AddGroupOrder(FACT);
+  AddGroupOrder(HAIR);
+  AddGroupOrder(EYES);
+  AddGroupOrder(RACE);
+  AddGroupOrder(SOUN);
+  AddGroupOrder(SKIL);
+  AddGroupOrder(MGEF);
+  AddGroupOrder(SCPT);
+  AddGroupOrder(LTEX);
+  AddGroupOrder(ENCH);
+  AddGroupOrder(SPEL);
+  AddGroupOrder(BSGN);
+  AddGroupOrder(ACTI);
+  AddGroupOrder(APPA);
+  AddGroupOrder(ARMO);
+  AddGroupOrder(BOOK);
+  AddGroupOrder(CLOT);
+  AddGroupOrder(CONT);
+  AddGroupOrder(DOOR);
+  AddGroupOrder(INGR);
+  AddGroupOrder(LIGH);
+  AddGroupOrder(MISC);
+  AddGroupOrder(STAT);
+  AddGroupOrder(GRAS);
+  AddGroupOrder(TREE);
+  AddGroupOrder(FLOR);
+  AddGroupOrder(FURN);
+  AddGroupOrder(WEAP);
+  AddGroupOrder(AMMO);
+  AddGroupOrder(NPC_);
+  AddGroupOrder(PLYR);
+  AddGroupOrder(CREA);
+  AddGroupOrder(LVLC);
+  AddGroupOrder(SLGM);
+  AddGroupOrder(KEYM);
+  AddGroupOrder(ALCH);
+  AddGroupOrder(SBSP);
+  AddGroupOrder(SGST);
+  AddGroupOrder(LVLI);
+  AddGroupOrder(WTHR);
+  AddGroupOrder(CLMT);
+  AddGroupOrder(REGN);
+  AddGroupOrder(CELL);
   //wbAddGroupOrder(REFR);
   //wbAddGroupOrder(ACHR);
   //wbAddGroupOrder(ACRE);
   //wbAddGroupOrder(PGRD);
-  wbAddGroupOrder(WRLD);
+  AddGroupOrder(WRLD);
   //wbAddGroupOrder(LAND);
   //wbAddGroupOrder(TLOD);
   //wbAddGroupOrder(ROAD);
-  wbAddGroupOrder(DIAL);
+  AddGroupOrder(DIAL);
   //wbAddGroupOrder(INFO);
-  wbAddGroupOrder(QUST);
-  wbAddGroupOrder(IDLE);
-  wbAddGroupOrder(PACK);
-  wbAddGroupOrder(CSTY);
-  wbAddGroupOrder(LSCR);
-  wbAddGroupOrder(LVSP);
-  wbAddGroupOrder(ANIO);
-  wbAddGroupOrder(WATR);
-  wbAddGroupOrder(EFSH);
+  AddGroupOrder(QUST);
+  AddGroupOrder(IDLE);
+  AddGroupOrder(PACK);
+  AddGroupOrder(CSTY);
+  AddGroupOrder(LSCR);
+  AddGroupOrder(LVSP);
+  AddGroupOrder(ANIO);
+  AddGroupOrder(WATR);
+  AddGroupOrder(EFSH);
   //wbAddGroupOrder(TOFT);
   NexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
   if wbToolMode = tmLODgen then

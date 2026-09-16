@@ -4065,7 +4065,7 @@ begin
     Sorted := False;
 
     for i := Pred(Count) downto 0 do
-      if wbFindRecordDef(AnsiString(Strings[i]), RecordDef) and not (dfInternalEditOnly in RecordDef.DefFlags) then
+      if GameDefObj.FindRecordDef(AnsiString(Strings[i]), RecordDef) and not (dfInternalEditOnly in RecordDef.DefFlags) then
         Strings[i] := Strings[i] + ' - ' + RecordDef.Name
       else
         Delete(i);
@@ -10950,8 +10950,9 @@ begin
   end;
 
   j := 0;
+  var lGameDef := GameDefObj;
   for i := Low(Result) to High(Result) do
-    if wbFindRecordDef(AnsiString(Result[i]), RecordDef) then begin
+    if lGameDef.FindRecordDef(AnsiString(Result[i]), RecordDef) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;
@@ -12699,7 +12700,7 @@ begin
     end;
 
   if not Assigned(mrDef) then begin
-    if wbFindRecordDef(PwbSignature(dcBasePtr)^, RecordDef) then
+    if mrGameDefObj.FindRecordDef(PwbSignature(dcBasePtr)^, RecordDef) then
       mrDef := RecordDef^
     else begin
       if wbHasProgressCallback then
@@ -18240,7 +18241,7 @@ var
 begin
   Result := True;
   if not wbIsInternalEdit then
-    if (grStruct.grsGroupType = 0) and wbFindRecordDef(PwbSignature(@grStruct.grsLabel)^, RecordDef) then
+    if (grStruct.grsGroupType = 0) and GameDefObj.FindRecordDef(PwbSignature(@grStruct.grsLabel)^, RecordDef) then
       if dfInternalEditOnly in RecordDef.DefFlags then
         Exit(False);
 end;
@@ -18417,8 +18418,9 @@ begin
           Result.Add('REFR');
   end;
   j := 0;
+  var lGameDef := GameDefObj;
   for i := Low(Result) to High(Result) do
-    if wbFindRecordDef(AnsiString(Result[i]), RecordDef) then begin
+    if lGameDef.FindRecordDef(AnsiString(Result[i]), RecordDef) then begin
       Result[j] := Result[i] + ' - ' + RecordDef.Name;
       Inc(j);
     end;
@@ -18562,7 +18564,7 @@ begin
   case grStruct.grsGroupType of
     0: begin
       Result := PwbSignature(@grStruct.grsLabel)^;
-      if wbFindRecordDef(AnsiString(Result), RecordDef) then
+      if GameDefObj.FindRecordDef(AnsiString(Result), RecordDef) then
         Result := RecordDef.GetName;
     end;
     1: Result := 'World Children of ' + IntToHex(GetGroupLabel, 8);
@@ -18801,8 +18803,9 @@ var
 begin
   case grStruct.grsGroupType of
     0: begin
-      SetSortOrder(wbGetGroupOrder(PwbSignature(@grStruct.grsLabel)^));
-      SetMemoryOrder(wbGetGroupOrder(PwbSignature(@grStruct.grsLabel)^));
+      var lGroupOrder := GameDefObj.GetGroupOrder(PwbSignature(@grStruct.grsLabel)^);
+      SetSortOrder(lGroupOrder);
+      SetMemoryOrder(lGroupOrder);
     end;
   end;
 
@@ -23993,7 +23996,7 @@ function TwbLoadingGameContext.LoadFile(const aFileName: string; aLoadOrder: Int
 var
   FileName: string;
 begin
-  wbInitRecords;
+  GameDefObj.InitRecords;
 
   FileName := wbExpandFileName(aFileName);
   {if ExtractFilePath(aFileName) = '' then
@@ -24133,7 +24136,7 @@ begin
   Assert( (not aIsLight) or GameDefObj.IsLightSupported or wbPseudoLight);
   Assert( (not aIsMedium) or GameDefObj.IsMediumSupported or wbPseudoMedium);
 
-  wbInitRecords;
+  GameDefObj.InitRecords;
 
   FileName := wbExpandFileName(aFileName);
   if Assigned(FileByName(FileName)) then
@@ -24148,7 +24151,7 @@ function TwbLoadingGameContext.NewFile(const aFileName: string; aLoadOrder: Inte
 var
   FileName: string;
 begin
-  wbInitRecords;
+  GameDefObj.InitRecords;
 
   FileName := wbExpandFileName(aFileName);
   if Assigned(FileByName(FileName)) then
