@@ -43,6 +43,7 @@ implementation
 
 uses
   wbInterface,
+  xeInit,
 
   xeMainForm;
 
@@ -69,5 +70,5 @@ begin
 end;
 
 initialization
-  wbCurrentContext.CellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
+  xeContext.Settings.CellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
 end.

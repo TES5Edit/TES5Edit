@@ -140,7 +140,7 @@ uses
 
   Winapi.Windows,
 
-  wbGameDefGlobals,
+  xeInit,
   wbInterface,
 
   xeMainForm;
@@ -451,7 +451,7 @@ begin
   if not wbIsUpdateSupported then
     with vstModules.Header.Columns[6] do
       Options := Options - [coVisible];
-  if wbPseudoLight or wbPseudoMedium or wbPseudoUpdate then
+  if xeContext.Settings.PseudoLight or xeContext.Settings.PseudoMedium or xeContext.Settings.PseudoUpdate then
     with vstModules.Header.Columns[5] do
       Options := Options - [coVisible];
 
@@ -762,7 +762,7 @@ begin
         var lModule := AllModules[lModuleIdx];
         Exclude(lModule.miFlags, mfForceLoad);
 
-        if wbAlwaysLoadGameMaster and
+        if xeContext.Settings.AlwaysLoadGameMaster and
            (mfIsGameMaster in lModule.miFlags)
         then
           Include(lModule.miFlags, mfForceLoad);

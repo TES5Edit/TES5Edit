@@ -1361,7 +1361,6 @@ uses
   wbBetterStringList,
   wbBSA,
   wbDataFormatWwise,
-  wbGameDefGlobals,
   wbHardcoded,
   wbHelpers,
   wbImplementation,
@@ -1590,14 +1589,14 @@ var
 begin
   Result := False;
 
-  if wbDontSave then
+  if xeContext.Settings.DontSave then
     Exit;
 
-  if not xeDontBackup and not DirectoryExists(wbBackupPath) then
-    if not ForceDirectories(wbBackupPath) then
-      wbCurrentContext.BackupPath := wbDataPath;
+  if not xeDontBackup and not DirectoryExists(xeContext.Settings.BackupPath) then
+    if not ForceDirectories(xeContext.Settings.BackupPath) then
+      xeContext.Settings.BackupPath := xeContext.Settings.DataPath;
 
-  lFrom := wbDataPath + aFrom;
+  lFrom := xeContext.Settings.DataPath + aFrom;
   if not FileExists(lFrom) then begin
     s := 'Could not rename "'+lFrom+'". File not found.';
     wbProgress(s);
@@ -1607,7 +1606,7 @@ begin
   end;
 
   // create backup file
-  lTo := wbDataPath + aTo;
+  lTo := xeContext.Settings.DataPath + aTo;
   OldDateTime := 0;
   if FileExists(lTo) then begin
     try
@@ -1618,7 +1617,7 @@ begin
       if not aSilent then
         MessageBox(0, PChar(s), 'Error', 0);
     end;
-    lBackup := wbBackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    lBackup := xeContext.Settings.BackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
     s := lBackup;
     i := 1;
     while FileExists(lBackup) and (i < 1000) do begin
@@ -1681,14 +1680,14 @@ var
 begin
   Result := False;
 
-  Assert(not wbDontSave);
+  Assert(not xeContext.Settings.DontSave);
   Assert(not xeDontBackup);
 
-  if not xeDontBackup and not DirectoryExists(wbBackupPath) then
-    if not ForceDirectories(wbBackupPath) then
-      wbCurrentContext.BackupPath := wbDataPath;
+  if not xeDontBackup and not DirectoryExists(xeContext.Settings.BackupPath) then
+    if not ForceDirectories(xeContext.Settings.BackupPath) then
+      xeContext.Settings.BackupPath := xeContext.Settings.DataPath;
 
-  lFrom := wbDataPath + aFrom;
+  lFrom := xeContext.Settings.DataPath + aFrom;
   if not FileExists(lFrom) then begin
     s := 'Could not rename "'+lFrom+'". File not found.';
     wbProgress(s);
@@ -1697,7 +1696,7 @@ begin
     Exit;
   end;
 
-  lBackup := wbBackupPath + aFrom.Replace('.save.', '.backup.');
+  lBackup := xeContext.Settings.BackupPath + aFrom.Replace('.save.', '.backup.');
   s := lBackup;
   i := 1;
   while FileExists(lBackup) and (i < 1000) do begin
@@ -1744,15 +1743,15 @@ begin
 
   wbFileForceClosed;
 
-  if wbDontSave then
+  if xeContext.Settings.DontSave then
     Exit;
 
   if not Assigned(FilesToRename) then
     Exit;
 
-  if not xeDontBackup and not DirectoryExists(wbBackupPath) then
-    if not ForceDirectories(wbBackupPath) then
-      wbCurrentContext.BackupPath := wbDataPath;
+  if not xeDontBackup and not DirectoryExists(xeContext.Settings.BackupPath) then
+    if not ForceDirectories(xeContext.Settings.BackupPath) then
+      xeContext.Settings.BackupPath := xeContext.Settings.DataPath;
 
   wbCurrentAction := 'Renaming previously saved files';
   wbProgress(wbCurrentAction);
@@ -1765,7 +1764,7 @@ begin
 
   if AnyError then begin
     MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
-    'Please check the files in your data path: ' + wbDataPath), 'Error', 0);
+    'Please check the files in your data path: ' + xeContext.Settings.DataPath), 'Error', 0);
     if _SaveProgress and Assigned(frmMain) then
       frmMain.SaveLogs(False);
   end;
@@ -1833,7 +1832,7 @@ var
   i, j, k: Integer;
   Present : Boolean;
 begin
-  if not wbrequireLoadorder then begin
+  if not xeContext.Settings.RequireLoadOrder then begin
     k := aFile.LoadOrder;
     if k >= 0 then
       for i := 0 to Pred(aFile.MasterCount[True]) do begin
@@ -1919,7 +1918,7 @@ begin
   if not IsValidWindowsFileName(aFileName) then
     raise Exception.CreateFmt('The specified filename:'#13#10#13#10'%s'#13#10#13#10'Contains one or more invalid characters:'#13#10#13#10'%s', [aFilename, InvalidFileNameChars]);
 
-  if FileExists(wbDataPath + aFileName) then begin
+  if FileExists(xeContext.Settings.DataPath + aFileName) then begin
     ShowMessage('A file of that name exists already.');
     Exit;
   end;
@@ -1933,7 +1932,7 @@ begin
     Exit;
   end;
 }
-  Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aIsLight, aIsMedium);
+  Result := wbNewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aIsLight, aIsMedium);
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   vstNav.AddChild(nil, Pointer(Result));
@@ -1950,7 +1949,7 @@ begin
   if not IsValidWindowsFileName(aFileName) then
     raise Exception.CreateFmt('The specified filename:'#13#10#13#10'%s'#13#10#13#10'Contains one or more invalid characters:'#13#10#13#10'%s', [aFilename, InvalidFileNameChars]);
 
-  if FileExists(wbDataPath + aFileName) then begin
+  if FileExists(xeContext.Settings.DataPath + aFileName) then begin
     ShowMessage('A file of that name exists already.');
     Exit;
   end;
@@ -1963,7 +1962,7 @@ begin
     LoadOrder := Succ(LoadOrder);
   end;
 
-  Result := wbNewFile(wbDataPath + aFileName, LoadOrder, aTemplate);
+  Result := wbNewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aTemplate);
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   vstNav.AddChild(nil, Pointer(Result));
@@ -2005,7 +2004,7 @@ begin
       s := s + '.esp';
 
     aFile := AddNewFileName(s, aIsLight, aIsMedium);
-    if Assigned(aFile) and wbAlwaysLoadGameMaster then
+    if Assigned(aFile) and xeContext.Settings.AlwaysLoadGameMaster then
       aFile.AddMasterIfMissing(wbGameMasterESM);
     Result := Assigned(aFile);
   end;
@@ -2026,7 +2025,7 @@ begin
     s := s + aTemplate.miExtension.ToString;
 
     aFile := AddNewFileName(s, aTemplate);
-    if Assigned(aFile) and wbAlwaysLoadGameMaster then
+    if Assigned(aFile) and xeContext.Settings.AlwaysLoadGameMaster then
       aFile.AddMasterIfMissing(wbGameMasterESM);
     Result := Assigned(aFile);
   end;
@@ -2076,7 +2075,7 @@ begin
 
     // add masters of masters
     // only for games that need it
-    if wbEnforceAllMasters then
+    if xeContext.Settings.EnforceAllMasters then
       for i := 0 to Pred(aMasters.Count) do
       begin
         var lFile := Files.Find(aMasters[i]);
@@ -2157,7 +2156,7 @@ begin
       begin
         // add masters of masters
         // only for games that need it
-        if wbEnforceAllMasters then
+        if xeContext.Settings.EnforceAllMasters then
         begin
           var lFileMasters := lFile.AllMasters;
           for j := low(lFileMasters) to High(lFileMasters) do
@@ -2908,9 +2907,9 @@ var
   MainRecord                  : IwbMainRecord;
   ReferencedBy                : TDynMainRecords;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
@@ -3165,7 +3164,7 @@ begin
   with odModule do begin
     Title := 'Please select the file you want to compare to "'+_File.FileName+'"...';
     FileName := '';
-    InitialDir := Settings.ReadString('CompareTo', 'InitialDir', wbDataPath);
+    InitialDir := Settings.ReadString('CompareTo', 'InitialDir', xeContext.Settings.DataPath);
     if not Execute then
       Exit;
 
@@ -3173,9 +3172,9 @@ begin
     Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
     if wbIsModule(CompareFile) then
-      fPath := wbDataPath
+      fPath := xeContext.Settings.DataPath
     else
-      fPath := wbSavePath;
+      fPath := xeContext.Settings.SavePath;
 
     // copy selected file to Data directory without overwriting an existing file
     if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in wbModuleByName(ExtractFileName(CompareFile)).miFlags) then begin
@@ -3199,8 +3198,8 @@ begin
 
   vstNav.PopupMenu := nil;
   bnMainMenu.Enabled := False;
-  wbCurrentContext.LoaderDone := False;
-  wbCurrentContext.LoaderError := False;
+  xeContext.LoaderDone := False;
+  xeContext.LoaderError := False;
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
@@ -3227,7 +3226,7 @@ begin
   with odModule do begin
     Title := 'Please select a newer version of "'+_File.FileName+'" to create a delta patch...';
     FileName := '';
-    InitialDir := Settings.ReadString('CreateDeltaPatch', 'InitialDir', wbDataPath);
+    InitialDir := Settings.ReadString('CreateDeltaPatch', 'InitialDir', xeContext.Settings.DataPath);
     if not Execute then
       Exit;
 
@@ -3245,7 +3244,7 @@ begin
     repeat
       if not InputQuery('Delta Patch Filename', 'Please specify the name of the delta patch (without extension)', s) then
         Exit;
-      CompareFile := wbDataPath + s + '.esu';
+      CompareFile := xeContext.Settings.DataPath + s + '.esu';
       if FileExists(CompareFile) then
         ShowMessage('A module called "' + s + '.esu" already exists.')
       else
@@ -3257,8 +3256,8 @@ begin
 
   vstNav.PopupMenu := nil;
   bnMainMenu.Enabled := False;
-  wbCurrentContext.LoaderDone := False;
-  wbCurrentContext.LoaderError := False;
+  xeContext.LoaderDone := False;
+  xeContext.LoaderError := False;
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Sender);
   wbStartTime := Now;
@@ -3285,9 +3284,9 @@ var
   OldMainRecord  : IwbMainRecord;
   NewMainRecord  : IwbMainRecord;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -3389,9 +3388,9 @@ var
   Elements                    : TDynElements;
   i, j                        : Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -3869,7 +3868,7 @@ begin
       ShowMessage('Please select exactly 1 module');
     until False;
 
-    FileName := wbDataPath + ChangeFileExt(SelectedModules[0].miName, '.modgroups');
+    FileName := xeContext.Settings.DataPath + ChangeFileExt(SelectedModules[0].miName, '.modgroups');
     with TStringList.Create do try
       if FileExists(FileName) then
         LoadFromFile(FileName);
@@ -3931,7 +3930,7 @@ begin
         PostAddMessage('Skipped: ' + aFile.FileName + ' doesn''t need sequence file')
       else try
         try
-          p := wbDataPath + 'Seq\';
+          p := xeContext.Settings.DataPath + 'Seq\';
           if not DirectoryExists(p) then
             if not ForceDirectories(p) then
               raise Exception.Create('Unable to create SEQ directory in game''s Data');
@@ -4086,9 +4085,9 @@ var
   sl                          : TStringList;
   i, j                        : Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -4289,7 +4288,7 @@ begin
     if Assigned(vstNav) and
        (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
 
-      if aForce or (wbLoaderDone and ((vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration))) then begin
+      if aForce or (xeContext.LoaderDone and ((vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration))) then begin
         vstNav.BeginUpdate;
         try
           if aForce or (vstNavLastCollapsedChildrenCleanup <> vstNavInitChildrenGeneration) or (vstNavLastCheckedForChanges <> wbGlobalModifedGeneration) then begin
@@ -4317,24 +4316,24 @@ var
   ;
   i     : Integer;
 begin
-  if not wbBuildRefs then
+  if not xeContext.Settings.BuildRefs then
     Exit;
   if xeTestConflicts or xeTestNavCopy then
     Exit;
-  if wbDontCache then
+  if xeContext.Settings.DontCache then
     Exit;
-  if wbDontCacheSave then
+  if xeContext.Settings.DontCacheSave then
     Exit;
   if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then
     Exit;
 
-  if not TDirectory.Exists(wbCachePath) then
+  if not TDirectory.Exists(xeContext.Settings.CachePath) then
     Exit;
 
-  if Length(TDirectory.GetFiles(wbCachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
+  if Length(TDirectory.GetFiles(xeContext.Settings.CachePath, IntToHex64(wbCRC32App, 8) + '_*' + wbRefCacheExt)) > 0 then
     Exit;
 
-  Files := TDirectory.GetFiles(wbCachePath, '*' + wbRefCacheExt);
+  Files := TDirectory.GetFiles(xeContext.Settings.CachePath, '*' + wbRefCacheExt);
 
   i := Length(Files);
   if i < 1 then
@@ -4564,7 +4563,7 @@ begin
   if xeScriptToRun = '' then
     xeScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
   else if not TPath.IsPathRooted(ExtractFilePath(xeScriptToRun)) then
-    xeScriptToRun := wbScriptsPath + xeScriptToRun;
+    xeScriptToRun := xeContext.Settings.ScriptsPath + xeScriptToRun;
 
   if not FileExists(xeScriptToRun) then
     with TOpenDialog.Create(Self) do try
@@ -4593,7 +4592,7 @@ end;
 
 function dfResourceOpenData(const aContainerName, aFileName: string): TBytes;
 begin
-  Result := wbContainerHandler.OpenResourceData(aContainerName, aFileName);
+  Result := xeContext.ContainerHandler.OpenResourceData(aContainerName, aFileName);
 end;
 
 procedure TfrmMain.DoInit;
@@ -4641,7 +4640,7 @@ begin
   SaveInterval := DefaultInterval;
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
 
-  wbCurrentContext.FormIDCallback := GetFormIDCallback;
+  xeContext.Settings.FormIDCallback := GetFormIDCallback;
 
   tbsView.TabVisible := False;
   tbsWEAPSpreadsheet.TabVisible := False;
@@ -4653,11 +4652,11 @@ begin
   lblPath.DoubleBuffered := True;
 
   wbDisplayLoadOrderFormID := True;
-  wbCurrentContext.SortSubRecords := True;
+  xeContext.Settings.SortSubRecords := True;
   wbDisplayShorterNames := True;
   wbHideUnused := True;
-  wbCurrentContext.FlagsAsArray := True;
-  wbCurrentContext.RequireLoadOrder := not wbUseFalsePlugins;
+  xeContext.Settings.FlagsAsArray := True;
+  xeContext.Settings.RequireLoadOrder := not xeContext.Settings.UseFalsePlugins;
   ShowUnsavedHint := True;
   ParentedGroupRecordType := [1, 6, 7];
   if wbVWDAsQuestChildren then
@@ -4694,37 +4693,37 @@ begin
   AddMessage('The Source Code Form is available at https://github.com/TES5Edit/TES5Edit');
   AddMessage('');
 
-  if wbShouldLoadMOHookFile then begin
-    AddMessage('Using Mod Organizer Profile: ' + wbMOProfile);
+  if xeContext.Settings.ShouldLoadMOHookFile then begin
+    AddMessage('Using Mod Organizer Profile: ' + xeContext.Settings.MOProfile);
     if not xeLoadMOHookFile then begin
       AddMessage('Error: Failed to load Mod Organizer Profile');
       Exit;
     end;
   end;
 
-  AddMessage('Using '+wbGameName2+' Data Path: ' + wbDataPath);
+  AddMessage('Using '+wbGameName2+' Data Path: ' + xeContext.Settings.DataPath);
 
-  if not (wbDontSave or xeDontBackup) then
-    AddMessage('Using Backup Path: ' + wbBackupPath);
+  if not (xeContext.Settings.DontSave or xeDontBackup) then
+    AddMessage('Using Backup Path: ' + xeContext.Settings.BackupPath);
 
-  AddMessage('Using Scripts Path: ' + wbScriptsPath);
+  AddMessage('Using Scripts Path: ' + xeContext.Settings.ScriptsPath);
 
-  if not wbDontCache then
-    AddMessage('Using Cache Path: ' + wbCachePath);
+  if not xeContext.Settings.DontCache then
+    AddMessage('Using Cache Path: ' + xeContext.Settings.CachePath);
 
-  AddMessage('Using ini: ' + wbTheGameIniFileName);
-  if not FileExists(wbTheGameIniFileName) then begin
+  AddMessage('Using ini: ' + xeContext.Settings.TheGameIniFileName);
+  if not FileExists(xeContext.Settings.TheGameIniFileName) then begin
     AddMessage('Fatal: Could not find ini');
     Exit;
   end;
 
-  if FileExists(wbCustomIniFileName) then begin
-    AddMessage('Using custom ini: ' + wbCustomIniFileName);
+  if FileExists(xeContext.Settings.CustomIniFileName) then begin
+    AddMessage('Using custom ini: ' + xeContext.Settings.CustomIniFileName);
   end;
 
-  if wbSavePath <> '' then begin
-    AddMessage('Using save path: ' + wbSavePath);
-    if not DirectoryExists(wbSavePath) then begin
+  if xeContext.Settings.SavePath <> '' then begin
+    AddMessage('Using save path: ' + xeContext.Settings.SavePath);
+    if not DirectoryExists(xeContext.Settings.SavePath) then begin
       if wbToolSource in [tsSaves] then begin
         AddMessage('Fatal: Could not find save path');
         Exit;
@@ -4737,9 +4736,9 @@ begin
       Exit;
     end;
 
-  if wbCreationClubContentFileName <> '' then begin
-    var lCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(wbDataPath)) + wbCreationClubContentFileName;
-    wbCurrentContext.CreationClubContentFileName := lCreationClubContentFileName;
+  if xeContext.Settings.CreationClubContentFileName <> '' then begin
+    var lCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(xeContext.Settings.DataPath)) + xeContext.Settings.CreationClubContentFileName;
+    xeContext.Settings.CreationClubContentFileName := lCreationClubContentFileName;
     if FileExists(lCreationClubContentFileName) then begin
       with TStringList.Create do try
         LoadFromFile(lCreationClubContentFileName);
@@ -4747,7 +4746,7 @@ begin
         SetLength(lCreationClubContent, Count);
         for i := 0 to Pred(Count) do
           lCreationClubContent[i] := Strings[i];
-        wbCurrentContext.CreationClubContent := lCreationClubContent;
+        xeContext.Settings.CreationClubContent := lCreationClubContent;
       finally
         Free;
       end;
@@ -4755,8 +4754,8 @@ begin
     end;
   end;
 
-  AddMessage('Using plugin list: ' + wbPluginsFileName);
-  if not FileExists(wbPluginsFileName) then begin
+  AddMessage('Using plugin list: ' + xeContext.Settings.PluginsFileName);
+  if not FileExists(xeContext.Settings.PluginsFileName) then begin
     // plugins file could be missing in Fallout 4 and SSE since DLCs are loaded automatically
 {    if (wbToolSource in [tsPlugins]) and not (wbGameMode in [gmFO4, gmFO4VR, gmTES5VR, gmSSE]) then begin
       AddMessage('Fatal: Could not find plugin list');
@@ -4777,9 +4776,9 @@ begin
     Exit;
   end;
 
-  AddMessage('Using language: ' + wbLanguage);
-  AddMessage('Using general string encoding: ' + wbEncoding.EncodingName);
-  AddMessage('Using translatable string encoding: ' + wbEncodingTrans.EncodingName);
+  AddMessage('Using language: ' + xeContext.Settings.Language);
+  AddMessage('Using general string encoding: ' + xeContext.Settings.Encoding.EncodingName);
+  AddMessage('Using translatable string encoding: ' + xeContext.Settings.EncodingTrans.EncodingName);
   if wbGameMode >= gmTES5 then
     AddMessage('Using VMAD string encoding: ' + wbEncodingVMAD.EncodingName);
 
@@ -4792,9 +4791,9 @@ begin
     vstNav.Header.Columns[i].Width := Settings.ReadInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
 
   if wbToolSource in [tsSaves] then
-    AddMessage('Loading saves list from : ' + wbSavePath)
+    AddMessage('Loading saves list from : ' + xeContext.Settings.SavePath)
   else if wbToolSource in [tsPlugins] then
-    AddMessage('Loading active plugin list: ' + wbPluginsFileName)
+    AddMessage('Loading active plugin list: ' + xeContext.Settings.PluginsFileName)
   else begin
     AddMessage('Fatal: No source specified');
     Exit;
@@ -4858,12 +4857,12 @@ begin
               gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
             end;
 
-            if FindFirst(ExpandFileName(wbSavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+            if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+saveExt), faAnyfile, R)=0 then try
               repeat
                 if R.Attr and faDirectory <> faDirectory then begin
                   CheckListBox1.Items.Add(R.Name);
                   s := ChangeFileExt(R.Name, coSaveExt);
-                  if (coSaveExt<>'') and FileExists(ExpandFileName(wbSavePath+'\'+s)) then
+                  if (coSaveExt<>'') and FileExists(ExpandFileName(xeContext.Settings.SavePath+'\'+s)) then
                     CheckListBox1.Items.Add(s);
                 end;
               until 0 <> FindNext(R);
@@ -4871,7 +4870,7 @@ begin
               System.SysUtils.FindClose(R);
             end;
             if (coSaveExt<>'') then
-              if FindFirst(ExpandFileName(wbSavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
+              if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
                 repeat
                   if R.Attr and faDirectory <> faDirectory then
                     if CheckListBox1.Items.IndexOf(R.Name) = -1 then
@@ -4895,7 +4894,7 @@ begin
               AgeDateTime := Modules[0].miDateTime;
               for i := 1 to High(Modules) do begin
                 AgeDateTime := AgeDateTime + (1/24/60);
-                TFile.SetLastWriteTime(wbDataPath + Modules[i].miOriginalName, AgeDateTime);
+                TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
               end;
             end;
           end;
@@ -4916,7 +4915,7 @@ begin
               end;
 
           // More plugins requested ?
-          while xeFindNextValidCmdLineModule(xeParamIndex, s, wbDataPath) do begin
+          while xeFindNextValidCmdLineModule(xeParamIndex, s, xeContext.Settings.DataPath) do begin
             with wbModuleByName(s)^ do
               if IsValid then begin
                 Activate;
@@ -4998,15 +4997,15 @@ begin
       if wbToolSource = tsSaves then begin
         s := sl[0];
         case wbGameMode of
-          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then wbCurrentContext.GameDef.SwitchToCoSave;
-          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then wbCurrentContext.GameDef.SwitchToCoSave
+          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
+          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
               Exit;
             end;
-          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then wbCurrentContext.GameDef.SwitchToCoSave;
-          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then wbCurrentContext.GameDef.SwitchToCoSave
+          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
+          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave
             else begin
               MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
               frmMain.Close;
@@ -5016,7 +5015,7 @@ begin
           gmTES5VR,
           gmEnderal,
           gmEnderalSE,
-          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then wbCurrentContext.GameDef.SwitchToCoSave;
+          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
           frmMain.Close;
@@ -5024,7 +5023,7 @@ begin
         end;
         sl.Clear;
         //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
-        wbMastersForFile(wbSavePath + s, sl);
+        wbMastersForFile(xeContext.Settings.SavePath + s, sl);
         sl.Add(s);
       end else {wbToolSource = tsPlugins} begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
@@ -5085,12 +5084,12 @@ begin
 
       // hold shift to skip building references
       if not xeTestConflicts and (GetKeyState(VK_SHIFT) < 0) then begin
-        wbCurrentContext.BuildRefs := False;
+        xeContext.Settings.BuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
 
       if xeQuickClean or xeQuickShowConflicts or xeQuickSEQ then
-        wbCurrentContext.BuildRefs := False;
+        xeContext.Settings.BuildRefs := False;
 
       CleanupRefCache;
 
@@ -5118,7 +5117,7 @@ begin
   TotalUsageTime := Settings.ReadFloat('Usage', 'TotalTime', 0);
   RateNoticeGiven := Settings.ReadInteger('Usage', 'RateNoticeGiven', 0);
   ShowUnsavedHint := Settings.ReadBool('Options', 'ShowUnsavedHint', ShowUnsavedHint);
-  if not wbTranslationMode then begin
+  if not xeContext.Settings.TranslationMode then begin
     wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
     wbHideIgnored := Settings.ReadBool('Options', 'HideIgnored', wbHideIgnored);
     wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
@@ -5136,13 +5135,13 @@ begin
   wbShowFileFlags := Settings.ReadBool('Options', 'ShowFileFlags', wbShowFileFlags);
   wbAutoCompareSelectedLimit := Settings.ReadInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
   tmrPendingSetActive.Interval := Settings.ReadInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
-  wbCurrentContext.ClampFormID := Settings.ReadBool('Options', 'ClampFormID', wbClampFormID);
-  wbCurrentContext.ResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
-  wbCurrentContext.AlwaysSaveOnam := Settings.ReadBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam) or wbAlwaysSaveOnamForce;
+  xeContext.Settings.ClampFormID := Settings.ReadBool('Options', 'ClampFormID', xeContext.Settings.ClampFormID);
+  xeContext.Settings.ResetModifiedOnSave := Settings.ReadBool('Options', 'ResetModifiedOnSave', xeContext.Settings.ResetModifiedOnSave);
+  xeContext.Settings.AlwaysSaveOnam := Settings.ReadBool('Options', 'AlwaysSaveOnam', xeContext.Settings.AlwaysSaveOnam) or xeContext.Settings.AlwaysSaveOnamForce;
   wbAlignArrayElements := Settings.ReadBool('Options', 'AlignArrayElements', wbAlignArrayElements);
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
-  wbCurrentContext.ConvertIntFormID := Settings.ReadBool('Options', 'ConvertIntFormID', wbConvertIntFormID);
+  xeContext.Settings.ConvertIntFormID := Settings.ReadBool('Options', 'ConvertIntFormID', xeContext.Settings.ConvertIntFormID);
   wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
   wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
   wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
@@ -5209,13 +5208,13 @@ begin
   wbCollapseScriptEntry := Settings.ReadBool('Options', 'CollapseScriptEntry', wbCollapseScriptEntry);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
   //wbIKnowWhatImDoing := Settings.ReadBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
-  wbCurrentContext.UDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', wbUDRSetXESP);
-  wbCurrentContext.UDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', wbUDRSetScale);
-  wbCurrentContext.UDRSetScaleValue := Settings.ReadFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
-  wbCurrentContext.UDRSetZ := Settings.ReadBool('Options', 'UDRSetZ', wbUDRSetZ);
-  wbCurrentContext.UDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
-  wbCurrentContext.UDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
-  wbCurrentContext.UDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+  xeContext.Settings.UDRSetXESP := Settings.ReadBool('Options', 'UDRSetXESP', xeContext.Settings.UDRSetXESP);
+  xeContext.Settings.UDRSetScale := Settings.ReadBool('Options', 'UDRSetScale', xeContext.Settings.UDRSetScale);
+  xeContext.Settings.UDRSetScaleValue := Settings.ReadFloat('Options', 'UDRSetScaleValue', xeContext.Settings.UDRSetScaleValue);
+  xeContext.Settings.UDRSetZ := Settings.ReadBool('Options', 'UDRSetZ', xeContext.Settings.UDRSetZ);
+  xeContext.Settings.UDRSetZValue := Settings.ReadFloat('Options', 'UDRSetZValue', xeContext.Settings.UDRSetZValue);
+  xeContext.Settings.UDRSetMSTT := Settings.ReadBool('Options', 'UDRSetMSTT', xeContext.Settings.UDRSetMSTT);
+  xeContext.Settings.UDRSetMSTTValue := Settings.ReadInteger('Options', 'UDRSetMSTTValue', xeContext.Settings.UDRSetMSTTValue);
   for ConflictThis := Low(TConflictThis) to High(TConflictThis) do
     wbColorConflictThis[ConflictThis] := Settings.ReadInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ConflictThis)), Integer(wbColorConflictThis[ConflictThis]));
   for ConflictAll := Low(TConflictAll) to High(TConflictAll) do
@@ -5431,7 +5430,7 @@ begin
 
     s := Trim(edFormIDSearch.Text);
 
-    if wbConvertIntFormID then
+    if xeContext.Settings.ConvertIntFormID then
       if not StartsText('0', s) and not StartsText('0x', s) then
         if TryStrToInt(s, tmp) then
         begin
@@ -5506,9 +5505,9 @@ begin
   if Assigned(ContainsChilds) then
     ContainsChilds^ := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   Result := vstNav.GetSortedSelection(True);
@@ -5538,7 +5537,7 @@ function TfrmMain.EditWarn: Boolean;
 var
   EditWarnCount: Integer;
 begin
-  if not wbLoaderDone then
+  if not xeContext.LoaderDone then
     Exit(False);
 
   Result :=
@@ -5970,12 +5969,12 @@ var
 
 begin
   Action := caFree;
-  if LoaderStarted and not wbLoaderDone then begin
+  if LoaderStarted and not xeContext.LoaderDone then begin
     wbForceTerminate := True;
     Caption := 'Waiting for Background Loader to terminate...';
     pnlClient.Enabled := False;
     try
-      while not wbLoaderDone do begin
+      while not xeContext.LoaderDone do begin
         DoProcessMessages;
         Sleep(100);
       end;
@@ -6025,8 +6024,8 @@ begin
 
   SaveLogs(True);
 
-  if DirectoryExists(wbTempPath) and xeRemoveTempPath then
-    DeleteDirectory(wbTempPath); // remove temp folder unless it existed
+  if DirectoryExists(xeContext.Settings.TempPath) and xeRemoveTempPath then
+    DeleteDirectory(xeContext.Settings.TempPath); // remove temp folder unless it existed
 
   tmrCheckUnsaved.Enabled := False;
 
@@ -6284,7 +6283,7 @@ var
   r                           : TRect;
   i                           : Integer;
 begin
-  if wbLoaderDone then begin
+  if xeContext.LoaderDone then begin
     if (Key = Ord('S')) and (Shift = [ssCtrl]) then begin
       jbhSave.CancelHint;
       SaveChanged(False, True);
@@ -6783,7 +6782,7 @@ begin
   end;
 
   if not HasElement then
-    if wbTranslationMode then
+    if xeContext.Settings.TranslationMode then
       ConflictThis := ctIgnored;
 
   if (ConflictAll in [caUnknown, caOnlyOne]) and ComparingSiblings then
@@ -6804,7 +6803,7 @@ begin
     end;
 
     case ConflictThis of
-      ctUnknown: vstView.IsVisible[aNode] := not lDontShow and not wbTranslationMode;
+      ctUnknown: vstView.IsVisible[aNode] := not lDontShow and not xeContext.Settings.TranslationMode;
       ctIgnored: vstView.IsVisible[aNode] := not wbHideIgnored;
       ctNotDefined: begin
           if aNode.Parent = vstView.RootNode then
@@ -6825,8 +6824,8 @@ begin
             j := Integer(aNode.Index);
             if (j >= i) and ((j-i) < ElementCount) then
               with (Element.Def as IwbRecordDef).Members[j - i] do begin
-                if (wbTranslationMode and (not (dfTranslatable in DefFlags))) or
-                  (wbTranslationMode and (ConflictPriority[nil] = cpIgnore)) then begin
+                if (xeContext.Settings.TranslationMode and (not (dfTranslatable in DefFlags))) or
+                  (xeContext.Settings.TranslationMode and (ConflictPriority[nil] = cpIgnore)) then begin
                   ConflictThis := ctIgnored;
                   for k := Low(ActiveRecords) to High(ActiveRecords) do
                     aNodeDatas[k].ConflictThis := ConflictThis;
@@ -6847,7 +6846,7 @@ begin
           end;
 
           if not Assigned(Element) then
-            if wbTranslationMode then
+            if xeContext.Settings.TranslationMode then
               ConflictThis := ctIgnored;
 
           if ConflictThis = ctNotDefined then begin
@@ -7408,9 +7407,9 @@ var
   NewElement                  : IwbElement;
   Control                     : Boolean;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if GetAddElement(TargetNode, TargetIndex, TargetElement) then begin
@@ -7537,7 +7536,7 @@ var
   i, j             : Integer;
   TargetColumns    : array of Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   Node := vstViewFocusedNode;
@@ -7614,7 +7613,7 @@ var
   i, j, k                     : Integer;
   Node                        : PVirtualNode;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   SourceMainRecord := nil;
@@ -7784,7 +7783,7 @@ begin
               if Result then
                 Result := sl.IndexOf(a._File.FileName) < 0;
               if Result then
-                Result := not ((not wbAllowESPMasters) and SameText(ExtractFileExt(a._File.FileName), '.esp'));
+                Result := not ((not xeContext.Settings.AllowESPMasters) and SameText(ExtractFileExt(a._File.FileName), '.esp'));
               if Result then
                 Result := not (wbIsStarfield and a._File.IsBlueprint);
             end;
@@ -7962,7 +7961,7 @@ begin
 
   ScriptPath := ExtractFilePath(aScriptFile);
   if ScriptPath = '' then
-    ScriptPath := wbScriptsPath;
+    ScriptPath := xeContext.Settings.ScriptsPath;
 
   Script := TxeScriptHost.CreateScript(aScriptFile, aScript);
   try
@@ -8288,7 +8287,7 @@ var
   Dummy: Boolean;
 begin
   if Now - LastNexusModsClick > 1/24/60/60 then begin
-    ShellExecute(Handle, 'open', PChar(wbNexusModsUrl), '', '', SW_SHOWNORMAL);
+    ShellExecute(Handle, 'open', PChar(xeContext.GameDefObj.NexusModsUrl), '', '', SW_SHOWNORMAL);
     LastNexusModsClick := Now;
   end;
   jbhNexusModsCloseBtnClick(Sender, Dummy);
@@ -8368,7 +8367,7 @@ var
   Scr: string;
 begin
   with TfrmScript.Create(Self) do try
-    Path := wbScriptsPath;
+    Path := xeContext.Settings.ScriptsPath;
     LastUsedScript := Settings.ReadString('View', 'LastUsedScript', '');
     chkScriptsSubDir.Checked := Settings.ReadBool('View', 'IncludeScriptsFromSubDir', False);
     if ShowModal <> mrOK then
@@ -8403,12 +8402,12 @@ begin
     if ActionList1.Actions[i].Tag > 0 then
       ActionList1.Actions[i].Free;
 
-  if not TDirectory.Exists(wbScriptsPath) then
+  if not TDirectory.Exists(xeContext.Settings.ScriptsPath) then
     Exit;
 
   slScript := TStringList.Create;
   try
-    for scr in TDirectory.GetFiles(wbScriptsPath, '*.pas', TSearchOption.soAllDirectories) do begin
+    for scr in TDirectory.GetFiles(xeContext.Settings.ScriptsPath, '*.pas', TSearchOption.soAllDirectories) do begin
       slScript.LoadFromFile(scr);
       for i := 0 to Pred(slScript.Count) do begin
         s := Trim(slScript[i]);
@@ -8495,7 +8494,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -8523,7 +8522,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -8572,9 +8571,9 @@ procedure TfrmMain.mniRefByCopyDisabledOverrideIntoClick(Sender: TObject);
 var
   Elements                    : TDynElements;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -8598,9 +8597,9 @@ procedure TfrmMain.mniRefByCopyIntoClick(Sender: TObject);
 var
   Elements                    : TDynElements;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -8621,9 +8620,9 @@ end;
 
 procedure TfrmMain.mniRefByMarkModifiedClick(Sender: TObject);
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
   if not EditWarn then
     Exit;
@@ -8655,9 +8654,9 @@ var
   Node                        : PVirtualNode;
   DialogResult                : Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -8992,9 +8991,9 @@ begin
   ReplaceList := nil;
   l := 0;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
@@ -9005,7 +9004,7 @@ begin
 
   with odCSV do begin
     FileName := '';
-    InitialDir := wbDataPath;
+    InitialDir := xeContext.Settings.DataPath;
     if not Execute then
       Exit;
   end;
@@ -9242,9 +9241,9 @@ var
   i, j ,k                     : Integer;
   FoundIt                     : Boolean;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -9353,9 +9352,9 @@ var
   _OldFile                    : IwbFile;
   _NewMasterFile              : IwbFile;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   AnyErrors := False;
@@ -9547,7 +9546,7 @@ var
   Flags                       : IwbFlagsDef;
   i, StringID                 : Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -9627,7 +9626,7 @@ begin
         ShowModal;
       end;
 
-      if wbConvertIntFormID and Element.CanContainFormIDs then
+      if xeContext.Settings.ConvertIntFormID and Element.CanContainFormIDs then
       begin
         var tmp: Integer;
         if not StartsText('0', EditValue) and not StartsText('0x', EditValue) then
@@ -9654,7 +9653,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -9730,9 +9729,9 @@ var
   AsNew                       : Boolean;
   AsWrapper                   : Boolean;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -9854,9 +9853,9 @@ var
   MainRecord                  : IwbMainRecord;
   GroupRecord                 : IwbGroupRecord;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   Column := vstView.Header.Columns.PopupIndex;
@@ -9993,7 +9992,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -10018,7 +10017,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not wbContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -10294,9 +10293,9 @@ var
   i                           : Integer;
   ContainsChilds              : Boolean;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   UserWasActive := True;
@@ -10392,9 +10391,9 @@ var
   StartTick                   : UInt64;
   i                           : Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   UserWasActive := True;
@@ -10495,9 +10494,9 @@ var
   NameRec                     : IwbContainerElementRef;
   Elements                    : TDynElements;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   UserWasActive := True;
@@ -10862,9 +10861,9 @@ var
   i, j, k    : Integer;
   Node       : PVirtualNode;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if not EditWarn then
@@ -10974,7 +10973,7 @@ begin
     else
       Result := Result + StringOfChar(' ', 6) + '- <<: *quickClean';
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, wbNexusModsUrl]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, xeContext.GameDefObj.NexusModsUrl]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
     if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
@@ -11064,9 +11063,9 @@ begin
   AutoModeCheckForDR := wbToolMode in [tmCheckForDR];
   if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
 
-  if not AutoModeCheckForDR and not wbEditAllowed then
+  if not AutoModeCheckForDR and not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   UserWasActive := True;
@@ -11171,31 +11170,31 @@ begin
 
 
               if not IsPersistent then
-                if wbUDRSetZ and GetPosition(Position) then begin
-                  Position.z := wbUDRSetZValue;
+                if xeContext.Settings.UDRSetZ and GetPosition(Position) then begin
+                  Position.z := xeContext.Settings.UDRSetZValue;
                   SetPosition(Position);
                 end;
               RemoveElement('Enable Parent');
               RemoveElement('XTEL');
               IsInitiallyDisabled := True;
-              if wbUDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
+              if xeContext.Settings.UDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
                 Cntr.ElementNativeValues['Reference'] := $14;
                 Cntr.Elements[1].NativeValue := 1;
               end;
 
-              if wbUDRSetScale then begin
+              if xeContext.Settings.UDRSetScale then begin
                 if not Assigned(ElementBySignature['XSCL']) then
                   Element := Add('XSCL', True);
                   if Assigned(Element) then
-                    Element.NativeValue := wbUDRSetScaleValue;
+                    Element.NativeValue := xeContext.Settings.UDRSetScaleValue;
               end;
 
-              if wbUDRSetMSTT and wbIsFallout3 then begin
+              if xeContext.Settings.UDRSetMSTT and wbIsFallout3 then begin
                 Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
                   if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
                     if LinksToRecord.Signature = 'MSTT' then
-                      Element.NativeValue := wbUDRSetMSTTValue;
+                      Element.NativeValue := xeContext.Settings.UDRSetMSTTValue;
               end;
 
             end;
@@ -11369,9 +11368,9 @@ begin
   AutoModeCheckForITM := wbToolMode in [tmCheckForITM];
   if AutoModeCheckForITM then Operation := 'Count' else Operation := 'Remov';
 
-  if not wbEditAllowed and not AutoModeCheckForITM then
+  if not xeContext.Settings.EditAllowed and not AutoModeCheckForITM then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   UserWasActive := True;
@@ -11638,9 +11637,9 @@ var
   Element                     : IwbElement;
   NextNode                    : PVirtualNode;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
     if not EditWarn then
       Exit;
@@ -11685,9 +11684,9 @@ var
   Element                     : IwbElement;
   NextNode                    : PVirtualNode;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
     if not EditWarn then
       Exit;
@@ -11732,9 +11731,9 @@ var
   Element                     : IwbElement;
   i                           : Integer;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -12019,10 +12018,10 @@ begin
 
   s := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
 
-  if wbLanguage = s then
+  if xeContext.Settings.Language = s then
     Exit;
 
-  wbCurrentContext.Language := s;
+  xeContext.Settings.Language := s;
 
   wbLocalizationHandler.Clear;
   for i := Low(Files) to High(Files) do
@@ -12065,7 +12064,7 @@ var
   lFrom, lTo          : TwbFastStringList;
   wblf                : TwbLocalizationFile;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
@@ -12221,8 +12220,8 @@ procedure TfrmMain.mniNavLogAnalyzerClick(Sender: TObject);
 begin
   with TfrmLogAnalyzer.Create(Self) do begin
     Caption := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-    lDataPath := wbDataPath;
-    lMyGamesTheGamePath := wbMyGamesTheGamePath;
+    lDataPath := xeContext.Settings.DataPath;
+    lMyGamesTheGamePath := xeContext.Settings.MyGamesTheGamePath;
     PFiles := @Files;
     JumpTo := frmMain.JumpTo;
     ltLog := TLogType(TMenuItem(Sender).Tag);
@@ -12237,9 +12236,9 @@ var
   Selection                   : TNodeArray;
   ContainsChilds              : Boolean;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   UserWasActive := True;
@@ -12308,9 +12307,9 @@ var
 
     Result := False;
 
-    if not wbEditAllowed then
+    if not xeContext.Settings.EditAllowed then
       Exit;
-    if wbTranslationMode then
+    if xeContext.Settings.TranslationMode then
       Exit;
 
     SourceFile := nil;
@@ -13306,7 +13305,7 @@ begin
       begin
         vstNav.BeginUpdate;
         try
-          ReInitTree(FilterNoGameMaster or wbTranslationMode, FilterFiles);
+          ReInitTree(FilterNoGameMaster or xeContext.Settings.TranslationMode, FilterFiles);
 
           Count := 0;
           vstNav.TreeOptions.AutoOptions := vstNav.TreeOptions.AutoOptions - [toAutoFreeOnCollapse];
@@ -13888,7 +13887,7 @@ begin
     pnlFontRecords.Font := vstNav.Font;
     pnlFontMessages.Font := mmoMessages.Font;
     pnlFontViewer.Font := Self.Font; LoadFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
-    if wbTranslationMode then begin
+    if xeContext.Settings.TranslationMode then begin
       cbHideUnused.Visible := False;
       cbHideIgnored.Visible := False;
       cbHideNeverShow.Visible := False;
@@ -13898,11 +13897,11 @@ begin
       cbHideNeverShow.Checked := wbHideNeverShow;
     end;
     cbActorTemplateHide.Checked := wbActorTemplateHide;
-    cbLoadBSAs.Checked := wbLoadBSAs;
+    cbLoadBSAs.Checked := xeContext.Settings.LoadBSAs;
     cbSortFLST.Checked := wbSortFLST;
-    cbSortINFO.Checked := wbSortINFO;
-    cbFillPNAM.Checked := wbFillPNAM;
-    cbWriteOffsetData.Checked := wbWriteOffsetData;
+    cbSortINFO.Checked := xeContext.Settings.SortINFO;
+    cbFillPNAM.Checked := xeContext.Settings.FillPNAM;
+    cbWriteOffsetData.Checked := xeContext.Settings.WriteOffsetData;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
     cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
@@ -13912,15 +13911,15 @@ begin
     sedNavChangeDelay.Value := tmrPendingSetActive.Interval;
     cbSimpleRecords.Checked := wbSimpleRecords;
     cbDecodeTexture.Checked := wbDecodeTextureHashes;
-    cbClampFormID.Checked := wbClampFormID;
-    cbResetModifiedOnSave.Checked := wbResetModifiedOnSave;
-    cbAlwaysSaveOnam.Checked := wbAlwaysSaveOnam or wbAlwaysSaveOnamForce;
-    if wbAlwaysSaveOnamForce then
+    cbClampFormID.Checked := xeContext.Settings.ClampFormID;
+    cbResetModifiedOnSave.Checked := xeContext.Settings.ResetModifiedOnSave;
+    cbAlwaysSaveOnam.Checked := xeContext.Settings.AlwaysSaveOnam or xeContext.Settings.AlwaysSaveOnamForce;
+    if xeContext.Settings.AlwaysSaveOnamForce then
       cbAlwaysSaveOnam.Enabled := False;
     cbAlignArrayElements.Checked := wbAlignArrayElements;
     cbManualCleaningHide.Checked := wbManualCleaningHide;
     cbManualCleaningAllow.Checked := wbManualCleaningAllow;
-    cbConvertIntFormID.Checked := wbConvertIntFormID;
+    cbConvertIntFormID.Checked := xeContext.Settings.ConvertIntFormID;
     cbCollapseRecordHeader.Checked := wbCollapseRecordHeader;
     cbCollapseObjectBounds.Checked := wbCollapseObjectBounds;
     cbCollapseModels.Checked := wbCollapseModels;
@@ -13971,13 +13970,13 @@ begin
     cbNoGitHubCheck.Checked := wbNoGitHubCheck;
     cbNoNexusModsCheck.Checked := wbNoNexusModsCheck;
     cbTrackAllEditorID.Checked := wbTrackAllEditorID;
-    cbUDRSetXESP.Checked := wbUDRSetXESP;
-    cbUDRSetScale.Checked := wbUDRSetScale;
-    edUDRSetScaleValue.Text := FloatToStrF(wbUDRSetScaleValue, ffFixed, 99, wbFloatDigits);
-    cbUDRSetZ.Checked := wbUDRSetZ;
-    edUDRSetZValue.Text := FloatToStrF(wbUDRSetZValue, ffFixed, 99, wbFloatDigits);
-    cbUDRSetMSTT.Checked := wbUDRSetMSTT;
-    edUDRSetMSTTValue.Text := IntToHex(wbUDRSetMSTTValue, 8);
+    cbUDRSetXESP.Checked := xeContext.Settings.UDRSetXESP;
+    cbUDRSetScale.Checked := xeContext.Settings.UDRSetScale;
+    edUDRSetScaleValue.Text := FloatToStrF(xeContext.Settings.UDRSetScaleValue, ffFixed, 99, wbFloatDigits);
+    cbUDRSetZ.Checked := xeContext.Settings.UDRSetZ;
+    edUDRSetZValue.Text := FloatToStrF(xeContext.Settings.UDRSetZValue, ffFixed, 99, wbFloatDigits);
+    cbUDRSetMSTT.Checked := xeContext.Settings.UDRSetMSTT;
+    edUDRSetMSTTValue.Text := IntToHex(xeContext.Settings.UDRSetMSTTValue, 8);
     _Files := @Files;
 
     if ShowModal <> mrOK then
@@ -13991,17 +13990,17 @@ begin
     lblPath.Font := pnlFontRecords.Font;
     //pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
     mmoMessages.Font := pnlFontMessages.Font;
-    if not wbTranslationMode then begin
+    if not xeContext.Settings.TranslationMode then begin
       wbHideUnused := cbHideUnused.Checked;
       wbHideIgnored := cbHideIgnored.Checked;
       wbHideNeverShow := cbHideNeverShow.Checked;
     end;
     wbActorTemplateHide := cbActorTemplateHide.Checked;
-    wbCurrentContext.LoadBSAs := cbLoadBSAs.Checked;
+    xeContext.Settings.LoadBSAs := cbLoadBSAs.Checked;
     wbSortFLST := cbSortFLST.Checked;
-    wbCurrentContext.SortINFO := cbSortINFO.Checked;
-    wbCurrentContext.FillPNAM := cbFillPNAM.Checked;
-    wbCurrentContext.WriteOffsetData := cbWriteOffsetData.Checked;
+    xeContext.Settings.SortINFO := cbSortINFO.Checked;
+    xeContext.Settings.FillPNAM := cbFillPNAM.Checked;
+    xeContext.Settings.WriteOffsetData := cbWriteOffsetData.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
     wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
@@ -14011,13 +14010,13 @@ begin
     tmrPendingSetActive.Interval := sedNavChangeDelay.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
     wbDecodeTextureHashes := cbDecodeTexture.Checked;
-    wbCurrentContext.ClampFormID := cbClampFormID.Checked;
-    wbCurrentContext.ResetModifiedOnSave := cbResetModifiedOnSave.Checked;
-    wbCurrentContext.AlwaysSaveOnam := cbAlwaysSaveOnam.Checked or wbAlwaysSaveOnamForce;
+    xeContext.Settings.ClampFormID := cbClampFormID.Checked;
+    xeContext.Settings.ResetModifiedOnSave := cbResetModifiedOnSave.Checked;
+    xeContext.Settings.AlwaysSaveOnam := cbAlwaysSaveOnam.Checked or xeContext.Settings.AlwaysSaveOnamForce;
     wbAlignArrayElements := cbAlignArrayElements.Checked;
     wbManualCleaningHide := cbManualCleaningHide.Checked;
     wbManualCleaningAllow := cbManualCleaningAllow.Checked;
-    wbCurrentContext.ConvertIntFormID := cbConvertIntFormID.Checked;
+    xeContext.Settings.ConvertIntFormID := cbConvertIntFormID.Checked;
     wbCollapseRecordHeader := cbCollapseRecordHeader.Checked;
     wbCollapseObjectBounds := cbCollapseObjectBounds.Checked;
     wbCollapseModels := cbCollapseModels.Checked;
@@ -14072,13 +14071,13 @@ begin
     wbNoGitHubCheck := cbNoGitHubCheck.Checked;
     wbNoNexusModsCheck := cbNoNexusModsCheck.Checked;
     wbTrackAllEditorID := cbTrackAllEditorID.Checked;
-    wbCurrentContext.UDRSetXESP := cbUDRSetXESP.Checked;
-    wbCurrentContext.UDRSetScale := cbUDRSetScale.Checked;
-    wbCurrentContext.UDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, wbUDRSetScaleValue);
-    wbCurrentContext.UDRSetZ := cbUDRSetZ.Checked;
-    wbCurrentContext.UDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, wbUDRSetZValue);
-    wbCurrentContext.UDRSetMSTT := cbUDRSetMSTT.Checked;
-    wbCurrentContext.UDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, wbUDRSetMSTTValue);
+    xeContext.Settings.UDRSetXESP := cbUDRSetXESP.Checked;
+    xeContext.Settings.UDRSetScale := cbUDRSetScale.Checked;
+    xeContext.Settings.UDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, xeContext.Settings.UDRSetScaleValue);
+    xeContext.Settings.UDRSetZ := cbUDRSetZ.Checked;
+    xeContext.Settings.UDRSetZValue := StrToFloatDef(edUDRSetZValue.Text, xeContext.Settings.UDRSetZValue);
+    xeContext.Settings.UDRSetMSTT := cbUDRSetMSTT.Checked;
+    xeContext.Settings.UDRSetMSTTValue := StrToInt64Def('$' + edUDRSetMSTTValue.Text, xeContext.Settings.UDRSetMSTTValue);
 
     if PatronSet then
       ShowDeveloperMessage(True);
@@ -14087,17 +14086,17 @@ begin
     SaveFont(Settings, 'UI', 'FontMessages', mmoMessages.Font);
     SaveFont(Settings, 'UI', 'FontViewer', pnlFontViewer.Font);
     Settings.WriteBool('Options', 'ShowUnsavedHint', ShowUnsavedHint);
-    if not wbTranslationMode then begin
+    if not xeContext.Settings.TranslationMode then begin
       Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
       Settings.WriteBool('Options', 'HideIgnored', wbHideIgnored);
       Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
     end;
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
-    Settings.WriteBool('Options', 'LoadBSAs', wbLoadBSAs);
+    Settings.WriteBool('Options', 'LoadBSAs', xeContext.Settings.LoadBSAs);
     Settings.WriteBool('Options', 'SortFLST2', wbSortFLST);
-    Settings.WriteBool('Options', 'SortINFO', wbSortINFO);
-    Settings.WriteBool('Options', 'FillPNAM', wbFillPNAM);
-    Settings.WriteBool('Options', 'WriteOffsetData2', wbWriteOffsetData);
+    Settings.WriteBool('Options', 'SortINFO', xeContext.Settings.SortINFO);
+    Settings.WriteBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
+    Settings.WriteBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
     Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
@@ -14107,13 +14106,13 @@ begin
     Settings.WriteInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
     Settings.WriteBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes);{changed name to enforce new default value}
-    Settings.WriteBool('Options', 'ClampFormID', wbClampFormID);
-    Settings.WriteBool('Options', 'ResetModifiedOnSave', wbResetModifiedOnSave);
-    Settings.WriteBool('Options', 'AlwaysSaveOnam', wbAlwaysSaveOnam or wbAlwaysSaveOnamForce);
+    Settings.WriteBool('Options', 'ClampFormID', xeContext.Settings.ClampFormID);
+    Settings.WriteBool('Options', 'ResetModifiedOnSave', xeContext.Settings.ResetModifiedOnSave);
+    Settings.WriteBool('Options', 'AlwaysSaveOnam', xeContext.Settings.AlwaysSaveOnam or xeContext.Settings.AlwaysSaveOnamForce);
     Settings.WriteBool('Options', 'AlignArrayElements', wbAlignArrayElements);
     Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
     Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
-    Settings.WriteBool('Options', 'ConvertIntFormID', wbConvertIntFormID);
+    Settings.WriteBool('Options', 'ConvertIntFormID', xeContext.Settings.ConvertIntFormID);
     Settings.WriteBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
     Settings.WriteBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
     Settings.WriteBool('Options', 'CollapseModels', wbCollapseModels);
@@ -14187,13 +14186,13 @@ begin
     Settings.WriteBool('Options', 'Patron', wbPatron);
     Settings.WriteBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
     Settings.WriteBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
-    Settings.WriteBool('Options', 'UDRSetXESP', wbUDRSetXESP);
-    Settings.WriteBool('Options', 'UDRSetScale', wbUDRSetScale);
-    Settings.WriteFloat('Options', 'UDRSetScaleValue', wbUDRSetScaleValue);
-    Settings.WriteBool('Options', 'UDRSetZ', wbUDRSetZ);
-    Settings.WriteFloat('Options', 'UDRSetZValue', wbUDRSetZValue);
-    Settings.WriteBool('Options', 'UDRSetMSTT', wbUDRSetMSTT);
-    Settings.WriteInteger('Options', 'UDRSetMSTTValue', wbUDRSetMSTTValue);
+    Settings.WriteBool('Options', 'UDRSetXESP', xeContext.Settings.UDRSetXESP);
+    Settings.WriteBool('Options', 'UDRSetScale', xeContext.Settings.UDRSetScale);
+    Settings.WriteFloat('Options', 'UDRSetScaleValue', xeContext.Settings.UDRSetScaleValue);
+    Settings.WriteBool('Options', 'UDRSetZ', xeContext.Settings.UDRSetZ);
+    Settings.WriteFloat('Options', 'UDRSetZValue', xeContext.Settings.UDRSetZValue);
+    Settings.WriteBool('Options', 'UDRSetMSTT', xeContext.Settings.UDRSetMSTT);
+    Settings.WriteInteger('Options', 'UDRSetMSTTValue', xeContext.Settings.UDRSetMSTTValue);
     for ct := Low(TConflictThis) to High(TConflictThis) do
       Settings.WriteInteger('ColorConflictThis', GetEnumName(TypeInfo(TConflictThis), Integer(ct)), Integer(wbColorConflictThis[ct]));
     for ca := Low(TConflictAll) to High(TConflictAll) do
@@ -14224,7 +14223,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -14247,7 +14246,7 @@ var
   p       : string;
   Element : IwbElement;
 begin
-  Assert(wbLoaderDone);
+  Assert(xeContext.LoaderDone);
 
   SetLength(Result, 0);
   l := 0;
@@ -14277,7 +14276,7 @@ end;
 
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 begin
-  Assert(wbLoaderDone);
+  Assert(xeContext.LoaderDone);
   Result := wbConflictNodeDatasForMainRecord(aMainRecord, Files, ConflictPolicy);
 end;
 
@@ -14511,7 +14510,7 @@ begin
         MenuItem := TMenuItem.Create(mniMainLocalizationLanguage);
         MenuItem.Caption := sl[i];
         MenuItem.RadioItem := true;
-        if SameText(sl[i], wbLanguage) then
+        if SameText(sl[i], xeContext.Settings.Language) then
           MenuItem.Checked := true;
         MenuItem.OnClick := mniMainLocalizationLanguageClick;
         mniMainLocalizationLanguage.Add(MenuItem);
@@ -14521,7 +14520,7 @@ begin
     end;
   end;
 
-  mniMainPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(wbDataPath + 'xEdit\xEditLink.ini');
+  mniMainPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini');
   if wbGameMode <> gmTES4 then
     mniMainPluggyLink.Caption := 'GameLink';
   mniMainPluggyLink.Checked := PluggyLinkState <> plsNone;
@@ -14533,12 +14532,12 @@ begin
   mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
   mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
 
-  mniMainSave.Visible := wbEditAllowed and not wbDontSave;
+  mniMainSave.Visible := xeContext.Settings.EditAllowed and not xeContext.Settings.DontSave;
 end;
 
 procedure TfrmMain.pmuNavHeaderPopupPopup(Sender: TObject);
 begin
-  mniNavHeaderINFO.Visible := wbSortINFO;
+  mniNavHeaderINFO.Visible := xeContext.Settings.SortINFO;
 end;
 
 procedure TfrmMain.pmuNavPopup(Sender: TObject);
@@ -14568,8 +14567,8 @@ begin
   mniNavHidden.Checked := Assigned(Element) and (esHidden in Element.ElementStates);
 
   mniNavChangeFormID.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     Assigned(Element) and
     (Element.ElementType = etMainRecord) and
     ((Element as IwbMainRecord).Signature <> 'TES4') and
@@ -14580,8 +14579,8 @@ begin
 //        {(Signature <> 'CELL') and (Signature <> 'WRLD') {and (Signature <> 'DIAL')};
 
   mniNavRenumberFormIDsFrom.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     Assigned(Element) and
     (Element.ElementType = etFile) and
     Element.IsEditable;
@@ -14598,15 +14597,15 @@ begin
     (_File.MasterCount[True] > 0);
 
   mniNavChangeReferencingRecords.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     Assigned(Element) and
     (Element.ElementType = etMainRecord) and
     ((Element as IwbMainRecord).MasterOrSelf.ReferencedByCount > 0);
 
   mniNavCheckForErrors.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     Assigned(Element);
 
   mniNavCheckForCircularLeveledLists.Visible :=
@@ -14639,16 +14638,16 @@ begin
   end;
 
   mniNavRemove.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     (Length(RemovableSelection(nil)) > 0);
   mniNavMarkModified.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     (Length(EditableSelection(nil)) > 0);
 
   mniNavCompareTo.Visible := Supports(Element, IwbFile);
-  mniNavCreateDeltaPatch.Visible := not wbTranslationMode and Supports(Element, IwbFile);
+  mniNavCreateDeltaPatch.Visible := not xeContext.Settings.TranslationMode and Supports(Element, IwbFile);
   mniNavAddMasters.Visible := mniNavCheckForErrors.Visible and Supports(Element, IwbFile);
   mniNavSortMasters.Visible := mniNavAddMasters.Visible;
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
@@ -14661,7 +14660,7 @@ begin
 
   var lItemCount := 0;
   var lAddToMni := mniNavAdd;
-  if not wbTranslationMode and wbEditAllowed then
+  if not xeContext.Settings.TranslationMode and xeContext.Settings.EditAllowed then
     if Supports(Element, IwbContainerElementRef, Container) then
       if Container.IsElementEditable(nil) then begin
         AddList := Container.GetAddList;
@@ -14806,7 +14805,7 @@ begin
     mniNavLogAnalyzer.Add(MenuItem);
   end;
 
-  mniNavCreateMergedPatch.Visible := not wbTranslationMode and wbEditAllowed;
+  mniNavCreateMergedPatch.Visible := not xeContext.Settings.TranslationMode and xeContext.Settings.EditAllowed;
 end;
 
 procedure TfrmMain.pmuRefByPopup(Sender: TObject);
@@ -14821,8 +14820,8 @@ begin
   Selected := GetRefBySelectionAsMainRecords;
 
   mniRefByCopyOverrideInto.Visible :=
-    not wbTranslationMode and
-    wbEditAllowed and
+    not xeContext.Settings.TranslationMode and
+    xeContext.Settings.EditAllowed and
     (Length(Selected) > 0);
   mniRefByCopyOverrideIntoWithOverwriting.Visible := mniRefByCopyOverrideInto.Visible;
   mniRefByDeepCopyOverrideInto.Visible := mniRefByCopyOverrideInto.Visible and ByRefSelectionIncludesAnyDeepCopyRecords(Selected);
@@ -14839,9 +14838,9 @@ begin
   mniRefByVWD.Visible := False;
   mniRefByNotVWD.Visible := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   if Length(Selected) < 1 then
@@ -14909,9 +14908,9 @@ begin
   mniViewHeaderRemove.Visible := False;
   mniViewHeaderHidden.Visible := False;
   mniViewHeaderJumpTo.Visible := False;
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
   Column := vstView.Header.Columns.PopupIndex;
   if Column < 1 then
@@ -14989,7 +14988,7 @@ begin
   mniViewCopyMultipleToSelectedRecords.Visible := False;
   mniViewCompareReferencedRow.Visible := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   if Length(ActiveRecords) < 1 then
@@ -15020,22 +15019,22 @@ begin
     if Assigned(NodeDatas) then begin
       Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       mniViewEdit.Visible := Assigned(Element) and Element.IsEditable;
-      mniViewSetToDefault.Visible := not wbTranslationMode and Assigned(Element) and Element._File.IsEditable and
+      mniViewSetToDefault.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element._File.IsEditable and
         (Supports(Element.ValueDef, IwbStructDef, StructDef) and (StructDef.OptionalFromElement <> -1));
-      mniViewRemove.Visible := not wbTranslationMode and Assigned(Element) and Element.IsRemovable;
-      mniViewClear.Visible := not wbTranslationMode and Assigned(Element) and Element.IsClearable;
-      mniViewMoveUp.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveUp;
-      mniViewMoveDown.Enabled := not wbTranslationMode and Assigned(Element) and Element.CanMoveDown;
+      mniViewRemove.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.IsRemovable;
+      mniViewClear.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.IsClearable;
+      mniViewMoveUp.Enabled := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.CanMoveUp;
+      mniViewMoveDown.Enabled := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.CanMoveDown;
       mniViewMoveUp.Visible := mniViewMoveUp.Enabled or mniViewMoveDown.Enabled;
       mniViewMoveDown.Visible := mniViewMoveUp.Visible;
-      mniViewRemoveFromSelected.Visible := not wbTranslationMode and mniViewRemove.Visible and ComparingSiblings;
-      mniViewCopyMultipleToSelectedRecords.Visible := not wbTranslationMode and ComparingSiblings;
+      mniViewRemoveFromSelected.Visible := not xeContext.Settings.TranslationMode and mniViewRemove.Visible and ComparingSiblings;
+      mniViewCopyMultipleToSelectedRecords.Visible := not xeContext.Settings.TranslationMode and ComparingSiblings;
       mniViewCopyToSelectedRecords.Visible := mniViewCopyMultipleToSelectedRecords.Visible and Assigned(Element);
-      mniViewCompareReferencedRow.Visible := not wbTranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
-      mniViewNextMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
-      mniViewPreviousMember.Visible := not wbTranslationMode and Assigned(Element) and Element.CanChangeMember;
+      mniViewCompareReferencedRow.Visible := not xeContext.Settings.TranslationMode and (Length(GetUniqueLinksTo(NodeDatas, Length(ActiveRecords))) > 1);
+      mniViewNextMember.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.CanChangeMember;
+      mniViewPreviousMember.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.CanChangeMember;
     end;
-    mniViewAdd.Visible := not wbTranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
+    mniViewAdd.Visible := not xeContext.Settings.TranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
       TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
   end;
 
@@ -15129,7 +15128,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
@@ -15190,9 +15189,9 @@ begin
   if Assigned(ContainsChilds) then
     ContainsChilds^ := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
-  if wbTranslationMode then
+  if xeContext.Settings.TranslationMode then
     Exit;
 
   Result := vstNav.GetSortedSelection(True);
@@ -15420,7 +15419,7 @@ const
 begin
   Result := srNothingToDo;
 
-  if wbDontSave then
+  if xeContext.Settings.DontSave then
     Exit;
 
   FoundSomething := False;
@@ -15491,21 +15490,21 @@ begin
               _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
               s := _LFile.FileName;
               NeedsRename := FileExists(s);
-              s := Copy(s, length(wbDataPath) + 1, length(s)); // relative path to string file from Data folder
+              s := Copy(s, length(xeContext.Settings.DataPath) + 1, length(s)); // relative path to string file from Data folder
               u := s;
               if NeedsRename then
                 s := s + t;
 
               try
-                ForceDirectories(ExtractFilePath(wbDataPath + s));
+                ForceDirectories(ExtractFilePath(xeContext.Settings.DataPath + s));
                 if NeedsRename then begin
                   j := 0;
-                  while FileExists(wbDataPath + s) do begin
+                  while FileExists(xeContext.Settings.DataPath + s) do begin
                     Inc(j);
                     s := u + t + '_' + j.ToString;
                   end;
                 end;
-                FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024*1024);
+                FileStream := TBufferedFileStream.Create(xeContext.Settings.DataPath + s, fmCreate, 1024*1024);
                 try
                   PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
                   _LFile.WriteToStream(FileStream);
@@ -15535,22 +15534,22 @@ begin
 
               s := CheckListBox1.Items[i];
               u := s;
-              NeedsRename := FileExists(wbDataPath + CheckListBox1.Items[i]);
+              NeedsRename := FileExists(xeContext.Settings.DataPath + CheckListBox1.Items[i]);
               if NeedsRename then begin
                 s := s + t;
                 j := 0;
-                while FileExists(wbDataPath + s) do begin
+                while FileExists(xeContext.Settings.DataPath + s) do begin
                   Inc(j);
                   s := u + t + '_' + j.ToString;
                 end;
               end;
 
               CRC := _File.CRC32;
-              FileStream := TBufferedFileStream.Create(wbDataPath + s, fmCreate, 1024 * 1024);
+              FileStream := TBufferedFileStream.Create(xeContext.Settings.DataPath + s, fmCreate, 1024 * 1024);
               try
                 try
                   PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
-                  _File.WriteToStream(FileStream, ResetModifiedFromBool[wbResetModifiedOnSave]);
+                  _File.WriteToStream(FileStream, ResetModifiedFromBool[xeContext.Settings.ResetModifiedOnSave]);
                   SavedThisOne := True;
                   if not (fsMemoryMapped in _File.FileStates) then
                     TryDirectRename := True;
@@ -15560,7 +15559,7 @@ begin
 
                 if NeedsRename then
                   if CRC = _File.CRC32 then begin
-                    System.SysUtils.DeleteFile(wbDataPath + s);
+                    System.SysUtils.DeleteFile(xeContext.Settings.DataPath + s);
                     NeedsRename := False;
                     TryDirectRename := False;
                     SavedThisOne := False;
@@ -15571,7 +15570,7 @@ begin
                   SavedAny := True;
               except
                 on E: Exception do begin
-                  System.SysUtils.DeleteFile(wbDataPath + s);
+                  System.SysUtils.DeleteFile(xeContext.Settings.DataPath + s);
                   AnyErrors := True;
                   NeedsRename := False;
                   PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
@@ -15595,7 +15594,7 @@ begin
                 // s - rename from, relative to DataPath
                 // u - rename to, relative to DataPath
                 FilesToRename.AddPair(u, s);
-                wbProgress('Queued renaming of save "' + wbDataPath + s + '" to "' + wbDataPath + u + '" on shutdown.');
+                wbProgress('Queued renaming of save "' + xeContext.Settings.DataPath + s + '" to "' + xeContext.Settings.DataPath + u + '" on shutdown.');
               end else begin
                 if Assigned(FilesToRename) then
                   for j := Pred(FilesToRename.Count) downto 0 do begin
@@ -15607,10 +15606,10 @@ begin
                           wbProgress('* Backups are disabled! *');
                           wbProgress('******** WARNING ********');
                         end;
-                        wbProgress('Removing previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
-                        System.SysUtils.DeleteFile(wbDataPath + s);
+                        wbProgress('Removing previously queued save "' + xeContext.Settings.DataPath + s + '" as a direct save to "' + xeContext.Settings.DataPath + u + '" has succeeded.');
+                        System.SysUtils.DeleteFile(xeContext.Settings.DataPath + s);
                       end else begin
-                        wbProgress('Backing up previously queued save "' + wbDataPath + s + '" as a direct save to "' + wbDataPath + u + '" has succeeded.');
+                        wbProgress('Backing up previously queued save "' + xeContext.Settings.DataPath + s + '" as a direct save to "' + xeContext.Settings.DataPath + u + '" has succeeded.');
                         DoBackupModule(s, u, aSilent);
                       end;
                       FilesToRename.Delete(j);
@@ -15856,7 +15855,7 @@ begin
         bnPinned.Enabled := True;
         ActiveMaster := nil;
 
-        if wbLoaderDone then begin
+        if xeContext.LoaderDone then begin
           ActiveRecords := NodeDatasForContainer(ActiveContainer);
         end else begin
           SetLength(ActiveRecords, 1);
@@ -15938,7 +15937,7 @@ begin
         vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
-    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Items.Count > 0);
+    tbsReferencedBy.TabVisible := xeContext.LoaderDone and (lvReferencedBy.Items.Count > 0);
     UpdateReferencedByTabCaption;
   finally
     lvReferencedBy.Items.EndUpdate;
@@ -16102,7 +16101,7 @@ begin
       IsESM := True;
       Result := True;
     end else begin
-      if wbMasterUpdateFilterONAM and (MasterCount[True] > 0) then
+      if xeContext.Settings.MasterUpdateFilterONAM and (MasterCount[True] > 0) then
         Elements[0].MarkModifiedRecursive(AllElementTypes);
     end;
 end;
@@ -16273,12 +16272,12 @@ begin
       if Assigned(ActiveRecord) then begin
         bnPinned.Enabled := True;
         ActiveMaster := nil;
-        if wbLoaderDone then
+        if xeContext.LoaderDone then
           ActiveMaster := ActiveRecord.MasterOrSelf
         else
           ActiveMaster := ActiveRecord;
 
-        if wbLoaderDone then begin
+        if xeContext.LoaderDone then begin
           ActiveRecords := NodeDatasForMainRecord(ActiveRecord);
         end else begin
           SetLength(ActiveRecords, 1);
@@ -16371,7 +16370,7 @@ begin
         vstView.ScrollIntoView(vstView.FocusedColumn, False);
     end;
 
-    if wbLoaderDone and Assigned(ActiveMaster) {$IFDEF USE_PARALLEL_BUILD_REFS}and not wbBuildingRefsParallel{$ENDIF} then begin
+    if xeContext.LoaderDone and Assigned(ActiveMaster) {$IFDEF USE_PARALLEL_BUILD_REFS}and not xeContext.BuildingRefsParallel{$ENDIF} then begin
       lvReferencedBy.Tag := ActiveMaster.ReferencedByCount;
       if pgMain.ActivePage = tbsReferencedBy then begin
         PopulateReferencedByListData(ActiveMaster);
@@ -16381,7 +16380,7 @@ begin
       lvReferencedBy.Tag := 0;
 
     var lCurrentPage := pgMain.ActivePage;
-    tbsReferencedBy.TabVisible := wbLoaderDone and (lvReferencedBy.Tag > 0);
+    tbsReferencedBy.TabVisible := xeContext.LoaderDone and (lvReferencedBy.Tag > 0);
     if lCurrentPage = tbsReferencedBy then
       pgMain.ActivePage := tbsReferencedBy;
     UpdateReferencedByTabCaption;
@@ -16710,7 +16709,7 @@ var
   slKeywords                  : TwbFastStringListCS;
   arKeywords                  : TDynMainRecords;
 begin
-  if not wbLoaderDone then
+  if not xeContext.LoaderDone then
     Exit;
 
   arKeywords := nil;
@@ -17021,7 +17020,7 @@ begin
       aFileCRC := Cardinal(FileCRCs.Objects[i])
     else begin
       try
-        aFileCRC := TwbHash.CRC32(wbDataPath + aFileName);
+        aFileCRC := TwbHash.CRC32(xeContext.Settings.DataPath + aFileName);
       except
         aFileCRC := 0;
       end;
@@ -17041,7 +17040,7 @@ var
   sl                          : TStringList;
   FoundExpired                : Boolean;
 begin
-  if not wbLoaderDone then
+  if not xeContext.LoaderDone then
     Exit;
 
   if UserWasActive then begin
@@ -17071,7 +17070,7 @@ begin
   if not pnlClient.Enabled then
     Exit;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   if wbToolMode in wbAutoModes then
@@ -17220,11 +17219,11 @@ begin
   end;
 
   if (wbToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
-        tmCheckForDR, tmCheckForErrors]) and wbLoaderDone and not xeMasterUpdateDone then begin
+        tmCheckForDR, tmCheckForErrors]) and xeContext.LoaderDone and not xeMasterUpdateDone then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
-    if wbLoaderError then begin
-      wbCurrentContext.DontSave := True;
+    if xeContext.LoaderError then begin
+      xeContext.Settings.DontSave := True;
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while loading your active modules.');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
@@ -17277,7 +17276,7 @@ begin
           end else
             CheckResult := 255;
         finally
-          wbCurrentContext.DontSave := True;
+          xeContext.Settings.DontSave := True;
         end;
       end else if wbToolMode = tmMasterUpdate then
         ChangesMade := SetAllToMaster
@@ -17307,7 +17306,7 @@ begin
           AutoDone := true;
 
     except
-      wbCurrentContext.DontSave := True;
+      xeContext.Settings.DontSave := True;
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] --= Error =--');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] An error occured while trying to modify the file or saving the modified files.');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Please look at the log above to determine which of your modules caused that problem.');
@@ -17826,7 +17825,7 @@ var
   NodeDatas                   : PViewNodeDatas;
 begin
   Allowed := False;
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
   if Column < 1 then
     Exit;
@@ -17843,7 +17842,7 @@ procedure TfrmMain.vstViewDragDrop(Sender: TBaseVirtualTree; Source: TObject;
 var
   SourceElement               : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   UserWasActive := True;
@@ -17864,7 +17863,7 @@ var
 begin
   Accept := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   TargetNode := Sender.DropTargetNode;
@@ -17927,7 +17926,7 @@ procedure TfrmMain.vstViewEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; 
 begin
   Allowed := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   if Column < 1 then
@@ -18265,7 +18264,7 @@ var
 begin
   Handled := True;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   UserWasActive := True;
@@ -18447,7 +18446,7 @@ begin
 
     case Key of
       VK_INSERT: begin
-        if not wbEditAllowed then
+        if not xeContext.Settings.EditAllowed then
           Exit;
 
         pmuViewPopup(nil);
@@ -18458,7 +18457,7 @@ begin
         end;
       end;
       VK_UP: begin
-        if not wbEditAllowed then
+        if not xeContext.Settings.EditAllowed then
           Exit;
 
         LockProcessMessages;
@@ -18476,7 +18475,7 @@ begin
         end;
       end;
       VK_DOWN: begin
-        if not wbEditAllowed then
+        if not xeContext.Settings.EditAllowed then
           Exit;
 
         LockProcessMessages;
@@ -18506,7 +18505,7 @@ begin
     if not Element.IsEditable then
       Exit;
 
-    if not wbEditAllowed then
+    if not xeContext.Settings.EditAllowed then
       Exit;
 
     case Key of
@@ -18598,7 +18597,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   UserWasActive := True;
@@ -18753,7 +18752,7 @@ var
   NodeData                    : PNavNodeData;
   MainRecord                  : IwbMainRecord;
 begin
-  if wbLoaderDone then begin
+  if xeContext.LoaderDone then begin
     NodeData := Sender.GetNodeData(Node);
 
     if Assigned(NodeData) and Assigned(NodeData.Element) and
@@ -19027,7 +19026,7 @@ begin
           end;
           if Result = 0 then begin
             Result := CmpI32(MainRecord1.SortPriority, MainRecord2.SortPriority);
-            if wbSortINFO and mniNavHeaderINFObyPreviousINFO.Checked and (MainRecord1.Signature = 'INFO') and (MainRecord2.Signature = 'INFO') then begin
+            if xeContext.Settings.SortINFO and mniNavHeaderINFObyPreviousINFO.Checked and (MainRecord1.Signature = 'INFO') and (MainRecord2.Signature = 'INFO') then begin
               if Supports(MainRecord1.Container, IwbGroupRecord, GroupRecord1) then
                 GroupRecord1.Sort;
               Result := CmpW32(MainRecord1.SortOrder, MainRecord2.SortOrder);
@@ -19142,7 +19141,7 @@ begin
         MainRecord := Element as IwbMainRecord;
         case Column of
           -1, 0: begin
-              if MainRecord.Signature = wbHeaderSignature then
+              if MainRecord.Signature = xeContext.GameDefObj.HeaderSignature then
                 CellText := 'File Header'
               else begin
                 CellText := MainRecord.LoadOrderFormID.ToString(True);
@@ -19505,8 +19504,8 @@ begin
     if Assigned(Container) then
       ContainerGen := Container.ElementGeneration;
 
-    if wbLoaderDone and
-      wbTranslationMode and
+    if xeContext.LoaderDone and
+      xeContext.Settings.TranslationMode and
       Assigned(Element) and
       (InitialStates * [ivsHidden, ivsHasChildren] = []) and
       (Element.ElementType = etMainRecord) then begin
@@ -19548,7 +19547,7 @@ var
   Chapter    : IwbChapter;
   _File      : IwbFile;
 begin
-  if wbLoaderDone then
+  if xeContext.LoaderDone then
     case Key of
       VK_DELETE: begin
         pmuNavPopup(nil);
@@ -19708,7 +19707,7 @@ begin
     if NodeData.Element.ElementType = etMainRecord then begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
-      if wbLoaderDone then
+      if xeContext.LoaderDone then
         if (NodeData.ConflictThis = ctUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           with NodeData^ do begin
@@ -19731,7 +19730,7 @@ begin
         end;
 
       if Column = 0 then
-        if MainRecord.Signature <> wbHeaderSignature then
+        if MainRecord.Signature <> xeContext.GameDefObj.HeaderSignature then
           if MonospaceFontName <> '' then
             TargetCanvas.Font.Name := MonospaceFontName;
     end else if NodeData.Element.ElementType = etFile then begin
@@ -19740,7 +19739,7 @@ begin
           TargetCanvas.Font.Name := MonospaceFontName;
     end;
 
-    if wbLoaderDone then begin
+    if xeContext.LoaderDone then begin
       if NodeData.Element.Modified then
         TargetCanvas.Font.Style := [fsBold];
       if nnfInjected in NodeData.Flags then
@@ -19758,7 +19757,7 @@ begin
     end;
   end;
 
-  if wbLoaderDone then
+  if xeContext.LoaderDone then
     TargetCanvas.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
 end;
 
@@ -19846,7 +19845,7 @@ var
   NodeDatas                   : PSpreadSheetNodeDatas;
 begin
   Allowed := False;
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
   if Column < Sender.Tag then
     Exit;
@@ -19860,7 +19859,7 @@ var
   TargetElement               : IwbElement;
   SourceElement               : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
   if Source <> Sender then
     Exit;
@@ -19903,7 +19902,7 @@ var
   SourceElement               : IwbElement;
 begin
   Accept := True;
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
   if Source <> Sender then
     Exit;
@@ -19941,7 +19940,7 @@ var
 begin
   Allowed := False;
 
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   if Column < Sender.Tag then
@@ -20092,7 +20091,7 @@ var
   NodeDatas                   : PSpreadSheetNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   if Column < Sender.Tag then
@@ -20240,7 +20239,7 @@ var
   NodeDatas                   : PSpreadSheetNodeDatas;
   Element                     : IwbElement;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
 
   UserWasActive := True;
@@ -20334,23 +20333,23 @@ begin
         lHeader.Add('#   OnlyShowMasterAndLeafs = ' + BoolToStr(OnlyShowMasterAndLeafs, True));
         lHeader.Add('#   wbAlignArrayElements = ' + BoolToStr(wbAlignArrayElements, True));
         lHeader.Add('#   wbAlignArrayLimit    = ' + IntToStr(wbAlignArrayLimit));
-        lHeader.Add('#   wbBuildRefs          = ' + BoolToStr(wbBuildRefs, True));
-        lHeader.Add('#   wbCompareRawData     = ' + BoolToStr(wbCompareRawData, True));
-        lHeader.Add('#   wbTranslationMode    = ' + BoolToStr(wbTranslationMode, True));
-        lHeader.Add('#   wbLoadBSAs           = ' + BoolToStr(wbLoadBSAs, True));
-        lHeader.Add('#   wbLoaderDone         = ' + BoolToStr(wbLoaderDone, True));
+        lHeader.Add('#   wbBuildRefs          = ' + BoolToStr(xeContext.Settings.BuildRefs, True));
+        lHeader.Add('#   wbCompareRawData     = ' + BoolToStr(xeContext.Settings.CompareRawData, True));
+        lHeader.Add('#   wbTranslationMode    = ' + BoolToStr(xeContext.Settings.TranslationMode, True));
+        lHeader.Add('#   wbLoadBSAs           = ' + BoolToStr(xeContext.Settings.LoadBSAs, True));
+        lHeader.Add('#   wbLoaderDone         = ' + BoolToStr(xeContext.LoaderDone, True));
         lHeader.Add('#   xeQuickShowConflicts = ' + BoolToStr(xeQuickShowConflicts, True));
         lHeader.Add('#   wbActorTemplateHide  = ' + BoolToStr(wbActorTemplateHide, True));
         lHeader.Add('#   wbAllowInternalEdit  = ' + BoolToStr(wbAllowInternalEdit, True));
-        lHeader.Add('#   wbCanSortINFO        = ' + BoolToStr(wbCanSortINFO, True));
+        lHeader.Add('#   wbCanSortINFO        = ' + BoolToStr(xeContext.Settings.CanSortINFO, True));
         lHeader.Add('#   wbDecodeTextureHashes = ' + BoolToStr(wbDecodeTextureHashes, True));
         lHeader.Add('#   wbDisplayLoadOrderFormID = ' + BoolToStr(wbDisplayLoadOrderFormID, True));
         lHeader.Add('#   wbDisplayShorterNames = ' + BoolToStr(wbDisplayShorterNames, True));
-        lHeader.Add('#   wbEditAllowed        = ' + BoolToStr(wbEditAllowed, True));
-        lHeader.Add('#   wbFillINOA           = ' + BoolToStr(wbFillINOA, True));
-        lHeader.Add('#   wbFillINOM           = ' + BoolToStr(wbFillINOM, True));
-        lHeader.Add('#   wbFillPNAM           = ' + BoolToStr(wbFillPNAM, True));
-        lHeader.Add('#   wbFlagsAsArray       = ' + BoolToStr(wbFlagsAsArray, True));
+        lHeader.Add('#   wbEditAllowed        = ' + BoolToStr(xeContext.Settings.EditAllowed, True));
+        lHeader.Add('#   wbFillINOA           = ' + BoolToStr(xeContext.Settings.FillINOA, True));
+        lHeader.Add('#   wbFillINOM           = ' + BoolToStr(xeContext.Settings.FillINOM, True));
+        lHeader.Add('#   wbFillPNAM           = ' + BoolToStr(xeContext.Settings.FillPNAM, True));
+        lHeader.Add('#   wbFlagsAsArray       = ' + BoolToStr(xeContext.Settings.FlagsAsArray, True));
         lHeader.Add('#   wbHideIgnored        = ' + BoolToStr(wbHideIgnored, True));
         lHeader.Add('#   wbHideLargeSubrecords = ' + BoolToStr(wbHideLargeSubrecords, True));
         lHeader.Add('#   wbHideNeverShow      = ' + BoolToStr(wbHideNeverShow, True));
@@ -20358,8 +20357,8 @@ begin
         lHeader.Add('#   wbShowFlagEnumValue  = ' + BoolToStr(wbShowFlagEnumValue, True));
         lHeader.Add('#   wbSimpleRecords      = ' + BoolToStr(wbSimpleRecords, True));
         lHeader.Add('#   wbSortFLST           = ' + BoolToStr(wbSortFLST, True));
-        lHeader.Add('#   wbSortINFO           = ' + BoolToStr(wbSortINFO, True));
-        lHeader.Add('#   wbSortSubRecords     = ' + BoolToStr(wbSortSubRecords, True));
+        lHeader.Add('#   wbSortINFO           = ' + BoolToStr(xeContext.Settings.SortINFO, True));
+        lHeader.Add('#   wbSortSubRecords     = ' + BoolToStr(xeContext.Settings.SortSubRecords, True));
         lHeader.Add('#');
         lHeader.Add('# Loaded modules, and for each one whether it carries a compare to file.');
         lHeader.Add('#');
@@ -20531,7 +20530,7 @@ end;
 
 procedure TfrmMain.DoTestNavCopy;
 begin
-  wbCurrentContext.DontSave := True;
+  xeContext.Settings.DontSave := True;
   EditWarnOk := True;
   TestNavCopyRows := TStringList.Create;
   TestNavCopyPhase := 0;
@@ -20685,7 +20684,7 @@ var
   lRecordC    : IwbMainRecord;
   lNode       : PVirtualNode;
 begin
-  if not wbEditAllowed then
+  if not xeContext.Settings.EditAllowed then
     raise Exception.Create('editing is not allowed in this run');
 
   lGameMaster := nil;
@@ -20774,7 +20773,7 @@ begin
   AddMessage(Format('[Test Nav Copy] %d QUST records copied as new into %s and overridden with a changed FULL and priority in %s and again in %s',
     [Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName, TestNavCopyFileB.FileName, TestNavCopyFileC.FileName]));
   if xeTestNavCopySave then begin
-    wbCurrentContext.DontSave := False;
+    xeContext.Settings.DontSave := False;
     AddMessage('[Test Nav Copy] the fixture will be saved on shutdown; no copy in this run');
     CheckResult := 0;
     TestNavCopyWrite;
@@ -21043,7 +21042,7 @@ begin
   lNode := vstNav.GetFirstInitialized;
   while Assigned(lNode) do begin
     lNodeData := vstNav.GetNodeData(lNode);
-    if Assigned(lNodeData) and Supports(lNodeData.Element, IwbMainRecord, lRecord) and (lRecord.Signature <> wbHeaderSignature) then
+    if Assigned(lNodeData) and Supports(lNodeData.Element, IwbMainRecord, lRecord) and (lRecord.Signature <> xeContext.GameDefObj.HeaderSignature) then
       if lRecord._File.Equals(TestNavCopyFileA) or lRecord._File.Equals(TestNavCopyFileB) or lRecord._File.Equals(TestNavCopyFileC) then begin
         SetLength(lNodes, Succ(Length(lNodes)));
         lNodes[High(lNodes)] := lNode;
@@ -21204,7 +21203,7 @@ var
   WasUnsaved: Boolean;
 begin
   try
-    wbCurrentContext.LoaderDone := True;
+    xeContext.LoaderDone := True;
     wbStartTime := PDateTime(Message.WParam)^;
     LoadOrder := Message.LParam;
     if LoadOrder < 0 then begin
@@ -21219,7 +21218,7 @@ begin
           HideTip;
         end;
 
-        if wbLoaderError then begin
+        if xeContext.LoaderError then begin
           if xeTestConflicts or xeTestNavCopy then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
@@ -21278,10 +21277,10 @@ begin
 
         tmrCheckUnsaved.Enabled := True;
 
-        if wbFirstLoadComplete then
+        if xeContext.FirstLoadComplete then
           Exit;
 
-        wbCurrentContext.FirstLoadComplete := True;
+        xeContext.FirstLoadComplete := True;
 
         ModGroups := nil;
 
@@ -21504,7 +21503,7 @@ begin
       end;
 
       if xeTestConflicts then begin
-        if wbLoaderError then begin
+        if xeContext.LoaderError then begin
           wbProgress('Test Conflicts mode FAILED: an error occured while loading the compare to module');
           CheckResult := 255;
         end else
@@ -21514,7 +21513,7 @@ begin
       end;
     end;
   finally
-    if wbFirstLoadComplete then begin
+    if xeContext.FirstLoadComplete then begin
       vstNav.PopupMenu := pmuNav;
       bnMainMenu.Enabled := True;
     end;
@@ -21604,7 +21603,7 @@ begin
     Exit;
 
   FileID := FormID.FileID;
-  if wbIsLightSupported or wbPseudoLight or wbPseudoUpdate then begin
+  if wbIsLightSupported or xeContext.Settings.PseudoLight or xeContext.Settings.PseudoUpdate then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrderFileID = FileID then begin
@@ -21685,7 +21684,7 @@ end;
 
 constructor TLoaderThread.Create(var aList: TStringList; aFileStates: TwbFileStates = []);
 begin
-  ltDataPath := wbDataPath;
+  ltDataPath := xeContext.Settings.DataPath;
   ltMaster := '';
   ltLoadList := aList;
   aList := nil;
@@ -21776,8 +21775,8 @@ begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
         wbCurrentContext.LoaderError := True;
       end else} begin
-        if wbContainerHandler = nil then begin
-          wbCurrentContext.ContainerHandler := wbCreateContainerHandler;
+        if xeContext.ContainerHandler = nil then begin
+          xeContext.ContainerHandler := wbCreateContainerHandler;
 
           _LoaderProgressLastShown := Now;
           _LoaderProgressAction := 'loading resources';
@@ -21788,21 +21787,21 @@ begin
             var lNotFoundArchives := TStringList.Create;
             try
               bsaCount := 0;
-              if FileExists(wbTheGameIniFileName) then begin
-                if FileExists(wbCustomIniFileName) then
-                  bsaCount := FindBSAs(wbTheGameIniFileName, wbCustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
+              if FileExists(xeContext.Settings.TheGameIniFileName) then begin
+                if FileExists(xeContext.Settings.CustomIniFileName) then
+                  bsaCount := FindBSAs(xeContext.Settings.TheGameIniFileName, xeContext.Settings.CustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
                 else
-                  bsaCount := FindBSAs(wbTheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
+                  bsaCount := FindBSAs(xeContext.Settings.TheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
               end;
 
               if (bsaCount > 0) then begin
                 for var lFoundIdx := 0 to Pred(lFoundArchives.Count) do
-                  if wbLoadBSAs then begin
+                  if xeContext.Settings.LoadBSAs then begin
                     LoaderProgress('[' + lFoundArchives[lFoundIdx] + '] Loading Resources.');
-                    if wbArchiveExtension = '.bsa' then
-                      wbContainerHandler.AddBSA(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath))
-                    else if wbArchiveExtension = '.ba2' then begin
-                      var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath));
+                    if xeContext.GameDefObj.ArchiveExtension = '.bsa' then
+                      xeContext.ContainerHandler.AddBSA(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath))
+                    else if xeContext.GameDefObj.ArchiveExtension = '.ba2' then begin
+                      var lContainer := xeContext.ContainerHandler.AddBA2(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath));
                       var lBA2File: IwbBA2File;
                       if Supports(lContainer, IwbBA2File, lBA2File) then
                         LoaderProgress('[' + lFoundArchives[lFoundIdx] + '] Version: ' + lBA2File.Version.ToString);
@@ -21830,13 +21829,13 @@ begin
                 if HasBSAs(ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
                     gcArchiveExactNameMatch in wbCurrentCapabilities, gcArchivePrivateIni in wbCurrentCapabilities, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
                       for var lFoundPluginIdx := 0 to Pred(lFoundPluginArchives.Count) do
-                        if wbLoadBSAs then begin
+                        if xeContext.Settings.LoadBSAs then begin
                           LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Loading Resources.');
                           try
-                            if wbArchiveExtension = '.bsa' then
-                              wbContainerHandler.AddBSA(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath))
-                            else if wbArchiveExtension = '.ba2' then begin
-                              var lContainer := wbContainerHandler.AddBA2(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath));
+                            if xeContext.GameDefObj.ArchiveExtension = '.bsa' then
+                              xeContext.ContainerHandler.AddBSA(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath))
+                            else if xeContext.GameDefObj.ArchiveExtension = '.ba2' then begin
+                              var lContainer := xeContext.ContainerHandler.AddBA2(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath));
                               var lBA2File: IwbBA2File;
                               if Supports(lContainer, IwbBA2File, lBA2File) then
                                 LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Version: ' + lBA2File.Version.ToString);
@@ -21859,12 +21858,12 @@ begin
 
           end;
           LoaderProgress('[' + ltDataPath + '] Setting Resource Path.');
-          wbContainerHandler.AddFolder(ltDataPath);
+          xeContext.ContainerHandler.AddFolder(ltDataPath);
         end;
 
         if wbDecodeTextureHashes then begin
           LoaderProgress('Start building resources cache...');
-          wbContainerHandler.EnsureCache;
+          xeContext.ContainerHandler.EnsureCache;
           LoaderProgress('...resources cache finished building');
         end;
 
@@ -21913,7 +21912,7 @@ begin
             if not wbIsModule(ltLoadList[lLoadListIdx]) then
               if wbToolSource in [tsSaves] then
                 if not FileExists(s) then // Assume its a save in the save path
-                  s := wbSavePath + ltLoadList[lLoadListIdx];
+                  s := xeContext.Settings.SavePath + ltLoadList[lLoadListIdx];
           end;
           _File := wbFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
@@ -21943,10 +21942,10 @@ begin
           end;
         end;
 
-        if wbBuildRefs then begin
+        if xeContext.Settings.BuildRefs then begin
           _LoaderProgressAction := 'building references';
           {$IFDEF USE_PARALLEL_BUILD_REFS}
-          wbCurrentContext.BuildingRefsParallel := True;
+          xeContext.BuildingRefsParallel := True;
           try
             TParallel.&For(Low(ltFiles), High(ltFiles), procedure(lLoadListIdx: Integer)
             var
@@ -21970,12 +21969,12 @@ begin
                          (fsIsGameMaster in _File.FileStates)
                       then
                         OnlyLoad := True;
-                      if not (OnlyLoad and (wbDontCache or wbDontCacheLoad)) then begin
+                      if not (OnlyLoad and (xeContext.Settings.DontCache or xeContext.Settings.DontCacheLoad)) then begin
                         if OnlyLoad then
                           s := 'loading'
                         else begin
                           s := 'building';
-                          if not (wbDontCache or wbDontCacheLoad) then
+                          if not (xeContext.Settings.DontCache or xeContext.Settings.DontCacheLoad) then
                             s := 'loading or ' + s;
                         end;
                         LoaderProgress('[' + _File.FileName + '] Start ' + s + ' reference info.');
@@ -21999,10 +21998,10 @@ begin
                         wbForceTerminate := True;
                       on E: Exception do begin
                         LoaderProgressNoAbortCheck('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
-                        wbCurrentContext.LoaderError := True;
+                        xeContext.LoaderError := True;
                       end;
                     end;
-                    if wbLoaderError or wbForceTerminate then
+                    if xeContext.LoaderError or wbForceTerminate then
                       Exit;
                   end;
                 end;
@@ -22013,7 +22012,7 @@ begin
               end;
             end);
           finally
-            wbCurrentContext.BuildingRefsParallel := False;
+            xeContext.BuildingRefsParallel := False;
           end;
           {$ENDIF}
         end;
@@ -22024,7 +22023,7 @@ begin
         wbForceTerminate := True;
       on E: Exception do begin
         LoaderProgressNoAbortCheck('Fatal: <' + e.ClassName + ': ' + e.Message + '>');
-        wbCurrentContext.LoaderError := True;
+        xeContext.LoaderError := True;
       end;
     end;
   finally
@@ -22352,7 +22351,7 @@ procedure TPluggyLinkThread.Execute;
 var
   WaitHandle : THandle;
 begin
-  plFolder := wbMyGamesTheGamePath + 'Pluggy\User Files\';
+  plFolder := xeContext.Settings.MyGamesTheGamePath + 'Pluggy\User Files\';
   frmMain.PostAddMessage('[PluggyLink] Starting for: ' + plFolder);
   ChangeDetected;
   try
@@ -22529,7 +22528,7 @@ procedure TGameLinkThread.Execute;
 var
   WaitHandle : THandle;
 begin
-  glFolder := wbDataPath + 'xEdit\';
+  glFolder := xeContext.Settings.DataPath + 'xEdit\';
   frmMain.PostAddMessage('[GameLink] Starting for: ' + glFolder);
   ChangeDetected;
   try
@@ -22653,12 +22652,12 @@ const
   csCheckFor = 'property="twitter:label1" content="version"';
   csExtractAfter = 'property="twitter:data1" content="';
 begin
-  if wbNexusModsUrl = '' then
+  if xeContext.GameDefObj.NexusModsUrl = '' then
     Exit;
 
   vmax := '';
   try
-    s := GetUrlContent(wbNexusModsUrl);
+    s := GetUrlContent(xeContext.GameDefObj.NexusModsUrl);
     s := s.ToLowerInvariant;
     if s.Contains(csCheckFor) then begin
       i := Pos(csExtractAfter, s);

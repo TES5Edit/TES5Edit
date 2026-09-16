@@ -27,7 +27,6 @@ uses
   VirtualTrees,
 
   wbDataFormat,
-  wbGameDefGlobals,
   wbHelpers,
   wbInterface,
   wbLOD,
@@ -68,7 +67,7 @@ end;
 
 procedure _wbLoadBSAs(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbLoadBSAs;
+  Value := xeContext.Settings.LoadBSAs;
 end;
 
 procedure _wbSimpleRecords(var Value: Variant; Args: TJvInterpreterArgs);
@@ -103,29 +102,29 @@ begin
   if frmMain.ScriptPath <> '' then
     Value := frmMain.ScriptPath
   else
-    Value := wbScriptsPath;
+    Value := xeContext.Settings.ScriptsPath;
 end;
 
 // mirrors the global, which stays the scripts root even while a script in a
 // subdirectory is running
 procedure _wbScriptsPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbScriptsPath;
+  Value := xeContext.Settings.ScriptsPath;
 end;
 
 procedure _wbDataPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDataPath;
+  Value := xeContext.Settings.DataPath;
 end;
 
 procedure _wbTempPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbTempPath;
+  Value := xeContext.Settings.TempPath;
 end;
 
 procedure _wbOutputPath(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbOutputPath;
+  Value := xeContext.Settings.OutputPath;
 end;
 
 procedure _wbSettingsFileName(var Value: Variant; Args: TJvInterpreterArgs);

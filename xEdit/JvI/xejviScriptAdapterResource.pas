@@ -28,7 +28,7 @@ uses
   wbBSArchive,
   wbHash,
   wbHelpers,
-  wbGameDefGlobals,
+  xeInit,
   wbInterface,
   wbLocalization,
   wbNifScanner;
@@ -63,30 +63,30 @@ end;
 
 procedure IwbContainerHandler_ResourceContainerList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbContainerHandler.ContainerList(TStrings(V2O(Args.Values[0])));
+  xeContext.ContainerHandler.ContainerList(TStrings(V2O(Args.Values[0])));
 end;
 
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
+  xeContext.ContainerHandler.ResourceCopy(Args.Values[0], Args.Values[1], Args.Values[2]);
 end;
 
 procedure IwbContainerHandler_ResourceCount(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  Value := xeContext.ContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
 end;
 
 procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbContainerHandler.ResourceExists(Args.Values[0]);
+  Value := xeContext.ContainerHandler.ResourceExists(Args.Values[0]);
 end;
 
 procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   case Args.Count of
     0, 1: JvInterpreterError(ieNotEnoughParams, -1);
-    2: wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
-    3: wbContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])), string(Args.Values[2]));
+    2: xeContext.ContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
+    3: xeContext.ContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])), string(Args.Values[2]));
     else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -94,7 +94,7 @@ end;
 
 procedure IwbContainerHandler_ResourceOpenData(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]);
+  Value := xeContext.ContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]);
 end;
 
 { TwbAsset }
@@ -137,7 +137,7 @@ end;
 
 procedure NifUtils_NifTextureListResource(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := NifTextures(wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]), TStrings(V2O(Args.Values[2])));
+  Value := NifTextures(xeContext.ContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]), TStrings(V2O(Args.Values[2])));
 end;
 
 procedure NifUtils_NifTextureListUVRange(var Value: Variant; Args: TJvInterpreterArgs);
@@ -155,7 +155,7 @@ end;
 
 procedure DDSUtils_wbDDSResourceToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDDSDataToBitmap(wbContainerHandler.OpenResourceData('', Args.Values[0]), TBitmap(V2O(Args.Values[1])));
+  Value := wbDDSDataToBitmap(xeContext.ContainerHandler.OpenResourceData('', Args.Values[0]), TBitmap(V2O(Args.Values[1])));
 end;
 
 procedure DDSUtils_wbDDSStreamToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
@@ -232,7 +232,7 @@ end;
 
 procedure Misc_wbCRC32Resource(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := TwbHash.CRC32(wbContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]));
+  Value := TwbHash.CRC32(xeContext.ContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]));
 end;
 
 // find REFR records in child groups by base record signatures
@@ -312,12 +312,12 @@ end;
 
 procedure Misc_wbIsPseudoLightMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbIsLightSupported and wbPseudoLight;
+  Value := wbIsLightSupported and xeContext.Settings.PseudoLight;
 end;
 
 procedure Misc_wbIsPseudoMediumMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbIsMediumSupported and wbPseudoMedium;
+  Value := wbIsMediumSupported and xeContext.Settings.PseudoMedium;
 end;
 
 {procedure Misc_wbMD5Data(var Value: Variant; Args: TJvInterpreterArgs);
