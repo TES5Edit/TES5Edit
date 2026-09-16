@@ -32,7 +32,8 @@ type
 
 function wbSoundBankCache: IwbSoundBankArray;
 
-procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
+procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList); overload;
+procedure wbBuildSoundBankCache(const aLoadOrder: TStringList); overload;
 
 implementation
 
@@ -146,6 +147,7 @@ type
     var FSoundBanks: TArray<TwbSoundBank>;
     var FOwned: TObjectDictionary<TwbWwiseObject, Boolean>;
     var FPending: TList<TwbPendingNode>;
+    var FContainerHandler: IwbContainerHandler;
 
     procedure BuildIndexFile(const aFileName, aModuleName: string);
     procedure BuildIndexFiles(const aFileNames: TStringList; const aModuleName: string = '');
@@ -155,7 +157,7 @@ type
   public
     {---TwbSoundBankArray---}
     constructor Create; overload;
-    constructor Create(const aLoadOrder: TStringList); overload;
+    constructor Create(const aContainerHandler: IwbContainerHandler; const aLoadOrder: TStringList); overload;
 
     destructor Destroy; override;
 
@@ -173,9 +175,14 @@ begin
     Result := _EmptySoundBankCache;
 end;
 
+procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
+begin
+  aContext.SoundBankCache := TwbSoundBankArray.Create(aContext.ContainerHandler, aLoadOrder);
+end;
+
 procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
 begin
-  _CurrentContext.SoundBankCache := TwbSoundBankArray.Create(aLoadOrder);
+  wbBuildSoundBankCache(_CurrentContext, aLoadOrder);
 end;
 
 { TwbSwitchGroup }
@@ -592,7 +599,7 @@ end;
 
 procedure TwbSoundBankArray.BuildIndexFile(const aFileName, aModuleName: string);
 begin
-  var lFile := wbContainerHandler.OpenResourceData('', aFileName);
+  var lFile := FContainerHandler.OpenResourceData('', aFileName);
 
   if Length(lFile) > 0 then
   begin
@@ -714,10 +721,11 @@ begin
   end;
 end;
 
-constructor TwbSoundBankArray.Create(const aLoadOrder: TStringList);
+constructor TwbSoundBankArray.Create(const aContainerHandler: IwbContainerHandler; const aLoadOrder: TStringList);
 begin
   Create;
 
+  FContainerHandler := aContainerHandler;
   BuildIndex(aLoadOrder);
 end;
 

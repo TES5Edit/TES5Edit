@@ -151,22 +151,29 @@ uses
 type
   TwbModGroupList = class
   private
-    mgFiles  : TwbModGroupsFiles;
-    mgLoaded : Boolean;
+    mgContext : TwbGameContext;
+    mgFiles   : TwbModGroupsFiles;
+    mgLoaded  : Boolean;
+    procedure Load;
   end;
 
-function wbCurrentModGroupList: TwbModGroupList;
+function wbModGroupListOf(const aContext: TwbGameContext): TwbModGroupList;
 begin
-  Result := TwbModGroupList(_CurrentContext.ModGroupList);
+  Result := TwbModGroupList(aContext.ModGroupList);
   if not Assigned(Result) then begin
     Result := TwbModGroupList.Create;
-    _CurrentContext.ModGroupList := Result;
+    Result.mgContext := aContext;
+    aContext.ModGroupList := Result;
   end;
 end;
 
-procedure wbLoadModGroups;
+function wbCurrentModGroupList: TwbModGroupList;
+begin
+  Result := wbModGroupListOf(_CurrentContext);
+end;
+
+procedure TwbModGroupList.Load;
 var
-  lList               : TwbModGroupList;
   ModGroupFilesByName : TStringList;
   ModGroupFiles       : TwbModGroupsFiles;
   Modules             : TwbModuleInfos;
@@ -174,8 +181,7 @@ var
   ModGroupFileName    : string;
   ModGroupFile        : PwbModGroupsFile;
 begin
-  lList := wbCurrentModGroupList;
-  if lList.mgLoaded then
+  if mgLoaded then
     Exit;
 
   ModGroupFiles := nil;
@@ -184,14 +190,14 @@ begin
     try
       ModGroupFilesByName.Sorted := True;
       ModGroupFilesByName.Duplicates := dupError;
-      Modules := wbModulesByLoadOrder{.FilteredByFlag(mfHasFile)};
+      Modules := wbModulesByLoadOrder(mgContext){.FilteredByFlag(mfHasFile)};
       SetLength(ModGroupFiles, Succ(Length(Modules)));
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
         if i > High(Modules) then
-          ModGroupFileName := wbModGroupFileName
+          ModGroupFileName := mgContext.Settings.ModGroupFileName
         else
-          ModGroupFileName := wbExpandFileName(ChangeFileExt(Modules[i].miName, '.modgroups'));
+          ModGroupFileName := mgContext.ExpandFileName(ChangeFileExt(Modules[i].miName, '.modgroups'));
 
         ModGroupFile := nil;
         if ModGroupFilesByName.Find(ModGroupFileName, k) then
@@ -219,18 +225,20 @@ begin
     for i := Low(ModGroupFiles) to High(ModGroupFiles) do
       ModGroupFiles[i].mgfCheckValid(True);
   except
-    lList.mgFiles := nil;
+    mgFiles := nil;
     raise;
   end;
-  lList.mgFiles := ModGroupFiles;
-  lList.mgLoaded := True;
+  mgFiles := ModGroupFiles;
+  mgLoaded := True;
 end;
 
 procedure wbReloadModGroups;
-
+var
+  lList: TwbModGroupList;
 begin
-  wbCurrentModGroupList.mgLoaded := False;
-  wbLoadModGroups;
+  lList := wbCurrentModGroupList;
+  lList.mgLoaded := False;
+  lList.Load;
 end;
 
 
@@ -736,11 +744,12 @@ end;
 
 
 function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
-
+var
+  lList: TwbModGroupList;
 begin
-
-  wbLoadModGroups;
-  wbCurrentModGroupList.mgFiles.mgfsAddModGroupsTo(Result, aValidOnly);
+  lList := wbCurrentModGroupList;
+  lList.Load;
+  lList.mgFiles.mgfsAddModGroupsTo(Result, aValidOnly);
   if Length(Result) > 1 then
     wbMergeSortPtr(@Result[0], Length(Result), CompareModGroupPtrsByName);
 end;

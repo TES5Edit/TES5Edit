@@ -140,7 +140,7 @@ type
     Width, Height: Single;
     ShiftX, ShiftY, ShiftZ, ScaleFactor: Single;
     Image: TImageData;
-    function LoadFromData(const aData: TBytes): Boolean;
+    function LoadFromData(const aContext: TwbGameContext; const aData: TBytes): Boolean;
   end;
   PwbLodTES5Tree = ^TwbLodTES5Tree;
 
@@ -215,7 +215,8 @@ function wbDefaultNormalTexture(const aGameDef: TwbGameDef): string;
 function wbDefaultSpecularTexture(const aGameDef: TwbGameDef): string;
 procedure wbPrepareImageAlpha(const img: TImageData; fmt: TImageFormat; threshold: Integer = 0);
 
-procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
+procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2); overload;
+procedure wbGetUVRangeTexturesList(const aContext: TwbGameContext; slMeshes, slTextures: TStrings; UVRange: Single = 1.2); overload;
 
 procedure wbBuildAtlas(
   const aGameDef: TwbGameDef;
@@ -236,7 +237,7 @@ procedure wbBuildAtlasFromTexturesList(
 ); overload;
 
 procedure wbBuildAtlasFromTexturesList(
-  const aGameDef: TwbGameDef;
+  const aContext: TwbGameContext;
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -248,7 +249,7 @@ procedure wbBuildAtlasFromTexturesList(
 procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile); overload;
 
-procedure wbBuildAtlasFromAtlasMap(const aGameDef: TwbGameDef; slMap: TStrings; aBrightness: integer;
+procedure wbBuildAtlasFromAtlasMap(const aContext: TwbGameContext; slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile); overload;
 
 procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
@@ -381,7 +382,7 @@ begin
     Result := '';
 end;
 
-function wbLoadImageFromMemory(Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
+function wbLoadImageFromMemory(const aContext: TwbGameContext; Data: Pointer; aSize: LongInt; var Image: TImageData): Boolean;
 type
   TMagic = array [0..3] of AnsiChar;
   PMagic = ^TMagic;
@@ -404,10 +405,10 @@ begin
     Exit;
 
   // temp file - better to use TPath.GetGUIDFileName if multithreaded
-  s := wbTempPath + TPath.GetGUIDFileName + '.dds';
+  s := aContext.Settings.TempPath + TPath.GetGUIDFileName + '.dds';
 
   // check temp path
-  if not ForceDirectories(wbTempPath) then
+  if not ForceDirectories(aContext.Settings.TempPath) then
     Exit;
 
   // write image to temp file
@@ -418,14 +419,14 @@ begin
   end;
 
   // command line
-  c := '"' + wbScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(wbTempPath) + '" "' + s + '"';
+  c := '"' + aContext.Settings.ScriptsPath + sTexconv + '" -nologo -y -f R32G32B32A32_FLOAT -o "' + ExcludeTrailingPathDelimiter(aContext.Settings.TempPath) + '" "' + s + '"';
   // execute command
   ErrCode := ExecuteCaptureConsoleOutput(c);
 
   // load the converted image from temp file if no error reported
   if (ErrCode = 0) and FileExists(s) then begin
     b := TFile.ReadAllBytes(s);
-    Result := wbLoadImageFromMemory(@b[0], Length(b), Image);
+    Result := wbLoadImageFromMemory(aContext, @b[0], Length(b), Image);
   end;
 
   // remove temp file
@@ -584,10 +585,10 @@ end;
 
 { TwbLodTES5Tree }
 
-function TwbLodTES5Tree.LoadFromData(const aData: TBytes): Boolean;
+function TwbLodTES5Tree.LoadFromData(const aContext: TwbGameContext; const aData: TBytes): Boolean;
 begin
   InitImage(Image);
-  Result := wbLoadImageFromMemory(@aData[0], Length(aData), Image);
+  Result := wbLoadImageFromMemory(aContext, @aData[0], Length(aData), Image);
 end;
 
 
@@ -1049,6 +1050,11 @@ begin
 end;
 
 procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
+begin
+  wbGetUVRangeTexturesList(_CurrentContext, slMeshes, slTextures, UVRange);
+end;
+
+procedure wbGetUVRangeTexturesList(const aContext: TwbGameContext; slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 const
   // UV values outside of this +/- range will be considered an error and ignored
   fCheckRange = 100.0;
@@ -1105,7 +1111,7 @@ begin
       //WriteLn(nifname);
       //if nifname <> 'meshes\lod\whiterun\wrplainsdistrictterrainlod_lod.nif' then Continue;
 
-      if not wbContainerHandler.ResourceExists(nifname) then begin
+      if not aContext.ContainerHandler.ResourceExists(nifname) then begin
         wbProgressCallback('<Warning: LOD mesh not found "' + nifname + '">');
         Continue;
       end;
@@ -1151,7 +1157,7 @@ begin
           if not bTiled then begin
             s := TwbAsset.GetAssetName(Shader.EditValues['Name'], '', atMaterial);
             // getting textures from material first, it has priority over textureset
-            if (ExtractFileExt(s) = '.bgsm') and wbContainerHandler.ResourceExists(s) then begin
+            if (ExtractFileExt(s) = '.bgsm') and aContext.ContainerHandler.ResourceExists(s) then begin
               try
                 bgsm.LoadFromResource(s);
                 AddTexture(bgsm.EditValues['Textures\Diffuse']);
@@ -1434,11 +1440,11 @@ procedure wbBuildAtlasFromTexturesList(
   const Settings: TCustomIniFile
 );
 begin
-  wbBuildAtlasFromTexturesList(_CurrentGameDef, slTextures, aMaxTextureSize, aMaxTileSize, aWidth, aHeight, aName, aMapName, Settings);
+  wbBuildAtlasFromTexturesList(_CurrentContext, slTextures, aMaxTextureSize, aMaxTileSize, aWidth, aHeight, aName, aMapName, Settings);
 end;
 
 procedure wbBuildAtlasFromTexturesList(
-  const aGameDef: TwbGameDef;
+  const aContext: TwbGameContext;
   slTextures: TStrings;
   aMaxTextureSize,
   aMaxTileSize,
@@ -1457,18 +1463,22 @@ var
   fmtDiffuse, fmtNormal, fmtSpecular: TImageFormat;
   alphaThreshold: Integer;
   Canvas: TImagingCanvas;
+  lGameDef: TwbGameDef;
+  lContainerHandler: IwbContainerHandler;
 begin
+  lGameDef := aContext.GameDefObj;
+  lContainerHandler := aContext.ContainerHandler;
   for i := 0 to Pred(slTextures.Count) do begin
     s := slTextures[i];
-    if not wbContainerHandler.ResourceExists(s) then begin
+    if not lContainerHandler.ResourceExists(s) then begin
       // default diffuse texture to use, only for fallouts since they can't use loose textures in LOD
-      if aGameDef.IsFallout3 then begin
+      if lGameDef.IsFallout3 then begin
         wbProgressCallback('<Note: ' + s + ' diffuse texture not found, using replacement>');
         s := 'textures\shared\shadefade01.dds';
       end;
     end;
 
-    res := wbContainerHandler.OpenResource(s);
+    res := lContainerHandler.OpenResource(s);
     if Length(res) = 0 then
       Continue;
 
@@ -1477,7 +1487,7 @@ begin
 
     // load diffuse
     InitImage(Images[Pred(Length(Images))].Image);
-    if not wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image) then begin
+    if not wbLoadImageFromMemory(aContext, @data[0], Length(data),Images[Pred(Length(Images))].Image) then begin
       SetLength(Images, Pred(Length(Images)));
       Continue;
     end;
@@ -1518,20 +1528,20 @@ begin
     if Pos('_d.dds', s) <> 0 then begin
       s := StringReplace(s, '_d.dds', '_n.dds', [rfIgnoreCase]);
       // fallback to simple _n addition if not found
-      if not wbContainerHandler.ResourceExists(s) then
+      if not lContainerHandler.ResourceExists(s) then
         s := ChangeFileExt(slTextures[i], '') + '_n.dds';
     end else
       s := ChangeFileExt(slTextures[i], '') + '_n.dds';
 
-    if not wbContainerHandler.ResourceExists(s) then begin
+    if not lContainerHandler.ResourceExists(s) then begin
       wbProgressCallback('<Note: ' + s + ' normal map not found, using flat replacement>');
       // default normals texture to use
-      s := wbDefaultNormalTexture(aGameDef);
+      s := wbDefaultNormalTexture(lGameDef);
     end;
-    res := wbContainerHandler.OpenResource(s);
+    res := lContainerHandler.OpenResource(s);
     if Length(res) <> 0 then
       data := res[High(res)].GetData;
-    if (Length(res) <> 0) and wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_n) then begin
+    if (Length(res) <> 0) and wbLoadImageFromMemory(aContext, @data[0], Length(data),Images[Pred(Length(Images))].Image_n) then begin
       // resize normals to match diffuse
       if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_n.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_n.Height)) then
         ResizeImage(
@@ -1549,7 +1559,7 @@ begin
     Images[Pred(Length(Images))].Name_n := s;
 
     // load specular
-    if aGameDef.IsFallout4 then begin
+    if lGameDef.IsFallout4 then begin
       InitImage(Images[Pred(Length(Images))].Image_s);
       s := slTextures[i];
       if Pos('_d.dds', s) <> 0 then
@@ -1557,14 +1567,14 @@ begin
       else
         s := ChangeFileExt(slTextures[i], '') + '_s.dds';
 
-      if not wbContainerHandler.ResourceExists(s) then begin
+      if not lContainerHandler.ResourceExists(s) then begin
         wbProgressCallback('<Note: ' + s + ' specular map not found, using flat replacement>');
-        s := wbDefaultSpecularTexture(aGameDef);
+        s := wbDefaultSpecularTexture(lGameDef);
       end;
-      res := wbContainerHandler.OpenResource(s);
+      res := lContainerHandler.OpenResource(s);
       if Length(res) <> 0 then
         data := res[High(res)].GetData;
-      if (Length(res) <> 0) and wbLoadImageFromMemory(@data[0], Length(data), Images[Pred(Length(Images))].Image_s) then begin
+      if (Length(res) <> 0) and wbLoadImageFromMemory(aContext, @data[0], Length(data),Images[Pred(Length(Images))].Image_s) then begin
         if ((Images[Pred(Length(Images))].Image.Width <> Images[Pred(Length(Images))].Image_s.Width) or (Images[Pred(Length(Images))].Image.Height <> Images[Pred(Length(Images))].Image_s.Height)) then
           ResizeImage(
             Images[Pred(Length(Images))].Image_s,
@@ -1588,7 +1598,7 @@ begin
       fmtNormal := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasNormalFormat', Integer(iDefaultAtlasNormalFormat)));
       fmtSpecular := TImageFormat(Settings.ReadInteger(wbAppName + ' LOD Options', 'AtlasSpecularFormat', Integer(iDefaultAtlasSpecularFormat)));
       alphaThreshold := Settings.ReadInteger(wbAppName + ' LOD Options', 'DefaultAlphaThreshold', iDefaultAlphaThreshold);
-      wbBuildAtlas(aGameDef, Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular, alphaThreshold);
+      wbBuildAtlas(lGameDef, Images, aWidth, aHeight, aName, fmtDiffuse, fmtNormal, fmtSpecular, alphaThreshold);
       for i := Low(Images) to High(Images) do
         if Images[i].AtlasName <> '' then begin
           // atlas name in map file must be relative to data folder
@@ -1613,7 +1623,7 @@ begin
       for i := Low(Images) to High(Images) do begin
         FreeImage(Images[i].Image);
         FreeImage(Images[i].Image_n);
-        if aGameDef.IsFallout4 then
+        if lGameDef.IsFallout4 then
           FreeImage(Images[i].Image_s);
       end;
   end;
@@ -1622,10 +1632,10 @@ end;
 procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 begin
-  wbBuildAtlasFromAtlasMap(_CurrentGameDef, slMap, aBrightness, GammaR, GammaG, GammaB, Settings);
+  wbBuildAtlasFromAtlasMap(_CurrentContext, slMap, aBrightness, GammaR, GammaG, GammaB, Settings);
 end;
 
-procedure wbBuildAtlasFromAtlasMap(const aGameDef: TwbGameDef; slMap: TStrings; aBrightness: integer;
+procedure wbBuildAtlasFromAtlasMap(const aContext: TwbGameContext; slMap: TStrings; aBrightness: integer;
   GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 var
   l, i: integer;
@@ -1654,28 +1664,28 @@ begin
       if sl.Count <> 8 then Continue;
 
       // load diffuse tile
-      res := wbContainerHandler.OpenResource(sl[0]);
+      res := aContext.ContainerHandler.OpenResource(sl[0]);
       if Length(res) = 0 then
         raise Exception.Create('Source tile not found ' + sl[0]);
 
       data := res[High(res)].GetData;
-      if not wbLoadImageFromMemory(@data[0], Length(data), img) then
+      if not wbLoadImageFromMemory(aContext, @data[0], Length(data),img) then
         raise Exception.Create('Error loading tile ' + sl[0]);
 
       // load normal tile
       fname := ChangeFileExt(sl[0], '') + '_n.dds';
-      res := wbContainerHandler.OpenResource(fname);
+      res := aContext.ContainerHandler.OpenResource(fname);
       if Length(res) = 0 then begin
         wbProgressCallback('<Note: ' + fname + ' normal map not found, using flat replacement>');
         // default normals texture to use
-        fname := wbDefaultNormalTexture(aGameDef);
-        res := wbContainerHandler.OpenResource(fname);
+        fname := wbDefaultNormalTexture(aContext.GameDefObj);
+        res := aContext.ContainerHandler.OpenResource(fname);
         if Length(res) = 0 then
           raise Exception.Create('Source tile normal map not found for ' + sl[0]);
       end;
 
       data := res[High(res)].GetData;
-      if not wbLoadImageFromMemory(@data[0], Length(data), img_n) then
+      if not wbLoadImageFromMemory(aContext, @data[0], Length(data),img_n) then
         raise Exception.Create('Error loading tile normal map for ' + sl[0]);
 
       // resize diffuse as set in atlas map
@@ -1722,7 +1732,7 @@ begin
 
       fname := slAtlas[i];
       if SameText(Copy(fname, 1, 9), 'textures\') then
-        fname := wbOutputPath + fname;
+        fname := aContext.Settings.OutputPath + fname;
 
       if not DirectoryExists(ExtractFilePath(fname)) then
         if not ForceDirectories(ExtractFilePath(fname)) then
@@ -2398,7 +2408,7 @@ var
     Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
     // load billboard texture
     Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(Result^.Billboard);
-    if (Length(Res) > 0) and Result^.LoadFromData(Res[High(Res)].GetData) then begin
+    if (Length(Res) > 0) and Result^.LoadFromData(aWorldspace.ContextObj, Res[High(Res)].GetData) then begin
       //slLog.Add(TreeRec.Name + ' using LOD ' + Result^.Billboard);
       // store checksum of billboard to avoid duplicates in atlas
       Result^.CRC32 := TwbHash.CRC32(Res[High(Res)].GetData);
@@ -3175,7 +3185,7 @@ begin
           if lGameDef.IsFallout3 then
             UVRange := 10000;
 
-          wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+          wbGetUVRangeTexturesList(aWorldspace.ContextObj, slLODMeshes, slLODTextures, UVRange);
 
           if slLODTextures.Count > 1 then begin
             // remove HD LOD texture if there
@@ -3188,7 +3198,7 @@ begin
             Application.ProcessMessages;
 
             wbBuildAtlasFromTexturesList(
-              lGameDef,
+              aWorldspace.ContextObj,
               slLODTextures,
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
               Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size
@@ -3689,7 +3699,7 @@ begin
       // creating lod textures atlas part 2 - gather list of used textures and create atlas textures
       if bBuildAtlas then begin
         // textures from LOD meshes
-        wbGetUVRangeTexturesList(slLODMeshes, slLODTextures, UVRange);
+        wbGetUVRangeTexturesList(aWorldspace.ContextObj, slLODMeshes, slLODTextures, UVRange);
 
         // textures from LOD material swaps
         if slBGSM.Count > 0 then begin
@@ -3742,7 +3752,7 @@ begin
           wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
           Application.ProcessMessages;
           wbBuildAtlasFromTexturesList(
-            lGameDef,
+            aWorldspace.ContextObj,
             slLODTextures,
             Settings.ReadInteger(Section, 'AtlasTextureSize', 512),
             Settings.ReadInteger(Section, 'AtlasTextureSize', 512), // tile size, same as texture size

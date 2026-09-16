@@ -978,6 +978,8 @@ type
   end;
 
   TwbFileSource = class(TwbFile)
+  private
+    function SelectTemporaryCopy(const aFileName, aCompareFile: string): string;
   protected
     procedure Scan; override;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
@@ -3301,7 +3303,7 @@ begin
     Include(flStates, fsIsCompareLoad);
     if SameText(ExtractFileName(aFileName), wbGameExeName) then
       Include(flStates, fsIsHardcoded);
-    flCompareTo := wbExpandFileName(aCompareTo);
+    flCompareTo := aContext.ExpandFileName(aCompareTo);
   end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
@@ -24008,7 +24010,7 @@ var
 begin
   GameDefObj.InitRecords;
 
-  FileName := wbExpandFileName(aFileName);
+  FileName := ExpandFileName(aFileName);
   {if ExtractFilePath(aFileName) = '' then
     FileName := ExpandFileName('.\' + aFileName)
   else
@@ -24057,7 +24059,7 @@ begin
     aIsBlueprint^ := False;
   wbProgressLock;
   try
-    FileName := wbExpandFileName(aFileName);
+    FileName := ExpandFileName(aFileName);
     try
       lFile := FileByName(FileName);
       if Assigned(lFile) then
@@ -24148,7 +24150,7 @@ begin
 
   GameDefObj.InitRecords;
 
-  FileName := wbExpandFileName(aFileName);
+  FileName := ExpandFileName(aFileName);
   if Assigned(FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
@@ -24163,7 +24165,7 @@ var
 begin
   GameDefObj.InitRecords;
 
-  FileName := wbExpandFileName(aFileName);
+  FileName := ExpandFileName(aFileName);
   if Assigned(FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
@@ -26048,47 +26050,25 @@ begin
       aNames.Add(MasterFiles[i].EditValue);
 end;
 
-function CreateTemporaryCopy(const FileName : string; var CompareFile: String): String;
+function TwbFileSource.SelectTemporaryCopy(const aFileName, aCompareFile: string): string;
 var
-  s : String;
-  i : Integer;
-
+  s         : String;
+  i         : Integer;
+  lDataPath : String;
 begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
-    s := wbDataPath + ExtractFileName(CompareFile);
-    if FileExists(s) then // Finds a unique name
-      for i := 0 to 255 do begin
-        s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
-        if not FileExists(s) then Break;
-      end;
-    if FileExists(s) then begin
-      wbProgressCallback('Could not copy ' + FileName + ' into ' + wbDataPath);
-      Exit;
-    end;
-    CompareFile := s;
-    CopyFile(PChar(FileName), PChar(CompareFile), false);
-  end;
-  Result := CompareFile;
-end;
-
-function SelectTemporaryCopy(const FileName : string; CompareFile: String): String;
-var
-  s : String;
-  i : Integer;
-
-begin
-  if not SameText(ExtractFilePath(CompareFile), wbDataPath) then begin
+  lDataPath := flContextObj.Settings.DataPath;
+  Result := aCompareFile;
+  if not SameText(ExtractFilePath(Result), lDataPath) then begin
     for i := 0 to 255 do begin
-      s := wbDataPath + ExtractFileName(CompareFile) + IntToHex(i, 3);
+      s := lDataPath + ExtractFileName(Result) + IntToHex(i, 3);
       if FileExists(s) then Break;
     end;
     if not FileExists(s) then
-      s := wbDataPath + CompareFile + IntToHex(0, 3);
-    CompareFile := s;
-    if not FileExists(CompareFile) then
-      CopyFile(PChar(FileName), PChar(CompareFile), false);
+      s := lDataPath + Result + IntToHex(0, 3);
+    Result := s;
+    if not FileExists(Result) then
+      CopyFile(PChar(aFileName), PChar(Result), false);
   end;
-  Result := CompareFile;
 end;
 
 procedure TwbFileSource.Scan;

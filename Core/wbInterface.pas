@@ -4503,6 +4503,7 @@ type
     procedure ForceClosed;
     procedure IncGlobalGeneration;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
+    function ExpandFileName(const aFileName: string): string;
 
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; virtual; abstract;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; virtual; abstract;
@@ -7628,6 +7629,14 @@ end;
 procedure TwbGameContext.IncGlobalGeneration;
 begin
   Inc(gcGlobalGeneration);
+end;
+
+function TwbGameContext.ExpandFileName(const aFileName: string): string;
+begin
+  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameExeName) then
+    Result := Settings.DataPath + ExtractFileName(aFileName)
+  else
+    Result := aFileName;
 end;
 
 function TwbGameContext.FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
