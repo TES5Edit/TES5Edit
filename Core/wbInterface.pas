@@ -4493,6 +4493,12 @@ type
     procedure IncGlobalGeneration;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
 
+    function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; virtual; abstract;
+    function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; virtual; abstract;
+    function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; virtual; abstract;
+    function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; virtual; abstract;
+    procedure ForceClosedFiles; virtual; abstract;
+
     property GlobalGeneration: Integer
       read gcGlobalGeneration;
 
@@ -4553,6 +4559,8 @@ type
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
+
+  TwbGameContextClass = class of TwbGameContext;
 
 const
   arcU32 = -1;
@@ -5972,9 +5980,11 @@ var
 
   _CurrentGameDef  : TwbGameDef;
   _CurrentContext  : TwbGameContext;
+  wbGameContextClass : TwbGameContextClass;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef;
+function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 
 function wbCurrentContext: IwbGameContext;
 procedure wbMakeCurrentContext(const aContext: IwbGameContext);
@@ -7096,6 +7106,13 @@ begin
   else
     _CurrentContext := nil;
   _CurrentContextRef := aContext;
+end;
+
+function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
+begin
+  Assert(Assigned(wbGameContextClass));
+  Result := wbGameContextClass.Create(aGameDef);
+  wbMakeCurrentContext(Result);
 end;
 
 { TwbGameContextSettings }

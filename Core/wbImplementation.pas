@@ -28,28 +28,6 @@ const
 var
   SubRecordOrderList : TStringList;
 
-function wbMastersForFile(const aContext     : TwbGameContext;
-                          const aFileName    : string;
-                                aMasters     : TStrings;
-                                aIsESM       : PBoolean = nil;
-                                aIsLight     : PBoolean = nil;
-                                aIsLocalized : PBoolean = nil;
-                                aIsUpdate    : PBoolean = nil;
-                                aIsMedium    : PBoolean = nil;
-                                aIsBluePrint : PBoolean = nil)
-                                             : Boolean; overload;
-
-function wbMastersForFile(const aContext     : TwbGameContext;
-                          const aFileName    : string;
-                            out aMasters     : TDynStrings;
-                                aIsESM       : PBoolean = nil;
-                                aIsLight     : PBoolean = nil;
-                                aIsLocalized : PBoolean = nil;
-                                aIsUpdate    : PBoolean = nil;
-                                aIsMedium    : PBoolean = nil;
-                                aIsBluePrint : PBoolean = nil)
-                                             : Boolean; overload;
-
 function wbMastersForFile(const aFileName    : string;
                                 aMasters     : TStrings;
                                 aIsESM       : PBoolean = nil;
@@ -70,16 +48,11 @@ function wbMastersForFile(const aFileName    : string;
                                 aIsBluePrint : PBoolean = nil)
                                              : Boolean; overload;
 
-function wbFile(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; overload;
-function wbFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; overload;
-function wbNewFile(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload;
-function wbNewFile(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
+function wbFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload;
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
 
-function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
-procedure wbFileForceClosed(const aContext: TwbGameContext); overload;
-procedure wbFileForceClosed; overload;
+procedure wbFileForceClosed;
 
 function StartsWith(const s, t: string): Boolean;
 
@@ -1009,6 +982,16 @@ type
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
+  end;
+
+  TwbLoadingGameContext = class(TwbGameContext)
+  public
+    function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; override;
+    function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; override;
+    function NewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
+    function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override;
+    function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override;
+    procedure ForceClosedFiles; override;
   end;
 
   TwbDataContainerFlag = (
@@ -2364,7 +2347,7 @@ begin
   if aAutoLoadOrder then
     i := High(Integer);
 
-  _File := wbFile(flContextObj, s + t, i, '', States);
+  _File := flContextObj.LoadFile(s + t, i, '', States);
   if not (wbToolMode in [tmDump, tmExport]) and (wbRequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
@@ -23992,21 +23975,21 @@ begin
   end;
 end;
 
-procedure wbFileForceClosed(const aContext: TwbGameContext);
+procedure TwbLoadingGameContext.ForceClosedFiles;
 begin
-  for var lFile in aContext.Files do begin
+  for var lFile in Files do begin
     (lFile as IwbFileInternal).ForceClosed;
     wbProgressCallback;
   end;
-  aContext.ForceClosed;
+  ForceClosed;
 end;
 
 procedure wbFileForceClosed;
 begin
-  wbFileForceClosed(_CurrentContext);
+  _CurrentContext.ForceClosedFiles;
 end;
 
-function wbFile(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
+function TwbLoadingGameContext.LoadFile(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes): IwbFile;
 var
   FileName: string;
 begin
@@ -24018,30 +24001,29 @@ begin
   else
     FileName := ExpandFileName(aFileName);}
 
-  Result := aContext.FileByName(FileName);
+  Result := FileByName(FileName);
   if not Assigned(Result) then begin
     if not wbIsModule(FileName) then
-      Result := TwbFileSource.Create(aContext, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
+      Result := TwbFileSource.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
     else
-      Result := TwbFile.Create(aContext, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+      Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
   end;
 end;
 
 function wbFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile;
 begin
-  Result := wbFile(_CurrentContext, aFileName, aLoadOrder, aCompareTo, aStates, aData);
+  Result := _CurrentContext.LoadFile(aFileName, aLoadOrder, aCompareTo, aStates, aData);
 end;
 
-function wbMastersForFile(const aContext     : TwbGameContext;
-                          const aFileName    : string;
-                                aMasters     : TStrings;
-                                aIsESM       : PBoolean;
-                                aIsLight     : PBoolean;
-                                aIsLocalized : PBoolean;
-                                aIsUpdate    : PBoolean;
-                                aIsMedium    : PBoolean;
-                                aIsBlueprint : PBoolean)
-                                             : Boolean;
+function TwbLoadingGameContext.MastersForFile(const aFileName    : string;
+                                                    aMasters     : TStrings;
+                                                    aIsESM       : PBoolean;
+                                                    aIsLight     : PBoolean;
+                                                    aIsLocalized : PBoolean;
+                                                    aIsUpdate    : PBoolean;
+                                                    aIsMedium    : PBoolean;
+                                                    aIsBlueprint : PBoolean)
+                                                                 : Boolean;
 var
   FileName : string;
   lFile    : IwbFile;
@@ -24064,13 +24046,13 @@ begin
   try
     FileName := wbExpandFileName(aFileName);
     try
-      lFile := aContext.FileByName(FileName);
+      lFile := FileByName(FileName);
       if Assigned(lFile) then
         _File := lFile as IwbFileInternal
       else if not wbIsModule(FileName) then
-        _File := TwbFileSource.Create(aContext, FileName, -1, '', [fsOnlyHeader], nil)
+        _File := TwbFileSource.Create(Self, FileName, -1, '', [fsOnlyHeader], nil)
       else
-        _File := TwbFile.Create(aContext, FileName, -1, '', [fsOnlyHeader], nil);
+        _File := TwbFile.Create(Self, FileName, -1, '', [fsOnlyHeader], nil);
 
       if Assigned(aMasters) then
         _File.GetMasters(aMasters);
@@ -24096,21 +24078,20 @@ begin
   end;
 end;
 
-function wbMastersForFile(const aContext     : TwbGameContext;
-                          const aFileName    : string;
-                            out aMasters     : TDynStrings;
-                                aIsESM       : PBoolean;
-                                aIsLight     : PBoolean;
-                                aIsLocalized : PBoolean;
-                                aIsUpdate    : PBoolean;
-                                aIsMedium    : PBoolean;
-                                aIsBlueprint : PBoolean)
-                                             : Boolean;
+function TwbLoadingGameContext.MastersForFile(const aFileName    : string;
+                                                out aMasters     : TDynStrings;
+                                                    aIsESM       : PBoolean;
+                                                    aIsLight     : PBoolean;
+                                                    aIsLocalized : PBoolean;
+                                                    aIsUpdate    : PBoolean;
+                                                    aIsMedium    : PBoolean;
+                                                    aIsBlueprint : PBoolean)
+                                                                 : Boolean;
 begin
   aMasters := nil;
   var sl := TStringList.Create;
   try
-    Result := wbMastersForFile(aContext, aFileName, sl, aIsESM, aIsLight, aIsLocalized, aIsUpdate, aIsMedium, aIsBlueprint);
+    Result := MastersForFile(aFileName, sl, aIsESM, aIsLight, aIsLocalized, aIsUpdate, aIsMedium, aIsBlueprint);
     if Result then
       aMasters := sl.ToStringArray;
   finally
@@ -24128,7 +24109,7 @@ function wbMastersForFile(const aFileName    : string;
                                 aIsBlueprint : PBoolean)
                                              : Boolean;
 begin
-  Result := wbMastersForFile(_CurrentContext, aFileName, aMasters, aIsESM, aIsLight, aIsLocalized, aIsUpdate, aIsMedium, aIsBlueprint);
+  Result := _CurrentContext.MastersForFile(aFileName, aMasters, aIsESM, aIsLight, aIsLocalized, aIsUpdate, aIsMedium, aIsBlueprint);
 end;
 
 function wbMastersForFile(const aFileName    : string;
@@ -24141,51 +24122,51 @@ function wbMastersForFile(const aFileName    : string;
                                 aIsBlueprint : PBoolean)
                                              : Boolean;
 begin
-  Result := wbMastersForFile(_CurrentContext, aFileName, aMasters, aIsESM, aIsLight, aIsLocalized, aIsUpdate, aIsMedium, aIsBlueprint);
+  Result := _CurrentContext.MastersForFile(aFileName, aMasters, aIsESM, aIsLight, aIsLocalized, aIsUpdate, aIsMedium, aIsBlueprint);
 end;
 
-function wbNewFile(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile;
+function TwbLoadingGameContext.NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile;
 var
   FileName: string;
 begin
   Assert( not (aIsLight and aIsMedium) );
-  Assert( (not aIsLight) or aContext.GameDefObj.IsLightSupported or wbPseudoLight);
-  Assert( (not aIsMedium) or aContext.GameDefObj.IsMediumSupported or wbPseudoMedium);
+  Assert( (not aIsLight) or GameDefObj.IsLightSupported or wbPseudoLight);
+  Assert( (not aIsMedium) or GameDefObj.IsMediumSupported or wbPseudoMedium);
 
   wbInitRecords;
 
   FileName := wbExpandFileName(aFileName);
-  if Assigned(aContext.FileByName(FileName)) then
+  if Assigned(FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(aContext, FileName, aLoadOrder, aIsLight, aIsMedium);
-    aContext.AddFile(Result, FileName);
+    Result := TwbFile.CreateNew(Self, FileName, aLoadOrder, aIsLight, aIsMedium);
+    AddFile(Result, FileName);
   end;
 end;
 
-function wbNewFile(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
+function TwbLoadingGameContext.NewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
 var
   FileName: string;
 begin
   wbInitRecords;
 
   FileName := wbExpandFileName(aFileName);
-  if Assigned(aContext.FileByName(FileName)) then
+  if Assigned(FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
-    Result := TwbFile.CreateNew(aContext, FileName, aLoadOrder, aTemplate);
-    aContext.AddFile(Result, FileName);
+    Result := TwbFile.CreateNew(Self, FileName, aLoadOrder, aTemplate);
+    AddFile(Result, FileName);
   end;
 end;
 
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile;
 begin
-  Result := wbNewFile(_CurrentContext, aFileName, aLoadOrder, aIsLight, aIsMedium);
+  Result := _CurrentContext.NewFile(aFileName, aLoadOrder, aIsLight, aIsMedium);
 end;
 
 function wbNewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile;
 begin
-  Result := wbNewFile(_CurrentContext, aFileName, aLoadOrder, aTemplate);
+  Result := (_CurrentContext as TwbLoadingGameContext).NewFile(aFileName, aLoadOrder, aTemplate);
 end;
 
 function wbFindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
@@ -26437,13 +26418,8 @@ begin
   Result := TwbMultipleElements.Create(aElements);
 end;
 
-function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
-begin
-  Result := TwbGameContext.Create(aGameDef);
-  wbMakeCurrentContext(Result);
-end;
-
 initialization
+  wbGameContextClass := TwbLoadingGameContext;
   _MastersGeneration := 1;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   _ResizeLock.Initialize;

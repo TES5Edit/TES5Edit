@@ -401,7 +401,7 @@ begin
 
         miDateTime := wbGetLastWriteTime(mlContext.Settings.DataPath + miOriginalName);
 
-        if not wbMastersForFile(mlContext, mlContext.Settings.DataPath + miOriginalName, miMasterNames, @IsESM, @IsLight, @IsLocalized, @IsUpdate, @IsMedium, @IsBlueprint) then
+        if not mlContext.MastersForFile(mlContext.Settings.DataPath + miOriginalName, miMasterNames, @IsESM, @IsLight, @IsLocalized, @IsUpdate, @IsMedium, @IsBlueprint) then
           Continue;
 
         if IsESM then begin
