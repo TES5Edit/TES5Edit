@@ -491,8 +491,8 @@ begin
 
   sl := TStringList.Create;
   try
-    if FileExists(wbPluginsFileName) then begin
-      sl.LoadFromFile(wbPluginsFileName);
+    if FileExists(mlContext.Settings.PluginsFileName) then begin
+      sl.LoadFromFile(mlContext.Settings.PluginsFileName);
       for i := 0 to Pred(sl.Count) do begin
         s := sl[i];
         j := Pos('#', s);
@@ -557,8 +557,8 @@ begin
         Include(miFlags, mfHasIndex);
       end;
 
-  for i := Low(wbCreationClubContent) to High(wbCreationClubContent) do
-    with ModuleByName(wbCreationClubContent[i])^ do
+  for i := Low(mlContext.Settings.CreationClubContent) to High(mlContext.Settings.CreationClubContent) do
+    with ModuleByName(mlContext.Settings.CreationClubContent[i])^ do
       if IsValid then begin
         miCCIndex := Succ(i);
         Include(miFlags, mfActive);
@@ -570,7 +570,7 @@ begin
     wbMergeSortPtr(@mlModulesLoadOrder[0], i, _ModulesLoadOrderCompare);
 
   if gcOrderFromLoadOrderTxt in lGameDef.Capabilities then begin
-    s := ExtractFilePath(wbPluginsFileName) + 'loadorder.txt';
+    s := ExtractFilePath(mlContext.Settings.PluginsFileName) + 'loadorder.txt';
     if FileExists(s) then begin
       sl := TStringList.Create;
       try

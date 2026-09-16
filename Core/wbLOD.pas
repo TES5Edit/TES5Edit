@@ -1781,7 +1781,7 @@ var
 begin
   var lGameDef := wbGameDefOf(aWorldspace);
   // split Skyrim's Trees LOD atlas into separate billboard textures
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
+  Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
   if Length(Res) > 0 then
     LodSet.LoadFromData(lGameDef, Res[High(Res)].GetData)
   else begin
@@ -1790,7 +1790,7 @@ begin
   end;
   Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.EditorID);
   try
-    Res := wbContainerHandler.OpenResource(Lst.ListFileName);
+    Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(Lst.ListFileName);
     if Length(Res) > 0 then
       Lst.LoadFromData(Res[High(Res)].GetData)
     else begin
@@ -1798,7 +1798,7 @@ begin
       Exit;
     end;
 
-    Res := wbContainerHandler.OpenResource(Lst.AtlasFileName);
+    Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(Lst.AtlasFileName);
     if Length(Res) > 0 then
       Lst.LoadAtlas(Res[High(Res)].GetData)
     else begin
@@ -1813,9 +1813,9 @@ begin
     slCont := TwbFastStringList.Create;
     slList := TwbFastStringList.Create;
     try
-      wbContainerHandler.ContainerList(slCont);
+      aWorldspace.ContextObj.ContainerHandler.ContainerList(slCont);
       for i := Pred(slCont.Count) downto 0 do
-        wbContainerHandler.ContainerResourceList(slCont[i], slList, ExtractFilePath(Lst.ListFileName));
+        aWorldspace.ContextObj.ContainerHandler.ContainerResourceList(slCont[i], slList, ExtractFilePath(Lst.ListFileName));
       slList.Duplicates := dupIgnore;
       slList.Sorted := True;
 
@@ -1832,7 +1832,7 @@ begin
       for i := 0 to Pred(slList.Count) do begin
         if not SameText(ExtractFileExt(slList[i]), '.' + wbLODTreeBlockFileExt(lGameDef)) then
           Continue;
-        Res := wbContainerHandler.OpenResource(slList[i]);
+        Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(slList[i]);
         if Length(Res) = 0 then Continue;
         BTT.LoadFromData(Res[High(Res)].GetData);
         // for each tree type in btt file
@@ -1867,7 +1867,7 @@ begin
       slList.Free;
     end;
 
-    SplitPath := wbOutputPath + 'Textures\Terrain\LODGen\AtlasSplit_' + ChangeFileExt(ExtractFileName(Lst.AtlasFileName), '') + '\';
+    SplitPath := aWorldspace.ContextObj.Settings.OutputPath + 'Textures\Terrain\LODGen\AtlasSplit_' + ChangeFileExt(ExtractFileName(Lst.AtlasFileName), '') + '\';
 
     for i := 0 to Pred(Lst.TreesListCount) do with Lst.TreesList[i] do begin
       for n := Low(TreeRecords[Index]) to High(TreeRecords[Index]) do begin
@@ -2020,7 +2020,7 @@ begin
     Result := ChangeFileExt(aStat.ElementEditValues['Model\MODL'], '') + '_lod.nif';
 
   Result := TwbAsset.GetAssetName(Result, '', atMesh);
-  if (aLODLevel <> -1) and not wbContainerHandler.ResourceExists(Result) then
+  if (aLODLevel <> -1) and not aStat.ContextObj.ContainerHandler.ResourceExists(Result) then
     Result := '';
 end;
 
@@ -2217,7 +2217,7 @@ begin
       Abort;
   end;
 
-  LODPath := wbOutputPath + 'DistantLOD\';
+  LODPath := aWorldspace.ContextObj.Settings.OutputPath + 'DistantLOD\';
 
   ForceDirectories(LODPath);
 
@@ -2397,13 +2397,13 @@ var
     end;
     Result := Lst.AddTree(TreeRec._File.FileName, Ovr.ElementEditValues['Model\MODL'], TreeRec.LoadOrderFormID, Width, Height);
     // load billboard texture
-    Res := wbContainerHandler.OpenResource(Result^.Billboard);
+    Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(Result^.Billboard);
     if (Length(Res) > 0) and Result^.LoadFromData(Res[High(Res)].GetData) then begin
       //slLog.Add(TreeRec.Name + ' using LOD ' + Result^.Billboard);
       // store checksum of billboard to avoid duplicates in atlas
       Result^.CRC32 := TwbHash.CRC32(Res[High(Res)].GetData);
       // load tree data
-      Res := wbContainerHandler.OpenResource(ChangeFileExt(Result^.Billboard, '.txt'));
+      Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(ChangeFileExt(Result^.Billboard, '.txt'));
       if Length(Res) > 0 then begin
         bsIni := TBytesStream.Create(Res[High(Res)].GetData);
         slIni := TStringList.Create;
@@ -2523,7 +2523,7 @@ begin
   var lGameDef := wbGameDefOf(aWorldspace);
 
   // need an existing lodsettings file to align lod blocks
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
+  Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
   if Length(Res) > 0 then
     LodSet.LoadFromData(lGameDef, Res[High(Res)].GetData)
   else begin
@@ -2703,7 +2703,7 @@ begin
       if (Lst.TreesListCount = 0) or (lGameDef.IsFallout3 and (TreesCount = 0)) then
         wbProgressCallback('<Note: Can not build Trees LOD for ' + aWorldspace.EditorID + ', no resource billboards or valid tree references found>')
       else begin
-        LODPath := wbOutputPath; // -O switch override
+        LODPath := aWorldspace.ContextObj.Settings.OutputPath; // -O switch override
 
         Application.MainForm.Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
@@ -3020,11 +3020,11 @@ begin
           UVRange := StrToFloatDef(Settings.ReadString(Section, 'AtlasTextureUVRange', '1.5'), 1.5);
           // atlas file name
           if lGameDef.IsSkyrim then
-            AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
+            AtlasName := aWorldspace.ContextObj.Settings.OutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'ObjectsLOD.dds'
           else if lGameDef.IsFallout3 then
-            AtlasName := wbOutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + '.Buildings.dds';
+            AtlasName := aWorldspace.ContextObj.Settings.OutputPath + 'textures\landscape\lod\' + aWorldspace.EditorID  + '\Blocks\' + aWorldspace.EditorID + '.Buildings.dds';
           // atlas map name
-          AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
+          AtlasMapName := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGenAtlasMap.txt';
           // textures list file name
           //if wbGameMode in [ gmSSE ] then
           //  TexturesListFile := wbScriptsPath + 'LODGenTexturesList.txt';
@@ -3036,7 +3036,7 @@ begin
         else
           // use vanilla atlas if build atlas is not selected
           if lGameDef.IsSkyrim then begin
-            AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
+            AtlasMapName := aWorldspace.ContextObj.Settings.ScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
             UVRange := 10000;
           end;
 
@@ -3062,18 +3062,18 @@ begin
           slExport.Add('TextureAtlasMap=' + AtlasMapName);
           slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
         end;
-        slExport.Add('PathData=' + wbDataPath);
+        slExport.Add('PathData=' + aWorldspace.ContextObj.Settings.DataPath);
         if lGameDef.IsSkyrim then
-          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
+          slExport.Add('PathOutput=' + aWorldspace.ContextObj.Settings.OutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects')
         else if lGameDef.IsFallout3 then
-          slExport.Add('PathOutput=' + wbOutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
+          slExport.Add('PathOutput=' + aWorldspace.ContextObj.Settings.OutputPath + 'meshes\landscape\lod\' + aWorldspace.EditorID  + '\Blocks')
         else
           raise Exception.Create('Unsupported LODGen game');
         // list of BSAs
-        if wbContainerHandler <> nil then begin
+        if aWorldspace.ContextObj.ContainerHandler <> nil then begin
           sl := TStringList.Create;
           try
-            wbContainerHandler.ContainerList(sl);
+            aWorldspace.ContextObj.ContainerHandler.ContainerList(sl);
             for i := 0 to sl.Count - 2 do  // exclude the last Data folder
               slExport.Add('Resource=' + sl[i]);
           finally
@@ -3108,13 +3108,13 @@ begin
                   FloatToStr(Lst.fTrees[i].ShiftZ) + #9 +
                   FloatToStr(Lst.fTrees[i].ScaleFactor) + #9 +
                   '1' + #9 +  // float for BillboardsEffectLighting
-                  wbScriptsPath + 'LODGen_flat_lod.nif' + #9 +
+                  aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGen_flat_lod.nif' + #9 +
                   '' + #9 + // glow texture
                   '-1' + #9 + // float vertex color
                   '-1' // float vertexcolor range
                 );
               end;
-            s := wbScriptsPath + 'LODGenFlatTextures.txt';
+            s := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGenFlatTextures.txt';
             sl.SaveToFile(s);
             slExport.Add('FlatTextures=' + s);
           finally
@@ -3123,7 +3123,7 @@ begin
         end;
 
         // adding Extra Options
-        s := wbScriptsPath + wbLODExtraOptionsFileName(
+        s := aWorldspace.ContextObj.Settings.ScriptsPath + wbLODExtraOptionsFileName(
           ChangeFileExt(ExtractFileName(aWorldspace.MasterOrSelf._File.FileName), ''),
           aWorldspace.EditorID
         );
@@ -3143,7 +3143,7 @@ begin
         slExport.AddStrings(slRefs);
 
         // saving export file
-        s := wbScriptsPath + 'LODGen.txt';
+        s := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGen.txt';
         wbProgressCallback('[' + aWorldspace.EditorID + '] Saving LODGen data: ' + s);
         slExport.SaveToFile(s);
 
@@ -3201,8 +3201,8 @@ begin
           end;
         end;
 
-        s := wbScriptsPath + 'LODGen.txt';
-        s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
+        s := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGen.txt';
+        s := Format('"%s" "%s"', [aWorldspace.ContextObj.Settings.ScriptsPath + sLODGenName, s]);
         s := s + ' --dontFixTangents';
         s := s + ' --removeUnseenFaces';
         // if "No LOD Water" flag is set for a worldspace, then don't remove underwater meshes
@@ -3232,9 +3232,9 @@ begin
 
         // disable traditional Trees LOD if trees are generated as objects
         if bTrees3D and (ErrCode = 0) then begin
-          s := wbDataPath + lst.ListFileName;
+          s := aWorldspace.ContextObj.Settings.DataPath + lst.ListFileName;
           if FileExists(s) then System.SysUtils.DeleteFile(s);
-          if wbContainerHandler.ResourceExists(lst.ListFileName) then begin
+          if aWorldspace.ContextObj.ContainerHandler.ResourceExists(lst.ListFileName) then begin
             ForceDirectories(ExtractFilePath(s));
             SetLength(Bytes, 4);
             TFile.WriteAllBytes(s, Bytes);
@@ -3548,7 +3548,7 @@ var
 begin
   var lGameDef := wbGameDefOf(aWorldspace);
   // need an existing lodsettings file to align lod blocks
-  Res := wbContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
+  Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
   if Length(Res) > 0 then
     LodSet.LoadFromData(lGameDef, Res[High(Res)].GetData)
   else begin
@@ -3610,9 +3610,9 @@ begin
       // creating lod textures atlas part 1 - set file paths to be used in export file
       if bBuildAtlas then begin
         // atlas file name
-        AtlasName := wbOutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'Objects.dds';
+        AtlasName := aWorldspace.ContextObj.Settings.OutputPath + 'textures\terrain\' + aWorldspace.EditorID  + '\Objects\' + aWorldspace.EditorID + 'Objects.dds';
         // atlas map name
-        AtlasMapName := wbScriptsPath + 'LODGenAtlasMap.txt';
+        AtlasMapName := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGenAtlasMap.txt';
         // make sure atlas folder exists
         if not DirectoryExists(ExtractFilePath(AtlasName)) then
           if not ForceDirectories(ExtractFilePath(AtlasName)) then
@@ -3620,7 +3620,7 @@ begin
       end
       else begin
         // use vanilla atlas if build atlas is not selected
-        AtlasMapName := wbScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
+        AtlasMapName := aWorldspace.ContextObj.Settings.ScriptsPath + wbAppName + '-AtlasMap-' + aWorldspace.EditorID + '.txt';
         UVRange := 10000;
       end;
 
@@ -3646,14 +3646,14 @@ begin
         slExport.Add('TextureAtlasMap=' + AtlasMapName);
         slExport.Add('AtlasTolerance=' + Format('%1.1f', [UVRange - 1.0]));
       end;
-      slExport.Add('PathData=' + wbDataPath);
-      slExport.Add('PathOutput=' + wbOutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
+      slExport.Add('PathData=' + aWorldspace.ContextObj.Settings.DataPath);
+      slExport.Add('PathOutput=' + aWorldspace.ContextObj.Settings.OutputPath + 'meshes\terrain\' + aWorldspace.EditorID  + '\Objects');
 
       // list of archives
-      if wbContainerHandler <> nil then begin
+      if aWorldspace.ContextObj.ContainerHandler <> nil then begin
         sl := TStringList.Create;
         try
-          wbContainerHandler.ContainerList(sl);
+          aWorldspace.ContextObj.ContainerHandler.ContainerList(sl);
           for i := 0 to sl.Count - 2 do  // exclude the last Data folder
             slExport.Add('Resource=' + sl[i]);
         finally
@@ -3662,7 +3662,7 @@ begin
       end;
 
       // adding Extra Options
-      s := wbScriptsPath + wbLODExtraOptionsFileName(
+      s := aWorldspace.ContextObj.Settings.ScriptsPath + wbLODExtraOptionsFileName(
         ChangeFileExt(ExtractFileName(aWorldspace.MasterOrSelf._File.FileName), ''),
         aWorldspace.EditorID
       );
@@ -3682,7 +3682,7 @@ begin
       slExport.AddStrings(slRefs);
 
       // saving export file
-      s := wbScriptsPath + 'LODGen.txt';
+      s := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGen.txt';
       wbProgressCallback('[' + aWorldspace.EditorID + '] Saving LODGen data: ' + s);
       slExport.SaveToFile(s);
 
@@ -3699,9 +3699,9 @@ begin
           slList := TwbFastStringList.Create;
           try
             // get list of all files in materials\lod\ for wildcard replacements
-            wbContainerHandler.ContainerList(slCont);
+            aWorldspace.ContextObj.ContainerHandler.ContainerList(slCont);
             for i := Pred(slCont.Count) downto 0 do
-              wbContainerHandler.ContainerResourceList(slCont[i], slList, 'materials\lod\');
+              aWorldspace.ContextObj.ContainerHandler.ContainerResourceList(slCont[i], slList, 'materials\lod\');
             slList.Duplicates := dupIgnore;
             slList.Sorted := True;
 
@@ -3722,7 +3722,7 @@ begin
                 if s = 'materials\dlc04\lod\architecture\galacticzone\metalpaneltrim01_lod__black17.bgsm' then
                   s := 'materials\dlc04\lod\architecture\galacticzone\metalpaneltrim01_lod_black17.bgsm';
 
-                if not wbContainerHandler.ResourceExists(s) then
+                if not aWorldspace.ContextObj.ContainerHandler.ResourceExists(s) then
                   raise Exception.Create('Not found');
 
                 bgsm.LoadFromResource(s);
@@ -3755,8 +3755,8 @@ begin
         end;
       end;
 
-      s := wbScriptsPath + 'LODGen.txt';
-      s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
+      s := aWorldspace.ContextObj.Settings.ScriptsPath + 'LODGen.txt';
+      s := Format('"%s" "%s"', [aWorldspace.ContextObj.Settings.ScriptsPath + sLODGenName, s]);
       if bChunk then begin
         if Settings.ReadString(Section, 'LODLevel', '') <> '' then
           s := s + ' --lodLevel ' + Settings.ReadString(Section, 'LODLevel', '');

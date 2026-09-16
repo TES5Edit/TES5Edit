@@ -801,6 +801,7 @@ type
   IwbGameDef = interface;
   TwbGameDef = class;
   IwbGameContext = interface;
+  TwbGameContext = class;
   IwbFile = interface;
   IwbSaveTables = interface;
   IwbNamedDef = interface;
@@ -1060,6 +1061,7 @@ type
     function GetFile: IwbFile;
     function GetReferenceFile: IwbFile;
     function GetGameDefObj: TwbGameDef;
+    function GetContextObj: TwbGameContext;
     function GetSortOrder: Integer;
     procedure SetSortOrder(aSortOrder: Integer);
     function GetMemoryOrder: Integer;
@@ -1185,6 +1187,8 @@ type
       read GetReferenceFile;
     property GameDefObj: TwbGameDef
       read GetGameDefObj;
+    property ContextObj: TwbGameContext
+      read GetContextObj;
     property InjectionSourceFiles: TwbFiles
       read GetInjectionSourceFiles;
 
