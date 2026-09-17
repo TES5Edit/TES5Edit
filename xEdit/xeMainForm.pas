@@ -1741,7 +1741,7 @@ begin
     frmMain.mmoMessages.Clear;
   wbProgress(wbCurrentAction);
 
-  wbFileForceClosed;
+  xeContext.ForceClosedFiles;
 
   if xeContext.Settings.DontSave then
     Exit;
@@ -1932,7 +1932,7 @@ begin
     Exit;
   end;
 }
-  Result := wbNewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aIsLight, aIsMedium);
+  Result := xeContext.NewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aIsLight, aIsMedium);
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   vstNav.AddChild(nil, Pointer(Result));
@@ -1962,7 +1962,7 @@ begin
     LoadOrder := Succ(LoadOrder);
   end;
 
-  Result := wbNewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aTemplate);
+  Result := (xeContext as TwbLoadingGameContext).NewFile(xeContext.Settings.DataPath + aFileName, LoadOrder, aTemplate);
   SetLength(Files, Succ(Length(Files)));
   Files[High(Files)] := Result;
   vstNav.AddChild(nil, Pointer(Result));
@@ -5023,7 +5023,7 @@ begin
         end;
         sl.Clear;
         //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
-        wbMastersForFile(xeContext.Settings.SavePath + s, sl);
+        xeContext.MastersForFile(xeContext.Settings.SavePath + s, sl);
         sl.Add(s);
       end else {wbToolSource = tsPlugins} begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
@@ -10621,7 +10621,7 @@ var
 
   i          : Integer;
 begin
-  MainRecord := wbFindWinningMainRecordByEditorID('FLST', 'FO3EditAddOnsOrderedList');
+  MainRecord := xeContext.FindWinningMainRecordByEditorID('FLST', 'FO3EditAddOnsOrderedList');
   if not Assigned(MainRecord) then
     raise Exception.Create('Can''t find FO3EditAddOnsOrderedList');
 
@@ -10638,7 +10638,7 @@ begin
 
   SetLength(KitConfigs, Length(Kits));
   for i := Low(Kits) to High(Kits) do begin
-    KitConfigs[i] := wbFindWinningMainRecordByEditorID('BOOK', 'FO3EditAddOns' + Kits[i].EditorID + 'Config');
+    KitConfigs[i] := xeContext.FindWinningMainRecordByEditorID('BOOK', 'FO3EditAddOns' + Kits[i].EditorID + 'Config');
     if not Assigned(KitConfigs[i]) then
       raise Exception.Create('Could not find the Config record for ' + Kits[i].EditorID);
   end;
@@ -21897,7 +21897,7 @@ begin
               if Length(b) > 0 then begin
                 t := wbGameExeName;
                 LoaderProgress('loading "' + t + '"...');
-                _File := wbFile(t, 0, '', [fsIsHardcoded], b);
+                _File := xeContext.LoadFile(t, 0, '', [fsIsHardcoded], b);
                 SetLength(ltFiles, Succ(Length(ltFiles)));
                 ltFiles[High(ltFiles)] := _File;
                 frmMain.SendAddFile(_File);
@@ -21918,7 +21918,7 @@ begin
                 if not FileExists(s) then // Assume its a save in the save path
                   s := xeContext.Settings.SavePath + ltLoadList[lLoadListIdx];
           end;
-          _File := wbFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
+          _File := xeContext.LoadFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);
@@ -21931,7 +21931,7 @@ begin
             if Length(b) > 0 then begin
               t := wbGameExeName;
               LoaderProgress('loading "' + t + '"...');
-              _File := wbFile(t, 0, ltDataPath + ltLoadList[lLoadListIdx], [fsIsHardcoded], b);
+              _File := xeContext.LoadFile(t, 0, ltDataPath + ltLoadList[lLoadListIdx], [fsIsHardcoded], b);
               SetLength(ltFiles, Succ(Length(ltFiles)));
               ltFiles[High(ltFiles)] := _File;
               frmMain.SendAddFile(_File);

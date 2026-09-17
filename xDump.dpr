@@ -1547,10 +1547,10 @@ begin
         Masters := TStringList.Create;
         try
           IsLocalized := False;
-          wbMastersForFile(s, Masters, nil, nil, @IsLocalized);
+          HostContext.MastersForFile(s, Masters, nil, nil, @IsLocalized);
           if not IsLocalized then
             for i := 0 to Pred(Masters.Count) do begin
-              wbMastersForFile(Masters[i], nil, nil, nil, @IsLocalized);
+              HostContext.MastersForFile(Masters[i], nil, nil, nil, @IsLocalized);
               if IsLocalized then
                 Break;
             end;
@@ -1676,18 +1676,18 @@ begin
       if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then begin
         b := TwbHardcodedContainer.GetHardCodedDat;
         if Length(b) > 0 then
-          wbFile(wbGameExeName, 0, '', [fsIsHardcoded], b);
+          HostContext.LoadFile(wbGameExeName, 0, '', [fsIsHardcoded], b);
       end;
 
       if wbToolMode in [tmDump] then
-        _File := wbFile(s, High(Integer));
+        _File := HostContext.LoadFile(s, High(Integer));
 
       if not (gcHardcodedFileIsFirstMaster in wbCurrentCapabilities) then
         with wbModuleByName(wbGameMasterEsm)^ do
           if mfHasFile in miFlags then begin
             b := TwbHardcodedContainer.GetHardCodedDat;
             if Length(b) > 0 then
-              wbFile(wbGameExeName, 0, wbGameMasterEsm, [fsIsHardcoded], b);
+              HostContext.LoadFile(wbGameExeName, 0, wbGameMasterEsm, [fsIsHardcoded], b);
           end;
 
       ReportProgress('Finished loading record. Starting Dump.');
