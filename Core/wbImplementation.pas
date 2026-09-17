@@ -71,7 +71,6 @@ uses
 {$ENDIF}
 
   wbCompression,
-  wbGameDefGlobals,
   wbHash,
   wbHelpers,
   wbLocalization,
@@ -2310,7 +2309,7 @@ var
   i     : Integer;
   States: TwbFileStates;
 begin
-  if not wbRequireLoadorder and IsTemporary then begin
+  if not flContextObj.Settings.RequireLoadOrder and IsTemporary then begin
     for i := 0 to Pred(GetMasterCount(True)) do
       if SameText(ExtractFileName(aFileName), GetMaster(i, True).FileName) then
         Exit;

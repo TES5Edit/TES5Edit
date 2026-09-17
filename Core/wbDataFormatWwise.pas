@@ -44,7 +44,6 @@ uses
 
   JsonDataObjects,
 
-  wbGameDefGlobals,
   wbHash;
 
 type

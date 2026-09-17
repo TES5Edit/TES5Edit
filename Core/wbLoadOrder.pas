@@ -164,7 +164,6 @@ uses
   System.IOUtils,
   System.Types,
 
-  wbGameDefGlobals,
   wbHelpers,
   wbImplementation,
   wbSort;
