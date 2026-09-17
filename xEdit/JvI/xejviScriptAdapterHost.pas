@@ -523,7 +523,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-    if wbIsSkyrim then
+    if xeContext.GameDefObj.IsSkyrim then
       wbGenerateLODTES5(MainRecord, [lodTrees], frmMain.Files, frmMain.Settings);
   end else
     JvInterpreterError(ieDirectInvalidArgument, 0);
@@ -534,7 +534,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-    if wbIsSkyrim then
+    if xeContext.GameDefObj.IsSkyrim then
       wbGenerateLODTES5(MainRecord, [lodObjects], frmMain.Files, frmMain.Settings);
   end else
     JvInterpreterError(ieDirectInvalidArgument, 0);

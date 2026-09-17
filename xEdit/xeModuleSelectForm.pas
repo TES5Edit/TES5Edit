@@ -430,6 +430,7 @@ end;
 
 procedure TfrmModuleSelect.FormCreate(Sender: TObject);
 begin
+  var lGameDef := xeContext.GameDefObj;
   xeApplyFontAndScale(Self);
   //vstModules.Header.Height := vstModules.DefaultNodeHeight + 4;
 
@@ -440,15 +441,15 @@ begin
     end;
 
   with vstModules.Header.Columns[3] do begin
-    if not wbIsLightSupported then
+    if not lGameDef.IsLightSupported then
       Options := Options - [coVisible]
     else
       Text := wbLightName;
   end;
-  if not wbIsMediumSupported then
+  if not lGameDef.IsMediumSupported then
     with vstModules.Header.Columns[7] do
       Options := Options - [coVisible];
-  if not wbIsUpdateSupported then
+  if not lGameDef.IsUpdateSupported then
     with vstModules.Header.Columns[6] do
       Options := Options - [coVisible];
   if xeContext.Settings.PseudoLight or xeContext.Settings.PseudoMedium or xeContext.Settings.PseudoUpdate then

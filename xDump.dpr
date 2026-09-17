@@ -564,14 +564,15 @@ var
   RecordDef : PwbMainRecordDef;
   Profile   : String;
 begin
+  var lGameDef := HostContext.GameDefObj;
   Profile := '';
   case wbToolSource of
     tsPlugins: begin
-      if _CurrentGameDef.FindRecordDef(HostContext.GameDefObj.HeaderSignature, RecordDef) then
+      if _CurrentGameDef.FindRecordDef(lGameDef.HeaderSignature, RecordDef) then
         ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
-      ProfileElement(aFormat, HostContext.GameDefObj.FileHeader, Profile, Pass, '');
+      ProfileElement(aFormat, lGameDef.FileHeader, Profile, Pass, '');
     end;
   end;
 end;
@@ -582,11 +583,12 @@ var
   RecordDef : PwbMainRecordDef;
   Profile   : String;
 begin
+  var lGameDef := HostContext.GameDefObj;
   case wbToolSource of
-    tsPlugins: for i := 0 to Pred(HostContext.GameDefObj.GroupOrder.Count) do
-      if HostContext.GameDefObj.GroupOrder[i]<>HostContext.GameDefObj.HeaderSignature then begin
+    tsPlugins: for i := 0 to Pred(lGameDef.GroupOrder.Count) do
+      if lGameDef.GroupOrder[i]<>lGameDef.HeaderSignature then begin
         Profile := '';
-        if _CurrentGameDef.FindRecordDef(AnsiString(HostContext.GameDefObj.GroupOrder[i]), RecordDef) then
+        if _CurrentGameDef.FindRecordDef(AnsiString(lGameDef.GroupOrder[i]), RecordDef) then
           ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
   end;
@@ -597,10 +599,11 @@ var
   i         : Integer;
   Profile   : String;
 begin
+  var lGameDef := HostContext.GameDefObj;
   Profile := '';
   case wbToolSource of
-    tsSaves: for i := 0 to Pred(HostContext.GameDefObj.FileChapters.MemberCount) do begin
-      ProfileElement(aFormat, HostContext.GameDefObj.FileChapters.Members[i], Profile, Pass, '');
+    tsSaves: for i := 0 to Pred(lGameDef.FileChapters.MemberCount) do begin
+      ProfileElement(aFormat, lGameDef.FileChapters.Members[i], Profile, Pass, '');
     end;
   end;
 end;
@@ -1660,7 +1663,7 @@ begin
           ReportProgress('[' + HostContext.Settings.DataPath + '] Setting Resource Path.');
           HostContext.ContainerHandler.AddFolder(HostContext.Settings.DataPath);
 
-          if gcWwiseSoundBanks in wbCurrentCapabilities then
+          if gcWwiseSoundBanks in HostContext.GameDefObj.Capabilities then
             wbBuildSoundBankCache(Masters);
 
         finally
@@ -1673,7 +1676,7 @@ begin
 
       wbResourcesLoaded;
 
-      if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then begin
+      if gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities then begin
         b := TwbHardcodedContainer.GetHardCodedDat;
         if Length(b) > 0 then
           HostContext.LoadFile(wbGameExeName, 0, '', [fsIsHardcoded], b);
@@ -1682,7 +1685,7 @@ begin
       if wbToolMode in [tmDump] then
         _File := HostContext.LoadFile(s, High(Integer));
 
-      if not (gcHardcodedFileIsFirstMaster in wbCurrentCapabilities) then
+      if not (gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities) then
         with wbModuleByName(wbGameMasterEsm)^ do
           if mfHasFile in miFlags then begin
             b := TwbHardcodedContainer.GetHardCodedDat;

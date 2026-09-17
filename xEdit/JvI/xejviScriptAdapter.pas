@@ -95,13 +95,14 @@ var
   sl: TStrings;
   i: integer;
 begin
+  var lGameDef := xeContext.GameDefObj;
   sl := TStrings(V2O(Args.Values[0]));
 
   if not Assigned(sl) then
     Exit;
 
-  for i := Low(xeContext.GameDefObj.RecordDefs) to High(xeContext.GameDefObj.RecordDefs) do
-    with xeContext.GameDefObj.RecordDefs[i].rdeDef do
+  for i := Low(lGameDef.RecordDefs) to High(lGameDef.RecordDefs) do
+    with lGameDef.RecordDefs[i].rdeDef do
       sl.Add(DefaultSignature + ' - ' + GetName);
 end;
 

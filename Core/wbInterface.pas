@@ -5764,22 +5764,6 @@ var
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
 
-function wbCurrentGameMode: TwbGameMode; inline;
-function wbIsMorrowind: Boolean; inline;
-function wbIsOblivion: Boolean; inline;
-function wbIsOblivionR: Boolean; inline;
-function wbIsFallout3: Boolean; inline;
-function wbIsFalloutNV: Boolean; inline;
-function wbIsSkyrim: Boolean; inline;
-function wbIsSkyrimSE: Boolean; inline;
-function wbIsFallout4: Boolean; inline;
-function wbIsFallout76: Boolean; inline;
-function wbIsStarfield: Boolean; inline;
-function wbIsLightSupported: Boolean; inline;
-function wbIsMediumSupported: Boolean; inline;
-function wbIsBlueprintSupported: Boolean; inline;
-function wbIsUpdateSupported: Boolean; inline;
-function wbCurrentCapabilities: TwbGameCapabilities;
 function wbGameDefOf(const aElement: IwbElement): TwbGameDef;
 
 type
@@ -6337,64 +6321,6 @@ begin
   Result := TwbNullWaitForm.Create;
 end;
 
-function wbCurrentGameMode: TwbGameMode; inline;
-begin
-  if _CurrentGameDef.Live then
-    Result := wbGameMode
-  else
-    Result := _CurrentGameDef.StoredGameMode;
-end;
-
-function wbIsMorrowind: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsMorrowind;
-end;
-
-function wbIsOblivion: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsOblivion;
-end;
-
-function wbIsOblivionR: Boolean; Inline;
-begin
-  Result := _CurrentGameDef.IsOblivionR;
-end;
-
-function wbIsFallout3: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsFallout3;
-end;
-
-function wbIsFalloutNV: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsFalloutNV;
-end;
-
-function wbIsSkyrim: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsSkyrim;
-end;
-
-function wbIsSkyrimSE: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsSkyrimSE;
-end;
-
-function wbIsFallout4: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsFallout4;
-end;
-
-function wbIsFallout76: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsFallout76;
-end;
-
-function wbIsStarfield: Boolean; inline;
-begin
-  Result := _CurrentGameDef.IsStarfield;
-end;
-
 function wbComputeCapabilities(aGameMode: TwbGameMode; aLightSupport, aMediumSupport, aUpdateSupport, aCS, aHNVSE: Boolean): TwbGameCapabilities;
 begin
   Result := [];
@@ -6484,31 +6410,6 @@ begin
     Include(Result, gcCommunityShaders);
   if aHNVSE then
     Include(Result, gcHNVSE);
-end;
-
-function wbCurrentCapabilities: TwbGameCapabilities;
-begin
-  Result := _CurrentGameDef.Capabilities;
-end;
-
-function wbIsLightSupported: Boolean; inline;
-begin
-  Result := gcLightPlugins in _CurrentGameDef.Capabilities;
-end;
-
-function wbIsMediumSupported: Boolean; inline;
-begin
-  Result := gcMediumPlugins in _CurrentGameDef.Capabilities;
-end;
-
-function wbIsBlueprintSupported: Boolean; inline;
-begin
-  Result := gcBlueprintPlugins in _CurrentGameDef.Capabilities;
-end;
-
-function wbIsUpdateSupported: Boolean; inline;
-begin
-  Result := gcUpdatePlugins in _CurrentGameDef.Capabilities;
 end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource);

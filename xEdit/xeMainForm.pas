@@ -1657,7 +1657,7 @@ begin
     Exit;
   end;
 
-  if not (gcOrderFromPluginsTxt in wbCurrentCapabilities) then
+  if not (gcOrderFromPluginsTxt in xeContext.GameDefObj.Capabilities) then
     if OldDateTime <> 0 then
       if wbIsModule(lTo) then try
       TFile.SetLastWriteTime(lTo, OldDateTime);
@@ -2791,7 +2791,7 @@ begin
                     Assert(Assigned(LeveledListEntries));
                     Assert(LeveledListEntries.ElementCount = 1);
                     LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
-                    if not wbIsOblivion then
+                    if not xeContext.GameDefObj.IsOblivion then
                       LeveledListEntry := LeveledListEntry.Elements[0] as IwbContainerElementRef;
                     Assert(Assigned(LeveledListEntry));
                     LeveledListEntry.Elements[2].EditValue := MainRecord2.EditValue;
@@ -3674,7 +3674,8 @@ var
   i               : Integer;
   EditState       : Boolean;
 begin
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+  var lGameDef := xeContext.GameDefObj;
+  if lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
     if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
@@ -4474,8 +4475,9 @@ var
   MainRecord  : IwbMainRecord;
   Worldspaces : TDynMainRecords;
 begin
+  var lGameDef := xeContext.GameDefObj;
   // xLODGen: selective lodgenning, no need to regenerate lod for all worldspaces like in Oblivion
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield then begin
+  if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield then begin
     try
       mniNavGenerateLODClick(nil);
     finally
@@ -4612,6 +4614,7 @@ var
 
   Stream        : TStream;
 begin
+  var lGameDef := xeContext.GameDefObj;
   {$IFDEF USE_PARALLEL_BUILD_REFS}
   TThread.CreateAnonymousThread(procedure begin
     var ThreadCount := TThread.ProcessorCount;
@@ -4890,7 +4893,7 @@ begin
               CheckListBox1.Items.EndUpdate;
             end;
 
-            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and wbIsFallout3 then begin
+            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
               AgeDateTime := Modules[0].miDateTime;
               for i := 1 to High(Modules) do begin
                 AgeDateTime := AgeDateTime + (1/24/60);
@@ -4900,7 +4903,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit or xeQuickSEQ) and not wbIsMorrowind then begin
+        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit or xeQuickSEQ) and not lGameDef.IsMorrowind then begin
           Modules.DeactivateAll;
 
           if (xePluginToUse <> '') or not xeQuickClean then
@@ -7785,7 +7788,7 @@ begin
               if Result then
                 Result := not ((not xeContext.Settings.AllowESPMasters) and SameText(ExtractFileExt(a._File.FileName), '.esp'));
               if Result then
-                Result := not (wbIsStarfield and a._File.IsBlueprint);
+                Result := not (xeContext.GameDefObj.IsStarfield and a._File.IsBlueprint);
             end;
           end);
         if Length(AllModules) < 1 then
@@ -9973,7 +9976,8 @@ var
   lodTypes    : TLODTypes;
   Section     : string;
 begin
-  if wbIsFallout76 or wbIsStarfield then begin
+  var lGameDef := xeContext.GameDefObj;
+  if lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
     Application.MessageBox('LOD generation not supported.', 'Warning', MB_ICONINFORMATION + MB_OK);
     Exit;
   end;
@@ -9992,7 +9996,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -10017,7 +10021,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -10075,7 +10079,7 @@ begin
   end;
 
   // xLODGen
-  if wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsStarfield then begin
+  if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield then begin
     with TfrmLODGen.Create(Self) do try
       j := -1;
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
@@ -10097,7 +10101,7 @@ begin
       Section := wbAppName + ' LOD Options';
 
       // FO4 settings
-      if wbIsFallout4 or wbIsStarfield then begin
+      if lGameDef.IsFallout4 or lGameDef.IsStarfield then begin
         iDefaultAtlasWidth := 4096;
         iDefaultAtlasHeight := 4096;
         fDefaultUVRange := 1.1;
@@ -10140,7 +10144,7 @@ begin
       cbTreesLOD.Checked := Settings.ReadBool(Section, 'TreesLOD', True);
       cbTrees3D.Checked := Settings.ReadBool(Section, 'Trees3D', False {wbGameMode in [gmSSE]});
       cmbTreesLODBrightness.ItemIndex := IndexOf(cmbTreesLODBrightness.Items, Settings.ReadString(Section, 'TreesBrightness', '0'));
-      if wbIsFallout4 or wbIsStarfield then begin
+      if lGameDef.IsFallout4 or lGameDef.IsStarfield then begin
         cbTreesLOD.Checked := False;
         cbTreesLOD.Enabled := False;
         cbUseAlphaThreshold.Visible := True;
@@ -10174,7 +10178,7 @@ begin
       Settings.WriteString(Section, 'LODX', edLODX.Text);
       Settings.WriteString(Section, 'LODY', edLODY.Text);
       // Fallouts can have only a single atlas, so no options here
-      if wbIsFallout3 then begin
+      if lGameDef.IsFallout3 then begin
         Settings.WriteBool(Section, 'BuildAtlas', True);
         Settings.WriteString(Section, 'AtlasTextureSize', '1024');
         Settings.WriteString(Section, 'AtlasTextureUVRange', '10000');
@@ -10200,9 +10204,9 @@ begin
       try
         for i := 0 to Pred(clbWorldspace.Count) do
           if clbWorldspace.Checked[i] then
-            if wbIsSkyrim or wbIsFallout3 then
+            if lGameDef.IsSkyrim or lGameDef.IsFallout3 then
               wbGenerateLODTES5(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), lodTypes, Files, Settings)
-            else if wbIsFallout4 or wbIsStarfield then
+            else if lGameDef.IsFallout4 or lGameDef.IsStarfield then
               wbGenerateLODFO4(IwbMainRecord(Pointer(clbWorldspace.Items.Objects[i])), Files, Settings);
       finally
         pnlClient.Enabled := True;
@@ -11189,7 +11193,7 @@ begin
                     Element.NativeValue := xeContext.Settings.UDRSetScaleValue;
               end;
 
-              if xeContext.Settings.UDRSetMSTT and wbIsFallout3 then begin
+              if xeContext.Settings.UDRSetMSTT and xeContext.GameDefObj.IsFallout3 then begin
                 Element := ElementBySignature['NAME'];
                 if Assigned(Element) then
                   if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
@@ -12693,6 +12697,7 @@ end;
 
 function IsUnnecessaryPersistent(MainRecord: IwbMainRecord): Boolean;
 begin
+  var lGameDef := xeContext.GameDefObj;
   if MainRecord.Flags.IsDeleted then begin
     Result := IsMasterTemporary(MainRecord);
     Exit;
@@ -12702,12 +12707,12 @@ begin
   if (MainRecord.Signature <> 'ACHR') and (MainRecord.Signature <> 'REFR') then
     Exit;
 
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then
+  if lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then
     if MainRecord.Flags._Flags and $10000 <> 0 then
       Exit;
 
   var lRefCount := MainRecord.ReferencedByCount;
-  if (lRefCount > 0) and (wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield) then
+  if (lRefCount > 0) and (lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield) then
     for var i := 0 to Pred(lRefCount) do begin
       var lRefRecord : IwbMainRecord;
       if Supports(MainRecord.ReferencedBy[i].LinksTo, IwbMainRecord, lRefRecord) then
@@ -12736,7 +12741,7 @@ begin
   if Assigned(lBaseRecord.RecordBySignature['SCRI']) then
     Exit;
 
-  if not wbIsMorrowind or not wbIsOblivion then
+  if not lGameDef.IsMorrowind or not lGameDef.IsOblivion then
     if lBaseRecord.Signature = 'ACTI' then
       if Assigned(lBaseRecord.RecordBySignature['WNAM']) then
         Exit;
@@ -14499,11 +14504,12 @@ var
   i        : Integer;
   MenuItem : TMenuItem;
 begin
+  var lGameDef := xeContext.GameDefObj;
   jbhSave.CancelHint;
 
-  mniMainLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield);
+  mniMainLocalization.Visible := (lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield);
 
-  if wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield then begin
+  if lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
     mniMainLocalizationLanguage.Clear;
     sl := TStringList.Create;
     try
@@ -14554,6 +14560,7 @@ var
   i                           : Integer;
   Nodes                       : TNodeArray;
 begin
+  var lGameDef := xeContext.GameDefObj;
   mniNavTest.Visible := DebugHook <> 0;
 
   {$IFNDEF USE_CODESITE}
@@ -14589,7 +14596,7 @@ begin
 
   mniNavCompactFormIDs.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
-    wbIsLightSupported and
+    lGameDef.IsLightSupported and
     Supports(Element, IwbFile, _File) and
     not (_File.IsLight or _File.IsUpdate);
 
@@ -14613,8 +14620,8 @@ begin
   mniNavCheckForCircularLeveledLists.Visible :=
     mniNavCheckForErrors.Visible;
 
-  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and wbIsOblivion;
-  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and wbIsOblivion;
+  mniNavSetVWDAuto.Visible := mniNavCheckForErrors.Visible and lGameDef.IsOblivion;
+  mniNavSetVWDAutoInto.Visible := mniNavCheckForErrors.Visible and lGameDef.IsOblivion;
   mniNavLOManagersDirtyInfo.Visible := mniNavCheckForErrors.Visible and (Length(LOOTPluginInfos) <> 0);
 
   if wbManualCleaningAllow then begin
@@ -14702,7 +14709,7 @@ begin
   end;
 
   mniNavCopyAsWrapper.Visible := False;
-  if not (wbIsFallout76 or wbIsMorrowind) and mniNavCopyAsOverride.Visible and IsMainRecord then
+  if not (lGameDef.IsFallout76 or lGameDef.IsMorrowind) and mniNavCopyAsOverride.Visible and IsMainRecord then
     mniNavCopyAsWrapper.Visible :=
       (MainRecord.Signature = 'LVLB') or
       (MainRecord.Signature = 'LVLC') or
@@ -14775,11 +14782,11 @@ begin
     mniNavCellChildVWD.Checked := SelectionIncludesAnyVWD(NoNodes);
   end;
 
-  mniNavCreateSEQFile.Visible := wbIsSkyrim and
+  mniNavCreateSEQFile.Visible := lGameDef.IsSkyrim and
      Assigned(Element) and
     (Element.ElementType = etFile);
 
-  mniNavLocalization.Visible := (wbIsSkyrim or wbIsFallout4 or wbIsFallout76 or wbIsStarfield);
+  mniNavLocalization.Visible := (lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield);
   mniNavLocalizationSwitch.Visible :=
      Assigned(Element) and
     (Element.ElementType = etFile) and
@@ -14790,9 +14797,9 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmFO3, gmFNV]) or wbIsSkyrim;
+  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmFO3, gmFNV]) or lGameDef.IsSkyrim;
   mniNavLogAnalyzer.Clear;
-  if wbIsSkyrim then begin
+  if lGameDef.IsSkyrim then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'Papyrus Log';
@@ -16759,7 +16766,7 @@ begin
         FreeAndNil(sl2);
       end;
 
-      if wbIsSkyrim then begin
+      if xeContext.GameDefObj.IsSkyrim then begin
         slKeywords := TwbFastStringListCS.CreateSorted;
         for i := 0 to Pred(CheckListBox1.Count) do
           if CheckListBox1.Checked[i] then begin
@@ -17355,7 +17362,7 @@ begin
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbIsOblivion then begin
+  if xeContext.GameDefObj.IsOblivion then begin
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
     Rec := MainRecord.RecordBySignature['DATA'];
@@ -17392,7 +17399,7 @@ begin
   NodeDatas[2].Element := MainRecord.RecordBySignature['EDID'];
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbIsOblivion then begin
+  if xeContext.GameDefObj.IsOblivion then begin
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
     Rec := MainRecord.RecordBySignature['BMDT'];
@@ -20130,7 +20137,7 @@ begin
   {Weapon Name}
   NodeDatas[3].Element := MainRecord.RecordBySignature['FULL'];
 
-  if wbIsOblivion then begin
+  if xeContext.GameDefObj.IsOblivion then begin
     {Enchantment}
     NodeDatas[4].Element := MainRecord.RecordBySignature['ENAM'];
 
@@ -21205,6 +21212,7 @@ var
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
 begin
+  var lGameDef := xeContext.GameDefObj;
   try
     xeContext.LoaderDone := True;
     wbStartTime := PDateTime(Message.WParam)^;
@@ -21240,7 +21248,7 @@ begin
           Exit;
         end;
 
-          if wbIsSkyrim then begin
+          if lGameDef.IsSkyrim then begin
           with vstSpreadSheetWeapon.Header.Columns[9] do
             Options := Options - [coVisible];
           for i := 12 to 20 do
@@ -21269,9 +21277,9 @@ begin
         SetupTreeView(vstSpreadsheetArmor);
         SetupTreeView(vstSpreadSheetAmmo);
 
-        tbsWEAPSpreadsheet.TabVisible := wbIsOblivion or wbIsSkyrim;
-        tbsARMOSpreadsheet.TabVisible := wbIsOblivion or wbIsSkyrim;
-        tbsAMMOSpreadsheet.TabVisible := wbIsOblivion or wbIsSkyrim;
+        tbsWEAPSpreadsheet.TabVisible := lGameDef.IsOblivion or lGameDef.IsSkyrim;
+        tbsARMOSpreadsheet.TabVisible := lGameDef.IsOblivion or lGameDef.IsSkyrim;
+        tbsAMMOSpreadsheet.TabVisible := lGameDef.IsOblivion or lGameDef.IsSkyrim;
 
         if wbForceTerminate then begin
           GeneralProgressNoAbortCheck('Loading of modules got terminated early. Editing is disabled.');
@@ -21607,7 +21615,7 @@ begin
 
   var lLayout := xeContext.SlotLayout;
   FileID := FormID.FileID[lLayout];
-  if wbIsLightSupported or xeContext.Settings.PseudoLight or xeContext.Settings.PseudoUpdate then begin
+  if xeContext.GameDefObj.IsLightSupported or xeContext.Settings.PseudoLight or xeContext.Settings.PseudoUpdate then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
       if Files[i].LoadOrderFileID = FileID then begin
@@ -21767,6 +21775,7 @@ var
   OnlyLoad: Boolean;
   {$ENDIF}
 begin
+  var lGameDef := xeContext.GameDefObj;
   StartTime := Now;
   wbStartTime := StartTime;
   LoaderProgress('starting...');
@@ -21802,9 +21811,9 @@ begin
                 for var lFoundIdx := 0 to Pred(lFoundArchives.Count) do
                   if xeContext.Settings.LoadBSAs then begin
                     LoaderProgress('[' + lFoundArchives[lFoundIdx] + '] Loading Resources.');
-                    if xeContext.GameDefObj.ArchiveExtension = '.bsa' then
+                    if lGameDef.ArchiveExtension = '.bsa' then
                       xeContext.ContainerHandler.AddBSA(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath))
-                    else if xeContext.GameDefObj.ArchiveExtension = '.ba2' then begin
+                    else if lGameDef.ArchiveExtension = '.ba2' then begin
                       var lContainer := xeContext.ContainerHandler.AddBA2(MakeDataFileName(lFoundArchives[lFoundIdx], ltDataPath));
                       var lBA2File: IwbBA2File;
                       if Supports(lContainer, IwbBA2File, lBA2File) then
@@ -21831,14 +21840,14 @@ begin
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
                 if HasBSAs(ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
-                    gcArchiveExactNameMatch in wbCurrentCapabilities, gcArchivePrivateIni in wbCurrentCapabilities, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
+                    gcArchiveExactNameMatch in lGameDef.Capabilities, gcArchivePrivateIni in lGameDef.Capabilities, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
                       for var lFoundPluginIdx := 0 to Pred(lFoundPluginArchives.Count) do
                         if xeContext.Settings.LoadBSAs then begin
                           LoaderProgress('[' + lFoundPluginArchives[lFoundPluginIdx] + '] Loading Resources.');
                           try
-                            if xeContext.GameDefObj.ArchiveExtension = '.bsa' then
+                            if lGameDef.ArchiveExtension = '.bsa' then
                               xeContext.ContainerHandler.AddBSA(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath))
-                            else if xeContext.GameDefObj.ArchiveExtension = '.ba2' then begin
+                            else if lGameDef.ArchiveExtension = '.ba2' then begin
                               var lContainer := xeContext.ContainerHandler.AddBA2(MakeDataFileName(lFoundPluginArchives[lFoundPluginIdx], ltDataPath));
                               var lBA2File: IwbBA2File;
                               if Supports(lContainer, IwbBA2File, lBA2File) then
@@ -21871,7 +21880,7 @@ begin
           LoaderProgress('...resources cache finished building');
         end;
 
-        if gcWwiseSoundBanks in wbCurrentCapabilities then begin
+        if gcWwiseSoundBanks in lGameDef.Capabilities then begin
           var lModules := TStringList.Create;
           try
             for var lFile in frmMain.Files do
@@ -21891,7 +21900,7 @@ begin
         for var
         lLoadListIdx := 0 to Pred(ltLoadList.Count) do begin
 
-          if gcHardcodedFileIsFirstMaster in wbCurrentCapabilities then
+          if gcHardcodedFileIsFirstMaster in lGameDef.Capabilities then
             if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
               b := TwbHardcodedContainer.GetHardCodedDat;
               if Length(b) > 0 then begin
@@ -22656,12 +22665,13 @@ const
   csCheckFor = 'property="twitter:label1" content="version"';
   csExtractAfter = 'property="twitter:data1" content="';
 begin
-  if xeContext.GameDefObj.NexusModsUrl = '' then
+  var lGameDef := xeContext.GameDefObj;
+  if lGameDef.NexusModsUrl = '' then
     Exit;
 
   vmax := '';
   try
-    s := GetUrlContent(xeContext.GameDefObj.NexusModsUrl);
+    s := GetUrlContent(lGameDef.NexusModsUrl);
     s := s.ToLowerInvariant;
     if s.Contains(csCheckFor) then begin
       i := Pos(csExtractAfter, s);

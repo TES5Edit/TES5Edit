@@ -312,12 +312,12 @@ end;
 
 procedure Misc_wbIsPseudoLightMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbIsLightSupported and xeContext.Settings.PseudoLight;
+  Value := xeContext.GameDefObj.IsLightSupported and xeContext.Settings.PseudoLight;
 end;
 
 procedure Misc_wbIsPseudoMediumMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbIsMediumSupported and xeContext.Settings.PseudoMedium;
+  Value := xeContext.GameDefObj.IsMediumSupported and xeContext.Settings.PseudoMedium;
 end;
 
 {procedure Misc_wbMD5Data(var Value: Variant; Args: TJvInterpreterArgs);
