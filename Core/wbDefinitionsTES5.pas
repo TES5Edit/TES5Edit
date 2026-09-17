@@ -1011,13 +1011,13 @@ var
   Container : IwbContainer;
   Group     : IwbGroupRecord;
 begin
-  if not _CurrentContext.Settings.SortINFO then
+  if not Assigned(aElement) then
+    Exit;
+
+  if not aElement.ContextObj.Settings.SortINFO then
     Exit;
 
   if VarSameValue(aOldValue, aNewValue) then
-    Exit;
-
-  if not Assigned(aElement) then
     Exit;
 
   Container := aElement.Container;

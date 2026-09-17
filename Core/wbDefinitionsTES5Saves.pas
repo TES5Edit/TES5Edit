@@ -575,7 +575,7 @@ begin
         Result := aType - 1000 + 9 + 15 + 1;
     end;
     if (Result < (1001-1000+9+15+1)) and (Result > 2) then Result := 0; //Others are not decoded yet
-    if (_CurrentContext.ChaptersToSkip <> nil) and _CurrentContext.ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
+    if (Container.ContextObj.ChaptersToSkip <> nil) and Container.ContextObj.ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
 end;
@@ -1612,7 +1612,7 @@ begin
 
   if (Result>=0) and Supports(Element, IwbDataContainer, Container) then begin
     Result := 1 + (Result and $3F);
-    if (_CurrentContext.ChaptersToSkip <> nil) and _CurrentContext.ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then
+    if (Container.ContextObj.ChaptersToSkip <> nil) and Container.ContextObj.ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then
       Result := 0;
   end else
     Result := 0;

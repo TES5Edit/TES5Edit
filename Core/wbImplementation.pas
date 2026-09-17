@@ -4127,7 +4127,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     Result :=
       (ceiGeneration >= GetHighestGenerationSelfAndMasters) and
-      (ceiLGeneration >= wbLocalizationHandler.Generation);
+      (ceiLGeneration >= wbLocalizationHandler(flContextObj).Generation);
     if Result then
       aEditInfo := ceiEditInfo
     else begin
@@ -6244,7 +6244,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     ceiEditInfo := aEditInfo;
     ceiGeneration := _FileGeneration;
-    ceiLGeneration := wbLocalizationHandler.Generation;
+    ceiLGeneration := wbLocalizationHandler(flContextObj).Generation;
   end;
 end;
 
@@ -11368,7 +11368,7 @@ var
   _File       : IwbFile;
   GridCell    : TwbGridCell;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
     mrInvalidateNameCache;
 
   if mrDisplayName <> '' then
@@ -11577,7 +11577,7 @@ function TwbMainRecord.GetFullName: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
     mrInvalidateNameCache;
 
   if mrsFullNameFromCache in mrStates then
@@ -12257,7 +12257,7 @@ var
 begin
   CanCache := (not aForName) or not wbNoFullInShortName;
 
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
     mrInvalidateNameCache;
 
   if wbDisplayShorterNames then begin
@@ -12318,7 +12318,7 @@ function TwbMainRecord.GetName: string;
 var
   s : string;
 begin
-  if mrLGeneration <> wbLocalizationHandler.Generation then
+  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
     mrInvalidateNameCache;
 
   if mrName <> '' then
@@ -13379,7 +13379,7 @@ begin
         mrFullName := FULLRec.EditValue;
     end;
   end;
-  mrLGeneration := wbLocalizationHandler.Generation
+  mrLGeneration := wbLocalizationHandler(ContextObj).Generation
 end;
 
 function TwbMainRecord.mrStruct: PwbMainRecordStruct;

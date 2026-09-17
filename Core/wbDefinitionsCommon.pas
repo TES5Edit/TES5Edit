@@ -3665,8 +3665,11 @@ end;
 function wbFileHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
-  if _CurrentContext.LoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
-    Result := _CurrentContext.ContainerHandler.ResolveFileHash(aInt);
+  if Assigned(aElement) and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
+    var lContext := aElement.ContextObj;
+    if lContext.LoaderDone then
+      Result := lContext.ContainerHandler.ResolveFileHash(aInt);
+  end;
 
   if Result = '' then
     case aType of
@@ -3685,8 +3688,11 @@ end;
 function wbFolderHashCallback(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 begin
   Result := '';
-  if _CurrentContext.LoaderDone and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then
-    Result := _CurrentContext.ContainerHandler.ResolveFolderHash(aInt);
+  if Assigned(aElement) and (aType in [ctToStr, ctToSummary, ctToSortKey] ) then begin
+    var lContext := aElement.ContextObj;
+    if lContext.LoaderDone then
+      Result := lContext.ContainerHandler.ResolveFolderHash(aInt);
+  end;
 
   if Result = '' then
     case aType of
@@ -4898,7 +4904,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if not _CurrentContext.Settings.BuildRefs then
+  if not aElement.ContextObj.Settings.BuildRefs then
     Exit;
 
   var lMainRecord := aElement.ContainingMainRecord;
@@ -5396,7 +5402,7 @@ var
   lCandidate        : TGUID;
   lFile             : IwbFile;
 begin
-  Result := wbSoundBankCache.TryLookupDisplay(wntSwitchGroup, aDisplay, aGUID);
+  Result := wbSoundBankCache(aElement.ContextObj).TryLookupDisplay(wntSwitchGroup, aDisplay, aGUID);
   if Result then
     Exit;
 
@@ -5415,11 +5421,11 @@ begin
       lMasters.Add(lFile.FileName);
     end;
 
-    wbSoundBankCache.GetStrings(wntSwitchGroup, lMasters, lGroups);
+    wbSoundBankCache(aElement.ContextObj).GetStrings(wntSwitchGroup, lMasters, lGroups);
 
     lMatches := 0;
     for var I := 0 to Pred(lGroups.Count) do
-      if StartsText(lName + ' [', lGroups[I]) and wbSoundBankCache.TryLookupDisplay(wntSwitchGroup, lGroups[I], lCandidate) then
+      if StartsText(lName + ' [', lGroups[I]) and wbSoundBankCache(aElement.ContextObj).TryLookupDisplay(wntSwitchGroup, lGroups[I], lCandidate) then
       begin
         Inc(lMatches);
         aGUID := lCandidate;
@@ -5483,7 +5489,7 @@ begin
         Exit;
 
       var lName, lFilename: string;
-      if wbSoundBankCache.TryLookupGUID(lNodeType, StringToGUID(aValue), lName, lFilename) then
+      if wbSoundBankCache(aElement.ContextObj).TryLookupGUID(lNodeType, StringToGUID(aValue), lName, lFilename) then
         if lName <> '' then
           aValue := Format('%s [%s]', [lName, lFilename]);
     end;
@@ -5498,7 +5504,7 @@ begin
         Exit;
       end;
 
-      if wbSoundBankCache.TryLookupDisplay(lNodeType, aValue, lGUID) then
+      if wbSoundBankCache(aElement.ContextObj).TryLookupDisplay(lNodeType, aValue, lGUID) then
       begin
         aValue := lGUID.ToString;
         Exit;
@@ -5539,7 +5545,7 @@ begin
 
           if lString2 <> '' then
             if wbWwiseSwitchGroupByDisplay(aElement, lString2, lGUID) then
-              wbSoundBankCache.GetChildStrings(lGUID, wntSwitch, lList1);
+              wbSoundBankCache(aElement.ContextObj).GetChildStrings(lGUID, wntSwitch, lList1);
         end
         else
         begin
@@ -5551,7 +5557,7 @@ begin
               lList2.Add(lFile.FileName);
             end;
 
-            wbSoundBankCache.GetStrings(lNodeType, lList2, lList1);
+            wbSoundBankCache(aElement.ContextObj).GetStrings(lNodeType, lList2, lList1);
           finally
             lList2.Free;
           end;
@@ -5561,7 +5567,7 @@ begin
         begin
           if StartsText(lString1 + ' [', lList1[lIndex]) then
           begin
-            if wbSoundBankCache.TryLookupDisplay(lNodeType, lList1[lIndex], lGUID) then
+            if wbSoundBankCache(aElement.ContextObj).TryLookupDisplay(lNodeType, lList1[lIndex], lGUID) then
             begin
               aValue := lGUID.ToString;
               Exit;
@@ -5590,7 +5596,7 @@ begin
 
           if Assigned(lElement) and (lElement.EditValue <> '') then
             if wbWwiseSwitchGroupByDisplay(aElement, lElement.EditValue, lGUID) then
-              wbSoundBankCache.GetChildStrings(lGUID, wntSwitch, lList1);
+              wbSoundBankCache(aElement.ContextObj).GetChildStrings(lGUID, wntSwitch, lList1);
         end
         else
         begin
@@ -5602,7 +5608,7 @@ begin
               lList2.Add(lFile.FileName);
             end;
 
-            wbSoundBankCache.GetStrings(lNodeType, lList2, lList1);
+            wbSoundBankCache(aElement.ContextObj).GetStrings(lNodeType, lList2, lList1);
           finally
             lList2.Free;
           end;

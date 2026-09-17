@@ -107,9 +107,15 @@ const
     '.STRINGS'
   );
 
-function wbLocalizationHandler: TwbLocalizationHandler; inline;
+function wbLocalizationHandler: TwbLocalizationHandler; overload; inline;
+function wbLocalizationHandler(aContext: TwbGameContext): TwbLocalizationHandler; overload; inline;
 
 implementation
+
+function wbLocalizationHandler(aContext: TwbGameContext): TwbLocalizationHandler;
+begin
+  Result := TwbLocalizationHandler(aContext.LocalizationHandler);
+end;
 
 function wbLocalizationHandler: TwbLocalizationHandler;
 begin

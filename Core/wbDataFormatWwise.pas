@@ -30,7 +30,8 @@ type
                            var aList     : TStringList);
   end;
 
-function wbSoundBankCache: IwbSoundBankArray;
+function wbSoundBankCache: IwbSoundBankArray; overload;
+function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray; overload;
 
 procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList); overload;
 procedure wbBuildSoundBankCache(const aLoadOrder: TStringList); overload;
@@ -169,10 +170,15 @@ type
 var
   _EmptySoundBankCache: IwbSoundBankArray;
 
+function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray;
+begin
+  if not Supports(aContext.SoundBankCache, IwbSoundBankArray, Result) then
+    Result := _EmptySoundBankCache;
+end;
+
 function wbSoundBankCache: IwbSoundBankArray;
 begin
-  if not Supports(_CurrentContext.SoundBankCache, IwbSoundBankArray, Result) then
-    Result := _EmptySoundBankCache;
+  Result := wbSoundBankCache(_CurrentContext);
 end;
 
 procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
