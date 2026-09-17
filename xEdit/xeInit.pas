@@ -1163,6 +1163,8 @@ begin
     Exit(False);
   end;
 
+  xeContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs)) as TwbGameContext;
+
   xeContext.Settings.SortINFO := xeContext.Settings.CanSortINFO;
 
   if not ReadSettings then
@@ -1417,8 +1419,6 @@ begin
 
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     xeContext.Settings.EncodingTrans :=  wbMBCSEncoding(s);
-
-  xeContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs)) as TwbGameContext;
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;
