@@ -1174,7 +1174,7 @@ begin
   if not ReadSettings then
     Exit(False);
 
-  if wbGameMode = gmSF1 then
+  if xeContext.GameDefObj.GameMode = gmSF1 then
     wbDecodeTextureHashes := True;
 
   if xeContext.Settings.CanSortINFO then begin
@@ -1192,11 +1192,11 @@ begin
   end;
 
   // Was gmTES5, but is now gmEnderal
-  if wbGameMode <= gmEnderal then
+  if xeContext.GameDefObj.GameMode <= gmEnderal then
     xeContext.AddDefaultLEncodingsIfMissing(False)
   else begin
     wbLEncodingDefault[False] := TEncoding.UTF8;
-    case wbGameMode of
+    case xeContext.GameDefObj.GameMode of
     gmSSE, gmTES5VR, gmEnderalSE:
       xeContext.AddLEncodingIfMissing('english', '1252', False);
     else {FO4, FO76}
@@ -1372,7 +1372,7 @@ begin
   end else begin
     if FileExists(xeContext.Settings.TheGameIniFileName) then begin
       with TMemIniFile.Create(xeContext.Settings.TheGameIniFileName) do try
-        case wbGameMode of
+        case xeContext.GameDefObj.GameMode of
           gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
             1: s := 'German';
             2: s := 'French';
@@ -1391,7 +1391,7 @@ begin
 
     if FileExists(xeContext.Settings.CustomIniFileName) then begin
        with TMemIniFile.Create(xeContext.Settings.CustomIniFileName) do try
-        case wbGameMode of
+        case xeContext.GameDefObj.GameMode of
           gmTES4: begin
             if ValueExists('Controls', 'iLanguage') then
               case ReadInteger('Controls', 'iLanguage', 0) of
@@ -1553,7 +1553,7 @@ begin
       xeContext.Settings.BuildRefs := False;
     end;
     tmTranslate: begin
-      if wbGameMode >= gmTES5 then
+      if xeContext.GameDefObj.GameMode >= gmTES5 then
         xeContext.Settings.LoadBSAs := True; //needed for localization
       xeContext.Settings.TranslationMode := True;
       wbHideUnused             := True;
@@ -1624,7 +1624,7 @@ begin
       wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
   except end;
 
-  case wbGameMode of
+  case xeContext.GameDefObj.GameMode of
     gmTES3, gmTES4, gmTES4R,  gmTES5, gmEnderal, gmSSE, gmTES5VR, gmEnderalSE:
       xeIconResource := 'xTESICON';
     gmFO3, gmFNV, gmFO4, gmFO4VR, gmFO76:

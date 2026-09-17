@@ -795,7 +795,7 @@ function CheckAppPath: string;
     Result := '';
     s := aStartFrom;
     while Length(s) > 3 do begin
-      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[HostContext.GameDefObj.GameMode = gmTES3]) then begin
         Result := s;
         Exit;
       end;
@@ -840,6 +840,7 @@ var
   ProgramPath : String;
   DataPath    : String;
 begin
+  var lGameDef := HostContext.GameDefObj;
   ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
 
   if not wbFindCmdLineParam('D', DataPath) then begin
@@ -850,7 +851,7 @@ begin
       RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
 
-      case wbGameMode of
+      case lGameDef.GameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1: begin
         regPath := sBethRegKey + wbGameNameReg + '\';
       end;
@@ -872,7 +873,7 @@ begin
         end;
       end;
 
-      case wbGameMode of
+      case lGameDef.GameMode of
       gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1:
                   regKey := 'Installed Path';
       gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
@@ -1321,14 +1322,14 @@ begin
         DumpForms.Free;
       end;
 
-      if wbGameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
+      if HostContext.GameDefObj.GameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
         HostContext.Settings.Language := 'En';
 
-      if wbGameMode <= gmEnderal then
+      if HostContext.GameDefObj.GameMode <= gmEnderal then
         HostContext.AddDefaultLEncodingsIfMissing(False)
       else begin
         wbLEncodingDefault[False] := TEncoding.UTF8;
-        case wbGameMode of
+        case HostContext.GameDefObj.GameMode of
         gmSSE, gmTES5VR, gmEnderalSE:
           HostContext.AddLEncodingIfMissing('english', '1252', False);
         else {FO4, FO76}
@@ -1343,7 +1344,7 @@ begin
       end else begin
         if FileExists(HostContext.Settings.TheGameIniFileName) then begin
           with TMemIniFile.Create(HostContext.Settings.TheGameIniFileName) do try
-            case wbGameMode of
+            case HostContext.GameDefObj.GameMode of
               gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
                 1: s := 'German';
                 2: s := 'French';
@@ -1362,7 +1363,7 @@ begin
 
         if FileExists(HostContext.Settings.CustomIniFileName) then begin
           with TMemIniFile.Create(HostContext.Settings.CustomIniFileName) do try
-            case wbGameMode of
+            case HostContext.GameDefObj.GameMode of
               gmTES4: begin
                 if ValueExists('Controls', 'iLanguage') then
                   case ReadInteger('Controls', 'iLanguage', 0) of
@@ -1430,7 +1431,7 @@ begin
         NeedsSyntaxInfo := True;
       end;
       if wbToolSource = tsSaves then
-        case wbGameMode of
+        case HostContext.GameDefObj.GameMode of
           gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
           gmFO3:    if SameText(ExtractFileExt(s), '.fose') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave
             else
@@ -1607,7 +1608,7 @@ begin
                   m := TStringList.Create;
                   try
                     if HasBSAs(HostContext, ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath,
-                        wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
+                        HostContext.GameDefObj.GameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], HostContext.GameDefObj.GameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
                         HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));

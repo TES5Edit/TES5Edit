@@ -2240,7 +2240,7 @@ begin
 
   if (PluggyLinkState <> plsNone) then
     if not Assigned(PluggyLinkThread) then begin
-      if wbGameMode = gmTES4 then
+      if xeContext.GameDefObj.GameMode = gmTES4 then
         PluggyLinkThread := TPluggyLinkThread.Create(False)
       else
         PluggyLinkThread := TGameLinkThread.Create(False);
@@ -3723,15 +3723,15 @@ begin
       CheckGroup(GroupBySignature['FLST'], ['FormIDs'], [], True);
       CheckGroup(GroupBySignature['CREA'], ['Items', 'Factions'], ['COCT']);
       // FNV doesn't merge DIAL quests properly at runtime
-      if wbGameMode in [gmFNV] then
+      if lGameDef.GameMode in [gmFNV] then
         CheckGroup(GroupBySignature['DIAL'], ['Added Quests'], []);
       // exclude Head Parts for Skyrim, causes issues
-      if wbGameMode >= gmTES5 then
+      if lGameDef.GameMode >= gmTES5 then
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Actor Effects', 'Perks', 'KWDA - Keywords'], ['COCT', '', 'SPCT', 'PRKZ', 'KSIZ'])
       else
         CheckGroup(GroupBySignature['NPC_'], ['Items', 'Factions', 'Head Parts', 'Actor Effects'], []);
       // keywords
-      if wbGameMode >= gmTES5 then begin
+      if lGameDef.GameMode >= gmTES5 then begin
         CheckGroup(GroupBySignature['ALCH'], ['KWDA - Keywords'], ['KSIZ']);
         CheckGroup(GroupBySignature['ARMO'], ['KWDA - Keywords'], ['KSIZ']);
         CheckGroup(GroupBySignature['AMMO'], ['KWDA - Keywords'], ['KSIZ']);
@@ -4491,7 +4491,7 @@ begin
   end;
 
   // TES4LODGen, rebuild for all worldspaces
-  if wbGameMode = gmTES4 then try
+  if lGameDef.GameMode = gmTES4 then try
     frmMain.PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] LOD Generator: starting');
 
     Worldspaces := nil;
@@ -4786,7 +4786,7 @@ begin
   AddMessage('Using language: ' + xeContext.Settings.Language);
   AddMessage('Using general string encoding: ' + xeContext.Settings.Encoding.EncodingName);
   AddMessage('Using translatable string encoding: ' + xeContext.Settings.EncodingTrans.EncodingName);
-  if wbGameMode >= gmTES5 then
+  if lGameDef.GameMode >= gmTES5 then
     AddMessage('Using VMAD string encoding: ' + wbEncodingVMAD.EncodingName);
 
   i := Settings.ReadInteger(Name, 'pnlNavWidth', pnlNav.Width);
@@ -4854,7 +4854,7 @@ begin
       with frmFileSelect do try
         case wbToolSource of
           tsSaves: begin
-            case wbGameMode of
+            case lGameDef.GameMode of
               gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
               gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
               gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
@@ -5003,7 +5003,7 @@ begin
 
       if wbToolSource = tsSaves then begin
         s := sl[0];
-        case wbGameMode of
+        case lGameDef.GameMode of
           gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
           gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave
             else begin
@@ -10056,7 +10056,7 @@ begin
     Exit;
 
   // TES4LODGen
-  if wbGameMode = gmTES4 then begin
+  if lGameDef.GameMode = gmTES4 then begin
     with TfrmFileSelect.Create(Self) do try
       Width := 450;
       for i := Low(WorldSpaces) to High(WorldSpaces) do
@@ -10090,7 +10090,7 @@ begin
       for i := Low(WorldSpaces) to High(WorldSpaces) do begin
         clbWorldspace.AddItem(WorldSpaces[i].Name, TObject(Pointer(WorldSpaces[i])));
         // default selected worldspace at the top
-        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((wbGameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
+        if (WorldSpaces[i].LoadOrderFormID.ToCardinal = $0000003C) or ((lGameDef.GameMode = gmFNV) and (WorldSpaces[i].LoadOrderFormID.ToCardinal = $000DA726)) then
           j := i;
       end;
 
@@ -10114,7 +10114,7 @@ begin
         iDefaultAtlasNormalFormat := ifATI2n;
       end;
 
-      if Assigned(Sender) and (wbGameMode in [gmSSE, gmTES5VR, gmEnderalSE]) then begin
+      if Assigned(Sender) and (lGameDef.GameMode in [gmSSE, gmTES5VR, gmEnderalSE]) then begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
         Application.MessageBox(
@@ -11060,7 +11060,7 @@ var
       Inc(notDeletedCount);
     end
     // skip refs of TREEs with LOD in FNV
-    else if (wbGameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
+    else if (xeContext.GameDefObj.GameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
       Result := False;
       Inc(notDeletedCount);
     end;
@@ -11582,7 +11582,7 @@ begin
     FileChanged := (i=0) or not SameText(LOOTPluginInfos[i].Plugin, LOOTPluginInfos[Pred(i)].Plugin);
     PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i], FileChanged));
     if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
-      BOSS := wbGameMode = gmTES4;
+      BOSS := xeContext.GameDefObj.GameMode = gmTES4;
   end;
   PostAddMessage('');
 
@@ -14534,17 +14534,17 @@ begin
     end;
   end;
 
-  mniMainPluggyLink.Visible := (wbGameMode = gmTES4) or FileExists(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini');
-  if wbGameMode <> gmTES4 then
+  mniMainPluggyLink.Visible := (lGameDef.GameMode = gmTES4) or FileExists(xeContext.Settings.DataPath + 'xEdit\xEditLink.ini');
+  if lGameDef.GameMode <> gmTES4 then
     mniMainPluggyLink.Caption := 'GameLink';
   mniMainPluggyLink.Checked := PluggyLinkState <> plsNone;
 
   mniMainPluggyLinkDisabled.Visible := mniMainPluggyLink.Visible;
   mniMainPluggyLinkReference.Visible := mniMainPluggyLink.Visible;
   mniMainPluggyLinkBaseObject.Visible := mniMainPluggyLink.Visible;
-  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
-  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
-  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (wbGameMode = gmTES4);
+  mniMainPluggyLinkInventory.Visible := mniMainPluggyLink.Visible and (lGameDef.GameMode = gmTES4);
+  mniMainPluggyLinkSpell.Visible := mniMainPluggyLink.Visible and (lGameDef.GameMode = gmTES4);
+  mniMainPluggyLinkEnchantment.Visible := mniMainPluggyLink.Visible and (lGameDef.GameMode = gmTES4);
 
   mniMainSave.Visible := xeContext.Settings.EditAllowed and not xeContext.Settings.DontSave;
 end;
@@ -14668,7 +14668,7 @@ begin
   mniNavCleanMasters.Visible := mniNavAddMasters.Visible;
   mniNavBatchChangeReferencingRecords.Visible := mniNavAddMasters.Visible;
   mniNavApplyScript.Visible := mniNavCheckForErrors.Visible;
-  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (wbGameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
+  mniNavGenerateLOD.Visible := mniNavCompareTo.Visible and (lGameDef.GameMode in [gmTES4, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE, gmFO4, gmFO4VR]);
 
   mniNavAdd.Clear;
   pmuNavAdd.Items.Clear;
@@ -14727,7 +14727,7 @@ begin
   mniNavCopyAsSpawnRateOverride.Visible :=
     mniNavCopyAsWrapper.Visible;
 
-  mniNavCopyIdle.Visible := (wbGameMode <= gmFNV) and mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
+  mniNavCopyIdle.Visible := (lGameDef.GameMode <= gmFNV) and mniNavCheckForErrors.Visible and not mniNavAddMasters.Visible;
 
   mniNavCleanupInjected.Visible :=
     mniNavCopyAsOverride.Visible and
@@ -14803,7 +14803,7 @@ begin
     else
       mniNavLocalizationSwitch.Caption := 'Localize plugin';
 
-  mniNavLogAnalyzer.Visible := (wbGameMode in [gmTES4, gmFO3, gmFNV]) or lGameDef.IsSkyrim;
+  mniNavLogAnalyzer.Visible := (lGameDef.GameMode in [gmTES4, gmFO3, gmFNV]) or lGameDef.IsSkyrim;
   mniNavLogAnalyzer.Clear;
   if lGameDef.IsSkyrim then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
@@ -14812,7 +14812,7 @@ begin
     MenuItem.Tag := Integer(ltTES5Papyrus);
     mniNavLogAnalyzer.Add(MenuItem);
   end else
-  if wbGameMode in [gmTES4, gmFO3, gmFNV] then begin
+  if lGameDef.GameMode in [gmTES4, gmFO3, gmFNV] then begin
     MenuItem := TMenuItem.Create(mniNavLogAnalyzer);
     MenuItem.OnClick := mniNavLogAnalyzerClick;
     MenuItem.Caption := 'RuntimeScriptProfiler xSE Extension Log';
@@ -21985,7 +21985,7 @@ begin
                   if (fsIsHardcoded in _File.FileStates) or not _File.IsNotPlugin then begin
                     try
                       OnlyLoad := False;
-                      if (wbGameMode = gmSF1) and
+                      if (lGameDef.GameMode = gmSF1) and
                          (SizeOf(Pointer) = 4) and
                          (fsIsGameMaster in _File.FileStates)
                       then

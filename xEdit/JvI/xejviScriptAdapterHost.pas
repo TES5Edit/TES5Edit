@@ -42,7 +42,7 @@ const
 
 procedure _wbGameMode(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameMode;
+  Value := xeContext.GameDefObj.GameMode;
 end;
 
 procedure _wbGameName(var Value: Variant; Args: TJvInterpreterArgs);
@@ -512,7 +512,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then begin
-    if wbGameMode = gmTES4 then
+    if xeContext.GameDefObj.GameMode = gmTES4 then
       wbGenerateLODTES4(MainRecord, frmMain.Settings);
   end else
     JvInterpreterError(ieDirectInvalidArgument, 0);
