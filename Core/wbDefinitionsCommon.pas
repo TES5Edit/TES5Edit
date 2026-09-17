@@ -841,7 +841,7 @@ begin
 
     var lPosition : TwbVector;
     if Assigned(lCell) and lCell.IsPersistent and aMainRecord.GetPosition(lPosition) then begin
-      var lGrid := wbPositionToGridCell(lPosition);
+      var lGrid := aMainRecord.GameDefObj.PositionToGridCell(lPosition);
       Result := Result + ' at ' + IntToStr(lGrid.X) + ',' + IntToStr(lGrid.Y);
     end;
 
@@ -4991,7 +4991,7 @@ begin
     var lPosition: TwbVector;
     lMainRecord.GetPosition(lPosition);
 
-    var lGridCell := wbPositionToGridCell(lPosition);
+    var lGridCell := lMainRecord.GameDefObj.PositionToGridCell(lPosition);
 
     lCellRecord := lWorldRecord.ChildByGridCell[lGridCell];
 

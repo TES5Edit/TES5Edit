@@ -2269,7 +2269,7 @@ begin
       StartTick := GetTickCount;
 
       for i := Low(RefInfos) to High(RefInfos) do
-        with RefInfos[i], wbPositionToGridCell(Pos) do begin
+        with RefInfos[i], aWorldspace.GameDefObj.PositionToGridCell(Pos) do begin
           lX := x - MinCell.x;
           ly := y - MinCell.y;
           Next := Cells[lx,ly];
@@ -2470,7 +2470,7 @@ var
               if Supports(References.Elements[j], IwbContainerElementRef, ReferenceEntry) then
                 if Supports(ReferenceEntry.ElementByPath['Ref'].LinksTo, IwbMainRecord, Reference) then begin
                   Reference.GetPosition(Pos);
-                  Cell := wbPositionToGridCell(Pos);
+                  Cell := aWorldspace.GameDefObj.PositionToGridCell(Pos);
                   // the origin of reference needs to be in the grids cell
                   // references listed in other grids has no effect
                   // ToDo test Overrides moving reference out of cell
@@ -2613,7 +2613,7 @@ begin
         if not REFRs[i].GetPosition(RefPos) then
           Continue;
 
-        RefCell := wbPositionToGridCell(RefPos);
+        RefCell := lGameDef.PositionToGridCell(RefPos);
         RefBlock := Lodset.BlockForCell(RefCell, LodLevel);
 
         // reference is out of lod range
@@ -2868,7 +2868,7 @@ begin
         if not REFRs[i].GetPosition(RefPos) then
           Continue;
 
-        RefCell := wbPositionToGridCell(RefPos);
+        RefCell := lGameDef.PositionToGridCell(RefPos);
         RefBlock := Lodset.BlockForCell(RefCell, 4);
 
         // reference is out of lod range
@@ -3354,7 +3354,7 @@ var
         end;
       end;
 
-      RefCell := wbPositionToGridCell(RefPos);
+      RefCell := aWorldspace.GameDefObj.PositionToGridCell(RefPos);
       RefBlock := Lodset.BlockForCell(RefCell, 4);
 
       // reference is out of lod range

@@ -10293,7 +10293,7 @@ begin
         if Supports(lContainer, IwbGroupRecordInternal, Group) then begin
           Cell := Group.ChildrenOf;
           if Assigned(Cell) and not Cell.IsPersistent and Cell.GetGridCell(GridCell) then
-            SetPosition(wbGridCellToCenterPosition(GridCell));
+            SetPosition(GameDefObj.GridCellToCenterPosition(GridCell));
         end;
     end);
 
@@ -15098,7 +15098,7 @@ begin
       if not GetPosition(Position) then
         Exit;//raise Exception.Create('Could not determine position of ' + GetName);
 
-      GridCell := wbPositionToGridCell(Position);
+      GridCell := GameDefObj.PositionToGridCell(Position);
 
       NewCell := nil;
       if not OldCellNotPartial.IsPersistent then begin

@@ -4105,6 +4105,9 @@ type
     property CellSizeFactor: Single
       read gdCellSizeFactor
       write gdCellSizeFactor;
+    function PositionToGridCell(const aPosition: TwbVector): TwbGridCell;
+    function GridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
+    function IsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
     property HeaderSignature: TwbSignature
       read gdHeaderSignature
       write gdHeaderSignature;
@@ -5692,12 +5695,9 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 
 function wbFlagsList(const aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 function wbSparseFlags(const aFlags: array of const; aUnknowns: Boolean = False; aSize: Cardinal = 32): TDynStrings;
-function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
-function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
-function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 
 var
   wbGameMode         : TwbGameMode;
@@ -8209,17 +8209,17 @@ begin
   end;
 end;
 
-function wbIsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
+function TwbGameDef.IsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
 var
   GridCell : TwbGridCell;
 begin
-  GridCell := wbPositionToGridCell(aPosition);
+  GridCell := PositionToGridCell(aPosition);
   Result := (GridCell.x = aGridCell.x) and (GridCell.y = aGridCell.y);
 end;
 
-function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
+function TwbGameDef.PositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 begin
-  var lCellSizeFactor := _CurrentGameDef.CellSizeFactor;
+  var lCellSizeFactor := gdCellSizeFactor;
   Result.x := Trunc(aPosition.x / lCellSizeFactor);
   if (aPosition.x < 0) and (Frac(aPosition.x / lCellSizeFactor) <> 0) then
     Dec(Result.x);
@@ -8229,9 +8229,9 @@ begin
     Dec(Result.y);
 end;
 
-function wbGridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
+function TwbGameDef.GridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
 begin
-  var lCellSizeFactor := _CurrentGameDef.CellSizeFactor;
+  var lCellSizeFactor := gdCellSizeFactor;
   Result.z := 0;
   if aGridCell.x >= 0 then
     Result.x := (Succ(aGridCell.x) * lCellSizeFactor) - (lCellSizeFactor/2)

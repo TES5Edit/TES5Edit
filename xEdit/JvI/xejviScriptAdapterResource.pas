@@ -307,7 +307,7 @@ end;
 
 procedure Misc_wbIsInGridCell(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbIsInGridCell(Var2wbVector(Args.Values[0]), Var2wbGridCell(Args.Values[1]));
+  Value := xeContext.GameDefObj.IsInGridCell(Var2wbVector(Args.Values[0]), Var2wbGridCell(Args.Values[1]));
 end;
 
 procedure Misc_wbIsPseudoLightMode(var Value: Variant; Args: TJvInterpreterArgs);
@@ -332,7 +332,7 @@ end;}
 
 procedure Misc_wbPositionToGridCell(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGridCell2Var(wbPositionToGridCell(Var2wbVector(Args.Values[0])));
+  Value := wbGridCell2Var(xeContext.GameDefObj.PositionToGridCell(Var2wbVector(Args.Values[0])));
 end;
 
 {procedure Misc_wbSHA1Data(var Value: Variant; Args: TJvInterpreterArgs);

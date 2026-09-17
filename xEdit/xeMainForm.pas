@@ -5862,7 +5862,7 @@ begin
                 if Supports(CELL.Container, IwbGroupRecord, WorldGRUP) then
                   if Supports(WorldGRUP.ChildrenOf, IwbMainRecord, WRLD) then
                     if WRLD.Signature = 'WRLD' then begin
-                      GridCell := wbPositionToGridCell(Position);
+                      GridCell := WRLD.GameDefObj.PositionToGridCell(Position);
                       CELL := WRLD.ChildByGridCell[GridCell];
                       if Assigned(CELL) then begin
                         Node := FindNodeForElement(CELL);
@@ -13484,7 +13484,7 @@ begin
                                             Supports(NodeData2.Element, IwbMainRecord, MainRecord2) and
                                             MainRecord2.GetPosition(Position) then begin
 
-                                            GridCell := wbPositionToGridCell(Position);
+                                            GridCell := MainRecord2.GameDefObj.PositionToGridCell(Position);
                                             with GridCell do begin
                                               Inc(x, 500);
                                               Inc(y, 500);
