@@ -4579,6 +4579,9 @@ type
     property LEncoding[aFallback: Boolean]: TStringList
       read GetLEncoding;
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
+    procedure AddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
+    procedure AddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
+    procedure AddDefaultLEncodingsIfMissing(aFallback: Boolean);
   end;
 
   TwbGameContextClass = class of TwbGameContext;
@@ -5903,10 +5906,6 @@ var
 
   wbLEncodingDefault : array[Boolean] of TEncoding;
 
-procedure wbAddDefaultLEncodingsIfMissing(aFallback: Boolean);
-procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
-procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
-function wbEncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
 
 function wbMBCSEncoding(aCP: Cardinal): TEncoding; overload;
 function wbMBCSEncoding(s: string): TEncoding; overload;
@@ -26186,7 +26185,7 @@ begin
     bsdFormater := (aFormater as IwbDefInternal).SetParent(Self, False) as IwbStringDefFormater;
 end;
 
-procedure wbAddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
+procedure TwbGameContext.AddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean);
 var
   i: Integer;
 begin
@@ -26194,11 +26193,11 @@ begin
     Exit;
   if not Assigned(aEncoding) then
     Exit;
-  if not _CurrentContext.LEncoding[aFallback].Find(aLanguage, i) then
-    _CurrentContext.LEncoding[aFallback].AddObject(aLanguage, aEncoding);
+  if not gcLEncoding[aFallback].Find(aLanguage, i) then
+    gcLEncoding[aFallback].AddObject(aLanguage, aEncoding);
 end;
 
-procedure wbAddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
+procedure TwbGameContext.AddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean);
 var
   i: Integer;
 begin
@@ -26206,37 +26205,32 @@ begin
     Exit;
   if aEncoding = '' then
     Exit;
-  if not _CurrentContext.LEncoding[aFallback].Find(aLanguage, i) then try
-    _CurrentContext.LEncoding[aFallback].AddObject(aLanguage, wbMBCSEncoding(aEncoding));
+  if not gcLEncoding[aFallback].Find(aLanguage, i) then try
+    gcLEncoding[aFallback].AddObject(aLanguage, wbMBCSEncoding(aEncoding));
   except end;
 end;
 
-procedure wbAddDefaultLEncodingsIfMissing(aFallback: Boolean);
+procedure TwbGameContext.AddDefaultLEncodingsIfMissing(aFallback: Boolean);
 begin
-  wbAddLEncodingIfMissing('english', '1252', aFallback);
-  wbAddLEncodingIfMissing('french', '1252', aFallback);
-  wbAddLEncodingIfMissing('polish', '1250', aFallback);
-  wbAddLEncodingIfMissing('czech', '1250', aFallback);
-  wbAddLEncodingIfMissing('danish', '1252', aFallback);
-  wbAddLEncodingIfMissing('finnish', '1252', aFallback);
-  wbAddLEncodingIfMissing('german', '1252', aFallback);
-  wbAddLEncodingIfMissing('greek', '1253', aFallback);
-  wbAddLEncodingIfMissing('italian', '1252', aFallback);
-  wbAddLEncodingIfMissing('japanese', TEncoding.UTF8, aFallback);
-  wbAddLEncodingIfMissing('norwegian', '1252', aFallback);
-  wbAddLEncodingIfMissing('portuguese', '1252', aFallback);
-  wbAddLEncodingIfMissing('spanish', '1252', aFallback);
-  wbAddLEncodingIfMissing('swedish', '1252', aFallback);
-  wbAddLEncodingIfMissing('turkish', '1254', aFallback);
-  wbAddLEncodingIfMissing('russian', '1251', aFallback);
-  wbAddLEncodingIfMissing('chinese', TEncoding.UTF8, aFallback);
-  wbAddLEncodingIfMissing('hungarian', '1250', aFallback);
-  wbAddLEncodingIfMissing('arabic', '1256', aFallback);
-end;
-
-function wbEncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
-begin
-  Result := _CurrentContext.EncodingForLanguage(aLanguage, aFallback);
+  AddLEncodingIfMissing('english', '1252', aFallback);
+  AddLEncodingIfMissing('french', '1252', aFallback);
+  AddLEncodingIfMissing('polish', '1250', aFallback);
+  AddLEncodingIfMissing('czech', '1250', aFallback);
+  AddLEncodingIfMissing('danish', '1252', aFallback);
+  AddLEncodingIfMissing('finnish', '1252', aFallback);
+  AddLEncodingIfMissing('german', '1252', aFallback);
+  AddLEncodingIfMissing('greek', '1253', aFallback);
+  AddLEncodingIfMissing('italian', '1252', aFallback);
+  AddLEncodingIfMissing('japanese', TEncoding.UTF8, aFallback);
+  AddLEncodingIfMissing('norwegian', '1252', aFallback);
+  AddLEncodingIfMissing('portuguese', '1252', aFallback);
+  AddLEncodingIfMissing('spanish', '1252', aFallback);
+  AddLEncodingIfMissing('swedish', '1252', aFallback);
+  AddLEncodingIfMissing('turkish', '1254', aFallback);
+  AddLEncodingIfMissing('russian', '1251', aFallback);
+  AddLEncodingIfMissing('chinese', TEncoding.UTF8, aFallback);
+  AddLEncodingIfMissing('hungarian', '1250', aFallback);
+  AddLEncodingIfMissing('arabic', '1256', aFallback);
 end;
 
 var

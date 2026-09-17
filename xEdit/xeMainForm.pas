@@ -12133,14 +12133,14 @@ begin
 
         for i := 0 to Pred(lFiles.Count) do begin
           if Integer(lFiles.Objects[i]) and 1 > 0 then begin
-            wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
+            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler.StringsPath + lFiles[i]);
             for j := 0 to Pred(wblf.Count) do
               lFrom.Add(AnsiLowerCase(wblf.Items[j]));
             wblf.Destroy;
           end;
 
           if Integer(lFiles.Objects[i]) and 2 > 0 then begin
-            wblf := TwbLocalizationFile.Create(wbLocalizationHandler.StringsPath + lFiles[i]);
+            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler.StringsPath + lFiles[i]);
             lTo.AddStrings(wblf.Items);
             wblf.Destroy;
           end;

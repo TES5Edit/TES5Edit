@@ -39,7 +39,7 @@ type
     fModified    : Boolean;
     fNextID      : Cardinal;
 
-    procedure Init;
+    procedure Init(aContext: TwbGameContext);
     function FileStringType(const aFileName: string): TwbLStringType;
     function ReadZString(aStream: TMemoryStream): string;
     function ReadLenZString(aStream: TMemoryStream): string;
@@ -56,8 +56,8 @@ type
     property FileName: string read fFileName;
     property Modified: Boolean read fModified write fModified;
     property NextID: Cardinal read fNextID;
-    constructor Create(const aFileName: string); overload;
-    constructor Create(const aFileName: string; const aData: TBytes); overload;
+    constructor Create(aContext: TwbGameContext; const aFileName: string); overload;
+    constructor Create(aContext: TwbGameContext; const aFileName: string; const aData: TBytes); overload;
     destructor Destroy; override;
     function Count: Integer;
     function IndexToID(Index: Integer): Cardinal;
@@ -122,14 +122,14 @@ begin
   Result := TwbLocalizationHandler(_CurrentContext.LocalizationHandler);
 end;
 
-constructor TwbLocalizationFile.Create(const aFileName: string);
+constructor TwbLocalizationFile.Create(aContext: TwbGameContext; const aFileName: string);
 var
   fs: TFileStream;
   fStream: TMemoryStream;
   Buffer: PByte;
 begin
   fFileName := aFileName;
-  Init;
+  Init(aContext);
   // cache file in mem
   fStream := TMemoryStream.Create;
   try
@@ -149,12 +149,12 @@ begin
   end;
 end;
 
-constructor TwbLocalizationFile.Create(const aFileName: string; const aData: TBytes);
+constructor TwbLocalizationFile.Create(aContext: TwbGameContext; const aFileName: string; const aData: TBytes);
 var
   fStream: TMemoryStream;
 begin
   fFileName := aFileName;
-  Init;
+  Init(aContext);
   fStream := TMemoryStream.Create;
   try
     fStream.WriteBuffer(aData[0], length(aData));
@@ -171,7 +171,7 @@ begin
   inherited;
 end;
 
-procedure TwbLocalizationFile.Init;
+procedure TwbLocalizationFile.Init(aContext: TwbGameContext);
 var
   i: Integer;
   s: string;
@@ -207,11 +207,11 @@ begin
   if Assigned(fEncoding[False]) then
     s := Format('[%s] Using encoding (from override): %s', [fName, fEncoding[False].EncodingName])
   else begin
-    fEncoding[False] := wbEncodingForLanguage(fLanguage, False);
+    fEncoding[False] := aContext.EncodingForLanguage(fLanguage, False);
     s := Format('[%s] Using encoding (from language): %s', [fName, fEncoding[False].EncodingName]);
   end;
 
-  fEncoding[True] := wbEncodingForLanguage(fLanguage, True);
+  fEncoding[True] := aContext.EncodingForLanguage(fLanguage, True);
   if fEncoding[True] = fEncoding[False] then
     fEncoding[True] := nil;
 
@@ -535,7 +535,7 @@ begin
     if lFiles.Find(s, i) then
       Result := lFiles.Objects[i] as TwbLocalizationFile
     else begin
-      Result := TwbLocalizationFile.Create(aFileName);
+      Result := TwbLocalizationFile.Create(lhContext, aFileName);
       lFiles.AddObject(s, Result);
     end;
   finally
@@ -556,7 +556,7 @@ begin
     else begin
       wbLockProcessMessages;
       try
-        Result := TwbLocalizationFile.Create(aFileName, aData);
+        Result := TwbLocalizationFile.Create(lhContext, aFileName, aData);
         lFiles.AddObject(s, Result);
       finally
         wbUnLockProcessMessages;

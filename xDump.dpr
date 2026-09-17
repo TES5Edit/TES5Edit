@@ -1318,18 +1318,18 @@ begin
         HostContext.Settings.Language := 'En';
 
       if wbGameMode <= gmEnderal then
-        wbAddDefaultLEncodingsIfMissing(False)
+        HostContext.AddDefaultLEncodingsIfMissing(False)
       else begin
         wbLEncodingDefault[False] := TEncoding.UTF8;
         case wbGameMode of
         gmSSE, gmTES5VR, gmEnderalSE:
-          wbAddLEncodingIfMissing('english', '1252', False);
+          HostContext.AddLEncodingIfMissing('english', '1252', False);
         else {FO4, FO76}
-          wbAddLEncodingIfMissing('en', '1252', False);
+          HostContext.AddLEncodingIfMissing('en', '1252', False);
         end;
       end;
 
-      wbAddDefaultLEncodingsIfMissing(True);
+      HostContext.AddDefaultLEncodingsIfMissing(True);
 
       if wbFindCmdLineParam('l', s) then begin
         HostContext.Settings.Language := s;
@@ -1380,7 +1380,7 @@ begin
           HostContext.Settings.Language := s;
       end;
 
-      HostContext.Settings.EncodingTrans := wbEncodingForLanguage(HostContext.Settings.Language, False);
+      HostContext.Settings.EncodingTrans := HostContext.EncodingForLanguage(HostContext.Settings.Language, False);
 
       if wbFindCmdLineParam('cp-general', s) then
         HostContext.Settings.Encoding :=  wbMBCSEncoding(s);
