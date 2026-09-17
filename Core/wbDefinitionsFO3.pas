@@ -756,7 +756,7 @@ procedure wbConditionsfterLoad(const aElement: IwbElement);
 var
   Container  : IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 
@@ -928,7 +928,7 @@ procedure wbHeadPartsAfterSet(const aElement: IwbElement; const aOldValue, aNewV
 var
   Container : IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit(True) then try
+  if aElement.ContextObj.BeginInternalEdit(True) then try
     if Supports(aElement, IwbContainerElementRef, Container) then
       if (Container.Elements[0].NativeValue = 1) and (Container.ElementCount > 2) then
         Container.RemoveElement(1);
@@ -2069,7 +2069,7 @@ var
   OldActorValue : Int64;
   NewActorValue : Int64;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2109,7 +2109,7 @@ var
   MainRecord    : IwbMainRecord;
   NewContainer  : IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2170,7 +2170,7 @@ var
   MainRecord : IwbMainRecord;
 //  BaseRecord : IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2187,7 +2187,7 @@ var
   MainRecord : IwbMainRecord;
   BaseRecord : IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2208,7 +2208,7 @@ var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2231,7 +2231,7 @@ var
   MainRecord   : IwbMainRecord;
 //  i            : Integer;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2259,7 +2259,7 @@ procedure wbEmbeddedScriptAfterLoad(const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 
@@ -2283,7 +2283,7 @@ var
   NewCntr2: IwbContainerElementRef;
   i: Integer;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2337,7 +2337,7 @@ end;
 
 procedure wbWATRAfterLoad(const aElement: IwbElement);
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Assigned(aElement) then
       Exit;
 
@@ -2370,7 +2370,7 @@ var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2393,7 +2393,7 @@ var
   FullParticleBirthRatio : Extended;
   PersistantParticleBirthRatio : Extended;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -2423,7 +2423,7 @@ var
   Container: IwbContainerElementRef;
   MainRecord   : IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 
@@ -2452,7 +2452,7 @@ var
   ActorValue: Variant;
   MainRecord: IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 

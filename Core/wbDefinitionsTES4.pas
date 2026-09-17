@@ -651,7 +651,7 @@ var
   MainRecord : IwbMainRecord;
   Regions    : IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -685,7 +685,7 @@ var
   ActorValue: Variant;
   MainRecord: IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 
@@ -764,7 +764,7 @@ var
   MainRecord : IwbMainRecord;
   Chance     : Integer;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -787,7 +787,7 @@ var
   MainRecord   : IwbMainRecord;
   _File        : IwbFile;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -880,7 +880,7 @@ var
   Removed     : Boolean;
   FirstRemoved: Boolean;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -936,7 +936,7 @@ var
   s           : string;
   Keys        : TStringList;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Connections) then
       Exit;
 
@@ -963,7 +963,7 @@ procedure wbREFRAfterLoad(const aElement: IwbElement);
 var
   Container: IwbContainerElementRef;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
     if Container.ElementCount < 1 then

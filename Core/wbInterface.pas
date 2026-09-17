@@ -4502,6 +4502,7 @@ type
     function AllocateMediumSlot: Integer;
     procedure ForceClosed;
     procedure IncGlobalGeneration;
+    function BeginInternalEdit(aForce: Boolean = False): Boolean;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function ExpandFileName(const aFileName: string): string;
 
@@ -5828,7 +5829,6 @@ type
 function wbNormalizeRadians(const aElement: IwbElement; aFloat: Extended): Extended;
 function wbNormalizeToRange(aMin, aMax: Extended): TwbFloatNormalizer;
 
-function wbBeginInternalEdit(aForce: Boolean = False): Boolean;
 procedure wbEndInternalEdit;
 function wbIsInternalEdit: Boolean;
 
@@ -6221,9 +6221,9 @@ begin
   Result := PwbSignature(@aInt)^;
 end;
 
-function wbBeginInternalEdit(aForce: Boolean): Boolean;
+function TwbGameContext.BeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := _CurrentContext.Settings.EditAllowed or ((wbAllowInternalEdit or aForce) and not _BlockInternalEdit);
+  Result := Settings.EditAllowed or ((wbAllowInternalEdit or aForce) and not _BlockInternalEdit);
   if Result then
     Inc(_InternalEditCount);
 end;

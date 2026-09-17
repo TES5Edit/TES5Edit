@@ -4909,7 +4909,7 @@ begin
     lATAV := lContainer.ElementBySignature['ATAV'];
     if not Assigned(lATAV) then Exit;
 
-    if wbBeginInternalEdit then
+    if aElement.ContextObj.BeginInternalEdit then
     try
       var lFirstChild := (lElement as IwbContainer).Elements[0];
       JsonRoot := SerializeElementToJson(lFirstChild);
@@ -4948,7 +4948,7 @@ begin
       // get and remove virtual tree in case we're loading updated json data to start fresh
       NewVirtualRoot := aElement.Container.ElementBySignature['NULL'];
 
-      if wbBeginInternalEdit then
+      if aElement.ContextObj.BeginInternalEdit then
       try
         // Create the virtual node if it doesn't exist
         if not Assigned(NewVirtualRoot) then

@@ -882,7 +882,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.NativeValue > 10000 then
       aElement.NativeValue := 10000;
     if aElement.NativeValue < 100 then
@@ -897,7 +897,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.NativeValue > 3 then
       aElement.NativeValue := 0;
   finally
@@ -910,7 +910,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lArray : IwbContainerElementRef;
     if not Supports(aElement, IwbContainerElementRef, lArray) then
       Exit;
@@ -935,7 +935,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then
+  if aElement.ContextObj.BeginInternalEdit then
   try
     var lContainer := aElement as IwbContainerElementRef;
 
@@ -961,7 +961,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then
+  if aElement.ContextObj.BeginInternalEdit then
   try
     var lContainer := aElement as IwbContainerElementRef;
 
@@ -992,7 +992,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lMainRecord := aElement.ContainingMainRecord;
     if not Assigned(lMainRecord) then
       Exit;
@@ -1013,7 +1013,7 @@ begin
   if not Assigned(MainRecord) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lMonth := aElement.Container.ElementByName['Month'];
     var lMonthVal :Integer := lMonth.NativeValue;
     if MainRecord.Version < 122 then
@@ -1041,7 +1041,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.NativeValue > 1 then
       aElement.NativeValue := 1;
   finally
@@ -1054,7 +1054,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then
+  if aElement.ContextObj.BeginInternalEdit then
   try
     if aElement.NativeValue = 0 then
       aElement.NativeValue := 1;
@@ -1068,7 +1068,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lMainRecord : IwbMainRecord;
     if not Supports(aElement, IwbMainRecord, lMainRecord) then
       Exit;
@@ -1111,7 +1111,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if (aElement.NativeValue and $1) = 0 then
       aElement.NativeValue := 0;
     if (aElement.NativeValue and $1) = 1 then
@@ -1126,7 +1126,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lContainerElementRef : IwbContainerElementRef;
     if not Supports(aElement, IwbContainerElementRef, lContainerElementRef) then
       Exit;
@@ -1158,7 +1158,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.NativeValue <> 3 then
       aElement.NativeValue := 3;
   finally
@@ -1171,7 +1171,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.NativeValue <> 0 then
       aElement.NativeValue := 0;
   finally
@@ -1181,7 +1181,7 @@ end;
 
 procedure wbSOUNAfterLoad(const aElement: IwbElement);
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Assigned(aElement) then
       Exit;
 
@@ -1221,7 +1221,7 @@ begin
 
   wbWorldAfterSet(aElement, 0, 1);
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lMainRecord : IwbMainRecord;
     if not Supports(aElement, IwbMainRecord, lMainRecord) then
       Exit;
@@ -1251,7 +1251,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.Name = 'Level Mult' then begin
       if aNewValue > 10000 then
         aElement.NativeValue := 10000;
@@ -1272,7 +1272,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     wbUpdateSameParentUnions(aElement, aOldValue, aNewValue);
 
     var lNativeValue := aElement.NativeValue;
@@ -1296,7 +1296,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lContainerElementRef : IwbContainerElementRef;
     if not Supports(aElement, IwbContainerElementRef, lContainerElementRef) then
       Exit;
@@ -1325,7 +1325,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aNewValue <> 2 then
       aElement.Container.ElementNativeValues['Reference'] := 0;
   finally
@@ -1341,7 +1341,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if Assigned(aElement.ContainingMainRecord.ElementBySignature[QNAM]) then
       aElement.ContainingMainRecord.ElementBySignature[QNAM].Remove;
   finally
@@ -1357,7 +1357,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if Assigned(aElement.ContainingMainRecord.ElementBySignature[PNAM]) then
       aElement.ContainingMainRecord.ElementBySignature[PNAM].Remove;
   finally
@@ -1373,7 +1373,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lMainRecord := aElement.ContainingMainRecord;
     if not Assigned(lMainRecord) then
       Exit;
@@ -1395,7 +1395,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lContainer := aElement.Container;
     var lValue := lContainer.ElementBySignature[CNAM];
 
@@ -1424,7 +1424,7 @@ begin
   if not Assigned(MainRecord) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lMonth := aElement.Container.ElementByName['Month'];
     var lMonthVal :Integer := lMonth.NativeValue;
     if MainRecord.Version < 122 then
@@ -1455,7 +1455,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then
+  if aElement.ContextObj.BeginInternalEdit then
   try
     if aElement.NativeValue = 0 then
       aElement.NativeValue := 1;
@@ -1472,7 +1472,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lContainerElementRef : IwbContainerElementRef;
     if not Supports(aElement.Container, IwbContainerElementRef, lContainerElementRef) then
       Exit;
@@ -1501,7 +1501,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if aElement.NativeValue > 255 then
       aElement.NativeValue := 255;
   finally
@@ -1564,7 +1564,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lContainerElementRef : IwbContainerElementRef;
     if not Supports(aElement.Container, IwbContainerElementRef, lContainerElementRef) then
       Exit;
@@ -1585,7 +1585,7 @@ begin
   if VarSameValue(aOldValue, aNewValue) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lContainerElementRef : IwbContainerElementRef;
     if not Supports(aElement, IwbContainerElementRef, lContainerElementRef) then
       Exit;
@@ -1666,7 +1666,7 @@ begin
   if not Assigned(lContainer) then
     Exit;
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     var lSounds := lContainer.ElementByPath['Sound Mappings'];
     if Assigned(lSounds) then
       lSounds.Remove;

@@ -1547,7 +1547,7 @@ var
 begin
   Exit; {>>> Looks like causes problems with Dawnguard.esm <<<}
 
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
 
@@ -1575,7 +1575,7 @@ procedure wbARMAAfterLoad(const aElement: IwbElement);
   MainRecord    : IwbMainRecord;}
 begin
   wbReplaceBODTwithBOD2(aElement);
-  {if wbBeginInternalEdit then try
+  {if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbMainRecord, MainRecord) then
       Exit;
     if MainRecord.ElementNativeValues['DNAM\Weight slider - Male'] = 0 then
@@ -1592,7 +1592,7 @@ var
   Container  : IwbContainerElementRef;
   MainRecord : IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -1619,7 +1619,7 @@ var
   MainRecord : IwbMainRecord;
   Flags      : Cardinal;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 
@@ -1708,7 +1708,7 @@ var
   DataSubRec   : IwbSubrecord;
   Flags        : Byte;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not wbTryGetContainerWithValidMainRecord(aElement, Container, MainRecord) then
       Exit;
 
@@ -1753,7 +1753,7 @@ end;
 //  FullParticleBirthRatio : Extended;
 //  PersistantParticleCount : Extended;
 //begin
-//  if wbBeginInternalEdit then try
+//  if aElement.ContextObj.BeginInternalEdit then try
 //    if not Supports(aElement, IwbContainerElementRef, Container) then
 //      Exit;
 //
@@ -1794,7 +1794,7 @@ var
   ActorValue: Variant;
   MainRecord: IwbMainRecord;
 begin
-  if wbBeginInternalEdit then try
+  if aElement.ContextObj.BeginInternalEdit then try
     if not Supports(aElement, IwbContainerElementRef, Container) then
       Exit;
 

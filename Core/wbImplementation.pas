@@ -2662,7 +2662,7 @@ var
     var MaxLightMasterCount := Succ(TwbFileID.MaxLightSlot);
     var MaxMediumMasterCount := Succ(TwbFileID.MaxMediumSlot);
 
-    if wbBeginInternalEdit(True) then try
+    if flContextObj.BeginInternalEdit(True) then try
       for i := 0 to Pred(lMasters.Count) do begin
         var lFile := GetLoadedFileByName(flContextObj, lMasters[i]);
         if not Assigned(lFile) then
@@ -2711,7 +2711,7 @@ var
     finally
       wbEndInternalEdit;
     end else
-      Assert(False, '[AddMasters] not wbBeginInternalEdit');
+      Assert(False, '[AddMasters] not flContextObj.BeginInternalEdit');
   end;
 
 var
@@ -3256,7 +3256,7 @@ begin
         SetLength(flMasters, j);
 
         (MasterFiles as IwbContainerInternal).SortBySortOrder;
-        if wbBeginInternalEdit(True) then try
+        if flContextObj.BeginInternalEdit(True) then try
           for i := Pred(MasterFiles.ElementCount) downto 0 do
             if MasterFiles[i].SortOrder = $1200 then
               MasterFiles.RemoveElement(i);
@@ -3268,7 +3268,7 @@ begin
         finally
           wbEndInternalEdit;
         end else
-          Assert(False, '[TwbFile.CleanMasters] not wbBeginInternalEdit');
+          Assert(False, '[TwbFile.CleanMasters] not flContextObj.BeginInternalEdit');
 
         SetModified(True);
         IncGeneration;
@@ -5955,7 +5955,7 @@ begin
           MasterFilesAdded := True;
         end;
         if Assigned(MasterFiles) then begin
-          if wbBeginInternalEdit(True) then try
+          if flContextObj.BeginInternalEdit(True) then try
             j := MasterFiles.ElementCount;
             if not MasterFilesAdded then
               MasterFiles.Assign(wbAssignAdd, nil, False)
@@ -6044,7 +6044,7 @@ begin
               if not Assigned(DialRecord) or (GroupRecord.GroupType <> 7) or not DialRecord.Equals(GroupRecord.ChildrenOf) then
                 GroupRecord := nil;
             if not Assigned(GroupRecord) and Assigned(DialRecord) then
-              if wbBeginInternalEdit(True) then try
+              if flContextObj.BeginInternalEdit(True) then try
                 GroupRecord := DialRecord.EnsureChildGroup;
               finally
                 wbEndInternalEdit;
@@ -6061,7 +6061,7 @@ begin
                 if not Assigned(CellRecord) or (GroupRecord.GroupType <> GroupType) or not CellRecord.Equals(GroupRecord.ChildrenOf) then
                   GroupRecord := nil;
               if not Assigned(GroupRecord) and Assigned(CellRecord) then
-                if wbBeginInternalEdit(True) then try
+                if flContextObj.BeginInternalEdit(True) then try
                   GroupRecord2 := CellRecord.EnsureChildGroup;
                   GroupRecord := GroupRecord2.FindChildGroup(GroupType, CellRecord);
                   if not Assigned(GroupRecord) then
@@ -6084,7 +6084,7 @@ begin
                 if Assigned(TopGroups) and TopGroups.Find(Signature, i) then
                   GroupRecord := IwbGroupRecord(Pointer(TopGroups.Objects[i]))
                 else
-                  if wbBeginInternalEdit(True) then try
+                  if flContextObj.BeginInternalEdit(True) then try
                     GroupRecord := TwbGroupRecord.Create(Self, Signature);
                     if not Assigned(TopGroups) then begin
                       TopGroups := TStringList.Create;
@@ -6164,7 +6164,7 @@ begin
   flActivateIndices;
 
   if lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
-    IsInternal := not GetIsEditable and wbBeginInternalEdit(True);
+    IsInternal := not GetIsEditable and flContextObj.BeginInternalEdit(True);
     try
       SetLength(Groups, flContextObj.GameDefObj.GroupOrder.Count);
       for i := High(cntElements) downto Succ(Low(cntElements)) do begin
@@ -6175,7 +6175,7 @@ begin
         if GroupRecord.ElementCount = 0 then begin
           var lName := GroupRecord.Name;
           flProgress('Warning: File contains empty top level group: ' + lName);
-          if wbBeginInternalEdit(True) then try
+          if flContextObj.BeginInternalEdit(True) then try
             GroupRecord.Remove;
             flProgress('Removed empty group: ' + lName);
           finally
@@ -6197,7 +6197,7 @@ begin
         end;
         if Assigned(Groups[GroupRecord.SortOrder]) then begin
           flProgress('Warning: File contains duplicated top level group: ' + cntElements[i].Name);
-          if wbBeginInternalEdit(True) then try
+          if flContextObj.BeginInternalEdit(True) then try
             if Groups[GroupRecord.SortOrder].ElementCount = 0 then begin
               Groups[GroupRecord.SortOrder].Remove;
               Groups[GroupRecord.SortOrder] := nil;
@@ -6227,7 +6227,7 @@ begin
   end;
 
   if (fsIsHardcoded in flStates) and (gcHardcodedPlayerRef in lGameDef.Capabilities) then
-    if wbBeginInternalEdit(True) then try
+    if flContextObj.BeginInternalEdit(True) then try
       ((Add('PLYR', True) as IwbGroupRecord).Add('PLYR', True) as IwbMainRecord).EditorID := 'PlayerRef';
     finally
       wbEndInternalEdit;
@@ -6525,7 +6525,7 @@ begin
             end;
         end;
         if Length(Old) > 0 then begin
-          if wbBeginInternalEdit(True) then try
+          if flContextObj.BeginInternalEdit(True) then try
             (MasterFiles as IwbContainerInternal).SortBySortOrder;
           finally
             wbEndInternalEdit;
@@ -10094,7 +10094,7 @@ begin
         aKAR^ := nil;
 
       if WasInternal then
-        WasInternal := wbBeginInternalEdit(True);
+        WasInternal := ContextObj.BeginInternalEdit(True);
       try
         if aForce or ResetChildrenLeafFirst then begin
           DoReset(True);
@@ -10726,7 +10726,7 @@ begin
 
   if (not lContext.Settings.WriteOffsetData) and (GetSignature = 'WRLD') then begin
     if Supports(GetRecordBySignature('OFST'), IwbSubRecord, CurrentRec) then begin
-      if wbBeginInternalEdit(True) then try
+      if ContextObj.BeginInternalEdit(True) then try
         RemoveElement('OFST');
       finally
         wbEndInternalEdit;
@@ -10736,7 +10736,7 @@ begin
     end;
 
     if Supports(GetRecordBySignature('CLSZ'), IwbSubRecord, CurrentRec) then begin
-      if wbBeginInternalEdit(True) then try
+      if ContextObj.BeginInternalEdit(True) then try
         RemoveElement('CLSZ');
       finally
         wbEndInternalEdit;
@@ -10754,7 +10754,7 @@ begin
 
     RequiredRecords := RequiredRecords - PresentRecords;
     if RequiredRecords <> [] then begin
-      if wbBeginInternalEdit then try
+      if ContextObj.BeginInternalEdit then try
         for i := 0 to Pred(mrDef.MemberCount) do
           if i in RequiredRecords then begin
             if wbMoreInfoForRequired  then
@@ -10791,7 +10791,7 @@ begin
   Include(cntStates, csInitOnce);
 
   if {$IFDEF USE_PARALLEL_BUILD_REFS}not lContext.BuildingRefsParallel and{$ENDIF} lContext.Settings.CanSortINFO and lContext.Settings.SortINFO then
-    if not (GetIsDeleted or GetIsPartialForm) and wbBeginInternalEdit(False) then try
+    if not (GetIsDeleted or GetIsPartialForm) and ContextObj.BeginInternalEdit(False) then try
       if lContext.Settings.FillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
           GroupRecordInternal.Sort(True);
@@ -13209,7 +13209,7 @@ var
     SelfRef       : IwbContainerElementRef;
     IsInternalEdit: Boolean;
   begin
-    IsInternalEdit := wbBeginInternalEdit(True);
+    IsInternalEdit := ContextObj.BeginInternalEdit(True);
     try
       KAR := wbCreateKeepAliveRoot;
 
@@ -13558,7 +13558,7 @@ begin
     if not CanPlaceCells(Children, False) then
       Exit;
 
-  if not wbBeginInternalEdit(True) then begin
+  if not aWorldspace.ContextObj.BeginInternalEdit(True) then begin
     aReason := 'editing is blocked';
     Exit;
   end;
@@ -13626,7 +13626,7 @@ begin
     wbProgressCallback('<Note: no OFST written for ' + GetName + ': ' + Reason + '>');
 
   if Assigned(GetRecordBySignature('OFST')) or Assigned(GetRecordBySignature('CLSZ')) then begin
-    if wbBeginInternalEdit(True) then try
+    if ContextObj.BeginInternalEdit(True) then try
       if Assigned(GetRecordBySignature('OFST')) then
         RemoveElement('OFST');
       if Assigned(GetRecordBySignature('CLSZ')) then
@@ -15473,7 +15473,7 @@ begin
       KAR := nil;
       if Assigned(MS) and (Length(cntElements) > 0) then begin
         if WasInternal then
-          WasInternal := wbBeginInternalEdit(True);
+          WasInternal := ContextObj.BeginInternalEdit(True);
         try
           if ResetChildrenLeafFirst then begin
             DoReset(True);
@@ -16902,7 +16902,7 @@ begin
     Exit(False);
 
   var lOldElementCount := GetElementCount;
-  if not wbBeginInternalEdit(True) then
+  if not ContextObj.BeginInternalEdit(True) then
     Exit(False);
   try
     BeginUpdate;
@@ -17721,7 +17721,7 @@ var
         var lEditorID := aSource.EditorID;
         lEditorID := RemovePrefix(lEditorID, aPrefixRemove);
         lEditorID := RemoveSuffix(lEditorID, aSuffixRemove);
-        if wbBeginInternalEdit(True) then try
+        if ContextObj.BeginInternalEdit(True) then try
           lResult.EditorID := aPrefix + lEditorID + aSuffix;
         finally
           wbEndInternalEdit;
@@ -18156,7 +18156,7 @@ end;
 procedure TwbGroupRecord.AfterConstruction;
 begin
   if Assigned(grDuplicateOf) then try
-    if wbBeginInternalEdit(True) then try
+    if ContextObj.BeginInternalEdit(True) then try
       var s := grDuplicateOf.ShortName;
       var Container := GetContainer;
       if GetElementCount = 0 then begin
@@ -18742,7 +18742,7 @@ begin
     Changed := False;
 
     if not GetMastersUpdated then begin
-      IsInternal := wbBeginInternalEdit(True);
+      IsInternal := ContextObj.BeginInternalEdit(True);
       try
         if grStruct.grsGroupType in [1, 6..10] then begin
           OldFormID := TwbFormID.FromCardinal(GetGroupLabel);
@@ -19264,7 +19264,7 @@ var
           else
             if aOnlyMasters then
               if ContextObj.Settings.FillPNAM and (not TargetRecord.IsDeleted) then
-                if wbBeginInternalEdit then try
+                if ContextObj.BeginInternalEdit then try
                   if not TargetRecord.ElementExists['PNAM'] then begin
                     {>>> No QSTI in Skyrim, using DIAL\QNAM <<<}
                     var lIsSkyrim := GameDefObj.IsSkyrim;
@@ -19325,7 +19325,7 @@ var
           else
             ListSig := 'INOA';
 
-          if wbBeginInternalEdit then try
+          if ContextObj.BeginInternalEdit then try
             if Supports(ChildrenOf.RecordBySignature[ListSig], IwbContainerElementRef, INOM) then begin
               INOM.Remove;
               INOM := nil;
@@ -21024,7 +21024,7 @@ procedure TwbElement.SetInternalModified(aValue: Boolean);
 var
   IsInternal: Boolean;
 begin
-  IsInternal := wbBeginInternalEdit(True);
+  IsInternal := ContextObj.BeginInternalEdit(True);
   try
     SetModified(aValue);
   finally
@@ -21203,7 +21203,7 @@ begin
     Exclude(eStates, esModifiedUpdated);
     if esModified in eStates then begin
       if esInternalModified in eStates then begin
-        IsInternal := wbBeginInternalEdit(True);
+        IsInternal := ContextObj.BeginInternalEdit(True);
         try
           SetParentModified;
         finally
