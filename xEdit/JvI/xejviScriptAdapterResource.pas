@@ -194,8 +194,8 @@ end;
 
 procedure Misc_LocalizationGetStringsFromFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  if wbLocalizationHandler <> nil then
-    wbLocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+  if wbLocalizationHandler(xeContext) <> nil then
+    wbLocalizationHandler(xeContext).GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 
 procedure Misc_wbAlphaBlend(var Value: Variant; Args: TJvInterpreterArgs);

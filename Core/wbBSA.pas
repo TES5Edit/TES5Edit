@@ -15,8 +15,7 @@ interface
 uses
   wbInterface;
 
-function wbCreateContainerHandler: IwbContainerHandler; overload;
-function wbCreateContainerHandler(aGameDef: TwbGameDef): IwbContainerHandler; overload;
+function wbCreateContainerHandler(aGameDef: TwbGameDef): IwbContainerHandler;
 
 implementation
 
@@ -161,11 +160,6 @@ type
     destructor Destroy; override;
   end;
 
-
-function wbCreateContainerHandler: IwbContainerHandler;
-begin
-  Result := wbCreateContainerHandler(_CurrentGameDef);
-end;
 
 function wbCreateContainerHandler(aGameDef: TwbGameDef): IwbContainerHandler;
 begin

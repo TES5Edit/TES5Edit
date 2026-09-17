@@ -30,11 +30,9 @@ type
                            var aList     : TStringList);
   end;
 
-function wbSoundBankCache: IwbSoundBankArray; overload;
-function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray; overload;
+function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray;
 
-procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList); overload;
-procedure wbBuildSoundBankCache(const aLoadOrder: TStringList); overload;
+procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
 
 implementation
 
@@ -176,19 +174,9 @@ begin
     Result := _EmptySoundBankCache;
 end;
 
-function wbSoundBankCache: IwbSoundBankArray;
-begin
-  Result := wbSoundBankCache(_CurrentContext);
-end;
-
 procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
 begin
   aContext.SoundBankCache := TwbSoundBankArray.Create(aContext.ContainerHandler, aLoadOrder);
-end;
-
-procedure wbBuildSoundBankCache(const aLoadOrder: TStringList);
-begin
-  wbBuildSoundBankCache(_CurrentContext, aLoadOrder);
 end;
 
 { TwbSwitchGroup }

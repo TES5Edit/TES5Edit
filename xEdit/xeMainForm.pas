@@ -9598,13 +9598,13 @@ begin
       // localization editor
       else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
-          wbLocalizationHandler.NoTranslate := true;
+          wbLocalizationHandler(xeContext).NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
-          wbLocalizationHandler.NoTranslate := false;
+          wbLocalizationHandler(xeContext).NoTranslate := false;
           EditValue(Element._File.FileName, StringID);
           ShowModal;
         finally
-          wbLocalizationHandler.NoTranslate := false;
+          wbLocalizationHandler(xeContext).NoTranslate := false;
           Free;
         end;
         vstView.Invalidate;
@@ -12002,7 +12002,7 @@ end;
 
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
 begin
-  if wbLocalizationHandler = nil then
+  if wbLocalizationHandler(xeContext) = nil then
     Exit;
 
   with TfrmLocalization.Create(Self) do try
@@ -12017,7 +12017,7 @@ var
   i: integer;
   s: string;
 begin
-  if wbLocalizationHandler = nil then
+  if wbLocalizationHandler(xeContext) = nil then
     Exit;
 
   s := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
@@ -12027,10 +12027,10 @@ begin
 
   xeContext.Settings.Language := s;
 
-  wbLocalizationHandler.Clear;
+  wbLocalizationHandler(xeContext).Clear;
   for i := Low(Files) to High(Files) do
     if Files[i].IsLocalized then
-      wbLocalizationHandler.LoadForFile(Files[i].FileName);
+      wbLocalizationHandler(xeContext).LoadForFile(Files[i].FileName);
 
   vstNav.Invalidate;
   vstView.Invalidate;
@@ -12089,7 +12089,7 @@ begin
 
       with TfrmLocalizePlugin.Create(Self) do try
 
-        wbLocalizationHandler.AvailableLocalizationFiles(lFiles);
+        wbLocalizationHandler(xeContext).AvailableLocalizationFiles(lFiles);
         clbFrom.Items.AddStrings(lFiles);
         clbTo.Items.AddStrings(lFiles);
 
@@ -12137,14 +12137,14 @@ begin
 
         for i := 0 to Pred(lFiles.Count) do begin
           if Integer(lFiles.Objects[i]) and 1 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler.StringsPath + lFiles[i]);
+            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler(xeContext).StringsPath + lFiles[i]);
             for j := 0 to Pred(wblf.Count) do
               lFrom.Add(AnsiLowerCase(wblf.Items[j]));
             wblf.Destroy;
           end;
 
           if Integer(lFiles.Objects[i]) and 2 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler.StringsPath + lFiles[i]);
+            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler(xeContext).StringsPath + lFiles[i]);
             lTo.AddStrings(wblf.Items);
             wblf.Destroy;
           end;
@@ -12174,13 +12174,13 @@ begin
               // count empty strings as translated too
               if s = '' then Inc(Translated);
           end;
-          ID := wbLocalizationHandler.AddValue(s, Element);
+          ID := wbLocalizationHandler(xeContext).AddValue(s, Element);
           Element.EditValue := sStringID + IntToHex(ID, 8);
         end else begin
           s := Element.EditValue;
-          wbLocalizationHandler.NoTranslate := true;
+          wbLocalizationHandler(xeContext).NoTranslate := true;
           Element.EditValue := s;
-          wbLocalizationHandler.NoTranslate := false;
+          wbLocalizationHandler(xeContext).NoTranslate := false;
         end;
 
         if StartTick + 500 < GetTickCount64 then begin
@@ -12201,7 +12201,7 @@ begin
         FreeAndNil(lTo);
       end;
 
-      wbLocalizationHandler.NoTranslate := false;
+      wbLocalizationHandler(xeContext).NoTranslate := false;
       pnlClient.Enabled := true;
       UpdatePnlCancelVisible;
       PostAddMessage('[Processing done] ' +
@@ -14513,7 +14513,7 @@ begin
     mniMainLocalizationLanguage.Clear;
     sl := TStringList.Create;
     try
-      wbLocalizationHandler.AvailableLanguages(sl);
+      wbLocalizationHandler(xeContext).AvailableLanguages(sl);
       for i := 0 to Pred(sl.Count) do begin
         MenuItem := TMenuItem.Create(mniMainLocalizationLanguage);
         MenuItem.Caption := sl[i];
@@ -15446,11 +15446,11 @@ begin
           SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
         end;
 
-      if wbLocalizationHandler <> nil then try
-        for i := 0 to Pred(wbLocalizationHandler.Count) do try
-          if wbLocalizationHandler[i].Modified or wbTestWrite then begin
-            CheckListBox1.AddItem(wbLocalizationHandler[i].Name, Pointer(wbLocalizationHandler[i]));
-            CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler[i].Modified;
+      if wbLocalizationHandler(xeContext) <> nil then try
+        for i := 0 to Pred(wbLocalizationHandler(xeContext).Count) do try
+          if wbLocalizationHandler(xeContext)[i].Modified or wbTestWrite then begin
+            CheckListBox1.AddItem(wbLocalizationHandler(xeContext)[i].Name, Pointer(wbLocalizationHandler(xeContext)[i]));
+            CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler(xeContext)[i].Modified;
             SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
           end;
         except
@@ -17667,10 +17667,10 @@ var
   CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
-  if EditInfoCacheLGeneration <> wbLocalizationHandler.Generation then begin
+  if EditInfoCacheLGeneration <> wbLocalizationHandler(xeContext).Generation then begin
     EditInfoCacheID := nil;
     EditInfoCache := nil;
-    EditInfoCacheLGeneration := wbLocalizationHandler.Generation;
+    EditInfoCacheLGeneration := wbLocalizationHandler(xeContext).Generation;
   end;
 
   case aElement.EditType of
@@ -21789,7 +21789,7 @@ begin
         wbCurrentContext.LoaderError := True;
       end else} begin
         if xeContext.ContainerHandler = nil then begin
-          xeContext.ContainerHandler := wbCreateContainerHandler;
+          xeContext.ContainerHandler := wbCreateContainerHandler(xeContext.GameDefObj);
 
           _LoaderProgressLastShown := Now;
           _LoaderProgressAction := 'loading resources';
@@ -21887,7 +21887,7 @@ begin
               if not (fsIsHardcoded in lFile.FileStates) then
                 lModules.Add(lFile.FileName);
             lModules.AddStrings(ltLoadList);
-            wbBuildSoundBankCache(lModules);
+            wbBuildSoundBankCache(xeContext, lModules);
           finally
             lModules.Free;
           end;

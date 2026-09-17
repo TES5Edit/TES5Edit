@@ -1519,7 +1519,7 @@ begin
       end;
 
       if HostContext.ContainerHandler = nil then
-        HostContext.ContainerHandler := wbCreateContainerHandler;
+        HostContext.ContainerHandler := wbCreateContainerHandler(HostContext.GameDefObj);
 
       StartTime := Now;
       ReportProgress('Application name : ' + wbApplicationTitle);
@@ -1664,7 +1664,7 @@ begin
           HostContext.ContainerHandler.AddFolder(HostContext.Settings.DataPath);
 
           if gcWwiseSoundBanks in HostContext.GameDefObj.Capabilities then
-            wbBuildSoundBankCache(Masters);
+            wbBuildSoundBankCache(HostContext, Masters);
 
         finally
           FreeAndNil(Masters);
