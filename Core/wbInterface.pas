@@ -4510,7 +4510,7 @@ type
     function ExpandFileName(const aFileName: string): string;
 
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; virtual; abstract;
-    function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; virtual; abstract;
+    function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; virtual; abstract;
     function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; virtual; abstract;
     function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; virtual; abstract;
     procedure ForceClosedFiles; virtual; abstract;
@@ -26891,7 +26891,6 @@ initialization
   wbSaveExtensions[1] := csDotEss;
 
   wbMakeCurrentGameDef(TwbGameDef.Create);
-  wbMakeCurrentContext(TwbGameContext.Create(_CurrentGameDefRef));
 finalization
   wbMakeCurrentContext(nil);
   _CurrentGameDef := nil;

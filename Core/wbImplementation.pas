@@ -26453,6 +26453,7 @@ end;
 
 initialization
   wbGameContextClass := TwbLoadingGameContext;
+  wbCreateGameContext(_CurrentGameDef as IwbGameDef);
   _MastersGeneration := 1;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   _ResizeLock.Initialize;
