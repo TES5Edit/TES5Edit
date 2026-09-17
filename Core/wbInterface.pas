@@ -6976,10 +6976,7 @@ end;
 constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
 begin
   inherited Create;
-  if Assigned(_CurrentContext) then
-    Settings := _CurrentContext.Settings
-  else
-    Settings := TwbGameContextSettings.Defaults;
+  Settings := TwbGameContextSettings.Defaults;
   gcGameDef := aGameDef;
   gcGameDefObj := aGameDef as TwbGameDef;
   gcGlobalGeneration := 1;
@@ -6995,16 +6992,6 @@ begin
   gcStripMastersFileNames := CreateNameList;
   gcLEncoding[False] := CreateLEncodingList;
   gcLEncoding[True] := CreateLEncodingList;
-  if Assigned(_CurrentContext) then begin
-    gcRecordToSkip.Assign(_CurrentContext.RecordToSkip);
-    gcSubRecordToSkip.Assign(_CurrentContext.SubRecordToSkip);
-    gcGroupToSkip.Assign(_CurrentContext.GroupToSkip);
-    gcChaptersToSkip.Assign(_CurrentContext.ChaptersToSkip);
-    gcAllowDirectSaveFor.Assign(_CurrentContext.AllowDirectSaveFor);
-    gcStripMastersFileNames.Assign(_CurrentContext.StripMastersFileNames);
-    gcLEncoding[False].Assign(_CurrentContext.LEncoding[False]);
-    gcLEncoding[True].Assign(_CurrentContext.LEncoding[True]);
-  end;
   gcLocalizationHandler := TwbLocalizationHandler.Create(Self);
 end;
 
