@@ -87,7 +87,7 @@ end;
 
 procedure _wbRecordDefMap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(wbInterface._wbRecordDefMap);
+  Value := O2V(xeContext.GameDefObj.RecordDefMap);
 end;
 
 procedure _wbProgramPath(var Value: Variant; Args: TJvInterpreterArgs);
@@ -467,7 +467,7 @@ begin
   Value := caUnknown;
   if Length(NodeDatas) > 0 then
     if Assigned(NodeDatas[0].Container) then
-      Value := frmMain.ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2], TwbConflictConfig.Current,
+      Value := frmMain.ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2], TwbConflictConfig.ForContext(xeContext),
         procedure(const aMessage: string) begin frmMain.PostAddMessage(aMessage); end)
     else
       Value := frmMain.ConflictLevelForNodeDatas(@NodeDatas[0], Length(NodeDatas), Args.Values[i+1], Args.Values[i+2]);

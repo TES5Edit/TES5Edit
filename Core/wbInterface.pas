@@ -2220,7 +2220,7 @@ type
     TranslationMode    : Boolean;
     AlignArrayElements : Boolean;
     AlignArrayLimit    : Integer;
-    class function Current: TwbConflictConfig; static;
+    class function ForContext(aContext: TwbGameContext): TwbConflictConfig; static;
   end;
 
   TwbConflictPolicy = record
@@ -5857,8 +5857,6 @@ function wbReadInteger24(aBasePtr: pointer): Int64;
 function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
 function wbFaceGenCacheOf(const aElement: IwbElement): IwbFaceGenCache;
 
-function _wbRecordDefMap: TStringList;
-
 function wbProgressLock: Integer;
 function wbProgressUnlock: Integer;
 function wbHasProgressCallback(aForce: Boolean = False): Boolean;
@@ -5954,9 +5952,9 @@ uses
   wbLocalization,
   wbSort;
 
-class function TwbConflictConfig.Current: TwbConflictConfig;
+class function TwbConflictConfig.ForContext(aContext: TwbGameContext): TwbConflictConfig;
 begin
-  Result.TranslationMode := _CurrentContext.Settings.TranslationMode;
+  Result.TranslationMode := aContext.Settings.TranslationMode;
   Result.AlignArrayElements := wbAlignArrayElements;
   Result.AlignArrayLimit := wbAlignArrayLimit;
 end;
@@ -8386,6 +8384,7 @@ type
     procedure AfterConstruction; override;
 
     function defIsLocked: Boolean;
+    function defGameDefObj: TwbGameDef; virtual;
 
     {---IInterface---}
     function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
@@ -8572,6 +8571,8 @@ type
 
     procedure recBuildReferences;
   protected
+    function defGameDefObj: TwbGameDef; override;
+
     constructor Clone(const aSource: TwbDef); override;
     constructor Create(aGameDef         : TwbGameDef;
                        aPriority        : TwbConflictPriority;
@@ -12216,6 +12217,14 @@ begin
   Result := Assigned(defParent) or (dfTemplate in defFlags);
 end;
 
+function TwbDef.defGameDefObj: TwbGameDef;
+begin
+  if Assigned(defParent) then
+    Result := defParent.defGameDefObj
+  else
+    Result := nil;
+end;
+
 function TwbDef.Duplicate: TwbDef;
 begin
   Result := TwbDefClass(ClassType).Clone(Self);
@@ -13049,6 +13058,11 @@ end;
 function TwbMainRecordDef.GetQuickInitLimit: Integer;
 begin
   Result := recQuickInitLimit;
+end;
+
+function TwbMainRecordDef.defGameDefObj: TwbGameDef;
+begin
+  Result := recGameDef;
 end;
 
 function TwbMainRecordDef.GetRecordHeaderStruct: IwbStructDef;
@@ -14651,7 +14665,11 @@ end;
 
 function TwbSubRecordStructDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := _CurrentGameDef.MainRecordHeader as IwbStructDef;
+  var lGameDef := defGameDefObj;
+  if Assigned(lGameDef) then
+    Result := lGameDef.MainRecordHeader as IwbStructDef
+  else
+    Result := nil;
 end;
 
 function TwbSubRecordStructDef.GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs;
@@ -15056,7 +15074,11 @@ end;
 
 function TwbSubRecordUnionDef.GetRecordHeaderStruct: IwbStructDef;
 begin
-  Result := _CurrentGameDef.MainRecordHeader as IwbStructDef;
+  var lGameDef := defGameDefObj;
+  if Assigned(lGameDef) then
+    Result := lGameDef.MainRecordHeader as IwbStructDef
+  else
+    Result := nil;
 end;
 
 function TwbSubRecordUnionDef.GetSignatureCount: Integer;
@@ -20351,8 +20373,9 @@ begin
         FilesProg := nil;
 
         if ACVAIsValid then begin
-          for i := 0 to Pred(_CurrentGameDef.ActorValueEnum.NameCount) do
-            Strings.Add(_CurrentGameDef.ActorValueEnum.Names[i] + ' [ACVA:' + IntToHex64(i, 8) + ']');
+          var lActorValueEnum := _File.GameDefObj.ActorValueEnum;
+          for i := 0 to Pred(lActorValueEnum.NameCount) do
+            Strings.Add(lActorValueEnum.Names[i] + ' [ACVA:' + IntToHex64(i, 8) + ']');
           Strings.Add(' None [ACVA:000000FF]');
           Strings.Add(' Invalid [ACVA:00000048]');
         end else begin
@@ -20717,8 +20740,17 @@ begin
       MainRecord := FindRecordForAVCode(aInt, aElement);
       if Assigned(MainRecord) then
         Result := MainRecord.FullName
-      else
-        Result := _CurrentGameDef.ActorValueEnum.ToString(aInt, aElement, aForSummary);
+      else begin
+        var lGameDef: TwbGameDef := nil;
+        if Assigned(aElement) then
+          lGameDef := aElement.GameDefObj;
+        if not Assigned(lGameDef) then
+          lGameDef := defGameDefObj;
+        if Assigned(lGameDef) then
+          Result := lGameDef.ActorValueEnum.ToString(aInt, aElement, aForSummary)
+        else
+          Result := '';
+      end;
       Result := Result + ' [ACVA:' + FormID.ToString(False) + ']';
     end;
     Exit;
@@ -24938,11 +24970,6 @@ begin
     Result := IntegerDef.ToString(aInt, aElement, aForSummary)
   else
     Result := '';
-end;
-
-function _wbRecordDefMap: TStringList;
-begin
-  Result := _CurrentGameDef.RecordDefMap;
 end;
 
 {$IFDEF USE_CODESITE}

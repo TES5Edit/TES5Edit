@@ -2345,7 +2345,7 @@ end;
 
 procedure TfrmMain.ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
 begin
-  wbConflictLevelForMainRecord(aMainRecord, Files, ConflictPolicy, TwbConflictConfig.Current,
+  wbConflictLevelForMainRecord(aMainRecord, Files, ConflictPolicy, TwbConflictConfig.ForContext(xeContext),
     procedure(const aMessage: string) begin PostAddMessage(aMessage); end,
     aConflictAll, aConflictThis);
 end;
@@ -18378,7 +18378,7 @@ end;
 
 procedure TfrmMain.vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
 begin
-  InitChildren(Sender.GetNodeData(Node), Length(ActiveRecords), ChildCount, TwbConflictConfig.Current,
+  InitChildren(Sender.GetNodeData(Node), Length(ActiveRecords), ChildCount, TwbConflictConfig.ForContext(xeContext),
     procedure(const aMessage: string)
     begin
       PostAddMessage(aMessage);
@@ -20484,7 +20484,7 @@ begin
                   lChainKey := IntToHex(lRec.LoadOrderFormID.ToCardinal, 8) + cTab + string(lRec.Signature) + cTab;
                   ConflictLevelForChildNodeDatas(lChain, False,
                     lRec.MasterOrSelf.IsInjected and not ((lRec.Signature = 'GMST') or (lRec.Signature = 'DFOB')),
-                    TwbConflictConfig.Current,
+                    TwbConflictConfig.ForContext(xeContext),
                     procedure(const aMessage: string) begin PostAddMessage(aMessage); end,
                     lOnField);
                 end;
@@ -21120,7 +21120,7 @@ begin
   lKey := 'field' + cTab + aRecord._File.FileName + cTab + IntToHex(aRecord.LoadOrderFormID.ToCardinal, 8) + cTab;
   ConflictLevelForChildNodeDatas(lChain, False,
     aRecord.MasterOrSelf.IsInjected and not ((aRecord.Signature = 'GMST') or (aRecord.Signature = 'DFOB')),
-    TwbConflictConfig.Current,
+    TwbConflictConfig.ForContext(xeContext),
     procedure(const aMessage: string) begin PostAddMessage(aMessage); end,
     procedure(const aNodeDatas: TDynViewNodeDatas; aConflictAll: TConflictAll)
     var
