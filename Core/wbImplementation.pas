@@ -1090,7 +1090,8 @@ type
     class function CreateForPtr(var aPtr            : Pointer;
                                 var aEndPtr         : Pointer;
                               const aContainer      : IwbContainer;
-                              const aPrevMainRecord : IwbMainRecord)
+                              const aPrevMainRecord : IwbMainRecord;
+                                    aContextObj     : TwbGameContext = nil)
                                                     : IwbRecord;
 
     function GetName: string; override;
@@ -1640,6 +1641,16 @@ type
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
     function GetAlignable: Boolean;
+  end;
+
+  TwbDetachedSubRecord = class(TwbSubRecord)
+  protected
+    dsrContextObj : TwbGameContext;
+
+    constructor CreateDetached(aContextObj: TwbGameContext; var aBasePtr, aEndPtr: Pointer);
+
+    function GameDefObj: TwbGameDef; override;
+    function ContextObj: TwbGameContext; override;
   end;
 
   TwbValueBase = class(TwbDataContainer, IwbValueBase)
@@ -6094,7 +6105,7 @@ begin
             Container := nil;
         end;
 
-        Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil);
+        Rec := TwbRecord.CreateForPtr(CurrentPtr, EndPtr, Container, nil, flContextObj);
 
         if Assigned(Rec) then
           if gcUngroupedRecordStream in lGameDef.Capabilities then begin
@@ -8995,7 +9006,8 @@ end;
 class function TwbRecord.CreateForPtr(var aPtr            : Pointer;
                                       var aEndPtr         : Pointer;
                                     const aContainer      : IwbContainer;
-                                    const aPrevMainRecord : IwbMainRecord)
+                                    const aPrevMainRecord : IwbMainRecord;
+                                          aContextObj     : TwbGameContext)
                                                           : IwbRecord;
 begin
   try
@@ -9005,8 +9017,14 @@ begin
       if PwbSignature(aPtr)^ = 'GRUP' then
         Result := TwbGroupRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord)
       else begin
-        if ((PwbSignature(aPtr)^ = 'NAM0') or (PwbSignature(aPtr)^ = 'MVRF')) and (gcReferencesEmbeddedInCell in wbGameDefOf(aContainer).Capabilities) then
-          Result := TwbSubRecord.Create(nil, aPtr, aEndPtr, nil)
+        var lDetached := (PwbSignature(aPtr)^ = 'NAM0') or (PwbSignature(aPtr)^ = 'MVRF');
+        if lDetached then begin
+          if Assigned(aContainer) then
+            aContextObj := (aContainer as IwbContainerInternal).ContextObj;
+          lDetached := gcReferencesEmbeddedInCell in aContextObj.GameDefObj.Capabilities;
+        end;
+        if lDetached then
+          Result := TwbDetachedSubRecord.CreateDetached(aContextObj, aPtr, aEndPtr)
         else
           Result := TwbMainRecord.Create(aContainer, aPtr, aEndPtr, aPrevMainRecord);
       end;
@@ -16784,6 +16802,28 @@ begin
     else
       srStruct.srsSignature := NONE;
   end;
+end;
+
+constructor TwbDetachedSubRecord.CreateDetached(aContextObj: TwbGameContext; var aBasePtr, aEndPtr: Pointer);
+begin
+  dsrContextObj := aContextObj;
+  inherited Create(nil, aBasePtr, aEndPtr, nil);
+end;
+
+function TwbDetachedSubRecord.GameDefObj: TwbGameDef;
+begin
+  if Assigned(eContainer) then
+    Result := inherited GameDefObj
+  else
+    Result := dsrContextObj.GameDefObj;
+end;
+
+function TwbDetachedSubRecord.ContextObj: TwbGameContext;
+begin
+  if Assigned(eContainer) then
+    Result := inherited ContextObj
+  else
+    Result := dsrContextObj;
 end;
 
 function TwbSubRecord.IsElementRemovable(const aElement: IwbElement): Boolean;
