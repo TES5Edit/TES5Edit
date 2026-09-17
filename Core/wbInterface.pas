@@ -274,7 +274,6 @@ var
 
 
 
-  wbAllowInternalEdit                : Boolean    = True;
   wbShowInternalEdit                 : Boolean    = False;
 
   wbReportMode                       : Boolean    = False;
@@ -4257,6 +4256,7 @@ type
     CompareRawData        : Boolean;
     TranslationMode       : Boolean;
     EditAllowed           : Boolean;
+    AllowInternalEdit     : Boolean;
     DontSave              : Boolean;
     AllowDirectSave       : Boolean;
     StripMasters          : Boolean;
@@ -6215,7 +6215,7 @@ end;
 
 function TwbGameContext.BeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := Settings.EditAllowed or ((wbAllowInternalEdit or aForce) and not _BlockInternalEdit);
+  Result := Settings.EditAllowed or ((Settings.AllowInternalEdit or aForce) and not _BlockInternalEdit);
   if Result then
     Inc(_InternalEditCount);
 end;
@@ -7059,6 +7059,7 @@ begin
   Result.AlwaysLoadGameMaster := True;
   Result.CreateContainedIn := True;
   Result.DelayLoadRecords := True;
+  Result.AllowInternalEdit := True;
   Result.Encoding := wbMBCSEncoding(1252);
   Result.EncodingTrans := Result.Encoding;
   Result.LoadBSAs := True;

@@ -1082,7 +1082,7 @@ begin
     end;
     gmTES3: begin
       xeContext.Settings.LoadBSAs := False;
-      wbAllowInternalEdit   := false;
+      xeContext.Settings.AllowInternalEdit := false;
       xeContext.Settings.DontCache := True;
       xeContext.Settings.DontCacheLoad := True;
       xeContext.Settings.DontCacheSave := True;
@@ -1098,14 +1098,14 @@ begin
         wbGameMasterEsm     := 'Nehrim.esm';
       end;
       xeContext.Settings.LoadBSAs := True;
-      wbAllowInternalEdit   := false;
+      xeContext.Settings.AllowInternalEdit := false;
       xeContext.Settings.CanSortINFO := True;
       xeContext.Settings.AllowESPMasters := True;
       xeContext.Settings.AllowESPMastersOnSave := True;
     end;
     gmTES4R: begin
       xeContext.Settings.LoadBSAs := False;
-      wbAllowInternalEdit   := False;
+      xeContext.Settings.AllowInternalEdit := False;
       xeContext.Settings.CanSortINFO := True;
       xeContext.Settings.AllowESPMasters := True;
       xeContext.Settings.AllowESPMastersOnSave := True;
@@ -1333,9 +1333,9 @@ begin
   end;
 
   if FindCmdLineSwitch('fixup') then
-    wbAllowInternalEdit := True
+    xeContext.Settings.AllowInternalEdit := True
   else if FindCmdLineSwitch('nofixup') then
-    wbAllowInternalEdit := False;
+    xeContext.Settings.AllowInternalEdit := False;
 
   if FindCmdLineSwitch('skipbsa') then
     xeContext.Settings.LoadBSAs := False
@@ -1343,9 +1343,9 @@ begin
     xeContext.Settings.LoadBSAs := True;
 
   if FindCmdLineSwitch('skipInternalEditing') then
-    wbAllowInternalEdit := False
+    xeContext.Settings.AllowInternalEdit := False
   else if FindCmdLineSwitch('forceInternalEditing') then
-    wbAllowInternalEdit := True;
+    xeContext.Settings.AllowInternalEdit := True;
 
   if FindCmdLineSwitch('showfixup') then
     wbShowInternalEdit := True
@@ -1354,7 +1354,7 @@ begin
 
   if xeQuickClean then begin
     xeContext.Settings.FixupPGRD := True;
-    wbAllowInternalEdit := True;
+    xeContext.Settings.AllowInternalEdit := True;
     wbSimpleRecords := False;
   end;
 
@@ -1516,7 +1516,7 @@ begin
   case wbToolMode of
     tmLODgen: begin
       wbIKnowWhatImDoing       := True;
-      wbAllowInternalEdit      := False;
+      xeContext.Settings.AllowInternalEdit := False;
       wbShowInternalEdit       := False;
       xeContext.Settings.LoadBSAs := True;
       xeContext.Settings.BuildRefs := False;
@@ -1528,7 +1528,7 @@ begin
     end;
     tmOnamUpdate, tmMasterUpdate, tmESMify: begin
       wbIKnowWhatImDoing       := True;
-      wbAllowInternalEdit      := False;
+      xeContext.Settings.AllowInternalEdit := False;
       wbShowInternalEdit       := False;
       xeContext.Settings.LoadBSAs := False;
       xeContext.Settings.BuildRefs := False;
@@ -1540,7 +1540,7 @@ begin
     end;
     tmMasterRestore, tmESPify, tmCheckForDR, tmCheckForITM, tmCheckForErrors: begin
       wbIKnowWhatImDoing       := True;
-      wbAllowInternalEdit      := False;
+      xeContext.Settings.AllowInternalEdit := False;
       wbShowInternalEdit       := False;
       xeContext.Settings.LoadBSAs := False;
       xeContext.Settings.BuildRefs := False;

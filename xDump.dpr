@@ -938,7 +938,7 @@ begin
   {$IFEND}
   _wbProgressCallback := ReportProgress;
   HostContext.Settings.DontSave := True;
-  wbAllowInternalEdit := False;
+  HostContext.Settings.AllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;
   wbHideUnused := False;

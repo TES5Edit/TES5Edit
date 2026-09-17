@@ -3705,10 +3705,10 @@ begin
 
   ResetAllTags;
 
-  EditState := wbAllowInternalEdit;
+  EditState := xeContext.Settings.AllowInternalEdit;
   try
     // do not dynamically update counter fields, they are set by merging code
-    wbAllowInternalEdit := False;
+    xeContext.Settings.AllowInternalEdit := False;
 
     for i := Succ(Low(Files)) to Pred(High(Files)) do with Files[i] do begin
       CheckGroup(GroupBySignature['LVLI'], ['Leveled List Entries'], ['LLCT']);
@@ -3747,7 +3747,7 @@ begin
     end;
 
   finally
-    wbAllowInternalEdit := EditState;
+    xeContext.Settings.AllowInternalEdit := EditState;
   end;
 
   TargetFile.CleanMasters;
@@ -20342,7 +20342,7 @@ begin
         lHeader.Add('#   wbLoaderDone         = ' + BoolToStr(xeContext.LoaderDone, True));
         lHeader.Add('#   xeQuickShowConflicts = ' + BoolToStr(xeQuickShowConflicts, True));
         lHeader.Add('#   wbActorTemplateHide  = ' + BoolToStr(wbActorTemplateHide, True));
-        lHeader.Add('#   wbAllowInternalEdit  = ' + BoolToStr(wbAllowInternalEdit, True));
+        lHeader.Add('#   wbAllowInternalEdit  = ' + BoolToStr(xeContext.Settings.AllowInternalEdit, True));
         lHeader.Add('#   wbCanSortINFO        = ' + BoolToStr(xeContext.Settings.CanSortINFO, True));
         lHeader.Add('#   wbDecodeTextureHashes = ' + BoolToStr(wbDecodeTextureHashes, True));
         lHeader.Add('#   wbDisplayLoadOrderFormID = ' + BoolToStr(wbDisplayLoadOrderFormID, True));
