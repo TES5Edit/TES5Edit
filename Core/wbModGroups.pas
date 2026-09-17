@@ -39,7 +39,7 @@ type
   PwbModGroupItem = ^TwbModGroupItem;
   TwbModGroupItem = record
   private
-    function mgiLoad(aLine: string): Boolean;
+    function mgiLoad(aContext: TwbGameContext; aLine: string): Boolean;
     procedure mgiCheckValid(aForce: Boolean);
     procedure mgiFlagFilesMissingCRC;
     function mgiNeedsCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean): Boolean;
@@ -72,7 +72,7 @@ type
 
   TwbModGroup = record
   private
-    procedure mgLoad(aLines: TStrings);
+    procedure mgLoad(aContext: TwbGameContext; aLines: TStrings);
     procedure mgCheckValid(aForce: Boolean);
     procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     procedure mgTagTargetFiles(aSource: PwbModuleInfo);
@@ -104,7 +104,7 @@ type
 
     function ToString: string;
 
-    function Activate: Boolean;
+    function Activate(aContext: TwbGameContext): Boolean;
     procedure ShowValidationMessages;
     procedure FlagFilesMissingCRC;
     procedure FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
@@ -119,7 +119,7 @@ type
 
   TwbModGroupsFile = record
   private
-    procedure mgfLoad;
+    procedure mgfLoad(aContext: TwbGameContext);
     procedure mgfCheckValid(aForce: Boolean);
     procedure mgfAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
     function mgfAnyModuleHasFile: Boolean;
@@ -137,8 +137,18 @@ type
     procedure mgfsAddModGroupsTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
   end;
 
-function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
-procedure wbReloadModGroups;
+  TwbModGroupList = class
+  private
+    mgContext : TwbGameContext;
+    mgFiles   : TwbModGroupsFiles;
+    mgLoaded  : Boolean;
+    procedure Load;
+  public
+    procedure Reload;
+    function ByName(aValidOnly: Boolean): TwbModGroupPtrs;
+  end;
+
+function wbModGroupListOf(const aContext: TwbGameContext): TwbModGroupList;
 
 implementation
 
@@ -148,15 +158,6 @@ uses
   wbHelpers,
   wbSort;
 
-type
-  TwbModGroupList = class
-  private
-    mgContext : TwbGameContext;
-    mgFiles   : TwbModGroupsFiles;
-    mgLoaded  : Boolean;
-    procedure Load;
-  end;
-
 function wbModGroupListOf(const aContext: TwbGameContext): TwbModGroupList;
 begin
   Result := TwbModGroupList(aContext.ModGroupList);
@@ -165,11 +166,6 @@ begin
     Result.mgContext := aContext;
     aContext.ModGroupList := Result;
   end;
-end;
-
-function wbCurrentModGroupList: TwbModGroupList;
-begin
-  Result := wbModGroupListOf(_CurrentContext);
 end;
 
 procedure TwbModGroupList.Load;
@@ -190,7 +186,7 @@ begin
     try
       ModGroupFilesByName.Sorted := True;
       ModGroupFilesByName.Duplicates := dupError;
-      Modules := wbModulesByLoadOrder(mgContext){.FilteredByFlag(mfHasFile)};
+      Modules := wbModuleListOf(mgContext).ModulesByLoadOrder(False){.FilteredByFlag(mfHasFile)};
       SetLength(ModGroupFiles, Succ(Length(Modules)));
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
@@ -207,7 +203,7 @@ begin
             ModGroupFile := @ModGroupFiles[j];
             with ModGroupFile^ do begin
               mgfFileName := ModGroupFileName;
-              mgfLoad;
+              mgfLoad(mgContext);
               Inc(j);
             end;
             ModGroupFilesByName.AddObject(ModGroupFileName, Pointer(ModGroupFile));
@@ -232,13 +228,10 @@ begin
   mgLoaded := True;
 end;
 
-procedure wbReloadModGroups;
-var
-  lList: TwbModGroupList;
+procedure TwbModGroupList.Reload;
 begin
-  lList := wbCurrentModGroupList;
-  lList.mgLoaded := False;
-  lList.Load;
+  mgLoaded := False;
+  Load;
 end;
 
 
@@ -285,7 +278,7 @@ begin
       Include(mgfFlags, mgffValid);
 end;
 
-procedure TwbModGroupsFile.mgfLoad;
+procedure TwbModGroupsFile.mgfLoad(aContext: TwbGameContext);
 var
   Sections : TStringList;
   Section  : TStringList;
@@ -302,7 +295,7 @@ begin
         with mgfModGroups[i] do begin
           mgName := Sections[i];
           ReadSectionValues(mgName, Section);
-          mgLoad(Section);
+          mgLoad(aContext, Section);
         end;
     finally
       Section.Free;
@@ -438,7 +431,7 @@ begin
     end;
 end;
 
-procedure TwbModGroup.mgLoad(aLines: TStrings);
+procedure TwbModGroup.mgLoad(aContext: TwbGameContext; aLines: TStrings);
 var
   i, j: Integer;
 begin
@@ -446,7 +439,7 @@ begin
   SetLength(mgItems, aLines.Count);
   j := 0;
   for i := 0 to Pred(aLines.Count) do
-    if mgItems[j].mgiLoad(aLines[i]) then
+    if mgItems[j].mgiLoad(aContext, aLines[i]) then
       Inc(j);
   SetLength(mgItems, j);
 end;
@@ -583,7 +576,7 @@ begin
     Include(mgiFlags, mgifValid);
 end;
 
-function TwbModGroupItem.mgiLoad(aLine: string): Boolean;
+function TwbModGroupItem.mgiLoad(aContext: TwbGameContext; aLine: string): Boolean;
 var
   Fragments : TArray<string>;
   i, j      : Integer;
@@ -638,7 +631,7 @@ begin
   if mgiFileName.IsEmpty then
     Exit(False);
 
-  mgiModule := wbModuleByName(mgiFileName);
+  mgiModule := wbModuleListOf(aContext).ModuleByName(mgiFileName);
 
   if Length(Fragments) > 1 then begin
     Fragments := Fragments[1].Split([',']).ForEach(Trim).RemoveEmpty;
@@ -743,13 +736,10 @@ begin
 end;
 
 
-function wbModGroupsByName(aValidOnly: Boolean = True): TwbModGroupPtrs;
-var
-  lList: TwbModGroupList;
+function TwbModGroupList.ByName(aValidOnly: Boolean): TwbModGroupPtrs;
 begin
-  lList := wbCurrentModGroupList;
-  lList.Load;
-  lList.mgFiles.mgfsAddModGroupsTo(Result, aValidOnly);
+  Load;
+  mgFiles.mgfsAddModGroupsTo(Result, aValidOnly);
   if Length(Result) > 1 then
     wbMergeSortPtr(@Result[0], Length(Result), CompareModGroupPtrsByName);
 end;
@@ -769,7 +759,7 @@ end;
 
 { TwbModGroupPtrsHelper }
 
-function TwbModGroupPtrsHelper.Activate: Boolean;
+function TwbModGroupPtrsHelper.Activate(aContext: TwbGameContext): Boolean;
 var
   Modules : TwbModuleInfos;
   i, j, k    : Integer;
@@ -777,7 +767,7 @@ var
   SourceReported : Boolean;
 begin
   Result := False;
-  Modules := wbModulesByLoadOrder;
+  Modules := wbModuleListOf(aContext).ModulesByLoadOrder(False);
   for i := Low(Modules) to High(Modules) do
     with Modules[i]^ do begin
       miModGroupTargets := nil;

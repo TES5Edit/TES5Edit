@@ -84,6 +84,7 @@ uses
   wbInterface,
   wbLoadOrder,
 
+  xeInit,
   xeMainForm,
   xeModuleSelectForm;
 
@@ -476,7 +477,7 @@ begin
         vstModGroupItems.Selected[vstModGroupItems.FocusedNode] := True;
       end else begin
         with TfrmModuleSelect.Create(Self) do try
-          AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
+          AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid);
           SelectFlag := mfTagged;
           FilterFlag := mfEphemeralModGroupTagged;
           AllModules.IncludeAll(mfEphemeralModGroupTagged);

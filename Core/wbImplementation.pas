@@ -3304,7 +3304,7 @@ begin
     if (not flContextObj.Settings.AllowDirectSave) or (fsIsGameMaster in flStates) then
       Include(flStates, fsMemoryMapped)
     else begin
-      flModule := wbModuleByName(GetFileName);
+      flModule := wbModuleListOf(flContextObj).ModuleByName(GetFileName);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) then
@@ -3344,9 +3344,9 @@ begin
     if flModule.miOfficialIndex < High(Integer) then
       Include(flStates, fsIsOfficial)
   end else if fsIsHardcoded in flStates then begin
-    flModule := wbModuleByName(GetFileName);
+    flModule := wbModuleListOf(flContextObj).ModuleByName(GetFileName);
     if not Assigned(flModule) then
-      flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+      flModule := wbModuleListOf(flContextObj).AddNewModule(GetFileName, False);
     flModule.miFile := Self;
     flModule.miLoadOrder := flLoadOrder;
     flModule.miFileID := flLoadOrderFileID;
@@ -3355,7 +3355,7 @@ begin
     Include(flModule.miFlags, mfIsHardcoded);
     Exclude(flModule.miFlags, mfValid);
   end else if not (fsOnlyHeader in flStates) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := wbModuleListOf(flContextObj).AddNewModule(GetFileName, False);
 
   if not (fsOnlyHeader in flStates) then begin
     if Assigned(flModule) and not Assigned(flModule.miFile) then begin
@@ -3404,11 +3404,11 @@ begin
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
-  flModule := wbModuleByName(GetFileName);
+  flModule := wbModuleListOf(flContextObj).ModuleByName(GetFileName);
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := wbModuleListOf(flContextObj).AddNewModule(GetFileName, False);
 
   Header := TwbMainRecord.Create(Self, flContextObj.GameDefObj.HeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := flContextObj.GameDefObj.HEDRVersion;
@@ -3475,11 +3475,11 @@ begin
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;
   flFileNameOnDisk := flFileName;
-  flModule := wbModuleByName(GetFileName);
+  flModule := wbModuleListOf(flContextObj).ModuleByName(GetFileName);
   if not flModule.IsValid then
     flModule := nil;
   if not Assigned(flModule) then
-    flModule := TwbModuleInfo.AddNewModule(GetFileName, False);
+    flModule := wbModuleListOf(flContextObj).AddNewModule(GetFileName, False);
 
   Header := TwbMainRecord.Create(Self, flContextObj.GameDefObj.HeaderSignature, TwbFormID.Null);
   Header.RecordBySignature['HEDR'].Elements[0].NativeValue := flContextObj.GameDefObj.HEDRVersion;
@@ -5817,7 +5817,7 @@ var
         flLoadOrderFileID := TwbFileID.CreateFull(flLoadOrder);
       end;
 
-      flModule := wbModuleByName(GetFileName);
+      flModule := wbModuleListOf(flContextObj).ModuleByName(GetFileName);
       if not flModule.IsValid then
         flModule := nil;
       if Assigned(flModule) and not Assigned(flModule.miFile) then begin

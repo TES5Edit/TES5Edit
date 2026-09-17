@@ -719,7 +719,7 @@ function TfrmModuleSelect.ShowModal: Integer;
 begin
   vstModules.Clear;
   if Length(AllModules) < 1 then
-    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
+    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredByFlag(FilterFlag);
   vstModules.ChildCount[nil] := Length(AllModules);
   vstModules.InitRecursive(nil, 100, False);
 
@@ -769,7 +769,7 @@ begin
           Include(lModule.miFlags, mfForceLoad);
       end;
 
-      SelectedModules := AllModules.SimulateLoad;
+      SelectedModules := wbModuleListOf(xeContext).SimulateLoad(AllModules);
       FilteredModules := SelectedModules.FilteredByFlag(SelectFlag).FilteredByFlag(FilterFlag);
     end else begin
       SelectedModules := AllModules.FilteredByFlag(SelectFlag).FilteredByFlag(FilterFlag);

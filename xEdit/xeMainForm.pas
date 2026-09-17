@@ -2569,7 +2569,7 @@ begin
     try
       with TfrmModuleSelect.Create(Self) do try
 
-        AllModules := wbModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := mfTemplate in a.miFlags;
             if not Result then begin
@@ -2871,7 +2871,7 @@ end;
 procedure TfrmMain.AddNewFileWithDialog;
 begin
   with TfrmModuleSelect.Create(Self) do try
-    AllModules := wbModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
+    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
     Caption := 'What type of module do you want to create?';
 
     FilterFlag := mfValid;
@@ -3154,6 +3154,7 @@ var
   i            : Integer;
   States       : TwbFileStates;
 begin
+  var lModules := wbModuleListOf(xeContext);
   States := [];
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
@@ -3177,15 +3178,15 @@ begin
       fPath := xeContext.Settings.SavePath;
 
     // copy selected file to Data directory without overwriting an existing file
-    if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in wbModuleByName(ExtractFileName(CompareFile)).miFlags) then begin
+    if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in lModules.ModuleByName(ExtractFileName(CompareFile)).miFlags) then begin
       s := fPath + ExtractFileName(CompareFile);
-      if FileExists(s) or (mfHasFile in wbModuleByName(ExtractFileName(s)).miFlags) then // Finds a unique name
+      if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then // Finds a unique name
         for i := 0 to 255 do begin
           s := fPath + ChangeFileExt(ChangeFileExt(ExtractFileName(CompareFile),'') + IntToHex(i, 3), ExtractFileExt(CompareFile));
-          if not (FileExists(s) or (mfHasFile in wbModuleByName(ExtractFileName(s)).miFlags)) then
+          if not (FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags)) then
             break;
         end;
-      if FileExists(s) or (mfHasFile in wbModuleByName(ExtractFileName(s)).miFlags) then begin
+      if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then begin
         wbProgress('Could not copy '+FileName+' into '+fPath);
         Exit;
       end;
@@ -3990,10 +3991,11 @@ procedure TfrmMain.mniNavDeleteModGroupsClick(Sender: TObject);
 var
   i            : Integer;
 begin
-  wbReloadModGroups;
+  var lModGroups := wbModGroupListOf(xeContext);
+  lModGroups.Reload;
 
   with TfrmModGroupSelect.Create(Self) do try
-    AllModGroups := wbModGroupsByName(False);
+    AllModGroups := lModGroups.ByName(False);
     AllModGroups.ExcludeAll(mgfTagged);
     SelectFlag := mgfTagged;
     FilterFlag := mgfNone;
@@ -4029,10 +4031,11 @@ var
   lModGroup    : TwbModGroup;
   sl           : TStringList;
 begin
-  wbReloadModGroups;
+  var lModGroups := wbModGroupListOf(xeContext);
+  lModGroups.Reload;
 
   with TfrmModGroupSelect.Create(Self) do try
-    AllModGroups := wbModGroupsByName(False);
+    AllModGroups := lModGroups.ByName(False);
     AllModGroups.ExcludeAll(mgfTagged);
     SelectFlag := mgfTagged;
     FilterFlag := mgfNone;
@@ -4614,6 +4617,7 @@ var
 
   Stream        : TStream;
 begin
+  var lModules := wbModuleListOf(xeContext);
   var lGameDef := xeContext.GameDefObj;
   {$IFDEF USE_PARALLEL_BUILD_REFS}
   TThread.CreateAnonymousThread(procedure begin
@@ -4884,7 +4888,7 @@ begin
               end;
           end;
           tsPlugins: begin
-            Modules := wbModulesByLoadOrder;
+            Modules := lModules.ModulesByLoadOrder(False);
             CheckListBox1.Items.BeginUpdate;
             try
               CheckListBox1.Items.Clear;
@@ -4907,7 +4911,7 @@ begin
           Modules.DeactivateAll;
 
           if (xePluginToUse <> '') or not xeQuickClean then
-            with wbModuleByName(xePluginToUse)^ do
+            with lModules.ModuleByName(xePluginToUse)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
@@ -4919,7 +4923,7 @@ begin
 
           // More plugins requested ?
           while xeFindNextValidCmdLineModule(xeParamIndex, s, xeContext.Settings.DataPath) do begin
-            with wbModuleByName(s)^ do
+            with lModules.ModuleByName(s)^ do
               if IsValid then begin
                 Activate;
                 Include(miFlags, mfTaggedForPluginMode);
@@ -4935,13 +4939,13 @@ begin
         if wbToolSource in [tsPlugins] then begin
           if (wbToolMode in wbPluginModes) or (xeAutoLoad and (xeTestConflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
-              if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
+              if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
                 ShowMessage('Exactly one module must be selected for Quick Clean mode.');
                 frmMain.Close;
                 Exit;
               end;
 
-            sl.AddStrings(wbModulesByLoadOrder.SimulateLoad.ToStrings(False));
+            sl.AddStrings(lModules.SimulateLoad(lModules.ModulesByLoadOrder(False)).ToStrings(False));
           except end;
 
           if sl.Count < 1 then
@@ -4950,7 +4954,7 @@ begin
                 MinSelect := 1;
                 MaxSelect := 1;
                 HideFlag := mfIsGameMaster;
-                AllModules := wbModulesByLoadOrder(False).FilteredByFlag(mfValid);
+                AllModules := lModules.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
                 Caption := 'Please check or double click the module that you want to ' + wbSubMode;
               end else
                 PresetCategory := 'ActiveModules';
@@ -4985,7 +4989,7 @@ begin
       end;
 
       if xeQuickClean then begin
-        if Length(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
+        if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
           MessageDlg('Exactly one plugin must be selected in QuickClean mode', mtError, [mbAbort], 0);
           frmMain.Close;
           Exit;
@@ -5030,7 +5034,7 @@ begin
         sl.Add(s);
       end else {wbToolSource = tsPlugins} begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
-        Modules := Modules.SimulateLoad; //Simulate a load, which might re-order masters
+        Modules := lModules.SimulateLoad(Modules); //Simulate a load, which might re-order masters
         sl.Clear;
         sl.AddStrings(Modules.ToStrings(False));
       end;
@@ -7778,7 +7782,7 @@ begin
       with TfrmModuleSelect.Create(Self) do try
         _File.GetMasters(sl);
         sl.Sorted := True;
-        AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := Assigned(a.miFile);
             if Result then begin
@@ -8469,17 +8473,18 @@ procedure TfrmMain.mniViewModGroupsReloadClick(Sender: TObject);
 var
   WasModGroupsExist: Boolean;
 begin
+  var lModGroups := wbModGroupListOf(xeContext);
   with TfrmModGroupSelect.Create(Self) do try
-    wbReloadModGroups;
-    wbModGroupsByName(False).ShowValidationMessages;
-    AllModGroups := wbModGroupsByName;
+    lModGroups.Reload;
+    lModGroups.ByName(False).ShowValidationMessages;
+    AllModGroups := lModGroups.ByName(True);
     LoadModGroupsSelection(AllModGroups);
     Caption := 'Reloading ModGroups - Which ModGroups do you want to activate?';
     PresetCategory := 'ActiveModGroups';
     if (Length(AllModGroups) < 1) or (ShowModal = mrOk) then begin
       SaveModGroupsSelection(SelectedModGroups);
       WasModGroupsExist := ModGroupsExist;
-      ModGroupsExist := SelectedModGroups.Activate;
+      ModGroupsExist := SelectedModGroups.Activate(xeContext);
       if WasModGroupsExist or ModGroupsExist then begin
         ModGroupsEnabled := ModGroupsExist;
         ResetAllConflict;
@@ -9161,7 +9166,7 @@ begin
     _File   : IwbFile;
     Modules : TwbModuleInfos;
   begin
-    Modules := wbModulesByLoadOrder.FilteredByFlag(mfHasFile);
+    Modules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfHasFile);
     for i := Low(Modules) to High(Modules) do begin
       _File := Modules[i]._File;
       if not (csRefsBuild in _File.ContainerStates) then begin
@@ -9191,7 +9196,7 @@ begin
   with TfrmModuleSelect.Create(nil) do try
     Caption := 'Build reference information for:';
 
-    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
       begin
         Result := Assigned(a.miFile);
         if Result then
@@ -11264,12 +11269,13 @@ var
   lSelectedModules : TwbModuleInfos;
   UpdatedCount     : Integer;
 begin
+  var lModGroups := wbModGroupListOf(xeContext);
   with TfrmModuleSelect.Create(Self) do try
-    AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
+    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid);
     AllModules.ExcludeAll(mfTagged);
     AllModules.ExcludeAll(mfModGroupMissingAnyCRC);
     AllModules.ExcludeAll(mfModGroupMissingCurrentCRC);
-    wbModGroupsByName(False).FlagFilesMissingCRC;
+    lModGroups.ByName(False).FlagFilesMissingCRC;
 
     MissingAny := AllModules.FilteredByFlag(mfModGroupMissingAnyCRC);
     MissingCurrent := AllModules.FilteredByFlag(mfModGroupMissingCurrentCRC);
@@ -11314,7 +11320,7 @@ begin
   end;
 
   with TfrmModGroupSelect.Create(Self) do try
-    AllModGroups := wbModGroupsByName(False);
+    AllModGroups := lModGroups.ByName(False);
     AllModGroups.ExcludeAll(mgfTagged);
     AllModGroups.FlagModGroupsNeedingCRCUpdateForTaggedFiles(Length(MissingAny) > 0, Length(MissingCurrent) > 0);
     AllModGroups := AllModGroups.FilteredByFlag(mgfNeedCRCUpdate);
@@ -12344,7 +12350,7 @@ var
 
     if Sender = mniNavRenumberFormIDsInject then begin
       with TfrmModuleSelect.Create(Self) do try
-        AllModules := wbModulesByLoadOrder.FilteredByFlag(mfValid);
+        AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid);
         AllModules.ExcludeAll(mfTagged);
         for i := 0 to Pred(SourceFile.MasterCount[True]) do
           with SourceFile.Masters[i, True] do
@@ -14769,7 +14775,7 @@ begin
     mniNavCreateModGroup.Visible := Length(Nodes) > 1;
   end;
 
-  mniNavEditModGroup.Visible := Length(wbModGroupsByName(False)) > 0;
+  mniNavEditModGroup.Visible := Length(wbModGroupListOf(xeContext).ByName(False)) > 0;
   mniNavDeleteModGroups.Visible := mniNavEditModGroup.Visible;
   mniNavUpdateCRCModGroups.Visible := mniNavEditModGroup.Visible;
 
@@ -15161,7 +15167,7 @@ var
 begin
   if xeQuickClean then begin
     aFiles := nil;
-    wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
+    wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
     begin
       Result := False;
       if Assigned(aModule.miFile) then
@@ -21212,6 +21218,8 @@ var
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
 begin
+  var lModules := wbModuleListOf(xeContext);
+  var lModGroups := wbModGroupListOf(xeContext);
   var lGameDef := xeContext.GameDefObj;
   try
     xeContext.LoaderDone := True;
@@ -21297,13 +21305,13 @@ begin
 
         if not (xeQuickClean or (wbToolMode in wbAutoModes) or (xeTestConflicts and not xeTestConflictsModGroups)) then
           if xeQuickShowConflicts or xeAutoLoad then begin
-            ModGroups := wbModGroupsByName;
-            wbModGroupsByName(False).ShowValidationMessages;
+            ModGroups := lModGroups.ByName(True);
+            lModGroups.ByName(False).ShowValidationMessages;
           end else
             if wbToolMode in [tmView, tmEdit] then begin
               with TfrmModGroupSelect.Create(Self) do try
-                AllModGroups := wbModGroupsByName;
-                wbModGroupsByName(False).ShowValidationMessages;
+                AllModGroups := lModGroups.ByName(True);
+                lModGroups.ByName(False).ShowValidationMessages;
                 LoadModGroupsSelection(AllModGroups);
                 Caption := 'Which ModGroups do you want to activate?';
                 PresetCategory := 'ActiveModGroups';
@@ -21316,7 +21324,7 @@ begin
               end;
             end;
 
-        ModGroupsExist := ModGroups.Activate;
+        ModGroupsExist := ModGroups.Activate(xeContext);
         ModGroupsEnabled := ModGroupsExist;
         mniModGroupsEnabled.Checked := ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ModGroupsEnabled;
@@ -21328,7 +21336,7 @@ begin
           pnlNavContent.Visible := False;
           try
             mniNavFilterForCleaning.Click;
-            JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+            JumpTo(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
             vstNav.ClearSelection;
             vstNav.FocusedNode := vstNav.FocusedNode.Parent;
             vstNav.Selected[vstNav.FocusedNode] := True;
@@ -21338,7 +21346,7 @@ begin
             mniNavRemoveIdenticalToMaster.Click;
 
             WasUnsaved := False;
-            with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+            with lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
               if esUnsaved in ElementStates then
                 WasUnsaved := True;
 
@@ -21350,7 +21358,7 @@ begin
                 ResetAllConflict;
 
                 mniNavFilterForCleaning.Click;
-                JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+                JumpTo(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
                 vstNav.ClearSelection;
                 vstNav.FocusedNode := vstNav.FocusedNode.Parent;
                 vstNav.Selected[vstNav.FocusedNode] := True;
@@ -21360,7 +21368,7 @@ begin
                 mniNavRemoveIdenticalToMaster.Click;
 
                 WasUnsaved := False;
-                with wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File do
+                with lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File do
                   if esUnsaved in ElementStates then
                     WasUnsaved := True;
 
@@ -21370,7 +21378,7 @@ begin
 
                   if WasUnsaved then begin
                     mniNavFilterForCleaning.Click;
-                    JumpTo(wbModulesByLoadOrder.FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
+                    JumpTo(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File.Header, False);
                     vstNav.ClearSelection;
                     vstNav.FocusedNode := vstNav.FocusedNode.Parent;
                     vstNav.Selected[vstNav.FocusedNode] := True;
@@ -21462,7 +21470,7 @@ begin
             DoSetActiveRecord(nil);
             pgMain.ActivePage := tbsMessages;
 
-            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             mniNavFilterForOnlyOneClick(Self);
 
@@ -21481,7 +21489,7 @@ begin
 
             NewFile.RemoveIdenticalDeltaFast;
 
-            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             mniNavFilterForCleaning.Click;
             JumpTo(NewFile.Header, False);
@@ -21495,7 +21503,7 @@ begin
             for i := High(Files) downto Low(Files) do
               Files[i].Show;
 
-            wbModulesByLoadOrder.ExcludeAll(mfTaggedForPluginMode);
+            lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
             xeQuickClean := True;
             mniNavFilterForCleaning.Click;

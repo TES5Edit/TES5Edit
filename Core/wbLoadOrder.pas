@@ -13,6 +13,7 @@ unit wbLoadOrder;
 interface
 
 uses
+  System.Classes,
   System.SysUtils,
 
   wbHash,
@@ -110,7 +111,6 @@ type
     function Description: string;
     function ToString(aInclDesc: Boolean): string;
     function _File: IwbFile;
-    class function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo; static;
 
     function GetModuleType: TwbModuleType;
 
@@ -124,42 +124,10 @@ type
     procedure ExcludeAll(aFlag: TwbModuleFlag);
     procedure IncludeAll(aFlag: TwbModuleFlag);
     procedure ActivateMasters;
-    function SimulateLoad: TwbModuleInfos;
-    procedure DisableSimulatedLoad;
     function FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
   end;
 
-procedure wbLoadModules;
-function wbModuleByName(const aName: string): PwbModuleInfo;
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False): TwbModuleInfos; overload;
-function wbModulesByLoadOrder(const aContext: TwbGameContext; aIncludeTemplates: Boolean = False): TwbModuleInfos; overload;
-
-implementation
-
-uses
-  System.Classes,
-  System.IOUtils,
-  System.Types,
-
-  wbGameDefGlobals,
-  wbHelpers,
-  wbImplementation,
-  wbSort;
-
-function TwbModuleExtensionHelper.ToString: string;
-begin
-  case Self of
-    meESM: Result := csDotEsm;
-    meESL: Result := csDotEsl;
-    meESP: Result := csDotEsp;
-    meESU: Result := csDotEsu;
-  else
-    Result := '';
-  end;
-end;
-
-type
   TwbDynModuleInfos = array of TwbModuleInfo;
 
   TwbModuleList = class
@@ -188,6 +156,31 @@ type
     procedure DisableSimulatedLoad;
   end;
 
+function wbModuleListOf(const aContext: TwbGameContext): TwbModuleList;
+
+implementation
+
+uses
+  System.IOUtils,
+  System.Types,
+
+  wbGameDefGlobals,
+  wbHelpers,
+  wbImplementation,
+  wbSort;
+
+function TwbModuleExtensionHelper.ToString: string;
+begin
+  case Self of
+    meESM: Result := csDotEsm;
+    meESL: Result := csDotEsl;
+    meESP: Result := csDotEsp;
+    meESU: Result := csDotEsu;
+  else
+    Result := '';
+  end;
+end;
+
 var
   _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
 
@@ -198,11 +191,6 @@ begin
     Result := TwbModuleList.Create(aContext);
     aContext.ModuleList := Result;
   end;
-end;
-
-function wbCurrentModuleList: TwbModuleList;
-begin
-  Result := wbModuleListOf(_CurrentContext);
 end;
 
 procedure FreeAllocatedModules(var aList: TwbModuleInfos);
@@ -246,11 +234,6 @@ begin
     Result := Pointer(mlModulesByName.Objects[i])
   else
     Result := @_InvalidModule;
-end;
-
-function wbModuleByName(const aName: string): PwbModuleInfo;
-begin
-  Result := wbCurrentModuleList.ModuleByName(aName);
 end;
 
 function _ModulesLoadOrderCompare(Item1, Item2: Pointer): Integer;
@@ -732,21 +715,6 @@ begin
   end;
 end;
 
-procedure wbLoadModules;
-begin
-  wbCurrentModuleList.LoadModules;
-end;
-
-function wbModulesByLoadOrder(aIncludeTemplates: Boolean = False):  TwbModuleInfos;
-begin
-  Result := wbCurrentModuleList.ModulesByLoadOrder(aIncludeTemplates);
-end;
-
-function wbModulesByLoadOrder(const aContext: TwbGameContext; aIncludeTemplates: Boolean = False): TwbModuleInfos;
-begin
-  Result := wbModuleListOf(aContext).ModulesByLoadOrder(aIncludeTemplates);
-end;
-
 { TwbModuleInfo }
 
 procedure TwbModuleInfo.Activate(aActivateMasters: Boolean);
@@ -765,11 +733,6 @@ begin
       with miMasters[i]^ do
         if not (mfActive in miFlags) then
           Activate(aRecursive);
-end;
-
-class function TwbModuleInfo.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
-begin
-  Result := wbCurrentModuleList.AddNewModule(aFileName, aTemplate);
 end;
 
 function TwbModuleList.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
@@ -984,11 +947,6 @@ begin
   ResetSimulatedLoad;
 end;
 
-procedure TwbModuleInfosHelper.DisableSimulatedLoad;
-begin
-  wbCurrentModuleList.DisableSimulatedLoad;
-end;
-
 procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
 var
   i: Integer;
@@ -1108,11 +1066,6 @@ begin
     Exit(nil);
 
   Result := NewLoadOrder;
-end;
-
-function TwbModuleInfosHelper.SimulateLoad: TwbModuleInfos;
-begin
-  Result := wbCurrentModuleList.SimulateLoad(Self);
 end;
 
 function TwbModuleInfosHelper.ToStrings(aInclDesc: Boolean): TDynStrings;

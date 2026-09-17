@@ -138,6 +138,7 @@ uses
 
   wbInterface,
 
+  xeInit,
   xeMainForm;
 
 procedure TfrmModGroupSelect.mniInvertSelectionClick(Sender: TObject);
@@ -638,7 +639,7 @@ function TfrmModGroupSelect.ShowModal: Integer;
 begin
   vstModGroups.Clear;
   if Length(AllModGroups) < 1 then
-    AllModGroups := wbModGroupsByName.FilteredByFlag(FilterFlag);
+    AllModGroups := wbModGroupListOf(xeContext).ByName(True).FilteredByFlag(FilterFlag);
   vstModGroups.ChildCount[nil] := Length(AllModGroups);
   vstModGroups.InitRecursive(nil, 100, False);
 
