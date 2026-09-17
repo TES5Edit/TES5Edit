@@ -932,16 +932,18 @@ var
   tms             : TwbSetOfMode;
   Found           : Boolean;
   b               : TBytes;
+  lSettings       : TwbGameContextSettings;
 begin
   HostContext := wbCurrentContext as TwbGameContext;
+  lSettings := TwbGameContextSettings.Defaults;
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
   {$ELSE}
   SysUtils.DecimalSeparator := '.';
   {$IFEND}
   _wbProgressCallback := ReportProgress;
-  HostContext.Settings.DontSave := True;
-  HostContext.Settings.AllowInternalEdit := False;
+  lSettings.DontSave := True;
+  lSettings.AllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   wbSimpleRecords := False;
   wbHideUnused := False;
@@ -1031,14 +1033,14 @@ begin
       wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode) );
       Delete(wbAppName, 1 ,2);
 
-      HostContext.Settings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      lSettings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       tss := [tsPlugins, tsSaves];
       tms := [tmDump, tmExport];
 
       if FindCmdLineSwitch('sr') then
         wbSimpleRecords := True;
 
-      HostContext.Settings.Language := 'English';
+      lSettings.Language := 'English';
 
       wbGameExeName := '';
       case wbGameMode of
@@ -1050,7 +1052,7 @@ begin
         end;
         gmTES3: begin
           wbGameName := 'Morrowind';
-          HostContext.Settings.LoadBSAs := false;
+          lSettings.LoadBSAs := false;
           tms := [tmDump];
           tss := [tsPlugins];
         end;
@@ -1074,7 +1076,7 @@ begin
         end;
         gmFO4: begin
           wbGameName           := 'Fallout4';
-          HostContext.Settings.CreateContainedIn := False;
+          lSettings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
         end;
         gmFO4VR: begin
@@ -1082,7 +1084,7 @@ begin
           wbGameExeName        := 'Fallout4VR';
           wbGameName2          := 'Fallout4VR';
           wbGameNameReg        := 'Fallout 4 VR';
-          HostContext.Settings.CreateContainedIn := False;
+          lSettings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
@@ -1103,13 +1105,13 @@ begin
           wbGameName           := 'Fallout76';
           wbGameNameReg        := 'Fallout 76';
           wbGameMasterEsm      := 'SeventySix.esm';
-          HostContext.Settings.CreateContainedIn := False;
+          lSettings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
         gmSF1: begin
           wbGameName           := 'Starfield';
-          HostContext.Settings.CreateContainedIn := False;
+          lSettings.CreateContainedIn := False;
           wbVWDAsQuestChildren := True;
         end;
       else begin
@@ -1139,6 +1141,8 @@ begin
       wbGameExeName := wbGameExeName + csDotExe;
 
       HostContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource)) as TwbGameContext;
+      lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
+      HostContext.Settings := lSettings;
 
       if not (wbToolMode in tms) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
