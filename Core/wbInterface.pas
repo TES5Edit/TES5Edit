@@ -1837,10 +1837,10 @@ type
     function IsVisibleWhenDistant: Boolean; inline;
     function IsDangerous: Boolean; inline;
     function IsCompressed: Boolean; inline;
-    function IsLight: Boolean; inline;
-    function IsMedium: Boolean; inline;
-    function IsBlueprint: Boolean; inline;
-    function IsUpdate: Boolean; inline;
+    function IsLight(aGameDef: TwbGameDef): Boolean;
+    function IsMedium(aGameDef: TwbGameDef): Boolean;
+    function IsBlueprint(aGameDef: TwbGameDef): Boolean;
+    function IsUpdate(aGameDef: TwbGameDef): Boolean;
     function CantWait: Boolean; inline;
     function HasLODtree: Boolean; inline;
 
@@ -1852,10 +1852,10 @@ type
     procedure SetCompressed(aValue: Boolean);
     procedure SetInitiallyDisabled(aValue: Boolean);
     procedure SetVisibleWhenDistant(aValue: Boolean);
-    procedure SetLight(aValue: Boolean);
-    procedure SetMedium(aValue: Boolean);
-    procedure SetBlueprint(aValue: Boolean);
-    procedure SetUpdate(aValue: Boolean);
+    procedure SetLight(aGameDef: TwbGameDef; aValue: Boolean);
+    procedure SetMedium(aGameDef: TwbGameDef; aValue: Boolean);
+    procedure SetBlueprint(aGameDef: TwbGameDef; aValue: Boolean);
+    procedure SetUpdate(aGameDef: TwbGameDef; aValue: Boolean);
   end;
 
   PwbMainRecordStructFlags3 = ^TwbMainRecordStructFlags3;
@@ -23399,36 +23399,36 @@ begin
   Result := (_Flags and $00000080) <> 0;
 end;
 
-function TwbMainRecordStructFlags.IsMedium: Boolean;
+function TwbMainRecordStructFlags.IsMedium(aGameDef: TwbGameDef): Boolean;
 begin
-  Result := wbIsMediumSupported and
+  Result := (gcMediumPlugins in aGameDef.Capabilities) and
     ((_Flags and $00000400) <> 0);
 end;
 
-function TwbMainRecordStructFlags.IsBlueprint: Boolean;
+function TwbMainRecordStructFlags.IsBlueprint(aGameDef: TwbGameDef): Boolean;
 begin
-  Result := wbIsBlueprintSupported and
+  Result := (gcBlueprintPlugins in aGameDef.Capabilities) and
     ((_Flags and $00000800) <> 0);
 end;
 
 
-function TwbMainRecordStructFlags.IsLight: Boolean;
+function TwbMainRecordStructFlags.IsLight(aGameDef: TwbGameDef): Boolean;
 begin
-  if wbIsStarfield then
-    Result := wbIsLightSupported and
+  if aGameDef.IsStarfield then
+    Result := (gcLightPlugins in aGameDef.Capabilities) and
       ((_Flags and $00000100) <> 0)
   else
-    Result := wbIsLightSupported and
+    Result := (gcLightPlugins in aGameDef.Capabilities) and
       ((_Flags and $00000200) <> 0);
 end;
 
-function TwbMainRecordStructFlags.IsUpdate: Boolean;
+function TwbMainRecordStructFlags.IsUpdate(aGameDef: TwbGameDef): Boolean;
 begin
-  Result := 
-        wbIsUpdateSupported 
+  Result :=
+        (gcUpdatePlugins in aGameDef.Capabilities)
     and (
-             (wbIsStarfield and ((_Flags and $00000200) <> 0)) 
-          or (wbVRESL       and ((_Flags and $00100000) <> 0))
+             (aGameDef.IsStarfield and ((_Flags and $00000200) <> 0))
+          or (wbVRESL              and ((_Flags and $00100000) <> 0))
         );
 end;
 
@@ -23478,34 +23478,34 @@ begin
     _Flags := _Flags and not $00000020;
 end;
 
-procedure TwbMainRecordStructFlags.SetMedium(aValue: Boolean);
+procedure TwbMainRecordStructFlags.SetMedium(aGameDef: TwbGameDef; aValue: Boolean);
 begin
-  if wbIsMediumSupported then
+  if gcMediumPlugins in aGameDef.Capabilities then
     if aValue then begin
       _Flags := _Flags or $00000400;
-      SetLight(False);
-      SetUpdate(False);
+      SetLight(aGameDef, False);
+      SetUpdate(aGameDef, False);
     end else
       _Flags := _Flags and not $00000400;
 end;
 
-procedure TwbMainRecordStructFlags.SetBlueprint(aValue: Boolean);
+procedure TwbMainRecordStructFlags.SetBlueprint(aGameDef: TwbGameDef; aValue: Boolean);
 begin
-  if wbIsBlueprintSupported then
+  if gcBlueprintPlugins in aGameDef.Capabilities then
     if aValue then
       _Flags := _Flags or $00000800
     else
       _Flags := _Flags and not $00000800;
 end;
 
-procedure TwbMainRecordStructFlags.SetLight(aValue: Boolean);
+procedure TwbMainRecordStructFlags.SetLight(aGameDef: TwbGameDef; aValue: Boolean);
 begin
-  if wbIsLightSupported then
-    if wbIsStarfield then begin
+  if gcLightPlugins in aGameDef.Capabilities then
+    if aGameDef.IsStarfield then begin
       if aValue then begin
         _Flags := _Flags or $00000100;
-        SetMedium(False);
-        SetUpdate(False);
+        SetMedium(aGameDef, False);
+        SetUpdate(aGameDef, False);
       end else
         _Flags := _Flags and not $00000100;
     end else
@@ -23515,18 +23515,18 @@ begin
         _Flags := _Flags and not $00000200;
 end;
 
-procedure TwbMainRecordStructFlags.SetUpdate(aValue: Boolean);
+procedure TwbMainRecordStructFlags.SetUpdate(aGameDef: TwbGameDef; aValue: Boolean);
 begin
-  if wbIsUpdateSupported then
+  if gcUpdatePlugins in aGameDef.Capabilities then
     if aValue then begin
-      if wbIsStarfield then
+      if aGameDef.IsStarfield then
         _Flags := _Flags or $00000200
       else if wbVRESL then
         _Flags := _Flags or $00100000;
-      SetLight(False);
-      SetMedium(False);
+      SetLight(aGameDef, False);
+      SetMedium(aGameDef, False);
     end else
-      if wbIsStarfield then
+      if aGameDef.IsStarfield then
         _Flags := _Flags and not $00000200
       else if wbVRESL then
         _Flags := _Flags and not $00100000;

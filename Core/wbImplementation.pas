@@ -12049,22 +12049,22 @@ end;
 
 function TwbMainRecord.GetIsMedium: Boolean;
 begin
-  Result := GetFlags.IsMedium;
+  Result := GetFlags.IsMedium(GameDefObj);
 end;
 
 function TwbMainRecord.GetIsBlueprint: Boolean;
 begin
-  Result := GetFlags.IsBlueprint;
+  Result := GetFlags.IsBlueprint(GameDefObj);
 end;
 
 function TwbMainRecord.GetIsLight: Boolean;
 begin
-  Result := GetFlags.IsLight;
+  Result := GetFlags.IsLight(GameDefObj);
 end;
 
 function TwbMainRecord.GetIsUpdate: Boolean;
 begin
-  Result := GetFlags.IsUpdate;
+  Result := GetFlags.IsUpdate(GameDefObj);
 end;
 
 
@@ -14622,7 +14622,7 @@ procedure TwbMainRecord.SetIsMedium(aValue: Boolean);
 begin
   if aValue <> GetIsMedium then begin
     MakeHeaderWriteable;
-    GetFlagsPtr.SetMedium(aValue);
+    GetFlagsPtr.SetMedium(GameDefObj, aValue);
   end;
 end;
 
@@ -14630,7 +14630,7 @@ procedure TwbMainRecord.SetIsBlueprint(aValue: Boolean);
 begin
   if aValue <> GetIsBlueprint then begin
     MakeHeaderWriteable;
-    GetFlagsPtr.SetBlueprint(aValue);
+    GetFlagsPtr.SetBlueprint(GameDefObj, aValue);
   end;
 end;
 
@@ -14638,7 +14638,7 @@ procedure TwbMainRecord.SetIsLight(aValue: Boolean);
 begin
   if aValue <> GetIsLight then begin
     MakeHeaderWriteable;
-    GetFlagsPtr.SetLight(aValue);
+    GetFlagsPtr.SetLight(GameDefObj, aValue);
   end;
 end;
 
@@ -14646,7 +14646,7 @@ procedure TwbMainRecord.SetIsUpdate(aValue: Boolean);
 begin
   if aValue <> GetIsUpdate then begin
     MakeHeaderWriteable;
-    GetFlagsPtr.SetUpdate(aValue);
+    GetFlagsPtr.SetUpdate(GameDefObj, aValue);
   end;
 end;
 
