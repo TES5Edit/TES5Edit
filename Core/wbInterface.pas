@@ -4516,8 +4516,13 @@ type
       read gcGlobalGeneration;
 
     function RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
+    function GameMasterRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
     function FindWinningMainRecordByEditorID(const aSignature: TwbSignature; const aEditorID: string): IwbMainRecord;
+    function FormIDOf(const aElement: IwbElement): TwbFormID;
+    function CellDetailsForWorldspace(const aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 
+    property GameMasterFile: IwbFile
+      read GetGameMasterFile;
     property GameDefObj: TwbGameDef
       read gcGameDefObj;
     property Files: TwbFiles
@@ -5687,9 +5692,6 @@ function ConflictThisToColor(aConflictThis: TConflictThis): TColor;
 
 function wbFlagsList(const aFlags: array of const; aDeleted : Boolean = True; aUnknowns: Boolean = False): TDynStrings;
 function wbSparseFlags(const aFlags: array of const; aUnknowns: Boolean = False; aSize: Cardinal = 32): TDynStrings;
-function wbGetFormID(const aElement: IwbElement): TwbFormID;
-
-function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
 function wbPositionToGridCell(const aPosition: TwbVector): TwbGridCell;
 function wbSubBlockFromGridCell(const aGridCell: TwbGridCell): TwbGridCell;
 function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
@@ -5938,9 +5940,6 @@ function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 function wbCurrentContext: IwbGameContext;
 procedure wbMakeCurrentContext(const aContext: IwbGameContext);
 
-function wbGetGameMasterFile: IwbFile; inline;
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord; inline;
-
 implementation
 
 uses
@@ -5966,25 +5965,6 @@ procedure TwbConflictNodeData.UpdateRefs;
 begin
   if Assigned(Element) and (Element.ElementType = etMainRecord) then
     (Element as IwbMainRecord).UpdateRefs;
-end;
-
-function wbGetGameMasterFile: IwbFile;
-begin
-  Result := _CurrentContext.GetGameMasterFile;
-end;
-
-function wbGameMasterRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
-begin
-  var lGameMaster := wbGetGameMasterFile;
-  if Assigned(lGameMaster) then
-    Result := lGameMaster.RecordByFormID[aFormID, True, False]
-  else
-    Result := nil;
-end;
-
-function wbRecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
-begin
-  Result := _CurrentContext.RecordByLoadOrderFormID(aFormID, aSeenFromFile);
 end;
 
 type
@@ -8052,6 +8032,30 @@ begin
   Settings.DelayLoadRecords := aValue;
 end;
 
+function TwbGameContext.GameMasterRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
+begin
+  var lGameMaster := GetGameMasterFile;
+  if Assigned(lGameMaster) then
+    Result := lGameMaster.RecordByFormID[aFormID, True, False]
+  else
+    Result := nil;
+end;
+
+function TwbGameContext.FormIDOf(const aElement: IwbElement): TwbFormID;
+begin
+  if Assigned(Settings.FormIDCallback) then
+    Result := Settings.FormIDCallback(aElement)
+  else
+    Result := TwbFormID.Null;
+end;
+
+function TwbGameContext.CellDetailsForWorldspace(const aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
+begin
+  Result :=
+    Assigned(Settings.CellDetailsForWorldspaceCallback) and
+    Settings.CellDetailsForWorldspaceCallback(aWorldspace, aPersistent, aGridCell);
+end;
+
 function TwbGameContext.GetGameMasterFile: IwbFile;
 begin
   for var lIdx := Low(gcFiles) to High(gcFiles) do
@@ -8269,21 +8273,6 @@ begin
   xx := PWord(@x)^;
   yy := PWord(@y)^;
   Result := Cardinal(yy) or (Cardinal(xx) shl 16);
-end;
-
-function wbGetFormID(const aElement: IwbElement): TwbFormID;
-begin
-  if Assigned(_CurrentContext.Settings.FormIDCallback) then
-    Result := _CurrentContext.Settings.FormIDCallback(aElement)
-  else
-    Result := TwbFormID.Null;
-end;
-
-function wbGetCellDetailsForWorldspace(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
-begin
-  Result :=
-    Assigned(_CurrentContext.Settings.CellDetailsForWorldspaceCallback) and
-    _CurrentContext.Settings.CellDetailsForWorldspaceCallback(aWorldspace, aPersistent, aGridCell);
 end;
 
 function ConflictAllToColor(aConflictAll: TConflictAll): TColor;
@@ -19883,7 +19872,7 @@ begin
 
         var lMainRecord: IwbMainRecord;
         if lFormID.IsHardcoded then
-          lMainRecord := wbGameMasterRecordByFormID(lFormID)
+          lMainRecord := lFile.ContextObj.GameMasterRecordByFormID(lFormID)
         else
           lMainRecord := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
 
@@ -20356,7 +20345,7 @@ begin
           Process(_File.Masters[i, aElement.MastersUpdated], False);
         end;
         if not ProcessedGM then
-          Process(wbGetGameMasterFile, True);
+          Process(_File.ContextObj.GameMasterFile, True);
 
         Wait := nil;
         FilesProg := nil;
@@ -20453,10 +20442,10 @@ begin
     Exit;
 
   if dfUseLoadOrder in defFlags then begin
-    var lFile: IwbFile;
     if Assigned(aElement) then
-      lFile := aElement._File;
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+      Result := aElement.ContextObj.RecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), aElement._File)
+    else
+      Result := nil;
   end else if Assigned(aElement) then begin
     var lFile := aElement._File;
     if Assigned(lFile) then try
@@ -20467,7 +20456,7 @@ begin
           lFormID.FileID := TwbFileID.Null;
 
       if lFormID.IsHardcoded then
-        Result := wbGameMasterRecordByFormID(lFormID)
+        Result := lFile.ContextObj.GameMasterRecordByFormID(lFormID)
       else
         Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
     except end;
@@ -20484,10 +20473,8 @@ function TwbFormIDDefFormater.GetMainRecord(aInt: Int64; const aElement: IwbElem
 begin
   Result := nil;
   if dfUseLoadOrder in defFlags then begin
-    var lFile: IwbFile;
     if Assigned(aElement) then
-      lFile := aElement._File;
-    Result := wbRecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), lFile)
+      Result := aElement.ContextObj.RecordByLoadOrderFormID(TwbFormID.FromCardinal(aInt), aElement._File);
   end else begin
     if Assigned(aElement) then begin
       var lFile := aElement._File;
@@ -20499,7 +20486,7 @@ begin
             lFormID.FileID := TwbFileID.Null;
 
         if lFormID.IsHardcoded then
-          Result := wbGameMasterRecordByFormID(lFormID)
+          Result := lFile.ContextObj.GameMasterRecordByFormID(lFormID)
         else
           Result := lFile.RecordByFormID[lFormID, True, aElement.MastersUpdated];
 
@@ -20794,14 +20781,14 @@ begin
         if dfUseLoadOrder in defFlags then begin
           {stored FormID is already a LoadOrder FormID}
           FormID := TwbFormID.FromCardinal(aInt);
-          MainRecord := wbRecordByLoadOrderFormID(FormID, _File);
+          MainRecord := _File.ContextObj.RecordByLoadOrderFormID(FormID, _File);
         end else begin
           if FormID.ObjectID < $800 then
             if not _File.AllowHardcodedRangeUse then
               FormID.FileID := TwbFileID.Null;
 
           if FormID.IsHardcoded then
-            MainRecord := wbGameMasterRecordByFormID(FormID)
+            MainRecord := _File.ContextObj.GameMasterRecordByFormID(FormID)
           else begin
             MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
             if wbDisplayLoadOrderFormID then
@@ -22389,7 +22376,7 @@ begin
             FormID.FileID := TwbFileID.Null;
 
         if FormID.IsHardcoded then
-          MainRecord := wbGameMasterRecordByFormID(FormID)
+          MainRecord := _File.ContextObj.GameMasterRecordByFormID(FormID)
         else begin
           MainRecord := _File.RecordByFormID[FormID, True, aElement.MastersUpdated];
           if wbDisplayLoadOrderFormID then

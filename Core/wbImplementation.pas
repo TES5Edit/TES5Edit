@@ -2526,7 +2526,7 @@ begin
         (Master as IwbMainRecordInternal).AddOverride(aRecord)
       else begin
         if FormID.IsHardcoded and not (fsIsGameMaster in flStates) then begin
-          if Supports(wbGetGameMasterFile, IwbFileInternal, GameMasterFile) then
+          if Supports(flContextObj.GameMasterFile, IwbFileInternal, GameMasterFile) then
             GameMasterFile.InjectMainRecord(aRecord);
         end else
           (GetMasterForFileID(lFileId, True, False) as IwbFileInternal).InjectMainRecord(aRecord);
@@ -4759,11 +4759,11 @@ begin
   if aFormID.ObjectID < $800 then begin
     if GetAllowHardcodedRangeUse then begin
       if aFormID.IsHardcoded then
-        lMaster := wbGetGameMasterFile
+        lMaster := flContextObj.GameMasterFile
       else
         {just keep going};
     end else begin
-      lMaster := wbGetGameMasterFile;
+      lMaster := flContextObj.GameMasterFile;
       if Assigned(lMaster) then
         aFormID := aFormID.ChangeFileID(lMaster.FileFileID[True])
     end;
@@ -17496,7 +17496,7 @@ begin
     end else begin
       if aSilent then
         raise Exception.Create('To add a Worldspace CELL silently, parameters must be specified: CELL[P] for persistent world cell or CELL[x,y] for temporary cell');
-      if not wbGetCellDetailsForWorldspace(GetChildrenOf, Persistent, GridCell) then
+      if not ContextObj.CellDetailsForWorldspace(GetChildrenOf, Persistent, GridCell) then
         Exit;
       if Persistent then begin
         GridCell.x := 0;
@@ -17533,7 +17533,7 @@ begin
     else
       FormID := _File.NewFormID
   else
-    FormID := _File.LoadOrderFormIDtoFileFormID(wbGetFormID(Self), True);
+    FormID := _File.LoadOrderFormIDtoFileFormID(ContextObj.FormIDOf(Self), True);
   if FormID.IsNull then
     Exit;
 
