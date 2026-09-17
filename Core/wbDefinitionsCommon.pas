@@ -2046,7 +2046,7 @@ begin
   var lFlagsValue := lFlags.NativeValue;
       {Shadow Spotlight}              {Shadow Hemisphere}
   if (((lFlagsValue and $400) = 0) and ((lFlagsValue and $800) = 0)) then
-    if ((not wbCS) or ((lFlagsValue and $4000) = 0)) then
+    if (not (gcCommunityShaders in aElement.GameDefObj.Capabilities)) or ((lFlagsValue and $4000) = 0) then
       Result := True;
 end;
 
@@ -2098,7 +2098,7 @@ begin
   var lFlagsValue := lFlags.NativeValue;
      {Shadow Spotlight}
   if (lFlagsValue and $400) = 0 then
-    if ((not wbCS) or ((lFlagsValue and $4000) = 0)) then
+    if (not (gcCommunityShaders in aElement.GameDefObj.Capabilities)) or ((lFlagsValue and $4000) = 0) then
       Result := True;
 end;
 

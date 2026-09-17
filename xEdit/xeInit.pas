@@ -769,8 +769,10 @@ var
   ToolSources: TwbSetOfSource;
   i: Integer;
   ExeName: string;
+  lInputs: TwbGameDefInputs;
 begin
   ExeName := ChangeFileExt(ExtractFileName(ParamStr(0)), '').ToLowerInvariant;
+  lInputs := Default(TwbGameDefInputs);
 
   if not wbIsAeroEnabled then
     wbThemesSupported := False;
@@ -1072,7 +1074,7 @@ begin
       xeContext.Settings.CanSortINFO := True;
       xeContext.Settings.AllowESPMasters := True;
       xeContext.Settings.AllowESPMastersOnSave := True;
-      wbHNVSE                 := FileExists(xeContext.Settings.DataPath + 'NVSE\Plugins\Hnvse.dll');
+      lInputs.HNVSE           := FileExists(xeContext.Settings.DataPath + 'NVSE\Plugins\Hnvse.dll');
     end;
     gmFO3: begin
       wbVWDInTemporary      := True;
@@ -1116,10 +1118,10 @@ begin
       xeContext.Settings.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       xeContext.Settings.CanSortINFO := True;
-      wbVRESL               := (wbGameMode in [gmTES5VR]) and FileExists(xeContext.Settings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
-      wbHasAddedLightSupport := wbVRESL;
-      wbHasAddedUpdateSupport := wbVRESL;
-      wbCS                  := xeContext.GameDefObj.IsSkyrimSE and FileExists(xeContext.Settings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
+      var lVRESL := (wbGameMode in [gmTES5VR]) and FileExists(xeContext.Settings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
+      lInputs.LightSupport := lVRESL;
+      lInputs.UpdateSupport := lVRESL;
+      lInputs.CS := xeContext.GameDefObj.IsSkyrimSE and FileExists(xeContext.Settings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
       xeContext.Settings.AllowESPMasters := True;
       xeContext.Settings.AllowESPMastersOnSave := True;
     end;
@@ -1130,10 +1132,10 @@ begin
       wbHideIgnored         := False; // to show Form Version
       xeContext.Settings.AlwaysSaveOnam := True;
       xeContext.Settings.AlwaysSaveOnamForce := True;
-      wbVRESL               := (wbGameMode in [gmFO4VR]) and (FileExists(xeContext.Settings.DataPath + 'F4SE\Plugins\falloutvresl.dll') or
-                                                              FileExists(xeContext.Settings.DataPath + 'F4SE\Plugins\Daytripper4.dll'));
-      wbHasAddedLightSupport := wbVRESL;
-      wbHasAddedUpdateSupport := wbVRESL;
+      var lVRESL := (wbGameMode in [gmFO4VR]) and (FileExists(xeContext.Settings.DataPath + 'F4SE\Plugins\falloutvresl.dll') or
+                                                    FileExists(xeContext.Settings.DataPath + 'F4SE\Plugins\Daytripper4.dll'));
+      lInputs.LightSupport := lVRESL;
+      lInputs.UpdateSupport := lVRESL;
       xeContext.Settings.AllowESPMasters := True;
       xeContext.Settings.AllowESPMastersOnSave := True;
     end;
@@ -1416,7 +1418,7 @@ begin
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     xeContext.Settings.EncodingTrans :=  wbMBCSEncoding(s);
 
-  xeContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource)) as TwbGameContext;
+  xeContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs)) as TwbGameContext;
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;

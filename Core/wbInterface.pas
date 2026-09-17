@@ -160,10 +160,7 @@ var
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
-  wbHasAddedLightSupport             : Boolean    = False;
-  wbHasAddedMediumSupport            : Boolean    = False;
   wbHasAddedOptimizedSupport         : Boolean    = False;
-  wbHasAddedUpdateSupport            : Boolean    = False;
   wbAllowEditHEDRVersion             : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
   wbAllowMasterFilesEdit             : Boolean    = False;          //must be set before DefineDefs
@@ -256,10 +253,6 @@ var
   wbDisableFormIDCheck               : Boolean    = False;
   wbComplexFileFileID                : Boolean    = False;
   wbAllowUnsafeScripts               : Boolean    = False;
-
-  wbCS                               : Boolean    = False;
-  wbVRESL                            : Boolean    = False;
-  wbHNVSE                            : Boolean    = False;
 
   wbAllowMakePartial                 : Boolean    = False;
 
@@ -684,6 +677,14 @@ type
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE
   );
   TwbGameCapabilities = set of TwbGameCapability;
+
+  TwbGameDefInputs = record
+    LightSupport  : Boolean;
+    MediumSupport : Boolean;
+    UpdateSupport : Boolean;
+    CS            : Boolean;
+    HNVSE         : Boolean;
+  end;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
@@ -3969,11 +3970,6 @@ type
     gdCapabilities     : TwbGameCapabilities;
     gdLiveKeyValid         : Boolean;
     gdLiveKeyGameMode      : TwbGameMode;
-    gdLiveKeyLightSupport  : Boolean;
-    gdLiveKeyMediumSupport : Boolean;
-    gdLiveKeyUpdateSupport : Boolean;
-    gdLiveKeyCS            : Boolean;
-    gdLiveKeyHNVSE         : Boolean;
     gdDefaultFormVersion : Word;
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
@@ -4018,6 +4014,7 @@ type
   public
     constructor Create; overload;
     constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource); overload;
+    constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs); overload;
     destructor Destroy; override;
 
     property Live: Boolean
@@ -5920,7 +5917,8 @@ var
   wbGameContextClass : TwbGameContextClass;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef;
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs): IwbGameDef; overload;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 
 function wbCurrentContext: IwbGameContext;
@@ -6414,11 +6412,16 @@ end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource);
 begin
+  Create(aGameMode, aToolSource, Default(TwbGameDefInputs));
+end;
+
+constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs);
+begin
   Create;
   gdLive := False;
   gdGameMode := aGameMode;
   gdToolSource := aToolSource;
-  gdCapabilities := wbComputeCapabilities(aGameMode, wbHasAddedLightSupport, wbHasAddedMediumSupport, wbHasAddedUpdateSupport, wbCS, wbHNVSE);
+  gdCapabilities := wbComputeCapabilities(aGameMode, aInputs.LightSupport, aInputs.MediumSupport, aInputs.UpdateSupport, aInputs.CS, aInputs.HNVSE);
 end;
 
 constructor TwbGameDef.Create;
@@ -6550,20 +6553,9 @@ end;
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
 begin
   if gdLive then
-    if not gdLiveKeyValid or
-       (gdLiveKeyGameMode <> wbGameMode) or
-       (gdLiveKeyLightSupport <> wbHasAddedLightSupport) or
-       (gdLiveKeyMediumSupport <> wbHasAddedMediumSupport) or
-       (gdLiveKeyUpdateSupport <> wbHasAddedUpdateSupport) or
-       (gdLiveKeyCS <> wbCS) or
-       (gdLiveKeyHNVSE <> wbHNVSE) then begin
+    if not gdLiveKeyValid or (gdLiveKeyGameMode <> wbGameMode) then begin
       gdLiveKeyGameMode := wbGameMode;
-      gdLiveKeyLightSupport := wbHasAddedLightSupport;
-      gdLiveKeyMediumSupport := wbHasAddedMediumSupport;
-      gdLiveKeyUpdateSupport := wbHasAddedUpdateSupport;
-      gdLiveKeyCS := wbCS;
-      gdLiveKeyHNVSE := wbHNVSE;
-      gdCapabilities := wbComputeCapabilities(wbGameMode, wbHasAddedLightSupport, wbHasAddedMediumSupport, wbHasAddedUpdateSupport, wbCS, wbHNVSE);
+      gdCapabilities := wbComputeCapabilities(wbGameMode, False, False, False, False, False);
       gdLiveKeyValid := True;
     end;
   Result := gdCapabilities;
@@ -8074,12 +8066,17 @@ end;
 
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef;
 begin
+  Result := wbCreateGameDef(aGameMode, aToolSource, Default(TwbGameDefInputs));
+end;
+
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs): IwbGameDef;
+begin
   var lGameDefClass := _GameDefClasses[aGameMode, aToolSource];
   if not Assigned(lGameDefClass) then
     raise Exception.Create('No definitions are registered for ' +
       GetEnumName(TypeInfo(TwbGameMode), Ord(aGameMode)) + ' with ' +
       GetEnumName(TypeInfo(TwbToolSource), Ord(aToolSource)));
-  var lGameDef := lGameDefClass.Create(aGameMode, aToolSource);
+  var lGameDef := lGameDefClass.Create(aGameMode, aToolSource, aInputs);
   Result := lGameDef;
   wbMakeCurrentGameDef(lGameDef);
   lGameDef.Define;
@@ -23366,7 +23363,7 @@ begin
         (gcUpdatePlugins in aGameDef.Capabilities)
     and (
              (aGameDef.IsStarfield and ((_Flags and $00000200) <> 0))
-          or (wbVRESL              and ((_Flags and $00100000) <> 0))
+          or ((not aGameDef.IsStarfield) and ((_Flags and $00100000) <> 0))
         );
 end;
 
@@ -23459,14 +23456,14 @@ begin
     if aValue then begin
       if aGameDef.IsStarfield then
         _Flags := _Flags or $00000200
-      else if wbVRESL then
+      else
         _Flags := _Flags or $00100000;
       SetLight(aGameDef, False);
       SetMedium(aGameDef, False);
     end else
       if aGameDef.IsStarfield then
         _Flags := _Flags and not $00000200
-      else if wbVRESL then
+      else
         _Flags := _Flags and not $00100000;
 end;
 

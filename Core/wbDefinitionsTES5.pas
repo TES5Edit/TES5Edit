@@ -2060,10 +2060,10 @@ end;
 
 procedure wbLIGHDataFlagsAfterSet(const aElement: IwbElement; const aOldValue, aNewValue: Variant);
 begin
-  if not wbCS then
+  if not Assigned(aElement) then
     Exit;
 
-  if not Assigned(aElement) then
+  if not (gcCommunityShaders in aElement.GameDefObj.Capabilities) then
     Exit;
 
   if VarSameValue(aOldValue and $4000, aNewValue and $4000) then
@@ -2098,7 +2098,7 @@ begin
   if not Assigned(aElement) then
     Exit;
 
-  if not wbCS then
+  if not (gcCommunityShaders in aElement.GameDefObj.Capabilities) then
     Exit;
 
   var lMainRecord := aElement.ContainingMainRecord;
