@@ -78,10 +78,7 @@ function MakeDataFileName(const FileName, DataPath: String): String;
 function CheckAddFilesToString(var mIni: TIniFile; var cIni: TIniFile; const Section, Ident: String): String;
 function FindBSAs(const aContext: TwbGameContext; const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
 function FindBSAs(const aContext: TwbGameContext; const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function HasBSAs(const aContext: TwbGameContext; ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
-function HasBSAs(ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload;
+function HasBSAs(const aContext: TwbGameContext; ModName : string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
 
 function wbStripDotGhost(const aFileName: string): string;
 
@@ -791,21 +788,6 @@ begin
     Result := StringReplace(cIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll])
   else
     Result := StringReplace(mIni.ReadString(Section, Ident, ''), ',' ,#10, [rfReplaceAll]);
-end;
-
-function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
-begin
-  Result := FindBSAs(_CurrentContext, IniName, DataPath, bsaNames, bsaMissing);
-end;
-
-function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
-begin
-  Result := FindBSAs(_CurrentContext, IniName, CustomIniName, DataPath, bsaNames, bsaMissing);
-end;
-
-function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;
-begin
-  Result := HasBSAs(_CurrentContext, ModName, DataPath, Exact, modini, bsaNames, bsaMissing);
 end;
 
 function FindBSAs(const aContext: TwbGameContext; const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;

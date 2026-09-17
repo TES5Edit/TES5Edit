@@ -10001,7 +10001,7 @@ begin
           for j := 0 to Pred(Group.ElementCount) do
             if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(lGameDef, MainRecord.EditorID)) then
                 Continue;
               if Mainrecord.Signature = 'WRLD' then begin
                 // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
@@ -10026,7 +10026,7 @@ begin
           if Supports(Group.Elements[j], IwbMainRecord, MainRecord) then begin
             if Mainrecord.Signature = 'WRLD' then begin
               // TES5LODGen works only for worldspaces with lodsettings file
-              if (lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(MainRecord.EditorID)) then
+              if (lGameDef.IsSkyrim or lGameDef.IsFallout3 or lGameDef.IsFallout4 or lGameDef.IsStarfield) and not xeContext.ContainerHandler.ResourceExists(wbLODSettingsFileName(lGameDef, MainRecord.EditorID)) then
                 Continue;
               // do not list worldspace if Use LOD Data flag of parent world is set - FO4 has a orphaned LOD data for Diamond City
               if Mainrecord.ElementExists['Parent\WNAM'] and (Mainrecord.ElementNativeValues['Parent\PNAM\Flags'] and $2 = $2) then
@@ -21810,9 +21810,9 @@ begin
               bsaCount := 0;
               if FileExists(xeContext.Settings.TheGameIniFileName) then begin
                 if FileExists(xeContext.Settings.CustomIniFileName) then
-                  bsaCount := FindBSAs(xeContext.Settings.TheGameIniFileName, xeContext.Settings.CustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
+                  bsaCount := FindBSAs(xeContext, xeContext.Settings.TheGameIniFileName, xeContext.Settings.CustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
                 else
-                  bsaCount := FindBSAs(xeContext.Settings.TheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
+                  bsaCount := FindBSAs(xeContext, xeContext.Settings.TheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
               end;
 
               if (bsaCount > 0) then begin
@@ -21847,7 +21847,7 @@ begin
               try
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
-                if HasBSAs(ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
+                if HasBSAs(xeContext, ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
                     gcArchiveExactNameMatch in lGameDef.Capabilities, gcArchivePrivateIni in lGameDef.Capabilities, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
                       for var lFoundPluginIdx := 0 to Pred(lFoundPluginArchives.Count) do
                         if xeContext.Settings.LoadBSAs then begin

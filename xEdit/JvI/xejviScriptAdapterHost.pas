@@ -542,7 +542,7 @@ end;
 
 procedure _wbGetUVRangeTexturesList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbGetUVRangeTexturesList(
+  wbGetUVRangeTexturesList(xeContext,
     TStrings(V2O(Args.Values[0])),  // TStrings list of meshes
     TStrings(V2O(Args.Values[1])),  // TStrings list of textures, output
     Single(Args.Values[2])          // UVRange
@@ -551,7 +551,7 @@ end;
 
 procedure _wbBuildAtlasFromTexturesList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbBuildAtlasFromTexturesList(
+  wbBuildAtlasFromTexturesList(xeContext,
     TStrings(V2O(Args.Values[0])),  // TStrings list of textures
     Args.Values[1], // max texture size
     Args.Values[2], // max tile size
@@ -565,7 +565,7 @@ end;
 
 procedure _wbBuildAtlasFromAtlasMap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbBuildAtlasFromAtlasMap(
+  wbBuildAtlasFromAtlasMap(xeContext,
     TStrings(V2O(Args.Values[0])),  // TStrings atlas map
     Args.Values[1],                // brightness
     Args.Values[2],                // GammaR

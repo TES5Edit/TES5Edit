@@ -1577,9 +1577,9 @@ begin
                   bsaCount := 0;
                   if FileExists(HostContext.Settings.TheGameIniFileName) then begin
                     if FileExists(HostContext.Settings.CustomIniFileName) then
-                      bsaCount := FindBSAs(HostContext.Settings.TheGameIniFileName, HostContext.Settings.CustomIniFileName, HostContext.Settings.DataPath, n, m)
+                      bsaCount := FindBSAs(HostContext, HostContext.Settings.TheGameIniFileName, HostContext.Settings.CustomIniFileName, HostContext.Settings.DataPath, n, m)
                     else
-                      bsaCount := FindBSAs(HostContext.Settings.TheGameIniFileName, HostContext.Settings.DataPath, n, m);
+                      bsaCount := FindBSAs(HostContext, HostContext.Settings.TheGameIniFileName, HostContext.Settings.DataPath, n, m);
                   end;
 
                   if (bsaCount > 0) then begin
@@ -1602,7 +1602,7 @@ begin
                 try
                   m := TStringList.Create;
                   try
-                    if HasBSAs(ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath,
+                    if HasBSAs(HostContext, ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath,
                         wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], wbGameMode in [gmTES5, gmEnderal, gmTES5vr, gmSSE], n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
@@ -1620,7 +1620,7 @@ begin
                 try
                   m := TStringList.Create;
                   try
-                    if HasBSAs(ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath, true, false, n, m)>0 then begin
+                    if HasBSAs(HostContext, ChangeFileExt(Masters[i], ''), HostContext.Settings.DataPath, true, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
                         HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
@@ -1628,7 +1628,7 @@ begin
                     end;
                     m.Clear;
                     n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Interface', HostContext.Settings.DataPath, true, false, n, m)>0 then begin
+                    if HasBSAs(HostContext, ChangeFileExt(Masters[i], '')+' - Interface', HostContext.Settings.DataPath, true, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
                         HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
@@ -1636,7 +1636,7 @@ begin
                     end;
                     m.Clear;
                     n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Localization', HostContext.Settings.DataPath, true, false, n, m)>0 then begin
+                    if HasBSAs(HostContext, ChangeFileExt(Masters[i], '')+' - Localization', HostContext.Settings.DataPath, true, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
                         HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));
@@ -1644,7 +1644,7 @@ begin
                     end;
                     m.Clear;
                     n.Clear;
-                    if HasBSAs(ChangeFileExt(Masters[i], '')+' - Wwise', HostContext.Settings.DataPath, false, false, n, m)>0 then begin
+                    if HasBSAs(HostContext, ChangeFileExt(Masters[i], '')+' - Wwise', HostContext.Settings.DataPath, false, false, n, m)>0 then begin
                       for j := 0 to Pred(n.Count) do begin
                         ReportProgress('[' + n[j] + '] Loading Resources.');
                         HostContext.ContainerHandler.AddBSA(MakeDataFileName(n[j], HostContext.Settings.DataPath));

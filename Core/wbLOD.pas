@@ -210,15 +210,13 @@ type
   end;
 
 function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
-function wbLODSettingsFileName(const WorldspaceID: string): string; overload;
-function wbLODSettingsFileName(const aGameDef: TwbGameDef; const WorldspaceID: string): string; overload;
+function wbLODSettingsFileName(const aGameDef: TwbGameDef; const WorldspaceID: string): string;
 function wbLODTreeBlockFileExt(const aGameDef: TwbGameDef): string;
 function wbDefaultNormalTexture(const aGameDef: TwbGameDef): string;
 function wbDefaultSpecularTexture(const aGameDef: TwbGameDef): string;
 procedure wbPrepareImageAlpha(const img: TImageData; fmt: TImageFormat; threshold: Integer = 0);
 
-procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2); overload;
-procedure wbGetUVRangeTexturesList(const aContext: TwbGameContext; slMeshes, slTextures: TStrings; UVRange: Single = 1.2); overload;
+procedure wbGetUVRangeTexturesList(const aContext: TwbGameContext; slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 
 procedure wbBuildAtlas(
   const aGameDef: TwbGameDef;
@@ -230,15 +228,6 @@ procedure wbBuildAtlas(
 );
 
 procedure wbBuildAtlasFromTexturesList(
-  slTextures: TStrings;
-  aMaxTextureSize,
-  aMaxTileSize,
-  aWidth, aHeight: integer;
-  const aName, aMapName: string;
-  const Settings: TCustomIniFile
-); overload;
-
-procedure wbBuildAtlasFromTexturesList(
   const aContext: TwbGameContext;
   slTextures: TStrings;
   aMaxTextureSize,
@@ -246,13 +235,10 @@ procedure wbBuildAtlasFromTexturesList(
   aWidth, aHeight: integer;
   const aName, aMapName: string;
   const Settings: TCustomIniFile
-); overload;
-
-procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
-  GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile); overload;
+);
 
 procedure wbBuildAtlasFromAtlasMap(const aContext: TwbGameContext; slMap: TStrings; aBrightness: integer;
-  GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile); overload;
+  GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
 
 procedure wbGenerateLODTES4(const aWorldspace: IwbMainRecord; const Settings: TCustomIniFile);
 
@@ -337,11 +323,6 @@ uses
 function wbLODExtraOptionsFileName(const PluginName, WorldspaceID: string): string;
 begin
   Result := wbAppName + 'LODGen_' + PluginName + '_' + WorldSpaceID + '_Options.txt';
-end;
-
-function wbLODSettingsFileName(const WorldspaceID: string): string;
-begin
-  Result := wbLODSettingsFileName(_CurrentGameDef, WorldspaceID);
 end;
 
 function wbLODSettingsFileName(const aGameDef: TwbGameDef; const WorldspaceID: string): string;
@@ -1052,11 +1033,6 @@ begin
     end;
 end;
 
-procedure wbGetUVRangeTexturesList(slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
-begin
-  wbGetUVRangeTexturesList(_CurrentContext, slMeshes, slTextures, UVRange);
-end;
-
 procedure wbGetUVRangeTexturesList(const aContext: TwbGameContext; slMeshes, slTextures: TStrings; UVRange: Single = 1.2);
 const
   // UV values outside of this +/- range will be considered an error and ignored
@@ -1435,18 +1411,6 @@ begin
 end;
 
 procedure wbBuildAtlasFromTexturesList(
-  slTextures: TStrings;
-  aMaxTextureSize,
-  aMaxTileSize,
-  aWidth, aHeight: integer;
-  const aName, aMapName: string;
-  const Settings: TCustomIniFile
-);
-begin
-  wbBuildAtlasFromTexturesList(_CurrentContext, slTextures, aMaxTextureSize, aMaxTileSize, aWidth, aHeight, aName, aMapName, Settings);
-end;
-
-procedure wbBuildAtlasFromTexturesList(
   const aContext: TwbGameContext;
   slTextures: TStrings;
   aMaxTextureSize,
@@ -1630,12 +1594,6 @@ begin
           FreeImage(Images[i].Image_s);
       end;
   end;
-end;
-
-procedure wbBuildAtlasFromAtlasMap(slMap: TStrings; aBrightness: integer;
-  GammaR, GammaG, GammaB: Single; const Settings: TCustomIniFile);
-begin
-  wbBuildAtlasFromAtlasMap(_CurrentContext, slMap, aBrightness, GammaR, GammaG, GammaB, Settings);
 end;
 
 procedure wbBuildAtlasFromAtlasMap(const aContext: TwbGameContext; slMap: TStrings; aBrightness: integer;
