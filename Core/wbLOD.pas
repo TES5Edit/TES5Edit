@@ -148,6 +148,7 @@ type
   TwbLodTES5TreeList = class
   private
     fGameDef: TwbGameDef;
+    fSlotLayout: TwbSlotLayout;
     fWorldspaceID: string;
     // structure for LST file
     fTreesList: array of TwbLodTES5TreeType;
@@ -165,7 +166,7 @@ type
     function GetAtlasRect(Index: Integer): TAtlasRect;
     function GetTreeByFormID(const aFormID: TwbFormID): PwbLodTES5Tree;
   public
-    constructor Create(const aGameDef: TwbGameDef; const WorldspaceID: string);
+    constructor Create(const aGameDef: TwbGameDef; aSlotLayout: TwbSlotLayout; const WorldspaceID: string);
     destructor Destroy; override;
     procedure LoadFromData(const aData: TBytes);
     procedure SaveToFile(const aFileName: string);
@@ -178,6 +179,7 @@ type
     function BillboardFileName(const aFileName, aModelName: string; const aFormID: TwbFormID): string;
     function AddTree(const aFileName, aModelName: string; const aFormID: TwbFormID; aWidth, aHeight: Single): PwbLodTES5Tree;
     property GameDef: TwbGameDef read fGameDef;
+    property SlotLayout: TwbSlotLayout read fSlotLayout;
     property WorldspaceID: string read fWorldspaceID write fWorldspaceID;
     property ListFileName: string read GetListFileName;
     property AtlasFileName: string read GetAtlasFileName;
@@ -594,9 +596,10 @@ end;
 
 { TwbLodTES5TreeList }
 
-constructor TwbLodTES5TreeList.Create(const aGameDef: TwbGameDef; const WorldspaceID: string);
+constructor TwbLodTES5TreeList.Create(const aGameDef: TwbGameDef; aSlotLayout: TwbSlotLayout; const WorldspaceID: string);
 begin
   fGameDef := aGameDef;
+  fSlotLayout := aSlotLayout;
   fWorldspaceID := WorldspaceID;
   if fWorldspaceID = '' then
     fWorldspaceID := 'Tamriel';
@@ -680,7 +683,7 @@ begin
   Result := Format('Textures\Terrain\LODGen\%s\%s_%s.dds', [
     aFileName,
     ChangeFileExt(ExtractFileName(aModelName), ''),
-    aFormID.ChangeFileID(TwbFileID.Null).ToString(False)
+    aFormID.ChangeFileID(fSlotLayout, TwbFileID.Null).ToString
   ]);
 end;
 
@@ -992,7 +995,7 @@ var
   i, j: integer;
 begin
   // check that FormID number is not duplicate
-  if (not TreeList.RefAllowDuplicates) and (TreeList.RefFormIDs.IndexOf(Pointer(aFormID.ObjectID)) <> -1) then begin
+  if (not TreeList.RefAllowDuplicates) and (TreeList.RefFormIDs.IndexOf(Pointer(aFormID.ObjectID[TreeList.SlotLayout])) <> -1) then begin
     Result := False;
     Exit;
   end;
@@ -1019,7 +1022,7 @@ begin
   Refs[j][i].Scale := Scale;
   Refs[j][i].Rotation := 2*Pi*Random;
 
-  TreeList.RefFormIDs.Add(Pointer(aFormID.ObjectID));
+  TreeList.RefFormIDs.Add(Pointer(aFormID.ObjectID[TreeList.SlotLayout]));
   Result := True;
 end;
 
@@ -1798,7 +1801,7 @@ begin
     wbProgressCallback('[' + aWorldspace.EditorID + '] Lodsettings file not found for worldspace.');
     Exit;
   end;
-  Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.EditorID);
+  Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.ContextObj.SlotLayout, aWorldspace.EditorID);
   try
     Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(Lst.ListFileName);
     if Length(Res) > 0 then
@@ -1851,7 +1854,7 @@ begin
           // for each reference of tree type
           for r := 0 to BTT.Types[j].Count - 1 do begin
             // a mod the reference is supposed to be from
-            k := BTT.Refs[j][r].RefFormID.FileID.FullSlot;
+            k := BTT.Refs[j][r].RefFormID.FileID[Lst.SlotLayout].FullSlot;
             if not Assigned(loFiles[k]) then
               Continue;
             Ref := loFiles[k].RecordByFormID[loFiles[k].LoadOrderFormIDtoFileFormID(BTT.Refs[j][r].RefFormID, True), False, True];
@@ -1885,7 +1888,7 @@ begin
           TreeFileName := Format('%s\%s_%s.dds', [
             TreeRecords[Index][n]._File.FileName,
             ChangeFileExt(ExtractFileName(TreeRecords[Index][n].WinningOverride.ElementEditValues['Model\MODL']), ''),
-            TreeRecords[Index][n].FormID.ChangeFileID(TwbFileID.Null).ToString(False)
+            TreeRecords[Index][n].FormID.ChangeFileID(aWorldspace.ContextObj.SlotLayout, TwbFileID.Null).ToString
           ])
         else
           TreeFileName := Format('Tree Type %d.dds', [Index]);
@@ -2475,7 +2478,7 @@ var
                   // references listed in other grids has no effect
                   // ToDo test Overrides moving reference out of cell
                   if (Grid.x = Cell.x) and (Grid.y = Cell.y) then
-                    sl.AddObject(Reference.MasterOrSelf.LoadOrderFormID.ToString(False), Pointer(Reference.MasterOrSelf));
+                    sl.AddObject(Reference.MasterOrSelf.LoadOrderFormID.ToString, Pointer(Reference.MasterOrSelf));
                 end;
           if StartTick + 500 < GetTickCount then begin
             Application.MainForm.Caption := 'Gathering Large References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
@@ -2562,7 +2565,7 @@ begin
     TreesDupCount := 0;
     slLog := TStringList.Create;
     if lGameDef.IsFallout3 then LodLevel := 8 else LodLevel := 4;
-    Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.EditorID);
+    Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.ContextObj.SlotLayout, aWorldspace.EditorID);
     try
 
     // Fallouts use common atlas for all worldspaces, so we need to collect all available billboards
@@ -2682,7 +2685,7 @@ begin
         else if REFRs[i].IsMaster then
           RefFormID := REFRs[i].FixedFormID
         else
-          RefFormID := REFRs[i].FixedFormID.ChangeFileID(TwbFileID.CreateFull(1));
+          RefFormID := REFRs[i].FixedFormID.ChangeFileID(aWorldspace.ContextObj.SlotLayout, TwbFileID.CreateFull(1));
 
         if LOD4[k].AddReference(RefFormID, PTree^.Index, RefPos, Scale) then
           Inc(TreesCount)
@@ -2788,7 +2791,7 @@ begin
     slLargeReferences := TStringList.Create;
     slLargeReferences.Sorted := True;
     slLargeReferences.Duplicates := dupIgnore;
-    Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.EditorID);
+    Lst := TwbLodTES5TreeList.Create(lGameDef, aWorldspace.ContextObj.SlotLayout, aWorldspace.EditorID);
 
     bChunk := Settings.ReadBool(Section, 'Chunk', False);
     // chunk option will work as an area limiter if upper boundaries are set
@@ -3000,7 +3003,7 @@ begin
           end;
         end;
 
-        s := REFRs[i].LoadOrderFormID.ToString(False) + #9 +
+        s := REFRs[i].LoadOrderFormID.ToString + #9 +
              IntToHex(REFRs[i].Flags._Flags, 8) + #9 +
              REFRs[i].ElementEditValues['DATA\Position\X'] + #9 +
              REFRs[i].ElementEditValues['DATA\Position\Y'] + #9 +
@@ -3343,7 +3346,7 @@ var
       if e.ElementExists['XESP'] then begin
         XESP := e.ElementLinksTo['XESP\Reference'] as IwbMainRecord;
         if Assigned(XESP) and (XESP.Flags._Flags and $100 = $100) then
-          xespid := XESP.FormID.ToString(False)
+          xespid := XESP.FormID.ToString
         // if the reference is inititally enabled it gets LOD, VWD always gets LOD
         else if Assigned(XESP) and not e.Flags.IsVisibleWhenDistant then begin
           bInitiallyDisabled := XESP.Flags.IsInitiallyDisabled;
@@ -3517,7 +3520,7 @@ var
         end;
       end;
 
-      s := e.LoadOrderFormID.ToString(False) + #9 +
+      s := e.LoadOrderFormID.ToString + #9 +
            IntToHex(e.Flags._Flags, 8) + #9 +
            e.ElementEditValues['DATA\Position\X'] + #9 +
            e.ElementEditValues['DATA\Position\Y'] + #9 +

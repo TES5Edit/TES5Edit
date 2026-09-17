@@ -261,14 +261,15 @@ begin
       else
         JvInterpreterError(ieTypeMistmatch, -1);
 
+      var lLayout := xeContext.SlotLayout;
       if lFile.IsLight then
-        lFormID.ObjectID := lFormID.ObjectID and $FFF
+        lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFF
       else if lFile.IsMedium then
-        lFormID.ObjectID := lFormID.ObjectID and $FFFF
+        lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFFF
       else
-        lFormID.ObjectID := lFormID.ObjectID and $FFFFFF;
+        lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFFFFF;
 
-      lFormID.FileID := lFile.LoadOrderFileID;
+      lFormID.FileID[lLayout] := lFile.LoadOrderFileID;
 
       Value := lFile.RecordByFormID[lFormID, True, True];
     end
@@ -286,7 +287,7 @@ begin
     Value := Null;
     aFormID := TwbFormID.FromStr(string(Args.Values[0]));
     for i := Low(frmMain.Files) to High(frmMain.Files) do
-      if frmMain.Files[i].LoadOrderFileID = aFormID.FileID then begin
+      if frmMain.Files[i].LoadOrderFileID = aFormID.FileID[xeContext.SlotLayout] then begin
         Value := frmMain.Files[i].RecordByFormID[aFormID, True, True];
         Break;
       end;

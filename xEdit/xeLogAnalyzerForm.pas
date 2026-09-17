@@ -125,6 +125,7 @@ uses
 
   Winapi.Messages,
 
+  xeInit,
   xeMainForm;
 
 {$R *.dfm}
@@ -217,7 +218,7 @@ var
   j      : integer;
 begin
   Result := nil;
-  FileID := FormID.FileID;
+  FileID := FormID.FileID[xeContext.SlotLayout];
 
   if FileID.FullSlot = $FF then
     Exit;
@@ -230,7 +231,7 @@ begin
     Inc(j);
   end;
   while Assigned(_File) do begin
-    Result := _File.RecordByFormID[FormID.ChangeFileID(_File.FileFileID[True]), True, True];
+    Result := _File.RecordByFormID[FormID.ChangeFileID(xeContext.SlotLayout, _File.FileFileID[True]), True, True];
     if Assigned(Result) then
       Exit;
 
@@ -328,7 +329,7 @@ begin
       if IsPlugin then
         CellText := Data.PEntry.Text
       else
-        CellText := Data.PEntry.FormID.ToString(True)
+        CellText := Data.PEntry.FormID.ToDisplayString(xeContext.SlotLayout)
     end;
     1: begin
       if Supports(Data.PEntry.Element, IwbMainRecord, MainRecord) then
@@ -495,7 +496,7 @@ begin
     end;
 
   elem := RecordByLoadOrderFormID(fid);
-  if (fid.FileID.FullSlot <> $FF) and not Assigned(elem) then begin
+  if (fid.FileID[xeContext.SlotLayout].FullSlot <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
       memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
     Inc(FormIDErrors);
@@ -505,7 +506,7 @@ begin
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
-    LoadOrder := FormID.FileID.FullSlot;
+    LoadOrder := FormID.FileID[xeContext.SlotLayout].FullSlot;
     Element := elem;
     Text := txt;
     if IsError then Value1 := 1 else Value1 := 0;
@@ -573,7 +574,7 @@ begin
     end;
 
   elem := RecordByLoadOrderFormID(fid);
-  if (fid.FileID.FullSlot <> $FF) and not Assigned(elem) then begin
+  if (fid.FileID[xeContext.SlotLayout].FullSlot <> $FF) and not Assigned(elem) then begin
     if FormIDErrors = 0 then
       memoText.Lines.Add('Unknown FormID [' + s + '], changed load order? All other unknown forms will be ignored.');
     Inc(FormIDErrors);
@@ -583,7 +584,7 @@ begin
   SetLength(LogEntries, Succ(Length(LogEntries)));
   with LogEntries[Pred(Length(LogEntries))] do begin
     FormID := fid;
-    LoadOrder := FormID.FileID.FullSlot;
+    LoadOrder := FormID.FileID[xeContext.SlotLayout].FullSlot;
     Element := elem;
     Text := txt;
     Value1 := 1;

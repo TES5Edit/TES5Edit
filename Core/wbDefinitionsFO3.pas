@@ -1112,7 +1112,7 @@ begin
       Exit;
     if not SameText(_File.FileName, 'WeaponModKits.esp') then
       Exit;
-    case MainRecord.FormID.ObjectID of
+    case MainRecord.FormID.ObjectID[aContainer.ContextObj.SlotLayout] of
       $0130EB, $0130ED, $01522D, $01522E, $0158D5, $0158D6, $0158D7, $0158D8, $0158D9, $0158DA, $0158DC, $0158DD, $018E20:
         Result := False;
     end;

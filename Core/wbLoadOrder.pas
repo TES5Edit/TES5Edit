@@ -1060,21 +1060,22 @@ var
         miLoadOrder := NewLoadOrderCount;
         NewLoadOrder[NewLoadOrderCount] := aModule;
         Inc(NewLoadOrderCount);
+        var lLayout := mlContext.SlotLayout;
         if not (mlContext.Settings.PseudoLight or mlContext.Settings.PseudoUpdate) then
           if (mfHasUpdateFlag in miFlags) and not mlContext.Settings.IgnoreUpdate then begin
             miFileID := TwbFileID.Invalid;
           end else if (mfHasLightFlag in miFlags) and not mlContext.Settings.IgnoreLight then begin
-            if mlNextLightSlot > TwbFileID.MaxLightSlot then
+            if mlNextLightSlot > TwbFileID.MaxLightSlot(lLayout) then
               raise Exception.Create('Too many light modules');
-            miFileID := TwbFileID.CreateLight(mlNextLightSlot);
+            miFileID := TwbFileID.CreateLight(mlNextLightSlot, lLayout);
             Inc(mlNextLightSlot);
           end else if (mfHasMediumFlag in miFlags) and not mlContext.Settings.IgnoreMedium then begin
-            if mlNextMediumSlot > TwbFileID.MaxMediumSlot then
+            if mlNextMediumSlot > TwbFileID.MaxMediumSlot(lLayout) then
               raise Exception.Create('Too many heavy modules');
-            miFileID := TwbFileID.CreateMedium(mlNextMediumSlot);
+            miFileID := TwbFileID.CreateMedium(mlNextMediumSlot, lLayout);
             Inc(mlNextMediumSlot);
           end else begin
-            if mlNextFullSlot > TwbFileID.MaxFullSlot then
+            if mlNextFullSlot > TwbFileID.MaxFullSlot(lLayout) then
               raise Exception.Create('Too many full modules');
             miFileID := TwbFileID.CreateFull(mlNextFullSlot);
             Inc(mlNextFullSlot);

@@ -879,6 +879,9 @@ type
     mtLight
   );
 
+  TwbSlotKind = (skLight, skMedium);
+  TwbSlotLayout = set of TwbSlotKind;
+
   TwbFileID = record
   private
     _LightSlot : SmallInt;
@@ -886,20 +889,20 @@ type
     _FullSlot  : SmallInt;
   public
     class function CreateFull(aFullSlot: SmallInt): TwbFileID; inline; static;
-    class function CreateMedium(aMediumSlot: SmallInt): TwbFileID; inline; static;
-    class function CreateLight(aLightSlot: SmallInt): TwbFileID; inline; static;
+    class function CreateMedium(aMediumSlot: SmallInt; aLayout: TwbSlotLayout): TwbFileID; inline; static;
+    class function CreateLight(aLightSlot: SmallInt; aLayout: TwbSlotLayout): TwbFileID; inline; static;
 
-    class function CreateFromFormID(aFormID: Cardinal): TwbFileID; inline; static;
+    class function CreateFromFormID(aFormID: Cardinal; aLayout: TwbSlotLayout): TwbFileID; inline; static;
 
     class function Null: TwbFileID; static; inline;
     class function Invalid: TwbFileID; static; inline;
 
-    class function MaxFullSlot: SmallInt; static;
-    class function MaxMediumSlot: SmallInt; static;
-    class function MaxLightSlot: SmallInt; static;
+    class function MaxFullSlot(aLayout: TwbSlotLayout): SmallInt; static;
+    class function MaxMediumSlot(aLayout: TwbSlotLayout): SmallInt; static;
+    class function MaxLightSlot(aLayout: TwbSlotLayout): SmallInt; static;
 
-    class function LightFullSlot: SmallInt; static; inline;
-    class function MediumFullSlot: SmallInt; static; inline;
+    class function LightFullSlot(aLayout: TwbSlotLayout): SmallInt; static; inline;
+    class function MediumFullSlot(aLayout: TwbSlotLayout): SmallInt; static; inline;
 
     class operator Equal(const A, B: TwbFileID): Boolean; inline;
     class operator NotEqual(const A, B: TwbFileID): Boolean; inline;
@@ -932,11 +935,11 @@ type
     //if this is not observed.
     _FormID: Cardinal;
 
-    function GetFileID: TwbFileID;
-    procedure SetFileID(const Value: TwbFileID);
+    function GetFileID(aLayout: TwbSlotLayout): TwbFileID;
+    procedure SetFileID(aLayout: TwbSlotLayout; const Value: TwbFileID);
 
-    function GetObjectID: Cardinal;
-    procedure SetObjectID(const Value: Cardinal); overload; inline;
+    function GetObjectID(aLayout: TwbSlotLayout): Cardinal;
+    procedure SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal); overload; inline;
   public
     class function FromCardinal(const aValue: Cardinal): TwbFormID; static; inline;
     class function FromStr(aValue: string): TwbFormID; static;
@@ -955,13 +958,14 @@ type
     class operator LessThan(const A, B: TwbFormID): Boolean; inline;
     class operator LessThanOrEqual(const A, B: TwbFormID): Boolean; inline;
 
-    class operator Inc(const A: TwbFormID): TwbFormID;
-    class operator Add(const A: TwbFormID; B: Int64): TwbFormID; inline;
-    class operator Subtract(const A: TwbFormID; B: Int64): TwbFormID; inline;
     class operator Subtract(const A: TwbFormID; const B: TwbFormID): Int64; inline;
 
-    function ChangeFileID(const aFileID: TwbFileID): TwbFormID; inline;
-    function ToString(aForDisplay: Boolean = False): string;
+    function Next(aLayout: TwbSlotLayout): TwbFormID;
+    function Offset(aLayout: TwbSlotLayout; aDelta: Int64): TwbFormID;
+
+    function ChangeFileID(aLayout: TwbSlotLayout; const aFileID: TwbFileID): TwbFormID; inline;
+    function ToString: string;
+    function ToDisplayString(aLayout: TwbSlotLayout): string;
 
     function IsNull   : Boolean; inline;
     function IsPlayer : Boolean; inline;
@@ -969,14 +973,14 @@ type
 
     function IsHardcoded: Boolean; inline;
 
-    procedure SetObjectID(const Value: Cardinal; aSilent: Boolean); overload;
+    procedure SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal; aSilent: Boolean); overload;
 
     property ToCardinal: Cardinal
       read _FormID;
-    property FileID: TwbFileID
+    property FileID[aLayout: TwbSlotLayout]: TwbFileID
       read GetFileID
       write SetFileID;
-    property ObjectID: Cardinal
+    property ObjectID[aLayout: TwbSlotLayout]: Cardinal
       read GetObjectID
       write SetObjectID;
   end;
@@ -4506,6 +4510,7 @@ type
     procedure ForceClosed;
     procedure IncGlobalGeneration;
     function BeginInternalEdit(aForce: Boolean = False): Boolean;
+    function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function ExpandFileName(const aFileName: string): string;
 
@@ -5840,7 +5845,7 @@ function wbIsInternalEdit: Boolean;
 function StrToSignature(const s: string): TwbSignature;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 
-function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean): TwbFormID;
+function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean; aLayout: TwbSlotLayout): TwbFormID;
 
 threadvar
   _InternalEditCount: Integer;
@@ -6196,6 +6201,16 @@ end;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 begin
   Result := PwbSignature(@aInt)^;
+end;
+
+function TwbGameContext.SlotLayout: TwbSlotLayout;
+begin
+  Result := [];
+  var lCapabilities := gcGameDefObj.Capabilities;
+  if Settings.PseudoLight or (gcLightPlugins in lCapabilities) then
+    Include(Result, skLight);
+  if Settings.PseudoMedium or (gcMediumPlugins in lCapabilities) then
+    Include(Result, skMedium);
 end;
 
 function TwbGameContext.BeginInternalEdit(aForce: Boolean): Boolean;
@@ -8084,7 +8099,7 @@ end;
 
 function TwbGameContext.AllocateFullSlot: Integer;
 begin
-  if gcNextFullSlot > TwbFileID.MaxFullSlot then
+  if gcNextFullSlot > TwbFileID.MaxFullSlot(SlotLayout) then
     raise Exception.Create('Too many full modules');
   Result := gcNextFullSlot;
   Inc(gcNextFullSlot);
@@ -8092,7 +8107,7 @@ end;
 
 function TwbGameContext.AllocateLightSlot: Integer;
 begin
-  if gcNextLightSlot > TwbFileID.MaxLightSlot then
+  if gcNextLightSlot > TwbFileID.MaxLightSlot(SlotLayout) then
     raise Exception.Create('Too many light modules');
   Result := gcNextLightSlot;
   Inc(gcNextLightSlot);
@@ -8100,7 +8115,7 @@ end;
 
 function TwbGameContext.AllocateMediumSlot: Integer;
 begin
-  if gcNextMediumSlot > TwbFileID.MaxMediumSlot then
+  if gcNextMediumSlot > TwbFileID.MaxMediumSlot(SlotLayout) then
     raise Exception.Create('Too many medium modules');
   Result := gcNextMediumSlot;
   Inc(gcNextMediumSlot);
@@ -8119,7 +8134,7 @@ end;
 function TwbGameContext.RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
 begin
   Result := nil;
-  var lFileID := aFormID.FileID;
+  var lFileID := aFormID.FileID[SlotLayout];
   for var i:= Low(gcFiles) to High(gcFiles) do
     if gcFiles[i].LoadOrderFileID = lFileID then begin
       Result := gcFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
@@ -8384,6 +8399,7 @@ type
 
     function defIsLocked: Boolean;
     function defGameDefObj: TwbGameDef; virtual;
+    function defSlotLayout(const aElement: IwbElement): TwbSlotLayout;
 
     {---IInterface---}
     function QueryInterface(const IID: TGUID; out Obj): HResult; virtual; stdcall;
@@ -12214,6 +12230,22 @@ end;
 function TwbDef.defIsLocked: Boolean;
 begin
   Result := Assigned(defParent) or (dfTemplate in defFlags);
+end;
+
+function TwbDef.defSlotLayout(const aElement: IwbElement): TwbSlotLayout;
+begin
+  if Assigned(aElement) then
+    Exit(aElement.ContextObj.SlotLayout);
+
+  Result := [];
+  var lGameDef := defGameDefObj;
+  if Assigned(lGameDef) then begin
+    var lCapabilities := lGameDef.Capabilities;
+    if gcLightPlugins in lCapabilities then
+      Include(Result, skLight);
+    if gcMediumPlugins in lCapabilities then
+      Include(Result, skMedium);
+  end;
 end;
 
 function TwbDef.defGameDefObj: TwbGameDef;
@@ -19826,7 +19858,7 @@ begin
         var TargetFile := aTarget._File;
         if Assigned(TargetFile) then begin
           if dfUnmappedFormID in defFlags then begin
-            if FormID.FileID.FullSlot <> 0 then
+            if FormID.FileID[TargetFile.ContextObj.SlotLayout].FullSlot <> 0 then
               raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
             if TargetFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
               if (TargetFile.MasterCount[True] < 1) or (TargetFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
@@ -19884,12 +19916,13 @@ begin
         if (dfUnmappedFormID in defFlags) and not lFormID.IsNull then begin
           if lFile.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
             if (lFile.MasterCount[True] < 1) or (lFile.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
-              Exit('['+lFormID.ToString(False)+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
+              Exit('['+lFormID.ToString+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
         end;
 
-        if lFormID.ObjectID < $800 then
+        var lLayout := defSlotLayout(aElement);
+        if lFormID.ObjectID[lLayout] < $800 then
           if not lFile.AllowHardcodedRangeUse then
-            lFormID.FileID := TwbFileID.Null;
+            lFormID.FileID[lLayout] := TwbFileID.Null;
 
         var lMainRecord: IwbMainRecord;
         if lFormID.IsHardcoded then
@@ -19912,12 +19945,12 @@ begin
   end;
 
   if dfUnmappedFormID in defFlags then begin
-    if lFormID.FileID.FullSlot <> 0 then
-      Exit('['+lFormID.ToString(False)+'] <Error: Unmapped FormIDs must belong to File ID [00]>');
+    if lFormID.FileID[defSlotLayout(aElement)].FullSlot <> 0 then
+      Exit('['+lFormID.ToString+'] <Error: Unmapped FormIDs must belong to File ID [00]>');
   end;
 
   if not lFormID.IsHardcoded then
-    Result := '['+lFormID.ToString(False)+'] <Error: Could not be resolved>';
+    Result := '['+lFormID.ToString+'] <Error: Could not be resolved>';
 end;
 
 function TwbFormIDDefFormater.CheckFlst(const aMainRecord: IwbMainRecord): Boolean;
@@ -20116,7 +20149,7 @@ begin
 
   if (Result <> 0) and (dfUnmappedFormID in defFlags) then begin
     var lFormID := TwbFormID.FromCardinal(Result);
-    if lFormID.FileID.FullSlot <> 0 then
+    if lFormID.FileID[defSlotLayout(aElement)].FullSlot <> 0 then
       raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
   end;
 
@@ -20171,7 +20204,7 @@ begin
     FormID := _File.LoadOrderFormIDtoFileFormID(FormID, aElement.MastersUpdated);
 
   if not FormID.IsNull and (dfUnmappedFormID in defFlags) then begin
-    if FormID.FileID.FullSlot <> 0 then
+    if FormID.FileID[defSlotLayout(aElement)].FullSlot <> 0 then
       raise Exception.Create('Unmapped FormIDs must belong to File ID [00]');
     if _File.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
       if (_File.MasterCount[True] < 1) or (_File.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
@@ -20473,9 +20506,10 @@ begin
     if Assigned(lFile) then try
       var lFormID := TwbFormID.FromCardinal(aInt);
 
-      if lFormID.ObjectID < $800 then
+      var lLayout := defSlotLayout(aElement);
+      if lFormID.ObjectID[lLayout] < $800 then
         if not lFile.AllowHardcodedRangeUse then
-          lFormID.FileID := TwbFileID.Null;
+          lFormID.FileID[lLayout] := TwbFileID.Null;
 
       if lFormID.IsHardcoded then
         Result := lFile.ContextObj.GameMasterRecordByFormID(lFormID)
@@ -20503,9 +20537,10 @@ begin
       if Assigned(lFile) then try
         var lFormID := TwbFormID.FromCardinal(aInt);
 
-        if lFormID.ObjectID < $800 then
+        var lLayout := defSlotLayout(aElement);
+        if lFormID.ObjectID[lLayout] < $800 then
           if not lFile.AllowHardcodedRangeUse then
-            lFormID.FileID := TwbFileID.Null;
+            lFormID.FileID[lLayout] := TwbFileID.Null;
 
         if lFormID.IsHardcoded then
           Result := lFile.ContextObj.GameMasterRecordByFormID(lFormID)
@@ -20532,7 +20567,7 @@ begin
   Result := True;
 end;
 
-function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean): TwbFormID;
+function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean; aLayout: TwbSlotLayout): TwbFormID;
 var
   FileID    : TwbFileID;
   i         : Integer;
@@ -20544,8 +20579,8 @@ var
   begin
     case aType of
       mtFull: Result := TwbFileID.CreateFull(aInt);
-      mtMedium: Result := TwbFileID.CreateMedium(aInt);
-      mtLight: Result := TwbFileID.CreateLight(aInt);
+      mtMedium: Result := TwbFileID.CreateMedium(aInt, aLayout);
+      mtLight: Result := TwbFileID.CreateLight(aInt, aLayout);
     end;
   end;
 
@@ -20555,16 +20590,16 @@ begin
   if Result.IsNull or Result.IsPlayer or Result.IsNone then
     Exit;
 
-  if Result.ObjectID < $800 then
+  if Result.ObjectID[aLayout] < $800 then
     if aAllowHardcodedRangeUse then begin
       if Result.IsHardcoded then
         Exit;
     end else begin
-      Result.FileID := TwbFileID.Null;
+      Result.FileID[aLayout] := TwbFileID.Null;
       Exit;
     end;
 
-  FileID := Result.FileID;
+  FileID := Result.FileID[aLayout];
 
   OldCount := aOldCount.Total;
   NewCount := aNewCount.Total;
@@ -20592,20 +20627,20 @@ begin
   if NewCount > OldCount then
     if Slot >= OldCount then begin
       FileID := CreateByType(FileID.GetModuleType, NewCount);
-      Result.FileID := FileID;
+      Result.FileID[aLayout] := FileID;
       Exit;
     end;
 
   for i := Low(aOld) to High(aOld) do
     if aOld[i] = FileID then begin
-      Result.FileID := aNew[i];
+      Result.FileID[aLayout] := aNew[i];
       Exit;
     end;
 
   if NewCount < OldCount then
     if Slot >= OldCount then begin
       FileID := CreateByType(FileID.GetModuleType, NewCount);
-      Result.FileID := FileID;
+      Result.FileID[aLayout] := FileID;
       Exit;
     end;
 end;
@@ -20626,7 +20661,7 @@ begin
   end;
 
   if aInt <> 0 then
-    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse).ToCardinal;
+    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, defSlotLayout(aElement)).ToCardinal;
 end;
 
 procedure TwbFormIDDefFormater.Report(const aParents: TwbDefPath);
@@ -20701,7 +20736,7 @@ begin
 
     end;
 
-  Result := FormID.ToString(False);
+  Result := FormID.ToString;
 
   if Self is TwbFormIDCheckedST then with TwbFormIDCheckedST(Self) do begin
     j := -1;
@@ -20750,7 +20785,7 @@ begin
         else
           Result := '';
       end;
-      Result := Result + ' [ACVA:' + FormID.ToString(False) + ']';
+      Result := Result + ' [ACVA:' + FormID.ToString + ']';
     end;
     Exit;
   end;
@@ -20760,7 +20795,7 @@ begin
       if aForSummary then
         Result := 'TARGET'
       else
-        Result := 'TARGET - Target Reference ['+FormID.ToString(False)+']';
+        Result := 'TARGET - Target Reference ['+FormID.ToString+']';
       if wbReportMode and not (dfNoReport in defFlags) then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
@@ -20776,7 +20811,7 @@ begin
         else
           Result := 'NULL'
       end else
-        Result := 'NULL - Null Reference ['+FormID.ToString(False)+']';
+        Result := 'NULL - Null Reference ['+FormID.ToString+']';
       if wbReportMode and not (dfNoReport in defFlags) then
         if wbReportFormIDs then begin
           if not Assigned(FoundSignatures) then
@@ -20792,7 +20827,7 @@ begin
       if aForSummary then
         Result := 'FFFF'
       else
-        Result := 'FFFF - None Reference ['+FormID.ToString(False)+']';
+        Result := 'FFFF - None Reference ['+FormID.ToString+']';
     if wbReportMode and not (dfNoReport in defFlags) then
       if wbReportFormIDs then begin
         if not Assigned(FoundSignatures) then
@@ -20814,9 +20849,10 @@ begin
           FormID := TwbFormID.FromCardinal(aInt);
           MainRecord := _File.ContextObj.RecordByLoadOrderFormID(FormID, _File);
         end else begin
-          if FormID.ObjectID < $800 then
+          var lLayout := defSlotLayout(aElement);
+          if FormID.ObjectID[lLayout] < $800 then
             if not _File.AllowHardcodedRangeUse then
-              FormID.FileID := TwbFileID.Null;
+              FormID.FileID[lLayout] := TwbFileID.Null;
 
           if FormID.IsHardcoded then
             MainRecord := _File.ContextObj.GameMasterRecordByFormID(FormID)
@@ -20831,11 +20867,11 @@ begin
         end;
 
         if dfUnmappedFormID in defFlags then begin
-          if FormID.FileID.FullSlot <> 0 then
-            Exit('['+FormID.ToString(False)+'] <Error: Unmapped FormIDs must belong to File ID [00]>');
+          if FormID.FileID[defSlotLayout(aElement)].FullSlot <> 0 then
+            Exit('['+FormID.ToString+'] <Error: Unmapped FormIDs must belong to File ID [00]>');
           if _File.FileStates * [fsIsGameMaster, fsIsHardcoded] = [] then
             if (_File.MasterCount[True] < 1) or (_File.Masters[0, True].FileStates * [fsIsGameMaster] = []) then
-              Exit('['+FormID.ToString(False)+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
+              Exit('['+FormID.ToString+'] <Error: Unmapped FormIDs can only be different from 00000000 in modules which have the game master as their first master>');
         end;
 
         if Assigned(MainRecord) then begin
@@ -20872,7 +20908,7 @@ begin
         end;
       except
         on E: Exception do begin
-          Result := '['+FormID.ToString(False)+'] <Error: '+E.Message+'>';
+          Result := '['+FormID.ToString+'] <Error: '+E.Message+'>';
           if wbReportMode and not (dfNoReport in defFlags) then
             if wbReportFormIDs then begin
               if not Assigned(FoundSignatures) then
@@ -20889,7 +20925,7 @@ begin
   end;
 
   if FormID.IsHardcoded then begin
-    s := FormID.ToString(False);
+    s := FormID.ToString;
     Result := '['+s+'] <Warning: Could not be resolved, but is possibly hardcoded in the engine>';
     if wbReportMode and not (dfNoReport in defFlags) then
       if wbReportFormIDs then begin
@@ -20908,7 +20944,7 @@ begin
         end;
       end;
   end else begin
-    s := FormID.ToString(False);
+    s := FormID.ToString;
     Result := '['+s+'] <Error: Could not be resolved>';
     if wbReportMode and not (dfNoReport in defFlags) then
       if wbReportFormIDs then begin
@@ -22402,9 +22438,10 @@ begin
     _File := aElement._File;
     if Assigned(_File) then begin
       try
-        if FormID.ObjectID < $800 then
+        var lLayout := defSlotLayout(aElement);
+        if FormID.ObjectID[lLayout] < $800 then
           if not _File.AllowHardcodedRangeUse then
-            FormID.FileID := TwbFileID.Null;
+            FormID.FileID[lLayout] := TwbFileID.Null;
 
         if FormID.IsHardcoded then
           MainRecord := _File.ContextObj.GameMasterRecordByFormID(FormID)
@@ -25121,16 +25158,16 @@ end;
 
 { TwbFormID }
 
-class operator TwbFormID.Add(const A: TwbFormID; B: Int64): TwbFormID;
-begin
-  Result := A;
-  Result.ObjectID := Result.ObjectID + B;
-end;
-
-function TwbFormID.ChangeFileID(const aFileID: TwbFileID): TwbFormID;
+function TwbFormID.Offset(aLayout: TwbSlotLayout; aDelta: Int64): TwbFormID;
 begin
   Result := Self;
-  Result.FileID := aFileID;
+  Result.ObjectID[aLayout] := Result.ObjectID[aLayout] + aDelta;
+end;
+
+function TwbFormID.ChangeFileID(aLayout: TwbSlotLayout; const aFileID: TwbFileID): TwbFormID;
+begin
+  Result := Self;
+  Result.FileID[aLayout] := aFileID;
 end;
 
 class function TwbFormID.Compare(const A, B: TwbFormID): Integer;
@@ -25181,16 +25218,17 @@ begin
   Result := A._FormID = B._FormID;
 end;
 
-function TwbFormID.GetFileID: TwbFileID;
+function TwbFormID.GetFileID(aLayout: TwbSlotLayout): TwbFileID;
 begin
-  Result := TwbFileID.CreateFromFormID(_FormID);
+  Result := TwbFileID.CreateFromFormID(_FormID, aLayout);
 end;
 
-function TwbFormID.GetObjectID: Cardinal;
+function TwbFormID.GetObjectID(aLayout: TwbSlotLayout): Cardinal;
 begin
-  if FileID.IsLightSlot then
+  var lFileID := TwbFileID.CreateFromFormID(_FormID, aLayout);
+  if lFileID.IsLightSlot then
     Result := _FormID and $FFF
-  else if FileID.IsMediumSlot then
+  else if lFileID.IsMediumSlot then
     Result := _FormID and $FFFF
   else
     Result := _FormID and $FFFFFF;
@@ -25206,11 +25244,11 @@ begin
   Result := A._FormID >= B._FormID;
 end;
 
-class operator TwbFormID.Inc(const A: TwbFormID): TwbFormID;
+function TwbFormID.Next(aLayout: TwbSlotLayout): TwbFormID;
 var
   Mask: Cardinal;
 begin
-  var lFileID := a.FileID;
+  var lFileID := FileID[aLayout];
 
   if lFileID.IsLightSlot then
     Mask := $FFF
@@ -25219,7 +25257,7 @@ begin
   else
     Mask := $FFFFFF;
 
-  Result._FormID := (A._FormID and (not Mask)) or Max(Succ(A._FormID and Mask) and Mask, 2048);
+  Result._FormID := (_FormID and (not Mask)) or Max(Succ(_FormID and Mask) and Mask, 2048);
 end;
 
 function TwbFormID.IsHardcoded: Boolean;
@@ -25267,31 +25305,31 @@ begin
   Result := TwbFormID.FromCardinal(0);
 end;
 
-procedure TwbFormID.SetFileID(const Value: TwbFileID);
+procedure TwbFormID.SetFileID(aLayout: TwbSlotLayout; const Value: TwbFileID);
 begin
   var lFormID := _FormID;
   try
-    var lObjectID := ObjectID;
+    var lObjectID := ObjectID[aLayout];
 
     _FormID := Value.BaseFormID;
 
-    SetObjectID(lObjectID, True);
+    SetObjectID(aLayout, lObjectID, True);
   except
     _FormID := lFormID;
     raise;
   end;
 end;
 
-procedure TwbFormID.SetObjectID(const Value: Cardinal);
+procedure TwbFormID.SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal);
 begin
-  SetObjectID(Value, False);
+  SetObjectID(aLayout, Value, False);
 end;
 
-procedure TwbFormID.SetObjectID(const Value: Cardinal; aSilent: Boolean);
+procedure TwbFormID.SetObjectID(aLayout: TwbSlotLayout; const Value: Cardinal; aSilent: Boolean);
 var
   Mask: Cardinal;
 begin
-  var lFileID := FileID;
+  var lFileID := FileID[aLayout];
 
   if lFileID.IsLightSlot then
     Mask := $FFF
@@ -25312,20 +25350,19 @@ begin
   Result := A._FormID - B._FormID;
 end;
 
-class operator TwbFormID.Subtract(const A: TwbFormID; B: Int64): TwbFormID;
+function TwbFormID.ToString: string;
 begin
-  Result := A;
-  Result.ObjectID := Result.ObjectID - B;
+  Result := IntToHex64(_FormID, 8);
 end;
 
-function TwbFormID.ToString(aForDisplay: Boolean): string;
+function TwbFormID.ToDisplayString(aLayout: TwbSlotLayout): string;
 begin
   Result := IntToHex64(_FormID, 8);
 
-  if wbPrettyFormID and aForDisplay then begin
+  if wbPrettyFormID then begin
     Insert(' ', Result, 3);
 
-    var lFileID := FileID;
+    var lFileID := FileID[aLayout];
     if lFileID.IsLightSlot then
       Insert(' ', Result, 7)
     else if lFileID.IsMediumSlot then
@@ -25338,25 +25375,25 @@ end;
 function TwbFileID.BaseFormID: Cardinal;
 begin
   if IsLightSlot then
-    Result := (Cardinal(LightFullSlot) shl 24) or (Cardinal(_LightSlot) shl 12)
+    Result := (Cardinal($FE) shl 24) or (Cardinal(_LightSlot) shl 12)
   else if IsMediumSlot then
-    Result := (Cardinal(MediumFullSlot) shl 24) or (Cardinal(_MediumSlot) shl 16)
+    Result := (Cardinal($FD) shl 24) or (Cardinal(_MediumSlot) shl 16)
   else if IsFullSlot then
     Result := Cardinal(_FullSlot) shl 24
   else
     Result := $FFFFFFFF;
 end;
 
-class function TwbFileID.CreateFromFormID(aFormID: Cardinal): TwbFileID;
+class function TwbFileID.CreateFromFormID(aFormID: Cardinal; aLayout: TwbSlotLayout): TwbFileID;
 begin
   Result._FullSlot := aFormID shr 24;
 
-  if (Result._FullSlot = LightFullSlot) and (_CurrentContext.Settings.PseudoLight or wbIsLightSupported) then
+  if (skLight in aLayout) and (Result._FullSlot = $FE) then
     Result._LightSlot := (aFormID shr 12) and $FFF
   else
     Result._LightSlot := -1;
 
-  if (Result._FullSlot = MediumFullSlot) and (_CurrentContext.Settings.PseudoMedium or wbIsMediumSupported) then
+  if (skMedium in aLayout) and (Result._FullSlot = $FD) then
     Result._MediumSlot := (aFormID shr 16) and $FF
   else
     Result._MediumSlot := -1;
@@ -25371,21 +25408,21 @@ begin
   end;
 end;
 
-class function TwbFileID.CreateMedium(aMediumSlot: SmallInt): TwbFileID;
+class function TwbFileID.CreateMedium(aMediumSlot: SmallInt; aLayout: TwbSlotLayout): TwbFileID;
 begin
-  Assert(wbIsMediumSupported or _CurrentContext.Settings.PseudoMedium);
+  Assert(skMedium in aLayout);
   with Result do begin
-    _FullSlot := MediumFullSlot;
+    _FullSlot := $FD;
     _MediumSlot := aMediumSlot;
     _LightSlot := -1;
   end;
 end;
 
-class function TwbFileID.CreateLight(aLightSlot: SmallInt): TwbFileID;
+class function TwbFileID.CreateLight(aLightSlot: SmallInt; aLayout: TwbSlotLayout): TwbFileID;
 begin
-  Assert(wbIsLightSupported or _CurrentContext.Settings.PseudoLight);
+  Assert(skLight in aLayout);
   with Result do begin
-    _FullSlot := LightFullSlot;
+    _FullSlot := $FE;
     _MediumSlot := -1;
     _LightSlot := aLightSlot;
   end;
@@ -25408,9 +25445,9 @@ begin
     Result := mtFull;
 end;
 
-class function TwbFileID.MediumFullSlot: SmallInt;
+class function TwbFileID.MediumFullSlot(aLayout: TwbSlotLayout): SmallInt;
 begin
-  if _CurrentContext.Settings.PseudoMedium or wbIsMediumSupported then
+  if skMedium in aLayout then
     Result := $FD
   else
     Result := -1;
@@ -25426,35 +25463,35 @@ begin
   Result := (_LightSlot >= 0) or (_MediumSlot >= 0) or (_FullSlot >= 0);
 end;
 
-class function TwbFileID.LightFullSlot: SmallInt;
+class function TwbFileID.LightFullSlot(aLayout: TwbSlotLayout): SmallInt;
 begin
-  if _CurrentContext.Settings.PseudoLight or wbIsLightSupported then
+  if skLight in aLayout then
     Result := $FE
   else
     Result := -1;
 end;
 
-class function TwbFileID.MaxFullSlot: SmallInt;
+class function TwbFileID.MaxFullSlot(aLayout: TwbSlotLayout): SmallInt;
 begin
   Result := $FE;
-  if _CurrentContext.Settings.PseudoLight or wbIsLightSupported then begin
+  if skLight in aLayout then begin
     Dec(Result); //$FD
-    if _CurrentContext.Settings.PseudoMedium or wbIsMediumSupported then
+    if skMedium in aLayout then
       Dec(Result); //$FC
   end;
 end;
 
-class function TwbFileID.MaxMediumSlot: SmallInt;
+class function TwbFileID.MaxMediumSlot(aLayout: TwbSlotLayout): SmallInt;
 begin
- if _CurrentContext.Settings.PseudoMedium or wbIsMediumSupported then
+ if skMedium in aLayout then
    Result := $FF
  else
    Result := -1;
 end;
 
-class function TwbFileID.MaxLightSlot: SmallInt;
+class function TwbFileID.MaxLightSlot(aLayout: TwbSlotLayout): SmallInt;
 begin
- if _CurrentContext.Settings.PseudoLight or wbIsLightSupported then
+ if skLight in aLayout then
    Result := $FFF
  else
    Result := -1;

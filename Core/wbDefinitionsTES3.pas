@@ -2179,8 +2179,9 @@ begin
       Result := Assigned(lFRMR);
       if Result then begin
         aFormID := TwbFormID.FromCardinal(lFRMR.NativeValue);
-        if aFormID.FileID.FullSlot = 0 then
-          aFormID.FileID := TwbFileID.CreateFull($FF);
+        var lLayout := aMainRecord.ContextObj.SlotLayout;
+        if aFormID.FileID[lLayout].FullSlot = 0 then
+          aFormID.FileID[lLayout] := TwbFileID.CreateFull($FF);
       end;
     end)
     .SetAfterLoad(wbDeletedAfterLoad);

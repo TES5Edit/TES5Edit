@@ -1561,7 +1561,7 @@ begin
 
   if Assigned(aElement) then begin
     ObjectID := aElement._File.NextObjectID; // remember ID
-    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID, True).ToString(False);
+    s := aElement._File.FileFormIDtoLoadOrderFormID(aElement._File.NewFormID, True).ToString;
   end;
 
   try
@@ -5443,7 +5443,7 @@ begin
       s := ReplaceText(s, '0x', '');
 
     FormID := TwbFormID.FromStrDef(s, 0);
-    FileID := FormID.FileID;
+    FileID := FormID.FileID[xeContext.SlotLayout];
     if not FormID.IsNull then begin
       _File := nil;
       j := Low(Files);
@@ -5453,7 +5453,7 @@ begin
         Inc(j);
       end;
       while Assigned(_File) do begin
-        FormID.FileID := TwbFileID.CreateFull(_File.MasterCount[True]);
+        FormID.FileID[xeContext.SlotLayout] := TwbFileID.CreateFull(_File.MasterCount[True]);
         MainRecord := _File.RecordByFormID[FormID, True, True];
         if Assigned(MainRecord) then begin
           Node := FindNodeForElement(MainRecord);
@@ -8167,7 +8167,7 @@ begin
     Item.Name := aMaster.ReferencedBy[i].Name;
     Item.Signature := aMaster.ReferencedBy[i].Signature;
     Item.FileName := aMaster.ReferencedBy[i]._File.Name;
-    Item.LoadOrderFormID := aMaster.ReferencedBy[i].LoadOrderFormID.ToString(True);
+    Item.LoadOrderFormID := aMaster.ReferencedBy[i].LoadOrderFormID.ToDisplayString(xeContext.SlotLayout);
     Item.RawFileName := aMaster.ReferencedBy[i]._File.FileName;
     Item.Data := Pointer(aMaster.ReferencedBy[i]);
     lvReferencedByAllItems.Add(Item);
@@ -8920,10 +8920,10 @@ begin
   if not Assigned(CSNPC) then
     raise Exception.Create('Can''t find CSNPCBanditBoss script');
 
-  CSNPCID           := CSNPC.LoadOrderFormID.ToString(False);
-  CSNPCBossID       := CSNPCBoss.LoadOrderFormID.ToString(False);
-  CSNPCBanditID     := CSNPCBandit.LoadOrderFormID.ToString(False);
-  CSNPCBanditBossID := CSNPCBanditBoss.LoadOrderFormID.ToString(False);
+  CSNPCID           := CSNPC.LoadOrderFormID.ToString;
+  CSNPCBossID       := CSNPCBoss.LoadOrderFormID.ToString;
+  CSNPCBanditID     := CSNPCBandit.LoadOrderFormID.ToString;
+  CSNPCBanditBossID := CSNPCBanditBoss.LoadOrderFormID.ToString;
 
   for i := MMMESM to High(Files) do
     if (i = MMMESM) or Files[i].HasMaster('Mart''s Monster Mod.esm') then
@@ -9053,7 +9053,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(OldMaster.FileFileID[True]), True, True];
+          OldRecord := OldMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(xeContext.SlotLayout, OldMaster.FileFileID[True]), True, True];
           if not Assigned(OldRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': Old Record with FormID "'+s+'" was not found in old Master "'+OldMaster.FileName+'".');
             Continue;
@@ -9065,7 +9065,7 @@ begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New FormID "'+s+'" is not in the valid range.');
             Continue;
           end;
-          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(NewMaster.FileFileID[True]), True, True];
+          NewRecord := NewMaster.RecordByFormID[TwbFormID.FromCardinal(j).ChangeFileID(xeContext.SlotLayout, NewMaster.FileFileID[True]), True, True];
           if not Assigned(NewRecord) then begin
             AddMessage('Skipping line '+IntToStr(i+1)+': New Record with FormID "'+s+'" was not found in new Master "'+NewMaster.FileName+'".');
             Continue;
@@ -9141,7 +9141,7 @@ begin
         ShowChangeReferencedBy(rlOldRecord.LoadOrderFormID, rlNewRecord.LoadOrderFormID, rlReferencedBy, True);
         RefRecord := _File.RecordByFormID[rlOldRecord.LoadOrderFormID, False, True];
         if Assigned(RefRecord) and _File.Equals(RefRecord._File) then begin
-          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToString(True)+'] to ['+rlNewRecord.LoadOrderFormID.ToString(True)+']');
+          AddMessage('Changing FormID ['+RefRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+'] to ['+rlNewRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout)+']');
           RefRecord.LoadOrderFormID := rlNewRecord.LoadOrderFormID;
         end;
       end;
@@ -9410,11 +9410,11 @@ begin
     OldFormID := MainRecord.LoadOrderFormID;
     if not Assigned(_File) then begin
 
-      s := OldFormID.ToString(False);
+      s := OldFormID.ToString;
       if InputQuery('New FormID', 'Please enter the new FormID in hex. e.g. 0404CC43. The FormID needs to be a load order corrected form ID.', s) then begin
 
         if s = '' then begin
-          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID, True).ToString(False);
+          s := MainRecord._File.FileFormIDtoLoadOrderFormID(MainRecord._File.NewFormID, True).ToString;
           if not InputQuery('New FormID generated', 'Please verify the newly generated FormID. The FormID needs to be a load order corrected form ID.', s) then
             Exit;
         end;
@@ -9428,7 +9428,7 @@ begin
 
     end else begin
 
-      OldFileID := OldFormID.FileID;
+      OldFileID := OldFormID.FileID[xeContext.SlotLayout];
       if OldFileID = _File.LoadOrderFileID then
         Continue;
       NewFormID := _File.FileFormIDtoLoadOrderFormID(_File.NewFormID, True);
@@ -9440,12 +9440,12 @@ begin
 
     pgMain.ActivePage := tbsMessages;
 
-    AddMessage('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
+    AddMessage('Changing FormID ['+OldFormID.ToDisplayString(xeContext.SlotLayout)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToDisplayString(xeContext.SlotLayout)+']');
 
     try
       MainRecord._File.LoadOrderFormIDtoFileFormID(NewFormID, True);
     except
-      NewFileID := NewFormID.FileID;
+      NewFileID := NewFormID.FileID[xeContext.SlotLayout];
       _OldFile := MainRecord._File;
       _NewMasterFile := nil;
       for i := Low(Files) to High(Files) do begin
@@ -10271,7 +10271,7 @@ begin
                       if LVLIs.Find(MainRecord2.EditorID+Race, l) then begin
                         with FormIDs[Cardinal(LVLIs.Objects[l])] do
                           if LoadOrder <= Files[i].LoadOrder then try
-                            Container2.Elements[0].EditValue := FormID.ToString(False)
+                            Container2.Elements[0].EditValue := FormID.ToString
                           except
                             on E: Exception do
                               PostAddMessage('Error updating Item '+MainRecord2.Name+' for '+MainRecord.Name+': '+ E.Message);
@@ -12273,6 +12273,7 @@ var
   MainRecords   : TDynMainRecords;
   TargetFormIDs : TArray<TwbFormID>;
   HighFormID    : TwbFormID;
+  lLayout       : TwbSlotLayout;
 
   function Prepare: Boolean;
   var
@@ -12406,14 +12407,14 @@ var
         end;
 
         StartFormID := TwbFormID.FromStrDef(s, 0);
-      until (StartFormID.FileID.FullSlot = 0) and not (StartFormID.ToCardinal < LowestFormID) and (not TargetIsLight or (StartFormID.ObjectID <= $FFF));
+      until (StartFormID.FileID[lLayout].FullSlot = 0) and not (StartFormID.ToCardinal < LowestFormID) and (not TargetIsLight or (StartFormID.ObjectID[lLayout] <= $FFF));
     end;
 
     SetLength(MainRecords, SourceFile.RecordCount);
     j := 0;
     for i := Pred(SourceFile.RecordCount) downto 0 do begin
       MainRecords[j] := SourceFile.Records[i];
-      if MainRecords[j].LoadOrderFormID.FileID = SourceFile.LoadOrderFileID then
+      if MainRecords[j].LoadOrderFormID.FileID[lLayout] = SourceFile.LoadOrderFileID then
         Inc(j);
     end;
     if j < 1 then begin
@@ -12426,17 +12427,17 @@ var
     TakenFormIDs := nil;
     SetLength(TakenFormIDs, j);
 
-    StartFormID.FileID := TargetFile.LoadOrderFileID;
+    StartFormID.FileID[lLayout] := TargetFile.LoadOrderFileID;
     HighFormID := StartFormID;
     if Sender = mniNavCompactFormIDs then
-      EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
+      EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, TargetFile.LoadOrderFileID)
     else if not TargetFile.Equals(SourceFile) then begin
       if TargetFile.IsLight then
-        EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(TargetFile.LoadOrderFileID)
+        EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, TargetFile.LoadOrderFileID)
       else
-        EndFormID := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(TargetFile.LoadOrderFileID);
+        EndFormID := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, TargetFile.LoadOrderFileID);
     end else begin
-      EndFormID := StartFormID + j;
+      EndFormID := StartFormID.Offset(lLayout, j);
       HighFormID := EndFormID;
     end;
 
@@ -12473,7 +12474,7 @@ var
 
           while (j <= High(TakenFormIDs)) and TakenFormIDs[j] do
             Inc(j);
-          NewFormID := StartFormID + j;
+          NewFormID := StartFormID.Offset(lLayout, j);
           Inc(j);
         end else begin
           NewFormID := TwbFormID.Null;
@@ -12481,7 +12482,7 @@ var
           repeat
             if PreserveObjectID then begin
               if NewFormID.IsNull then
-                NewFormID := OldFormID.ChangeFileID(TargetFile.LoadOrderFileID)
+                NewFormID := OldFormID.ChangeFileID(lLayout, TargetFile.LoadOrderFileID)
               else
                 if AllOrNothing then begin
                   ShowMessage(Format('The FormID [%s] which should be assigned to: ' + CRLF + CRLF +
@@ -12496,7 +12497,7 @@ var
                   Break;
                 end;
             end else begin
-              NewFormID := StartFormID + j;
+              NewFormID := StartFormID.Offset(lLayout, j);
               Inc(j);
             end;
             TargetMainRecord := TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True];
@@ -12535,7 +12536,7 @@ var
             Continue;
 
           repeat
-            NewFormID := StartFormID + j;
+            NewFormID := StartFormID.Offset(lLayout, j);
             Inc(j);
           until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True]);
 
@@ -12581,12 +12582,13 @@ var
   procedure UpdateNextObjectID;
   begin
     if TargetFile.IsEditable then begin
-      Inc(HighFormID);
-      TargetFile.NextObjectID := HighFormID.ObjectID;
+      HighFormID := HighFormID.Next(lLayout);
+      TargetFile.NextObjectID := HighFormID.ObjectID[lLayout];
     end;
   end;
 
 begin
+  lLayout := xeContext.SlotLayout;
   if Prepare then begin
     SourceFile.BuildOrLoadRef(False);
     PerformLongAction('Changing FormIDs', 'Processed Records: 0', procedure
@@ -12606,7 +12608,7 @@ begin
         OldFormID := MainRecord.LoadOrderFormID;
         NewFormID := TargetFormIDs[k];
 
-        wbProgress('Changing FormID ['+OldFormID.ToString(True)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToString(True)+']');
+        wbProgress('Changing FormID ['+OldFormID.ToDisplayString(lLayout)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToDisplayString(lLayout)+']');
 
         Master := MainRecord.MasterOrSelf;
         SetLength(ReferencedBy, Master.ReferencedByCount);
@@ -16415,7 +16417,7 @@ begin
 
     if Counter <= 0 then begin
       if not aSilent then
-        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToString(True) + ' but none of them are in editable files.');
+        ShowMessage('There are ' + IntToStr(Length(ReferencedBy)) + ' records referencing FormID ' + OldFormID.ToDisplayString(xeContext.SlotLayout) + ' but none of them are in editable files.');
       Exit;
     end;
 
@@ -16456,7 +16458,7 @@ begin
           end;
         end;
 
-        wbProgress(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToString(True) + '] have been updated to [' + NewFormID.ToString(True) + ']');
+        wbProgress(IntToStr(Counter) + ' records out of '+IntToStr(Length(ReferencedBy))+' total records which reference FormID [' + OldFormID.ToDisplayString(xeContext.SlotLayout) + '] have been updated to [' + NewFormID.ToDisplayString(xeContext.SlotLayout) + ']');
       end);
 
       if not aSilent then begin
@@ -16594,7 +16596,7 @@ var
 
     for i := 0 to Pred(Keywords.ElementCount) do
       if Supports(Keywords.Elements[i].LinksTo, IwbMainRecord, Keyword) then begin
-        s := Keyword.LoadOrderFormID.ToString(False);
+        s := Keyword.LoadOrderFormID.ToString;
         if slKeywords.IndexOf(s) < 0 then begin
           SetLength(arKeywords, Succ(Length(arKeywords)));
           arKeywords[High(arKeywords)] := Keyword;
@@ -16673,7 +16675,7 @@ var
           with CheckListBox1 do
             for i := 0 to Pred(Count) do
               if Checked[i] then
-                slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString(False), Items.Objects[i]);
+                slKeywords.AddObject(IwbMainRecord(Pointer(Items.Objects[i])).LoadOrderFormID.ToString, Items.Objects[i]);
 
         slKeywords.Sorted := True;
 
@@ -19144,7 +19146,7 @@ begin
               if MainRecord.Signature = xeContext.GameDefObj.HeaderSignature then
                 CellText := 'File Header'
               else begin
-                CellText := MainRecord.LoadOrderFormID.ToString(True);
+                CellText := MainRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout);
               end;
             end;
           1: CellText := MainRecord.EditorID;
@@ -19259,7 +19261,7 @@ begin
             if MainRecord.Signature = 'TES4' then
               CompareText := 'File Header'
             else
-              CompareText := MainRecord.LoadOrderFormID.ToString(True);
+              CompareText := MainRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout);
           end;
         1: CompareText := MainRecord.EditorID;
         2: CompareText := MainRecord.DisplayName[True];
@@ -20006,7 +20008,7 @@ begin
 
   case Column of
     0: CellText := Element._File.Name;
-    1: CellText := (Element as IwbMainRecord).LoadOrderFormID.ToString(True);
+    1: CellText := (Element as IwbMainRecord).LoadOrderFormID.ToDisplayString(xeContext.SlotLayout);
   else
     Element := NodeDatas[Column].Element;
     if not Assigned(Element) then
@@ -20016,7 +20018,7 @@ begin
       if Supports(Element, IwbMainRecord, MainRecord) then begin
         CellText := MainRecord.EditorID;
         if CellText = '' then
-          CellText := MainRecord.LoadOrderFormID.ToString(True);
+          CellText := MainRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout);
       end;
     end else
       CellText := Element.Value;
@@ -20851,8 +20853,9 @@ var
     i: Integer;
   begin
     Result := 0;
+    var lLayout := xeContext.SlotLayout;
     for i := 0 to Pred(aFile.RecordCount) do
-      if aFile.Records[i].LoadOrderFormID.FileID = aFile.LoadOrderFileID then
+      if aFile.Records[i].LoadOrderFormID.FileID[lLayout] = aFile.LoadOrderFileID then
         Inc(Result);
   end;
 
@@ -21584,7 +21587,7 @@ begin
   case PluggyLinkState of
     plsReference: begin
       FormID := PluggyFormID;
-      if FormID.FileID.FullSlot = $FF then
+      if FormID.FileID[xeContext.SlotLayout].FullSlot = $FF then
         FormID := PluggyBaseFormID;
     end;
     plsBase:
@@ -21602,7 +21605,8 @@ begin
   if FormID.IsNull then
     Exit;
 
-  FileID := FormID.FileID;
+  var lLayout := xeContext.SlotLayout;
+  FileID := FormID.FileID[lLayout];
   if wbIsLightSupported or xeContext.Settings.PseudoLight or xeContext.Settings.PseudoUpdate then begin
     _File := nil;
     for i := Low(Files) to High(Files) do
@@ -21618,7 +21622,7 @@ begin
     _File := Files[FileID.FullSlot];
   end;
 
-  FormID.FileID := _File.FileFileID[True];
+  FormID.FileID[lLayout] := _File.FileFileID[True];
   MainRecord := _File.RecordByFormID[FormID, True, True];
   if Assigned(MainRecord) then begin
     MainRecord := MainRecord.WinningOverride;
