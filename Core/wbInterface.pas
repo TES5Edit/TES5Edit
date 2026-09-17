@@ -26116,6 +26116,12 @@ begin
       _File := aElement._File;
       if Assigned(_File) then
         Exit(_File.Encoding[dfTranslatable in defFlags]);
+      var lContext := aElement.ContextObj;
+      if Assigned(lContext) then
+        if dfTranslatable in defFlags then
+          Exit(lContext.Settings.EncodingTrans)
+        else
+          Exit(lContext.Settings.Encoding);
     end;
     if dfTranslatable in defFlags then
       Result := _CurrentContext.Settings.EncodingTrans
