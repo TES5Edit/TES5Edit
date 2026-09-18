@@ -1170,7 +1170,7 @@ begin
   lInputs.GameExeName := wbGameExeName;
   lInputs.GameMasterEsm := wbGameMasterEsm;
   lInputs.AppName := wbAppName;
-  xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs));
+  xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
   xeContext.Settings := lSettings;
@@ -1429,6 +1429,9 @@ begin
 
   if wbFindCmdLineParam('cp', s) or wbFindCmdLineParam('cp-trans', s) then
     xeContext.Settings.EncodingTrans :=  wbMBCSEncoding(s);
+
+  xeContext.GameDefObj.EnsureDefined;
+  xeContext.Settings.CreationClubContentFileName := xeContext.GameDefObj.CreationClubContentFileName;
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;

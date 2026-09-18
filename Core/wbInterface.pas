@@ -3948,6 +3948,7 @@ type
     gdRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
     gdRecordDefMap     : TStringList;
     gdRecordsInit      : Boolean;
+    gdDefined          : Boolean;
     gdGameMode         : TwbGameMode;
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
@@ -3994,6 +3995,8 @@ type
     constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource); overload;
     constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs); overload;
     destructor Destroy; override;
+
+    procedure EnsureDefined;
 
     property ToolSource: TwbToolSource
       read gdToolSource;
@@ -5898,7 +5901,7 @@ var
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs): IwbGameDef; overload;
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef; overload;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 
 implementation
@@ -6837,6 +6840,14 @@ end;
 
 procedure TwbGameDef.SwitchToCoSave;
 begin
+end;
+
+procedure TwbGameDef.EnsureDefined;
+begin
+  if gdDefined then
+    Exit;
+  gdDefined := True;
+  Define;
 end;
 
 var
@@ -7967,7 +7978,7 @@ begin
   Result := wbCreateGameDef(aGameMode, aToolSource, Default(TwbGameDefInputs));
 end;
 
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs): IwbGameDef;
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef;
 begin
   var lGameDefClass := _GameDefClasses[aGameMode, aToolSource];
   if not Assigned(lGameDefClass) then
@@ -7976,7 +7987,8 @@ begin
       GetEnumName(TypeInfo(TwbToolSource), Ord(aToolSource)));
   var lGameDef := lGameDefClass.Create(aGameMode, aToolSource, aInputs);
   Result := lGameDef;
-  lGameDef.Define;
+  if aDefine then
+    lGameDef.EnsureDefined;
 end;
 
 function wbDefToName(const aDef: IwbDef): string;
