@@ -20296,7 +20296,7 @@ begin
   if Assigned(eContainer) then
     Result := IwbContainerInternal(eContainer).GameDefObj
   else
-    Result := _CurrentGameDef;
+    Result := nil;
 end;
 
 function TwbElement.ContextObj: TwbGameContext;
@@ -20304,7 +20304,7 @@ begin
   if Assigned(eContainer) then
     Result := IwbContainerInternal(eContainer).ContextObj
   else
-    Result := _CurrentContext;
+    Result := nil;
 end;
 
 function TwbElement.GetGameDefObj: TwbGameDef;
@@ -26433,7 +26433,6 @@ end;
 
 initialization
   wbGameContextClass := TwbLoadingGameContext;
-  wbCreateGameContext(_CurrentGameDef as IwbGameDef);
   _MastersGeneration := 1;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   _ResizeLock.Initialize;
@@ -26448,7 +26447,6 @@ initialization
   SubRecordOrderList.Sorted := True;
   SubRecordOrderList.Duplicates := dupIgnore;
 finalization
-  wbMakeCurrentContext(nil);
   WriteSubRecordOrderList;
   FreeAndNil(SubRecordOrderList);
   wbContainedInDef[1] := nil;

@@ -1385,7 +1385,8 @@ uses
   xeRichEditForm,
   xeScriptForm,
   xeTipForm,
-  xeViewElementsForm;
+  xeViewElementsForm,
+  xeWorldspaceCellDetailsForm;
 
 function wbFormatElapsedTime(aElapsed: double): string;
 var
@@ -4648,6 +4649,7 @@ begin
   TfrmMain(splElements).OnMouseDown := splElementsMouseDown;
 
   xeContext.Settings.FormIDCallback := GetFormIDCallback;
+  xeContext.Settings.CellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
 
   tbsView.TabVisible := False;
   tbsWEAPSpreadsheet.TabVisible := False;
@@ -12991,7 +12993,7 @@ begin
         Signatures.Duplicates := dupIgnore;
         for i := Pred(BaseSignatures.Count) downto 0 do
           {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
-          if _CurrentGameDef.FindRecordDef(BaseSignatures[i], MainRecordDef) then
+          if xeContext.GameDefObj.FindRecordDef(BaseSignatures[i], MainRecordDef) then
           {$WARN IMPLICIT_STRING_CAST_LOSS ON}
             for j := 0 to Pred(MainRecordDef^.ReferenceSignatureCount) do
               Signatures.Add(MainRecordDef^.ReferenceSignatures[j]);
@@ -12999,7 +13001,7 @@ begin
         for i := Pred(Signatures.Count) downto 0 do begin
           FoundAny := False;
           {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
-          if _CurrentGameDef.FindRecordDef(Signatures[i], MainRecordDef) then
+          if xeContext.GameDefObj.FindRecordDef(Signatures[i], MainRecordDef) then
           {$WARN IMPLICIT_STRING_CAST_LOSS ON}
             for j := 0 to Pred(MainRecordDef^.BaseSignatureCount) do
               if BaseSignatures.Find(MainRecordDef^.BaseSignatures[j], Dummy) then begin
@@ -13054,7 +13056,7 @@ begin
 
     for i := Pred(TopLevelGroups.Count) downto 0 do
       {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
-      if _CurrentGameDef.FindRecordDef(TopLevelGroups[i], MainRecordDef) then begin
+      if xeContext.GameDefObj.FindRecordDef(TopLevelGroups[i], MainRecordDef) then begin
       {$WARN IMPLICIT_STRING_CAST_LOSS ON}
         if MainRecordDef^.IsReference then
           PotentiallyUnfilteredRefs := True;
@@ -19004,9 +19006,9 @@ begin
                 var lName2: string := lLabel2;
                 if xeSortGroupsByFullName then begin
                   var lRecordDef: PwbMainRecordDef;
-                  if _CurrentGameDef.FindRecordDef(lLabel1, lRecordDef) then
+                  if xeContext.GameDefObj.FindRecordDef(lLabel1, lRecordDef) then
                     lName1 := lRecordDef.Name;
-                  if _CurrentGameDef.FindRecordDef(lLabel2, lRecordDef) then
+                  if xeContext.GameDefObj.FindRecordDef(lLabel2, lRecordDef) then
                     lName2 := lRecordDef.Name;
                 end;
                 Result := CompareText(
@@ -21794,7 +21796,7 @@ begin
     try
       {if ltLoadOrderOffset + ltLoadList.Count >= 255 then begin
         LoaderProgress('Too many plugins selected. Adding '+IntToStr(ltLoadList.Count)+' files would exceed the maximum index of 254');
-        wbCurrentContext.LoaderError := True;
+        xeContext.LoaderError := True;
       end else} begin
         if xeContext.ContainerHandler = nil then begin
           xeContext.ContainerHandler := wbCreateContainerHandler(xeContext.GameDefObj);

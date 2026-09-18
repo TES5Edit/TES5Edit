@@ -18,7 +18,9 @@ uses
   Vcl.Controls,
   Vcl.Forms,
   Vcl.Samples.Spin,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls,
+
+  wbInterface;
 type
   TfrmWorldspaceCellDetails = class(TForm)
     rbPersistent: TRadioButton;
@@ -37,12 +39,13 @@ type
     { Public declarations }
   end;
 
+function xeGetCellDetailsForWorldspaceImplementation(aWorldspace: IwbMainRecord; var aPersistent: Boolean; var aGridCell: TwbGridCell): Boolean;
+
 implementation
 
 {$R *.dfm}
 
 uses
-  wbInterface,
   xeInit,
 
   xeMainForm;
@@ -69,6 +72,4 @@ begin
   end;
 end;
 
-initialization
-  xeContext.Settings.CellDetailsForWorldspaceCallback := xeGetCellDetailsForWorldspaceImplementation;
 end.

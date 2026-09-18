@@ -18,6 +18,7 @@ uses
   wbInterface;
 
 var
+  xeContextRef             : IwbGameContext;
   xeContext                : TwbGameContext;
   xeScriptToRun            : string;
   xeSettingsFileName       : string;
@@ -417,7 +418,7 @@ var
   IniFile : TMemIniFile;
   lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
 begin
-  var lGameDef := xeContext.GameDefObj;
+  var lIsOblivionR := wbGameMode = gmTES4R;
   aSettings.ModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
   isEpicNV := false;
 
@@ -492,7 +493,7 @@ begin
 
     if lDataPath <> '' then
     begin
-      if lGameDef.IsOblivionR then
+      if lIsOblivionR then
         lDataPath := IncludeTrailingPathDelimiter(lDataPath) + 'OblivionRemastered\Content\Dev\ObvData\Data\'
       else
         lDataPath := IncludeTrailingPathDelimiter(lDataPath) + DataName[wbGameMode = gmTES3] + '\';
@@ -544,7 +545,7 @@ begin
     // VR games don't create ini file in My Games by default, use the one in the game folder
     if (wbGameMode in [gmTES5VR, gmFO4VR, gmSF1]) and not FileExists(lTheGameIniFileName) then
       lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + '\' + ExtractFileName(lTheGameIniFileName)
-    else if lGameDef.IsOblivionR and not FileExists(lTheGameIniFileName) then
+    else if lIsOblivionR and not FileExists(lTheGameIniFileName) then
       lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + 'Oblivion.ini';
   end;
 
@@ -579,7 +580,7 @@ begin
     end;
 
     // Oblivion Remastered has a hard coded path and ignores ini settings
-    if lGameDef.IsOblivionR then
+    if lIsOblivionR then
       s := 'Saved\SaveGames\';
 
     lSavePath := PathRelativeToFull(lMyGamesTheGamePath, s);
@@ -607,7 +608,7 @@ begin
         lPluginsFileName := lPluginsFileName + wbGameName + '\Plugins.txt'
       else if (wbGameMode = gmFNV) and isEpicNV then
         lPluginsFileName := lPluginsFileName + wbGameName + '_Epic' + '\Plugins.txt'
-      else if lGameDef.IsOblivionR then
+      else if lIsOblivionR then
         lPluginsFileName :=  IncludeTrailingPathDelimiter(aSettings.DataPath) + 'Plugins.txt'
       else
         lPluginsFileName := lPluginsFileName + wbGameName2 + '\Plugins.txt';
@@ -620,7 +621,7 @@ begin
   xeSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
   if not FileExists(xeSettingsFileName) then
   begin
-    if lGameDef.IsOblivionR then
+    if lIsOblivionR then
       xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName2 + '\Plugins.'+LowerCase(wbAppName)+'viewsettings'
     else
       xeSettingsFileName := ChangeFileExt(aSettings.PluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
@@ -1123,7 +1124,7 @@ begin
       var lVRESL := (wbGameMode in [gmTES5VR]) and FileExists(lSettings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
       lInputs.LightSupport := lVRESL;
       lInputs.UpdateSupport := lVRESL;
-      lInputs.CS := xeContext.GameDefObj.IsSkyrimSE and FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
+      lInputs.CS := (wbGameMode in [gmTES5VR, gmSSE, gmEnderalSE]) and FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
       lSettings.AllowESPMasters := True;
       lSettings.AllowESPMastersOnSave := True;
     end;
@@ -1165,7 +1166,8 @@ begin
     Exit(False);
   end;
 
-  xeContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs)) as TwbGameContext;
+  xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs));
+  xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
   xeContext.Settings := lSettings;
 
@@ -1662,8 +1664,5 @@ begin
         ShowMessage(Format('Error loading theme file "%s": %s', [s, E.Message]));
     end;
 end;
-
-initialization
-  xeContext := wbCurrentContext as TwbGameContext;
 
 end.

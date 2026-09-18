@@ -66,6 +66,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
+  HostContextRef       : IwbGameContext;
   HostContext          : TwbGameContext;
   StartTime            : TDateTime;
   DumpGroups           : TStringList;
@@ -568,7 +569,7 @@ begin
   Profile := '';
   case wbToolSource of
     tsPlugins: begin
-      if _CurrentGameDef.FindRecordDef(lGameDef.HeaderSignature, RecordDef) then
+      if lGameDef.FindRecordDef(lGameDef.HeaderSignature, RecordDef) then
         ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
@@ -588,7 +589,7 @@ begin
     tsPlugins: for i := 0 to Pred(lGameDef.GroupOrder.Count) do
       if lGameDef.GroupOrder[i]<>lGameDef.HeaderSignature then begin
         Profile := '';
-        if _CurrentGameDef.FindRecordDef(AnsiString(lGameDef.GroupOrder[i]), RecordDef) then
+        if lGameDef.FindRecordDef(AnsiString(lGameDef.GroupOrder[i]), RecordDef) then
           ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
   end;
@@ -935,7 +936,6 @@ var
   b               : TBytes;
   lSettings       : TwbGameContextSettings;
 begin
-  HostContext := wbCurrentContext as TwbGameContext;
   lSettings := TwbGameContextSettings.Defaults;
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
@@ -1141,7 +1141,8 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
-      HostContext := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource)) as TwbGameContext;
+      HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
+      HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
       HostContext.Settings := lSettings;
 
@@ -1718,7 +1719,7 @@ begin
           end;
 
           if not DontWriteReport then
-            _CurrentGameDef.ReportDefs;
+            HostContext.GameDefObj.ReportDefs;
         end;
       end else if wbToolMode in [tmExport] then begin
         for Pass := epRead to epRemaining do begin

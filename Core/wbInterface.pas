@@ -3318,13 +3318,6 @@ type
   IwbGameDef = interface(IwbInterface)
     ['{A42F48ED-EAF9-4F5A-9CEE-13E73B96E2DF}']
     function GetGameMode: TwbGameMode;
-    function GetGameName: string;
-    function GetGameExeName: string;
-    function GetGameMasterEsm: string;
-    function GetGameName2: string;
-    function GetGameNameReg: string;
-    function GetGameSteamID: string;
-    function GetAppName: string;
     function GetArchiveExtension: string;
     function GetCreationClubContentFileName: string;
     function GetDefaultLandTexture: string;
@@ -3350,20 +3343,6 @@ type
 
     property GameMode: TwbGameMode
       read GetGameMode;
-    property GameName: string
-      read GetGameName;
-    property GameExeName: string
-      read GetGameExeName;
-    property GameMasterEsm: string
-      read GetGameMasterEsm;
-    property GameName2: string
-      read GetGameName2;
-    property GameNameReg: string
-      read GetGameNameReg;
-    property GameSteamID: string
-      read GetGameSteamID;
-    property AppName: string
-      read GetAppName;
     property ArchiveExtension: string
       read GetArchiveExtension;
     property CreationClubContentFileName: string
@@ -3964,12 +3943,9 @@ type
     gdRecordDefHashMap : array[0..Pred(RecordDefHashMapSize)] of Integer;
     gdRecordDefMap     : TStringList;
     gdRecordsInit      : Boolean;
-    gdLive             : Boolean;
     gdGameMode         : TwbGameMode;
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
-    gdLiveKeyValid         : Boolean;
-    gdLiveKeyGameMode      : TwbGameMode;
     gdDefaultFormVersion : Word;
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
@@ -3982,13 +3958,6 @@ type
     procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
 
     function GetGameMode: TwbGameMode;
-    function GetGameName: string;
-    function GetGameExeName: string;
-    function GetGameMasterEsm: string;
-    function GetGameName2: string;
-    function GetGameNameReg: string;
-    function GetGameSteamID: string;
-    function GetAppName: string;
     function GetArchiveExtension: string;
     function GetCreationClubContentFileName: string;
     function GetDefaultLandTexture: string;
@@ -4017,16 +3986,12 @@ type
     constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs); overload;
     destructor Destroy; override;
 
-    property Live: Boolean
-      read gdLive;
-    property StoredGameMode: TwbGameMode
-      read gdGameMode;
     property ToolSource: TwbToolSource
       read gdToolSource;
     property GameMode: TwbGameMode
-      read GetGameMode;
+      read gdGameMode;
     property Capabilities: TwbGameCapabilities
-      read GetCapabilities;
+      read gdCapabilities;
     function IsCS(const aDef1, aDef2: string): string; overload;
     function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority; overload;
     function IsTES3(const aDef1, aDef2: string): string; overload;
@@ -5912,17 +5877,12 @@ var
   wbFileBySortOrderComparer        : IComparer<IwbFile>;
   wbFileByReverseSortOrderComparer : IComparer<IwbFile>;
 
-  _CurrentGameDef  : TwbGameDef;
-  _CurrentContext  : TwbGameContext;
   wbGameContextClass : TwbGameContextClass;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs): IwbGameDef; overload;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
-
-function wbCurrentContext: IwbGameContext;
-procedure wbMakeCurrentContext(const aContext: IwbGameContext);
 
 implementation
 
@@ -6418,7 +6378,6 @@ end;
 constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs);
 begin
   Create;
-  gdLive := False;
   gdGameMode := aGameMode;
   gdToolSource := aToolSource;
   gdCapabilities := wbComputeCapabilities(aGameMode, aInputs.LightSupport, aInputs.MediumSupport, aInputs.UpdateSupport, aInputs.CS, aInputs.HNVSE);
@@ -6427,7 +6386,6 @@ end;
 constructor TwbGameDef.Create;
 begin
   inherited Create;
-  gdLive := True;
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
   gdCellSizeFactor := 4096.0;
@@ -6489,45 +6447,7 @@ end;
 
 function TwbGameDef.GetGameMode: TwbGameMode;
 begin
-  if gdLive then
-    Result := wbGameMode
-  else
-    Result := gdGameMode;
-end;
-
-function TwbGameDef.GetGameName: string;
-begin
-  Result := wbGameName;
-end;
-
-function TwbGameDef.GetGameExeName: string;
-begin
-  Result := wbGameExeName;
-end;
-
-function TwbGameDef.GetGameMasterEsm: string;
-begin
-  Result := wbGameMasterEsm;
-end;
-
-function TwbGameDef.GetGameName2: string;
-begin
-  Result := wbGameName2;
-end;
-
-function TwbGameDef.GetGameNameReg: string;
-begin
-  Result := wbGameNameReg;
-end;
-
-function TwbGameDef.GetGameSteamID: string;
-begin
-  Result := wbGameSteamID;
-end;
-
-function TwbGameDef.GetAppName: string;
-begin
-  Result := wbAppName;
+  Result := gdGameMode;
 end;
 
 function TwbGameDef.GetArchiveExtension: string;
@@ -6552,12 +6472,6 @@ end;
 
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
 begin
-  if gdLive then
-    if not gdLiveKeyValid or (gdLiveKeyGameMode <> wbGameMode) then begin
-      gdLiveKeyGameMode := wbGameMode;
-      gdCapabilities := wbComputeCapabilities(wbGameMode, False, False, False, False, False);
-      gdLiveKeyValid := True;
-    end;
   Result := gdCapabilities;
 end;
 
@@ -6900,48 +6814,18 @@ end;
 
 var
   _GameDefClasses    : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
-  _CurrentGameDefRef : IwbGameDef;
-  _CurrentContextRef : IwbGameContext;
 
 function wbGameDefOf(const aElement: IwbElement): TwbGameDef;
 begin
   Result := nil;
   if Assigned(aElement) then
     Result := aElement.GameDefObj;
-  if not Assigned(Result) then
-    Result := _CurrentGameDef;
-end;
-
-procedure wbMakeCurrentGameDef(aGameDef: TwbGameDef);
-begin
-  _CurrentGameDef := aGameDef;
-  _CurrentGameDefRef := aGameDef;
-end;
-
-function wbCurrentContext: IwbGameContext;
-begin
-  Result := _CurrentContextRef;
-end;
-
-procedure wbMakeCurrentContext(const aContext: IwbGameContext);
-var
-  lPrevious: IwbGameContext;
-begin
-  lPrevious := _CurrentContextRef;
-  _CurrentContextRef := nil;
-  lPrevious := nil;
-  if Assigned(aContext) then
-    _CurrentContext := aContext as TwbGameContext
-  else
-    _CurrentContext := nil;
-  _CurrentContextRef := aContext;
 end;
 
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 begin
   Assert(Assigned(wbGameContextClass));
   Result := wbGameContextClass.Create(aGameDef);
-  wbMakeCurrentContext(Result);
 end;
 
 { TwbGameContextSettings }
@@ -8065,7 +7949,6 @@ begin
       GetEnumName(TypeInfo(TwbToolSource), Ord(aToolSource)));
   var lGameDef := lGameDefClass.Create(aGameMode, aToolSource, aInputs);
   Result := lGameDef;
-  wbMakeCurrentGameDef(lGameDef);
   lGameDef.Define;
 end;
 
@@ -26009,9 +25892,9 @@ begin
           Exit(lContext.Settings.Encoding);
     end;
     if dfTranslatable in defFlags then
-      Result := _CurrentContext.Settings.EncodingTrans
+      Result := TwbGameContextSettings.Defaults.EncodingTrans
     else
-      Result := _CurrentContext.Settings.Encoding;
+      Result := TwbGameContextSettings.Defaults.Encoding;
   end;
 end;
 
@@ -26818,12 +26701,7 @@ initialization
   SetLength(wbSaveExtensions, 2);
   wbSaveExtensions[0] := csDotFos;
   wbSaveExtensions[1] := csDotEss;
-
-  wbMakeCurrentGameDef(TwbGameDef.Create);
 finalization
-  wbMakeCurrentContext(nil);
-  _CurrentGameDef := nil;
-  _CurrentGameDefRef := nil;
   FreeAndNil(_MBCSEncodings);
   FreeAndNil(_NamedIndices);
 end.
