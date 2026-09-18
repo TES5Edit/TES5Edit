@@ -1151,7 +1151,7 @@ begin
       lSettings.AlwaysSaveOnamForce := True;
     end;
     gmSF1: begin
-      wbComplexFileFileID   := True;
+      lInputs.ComplexFileFileID := True;
       lSettings.EnforceAllMasters := True;
       lInputs.VWDInTemporary := True;
       lInputs.VWDAsQuestChildren := True;
@@ -1466,7 +1466,7 @@ begin
     if FindCmdLineSwitch('PseudoUpdate') then
       xeContext.Settings.PseudoUpdate := True;
 
-  if wbComplexFileFileID then begin
+  if gcComplexFileFileID in xeContext.GameDefObj.Capabilities then begin
     xeContext.Settings.IgnoreLight := False;
     xeContext.Settings.PseudoLight := False;
     xeContext.Settings.IgnoreMedium := False;

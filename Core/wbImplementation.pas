@@ -763,6 +763,7 @@ type
     procedure flProgress(const aStatus: string);
 
     function flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
+    function flComplexFileFileID: Boolean; inline;
 
     function Reached: Boolean; override;
 
@@ -2309,6 +2310,11 @@ end;
 var
   _FileGeneration: Integer = 1;
 
+function TwbFile.flComplexFileFileID: Boolean;
+begin
+  Result := gcComplexFileFileID in flContextObj.GameDefObj.Capabilities;
+end;
+
 procedure TwbFile.AddMaster(const aFileName: string; IsTemporary: Boolean; aAutoLoadOrder: Boolean; aSilent: Boolean);
 var
   _File : IwbFile;
@@ -2477,7 +2483,7 @@ begin
     var lFileID := FormID.FileID[flContextObj.SlotLayout];
     if IsNewRecord(lFileID, True) and not (fsIsCompareLoad in flStates) and not (FormID.IsHardcoded and not (fsIsGameMaster in flStates))  then begin
 
-      if not wbComplexFileFileID then begin
+      if not flComplexFileFileID then begin
 
         if (FormID.ToCardinal and $00FFF000) <> 0 then begin
           Exclude(flStates, fsLightCompatible);
@@ -2656,8 +2662,8 @@ var
         var lIsMediumFile := lFile.IsMedium;
         var lIsFullFile := lFile.GetIsFull;
 
-        if (((not wbComplexFileFileID) and (GetMasterCount(True) >= MaxMasterCount)) or
-            (wbComplexFileFileID and (
+        if (((not flComplexFileFileID) and (GetMasterCount(True) >= MaxMasterCount)) or
+            (flComplexFileFileID and (
               (lIsLightFile and (GetLightMasterCount(True) >= MaxLightMasterCount - 1)) or // -1 for safety in case module is converted later
               (lIsMediumFile and (GetMediumMasterCount(True) >= MaxMediumMasterCount - 1)) or
               (lIsFullFile and (GetFullMasterCount(True) >= MaxMasterCount))
@@ -2721,8 +2727,8 @@ begin;
 
     if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
       if Length(flOldMasters) <> Length(flMasters) then begin
-        var lOldCount := TwbSlotCounts.Create(flOldMasters);
-        var lNewCount := TwbSlotCounts.Create(flMasters);
+        var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
+        var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
         MastersUpdated([], [], lOldCount, lNewCount);
         SortRecords;
@@ -3180,7 +3186,7 @@ begin
               SetLength(Old, Succ(Length(Old)));
               SetLength(New, Succ(Length(New)));
 
-              if wbComplexFileFileID then
+              if flComplexFileFileID then
                 case flMasters[i].GetModuleType of
                   mtFull:
                     begin
@@ -3265,8 +3271,8 @@ begin
 
         if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
         begin
-          var lOldCount := TwbSlotCounts.Create(flOldMasters);
-          var lNewCount := TwbSlotCounts.Create(flMasters);
+          var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
+          var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
           MastersUpdated(Old, New, lOldCount, lNewCount);
         end;
@@ -3578,7 +3584,7 @@ end;
 
 function TwbFile.FileFileIDtoLoadOrderFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
 begin
-  if wbComplexFileFileID then case aFileID.ModuleType of
+  if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
       if aFileID.LightSlot < GetLightMasterCount(aNew) then
       Exit(GetLightMaster(aFileID.LightSlot, aNew).LoadOrderFileID);
@@ -4131,7 +4137,7 @@ function TwbFile.GetContainedRecordByLoadOrderFormID(const aFormID: TwbFormID; a
 
   function LoadOrderToFile(const aFileID: TwbFileID): TwbFileID;
   begin
-    if wbComplexFileFileID then begin
+    if flComplexFileFileID then begin
       if aFileID = flLoadOrderFileID then
         Exit(GetFileFileID(False));
 
@@ -4272,7 +4278,7 @@ function TwbFile.GetFileFileID(aNewMasters : Boolean): TwbFileID;
 begin
   var SelfRef := Self as IwbContainerElementRef;
 
-  if wbComplexFileFileID then case GetModuleType of
+  if flComplexFileFileID then case GetModuleType of
     mtLight:
       Result := TwbFileID.CreateLight(GetLightMasterCount(aNewMasters), flContextObj.SlotLayout);
     mtMedium:
@@ -4690,7 +4696,7 @@ begin
   if aAllowSelf and IsNewRecord(aFileID, aNew) then
     Exit(Self);
 
-  if wbComplexFileFileID then case aFileID.ModuleType of
+  if flComplexFileFileID then case aFileID.ModuleType of
     mtLight:
       Exit(GetLightMaster(aFileID.LightSlot, True));
     mtMedium:
@@ -4703,7 +4709,7 @@ end;
 
 function TwbFile.GetMasterIndexForFileID(const aFileID: TwbFileID; aNew: Boolean): Integer;
 begin
-  if wbComplexFileFileID then begin
+  if flComplexFileFileID then begin
     var lFullIndex := -1;
     var lLightIndex := -1;
     var lMediumIndex := -1;
@@ -4755,7 +4761,7 @@ begin
   end;
 
   if not Assigned(lMaster) then begin
-    if wbComplexFileFileID then begin
+    if flComplexFileFileID then begin
       var lFileID := aFormID.FileID[lLayout];
 
       case lFileID.ModuleType of
@@ -5110,7 +5116,7 @@ end;
 
 function TwbFile.IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean;
 begin
-  if wbComplexFileFileID then case aFileID.ModuleType of 
+  if flComplexFileFileID then case aFileID.ModuleType of 
     mtLight:
       Result := aFileID.LightSlot >= GetLightMasterCount(aNew);
     mtMedium:
@@ -5125,7 +5131,7 @@ end;
 
 function TwbFile.LoadOrderFileIDtoFileFileID(const aFileID: TwbFileID; aNew: Boolean): TwbFileID;
 begin
-  if wbComplexFileFileID then begin
+  if flComplexFileFileID then begin
     if aFileID = flLoadOrderFileID then
       Exit(GetFileFileID(aNew));
 
@@ -5549,7 +5555,7 @@ begin
         flRecords[i].ClampFormID(k);
     end;
 
-    if wbComplexFileFileID then begin
+    if flComplexFileFileID then begin
       if not flContextObj.Settings.RedPill then begin
         for var lMasterIdx := 0 to Pred(GetMasterCount(True)) do begin
           var lMaster := GetMaster(lMasterIdx, True);
@@ -6480,7 +6486,7 @@ begin
             SetLength(Old, Succ(Length(Old)));
             SetLength(New, Succ(Length(New)));
 
-            if not wbcomplexfileFileID then
+            if not flComplexFileFileID then
             begin
               Old[High(Old)] := TwbFileID.CreateFull(j);
               New[High(New)] := TwbFileID.CreateFull(i);
@@ -6521,8 +6527,8 @@ begin
             Assert(False);
           if gcMasterSlotsInFormID in flContextObj.GameDefObj.Capabilities then
           begin
-            var lOldCount := TwbSlotCounts.Create(flOldMasters);
-            var lNewCount := TwbSlotCounts.Create(flMasters);
+            var lOldCount := TwbSlotCounts.Create(flOldMasters, flComplexFileFileID);
+            var lNewCount := TwbSlotCounts.Create(flMasters, flComplexFileFileID);
 
             MastersUpdated(Old, New, lOldCount, lNewCount);
           end;
@@ -9640,7 +9646,7 @@ var
     var MainRecord: IwbMainRecord := nil;
     var lLayout := ContextObj.SlotLayout;
 
-    if wbComplexFileFileID then begin
+    if gcComplexFileFileID in GameDefObj.Capabilities then begin
 
       var lFileID := aFormID.FileID[lLayout];
       var lFileIndex: Integer;
@@ -9833,7 +9839,7 @@ begin
         Exit;
       end;
 
-    if wbComplexFileFileID then begin
+    if gcComplexFileFileID in GameDefObj.Capabilities then begin
       var lFileID := Result.FileID[lLayout];
       case lFileID.ModuleType of
         mtLight:
@@ -11511,8 +11517,9 @@ begin
   if MasterCount < 1 then
     Exit;
 
+  var lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
   for var FormID in mrReferences do begin
-    if wbComplexFileFileID then begin
+    if lComplex then begin
       if _File.IsNewRecord(FormID, GetMastersUpdated) then
         Continue;
     end else begin
@@ -11695,7 +11702,7 @@ begin
   var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
   if not lFormIDInHeader then
     Exit;
-  if wbComplexFileFileID then
+  if gcComplexFileFileID in GameDefObj.Capabilities then
     Exit;
 
   if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aIndex then begin
@@ -12912,7 +12919,7 @@ var
     var MainRecord: IwbMainRecord := nil;
     var lLayout := ContextObj.SlotLayout;
 
-    if wbComplexFileFileID then begin
+    if gcComplexFileFileID in GameDefObj.Capabilities then begin
 
       var lFileID := aFormID.FileID[lLayout];
       var lFileIndex: Integer;
@@ -13227,7 +13234,7 @@ var
         HeaderUpdated := False;
         OldFormID := GetFixedFormID;
         if not OldFormID.IsNull then begin
-          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout);
+          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
           if GetFormID <> NewFormID then begin
             MakeHeaderWriteable;
             mrStruct.mrsFormID(gcFormIDInRecordHeader in GameDefObj.Capabilities)^ := NewFormID;
@@ -13243,7 +13250,7 @@ var
 
           for i := Low(mrReferences) to High(mrReferences) do begin
             OldFormID := mrReferences[i];
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout);
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
             if OldFormID <> NewFormID then begin
               FoundOne := True;
               mrReferences[i] := NewFormID;
@@ -18750,7 +18757,7 @@ begin
             if Assigned(lFile) then
               lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
 
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout);
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
             if grStruct.grsLabel <> NewFormID.ToCardinal then begin
               MakeHeaderWriteable;
               grStruct.grsLabel := NewFormID.ToCardinal;

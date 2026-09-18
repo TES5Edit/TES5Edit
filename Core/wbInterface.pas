@@ -249,7 +249,6 @@ var
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
-  wbComplexFileFileID                : Boolean    = False;
   wbAllowUnsafeScripts               : Boolean    = False;
 
   wbAllowMakePartial                 : Boolean    = False;
@@ -673,7 +672,7 @@ type
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
-    gcVWDInTemporary, gcVWDAsQuestChildren
+    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -685,6 +684,7 @@ type
     HNVSE              : Boolean;
     VWDInTemporary     : Boolean;
     VWDAsQuestChildren : Boolean;
+    ComplexFileFileID  : Boolean;
   end;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -995,7 +995,7 @@ type
     Medium : Byte;
 
     class operator Initialize(out aDest: TwbSlotCounts);
-    class function Create(const aMasters : TwbFiles): TwbSlotCounts; static;
+    class function Create(const aMasters : TwbFiles; aComplex: Boolean): TwbSlotCounts; static;
     function Total: SmallInt; inline;
   end;
 
@@ -5792,7 +5792,7 @@ function wbIsInternalEdit: Boolean;
 function StrToSignature(const s: string): TwbSignature;
 function IntToSignature(aInt: Cardinal): TwbSignature; inline;
 
-function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean; aLayout: TwbSlotLayout): TwbFormID;
+function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean; aLayout: TwbSlotLayout; aComplex: Boolean): TwbFormID;
 
 threadvar
   _InternalEditCount: Integer;
@@ -6373,6 +6373,8 @@ begin
     Include(Result, gcVWDInTemporary);
   if aInputs.VWDAsQuestChildren then
     Include(Result, gcVWDAsQuestChildren);
+  if aInputs.ComplexFileFileID then
+    Include(Result, gcComplexFileFileID);
 end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource);
@@ -20341,7 +20343,7 @@ begin
   Result := True;
 end;
 
-function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean; aLayout: TwbSlotLayout): TwbFormID;
+function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts; aAllowHardcodedRangeUse: Boolean; aLayout: TwbSlotLayout; aComplex: Boolean): TwbFormID;
 var
   FileID    : TwbFileID;
   i         : Integer;
@@ -20379,7 +20381,7 @@ begin
   NewCount := aNewCount.Total;
   Slot := FileID.FullSlot;
 
-  if wbComplexFileFileID then
+  if aComplex then
   case FileID.GetModuleType of
     mtFull: begin
       OldCount := aOldCount.Full;
@@ -20434,8 +20436,11 @@ begin
       lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
   end;
 
-  if aInt <> 0 then
-    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, defSlotLayout(aElement)).ToCardinal;
+  if aInt <> 0 then begin
+    var lGameDef := defGameDefObj;
+    var lComplex := Assigned(lGameDef) and (gcComplexFileFileID in lGameDef.Capabilities);
+    Result := FixupFormID(TwbFormID.FromCardinal(aInt), aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, defSlotLayout(aElement), lComplex).ToCardinal;
+  end;
 end;
 
 procedure TwbFormIDDefFormater.Report(const aParents: TwbDefPath);
@@ -25323,9 +25328,9 @@ begin
   FillChar(aDest, SizeOf(aDest), 0);
 end;
 
-class function TwbSlotCounts.Create(const aMasters : TwbFiles): TwbSlotCounts;
+class function TwbSlotCounts.Create(const aMasters : TwbFiles; aComplex: Boolean): TwbSlotCounts;
 begin
-  if wbComplexFileFileID then
+  if aComplex then
   begin
     // need to build counts per type
     for var lMaster in aMasters do
