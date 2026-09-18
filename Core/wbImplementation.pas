@@ -271,6 +271,7 @@ type
     eExtendedSortKey   : string;
 
     eContainerRef      : IwbContainerElementRef;
+    eContextObj        : TwbGameContext;
 
     eUpdateCount       : Integer;
 
@@ -20306,6 +20307,8 @@ function TwbElement.GameDefObj: TwbGameDef;
 begin
   if Assigned(eContainer) then
     Result := IwbContainerInternal(eContainer).GameDefObj
+  else if Assigned(eContextObj) then
+    Result := eContextObj.GameDefObj
   else
     Result := nil;
 end;
@@ -20315,7 +20318,7 @@ begin
   if Assigned(eContainer) then
     Result := IwbContainerInternal(eContainer).ContextObj
   else
-    Result := nil;
+    Result := eContextObj;
 end;
 
 function TwbElement.GetGameDefObj: TwbGameDef;
@@ -20990,10 +20993,14 @@ begin
   end else
     Assert(Assigned(eContainer));
 
-  if Assigned(aContainer) then
-    eContainer := Pointer(aContainer as IwbContainerInternal)
-  else
+  if Assigned(aContainer) then begin
+    eContextObj := nil;
+    eContainer := Pointer(aContainer as IwbContainerInternal);
+  end else begin
+    if eExternalRefs > 0 then
+      eContextObj := ContextObj;
     eContainer := nil;
+  end;
 
   if not Assigned(eContainer) then
     eContainerRef := nil
