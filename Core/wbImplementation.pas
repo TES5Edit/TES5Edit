@@ -9639,6 +9639,7 @@ var
   LightFilesCount : Integer;
 
   SelfIntf      : IwbMainRecord;
+  lComplex      : Boolean;
 
   procedure ProcessRef(const aFormID: TwbFormID; aAdd: Boolean);
   begin
@@ -9646,7 +9647,7 @@ var
     var MainRecord: IwbMainRecord := nil;
     var lLayout := ContextObj.SlotLayout;
 
-    if gcComplexFileFileID in GameDefObj.Capabilities then begin
+    if lComplex then begin
 
       var lFileID := aFormID.FileID[lLayout];
       var lFileIndex: Integer;
@@ -9752,6 +9753,7 @@ var
   SelfRef       : IwbContainerElementRef;
 begin
   Result := False;
+  lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
 
   if dfExcludeFromBuildRef in mrDef.DefFlags then
     Exit;
@@ -12913,13 +12915,14 @@ var
   LightFilesCount : Integer;
 
   SelfIntf      : IwbMainRecord;
+  lComplex      : Boolean;
 
   procedure ProcessRef(const aFormID: TwbFormID);
   begin
     var MainRecord: IwbMainRecord := nil;
     var lLayout := ContextObj.SlotLayout;
 
-    if gcComplexFileFileID in GameDefObj.Capabilities then begin
+    if lComplex then begin
 
       var lFileID := aFormID.FileID[lLayout];
       var lFileIndex: Integer;
@@ -13025,6 +13028,7 @@ var
   i: Integer;
 begin
   Assert(gcFormIDInRecordHeader in GameDefObj.Capabilities);
+  lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
 
   Assert(Length(mrReferences)=0);
   aStream.Read(lFormID, SizeOf(TwbFormID));
