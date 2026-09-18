@@ -1737,6 +1737,7 @@ begin
         ReportProgress('Unexpected Error: <'+e.ClassName+': '+e.Message+'>');
     end;
   finally
+    _File := nil;
     if DebugHook <> 0 then begin
       ReportProgress('Press enter to continue...');
       ReadLn;
