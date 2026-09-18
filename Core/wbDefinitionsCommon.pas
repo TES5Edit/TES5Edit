@@ -201,7 +201,8 @@ function wbPackagePSDTMonthValueToInt(const aString: string; const aElement: Iwb
 function wbEdgeToStr(aEdge: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbVertexToStr(aVertex: Integer; aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 
-function wbAliasToStr                (aInt: Int64; const aQuestRef: IwbElement; aType: TwbCallbackType): string;
+function wbAliasToStr                (aInt: Int64; const aQuestRef: IwbElement; aType: TwbCallbackType): string; overload;
+function wbAliasToStr                (aInt: Int64; const aQuestRef, aElement: IwbElement; aType: TwbCallbackType): string; overload;
 function wbClmtMoonsPhaseLength      (aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbClmtTime                  (aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
 function wbConditionAliasToStr       (aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -3214,6 +3215,11 @@ end;
 {>>> To String Callback Functions <<<} //31
 
 function wbAliasToStr(aInt: Int64; const aQuestRef: IwbElement; aType: TwbCallbackType): string;
+begin
+  Result := wbAliasToStr(aInt, aQuestRef, aQuestRef, aType);
+end;
+
+function wbAliasToStr(aInt: Int64; const aQuestRef, aElement: IwbElement; aType: TwbCallbackType): string;
 var
   MainRecord : IwbMainRecord;
   EditInfos  : TStringList;
@@ -3221,7 +3227,7 @@ var
   Alias      : IwbContainerElementRef;
 begin
   Result := '';
-  var lGameDef := wbGameDefOf(aQuestRef);
+  var lGameDef := wbGameDefOf(aElement);
   case aType of
     ctToEditValue, ctToStr, ctToSummary:
       if aInt = -1 then
@@ -3407,11 +3413,11 @@ begin
 
     var lSig := lMainRecord.Signature;
     if lSig = QUST then
-      Result := wbAliasToStr(aInt, lMainRecord, aType)
+      Result := wbAliasToStr(aInt, lMainRecord, aElement, aType)
     else if lSig = SCEN then
-      Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['PNAM'], aType)
+      Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['PNAM'], aElement, aType)
     else if (lSig = PACK) or (wbGameDefOf(aElement).IsFallout76 and (lSig = TERM)) then
-      Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['QNAM'], aType)
+      Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['QNAM'], aElement, aType)
     else if lSig = INFO then begin
       // get DIAL for INFO
       var lTopicElement := lMainRecord.ElementByName['Topic'];
@@ -3423,7 +3429,7 @@ begin
       var lTopic := lTopicRecord.HighestOverrideVisibleForFile[aElement._File];
       if not Assigned(lTopic) then
         Exit;
-      Result := wbAliasToStr(aInt, lTopic.ElementBySignature['QNAM'], aType);
+      Result := wbAliasToStr(aInt, lTopic.ElementBySignature['QNAM'], aElement, aType);
     end;
   end else begin
     case aType of
@@ -3738,7 +3744,7 @@ begin
     if not Assigned(lTopic) then
       Exit;
 
-    Result := wbAliasToStr(aInt, lTopic.ElementBySignature['QNAM'] , aType);
+    Result := wbAliasToStr(aInt, lTopic.ElementBySignature['QNAM'], aElement, aType);
   end else begin
     case aType of
       ctToSortKey: Result := IntToHex64(aInt, 8);
@@ -4161,7 +4167,7 @@ begin
     if not Assigned(lMainRecord) then
       Exit;
 
-    Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['QNAM'], aType);
+    Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['QNAM'], aElement, aType);
   end else begin
     case aType of
       ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
@@ -4192,7 +4198,7 @@ begin
     if not Assigned(lMainRecord) then
       Exit;
 
-    Result := wbAliasToStr(aInt, lMainRecord, aType);
+    Result := wbAliasToStr(aInt, lMainRecord, aElement, aType);
   end else begin
     case aType of
       ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;
@@ -4212,7 +4218,7 @@ begin
     if not Supports(aElement.Container, IwbContainerElementRef, lCER) then
       Exit;
 
-    Result := wbAliasToStr(aInt, lCER.ElementBySignature['ALEQ'] , aType);
+    Result := wbAliasToStr(aInt, lCER.ElementBySignature['ALEQ'], aElement, aType);
   end else begin
     case aType of
       ctToSortKey: Result := IntToHex64(aInt, 8);
@@ -4298,7 +4304,7 @@ begin
     if not Assigned(lMainRecord) then
       Exit;
 
-    Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['PNAM'] , aType);
+    Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['PNAM'], aElement, aType);
   end else begin
     case aType of
       ctToSortKey: Result := IntToHex64(aInt, 8);
@@ -4318,7 +4324,7 @@ begin
     if not Assigned(lCER) then
       Exit;
 
-    Result := wbAliasToStr(aInt, lCER.ElementByName['FormID'], aType);
+    Result := wbAliasToStr(aInt, lCER.ElementByName['FormID'], aElement, aType);
   end else begin
     case aType of
       ctToStr, ctToSummary, ctToEditValue: Result := aInt.ToString;

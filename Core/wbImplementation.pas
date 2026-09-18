@@ -2022,11 +2022,15 @@ type
     arcSorted      : Boolean;
     arcSortInvalid : Boolean;
     arcNameGen     : Integer;
+    arcContextObj  : TwbGameContext;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
                              aPos       : Integer;
                        const aDef       : IwbSubRecordArrayDef);
+
+    function GameDefObj: TwbGameDef; override;
+    function ContextObj: TwbGameContext; override;
 
     procedure DoProcess(const aContainer : IwbContainer;
                               aPos       : Integer);
@@ -2072,12 +2076,16 @@ type
 
   TwbSubRecordStruct = class(TwbContainer, IwbSubRecordStruct, IwbHasSignature)
   protected {private}
-    srcDef: IwbRecordDef;
+    srcDef        : IwbRecordDef;
+    srcContextObj : TwbGameContext;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
                              aPos       : Integer;
                        const aDef       : IwbSubRecordStructDef);
+
+    function GameDefObj: TwbGameDef; override;
+    function ContextObj: TwbGameContext; override;
 
     procedure TryAssignMembers(const aSource: IwbElement); override;
 
@@ -21561,6 +21569,8 @@ var
   i        : Integer;
 begin
   arcDef := aDef;
+  if not Assigned(aOwner) and Assigned(aContainer) then
+    arcContextObj := aContainer.ContextObj;
   eContainer := Pointer(aOwner);
   try
     if aPos <> Low(Integer) then begin
@@ -21589,6 +21599,21 @@ begin
     SetModified(True);
     InvalidateStorage;
   end;
+end;
+
+function TwbSubRecordArray.GameDefObj: TwbGameDef;
+begin
+  if Assigned(arcContextObj) then
+    Result := arcContextObj.GameDefObj
+  else
+    Result := inherited GameDefObj;
+end;
+
+function TwbSubRecordArray.ContextObj: TwbGameContext;
+begin
+  Result := arcContextObj;
+  if not Assigned(Result) then
+    Result := inherited ContextObj;
 end;
 
 procedure TwbSubRecordArray.DoAfterSet(const aOldValue, aNewValue: Variant);
@@ -22205,6 +22230,8 @@ var
   FoundMembers  : IwbElements;
 begin
   srcDef := aDef as IwbRecordDef;
+  if not Assigned(aOwner) and Assigned(aContainer) then
+    srcContextObj := aContainer.ContextObj;
   LastDef := nil;
   LastElement := nil;
 
@@ -22320,6 +22347,21 @@ begin
     Remove;
     raise;
   end;
+end;
+
+function TwbSubRecordStruct.GameDefObj: TwbGameDef;
+begin
+  if Assigned(srcContextObj) then
+    Result := srcContextObj.GameDefObj
+  else
+    Result := inherited GameDefObj;
+end;
+
+function TwbSubRecordStruct.ContextObj: TwbGameContext;
+begin
+  Result := srcContextObj;
+  if not Assigned(Result) then
+    Result := inherited ContextObj;
 end;
 {
 function TwbSubRecordStruct.GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
