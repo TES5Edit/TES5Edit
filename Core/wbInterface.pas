@@ -153,9 +153,7 @@ var
   wbMoreInfoForIndex                 : Boolean    = False;
   wdMakeUnknownElementsUnique        : Boolean    = False;
   wbTestWrite                        : Boolean    = False;
-  wbVWDInTemporary                   : Boolean    = False;
-  wbVWDAsQuestChildren               : Boolean    = False;
-  wbResolveAlias                     : Boolean    = True;
+  wbResolveAlias                    : Boolean    = True;
   wbActorTemplateHide                : Boolean    = True;
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
@@ -674,16 +672,19 @@ type
     gcWorkbenchRecipes, gcNPCRelationships, gcQuestScenesAndDialogue, gcPartialCellsFromGameMasterOnly,
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
-    gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE
+    gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
+    gcVWDInTemporary, gcVWDAsQuestChildren
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
   TwbGameDefInputs = record
-    LightSupport  : Boolean;
-    MediumSupport : Boolean;
-    UpdateSupport : Boolean;
-    CS            : Boolean;
-    HNVSE         : Boolean;
+    LightSupport       : Boolean;
+    MediumSupport      : Boolean;
+    UpdateSupport      : Boolean;
+    CS                 : Boolean;
+    HNVSE              : Boolean;
+    VWDInTemporary     : Boolean;
+    VWDAsQuestChildren : Boolean;
   end;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -6279,16 +6280,16 @@ begin
   Result := TwbNullWaitForm.Create;
 end;
 
-function wbComputeCapabilities(aGameMode: TwbGameMode; aLightSupport, aMediumSupport, aUpdateSupport, aCS, aHNVSE: Boolean): TwbGameCapabilities;
+function wbComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities;
 begin
   Result := [];
-  if (aGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or aLightSupport then
+  if (aGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or aInputs.LightSupport then
     Include(Result, gcLightPlugins);
-  if (aGameMode in [gmSF1]) or aMediumSupport then
+  if (aGameMode in [gmSF1]) or aInputs.MediumSupport then
     Include(Result, gcMediumPlugins);
   if aGameMode in [gmSF1] then
     Include(Result, gcBlueprintPlugins);
-  if (aGameMode in [gmSF1]) or aUpdateSupport then
+  if (aGameMode in [gmSF1]) or aInputs.UpdateSupport then
     Include(Result, gcUpdatePlugins);
   if aGameMode in [gmFO76, gmSF1] then
     Include(Result, gcCurveTableProperties);
@@ -6364,10 +6365,14 @@ begin
     Include(Result, gcWeatherFogMax);
   if aGameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV] then
     Include(Result, gcModelTextureFileHashList);
-  if aCS then
+  if aInputs.CS then
     Include(Result, gcCommunityShaders);
-  if aHNVSE then
+  if aInputs.HNVSE then
     Include(Result, gcHNVSE);
+  if aInputs.VWDInTemporary then
+    Include(Result, gcVWDInTemporary);
+  if aInputs.VWDAsQuestChildren then
+    Include(Result, gcVWDAsQuestChildren);
 end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource);
@@ -6380,7 +6385,7 @@ begin
   Create;
   gdGameMode := aGameMode;
   gdToolSource := aToolSource;
-  gdCapabilities := wbComputeCapabilities(aGameMode, aInputs.LightSupport, aInputs.MediumSupport, aInputs.UpdateSupport, aInputs.CS, aInputs.HNVSE);
+  gdCapabilities := wbComputeCapabilities(aGameMode, aInputs);
 end;
 
 constructor TwbGameDef.Create;

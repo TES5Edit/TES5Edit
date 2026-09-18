@@ -935,8 +935,10 @@ var
   Found           : Boolean;
   b               : TBytes;
   lSettings       : TwbGameContextSettings;
+  lInputs         : TwbGameDefInputs;
 begin
   lSettings := TwbGameContextSettings.Defaults;
+  lInputs := Default(TwbGameDefInputs);
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
   {$ELSE}
@@ -1078,7 +1080,7 @@ begin
         gmFO4: begin
           wbGameName           := 'Fallout4';
           lSettings.CreateContainedIn := False;
-          wbVWDAsQuestChildren := True;
+          lInputs.VWDAsQuestChildren := True;
         end;
         gmFO4VR: begin
           wbGameName           := 'Fallout4';
@@ -1086,7 +1088,7 @@ begin
           wbGameName2          := 'Fallout4VR';
           wbGameNameReg        := 'Fallout 4 VR';
           lSettings.CreateContainedIn := False;
-          wbVWDAsQuestChildren := True;
+          lInputs.VWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
         gmSSE: begin
@@ -1107,13 +1109,13 @@ begin
           wbGameNameReg        := 'Fallout 76';
           wbGameMasterEsm      := 'SeventySix.esm';
           lSettings.CreateContainedIn := False;
-          wbVWDAsQuestChildren := True;
+          lInputs.VWDAsQuestChildren := True;
           tss := [tsPlugins];
         end;
         gmSF1: begin
           wbGameName           := 'Starfield';
           lSettings.CreateContainedIn := False;
-          wbVWDAsQuestChildren := True;
+          lInputs.VWDAsQuestChildren := True;
         end;
       else begin
         s := '';
@@ -1141,7 +1143,7 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
-      HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource));
+      HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs));
       HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
       HostContext.Settings := lSettings;

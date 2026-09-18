@@ -9166,7 +9166,7 @@ begin
     Result := Group.Add(aName, aSilent);
 
     Exit;
-  end else if wbVWDAsQuestChildren and (GetSignature = 'QUST') and
+  end else if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (GetSignature = 'QUST') and
      (
         SameText(s, 'DLBR') or
         SameText(s, 'DIAL') or
@@ -9924,7 +9924,7 @@ begin
       CELL: SearchForGroup := 6;
       DIAL: SearchForGroup := 7;
     else
-      if wbVWDAsQuestChildren and (GetSignature = 'QUST') then
+      if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (GetSignature = 'QUST') then
         SearchForGroup := 10
       else
         SearchForGroup := 0;
@@ -10195,7 +10195,7 @@ var
     if Supports(lContainer, IwbGroupRecordInternal, Group) then
       if Group.GroupType = 8 then
         BasePtr.mrsFlags(lFormIDInHeader).SetPersistent(True)
-      else if (Group.GroupType = 10) and not (wbVWDAsQuestChildren
+      else if (Group.GroupType = 10) and not ((gcVWDAsQuestChildren in lGameDef.Capabilities)
                  and Supports(Group.Container, IwbGroupRecord, Group2) and (TwbSignature(Group2.GroupLabel) = 'QUST')) then
         BasePtr.mrsFlags(lFormIDInHeader).SetVisibleWhenDistant(True);
 
@@ -10956,7 +10956,7 @@ begin
   end else if GetSignature = 'WRLD' then begin
     Result.Add('CELL');
     Result.Add('ROAD');
-  end else if wbVWDAsQuestChildren and (GetSignature = 'QUST') then begin
+  end else if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (GetSignature = 'QUST') then begin
     SetLength(Result, 3);
     Result[0] := 'DIAL';
     Result[1] := 'DLBR';
@@ -11312,7 +11312,7 @@ begin
         SearchForGroup := 6
       else if GetSignature = 'DIAL' then
         SearchForGroup := 7
-      else if wbVWDAsQuestChildren and (GetSignature = 'QUST') then
+      else if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (GetSignature = 'QUST') then
         SearchForGroup := 10;
 
       if SearchForGroup > 0 then
@@ -12886,7 +12886,7 @@ begin
       (Signature = 'NAVM') or
       (Signature = 'ROAD') or
       (Signature = 'LAND') or
-      (wbVWDAsQuestChildren and ((Signature = 'DLBR') or (Signature = 'DIAL') or (Signature = 'SCEN')));
+      ((gcVWDAsQuestChildren in GameDefObj.Capabilities) and ((Signature = 'DLBR') or (Signature = 'DIAL') or (Signature = 'SCEN')));
 end;
 
 procedure TwbMainRecord.LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
@@ -13837,7 +13837,7 @@ var
             raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         8, 10: begin {Persistent and Visible when Distant/Quest Children}
-          if wbVWDAsQuestChildren and (GroupRecord.GroupType = 10) then begin
+          if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (GroupRecord.GroupType = 10) then begin
             if (GetSignature <> 'DLBR') and (GetSignature <> 'DIAL') and (GetSignature <> 'SCEN') then
               raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
           end else begin
@@ -13890,7 +13890,7 @@ var
           var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities);
           if lFlags.IsPersistent then
             raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-          if lFlags.IsVisibleWhenDistant and not wbVWDInTemporary then
+          if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in GameDefObj.Capabilities) then
             raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
         end;
       end;
@@ -15042,7 +15042,7 @@ begin
 
   if GetIsPersistent then
     CorrectGroupType := 8
-  else if GetIsVisibleWhenDistant and not wbVWDInTemporary then
+  else if GetIsVisibleWhenDistant and not (gcVWDInTemporary in GameDefObj.Capabilities) then
     CorrectGroupType := 10
   else
     CorrectGroupType := 9;
@@ -17411,8 +17411,8 @@ begin
           (Signature <> 'ACRE') and
           (Signature <> 'ACHR') then
          Exit;
-   10: if (not wbVWDAsQuestChildren and (Signature <> 'REFR')) or
-          (wbVWDAsQuestChildren and
+   10: if (not (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (Signature <> 'REFR')) or
+          ((gcVWDAsQuestChildren in GameDefObj.Capabilities) and
              not ((Signature = 'REFR') or (Signature = 'DLBR') or (Signature = 'DIAL') or (Signature = 'SCEN')))
        then
          Exit;
@@ -17606,7 +17606,7 @@ var
   i         : Integer;
 begin
   if esUnsaved in aElement.ElementStates then  // Let's not penalised too much loading time.
-    if ((TwbSignature(grStruct.grsLabel) = 'DIAL') or wbVWDAsQuestChildren) then  // Issue 86: https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=86
+    if ((TwbSignature(grStruct.grsLabel) = 'DIAL') or (gcVWDAsQuestChildren in GameDefObj.Capabilities)) then  // Issue 86: https://code.google.com/p/skyrim-plugin-decoding-project/issues/detail?id=86
       if Supports(aElement, IwbGroupRecord, DialGroup) then // The DIAL GRUP must immediatly follow corresponding DIAL MainRecord.
         if DialGroup.GroupType = 7 then // Let's hope nobody messes up the groupType
           if Supports(Self, IwbContainer, Container) then
@@ -17847,7 +17847,7 @@ begin
 
           Exit;
         end;
-      end else if wbVWDAsQuestChildren and (TwbSignature(grStruct.grsLabel) = 'QUST') then begin
+      end else if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (TwbSignature(grStruct.grsLabel) = 'QUST') then begin
         var lGroupRecord0Qust: IwbGroupRecord;
         if Supports(aElement, IwbGroupRecord, lGroupRecord0Qust) then begin
           if lGroupRecord0Qust.GroupType <> 10 then
@@ -18084,7 +18084,7 @@ begin
     end;
     8, 9, 10: begin
       var lGroupRecord8910: IwbGroupRecord;
-      if wbVWDAsQuestChildren and Supports(aElement, IwbGroupRecord, lGroupRecord8910) then begin
+      if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and Supports(aElement, IwbGroupRecord, lGroupRecord8910) then begin
         if lGroupRecord8910.GroupType <> 7 then
           raise Exception.Create('Can''t add ' + lGroupRecord8910.Name + ' to top level group with signature ' + TwbSignature(grStruct.grsLabel));
         var lSourceMainRecord8910 := lGroupRecord8910.ChildrenOf;
@@ -18132,7 +18132,7 @@ begin
           // check any non reference record
           if not (
             // DIAL, DLBR and SCEN can be added to child group 10 (quest children)
-            (wbVWDAsQuestChildren and (grStruct.grsGroupType = 10) and ((lMainRecord8910.Signature = 'DLBR') or (lMainRecord8910.Signature = 'DIAL') or (lMainRecord8910.Signature = 'SCEN')))
+            ((gcVWDAsQuestChildren in GameDefObj.Capabilities) and (grStruct.grsGroupType = 10) and ((lMainRecord8910.Signature = 'DLBR') or (lMainRecord8910.Signature = 'DIAL') or (lMainRecord8910.Signature = 'SCEN')))
             or
             // PGRD, LAND and NAVM can be added to child group 9 (temporary)
             (grStruct.grsGroupType = 9) and ((lMainRecord8910.Signature = 'PGRD') or (lMainRecord8910.Signature = 'LAND') or (lMainRecord8910.Signature = 'NAVM'))
@@ -18252,7 +18252,7 @@ begin
     6, 8, 9: Assert(aMainRecord.Signature = 'CELL');
     10: Assert(
       (aMainRecord.Signature = 'CELL') or
-      (wbVWDAsQuestChildren and (aMainRecord.Signature = 'QUST'))
+      ((gcVWDAsQuestChildren in wbGameDefOf(aContainer).Capabilities) and (aMainRecord.Signature = 'QUST'))
     );
     7: Assert(aMainRecord.Signature = 'DIAL');
   end;
@@ -18450,7 +18450,7 @@ begin
            Result.Add('NAVM');
          end;
        end;
-    10: if wbVWDAsQuestChildren then begin
+    10: if (gcVWDAsQuestChildren in GameDefObj.Capabilities) then begin
           SetLength(Result, 3);
           Result[0] := 'DIAL';
           Result[1] := 'DLBR';
@@ -18582,7 +18582,7 @@ begin
     7: Result := Result + ' Topic Children of ';
     8: Result := Result + ' Cell Persistent Children of ';
     9: Result := Result + ' Cell Temporary Children of ';
-    10: if wbVWDAsQuestChildren then
+    10: if (gcVWDAsQuestChildren in GameDefObj.Capabilities) then
       Result := Result + ' Quest Children of '
     else
       Result := Result + ' Cell Visible Distant Children of ';
@@ -18618,7 +18618,7 @@ begin
     7: Result := 'Children of ' + IntToHex(GetGroupLabel, 8);
     8: Result := 'Persistent';
     9: Result := 'Temporary';
-    10: if wbVWDAsQuestChildren then
+    10: if (gcVWDAsQuestChildren in GameDefObj.Capabilities) then
       Result := 'Children of ' + IntToHex(GetGroupLabel, 8)
     else
       Result := 'Visible when Distant';
@@ -25723,7 +25723,8 @@ begin
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Exit;
 
-  if wbVWDAsQuestChildren then
+  var lVWDAsQuestChildren := gcVWDAsQuestChildren in GameDefObj.Capabilities;
+  if lVWDAsQuestChildren then
     Grp := [8..9]
   else
     Grp := [8..10];
@@ -25732,7 +25733,7 @@ begin
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Exit;
 
-  if wbVWDAsQuestChildren then
+  if lVWDAsQuestChildren then
     Grp := [1, 6, 7, 10]
   else
     Grp := [1, 6, 7];
@@ -25767,13 +25768,14 @@ begin
       Assert(False);
   // if group is persistent, temporary or vwd cell children, it should be in a group too
   // if vwd is treated as quest children, then exclude it from check
-  if wbVWDAsQuestChildren then Grp := [8..9] else Grp := [8..10];
+  var lVWDAsQuestChildren := gcVWDAsQuestChildren in wbGameDefOf(aMainRecord).Capabilities;
+  if lVWDAsQuestChildren then Grp := [8..9] else Grp := [8..10];
   if GroupRecord.GroupType in Grp then
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then
       Assert(False);
 
   // the final list of parent groups, mainrecords in those will have ContainedIn element
-  if wbVWDAsQuestChildren then Grp := [1, 6, 7, 10] else Grp := [1, 6, 7];
+  if lVWDAsQuestChildren then Grp := [1, 6, 7, 10] else Grp := [1, 6, 7];
   Assert(GroupRecord.GroupType in Grp);
 
   Include(dcFlags, dcfDontMerge);
@@ -25893,7 +25895,7 @@ begin
         6: begin
              if MainRecord.IsPersistent then
                CorrectGroup := 8
-             else if MainRecord.IsVisibleWhenDistant and not wbVWDInTemporary then
+             else if MainRecord.IsVisibleWhenDistant and not (gcVWDInTemporary in GameDefObj.Capabilities) then
                CorrectGroup := 10
              else
                CorrectGroup := 9;

@@ -4668,7 +4668,7 @@ begin
   xeContext.Settings.RequireLoadOrder := not xeContext.Settings.UseFalsePlugins;
   ShowUnsavedHint := True;
   ParentedGroupRecordType := [1, 6, 7];
-  if wbVWDAsQuestChildren then
+  if gcVWDAsQuestChildren in xeContext.GameDefObj.Capabilities then
     Include(ParentedGroupRecordType, 10);
 
   vstNav.NodeDataSize := SizeOf(TNavNodeData);
@@ -13047,7 +13047,7 @@ begin
         if TopLevelGroups.Find('INFO', Dummy) then
           TopLevelGroups.Add('DIAL');
 
-      if wbVWDAsQuestChildren and not TopLevelGroups.Find('QUST', Dummy) then
+      if (gcVWDAsQuestChildren in xeContext.GameDefObj.Capabilities) and not TopLevelGroups.Find('QUST', Dummy) then
         if TopLevelGroups.Find('DIAL', Dummy) or
            TopLevelGroups.Find('DLBR', Dummy) or
            TopLevelGroups.Find('SCEN', Dummy) then

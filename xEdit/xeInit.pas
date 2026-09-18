@@ -1072,7 +1072,7 @@ begin
   // specific Game settings
   case wbGameMode of
     gmFNV: begin
-      wbVWDInTemporary        := True;
+      lInputs.VWDInTemporary  := True;
       lSettings.LoadBSAs := False;
       lSettings.CanSortINFO := True;
       lSettings.AllowESPMasters := True;
@@ -1080,7 +1080,7 @@ begin
       lInputs.HNVSE           := FileExists(lSettings.DataPath + 'NVSE\Plugins\Hnvse.dll');
     end;
     gmFO3: begin
-      wbVWDInTemporary      := True;
+      lInputs.VWDInTemporary := True;
       lSettings.LoadBSAs := False;
       lSettings.CanSortINFO := True;
       lSettings.AllowESPMasters := True;
@@ -1093,7 +1093,7 @@ begin
       lSettings.DontCacheLoad := True;
       lSettings.DontCacheSave := True;
       lSettings.BuildRefs := False;
-      wbVWDInTemporary      := True;
+      lInputs.VWDInTemporary := True;
       lSettings.CreateContainedIn := False;
       lSettings.AllowESPMasters := True;
       lSettings.AllowESPMastersOnSave := True;
@@ -1117,7 +1117,7 @@ begin
       lSettings.AllowESPMastersOnSave := True;
     end;
     gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
-      wbVWDInTemporary      := True;
+      lInputs.VWDInTemporary := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       lSettings.CanSortINFO := True;
@@ -1129,8 +1129,8 @@ begin
       lSettings.AllowESPMastersOnSave := True;
     end;
     gmFO4, gmFO4VR: begin
-      wbVWDInTemporary      := True;
-      wbVWDAsQuestChildren  := True;
+      lInputs.VWDInTemporary := True;
+      lInputs.VWDAsQuestChildren := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
@@ -1143,8 +1143,8 @@ begin
       lSettings.AllowESPMastersOnSave := True;
     end;
     gmFO76: begin
-      wbVWDInTemporary      := True;
-      wbVWDAsQuestChildren  := True;
+      lInputs.VWDInTemporary := True;
+      lInputs.VWDAsQuestChildren := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
@@ -1153,8 +1153,8 @@ begin
     gmSF1: begin
       wbComplexFileFileID   := True;
       lSettings.EnforceAllMasters := True;
-      wbVWDInTemporary      := True;
-      wbVWDAsQuestChildren  := True;
+      lInputs.VWDInTemporary := True;
+      lInputs.VWDAsQuestChildren := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
       wbHideIgnored         := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
