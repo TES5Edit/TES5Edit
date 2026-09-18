@@ -266,20 +266,20 @@ type
     eSortOrder         : Integer;
     eMemoryOrder       : Integer;
     eStates            : TwbElementStates;
+    eExternalRefs      : Integer;
     eSortKey           : string;
     eExtendedSortKey   : string;
 
-    eExternalRefs      : Integer;
     eContainerRef      : IwbContainerElementRef;
 
     eUpdateCount       : Integer;
 
     eGeneration        : Integer;
     eMastersGeneration : Integer;
+    eLinksToGeneration : Integer;
 
     eNameSuffix        : string;
 
-    eLinksToGeneration : Integer;
     eCachedLinksTo     : IwbElement;
     eSummaryLinksTo    : IwbElement;
 
