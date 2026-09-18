@@ -115,7 +115,7 @@ uses
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
-  Result := wbIsModule(aFilePath) or wbIsSave(aFilePath);
+  Result := wbIsModule(aFilePath, wbGameExeName) or wbIsSave(aFilePath);
 end;
 
 function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
@@ -141,7 +141,7 @@ function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
 begin
   repeat
     Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
-  until not Result or wbIsModule(aValue);
+  until not Result or wbIsModule(aValue, wbGameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
       aValue := ExtractFileName(aValue);
@@ -1166,6 +1166,10 @@ begin
     Exit(False);
   end;
 
+  lInputs.GameName := wbGameName;
+  lInputs.GameExeName := wbGameExeName;
+  lInputs.GameMasterEsm := wbGameMasterEsm;
+  lInputs.AppName := wbAppName;
   xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs));
   xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;

@@ -13048,7 +13048,7 @@ begin
     {0x8000} 'Unknown 15'
   ]);
 
-  s := ExtractFilePath(ParamStr(0)) + wbAppName + 'MapMarkers.txt';
+  s := ExtractFilePath(ParamStr(0)) + AppName +'MapMarkers.txt';
   if FileExists(s) then try
     wbMapMarkerEnum := wbEnum(TFile.ReadAllLines(s));
   except end;

@@ -1143,6 +1143,10 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
+      lInputs.GameName := wbGameName;
+      lInputs.GameExeName := wbGameExeName;
+      lInputs.GameMasterEsm := wbGameMasterEsm;
+      lInputs.AppName := wbAppName;
       HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs));
       HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
@@ -1685,7 +1689,7 @@ begin
       wbResourcesLoaded;
 
       if gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities then begin
-        b := TwbHardcodedContainer.GetHardCodedDat;
+        b := TwbHardcodedContainer.GetHardCodedDat(HostContext.GameDefObj.GameName);
         if Length(b) > 0 then
           HostContext.LoadFile(wbGameExeName, 0, '', [fsIsHardcoded], b);
       end;
@@ -1696,7 +1700,7 @@ begin
       if not (gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities) then
         with wbModuleListOf(HostContext).ModuleByName(wbGameMasterEsm)^ do
           if mfHasFile in miFlags then begin
-            b := TwbHardcodedContainer.GetHardCodedDat;
+            b := TwbHardcodedContainer.GetHardCodedDat(HostContext.GameDefObj.GameName);
             if Length(b) > 0 then
               HostContext.LoadFile(wbGameExeName, 0, wbGameMasterEsm, [fsIsHardcoded], b);
           end;

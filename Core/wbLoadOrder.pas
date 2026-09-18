@@ -349,7 +349,7 @@ begin
     with mlModules[0] do begin
       miFlags := [];
       miContext := mlContext;
-      miOriginalName := wbGameExeName;
+      miOriginalName := lGameDef.GameExeName;
       miName := miOriginalName;
       miExtension := meESM;
 
@@ -518,14 +518,14 @@ begin
       if mfMastersMissing in miFlags then
         Exclude(miFlags, mfActive);
 
-  with ModuleByName(wbGameMasterEsm)^ do
+  with ModuleByName(lGameDef.GameMasterEsm)^ do
     if IsValid then begin
       miOfficialIndex := Low(Integer);
       Include(miFlags, mfActive);
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with ModuleByName(wbGameExeName)^ do begin
+  with ModuleByName(lGameDef.GameExeName)^ do begin
     miOfficialIndex := Succ(Low(Integer));
     Include(miFlags, mfHasIndex);
   end;

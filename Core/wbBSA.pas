@@ -254,7 +254,7 @@ begin
     ContainerResourceDict('', ccAll, '');
 
     var lPath :=  IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
-    var lHashSeedName := lPath + wbGameName + '.HashSeed.txt';
+    var lHashSeedName := lPath + chGameDef.GameName + '.HashSeed.txt';
 
     if FileExists(lHashSeedName) then
     with TStringList.Create do try

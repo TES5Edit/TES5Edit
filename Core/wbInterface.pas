@@ -685,6 +685,10 @@ type
     VWDInTemporary     : Boolean;
     VWDAsQuestChildren : Boolean;
     ComplexFileFileID  : Boolean;
+    GameName           : string;
+    GameExeName        : string;
+    GameMasterEsm      : string;
+    AppName            : string;
   end;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -3947,6 +3951,10 @@ type
     gdGameMode         : TwbGameMode;
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
+    gdGameName         : string;
+    gdGameExeName      : string;
+    gdGameMasterEsm    : string;
+    gdAppName          : string;
     gdDefaultFormVersion : Word;
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
@@ -3993,6 +4001,14 @@ type
       read gdGameMode;
     property Capabilities: TwbGameCapabilities
       read gdCapabilities;
+    property GameName: string
+      read gdGameName;
+    property GameExeName: string
+      read gdGameExeName;
+    property GameMasterEsm: string
+      read gdGameMasterEsm;
+    property AppName: string
+      read gdAppName;
     function IsCS(const aDef1, aDef2: string): string; overload;
     function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority; overload;
     function IsTES3(const aDef1, aDef2: string): string; overload;
@@ -5645,7 +5661,7 @@ function wbFormaterUnion(      aDecider : TwbIntegerDefFormaterUnionDecider;
                          const aMembers : array of IwbIntegerDefFormater)
                                         : IwbIntegerDefFormaterUnion;
 
-function wbIsModule(const aFileName: string): Boolean;
+function wbIsModule(const aFileName, aGameExeName: string): Boolean;
 function wbIsSave(const aFileName: string): Boolean;
 
 function wbStr4ToString(aInt: Int64): string;
@@ -6388,6 +6404,10 @@ begin
   gdGameMode := aGameMode;
   gdToolSource := aToolSource;
   gdCapabilities := wbComputeCapabilities(aGameMode, aInputs);
+  gdGameName := aInputs.GameName;
+  gdGameExeName := aInputs.GameExeName;
+  gdGameMasterEsm := aInputs.GameMasterEsm;
+  gdAppName := aInputs.AppName;
 end;
 
 constructor TwbGameDef.Create;
@@ -7397,7 +7417,7 @@ end;
 
 function TwbGameContext.ExpandFileName(const aFileName: string): string;
 begin
-  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, wbGameExeName) then
+  if (ExtractFilePath(aFileName) = '') and not SameText(aFileName, gcGameDefObj.GameExeName) then
     Result := Settings.DataPath + ExtractFileName(aFileName)
   else
     Result := aFileName;
@@ -24896,9 +24916,9 @@ begin
     ndToStr(Result, aBasePtr, aEndPtr, aElement, ctToStr);
 end;
 
-function wbIsModule(const aFileName: string): Boolean;
+function wbIsModule(const aFileName, aGameExeName: string): Boolean;
 begin
-  Result := SameText(aFileName, wbGameExeName);
+  Result := SameText(aFileName, aGameExeName);
   if not Result then
     for var i := Low(wbModuleExtensions) to High(wbModuleExtensions) do
       if aFileName.EndsWith(wbModuleExtensions[i], True) or aFileName.EndsWith(wbModuleExtensions[i] + csDotGhost, True) then

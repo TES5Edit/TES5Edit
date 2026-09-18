@@ -2656,7 +2656,7 @@ var
           raise Exception.CreateFmt('[AddMasters] Requested file to add is not loaded: "%s"', [lMasters[i]]);
 
         if lFile.IsBlueprint and flContextObj.GameDefObj.IsStarfield then
-          raise Exception.CreateFmt('[AddMasters] File [%s] not added. %s does not support blueprint files as masters to other modules.', [lMasters[i], wbGameName]);
+          raise Exception.CreateFmt('[AddMasters] File [%s] not added. %s does not support blueprint files as masters to other modules.', [lMasters[i], flContextObj.GameDefObj.GameName]);
 
         var lIsLightFile := lFile.IsLight;
         var lIsMediumFile := lFile.IsMedium;
@@ -2715,7 +2715,7 @@ begin;
         s := Trim(aMasters[i]);
         t := ExtractFileExt(s);
         if SameText(t, '.esp') and (not flContextObj.Settings.AllowESPMasters) then
-          raise Exception.CreateFmt('[AddMasters] You cannot add a .esp as a master in %s.', [wbGameName]);
+          raise Exception.CreateFmt('[AddMasters] You cannot add a .esp as a master in %s.', [flContextObj.GameDefObj.GameName]);
         if SameText(t, '.esm') or SameText(t, '.esp') or (flContextObj.GameDefObj.IsLightSupported and SameText(t, '.esl')) then
           lMasters.Add(s);
       end;
@@ -3175,7 +3175,7 @@ begin
         for i := Low(flMasters) to High(flMasters) do
         begin
           if UsedMasters[i] or
-             SameText(flMasters[i].FileName, wbGameMasterESM) or
+             SameText(flMasters[i].FileName, flContextObj.GameDefObj.GameMasterEsm) or
              KeepMasters.Find(flMasters[i].FileName, k)
           then begin
 
@@ -3299,10 +3299,10 @@ begin
   flLoadOrderFileID := TwbFileID.Invalid;
   if aCompareTo <> '' then begin
     Include(flStates, fsIsCompareLoad);
-    if SameText(ExtractFileName(aFileName), wbGameExeName) then
+    if SameText(ExtractFileName(aFileName), flContextObj.GameDefObj.GameExeName) then
       Include(flStates, fsIsHardcoded);
     flCompareTo := aContext.ExpandFileName(aCompareTo);
-  end else if SameText(ExtractFileName(aFileName), wbGameMasterEsm) then begin
+  end else if SameText(ExtractFileName(aFileName), flContextObj.GameDefObj.GameMasterEsm) then begin
     Include(flStates, fsIsGameMaster);
     Include(flStates, fsIsOfficial);
   end;
@@ -4107,7 +4107,7 @@ function TwbFile.GetBaseName: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameExeName;
+    Result := flContextObj.GameDefObj.GameExeName;
 end;
 
 function TwbFile.GetCachedEditInfo(aIdent: Integer; var aEditInfo: TArray<string>): Boolean;
@@ -4637,7 +4637,7 @@ end;
 
 function TwbFile.GetIsNotPlugin: Boolean;
 begin
-  Result := not wbIsModule(flFileName);
+  Result := not wbIsModule(flFileName, flContextObj.GameDefObj.GameExeName);
 end;
 
 function TwbFile.GetIsRemovable: Boolean;
@@ -4899,7 +4899,7 @@ function TwbFile.GetName: string;
 begin
   Result := GetFileName;
   if fsIsHardcoded in flStates then
-    Result := wbGameExeName;
+    Result := flContextObj.GameDefObj.GameExeName;
   Result := '[' + flLoadOrderFileID.ToString + '] ' + Result;
 end;
 
@@ -5340,7 +5340,7 @@ begin
       raise Exception.Create('File ' + GetFileName + ' has invalid record ' + cntElements[0].Name + ' with invalid signature as file header.');
 
     if (FileHeader.Flags._Flags and $10 <> 0) and not wbHasAddedOptimizedSupport then
-      raise Exception.Create('Modules with the "Optimized" file flag set can not be saved in ' + wbAppName + wbToolName);
+      raise Exception.Create('Modules with the "Optimized" file flag set can not be saved in ' + flContextObj.GameDefObj.AppName + wbToolName);
 
     HEDR := FileHeader.RecordBySignature['HEDR'];
     if not Assigned(HEDR) then
@@ -5357,7 +5357,7 @@ begin
     if not flContextObj.Settings.AllowESPMastersOnSave then
       for i := Low(flModule.miMasters) to High(flModule.miMasters) do
         if flModule.miMasters[i].miExtension = meESP then
-          raise Exception.CreateFmt('%s modules must never have .esp masters.', [wbGameName]);
+          raise Exception.CreateFmt('%s modules must never have .esp masters.', [flContextObj.GameDefObj.GameName]);
 
     if lGameDef.IsStarfield then begin
       if GetIsUpdateDirect and (GetIsLightDirect or GetIsMediumDirect) then
@@ -5368,7 +5368,7 @@ begin
           raise Exception.Create('".esp" modules must not be small or medium.');
         if GetIsESM then
         begin
-          flProgress(Format('%s .esp files must not have ESM flag. Removing.', [wbGameName]));
+          flProgress(Format('%s .esp files must not have ESM flag. Removing.', [flContextObj.GameDefObj.GameName]));
           SetIsESM(False);
         end;
       end;
@@ -5383,7 +5383,7 @@ begin
         raise Exception.Create('Saving blueprint modules is not currently supported.');
 
       if HasBlueprintMaster then
-        raise Exception.CreateFmt('%s modules must never have any blueprint masters.', [wbGameName]);
+        raise Exception.CreateFmt('%s modules must never have any blueprint masters.', [flContextObj.GameDefObj.GameName]);
     end;
 
     inherited;
@@ -5560,20 +5560,20 @@ begin
         for var lMasterIdx := 0 to Pred(GetMasterCount(True)) do begin
           var lMaster := GetMaster(lMasterIdx, True);
           if lMaster.GetIsUpdateDirect or (PwbModuleInfo(lMaster.ModuleInfo).miFlags * [mfHasUpdateFlag] <> []) then
-            raise Exception.Create('Modules with Update flagged modules as masters can''t be saved in ' + wbAppName + wbToolName);
+            raise Exception.Create('Modules with Update flagged modules as masters can''t be saved in ' + flContextObj.GameDefObj.AppName + wbToolName);
         end;
 
         if FileHeader.IsLight <> (mfHasLightFlag in flModule.miFlags) then
-          raise Exception.Create('Small flag can''t be added or removed from existing files in ' + wbAppName + wbToolName);
+          raise Exception.Create('Small flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + wbToolName);
 
         if FileHeader.IsMedium <> (mfHasMediumFlag in flModule.miFlags) then
-          raise Exception.Create('Medium flag can''t be added or removed from existing files in ' + wbAppName + wbToolName);
+          raise Exception.Create('Medium flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + wbToolName);
 
         if FileHeader.IsUpdate <> (mfHasUpdateFlag in flModule.miFlags) then
-          raise Exception.Create('Update flag can''t be added or removed from existing files in ' + wbAppName + wbToolName);
+          raise Exception.Create('Update flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + wbToolName);
 
         if FileHeader.IsUpdate then
-          raise Exception.Create('Update flagged files can''t be saved in ' + wbAppName + wbToolName);
+          raise Exception.Create('Update flagged files can''t be saved in ' + flContextObj.GameDefObj.AppName + wbToolName);
       end;
     end else begin
       var lFileFileID := GetFileFileID(true);
@@ -5900,7 +5900,7 @@ begin
 
     if gcHardcodedFileIsFirstMaster in lGameDef.Capabilities then
       if flLoadOrder > 0 then
-        AddMaster(wbGameName + csDotExe, False, False);
+        AddMaster(flContextObj.GameDefObj.GameName + csDotExe, False, False);
 
     { add required masters BEFORE deciding on the slot }
     MasterFiles := Header.ElementByName['Master Files'] as IwbContainerElementRef;
@@ -24091,7 +24091,7 @@ begin
 
   Result := FileByName(FileName);
   if not Assigned(Result) then begin
-    if not wbIsModule(FileName) then
+    if not wbIsModule(FileName, GameDefObj.GameExeName) then
       Result := TwbFileSource.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
     else
       Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
@@ -24132,7 +24132,7 @@ begin
       lFile := FileByName(FileName);
       if Assigned(lFile) then
         _File := lFile as IwbFileInternal
-      else if not wbIsModule(FileName) then
+      else if not wbIsModule(FileName, GameDefObj.GameExeName) then
         _File := TwbFileSource.Create(Self, FileName, -1, '', [fsOnlyHeader], nil)
       else
         _File := TwbFile.Create(Self, FileName, -1, '', [fsOnlyHeader], nil);
@@ -26144,9 +26144,9 @@ begin
       if FileExists(fPath) then
         AddMaster(fPath, False, True)
       else if flContextObj.Settings.UseFalsePlugins then begin
-        fPath := flContextObj.Settings.DataPath + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+        fPath := flContextObj.Settings.DataPath + flContextObj.GameDefObj.AppName + TheEmptyPlugin; // place holder to keep save indexes
         if not FileExists(fPath) then
-          fPath := ExtractFilePath(wbProgramPath) + wbAppName + TheEmptyPlugin; // place holder to keep save indexes
+          fPath := ExtractFilePath(wbProgramPath) + flContextObj.GameDefObj.AppName + TheEmptyPlugin; // place holder to keep save indexes
         if FileExists(fPath) then
           AddMaster(SelectTemporaryCopy(fPath, Names[i]), True, True);
       end;

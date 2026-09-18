@@ -8351,7 +8351,7 @@ begin
     .SetSummaryKey([1]);
 
   // load terminal theme list from external file if present
-  var s := ExtractFilePath(ParamStr(0)) + wbAppName + 'TerminalArtThemes.txt';
+  var s := ExtractFilePath(ParamStr(0)) + AppName +'TerminalArtThemes.txt';
   var wbTerminalArtThemeEnum : IwbEnumDef;
   if FileExists(s) then try
     wbTerminalArtThemeEnum := wbEnum(TFile.ReadAllLines(s));

@@ -1660,7 +1660,7 @@ begin
 
   if not (gcOrderFromPluginsTxt in xeContext.GameDefObj.Capabilities) then
     if OldDateTime <> 0 then
-      if wbIsModule(lTo) then try
+      if wbIsModule(lTo, xeContext.GameDefObj.GameExeName) then try
       TFile.SetLastWriteTime(lTo, OldDateTime);
     except
       s := 'Could not set last modified time of "' + lTo + '".';
@@ -3173,7 +3173,7 @@ begin
     CompareFile := FileName;
     Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
-    if wbIsModule(CompareFile) then
+    if wbIsModule(CompareFile, xeContext.GameDefObj.GameExeName) then
       fPath := xeContext.Settings.DataPath
     else
       fPath := xeContext.Settings.SavePath;
@@ -3236,7 +3236,7 @@ begin
     Settings.WriteString('CreateDeltaPatch', 'InitialDir', ExtractFilePath(CompareFile));
     Settings.UpdateFile;
 
-    if not wbIsModule(CompareFile) then begin
+    if not wbIsModule(CompareFile, xeContext.GameDefObj.GameExeName) then begin
       ShowMessage('Delta patch can only be created for modules');
       Exit;
     end;
@@ -21912,7 +21912,7 @@ begin
 
           if gcHardcodedFileIsFirstMaster in lGameDef.Capabilities then
             if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
-              b := TwbHardcodedContainer.GetHardCodedDat;
+              b := TwbHardcodedContainer.GetHardCodedDat(xeContext.GameDefObj.GameName);
               if Length(b) > 0 then begin
                 t := wbGameExeName;
                 LoaderProgress('loading "' + t + '"...');
@@ -21932,7 +21932,7 @@ begin
             s := ltLoadList[lLoadListIdx]
           else begin
             s := ltDataPath + ltLoadList[lLoadListIdx];
-            if not wbIsModule(ltLoadList[lLoadListIdx]) then
+            if not wbIsModule(ltLoadList[lLoadListIdx], xeContext.GameDefObj.GameExeName) then
               if wbToolSource in [tsSaves] then
                 if not FileExists(s) then // Assume its a save in the save path
                   s := xeContext.Settings.SavePath + ltLoadList[lLoadListIdx];
@@ -21946,7 +21946,7 @@ begin
             Exit;
 
           if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
-            b := TwbHardcodedContainer.GetHardCodedDat;
+            b := TwbHardcodedContainer.GetHardCodedDat(xeContext.GameDefObj.GameName);
             if Length(b) > 0 then begin
               t := wbGameExeName;
               LoaderProgress('loading "' + t + '"...');
