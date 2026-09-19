@@ -3488,6 +3488,18 @@ type
 
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
 
+  TwbSaveDef = class
+  public
+    FileMagic       : TwbFileMagic;
+    FilePlugins     : string;
+    FileHeader      : IwbStructDef;
+    FileChapters    : IwbStructDef;
+    ExtractInfo     : PByteSet;
+    FilePluginNames : TwbFilePluginNames;
+
+    constructor Create;
+  end;
+
   PwbRecordDefEntry = ^TwbRecordDefEntry;
   TwbRecordDefEntry = record
     rdeSignature : TwbSignature;
@@ -3513,13 +3525,8 @@ type
     gdNexusModsUrl     : string;
     gdIgnoreRecords    : TStringList;
     gdGroupOrder       : TStringList;
-    gdFileMagic        : TwbFileMagic;
-    gdFilePlugins      : string;
     gdActorValueEnum   : IwbEnumDef;
-    gdFileHeader       : IwbStructDef;
-    gdFileChapters     : IwbStructDef;
-    gdExtractInfo      : PByteSet;
-    gdFilePluginNames  : TwbFilePluginNames;
+    gdSaveDef          : TwbSaveDef;
     gdOfficialDLC      : TArray<string>;
     gdCreationClubContentFileName : string;
     gdKnownSubRecordSignatures    : TwbKnownSubRecordSignatures;
@@ -3686,27 +3693,11 @@ type
       read gdIgnoreRecords;
     property GroupOrder: TStringList
       read gdGroupOrder;
-    property FileMagic: TwbFileMagic
-      read gdFileMagic
-      write gdFileMagic;
-    property FilePlugins: string
-      read gdFilePlugins
-      write gdFilePlugins;
     property ActorValueEnum: IwbEnumDef
       read gdActorValueEnum
       write gdActorValueEnum;
-    property FileHeader: IwbStructDef
-      read gdFileHeader
-      write gdFileHeader;
-    property FileChapters: IwbStructDef
-      read gdFileChapters
-      write gdFileChapters;
-    property ExtractInfo: PByteSet
-      read gdExtractInfo
-      write gdExtractInfo;
-    property FilePluginNames: TwbFilePluginNames
-      read gdFilePluginNames
-      write gdFilePluginNames;
+    property SaveDef: TwbSaveDef
+      read gdSaveDef;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC
       write gdOfficialDLC;
@@ -5842,6 +5833,12 @@ begin
   gdAppName := aInputs.AppName;
 end;
 
+constructor TwbSaveDef.Create;
+begin
+  inherited Create;
+  FilePlugins := 'Master Files';
+end;
+
 constructor TwbGameDef.Create;
 begin
   inherited Create;
@@ -5853,7 +5850,6 @@ begin
   gdIgnoreRecords := TStringList.Create;
   gdIgnoreRecords.Sorted := True;
   gdIgnoreRecords.Duplicates := dupIgnore;
-  gdFilePlugins := 'Master Files';
   gdDefaultFormVersion := 15;
   gdQuestFlagsSignature := 'DATA';
   gdRaceFlagsSignature := 'DATA';
@@ -5882,6 +5878,7 @@ end;
 
 destructor TwbGameDef.Destroy;
 begin
+  FreeAndNil(gdSaveDef);
   FreeAndNil(gdRecordDefMap);
   FreeAndNil(gdGroupOrder);
   FreeAndNil(gdIgnoreRecords);

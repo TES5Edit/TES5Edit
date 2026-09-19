@@ -573,7 +573,7 @@ begin
         ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
     end;
     tsSaves: begin
-      ProfileElement(aFormat, lGameDef.FileHeader, Profile, Pass, '');
+      ProfileElement(aFormat, lGameDef.SaveDef.FileHeader, Profile, Pass, '');
     end;
   end;
 end;
@@ -603,8 +603,8 @@ begin
   var lGameDef := HostContext.GameDefObj;
   Profile := '';
   case wbToolSource of
-    tsSaves: for i := 0 to Pred(lGameDef.FileChapters.MemberCount) do begin
-      ProfileElement(aFormat, lGameDef.FileChapters.Members[i], Profile, Pass, '');
+    tsSaves: for i := 0 to Pred(lGameDef.SaveDef.FileChapters.MemberCount) do begin
+      ProfileElement(aFormat, lGameDef.SaveDef.FileChapters.Members[i], Profile, Pass, '');
     end;
   end;
 end;

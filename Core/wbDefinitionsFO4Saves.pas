@@ -7309,7 +7309,7 @@ begin
     ,wbInteger('Form Version', itU8)
     ,wbLenString('Runtime version', 2)
     ,wbInteger('PluginInfo Size (?)', itU32)
-    ,wbArray(FilePlugins, wbLenString('PluginName', 2), -4)
+    ,wbArray(gdSaveDef.FilePlugins, wbLenString('PluginName', 2), -4)
     ,wbUnion('', SaveVersionGreaterThan14Decider, [wbNull, wbArray('Light plugins', wbLenString('LightPluginName', 2), -2)])
     ,wbFileLocationTable
   ]);
@@ -7387,8 +7387,8 @@ begin
     wbCoSavePlugins
   ]);
 
-  FileChapters := wbSaveChapters;
-  FileHeader := wbSaveHeader;
+  gdSaveDef.FileChapters := wbSaveChapters;
+  gdSaveDef.FileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
   wbCoSaveHeader.TreeHead := True;
 //  wbSaveHeader.TreeLeaf := True;
@@ -7415,7 +7415,7 @@ var
   Union : IwbContainer;
   i     : Integer;
 begin
-  AddNames(aHeader.ElementByName[FilePlugins]);
+  AddNames(aHeader.ElementByName[gdSaveDef.FilePlugins]);
   for i := 0 to Pred(aHeader.ElementCount) do
     if Supports(aHeader.Elements[i], IwbContainer, Union) and (Union.Name = '') then
       AddNames(Union.ElementByName['Light plugins']);
@@ -7423,10 +7423,12 @@ end;
 
 procedure TwbGameDefFO4Saves.Define;
 begin
-  FileMagic := 'FO4_SAVEGAME';
-  ExtractInfo := @ExtractInfoSave;
-  FilePlugins := 'Plugins';
-  FilePluginNames := SavePluginNames;
+  if not Assigned(gdSaveDef) then
+    gdSaveDef := TwbSaveDef.Create;
+  gdSaveDef.FileMagic := 'FO4_SAVEGAME';
+  gdSaveDef.ExtractInfo := @ExtractInfoSave;
+  gdSaveDef.FilePlugins := 'Plugins';
+  gdSaveDef.FilePluginNames := SavePluginNames;
   inherited;
   DefineFO4SavesA;
   DefineFO4SavesS;
@@ -7434,12 +7436,12 @@ end;
 
 procedure TwbGameDefFO4Saves.SwitchToCoSave;
 begin
-  FileMagic := 'F4SE';
-  ExtractInfo := @ExtractInfoCoSave;
-  FilePlugins := 'Absolute:44';
-  FilePluginNames := nil;
-  FileChapters := wbCoSaveChapters;
-  FileHeader := wbCoSaveHeader;
+  gdSaveDef.FileMagic := 'F4SE';
+  gdSaveDef.ExtractInfo := @ExtractInfoCoSave;
+  gdSaveDef.FilePlugins := 'Absolute:44';
+  gdSaveDef.FilePluginNames := nil;
+  gdSaveDef.FileChapters := wbCoSaveChapters;
+  gdSaveDef.FileHeader := wbCoSaveHeader;
 end;
 
 initialization

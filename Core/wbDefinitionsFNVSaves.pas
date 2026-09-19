@@ -6819,7 +6819,7 @@ begin
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayPT(FilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(gdSaveDef.FilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 
@@ -6901,8 +6901,8 @@ begin
     wbCoSavePlugins
   ]);
 
-  FileChapters := wbSaveChapters;
-  FileHeader := wbSaveHeader;
+  gdSaveDef.FileChapters := wbSaveChapters;
+  gdSaveDef.FileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
   wbCoSaveHeader.TreeHead := True;
 //  wbSaveHeader.TreeLeaf := True;
@@ -6915,9 +6915,11 @@ var
 
 procedure TwbGameDefFNVSaves.Define;
 begin
-  FileMagic := 'FO3SAVEGAME';
-  ExtractInfo := @ExtractInfoSave;
-  FilePlugins := 'Plugins';
+  if not Assigned(gdSaveDef) then
+    gdSaveDef := TwbSaveDef.Create;
+  gdSaveDef.FileMagic := 'FO3SAVEGAME';
+  gdSaveDef.ExtractInfo := @ExtractInfoSave;
+  gdSaveDef.FilePlugins := 'Plugins';
   inherited;
   DefineFNVSavesA;
   DefineFNVSavesS;
@@ -6925,11 +6927,11 @@ end;
 
 procedure TwbGameDefFNVSaves.SwitchToCoSave;
 begin
-  FileMagic := 'NVSE';
-  ExtractInfo := @ExtractInfoCoSave;
-  FilePlugins := 'Absolute:44';
-  FileChapters := wbCoSaveChapters;
-  FileHeader := wbCoSaveHeader;
+  gdSaveDef.FileMagic := 'NVSE';
+  gdSaveDef.ExtractInfo := @ExtractInfoCoSave;
+  gdSaveDef.FilePlugins := 'Absolute:44';
+  gdSaveDef.FileChapters := wbCoSaveChapters;
+  gdSaveDef.FileHeader := wbCoSaveHeader;
 end;
 
 initialization

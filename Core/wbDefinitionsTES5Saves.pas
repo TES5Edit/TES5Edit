@@ -421,7 +421,7 @@ var
 begin
   Content := SaveContent(aHeader);
   if not Assigned(Content) then Exit;
-  AddNames(Content.ElementByName[FilePlugins]);
+  AddNames(Content.ElementByName[gdSaveDef.FilePlugins]);
   for i := 0 to Pred(Content.ElementCount) do
     if Supports(Content.Elements[i], IwbContainer, Union) and (Union.Name = '') then
       AddNames(Union.ElementByName['Light plugins']);
@@ -6129,7 +6129,7 @@ begin
   wbSaveContent := wbStruct('Content', [
      wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArray(FilePlugins, wbLenString('PluginName',  2), -4)
+    ,wbArray(gdSaveDef.FilePlugins, wbLenString('PluginName',  2), -4)
     ,wbUnion('', SaveFormVersionGreaterThan77Decider, [wbNull, wbArray('Light plugins', wbLenString('LightPluginName', 2), -2)])
     ,wbFileLocationTable
     ,wbSaveChapters
@@ -6221,8 +6221,8 @@ begin
     wbCoSavePlugins
   ]);
 
-  FileChapters := wbStruct('Save File Chapters', []);
-  FileHeader := wbSaveHeader;
+  gdSaveDef.FileChapters := wbStruct('Save File Chapters', []);
+  gdSaveDef.FileHeader := wbSaveHeader;
   wbSaveHeader.TreeHead := True;
   wbCoSaveHeader.TreeHead := True;
 //  wbSaveHeader.TreeLeaf := True;
@@ -6235,10 +6235,12 @@ var
 
 procedure TwbGameDefTES5Saves.Define;
 begin
-  FileMagic := 'TESV_SAVEGAME';
-  ExtractInfo := @ExtractInfoSave;
-  FilePlugins := 'Plugins';
-  FilePluginNames := SavePluginNames;
+  if not Assigned(gdSaveDef) then
+    gdSaveDef := TwbSaveDef.Create;
+  gdSaveDef.FileMagic := 'TESV_SAVEGAME';
+  gdSaveDef.ExtractInfo := @ExtractInfoSave;
+  gdSaveDef.FilePlugins := 'Plugins';
+  gdSaveDef.FilePluginNames := SavePluginNames;
   inherited;
   DefineTES5SavesA;
   DefineTES5SavesS;
@@ -6246,12 +6248,12 @@ end;
 
 procedure TwbGameDefTES5Saves.SwitchToCoSave;
 begin
-  FileMagic := 'SKSE';
-  ExtractInfo := @ExtractInfoCoSave;
-  FilePlugins := 'Absolute:44';
-  FilePluginNames := nil;
-  FileChapters := wbCoSaveChapters;
-  FileHeader := wbCoSaveHeader;
+  gdSaveDef.FileMagic := 'SKSE';
+  gdSaveDef.ExtractInfo := @ExtractInfoCoSave;
+  gdSaveDef.FilePlugins := 'Absolute:44';
+  gdSaveDef.FilePluginNames := nil;
+  gdSaveDef.FileChapters := wbCoSaveChapters;
+  gdSaveDef.FileHeader := wbCoSaveHeader;
 end;
 
 initialization

@@ -968,6 +968,7 @@ type
 
   TwbFileSource = class(TwbFile)
   private
+    function flSaveDef: TwbSaveDef;
     function SelectTemporaryCopy(const aFileName, aCompareFile: string): string;
   protected
     procedure Scan; override;
@@ -26221,6 +26222,13 @@ begin
   flFileNameOnDisk := flFileName;
 end;
 
+function TwbFileSource.flSaveDef: TwbSaveDef;
+begin
+  Result := flContextObj.GameDefObj.SaveDef;
+  if not Assigned(Result) or not Assigned(Result.FileHeader) then
+    raise Exception.CreateFmt('Expected a module, found "%s"', [flFileName]);
+end;
+
 procedure TwbFileSource.GetMasters(aMasters: TStrings);
 var
   Header : IwbFileHeader;
@@ -26231,9 +26239,10 @@ begin
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.FileMagic <> flContextObj.GameDefObj.FileMagic then
+  var lSaveDef := flSaveDef;
+  if Header.FileMagic <> lSaveDef.FileMagic then
     raise Exception.CreateFmt('Expected File Magic %s, found %s in file "%s"',
-      [flContextObj.GameDefObj.FileMagic, String(Header.FileMagic), flFileName]);
+      [lSaveDef.FileMagic, String(Header.FileMagic), flFileName]);
 
   Names := TStringList.Create;
   try
@@ -26255,18 +26264,20 @@ var
   modPtr      : Pointer;
   mods        : TwbArray;
 begin
-  var lFilePluginNames := flContextObj.GameDefObj.FilePluginNames;
+  var lSaveDef := flSaveDef;
+  var lFilePluginNames := lSaveDef.FilePluginNames;
   if Assigned(lFilePluginNames) then begin
     lFilePluginNames(aHeader, aNames);
     Exit;
   end;
 
-  if Pos('Absolute:', flContextObj.GameDefObj.FilePlugins)=1 then begin
-    modPtr := PByte(flView) + StrToInt(Copy(flContextObj.GameDefObj.FilePlugins, 10, Length(flContextObj.GameDefObj.FilePlugins)));
+  var lFilePlugins := lSaveDef.FilePlugins;
+  if Pos('Absolute:', lFilePlugins)=1 then begin
+    modPtr := PByte(flView) + StrToInt(Copy(lFilePlugins, 10, Length(lFilePlugins)));
     mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
-    MasterFiles := aHeader.ElementByName[flContextObj.GameDefObj.FilePlugins] as IwbContainerElementRef;
+    MasterFiles := aHeader.ElementByName[lFilePlugins] as IwbContainerElementRef;
 
   if Assigned(MasterFiles) then
     for i := 0 to Pred(MasterFiles.ElementCount) do
@@ -26310,22 +26321,21 @@ begin
   SelfRef := Self as IwbContainerElementRef;
   flProgress('Start processing');
 
-  if flContextObj.GameDefObj.FileHeader = nil then
-    raise Exception.CreateFmt('Expected a module, found "%s"', [flFileName]);
+  var lSaveDef := flSaveDef;
 
   flLoadOrderFileID := TwbFileID.CreateFull($FF);
 
   flBaseOffset := NativeUInt(flView);
 
   CurrentPtr := flView;
-  TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, flContextObj.GameDefObj.FileHeader, '', False);
+  TwbFileHeader.Create(Self, CurrentPtr, flEndPtr, lSaveDef.FileHeader, '', False);
 
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
 
-  if Header.FileMagic <> flContextObj.GameDefObj.FileMagic then
+  if Header.FileMagic <> lSaveDef.FileMagic then
     raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"',
-      [flContextObj.GameDefObj.FileMagic, String(Header.FileMagic), flFileName]);
+      [lSaveDef.FileMagic, String(Header.FileMagic), flFileName]);
 
   if fsOnlyHeader in flStates then
     Exit;
@@ -26355,14 +26365,15 @@ begin
     AddMaster(flCompareTo);
   end;
 
-  if flContextObj.GameDefObj.ExtractInfo <> nil then
-    ExtractInfo := flContextObj.GameDefObj.ExtractInfo^
+  if lSaveDef.ExtractInfo <> nil then
+    ExtractInfo := lSaveDef.ExtractInfo^
   else
     ExtractInfo := [];
 
-  for i := 0 to Pred(flContextObj.GameDefObj.FileChapters.MemberCount) do begin
+  var lFileChapters := lSaveDef.FileChapters;
+  for i := 0 to Pred(lFileChapters.MemberCount) do begin
 
-    ValueDef := flContextObj.GameDefObj.FileChapters.Members[i];
+    ValueDef := lFileChapters.Members[i];
     if ValueDef.DefType = dtResolvable then
       ValueDef := Resolve(ValueDef, currentPtr, flEndPtr, Self);
     if dfUnionStaticResolve in ValueDef.DefFlags then
