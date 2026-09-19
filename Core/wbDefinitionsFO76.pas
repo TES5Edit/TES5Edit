@@ -74,7 +74,6 @@ var
   wbVatsValueFunctionEnum: IwbEnumDef;
   wbWardStateEnum: IwbEnumDef;
   wbWeaponAnimTypeEnum: IwbEnumDef;
-  wbZTestFuncEnum: IwbEnumDef;
   wbDialogueSubtypeEnum: IwbEnumDef;
   wbKeywordTypeEnum: IwbEnumDef;
   wbReverbClassEnum: IwbEnumDef;
@@ -8490,7 +8489,7 @@ begin
       wbBelowVersion(107, wbUnused(1)),
       wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum(Self)),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
-      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum),
+      wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum(Self)),
       wbByteColors(Self, 'Fill/Texture Effect - Color Key 1'),
       wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
       wbFloat('Fill/Texture Effect - Full Alpha Time'),
