@@ -937,7 +937,9 @@ var
   lSettings       : TwbGameContextSettings;
   lInputs         : TwbGameDefInputs;
   lDefineOptions  : TwbGameDefineOptions;
+  OutputBuffer    : array[0..1048575] of Byte;
 begin
+  SetTextBuf(Output, OutputBuffer);
   lSettings := TwbGameContextSettings.Defaults;
   lInputs := Default(TwbGameDefInputs);
   lDefineOptions := TwbGameDefineOptions.Defaults;
