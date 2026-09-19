@@ -138,7 +138,6 @@ var
   wbIKnowWhatImDoing                 : Boolean    = False;
   wbHideUnused                       : Boolean    = True;
   wbHideNeverShow                    : Boolean    = True;
-  wbShowFormVersion                  : Boolean    = False;
   wbShowFlagEnumValue                : Boolean    = False;
   wbShowGroupRecordCount             : Boolean    = False;
   wbShowFileFlags                    : Boolean    = False;
@@ -156,8 +155,6 @@ var
   wbCopyIsRunning                    : Integer    = 0;
   wbHasAddedOptimizedSupport         : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
-  wbCanAddScripts                    : Boolean    = True;
-  wbCanAddScriptProperties           : Boolean    = True;
   wbEditInfoUseShortName             : Boolean    = False;
   wbDevMode                          : Boolean    = False;
   wbAlwaysSorted                     : Boolean    = False;
@@ -175,8 +172,6 @@ var
   wbDontDrawColorText                : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
-  wbNoIndexInAliasSummary            : Boolean    = True;
-  wbExtendedLight                    : Boolean    = False;
   wbAlwaysFastAssign                 : Boolean    = False;
   wbShowRawData                      : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;

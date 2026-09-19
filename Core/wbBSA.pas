@@ -226,9 +226,6 @@ begin
   InvalidateCache;
 end;
 
-threadvar
-  _cc: PwbContainerCache;
-
 const
   _AllCount = 1000000;
   _OtherCount = 500000;
