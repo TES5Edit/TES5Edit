@@ -1682,6 +1682,10 @@ type
                        const aSource     : IwbElement;
                        const aOnlySK     : Boolean;
                        const aNameSuffix : string); reintroduce; overload;
+    constructor CreateDetached(const aContext    : TwbGameContext;
+                                 var aBasePtr    : Pointer;
+                                     aEndPtr     : Pointer;
+                               const aValueDef   : IwbValueDef);
   end;
 
   TwbArray = class(TwbValueBase, IwbSortableContainer, IwbArray)
@@ -25285,6 +25289,15 @@ begin
   inherited Create(aContainer, aBasePtr, aEndPtr, nil);
 end;
 
+constructor TwbValueBase.CreateDetached(const aContext    : TwbGameContext;
+                                          var aBasePtr    : Pointer;
+                                              aEndPtr     : Pointer;
+                                        const aValueDef   : IwbValueDef);
+begin
+  eContextObj := aContext;
+  Create(nil, aBasePtr, aEndPtr, aValueDef, '');
+end;
+
 function TwbValueBase.CanContainFormIDs: Boolean;
 begin
   Result := dfCanContainFormID in vbValueDef.DefFlags;
@@ -26274,7 +26287,7 @@ begin
   var lFilePlugins := lSaveDef.FilePlugins;
   if Pos('Absolute:', lFilePlugins)=1 then begin
     modPtr := PByte(flView) + StrToInt(Copy(lFilePlugins, 10, Length(lFilePlugins)));
-    mods := TwbArray.Create(nil, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4), '', False);
+    mods := TwbArray.CreateDetached(flContextObj, modPtr, flEndPtr, wbArray('Modules', wbLenString('PluginName', 2), -4));
     Supports(mods, IwbContainerElementRef, MasterFiles);
   end else
     MasterFiles := aHeader.ElementByName[lFilePlugins] as IwbContainerElementRef;
