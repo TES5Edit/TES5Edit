@@ -3537,6 +3537,7 @@ type
     gdRecordDefMap     : TStringList;
     gdRecordsInit      : Boolean;
     gdDefined          : Boolean;
+    gdDefining         : Boolean;
     gdGameMode         : TwbGameMode;
     gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
@@ -6267,8 +6268,15 @@ procedure TwbGameDef.EnsureDefined;
 begin
   if gdDefined then
     Exit;
-  gdDefined := True;
-  Define;
+  if gdDefining then
+    raise Exception.Create('EnsureDefined called while the game def is being defined');
+  gdDefining := True;
+  try
+    Define;
+    gdDefined := True;
+  finally
+    gdDefining := False;
+  end;
 end;
 
 var
