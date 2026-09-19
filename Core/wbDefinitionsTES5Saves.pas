@@ -25,6 +25,8 @@ type
 
     procedure DefineTES5SavesS;
     procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+    procedure DefineTES5SavesA;
+
     procedure Define; override;
     procedure SwitchToCoSave; override;
   end;
@@ -39,7 +41,7 @@ uses
   wbSaveInterface;
 
 var
-  wbSexEnum          : IwbEnumDef;
+  wbSaveSexEnum      : IwbEnumDef;
   wbPropTypeEnum     : IwbEnumDef;
   wbExtraTypeEnum    : IwbEnumDef;
   wbRecordFlagsFlags : IwbFlagsDef;
@@ -51,7 +53,7 @@ var
   wbSaveHeader     : IwbStructDef;
   wbCoSaveHeader   : IwbStructDef;
 
-procedure DefineTES5SavesA(const aGameDef: TwbGameDef);
+procedure TwbGameDefTES5Saves.DefineTES5SavesA;
 begin
   wbPropTypeEnum := wbEnum([
     {00} 'None',
@@ -72,7 +74,7 @@ begin
     {15} 'Array of Bool'
   ]);
 
-  wbSexEnum := wbEnum(['Male','Female']);
+  wbSaveSexEnum := wbEnum(['Male','Female']);
 
   wbRecordFlagsFlags := wbFlags([
     {>>> 0x00000000 ACTI: Collision Geometry (default) <<<}
@@ -5515,7 +5517,7 @@ begin
 
   wbUnionCHANGE_NPC_SLEEP_OUTFIT := wbUnion('Sleep Outfit', ChangedFlag13Decider, [wbNull, wbRefID('Change Actor Sleep Outfit')]);
 
-  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbInteger('Change Actor Gender', itU8, wbSexEnum)]);
+  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbInteger('Change Actor Gender', itU8, wbSaveSexEnum)]);
 
   wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull,
     wbStruct('Change Actor Race', [
@@ -6086,7 +6088,7 @@ begin
     wbLenString('Save Cell', 2),
     wbLenString('Save Duration', 2),
     wbLenString('Player Race Editor ID', 2),
-    wbInteger('Player Sex', itU16, wbSexEnum),
+    wbInteger('Player Sex', itU16, wbSaveSexEnum),
     wbFloat('Player Current Experience'),
     wbFloat('Player LevelUp Experience'),
     wbByteArray('Save Time', 8),
@@ -6238,7 +6240,7 @@ begin
   FilePlugins := 'Plugins';
   FilePluginNames := SavePluginNames;
   inherited;
-  DefineTES5SavesA(Self);
+  DefineTES5SavesA;
   DefineTES5SavesS;
 end;
 

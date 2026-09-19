@@ -13,11 +13,19 @@ unit wbDefinitionsTES3;
 interface
 
 uses
+  wbDefinitionsCommon,
   wbInterface;
 
 type
-  TwbGameDefTES3 = class(TwbGameDef)
+  TwbGameDefTES3 = class(TwbGameDefCommon)
   protected
+    function wbAIData: IwbRecordMemberDef;
+    function wbBipedObjects: IwbRecordMemberDef;
+    function wbEnchantment: IwbRecordMemberDef;
+    function wbInventory: IwbRecordMemberDef;
+    function wbPackages: IwbRecordMemberDef;
+    function wbTravelServices: IwbRecordMemberDef;
+
     procedure Define; override;
   end;
 
@@ -26,7 +34,6 @@ implementation
 uses
   System.SysUtils,
 
-  wbDefinitionsCommon,
   wbDefinitionsSignatures,
   wbHelpers;
 
@@ -654,7 +661,7 @@ begin
 end;
 
 
-function wbAIData(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function TwbGameDefTES3.wbAIData: IwbRecordMemberDef;
 begin
   Result :=
     wbStruct(AIDT, 'AI Data', [
@@ -663,11 +670,11 @@ begin
       wbInteger('Flee', itU8).SetDefaultNativeValue(30),
       wbInteger('Alarm', itU8),
       wbUnused(3),
-      wbInteger('Service Flags', itU32, wbServiceFlags(aGameDef)).IncludeFlag(dfCollapsed, clpFlags in aGameDef.DefineOptions.Collapse)
+      wbInteger('Service Flags', itU32, wbServiceFlags).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired;
 end;
 
-function wbBipedObjects(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function TwbGameDefTES3.wbBipedObjects: IwbRecordMemberDef;
 begin
   Result :=
     wbRArray('Biped Objects',
@@ -710,7 +717,7 @@ begin
         .SetSummaryMemberPrefixSuffix(2, 'Female: ', ',')
         .IncludeFlag(dfSummaryMembersNoName)
         .IncludeFlag(dfSummaryNoSortKey)
-        .IncludeFlag(dfCollapsed, clpBodyParts in aGameDef.DefineOptions.Collapse));
+        .IncludeFlag(dfCollapsed, clpBodyParts in DefineOptions.Collapse));
 end;
 
 function wbDeleted: IwbRecordMemberDef;
@@ -772,7 +779,7 @@ begin
         .IncludeFlag(dfSummaryNoSortKey));
 end;
 
-function wbEnchantment(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function TwbGameDefTES3.wbEnchantment: IwbRecordMemberDef;
 begin
   Result := wbString(ENAM, 'Enchantment');
 end;
@@ -787,7 +794,7 @@ begin
   Result := wbString(ITEX, 'Icon Filename');
 end;
 
-function wbInventory(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function TwbGameDefTES3.wbInventory: IwbRecordMemberDef;
 begin
   Result :=
     wbRArray('Inventory',
@@ -797,7 +804,7 @@ begin
       ]).SetSummaryKeyOnValue([1,0])
         .SetSummaryPrefixSuffixOnValue(0, 'x', '}')
         .SetSummaryPrefixSuffixOnValue(1, '{', '')
-        .IncludeFlag(dfCollapsed, clpItems in aGameDef.DefineOptions.Collapse));
+        .IncludeFlag(dfCollapsed, clpItems in DefineOptions.Collapse));
 end;
 
 function wbModel: IwbRecordMemberDef;
@@ -805,7 +812,7 @@ begin
   Result := wbString(MODL, 'Model').SetDefaultEditValue('Add Art File');
 end;
 
-function wbPackages(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function TwbGameDefTES3.wbPackages: IwbRecordMemberDef;
 begin
   Result :=
     wbRArray('Packages',
@@ -827,13 +834,13 @@ begin
           wbInteger('Reset', itU8, wbBoolEnum).SetDefaultNativeValue(1)
         ]).SetRequired,
         wbStruct(AI_T, 'Travel', [
-          wbVec3(aGameDef, 'Position'),
+          wbVec3('Position'),
           wbInteger('Reset', itU8, wbBoolEnum).SetDefaultNativeValue(1),
           wbUnused(3)
         ]),
         wbRStruct('Follow', [
           wbStruct(AI_F, 'Follow', [
-            wbVec3(aGameDef, 'Position'),
+            wbVec3('Position'),
             wbInteger('Duration In Hours', itU16),
             wbStringForward('Target', 32).SetAfterLoad(wbForwardForReal), //[CREA, NPC_]
             wbInteger('Reset', itU16, wbBoolEnum).SetDefaultNativeValue(1)
@@ -842,7 +849,7 @@ begin
         ]),
         wbRStruct('Escort', [
           wbStruct(AI_E, 'Escort', [
-            wbVec3(aGameDef, 'Position'),
+            wbVec3('Position'),
             wbInteger('Duration In Hours', itU16),
             wbStringForward('Target', 32).SetAfterLoad(wbForwardForReal), //[CREA, NPC_]
             wbInteger('Reset', itU16, wbBoolEnum).SetDefaultNativeValue(1)
@@ -869,12 +876,12 @@ begin
     );
 end;
 
-function wbTravelServices(const aGameDef: TwbGameDef): IwbRecordMemberDef;
+function TwbGameDefTES3.wbTravelServices: IwbRecordMemberDef;
 begin
   Result :=
     wbRArray('Travel Services',
       wbRStruct('Travel Service', [
-        wbVec3PosRot(aGameDef, DODT, 'Destination').SetRequired,
+        wbVec3PosRot(DODT, 'Destination').SetRequired,
         wbStringForward(DNAM, 'Cell', 64)
       ]));
 end;
@@ -1014,8 +1021,8 @@ begin
       wbInteger('Armor Rating', itU32).SetDefaultNativeValue(1)
     ]).SetRequired,
     wbIcon,
-    wbBipedObjects(Self),
-    wbEnchantment(Self) //[ENCH]
+    wbBipedObjects,
+    wbEnchantment //[ENCH]
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(BODY, 'Body Part', @wbKnownSubRecordSignaturesNoFNAM,
@@ -1086,7 +1093,7 @@ begin
     wbScript, //[SCPT]
     wbIcon,
     wbLStringKC(TEXT, 'Book Text', 0, cpTranslate),
-    wbEnchantment(Self) //[ENCH]
+    wbEnchantment //[ENCH]
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(BSGN, 'Birthsign', [
@@ -1121,12 +1128,12 @@ begin
     ]).SetRequired,
     wbInteger(INTV, 'Water Height', itS32, nil, cpIgnore).SetDontShow(wbCellExteriorDontShow),
     wbString(RGNN, 'Region'),  //[REGN]
-    wbByteColors(Self, NAM5, 'Region Map Color').SetDontShow(wbCellInteriorDontShow),
+    wbByteColors(NAM5, 'Region Map Color').SetDontShow(wbCellInteriorDontShow),
     wbFloat(WHGT, 'Water Height').SetDontShow(wbCellExteriorDontShow),
     wbStruct(AMBI, 'Ambience', [
-      wbByteColors(Self, 'Ambient Color'),
-      wbByteColors(Self, 'Sunlight Color'),
-      wbByteColors(Self, 'Fog Color'),
+      wbByteColors('Ambient Color'),
+      wbByteColors('Sunlight Color'),
+      wbByteColors('Fog Color'),
       wbFloat('Fog Density', cpNormal, False, 1, 2).SetDefaultNativeValue(1)
     ]).SetDontShow(wbCellExteriorDontShow)
   ]).SetFormIDBase($B0)
@@ -1168,7 +1175,7 @@ begin
         ]),
       5),
       wbInteger('Playable', itU32, wbBoolEnum),
-      wbInteger('Service Flags', itU32, wbServiceFlags(Self)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
+      wbInteger('Service Flags', itU32, wbServiceFlags).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired,
     wbDescription
   ]).SetFormIDBase($18);
@@ -1201,8 +1208,8 @@ begin
     ]).SetRequired,
     wbScript, //[SCPT]
     wbIcon,
-    wbBipedObjects(Self),
-    wbEnchantment(Self) //[ENCH]
+    wbBipedObjects,
+    wbEnchantment //[ENCH]
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(CONT, 'Container',
@@ -1225,7 +1232,7 @@ begin
      .SetRequired
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbScript, //[SCPT]
-    wbInventory(Self)
+    wbInventory
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(CREA, 'Creature',
@@ -1292,11 +1299,11 @@ begin
      .SetRequired
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2).SetDefaultNativeValue(1),
-    wbInventory(Self),
+    wbInventory,
     wbSpells,
-    wbAIData(Self),
-    wbTravelServices(Self),
-    wbPackages(Self)
+    wbAIData,
+    wbTravelServices,
+    wbPackages
   ]).SetFormIDBase($40);
 
   RegisterRecordDef(DIAL, 'Dialog Topic', [
@@ -1415,7 +1422,7 @@ begin
       wbInteger('Dialog Type', itU32, wbDialogTypeEnum),
       wbInteger('Disposition/Index', itU32),
       wbInteger('Speaker Faction Rank', itS8).SetDefaultNativeValue(-1),
-      wbInteger('Sex', itS8, wbSexEnum(Self)).SetDefaultNativeValue(-1),
+      wbInteger('Sex', itS8, wbSexEnum).SetDefaultNativeValue(-1),
       wbInteger('Player Faction Rank', itS8).SetDefaultNativeValue(-1),
       wbUnused(1)
     ]).SetRequired,
@@ -1782,7 +1789,7 @@ begin
       wbInteger('Value', itU32),
       wbInteger('Time', itS32).SetDefaultNativeValue(-1),
       wbInteger('Radius', itU32).SetDefaultNativeValue(1000),
-      wbByteColors(Self),
+      wbByteColors,
       wbInteger('Flags', itU32,
         wbFlags([
         {0} 'Dynamic',
@@ -1985,11 +1992,11 @@ begin
       ], False, 12))
     ).SetDefaultNativeValue(18)
      .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
-    wbInventory(Self),
+    wbInventory,
     wbSpells,
-    wbAIData(Self).SetRequired,
-    wbTravelServices(Self),
-    wbPackages(Self).SetRequired,
+    wbAIData.SetRequired,
+    wbTravelServices,
+    wbPackages.SetRequired,
     wbFloat(XSCL, 'Scale', cpNormal, False, 1, 2).SetDefaultNativeValue(1)
   ]).SetFormIDBase($40);
 
@@ -2164,7 +2171,7 @@ begin
     wbInteger(INTV, 'Health', itU32),
     wbInteger(NAM9, 'Count', itU32),
     wbRStructSK([], 'Teleport Data', [
-      wbVec3PosRot(Self, DODT),
+      wbVec3PosRot(DODT),
       wbString(DNAM, 'Cell') //[CELL]
     ]),
     wbRStructSK([], 'Lock Data', [
@@ -2173,7 +2180,7 @@ begin
       wbString(TNAM, 'Trap') //[ENCH]
     ]).SetUnordered,
     wbDeleted,
-    wbVec3PosRot(Self, DATA, 'Reference Data')
+    wbVec3PosRot(DATA, 'Reference Data')
   ]).SetGetFormIDCallback(function(const aMainRecord: IwbMainRecord; out aFormID: TwbFormID): Boolean begin
       var lFRMR := aMainRecord.RecordBySignature[FRMR];
       Result := Assigned(lFRMR);
@@ -2204,7 +2211,7 @@ begin
     ]).SetOptionalFrom(8)
       .SetRequired,
     wbString(BNAM, 'Sleep Creature'), //[LEVC]
-    wbByteColors(Self, CNAM, 'Region Map Color').SetRequired,
+    wbByteColors(CNAM, 'Region Map Color').SetRequired,
     wbRArray('Region Sounds',
       wbStruct(SNAM, 'Region Sound', [
         wbStringForward('Sound', 32).SetAfterLoad(wbForwardForReal), //[SOUN]
@@ -2472,7 +2479,7 @@ begin
     ]).SetRequired,
     wbScript, //[SCPT]
     wbIcon,
-    wbEnchantment(Self) //[ENCH]
+    wbEnchantment //[ENCH]
   ]).SetFormIDBase($40);
 
   AddGroupOrder(GMST);

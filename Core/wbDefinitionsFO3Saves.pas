@@ -4155,9 +4155,9 @@ begin
     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
     {02} wbInteger('Energy Level', itU8),
     {03} wbInteger('Responsibility', itU8),
-    {04} wbInteger('Mood', itU8, wbMoodEnum(Self)),
+    {04} wbInteger('Mood', itU8, wbMoodEnum),
          wbByteArray('Unused', 3),
-    {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags(Self)),
+    {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
     {0C} wbInteger('Teaches', itS8),
     {0D} wbInteger('Maximum training level', itU8),
     {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
@@ -4227,7 +4227,7 @@ begin
     ])
   ]);
 
-  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, wbSexEnum(Self))]);
+  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, wbSexEnum)]);
 
   wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbStruct('Races', [
     wbRefIDT('Race'),
@@ -4340,7 +4340,7 @@ begin
   wbChangePackageStruct := wbStruct('Data', [
       wbStruct('General', [
         wbInteger('Flags', itU32),
-        wbInteger('Type', itU8, wbPackageTypeEnum(Self)),
+        wbInteger('Type', itU8, wbPackageTypeEnum),
         wbByteArray('Unused', 1),
         wbInteger('Fallout Behavior Flags', itU16),
         wbIntegerT('Specific Type Flags', itU32)
@@ -4474,7 +4474,7 @@ begin
 
   wbNonActorMagicTarget := wbArrayPT('Magic Item List', wbStruct('Magic Item', [
     wbRefIDT('Magic Form'),
-    wbIntegerT('ArchType', itU8, wbArchtypeEnum(Self)),
+    wbIntegerT('ArchType', itU8, wbArchtypeEnum),
     wbIntegerT('Unk098', itU6to30),
     wbArrayPT('Effect Items', wbInteger('Effect Item', itU8), -254)
   ]), -254);
@@ -4677,7 +4677,7 @@ begin
       wbIntegerT('Count?', itS32)
     ]),
     wbStruct('Package Data', [
-      wbIntegerT('Package Data Type', itU8, wbPackageTypeEnum(Self)),
+      wbIntegerT('Package Data Type', itU8, wbPackageTypeEnum),
       wbActorPackageData
     ]),
     wbArrayPT('Say TopicInfo once a day', wbStruct('Data', [       // 032
@@ -4994,7 +4994,7 @@ begin
       wbStruct('Package Data', [
         wbUnion('Created Package', ChangeFormBaseProcessCreatedPackageDecider, [ wbNull,
           wbStruct('Created Package Struct', [
-            wbIntegerT('Type', itS8, wbPackageTypeEnum(Self)),
+            wbIntegerT('Type', itS8, wbPackageTypeEnum),
             wbUnion('Created Package', ChangeFormCreatedPackageDecider, [
               wbChangePackageStruct,
               wbNull,
