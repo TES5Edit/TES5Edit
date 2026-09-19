@@ -513,24 +513,8 @@ begin
 end;
 }
 
-function wbNiObjectList: TArray<string>;
+procedure EnsureNifDefs;
 begin
-  if not NifDefsInitialized then begin
-    wbDefineNif;
-    NifDefsInitialized := True;
-  end;
-
-  SetLength(Result, Length(NiObjectInfos.NiObjects));
-  for var i := Low(NiObjectInfos.NiObjects) to High(NiObjectInfos.NiObjects) do
-    Result[i] := NiObjectInfos.NiObjects[i].Def.Name;
-end;
-
-
-function wbNiObjectDef(const aNiObject: string): TdfDef;
-var
-  i: integer;
-begin
-  // initialize NIF definitions if missing
   if not NifDefsInitialized then begin
     Sync.BeginWrite;
     try
@@ -542,6 +526,23 @@ begin
       Sync.EndWrite;
     end;
   end;
+end;
+
+function wbNiObjectList: TArray<string>;
+begin
+  EnsureNifDefs;
+
+  SetLength(Result, Length(NiObjectInfos.NiObjects));
+  for var i := Low(NiObjectInfos.NiObjects) to High(NiObjectInfos.NiObjects) do
+    Result[i] := NiObjectInfos.NiObjects[i].Def.Name;
+end;
+
+
+function wbNiObjectDef(const aNiObject: string): TdfDef;
+var
+  i: integer;
+begin
+  EnsureNifDefs;
 
   i := NiObjectInfos.IndexOf(aNiObject);
 
