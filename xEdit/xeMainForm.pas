@@ -21852,6 +21852,7 @@ begin
             var
               OnlyLoad : Boolean;
               _File    : IwbFile;
+              s        : string;
             begin
               wbStartTime := StartTime;
               _wbProgressCallback := LoaderProgress;
