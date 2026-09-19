@@ -136,7 +136,6 @@ var
   wbDisplayLoadOrderFormID           : Boolean    = False;
   wbPrettyFormID                     : Boolean    = False;
   wbSimpleRecords                    : Boolean    = True;
-  wbDecodeTextureHashes              : Boolean    = True;
   wbIKnowWhatImDoing                 : Boolean    = False;
   wbHideUnused                       : Boolean    = True;
   wbHideNeverShow                    : Boolean    = True;
@@ -688,6 +687,11 @@ type
     GameExeName        : string;
     GameMasterEsm      : string;
     AppName            : string;
+  end;
+
+  TwbGameDefineOptions = record
+    DecodeTextureHashes : Boolean;
+    class function Defaults: TwbGameDefineOptions; static;
   end;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -3990,6 +3994,8 @@ type
     procedure Define; virtual;
     procedure SwitchToCoSave; virtual;
   public
+    DefineOptions: TwbGameDefineOptions;
+
     constructor Create; overload;
     constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource); overload;
     constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs); overload;
@@ -6416,6 +6422,7 @@ end;
 constructor TwbGameDef.Create;
 begin
   inherited Create;
+  DefineOptions := TwbGameDefineOptions.Defaults;
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
   gdCellSizeFactor := 4096.0;
@@ -6864,6 +6871,14 @@ function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 begin
   Assert(Assigned(wbGameContextClass));
   Result := wbGameContextClass.Create(aGameDef);
+end;
+
+{ TwbGameDefineOptions }
+
+class function TwbGameDefineOptions.Defaults: TwbGameDefineOptions;
+begin
+  Result := Default(TwbGameDefineOptions);
+  Result.DecodeTextureHashes := True;
 end;
 
 { TwbGameContextSettings }

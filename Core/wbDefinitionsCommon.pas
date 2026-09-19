@@ -8875,7 +8875,7 @@ begin
     if aName = '' then
       aName := 'Textures';
 
-    if not wbDecodeTextureHashes then
+    if not aGameDef.DefineOptions.DecodeTextureHashes then
       Exit(wbByteArray(aSignature, aName, 0, cpIgnore).SetDontShow(wbNeverShow));
 
     var TextureFile := wbStruct('Texture', [
@@ -8894,7 +8894,7 @@ begin
     if aName = '' then
       aName := 'Model Information';
 
-    if not wbDecodeTextureHashes then
+    if not aGameDef.DefineOptions.DecodeTextureHashes then
       Exit(wbByteArray(aSignature, aName, 0, cpIgnore).SetDontShow(wbNeverShow));
 
     var CreateFileEntry := function(const aName: string): IwbValueDef begin
@@ -9002,7 +9002,7 @@ begin
   if aName = '' then
     aName := 'Model List Textures';
 
-  if not wbDecodeTextureHashes then
+  if not aGameDef.DefineOptions.DecodeTextureHashes then
     Exit(wbByteArray(aSignature, aName, 0, cpIgnore).SetDontShow(wbNeverShow));
 
   var TextureFile := wbStruct('Texture', [

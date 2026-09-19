@@ -193,7 +193,7 @@ begin
     try
       xeContext.Settings.LoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', xeContext.Settings.LoadBSAs);
       wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
-      wbDecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes); {changed name to enforce new default value}
+      xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', xeContext.GameDefObj.DefineOptions.DecodeTextureHashes); {changed name to enforce new default value}
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
       xeContext.Settings.AllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', xeContext.Settings.AllowDirectSave);
@@ -1159,7 +1159,6 @@ begin
       lSettings.HideIgnored := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
       lSettings.AlwaysSaveOnamForce := True;
-      wbDecodeTextureHashes := True;
     end;
   else
     ShowMessage('Unknown GameMode');
@@ -1181,7 +1180,7 @@ begin
     Exit(False);
 
   if xeContext.GameDefObj.GameMode = gmSF1 then
-    wbDecodeTextureHashes := True;
+    xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := True;
 
   if xeContext.Settings.CanSortINFO then begin
     if FindCmdLineSwitch('sortinfo') then

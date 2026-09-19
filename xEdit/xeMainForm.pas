@@ -13925,7 +13925,7 @@ begin
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
     sedNavChangeDelay.Value := tmrPendingSetActive.Interval;
     cbSimpleRecords.Checked := wbSimpleRecords;
-    cbDecodeTexture.Checked := wbDecodeTextureHashes;
+    cbDecodeTexture.Checked := xeContext.GameDefObj.DefineOptions.DecodeTextureHashes;
     cbClampFormID.Checked := xeContext.Settings.ClampFormID;
     cbResetModifiedOnSave.Checked := xeContext.Settings.ResetModifiedOnSave;
     cbAlwaysSaveOnam.Checked := xeContext.Settings.AlwaysSaveOnam or xeContext.Settings.AlwaysSaveOnamForce;
@@ -14024,7 +14024,7 @@ begin
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
     tmrPendingSetActive.Interval := sedNavChangeDelay.Value;
     wbSimpleRecords := cbSimpleRecords.Checked;
-    wbDecodeTextureHashes := cbDecodeTexture.Checked;
+    xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := cbDecodeTexture.Checked;
     xeContext.Settings.ClampFormID := cbClampFormID.Checked;
     xeContext.Settings.ResetModifiedOnSave := cbResetModifiedOnSave.Checked;
     xeContext.Settings.AlwaysSaveOnam := cbAlwaysSaveOnam.Checked or xeContext.Settings.AlwaysSaveOnamForce;
@@ -14120,7 +14120,7 @@ begin
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
     Settings.WriteInteger('Options', 'NavChangeDelay', tmrPendingSetActive.Interval);
     Settings.WriteBool('Options', 'SimpleRecords', wbSimpleRecords);
-    Settings.WriteBool('Options', 'DecodeTextureHashes2', wbDecodeTextureHashes);{changed name to enforce new default value}
+    Settings.WriteBool('Options', 'DecodeTextureHashes2', xeContext.GameDefObj.DefineOptions.DecodeTextureHashes);{changed name to enforce new default value}
     Settings.WriteBool('Options', 'ClampFormID', xeContext.Settings.ClampFormID);
     Settings.WriteBool('Options', 'ResetModifiedOnSave', xeContext.Settings.ResetModifiedOnSave);
     Settings.WriteBool('Options', 'AlwaysSaveOnam', xeContext.Settings.AlwaysSaveOnam or xeContext.Settings.AlwaysSaveOnamForce);
@@ -20359,7 +20359,7 @@ begin
         lHeader.Add('#   wbActorTemplateHide  = ' + BoolToStr(wbActorTemplateHide, True));
         lHeader.Add('#   wbAllowInternalEdit  = ' + BoolToStr(xeContext.Settings.AllowInternalEdit, True));
         lHeader.Add('#   wbCanSortINFO        = ' + BoolToStr(xeContext.Settings.CanSortINFO, True));
-        lHeader.Add('#   wbDecodeTextureHashes = ' + BoolToStr(wbDecodeTextureHashes, True));
+        lHeader.Add('#   wbDecodeTextureHashes = ' + BoolToStr(xeContext.GameDefObj.DefineOptions.DecodeTextureHashes, True));
         lHeader.Add('#   wbDisplayLoadOrderFormID = ' + BoolToStr(wbDisplayLoadOrderFormID, True));
         lHeader.Add('#   wbDisplayShorterNames = ' + BoolToStr(wbDisplayShorterNames, True));
         lHeader.Add('#   wbEditAllowed        = ' + BoolToStr(xeContext.Settings.EditAllowed, True));
@@ -21884,7 +21884,7 @@ begin
           xeContext.ContainerHandler.AddFolder(ltDataPath);
         end;
 
-        if wbDecodeTextureHashes then begin
+        if lGameDef.DefineOptions.DecodeTextureHashes then begin
           LoaderProgress('Start building resources cache...');
           xeContext.ContainerHandler.EnsureCache;
           LoaderProgress('...resources cache finished building');
