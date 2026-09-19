@@ -21690,9 +21690,9 @@ begin
               bsaCount := 0;
               if FileExists(xeContext.Settings.TheGameIniFileName) then begin
                 if FileExists(xeContext.Settings.CustomIniFileName) then
-                  bsaCount := FindBSAs(xeContext, xeContext.Settings.TheGameIniFileName, xeContext.Settings.CustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
+                  bsaCount := xeContext.FindBSAs(xeContext.Settings.TheGameIniFileName, xeContext.Settings.CustomIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives)
                 else
-                  bsaCount := FindBSAs(xeContext, xeContext.Settings.TheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
+                  bsaCount := xeContext.FindBSAs(xeContext.Settings.TheGameIniFileName, ltDataPath, lFoundArchives, lNotFoundArchives);
               end;
 
               if (bsaCount > 0) then begin
@@ -21727,7 +21727,7 @@ begin
               try
                 // all games except old Skyrim load BSA files with partial matching, Skyrim requires exact names match
                 // and can use a private ini to specify the bsa to use.
-                if HasBSAs(xeContext, ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
+                if xeContext.HasBSAs(ChangeFileExt(ltLoadList[lLoadListIdx], ''), ltDataPath,
                     gcArchiveExactNameMatch in lGameDef.Capabilities, gcArchivePrivateIni in lGameDef.Capabilities, lFoundPluginArchives, lNotFoundPluginArchives)>0 then begin
                       for var lFoundPluginIdx := 0 to Pred(lFoundPluginArchives.Count) do
                         if xeContext.Settings.LoadBSAs then begin
