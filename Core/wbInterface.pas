@@ -637,6 +637,88 @@ type
   );
   TwbCollapseOptions = set of TwbCollapseOption;
 
+  TwbCollapseGroup = (
+    cgRecord, cgModels, cgActors, cgItems, cgScripts, cgQuests, cgPlacement, cgWeather, cgTypes, cgStarfield
+  );
+
+  TwbCollapseOptionInfo = record
+    Group   : TwbCollapseGroup;
+    Caption : string;
+  end;
+
+const
+  wbCollapseGroupCaptions : array[TwbCollapseGroup] of string = (
+    'Record', 'Models', 'Actors and Factions', 'Items and Lists', 'Scripts and Conditions', 'Quests',
+    'Placement and Navigation', 'Weather and Sounds', 'Value Types', 'Starfield'
+  );
+
+  wbCollapseOptionInfos : array[TwbCollapseOption] of TwbCollapseOptionInfo = (
+    {clpRecordHeader}             (Group: cgRecord;    Caption: 'Record Header'),
+    {clpObjectBounds}             (Group: cgRecord;    Caption: 'Object Bounds (except TES4)'),
+    {clpModels}                   (Group: cgModels;    Caption: 'Models / 1st Person Models / Biped Models / World Models'),
+    {clpFactions}                 (Group: cgActors;    Caption: 'Factions'),
+    {clpFactionRelations}         (Group: cgActors;    Caption: 'Faction Relations'),
+    {clpFragments}                (Group: cgScripts;   Caption: 'Script Fragments (TES5+)'),
+    {clpItems}                    (Group: cgItems;     Caption: 'Items / Components'),
+    {clpLeveledItems}             (Group: cgItems;     Caption: 'Leveled List Entries (except FO76)'),
+    {clpEquipSlots}               (Group: cgActors;    Caption: 'Race Equip Slots (FO4 and FO76)'),
+    {clpObjectProperties}         (Group: cgActors;    Caption: 'Actor Value Properties (FO4 and FO76)'),
+    {clpScriptProperties}         (Group: cgScripts;   Caption: 'Script Properties (TES5+)'),
+    {clpConditions}               (Group: cgScripts;   Caption: 'Conditions'),
+    {clpRGBA}                     (Group: cgTypes;     Caption: 'Colors (RGB/A)'),
+    {clpVec3}                     (Group: cgTypes;     Caption: 'Vector3 (XYZ)'),
+    {clpPosRot}                   (Group: cgTypes;     Caption: 'PosRot Vec (XYZ,XYZ)'),
+    {clpRange}                    (Group: cgRecord;    Caption: 'Range'),
+    {clpARMABoneData}             (Group: cgModels;    Caption: 'ARMA Bone'),
+    {clpRACEBoneData}             (Group: cgModels;    Caption: 'RACE Bone'),
+    {clpScriptData}               (Group: cgScripts;   Caption: 'Script Data (TES3, TES4)'),
+    {clpHeadParts}                (Group: cgModels;    Caption: 'HeadParts'),
+    {clpBodyParts}                (Group: cgModels;    Caption: 'BodyParts'),
+    {clpModelInfoTexture}         (Group: cgModels;    Caption: 'Model Info: Alternate Texture'),
+    {clpModelInfoTextures}        (Group: cgModels;    Caption: 'Model Info: Texture File Hashes'),
+    {clpModelInfoAddons}          (Group: cgModels;    Caption: 'Model Info: Addons'),
+    {clpModelInfoMaterial}        (Group: cgModels;    Caption: 'Model Info: Material File Hash'),
+    {clpModelInfoMaterials}       (Group: cgModels;    Caption: 'Model Info: Materials'),
+    {clpModelInfo}                (Group: cgModels;    Caption: 'Model Info'),
+    {clpModelInfoHeader}          (Group: cgModels;    Caption: 'Model Info: Header'),
+    {clpTimeInterpolator}         (Group: cgTypes;     Caption: 'Time Interpolator (Time, Value)'),
+    {clpTimeInterpolators}        (Group: cgTypes;     Caption: 'Time Interpolators'),
+    {clpTimeInterpolatorsMultAdd} (Group: cgTypes;     Caption: 'Time Interpolators (Mult / Add)'),
+    {clpBluePrintItem}            (Group: cgStarfield; Caption: 'Blueprint Items'),
+    {clpPlacement}                (Group: cgPlacement; Caption: 'Placement'),
+    {clpVertices}                 (Group: cgPlacement; Caption: 'Vertices'),
+    {clpRDSA}                     (Group: cgStarfield; Caption: 'Reaction Radius Behavior (RDSA)'),
+    {clpFlags}                    (Group: cgTypes;     Caption: 'Flags'),
+    {clpTransforms}               (Group: cgPlacement; Caption: 'Transforms'),
+    {clpSounds}                   (Group: cgWeather;   Caption: 'Sounds'),
+    {clpDestruction}              (Group: cgRecord;    Caption: 'Destruction'),
+    {clpLocations}                (Group: cgRecord;    Caption: 'Locations'),
+    {clpNavmesh}                  (Group: cgPlacement; Caption: 'Navmesh'),
+    {clpOther}                    (Group: cgRecord;    Caption: 'Other'),
+    {clpPerk}                     (Group: cgRecord;    Caption: 'Perk'),
+    {clpKeywords}                 (Group: cgRecord;    Caption: 'Keywords'),
+    {clpFactionRanks}             (Group: cgActors;    Caption: 'Faction Ranks'),
+    {clpOwnership}                (Group: cgRecord;    Caption: 'Ownership'),
+    {clpObjectPaletteDefaults}    (Group: cgStarfield; Caption: 'Object Palette Defaults'),
+    {clpTraversal}                (Group: cgStarfield; Caption: 'Traversals'),
+    {clpBaseFormComponent}        (Group: cgRecord;    Caption: 'BaseForm Component'),
+    {clpVehicleConfig}            (Group: cgStarfield; Caption: 'Vehicle Config'),
+    {clpWeatherTimeOfDay}         (Group: cgWeather;   Caption: 'Weather: Time of Day Colors'),
+    {clpWeatherCloudTextures}     (Group: cgWeather;   Caption: 'Weather: Cloud Textures'),
+    {clpWeatherCloudSpeed}        (Group: cgWeather;   Caption: 'Weather: Cloud Speeds'),
+    {clpWeatherCloudAlphas}       (Group: cgWeather;   Caption: 'Weather: Cloud Alphas'),
+    {clpRagdoll}                  (Group: cgModels;    Caption: 'Ragdoll'),
+    {clpDirectionRotation}        (Group: cgPlacement; Caption: 'Direction Rotation'),
+    {clpMaxHeightData}            (Group: cgPlacement; Caption: 'Max Height Data'),
+    {clpAliases}                  (Group: cgQuests;    Caption: 'Aliases'),
+    {clpQuestStage}               (Group: cgQuests;    Caption: 'Quest Stages'),
+    {clpQuestLog}                 (Group: cgQuests;    Caption: 'Quest Log Entries'),
+    {clpQuestObjective}           (Group: cgQuests;    Caption: 'Quest Objectives'),
+    {clpQuestObjectiveTarget}     (Group: cgQuests;    Caption: 'Quest Objective Targets'),
+    {clpScriptEntry}              (Group: cgScripts;   Caption: 'Script Entries')
+  );
+
+type
   TwbGameDefineOptions = record
     Collapse             : TwbCollapseOptions;
     SimpleRecords        : Boolean;
