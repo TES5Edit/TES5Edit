@@ -6162,7 +6162,6 @@ begin
     end;
 
   wbDarkMode := wbIsDarkMode;
-  //_BlockInternalEdit := True;
   _wbProgressCallback := GeneralProgress;
   LastUpdate := GetTickCount64;
   UpdateTreeLineColor;
@@ -21051,8 +21050,6 @@ begin
             ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
           Exit;
         end;
-
-        _BlockInternalEdit := False;
 
         if (wbToolMode in [tmLODgen, tmScript]) then begin
           if not wbForceTerminate then

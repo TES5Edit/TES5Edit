@@ -5250,7 +5250,6 @@ function FixupFormID(const aFormID: TwbFormID; const aOld, aNew: TwbFileIDs; aOl
 
 threadvar
   _InternalEditCount: Integer;
-  _BlockInternalEdit: Boolean;
 
 var
 
@@ -5613,7 +5612,7 @@ end;
 
 function TwbGameContext.BeginInternalEdit(aForce: Boolean): Boolean;
 begin
-  Result := Settings.EditAllowed or ((Settings.AllowInternalEdit or aForce) and not _BlockInternalEdit);
+  Result := Settings.EditAllowed or Settings.AllowInternalEdit or aForce;
   if Result then
     Inc(_InternalEditCount);
 end;
