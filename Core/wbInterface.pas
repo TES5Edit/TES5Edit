@@ -3913,6 +3913,7 @@ type
 
     procedure AddFile(const aFile: IwbFile; const aFileName: string);
     function FileByName(const aFileName: string): IwbFile;
+    function FileByModuleName(const aModuleName: string): IwbFile;
     function AllocateFullSlot: Integer;
     function AllocateLightSlot: Integer;
     function AllocateMediumSlot: Integer;
@@ -6557,6 +6558,14 @@ begin
     Result := IwbFile(Pointer(gcFilesMap.Objects[i]))
   else
     Result := nil;
+end;
+
+function TwbGameContext.FileByModuleName(const aModuleName: string): IwbFile;
+begin
+  for var lIdx := Low(gcFiles) to High(gcFiles) do
+    if SameText(gcFiles[lIdx].FileName, aModuleName) then
+      Exit(gcFiles[lIdx]);
+  Result := nil;
 end;
 
 function TwbGameContext.AllocateFullSlot: Integer;

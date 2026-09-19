@@ -2303,13 +2303,6 @@ begin
     IwbFile(Pointer(List.Objects[Index2])).LoadOrder);
 end;
 
-function GetLoadedFileByName(const aContext: TwbGameContext; const aName: string): IwbFile;
-begin
-  for var lFile in aContext.Files do
-    if SameText(lFile.FileName, aName) then
-      Exit(lFile);
-end;
-
 { TwbFile }
 
 var
@@ -2570,7 +2563,7 @@ begin
     for i := 0  to Pred(aMasters.Count) do
       if not HasMaster(aMasters[i]) then
       begin
-        var lFile := GetLoadedFileByName(flContextObj, aMasters[i]);
+        var lFile := flContextObj.FileByModuleName(aMasters[i]);
         if not Assigned(lFile) then
           raise Exception.CreateFmt('[AddMAddMastersIfMissingasters] Requested file to add is not loaded: "%s"', [aMasters[i]]);
 
@@ -2656,7 +2649,7 @@ var
 
     if flContextObj.BeginInternalEdit(True) then try
       for i := 0 to Pred(lMasters.Count) do begin
-        var lFile := GetLoadedFileByName(flContextObj, lMasters[i]);
+        var lFile := flContextObj.FileByModuleName(lMasters[i]);
         if not Assigned(lFile) then
           raise Exception.CreateFmt('[AddMasters] Requested file to add is not loaded: "%s"', [lMasters[i]]);
 
