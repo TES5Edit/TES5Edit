@@ -10192,7 +10192,7 @@ var
     Include(mrStates, mrsBasePtrAllocated);
     BasePtr.mrsSignature := aSignature;
     BasePtr.mrsDataSize := 0;
-    var lGameDef := wbGameDefOf(aContainer);
+    var lGameDef := aContainer.GameDefObj;
     var lFormIDInHeader := gcFormIDInRecordHeader in lGameDef.Capabilities;
     BasePtr.mrsFlags(lFormIDInHeader)._Flags := 0;
     if lFormIDInHeader then
@@ -18268,7 +18268,7 @@ begin
     6, 8, 9: Assert(aMainRecord.Signature = 'CELL');
     10: Assert(
       (aMainRecord.Signature = 'CELL') or
-      ((gcVWDAsQuestChildren in wbGameDefOf(aContainer).Capabilities) and (aMainRecord.Signature = 'QUST'))
+      ((gcVWDAsQuestChildren in aContainer.GameDefObj.Capabilities) and (aMainRecord.Signature = 'QUST'))
     );
     7: Assert(aMainRecord.Signature = 'DIAL');
   end;
@@ -25972,7 +25972,7 @@ begin
       Assert(False);
   // if group is persistent, temporary or vwd cell children, it should be in a group too
   // if vwd is treated as quest children, then exclude it from check
-  var lVWDAsQuestChildren := gcVWDAsQuestChildren in wbGameDefOf(aMainRecord).Capabilities;
+  var lVWDAsQuestChildren := gcVWDAsQuestChildren in aMainRecord.GameDefObj.Capabilities;
   if lVWDAsQuestChildren then Grp := [8..9] else Grp := [8..10];
   if GroupRecord.GroupType in Grp then
     if not Supports(GroupRecord.Container, IwbGroupRecord, GroupRecord) then

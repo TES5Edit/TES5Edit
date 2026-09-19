@@ -5176,8 +5176,6 @@ var
 function wbDefToName(const aDef: IwbDef): string;
 function wbDefsToPath(const aDefs: TwbDefPath): string;
 
-function wbGameDefOf(const aElement: IwbElement): TwbGameDef;
-
 type
   IwbProgress = interface
     ['{054006B0-096D-43CD-A92A-3095B525C854}']
@@ -6275,13 +6273,6 @@ end;
 
 var
   _GameDefClasses    : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
-
-function wbGameDefOf(const aElement: IwbElement): TwbGameDef;
-begin
-  Result := nil;
-  if Assigned(aElement) then
-    Result := aElement.GameDefObj;
-end;
 
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 begin

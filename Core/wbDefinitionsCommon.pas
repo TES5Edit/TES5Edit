@@ -758,7 +758,7 @@ begin
   if not Assigned(aMainRecord) then
     Exit;
 
-  if wbGameDefOf(aMainRecord).IsSkyrim then
+  if aMainRecord.GameDefObj.IsSkyrim then
     Result := aMainRecord.ElementEditValues['QNAM']
   else
     Result := aMainRecord.ElementEditValues['Quest'];
@@ -772,7 +772,7 @@ begin
   if not Assigned(aMainRecord) then
     Exit;
 
-  if wbGameDefOf(aMainRecord).IsSkyrim then
+  if aMainRecord.GameDefObj.IsSkyrim then
     Result := aMainRecord.ElementEditValues['QNAM']
   else
     Result := aMainRecord.ElementEditValues['Quest'];
@@ -790,7 +790,7 @@ begin
   if Result <> '' then
     Result := ' in ' + Result;
 
-  var lGameDef := wbGameDefOf(aMainRecord);
+  var lGameDef := aMainRecord.GameDefObj;
   if lGameDef.IsOblivion or lGameDef.IsFallout3 then
     Result := Result + ' in ' + aMainRecord.ElementEditValues['QSTI'];
 
@@ -874,7 +874,7 @@ begin
   if not Assigned(aMainRecord) then
     Exit;
 
-  if wbGameDefOf(aMainRecord).IsSkyrim then
+  if aMainRecord.GameDefObj.IsSkyrim then
     Result := aMainRecord.ElementEditValues['PNAM']
   else
     Result := aMainRecord.ElementEditValues['Quest'];
@@ -1316,7 +1316,7 @@ begin
     if OldValue <> NewValue then
       lContainerElementRef.ElementNativeValues['..\Comparison Value'] := 0;
 
-    if (aNewValue and 2) and wbGameDefOf(aElement).IsFallout3 then begin
+    if (aNewValue and 2) and aElement.GameDefObj.IsFallout3 then begin
       lContainerElementRef.ElementNativeValues['..\Run On'] := 1;
       if Integer(lContainerElementRef.ElementNativeValues['..\Run On']) = 1 then
         aElement.NativeValue := Byte(aNewValue) and not 2;
@@ -1599,7 +1599,7 @@ begin
     if not Supports(aElement, IwbContainerElementRef, lContainerElementRef) then
       Exit;
 
-    var lGameDef := wbGameDefOf(aElement);
+    var lGameDef := aElement.GameDefObj;
     if lGameDef.IsOblivion then
 	    if Assigned(lContainerElementRef.RecordBySignature[WNAM]) then begin
 	      lContainerElementRef.RemoveElement(CNAM);
@@ -1903,7 +1903,7 @@ end;
 
 function wbFlagNavmeshFilterDontSHow(const aElement: IwbElement): Boolean;
 begin
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef := aElement.GameDefObj;
   Result := (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
          or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and lGameDef.IsStarfield)
          or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and lGameDef.IsStarfield)
@@ -1912,7 +1912,7 @@ end;
 
 function wbFlagNavmeshBoundingBoxDontSHow(const aElement: IwbElement): Boolean;
 begin
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef := aElement.GameDefObj;
   Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
          or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and lGameDef.IsStarfield)
          or ((aElement.ContainingMainRecord.Flags._Flags and $20000000 <> 0) and lGameDef.IsStarfield)
@@ -1937,7 +1937,7 @@ end;
 
 function wbFlagNavmeshGroundDontSHow(const aElement: IwbElement): Boolean;
 begin
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef := aElement.GameDefObj;
   Result := (aElement.ContainingMainRecord.Flags._Flags and $4000000 <> 0)
          or (aElement.ContainingMainRecord.Flags._Flags and $8000000 <> 0)
          or ((aElement.ContainingMainRecord.Flags._Flags and $10000000 <> 0) and lGameDef.IsStarfield)
@@ -1993,12 +1993,12 @@ end;
 
 function wbCellInteriorDontShow(const aElement: IwbElement): Boolean;
 begin
-  Result := (aElement.ContainingMainRecord.ElementNativeValues[IfThen(wbGameDefOf(aElement).IsMorrowind, 'DATA\Flags', 'DATA')] and 1 = 1);
+  Result := (aElement.ContainingMainRecord.ElementNativeValues[IfThen(aElement.GameDefObj.IsMorrowind, 'DATA\Flags', 'DATA')] and 1 = 1);
 end;
 
 function wbCellExteriorDontShow(const aElement: IwbElement): Boolean;
 begin
-  Result := (aElement.ContainingMainRecord.ElementNativeValues[IfThen(wbGameDefOf(aElement).IsMorrowind, 'DATA\Flags', 'DATA')] and 1 = 0);
+  Result := (aElement.ContainingMainRecord.ElementNativeValues[IfThen(aElement.GameDefObj.IsMorrowind, 'DATA\Flags', 'DATA')] and 1 = 0);
 end;
 
 function wbIdleMarkerPNAMDontShow(const aElement: IwbElement): Boolean;
@@ -2124,7 +2124,7 @@ end;
 
 function wbModelInfoDontShow(const aElement: IwbElement): Boolean;
 begin
-  if gcModelTextureFileHashList in wbGameDefOf(aElement).Capabilities then
+  if gcModelTextureFileHashList in aElement.GameDefObj.Capabilities then
     Exit(False);
 
   Result := True;
@@ -2302,7 +2302,7 @@ procedure wbModelInfoGetCP(const aElement: IwbElement; var aConflictPriority: Tw
 begin
   aConflictPriority := cpNormal;
 
-  if gcModelTextureFileHashList in wbGameDefOf(aElement).Capabilities then
+  if gcModelTextureFileHashList in aElement.GameDefObj.Capabilities then
     Exit;
 
   if not Assigned(aElement) then
@@ -2515,7 +2515,7 @@ end;
 
 function wbWorldMapDataIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  if wbGameDefOf(aElement).IsOblivion then
+  if aElement.GameDefObj.IsOblivion then
     Result := Assigned(aElement.ContainingMainRecord.RecordBySignature[WNAM])
   else
     Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $04 = 4);
@@ -2523,7 +2523,7 @@ end;
 
 function wbWorldWaterIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  if wbGameDefOf(aElement).IsOblivion then
+  if aElement.GameDefObj.IsOblivion then
     Result := Assigned(aElement.ContainingMainRecord.RecordBySignature[WNAM])
   else
     Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $08 = 8);
@@ -2531,7 +2531,7 @@ end;
 
 function wbWorldClimateIsRemovable(const aElement: IwbElement): Boolean;
 begin
-  if wbGameDefOf(aElement).IsOblivion then
+  if aElement.GameDefObj.IsOblivion then
     Result := Assigned(aElement.ContainingMainRecord.RecordBySignature[WNAM])
   else
     Result := (aElement.ContainingMainRecord.ElementNativeValues['Parent Worldspace\PNAM'] and $10 = 16);
@@ -2561,7 +2561,7 @@ begin
     if not Supports(aQuestRef.LinksTo, IwbMainRecord, lMainRecord) then
       Exit;
 
-  if wbGameDefOf(aQuestRef).IsSkyrim then
+  if aQuestRef.GameDefObj.IsSkyrim then
     lMainRecord := lMainRecord.WinningOverride
   else
     // get winning quest override except for partial forms
@@ -2600,7 +2600,7 @@ begin
   if not wbTrySetContainer(aElement, ctToSummary, Container) then
     Exit;
 
-  if gcConditionWrapsCTDA in wbGameDefOf(aElement).Capabilities then begin
+  if gcConditionWrapsCTDA in aElement.GameDefObj.Capabilities then begin
     if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
       Exit;
   end else
@@ -2952,7 +2952,9 @@ begin
   if aString = 'None' then
     Exit;
 
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef: TwbGameDef := nil;
+  if Assigned(aElement) then
+    lGameDef := aElement.GameDefObj;
   if (aString = 'Player') and not lGameDef.IsSkyrim then begin
     Result := -2;
     Exit;
@@ -3235,7 +3237,9 @@ var
   Alias      : IwbContainerElementRef;
 begin
   Result := '';
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef: TwbGameDef := nil;
+  if Assigned(aElement) then
+    lGameDef := aElement.GameDefObj;
   case aType of
     ctToEditValue, ctToStr, ctToSummary:
       if aInt = -1 then
@@ -3424,7 +3428,7 @@ begin
       Result := wbAliasToStr(aInt, lMainRecord, aElement, aType)
     else if lSig = SCEN then
       Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['PNAM'], aElement, aType)
-    else if (lSig = PACK) or (wbGameDefOf(aElement).IsFallout76 and (lSig = TERM)) then
+    else if (lSig = PACK) or (aElement.GameDefObj.IsFallout76 and (lSig = TERM)) then
       Result := wbAliasToStr(aInt, lMainRecord.ElementBySignature['QNAM'], aElement, aType)
     else if lSig = INFO then begin
       // get DIAL for INFO
@@ -3475,7 +3479,7 @@ var
 begin
   Result := '';
 
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef := aElement.GameDefObj;
   var lTES4FO3 := lGameDef.IsOblivion or lGameDef.IsFallout3;
 
   Flags :=
@@ -4572,7 +4576,7 @@ begin
   if not wbTrySetContainer(aElement, aType, Container) then
     Exit;
 
-  var lGameDef := wbGameDefOf(aElement);
+  var lGameDef := aElement.GameDefObj;
   if gcConditionWrapsCTDA in lGameDef.Capabilities then begin
     if not Supports(Container.RecordBySignature[CTDA], IwbContainerElementRef, cerCTDA) then
       Exit;
@@ -4674,7 +4678,7 @@ begin
 
   aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
 
-  if not (gcCurveTableProperties in wbGameDefOf(aElement).Capabilities) then
+  if not (gcCurveTableProperties in aElement.GameDefObj.Capabilities) then
     Exit;
 
   if not wbTryGetMainRecord(Container.ElementByName['Curve Table'], MainRecord) then
@@ -4738,7 +4742,7 @@ begin
 
   aValue := Faction.Value;
 
-  if wbGameDefOf(aElement).IsOblivion then begin
+  if aElement.GameDefObj.IsOblivion then begin
     var NativeReaction := Reaction.NativeValue;
 
     aValue := IntToStr(NativeReaction) + ' ' + aValue;
@@ -4780,7 +4784,7 @@ begin
   if aElement.NativeValue <> 0 then
     Exit;
 
-  var lDefaultTexture := wbGameDefOf(aElement).DefaultLandTexture;
+  var lDefaultTexture := aElement.GameDefObj.DefaultLandTexture;
 
   case aType of
     ctToStr, ctToSummary : aValue := lDefaultTexture + ' [LTEX:00000000]';
@@ -4852,7 +4856,7 @@ begin
 
   aValue := MainRecord.EditorID + ' = ' + Format('%.*g', [5, StrToFloat(ActorValueData.Value)]);
 
-  if not (gcCurveTableProperties in wbGameDefOf(aElement).Capabilities) then
+  if not (gcCurveTableProperties in aElement.GameDefObj.Capabilities) then
     Exit;
 
   if not wbTryGetMainRecord(Container.ElementByName['Curve Table'], MainRecord) then
@@ -5126,7 +5130,7 @@ begin
   if lBaseRecord.Signature <> LIGH then
     Exit;
 
-  var lRadius := lBaseRecord.ElementByPath[IfThen(wbGameDefOf(aElement).IsStarfield, 'DAT2\Radius', 'DATA\Radius')];
+  var lRadius := lBaseRecord.ElementByPath[IfThen(aElement.GameDefObj.IsStarfield, 'DAT2\Radius', 'DATA\Radius')];
   if not Assigned(lRadius) then
     Exit;
 
@@ -5213,7 +5217,7 @@ begin
     Exit;
 
   var SCDA := CER.ElementBySignature[SCDA];
-  if wbGameDefOf(aElement).IsMorrowind then
+  if aElement.GameDefObj.IsMorrowind then
     SCDA := CER.ElementBySignature[SCDT];
   var SCTX := CER.ElementBySignature[SCTX];
 
@@ -5738,7 +5742,7 @@ begin
   if not wbTryGetContainerFromUnion(aElement, Container) then
     Exit;
 
-  if wbGameDefOf(aElement).IsFalloutNV then begin
+  if aElement.GameDefObj.IsFalloutNV then begin
     // IsFacingUp, IsLeftUp
     var i := Container.ElementNativeValues['Function'];
     if (i = 106) or (i = 285) then
@@ -5868,7 +5872,7 @@ begin
           'i': Result := 1; {intS32}
           'f': Result := 2; {Float}
           else begin
-            var lGameDef := wbGameDefOf(aElement);
+            var lGameDef := aElement.GameDefObj;
             if gcBoolGameSettings in lGameDef.Capabilities then
               if lEditorID[1] = 'b' then
                 Exit(3);

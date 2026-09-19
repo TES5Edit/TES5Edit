@@ -1749,7 +1749,7 @@ var
   ini             : TMemIniFile;
   Cell            : TwbGridCell;
 begin
-  var lGameDef := wbGameDefOf(aWorldspace);
+  var lGameDef := aWorldspace.GameDefObj;
   // split Skyrim's Trees LOD atlas into separate billboard textures
   Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
   if Length(Res) > 0 then
@@ -1971,7 +1971,7 @@ end;
 function wbGetLODMeshName(const aStat: IwbMainRecord; const aLODLevel: Integer; aTrees3D: Boolean = False): string;
 begin
   Result := '';
-  var lGameDef := wbGameDefOf(aStat);
+  var lGameDef := aStat.GameDefObj;
   // full mesh
   if aLODLevel = -1 then
     Result := aStat.ElementEditValues['Model\MODL']
@@ -2490,7 +2490,7 @@ var
   Bytes               : TBytes;
 begin
   Master := aWorldspace.MasterOrSelf;
-  var lGameDef := wbGameDefOf(aWorldspace);
+  var lGameDef := aWorldspace.GameDefObj;
 
   // need an existing lodsettings file to align lod blocks
   Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
@@ -3516,7 +3516,7 @@ var
     end;
 
 begin
-  var lGameDef := wbGameDefOf(aWorldspace);
+  var lGameDef := aWorldspace.GameDefObj;
   // need an existing lodsettings file to align lod blocks
   Res := aWorldspace.ContextObj.ContainerHandler.OpenResource(wbLODSettingsFileName(lGameDef, aWorldspace.EditorID));
   if Length(Res) > 0 then
