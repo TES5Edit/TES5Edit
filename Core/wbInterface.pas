@@ -135,11 +135,9 @@ var
 var
   wbDisplayLoadOrderFormID           : Boolean    = False;
   wbPrettyFormID                     : Boolean    = False;
-  wbSimpleRecords                    : Boolean    = True;
   wbIKnowWhatImDoing                 : Boolean    = False;
   wbHideUnused                       : Boolean    = True;
   wbHideNeverShow                    : Boolean    = True;
-  wbHideLargeSubrecords              : Boolean    = True;
   wbShowFormVersion                  : Boolean    = False;
   wbShowFlagEnumValue                : Boolean    = False;
   wbShowGroupRecordCount             : Boolean    = False;
@@ -157,9 +155,7 @@ var
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
   wbHasAddedOptimizedSupport         : Boolean    = False;
-  wbAllowEditHEDRVersion             : Boolean    = False;
   wbAllowEditGameMaster              : Boolean    = False;
-  wbAllowMasterFilesEdit             : Boolean    = False;          //must be set before DefineDefs
   wbCanAddScripts                    : Boolean    = True;
   wbCanAddScriptProperties           : Boolean    = True;
   wbEditInfoUseShortName             : Boolean    = False;
@@ -175,70 +171,7 @@ var
   wbManualCleaningAllow              : Boolean    = False;
   wbManualCleaningHide               : Boolean    = False;
   wbShrinkButtons                    : Boolean    = False;
-  wbCollapseRecordHeader             : Boolean    = True;
-  wbCollapseObjectBounds             : Boolean    = True;
-  wbCollapseModels                   : Boolean    = True;
-  wbCollapseFactions                 : Boolean    = True;
-  wbCollapseFactionRelations         : Boolean    = True;
-  wbCollapseFragments                : Boolean    = True;
-  wbCollapseItems                    : Boolean    = True;
-  wbCollapseLeveledItems             : Boolean    = True;
-  wbCollapseEquipSlots               : Boolean    = True;
-  wbCollapseObjectProperties         : Boolean    = True;
-  wbCollapseScriptProperties         : Boolean    = True;
-  wbCollapseConditions               : Boolean    = True;
   wbCollapseBenignArray              : Boolean    = True;
-  wbCollapseRGBA                     : Boolean    = True;
-  wbCollapseVec3                     : Boolean    = True;
-  wbCollapsePosRot                   : Boolean    = True;
-  wbCollapseRange                    : Boolean    = True;
-  wbCollapseARMABoneData             : Boolean    = True;
-  wbCollapseRACEBoneData             : Boolean    = True;
-  wbCollapseScriptData               : Boolean    = True;
-  wbCollapseHeadParts                : Boolean    = True;
-  wbCollapseBodyParts                : Boolean    = True;
-  wbCollapseModelInfoTexture         : Boolean    = True;
-  wbCollapseModelInfoTextures        : Boolean    = True;
-  wbCollapseModelInfoAddons          : Boolean    = True;
-  wbCollapseModelInfoMaterial        : Boolean    = True;
-  wbCollapseModelInfoMaterials       : Boolean    = True;
-  wbCollapseModelInfo                : Boolean    = True;
-  wbCollapseModelInfoHeader          : Boolean    = True;
-  wbCollapseTimeInterpolator         : Boolean    = True;
-  wbCollapseTimeInterpolators        : Boolean    = True;
-  wbCollapseTimeInterpolatorsMultAdd : Boolean    = True;
-  wbCollapseBluePrintItem            : Boolean    = True;
-  wbCollapsePlacement                : Boolean    = True;
-  wbCollapseVertices                 : Boolean    = True;
-  wbCollapseRDSA                     : Boolean    = True;
-  wbCollapseFlags                    : Boolean    = True;
-  wbCollapseTransforms               : Boolean    = True;
-  wbCollapseSounds                   : Boolean    = True;
-  wbCollapseDestruction              : Boolean    = True;
-  wbCollapseLocations                : Boolean    = True;
-  wbCollapseNavmesh                  : Boolean    = True;
-  wbCollapseOther                    : Boolean    = True; // catch all for things not explicitly defined with their own value
-  wbCollapsePerk                     : Boolean    = True;
-  wbCollapseKeywords                 : Boolean    = True;
-  wbCollapseFactionRanks             : Boolean    = True;
-  wbCollapseOwnership                : Boolean    = True;
-  wbCollapseObjectPaletteDefaults    : Boolean    = True;
-  wbCollapseTraversal                : Boolean    = True;
-  wbCollapseBaseFormComponent        : Boolean    = True;
-  wbCollapseVehicleConfig            : Boolean    = True;
-  wbCollapseWeatherTimeOfDay         : Boolean    = True;
-  wbCollapseWeatherCloudTextures     : Boolean    = True;
-  wbCollapseWeatherCloudSpeed        : Boolean    = True;
-  wbCollapseWeatherCloudAlphas       : Boolean    = True;
-  wbCollapseRagdoll                  : Boolean    = True;
-  wbCollapseDirectionRotation        : Boolean    = True;
-  wbCollapseMaxHeightData            : Boolean    = True;
-  wbCollapseAliases                  : Boolean    = True;
-  wbCollapseQuestStage               : Boolean    = True;
-  wbCollapseQuestLog                 : Boolean    = True;
-  wbCollapseQuestObjective           : Boolean    = True;
-  wbCollapseQuestObjectiveTarget     : Boolean    = True;
-  wbCollapseScriptEntry              : Boolean    = True;
   wbDontDrawColorText                : Boolean    = True;
   wbReportInjected                   : Boolean    = True;
   wbNoFullInShortName                : Boolean    = True;
@@ -689,9 +622,31 @@ type
     AppName            : string;
   end;
 
+  TwbCollapseOption = (
+    clpRecordHeader, clpObjectBounds, clpModels, clpFactions, clpFactionRelations, clpFragments, clpItems,
+    clpLeveledItems, clpEquipSlots, clpObjectProperties, clpScriptProperties, clpConditions, clpRGBA, clpVec3,
+    clpPosRot, clpRange, clpARMABoneData, clpRACEBoneData, clpScriptData, clpHeadParts, clpBodyParts,
+    clpModelInfoTexture, clpModelInfoTextures, clpModelInfoAddons, clpModelInfoMaterial, clpModelInfoMaterials,
+    clpModelInfo, clpModelInfoHeader, clpTimeInterpolator, clpTimeInterpolators, clpTimeInterpolatorsMultAdd,
+    clpBluePrintItem, clpPlacement, clpVertices, clpRDSA, clpFlags, clpTransforms, clpSounds, clpDestruction,
+    clpLocations, clpNavmesh, clpOther, clpPerk, clpKeywords, clpFactionRanks, clpOwnership,
+    clpObjectPaletteDefaults, clpTraversal, clpBaseFormComponent, clpVehicleConfig, clpWeatherTimeOfDay,
+    clpWeatherCloudTextures, clpWeatherCloudSpeed, clpWeatherCloudAlphas, clpRagdoll, clpDirectionRotation,
+    clpMaxHeightData, clpAliases, clpQuestStage, clpQuestLog, clpQuestObjective, clpQuestObjectiveTarget,
+    clpScriptEntry
+  );
+  TwbCollapseOptions = set of TwbCollapseOption;
+
   TwbGameDefineOptions = record
-    DecodeTextureHashes : Boolean;
+    Collapse             : TwbCollapseOptions;
+    SimpleRecords        : Boolean;
+    HideLargeSubrecords  : Boolean;
+    AllowMasterFilesEdit : Boolean;
+    AllowEditHEDRVersion : Boolean;
+    DecodeTextureHashes  : Boolean;
     class function Defaults: TwbGameDefineOptions; static;
+    class function CollapseSettingsKey(aOption: TwbCollapseOption): string; static;
+    procedure SetCollapse(aOption: TwbCollapseOption; aValue: Boolean);
   end;
 
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
@@ -5908,6 +5863,7 @@ var
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef; overload;
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef; overload;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 
 implementation
@@ -6878,7 +6834,23 @@ end;
 class function TwbGameDefineOptions.Defaults: TwbGameDefineOptions;
 begin
   Result := Default(TwbGameDefineOptions);
+  Result.Collapse := [Low(TwbCollapseOption)..High(TwbCollapseOption)];
+  Result.SimpleRecords := True;
+  Result.HideLargeSubrecords := True;
   Result.DecodeTextureHashes := True;
+end;
+
+class function TwbGameDefineOptions.CollapseSettingsKey(aOption: TwbCollapseOption): string;
+begin
+  Result := 'Collapse' + Copy(GetEnumName(TypeInfo(TwbCollapseOption), Ord(aOption)), 4, MaxInt);
+end;
+
+procedure TwbGameDefineOptions.SetCollapse(aOption: TwbCollapseOption; aValue: Boolean);
+begin
+  if aValue then
+    Include(Collapse, aOption)
+  else
+    Exclude(Collapse, aOption);
 end;
 
 { TwbGameContextSettings }
@@ -8005,6 +7977,14 @@ begin
   Result := lGameDef;
   if aDefine then
     lGameDef.EnsureDefined;
+end;
+
+function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef;
+begin
+  Result := wbCreateGameDef(aGameMode, aToolSource, aInputs, False);
+  var lGameDef := Result as TwbGameDef;
+  lGameDef.DefineOptions := aDefineOptions;
+  lGameDef.EnsureDefined;
 end;
 
 function wbDefToName(const aDef: IwbDef): string;

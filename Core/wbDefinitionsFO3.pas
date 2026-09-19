@@ -790,7 +790,7 @@ begin
       .SetRequired(aRequired)
       .IncludeFlag(dfSummaryMembersNoName)
       .IncludeFlag(dfSummaryNoSortKey)
-      .IncludeFlag(dfCollapsed, wbCollapseModels);
+      .IncludeFlag(dfCollapsed, clpModels in aGameDef.DefineOptions.Collapse);
 end;
 
 function TwbGameDefFO3.EPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
@@ -2511,7 +2511,7 @@ procedure TwbGameDefFO3.Define;
 begin
   RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbRecordHeader(RecordFlags);
+  MainRecordHeader := wbRecordHeader(Self, RecordFlags);
 
   SizeOfMainRecordStruct := 24;
 
@@ -2849,7 +2849,7 @@ begin
         {1} 'Torso',
         {2} 'Right Hand',
         {3} 'Left Hand'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags);
+      ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse);
 
   wbMOSD :=
     wbInteger(MOSD, 'FaceGen Model Flags', itU8,
@@ -2858,7 +2858,7 @@ begin
         {1} 'Torso',
         {2} 'Right Hand',
         {3} 'Left Hand'
-      ])).IncludeFlag(dfCollapsed, wbCollapseFlags);
+      ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse);
 
   {>>> Common Defs <<<}
 
@@ -2874,10 +2874,10 @@ begin
   wbETYPReq := wbInteger(ETYP, 'Equipment Type', itS32, wbEquipTypeEnum).SetRequired;
   wbFULL := wbStringKC(FULL, 'Name', 0, cpTranslate);
   wbFULLReq := wbStringKC(FULL, 'Name', 0, cpTranslate).SetRequired;
-  wbMODS := wbArrayS(MODS, 'Alternate Textures', wbAlternateTexture, -1);
-  wbMO2S := wbArrayS(MO2S, 'Alternate Textures', wbAlternateTexture, -1);
-  wbMO3S := wbArrayS(MO3S, 'Alternate Textures', wbAlternateTexture, -1);
-  wbMO4S := wbArrayS(MO4S, 'Alternate Textures', wbAlternateTexture, -1);
+  wbMODS := wbArrayS(MODS, 'Alternate Textures', wbAlternateTexture(Self), -1);
+  wbMO2S := wbArrayS(MO2S, 'Alternate Textures', wbAlternateTexture(Self), -1);
+  wbMO3S := wbArrayS(MO3S, 'Alternate Textures', wbAlternateTexture(Self), -1);
+  wbMO4S := wbArrayS(MO4S, 'Alternate Textures', wbAlternateTexture(Self), -1);
   wbREPL := wbFormIDCkNoReach(REPL, 'Repair List', [FLST]);
   wbSCRI := wbFormIDCk(SCRI, 'Script', [SCPT]);
   wbXLCM := wbInteger(XLCM, 'Level Modifier', itS32);
@@ -2978,7 +2978,7 @@ begin
       wbInteger('Responsibility', itU8),
       wbInteger('Mood', itU8, wbMoodEnum(Self)),
       wbUnused(3),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags(Self)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Teaches', itS8, wbSkillEnum),
       wbInteger('Maximum training level', itU8),
       wbInteger('Assistance', itS8, wbAssistanceEnum),
@@ -3011,14 +3011,14 @@ begin
           {17} 'Body AddOn 1',
           {18} 'Body AddOn 2',
           {19} 'Body AddOn 3'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('General Flags', itU8,
           wbFlags(wbSparseFlags([
             5, 'Power Armor',
             6, 'Non-Playable',
             7, 'Heavy'
           ], False, 8), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
           wbUnused(3)
       ]).SetRequired;
 
@@ -3046,9 +3046,9 @@ begin
         .SetSummaryDelimiterOnValue(' ')
         .IncludeFlagOnValue(dfSummaryNoSortKey)
         .IncludeFlagOnValue(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed, wbCollapseItems),
+        .IncludeFlag(dfCollapsed, clpItems in DefineOptions.Collapse),
         wbCOED
-      ]).IncludeFlag(dfCollapsed, wbCollapseItems)
+      ]).IncludeFlag(dfCollapsed, clpItems in DefineOptions.Collapse)
     );
 
   wbConditions :=
@@ -3079,7 +3079,7 @@ begin
       ]).SetOptionalFrom(7)
         .SetAfterLoad(wbConditionsfterLoad)
         .SetToStr(wbConditionToStr)
-        .IncludeFlag(dfCollapsed, wbCollapseConditions));
+        .IncludeFlag(dfCollapsed, clpConditions in DefineOptions.Collapse));
 
   wbDEST :=
     wbRStruct('Destructible', [
@@ -3090,7 +3090,7 @@ begin
         wbUnused(2)
       ]).SetSummaryKeyOnValue([0])
         .SetSummaryPrefixSuffixOnValue(0,'Health ','')
-        .IncludeFlag(dfCollapsed, wbCollapseDestruction),
+        .IncludeFlag(dfCollapsed, clpDestruction in DefineOptions.Collapse),
       wbRArray('Stages',
         wbRStruct('Stage', [
           wbStruct(DSTD, 'Destruction Stage Data', [
@@ -3102,7 +3102,7 @@ begin
                 {0} 'Cap Damage',
                 {1} 'Disable',
                 {2} 'Destroy'
-              ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+              ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
             wbInteger('Self Damage per Second', itS32),
             wbFormIDCk('Explosion', [EXPL, NULL]),
             wbFormIDCk('Debris', [DEBR, NULL]),
@@ -3113,12 +3113,12 @@ begin
           .SetSummaryDelimiterOnValue(', ')
           .IncludeFlagOnValue(dfSummaryExcludeNULL)
           .IncludeFlagOnValue(dfSummaryMembersNoName)
-          .IncludeFlag(dfCollapsed, wbCollapseDestruction),
+          .IncludeFlag(dfCollapsed, clpDestruction in DefineOptions.Collapse),
           wbRStructSK([0], 'Model', [
             wbString(DMDL, 'Model FileName'),
             wbModelInfo(Self, DMDT)
           ]).SetSummaryKey([0])
-            .IncludeFlag(dfCollapsed, wbCollapseModels),
+            .IncludeFlag(dfCollapsed, clpModels in DefineOptions.Collapse),
           wbEmpty(DSTF, 'End Marker').SetRequired
         ]).SetSummaryKey([0, 1])
           .IncludeFlag(dfSummaryMembersNoName))
@@ -3142,9 +3142,9 @@ begin
           {1} 'Alpha - Blending',
           {2} 'Alpha - Testing'
         ], True)
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(2),
-      wbByteColors('Color')
+      wbByteColors(Self, 'Color')
     ]);
 
   wbEFIT :=
@@ -3208,7 +3208,7 @@ begin
         .SetSummaryDelimiter(' ')
         .IncludeFlag(dfSummaryMembersNoName)
         .IncludeFlag(dfSummaryNoSortKey)
-        .IncludeFlag(dfCollapsed, wbCollapseBodyParts)
+        .IncludeFlag(dfCollapsed, clpBodyParts in DefineOptions.Collapse)
     ).SetRequired;
 
   wbSCHRReq :=
@@ -3283,7 +3283,7 @@ begin
         wbFlags([
           {0} 'Set Enable State to Opposite of Parent',
           {1} 'Pop In'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3)
     ]);
 
@@ -3332,8 +3332,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbByteColors('Link Start Color'),
-      wbByteColors('Link End Color')
+      wbByteColors(Self, 'Link Start Color'),
+      wbByteColors(Self, 'Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -3361,7 +3361,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbVec3PosRot(DATA).SetRequired
+    wbVec3PosRot(Self, DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered;
 
@@ -3412,8 +3412,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbByteColors('Link Start Color'),
-      wbByteColors('Link End Color')
+      wbByteColors(Self, 'Link Start Color'),
+      wbByteColors(Self, 'Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -3441,7 +3441,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbVec3PosRot(DATA).SetRequired
+    wbVec3PosRot(Self, DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered;
 
@@ -3497,7 +3497,7 @@ begin
           {0} 'No Auto-Calc',
           {1} 'Food Item',
           {2} 'Medicine'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3),
       wbFormIDCk('Withdrawal Effect', [SPEL, NULL]),
       wbFloat('Addiction Chance'),
@@ -3521,7 +3521,7 @@ begin
         wbFlags([
           {0} 'Ignores Normal Weapon Resistance',
           {1} 'Non-Playable'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3),
       wbInteger('Value', itS32),
       wbInteger('Clip Rounds', itU8)
@@ -3628,7 +3628,7 @@ begin
         wbFlags([
           {0} 'Scroll',
           {1} 'Can''t be Taken'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Skill', itS8, wbSkillEnum),
       wbInteger('Value', itS32),
       wbFloat('Weight')
@@ -3654,12 +3654,12 @@ begin
         {6} 'Hand changed',
         {7} 'Behave like exterior'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags),
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbCellGrid(Self),
     wbStruct(XCLL, 'Lighting', [
-      wbByteColors('Ambient Color'),
-      wbByteColors('Directional Color'),
-      wbByteColors('Fog Color'),
+      wbByteColors(Self, 'Ambient Color'),
+      wbByteColors(Self, 'Directional Color'),
+      wbByteColors(Self, 'Fog Color'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -3696,7 +3696,7 @@ begin
           {7} 'Clip Distance',
           {8} 'Fog Power'
         ])).SetRequired
-           .IncludeFlag(dfCollapsed, wbCollapseFlags)
+           .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired,
     wbFloat(XCLW, 'Water Height'),
     wbString(XNAM, 'Water Noise Texture'),
@@ -3730,8 +3730,8 @@ begin
           {0} 'Playable',
           {1} 'Guard'
         ], True)
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbInteger('Buys/Sells and Services', itU32, wbServiceFlags(Self)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Teaches', itS8, wbSkillEnum),
       wbInteger('Maximum training level', itU8),
       wbUnused(2)
@@ -3783,7 +3783,7 @@ begin
         wbFlags(wbSparseFlags([
           1, 'Respawns'
         ], False, 2)
-      )).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      )).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbFloat('Weight')
     ]).SetRequired,
     wbFormIDCk(SNAM, 'Sound - Open', [SOUN]),
@@ -3861,7 +3861,7 @@ begin
            .SetFlagHasDontShow(27, wbActorTemplateUseModelAnimation)
            .SetFlagHasDontShow(28, wbActorTemplateUseBaseData)
            .SetFlagHasDontShow(30, wbActorTemplateUseModelAnimation)
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       {04} wbInteger('Fatigue', itU16).SetDontShow(wbActorTemplateUseStats),
       {06} wbInteger('Barter gold', itU16).SetDontShow(wbActorTemplateUseAIData),
       {08} wbUnion('Level', wbACBSLevelDecider, [
@@ -3877,7 +3877,7 @@ begin
       {14} wbInteger('Speed Multiplier', itU16).SetDontShow(wbActorTemplateUseStats),
       {16} wbFloat('Karma (Alignment)').SetDontShow(wbActorTemplateUseTraits),
       {20} wbInteger('Disposition Base', itS16).SetDontShow(wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbTemplateFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      {22} wbInteger('Template Flags', itU16, wbTemplateFlags(Self)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired,
     wbRArrayS('Factions', wbFaction(Self)).SetDontShow(wbActorTemplateUseFactions),
     wbFormIDCk(INAM, 'Death item', [LVLI]).SetDontShow(wbActorTemplateUseTraits),
@@ -3994,7 +3994,7 @@ begin
                7, 'Ignore Damaging Spectators',
                8, 'Cannot Use Stealthboy'
              ], False, 9))
-           ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+           ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       {082}wbUnused(2),
       {085}wbInteger('Maneuver Decision - Acrobatic Dodge % Chance', itU8),
       {085}wbInteger('Melee Decision - Power Attacks - Rushing Attack % Chance', itU8),
@@ -4074,7 +4074,7 @@ begin
         {0} 'Rumors',
         {1} 'Top-level'
         ])
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetOptionalFrom(1)
       .SetRequired,
     wbINOM,
@@ -4104,7 +4104,7 @@ begin
         4, 'Sliding Door'
       ], False, 5))
     ).SetRequired
-     .IncludeFlag(dfCollapsed, wbCollapseFlags)
+     .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
   ]);
 
   RegisterRecordDef(EFSH, 'Effect Shader', [
@@ -4119,12 +4119,12 @@ begin
           3, 'No Particle Shader',
           4, 'Edge Effect - Inverse',
           5, 'Membrane Shader - Affect Skin Only'
-        ], False, 6))).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ], False, 6))).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3),
       wbInteger('Membrane Shader - Source Blend Mode', itU32, wbBlendModeEnum(Self)),
       wbInteger('Membrane Shader - Blend Operation', itU32, wbBlendOpEnum),
       wbInteger('Membrane Shader - Z Test Function', itU32, wbZTestFuncEnum(Self)),
-      wbByteColors('Fill/Texture Effect - Color'),
+      wbByteColors(Self, 'Fill/Texture Effect - Color'),
       wbFloat('Fill/Texture Effect - Alpha Fade In Time'),
       wbFloat('Fill/Texture Effect - Full Alpha Time'),
       wbFloat('Fill/Texture Effect - Alpha Fade Out Time'),
@@ -4134,7 +4134,7 @@ begin
       wbFloat('Fill/Texture Effect - Texture Animation Speed (U)'),
       wbFloat('Fill/Texture Effect - Texture Animation Speed (V)'),
       wbFloat('Edge Effect - Fall Off'),
-      wbByteColors('Edge Effect - Color'),
+      wbByteColors(Self, 'Edge Effect - Color'),
       wbFloat('Edge Effect - Alpha Fade In Time'),
       wbFloat('Edge Effect - Full Alpha Time'),
       wbFloat('Edge Effect - Alpha Fade Out Time'),
@@ -4167,9 +4167,9 @@ begin
       wbFloat('Particle Shader - Scale Key 2'),
       wbFloat('Particle Shader - Scale Key 1 Time'),
       wbFloat('Particle Shader - Scale Key 2 Time'),
-      wbByteColors('Color Key 1 - Color'),
-      wbByteColors('Color Key 2 - Color'),
-      wbByteColors('Color Key 3 - Color'),
+      wbByteColors(Self, 'Color Key 1 - Color'),
+      wbByteColors(Self, 'Color Key 2 - Color'),
+      wbByteColors(Self, 'Color Key 3 - Color'),
       wbFloat('Color Key 1 - Color Alpha'),
       wbFloat('Color Key 2 - Color Alpha'),
       wbFloat('Color Key 3 - Color Alpha'),
@@ -4187,7 +4187,7 @@ begin
       wbFloat('Holes - Start Val'),
       wbFloat('Holes - End Val'),
       wbFloat('Edge Width (alpha units)'),
-      wbByteColors('Edge Color'),
+      wbByteColors(Self, 'Edge Color'),
       wbFloat('Explosion Wind Speed'),
       wbInteger('Texture Count U', itU32),
       wbInteger('Texture Count V', itU32),
@@ -4217,7 +4217,7 @@ begin
           0, 'No Auto-Calc',
           2, 'Hide Effect'
         ], False, 3))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3)
     ]).SetRequired,
     wbEffectsReq
@@ -4233,7 +4233,7 @@ begin
         {1} 'Not Male',
         {2} 'Not Female'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags)
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
   ]);
 
   RegisterRecordDef(FACT, 'Faction', [
@@ -4246,12 +4246,12 @@ begin
           {0} 'Hidden from PC',
           {1} 'Evil',
           {2} 'Special Combat'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Flags 2', itU8,
         wbFlags([
           {0} 'Track Crime',
           {1} 'Allow Sell'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(2)
     ]).SetOptionalFrom(1)
       .SetRequired,
@@ -4439,7 +4439,7 @@ begin
           {1} 'Unlocked',
           {2} 'Alternate Colors',
           {3} 'Hide Welcome Text when displaying Image'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('ServerType', itU8,
         wbEnum([
           {0} '-Server 1-',
@@ -4464,7 +4464,7 @@ begin
             {0 }'Add Note',
             {1} 'Force Redraw'
           ])).SetRequired
-             .IncludeFlag(dfCollapsed, wbCollapseFlags),
+             .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbFormIDCk(INAM, 'Display Note', [NOTE]),
         wbFormIDCk(TNAM, 'Sub Menu', [TERM]),
         wbEmbeddedScriptReq,
@@ -4492,7 +4492,7 @@ begin
     wbRArray('Parts',
       wbRStruct('Part', [
         wbFormIDCk(ONAM, 'Static', [STAT]),
-        wbStaticPartPlacements
+        wbStaticPartPlacements(Self)
       ]).SetRequired
     ).SetRequired
   ]);
@@ -4538,7 +4538,7 @@ begin
           28, 'Depth',
           29, 'Object Texture Coordinates',
           31, 'No Underwater Fog'
-        ]))).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ]))).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbFormIDCk('Water', [WATR])
     ]).SetRequired
   ]);
@@ -4602,7 +4602,7 @@ begin
                8, 'Pins Limbs',
                9, 'Pass Through Small Transparent'
              ], False, 10)
-           )).IncludeFlag(dfCollapsed, wbCollapseFlags),
+           )).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       {00} wbInteger('Type', itU16,
              wbEnum([], [
                1, 'Missile',
@@ -4632,7 +4632,7 @@ begin
       wbModelInfo(Self, NAM2)
     ]).SetSummaryKey([0])
       .SetRequired
-      .IncludeFlag(dfCollapsed, wbCollapseModels),
+      .IncludeFlag(dfCollapsed, clpModels in DefineOptions.Collapse),
     wbInteger(VNAM, 'Sound Level', itU32, wbSoundLevelEnum).SetRequired
   ]);
 
@@ -4645,7 +4645,7 @@ begin
           wbFlags(wbSparseFlags([
             4, 'Initially Disabled',
             5, 'Is Island'
-          ], False, 6))).IncludeFlag(dfCollapsed, wbCollapseFlags),
+          ], False, 6))).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbFormIDCk('Navmesh', [NAVM]).IncludeFlag(dfSummaryNoName),
         wbFormIDCk('Location', [CELL, WRLD]),
         wbStruct('Coordinates', [
@@ -4655,52 +4655,52 @@ begin
           .SetSummaryMemberPrefixSuffix(0, 'Y: ', '>')
           .SetSummaryMemberPrefixSuffix(1, '<X: ', '')
           .SetSummaryDelimiter(', ')
-          .IncludeFlag(dfCollapsed, wbCollapsePlacement)
+          .IncludeFlag(dfCollapsed, clpPlacement in DefineOptions.Collapse)
           .IncludeFlag(dfSummaryMembersNoName),
-        wbVec3('Approx Location'),
+        wbVec3(Self, 'Approx Location'),
         wbUnion('Island Data', wbNAVINVMIDecider, [
           wbStruct('Unused', [wbEmpty('Unused')])
             .SetDontShow(wbNeverShow)
-            .IncludeFlag(dfCollapsed, wbCollapseOther),
+            .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
           wbStruct('Island Data', [
             wbStruct('Navmesh Bounds', [
-              wbVec3('Min'),
-              wbVec3('Max')
+              wbVec3(Self, 'Min'),
+              wbVec3(Self, 'Max')
             ]),
             wbInteger('Vertex Count', itU16),
             wbInteger('Triangle Count', itU16),
             wbArray('Vertices',
-              wbVec3('Vertex')
+              wbVec3(Self, 'Vertex')
             ).SetCountPath('Vertex Count', True)
-             .IncludeFlag(dfCollapsed, wbCollapseVertices)
+             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
              .IncludeFlag(dfNotAlignable),
             wbArray('Triangles',
               wbStruct('Triangle', [
                 wbInteger('Vertex 0', itU16),
                 wbInteger('Vertex 1', itU16),
                 wbInteger('Vertex 2', itU16)
-              ]).IncludeFlag(dfCollapsed, wbCollapseVertices)
+              ]).IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
             ).SetCountPath('Triangle Count', True)
-             .IncludeFlag(dfCollapsed, wbCollapseVertices)
+             .IncludeFlag(dfCollapsed, clpVertices in DefineOptions.Collapse)
              .IncludeFlag(dfNotAlignable)
           ]).SetSummaryKey([4])
-            .IncludeFlag(dfCollapsed, wbCollapseNavmesh)
-        ]).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
+            .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
+        ]).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
         wbFloat('Preferred %')
       ]).SetSummaryKeyOnValue([1,2,5])
         .SetSummaryPrefixSuffixOnValue(1, '', '')
         .SetSummaryPrefixSuffixOnValue(2, 'in ', '')
         .SetSummaryPrefixSuffixOnValue(5, 'is island with ', '')
-        .IncludeFlag(dfCollapsed, wbCollapseNavmesh)
-    ).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
+        .IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
+    ).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
     wbRArrayS('Navmesh Connections',
       wbStructSK(NVCI, [0], 'Connection', [
         wbFormIDCk('Navmesh', [NAVM]),
-        wbArrayS('Standard', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
-        wbArrayS('Preferred', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh),
-        wbArrayS('Door Links', wbFormIDCk('Door', [REFR]), -1).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
-      ]).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
-    ).IncludeFlag(dfCollapsed, wbCollapseNavmesh)
+        wbArrayS('Standard', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+        wbArrayS('Preferred', wbFormIDCk('Navmesh', [NAVM]), -1).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse),
+        wbArrayS('Door Links', wbFormIDCk('Door', [REFR]), -1).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
+      ]).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
+    ).IncludeFlag(dfCollapsed, clpNavmesh in DefineOptions.Collapse)
   ]);
 
   RegisterRecordDef(NAVM, 'Navmesh',
@@ -4718,17 +4718,17 @@ begin
       wbInteger('Cover Triangle Count', itU32),
       wbInteger('Door Link Count', itU32)
     ]),
-    IfThen(wbSimpleRecords,
+    IfThen(DefineOptions.SimpleRecords,
       wbArray(NVVX, 'Vertices',
         wbByteArray('Vertex', 12)
       ).SetCountPathOnValue('DATA\Vertex Count', False)
        .IncludeFlag(dfNotAlignable),
       wbArray(NVVX, 'Vertices',
-        wbVec3('Vertex')
+        wbVec3(Self, 'Vertex')
       ).SetCountPathOnValue('DATA\Vertex Count', False)
        .IncludeFlag(dfNotAlignable)
     ),
-    IfThen(wbSimpleRecords,
+    IfThen(DefineOptions.SimpleRecords,
       wbArray(NVTR, 'Triangles',
         wbByteArray('Triangle', 16)
       ).SetCountPathOnValue('DATA\Triangle Count', False)
@@ -4742,14 +4742,14 @@ begin
           wbInteger('Edge 1-2', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt),
           wbInteger('Edge 2-0', itS16, wbNVTREdgeToStr, wbNVTREdgeToInt),
           wbInteger('Flags', itU16, wbNavmeshTriangleFlags(Self))
-            .IncludeFlag(dfCollapsed, wbCollapseFlags),
+            .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
           wbInteger('Cover Flags', itU16, wbNavmeshCoverFlags(Self))
-            .IncludeFlag(dfCollapsed, wbCollapseFlags)
+            .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
         ])
       ).SetCountPathOnValue('DATA\Triangle Count', False)
        .IncludeFlag(dfNotAlignable)
     ),
-    IfThen(wbSimpleRecords,
+    IfThen(DefineOptions.SimpleRecords,
       wbArray(NVCA, 'Cover Triangles',
         wbByteArray('Cover Triangle', 2)
       ).SetCountPathOnValue('DATA\Cover Triangle Count', False)
@@ -4772,10 +4772,10 @@ begin
       wbFloat('Max X Distance'),
       wbFloat('Max Y Distance'),
       wbStruct('Navmesh Bounds', [
-        wbVec3('Min'),
-        wbVec3('Max')
+        wbVec3(Self, 'Min'),
+        wbVec3(Self, 'Max')
       ]),
-      IfThen(wbSimpleRecords,
+      IfThen(DefineOptions.SimpleRecords,
         wbArray('Cells',
           wbArray('Cell',
             wbByteArray('Triangle', 2),
@@ -4834,7 +4834,7 @@ begin
           wbFlags([
             {0} 'Reflection',
             {1} 'Refraction'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
       ])),
 
     {--- Decals ---}
@@ -4848,8 +4848,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbByteColors('Link Start Color'),
-      wbByteColors('Link End Color')
+      wbByteColors(Self, 'Link Start Color'),
+      wbByteColors(Self, 'Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -4877,7 +4877,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbVec3PosRot(DATA).SetRequired
+    wbVec3PosRot(Self, DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered;
 
@@ -4913,7 +4913,7 @@ begin
           wbFlags([
             {0} 'Reflection',
             {1} 'Refraction'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
       ])),
 
     {--- Decals ---}
@@ -4927,8 +4927,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbByteColors('Link Start Color'),
-      wbByteColors('Link End Color')
+      wbByteColors(Self, 'Link Start Color'),
+      wbByteColors(Self, 'Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -4956,7 +4956,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbVec3PosRot(DATA).SetRequired
+    wbVec3PosRot(Self, DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered;
 
@@ -4992,7 +4992,7 @@ begin
           wbFlags([
             {0} 'Reflection',
             {1} 'Refraction'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
       ])),
 
     {--- Decals ---}
@@ -5006,8 +5006,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbByteColors('Link Start Color'),
-      wbByteColors('Link End Color')
+      wbByteColors(Self, 'Link Start Color'),
+      wbByteColors(Self, 'Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -5035,7 +5035,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbVec3PosRot(DATA).SetRequired
+    wbVec3PosRot(Self, DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered;
 
@@ -5062,7 +5062,7 @@ begin
         {5} 'Push Explosion Source Ref Only',
         {6} 'Ignore Image Space Swap'
         ])
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbFloat('IS Radius'),
       wbFormIDCk('Impact DataSet', [IPDS, NULL]),
       wbFormIDCk('Sound 2', [SOUN, NULL]),
@@ -5078,7 +5078,7 @@ begin
 
   RegisterRecordDef(DEBR, 'Debris', [
     wbEDIDReq,
-    wbRArray('Models', wbDebrisModel(wbModelInfo(Self, MODT))).SetRequired
+    wbRArray('Models', wbDebrisModel(Self, wbModelInfo(Self, MODT))).SetRequired
   ]);
 
   RegisterRecordDef(IMGS, 'Image Space', [
@@ -5112,7 +5112,7 @@ begin
         {80} wbFloat('Damping Constant')
       ]),
       wbStruct('Night Eye', [
-        wbFloatColors('Tint Color'),
+        wbFloatColors(Self, 'Tint Color'),
       {96} wbFloat('Brightness')
       ]),
       wbStruct('Cinematic', [
@@ -5123,7 +5123,7 @@ begin
         ]),
         {112} wbFloat('Cinematic - Brightness - Value'),
         wbStruct('Tint', [
-          wbFloatColors('Color'),
+          wbFloatColors(Self, 'Color'),
         {128} wbFloat('Value')
         ])
       ]),
@@ -5138,7 +5138,7 @@ begin
           {2} 'Tint',
           {3} 'Brightness'
         ], True))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbFromVersion(13, wbUnused(3))
     ]).SetOptionalFrom(5)
       .SetRequired
@@ -5197,7 +5197,7 @@ begin
         {3} 'Unknown 3',
         {4} 'Unknown 4',
         {5} 'Unknown 5'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(2),
       wbInteger('Radial Blur Ramp Down', itU32),
       wbInteger('Radial Blur Down Start', itU32),
@@ -5205,49 +5205,49 @@ begin
       wbInteger('Motion Blur Strength', itU32)
     ]).SetOptionalFrom(8)
       .SetRequired,
-    wbTimeInterpolators(BNAM, 'Blur Radius'),
-    wbTimeInterpolators(VNAM, 'Double Vision Strength'),
-    wbArray(TNAM, 'Tint Color', wbColorInterpolator).SetRequired,
-    wbArray(NAM3, 'Fade Color', wbColorInterpolator).SetRequired,
+    wbTimeInterpolators(Self, BNAM, 'Blur Radius'),
+    wbTimeInterpolators(Self, VNAM, 'Double Vision Strength'),
+    wbArray(TNAM, 'Tint Color', wbColorInterpolator(Self)).SetRequired,
+    wbArray(NAM3, 'Fade Color', wbColorInterpolator(Self)).SetRequired,
     wbRStruct('Radial Blur', [
-      wbTimeInterpolators(RNAM, 'Strength'),
-      wbTimeInterpolators(SNAM, 'Ramp Up'),
-      wbTimeInterpolators(UNAM, 'Start'),
-      wbTimeInterpolators(NAM1, 'Ramp Down'),
-      wbTimeInterpolators(NAM2, 'Down Start')
+      wbTimeInterpolators(Self, RNAM, 'Strength'),
+      wbTimeInterpolators(Self, SNAM, 'Ramp Up'),
+      wbTimeInterpolators(Self, UNAM, 'Start'),
+      wbTimeInterpolators(Self, NAM1, 'Ramp Down'),
+      wbTimeInterpolators(Self, NAM2, 'Down Start')
     ]).SetRequired,
     wbRStruct('Depth of Field', [
-      wbTimeInterpolators(WNAM, 'Strength'),
-      wbTimeInterpolators(XNAM, 'Distance'),
-      wbTimeInterpolators(YNAM, 'Range')
+      wbTimeInterpolators(Self, WNAM, 'Strength'),
+      wbTimeInterpolators(Self, XNAM, 'Distance'),
+      wbTimeInterpolators(Self, YNAM, 'Range')
     ]).SetRequired,
-    wbTimeInterpolators(NAM4, 'Motion Blur Strength'),
+    wbTimeInterpolators(Self, NAM4, 'Motion Blur Strength'),
     wbRStruct('HDR', [
-      wbTimeInterpolatorsMultAdd(_00_IAD, _40_IAD, 'Eye Adapt Speed'),
-      wbTimeInterpolatorsMultAdd(_01_IAD, _41_IAD, 'Blur Radius'),
-      wbTimeInterpolatorsMultAdd(_02_IAD, _42_IAD, 'Skin Dimmer'),
-      wbTimeInterpolatorsMultAdd(_03_IAD, _43_IAD, 'Emissive Mult'),
-      wbTimeInterpolatorsMultAdd(_04_IAD, _44_IAD, 'Target LUM'),
-      wbTimeInterpolatorsMultAdd(_05_IAD, _45_IAD, 'Upper LUM Clamp'),
-      wbTimeInterpolatorsMultAdd(_06_IAD, _46_IAD, 'Bright Scale'),
-      wbTimeInterpolatorsMultAdd(_07_IAD, _47_IAD, 'Bright Clamp'),
-      wbTimeInterpolatorsMultAdd(_08_IAD, _48_IAD, 'LUM Ramp No Tex'),
-      wbTimeInterpolatorsMultAdd(_09_IAD, _49_IAD, 'LUM Ramp Min'),
-      wbTimeInterpolatorsMultAdd(_0A_IAD, _4A_IAD, 'LUM Ramp Max'),
-      wbTimeInterpolatorsMultAdd(_0B_IAD, _4B_IAD, 'Sunlight Dimmer'),
-      wbTimeInterpolatorsMultAdd(_0C_IAD, _4C_IAD, 'Grass Dimmer'),
-      wbTimeInterpolatorsMultAdd(_0D_IAD, _4D_IAD, 'Tree Dimmer')
+      wbTimeInterpolatorsMultAdd(Self, _00_IAD, _40_IAD, 'Eye Adapt Speed'),
+      wbTimeInterpolatorsMultAdd(Self, _01_IAD, _41_IAD, 'Blur Radius'),
+      wbTimeInterpolatorsMultAdd(Self, _02_IAD, _42_IAD, 'Skin Dimmer'),
+      wbTimeInterpolatorsMultAdd(Self, _03_IAD, _43_IAD, 'Emissive Mult'),
+      wbTimeInterpolatorsMultAdd(Self, _04_IAD, _44_IAD, 'Target LUM'),
+      wbTimeInterpolatorsMultAdd(Self, _05_IAD, _45_IAD, 'Upper LUM Clamp'),
+      wbTimeInterpolatorsMultAdd(Self, _06_IAD, _46_IAD, 'Bright Scale'),
+      wbTimeInterpolatorsMultAdd(Self, _07_IAD, _47_IAD, 'Bright Clamp'),
+      wbTimeInterpolatorsMultAdd(Self, _08_IAD, _48_IAD, 'LUM Ramp No Tex'),
+      wbTimeInterpolatorsMultAdd(Self, _09_IAD, _49_IAD, 'LUM Ramp Min'),
+      wbTimeInterpolatorsMultAdd(Self, _0A_IAD, _4A_IAD, 'LUM Ramp Max'),
+      wbTimeInterpolatorsMultAdd(Self, _0B_IAD, _4B_IAD, 'Sunlight Dimmer'),
+      wbTimeInterpolatorsMultAdd(Self, _0C_IAD, _4C_IAD, 'Grass Dimmer'),
+      wbTimeInterpolatorsMultAdd(Self, _0D_IAD, _4D_IAD, 'Tree Dimmer')
     ]).SetRequired,
     wbRStruct('Bloom', [
-      wbTimeInterpolatorsMultAdd(_0E_IAD, _4E_IAD, 'Blur Radius'),
-      wbTimeInterpolatorsMultAdd(_0F_IAD, _4F_IAD, 'Alpha Mult Interior'),
-      wbTimeInterpolatorsMultAdd(_10_IAD, _50_IAD, 'Alpha Mult Exterior')
+      wbTimeInterpolatorsMultAdd(Self, _0E_IAD, _4E_IAD, 'Blur Radius'),
+      wbTimeInterpolatorsMultAdd(Self, _0F_IAD, _4F_IAD, 'Alpha Mult Interior'),
+      wbTimeInterpolatorsMultAdd(Self, _10_IAD, _50_IAD, 'Alpha Mult Exterior')
     ]).SetRequired,
     wbRStruct('Cinematic', [
-      wbTimeInterpolatorsMultAdd(_11_IAD, _51_IAD, 'Saturation'),
-      wbTimeInterpolatorsMultAdd(_12_IAD, _52_IAD, 'Contrast'),
-      wbTimeInterpolatorsMultAdd(_13_IAD, _53_IAD, 'Contrast Avg Lum'),
-      wbTimeInterpolatorsMultAdd(_14_IAD, _54_IAD, 'Brightness')
+      wbTimeInterpolatorsMultAdd(Self, _11_IAD, _51_IAD, 'Saturation'),
+      wbTimeInterpolatorsMultAdd(Self, _12_IAD, _52_IAD, 'Contrast'),
+      wbTimeInterpolatorsMultAdd(Self, _13_IAD, _53_IAD, 'Contrast Avg Lum'),
+      wbTimeInterpolatorsMultAdd(Self, _14_IAD, _54_IAD, 'Brightness')
     ]).SetRequired
   ]);
 
@@ -5385,7 +5385,7 @@ begin
               {4} 'IK Data - Is Head',
               {5} 'IK Data - Headtracking',
               {6} 'To Hit Chance - Absolute'
-            ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+            ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
           wbInteger('Part Type', itS8, wbBodyLocationEnum),
           wbInteger('Health Percent', itU8),
           wbInteger('Actor Value', itS8, ActorValueEnum),
@@ -5400,7 +5400,7 @@ begin
           wbFormIDCk('Severable - Debris', [DEBR, NULL]),
           wbFormIDCk('Severable - Explosion', [EXPL, NULL]),
           wbFloat('Severable - Debris Scale'),
-          wbVec3PosRot('Gore Effects Positioning'),
+          wbVec3PosRot(Self, 'Gore Effects Positioning'),
           wbFormIDCk('Severable - Impact DataSet', [IPDS, NULL]),
           wbFormIDCk('Explodable - Impact DataSet', [IPDS, NULL]),
           wbInteger('Severable - Decal Count', itU8),
@@ -5480,7 +5480,7 @@ begin
                {3} 'First Person Camera',
                {4} 'No Tracer',
                {5} 'Start At Time Zero'
-             ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+             ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbStruct('Time Multipliers', [
         {16} wbFloat('Player'),
         {20} wbFloat('Target'),
@@ -5517,7 +5517,7 @@ begin
         {0} 'Allow Default Dialog',
         {1} 'Female'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags)
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
   ]);
 
   RegisterRecordDef(IPCT, 'Impact', [
@@ -5571,7 +5571,7 @@ begin
         wbFlags([
           {0} 'Never Resets',
           {1} 'Match PC Below Minimum Level'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(1)
     ]).SetRequired
   ]);
@@ -5598,7 +5598,7 @@ begin
       ])
     ).SetAfterSet(wbMESGDNAMAfterSet)
      .SetRequired
-     .IncludeFlag(dfCollapsed, wbCollapseFlags),
+     .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbInteger(TNAM, 'Display Time', itU32)
       .SetDefaultNativeValue(2)
       .SetDontShow(wbMESGTNAMDontShow)
@@ -5696,9 +5696,9 @@ begin
   RegisterRecordDef(LGTM, 'Lighting Template', [
     wbEDIDReq,
     wbStruct(DATA, 'Lighting', [
-      wbByteColors('Ambient Color'),
-      wbByteColors('Directional Color'),
-      wbByteColors('Fog Color'),
+      wbByteColors(Self, 'Ambient Color'),
+      wbByteColors(Self, 'Directional Color'),
+      wbByteColors(Self, 'Fog Color'),
       wbFloat('Fog Near'),
       wbFloat('Fog Far'),
       wbInteger('Directional Rotation XY', itS32),
@@ -5745,7 +5745,7 @@ begin
           {0} 'Vertex Lighting',
           {1} 'Uniform Scaling',
           {2} 'Fit to Slope'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3)
     ]).SetRequired
   ]);
@@ -5762,7 +5762,7 @@ begin
         {2} 'Not Female',
         {3} 'Fixed'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags)
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
   ]);
 
   RegisterRecordDef(IDLE, 'Idle Animation', [
@@ -5815,13 +5815,13 @@ begin
         {6} 'Run for Rumors',
         {7} 'Speech Challenge'
         ])
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Flags 2', itU8,
         wbFlags([
         {0} 'Say Once a Day',
         {1} 'Always Darken'
         ])
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetOptionalFrom(3)
       .SetRequired,
     wbFormIDCkNoReach(QSTI, 'Quest', [QUST]).SetRequired,
@@ -5901,7 +5901,7 @@ begin
         wbFlags([
           {0} 'No auto-calculation',
           {1} 'Food item'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3)
     ]).SetRequired,
     wbEffectsReq
@@ -5939,11 +5939,11 @@ begin
         4,  'Auto-Calc Normals',
         10, 'Ignored'
       ], False, 11))
-    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-    wbLandNormals,
-    wbLandHeights,
-    wbLandColors,
-    wbLandLayers
+    ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+    wbLandNormals(Self),
+    wbLandHeights(Self),
+    wbLandColors(Self),
+    wbLandLayers(Self)
   ]).SetAddInfo(wbLANDAddInfo);
 
   RegisterRecordDef(LIGH, 'Light',
@@ -5962,7 +5962,7 @@ begin
     wbStruct(DATA, '', [
       wbInteger('Time', itS32),
       wbInteger('Radius', itU32),
-      wbByteColors('Color'),
+      wbByteColors(Self, 'Color'),
       wbInteger('Flags', itU32,
         wbFlags(wbSparseFlags([
           0,  'Dynamic',
@@ -5976,7 +5976,7 @@ begin
           9,  'Spot Light',
           10, 'Spot Shadow'
         ], False, 11))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbFloat('Falloff Exponent').SetDefaultNativeValue(1),
       wbFloat('FOV').SetDefaultNativeValue(90),
       wbInteger('Value', itU32),
@@ -6054,13 +6054,13 @@ begin
         {0} 'Calculate from all levels <= player''s level',
         {1} 'Calculate for each item in count'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags),
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbLeveledListEntry(Self, 'Creature', [CREA, LVLC]),
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
-        .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
+        .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
     ),
     wbGenericModel(Self)
   ]);
@@ -6074,13 +6074,13 @@ begin
         {0} 'Calculate from all levels <= player''s level',
         {1} 'Calculate for each item in count'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags),
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbLeveledListEntry(Self, 'NPC', [LVLN, NPC_]),
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
-        .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
+        .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
     ),
     wbGenericModel(Self)
   ]);
@@ -6095,14 +6095,14 @@ begin
         {1} 'Calculate for each item in count',
         {2} 'Use All'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags),
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbFormIDCk(LVLG, 'Global', [GLOB]),
     wbRArrayS('Leveled List Entries',
       wbRStructExSK([0], [1], 'Leveled List Entry', [
         wbLeveledListEntry(Self, 'Item', [ALCH, AMMO, ARMO, BOOK, KEYM, LVLI, MISC, NOTE, WEAP]),
         wbCOED
       ]).SetSummaryMemberMaxDepth(0, 1)
-        .IncludeFlag(dfCollapsed, wbCollapseLeveledItems)
+        .IncludeFlag(dfCollapsed, clpLeveledItems in DefineOptions.Collapse)
     )
   ]);
 
@@ -6137,7 +6137,7 @@ begin
              28, 'No Death Dispel',
              29, '????'
            ], False, 30))
-         ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+         ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     {1}  wbFloat('Base cost (Unused)'),
     {2}  wbUnion('Assoc. Item', wbMGEFFAssocItemDecider, [
          {0} wbFormIDCk('Unused', [NULL]),
@@ -6240,7 +6240,7 @@ begin
           .SetFlagHasDontShow(12, wbActorTemplateUseModelAnimation)
           .SetFlagHasDontShow(27, wbActorTemplateUseModelAnimation)
           .SetFlagHasDontShow(30, wbActorTemplateUseModelAnimation)
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       {04} wbInteger('Fatigue', itU16).SetDontShow(wbActorTemplateUseStats),
       {06} wbInteger('Barter gold', itU16).SetDontShow(wbActorTemplateUseAIData),
       {08} wbUnion('Level', wbACBSLevelDecider, [
@@ -6255,7 +6255,7 @@ begin
       {14} wbInteger('Speed Multiplier', itU16).SetDontShow(wbActorTemplateUseStats),
       {16} wbFloat('Karma (Alignment)').SetDontShow(wbActorTemplateUseTraits),
       {20} wbInteger('Disposition Base', itS16).SetDontShow(wbActorTemplateUseTraits),
-      {22} wbInteger('Template Flags', itU16, wbTemplateFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      {22} wbInteger('Template Flags', itU16, wbTemplateFlags(Self)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired,
     wbRArrayS('Factions', wbFaction(Self)).SetDontShow(wbActorTemplateUseFactions),
     wbFormIDCk(INAM, 'Death item', [LVLI]).SetDontShow(wbActorTemplateUseTraits),
@@ -6334,12 +6334,12 @@ begin
     wbFormIDCk(HNAM, 'Hair', [HAIR]).SetDontShow(wbActorTemplateUseModelAnimation),
     wbFloat(LNAM, 'Hair length').SetDontShow(wbActorTemplateUseModelAnimation),
     wbFormIDCk(ENAM, 'Eyes', [EYES]).SetDontShow(wbActorTemplateUseModelAnimation),
-    wbByteColors(HCLR, 'Hair color')
+    wbByteColors(Self, HCLR, 'Hair color')
       .SetDontShow(wbActorTemplateUseModelAnimation)
       .SetRequired,
     wbFormIDCk(ZNAM, 'Combat Style', [CSTY]).SetDontShow(wbActorTemplateUseTraits),
     wbInteger(NAM4, 'Impact Material Type', itU32, wbActorImpactMaterialEnum).SetDontShow(wbActorTemplateUseModelAnimation).SetRequired,
-    wbFaceGen.SetDontShow(wbActorTemplateUseModelAnimation),
+    wbFaceGen(Self).SetDontShow(wbActorTemplateUseModelAnimation),
     wbInteger(NAM5, 'Unknown', itU16)
       .SetDefaultNativeValue(255)
       .SetRequired,
@@ -6358,7 +6358,7 @@ begin
     ])), [
     wbEDIDReq,
     wbStruct(PKDT, 'General', [
-      wbInteger('General Flags', itU32, wbPackageFlags(Self)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      wbInteger('General Flags', itU32, wbPackageFlags(Self)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Type', itU8, wbPackageTypeEnum(Self)),
       wbUnused(1),
       wbInteger('Fallout Behavior Flags', itU16,
@@ -6372,7 +6372,7 @@ begin
           7, 'Allow Idle Chatter',
           8, 'Avoid Radiation'
         ], False, 9), True)
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnion('Type Specific Flags', wbPKDTSpecificFlagsDecider, [
         wbEmpty('Type Specific Flags (missing)', cpIgnore, False, True),
         wbInteger('Type Specific Flags - Find', itU16,
@@ -6381,23 +6381,23 @@ begin
             9, 'Allow Killing',
            10, 'Allow Stealing'
           ], False, 11), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Follow', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Follow', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Escort', itU16,
           wbFlags(wbSparseFlags([
             8, 'Allow Buying',
             9, 'Allow Killing',
            10, 'Allow Stealing'
           ], False, 11), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Eat', itU16,
           wbFlags(wbSparseFlags([
             8, 'Allow Buying',
             9, 'Allow Killing',
            10, 'Allow Stealing'
           ], False, 11), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Sleep', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Sleep', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Wander', itU16,
           wbFlags([
             {0} 'No Eating',
@@ -6407,9 +6407,9 @@ begin
             {4} 'No Furniture',
             {5} 'No Wandering'
           ], True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Travel', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Accompany', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Travel', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Accompany', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Use Item At', itU16,
           wbFlags(wbSparseFlags([
             2, 'Sit Down',
@@ -6417,14 +6417,14 @@ begin
             9, 'Allow Killing',
            10, 'Allow Stealing'
           ], False, 11), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Ambush', itU16,
           wbFlags(wbSparseFlags([
             0, 'Hide While Ambushing'
           ], False, 1), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Flee Not Combat', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Cast Magic', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Flee Not Combat', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Cast Magic', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Sandbox', itU16,
           wbFlags([
             {0} 'No Eating',
@@ -6434,15 +6434,15 @@ begin
             {4} 'No Furniture',
             {5} 'No Wandering'
           ], True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Patrol', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Patrol', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Type Specific Flags - Guard', itU16,
           wbFlags(wbSparseFlags([
             3, 'Remain Near Reference to Guard'
           ], False, 4), True)
-        ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Dialogue', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags),
-        wbInteger('Type Specific Flags - Use Weapon', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, wbCollapseFlags)
+        ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Dialogue', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+        wbInteger('Type Specific Flags - Use Weapon', itU16, wbFlags([], True)).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
       ]),
       wbUnused(2)
     ]).SetOptionalFrom(2)
@@ -6544,7 +6544,7 @@ begin
           16, 'Crouch To Reload',
           24, 'Hold Fire When Blocked'
         ], False, 25))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Fire Rate', itU8,
         wbEnum([
           {0} 'Auto Fire',
@@ -6593,7 +6593,7 @@ begin
           0, 'No Headtracking',
           8, 'Don''t Control Target Movement'
         ], False, 9))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(4),
       wbInteger('Dialogue Type', itU32,
         wbEnum([
@@ -6659,7 +6659,7 @@ begin
           3, 'Allow repeated stages',
           4, 'Default Script Processing Delay'
         ], False, 5))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbInteger('Priority', itU8),
       wbUnused(2),
       wbFloat('Quest Delay')
@@ -6673,7 +6673,7 @@ begin
           wbFlags([
             {0} 'Complete Quest',
             {1} 'Fail Quest'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbConditions,
         wbStringKC(CNAM, 'Log Entry', 0, cpTranslate),
         wbEmbeddedScriptReq,
@@ -6709,7 +6709,7 @@ begin
         .SetSummaryDelimiter(' ')
         .IncludeFlag(dfSummaryNoSortKey)
         .IncludeFlag(dfSummaryMembersNoName)
-        .IncludeFlag(dfCollapsed, wbCollapseObjectProperties), 7),
+        .IncludeFlag(dfCollapsed, clpObjectProperties in DefineOptions.Collapse), 7),
       wbUnused(2),
       wbFloat('Male Height'),
       wbFloat('Female Height'),
@@ -6720,7 +6720,7 @@ begin
           0, 'Playable',
           2, 'Child'
         ], False, 3))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags)
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]).SetRequired,
     wbFormIDCk(ONAM, 'Older', [RACE]),
     wbFormIDCk(YNAM, 'Younger', [RACE]),
@@ -6780,12 +6780,12 @@ begin
     wbRStruct('FaceGen Data', [
       wbRStruct('Male FaceGen Data', [
         wbEmpty(MNAM, 'Male Data Marker').SetRequired,
-        wbFaceGen,
+        wbFaceGen(Self),
         wbUnknown(SNAM).SetRequired
       ]).SetRequired,
       wbRStruct('Female FaceGen Data', [
         wbEmpty(FNAM, 'Female Data Marker').SetRequired,
-        wbFaceGen,
+        wbFaceGen(Self),
         wbUnknown(SNAM).SetRequired
       ]).SetRequired
     ]).SetRequired
@@ -6843,8 +6843,8 @@ begin
         wbFloat('Y', cpNormal, True, 2, 4),
         wbFloat('Z', cpNormal, True, 2, 4)
       ]).SetToStr(wbVec3ToStr)
-        .IncludeFlag(dfCollapsed, wbCollapseVec3),
-      wbFloatRGBA,
+        .IncludeFlag(dfCollapsed, clpVec3 in DefineOptions.Collapse),
+      wbFloatRGBA(Self),
       wbInteger('Type', itU32,
         wbEnum([
           {0} 'None',
@@ -6904,14 +6904,14 @@ begin
     {--- Bound Contents ---}
 
     {--- Bound Data ---}
-    wbVec3(XMBO, 'Bound Half Extents'),
+    wbVec3(Self, XMBO, 'Bound Half Extents'),
 
     {--- Teleport ---}
     wbStruct(XTEL, 'Teleport Destination', [
       wbFormIDCk('Door', [REFR], True)
         .SetFormIDFilter(wbREFRTeleportFilter)
         .SetToStr(wbREFRTeleportToStr),
-      wbVec3PosRot,
+      wbVec3PosRot(Self),
       wbInteger('No Alarm', itU32, wbBoolEnum)
     ]),
 
@@ -6924,7 +6924,7 @@ begin
           {1} 'Can Travel To',
           {2} '"Show All" Hidden'
         ])).SetRequired
-           .IncludeFlag(dfCollapsed, wbCollapseFlags),
+           .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbFULLReq,
       wbStruct(TNAM, '', [
         wbInteger('Type', itU8,
@@ -6954,7 +6954,7 @@ begin
         1, 'Imposter',
         2, 'Use Full Shader in LOD'
       ], False, 3))
-    ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+    ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbByteArray(XSRD, 'Special Rendering Data', 4),
 
     {--- X Target Data ---}
@@ -6999,7 +6999,7 @@ begin
         wbFlags(wbSparseFlags([
           2, 'Leveled Lock'
         ], False, 3))
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3),
       wbByteArray('Unknown', 8)
     ]).SetOptionalFrom(5),
@@ -7023,7 +7023,7 @@ begin
           wbFlags([
             {0} 'Reflection',
             {1} 'Refraction'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags)
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
       ])),
 
     {--- Lit Water ---}
@@ -7042,8 +7042,8 @@ begin
     {--- Linked Ref ---}
     wbFormIDCk(XLKR, 'Linked Reference', [REFR, ACRE, ACHR, PGRE, PMIS, PBEA, PLYR]),
     wbStruct(XCLP, 'Linked Reference Color', [
-      wbByteColors('Link Start Color'),
-      wbByteColors('Link End Color')
+      wbByteColors(Self, 'Link Start Color'),
+      wbByteColors(Self, 'Link End Color')
     ]),
 
     {--- Activate Parents ---}
@@ -7067,7 +7067,7 @@ begin
     wbFormIDCk(XMBR, 'MultiBound Reference', [REFR]),
 
     {--- Flags ---}
-    wbActionFlag,
+    wbActionFlag(Self),
     wbEmpty(ONAM, 'Open by Default'),
     wbEmpty(XIBS, 'Ignored By Sandbox'),
 
@@ -7079,7 +7079,7 @@ begin
     ]),
 
     wbArray(XPOD, 'Portal Data', wbFormIDCk('Room', [REFR, NULL]), 2),
-    wbSizePosRot(XPTL, 'Portal Data'),
+    wbSizePosRot(Self, XPTL, 'Portal Data'),
 
     wbInteger(XSED, 'SpeedTree Seed', itU8),
 
@@ -7093,7 +7093,7 @@ begin
       ).SetCountPath('XRMR\Linked Rooms Count')
     ]),
 
-    wbSizePosRot(XOCP, 'Occlusion Plane Data'),
+    wbSizePosRot(Self, XOCP, 'Occlusion Plane Data'),
     wbArray(XORD, 'Linked Occlusion Planes', wbFormIDCk('Plane', [REFR, NULL]), [
       'Right',
       'Left',
@@ -7105,7 +7105,7 @@ begin
 
     {--- 3D Data ---}
     wbXSCL,
-    wbVec3PosRot(DATA).SetRequired
+    wbVec3PosRot(Self, DATA).SetRequired
   ]).SetAddInfo(wbPlacedAddInfo)
     .SetUnordered
     .SetAfterLoad(wbREFRAfterLoad);
@@ -7117,7 +7117,7 @@ begin
     ])), [
     wbEDID,
     wbICON,
-    wbByteColors(RCLR, 'Map Color').SetRequired,
+    wbByteColors(Self, RCLR, 'Map Color').SetRequired,
     wbFormIDCkNoReach(WNAM, 'Worldspace', [WRLD]),
     wbRegionAreas(Self),
 
@@ -7160,7 +7160,7 @@ begin
             {5}'Z +/-',
             {6}'Tree',
             {7}'Huge Rock'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Radius wrt Parent', itU16),
         wbInteger('Radius', itU16),
         wbFloat('Min Height'),
@@ -7173,7 +7173,7 @@ begin
           wbInteger('Y', itU16),
           wbInteger('Z', itU16)
         ]).SetToStr(wbVec3ToStr)
-          .IncludeFlag(dfCollapsed, wbCollapseVec3),
+          .IncludeFlag(dfCollapsed, clpVec3 in DefineOptions.Collapse),
         wbUnused(2),
         wbByteArray('Unknown', 4)
       ])).SetDontShow(wbREGNObjectsDontShow),
@@ -7226,7 +7226,7 @@ begin
             {10} 'Envelope Slow',
             {11} '2D Radius',
             {12} 'Mute When Submerged'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Static attenuation cdB', itS16),
         wbInteger('Stop time ', itU8),
         wbInteger('Start time ', itU8),
@@ -7255,7 +7255,7 @@ begin
             {10} 'Envelope Slow',
             {11} '2D Radius',
             {12} 'Mute When Submerged'
-          ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+          ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
         wbInteger('Static attenuation cdB', itS16),
         wbInteger('Stop time ', itU8),
         wbInteger('Start time ', itU8)
@@ -7293,7 +7293,7 @@ begin
           {5} 'Script Effect Always Applies',
           {6} 'Disable Absorb/Reflect',
           {7} 'Force Touch Explode'
-        ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+        ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       wbUnused(3)
     ]).SetRequired,
     wbEffectsReq
@@ -7322,7 +7322,7 @@ begin
       0, 'ESM',
       4, 'Optimized'
     ])), [
-    wbHEDR,
+    wbHEDR(Self),
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
     wbByteArray(DELE, 'Unknown', 0, cpIgnore),
     wbString(CNAM, 'Author', 0, cpTranslate).SetRequired,
@@ -7330,11 +7330,11 @@ begin
     wbRArray('Master Files', wbRStruct('Master File', [
       wbStringForward(MAST, 'FileName').SetRequired,
       wbByteArray(DATA, 'Unused', 8, cpIgnore).SetRequired
-    ], [ONAM])).IncludeFlag(dfInternalEditOnly, not wbAllowMasterFilesEdit),
+    ], [ONAM])).IncludeFlag(dfInternalEditOnly, not DefineOptions.AllowMasterFilesEdit),
     wbArray(ONAM, 'Overridden Forms',
       wbFormIDCk('Form', [ACHR,ACRE,LAND,NAVM,PBEA,PGRE,PMIS,REFR])
     ).SetDontShow(wbTES4ONAMDontShow)
-     .IncludeFlag(dfCollapsed, wbCollapseOther)
+     .IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
      .IncludeFlag(dfExcludeFromBuildRef),
     wbByteArray(SCRN, 'Screenshot')
   ], cpNormal, True).SetUnordered;
@@ -7380,7 +7380,7 @@ begin
         {0}'Causes Damage',
         {1}'Reflective'
       ])).SetRequired
-         .IncludeFlag(dfCollapsed, wbCollapseFlags),
+         .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbString(MNAM, 'Material ID').SetRequired,
     wbFormIDCk(SNAM, 'Sound', [SOUN]),
     wbFormIDCk(XNAM, 'Actor Effect', [SPEL]),
@@ -7395,9 +7395,9 @@ begin
       wbUnused(4),
       wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
       wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-      wbByteColors('Shallow Color', 0, 128, 128),
-      wbByteColors('Deep Color', 0, 0, 25),
-      wbByteColors('Reflection Color', 255, 255, 255),
+      wbByteColors(Self, 'Shallow Color', 0, 128, 128),
+      wbByteColors(Self, 'Deep Color', 0, 0, 25),
+      wbByteColors(Self, 'Reflection Color', 255, 255, 255),
       wbUnused(4),
       wbFloat('Rain Simulator - Force').SetDefaultNativeValue(0.1),
       wbFloat('Rain Simulator - Velocity').SetDefaultNativeValue(0.6),
@@ -7444,9 +7444,9 @@ begin
       wbUnused(4),
       wbFloat('Fog Properties - Above Water - Fog Distance - Near Plane'),
       wbFloat('Fog Properties - Above Water - Fog Distance - Far Plane'),
-      wbByteColors('Shallow Color'),
-      wbByteColors('Deep Color'),
-      wbByteColors('Reflection Color'),
+      wbByteColors(Self, 'Shallow Color'),
+      wbByteColors(Self, 'Deep Color'),
+      wbByteColors(Self, 'Reflection Color'),
       wbUnused(4),
       wbFloat('Rain Simulator - Force'),
       wbFloat('Rain Simulator - Velocity'),
@@ -7511,14 +7511,14 @@ begin
       wbMO2S
     ])
     .SetSummaryKey([0])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
+    .IncludeFlag(dfCollapsed, clpModels in DefineOptions.Collapse),
     wbRStruct('Scope Model', [
       wbString(MOD3, 'Model FileName'),
       wbModelInfo(Self, MO3T),
       wbMO3S
     ])
     .SetSummaryKey([0])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
+    .IncludeFlag(dfCollapsed, clpModels in DefineOptions.Collapse),
     wbFormIDCK(EFSD, 'Scope Effect', [EFSH]),
     wbRStruct('World Model', [
       wbString(MOD4, 'Model FileName'),
@@ -7526,7 +7526,7 @@ begin
       wbMO4S
     ])
     .SetSummaryKey([0])
-    .IncludeFlag(dfCollapsed, wbCollapseModels),
+    .IncludeFlag(dfCollapsed, clpModels in DefineOptions.Collapse),
     wbString(NNAM, 'Embedded Weapon Node'),
     wbFormIDCk(INAM, 'Impact DataSet', [IPDS]),
     wbFormIDCk(WNAM, '1st Person Model', [STAT]),
@@ -7559,7 +7559,7 @@ begin
                {5} 'Embedded Weapon',
                {6} 'Don''t Use 1st Person IS Animations',
                {7} 'Non-Playable'
-             ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+             ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       {13} wbInteger('Grip Animation', itU8,
              wbEnum([], [
                171, 'HandGrip1',
@@ -7647,7 +7647,7 @@ begin
               {9}  'Short Burst',
               {10} 'Rumble Alternate',
               {11} 'Long Burst'
-            ])).IncludeFlag(dfCollapsed, wbCollapseFlags),
+            ])).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
       {60} wbFloat('Animation Attack Multiplier'),
       {64} wbFloat('Fire Rate'),
       {68} wbFloat('Override - Action Points'),
@@ -7723,10 +7723,10 @@ begin
           {2} 'Weather - Rainy',
           {3} 'Weather - Snow'
         ], True)
-      ).IncludeFlag(dfCollapsed, wbCollapseFlags),
-      wbWeatherLightningColor
+      ).IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
+      wbWeatherLightningColor(Self)
     ]).SetRequired,
-    wbWeatherSounds
+    wbWeatherSounds(Self)
   ]);
 
   RegisterRecordDef(WRLD, 'Worldspace',
@@ -7748,7 +7748,7 @@ begin
           {5} 'Use Image Space Data'
         ], True)
       ).SetRequired
-       .IncludeFlag(dfCollapsed, wbCollapseFlags)
+       .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse)
     ]),
     wbFormIDCk(CNAM, 'Climate', [CLMT])
       .SetDefaultNativeValue(351)
@@ -7773,13 +7773,13 @@ begin
       ], False, 8), True)
     ).SetDefaultNativeValue(1)
      .SetRequired
-     .IncludeFlag(dfCollapsed, wbCollapseFlags),
+     .IncludeFlag(dfCollapsed, clpFlags in DefineOptions.Collapse),
     wbWorldObjectBounds(Self),
     wbFormIDCk(ZNAM, 'Music', [MUSC]),
     wbString(NNAM, 'Canopy Shadow').SetRequired,
     wbString(XNAM, 'Water Noise Texture').SetRequired,
-    wbWorldSwapsImpactData,
-    wbWorldOffsetData
+    wbWorldSwapsImpactData(Self),
+    wbWorldOffsetData(Self)
   ]).SetAfterLoad(wbWorldAfterLoad)
     .SetAfterSet(wbWorldAfterSet);
 

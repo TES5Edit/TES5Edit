@@ -72,7 +72,7 @@ end;
 
 procedure _wbSimpleRecords(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbSimpleRecords;
+  Value := xeContext.GameDefObj.DefineOptions.SimpleRecords;
 end;
 
 procedure _wbDecodeTextureHashes(var Value: Variant; Args: TJvInterpreterArgs);

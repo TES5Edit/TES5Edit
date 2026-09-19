@@ -192,7 +192,7 @@ begin
     Settings := TMemIniFile.Create(xeSettingsFileName);
     try
       xeContext.Settings.LoadBSAs := Settings.ReadBool('Options', 'LoadBSAs', xeContext.Settings.LoadBSAs);
-      wbSimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', wbSimpleRecords);
+      xeContext.GameDefObj.DefineOptions.SimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', xeContext.GameDefObj.DefineOptions.SimpleRecords);
       xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', xeContext.GameDefObj.DefineOptions.DecodeTextureHashes); {changed name to enforce new default value}
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
       wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
@@ -200,70 +200,9 @@ begin
       xeContext.Settings.SortINFO := Settings.ReadBool('Options', 'SortINFO', xeContext.Settings.SortINFO);
       xeContext.Settings.FillPNAM := Settings.ReadBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
       xeContext.Settings.WriteOffsetData := Settings.ReadBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData); {changed name to enforce new default value}
-      wbCollapseRecordHeader := Settings.ReadBool('Options', 'CollapseRecordHeader', wbCollapseRecordHeader);
-      wbCollapseObjectBounds := Settings.ReadBool('Options', 'CollapseObjectBounds', wbCollapseObjectBounds);
-      wbCollapseModels := Settings.ReadBool('Options', 'CollapseModels', wbCollapseModels);
-      wbCollapseFactions := Settings.ReadBool('Options', 'CollapseFactions', wbCollapseFactions);
-      wbCollapseFactionRelations := Settings.ReadBool('Options', 'CollapseFactionRelations', wbCollapseFactionRelations);
-      wbCollapseFragments := Settings.ReadBool('Options', 'CollapseFragments', wbCollapseFragments);
-      wbCollapseItems := Settings.ReadBool('Options', 'CollapseItems', wbCollapseItems);
-      wbCollapseLeveledItems := Settings.ReadBool('Options', 'CollapseLeveledItems', wbCollapseLeveledItems);
-      wbCollapseEquipSlots := Settings.ReadBool('Options', 'CollapseEquipSlots', wbCollapseEquipSlots);
-      wbCollapseObjectProperties := Settings.ReadBool('Options', 'CollapseObjectProperties', wbCollapseObjectProperties);
-      wbCollapseScriptProperties := Settings.ReadBool('Options', 'CollapseScriptProperties', wbCollapseScriptProperties);
-      wbCollapseConditions := Settings.ReadBool('Options', 'CollapseConditions', wbCollapseConditions);
+      for var lCollapse := Low(TwbCollapseOption) to High(TwbCollapseOption) do
+        xeContext.GameDefObj.DefineOptions.SetCollapse(lCollapse, Settings.ReadBool('Options', TwbGameDefineOptions.CollapseSettingsKey(lCollapse), lCollapse in xeContext.GameDefObj.DefineOptions.Collapse));
       wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
-      wbCollapseRGBA := Settings.ReadBool('Options', 'CollapseRGBA', wbCollapseRGBA);
-      wbCollapseVec3 := Settings.ReadBool('Options', 'CollapseVec3', wbCollapseVec3);
-      wbCollapseHeadParts := Settings.ReadBool('Options', 'CollapseHeadParts', wbCollapseHeadParts);
-      wbCollapseBodyParts := Settings.ReadBool('Options', 'CollapseBodyParts', wbCollapseBodyParts);
-      wbCollapsePosRot := Settings.ReadBool('Options', 'CollapsePosRot', wbCollapsePosRot);
-      wbCollapseRange := Settings.ReadBool('Options', 'CollapseRange', wbCollapseRange);
-      wbCollapseARMABoneData := Settings.ReadBool('Options', 'CollapseARMABoneData', wbCollapseARMABoneData);
-      wbCollapseRACEBoneData := Settings.ReadBool('Options', 'CollapseRACEBoneData', wbCollapseRACEBoneData);
-      wbCollapseScriptData := Settings.ReadBool('Options', 'CollapseScriptData', wbCollapseScriptData);
-      wbCollapseModelInfoTexture := Settings.ReadBool('Options', 'CollapseModelInfoTexture', wbCollapseModelInfoTexture);
-      wbCollapseModelInfoTextures := Settings.ReadBool('Options', 'CollapseModelInfoTextures', wbCollapseModelInfoTextures);
-      wbCollapseModelInfoAddons := Settings.ReadBool('Options', 'CollapseModelInfoAddons', wbCollapseModelInfoAddons);
-      wbCollapseModelInfoMaterial := Settings.ReadBool('Options', 'CollapseModelInfoMaterial', wbCollapseModelInfoMaterial);
-      wbCollapseModelInfoMaterials := Settings.ReadBool('Options', 'CollapseModelInfoMaterials', wbCollapseModelInfoMaterials);
-      wbCollapseModelInfo := Settings.ReadBool('Options', 'CollapseModelInfo', wbCollapseModelInfo);
-      wbCollapseModelInfoHeader := Settings.ReadBool('Options', 'CollapseModelInfoHeader', wbCollapseModelInfoHeader);
-      wbCollapseTimeInterpolator := Settings.ReadBool('Options', 'CollapseTimeInterpolator', wbCollapseTimeInterpolator);
-      wbCollapseTimeInterpolators := Settings.ReadBool('Options', 'CollapseTimeInterpolators', wbCollapseTimeInterpolators);
-      wbCollapseTimeInterpolatorsMultAdd := Settings.ReadBool('Options', 'CollapseTimeInterpolatorsMultAdd', wbCollapseTimeInterpolatorsMultAdd);
-      wbCollapseBluePrintItem := Settings.ReadBool('Options', 'CollapseBluePrintItem', wbCollapseBluePrintItem);
-      wbCollapsePlacement := Settings.ReadBool('Options', 'CollapsePlacement', wbCollapsePlacement);
-      wbCollapseVertices := Settings.ReadBool('Options', 'CollapseVertices', wbCollapseVertices);
-      wbCollapseRDSA := Settings.ReadBool('Options', 'CollapseRDSA', wbCollapseRDSA);
-      wbCollapseFlags := Settings.ReadBool('Options', 'CollapseFlags', wbCollapseFlags);
-      wbCollapseTransforms := Settings.ReadBool('Options', 'CollapseTransforms', wbCollapseTransforms);
-      wbCollapseSounds := Settings.ReadBool('Options', 'CollapseSounds', wbCollapseSounds);
-      wbCollapseDestruction := Settings.ReadBool('Options', 'CollapseDestruction', wbCollapseDestruction);
-      wbCollapseLocations := Settings.ReadBool('Options', 'CollapseLocations', wbCollapseLocations);
-      wbCollapseNavmesh := Settings.ReadBool('Options', 'CollapseNavmesh', wbCollapseNavmesh);
-      wbCollapseOther := Settings.ReadBool('Options', 'CollapseOther', wbCollapseOther);
-      wbCollapsePerk := Settings.ReadBool('Options', 'CollapsePerk', wbCollapsePerk);
-      wbCollapseKeywords := Settings.ReadBool('Options', 'CollapseKeywords', wbCollapseKeywords);
-      wbCollapseFactionRanks := Settings.ReadBool('Options', 'CollapseFactionRanks', wbCollapseFactionRanks);
-      wbCollapseOwnership := Settings.ReadBool('Options', 'CollapseOwnership', wbCollapseOwnership);
-      wbCollapseObjectPaletteDefaults := Settings.ReadBool('Options', 'CollapseObjectPaletteDefaults', wbCollapseObjectPaletteDefaults);
-      wbCollapseTraversal := Settings.ReadBool('Options', 'CollapseTraversal', wbCollapseTraversal);
-      wbCollapseBaseFormComponent := Settings.ReadBool('Options', 'CollapseBaseFormComponent', wbCollapseBaseFormComponent);
-      wbCollapseVehicleConfig := Settings.ReadBool('Options', 'CollapseVehicleConfig', wbCollapseVehicleConfig);
-      wbCollapseWeatherTimeOfDay := Settings.ReadBool('Options', 'CollapseWeatherTimeOfDay', wbCollapseWeatherTimeOfDay);
-      wbCollapseWeatherCloudTextures := Settings.ReadBool('Options', 'CollapseWeatherCloudTextures', wbCollapseWeatherCloudTextures);
-      wbCollapseWeatherCloudSpeed := Settings.ReadBool('Options', 'CollapseWeatherCloudSpeed', wbCollapseWeatherCloudSpeed);
-      wbCollapseWeatherCloudAlphas := Settings.ReadBool('Options', 'CollapseWeatherCloudAlphas', wbCollapseWeatherCloudAlphas);
-      wbCollapseRagdoll := Settings.ReadBool('Options', 'CollapseRagdoll', wbCollapseRagdoll);
-      wbCollapseDirectionRotation := Settings.ReadBool('Options', 'CollapseDirectionRotation', wbCollapseDirectionRotation);
-      wbCollapseMaxHeightData := Settings.ReadBool('Options', 'CollapseMaxHeightData', wbCollapseMaxHeightData);
-      wbCollapseAliases := Settings.ReadBool('Options', 'CollapseAliases', wbCollapseAliases);
-      wbCollapseQuestStage := Settings.ReadBool('Options', 'CollapseQuestStage', wbCollapseQuestStage);
-      wbCollapseQuestLog := Settings.ReadBool('Options', 'CollapseQuestLog', wbCollapseQuestLog);
-      wbCollapseQuestObjective := Settings.ReadBool('Options', 'CollapseQuestObjective', wbCollapseQuestObjective);
-      wbCollapseQuestObjectiveTarget := Settings.ReadBool('Options', 'CollapseQuestObjectiveTarget', wbCollapseQuestObjectiveTarget);
-      wbCollapseScriptEntry := Settings.ReadBool('Options', 'CollapseScriptEntry', wbCollapseScriptEntry);
       sl := TStringList.Create;
       try
         Settings.ReadSection('cpoverride', sl);
@@ -1227,10 +1166,10 @@ begin
       wbAllowMakePartial := True;
 
     if FindCmdLineSwitch('AllowMasterFilesEdit') then
-      wbAllowMasterFilesEdit := True;
+      xeContext.GameDefObj.DefineOptions.AllowMasterFilesEdit := True;
 
     if FindCmdLineSwitch('AllowEditHEDRVersion') then
-      wbAllowEditHEDRVersion := True;
+      xeContext.GameDefObj.DefineOptions.AllowEditHEDRVersion := True;
 
     if FindCmdLineSwitch('StripEmptyMasters') then
       xeContext.Settings.StripEmptyMasters := True;
@@ -1335,7 +1274,7 @@ begin
   end;
 
   if FindCmdLineSwitch('showlargesubrecords') then
-    wbHideLargeSubrecords := False;
+    xeContext.GameDefObj.DefineOptions.HideLargeSubrecords := False;
 
   if xeQuickClean then
     xeContext.Settings.WriteOffsetData := True;
@@ -1369,7 +1308,7 @@ begin
   if xeQuickClean then begin
     xeContext.Settings.FixupPGRD := True;
     xeContext.Settings.AllowInternalEdit := True;
-    wbSimpleRecords := False;
+    xeContext.GameDefObj.DefineOptions.SimpleRecords := False;
   end;
 
   if wbFindCmdLineParam('l', s) then begin
