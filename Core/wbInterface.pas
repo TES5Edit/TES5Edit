@@ -139,7 +139,6 @@ var
   wbDecodeTextureHashes              : Boolean    = True;
   wbIKnowWhatImDoing                 : Boolean    = False;
   wbHideUnused                       : Boolean    = True;
-  wbHideIgnored                      : Boolean    = True;
   wbHideNeverShow                    : Boolean    = True;
   wbHideLargeSubrecords              : Boolean    = True;
   wbShowFormVersion                  : Boolean    = False;
@@ -4237,6 +4236,7 @@ type
     FlagsAsArray          : Boolean;
     CompareRawData        : Boolean;
     TranslationMode       : Boolean;
+    HideIgnored           : Boolean;
     EditAllowed           : Boolean;
     AllowInternalEdit     : Boolean;
     DontSave              : Boolean;
@@ -6875,6 +6875,7 @@ begin
   Result.CreateContainedIn := True;
   Result.DelayLoadRecords := True;
   Result.AllowInternalEdit := True;
+  Result.HideIgnored := True;
   Result.Encoding := wbMBCSEncoding(1252);
   Result.EncodingTrans := Result.Encoding;
   Result.LoadBSAs := True;
@@ -13230,6 +13231,10 @@ begin
     if Supports(aElement, IwbContainerElementRef, CER) then begin
       var MembersNoName := (dfSummaryMembersNoName in CER.Def.DefFlags);
       var MembersShowIgnore := (dfSummaryMembersShowIgnore in CER.Def.DefFlags);
+      if not MembersShowIgnore then begin
+        var lContext := CER.ContextObj;
+        MembersShowIgnore := Assigned(lContext) and not lContext.Settings.HideIgnored;
+      end;
       for var i := 0 to Pred(l) do begin
         var SortOrder := aKeys[i];
         if (SortOrder >= Low(aMembers)) and (SortOrder <= High(aMembers)) then begin
@@ -13243,7 +13248,7 @@ begin
             if Assigned(Member) and
                not Member.DontShow and
                Supports(Member.Def, IwbRecordMemberDef, RMD) and
-               (MembersShowIgnore or (dfSummaryShowIgnore in RMD.DefFlags) or not wbHideIgnored or (Member.ConflictPriority > cpIgnore))
+               (MembersShowIgnore or (dfSummaryShowIgnore in RMD.DefFlags) or (Member.ConflictPriority > cpIgnore))
             then begin
               var lMemberSummary := RMD.ToSummary(Succ(aDepth), Member, aLinksTo).Trim;
               if lMemberSummary <> '' then begin
@@ -17061,7 +17066,7 @@ var
           var MemberCER: IwbContainerElementRef;
           if Supports(Element, IwbContainerElementRef, MemberCER) and
              Supports(Element, IwbDataContainer, DC) and
-             (MembersShowIgnore or (dfSummaryShowIgnore in Element.Def.DefFlags) or not wbHideIgnored or (Element.ConflictPriority > cpIgnore)) and
+             (MembersShowIgnore or (dfSummaryShowIgnore in Element.Def.DefFlags) or (Element.ConflictPriority > cpIgnore)) and
              not Element.DontShow
           then begin
             var MemberDef := stMembers[SortMember];
@@ -17117,6 +17122,10 @@ begin
     DelayedName := '';
     MembersNoName := dfSummaryMembersNoName in defFlags;
     MembersShowIgnore := dfSummaryMembersShowIgnore in defFlags;
+    if not MembersShowIgnore then begin
+      var lContext := CER.ContextObj;
+      MembersShowIgnore := Assigned(lContext) and not lContext.Settings.HideIgnored;
+    end;
     if not (dfSummaryNoSortKey in defFlags) then begin
       Process(stSortKey);
       Process(stExSortKey);

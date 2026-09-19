@@ -1119,7 +1119,7 @@ begin
     gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
       lInputs.VWDInTemporary := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
+      lSettings.HideIgnored := False; // to show Form Version
       lSettings.CanSortINFO := True;
       var lVRESL := (wbGameMode in [gmTES5VR]) and FileExists(lSettings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
       lInputs.LightSupport := lVRESL;
@@ -1132,7 +1132,7 @@ begin
       lInputs.VWDInTemporary := True;
       lInputs.VWDAsQuestChildren := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
+      lSettings.HideIgnored := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
       lSettings.AlwaysSaveOnamForce := True;
       var lVRESL := (wbGameMode in [gmFO4VR]) and (FileExists(lSettings.DataPath + 'F4SE\Plugins\falloutvresl.dll') or
@@ -1146,7 +1146,7 @@ begin
       lInputs.VWDInTemporary := True;
       lInputs.VWDAsQuestChildren := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
+      lSettings.HideIgnored := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
       lSettings.AlwaysSaveOnamForce := True;
     end;
@@ -1156,7 +1156,7 @@ begin
       lInputs.VWDInTemporary := True;
       lInputs.VWDAsQuestChildren := True;
       lSettings.LoadBSAs := True;  // localization won't work otherwise
-      wbHideIgnored         := False; // to show Form Version
+      lSettings.HideIgnored := False; // to show Form Version
       lSettings.AlwaysSaveOnam := True;
       lSettings.AlwaysSaveOnamForce := True;
       wbDecodeTextureHashes := True;
@@ -1566,7 +1566,7 @@ begin
         xeContext.Settings.LoadBSAs := True; //needed for localization
       xeContext.Settings.TranslationMode := True;
       wbHideUnused             := True;
-      wbHideIgnored            := True;
+      xeContext.Settings.HideIgnored := True;
       wbHideNeverShow          := True;
     end;
   end;
