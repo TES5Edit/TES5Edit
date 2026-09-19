@@ -23795,7 +23795,9 @@ begin
       t := '';
     if t = '' then
       t := aContainer.Def.Name;
-    if t.StartsWith('Unknown', True) and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then
+    if t.StartsWith('Unknown', True) and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then begin
+      var lGameDef := aContainer.GameDefObj;
+      var lIsSave := Assigned(lGameDef) and (lGameDef.ToolSource = tsSaves);
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
         var lContainer: IwbContainer := TwbStruct.Create(aContainer, BasePtr, aEndPtr, wbStruct('Offset ' + IntToStr(i), []), '');
@@ -23833,13 +23835,14 @@ begin
         Element := TwbArray.Create(lContainer, BasePtr, aEndPtr, wbArray('AsLString', wbLString('AsLString')), '', True);
         BasePtr := PByte(aBasePtr) + i;
         Element := TwbArray.Create(lContainer, BasePtr, aEndPtr, wbArray('AsLenString', wbLenString('AsLenString')), '', True);
-        if wbToolSource in [tsSaves] then begin
+        if lIsSave then begin
           BasePtr := PByte(aBasePtr) + i;
           Element := TwbArray.Create(lContainer, BasePtr, aEndPtr, wbArray('AsRefID', wbRefID('RefID')), '', True);
           BasePtr := PByte(aBasePtr) + i;
           Element := TwbArray.Create(lContainer, BasePtr, aEndPtr, wbArray(' AsU6to30', wbInteger('AsU6to30', itU6to30)), '', True);
         end;
       end;
+    end;
   end;
 
   if assigned(aResolvedDef) then
