@@ -5922,52 +5922,52 @@ end;
 
 function TwbGameDef.GetIsMorrowind: Boolean;
 begin
-  Result := GetGameMode in [gmTES3];
+  Result := gdGameMode in [gmTES3];
 end;
 
 function TwbGameDef.GetIsOblivion: Boolean;
 begin
-  Result := GetGameMode in [gmTES4, gmTES4R];
+  Result := gdGameMode in [gmTES4, gmTES4R];
 end;
 
 function TwbGameDef.GetIsOblivionR: Boolean;
 begin
-  Result := GetGameMode in [gmTES4R];
+  Result := gdGameMode in [gmTES4R];
 end;
 
 function TwbGameDef.GetIsFallout3: Boolean;
 begin
-  Result := GetGameMode in [gmFO3, gmFNV];
+  Result := gdGameMode in [gmFO3, gmFNV];
 end;
 
 function TwbGameDef.GetIsFalloutNV: Boolean;
 begin
-  Result := GetGameMode in [gmFNV];
+  Result := gdGameMode in [gmFNV];
 end;
 
 function TwbGameDef.GetIsSkyrim: Boolean;
 begin
-  Result := GetGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
+  Result := gdGameMode in [gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE];
 end;
 
 function TwbGameDef.GetIsSkyrimSE: Boolean;
 begin
-  Result := GetGameMode in [gmTES5VR, gmSSE, gmEnderalSE];
+  Result := gdGameMode in [gmTES5VR, gmSSE, gmEnderalSE];
 end;
 
 function TwbGameDef.GetIsFallout4: Boolean;
 begin
-  Result := GetGameMode in [gmFO4, gmFO4VR];
+  Result := gdGameMode in [gmFO4, gmFO4VR];
 end;
 
 function TwbGameDef.GetIsFallout76: Boolean;
 begin
-  Result := GetGameMode in [gmFO76];
+  Result := gdGameMode in [gmFO76];
 end;
 
 function TwbGameDef.GetIsStarfield: Boolean;
 begin
-  Result := GetGameMode in [gmSF1];
+  Result := gdGameMode in [gmSF1];
 end;
 
 function TwbGameDef.IsCS(const aDef1, aDef2: string): string;
@@ -6231,22 +6231,22 @@ end;
 
 function TwbGameDef.GetIsLightSupported: Boolean;
 begin
-  Result := gcLightPlugins in GetCapabilities;
+  Result := gcLightPlugins in gdCapabilities;
 end;
 
 function TwbGameDef.GetIsMediumSupported: Boolean;
 begin
-  Result := gcMediumPlugins in GetCapabilities;
+  Result := gcMediumPlugins in gdCapabilities;
 end;
 
 function TwbGameDef.GetIsBlueprintSupported: Boolean;
 begin
-  Result := gcBlueprintPlugins in GetCapabilities;
+  Result := gcBlueprintPlugins in gdCapabilities;
 end;
 
 function TwbGameDef.GetIsUpdateSupported: Boolean;
 begin
-  Result := gcUpdatePlugins in GetCapabilities;
+  Result := gcUpdatePlugins in gdCapabilities;
 end;
 
 procedure TwbGameDef.Define;

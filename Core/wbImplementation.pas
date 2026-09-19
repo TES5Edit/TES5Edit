@@ -9822,7 +9822,8 @@ end;
 
 function TwbMainRecord.DoGetFixedFormID: TwbFormID;
 begin
-  if not (gcFormIDInRecordHeader in GameDefObj.Capabilities) then
+  var lCapabilities := GameDefObj.Capabilities;
+  if not (gcFormIDInRecordHeader in lCapabilities) then
     Result := GetFormID
   else
     Result := PwbMainRecordStruct(dcBasePtr).mrsFormID(True)^;
@@ -9839,7 +9840,7 @@ begin
         Exit;
       end;
 
-    if gcComplexFileFileID in GameDefObj.Capabilities then begin
+    if gcComplexFileFileID in lCapabilities then begin
       var lFileID := Result.FileID[lLayout];
       case lFileID.ModuleType of
         mtLight:
@@ -10487,6 +10488,7 @@ var
 
 begin
   var lContext := ContextObj;
+  var lGameDef := GameDefObj;
   RequiredRecords := [];
   PresentRecords := [];
 
@@ -10514,10 +10516,10 @@ begin
     if Assigned(mrDef) then
       RecordHeaderStruct := mrDef.RecordHeaderStruct as IwbStructDef;
     if not Assigned(RecordHeaderStruct) then
-      RecordHeaderStruct := GameDefObj.MainRecordHeader as IwbStructDef;
+      RecordHeaderStruct := lGameDef.MainRecordHeader as IwbStructDef;
 
     CurrentPtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + GameDefObj.SizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, CurrentPtr, PByte(CurrentPtr) + lGameDef.SizeOfMainRecordStruct, RecordHeaderStruct, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -10525,7 +10527,7 @@ begin
     end;
   end;
 
-  var lCapabilities := GameDefObj.Capabilities;
+  var lCapabilities := lGameDef.Capabilities;
   IsTES3CELL := (gcReferencesEmbeddedInCell in lCapabilities) and (GetSignature = 'CELL');
   IsTES3REFR := (gcReferencesEmbeddedInCell in lCapabilities) and (GetSignature = 'REFR');
   FRMRCount := 0;
@@ -10548,7 +10550,7 @@ begin
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
       if Supports(Element, IwbSubRecord, CurrentRec) then begin
         var lSignature := CurrentRec.Signature;
-        if GameDefObj.IgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) or lContext.SubRecordToSkip.Find(lSignature, Dummy) then
+        if lGameDef.IgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) or lContext.SubRecordToSkip.Find(lSignature, Dummy) then
           CurrentRec.Skipped := True;
         {$IFDEF DBGSUBREC}
         if lSubRecordCount >= Length(lSubRecords) then
@@ -10743,7 +10745,7 @@ begin
 
   mrDef.AfterLoad(Self);
 
-  if not (mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsDeleted or GetIsPartialForm) then begin
+  if not (mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsDeleted or GetIsPartialForm) then begin
     for i := 0 to Pred(mrDef.MemberCount) do
       if mrDef.Members[i].Required then
         Include(RequiredRecords, i);
@@ -11399,10 +11401,7 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'LAND') then begin
-      if GetGridCell(GridCell) then
-        Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
-    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'PGRD') then begin
+    end else if ((GetSignature = 'LAND') or (GetSignature = 'PGRD')) and (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) then begin
       if GetGridCell(GridCell) then
         Result := '<' + StrRight(GridCell.X.ToString, 3) + ', ' + StrRight(GridCell.Y.ToString, 3) + '>';
     end else if (GetSignature = 'INFO') then begin
@@ -11451,10 +11450,7 @@ begin
       else
         if GetGridCell(GridCell) then
           Result := GridCell.SortKey;
-    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'LAND') then begin
-      if GetGridCell(GridCell) then
-        Result := GridCell.SortKey;
-    end else if (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) and (GetSignature = 'PGRD') then
+    end else if ((GetSignature = 'LAND') or (GetSignature = 'PGRD')) and (gcGridCellInLandAndPathgrid in GameDefObj.Capabilities) then
       if GetGridCell(GridCell) then
         Result := GridCell.SortKey;
 
@@ -11699,10 +11695,11 @@ end;
 
 procedure TwbMainRecord.ClampFormID(aIndex: Byte);
 begin
-  var lFormIDInHeader := gcFormIDInRecordHeader in GameDefObj.Capabilities;
+  var lCapabilities := GameDefObj.Capabilities;
+  var lFormIDInHeader := gcFormIDInRecordHeader in lCapabilities;
   if not lFormIDInHeader then
     Exit;
-  if gcComplexFileFileID in GameDefObj.Capabilities then
+  if gcComplexFileFileID in lCapabilities then
     Exit;
 
   if mrStruct.mrsFormID(lFormIDInHeader).FileID[ContextObj.SlotLayout].FullSlot > aIndex then begin
@@ -13025,8 +13022,9 @@ var
   lFormID: TwbFormID;
   i: Integer;
 begin
-  Assert(gcFormIDInRecordHeader in GameDefObj.Capabilities);
-  lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
+  var lCapabilities := GameDefObj.Capabilities;
+  Assert(gcFormIDInRecordHeader in lCapabilities);
+  lComplex := gcComplexFileFileID in lCapabilities;
 
   Assert(Length(mrReferences)=0);
   aStream.Read(lFormID, SizeOf(TwbFormID));
@@ -13233,13 +13231,17 @@ var
         if Assigned(lFile) then
           lAllowHardcodedRangeUse := lFile.AllowHardcodedRangeUse;
 
+        var lCapabilities := GameDefObj.Capabilities;
+        var lComplex := gcComplexFileFileID in lCapabilities;
+        var lLayout := ContextObj.SlotLayout;
+
         HeaderUpdated := False;
         OldFormID := GetFixedFormID;
         if not OldFormID.IsNull then begin
-          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
+          NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, lLayout, lComplex);
           if GetFormID <> NewFormID then begin
             MakeHeaderWriteable;
-            mrStruct.mrsFormID(gcFormIDInRecordHeader in GameDefObj.Capabilities)^ := NewFormID;
+            mrStruct.mrsFormID(gcFormIDInRecordHeader in lCapabilities)^ := NewFormID;
             mrFixedFormID := TwbFormID.Null;
             mrLoadOrderFormID := TwbFormID.Null;
             Exclude(mrStates, mrsIsInjectedChecked);
@@ -13252,7 +13254,7 @@ var
 
           for i := Low(mrReferences) to High(mrReferences) do begin
             OldFormID := mrReferences[i];
-            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, ContextObj.SlotLayout, gcComplexFileFileID in GameDefObj.Capabilities);
+            NewFormID := FixupFormID(OldFormID, aOld, aNew, aOldCount, aNewCount, lAllowHardcodedRangeUse, lLayout, lComplex);
             if OldFormID <> NewFormID then begin
               FoundOne := True;
               mrReferences[i] := NewFormID;
@@ -13815,7 +13817,9 @@ var
   begin
     KAR := wbCreateKeepAliveRoot;
 
-    if GetSignature = GameDefObj.HeaderSignature then begin
+    var lGameDef := GameDefObj;
+    var lCapabilities := lGameDef.Capabilities;
+    if GetSignature = lGameDef.HeaderSignature then begin
       if not Supports(GetContainer, IwbFile, _File) then
         raise Exception.Create('File Header record "' + GetFullPath + '" must be contained directly in the file.');
       if not GetFormID.IsNull then
@@ -13846,7 +13850,7 @@ var
             raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
         end;
         8, 10: begin {Persistent and Visible when Distant/Quest Children}
-          if (gcVWDAsQuestChildren in GameDefObj.Capabilities) and (GroupRecord.GroupType = 10) then begin
+          if (gcVWDAsQuestChildren in lCapabilities) and (GroupRecord.GroupType = 10) then begin
             if (GetSignature <> 'DLBR') and (GetSignature <> 'DIAL') and (GetSignature <> 'SCEN') then
               raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
           end else begin
@@ -13866,11 +13870,11 @@ var
 
             case GroupRecord.GroupType of
               8: begin
-                if not mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities).IsPersistent then
+                if not mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities).IsPersistent then
                   raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
               end;
               10: begin
-                var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities);
+                var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities);
                 if not lFlags.IsVisibleWhenDistant then
                   raise Exception.Create('Record "' + GetFullPath + '" needs to have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
                 if lFlags.IsPersistent then
@@ -13896,10 +13900,10 @@ var
              (GetSignature <> 'PHZD')     {>>> Skyrim <<<}
           then
             raise Exception.Create('Record "' + GetFullPath + '" can not be contained in ' + GroupRecord.Name);
-          var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in GameDefObj.Capabilities);
+          var lFlags := mrStruct.mrsFlags(gcFormIDInRecordHeader in lCapabilities);
           if lFlags.IsPersistent then
             raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Persistent flag set to be contained in ' + GroupRecord.Name);
-          if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in GameDefObj.Capabilities) then
+          if lFlags.IsVisibleWhenDistant and not (gcVWDInTemporary in lCapabilities) then
             raise Exception.Create('Record "' + GetFullPath + '" can not have it''s Visible when Distant flag set to be contained in ' + GroupRecord.Name);
         end;
       end;
