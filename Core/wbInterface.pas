@@ -6811,9 +6811,8 @@ var
   Group : IwbGroupRecord;
 begin
   Result := nil;
-  var lFiles := FilesWithSaves;
-  for i := High(lFiles) downto Low(lFiles) do
-    if Supports(lFiles[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
+  for i := High(gcFiles) downto Low(gcFiles) do
+    if Supports(gcFiles[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
       Result := Group.MainRecordByEditorID[aEditorID];
       if Assigned(Result) then begin
         Result := Result.WinningOverride;
