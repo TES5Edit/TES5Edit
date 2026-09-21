@@ -13422,7 +13422,8 @@ begin
         mrFullName := FULLRec.EditValue;
     end;
   end;
-  mrLGeneration := wbLocalizationHandler(ContextObj).Generation
+  if Assigned(_File) then
+    mrLGeneration := wbLocalizationHandler(ContextObj).Generation;
 end;
 
 function TwbMainRecord.mrStruct: PwbMainRecordStruct;
