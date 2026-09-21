@@ -21765,16 +21765,20 @@ begin
             end;
 
           LoaderProgress('loading "' + ltLoadList[lLoadListIdx] + '"...');
+          var lIsSave := Assigned(xeSaveContext) and
+            not wbIsModule(ltLoadList[lLoadListIdx], xeContext.GameDefObj.GameExeName);
           if FileExists(ltLoadList[lLoadListIdx]) then
             s := ltLoadList[lLoadListIdx]
           else begin
             s := ltDataPath + ltLoadList[lLoadListIdx];
-            if not wbIsModule(ltLoadList[lLoadListIdx], xeContext.GameDefObj.GameExeName) then
-              if wbToolSource in [tsSaves] then
-                if not FileExists(s) then // Assume its a save in the save path
-                  s := xeContext.Settings.SavePath + ltLoadList[lLoadListIdx];
+            if lIsSave then
+              if not FileExists(s) then // Assume its a save in the save path
+                s := xeContext.Settings.SavePath + ltLoadList[lLoadListIdx];
           end;
-          _File := xeContext.LoadFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
+          if lIsSave then
+            _File := xeSaveContext.LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates)
+          else
+            _File := xeContext.LoadFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);

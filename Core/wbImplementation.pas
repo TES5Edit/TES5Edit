@@ -363,8 +363,10 @@ type
     function GetFile: IwbFile; virtual;
     function GameDefObj: TwbGameDef; virtual;
     function ContextObj: TwbGameContext; virtual;
+    function SaveContextObj: TwbSaveContext; virtual;
     function GetGameDefObj: TwbGameDef;
     function GetContextObj: TwbGameContext;
+    function GetSaveContextObj: TwbSaveContext;
     function GetReferenceFile: IwbFile; virtual;
     function GetSortOrder: Integer;
     procedure BuildRef; virtual;
@@ -511,6 +513,7 @@ type
 
     function GameDefObj: TwbGameDef;
     function ContextObj: TwbGameContext;
+    function SaveContextObj: TwbSaveContext;
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer);
     procedure CreatedEmpty;
@@ -688,6 +691,8 @@ type
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
     procedure ForceClosed;
     function ContextObj: TwbGameContext;
+    function SaveContextObj: TwbSaveContext;
+    procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
@@ -752,6 +757,7 @@ type
     flModule                 : PwbModuleInfo;
     [weak] flContext         : IwbGameContext;
     flContextObj             : TwbGameContext;
+    flSaveContextObj         : TwbSaveContext;
     flSaveTables             : IwbSaveTables;
 
     flCachedEditInfos        : TwbCachedEditInfos;
@@ -777,6 +783,8 @@ type
     function GameDefObj: TwbGameDef; override;
     function GetContext: IwbGameContext;
     function ContextObj: TwbGameContext; override;
+    function SaveContextObj: TwbSaveContext; override;
+    procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetReferenceFile: IwbFile; override;
@@ -975,6 +983,14 @@ type
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
+  public
+    constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates);
+  end;
+
+  TwbLoadingSaveContext = class(TwbSaveContext)
+  public
+    destructor Destroy; override;
+    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile; override;
   end;
 
   TwbDataContainerFlag = (
@@ -4258,6 +4274,16 @@ end;
 function TwbFile.ContextObj: TwbGameContext;
 begin
   Result := flContextObj;
+end;
+
+function TwbFile.SaveContextObj: TwbSaveContext;
+begin
+  Result := flSaveContextObj;
+end;
+
+procedure TwbFile.SetSaveContextObj(aSaveContext: TwbSaveContext);
+begin
+  flSaveContextObj := aSaveContext;
 end;
 
 function TwbFile.GetSaveTables: IwbSaveTables;
@@ -20327,6 +20353,14 @@ begin
     Result := eContextObj;
 end;
 
+function TwbElement.SaveContextObj: TwbSaveContext;
+begin
+  if Assigned(eContainer) then
+    Result := IwbContainerInternal(eContainer).SaveContextObj
+  else
+    Result := nil;
+end;
+
 function TwbElement.GetGameDefObj: TwbGameDef;
 begin
   Result := GameDefObj;
@@ -20335,6 +20369,11 @@ end;
 function TwbElement.GetContextObj: TwbGameContext;
 begin
   Result := ContextObj;
+end;
+
+function TwbElement.GetSaveContextObj: TwbSaveContext;
+begin
+  Result := SaveContextObj;
 end;
 
 function TwbElement.GetFound: Boolean;
@@ -24415,6 +24454,33 @@ begin
   end;
 end;
 
+{ TwbLoadingSaveContext }
+
+destructor TwbLoadingSaveContext.Destroy;
+var
+  lFile: IwbFileInternal;
+begin
+  if Supports(scFile, IwbFileInternal, lFile) then begin
+    lFile.SetSaveContextObj(nil);
+    lFile := nil;
+  end;
+  inherited;
+end;
+
+function TwbLoadingSaveContext.LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates): IwbFile;
+begin
+  var lGameContext := GameContextObj;
+  lGameContext.GameDefObj.InitRecords;
+
+  var lFileName := lGameContext.ExpandFileName(aFileName);
+  Result := lGameContext.FileByName(lFileName);
+  if Assigned(Result) then
+    (Result as IwbFileInternal).SetSaveContextObj(Self)
+  else
+    Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap]);
+  scFile := Result;
+end;
+
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;
 var
   Container  : IwbContainerElementRef;
@@ -26235,6 +26301,12 @@ begin
   flFileNameOnDisk := flFileName;
 end;
 
+constructor TwbFileSource.CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates);
+begin
+  flSaveContextObj := aSaveContext;
+  inherited Create(aSaveContext.GameContextObj, aFileName, aLoadOrder, aCompareTo, aStates, nil);
+end;
+
 function TwbFileSource.flSaveDef: TwbSaveDef;
 begin
   Result := flContextObj.GameDefObj.SaveDef;
@@ -26660,6 +26732,7 @@ end;
 
 initialization
   wbGameContextClass := TwbLoadingGameContext;
+  wbSaveContextClass := TwbLoadingSaveContext;
   _MastersGeneration := 1;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   _ResizeLock.Initialize;

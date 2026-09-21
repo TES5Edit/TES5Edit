@@ -842,6 +842,8 @@ type
   TwbGameDef = class;
   IwbGameContext = interface;
   TwbGameContext = class;
+  IwbSaveContext = interface;
+  TwbSaveContext = class;
   IwbFile = interface;
   IwbSaveTables = interface;
   IwbNamedDef = interface;
@@ -1106,6 +1108,7 @@ type
     function GetReferenceFile: IwbFile;
     function GetGameDefObj: TwbGameDef;
     function GetContextObj: TwbGameContext;
+    function GetSaveContextObj: TwbSaveContext;
     function GetSortOrder: Integer;
     procedure SetSortOrder(aSortOrder: Integer);
     function GetMemoryOrder: Integer;
@@ -1233,6 +1236,8 @@ type
       read GetGameDefObj;
     property ContextObj: TwbGameContext
       read GetContextObj;
+    property SaveContextObj: TwbSaveContext
+      read GetSaveContextObj;
     property InjectionSourceFiles: TwbFiles
       read GetInjectionSourceFiles;
 
@@ -3995,6 +4000,29 @@ type
 
   TwbGameContextClass = class of TwbGameContext;
 
+  IwbSaveContext = interface(IwbInterface)
+    ['{5853FC05-06A7-4875-887E-BC04D9C6A52E}']
+  end;
+
+  TwbSaveContext = class(TInterfacedObject, IwbSaveContext)
+  protected
+    scGameContext    : IwbGameContext;
+    scGameContextObj : TwbGameContext;
+    scFile           : IwbFile;
+  public
+    constructor Create(const aGameContext: IwbGameContext);
+    destructor Destroy; override;
+
+    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile; virtual; abstract;
+
+    property GameContextObj: TwbGameContext
+      read scGameContextObj;
+    property SaveFile: IwbFile
+      read scFile;
+  end;
+
+  TwbSaveContextClass = class of TwbSaveContext;
+
 const
   arcU32 = -1;
   arcU16 = -2;
@@ -5317,12 +5345,14 @@ var
   wbFileByReverseSortOrderComparer : IComparer<IwbFile>;
 
   wbGameContextClass : TwbGameContextClass;
+  wbSaveContextClass : TwbSaveContextClass;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef; overload;
 function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef; overload;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
+function wbCreateSaveContext(const aGameContext: IwbGameContext): IwbSaveContext;
 
 implementation
 
@@ -6276,6 +6306,29 @@ function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 begin
   Assert(Assigned(wbGameContextClass));
   Result := wbGameContextClass.Create(aGameDef);
+end;
+
+function wbCreateSaveContext(const aGameContext: IwbGameContext): IwbSaveContext;
+begin
+  Assert(Assigned(wbSaveContextClass));
+  Result := wbSaveContextClass.Create(aGameContext);
+end;
+
+{ TwbSaveContext }
+
+constructor TwbSaveContext.Create(const aGameContext: IwbGameContext);
+begin
+  inherited Create;
+  scGameContext := aGameContext;
+  scGameContextObj := aGameContext as TwbGameContext;
+end;
+
+destructor TwbSaveContext.Destroy;
+begin
+  scFile := nil;
+  scGameContextObj := nil;
+  scGameContext := nil;
+  inherited;
 end;
 
 { TwbGameDefineOptions }

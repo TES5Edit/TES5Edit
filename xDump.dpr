@@ -68,6 +68,8 @@ const
 var
   HostContextRef       : IwbGameContext;
   HostContext          : TwbGameContext;
+  HostSaveContextRef   : IwbSaveContext;
+  HostSaveContext      : TwbSaveContext;
   StartTime            : TDateTime;
   DumpGroups           : TStringList;
   DumpRecords          : TStringList;
@@ -1165,6 +1167,11 @@ begin
         Exit;
       end;
 
+      if wbToolSource = tsSaves then begin
+        HostSaveContextRef := wbCreateSaveContext(HostContextRef);
+        HostSaveContext := HostSaveContextRef as TwbSaveContext;
+      end;
+
       DoInitPath;
       if (wbToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
         HostContext.Settings.DataPath := CheckParamPath;
@@ -1699,7 +1706,10 @@ begin
       end;
 
       if wbToolMode in [tmDump] then
-        _File := HostContext.LoadFile(s, High(Integer));
+        if Assigned(HostSaveContext) then
+          _File := HostSaveContext.LoadSave(s, High(Integer))
+        else
+          _File := HostContext.LoadFile(s, High(Integer));
 
       if not (gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities) then
         with wbModuleListOf(HostContext).ModuleByName(wbGameMasterEsm)^ do

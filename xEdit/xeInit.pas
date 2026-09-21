@@ -20,6 +20,8 @@ uses
 var
   xeContextRef             : IwbGameContext;
   xeContext                : TwbGameContext;
+  xeSaveContextRef         : IwbSaveContext;
+  xeSaveContext            : TwbSaveContext;
   xeScriptToRun            : string;
   xeSettingsFileName       : string;
   xePluginToUse            : string;          // Passed a specific plugin as parameter
@@ -1114,6 +1116,11 @@ begin
   xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
   xeContext.Settings := lSettings;
+
+  if wbToolSource = tsSaves then begin
+    xeSaveContextRef := wbCreateSaveContext(xeContextRef);
+    xeSaveContext := xeSaveContextRef as TwbSaveContext;
+  end;
 
   xeContext.Settings.SortINFO := xeContext.Settings.CanSortINFO;
 
