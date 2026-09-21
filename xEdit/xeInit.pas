@@ -58,6 +58,8 @@ var
   xeTestNavCopyMaster      : string = 'NavCopyA.esp';
   xeTestNavCopyPlugin      : string = 'NavCopyB.esp';
   xeTestNavCopyCount       : Integer = 12;
+  xeTestNavCopyNew         : Boolean;
+  xeTestNavCopySignature   : string = 'QUST';
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
@@ -1245,6 +1247,9 @@ begin
         xeTestNavCopyPlugin := lValue;
       if wbFindCmdLineParam('testnavcopycount', lValue) then
         xeTestNavCopyCount := StrToIntDef(lValue, xeTestNavCopyCount);
+      xeTestNavCopyNew := FindCmdLineSwitch('testnavcopynew');
+      if wbFindCmdLineParam('testnavcopysig', lValue) and (Length(lValue) = 4) then
+        xeTestNavCopySignature := lValue;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
