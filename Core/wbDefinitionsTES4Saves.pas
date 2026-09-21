@@ -17,8 +17,6 @@ uses
 type
   TwbGameDefTES4Saves = class(TwbGameDefTES4)
   protected
-    procedure DefineTES4SavesA;
-    procedure DefineTES4SavesS;
     procedure Define; override;
   end;
 
@@ -29,23 +27,40 @@ uses
 
   wbSaveInterface;
 
-var
-  wbActorValueLabels : array of string;
+type
+  TwbSaveDefTES4Base = class(TwbSaveDef)
+  protected
+    sdActorValueLabels : array of string;
+    sdSaveChapters     : IwbStructDef;
+    sdCoSaveChapters   : IwbStructDef;
+    sdSaveHeader       : IwbStructDef;
+    sdCoSaveHeader     : IwbStructDef;
+    sdExtractInfo      : TByteSet;
 
-  // forward type directives
-  //wbChangeTypes    : IwbEnumDef;
-  wbSaveChapters   : IwbStructDef;
-  wbCoSaveChapters : IwbStructDef;
-  wbSaveHeader     : IwbStructDef;
-  wbCoSaveHeader   : IwbStructDef;
+    procedure DefineTES4SavesA;
+    procedure DefineTES4SavesS;
+  public
+    procedure Define; override;
+  end;
 
-procedure TwbGameDefTES4Saves.DefineTES4SavesA;
+  TwbSaveDefTES4 = class(TwbSaveDefTES4Base)
+  public
+    procedure Define; override;
+  end;
+
+  TwbCoSaveDefTES4 = class(TwbSaveDefTES4Base)
+  public
+    procedure Define; override;
+  end;
+
+procedure TwbSaveDefTES4Base.DefineTES4SavesA;
 var
   i: Integer;
 begin
-  SetLength(wbActorValueLabels, ActorValueEnum.NameCount);
-  for i := 0 to ActorValueEnum.NameCount - 1 do
-    wbActorValueLabels[i] := ActorValueEnum.Names[i];
+  var lActorValueEnum := sdGameDef.ActorValueEnum;
+  SetLength(sdActorValueLabels, lActorValueEnum.NameCount);
+  for i := 0 to lActorValueEnum.NameCount - 1 do
+    sdActorValueLabels[i] := lActorValueEnum.Names[i];
 end;
 
 //{ TES4saves }
@@ -1811,7 +1826,7 @@ end;
 //  Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z'], nil);
 //end;
 
-procedure TwbGameDefTES4Saves.DefineTES4SavesS;  // This is all based on the Runtime
+procedure TwbSaveDefTES4Base.DefineTES4SavesS;  // This is all based on the Runtime
 var
   wbHeader                   : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
@@ -6304,9 +6319,9 @@ begin
 //      ,wbChangedREFR  {03A}
 //      ,wbStruct('Change ACHR Data', [ {03B}
 //         wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player data', [
-//           wbArray('ActorValues244', wbFloatT('Actor Value'), wbActorValueLabels),
-//           wbArray('ActorValues378', wbFloatT('Actor Value'), wbActorValueLabels),
-//           wbArray('ActorValues4B0', wbFloatT('Actor Value'), wbActorValueLabels),
+//           wbArray('ActorValues244', wbFloatT('Actor Value'), sdActorValueLabels),
+//           wbArray('ActorValues378', wbFloatT('Actor Value'), sdActorValueLabels),
+//           wbArray('ActorValues4B0', wbFloatT('Actor Value'), sdActorValueLabels),
 //           wbIntegerT('Unk4AC', itU32)
 //         ])])
 //        ,wbChangedCharacter
@@ -6753,18 +6768,18 @@ begin
     wbByteArray('Unused', $6e - 9*4)
   ]);
 
-  wbSaveHeader := wbStruct('Save File Header', [
+  sdSaveHeader := wbStruct('Save File Header', [
      wbString('Magic', 11)
     ,wbInteger('Header Size', itU32)
     ,wbHeader
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayPT(gdSaveDef.FilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(FilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 
-  wbSaveChapters := wbStruct('Save File Chapters', [
+  sdSaveChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter)
     ,wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter)
     ,wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter)
@@ -6775,7 +6790,7 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbCoSaveHeader := wbStruct('CoSave File Header', [
+  sdCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('OBSE Version', itU16)
@@ -6842,41 +6857,53 @@ begin
   wbCoSaveChunks.TreeBranch := True;
   wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbCoSavePluginCounter);
 
-  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+  sdCoSaveChapters := wbStruct('CoSave File Chapters', [
     wbCoSavePlugins
   ]);
 
-  gdSaveDef.FileChapters := wbSaveChapters;
-  gdSaveDef.FileHeader := wbSaveHeader;
-  wbSaveHeader.TreeHead := True;
-  wbCoSaveHeader.TreeHead := True;
-//  wbSaveHeader.TreeLeaf := True;
-//  wbCoSaveHeader.TreeLeaf := True;
+  sdSaveHeader.TreeHead := True;
+  sdCoSaveHeader.TreeHead := True;
+//  sdSaveHeader.TreeLeaf := True;
+//  sdCoSaveHeader.TreeLeaf := True;
 end;
 
-var
-  ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
-  ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
+procedure TwbSaveDefTES4Base.Define;
+begin
+  FilePlugins := 'Plugins';
+  DefineTES4SavesA;
+  DefineTES4SavesS;
+end;
+
+procedure TwbSaveDefTES4.Define;
+begin
+  inherited;
+  FileExtension := '.ess';
+  FileMagic := 'FO3SAVEGAME';
+  sdExtractInfo := [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfo := @sdExtractInfo;
+  FileChapters := sdSaveChapters;
+  FileHeader := sdSaveHeader;
+end;
+
+procedure TwbCoSaveDefTES4.Define;
+begin
+  inherited;
+  FileExtension := '.obse';
+  FileMagic := 'OBSE';
+  sdExtractInfo := [];
+  ExtractInfo := @sdExtractInfo;
+  FilePlugins := 'Absolute:44';
+  FileChapters := sdCoSaveChapters;
+  FileHeader := sdCoSaveHeader;
+end;
 
 procedure TwbGameDefTES4Saves.Define;
 begin
-  if not Assigned(gdSaveDef) then
-    gdSaveDef := TwbSaveDef.Create(Self);
-  gdSaveDef.FileExtension := '.ess';
-  gdSaveDef.FileMagic := 'FO3SAVEGAME';
-  gdSaveDef.ExtractInfo := @ExtractInfoSave;
-  gdSaveDef.FilePlugins := 'Plugins';
   inherited;
-  DefineTES4SavesA;
-  DefineTES4SavesS;
-  if not Assigned(gdCoSaveDef) then
-    gdCoSaveDef := TwbSaveDef.Create(Self);
-  gdCoSaveDef.FileExtension := '.obse';
-  gdCoSaveDef.FileMagic := 'OBSE';
-  gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;
-  gdCoSaveDef.FilePlugins := 'Absolute:44';
-  gdCoSaveDef.FileChapters := wbCoSaveChapters;
-  gdCoSaveDef.FileHeader := wbCoSaveHeader;
+  gdSaveDef := TwbSaveDefTES4.Create(Self);
+  gdSaveDef.Define;
+  gdCoSaveDef := TwbCoSaveDefTES4.Create(Self);
+  gdCoSaveDef.Define;
 end;
 
 initialization
