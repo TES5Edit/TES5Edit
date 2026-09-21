@@ -3266,8 +3266,14 @@ var
   s            : String;
   i            : Integer;
   States       : TwbFileStates;
+
+  function IsLoaded(const aFileName: string): Boolean;
+  begin
+    Result := (mfHasFile in wbModuleListOf(xeContext).ModuleByName(ExtractFileName(aFileName)).miFlags) or
+      Assigned(xeContext.FileByName(fPath + ExtractFileName(aFileName)));
+  end;
+
 begin
-  var lModules := wbModuleListOf(xeContext);
   States := [];
   CompareFile := aSelected;
   if wbIsModule(CompareFile, xeContext.GameDefObj.GameExeName) then
@@ -3276,15 +3282,15 @@ begin
     fPath := xeContext.Settings.SavePath;
 
   // copy selected file to Data directory without overwriting an existing file
-  if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in lModules.ModuleByName(ExtractFileName(CompareFile)).miFlags) then begin
+  if not SameText(ExtractFilePath(CompareFile), fPath) or IsLoaded(CompareFile) then begin
     s := fPath + ExtractFileName(CompareFile);
-    if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then // Finds a unique name
+    if FileExists(s) or IsLoaded(s) then // Finds a unique name
       for i := 0 to 255 do begin
         s := fPath + ChangeFileExt(ChangeFileExt(ExtractFileName(CompareFile),'') + IntToHex(i, 3), ExtractFileExt(CompareFile));
-        if not (FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags)) then
+        if not (FileExists(s) or IsLoaded(s)) then
           break;
       end;
-    if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then begin
+    if FileExists(s) or IsLoaded(s) then begin
       wbProgress('Could not copy '+aSelected+' into '+fPath);
       Exit;
     end;

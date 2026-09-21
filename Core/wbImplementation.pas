@@ -695,7 +695,6 @@ type
     function SaveContextObj: TwbSaveContext;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     procedure DetachModule;
-    procedure ReleaseModule;
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
@@ -789,7 +788,6 @@ type
     function SaveContextObj: TwbSaveContext; override;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     procedure DetachModule;
-    procedure ReleaseModule;
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetReferenceFile: IwbFile; override;
@@ -985,6 +983,9 @@ type
     function SelectTemporaryCopy(const aFileName, aCompareFile: string): string;
   protected
     procedure Scan; override;
+    function GetAddList: TDynStrings; override;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
@@ -2557,6 +2558,8 @@ end;
 
 procedure TwbFile.AddMaster(const aFile: IwbFile);
 begin
+  if aFile.IsNotPlugin and not GetIsNotPlugin then
+    raise Exception.CreateFmt('"%s" is a save and can not be a master of "%s"', [aFile.FileName, GetFileName]);
   SetLength(flMasters, Succ(Length(flMasters)));
   flMasters[High(flMasters)] := aFile;
   UpdateModuleMasters;
@@ -3391,7 +3394,7 @@ begin
     Include(flModule.miFlags, mfLoaded);
     Include(flModule.miFlags, mfIsHardcoded);
     Exclude(flModule.miFlags, mfValid);
-  end else if not (fsOnlyHeader in flStates) then
+  end else if not (fsOnlyHeader in flStates) and not GetIsNotPlugin then
     flModule := wbModuleListOf(flContextObj).AddNewModule(GetFileName, False);
 
   if not (fsOnlyHeader in flStates) then begin
@@ -3598,7 +3601,10 @@ end;
 destructor TwbFile.Destroy;
 begin
   flSaveTables := nil;
-  ReleaseModule;
+  if Assigned(flModule) and (flModule.miFile = Self) then begin
+    Exclude(flModule.miFlags, mfHasFile);
+    flModule.miFile := nil;
+  end;
   flCloseFile;
   inherited;
 end;
@@ -4290,15 +4296,6 @@ end;
 
 procedure TwbFile.DetachModule;
 begin
-  flModule := nil;
-end;
-
-procedure TwbFile.ReleaseModule;
-begin
-  if Assigned(flModule) and (flModule.miFile = Self) then begin
-    Exclude(flModule.miFlags, mfHasFile);
-    flModule.miFile := nil;
-  end;
   flModule := nil;
 end;
 
@@ -24341,8 +24338,6 @@ begin
   for var lIdx := Low(gcFiles) to High(gcFiles) do
     if Assigned(gcFiles[lIdx]) then
       (gcFiles[lIdx] as IwbFileInternal).DetachModule;
-  for var lFile in SaveContextFiles do
-    (lFile as IwbFileInternal).DetachModule;
 end;
 
 function TwbLoadingGameContext.LoadFile(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes): IwbFile;
@@ -24492,8 +24487,6 @@ var
 begin
   if Supports(scFile, IwbFileInternal, lFile) then begin
     lFile.SetSaveContextObj(nil);
-    if scFileName <> '' then
-      lFile.ReleaseModule;
     lFile := nil;
   end;
   inherited;
@@ -26343,6 +26336,21 @@ const
   QUST : TwbSignature = 'QUST';
 
 { TwbFileSource }
+
+function TwbFileSource.Add(const aName: string; aSilent: Boolean): IwbElement;
+begin
+  raise Exception.Create('"' + GetFileName + '" is a save and holds no records');
+end;
+
+function TwbFileSource.AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
+begin
+  raise Exception.Create('"' + GetFileName + '" is a save and holds no records');
+end;
+
+function TwbFileSource.GetAddList: TDynStrings;
+begin
+  Result := nil;
+end;
 
 constructor TwbFileSource.CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
 begin
