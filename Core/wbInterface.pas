@@ -227,7 +227,10 @@ var
 
   wbCheckExpectedBytes               : Boolean    = True;
 
-  wbRadiansToDegreesScale            : Extended   = 180/Pi;
+const
+  wbRadiansToDegreesScale            = 180/Pi;
+
+var
   wbAngleDigits                      : Integer    = 4;
 
   wbDumpOffset                       : Integer    = 0;              // 1= starting offset, 2 = Count, 3 = Offsets, size and count
@@ -5270,10 +5273,12 @@ var
   wbNullSignature     : TwbSignature = #0#0#0#0;
   wbBytesToSkip       : Cardinal = 0;
   wbBytesToDump       : Cardinal = $FFFFFFFF;
-  wbBytesToGroup      : Cardinal = 4;
-  wbTerminator        : Byte = Ord('|');
-  wbPlayerRefID       : Cardinal = $14;
-  wbChangedFormOffset : Integer = 10000;
+
+const
+  wbBytesToGroup      = Cardinal(4);
+  wbTerminator        = Byte(Ord('|'));
+  wbPlayerRefID       = Cardinal($14);
+  wbChangedFormOffset = Integer(10000);
 
 function wbReadInteger24(aBasePtr: pointer): Int64;
 function wbSaveTablesFor(const aElement: IwbElement): IwbSaveTables;
