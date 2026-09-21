@@ -62,6 +62,10 @@ var
   xeTestNavCopyCount       : Integer = 12;
   xeTestNavCopyNew         : Boolean;
   xeTestNavCopySignature   : string = 'QUST';
+  xeTestSaveContexts       : Boolean;
+  xeTestSaveContextsFile   : string;
+  xeTestSaveContextsSave   : string;
+  xeTestSaveContextsCompare: string;
 
   xeParamIndex             : Integer = 1;     // First unused parameter
   xeModulesToUse           : TStringList;
@@ -1283,6 +1287,18 @@ begin
       xeQuickClean := True;
       xeQuickCleanAutoSave := xeQuickClean;
     end;
+  end;
+
+  if wbFindCmdLineParam('testsavecontexts', xeTestSaveContextsFile) then begin
+    if (xeTestSaveContextsFile = '') or (wbToolSource <> tsSaves) or
+       not wbFindCmdLineParam('testsavecontextssave', xeTestSaveContextsSave) or
+       not wbFindCmdLineParam('testsavecontextscompare', xeTestSaveContextsCompare) then begin
+      ShowMessage('testsavecontexts runs in saves mode and requires -testsavecontexts:<filename> -testsavecontextssave:<save> -testsavecontextscompare:<save>');
+      Exit(False);
+    end;
+    xeTestSaveContexts := True;
+    xeAutoLoad := True;
+    xeAutoExit := True;
   end;
 
   if FindCmdLineSwitch('showlargesubrecords') then

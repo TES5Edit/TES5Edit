@@ -853,6 +853,8 @@ type
 
     procedure DoTestConflictsDump;
     procedure DoTestNavCopy;
+    procedure DoTestSaveContextsCompare;
+    procedure DoCompareTo(const aFile: IwbFile; const aSelected: string);
   protected
 
     function GetUniqueLinksTo(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer): TDynMainRecords;
@@ -1727,6 +1729,90 @@ begin
     GeneralProgress(s);
 end;
 
+var
+  _TestSaveContextsFiles    : TArray<IwbFile>;
+  _TestSaveContextsContexts : TArray<Pointer>;
+
+procedure TestSaveContextsReport(const aStage: string);
+
+  function FileLabel(const aFile: IwbFile): string;
+  begin
+    if not Assigned(aFile) then
+      Exit('nil');
+    for var lIdx := Low(_TestSaveContextsFiles) to High(_TestSaveContextsFiles) do
+      if _TestSaveContextsFiles[lIdx].Equals(aFile) then
+        Exit(Chr(Ord('A') + lIdx));
+    Result := aFile.FileName;
+  end;
+
+  function ContextLabel(aSaveContext: TwbSaveContext): string;
+  begin
+    if not Assigned(aSaveContext) then
+      Exit('nil');
+    var lIdx := High(_TestSaveContextsContexts);
+    while (lIdx >= 0) and (_TestSaveContextsContexts[lIdx] <> Pointer(aSaveContext)) do
+      Dec(lIdx);
+    if lIdx < 0 then begin
+      _TestSaveContextsContexts := _TestSaveContextsContexts + [Pointer(aSaveContext)];
+      lIdx := High(_TestSaveContextsContexts);
+    end;
+    Result := 'SC' + IntToStr(Succ(lIdx));
+  end;
+
+  function ModuleText(const aFile: IwbFile): string;
+  begin
+    if Assigned(aFile.ModuleInfo) then
+      Result := 'assigned ' + PwbModuleInfo(aFile.ModuleInfo).miOriginalName
+    else
+      Result := 'nil';
+  end;
+
+  function MastersText(const aFile: IwbFile): string;
+  begin
+    Result := '';
+    for var lIdx := 0 to Pred(aFile.MasterCount[False]) do
+      Result := Result + ' ' + FileLabel(aFile.Masters[lIdx, False]);
+  end;
+
+begin
+  var lGameExeName := xeContext.GameDefObj.GameExeName;
+  var lLines := TStringList.Create;
+  try
+    lLines.Add('[' + aStage + ']');
+    if (aStage = 'LOAD-DONE') or (aStage = 'LOAD-ERROR') then begin
+      _TestSaveContextsFiles := nil;
+      for var lCompareLoad := False to True do
+        for var lFile in frmMain.Files do
+          if not wbIsModule(lFile.FileName, lGameExeName) and ((fsIsCompareLoad in lFile.FileStates) = lCompareLoad) then
+            _TestSaveContextsFiles := _TestSaveContextsFiles + [lFile];
+    end;
+    lLines.Add('contextFiles=' + IntToStr(Length(xeContext.Files)));
+    for var lFile in xeContext.Files do
+      lLines.Add('  ' + FileLabel(lFile));
+    for var lFile in _TestSaveContextsFiles do begin
+      lLines.Add(Format('save %s: file=%s compareLoad=%s saveContext=%s module=%s', [FileLabel(lFile), lFile.FileName,
+        BoolToStr(fsIsCompareLoad in lFile.FileStates, True), ContextLabel(lFile.SaveContextObj), ModuleText(lFile)]));
+      if aStage <> 'AFTER-FORCECLOSEDFILES' then
+        lLines.Add(Format('save %s masters:%s', [FileLabel(lFile), MastersText(lFile)]));
+    end;
+    if (aStage = 'LOAD-DONE') and (Length(_TestSaveContextsFiles) = 2) then begin
+      var lA := _TestSaveContextsFiles[0];
+      var lB := _TestSaveContextsFiles[1];
+      lLines.Add('A and B share a save context=' + BoolToStr(lA.SaveContextObj = lB.SaveContextObj, True));
+      lLines.Add('B compare master is A=' + BoolToStr((lB.MasterCount[False] > 0) and
+        lB.Masters[Pred(lB.MasterCount[False]), False].Equals(lA), True));
+      lLines.Add('B compareToFile=' + FileLabel(lB.CompareToFile));
+    end;
+    if aStage = 'AFTER-FORCECLOSEDFILES' then begin
+      lLines.Add('exit reached');
+      _TestSaveContextsFiles := nil;
+    end;
+    TFile.AppendAllText(xeTestSaveContextsFile, lLines.Text);
+  finally
+    lLines.Free;
+  end;
+end;
+
 procedure DoRename;
 var
   i        : Integer;
@@ -1743,6 +1829,9 @@ begin
   wbProgress(wbCurrentAction);
 
   xeContext.ForceClosedFiles;
+
+  if xeTestSaveContexts then
+    TestSaveContextsReport('AFTER-FORCECLOSEDFILES');
 
   if xeContext.Settings.DontSave then
     Exit;
@@ -3149,14 +3238,7 @@ procedure TfrmMain.mniNavCompareToClick(Sender: TObject);
 var
   _File        : IwbFile;
   NodeData     : PNavNodeData;
-  CompareFile  : string;
-  fPath        : string;
-  s            : String;
-  i            : Integer;
-  States       : TwbFileStates;
 begin
-  var lModules := wbModuleListOf(xeContext);
-  States := [];
   NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
   if not Assigned(NodeData) then
     Exit;
@@ -3170,32 +3252,45 @@ begin
     if not Execute then
       Exit;
 
-    CompareFile := FileName;
-    Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(CompareFile));
+    Settings.WriteString('CompareTo', 'InitialDir', ExtractFilePath(FileName));
     Settings.UpdateFile;
-    if wbIsModule(CompareFile, xeContext.GameDefObj.GameExeName) then
-      fPath := xeContext.Settings.DataPath
-    else
-      fPath := xeContext.Settings.SavePath;
+    DoCompareTo(_File, FileName);
+  end;
+end;
 
-    // copy selected file to Data directory without overwriting an existing file
-    if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in lModules.ModuleByName(ExtractFileName(CompareFile)).miFlags) then begin
-      s := fPath + ExtractFileName(CompareFile);
-      if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then // Finds a unique name
-        for i := 0 to 255 do begin
-          s := fPath + ChangeFileExt(ChangeFileExt(ExtractFileName(CompareFile),'') + IntToHex(i, 3), ExtractFileExt(CompareFile));
-          if not (FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags)) then
-            break;
-        end;
-      if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then begin
-        wbProgress('Could not copy '+FileName+' into '+fPath);
-        Exit;
+procedure TfrmMain.DoCompareTo(const aFile: IwbFile; const aSelected: string);
+var
+  CompareFile  : string;
+  fPath        : string;
+  s            : String;
+  i            : Integer;
+  States       : TwbFileStates;
+begin
+  var lModules := wbModuleListOf(xeContext);
+  States := [];
+  CompareFile := aSelected;
+  if wbIsModule(CompareFile, xeContext.GameDefObj.GameExeName) then
+    fPath := xeContext.Settings.DataPath
+  else
+    fPath := xeContext.Settings.SavePath;
+
+  // copy selected file to Data directory without overwriting an existing file
+  if not SameText(ExtractFilePath(CompareFile), fPath) or (mfHasFile in lModules.ModuleByName(ExtractFileName(CompareFile)).miFlags) then begin
+    s := fPath + ExtractFileName(CompareFile);
+    if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then // Finds a unique name
+      for i := 0 to 255 do begin
+        s := fPath + ChangeFileExt(ChangeFileExt(ExtractFileName(CompareFile),'') + IntToHex(i, 3), ExtractFileExt(CompareFile));
+        if not (FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags)) then
+          break;
       end;
-      CompareFile := s;
-      CopyFile(PChar(FileName), PChar(CompareFile), false);
-      // We need to propagate a flag to mark the copy temporary, so it can be deleted on close
-      Include(States, fsIsTemporary);
+    if FileExists(s) or (mfHasFile in lModules.ModuleByName(ExtractFileName(s)).miFlags) then begin
+      wbProgress('Could not copy '+aSelected+' into '+fPath);
+      Exit;
     end;
+    CompareFile := s;
+    CopyFile(PChar(aSelected), PChar(CompareFile), false);
+    // We need to propagate a flag to mark the copy temporary, so it can be deleted on close
+    Include(States, fsIsTemporary);
   end;
 
   vstNav.PopupMenu := nil;
@@ -3203,9 +3298,21 @@ begin
   xeContext.LoaderDone := False;
   xeContext.LoaderError := False;
   DoSetActiveRecord(nil);
-  mniNavFilterRemoveClick(Sender);
+  mniNavFilterRemoveClick(Self);
   wbStartTime := Now;
-  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, States);
+  TLoaderThread.Create(CompareFile, aFile.FileName, aFile.LoadOrder, States);
+end;
+
+procedure TfrmMain.DoTestSaveContextsCompare;
+begin
+  for var lIdx := High(Files) downto Low(Files) do
+    if not wbIsModule(Files[lIdx].FileName, xeContext.GameDefObj.GameExeName) then begin
+      DoCompareTo(Files[lIdx], xeTestSaveContextsCompare);
+      Exit;
+    end;
+  TestSaveContextsReport('NO-SAVE-LOADED');
+  CheckResult := 255;
+  tmrShutdown.Enabled := True;
 end;
 
 procedure TfrmMain.mniNavCreateDeltaPatchClick(Sender: TObject);
@@ -4845,7 +4952,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -4975,7 +5082,9 @@ begin
               Free;
             end;
         end else begin
-          if not (wbToolMode in wbAutoModes) then
+          if xeTestSaveContexts then
+            sl.Add(xeTestSaveContextsSave)
+          else if not (wbToolMode in wbAutoModes) then
             if ShowModal = mrOk then
               for i := 0 to Pred(CheckListBox1.Count) do
                 if CheckListBox1.Checked[i] then
@@ -21271,6 +21380,9 @@ begin
 
         if xeTestNavCopy then
           DoTestNavCopy;
+
+        if xeTestSaveContexts then
+          DoTestSaveContextsCompare;
       finally
         Dec(wbShowStartTime);
       end;
@@ -21368,6 +21480,15 @@ begin
           DoTestConflictsDump;
         if xeAutoExit then
           tmrShutdown.Enabled := True;
+      end;
+
+      if xeTestSaveContexts then begin
+        if xeContext.LoaderError then begin
+          TestSaveContextsReport('LOAD-ERROR');
+          CheckResult := 255;
+        end else
+          TestSaveContextsReport('LOAD-DONE');
+        tmrShutdown.Enabled := True;
       end;
     end;
   finally
