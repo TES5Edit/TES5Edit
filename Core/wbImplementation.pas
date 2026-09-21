@@ -695,6 +695,7 @@ type
     function SaveContextObj: TwbSaveContext;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     procedure DetachModule;
+    procedure ReleaseModule;
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
@@ -788,6 +789,7 @@ type
     function SaveContextObj: TwbSaveContext; override;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     procedure DetachModule;
+    procedure ReleaseModule;
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetReferenceFile: IwbFile; override;
@@ -3596,10 +3598,7 @@ end;
 destructor TwbFile.Destroy;
 begin
   flSaveTables := nil;
-  if Assigned(flModule) and (flModule.miFile = Self) then begin
-    Exclude(flModule.miFlags, mfHasFile);
-    flModule.miFile := nil;
-  end;
+  ReleaseModule;
   flCloseFile;
   inherited;
 end;
@@ -4291,6 +4290,15 @@ end;
 
 procedure TwbFile.DetachModule;
 begin
+  flModule := nil;
+end;
+
+procedure TwbFile.ReleaseModule;
+begin
+  if Assigned(flModule) and (flModule.miFile = Self) then begin
+    Exclude(flModule.miFlags, mfHasFile);
+    flModule.miFile := nil;
+  end;
   flModule := nil;
 end;
 
@@ -24282,6 +24290,10 @@ begin
     (lFile as IwbFileInternal).ForceClosed;
     wbProgressCallback;
   end;
+  for var lFile in SaveContextFiles do begin
+    (lFile as IwbFileInternal).ForceClosed;
+    wbProgressCallback;
+  end;
   ForceClosed;
 end;
 
@@ -24329,6 +24341,8 @@ begin
   for var lIdx := Low(gcFiles) to High(gcFiles) do
     if Assigned(gcFiles[lIdx]) then
       (gcFiles[lIdx] as IwbFileInternal).DetachModule;
+  for var lFile in SaveContextFiles do
+    (lFile as IwbFileInternal).DetachModule;
 end;
 
 function TwbLoadingGameContext.LoadFile(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes): IwbFile;
@@ -24478,6 +24492,8 @@ var
 begin
   if Supports(scFile, IwbFileInternal, lFile) then begin
     lFile.SetSaveContextObj(nil);
+    if scFileName <> '' then
+      lFile.ReleaseModule;
     lFile := nil;
   end;
   inherited;
@@ -24499,12 +24515,23 @@ begin
   lGameContext.GameDefObj.InitRecords;
 
   var lFileName := lGameContext.ExpandFileName(aFileName);
+  if Assigned(scHeldFileByName(lFileName)) then
+    raise Exception.CreateFmt('"%s" can not be loaded: another save context holds it', [lFileName]);
+
   Result := lGameContext.FileByName(lFileName);
-  if Assigned(Result) then
-    (Result as IwbFileInternal).SetSaveContextObj(Self)
-  else
-    Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, lCompareTo, aCompareToFile, aStates + [fsAddToMap]);
-  scFile := Result;
+  if Assigned(Result) then begin
+    (Result as IwbFileInternal).SetSaveContextObj(Self);
+    scFile := Result;
+  end else begin
+    Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, lCompareTo, aCompareToFile, aStates);
+    try
+      scJoin(Result, lFileName);
+    except
+      (Result as IwbFileInternal).SetSaveContextObj(nil);
+      Result := nil;
+      raise;
+    end;
+  end;
 end;
 
 function wbFormListToArray(const aFormList: IwbMainRecord; const aSignatures: string): TDynMainRecords;

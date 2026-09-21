@@ -3887,7 +3887,12 @@ type
     gcGlobalGeneration     : Integer;
     gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
+    gcSaveContexts         : TArray<TwbSaveContext>;
+    gcSaveContextsLock     : TObject;
 
+    function SaveContextFileByName(const aFileName: string): IwbFile;
+    function SaveContextFiles: TwbFiles;
+    function FilesWithSaves: TwbFiles;
     function GetGameDef: IwbGameDef;
     function GetFileCount: Integer;
     function GetFile(aIndex: Integer): IwbFile;
@@ -4010,10 +4015,16 @@ type
     scGameContext    : IwbGameContext;
     scGameContextObj : TwbGameContext;
     scFile           : IwbFile;
+    scFileName       : string;
+    scJoinIndex      : Integer;
     scChaptersToSkip : TStringList;
+
+    procedure scJoin(const aFile: IwbFile; const aFileName: string);
+    function scHeldFileByName(const aFileName: string): IwbFile;
   public
     constructor Create(const aGameContext: IwbGameContext);
     destructor Destroy; override;
+    procedure BeforeDestruction; override;
 
     function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; virtual; abstract;
 
@@ -6341,6 +6352,48 @@ begin
   inherited;
 end;
 
+procedure TwbSaveContext.BeforeDestruction;
+begin
+  if Assigned(scGameContextObj) then begin
+    var lContext := scGameContextObj;
+    TMonitor.Enter(lContext.gcSaveContextsLock);
+    try
+      for var lIdx := High(lContext.gcSaveContexts) downto Low(lContext.gcSaveContexts) do
+        if lContext.gcSaveContexts[lIdx] = Self then
+          Delete(lContext.gcSaveContexts, lIdx, 1);
+    finally
+      TMonitor.Exit(lContext.gcSaveContextsLock);
+    end;
+  end;
+  inherited;
+end;
+
+procedure TwbSaveContext.scJoin(const aFile: IwbFile; const aFileName: string);
+var
+  lIdx: Integer;
+begin
+  var lContext := scGameContextObj;
+  TMonitor.Enter(lContext.gcSaveContextsLock);
+  try
+    if lContext.gcFilesMap.Find(aFileName, lIdx) then
+      raise Exception.CreateFmt('"%s" is loaded already', [aFileName]);
+    for var lSaveContext in lContext.gcSaveContexts do
+      if SameText(lSaveContext.scFileName, aFileName) then
+        raise Exception.CreateFmt('"%s" is held by another save context', [aFileName]);
+    scFile := aFile;
+    scFileName := aFileName;
+    scJoinIndex := Length(lContext.gcFiles);
+    lContext.gcSaveContexts := lContext.gcSaveContexts + [Self];
+  finally
+    TMonitor.Exit(lContext.gcSaveContextsLock);
+  end;
+end;
+
+function TwbSaveContext.scHeldFileByName(const aFileName: string): IwbFile;
+begin
+  Result := scGameContextObj.SaveContextFileByName(aFileName);
+end;
+
 { TwbGameDefineOptions }
 
 class function TwbGameDefineOptions.Defaults: TwbGameDefineOptions;
@@ -6406,6 +6459,7 @@ begin
   gcFilesMap := TwbFastStringList.Create;
   gcFilesMap.Sorted := True;
   gcFilesMap.Duplicates := dupError;
+  gcSaveContextsLock := TObject.Create;
   gcRecordToSkip := CreateSkipList;
   gcSubRecordToSkip := CreateSkipList;
   gcGroupToSkip := CreateSkipList;
@@ -6436,11 +6490,71 @@ begin
   FreeAndNil(gcStripMastersFileNames);
   FreeAndNil(gcLEncoding[True]);
   FreeAndNil(gcLEncoding[False]);
+  FreeAndNil(gcSaveContextsLock);
   inherited;
 end;
 
 procedure TwbGameContext.DetachFilesFromModules;
 begin
+end;
+
+function TwbGameContext.SaveContextFileByName(const aFileName: string): IwbFile;
+begin
+  Result := nil;
+  TMonitor.Enter(gcSaveContextsLock);
+  try
+    for var lSaveContext in gcSaveContexts do
+      if SameText(lSaveContext.scFileName, aFileName) then
+        Exit(lSaveContext.scFile);
+  finally
+    TMonitor.Exit(gcSaveContextsLock);
+  end;
+end;
+
+function TwbGameContext.SaveContextFiles: TwbFiles;
+begin
+  TMonitor.Enter(gcSaveContextsLock);
+  try
+    SetLength(Result, Length(gcSaveContexts));
+    for var lIdx := Low(gcSaveContexts) to High(gcSaveContexts) do
+      Result[lIdx] := gcSaveContexts[lIdx].scFile;
+  finally
+    TMonitor.Exit(gcSaveContextsLock);
+  end;
+end;
+
+function TwbGameContext.FilesWithSaves: TwbFiles;
+var
+  lSaves     : TwbFiles;
+  lPositions : TArray<Integer>;
+begin
+  TMonitor.Enter(gcSaveContextsLock);
+  try
+    SetLength(lSaves, Length(gcSaveContexts));
+    SetLength(lPositions, Length(gcSaveContexts));
+    for var lIdx := Low(gcSaveContexts) to High(gcSaveContexts) do begin
+      lSaves[lIdx] := gcSaveContexts[lIdx].scFile;
+      lPositions[lIdx] := gcSaveContexts[lIdx].scJoinIndex;
+    end;
+  finally
+    TMonitor.Exit(gcSaveContextsLock);
+  end;
+  if Length(lSaves) = 0 then
+    Exit(gcFiles);
+
+  SetLength(Result, Length(gcFiles) + Length(lSaves));
+  var lOut := 0;
+  for var lFileIdx := 0 to Length(gcFiles) do begin
+    for var lSaveIdx := Low(lSaves) to High(lSaves) do
+      if (lPositions[lSaveIdx] = lFileIdx) or ((lFileIdx = Length(gcFiles)) and (lPositions[lSaveIdx] > lFileIdx)) then begin
+        Result[lOut] := lSaves[lSaveIdx];
+        Inc(lOut);
+      end;
+    if lFileIdx < Length(gcFiles) then begin
+      Result[lOut] := gcFiles[lFileIdx];
+      Inc(lOut);
+    end;
+  end;
 end;
 
 function TwbGameContext.CreateSkipList: TStringList;
@@ -6620,7 +6734,7 @@ begin
   if gcFilesMap.Find(aFileName, i) then
     Result := IwbFile(Pointer(gcFilesMap.Objects[i]))
   else
-    Result := nil;
+    Result := SaveContextFileByName(aFileName);
 end;
 
 function TwbGameContext.FileByModuleName(const aModuleName: string): IwbFile;
@@ -6670,9 +6784,12 @@ function TwbGameContext.RecordByLoadOrderFormID(const aFormID: TwbFormID; const 
 begin
   Result := nil;
   var lFileID := aFormID.FileID[SlotLayout];
-  for var i:= Low(gcFiles) to High(gcFiles) do
-    if gcFiles[i].LoadOrderFileID = lFileID then begin
-      Result := gcFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
+  var lFiles := gcFiles;
+  if lFileID = TwbFileID.CreateFull($FF) then
+    lFiles := FilesWithSaves;
+  for var i:= Low(lFiles) to High(lFiles) do
+    if lFiles[i].LoadOrderFileID = lFileID then begin
+      Result := lFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
       if Assigned(Result) and Assigned(aSeenFromFile) then begin
         var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
         if Assigned(lVisibleResult) then
@@ -6688,8 +6805,9 @@ var
   Group : IwbGroupRecord;
 begin
   Result := nil;
-  for i := High(gcFiles) downto Low(gcFiles) do
-    if Supports(gcFiles[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
+  var lFiles := FilesWithSaves;
+  for i := High(lFiles) downto Low(lFiles) do
+    if Supports(lFiles[i].GroupBySignature[aSignature], IwbGroupRecord, Group) then begin
       Result := Group.MainRecordByEditorID[aEditorID];
       if Assigned(Result) then begin
         Result := Result.WinningOverride;
