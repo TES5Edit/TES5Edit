@@ -17,12 +17,6 @@ uses
 type
   TwbGameDefFNVSaves = class(TwbGameDefFNV)
   protected
-    gdChangeTypes : IwbEnumDef;
-
-    function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
-
-    procedure DefineFNVSavesA;
-    procedure DefineFNVSavesS;
     procedure Define; override;
   end;
 
@@ -35,22 +29,43 @@ uses
   wbImplementation,
   wbSaveInterface;
 
-var
-  wbActorValueLabels : array of string;
+type
+  TwbSaveDefFNVBase = class(TwbSaveDef)
+  protected
+    sdActorValueLabels : array of string;
+    sdChangeTypes      : IwbEnumDef;
+    sdSaveChapters     : IwbStructDef;
+    sdCoSaveChapters   : IwbStructDef;
+    sdSaveHeader       : IwbStructDef;
+    sdCoSaveHeader     : IwbStructDef;
+    sdExtractInfo      : TByteSet;
 
- // forward type directives
-  wbSaveChapters   : IwbStructDef;
-  wbCoSaveChapters : IwbStructDef;
-  wbSaveHeader     : IwbStructDef;
-  wbCoSaveHeader   : IwbStructDef;
+    function ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
 
-procedure TwbGameDefFNVSaves.DefineFNVSavesA;
+    procedure DefineFNVSavesA;
+    procedure DefineFNVSavesS;
+  public
+    procedure Define; override;
+  end;
+
+  TwbSaveDefFNV = class(TwbSaveDefFNVBase)
+  public
+    procedure Define; override;
+  end;
+
+  TwbCoSaveDefFNV = class(TwbSaveDefFNVBase)
+  public
+    procedure Define; override;
+  end;
+
+procedure TwbSaveDefFNVBase.DefineFNVSavesA;
 var
   i: Integer;
 begin
-  SetLength(wbActorValueLabels, ActorValueEnum.NameCount);
-  for i := 0 to ActorValueEnum.NameCount - 1 do
-    wbActorValueLabels[i] := ActorValueEnum.Names[i];
+  var lActorValueEnum := sdGameDef.ActorValueEnum;
+  SetLength(sdActorValueLabels, lActorValueEnum.NameCount);
+  for i := 0 to lActorValueEnum.NameCount - 1 do
+    sdActorValueLabels[i] := lActorValueEnum.Names[i];
 end;
 
 { FNVsaves }
@@ -484,13 +499,13 @@ begin
     Result := wbChangedFormOffset + Result;
 end;
 
-function TwbGameDefFNVSaves.ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+function TwbSaveDefFNVBase.ChangedFormGetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
 var
   aType : Integer;
 begin
   aType := ChangedFormGetChapterType(aBasePtr, aEndPtr, aElement);
-  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+gdChangeTypes.NameCount) then
-    Result := gdChangeTypes.Names[aType-wbChangedFormOffset];
+  if (aType>=wbChangedFormOffset) and (aType < wbChangedFormOffset+sdChangeTypes.NameCount) then
+    Result := sdChangeTypes.Names[aType-wbChangedFormOffset];
   {
   if (Pos(' ', Result)>0) and (Length(Result)>1) then
     Result := Copy(Result, Pos(' ', Result)+1, Length(Result));
@@ -1826,7 +1841,7 @@ begin
   Result := wbArrayT(aName, wbFloat('Coord'), 3, ['X', 'Y', 'Z']);
 end;
 
-procedure TwbGameDefFNVSaves.DefineFNVSavesS;  // This is all based on the Runtime
+procedure TwbSaveDefFNVBase.DefineFNVSavesS;  // This is all based on the Runtime
 var
   wbHeader                   : IwbStructDef;
   wbFileLocationTable        : IwbStructDef;
@@ -2358,7 +2373,7 @@ begin
     {0x1000} 'Unknown 13'
   ]));
 
-  gdChangeTypes := wbKey2Data6Enum([
+  sdChangeTypes := wbKey2Data6Enum([
     '00 (03A : REFR)',
     '01 (03B : ACHR)',
     '02 (03C : ACRE)',
@@ -4672,9 +4687,9 @@ begin
     {01} wbInteger('Confidence', itU8, wbConfidenceEnum),
     {02} wbInteger('Energy Level', itU8),
     {03} wbInteger('Responsibility', itU8),
-    {04} wbInteger('Mood', itU8, wbMoodEnum),
+    {04} wbInteger('Mood', itU8, (sdGameDef as TwbGameDefCommon).wbMoodEnum),
          wbByteArray('Unused', 3),
-    {08} wbInteger('Buys/Sells and Services', itU32, wbServiceFlags),
+    {08} wbInteger('Buys/Sells and Services', itU32, (sdGameDef as TwbGameDefCommon).wbServiceFlags),
     {0C} wbInteger('Teaches', itS8),
     {0D} wbInteger('Maximum training level', itU8),
     {0E} wbInteger('Assistance', itS8, wbAssistanceEnum),
@@ -4744,7 +4759,7 @@ begin
     ])
   ]);
 
-  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, wbSexEnum)]);
+  wbUnionCHANGE_NPC_GENDER := wbUnion('Gender', ChangedFlag24Decider, [wbNull, wbIntegerT('Gender', itU8, (sdGameDef as TwbGameDefCommon).wbSexEnum)]);
 
   wbUnionCHANGE_NPC_RACE := wbUnion('Race', ChangedFlag25Decider, [wbNull, wbStruct('Races', [
     wbRefIDT('Race'),
@@ -4857,7 +4872,7 @@ begin
   wbChangePackageStruct := wbStruct('Data', [
       wbStruct('General', [
         wbInteger('Flags', itU32),
-        wbInteger('Type', itU8, wbPackageTypeEnum),
+        wbInteger('Type', itU8, (sdGameDef as TwbGameDefCommon).wbPackageTypeEnum),
         wbByteArray('Unused', 1),
         wbInteger('Fallout Behavior Flags', itU16),
         wbIntegerT('Specific Type Flags', itU32)
@@ -4991,7 +5006,7 @@ begin
 
   wbNonActorMagicTarget := wbArrayPT('Magic Item List', wbStruct('Magic Item', [
     wbRefIDT('Magic Form'),
-    wbIntegerT('ArchType', itU8, wbArchtypeEnum),
+    wbIntegerT('ArchType', itU8, (sdGameDef as TwbGameDefCommon).wbArchtypeEnum),
     wbIntegerT('Unk098', itU6to30),
     wbArrayPT('Effect Items', wbInteger('Effect Item', itU8), -254)
   ]), -254);
@@ -5194,7 +5209,7 @@ begin
       wbIntegerT('Count?', itS32)
     ]),
     wbStruct('Package Data', [
-      wbIntegerT('Package Data Type', itU8, wbPackageTypeEnum),
+      wbIntegerT('Package Data Type', itU8, (sdGameDef as TwbGameDefCommon).wbPackageTypeEnum),
       wbActorPackageData
     ]),
     wbArrayPT('Say TopicInfo once a day', wbStruct('Data', [       // 032
@@ -5511,7 +5526,7 @@ begin
       wbStruct('Package Data', [
         wbUnion('Created Package', ChangeFormBaseProcessCreatedPackageDecider, [ wbNull,
           wbStruct('Created Package Struct', [
-            wbIntegerT('Type', itS8, wbPackageTypeEnum),
+            wbIntegerT('Type', itS8, (sdGameDef as TwbGameDefCommon).wbPackageTypeEnum),
             wbUnion('Created Package', ChangeFormCreatedPackageDecider, [
               wbChangePackageStruct,
               wbNull,
@@ -6312,9 +6327,9 @@ begin
 
   wbChangedACHR := wbStruct('Change ACHR Data', [ {03B}
      wbUnion('Player specific', IsActorPlayerDecider, [wbNull, wbStruct('Player data', [
-       wbArray('ActorValues244', wbFloatT('Actor Value'), wbActorValueLabels),
-       wbArray('ActorValues378', wbFloatT('Actor Value'), wbActorValueLabels),
-       wbArray('ActorValues4B0', wbFloatT('Actor Value'), wbActorValueLabels),
+       wbArray('ActorValues244', wbFloatT('Actor Value'), sdActorValueLabels),
+       wbArray('ActorValues378', wbFloatT('Actor Value'), sdActorValueLabels),
+       wbArray('ActorValues4B0', wbFloatT('Actor Value'), sdActorValueLabels),
        wbIntegerT('Unk4AC', itU32)
      ])])
     ,wbChangedCharacter
@@ -6765,7 +6780,7 @@ begin
     [
       wbRefID('RefID'),
       wbChangeFlags,
-      wbInteger('Type', itU8, gdChangeTypes),
+      wbInteger('Type', itU8, sdChangeTypes),
       wbInteger('Version', itU8),
       wbUnion('Datas', ChangedFormDataLengthDecider, [
         wbStruct('CForm Data', [
@@ -6813,18 +6828,18 @@ begin
     wbByteArray('Unused', $6e - 9*4)
   ]);
 
-  wbSaveHeader := wbStruct('Save File Header', [
+  sdSaveHeader := wbStruct('Save File Header', [
      wbString('Magic', 11)
     ,wbInteger('Header Size', itU32)
     ,wbHeader
     ,wbByteArray('Hidden: Screenshot Data', ScreenShotDataCounter)
     ,wbInteger('Form Version', itU8)
     ,wbInteger('PluginInfo Size', itU32)
-    ,wbArrayPT(gdSaveDef.FilePlugins, wbLenStringT('PluginName', -3), -4)
+    ,wbArrayPT(FilePlugins, wbLenStringT('PluginName', -3), -4)
     ,wbFileLocationTable
   ]);
 
-  wbSaveChapters := wbStruct('Save File Chapters', [
+  sdSaveChapters := wbStruct('Save File Chapters', [
      wbArray('Global Data 1', wbGlobalData, [], GlobalData1Counter),
      wbArray('Changed Forms', wbChangedForm, [], ChangedFormsCounter),
      wbArray('Global Data 2', wbGlobalData, [], GlobalData2Counter),
@@ -6835,7 +6850,7 @@ begin
 //    ,wbArray('Remaining',  WbByteArray('Unknown', wbBytesToGroup), DumpCounter) // Lets you dump an arbitrary number of quartet, Setable from CommandLine -btd:n
   ]);
 
-  wbCoSaveHeader := wbStruct('CoSave File Header', [
+  sdCoSaveHeader := wbStruct('CoSave File Header', [
      wbString('Magic', 4)
     ,wbInteger('Version', itU32)
     ,wbInteger('NVSE Version', itU16)
@@ -6898,41 +6913,53 @@ begin
   wbCoSaveChunks.TreeBranch := True;
   wbCoSavePlugins := wbArray('Plugins', wbCoSavePlugin, wbCoSavePluginCounter);
 
-  wbCoSaveChapters := wbStruct('CoSave File Chapters', [
+  sdCoSaveChapters := wbStruct('CoSave File Chapters', [
     wbCoSavePlugins
   ]);
 
-  gdSaveDef.FileChapters := wbSaveChapters;
-  gdSaveDef.FileHeader := wbSaveHeader;
-  wbSaveHeader.TreeHead := True;
-  wbCoSaveHeader.TreeHead := True;
-//  wbSaveHeader.TreeLeaf := True;
-//  wbCoSaveHeader.TreeLeaf := True;
+  sdSaveHeader.TreeHead := True;
+  sdCoSaveHeader.TreeHead := True;
+//  sdSaveHeader.TreeLeaf := True;
+//  sdCoSaveHeader.TreeLeaf := True;
 end;
 
-var
-  ExtractInfoSave:   TByteSet = [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
-  ExtractInfoCoSave: TByteSet = [];     // CoSaveFileChapters that should be initialized before dumping to get more information
+procedure TwbSaveDefFNVBase.Define;
+begin
+  FilePlugins := 'Plugins';
+  DefineFNVSavesA;
+  DefineFNVSavesS;
+end;
+
+procedure TwbSaveDefFNV.Define;
+begin
+  inherited;
+  FileExtension := '.fos';
+  FileMagic := 'FO3SAVEGAME';
+  sdExtractInfo := [3, 4]; // SaveFileChapters that should be initialized before dumping to get more information
+  ExtractInfo := @sdExtractInfo;
+  FileChapters := sdSaveChapters;
+  FileHeader := sdSaveHeader;
+end;
+
+procedure TwbCoSaveDefFNV.Define;
+begin
+  inherited;
+  FileExtension := '.nvse';
+  FileMagic := 'NVSE';
+  sdExtractInfo := [];
+  ExtractInfo := @sdExtractInfo;
+  FilePlugins := 'Absolute:44';
+  FileChapters := sdCoSaveChapters;
+  FileHeader := sdCoSaveHeader;
+end;
 
 procedure TwbGameDefFNVSaves.Define;
 begin
-  if not Assigned(gdSaveDef) then
-    gdSaveDef := TwbSaveDef.Create(Self);
-  gdSaveDef.FileExtension := '.fos';
-  gdSaveDef.FileMagic := 'FO3SAVEGAME';
-  gdSaveDef.ExtractInfo := @ExtractInfoSave;
-  gdSaveDef.FilePlugins := 'Plugins';
   inherited;
-  DefineFNVSavesA;
-  DefineFNVSavesS;
-  if not Assigned(gdCoSaveDef) then
-    gdCoSaveDef := TwbSaveDef.Create(Self);
-  gdCoSaveDef.FileExtension := '.nvse';
-  gdCoSaveDef.FileMagic := 'NVSE';
-  gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;
-  gdCoSaveDef.FilePlugins := 'Absolute:44';
-  gdCoSaveDef.FileChapters := wbCoSaveChapters;
-  gdCoSaveDef.FileHeader := wbCoSaveHeader;
+  gdSaveDef := TwbSaveDefFNV.Create(Self);
+  gdSaveDef.Define;
+  gdCoSaveDef := TwbCoSaveDefFNV.Create(Self);
+  gdCoSaveDef.Define;
 end;
 
 initialization
