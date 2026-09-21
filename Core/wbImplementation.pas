@@ -24485,6 +24485,9 @@ end;
 
 function TwbLoadingSaveContext.LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates): IwbFile;
 begin
+  if Assigned(scFile) then
+    raise Exception.CreateFmt('A save context holds one save: "%s" is loaded, "%s" can not be loaded into it', [scFile.FileName, ExtractFileName(aFileName)]);
+
   var lGameContext := GameContextObj;
   lGameContext.GameDefObj.InitRecords;
 

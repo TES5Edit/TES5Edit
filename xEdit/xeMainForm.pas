@@ -20205,7 +20205,10 @@ end;
 
 procedure TfrmMain.WMUser1(var Message: TMessage);
 begin
-  AddFile(IwbFile(Pointer(Message.WParam)));
+  var lFile := IwbFile(Pointer(Message.WParam));
+  if Assigned(lFile.SaveContextObj) then
+    xeSaveContexts := xeSaveContexts + [lFile.SaveContextObj as IwbSaveContext];
+  AddFile(lFile);
 end;
 
 function xeCompareTestConflictRows(List: TStringList; Index1, Index2: Integer): Integer;
@@ -21886,8 +21889,9 @@ begin
             end;
 
           LoaderProgress('loading "' + ltLoadList[lLoadListIdx] + '"...');
-          var lIsSave := Assigned(xeSaveContext) and
+          var lIsSave := (wbToolSource = tsSaves) and
             not wbIsModule(ltLoadList[lLoadListIdx], xeContext.GameDefObj.GameExeName);
+          var lSaveContext: IwbSaveContext := nil;
           if FileExists(ltLoadList[lLoadListIdx]) then
             s := ltLoadList[lLoadListIdx]
           else begin
@@ -21896,13 +21900,15 @@ begin
               if not FileExists(s) then // Assume its a save in the save path
                 s := xeContext.Settings.SavePath + ltLoadList[lLoadListIdx];
           end;
-          if lIsSave then
-            _File := xeSaveContext.LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates)
-          else
+          if lIsSave then begin
+            lSaveContext := wbCreateSaveContext(xeContextRef);
+            _File := (lSaveContext as TwbSaveContext).LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
+          end else
             _File := xeContext.LoadFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
           ltFiles[High(ltFiles)] := _File;
           frmMain.SendAddFile(_File);
+          lSaveContext := nil;
 
           if wbForceTerminate then
             Exit;
