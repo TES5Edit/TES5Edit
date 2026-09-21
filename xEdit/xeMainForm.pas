@@ -1178,13 +1178,14 @@ type
     ltLoadList: TStringList;
     ltDataPath: string;
     ltMaster: string;
+    ltMasterFile: IwbFile;
     ltFiles: array of IwbFile;
     ltStates: TwbFileStates;
 
     procedure Execute; override;
   public
     constructor Create(var aList: TStringList; aFileStates: TwbFileStates = []); overload;
-    constructor Create(const aFileName, aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []); overload;
+    constructor Create(const aFileName: string; const aMaster: IwbFile; aFileStates: TwbFileStates = []); overload;
     destructor Destroy; override;
   end;
 
@@ -3300,7 +3301,7 @@ begin
   DoSetActiveRecord(nil);
   mniNavFilterRemoveClick(Self);
   wbStartTime := Now;
-  TLoaderThread.Create(CompareFile, aFile.FileName, aFile.LoadOrder, States);
+  TLoaderThread.Create(CompareFile, aFile, States);
 end;
 
 procedure TfrmMain.DoTestSaveContextsCompare;
@@ -3372,7 +3373,7 @@ begin
   wbStartTime := Now;
   DoSetActiveRecord(nil);
   pgMain.ActivePage := tbsMessages;
-  TLoaderThread.Create(CompareFile, _File.FileName, _File.LoadOrder, [fsIsDeltaPatch]);
+  TLoaderThread.Create(CompareFile, _File, [fsIsDeltaPatch]);
 end;
 
 procedure TfrmMain.mniNavCopyIdleClick(Sender: TObject);
@@ -21374,7 +21375,7 @@ begin
 
         if xeTestConflicts then
           if xeTestConflictsCompareTo <> '' then
-            TLoaderThread.Create(xeTestConflictsCompareTo, Files[High(Files)].FileName, Files[High(Files)].LoadOrder)
+            TLoaderThread.Create(xeTestConflictsCompareTo, Files[High(Files)])
           else begin
             DoTestConflictsDump;
             if xeAutoExit then
@@ -21676,13 +21677,14 @@ begin
   FreeOnTerminate := True;
 end;
 
-constructor TLoaderThread.Create(const aFileName, aMaster: string; aLoadOrder: Integer; aFileStates: TwbFileStates = []);
+constructor TLoaderThread.Create(const aFileName: string; const aMaster: IwbFile; aFileStates: TwbFileStates = []);
 begin
-  ltLoadOrderOffset := aLoadOrder;
+  ltLoadOrderOffset := aMaster.LoadOrder;
   ltDataPath := '';
   ltLoadList := TStringList.Create;
   ltLoadList.Add(aFileName);
-  ltMaster := aMaster;
+  ltMaster := aMaster.FileName;
+  ltMasterFile := aMaster;
   ltStates := aFileStates;
   inherited Create(False);
   FreeOnTerminate := True;
@@ -21902,7 +21904,7 @@ begin
           end;
           if lIsSave then begin
             lSaveContext := wbCreateSaveContext(xeContextRef);
-            _File := (lSaveContext as TwbSaveContext).LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
+            _File := (lSaveContext as TwbSaveContext).LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates, ltMasterFile);
           end else
             _File := xeContext.LoadFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));

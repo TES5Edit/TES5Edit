@@ -4015,7 +4015,7 @@ type
     constructor Create(const aGameContext: IwbGameContext);
     destructor Destroy; override;
 
-    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile; virtual; abstract;
+    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; virtual; abstract;
 
     property GameContextObj: TwbGameContext
       read scGameContextObj;

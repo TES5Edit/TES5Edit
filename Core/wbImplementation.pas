@@ -987,13 +987,13 @@ type
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
   public
-    constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates);
+    constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; const aCompareToFile: IwbFile; aStates: TwbFileStates);
   end;
 
   TwbLoadingSaveContext = class(TwbSaveContext)
   public
     destructor Destroy; override;
-    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []): IwbFile; override;
+    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; override;
   end;
 
   TwbDataContainerFlag = (
@@ -24483,12 +24483,19 @@ begin
   inherited;
 end;
 
-function TwbLoadingSaveContext.LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates): IwbFile;
+function TwbLoadingSaveContext.LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aCompareToFile: IwbFile): IwbFile;
 begin
   if Assigned(scFile) then
     raise Exception.CreateFmt('A save context holds one save: "%s" is loaded, "%s" can not be loaded into it', [scFile.FileName, ExtractFileName(aFileName)]);
 
   var lGameContext := GameContextObj;
+  var lCompareTo := aCompareTo;
+  if Assigned(aCompareToFile) then begin
+    if aCompareToFile.ContextObj <> lGameContext then
+      raise Exception.CreateFmt('"%s" can not be compared to "%s": they belong to different game contexts', [ExtractFileName(aFileName), aCompareToFile.FileName]);
+    lCompareTo := aCompareToFile.FileName;
+  end;
+
   lGameContext.GameDefObj.InitRecords;
 
   var lFileName := lGameContext.ExpandFileName(aFileName);
@@ -24496,7 +24503,7 @@ begin
   if Assigned(Result) then
     (Result as IwbFileInternal).SetSaveContextObj(Self)
   else
-    Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap]);
+    Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, lCompareTo, aCompareToFile, aStates + [fsAddToMap]);
   scFile := Result;
 end;
 
@@ -26320,9 +26327,10 @@ begin
   flFileNameOnDisk := flFileName;
 end;
 
-constructor TwbFileSource.CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates);
+constructor TwbFileSource.CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; const aCompareToFile: IwbFile; aStates: TwbFileStates);
 begin
   flSaveContextObj := aSaveContext;
+  flCompareToFile := aCompareToFile;
   inherited Create(aSaveContext.GameContextObj, aFileName, aLoadOrder, aCompareTo, aStates, nil);
 end;
 
@@ -26463,7 +26471,10 @@ begin
     Names.Free;
   end;
 
-  if flCompareTo <> '' then begin
+  if Assigned(flCompareToFile) then begin
+    flProgress('Adding master "' + flCompareToFile.FileName + '"');
+    AddMaster(flCompareToFile);
+  end else if flCompareTo <> '' then begin
     if not FileExists(flCompareTo) then
       flCompareTo := ExtractFilePath(flFileName) + ExtractFileName(flCompareTo);
     AddMaster(flCompareTo);
