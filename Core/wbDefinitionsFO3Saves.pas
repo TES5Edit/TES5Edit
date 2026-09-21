@@ -6340,7 +6340,7 @@ var
 procedure TwbGameDefFO3Saves.Define;
 begin
   if not Assigned(gdSaveDef) then
-    gdSaveDef := TwbSaveDef.Create;
+    gdSaveDef := TwbSaveDef.Create(Self);
   gdSaveDef.FileExtension := '.fos';
   gdSaveDef.FileMagic := 'FO3SAVEGAME';
   gdSaveDef.ExtractInfo := @ExtractInfoSave;
@@ -6349,7 +6349,7 @@ begin
   DefineFO3SavesA;
   DefineFO3SavesS;
   if not Assigned(gdCoSaveDef) then
-    gdCoSaveDef := TwbSaveDef.Create;
+    gdCoSaveDef := TwbSaveDef.Create(Self);
   gdCoSaveDef.FileExtension := '.fose';
   gdCoSaveDef.FileMagic := 'FOSE';
   gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;

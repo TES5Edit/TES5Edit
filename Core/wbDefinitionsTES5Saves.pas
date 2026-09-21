@@ -6237,7 +6237,7 @@ var
 procedure TwbGameDefTES5Saves.Define;
 begin
   if not Assigned(gdSaveDef) then
-    gdSaveDef := TwbSaveDef.Create;
+    gdSaveDef := TwbSaveDef.Create(Self);
   gdSaveDef.FileExtension := '.ess';
   gdSaveDef.FileMagic := 'TESV_SAVEGAME';
   gdSaveDef.ExtractInfo := @ExtractInfoSave;
@@ -6247,7 +6247,7 @@ begin
   DefineTES5SavesA;
   DefineTES5SavesS;
   if not Assigned(gdCoSaveDef) then
-    gdCoSaveDef := TwbSaveDef.Create;
+    gdCoSaveDef := TwbSaveDef.Create(Self);
   gdCoSaveDef.FileExtension := '.skse';
   gdCoSaveDef.FileMagic := 'SKSE';
   gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;

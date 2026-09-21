@@ -3496,6 +3496,8 @@ type
   TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
 
   TwbSaveDef = class
+  protected
+    sdGameDef : TwbGameDef;
   public
     FileExtension   : string;
     FileMagic       : TwbFileMagic;
@@ -3505,7 +3507,11 @@ type
     ExtractInfo     : PByteSet;
     FilePluginNames : TwbFilePluginNames;
 
-    constructor Create;
+    constructor Create(aGameDef: TwbGameDef); virtual;
+    procedure Define; virtual;
+
+    property GameDef: TwbGameDef
+      read sdGameDef;
   end;
 
   PwbRecordDefEntry = ^TwbRecordDefEntry;
@@ -5881,10 +5887,15 @@ begin
   gdAppName := aInputs.AppName;
 end;
 
-constructor TwbSaveDef.Create;
+constructor TwbSaveDef.Create(aGameDef: TwbGameDef);
 begin
   inherited Create;
+  sdGameDef := aGameDef;
   FilePlugins := 'Master Files';
+end;
+
+procedure TwbSaveDef.Define;
+begin
 end;
 
 constructor TwbGameDef.Create;
