@@ -3870,7 +3870,6 @@ type
     gcRecordToSkip    : TStringList;
     gcSubRecordToSkip : TStringList;
     gcGroupToSkip     : TStringList;
-    gcChaptersToSkip  : TStringList;
     gcAllowDirectSaveFor    : TStringList;
     gcStripMastersFileNames : TStringList;
     gcLEncoding       : array[Boolean] of TStringList;
@@ -3916,6 +3915,7 @@ type
     procedure ForceClosed;
     procedure IncGlobalGeneration;
     function BeginInternalEdit(aForce: Boolean = False): Boolean;
+    procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
     function FormIDFromIdentity(aFormIDBase, aFormIDNameBase: Byte; aIdentity: string): TwbFormID;
     function ExpandFileName(const aFileName: string): string;
@@ -3959,8 +3959,6 @@ type
       read gcSubRecordToSkip;
     property GroupToSkip: TStringList
       read gcGroupToSkip;
-    property ChaptersToSkip: TStringList
-      read gcChaptersToSkip;
     property AllowDirectSaveFor: TStringList
       read gcAllowDirectSaveFor;
     property StripMastersFileNames: TStringList
@@ -4009,6 +4007,7 @@ type
     scGameContext    : IwbGameContext;
     scGameContextObj : TwbGameContext;
     scFile           : IwbFile;
+    scChaptersToSkip : TStringList;
   public
     constructor Create(const aGameContext: IwbGameContext);
     destructor Destroy; override;
@@ -4019,6 +4018,8 @@ type
       read scGameContextObj;
     property SaveFile: IwbFile
       read scFile;
+    property ChaptersToSkip: TStringList
+      read scChaptersToSkip;
   end;
 
   TwbSaveContextClass = class of TwbSaveContext;
@@ -6321,6 +6322,9 @@ begin
   inherited Create;
   scGameContext := aGameContext;
   scGameContextObj := aGameContext as TwbGameContext;
+  scChaptersToSkip := TwbFastStringList.Create;
+  scChaptersToSkip.Sorted := True;
+  scChaptersToSkip.Duplicates := dupIgnore;
 end;
 
 destructor TwbSaveContext.Destroy;
@@ -6328,6 +6332,7 @@ begin
   scFile := nil;
   scGameContextObj := nil;
   scGameContext := nil;
+  FreeAndNil(scChaptersToSkip);
   inherited;
 end;
 
@@ -6399,7 +6404,6 @@ begin
   gcRecordToSkip := CreateSkipList;
   gcSubRecordToSkip := CreateSkipList;
   gcGroupToSkip := CreateSkipList;
-  gcChaptersToSkip := CreateSkipList;
   gcAllowDirectSaveFor := CreateNameList;
   gcStripMastersFileNames := CreateNameList;
   gcLEncoding[False] := CreateLEncodingList;
@@ -6417,17 +6421,21 @@ begin
   for var i := Low(gcIdentitys) to High(gcIdentitys) do
     FreeAndNil(gcIdentitys[i]);
   FreeAndNil(gcFilesMap);
+  DetachFilesFromModules;
   FreeAndNil(gcModuleList);
   FreeAndNil(gcModGroupList);
   FreeAndNil(gcRecordToSkip);
   FreeAndNil(gcSubRecordToSkip);
   FreeAndNil(gcGroupToSkip);
-  FreeAndNil(gcChaptersToSkip);
   FreeAndNil(gcAllowDirectSaveFor);
   FreeAndNil(gcStripMastersFileNames);
   FreeAndNil(gcLEncoding[True]);
   FreeAndNil(gcLEncoding[False]);
   inherited;
+end;
+
+procedure TwbGameContext.DetachFilesFromModules;
+begin
 end;
 
 function TwbGameContext.CreateSkipList: TStringList;
@@ -6645,6 +6653,7 @@ end;
 procedure TwbGameContext.ForceClosed;
 begin
   gcFaceGenCache := nil;
+  DetachFilesFromModules;
   gcFiles := nil;
   gcFilesMap.Clear;
   gcNextFullSlot := 0;

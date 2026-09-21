@@ -31,6 +31,7 @@ var
 type
   TwbLoadingGameContext = class(TwbGameContext)
   public
+    procedure DetachFilesFromModules; override;
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; override;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; override;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
@@ -693,6 +694,7 @@ type
     function ContextObj: TwbGameContext;
     function SaveContextObj: TwbSaveContext;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
+    procedure DetachModule;
     procedure GetMasters(aMasters: TStrings);
     procedure IncGeneration;
     function GetFileGeneration: Integer;
@@ -785,6 +787,7 @@ type
     function ContextObj: TwbGameContext; override;
     function SaveContextObj: TwbSaveContext; override;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
+    procedure DetachModule;
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
     function GetReferenceFile: IwbFile; override;
@@ -4284,6 +4287,11 @@ end;
 procedure TwbFile.SetSaveContextObj(aSaveContext: TwbSaveContext);
 begin
   flSaveContextObj := aSaveContext;
+end;
+
+procedure TwbFile.DetachModule;
+begin
+  flModule := nil;
 end;
 
 function TwbFile.GetSaveTables: IwbSaveTables;
@@ -24315,6 +24323,13 @@ begin
   end;
 end;
 
+procedure TwbLoadingGameContext.DetachFilesFromModules;
+begin
+  for var lIdx := Low(gcFiles) to High(gcFiles) do
+    if Assigned(gcFiles[lIdx]) then
+      (gcFiles[lIdx] as IwbFileInternal).DetachModule;
+end;
+
 function TwbLoadingGameContext.LoadFile(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes): IwbFile;
 var
   FileName: string;
@@ -26510,7 +26525,8 @@ begin
   if Assigned(aValueDef) then
     Assert(Supports(aValueDef, IwbStructCDef));
   inherited;
-  cChapterSkipped := cChapterSkipped or ContextObj.ChaptersToSkip.Find(aValueDef.Name, Dummy);
+  var lSaveContext := SaveContextObj;
+  cChapterSkipped := cChapterSkipped or (Assigned(lSaveContext) and lSaveContext.ChaptersToSkip.Find(aValueDef.Name, Dummy));
 end;
 
 function TwbChapter.GetChapterName: String;

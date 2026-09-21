@@ -638,8 +638,8 @@ begin
       Exit;
     ReportProgress('Dumping: ' + aContainer.Name);
   end;
-  if (wbToolSource in [tsSaves]) and (HostContext.ChaptersToSkip <> nil) and Supports(aContainer, IwbChapter, Chapter) then
-    if HostContext.ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
+  if Assigned(HostSaveContext) and Supports(aContainer, IwbChapter, Chapter) then
+    if HostSaveContext.ChaptersToSkip.Find(IntToStr(Chapter.ChapterType), i) then begin
       ReportProgress('Skiping: ' + Chapter.ChapterTypeName);
       Exit;
     end;
@@ -1320,13 +1320,14 @@ begin
         HostContext.GroupToSkip.Add('WRLD');
       end;
 
-      if wbFindCmdLineParam('xc', s) then
-        HostContext.ChaptersToSkip.CommaText := s
-      else if FindCmdLineSwitch('xcbloat') then begin
-        HostContext.ChaptersToSkip.Add('1001');
-      end;
+      if Assigned(HostSaveContext) then
+        if wbFindCmdLineParam('xc', s) then
+          HostSaveContext.ChaptersToSkip.CommaText := s
+        else if FindCmdLineSwitch('xcbloat') then begin
+          HostSaveContext.ChaptersToSkip.Add('1001');
+        end;
 
-      if wbFindCmdLineParam('xf', s) then begin
+      if Assigned(HostSaveContext) and wbFindCmdLineParam('xf', s) then begin
         DumpForms := TStringList.Create;
         DumpForms.Sorted := True;
         DumpForms.Duplicates := dupIgnore;
@@ -1334,7 +1335,7 @@ begin
         DumpForms.Sort;
         for i := 0 to DumpForms.Count-1 do try
           c := StrToInt(DumpForms[i]);
-          HostContext.ChaptersToSkip.Add(IntToStr(wbChangedFormOffset+c));
+          HostSaveContext.ChaptersToSkip.Add(IntToStr(wbChangedFormOffset+c));
         finally
         end;
         DumpForms.Free;
@@ -1559,8 +1560,8 @@ begin
 
       if Assigned(DumpChapters) then
         ReportProgress('['+s+']   Dumping chapters : '+DumpChapters.CommaText);
-      if (HostContext.ChaptersToSkip <> nil) and (HostContext.ChaptersToSkip.Count>0) then
-        ReportProgress('['+s+']   Excluding chapters : '+HostContext.ChaptersToSkip.CommaText);
+      if Assigned(HostSaveContext) and (HostSaveContext.ChaptersToSkip.Count>0) then
+        ReportProgress('['+s+']   Excluding chapters : '+HostSaveContext.ChaptersToSkip.CommaText);
       if wbBytesToSkip>0 then
         ReportProgress('['+s+']   BytesToSkip : '+IntToStr(wbBytesToSkip));
       if wbBytesToDump<$FFFFFFFF then

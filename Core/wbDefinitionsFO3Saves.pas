@@ -217,7 +217,8 @@ begin
         Result := aType - 1000 + 12 + 1;
     end;
     if (Result > 12) then Result := 0; //Others are not decoded yet
-    if (Container.ContextObj.ChaptersToSkip <> nil) and Container.ContextObj.ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
+    var lSaveContext := Container.SaveContextObj;
+    if Assigned(lSaveContext) and lSaveContext.ChaptersToSkip.Find(IntToStr(aType), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end;
 end;
@@ -545,7 +546,8 @@ begin
     Result := 1 + Result;
     if (Result > 42) then
       Result := 0;
-    if (Container.ContextObj.ChaptersToSkip <> nil) and Container.ContextObj.ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
+    var lSaveContext := Container.SaveContextObj;
+    if Assigned(lSaveContext) and lSaveContext.ChaptersToSkip.Find(IntToStr(wbChangedFormOffset+Result), aType)  then // "Required" time optimisation (can save "hours" if used on 1001)
       Result := 0;
   end else
     Result := 0;
