@@ -1451,20 +1451,18 @@ begin
       end;
       if wbToolSource = tsSaves then
         case HostContext.GameDefObj.GameMode of
-          gmFNV:    if SameText(ExtractFileExt(s), '.nvse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
-          gmFO3:    if SameText(ExtractFileExt(s), '.fose') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave
-            else
-              WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+          gmFNV,
           gmFO4,
-          gmFO4vr:  if SameText(ExtractFileExt(s), '.f4se') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
-          gmTES4:   if SameText(ExtractFileExt(s), '.obse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave
-            else
-              WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
+          gmFO4vr,
           gmTES5,
           gmTES5vr,
           gmEnderal,
           gmEnderalSE,
-          gmSSE:     if SameText(ExtractFileExt(s), '.skse') then (HostContext as IwbGameContext).GameDef.SwitchToCoSave;
+          gmSSE: ;
+          gmFO3,
+          gmTES4:
+            if HostContext.GameDefObj.SaveDefFor(s) = HostContext.GameDefObj.SaveDef then
+              WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
         else
             WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
         end;

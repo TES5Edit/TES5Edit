@@ -26363,7 +26363,7 @@ end;
 
 function TwbFileSource.flSaveDef: TwbSaveDef;
 begin
-  Result := flContextObj.GameDefObj.SaveDef;
+  Result := flContextObj.GameDefObj.SaveDefFor(flFileName);
   if not Assigned(Result) or not Assigned(Result.FileHeader) then
     raise Exception.CreateFmt('Expected a module, found "%s"', [flFileName]);
 end;

@@ -26,7 +26,6 @@ type
     procedure DefineFO4SavesS;
     procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
     procedure Define; override;
-    procedure SwitchToCoSave; override;
   end;
 
 implementation
@@ -7427,6 +7426,7 @@ procedure TwbGameDefFO4Saves.Define;
 begin
   if not Assigned(gdSaveDef) then
     gdSaveDef := TwbSaveDef.Create;
+  gdSaveDef.FileExtension := '.fos';
   gdSaveDef.FileMagic := 'FO4_SAVEGAME';
   gdSaveDef.ExtractInfo := @ExtractInfoSave;
   gdSaveDef.FilePlugins := 'Plugins';
@@ -7434,16 +7434,15 @@ begin
   inherited;
   DefineFO4SavesA;
   DefineFO4SavesS;
-end;
-
-procedure TwbGameDefFO4Saves.SwitchToCoSave;
-begin
-  gdSaveDef.FileMagic := 'F4SE';
-  gdSaveDef.ExtractInfo := @ExtractInfoCoSave;
-  gdSaveDef.FilePlugins := 'Absolute:44';
-  gdSaveDef.FilePluginNames := nil;
-  gdSaveDef.FileChapters := wbCoSaveChapters;
-  gdSaveDef.FileHeader := wbCoSaveHeader;
+  if not Assigned(gdCoSaveDef) then
+    gdCoSaveDef := TwbSaveDef.Create;
+  gdCoSaveDef.FileExtension := '.f4se';
+  gdCoSaveDef.FileMagic := 'F4SE';
+  gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;
+  gdCoSaveDef.FilePlugins := 'Absolute:44';
+  gdCoSaveDef.FilePluginNames := nil;
+  gdCoSaveDef.FileChapters := wbCoSaveChapters;
+  gdCoSaveDef.FileHeader := wbCoSaveHeader;
 end;
 
 initialization

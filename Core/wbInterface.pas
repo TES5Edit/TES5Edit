@@ -3368,7 +3368,6 @@ type
     function GetGameMode: TwbGameMode;
     function GetCapabilities: TwbGameCapabilities;
 
-    procedure SwitchToCoSave;
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean;
 
     property GameMode: TwbGameMode
@@ -3498,6 +3497,7 @@ type
 
   TwbSaveDef = class
   public
+    FileExtension   : string;
     FileMagic       : TwbFileMagic;
     FilePlugins     : string;
     FileHeader      : IwbStructDef;
@@ -3535,6 +3535,7 @@ type
     gdGroupOrder       : TStringList;
     gdActorValueEnum   : IwbEnumDef;
     gdSaveDef          : TwbSaveDef;
+    gdCoSaveDef        : TwbSaveDef;
     gdOfficialDLC      : TArray<string>;
     gdCreationClubContentFileName : string;
     gdKnownSubRecordSignatures    : TwbKnownSubRecordSignatures;
@@ -3585,7 +3586,6 @@ type
     function GetIsUpdateSupported: Boolean;
 
     procedure Define; virtual;
-    procedure SwitchToCoSave; virtual;
   public
     DefineOptions: TwbGameDefineOptions;
 
@@ -3706,6 +3706,7 @@ type
       write gdActorValueEnum;
     property SaveDef: TwbSaveDef
       read gdSaveDef;
+    function SaveDefFor(const aFileName: string): TwbSaveDef;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC
       write gdOfficialDLC;
@@ -5925,6 +5926,7 @@ end;
 
 destructor TwbGameDef.Destroy;
 begin
+  FreeAndNil(gdCoSaveDef);
   FreeAndNil(gdSaveDef);
   FreeAndNil(gdRecordDefMap);
   FreeAndNil(gdGroupOrder);
@@ -6297,8 +6299,12 @@ procedure TwbGameDef.Define;
 begin
 end;
 
-procedure TwbGameDef.SwitchToCoSave;
+function TwbGameDef.SaveDefFor(const aFileName: string): TwbSaveDef;
 begin
+  if Assigned(gdCoSaveDef) and SameText(ExtractFileExt(aFileName), gdCoSaveDef.FileExtension) then
+    Result := gdCoSaveDef
+  else
+    Result := gdSaveDef;
 end;
 
 procedure TwbGameDef.EnsureDefined;

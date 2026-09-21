@@ -5116,25 +5116,20 @@ begin
       if wbToolSource = tsSaves then begin
         s := sl[0];
         case lGameDef.GameMode of
-          gmFNV:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
-          gmFO3:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave
-            else begin
-              MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
-              frmMain.Close;
-              Exit;
-            end;
-          gmFO4:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
-          gmTES4: if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave
-            else begin
-              MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
-              frmMain.Close;
-              Exit;
-            end;
+          gmFNV,
+          gmFO4,
           gmTES5,
           gmTES5VR,
           gmEnderal,
           gmEnderalSE,
-          gmSSE:  if SameText(ExtractFileExt(s), coSaveExt) then (xeContext as IwbGameContext).GameDef.SwitchToCoSave;
+          gmSSE: ;
+          gmFO3,
+          gmTES4:
+            if lGameDef.SaveDefFor(s) = lGameDef.SaveDef then begin
+              MessageDlg('Save are not supported yet "'+s+'". Please check the selection.', mtError, [mbAbort], 0);
+              frmMain.Close;
+              Exit;
+            end;
         else
           MessageDlg('CoSave are not supported yet "'+s+'". Please check the the selection.', mtError, [mbAbort], 0);
           frmMain.Close;

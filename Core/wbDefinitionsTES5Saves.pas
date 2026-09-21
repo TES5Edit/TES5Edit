@@ -28,7 +28,6 @@ type
     procedure DefineTES5SavesA;
 
     procedure Define; override;
-    procedure SwitchToCoSave; override;
   end;
 
 implementation
@@ -6239,6 +6238,7 @@ procedure TwbGameDefTES5Saves.Define;
 begin
   if not Assigned(gdSaveDef) then
     gdSaveDef := TwbSaveDef.Create;
+  gdSaveDef.FileExtension := '.ess';
   gdSaveDef.FileMagic := 'TESV_SAVEGAME';
   gdSaveDef.ExtractInfo := @ExtractInfoSave;
   gdSaveDef.FilePlugins := 'Plugins';
@@ -6246,16 +6246,15 @@ begin
   inherited;
   DefineTES5SavesA;
   DefineTES5SavesS;
-end;
-
-procedure TwbGameDefTES5Saves.SwitchToCoSave;
-begin
-  gdSaveDef.FileMagic := 'SKSE';
-  gdSaveDef.ExtractInfo := @ExtractInfoCoSave;
-  gdSaveDef.FilePlugins := 'Absolute:44';
-  gdSaveDef.FilePluginNames := nil;
-  gdSaveDef.FileChapters := wbCoSaveChapters;
-  gdSaveDef.FileHeader := wbCoSaveHeader;
+  if not Assigned(gdCoSaveDef) then
+    gdCoSaveDef := TwbSaveDef.Create;
+  gdCoSaveDef.FileExtension := '.skse';
+  gdCoSaveDef.FileMagic := 'SKSE';
+  gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;
+  gdCoSaveDef.FilePlugins := 'Absolute:44';
+  gdCoSaveDef.FilePluginNames := nil;
+  gdCoSaveDef.FileChapters := wbCoSaveChapters;
+  gdCoSaveDef.FileHeader := wbCoSaveHeader;
 end;
 
 initialization

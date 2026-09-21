@@ -24,7 +24,6 @@ type
     procedure DefineFNVSavesA;
     procedure DefineFNVSavesS;
     procedure Define; override;
-    procedure SwitchToCoSave; override;
   end;
 
 implementation
@@ -6919,21 +6918,21 @@ procedure TwbGameDefFNVSaves.Define;
 begin
   if not Assigned(gdSaveDef) then
     gdSaveDef := TwbSaveDef.Create;
+  gdSaveDef.FileExtension := '.fos';
   gdSaveDef.FileMagic := 'FO3SAVEGAME';
   gdSaveDef.ExtractInfo := @ExtractInfoSave;
   gdSaveDef.FilePlugins := 'Plugins';
   inherited;
   DefineFNVSavesA;
   DefineFNVSavesS;
-end;
-
-procedure TwbGameDefFNVSaves.SwitchToCoSave;
-begin
-  gdSaveDef.FileMagic := 'NVSE';
-  gdSaveDef.ExtractInfo := @ExtractInfoCoSave;
-  gdSaveDef.FilePlugins := 'Absolute:44';
-  gdSaveDef.FileChapters := wbCoSaveChapters;
-  gdSaveDef.FileHeader := wbCoSaveHeader;
+  if not Assigned(gdCoSaveDef) then
+    gdCoSaveDef := TwbSaveDef.Create;
+  gdCoSaveDef.FileExtension := '.nvse';
+  gdCoSaveDef.FileMagic := 'NVSE';
+  gdCoSaveDef.ExtractInfo := @ExtractInfoCoSave;
+  gdCoSaveDef.FilePlugins := 'Absolute:44';
+  gdCoSaveDef.FileChapters := wbCoSaveChapters;
+  gdCoSaveDef.FileHeader := wbCoSaveHeader;
 end;
 
 initialization
