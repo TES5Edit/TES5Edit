@@ -298,6 +298,9 @@ begin
   Result := CompressedSize;
 end;
 
+var
+  GetRelativeDeciderHint: Integer = -1;
+
 function GetRelativeDeciderInteger(anOffset: UInt32; aSize: Integer; const aContainerName, anIntegerName: string;
   aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
@@ -319,8 +322,21 @@ begin
     if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
       if Pos('\', anIntegerName)<>0 then
         Element := Container.GetElementByPath(anIntegerName)
-      else
-        Element := Container.GetElementByName(anIntegerName);
+      else begin
+        Element := nil;
+        if (GetRelativeDeciderHint >= 0) and (GetRelativeDeciderHint < Container.ElementCount) then begin
+          var lCandidate := Container.Elements[GetRelativeDeciderHint];
+          if SameText(lCandidate.BaseName, anIntegerName) then
+            Element := lCandidate;
+        end;
+        if not Assigned(Element) then
+          for var lIdx := 0 to Pred(Container.ElementCount) do
+            if SameText(Container.Elements[lIdx].BaseName, anIntegerName) then begin
+              Element := Container.Elements[lIdx];
+              GetRelativeDeciderHint := lIdx;
+              Break;
+            end;
+      end;
       if Assigned(Element) then begin
         Result := Element.NativeValue;
       end;
@@ -1036,19 +1052,11 @@ begin
   end;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr: Pointer = nil;
-
 function ChangedFormPackageCreatedContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr := aBasePtr
-  else
-    ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
   else
@@ -1059,7 +1067,7 @@ function ChangedFormPackageCreatedContentFlagsBit1Decider(aBasePtr: Pointer; aEn
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
   else
@@ -1070,26 +1078,18 @@ function ChangedFormPackageCreatedContentFlagsBit2Decider(aBasePtr: Pointer; aEn
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
   else
     Result := 1;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr: Pointer = nil;
-
 function ChangedFormPackageActorMoverContentFlagsBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr := aBasePtr
-  else
-    ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
   else
@@ -1100,7 +1100,7 @@ function ChangedFormPackageActorMoverContentFlagsBit1Decider(aBasePtr: Pointer; 
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
   else
@@ -1111,7 +1111,7 @@ function ChangedFormPackageActorMoverContentFlagsBit2Decider(aBasePtr: Pointer; 
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
   else
@@ -1122,7 +1122,7 @@ function ChangedFormPackageActorMoverContentFlagsBit3Decider(aBasePtr: Pointer; 
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', ChangedFormPackageActorMoverContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Actor Mover', 'Content Flags', nil, aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 8) = 0) then
     Result := 0
   else
@@ -1168,7 +1168,7 @@ function ChangedFormPackageCreatedPackageDataTypeDecider(aBasePtr: Pointer; aEnd
 const
   Offset = (13 - 4) + 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'General\Type', ChangedFormPackageCreatedContentFlagsBit0DeciderBasePtr, aEndPtr, aElement);
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Data', 'General\Type', nil, aEndPtr, aElement);
   case Result of
     0, 4, 5, 6, 7, 10, 11, 12, 14: Result := 0;
     1, 2: Result := 1;
@@ -1478,19 +1478,11 @@ begin
     Result := 1;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr: Pointer = nil;
-
 function ChangeFormCreatedPackageHasContentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr := aBasePtr
-  else
-    ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
@@ -1502,7 +1494,7 @@ function ChangeFormCreatedPackageHasContentFlagBit1Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
@@ -1514,7 +1506,7 @@ function ChangeFormCreatedPackageHasContentFlagBit2Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
@@ -1526,7 +1518,7 @@ function ChangeFormCreatedPackageHasContentFlagBit3Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 8) = 0) then
     Result := 0
@@ -1538,7 +1530,7 @@ function ChangeFormCreatedPackageHasContentFlagBit4Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 16) = 0) then
     Result := 0
@@ -1550,7 +1542,7 @@ function ChangeFormCreatedPackageHasContentFlagBit5Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', ChangeFormCreatedPackageHasContentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Content Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 32) = 0) then
     Result := 0
@@ -1558,19 +1550,11 @@ begin
     Result := 1;
 end;
 
-var // Remembers the offset of the first decider in the group
-  ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr: Pointer = nil;
-
 function ChangeFormCreatedPackageHasPresentFlagBit0Decider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 const
   Offset = 2;
 begin
-  if Assigned(aBasePtr) then
-    ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr := aBasePtr
-  else
-    ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr := nil;
-
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 1) = 0) then
     Result := 0
@@ -1582,7 +1566,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit1Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 2) = 0) then
     Result := 0
@@ -1594,7 +1578,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit2Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 4) = 0) then
     Result := 0
@@ -1606,7 +1590,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit3Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 8) = 0) then
     Result := 0
@@ -1618,7 +1602,7 @@ function ChangeFormCreatedPackageHasPresentFlagBit4Decider(aBasePtr: Pointer; aE
 const
   Offset = 2;
 begin
-  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', ChangeFormCreatedPackageHasPresentFlagBit0DeciderBasePtr,
+  Result := GetRelativeDeciderInteger(Offset, 1, 'Unk09C', 'Present Flags', nil,
     aEndPtr, aElement);
   if (Result = MaxInt) or ((Result and 16) = 0) then
     Result := 0
