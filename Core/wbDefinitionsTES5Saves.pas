@@ -46,7 +46,7 @@ type
 
   TwbSaveDefTES5 = class(TwbSaveDefTES5Base)
   protected
-    procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+    procedure SavePluginNames(const aHeader: IwbContainer; aNames, aLightNames: TStrings);
   public
     procedure Define; override;
   end;
@@ -405,16 +405,16 @@ begin
     end;
 end;
 
-procedure TwbSaveDefTES5.SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+procedure TwbSaveDefTES5.SavePluginNames(const aHeader: IwbContainer; aNames, aLightNames: TStrings);
 
-  procedure AddNames(const aList: IwbElement);
+  procedure AddNames(const aList: IwbElement; aTarget: TStrings);
   var
     List : IwbContainerElementRef;
     i    : Integer;
   begin
     if Supports(aList, IwbContainerElementRef, List) then
       for i := 0 to Pred(List.ElementCount) do
-        aNames.Add(List[i].EditValue);
+        aTarget.Add(List[i].EditValue);
   end;
 
 var
@@ -424,10 +424,10 @@ var
 begin
   Content := SaveContent(aHeader);
   if not Assigned(Content) then Exit;
-  AddNames(Content.ElementByName[FilePlugins]);
+  AddNames(Content.ElementByName[FilePlugins], aNames);
   for i := 0 to Pred(Content.ElementCount) do
     if Supports(Content.Elements[i], IwbContainer, Union) and (Union.Name = '') then
-      AddNames(Union.ElementByName['Light plugins']);
+      AddNames(Union.ElementByName['Light plugins'], aLightNames);
 end;
 
 function SaveFormVersionDecider(aMinimum: Integer; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;

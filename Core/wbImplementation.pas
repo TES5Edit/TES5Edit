@@ -988,7 +988,7 @@ type
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
     procedure GetMasters(aMasters: TStrings); override;
-    procedure GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
+    procedure GetPluginNames(const aHeader: IwbFileHeader; aNames, aLightNames: TStrings);
   public
     constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; const aCompareToFile: IwbFile; aStates: TwbFileStates);
   end;
@@ -26392,7 +26392,13 @@ begin
 
   Names := TStringList.Create;
   try
-    GetPluginNames(Header, Names);
+    var lLightNames := TStringList.Create;
+    try
+      GetPluginNames(Header, Names, lLightNames);
+      Names.AddStrings(lLightNames);
+    finally
+      lLightNames.Free;
+    end;
     for i := 0 to Pred(Names.Count) do begin
       fPath := flContextObj.Settings.DataPath + Names[i];
       if FileExists(fPath) then
@@ -26403,7 +26409,7 @@ begin
   end;
 end;
 
-procedure TwbFileSource.GetPluginNames(const aHeader: IwbFileHeader; aNames: TStrings);
+procedure TwbFileSource.GetPluginNames(const aHeader: IwbFileHeader; aNames, aLightNames: TStrings);
 var
   MasterFiles : IwbContainerElementRef;
   i           : Integer;
@@ -26413,7 +26419,7 @@ begin
   var lSaveDef := flSaveDef;
   var lFilePluginNames := lSaveDef.FilePluginNames;
   if Assigned(lFilePluginNames) then begin
-    lFilePluginNames(aHeader, aNames);
+    lFilePluginNames(aHeader, aNames, aLightNames);
     Exit;
   end;
 
@@ -26488,7 +26494,15 @@ begin
 
   Names := TStringList.Create;
   try
-    GetPluginNames(Header, Names);
+    var lLightNames := TStringList.Create;
+    try
+      GetPluginNames(Header, Names, lLightNames);
+      if Assigned(flSaveContextObj) then
+        flSaveContextObj.SetPluginNames(Names, lLightNames);
+      Names.AddStrings(lLightNames);
+    finally
+      lLightNames.Free;
+    end;
     for i := 0 to Pred(Names.Count) do begin
       fPath := flContextObj.Settings.DataPath + Names[i];
       if FileExists(fPath) then

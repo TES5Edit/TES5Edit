@@ -3491,7 +3491,7 @@ type
     function EncodingForLanguage(const aLanguage: string; aFallback: Boolean): TEncoding;
   end;
 
-  TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames: TStrings);
+  TwbFilePluginNames = reference to procedure(const aHeader: IwbContainer; aNames, aLightNames: TStrings);
 
   TwbSaveDef = class
   protected
@@ -4030,6 +4030,9 @@ type
     scJoinIndex      : Integer;
     scChaptersToSkip : TStringList;
 
+    scFullPluginNames  : TStringList;
+    scLightPluginNames : TStringList;
+
     procedure scJoin(const aFile: IwbFile; const aFileName: string);
     function scHeldFileByName(const aFileName: string): IwbFile;
   public
@@ -4045,6 +4048,12 @@ type
       read scFile;
     property ChaptersToSkip: TStringList
       read scChaptersToSkip;
+    property FullPluginNames: TStringList
+      read scFullPluginNames;
+    property LightPluginNames: TStringList
+      read scLightPluginNames;
+
+    procedure SetPluginNames(aFullNames, aLightNames: TStrings);
   end;
 
   TwbSaveContextClass = class of TwbSaveContext;
@@ -6416,6 +6425,8 @@ begin
   scChaptersToSkip := TwbFastStringList.Create;
   scChaptersToSkip.Sorted := True;
   scChaptersToSkip.Duplicates := dupIgnore;
+  scFullPluginNames := TStringList.Create;
+  scLightPluginNames := TStringList.Create;
 end;
 
 destructor TwbSaveContext.Destroy;
@@ -6424,7 +6435,15 @@ begin
   scGameContextObj := nil;
   scGameContext := nil;
   FreeAndNil(scChaptersToSkip);
+  FreeAndNil(scFullPluginNames);
+  FreeAndNil(scLightPluginNames);
   inherited;
+end;
+
+procedure TwbSaveContext.SetPluginNames(aFullNames, aLightNames: TStrings);
+begin
+  scFullPluginNames.Assign(aFullNames);
+  scLightPluginNames.Assign(aLightNames);
 end;
 
 procedure TwbSaveContext.BeforeDestruction;

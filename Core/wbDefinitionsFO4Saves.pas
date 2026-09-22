@@ -45,7 +45,7 @@ type
 
   TwbSaveDefFO4 = class(TwbSaveDefFO4Base)
   protected
-    procedure SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+    procedure SavePluginNames(const aHeader: IwbContainer; aNames, aLightNames: TStrings);
   public
     procedure Define; override;
   end;
@@ -7432,26 +7432,26 @@ begin
   FileHeader := sdCoSaveHeader;
 end;
 
-procedure TwbSaveDefFO4.SavePluginNames(const aHeader: IwbContainer; aNames: TStrings);
+procedure TwbSaveDefFO4.SavePluginNames(const aHeader: IwbContainer; aNames, aLightNames: TStrings);
 
-  procedure AddNames(const aList: IwbElement);
+  procedure AddNames(const aList: IwbElement; aTarget: TStrings);
   var
     List : IwbContainerElementRef;
     i    : Integer;
   begin
     if Supports(aList, IwbContainerElementRef, List) then
       for i := 0 to Pred(List.ElementCount) do
-        aNames.Add(List[i].EditValue);
+        aTarget.Add(List[i].EditValue);
   end;
 
 var
   Union : IwbContainer;
   i     : Integer;
 begin
-  AddNames(aHeader.ElementByName[FilePlugins]);
+  AddNames(aHeader.ElementByName[FilePlugins], aNames);
   for i := 0 to Pred(aHeader.ElementCount) do
     if Supports(aHeader.Elements[i], IwbContainer, Union) and (Union.Name = '') then
-      AddNames(Union.ElementByName['Light plugins']);
+      AddNames(Union.ElementByName['Light plugins'], aLightNames);
 end;
 
 initialization
