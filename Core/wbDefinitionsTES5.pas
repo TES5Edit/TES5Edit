@@ -18,6 +18,111 @@ uses
 
 type
   TwbGameDefTES5 = class(TwbGameDefCommon)
+  private
+    wbBipedObjectFlags: IwbFlagsDef;
+    wbPKDTInterruptFlags: IwbFlagsDef;
+
+    wbPlayerActionEnum: IwbEnumDef;
+    wbArmorTypeEnum: IwbEnumDef;
+    wbAttackAnimationEnum: IwbEnumDef;
+    wbBipedObjectEnum: IwbEnumDef;
+    wbCastEnum: IwbEnumDef;
+    wbCastingSourceEnum: IwbEnumDef;
+    wbDeliveryEnum: IwbEnumDef;
+    wbEmotionTypeEnum: IwbEnumDef;
+    wbEntryPointsEnum: IwbEnumDef;
+    wbFormTypeEnum: IwbEnumDef;
+    wbFurnitureAnimEnum: IwbEnumDef;
+    wbLocationEnum: IwbEnumDef;
+    wbMapMarkerEnum: IwbEnumDef;
+    wbMiscStatEnum: IwbEnumDef;
+    wbObjectTypeEnum: IwbEnumDef;
+    wbQuestTypeEnum: IwbEnumDef;
+    wbSkillEnum: IwbEnumDef;
+    wbSoundLevelEnum: IwbEnumDef;
+    wbTintMaskTypeEnum: IwbEnumDef;
+    wbVatsValueFunctionEnum: IwbEnumDef;
+    wbWardStateEnum: IwbEnumDef;
+    wbWeaponAnimTypeEnum: IwbEnumDef;
+
+    wbEDID: IwbSubRecordDef;
+    wbCOED: IwbSubRecordDef;
+    wbXLCM: IwbSubRecordDef;
+    wbDEST: IwbSubRecordStructDef;
+    wbDODT: IwbSubRecordDef;
+    wbSPLO: IwbSubRecordDef;
+    wbSPLOs: IwbSubRecordArrayDef;
+    wbCNTO: IwbRecordMemberDef;
+    wbCNTOs: IwbSubRecordArrayDef;
+    wbCNTONoReach: IwbRecordMemberDef;
+    wbCNTOsNoReach: IwbSubRecordArrayDef;
+    wbAIDT: IwbRecordMemberDef;
+    wbCSDT: IwbSubRecordStructDef;
+    wbCSDTs: IwbSubRecordArrayDef;
+    wbFULL: IwbSubRecordDef;
+    wbFULLReq: IwbSubRecordDef;
+    wbDESC: IwbSubRecordDef;
+    wbDESCReq: IwbSubRecordDef;
+    wbXSCL: IwbSubRecordDef;
+    wbMODD: IwbRecordMemberDef;
+    wbMODS: IwbSubRecordDef;
+    wbMO2S: IwbSubRecordDef;
+    wbMO3S: IwbSubRecordDef;
+    wbMO4S: IwbSubRecordDef;
+    wbConditions: IwbRecordMemberDef;
+    wbXESP: IwbSubRecordDef;
+    wbICON: IwbSubRecordStructDef;
+    wbICONReq: IwbRecordMemberDef;
+    wbICO2: IwbSubRecordStructDef;
+    wbActorValue: IwbIntegerDef;
+    wbETYP: IwbSubRecordDef;
+    wbETYPReq: IwbSubRecordDef;
+    wbEFID: IwbSubRecordDef;
+    wbEFIT: IwbRecordMemberDef;
+    wbEffectsReq: IwbSubRecordArrayDef;
+    wbFirstPersonFlagsU32: IwbValueDef;
+    wbBODT: IwbSubRecordDef;
+    wbBOD2: IwbSubRecordDef;
+    wbBODTBOD2: IwbRecordMemberDef;
+    wbScriptEntry: IwbValueDef;
+    wbScriptPropertyObject: IwbUnionDef;
+    wbPLDT: IwbSubRecordDef;
+    wbPLVD: IwbSubRecordDef;
+    wbAttackData: IwbSubRecordStructDef;
+    wbLLCT: IwbSubRecordDef;
+    wbLVLD: IwbSubRecordDef;
+    wbVMAD: IwbSubRecordDef;
+    wbVMADFragmentedPERK: IwbSubRecordDef;
+    wbVMADFragmentedPACK: IwbSubRecordDef;
+    wbVMADFragmentedQUST: IwbSubRecordDef;
+    wbVMADFragmentedSCEN: IwbSubRecordDef;
+    wbVMADFragmentedINFO: IwbSubRecordDef;
+    wbCOCT: IwbSubRecordDef;
+    wbCITC: IwbSubRecordDef;
+    wbCITCReq: IwbSubRecordDef;
+    wbDMDSs: IwbSubRecordDef;
+    wbMO5S: IwbSubRecordDef;
+    wbSPCT: IwbSubRecordDef;
+    wbTints: IwbSubRecordArrayDef;
+    wbRACE_DATAFlags01: IwbValueDef;
+    wbPhonemeTargets: IwbSubRecordDef;
+    wbNoseMorphFlags: IwbValueDef;
+    wbBrowMorphFlags: IwbValueDef;
+    wbEyesMorphFlags01: IwbValueDef;
+    wbEyesMorphFlags02: IwbValueDef;
+    wbLipMorphFlags: IwbValueDef;
+    wbPHWT: IwbSubRecordStructDef;
+    wbMorphs: IwbSubRecordStructDef;
+    wbPDTO: IwbSubRecordDef;
+    wbPDTOs: IwbSubRecordArrayDef;
+    wbNull: IwbValueDef;
+    wbYNAM: IwbSubRecordDef;
+    wbZNAM: IwbSubRecordDef;
+    wbTVDT: IwbSubRecordDef;
+    wbNVNM: IwbSubRecordDef;
+    wbStaticPart: IwbRecordMemberDef;
+    wbFactionRank: IwbRecordMemberDef;
+    wbSubtypeNamesEnum: IwbEnumDef;
   protected
     gdEventFunctionEnum : IwbEnumDef;
     gdEventMemberEnum   : IwbEnumDef;
@@ -46,113 +151,6 @@ uses
 
 type
   TVarRecs = array of TVarRec;
-
-var
-  wbBipedObjectFlags: IwbFlagsDef;
-  wbPKDTInterruptFlags: IwbFlagsDef;
-
-  wbPlayerActionEnum: IwbEnumDef;
-  wbArmorTypeEnum: IwbEnumDef;
-  wbAttackAnimationEnum: IwbEnumDef;
-  wbBipedObjectEnum: IwbEnumDef;
-  wbCastEnum: IwbEnumDef;
-  wbCastingSourceEnum: IwbEnumDef;
-  wbDeliveryEnum: IwbEnumDef;
-  wbEmotionTypeEnum: IwbEnumDef;
-  wbEntryPointsEnum: IwbEnumDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbFurnitureAnimEnum: IwbEnumDef;
-  wbLocationEnum: IwbEnumDef;
-  wbMapMarkerEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbQuestTypeEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbTintMaskTypeEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbWardStateEnum: IwbEnumDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-
-  wbEDID: IwbSubRecordDef;
-  wbCOED: IwbSubRecordDef;
-  wbXLCM: IwbSubRecordDef;
-  wbDEST: IwbSubRecordStructDef;
-  wbDODT: IwbSubRecordDef;
-  wbSPLO: IwbSubRecordDef;
-  wbSPLOs: IwbSubRecordArrayDef;
-  wbCNTO: IwbRecordMemberDef;
-  wbCNTOs: IwbSubRecordArrayDef;
-  wbCNTONoReach: IwbRecordMemberDef;
-  wbCNTOsNoReach: IwbSubRecordArrayDef;
-  wbAIDT: IwbRecordMemberDef;
-  wbCSDT: IwbSubRecordStructDef;
-  wbCSDTs: IwbSubRecordArrayDef;
-  wbFULL: IwbSubRecordDef;
-  wbFULLReq: IwbSubRecordDef;
-  wbDESC: IwbSubRecordDef;
-  wbDESCReq: IwbSubRecordDef;
-  wbXSCL: IwbSubRecordDef;
-  wbMODD: IwbRecordMemberDef;
-  wbMODS: IwbSubRecordDef;
-  wbMO2S: IwbSubRecordDef;
-  wbMO3S: IwbSubRecordDef;
-  wbMO4S: IwbSubRecordDef;
-  wbConditions: IwbRecordMemberDef;
-  wbXESP: IwbSubRecordDef;
-  wbICON: IwbSubRecordStructDef;
-  wbICONReq: IwbRecordMemberDef;
-  wbICO2: IwbSubRecordStructDef;
-  wbActorValue: IwbIntegerDef;
-  wbETYP: IwbSubRecordDef;
-  wbETYPReq: IwbSubRecordDef;
-  wbEFID: IwbSubRecordDef;
-  wbEFIT: IwbRecordMemberDef;
-  wbEffectsReq: IwbSubRecordArrayDef;
-  wbFirstPersonFlagsU32: IwbValueDef;
-  wbBODT: IwbSubRecordDef;
-  wbBOD2: IwbSubRecordDef;
-  wbBODTBOD2: IwbRecordMemberDef;
-  wbScriptEntry: IwbValueDef;
-  wbScriptPropertyObject: IwbUnionDef;
-  wbPLDT: IwbSubRecordDef;
-  wbPLVD: IwbSubRecordDef;
-  wbAttackData: IwbSubRecordStructDef;
-  wbLLCT: IwbSubRecordDef;
-  wbLVLD: IwbSubRecordDef;
-  wbVMAD: IwbSubRecordDef;
-  wbVMADFragmentedPERK: IwbSubRecordDef;
-  wbVMADFragmentedPACK: IwbSubRecordDef;
-  wbVMADFragmentedQUST: IwbSubRecordDef;
-  wbVMADFragmentedSCEN: IwbSubRecordDef;
-  wbVMADFragmentedINFO: IwbSubRecordDef;
-  wbCOCT: IwbSubRecordDef;
-  wbCITC: IwbSubRecordDef;
-  wbCITCReq: IwbSubRecordDef;
-  wbDMDSs: IwbSubRecordDef;
-  wbMO5S: IwbSubRecordDef;
-  wbSPCT: IwbSubRecordDef;
-  wbTints: IwbSubRecordArrayDef;
-  wbRACE_DATAFlags01: IwbValueDef;
-  wbPhonemeTargets: IwbSubRecordDef;
-  wbNoseMorphFlags: IwbValueDef;
-  wbBrowMorphFlags: IwbValueDef;
-  wbEyesMorphFlags01: IwbValueDef;
-  wbEyesMorphFlags02: IwbValueDef;
-  wbLipMorphFlags: IwbValueDef;
-  wbPHWT: IwbSubRecordStructDef;
-  wbMorphs: IwbSubRecordStructDef;
-  wbPDTO: IwbSubRecordDef;
-  wbPDTOs: IwbSubRecordArrayDef;
-  wbNull: IwbValueDef;
-  wbYNAM: IwbSubRecordDef;
-  wbZNAM: IwbSubRecordDef;
-  wbTVDT: IwbSubRecordDef;
-  wbNVNM: IwbSubRecordDef;
-  wbStaticPart: IwbRecordMemberDef;
-  s: string;
-  wbFactionRank: IwbRecordMemberDef;
-  wbSubtypeNamesEnum: IwbEnumDef;
 
 type
   TConditionParameterType = (
@@ -2174,6 +2172,8 @@ begin
 end;
 
 procedure TwbGameDefTES5.Define;
+var
+  s: string;
 begin
   gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
