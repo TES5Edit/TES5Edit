@@ -49,6 +49,15 @@ type
     procedure Define; override;
   end;
 
+  TwbSaveContextFO3 = class(TwbLoadingSaveContext)
+  protected
+    scChangedFormFlags : Integer;
+  public
+    property ChangedFormFlags: Integer
+      read scChangedFormFlags
+      write scChangedFormFlags;
+  end;
+
 procedure TwbSaveDefFO3Base.DefineFO3SavesA;
 var
   i: Integer;
@@ -603,7 +612,7 @@ begin
     Element := wbFindSaveElement('Leveled Creature', aElement);
   if Assigned(Element) then begin
     var lSaveContext := aElement.SaveContextObj;
-    if Assigned(lSaveContext) and ((lSaveContext.ChangedFormFlags and aMask)<>0) then
+    if (lSaveContext is TwbSaveContextFO3) and ((TwbSaveContextFO3(lSaveContext).ChangedFormFlags and aMask)<>0) then
       Result := 1;
   end else begin
     Element := wbFindSaveElement('Changed Form', aElement);
@@ -1255,8 +1264,8 @@ begin
       Element := Container.GetElementByName('Actor Base Changed Flags');
       if Assigned(Element) then begin
         var lSaveContext := aElement.SaveContextObj;
-        if Assigned(lSaveContext) then
-          lSaveContext.ChangedFormFlags := Element.NativeValue;
+        if lSaveContext is TwbSaveContextFO3 then
+          TwbSaveContextFO3(lSaveContext).ChangedFormFlags := Element.NativeValue;
       end else
         Result := 0;
     end;
@@ -6352,6 +6361,6 @@ begin
 end;
 
 initialization
-  wbRegisterSaveDefs([gmFO3], TwbSaveDefFO3, TwbCoSaveDefFO3);
+  wbRegisterSaveDefs([gmFO3], TwbSaveDefFO3, TwbCoSaveDefFO3, TwbSaveContextFO3);
 end.
 

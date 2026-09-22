@@ -845,6 +845,7 @@ type
   TwbGameContext = class;
   IwbSaveContext = interface;
   TwbSaveContext = class;
+  TwbSaveContextClass = class of TwbSaveContext;
   IwbFile = interface;
   IwbSaveTables = interface;
   IwbNamedDef = interface;
@@ -3717,6 +3718,7 @@ type
     property CoSaveDef: TwbSaveDef
       read GetCoSaveDef;
     function SaveDefFor(const aFileName: string): TwbSaveDef;
+    function SaveContextClass: TwbSaveContextClass;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC
       write gdOfficialDLC;
@@ -4030,9 +4032,6 @@ type
     scJoinIndex      : Integer;
     scChaptersToSkip : TStringList;
 
-    scChangedFormFlags : Integer;
-    scLastRegistrationStart : Integer;
-
     scFullPluginNames  : TStringList;
     scLightPluginNames : TStringList;
 
@@ -4056,12 +4055,6 @@ type
       read scFile;
     property ChaptersToSkip: TStringList
       read scChaptersToSkip;
-    property ChangedFormFlags: Integer
-      read scChangedFormFlags
-      write scChangedFormFlags;
-    property LastRegistrationStart: Integer
-      read scLastRegistrationStart
-      write scLastRegistrationStart;
     property FullPluginNames: TStringList
       read scFullPluginNames;
     property LightPluginNames: TStringList
@@ -4077,8 +4070,6 @@ type
 
     procedure SetPluginNames(aFullNames, aLightNames: TStrings);
   end;
-
-  TwbSaveContextClass = class of TwbSaveContext;
 
 const
   arcU32 = -1;
@@ -5405,7 +5396,7 @@ var
   wbSaveContextClass : TwbSaveContextClass;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aGameDefClass: TwbGameDefClass);
-procedure wbRegisterSaveDefs(const aGameModes: TwbGameModes; aSaveDefClass, aCoSaveDefClass: TwbSaveDefClass);
+procedure wbRegisterSaveDefs(const aGameModes: TwbGameModes; aSaveDefClass, aCoSaveDefClass: TwbSaveDefClass; aSaveContextClass: TwbSaveContextClass = nil);
 function wbCreateGameDef(aGameMode: TwbGameMode): IwbGameDef; overload;
 function wbCreateGameDef(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef; overload;
 function wbCreateGameDef(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef; overload;
@@ -6349,6 +6340,7 @@ var
   _GameDefClasses    : array[TwbGameMode] of TwbGameDefClass;
   _SaveDefClasses    : array[TwbGameMode] of TwbSaveDefClass;
   _CoSaveDefClasses  : array[TwbGameMode] of TwbSaveDefClass;
+  _SaveContextClasses: array[TwbGameMode] of TwbSaveContextClass;
 
 procedure TwbGameDef.CreateSaveDefs;
 begin
@@ -6410,6 +6402,11 @@ begin
     Result := gdSaveDef;
 end;
 
+function TwbGameDef.SaveContextClass: TwbSaveContextClass;
+begin
+  Result := _SaveContextClasses[gdGameMode];
+end;
+
 procedure TwbGameDef.EnsureDefined;
 begin
   if gdDefined then
@@ -6433,8 +6430,11 @@ end;
 
 function wbCreateSaveContext(const aGameContext: IwbGameContext): IwbSaveContext;
 begin
-  Assert(Assigned(wbSaveContextClass));
-  Result := wbSaveContextClass.Create(aGameContext);
+  var lSaveContextClass := (aGameContext as TwbGameContext).GameDefObj.SaveContextClass;
+  if not Assigned(lSaveContextClass) then
+    lSaveContextClass := wbSaveContextClass;
+  Assert(Assigned(lSaveContextClass));
+  Result := lSaveContextClass.Create(aGameContext);
 end;
 
 { TwbSaveContext }
@@ -7018,12 +7018,13 @@ begin
       _GameDefClasses[lGameMode] := aGameDefClass;
 end;
 
-procedure wbRegisterSaveDefs(const aGameModes: TwbGameModes; aSaveDefClass, aCoSaveDefClass: TwbSaveDefClass);
+procedure wbRegisterSaveDefs(const aGameModes: TwbGameModes; aSaveDefClass, aCoSaveDefClass: TwbSaveDefClass; aSaveContextClass: TwbSaveContextClass);
 begin
   for var lGameMode := Low(TwbGameMode) to High(TwbGameMode) do
     if lGameMode in aGameModes then begin
       _SaveDefClasses[lGameMode] := aSaveDefClass;
       _CoSaveDefClasses[lGameMode] := aCoSaveDefClass;
+      _SaveContextClasses[lGameMode] := aSaveContextClass;
     end;
 end;
 

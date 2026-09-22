@@ -55,6 +55,15 @@ type
     procedure Define; override;
   end;
 
+  TwbSaveContextFO4 = class(TwbLoadingSaveContext)
+  protected
+    scLastRegistrationStart : Integer;
+  public
+    property LastRegistrationStart: Integer
+      read scLastRegistrationStart
+      write scLastRegistrationStart;
+  end;
+
 procedure TwbSaveDefFO4Base.DefineFO4SavesA;
 begin
   sdRecordFlagsFlags := wbFlags([
@@ -2662,8 +2671,8 @@ begin
       else Result := 12;
       if (Result >= 5) and (Result <= 11) then begin
         var lSaveContext := aElement.SaveContextObj;
-        if Assigned(lSaveContext) then
-          lSaveContext.LastRegistrationStart := Result;
+        if lSaveContext is TwbSaveContextFO4 then
+          TwbSaveContextFO4(lSaveContext).LastRegistrationStart := Result;
       end;
     end;
   end;
@@ -2674,8 +2683,8 @@ begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   var lSaveContext := aElement.SaveContextObj;
-  if not Assigned(lSaveContext) then Exit;
-  case lSaveContext.LastRegistrationStart of
+  if not (lSaveContext is TwbSaveContextFO4) then Exit;
+  case TwbSaveContextFO4(lSaveContext).LastRegistrationStart of
     5, 7, 8 : Result := 1;  // String
     6, 11:    Result := 2;  // UInt32
     9, 10:    Result := 3;  // Null
@@ -2687,8 +2696,8 @@ begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   var lSaveContext := aElement.SaveContextObj;
-  if not Assigned(lSaveContext) then Exit;
-  case lSaveContext.LastRegistrationStart of
+  if not (lSaveContext is TwbSaveContextFO4) then Exit;
+  case TwbSaveContextFO4(lSaveContext).LastRegistrationStart of
     8:
       Result := 1;  // String
     5, 6, 7, 9, 10, 11:
@@ -7463,5 +7472,5 @@ begin
 end;
 
 initialization
-  wbRegisterSaveDefs([gmFO4, gmFO4VR], TwbSaveDefFO4, TwbCoSaveDefFO4);
+  wbRegisterSaveDefs([gmFO4, gmFO4VR], TwbSaveDefFO4, TwbCoSaveDefFO4, TwbSaveContextFO4);
 end.

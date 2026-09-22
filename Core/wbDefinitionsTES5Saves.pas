@@ -56,6 +56,15 @@ type
     procedure Define; override;
   end;
 
+  TwbSaveContextTES5 = class(TwbLoadingSaveContext)
+  protected
+    scLastRegistrationStart : Integer;
+  public
+    property LastRegistrationStart: Integer
+      read scLastRegistrationStart
+      write scLastRegistrationStart;
+  end;
+
 procedure TwbSaveDefTES5Base.DefineTES5SavesA;
 begin
   sdPropTypeEnum := wbEnum([
@@ -2414,8 +2423,8 @@ begin
       else Result := 12;
       if (Result >= 5) and (Result <= 11) then begin
         var lSaveContext := aElement.SaveContextObj;
-        if Assigned(lSaveContext) then
-          lSaveContext.LastRegistrationStart := Result;
+        if lSaveContext is TwbSaveContextTES5 then
+          TwbSaveContextTES5(lSaveContext).LastRegistrationStart := Result;
       end;
     end;
   end;
@@ -2426,8 +2435,8 @@ begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   var lSaveContext := aElement.SaveContextObj;
-  if not Assigned(lSaveContext) then Exit;
-  case lSaveContext.LastRegistrationStart of
+  if not (lSaveContext is TwbSaveContextTES5) then Exit;
+  case TwbSaveContextTES5(lSaveContext).LastRegistrationStart of
     5, 7, 8 : Result := 1;  // String
     6, 11:    Result := 2;  // UInt32
     9, 10:    Result := 3;  // Null
@@ -2439,8 +2448,8 @@ begin
   Result := 0;
   if not Assigned(aElement) then Exit;
   var lSaveContext := aElement.SaveContextObj;
-  if not Assigned(lSaveContext) then Exit;
-  case lSaveContext.LastRegistrationStart of
+  if not (lSaveContext is TwbSaveContextTES5) then Exit;
+  case TwbSaveContextTES5(lSaveContext).LastRegistrationStart of
     8:
       Result := 1;  // String
     5, 6, 7, 9, 10, 11:
@@ -6273,5 +6282,5 @@ begin
 end;
 
 initialization
-  wbRegisterSaveDefs([gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE], TwbSaveDefTES5, TwbCoSaveDefTES5);
+  wbRegisterSaveDefs([gmTES5, gmTES5VR, gmEnderal, gmSSE, gmEnderalSE], TwbSaveDefTES5, TwbCoSaveDefTES5, TwbSaveContextTES5);
 end.
