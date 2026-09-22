@@ -4064,6 +4064,7 @@ type
 
     function FullSlotFile(aSlot: Integer): IwbFile;
     function LightSlotFile(aSlot: Integer): IwbFile;
+    function SlotFile(const aFileID: TwbFileID): IwbFile;
 
     procedure SetPluginNames(aFullNames, aLightNames: TStrings);
   end;
@@ -6547,6 +6548,16 @@ begin
   Result := scSlotFile(scLightSlotFiles, aSlot);
 end;
 
+function TwbSaveContext.SlotFile(const aFileID: TwbFileID): IwbFile;
+begin
+  if aFileID.IsLightSlot then
+    Result := scSlotFile(scLightSlotFiles, aFileID.LightSlot)
+  else if aFileID.IsFullSlot then
+    Result := scSlotFile(scFullSlotFiles, aFileID.FullSlot)
+  else
+    Result := nil;
+end;
+
 function TwbSaveContext.scHeldFileByName(const aFileName: string): IwbFile;
 begin
   Result := scGameContextObj.SaveContextFileByName(aFileName);
@@ -6942,6 +6953,24 @@ function TwbGameContext.RecordByLoadOrderFormID(const aFormID: TwbFormID; const 
 begin
   Result := nil;
   var lFileID := aFormID.FileID[SlotLayout];
+
+  if Assigned(aSeenFromFile) and not lFileID.IsMediumSlot and (lFileID <> TwbFileID.CreateFull($FF)) then begin
+    var lSaveContext := aSeenFromFile.SaveContextObj;
+    if Assigned(lSaveContext) then begin
+      var lSlotFile := lSaveContext.SlotFile(lFileID);
+      if Assigned(lSlotFile) then begin
+        var lTargetFormID := aFormID.ChangeFileID(SlotLayout, lSlotFile.LoadOrderFileID);
+        Result := lSlotFile.ContainedRecordByLoadOrderFormID[lTargetFormID, True];
+        if Assigned(Result) then begin
+          var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
+          if Assigned(lVisibleResult) then
+            Result := lVisibleResult;
+        end;
+      end;
+      Exit;
+    end;
+  end;
+
   var lFiles := gcFiles;
   if lFileID = TwbFileID.CreateFull($FF) then
     lFiles := FilesWithSaves;
