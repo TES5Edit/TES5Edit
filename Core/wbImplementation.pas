@@ -13986,7 +13986,7 @@ type
     mrcMainRecords : TDynMainRecords;
   end;
 
-var
+threadvar
   _Collector       : PwbMainRecordCollector;
   _IgnoreCollector : Boolean;
 
