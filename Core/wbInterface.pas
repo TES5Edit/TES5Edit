@@ -618,8 +618,39 @@ type
     GameExeName        : string;
     GameMasterEsm      : string;
     AppName            : string;
+    class function ForGame(aGameMode: TwbGameMode): TwbGameDefInputs; static;
   end;
 
+  TwbGameIdentity = record
+    AppName       : string;
+    GameName      : string;
+    GameExeName   : string;
+    GameName2     : string;
+    GameNameReg   : string;
+    GameMasterEsm : string;
+    SteamID       : string;
+    LightName     : string;
+  end;
+
+const
+  wbGameIdentities : array[TwbGameMode] of TwbGameIdentity = (
+    {gmTES3}      (AppName: 'TES3';      GameName: 'Morrowind'; GameExeName: 'Morrowind.exe';           GameName2: 'Morrowind';               GameNameReg: 'Morrowind';               GameMasterEsm: 'Morrowind.esm';  SteamID: '22320';        LightName: 'Light'),
+    {gmTES4}      (AppName: 'TES4';      GameName: 'Oblivion';  GameExeName: 'Oblivion.exe';            GameName2: 'Oblivion';                GameNameReg: 'Oblivion';                GameMasterEsm: 'Oblivion.esm';   SteamID: '22330,900883'; LightName: 'Light'),
+    {gmTES4R}     (AppName: 'TES4R';     GameName: 'Oblivion';  GameExeName: 'Oblivion Remastered.exe'; GameName2: 'Oblivion Remastered';     GameNameReg: 'Steam App 2623190';       GameMasterEsm: 'Oblivion.esm';   SteamID: '2623190';      LightName: 'Light'),
+    {gmFO3}       (AppName: 'FO3';       GameName: 'Fallout3';  GameExeName: 'Fallout3.exe';            GameName2: 'Fallout3';                GameNameReg: 'Fallout3';                GameMasterEsm: 'Fallout3.esm';   SteamID: '22370,22300';  LightName: 'Light'),
+    {gmFNV}       (AppName: 'FNV';       GameName: 'FalloutNV'; GameExeName: 'FalloutNV.exe';           GameName2: 'FalloutNV';               GameNameReg: 'FalloutNV';               GameMasterEsm: 'FalloutNV.esm';  SteamID: '22380,22490';  LightName: 'Light'),
+    {gmTES5}      (AppName: 'TES5';      GameName: 'Skyrim';    GameExeName: 'TESV.exe';                GameName2: 'Skyrim';                  GameNameReg: 'Skyrim';                  GameMasterEsm: 'Skyrim.esm';     SteamID: '72850';        LightName: 'Light'),
+    {gmEnderal}   (AppName: 'Enderal';   GameName: 'Enderal';   GameExeName: 'TESV.exe';                GameName2: 'Enderal';                 GameNameReg: 'Enderal';                 GameMasterEsm: 'Skyrim.esm';     SteamID: '933480';       LightName: 'Light'),
+    {gmFO4}       (AppName: 'FO4';       GameName: 'Fallout4';  GameExeName: 'Fallout4.exe';            GameName2: 'Fallout4';                GameNameReg: 'Fallout4';                GameMasterEsm: 'Fallout4.esm';   SteamID: '377160';       LightName: 'Light'),
+    {gmSSE}       (AppName: 'SSE';       GameName: 'Skyrim';    GameExeName: 'SkyrimSE.exe';            GameName2: 'Skyrim Special Edition';  GameNameReg: 'Skyrim Special Edition';  GameMasterEsm: 'Skyrim.esm';     SteamID: '489830';       LightName: 'Light'),
+    {gmTES5VR}    (AppName: 'TES5VR';    GameName: 'Skyrim';    GameExeName: 'SkyrimVR.exe';            GameName2: 'Skyrim VR';               GameNameReg: 'Skyrim VR';               GameMasterEsm: 'Skyrim.esm';     SteamID: '611670';       LightName: 'Light'),
+    {gmEnderalSE} (AppName: 'EnderalSE'; GameName: 'Enderal';   GameExeName: 'SkyrimSE.exe';            GameName2: 'Enderal Special Edition'; GameNameReg: 'EnderalSE';               GameMasterEsm: 'Skyrim.esm';     SteamID: '976620';       LightName: 'Light'),
+    {gmFO4VR}     (AppName: 'FO4VR';     GameName: 'Fallout4';  GameExeName: 'Fallout4VR.exe';          GameName2: 'Fallout4VR';              GameNameReg: 'Fallout 4 VR';            GameMasterEsm: 'Fallout4.esm';   SteamID: '611660';       LightName: 'Light'),
+    {gmFO76}      (AppName: 'FO76';      GameName: 'Fallout76'; GameExeName: 'Fallout76.exe';           GameName2: 'Fallout 76';              GameNameReg: 'Steam App 1151340';       GameMasterEsm: 'SeventySix.esm'; SteamID: '1151340';      LightName: 'Light'),
+    {gmSF1}       (AppName: 'SF1';       GameName: 'Starfield'; GameExeName: 'Starfield.exe';           GameName2: 'Starfield';               GameNameReg: 'Steam App 1716740';       GameMasterEsm: 'Starfield.esm';  SteamID: '1716740';      LightName: 'Small')
+  );
+
+type
   TwbCollapseOption = (
     clpRoot, clpGroupRecord, clpGroupModels, clpGroupActors, clpGroupItems, clpGroupScripts, clpGroupQuests,
     clpGroupPlacement, clpGroupWeather, clpGroupTypes, clpGroupStarfield,
@@ -3863,6 +3894,7 @@ type
     FormIDCallback        : TwbGetFormIDCallback;
     CellDetailsForWorldspaceCallback : TwbGetCellDetailsForWorldspaceCallback;
     class function Defaults: TwbGameContextSettings; static;
+    procedure ApplyGameDefaults(aGameMode: TwbGameMode);
   end;
 
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
@@ -5792,6 +5824,14 @@ begin
   Result := TwbNullWaitForm.Create;
 end;
 
+class function TwbGameDefInputs.ForGame(aGameMode: TwbGameMode): TwbGameDefInputs;
+begin
+  Result := Default(TwbGameDefInputs);
+  Result.VWDInTemporary := not (aGameMode in [gmTES4, gmTES4R]);
+  Result.VWDAsQuestChildren := aGameMode in [gmFO4, gmFO4VR, gmFO76, gmSF1];
+  Result.ComplexFileFileID := aGameMode = gmSF1;
+end;
+
 function wbComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities;
 begin
   Result := [];
@@ -6621,6 +6661,81 @@ begin
   Result.ResetModifiedOnSave := True;
   Result.ClampFormID := True;
   Result.NewHeaderAddon := 40;
+end;
+
+procedure TwbGameContextSettings.ApplyGameDefaults(aGameMode: TwbGameMode);
+begin
+  if aGameMode in [gmFO4, gmFO4VR, gmFO76, gmSF1] then
+    Language := 'En'
+  else
+    Language := 'English';
+
+  if aGameMode in [gmFO3, gmFNV] then begin
+    UDRSetZ := False;
+    UDRSetZValue := -15000;
+  end;
+
+  case aGameMode of
+    gmTES3: begin
+      LoadBSAs := False;
+      AllowInternalEdit := False;
+      DontCache := True;
+      DontCacheLoad := True;
+      DontCacheSave := True;
+      BuildRefs := False;
+      CreateContainedIn := False;
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+    end;
+    gmTES4: begin
+      LoadBSAs := True;
+      AllowInternalEdit := False;
+      CanSortINFO := True;
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+    end;
+    gmTES4R: begin
+      LoadBSAs := False;
+      AllowInternalEdit := False;
+      CanSortINFO := True;
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+    end;
+    gmFO3, gmFNV: begin
+      LoadBSAs := False;
+      CanSortINFO := True;
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+    end;
+    gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
+      LoadBSAs := True;  // localization won't work otherwise
+      HideIgnored := False; // to show Form Version
+      CanSortINFO := True;
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+    end;
+    gmFO4, gmFO4VR: begin
+      LoadBSAs := True;  // localization won't work otherwise
+      HideIgnored := False; // to show Form Version
+      AlwaysSaveOnam := True;
+      AlwaysSaveOnamForce := True;
+      AllowESPMasters := True;
+      AllowESPMastersOnSave := True;
+    end;
+    gmFO76: begin
+      LoadBSAs := True;  // localization won't work otherwise
+      HideIgnored := False; // to show Form Version
+      AlwaysSaveOnam := True;
+      AlwaysSaveOnamForce := True;
+    end;
+    gmSF1: begin
+      EnforceAllMasters := True;
+      LoadBSAs := True;  // localization won't work otherwise
+      HideIgnored := False; // to show Form Version
+      AlwaysSaveOnam := True;
+      AlwaysSaveOnamForce := True;
+    end;
+  end;
 end;
 
 { TwbGameContext }

@@ -90,7 +90,9 @@ implementation
 uses
   System.IniFiles,
   System.IOUtils,
+  System.Rtti,
   System.SysUtils,
+  System.TypInfo,
   System.UITypes,
   System.Win.Registry,
 
@@ -800,30 +802,20 @@ begin
 
   lSettings.Language := 'English';
 
-  wbGameExeName        := '';
   if isMode('FNV') then begin
     wbGameMode         := gmFNV;
-    wbAppName          := 'FNV';
-    wbGameName         := 'FalloutNV';
-    wbGameSteamID      := '22380,22490';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     SavesSupported     := True;
   end
 
   else if isMode('FO3') then begin
     wbGameMode         := gmFO3;
-    wbAppName          := 'FO3';
-    wbGameName         := 'Fallout3';
-    wbGameSteamID      := '22370,22300';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     SavesSupported     := False;
   end
 
   else if isMode('TES3') then begin
     wbGameMode         := gmTES3;
-    wbAppName          := 'TES3';
-    wbGameName         := 'Morrowind';
-    wbGameSteamID      := '22320';
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
     SavesSupported     := False;
@@ -832,128 +824,68 @@ begin
 
   else if isMode('TES4') then begin
     wbGameMode         := gmTES4;
-    wbAppName          := 'TES4';
-    wbGameName         := 'Oblivion';
-    wbGameSteamID      := '22330,900883';
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('TES4R') then begin
     wbGameMode         := gmTES4R;
-    wbAppName          := 'TES4R';
-    wbGameName         := 'Oblivion';
-    wbGameExeName      := 'Oblivion Remastered';
-    wbGameName2        := 'Oblivion Remastered';
-    wbGameMasterEsm    := 'Oblivion.esm';
-    wbGameNameReg      := 'Steam App 2623190';
-    wbGameSteamID      := '2623190';
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('TES5') then begin
     wbGameMode         := gmTES5;
-    wbAppName          := 'TES5';
-    wbGameName         := 'Skyrim';
-    wbGameExeName      := 'TESV';
-    wbGameSteamID      := '72850';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('EnderalSE') then begin
     wbGameMode         := gmEnderalSE;
-    wbAppName          := 'EnderalSE';
-    wbGameName         := 'Enderal';
-    wbGameExeName      := 'SkyrimSE';
-    wbGameName2        := 'Enderal Special Edition';
-    wbGameNameReg      := 'EnderalSE';
-    wbGameMasterEsm    := 'Skyrim.esm';
-    wbGameSteamID      := '976620';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('Enderal') then begin
     wbGameMode         := gmEnderal;
-    wbAppName          := 'Enderal';
-    wbGameName         := 'Enderal';
-    wbGameExeName      := 'TESV';
-    wbGameMasterEsm    := 'Skyrim.esm';
-    wbGameSteamID      := '933480';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('TES5VR') then begin
     wbGameMode         := gmTES5VR;
-    wbAppName          := 'TES5VR';
-    wbGameName         := 'Skyrim';
-    wbGameName2        := 'Skyrim VR';
-    wbGameExeName      := 'SkyrimVR';
-    wbGameSteamID      := '611670';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := False;
   end
 
   else if isMode('SSE') then begin
     wbGameMode         := gmSSE;
-    wbAppName          := 'SSE';
-    wbGameName         := 'Skyrim';
-    wbGameExeName      := 'SkyrimSE';
-    wbGameName2        := 'Skyrim Special Edition';
-    wbGameSteamID      := '489830';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('FO4') then begin
     wbGameMode         := gmFO4;
-    wbAppName          := 'FO4';
-    wbGameName         := 'Fallout4';
-    lSettings.Language := 'En';
-    wbGameSteamID      := '377160';
     ToolModes          := wbAlwaysMode;
     SavesSupported     := True;
   end
 
   else if isMode('FO4VR') then begin
     wbGameMode         := gmFO4VR;
-    wbAppName          := 'FO4VR';
-    wbGameName         := 'Fallout4';
-    wbGameExeName      := 'Fallout4VR';
-    wbGameName2        := 'Fallout4VR';
-    wbGameNameReg      := 'Fallout 4 VR';
-    lSettings.Language := 'En';
-    wbGameSteamID      := '611660';
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('FO76') then begin
     wbGameMode         := gmFO76;
-    wbAppName          := 'FO76';
-    wbGameName         := 'Fallout76';
-    wbGameName2        := 'Fallout 76';
-    wbGameNameReg      := 'Steam App 1151340';
-    wbGameMasterEsm    := 'SeventySix.esm';
-    lSettings.Language := 'En';
-    wbGameSteamID      := '1151340';
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('SF1') then begin
     wbGameMode         := gmSF1;
-    wbAppName          := 'SF1';
-    wbGameName         := 'Starfield';
-    wbGameNameReg      := 'Steam App 1716740';
-    lSettings.Language := 'En';
-    wbGameSteamID      := '1716740';
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     SavesSupported     := False;
-    wbLightName        := 'Small';
 
     if    FindCmdLineSwitch('ItJustWorksTM')
       and FindCmdLineSwitch('ThisIsFine')
@@ -970,15 +902,15 @@ begin
     Exit(False);
   end;
 
-  if wbGameExeName = '' then
-    wbGameExeName := wbGameName;
-
-  wbGameExeName := wbGameExeName + csDotExe;
-
-  if wbGameMode in [gmFO3, gmFNV] then begin
-    lSettings.UDRSetZ := False;
-    lSettings.UDRSetZValue := -15000;
-  end;
+  var lIdentity := wbGameIdentities[wbGameMode];
+  wbAppName       := lIdentity.AppName;
+  wbGameName      := lIdentity.GameName;
+  wbGameExeName   := lIdentity.GameExeName;
+  wbGameName2     := lIdentity.GameName2;
+  wbGameNameReg   := lIdentity.GameNameReg;
+  wbGameMasterEsm := lIdentity.GameMasterEsm;
+  wbGameSteamID   := lIdentity.SteamID;
+  wbLightName     := lIdentity.LightName;
 
   if not (wbToolMode in ToolModes) then begin
     ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbToolName);
@@ -995,15 +927,6 @@ begin
     Exit(False);
   end;
 
-  if wbGameName2 = '' then
-    wbGameName2 := wbGameName;
-
-  if wbGameNameReg = '' then
-    wbGameNameReg := wbGameName2;
-
-  if wbGameMasterEsm = '' then
-    wbGameMasterEsm := wbGameName + csDotEsm;
-
   if FindCmdLineSwitch('DontCache') then
     lSettings.DontCache := True;
   if lSettings.DontCache or FindCmdLineSwitch('DontCacheLoad') then
@@ -1015,100 +938,28 @@ begin
 
   DoInitPath(xeParamIndex, lSettings);
 
-  // specific Game settings
+  lSettings.ApplyGameDefaults(wbGameMode);
+  lInputs := TwbGameDefInputs.ForGame(wbGameMode);
   case wbGameMode of
-    gmFNV: begin
-      lInputs.VWDInTemporary  := True;
-      lSettings.LoadBSAs := False;
-      lSettings.CanSortINFO := True;
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
-      lInputs.HNVSE           := FileExists(lSettings.DataPath + 'NVSE\Plugins\Hnvse.dll');
-    end;
-    gmFO3: begin
-      lInputs.VWDInTemporary := True;
-      lSettings.LoadBSAs := False;
-      lSettings.CanSortINFO := True;
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
-    end;
-    gmTES3: begin
-      lSettings.LoadBSAs := False;
-      lSettings.AllowInternalEdit := false;
-      lSettings.DontCache := True;
-      lSettings.DontCacheLoad := True;
-      lSettings.DontCacheSave := True;
-      lSettings.BuildRefs := False;
-      lInputs.VWDInTemporary := True;
-      lSettings.CreateContainedIn := False;
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
-    end;
-    gmTES4: begin
+    gmTES4:
       if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then begin
         wbAppName           := 'Nehrim';
         wbGameMasterEsm     := 'Nehrim.esm';
       end;
-      lSettings.LoadBSAs := True;
-      lSettings.AllowInternalEdit := false;
-      lSettings.CanSortINFO := True;
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
+    gmFNV:
+      lInputs.HNVSE := FileExists(lSettings.DataPath + 'NVSE\Plugins\Hnvse.dll');
+    gmSSE, gmEnderalSE:
+      lInputs.CS := FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
+    gmTES5VR: begin
+      lInputs.LightSupport := FileExists(lSettings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
+      lInputs.UpdateSupport := lInputs.LightSupport;
+      lInputs.CS := FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
     end;
-    gmTES4R: begin
-      lSettings.LoadBSAs := False;
-      lSettings.AllowInternalEdit := False;
-      lSettings.CanSortINFO := True;
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
+    gmFO4VR: begin
+      lInputs.LightSupport := FileExists(lSettings.DataPath + 'F4SE\Plugins\falloutvresl.dll') or
+                              FileExists(lSettings.DataPath + 'F4SE\Plugins\Daytripper4.dll');
+      lInputs.UpdateSupport := lInputs.LightSupport;
     end;
-    gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
-      lInputs.VWDInTemporary := True;
-      lSettings.LoadBSAs := True;  // localization won't work otherwise
-      lSettings.HideIgnored := False; // to show Form Version
-      lSettings.CanSortINFO := True;
-      var lVRESL := (wbGameMode in [gmTES5VR]) and FileExists(lSettings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
-      lInputs.LightSupport := lVRESL;
-      lInputs.UpdateSupport := lVRESL;
-      lInputs.CS := (wbGameMode in [gmTES5VR, gmSSE, gmEnderalSE]) and FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
-    end;
-    gmFO4, gmFO4VR: begin
-      lInputs.VWDInTemporary := True;
-      lInputs.VWDAsQuestChildren := True;
-      lSettings.LoadBSAs := True;  // localization won't work otherwise
-      lSettings.HideIgnored := False; // to show Form Version
-      lSettings.AlwaysSaveOnam := True;
-      lSettings.AlwaysSaveOnamForce := True;
-      var lVRESL := (wbGameMode in [gmFO4VR]) and (FileExists(lSettings.DataPath + 'F4SE\Plugins\falloutvresl.dll') or
-                                                    FileExists(lSettings.DataPath + 'F4SE\Plugins\Daytripper4.dll'));
-      lInputs.LightSupport := lVRESL;
-      lInputs.UpdateSupport := lVRESL;
-      lSettings.AllowESPMasters := True;
-      lSettings.AllowESPMastersOnSave := True;
-    end;
-    gmFO76: begin
-      lInputs.VWDInTemporary := True;
-      lInputs.VWDAsQuestChildren := True;
-      lSettings.LoadBSAs := True;  // localization won't work otherwise
-      lSettings.HideIgnored := False; // to show Form Version
-      lSettings.AlwaysSaveOnam := True;
-      lSettings.AlwaysSaveOnamForce := True;
-    end;
-    gmSF1: begin
-      lInputs.ComplexFileFileID := True;
-      lSettings.EnforceAllMasters := True;
-      lInputs.VWDInTemporary := True;
-      lInputs.VWDAsQuestChildren := True;
-      lSettings.LoadBSAs := True;  // localization won't work otherwise
-      lSettings.HideIgnored := False; // to show Form Version
-      lSettings.AlwaysSaveOnam := True;
-      lSettings.AlwaysSaveOnamForce := True;
-    end;
-  else
-    ShowMessage('Unknown GameMode');
-    Exit(False);
   end;
 
   lInputs.GameName := wbGameName;
@@ -1607,10 +1458,89 @@ begin
   except end;
 end;
 
+procedure xeDumpInitState(const aFileName: string);
+
+  function ValueText(const aValue: TValue): string;
+  begin
+    case aValue.Kind of
+      tkClass: begin
+        var lObject := aValue.AsObject;
+        if not Assigned(lObject) then
+          Result := 'nil'
+        else if lObject is TEncoding then
+          Result := lObject.ClassName + ':' + IntToStr(TEncoding(lObject).CodePage)
+        else
+          Result := lObject.ClassName;
+      end;
+      tkMethod:
+        Result := BoolToStr(Assigned(PMethod(aValue.GetReferenceToRawData).Code), True);
+      tkDynArray: begin
+        Result := '';
+        for var lIdx := 0 to Pred(aValue.GetArrayLength) do
+          Result := Result + '|' + aValue.GetArrayElement(lIdx).ToString;
+        Result := '[' + Copy(Result, 2, MaxInt) + ']';
+      end;
+    else
+      Result := aValue.ToString;
+    end;
+  end;
+
+var
+  lLines         : TStringList;
+  lRtti          : TRttiContext;
+  lField         : TRttiField;
+  lCapabilities  : string;
+  lSettings      : TwbGameContextSettings;
+  lDefineOptions : TwbGameDefineOptions;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('host.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode)));
+    lLines.Add('host.ToolMode=' + GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode)));
+    lLines.Add('host.ToolName=' + wbToolName);
+    lLines.Add('host.AppName=' + wbAppName);
+    lLines.Add('host.GameName=' + wbGameName);
+    lLines.Add('host.GameExeName=' + wbGameExeName);
+    lLines.Add('host.GameName2=' + wbGameName2);
+    lLines.Add('host.GameNameReg=' + wbGameNameReg);
+    lLines.Add('host.GameMasterEsm=' + wbGameMasterEsm);
+    lLines.Add('host.GameSteamID=' + wbGameSteamID);
+    lLines.Add('host.LightName=' + wbLightName);
+    lLines.Add('host.ApplicationTitle=' + wbApplicationTitle);
+    lLines.Add('host.IconResource=' + xeIconResource);
+    lLines.Add('def.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(xeContext.GameDefObj.GameMode)));
+    lLines.Add('def.AppName=' + xeContext.GameDefObj.AppName);
+    lLines.Add('def.GameName=' + xeContext.GameDefObj.GameName);
+    lLines.Add('def.GameExeName=' + xeContext.GameDefObj.GameExeName);
+    lLines.Add('def.GameMasterEsm=' + xeContext.GameDefObj.GameMasterEsm);
+    lCapabilities := '';
+    for var lCapability := Low(TwbGameCapability) to High(TwbGameCapability) do
+      if lCapability in xeContext.GameDefObj.Capabilities then
+        lCapabilities := lCapabilities + ' ' + GetEnumName(TypeInfo(TwbGameCapability), Ord(lCapability));
+    lLines.Add('def.Capabilities=' + Trim(lCapabilities));
+    lRtti := TRttiContext.Create;
+    lSettings := xeContext.Settings;
+    for lField in lRtti.GetType(TypeInfo(TwbGameContextSettings)).GetFields do
+      lLines.Add('settings.' + lField.Name + '=' + ValueText(lField.GetValue(@lSettings)));
+    lDefineOptions := xeContext.GameDefObj.DefineOptions;
+    for lField in lRtti.GetType(TypeInfo(TwbGameDefineOptions)).GetFields do
+      lLines.Add('defineoptions.' + lField.Name + '=' + ValueText(lField.GetValue(@lDefineOptions)));
+    lLines.SaveToFile(aFileName);
+  finally
+    lLines.Free;
+  end;
+end;
+
 function xeDoInit: Boolean;
+var
+  s: string;
 begin
   try
     Result := _DoInit;
+    if Result and wbFindCmdLineParam('dumpinit', s) then begin
+      xeDumpInitState(s);
+      Result := False;
+    end;
   except
     on E: Exception do begin
       Result := False;
