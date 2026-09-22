@@ -4030,6 +4030,8 @@ type
     scJoinIndex      : Integer;
     scChaptersToSkip : TStringList;
 
+    scChangedFormFlags : Integer;
+
     scFullPluginNames  : TStringList;
     scLightPluginNames : TStringList;
 
@@ -4053,6 +4055,9 @@ type
       read scFile;
     property ChaptersToSkip: TStringList
       read scChaptersToSkip;
+    property ChangedFormFlags: Integer
+      read scChangedFormFlags
+      write scChangedFormFlags;
     property FullPluginNames: TStringList
       read scFullPluginNames;
     property LightPluginNames: TStringList

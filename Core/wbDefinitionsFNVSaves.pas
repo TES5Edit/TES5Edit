@@ -590,9 +590,6 @@ begin
     Result := 0;
 end;
 
-var
-  TempChangedFormFlags : Integer;
-
 function ChangedFlagXXDecider(aMask: Cardinal; aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
@@ -605,7 +602,8 @@ begin
   if Pos('\ Leveled Creature \', aElement.Path)>0 then
     Element := wbFindSaveElement('Leveled Creature', aElement);
   if Assigned(Element) then begin
-    if (TempChangedFormFlags and aMask)<>0 then
+    var lSaveContext := aElement.SaveContextObj;
+    if Assigned(lSaveContext) and ((lSaveContext.ChangedFormFlags and aMask)<>0) then
       Result := 1;
   end else begin
     Element := wbFindSaveElement('Changed Form', aElement);
@@ -1256,7 +1254,9 @@ begin
     if Assigned(Element) and Supports(Element, IwbContainer, Container) then begin
       Element := Container.GetElementByName('Actor Base Changed Flags');
       if Assigned(Element) then begin
-        TempChangedFormFlags := Element.NativeValue;
+        var lSaveContext := aElement.SaveContextObj;
+        if Assigned(lSaveContext) then
+          lSaveContext.ChangedFormFlags := Element.NativeValue;
       end else
         Result := 0;
     end;
