@@ -18,6 +18,65 @@ uses
 
 type
   TwbGameDefFO3 = class(TwbGameDefCommon)
+  private
+    wbConditionParameters: array of IwbValueDef;
+    wbConditionVATSValueParameters: array of IwbValueDef;
+    wbConditionBaseObjects: TwbSignatures;
+
+    wbFormTypeEnum: IwbEnumDef;
+    wbMiscStatEnum: IwbEnumDef;
+    wbObjectTypeEnum: IwbEnumDef;
+    wbPlayerActionEnum: IwbEnumDef;
+    wbSkillEnum: IwbEnumDef;
+    wbSoundLevelEnum: IwbEnumDef;
+    wbVatsActionEnum: IwbEnumDef;
+    wbVatsValueFunctionEnum: IwbEnumDef;
+    wbWeaponAnimTypeEnum: IwbEnumDef;
+
+    wbActorValue: IwbIntegerDef;
+
+    wbAIDT: IwbRecordMemberDef;
+    wbBIPL: IwbRecordMemberDef;
+    wbBMDT: IwbRecordMemberDef;
+    wbCNTOs: IwbRecordMemberDef;
+    wbCOED: IwbRecordMemberDef;
+    wbConditions: IwbRecordMemberDef;
+    wbDESC: IwbRecordMemberDef;
+    wbDESCReq: IwbRecordMemberDef;
+    wbDEST: IwbRecordMemberDef;
+    wbDODT: IwbRecordMemberDef;
+    wbEDID: IwbRecordMemberDef;
+    wbEDIDReq: IwbRecordMemberDef;
+    wbEDIDReqKC: IwbRecordMemberDef;
+    wbEffects: IwbRecordMemberDef;
+    wbEffectsReq: IwbRecordMemberDef;
+    wbEFID: IwbRecordMemberDef;
+    wbEFIT: IwbRecordMemberDef;
+    wbEmbeddedScript: IwbRecordMemberDef;
+    wbEmbeddedScriptReq: IwbRecordMemberDef;
+    wbETYP: IwbRecordMemberDef;
+    wbETYPReq: IwbRecordMemberDef;
+    wbFULL: IwbSubRecordDef;
+    wbFULLReq: IwbRecordMemberDef;
+    wbICON: IwbRecordMemberDef;
+    wbICONReq: IwbRecordMemberDef;
+    wbMODD: IwbRecordMemberDef;
+    wbMODS: IwbRecordMemberDef;
+    wbMOSD: IwbRecordMemberDef;
+    wbMO2S: IwbRecordMemberDef;
+    wbMO3S: IwbRecordMemberDef;
+    wbMO4S: IwbRecordMemberDef;
+    wbREPL: IwbRecordMemberDef;
+    wbSCHRReq: IwbRecordMemberDef;
+    wbSCRI: IwbRecordMemberDef;
+    wbSCROs: IwbRecordMemberDef;
+    wbSLSD: IwbRecordMemberDef;
+    wbSPLOs: IwbRecordMemberDef;
+    wbXESP: IwbRecordMemberDef;
+    wbXLCM: IwbRecordMemberDef;
+    wbXSCL: IwbRecordMemberDef;
+    wbYNAM: IwbRecordMemberDef;
+    wbZNAM: IwbRecordMemberDef;
   protected
     function EPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
     function EPFDActorValueToInt(const aString: string; const aElement: IwbElement): Int64;
@@ -37,66 +96,6 @@ uses
 
   wbDefinitionsSignatures,
   wbHelpers;
-
-var
-  wbConditionParameters: array of IwbValueDef;
-  wbConditionVATSValueParameters: array of IwbValueDef;
-  wbConditionBaseObjects: TwbSignatures;
-
-  wbFormTypeEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbPlayerActionEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbVatsActionEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-
-  wbActorValue: IwbIntegerDef;
-
-  wbAIDT: IwbRecordMemberDef;
-  wbBIPL: IwbRecordMemberDef;
-  wbBMDT: IwbRecordMemberDef;
-  wbCNTOs: IwbRecordMemberDef;
-  wbCOED: IwbRecordMemberDef;
-  wbConditions: IwbRecordMemberDef;
-  wbDESC: IwbRecordMemberDef;
-  wbDESCReq: IwbRecordMemberDef;
-  wbDEST: IwbRecordMemberDef;
-  wbDODT: IwbRecordMemberDef;
-  wbEDID: IwbRecordMemberDef;
-  wbEDIDReq: IwbRecordMemberDef;
-  wbEDIDReqKC: IwbRecordMemberDef;
-  wbEffects: IwbRecordMemberDef;
-  wbEffectsReq: IwbRecordMemberDef;
-  wbEFID: IwbRecordMemberDef;
-  wbEFIT: IwbRecordMemberDef;
-  wbEmbeddedScript: IwbRecordMemberDef;
-  wbEmbeddedScriptReq: IwbRecordMemberDef;
-  wbETYP: IwbRecordMemberDef;
-  wbETYPReq: IwbRecordMemberDef;
-  wbFULL: IwbSubRecordDef;
-  wbFULLReq: IwbRecordMemberDef;
-  wbICON: IwbRecordMemberDef;
-  wbICONReq: IwbRecordMemberDef;
-  wbMODD: IwbRecordMemberDef;
-  wbMODS: IwbRecordMemberDef;
-  wbMOSD: IwbRecordMemberDef;
-  wbMO2S: IwbRecordMemberDef;
-  wbMO3S: IwbRecordMemberDef;
-  wbMO4S: IwbRecordMemberDef;
-  wbREPL: IwbRecordMemberDef;
-  wbSCHRReq: IwbRecordMemberDef;
-  wbSCRI: IwbRecordMemberDef;
-  wbSCROs: IwbRecordMemberDef;
-  wbSLSD: IwbRecordMemberDef;
-  wbSPLOs: IwbRecordMemberDef;
-  wbXESP: IwbRecordMemberDef;
-  wbXLCM: IwbRecordMemberDef;
-  wbXSCL: IwbRecordMemberDef;
-  wbYNAM: IwbRecordMemberDef;
-  wbZNAM: IwbRecordMemberDef;
 
 type
   TConditionParameterType = (
