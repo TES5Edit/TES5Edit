@@ -10,21 +10,12 @@ unit wbDefinitionsTES4Saves;
 
 interface
 
-uses
-  wbDefinitionsTES4,
-  wbInterface;
-
-type
-  TwbGameDefTES4Saves = class(TwbGameDefTES4)
-  protected
-    procedure Define; override;
-  end;
-
 implementation
 
 uses
   System.SysUtils,
 
+  wbInterface,
   wbSaveInterface;
 
 type
@@ -6897,16 +6888,7 @@ begin
   FileHeader := sdCoSaveHeader;
 end;
 
-procedure TwbGameDefTES4Saves.Define;
-begin
-  inherited;
-  gdSaveDef := TwbSaveDefTES4.Create(Self);
-  gdSaveDef.Define;
-  gdCoSaveDef := TwbCoSaveDefTES4.Create(Self);
-  gdCoSaveDef.Define;
-end;
-
 initialization
-  wbRegisterGameDef([gmTES4], tsSaves, TwbGameDefTES4Saves);
+  wbRegisterSaveDefs([gmTES4], TwbSaveDefTES4, TwbCoSaveDefTES4);
 end.
 

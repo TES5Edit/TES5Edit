@@ -10,16 +10,6 @@ unit wbDefinitionsFO3Saves;
 
 interface
 
-uses
-  wbDefinitionsFO3,
-  wbInterface;
-
-type
-  TwbGameDefFO3Saves = class(TwbGameDefFO3)
-  protected
-    procedure Define; override;
-  end;
-
 implementation
 
 uses
@@ -27,6 +17,7 @@ uses
 
   wbDefinitionsCommon,
   wbImplementation,
+  wbInterface,
   wbSaveInterface;
 
 type
@@ -6376,16 +6367,7 @@ begin
   FileHeader := sdCoSaveHeader;
 end;
 
-procedure TwbGameDefFO3Saves.Define;
-begin
-  inherited;
-  gdSaveDef := TwbSaveDefFO3.Create(Self);
-  gdSaveDef.Define;
-  gdCoSaveDef := TwbCoSaveDefFO3.Create(Self);
-  gdCoSaveDef.Define;
-end;
-
 initialization
-  wbRegisterGameDef([gmFO3], tsSaves, TwbGameDefFO3Saves);
+  wbRegisterSaveDefs([gmFO3], TwbSaveDefFO3, TwbCoSaveDefFO3);
 end.
 

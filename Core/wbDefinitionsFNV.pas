@@ -9134,6 +9134,6 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmFNV], tsPlugins, TwbGameDefFNV);
+  wbRegisterGameDef([gmFNV], TwbGameDefFNV);
 end.
 

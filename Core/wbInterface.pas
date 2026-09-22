@@ -3514,6 +3514,8 @@ type
       read sdGameDef;
   end;
 
+  TwbSaveDefClass = class of TwbSaveDef;
+
   PwbRecordDefEntry = ^TwbRecordDefEntry;
   TwbRecordDefEntry = record
     rdeSignature : TwbSignature;
@@ -3542,6 +3544,8 @@ type
     gdActorValueEnum   : IwbEnumDef;
     gdSaveDef          : TwbSaveDef;
     gdCoSaveDef        : TwbSaveDef;
+    gdSaveDefsLock     : TObject;
+    gdSaveDefsCreated  : Boolean;
     gdOfficialDLC      : TArray<string>;
     gdCreationClubContentFileName : string;
     gdKnownSubRecordSignatures    : TwbKnownSubRecordSignatures;
@@ -3556,7 +3560,6 @@ type
     gdDefined          : Boolean;
     gdDefining         : Boolean;
     gdGameMode         : TwbGameMode;
-    gdToolSource       : TwbToolSource;
     gdCapabilities     : TwbGameCapabilities;
     gdGameName         : string;
     gdGameExeName      : string;
@@ -3590,20 +3593,20 @@ type
     function GetIsMediumSupported: Boolean;
     function GetIsBlueprintSupported: Boolean;
     function GetIsUpdateSupported: Boolean;
+    function GetSaveDef: TwbSaveDef;
 
     procedure Define; virtual;
+    procedure CreateSaveDefs;
   public
     DefineOptions: TwbGameDefineOptions;
 
     constructor Create; overload;
-    constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource); overload;
-    constructor Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs); overload;
+    constructor Create(aGameMode: TwbGameMode); overload;
+    constructor Create(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs); overload;
     destructor Destroy; override;
 
     procedure EnsureDefined;
 
-    property ToolSource: TwbToolSource
-      read gdToolSource;
     property GameMode: TwbGameMode
       read gdGameMode;
     property Capabilities: TwbGameCapabilities
@@ -3711,7 +3714,7 @@ type
       read gdActorValueEnum
       write gdActorValueEnum;
     property SaveDef: TwbSaveDef
-      read gdSaveDef;
+      read GetSaveDef;
     function SaveDefFor(const aFileName: string): TwbSaveDef;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC
@@ -5371,10 +5374,11 @@ var
   wbGameContextClass : TwbGameContextClass;
   wbSaveContextClass : TwbSaveContextClass;
 
-procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef; overload;
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef; overload;
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef; overload;
+procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aGameDefClass: TwbGameDefClass);
+procedure wbRegisterSaveDefs(const aGameModes: TwbGameModes; aSaveDefClass, aCoSaveDefClass: TwbSaveDefClass);
+function wbCreateGameDef(aGameMode: TwbGameMode): IwbGameDef; overload;
+function wbCreateGameDef(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef; overload;
+function wbCreateGameDef(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef; overload;
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 function wbCreateSaveContext(const aGameContext: IwbGameContext): IwbSaveContext;
 
@@ -5870,16 +5874,15 @@ begin
     Include(Result, gcComplexFileFileID);
 end;
 
-constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource);
+constructor TwbGameDef.Create(aGameMode: TwbGameMode);
 begin
-  Create(aGameMode, aToolSource, Default(TwbGameDefInputs));
+  Create(aGameMode, Default(TwbGameDefInputs));
 end;
 
-constructor TwbGameDef.Create(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs);
+constructor TwbGameDef.Create(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs);
 begin
   Create;
   gdGameMode := aGameMode;
-  gdToolSource := aToolSource;
   gdCapabilities := wbComputeCapabilities(aGameMode, aInputs);
   gdGameName := aInputs.GameName;
   gdGameExeName := aInputs.GameExeName;
@@ -5902,6 +5905,7 @@ constructor TwbGameDef.Create;
 begin
   inherited Create;
   DefineOptions := TwbGameDefineOptions.Defaults;
+  gdSaveDefsLock := TObject.Create;
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
   gdCellSizeFactor := 4096.0;
@@ -5939,6 +5943,7 @@ destructor TwbGameDef.Destroy;
 begin
   FreeAndNil(gdCoSaveDef);
   FreeAndNil(gdSaveDef);
+  FreeAndNil(gdSaveDefsLock);
   FreeAndNil(gdRecordDefMap);
   FreeAndNil(gdGroupOrder);
   FreeAndNil(gdIgnoreRecords);
@@ -6310,8 +6315,58 @@ procedure TwbGameDef.Define;
 begin
 end;
 
+var
+  _GameDefClasses    : array[TwbGameMode] of TwbGameDefClass;
+  _SaveDefClasses    : array[TwbGameMode] of TwbSaveDefClass;
+  _CoSaveDefClasses  : array[TwbGameMode] of TwbSaveDefClass;
+
+procedure TwbGameDef.CreateSaveDefs;
+begin
+  TMonitor.Enter(gdSaveDefsLock);
+  try
+    if gdSaveDefsCreated then
+      Exit;
+    var lSaveDefClass := _SaveDefClasses[gdGameMode];
+    var lCoSaveDefClass := _CoSaveDefClasses[gdGameMode];
+    if Assigned(lSaveDefClass) or Assigned(lCoSaveDefClass) then begin
+      if not gdDefined then
+        raise Exception.Create('The save defs of a game def are built from its definitions, which are not defined yet');
+      var lSaveDef: TwbSaveDef := nil;
+      var lCoSaveDef: TwbSaveDef := nil;
+      try
+        if Assigned(lSaveDefClass) then begin
+          lSaveDef := lSaveDefClass.Create(Self);
+          lSaveDef.Define;
+        end;
+        if Assigned(lCoSaveDefClass) then begin
+          lCoSaveDef := lCoSaveDefClass.Create(Self);
+          lCoSaveDef.Define;
+        end;
+      except
+        lCoSaveDef.Free;
+        lSaveDef.Free;
+        raise;
+      end;
+      gdSaveDef := lSaveDef;
+      gdCoSaveDef := lCoSaveDef;
+    end;
+    gdSaveDefsCreated := True;
+  finally
+    TMonitor.Exit(gdSaveDefsLock);
+  end;
+end;
+
+function TwbGameDef.GetSaveDef: TwbSaveDef;
+begin
+  if not gdSaveDefsCreated then
+    CreateSaveDefs;
+  Result := gdSaveDef;
+end;
+
 function TwbGameDef.SaveDefFor(const aFileName: string): TwbSaveDef;
 begin
+  if not gdSaveDefsCreated then
+    CreateSaveDefs;
   if Assigned(gdCoSaveDef) and SameText(ExtractFileExt(aFileName), gdCoSaveDef.FileExtension) then
     Result := gdCoSaveDef
   else
@@ -6332,9 +6387,6 @@ begin
     gdDefining := False;
   end;
 end;
-
-var
-  _GameDefClasses    : array[TwbGameMode, TwbToolSource] of TwbGameDefClass;
 
 function wbCreateGameContext(const aGameDef: IwbGameDef): IwbGameContext;
 begin
@@ -6832,34 +6884,41 @@ begin
     end;
 end;
 
-procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aToolSource: TwbToolSource; aGameDefClass: TwbGameDefClass);
+procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aGameDefClass: TwbGameDefClass);
 begin
   for var lGameMode := Low(TwbGameMode) to High(TwbGameMode) do
     if lGameMode in aGameModes then
-      _GameDefClasses[lGameMode, aToolSource] := aGameDefClass;
+      _GameDefClasses[lGameMode] := aGameDefClass;
 end;
 
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource): IwbGameDef;
+procedure wbRegisterSaveDefs(const aGameModes: TwbGameModes; aSaveDefClass, aCoSaveDefClass: TwbSaveDefClass);
 begin
-  Result := wbCreateGameDef(aGameMode, aToolSource, Default(TwbGameDefInputs));
+  for var lGameMode := Low(TwbGameMode) to High(TwbGameMode) do
+    if lGameMode in aGameModes then begin
+      _SaveDefClasses[lGameMode] := aSaveDefClass;
+      _CoSaveDefClasses[lGameMode] := aCoSaveDefClass;
+    end;
 end;
 
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef;
+function wbCreateGameDef(aGameMode: TwbGameMode): IwbGameDef;
 begin
-  var lGameDefClass := _GameDefClasses[aGameMode, aToolSource];
+  Result := wbCreateGameDef(aGameMode, Default(TwbGameDefInputs));
+end;
+
+function wbCreateGameDef(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs; aDefine: Boolean = True): IwbGameDef;
+begin
+  var lGameDefClass := _GameDefClasses[aGameMode];
   if not Assigned(lGameDefClass) then
-    raise Exception.Create('No definitions are registered for ' +
-      GetEnumName(TypeInfo(TwbGameMode), Ord(aGameMode)) + ' with ' +
-      GetEnumName(TypeInfo(TwbToolSource), Ord(aToolSource)));
-  var lGameDef := lGameDefClass.Create(aGameMode, aToolSource, aInputs);
+    raise Exception.Create('No definitions are registered for ' + GetEnumName(TypeInfo(TwbGameMode), Ord(aGameMode)));
+  var lGameDef := lGameDefClass.Create(aGameMode, aInputs);
   Result := lGameDef;
   if aDefine then
     lGameDef.EnsureDefined;
 end;
 
-function wbCreateGameDef(aGameMode: TwbGameMode; aToolSource: TwbToolSource; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef;
+function wbCreateGameDef(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs; const aDefineOptions: TwbGameDefineOptions): IwbGameDef;
 begin
-  Result := wbCreateGameDef(aGameMode, aToolSource, aInputs, False);
+  Result := wbCreateGameDef(aGameMode, aInputs, False);
   var lGameDef := Result as TwbGameDef;
   lGameDef.DefineOptions := aDefineOptions;
   lGameDef.EnsureDefined;

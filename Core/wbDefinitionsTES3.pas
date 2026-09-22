@@ -2530,5 +2530,5 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmTES3], tsPlugins, TwbGameDefTES3);
+  wbRegisterGameDef([gmTES3], TwbGameDefTES3);
 end.

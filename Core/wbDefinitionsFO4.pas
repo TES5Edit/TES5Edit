@@ -13308,5 +13308,5 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmFO4, gmFO4VR], tsPlugins, TwbGameDefFO4);
+  wbRegisterGameDef([gmFO4, gmFO4VR], TwbGameDefFO4);
 end.

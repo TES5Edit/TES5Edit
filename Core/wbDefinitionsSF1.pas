@@ -19369,5 +19369,5 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmSF1], tsPlugins, TwbGameDefSF1);
+  wbRegisterGameDef([gmSF1], TwbGameDefSF1);
 end.

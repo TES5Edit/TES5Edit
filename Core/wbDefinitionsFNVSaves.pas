@@ -10,16 +10,6 @@ unit wbDefinitionsFNVSaves;
 
 interface
 
-uses
-  wbDefinitionsFNV,
-  wbInterface;
-
-type
-  TwbGameDefFNVSaves = class(TwbGameDefFNV)
-  protected
-    procedure Define; override;
-  end;
-
 implementation
 
 uses
@@ -27,6 +17,7 @@ uses
 
   wbDefinitionsCommon,
   wbImplementation,
+  wbInterface,
   wbSaveInterface;
 
 type
@@ -6953,16 +6944,7 @@ begin
   FileHeader := sdCoSaveHeader;
 end;
 
-procedure TwbGameDefFNVSaves.Define;
-begin
-  inherited;
-  gdSaveDef := TwbSaveDefFNV.Create(Self);
-  gdSaveDef.Define;
-  gdCoSaveDef := TwbCoSaveDefFNV.Create(Self);
-  gdCoSaveDef.Define;
-end;
-
 initialization
-  wbRegisterGameDef([gmFNV], tsSaves, TwbGameDefFNVSaves);
+  wbRegisterSaveDefs([gmFNV], TwbSaveDefFNV, TwbCoSaveDefFNV);
 end.
 

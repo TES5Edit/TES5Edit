@@ -23851,8 +23851,7 @@ begin
     if t = '' then
       t := aContainer.Def.Name;
     if t.StartsWith('Unknown', True) and (not Assigned(aBasePtr) or (aBasePtr <> aEndPtr)) and not lSkip then begin
-      var lGameDef := aContainer.GameDefObj;
-      var lIsSave := Assigned(lGameDef) and (lGameDef.ToolSource = tsSaves);
+      var lIsSave := Assigned(aContainer.SaveContextObj);
       for i := 0 to 3 do begin
         BasePtr := PByte(aBasePtr) + i;
         var lContainer: IwbContainer := TwbStruct.Create(aContainer, BasePtr, aEndPtr, wbStruct('Offset ' + IntToStr(i), []), '');

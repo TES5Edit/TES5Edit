@@ -7895,5 +7895,5 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmFO3], tsPlugins, TwbGameDefFO3);
+  wbRegisterGameDef([gmFO3], TwbGameDefFO3);
 end.

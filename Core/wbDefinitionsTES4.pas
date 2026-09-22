@@ -3739,5 +3739,5 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmTES4, gmTES4R], tsPlugins, TwbGameDefTES4);
+  wbRegisterGameDef([gmTES4, gmTES4R], TwbGameDefTES4);
 end.

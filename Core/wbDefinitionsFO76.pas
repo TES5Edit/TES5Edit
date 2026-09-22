@@ -17757,6 +17757,6 @@ begin
 end;
 
 initialization
-  wbRegisterGameDef([gmFO76], tsPlugins, TwbGameDefFO76);
+  wbRegisterGameDef([gmFO76], TwbGameDefFO76);
 end.
 

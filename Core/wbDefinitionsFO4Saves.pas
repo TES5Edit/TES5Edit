@@ -10,25 +10,15 @@ unit wbDefinitionsFO4Saves;
 
 interface
 
-uses
-  System.Classes,
-
-  wbDefinitionsFO4,
-  wbInterface;
-
-type
-  TwbGameDefFO4Saves = class(TwbGameDefFO4)
-  protected
-    procedure Define; override;
-  end;
-
 implementation
 
 uses
+  System.Classes,
   System.SysUtils,
 
   wbDefinitionsCommon,
   wbImplementation,
+  wbInterface,
   wbSaveInterface;
 
 type
@@ -7464,15 +7454,6 @@ begin
       AddNames(Union.ElementByName['Light plugins']);
 end;
 
-procedure TwbGameDefFO4Saves.Define;
-begin
-  inherited;
-  gdSaveDef := TwbSaveDefFO4.Create(Self);
-  gdSaveDef.Define;
-  gdCoSaveDef := TwbCoSaveDefFO4.Create(Self);
-  gdCoSaveDef.Define;
-end;
-
 initialization
-  wbRegisterGameDef([gmFO4, gmFO4VR], tsSaves, TwbGameDefFO4Saves);
+  wbRegisterSaveDefs([gmFO4, gmFO4VR], TwbSaveDefFO4, TwbCoSaveDefFO4);
 end.

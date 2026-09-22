@@ -1115,7 +1115,7 @@ begin
   lInputs.GameExeName := wbGameExeName;
   lInputs.GameMasterEsm := wbGameMasterEsm;
   lInputs.AppName := wbAppName;
-  xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, wbToolSource, lInputs, False));
+  xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
   xeContext.Settings := lSettings;
