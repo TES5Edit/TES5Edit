@@ -2386,9 +2386,6 @@ begin
   end;
 end;
 
-var
-  LastRegistrationStart : Integer = 0;
-
 function SKSEChaptersDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 var
   Element   : IwbElement;
@@ -2407,14 +2404,19 @@ begin
       else if EValue = 'LMOD' then Result := 2
       else if EValue = 'REGS' then Result := 3
       else if EValue = 'REGE' then Result := 4
-      else if EValue = 'MENR' then begin Result :=  5; LastRegistrationStart := Result; end
-      else if EValue = 'KEYR' then begin Result :=  6; LastRegistrationStart := Result; end
-      else if EValue = 'CTLR' then begin Result :=  7; LastRegistrationStart := Result; end
-      else if EValue = 'MCBR' then begin Result :=  8; LastRegistrationStart := Result; end
-      else if EValue = 'CHRR' then begin Result :=  9; LastRegistrationStart := Result; end
-      else if EValue = 'CAMR' then begin Result := 10; LastRegistrationStart := Result; end
-      else if EValue = 'AACT' then begin Result := 11; LastRegistrationStart := Result; end
+      else if EValue = 'MENR' then Result :=  5
+      else if EValue = 'KEYR' then Result :=  6
+      else if EValue = 'CTLR' then Result :=  7
+      else if EValue = 'MCBR' then Result :=  8
+      else if EValue = 'CHRR' then Result :=  9
+      else if EValue = 'CAMR' then Result := 10
+      else if EValue = 'AACT' then Result := 11
       else Result := 12;
+      if (Result >= 5) and (Result <= 11) then begin
+        var lSaveContext := aElement.SaveContextObj;
+        if Assigned(lSaveContext) then
+          lSaveContext.LastRegistrationStart := Result;
+      end;
     end;
   end;
 end;
@@ -2422,7 +2424,10 @@ end;
 function SKSERegKeyDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
-  case LastRegistrationStart of
+  if not Assigned(aElement) then Exit;
+  var lSaveContext := aElement.SaveContextObj;
+  if not Assigned(lSaveContext) then Exit;
+  case lSaveContext.LastRegistrationStart of
     5, 7, 8 : Result := 1;  // String
     6, 11:    Result := 2;  // UInt32
     9, 10:    Result := 3;  // Null
@@ -2432,7 +2437,10 @@ end;
 function SKSERegDataDecider(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
 begin
   Result := 0;
-  case LastRegistrationStart of
+  if not Assigned(aElement) then Exit;
+  var lSaveContext := aElement.SaveContextObj;
+  if not Assigned(lSaveContext) then Exit;
+  case lSaveContext.LastRegistrationStart of
     8:
       Result := 1;  // String
     5, 6, 7, 9, 10, 11:

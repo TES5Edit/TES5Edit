@@ -4031,6 +4031,7 @@ type
     scChaptersToSkip : TStringList;
 
     scChangedFormFlags : Integer;
+    scLastRegistrationStart : Integer;
 
     scFullPluginNames  : TStringList;
     scLightPluginNames : TStringList;
@@ -4058,6 +4059,9 @@ type
     property ChangedFormFlags: Integer
       read scChangedFormFlags
       write scChangedFormFlags;
+    property LastRegistrationStart: Integer
+      read scLastRegistrationStart
+      write scLastRegistrationStart;
     property FullPluginNames: TStringList
       read scFullPluginNames;
     property LightPluginNames: TStringList
