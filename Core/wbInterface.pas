@@ -3592,6 +3592,7 @@ type
     function GetIsBlueprintSupported: Boolean;
     function GetIsUpdateSupported: Boolean;
     function GetSaveDef: TwbSaveDef;
+    function GetCoSaveDef: TwbSaveDef;
 
     procedure Define; virtual;
     procedure CreateSaveDefs;
@@ -3713,6 +3714,8 @@ type
       write gdActorValueEnum;
     property SaveDef: TwbSaveDef
       read GetSaveDef;
+    property CoSaveDef: TwbSaveDef
+      read GetCoSaveDef;
     function SaveDefFor(const aFileName: string): TwbSaveDef;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC
@@ -6357,6 +6360,13 @@ begin
   if not gdSaveDefsCreated then
     CreateSaveDefs;
   Result := gdSaveDef;
+end;
+
+function TwbGameDef.GetCoSaveDef: TwbSaveDef;
+begin
+  if not gdSaveDefsCreated then
+    CreateSaveDefs;
+  Result := gdCoSaveDef;
 end;
 
 function TwbGameDef.SaveDefFor(const aFileName: string): TwbSaveDef;

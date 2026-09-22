@@ -4965,15 +4965,10 @@ begin
       frmFileSelect := TfrmFileSelect.Create(nil);
       with frmFileSelect do try
         if xeSavesMode then begin
-          case lGameDef.GameMode of
-            gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
-            gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
-            gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
-            gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
-            gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
-            gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
-            gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
-          end;
+          if Assigned(lGameDef.SaveDef) then
+            saveExt := lGameDef.SaveDef.FileExtension;
+          if Assigned(lGameDef.CoSaveDef) then
+            coSaveExt := lGameDef.CoSaveDef.FileExtension;
 
           if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+saveExt), faAnyfile, R)=0 then try
             repeat
