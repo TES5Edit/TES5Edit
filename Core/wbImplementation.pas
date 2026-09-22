@@ -2374,7 +2374,7 @@ begin
     i := High(Integer);
 
   _File := flContextObj.LoadFile(s + t, i, '', States);
-  if not (wbToolMode in [tmDump, tmExport]) and (flContextObj.Settings.RequireLoadOrder and (_File.LoadOrder < 0)) then
+  if not flContextObj.Settings.TolerateMissingFiles and (flContextObj.Settings.RequireLoadOrder and (_File.LoadOrder < 0)) then
     raise Exception.Create('"' + GetFileName + '" requires master "' + aFileName + '" to be loaded before it.')
   else
     AddMaster(_File);
@@ -24416,7 +24416,7 @@ begin
       Result := True;
     except
       // File neither found nor replaced, ignore if in xDump
-      if not (wbToolMode in [tmDump, tmExport]) then Raise;
+      if not Settings.TolerateMissingFiles then Raise;
     end;
   finally
     wbProgressUnlock;

@@ -395,7 +395,7 @@ begin
 
         if IsESM then begin
           Include(miFlags, mfHasESMFlag);
-          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and lGameDef.IsFallout3 then
+          if mlContext.Settings.IgnoreESMFlagForLoadOrder and lGameDef.IsFallout3 then
             {ignore header flag for load order, only extension counts}
           else
             Include(miFlags, mfIsESM);

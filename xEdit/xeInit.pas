@@ -84,6 +84,7 @@ function xeLoadMOHookFile: Boolean;
 
 function xeDoInit: Boolean;
 procedure xeInitStyles;
+function xeNexusModsUrl: string;
 
 implementation
 
@@ -1382,6 +1383,8 @@ begin
     end;
   end;
 
+  xeContext.Settings.IgnoreESMFlagForLoadOrder := wbToolMode in [tmMasterUpdate, tmMasterRestore];
+
   if FindCmdLineSwitch('alwayssaveonam') then
     xeContext.Settings.AlwaysSaveOnam := True;
 
@@ -1458,6 +1461,13 @@ begin
   except end;
 end;
 
+function xeNexusModsUrl: string;
+begin
+  Result := xeContext.GameDefObj.NexusModsUrl;
+  if (wbToolMode = tmLODgen) and (xeContext.GameDefObj.LODGenNexusModsUrl <> '') then
+    Result := xeContext.GameDefObj.LODGenNexusModsUrl;
+end;
+
 procedure xeDumpInitState(const aFileName: string);
 
   function ValueText(const aValue: TValue): string;
@@ -1508,6 +1518,7 @@ begin
     lLines.Add('host.LightName=' + wbLightName);
     lLines.Add('host.ApplicationTitle=' + wbApplicationTitle);
     lLines.Add('host.IconResource=' + xeIconResource);
+    lLines.Add('host.NexusModsUrl=' + xeNexusModsUrl);
     lLines.Add('def.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(xeContext.GameDefObj.GameMode)));
     lLines.Add('def.AppName=' + xeContext.GameDefObj.AppName);
     lLines.Add('def.GameName=' + xeContext.GameDefObj.GameName);

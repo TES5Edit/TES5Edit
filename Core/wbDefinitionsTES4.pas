@@ -3731,8 +3731,7 @@ begin
   AddGroupOrder(EFSH);
   //wbAddGroupOrder(TOFT);
   gdNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
-  if wbToolMode = tmLODgen then
-    gdNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
+  gdLODGenNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
   gdHEDRVersion := 1.0;
   gdDefaultLandTexture := 'TerrainHDDirt01dds';
 end;

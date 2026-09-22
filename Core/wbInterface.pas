@@ -3578,6 +3578,7 @@ type
     gdCellSizeFactor   : Single;
     gdHeaderSignature  : TwbSignature;
     gdNexusModsUrl     : string;
+    gdLODGenNexusModsUrl : string;
     gdIgnoreRecords    : TStringList;
     gdGroupOrder       : TStringList;
     gdActorValueEnum   : IwbEnumDef;
@@ -3763,6 +3764,8 @@ type
       read gdHeaderSignature;
     property NexusModsUrl: string
       read gdNexusModsUrl;
+    property LODGenNexusModsUrl: string
+      read gdLODGenNexusModsUrl;
     property IgnoreRecords: TStringList
       read gdIgnoreRecords;
     property GroupOrder: TStringList
@@ -3891,6 +3894,8 @@ type
     DontCache             : Boolean;
     DontCacheLoad         : Boolean;
     DontCacheSave         : Boolean;
+    TolerateMissingFiles  : Boolean;
+    IgnoreESMFlagForLoadOrder : Boolean;
     FormIDCallback        : TwbGetFormIDCallback;
     CellDetailsForWorldspaceCallback : TwbGetCellDetailsForWorldspaceCallback;
     class function Defaults: TwbGameContextSettings; static;

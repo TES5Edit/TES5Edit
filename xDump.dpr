@@ -1137,6 +1137,7 @@ begin
       HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
       HostContext.Settings := lSettings;
+      HostContext.Settings.TolerateMissingFiles := wbToolMode in [tmDump, tmExport];
 
       if not (wbToolMode in tms) then begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);

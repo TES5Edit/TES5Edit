@@ -7886,8 +7886,7 @@ begin
   AddGroupOrder(LGTM);
   AddGroupOrder(MUSC);
   gdNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
-  if wbToolMode = tmLODgen then
-    gdNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
+  gdLODGenNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
   gdHEDRVersion := 0.94;
   gdDefaultFormVersion := 15;
   gdDefaultLandTexture := 'LDirtWasteland01';

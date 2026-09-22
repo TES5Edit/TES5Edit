@@ -8330,7 +8330,7 @@ var
   Dummy: Boolean;
 begin
   if Now - LastNexusModsClick > 1/24/60/60 then begin
-    ShellExecute(Handle, 'open', PChar(xeContext.GameDefObj.NexusModsUrl), '', '', SW_SHOWNORMAL);
+    ShellExecute(Handle, 'open', PChar(xeNexusModsUrl), '', '', SW_SHOWNORMAL);
     LastNexusModsClick := Now;
   end;
   jbhNexusModsCloseBtnClick(Sender, Dummy);
@@ -11018,7 +11018,7 @@ begin
     else
       Result := Result + StringOfChar(' ', 6) + '- <<: *quickClean';
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, xeContext.GameDefObj.NexusModsUrl]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, xeNexusModsUrl]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
     if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
@@ -22632,13 +22632,13 @@ const
   csCheckFor = 'property="twitter:label1" content="version"';
   csExtractAfter = 'property="twitter:data1" content="';
 begin
-  var lGameDef := xeContext.GameDefObj;
-  if lGameDef.NexusModsUrl = '' then
+  var lUrl := xeNexusModsUrl;
+  if lUrl = '' then
     Exit;
 
   vmax := '';
   try
-    s := GetUrlContent(lGameDef.NexusModsUrl);
+    s := GetUrlContent(lUrl);
     s := s.ToLowerInvariant;
     if s.Contains(csCheckFor) then begin
       i := Pos(csExtractAfter, s);

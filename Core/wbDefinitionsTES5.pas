@@ -10874,16 +10874,20 @@ begin
    if IsSkyrimSE then AddGroupOrder(VOLI); {New to SSE}
   if IsSkyrimSE then begin
     gdNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/164';
-    if wbToolMode = tmLODgen then
-      gdNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
+    gdLODGenNexusModsUrl := 'https://www.nexusmods.com/skyrimspecialedition/mods/6642';
   end else begin
     gdNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/25859';
-    if wbToolMode = tmLODgen then
-      gdNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
+    gdLODGenNexusModsUrl := 'https://www.nexusmods.com/skyrim/mods/62698';
   end;
   case GameMode of
-    gmEnderal: gdNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
-    gmEnderalSE: gdNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
+    gmEnderal: begin
+      gdNexusModsUrl := 'https://www.nexusmods.com/enderal/mods/23';
+      gdLODGenNexusModsUrl := '';
+    end;
+    gmEnderalSE: begin
+      gdNexusModsUrl := 'https://www.nexusmods.com/enderalspecialedition/mods/78';
+      gdLODGenNexusModsUrl := '';
+    end;
   end;
   if IsSkyrimSE then begin
     gdOfficialDLC := ['Dawnguard.esm', 'HearthFires.esm', 'Dragonborn.esm'];

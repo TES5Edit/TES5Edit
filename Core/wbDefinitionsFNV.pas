@@ -9125,8 +9125,7 @@ begin
   AddGroupOrder(HUNG);
   AddGroupOrder(SLPD);
   gdNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
-  if wbToolMode = tmLODgen then
-    gdNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
+  gdLODGenNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
   gdHEDRVersion := 1.34;
   gdDefaultFormVersion := 15;
   gdDefaultLandTexture := 'LDirtWasteland01';
