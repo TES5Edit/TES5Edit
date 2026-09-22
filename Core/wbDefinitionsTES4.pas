@@ -18,6 +18,40 @@ uses
 
 type
   TwbGameDefTES4 = class(TwbGameDefCommon)
+  private
+    wbConditionMembers: array of IwbValueDef;
+    wbConditionParameters: array of IwbValueDef;
+    wbSoundDataMembers: array of IwbValueDef;
+
+    wbAttributeEnum: IwbEnumDef;
+    wbDialogueTypeEnum: IwbEnumDef;
+    wbFormTypeEnum: IwbEnumDef;
+    wbMagicSchoolEnum: IwbEnumDef;
+    wbMajorSkillEnum: IwbEnumDef;
+    wbMiscStatEnum: IwbEnumDef;
+    wbSkillEnum: IwbEnumDef;
+    wbSpecializationEnum: IwbEnumDef;
+
+    wbBipedFlags: IwbFlagsDef;
+    wbPGAGFlags: IwbFlagsDef;
+
+    wbBodyParts: IwbRecordMemberDef;
+    wbCNTOs: IwbRecordMemberDef;
+    wbConditions: IwbRecordMemberDef;
+    wbDESC: IwbRecordMemberDef;
+    wbEDID: IwbRecordMemberDef;
+    wbEffects: IwbRecordMemberDef;
+    wbFULL: IwbSubRecordDef;
+    wbFULLReq: IwbRecordMemberDef;
+    wbICON: IwbRecordMemberDef;
+    wbPGRP: IwbRecordMemberDef;
+    wbResultScript: IwbRecordMemberDef;
+    wbSCHR: IwbRecordMemberDef;
+    wbSCRI: IwbRecordMemberDef;
+    wbSCROs: IwbRecordMemberDef;
+    wbSPLOs: IwbRecordMemberDef;
+    wbXESP: IwbRecordMemberDef;
+    wbXSCL: IwbRecordMemberDef;
   protected
     procedure Define; override;
   end;
@@ -31,41 +65,6 @@ uses
 
   wbDefinitionsSignatures,
   wbHelpers;
-
-var
-  wbConditionMembers: array of IwbValueDef;
-  wbConditionParameters: array of IwbValueDef;
-  wbSoundDataMembers: array of IwbValueDef;
-
-  wbAttributeEnum: IwbEnumDef;
-  wbDialogueTypeEnum: IwbEnumDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbMagicSchoolEnum: IwbEnumDef;
-  wbMajorSkillEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
-  wbSpecializationEnum: IwbEnumDef;
-
-  wbBipedFlags: IwbFlagsDef;
-  wbPGAGFlags: IwbFlagsDef;
-
-  wbBodyParts: IwbRecordMemberDef;
-  wbCNTOs: IwbRecordMemberDef;
-  wbConditions: IwbRecordMemberDef;
-  wbDESC: IwbRecordMemberDef;
-  wbEDID: IwbRecordMemberDef;
-  wbEffects: IwbRecordMemberDef;
-  wbFULL: IwbSubRecordDef;
-  wbFULLReq: IwbRecordMemberDef;
-  wbICON: IwbRecordMemberDef;
-  wbPGRP: IwbRecordMemberDef;
-  wbResultScript: IwbRecordMemberDef;
-  wbSCHR: IwbRecordMemberDef;
-  wbSCRI: IwbRecordMemberDef;
-  wbSCROs: IwbRecordMemberDef;
-  wbSPLOs: IwbRecordMemberDef;
-  wbXESP: IwbRecordMemberDef;
-  wbXSCL: IwbRecordMemberDef;
 
 type
   TConditionParameterType = (
