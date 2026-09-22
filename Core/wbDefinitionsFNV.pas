@@ -18,6 +18,81 @@ uses
 
 type
   TwbGameDefFNV = class(TwbGameDefCommon)
+  private
+    wbConditionParameters: array of IwbValueDef;
+    wbConditionVATSValueParameters: array of IwbValueDef;
+    wbConditionBaseObjects: TwbSignatures;
+
+    wbConditionVATSValueEnum: IwbEnumDef;
+    wbFormTypeEnum: IwbEnumDef;
+    wbHeadPartIndexEnum: IwbEnumDef;
+    wbMiscStatEnum: IwbEnumDef;
+    wbModEffectEnum: IwbEnumDef;
+    wbObjectTypeEnum: IwbEnumDef;
+    wbPlayerActionEnum: IwbEnumDef;
+    wbReloadAnimEnum: IwbEnumDef;
+    wbSkillEnum: IwbEnumDef;
+    wbSoundLevelEnum: IwbEnumDef;
+    wbVatsValueFunctionEnum: IwbEnumDef;
+    wbWeaponAnimTypeEnum: IwbEnumDef;
+
+    wbEDID: IwbSubRecordDef;
+    wbEDIDReq: IwbSubRecordDef;
+    wbEDIDReqKC: IwbSubRecordDef;
+    wbBMDT: IwbSubRecordDef;
+    wbYNAM: IwbSubRecordDef;
+    wbZNAM: IwbSubRecordDef;
+    wbCOED: IwbSubRecordDef;
+    wbXLCM: IwbSubRecordDef;
+    wbREPL: IwbSubRecordDef;
+    wbBIPL: IwbSubRecordDef;
+    wbDEST: IwbSubRecordStructDef;
+    wbDESTActor: IwbRecordMemberDef;
+    wbDODT: IwbSubRecordDef;
+    wbSLSD: IwbSubRecordDef;
+    wbSPLO: IwbSubRecordDef;
+    wbSPLOs: IwbRecordMemberDef;
+    wbCNTO: IwbRecordMemberDef;
+    wbCNTOs: IwbSubRecordArrayDef;
+    wbAIDT: IwbRecordMemberDef;
+    wbCSDT: IwbSubRecordStructDef;
+    wbCSDTs: IwbRecordMemberDef;
+    wbFULL: IwbSubRecordDef;
+    wbFULLActor: IwbRecordMemberDef;
+    wbFULLReq: IwbSubRecordDef;
+    wbDESC: IwbSubRecordDef;
+    wbDESCReq: IwbSubRecordDef;
+    wbXSCL: IwbSubRecordDef;
+    wbMODD: IwbRecordMemberDef;
+    wbMOSD: IwbRecordMemberDef;
+    wbMODS: IwbSubRecordDef;
+    wbMO2S: IwbSubRecordDef;
+    wbMO3S: IwbSubRecordDef;
+    wbMO4S: IwbSubRecordDef;
+    wbSCHRReq: IwbSubRecordDef;
+    wbConditions: IwbRecordMemberDef;
+    wbSCROs: IwbRecordMemberDef;
+    wbEmbeddedScript: IwbRecordMemberDef;
+    wbEmbeddedScriptPerk: IwbRecordMemberDef;
+    wbEmbeddedScriptReq: IwbRecordMemberDef;
+    wbSCRI: IwbSubRecordDef;
+    wbSCRIActor: IwbRecordMemberDef;
+    wbENAM: IwbSubRecordDef;
+    wbXESP: IwbSubRecordDef;
+    wbICON: IwbSubRecordStructDef;
+    wbICONReq: IwbSubRecordStructDef;
+    wbActorValue: IwbIntegerDef;
+    wbETYP: IwbSubRecordDef;
+    wbETYPReq: IwbSubRecordDef;
+    wbEFID: IwbSubRecordDef;
+    wbEFIT: IwbRecordMemberDef;
+    wbEffects: IwbSubRecordArrayDef;
+    wbEffectsReq: IwbSubRecordArrayDef;
+    wbEffect: IwbRecordMemberDef;
+    wbIngredient: IwbRecordMemberDef;
+    wbOutput: IwbRecordMemberDef;
+    wbFactionRank: IwbRecordMemberDef;
+    wbStaticPart: IwbRecordMemberDef;
   protected
     function EPFDActorValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
     function EPFDActorValueToInt(const aString: string; const aElement: IwbElement): Int64;
@@ -37,82 +112,6 @@ uses
 
   wbDefinitionsSignatures,
   wbHelpers;
-
-var
-  wbConditionParameters: array of IwbValueDef;
-  wbConditionVATSValueParameters: array of IwbValueDef;
-  wbConditionBaseObjects: TwbSignatures;
-
-  wbConditionVATSValueEnum: IwbEnumDef;
-  wbFormTypeEnum: IwbEnumDef;
-  wbHeadPartIndexEnum: IwbEnumDef;
-  wbMiscStatEnum: IwbEnumDef;
-  wbModEffectEnum: IwbEnumDef;
-  wbObjectTypeEnum: IwbEnumDef;
-  wbPlayerActionEnum: IwbEnumDef;
-  wbReloadAnimEnum: IwbEnumDef;
-  wbSkillEnum: IwbEnumDef;
-  wbSoundLevelEnum: IwbEnumDef;
-  wbVatsValueFunctionEnum: IwbEnumDef;
-  wbWeaponAnimTypeEnum: IwbEnumDef;
-
-  wbEDID: IwbSubRecordDef;
-  wbEDIDReq: IwbSubRecordDef;
-  wbEDIDReqKC: IwbSubRecordDef;
-  wbBMDT: IwbSubRecordDef;
-  wbYNAM: IwbSubRecordDef;
-  wbZNAM: IwbSubRecordDef;
-  wbCOED: IwbSubRecordDef;
-  wbXLCM: IwbSubRecordDef;
-  wbREPL: IwbSubRecordDef;
-  wbBIPL: IwbSubRecordDef;
-  wbDEST: IwbSubRecordStructDef;
-  wbDESTActor: IwbRecordMemberDef;
-  wbDODT: IwbSubRecordDef;
-  wbSLSD: IwbSubRecordDef;
-  wbSPLO: IwbSubRecordDef;
-  wbSPLOs: IwbRecordMemberDef;
-  wbCNTO: IwbRecordMemberDef;
-  wbCNTOs: IwbSubRecordArrayDef;
-  wbAIDT: IwbRecordMemberDef;
-  wbCSDT: IwbSubRecordStructDef;
-  wbCSDTs: IwbRecordMemberDef;
-  wbFULL: IwbSubRecordDef;
-  wbFULLActor: IwbRecordMemberDef;
-  wbFULLReq: IwbSubRecordDef;
-  wbDESC: IwbSubRecordDef;
-  wbDESCReq: IwbSubRecordDef;
-  wbXSCL: IwbSubRecordDef;
-  wbMODD: IwbRecordMemberDef;
-  wbMOSD: IwbRecordMemberDef;
-  wbMODS: IwbSubRecordDef;
-  wbMO2S: IwbSubRecordDef;
-  wbMO3S: IwbSubRecordDef;
-  wbMO4S: IwbSubRecordDef;
-  wbSCHRReq: IwbSubRecordDef;
-  wbConditions: IwbRecordMemberDef;
-  wbSCROs: IwbRecordMemberDef;
-  wbEmbeddedScript: IwbRecordMemberDef;
-  wbEmbeddedScriptPerk: IwbRecordMemberDef;
-  wbEmbeddedScriptReq: IwbRecordMemberDef;
-  wbSCRI: IwbSubRecordDef;
-  wbSCRIActor: IwbRecordMemberDef;
-  wbENAM: IwbSubRecordDef;
-  wbXESP: IwbSubRecordDef;
-  wbICON: IwbSubRecordStructDef;
-  wbICONReq: IwbSubRecordStructDef;
-  wbActorValue: IwbIntegerDef;
-  wbETYP: IwbSubRecordDef;
-  wbETYPReq: IwbSubRecordDef;
-  wbEFID: IwbSubRecordDef;
-  wbEFIT: IwbRecordMemberDef;
-  wbEffects: IwbSubRecordArrayDef;
-  wbEffectsReq: IwbSubRecordArrayDef;
-  wbEffect: IwbRecordMemberDef;
-  wbIngredient: IwbRecordMemberDef;
-  wbOutput: IwbRecordMemberDef;
-  wbFactionRank: IwbRecordMemberDef;
-  wbStaticPart: IwbRecordMemberDef;
 
 type
   TConditionParameterType = (
