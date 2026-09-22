@@ -24510,19 +24510,16 @@ begin
   if Assigned(scHeldFileByName(lFileName)) then
     raise Exception.CreateFmt('"%s" can not be loaded: another save context holds it', [lFileName]);
 
-  Result := lGameContext.FileByName(lFileName);
-  if Assigned(Result) then begin
-    (Result as IwbFileInternal).SetSaveContextObj(Self);
-    scFile := Result;
-  end else begin
-    Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, lCompareTo, aCompareToFile, aStates);
-    try
-      scJoin(Result, lFileName);
-    except
-      (Result as IwbFileInternal).SetSaveContextObj(nil);
-      Result := nil;
-      raise;
-    end;
+  if Assigned(lGameContext.FileByName(lFileName)) then
+    raise Exception.CreateFmt('"%s" can not be loaded as a save: the game context already holds it', [lFileName]);
+
+  Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, lCompareTo, aCompareToFile, aStates);
+  try
+    scJoin(Result, lFileName);
+  except
+    (Result as IwbFileInternal).SetSaveContextObj(nil);
+    Result := nil;
+    raise;
   end;
 end;
 
