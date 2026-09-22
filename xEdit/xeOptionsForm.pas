@@ -151,9 +151,7 @@ uses
 type
   PCollapseNodeData = ^TCollapseNodeData;
   TCollapseNodeData = record
-    IsGroup : Boolean;
-    Group   : TwbCollapseGroup;
-    Option  : TwbCollapseOption;
+    Option : TwbCollapseOption;
   end;
 
 var
@@ -186,10 +184,22 @@ begin
 end;
 
 procedure TfrmOptions.CreateCollapseTree;
-var
-  lGroupNodes : array[TwbCollapseGroup] of PVirtualNode;
-  lNode       : PVirtualNode;
-  lData       : PCollapseNodeData;
+
+  procedure AddChildren(aParentNode: PVirtualNode; aParent: TwbCollapseOption);
+  begin
+    for var lOption := Low(TwbCollapseOption) to High(TwbCollapseOption) do
+      if (lOption <> clpRoot) and (wbCollapseOptionInfos[lOption].Parent = aParent) then begin
+        var lNode := vstCollapse.AddChild(aParentNode);
+        var lData: PCollapseNodeData := vstCollapse.GetNodeData(lNode);
+        lData.Option := lOption;
+        if cofHeader in wbCollapseOptionInfos[lOption].Flags then begin
+          vstCollapse.CheckType[lNode] := ctTriStateCheckBox;
+          AddChildren(lNode, lOption);
+        end else
+          vstCollapse.CheckType[lNode] := ctCheckBox;
+      end;
+  end;
+
 begin
   vstCollapse := TVirtualStringTree.Create(Self);
   vstCollapse.Name := 'vstCollapse';
@@ -204,22 +214,7 @@ begin
 
   vstCollapse.BeginUpdate;
   try
-    for var lGroup := Low(TwbCollapseGroup) to High(TwbCollapseGroup) do begin
-      lNode := vstCollapse.AddChild(nil);
-      vstCollapse.CheckType[lNode] := ctTriStateCheckBox;
-      lData := vstCollapse.GetNodeData(lNode);
-      lData.IsGroup := True;
-      lData.Group := lGroup;
-      lGroupNodes[lGroup] := lNode;
-    end;
-    for var lOption := Low(TwbCollapseOption) to High(TwbCollapseOption) do begin
-      lNode := vstCollapse.AddChild(lGroupNodes[wbCollapseOptionInfos[lOption].Group]);
-      vstCollapse.CheckType[lNode] := ctCheckBox;
-      lData := vstCollapse.GetNodeData(lNode);
-      lData.IsGroup := False;
-      lData.Group := wbCollapseOptionInfos[lOption].Group;
-      lData.Option := lOption;
-    end;
+    AddChildren(nil, clpRoot);
     vstCollapse.FullExpand;
   finally
     vstCollapse.EndUpdate;
@@ -344,7 +339,7 @@ begin
   lNode := vstCollapse.GetFirst;
   while Assigned(lNode) do begin
     lData := vstCollapse.GetNodeData(lNode);
-    if not lData.IsGroup and (vstCollapse.CheckState[lNode] in [csCheckedNormal, csCheckedPressed]) then
+    if not (cofHeader in wbCollapseOptionInfos[lData.Option].Flags) and (vstCollapse.CheckState[lNode] in [csCheckedNormal, csCheckedPressed]) then
       Include(Result, lData.Option);
     lNode := vstCollapse.GetNext(lNode);
   end;
@@ -391,7 +386,7 @@ begin
     lNode := vstCollapse.GetFirst;
     while Assigned(lNode) do begin
       lData := vstCollapse.GetNodeData(lNode);
-      if not lData.IsGroup then
+      if not (cofHeader in wbCollapseOptionInfos[lData.Option].Flags) then
         if lData.Option in aValue then
           vstCollapse.CheckState[lNode] := csCheckedNormal
         else
@@ -426,10 +421,7 @@ var
   lData : PCollapseNodeData;
 begin
   lData := Sender.GetNodeData(Node);
-  if lData.IsGroup then
-    CellText := wbCollapseGroupCaptions[lData.Group]
-  else
-    CellText := wbCollapseOptionInfos[lData.Option].Caption;
+  CellText := wbCollapseOptionInfos[lData.Option].Caption;
 end;
 
 end.

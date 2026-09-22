@@ -5247,7 +5247,7 @@ begin
   wbManualCleaningHide := Settings.ReadBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
   wbManualCleaningAllow := Settings.ReadBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
   xeContext.Settings.ConvertIntFormID := Settings.ReadBool('Options', 'ConvertIntFormID', xeContext.Settings.ConvertIntFormID);
-  for var lCollapse := Low(TwbCollapseOption) to High(TwbCollapseOption) do
+  for var lCollapse in TwbGameDefineOptions.CheckableCollapse do
     xeContext.GameDefObj.DefineOptions.SetCollapse(lCollapse, Settings.ReadBool('Options', TwbGameDefineOptions.CollapseSettingsKey(lCollapse), lCollapse in xeContext.GameDefObj.DefineOptions.Collapse));
   wbCollapseBenignArray := Settings.ReadBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
   wbShrinkButtons := Settings.ReadBool('Options', 'ShrinkButtons', wbShrinkButtons);
@@ -14086,7 +14086,7 @@ begin
     Settings.WriteBool('Options', 'ManualCleaningHide', wbManualCleaningHide);
     Settings.WriteBool('Options', 'ManualCleaningAllow', wbManualCleaningAllow);
     Settings.WriteBool('Options', 'ConvertIntFormID', xeContext.Settings.ConvertIntFormID);
-    for var lCollapse := Low(TwbCollapseOption) to High(TwbCollapseOption) do
+    for var lCollapse in TwbGameDefineOptions.CheckableCollapse do
       Settings.WriteBool('Options', TwbGameDefineOptions.CollapseSettingsKey(lCollapse), lCollapse in xeContext.GameDefObj.DefineOptions.Collapse);
     Settings.WriteBool('Options', 'CollapseBenignArray', wbCollapseBenignArray);
     Settings.WriteBool('Options', 'ShrinkButtons', wbShrinkButtons);

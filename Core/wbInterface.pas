@@ -621,6 +621,8 @@ type
   end;
 
   TwbCollapseOption = (
+    clpRoot, clpGroupRecord, clpGroupModels, clpGroupActors, clpGroupItems, clpGroupScripts, clpGroupQuests,
+    clpGroupPlacement, clpGroupWeather, clpGroupTypes, clpGroupStarfield,
     clpRecordHeader, clpObjectBounds, clpModels, clpFactions, clpFactionRelations, clpFragments, clpItems,
     clpLeveledItems, clpEquipSlots, clpObjectProperties, clpScriptProperties, clpConditions, clpRGBA, clpVec3,
     clpPosRot, clpRange, clpARMABoneData, clpRACEBoneData, clpScriptData, clpHeadParts, clpBodyParts,
@@ -635,85 +637,91 @@ type
   );
   TwbCollapseOptions = set of TwbCollapseOption;
 
-  TwbCollapseGroup = (
-    cgRecord, cgModels, cgActors, cgItems, cgScripts, cgQuests, cgPlacement, cgWeather, cgTypes, cgStarfield
-  );
+  TwbCollapseOptionFlag = (cofHeader);
+  TwbCollapseOptionFlags = set of TwbCollapseOptionFlag;
 
   TwbCollapseOptionInfo = record
-    Group   : TwbCollapseGroup;
+    Parent  : TwbCollapseOption;
     Caption : string;
+    Flags   : TwbCollapseOptionFlags;
   end;
 
 const
-  wbCollapseGroupCaptions : array[TwbCollapseGroup] of string = (
-    'Record', 'Models', 'Actors and Factions', 'Items and Lists', 'Scripts and Conditions', 'Quests',
-    'Placement and Navigation', 'Weather and Sounds', 'Value Types', 'Starfield'
-  );
-
   wbCollapseOptionInfos : array[TwbCollapseOption] of TwbCollapseOptionInfo = (
-    {clpRecordHeader}             (Group: cgRecord;    Caption: 'Record Header'),
-    {clpObjectBounds}             (Group: cgRecord;    Caption: 'Object Bounds (except TES4)'),
-    {clpModels}                   (Group: cgModels;    Caption: 'Models / 1st Person Models / Biped Models / World Models'),
-    {clpFactions}                 (Group: cgActors;    Caption: 'Factions'),
-    {clpFactionRelations}         (Group: cgActors;    Caption: 'Faction Relations'),
-    {clpFragments}                (Group: cgScripts;   Caption: 'Script Fragments (TES5+)'),
-    {clpItems}                    (Group: cgItems;     Caption: 'Items / Components'),
-    {clpLeveledItems}             (Group: cgItems;     Caption: 'Leveled List Entries (except FO76)'),
-    {clpEquipSlots}               (Group: cgActors;    Caption: 'Race Equip Slots (FO4 and FO76)'),
-    {clpObjectProperties}         (Group: cgActors;    Caption: 'Actor Value Properties (FO4 and FO76)'),
-    {clpScriptProperties}         (Group: cgScripts;   Caption: 'Script Properties (TES5+)'),
-    {clpConditions}               (Group: cgScripts;   Caption: 'Conditions'),
-    {clpRGBA}                     (Group: cgTypes;     Caption: 'Colors (RGB/A)'),
-    {clpVec3}                     (Group: cgTypes;     Caption: 'Vector3 (XYZ)'),
-    {clpPosRot}                   (Group: cgTypes;     Caption: 'PosRot Vec (XYZ,XYZ)'),
-    {clpRange}                    (Group: cgRecord;    Caption: 'Range'),
-    {clpARMABoneData}             (Group: cgModels;    Caption: 'ARMA Bone'),
-    {clpRACEBoneData}             (Group: cgModels;    Caption: 'RACE Bone'),
-    {clpScriptData}               (Group: cgScripts;   Caption: 'Script Data (TES3, TES4)'),
-    {clpHeadParts}                (Group: cgModels;    Caption: 'HeadParts'),
-    {clpBodyParts}                (Group: cgModels;    Caption: 'BodyParts'),
-    {clpModelInfoTexture}         (Group: cgModels;    Caption: 'Model Info: Alternate Texture'),
-    {clpModelInfoTextures}        (Group: cgModels;    Caption: 'Model Info: Texture File Hashes'),
-    {clpModelInfoAddons}          (Group: cgModels;    Caption: 'Model Info: Addons'),
-    {clpModelInfoMaterial}        (Group: cgModels;    Caption: 'Model Info: Material File Hash'),
-    {clpModelInfoMaterials}       (Group: cgModels;    Caption: 'Model Info: Materials'),
-    {clpModelInfo}                (Group: cgModels;    Caption: 'Model Info'),
-    {clpModelInfoHeader}          (Group: cgModels;    Caption: 'Model Info: Header'),
-    {clpTimeInterpolator}         (Group: cgTypes;     Caption: 'Time Interpolator (Time, Value)'),
-    {clpTimeInterpolators}        (Group: cgTypes;     Caption: 'Time Interpolators'),
-    {clpTimeInterpolatorsMultAdd} (Group: cgTypes;     Caption: 'Time Interpolators (Mult / Add)'),
-    {clpBluePrintItem}            (Group: cgStarfield; Caption: 'Blueprint Items'),
-    {clpPlacement}                (Group: cgPlacement; Caption: 'Placement'),
-    {clpVertices}                 (Group: cgPlacement; Caption: 'Vertices'),
-    {clpRDSA}                     (Group: cgStarfield; Caption: 'Reaction Radius Behavior (RDSA)'),
-    {clpFlags}                    (Group: cgTypes;     Caption: 'Flags'),
-    {clpTransforms}               (Group: cgPlacement; Caption: 'Transforms'),
-    {clpSounds}                   (Group: cgWeather;   Caption: 'Sounds'),
-    {clpDestruction}              (Group: cgRecord;    Caption: 'Destruction'),
-    {clpLocations}                (Group: cgRecord;    Caption: 'Locations'),
-    {clpNavmesh}                  (Group: cgPlacement; Caption: 'Navmesh'),
-    {clpOther}                    (Group: cgRecord;    Caption: 'Other'),
-    {clpPerk}                     (Group: cgRecord;    Caption: 'Perk'),
-    {clpKeywords}                 (Group: cgRecord;    Caption: 'Keywords'),
-    {clpFactionRanks}             (Group: cgActors;    Caption: 'Faction Ranks'),
-    {clpOwnership}                (Group: cgRecord;    Caption: 'Ownership'),
-    {clpObjectPaletteDefaults}    (Group: cgStarfield; Caption: 'Object Palette Defaults'),
-    {clpTraversal}                (Group: cgStarfield; Caption: 'Traversals'),
-    {clpBaseFormComponent}        (Group: cgRecord;    Caption: 'BaseForm Component'),
-    {clpVehicleConfig}            (Group: cgStarfield; Caption: 'Vehicle Config'),
-    {clpWeatherTimeOfDay}         (Group: cgWeather;   Caption: 'Weather: Time of Day Colors'),
-    {clpWeatherCloudTextures}     (Group: cgWeather;   Caption: 'Weather: Cloud Textures'),
-    {clpWeatherCloudSpeed}        (Group: cgWeather;   Caption: 'Weather: Cloud Speeds'),
-    {clpWeatherCloudAlphas}       (Group: cgWeather;   Caption: 'Weather: Cloud Alphas'),
-    {clpRagdoll}                  (Group: cgModels;    Caption: 'Ragdoll'),
-    {clpDirectionRotation}        (Group: cgPlacement; Caption: 'Direction Rotation'),
-    {clpMaxHeightData}            (Group: cgPlacement; Caption: 'Max Height Data'),
-    {clpAliases}                  (Group: cgQuests;    Caption: 'Aliases'),
-    {clpQuestStage}               (Group: cgQuests;    Caption: 'Quest Stages'),
-    {clpQuestLog}                 (Group: cgQuests;    Caption: 'Quest Log Entries'),
-    {clpQuestObjective}           (Group: cgQuests;    Caption: 'Quest Objectives'),
-    {clpQuestObjectiveTarget}     (Group: cgQuests;    Caption: 'Quest Objective Targets'),
-    {clpScriptEntry}              (Group: cgScripts;   Caption: 'Script Entries')
+    {clpRoot}                     (Parent: clpRoot;            Caption: ''; Flags: [cofHeader]),
+    {clpGroupRecord}              (Parent: clpRoot;            Caption: 'Record'; Flags: [cofHeader]),
+    {clpGroupModels}              (Parent: clpRoot;            Caption: 'Models'; Flags: [cofHeader]),
+    {clpGroupActors}              (Parent: clpRoot;            Caption: 'Actors and Factions'; Flags: [cofHeader]),
+    {clpGroupItems}               (Parent: clpRoot;            Caption: 'Items and Lists'; Flags: [cofHeader]),
+    {clpGroupScripts}             (Parent: clpRoot;            Caption: 'Scripts and Conditions'; Flags: [cofHeader]),
+    {clpGroupQuests}              (Parent: clpRoot;            Caption: 'Quests'; Flags: [cofHeader]),
+    {clpGroupPlacement}           (Parent: clpRoot;            Caption: 'Placement and Navigation'; Flags: [cofHeader]),
+    {clpGroupWeather}             (Parent: clpRoot;            Caption: 'Weather and Sounds'; Flags: [cofHeader]),
+    {clpGroupTypes}               (Parent: clpRoot;            Caption: 'Value Types'; Flags: [cofHeader]),
+    {clpGroupStarfield}           (Parent: clpRoot;            Caption: 'Starfield'; Flags: [cofHeader]),
+    {clpRecordHeader}             (Parent: clpGroupRecord;     Caption: 'Record Header'; Flags: []),
+    {clpObjectBounds}             (Parent: clpGroupRecord;     Caption: 'Object Bounds (except TES4)'; Flags: []),
+    {clpModels}                   (Parent: clpGroupModels;     Caption: 'Models / 1st Person Models / Biped Models / World Models'; Flags: []),
+    {clpFactions}                 (Parent: clpGroupActors;     Caption: 'Factions'; Flags: []),
+    {clpFactionRelations}         (Parent: clpGroupActors;     Caption: 'Faction Relations'; Flags: []),
+    {clpFragments}                (Parent: clpGroupScripts;    Caption: 'Script Fragments (TES5+)'; Flags: []),
+    {clpItems}                    (Parent: clpGroupItems;      Caption: 'Items / Components'; Flags: []),
+    {clpLeveledItems}             (Parent: clpGroupItems;      Caption: 'Leveled List Entries (except FO76)'; Flags: []),
+    {clpEquipSlots}               (Parent: clpGroupActors;     Caption: 'Race Equip Slots (FO4 and FO76)'; Flags: []),
+    {clpObjectProperties}         (Parent: clpGroupActors;     Caption: 'Actor Value Properties (FO4 and FO76)'; Flags: []),
+    {clpScriptProperties}         (Parent: clpGroupScripts;    Caption: 'Script Properties (TES5+)'; Flags: []),
+    {clpConditions}               (Parent: clpGroupScripts;    Caption: 'Conditions'; Flags: []),
+    {clpRGBA}                     (Parent: clpGroupTypes;      Caption: 'Colors (RGB/A)'; Flags: []),
+    {clpVec3}                     (Parent: clpGroupTypes;      Caption: 'Vector3 (XYZ)'; Flags: []),
+    {clpPosRot}                   (Parent: clpGroupTypes;      Caption: 'PosRot Vec (XYZ,XYZ)'; Flags: []),
+    {clpRange}                    (Parent: clpGroupRecord;     Caption: 'Range'; Flags: []),
+    {clpARMABoneData}             (Parent: clpGroupModels;     Caption: 'ARMA Bone'; Flags: []),
+    {clpRACEBoneData}             (Parent: clpGroupModels;     Caption: 'RACE Bone'; Flags: []),
+    {clpScriptData}               (Parent: clpGroupScripts;    Caption: 'Script Data (TES3, TES4)'; Flags: []),
+    {clpHeadParts}                (Parent: clpGroupModels;     Caption: 'HeadParts'; Flags: []),
+    {clpBodyParts}                (Parent: clpGroupModels;     Caption: 'BodyParts'; Flags: []),
+    {clpModelInfoTexture}         (Parent: clpGroupModels;     Caption: 'Model Info: Alternate Texture'; Flags: []),
+    {clpModelInfoTextures}        (Parent: clpGroupModels;     Caption: 'Model Info: Texture File Hashes'; Flags: []),
+    {clpModelInfoAddons}          (Parent: clpGroupModels;     Caption: 'Model Info: Addons'; Flags: []),
+    {clpModelInfoMaterial}        (Parent: clpGroupModels;     Caption: 'Model Info: Material File Hash'; Flags: []),
+    {clpModelInfoMaterials}       (Parent: clpGroupModels;     Caption: 'Model Info: Materials'; Flags: []),
+    {clpModelInfo}                (Parent: clpGroupModels;     Caption: 'Model Info'; Flags: []),
+    {clpModelInfoHeader}          (Parent: clpGroupModels;     Caption: 'Model Info: Header'; Flags: []),
+    {clpTimeInterpolator}         (Parent: clpGroupTypes;      Caption: 'Time Interpolator (Time, Value)'; Flags: []),
+    {clpTimeInterpolators}        (Parent: clpGroupTypes;      Caption: 'Time Interpolators'; Flags: []),
+    {clpTimeInterpolatorsMultAdd} (Parent: clpGroupTypes;      Caption: 'Time Interpolators (Mult / Add)'; Flags: []),
+    {clpBluePrintItem}            (Parent: clpGroupStarfield;  Caption: 'Blueprint Items'; Flags: []),
+    {clpPlacement}                (Parent: clpGroupPlacement;  Caption: 'Placement'; Flags: []),
+    {clpVertices}                 (Parent: clpGroupPlacement;  Caption: 'Vertices'; Flags: []),
+    {clpRDSA}                     (Parent: clpGroupStarfield;  Caption: 'Reaction Radius Behavior (RDSA)'; Flags: []),
+    {clpFlags}                    (Parent: clpGroupTypes;      Caption: 'Flags'; Flags: []),
+    {clpTransforms}               (Parent: clpGroupPlacement;  Caption: 'Transforms'; Flags: []),
+    {clpSounds}                   (Parent: clpGroupWeather;    Caption: 'Sounds'; Flags: []),
+    {clpDestruction}              (Parent: clpGroupRecord;     Caption: 'Destruction'; Flags: []),
+    {clpLocations}                (Parent: clpGroupRecord;     Caption: 'Locations'; Flags: []),
+    {clpNavmesh}                  (Parent: clpGroupPlacement;  Caption: 'Navmesh'; Flags: []),
+    {clpOther}                    (Parent: clpGroupRecord;     Caption: 'Other'; Flags: []),
+    {clpPerk}                     (Parent: clpGroupRecord;     Caption: 'Perk'; Flags: []),
+    {clpKeywords}                 (Parent: clpGroupRecord;     Caption: 'Keywords'; Flags: []),
+    {clpFactionRanks}             (Parent: clpGroupActors;     Caption: 'Faction Ranks'; Flags: []),
+    {clpOwnership}                (Parent: clpGroupRecord;     Caption: 'Ownership'; Flags: []),
+    {clpObjectPaletteDefaults}    (Parent: clpGroupStarfield;  Caption: 'Object Palette Defaults'; Flags: []),
+    {clpTraversal}                (Parent: clpGroupStarfield;  Caption: 'Traversals'; Flags: []),
+    {clpBaseFormComponent}        (Parent: clpGroupRecord;     Caption: 'BaseForm Component'; Flags: []),
+    {clpVehicleConfig}            (Parent: clpGroupStarfield;  Caption: 'Vehicle Config'; Flags: []),
+    {clpWeatherTimeOfDay}         (Parent: clpGroupWeather;    Caption: 'Weather: Time of Day Colors'; Flags: []),
+    {clpWeatherCloudTextures}     (Parent: clpGroupWeather;    Caption: 'Weather: Cloud Textures'; Flags: []),
+    {clpWeatherCloudSpeed}        (Parent: clpGroupWeather;    Caption: 'Weather: Cloud Speeds'; Flags: []),
+    {clpWeatherCloudAlphas}       (Parent: clpGroupWeather;    Caption: 'Weather: Cloud Alphas'; Flags: []),
+    {clpRagdoll}                  (Parent: clpGroupModels;     Caption: 'Ragdoll'; Flags: []),
+    {clpDirectionRotation}        (Parent: clpGroupPlacement;  Caption: 'Direction Rotation'; Flags: []),
+    {clpMaxHeightData}            (Parent: clpGroupPlacement;  Caption: 'Max Height Data'; Flags: []),
+    {clpAliases}                  (Parent: clpGroupQuests;     Caption: 'Aliases'; Flags: []),
+    {clpQuestStage}               (Parent: clpGroupQuests;     Caption: 'Quest Stages'; Flags: []),
+    {clpQuestLog}                 (Parent: clpGroupQuests;     Caption: 'Quest Log Entries'; Flags: []),
+    {clpQuestObjective}           (Parent: clpGroupQuests;     Caption: 'Quest Objectives'; Flags: []),
+    {clpQuestObjectiveTarget}     (Parent: clpGroupQuests;     Caption: 'Quest Objective Targets'; Flags: []),
+    {clpScriptEntry}              (Parent: clpGroupScripts;    Caption: 'Script Entries'; Flags: [])
   );
 
 type
@@ -725,6 +733,7 @@ type
     AllowEditHEDRVersion : Boolean;
     DecodeTextureHashes  : Boolean;
     class function Defaults: TwbGameDefineOptions; static;
+    class function CheckableCollapse: TwbCollapseOptions; static;
     class function CollapseSettingsKey(aOption: TwbCollapseOption): string; static;
     procedure SetCollapse(aOption: TwbCollapseOption; aValue: Boolean);
   end;
@@ -6554,10 +6563,18 @@ end;
 class function TwbGameDefineOptions.Defaults: TwbGameDefineOptions;
 begin
   Result := Default(TwbGameDefineOptions);
-  Result.Collapse := [Low(TwbCollapseOption)..High(TwbCollapseOption)];
+  Result.Collapse := CheckableCollapse;
   Result.SimpleRecords := True;
   Result.HideLargeSubrecords := True;
   Result.DecodeTextureHashes := True;
+end;
+
+class function TwbGameDefineOptions.CheckableCollapse: TwbCollapseOptions;
+begin
+  Result := [];
+  for var lOption := Low(TwbCollapseOption) to High(TwbCollapseOption) do
+    if not (cofHeader in wbCollapseOptionInfos[lOption].Flags) then
+      Include(Result, lOption);
 end;
 
 class function TwbGameDefineOptions.CollapseSettingsKey(aOption: TwbCollapseOption): string;
