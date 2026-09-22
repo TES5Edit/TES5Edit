@@ -46,7 +46,7 @@ type
   TwbLoadingSaveContext = class(TwbSaveContext)
   public
     destructor Destroy; override;
-    function LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; override;
+    function LoadSave(const aFileName: string; aLoadOrder: Integer; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; override;
   end;
 
 function StartsWith(const s, t: string): Boolean;
@@ -996,7 +996,7 @@ type
     procedure GetMasters(aMasters: TStrings); override;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames, aLightNames: TStrings);
   public
-    constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; const aCompareToFile: IwbFile; aStates: TwbFileStates);
+    constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareToFile: IwbFile; aStates: TwbFileStates);
   end;
 
   TwbDataContainerFlag = (
@@ -24491,18 +24491,14 @@ begin
   inherited;
 end;
 
-function TwbLoadingSaveContext.LoadSave(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aCompareToFile: IwbFile): IwbFile;
+function TwbLoadingSaveContext.LoadSave(const aFileName: string; aLoadOrder: Integer; aStates: TwbFileStates; const aCompareToFile: IwbFile): IwbFile;
 begin
   if Assigned(scFile) then
     raise Exception.CreateFmt('A save context holds one save: "%s" is loaded, "%s" can not be loaded into it', [scFile.FileName, ExtractFileName(aFileName)]);
 
   var lGameContext := GameContextObj;
-  var lCompareTo := aCompareTo;
-  if Assigned(aCompareToFile) then begin
-    if aCompareToFile.ContextObj <> lGameContext then
-      raise Exception.CreateFmt('"%s" can not be compared to "%s": they belong to different game contexts', [ExtractFileName(aFileName), aCompareToFile.FileName]);
-    lCompareTo := aCompareToFile.FileName;
-  end;
+  if Assigned(aCompareToFile) and (aCompareToFile.ContextObj <> lGameContext) then
+    raise Exception.CreateFmt('"%s" can not be compared to "%s": they belong to different game contexts', [ExtractFileName(aFileName), aCompareToFile.FileName]);
 
   lGameContext.GameDefObj.InitRecords;
 
@@ -24513,7 +24509,7 @@ begin
   if Assigned(lGameContext.FileByName(lFileName)) then
     raise Exception.CreateFmt('"%s" can not be loaded as a save: the game context already holds it', [lFileName]);
 
-  Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, lCompareTo, aCompareToFile, aStates);
+  Result := TwbFileSource.CreateSave(Self, lFileName, aLoadOrder, aCompareToFile, aStates);
   try
     scJoin(Result, lFileName);
   except
@@ -26358,11 +26354,15 @@ begin
   flFileNameOnDisk := flFileName;
 end;
 
-constructor TwbFileSource.CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; const aCompareToFile: IwbFile; aStates: TwbFileStates);
+constructor TwbFileSource.CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareToFile: IwbFile; aStates: TwbFileStates);
+var
+  lCompareTo : string;
 begin
   flSaveContextObj := aSaveContext;
   flCompareToFile := aCompareToFile;
-  inherited Create(aSaveContext.GameContextObj, aFileName, aLoadOrder, aCompareTo, aStates, nil);
+  if Assigned(aCompareToFile) then
+    lCompareTo := aCompareToFile.FileName;
+  inherited Create(aSaveContext.GameContextObj, aFileName, aLoadOrder, lCompareTo, aStates, nil);
 end;
 
 function TwbFileSource.flSaveDef: TwbSaveDef;
@@ -26519,10 +26519,6 @@ begin
   if Assigned(flCompareToFile) then begin
     flProgress('Adding master "' + flCompareToFile.FileName + '"');
     AddMaster(flCompareToFile);
-  end else if flCompareTo <> '' then begin
-    if not FileExists(flCompareTo) then
-      flCompareTo := ExtractFilePath(flFileName) + ExtractFileName(flCompareTo);
-    AddMaster(flCompareTo);
   end;
 
   if lSaveDef.ExtractInfo <> nil then

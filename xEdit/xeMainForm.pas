@@ -21890,7 +21890,7 @@ begin
           end;
           if lIsSave then begin
             lSaveContext := wbCreateSaveContext(xeContextRef);
-            _File := (lSaveContext as TwbSaveContext).LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates, ltMasterFile);
+            _File := (lSaveContext as TwbSaveContext).LoadSave(s, lLoadListIdx + ltLoadOrderOffset, ltStates, ltMasterFile);
           end else
             _File := xeContext.LoadFile(s, lLoadListIdx + ltLoadOrderOffset, ltMaster, ltStates);
           SetLength(ltFiles, Succ(Length(ltFiles)));
