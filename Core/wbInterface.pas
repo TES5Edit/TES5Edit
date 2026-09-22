@@ -732,9 +732,7 @@ type
   TwbToolMode   = (tmView, tmEdit, tmDump, tmExport, tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmLODgen, tmScript,
                     tmTranslate, tmESMify, tmESPify, tmSortAndCleanMasters,
                     tmCheckForErrors, tmCheckForITM, tmCheckForDR, tmGenerateSEQ);
-  TwbToolSource = (tsPlugins, tsSaves);
   TwbSetOfMode  = set of TwbToolMode;
-  TwbSetOfSource  = set of TwbToolSource;
 
   IwbDef = interface;
 
@@ -5167,7 +5165,6 @@ function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 var
   wbGameMode         : TwbGameMode;
   wbToolMode         : TwbToolMode;
-  wbToolSource       : TwbToolSource;
   wbSubMode          : string;
   wbAppName          : string;
   wbApplicationTitle : string;
@@ -5177,7 +5174,6 @@ var
   wbGameName2        : string; // game title name used for AppData and MyGames folders
   wbGameNameReg      : string; // registry name
   wbToolName         : string;
-  wbSourceName       : string;
   wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status

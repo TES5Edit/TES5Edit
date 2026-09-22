@@ -34,6 +34,7 @@ var
   xeRemoveTempPath         : Boolean = True;
   xeQuickShowConflicts     : Boolean;
   xeVeryQuickShowConflicts : Boolean;
+  xeSavesMode              : Boolean;
   xeQuickClean             : Boolean;
   xeQuickEdit              : Boolean;
   xeQuickCleanAutoSave     : Boolean;
@@ -713,7 +714,8 @@ function _DoInit: Boolean;
 var
   s: string;
   ToolModes: TwbSetOfMode;
-  ToolSources: TwbSetOfSource;
+  SavesSupported: Boolean;
+  SourceName: string;
   i: Integer;
   ExeName: string;
   lInputs: TwbGameDefInputs;
@@ -735,14 +737,12 @@ begin
   CheckForcedMode;
   DetectAppMode;
 
-  if isMode('Saves') then begin
-    wbToolSource := tsSaves;
-    wbSourceName := 'Saves';
+  xeSavesMode := isMode('Saves');
+  if xeSavesMode then begin
+    SourceName := 'Saves';
     lSettings.UseFalsePlugins := True;
-  end else begin // defaults to plugin
-    wbToolSource := tsPlugins;
-    wbSourceName := 'Plugins';
-  end;
+  end else // defaults to plugin
+    SourceName := 'Plugins';
 
   if isMode('View') then begin
     wbToolMode    := tmView;
@@ -807,7 +807,7 @@ begin
     wbGameName         := 'FalloutNV';
     wbGameSteamID      := '22380,22490';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    ToolSources        := [tsPlugins, tsSaves];
+    SavesSupported     := True;
   end
 
   else if isMode('FO3') then begin
@@ -816,7 +816,7 @@ begin
     wbGameName         := 'Fallout3';
     wbGameSteamID      := '22370,22300';
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
   end
 
   else if isMode('TES3') then begin
@@ -826,7 +826,7 @@ begin
     wbGameSteamID      := '22320';
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
     (**)
   end
 
@@ -836,7 +836,7 @@ begin
     wbGameName         := 'Oblivion';
     wbGameSteamID      := '22330,900883';
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
   end
 
   else if isMode('TES4R') then begin
@@ -849,7 +849,7 @@ begin
     wbGameNameReg      := 'Steam App 2623190';
     wbGameSteamID      := '2623190';
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
   end
 
   else if isMode('TES5') then begin
@@ -859,7 +859,7 @@ begin
     wbGameExeName      := 'TESV';
     wbGameSteamID      := '72850';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
+    SavesSupported     := True;
   end
 
   else if isMode('EnderalSE') then begin
@@ -872,7 +872,7 @@ begin
     wbGameMasterEsm    := 'Skyrim.esm';
     wbGameSteamID      := '976620';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
+    SavesSupported     := True;
   end
 
   else if isMode('Enderal') then begin
@@ -883,7 +883,7 @@ begin
     wbGameMasterEsm    := 'Skyrim.esm';
     wbGameSteamID      := '933480';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
+    SavesSupported     := True;
   end
 
   else if isMode('TES5VR') then begin
@@ -894,7 +894,7 @@ begin
     wbGameExeName      := 'SkyrimVR';
     wbGameSteamID      := '611670';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
   end
 
   else if isMode('SSE') then begin
@@ -905,7 +905,7 @@ begin
     wbGameName2        := 'Skyrim Special Edition';
     wbGameSteamID      := '489830';
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    ToolSources        := [tsPlugins, tsSaves];
+    SavesSupported     := True;
   end
 
   else if isMode('FO4') then begin
@@ -915,7 +915,7 @@ begin
     lSettings.Language := 'En';
     wbGameSteamID      := '377160';
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins, tsSaves];
+    SavesSupported     := True;
   end
 
   else if isMode('FO4VR') then begin
@@ -928,7 +928,7 @@ begin
     lSettings.Language := 'En';
     wbGameSteamID      := '611660';
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
   end
 
   else if isMode('FO76') then begin
@@ -941,7 +941,7 @@ begin
     lSettings.Language := 'En';
     wbGameSteamID      := '1151340';
     ToolModes          := wbAlwaysMode;
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
   end
 
   else if isMode('SF1') then begin
@@ -952,7 +952,7 @@ begin
     lSettings.Language := 'En';
     wbGameSteamID      := '1716740';
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
-    ToolSources        := [tsPlugins];
+    SavesSupported     := False;
     wbLightName        := 'Small';
 
     if    FindCmdLineSwitch('ItJustWorksTM')
@@ -985,13 +985,13 @@ begin
     Exit(False);
   end;
 
-  if not (wbToolSource in ToolSources) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName);
+  if xeSavesMode and not SavesSupported then begin
+    ShowMessage('Application ' + wbGameName + ' does not currently support ' + SourceName);
     Exit(False);
   end;
 
-  if (wbToolSource = tsSaves) and (wbToolMode = tmEdit) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbSourceName + ' in ' + wbToolName + ' mode.');
+  if xeSavesMode and (wbToolMode = tmEdit) then begin
+    ShowMessage('Application ' + wbGameName + ' does not currently support ' + SourceName + ' in ' + wbToolName + ' mode.');
     Exit(False);
   end;
 
@@ -1268,14 +1268,14 @@ begin
         xeVeryQuickShowConflicts := True;
 
     if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
-      or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and (wbToolSource in [tsPlugins]) then begin
+      or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and not xeSavesMode then begin
       if xeContext.Settings.CanSortINFO then
         xeContext.Settings.FillPNAM := True;
       xeQuickClean := True;
     end;
 
     if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
-      or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and (wbToolSource in [tsPlugins]) then begin
+      or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and not xeSavesMode then begin
       if xeContext.Settings.CanSortINFO then
         xeContext.Settings.FillPNAM := True;
       xeQuickClean := True;
@@ -1284,7 +1284,7 @@ begin
   end;
 
   if wbFindCmdLineParam('testsavecontexts', xeTestSaveContextsFile) then begin
-    if (xeTestSaveContextsFile = '') or (wbToolSource <> tsSaves) or
+    if (xeTestSaveContextsFile = '') or not xeSavesMode or
        not wbFindCmdLineParam('testsavecontextssave', xeTestSaveContextsSave) or
        not wbFindCmdLineParam('testsavecontextscompare', xeTestSaveContextsCompare) then begin
       ShowMessage('testsavecontexts runs in saves mode and requires -testsavecontexts:<filename> -testsavecontextssave:<save> -testsavecontextscompare:<save>');

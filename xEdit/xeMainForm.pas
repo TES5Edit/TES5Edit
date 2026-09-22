@@ -4847,14 +4847,14 @@ begin
   if xeContext.Settings.SavePath <> '' then begin
     AddMessage('Using save path: ' + xeContext.Settings.SavePath);
     if not DirectoryExists(xeContext.Settings.SavePath) then begin
-      if wbToolSource in [tsSaves] then begin
+      if xeSavesMode then begin
         AddMessage('Fatal: Could not find save path');
         Exit;
       end else
         AddMessage('Warning: Could not find save path');
     end;
   end else
-    if wbToolSource in [tsSaves] then begin
+    if xeSavesMode then begin
       AddMessage('Fatal: No save path specified');
       Exit;
     end;
@@ -4913,14 +4913,10 @@ begin
   for i := 0 to Pred(vstNav.Header.Columns.Count) do
     vstNav.Header.Columns[i].Width := Settings.ReadInteger(Name, 'vstNavColumnWidth' + IntToStr(i), vstNav.Header.Columns[i].Width);
 
-  if wbToolSource in [tsSaves] then
+  if xeSavesMode then
     AddMessage('Loading saves list from : ' + xeContext.Settings.SavePath)
-  else if wbToolSource in [tsPlugins] then
-    AddMessage('Loading active plugin list: ' + xeContext.Settings.PluginsFileName)
-  else begin
-    AddMessage('Fatal: No source specified');
-    Exit;
-  end;
+  else
+    AddMessage('Loading active plugin list: ' + xeContext.Settings.PluginsFileName);
 
   if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
     i := Settings.ReadInteger('WhatsNew', 'Version', 0);
@@ -4968,57 +4964,54 @@ begin
     try
       frmFileSelect := TfrmFileSelect.Create(nil);
       with frmFileSelect do try
-        case wbToolSource of
-          tsSaves: begin
-            case lGameDef.GameMode of
-              gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
-              gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
-              gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
-              gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
-              gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
-              gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
-              gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
-            end;
+        if xeSavesMode then begin
+          case lGameDef.GameMode of
+            gmFO3:  begin saveExt := '.fos'; coSaveExt := '.fose'; end;
+            gmFO4, gmFO4VR:  begin saveExt := '.fos'; coSaveExt := '';      end;
+            gmFO76:  begin saveExt := '.fos'; coSaveExt := '';      end;
+            gmFNV:  begin saveExt := '.fos'; coSaveExt := '.nvse'; end;
+            gmTES3: begin saveExt := '.ess'; coSaveExt := '';      end;
+            gmTES4: begin saveExt := '.ess'; coSaveExt := '.obse'; end;
+            gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin saveExt := '.ess'; coSaveExt := '.skse'; end;
+          end;
 
-            if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+          if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+saveExt), faAnyfile, R)=0 then try
+            repeat
+              if R.Attr and faDirectory <> faDirectory then begin
+                CheckListBox1.Items.Add(R.Name);
+                s := ChangeFileExt(R.Name, coSaveExt);
+                if (coSaveExt<>'') and FileExists(ExpandFileName(xeContext.Settings.SavePath+'\'+s)) then
+                  CheckListBox1.Items.Add(s);
+              end;
+            until 0 <> FindNext(R);
+          finally
+            System.SysUtils.FindClose(R);
+          end;
+          if (coSaveExt<>'') then
+            if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
               repeat
-                if R.Attr and faDirectory <> faDirectory then begin
-                  CheckListBox1.Items.Add(R.Name);
-                  s := ChangeFileExt(R.Name, coSaveExt);
-                  if (coSaveExt<>'') and FileExists(ExpandFileName(xeContext.Settings.SavePath+'\'+s)) then
-                    CheckListBox1.Items.Add(s);
-                end;
+                if R.Attr and faDirectory <> faDirectory then
+                  if CheckListBox1.Items.IndexOf(R.Name) = -1 then
+                    CheckListBox1.Items.Add(R.Name);
               until 0 <> FindNext(R);
             finally
               System.SysUtils.FindClose(R);
             end;
-            if (coSaveExt<>'') then
-              if FindFirst(ExpandFileName(xeContext.Settings.SavePath+'\*'+coSaveExt), faAnyfile, R)=0 then try
-                repeat
-                  if R.Attr and faDirectory <> faDirectory then
-                    if CheckListBox1.Items.IndexOf(R.Name) = -1 then
-                      CheckListBox1.Items.Add(R.Name);
-                until 0 <> FindNext(R);
-              finally
-                System.SysUtils.FindClose(R);
-              end;
+        end else begin
+          Modules := lModules.ModulesByLoadOrder(False);
+          CheckListBox1.Items.BeginUpdate;
+          try
+            CheckListBox1.Items.Clear;
+            CheckListBox1.Items.AddStrings(Modules.ToStrings(True));
+          finally
+            CheckListBox1.Items.EndUpdate;
           end;
-          tsPlugins: begin
-            Modules := lModules.ModulesByLoadOrder(False);
-            CheckListBox1.Items.BeginUpdate;
-            try
-              CheckListBox1.Items.Clear;
-              CheckListBox1.Items.AddStrings(Modules.ToStrings(True));
-            finally
-              CheckListBox1.Items.EndUpdate;
-            end;
 
-            if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
-              AgeDateTime := Modules[0].miDateTime;
-              for i := 1 to High(Modules) do begin
-                AgeDateTime := AgeDateTime + (1/24/60);
-                TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
-              end;
+          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
+            AgeDateTime := Modules[0].miDateTime;
+            for i := 1 to High(Modules) do begin
+              AgeDateTime := AgeDateTime + (1/24/60);
+              TFile.SetLastWriteTime(xeContext.Settings.DataPath + Modules[i].miOriginalName, AgeDateTime);
             end;
           end;
         end;
@@ -5052,7 +5045,7 @@ begin
         end;
 
         sl.Clear;
-        if wbToolSource in [tsPlugins] then begin
+        if not xeSavesMode then begin
           if (wbToolMode in wbPluginModes) or (xeAutoLoad and (xeTestConflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
@@ -5112,14 +5105,14 @@ begin
           frmMain.Close;
           Exit;
         end;
-      end else if (wbToolSource in [tsSaves]) then
+      end else if xeSavesMode then
         if sl.Count <> 1 then begin
           MessageDlg('Exactly one plugin must be selected with this source', mtError, [mbAbort], 0);
           frmMain.Close;
           Exit;
         end;
 
-      if wbToolSource = tsSaves then begin
+      if xeSavesMode then begin
         s := sl[0];
         case lGameDef.GameMode of
           gmFNV,
@@ -5145,7 +5138,7 @@ begin
         //assumption: for a savegame, we should load exactly the listed masters in the listed order, followed by the savegame
         xeContext.MastersForFile(xeContext.Settings.SavePath + s, sl);
         sl.Add(s);
-      end else {wbToolSource = tsPlugins} begin
+      end else begin
         Modules.ActivateMasters;         //Activate all required masters in their current load order position first
         Modules := lModules.SimulateLoad(Modules); //Simulate a load, which might re-order masters
         sl.Clear;
@@ -5156,10 +5149,8 @@ begin
       DoProcessMessages;
       tmrMessagesTimer(nil);
 
-      if not (wbToolMode in wbAutoModes) then
-      case wbToolSource of
-        tsSaves: { to be done };
-        tsPlugins: with TfrmFileSelect.Create(nil) do try
+      if not (wbToolMode in wbAutoModes) and not xeSavesMode then
+        with TfrmFileSelect.Create(nil) do try
           {
           if (not wbEditAllowed) or wbTranslationMode then begin
             Caption := 'Skip these records:';
@@ -5196,7 +5187,6 @@ begin
         finally
           Free;
         end;
-      end;
 
       mniMasterAndLeafs.Visible := True;
       mniMasterAndLeafsEnabled.Checked := OnlyShowMasterAndLeafs;
@@ -21892,7 +21882,7 @@ begin
             end;
 
           LoaderProgress('loading "' + ltLoadList[lLoadListIdx] + '"...');
-          var lIsSave := (wbToolSource = tsSaves) and
+          var lIsSave := xeSavesMode and
             not wbIsModule(ltLoadList[lLoadListIdx], xeContext.GameDefObj.GameExeName);
           var lSaveContext: IwbSaveContext := nil;
           if FileExists(ltLoadList[lLoadListIdx]) then

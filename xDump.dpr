@@ -85,6 +85,9 @@ var
   DontWriteReport      : Boolean      = False;
   ProgressLocked       : Boolean      = False;
   ReportRecordProgress : Boolean      = True;
+  DumpSaves            : Boolean      = False;
+  DumpSourceName       : string;
+  FileIsSave           : Boolean      = False;
 
 procedure ReportProgress(const aStatus: string);
 begin
@@ -569,15 +572,10 @@ var
 begin
   var lGameDef := HostContext.GameDefObj;
   Profile := '';
-  case wbToolSource of
-    tsPlugins: begin
-      if lGameDef.FindRecordDef(lGameDef.HeaderSignature, RecordDef) then
-        ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
-    end;
-    tsSaves: begin
-      ProfileElement(aFormat, lGameDef.SaveDef.FileHeader, Profile, Pass, '');
-    end;
-  end;
+  if DumpSaves then
+    ProfileElement(aFormat, lGameDef.SaveDef.FileHeader, Profile, Pass, '')
+  else if lGameDef.FindRecordDef(lGameDef.HeaderSignature, RecordDef) then
+    ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
 end;
 
 procedure ProfileArray(aFormat: TExportFormat; Pass: TwbExportPass);
@@ -587,14 +585,13 @@ var
   Profile   : String;
 begin
   var lGameDef := HostContext.GameDefObj;
-  case wbToolSource of
-    tsPlugins: for i := 0 to Pred(lGameDef.GroupOrder.Count) do
+  if not DumpSaves then
+    for i := 0 to Pred(lGameDef.GroupOrder.Count) do
       if lGameDef.GroupOrder[i]<>lGameDef.HeaderSignature then begin
         Profile := '';
         if lGameDef.FindRecordDef(AnsiString(lGameDef.GroupOrder[i]), RecordDef) then
           ProfileElement(aFormat, RecordDef^, Profile, Pass, '');
       end;
-  end;
 end;
 
 procedure ProfileChapters(aFormat: TExportFormat; Pass: TwbExportPass);
@@ -604,11 +601,9 @@ var
 begin
   var lGameDef := HostContext.GameDefObj;
   Profile := '';
-  case wbToolSource of
-    tsSaves: for i := 0 to Pred(lGameDef.SaveDef.FileChapters.MemberCount) do begin
+  if DumpSaves then
+    for i := 0 to Pred(lGameDef.SaveDef.FileChapters.MemberCount) do
       ProfileElement(aFormat, lGameDef.SaveDef.FileChapters.Members[i], Profile, Pass, '');
-    end;
-  end;
 end;
 
 procedure WriteElement(aElement: IwbElement; aIndent: string = ''); forward;
@@ -621,7 +616,7 @@ var
   Chapter      : IwbChapter;
   MainRecord   : IwbMainRecord;
 begin
-  if (wbToolSource in [tsPlugins]) then if (aContainer.ElementType = etGroupRecord) then
+  if not FileIsSave then if (aContainer.ElementType = etGroupRecord) then
     if Supports(aContainer, IwbGroupRecord, GroupRecord) then
       if GroupRecord.GroupType = 0 then begin
         if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
@@ -633,7 +628,7 @@ begin
            SkipChildGroups.Find(String(TwbSignature(GroupRecord.ChildrenOf.Signature)), i)
         then
           Exit;
-  if (wbToolSource in [tsSaves]) and Assigned(DumpChapters) and Supports(aContainer, IwbChapter, Chapter) then begin
+  if FileIsSave and Assigned(DumpChapters) and Supports(aContainer, IwbChapter, Chapter) then begin
     if not DumpChapters.Find(IntToStr(Chapter.ChapterType), i) then
       Exit;
     ReportProgress('Dumping: ' + aContainer.Name);
@@ -647,7 +642,7 @@ begin
   if aContainer.Skipped then begin
     if ((not wbReportMode) or DumpCheckReport) then WriteLn(aIndent, '<contents skipped>');
   end else begin
-    if (wbToolSource in [tsPlugins]) and
+    if not FileIsSave and
        (aContainer.ElementType = etMainRecord) and
         Supports(aContainer, IwbMainRecord, MainRecord)
     then
@@ -761,7 +756,7 @@ begin
 
   if Supports(aElement, IwbContainerElementRef, Container) then begin
 
-    if (wbToolSource in [tsPlugins]) then if (Container.ElementType = etGroupRecord) then
+    if not FileIsSave then if (Container.ElementType = etGroupRecord) then
       if Supports(Container, IwbGroupRecord, GroupRecord) then
         if GroupRecord.GroupType = 0 then begin
           if Assigned(DumpGroups) and not DumpGroups.Find(String(TwbSignature(GroupRecord.GroupLabel)), i) then
@@ -929,10 +924,9 @@ var
 //  F               : TSearchRec;
   n,m             : TStringList;
   Pass            : TwbExportPass;
-  ts              : TwbToolSource;
   tm              : TwbToolMode;
   gm              : TwbGameMode;
-  tss             : TwbSetOfSource;
+  SavesSupported  : Boolean;
   tms             : TwbSetOfMode;
   Found           : Boolean;
   b               : TBytes;
@@ -962,28 +956,12 @@ begin
     try
       t := ExtractFileName(ParamStr(0)).ToLowerInvariant;
 
-      Found := False;
-      for ts := Low(TwbToolSource) to High(TwbToolSource) do begin
-        s := GetEnumName(TypeInfo(TwbToolSource), Ord(ts) );
-        Delete(s, 1, 2);
-        if FindCmdLineSwitch(s) then begin
-          wbToolSource := ts;
-          Found := True;
-          Break;
-        end;
-      end;
-      if not Found then
-        for ts := Low(TwbToolSource) to High(TwbToolSource) do begin
-          s := GetEnumName(TypeInfo(TwbToolSource), Ord(ts) ).ToLowerInvariant;
-          Delete(s, 1, 2);
-          if t.Contains(s) then begin
-            wbToolSource := ts;
-            Found := True;
-            Break;
-          end;
-        end;
-      if not Found then
-        wbToolSource := tsPlugins;
+      if FindCmdLineSwitch('Plugins') then
+        DumpSaves := False
+      else if FindCmdLineSwitch('Saves') then
+        DumpSaves := True
+      else
+        DumpSaves := not t.Contains('plugins') and t.Contains('saves');
 
       Found := False;
       for tm := Low(TwbToolMode) to High(TwbToolMode) do begin
@@ -1037,13 +1015,15 @@ begin
 
       wbToolName := GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode) );
       Delete(wbToolName, 1 ,2);
-      wbSourceName := GetEnumName(TypeInfo(TwbToolSource), Ord(wbToolSource) );
-      Delete(wbSourceName, 1 ,2);
+      if DumpSaves then
+        DumpSourceName := 'Saves'
+      else
+        DumpSourceName := 'Plugins';
       wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode) );
       Delete(wbAppName, 1 ,2);
 
       lSettings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      tss := [tsPlugins, tsSaves];
+      SavesSupported := True;
       tms := [tmDump, tmExport];
 
       if FindCmdLineSwitch('sr') then
@@ -1063,7 +1043,7 @@ begin
           wbGameName := 'Morrowind';
           lSettings.LoadBSAs := false;
           tms := [tmDump];
-          tss := [tsPlugins];
+          SavesSupported := False;
         end;
         gmTES4: begin
           wbGameName := 'Oblivion';
@@ -1081,7 +1061,7 @@ begin
           wbGameName    := 'Skyrim';
           wbGameName2   := 'Skyrim VR';
           wbGameExeName := 'SkyrimVR';
-          tss := [tsPlugins];
+          SavesSupported := False;
         end;
         gmFO4: begin
           wbGameName           := 'Fallout4';
@@ -1095,7 +1075,7 @@ begin
           wbGameNameReg        := 'Fallout 4 VR';
           lSettings.CreateContainedIn := False;
           lInputs.VWDAsQuestChildren := True;
-          tss := [tsPlugins];
+          SavesSupported := False;
         end;
         gmSSE: begin
           wbGameName    := 'Skyrim';
@@ -1116,7 +1096,7 @@ begin
           wbGameMasterEsm      := 'SeventySix.esm';
           lSettings.CreateContainedIn := False;
           lInputs.VWDAsQuestChildren := True;
-          tss := [tsPlugins];
+          SavesSupported := False;
         end;
         gmSF1: begin
           wbGameName           := 'Starfield';
@@ -1162,12 +1142,12 @@ begin
         WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
         Exit;
       end;
-      if not (wbToolSource in tss) then begin
-        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolSource: '+wbSourceName);
+      if DumpSaves and not SavesSupported then begin
+        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolSource: '+DumpSourceName);
         Exit;
       end;
 
-      if wbToolSource = tsSaves then begin
+      if DumpSaves then begin
         HostSaveContextRef := wbCreateSaveContext(HostContextRef);
         HostSaveContext := HostSaveContextRef as TwbSaveContext;
       end;
@@ -1216,7 +1196,7 @@ begin
       if wbReportMode then
         wbShowFlagEnumValue := True;
 
-     var SourceName := wbSourceName;
+     var SourceName := DumpSourceName;
      if SourceName = 'Plugins' then
        SourceName := '';
 
@@ -1449,7 +1429,7 @@ begin
         WriteLn;
         NeedsSyntaxInfo := True;
       end;
-      if wbToolSource = tsSaves then
+      if DumpSaves then
         case HostContext.GameDefObj.GameMode of
           gmFNV,
           gmFO4,
@@ -1721,6 +1701,7 @@ begin
       ReportProgress('Finished loading record. Starting Dump.');
 
       if wbToolMode in [tmDump] then begin
+        FileIsSave := Assigned(_File) and Assigned(_File.SaveContextObj);
         if FindCmdLineSwitch('check') and not wbReportMode then
           CheckForErrors(0, _File)
         else begin
@@ -1747,7 +1728,7 @@ begin
           ProfileChapters(StrToTExportFormat(s), Pass);
         end;
 
-        wbDefProfiles.SaveToFile(wbAppName+wbToolName+wbSourceName+'.txt');
+        wbDefProfiles.SaveToFile(wbAppName+wbToolName+DumpSourceName+'.txt');
       end;
 
       ReportProgress('All Done.');
