@@ -3573,7 +3573,6 @@ type
     gdHardcodedRangeMinVersion : Double;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
-    procedure SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
 
     function GetGameMode: TwbGameMode;
     function GetCreationClubContentFileName: string;
@@ -3597,28 +3596,7 @@ type
 
     procedure Define; virtual;
     procedure CreateSaveDefs;
-  public
-    DefineOptions: TwbGameDefineOptions;
 
-    constructor Create; overload;
-    constructor Create(aGameMode: TwbGameMode); overload;
-    constructor Create(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs); overload;
-    destructor Destroy; override;
-
-    procedure EnsureDefined;
-
-    property GameMode: TwbGameMode
-      read gdGameMode;
-    property Capabilities: TwbGameCapabilities
-      read gdCapabilities;
-    property GameName: string
-      read gdGameName;
-    property GameExeName: string
-      read gdGameExeName;
-    property GameMasterEsm: string
-      read gdGameMasterEsm;
-    property AppName: string
-      read gdAppName;
     function IsCS(const aDef1, aDef2: string): string; overload;
     function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority; overload;
     function IsTES3(const aDef1, aDef2: string): string; overload;
@@ -3656,6 +3634,48 @@ type
     function IsSF1(const aDef1, aDef2: IwbRecordMemberDef): IwbRecordMemberDef; overload;
     function IsSF1(const aDef1, aDef2: IwbValueDef): IwbValueDef; overload;
     function IsSF1(const aDef1, aDef2: string): string; overload;
+
+    procedure AddGroupOrder(const aSignature: TwbSignature);
+    function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
+
+    function RegisterRecordDef(const aSignature   : TwbSignature;
+                               const aName        : string;
+                               const aKnownSRs    : PwbKnownSubRecordSignatures;
+                               const aRecordFlags : IwbIntegerDefFormater;
+                               const aMembers     : array of IwbRecordMemberDef;
+                                     aPriority    : TwbConflictPriority;
+                                     aRequired    : Boolean;
+                                     aIsReference : Boolean)
+                                                  : IwbMainRecordDef; overload;
+    procedure AddRefRecordDef(const aRecordDef: IwbMainRecordDef);
+    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aKnownSRs: PwbKnownSubRecordSignatures; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aKnownSRs: PwbKnownSubRecordSignatures; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+    function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
+  public
+    DefineOptions: TwbGameDefineOptions;
+
+    constructor Create; overload;
+    constructor Create(aGameMode: TwbGameMode); overload;
+    constructor Create(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs); overload;
+    destructor Destroy; override;
+
+    procedure EnsureDefined;
+
+    property GameMode: TwbGameMode
+      read gdGameMode;
+    property Capabilities: TwbGameCapabilities
+      read gdCapabilities;
+    property GameName: string
+      read gdGameName;
+    property GameExeName: string
+      read gdGameExeName;
+    property GameMasterEsm: string
+      read gdGameMasterEsm;
+    property AppName: string
+      read gdAppName;
     property IsMorrowind: Boolean
       read GetIsMorrowind;
     property IsOblivion: Boolean
@@ -3685,34 +3705,27 @@ type
     property IsUpdateSupported: Boolean
       read GetIsUpdateSupported;
 
-    procedure AddGroupOrder(const aSignature: TwbSignature);
     function GetGroupOrder(const aSignature: TwbSignature): Integer;
 
     property HEDRVersion: Double
-      read gdHEDRVersion
-      write gdHEDRVersion;
+      read gdHEDRVersion;
     property HEDRNextObjectID: Integer
-      read gdHEDRNextObjectID
-      write gdHEDRNextObjectID;
+      read gdHEDRNextObjectID;
     property CellSizeFactor: Single
-      read gdCellSizeFactor
-      write gdCellSizeFactor;
+      read gdCellSizeFactor;
     function PositionToGridCell(const aPosition: TwbVector): TwbGridCell;
     function GridCellToCenterPosition(const aGridCell: TwbGridCell): TwbVector;
     function IsInGridCell(const aPosition: TwbVector; const aGridCell: TwbGridCell): Boolean;
     property HeaderSignature: TwbSignature
-      read gdHeaderSignature
-      write gdHeaderSignature;
+      read gdHeaderSignature;
     property NexusModsUrl: string
-      read gdNexusModsUrl
-      write gdNexusModsUrl;
+      read gdNexusModsUrl;
     property IgnoreRecords: TStringList
       read gdIgnoreRecords;
     property GroupOrder: TStringList
       read gdGroupOrder;
     property ActorValueEnum: IwbEnumDef
-      read gdActorValueEnum
-      write gdActorValueEnum;
+      read gdActorValueEnum;
     property SaveDef: TwbSaveDef
       read GetSaveDef;
     property CoSaveDef: TwbSaveDef
@@ -3720,67 +3733,36 @@ type
     function SaveDefFor(const aFileName: string): TwbSaveDef;
     function SaveContextClass: TwbSaveContextClass;
     property OfficialDLC: TArray<string>
-      read gdOfficialDLC
-      write gdOfficialDLC;
+      read gdOfficialDLC;
     property CreationClubContentFileName: string
-      read gdCreationClubContentFileName
-      write gdCreationClubContentFileName;
+      read gdCreationClubContentFileName;
     property KnownSubRecordSignatures[aKind: TwbKnownSubRecord]: TwbSignature
-      read GetKnownSubRecordSignature
-      write SetKnownSubRecordSignature;
+      read GetKnownSubRecordSignature;
     property RecordFlags: IwbIntegerDef
-      read gdRecordFlags
-      write gdRecordFlags;
+      read gdRecordFlags;
     property MainRecordHeader: IwbValueDef
-      read gdMainRecordHeader
-      write gdMainRecordHeader;
+      read gdMainRecordHeader;
     property SizeOfMainRecordStruct: Integer
-      read gdSizeOfMainRecordStruct
-      write gdSizeOfMainRecordStruct;
+      read gdSizeOfMainRecordStruct;
     property RecordDefs: TwbRecordDefEntries
       read gdRecordDefs;
     property RefRecordDefs: TwbMainRecordDefs
       read gdRefRecordDefs;
     property DefaultFormVersion: Word
-      read gdDefaultFormVersion
-      write gdDefaultFormVersion;
+      read gdDefaultFormVersion;
     property QuestFlagsSignature: TwbSignature
-      read gdQuestFlagsSignature
-      write gdQuestFlagsSignature;
+      read gdQuestFlagsSignature;
     property RaceFlagsSignature: TwbSignature
-      read gdRaceFlagsSignature
-      write gdRaceFlagsSignature;
+      read gdRaceFlagsSignature;
     property DefaultLandTexture: string
-      read gdDefaultLandTexture
-      write gdDefaultLandTexture;
+      read gdDefaultLandTexture;
     property ArchiveExtension: string
-      read gdArchiveExtension
-      write gdArchiveExtension;
+      read gdArchiveExtension;
     property HardcodedRangeAdmitted: Boolean
-      read gdHardcodedRangeAdmitted
-      write gdHardcodedRangeAdmitted;
+      read gdHardcodedRangeAdmitted;
     property HardcodedRangeMinVersion: Double
-      read gdHardcodedRangeMinVersion
-      write gdHardcodedRangeMinVersion;
+      read gdHardcodedRangeMinVersion;
 
-    function KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;
-
-    function RegisterRecordDef(const aSignature   : TwbSignature;
-                               const aName        : string;
-                               const aKnownSRs    : PwbKnownSubRecordSignatures;
-                               const aRecordFlags : IwbIntegerDefFormater;
-                               const aMembers     : array of IwbRecordMemberDef;
-                                     aPriority    : TwbConflictPriority;
-                                     aRequired    : Boolean;
-                                     aIsReference : Boolean)
-                                                  : IwbMainRecordDef; overload;
-    procedure AddRefRecordDef(const aRecordDef: IwbMainRecordDef);
-    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
-    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aKnownSRs: PwbKnownSubRecordSignatures; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
-    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aKnownSRs: PwbKnownSubRecordSignatures; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
-    function RegisterRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
-    function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aRecordFlags: IwbIntegerDefFormater; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
-    function RegisterRefRecordDef(const aSignature: TwbSignature; const aName: string; const aMembers: array of IwbRecordMemberDef; aPriority: TwbConflictPriority = cpNormal; aRequired: Boolean = False): IwbMainRecordDef; overload;
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean; overload;
     function FindRecordDef(const aSignature: AnsiString; out aRecordDef: PwbMainRecordDef): Boolean; overload;
     function RecordDefMap: TStringList;
@@ -5948,11 +5930,6 @@ end;
 function TwbGameDef.GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
 begin
   Result := gdKnownSubRecordSignatures[aKind];
-end;
-
-procedure TwbGameDef.SetKnownSubRecordSignature(aKind: TwbKnownSubRecord; const aValue: TwbSignature);
-begin
-  gdKnownSubRecordSignatures[aKind] := aValue;
 end;
 
 function TwbGameDef.KnownSubRecordSignaturesPtr: PwbKnownSubRecordSignatures;

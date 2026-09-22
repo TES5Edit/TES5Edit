@@ -889,27 +889,27 @@ end;
 
 procedure TwbGameDefTES3.Define;
 begin
-  HeaderSignature := 'TES3';
+  gdHeaderSignature := 'TES3';
 
-  RecordFlags :=
+  gdRecordFlags :=
     wbInteger('Record Flags', itU32,
       wbFlags([
       {0} 'ESM'
       ]));
 
-  MainRecordHeader := wbStruct('Record Header', [
+  gdMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
     wbByteArray('Version Control Info', 4, cpIgnore).SetToStr(wbVCI1ToStrBeforeFO4),
     RecordFlags
   ]);
 
-  SizeOfMainRecordStruct := 16;
+  gdSizeOfMainRecordStruct := 16;
 
-  KnownSubRecordSignatures[ksrEditorID] := 'NAME';
-  KnownSubRecordSignatures[ksrFullName] := 'FNAM';
-  KnownSubRecordSignatures[ksrBaseRecord] := '____';
-  KnownSubRecordSignatures[ksrGridCell] := 'DATA';
+  gdKnownSubRecordSignatures[ksrEditorID] := 'NAME';
+  gdKnownSubRecordSignatures[ksrFullName] := 'FNAM';
+  gdKnownSubRecordSignatures[ksrBaseRecord] := '____';
+  gdKnownSubRecordSignatures[ksrGridCell] := 'DATA';
 
   {>>> Records <<<}
 
@@ -2524,9 +2524,9 @@ begin
   AddGroupOrder(SNDG);
   AddGroupOrder(DIAL);
   AddGroupOrder(INFO);
-  NexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
-  HEDRVersion := 1.30;
-  HardcodedRangeAdmitted := True;
+  gdNexusModsUrl := 'https://www.nexusmods.com/morrowind/mods/54508';
+  gdHEDRVersion := 1.30;
+  gdHardcodedRangeAdmitted := True;
 end;
 
 initialization

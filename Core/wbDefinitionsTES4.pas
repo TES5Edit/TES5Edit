@@ -1005,9 +1005,9 @@ end;
 
 procedure TwbGameDefTES4.Define;
 begin
-  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbStruct('Record Header', [
+  gdMainRecordHeader := wbStruct('Record Header', [
     wbString('Signature', 4, cpCritical),
     wbInteger('Data Size', itU32, nil, cpIgnore),
     RecordFlags,
@@ -1018,13 +1018,13 @@ begin
     .IncludeFlag(dfSummaryMembersNoName)
     .IncludeFlag(dfCollapsed, clpRecordHeader in DefineOptions.Collapse);
 
-  SizeOfMainRecordStruct := 20;
+  gdSizeOfMainRecordStruct := 20;
 
   IgnoreRecords.Add(XXXX);
 
 {>>> Enums <<<}
 
-  ActorValueEnum :=
+  gdActorValueEnum :=
     wbEnum([
       {0}  'Strength',
       {1}  'Intelligence',
@@ -3731,11 +3731,11 @@ begin
   AddGroupOrder(WATR);
   AddGroupOrder(EFSH);
   //wbAddGroupOrder(TOFT);
-  NexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
+  gdNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/11536';
   if wbToolMode = tmLODgen then
-    NexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
-  HEDRVersion := 1.0;
-  DefaultLandTexture := 'TerrainHDDirt01dds';
+    gdNexusModsUrl := 'https://www.nexusmods.com/oblivion/mods/15781';
+  gdHEDRVersion := 1.0;
+  gdDefaultLandTexture := 'TerrainHDDirt01dds';
 end;
 
 initialization

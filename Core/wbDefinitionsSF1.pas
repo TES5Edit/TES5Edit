@@ -2239,20 +2239,20 @@ end;
 
 procedure TwbGameDefSF1.Define;
 begin
-  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbRecordHeader(RecordFlags);
+  gdMainRecordHeader := wbRecordHeader(RecordFlags);
 
-  SizeOfMainRecordStruct := 24;
+  gdSizeOfMainRecordStruct := 24;
 
-  KnownSubRecordSignatures[ksrBaseFormComponents] := '____';
-  HEDRVersion := 0.96;
-  CellSizeFactor := 100;
-  DefaultFormVersion := 582;
-  QuestFlagsSignature := 'DNAM';
-  RaceFlagsSignature := 'DAT2';
-  ArchiveExtension := '.ba2';
-  HardcodedRangeAdmitted := True;
+  gdKnownSubRecordSignatures[ksrBaseFormComponents] := '____';
+  gdHEDRVersion := 0.96;
+  gdCellSizeFactor := 100;
+  gdDefaultFormVersion := 582;
+  gdQuestFlagsSignature := 'DNAM';
+  gdRaceFlagsSignature := 'DAT2';
+  gdArchiveExtension := '.ba2';
+  gdHardcodedRangeAdmitted := True;
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);
@@ -19360,12 +19360,12 @@ begin
   AddGroupOrder(GWED);
   AddGroupOrder(TDED);
 
-  NexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
+  gdNexusModsUrl := 'https://www.nexusmods.com/starfield/mods/239';
 
-  OfficialDLC := ['ShatteredSpace.esm', 'Constellation.esm', 'OldMars.esm', 'SFBGS003.esm',
+  gdOfficialDLC := ['ShatteredSpace.esm', 'Constellation.esm', 'OldMars.esm', 'SFBGS003.esm',
     'SFBGS004.esm', 'SFBGS006.esm', 'SFBGS007.esm', 'SFBGS008.esm', 'SFBGS00D.esm',
     'SFBGS047.esm', 'SFBGS050.esm', 'BlueprintShips-Starfield.esm', 'BlueprintShips-SFBGS050.esm'];
-  CreationClubContentFileName := 'Starfield.ccc';
+  gdCreationClubContentFileName := 'Starfield.ccc';
 end;
 
 initialization

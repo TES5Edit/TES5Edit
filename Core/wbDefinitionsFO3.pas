@@ -2511,17 +2511,17 @@ end;
 
 procedure TwbGameDefFO3.Define;
 begin
-  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbRecordHeader(RecordFlags);
+  gdMainRecordHeader := wbRecordHeader(RecordFlags);
 
-  SizeOfMainRecordStruct := 24;
+  gdSizeOfMainRecordStruct := 24;
 
   IgnoreRecords.Add(XXXX);
 
   {>>> Enums <<<}
 
-  ActorValueEnum :=
+  gdActorValueEnum :=
     wbEnum([
       {0}  'Aggression',
       {1}  'Confidence',
@@ -7886,12 +7886,12 @@ begin
   AddGroupOrder(DOBJ);
   AddGroupOrder(LGTM);
   AddGroupOrder(MUSC);
-  NexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
+  gdNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/637';
   if wbToolMode = tmLODgen then
-    NexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
-  HEDRVersion := 0.94;
-  DefaultFormVersion := 15;
-  DefaultLandTexture := 'LDirtWasteland01';
+    gdNexusModsUrl := 'https://www.nexusmods.com/fallout3/mods/21174';
+  gdHEDRVersion := 0.94;
+  gdDefaultFormVersion := 15;
+  gdDefaultLandTexture := 'LDirtWasteland01';
 end;
 
 initialization

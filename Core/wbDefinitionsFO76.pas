@@ -4027,11 +4027,11 @@ end;
 
 procedure TwbGameDefFO76.Define;
 begin
-  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbRecordHeader(RecordFlags);
+  gdMainRecordHeader := wbRecordHeader(RecordFlags);
 
-  SizeOfMainRecordStruct := 24;
+  gdSizeOfMainRecordStruct := 24;
 
   wbNull := wbUnused(-255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
@@ -5654,7 +5654,7 @@ begin
       {21} 'Is Synced Anim'
     ]);
 
-  ActorValueEnum :=
+  gdActorValueEnum :=
     wbEnum([
     {00} 'Aggression',
     {01} 'Confidence',
@@ -17747,13 +17747,13 @@ begin
   AddGroupOrder(CMPT);
   AddGroupOrder(CMPI);
   AddGroupOrder(TEPF);
-  NexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
+  gdNexusModsUrl := 'https://www.nexusmods.com/fallout76/mods/30';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  HEDRVersion := 266.0;
-  DefaultFormVersion := 209;
-  QuestFlagsSignature := 'DNAM';
-  ArchiveExtension := '.ba2';
+  gdHEDRVersion := 266.0;
+  gdDefaultFormVersion := 209;
+  gdQuestFlagsSignature := 'DNAM';
+  gdArchiveExtension := '.ba2';
 end;
 
 initialization

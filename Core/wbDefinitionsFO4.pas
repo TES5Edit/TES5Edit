@@ -3204,11 +3204,11 @@ end;
 
 procedure TwbGameDefFO4.Define;
 begin
-  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbRecordHeader(RecordFlags);
+  gdMainRecordHeader := wbRecordHeader(RecordFlags);
 
-  SizeOfMainRecordStruct := 24;
+  gdSizeOfMainRecordStruct := 24;
 
   wbNull := wbUnused(-255);
   wbLLCT := wbInteger(LLCT, 'Count', itU8, nil, cpBenign);
@@ -4585,7 +4585,7 @@ begin
       {20} 'Casting Type Is'
     ]);
 
-  ActorValueEnum :=
+  gdActorValueEnum :=
     wbEnum([
     {00} 'Aggression',
     {01} 'Confidence',
@@ -13281,29 +13281,29 @@ begin
    //wbAddGroupOrder(LSPR);
    AddGroupOrder(GDRY);
    AddGroupOrder(OVIS);
-  NexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
+  gdNexusModsUrl := 'https://www.nexusmods.com/fallout4/mods/2737';
   {if wbToolMode = tmLODgen then
     wbNexusModsUrl := '';}
-  OfficialDLC := ['DLCRobot.esm', 'DLCworkshop01.esm', 'DLCCoast.esm', 'DLCworkshop02.esm',
+  gdOfficialDLC := ['DLCRobot.esm', 'DLCworkshop01.esm', 'DLCCoast.esm', 'DLCworkshop02.esm',
     'DLCworkshop03.esm', 'DLCNukaWorld.esm', 'DLCUltraHighResolution.esm'];
   if GameMode = gmFO4VR then begin
     // new VR esm is loaded after DLCs
-    OfficialDLC := OfficialDLC + ['Fallout4_VR.esm'];
+    gdOfficialDLC := OfficialDLC + ['Fallout4_VR.esm'];
   end else
-    CreationClubContentFileName := 'Fallout4.ccc';
+    gdCreationClubContentFileName := 'Fallout4.ccc';
   if GameMode = gmFO4VR then
-    HEDRVersion := 0.95
+    gdHEDRVersion := 0.95
   else begin
-    HEDRVersion := 1.0;
-    HEDRNextObjectID := 1;
+    gdHEDRVersion := 1.0;
+    gdHEDRNextObjectID := 1;
   end;
-  DefaultFormVersion := 131;
-  QuestFlagsSignature := 'DNAM';
-  DefaultLandTexture := 'LCWDefault01Grass01';
-  ArchiveExtension := '.ba2';
+  gdDefaultFormVersion := 131;
+  gdQuestFlagsSignature := 'DNAM';
+  gdDefaultLandTexture := 'LCWDefault01Grass01';
+  gdArchiveExtension := '.ba2';
   if GameMode = gmFO4 then begin
-    HardcodedRangeAdmitted := True;
-    HardcodedRangeMinVersion := 1.0;
+    gdHardcodedRangeAdmitted := True;
+    gdHardcodedRangeMinVersion := 1.0;
   end;
 end;
 

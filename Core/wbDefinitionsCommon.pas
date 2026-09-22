@@ -21,7 +21,7 @@ type
   TwbVarRecs = TArray<TVarRec>;
 
   TwbGameDefCommon = class(TwbGameDef)
-  public
+  protected
     {>>> Vec3 Defs <<<} //12
     function wbVec3Int(const aName   : string = 'Unknown';
                        const aPrefix : string = '')
@@ -175,32 +175,13 @@ type
                             const aDefaultB : Single = 0)
                                             : IwbRecordMemberDef;
 
-    function wbFloatRGBA(const aSignature : TwbSignature;
-                         const aName      : string = 'Color';
-                         const aDefaultR  : Single = 0;
-                         const aDefaultG  : Single = 0;
-                         const aDefaultB  : Single = 0;
-                         const aDefaultA  : Single = 0)
-                                          : IwbRecordMemberDef; overload;
-
-    function wbFloatRGBA(const aName     : string = 'Color';
-                         const aDefaultR : Single = 0;
-                         const aDefaultG : Single = 0;
-                         const aDefaultB : Single = 0;
-                         const aDefaultA : Single = 0)
-                                         : IwbValueDef; overload;
-
     {>>> Enum Defs <<<} //12
-    function wbArchtypeEnum: IwbEnumDef;
     function wbBlendModeEnum: IwbEnumDef;
     function wbBodyPartIndexEnum: IwbEnumDef;
     function wbCriticalStageEnum: IwbEnumDef;
     function wbCrimeTypeEnum: IwbEnumDef;
     function wbMenuModeEnum: IwbEnumDef;
-    function wbMoodEnum: IwbEnumDef;
-    function wbPackageTypeEnum: IwbEnumDef;
     function wbQuestEventEnum: IwbEnumDef;
-    function wbSexEnum: IwbEnumDef;
     function wbZoomOverlayEnum: IwbEnumDef;
     function wbZTestFuncEnum: IwbEnumDef;
 
@@ -209,7 +190,6 @@ type
     function wbNavmeshTriangleFlags: IwbFlagsDef;
     function wbNavmeshCoverFlags: IwbFlagsDef;
     function wbPackageFlags: IwbFlagsDef;
-    function wbServiceFlags: IwbFlagsDef;
     function wbTemplateFlags: IwbFlagsDef;
 
     {>>> Value Defs <<<} //7
@@ -321,6 +301,27 @@ type
                                         const aSignatureAdd  : TwbSignature;
                                         const aName          : string)
                                                              : IwbRecordMemberDef;
+  public
+    function wbFloatRGBA(const aSignature : TwbSignature;
+                         const aName      : string = 'Color';
+                         const aDefaultR  : Single = 0;
+                         const aDefaultG  : Single = 0;
+                         const aDefaultB  : Single = 0;
+                         const aDefaultA  : Single = 0)
+                                          : IwbRecordMemberDef; overload;
+
+    function wbFloatRGBA(const aName     : string = 'Color';
+                         const aDefaultR : Single = 0;
+                         const aDefaultG : Single = 0;
+                         const aDefaultB : Single = 0;
+                         const aDefaultA : Single = 0)
+                                         : IwbValueDef; overload;
+
+    function wbArchtypeEnum: IwbEnumDef;
+    function wbMoodEnum: IwbEnumDef;
+    function wbPackageTypeEnum: IwbEnumDef;
+    function wbSexEnum: IwbEnumDef;
+    function wbServiceFlags: IwbFlagsDef;
   end;
 
 var

@@ -2838,11 +2838,11 @@ end;
 
 procedure TwbGameDefFNV.Define;
 begin
-  RecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
+  gdRecordFlags := wbInteger('Record Flags', itU32, wbFlags(wbFlagsList([])));
 
-  MainRecordHeader := wbRecordHeader(RecordFlags);
+  gdMainRecordHeader := wbRecordHeader(RecordFlags);
 
-  SizeOfMainRecordStruct := 24;
+  gdSizeOfMainRecordStruct := 24;
 
   IgnoreRecords.Add(XXXX);
 
@@ -3347,7 +3347,7 @@ begin
       'Is Paralyzing Palm'
     ]);
 
-  ActorValueEnum :=
+  gdActorValueEnum :=
     wbEnum([
         {00} 'Aggression',
         {01} 'Confidence',
@@ -9125,12 +9125,12 @@ begin
   AddGroupOrder(DEHY);
   AddGroupOrder(HUNG);
   AddGroupOrder(SLPD);
-  NexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
+  gdNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/34703';
   if wbToolMode = tmLODgen then
-    NexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
-  HEDRVersion := 1.34;
-  DefaultFormVersion := 15;
-  DefaultLandTexture := 'LDirtWasteland01';
+    gdNexusModsUrl := 'https://www.nexusmods.com/newvegas/mods/58562';
+  gdHEDRVersion := 1.34;
+  gdDefaultFormVersion := 15;
+  gdDefaultLandTexture := 'LDirtWasteland01';
 end;
 
 initialization
