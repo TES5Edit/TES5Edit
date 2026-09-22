@@ -3567,6 +3567,7 @@ type
     gdRecordsInit      : Boolean;
     gdDefined          : Boolean;
     gdDefining         : Boolean;
+    gdDefinedOptions   : TwbGameDefineOptions;
     gdGameMode         : TwbGameMode;
     gdCapabilities     : TwbGameCapabilities;
     gdGameName         : string;
@@ -3672,6 +3673,8 @@ type
     destructor Destroy; override;
 
     procedure EnsureDefined;
+    property DefinedOptions: TwbGameDefineOptions
+      read gdDefinedOptions;
 
     property GameMode: TwbGameMode
       read gdGameMode;
@@ -5917,6 +5920,7 @@ constructor TwbGameDef.Create;
 begin
   inherited Create;
   DefineOptions := TwbGameDefineOptions.Defaults;
+  gdDefinedOptions := DefineOptions;
   gdSaveDefsLock := TObject.Create;
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
@@ -6401,6 +6405,7 @@ begin
     raise Exception.Create('EnsureDefined called while the game def is being defined');
   gdDefining := True;
   try
+    gdDefinedOptions := DefineOptions;
     Define;
     gdDefined := True;
   finally

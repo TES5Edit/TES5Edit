@@ -2320,7 +2320,7 @@ end;
 
 procedure wbNAVMEdgeLinksGetCP(const aElement: IwbElement; var aConflictPriority: TwbConflictPriority);
 begin
-  if not Assigned(aElement) or aElement.GameDefObj.DefineOptions.SimpleRecords then
+  if not Assigned(aElement) or aElement.GameDefObj.DefinedOptions.SimpleRecords then
     aConflictPriority := cpNormal
   else
     aConflictPriority := cpIgnore;

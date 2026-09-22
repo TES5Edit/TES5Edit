@@ -20259,7 +20259,7 @@ begin
         lHeader.Add('#   wbActorTemplateHide  = ' + BoolToStr(wbActorTemplateHide, True));
         lHeader.Add('#   wbAllowInternalEdit  = ' + BoolToStr(xeContext.Settings.AllowInternalEdit, True));
         lHeader.Add('#   wbCanSortINFO        = ' + BoolToStr(xeContext.Settings.CanSortINFO, True));
-        lHeader.Add('#   wbDecodeTextureHashes = ' + BoolToStr(xeContext.GameDefObj.DefineOptions.DecodeTextureHashes, True));
+        lHeader.Add('#   wbDecodeTextureHashes = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.DecodeTextureHashes, True));
         lHeader.Add('#   wbDisplayLoadOrderFormID = ' + BoolToStr(wbDisplayLoadOrderFormID, True));
         lHeader.Add('#   wbDisplayShorterNames = ' + BoolToStr(wbDisplayShorterNames, True));
         lHeader.Add('#   wbEditAllowed        = ' + BoolToStr(xeContext.Settings.EditAllowed, True));
@@ -20268,11 +20268,11 @@ begin
         lHeader.Add('#   wbFillPNAM           = ' + BoolToStr(xeContext.Settings.FillPNAM, True));
         lHeader.Add('#   wbFlagsAsArray       = ' + BoolToStr(xeContext.Settings.FlagsAsArray, True));
         lHeader.Add('#   wbHideIgnored        = ' + BoolToStr(xeContext.Settings.HideIgnored, True));
-        lHeader.Add('#   wbHideLargeSubrecords = ' + BoolToStr(xeContext.GameDefObj.DefineOptions.HideLargeSubrecords, True));
+        lHeader.Add('#   wbHideLargeSubrecords = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.HideLargeSubrecords, True));
         lHeader.Add('#   wbHideNeverShow      = ' + BoolToStr(wbHideNeverShow, True));
         lHeader.Add('#   wbHideUnused         = ' + BoolToStr(wbHideUnused, True));
         lHeader.Add('#   wbShowFlagEnumValue  = ' + BoolToStr(wbShowFlagEnumValue, True));
-        lHeader.Add('#   wbSimpleRecords      = ' + BoolToStr(xeContext.GameDefObj.DefineOptions.SimpleRecords, True));
+        lHeader.Add('#   wbSimpleRecords      = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.SimpleRecords, True));
         lHeader.Add('#   wbSortFLST           = ' + BoolToStr(wbSortFLST, True));
         lHeader.Add('#   wbSortINFO           = ' + BoolToStr(xeContext.Settings.SortINFO, True));
         lHeader.Add('#   wbSortSubRecords     = ' + BoolToStr(xeContext.Settings.SortSubRecords, True));
@@ -21833,7 +21833,7 @@ begin
           xeContext.ContainerHandler.AddFolder(ltDataPath);
         end;
 
-        if lGameDef.DefineOptions.DecodeTextureHashes then begin
+        if lGameDef.DefinedOptions.DecodeTextureHashes then begin
           LoaderProgress('Start building resources cache...');
           xeContext.ContainerHandler.EnsureCache;
           LoaderProgress('...resources cache finished building');
