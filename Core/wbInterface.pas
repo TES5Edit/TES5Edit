@@ -4033,7 +4033,12 @@ type
     scFullPluginNames  : TStringList;
     scLightPluginNames : TStringList;
 
+    scFullSlotFiles    : TArray<Integer>;
+    scLightSlotFiles   : TArray<Integer>;
+
     procedure scJoin(const aFile: IwbFile; const aFileName: string);
+    procedure scBuildSlotTable;
+    function scSlotFile(const aSlotFiles: TArray<Integer>; aSlot: Integer): IwbFile;
     function scHeldFileByName(const aFileName: string): IwbFile;
   public
     constructor Create(const aGameContext: IwbGameContext);
@@ -4052,6 +4057,13 @@ type
       read scFullPluginNames;
     property LightPluginNames: TStringList
       read scLightPluginNames;
+    property FullSlotFiles: TArray<Integer>
+      read scFullSlotFiles;
+    property LightSlotFiles: TArray<Integer>
+      read scLightSlotFiles;
+
+    function FullSlotFile(aSlot: Integer): IwbFile;
+    function LightSlotFile(aSlot: Integer): IwbFile;
 
     procedure SetPluginNames(aFullNames, aLightNames: TStrings);
   end;
@@ -6478,9 +6490,61 @@ begin
     scFileName := aFileName;
     scJoinIndex := Length(lContext.gcFiles);
     lContext.gcSaveContexts := lContext.gcSaveContexts + [Self];
+    scBuildSlotTable;
   finally
     TMonitor.Exit(lContext.gcSaveContextsLock);
   end;
+end;
+
+procedure TwbSaveContext.scBuildSlotTable;
+var
+  lContext : TwbGameContext;
+
+  function ResolveSlot(const aName: string): Integer;
+  var
+    lMapIdx : Integer;
+    lObj    : Pointer;
+  begin
+    Result := -1;
+    if aName = '' then
+      Exit;
+    if not lContext.gcFilesMap.Find(lContext.ExpandFileName(lContext.Settings.DataPath + aName), lMapIdx) then
+      Exit;
+    lObj := Pointer(lContext.gcFilesMap.Objects[lMapIdx]);
+    for var lIdx := Low(lContext.gcFiles) to High(lContext.gcFiles) do
+      if Pointer(lContext.gcFiles[lIdx]) = lObj then
+        Exit(lIdx);
+  end;
+
+begin
+  lContext := scGameContextObj;
+  SetLength(scFullSlotFiles, scFullPluginNames.Count);
+  for var lSlot := 0 to Pred(scFullPluginNames.Count) do
+    scFullSlotFiles[lSlot] := ResolveSlot(scFullPluginNames[lSlot]);
+  SetLength(scLightSlotFiles, scLightPluginNames.Count);
+  for var lSlot := 0 to Pred(scLightPluginNames.Count) do
+    scLightSlotFiles[lSlot] := ResolveSlot(scLightPluginNames[lSlot]);
+end;
+
+function TwbSaveContext.scSlotFile(const aSlotFiles: TArray<Integer>; aSlot: Integer): IwbFile;
+begin
+  Result := nil;
+  if (aSlot < Low(aSlotFiles)) or (aSlot > High(aSlotFiles)) then
+    Exit;
+  var lIdx := aSlotFiles[aSlot];
+  if (lIdx < 0) or (lIdx > High(scGameContextObj.gcFiles)) then
+    Exit;
+  Result := scGameContextObj.gcFiles[lIdx];
+end;
+
+function TwbSaveContext.FullSlotFile(aSlot: Integer): IwbFile;
+begin
+  Result := scSlotFile(scFullSlotFiles, aSlot);
+end;
+
+function TwbSaveContext.LightSlotFile(aSlot: Integer): IwbFile;
+begin
+  Result := scSlotFile(scLightSlotFiles, aSlot);
 end;
 
 function TwbSaveContext.scHeldFileByName(const aFileName: string): IwbFile;
