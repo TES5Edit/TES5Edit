@@ -980,7 +980,7 @@ type
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean); overload;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
-    procedure AfterConstruction; override;
+    class function NewInstance: TObject; override;
     destructor Destroy; override;
   end;
 
@@ -2337,10 +2337,10 @@ var
   _FileGeneration: Integer = 1;
   _FileSerial: Integer;
 
-procedure TwbFile.AfterConstruction;
+class function TwbFile.NewInstance: TObject;
 begin
-  inherited;
-  flSerial := Cardinal(AtomicIncrement(_FileSerial));
+  Result := inherited NewInstance;
+  TwbFile(Result).flSerial := Cardinal(AtomicIncrement(_FileSerial));
 end;
 
 function TwbFile.flComplexFileFileID: Boolean;
