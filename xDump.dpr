@@ -27,7 +27,6 @@ uses
   System.IniFiles,
   System.SysUtils,
   System.TypInfo,
-  System.Win.Registry,
 
   WinApi.Windows,
 
@@ -777,41 +776,6 @@ begin
 end;
 {==============================================================================}
 
-const
-  DataName : array[Boolean] of string = (
-    'Data',
-    'Data Files'   // gmTES3
-  );
-
-function CheckAppPath: string;
-
-  function CheckPath(const aStartFrom: string): string;
-  var
-    s: string;
-  begin
-    Result := '';
-    s := aStartFrom;
-    while Length(s) > 3 do begin
-      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[HostContext.GameDefObj.GameMode = gmTES3]) then begin
-        Result := s;
-        Exit;
-      end;
-      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
-    end;
-  end;
-
-var
-  CurrentDir, ExeDir: string;
-begin
-  CurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
-  Result := CheckPath(CurrentDir);
-  if (Result = '') then begin
-    ExeDir := ExtractFilePath(ParamStr(0));
-    if not SameText(CurrentDir, ExeDir) then
-      Result := CheckPath(ExeDir);
-  end;
-end;
-
 function CheckParamPath: string; // for Dump, do we have bsa in the same directory
 var
   s: string;
@@ -827,73 +791,19 @@ begin
 end;
 
 procedure DoInitPath;
-const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
-  sSureAIRegKey           = '\Software\SureAI\';
-
 var
-  regPath, regKey, client: string;
-  ProgramPath : String;
-  DataPath    : String;
+  lRegistryName : string;
+  lDataPath     : string;
 begin
-  var lGameDef := HostContext.GameDefObj;
-  ProgramPath := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
-
-  if not wbFindCmdLineParam('D', DataPath) then begin
-    DataPath := CheckAppPath;
-
-    if (DataPath = '') then with TRegistry.Create do try
-      Access  := KEY_READ or KEY_WOW64_32KEY;
-      RootKey := HKEY_LOCAL_MACHINE;
-      client  := 'Steam';
-
-      case lGameDef.GameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1: begin
-        regPath := sBethRegKey + wbGameNameReg + '\';
-      end;
-      gmEnderal, gmEnderalSE: begin
-        RootKey := HKEY_CURRENT_USER;
-        regPath := sSureAIRegKey + wbGameNameReg + '\';
-      end;
-      gmFO76: begin
-        regPath := sUninstallRegKey + wbGameNameReg + '\';
-        client  := 'Bethesda.net Launcher';
-      end;
-      end;
-
-      if not OpenKey(regPath, False) then begin
-        Access := KEY_READ or KEY_WOW64_64KEY;
-        if not OpenKey(regPath, False) then begin
-          ReportProgress('Warning: Could not open registry key: ' + regPath);
-          Exit;
-        end;
-      end;
-
-      case lGameDef.GameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR, gmSF1:
-                  regKey := 'Installed Path';
-      gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
-      gmFO76:     regKey := 'Path';
-      end;
-
-      DataPath := ReadString(regKey);
-      DataPath := StringReplace(DataPath, '"', '', [rfReplaceAll]);
-
-      if DataPath = '' then begin
-        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]));
-      end;
-    finally
-      Free;
+  if wbFindCmdLineParam('D', lDataPath) then
+    HostContext.Settings.DataPath := IncludeTrailingPathDelimiter(lDataPath)
+  else
+    case HostContext.Settings.FindDataPath(HostContext.GameDefObj.GameMode, lRegistryName) of
+      dpsNoRegistryKey:
+        ReportProgress('Warning: Could not open registry key: ' + lRegistryName);
+      dpsNoRegistryValue:
+        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, lRegistryName]));
     end;
-
-    if (DataPath <> '') then
-      DataPath := IncludeTrailingPathDelimiter(DataPath) + 'Data\';
-
-  end else
-    DataPath := IncludeTrailingPathDelimiter(DataPath);
-
-  HostContext.Settings.DataPath := DataPath;
 end;
 
 function isMode(aMode: String): Boolean;
