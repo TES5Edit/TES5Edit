@@ -545,7 +545,7 @@ type
     procedure vstViewCollapsing(Sender: TBaseVirtualTree; Node: PVirtualNode; var Allowed: Boolean);
     procedure vstViewDblClick(Sender: TObject);
     procedure vstViewDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-    procedure vstViewDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure vstViewDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: TVTDragDataObject; Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure vstViewDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
     procedure vstViewEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstViewFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -556,8 +556,8 @@ type
     procedure vstViewHeaderClick(Sender: TVTHeader; const HitInfo: TVTHeaderHitInfo);
     procedure vstViewHeaderDropped(Sender: TVTHeader; SourceColumn, TargetColumn: TColumnIndex; var Handled: Boolean);
     procedure vstViewHeaderDrawQueryElements(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
-    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
+    procedure vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: TDimension);
+    procedure vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: TDimension);
     procedure vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
     procedure vstViewInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstViewKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -609,7 +609,7 @@ type
     procedure vstSpreadSheetClick(Sender: TObject);
     procedure vstSpreadSheetCompareNodes(Sender: TBaseVirtualTree; Node1, Node2: PVirtualNode; Column: TColumnIndex; var Result: Integer);
     procedure vstSpreadSheetDragAllowed(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-    procedure vstSpreadSheetDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+    procedure vstSpreadSheetDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: TVTDragDataObject; Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
     procedure vstSpreadSheetDragOver(Sender: TBaseVirtualTree; Source: TObject; Shift: TShiftState; State: TDragState; Pt: TPoint; Mode: TDropMode; var Effect: Integer; var Accept: Boolean);
     procedure vstSpreadSheetEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstSpreadSheetFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -690,7 +690,7 @@ type
     procedure mniNavDeleteModGroupsClick(Sender: TObject);
     procedure edFilterNoBeepOnEnterKeyPress(Sender: TObject; var Key: Char);
     procedure tmrUpdateColumnWidthsTimer(Sender: TObject);
-    procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
+    procedure vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: TDimension);
     procedure bnHelpClick(Sender: TObject);
     procedure bnVideosClick(Sender: TObject);
     procedure bnNexusModsClick(Sender: TObject);
@@ -17752,7 +17752,7 @@ begin
 end;
 
 procedure TfrmMain.vstViewDragDrop(Sender: TBaseVirtualTree; Source: TObject;
-  DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState;
+  DataObject: TVTDragDataObject; Formats: TFormatArray; Shift: TShiftState;
   Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
   SourceElement               : IwbElement;
@@ -18224,7 +18224,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfrmMain.vstViewHeaderMouseDown(Sender: TVTHeader; Button: TMouseButton; Shift: TShiftState; X, Y: TDimension);
 var
   Column     : Integer;
   Element    : IwbElement;
@@ -18242,7 +18242,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: Integer);
+procedure TfrmMain.vstViewHeaderMouseMove(Sender: TVTHeader; Shift: TShiftState; X, Y: TDimension);
 var
   Column     : Integer;
 begin
@@ -18635,7 +18635,7 @@ begin
     UpdateColumnWidths;
 end;
 
-procedure TfrmMain.vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: Integer);
+procedure TfrmMain.vstViewScroll(Sender: TBaseVirtualTree; DeltaX, DeltaY: TDimension);
 begin
   if DeltaY <> 0 then
     if mniViewColumnWidthFitText.Checked or mniViewColumnWidthFitSmart.Checked then begin
@@ -19768,7 +19768,7 @@ begin
   Allowed := Assigned(NodeDatas[Column].Element);
 end;
 
-procedure TfrmMain.vstSpreadSheetDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: IDataObject; Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
+procedure TfrmMain.vstSpreadSheetDragDrop(Sender: TBaseVirtualTree; Source: TObject; DataObject: TVTDragDataObject; Formats: TFormatArray; Shift: TShiftState; Pt: TPoint; var Effect: Integer; Mode: TDropMode);
 var
   NodeDatas                   : PSpreadSheetNodeDatas;
   TargetElement               : IwbElement;
