@@ -7,29 +7,6 @@ uses
 
   wbInterface;
 
-type
-  IwbSoundBankArray = interface(IInterface)
-  ['{5FEF18BF-C357-4B8A-9DBB-6F6D58923F89}']
-    function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
-                           const aGUID     : TGUID;
-                             var aName     : string;
-                             var aFilename : string)
-                                           : Boolean;
-
-    function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
-                              const aDisplayStr : string;
-                                var aGUID       : TGUID)
-                                                : Boolean;
-
-    procedure GetChildStrings(const aParentGUID: TGUID;
-                              const aChildType: TwbWwiseNodeType;
-                                var aList: TStringList);
-
-    procedure GetStrings(const aNodeType : TwbWwiseNodeType;
-                         const aMasters  : TStringList;
-                           var aList     : TStringList);
-  end;
-
 function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray;
 
 procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
@@ -169,7 +146,8 @@ var
 
 function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray;
 begin
-  if not Supports(aContext.SoundBankCache, IwbSoundBankArray, Result) then
+  Result := aContext.SoundBankCache;
+  if not Assigned(Result) then
     Result := _EmptySoundBankCache;
 end;
 

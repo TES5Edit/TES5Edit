@@ -3441,6 +3441,28 @@ type
     function Append(aKind: TwbFaceGenKind; const aRaceID: string; aFemale: Boolean): PwbFaceGenFeature;
   end;
 
+  IwbSoundBankArray = interface(IInterface)
+  ['{5FEF18BF-C357-4B8A-9DBB-6F6D58923F89}']
+    function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
+                           const aGUID     : TGUID;
+                             var aName     : string;
+                             var aFilename : string)
+                                           : Boolean;
+
+    function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
+                              const aDisplayStr : string;
+                                var aGUID       : TGUID)
+                                                : Boolean;
+
+    procedure GetChildStrings(const aParentGUID: TGUID;
+                              const aChildType: TwbWwiseNodeType;
+                                var aList: TStringList);
+
+    procedure GetStrings(const aNodeType : TwbWwiseNodeType;
+                         const aMasters  : TStringList;
+                           var aList     : TStringList);
+  end;
+
   IwbSaveTables = interface(IwbInterface)
     ['{6F2D9C41-8B3A-4E57-A1C0-5D7E92B4F318}']
     procedure InitializeVMTypeArray(const aContainer: IwbContainer);
@@ -3511,14 +3533,14 @@ type
     property Files[aIndex: Integer]: IwbFile
       read GetFile;
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
-    function GetSoundBankCache: IInterface;
-    procedure SetSoundBankCache(const aValue: IInterface);
+    function GetSoundBankCache: IwbSoundBankArray;
+    procedure SetSoundBankCache(const aValue: IwbSoundBankArray);
     function GetFaceGenCache: IwbFaceGenCache;
     procedure SetFaceGenCache(const aValue: IwbFaceGenCache);
     property ContainerHandler: IwbContainerHandler
       read GetContainerHandler
       write SetContainerHandler;
-    property SoundBankCache: IInterface
+    property SoundBankCache: IwbSoundBankArray
       read GetSoundBankCache
       write SetSoundBankCache;
     property FaceGenCache: IwbFaceGenCache
@@ -4064,7 +4086,7 @@ type
     gcBuildingRefsParallel : Boolean;
     gcContainerHandler     : IwbContainerHandler;
     gcLocalizationHandler  : TwbLocalizationHandler;
-    gcSoundBankCache       : IInterface;
+    gcSoundBankCache       : IwbSoundBankArray;
     gcFaceGenCache         : IwbFaceGenCache;
     gcGlobalGeneration     : Integer;
     gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
@@ -4085,8 +4107,8 @@ type
     function GetEncoding: TEncoding;
     function GetDontSave: Boolean;
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
-    function GetSoundBankCache: IInterface;
-    procedure SetSoundBankCache(const aValue: IInterface);
+    function GetSoundBankCache: IwbSoundBankArray;
+    procedure SetSoundBankCache(const aValue: IwbSoundBankArray);
     function GetLEncoding(aFallback: Boolean): TStringList;
     function CreateSkipList: TStringList;
     function CreateLEncodingList: TStringList;
@@ -4167,7 +4189,7 @@ type
       write gcContainerHandler;
     property LocalizationHandler: TwbLocalizationHandler
       read gcLocalizationHandler;
-    property SoundBankCache: IInterface
+    property SoundBankCache: IwbSoundBankArray
       read gcSoundBankCache
       write gcSoundBankCache;
     function GetFaceGenCache: IwbFaceGenCache;
@@ -7195,12 +7217,12 @@ begin
   gcContainerHandler := aValue;
 end;
 
-function TwbGameContext.GetSoundBankCache: IInterface;
+function TwbGameContext.GetSoundBankCache: IwbSoundBankArray;
 begin
   Result := gcSoundBankCache;
 end;
 
-procedure TwbGameContext.SetSoundBankCache(const aValue: IInterface);
+procedure TwbGameContext.SetSoundBankCache(const aValue: IwbSoundBankArray);
 begin
   gcSoundBankCache := aValue;
 end;
