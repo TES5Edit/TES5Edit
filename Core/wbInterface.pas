@@ -667,6 +667,8 @@ type
     PluginsFolder      : string;
   end;
 
+  TwbDataPathSearch = (dpsFound, dpsNoRegistryKey, dpsNoRegistryValue);
+
 const
   wbInstallRegistries : array[TwbInstallRegistry] of TwbInstallRegistryInfo = (
     {irBethesda}  (CurrentUser: False; KeyPrefix: '\SOFTWARE\Bethesda Softworks\';                          ValueName: 'Installed Path'),
@@ -3964,6 +3966,7 @@ type
     CellDetailsForWorldspaceCallback : TwbGetCellDetailsForWorldspaceCallback;
     class function Defaults: TwbGameContextSettings; static;
     procedure ApplyGameDefaults(aGameMode: TwbGameMode);
+    function FindDataPath(aGameMode: TwbGameMode; out aRegistryName: string): TwbDataPathSearch;
   end;
 
   TwbModuleExtension = (
@@ -5729,11 +5732,13 @@ uses
   System.RegularExpressions,
   System.TypInfo,
   System.Variants,
+  System.Win.Registry,
 
   Winapi.Windows,
 
   wbHalfFloat,
-  wbSort;
+  wbSort,
+  wbSteamVDFParser;
 
 class function TwbConflictConfig.ForContext(aContext: TwbGameContext): TwbConflictConfig;
 begin
@@ -7087,6 +7092,78 @@ begin
       AlwaysSaveOnamForce := True;
     end;
   end;
+end;
+
+function TwbGameContextSettings.FindDataPath(aGameMode: TwbGameMode; out aRegistryName: string): TwbDataPathSearch;
+var
+  lIdentity    : TwbGameIdentity;
+  lLocation    : TwbGameLocation;
+  lInstallPath : string;
+  lCurrentDir  : string;
+  lExeDir      : string;
+
+  function CheckPath(const aStartFrom: string): string;
+  var
+    s: string;
+  begin
+    Result := '';
+    s := aStartFrom;
+    while Length(s) > 3 do begin
+      if FileExists(s + lIdentity.GameExeName) and DirectoryExists(s + lLocation.DataFolder) then begin
+        Result := s;
+        Exit;
+      end;
+      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
+    end;
+  end;
+
+begin
+  Result := dpsFound;
+  aRegistryName := '';
+  DataPath := '';
+  lIdentity := wbGameIdentities[aGameMode];
+  lLocation := wbGameLocations[aGameMode];
+
+  lCurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
+  lInstallPath := CheckPath(lCurrentDir);
+  if lInstallPath = '' then begin
+    lExeDir := ExtractFilePath(ParamStr(0));
+    if not SameText(lCurrentDir, lExeDir) then
+      lInstallPath := CheckPath(lExeDir);
+  end;
+
+  if lInstallPath = '' then
+    for var lID in lIdentity.SteamID.Split([',']) do begin
+      lInstallPath := GetInstallPathBySteamID(lID);
+      if lInstallPath <> '' then
+        Break;
+    end;
+
+  if lInstallPath = '' then begin
+    var lRegistryInfo := wbInstallRegistries[lLocation.InstallRegistry];
+    var lRegistry := TRegistry.Create;
+    try
+      lRegistry.Access := KEY_READ or KEY_WOW64_32KEY;
+      if lRegistryInfo.CurrentUser then
+        lRegistry.RootKey := HKEY_CURRENT_USER
+      else
+        lRegistry.RootKey := HKEY_LOCAL_MACHINE;
+      aRegistryName := lRegistryInfo.KeyPrefix + lIdentity.GameNameReg + '\';
+      if not lRegistry.OpenKey(aRegistryName, False) then begin
+        lRegistry.Access := KEY_READ or KEY_WOW64_64KEY;
+        if not lRegistry.OpenKey(aRegistryName, False) then
+          Exit(dpsNoRegistryKey);
+      end;
+      aRegistryName := lRegistryInfo.ValueName;
+      lInstallPath := StringReplace(lRegistry.ReadString(aRegistryName), '"', '', [rfReplaceAll]);
+      if lInstallPath = '' then
+        Exit(dpsNoRegistryValue);
+    finally
+      lRegistry.Free;
+    end;
+  end;
+
+  DataPath := IncludeTrailingPathDelimiter(lInstallPath) + lLocation.DataFolder + '\';
 end;
 
 { TwbGameContext }

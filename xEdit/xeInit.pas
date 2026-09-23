@@ -95,7 +95,6 @@ uses
   System.SysUtils,
   System.TypInfo,
   System.UITypes,
-  System.Win.Registry,
 
   Vcl.Dialogs,
   Vcl.Themes,
@@ -119,7 +118,6 @@ uses
   wbDefinitionsTES5Saves,
   wbHelpers,
   wbImplementation,
-  wbSteamVDFParser,
 
   xeGameSelectForm,
   xeScriptHost;
@@ -251,35 +249,6 @@ begin
     Result := IncludeTrailingBackslash(Result);
 end;
 
-function CheckAppPath: string;
-
-  function CheckPath(const aStartFrom: string): string;
-  var
-    s: string;
-  begin
-    Result := '';
-    s := aStartFrom;
-    while Length(s) > 3 do begin
-      if FileExists(s + wbGameExeName) and DirectoryExists(s + wbGameLocations[wbGameMode].DataFolder) then begin
-        Result := s;
-        Exit;
-      end;
-      s := ExtractFilePath(ExcludeTrailingPathDelimiter(s));
-    end;
-  end;
-
-var
-  CurrentDir, ExeDir: string;
-begin
-  CurrentDir := IncludeTrailingPathDelimiter(GetCurrentDir);
-  Result := CheckPath(CurrentDir);
-  if (Result = '') then begin
-    ExeDir := ExtractFilePath(ParamStr(0));
-    if not SameText(CurrentDir, ExeDir) then
-      Result := CheckPath(ExeDir);
-  end;
-end;
-
 function PathRelativeToFull(const BasePath: string; const AddPath: string) : string;
 var CDir : string;
 begin
@@ -352,7 +321,7 @@ end;
 
 procedure DoInitPath(const ParamIndex: Integer; var aSettings: TwbGameContextSettings);
 var
-  s, regPath, regKey, client: string;
+  s, lRegistryName: string;
   isEpicNV : Boolean;
   IniFile : TMemIniFile;
   lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
@@ -372,52 +341,20 @@ begin
   aSettings.TempPath := s;
 
   if not wbFindCmdLineParam('D', lDataPath) then begin
-    lDataPath := CheckAppPath;
-
-    if (lDataPath = '') then
-      for var lID in wbGameSteamID.Split([',']) do
-        begin
-          lDataPath := GetInstallPathBySteamID(lID);
-          if lDataPath <> '' then
-            break;
-        end;
-
-    if (lDataPath = '') then with TRegistry.Create do try
-      var lRegistry := wbInstallRegistries[lLocation.InstallRegistry];
-      Access  := KEY_READ or KEY_WOW64_32KEY;
-      if lRegistry.CurrentUser then
-        RootKey := HKEY_CURRENT_USER
-      else
-        RootKey := HKEY_LOCAL_MACHINE;
-      client  := 'Steam';
-      regPath := lRegistry.KeyPrefix + wbGameNameReg + '\';
-
-      if not OpenKey(regPath, False) then begin
-        Access := KEY_READ or KEY_WOW64_64KEY;
-        if not OpenKey(regPath, False) then begin
-          s := 'Fatal: Could not open registry key: ' + regPath;
-          ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
-          aSettings.DontSave := True;
-          aSettings.DataPath := lDataPath;
-          Exit;
-        end;
+    case aSettings.FindDataPath(wbGameMode, lRegistryName) of
+      dpsNoRegistryKey: begin
+        s := 'Fatal: Could not open registry key: ' + lRegistryName;
+        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
+        aSettings.DontSave := True;
+        Exit;
       end;
-
-      regKey := lRegistry.ValueName;
-      lDataPath := ReadString(regKey);
-      lDataPath := StringReplace(lDataPath, '"', '', [rfReplaceAll]);
-
-      if (lDataPath = '') then begin
-        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, regKey]);
-        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, client]));
+      dpsNoRegistryValue: begin
+        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, lRegistryName]);
+        ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
         aSettings.DontSave := True;
       end;
-    finally
-      Free;
     end;
-
-    if lDataPath <> '' then
-      lDataPath := IncludeTrailingPathDelimiter(lDataPath) + lLocation.DataFolder + '\';
+    lDataPath := aSettings.DataPath;
   end else
     lDataPath := IncludeTrailingPathDelimiter(lDataPath);
   aSettings.DataPath := lDataPath;
