@@ -1302,7 +1302,8 @@ begin
         WriteLn(ErrOutput, '-q           ', 'Suppress version message');
         WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
         WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (since TES5)');
-        WriteLn(ErrOutput, '             ', '  Default language is English for TES5 or SSE and En for FO4');
+        WriteLn(ErrOutput, '             ', '  Default language is the one the game''s ini (or custom ini) sets,');
+        WriteLn(ErrOutput, '             ', '  else English for TES5 or SSE and En for FO4');
         WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
         WriteLn(ErrOutput, '             ', ' (plugin'+HostContext.GameDefObj.ArchiveExtension+' and plugin - interface.'+HostContext.GameDefObj.ArchiveExtension+')');
         WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
