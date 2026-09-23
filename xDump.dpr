@@ -1303,8 +1303,8 @@ begin
         WriteLn(ErrOutput, '-more        ', 'Displays aditional information on Unknowns');
         WriteLn(ErrOutput, '-l:language  ', 'Specifies language for localization files (since TES5)');
         WriteLn(ErrOutput, '             ', '  Default language is the one the game''s ini sets, replaced by the custom');
-        WriteLn(ErrOutput, '             ', '  ini''s when it has the key; if that leaves none, English for TES5 or SSE');
-        WriteLn(ErrOutput, '             ', '  and En for FO4');
+        WriteLn(ErrOutput, '             ', '  ini''s when it has the key; if that leaves none, En for FO4, FO4VR, FO76');
+        WriteLn(ErrOutput, '             ', '  and SF1, else English');
         WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
         WriteLn(ErrOutput, '             ', ' (plugin'+HostContext.GameDefObj.ArchiveExtension+' and plugin - interface.'+HostContext.GameDefObj.ArchiveExtension+')');
         WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
