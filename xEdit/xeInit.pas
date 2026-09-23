@@ -380,25 +380,14 @@ begin
       Exit;
     end;
 
-    if lLocation.MyGamesIsInstall then
-      lMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)))
-    else
-      lMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
-
-    if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
-        lMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
-        isEpicNV := true;
-    end;
+    lMyGamesTheGamePath := aSettings.DefaultMyGamesPath(wbGameMode, xeMyProfileName, isEpicNV);
   end;
 
-  if not wbFindCmdLineParam('I', lTheGameIniFileName) then begin
-    lTheGameIniFileName := lMyGamesTheGamePath + lLocation.IniName + '.ini';
-    if lLocation.IniInstallFallback and not FileExists(lTheGameIniFileName) then
-      lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + lLocation.IniName + '.ini';
-  end;
+  if not wbFindCmdLineParam('I', lTheGameIniFileName) then
+    lTheGameIniFileName := aSettings.DefaultGameIniFileName(wbGameMode, lMyGamesTheGamePath);
 
   if not wbFindCmdLineParam('CustomIni', lCustomIniFileName) then
-    lCustomIniFileName := lMyGamesTheGamePath + lLocation.IniName + 'Custom.ini';
+    lCustomIniFileName := aSettings.DefaultCustomIniFileName(wbGameMode, lMyGamesTheGamePath);
 
   if not wbFindCmdLineParam('G', lSavePath) then begin
     if lMyGamesTheGamePath = '' then

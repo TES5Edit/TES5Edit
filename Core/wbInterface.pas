@@ -3963,6 +3963,9 @@ type
     class function Defaults: TwbGameContextSettings; static;
     procedure ApplyGameDefaults(aGameMode: TwbGameMode);
     function FindDataPath(aGameMode: TwbGameMode; out aRegistryName: string): TwbDataPathSearch;
+    function DefaultMyGamesPath(aGameMode: TwbGameMode; const aDocumentsPath: string; out aIsEpic: Boolean): string;
+    function DefaultGameIniFileName(aGameMode: TwbGameMode; const aMyGamesPath: string): string;
+    function DefaultCustomIniFileName(aGameMode: TwbGameMode; const aMyGamesPath: string): string;
   end;
 
   TwbModuleExtension = (
@@ -7152,6 +7155,33 @@ begin
   end;
 
   DataPath := IncludeTrailingPathDelimiter(lInstallPath) + lLocation.DataFolder + '\';
+end;
+
+function TwbGameContextSettings.DefaultMyGamesPath(aGameMode: TwbGameMode; const aDocumentsPath: string; out aIsEpic: Boolean): string;
+begin
+  aIsEpic := False;
+  if wbGameLocations[aGameMode].MyGamesIsInstall then
+    Result := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(DataPath)))
+  else
+    Result := aDocumentsPath + 'My Games\' + wbGameIdentities[aGameMode].GameName2 + '\';
+
+  if (aGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(DataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
+    Result := aDocumentsPath + 'My Games\FalloutNV_Epic\';
+    aIsEpic := True;
+  end;
+end;
+
+function TwbGameContextSettings.DefaultGameIniFileName(aGameMode: TwbGameMode; const aMyGamesPath: string): string;
+begin
+  var lLocation := wbGameLocations[aGameMode];
+  Result := aMyGamesPath + lLocation.IniName + '.ini';
+  if lLocation.IniInstallFallback and not FileExists(Result) then
+    Result := ExtractFilePath(ExcludeTrailingPathDelimiter(DataPath)) + lLocation.IniName + '.ini';
+end;
+
+function TwbGameContextSettings.DefaultCustomIniFileName(aGameMode: TwbGameMode; const aMyGamesPath: string): string;
+begin
+  Result := aMyGamesPath + wbGameLocations[aGameMode].IniName + 'Custom.ini';
 end;
 
 { TwbGameContext }
