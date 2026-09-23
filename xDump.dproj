@@ -83,7 +83,7 @@
         <DCC_HighEntropyVa>false</DCC_HighEntropyVa>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_Namespace>System;System.Win;Xml;Data;Datasnap;Web;Soap;Winapi;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>.\External\delphi-detours-library\Source;.\External\Diff;.\External\FileContainer;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\include;.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\JsonDataObjects\Source;.\External\libdeflate-pas;.\External\lz4-delphi;.\External\SynEdit\Source;.\External\TOM2;.\External\vcl-styles-utils\Common;.\External\VirtualTrees\Source;.\Core;.\xDump;.\xEdit;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>.\External\delphi-detours-library\Source;.\External\Diff;.\External\FileContainer;.\External\ImagingLib\Source\;.\External\ImagingLib\Source\zlib;.\External\jcl\jcl\source\common;.\External\jcl\jcl\source\include;.\External\jcl-inc;.\External\jcl\jcl\source\include\jedi;.\External\jcl\jcl\source\windows;.\External\jvcl\jvcl\common;.\External\jvcl\jvcl\resources;.\External\jvcl\jvcl\run;.\External\JsonDataObjects\Source;.\External\libdeflate-pas;.\External\lz4-delphi;.\External\SynEdit\Source;.\External\TOM2;.\External\vcl-styles-utils\Common;.\External\VirtualTrees\Source;.\Core;.\xDump;.\xEdit;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_UseMSBuildExternally>true</DCC_UseMSBuildExternally>
         <DCC_WIDECHAR_REDUCED>false</DCC_WIDECHAR_REDUCED>
         <Manifest_File>(None)</Manifest_File>
