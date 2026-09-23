@@ -995,7 +995,6 @@ begin
   if xeContext.GameDefObj.GameMode <= gmEnderal then
     xeContext.AddDefaultLEncodingsIfMissing(False)
   else begin
-    wbLEncodingDefault[False] := TEncoding.UTF8;
     case xeContext.GameDefObj.GameMode of
     gmSSE, gmTES5VR, gmEnderalSE:
       xeContext.AddLEncodingIfMissing('english', '1252', False);

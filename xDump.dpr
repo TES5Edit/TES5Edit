@@ -936,7 +936,6 @@ var
 begin
   SetTextBuf(Output, OutputBuffer);
   lSettings := TwbGameContextSettings.Defaults;
-  lInputs := Default(TwbGameDefInputs);
   lDefineOptions := TwbGameDefineOptions.Defaults;
   {$IF CompilerVersion >= 24}
   FormatSettings.DecimalSeparator := '.';
@@ -944,8 +943,6 @@ begin
   SysUtils.DecimalSeparator := '.';
   {$IFEND}
   _wbProgressCallback := ReportProgress;
-  lSettings.DontSave := True;
-  lSettings.AllowInternalEdit := False;
   wbMoreInfoForUnknown := False;
   lDefineOptions.SimpleRecords := False;
   wbHideUnused := False;
@@ -1018,89 +1015,40 @@ begin
         DumpSourceName := 'Saves'
       else
         DumpSourceName := 'Plugins';
-      wbAppName := GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode) );
-      Delete(wbAppName, 1 ,2);
+      var lIdentity := wbGameIdentities[wbGameMode];
+      wbAppName       := lIdentity.AppName;
+      wbGameName      := lIdentity.GameName;
+      wbGameExeName   := lIdentity.GameExeName;
+      wbGameName2     := lIdentity.GameName2;
+      wbGameNameReg   := lIdentity.GameNameReg;
+      wbGameMasterEsm := lIdentity.GameMasterEsm;
 
+      lSettings.ApplyGameDefaults(wbGameMode);
+      lSettings.DontSave := True;
+      lSettings.AllowInternalEdit := False;
+      lSettings.HideIgnored := True;
       lSettings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
+      lInputs := TwbGameDefInputs.ForGame(wbGameMode);
       SavesSupported := True;
       tms := [tmDump, tmExport];
 
       if FindCmdLineSwitch('sr') then
         lDefineOptions.SimpleRecords := True;
 
-      lSettings.Language := 'English';
-
-      wbGameExeName := '';
       case wbGameMode of
-        gmFNV: begin
-          wbGameName := 'FalloutNV';
-        end;
-        gmFO3: begin
-          wbGameName := 'Fallout3';
-        end;
+        gmFNV, gmFO3, gmTES4, gmTES5, gmEnderal, gmSSE, gmEnderalSE: ;
         gmTES3: begin
-          wbGameName := 'Morrowind';
-          lSettings.LoadBSAs := false;
+          lSettings.LoadBSAs := False;
           tms := [tmDump];
           SavesSupported := False;
         end;
-        gmTES4: begin
-          wbGameName := 'Oblivion';
-        end;
-        gmTES5: begin
-          wbGameName    := 'Skyrim';
-          wbGameExeName := 'TESV';
-        end;
-        gmEnderal: begin
-          wbGameName      := 'Enderal';
-          wbGameExeName   := 'TESV';
-          wbGameMasterEsm := 'Skyrim.esm';
-        end;
-        gmTES5VR: begin
-          wbGameName    := 'Skyrim';
-          wbGameName2   := 'Skyrim VR';
-          wbGameExeName := 'SkyrimVR';
+        gmTES5VR:
           SavesSupported := False;
-        end;
-        gmFO4: begin
-          wbGameName           := 'Fallout4';
+        gmFO4, gmSF1:
           lSettings.CreateContainedIn := False;
-          lInputs.VWDAsQuestChildren := True;
-        end;
-        gmFO4VR: begin
-          wbGameName           := 'Fallout4';
-          wbGameExeName        := 'Fallout4VR';
-          wbGameName2          := 'Fallout4VR';
-          wbGameNameReg        := 'Fallout 4 VR';
+        gmFO4VR, gmFO76: begin
           lSettings.CreateContainedIn := False;
-          lInputs.VWDAsQuestChildren := True;
           SavesSupported := False;
-        end;
-        gmSSE: begin
-          wbGameName    := 'Skyrim';
-          wbGameExeName := 'SkyrimSE';
-          wbGameName2   := 'Skyrim Special Edition';
-        end;
-        gmEnderalSE: begin
-          wbAppName       := 'EnderalSE';
-          wbGameName      := 'Enderal';
-          wbGameExeName   := 'SkyrimSE';
-          wbGameName2     := 'Enderal Special Edition';
-          wbGameNameReg   := 'EnderalSE';
-          wbGameMasterEsm := 'Skyrim.esm';
-        end;
-        gmFO76: begin
-          wbGameName           := 'Fallout76';
-          wbGameNameReg        := 'Fallout 76';
-          wbGameMasterEsm      := 'SeventySix.esm';
-          lSettings.CreateContainedIn := False;
-          lInputs.VWDAsQuestChildren := True;
-          SavesSupported := False;
-        end;
-        gmSF1: begin
-          wbGameName           := 'Starfield';
-          lSettings.CreateContainedIn := False;
-          lInputs.VWDAsQuestChildren := True;
         end;
       else begin
         s := '';
@@ -1114,19 +1062,6 @@ begin
         Exit;
       end;
       end;
-
-      if wbGameName2 = '' then
-        wbGameName2 := wbGameName;
-
-      if wbGameNameReg = '' then
-        wbGameNameReg := wbGameName2;
-
-      if wbGameMasterEsm = '' then
-        wbGameMasterEsm := wbGameName + csDotEsm;
-
-      if wbGameExeName = '' then
-        wbGameExeName := wbGameName;
-      wbGameExeName := wbGameExeName + csDotExe;
 
       HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, lInputs, lDefineOptions));
       HostContext := HostContextRef as TwbGameContext;
@@ -1317,13 +1252,9 @@ begin
         DumpForms.Free;
       end;
 
-      if HostContext.GameDefObj.GameMode in [gmFO4, gmFO4vr, gmFO76, gmSF1] then
-        HostContext.Settings.Language := 'En';
-
       if HostContext.GameDefObj.GameMode <= gmEnderal then
         HostContext.AddDefaultLEncodingsIfMissing(False)
       else begin
-        wbLEncodingDefault[False] := TEncoding.UTF8;
         case HostContext.GameDefObj.GameMode of
         gmSSE, gmTES5VR, gmEnderalSE:
           HostContext.AddLEncodingIfMissing('english', '1252', False);
