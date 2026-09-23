@@ -4121,6 +4121,7 @@ type
     gcContainerHandler     : IwbContainerHandler;
     gcLocalizationHandler  : TwbLocalizationHandler;
     gcSoundBankCache       : TwbSoundBankCache;
+    gcRetiredSoundBanks    : TArray<TwbSoundBankCache>;
     gcFaceGenCache         : TwbFaceGenCache;
     gcGlobalGeneration     : Integer;
     gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
@@ -7181,6 +7182,9 @@ begin
   FreeAndNil(gcFaceGenCache);
   gcFiles := nil;
   FreeAndNil(gcSoundBankCache);
+  for var lCache in gcRetiredSoundBanks do
+    lCache.Free;
+  gcRetiredSoundBanks := nil;
   FreeAndNil(gcLocalizationHandler);
   gcContainerHandler := nil;
   for var i := Low(gcIdentitys) to High(gcIdentitys) do
@@ -7380,7 +7384,10 @@ begin
     gcSoundBankCache := aValue
   else
     gcSoundBankCache := TwbSoundBankCache.Create;
-  lOld.Free;
+  if Length(gcFiles) = 0 then
+    lOld.Free
+  else
+    gcRetiredSoundBanks := gcRetiredSoundBanks + [lOld];
 end;
 
 function TwbGameContext.FaceGenCache: TwbFaceGenCache;
