@@ -25,6 +25,7 @@ uses
 
   System.Classes,
   System.IniFiles,
+  System.IOUtils,
   System.SysUtils,
   System.TypInfo,
 
@@ -996,6 +997,11 @@ begin
       DoInitPath;
       if (wbToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
         HostContext.Settings.DataPath := CheckParamPath;
+
+      var lIsEpic: Boolean;
+      var lMyGamesPath := HostContext.Settings.DefaultMyGamesPath(wbGameMode, IncludeTrailingPathDelimiter(TPath.GetDocumentsPath), lIsEpic);
+      HostContext.Settings.TheGameIniFileName := HostContext.Settings.DefaultGameIniFileName(wbGameMode, lMyGamesPath);
+      HostContext.Settings.CustomIniFileName := HostContext.Settings.DefaultCustomIniFileName(wbGameMode, lMyGamesPath);
 
       HostContext.ModuleList.LoadModules;
 
