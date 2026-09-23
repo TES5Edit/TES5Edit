@@ -4123,7 +4123,7 @@ type
     gcRetiredSoundBanks    : TArray<TwbSoundBankCache>;
     gcFaceGenCache         : TwbFaceGenCache;
     gcGlobalGeneration     : Integer;
-    gcIdentitys            : array[Byte] of TDictionary<string, Cardinal>;
+    gcIdentities           : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
     gcSaveContexts         : TArray<TwbSaveContext>;
     gcSaveContextsLock     : TObject;
@@ -4249,8 +4249,8 @@ type
     scFullPluginNames  : TStringList;
     scLightPluginNames : TStringList;
 
-    scFullSlotFiles    : TArray<Integer>;
-    scLightSlotFiles   : TArray<Integer>;
+    scFullSlotFileIndices  : TArray<Integer>;
+    scLightSlotFileIndices : TArray<Integer>;
 
     procedure scJoin(const aFile: IwbFile; const aFileName: string);
     procedure scBuildSlotTable;
@@ -4273,10 +4273,10 @@ type
       read scFullPluginNames;
     property LightPluginNames: TStringList
       read scLightPluginNames;
-    property FullSlotFiles: TArray<Integer>
-      read scFullSlotFiles;
-    property LightSlotFiles: TArray<Integer>
-      read scLightSlotFiles;
+    property FullSlotFileIndices: TArray<Integer>
+      read scFullSlotFileIndices;
+    property LightSlotFileIndices: TArray<Integer>
+      read scLightSlotFileIndices;
 
     function FullSlotFile(aSlot: Integer): IwbFile;
     function LightSlotFile(aSlot: Integer): IwbFile;
@@ -6856,12 +6856,12 @@ var
 
 begin
   lContext := scGameContextObj;
-  SetLength(scFullSlotFiles, scFullPluginNames.Count);
+  SetLength(scFullSlotFileIndices, scFullPluginNames.Count);
   for var lSlot := 0 to Pred(scFullPluginNames.Count) do
-    scFullSlotFiles[lSlot] := ResolveSlot(scFullPluginNames[lSlot]);
-  SetLength(scLightSlotFiles, scLightPluginNames.Count);
+    scFullSlotFileIndices[lSlot] := ResolveSlot(scFullPluginNames[lSlot]);
+  SetLength(scLightSlotFileIndices, scLightPluginNames.Count);
   for var lSlot := 0 to Pred(scLightPluginNames.Count) do
-    scLightSlotFiles[lSlot] := ResolveSlot(scLightPluginNames[lSlot]);
+    scLightSlotFileIndices[lSlot] := ResolveSlot(scLightPluginNames[lSlot]);
 end;
 
 function TwbSaveContext.scSlotFile(const aSlotFiles: TArray<Integer>; aSlot: Integer): IwbFile;
@@ -6877,20 +6877,20 @@ end;
 
 function TwbSaveContext.FullSlotFile(aSlot: Integer): IwbFile;
 begin
-  Result := scSlotFile(scFullSlotFiles, aSlot);
+  Result := scSlotFile(scFullSlotFileIndices, aSlot);
 end;
 
 function TwbSaveContext.LightSlotFile(aSlot: Integer): IwbFile;
 begin
-  Result := scSlotFile(scLightSlotFiles, aSlot);
+  Result := scSlotFile(scLightSlotFileIndices, aSlot);
 end;
 
 function TwbSaveContext.SlotFile(const aFileID: TwbFileID): IwbFile;
 begin
   if aFileID.IsLightSlot then
-    Result := scSlotFile(scLightSlotFiles, aFileID.LightSlot)
+    Result := scSlotFile(scLightSlotFileIndices, aFileID.LightSlot)
   else if aFileID.IsFullSlot then
-    Result := scSlotFile(scFullSlotFiles, aFileID.FullSlot)
+    Result := scSlotFile(scFullSlotFileIndices, aFileID.FullSlot)
   else
     Result := nil;
 end;
@@ -7178,8 +7178,8 @@ begin
   gcRetiredSoundBanks := nil;
   FreeAndNil(gcLocalizationHandler);
   gcContainerHandler := nil;
-  for var i := Low(gcIdentitys) to High(gcIdentitys) do
-    FreeAndNil(gcIdentitys[i]);
+  for var i := Low(gcIdentities) to High(gcIdentities) do
+    FreeAndNil(gcIdentities[i]);
   FreeAndNil(gcFilesMap);
   DetachFilesFromModules;
   FreeAndNil(gcModuleList);
@@ -7313,13 +7313,13 @@ var
 begin
   aIdentity := aIdentity.ToLowerInvariant;
 
-  if not Assigned(gcIdentitys[aFormIDNameBase]) then
-    gcIdentitys[aFormIDNameBase] := TDictionary<string, Cardinal>.Create;
+  if not Assigned(gcIdentities[aFormIDNameBase]) then
+    gcIdentities[aFormIDNameBase] := TDictionary<string, Cardinal>.Create;
 
-  if not gcIdentitys[aFormIDNameBase].TryGetValue(aIdentity, i) then begin
+  if not gcIdentities[aFormIDNameBase].TryGetValue(aIdentity, i) then begin
     i := gcNextIDs[aFormIDNameBase];
     Inc(gcNextIDs[aFormIDNameBase]);
-    gcIdentitys[aFormIDNameBase].Add(aIdentity, i);
+    gcIdentities[aFormIDNameBase].Add(aIdentity, i);
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
