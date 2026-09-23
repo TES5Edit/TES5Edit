@@ -49,22 +49,22 @@ end;
 
 procedure _wbGameName(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameName;
+  Value := xeContext.GameDefObj.GameName;
 end;
 
 procedure _wbGameMasterEsm(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameMasterEsm;
+  Value := xeContext.GameDefObj.GameMasterEsm;
 end;
 
 procedure _wbGameName2(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbGameName2;
+  Value := xeContext.GameDefObj.Identity.GameName2;
 end;
 
 procedure _wbAppName(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbAppName;
+  Value := xeContext.GameDefObj.AppName;
 end;
 
 procedure _wbLoadBSAs(var Value: Variant; Args: TJvInterpreterArgs);

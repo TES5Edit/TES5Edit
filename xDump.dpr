@@ -803,7 +803,7 @@ begin
       dpsNoRegistryKey:
         ReportProgress('Warning: Could not open registry key: ' + lRegistryName);
       dpsNoRegistryValue:
-        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameName2, lRegistryName]));
+        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [HostContext.GameDefObj.Identity.GameName2, lRegistryName]));
     end;
 end;
 
@@ -926,14 +926,6 @@ begin
         DumpSourceName := 'Saves'
       else
         DumpSourceName := 'Plugins';
-      var lIdentity := wbGameIdentities[wbGameMode];
-      wbAppName       := lIdentity.AppName;
-      wbGameName      := lIdentity.GameName;
-      wbGameExeName   := lIdentity.GameExeName;
-      wbGameName2     := lIdentity.GameName2;
-      wbGameNameReg   := lIdentity.GameNameReg;
-      wbGameMasterEsm := lIdentity.GameMasterEsm;
-
       lSettings.ApplyGameDefaults(wbGameMode);
       lSettings.DontSave := True;
       lSettings.AllowInternalEdit := False;
@@ -981,11 +973,11 @@ begin
       HostContext.Settings.TolerateMissingFiles := wbToolMode in [tmDump, tmExport];
 
       if not (wbToolMode in tms) then begin
-        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolMode: '+wbToolName);
+        WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolMode: '+wbToolName);
         Exit;
       end;
       if DumpSaves and not SavesSupported then begin
-        WriteLn(ErrOutput, 'Application '+wbGameName+' does not currently support ToolSource: '+DumpSourceName);
+        WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolSource: '+DumpSourceName);
         Exit;
       end;
 
@@ -1047,7 +1039,7 @@ begin
      if SourceName = 'Plugins' then
        SourceName := '';
 
-     wbApplicationTitle := wbAppName + wbToolName + SourceName +  ' ' + VersionString;
+     wbApplicationTitle := HostContext.GameDefObj.AppName + wbToolName + SourceName +  ' ' + VersionString;
      {$IFDEF WIN64}
      wbApplicationTitle := wbApplicationTitle + ' x64';
      {$ENDIF WIN64}
@@ -1291,18 +1283,19 @@ begin
         end;
 
       if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
-        WriteLn(ErrOutput, 'Syntax:  '+wbAppName+'Dump [options] inputfile');
-        WriteLn(ErrOutput, '  or     '+wbAppName+'Export [options] format');
+        var lIdentity := HostContext.GameDefObj.Identity;
+        WriteLn(ErrOutput, 'Syntax:  '+lIdentity.AppName+'Dump [options] inputfile');
+        WriteLn(ErrOutput, '  or     '+lIdentity.AppName+'Export [options] format');
         WriteLn(ErrOutput);
-        WriteLn(ErrOutput, wbAppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
+        WriteLn(ErrOutput, lIdentity.AppName + 'Dump will load the specified esp/esm files and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the same directory as the specified file.');
         WriteLn(ErrOutput);
-        WriteLn(ErrOutput, wbAppName + 'Dump -Saves will load the specified save or coSave file and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
+        WriteLn(ErrOutput, lIdentity.AppName + 'Dump -Saves will load the specified save or coSave file and all it''s masters and will dump the decoded contents of the specified file to stdout. Masters are searched for in the game directory.');
         WriteLn(ErrOutput);
-        WriteLn(ErrOutput, wbAppName + 'Export will dump the plugin definition in the specified format.');
-        WriteLn(ErrOutput, wbAppName + 'Export -Saves will dump the save file definition in the specified format.');
+        WriteLn(ErrOutput, lIdentity.AppName + 'Export will dump the plugin definition in the specified format.');
+        WriteLn(ErrOutput, lIdentity.AppName + 'Export -Saves will dump the save file definition in the specified format.');
         WriteLn(ErrOutput);
         WriteLn(ErrOutput, 'You can use the normal redirect mechanism to send the output to a file.');
-        WriteLn(ErrOutput, 'e.g. "'+wbAppName+'Dump '+wbGameMasterEsm+' > '+wbGameName+'.txt"');
+        WriteLn(ErrOutput, 'e.g. "'+lIdentity.AppName+'Dump '+lIdentity.GameMasterEsm+' > '+lIdentity.GameName+'.txt"');
         WriteLn(ErrOutput);
         WriteLn(ErrOutput, 'Currently supported options:');
         WriteLn(ErrOutput, '-? / -help   ', 'This help screen');
@@ -1524,7 +1517,7 @@ begin
       if gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities then begin
         b := TwbHardcodedContainer.GetHardCodedDat(HostContext.GameDefObj.GameName);
         if Length(b) > 0 then
-          HostContext.LoadFile(wbGameExeName, 0, '', [fsIsHardcoded], b);
+          HostContext.LoadFile(HostContext.GameDefObj.GameExeName, 0, '', [fsIsHardcoded], b);
       end;
 
       if wbToolMode in [tmDump] then
@@ -1534,11 +1527,11 @@ begin
           _File := HostContext.LoadFile(s, High(Integer));
 
       if not (gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities) then
-        with HostContext.ModuleList.ModuleByName(wbGameMasterEsm)^ do
+        with HostContext.ModuleList.ModuleByName(HostContext.GameDefObj.GameMasterEsm)^ do
           if mfHasFile in miFlags then begin
             b := TwbHardcodedContainer.GetHardCodedDat(HostContext.GameDefObj.GameName);
             if Length(b) > 0 then
-              HostContext.LoadFile(wbGameExeName, 0, wbGameMasterEsm, [fsIsHardcoded], b);
+              HostContext.LoadFile(HostContext.GameDefObj.GameExeName, 0, HostContext.GameDefObj.GameMasterEsm, [fsIsHardcoded], b);
           end;
 
       ReportProgress('Finished loading record. Starting Dump.');
@@ -1571,7 +1564,7 @@ begin
           ProfileChapters(StrToTExportFormat(s), Pass);
         end;
 
-        wbDefProfiles.SaveToFile(wbAppName+wbToolName+DumpSourceName+'.txt');
+        wbDefProfiles.SaveToFile(HostContext.GameDefObj.AppName+wbToolName+DumpSourceName+'.txt');
       end;
 
       ReportProgress('All Done.');

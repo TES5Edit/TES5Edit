@@ -3664,10 +3664,7 @@ type
     gdDefinedOptions   : TwbGameDefineOptions;
     gdGameMode         : TwbGameMode;
     gdCapabilities     : TwbGameCapabilities;
-    gdGameName         : string;
-    gdGameExeName      : string;
-    gdGameMasterEsm    : string;
-    gdAppName          : string;
+    gdIdentity         : TwbGameIdentity;
     gdDefaultFormVersion : Word;
     gdQuestFlagsSignature : TwbSignature;
     gdRaceFlagsSignature  : TwbSignature;
@@ -3774,14 +3771,16 @@ type
       read gdGameMode;
     property Capabilities: TwbGameCapabilities
       read gdCapabilities;
+    property Identity: TwbGameIdentity
+      read gdIdentity;
     property GameName: string
-      read gdGameName;
+      read gdIdentity.GameName;
     property GameExeName: string
-      read gdGameExeName;
+      read gdIdentity.GameExeName;
     property GameMasterEsm: string
-      read gdGameMasterEsm;
+      read gdIdentity.GameMasterEsm;
     property AppName: string
-      read gdAppName;
+      read gdIdentity.AppName;
     property IsMorrowind: Boolean
       read GetIsMorrowind;
     property IsOblivion: Boolean
@@ -6282,13 +6281,10 @@ begin
   Create;
   gdGameMode := aGameMode;
   gdCapabilities := wbComputeCapabilities(aGameMode, aInputs);
-  gdGameName := wbGameIdentities[aGameMode].GameName;
-  gdGameExeName := wbGameIdentities[aGameMode].GameExeName;
-  gdGameMasterEsm := wbGameIdentities[aGameMode].GameMasterEsm;
-  gdAppName := wbGameIdentities[aGameMode].AppName;
+  gdIdentity := wbGameIdentities[aGameMode];
   if (aGameMode = gmTES4) and aInputs.Nehrim then begin
-    gdAppName := 'Nehrim';
-    gdGameMasterEsm := 'Nehrim.esm';
+    gdIdentity.AppName := 'Nehrim';
+    gdIdentity.GameMasterEsm := 'Nehrim.esm';
   end;
 end;
 

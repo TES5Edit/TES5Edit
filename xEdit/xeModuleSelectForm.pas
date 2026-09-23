@@ -446,7 +446,7 @@ begin
     if not lGameDef.IsLightSupported then
       Options := Options - [coVisible]
     else
-      Text := wbLightName;
+      Text := lGameDef.Identity.LightName;
   end;
   if not lGameDef.IsMediumSupported then
     with vstModules.Header.Columns[7] do
@@ -899,7 +899,7 @@ begin
           0 : CellText := miName;
           1 : CellText := LoadOrderDescription;
           2 : if mfHasESMFlag in miFlags then Celltext := 'ESM';
-          3 : if mfHasLightFlag in miFlags then Celltext := wbLightName;
+          3 : if mfHasLightFlag in miFlags then Celltext := xeContext.GameDefObj.Identity.LightName;
           4 : if miLoadOrder < 10000 then Celltext := miLoadOrder.ToString;
           5 : if miLoadOrder < 10000 then Celltext := miFileID.ToString;
           6 : if mfHasUpdateFlag in miFlags then Celltext := 'Update';

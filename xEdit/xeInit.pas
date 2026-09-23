@@ -124,7 +124,7 @@ uses
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
-  Result := wbIsModule(aFilePath, wbGameExeName) or wbIsSave(aFilePath);
+  Result := wbIsModule(aFilePath, wbGameIdentities[wbGameMode].GameExeName) or wbIsSave(aFilePath);
 end;
 
 function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
@@ -150,7 +150,7 @@ function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
 begin
   repeat
     Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
-  until not Result or wbIsModule(aValue, wbGameExeName);
+  until not Result or wbIsModule(aValue, wbGameIdentities[wbGameMode].GameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
       aValue := ExtractFileName(aValue);
@@ -327,7 +327,8 @@ var
   lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
 begin
   var lLocation := wbGameLocations[wbGameMode];
-  aSettings.ModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
+  var lIdentity := wbGameIdentities[wbGameMode];
+  aSettings.ModGroupFileName := wbProgramPath + lIdentity.AppName + wbToolName + '.modgroups';
   isEpicNV := false;
 
   if not wbFindCmdLineParam('S', s) then
@@ -335,7 +336,7 @@ begin
   aSettings.ScriptsPath := s;
 
   if not wbFindCmdLineParam('T', s) then
-    s := IncludeTrailingPathDelimiter(TPath.GetTempPath + wbAppName + 'Edit')
+    s := IncludeTrailingPathDelimiter(TPath.GetTempPath + lIdentity.AppName + 'Edit')
   else
     xeRemoveTempPath := not DirectoryExists(s);
   aSettings.TempPath := s;
@@ -349,7 +350,7 @@ begin
         Exit;
       end;
       dpsNoRegistryValue: begin
-        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [wbGameName2, lRegistryName]);
+        s := Format('Fatal: Could not determine %s installation path, no "%s" registry key', [lIdentity.GameName2, lRegistryName]);
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
         aSettings.DontSave := True;
       end;
@@ -448,24 +449,24 @@ begin
   aSettings.PluginsFileName := lPluginsFileName;
 
   // settings in the ini file next to app, or in the same folder with plugins.txt
-  xeSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
+  xeSettingsFileName := wbProgramPath + lIdentity.AppName + wbToolName + '.ini';
   if not FileExists(xeSettingsFileName) then
   begin
     if lLocation.PluginsInData then
-      xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + lLocation.PluginsFolder + '\Plugins.'+LowerCase(wbAppName)+'viewsettings'
+      xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + lLocation.PluginsFolder + '\Plugins.'+LowerCase(lIdentity.AppName)+'viewsettings'
     else
-      xeSettingsFileName := ChangeFileExt(aSettings.PluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
+      xeSettingsFileName := ChangeFileExt(aSettings.PluginsFileName, '.'+LowerCase(lIdentity.AppName)+'viewsettings');
   end;
 
   lBackupPath := '';
   if not (aSettings.DontSave or wbFindCmdLineParam('B', lBackupPath)) then
-    lBackupPath := lDataPath + wbAppName + 'Edit Backups\';
+    lBackupPath := lDataPath + lIdentity.AppName + 'Edit Backups\';
   aSettings.BackupPath := lBackupPath;
 
   lCachePath := '';
   if not (aSettings.DontCache or wbFindCmdLineParam('C', lCachePath)) then
     if lDataPath <> '' then
-      lCachePath := lDataPath + wbAppName + 'Edit Cache\';
+      lCachePath := lDataPath + lIdentity.AppName + 'Edit Cache\';
   if lCachePath = '' then
     aSettings.DontCache := True;
   if not aSettings.DontCache then
@@ -784,27 +785,19 @@ begin
   end;
 
   var lIdentity := wbGameIdentities[wbGameMode];
-  wbAppName       := lIdentity.AppName;
-  wbGameName      := lIdentity.GameName;
-  wbGameExeName   := lIdentity.GameExeName;
-  wbGameName2     := lIdentity.GameName2;
-  wbGameNameReg   := lIdentity.GameNameReg;
-  wbGameMasterEsm := lIdentity.GameMasterEsm;
-  wbGameSteamID   := lIdentity.SteamID;
-  wbLightName     := lIdentity.LightName;
 
   if not (wbToolMode in ToolModes) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + wbToolName);
+    ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + wbToolName);
     Exit(False);
   end;
 
   if xeSavesMode and not SavesSupported then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + SourceName);
+    ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + SourceName);
     Exit(False);
   end;
 
   if xeSavesMode and (wbToolMode = tmEdit) then begin
-    ShowMessage('Application ' + wbGameName + ' does not currently support ' + SourceName + ' in ' + wbToolName + ' mode.');
+    ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + SourceName + ' in ' + wbToolName + ' mode.');
     Exit(False);
   end;
 
@@ -822,11 +815,8 @@ begin
   lSettings.ApplyGameDefaults(wbGameMode);
   case wbGameMode of
     gmTES4:
-      if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then begin
+      if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then
         lInputs.Nehrim      := True;
-        wbAppName           := 'Nehrim';
-        wbGameMasterEsm     := 'Nehrim.esm';
-      end;
     gmFNV:
       lInputs.HNVSE := FileExists(lSettings.DataPath + 'NVSE\Plugins\Hnvse.dll');
     gmSSE, gmEnderalSE:
@@ -1288,7 +1278,7 @@ begin
     s := xeDefaultScriptHost;
   TxeScriptHost.Init(s);
 
-  wbApplicationTitle := wbAppName + wbToolName + ' ' + VersionString;
+  wbApplicationTitle := xeContext.GameDefObj.AppName + wbToolName + ' ' + VersionString;
   {$IFDEF LiteVersion}
   wbApplicationTitle := wbApplicationTitle + ' Lite';
   {$ENDIF}
@@ -1318,8 +1308,8 @@ begin
     wbMoreInfoForUnknown := True;
 
   try
-    if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + wbAppName + 'pas') then
-      wbAssociateWithExtension('.' + wbAppName + 'pas', wbAppName + 'Script', wbAppName + wbToolName + ' script');
+    if (wbToolMode = tmEdit) and not wbIsAssociatedWithExtension('.' + xeContext.GameDefObj.AppName + 'pas') then
+      wbAssociateWithExtension('.' + xeContext.GameDefObj.AppName + 'pas', xeContext.GameDefObj.AppName + 'Script', xeContext.GameDefObj.AppName + wbToolName + ' script');
   except end;
 
   case xeContext.GameDefObj.GameMode of
@@ -1383,14 +1373,15 @@ begin
     lLines.Add('host.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode)));
     lLines.Add('host.ToolMode=' + GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode)));
     lLines.Add('host.ToolName=' + wbToolName);
-    lLines.Add('host.AppName=' + wbAppName);
-    lLines.Add('host.GameName=' + wbGameName);
-    lLines.Add('host.GameExeName=' + wbGameExeName);
-    lLines.Add('host.GameName2=' + wbGameName2);
-    lLines.Add('host.GameNameReg=' + wbGameNameReg);
-    lLines.Add('host.GameMasterEsm=' + wbGameMasterEsm);
-    lLines.Add('host.GameSteamID=' + wbGameSteamID);
-    lLines.Add('host.LightName=' + wbLightName);
+    var lIdentity := xeContext.GameDefObj.Identity;
+    lLines.Add('host.AppName=' + lIdentity.AppName);
+    lLines.Add('host.GameName=' + lIdentity.GameName);
+    lLines.Add('host.GameExeName=' + lIdentity.GameExeName);
+    lLines.Add('host.GameName2=' + lIdentity.GameName2);
+    lLines.Add('host.GameNameReg=' + lIdentity.GameNameReg);
+    lLines.Add('host.GameMasterEsm=' + lIdentity.GameMasterEsm);
+    lLines.Add('host.GameSteamID=' + lIdentity.SteamID);
+    lLines.Add('host.LightName=' + lIdentity.LightName);
     lLines.Add('host.ApplicationTitle=' + wbApplicationTitle);
     lLines.Add('host.IconResource=' + xeIconResource);
     lLines.Add('host.NexusModsUrl=' + xeNexusModsUrl);

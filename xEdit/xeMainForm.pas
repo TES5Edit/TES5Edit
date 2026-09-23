@@ -2097,7 +2097,7 @@ begin
 
     aFile := AddNewFileName(s, aIsLight, aIsMedium);
     if Assigned(aFile) and xeContext.Settings.AlwaysLoadGameMaster then
-      aFile.AddMasterIfMissing(wbGameMasterESM);
+      aFile.AddMasterIfMissing(xeContext.GameDefObj.GameMasterEsm);
     Result := Assigned(aFile);
   end;
 end;
@@ -2118,7 +2118,7 @@ begin
 
     aFile := AddNewFileName(s, aTemplate);
     if Assigned(aFile) and xeContext.Settings.AlwaysLoadGameMaster then
-      aFile.AddMasterIfMissing(wbGameMasterESM);
+      aFile.AddMasterIfMissing(xeContext.GameDefObj.GameMasterEsm);
     Result := Assigned(aFile);
   end;
 end;
@@ -3793,7 +3793,7 @@ var
 begin
   var lGameDef := xeContext.GameDefObj;
   if lGameDef.IsSkyrim or lGameDef.IsFallout4 or lGameDef.IsFallout76 or lGameDef.IsStarfield then begin
-    if MessageDlg('Merged patch is unsupported for ' + wbGameName2 +
+    if MessageDlg('Merged patch is unsupported for ' + lGameDef.Identity.GameName2 +
       '. Create it only if you know what you are doing and can troubleshoot possible issues yourself. ' +
       'Do you want to continue?',
       mtWarning, mbYesNo, 0) <> mrYes
@@ -4460,7 +4460,7 @@ begin
     Exit;
 
   if MessageDlg('The Reference Cache contains ' + i.ToString +
-    ' files from a different version of ' + wbAppName + wbToolName +
+    ' files from a different version of ' + xeContext.GameDefObj.AppName + wbToolName +
     '. Do you want to remove them?', mtConfirmation, mbYesNo, 0) = mrYes then
     for i := Low(Files) to High(Files) do try
       TFile.Delete(Files[i]);
@@ -4682,7 +4682,7 @@ procedure TfrmMain.DoRunScript;
 
 begin
   if xeScriptToRun = '' then
-    xeScriptToRun := wbProgramPath + wbAppName + 'Script.pas'
+    xeScriptToRun := wbProgramPath + xeContext.GameDefObj.AppName + 'Script.pas'
   else if not TPath.IsPathRooted(ExtractFilePath(xeScriptToRun)) then
     xeScriptToRun := xeContext.Settings.ScriptsPath + xeScriptToRun;
 
@@ -4825,7 +4825,7 @@ begin
     end;
   end;
 
-  AddMessage('Using '+wbGameName2+' Data Path: ' + xeContext.Settings.DataPath);
+  AddMessage('Using '+xeContext.GameDefObj.Identity.GameName2+' Data Path: ' + xeContext.Settings.DataPath);
 
   if not (xeContext.Settings.DontSave or xeDontBackup) then
     AddMessage('Using Backup Path: ' + xeContext.Settings.BackupPath);
@@ -5985,7 +5985,7 @@ end;
 
 procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
 begin
-  SaveLog(wbProgramPath + wbAppName + wbToolName + '_log.txt', aAllowReplace);
+  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + wbToolName + '_log.txt', aAllowReplace);
   if xeLogFile <> '' then
     SaveLog(xeLogFile, aAllowReplace);
 end;
@@ -10140,7 +10140,7 @@ begin
       if clbWorldspace.Items.Count = 1 then
         clbWorldspace.Checked[0] := True;
 
-      Section := wbAppName + ' LOD Options';
+      Section := xeContext.GameDefObj.AppName + ' LOD Options';
 
       // FO4 settings
       if lGameDef.IsFallout4 or lGameDef.IsStarfield then begin
@@ -11019,7 +11019,7 @@ begin
     else
       Result := Result + StringOfChar(' ', 6) + '- <<: *quickClean';
     Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [wbAppName, VersionString.ToString, xeNexusModsUrl]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [xeContext.GameDefObj.AppName, VersionString.ToString, xeNexusModsUrl]);
     if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
     if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
     if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
@@ -11029,7 +11029,7 @@ begin
       Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
     Result := Result + StringOfChar(' ', 4) + 'clean:';
     Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [wbAppName, VersionString.ToString]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [xeContext.GameDefObj.AppName, VersionString.ToString]);
   end;
 end;
 
@@ -11048,7 +11048,7 @@ begin
       IntToHex(aInfo.CRC32, 8),
       aInfo.ITM,
       aInfo.UDR,
-      wbAppName
+      xeContext.GameDefObj.AppName
     ]);
   end;
 end;
@@ -19085,7 +19085,7 @@ begin
               if _File.Header.IsESM then
                 s := '<ESM>';
               if _File.Header.IsLight then
-                s := s + '<' + wbLightName + '>';
+                s := s + '<' + xeContext.GameDefObj.Identity.LightName + '>';
               if _File.Header.IsMedium then
                 s := s + '<Medium>';
               if _File.Header.IsUpdate then
@@ -20624,15 +20624,15 @@ begin
     TestNavCopyFileA.IsESM := True;
   end else
     TestNavCopyFileA := AddNewFileName('NavCopyA.esp', False, False);
-  TestNavCopyFileA.AddMasterIfMissing(wbGameMasterESM);
+  TestNavCopyFileA.AddMasterIfMissing(xeContext.GameDefObj.GameMasterEsm);
   TestNavCopyFileB := AddNewFileName('NavCopyB.esp', False, False);
-  TestNavCopyFileB.AddMasterIfMissing(wbGameMasterESM);
+  TestNavCopyFileB.AddMasterIfMissing(xeContext.GameDefObj.GameMasterEsm);
   TestNavCopyFileB.AddMasterIfMissing(TestNavCopyFileA.FileName);
   if xeTestNavCopyTwo then
     TestNavCopyFileC := TestNavCopyFileB
   else begin
     TestNavCopyFileC := AddNewFileName('NavCopyC.esp', False, False);
-    TestNavCopyFileC.AddMasterIfMissing(wbGameMasterESM);
+    TestNavCopyFileC.AddMasterIfMissing(xeContext.GameDefObj.GameMasterEsm);
     TestNavCopyFileC.AddMasterIfMissing(TestNavCopyFileA.FileName);
   end;
 
@@ -21861,10 +21861,10 @@ begin
         lLoadListIdx := 0 to Pred(ltLoadList.Count) do begin
 
           if gcHardcodedFileIsFirstMaster in lGameDef.Capabilities then
-            if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
+            if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], lGameDef.GameMasterEsm) then begin
               b := TwbHardcodedContainer.GetHardCodedDat(xeContext.GameDefObj.GameName);
               if Length(b) > 0 then begin
-                t := wbGameExeName;
+                t := lGameDef.GameExeName;
                 LoaderProgress('loading "' + t + '"...');
                 _File := xeContext.LoadFile(t, 0, '', [fsIsHardcoded], b);
                 SetLength(ltFiles, Succ(Length(ltFiles)));
@@ -21902,10 +21902,10 @@ begin
           if wbForceTerminate then
             Exit;
 
-          if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], wbGameMasterEsm) then begin
+          if (lLoadListIdx = 0) and (ltMaster = '') and (ltLoadOrderOffset = 0) and (ltLoadList.Count > 0) and SameText(ltLoadList[0], lGameDef.GameMasterEsm) then begin
             b := TwbHardcodedContainer.GetHardCodedDat(xeContext.GameDefObj.GameName);
             if Length(b) > 0 then begin
-              t := wbGameExeName;
+              t := lGameDef.GameExeName;
               LoaderProgress('loading "' + t + '"...');
               _File := xeContext.LoadFile(t, 0, ltDataPath + ltLoadList[lLoadListIdx], [fsIsHardcoded], b);
               SetLength(ltFiles, Succ(Length(ltFiles)));
@@ -21914,7 +21914,7 @@ begin
               if wbForceTerminate then
                 Exit;
 
-              t := wbGameName + '.Hardcoded.esp';
+              t := lGameDef.GameName + '.Hardcoded.esp';
               s := wbProgramPath + t;
               if FileExists(s) then
                 System.SysUtils.DeleteFile(s);
@@ -22254,7 +22254,7 @@ var
   s                                                : string;
   FormID, BaseFormID, InventoryFormID, EnchantmentFormID, SpellFormID : TwbFormID;
 begin
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewWorld.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -22273,7 +22273,7 @@ begin
   finally
     Free;
   end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewInventory.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
@@ -22292,7 +22292,7 @@ begin
   finally
     Free;
   end;
-  with TBufferedFileStream.Create(plFolder + 'Pluggy'+wbAppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
+  with TBufferedFileStream.Create(plFolder + 'Pluggy'+xeContext.GameDefObj.AppName+'ViewSpells.csv', fmOpenRead or fmShareDenyNone) do try
     Position := Size - 2024;
     SetLength(s, 64 * 1024);
     SetLength(s, Read(s[1], 64 * 1024));
