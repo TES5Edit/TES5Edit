@@ -769,6 +769,7 @@ type
 
     flCachedEditInfos        : TwbCachedEditInfos;
     flGeneration             : Integer;
+    flSerial                 : Cardinal;
 
     flEncoding               : TEncoding;
     flEncodingTrans          : TEncoding;
@@ -979,6 +980,7 @@ type
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean); overload;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
+    procedure AfterConstruction; override;
     destructor Destroy; override;
   end;
 
@@ -2333,6 +2335,13 @@ end;
 
 var
   _FileGeneration: Integer = 1;
+  _FileSerial: Integer;
+
+procedure TwbFile.AfterConstruction;
+begin
+  inherited;
+  flSerial := Cardinal(AtomicIncrement(_FileSerial));
+end;
 
 function TwbFile.flComplexFileFileID: Boolean;
 begin
@@ -11831,7 +11840,7 @@ type
   end;
 
 threadvar
-  PrecombinedCacheFileName: string;
+  PrecombinedCacheFileSerial: Cardinal;
   PrecombinedCacheCellFormID: TwbFormID;
   PrecombinedCache: array of TwbPrecombinedInfo;
 
@@ -11844,7 +11853,7 @@ var
   CombinedRefs, CombinedRef: IwbContainerElementRef;
   cnt, i      : Integer;
   CellFormID  : TwbFormID;
-  MasterFolder, s: string;
+  MasterFolder: string;
 begin
   Result := '';
 
@@ -11888,13 +11897,13 @@ begin
     if not Assigned(Cell) then
       Exit;
 
-    s := IwbElement(Self)._File.Name;
+    var lFileSerial := TwbFile(IwbElement(Self)._File as TObject).flSerial;
     CellFormID := Cell.FormID;
 
     // store cell's precombined index in cache
-    if (CellFormID <> PrecombinedCacheCellFormID) or (s <> PrecombinedCacheFileName) then begin
+    if (CellFormID <> PrecombinedCacheCellFormID) or (lFileSerial <> PrecombinedCacheFileSerial) then begin
       PrecombinedCacheCellFormID := CellFormID;
-      PrecombinedCacheFileName := s;
+      PrecombinedCacheFileSerial := lFileSerial;
       SetLength(PrecombinedCache, 0);
 
       if gcPrecombinedMeshPerCell in lGameDef.Capabilities then begin
