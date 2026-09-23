@@ -614,10 +614,7 @@ type
     VWDInTemporary     : Boolean;
     VWDAsQuestChildren : Boolean;
     ComplexFileFileID  : Boolean;
-    GameName           : string;
-    GameExeName        : string;
-    GameMasterEsm      : string;
-    AppName            : string;
+    Nehrim             : Boolean;
     class function ForGame(aGameMode: TwbGameMode): TwbGameDefInputs; static;
   end;
 
@@ -5944,10 +5941,14 @@ begin
   Create;
   gdGameMode := aGameMode;
   gdCapabilities := wbComputeCapabilities(aGameMode, aInputs);
-  gdGameName := aInputs.GameName;
-  gdGameExeName := aInputs.GameExeName;
-  gdGameMasterEsm := aInputs.GameMasterEsm;
-  gdAppName := aInputs.AppName;
+  gdGameName := wbGameIdentities[aGameMode].GameName;
+  gdGameExeName := wbGameIdentities[aGameMode].GameExeName;
+  gdGameMasterEsm := wbGameIdentities[aGameMode].GameMasterEsm;
+  gdAppName := wbGameIdentities[aGameMode].AppName;
+  if (aGameMode = gmTES4) and aInputs.Nehrim then begin
+    gdAppName := 'Nehrim';
+    gdGameMasterEsm := 'Nehrim.esm';
+  end;
 end;
 
 constructor TwbSaveDef.Create(aGameDef: TwbGameDef);

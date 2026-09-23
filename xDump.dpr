@@ -1129,10 +1129,6 @@ begin
         wbGameExeName := wbGameName;
       wbGameExeName := wbGameExeName + csDotExe;
 
-      lInputs.GameName := wbGameName;
-      lInputs.GameExeName := wbGameExeName;
-      lInputs.GameMasterEsm := wbGameMasterEsm;
-      lInputs.AppName := wbAppName;
       HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, lInputs, lDefineOptions));
       HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;

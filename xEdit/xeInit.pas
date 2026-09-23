@@ -944,6 +944,7 @@ begin
   case wbGameMode of
     gmTES4:
       if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then begin
+        lInputs.Nehrim      := True;
         wbAppName           := 'Nehrim';
         wbGameMasterEsm     := 'Nehrim.esm';
       end;
@@ -963,10 +964,6 @@ begin
     end;
   end;
 
-  lInputs.GameName := wbGameName;
-  lInputs.GameExeName := wbGameExeName;
-  lInputs.GameMasterEsm := wbGameMasterEsm;
-  lInputs.AppName := wbAppName;
   xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
