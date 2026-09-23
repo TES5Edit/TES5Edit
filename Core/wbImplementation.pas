@@ -3385,7 +3385,7 @@ begin
       Include(flStates, fsIsOfficial)
   end else if fsIsHardcoded in flStates then begin
     flModule := wbModuleListOf(flContextObj).ModuleByName(GetFileName);
-    if not Assigned(flModule) then
+    if not flModule.IsValid then
       flModule := wbModuleListOf(flContextObj).AddNewModule(GetFileName, False);
     flModule.miFile := Self;
     flModule.miLoadOrder := flLoadOrder;

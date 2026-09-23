@@ -248,7 +248,7 @@ begin
   while Assigned(Node) do begin
     NodeData := vstModGroupItems.GetNodeData(Node);
     with NodeData.mgindModGroupItem do
-      if Assigned(mgiModule) then
+      if Assigned(mgiModule) and mgiModule.IsValid then
         if aExclude then
           Exclude(mgiModule.miFlags, mfEphemeralModGroupTagged)
         else

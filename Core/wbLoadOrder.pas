@@ -525,10 +525,11 @@ begin
       Include(miFlags, mfHasIndex);
       Include(miFlags, mfIsGameMaster);
     end;
-  with ModuleByName(lGameDef.GameExeName)^ do begin
-    miOfficialIndex := Succ(Low(Integer));
-    Include(miFlags, mfHasIndex);
-  end;
+  with ModuleByName(lGameDef.GameExeName)^ do
+    if IsValid then begin
+      miOfficialIndex := Succ(Low(Integer));
+      Include(miFlags, mfHasIndex);
+    end;
 
   if lGameDef.IsSkyrim then
     with ModuleByName('Update.esm')^ do
@@ -810,6 +811,10 @@ end;
 
 function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32): Boolean;
 begin
+  if not IsValid then begin
+    aCRC32 := 0;
+    Exit(False);
+  end;
   if Assigned(miFile) then
     aCRC32 := _File.CRC32
   else begin
@@ -832,6 +837,8 @@ end;
 
 function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;
 begin
+  if not IsValid then
+    Exit(False);
   if Assigned(miFile) then
     Exit(_File.CRC32 = aCRC32);
   if miCRC32 = 0 then
