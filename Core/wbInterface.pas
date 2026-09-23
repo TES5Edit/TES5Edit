@@ -611,11 +611,7 @@ type
     UpdateSupport      : Boolean;
     CS                 : Boolean;
     HNVSE              : Boolean;
-    VWDInTemporary     : Boolean;
-    VWDAsQuestChildren : Boolean;
-    ComplexFileFileID  : Boolean;
     Nehrim             : Boolean;
-    class function ForGame(aGameMode: TwbGameMode): TwbGameDefInputs; static;
   end;
 
   TwbGameIdentity = record
@@ -6176,14 +6172,6 @@ begin
   Result := TwbNullWaitForm.Create;
 end;
 
-class function TwbGameDefInputs.ForGame(aGameMode: TwbGameMode): TwbGameDefInputs;
-begin
-  Result := Default(TwbGameDefInputs);
-  Result.VWDInTemporary := not (aGameMode in [gmTES4, gmTES4R]);
-  Result.VWDAsQuestChildren := aGameMode in [gmFO4, gmFO4VR, gmFO76, gmSF1];
-  Result.ComplexFileFileID := aGameMode = gmSF1;
-end;
-
 function wbComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities;
 begin
   Result := [];
@@ -6273,11 +6261,11 @@ begin
     Include(Result, gcCommunityShaders);
   if aInputs.HNVSE then
     Include(Result, gcHNVSE);
-  if aInputs.VWDInTemporary then
+  if not (aGameMode in [gmTES4, gmTES4R]) then
     Include(Result, gcVWDInTemporary);
-  if aInputs.VWDAsQuestChildren then
+  if aGameMode in [gmFO4, gmFO4VR, gmFO76, gmSF1] then
     Include(Result, gcVWDAsQuestChildren);
-  if aInputs.ComplexFileFileID then
+  if aGameMode in [gmSF1] then
     Include(Result, gcComplexFileFileID);
 end;
 

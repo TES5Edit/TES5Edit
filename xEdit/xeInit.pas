@@ -831,7 +831,6 @@ begin
   DoInitPath(xeParamIndex, lSettings);
 
   lSettings.ApplyGameDefaults(wbGameMode);
-  lInputs := TwbGameDefInputs.ForGame(wbGameMode);
   case wbGameMode of
     gmTES4:
       if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then begin

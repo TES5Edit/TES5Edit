@@ -938,7 +938,7 @@ begin
       lSettings.AllowInternalEdit := False;
       lSettings.HideIgnored := True;
       lSettings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      lInputs := TwbGameDefInputs.ForGame(wbGameMode);
+      lInputs := Default(TwbGameDefInputs);
       SavesSupported := True;
       tms := [tmDump, tmExport];
 
