@@ -1921,7 +1921,7 @@ function wbTintLayerToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCal
 
   function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := wbFaceGenCacheOf(aElement).Cached(fgkTintLayers, aRaceID, aFemale);
+    Result := aElement.ContextObj.FaceGenCache.Cached(fgkTintLayers, aRaceID, aFemale);
   end;
 
 var
@@ -1972,7 +1972,7 @@ begin
     for i := 0 to 1 do begin
 
       Female2 := i = 1;
-      Cache := wbFaceGenCacheOf(aElement).Append(fgkTintLayers, RaceID, Female2);
+      Cache := aElement.ContextObj.FaceGenCache.Append(fgkTintLayers, RaceID, Female2);
 
       if not Female2 then
         Element := Race.ElementByPath['Head Data\Male Head Data\Tint Masks']

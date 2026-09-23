@@ -3359,7 +3359,7 @@ function wbMorphValueToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCa
 
   function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := wbFaceGenCacheOf(aElement).Cached(fgkMorphValues, aRaceID, aFemale);
+    Result := aElement.ContextObj.FaceGenCache.Cached(fgkMorphValues, aRaceID, aFemale);
   end;
 
 var
@@ -3413,7 +3413,7 @@ begin
     for i := 0 to 1 do begin
 
       Female2 := i = 1;
-      Cache := wbFaceGenCacheOf(aElement).Append(fgkMorphValues, RaceID, Female2);
+      Cache := aElement.ContextObj.FaceGenCache.Append(fgkMorphValues, RaceID, Female2);
 
       slList.Clear;
 
@@ -3509,7 +3509,7 @@ end;
 function wbFaceMorphToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCallbackType): string;
   function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := wbFaceGenCacheOf(aElement).Cached(fgkFaceMorphs, aRaceID, aFemale);
+    Result := aElement.ContextObj.FaceGenCache.Cached(fgkFaceMorphs, aRaceID, aFemale);
   end;
 
 var
@@ -3559,7 +3559,7 @@ begin
     for i := 0 to 1 do begin
 
       Female2 := i = 1;
-      Cache := wbFaceGenCacheOf(aElement).Append(fgkFaceMorphs, RaceID, Female2);
+      Cache := aElement.ContextObj.FaceGenCache.Append(fgkFaceMorphs, RaceID, Female2);
 
       if not Female2 then
         Element := Race.ElementByPath['Head Datas\Male Head Data\Male Face Morphs']
@@ -3641,7 +3641,7 @@ function wbTintLayerToStr(aInt: Int64; const aElement: IwbElement; aType: TwbCal
 
   function GetCached(const aRaceID: string; aFemale: boolean): PwbFaceGenFeature;
   begin
-    Result := wbFaceGenCacheOf(aElement).Cached(fgkTintLayers, aRaceID, aFemale);
+    Result := aElement.ContextObj.FaceGenCache.Cached(fgkTintLayers, aRaceID, aFemale);
   end;
 
 var
@@ -3694,7 +3694,7 @@ begin
 
     for i := 0 to 1 do begin
       Female2 := i = 1;
-      Cache := wbFaceGenCacheOf(aElement).Append(fgkTintLayers, RaceID, Female2);
+      Cache := aElement.ContextObj.FaceGenCache.Append(fgkTintLayers, RaceID, Female2);
 
       if not Female2 then
         Element := Race.ElementByPath['Head Datas\Male Head Data\Male Tint Layers']
