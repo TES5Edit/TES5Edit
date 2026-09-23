@@ -18,10 +18,6 @@
 	path = External/jvcl
 	url = https://github.com/ElminsterAU/jvcl.git
 	branch = xEdit-4.1.x
-[submodule "DWScript"]
-	path = External/DWScript
-	url = https://github.com/ElminsterAU/DWScript.git
-	branch = xEdit-4.1.x
 [submodule "JsonDataObjects"]
 	path = External/JsonDataObjects
 	url = https://github.com/ElminsterAU/JsonDataObjects.git
