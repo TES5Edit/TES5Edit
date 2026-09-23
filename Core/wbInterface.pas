@@ -3899,6 +3899,146 @@ type
     procedure ApplyGameDefaults(aGameMode: TwbGameMode);
   end;
 
+  TwbModuleExtension = (
+    meUnknown,
+    meESM,
+    meESL,
+    meESP,
+    meESU
+  );
+
+  TwbModuleExtensionHelper = record helper for TwbModuleExtension
+    function ToString: string;
+  end;
+
+  TwbModuleFlag = (
+    mfInvalid,
+    mfValid,
+    mfGhost,
+    mfMastersMissing,
+    mfHasESMFlag,
+    mfHasLightFlag,
+    mfHasMediumFlag,
+    mfHasBlueprintFlag,
+    mfHasUpdateFlag,
+    mfHasLocalizedFlag,
+    mfHasESMExtension,
+    mfIsESM,
+    mfActiveInPluginsTxt,
+    mfActive,
+    mfForceLoad,
+    mfHasIndex,
+    mfLoaded,
+    mfLoading,
+    mfTagged,
+    mfHasFile,
+    mfIsHardcoded,
+    mfIsGameMaster,
+    mfNew,
+    mfTemplate,
+    mfIsModGroupTarget,
+    mfIsModGroupSource,
+    mfEphemeralModGroupTagged,
+    mfTaggedForPluginMode,
+    mfModGroupMissingCurrentCRC,
+    mfModGroupMissingAnyCRC
+  );
+
+  TwbModuleFlags = set of TwbModuleFlag;
+
+  PwbModuleInfo = ^TwbModuleInfo;
+  TwbModuleInfos = array of PwbModuleInfo;
+  TwbModuleInfo = record
+  private
+    miCRC32             : TwbCRC32;
+  public
+    miOriginalName      : string;
+    miName              : string;
+    miDateTime          : TDateTime;
+
+    miExtension         : TwbModuleExtension;
+
+    miMasterNames       : TDynStrings;
+    miMasters           : TwbModuleInfos;
+
+    miFlags             : TwbModuleFlags;
+
+    miOfficialIndex     : Integer;
+    miCCIndex           : Integer;
+    miPluginsTxtIndex   : Integer;
+    miLoadOrderTxtIndex : Integer;
+
+    miCombinedIndex     : Integer;
+
+    miFileID            : TwbFileID;
+    miLoadOrder         : Integer;
+
+    miFile              : TObject;
+    miContext           : TwbGameContext;
+
+    miModGroupTargets   : TwbModuleInfos;
+    miModGroupSources   : TwbModuleInfos;
+
+    function IsValid: Boolean;
+    function HasIndex: Boolean;
+    function IsActive: Boolean;
+    function IsTemplate: Boolean;
+    procedure ActivateMasters(aRecursive: Boolean);
+    procedure Activate(aActivateMasters: Boolean = False);
+    function LoadOrderDescription: string;
+    function FlagsDescription: string;
+    function Description: string;
+    function ToString(aInclDesc: Boolean): string;
+    function _File: IwbFile;
+
+    function GetModuleType: TwbModuleType;
+
+    function HasCRC32(aCRC32: TwbCRC32): Boolean;
+    function GetCRC32(out aCRC32: TwbCRC32): Boolean;
+  end;
+
+  TwbModuleInfosHelper = record helper for TwbModuleInfos
+    function ToStrings(aInclDesc: Boolean = False): TDynStrings;
+    procedure DeactivateAll;
+    procedure ExcludeAll(aFlag: TwbModuleFlag);
+    procedure IncludeAll(aFlag: TwbModuleFlag);
+    procedure ActivateMasters;
+    function FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
+    function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
+  end;
+
+  TwbDynModuleInfos = array of TwbModuleInfo;
+
+  TwbModuleList = class
+  protected
+    mlContext               : TwbGameContext;
+    mlModules               : TwbDynModuleInfos;
+    mlModulesByName         : TStringList;
+    mlModulesLoadOrder      : TwbModuleInfos;
+    mlAdditionalModules     : TwbModuleInfos;
+    mlTemplateModules       : TwbModuleInfos;
+    mlUpdateIndex           : Integer;
+    mlNextFullSlot          : Integer;
+    mlNextMediumSlot        : Integer;
+    mlNextLightSlot         : Integer;
+    mlSimulatedLoadDisabled : Boolean;
+
+    class function InvalidModule: PwbModuleInfo; static;
+  public
+    constructor Create(aContext: TwbGameContext);
+    destructor Destroy; override;
+
+    procedure LoadModules; virtual; abstract;
+    function ModuleByName(const aName: string): PwbModuleInfo;
+    function ModulesByLoadOrder(aIncludeTemplates: Boolean): TwbModuleInfos;
+    function AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+    function SimulateLoad(const aModules: TwbModuleInfos): TwbModuleInfos;
+    procedure ResetSimulatedLoad;
+    procedure DisableSimulatedLoad;
+  end;
+
+  TwbModuleListClass = class of TwbModuleList;
+
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
     gcGameDef        : IwbGameDef;
@@ -3909,7 +4049,7 @@ type
     gcNextLightSlot  : Integer;
     gcNextMediumSlot : Integer;
     gcNextLoadOrder  : Integer;
-    gcModuleList     : TObject;
+    gcModuleList     : TwbModuleList;
     gcModGroupList   : TObject;
     gcRecordToSkip    : TStringList;
     gcSubRecordToSkip : TStringList;
@@ -3935,6 +4075,7 @@ type
     function SaveContextFiles: TwbFiles;
     function FilesWithSaves: TwbFiles;
     function GetGameDef: IwbGameDef;
+    function GetModuleList: TwbModuleList;
     function GetFileCount: Integer;
     function GetFile(aIndex: Integer): IwbFile;
     function GetContainerHandler: IwbContainerHandler;
@@ -3996,9 +4137,8 @@ type
     property NextLoadOrder: Integer
       read gcNextLoadOrder
       write gcNextLoadOrder;
-    property ModuleList: TObject
-      read gcModuleList
-      write gcModuleList;
+    property ModuleList: TwbModuleList
+      read GetModuleList;
     property ModGroupList: TObject
       read gcModGroupList
       write gcModGroupList;
@@ -5421,6 +5561,7 @@ var
   wbFileByReverseSortOrderComparer : IComparer<IwbFile>;
 
   wbGameContextClass : TwbGameContextClass;
+  wbModuleListClass  : TwbModuleListClass;
   wbSaveContextClass : TwbSaveContextClass;
 
 procedure wbRegisterGameDef(const aGameModes: TwbGameModes; aGameDefClass: TwbGameDefClass);
@@ -6745,6 +6886,15 @@ begin
 end;
 
 { TwbGameContext }
+
+function TwbGameContext.GetModuleList: TwbModuleList;
+begin
+  if not Assigned(gcModuleList) then begin
+    Assert(Assigned(wbModuleListClass));
+    gcModuleList := wbModuleListClass.Create(Self);
+  end;
+  Result := gcModuleList;
+end;
 
 constructor TwbGameContext.Create(const aGameDef: IwbGameDef);
 begin
@@ -25898,6 +26048,461 @@ constructor TwbFilesSet.Create;
 begin
   fdGeneration := AtomicIncrement(fdGenerationHead);
   inherited Create;
+end;
+
+function TwbModuleExtensionHelper.ToString: string;
+begin
+  case Self of
+    meESM: Result := csDotEsm;
+    meESL: Result := csDotEsl;
+    meESP: Result := csDotEsp;
+    meESU: Result := csDotEsu;
+  else
+    Result := '';
+  end;
+end;
+
+var
+  _InvalidModule     : TwbModuleInfo = (miFlags: [mfInvalid]);
+
+procedure FreeAllocatedModules(var aList: TwbModuleInfos);
+var
+  i: Integer;
+begin
+  for i := Low(aList) to High(aList) do
+    Dispose(aList[i]);
+  aList := nil;
+end;
+
+{ TwbModuleList }
+
+class function TwbModuleList.InvalidModule: PwbModuleInfo;
+begin
+  Result := @_InvalidModule;
+end;
+
+constructor TwbModuleList.Create(aContext: TwbGameContext);
+begin
+  inherited Create;
+  mlContext := aContext;
+  mlUpdateIndex := -1;
+end;
+
+destructor TwbModuleList.Destroy;
+begin
+  FreeAndNil(mlModulesByName);
+  FreeAllocatedModules(mlTemplateModules);
+  FreeAllocatedModules(mlAdditionalModules);
+  inherited;
+end;
+
+function TwbModuleList.ModuleByName(const aName: string): PwbModuleInfo;
+var
+  i: Integer;
+  s: string;
+begin
+  s := aName;
+  if s.EndsWith(csDotGhost, True) then
+    SetLength(s, Length(s) - Length(csDotGhost));
+  if s = '' then
+    Exit(@_InvalidModule);
+  LoadModules;
+  if mlModulesByName.Find(s, i) then
+    Result := Pointer(mlModulesByName.Objects[i])
+  else
+    Result := @_InvalidModule;
+end;
+
+function TwbModuleList.ModulesByLoadOrder(aIncludeTemplates: Boolean): TwbModuleInfos;
+var
+  i, j : Integer;
+begin
+  LoadModules;
+  Result := Copy(mlModulesLoadOrder);
+  i := Length(mlAdditionalModules);
+  if i > 0 then begin
+    j := Length(Result);
+    SetLength(Result, j + i);
+    for i := 0 to Pred(i) do
+      Result[j + i] := mlAdditionalModules[i];
+  end;
+  if aIncludeTemplates then begin
+    i := Length(mlTemplateModules);
+    if i > 0 then begin
+      j := Length(Result);
+      SetLength(Result, j + i);
+      for i := 0 to Pred(i) do
+        Result[j + i] := mlTemplateModules[i];
+    end;
+  end;
+end;
+
+{ TwbModuleInfo }
+
+procedure TwbModuleInfo.Activate(aActivateMasters: Boolean);
+begin
+  Include(miFlags, mfActive);
+  if aActivateMasters then
+    ActivateMasters(True);
+end;
+
+procedure TwbModuleInfo.ActivateMasters(aRecursive: Boolean);
+var
+  i: Integer;
+begin
+  for i := High(miMasters) downto Low(miMasters) do
+    if Assigned(miMasters[i]) then
+      with miMasters[i]^ do
+        if not (mfActive in miFlags) then
+          Activate(aRecursive);
+end;
+
+function TwbModuleList.AddNewModule(const aFileName: string; aTemplate: Boolean): PwbModuleInfo;
+begin
+  Result := AllocMem(SizeOf(TwbModuleInfo));
+  with Result^ do begin
+    miContext := mlContext;
+    miOriginalName := aFileName;
+    miName := aFileName;
+
+    miExtension := meUnknown;
+    if miName.EndsWith(csDotEsm, True) then
+      miExtension := meESM
+    else if miName.EndsWith(csDotEsp, True) then
+      miExtension := meESP
+    else if miName.EndsWith(csDotEsu, True) then
+      miExtension := meESU
+    else if miName.EndsWith(csDotEsl, True) and mlContext.GameDefObj.IsLightSupported then
+      miExtension := meESL;
+
+    if miExtension in [meESM, meESL] then
+      Include(miFlags, mfIsESM);
+
+    miDateTime := Now;
+    Include(miFlags, mfValid);
+    if aTemplate then
+      Include(miFlags, mfTemplate)
+    else
+      Include(miFlags, mfNew);
+
+    miOfficialIndex := High(Integer);
+    miCCIndex := High(Integer);
+    miPluginsTxtIndex := High(Integer);
+    miLoadOrderTxtIndex := High(Integer);
+    miCombinedIndex := High(Integer);
+
+    miFileID := TwbFileID.Invalid;
+    miLoadOrder := High(Integer);
+  end;
+  if aTemplate then begin
+    SetLength(mlTemplateModules, Succ(Length(mlTemplateModules)));
+    mlTemplateModules[High(mlTemplateModules)] := Result;
+    Result.miLoadOrder := 10000 + High(mlTemplateModules);
+  end else begin
+    SetLength(mlAdditionalModules, Succ(Length(mlAdditionalModules)));
+    mlAdditionalModules[High(mlAdditionalModules)] := Result;
+    mlModulesByName.AddObject(aFileName, Pointer(Result));
+  end;
+end;
+
+function TwbModuleInfo.Description: string;
+begin
+  Result := Trim(LoadOrderDescription + ' ' + FlagsDescription);
+end;
+
+function TwbModuleInfo.FlagsDescription: string;
+begin
+  Result := '';
+  if mfHasBlueprintFlag in miFlags then
+    Result := Result + '<BP>';
+  if mfGhost in miFlags then
+    Result := Result + '<Ghost>';
+  if mfHasESMFlag in miFlags then
+    Result := Result + '<ESM>';
+  if mfHasLightFlag in miFlags then
+    Result := Result + '<Light>';
+  if mfHasMediumFlag in miFlags then
+    Result := Result + '<Medium>';
+  if mfHasUpdateFlag in miFlags then
+    Result := Result + '<Update>';
+  if mfHasLocalizedFlag in miFlags then
+    Result := Result + '<Localized>';
+  if mfMastersMissing in miFlags then
+    Result := Result + '<MissingMasters>';
+end;
+
+function TwbModuleInfo.GetCRC32(out aCRC32: TwbCRC32): Boolean;
+begin
+  if not IsValid then begin
+    aCRC32 := 0;
+    Exit(False);
+  end;
+  if Assigned(miFile) then
+    aCRC32 := _File.CRC32
+  else begin
+    if miCRC32 = 0 then
+      miCRC32 := TwbHash.CRC32(miContext.Settings.DataPath + miOriginalName);
+    aCRC32 := miCRC32;
+  end;
+  Result := aCRC32.IsValid;
+end;
+
+function TwbModuleInfo.GetModuleType: TwbModuleType;
+begin
+  if mfHasLightFlag in miFlags then
+    Result := mtLight
+  else if mfHasMediumFlag in miFlags then
+    Result := mtMedium
+  else
+    Result := mtFull;
+end;
+
+function TwbModuleInfo.HasCRC32(aCRC32: TwbCRC32): Boolean;
+begin
+  if not IsValid then
+    Exit(False);
+  if Assigned(miFile) then
+    Exit(_File.CRC32 = aCRC32);
+  if miCRC32 = 0 then
+    miCRC32 := TwbHash.CRC32(miContext.Settings.DataPath + miOriginalName);
+  Result := aCRC32 = miCRC32;
+end;
+
+function TwbModuleInfo.HasIndex: Boolean;
+begin
+  Result := IsValid and (mfHasIndex in miFlags);
+end;
+
+function TwbModuleInfo.IsActive: Boolean;
+begin
+  Result := IsValid and (mfActive in miFlags);
+end;
+
+function TwbModuleInfo.IsTemplate: Boolean;
+begin
+  Result := IsValid and (mfTemplate in miFlags);
+end;
+
+function TwbModuleInfo.IsValid: Boolean;
+begin
+  Result := not ((mfInvalid in miFlags) or (@Self = @_InvalidModule));
+end;
+
+function TwbModuleInfo.LoadOrderDescription: string;
+begin
+  if mfTemplate in miFlags then
+    Exit('[Template]');
+
+  Result := '';
+  if (mfHasBlueprintFlag in miFlags) and (gcBlueprintPlugins in miContext.GameDefObj.Capabilities) then
+    Result := Result + '[BP]';
+  if miOfficialIndex = Low(Integer) then
+    Result := Result + '[GameMaster]'
+  else if miOfficialIndex = Succ(Low(Integer)) then
+    Result := Result + '[Hardcoded]'
+  else if miOfficialIndex = miContext.ModuleList.mlUpdateIndex then
+    Result := Result + '[Update]'
+  else if miOfficialIndex < High(Integer) then
+    Result := Result + '[DLC:'+miOfficialIndex.ToString+']';
+  if miCCIndex < High(Integer) then
+    Result := Result + '[CC:'+miCCIndex.ToString+']';
+  if Result = '' then begin
+    if (mfIsESM in miFlags) and (gcMastersLoadFirst in miContext.GameDefObj.Capabilities) then
+      Result := Result + '[ESM]';
+
+    if miPluginsTxtIndex < High(Integer) then
+      Result := Result + '[Plugins.txt:'+miPluginsTxtIndex.ToString+']';
+    if miLoadOrderTxtIndex < High(Integer) then
+      Result := Result + '[LoadOrder.txt:'+miLoadOrderTxtIndex.ToString+']';
+
+    if (Result = '') or (Result = '[ESM]') then
+      Result := Result + '[Time:'+FormatDateTime('yyyy-mm-dd hh:mm:ss', miDateTime)+']';
+  end;
+end;
+
+function TwbModuleInfo.ToString(aInclDesc: Boolean): string;
+begin
+  Result := miName;
+  if aInclDesc then
+    Result := Trim(Result + '    ' + Description);
+end;
+
+function TwbModuleInfo._File: IwbFile;
+
+begin
+  if not Supports(miFile, IwbFile, Result) then
+    Result := nil;
+end;
+
+{ TwbModuleInfosHelper }
+
+procedure TwbModuleInfosHelper.ActivateMasters;
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do
+      if mfActive in miFlags then
+        ActivateMasters(True);
+end;
+
+procedure TwbModuleInfosHelper.DeactivateAll;
+begin
+  ExcludeAll(mfActive);
+end;
+
+procedure TwbModuleList.ResetSimulatedLoad;
+var
+  i: Integer;
+begin
+  for i := Low(mlModules) to High(mlModules) do
+    with mlModules[i] do begin
+      Exclude(miFlags, mfLoaded);
+      Exclude(miFlags, mfLoading);
+      miFileID := TwbFileID.Invalid;
+      miLoadOrder := High(Integer);
+    end;
+  mlNextFullSlot := 0;
+  mlNextLightSlot := 0;
+  mlNextMediumSlot := 0;
+end;
+
+procedure TwbModuleList.DisableSimulatedLoad;
+begin
+  if mlSimulatedLoadDisabled then
+    Exit;
+  mlSimulatedLoadDisabled := True;
+  ResetSimulatedLoad;
+end;
+
+procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do
+      Exclude(miFlags, aFlag);
+end;
+
+function TwbModuleInfosHelper.FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
+var
+  i, j: Integer;
+begin
+  SetLength(Result, Length(Self));
+  j := 0;
+  for i := Low(Self) to High(Self) do
+    if aFunc(Self[i]) then begin
+      Result[j] := Self[i];
+      Inc(j);
+    end;
+  SetLength(Result, j);
+end;
+
+function TwbModuleInfosHelper.FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
+var
+  i, j: Integer;
+begin
+  SetLength(Result, Length(Self));
+  j := 0;
+  for i := Low(Self) to High(Self) do
+    if (not (aFlag in Self[i]^.miFlags)) xor aHasFlag then begin
+      Result[j] := Self[i];
+      Inc(j);
+    end;
+  SetLength(Result, j);
+end;
+
+procedure TwbModuleInfosHelper.IncludeAll(aFlag: TwbModuleFlag);
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    with Self[i]^ do
+      Include(miFlags, aFlag);
+end;
+
+function TwbModuleList.SimulateLoad(const aModules: TwbModuleInfos): TwbModuleInfos;
+var
+  NewLoadOrder      : TwbModuleInfos;
+  NewLoadOrderCount : Integer;
+
+  procedure Load(aModule: PwbModuleInfo);
+  var
+    i: Integer;
+  begin
+    with aModule^ do begin
+      if mfLoaded in miFlags then
+        Exit;
+      if mfLoading in miFlags then
+        raise Exception.Create('Modules contain circular references. Can''t load "'+miName+'"');
+      Include(miFlags, mfLoading);
+      try
+        for i := Low(miMasters) to High(miMasters) do
+          if Assigned(miMasters[i]) then
+            Load(miMasters[i])
+          else
+            raise Exception.Create('Module "'+miName+'" requires master "'+miMasterNames[i]+'" which can not be found');
+        Include(miFlags, mfLoaded);
+        miLoadOrder := NewLoadOrderCount;
+        NewLoadOrder[NewLoadOrderCount] := aModule;
+        Inc(NewLoadOrderCount);
+        var lLayout := mlContext.SlotLayout;
+        if not (mlContext.Settings.PseudoLight or mlContext.Settings.PseudoUpdate) then
+          if (mfHasUpdateFlag in miFlags) and not mlContext.Settings.IgnoreUpdate then begin
+            miFileID := TwbFileID.Invalid;
+          end else if (mfHasLightFlag in miFlags) and not mlContext.Settings.IgnoreLight then begin
+            if mlNextLightSlot > TwbFileID.MaxLightSlot(lLayout) then
+              raise Exception.Create('Too many light modules');
+            miFileID := TwbFileID.CreateLight(mlNextLightSlot, lLayout);
+            Inc(mlNextLightSlot);
+          end else if (mfHasMediumFlag in miFlags) and not mlContext.Settings.IgnoreMedium then begin
+            if mlNextMediumSlot > TwbFileID.MaxMediumSlot(lLayout) then
+              raise Exception.Create('Too many heavy modules');
+            miFileID := TwbFileID.CreateMedium(mlNextMediumSlot, lLayout);
+            Inc(mlNextMediumSlot);
+          end else begin
+            if mlNextFullSlot > TwbFileID.MaxFullSlot(lLayout) then
+              raise Exception.Create('Too many full modules');
+            miFileID := TwbFileID.CreateFull(mlNextFullSlot);
+            Inc(mlNextFullSlot);
+          end;
+      finally
+        Exclude(miFlags, mfLoading);
+      end;
+    end;
+  end;
+
+begin
+  if mlSimulatedLoadDisabled then
+    raise Exception.Create('Simulated Load has been disabled');
+
+  ResetSimulatedLoad;
+  SetLength(NewLoadOrder, Length(mlModules));
+  NewLoadOrderCount := 0;
+  for var lModuleIdx := Low(aModules) to High(aModules) do
+    with aModules[lModuleIdx]^ do
+      if miFlags * [mfActive, mfForceLoad] <> [] then
+        Load(aModules[lModuleIdx]);
+  SetLength(NewLoadOrder, NewLoadOrderCount);
+
+  var lActiveCount := 0;
+  for var lNewLoadOrderIdx := Low(NewLoadOrder) to High(NewLoadOrder) do
+    with NewLoadOrder[lNewLoadOrderIdx]^ do
+      if miFlags * [mfActive] <> [] then
+        Inc(lActiveCount);
+  if lActiveCount < 1 then
+    Exit(nil);
+
+  Result := NewLoadOrder;
+end;
+
+function TwbModuleInfosHelper.ToStrings(aInclDesc: Boolean): TDynStrings;
+var
+  i: Integer;
+begin
+  SetLength(Result ,Length(Self));
+  for i := Low(Self) to High(Self) do
+    Result[i] := Self[i].ToString(aInclDesc);
 end;
 
 initialization

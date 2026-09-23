@@ -185,7 +185,7 @@ begin
     try
       ModGroupFilesByName.Sorted := True;
       ModGroupFilesByName.Duplicates := dupError;
-      Modules := wbModuleListOf(mgContext).ModulesByLoadOrder(False){.FilteredByFlag(mfHasFile)};
+      Modules := mgContext.ModuleList.ModulesByLoadOrder(False){.FilteredByFlag(mfHasFile)};
       SetLength(ModGroupFiles, Succ(Length(Modules)));
       j := 0;
       for i := Low(Modules) to Length(Modules) do begin
@@ -630,7 +630,7 @@ begin
   if mgiFileName.IsEmpty then
     Exit(False);
 
-  mgiModule := wbModuleListOf(aContext).ModuleByName(mgiFileName);
+  mgiModule := aContext.ModuleList.ModuleByName(mgiFileName);
 
   if Length(Fragments) > 1 then begin
     Fragments := Fragments[1].Split([',']).ForEach(Trim).RemoveEmpty;
@@ -766,7 +766,7 @@ var
   SourceReported : Boolean;
 begin
   Result := False;
-  Modules := wbModuleListOf(aContext).ModulesByLoadOrder(False);
+  Modules := aContext.ModuleList.ModulesByLoadOrder(False);
   for i := Low(Modules) to High(Modules) do
     with Modules[i]^ do begin
       miModGroupTargets := nil;

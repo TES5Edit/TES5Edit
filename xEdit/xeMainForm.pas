@@ -2660,7 +2660,7 @@ begin
     try
       with TfrmModuleSelect.Create(Self) do try
 
-        AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := mfTemplate in a.miFlags;
             if not Result then begin
@@ -2962,7 +2962,7 @@ end;
 procedure TfrmMain.AddNewFileWithDialog;
 begin
   with TfrmModuleSelect.Create(Self) do try
-    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
+    AllModules := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredByFlag(mfTemplate);
     Caption := 'What type of module do you want to create?';
 
     FilterFlag := mfValid;
@@ -3269,7 +3269,7 @@ var
 
   function IsLoaded(const aFileName: string): Boolean;
   begin
-    Result := (mfHasFile in wbModuleListOf(xeContext).ModuleByName(ExtractFileName(aFileName)).miFlags) or
+    Result := (mfHasFile in xeContext.ModuleList.ModuleByName(ExtractFileName(aFileName)).miFlags) or
       Assigned(xeContext.FileByName(fPath + ExtractFileName(aFileName)));
   end;
 
@@ -4732,7 +4732,7 @@ var
 
   Stream        : TStream;
 begin
-  var lModules := wbModuleListOf(xeContext);
+  var lModules := xeContext.ModuleList;
   var lGameDef := xeContext.GameDefObj;
   {$IFDEF USE_PARALLEL_BUILD_REFS}
   TThread.CreateAnonymousThread(procedure begin
@@ -7818,7 +7818,7 @@ begin
       with TfrmModuleSelect.Create(Self) do try
         _File.GetMasters(sl);
         sl.Sorted := True;
-        AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+        AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := Assigned(a.miFile);
             if Result then begin
@@ -9202,7 +9202,7 @@ begin
     _File   : IwbFile;
     Modules : TwbModuleInfos;
   begin
-    Modules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfHasFile);
+    Modules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfHasFile);
     for i := Low(Modules) to High(Modules) do begin
       _File := Modules[i]._File;
       if not (csRefsBuild in _File.ContainerStates) then begin
@@ -9232,7 +9232,7 @@ begin
   with TfrmModuleSelect.Create(nil) do try
     Caption := 'Build reference information for:';
 
-    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
+    AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
       begin
         Result := Assigned(a.miFile);
         if Result then
@@ -11307,7 +11307,7 @@ var
 begin
   var lModGroups := wbModGroupListOf(xeContext);
   with TfrmModuleSelect.Create(Self) do try
-    AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid);
+    AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
     AllModules.ExcludeAll(mfTagged);
     AllModules.ExcludeAll(mfModGroupMissingAnyCRC);
     AllModules.ExcludeAll(mfModGroupMissingCurrentCRC);
@@ -12386,7 +12386,7 @@ var
 
     if Sender = mniNavRenumberFormIDsInject then begin
       with TfrmModuleSelect.Create(Self) do try
-        AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid);
+        AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
         AllModules.ExcludeAll(mfTagged);
         for i := 0 to Pred(SourceFile.MasterCount[True]) do
           with SourceFile.Masters[i, True] do
@@ -15066,7 +15066,7 @@ var
 begin
   if xeQuickClean then begin
     aFiles := nil;
-    wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
+    xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode).FilteredBy(function(aModule: PwbModuleInfo): Boolean
     begin
       Result := False;
       if Assigned(aModule.miFile) then
@@ -21158,7 +21158,7 @@ var
   MasterFile: IwbFile;
   WasUnsaved: Boolean;
 begin
-  var lModules := wbModuleListOf(xeContext);
+  var lModules := xeContext.ModuleList;
   var lModGroups := wbModGroupListOf(xeContext);
   var lGameDef := xeContext.GameDefObj;
   try

@@ -477,7 +477,7 @@ begin
         vstModGroupItems.Selected[vstModGroupItems.FocusedNode] := True;
       end else begin
         with TfrmModuleSelect.Create(Self) do try
-          AllModules := wbModuleListOf(xeContext).ModulesByLoadOrder(False).FilteredByFlag(mfValid);
+          AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
           SelectFlag := mfTagged;
           FilterFlag := mfEphemeralModGroupTagged;
           AllModules.IncludeAll(mfEphemeralModGroupTagged);

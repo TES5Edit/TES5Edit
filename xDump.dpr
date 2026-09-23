@@ -1153,7 +1153,7 @@ begin
       if (wbToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
         HostContext.Settings.DataPath := CheckParamPath;
 
-      wbModuleListOf(HostContext).LoadModules;
+      HostContext.ModuleList.LoadModules;
 
       if FindCmdLineSwitch('report') then
         wbReportMode := True
@@ -1688,7 +1688,7 @@ begin
           _File := HostContext.LoadFile(s, High(Integer));
 
       if not (gcHardcodedFileIsFirstMaster in HostContext.GameDefObj.Capabilities) then
-        with wbModuleListOf(HostContext).ModuleByName(wbGameMasterEsm)^ do
+        with HostContext.ModuleList.ModuleByName(wbGameMasterEsm)^ do
           if mfHasFile in miFlags then begin
             b := TwbHardcodedContainer.GetHardCodedDat(HostContext.GameDefObj.GameName);
             if Length(b) > 0 then
