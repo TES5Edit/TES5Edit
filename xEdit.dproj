@@ -187,7 +187,6 @@
         <DCCReference Include="Core\wbImplementation.pas"/>
         <DCCReference Include="Core\wbInterface.pas"/>
         <DCCReference Include="Core\wbLoadOrder.pas"/>
-        <DCCReference Include="Core\wbLocalization.pas"/>
         <DCCReference Include="Core\wbLOD.pas"/>
         <DCCReference Include="Core\wbModGroups.pas"/>
         <DCCReference Include="Core\wbNifMath.pas"/>

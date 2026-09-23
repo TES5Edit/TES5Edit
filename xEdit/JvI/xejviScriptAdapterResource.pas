@@ -30,7 +30,6 @@ uses
   wbHelpers,
   xeInit,
   wbInterface,
-  wbLocalization,
   wbNifScanner;
 
 const
@@ -194,8 +193,8 @@ end;
 
 procedure Misc_LocalizationGetStringsFromFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  if wbLocalizationHandler(xeContext) <> nil then
-    wbLocalizationHandler(xeContext).GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+  if xeContext.LocalizationHandler <> nil then
+    xeContext.LocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
 end;
 
 procedure Misc_wbAlphaBlend(var Value: Variant; Args: TJvInterpreterArgs);

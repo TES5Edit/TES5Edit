@@ -153,7 +153,6 @@
         <DCCReference Include="Core\wbInterface.pas"/>
         <DCCReference Include="Core\wbSaveInterface.pas"/>
         <DCCReference Include="Core\wbImplementation.pas"/>
-        <DCCReference Include="Core\wbLocalization.pas"/>
         <DCCReference Include="Core\wbHelpers.pas"/>
         <DCCReference Include="Core\wbLoadOrder.pas"/>
         <DCCReference Include="Core\wbHardcoded.pas"/>

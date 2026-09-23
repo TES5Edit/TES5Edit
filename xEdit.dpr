@@ -77,7 +77,6 @@ uses
   wbImplementation in 'Core\wbImplementation.pas',
   wbInterface in 'Core\wbInterface.pas',
   wbLoadOrder in 'Core\wbLoadOrder.pas',
-  wbLocalization in 'Core\wbLocalization.pas',
   wbLOD in 'Core\wbLOD.pas',
   wbModGroups in 'Core\wbModGroups.pas',
   wbNifMath in 'Core\wbNifMath.pas',

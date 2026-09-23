@@ -1367,7 +1367,6 @@ uses
   wbHardcoded,
   wbHelpers,
   wbImplementation,
-  wbLocalization,
   wbLOD,
   wbSort,
 
@@ -9639,13 +9638,13 @@ begin
       // localization editor
       else if Element._File.IsLocalized and Assigned(Element.ValueDef) and (Element.ValueDef.DefType = dtLString) then begin
         with TfrmLocalization.Create(Self) do try
-          wbLocalizationHandler(xeContext).NoTranslate := true;
+          xeContext.LocalizationHandler.NoTranslate := true;
           StringID := StrToInt64Def('$' + Element.Value, 0);
-          wbLocalizationHandler(xeContext).NoTranslate := false;
+          xeContext.LocalizationHandler.NoTranslate := false;
           EditValue(Element._File.FileName, StringID);
           ShowModal;
         finally
-          wbLocalizationHandler(xeContext).NoTranslate := false;
+          xeContext.LocalizationHandler.NoTranslate := false;
           Free;
         end;
         vstView.Invalidate;
@@ -12044,7 +12043,7 @@ end;
 
 procedure TfrmMain.mniMainLocalizationEditorClick(Sender: TObject);
 begin
-  if wbLocalizationHandler(xeContext) = nil then
+  if xeContext.LocalizationHandler = nil then
     Exit;
 
   with TfrmLocalization.Create(Self) do try
@@ -12059,7 +12058,7 @@ var
   i: integer;
   s: string;
 begin
-  if wbLocalizationHandler(xeContext) = nil then
+  if xeContext.LocalizationHandler = nil then
     Exit;
 
   s := StringReplace(TMenuItem(Sender).Caption, '&', '', []);
@@ -12069,10 +12068,10 @@ begin
 
   xeContext.Settings.Language := s;
 
-  wbLocalizationHandler(xeContext).Clear;
+  xeContext.LocalizationHandler.Clear;
   for i := Low(Files) to High(Files) do
     if Files[i].IsLocalized then
-      wbLocalizationHandler(xeContext).LoadForFile(Files[i].FileName);
+      xeContext.LocalizationHandler.LoadForFile(Files[i].FileName);
 
   vstNav.Invalidate;
   vstView.Invalidate;
@@ -12131,7 +12130,7 @@ begin
 
       with TfrmLocalizePlugin.Create(Self) do try
 
-        wbLocalizationHandler(xeContext).AvailableLocalizationFiles(lFiles);
+        xeContext.LocalizationHandler.AvailableLocalizationFiles(lFiles);
         clbFrom.Items.AddStrings(lFiles);
         clbTo.Items.AddStrings(lFiles);
 
@@ -12179,14 +12178,14 @@ begin
 
         for i := 0 to Pred(lFiles.Count) do begin
           if Integer(lFiles.Objects[i]) and 1 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler(xeContext).StringsPath + lFiles[i]);
+            wblf := TwbLocalizationFile.Create(xeContext, xeContext.LocalizationHandler.StringsPath + lFiles[i]);
             for j := 0 to Pred(wblf.Count) do
               lFrom.Add(AnsiLowerCase(wblf.Items[j]));
             wblf.Destroy;
           end;
 
           if Integer(lFiles.Objects[i]) and 2 > 0 then begin
-            wblf := TwbLocalizationFile.Create(xeContext, wbLocalizationHandler(xeContext).StringsPath + lFiles[i]);
+            wblf := TwbLocalizationFile.Create(xeContext, xeContext.LocalizationHandler.StringsPath + lFiles[i]);
             lTo.AddStrings(wblf.Items);
             wblf.Destroy;
           end;
@@ -12216,13 +12215,13 @@ begin
               // count empty strings as translated too
               if s = '' then Inc(Translated);
           end;
-          ID := wbLocalizationHandler(xeContext).AddValue(s, Element);
+          ID := xeContext.LocalizationHandler.AddValue(s, Element);
           Element.EditValue := sStringID + IntToHex(ID, 8);
         end else begin
           s := Element.EditValue;
-          wbLocalizationHandler(xeContext).NoTranslate := true;
+          xeContext.LocalizationHandler.NoTranslate := true;
           Element.EditValue := s;
-          wbLocalizationHandler(xeContext).NoTranslate := false;
+          xeContext.LocalizationHandler.NoTranslate := false;
         end;
 
         if StartTick + 500 < GetTickCount64 then begin
@@ -12243,7 +12242,7 @@ begin
         FreeAndNil(lTo);
       end;
 
-      wbLocalizationHandler(xeContext).NoTranslate := false;
+      xeContext.LocalizationHandler.NoTranslate := false;
       pnlClient.Enabled := true;
       UpdatePnlCancelVisible;
       PostAddMessage('[Processing done] ' +
@@ -14418,7 +14417,7 @@ begin
     mniMainLocalizationLanguage.Clear;
     sl := TStringList.Create;
     try
-      wbLocalizationHandler(xeContext).AvailableLanguages(sl);
+      xeContext.LocalizationHandler.AvailableLanguages(sl);
       for i := 0 to Pred(sl.Count) do begin
         MenuItem := TMenuItem.Create(mniMainLocalizationLanguage);
         MenuItem.Caption := sl[i];
@@ -15351,20 +15350,20 @@ begin
           SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
         end;
 
-      if wbLocalizationHandler(xeContext) <> nil then try
-        for i := 0 to Pred(wbLocalizationHandler(xeContext).Count) do try
-          if wbLocalizationHandler(xeContext)[i].Modified or wbTestWrite then begin
-            CheckListBox1.AddItem(wbLocalizationHandler(xeContext)[i].Name, Pointer(wbLocalizationHandler(xeContext)[i]));
-            CheckListBox1.Checked[Pred(CheckListBox1.Count)] := wbLocalizationHandler(xeContext)[i].Modified;
+      if xeContext.LocalizationHandler <> nil then try
+        for i := 0 to Pred(xeContext.LocalizationHandler.Count) do try
+          if xeContext.LocalizationHandler[i].Modified or wbTestWrite then begin
+            CheckListBox1.AddItem(xeContext.LocalizationHandler[i].Name, Pointer(xeContext.LocalizationHandler[i]));
+            CheckListBox1.Checked[Pred(CheckListBox1.Count)] := xeContext.LocalizationHandler[i].Modified;
             SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;
           end;
         except
           on E: Exception do
-            wbProgress('Error while trying to access wbLocalizationHandler[%d]: [%s] %s', [i, E.ClassName, E.Message]);
+            wbProgress('Error while trying to access LocalizationHandler[%d]: [%s] %s', [i, E.ClassName, E.Message]);
         end;
       except
         on E: Exception do
-          wbProgress('Error while trying to iterate over wbLocalizationHandler: [%s] %s', [E.ClassName, E.Message]);
+          wbProgress('Error while trying to iterate over LocalizationHandler: [%s] %s', [E.ClassName, E.Message]);
       end;
 
       Caption := 'Save changed files:';
@@ -17572,10 +17571,10 @@ var
   CheckComboLink              : TwbCheckComboEditLink;
   {$ENDIF}
 begin
-  if EditInfoCacheLGeneration <> wbLocalizationHandler(xeContext).Generation then begin
+  if EditInfoCacheLGeneration <> xeContext.LocalizationHandler.Generation then begin
     EditInfoCacheID := nil;
     EditInfoCache := nil;
-    EditInfoCacheLGeneration := wbLocalizationHandler(xeContext).Generation;
+    EditInfoCacheLGeneration := xeContext.LocalizationHandler.Generation;
   end;
 
   case aElement.EditType of

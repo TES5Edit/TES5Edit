@@ -37,7 +37,6 @@ uses
   wbInterface in 'Core\wbInterface.pas',
   wbSaveInterface in 'Core\wbSaveInterface.pas',
   wbImplementation in 'Core\wbImplementation.pas',
-  wbLocalization in 'Core\wbLocalization.pas',
   wbHelpers in 'Core\wbHelpers.pas',
   wbLoadOrder in 'Core\wbLoadOrder.pas',
   wbHardcoded in 'Core\wbHardcoded.pas',

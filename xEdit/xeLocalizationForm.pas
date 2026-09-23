@@ -76,7 +76,7 @@ uses
   Vcl.Graphics,
 
   wbHelpers,
-  wbLocalization,
+  wbInterface,
 
   xeInit,
   xeMainForm;
@@ -96,7 +96,7 @@ begin
   xeApplyFontAndScale(Self);
 
   vetStrings.NodeDataSize := SizeOf(TTreeData);
-  vetStrings.RootNodeCount := wbLocalizationHandler(xeContext).Count;
+  vetStrings.RootNodeCount := xeContext.LocalizationHandler.Count;
   pnlControls.Visible := false;
 end;
 
@@ -185,7 +185,7 @@ begin
   Data := Sender.GetNodeData(Node);
   if ParentNode = nil then begin
     Data.ID := 0;
-    Data.lFile := wbLocalizationHandler(xeContext)[Node.Index];
+    Data.lFile := xeContext.LocalizationHandler[Node.Index];
     if Data.lFile.Count > 0 then
       Include(InitialStates, ivsHasChildren);
   end else begin

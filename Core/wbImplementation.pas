@@ -84,7 +84,6 @@ uses
   wbCompression,
   wbHash,
   wbHelpers,
-  wbLocalization,
   wbSort;
 
 const
@@ -4144,7 +4143,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     Result :=
       (ceiGeneration >= GetHighestGenerationSelfAndMasters) and
-      (ceiLGeneration >= wbLocalizationHandler(flContextObj).Generation);
+      (ceiLGeneration >= flContextObj.LocalizationHandler.Generation);
     if Result then
       aEditInfo := ceiEditInfo
     else begin
@@ -6280,7 +6279,7 @@ begin
   with flCachedEditInfos[aIdent] do begin
     ceiEditInfo := aEditInfo;
     ceiGeneration := _FileGeneration;
-    ceiLGeneration := wbLocalizationHandler(flContextObj).Generation;
+    ceiLGeneration := flContextObj.LocalizationHandler.Generation;
   end;
 end;
 
@@ -11412,7 +11411,7 @@ var
   _File       : IwbFile;
   GridCell    : TwbGridCell;
 begin
-  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
+  if mrLGeneration <> ContextObj.LocalizationHandler.Generation then
     mrInvalidateNameCache;
 
   if mrDisplayName <> '' then
@@ -11616,7 +11615,7 @@ function TwbMainRecord.GetFullName: string;
 var
   SelfRef: IwbContainerElementRef;
 begin
-  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
+  if mrLGeneration <> ContextObj.LocalizationHandler.Generation then
     mrInvalidateNameCache;
 
   if mrsFullNameFromCache in mrStates then
@@ -12297,7 +12296,7 @@ var
 begin
   CanCache := (not aForName) or not wbNoFullInShortName;
 
-  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
+  if mrLGeneration <> ContextObj.LocalizationHandler.Generation then
     mrInvalidateNameCache;
 
   if wbDisplayShorterNames then begin
@@ -12358,7 +12357,7 @@ function TwbMainRecord.GetName: string;
 var
   s : string;
 begin
-  if mrLGeneration <> wbLocalizationHandler(ContextObj).Generation then
+  if mrLGeneration <> ContextObj.LocalizationHandler.Generation then
     mrInvalidateNameCache;
 
   if mrName <> '' then
@@ -13428,7 +13427,7 @@ begin
     end;
   end;
   if Assigned(_File) then
-    mrLGeneration := wbLocalizationHandler(ContextObj).Generation;
+    mrLGeneration := ContextObj.LocalizationHandler.Generation;
 end;
 
 function TwbMainRecord.mrStruct: PwbMainRecordStruct;
