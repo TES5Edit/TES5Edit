@@ -16971,7 +16971,7 @@ begin
       Settings.UpdateFile;
       ShowMessage('You''ve been actively using this program for a while now.'#13#13 +
         'If you should find this program useful I would greatly appreciate it if you ' +
-        'would go to the download page at '+SiteName[wbGameMode]+' Nexus and give it an endorsement.'#13#13 +
+        'would go to the download page at '+SiteName[xeGameMode]+' Nexus and give it an endorsement.'#13#13 +
         'If you have already endorsed this program I would like to thank you for your support and '+
         'if you have any suggestions how to improve this program please don''t hesitate to let me know about '+
         'them via the release topic on the Bethesda Game Studios Forums.');

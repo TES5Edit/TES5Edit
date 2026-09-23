@@ -65,6 +65,7 @@ const
 {$SetPEFlags IMAGE_FILE_LARGE_ADDRESS_AWARE}
 
 var
+  HostGameMode         : TwbGameMode  = Low(TwbGameMode);
   HostContextRef       : IwbGameContext;
   HostContext          : TwbGameContext;
   HostSaveContextRef   : IwbSaveContext;
@@ -900,7 +901,7 @@ begin
         s := GetEnumName(TypeInfo(TwbGameMode), Ord(gm) );
         Delete(s, 1, 2);
         if FindCmdLineSwitch(s) then begin
-          wbGameMode := gm;
+          HostGameMode := gm;
           Found := True;
           Break;
         end;
@@ -910,7 +911,7 @@ begin
           s := GetEnumName(TypeInfo(TwbGameMode), Ord(gm) ).ToLowerInvariant;
           Delete(s, 1, 2);
           if t.Contains(s) then begin
-            wbGameMode := gm;
+            HostGameMode := gm;
             Found := True;
             Break;
           end;
@@ -926,7 +927,7 @@ begin
         DumpSourceName := 'Saves'
       else
         DumpSourceName := 'Plugins';
-      lSettings.ApplyGameDefaults(wbGameMode);
+      lSettings.ApplyGameDefaults(HostGameMode);
       lSettings.DontSave := True;
       lSettings.AllowInternalEdit := False;
       lSettings.HideIgnored := True;
@@ -938,7 +939,7 @@ begin
       if FindCmdLineSwitch('sr') then
         lDefineOptions.SimpleRecords := True;
 
-      case wbGameMode of
+      case HostGameMode of
         gmFNV, gmFO3, gmTES4, gmTES5, gmEnderal, gmSSE, gmEnderalSE: ;
         gmTES3: begin
           lSettings.LoadBSAs := False;
@@ -966,7 +967,7 @@ begin
       end;
       end;
 
-      HostContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, lInputs, lDefineOptions));
+      HostContextRef := wbCreateGameContext(wbCreateGameDef(HostGameMode, lInputs, lDefineOptions));
       HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
       HostContext.Settings := lSettings;
@@ -991,9 +992,9 @@ begin
         HostContext.Settings.DataPath := CheckParamPath;
 
       var lIsEpic: Boolean;
-      var lMyGamesPath := HostContext.Settings.DefaultMyGamesPath(wbGameMode, IncludeTrailingPathDelimiter(TPath.GetDocumentsPath), lIsEpic);
-      HostContext.Settings.TheGameIniFileName := HostContext.Settings.DefaultGameIniFileName(wbGameMode, lMyGamesPath);
-      HostContext.Settings.CustomIniFileName := HostContext.Settings.DefaultCustomIniFileName(wbGameMode, lMyGamesPath);
+      var lMyGamesPath := HostContext.Settings.DefaultMyGamesPath(HostGameMode, IncludeTrailingPathDelimiter(TPath.GetDocumentsPath), lIsEpic);
+      HostContext.Settings.TheGameIniFileName := HostContext.Settings.DefaultGameIniFileName(HostGameMode, lMyGamesPath);
+      HostContext.Settings.CustomIniFileName := HostContext.Settings.DefaultCustomIniFileName(HostGameMode, lMyGamesPath);
 
       HostContext.ModuleList.LoadModules;
 

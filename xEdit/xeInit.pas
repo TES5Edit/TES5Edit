@@ -18,6 +18,7 @@ uses
   wbInterface;
 
 var
+  xeGameMode               : TwbGameMode;
   xeContextRef             : IwbGameContext;
   xeContext                : TwbGameContext;
   xeSaveContexts           : TArray<IwbSaveContext>;
@@ -124,7 +125,7 @@ uses
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
-  Result := wbIsModule(aFilePath, wbGameIdentities[wbGameMode].GameExeName) or wbIsSave(aFilePath);
+  Result := wbIsModule(aFilePath, wbGameIdentities[xeGameMode].GameExeName) or wbIsSave(aFilePath);
 end;
 
 function xeFindNextValidCmdLineFileName(var aStartIndex  : Integer;
@@ -150,7 +151,7 @@ function xeFindNextValidCmdLineModule(var aStartIndex  : Integer;
 begin
   repeat
     Result := xeFindNextValidCmdLineFileName(aStartIndex, aValue, aDefaultPath);
-  until not Result or wbIsModule(aValue, wbGameIdentities[wbGameMode].GameExeName);
+  until not Result or wbIsModule(aValue, wbGameIdentities[xeGameMode].GameExeName);
   if Result  then
     if (AnsiCompareText(ExtractFilePath(ExpandFileName(aValue)), ExpandFileName(aDefaultPath)) = 0) then begin
       aValue := ExtractFileName(aValue);
@@ -326,8 +327,8 @@ var
   IniFile : TMemIniFile;
   lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
 begin
-  var lLocation := wbGameLocations[wbGameMode];
-  var lIdentity := wbGameIdentities[wbGameMode];
+  var lLocation := wbGameLocations[xeGameMode];
+  var lIdentity := wbGameIdentities[xeGameMode];
   aSettings.ModGroupFileName := wbProgramPath + lIdentity.AppName + wbToolName + '.modgroups';
   isEpicNV := false;
 
@@ -342,7 +343,7 @@ begin
   aSettings.TempPath := s;
 
   if not wbFindCmdLineParam('D', lDataPath) then begin
-    case aSettings.FindDataPath(wbGameMode, lRegistryName) of
+    case aSettings.FindDataPath(xeGameMode, lRegistryName) of
       dpsNoRegistryKey: begin
         s := 'Fatal: Could not open registry key: ' + lRegistryName;
         ShowMessage(Format('%s'#13#10'This can happen after %s updates, run the game''s launcher to restore registry settings', [s, 'Steam']));
@@ -381,14 +382,14 @@ begin
       Exit;
     end;
 
-    lMyGamesTheGamePath := aSettings.DefaultMyGamesPath(wbGameMode, xeMyProfileName, isEpicNV);
+    lMyGamesTheGamePath := aSettings.DefaultMyGamesPath(xeGameMode, xeMyProfileName, isEpicNV);
   end;
 
   if not wbFindCmdLineParam('I', lTheGameIniFileName) then
-    lTheGameIniFileName := aSettings.DefaultGameIniFileName(wbGameMode, lMyGamesTheGamePath);
+    lTheGameIniFileName := aSettings.DefaultGameIniFileName(xeGameMode, lMyGamesTheGamePath);
 
   if not wbFindCmdLineParam('CustomIni', lCustomIniFileName) then
-    lCustomIniFileName := aSettings.DefaultCustomIniFileName(wbGameMode, lMyGamesTheGamePath);
+    lCustomIniFileName := aSettings.DefaultCustomIniFileName(xeGameMode, lMyGamesTheGamePath);
 
   if not wbFindCmdLineParam('G', lSavePath) then begin
     if lMyGamesTheGamePath = '' then
@@ -685,19 +686,19 @@ begin
   lSettings.Language := 'English';
 
   if isMode('FNV') then begin
-    wbGameMode         := gmFNV;
+    xeGameMode         := gmFNV;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     SavesSupported     := True;
   end
 
   else if isMode('FO3') then begin
-    wbGameMode         := gmFO3;
+    xeGameMode         := gmFO3;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
     SavesSupported     := False;
   end
 
   else if isMode('TES3') then begin
-    wbGameMode         := gmTES3;
+    xeGameMode         := gmTES3;
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
     SavesSupported     := False;
@@ -705,67 +706,67 @@ begin
   end
 
   else if isMode('TES4') then begin
-    wbGameMode         := gmTES4;
+    xeGameMode         := gmTES4;
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('TES4R') then begin
-    wbGameMode         := gmTES4R;
+    xeGameMode         := gmTES4R;
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('TES5') then begin
-    wbGameMode         := gmTES5;
+    xeGameMode         := gmTES5;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('EnderalSE') then begin
-    wbGameMode         := gmEnderalSE;
+    xeGameMode         := gmEnderalSE;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('Enderal') then begin
-    wbGameMode         := gmEnderal;
+    xeGameMode         := gmEnderal;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('TES5VR') then begin
-    wbGameMode         := gmTES5VR;
+    xeGameMode         := gmTES5VR;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := False;
   end
 
   else if isMode('SSE') then begin
-    wbGameMode         := gmSSE;
+    xeGameMode         := gmSSE;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
     SavesSupported     := True;
   end
 
   else if isMode('FO4') then begin
-    wbGameMode         := gmFO4;
+    xeGameMode         := gmFO4;
     ToolModes          := wbAlwaysMode;
     SavesSupported     := True;
   end
 
   else if isMode('FO4VR') then begin
-    wbGameMode         := gmFO4VR;
+    xeGameMode         := gmFO4VR;
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('FO76') then begin
-    wbGameMode         := gmFO76;
+    xeGameMode         := gmFO76;
     ToolModes          := wbAlwaysMode;
     SavesSupported     := False;
   end
 
   else if isMode('SF1') then begin
-    wbGameMode         := gmSF1;
+    xeGameMode         := gmSF1;
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
     SavesSupported     := False;
 
@@ -784,7 +785,7 @@ begin
     Exit(False);
   end;
 
-  var lIdentity := wbGameIdentities[wbGameMode];
+  var lIdentity := wbGameIdentities[xeGameMode];
 
   if not (wbToolMode in ToolModes) then begin
     ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + wbToolName);
@@ -812,8 +813,8 @@ begin
 
   DoInitPath(xeParamIndex, lSettings);
 
-  lSettings.ApplyGameDefaults(wbGameMode);
-  case wbGameMode of
+  lSettings.ApplyGameDefaults(xeGameMode);
+  case xeGameMode of
     gmTES4:
       if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then
         lInputs.Nehrim      := True;
@@ -833,7 +834,7 @@ begin
     end;
   end;
 
-  xeContextRef := wbCreateGameContext(wbCreateGameDef(wbGameMode, lInputs, False));
+  xeContextRef := wbCreateGameContext(wbCreateGameDef(xeGameMode, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;
   lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
   xeContext.Settings := lSettings;
@@ -1370,7 +1371,7 @@ var
 begin
   lLines := TStringList.Create;
   try
-    lLines.Add('host.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(wbGameMode)));
+    lLines.Add('host.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(xeGameMode)));
     lLines.Add('host.ToolMode=' + GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode)));
     lLines.Add('host.ToolName=' + wbToolName);
     var lIdentity := xeContext.GameDefObj.Identity;

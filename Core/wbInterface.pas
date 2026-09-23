@@ -5488,7 +5488,6 @@ function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 
 var
-  wbGameMode         : TwbGameMode;
   wbToolMode         : TwbToolMode;
   wbSubMode          : string;
   wbApplicationTitle : string;
