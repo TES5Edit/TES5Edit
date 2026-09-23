@@ -5,8 +5,7 @@ program sseextend;
 uses
   SysUtils,
   Classes,
-  lz4 in '..\..\lz4\lz4.pas',
-  lz4Common in '..\..\lz4\lz4Common.pas';
+  lz4d;
 
 const
   Magic = 'TESV_SAVEGAME';
@@ -113,7 +112,7 @@ begin
           b := sh.CompressedSize;
           l := S.Read(bs, b);
           if b = l then begin
-            {r :=} LZ4_decompress_safe(@bs[0], @bd[0], sh.CompressedSize, sh.UncompressedSize);
+            {r :=} TLZ4.Decode(@bs[0], @bd[0], sh.CompressedSize, sh.UncompressedSize);
             D.Write(bd, sh.UncompressedSize);
           end else
             WriteLN('  Invalid read: Expected=' + IntToStr(b) + ' Actual=' + IntToStr(l));
