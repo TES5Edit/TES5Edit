@@ -3685,6 +3685,7 @@ type
 
     procedure Define; virtual;
     procedure CreateSaveDefs;
+    class function ComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities; static;
 
     function IsCS(const aDef1, aDef2: string): string; overload;
     function IsHNVSE(const aDef1, aDef2: TwbConflictPriority): TwbConflictPriority; overload;
@@ -6132,7 +6133,7 @@ begin
   Result := TwbNullWaitForm.Create;
 end;
 
-function wbComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities;
+class function TwbGameDef.ComputeCapabilities(aGameMode: TwbGameMode; const aInputs: TwbGameDefInputs): TwbGameCapabilities;
 begin
   Result := [];
   if (aGameMode in [gmSSE, gmEnderalSE, gmFO4, gmSF1]) or aInputs.LightSupport then
@@ -6238,7 +6239,7 @@ constructor TwbGameDef.Create(aGameMode: TwbGameMode; const aInputs: TwbGameDefI
 begin
   Create;
   gdGameMode := aGameMode;
-  gdCapabilities := wbComputeCapabilities(aGameMode, aInputs);
+  gdCapabilities := ComputeCapabilities(aGameMode, aInputs);
   gdIdentity := wbGameIdentities[aGameMode];
   if (aGameMode = gmTES4) and aInputs.Nehrim then begin
     gdIdentity.AppName := 'Nehrim';
