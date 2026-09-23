@@ -7,8 +7,6 @@ uses
 
   wbInterface;
 
-function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray;
-
 procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
 
 implementation
@@ -140,16 +138,6 @@ type
 
     procedure RegisterNode(const aNodeType: TwbWwiseNodeType; const aObject: TwbWwiseObject; const aBankFileName: string);
   end;
-
-var
-  _EmptySoundBankCache: IwbSoundBankArray;
-
-function wbSoundBankCache(aContext: TwbGameContext): IwbSoundBankArray;
-begin
-  Result := aContext.SoundBankCache;
-  if not Assigned(Result) then
-    Result := _EmptySoundBankCache;
-end;
 
 procedure wbBuildSoundBankCache(const aContext: TwbGameContext; const aLoadOrder: TStringList);
 begin
@@ -855,8 +843,5 @@ begin
     aFileName := TwbSoundBank(lParent).FFilename;
   end;
 end;
-
-initialization
-  _EmptySoundBankCache := TwbSoundBankArray.Create;
 
 end.

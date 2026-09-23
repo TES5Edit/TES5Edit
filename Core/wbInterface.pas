@@ -4191,7 +4191,7 @@ type
       read gcLocalizationHandler;
     property SoundBankCache: IwbSoundBankArray
       read gcSoundBankCache
-      write gcSoundBankCache;
+      write SetSoundBankCache;
     function GetFaceGenCache: IwbFaceGenCache;
     procedure SetFaceGenCache(const aValue: IwbFaceGenCache);
     property FaceGenCache: IwbFaceGenCache
@@ -6044,6 +6044,29 @@ type
     procedure UpdateStatus(aPosition: Integer; const aStatus: string);
   end;
 
+  TwbNullSoundBankArray = class(TInterfacedObject, IwbSoundBankArray)
+  protected
+    {--- IwbSoundBankArray ---}
+    function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
+                           const aGUID     : TGUID;
+                             var aName     : string;
+                             var aFilename : string)
+                                           : Boolean;
+
+    function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
+                              const aDisplayStr : string;
+                                var aGUID       : TGUID)
+                                                : Boolean;
+
+    procedure GetChildStrings(const aParentGUID: TGUID;
+                              const aChildType: TwbWwiseNodeType;
+                                var aList: TStringList);
+
+    procedure GetStrings(const aNodeType : TwbWwiseNodeType;
+                         const aMasters  : TStringList;
+                           var aList     : TStringList);
+  end;
+
 { TwbNullWaitForm }
 
 function TwbNullWaitForm.CreateProgress(const aCaption, aStatus: string; aMax: Integer): IwbProgress;
@@ -6060,6 +6083,38 @@ end;
 
 procedure TwbNullProgress.UpdateStatus(aPosition: Integer; const aStatus: string);
 begin
+end;
+
+{ TwbNullSoundBankArray }
+
+procedure TwbNullSoundBankArray.GetChildStrings(const aParentGUID: TGUID; const aChildType: TwbWwiseNodeType; var aList: TStringList);
+begin
+  GetStrings(aChildType, nil, aList);
+end;
+
+procedure TwbNullSoundBankArray.GetStrings(const aNodeType: TwbWwiseNodeType; const aMasters: TStringList; var aList: TStringList);
+begin
+  if not Assigned(aList) then
+    Exit;
+
+  aList.BeginUpdate;
+  try
+    aList.Sorted := True;
+    aList.Duplicates := dupIgnore;
+  finally
+    aList.EndUpdate;
+  end;
+end;
+
+function TwbNullSoundBankArray.TryLookupDisplay(const aNodeType: TwbWwiseNodeType; const aDisplayStr: string; var aGUID: TGUID): Boolean;
+begin
+  aGUID := Default(TGUID);
+  Result := False;
+end;
+
+function TwbNullSoundBankArray.TryLookupGUID(const aNodeType: TwbWwiseNodeType; const aGUID: TGUID; var aName: string; var aFilename: string): Boolean;
+begin
+  Result := False;
 end;
 
 function NullCreateWaitForm(const aCaption     : string;
@@ -7021,6 +7076,7 @@ begin
   gcLEncoding[False] := CreateLEncodingList;
   gcLEncoding[True] := CreateLEncodingList;
   gcLocalizationHandler := TwbLocalizationHandler.Create(Self);
+  gcSoundBankCache := TwbNullSoundBankArray.Create;
 end;
 
 destructor TwbGameContext.Destroy;
@@ -7224,7 +7280,10 @@ end;
 
 procedure TwbGameContext.SetSoundBankCache(const aValue: IwbSoundBankArray);
 begin
-  gcSoundBankCache := aValue;
+  if Assigned(aValue) then
+    gcSoundBankCache := aValue
+  else
+    gcSoundBankCache := TwbNullSoundBankArray.Create;
 end;
 
 function TwbGameContext.GetFaceGenCache: IwbFaceGenCache;
