@@ -4139,9 +4139,6 @@ type
       write gcNextLoadOrder;
     property ModuleList: TwbModuleList
       read GetModuleList;
-    property ModGroupList: TObject
-      read gcModGroupList
-      write gcModGroupList;
     property RecordToSkip: TStringList
       read gcRecordToSkip;
     property SubRecordToSkip: TStringList

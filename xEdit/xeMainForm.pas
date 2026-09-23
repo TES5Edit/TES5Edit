@@ -4106,7 +4106,7 @@ procedure TfrmMain.mniNavDeleteModGroupsClick(Sender: TObject);
 var
   i            : Integer;
 begin
-  var lModGroups := wbModGroupListOf(xeContext);
+  var lModGroups := xeContext.ModGroupList;
   lModGroups.Reload;
 
   with TfrmModGroupSelect.Create(Self) do try
@@ -4146,7 +4146,7 @@ var
   lModGroup    : TwbModGroup;
   sl           : TStringList;
 begin
-  var lModGroups := wbModGroupListOf(xeContext);
+  var lModGroups := xeContext.ModGroupList;
   lModGroups.Reload;
 
   with TfrmModGroupSelect.Create(Self) do try
@@ -8509,7 +8509,7 @@ procedure TfrmMain.mniViewModGroupsReloadClick(Sender: TObject);
 var
   WasModGroupsExist: Boolean;
 begin
-  var lModGroups := wbModGroupListOf(xeContext);
+  var lModGroups := xeContext.ModGroupList;
   with TfrmModGroupSelect.Create(Self) do try
     lModGroups.Reload;
     lModGroups.ByName(False).ShowValidationMessages;
@@ -11305,7 +11305,7 @@ var
   lSelectedModules : TwbModuleInfos;
   UpdatedCount     : Integer;
 begin
-  var lModGroups := wbModGroupListOf(xeContext);
+  var lModGroups := xeContext.ModGroupList;
   with TfrmModuleSelect.Create(Self) do try
     AllModules := xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
     AllModules.ExcludeAll(mfTagged);
@@ -14674,7 +14674,7 @@ begin
     mniNavCreateModGroup.Visible := Length(Nodes) > 1;
   end;
 
-  mniNavEditModGroup.Visible := Length(wbModGroupListOf(xeContext).ByName(False)) > 0;
+  mniNavEditModGroup.Visible := Length(xeContext.ModGroupList.ByName(False)) > 0;
   mniNavDeleteModGroups.Visible := mniNavEditModGroup.Visible;
   mniNavUpdateCRCModGroups.Visible := mniNavEditModGroup.Visible;
 
@@ -21159,7 +21159,7 @@ var
   WasUnsaved: Boolean;
 begin
   var lModules := xeContext.ModuleList;
-  var lModGroups := wbModGroupListOf(xeContext);
+  var lModGroups := xeContext.ModGroupList;
   var lGameDef := xeContext.GameDefObj;
   try
     xeContext.LoaderDone := True;

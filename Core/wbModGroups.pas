@@ -147,7 +147,13 @@ type
     function ByName(aValidOnly: Boolean): TwbModGroupPtrs;
   end;
 
-function wbModGroupListOf(const aContext: TwbGameContext): TwbModGroupList;
+  TwbGameContextModGroupsHelper = class helper for TwbGameContext
+  private
+    function GetModGroupList: TwbModGroupList;
+  public
+    property ModGroupList: TwbModGroupList
+      read GetModGroupList;
+  end;
 
 implementation
 
@@ -157,14 +163,16 @@ uses
   wbHelpers,
   wbSort;
 
-function wbModGroupListOf(const aContext: TwbGameContext): TwbModGroupList;
+{ TwbGameContextModGroupsHelper }
+
+function TwbGameContextModGroupsHelper.GetModGroupList: TwbModGroupList;
 begin
-  Result := TwbModGroupList(aContext.ModGroupList);
-  if not Assigned(Result) then begin
+  if not Assigned(gcModGroupList) then begin
     Result := TwbModGroupList.Create;
-    Result.mgContext := aContext;
-    aContext.ModGroupList := Result;
-  end;
+    Result.mgContext := Self;
+    gcModGroupList := Result;
+  end else
+    Result := TwbModGroupList(gcModGroupList);
 end;
 
 procedure TwbModGroupList.Load;

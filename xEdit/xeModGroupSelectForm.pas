@@ -639,7 +639,7 @@ function TfrmModGroupSelect.ShowModal: Integer;
 begin
   vstModGroups.Clear;
   if Length(AllModGroups) < 1 then
-    AllModGroups := wbModGroupListOf(xeContext).ByName(True).FilteredByFlag(FilterFlag);
+    AllModGroups := xeContext.ModGroupList.ByName(True).FilteredByFlag(FilterFlag);
   vstModGroups.ChildCount[nil] := Length(AllModGroups);
   vstModGroups.InitRecursive(nil, 100, False);
 
