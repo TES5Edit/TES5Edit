@@ -4254,7 +4254,7 @@ type
 
     procedure scJoin(const aFile: IwbFile; const aFileName: string);
     procedure scBuildSlotTable;
-    function scSlotFile(const aSlotFiles: TArray<Integer>; aSlot: Integer): IwbFile;
+    function scSlotFile(const aSlotFileIndices: TArray<Integer>; aSlot: Integer): IwbFile;
     function scHeldFileByName(const aFileName: string): IwbFile;
   public
     constructor Create(const aGameContext: IwbGameContext);
@@ -6863,12 +6863,12 @@ begin
     scLightSlotFileIndices[lSlot] := ResolveSlot(scLightPluginNames[lSlot]);
 end;
 
-function TwbSaveContext.scSlotFile(const aSlotFiles: TArray<Integer>; aSlot: Integer): IwbFile;
+function TwbSaveContext.scSlotFile(const aSlotFileIndices: TArray<Integer>; aSlot: Integer): IwbFile;
 begin
   Result := nil;
-  if (aSlot < Low(aSlotFiles)) or (aSlot > High(aSlotFiles)) then
+  if (aSlot < Low(aSlotFileIndices)) or (aSlot > High(aSlotFileIndices)) then
     Exit;
-  var lIdx := aSlotFiles[aSlot];
+  var lIdx := aSlotFileIndices[aSlot];
   if (lIdx < 0) or (lIdx > High(scGameContextObj.gcFiles)) then
     Exit;
   Result := scGameContextObj.gcFiles[lIdx];
