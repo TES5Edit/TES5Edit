@@ -251,12 +251,6 @@ begin
     Result := IncludeTrailingBackslash(Result);
 end;
 
-const
-  DataName : array[Boolean] of string = (
-    'Data',
-    'Data Files'   // gmTES3
-  );
-
 function CheckAppPath: string;
 
   function CheckPath(const aStartFrom: string): string;
@@ -266,7 +260,7 @@ function CheckAppPath: string;
     Result := '';
     s := aStartFrom;
     while Length(s) > 3 do begin
-      if FileExists(s + wbGameExeName) and DirectoryExists(s + DataName[wbGameMode = gmTES3]) then begin
+      if FileExists(s + wbGameExeName) and DirectoryExists(s + wbGameLocations[wbGameMode].DataFolder) then begin
         Result := s;
         Exit;
       end;
@@ -357,18 +351,13 @@ begin
 end;
 
 procedure DoInitPath(const ParamIndex: Integer; var aSettings: TwbGameContextSettings);
-const
-  sBethRegKey             = '\SOFTWARE\Bethesda Softworks\';
-  sUninstallRegKey        = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
-  sSureAIRegKey           = '\Software\SureAI\';
-
 var
   s, regPath, regKey, client: string;
   isEpicNV : Boolean;
   IniFile : TMemIniFile;
   lDataPath, lOutputPath, lMyGamesTheGamePath, lTheGameIniFileName, lCustomIniFileName, lSavePath, lBackupPath, lCachePath: string;
 begin
-  var lIsOblivionR := wbGameMode = gmTES4R;
+  var lLocation := wbGameLocations[wbGameMode];
   aSettings.ModGroupFileName := wbProgramPath + wbAppName + wbToolName + '.modgroups';
   isEpicNV := false;
 
@@ -394,22 +383,14 @@ begin
         end;
 
     if (lDataPath = '') then with TRegistry.Create do try
+      var lRegistry := wbInstallRegistries[lLocation.InstallRegistry];
       Access  := KEY_READ or KEY_WOW64_32KEY;
-      RootKey := HKEY_LOCAL_MACHINE;
+      if lRegistry.CurrentUser then
+        RootKey := HKEY_CURRENT_USER
+      else
+        RootKey := HKEY_LOCAL_MACHINE;
       client  := 'Steam';
-
-      case wbGameMode of
-        gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR: begin
-          regPath := sBethRegKey + wbGameNameReg + '\';
-        end;
-        gmEnderal, gmEnderalSE: begin
-          RootKey := HKEY_CURRENT_USER;
-          regPath := sSureAIRegKey + wbGameNameReg + '\';
-        end;
-        gmFO76, gmSF1, gmTES4R: begin
-          regPath := sUninstallRegKey + wbGameNameReg + '\';
-        end;
-      end;
+      regPath := lRegistry.KeyPrefix + wbGameNameReg + '\';
 
       if not OpenKey(regPath, False) then begin
         Access := KEY_READ or KEY_WOW64_64KEY;
@@ -422,13 +403,7 @@ begin
         end;
       end;
 
-      case wbGameMode of
-      gmTES3, gmTES4, gmFO3, gmFNV, gmTES5, gmFO4, gmSSE, gmTES5VR, gmFO4VR:
-                  regKey := 'Installed Path';
-      gmEnderal, gmEnderalSE:  regKey := 'Install_Path';
-      gmFO76, gmSF1, gmTES4R:  regKey := 'InstallLocation';
-      end;
-
+      regKey := lRegistry.ValueName;
       lDataPath := ReadString(regKey);
       lDataPath := StringReplace(lDataPath, '"', '', [rfReplaceAll]);
 
@@ -442,12 +417,7 @@ begin
     end;
 
     if lDataPath <> '' then
-    begin
-      if lIsOblivionR then
-        lDataPath := IncludeTrailingPathDelimiter(lDataPath) + 'OblivionRemastered\Content\Dev\ObvData\Data\'
-      else
-        lDataPath := IncludeTrailingPathDelimiter(lDataPath) + DataName[wbGameMode = gmTES3] + '\';
-    end;
+      lDataPath := IncludeTrailingPathDelimiter(lDataPath) + lLocation.DataFolder + '\';
   end else
     lDataPath := IncludeTrailingPathDelimiter(lDataPath);
   aSettings.DataPath := lDataPath;
@@ -473,12 +443,10 @@ begin
       Exit;
     end;
 
-    case wbGameMode of
-      gmTES3:
-        lMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)));
+    if lLocation.MyGamesIsInstall then
+      lMyGamesTheGamePath := IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)))
     else
       lMyGamesTheGamePath := xeMyProfileName + 'My Games\' + wbGameName2 + '\';
-    end;
 
     if (wbGameMode in [gmFNV]) and FileExists(IncludeTrailingPathDelimiter(ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath))) + 'EOSSDK-Win32-Shipping.dll') then begin
         lMyGamesTheGamePath := xeMyProfileName + 'My Games\FalloutNV_Epic\';
@@ -487,24 +455,13 @@ begin
   end;
 
   if not wbFindCmdLineParam('I', lTheGameIniFileName) then begin
-    if wbGameMode in [gmFO3, gmFNV] then
-      lTheGameIniFileName := lMyGamesTheGamePath + 'Fallout.ini'
-    else
-      lTheGameIniFileName := lMyGamesTheGamePath + wbGameName + '.ini';
-
-    // VR games don't create ini file in My Games by default, use the one in the game folder
-    if (wbGameMode in [gmTES5VR, gmFO4VR, gmSF1]) and not FileExists(lTheGameIniFileName) then
-      lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + '\' + ExtractFileName(lTheGameIniFileName)
-    else if lIsOblivionR and not FileExists(lTheGameIniFileName) then
-      lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + 'Oblivion.ini';
+    lTheGameIniFileName := lMyGamesTheGamePath + lLocation.IniName + '.ini';
+    if lLocation.IniInstallFallback and not FileExists(lTheGameIniFileName) then
+      lTheGameIniFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(lDataPath)) + lLocation.IniName + '.ini';
   end;
 
-  if not wbFindCmdLineParam('CustomIni', lCustomIniFileName) then begin
-    if wbGameMode in [gmFO3, gmFNV] then
-      lCustomIniFileName := lMyGamesTheGamePath + 'FalloutCustom.ini'
-    else
-      lCustomIniFileName := lMyGamesTheGamePath + wbGameName + 'Custom.ini';
-  end;
+  if not wbFindCmdLineParam('CustomIni', lCustomIniFileName) then
+    lCustomIniFileName := lMyGamesTheGamePath + lLocation.IniName + 'Custom.ini';
 
   if not wbFindCmdLineParam('G', lSavePath) then begin
     if lMyGamesTheGamePath = '' then
@@ -529,9 +486,8 @@ begin
       end;
     end;
 
-    // Oblivion Remastered has a hard coded path and ignores ini settings
-    if lIsOblivionR then
-      s := 'Saved\SaveGames\';
+    if lLocation.FixedSaveFolder <> '' then
+      s := lLocation.FixedSaveFolder;
 
     lSavePath := PathRelativeToFull(lMyGamesTheGamePath, s);
   end;
@@ -554,14 +510,12 @@ begin
         Exit;
       end;
 
-      if wbGameMode = gmFO76 then
-        lPluginsFileName := lPluginsFileName + wbGameName + '\Plugins.txt'
-      else if (wbGameMode = gmFNV) and isEpicNV then
-        lPluginsFileName := lPluginsFileName + wbGameName + '_Epic' + '\Plugins.txt'
-      else if lIsOblivionR then
-        lPluginsFileName :=  IncludeTrailingPathDelimiter(aSettings.DataPath) + 'Plugins.txt'
+      if lLocation.PluginsInData then
+        lPluginsFileName := IncludeTrailingPathDelimiter(aSettings.DataPath) + 'Plugins.txt'
+      else if isEpicNV then
+        lPluginsFileName := lPluginsFileName + lLocation.PluginsFolder + '_Epic' + '\Plugins.txt'
       else
-        lPluginsFileName := lPluginsFileName + wbGameName2 + '\Plugins.txt';
+        lPluginsFileName := lPluginsFileName + lLocation.PluginsFolder + '\Plugins.txt';
     end;
   if ExtractFilePath(lPluginsFileName) = '' then
     lPluginsFileName := ExpandFileName(lPluginsFileName);
@@ -571,8 +525,8 @@ begin
   xeSettingsFileName := wbProgramPath + wbAppName + wbToolName + '.ini';
   if not FileExists(xeSettingsFileName) then
   begin
-    if lIsOblivionR then
-      xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + wbGameName2 + '\Plugins.'+LowerCase(wbAppName)+'viewsettings'
+    if lLocation.PluginsInData then
+      xeSettingsFileName := GetCSIDLShellFolder(CSIDL_LOCAL_APPDATA) + lLocation.PluginsFolder + '\Plugins.'+LowerCase(wbAppName)+'viewsettings'
     else
       xeSettingsFileName := ChangeFileExt(aSettings.PluginsFileName, '.'+LowerCase(wbAppName)+'viewsettings');
   end;
