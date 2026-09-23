@@ -263,7 +263,7 @@ begin
       else
         JvInterpreterError(ieTypeMistmatch, -1);
 
-      var lLayout := xeContext.SlotLayout;
+      var lLayout := lFile.ContextObj.SlotLayout;
       if lFile.IsLight then
         lFormID.ObjectID[lLayout] := lFormID.ObjectID[lLayout] and $FFF
       else if lFile.IsMedium then
