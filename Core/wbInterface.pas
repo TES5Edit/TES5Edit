@@ -3665,7 +3665,6 @@ type
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
 
     function GetGameMode: TwbGameMode;
-    function GetCreationClubContentFileName: string;
     function GetCapabilities: TwbGameCapabilities;
     function GetIsMorrowind: Boolean;
     function GetIsOblivion: Boolean;
@@ -4138,9 +4137,6 @@ type
     function GetFile(aIndex: Integer): IwbFile;
     function GetContainerHandler: IwbContainerHandler;
     function GetGameMasterFile: IwbFile;
-    function GetCreationClubContentFileName: string;
-    function GetEncoding: TEncoding;
-    function GetDontSave: Boolean;
     procedure SetContainerHandler(const aValue: IwbContainerHandler);
     procedure SetSoundBankCache(const aValue: TwbSoundBankCache);
     function GetLEncoding(aFallback: Boolean): TStringList;
@@ -6329,11 +6325,6 @@ begin
   Result := gdGameMode;
 end;
 
-function TwbGameDef.GetCreationClubContentFileName: string;
-begin
-  Result := gdCreationClubContentFileName;
-end;
-
 function TwbGameDef.GetCapabilities: TwbGameCapabilities;
 begin
   Result := gdCapabilities;
@@ -7303,16 +7294,6 @@ begin
     Result := gcLEncoding[aFallback].Objects[i] as TEncoding;
 end;
 
-function TwbGameContext.GetEncoding: TEncoding;
-begin
-  Result := Settings.Encoding;
-end;
-
-function TwbGameContext.GetDontSave: Boolean;
-begin
-  Result := Settings.DontSave;
-end;
-
 procedure TwbGameContext.IncGlobalGeneration;
 begin
   Inc(gcGlobalGeneration);
@@ -7342,11 +7323,6 @@ begin
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
-end;
-
-function TwbGameContext.GetCreationClubContentFileName: string;
-begin
-  Result := Settings.CreationClubContentFileName;
 end;
 
 function TwbGameContext.GetGameDef: IwbGameDef;
