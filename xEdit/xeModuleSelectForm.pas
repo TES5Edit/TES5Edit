@@ -13,6 +13,8 @@ unit xeModuleSelectForm;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   System.Actions,
   System.Classes,
 

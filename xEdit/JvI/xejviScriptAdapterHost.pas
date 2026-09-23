@@ -13,6 +13,8 @@ unit xejviScriptAdapterHost;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   JvInterpreter;
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);

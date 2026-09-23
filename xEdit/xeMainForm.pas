@@ -13,6 +13,8 @@ unit xeMainForm;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   System.Actions,
   System.Generics.Collections,
   System.Generics.Defaults,

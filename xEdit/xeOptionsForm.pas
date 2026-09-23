@@ -13,6 +13,7 @@ unit xeOptionsForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.Controls,

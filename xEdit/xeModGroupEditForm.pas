@@ -13,6 +13,8 @@ unit xeModGroupEditForm;
 interface
 
 uses
+  VirtualTrees.BaseTree,
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.Controls,

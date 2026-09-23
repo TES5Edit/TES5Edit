@@ -13,6 +13,7 @@ unit xeRichEditForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.ComCtrls,

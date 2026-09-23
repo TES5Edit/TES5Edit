@@ -13,6 +13,7 @@ unit xeLocalizationForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
   System.IniFiles,
 

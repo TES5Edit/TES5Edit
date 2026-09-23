@@ -13,6 +13,7 @@ unit xeLogAnalyzerForm;
 interface
 
 uses
+  VirtualTrees.Types,
   System.Classes,
 
   Vcl.Controls,
