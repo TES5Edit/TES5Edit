@@ -90,9 +90,6 @@ const
   csDotFos   = '.fos';
   csDotEss   = '.ess';
 
-var
-  wbLightName: string = 'Light';
-
 type
   TwbProgressCallback = procedure(const aStatus: string);
 
@@ -5510,15 +5507,8 @@ var
   wbGameMode         : TwbGameMode;
   wbToolMode         : TwbToolMode;
   wbSubMode          : string;
-  wbAppName          : string;
   wbApplicationTitle : string;
-  wbGameName         : string; //name of the exe, usually also name of the game master
-  wbGameExeName      : string;
-  wbGameMasterEsm    : string; // name of the GameMaster.esm, usually wbGameName + csDotEsm, different for Fallout 76
-  wbGameName2        : string; // game title name used for AppData and MyGames folders
-  wbGameNameReg      : string; // registry name
   wbToolName         : string;
-  wbGameSteamID      : string;
 
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
     tmOnamUpdate,
