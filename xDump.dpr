@@ -960,8 +960,7 @@ begin
 
       Found := False;
       for gm := Low(TwbGameMode) to High(TwbGameMode) do begin
-        s := GetEnumName(TypeInfo(TwbGameMode), Ord(gm) );
-        Delete(s, 1, 2);
+        s := wbGameIdentities[gm].AppName;
         if FindCmdLineSwitch(s) then begin
           HostGameMode := gm;
           Found := True;
@@ -971,8 +970,7 @@ begin
       if not Found then begin
         var lMatchLength := 0;
         for gm := Low(TwbGameMode) to High(TwbGameMode) do begin
-          s := GetEnumName(TypeInfo(TwbGameMode), Ord(gm) ).ToLowerInvariant;
-          Delete(s, 1, 2);
+          s := wbGameIdentities[gm].AppName.ToLowerInvariant;
           if t.Contains(s) and (Length(s) > lMatchLength) then begin
             HostGameMode := gm;
             lMatchLength := Length(s);
