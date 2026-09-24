@@ -763,7 +763,6 @@ type
     flInjectedRecords        : array of IwbMainRecord;
 
     flModule                 : PwbModuleInfo;
-    [weak] flContext         : IwbGameContext;
     flContextObj             : TwbGameContext;
     flSaveContextObj         : TwbSaveContext;
     flSaveTables             : IwbSaveTables;
@@ -790,7 +789,6 @@ type
     function GetElementType: TwbElementType; override;
     function GetFile: IwbFile; override;
     function GameDefObj: TwbGameDef; override;
-    function GetContext: IwbGameContext;
     function ContextObj: TwbGameContext; override;
     function SaveContextObj: TwbSaveContext; override;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
@@ -3329,7 +3327,6 @@ var
   s: string;
 begin
   flContextObj := aContext;
-  flContext := aContext;
   flData := aData;
   flStates := aStates * [fsIsTemporary, fsIsHardcoded, fsOnlyHeader, fsIsDeltaPatch];
   flLoadOrderFileID := TwbFileID.Invalid;
@@ -3438,7 +3435,6 @@ var
   Header : IwbMainRecord;
 begin
   flContextObj := aContext;
-  flContext := aContext;
   var lGameDef := flContextObj.GameDefObj;
   Assert(not (aIsLight and aIsMedium));
 
@@ -3514,7 +3510,6 @@ var
   i      : Integer;
 begin
   flContextObj := aContext;
-  flContext := aContext;
   var lGameDef := flContextObj.GameDefObj;
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
@@ -4281,11 +4276,6 @@ end;
 function TwbFile.GetBaseOffset: NativeUInt;
 begin
   Result := flBaseOffset;
-end;
-
-function TwbFile.GetContext: IwbGameContext;
-begin
-  Result := flContext;
 end;
 
 function TwbFile.ContextObj: TwbGameContext;
@@ -26409,7 +26399,6 @@ end;
 constructor TwbFileSource.CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
 begin
   flContextObj := aContext;
-  flContext := aContext;
   Include(flStates, fsIsNew);
   flLoadOrder := aLoadOrder;
   flFileName := aFileName;

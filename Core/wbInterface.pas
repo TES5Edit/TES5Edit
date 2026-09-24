@@ -1746,7 +1746,6 @@ type
     function GetEncoding(aTranslatable: Boolean): TEncoding;
 
     function GetCompareToFile: IwbFile;
-    function GetContext: IwbGameContext;
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
 
@@ -1768,8 +1767,6 @@ type
     property UnsavedSince: TDateTime
       read GetUnsavedSince;
 
-    property Context: IwbGameContext
-      read GetContext;
     property SaveTables: IwbSaveTables
       read GetSaveTables
       write SetSaveTables;
@@ -3553,7 +3550,6 @@ type
 
   IwbGameContext = interface(IwbInterface)
     ['{BA650F2A-0ADF-4157-8D8D-63D0A49F3660}']
-    function GetGameDef: IwbGameDef;
     function GetFileCount: Integer;
     function GetFile(aIndex: Integer): IwbFile;
     function GetContainerHandler: IwbContainerHandler;
@@ -3564,8 +3560,6 @@ type
 
     procedure IncGlobalGeneration;
 
-    property GameDef: IwbGameDef
-      read GetGameDef;
     property FileCount: Integer
       read GetFileCount;
     property Files[aIndex: Integer]: IwbFile
@@ -4133,7 +4127,6 @@ type
     function SaveContextFileByName(const aFileName: string): IwbFile;
     function SaveContextFiles: TwbFiles;
     function FilesWithSaves: TwbFiles;
-    function GetGameDef: IwbGameDef;
     function GetModuleList: TwbModuleList;
     function GetFileCount: Integer;
     function GetFile(aIndex: Integer): IwbFile;
@@ -7348,11 +7341,6 @@ begin
   end;
 
   Result := TwbFormID.FromCardinal( (Cardinal(aFormIDBase) shl 16) + i );
-end;
-
-function TwbGameContext.GetGameDef: IwbGameDef;
-begin
-  Result := gcGameDef;
 end;
 
 function TwbGameContext.GetFileCount: Integer;
