@@ -17551,7 +17551,7 @@ begin
 end;
 
 type
-  {WARNING: This is correct for Delphi 10.2 Tokyo. Might need to be adjusted for other Delphi versions. Still valid like this up to Delphi 12}
+  {WARNING: This is correct for Delphi 10.2 Tokyo. Might need to be adjusted for other Delphi versions. Still valid like this up to Delphi 13}
   TStringListPrivateHacker = class(TStrings)
   protected
     FList: TStringItemList;
