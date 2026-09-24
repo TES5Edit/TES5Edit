@@ -16907,17 +16907,20 @@ begin
 end;
 
 procedure TfrmMain.SetDefaultNodeHeight(aHeight: Integer);
+
+  procedure SetTreeHeights(aTree: TVirtualEditTree);
+  begin
+    aTree.HandleNeeded;
+    aTree.DefaultNodeHeight := aHeight;
+    aTree.Header.Height := aHeight + 3;
+  end;
+
 begin
-  vstNav.DefaultNodeHeight := aHeight;
-  vstNav.Header.Height := aHeight + 3;
-  vstView.DefaultNodeHeight := aHeight;
-  vstView.Header.Height := aHeight + 3;
-  vstSpreadSheetWeapon.DefaultNodeHeight := aHeight;
-  vstSpreadSheetWeapon.Header.Height := aHeight + 3;
-  vstSpreadSheetArmor.DefaultNodeHeight := aHeight;
-  vstSpreadSheetArmor.Header.Height := aHeight + 3;
-  vstSpreadSheetAmmo.DefaultNodeHeight := aHeight;
-  vstSpreadSheetAmmo.Header.Height := aHeight + 3;
+  SetTreeHeights(vstNav);
+  SetTreeHeights(vstView);
+  SetTreeHeights(vstSpreadSheetWeapon);
+  SetTreeHeights(vstSpreadSheetArmor);
+  SetTreeHeights(vstSpreadSheetAmmo);
 end;
 
 function TfrmMain.ValidateCRC(const aFileName  : string;
