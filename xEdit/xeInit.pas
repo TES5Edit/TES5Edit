@@ -840,7 +840,6 @@ begin
 
   xeContextRef := wbCreateGameContext(wbCreateGameDef(xeGameMode, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;
-  lSettings.CreationClubContentFileName := xeContext.Settings.CreationClubContentFileName;
   xeContext.Settings := lSettings;
 
   xeContext.Settings.SortINFO := xeContext.Settings.CanSortINFO;
@@ -1116,7 +1115,6 @@ begin
     xeContext.Settings.EncodingTrans :=  wbMBCSEncoding(s);
 
   xeContext.GameDefObj.EnsureDefined;
-  xeContext.Settings.CreationClubContentFileName := xeContext.GameDefObj.CreationClubContentFileName;
 
   if FindCmdLineSwitch('reportinjected') then
     wbReportInjected := True;

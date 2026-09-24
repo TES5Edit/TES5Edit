@@ -973,7 +973,6 @@ begin
 
       HostContextRef := wbCreateGameContext(wbCreateGameDef(HostGameMode, lInputs, lDefineOptions));
       HostContext := HostContextRef as TwbGameContext;
-      lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
       HostContext.Settings := lSettings;
       HostContext.Settings.TolerateMissingFiles := HostToolMode in [tmDump, tmExport];
 

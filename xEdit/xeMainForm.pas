@@ -4860,9 +4860,8 @@ begin
       Exit;
     end;
 
-  if xeContext.Settings.CreationClubContentFileName <> '' then begin
-    var lCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(xeContext.Settings.DataPath)) + xeContext.Settings.CreationClubContentFileName;
-    xeContext.Settings.CreationClubContentFileName := lCreationClubContentFileName;
+  if xeContext.GameDefObj.CreationClubContentFileName <> '' then begin
+    var lCreationClubContentFileName := ExtractFilePath(ExcludeTrailingPathDelimiter(xeContext.Settings.DataPath)) + xeContext.GameDefObj.CreationClubContentFileName;
     if FileExists(lCreationClubContentFileName) then begin
       with TStringList.Create do try
         LoadFromFile(lCreationClubContentFileName);

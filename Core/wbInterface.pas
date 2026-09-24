@@ -3879,7 +3879,6 @@ type
     UseFalsePlugins       : Boolean;
     CreateContainedIn     : Boolean;
     DelayLoadRecords      : Boolean;
-    CreationClubContentFileName : string;
     CreationClubContent   : TArray<string>;
     ToolName              : string;
     DataPath              : string;
@@ -7146,7 +7145,6 @@ begin
   gcGameDef := aGameDef;
   gcGameDefObj := aGameDef as TwbGameDef;
   gcGlobalGeneration := 1;
-  Settings.CreationClubContentFileName := gcGameDefObj.CreationClubContentFileName;
   gcFilesMap := TwbFastStringList.Create;
   gcFilesMap.Sorted := True;
   gcFilesMap.Duplicates := dupError;
