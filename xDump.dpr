@@ -968,16 +968,18 @@ begin
           Break;
         end;
       end;
-      if not Found then
+      if not Found then begin
+        var lMatchLength := 0;
         for gm := Low(TwbGameMode) to High(TwbGameMode) do begin
           s := GetEnumName(TypeInfo(TwbGameMode), Ord(gm) ).ToLowerInvariant;
           Delete(s, 1, 2);
-          if t.Contains(s) then begin
+          if t.Contains(s) and (Length(s) > lMatchLength) then begin
             HostGameMode := gm;
+            lMatchLength := Length(s);
             Found := True;
-            Break;
           end;
         end;
+      end;
       if not Found then begin
         WriteLn(ErrOutput, 'Can''t determine GameMode.');
         Exit;
@@ -1348,8 +1350,8 @@ begin
         WriteLn(ErrOutput, '             ', '  ini''s when it has the key; if that leaves none, En for FO4, FO4VR, FO76');
         WriteLn(ErrOutput, '             ', '  and SF1, else English');
         WriteLn(ErrOutput, '-bsa         ', 'Loads default associated BSAs');
-        WriteLn(ErrOutput, '             ', ' (plugin'+HostContext.GameDefObj.ArchiveExtension+' and plugin - interface.'+HostContext.GameDefObj.ArchiveExtension+')');
-        WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*.bsa)');
+        WriteLn(ErrOutput, '             ', ' (plugin'+HostContext.GameDefObj.ArchiveExtension+' and plugin - interface'+HostContext.GameDefObj.ArchiveExtension+')');
+        WriteLn(ErrOutput, '-allbsa      ', 'Loads all associated BSAs (plugin*'+HostContext.GameDefObj.ArchiveExtension+')');
         WriteLn(ErrOutput, '             ', '   useful if strings are in a non-standard BSA');
         WriteLn(ErrOutput, '-d:datapath  ', 'Path to the game plugins directory');
         WriteLn(ErrOutput, '-do:value    ', 'Dump objects offsets and size and/or array count');
