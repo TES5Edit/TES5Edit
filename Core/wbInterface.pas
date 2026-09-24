@@ -4129,7 +4129,6 @@ type
 
     function SaveContextFileByName(const aFileName: string): IwbFile;
     function SaveContextFiles: TwbFiles;
-    function FilesWithSaves: TwbFiles;
     function GetModuleList: TwbModuleList;
     function GetFileCount: Integer;
     function GetFile(aIndex: Integer): IwbFile;
@@ -4243,7 +4242,6 @@ type
     scGameContextObj : TwbGameContext;
     scFile           : IwbFile;
     scFileName       : string;
-    scJoinIndex      : Integer;
     scChaptersToSkip : TStringList;
 
     scFullPluginNames  : TStringList;
@@ -6852,7 +6850,6 @@ begin
         raise Exception.CreateFmt('"%s" is held by another save context', [aFileName]);
     scFile := aFile;
     scFileName := aFileName;
-    scJoinIndex := Length(lContext.gcFiles);
     lContext.gcSaveContexts := lContext.gcSaveContexts + [Self];
     scBuildSlotTable;
   finally
@@ -7245,40 +7242,6 @@ begin
   end;
 end;
 
-function TwbGameContext.FilesWithSaves: TwbFiles;
-var
-  lSaves     : TwbFiles;
-  lPositions : TArray<Integer>;
-begin
-  TMonitor.Enter(gcSaveContextsLock);
-  try
-    SetLength(lSaves, Length(gcSaveContexts));
-    SetLength(lPositions, Length(gcSaveContexts));
-    for var lIdx := Low(gcSaveContexts) to High(gcSaveContexts) do begin
-      lSaves[lIdx] := gcSaveContexts[lIdx].scFile;
-      lPositions[lIdx] := gcSaveContexts[lIdx].scJoinIndex;
-    end;
-  finally
-    TMonitor.Exit(gcSaveContextsLock);
-  end;
-  if Length(lSaves) = 0 then
-    Exit(gcFiles);
-
-  SetLength(Result, Length(gcFiles) + Length(lSaves));
-  var lOut := 0;
-  for var lFileIdx := 0 to Length(gcFiles) do begin
-    for var lSaveIdx := Low(lSaves) to High(lSaves) do
-      if (lPositions[lSaveIdx] = lFileIdx) or ((lFileIdx = Length(gcFiles)) and (lPositions[lSaveIdx] > lFileIdx)) then begin
-        Result[lOut] := lSaves[lSaveIdx];
-        Inc(lOut);
-      end;
-    if lFileIdx < Length(gcFiles) then begin
-      Result[lOut] := gcFiles[lFileIdx];
-      Inc(lOut);
-    end;
-  end;
-end;
-
 function TwbGameContext.CreateSkipList: TStringList;
 begin
   Result := TwbFastStringList.Create;
@@ -7507,12 +7470,9 @@ begin
     end;
   end;
 
-  var lFiles := gcFiles;
-  if lFileID = TwbFileID.CreateFull($FF) then
-    lFiles := FilesWithSaves;
-  for var i:= Low(lFiles) to High(lFiles) do
-    if lFiles[i].LoadOrderFileID = lFileID then begin
-      Result := lFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
+  for var i:= Low(gcFiles) to High(gcFiles) do
+    if gcFiles[i].LoadOrderFileID = lFileID then begin
+      Result := gcFiles[i].ContainedRecordByLoadOrderFormID[aFormID, True];
       if Assigned(Result) and Assigned(aSeenFromFile) then begin
         var lVisibleResult := Result.HighestOverrideVisibleForFile[aSeenFromFile];
         if Assigned(lVisibleResult) then
