@@ -41,6 +41,7 @@ type
     function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override;
     function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override;
     function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; override;
+    procedure ApplyGameIniLanguage; override;
   end;
 
   TwbLoadingSaveContext = class(TwbSaveContext)
@@ -24338,6 +24339,59 @@ begin
   finally
     System.SysUtils.FindClose(F);
   end;
+end;
+
+procedure TwbLoadingGameContext.ApplyGameIniLanguage;
+var
+  s: string;
+begin
+  s := '';
+  var lMode := GameDefObj.GameMode;
+
+  if FileExists(Settings.TheGameIniFileName) then begin
+    with TMemIniFile.Create(Settings.TheGameIniFileName) do try
+      case lMode of
+        gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
+          1: s := 'German';
+          2: s := 'French';
+          3: s := 'Spanish';
+          4: s := 'Italian';
+        else
+          s := 'English';
+        end;
+      else
+        s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+      end;
+    finally
+      Free;
+    end;
+  end;
+
+  if FileExists(Settings.CustomIniFileName) then begin
+    with TMemIniFile.Create(Settings.CustomIniFileName) do try
+      case lMode of
+        gmTES4: begin
+          if ValueExists('Controls', 'iLanguage') then
+            case ReadInteger('Controls', 'iLanguage', 0) of
+              1: s := 'German';
+              2: s := 'French';
+              3: s := 'Spanish';
+              4: s := 'Italian';
+            else
+              s := 'English';
+            end;
+        end else begin
+          if ValueExists('General', 'sLanguage') then
+            s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
+        end;
+      end;
+    finally
+      Free;
+    end;
+  end;
+
+  if (s <> '') and not SameText(s, Settings.Language) then
+    Settings.Language := s;
 end;
 
 procedure TwbLoadingGameContext.DetachFilesFromModules;

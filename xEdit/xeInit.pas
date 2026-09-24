@@ -831,19 +831,7 @@ begin
       xeContext.Settings.FillPNAM := False;
   end;
 
-  // Was gmTES5, but is now gmEnderal
-  if xeContext.GameDefObj.GameMode <= gmEnderal then
-    xeContext.AddDefaultLEncodingsIfMissing(False)
-  else begin
-    case xeContext.GameDefObj.GameMode of
-    gmSSE, gmTES5VR, gmEnderalSE:
-      xeContext.AddLEncodingIfMissing('english', '1252', False);
-    else {FO4, FO76}
-      xeContext.AddLEncodingIfMissing('en', '1252', False);
-    end;
-  end;
-
-  xeContext.AddDefaultLEncodingsIfMissing(True);
+  xeContext.AddGameDefaultLEncodings;
 
   if wbFindCmdLineParam('AllowDirectSaves', s) then begin
     xeContext.AllowDirectSaveFor.AddStrings(s.Split([',']).ForEach(Trim).RemoveEmpty);
@@ -1021,54 +1009,10 @@ begin
     xeContext.GameDefObj.DefineOptions.SimpleRecords := False;
   end;
 
-  if wbFindCmdLineParam('l', s) then begin
-    xeContext.Settings.Language := s;
-  end else begin
-    if FileExists(xeContext.Settings.TheGameIniFileName) then begin
-      with TMemIniFile.Create(xeContext.Settings.TheGameIniFileName) do try
-        case xeContext.GameDefObj.GameMode of
-          gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
-            1: s := 'German';
-            2: s := 'French';
-            3: s := 'Spanish';
-            4: s := 'Italian';
-          else
-            s := 'English';
-          end;
-        else
-          s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-        end;
-      finally
-        Free;
-      end;
-    end;
-
-    if FileExists(xeContext.Settings.CustomIniFileName) then begin
-       with TMemIniFile.Create(xeContext.Settings.CustomIniFileName) do try
-        case xeContext.GameDefObj.GameMode of
-          gmTES4: begin
-            if ValueExists('Controls', 'iLanguage') then
-              case ReadInteger('Controls', 'iLanguage', 0) of
-                1: s := 'German';
-                2: s := 'French';
-                3: s := 'Spanish';
-                4: s := 'Italian';
-              else
-                s := 'English';
-              end;
-          end else begin
-            if ValueExists('General', 'sLanguage') then
-              s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-          end;
-        end;
-      finally
-        Free;
-      end;
-    end;
-
-    if (s <> '') and not SameText(s, xeContext.Settings.Language) then
-      xeContext.Settings.Language := s;
-  end;
+  if wbFindCmdLineParam('l', s) then
+    xeContext.Settings.Language := s
+  else
+    xeContext.ApplyGameIniLanguage;
 
   xeContext.Settings.EncodingTrans := xeContext.EncodingForLanguage(xeContext.Settings.Language, False);
 

@@ -4173,6 +4173,7 @@ type
     function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
     function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
     function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; virtual; abstract;
+    procedure ApplyGameIniLanguage; virtual; abstract;
 
     property GlobalGeneration: Integer
       read gcGlobalGeneration;
@@ -4231,6 +4232,7 @@ type
     procedure AddLEncodingIfMissing(const aLanguage: string; aEncoding: TEncoding; aFallback: Boolean); overload;
     procedure AddLEncodingIfMissing(const aLanguage: string; const aEncoding: string; aFallback: Boolean); overload;
     procedure AddDefaultLEncodingsIfMissing(aFallback: Boolean);
+    procedure AddGameDefaultLEncodings;
   end;
 
   TwbGameContextClass = class of TwbGameContext;
@@ -25659,6 +25661,22 @@ begin
   AddLEncodingIfMissing('chinese', TEncoding.UTF8, aFallback);
   AddLEncodingIfMissing('hungarian', '1250', aFallback);
   AddLEncodingIfMissing('arabic', '1256', aFallback);
+end;
+
+procedure TwbGameContext.AddGameDefaultLEncodings;
+begin
+  if gcGameDefObj.GameMode <= gmEnderal then
+    AddDefaultLEncodingsIfMissing(False)
+  else begin
+    case gcGameDefObj.GameMode of
+    gmSSE, gmTES5VR, gmEnderalSE:
+      AddLEncodingIfMissing('english', '1252', False);
+    else
+      AddLEncodingIfMissing('en', '1252', False);
+    end;
+  end;
+
+  AddDefaultLEncodingsIfMissing(True);
 end;
 
 var

@@ -1221,67 +1221,12 @@ begin
         DumpForms.Free;
       end;
 
-      if HostContext.GameDefObj.GameMode <= gmEnderal then
-        HostContext.AddDefaultLEncodingsIfMissing(False)
-      else begin
-        case HostContext.GameDefObj.GameMode of
-        gmSSE, gmTES5VR, gmEnderalSE:
-          HostContext.AddLEncodingIfMissing('english', '1252', False);
-        else {FO4, FO76}
-          HostContext.AddLEncodingIfMissing('en', '1252', False);
-        end;
-      end;
+      HostContext.AddGameDefaultLEncodings;
 
-      HostContext.AddDefaultLEncodingsIfMissing(True);
-
-      if wbFindCmdLineParam('l', s) then begin
-        HostContext.Settings.Language := s;
-      end else begin
-        if FileExists(HostContext.Settings.TheGameIniFileName) then begin
-          with TMemIniFile.Create(HostContext.Settings.TheGameIniFileName) do try
-            case HostContext.GameDefObj.GameMode of
-              gmTES4: case ReadInteger('Controls', 'iLanguage', 0) of
-                1: s := 'German';
-                2: s := 'French';
-                3: s := 'Spanish';
-                4: s := 'Italian';
-              else
-                s := 'English';
-              end;
-            else
-              s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-            end;
-          finally
-            Free;
-          end;
-        end;
-
-        if FileExists(HostContext.Settings.CustomIniFileName) then begin
-          with TMemIniFile.Create(HostContext.Settings.CustomIniFileName) do try
-            case HostContext.GameDefObj.GameMode of
-              gmTES4: begin
-                if ValueExists('Controls', 'iLanguage') then
-                  case ReadInteger('Controls', 'iLanguage', 0) of
-                    1: s := 'German';
-                    2: s := 'French';
-                    3: s := 'Spanish';
-                    4: s := 'Italian';
-                  else
-                    s := 'English';
-                  end;
-              end else begin
-                if ValueExists('General', 'sLanguage') then
-                  s := Trim(ReadString('General', 'sLanguage', '')).ToLower;
-              end;
-            end;
-          finally
-            Free;
-          end;
-        end;
-
-        if (s <> '') and not SameText(s, HostContext.Settings.Language) then
-          HostContext.Settings.Language := s;
-      end;
+      if wbFindCmdLineParam('l', s) then
+        HostContext.Settings.Language := s
+      else
+        HostContext.ApplyGameIniLanguage;
 
       HostContext.Settings.EncodingTrans := HostContext.EncodingForLanguage(HostContext.Settings.Language, False);
 
