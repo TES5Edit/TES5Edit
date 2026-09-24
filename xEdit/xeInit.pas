@@ -842,7 +842,7 @@ begin
   xeContext := xeContextRef as TwbGameContext;
   xeContext.Settings := lSettings;
 
-  xeContext.Settings.SortINFO := xeContext.Settings.CanSortINFO;
+  xeContext.Settings.SortINFO := gcCanSortINFO in xeContext.GameDefObj.Capabilities;
 
   if not ReadSettings then
     Exit(False);
@@ -853,7 +853,7 @@ begin
       xeContext.GameDefObj.DefineOptions.StarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
   end;
 
-  if xeContext.Settings.CanSortINFO then begin
+  if gcCanSortINFO in xeContext.GameDefObj.Capabilities then begin
     if FindCmdLineSwitch('sortinfo') then
       xeContext.Settings.SortINFO := True;
 
@@ -993,14 +993,14 @@ begin
 
     if (FindCmdLineSwitch('quickclean') or FindCmdLineSwitch('qc')
       or ExeName.Contains('quickclean') or ExeName.Contains('qc')) and not xeSavesMode then begin
-      if xeContext.Settings.CanSortINFO then
+      if gcCanSortINFO in xeContext.GameDefObj.Capabilities then
         xeContext.Settings.FillPNAM := True;
       xeQuickClean := True;
     end;
 
     if (FindCmdLineSwitch('quickautoclean') or FindCmdLineSwitch('qac')
       or ExeName.Contains('quickautoclean') or ExeName.Contains('qac')) and not xeSavesMode then begin
-      if xeContext.Settings.CanSortINFO then
+      if gcCanSortINFO in xeContext.GameDefObj.Capabilities then
         xeContext.Settings.FillPNAM := True;
       xeQuickClean := True;
       xeQuickCleanAutoSave := xeQuickClean;

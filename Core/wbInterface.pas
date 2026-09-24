@@ -591,7 +591,7 @@ type
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
-    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID
+    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -3915,7 +3915,6 @@ type
     StripMasters          : Boolean;
     StripEmptyMasters     : Boolean;
     RedPill               : Boolean;
-    CanSortINFO           : Boolean;
     SortINFO              : Boolean;
     FillPNAM              : Boolean;
     FillINOM              : Boolean;
@@ -6221,6 +6220,8 @@ begin
     Include(Result, gcVWDAsQuestChildren);
   if aGameMode in [gmSF1] then
     Include(Result, gcComplexFileFileID);
+  if aGameMode in [gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE] then
+    Include(Result, gcCanSortINFO);
 end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode);
@@ -6980,27 +6981,23 @@ begin
     gmTES4: begin
       LoadBSAs := True;
       AllowInternalEdit := False;
-      CanSortINFO := True;
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
     end;
     gmTES4R: begin
       LoadBSAs := False;
       AllowInternalEdit := False;
-      CanSortINFO := True;
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
     end;
     gmFO3, gmFNV: begin
       LoadBSAs := False;
-      CanSortINFO := True;
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
     end;
     gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: begin
       LoadBSAs := True;  // localization won't work otherwise
       HideIgnored := False; // to show Form Version
-      CanSortINFO := True;
       AllowESPMasters := True;
       AllowESPMastersOnSave := True;
     end;

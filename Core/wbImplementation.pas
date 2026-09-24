@@ -10840,7 +10840,7 @@ begin
 
   Include(cntStates, csInitOnce);
 
-  if {$IFDEF USE_PARALLEL_BUILD_REFS}not lContext.BuildingRefsParallel and{$ENDIF} lContext.Settings.CanSortINFO and lContext.Settings.SortINFO then
+  if {$IFDEF USE_PARALLEL_BUILD_REFS}not lContext.BuildingRefsParallel and{$ENDIF} (gcCanSortINFO in lCapabilities) and lContext.Settings.SortINFO then
     if not (GetIsDeleted or GetIsPartialForm) and ContextObj.BeginInternalEdit(False) then try
       if lContext.Settings.FillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
         if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
@@ -19453,7 +19453,7 @@ begin
     ChildrenOf := GetChildrenOf;
     // there is no PNAM in Fallout 4, looks like INFOs are no longer linked lists
 
-    if {$IFDEF USE_PARALLEL_BUILD_REFS}not ContextObj.BuildingRefsParallel and{$ENDIF} ContextObj.Settings.CanSortINFO and (grStruct.grsGroupType = 7) then begin
+    if {$IFDEF USE_PARALLEL_BUILD_REFS}not ContextObj.BuildingRefsParallel and{$ENDIF} (gcCanSortINFO in GameDefObj.Capabilities) and (grStruct.grsGroupType = 7) then begin
 
       if not ContextObj.Settings.SortINFO then
         Exit;
