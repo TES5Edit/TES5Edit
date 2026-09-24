@@ -814,6 +814,7 @@ begin
   DoInitPath(xeParamIndex, lSettings);
 
   lSettings.ApplyGameDefaults(xeGameMode);
+  lSettings.ToolName := wbToolName;
   case xeGameMode of
     gmTES4:
       if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then

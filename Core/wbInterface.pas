@@ -3887,6 +3887,7 @@ type
     DelayLoadRecords      : Boolean;
     CreationClubContentFileName : string;
     CreationClubContent   : TArray<string>;
+    ToolName              : string;
     DataPath              : string;
     OutputPath            : string;
     ScriptsPath           : string;

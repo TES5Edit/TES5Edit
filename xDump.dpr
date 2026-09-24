@@ -928,6 +928,7 @@ begin
       else
         DumpSourceName := 'Plugins';
       lSettings.ApplyGameDefaults(HostGameMode);
+      lSettings.ToolName := wbToolName;
       lSettings.DontSave := True;
       lSettings.AllowInternalEdit := False;
       lSettings.HideIgnored := True;

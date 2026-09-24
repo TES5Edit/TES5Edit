@@ -5390,7 +5390,7 @@ begin
       raise Exception.Create('File ' + GetFileName + ' has invalid record ' + cntElements[0].Name + ' with invalid signature as file header.');
 
     if (FileHeader.Flags._Flags and $10 <> 0) and not wbHasAddedOptimizedSupport then
-      raise Exception.Create('Modules with the "Optimized" file flag set can not be saved in ' + flContextObj.GameDefObj.AppName + wbToolName);
+      raise Exception.Create('Modules with the "Optimized" file flag set can not be saved in ' + flContextObj.GameDefObj.AppName + flContextObj.Settings.ToolName);
 
     HEDR := FileHeader.RecordBySignature['HEDR'];
     if not Assigned(HEDR) then
@@ -5610,20 +5610,20 @@ begin
         for var lMasterIdx := 0 to Pred(GetMasterCount(True)) do begin
           var lMaster := GetMaster(lMasterIdx, True);
           if lMaster.GetIsUpdateDirect or (PwbModuleInfo(lMaster.ModuleInfo).miFlags * [mfHasUpdateFlag] <> []) then
-            raise Exception.Create('Modules with Update flagged modules as masters can''t be saved in ' + flContextObj.GameDefObj.AppName + wbToolName);
+            raise Exception.Create('Modules with Update flagged modules as masters can''t be saved in ' + flContextObj.GameDefObj.AppName + flContextObj.Settings.ToolName);
         end;
 
         if FileHeader.IsLight <> (mfHasLightFlag in flModule.miFlags) then
-          raise Exception.Create('Small flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + wbToolName);
+          raise Exception.Create('Small flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + flContextObj.Settings.ToolName);
 
         if FileHeader.IsMedium <> (mfHasMediumFlag in flModule.miFlags) then
-          raise Exception.Create('Medium flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + wbToolName);
+          raise Exception.Create('Medium flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + flContextObj.Settings.ToolName);
 
         if FileHeader.IsUpdate <> (mfHasUpdateFlag in flModule.miFlags) then
-          raise Exception.Create('Update flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + wbToolName);
+          raise Exception.Create('Update flag can''t be added or removed from existing files in ' + flContextObj.GameDefObj.AppName + flContextObj.Settings.ToolName);
 
         if FileHeader.IsUpdate then
-          raise Exception.Create('Update flagged files can''t be saved in ' + flContextObj.GameDefObj.AppName + wbToolName);
+          raise Exception.Create('Update flagged files can''t be saved in ' + flContextObj.GameDefObj.AppName + flContextObj.Settings.ToolName);
       end;
     end else begin
       var lFileFileID := GetFileFileID(true);
