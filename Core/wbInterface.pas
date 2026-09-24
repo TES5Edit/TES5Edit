@@ -144,14 +144,12 @@ var
   wbMoreInfoForUnknown               : Boolean    = False;
   wbMoreInfoForIndex                 : Boolean    = False;
   wdMakeUnknownElementsUnique        : Boolean    = False;
-  wbTestWrite                        : Boolean    = False;
   wbResolveAlias                    : Boolean    = True;
   wbActorTemplateHide                : Boolean    = True;
   wbAlignArrayElements               : Boolean    = True;
   wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
   wbHasAddedOptimizedSupport         : Boolean    = False;
-  wbAllowEditGameMaster              : Boolean    = False;
   wbEditInfoUseShortName             : Boolean    = False;
   wbDevMode                          : Boolean    = False;
   wbAlwaysSorted                     : Boolean    = False;
@@ -173,8 +171,6 @@ var
   wbShowRawData                      : Boolean    = False;
   wbDisableFormIDCheck               : Boolean    = False;
   wbAllowUnsafeScripts               : Boolean    = False;
-
-  wbAllowMakePartial                 : Boolean    = False;
 
   wbGlobalModifedGeneration          : UInt64;
 
@@ -216,7 +212,6 @@ var
 
   wbMoreInfoForRequired              : Boolean    = False;
   wbMoreInfoForDecider               : Boolean    = False;
-  wbTrackAllEditorID                 : Boolean    = False;
   wbShowTip                          : Boolean    = True;
   wbPatron                           : Boolean    = False;
   wbNoGitHubCheck                    : Boolean    = False;
@@ -3913,6 +3908,9 @@ type
     HideIgnored           : Boolean;
     EditAllowed           : Boolean;
     AllowInternalEdit     : Boolean;
+    AllowEditGameMaster   : Boolean;
+    AllowMakePartial      : Boolean;
+    TrackAllEditorID      : Boolean;
     DontSave              : Boolean;
     AllowDirectSave       : Boolean;
     StripMasters          : Boolean;
@@ -3941,6 +3939,7 @@ type
     ConvertIntFormID      : Boolean;
     ForceNewHeader        : Boolean;
     NewHeaderAddon        : Cardinal;
+    TestWrite             : Boolean;
     DontCache             : Boolean;
     DontCacheLoad         : Boolean;
     DontCacheSave         : Boolean;

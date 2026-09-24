@@ -11482,7 +11482,7 @@ begin
           if (
                (Node.ChildCount = 0) or
                (
-                 wbAllowMakePartial and
+                 xeContext.Settings.AllowMakePartial and
                  Supports(NodeData.Element, IwbMainRecord, MainRecord) and
                  not MainRecord.IsPartialForm and
                  MainRecord.CanBePartial
@@ -11497,7 +11497,7 @@ begin
               ) or
               (
                 (NodeData.OrgConflictThis = ctIdenticalToMaster) and
-                wbAllowMakePartial and
+                xeContext.Settings.AllowMakePartial and
                 (Node.ChildCount > 0)
               ) or
               (
@@ -11505,7 +11505,7 @@ begin
               ) or
               (
                 (Node.ChildCount = 0) and
-                wbAllowMakePartial and
+                xeContext.Settings.AllowMakePartial and
                 Supports(NodeData.Element, IwbMainRecord, MainRecord) and
                 MainRecord.IsPartialForm and
                 (not Assigned(MainRecord.ChildGroup) or (MainRecord.ChildGroup.ElementCount = 0))
@@ -11526,7 +11526,7 @@ begin
               else begin
                 if not AutoModeCheckForITM then begin
                   if Node.ChildCount > 0 then begin
-                    if wbAllowMakePartial and
+                    if xeContext.Settings.AllowMakePartial and
                        Supports(NodeData.Element, IwbMainRecord, MainRecord)
                     then begin
                       if not HideRemoveMessage then
@@ -13981,7 +13981,7 @@ begin
     cbPatron.Checked := wbPatron;
     cbNoGitHubCheck.Checked := wbNoGitHubCheck;
     cbNoNexusModsCheck.Checked := wbNoNexusModsCheck;
-    cbTrackAllEditorID.Checked := wbTrackAllEditorID;
+    cbTrackAllEditorID.Checked := xeContext.Settings.TrackAllEditorID;
     cbUDRSetXESP.Checked := xeContext.Settings.UDRSetXESP;
     cbUDRSetScale.Checked := xeContext.Settings.UDRSetScale;
     edUDRSetScaleValue.Text := FloatToStrF(xeContext.Settings.UDRSetScaleValue, ffFixed, 99, wbFloatDigits);
@@ -14044,7 +14044,7 @@ begin
     wbPatron := cbPatron.Checked;
     wbNoGitHubCheck := cbNoGitHubCheck.Checked;
     wbNoNexusModsCheck := cbNoNexusModsCheck.Checked;
-    wbTrackAllEditorID := cbTrackAllEditorID.Checked;
+    xeContext.Settings.TrackAllEditorID := cbTrackAllEditorID.Checked;
     xeContext.Settings.UDRSetXESP := cbUDRSetXESP.Checked;
     xeContext.Settings.UDRSetScale := cbUDRSetScale.Checked;
     xeContext.Settings.UDRSetScaleValue := StrToFloatDef(edUDRSetScaleValue.Text, xeContext.Settings.UDRSetScaleValue);
@@ -14094,7 +14094,7 @@ begin
     Settings.WriteInteger('Options', 'ColumnWidth', ColumnWidth);
     Settings.WriteInteger('Options', 'RowHeight', RowHeight);
     //Settings.WriteBool('Options', 'IKnowWhatImDoing', wbIKnowWhatImDoing);
-    Settings.WriteBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
+    Settings.WriteBool('Options', 'TrackAllEditorID', xeContext.Settings.TrackAllEditorID);
     Settings.WriteBool('Options', 'ShowTip', wbShowTip);
     Settings.WriteBool('Options', 'Patron', wbPatron);
     Settings.WriteBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
@@ -15346,7 +15346,7 @@ begin
   with TfrmFileSelect.Create(nil) do try
     try
       for i := Low(Files) to High(Files) do
-        if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or wbTestWrite then begin
+        if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or xeContext.Settings.TestWrite then begin
           CheckListBox1.AddItem(Files[i].FileNameOnDisk, Pointer(Files[i]));
           CheckListBox1.Checked[Pred(CheckListBox1.Count)] := esUnsaved in Files[i].ElementStates;
           SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;
@@ -15354,7 +15354,7 @@ begin
 
       if xeContext.LocalizationHandler <> nil then try
         for i := 0 to Pred(xeContext.LocalizationHandler.Count) do try
-          if xeContext.LocalizationHandler[i].Modified or wbTestWrite then begin
+          if xeContext.LocalizationHandler[i].Modified or xeContext.Settings.TestWrite then begin
             CheckListBox1.AddItem(xeContext.LocalizationHandler[i].Name, Pointer(xeContext.LocalizationHandler[i]));
             CheckListBox1.Checked[Pred(CheckListBox1.Count)] := xeContext.LocalizationHandler[i].Modified;
             SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 1;

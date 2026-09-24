@@ -209,7 +209,7 @@ begin
       xeContext.GameDefObj.DefineOptions.SimpleRecords := Settings.ReadBool('Options', 'SimpleRecords', xeContext.GameDefObj.DefineOptions.SimpleRecords);
       xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := Settings.ReadBool('Options', 'DecodeTextureHashes2', xeContext.GameDefObj.DefineOptions.DecodeTextureHashes); {changed name to enforce new default value}
       wbShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
-      wbTrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', wbTrackAllEditorID);
+      xeContext.Settings.TrackAllEditorID := Settings.ReadBool('Options', 'TrackAllEditorID', xeContext.Settings.TrackAllEditorID);
       xeContext.Settings.AllowDirectSave := Settings.ReadBool('Options', 'AllowDirectSave', xeContext.Settings.AllowDirectSave);
       xeContext.Settings.SortINFO := Settings.ReadBool('Options', 'SortINFO', xeContext.Settings.SortINFO);
       xeContext.Settings.FillPNAM := Settings.ReadBool('Options', 'FillPNAM', xeContext.Settings.FillPNAM);
@@ -895,7 +895,7 @@ begin
     wbIKnowWhatImDoing := True;
 
     if FindCmdLineSwitch('AllowMakePartial') then
-      wbAllowMakePartial := True;
+      xeContext.Settings.AllowMakePartial := True;
 
     if FindCmdLineSwitch('AllowMasterFilesEdit') then
       xeContext.GameDefObj.DefineOptions.AllowMasterFilesEdit := True;
@@ -1134,10 +1134,10 @@ begin
     wbMoreInfoForIndex := true;
 
   if wbIKnowWhatImDoing and FindCmdLineSwitch('IKnowIllBreakMyGameWithThis') then
-    wbAllowEditGameMaster := True;
+    xeContext.Settings.AllowEditGameMaster := True;
 
   if FindCmdLineSwitch('TrackAllEditorID') then
-    wbTrackAllEditorID := True;
+    xeContext.Settings.TrackAllEditorID := True;
 
 
   if FindCmdLineSwitch('IgnoreESL') or FindCmdLineSwitch('IgnoreLight') or FindCmdLineSwitch('IgnoreSmall') then

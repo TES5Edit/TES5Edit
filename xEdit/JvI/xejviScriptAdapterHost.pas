@@ -84,7 +84,7 @@ end;
 
 procedure _wbTrackAllEditorID(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbTrackAllEditorID;
+  Value := xeContext.Settings.TrackAllEditorID;
 end;
 
 procedure _wbRecordDefMap(var Value: Variant; Args: TJvInterpreterArgs);

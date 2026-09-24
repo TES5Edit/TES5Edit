@@ -4467,7 +4467,7 @@ begin
     wbIsInternalEdit or
     (
       flContextObj.Settings.EditAllowed and
-      ((not (fsIsGameMaster in flStates)) or wbAllowEditGameMaster) and
+      ((not (fsIsGameMaster in flStates)) or flContextObj.Settings.AllowEditGameMaster) and
       not (fsIsHardcoded in flStates) and
       ((not (fsIsCompareLoad in flStates)) or (fsIsDeltaPatch in flStates))
     );
@@ -9602,7 +9602,7 @@ begin
   Result := False;
   aKeys.Clear;
   if Assigned(mrDef) then begin
-    if GetCanHaveEditorID and wbTrackAllEditorID or (dfIndexEditorID in mrDef.DefFlags) then begin
+    if GetCanHaveEditorID and ContextObj.Settings.TrackAllEditorID or (dfIndexEditorID in mrDef.DefFlags) then begin
       Result := True;
       aKeys.Keys[wbIdxEditorID] := GetEditorID;
     end
@@ -13671,7 +13671,7 @@ begin
 
   GroupRecord := GetChildGroup;
 
-  if not ((esModified in eStates) or wbTestWrite or (Assigned(GroupRecord) and GroupRecord.Modified)) then
+  if not ((esModified in eStates) or ContextObj.Settings.TestWrite or (Assigned(GroupRecord) and GroupRecord.Modified)) then
     Exit;
 
   if wbReserveWorldOffsetData(Self, Reason, mrOFSTCells) then begin
@@ -15425,7 +15425,7 @@ var
             _OffsetData.odcSizeLocal := -1;
             _OffsetData.odcSizePayload := -1;
             _OffsetData.odcCellSlot := -1;
-            if not ((esModified in eStates) or wbTestWrite) then begin
+            if not ((esModified in eStates) or ContextObj.Settings.TestWrite) then begin
               var lOffsetData: IwbDataContainer;
               if Supports(GetRecordBySignature('OFST'), IwbDataContainer, lOffsetData) then
                 if (NativeUInt(lOffsetData.DataBasePtr) >= NativeUInt(dcBasePtr)) and
@@ -15442,7 +15442,7 @@ var
       end;
     end;
 
-    if (esModified in eStates) or wbTestWrite then begin
+    if (esModified in eStates) or ContextObj.Settings.TestWrite then begin
       SelfRef := Self as IwbContainerElementRef;
       DoInit(True);
 
@@ -17341,7 +17341,7 @@ begin
     SelfRef := Self as IwbContainerElementRef;
     DoInit(False);
     var lSize32Bit := gcSubrecordSize32Bit in GameDefObj.Capabilities;
-    if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or wbTestWrite or (srStruct.srsDataSize[lSize32Bit] = 0) then begin
+    if (esModified in eStates) or (dcfBasePtrInvalid in dcFlags) or ContextObj.Settings.TestWrite or (srStruct.srsDataSize[lSize32Bit] = 0) then begin
       DoInit(True);
 
       if dcfStorageInvalid in dcFlags then begin
@@ -17767,7 +17767,7 @@ var
       if not aSource.IsDeleted then
         lResult.IsDeleted := False;
       if not aSource.IsPartialForm then begin
-        if lIsNew and wbAllowMakePartial and lResult.CanBePartial then
+        if lIsNew and ContextObj.Settings.AllowMakePartial and lResult.CanBePartial then
           lResult.IsPartialForm := True
         else
           lResult.IsPartialForm := False;
@@ -19536,7 +19536,7 @@ begin
 
   if _OffsetData.odcActive and (_OffsetData.odcStream = aStream) and
      ((grs.grsGroupType = 1) or (grs.grsGroupType = 4) or (grs.grsGroupType = 5)) and
-     not ((esModified in eStates) or wbTestWrite)
+     not ((esModified in eStates) or lContext.Settings.TestWrite)
   then
     wbPlaceBlittedOffsetDataCells(Self, GetDataBasePtr, aStream.Position, aStream);
 
@@ -19569,7 +19569,7 @@ begin
     _OffsetData.odcActive := False;
   end;
 
-  if (esModified in eStates) or wbTestWrite then begin
+  if (esModified in eStates) or lContext.Settings.TestWrite then begin
 
     NewPosition := aStream.Position;
     DataSize := (NewPosition - CurrentPosition);
@@ -25321,7 +25321,7 @@ begin
   ExpectedSize := GetDataSize;
   NeedReset := True;
 
-  if (esModified in eStates) or wbTestWrite then begin
+  if (esModified in eStates) or ContextObj.Settings.TestWrite then begin
     if not (dcfStorageInvalid in dcFlags) and Assigned(dcDataEndPtr) and Assigned(dcDataBasePtr) then
       Size := NativeUInt(dcDataEndPtr ) - NativeUInt(dcDataBasePtr)
     else

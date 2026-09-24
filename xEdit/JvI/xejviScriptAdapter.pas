@@ -86,7 +86,7 @@ end;
 
 procedure EnableSkyrimSaveFormat(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  wbTestWrite := True;
+  xeContext.Settings.TestWrite := True;
   xeContext.Settings.ForceNewHeader := True;
 end;
 
