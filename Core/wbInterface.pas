@@ -25665,7 +25665,7 @@ end;
 
 procedure TwbGameContext.AddGameDefaultLEncodings;
 begin
-  if gcGameDefObj.GameMode <= gmEnderal then
+  if gcGameDefObj.GameMode in [gmTES3, gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal] then
     AddDefaultLEncodingsIfMissing(False)
   else begin
     case gcGameDefObj.GameMode of

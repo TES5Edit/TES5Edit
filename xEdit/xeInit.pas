@@ -1153,7 +1153,7 @@ begin
       xeContext.Settings.BuildRefs := False;
     end;
     tmTranslate: begin
-      if xeContext.GameDefObj.GameMode >= gmTES5 then
+      if xeContext.GameDefObj.GameMode in [gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
         xeContext.Settings.LoadBSAs := True; //needed for localization
       xeContext.Settings.TranslationMode := True;
       wbHideUnused             := True;
