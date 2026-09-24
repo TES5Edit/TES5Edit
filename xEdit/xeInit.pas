@@ -603,7 +603,6 @@ function _DoInit: Boolean;
 var
   s: string;
   ToolModes: TwbSetOfMode;
-  SavesSupported: Boolean;
   SourceName: string;
   i: Integer;
   ExeName: string;
@@ -692,87 +691,73 @@ begin
   if isMode('FNV') then begin
     xeGameMode         := gmFNV;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    SavesSupported     := True;
   end
 
   else if isMode('FO3') then begin
     xeGameMode         := gmFO3;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
-    SavesSupported     := False;
   end
 
   else if isMode('TES3') then begin
     xeGameMode         := gmTES3;
     (**)
     ToolModes          := (**)[tmView];(** )wbAlwaysMode - [tmLODgen];(**)
-    SavesSupported     := False;
     (**)
   end
 
   else if isMode('TES4') then begin
     xeGameMode         := gmTES4;
     ToolModes          := wbAlwaysMode;
-    SavesSupported     := False;
   end
 
   else if isMode('TES4R') then begin
     xeGameMode         := gmTES4R;
     ToolModes          := wbAlwaysMode;
-    SavesSupported     := False;
   end
 
   else if isMode('TES5') then begin
     xeGameMode         := gmTES5;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    SavesSupported     := True;
   end
 
   else if isMode('EnderalSE') then begin
     xeGameMode         := gmEnderalSE;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    SavesSupported     := True;
   end
 
   else if isMode('Enderal') then begin
     xeGameMode         := gmEnderal;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    SavesSupported     := True;
   end
 
   else if isMode('TES5VR') then begin
     xeGameMode         := gmTES5VR;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    SavesSupported     := False;
   end
 
   else if isMode('SSE') then begin
     xeGameMode         := gmSSE;
     ToolModes          := wbAlwaysMode + [tmOnamUpdate];
-    SavesSupported     := True;
   end
 
   else if isMode('FO4') then begin
     xeGameMode         := gmFO4;
     ToolModes          := wbAlwaysMode;
-    SavesSupported     := True;
   end
 
   else if isMode('FO4VR') then begin
     xeGameMode         := gmFO4VR;
     ToolModes          := wbAlwaysMode;
-    SavesSupported     := False;
   end
 
   else if isMode('FO76') then begin
     xeGameMode         := gmFO76;
     ToolModes          := wbAlwaysMode;
-    SavesSupported     := False;
   end
 
   else if isMode('SF1') then begin
     xeGameMode         := gmSF1;
     ToolModes          := wbAlwaysMode - [tmESMify, tmESPify, tmLODgen];
-    SavesSupported     := False;
 
     if    FindCmdLineSwitch('ItJustWorksTM')
       and FindCmdLineSwitch('ThisIsFine')
@@ -792,16 +777,6 @@ begin
 
   if not (xeToolMode in ToolModes) then begin
     ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + xeToolName);
-    Exit(False);
-  end;
-
-  if xeSavesMode and not SavesSupported then begin
-    ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + SourceName);
-    Exit(False);
-  end;
-
-  if xeSavesMode and (xeToolMode = tmEdit) then begin
-    ShowMessage('Application ' + lIdentity.GameName + ' does not currently support ' + SourceName + ' in ' + xeToolName + ' mode.');
     Exit(False);
   end;
 
@@ -841,6 +816,16 @@ begin
   xeContextRef := wbCreateGameContext(wbCreateGameDef(xeGameMode, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;
   xeContext.Settings := lSettings;
+
+  if xeSavesMode and not xeContext.GameDefObj.HasSaveDef then begin
+    ShowMessage('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName);
+    Exit(False);
+  end;
+
+  if xeSavesMode and (xeToolMode = tmEdit) then begin
+    ShowMessage('Application ' + xeContext.GameDefObj.GameName + ' does not currently support ' + SourceName + ' in ' + xeToolName + ' mode.');
+    Exit(False);
+  end;
 
   xeContext.Settings.SortINFO := gcCanSortINFO in xeContext.GameDefObj.Capabilities;
 
@@ -1401,6 +1386,7 @@ begin
       if lCapability in xeContext.GameDefObj.Capabilities then
         lCapabilities := lCapabilities + ' ' + GetEnumName(TypeInfo(TwbGameCapability), Ord(lCapability));
     lLines.Add('def.Capabilities=' + Trim(lCapabilities));
+    lLines.Add('def.HasSaveDef=' + BoolToStr(xeContext.GameDefObj.HasSaveDef, True));
     lRtti := TRttiContext.Create;
     lSettings := xeContext.Settings;
     for lField in lRtti.GetType(TypeInfo(TwbGameContextSettings)).GetFields do

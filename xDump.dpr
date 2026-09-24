@@ -840,7 +840,6 @@ var
   Pass            : TwbExportPass;
   tm              : TwbToolMode;
   gm              : TwbGameMode;
-  SavesSupported  : Boolean;
   tms             : TwbSetOfMode;
   Found           : Boolean;
   b               : TBytes;
@@ -937,27 +936,19 @@ begin
       lSettings.HideIgnored := True;
       lSettings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
       lInputs := Default(TwbGameDefInputs);
-      SavesSupported := True;
       tms := [tmDump, tmExport];
 
       if FindCmdLineSwitch('sr') then
         lDefineOptions.SimpleRecords := True;
 
       case HostGameMode of
-        gmFNV, gmFO3, gmTES4, gmTES5, gmEnderal, gmSSE, gmEnderalSE: ;
+        gmFNV, gmFO3, gmTES4, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: ;
         gmTES3: begin
           lSettings.LoadBSAs := False;
           tms := [tmDump];
-          SavesSupported := False;
         end;
-        gmTES5VR:
-          SavesSupported := False;
-        gmFO4, gmSF1:
+        gmFO4, gmFO4VR, gmFO76, gmSF1:
           lSettings.CreateContainedIn := False;
-        gmFO4VR, gmFO76: begin
-          lSettings.CreateContainedIn := False;
-          SavesSupported := False;
-        end;
       else begin
         s := '';
         for gm := Low(TwbGameMode) to High(TwbGameMode) do
@@ -980,7 +971,7 @@ begin
         WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolMode: '+HostToolName);
         Exit;
       end;
-      if DumpSaves and not SavesSupported then begin
+      if DumpSaves and not HostContext.GameDefObj.HasSaveDef then begin
         WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolSource: '+DumpSourceName);
         Exit;
       end;
@@ -1266,23 +1257,6 @@ begin
         WriteLn;
         NeedsSyntaxInfo := True;
       end;
-      if DumpSaves then
-        case HostContext.GameDefObj.GameMode of
-          gmFNV,
-          gmFO4,
-          gmFO4vr,
-          gmTES5,
-          gmTES5vr,
-          gmEnderal,
-          gmEnderalSE,
-          gmSSE: ;
-          gmFO3,
-          gmTES4:
-            if HostContext.GameDefObj.SaveDefFor(s) = HostContext.GameDefObj.SaveDef then
-              WriteLn(ErrOutput, 'Save are not supported yet "',s,'". Please check the command line parameters.');
-        else
-            WriteLn(ErrOutput, 'CoSave are not supported yet "',s,'". Please check the command line parameters.');
-        end;
 
       if NeedsSyntaxInfo or (ParamCount < 1) or FindCmdLineSwitch('?') or FindCmdLineSwitch('help') then begin
         var lIdentity := HostContext.GameDefObj.Identity;

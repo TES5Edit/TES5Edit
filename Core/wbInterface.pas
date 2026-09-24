@@ -3822,6 +3822,7 @@ type
       read GetCoSaveDef;
     function SaveDefFor(const aFileName: string): TwbSaveDef;
     function SaveContextClass: TwbSaveContextClass;
+    function HasSaveDef: Boolean;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC;
     property CreationClubContentFileName: string
@@ -6726,6 +6727,11 @@ end;
 function TwbGameDef.SaveContextClass: TwbSaveContextClass;
 begin
   Result := _SaveContextClasses[gdGameMode];
+end;
+
+function TwbGameDef.HasSaveDef: Boolean;
+begin
+  Result := Assigned(_SaveDefClasses[gdGameMode]);
 end;
 
 procedure TwbGameDef.EnsureDefined;

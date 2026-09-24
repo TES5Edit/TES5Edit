@@ -8,6 +8,8 @@
 
 unit wbDefinitionsTES4Saves;
 
+{$I wbDefines.inc}
+
 interface
 
 implementation
@@ -6889,6 +6891,8 @@ begin
 end;
 
 initialization
+{$IFDEF USE_UNFINISHED_SAVE_DEFS}
   wbRegisterSaveDefs([gmTES4], TwbSaveDefTES4, TwbCoSaveDefTES4);
+{$ENDIF}
 end.
 

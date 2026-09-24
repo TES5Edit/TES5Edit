@@ -8,6 +8,8 @@
 
 unit wbDefinitionsFO3Saves;
 
+{$I wbDefines.inc}
+
 interface
 
 implementation
@@ -6361,6 +6363,8 @@ begin
 end;
 
 initialization
+{$IFDEF USE_UNFINISHED_SAVE_DEFS}
   wbRegisterSaveDefs([gmFO3], TwbSaveDefFO3, TwbCoSaveDefFO3, TwbSaveContextFO3);
+{$ENDIF}
 end.
 
