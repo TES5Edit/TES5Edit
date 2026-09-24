@@ -685,8 +685,6 @@ begin
   if not (xeToolMode in [tmView, tmEdit]) then
     wbPrettyFormID := False;
 
-  lSettings.Language := 'English';
-
   if isMode('FNV') then begin
     xeGameMode         := gmFNV;
     ToolModes          := wbAlwaysMode + [tmMasterUpdate, tmMasterRestore];
