@@ -234,8 +234,6 @@ var
 
   wbProgramPath                      : string;
 
-  wbStarfieldIsABugInfestedHellhole  : Boolean    = False;
-
   wbSpeedOverMemory                  : Boolean    = False;
 
   wbDarkMode                         : Boolean    = False;
@@ -799,6 +797,7 @@ type
     AllowMasterFilesEdit : Boolean;
     AllowEditHEDRVersion : Boolean;
     DecodeTextureHashes  : Boolean;
+    StarfieldIsABugInfestedHellhole : Boolean;
     class function Defaults: TwbGameDefineOptions; static;
     class function CheckableCollapse: TwbCollapseOptions; static;
     class function CollapseSettingsKey(aOption: TwbCollapseOption): string; static;

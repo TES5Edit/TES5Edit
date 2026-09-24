@@ -8346,7 +8346,7 @@ begin
   var wbStaticPart :=
     wbRStructSK([0], 'Part', [
       wbStructSK(ONAM, [0], 'Unknown', [
-        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+        wbFormIDCk('Static', [ACTI, ALCH, AMMO, BOOK, CONT, DOOR, FURN, MISC, MSTT, STAT, TERM, WEAP, FLOR]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
         wbUnknown(4)
       ]),
       wbStaticPartPlacements
@@ -10205,7 +10205,7 @@ begin
       'Gas Giant'
     ])).SetRequired,
     wbRStructs('Marker Objects Keywords', 'Marker Data', [
-      wbFormIDCk(KNAM, 'Marker Type', [KYWD]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+      wbFormIDCk(KNAM, 'Marker Type', [KYWD]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
       wbKeywords
     ]),
 //    wbRStructs('Terrain Data', 'Terrain Data', [
@@ -11543,7 +11543,7 @@ begin
     wbEDID,
     wbFormIDCkNoReach(QNAM, 'Quest', [QUST])
       .SetRequired
-      .IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+      .IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
     wbInteger(TNAM, 'Category', itU32,
       wbEnum([
       {0} 'Player',
@@ -12324,7 +12324,7 @@ begin
     wbVMAD,
     wbBaseFormComponents,
     wbRArray('Grasses', wbRStruct('Grass', [
-      wbFormIDCk(GNAM, 'Grass', [GRAS]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+      wbFormIDCk(GNAM, 'Grass', [GRAS]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
       wbInteger(DNAM, 'Override Density', itS16).SetDefaultEditValue('-1')
     ])),
     wbRArray('Landscape Textures', wbFormIDCk(LNAM, 'Landscape Texture', [LTEX])),
@@ -13203,7 +13203,7 @@ begin
     wbEDID,
     wbBaseFormComponents,
     wbRArrayS('Data', wbStructSK(PNAM, [0], '', [
-      wbFormIDCk('Material Type', [MATT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+      wbFormIDCk('Material Type', [MATT]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
       wbFormIDCk('Impact Data', [IPCT])
     ])),
     wbFormIDCk(ENAM, 'Parent Impact Data Set', [IPDS])
@@ -13293,7 +13293,7 @@ begin
     wbSoundReference(WED0),
     wbRArray('Keywords', wbFormIDCk(KNAM, 'Keyword', [KYWD])
       .IncludeFlag(dfCollapsed, clpKeywords in DefineOptions.Collapse)
-      .IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
+      .IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole)),
     wbInteger(RSMC, 'Count', itU32, nil, cpNormal, True)                        // yes they use the same signature for count and other data below
       .IncludeFlag(dfSkipImplicitEdit),
     wbRStructs('Reverb Sounds', 'Entry', [
@@ -15644,7 +15644,7 @@ begin
             wbCITCReq,
             wbConditions
           ]),
-          wbFormIDCk(STSC, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)
+          wbFormIDCk(STSC, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole)
         ])
       ], [], cpNormal, False)),
       wbUNAMs
@@ -17198,8 +17198,8 @@ begin
         {4} wbRStruct('Start Scene', [
               wbRStructs('Start Scenes', 'Start Scene', [
                 wbRUnion('Scene', [
-                  wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),  //LCEP same as STSC
-                  wbFormIDCk(STSC, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)   //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
+                  wbFormIDCk(LCEP, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),  //LCEP same as STSC
+                  wbFormIDCk(STSC, 'Scene', [SCEN]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole)   //STSC +0x28 array; repeated; appears to allocate a new item into the array, with the value set to item+0x18; likely acts as start marker for an item in this array
                 ]),
                 wbRUnion('Phase Index', [
                   wbInteger(INTT, 'Phase Index', itU16).SetRequired,                //INTT  uint16 // +0x28 array; repeated; sets to item+0x0E
@@ -17627,7 +17627,7 @@ begin
     wbStruct(BNAM, 'Surface Blocks', [
       wbArray('Data',
         wbArray('Row',
-          wbFormIDCk('Column', [SFBK]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+          wbFormIDCk('Column', [SFBK]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
         16).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
       16).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
     ]).SetSummaryKeyOnValue([0])
@@ -17635,7 +17635,7 @@ begin
     wbStruct(FNAM, 'Master - Surface Block Forms', [
       wbArray('Data',
         wbArray('Row',
-          wbFormIDCk('Column', [SFBK]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+          wbFormIDCk('Column', [SFBK]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
         16).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
       16).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
     ]).SetSummaryKeyOnValue([0])
@@ -17653,7 +17653,7 @@ begin
     wbStruct(EFRM, 'Override - Surface Block Forms', [
       wbArray('Data',
         wbArray('Row',
-          wbFormIDCk('Column', [SFBK]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole),
+          wbFormIDCk('Column', [SFBK]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole),
         16).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
       16).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
     ]).SetSummaryKeyOnValue([0])
@@ -17678,10 +17678,10 @@ begin
     wbBaseFormComponents,
     wbUnknown(CNAM).IncludeFlag(dfNoCopyAsOverride),  // CK does not copy this on overrides
     wbInteger(DNAM, 'Edge Size', itU32).IncludeFlag(dfNoCopyAsOverride),  // CK does not copy this on overrides
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
-    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+    wbArray(ENAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
     wbRArray('Surface Pattern Data', wbRStruct('Surface Patterns', [
-      wbArray(FNAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
+      wbArray(FNAM, 'Surface Patterns', wbFormIDCk('Surface Pattern', [SFPT]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse),
       wbArray(GNAM, 'Unknown', wbinteger('Unknown', itS8), 65536).IncludeFlag(dfCollapsed, clpOther in DefineOptions.Collapse)
     ]), 2).IncludeFlag(dfNoCopyAsOverride),   // CK does not copy this on overrides
     wbString(NAM1, 'Filter').IncludeFlag(dfNoCopyAsOverride)   // CK does not copy this on overrides
@@ -18068,7 +18068,7 @@ begin
       {2} 'Downstairs'
       ])),
     wbRArray('Adjacent Snap Nodes',
-      wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID, wbStarfieldIsABugInfestedHellhole)),
+      wbFormIDCk(NNAM, 'Adjacent Snap Node', [STND]).IncludeFlag(dfUnmappedFormID, DefineOptions.StarfieldIsABugInfestedHellhole)),
     wbRStruct('Angles', [
       wbFloat(FLTV, 'Min'),
       wbFloat(FLTV, 'Max'),

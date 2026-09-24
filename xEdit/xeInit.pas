@@ -780,7 +780,6 @@ begin
     then begin
       VersionString.Title := 'ItJustWorks[TM] Edition';
       lSettings.RedPill := True;
-      wbStarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
     end;
   end
 
@@ -849,8 +848,11 @@ begin
   if not ReadSettings then
     Exit(False);
 
-  if xeContext.GameDefObj.GameMode = gmSF1 then
+  if xeContext.GameDefObj.GameMode = gmSF1 then begin
     xeContext.GameDefObj.DefineOptions.DecodeTextureHashes := True;
+    if xeContext.Settings.RedPill then
+      xeContext.GameDefObj.DefineOptions.StarfieldIsABugInfestedHellhole := False; //you wish... but lets pretend
+  end;
 
   if xeContext.Settings.CanSortINFO then begin
     if FindCmdLineSwitch('sortinfo') then
