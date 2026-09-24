@@ -66,6 +66,9 @@ const
 
 var
   HostGameMode         : TwbGameMode  = Low(TwbGameMode);
+  HostToolMode         : TwbToolMode  = Low(TwbToolMode);
+  HostApplicationTitle : string;
+  HostToolName         : string;
   HostContextRef       : IwbGameContext;
   HostContext          : TwbGameContext;
   HostSaveContextRef   : IwbSaveContext;
@@ -699,7 +702,7 @@ begin
   if DumpCheckReport then
     Error := aElement.Check;
 
-  if wbToolMode in [tmDump] then begin
+  if HostToolMode in [tmDump] then begin
 
     Name := aElement.DisplayName[True];
     Value := aElement.Value;
@@ -876,7 +879,7 @@ begin
         s := GetEnumName(TypeInfo(TwbToolMode), Ord(tm) );
         Delete(s, 1, 2);
         if FindCmdLineSwitch(s) then begin
-          wbToolMode := tm;
+          HostToolMode := tm;
           Found := True;
           Break;
         end;
@@ -886,7 +889,7 @@ begin
           s := GetEnumName(TypeInfo(TwbToolMode), Ord(tm) ).ToLowerInvariant;
           Delete(s, 1, 2);
           if t.Contains(s) then begin
-            wbToolMode := tm;
+            HostToolMode := tm;
             Found := True;
             Break;
           end;
@@ -921,14 +924,14 @@ begin
         Exit;
       end;
 
-      wbToolName := GetEnumName(TypeInfo(TwbToolMode), Ord(wbToolMode) );
-      Delete(wbToolName, 1 ,2);
+      HostToolName := GetEnumName(TypeInfo(TwbToolMode), Ord(HostToolMode) );
+      Delete(HostToolName, 1 ,2);
       if DumpSaves then
         DumpSourceName := 'Saves'
       else
         DumpSourceName := 'Plugins';
       lSettings.ApplyGameDefaults(HostGameMode);
-      lSettings.ToolName := wbToolName;
+      lSettings.ToolName := HostToolName;
       lSettings.DontSave := True;
       lSettings.AllowInternalEdit := False;
       lSettings.HideIgnored := True;
@@ -972,10 +975,10 @@ begin
       HostContext := HostContextRef as TwbGameContext;
       lSettings.CreationClubContentFileName := HostContext.Settings.CreationClubContentFileName;
       HostContext.Settings := lSettings;
-      HostContext.Settings.TolerateMissingFiles := wbToolMode in [tmDump, tmExport];
+      HostContext.Settings.TolerateMissingFiles := HostToolMode in [tmDump, tmExport];
 
-      if not (wbToolMode in tms) then begin
-        WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolMode: '+wbToolName);
+      if not (HostToolMode in tms) then begin
+        WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolMode: '+HostToolName);
         Exit;
       end;
       if DumpSaves and not SavesSupported then begin
@@ -989,7 +992,7 @@ begin
       end;
 
       DoInitPath;
-      if (wbToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
+      if (HostToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
         HostContext.Settings.DataPath := CheckParamPath;
 
       var lIsEpic: Boolean;
@@ -1041,19 +1044,17 @@ begin
      if SourceName = 'Plugins' then
        SourceName := '';
 
-     wbApplicationTitle := HostContext.GameDefObj.AppName + wbToolName + SourceName +  ' ' + VersionString;
+     HostApplicationTitle := HostContext.GameDefObj.AppName + HostToolName + SourceName +  ' ' + VersionString;
      {$IFDEF WIN64}
-     wbApplicationTitle := wbApplicationTitle + ' x64';
+     HostApplicationTitle := HostApplicationTitle + ' x64';
      {$ENDIF WIN64}
-     if wbSubMode <> '' then
-       wbApplicationTitle := wbApplicationTitle + ' (' + wbSubMode + ')';
 
      {$IFDEF EXCEPTION_LOGGING_ENABLED}
-     nxEHAppVersion := wbApplicationTitle;
+     nxEHAppVersion := HostApplicationTitle;
      {$ENDIF}
 
       if not FindCmdLineSwitch('q') and not wbReportMode then begin
-        WriteLn(ErrOutput, wbApplicationTitle);
+        WriteLn(ErrOutput, HostApplicationTitle);
         WriteLn(ErrOutput);
 
         WriteLn(ErrOutput, 'The Source Code Form is subject to the terms of the Mozilla Public License,');
@@ -1251,14 +1252,14 @@ begin
         if FileExists(HostContext.Settings.DataPath + s) then
           s := HostContext.Settings.DataPath + s;
 
-      if (wbToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
+      if (HostToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
         if s[1] in SwitchChars then
           WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
         else
           WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
         WriteLn;
         NeedsSyntaxInfo := True;
-      end else if (wbToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
+      end else if (HostToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
         if s[1] in SwitchChars then
           WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
         else
@@ -1353,7 +1354,7 @@ begin
         Exit;
       end;
 
-      if wbToolMode in [tmExport] then begin
+      if HostToolMode in [tmExport] then begin
         HostContext.Settings.LoadBSAs := False;
         wbReportMode := False;
         wbMoreInfoForUnknown:= False;
@@ -1364,7 +1365,7 @@ begin
         HostContext.ContainerHandler := wbCreateContainerHandler(HostContext.GameDefObj);
 
       StartTime := Now;
-      ReportProgress('Application name : ' + wbApplicationTitle);
+      ReportProgress('Application name : ' + HostApplicationTitle);
       if Assigned(Dumpgroups) then
         ReportProgress('['+s+']   Dumping groups : '+DumpGroups.CommaText);
       if Assigned(DumpRecords) then
@@ -1387,7 +1388,7 @@ begin
       if wbDumpOffset>0 then
         ReportProgress('['+s+']   Dump Offset mode : '+IntToStr(wbDumpOffset));
 
-      if wbToolMode in [tmDump] then begin
+      if HostToolMode in [tmDump] then begin
 
         Masters := TStringList.Create;
         try
@@ -1524,7 +1525,7 @@ begin
           HostContext.LoadFile(HostContext.GameDefObj.GameExeName, 0, '', [fsIsHardcoded], b);
       end;
 
-      if wbToolMode in [tmDump] then
+      if HostToolMode in [tmDump] then
         if Assigned(HostSaveContext) then
           _File := HostSaveContext.LoadSave(s, High(Integer))
         else
@@ -1540,7 +1541,7 @@ begin
 
       ReportProgress('Finished loading record. Starting Dump.');
 
-      if wbToolMode in [tmDump] then begin
+      if HostToolMode in [tmDump] then begin
         FileIsSave := Assigned(_File) and Assigned(_File.SaveContextObj);
         if FindCmdLineSwitch('check') and not wbReportMode then
           CheckForErrors(0, _File)
@@ -1561,14 +1562,14 @@ begin
           if not DontWriteReport then
             HostContext.GameDefObj.ReportDefs;
         end;
-      end else if wbToolMode in [tmExport] then begin
+      end else if HostToolMode in [tmExport] then begin
         for Pass := epRead to epRemaining do begin
           ProfileHeader(StrToTExportFormat(s), Pass);
           ProfileArray(StrToTExportFormat(s), Pass);
           ProfileChapters(StrToTExportFormat(s), Pass);
         end;
 
-        wbDefProfiles.SaveToFile(HostContext.GameDefObj.AppName+wbToolName+DumpSourceName+'.txt');
+        wbDefProfiles.SaveToFile(HostContext.GameDefObj.AppName+HostToolName+DumpSourceName+'.txt');
       end;
 
       ReportProgress('All Done.');

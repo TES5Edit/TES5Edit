@@ -5490,11 +5490,6 @@ function wbBlockFromSubBlock(const aSubBlock: TwbGridCell): TwbGridCell;
 function wbGridCellToGroupLabel(const aGridCell: TwbGridCell): Cardinal;
 
 var
-  wbToolMode         : TwbToolMode;
-  wbSubMode          : string;
-  wbApplicationTitle : string;
-  wbToolName         : string;
-
   wbAutoModes: TwbSetOfMode = [ // Tool modes that run without user interaction until final status
     tmOnamUpdate,
     tmMasterUpdate,

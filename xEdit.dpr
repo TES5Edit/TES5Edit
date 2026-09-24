@@ -150,9 +150,9 @@ begin
   end;
 
   {$IFDEF EXCEPTION_LOGGING_ENABLED}
-  nxEHAppVersion := wbApplicationTitle;
+  nxEHAppVersion := xeApplicationTitle;
   {$ENDIF}
-  Application.Title := wbApplicationTitle;
+  Application.Title := xeApplicationTitle;
   try
     Application.CreateForm(TfrmMain, frmMain);
   Application.Run;

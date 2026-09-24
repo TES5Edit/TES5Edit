@@ -4404,7 +4404,7 @@ var
   CheckFocusedNode: Boolean;
 begin
   CheckFocusedNode := False;
-  if (wbToolMode in [tmEdit, tmTranslate]) or aForce then begin
+  if (xeToolMode in [tmEdit, tmTranslate]) or aForce then begin
     if Assigned(vstNav) and
        (toAutoFreeOnCollapse in vstNav.TreeOptions.AutoOptions) then begin
 
@@ -4444,7 +4444,7 @@ begin
     Exit;
   if xeContext.Settings.DontCacheSave then
     Exit;
-  if not (wbToolMode in [tmView, tmEdit, tmTranslate]) then
+  if not (xeToolMode in [tmView, tmEdit, tmTranslate]) then
     Exit;
 
   if not TDirectory.Exists(xeContext.Settings.CachePath) then
@@ -4460,7 +4460,7 @@ begin
     Exit;
 
   if MessageDlg('The Reference Cache contains ' + i.ToString +
-    ' files from a different version of ' + xeContext.GameDefObj.AppName + wbToolName +
+    ' files from a different version of ' + xeContext.GameDefObj.AppName + xeToolName +
     '. Do you want to remove them?', mtConfirmation, mbYesNo, 0) = mrYes then
     for i := Low(Files) to High(Files) do try
       TFile.Delete(Files[i]);
@@ -4809,7 +4809,7 @@ begin
   vstSpreadSheetAmmo.OnCheckHotTrack := vstSpreadSheetCheckHotTrack;
   vstSpreadSheetAmmo.TreeOptions.PaintOptions := vstSpreadSheetAmmo.TreeOptions.PaintOptions + [toZebra, toAdvHotTrack];
 
-  AddMessage(wbApplicationTitle + ' ('+IntToHex64(wbCRC32App, 8)+') starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
+  AddMessage(xeApplicationTitle + ' ('+IntToHex64(wbCRC32App, 8)+') starting session ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', Now));
   AddMessage('');
   AddMessage('The Source Code Form of this program is subject to the terms of the Mozilla Public License, v. 2.0');
   AddMessage('If a copy of the MPL was not distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.');
@@ -4919,7 +4919,7 @@ begin
   else
     AddMessage('Loading active plugin list: ' + xeContext.Settings.PluginsFileName);
 
-  if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
+  if xeToolMode in [tmEdit, tmView, tmTranslate] then begin
     i := Settings.ReadInteger('WhatsNew', 'Version', 0);
     with TfrmRichEdit.Create(Self) do begin
       Caption := 'What''s New?';
@@ -5003,7 +5003,7 @@ begin
             CheckListBox1.Items.EndUpdate;
           end;
 
-          if (wbToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
+          if (xeToolMode in [tmMasterUpdate, tmMasterRestore]) and (Length(Modules)>1) and lGameDef.IsFallout3 then begin
             AgeDateTime := Modules[0].miDateTime;
             for i := 1 to High(Modules) do begin
               AgeDateTime := AgeDateTime + (1/24/60);
@@ -5012,7 +5012,7 @@ begin
           end;
         end;
 
-        if ((wbToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit or xeQuickSEQ) and not lGameDef.IsMorrowind then begin
+        if ((xeToolMode in wbPluginModes) or xeQuickClean or xeQuickEdit or xeQuickSEQ) and not lGameDef.IsMorrowind then begin
           Modules.DeactivateAll;
 
           if (xePluginToUse <> '') or not xeQuickClean then
@@ -5042,7 +5042,7 @@ begin
 
         sl.Clear;
         if not xeSavesMode then begin
-          if (wbToolMode in wbPluginModes) or (xeAutoLoad and (xeTestConflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
+          if (xeToolMode in wbPluginModes) or (xeAutoLoad and (xeTestConflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
                 ShowMessage('Exactly one module must be selected for Quick Clean mode.');
@@ -5060,7 +5060,7 @@ begin
                 MaxSelect := 1;
                 HideFlag := mfIsGameMaster;
                 AllModules := lModules.ModulesByLoadOrder(False).FilteredByFlag(mfValid);
-                Caption := 'Please check or double click the module that you want to ' + wbSubMode;
+                Caption := 'Please check or double click the module that you want to ' + xeSubMode;
               end else
                 PresetCategory := 'ActiveModules';
 
@@ -5080,7 +5080,7 @@ begin
         end else begin
           if xeTestSaveContexts then
             sl.Add(xeTestSaveContextsSave)
-          else if not (wbToolMode in wbAutoModes) then
+          else if not (xeToolMode in wbAutoModes) then
             if ShowModal = mrOk then
               for i := 0 to Pred(CheckListBox1.Count) do
                 if CheckListBox1.Checked[i] then
@@ -5145,7 +5145,7 @@ begin
       DoProcessMessages;
       tmrMessagesTimer(nil);
 
-      if not (wbToolMode in wbAutoModes) and not xeSavesMode then
+      if not (xeToolMode in wbAutoModes) and not xeSavesMode then
         with TfrmFileSelect.Create(nil) do try
           {
           if (not wbEditAllowed) or wbTranslationMode then begin
@@ -5200,7 +5200,7 @@ begin
       CleanupRefCache;
 
       wbShowTip := Settings.ReadBool('Options', 'ShowTip', wbShowTip);
-      if wbShowTip and (wbToolMode in [tmEdit]) then
+      if wbShowTip and (xeToolMode in [tmEdit]) then
         ShowTip;
 
       wbStartTime := Now;
@@ -5294,7 +5294,7 @@ begin
   CreateActionsForScripts;
   dfResourceGetDataCallback := @dfResourceOpenData;
 
-  if wbToolMode in [tmEdit, tmView, tmTranslate] then begin
+  if xeToolMode in [tmEdit, tmView, tmTranslate] then begin
     i := Settings.ReadInteger('Patreon', 'SnoozeCounter', 0);
     if i > 0 then begin
       Settings.WriteInteger('Patreon', 'SnoozeCounter', Pred(i));
@@ -5985,7 +5985,7 @@ end;
 
 procedure TfrmMain.SaveLogs(aAllowReplace: Boolean);
 begin
-  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + wbToolName + '_log.txt', aAllowReplace);
+  SaveLog(wbProgramPath + xeContext.GameDefObj.AppName + xeToolName + '_log.txt', aAllowReplace);
   if xeLogFile <> '' then
     SaveLog(xeLogFile, aAllowReplace);
 end;
@@ -6303,7 +6303,7 @@ begin
   if wbShrinkButtons then
     ShrinkButtons;
 
-  if wbToolMode in wbAutoModes then begin
+  if xeToolMode in wbAutoModes then begin
     mmoMessages.Parent := Self;
     pnlNav.Visible := False;
     pnlTop.Visible := False;
@@ -11106,7 +11106,7 @@ var
   end;
 
 begin
-  AutoModeCheckForDR := wbToolMode in [tmCheckForDR];
+  AutoModeCheckForDR := xeToolMode in [tmCheckForDR];
   if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
 
   if not AutoModeCheckForDR and not xeContext.Settings.EditAllowed then
@@ -11412,7 +11412,7 @@ var
 begin
   PluginCRC32 := 0;
 
-  AutoModeCheckForITM := wbToolMode in [tmCheckForITM];
+  AutoModeCheckForITM := xeToolMode in [tmCheckForITM];
   if AutoModeCheckForITM then Operation := 'Count' else Operation := 'Remov';
 
   if not xeContext.Settings.EditAllowed and not AutoModeCheckForITM then
@@ -15375,7 +15375,7 @@ begin
 
       if (CheckListBox1.Count > 0) then begin
         FoundSomething := True;
-        if (not (wbToolMode in wbAutoModes)) then begin
+        if (not (xeToolMode in wbAutoModes)) then begin
           if not aSilent then
             if ShowModal <> mrOk then
               Exit(srAbort);
@@ -16988,7 +16988,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  if wbToolMode in wbAutoModes then
+  if xeToolMode in wbAutoModes then
     Exit;
 
   if not ShowUnsavedHint then
@@ -17047,9 +17047,9 @@ begin
   if GeneratorStarted then
     Exit;
   GeneratorStarted := True;
-  if wbToolMode = tmLODGen then
+  if xeToolMode = tmLODGen then
     DoGenerateLOD
-  else if wbToolMode = tmScript then
+  else if xeToolMode = tmScript then
     DoRunScript;
 
   if xeAutoExit then
@@ -17133,7 +17133,7 @@ begin
     frmMain.Close;   // Wait until NewMessages are processed.
   end;
 
-  if (wbToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
+  if (xeToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
         tmCheckForDR, tmCheckForErrors]) and xeContext.LoaderDone and not xeMasterUpdateDone then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
@@ -17151,17 +17151,17 @@ begin
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] a working version. But it is recommended to contact the author of the module');
       PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] to get the original fixed.');
     end else try
-      if (wbToolMode = tmSortAndCleanMasters) then begin
+      if (xeToolMode = tmSortAndCleanMasters) then begin
         for i := Low(Files) to High(Files) do
           if xeModulesToUse.Find(Files[i].FileName, dummy) and Files[i].IsEditable then begin
             Files[i].SortMasters;
             Files[i].CleanMasters;
             ChangesMade := ChangesMade or Files[i].Modified;
           end
-      end else if (wbToolMode in [tmMasterRestore, tmESPify]) then
+      end else if (xeToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
-      else if (wbToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
-        if (wbToolMode in [tmCheckForITM, tmCheckForDR]) then
+      else if (xeToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
+        if (xeToolMode in [tmCheckForITM, tmCheckForDR]) then
           mniNavFilterForCleaning.Click;
         JumpTo(Files[High(Files)].Header, False);
         vstNav.ClearSelection;
@@ -17170,19 +17170,19 @@ begin
         DoSetActiveRecord(nil);
         pgMain.ActivePage := tbsMessages;
         try
-          if wbToolMode = tmCheckForErrors then begin
+          if xeToolMode = tmCheckForErrors then begin
             mniNavCheckForErrorsClick(Nil);
             if ErrorsCount>126 then
               CheckResult := 127
             else
               CheckResult := ErrorsCount;
-          end else if wbToolMode = tmCheckForITM then begin
+          end else if xeToolMode = tmCheckForITM then begin
             mniNavRemoveIdenticalToMasterClick(Nil);
             if ITMcount>126 then
               CheckResult := 127
             else
               CheckResult := ITMcount;
-          end else if wbToolMode = tmCheckForDR then begin
+          end else if xeToolMode = tmCheckForDR then begin
             mniNavUndeleteAndDisableReferencesClick(Nil);
             if DRcount>126 then
               CheckResult := 127
@@ -17193,9 +17193,9 @@ begin
         finally
           xeContext.Settings.DontSave := True;
         end;
-      end else if wbToolMode = tmMasterUpdate then
+      end else if xeToolMode = tmMasterUpdate then
         ChangesMade := SetAllToMaster
-      else if wbToolMode = tmOnamUpdate then begin
+      else if xeToolMode = tmOnamUpdate then begin
         ChangesMade := UpdateAllOnam;
         if ChangesMade then begin
           Settings.WriteBool('Options', 'AlwaysSaveOnam', True);
@@ -17213,11 +17213,11 @@ begin
       end else begin
         PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] None of your active modules required changes.');
       end;
-      if (wbToolMode in [tmOnamUpdate, tmMasterUpdate]) then begin
+      if (xeToolMode in [tmOnamUpdate, tmMasterUpdate]) then begin
         PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + ']');
         PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] !!! Remember to run this program again any time you make changes to your active mods. !!!.');
       end else
-        if (wbToolMode in wbPluginModes) then
+        if (xeToolMode in wbPluginModes) then
           AutoDone := true;
 
     except
@@ -20230,7 +20230,7 @@ begin
       lData := TStringList.Create;
       try
         lHeader.Add('# xEdit conflict status dump');
-        lHeader.Add('# ' + wbApplicationTitle);
+        lHeader.Add('# ' + xeApplicationTitle);
         lHeader.Add('#');
         lHeader.Add('# Columns, tab separated:');
         lHeader.Add('#   load order / file / signature / load order FormID / local FormID /');
@@ -20316,7 +20316,7 @@ begin
             lFieldsTmp := xeTestConflictsFieldsFile + '.partial';
             lFields := TStreamWriter.Create(lFieldsTmp, False, TEncoding.UTF8);
             lFields.WriteLine('# xEdit conflict status dump, fields');
-            lFields.WriteLine('# ' + wbApplicationTitle);
+            lFields.WriteLine('# ' + xeApplicationTitle);
             lFields.WriteLine('#');
             lFields.WriteLine('# Columns, tab separated:');
             lFields.WriteLine('#   load order FormID of the first record in the override chain / signature /');
@@ -21108,7 +21108,7 @@ begin
   lLines := TStringList.Create;
   try
     lLines.Add('# xEdit nav tree copy probe');
-    lLines.Add('# ' + wbApplicationTitle);
+    lLines.Add('# ' + xeApplicationTitle);
     lLines.Add('#');
     lLines.Add('# Columns, tab separated: phase / file / signature / load order FormID / EditorID /');
     lLines.Add('#   node ConflictAll / node ConflictThis / node ElementGen / record ElementGeneration');
@@ -21169,7 +21169,7 @@ begin
     if LoadOrder < 0 then begin
       Inc(wbShowStartTime);
       try
-        if wbToolMode in [tmEdit] then begin
+        if xeToolMode in [tmEdit] then begin
           // unchecked Show Tip checkbox, update setting
           if Assigned(frmTip) and not wbShowTip then begin
             Settings.WriteBool('Options', 'ShowTip', wbShowTip);
@@ -21189,7 +21189,7 @@ begin
           Exit;
         end;
 
-        if (wbToolMode in [tmLODgen, tmScript]) then begin
+        if (xeToolMode in [tmLODgen, tmScript]) then begin
           if not wbForceTerminate then
             tmrGenerator.Enabled := True;
           Exit;
@@ -21242,12 +21242,12 @@ begin
 
         ModGroups := nil;
 
-        if not (xeQuickClean or (wbToolMode in wbAutoModes) or (xeTestConflicts and not xeTestConflictsModGroups)) then
+        if not (xeQuickClean or (xeToolMode in wbAutoModes) or (xeTestConflicts and not xeTestConflictsModGroups)) then
           if xeQuickShowConflicts or xeAutoLoad then begin
             ModGroups := lModGroups.ByName(True);
             lModGroups.ByName(False).ShowValidationMessages;
           end else
-            if wbToolMode in [tmView, tmEdit] then begin
+            if xeToolMode in [tmView, tmEdit] then begin
               with TfrmModGroupSelect.Create(Self) do try
                 AllModGroups := lModGroups.ByName(True);
                 lModGroups.ByName(False).ShowValidationMessages;
