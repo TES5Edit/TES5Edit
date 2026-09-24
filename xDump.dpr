@@ -26,6 +26,7 @@ uses
   System.Classes,
   System.IniFiles,
   System.IOUtils,
+  System.Rtti,
   System.SysUtils,
   System.TypInfo,
 
@@ -811,6 +812,65 @@ begin
     end;
 end;
 
+procedure DumpInitState(const aFileName: string);
+
+  function ValueText(const aValue: TValue): string;
+  begin
+    case aValue.Kind of
+      tkClass: begin
+        var lObject := aValue.AsObject;
+        if not Assigned(lObject) then
+          Result := 'nil'
+        else if lObject is TEncoding then
+          Result := lObject.ClassName + ':' + IntToStr(TEncoding(lObject).CodePage)
+        else
+          Result := lObject.ClassName;
+      end;
+      tkMethod:
+        Result := BoolToStr(Assigned(PMethod(aValue.GetReferenceToRawData).Code), True);
+      tkDynArray: begin
+        Result := '';
+        for var lIdx := 0 to Pred(aValue.GetArrayLength) do
+          Result := Result + '|' + aValue.GetArrayElement(lIdx).ToString;
+        Result := '[' + Copy(Result, 2, MaxInt) + ']';
+      end;
+    else
+      Result := aValue.ToString;
+    end;
+  end;
+
+begin
+  var lLines := TStringList.Create;
+  try
+    lLines.Add('host.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(HostGameMode)));
+    lLines.Add('host.ToolMode=' + GetEnumName(TypeInfo(TwbToolMode), Ord(HostToolMode)));
+    lLines.Add('host.ToolName=' + HostToolName);
+    lLines.Add('host.DumpSourceName=' + DumpSourceName);
+    var lGameDef := HostContext.GameDefObj;
+    lLines.Add('def.GameMode=' + GetEnumName(TypeInfo(TwbGameMode), Ord(lGameDef.GameMode)));
+    lLines.Add('def.AppName=' + lGameDef.AppName);
+    lLines.Add('def.GameName=' + lGameDef.GameName);
+    lLines.Add('def.GameExeName=' + lGameDef.GameExeName);
+    lLines.Add('def.GameMasterEsm=' + lGameDef.GameMasterEsm);
+    var lCapabilities := '';
+    for var lCapability := Low(TwbGameCapability) to High(TwbGameCapability) do
+      if lCapability in lGameDef.Capabilities then
+        lCapabilities := lCapabilities + ' ' + GetEnumName(TypeInfo(TwbGameCapability), Ord(lCapability));
+    lLines.Add('def.Capabilities=' + Trim(lCapabilities));
+    lLines.Add('def.HasSaveDef=' + BoolToStr(lGameDef.HasSaveDef, True));
+    var lRtti := TRttiContext.Create;
+    var lSettings := HostContext.Settings;
+    for var lField in lRtti.GetType(TypeInfo(TwbGameContextSettings)).GetFields do
+      lLines.Add('settings.' + lField.Name + '=' + ValueText(lField.GetValue(@lSettings)));
+    var lDefineOptions := lGameDef.DefineOptions;
+    for var lField in lRtti.GetType(TypeInfo(TwbGameDefineOptions)).GetFields do
+      lLines.Add('defineoptions.' + lField.Name + '=' + ValueText(lField.GetValue(@lDefineOptions)));
+    lLines.SaveToFile(aFileName);
+  finally
+    lLines.Free;
+  end;
+end;
+
 function isMode(aMode: String): Boolean;
 begin
   Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
@@ -989,6 +1049,12 @@ begin
       var lMyGamesPath := HostContext.Settings.DefaultMyGamesPath(HostGameMode, IncludeTrailingPathDelimiter(TPath.GetDocumentsPath), lIsEpic);
       HostContext.Settings.TheGameIniFileName := HostContext.Settings.DefaultGameIniFileName(HostGameMode, lMyGamesPath);
       HostContext.Settings.CustomIniFileName := HostContext.Settings.DefaultCustomIniFileName(HostGameMode, lMyGamesPath);
+
+      var lDumpInitFile: string;
+      if wbFindCmdLineParam('dumpinit', lDumpInitFile) then begin
+        DumpInitState(lDumpInitFile);
+        Exit;
+      end;
 
       HostContext.ModuleList.LoadModules;
 
