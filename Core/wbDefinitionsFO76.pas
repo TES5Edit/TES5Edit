@@ -17752,7 +17752,6 @@ begin
   gdHEDRVersion := 266.0;
   gdDefaultFormVersion := 209;
   gdQuestFlagsSignature := 'DNAM';
-  gdArchiveExtension := '.ba2';
 end;
 
 initialization

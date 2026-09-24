@@ -2251,7 +2251,6 @@ begin
   gdDefaultFormVersion := 582;
   gdQuestFlagsSignature := 'DNAM';
   gdRaceFlagsSignature := 'DAT2';
-  gdArchiveExtension := '.ba2';
   gdHardcodedRangeAdmitted := True;
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);

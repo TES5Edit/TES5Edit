@@ -610,7 +610,6 @@ var
   lSettings: TwbGameContextSettings;
 begin
   ExeName := ChangeFileExt(ExtractFileName(ParamStr(0)), '').ToLowerInvariant;
-  lInputs := Default(TwbGameDefInputs);
   lSettings := TwbGameContextSettings.Defaults;
 
   if not wbIsAeroEnabled then
@@ -793,25 +792,7 @@ begin
 
   lSettings.ApplyGameDefaults(xeGameMode);
   lSettings.ToolName := xeToolName;
-  case xeGameMode of
-    gmTES4:
-      if (not FileExists(lSettings.DataPath + 'Oblivion.esm')) and FileExists(lSettings.DataPath + 'Nehrim.esm') then
-        lInputs.Nehrim      := True;
-    gmFNV:
-      lInputs.HNVSE := FileExists(lSettings.DataPath + 'NVSE\Plugins\Hnvse.dll');
-    gmSSE, gmEnderalSE:
-      lInputs.CS := FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
-    gmTES5VR: begin
-      lInputs.LightSupport := FileExists(lSettings.DataPath + 'SKSE\Plugins\skyrimvresl.dll');
-      lInputs.UpdateSupport := lInputs.LightSupport;
-      lInputs.CS := FileExists(lSettings.DataPath + 'SKSE\Plugins\CommunityShaders.dll');
-    end;
-    gmFO4VR: begin
-      lInputs.LightSupport := FileExists(lSettings.DataPath + 'F4SE\Plugins\falloutvresl.dll') or
-                              FileExists(lSettings.DataPath + 'F4SE\Plugins\Daytripper4.dll');
-      lInputs.UpdateSupport := lInputs.LightSupport;
-    end;
-  end;
+  lInputs := TwbGameDefInputs.Detect(xeGameMode, lSettings.DataPath);
 
   xeContextRef := wbCreateGameContext(wbCreateGameDef(xeGameMode, lInputs, False));
   xeContext := xeContextRef as TwbGameContext;

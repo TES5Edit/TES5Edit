@@ -789,26 +789,26 @@ var
 begin
   Result := '';
   s := ParamStr(ParamCount);
-  s := ChangeFileExt(s, '*' + HostContext.GameDefObj.ArchiveExtension);
+  s := ChangeFileExt(s, '*' + wbGameLocations[HostGameMode].ArchiveExtension);
   if FindFirst(s, faAnyfile, F)=0 then begin
     Result := ExtractFilePath(ParamStr(ParamCount));
     System.SysUtils.FindClose(F);
   end;
 end;
 
-procedure DoInitPath;
+procedure DoInitPath(var aSettings: TwbGameContextSettings);
 var
   lRegistryName : string;
   lDataPath     : string;
 begin
   if wbFindCmdLineParam('D', lDataPath) then
-    HostContext.Settings.DataPath := IncludeTrailingPathDelimiter(lDataPath)
+    aSettings.DataPath := IncludeTrailingPathDelimiter(lDataPath)
   else
-    case HostContext.Settings.FindDataPath(HostContext.GameDefObj.GameMode, lRegistryName) of
+    case aSettings.FindDataPath(HostGameMode, lRegistryName) of
       dpsNoRegistryKey:
         ReportProgress('Warning: Could not open registry key: ' + lRegistryName);
       dpsNoRegistryValue:
-        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [HostContext.GameDefObj.Identity.GameName2, lRegistryName]));
+        ReportProgress(Format('Warning: Could not determine %s installation path, no "%s" registry key', [wbGameIdentities[HostGameMode].GameName2, lRegistryName]));
     end;
 end;
 
@@ -995,7 +995,6 @@ begin
       lSettings.AllowInternalEdit := False;
       lSettings.HideIgnored := True;
       lSettings.LoadBSAs := FindCmdLineSwitch('bsa') or FindCmdLineSwitch('allbsa');
-      lInputs := Default(TwbGameDefInputs);
       tms := [tmDump, tmExport];
 
       if FindCmdLineSwitch('sr') then
@@ -1022,6 +1021,11 @@ begin
       end;
       end;
 
+      DoInitPath(lSettings);
+      if (HostToolMode in [tmDump]) and (lSettings.DataPath = '') then // Dump can be run in any directory configuration
+        lSettings.DataPath := CheckParamPath;
+      lInputs := TwbGameDefInputs.Detect(HostGameMode, lSettings.DataPath);
+
       HostContextRef := wbCreateGameContext(wbCreateGameDef(HostGameMode, lInputs, lDefineOptions));
       HostContext := HostContextRef as TwbGameContext;
       HostContext.Settings := lSettings;
@@ -1040,10 +1044,6 @@ begin
         HostSaveContextRef := wbCreateSaveContext(HostContextRef);
         HostSaveContext := HostSaveContextRef as TwbSaveContext;
       end;
-
-      DoInitPath;
-      if (HostToolMode in [tmDump]) and (HostContext.Settings.DataPath = '') then // Dump can be run in any directory configuration
-        HostContext.Settings.DataPath := CheckParamPath;
 
       var lIsEpic: Boolean;
       var lMyGamesPath := HostContext.Settings.DefaultMyGamesPath(HostGameMode, IncludeTrailingPathDelimiter(TPath.GetDocumentsPath), lIsEpic);

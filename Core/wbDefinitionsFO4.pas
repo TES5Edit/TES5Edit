@@ -13299,7 +13299,6 @@ begin
   gdDefaultFormVersion := 131;
   gdQuestFlagsSignature := 'DNAM';
   gdDefaultLandTexture := 'LCWDefault01Grass01';
-  gdArchiveExtension := '.ba2';
   if GameMode = gmFO4 then begin
     gdHardcodedRangeAdmitted := True;
     gdHardcodedRangeMinVersion := 1.0;

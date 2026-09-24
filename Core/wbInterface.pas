@@ -602,6 +602,8 @@ type
     CS                 : Boolean;
     HNVSE              : Boolean;
     Nehrim             : Boolean;
+
+    class function Detect(aGameMode: TwbGameMode; const aDataPath: string): TwbGameDefInputs; static;
   end;
 
   TwbGameIdentity = record
@@ -651,6 +653,7 @@ type
     FixedSaveFolder    : string;
     PluginsInData      : Boolean;
     PluginsFolder      : string;
+    ArchiveExtension   : string;
   end;
 
   TwbDataPathSearch = (dpsFound, dpsNoRegistryKey, dpsNoRegistryValue);
@@ -663,20 +666,20 @@ const
   );
 
   wbGameLocations : array[TwbGameMode] of TwbGameLocation = (
-    {gmTES3}      (InstallRegistry: irBethesda;  DataFolder: 'Data Files';                                  MyGamesIsInstall: True;  IniName: 'Morrowind'; IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Morrowind'),
-    {gmTES4}      (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Oblivion';  IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Oblivion'),
-    {gmTES4R}     (InstallRegistry: irUninstall; DataFolder: 'OblivionRemastered\Content\Dev\ObvData\Data'; MyGamesIsInstall: False; IniName: 'Oblivion';  IniInstallFallback: True;  FixedSaveFolder: 'Saved\SaveGames\'; PluginsInData: True;  PluginsFolder: 'Oblivion Remastered'),
-    {gmFO3}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout3'),
-    {gmFNV}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'FalloutNV'),
-    {gmTES5}      (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Skyrim';    IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Skyrim'),
-    {gmEnderal}   (InstallRegistry: irSureAI;    DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Enderal';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Enderal'),
-    {gmFO4}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout4';  IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout4'),
-    {gmSSE}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Skyrim';    IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Skyrim Special Edition'),
-    {gmTES5VR}    (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Skyrim';    IniInstallFallback: True;  FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Skyrim VR'),
-    {gmEnderalSE} (InstallRegistry: irSureAI;    DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Enderal';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Enderal Special Edition'),
-    {gmFO4VR}     (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout4';  IniInstallFallback: True;  FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout4VR'),
-    {gmFO76}      (InstallRegistry: irUninstall; DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout76'; IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout76'),
-    {gmSF1}       (InstallRegistry: irUninstall; DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Starfield'; IniInstallFallback: True;  FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Starfield')
+    {gmTES3}      (InstallRegistry: irBethesda;  DataFolder: 'Data Files';                                  MyGamesIsInstall: True;  IniName: 'Morrowind'; IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Morrowind';               ArchiveExtension: '.bsa'),
+    {gmTES4}      (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Oblivion';  IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Oblivion';                ArchiveExtension: '.bsa'),
+    {gmTES4R}     (InstallRegistry: irUninstall; DataFolder: 'OblivionRemastered\Content\Dev\ObvData\Data'; MyGamesIsInstall: False; IniName: 'Oblivion';  IniInstallFallback: True;  FixedSaveFolder: 'Saved\SaveGames\'; PluginsInData: True;  PluginsFolder: 'Oblivion Remastered';     ArchiveExtension: '.bsa'),
+    {gmFO3}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout3';                ArchiveExtension: '.bsa'),
+    {gmFNV}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'FalloutNV';               ArchiveExtension: '.bsa'),
+    {gmTES5}      (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Skyrim';    IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Skyrim';                  ArchiveExtension: '.bsa'),
+    {gmEnderal}   (InstallRegistry: irSureAI;    DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Enderal';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Enderal';                 ArchiveExtension: '.bsa'),
+    {gmFO4}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout4';  IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout4';                ArchiveExtension: '.ba2'),
+    {gmSSE}       (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Skyrim';    IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Skyrim Special Edition';  ArchiveExtension: '.bsa'),
+    {gmTES5VR}    (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Skyrim';    IniInstallFallback: True;  FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Skyrim VR';               ArchiveExtension: '.bsa'),
+    {gmEnderalSE} (InstallRegistry: irSureAI;    DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Enderal';   IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Enderal Special Edition'; ArchiveExtension: '.bsa'),
+    {gmFO4VR}     (InstallRegistry: irBethesda;  DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout4';  IniInstallFallback: True;  FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout4VR';              ArchiveExtension: '.ba2'),
+    {gmFO76}      (InstallRegistry: irUninstall; DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Fallout76'; IniInstallFallback: False; FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Fallout76';               ArchiveExtension: '.ba2'),
+    {gmSF1}       (InstallRegistry: irUninstall; DataFolder: 'Data';                                        MyGamesIsInstall: False; IniName: 'Starfield'; IniInstallFallback: True;  FixedSaveFolder: '';                 PluginsInData: False; PluginsFolder: 'Starfield';               ArchiveExtension: '.ba2')
   );
 
 type
@@ -6236,6 +6239,7 @@ begin
   gdGameMode := aGameMode;
   gdCapabilities := ComputeCapabilities(aGameMode, aInputs);
   gdIdentity := wbGameIdentities[aGameMode];
+  gdArchiveExtension := wbGameLocations[aGameMode].ArchiveExtension;
   if (aGameMode = gmTES4) and aInputs.Nehrim then begin
     gdIdentity.AppName := 'Nehrim';
     gdIdentity.GameMasterEsm := 'Nehrim.esm';
@@ -6251,6 +6255,30 @@ end;
 
 procedure TwbSaveDef.Define;
 begin
+end;
+
+class function TwbGameDefInputs.Detect(aGameMode: TwbGameMode; const aDataPath: string): TwbGameDefInputs;
+begin
+  Result := Default(TwbGameDefInputs);
+  case aGameMode of
+    gmTES4:
+      if (not FileExists(aDataPath + 'Oblivion.esm')) and FileExists(aDataPath + 'Nehrim.esm') then
+        Result.Nehrim      := True;
+    gmFNV:
+      Result.HNVSE := FileExists(aDataPath + 'NVSE\Plugins\Hnvse.dll');
+    gmSSE, gmEnderalSE:
+      Result.CS := FileExists(aDataPath + 'SKSE\Plugins\CommunityShaders.dll');
+    gmTES5VR: begin
+      Result.LightSupport := FileExists(aDataPath + 'SKSE\Plugins\skyrimvresl.dll');
+      Result.UpdateSupport := Result.LightSupport;
+      Result.CS := FileExists(aDataPath + 'SKSE\Plugins\CommunityShaders.dll');
+    end;
+    gmFO4VR: begin
+      Result.LightSupport := FileExists(aDataPath + 'F4SE\Plugins\falloutvresl.dll') or
+                             FileExists(aDataPath + 'F4SE\Plugins\Daytripper4.dll');
+      Result.UpdateSupport := Result.LightSupport;
+    end;
+  end;
 end;
 
 constructor TwbGameDef.Create;
