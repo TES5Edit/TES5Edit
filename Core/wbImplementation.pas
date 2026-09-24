@@ -3498,8 +3498,8 @@ begin
     end;
   end;
 
-  if lGameDef.IsStarfield then
-    AddMasters(['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}]);
+  if Length(lGameDef.NewFileMasters) > 0 then
+    AddMasters(lGameDef.NewFileMasters);
 
   BuildOrLoadRef(False);
 end;
@@ -3596,8 +3596,8 @@ begin
           if Assigned(miFile) then
             AddMaster(_File);
 
-  if lGameDef.IsStarfield then
-    AddMasters(['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}]);
+  if Length(lGameDef.NewFileMasters) > 0 then
+    AddMasters(lGameDef.NewFileMasters);
 
   BuildOrLoadRef(False);
 end;

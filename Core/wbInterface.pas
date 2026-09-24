@@ -3629,6 +3629,7 @@ type
     gdSaveDefsLock     : TObject;
     gdSaveDefsCreated  : Boolean;
     gdOfficialDLC      : TArray<string>;
+    gdNewFileMasters   : TArray<string>;
     gdCreationClubContentFileName : string;
     gdKnownSubRecordSignatures    : TwbKnownSubRecordSignatures;
     gdRecordFlags            : IwbIntegerDef;
@@ -3822,6 +3823,8 @@ type
     function HasSaveDef: Boolean;
     property OfficialDLC: TArray<string>
       read gdOfficialDLC;
+    property NewFileMasters: TArray<string>
+      read gdNewFileMasters;
     property CreationClubContentFileName: string
       read gdCreationClubContentFileName;
     property KnownSubRecordSignatures[aKind: TwbKnownSubRecord]: TwbSignature

@@ -19364,6 +19364,7 @@ begin
   gdOfficialDLC := ['ShatteredSpace.esm', 'Constellation.esm', 'OldMars.esm', 'SFBGS003.esm',
     'SFBGS004.esm', 'SFBGS006.esm', 'SFBGS007.esm', 'SFBGS008.esm', 'SFBGS00D.esm',
     'SFBGS047.esm', 'SFBGS050.esm', 'BlueprintShips-Starfield.esm', 'BlueprintShips-SFBGS050.esm'];
+  gdNewFileMasters := ['Starfield.esm'{, 'BlueprintShips-Starfield.esm'}];
   gdCreationClubContentFileName := 'Starfield.ccc';
 end;
 
