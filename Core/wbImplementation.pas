@@ -4047,16 +4047,22 @@ end;
 
 procedure TwbFile.ForceClosed;
 var
-  i: Integer;
+  i       : Integer;
+  lRecord : IwbMainRecordInternal;
 begin
   flSaveTables := nil;
   for i := Low(flRecordsIndices) to High(flRecordsIndices) do
     FreeAndNil(flRecordsIndices[i]);
   flIndicesActive := False;
-  for i := High(flRecords) downto Low(flRecords) do
-    (flRecords[i] as IwbMainRecordInternal).ClearForRelease;
-  for i := High(flInjectedRecords) downto Low(flInjectedRecords) do
-    (flInjectedRecords[i] as IwbMainRecordInternal).ClearForRelease;
+  for i := High(flRecords) downto Low(flRecords) do begin
+    lRecord := flRecords[i] as IwbMainRecordInternal;
+    lRecord.ClearForRelease;
+  end;
+  for i := High(flInjectedRecords) downto Low(flInjectedRecords) do begin
+    lRecord := flInjectedRecords[i] as IwbMainRecordInternal;
+    lRecord.ClearForRelease;
+  end;
+  lRecord := nil;
   flMasters                := nil;
   flRecords                := nil;
   flInjectedRecords        := nil;
