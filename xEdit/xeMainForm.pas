@@ -7395,7 +7395,7 @@ begin
             if Shift * [ssShift, ssAlt] = [ssAlt] then
               t := MainRecord.Name
             else
-              t := IntToHex64(Cardinal(MainRecord.FixedFormID), 8);
+              t := MainRecord.LoadOrderFormID.ToString;
           if t <> '' then begin
             if s <> '' then
               s := s + CRLF;
