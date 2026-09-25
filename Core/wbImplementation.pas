@@ -24506,6 +24506,8 @@ begin
   GameDefObj.InitRecords;
 
   FileName := ExpandFileName(aFileName);
+  if not wbIsModule(FileName, GameDefObj.GameExeName) then
+    raise Exception.CreateFmt('Expected a module, found "%s"', [FileName]);
   if Assigned(FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
@@ -24521,6 +24523,8 @@ begin
   GameDefObj.InitRecords;
 
   FileName := ExpandFileName(aFileName);
+  if not wbIsModule(FileName, GameDefObj.GameExeName) then
+    raise Exception.CreateFmt('Expected a module, found "%s"', [FileName]);
   if Assigned(FileByName(FileName)) then
     raise Exception.Create(FileName + ' exists already')
   else begin
