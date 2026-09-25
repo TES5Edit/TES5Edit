@@ -24406,9 +24406,8 @@ begin
   Result := FileByName(FileName);
   if not Assigned(Result) then begin
     if not wbIsModule(FileName, GameDefObj.GameExeName) then
-      Result := TwbFileSource.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData)
-    else
-      Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+      raise Exception.CreateFmt('Expected a module, found "%s"', [FileName]);
+    Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
   end;
 end;
 

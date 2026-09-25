@@ -1035,6 +1035,13 @@ begin
         WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolMode: '+HostToolName);
         Exit;
       end;
+      if (HostToolMode in [tmDump]) and not DumpSaves and not FindCmdLineSwitch('Plugins') and not t.Contains('plugins') then begin
+        var lInputFile := ParamStr(ParamCount);
+        if (lInputFile <> '') and not CharInSet(lInputFile[1], SwitchChars) and not wbIsModule(lInputFile, HostContext.GameDefObj.GameExeName) then begin
+          DumpSaves := True;
+          DumpSourceName := 'Saves';
+        end;
+      end;
       if DumpSaves and not HostContext.GameDefObj.HasSaveDef then begin
         WriteLn(ErrOutput, 'Application '+HostContext.GameDefObj.GameName+' does not currently support ToolSource: '+DumpSourceName);
         Exit;
