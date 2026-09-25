@@ -24404,12 +24404,11 @@ begin
   else
     FileName := ExpandFileName(aFileName);}
 
+  if not wbIsModule(FileName, GameDefObj.GameExeName) then
+    raise Exception.CreateFmt('Expected a module, found "%s"', [FileName]);
   Result := FileByName(FileName);
-  if not Assigned(Result) then begin
-    if not wbIsModule(FileName, GameDefObj.GameExeName) then
-      raise Exception.CreateFmt('Expected a module, found "%s"', [FileName]);
+  if not Assigned(Result) then
     Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
-  end;
 end;
 
 function TwbLoadingGameContext.MastersForFile(const aFileName    : string;
