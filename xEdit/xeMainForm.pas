@@ -763,6 +763,7 @@ type
     function IsViewNodeFiltered(aNode: PVirtualNode): Boolean;
     procedure ApplyViewFilter;
     procedure SetSaveInterval;
+    procedure ApplySpreadsheetColor;
 
     procedure ExpandButtons;
     procedure ShrinkButtons;
@@ -6183,6 +6184,7 @@ begin
     if Assigned(Settings) then begin
       TStyleManager.TrySetStyle(Settings.ReadString('UI', 'Theme', TStyleManager.ActiveStyle.Name), False);
       Vcl.Graphics.PaletteChanged;
+      ApplySpreadsheetColor;
     end;
   except end;
 
@@ -13993,8 +13995,10 @@ begin
     if ShowModal <> mrOK then
       Exit;
 
-    if wbThemesSupported then
+    if wbThemesSupported then begin
       TStyleManager.TrySetStyle(GetSelectedTheme, False);
+      ApplySpreadsheetColor;
+    end;
 
     vstNav.Font := pnlFontRecords.Font;
     vstView.Font := pnlFontRecords.Font;
@@ -16045,6 +16049,19 @@ begin
       SetDoubleBuffered(TWinControl(aWinControl.Controls[i]))
     else
       Exit;
+end;
+
+procedure TfrmMain.ApplySpreadsheetColor;
+var
+  lColor: TColor;
+begin
+  if TStyleManager.IsCustomStyleActive then
+    lColor := clWindow
+  else
+    lColor := clInfoBk;
+  vstSpreadSheetWeapon.Color := lColor;
+  vstSpreadsheetArmor.Color := lColor;
+  vstSpreadSheetAmmo.Color := lColor;
 end;
 
 procedure TfrmMain.SetSaveInterval;
