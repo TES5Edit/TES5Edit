@@ -10154,8 +10154,8 @@ begin
         cbObjectsLOD.Checked := False;
         cbObjectsLOD.Enabled := False;
         Application.MessageBox(
-          'Objects LOD generation for Skyrim Special Edition and Skyrim VR is possible only in xLODGen mode either ' +
-          'by renaming executable to SSELODGen.exe or running with -lodgen command line parameter.',
+          PChar('Objects LOD generation for ' + lGameDef.Identity.GameName2 + ' is possible only in xLODGen mode either ' +
+          'by renaming executable to ' + lGameDef.AppName + 'LODGen.exe or running with -lodgen command line parameter.'),
           'Warning',
           MB_ICONINFORMATION + MB_OK
         );
