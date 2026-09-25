@@ -1001,7 +1001,7 @@ begin
         lDefineOptions.SimpleRecords := True;
 
       case HostGameMode of
-        gmFNV, gmFO3, gmTES4, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: ;
+        gmFNV, gmFO3, gmTES4, gmTES4R, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE: ;
         gmTES3: begin
           lSettings.LoadBSAs := False;
           tms := [tmDump];
@@ -1011,7 +1011,7 @@ begin
       else begin
         s := '';
         for gm := Low(TwbGameMode) to High(TwbGameMode) do
-          if gm in [gmFNV, gmFO3, gmTES3, gmTES4, gmTES5, gmEnderal, gmTES5VR, gmFO4, gmFO4VR, gmSSE, gmEnderalSE, gmFO76, gmSF1] then begin
+          if gm in [gmFNV, gmFO3, gmTES3, gmTES4, gmTES4R, gmTES5, gmEnderal, gmTES5VR, gmFO4, gmFO4VR, gmSSE, gmEnderalSE, gmFO76, gmSF1] then begin
             if s <> '' then
               s := s + ', ';
             s := s + Copy(GetEnumName(TypeInfo(TwbGameMode), Ord(gm)), 3);
