@@ -1819,6 +1819,7 @@ type
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
     function IsElementEditable(const aElement: IwbElement): Boolean; override;
     function GetIsEditable: Boolean; override;
+    function GetIsRemovable: Boolean; override;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
   end;
@@ -25944,6 +25945,11 @@ end;
 function TwbRecordHeaderStruct.GetIsEditable: Boolean;
 begin
   Result := wbIsInternalEdit;
+end;
+
+function TwbRecordHeaderStruct.GetIsRemovable: Boolean;
+begin
+  Result := False;
 end;
 
 function TwbRecordHeaderStruct.IsElementEditable(const aElement: IwbElement): Boolean;
