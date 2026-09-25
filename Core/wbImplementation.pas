@@ -26528,6 +26528,16 @@ begin
 
   var lSaveDef := flSaveDef;
 
+  var lMagic := AnsiString(lSaveDef.FileMagic);
+  var lFoundLength := NativeUInt(flEndPtr) - NativeUInt(flView);
+  if lFoundLength > NativeUInt(Length(lMagic)) then
+    lFoundLength := Length(lMagic);
+  var lFoundMagic: AnsiString;
+  SetString(lFoundMagic, PAnsiChar(flView), Integer(lFoundLength));
+  if lFoundMagic <> lMagic then
+    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"',
+      [lSaveDef.FileMagic, String(lFoundMagic), flFileName]);
+
   flLoadOrderFileID := TwbFileID.CreateFull($FF);
 
   flBaseOffset := NativeUInt(flView);
@@ -26537,10 +26547,6 @@ begin
 
   if (GetElementCount <> 1) or not Supports(GetElement(0), IwbFileHeader, Header) then
     raise Exception.CreateFmt('Unexpected error reading file "%s"', [flFileName]);
-
-  if Header.FileMagic <> lSaveDef.FileMagic then
-    raise Exception.CreateFmt('Expected header Magic %s, found %s in file "%s"',
-      [lSaveDef.FileMagic, String(Header.FileMagic), flFileName]);
 
   if fsOnlyHeader in flStates then
     Exit;
