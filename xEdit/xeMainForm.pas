@@ -13964,7 +13964,6 @@ begin
     cbWriteOffsetData.Checked := xeContext.Settings.WriteOffsetData;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
-    cbShowFlagEnumValue.Checked := wbShowFlagEnumValue;
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
     cbShowFileFlags.Checked := wbShowFileFlags;
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
@@ -14027,7 +14026,6 @@ begin
     xeContext.Settings.WriteOffsetData := cbWriteOffsetData.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
-    wbShowFlagEnumValue := cbShowFlagEnumValue.Checked;
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
     wbShowFileFlags := cbShowFileFlags.Checked;
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
@@ -14085,7 +14083,6 @@ begin
     Settings.WriteBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
-    Settings.WriteBool('Options', 'ShowFlagEnumValue', wbShowFlagEnumValue);
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
     Settings.WriteBool('Options', 'ShowFileFlags', wbShowFileFlags);
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
@@ -20293,7 +20290,7 @@ begin
         lHeader.Add('#   wbHideLargeSubrecords = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.HideLargeSubrecords, True));
         lHeader.Add('#   wbHideNeverShow      = ' + BoolToStr(wbHideNeverShow, True));
         lHeader.Add('#   wbHideUnused         = ' + BoolToStr(wbHideUnused, True));
-        lHeader.Add('#   wbShowFlagEnumValue  = ' + BoolToStr(wbShowFlagEnumValue, True));
+        lHeader.Add('#   wbShowFlagEnumValue  = False');
         lHeader.Add('#   wbSimpleRecords      = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.SimpleRecords, True));
         lHeader.Add('#   wbSortFLST           = ' + BoolToStr(wbSortFLST, True));
         lHeader.Add('#   wbSortINFO           = ' + BoolToStr(xeContext.Settings.SortINFO, True));

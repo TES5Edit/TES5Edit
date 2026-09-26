@@ -577,24 +577,11 @@ object frmOptions: TfrmOptions
       ImageIndex = 4
       object cbClampFormID: TCheckBox
         Left = 16
-        Top = 101
+        Top = 80
         Width = 439
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
         Caption = 'Clamp FormIDs'
-        TabOrder = 4
-      end
-      object cbShowFlagEnumValue: TCheckBox
-        Left = 16
-        Top = 80
-        Width = 439
-        Height = 17
-        Hint = 
-          'Add integer values of flags and enumerations in () brackets at t' +
-          'he end'
-        Caption = 
-          'Show values of flags and enumerations (requires restart, interfe' +
-          'res with scripts)'
         TabOrder = 3
       end
       object cbSortINFO: TCheckBox
@@ -629,33 +616,33 @@ object frmOptions: TfrmOptions
       end
       object cbManualCleaningAllow: TCheckBox
         Left = 16
-        Top = 124
+        Top = 103
         Width = 439
         Height = 17
         Caption = 'Allow Manual Cleaning functions'
-        TabOrder = 5
+        TabOrder = 4
       end
       object cbDecodeTexture: TCheckBox
         Left = 16
-        Top = 170
+        Top = 149
         Width = 233
         Height = 24
         Caption = 'Decode Texture Hashes (requires restart)'
-        TabOrder = 6
+        TabOrder = 5
       end
       object cbConvertIntFormID: TCheckBox
         Left = 16
-        Top = 194
+        Top = 173
         Width = 438
         Height = 24
         Caption = 
           'Allow use of integer FormIDs (requires '#39'0x'#39' prefix on hex FormID' +
           's)'
-        TabOrder = 7
+        TabOrder = 6
       end
       object cbWriteOffsetData: TCheckBox
         Left = 16
-        Top = 218
+        Top = 197
         Width = 438
         Height = 24
         Hint = 
@@ -663,7 +650,7 @@ object frmOptions: TfrmOptions
           'saving. A worldspace that can not be described exactly is written ' +
           'without a table rather than with an approximate one.'
         Caption = 'Write worldspace cell offsets (OFST) on save'
-        TabOrder = 8
+        TabOrder = 7
       end
     end
   end

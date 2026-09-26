@@ -60,7 +60,6 @@ type
     cbShowUnsavedHint: TCheckBox;
     cbTrackAllEditorID: TCheckBox;
     cbSortINFO: TCheckBox;
-    cbShowFlagEnumValue: TCheckBox;
     pnlFontRecords: TPanel;
     pnlFontMessages: TPanel;
     pnlFontViewer: TPanel;

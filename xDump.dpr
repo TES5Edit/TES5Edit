@@ -1100,9 +1100,6 @@ begin
         DumpHidden := True;
       end;
 
-      if wbReportMode then
-        wbShowFlagEnumValue := True;
-
      var SourceName := DumpSourceName;
      if SourceName = 'Plugins' then
        SourceName := '';
