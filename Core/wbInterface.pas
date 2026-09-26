@@ -3654,6 +3654,8 @@ type
     gdArchiveExtension    : string;
     gdHardcodedRangeAdmitted   : Boolean;
     gdHardcodedRangeMinVersion : Double;
+    gdLightFlag                : Cardinal;
+    gdLightFlags               : Cardinal;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
 
@@ -3854,6 +3856,10 @@ type
       read gdHardcodedRangeAdmitted;
     property HardcodedRangeMinVersion: Double
       read gdHardcodedRangeMinVersion;
+    property LightFlag: Cardinal
+      read gdLightFlag;
+    property LightFlags: Cardinal
+      read gdLightFlags;
 
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean; overload;
     function FindRecordDef(const aSignature: AnsiString; out aRecordDef: PwbMainRecordDef): Boolean; overload;
@@ -6288,6 +6294,8 @@ begin
   gdSaveDefsLock := TObject.Create;
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
+  gdLightFlag := $00000200;
+  gdLightFlags := $00000200;
   gdCellSizeFactor := 4096.0;
   gdHeaderSignature := 'TES4';
   gdIgnoreRecords := TStringList.Create;
@@ -22820,12 +22828,8 @@ end;
 
 function TwbMainRecordStructFlags.IsLight(aGameDef: TwbGameDef): Boolean;
 begin
-  if aGameDef.IsStarfield then
-    Result := (gcLightPlugins in aGameDef.Capabilities) and
-      ((_Flags and $00000100) <> 0)
-  else
-    Result := (gcLightPlugins in aGameDef.Capabilities) and
-      ((_Flags and $00000200) <> 0);
+  Result := (gcLightPlugins in aGameDef.Capabilities) and
+    ((_Flags and aGameDef.LightFlags) <> 0);
 end;
 
 function TwbMainRecordStructFlags.IsUpdate(aGameDef: TwbGameDef): Boolean;
@@ -22907,18 +22911,14 @@ end;
 procedure TwbMainRecordStructFlags.SetLight(aGameDef: TwbGameDef; aValue: Boolean);
 begin
   if gcLightPlugins in aGameDef.Capabilities then
-    if aGameDef.IsStarfield then begin
-      if aValue then begin
-        _Flags := _Flags or $00000100;
+    if aValue then begin
+      _Flags := _Flags or aGameDef.LightFlag;
+      if aGameDef.IsStarfield then begin
         SetMedium(aGameDef, False);
         SetUpdate(aGameDef, False);
-      end else
-        _Flags := _Flags and not $00000100;
+      end;
     end else
-      if aValue then
-        _Flags := _Flags or $00000200
-      else
-        _Flags := _Flags and not $00000200;
+      _Flags := _Flags and not aGameDef.LightFlags;
 end;
 
 procedure TwbMainRecordStructFlags.SetUpdate(aGameDef: TwbGameDef; aValue: Boolean);
