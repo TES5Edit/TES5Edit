@@ -3447,8 +3447,8 @@ begin
   var lGameDef := flContextObj.GameDefObj;
   Assert(not (aIsLight and aIsMedium));
 
-  Assert((not aIsLight) or lGameDef.IsLightSupported);
-  Assert((not aIsMedium) or lGameDef.IsMediumSupported);
+  Assert((not aIsLight) or lGameDef.IsLightSupported or flContextObj.Settings.PseudoLight);
+  Assert((not aIsMedium) or lGameDef.IsMediumSupported or flContextObj.Settings.PseudoMedium);
 
   flLoadOrderFileID := TwbFileID.Invalid;
   Include(flStates, fsIsNew);
@@ -3472,11 +3472,15 @@ begin
   if aIsLight then begin
     Header.IsLight := True;
     Include(flModule.miFlags, mfHasLightFlag);
+    if flContextObj.Settings.PseudoLight then
+      Include(flStates, fsPseudoLight);
   end;
 
   if aIsMedium then begin
     Header.IsMedium := True;
     Include(flModule.miFlags, mfHasMediumFlag);
+    if flContextObj.Settings.PseudoMedium then
+      Include(flStates, fsPseudoMedium);
   end;
 
   flLoadFinished := True;
@@ -3485,9 +3489,9 @@ begin
 
   if flLoadOrder >= 0 then begin
     if lGameDef.IsLightSupported or flContextObj.Settings.PseudoLight or lGameDef.IsMediumSupported or flContextObj.Settings.PseudoMedium or flContextObj.Settings.PseudoUpdate then begin
-      if Header.IsLight and not flContextObj.Settings.IgnoreLight then
+      if (fsPseudoLight in flStates) or (Header.IsLight and not flContextObj.Settings.IgnoreLight) then
         flLoadOrderFileID := TwbFileID.CreateLight(flContextObj.AllocateLightSlot, flContextObj.SlotLayout)
-      else if Header.IsMedium and not flContextObj.Settings.IgnoreMedium then
+      else if (fsPseudoMedium in flStates) or (Header.IsMedium and not flContextObj.Settings.IgnoreMedium) then
         flLoadOrderFileID := TwbFileID.CreateMedium(flContextObj.AllocateMediumSlot, flContextObj.SlotLayout)
       else begin
         if (lGameDef.IsUpdateSupported or flContextObj.Settings.PseudoUpdate) and Header.IsUpdate and not flContextObj.Settings.IgnoreUpdate then
