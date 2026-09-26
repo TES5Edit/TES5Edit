@@ -30,6 +30,8 @@ var
 
 type
   TwbLoadingGameContext = class(TwbGameContext)
+  private
+    lgcLoading: TArray<string>;
   public
     procedure DetachFilesFromModules; override;
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; override;
@@ -24477,8 +24479,17 @@ begin
   if not wbIsModule(FileName, GameDefObj.GameExeName) then
     raise Exception.CreateFmt('Expected a module, found "%s"', [FileName]);
   Result := FileByName(FileName);
-  if not Assigned(Result) then
-    Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+  if not Assigned(Result) then begin
+    for var lLoading in lgcLoading do
+      if SameText(lLoading, FileName) then
+        raise Exception.CreateFmt('"%s" is its own master, directly or through its masters', [ExtractFileName(FileName)]);
+    lgcLoading := lgcLoading + [FileName];
+    try
+      Result := TwbFile.Create(Self, FileName, aLoadOrder, aCompareTo, aStates + [fsAddToMap], aData);
+    finally
+      Delete(lgcLoading, High(lgcLoading), 1);
+    end;
+  end;
 end;
 
 function TwbLoadingGameContext.MastersForFile(const aFileName    : string;
