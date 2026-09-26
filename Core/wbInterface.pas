@@ -3865,6 +3865,7 @@ type
       read gdLightFlags;
     property EslExtensionSupported: Boolean
       read gdEslExtensionSupported;
+    function NewLightFileExtension: string;
 
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean; overload;
     function FindRecordDef(const aSignature: AnsiString; out aRecordDef: PwbMainRecordDef): Boolean; overload;
@@ -6253,7 +6254,7 @@ begin
     gdIdentity.GameMasterEsm := 'Nehrim.esm';
   end;
   gdHardcodedRangeAdmitted := aInputs.HardcodedRange;
-  gdEslExtensionSupported := aInputs.EslExtension or (gcLightPlugins in gdCapabilities);
+  gdEslExtensionSupported := aInputs.EslExtension or (gcLightPlugins in ComputeCapabilities(aGameMode, Default(TwbGameDefInputs)));
 end;
 
 constructor TwbSaveDef.Create(aGameDef: TwbGameDef);
@@ -6270,6 +6271,14 @@ end;
 class function TwbGameDefInputs.Detect(aGameMode: TwbGameMode; const aDataPath: string): TwbGameDefInputs;
 
   function TomlBool(const aFileName, aSection, aKey: string; aDefault: Boolean): Boolean;
+
+    function Unquoted(const s: string): string;
+    begin
+      Result := Trim(s);
+      if (Length(Result) >= 2) and CharInSet(Result[1], ['"', '''']) and (Result[Length(Result)] = Result[1]) then
+        Result := Copy(Result, 2, Length(Result) - 2);
+    end;
+
   begin
     Result := aDefault;
     if not FileExists(aFileName) then
@@ -6289,10 +6298,10 @@ class function TwbGameDefInputs.Detect(aGameMode: TwbGameMode; const aDataPath: 
           Delete(s, p, MaxInt);
         s := Trim(s);
         if s.StartsWith('[') and s.EndsWith(']') then
-          lSection := Trim(Copy(s, 2, Length(s) - 2))
+          lSection := Unquoted(Copy(s, 2, Length(s) - 2))
         else if lSection = aSection then begin
           p := Pos('=', s);
-          if (p > 0) and (Trim(Copy(s, 1, p - 1)) = aKey) then begin
+          if (p > 0) and (Unquoted(Copy(s, 1, p - 1)) = aKey) then begin
             var lValue := Trim(Copy(s, p + 1, MaxInt));
             if lValue = 'true' then
               Result := True
@@ -6321,6 +6330,7 @@ begin
     gmTES5VR: begin
       Result.LightSupport := FileExists(aDataPath + 'SKSE\Plugins\skyrimvresl.dll');
       Result.UpdateSupport := Result.LightSupport;
+      Result.EslExtension := Result.LightSupport;
       Result.CS := FileExists(aDataPath + 'SKSE\Plugins\CommunityShaders.dll');
     end;
     gmFO4VR: begin
@@ -6331,7 +6341,7 @@ begin
         (lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'SmallFileLoader', False));
       Result.UpdateSupport := lVRESL;
       Result.HardcodedRange := lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'ExtendedFormRange', True);
-      Result.EslExtension := lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'EslExtensionSupport', True);
+      Result.EslExtension := lVRESL or (lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'EslExtensionSupport', True));
     end;
   end;
 end;
@@ -6722,6 +6732,14 @@ end;
 function TwbGameDef.GetIsLightSupported: Boolean;
 begin
   Result := gcLightPlugins in gdCapabilities;
+end;
+
+function TwbGameDef.NewLightFileExtension: string;
+begin
+  if gdEslExtensionSupported then
+    Result := csDotEsl
+  else
+    Result := csDotEsp;
 end;
 
 function TwbGameDef.GetIsMediumSupported: Boolean;

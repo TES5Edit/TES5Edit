@@ -2092,7 +2092,7 @@ begin
       Exit;
 
     if aIsLight then
-      s := s + '.esl'
+      s := s + xeContext.GameDefObj.NewLightFileExtension
     else
       s := s + '.esp';
 

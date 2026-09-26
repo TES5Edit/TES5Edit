@@ -474,7 +474,7 @@ begin
   end;
 
   if not lGameDef.IsStarfield then begin
-    if lGameDef.IsLightSupported then begin
+    if lGameDef.IsLightSupported and lGameDef.EslExtensionSupported then begin
       with AddNewModule('<new file>.esl', True)^ do begin
         Include(miFlags, mfHasESMFlag);
         Include(miFlags, mfHasLightFlag);
