@@ -1547,7 +1547,8 @@ begin
   RegisterRecordDef(TES4, 'Main File Header',
     wbFlags(wbFlagsList([
       0, 'ESM',
-      4, 'Optimized'
+      4, 'Optimized',
+      9, wb<string>.Iff(gcLightPlugins in Capabilities, 'ESL', '')
     ])), [
     wbHEDR,
     IfThen(DefineOptions.SimpleRecords,

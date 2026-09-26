@@ -6258,9 +6258,11 @@ class function TwbGameDefInputs.Detect(aGameMode: TwbGameMode; const aDataPath: 
 begin
   Result := Default(TwbGameDefInputs);
   case aGameMode of
-    gmTES4:
+    gmTES4: begin
       if (not FileExists(aDataPath + 'Oblivion.esm')) and FileExists(aDataPath + 'Nehrim.esm') then
         Result.Nehrim      := True;
+      Result.LightSupport := FileExists(aDataPath + 'OBSE\Plugins\OblivionESL.dll');
+    end;
     gmFNV:
       Result.HNVSE := FileExists(aDataPath + 'NVSE\Plugins\Hnvse.dll');
     gmSSE, gmEnderalSE:
