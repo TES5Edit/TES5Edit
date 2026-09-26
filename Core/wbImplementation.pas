@@ -4312,6 +4312,10 @@ end;
 
 procedure TwbFile.DetachModule;
 begin
+  if Assigned(flModule) and (flModule.miFile = Self) then begin
+    Exclude(flModule.miFlags, mfHasFile);
+    flModule.miFile := nil;
+  end;
   flModule := nil;
 end;
 
