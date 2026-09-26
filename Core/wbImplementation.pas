@@ -696,6 +696,7 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    procedure ReleaseRecords;
     procedure ForceClosed;
     function ContextObj: TwbGameContext;
     function SaveContextObj: TwbSaveContext;
@@ -959,6 +960,7 @@ type
     procedure RemoveMainRecord(const aRecord: IwbMainRecord);
     procedure InjectMainRecord(const aRecord: IwbMainRecord);
     procedure RemoveInjectedMainRecord(const aRecord: IwbMainRecord);
+    procedure ReleaseRecords;
     procedure ForceClosed;
     procedure GetMasters(aMasters: TStrings); virtual;
     procedure IncGeneration;
@@ -4045,7 +4047,7 @@ begin
     IncGeneration;
 end;
 
-procedure TwbFile.ForceClosed;
+procedure TwbFile.ReleaseRecords;
 var
   i       : Integer;
   lRecord : IwbMainRecordInternal;
@@ -4062,7 +4064,11 @@ begin
     lRecord := flInjectedRecords[i] as IwbMainRecordInternal;
     lRecord.ClearForRelease;
   end;
-  lRecord := nil;
+end;
+
+procedure TwbFile.ForceClosed;
+begin
+  ReleaseRecords;
   flMasters                := nil;
   flRecords                := nil;
   flInjectedRecords        := nil;
@@ -24288,6 +24294,10 @@ end;
 
 procedure TwbLoadingGameContext.ForceClosedFiles;
 begin
+  for var lFile in Files do
+    (lFile as IwbFileInternal).ReleaseRecords;
+  for var lFile in SaveContextFiles do
+    (lFile as IwbFileInternal).ReleaseRecords;
   for var lFile in Files do begin
     (lFile as IwbFileInternal).ForceClosed;
     wbProgressCallback;
