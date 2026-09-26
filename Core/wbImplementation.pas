@@ -580,6 +580,7 @@ type
     function ResetLeafFirst: Boolean; override;
     function ResetChildrenLeafFirst: Boolean; virtual;
     procedure DoInit(aNeedSorted: Boolean); virtual;
+    procedure DoPendingFill; virtual;
 
     function HasErrors: Boolean; override;
     function ContentIsAllZero: Boolean; override;
@@ -1300,8 +1301,11 @@ type
     procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
     procedure SetParentModified; override;
     procedure SetModified(aValue: Boolean); override;
+    procedure DoPendingFill; override;
 
     function DoBuildRef(aRemove: Boolean): Boolean;
+    function NeedsOrderFill: Boolean;
+    procedure FillOrderBySort;
     procedure BuildRef; override;
     procedure AddReferencedFromID(const aFormID: TwbFormID); override;
     procedure ResetConflict; override;
@@ -7341,8 +7345,11 @@ var
 begin
   if esDestroying in eStates then
     Exit;
-  if csInit in cntStates then
+  if csInit in cntStates then begin
+    if csFillPending in cntStates then
+      DoPendingFill;
     Exit;
+  end;
   if [csInitializing, csReseting] * cntStates <> [] then
     Exit;
   Exclude(cntStates, csSortedBySortOrder);
@@ -7434,7 +7441,7 @@ begin
       lock dec dword ptr [eax + cntElementRefs]
     end;
     {$ENDIF WIN32}
-    Exclude(cntStates, csInit);
+    cntStates := cntStates - [csInit, csFillPending];
   end;
 end;
 
@@ -8560,6 +8567,10 @@ begin
   { can be overriden }
 end;
 
+procedure TwbContainer.DoPendingFill;
+begin
+end;
+
 function TwbContainer.ResetChildrenLeafFirst: Boolean;
 var
   i       : Integer;
@@ -9644,8 +9655,10 @@ begin
   else begin
     UseKAC;
     if _FileRefsBuilding and not (esModified in eStates) then
-      if ResetChildrenLeafFirst then
+      if ResetChildrenLeafFirst then begin
+        Exclude(cntStates, csFillPending);
         Reset;
+      end;
   end;
 
   if wbHasProgressCallback then
@@ -10515,7 +10528,6 @@ var
   Dummy                : Integer;
   LastElementForMember : array of IwbElement;
   GroupRecord          : IwbGroupRecord;
-  GroupRecordInternal  : IwbGroupRecordInternal;
   RequiredRecords      : set of byte;
   PresentRecords       : set of byte;
   i                    : Integer;
@@ -10844,19 +10856,57 @@ begin
 
   Include(cntStates, csInitOnce);
 
-  if {$IFDEF USE_PARALLEL_BUILD_REFS}not lContext.BuildingRefsParallel and{$ENDIF} (gcCanSortINFO in lCapabilities) and lContext.Settings.SortINFO then
-    if not (GetIsDeleted or GetIsPartialForm) and ContextObj.BeginInternalEdit(False) then try
-      if lContext.Settings.FillPNAM and (GetSignature = 'INFO') and not Assigned(GetRecordBySignature('PNAM')) then begin
-        if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
-          GroupRecordInternal.Sort(True);
-      end else if GetSignature = 'DIAL' then
-        if (lContext.Settings.FillINOM and not Assigned(GetRecordBySignature('INOM'))) or (lContext.Settings.FillINOA and not Assigned(GetRecordBySignature('INOA'))) then begin
-          if Supports(GetChildGroup, IwbGroupRecordInternal, GroupRecordInternal) then
-            GroupRecordInternal.Sort(True);
-        end;
-    finally
-      wbEndInternalEdit;
-    end;
+  if (gcCanSortINFO in lCapabilities) and lContext.Settings.SortINFO then
+    {$IFDEF USE_PARALLEL_BUILD_REFS}
+    if lContext.BuildingRefsParallel then begin
+      var lSignature := GetSignature;
+      if (lSignature = 'INFO') or (lSignature = 'DIAL') then
+        Include(cntStates, csFillPending);
+    end else
+    {$ENDIF}
+      FillOrderBySort;
+end;
+
+procedure TwbMainRecord.DoPendingFill;
+begin
+  if ContextObj.BuildingRefsParallel then
+    Exit;
+  Exclude(cntStates, csFillPending);
+  FillOrderBySort;
+end;
+
+function TwbMainRecord.NeedsOrderFill: Boolean;
+begin
+  var lSignature := GetSignature;
+  if (lSignature <> 'INFO') and (lSignature <> 'DIAL') then
+    Exit(False);
+  if GetIsDeleted or GetIsPartialForm then
+    Exit(False);
+  var lContext := ContextObj;
+  if lSignature = 'INFO' then
+    Result := lContext.Settings.FillPNAM and not Assigned(GetRecordBySignature('PNAM'))
+  else
+    Result := (lContext.Settings.FillINOM and not Assigned(GetRecordBySignature('INOM'))) or (lContext.Settings.FillINOA and not Assigned(GetRecordBySignature('INOA')));
+end;
+
+procedure TwbMainRecord.FillOrderBySort;
+var
+  GroupRecordInternal : IwbGroupRecordInternal;
+begin
+  if not NeedsOrderFill then
+    Exit;
+  if not ContextObj.BeginInternalEdit(False) then
+    Exit;
+  try
+    if GetSignature = 'INFO' then begin
+      if Supports(IwbContainer(eContainer), IwbGroupRecordInternal, GroupRecordInternal) then
+        GroupRecordInternal.Sort(True);
+    end else
+      if Supports(GetChildGroup, IwbGroupRecordInternal, GroupRecordInternal) then
+        GroupRecordInternal.Sort(True);
+  finally
+    wbEndInternalEdit;
+  end;
 end;
 
 function TwbMainRecord.FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
