@@ -177,7 +177,7 @@ begin
           miExtension := meESP
         else if miName.EndsWith(csDotEsu, True) then
           miExtension := meESU
-        else if miName.EndsWith(csDotEsl, True) and lGameDef.IsLightSupported then
+        else if miName.EndsWith(csDotEsl, True) and lGameDef.EslExtensionSupported then
           miExtension := meESL;
         if miExtension = meUnknown then
           Continue;
@@ -213,7 +213,7 @@ begin
           if {(Length(miMasterNames) < 1) or} IsLight or IsMedium then
             IsUpdate := False;
         end else
-          if miExtension in [meESL] then
+          if (miExtension in [meESL]) and lGameDef.IsLightSupported then
             Include(miFlags, mfHasLightFlag);
 
         if IsUpdate then

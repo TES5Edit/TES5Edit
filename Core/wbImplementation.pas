@@ -2759,7 +2759,7 @@ begin;
         t := ExtractFileExt(s);
         if SameText(t, '.esp') and (not flContextObj.Settings.AllowESPMasters) then
           raise Exception.CreateFmt('[AddMasters] You cannot add a .esp as a master in %s.', [flContextObj.GameDefObj.GameName]);
-        if SameText(t, '.esm') or SameText(t, '.esp') or (flContextObj.GameDefObj.IsLightSupported and SameText(t, '.esl')) then
+        if SameText(t, '.esm') or SameText(t, '.esp') or (flContextObj.GameDefObj.EslExtensionSupported and SameText(t, '.esl')) then
           lMasters.Add(s);
       end;
 

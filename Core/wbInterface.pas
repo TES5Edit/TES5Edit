@@ -602,6 +602,8 @@ type
     CS                 : Boolean;
     HNVSE              : Boolean;
     Nehrim             : Boolean;
+    HardcodedRange     : Boolean;
+    EslExtension       : Boolean;
 
     class function Detect(aGameMode: TwbGameMode; const aDataPath: string): TwbGameDefInputs; static;
   end;
@@ -3656,6 +3658,7 @@ type
     gdHardcodedRangeMinVersion : Double;
     gdLightFlag                : Cardinal;
     gdLightFlags               : Cardinal;
+    gdEslExtensionSupported    : Boolean;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
 
@@ -3860,6 +3863,8 @@ type
       read gdLightFlag;
     property LightFlags: Cardinal
       read gdLightFlags;
+    property EslExtensionSupported: Boolean
+      read gdEslExtensionSupported;
 
     function FindRecordDef(const aSignature: TwbSignature; out aRecordDef: PwbMainRecordDef): Boolean; overload;
     function FindRecordDef(const aSignature: AnsiString; out aRecordDef: PwbMainRecordDef): Boolean; overload;
@@ -6247,6 +6252,8 @@ begin
     gdIdentity.AppName := 'Nehrim';
     gdIdentity.GameMasterEsm := 'Nehrim.esm';
   end;
+  gdHardcodedRangeAdmitted := aInputs.HardcodedRange;
+  gdEslExtensionSupported := aInputs.EslExtension or (gcLightPlugins in gdCapabilities);
 end;
 
 constructor TwbSaveDef.Create(aGameDef: TwbGameDef);
@@ -6261,6 +6268,44 @@ begin
 end;
 
 class function TwbGameDefInputs.Detect(aGameMode: TwbGameMode; const aDataPath: string): TwbGameDefInputs;
+
+  function TomlBool(const aFileName, aSection, aKey: string; aDefault: Boolean): Boolean;
+  begin
+    Result := aDefault;
+    if not FileExists(aFileName) then
+      Exit;
+    var lLines := TStringList.Create;
+    try
+      try
+        lLines.LoadFromFile(aFileName);
+      except
+        Exit;
+      end;
+      var lSection := '';
+      for var lLine in lLines do begin
+        var s := lLine;
+        var p := Pos('#', s);
+        if p > 0 then
+          Delete(s, p, MaxInt);
+        s := Trim(s);
+        if s.StartsWith('[') and s.EndsWith(']') then
+          lSection := Trim(Copy(s, 2, Length(s) - 2))
+        else if lSection = aSection then begin
+          p := Pos('=', s);
+          if (p > 0) and (Trim(Copy(s, 1, p - 1)) = aKey) then begin
+            var lValue := Trim(Copy(s, p + 1, MaxInt));
+            if lValue = 'true' then
+              Result := True
+            else if lValue = 'false' then
+              Result := False;
+          end;
+        end;
+      end;
+    finally
+      lLines.Free;
+    end;
+  end;
+
 begin
   Result := Default(TwbGameDefInputs);
   case aGameMode of
@@ -6279,9 +6324,14 @@ begin
       Result.CS := FileExists(aDataPath + 'SKSE\Plugins\CommunityShaders.dll');
     end;
     gmFO4VR: begin
-      Result.LightSupport := FileExists(aDataPath + 'F4SE\Plugins\falloutvresl.dll') or
-                             FileExists(aDataPath + 'F4SE\Plugins\Daytripper4.dll');
-      Result.UpdateSupport := Result.LightSupport;
+      var lVRESL := FileExists(aDataPath + 'F4SE\Plugins\falloutvresl.dll');
+      var lDaytripper4 := FileExists(aDataPath + 'F4SE\Plugins\Daytripper4.dll');
+      var lDaytripper4Toml := aDataPath + 'F4SE\Plugins\Daytripper4.toml';
+      Result.LightSupport := lVRESL or
+        (lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'SmallFileLoader', False));
+      Result.UpdateSupport := lVRESL;
+      Result.HardcodedRange := lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'ExtendedFormRange', True);
+      Result.EslExtension := lDaytripper4 and TomlBool(lDaytripper4Toml, 'Patches', 'EslExtensionSupport', True);
     end;
   end;
 end;
@@ -26379,7 +26429,7 @@ begin
       miExtension := meESP
     else if miName.EndsWith(csDotEsu, True) then
       miExtension := meESU
-    else if miName.EndsWith(csDotEsl, True) and mlContext.GameDefObj.IsLightSupported then
+    else if miName.EndsWith(csDotEsl, True) and mlContext.GameDefObj.EslExtensionSupported then
       miExtension := meESL;
 
     if miExtension in [meESM, meESL] then
