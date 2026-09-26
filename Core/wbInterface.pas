@@ -22963,10 +22963,8 @@ begin
   if gcLightPlugins in aGameDef.Capabilities then
     if aValue then begin
       _Flags := _Flags or aGameDef.LightFlag;
-      if aGameDef.IsStarfield then begin
-        SetMedium(aGameDef, False);
-        SetUpdate(aGameDef, False);
-      end;
+      SetMedium(aGameDef, False);
+      SetUpdate(aGameDef, False);
     end else
       _Flags := _Flags and not aGameDef.LightFlags;
 end;
