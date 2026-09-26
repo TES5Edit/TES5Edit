@@ -146,8 +146,6 @@ var
   wdMakeUnknownElementsUnique        : Boolean    = False;
   wbResolveAlias                    : Boolean    = True;
   wbActorTemplateHide                : Boolean    = True;
-  wbAlignArrayElements               : Boolean    = True;
-  wbAlignArrayLimit                  : Integer    = 5000;
   wbCopyIsRunning                    : Integer    = 0;
   wbHasAddedOptimizedSupport         : Boolean    = False;
   wbEditInfoUseShortName             : Boolean    = False;
@@ -2340,19 +2338,6 @@ type
 
   TwbConflictMessageProc = reference to procedure(const aMessage: string);
   TwbConflictElementProc = reference to procedure(aColumn: Integer; const aElement: IwbElement);
-
-  TwbConflictConfig = record
-    TranslationMode    : Boolean;
-    AlignArrayElements : Boolean;
-    AlignArrayLimit    : Integer;
-    class function ForContext(aContext: TwbGameContext): TwbConflictConfig; static;
-  end;
-
-  TwbConflictPolicy = record
-    QuickShowConflicts : Boolean;
-    OnlyMasterAndLeafs : Boolean;
-    ModGroupsEnabled   : Boolean;
-  end;
 
   PwbConflictNodeData = ^TwbConflictNodeData;
   TwbConflictNodeData = record
@@ -5715,13 +5700,6 @@ uses
   wbHalfFloat,
   wbSort,
   wbSteamVDFParser;
-
-class function TwbConflictConfig.ForContext(aContext: TwbGameContext): TwbConflictConfig;
-begin
-  Result.TranslationMode := aContext.Settings.TranslationMode;
-  Result.AlignArrayElements := wbAlignArrayElements;
-  Result.AlignArrayLimit := wbAlignArrayLimit;
-end;
 
 procedure TwbConflictNodeData.UpdateRefs;
 begin

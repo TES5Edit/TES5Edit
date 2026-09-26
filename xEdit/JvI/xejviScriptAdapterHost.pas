@@ -470,7 +470,7 @@ begin
   Value := caUnknown;
   if Length(NodeDatas) > 0 then
     if Assigned(NodeDatas[0].Container) then
-      Value := frmMain.ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2], TwbConflictConfig.ForContext(xeContext),
+      Value := frmMain.ConflictLevelForChildNodeDatas(NodeDatas, Args.Values[i+1], Args.Values[i+2], frmMain.ConflictView,
         procedure(const aMessage: string) begin frmMain.PostAddMessage(aMessage); end)
     else
       Value := frmMain.ConflictLevelForNodeDatas(@NodeDatas[0], Length(NodeDatas), Args.Values[i+1], Args.Values[i+2]);
