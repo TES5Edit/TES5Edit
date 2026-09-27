@@ -827,8 +827,11 @@ type
     TestOptionsShown         : Boolean;
     TestOptionsDialogAlign   : Boolean;
 
+    TestCopyIntoGapTimer     : TTimer;
+
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
+    procedure TestCopyIntoGapRunTimer(Sender: TObject);
 
     function TestNavCopyLastPhase: Integer;
     procedure TestNavCopyPhaseTimer(Sender: TObject);
@@ -869,6 +872,7 @@ type
     procedure DoTestNavCopy;
     procedure DoTestViewText;
     procedure DoTestOptions;
+    procedure DoTestCopyIntoGap;
     procedure DoTestSaveContextsCompare;
 
     function ViewName(const aElement: IwbElement; const aName: string): string;
@@ -4979,7 +4983,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestCopyIntoGap or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -21356,6 +21360,178 @@ begin
     end;
 end;
 
+procedure TfrmMain.DoTestCopyIntoGap;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  TestCopyIntoGapTimer := TTimer.Create(Self);
+  TestCopyIntoGapTimer.Interval := 500;
+  TestCopyIntoGapTimer.OnTimer := TestCopyIntoGapRunTimer;
+  TestCopyIntoGapTimer.Enabled := True;
+end;
+
+procedure TfrmMain.TestCopyIntoGapRunTimer(Sender: TObject);
+
+  function ElementText(const aElement: IwbElement): string;
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      Result := '';
+      for var i := 0 to Pred(lContainer.ElementCount) do begin
+        if i > 0 then
+          Result := Result + ' | ';
+        Result := Result + ElementText(lContainer.Elements[i]);
+      end;
+    end else
+      Result := aElement.EditValue;
+  end;
+
+  procedure AddContainer(aLines: TStrings; const aTag: string; const aContainer: IwbContainerElementRef);
+  var
+    lRows : string;
+  begin
+    lRows := '';
+    for var i := 0 to Pred(aContainer.ElementCount) do begin
+      aLines.Add(aTag + #9 + IntToStr(i) + #9 + ElementText(aContainer.Elements[i]));
+      lRows := lRows + ' ' + IntToStr(aContainer.Elements[i].SortOrder);
+    end;
+    aLines.Add('# ' + aTag + ' rows:' + lRows);
+  end;
+
+var
+  lLines       : TStringList;
+  lSource      : IwbMainRecord;
+  lRecord      : IwbMainRecord;
+  lColumn      : Integer;
+  lGapNode     : PVirtualNode;
+  lNodeDatas   : PViewNodeDatas;
+  lParentDatas : PViewNodeDatas;
+  lGapSource   : IwbElement;
+  lContainer   : IwbContainerElementRef;
+  lTmp         : string;
+begin
+  TestCopyIntoGapTimer.Enabled := False;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit copy-into-gap probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# record = ' + xeTestCopyIntoGapRecord + ', source = ' + xeTestCopyIntoGapSource + ', op = ' + xeTestCopyIntoGapOp);
+    lLines.Add('# Columns, tab separated: what / index / text; the "#" rows lines carry each element''s SortOrder');
+    CheckResult := 2;
+    try
+      lSource := nil;
+      var lFormID := TwbFormID.FromStr(xeTestCopyIntoGapRecord);
+      for var i := Low(Files) to High(Files) do
+        if SameText(Files[i].FileName, xeTestCopyIntoGapSource) then
+          lSource := Files[i].RecordByFormID[lFormID, True, True];
+      if not Assigned(lSource) then
+        raise Exception.Create('no record ' + xeTestCopyIntoGapRecord + ' in ' + xeTestCopyIntoGapSource);
+
+      var lFile := AddNewFileName('CopyIntoGap.esp', False, False);
+      if not AddRequiredMasters(lSource, lFile, False, True) then
+        raise Exception.Create('the masters of ' + lSource.Name + ' could not be added');
+      lRecord := wbCopyElementToFile(lSource, lFile, False, True, '', '', '', '', False) as IwbMainRecord;
+      if not Assigned(lRecord) then
+        raise Exception.Create('no override of ' + lSource.Name + ' was created');
+
+      DoSetActiveRecord(lRecord);
+      vstView.FullExpand;
+      lColumn := -1;
+      for var i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lRecord) then
+          lColumn := i;
+      if lColumn < 0 then
+        raise Exception.Create('the override is not a column of the View tab');
+      lLines.Add('columns' + #9 + IntToStr(Length(ActiveRecords)) + #9 + 'target ' + IntToStr(lColumn) + ' ' + lFile.FileName);
+
+      lGapNode := nil;
+      lGapSource := nil;
+      lParentDatas := nil;
+      for var lNode in vstView.Nodes(False) do begin
+        lNodeDatas := vstView.GetNodeData(lNode);
+        if lNode.Parent = vstView.RootNode then
+          lParentDatas := @ActiveRecords[0]
+        else
+          lParentDatas := vstView.GetNodeData(lNode.Parent);
+        if not Assigned(lNodeDatas) or not Assigned(lParentDatas) then
+          Continue;
+        if not (vnfIsAligned in lParentDatas[lColumn].ViewNodeFlags) or Assigned(lNodeDatas[lColumn].Element) or
+           not Assigned(lParentDatas[lColumn].Element) then
+          Continue;
+        for var k := Low(ActiveRecords) to High(ActiveRecords) do
+          if (k <> lColumn) and Assigned(lNodeDatas[k].Element) then begin
+            lGapSource := lNodeDatas[k].Element;
+            Break;
+          end;
+        if Assigned(lGapSource) then begin
+          lGapNode := lNode;
+          Break;
+        end;
+      end;
+      if not Assigned(lGapNode) then
+        raise Exception.Create('no aligned gap in the override''s column');
+      if not Supports(lParentDatas[lColumn].Element, IwbContainerElementRef, lContainer) then
+        raise Exception.Create('the gap''s parent is not a container');
+      lLines.Add('gap' + #9 + IntToStr(lGapNode.Index) + #9 + lContainer.Path);
+      lLines.Add('source' + #9 + '-' + #9 + ElementText(lGapSource));
+      AddContainer(lLines, 'before', lContainer);
+
+      if SameText(xeTestCopyIntoGapOp, 'popup') then begin
+        OverrideViewFocusedNode := lGapNode;
+        try
+          vstView.FocusedColumn := Succ(lColumn);
+          pmuViewPopup(Self);
+          lLines.Add('popup' + #9 + 'add visible' + #9 + BoolToStr(mniViewAdd.Visible and mniViewAdd.Enabled, True));
+        finally
+          OverrideViewFocusedNode := nil;
+        end;
+      end else if SameText(xeTestCopyIntoGapOp, 'dragover') then begin
+        var lTargetNode := lGapNode;
+        var lTargetIndex: Integer;
+        var lTargetElement: IwbElement;
+        var lAccept := GetTargetElement(vstView, lTargetNode, Succ(lColumn), lTargetIndex, lTargetElement) and
+          (lTargetElement <> lGapSource) and lTargetElement.CanAssign(lTargetIndex, lGapSource, True);
+        lLines.Add('dragover' + #9 + 'accept' + #9 + BoolToStr(lAccept, True));
+      end else if SameText(xeTestCopyIntoGapOp, 'drop') then begin
+        lLines.Add('drop' + #9 + 'performed' + #9 + BoolToStr(PerformDrop(vstView, lGapNode, Succ(lColumn), lGapSource), True));
+        AddContainer(lLines, 'after', lContainer);
+      end else begin
+        OverrideViewFocusedNode := lGapNode;
+        try
+          vstView.FocusedColumn := Succ(lColumn);
+          pmuViewPopup(Self);
+          var lClicked := mniViewAdd.Visible and mniViewAdd.Enabled;
+          if lClicked then
+            if mniViewAdd.Count > 0 then
+              mniViewAdd.Items[0].Click
+            else
+              mniViewAdd.Click;
+          lLines.Add('add' + #9 + 'clicked' + #9 + BoolToStr(lClicked, True));
+        finally
+          OverrideViewFocusedNode := nil;
+        end;
+        AddContainer(lLines, 'after', lContainer);
+      end;
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test Copy Into Gap] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestCopyIntoGapFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestCopyIntoGapFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -21603,6 +21779,9 @@ begin
 
         if xeTestOptions then
           DoTestOptions;
+
+        if xeTestCopyIntoGap then
+          DoTestCopyIntoGap;
 
         if xeTestSaveContexts then
           DoTestSaveContextsCompare;

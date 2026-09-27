@@ -72,6 +72,11 @@ var
   xeTestViewTextRecord     : string = '00000007';
   xeTestOptions            : Boolean;
   xeTestOptionsFile        : string;
+  xeTestCopyIntoGap        : Boolean;
+  xeTestCopyIntoGapFile    : string;
+  xeTestCopyIntoGapRecord  : string;
+  xeTestCopyIntoGapSource  : string;
+  xeTestCopyIntoGapOp      : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -956,6 +961,21 @@ begin
       end;
       xeTestOptions := True;
       xeAutoLoad    := True;
+    end;
+
+    if wbFindCmdLineParam('testcopyintogap', xeTestCopyIntoGapFile) then begin
+      if (xeTestCopyIntoGapFile = '') or
+         not wbFindCmdLineParam('testcopyintogaprecord', xeTestCopyIntoGapRecord) or
+         not wbFindCmdLineParam('testcopyintogapsource', xeTestCopyIntoGapSource) or
+         not wbFindCmdLineParam('testcopyintogapop', xeTestCopyIntoGapOp) or
+         not (SameText(xeTestCopyIntoGapOp, 'popup') or SameText(xeTestCopyIntoGapOp, 'dragover') or
+              SameText(xeTestCopyIntoGapOp, 'drop') or SameText(xeTestCopyIntoGapOp, 'add')) then begin
+        ShowMessage('testcopyintogap requires -testcopyintogap:<filename> -testcopyintogaprecord:<FormID> ' +
+          '-testcopyintogapsource:<module> -testcopyintogapop:<popup|dragover|drop|add>');
+        Exit(False);
+      end;
+      xeTestCopyIntoGap := True;
+      xeAutoLoad        := True;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
