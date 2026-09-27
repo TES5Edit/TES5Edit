@@ -114,7 +114,7 @@ begin
   if aTargets <> cvModGroupTargets then begin
     cvModGroupTargets.Clear;
     for var lPair in aTargets do
-      cvModGroupTargets.Add(lPair.Key, lPair.Value);
+      cvModGroupTargets.Add(lPair.Key, Copy(lPair.Value));
   end;
   RulesChanged;
 end;
