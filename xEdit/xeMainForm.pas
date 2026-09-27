@@ -16773,6 +16773,7 @@ end;
 
 procedure TfrmMain.tmrShutdownTimer(Sender: TObject);
 begin
+  tmrShutdown.Enabled := False;
   Close;
 end;
 
