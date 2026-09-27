@@ -852,6 +852,7 @@ type
     procedure UpdatePnlCancelVisible;
   public
     procedure ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    function IsPositionChanged(const aMainRecord: IwbMainRecord): Boolean;
     function ConflictLevelForChildNodeDatas(const aNodeDatas: TDynViewNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TFieldConflictProc = nil): TConflictAll;
     function ConflictLevelForNodeDatas(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
 
@@ -1325,8 +1326,6 @@ function UnLockProcessMessages: Integer;
 procedure DoProcessMessages;
 
 procedure xeApplyFontAndScale(aForm: TForm);
-
-function IsPositionChanged(MainRecord: IwbMainRecord): Boolean;
 
 implementation
 
@@ -6992,10 +6991,7 @@ begin
 
       if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
         MainRecord := (NodeData.Element as IwbMainRecord);
-        with MainRecord do begin
-          ConflictAll := caUnknown;
-          ConflictThis := ctUnknown;
-        end;
+        MainRecord.ResetConflict;
         ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
         with NodeData^ do begin
           OrgConflictAll  := ConflictAll;
@@ -7177,10 +7173,7 @@ begin
 
         if Assigned(NodeData.Element) and (NodeData.Element.ElementType = etMainRecord) then begin
           MainRecord := (NodeData.Element as IwbMainRecord);
-          with MainRecord do begin
-            ConflictAll := caUnknown;
-            ConflictThis := ctUnknown;
-          end;
+          MainRecord.ResetConflict;
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           with NodeData^ do begin
             OrgConflictAll  := ConflictAll;
@@ -12724,24 +12717,27 @@ begin
     not MainRecord.Master.IsPersistent;
 end;
 
-function IsPositionChanged(MainRecord: IwbMainRecord): Boolean;
+function TfrmMain.IsPositionChanged(const aMainRecord: IwbMainRecord): Boolean;
 var
-  Master    : IwbMainRecord;
-  MasterPos : IwbRecord;
-  ThisPos   : IwbRecord;
+  Master       : IwbMainRecord;
+  MasterPos    : IwbRecord;
+  ThisPos      : IwbRecord;
+  ConflictAll  : TConflictAll;
+  ConflictThis : TConflictThis;
 begin
   Result := False;
-  if MainRecord.ConflictThis in [ctMaster, ctIdenticalToMaster] then
+  ConflictView.Peek(aMainRecord, ConflictAll, ConflictThis);
+  if ConflictThis in [ctMaster, ctIdenticalToMaster] then
     Exit;
-  if MainRecord.IsMaster then
+  if aMainRecord.IsMaster then
     Exit;
-  if MainRecord.Flags.IsDeleted then
+  if aMainRecord.Flags.IsDeleted then
     Exit;
-  Master := MainRecord.Master;
+  Master := aMainRecord.Master;
   if not Assigned(Master) then
     Exit;
   MasterPos := Master.RecordBySignature['DATA'];
-  ThisPos := MainRecord.RecordBySignature['DATA'];
+  ThisPos := aMainRecord.RecordBySignature['DATA'];
 
   if Assigned(MasterPos) <> Assigned(ThisPos) then begin
     Result := True;
@@ -15254,6 +15250,7 @@ var
   _File : IwbFile;
 begin
   wbStartTime := Now;
+  ConflictView.RulesChanged;
 
   pnlClient.Enabled := False;
   UpdatePnlCancelVisible;
@@ -20971,6 +20968,8 @@ var
   lNode    : PVirtualNode;
   lNodeCA  : string;
   lRecord  : IwbMainRecord;
+  lCA, lMasterCA : TConflictAll;
+  lCT, lMasterCT : TConflictThis;
 
   function SortedFlags(const aRecord: IwbMainRecord): string;
   var
@@ -20995,9 +20994,11 @@ begin
       lNodeCA := wbNameConflictAll[PNavNodeData(vstNav.GetNodeData(lNode)).ConflictAll] + ' gen ' + IntToStr(PNavNodeData(vstNav.GetNodeData(lNode)).ElementGen)
     else
       lNodeCA := 'no node';
+    ConflictView.Peek(lRecord, lCA, lCT);
+    ConflictView.Peek(TestNavCopyRecordsA[i], lMasterCA, lMasterCT);
     AddMessage(Format('[Test Nav Copy]   %s: record %s / %s gen %d sorted%s; master %s / %s gen %d sorted%s; node %s',
-      [lRecord.EditorID, wbNameConflictAll[lRecord.ConflictAll], wbNameConflictThis[lRecord.ConflictThis], lRecord.ElementGeneration, SortedFlags(lRecord),
-       wbNameConflictAll[TestNavCopyRecordsA[i].ConflictAll], wbNameConflictThis[TestNavCopyRecordsA[i].ConflictThis], TestNavCopyRecordsA[i].ElementGeneration, SortedFlags(TestNavCopyRecordsA[i]),
+      [lRecord.EditorID, wbNameConflictAll[lCA], wbNameConflictThis[lCT], lRecord.ElementGeneration, SortedFlags(lRecord),
+       wbNameConflictAll[lMasterCA], wbNameConflictThis[lMasterCT], TestNavCopyRecordsA[i].ElementGeneration, SortedFlags(TestNavCopyRecordsA[i]),
        lNodeCA]));
   end;
 end;

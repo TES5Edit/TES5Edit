@@ -6,17 +6,44 @@ uses
   wbInterface;
 
 type
+  TwbConflictEntry = record
+    Stamp        : Cardinal;
+    Epoch        : Cardinal;
+    ConflictAll  : TConflictAll;
+    ConflictThis : TConflictThis;
+  end;
+
   TwbConflictView = class
   private
-    cvContextRef       : IwbGameContext;
+    cvContextRef         : IwbGameContext;
+    cvQuickShowConflicts : Boolean;
+    cvOnlyMasterAndLeafs : Boolean;
+    cvModGroupsEnabled   : Boolean;
+    cvAlignArrayElements : Boolean;
+    cvAlignArrayLimit    : Integer;
+    cvEpoch              : Cardinal;
+    procedure SetQuickShowConflicts(aValue: Boolean);
+    procedure SetOnlyMasterAndLeafs(aValue: Boolean);
+    procedure SetModGroupsEnabled(aValue: Boolean);
+    procedure SetAlignArrayElements(aValue: Boolean);
+    procedure SetAlignArrayLimit(aValue: Integer);
+    function Lookup(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis): Boolean;
+    procedure Store(const aRecord: IwbMainRecord; aConflictAll: TConflictAll; aConflictThis: TConflictThis);
+  protected
+    cvEntries            : TArray<TwbConflictEntry>;
   public
-    Context            : TwbGameContext;
-    QuickShowConflicts : Boolean;
-    OnlyMasterAndLeafs : Boolean;
-    ModGroupsEnabled   : Boolean;
-    AlignArrayElements : Boolean;
-    AlignArrayLimit    : Integer;
+    Context : TwbGameContext;
+    Hits    : Int64;
+    Misses  : Int64;
     constructor Create(aContext: TwbGameContext);
+    procedure RulesChanged;
+    procedure Peek(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    property QuickShowConflicts: Boolean read cvQuickShowConflicts write SetQuickShowConflicts;
+    property OnlyMasterAndLeafs: Boolean read cvOnlyMasterAndLeafs write SetOnlyMasterAndLeafs;
+    property ModGroupsEnabled: Boolean read cvModGroupsEnabled write SetModGroupsEnabled;
+    property AlignArrayElements: Boolean read cvAlignArrayElements write SetAlignArrayElements;
+    property AlignArrayLimit: Integer read cvAlignArrayLimit write SetAlignArrayLimit;
+    property Epoch: Cardinal read cvEpoch;
   end;
 
 function wbConflictLevelForNodeDatas(const aNodeDatas: PwbConflictNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
@@ -53,8 +80,94 @@ begin
   inherited Create;
   Context := aContext;
   cvContextRef := aContext;
-  AlignArrayElements := True;
-  AlignArrayLimit := 5000;
+  cvAlignArrayElements := True;
+  cvAlignArrayLimit := 5000;
+  cvEpoch := 1;
+end;
+
+procedure TwbConflictView.RulesChanged;
+begin
+  Inc(cvEpoch);
+end;
+
+procedure TwbConflictView.SetQuickShowConflicts(aValue: Boolean);
+begin
+  if cvQuickShowConflicts <> aValue then begin
+    cvQuickShowConflicts := aValue;
+    RulesChanged;
+  end;
+end;
+
+procedure TwbConflictView.SetOnlyMasterAndLeafs(aValue: Boolean);
+begin
+  if cvOnlyMasterAndLeafs <> aValue then begin
+    cvOnlyMasterAndLeafs := aValue;
+    RulesChanged;
+  end;
+end;
+
+procedure TwbConflictView.SetModGroupsEnabled(aValue: Boolean);
+begin
+  if cvModGroupsEnabled <> aValue then begin
+    cvModGroupsEnabled := aValue;
+    RulesChanged;
+  end;
+end;
+
+procedure TwbConflictView.SetAlignArrayElements(aValue: Boolean);
+begin
+  if cvAlignArrayElements <> aValue then begin
+    cvAlignArrayElements := aValue;
+    RulesChanged;
+  end;
+end;
+
+procedure TwbConflictView.SetAlignArrayLimit(aValue: Integer);
+begin
+  if cvAlignArrayLimit <> aValue then begin
+    cvAlignArrayLimit := aValue;
+    RulesChanged;
+  end;
+end;
+
+function TwbConflictView.Lookup(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis): Boolean;
+begin
+  var lID := aRecord.DenseIDIn(Context);
+  Result := (lID > 0) and (lID < Cardinal(Length(cvEntries)));
+  if Result then
+    with cvEntries[lID] do begin
+      Result := (Epoch = cvEpoch) and (Stamp = aRecord.ChainStamp);
+      if Result then begin
+        aConflictAll := ConflictAll;
+        aConflictThis := ConflictThis;
+      end;
+    end;
+  if not Result then begin
+    aConflictAll := caUnknown;
+    aConflictThis := ctUnknown;
+  end;
+end;
+
+procedure TwbConflictView.Store(const aRecord: IwbMainRecord; aConflictAll: TConflictAll; aConflictThis: TConflictThis);
+begin
+  var lID := aRecord.DenseIDIn(Context);
+  if lID = 0 then
+    Exit;
+  if lID >= Cardinal(Length(cvEntries)) then
+    SetLength(cvEntries, Max(2 * Length(cvEntries), Integer(lID) + 1));
+  with cvEntries[lID] do begin
+    Stamp := aRecord.ChainStamp;
+    Epoch := cvEpoch;
+    ConflictAll := aConflictAll;
+    ConflictThis := aConflictThis;
+  end;
+  if (aConflictAll <> caUnknown) or (aConflictThis <> ctUnknown) then
+    aRecord.MarkConflictStored;
+end;
+
+procedure TwbConflictView.Peek(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+begin
+  Lookup(aRecord, aConflictAll, aConflictThis);
 end;
 
 function wbConflictLevelForNodeDatas(const aNodeDatas: PwbConflictNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
@@ -924,15 +1037,34 @@ begin
 end;
 
 procedure wbConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+var
+  ThisConflict                : TConflictThis;
 
-  procedure Fix(const aMainRecord: IwbMainRecord);
+  procedure Put(const aRecord: IwbMainRecord; aAll: TConflictAll; aThis: TConflictThis);
   begin
-    with aMainRecord do begin
-      ConflictAll := aConflictAll;
-      if ConflictThis = ctUnknown then begin
-        ConflictThis := ctHiddenByModGroup;
+    aView.Store(aRecord, aAll, aThis);
+    if aRecord.Equals(aMainRecord) then
+      ThisConflict := aThis;
+  end;
+
+  procedure Fix(const aRecord: IwbMainRecord);
+  var
+    lAll  : TConflictAll;
+    lThis : TConflictThis;
+  begin
+    aView.Lookup(aRecord, lAll, lThis);
+    if lThis = ctUnknown then
+      lThis := ctHiddenByModGroup;
+    Put(aRecord, aConflictAll, lThis);
+  end;
+
+  procedure Allocate(const aRecords: TDynMainRecords);
+  begin
+    for var lRecord in aRecords do
+      if lRecord.DenseIDIn(aView.Context) = 0 then begin
+        aView.Context.AllocateDenseIDs(aRecords);
+        Exit;
       end;
-    end;
   end;
 
 var
@@ -983,19 +1115,21 @@ var
 begin
   KeepAliveRoot := wbCreateKeepAliveRoot;
 
-  aConflictAll := aMainRecord.ConflictAll;
-  aConflictThis := aMainRecord.ConflictThis;
+  aView.Lookup(aMainRecord, aConflictAll, aConflictThis);
 
-  if aConflictAll > caUnknown then
+  if aConflictAll > caUnknown then begin
+    Inc(aView.Hits);
     Exit;
+  end;
+  Inc(aView.Misses);
 
   TranslationMode := aView.Context.Settings.TranslationMode;
   Master := aMainRecord.MasterOrSelf;
   if (Master.OverrideCount = 0) and not TranslationMode and not ((Master.Signature = 'GMST') or (Master.Signature = 'DFOB')) then begin
     aConflictAll := caOnlyOne;
     aConflictThis := ctOnlyOne;
-    aMainRecord.ConflictAll := aConflictAll;
-    aMainRecord.ConflictThis := aConflictThis;
+    Allocate([aMainRecord]);
+    aView.Store(aMainRecord, aConflictAll, aConflictThis);
   end else begin
     NodeDatas := wbConflictNodeDatasForMainRecord(aMainRecord, aFiles, aView);
     if (Length(NodeDatas) = 1) and not TranslationMode then begin
@@ -1020,19 +1154,33 @@ begin
     end else
       aConflictAll := wbConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ), aView, aOnMessage);
 
+    var lWritten: TDynMainRecords;
+    SetLength(lWritten, Length(NodeDatas) + 1 + Master.OverrideCount);
+    var lCount := 0;
     for i := Low(NodeDatas) to High(NodeDatas) do
-      with NodeDatas[i] do
-        if Assigned(Element) then
-          with (Element as IwbMainRecord) do begin
-            ConflictAll := aConflictAll;
-            ConflictThis := NodeDatas[i].ConflictThis;
-          end;
+      if Assigned(NodeDatas[i].Element) then begin
+        lWritten[lCount] := NodeDatas[i].Element as IwbMainRecord;
+        Inc(lCount);
+      end;
+    lWritten[lCount] := Master;
+    Inc(lCount);
+    for i := 0 to Pred(Master.OverrideCount) do begin
+      lWritten[lCount] := Master.Overrides[i];
+      Inc(lCount);
+    end;
+    SetLength(lWritten, lCount);
+    Allocate(lWritten);
+
+    ThisConflict := ctUnknown;
+    for i := Low(NodeDatas) to High(NodeDatas) do
+      if Assigned(NodeDatas[i].Element) then
+        Put(NodeDatas[i].Element as IwbMainRecord, aConflictAll, NodeDatas[i].ConflictThis);
 
     Fix(Master);
     for i := 0 to Pred(Master.OverrideCount) do
       Fix(Master.Overrides[i]);
 
-    aConflictThis := aMainRecord.ConflictThis;
+    aConflictThis := ThisConflict;
   end;
 end;
 

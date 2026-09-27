@@ -32,7 +32,20 @@ type
   TwbLoadingGameContext = class(TwbGameContext)
   private
     lgcLoading: TArray<string>;
+  protected
+    lgcDenseRecords : TArray<Pointer>;
+    lgcFreeIDs      : TArray<Cardinal>;
+    lgcFreeCount    : Integer;
+    lgcNextDenseID  : Cardinal;
+    lgcLiveIDs      : Integer;
+    class var lgcIDLock: TObject;
+    class constructor CreateIDLock;
+    class destructor DestroyIDLock;
+    function TakeDenseID(aRecord: Pointer): Cardinal;
+    procedure ReturnDenseID(aID: Cardinal);
   public
+    destructor Destroy; override;
+    procedure AllocateDenseIDs(const aRecords: TDynMainRecords); override;
     procedure DetachFilesFromModules; override;
     function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; override;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; override;
@@ -1154,6 +1167,11 @@ type
     function IsSameData(aBase, aEnd: Pointer): Boolean;
 
     procedure PrepareOffsetData;
+
+    procedure ResetChain;
+    procedure ResetConflictMember;
+    procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
+    procedure BumpChainStampAtMost(aMark: Cardinal);
   end;
 
   IwbMainRecordEntry = interface(IwbMainRecordInternal)
@@ -1212,7 +1230,8 @@ type
     mrsResettingConflict,
     mrsOFSTRemoved,
     mrsOFSTReserved,
-    mrsIndexKeysActive
+    mrsIndexKeysActive,
+    mrsConflictStored
   );
 
   TwbMainRecordStates = set of TwbMainRecordState;
@@ -1239,8 +1258,8 @@ type
     mrGridCell          : TwbGridCell;
     mrPrecombinedCellID : Cardinal;
     mrPrecombinedID     : Cardinal;
-    mrConflictAll       : TConflictAll;
-    mrConflictThis      : TConflictThis;
+    mrDenseID           : Cardinal;
+    mrChainStamp        : Cardinal;
     mrDataStorage       : TBytes;
     mrGroup             : IwbGroupRecord;
     mrGroupSearchGen    : Integer;
@@ -1406,10 +1425,9 @@ type
 
     procedure MakeHeaderWriteable;
 
-    function GetConflictAll: TConflictAll;
-    procedure SetConflictAll(aValue: TConflictAll);
-    function GetConflictThis: TConflictThis;
-    procedure SetConflictThis(aValue: TConflictThis);
+    function DenseIDIn(aContext: TwbGameContext): Cardinal;
+    function GetChainStamp: Cardinal;
+    procedure MarkConflictStored;
 
     function GetIsESM: Boolean;
     procedure SetIsESM(aValue: Boolean);
@@ -1485,6 +1503,10 @@ type
     procedure SaveRefsToStream(aStream: TStream; aSaveNames: Boolean);
     procedure LoadRefsFromStream(aStream: TStream; aLoadNames: Boolean);
     function IsSameData(aBase, aEnd: Pointer): Boolean;
+    procedure ResetChain;
+    procedure ResetConflictMember;
+    procedure TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
+    procedure BumpChainStampAtMost(aMark: Cardinal);
 
     {---IwbMainRecordEntry---}
     procedure RemoveEntry;
@@ -9368,6 +9390,7 @@ begin
   (aMainRecord as IwbMainRecordInternal).SetMaster(Self);
   Exclude(mrStates, mrsOverridesSorted);
   mrMasterAndLeafs := nil;
+  mrChainStamp := ContextObj.NextStamp;
 end;
 
 {$IFDEF USE_PARALLEL_BUILD_REFS}
@@ -10524,6 +10547,17 @@ end;
 
 destructor TwbMainRecord.Destroy;
 begin
+  if mrDenseID <> 0 then begin
+    TMonitor.Enter(TwbLoadingGameContext.lgcIDLock);
+    try
+      if mrDenseID <> 0 then begin
+        TwbLoadingGameContext(mrContextObj).ReturnDenseID(mrDenseID);
+        mrDenseID := 0;
+      end;
+    finally
+      TMonitor.Exit(TwbLoadingGameContext.lgcIDLock);
+    end;
+  end;
   if mrsBasePtrAllocated in mrStates then
     FreeMem(dcBasePtr);
   inherited;
@@ -11453,14 +11487,42 @@ begin
   end;
 end;
 
-function TwbMainRecord.GetConflictAll: TConflictAll;
+function TwbMainRecord.DenseIDIn(aContext: TwbGameContext): Cardinal;
 begin
-  Result := mrConflictAll;
+  if mrContextObj = aContext then
+    Result := mrDenseID
+  else
+    Result := 0;
 end;
 
-function TwbMainRecord.GetConflictThis: TConflictThis;
+function TwbMainRecord.GetChainStamp: Cardinal;
 begin
-  Result := mrConflictThis;
+  if Assigned(mrMaster) then
+    Result := IwbMainRecord(mrMaster).ChainStamp
+  else
+    Result := mrChainStamp;
+end;
+
+procedure TwbMainRecord.MarkConflictStored;
+begin
+  Include(mrStates, mrsConflictStored);
+end;
+
+procedure TwbMainRecord.TakeDenseIDFrom(aContext: TwbLoadingGameContext; aMark: Cardinal);
+begin
+  if (mrDenseID <> 0) or (mrContextObj <> aContext) then
+    Exit;
+  mrDenseID := aContext.TakeDenseID(Self);
+  if Assigned(mrMaster) then
+    (IwbMainRecord(mrMaster) as IwbMainRecordInternal).BumpChainStampAtMost(aMark)
+  else
+    BumpChainStampAtMost(aMark);
+end;
+
+procedure TwbMainRecord.BumpChainStampAtMost(aMark: Cardinal);
+begin
+  if mrChainStamp <= aMark then
+    mrChainStamp := ContextObj.NextStamp;
 end;
 
 function TwbMainRecord.GetContainingMainRecord: IwbMainRecord;
@@ -12821,7 +12883,19 @@ var
   p         : PwbMainRecordStruct;
 begin
   mrGameDefObj := inherited GameDefObj;
-  mrContextObj := inherited ContextObj;
+  var lContext := inherited ContextObj;
+  if Assigned(mrContextObj) and (lContext <> mrContextObj) then begin
+    TMonitor.Enter(TwbLoadingGameContext.lgcIDLock);
+    try
+      if mrDenseID <> 0 then begin
+        TwbLoadingGameContext(mrContextObj).ReturnDenseID(mrDenseID);
+        mrDenseID := 0;
+      end;
+    finally
+      TMonitor.Exit(TwbLoadingGameContext.lgcIDLock);
+    end;
+  end;
+  mrContextObj := lContext;
   if Assigned(dcEndPtr) then
     if (gcReferencesEmbeddedInCell in mrGameDefObj.Capabilities) and ((PwbSignature(dcBasePtr)^ = 'FRMR') or (PwbSignature(dcBasePtr)^ = 'CNDT')) then begin
       Assert(not (mrsBasePtrAllocated in mrStates));
@@ -14229,8 +14303,7 @@ begin
   mrFixedFormID := TwbFormID.Null;
   mrLoadOrderFormID := TwbFormID.Null;
   Exclude(mrStates, mrsIsInjectedChecked);
-  mrConflictAll := caUnknown;
-  mrConflictThis := ctUnknown;
+  Exclude(mrStates, mrsConflictStored);
 
   if Assigned(lMaster) then
     lMaster.ResetConflict;
@@ -14457,27 +14530,38 @@ begin
 end;
 
 procedure TwbMainRecord.ResetConflict;
-var
-  i: Integer;
 begin
   if mrsResettingConflict in mrStates then
     Exit;
   Include(mrStates, mrsResettingConflict);
   try
-    inherited;
-    if (mrConflictAll <> caUnknown) or (mrConflictThis <> ctUnknown) then begin
-      mrConflictAll := caUnknown;
-      mrConflictThis := ctUnknown;
-      Inc(eGeneration);
-      ContextObj.IncGlobalGeneration;
-    end;
-    if Assigned(mrMaster) then
-      IwbElement(mrMaster).ResetConflict
-    else
-      for i := Low(mrOverrides) to High(mrOverrides) do
-        mrOverrides[i].ResetConflict;
+    if Assigned(mrMaster) then begin
+      ResetConflictMember;
+      (IwbMainRecord(mrMaster) as IwbMainRecordInternal).ResetChain;
+    end else
+      ResetChain;
   finally
     Exclude(mrStates, mrsResettingConflict);
+  end;
+end;
+
+procedure TwbMainRecord.ResetChain;
+begin
+  var lContext := ContextObj;
+  if Assigned(lContext) then
+    mrChainStamp := lContext.NextStamp;
+  ResetConflictMember;
+  for var i := Low(mrOverrides) to High(mrOverrides) do
+    (mrOverrides[i] as IwbMainRecordInternal).ResetConflictMember;
+end;
+
+procedure TwbMainRecord.ResetConflictMember;
+begin
+  inherited ResetConflict;
+  if mrsConflictStored in mrStates then begin
+    Exclude(mrStates, mrsConflictStored);
+    Inc(eGeneration);
+    ContextObj.IncGlobalGeneration;
   end;
 end;
 
@@ -14592,16 +14676,6 @@ begin
     Assert(Assigned(mrGroup));
 
   mrGroup := aGroup;
-end;
-
-procedure TwbMainRecord.SetConflictAll(aValue: TConflictAll);
-begin
-  mrConflictAll := aValue;
-end;
-
-procedure TwbMainRecord.SetConflictThis(aValue: TConflictThis);
-begin
-  mrConflictThis := aValue;
 end;
 
 procedure TwbMainRecord.SetContainer(const aContainer: IwbContainer);
@@ -14978,8 +15052,7 @@ begin
     mrReferencedByCount := 0;
     mrReferencedBySize := 0;
     Exclude(mrStates, mrsIsInjectedChecked);
-    mrConflictAll := caUnknown;
-    mrConflictThis := ctUnknown;
+    Exclude(mrStates, mrsConflictStored);
 
     if Assigned(mrGroup) or (GetChildGroup <> nil)  then
       Assert(mrGroup.GroupLabel = GetFormID.ToCardinal);
@@ -15669,6 +15742,7 @@ begin
     (mrOverrides[lOverrideIndex] as IwbMainRecordInternal).SetMaster(Self);
   Exclude(mrStates, mrsOverridesSorted);
   mrMasterAndLeafs := nil;
+  mrChainStamp := ContextObj.NextStamp;
 
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
@@ -15717,6 +15791,7 @@ begin
     (mrOverrides[lSetMasterIdx] as IwbMainRecordInternal).SetMaster(Self);
   Exclude(mrStates, mrsOverridesSorted);
   mrMasterAndLeafs := nil;
+  mrChainStamp := ContextObj.NextStamp;
 
   mrReferencedBy := aReferencedBy;
   mrReferencedBySize := Length(mrReferencedBy);
@@ -24470,6 +24545,71 @@ begin
   for var lIdx := Low(gcFiles) to High(gcFiles) do
     if Assigned(gcFiles[lIdx]) then
       (gcFiles[lIdx] as IwbFileInternal).DetachModule;
+end;
+
+class constructor TwbLoadingGameContext.CreateIDLock;
+begin
+  lgcIDLock := TObject.Create;
+end;
+
+class destructor TwbLoadingGameContext.DestroyIDLock;
+begin
+  FreeAndNil(lgcIDLock);
+end;
+
+destructor TwbLoadingGameContext.Destroy;
+begin
+  TMonitor.Enter(lgcIDLock);
+  try
+    for var lID := 1 to High(lgcDenseRecords) do
+      if Assigned(lgcDenseRecords[lID]) then
+        TwbMainRecord(lgcDenseRecords[lID]).mrDenseID := 0;
+    lgcDenseRecords := nil;
+    lgcFreeIDs := nil;
+    lgcFreeCount := 0;
+    lgcLiveIDs := 0;
+  finally
+    TMonitor.Exit(lgcIDLock);
+  end;
+  inherited;
+end;
+
+procedure TwbLoadingGameContext.AllocateDenseIDs(const aRecords: TDynMainRecords);
+begin
+  var lMark := gcStampCounter;
+  TMonitor.Enter(lgcIDLock);
+  try
+    for var lRecord in aRecords do
+      if Assigned(lRecord) then
+        (lRecord as IwbMainRecordInternal).TakeDenseIDFrom(Self, lMark);
+  finally
+    TMonitor.Exit(lgcIDLock);
+  end;
+end;
+
+function TwbLoadingGameContext.TakeDenseID(aRecord: Pointer): Cardinal;
+begin
+  if lgcFreeCount > 0 then begin
+    Dec(lgcFreeCount);
+    Result := lgcFreeIDs[lgcFreeCount];
+  end else begin
+    Inc(lgcNextDenseID);
+    Result := lgcNextDenseID;
+  end;
+  if Result >= Cardinal(Length(lgcDenseRecords)) then
+    SetLength(lgcDenseRecords, Max(2 * Length(lgcDenseRecords), Integer(Result) + 1));
+  lgcDenseRecords[Result] := aRecord;
+  Inc(lgcLiveIDs);
+end;
+
+procedure TwbLoadingGameContext.ReturnDenseID(aID: Cardinal);
+begin
+  lgcDenseRecords[aID] := nil;
+  if lgcFreeCount >= Length(lgcFreeIDs) then
+    SetLength(lgcFreeIDs, Max(2 * Length(lgcFreeIDs), 16));
+  lgcFreeIDs[lgcFreeCount] := aID;
+  Inc(lgcFreeCount);
+  Dec(lgcLiveIDs);
 end;
 
 function TwbLoadingGameContext.LoadFile(const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes): IwbFile;

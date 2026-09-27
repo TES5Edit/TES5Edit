@@ -2085,10 +2085,9 @@ type
     function GetBaseRecordSignature: TwbSignature;
     function GetMasterAndLeafs: TDynMainRecords;
 
-    function GetConflictAll: TConflictAll;
-    procedure SetConflictAll(aValue: TConflictAll);
-    function GetConflictThis: TConflictThis;
-    procedure SetConflictThis(aValue: TConflictThis);
+    function DenseIDIn(aContext: TwbGameContext): Cardinal;
+    function GetChainStamp: Cardinal;
+    procedure MarkConflictStored;
 
     function GetIsESM: Boolean;
     procedure SetIsESM(aValue: Boolean);
@@ -2285,12 +2284,8 @@ type
       read GetIsUpdate
       write SetIsUpdate;
 
-    property ConflictAll: TConflictAll
-      read GetConflictAll
-      write SetConflictAll;
-    property ConflictThis: TConflictThis
-      read GetConflictThis
-      write SetConflictThis;
+    property ChainStamp: Cardinal
+      read GetChainStamp;
   end;
 
   IwbFileHeader = interface(IwbDataContainer)
@@ -4119,6 +4114,7 @@ type
     gcRetiredSoundBanks    : TArray<TwbSoundBankCache>;
     gcFaceGenCache         : TwbFaceGenCache;
     gcGlobalGeneration     : Integer;
+    gcStampCounter         : Cardinal;
     gcIdentities           : array[Byte] of TDictionary<string, Cardinal>;
     gcNextIDs              : array[Byte] of Cardinal;
     gcSaveContexts         : TArray<TwbSaveContext>;
@@ -4151,6 +4147,8 @@ type
     function AllocateMediumSlot: Integer;
     procedure ForceClosed;
     procedure IncGlobalGeneration;
+    function NextStamp: Cardinal;
+    procedure AllocateDenseIDs(const aRecords: TDynMainRecords); virtual; abstract;
     function BeginInternalEdit(aForce: Boolean = False): Boolean;
     procedure DetachFilesFromModules; virtual;
     function SlotLayout: TwbSlotLayout;
@@ -4169,6 +4167,8 @@ type
 
     property GlobalGeneration: Integer
       read gcGlobalGeneration;
+    property StampCounter: Cardinal
+      read gcStampCounter;
 
     function RecordByLoadOrderFormID(const aFormID: TwbFormID; const aSeenFromFile: IwbFile): IwbMainRecord;
     function GameMasterRecordByFormID(const aFormID: TwbFormID): IwbMainRecord;
@@ -7337,6 +7337,11 @@ end;
 procedure TwbGameContext.IncGlobalGeneration;
 begin
   Inc(gcGlobalGeneration);
+end;
+
+function TwbGameContext.NextStamp: Cardinal;
+begin
+  Result := AtomicIncrement(gcStampCounter);
 end;
 
 function TwbGameContext.ExpandFileName(const aFileName: string): string;

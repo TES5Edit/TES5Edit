@@ -302,7 +302,7 @@ var
   MainRecord: IwbMainRecord;
 begin
   if Supports(IInterface(Args.Values[0]), IwbMainRecord, MainRecord) then
-    Value := IsPositionChanged(MainRecord)
+    Value := frmMain.IsPositionChanged(MainRecord)
   else
     JvInterpreterError(ieDirectInvalidArgument, 0);
 end;
