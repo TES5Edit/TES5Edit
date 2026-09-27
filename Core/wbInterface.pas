@@ -21179,7 +21179,7 @@ function TwbDivDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
 const
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
-  Result := PlusMinus[aInt < 0] + IntToHex64(Abs(FromEditValue(aElement.EditValue, aElement)), 16);
+  Result := PlusMinus[aInt < 0] + IntToHex64(Abs(FromEditValue(ToEditValue(aInt, aElement), aElement)), 16);
 end;
 
 function TwbDivDef.ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string;
@@ -21233,7 +21233,7 @@ function TwbDivFDef.ToSortKey(aInt: Int64; const aElement: IwbElement): string;
 const
   PlusMinus : array[Boolean] of string = ('+', '-');
 begin
-  Result := PlusMinus[aInt < 0] + IntToHex64(Abs(FromEditValue(aElement.EditValue, aElement)), 16);
+  Result := PlusMinus[aInt < 0] + IntToHex64(Abs(FromEditValue(ToEditValue(aInt, aElement), aElement)), 16);
 end;
 
 function TwbDivfDef.ToString(aInt: Int64; const aElement: IwbElement; aForSummary: Boolean): string;
