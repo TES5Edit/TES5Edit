@@ -10880,7 +10880,7 @@ end;
 
 procedure TwbMainRecord.DoPendingFill;
 begin
-  if ContextObj.BuildingRefsParallel then
+  if not Assigned(eContainer) or ContextObj.BuildingRefsParallel then
     Exit;
   Exclude(cntStates, csFillPending);
   FillOrderBySort;
