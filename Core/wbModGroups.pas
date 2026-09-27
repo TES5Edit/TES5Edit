@@ -18,6 +18,7 @@ uses
 
   wbHash,
   wbInterface,
+  wbConflict,
   wbLoadOrder;
 
 type
@@ -74,7 +75,7 @@ type
     procedure mgLoad(aContext: TwbGameContext; aLines: TStrings);
     procedure mgCheckValid(aForce: Boolean);
     procedure mgAddSelfTo(var aList: TwbModGroupPtrs; aValidOnly: Boolean);
-    procedure mgTagTargetFiles(aSource: PwbModuleInfo);
+    procedure mgTagTargetFiles(aSource: PwbModuleInfo; var aTargets: TwbModuleInfos);
     procedure mgFlagFilesMissingCRC;
     procedure mgFlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
     function mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
@@ -103,7 +104,7 @@ type
 
     function ToString: string;
 
-    function Activate(aContext: TwbGameContext): Boolean;
+    function Activate(aView: TwbConflictView): Boolean;
     procedure ShowValidationMessages;
     procedure FlagFilesMissingCRC;
     procedure FlagModGroupsNeedingCRCUpdateForTaggedFiles(aAdd, aUpdate: Boolean);
@@ -159,6 +160,7 @@ implementation
 
 uses
   System.IniFiles,
+  System.Generics.Collections,
 
   wbHelpers,
   wbSort;
@@ -473,7 +475,7 @@ begin
   end;
 end;
 
-procedure TwbModGroup.mgTagTargetFiles(aSource: PwbModuleInfo);
+procedure TwbModGroup.mgTagTargetFiles(aSource: PwbModuleInfo; var aTargets: TwbModuleInfos);
 var
   i, j : Integer;
 begin
@@ -488,7 +490,7 @@ begin
           for j := Pred(i) downto Low(mgItems) do
             with mgItems[j] do
               if Assigned(mgiModule) and (mgiFlags * [mgifIsTarget, mgifHasFile] = [mgifIsTarget, mgifHasFile]) then
-                Include(mgiModule.miFlags, mfIsModGroupTarget);
+                aTargets := aTargets + [mgiModule];
 end;
 
 function TwbModGroup.mgUpdateCRC(aAdd, aUpdate: Boolean): Boolean;
@@ -766,61 +768,52 @@ end;
 
 { TwbModGroupPtrsHelper }
 
-function TwbModGroupPtrsHelper.Activate(aContext: TwbGameContext): Boolean;
+function TwbModGroupPtrsHelper.Activate(aView: TwbConflictView): Boolean;
 var
-  Modules : TwbModuleInfos;
+  Modules    : TwbModuleInfos;
   i, j, k    : Integer;
-  Targets : TwbModuleInfos;
-  SourceReported : Boolean;
+  Tagged     : TwbModuleInfos;
+  Targets    : TwbModuleInfos;
+  AllTargets : TDictionary<PwbModuleInfo, TwbModuleInfos>;
 begin
   Result := False;
-  Modules := aContext.ModuleList.ModulesByLoadOrder(False);
-  for i := Low(Modules) to High(Modules) do
-    with Modules[i]^ do begin
-      miModGroupTargets := nil;
-      miModGroupSources := nil;
+  Modules := aView.Context.ModuleList.ModulesByLoadOrder(False);
+  AllTargets := TDictionary<PwbModuleInfo, TwbModuleInfos>.Create;
+  try
+    for i := Low(Modules) to High(Modules) do begin
+      Tagged := nil;
+      for j := Low(Self) to High(Self) do
+        Self[j].mgTagTargetFiles(Modules[i], Tagged);
+      if Length(Tagged) = 0 then
+        Continue;
+
+      Targets := nil;
+      SetLength(Targets, i);
+      k := 0;
+      for j := Pred(i) downto 0 do
+        if Tagged.Contains(Modules[j]) then begin
+          Targets[k] := Modules[j];
+          Inc(k);
+        end;
+      SetLength(Targets, k);
+      if k > 0 then
+        AllTargets.Add(Modules[i], Targets);
     end;
 
-  for i := Low(Modules) to High(Modules) do begin
-    Modules.ExcludeAll(mfIsModGroupTarget);
-    for j := Low(Self) to High(Self) do
-      Self[j].mgTagTargetFiles(Modules[i]);
-
-    Targets := nil;
-    SetLength(Targets, i);
-    k := 0;
-    for j := Pred(i) downto 0 do
-      if mfIsModGroupTarget in Modules[j].miFlags then begin
-        Targets[k] := Modules[j];
-        Inc(k);
+    for i := Low(Modules) to High(Modules) do
+      if AllTargets.TryGetValue(Modules[i], Targets) then begin
+        Result := True;
+        if wbReportModGroups then begin
+          wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
+          for j := Low(Targets) to High(Targets) do
+            wbProgress(' - ' + Targets[j].miName);
+        end;
       end;
-    SetLength(Targets, k);
-    Modules[i].miModGroupTargets := Targets;
+
+    aView.SetModGroupTargets(AllTargets);
+  finally
+    AllTargets.Free;
   end;
-
-  Modules.ExcludeAll(mfIsModGroupTarget);
-  Modules.ExcludeAll(mfIsModGroupSource);
-
-  for i := Low(Modules) to High(Modules) do
-    with Modules[i]^ do
-      if Length(miModGroupTargets) > 0 then begin
-        Include(miFlags, mfIsModGroupSource);
-        SourceReported := False;
-        for j := Low(miModGroupTargets) to High(miModGroupTargets) do
-          with miModGroupTargets[j]^ do begin
-            if not SourceReported then begin
-              if wbReportModGroups then
-                wbProgress('Records in "'+Modules[i].miName+'" will hide records from:');
-              SourceReported := True;
-            end;
-            Result := True;
-            Include(miFlags, mfIsModGroupTarget);
-            SetLength(miModGroupSources, Succ(Length(miModGroupSources)));
-            miModGroupSources[High(miModGroupSources)] := Modules[i];
-            if wbReportModGroups then
-              wbProgress(' - ' + miName);
-          end;
-      end;
 end;
 
 procedure TwbModGroupPtrsHelper.ExcludeAll(aFlag: TwbModGroupFlag);

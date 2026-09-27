@@ -8540,7 +8540,7 @@ begin
     if (Length(AllModGroups) < 1) or (ShowModal = mrOk) then begin
       SaveModGroupsSelection(SelectedModGroups);
       WasModGroupsExist := ModGroupsExist;
-      ModGroupsExist := SelectedModGroups.Activate(xeContext);
+      ModGroupsExist := SelectedModGroups.Activate(ConflictView);
       if WasModGroupsExist or ModGroupsExist then begin
         ConflictView.ModGroupsEnabled := ModGroupsExist;
         ResetAllConflict;
@@ -21486,7 +21486,7 @@ begin
               end;
             end;
 
-        ModGroupsExist := ModGroups.Activate(xeContext);
+        ModGroupsExist := ModGroups.Activate(ConflictView);
         ConflictView.ModGroupsEnabled := ModGroupsExist;
         mniModGroupsEnabled.Checked := ConflictView.ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ConflictView.ModGroupsEnabled;

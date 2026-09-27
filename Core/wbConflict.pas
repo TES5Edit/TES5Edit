@@ -3,6 +3,7 @@ unit wbConflict;
 interface
 
 uses
+  System.Generics.Collections,
   wbInterface;
 
 type
@@ -21,6 +22,7 @@ type
     cvModGroupsEnabled   : Boolean;
     cvAlignArrayElements : Boolean;
     cvAlignArrayLimit    : Integer;
+    cvModGroupTargets    : TDictionary<PwbModuleInfo, TwbModuleInfos>;
     cvEpoch              : Cardinal;
     procedure SetQuickShowConflicts(aValue: Boolean);
     procedure SetOnlyMasterAndLeafs(aValue: Boolean);
@@ -36,8 +38,12 @@ type
     Hits    : Int64;
     Misses  : Int64;
     constructor Create(aContext: TwbGameContext);
+    destructor Destroy; override;
     procedure RulesChanged;
     procedure Peek(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    function ModGroupTargets(aModule: PwbModuleInfo): TwbModuleInfos;
+    procedure SetModGroupTargets(aTargets: TDictionary<PwbModuleInfo, TwbModuleInfos>); overload;
+    procedure SetModGroupTargets(aFrom: TwbConflictView); overload;
     property QuickShowConflicts: Boolean read cvQuickShowConflicts write SetQuickShowConflicts;
     property OnlyMasterAndLeafs: Boolean read cvOnlyMasterAndLeafs write SetOnlyMasterAndLeafs;
     property ModGroupsEnabled: Boolean read cvModGroupsEnabled write SetModGroupsEnabled;
@@ -82,12 +88,40 @@ begin
   cvContextRef := aContext;
   cvAlignArrayElements := True;
   cvAlignArrayLimit := 5000;
+  cvModGroupTargets := TDictionary<PwbModuleInfo, TwbModuleInfos>.Create;
   cvEpoch := 1;
+end;
+
+destructor TwbConflictView.Destroy;
+begin
+  cvModGroupTargets.Free;
+  inherited;
 end;
 
 procedure TwbConflictView.RulesChanged;
 begin
   Inc(cvEpoch);
+end;
+
+function TwbConflictView.ModGroupTargets(aModule: PwbModuleInfo): TwbModuleInfos;
+begin
+  if not cvModGroupTargets.TryGetValue(aModule, Result) then
+    Result := nil;
+end;
+
+procedure TwbConflictView.SetModGroupTargets(aTargets: TDictionary<PwbModuleInfo, TwbModuleInfos>);
+begin
+  if aTargets <> cvModGroupTargets then begin
+    cvModGroupTargets.Clear;
+    for var lPair in aTargets do
+      cvModGroupTargets.Add(lPair.Key, lPair.Value);
+  end;
+  RulesChanged;
+end;
+
+procedure TwbConflictView.SetModGroupTargets(aFrom: TwbConflictView);
+begin
+  SetModGroupTargets(aFrom.cvModGroupTargets);
 end;
 
 procedure TwbConflictView.SetQuickShowConflicts(aValue: Boolean);
@@ -894,6 +928,8 @@ var
   Modules       : TwbModuleInfos;
   FirstModule   : PwbModuleInfo;
   LastModule    : PwbModuleInfo;
+  Targets       : TwbModuleInfos;
+  Hidden        : TwbModuleInfos;
 begin
   MainRecords := nil;
   Result := nil;
@@ -978,31 +1014,24 @@ begin
 
   if aView.ModGroupsEnabled and (Length(MainRecords) > 2) then begin
     SetLength(Modules, Length(MainRecords));
-    for i := Low(MainRecords) to High(MainRecords) do begin
-      Modules[i] := MainRecords[i]._File.ModuleInfo;
-      if Assigned(Modules[i]) then
-        Exclude(Modules[i].miFlags, mfEphemeralModGroupTagged);
-    end;
     FirstModule := nil;
     LastModule := nil;
-    for i := Low(Modules) to High(Modules) do
+    Hidden := nil;
+    for i := Low(MainRecords) to High(MainRecords) do begin
+      Modules[i] := MainRecords[i]._File.ModuleInfo;
       if Assigned(Modules[i]) then begin
         if not Assigned(FirstModule) then
           FirstModule := Modules[i];
-        with Modules[i]^ do
-          for j := Low(miModGroupTargets) to High(miModGroupTargets) do
-            Include(miModGroupTargets[j].miFlags, mfEphemeralModGroupTagged);
         LastModule := Modules[i];
+        Targets := aView.ModGroupTargets(Modules[i]);
+        if Length(Targets) > 0 then
+          Hidden := Hidden + Targets;
       end;
-
-    if Assigned(FirstModule) then
-      Exclude(FirstModule.miFlags, mfEphemeralModGroupTagged);
-    if Assigned(LastModule) then
-      Exclude(LastModule.miFlags, mfEphemeralModGroupTagged);
+    end;
 
     j := 0;
     for i := Low(Modules) to High(Modules) do
-      if not Assigned(Modules[i]) or not (mfEphemeralModGroupTagged in Modules[i].miFlags) then begin
+      if not Assigned(Modules[i]) or (Modules[i] = FirstModule) or (Modules[i] = LastModule) or not Hidden.Contains(Modules[i]) then begin
         if i <> j then
           MainRecords[j] := MainRecords[i];
         Inc(j);

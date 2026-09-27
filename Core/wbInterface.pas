@@ -3983,8 +3983,6 @@ type
     mfIsGameMaster,
     mfNew,
     mfTemplate,
-    mfIsModGroupTarget,
-    mfIsModGroupSource,
     mfEphemeralModGroupTagged,
     mfTaggedForPluginMode,
     mfModGroupMissingCurrentCRC,
@@ -4023,9 +4021,6 @@ type
     miFile              : TObject;
     miContext           : TwbGameContext;
 
-    miModGroupTargets   : TwbModuleInfos;
-    miModGroupSources   : TwbModuleInfos;
-
     function IsValid: Boolean;
     function HasIndex: Boolean;
     function IsActive: Boolean;
@@ -4052,6 +4047,7 @@ type
     procedure ActivateMasters;
     function FilteredByFlag(aFlag: TwbModuleFlag; aHasFlag: Boolean = True): TwbModuleInfos;
     function FilteredBy(const aFunc: TFunc<PwbModuleInfo, Boolean>): TwbModuleInfos;
+    function Contains(aModule: PwbModuleInfo): Boolean;
   end;
 
   TwbDynModuleInfos = array of TwbModuleInfo;
@@ -26592,6 +26588,16 @@ begin
     Exit;
   mlSimulatedLoadDisabled := True;
   ResetSimulatedLoad;
+end;
+
+function TwbModuleInfosHelper.Contains(aModule: PwbModuleInfo): Boolean;
+var
+  i: Integer;
+begin
+  for i := Low(Self) to High(Self) do
+    if Self[i] = aModule then
+      Exit(True);
+  Result := False;
 end;
 
 procedure TwbModuleInfosHelper.ExcludeAll(aFlag: TwbModuleFlag);
