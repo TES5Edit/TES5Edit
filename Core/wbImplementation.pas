@@ -3622,6 +3622,8 @@ begin
     Exclude(flModule.miFlags, mfHasFile);
     flModule.miFile := nil;
   end;
+  var lElements := ReleaseElements;
+  lElements := nil;
   flCloseFile;
   inherited;
 end;
@@ -4082,7 +4084,8 @@ begin
   flMasters                := nil;
   flRecords                := nil;
   flInjectedRecords        := nil;
-  ReleaseElements;
+  var lElements := ReleaseElements;
+  lElements := nil;
   flCloseFile;
 end;
 
