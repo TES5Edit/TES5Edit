@@ -70,6 +70,8 @@ var
   xeTestViewText           : Boolean;
   xeTestViewTextFile       : string;
   xeTestViewTextRecord     : string = '00000007';
+  xeTestOptions            : Boolean;
+  xeTestOptionsFile        : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -945,6 +947,15 @@ begin
       var lValue: string;
       if wbFindCmdLineParam('testviewrecord', lValue) and (lValue <> '') then
         xeTestViewTextRecord := lValue;
+    end;
+
+    if wbFindCmdLineParam('testoptions', xeTestOptionsFile) then begin
+      if xeTestOptionsFile = '' then begin
+        ShowMessage('testoptions requires an output file, as -testoptions:<filename>');
+        Exit(False);
+      end;
+      xeTestOptions := True;
+      xeAutoLoad    := True;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')

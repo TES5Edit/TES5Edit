@@ -821,6 +821,15 @@ type
     TestNavCopyControlMisses : Integer;
     TestNavCopyStartGiven    : Boolean;
 
+    TestOptionsTimer         : TTimer;
+    TestOptionsAnswer        : TTimer;
+    TestOptionsToggle        : Boolean;
+    TestOptionsShown         : Boolean;
+    TestOptionsDialogAlign   : Boolean;
+
+    procedure TestOptionsRunTimer(Sender: TObject);
+    procedure TestOptionsAnswerTimer(Sender: TObject);
+
     function TestNavCopyLastPhase: Integer;
     procedure TestNavCopyPhaseTimer(Sender: TObject);
     procedure TestNavCopyAnswerTimer(Sender: TObject);
@@ -859,6 +868,7 @@ type
     procedure DoTestConflictsDump;
     procedure DoTestNavCopy;
     procedure DoTestViewText;
+    procedure DoTestOptions;
     procedure DoTestSaveContextsCompare;
 
     function ViewName(const aElement: IwbElement; const aName: string): string;
@@ -4969,7 +4979,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -21248,6 +21258,104 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoTestOptions;
+begin
+  xeContext.Settings.DontSave := True;
+  TestOptionsAnswer := TTimer.Create(Self);
+  TestOptionsAnswer.Enabled := False;
+  TestOptionsAnswer.Interval := 250;
+  TestOptionsAnswer.OnTimer := TestOptionsAnswerTimer;
+  TestOptionsTimer := TTimer.Create(Self);
+  TestOptionsTimer.Interval := 500;
+  TestOptionsTimer.OnTimer := TestOptionsRunTimer;
+  TestOptionsTimer.Enabled := True;
+end;
+
+procedure TfrmMain.TestOptionsRunTimer(Sender: TObject);
+const
+  cArms    : array[0..2] of string = ('unchanged', 'toggle', 'restore');
+  cVerdict : array[Boolean] of string = ('FAIL', 'PASS');
+var
+  lLines       : TStringList;
+  lFailed      : Integer;
+  lEpochBefore : Cardinal;
+  lEpochAfter  : Cardinal;
+  lAlignBefore : Boolean;
+  lAlignAfter  : Boolean;
+  lPass        : Boolean;
+  lTmp         : string;
+begin
+  TestOptionsTimer.Enabled := False;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit options epoch probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# Columns, tab separated: arm, toggled, dialog shown, dialog align, epoch before, epoch after, align before, align after, verdict');
+    lFailed := 0;
+    try
+      for var lArm := Low(cArms) to High(cArms) do begin
+        TestOptionsToggle := lArm > Low(cArms);
+        TestOptionsShown := False;
+        lEpochBefore := ConflictView.Epoch;
+        lAlignBefore := ConflictView.AlignArrayElements;
+        TestOptionsAnswer.Enabled := True;
+        try
+          mniNavOptionsClick(nil);
+        finally
+          TestOptionsAnswer.Enabled := False;
+        end;
+        lEpochAfter := ConflictView.Epoch;
+        lAlignAfter := ConflictView.AlignArrayElements;
+        lPass := TestOptionsShown and (TestOptionsDialogAlign = lAlignBefore) and
+          ((lEpochAfter <> lEpochBefore) = TestOptionsToggle) and ((lAlignAfter <> lAlignBefore) = TestOptionsToggle);
+        if not lPass then
+          Inc(lFailed);
+        lLines.Add(string.Join(#9, [cArms[lArm], BoolToStr(TestOptionsToggle, True), BoolToStr(TestOptionsShown, True),
+          BoolToStr(TestOptionsDialogAlign, True), lEpochBefore.ToString, lEpochAfter.ToString, BoolToStr(lAlignBefore, True),
+          BoolToStr(lAlignAfter, True), cVerdict[lPass]]));
+        AddMessage(Format('[Test Options] %s: epoch %d -> %d, align %s -> %s, %s', [cArms[lArm], lEpochBefore, lEpochAfter,
+          BoolToStr(lAlignBefore, True), BoolToStr(lAlignAfter, True), cVerdict[lPass]]));
+      end;
+      if lFailed = 0 then
+        CheckResult := 0
+      else
+        CheckResult := 1;
+    except
+      on E: Exception do begin
+        AddMessage('[Test Options] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+        CheckResult := 255;
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestOptionsFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestOptionsFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TfrmMain.TestOptionsAnswerTimer(Sender: TObject);
+var
+  lForm: TfrmOptions;
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] is TfrmOptions) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := TfrmOptions(Screen.CustomForms[i]);
+      TestOptionsShown := True;
+      TestOptionsDialogAlign := lForm.cbAlignArrayElements.Checked;
+      if TestOptionsToggle then
+        lForm.cbAlignArrayElements.Checked := not lForm.cbAlignArrayElements.Checked;
+      lForm.ModalResult := mrOk;
+      Exit;
+    end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -21492,6 +21600,9 @@ begin
           if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;
+
+        if xeTestOptions then
+          DoTestOptions;
 
         if xeTestSaveContexts then
           DoTestSaveContextsCompare;
