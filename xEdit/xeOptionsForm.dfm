@@ -577,11 +577,22 @@ object frmOptions: TfrmOptions
       ImageIndex = 4
       object cbClampFormID: TCheckBox
         Left = 16
-        Top = 80
+        Top = 101
         Width = 439
         Height = 17
         Hint = 'Set FormID index to the number of masters if greater'
         Caption = 'Clamp FormIDs'
+        TabOrder = 4
+      end
+      object cbShowFlagEnumValue: TCheckBox
+        Left = 16
+        Top = 80
+        Width = 439
+        Height = 17
+        Hint = 
+          'Show a flag'#39's value (0x...) and an enumeration'#39's value (n) after ' +
+          'its name in the view and its edit lists'
+        Caption = 'Show values of flags and enumerations'
         TabOrder = 3
       end
       object cbSortINFO: TCheckBox
@@ -616,33 +627,33 @@ object frmOptions: TfrmOptions
       end
       object cbManualCleaningAllow: TCheckBox
         Left = 16
-        Top = 103
+        Top = 124
         Width = 439
         Height = 17
         Caption = 'Allow Manual Cleaning functions'
-        TabOrder = 4
+        TabOrder = 5
       end
       object cbDecodeTexture: TCheckBox
         Left = 16
-        Top = 149
+        Top = 170
         Width = 233
         Height = 24
         Caption = 'Decode Texture Hashes (requires restart)'
-        TabOrder = 5
+        TabOrder = 6
       end
       object cbConvertIntFormID: TCheckBox
         Left = 16
-        Top = 173
+        Top = 194
         Width = 438
         Height = 24
         Caption = 
           'Allow use of integer FormIDs (requires '#39'0x'#39' prefix on hex FormID' +
           's)'
-        TabOrder = 6
+        TabOrder = 7
       end
       object cbWriteOffsetData: TCheckBox
         Left = 16
-        Top = 197
+        Top = 218
         Width = 438
         Height = 24
         Hint = 
@@ -650,7 +661,7 @@ object frmOptions: TfrmOptions
           'saving. A worldspace that can not be described exactly is written ' +
           'without a table rather than with an approximate one.'
         Caption = 'Write worldspace cell offsets (OFST) on save'
-        TabOrder = 7
+        TabOrder = 8
       end
     end
   end

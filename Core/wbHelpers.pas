@@ -109,6 +109,13 @@ type
     class function Iff(aCond: Boolean; const aTrue, aFalse: T): T; static;
   end;
 
+  TwbFlagEnumValues = record
+    class function Name(const aElement: IwbElement; const aName: string): string; static;
+    class function Value(const aElement: IwbElement; const aValue: string): string; static;
+    class function EditInfo(const aElement: IwbElement; const aEditInfo: TwbStringArray): TwbStringArray; static;
+    class function Strip(const aElement: IwbElement; const aEditValue: string): string; static;
+  end;
+
 procedure wbCodeBlock(const aProc: TProc);
 
 function wbVarArray(const aElements: array of Variant): Variant;
@@ -1013,6 +1020,95 @@ begin
     Result := aTrue
   else
     Result := aFalse;
+end;
+
+function FlagMask(aIndex: Integer): string;
+begin
+  Result := ' (0x' + IntToHex(Int64(1) shl aIndex, 8) + ')';
+end;
+
+function TryGetFormater(const aElement: IwbElement; out aFormater: IwbIntegerDefFormater): Boolean;
+var
+  lIntegerDef: IwbIntegerDef;
+begin
+  Result := Assigned(aElement) and Supports(aElement.ResolvedValueDef, IwbIntegerDef, lIntegerDef);
+  if Result then begin
+    aFormater := lIntegerDef.Formater[aElement];
+    Result := Assigned(aFormater);
+  end;
+end;
+
+class function TwbFlagEnumValues.Name(const aElement: IwbElement; const aName: string): string;
+var
+  lFlagDef: IwbFlagDef;
+begin
+  Result := aName;
+  if (aName <> '') and Assigned(aElement) and Supports(aElement.Def, IwbFlagDef, lFlagDef) then
+    Result := aName + FlagMask(lFlagDef.FlagIndex);
+end;
+
+class function TwbFlagEnumValues.Value(const aElement: IwbElement; const aValue: string): string;
+var
+  lFormater : IwbIntegerDefFormater;
+  lNative   : Variant;
+begin
+  Result := aValue;
+  if (aValue <> '') and TryGetFormater(aElement, lFormater) and Supports(lFormater, IwbEnumDef) then begin
+    lNative := aElement.NativeValue;
+    if VarIsOrdinal(lNative) then
+      Result := aValue + ' (' + IntToStr(Int64(lNative)) + ')';
+  end;
+end;
+
+class function TwbFlagEnumValues.EditInfo(const aElement: IwbElement; const aEditInfo: TwbStringArray): TwbStringArray;
+var
+  lFormater : IwbIntegerDefFormater;
+  lEnumDef  : IwbEnumDef;
+begin
+  Result := aEditInfo;
+  if not TryGetFormater(aElement, lFormater) then
+    Exit;
+  if Supports(lFormater, IwbFlagsDef) then begin
+    SetLength(Result, Length(aEditInfo));
+    for var i := Low(aEditInfo) to High(aEditInfo) do
+      Result[i] := aEditInfo[i] + FlagMask(i);
+  end else if Supports(lFormater, IwbEnumDef, lEnumDef) then begin
+    SetLength(Result, Length(aEditInfo));
+    for var i := Low(aEditInfo) to High(aEditInfo) do
+      try
+        Result[i] := aEditInfo[i] + ' (' + IntToStr(lEnumDef.FromEditValue(aEditInfo[i], aElement)) + ')';
+      except
+        on Exception do
+          Result[i] := aEditInfo[i];
+      end;
+  end;
+end;
+
+class function TwbFlagEnumValues.Strip(const aElement: IwbElement; const aEditValue: string): string;
+var
+  lFormater : IwbIntegerDefFormater;
+  lEnumDef  : IwbEnumDef;
+  lOpen     : Integer;
+  lValue    : Int64;
+begin
+  Result := aEditValue;
+  if (aEditValue = '') or (aEditValue[Length(aEditValue)] <> ')') then
+    Exit;
+  if not (TryGetFormater(aElement, lFormater) and Supports(lFormater, IwbEnumDef, lEnumDef)) then
+    Exit;
+  lOpen := LastDelimiter('(', aEditValue);
+  if (lOpen < 3) or (aEditValue[Pred(lOpen)] <> ' ') then
+    Exit;
+  if not TryStrToInt64(Copy(aEditValue, Succ(lOpen), Length(aEditValue) - Succ(lOpen)), lValue) then
+    Exit;
+  var lName := Copy(aEditValue, 1, lOpen - 2);
+  try
+    if lEnumDef.FromEditValue(lName, aElement) = lValue then
+      Result := lName;
+  except
+    on Exception do
+      ;
+  end;
 end;
 
 procedure wbCodeBlock(const aProc: TProc);

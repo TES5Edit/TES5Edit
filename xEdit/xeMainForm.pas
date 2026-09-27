@@ -857,7 +857,13 @@ type
 
     procedure DoTestConflictsDump;
     procedure DoTestNavCopy;
+    procedure DoTestViewText;
     procedure DoTestSaveContextsCompare;
+
+    function ViewName(const aElement: IwbElement; const aName: string): string;
+    function ViewValue(const aElement: IwbElement; const aValue: string): string;
+    function ViewEditInfo(const aElement: IwbElement): TArray<string>;
+    function ViewCommitText(const aElement: IwbElement; const aText: string): string;
     procedure DoCompareTo(const aFile: IwbFile; const aSelected: string);
   protected
 
@@ -978,6 +984,7 @@ type
     ModGroupsExist : Boolean;
     NewModGroupName: string;
     ShowUnsavedHint: Boolean;
+    ShowFlagEnumValue: Boolean;
     ScriptRunning: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
@@ -4963,7 +4970,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -5230,6 +5237,7 @@ begin
   TotalUsageTime := Settings.ReadFloat('Usage', 'TotalTime', 0);
   RateNoticeGiven := Settings.ReadInteger('Usage', 'RateNoticeGiven', 0);
   ShowUnsavedHint := Settings.ReadBool('Options', 'ShowUnsavedHint', ShowUnsavedHint);
+  ShowFlagEnumValue := Settings.ReadBool('Options', 'ShowFlagEnumValue', ShowFlagEnumValue);
   if not xeContext.Settings.TranslationMode then begin
     wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
     xeContext.Settings.HideIgnored := Settings.ReadBool('Options', 'HideIgnored', xeContext.Settings.HideIgnored);
@@ -13964,6 +13972,7 @@ begin
     cbWriteOffsetData.Checked := xeContext.Settings.WriteOffsetData;
     cbFocusAddedElement.Checked := wbFocusAddedElement;
     cbRequireCtrlForDblClick.Checked := wbRequireCtrlForDblClick;
+    cbShowFlagEnumValue.Checked := ShowFlagEnumValue;
     cbShowGroupRecordCount.Checked := wbShowGroupRecordCount;
     cbShowFileFlags.Checked := wbShowFileFlags;
     sedAutoCompareSelectedLimit.Value := wbAutoCompareSelectedLimit;
@@ -14026,6 +14035,14 @@ begin
     xeContext.Settings.WriteOffsetData := cbWriteOffsetData.Checked;
     wbFocusAddedElement := cbFocusAddedElement.Checked;
     wbRequireCtrlForDblClick := cbRequireCtrlForDblClick.Checked;
+    if ShowFlagEnumValue <> cbShowFlagEnumValue.Checked then begin
+      ShowFlagEnumValue := cbShowFlagEnumValue.Checked;
+      EditInfoCacheID := nil;
+      vstView.Invalidate;
+      vstSpreadSheetWeapon.Invalidate;
+      vstSpreadSheetArmor.Invalidate;
+      vstSpreadSheetAmmo.Invalidate;
+    end;
     wbShowGroupRecordCount := cbShowGroupRecordCount.Checked;
     wbShowFileFlags := cbShowFileFlags.Checked;
     wbAutoCompareSelectedLimit := sedAutoCompareSelectedLimit.Value;
@@ -14083,6 +14100,7 @@ begin
     Settings.WriteBool('Options', 'WriteOffsetData2', xeContext.Settings.WriteOffsetData);
     Settings.WriteBool('Options', 'FocusAddedElement', wbFocusAddedElement);
     Settings.WriteBool('Options', 'RequireCtrlForDblClick', wbRequireCtrlForDblClick);
+    Settings.WriteBool('Options', 'ShowFlagEnumValue', ShowFlagEnumValue);
     Settings.WriteBool('Options', 'ShowGroupRecordCount', wbShowGroupRecordCount);
     Settings.WriteBool('Options', 'ShowFileFlags', wbShowFileFlags);
     Settings.WriteInteger('Options', 'AutoCompareSelectedLimit', wbAutoCompareSelectedLimit);
@@ -17608,7 +17626,7 @@ begin
       EditLink := ComboLink;
       if aElement.ElementID <> EditInfoCacheID then begin
         EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := aElement.EditInfo;
+        EditInfoCache := ViewEditInfo(aElement);
       end;
       with ComboLink.Properties do begin
         with Items do begin
@@ -17633,7 +17651,7 @@ begin
       EditLink := CheckComboLink;
       if aElement.ElementID <> EditInfoCacheID then begin
         EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := aElement.EditInfo;
+        EditInfoCache := ViewEditInfo(aElement);
       end;
 
       with CheckComboLink.Properties do begin
@@ -17656,7 +17674,7 @@ begin
       EditLink := ComboLink;
       if aElement.ElementID <> EditInfoCacheID then begin
         EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := aElement.EditInfo;
+        EditInfoCache := ViewEditInfo(aElement);
       end;
       with ComboLink.PickList do begin
         BeginUpdate;
@@ -17673,7 +17691,7 @@ begin
       EditLink := CheckComboLink;
       if aElement.ElementID <> EditInfoCacheID then begin
         EditInfoCacheID := aElement.ElementID;
-        EditInfoCache := aElement.EditInfo;
+        EditInfoCache := ViewEditInfo(aElement);
       end;
       with CheckComboLink.PickList do begin
         BeginUpdate;
@@ -18072,7 +18090,38 @@ begin
 
   Element := NodeDatas[Column].Element;
   if Assigned(Element) and Element.IsEditable then
-    CellText := Element.EditValue;
+    CellText := ViewValue(Element, Element.EditValue);
+end;
+
+function TfrmMain.ViewName(const aElement: IwbElement; const aName: string): string;
+begin
+  if ShowFlagEnumValue then
+    Result := TwbFlagEnumValues.Name(aElement, aName)
+  else
+    Result := aName;
+end;
+
+function TfrmMain.ViewValue(const aElement: IwbElement; const aValue: string): string;
+begin
+  if ShowFlagEnumValue then
+    Result := TwbFlagEnumValues.Value(aElement, aValue)
+  else
+    Result := aValue;
+end;
+
+function TfrmMain.ViewEditInfo(const aElement: IwbElement): TArray<string>;
+begin
+  Result := aElement.EditInfo;
+  if ShowFlagEnumValue then
+    Result := TwbFlagEnumValues.EditInfo(aElement, Result);
+end;
+
+function TfrmMain.ViewCommitText(const aElement: IwbElement; const aText: string): string;
+begin
+  if ShowFlagEnumValue then
+    Result := TwbFlagEnumValues.Strip(aElement, aText)
+  else
+    Result := aText;
 end;
 
 procedure TfrmMain.vstViewGetText(Sender: TBaseVirtualTree;
@@ -18121,7 +18170,7 @@ begin
   if Assigned(Element) then begin
     if TextType = ttNormal then begin
       if Column < 1 then begin
-        CellText := Element.DisplayName[UseSuffix];
+        CellText := ViewName(Element, Element.DisplayName[UseSuffix]);
         if vnfIsSorted in NodeDatas[0].ViewNodeFlags then
           CellText := CellText + ' (sorted)'
         else if vnfIsAligned in NodeDatas[0].ViewNodeFlags then
@@ -18132,7 +18181,7 @@ begin
           CellText := Element.RawDataAsString;
         if CellText = '' then
           if (Element.ConflictPriority <> cpIgnore) or not xeContext.Settings.HideIgnored then begin
-            CellText := Element.Value;
+            CellText := ViewValue(Element, Element.Value);
             if (CellText = '') and not (vsExpanded in Node.States) then
               CellText := Element.Summary;
           end;
@@ -18549,7 +18598,7 @@ begin
       //      vstView.BeginUpdate;
       LockProcessMessages;
       try
-        Element.EditValue := NewText;
+        Element.EditValue := ViewCommitText(Element, NewText);
         ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
         ViewFocusedElement := Element;
         EditFocusedViewElement := False;
@@ -19916,7 +19965,7 @@ begin
 
   Element := NodeDatas[Column].Element;
   if Assigned(Element) and Element.IsEditable then
-    CellText := Element.EditValue;
+    CellText := ViewValue(Element, Element.EditValue);
 end;
 
 procedure TfrmMain.vstSpreadSheetGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
@@ -19952,7 +20001,7 @@ begin
           CellText := MainRecord.LoadOrderFormID.ToDisplayString(xeContext.SlotLayout);
       end;
     end else
-      CellText := Element.Value;
+      CellText := ViewValue(Element, Element.Value);
   end;
 end;
 
@@ -20188,7 +20237,7 @@ begin
       if not EditWarn then
         Exit;
 
-      Element.EditValue := NewText;
+      Element.EditValue := ViewCommitText(Element, NewText);
     end;
   end;
 end;
@@ -21151,6 +21200,52 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoTestViewText;
+var
+  lRecord : IwbMainRecord;
+  lLines  : TStringList;
+  lTmp    : string;
+begin
+  lRecord := nil;
+  var lFormID := TwbFormID.FromStr(xeTestViewTextRecord);
+  for var i := High(Files) downto Low(Files) do begin
+    lRecord := Files[i].RecordByFormID[lFormID, True, True];
+    if Assigned(lRecord) then
+      Break;
+  end;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit view text probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# showFlagEnumValue = ' + BoolToStr(ShowFlagEnumValue, True));
+    lLines.Add('# record = ' + xeTestViewTextRecord);
+    lLines.Add('# Columns, tab separated: indented name / per record column: cell text, edit text');
+    if not Assigned(lRecord) then
+      lLines.Add('# NOT FOUND')
+    else begin
+      lLines.Add('# found = ' + lRecord.Name);
+      DoSetActiveRecord(lRecord);
+      vstView.FullExpand;
+      for var lNode in vstView.Nodes(False) do begin
+        var lLine := StringOfChar(' ', 2 * Integer(vstView.GetNodeLevel(lNode))) + vstView.Text[lNode, 0, False];
+        for var lColumn := 1 to Pred(vstView.Header.Columns.Count) do begin
+          var lEditText := '';
+          vstViewGetEditText(vstView, lNode, lColumn, lEditText);
+          lLine := lLine + #9 + vstView.Text[lNode, lColumn, False] + #9 + lEditText;
+        end;
+        lLines.Add(lLine);
+      end;
+    end;
+    lTmp := xeTestViewTextFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestViewTextFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+    AddMessage(Format('[Test View Text] %d rows written to %s', [lLines.Count, xeTestViewTextFile]));
+  finally
+    lLines.Free;
+  end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -21389,6 +21484,12 @@ begin
 
         if xeTestNavCopy then
           DoTestNavCopy;
+
+        if xeTestViewText then begin
+          DoTestViewText;
+          if xeAutoExit then
+            tmrShutdown.Enabled := True;
+        end;
 
         if xeTestSaveContexts then
           DoTestSaveContextsCompare;

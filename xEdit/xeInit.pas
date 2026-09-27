@@ -67,6 +67,9 @@ var
   xeTestNavCopyCount       : Integer = 12;
   xeTestNavCopyNew         : Boolean;
   xeTestNavCopySignature   : string = 'QUST';
+  xeTestViewText           : Boolean;
+  xeTestViewTextFile       : string;
+  xeTestViewTextRecord     : string = '00000007';
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -930,6 +933,18 @@ begin
       xeTestNavCopyNew := FindCmdLineSwitch('testnavcopynew');
       if wbFindCmdLineParam('testnavcopysig', lValue) and (Length(lValue) = 4) then
         xeTestNavCopySignature := lValue;
+    end;
+
+    if wbFindCmdLineParam('testviewtext', xeTestViewTextFile) then begin
+      if xeTestViewTextFile = '' then begin
+        ShowMessage('testviewtext requires an output file, as -testviewtext:<filename>');
+        Exit(False);
+      end;
+      xeTestViewText := True;
+      xeAutoLoad     := True;
+      var lValue: string;
+      if wbFindCmdLineParam('testviewrecord', lValue) and (lValue <> '') then
+        xeTestViewTextRecord := lValue;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')

@@ -86,6 +86,7 @@ var
   DumpSize             : Boolean      = False;
   DumpHidden           : Boolean      = False;
   DumpSummary          : Boolean      = True;
+  ShowFlagEnumValue    : Boolean      = False;
   DontWriteReport      : Boolean      = False;
   ProgressLocked       : Boolean      = False;
   ReportRecordProgress : Boolean      = True;
@@ -712,8 +713,13 @@ begin
       lSummary := aElement.Summary;
 
     if DumpHidden or ((aElement.Name <> 'Unused') and (Name <> 'Unused')) then begin
+      if ShowFlagEnumValue then
+        Value := TwbFlagEnumValues.Value(aElement, Value);
       if (Name <> '') and ((not wbReportMode) or DumpCheckReport) then
-        Write(aIndent, Name);
+        if ShowFlagEnumValue then
+          Write(aIndent, TwbFlagEnumValues.Name(aElement, Name))
+        else
+          Write(aIndent, Name);
       if (Name <> '') or (Value <> '') then begin
         aIndent := aIndent + '  ';
         if DumpSize then
@@ -1099,6 +1105,8 @@ begin
       if FindCmdLineSwitch('dh') then begin
         DumpHidden := True;
       end;
+
+      ShowFlagEnumValue := wbReportMode;
 
      var SourceName := DumpSourceName;
      if SourceName = 'Plugins' then
