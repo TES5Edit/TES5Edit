@@ -893,11 +893,11 @@ type
     function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
     procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
-    function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
+    function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
     function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean;
     function GetSourceElement(Source: TObject; out SourceElement: IwbElement): Boolean;
 
-    function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
+    function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
 
     procedure ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
 
@@ -6554,12 +6554,13 @@ begin
 end;
 
 function TfrmMain.GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer;
-  out TargetElement: IwbElement): Boolean;
+  out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
 var
   NodeDatas                   : PViewNodeDatas;
   Container                   : IwbContainerElementRef;
 begin
   TargetIndex := High(Integer);
+  aAlignedMemoryIndex := -1;
   Result := False;
 
   if Pred(vstView.FocusedColumn) > High(ActiveRecords) then
@@ -6574,6 +6575,8 @@ begin
     if Assigned(NodeDatas) then begin
       TargetElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       if Assigned(TargetElement) then begin
+        if TargetIndex < High(Integer) then
+          wbConflictAlignedGap(NodeDatas[Pred(vstView.FocusedColumn)], TargetIndex, aAlignedMemoryIndex);
         if (TargetIndex < High(Integer)) and Supports(TargetElement, IwbContainerElementRef, Container) then
           Dec(TargetIndex, Container.AdditionalElementCount);
         Break;
@@ -6591,13 +6594,15 @@ begin
 end;
 
 function TfrmMain.GetTargetElement(Target: TBaseVirtualTree;
-  var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement): Boolean;
+  var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement;
+  out aAlignedMemoryIndex: Integer): Boolean;
 var
   NodeDatas                   : PViewNodeDatas;
   Container                   : IwbContainerElementRef;
 begin
   TargetIndex := Low(Integer);
   TargetElement := nil;
+  aAlignedMemoryIndex := -1;
   Result := False;
 
   if TargetColumn < 1 then
@@ -6613,6 +6618,8 @@ begin
     if Assigned(NodeDatas) then begin
       TargetElement := NodeDatas[Pred(TargetColumn)].Element;
       if Assigned(TargetElement) then begin
+        if TargetIndex >= 0 then
+          wbConflictAlignedGap(NodeDatas[Pred(TargetColumn)], TargetIndex, aAlignedMemoryIndex);
         if (TargetIndex >= 0) and Supports(TargetElement, IwbContainerElementRef, Container) then
           Dec(TargetIndex, Container.AdditionalElementCount);
         Break;
@@ -7471,6 +7478,7 @@ var
   TargetNode                  : PVirtualNode;
   TargetIndex                 : Integer;
   TargetElement               : IwbElement;
+  AlignedMemoryIndex          : Integer;
   NewElement                  : IwbElement;
   Control                     : Boolean;
 begin
@@ -7479,7 +7487,7 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  if GetAddElement(TargetNode, TargetIndex, TargetElement) then begin
+  if GetAddElement(TargetNode, TargetIndex, TargetElement, AlignedMemoryIndex) then begin
     if not EditWarn then
       Exit;
 
@@ -7495,7 +7503,10 @@ begin
             lTemplate := lTemplates[lTemplateIdx];
         end;
 
-        NewElement := TargetElement.Assign(TargetIndex, lTemplate, False);
+        if AlignedMemoryIndex >= 0 then
+          NewElement := (TargetElement as IwbContainerElementRef).AssignAligned(TargetIndex, AlignedMemoryIndex, lTemplate, False)
+        else
+          NewElement := TargetElement.Assign(TargetIndex, lTemplate, False);
         if Assigned(NewElement) then
           NewElement.SetToDefaultIfAsCreatedEmpty;
 
@@ -14272,16 +14283,15 @@ function TfrmMain.PerformDrop(TargetTree    : TBaseVirtualTree;
                         const SourceElement : IwbElement)
                                             : Boolean;
 var
-  TargetIndex     : Integer;
-  TargetElement   : IwbElement;
-  NewElement      : IwbElement;
-  TargetNodeDatas : PViewNodeDatas;
-  TargetNodeData  : PViewNodeData;
-  TargetContainer : IwbContainerElementRef;
+  TargetIndex        : Integer;
+  TargetElement      : IwbElement;
+  AlignedMemoryIndex : Integer;
+  NewElement         : IwbElement;
+  TargetContainer    : IwbContainerElementRef;
 begin
   Result := False;
 
-  if GetTargetElement(TargetTree, TargetNode, TargetColumn, TargetIndex, TargetElement) then begin
+  if GetTargetElement(TargetTree, TargetNode, TargetColumn, TargetIndex, TargetElement, AlignedMemoryIndex) then begin
 
     if SourceElement.Equals(TargetElement) then
       Exit;
@@ -14294,19 +14304,13 @@ begin
 
     vstView.BeginUpdate;
     try
-      NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
-      if Assigned(NewElement) and (TargetIndex >= 0) and (TargetIndex < High(Integer)) then begin
-        TargetNodeDatas := vstView.GetNodeData(TargetNode);
-        if Assigned(TargetNodeDatas) then begin
-          TargetNodeData := @TargetNodeDatas[Pred(TargetColumn)];
-          if vnfIsAligned in TargetNodeData.ViewNodeFlags then
-            if Supports(TargetElement, IwbContainerElementRef, TargetContainer) then begin
-              NewElement.SortOrder := TargetIndex;
-              TargetContainer.SortBySortOrder;
-              TargetContainer.ResetMemoryOrder;
-            end;
-        end;
-      end;
+      if AlignedMemoryIndex >= 0 then begin
+        TargetContainer := TargetElement as IwbContainerElementRef;
+        NewElement := TargetContainer.AssignAligned(TargetIndex, AlignedMemoryIndex, SourceElement, False);
+        if Assigned(NewElement) then
+          TargetContainer.MoveElementTo(NewElement, AlignedMemoryIndex);
+      end else
+        NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
 
       ActiveRecords[Pred(TargetColumn)].UpdateRefs;
       ViewFocusedElement := NewElement;
@@ -14911,6 +14915,7 @@ var
   TargetNode    : PVirtualNode;
   TargetIndex   : Integer;
   TargetElement : IwbElement;
+  AlignedIndex  : Integer;
   NodeLabel     : String;
 begin
   Element := GetFocusedViewElementSafely;
@@ -14979,8 +14984,10 @@ begin
       mniViewNextMember.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.CanChangeMember;
       mniViewPreviousMember.Visible := not xeContext.Settings.TranslationMode and Assigned(Element) and Element.CanChangeMember;
     end;
-    mniViewAdd.Visible := not xeContext.Settings.TranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement) and
-      TargetElement.CanAssign(TargetIndex, nil, True) and not (esNotSuitableToAddTo in TargetElement.ElementStates);
+    mniViewAdd.Visible := not xeContext.Settings.TranslationMode and GetAddElement(TargetNode, TargetIndex, TargetElement, AlignedIndex) and
+      ( ((AlignedIndex >= 0) and (TargetElement as IwbContainerElementRef).CanAssignAligned(TargetIndex, True)) or
+        ((AlignedIndex < 0) and TargetElement.CanAssign(TargetIndex, nil, True)) ) and
+      not (esNotSuitableToAddTo in TargetElement.ElementStates);
   end;
 
   mniViewAdd.Tag := -1;
@@ -17829,6 +17836,7 @@ var
   TargetColumn                : Integer;
   TargetIndex                 : Integer;
   TargetElement               : IwbElement;
+  AlignedMemoryIndex          : Integer;
   SourceElement               : IwbElement;
 begin
   Accept := False;
@@ -17839,7 +17847,7 @@ begin
   TargetNode := Sender.DropTargetNode;
   TargetColumn := Sender.DropTargetColumn;
 
-  Accept := GetSourceElement(Source, SourceElement) and GetTargetElement(Sender, TargetNode, TargetColumn, TargetIndex, TargetElement) and
+  Accept := GetSourceElement(Source, SourceElement) and GetTargetElement(Sender, TargetNode, TargetColumn, TargetIndex, TargetElement, AlignedMemoryIndex) and
     (TargetElement <> SourceElement) and
     TargetElement.CanAssign(TargetIndex, SourceElement, True);
 end;
@@ -18087,6 +18095,7 @@ begin
   for i := Low(ActiveRecords) to High(ActiveRecords) do begin
     NodeDatas[i].Element := nil;
     NodeDatas[i].Container := nil;
+    NodeDatas[i].RowElements := nil;
   end;
 end;
 
@@ -21481,6 +21490,9 @@ begin
       if not Supports(lParentDatas[lColumn].Element, IwbContainerElementRef, lContainer) then
         raise Exception.Create('the gap''s parent is not a container');
       lLines.Add('gap' + #9 + IntToStr(lGapNode.Index) + #9 + lContainer.Path);
+      var lGapMemoryIndex: Integer;
+      var lGapValid := wbConflictAlignedGap(lParentDatas[lColumn], lGapNode.Index, lGapMemoryIndex);
+      lLines.Add('# gap valid' + #9 + BoolToStr(lGapValid, True) + #9 + 'memory index ' + IntToStr(lGapMemoryIndex));
       lLines.Add('source' + #9 + '-' + #9 + ElementText(lGapSource));
       AddContainer(lLines, 'before', lContainer);
 
@@ -21497,9 +21509,11 @@ begin
         var lTargetNode := lGapNode;
         var lTargetIndex: Integer;
         var lTargetElement: IwbElement;
-        var lAccept := GetTargetElement(vstView, lTargetNode, Succ(lColumn), lTargetIndex, lTargetElement) and
+        var lAlignedMemoryIndex: Integer;
+        var lAccept := GetTargetElement(vstView, lTargetNode, Succ(lColumn), lTargetIndex, lTargetElement, lAlignedMemoryIndex) and
           (lTargetElement <> lGapSource) and lTargetElement.CanAssign(lTargetIndex, lGapSource, True);
         lLines.Add('dragover' + #9 + 'accept' + #9 + BoolToStr(lAccept, True));
+        lLines.Add('# dragover aligned memory index' + #9 + IntToStr(lAlignedMemoryIndex));
       end else if SameText(xeTestCopyIntoGapOp, 'drop') then begin
         lLines.Add('drop' + #9 + 'performed' + #9 + BoolToStr(PerformDrop(vstView, lGapNode, Succ(lColumn), lGapSource), True));
         AddContainer(lLines, 'after', lContainer);

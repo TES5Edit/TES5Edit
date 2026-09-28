@@ -582,6 +582,7 @@ type
     procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); virtual;
     procedure SortBySortOrder; virtual;
     procedure SetIsSortedBySortOrder(aForce: Boolean);
+    procedure MoveElementTo(const aElement: IwbElement; aIndex: Integer);
     procedure CreatedEmpty;
 
     function Reached: Boolean; override;
@@ -612,6 +613,8 @@ type
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; virtual;
+    function CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean; virtual;
+    function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
     procedure SetToDefaultInternal; override;
     procedure SetToDefaultIfAsCreatedEmpty; override;
@@ -1651,6 +1654,8 @@ type
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
     function GetIsInSK(aIndex: Integer): Boolean; override;
+    function CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean; override;
+    function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
     function DoCheckSizeAfterWrite: Boolean; override;
 
     function GetDef: IwbNamedDef; override;
@@ -6945,6 +6950,11 @@ begin
   Include(cntStates, csConstructionCompleted);
 end;
 
+function TwbContainer.AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+begin
+  Result := Assign(aIndex, aElement, aOnlySK);
+end;
+
 function TwbContainer.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Container       : IwbContainer;
@@ -7115,6 +7125,11 @@ begin
     if cntElements[i].CanContainFormIDs then
       cntElements[i].BuildRef;
   cntRefsBuildAt := eGeneration;
+end;
+
+function TwbContainer.CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean;
+begin
+  Result := CanAssign(aIndex, nil, aCheckDontShow);
 end;
 
 function TwbContainer.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
@@ -8189,6 +8204,42 @@ begin
 
       Exit;
     end;
+end;
+
+procedure TwbContainer.MoveElementTo(const aElement: IwbElement; aIndex: Integer);
+var
+  SelfRef  : IwbContainerElementRef;
+  lElement : IwbElementInternal;
+  i, j     : Integer;
+begin
+  if not Assigned(aElement) or (Length(cntElements) < 1) then
+    Exit;
+  SelfRef := Self as IwbContainerElementRef;
+
+  i := High(cntElements);
+  while (i >= 0) and not cntElements[i].Equals(aElement) do
+    Dec(i);
+  if i < 0 then
+    Exit;
+
+  aIndex := EnsureRange(aIndex, 0, High(cntElements));
+  if aIndex <> i then begin
+    lElement := cntElements[i];
+    if aIndex < i then
+      for j := i downto Succ(aIndex) do
+        cntElements[j] := cntElements[Pred(j)]
+    else
+      for j := i to Pred(aIndex) do
+        cntElements[j] := cntElements[Succ(j)];
+    cntElements[aIndex] := lElement;
+    if csSortedBySortOrder in cntStates then
+      SetIsSortedBySortOrder(False);
+  end;
+
+  SetModified(True);
+  if Length(cntElements) - GetAdditionalElementCount > 1 then
+    InvalidateStorage;
+  ResetMemoryOrder;
 end;
 
 procedure TwbContainer.MoveElementUp(const aElement: IwbElement);
@@ -16027,6 +16078,16 @@ begin
     inherited AddIfMissingInternal(aElement, aAsNew, aDeepCopy, aPrefixRemove, aSuffixRemove, aPrefix, aSuffix, aAllowOverwrite);
 end;
 
+function TwbSubRecord.AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
+begin
+  if GetAlignable then begin
+    Result := Assign(wbAssignAdd, aElement, aOnlySK);
+    if Assigned(Result) then
+      MoveElementTo(Result, aMemoryIndex);
+  end else
+    Result := inherited;
+end;
+
 function TwbSubRecord.AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 var
   Element       : IwbElement;
@@ -16037,7 +16098,6 @@ var
   i             : Integer;
   SelfRef       : IwbContainerElementRef;
   p, q          : Pointer;
-  AlignedCreate : Boolean;
 begin
   Result := nil;
 
@@ -16142,8 +16202,7 @@ begin
             aIndex := wbAssignAdd;
 
           if (aIndex >= 0) and (ArrayDef.ElementCount <= 0) then begin
-            AlignedCreate := ( (aIndex < wbAssignAdd) and GetAlignable and (csSortedBySortOrder in cntStates) and not Assigned(GetElementBySortOrder(aIndex)) );
-            if AlignedCreate or ((aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef)) then begin
+            if (aIndex = wbAssignAdd) or ArrayDef.Element.CanAssign(Self, wbAssignThis, lDef) then begin
               {add one entry}
 
               if srsSorted in srStates then
@@ -16180,11 +16239,6 @@ begin
                   end;
                 end;
                 Result := Element;
-              end;
-              if AlignedCreate then begin
-                Result.SortOrder := aIndex;
-                SortBySortOrder;
-                ResetMemoryOrder;
               end;
             end;
           end;
@@ -16262,6 +16316,14 @@ begin
   inherited;
 end;
 
+function TwbSubRecord.CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean;
+begin
+  if GetAlignable then
+    Result := CanAssign(wbAssignAdd, nil, aCheckDontShow)
+  else
+    Result := inherited;
+end;
+
 function TwbSubRecord.CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   ArrayDef: IwbArrayDef;
@@ -16308,7 +16370,7 @@ begin
   if srsIsArray in srStates then begin
     ArrayDef := srValueDef as IwbArrayDef;
     if not Assigned(aElement) then begin
-      if (aIndex = wbAssignAdd) or ((aIndex >= 0) and GetAlignable and (csSortedBySortOrder in cntStates) and not Assigned(GetElementBySortOrder(aIndex)) )  then
+      if aIndex = wbAssignAdd then
         Result := ArrayDef.ElementCount <= 0;
       Exit;
     end;

@@ -1535,6 +1535,10 @@ type
     procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer));
     procedure SortBySortOrder;
     procedure SetIsSortedBySortOrder(aForce: Boolean);
+    procedure MoveElementTo(const aElement: IwbElement; aIndex: Integer);
+
+    function CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean;
+    function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
 
     property ElementByPath[const aPath: string]: IwbElement
       read GetElementByPath;
@@ -2342,6 +2346,7 @@ type
     ElementGen   : Integer;
     ContainerGen : Integer;
     MissingElements : TDynElements;
+    RowElements  : TDynElements;
     ViewNodeFlags: TwbConflictNodeFlags;
     procedure UpdateRefs;
   end;

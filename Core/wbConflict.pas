@@ -64,6 +64,8 @@ procedure wbConflictInitNodes(const aNodeDatas: PwbConflictNodeDatas;
 procedure wbConflictInitChildren(const aNodeDatas: PwbConflictNodeDatas; aNodeCount: Integer;
   var aChildCount: Cardinal; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc);
 
+function wbConflictAlignedGap(const aParentData: TwbConflictNodeData; aRow: Integer; out aMemoryIndex: Integer): Boolean;
+
 function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TwbFieldConflictProc = nil): TConflictAll;
 
 function wbConflictNodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView): TwbDynConflictNodeDatas;
@@ -519,9 +521,12 @@ begin
 
     Container := ParentData.Container;
     if Assigned(Container) then begin
-      if (vnfUseSortOrder in ParentData.ViewNodeFlags) or (Supports(Container, IwbSortableContainer, SortableContainer) and SortableContainer.Sorted) then
-        NodeData.Element := Container.ElementBySortOrder[aIndex]
-      else
+      if (vnfUseSortOrder in ParentData.ViewNodeFlags) or (Supports(Container, IwbSortableContainer, SortableContainer) and SortableContainer.Sorted) then begin
+        if aIndex < Cardinal(Length(ParentData.RowElements)) then
+          NodeData.Element := ParentData.RowElements[aIndex]
+        else
+          NodeData.Element := nil;
+      end else
         case Container.ElementType of
           etMainRecord, etSubRecordStruct:
             NodeData.Element := Container.ElementBySortOrder[aIndex];
@@ -603,6 +608,8 @@ begin
   FirstContainer := nil;
   for i := 0 to Pred(aNodeCount) do begin
     NodeData := @aNodeDatas[i];
+    NodeData.RowElements := nil;
+    NodeData.ViewNodeFlags := NodeData.ViewNodeFlags - [vnfUseSortOrder, vnfIsSorted, vnfIsAligned];
     Container := NodeData.Container;
     if not Assigned(FirstContainer) then
       FirstContainer := Container;
@@ -672,17 +679,15 @@ begin
 
       aChildCount := SortedKeys[aNodeCount].Count;
 
+      for i := 0 to Pred(aNodeCount) do
+        if Assigned(Sortables[i]) then
+          SetLength(aNodeDatas[i].RowElements, aChildCount);
+
       for j := 0 to Pred(aChildCount) do begin
         SortKey := SortedKeys[aNodeCount].Strings[j];
         for i := 0 to Pred(aNodeCount) do
           if SortedKeys[i].Find(SortKey, k) then
-            IwbElement(Pointer(SortedKeys[i].Objects[k])).SortOrder := j;
-      end;
-
-      for i := 0 to Pred(aNodeCount) do begin
-        NodeData := @aNodeDatas[i];
-        if Assigned(NodeData.Container) then
-          NodeData.Container.SetIsSortedBySortOrder(False);
+            aNodeDatas[i].RowElements[j] := IwbElement(Pointer(SortedKeys[i].Objects[k]));
       end;
 
     finally
@@ -808,11 +813,11 @@ begin
               NodeData := @aNodeDatas[i];
               Include(NodeData.ViewNodeFlags, vnfUseSortOrder);
               Include(NodeData.ViewNodeFlags, vnfIsAligned);
-              for j := Low(KeyedElements[i]) to High(KeyedElements[i]) do
-                if Assigned(KeyedElements[i, j]) then
-                  IwbElement(KeyedElements[i, j]).SortOrder := j;
-              if Assigned(NodeData.Container) then
-                NodeData.Container.SetIsSortedBySortOrder(True);
+              if Assigned(NodeData.Container) then begin
+                SetLength(NodeData.RowElements, aChildCount);
+                for j := Low(KeyedElements[i]) to High(KeyedElements[i]) do
+                  NodeData.RowElements[j] := IwbElement(KeyedElements[i, j]);
+              end;
             end;
           end;
         end;
@@ -822,6 +827,35 @@ begin
       AllKeys.Free;
     end;
   end;
+end;
+
+function wbConflictAlignedGap(const aParentData: TwbConflictNodeData; aRow: Integer; out aMemoryIndex: Integer): Boolean;
+var
+  i, lCount, lBefore : Integer;
+begin
+  aMemoryIndex := -1;
+  Result := False;
+
+  if not (vnfIsAligned in aParentData.ViewNodeFlags) or not Assigned(aParentData.Container) then
+    Exit;
+  if (aRow < 0) or (aRow >= Length(aParentData.RowElements)) or Assigned(aParentData.RowElements[aRow]) then
+    Exit;
+
+  lCount := 0;
+  lBefore := 0;
+  for i := Low(aParentData.RowElements) to High(aParentData.RowElements) do
+    if Assigned(aParentData.RowElements[i]) then begin
+      if (lCount >= aParentData.Container.ElementCount) or not aParentData.RowElements[i].Equals(aParentData.Container.Elements[lCount]) then
+        Exit;
+      if i < aRow then
+        Inc(lBefore);
+      Inc(lCount);
+    end;
+  if lCount <> aParentData.Container.ElementCount then
+    Exit;
+
+  aMemoryIndex := lBefore;
+  Result := True;
 end;
 
 function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TwbFieldConflictProc): TConflictAll;
