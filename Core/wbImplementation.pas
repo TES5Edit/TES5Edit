@@ -8618,6 +8618,7 @@ var
   SelfRef : IwbContainerElementRef;
 begin
   SelfRef := Self as IwbContainerElementRef;
+  DoInit(False);
 
   Result := nil;
 
