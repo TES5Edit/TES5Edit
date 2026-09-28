@@ -17095,13 +17095,20 @@ begin
   if GeneratorStarted then
     Exit;
   GeneratorStarted := True;
-  if xeToolMode = tmLODGen then
-    DoGenerateLOD
-  else if xeToolMode = tmScript then
-    DoRunScript;
-
-  if xeAutoExit then
-    tmrShutdown.Enabled := True;
+  try
+    if xeToolMode = tmLODGen then
+      DoGenerateLOD
+    else if xeToolMode = tmScript then
+      try
+        DoRunScript;
+      except
+        CheckResult := 1;
+        raise;
+      end;
+  finally
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
 end;
 
 procedure TfrmMain.tmrMessagesTimer(Sender: TObject);
