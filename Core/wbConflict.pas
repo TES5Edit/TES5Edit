@@ -1429,6 +1429,7 @@ constructor TwbConflictTree.CreateForRecords(aView: TwbConflictView; const aReco
   const aOnMessage: TwbConflictMessageProc);
 var
   lDatas : TwbDynConflictNodeDatas;
+  lCount : Integer;
 begin
   inherited Create;
   if Length(aRecords) < 1 then
@@ -1438,7 +1439,10 @@ begin
     lDatas[i].Element := aRecords[i];
     lDatas[i].Container := aRecords[i] as IwbContainerElementRef;
   end;
-  Setup(aView, lDatas, True, False, (aRecords[0].Def as IwbRecordDef).MemberCount + aRecords[0].AdditionalElementCount, aOnMessage);
+  lCount := 0;
+  if Assigned(aRecords[0].Def) then
+    lCount := (aRecords[0].Def as IwbRecordDef).MemberCount + aRecords[0].AdditionalElementCount;
+  Setup(aView, lDatas, True, False, lCount, aOnMessage);
 end;
 
 procedure TwbConflictTree.Setup(aView: TwbConflictView; const aRootDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean;

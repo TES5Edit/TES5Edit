@@ -16009,7 +16009,8 @@ begin
       end;
 
       vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
-      vstView.RootNodeCount := (aMainRecords[0].Def as IwbRecordDef).MemberCount + aMainRecords[0].AdditionalElementCount;
+      if Assigned(aMainRecords[0].Def) then
+        vstView.RootNodeCount := (aMainRecords[0].Def as IwbRecordDef).MemberCount + aMainRecords[0].AdditionalElementCount;
       InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
       ExpandView;
       UpdateColumnWidths;
