@@ -826,6 +826,8 @@ type
     TestOptionsToggle        : Boolean;
     TestOptionsShown         : Boolean;
     TestOptionsDialogAlign   : Boolean;
+    TestOptionsToggleNeverShow : Boolean;
+    TestOptionsDialogNeverShow : Boolean;
 
     TestCopyIntoGapTimer     : TTimer;
 
@@ -21300,31 +21302,36 @@ end;
 
 procedure TfrmMain.TestOptionsRunTimer(Sender: TObject);
 const
-  cArms    : array[0..2] of string = ('unchanged', 'toggle', 'restore');
+  cArms    : array[0..4] of string = ('unchanged', 'toggle', 'restore', 'toggle never show', 'restore never show');
   cVerdict : array[Boolean] of string = ('FAIL', 'PASS');
 var
-  lLines       : TStringList;
-  lFailed      : Integer;
-  lEpochBefore : Cardinal;
-  lEpochAfter  : Cardinal;
-  lAlignBefore : Boolean;
-  lAlignAfter  : Boolean;
-  lPass        : Boolean;
-  lTmp         : string;
+  lLines           : TStringList;
+  lFailed          : Integer;
+  lEpochBefore     : Cardinal;
+  lEpochAfter      : Cardinal;
+  lAlignBefore     : Boolean;
+  lAlignAfter      : Boolean;
+  lNeverShowBefore : Boolean;
+  lNeverShowAfter  : Boolean;
+  lPass            : Boolean;
+  lTmp             : string;
 begin
   TestOptionsTimer.Enabled := False;
   lLines := TStringList.Create;
   try
     lLines.Add('# xEdit options epoch probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# Columns, tab separated: arm, toggled, dialog shown, dialog align, epoch before, epoch after, align before, align after, verdict');
+    lLines.Add('# Columns, tab separated: arm, toggled, dialog shown, dialog align, epoch before, epoch after, align before, align after, ' +
+      'dialog never show, never show before, never show after, verdict');
     lFailed := 0;
     try
       for var lArm := Low(cArms) to High(cArms) do begin
-        TestOptionsToggle := lArm > Low(cArms);
+        TestOptionsToggle := lArm in [1, 2];
+        TestOptionsToggleNeverShow := lArm in [3, 4];
         TestOptionsShown := False;
         lEpochBefore := ConflictView.Epoch;
         lAlignBefore := ConflictView.AlignArrayElements;
+        lNeverShowBefore := wbHideNeverShow;
         TestOptionsAnswer.Enabled := True;
         try
           mniNavOptionsClick(nil);
@@ -21333,15 +21340,20 @@ begin
         end;
         lEpochAfter := ConflictView.Epoch;
         lAlignAfter := ConflictView.AlignArrayElements;
-        lPass := TestOptionsShown and (TestOptionsDialogAlign = lAlignBefore) and
-          ((lEpochAfter <> lEpochBefore) = TestOptionsToggle) and ((lAlignAfter <> lAlignBefore) = TestOptionsToggle);
+        lNeverShowAfter := wbHideNeverShow;
+        lPass := TestOptionsShown and (TestOptionsDialogAlign = lAlignBefore) and (TestOptionsDialogNeverShow = lNeverShowBefore) and
+          ((lAlignAfter <> lAlignBefore) = TestOptionsToggle) and ((lNeverShowAfter <> lNeverShowBefore) = TestOptionsToggleNeverShow);
+        if not TestOptionsToggleNeverShow then
+          lPass := lPass and ((lEpochAfter <> lEpochBefore) = TestOptionsToggle);
         if not lPass then
           Inc(lFailed);
         lLines.Add(string.Join(#9, [cArms[lArm], BoolToStr(TestOptionsToggle, True), BoolToStr(TestOptionsShown, True),
           BoolToStr(TestOptionsDialogAlign, True), lEpochBefore.ToString, lEpochAfter.ToString, BoolToStr(lAlignBefore, True),
-          BoolToStr(lAlignAfter, True), cVerdict[lPass]]));
-        AddMessage(Format('[Test Options] %s: epoch %d -> %d, align %s -> %s, %s', [cArms[lArm], lEpochBefore, lEpochAfter,
-          BoolToStr(lAlignBefore, True), BoolToStr(lAlignAfter, True), cVerdict[lPass]]));
+          BoolToStr(lAlignAfter, True), BoolToStr(TestOptionsDialogNeverShow, True), BoolToStr(lNeverShowBefore, True),
+          BoolToStr(lNeverShowAfter, True), cVerdict[lPass]]));
+        AddMessage(Format('[Test Options] %s: epoch %d -> %d, align %s -> %s, never show %s -> %s, %s', [cArms[lArm], lEpochBefore,
+          lEpochAfter, BoolToStr(lAlignBefore, True), BoolToStr(lAlignAfter, True), BoolToStr(lNeverShowBefore, True),
+          BoolToStr(lNeverShowAfter, True), cVerdict[lPass]]));
       end;
       if lFailed = 0 then
         CheckResult := 0
@@ -21376,8 +21388,11 @@ begin
       lForm := TfrmOptions(Screen.CustomForms[i]);
       TestOptionsShown := True;
       TestOptionsDialogAlign := lForm.cbAlignArrayElements.Checked;
+      TestOptionsDialogNeverShow := lForm.cbHideNeverShow.Checked;
       if TestOptionsToggle then
         lForm.cbAlignArrayElements.Checked := not lForm.cbAlignArrayElements.Checked;
+      if TestOptionsToggleNeverShow then
+        lForm.cbHideNeverShow.Checked := not lForm.cbHideNeverShow.Checked;
       lForm.ModalResult := mrOk;
       Exit;
     end;
