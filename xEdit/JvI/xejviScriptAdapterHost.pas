@@ -19,6 +19,8 @@ uses
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 
+function ListArgument(const aValue: Variant; aClass: TClass; aIndex: Integer): TObject;
+
 implementation
 
 uses
@@ -435,6 +437,17 @@ begin
     JvInterpreterError(ieDirectInvalidArgument, 0);
 end;
 
+function ListArgument(const aValue: Variant; aClass: TClass; aIndex: Integer): TObject;
+begin
+  Result := nil;
+  if TVarData(aValue).VType = varObject then
+    Result := V2O(aValue)
+  else if (TVarData(aValue).VType <> varPointer) or Assigned(TVarData(aValue).VPointer) then
+    JvInterpreterError(ieDirectInvalidArgument, aIndex);
+  if Assigned(Result) and not (Result is aClass) then
+    JvInterpreterError(ieDirectInvalidArgument, aIndex);
+end;
+
 procedure _ConflictAllForElements(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -445,7 +458,7 @@ var
 begin
   if Args.Count = 3 then begin
     Value := caUnknown;
-    List := TList(V2O(Args.Values[0]));
+    List := TList(ListArgument(Args.Values[0], TList, 0));
     if Assigned(List) then
     for i := 0 to Pred(List.Count) do begin
       if not Supports(IInterface(Pointer(List[i])), IwbElement, Element) then
@@ -686,7 +699,7 @@ var
   i, j: Integer;
   Found: Boolean;
 begin
-  List := TList(V2O(Args.Values[0]));
+  List := TList(ListArgument(Args.Values[0], TList, 0));
   if not Assigned(List) then
     Exit;
 
@@ -735,7 +748,7 @@ var
   Nodes: TNodeArray;
   i: Integer;
 begin
-  if not (V2O(Args.Values[0]) is TStrings) then begin
+  if (TVarData(Args.Values[0]).VType <> varObject) or not (V2O(Args.Values[0]) is TStrings) then begin
     JvInterpreterErrorN(ieDirectInvalidArgument, 0, 'Expected a TStrings or TStringsList'); // or ieNotEnoughParams, ieIncompatibleTypes or others.
   end;
   
