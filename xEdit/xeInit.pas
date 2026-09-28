@@ -77,6 +77,13 @@ var
   xeTestCopyIntoGapRecord  : string;
   xeTestCopyIntoGapSource  : string;
   xeTestCopyIntoGapOp      : string;
+  xeTestDeltaPatch         : Boolean;
+  xeTestDeltaPatchFile     : string;
+  xeTestDeltaPatchMaster   : string;
+  xeTestDeltaPatchNewer    : string;
+  xeTestDeltaPatchName     : string;
+  xeTestDeltaPatchHide     : string;
+  xeTestDeltaPatchHideRecord : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -976,6 +983,21 @@ begin
       end;
       xeTestCopyIntoGap := True;
       xeAutoLoad        := True;
+    end;
+
+    if wbFindCmdLineParam('testdeltapatch', xeTestDeltaPatchFile) then begin
+      if (xeTestDeltaPatchFile = '') or
+         not wbFindCmdLineParam('testdeltapatchmaster', xeTestDeltaPatchMaster) or
+         not wbFindCmdLineParam('testdeltapatchnewer', xeTestDeltaPatchNewer) or
+         not wbFindCmdLineParam('testdeltapatchname', xeTestDeltaPatchName) then begin
+        ShowMessage('testdeltapatch requires -testdeltapatch:<filename> -testdeltapatchmaster:<module> ' +
+          '-testdeltapatchnewer:<file> -testdeltapatchname:<name> [-testdeltapatchhide:<module>] [-testdeltapatchhiderec:<formid>]');
+        Exit(False);
+      end;
+      wbFindCmdLineParam('testdeltapatchhide', xeTestDeltaPatchHide);
+      wbFindCmdLineParam('testdeltapatchhiderec', xeTestDeltaPatchHideRecord);
+      xeTestDeltaPatch := True;
+      xeAutoLoad       := True;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')

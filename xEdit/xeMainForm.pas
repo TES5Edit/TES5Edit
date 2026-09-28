@@ -829,6 +829,11 @@ type
 
     TestCopyIntoGapTimer     : TTimer;
 
+    TestDeltaPatchLines      : TStringList;
+
+    procedure TestDeltaPatchStates(const aWhen: string);
+    procedure TestDeltaPatchWrite;
+
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
     procedure TestCopyIntoGapRunTimer(Sender: TObject);
@@ -873,6 +878,8 @@ type
     procedure DoTestViewText;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
+    procedure DoTestDeltaPatchStart;
+    procedure DoTestDeltaPatchReport;
     procedure DoTestSaveContextsCompare;
 
     function ViewName(const aElement: IwbElement; const aName: string): string;
@@ -4983,7 +4990,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestCopyIntoGap or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -21553,6 +21560,135 @@ begin
   end;
 end;
 
+procedure TfrmMain.TestDeltaPatchStates(const aWhen: string);
+var
+  lRecord : IwbMainRecord;
+begin
+  for var i := Low(Files) to High(Files) do
+    TestDeltaPatchLines.Add('file' + #9 + aWhen + #9 + Files[i].FileName + #9 +
+      'esHidden=' + BoolToStr(esHidden in Files[i].ElementStates, True) + #9 + 'IsHidden=' + BoolToStr(Files[i].IsHidden, True));
+  if xeTestDeltaPatchHideRecord = '' then
+    Exit;
+  lRecord := nil;
+  for var i := Low(Files) to High(Files) do
+    if SameText(Files[i].FileName, xeTestDeltaPatchMaster) then
+      lRecord := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestDeltaPatchHideRecord), True, True];
+  if Assigned(lRecord) then
+    TestDeltaPatchLines.Add('record' + #9 + aWhen + #9 + lRecord.Name + #9 +
+      'esHidden=' + BoolToStr(esHidden in lRecord.ElementStates, True) + #9 + 'IsHidden=' + BoolToStr(lRecord.IsHidden, True));
+end;
+
+procedure TfrmMain.TestDeltaPatchWrite;
+var
+  lTmp : string;
+begin
+  try
+    TestDeltaPatchLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestDeltaPatchFile + '.partial';
+    TestDeltaPatchLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestDeltaPatchFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(TestDeltaPatchLines);
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TfrmMain.DoTestDeltaPatchStart;
+var
+  lMaster : IwbFile;
+  lRecord : IwbMainRecord;
+  lTarget : string;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  CheckResult := 2;
+  TestDeltaPatchLines := TStringList.Create;
+  TestDeltaPatchLines.Add('# xEdit delta patch probe');
+  TestDeltaPatchLines.Add('# ' + xeApplicationTitle);
+  TestDeltaPatchLines.Add('# master = ' + xeTestDeltaPatchMaster + ', newer = ' + xeTestDeltaPatchNewer +
+    ', name = ' + xeTestDeltaPatchName + ', hide = ' + xeTestDeltaPatchHide + ', hide record = ' + xeTestDeltaPatchHideRecord);
+  TestDeltaPatchLines.Add('# Columns, tab separated: what / when / name / states');
+  try
+    lMaster := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, xeTestDeltaPatchMaster) then
+        lMaster := Files[i];
+    if not Assigned(lMaster) then
+      raise Exception.Create('no module ' + xeTestDeltaPatchMaster);
+    TestDeltaPatchStates('loaded');
+    if xeTestDeltaPatchHide <> '' then
+      for var i := Low(Files) to High(Files) do
+        if SameText(Files[i].FileName, xeTestDeltaPatchHide) then
+          Files[i].Hide;
+    if xeTestDeltaPatchHideRecord <> '' then begin
+      lRecord := lMaster.RecordByFormID[TwbFormID.FromStr(xeTestDeltaPatchHideRecord), True, True];
+      if not Assigned(lRecord) then
+        raise Exception.Create('no record ' + xeTestDeltaPatchHideRecord + ' in ' + xeTestDeltaPatchMaster);
+      lRecord.Hide;
+    end;
+    TestDeltaPatchStates('before');
+
+    lTarget := xeContext.Settings.DataPath + xeTestDeltaPatchName + '.esu';
+    if FileExists(lTarget) then
+      raise Exception.Create(lTarget + ' already exists');
+    if not CopyFile(PChar(xeTestDeltaPatchNewer), PChar(lTarget), True) then
+      RaiseLastOSError;
+    TestDeltaPatchLines.Add('# delta patch file = ' + lTarget);
+
+    vstNav.PopupMenu := nil;
+    bnMainMenu.Enabled := False;
+    xeContext.LoaderDone := False;
+    xeContext.LoaderError := False;
+    DoSetActiveRecord(nil);
+    mniNavFilterRemoveClick(Self);
+    wbStartTime := Now;
+    DoSetActiveRecord(nil);
+    pgMain.ActivePage := tbsMessages;
+    TLoaderThread.Create(lTarget, lMaster, [fsIsDeltaPatch]);
+  except
+    on E: Exception do begin
+      AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestDeltaPatchWrite;
+    end;
+  end;
+end;
+
+procedure TfrmMain.DoTestDeltaPatchReport;
+var
+  lRecord : IwbMainRecord;
+begin
+  if not Assigned(TestDeltaPatchLines) then
+    Exit;
+  try
+    if xeContext.LoaderError then
+      raise Exception.Create('the delta patch load failed');
+    TestDeltaPatchStates('after');
+    var lFound := False;
+    for var i := Low(Files) to High(Files) do
+      if fsIsDeltaPatch in Files[i].FileStates then begin
+        lFound := True;
+        TestDeltaPatchLines.Add('patch' + #9 + Files[i].FileName + #9 + 'records ' + IntToStr(Files[i].RecordCount));
+        for var j := 0 to Pred(Files[i].RecordCount) do begin
+          lRecord := Files[i].Records[j];
+          TestDeltaPatchLines.Add('patchrecord' + #9 + string(lRecord.Signature) + #9 + IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 +
+            'deleted=' + BoolToStr(lRecord.IsDeleted, True) + #9 + lRecord.EditorID);
+        end;
+      end;
+    if not lFound then
+      raise Exception.Create('no delta patch file is loaded');
+    CheckResult := 0;
+  except
+    on E: Exception do begin
+      AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+    end;
+  end;
+  TestDeltaPatchWrite;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -21804,6 +21940,9 @@ begin
         if xeTestCopyIntoGap then
           DoTestCopyIntoGap;
 
+        if xeTestDeltaPatch then
+          DoTestDeltaPatchStart;
+
         if xeTestSaveContexts then
           DoTestSaveContextsCompare;
       finally
@@ -21894,6 +22033,9 @@ begin
           HideRemoveMessage := False;
         end;
       end;
+
+      if xeTestDeltaPatch then
+        DoTestDeltaPatchReport;
 
       if xeTestConflicts then begin
         if xeContext.LoaderError then begin
