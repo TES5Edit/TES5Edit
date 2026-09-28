@@ -86,6 +86,7 @@ type
   TwbConflictTree = class
   private
     ctView           : TwbConflictView;
+    ctContextRef     : IwbGameContext;
     ctEpoch          : Cardinal;
     ctStamps         : TArray<Cardinal>;
     ctFileCount      : Integer;
@@ -1443,6 +1444,7 @@ var
   lRecord : IwbMainRecord;
 begin
   ctView := aView;
+  ctContextRef := aView.cvContextRef;
   aView.cvTrees.Add(Self);
   ctEpoch := aView.Epoch;
   ctFileCount := aView.cvContextRef.FileCount;
