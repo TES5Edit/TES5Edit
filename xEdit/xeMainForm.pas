@@ -832,11 +832,14 @@ type
     TestCopyIntoGapTimer     : TTimer;
 
     TestDeltaPatchLines      : TStringList;
+    TestDeltaPatchTimer      : TTimer;
+    TestDeltaPatchCancelled  : Boolean;
 
     TestHideTimer            : TTimer;
 
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
+    procedure TestDeltaPatchCancelTimer(Sender: TObject);
     procedure TestHideRunTimer(Sender: TObject);
 
     procedure TestOptionsRunTimer(Sender: TObject);
@@ -21667,12 +21670,38 @@ begin
     DoSetActiveRecord(nil);
     pgMain.ActivePage := tbsMessages;
     TLoaderThread.Create(lTarget, lMaster, [fsIsDeltaPatch]);
+    if xeTestDeltaPatchCancel then begin
+      TestDeltaPatchTimer := TTimer.Create(Self);
+      TestDeltaPatchTimer.Interval := 50;
+      TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
+      TestDeltaPatchTimer.Enabled := True;
+    end;
   except
     on E: Exception do begin
       AddMessage('[Test Delta Patch] FAILED: ' + E.ClassName + ': ' + E.Message);
       TestDeltaPatchLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
       TestDeltaPatchWrite;
     end;
+  end;
+end;
+
+procedure TfrmMain.TestDeltaPatchCancelTimer(Sender: TObject);
+begin
+  if not Assigned(TestDeltaPatchLines) then begin
+    TestDeltaPatchTimer.Enabled := False;
+    Exit;
+  end;
+  if not TestDeltaPatchCancelled then begin
+    if SameText(wbCurrentAction, 'Applying Filter') then begin
+      AddMessage('[Test Delta Patch] cancelling the delta patch while "' + wbCurrentAction + '" runs');
+      TestDeltaPatchLines.Add('# cancelled while: ' + wbCurrentAction);
+      TestDeltaPatchCancelled := True;
+      wbForceTerminate := True;
+    end;
+  end else if not SameText(wbCurrentAction, 'Applying Filter') and not SameText(wbCurrentAction, 'Creating Delta Patch') then begin
+    TestDeltaPatchTimer.Enabled := False;
+    wbForceTerminate := False;
+    DoTestDeltaPatchReport;
   end;
 end;
 

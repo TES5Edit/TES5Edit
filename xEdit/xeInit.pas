@@ -84,6 +84,7 @@ var
   xeTestDeltaPatchName     : string;
   xeTestDeltaPatchHide     : string;
   xeTestDeltaPatchHideRecord : string;
+  xeTestDeltaPatchCancel   : Boolean;
   xeTestHide               : Boolean;
   xeTestHideFile           : string;
   xeTestHideRecord         : string;
@@ -996,11 +997,13 @@ begin
          not wbFindCmdLineParam('testdeltapatchnewer', xeTestDeltaPatchNewer) or
          not wbFindCmdLineParam('testdeltapatchname', xeTestDeltaPatchName) then begin
         ShowMessage('testdeltapatch requires -testdeltapatch:<filename> -testdeltapatchmaster:<module> ' +
-          '-testdeltapatchnewer:<file> -testdeltapatchname:<name> [-testdeltapatchhide:<module>] [-testdeltapatchhiderec:<formid>]');
+          '-testdeltapatchnewer:<file> -testdeltapatchname:<name> [-testdeltapatchhide:<module>] [-testdeltapatchhiderec:<formid>] ' +
+          '[-testdeltapatchcancel]');
         Exit(False);
       end;
       wbFindCmdLineParam('testdeltapatchhide', xeTestDeltaPatchHide);
       wbFindCmdLineParam('testdeltapatchhiderec', xeTestDeltaPatchHideRecord);
+      xeTestDeltaPatchCancel := FindCmdLineSwitch('testdeltapatchcancel');
       xeTestDeltaPatch := True;
       xeAutoLoad       := True;
     end;
