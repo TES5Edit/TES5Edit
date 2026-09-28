@@ -54,7 +54,7 @@ begin
   end;
 end;
 
-function HiddenState(const aElement: IwbElement; aState: TwbElementState; out aValue: Boolean): Boolean;
+function TryHiddenState(const aElement: IwbElement; aState: TwbElementState; out aValue: Boolean): Boolean;
 var
   lContainer : IwbContainer;
 begin
@@ -206,7 +206,7 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     try
       eState := IntToEsState(Args.Values[1]);
-      if HiddenState(Element, eState, Was) then begin
+      if TryHiddenState(Element, eState, Was) then begin
         Value := Was;
         if eState = esHidden then
           frmMain.ConflictView.Hidden.Show(Element);
@@ -401,7 +401,7 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     try
       eState := IntToEsState(Args.Values[1]);
-      if not HiddenState(Element, eState, Current) then
+      if not TryHiddenState(Element, eState, Current) then
         Current := eState in Element.ElementStates;
       Value := Current;
     except
@@ -582,7 +582,7 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
     try
       eState := IntToEsState(Args.Values[1]);
-      if HiddenState(Element, eState, Was) then begin
+      if TryHiddenState(Element, eState, Was) then begin
         Value := Was;
         if eState = esHidden then
           frmMain.ConflictView.Hidden.Hide(Element);

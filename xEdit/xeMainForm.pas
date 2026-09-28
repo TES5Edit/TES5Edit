@@ -22206,9 +22206,9 @@ begin
             xeQuickClean := True;
 
             UserHidden := ConflictView.Hidden.Files;
-            for i := High(Files) downto Low(Files) do
-              ConflictView.Hidden.Hide(Files[i]);
             try
+              for i := High(Files) downto Low(Files) do
+                ConflictView.Hidden.Hide(Files[i]);
               ConflictView.Hidden.Show(MasterFile);
               ConflictView.Hidden.Show(NewFile);
 
