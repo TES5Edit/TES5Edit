@@ -5399,7 +5399,7 @@ begin
     while Assigned(Node) do begin
       // don't search in hidden elements
       NodeData := vstNav.GetNodeData(Node);
-      if Assigned(NodeData) and Assigned(NodeData.Element) and not NodeData.Element.IsHidden then
+      if Assigned(NodeData) and Assigned(NodeData.Element) and not ConflictView.Hidden.IsHidden(NodeData.Element) then
         if StartsWith(vstNav.Text[Node, 1, False], EditorID) then begin
           if not vstNav.FullyVisible[Node] then begin
             vstNav.FullyVisible[Node] := True;
@@ -5550,7 +5550,7 @@ begin
           if not Assigned(Node) then
             for i := 0 to Pred(MainRecord.OverrideCount) do begin
               // don't search in hidden elements
-              if MainRecord.Overrides[i].IsHidden then
+              if ConflictView.Hidden.IsHidden(MainRecord.Overrides[i]) then
                 Continue;
               Node := FindNodeForElement(MainRecord.Overrides[i]);
               if Assigned(Node) then
@@ -9915,9 +9915,9 @@ begin
   if not Supports(Element, IwbMainRecord, MainRecord) then
     Exit;
   if mniViewHeaderHidden.Checked then
-    MainRecord.Hide
+    ConflictView.Hidden.Hide(MainRecord)
   else
-    MainRecord.Show;
+    ConflictView.Hidden.Show(MainRecord);
   PostResetActiveTree;
   InvalidateElementsTreeView(NoNodes);
 end;
@@ -11719,9 +11719,9 @@ begin
     Element := ActiveRecords[i].Element;
     if Supports(Element, IwbMainRecord, MainRecord) then begin
       MainRecord := MainRecord.MasterOrSelf;
-      MainRecord.Show;
+      ConflictView.Hidden.Show(MainRecord);
       for j := 0 to Pred(MainRecord.OverrideCount) do
-        MainRecord.Overrides[j].Show;
+        ConflictView.Hidden.Show(MainRecord.Overrides[j]);
       Break;
     end;
   end;
@@ -11967,9 +11967,9 @@ begin
     NodeData := vstNav.GetNodeData(Nodes[i]);
     if Assigned(NodeData) and Assigned(NodeData.Element) then begin
       if mniNavHidden.Checked then
-        NodeData.Element.Hide
+        ConflictView.Hidden.Hide(NodeData.Element)
       else
-        NodeData.Element.Show;
+        ConflictView.Hidden.Show(NodeData.Element);
       NodeData.ConflictAll := caUnknown;
       NodeData.ConflictThis := ctUnknown;
       vstNav.InvalidateNode(Nodes[i]);
@@ -13465,10 +13465,10 @@ begin
                   Master := MainRecord.MasterOrSelf;
                   if Master.OverrideCount > 0 then begin
                     j := 0;
-                    if not Master.IsHidden then
+                    if not ConflictView.Hidden.IsHidden(Master) then
                       Inc(j);
                     for i := 0 to Pred(Master.OverrideCount) do
-                      if not Master.Overrides[i].IsHidden then begin
+                      if not ConflictView.Hidden.IsHidden(Master.Overrides[i]) then begin
                         Inc(j);
                         if j > 1 then
                           Break;
@@ -14530,7 +14530,7 @@ begin
     Element := NodeData.Element;
 
   mniNavHidden.Visible := Assigned(Element);
-  mniNavHidden.Checked := Assigned(Element) and (esHidden in Element.ElementStates);
+  mniNavHidden.Checked := Assigned(Element) and ConflictView.Hidden.Contains(Element);
 
   mniNavChangeFormID.Visible :=
     not xeContext.Settings.TranslationMode and
@@ -14907,13 +14907,13 @@ begin
 
   mniViewHeaderJumpTo.Visible := True;
   mniViewHeaderHidden.Visible := True;
-  mniViewHeaderHidden.Checked := esHidden in MainRecord.ElementStates;
+  mniViewHeaderHidden.Checked := ConflictView.Hidden.Contains(MainRecord);
 
   MainRecord := MainRecord.MasterOrSelf;
-  AnyHidden := MainRecord.IsHidden;
+  AnyHidden := ConflictView.Hidden.IsHidden(MainRecord);
   if not AnyHidden then
     for i := 0 to Pred(MainRecord.OverrideCount) do
-      if MainRecord.Overrides[i].IsHidden then begin
+      if ConflictView.Hidden.IsHidden(MainRecord.Overrides[i]) then begin
         AnyHidden := True;
         Break;
       end;
@@ -21589,7 +21589,7 @@ var
 begin
   for var i := Low(Files) to High(Files) do
     TestDeltaPatchLines.Add('file' + #9 + aWhen + #9 + Files[i].FileName + #9 +
-      'esHidden=' + BoolToStr(esHidden in Files[i].ElementStates, True) + #9 + 'IsHidden=' + BoolToStr(Files[i].IsHidden, True));
+      'member=' + BoolToStr(ConflictView.Hidden.Contains(Files[i]), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(Files[i]), True));
   if xeTestDeltaPatchHideRecord = '' then
     Exit;
   lRecord := nil;
@@ -21598,7 +21598,7 @@ begin
       lRecord := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestDeltaPatchHideRecord), True, True];
   if Assigned(lRecord) then
     TestDeltaPatchLines.Add('record' + #9 + aWhen + #9 + lRecord.Name + #9 +
-      'esHidden=' + BoolToStr(esHidden in lRecord.ElementStates, True) + #9 + 'IsHidden=' + BoolToStr(lRecord.IsHidden, True));
+      'member=' + BoolToStr(ConflictView.Hidden.Contains(lRecord), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(lRecord), True));
 end;
 
 procedure TfrmMain.TestDeltaPatchWrite;
@@ -21644,12 +21644,12 @@ begin
     if xeTestDeltaPatchHide <> '' then
       for var i := Low(Files) to High(Files) do
         if SameText(Files[i].FileName, xeTestDeltaPatchHide) then
-          Files[i].Hide;
+          ConflictView.Hidden.Hide(Files[i]);
     if xeTestDeltaPatchHideRecord <> '' then begin
       lRecord := lMaster.RecordByFormID[TwbFormID.FromStr(xeTestDeltaPatchHideRecord), True, True];
       if not Assigned(lRecord) then
         raise Exception.Create('no record ' + xeTestDeltaPatchHideRecord + ' in ' + xeTestDeltaPatchMaster);
-      lRecord.Hide;
+      ConflictView.Hidden.Hide(lRecord);
     end;
     TestDeltaPatchStates('before');
 
@@ -22200,51 +22200,62 @@ begin
             Node       : PVirtualNode;
             NodeData   : PNavNodeData;
             MainRecord : IwbMainRecord;
+            UserHidden : TwbFiles;
           begin
             HideRemoveMessage := True;
             xeQuickClean := True;
 
+            UserHidden := ConflictView.Hidden.Files;
             for i := High(Files) downto Low(Files) do
-              Files[i].Hide;
+              ConflictView.Hidden.Hide(Files[i]);
+            try
+              ConflictView.Hidden.Show(MasterFile);
+              ConflictView.Hidden.Show(NewFile);
 
-            MasterFile.Show;
-            NewFile.Show;
+              DoSetActiveRecord(nil);
+              pgMain.ActivePage := tbsMessages;
 
-            DoSetActiveRecord(nil);
-            pgMain.ActivePage := tbsMessages;
+              lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
+              Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+              mniNavFilterForOnlyOneClick(Self);
 
-            lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
-            Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-            mniNavFilterForOnlyOneClick(Self);
+              Node := vstNav.GetFirst;
+              while Assigned(Node) do begin
+                NodeData := vstNav.GetNodeData(Node);
+                if Assigned(NodeData) then
+                  if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
+                    if MainRecord.Signature <> 'TES4' then
+                      if not MainRecord.IsDeleted then
+                        if NodeData.ConflictThis = ctOnlyOne then
+                          if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', '', False), IwbMainRecord, MainRecord) then
+                            MainRecord.IsDeleted := True;
+                Node := vstNav.GetNext(Node);
+              end;
 
-            Node := vstNav.GetFirst;
-            while Assigned(Node) do begin
-              NodeData := vstNav.GetNodeData(Node);
-              if Assigned(NodeData) then
-                if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
-                  if MainRecord.Signature <> 'TES4' then
-                    if not MainRecord.IsDeleted then
-                      if NodeData.ConflictThis = ctOnlyOne then
-                        if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', '', False), IwbMainRecord, MainRecord) then
-                          MainRecord.IsDeleted := True;
-              Node := vstNav.GetNext(Node);
+              NewFile.RemoveIdenticalDeltaFast;
+
+              lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
+              Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
+              mniNavFilterForCleaning.Click;
+              JumpTo(NewFile.Header, False);
+              vstNav.ClearSelection;
+              vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+              vstNav.Selected[vstNav.FocusedNode] := True;
+              DoSetActiveRecord(nil);
+              pgMain.ActivePage := tbsMessages;
+              mniNavRemoveIdenticalToMaster.Click;
+            finally
+              for i := High(Files) downto Low(Files) do begin
+                var WasHidden := False;
+                for var UserFile in UserHidden do
+                  if UserFile.Equals(Files[i]) then
+                    WasHidden := True;
+                if WasHidden then
+                  ConflictView.Hidden.Hide(Files[i])
+                else
+                  ConflictView.Hidden.Show(Files[i]);
+              end;
             end;
-
-            NewFile.RemoveIdenticalDeltaFast;
-
-            lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
-            Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-            mniNavFilterForCleaning.Click;
-            JumpTo(NewFile.Header, False);
-            vstNav.ClearSelection;
-            vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-            vstNav.Selected[vstNav.FocusedNode] := True;
-            DoSetActiveRecord(nil);
-            pgMain.ActivePage := tbsMessages;
-            mniNavRemoveIdenticalToMaster.Click;
-
-            for i := High(Files) downto Low(Files) do
-              Files[i].Show;
 
             lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
             Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);

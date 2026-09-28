@@ -918,6 +918,7 @@ type
   TwbSaveContext = class;
   TwbSaveContextClass = class of TwbSaveContext;
   TwbLocalizationHandler = class;
+  TwbHiddenSet = class;
   IwbFile = interface;
   IwbSaveTables = interface;
   IwbNamedDef = interface;
@@ -1248,9 +1249,7 @@ type
 
     function HasErrors: Boolean;
 
-    procedure Hide;
-    procedure Show;
-    function GetIsHidden: Boolean;
+    function IsHiddenIn(aHidden: TwbHiddenSet): Boolean;
 
     procedure MoveUp;
     procedure MoveDown;
@@ -1276,9 +1275,6 @@ type
     property Found: Boolean
       read GetFound
       write SetFound;
-
-    property IsHidden: Boolean
-      read GetIsHidden;
 
     procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified);
 
@@ -4357,6 +4353,22 @@ type
     function GetLocalizationFileNameByElement(aElement: IwbElement): string;
     function GetLocalizationFileNameByType(const aPluginFile: string; ls: TwbLStringType): string;
     procedure GetStringsFromFile(const aFileName: string; const aList: TStrings);
+  end;
+
+  TwbHiddenSet = class
+  private
+    hsMembers : TDictionary<Pointer, IwbElement>;
+    function GetCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Hide(const aElement: IwbElement);
+    procedure Show(const aElement: IwbElement);
+    function Contains(const aElement: IwbElement): Boolean;
+    function ContainsID(aElementID: Pointer): Boolean;
+    function IsHidden(const aElement: IwbElement): Boolean;
+    function Files: TwbFiles;
+    property Count: Integer read GetCount;
   end;
 
 const
@@ -27089,6 +27101,68 @@ begin
   finally
     FreeAndNil(sl);
   end;
+end;
+
+constructor TwbHiddenSet.Create;
+begin
+  inherited Create;
+  hsMembers := TDictionary<Pointer, IwbElement>.Create;
+end;
+
+destructor TwbHiddenSet.Destroy;
+begin
+  hsMembers.Free;
+  inherited;
+end;
+
+function TwbHiddenSet.GetCount: Integer;
+begin
+  Result := hsMembers.Count;
+end;
+
+procedure TwbHiddenSet.Hide(const aElement: IwbElement);
+begin
+  var lID := aElement.ElementID;
+  if not hsMembers.ContainsKey(lID) then begin
+    hsMembers.Add(lID, aElement);
+    aElement.ResetConflict;
+  end;
+end;
+
+procedure TwbHiddenSet.Show(const aElement: IwbElement);
+var
+  lMember : IwbElement;
+begin
+  var lID := aElement.ElementID;
+  if hsMembers.TryGetValue(lID, lMember) then begin
+    hsMembers.Remove(lID);
+    lMember.ResetConflict;
+  end;
+end;
+
+function TwbHiddenSet.Contains(const aElement: IwbElement): Boolean;
+begin
+  Result := hsMembers.ContainsKey(aElement.ElementID);
+end;
+
+function TwbHiddenSet.ContainsID(aElementID: Pointer): Boolean;
+begin
+  Result := hsMembers.ContainsKey(aElementID);
+end;
+
+function TwbHiddenSet.IsHidden(const aElement: IwbElement): Boolean;
+begin
+  Result := (hsMembers.Count > 0) and aElement.IsHiddenIn(Self);
+end;
+
+function TwbHiddenSet.Files: TwbFiles;
+var
+  lFile : IwbFile;
+begin
+  Result := nil;
+  for var lMember in hsMembers.Values do
+    if Supports(lMember, IwbFile, lFile) then
+      Result := Result + [lFile];
 end;
 
 constructor TwbLocalizationHandler.Create(aContext: TwbGameContext);

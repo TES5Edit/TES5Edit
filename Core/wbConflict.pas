@@ -23,6 +23,7 @@ type
     cvAlignArrayElements : Boolean;
     cvAlignArrayLimit    : Integer;
     cvModGroupTargets    : TDictionary<PwbModuleInfo, TwbModuleInfos>;
+    cvHidden             : TwbHiddenSet;
     cvEpoch              : Cardinal;
     procedure SetQuickShowConflicts(aValue: Boolean);
     procedure SetOnlyMasterAndLeafs(aValue: Boolean);
@@ -49,6 +50,7 @@ type
     property ModGroupsEnabled: Boolean read cvModGroupsEnabled write SetModGroupsEnabled;
     property AlignArrayElements: Boolean read cvAlignArrayElements write SetAlignArrayElements;
     property AlignArrayLimit: Integer read cvAlignArrayLimit write SetAlignArrayLimit;
+    property Hidden: TwbHiddenSet read cvHidden;
     property Epoch: Cardinal read cvEpoch;
   end;
 
@@ -91,11 +93,13 @@ begin
   cvAlignArrayElements := True;
   cvAlignArrayLimit := 5000;
   cvModGroupTargets := TDictionary<PwbModuleInfo, TwbModuleInfos>.Create;
+  cvHidden := TwbHiddenSet.Create;
   cvEpoch := 1;
 end;
 
 destructor TwbConflictView.Destroy;
 begin
+  cvHidden.Free;
   cvModGroupTargets.Free;
   inherited;
 end;
@@ -1073,14 +1077,16 @@ begin
     SetLength(MainRecords, j);
   end;
 
-  j := 0;
-  for i := Low(MainRecords) to High(MainRecords) do
-    if not MainRecords[i].IsHidden then begin
-      if i <> j then
-        MainRecords[j] := MainRecords[i];
-      Inc(j);
-    end;
-  SetLength(MainRecords, j);
+  if aView.Hidden.Count > 0 then begin
+    j := 0;
+    for i := Low(MainRecords) to High(MainRecords) do
+      if not MainRecords[i].IsHiddenIn(aView.Hidden) then begin
+        if i <> j then
+          MainRecords[j] := MainRecords[i];
+        Inc(j);
+      end;
+    SetLength(MainRecords, j);
+  end;
 
   if Length(MainRecords) < 1 then
     MainRecords := [aMainRecord];

@@ -349,9 +349,7 @@ type
     procedure SetElementState(aState: TwbElementState; Clear: Boolean = false);
     function Equals(const aElement: IwbElement): Boolean; reintroduce;
 
-    procedure Hide;
-    procedure Show;
-    function GetIsHidden: Boolean;
+    function IsHiddenIn(aHidden: TwbHiddenSet): Boolean;
 
     function HasErrors: Boolean; virtual;
 
@@ -20671,16 +20669,18 @@ begin
   Result := wbIsInternalEdit;
 end;
 
-function TwbElement.GetIsHidden: Boolean;
+function TwbElement.IsHiddenIn(aHidden: TwbHiddenSet): Boolean;
+var
+  lElement : TwbElement;
 begin
-  if [esHidden, esParentHiddenChecked] * eStates = [] then begin
-    Include(eStates, esParentHiddenChecked);
-    if Assigned(eContainer) and IwbContainer(eContainer).IsHidden then
-      Include(eStates, esParentHidden)
-    else
-      Exclude(eStates, esParentHidden);
-  end;
-  Result := eStates * [esHidden, esParentHidden] <> [];
+  lElement := Self;
+  repeat
+    if aHidden.ContainsID(lElement) then
+      Exit(True);
+    if not Assigned(lElement.eContainer) then
+      Exit(False);
+    lElement := TwbElement(IwbContainer(lElement.eContainer).ElementID);
+  until False;
 end;
 
 function TwbElement.GetIsInjected: Boolean;
@@ -20986,14 +20986,6 @@ begin
   Result := Trim(GetCheck) <> '';
 end;
 
-procedure TwbElement.Hide;
-begin
-  if not (esHidden in eStates) then begin
-    Include(eStates, esHidden);
-    ResetConflict;
-  end;
-end;
-
 procedure TwbElement.InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
 begin
   {can be overriden}
@@ -21239,8 +21231,6 @@ end;
 
 procedure TwbElement.ResetConflict;
 begin
-  Exclude(eStates, esParentHiddenChecked);
-  Exclude(eStates, esParentHidden);
   Exclude(eStates, esSortKeyValid);
   Exclude(eStates, esExtendedSortKeyValid);
 end;
@@ -21458,14 +21448,6 @@ begin
   State := TwbElementState(Ord(esReportedErrorReading) + Ord(aErrorType));
   Result := not (State in eStates);
   Include(eStates, State);
-end;
-
-procedure TwbElement.Show;
-begin
-  if esHidden in eStates then begin
-    Exclude(eStates, esHidden);
-    ResetConflict;
-  end;
 end;
 
 procedure TwbElement.Tag;
