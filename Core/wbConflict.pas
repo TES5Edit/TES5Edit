@@ -72,7 +72,7 @@ type
     destructor Destroy; override;
     function RowElement(aColumn, aRow: Integer): IwbElement;
     function IsAlignedGap(aColumn, aRow: Integer; out aMemoryIndex: Integer): Boolean;
-    function CanAssignAligned(aColumn, aRow: Integer; aCheckDontShow: Boolean): Boolean;
+    function CanAssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aCheckDontShow: Boolean): Boolean;
     function AssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
     property Tree: TwbConflictTree read tnTree;
     property Parent: TwbConflictTreeNode read tnParent;
@@ -1383,14 +1383,17 @@ begin
   Result := wbConflictAlignedGap(tnDatas[aColumn], aRow, aMemoryIndex);
 end;
 
-function TwbConflictTreeNode.CanAssignAligned(aColumn, aRow: Integer; aCheckDontShow: Boolean): Boolean;
+function TwbConflictTreeNode.CanAssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aCheckDontShow: Boolean): Boolean;
 var
   lMemoryIndex : Integer;
 begin
   Result := not tnTree.IsStale and IsAlignedGap(aColumn, aRow, lMemoryIndex);
   if Result then
     with tnDatas[aColumn] do
-      Result := Container.CanAssignAligned(aRow - Container.AdditionalElementCount, aCheckDontShow);
+      if Assigned(aSource) then
+        Result := Container.CanAssign(aRow - Container.AdditionalElementCount, aSource, aCheckDontShow)
+      else
+        Result := Container.CanAssignAligned(aRow - Container.AdditionalElementCount, aCheckDontShow);
 end;
 
 function TwbConflictTreeNode.AssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
