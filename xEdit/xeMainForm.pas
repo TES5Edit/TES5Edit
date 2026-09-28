@@ -14911,10 +14911,10 @@ begin
   mniViewHeaderHidden.Checked := ConflictView.Hidden.Contains(MainRecord);
 
   MainRecord := MainRecord.MasterOrSelf;
-  AnyHidden := ConflictView.Hidden.IsHidden(MainRecord);
+  AnyHidden := ConflictView.Hidden.Contains(MainRecord);
   if not AnyHidden then
     for i := 0 to Pred(MainRecord.OverrideCount) do
-      if ConflictView.Hidden.IsHidden(MainRecord.Overrides[i]) then begin
+      if ConflictView.Hidden.Contains(MainRecord.Overrides[i]) then begin
         AnyHidden := True;
         Break;
       end;
