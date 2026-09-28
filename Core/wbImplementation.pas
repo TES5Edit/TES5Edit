@@ -6850,6 +6850,7 @@ procedure TwbContainer.InsertElement(aPosition: Integer; const aElement: IwbElem
 begin
   if not Assigned(aElement) then
     Exit;
+  DoInit(False);
 
   SetLength(cntElements, Succ(Length(cntElements)));
 
