@@ -10717,7 +10717,7 @@ begin
       Element := TwbRecord.CreateForPtr(CurrentPtr, dcDataEndPtr, Self, nil);
       if Supports(Element, IwbSubRecord, CurrentRec) then begin
         var lSignature := CurrentRec.Signature;
-        if lGameDef.IgnoreRecords.Find(lSignature, Dummy) or mrDef.ShouldIgnore(lSignature) or lContext.SubRecordToSkip.Find(lSignature, Dummy) then
+        if lGameDef.IgnoreRecords.Find(lSignature, Dummy) or (Assigned(mrDef) and mrDef.ShouldIgnore(lSignature)) or lContext.SubRecordToSkip.Find(lSignature, Dummy) then
           CurrentRec.Skipped := True;
         {$IFDEF DBGSUBREC}
         if lSubRecordCount >= Length(lSubRecords) then
