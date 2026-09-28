@@ -21897,6 +21897,15 @@ begin
       NavToggle(lMaster);
       Search('search', 'master shown');
 
+      NavToggle(lModule);
+      HeaderMenu('unhideAll', 'file hidden', lMaster);
+      mniViewHeaderUnhideAll.Click;
+      NavMenu('unhideAll', 'clicked', lModule);
+      Verdict('unhideAll', 'clicked');
+      HeaderMenu('unhideAll', 'clicked', lMaster);
+      NavToggle(lModule);
+      Verdict('unhideAll', 'file shown');
+
       CheckResult := 0;
     except
       on E: Exception do begin
