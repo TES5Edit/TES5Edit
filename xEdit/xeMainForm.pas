@@ -833,8 +833,11 @@ type
 
     TestDeltaPatchLines      : TStringList;
 
+    TestHideTimer            : TTimer;
+
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
+    procedure TestHideRunTimer(Sender: TObject);
 
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
@@ -882,6 +885,7 @@ type
     procedure DoTestCopyIntoGap;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
+    procedure DoTestHide;
     procedure DoTestSaveContextsCompare;
 
     function ViewName(const aElement: IwbElement; const aName: string): string;
@@ -1359,6 +1363,7 @@ uses
   System.IOUtils,
   System.Math,
   System.RegularExpressionsCore,
+  System.Rtti,
   System.StrUtils,
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   System.SyncObjs,
@@ -4992,7 +4997,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestHide or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -21704,6 +21709,184 @@ begin
   TestDeltaPatchWrite;
 end;
 
+procedure TfrmMain.DoTestHide;
+begin
+  xeContext.Settings.DontSave := True;
+  TestHideTimer := TTimer.Create(Self);
+  TestHideTimer.Interval := 500;
+  TestHideTimer.OnTimer := TestHideRunTimer;
+  TestHideTimer.Enabled := True;
+end;
+
+procedure TfrmMain.TestHideRunTimer(Sender: TObject);
+var
+  lLines    : TStringList;
+  lMaster   : IwbMainRecord;
+  lOverride : IwbMainRecord;
+  lModule   : IwbFile;
+  lTmp      : string;
+
+  procedure Verdict(const aArm, aWhen: string);
+  var
+    lCA      : TConflictAll;
+    lCT      : TConflictThis;
+    lColumns : string;
+  begin
+    DoSetActiveRecord(lMaster, True);
+    lColumns := '';
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[i].Element) then
+        lColumns := lColumns + ' ' + ActiveRecords[i].Element._File.FileName;
+    ConflictLevelForMainRecord(lMaster, lCA, lCT);
+    lLines.Add(string.Join(#9, [aArm, aWhen, 'view', IntToStr(Length(ActiveRecords)) + ' columns:' + lColumns,
+      wbNameConflictAll[lCA] + ' / ' + wbNameConflictThis[lCT]]));
+  end;
+
+  procedure NavFocus(const aElement: IwbElement);
+  var
+    lNode : PVirtualNode;
+  begin
+    lNode := FindNodeForElement(aElement);
+    if not Assigned(lNode) then
+      raise Exception.Create('no navigation node for ' + aElement.Name);
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := lNode;
+    vstNav.Selected[lNode] := True;
+    pmuNavPopup(nil);
+  end;
+
+  procedure NavMenu(const aArm, aWhen: string; const aElement: IwbElement);
+  begin
+    NavFocus(aElement);
+    lLines.Add(string.Join(#9, [aArm, aWhen, 'nav Hidden', 'visible ' + BoolToStr(mniNavHidden.Visible, True) + ', checked ' +
+      BoolToStr(mniNavHidden.Checked, True)]));
+  end;
+
+  procedure NavToggle(const aElement: IwbElement);
+  begin
+    NavFocus(aElement);
+    mniNavHidden.Click;
+  end;
+
+  procedure HeaderMenu(const aArm, aWhen: string; const aRecord: IwbMainRecord);
+  var
+    lColumn : Integer;
+  begin
+    DoSetActiveRecord(lMaster, True);
+    lColumn := -1;
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(aRecord) then
+        lColumn := i;
+    if lColumn < 0 then
+      raise Exception.Create(aRecord.Name + ' is not a column of the View tab');
+    var lRtti := TRttiContext.Create;
+    lRtti.GetType(vstView.Header.Columns.ClassType).GetField('FPopupIndex').SetValue(vstView.Header.Columns, lColumn + 1);
+    pmuViewHeaderPopup(nil);
+    lLines.Add(string.Join(#9, [aArm, aWhen, 'header column ' + IntToStr(lColumn), 'Hide visible ' +
+      BoolToStr(mniViewHeaderHidden.Visible, True) + ', checked ' + BoolToStr(mniViewHeaderHidden.Checked, True) +
+      ', Unhide all visible ' + BoolToStr(mniViewHeaderUnhideAll.Visible, True)]));
+  end;
+
+  procedure Search(const aArm, aWhen: string);
+  var
+    lKey  : Word;
+    lData : PNavNodeData;
+  begin
+    edEditorIDSearch.Text := lMaster.EditorID;
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := vstNav.GetFirst;
+    lKey := VK_RETURN;
+    edEditorIDSearchKeyDown(nil, lKey, []);
+    lData := vstNav.GetNodeData(vstNav.FocusedNode);
+    if Assigned(lData) and Assigned(lData.Element) then
+      lLines.Add(string.Join(#9, [aArm, aWhen, 'EditorID search', 'found ' + lData.Element.Name + ' in ' + lData.Element._File.FileName]))
+    else
+      lLines.Add(string.Join(#9, [aArm, aWhen, 'EditorID search', 'found nothing']));
+  end;
+
+begin
+  TestHideTimer.Enabled := False;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit hide probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# record = ' + xeTestHideRecord + ' of ' + xeTestHideMaster + ', module = ' + xeTestHideModule);
+    lLines.Add('# Columns, tab separated: arm / when / what / state');
+    CheckResult := 2;
+    try
+      lMaster := nil;
+      lModule := nil;
+      for var i := Low(Files) to High(Files) do begin
+        if SameText(Files[i].FileName, xeTestHideMaster) then
+          lMaster := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestHideRecord), True, True];
+        if SameText(Files[i].FileName, xeTestHideModule) then
+          lModule := Files[i];
+      end;
+      if not Assigned(lMaster) then
+        raise Exception.Create('no record ' + xeTestHideRecord + ' in ' + xeTestHideMaster);
+      if not Assigned(lModule) then
+        raise Exception.Create('no module ' + xeTestHideModule);
+      lMaster := lMaster.MasterOrSelf;
+      lOverride := nil;
+      for var i := 0 to Pred(lMaster.OverrideCount) do
+        if lMaster.Overrides[i]._File.Equals(lModule) then
+          lOverride := lMaster.Overrides[i];
+      if not Assigned(lOverride) then
+        raise Exception.Create(lMaster.Name + ' has no override in ' + xeTestHideModule);
+      if lMaster.EditorID = '' then
+        raise Exception.Create(lMaster.Name + ' has no EditorID to search for');
+      lLines.Add('# master = ' + lMaster.Name + ' in ' + lMaster._File.FileName + ', override in ' + lModule.FileName);
+
+      Verdict('base', 'before');
+
+      NavMenu('navRecord', 'before', lOverride);
+      NavToggle(lOverride);
+      NavMenu('navRecord', 'hidden', lOverride);
+      Verdict('navRecord', 'hidden');
+      NavToggle(lOverride);
+      NavMenu('navRecord', 'shown', lOverride);
+      Verdict('navRecord', 'shown');
+
+      HeaderMenu('header', 'before', lOverride);
+      mniViewHeaderHidden.Click;
+      Verdict('header', 'hidden');
+      HeaderMenu('header', 'master column', lMaster);
+      mniViewHeaderUnhideAll.Click;
+      Verdict('header', 'unhidden');
+      HeaderMenu('header', 'after', lOverride);
+
+      NavMenu('navFile', 'before', lModule);
+      NavToggle(lModule);
+      NavMenu('navFile', 'hidden', lModule);
+      Verdict('navFile', 'hidden');
+      NavToggle(lModule);
+      Verdict('navFile', 'shown');
+
+      Search('search', 'nothing hidden');
+      NavToggle(lMaster);
+      Search('search', 'master hidden');
+      NavToggle(lMaster);
+      Search('search', 'master shown');
+
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test Hide] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestHideFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestHideFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -21957,6 +22140,9 @@ begin
 
         if xeTestDeltaPatch then
           DoTestDeltaPatchStart;
+
+        if xeTestHide then
+          DoTestHide;
 
         if xeTestSaveContexts then
           DoTestSaveContextsCompare;

@@ -84,6 +84,11 @@ var
   xeTestDeltaPatchName     : string;
   xeTestDeltaPatchHide     : string;
   xeTestDeltaPatchHideRecord : string;
+  xeTestHide               : Boolean;
+  xeTestHideFile           : string;
+  xeTestHideRecord         : string;
+  xeTestHideMaster         : string;
+  xeTestHideModule         : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -998,6 +1003,19 @@ begin
       wbFindCmdLineParam('testdeltapatchhiderec', xeTestDeltaPatchHideRecord);
       xeTestDeltaPatch := True;
       xeAutoLoad       := True;
+    end;
+
+    if wbFindCmdLineParam('testhide', xeTestHideFile) then begin
+      if (xeTestHideFile = '') or
+         not wbFindCmdLineParam('testhiderecord', xeTestHideRecord) or
+         not wbFindCmdLineParam('testhidemaster', xeTestHideMaster) or
+         not wbFindCmdLineParam('testhidemodule', xeTestHideModule) then begin
+        ShowMessage('testhide requires -testhide:<filename> -testhiderecord:<formid> -testhidemaster:<module> ' +
+          '-testhidemodule:<module>');
+        Exit(False);
+      end;
+      xeTestHide := True;
+      xeAutoLoad := True;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
