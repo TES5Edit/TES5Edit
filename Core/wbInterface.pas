@@ -134,7 +134,6 @@ var
   wbPrettyFormID                     : Boolean    = False;
   wbIKnowWhatImDoing                 : Boolean    = False;
   wbHideUnused                       : Boolean    = True;
-  wbHideNeverShow                    : Boolean    = True;
   wbShowGroupRecordCount             : Boolean    = False;
   wbShowFileFlags                    : Boolean    = False;
   wbDisplayShorterNames              : Boolean    = False;
@@ -3903,6 +3902,7 @@ type
     CompareRawData        : Boolean;
     TranslationMode       : Boolean;
     HideIgnored           : Boolean;
+    HideNeverShow         : Boolean;
     EditAllowed           : Boolean;
     AllowInternalEdit     : Boolean;
     AllowEditGameMaster   : Boolean;
@@ -7022,6 +7022,7 @@ begin
   Result.DelayLoadRecords := True;
   Result.AllowInternalEdit := True;
   Result.HideIgnored := True;
+  Result.HideNeverShow := True;
   Result.Encoding := wbMBCSEncoding(1252);
   Result.EncodingTrans := Result.Encoding;
   Result.LoadBSAs := True;
@@ -25939,7 +25940,12 @@ end;
 
 function wbNeverShow(const aElement: IwbElement): Boolean;
 begin
-  Result := wbHideNeverShow;
+  Result := True;
+  if Assigned(aElement) then begin
+    var lContext := aElement.ContextObj;
+    if Assigned(lContext) then
+      Result := lContext.Settings.HideNeverShow;
+  end;
 end;
 
 var

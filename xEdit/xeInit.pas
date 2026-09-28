@@ -1225,7 +1225,7 @@ begin
       xeContext.Settings.TranslationMode := True;
       wbHideUnused             := True;
       xeContext.Settings.HideIgnored := True;
-      wbHideNeverShow          := True;
+      xeContext.Settings.HideNeverShow := True;
     end;
   end;
 

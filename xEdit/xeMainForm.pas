@@ -5263,7 +5263,7 @@ begin
   if not xeContext.Settings.TranslationMode then begin
     wbHideUnused := Settings.ReadBool('Options', 'HideUnused', wbHideUnused);
     xeContext.Settings.HideIgnored := Settings.ReadBool('Options', 'HideIgnored', xeContext.Settings.HideIgnored);
-    wbHideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', wbHideNeverShow);
+    xeContext.Settings.HideNeverShow := Settings.ReadBool('Options', 'HideNeverShow', xeContext.Settings.HideNeverShow);
   end;
   wbActorTemplateHide := Settings.ReadBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
   ColumnWidth := Settings.ReadInteger('Options', 'ColumnWidth', ColumnWidth);
@@ -13992,7 +13992,7 @@ begin
     end else begin
       cbHideUnused.Checked := wbHideUnused;
       cbHideIgnored.Checked := xeContext.Settings.HideIgnored;
-      cbHideNeverShow.Checked := wbHideNeverShow;
+      cbHideNeverShow.Checked := xeContext.Settings.HideNeverShow;
     end;
     cbActorTemplateHide.Checked := wbActorTemplateHide;
     cbLoadBSAs.Checked := xeContext.Settings.LoadBSAs;
@@ -14055,7 +14055,7 @@ begin
     if not xeContext.Settings.TranslationMode then begin
       wbHideUnused := cbHideUnused.Checked;
       xeContext.Settings.HideIgnored := cbHideIgnored.Checked;
-      wbHideNeverShow := cbHideNeverShow.Checked;
+      xeContext.Settings.HideNeverShow := cbHideNeverShow.Checked;
     end;
     wbActorTemplateHide := cbActorTemplateHide.Checked;
     xeContext.Settings.LoadBSAs := cbLoadBSAs.Checked;
@@ -14120,7 +14120,7 @@ begin
     if not xeContext.Settings.TranslationMode then begin
       Settings.WriteBool('Options', 'HideUnused', wbHideUnused);
       Settings.WriteBool('Options', 'HideIgnored', xeContext.Settings.HideIgnored);
-      Settings.WriteBool('Options', 'HideNeverShow', wbHideNeverShow);
+      Settings.WriteBool('Options', 'HideNeverShow', xeContext.Settings.HideNeverShow);
     end;
     Settings.WriteBool('Options', 'ActorTemplateHide', wbActorTemplateHide);
     Settings.WriteBool('Options', 'LoadBSAs', xeContext.Settings.LoadBSAs);
@@ -20374,7 +20374,7 @@ begin
         lHeader.Add('#   wbFlagsAsArray       = ' + BoolToStr(xeContext.Settings.FlagsAsArray, True));
         lHeader.Add('#   wbHideIgnored        = ' + BoolToStr(xeContext.Settings.HideIgnored, True));
         lHeader.Add('#   wbHideLargeSubrecords = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.HideLargeSubrecords, True));
-        lHeader.Add('#   wbHideNeverShow      = ' + BoolToStr(wbHideNeverShow, True));
+        lHeader.Add('#   wbHideNeverShow      = ' + BoolToStr(xeContext.Settings.HideNeverShow, True));
         lHeader.Add('#   wbHideUnused         = ' + BoolToStr(wbHideUnused, True));
         lHeader.Add('#   wbShowFlagEnumValue  = False');
         lHeader.Add('#   wbSimpleRecords      = ' + BoolToStr(xeContext.GameDefObj.DefinedOptions.SimpleRecords, True));
@@ -21331,7 +21331,7 @@ begin
         TestOptionsShown := False;
         lEpochBefore := ConflictView.Epoch;
         lAlignBefore := ConflictView.AlignArrayElements;
-        lNeverShowBefore := wbHideNeverShow;
+        lNeverShowBefore := xeContext.Settings.HideNeverShow;
         TestOptionsAnswer.Enabled := True;
         try
           mniNavOptionsClick(nil);
@@ -21340,7 +21340,7 @@ begin
         end;
         lEpochAfter := ConflictView.Epoch;
         lAlignAfter := ConflictView.AlignArrayElements;
-        lNeverShowAfter := wbHideNeverShow;
+        lNeverShowAfter := xeContext.Settings.HideNeverShow;
         lPass := TestOptionsShown and (TestOptionsDialogAlign = lAlignBefore) and (TestOptionsDialogNeverShow = lNeverShowBefore) and
           ((lAlignAfter <> lAlignBefore) = TestOptionsToggle) and ((lNeverShowAfter <> lNeverShowBefore) = TestOptionsToggleNeverShow);
         if not TestOptionsToggleNeverShow then

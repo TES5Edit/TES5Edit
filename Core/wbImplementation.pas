@@ -26283,7 +26283,8 @@ end;
 
 function TwbStringListTerminator.GetDontShow: Boolean;
 begin
-  Result := wbHideNeverShow;
+  var lContext := ContextObj;
+  Result := not Assigned(lContext) or lContext.Settings.HideNeverShow;
 end;
 
 function TwbStringListTerminator.GetElementType: TwbElementType;

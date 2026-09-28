@@ -512,7 +512,7 @@ end;
 
 function wbDontShowBranch(const aElement: IwbElement): Boolean;
 begin
-  Result := wbHideNeverShow;
+  Result := wbNeverShow(aElement);
 end;
 
 function wbCoSaveChapterOtherCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Cardinal;
