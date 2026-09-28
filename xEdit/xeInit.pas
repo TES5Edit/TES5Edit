@@ -70,6 +70,10 @@ var
   xeTestViewText           : Boolean;
   xeTestViewTextFile       : string;
   xeTestViewTextRecord     : string = '00000007';
+  xeTestViewTree           : Boolean;
+  xeTestViewTreeFile       : string;
+  xeTestViewTreeList       : string;
+  xeTestViewTreeHide       : string;
   xeTestOptions            : Boolean;
   xeTestOptionsFile        : string;
   xeTestCopyIntoGap        : Boolean;
@@ -965,6 +969,16 @@ begin
       var lValue: string;
       if wbFindCmdLineParam('testviewrecord', lValue) and (lValue <> '') then
         xeTestViewTextRecord := lValue;
+    end;
+
+    if wbFindCmdLineParam('testviewtree', xeTestViewTreeFile) then begin
+      if (xeTestViewTreeFile = '') or not wbFindCmdLineParam('testviewrecords', xeTestViewTreeList) or (xeTestViewTreeList = '') then begin
+        ShowMessage('testviewtree requires an output file and a record list, as -testviewtree:<filename> -testviewrecords:<filename>');
+        Exit(False);
+      end;
+      xeTestViewTree := True;
+      xeAutoLoad     := True;
+      wbFindCmdLineParam('testviewtreehide', xeTestViewTreeHide);
     end;
 
     if wbFindCmdLineParam('testoptions', xeTestOptionsFile) then begin

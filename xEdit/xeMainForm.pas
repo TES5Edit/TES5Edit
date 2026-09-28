@@ -884,6 +884,7 @@ type
     procedure DoTestConflictsDump;
     procedure DoTestNavCopy;
     procedure DoTestViewText;
+    procedure DoTestViewTree;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
     procedure DoTestDeltaPatchStart;
@@ -5000,7 +5001,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestHide or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestHide or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -21295,6 +21296,122 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoTestViewTree;
+const
+  cFlagChars: array[TwbConflictNodeFlag] of Char = ('D', 'I', 'U', 'S', 'A', 'P');
+var
+  lLines   : TStringList;
+  lList    : TStringList;
+  lRecords : TDynMainRecords;
+  lTmp     : string;
+
+  function FindRecord(const aFormID: string): IwbMainRecord;
+  begin
+    Result := nil;
+    var lFormID := TwbFormID.FromStr(Trim(aFormID));
+    for var i := High(Files) downto Low(Files) do begin
+      Result := Files[i].RecordByFormID[lFormID, True, True];
+      if Assigned(Result) then
+        Exit;
+    end;
+    raise Exception.Create('no record ' + aFormID);
+  end;
+
+  function Cells(aDatas: PViewNodeDatas): string;
+  begin
+    Result := '';
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do begin
+      var lFlags := '';
+      for var lFlag := Low(TwbConflictNodeFlag) to High(TwbConflictNodeFlag) do
+        if lFlag in aDatas[i].ViewNodeFlags then
+          lFlags := lFlags + cFlagChars[lFlag];
+      Result := Result + #9 + IfThen(Assigned(aDatas[i].Element), 'E', '-') + ':' +
+        wbNameConflictThis[aDatas[i].ConflictThis] + ':' + lFlags;
+    end;
+  end;
+
+  function Path(aNode: PVirtualNode): string;
+  begin
+    Result := '';
+    while Assigned(aNode) and (aNode <> vstView.RootNode) do begin
+      if Result = '' then
+        Result := IntToStr(aNode.Index)
+      else
+        Result := IntToStr(aNode.Index) + '.' + Result;
+      aNode := aNode.Parent;
+    end;
+  end;
+
+begin
+  lLines := TStringList.Create;
+  lList := TStringList.Create;
+  try
+    lLines.Add('# xEdit view tree probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide);
+    lLines.Add('# Columns, tab separated: entry / row path / row ConflictAll / visible / per record column: element:ConflictThis:flags');
+    CheckResult := 2;
+    try
+      if xeTestViewTreeHide <> '' then begin
+        var lHidden := False;
+        for var i := Low(Files) to High(Files) do
+          if SameText(Files[i].FileName, xeTestViewTreeHide) then begin
+            ConflictView.Hidden.Hide(Files[i]);
+            lHidden := True;
+          end;
+        if not lHidden then
+          raise Exception.Create('no module ' + xeTestViewTreeHide);
+      end;
+      lList.LoadFromFile(xeTestViewTreeList);
+      var lEntry := 0;
+      for var lLine in lList do begin
+        if (Trim(lLine) = '') or lLine.StartsWith('#') then
+          Continue;
+        Inc(lEntry);
+        lRecords := nil;
+        for var lFormID in lLine.Split([',']) do
+          lRecords := lRecords + [FindRecord(lFormID)];
+        DoSetActiveRecord(IwbMainRecord(nil));
+        if Length(lRecords) = 1 then
+          DoSetActiveRecord(lRecords[0], True)
+        else
+          DoSetActiveRecord(lRecords);
+        var lColumns := '';
+        for var i := Low(ActiveRecords) to High(ActiveRecords) do
+          if Assigned(ActiveRecords[i].Element) then
+            lColumns := lColumns + ' ' + ActiveRecords[i].Element._File.FileName
+          else
+            lColumns := lColumns + ' -';
+        lLines.Add(Format('# entry %d: %s -> %s | %d columns:%s | %d root rows',
+          [lEntry, Trim(lLine), lRecords[0].Name, Length(ActiveRecords), lColumns, vstView.RootNodeCount]));
+        if Length(ActiveRecords) = 0 then
+          Continue;
+        lLines.Add(IntToStr(lEntry) + #9 + 'root' + #9 + wbNameConflictAll[ActiveRecords[0].ConflictAll] + #9 + '-' +
+          Cells(@ActiveRecords[0]));
+        for var lNode in vstView.Nodes(False) do
+          lLines.Add(IntToStr(lEntry) + #9 + Path(lNode) + #9 +
+            wbNameConflictAll[PViewNodeDatas(vstView.GetNodeData(lNode))[0].ConflictAll] + #9 +
+            IfThen(vstView.IsVisible[lNode], 'V', 'h') + Cells(vstView.GetNodeData(lNode)));
+      end;
+      DoSetActiveRecord(IwbMainRecord(nil));
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test View Tree] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestViewTreeFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestViewTreeFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lList.Free;
+    lLines.Free;
+  end;
+end;
+
 procedure TfrmMain.DoTestOptions;
 begin
   xeContext.Settings.DontSave := True;
@@ -22166,6 +22283,12 @@ begin
 
         if xeTestViewText then begin
           DoTestViewText;
+          if xeAutoExit then
+            tmrShutdown.Enabled := True;
+        end;
+
+        if xeTestViewTree then begin
+          DoTestViewTree;
           if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;
