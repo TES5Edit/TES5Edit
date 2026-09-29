@@ -1406,7 +1406,6 @@ var
   lView         : TwbConflictView;
   lFiles        : TwbFiles;
   lParented     : TwbByteSet;
-  lAllowPartial : Boolean;
   lCounts       : TwbDeltaPatchCounts;
 
   procedure Verdicts(aNode: TwbDeltaPatchNode; aOnlyOne: Boolean);
@@ -1474,7 +1473,6 @@ var
   var
     lRecord : IwbMainRecord;
     lIsRec  : Boolean;
-    lLive   : Integer;
   begin
     for var i := High(aNode.dnChildren) downto Low(aNode.dnChildren) do
       if not aNode.dnChildren[i].dnGone then
@@ -1482,20 +1480,11 @@ var
     wbTick;
     Inc(lCounts.Processed);
     lIsRec := Supports(aNode.dnElement, IwbMainRecord, lRecord);
-    lLive := aNode.LiveChildCount;
-    if (
-         (lLive = 0) or
-         (lAllowPartial and lIsRec and not lRecord.IsPartialForm and lRecord.CanBePartial)
-       ) and
+    if (aNode.LiveChildCount = 0) and
        (
          (aNode.dnThis = ctIdenticalToMaster) or
          ((aNode.dnThis = ctConflictBenign) and lIsRec and (lRecord.Signature = 'NAVM')) or
-         ((aNode.dnOwn = ctIdenticalToMaster) and lAllowPartial and (lLive > 0)) or
-         Supports(aNode.dnElement, IwbGroupRecord) or
-         (
-           (lLive = 0) and lAllowPartial and lIsRec and lRecord.IsPartialForm and
-           (not Assigned(lRecord.ChildGroup) or (lRecord.ChildGroup.ElementCount = 0))
-         )
+         Supports(aNode.dnElement, IwbGroupRecord)
        ) and
        not (lIsRec and lRecord.MasterOrSelf.IsInjected)
     then begin
@@ -1505,15 +1494,10 @@ var
           aOnMessage('Can''t remove: ' + aNode.dnElement.Name);
         Inc(lCounts.CantRemove);
       end else begin
-        if lLive > 0 then begin
-          if lAllowPartial and lIsRec then
-            lRecord.MakePartialForm;
-        end else begin
-          if Assigned(aNode.dnContainer) and not aNode.dnContainer.Equals(aNode.dnElement) then
-            aNode.dnContainer.Remove;
-          aNode.dnElement.Remove;
-          aNode.dnGone := True;
-        end;
+        if Assigned(aNode.dnContainer) and not aNode.dnContainer.Equals(aNode.dnElement) then
+          aNode.dnContainer.Remove;
+        aNode.dnElement.Remove;
+        aNode.dnGone := True;
         Inc(lCounts.Removed);
       end;
     end;
@@ -1534,7 +1518,6 @@ begin
     raise Exception.Create('Delta patch: not available in translation mode');
 
   lFiles := lContext.Files;
-  lAllowPartial := lContext.Settings.AllowMakePartial;
   lParented := [1, 6, 7];
   if gcVWDAsQuestChildren in lContext.GameDefObj.Capabilities then
     Include(lParented, 10);
