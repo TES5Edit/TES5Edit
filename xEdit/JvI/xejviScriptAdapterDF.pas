@@ -516,7 +516,10 @@ var
 begin
   case Args.Count of
    0: Value := TwbNifBlock(Args.Obj).GetAssetsList;
-   1: for s in TwbNifBlock(Args.Obj).GetAssetsList do TStrings(ObjectArgument(Args.Values[0], TStrings, 0)).Add(s);
+   1: begin
+     var lList := TStrings(ObjectArgument(Args.Values[0], TStrings, 0));
+     for s in TwbNifBlock(Args.Obj).GetAssetsList do lList.Add(s);
+   end;
    else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -664,7 +667,10 @@ var
 begin
   case Args.Count of
    0: Value := TwbNifFile(Args.Obj).GetAssetsList;
-   1: for s in TwbNifFile(Args.Obj).GetAssetsList do TStrings(ObjectArgument(Args.Values[0], TStrings, 0)).Add(s);
+   1: begin
+     var lList := TStrings(ObjectArgument(Args.Values[0], TStrings, 0));
+     for s in TwbNifFile(Args.Obj).GetAssetsList do lList.Add(s);
+   end;
    else
      JvInterpreterError(ieTooManyParams, -1);
   end;
