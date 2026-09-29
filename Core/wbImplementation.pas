@@ -1326,6 +1326,7 @@ type
     procedure DoPendingFill; override;
 
     function DoBuildRef(aRemove: Boolean): Boolean;
+    function RecordHeaderStructDef: IwbStructDef;
     function NeedsOrderFill: Boolean;
     procedure FillOrderBySort;
     procedure BuildRef; override;
@@ -9762,7 +9763,7 @@ begin
   SelfRef := Self;
   DoInit(False);
   inherited;
-  if mrDef.IsReference and CheckChildOfCell then begin
+  if Assigned(mrDef) and mrDef.IsReference and CheckChildOfCell then begin
     if not Supports(GetRecordBySignature('DATA'), IwbContainerElementRef, DataRec) then
       Exit;
     if DataRec.ElementCount <> 2 then
@@ -9910,7 +9911,7 @@ begin
   Result := False;
   lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
 
-  if dfExcludeFromBuildRef in mrDef.DefFlags then
+  if not Assigned(mrDef) or (dfExcludeFromBuildRef in mrDef.DefFlags) then
     Exit;
 
   if mrsBuildingRef in mrStates then
@@ -10041,7 +10042,7 @@ var
   SubRecord   : IwbSubRecord;
   NotRelevant : Boolean;
 begin
-  if Supports(aElement, IwbSubRecord, SubRecord) then begin
+  if Assigned(mrDef) and Supports(aElement, IwbSubRecord, SubRecord) then begin
     NotRelevant := False;
     if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
       mrEditorID := mrDef.GetEditorID(SubRecord);
@@ -10111,7 +10112,7 @@ begin
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       Exit;
-    if dfInternalEditOnly in mrDef.DefFlags then
+    if Assigned(mrDef) and (dfInternalEditOnly in mrDef.DefFlags) then
       Exit;
   end;
 
@@ -10149,7 +10150,7 @@ begin
       Exit;
 
   if not Assigned(aElement) then begin
-    Result := (aIndex >= 0) and (aIndex < mrDef.MemberCount) and (GetElementBySortOrder(aIndex + GetAdditionalElementCount) = nil);
+    Result := Assigned(mrDef) and (aIndex >= 0) and (aIndex < mrDef.MemberCount) and (GetElementBySortOrder(aIndex + GetAdditionalElementCount) = nil);
     if Result and aCheckDontShow then
       Result := not mrDef.Members[aIndex].DontShow[Self];
     if Result and not wbIsInternalEdit then
@@ -10534,6 +10535,14 @@ begin
   }
 end;
 
+function TwbMainRecord.RecordHeaderStructDef: IwbStructDef;
+begin
+  if Assigned(mrDef) then
+    Result := mrDef.RecordHeaderStruct
+  else
+    Result := GameDefObj.MainRecordHeader as IwbStructDef;
+end;
+
 procedure TwbMainRecord.Delete;
 var
   SelfRef     : IwbContainerElementRef;
@@ -10566,7 +10575,7 @@ begin
     GroupRecord := nil;
 
     BasePtr := dcBasePtr;
-    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+    with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, RecordHeaderStructDef, '') do begin
       Include(dcFlags, dcfDontSave);
       SetSortOrder(-1);
       SetMemoryOrder(Low(Integer));
@@ -11622,7 +11631,9 @@ begin
       (GetSignature = 'PBAR') or {>>> Skyrim <<<}
       (GetSignature = 'PHZD')    {>>> Skyrim <<<}
     then begin
-      if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
+      if not Assigned(mrDef) then
+        Rec := nil
+      else if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
         Rec := MapMarker.RecordBySignature[mrDef.KnownSubRecordSignatures[ksrFullName]]
       else
         Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrBaseRecord]);
@@ -11671,7 +11682,9 @@ begin
       (GetSignature = 'PBAR') or {>>> Skyrim <<<}
       (GetSignature = 'PHZD')    {>>> Skyrim <<<}
     then begin
-      if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
+      if not Assigned(mrDef) then
+        Rec := nil
+      else if Supports(GetElementByName('Map Marker'), IwbContainerElementRef, MapMarker) then
         Rec := MapMarker.RecordBySignature[mrDef.KnownSubRecordSignatures[ksrFullName]]
       else
         Rec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrBaseRecord]);
@@ -11862,7 +11875,7 @@ var
 begin
   Result := False;
 
-  if not mrDef.ContainsKnownSubRecord[ksrGridCell] then
+  if not Assigned(mrDef) or not mrDef.ContainsKnownSubRecord[ksrGridCell] then
     Exit;
 
   SelfRef := Self;
@@ -11952,7 +11965,7 @@ var
 begin
   Result := False;
 
-  if not mrDef.ContainsKnownSubRecord[ksrGridCell] then
+  if not Assigned(mrDef) or not mrDef.ContainsKnownSubRecord[ksrGridCell] then
     Exit;
 
   SelfRef := Self as IwbContainerElementRef;
@@ -12267,7 +12280,7 @@ end;
 function TwbMainRecord.GetIsEditable: Boolean;
 begin
   Result := wbIsInternalEdit;
-  if Result or (dfInternalEditOnly in mrDef.DefFlags) then
+  if Result or (Assigned(mrDef) and (dfInternalEditOnly in mrDef.DefFlags)) then
     Exit;
 
   if Assigned(eContainer) and not IwbContainer(eContainer).IsElementEditable(Self) then
@@ -13622,7 +13635,7 @@ begin
     mrName := '';
     mrShortName := '';
     mrDisplayName := '';
-    if (mrsQuickInitDone in mrStates) or (csInitOnce in cntStates) then begin
+    if Assigned(mrDef) and ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
       FULLRec := GetRecordBySignature(mrDef.KnownSubRecordSignatures[ksrFullName]);
       if Assigned(FULLRec) then
         mrFullName := FULLRec.EditValue;
@@ -14376,7 +14389,7 @@ begin
   if aMarkModified then
     if Assigned(Result) and (Result.ElementType = etSubRecord) then begin
       var SubRecord : IwbSubRecord;
-      if Supports(Result, IwbSubRecord, SubRecord) then begin
+      if Assigned(mrDef) and Supports(Result, IwbSubRecord, SubRecord) then begin
         var NotRelevant := False;
         if SubRecord.Signature = mrDef.KnownSubRecordSignatures[ksrEditorID] then begin
           mrEditorID := '';
@@ -14770,7 +14783,7 @@ begin
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');
-    if dfInternalEditOnly in mrDef.DefFlags then
+    if Assigned(mrDef) and (dfInternalEditOnly in mrDef.DefFlags) then
       Exit;
   end;
 
@@ -14822,7 +14835,7 @@ begin
       GroupRecord := nil;
 
       BasePtr := dcBasePtr;
-      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, mrDef.RecordHeaderStruct, '') do begin
+      with TwbRecordHeaderStruct.Create(Self, BasePtr, PByte(BasePtr) + GameDefObj.SizeOfMainRecordStruct, RecordHeaderStructDef, '') do begin
         Include(dcFlags, dcfDontSave);
         SetSortOrder(-1);
         SetMemoryOrder(Low(Integer));
@@ -14831,9 +14844,10 @@ begin
 
       BeginUpdate;
       try
-        for i := 0 to Pred(mrDef.MemberCount) do
-          if mrDef.Members[i].Required then
-            Assign(i, nil, False);
+        if Assigned(mrDef) then
+          for i := 0 to Pred(mrDef.MemberCount) do
+            if mrDef.Members[i].Required then
+              Assign(i, nil, False);
 
         Master := GetMaster;
 
@@ -15146,7 +15160,7 @@ begin
   if not wbIsInternalEdit then begin
     if not ContextObj.Settings.EditAllowed then
       raise Exception.Create(GetName + ' can not be edited.');
-    if dfInternalEditOnly in mrDef.DefFlags then
+    if Assigned(mrDef) and (dfInternalEditOnly in mrDef.DefFlags) then
       Exit;
   end;
 
