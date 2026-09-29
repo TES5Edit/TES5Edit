@@ -841,6 +841,7 @@ type
     TestMergeTimer           : TTimer;
     TestMergeAnswer          : TTimer;
     TestMergeTarget          : IwbFile;
+    TestMergeNotOffered      : Boolean;
 
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
@@ -21993,6 +21994,8 @@ begin
     vstNav.FocusedNode := lNode;
     lBefore := OwnRecords(lSource);
     mniNavRenumberFormIDsFromClick(mniNavRenumberFormIDsInject);
+    if TestMergeNotOffered then
+      raise Exception.Create(lTarget.FileName + ' was not offered by the inject''s module picker');
     TestMergeLines.Add('inject' + #9 + 'own records before ' + IntToStr(lBefore) + ', after ' + IntToStr(OwnRecords(lSource)));
 
     vstNav.ClearSelection;
@@ -22013,6 +22016,8 @@ begin
     else
       TestMergeLines.Add('copy' + #9 + 'no top level group in ' + lSource.FileName + ', nothing to copy');
     TestMergeAnswer.Enabled := False;
+    if TestMergeNotOffered then
+      raise Exception.Create(lTarget.FileName + ' was not offered by the copy''s module picker');
 
     TestMergeLines.Add('target' + #9 + lTarget.FileName + #9 + 'records ' + IntToStr(lTarget.RecordCount) + #9 +
       'masters ' + IntToStr(lTarget.MasterCount[True]));
@@ -22033,6 +22038,8 @@ begin
       TestMergeLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
     end;
   end;
+  if Assigned(TestMergeAnswer) then
+    TestMergeAnswer.Enabled := False;
   TestMergeWrite;
 end;
 
@@ -22063,6 +22070,8 @@ var
   end;
 
 begin
+  if not Assigned(TestMergeLines) then
+    Exit;
   lForm := nil;
   for var i := 0 to Pred(Screen.CustomFormCount) do
     if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
@@ -22076,8 +22085,17 @@ begin
   CollectText(lForm);
   lResult := mrNone;
   if lForm is TfrmModuleSelect then begin
-    Include(PwbModuleInfo(TestMergeTarget.ModuleInfo).miFlags, mfTagged);
-    lResult := mrOk;
+    var lOffered := False;
+    for var lInfo in TfrmModuleSelect(lForm).AllModules do
+      if lInfo = PwbModuleInfo(TestMergeTarget.ModuleInfo) then
+        lOffered := True;
+    if lOffered then begin
+      Include(PwbModuleInfo(TestMergeTarget.ModuleInfo).miFlags, mfTagged);
+      lResult := mrOk;
+    end else begin
+      TestMergeNotOffered := True;
+      lResult := mrCancel;
+    end;
   end else if HasButton(lForm, mrYesToAll) then
     lResult := mrYesToAll
   else if HasButton(lForm, mrYes) then
