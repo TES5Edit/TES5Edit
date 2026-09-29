@@ -21825,8 +21825,25 @@ begin
 end;
 
 procedure TfrmMain.DoTestDeltaPatchReport;
+
+  procedure AddTree(const aContainer: IwbContainer; aDepth: Integer);
+  var
+    lGroup  : IwbGroupRecord;
+    lRecord : IwbMainRecord;
+  begin
+    for var i := 0 to Pred(aContainer.ElementCount) do
+      if Supports(aContainer.Elements[i], IwbGroupRecord, lGroup) then begin
+        TestDeltaPatchLines.Add('patchtree' + #9 + IntToStr(aDepth) + #9 + 'GRUP' + #9 + IntToStr(lGroup.GroupType) + #9 +
+          IntToHex(lGroup.GroupLabel, 8));
+        AddTree(lGroup, Succ(aDepth));
+      end else if Supports(aContainer.Elements[i], IwbMainRecord, lRecord) then
+        TestDeltaPatchLines.Add('patchtree' + #9 + IntToStr(aDepth) + #9 + string(lRecord.Signature) + #9 +
+          IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
+  end;
+
 var
   lRecord : IwbMainRecord;
+  lStream : TMemoryStream;
 begin
   if not Assigned(TestDeltaPatchLines) then
     Exit;
@@ -21843,6 +21860,16 @@ begin
           lRecord := Files[i].Records[j];
           TestDeltaPatchLines.Add('patchrecord' + #9 + string(lRecord.Signature) + #9 + IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 +
             'deleted=' + BoolToStr(lRecord.IsDeleted, True) + #9 + lRecord.EditorID);
+        end;
+        AddTree(Files[i], 0);
+        for var lInfo in LOOTPluginInfos do
+          TestDeltaPatchLines.Add('loot' + #9 + lInfo.Plugin + #9 + IntToHex(lInfo.CRC32, 8) + #9 + 'itm=' + IntToStr(lInfo.ITM));
+        lStream := TMemoryStream.Create;
+        try
+          Files[i].WriteToStream(lStream, rmNo);
+          TestDeltaPatchLines.Add('patchbytes' + #9 + IntToStr(lStream.Size) + #9 + IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+        finally
+          lStream.Free;
         end;
       end;
     if not lFound then
