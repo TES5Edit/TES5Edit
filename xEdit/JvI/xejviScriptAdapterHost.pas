@@ -734,7 +734,7 @@ var
   Nodes: TNodeArray;
   i: Integer;
 begin
-  var lList := TStrings(ObjectArgument(Args.Values[0], TStrings, 0, True, 'Expected a TStrings or TStringsList'));
+  var lList := TStrings(ObjectArgument(Args.Values[0], TStrings, 0, True, 'Expected a TStrings or TStringList'));
 
   Nodes := frmMain.vstNav.GetSortedSelection(True);
 
