@@ -19,7 +19,7 @@ uses
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 
-function ListArgument(const aValue: Variant; aClass: TClass; aIndex: Integer): TObject;
+function ObjectArgument(const aValue: Variant; aClass: TClass; aIndex: Integer; aRequired: Boolean = False; const aMessage: string = ''): TObject;
 
 implementation
 
@@ -437,15 +437,26 @@ begin
     JvInterpreterError(ieDirectInvalidArgument, 0);
 end;
 
-function ListArgument(const aValue: Variant; aClass: TClass; aIndex: Integer): TObject;
+function ObjectArgument(const aValue: Variant; aClass: TClass; aIndex: Integer; aRequired: Boolean = False; const aMessage: string = ''): TObject;
+
+  procedure Refuse;
+  begin
+    if aMessage <> '' then
+      JvInterpreterErrorN(ieDirectInvalidArgument, aIndex, aMessage)
+    else
+      JvInterpreterError(ieDirectInvalidArgument, aIndex);
+  end;
+
 begin
   Result := nil;
-  if TVarData(aValue).VType = varObject then
+  if (TVarData(aValue).VType = varObject) or (TVarData(aValue).VType = varPointer) then
     Result := V2O(aValue)
-  else if (TVarData(aValue).VType <> varPointer) or Assigned(TVarData(aValue).VPointer) then
-    JvInterpreterError(ieDirectInvalidArgument, aIndex);
+  else if Assigned(V2O(aValue)) then
+    Refuse;
   if Assigned(Result) and not (Result is aClass) then
-    JvInterpreterError(ieDirectInvalidArgument, aIndex);
+    Refuse;
+  if aRequired and not Assigned(Result) then
+    Refuse;
 end;
 
 procedure _ConflictAllForElements(var Value: Variant; Args: TJvInterpreterArgs);
@@ -458,7 +469,7 @@ var
 begin
   if Args.Count = 3 then begin
     Value := caUnknown;
-    List := TList(ListArgument(Args.Values[0], TList, 0));
+    List := TList(ObjectArgument(Args.Values[0], TList, 0));
     if Assigned(List) then
     for i := 0 to Pred(List.Count) do begin
       if not Supports(IInterface(Pointer(List[i])), IwbElement, Element) then
@@ -527,9 +538,7 @@ var
 begin
   if not Supports(IInterface(Args.Values[0]), IwbElement, Element) then
     JvInterpreterError(ieDirectInvalidArgument, 0);
-  if (TVarData(Args.Values[1]).VType <> varObject) or not (V2O(Args.Values[1]) is TStrings) then
-    JvInterpreterError(ieDirectInvalidArgument, 1);
-  List := TStrings(V2O(Args.Values[1]));
+  List := TStrings(ObjectArgument(Args.Values[1], TStrings, 1, True));
   Value := -1;
   Tree := AlignedConflictTree(Element, Node, Column);
   try
@@ -699,7 +708,7 @@ var
   i, j: Integer;
   Found: Boolean;
 begin
-  List := TList(ListArgument(Args.Values[0], TList, 0));
+  List := TList(ObjectArgument(Args.Values[0], TList, 0));
   if not Assigned(List) then
     Exit;
 
@@ -748,10 +757,8 @@ var
   Nodes: TNodeArray;
   i: Integer;
 begin
-  if (TVarData(Args.Values[0]).VType <> varObject) or not (V2O(Args.Values[0]) is TStrings) then begin
-    JvInterpreterErrorN(ieDirectInvalidArgument, 0, 'Expected a TStrings or TStringsList'); // or ieNotEnoughParams, ieIncompatibleTypes or others.
-  end;
-  
+  var lList := TStrings(ObjectArgument(Args.Values[0], TStrings, 0, True, 'Expected a TStrings or TStringsList'));
+
   Nodes := frmMain.vstNav.GetSortedSelection(True);
 
   for i := Low(Nodes) to High(Nodes) do begin
@@ -760,16 +767,16 @@ begin
       Continue;
     Element := NodeData.Element;
     if Supports(Element, IwbFile, _File) then begin
-      if TStrings(V2O(Args.Values[0])).IndexOf(_File.FileName) = -1 then
-        TStrings(V2O(Args.Values[0])).AddObject(_File.FileName, TObject(Pointer(Element)));
+      if lList.IndexOf(_File.FileName) = -1 then
+        lList.AddObject(_File.FileName, TObject(Pointer(Element)));
     end
     else if Supports(Element, IwbMainRecord, MainRecord) then begin
-      if TStrings(V2O(Args.Values[0])).IndexOf(MainRecord._File.FileName) = -1 then
-        TStrings(V2O(Args.Values[0])).AddObject(MainRecord._File.FileName, TObject(Pointer(MainRecord._File)));
+      if lList.IndexOf(MainRecord._File.FileName) = -1 then
+        lList.AddObject(MainRecord._File.FileName, TObject(Pointer(MainRecord._File)));
     end
 	else if Supports(Element, IwbGroupRecord, Container) then begin
-	  if TStrings(V2O(Args.Values[0])).IndexOf(Container._File.FileName) = -1 then
-	    TStrings(V2O(Args.Values[0])).AddObject(Container._File.FileName, TObject(Pointer(Container._File)));
+	  if lList.IndexOf(Container._File.FileName) = -1 then
+	    lList.AddObject(Container._File.FileName, TObject(Pointer(Container._File)));
 	end;
   end;
 end;

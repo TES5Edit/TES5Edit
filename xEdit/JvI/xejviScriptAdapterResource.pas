@@ -250,7 +250,7 @@ begin
     Exit;
   BaseSignatures := string(Args.Values[1]);
   Opt := Integer(Args.Values[2]);
-  lst := TList(ListArgument(Args.Values[3], TList, 3));
+  lst := TList(ObjectArgument(Args.Values[3], TList, 3));
   if not Assigned(lst) then
     Exit;
 
@@ -292,7 +292,7 @@ begin
     Exit;
   sigs := string(Args.Values[1]);
   Overrides := Boolean(Args.Values[2]);
-  lst := TList(ListArgument(Args.Values[3], TList, 3));
+  lst := TList(ObjectArgument(Args.Values[3], TList, 3));
   if not Assigned(lst) then
     Exit;
 
