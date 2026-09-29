@@ -26,7 +26,8 @@ uses
   JsonDataObjects,
 
   wbInterface,
-  xeInit;
+  xeInit,
+  xejviScriptArguments;
 
 { JsonDataObjects }
 
@@ -94,9 +95,9 @@ begin
   with TJsonBaseObject(Args.Obj) do
   case Args.Count of
    0: JvInterpreterError(ieNotEnoughParams, -1);
-   1: LoadFromStream(TStream(V2O(Args.Values[0])));
-   2: LoadFromStream(TStream(V2O(Args.Values[0])), TEncoding(V2O(Args.Values[1])));
-   3: LoadFromStream(TStream(V2O(Args.Values[0])), TEncoding(V2O(Args.Values[1])), Args.Values[2]);
+   1: LoadFromStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)));
+   2: LoadFromStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)), TEncoding(ObjectArgument(Args.Values[1], TEncoding, 1)));
+   3: LoadFromStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)), TEncoding(ObjectArgument(Args.Values[1], TEncoding, 1)), Args.Values[2]);
    else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -114,8 +115,8 @@ begin
    0: JvInterpreterError(ieNotEnoughParams, -1);
    1: SaveToFile(Args.Values[0]);
    2: SaveToFile(Args.Values[0], Args.Values[1]);
-   3: SaveToFile(Args.Values[0], Args.Values[1], TEncoding(V2O(Args.Values[2])));
-   4: SaveToFile(Args.Values[0], Args.Values[1], TEncoding(V2O(Args.Values[2])), Args.Values[3]);
+   3: SaveToFile(Args.Values[0], Args.Values[1], TEncoding(ObjectArgument(Args.Values[2], TEncoding, 2)));
+   4: SaveToFile(Args.Values[0], Args.Values[1], TEncoding(ObjectArgument(Args.Values[2], TEncoding, 2)), Args.Values[3]);
    else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -123,7 +124,7 @@ end;
 
 procedure TJsonBaseObject_SaveToLines(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJsonBaseObject(Args.Obj).SaveToLines(TStrings(V2O(Args.Values[0])));
+  TJsonBaseObject(Args.Obj).SaveToLines(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TJsonBaseObject_SaveToStream(var Value: Variant; Args: TJvInterpreterArgs);
@@ -131,10 +132,10 @@ begin
   with TJsonBaseObject(Args.Obj) do
   case Args.Count of
    0: JvInterpreterError(ieNotEnoughParams, -1);
-   1: SaveToStream(TStream(V2O(Args.Values[0])));
-   2: SaveToStream(TStream(V2O(Args.Values[0])), Args.Values[1]);
-   3: SaveToStream(TStream(V2O(Args.Values[0])), Args.Values[1], TEncoding(V2O(Args.Values[2])));
-   4: SaveToStream(TStream(V2O(Args.Values[0])), Args.Values[1], TEncoding(V2O(Args.Values[2])), Args.Values[3]);
+   1: SaveToStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)));
+   2: SaveToStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)), Args.Values[1]);
+   3: SaveToStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)), Args.Values[1], TEncoding(ObjectArgument(Args.Values[2], TEncoding, 2)));
+   4: SaveToStream(TStream(ObjectArgument(Args.Values[0], TStream, 0)), Args.Values[1], TEncoding(ObjectArgument(Args.Values[2], TEncoding, 2)), Args.Values[3]);
    else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -275,7 +276,7 @@ end;
 
 procedure TJsonArray_Assign(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJsonArray(Args.Obj).Assign(TJsonArray(V2O(Args.Values[0])));
+  TJsonArray(Args.Obj).Assign(TJsonArray(ObjectArgument(Args.Values[0], TJsonArray, 0)));
 end;
 
 procedure TJsonArray_Clear(var Value: Variant; Args: TJvInterpreterArgs);
@@ -333,7 +334,7 @@ begin
   case Args.Count of
     0: JvInterpreterError(ieNotEnoughParams, -1);
     1: Value := O2V(TJsonArray(Args.Obj).InsertObject(Args.Values[0]));
-    2: TJsonArray(Args.Obj).InsertObject( Args.Values[0], TJsonObject(V2O(Args.Values[1])) );
+    2: TJsonArray(Args.Obj).InsertObject( Args.Values[0], TJsonObject(ObjectArgument(Args.Values[1], TJsonObject, 1)) );
     else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -458,7 +459,7 @@ end;
 
 procedure TJsonObject_Assign(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TJsonObject(Args.Obj).Assign(TJsonObject(V2O(Args.Values[0])));
+  TJsonObject(Args.Obj).Assign(TJsonObject(ObjectArgument(Args.Values[0], TJsonObject, 0)));
 end;
 
 procedure TJsonObject_Clear(var Value: Variant; Args: TJvInterpreterArgs);

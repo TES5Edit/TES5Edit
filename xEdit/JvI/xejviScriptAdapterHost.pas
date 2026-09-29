@@ -19,8 +19,6 @@ uses
 
 procedure RegisterJvInterpreterAdapter(JvInterpreterAdapter: TJvInterpreterAdapter);
 
-function ObjectArgument(const aValue: Variant; aClass: TClass; aIndex: Integer; aRequired: Boolean = False; const aMessage: string = ''): TObject;
-
 implementation
 
 uses
@@ -39,7 +37,8 @@ uses
 
   xeFileSelectForm,
   xeInit,
-  xeMainForm;
+  xeMainForm,
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -437,28 +436,6 @@ begin
     JvInterpreterError(ieDirectInvalidArgument, 0);
 end;
 
-function ObjectArgument(const aValue: Variant; aClass: TClass; aIndex: Integer; aRequired: Boolean = False; const aMessage: string = ''): TObject;
-
-  procedure Refuse;
-  begin
-    if aMessage <> '' then
-      JvInterpreterErrorN(ieDirectInvalidArgument, aIndex, aMessage)
-    else
-      JvInterpreterError(ieDirectInvalidArgument, aIndex);
-  end;
-
-begin
-  Result := nil;
-  if (TVarData(aValue).VType = varObject) or (TVarData(aValue).VType = varPointer) then
-    Result := V2O(aValue)
-  else if Assigned(V2O(aValue)) then
-    Refuse;
-  if Assigned(Result) and not (Result is aClass) then
-    Refuse;
-  if aRequired and not Assigned(Result) then
-    Refuse;
-end;
-
 procedure _ConflictAllForElements(var Value: Variant; Args: TJvInterpreterArgs);
 var
   Element: IwbElement;
@@ -665,8 +642,8 @@ end;
 procedure _wbGetUVRangeTexturesList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbGetUVRangeTexturesList(xeContext,
-    TStrings(V2O(Args.Values[0])),  // TStrings list of meshes
-    TStrings(V2O(Args.Values[1])),  // TStrings list of textures, output
+    TStrings(ObjectArgument(Args.Values[0], TStrings, 0)),  // TStrings list of meshes
+    TStrings(ObjectArgument(Args.Values[1], TStrings, 1)),  // TStrings list of textures, output
     Single(Args.Values[2])          // UVRange
   );
 end;
@@ -674,7 +651,7 @@ end;
 procedure _wbBuildAtlasFromTexturesList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbBuildAtlasFromTexturesList(xeContext,
-    TStrings(V2O(Args.Values[0])),  // TStrings list of textures
+    TStrings(ObjectArgument(Args.Values[0], TStrings, 0)),  // TStrings list of textures
     Args.Values[1], // max texture size
     Args.Values[2], // max tile size
     Args.Values[3], // atlas width
@@ -688,7 +665,7 @@ end;
 procedure _wbBuildAtlasFromAtlasMap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   wbBuildAtlasFromAtlasMap(xeContext,
-    TStrings(V2O(Args.Values[0])),  // TStrings atlas map
+    TStrings(ObjectArgument(Args.Values[0], TStrings, 0)),  // TStrings atlas map
     Args.Values[1],                // brightness
     Args.Values[2],                // GammaR
     Args.Values[3],                // GammaG

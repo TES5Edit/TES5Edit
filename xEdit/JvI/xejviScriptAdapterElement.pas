@@ -27,7 +27,8 @@ uses
   wbImplementation,
   wbInterface,
   wbConflict,
-  xeMainForm;
+  xeMainForm,
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -543,7 +544,7 @@ var
   Element: IwbElement;
 begin
   if Supports(IInterface(Args.Values[0]), IwbElement, Element) then begin
-    var lStrings := TStrings(V2O(Args.Values[1]));
+    var lStrings := TStrings(ObjectArgument(Args.Values[1], TStrings, 1));
     var lMasters := TwbFilesSet.Create;
     try
       Element.ReportRequiredMasters(lMasters, Args.Values[2], Args.Values[3]);

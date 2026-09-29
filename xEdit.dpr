@@ -102,6 +102,7 @@ uses
   xejviScriptAdapterMiscVcl in 'xEdit\JvI\xejviScriptAdapterMiscVcl.pas',
   xejviScriptAdapterRecord in 'xEdit\JvI\xejviScriptAdapterRecord.pas',
   xejviScriptAdapterResource in 'xEdit\JvI\xejviScriptAdapterResource.pas',
+  xejviScriptArguments in 'xEdit\JvI\xejviScriptArguments.pas',
   xejviScriptHost in 'xEdit\JvI\xejviScriptHost.pas',
   xeLegendForm in 'xEdit\xeLegendForm.pas' {frmLegend},
   xeLocalizationForm in 'xEdit\xeLocalizationForm.pas' {frmLocalization},

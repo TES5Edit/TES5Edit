@@ -32,7 +32,7 @@ uses
   wbInterface,
   wbNifScanner,
 
-  xejviScriptAdapterHost;
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -64,7 +64,7 @@ end;
 
 procedure IwbContainerHandler_ResourceContainerList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  xeContext.ContainerHandler.ContainerList(TStrings(V2O(Args.Values[0])));
+  xeContext.ContainerHandler.ContainerList(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure IwbContainerHandler_ResourceCopy(var Value: Variant; Args: TJvInterpreterArgs);
@@ -74,7 +74,7 @@ end;
 
 procedure IwbContainerHandler_ResourceCount(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := xeContext.ContainerHandler.ResourceCount(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  Value := xeContext.ContainerHandler.ResourceCount(Args.Values[0], TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure IwbContainerHandler_ResourceExists(var Value: Variant; Args: TJvInterpreterArgs);
@@ -86,8 +86,8 @@ procedure IwbContainerHandler_ResourceList(var Value: Variant; Args: TJvInterpre
 begin
   case Args.Count of
     0, 1: JvInterpreterError(ieNotEnoughParams, -1);
-    2: xeContext.ContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])));
-    3: xeContext.ContainerHandler.ContainerResourceList(Args.Values[0], TStrings(V2O(Args.Values[1])), string(Args.Values[2]));
+    2: xeContext.ContainerHandler.ContainerResourceList(Args.Values[0], TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
+    3: xeContext.ContainerHandler.ContainerResourceList(Args.Values[0], TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), string(Args.Values[2]));
     else
      JvInterpreterError(ieTooManyParams, -1);
   end;
@@ -128,22 +128,22 @@ end;
 
 procedure NifUtils_NifBlockList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := NifBlockList(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+  Value := NifBlockList(TBytes(Args.Values[0]), TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure NifUtils_NifTextureList(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := NifTextures(TBytes(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+  Value := NifTextures(TBytes(Args.Values[0]), TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure NifUtils_NifTextureListResource(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := NifTextures(xeContext.ContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]), TStrings(V2O(Args.Values[2])));
+  Value := NifTextures(xeContext.ContainerHandler.OpenResourceData(Args.Values[0], Args.Values[1]), TStrings(ObjectArgument(Args.Values[2], TStrings, 2)));
 end;
 
 procedure NifUtils_NifTextureListUVRange(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := NifTexturesUVRange(TBytes(Args.Values[0]), Single(Args.Values[1]), TStrings(V2O(Args.Values[2])));
+  Value := NifTexturesUVRange(TBytes(Args.Values[0]), Single(Args.Values[1]), TStrings(ObjectArgument(Args.Values[2], TStrings, 2)));
 end;
 
 
@@ -151,17 +151,17 @@ end;
 
 procedure DDSUtils_wbDDSDataToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDDSDataToBitmap(TBytes(Args.Values[0]), TBitmap(V2O(Args.Values[1])));
+  Value := wbDDSDataToBitmap(TBytes(Args.Values[0]), TBitmap(ObjectArgument(Args.Values[1], TBitmap, 1)));
 end;
 
 procedure DDSUtils_wbDDSResourceToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDDSDataToBitmap(xeContext.ContainerHandler.OpenResourceData('', Args.Values[0]), TBitmap(V2O(Args.Values[1])));
+  Value := wbDDSDataToBitmap(xeContext.ContainerHandler.OpenResourceData('', Args.Values[0]), TBitmap(ObjectArgument(Args.Values[1], TBitmap, 1)));
 end;
 
 procedure DDSUtils_wbDDSStreamToBitmap(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := wbDDSStreamToBitmap(TStream(V2O(Args.Values[0])), TBitmap(V2O(Args.Values[1])));
+  Value := wbDDSStreamToBitmap(TStream(ObjectArgument(Args.Values[0], TStream, 0)), TBitmap(ObjectArgument(Args.Values[1], TBitmap, 1)));
 end;
 
 
@@ -196,7 +196,7 @@ end;
 procedure Misc_LocalizationGetStringsFromFile(var Value: Variant; Args: TJvInterpreterArgs);
 begin
   if xeContext.LocalizationHandler <> nil then
-    xeContext.LocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(V2O(Args.Values[1])));
+    xeContext.LocalizationHandler.GetStringsFromFile(string(Args.Values[0]), TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure Misc_wbAlphaBlend(var Value: Variant; Args: TJvInterpreterArgs);
@@ -353,7 +353,7 @@ var
   i: integer;
 begin
   Value := -1;
-  sl := TStringList(V2O(Args.Values[0]));
+  sl := TStringList(ObjectArgument(Args.Values[0], TStrings, 0));
   if not Assigned(sl) then
     Exit;
   s := string(Args.Values[1]);

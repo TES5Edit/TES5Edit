@@ -34,13 +34,15 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
   Vcl.Menus,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls,
+
+  xejviScriptArguments;
 
 { TBinaryReader }
 
 procedure TBinaryReader_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TBinaryReader.Create(TFileStream(V2O(Args.Values[0]))));
+  Value := O2V(TBinaryReader.Create(TFileStream(ObjectArgument(Args.Values[0], TStream, 0))));
 end;
 
 procedure TBinaryReader_Read(var Value: Variant; Args: TJvInterpreterArgs);
@@ -112,7 +114,7 @@ end;
 
 procedure TBinaryWriter_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TBinaryWriter.Create(TFileStream(V2O(Args.Values[0]))));
+  Value := O2V(TBinaryWriter.Create(TFileStream(ObjectArgument(Args.Values[0], TStream, 0))));
 end;
 
 procedure TBinaryWriter_Write(var Value: Variant; Args: TJvInterpreterArgs);
@@ -194,7 +196,7 @@ end;
 
 procedure TCheckListBox_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TCheckListBox.Create(V2O(Args.Values[0]) as TComponent));
+  Value := O2V(TCheckListBox.Create(TComponent(ObjectArgument(Args.Values[0], TComponent, 0))));
 end;
 
 procedure TCheckListBox_Read_Header(var Value: Variant; Args: TJvInterpreterArgs);
@@ -311,17 +313,17 @@ end;
 
 procedure TCustomIniFile_ReadSection(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TCustomIniFile(Args.Obj).ReadSection(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  TCustomIniFile(Args.Obj).ReadSection(Args.Values[0], TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure TCustomIniFile_ReadSections(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TCustomIniFile(Args.Obj).ReadSections(TStrings(V2O(Args.Values[0])));
+  TCustomIniFile(Args.Obj).ReadSections(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TCustomIniFile_ReadSectionValues(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TCustomIniFile(Args.Obj).ReadSectionValues(Args.Values[0], TStrings(V2O(Args.Values[1])));
+  TCustomIniFile(Args.Obj).ReadSectionValues(Args.Values[0], TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure TCustomIniFile_ReadString(var Value: Variant; Args: TJvInterpreterArgs);
@@ -368,7 +370,7 @@ end;
 
 procedure TCustomLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TCustomLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
+  Value := O2V(TCustomLabeledEdit.Create(TComponent(ObjectArgument(Args.Values[0], TComponent, 0))));
 end;
 
 procedure TCustomLabeledEdit_Read_EditLabel(var Value: Variant; Args: TJvInterpreterArgs);
@@ -438,7 +440,7 @@ end;
 
 procedure TLabeledEdit_Create(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  Value := O2V(TLabeledEdit.Create(V2O(Args.Values[0]) as TComponent));
+  Value := O2V(TLabeledEdit.Create(TComponent(ObjectArgument(Args.Values[0], TComponent, 0))));
 end;
 
 { TListItem }
@@ -489,12 +491,12 @@ end;
 
 procedure TMemIniFile_GetStrings(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TMemIniFile(Args.Obj).GetStrings(TStrings(V2O(Args.Values[0])));
+  TMemIniFile(Args.Obj).GetStrings(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 procedure TMemIniFile_SetStrings(var Value: Variant; Args: TJvInterpreterArgs);
 begin
-  TMemIniFile(Args.Obj).SetStrings(TStrings(V2O(Args.Values[0])));
+  TMemIniFile(Args.Obj).SetStrings(TStrings(ObjectArgument(Args.Values[0], TStrings, 0)));
 end;
 
 { TMenu }

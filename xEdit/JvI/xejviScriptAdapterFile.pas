@@ -23,7 +23,9 @@ uses
   System.Classes,
   System.SysUtils,
 
-  wbInterface;
+  wbInterface,
+
+  xejviScriptArguments;
 
 const
   cUnit = 'Dummy';
@@ -53,8 +55,8 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     case Args.Count of
     0, 1: JvInterpreterError(ieNotEnoughParams, -1);
-    3: _File.AddMasters(TStrings(V2O(Args.Values[1])), Boolean(Args.Values[2]));
-    2: _File.AddMasters(TStrings(V2O(Args.Values[1])));
+    3: _File.AddMasters(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), Boolean(Args.Values[2]));
+    2: _File.AddMasters(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
     else
      JvInterpreterError(ieTooManyParams, -1);
     end;
@@ -67,9 +69,9 @@ begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
     case Args.Count of
     0, 1: JvInterpreterError(ieNotEnoughParams, -1);
-    4: _File.AddMastersIfMissing(TStrings(V2O(Args.Values[1])), Boolean(Args.Values[2]), Boolean(Args.Values[3]));
-    3: _File.AddMastersIfMissing(TStrings(V2O(Args.Values[1])), Boolean(Args.Values[2]));
-    2: _File.AddMastersIfMissing(TStrings(V2O(Args.Values[1])));
+    4: _File.AddMastersIfMissing(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), Boolean(Args.Values[2]), Boolean(Args.Values[3]));
+    3: _File.AddMastersIfMissing(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)), Boolean(Args.Values[2]));
+    2: _File.AddMastersIfMissing(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
     else
      JvInterpreterError(ieTooManyParams, -1);
     end;
@@ -178,7 +180,7 @@ var
   _File : IwbFile;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then
-    _File.GetMasters(TStrings(V2O(Args.Values[1])));
+    _File.GetMasters(TStrings(ObjectArgument(Args.Values[1], TStrings, 1)));
 end;
 
 procedure IwbFile_GetNewFormID(var Value: Variant; Args: TJvInterpreterArgs);
@@ -314,7 +316,7 @@ var
   rm     : TwbResetModified;
 begin
   if Supports(IInterface(Args.Values[0]), IwbFile, _File) then begin
-    Stream := TStream(V2O(Args.Values[1]));
+    Stream := TStream(ObjectArgument(Args.Values[1], TStream, 1));
     if Assigned(Stream) then begin
       i := Args.Values[2];
       case i of
