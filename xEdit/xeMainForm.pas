@@ -13790,6 +13790,9 @@ begin
   FilterByBaseName := False;
   FilterBaseName := '';
 
+  FilterByElementValue := False;
+  FilterElementValue := '';
+
   FilterScaledActors := False;
 
   FilterByPersistent := False;
@@ -13861,6 +13864,9 @@ begin
 
   FilterByBaseName := False;
   FilterBaseName := '';
+
+  FilterByElementValue := False;
+  FilterElementValue := '';
 
   FilterScaledActors := False;
 
@@ -13943,6 +13949,9 @@ begin
 
   FilterByBaseName := False;
   FilterBaseName := '';
+
+  FilterByElementValue := False;
+  FilterElementValue := '';
 
   FilterScaledActors := False;
 
