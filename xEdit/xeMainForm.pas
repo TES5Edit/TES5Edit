@@ -22452,64 +22452,38 @@ begin
 
           PerformLongAction('Creating Delta Patch', '', procedure
           var
-            i          : Integer;
-            Node       : PVirtualNode;
-            NodeData   : PNavNodeData;
-            MainRecord : IwbMainRecord;
-            UserHidden : TwbFiles;
+            Counts    : TwbDeltaPatchCounts;
+            DirtyInfo : PLOOTPluginInfo;
           begin
             HideRemoveMessage := True;
             xeQuickClean := True;
 
-            UserHidden := ConflictView.Hidden.Files;
-            try
-              for i := High(Files) downto Low(Files) do
-                ConflictView.Hidden.Hide(Files[i]);
-              ConflictView.Hidden.Show(MasterFile);
-              ConflictView.Hidden.Show(NewFile);
+            DoSetActiveRecord(nil);
+            pgMain.ActivePage := tbsMessages;
 
-              DoSetActiveRecord(nil);
-              pgMain.ActivePage := tbsMessages;
+            if EditWarn then begin
+              wbStartTime := Now;
+              Counts := wbConflictMakeDeltaPatch(MasterFile, NewFile, ConflictView,
+                procedure(const aMessage: string) begin PostAddMessage(aMessage); end);
 
-              lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
-              Include(PwbModuleInfo(MasterFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-              mniNavFilterForOnlyOneClick(Self);
+              PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Counts.Processed) +
+                ', Removed Records: ' + IntToStr(Counts.Removed) +
+                ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
 
-              Node := vstNav.GetFirst;
-              while Assigned(Node) do begin
-                NodeData := vstNav.GetNodeData(Node);
-                if Assigned(NodeData) then
-                  if Supports(NodeData.Element, IwbMainRecord, MainRecord) then
-                    if MainRecord.Signature <> 'TES4' then
-                      if not MainRecord.IsDeleted then
-                        if NodeData.ConflictThis = ctOnlyOne then
-                          if Supports(wbCopyElementToFile(NodeData.Element, NewFile, False, False, '', '', '', '', False), IwbMainRecord, MainRecord) then
-                            MainRecord.IsDeleted := True;
-                Node := vstNav.GetNext(Node);
-              end;
-
-              NewFile.RemoveIdenticalDeltaFast;
-
-              lModules.ModulesByLoadOrder(False).ExcludeAll(mfTaggedForPluginMode);
-              Include(PwbModuleInfo(NewFile.ModuleInfo).miFlags, mfTaggedForPluginMode);
-              mniNavFilterForCleaning.Click;
-              JumpTo(NewFile.Header, False);
-              vstNav.ClearSelection;
-              vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-              vstNav.Selected[vstNav.FocusedNode] := True;
-              DoSetActiveRecord(nil);
-              pgMain.ActivePage := tbsMessages;
-              mniNavRemoveIdenticalToMaster.Click;
-            finally
-              for i := High(Files) downto Low(Files) do begin
-                var WasHidden := False;
-                for var UserFile in UserHidden do
-                  if UserFile.Equals(Files[i]) then
-                    WasHidden := True;
-                if WasHidden then
-                  ConflictView.Hidden.Hide(Files[i])
-                else
-                  ConflictView.Hidden.Show(Files[i]);
+              if Counts.Candidates > 0 then begin
+                DirtyInfo := nil;
+                for var i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
+                  if (LOOTPluginInfos[i].Plugin = NewFile.FileName) and (LOOTPluginInfos[i].CRC32 = NewFile.CRC32) then begin
+                    DirtyInfo := @LOOTPluginInfos[i];
+                    Break;
+                  end;
+                if not Assigned(DirtyInfo) then begin
+                  SetLength(LOOTPluginInfos, Succ(Length(LOOTPluginInfos)));
+                  DirtyInfo := @LOOTPluginInfos[Pred(Length(LOOTPluginInfos))];
+                end;
+                DirtyInfo.Plugin := NewFile.FileName;
+                DirtyInfo.CRC32 := NewFile.CRC32;
+                DirtyInfo.ITM := Counts.Removed;
               end;
             end;
 

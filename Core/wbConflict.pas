@@ -113,6 +113,14 @@ type
     property Injected: Boolean read ctInjected;
   end;
 
+  TwbDeltaPatchCounts = record
+    Copied     : Integer;
+    Processed  : Integer;
+    Candidates : Integer;
+    Removed    : Integer;
+    CantRemove : Integer;
+  end;
+
 function wbConflictCellElement(const aParentData: TwbConflictNodeData; aIndex: Cardinal): IwbElement;
 
 function wbConflictLevelForNodeDatas(const aNodeDatas: PwbConflictNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
@@ -134,6 +142,8 @@ function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDa
 function wbConflictNodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView): TwbDynConflictNodeDatas;
 
 procedure wbConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+
+function wbConflictMakeDeltaPatch(const aOld, aNew: IwbFile; aTemplate: TwbConflictView; const aOnMessage: TwbConflictMessageProc): TwbDeltaPatchCounts;
 
 implementation
 
@@ -1324,6 +1334,244 @@ begin
 
     aConflictThis := ThisConflict;
   end;
+end;
+
+type
+  TwbByteSet = set of Byte;
+
+  TwbDeltaPatchNode = class
+  private
+    dnElement   : IwbElement;
+    dnContainer : IwbContainer;
+    dnChildren  : TArray<TwbDeltaPatchNode>;
+    dnGone      : Boolean;
+    dnOwn       : TConflictThis;
+    dnThis      : TConflictThis;
+    function LiveChildCount: Integer;
+  public
+    constructor Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);
+    destructor Destroy; override;
+  end;
+
+constructor TwbDeltaPatchNode.Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);
+var
+  lRecord : IwbMainRecord;
+  lGroup  : IwbGroupRecord;
+  lChild  : IwbContainer;
+  i       : Integer;
+begin
+  inherited Create;
+  dnElement := aElement;
+  dnContainer := aContainer;
+  if not Assigned(dnContainer) then
+    Exit;
+  i := 0;
+  while i < dnContainer.ElementCount do begin
+    var lElement := dnContainer.Elements[i];
+    lChild := nil;
+    if Supports(lElement, IwbMainRecord, lRecord) then begin
+      if (Succ(i) < dnContainer.ElementCount) and
+         Supports(dnContainer.Elements[Succ(i)], IwbGroupRecord, lGroup) and
+         (lGroup.GroupType in aParented) and
+         (lRecord.FormID.ToCardinal = lGroup.GroupLabel)
+      then begin
+        lChild := lGroup;
+        Inc(i);
+      end;
+    end else if Supports(lElement, IwbGroupRecord, lGroup) then
+      lChild := lGroup;
+    dnChildren := dnChildren + [TwbDeltaPatchNode.Create(lElement, lChild, aParented)];
+    Inc(i);
+  end;
+end;
+
+destructor TwbDeltaPatchNode.Destroy;
+begin
+  for var lChild in dnChildren do
+    lChild.Free;
+  inherited;
+end;
+
+function TwbDeltaPatchNode.LiveChildCount: Integer;
+begin
+  Result := 0;
+  for var lChild in dnChildren do
+    if not lChild.dnGone then
+      Inc(Result);
+end;
+
+function wbConflictMakeDeltaPatch(const aOld, aNew: IwbFile; aTemplate: TwbConflictView; const aOnMessage: TwbConflictMessageProc): TwbDeltaPatchCounts;
+var
+  lContext      : TwbGameContext;
+  lView         : TwbConflictView;
+  lFiles        : TwbFiles;
+  lParented     : TwbByteSet;
+  lAllowPartial : Boolean;
+  lCounts       : TwbDeltaPatchCounts;
+
+  procedure Verdicts(aNode: TwbDeltaPatchNode; aOnlyOne: Boolean);
+  var
+    lRecord : IwbMainRecord;
+    lMaster : IwbMainRecord;
+    lAll    : TConflictAll;
+  begin
+    for var i := High(aNode.dnChildren) downto Low(aNode.dnChildren) do
+      Verdicts(aNode.dnChildren[i], aOnlyOne);
+    wbTick;
+    aNode.dnOwn := ctUnknown;
+    aNode.dnThis := ctUnknown;
+    if Supports(aNode.dnElement, IwbMainRecord, lRecord) then begin
+      if aOnlyOne and (aNode.LiveChildCount = 0) then begin
+        lMaster := lRecord.MasterOrSelf;
+        if lMaster.OverrideCount > 0 then begin
+          var lVisible := 0;
+          if not lView.Hidden.IsHidden(lMaster) then
+            Inc(lVisible);
+          for var i := 0 to Pred(lMaster.OverrideCount) do
+            if not lView.Hidden.IsHidden(lMaster.Overrides[i]) then begin
+              Inc(lVisible);
+              if lVisible > 1 then
+                Break;
+            end;
+          if lVisible > 1 then begin
+            aNode.dnGone := True;
+            Exit;
+          end;
+        end;
+      end;
+      wbConflictLevelForMainRecord(lRecord, lFiles, lView, aOnMessage, lAll, aNode.dnOwn);
+      aNode.dnThis := aNode.dnOwn;
+    end;
+    if aNode.LiveChildCount > 0 then begin
+      for var lChild in aNode.dnChildren do
+        if not lChild.dnGone and (lChild.dnThis > aNode.dnThis) then
+          aNode.dnThis := lChild.dnThis;
+    end else if aNode.dnElement.Skipped then
+      aNode.dnGone := True;
+  end;
+
+  procedure CopyDeleted(aNode: TwbDeltaPatchNode);
+  var
+    lRecord : IwbMainRecord;
+    lCopy   : IwbMainRecord;
+  begin
+    wbTick;
+    if Supports(aNode.dnElement, IwbMainRecord, lRecord) and
+       (lRecord.Signature <> 'TES4') and
+       not lRecord.IsDeleted and
+       (aNode.dnThis = ctOnlyOne) and
+       Supports(wbCopyElementToFile(lRecord, aNew, False, False, '', '', '', '', False), IwbMainRecord, lCopy)
+    then begin
+      lCopy.IsDeleted := True;
+      Inc(lCounts.Copied);
+    end;
+    for var lChild in aNode.dnChildren do
+      if not lChild.dnGone then
+        CopyDeleted(lChild);
+  end;
+
+  procedure RemoveIdentical(aNode: TwbDeltaPatchNode);
+  var
+    lRecord : IwbMainRecord;
+    lIsRec  : Boolean;
+    lLive   : Integer;
+  begin
+    for var i := High(aNode.dnChildren) downto Low(aNode.dnChildren) do
+      if not aNode.dnChildren[i].dnGone then
+        RemoveIdentical(aNode.dnChildren[i]);
+    wbTick;
+    Inc(lCounts.Processed);
+    lIsRec := Supports(aNode.dnElement, IwbMainRecord, lRecord);
+    lLive := aNode.LiveChildCount;
+    if (
+         (lLive = 0) or
+         (lAllowPartial and lIsRec and not lRecord.IsPartialForm and lRecord.CanBePartial)
+       ) and
+       (
+         (aNode.dnThis = ctIdenticalToMaster) or
+         ((aNode.dnThis = ctConflictBenign) and lIsRec and (lRecord.Signature = 'NAVM')) or
+         ((aNode.dnOwn = ctIdenticalToMaster) and lAllowPartial and (lLive > 0)) or
+         Supports(aNode.dnElement, IwbGroupRecord) or
+         (
+           (lLive = 0) and lAllowPartial and lIsRec and lRecord.IsPartialForm and
+           (not Assigned(lRecord.ChildGroup) or (lRecord.ChildGroup.ElementCount = 0))
+         )
+       ) and
+       not (lIsRec and lRecord.MasterOrSelf.IsInjected)
+    then begin
+      Inc(lCounts.Candidates);
+      if not aNode.dnElement.IsRemovable then begin
+        if Assigned(aOnMessage) then
+          aOnMessage('Can''t remove: ' + aNode.dnElement.Name);
+        Inc(lCounts.CantRemove);
+      end else begin
+        if lLive > 0 then begin
+          if lAllowPartial and lIsRec then
+            lRecord.MakePartialForm;
+        end else begin
+          if Assigned(aNode.dnContainer) and not aNode.dnContainer.Equals(aNode.dnElement) then
+            aNode.dnContainer.Remove;
+          aNode.dnElement.Remove;
+          aNode.dnGone := True;
+        end;
+        Inc(lCounts.Removed);
+      end;
+    end;
+  end;
+
+var
+  lTree : TwbDeltaPatchNode;
+begin
+  lCounts := Default(TwbDeltaPatchCounts);
+  lContext := aNew.ContextObj;
+  if aOld.ContextObj <> lContext then
+    raise Exception.Create('Delta patch: ' + aOld.FileName + ' and ' + aNew.FileName + ' are not loaded in the same context');
+  if not (fsIsDeltaPatch in aNew.FileStates) or not aOld.Equals(aNew.CompareToFile) then
+    raise Exception.Create('Delta patch: ' + aNew.FileName + ' is not loaded as a delta patch of ' + aOld.FileName);
+  if not aNew.IsEditable then
+    raise Exception.Create('Delta patch: ' + aNew.FileName + ' is not editable');
+  if lContext.Settings.TranslationMode then
+    raise Exception.Create('Delta patch: not available in translation mode');
+
+  lFiles := lContext.Files;
+  lAllowPartial := lContext.Settings.AllowMakePartial;
+  lParented := [1, 6, 7];
+  if gcVWDAsQuestChildren in lContext.GameDefObj.Capabilities then
+    Include(lParented, 10);
+
+  lView := TwbConflictView.Create(lContext);
+  try
+    if Assigned(aTemplate) then begin
+      lView.AlignArrayElements := aTemplate.AlignArrayElements;
+      lView.AlignArrayLimit := aTemplate.AlignArrayLimit;
+    end;
+    for var lFile in lFiles do
+      if not lFile.Equals(aOld) and not lFile.Equals(aNew) then
+        lView.Hidden.Hide(lFile);
+
+    lTree := TwbDeltaPatchNode.Create(aOld, aOld, lParented);
+    try
+      Verdicts(lTree, True);
+      CopyDeleted(lTree);
+    finally
+      lTree.Free;
+    end;
+
+    aNew.RemoveIdenticalDeltaFast;
+
+    lTree := TwbDeltaPatchNode.Create(aNew, aNew, lParented);
+    try
+      Verdicts(lTree, False);
+      for var i := High(lTree.dnChildren) downto Low(lTree.dnChildren) do
+        if not lTree.dnChildren[i].dnGone then
+          RemoveIdentical(lTree.dnChildren[i]);
+    finally
+      lTree.Free;
+    end;
+  finally
+    lView.Free;
+  end;
+  Result := lCounts;
 end;
 
 destructor TwbConflictTreeNode.Destroy;
