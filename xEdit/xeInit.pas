@@ -102,6 +102,9 @@ var
   xeTestHideModule         : string;
   xeTestFilter             : Boolean;
   xeTestFilterFile         : string;
+  xeTestFilterPreset       : string;
+  xeTestFilterByValue      : string;
+  xeTestFilterRemove       : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -1058,8 +1061,13 @@ begin
     end;
 
     if wbFindCmdLineParam('testfilter', xeTestFilterFile) then begin
-      if xeTestFilterFile = '' then begin
-        ShowMessage('testfilter requires -testfilter:<filename>');
+      wbFindCmdLineParam('testfilterpreset', xeTestFilterPreset);
+      wbFindCmdLineParam('testfilterbyvalue', xeTestFilterByValue);
+      wbFindCmdLineParam('testfilterremove', xeTestFilterRemove);
+      if (xeTestFilterFile = '') or
+         not ((xeTestFilterPreset = '') or SameText(xeTestFilterPreset, 'cleaning') or SameText(xeTestFilterPreset, 'onlyone')) then begin
+        ShowMessage('testfilter requires -testfilter:<filename> [-testfilterpreset:<cleaning|onlyone>] ' +
+          '[-testfilterbyvalue:<text>] [-testfilterremove:<module>]');
         Exit(False);
       end;
       xeTestFilter := True;

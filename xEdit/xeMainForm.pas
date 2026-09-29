@@ -842,6 +842,11 @@ type
     TestMergeAnswer          : TTimer;
     TestMergeTarget          : IwbFile;
 
+    TestFilterAnswer         : TTimer;
+    TestFilterAnswered       : string;
+
+    procedure TestFilterAnswerTimer(Sender: TObject);
+
     procedure TestMergeRunTimer(Sender: TObject);
     procedure TestMergeAnswerTimer(Sender: TObject);
     procedure TestMergeWrite;
@@ -6345,7 +6350,7 @@ begin
     TestNavCopyAnswer.OnTimer := TestNavCopyAnswerTimer;
     TestNavCopyAnswer.Enabled := True;
   end;
-  if xeTestMerge then
+  if xeTestMerge or (xeTestFilterRemove <> '') then
     UseLatestCommonDialogs := False;
 
   try
@@ -22295,67 +22300,115 @@ begin
   try
     lLines.Add('# xEdit filter probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# filter = by persistent, everything else off');
+    if xeTestFilterPreset = '' then
+      lLines.Add('# filter = by persistent, everything else off')
+    else
+      lLines.Add('# filter = the "' + xeTestFilterPreset + '" preset');
+    if xeTestFilterByValue <> '' then
+      lLines.Add('# before the filter: FilterByElementValue = True, FilterElementValue = ' + xeTestFilterByValue +
+        ' (what the filter dialog''s apply leaves after a filter by element value)');
     lLines.Add('# Columns, tab separated: record left in the tree / file');
     CheckResult := 2;
     try
-      FilterConflictAll := False;
-      FilterConflictThis := False;
-      FilterByInjectStatus := False;
-      FilterInjectStatus := False;
-      FilterByNotReachableStatus := False;
-      FilterNotReachableStatus := False;
-      FilterByReferencesInjectedStatus := False;
-      FilterReferencesInjectedStatus := False;
-      FilterByEditorID := False;
-      FilterEditorID := '';
-      FilterByName := False;
-      FilterName := '';
-      FilterByBaseEditorID := False;
-      FilterBaseEditorID := '';
-      FilterByBaseName := False;
-      FilterBaseName := '';
-      FilterScaledActors := False;
-      FilterByPersistent := True;
-      FilterPersistent := True;
-      FilterUnnecessaryPersistent := False;
-      FilterMasterIsTemporary := False;
-      FilterIsMaster := False;
-      FilterPersistentPosChanged := False;
-      FilterDeleted := False;
-      FilterByVWD := False;
-      FilterVWD := False;
-      FilterByHasVWDMesh := False;
-      FilterHasVWDMesh := False;
-      FilterByHasPrecombinedMesh := False;
-      FilterHasPrecombinedMesh := False;
-      FilterBySignature := False;
-      FilterSignatures := '';
-      FilterByBaseSignature := False;
-      FilterBaseSignatures := '';
-      FilterConflictAllSet := [];
-      FilterConflictThisSet := [];
-      FlattenBlocks := True;
-      FlattenCellChilds := True;
-      AssignPersWrldChild := True;
-      InheritConflictByParent := True;
-      FilterPreset := True;
-      try
-        mniNavFilterApplyClick(nil);
-      finally
-        FilterPreset := False;
+      if xeTestFilterByValue <> '' then begin
+        FilterByElementValue := True;
+        FilterElementValue := xeTestFilterByValue;
       end;
+      if SameText(xeTestFilterPreset, 'cleaning') then
+        mniNavFilterForCleaningClick(nil)
+      else if SameText(xeTestFilterPreset, 'onlyone') then
+        mniNavFilterForOnlyOneClick(nil)
+      else begin
+        FilterConflictAll := False;
+        FilterConflictThis := False;
+        FilterByInjectStatus := False;
+        FilterInjectStatus := False;
+        FilterByNotReachableStatus := False;
+        FilterNotReachableStatus := False;
+        FilterByReferencesInjectedStatus := False;
+        FilterReferencesInjectedStatus := False;
+        FilterByEditorID := False;
+        FilterEditorID := '';
+        FilterByName := False;
+        FilterName := '';
+        FilterByBaseEditorID := False;
+        FilterBaseEditorID := '';
+        FilterByBaseName := False;
+        FilterBaseName := '';
+        FilterScaledActors := False;
+        FilterByPersistent := True;
+        FilterPersistent := True;
+        FilterUnnecessaryPersistent := False;
+        FilterMasterIsTemporary := False;
+        FilterIsMaster := False;
+        FilterPersistentPosChanged := False;
+        FilterDeleted := False;
+        FilterByVWD := False;
+        FilterVWD := False;
+        FilterByHasVWDMesh := False;
+        FilterHasVWDMesh := False;
+        FilterByHasPrecombinedMesh := False;
+        FilterHasPrecombinedMesh := False;
+        FilterBySignature := False;
+        FilterSignatures := '';
+        FilterByBaseSignature := False;
+        FilterBaseSignatures := '';
+        FilterConflictAllSet := [];
+        FilterConflictThisSet := [];
+        FlattenBlocks := True;
+        FlattenCellChilds := True;
+        AssignPersWrldChild := True;
+        InheritConflictByParent := True;
+        FilterPreset := True;
+        try
+          mniNavFilterApplyClick(nil);
+        finally
+          FilterPreset := False;
+        end;
+      end;
+      lLines.Add('# after the filter: FilterByElementValue = ' + BoolToStr(FilterByElementValue, True));
       lCount := 0;
       lNode := vstNav.GetFirst;
       while Assigned(lNode) do begin
         lData := vstNav.GetNodeData(lNode);
         if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then begin
           Inc(lCount);
-          lLines.Add(lData.Element.Name + #9 + lData.Element._File.FileName);
+          if xeTestFilterPreset = '' then
+            lLines.Add(lData.Element.Name + #9 + lData.Element._File.FileName);
         end;
         lNode := vstNav.GetNext(lNode);
       end;
       lLines.Add('# records left: ' + IntToStr(lCount));
+      if xeTestFilterRemove <> '' then begin
+        xeContext.Settings.DontSave := True;
+        EditWarnOk := True;
+        var lFile : IwbFile := nil;
+        for var i := Low(Files) to High(Files) do
+          if SameText(Files[i].FileName, xeTestFilterRemove) then
+            lFile := Files[i];
+        if not Assigned(lFile) then
+          raise Exception.Create('no module ' + xeTestFilterRemove);
+        lNode := FindNodeForElement(lFile);
+        if not Assigned(lNode) then
+          raise Exception.Create('no nav node for ' + lFile.FileName);
+        var lBefore := lFile.RecordCount;
+        vstNav.ClearSelection;
+        vstNav.Selected[lNode] := True;
+        vstNav.FocusedNode := lNode;
+        TestFilterAnswered := '';
+        TestFilterAnswer := TTimer.Create(Self);
+        TestFilterAnswer.Interval := 100;
+        TestFilterAnswer.OnTimer := TestFilterAnswerTimer;
+        TestFilterAnswer.Enabled := True;
+        try
+          mniNavRemoveIdenticalToMasterClick(nil);
+        finally
+          TestFilterAnswer.Enabled := False;
+        end;
+        if TestFilterAnswered <> '' then
+          lLines.Add('# remove: a dialog was answered: ' + TestFilterAnswered);
+        lLines.Add('# remove: ' + lFile.FileName + ' records before ' + IntToStr(lBefore) + ', after ' + IntToStr(lFile.RecordCount));
+      end;
       CheckResult := 0;
     except
       on E: Exception do begin
@@ -22373,6 +22426,36 @@ begin
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
+end;
+
+procedure TfrmMain.TestFilterAnswerTimer(Sender: TObject);
+var
+  lForm : TCustomForm;
+  lText : string;
+
+  procedure CollectText(aOwner: TComponent);
+  begin
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TLabel then
+        lText := lText + ' ' + TLabel(aOwner.Components[i]).Caption;
+      CollectText(aOwner.Components[i]);
+    end;
+  end;
+
+begin
+  lForm := nil;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := Screen.CustomForms[i];
+      Break;
+    end;
+  if not Assigned(lForm) then
+    Exit;
+  lText := '';
+  CollectText(lForm);
+  TestFilterAnswered := TestFilterAnswered + '[' + lForm.Caption + ']' + lText.Replace(#13, ' ').Replace(#10, ' ');
+  lForm.ModalResult := mrOk;
 end;
 
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
