@@ -9911,7 +9911,10 @@ begin
   Result := False;
   lComplex := gcComplexFileFileID in GameDefObj.Capabilities;
 
-  if not Assigned(mrDef) or (dfExcludeFromBuildRef in mrDef.DefFlags) then
+  if Assigned(mrDef) then begin
+    if dfExcludeFromBuildRef in mrDef.DefFlags then
+      Exit;
+  end else if not aRemove then
     Exit;
 
   if mrsBuildingRef in mrStates then
@@ -10416,6 +10419,10 @@ var
   end;
 
 begin
+  var lRecordDef: PwbMainRecordDef;
+  if not aContainer.GameDefObj.FindRecordDef(aSignature, lRecordDef) then
+    raise Exception.Create('Can''t add main record with signature ' + aSignature + ': it is not a defined record type');
+
   Inner;
 
   var EndPtr: Pointer := nil;

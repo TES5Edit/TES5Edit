@@ -786,7 +786,7 @@ begin
 
         if Assigned(Container) then begin
           case Container.ElementType of
-            etMainRecord, etSubRecordStruct: begin
+            etMainRecord, etSubRecordStruct: if Assigned(Container.Def) then begin
                 aChildCount := (Container.Def as IwbRecordDef).MemberCount;
                 Inc(aChildCount, Container.AdditionalElementCount);
                 if (Cardinal(Container.ElementCount) > aChildCount) and Assigned(aOnMessage) then begin
