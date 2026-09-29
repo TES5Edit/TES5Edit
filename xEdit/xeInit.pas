@@ -1065,8 +1065,9 @@ begin
       wbFindCmdLineParam('testfilterbyvalue', xeTestFilterByValue);
       wbFindCmdLineParam('testfilterremove', xeTestFilterRemove);
       if (xeTestFilterFile = '') or
-         not ((xeTestFilterPreset = '') or SameText(xeTestFilterPreset, 'cleaning') or SameText(xeTestFilterPreset, 'onlyone')) then begin
-        ShowMessage('testfilter requires -testfilter:<filename> [-testfilterpreset:<cleaning|onlyone>] ' +
+         not ((xeTestFilterPreset = '') or SameText(xeTestFilterPreset, 'cleaning') or SameText(xeTestFilterPreset, 'onlyone') or
+              SameText(xeTestFilterPreset, 'conflicts')) then begin
+        ShowMessage('testfilter requires -testfilter:<filename> [-testfilterpreset:<cleaning|onlyone|conflicts>] ' +
           '[-testfilterbyvalue:<text>] [-testfilterremove:<module>]');
         Exit(False);
       end;

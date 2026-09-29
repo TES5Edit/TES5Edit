@@ -22318,6 +22318,8 @@ begin
         mniNavFilterForCleaningClick(nil)
       else if SameText(xeTestFilterPreset, 'onlyone') then
         mniNavFilterForOnlyOneClick(nil)
+      else if SameText(xeTestFilterPreset, 'conflicts') then
+        mniNavFilterConflictsClick(nil)
       else begin
         FilterConflictAll := False;
         FilterConflictThis := False;
