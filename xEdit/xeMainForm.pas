@@ -22461,6 +22461,7 @@ begin
             DoSetActiveRecord(nil);
             pgMain.ActivePage := tbsMessages;
 
+            UserWasActive := True;
             if EditWarn then begin
               wbStartTime := Now;
               Counts := wbConflictMakeDeltaPatch(MasterFile, NewFile, ConflictView,
