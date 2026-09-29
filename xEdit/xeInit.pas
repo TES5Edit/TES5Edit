@@ -94,6 +94,8 @@ var
   xeTestHideRecord         : string;
   xeTestHideMaster         : string;
   xeTestHideModule         : string;
+  xeTestFilter             : Boolean;
+  xeTestFilterFile         : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -1032,6 +1034,15 @@ begin
         Exit(False);
       end;
       xeTestHide := True;
+      xeAutoLoad := True;
+    end;
+
+    if wbFindCmdLineParam('testfilter', xeTestFilterFile) then begin
+      if xeTestFilterFile = '' then begin
+        ShowMessage('testfilter requires -testfilter:<filename>');
+        Exit(False);
+      end;
+      xeTestFilter := True;
       xeAutoLoad := True;
     end;
 

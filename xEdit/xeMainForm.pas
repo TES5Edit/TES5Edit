@@ -890,6 +890,7 @@ type
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
     procedure DoTestHide;
+    procedure DoTestFilter;
     procedure DoTestSaveContextsCompare;
 
     function ViewName(const aElement: IwbElement; const aName: string): string;
@@ -5001,7 +5002,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestHide or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestHide or xeTestFilter or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -22043,6 +22044,98 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoTestFilter;
+var
+  lLines : TStringList;
+  lTmp   : string;
+  lNode  : PVirtualNode;
+  lData  : PNavNodeData;
+  lCount : Integer;
+begin
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit filter probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# filter = by persistent, everything else off');
+    lLines.Add('# Columns, tab separated: record left in the tree / file');
+    CheckResult := 2;
+    try
+      FilterConflictAll := False;
+      FilterConflictThis := False;
+      FilterByInjectStatus := False;
+      FilterInjectStatus := False;
+      FilterByNotReachableStatus := False;
+      FilterNotReachableStatus := False;
+      FilterByReferencesInjectedStatus := False;
+      FilterReferencesInjectedStatus := False;
+      FilterByEditorID := False;
+      FilterEditorID := '';
+      FilterByName := False;
+      FilterName := '';
+      FilterByBaseEditorID := False;
+      FilterBaseEditorID := '';
+      FilterByBaseName := False;
+      FilterBaseName := '';
+      FilterScaledActors := False;
+      FilterByPersistent := True;
+      FilterPersistent := True;
+      FilterUnnecessaryPersistent := False;
+      FilterMasterIsTemporary := False;
+      FilterIsMaster := False;
+      FilterPersistentPosChanged := False;
+      FilterDeleted := False;
+      FilterByVWD := False;
+      FilterVWD := False;
+      FilterByHasVWDMesh := False;
+      FilterHasVWDMesh := False;
+      FilterByHasPrecombinedMesh := False;
+      FilterHasPrecombinedMesh := False;
+      FilterBySignature := False;
+      FilterSignatures := '';
+      FilterByBaseSignature := False;
+      FilterBaseSignatures := '';
+      FilterConflictAllSet := [];
+      FilterConflictThisSet := [];
+      FlattenBlocks := True;
+      FlattenCellChilds := True;
+      AssignPersWrldChild := True;
+      InheritConflictByParent := True;
+      FilterPreset := True;
+      try
+        mniNavFilterApplyClick(nil);
+      finally
+        FilterPreset := False;
+      end;
+      lCount := 0;
+      lNode := vstNav.GetFirst;
+      while Assigned(lNode) do begin
+        lData := vstNav.GetNodeData(lNode);
+        if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then begin
+          Inc(lCount);
+          lLines.Add(lData.Element.Name + #9 + lData.Element._File.FileName);
+        end;
+        lNode := vstNav.GetNext(lNode);
+      end;
+      lLines.Add('# records left: ' + IntToStr(lCount));
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test Filter] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestFilterFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestFilterFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -22305,6 +22398,9 @@ begin
 
         if xeTestHide then
           DoTestHide;
+
+        if xeTestFilter then
+          DoTestFilter;
 
         if xeTestSaveContexts then
           DoTestSaveContextsCompare;
