@@ -89,6 +89,12 @@ var
   xeTestDeltaPatchHide     : string;
   xeTestDeltaPatchHideRecord : string;
   xeTestDeltaPatchCancel   : Boolean;
+  xeTestDeltaPatchSave     : string;
+  xeTestMerge              : Boolean;
+  xeTestMergeFile          : string;
+  xeTestMergeSource        : string;
+  xeTestMergeTarget        : string;
+  xeTestMergeOut           : string;
   xeTestHide               : Boolean;
   xeTestHideFile           : string;
   xeTestHideRecord         : string;
@@ -1014,14 +1020,28 @@ begin
          not wbFindCmdLineParam('testdeltapatchname', xeTestDeltaPatchName) then begin
         ShowMessage('testdeltapatch requires -testdeltapatch:<filename> -testdeltapatchmaster:<module> ' +
           '-testdeltapatchnewer:<file> -testdeltapatchname:<name> [-testdeltapatchhide:<module>] [-testdeltapatchhiderec:<formid>] ' +
-          '[-testdeltapatchcancel]');
+          '[-testdeltapatchcancel] [-testdeltapatchsave:<file>]');
         Exit(False);
       end;
       wbFindCmdLineParam('testdeltapatchhide', xeTestDeltaPatchHide);
       wbFindCmdLineParam('testdeltapatchhiderec', xeTestDeltaPatchHideRecord);
+      wbFindCmdLineParam('testdeltapatchsave', xeTestDeltaPatchSave);
       xeTestDeltaPatchCancel := FindCmdLineSwitch('testdeltapatchcancel');
       xeTestDeltaPatch := True;
       xeAutoLoad       := True;
+    end;
+
+    if wbFindCmdLineParam('testmerge', xeTestMergeFile) then begin
+      if (xeTestMergeFile = '') or
+         not wbFindCmdLineParam('testmergesource', xeTestMergeSource) or
+         not wbFindCmdLineParam('testmergetarget', xeTestMergeTarget) or
+         not wbFindCmdLineParam('testmergeout', xeTestMergeOut) then begin
+        ShowMessage('testmerge requires -testmerge:<filename> -testmergesource:<module> -testmergetarget:<module> ' +
+          '-testmergeout:<file>');
+        Exit(False);
+      end;
+      xeTestMerge := True;
+      xeAutoLoad  := True;
     end;
 
     if wbFindCmdLineParam('testhide', xeTestHideFile) then begin

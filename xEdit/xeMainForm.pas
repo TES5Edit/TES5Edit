@@ -837,6 +837,15 @@ type
 
     TestHideTimer            : TTimer;
 
+    TestMergeLines           : TStringList;
+    TestMergeTimer           : TTimer;
+    TestMergeAnswer          : TTimer;
+    TestMergeTarget          : IwbFile;
+
+    procedure TestMergeRunTimer(Sender: TObject);
+    procedure TestMergeAnswerTimer(Sender: TObject);
+    procedure TestMergeWrite;
+
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
@@ -889,6 +898,7 @@ type
     procedure DoTestCopyIntoGap;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
+    procedure DoTestMerge;
     procedure DoTestHide;
     procedure DoTestFilter;
     procedure DoTestSaveContextsCompare;
@@ -5002,7 +5012,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestHide or xeTestFilter or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestMerge or xeTestHide or xeTestFilter or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -6335,6 +6345,8 @@ begin
     TestNavCopyAnswer.OnTimer := TestNavCopyAnswerTimer;
     TestNavCopyAnswer.Enabled := True;
   end;
+  if xeTestMerge then
+    UseLatestCommonDialogs := False;
 
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
@@ -21868,6 +21880,10 @@ begin
         try
           Files[i].WriteToStream(lStream, rmNo);
           TestDeltaPatchLines.Add('patchbytes' + #9 + IntToStr(lStream.Size) + #9 + IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+          if xeTestDeltaPatchSave <> '' then begin
+            lStream.SaveToFile(xeTestDeltaPatchSave);
+            TestDeltaPatchLines.Add('patchsaved' + #9 + xeTestDeltaPatchSave);
+          end;
         finally
           lStream.Free;
         end;
@@ -21882,6 +21898,202 @@ begin
     end;
   end;
   TestDeltaPatchWrite;
+end;
+
+procedure TfrmMain.DoTestMerge;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  CheckResult := 2;
+  TestMergeLines := TStringList.Create;
+  TestMergeLines.Add('# xEdit merge into master probe');
+  TestMergeLines.Add('# ' + xeApplicationTitle);
+  TestMergeLines.Add('# source = ' + xeTestMergeSource + ', target = ' + xeTestMergeTarget + ', out = ' + xeTestMergeOut);
+  TestMergeLines.Add('# Columns, tab separated: what / details');
+  TestMergeTimer := TTimer.Create(Self);
+  TestMergeTimer.Interval := 500;
+  TestMergeTimer.OnTimer := TestMergeRunTimer;
+  TestMergeTimer.Enabled := True;
+end;
+
+procedure TfrmMain.TestMergeRunTimer(Sender: TObject);
+
+  function OwnRecords(const aFile: IwbFile): Integer;
+  begin
+    Result := 0;
+    var lLayout := xeContext.SlotLayout;
+    for var i := 0 to Pred(aFile.RecordCount) do
+      if aFile.Records[i].LoadOrderFormID.FileID[lLayout] = aFile.LoadOrderFileID then
+        Inc(Result);
+  end;
+
+  procedure AddTree(const aContainer: IwbContainer; aDepth: Integer);
+  var
+    lGroup  : IwbGroupRecord;
+    lRecord : IwbMainRecord;
+  begin
+    for var i := 0 to Pred(aContainer.ElementCount) do
+      if Supports(aContainer.Elements[i], IwbGroupRecord, lGroup) then begin
+        TestMergeLines.Add('targettree' + #9 + IntToStr(aDepth) + #9 + 'GRUP' + #9 + IntToStr(lGroup.GroupType) + #9 +
+          IntToHex(lGroup.GroupLabel, 8));
+        AddTree(lGroup, Succ(aDepth));
+      end else if Supports(aContainer.Elements[i], IwbMainRecord, lRecord) then
+        TestMergeLines.Add('targettree' + #9 + IntToStr(aDepth) + #9 + string(lRecord.Signature) + #9 +
+          IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
+  end;
+
+var
+  lSource : IwbFile;
+  lTarget : IwbFile;
+  lNode   : PVirtualNode;
+  lBefore : Integer;
+  lGroups : Integer;
+  lStream : TMemoryStream;
+begin
+  TestMergeTimer.Enabled := False;
+  try
+    lSource := nil;
+    lTarget := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, xeTestMergeSource) then
+        lSource := Files[i]
+      else if SameText(Files[i].FileName, xeTestMergeTarget) then
+        lTarget := Files[i];
+    if not Assigned(lSource) or not Assigned(lTarget) then
+      raise Exception.Create(xeTestMergeSource + ' and ' + xeTestMergeTarget + ' must both be loaded');
+    TestMergeTarget := lTarget;
+    TestMergeLines.Add('source' + #9 + lSource.FileName + #9 + 'records ' + IntToStr(lSource.RecordCount) + #9 +
+      'own ' + IntToStr(OwnRecords(lSource)));
+    TestMergeLines.Add('target' + #9 + lTarget.FileName + #9 + 'records ' + IntToStr(lTarget.RecordCount));
+
+    TestMergeAnswer := TTimer.Create(Self);
+    TestMergeAnswer.Interval := 100;
+    TestMergeAnswer.OnTimer := TestMergeAnswerTimer;
+    TestMergeAnswer.Enabled := True;
+
+    lNode := FindNodeForElement(lSource);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + lSource.FileName);
+    vstNav.ClearSelection;
+    vstNav.Selected[lNode] := True;
+    vstNav.FocusedNode := lNode;
+    lBefore := OwnRecords(lSource);
+    mniNavRenumberFormIDsFromClick(mniNavRenumberFormIDsInject);
+    TestMergeLines.Add('inject' + #9 + 'own records before ' + IntToStr(lBefore) + ', after ' + IntToStr(OwnRecords(lSource)));
+
+    vstNav.ClearSelection;
+    lGroups := 0;
+    for var i := 0 to Pred(lSource.ElementCount) do
+      if Supports(lSource.Elements[i], IwbGroupRecord) then begin
+        lNode := FindNodeForElement(lSource.Elements[i]);
+        if not Assigned(lNode) then
+          raise Exception.Create('no nav node for ' + lSource.Elements[i].Name);
+        vstNav.Selected[lNode] := True;
+        if lGroups = 0 then
+          vstNav.FocusedNode := lNode;
+        Inc(lGroups);
+        TestMergeLines.Add('selected' + #9 + lSource.Elements[i].Name);
+      end;
+    if lGroups > 0 then
+      mniNavCopyIntoClick(mniNavDeepCopyAsOverrideWithOverwriting)
+    else
+      TestMergeLines.Add('copy' + #9 + 'no top level group in ' + lSource.FileName + ', nothing to copy');
+    TestMergeAnswer.Enabled := False;
+
+    TestMergeLines.Add('target' + #9 + lTarget.FileName + #9 + 'records ' + IntToStr(lTarget.RecordCount) + #9 +
+      'masters ' + IntToStr(lTarget.MasterCount[True]));
+    AddTree(lTarget, 0);
+    lStream := TMemoryStream.Create;
+    try
+      lTarget.WriteToStream(lStream, rmNo);
+      lStream.SaveToFile(xeTestMergeOut);
+      TestMergeLines.Add('merged' + #9 + xeTestMergeOut + #9 + IntToStr(lStream.Size) + #9 +
+        IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+    finally
+      lStream.Free;
+    end;
+    CheckResult := 0;
+  except
+    on E: Exception do begin
+      AddMessage('[Test Merge] FAILED: ' + E.ClassName + ': ' + E.Message);
+      TestMergeLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+    end;
+  end;
+  TestMergeWrite;
+end;
+
+procedure TfrmMain.TestMergeAnswerTimer(Sender: TObject);
+var
+  lForm   : TCustomForm;
+  lResult : TModalResult;
+  lText   : string;
+
+  function HasButton(aOwner: TComponent; aResult: TModalResult): Boolean;
+  begin
+    Result := False;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if (aOwner.Components[i] is TButton) and (TButton(aOwner.Components[i]).ModalResult = aResult) then
+        Exit(True);
+      if HasButton(aOwner.Components[i], aResult) then
+        Exit(True);
+    end;
+  end;
+
+  procedure CollectText(aOwner: TComponent);
+  begin
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TLabel then
+        lText := lText + ' ' + TLabel(aOwner.Components[i]).Caption;
+      CollectText(aOwner.Components[i]);
+    end;
+  end;
+
+begin
+  lForm := nil;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := Screen.CustomForms[i];
+      Break;
+    end;
+  if not Assigned(lForm) then
+    Exit;
+  lText := '';
+  CollectText(lForm);
+  lResult := mrNone;
+  if lForm is TfrmModuleSelect then begin
+    Include(PwbModuleInfo(TestMergeTarget.ModuleInfo).miFlags, mfTagged);
+    lResult := mrOk;
+  end else if HasButton(lForm, mrYesToAll) then
+    lResult := mrYesToAll
+  else if HasButton(lForm, mrYes) then
+    lResult := mrYes
+  else if HasButton(lForm, mrOk) then
+    lResult := mrOk;
+  if lResult = mrNone then
+    Exit;
+  lText := lText.Replace(#13, ' ').Replace(#10, ' ');
+  if Length(lText) > 300 then
+    lText := Copy(lText, 1, 300) + '...';
+  TestMergeLines.Add('answer' + #9 + lForm.Caption + #9 + IntToStr(lResult) + #9 + lText.Trim);
+  lForm.ModalResult := lResult;
+end;
+
+procedure TfrmMain.TestMergeWrite;
+var
+  lTmp : string;
+begin
+  try
+    TestMergeLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestMergeFile + '.partial';
+    TestMergeLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestMergeFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(TestMergeLines);
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
 end;
 
 procedure TfrmMain.DoTestHide;
@@ -22209,7 +22421,7 @@ begin
         end;
 
         if xeContext.LoaderError then begin
-          if xeTestConflicts or xeTestNavCopy then begin
+          if xeTestConflicts or xeTestNavCopy or xeTestMerge then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -22422,6 +22634,9 @@ begin
 
         if xeTestDeltaPatch then
           DoTestDeltaPatchStart;
+
+        if xeTestMerge then
+          DoTestMerge;
 
         if xeTestHide then
           DoTestHide;
