@@ -13264,7 +13264,7 @@ begin
             (FilterRequiresMainRecord and
               (
                 not Supports(NodeData.Element, IwbMainRecord, MainRecord) or
-                (FilterRequiresReference and not MainRecord.Def.IsReference) or
+                (FilterRequiresReference and not (Assigned(MainRecord.Def) and MainRecord.Def.IsReference)) or
                 (FilterRequiresBaseRecord and not Supports(MainRecord.BaseRecord, IwbMainRecord, BaseRecord)) or
 
                 (FilterDeleted and not MainRecord.IsDeleted) or
