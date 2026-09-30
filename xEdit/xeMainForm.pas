@@ -21455,19 +21455,28 @@ var
   procedure HeaderProbe(aEntry: Integer);
   begin
     var lExpected := 'none';
-    if ActiveRecords[0].ConflictAll >= caNoConflict then
-      lExpected := Format('%.6x', [ColorToRGB(wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85))]);
+    var lRoot := caUnknown;
+    if Length(ActiveRecords) > 0 then
+      lRoot := ActiveRecords[0].ConflictAll;
+    if lRoot >= caNoConflict then
+      lExpected := Format('%.6x', [ColorToRGB(wbLighter(ConflictAllToColor(lRoot), 0.85))]);
     for var i := Low(ActiveRecords) to High(ActiveRecords) do
       lExpected := lExpected + Format(' | %s text %.6x', [wbNameConflictThis[ActiveRecords[i].ConflictThis],
         ColorToRGB(wbDarker(ConflictThisToColor(ActiveRecords[i].ConflictThis)))]);
-    lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
-      [aEntry, wbNameConflictAll[ActiveRecords[0].ConflictAll], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('as is')]));
     var lOptions := vstView.TreeOptions.PaintOptions;
     vstView.TreeOptions.PaintOptions := lOptions - [toThemeAware];
     try
       lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
-        [aEntry, wbNameConflictAll[ActiveRecords[0].ConflictAll], lExpected, TStyleManager.ActiveStyle.Name,
-         PaintHeader('unthemed')]));
+        [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('unthemed first')]));
+    finally
+      vstView.TreeOptions.PaintOptions := lOptions;
+    end;
+    lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
+      [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('as is')]));
+    vstView.TreeOptions.PaintOptions := lOptions - [toThemeAware];
+    try
+      lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
+        [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('unthemed')]));
     finally
       vstView.TreeOptions.PaintOptions := lOptions;
     end;
@@ -21834,6 +21843,8 @@ begin
           TimeProbe(lEntry, lRecords);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
+      if xeTestViewTreeHeader then
+        HeaderProbe(0);
       CheckResult := 0;
     except
       on E: Exception do begin
