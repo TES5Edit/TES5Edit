@@ -846,7 +846,12 @@ type
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
 
+    TestViewModalAnswer      : TTimer;
+    TestViewModalFactory     : TFunc<TwbConflictTree>;
+    TestViewModalSeen        : string;
+
     procedure TestFilterAnswerTimer(Sender: TObject);
+    procedure TestViewModalAnswerTimer(Sender: TObject);
 
     procedure TestMergeRunTimer(Sender: TObject);
     procedure TestMergeAnswerTimer(Sender: TObject);
@@ -21406,6 +21411,78 @@ var
     end;
   end;
 
+  procedure ModalProbe(aEntry: Integer; const aRecord, aTarget: IwbMainRecord);
+
+    procedure SelectInNav;
+    begin
+      vstNav.ClearSelection;
+      for var lRecord in [aRecord, aTarget] do begin
+        var lNode := FindNodeForElement(lRecord);
+        if not Assigned(lNode) then
+          raise Exception.Create('no nav node for ' + lRecord.Name);
+        vstNav.Selected[lNode] := True;
+      end;
+      if tmrPendingSetActive.Enabled then
+        tmrPendingSetActiveTimer(tmrPendingSetActive);
+    end;
+
+    procedure Run(const aName: string; aSwitch, aCopy: Boolean);
+    begin
+      if aCopy then
+        SelectInNav;
+      Build([aRecord]);
+      var lRow: PVirtualNode := nil;
+      for var lNode in vstView.Nodes(False) do
+        if (lNode.Parent = vstView.RootNode) and Assigned(ViewCells(lNode)[0].Element) and
+           ViewCells(lNode)[0].Element.Name.StartsWith('EDID') then begin
+          lRow := lNode;
+          Break;
+        end;
+      if not Assigned(lRow) then begin
+        lLines.Add(Format('# modal %d'#9'%s'#9'no EDID row', [aEntry, aName]));
+        Exit;
+      end;
+      vstViewFocusedNode := lRow;
+      vstView.FocusedColumn := 1;
+      EditWarnOk := False;
+      TestViewModalFactory := ViewTreeFactory;
+      TestViewModalSeen := '';
+      var lDelay := tmrPendingSetActive.Interval;
+      if aSwitch then begin
+        tmrPendingSetActive.Interval := 50;
+        SetActiveRecord(aTarget);
+      end;
+      var lColumn := vstView.FocusedColumn;
+      TestViewModalAnswer.Enabled := True;
+      var lResult := 'returned';
+      try
+        if aCopy then
+          mniViewCopyMultipleToSelectedRecordsClick(nil)
+        else
+          mniViewEditClick(nil);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      TestViewModalAnswer.Enabled := False;
+      TestViewModalFactory := nil;
+      tmrPendingSetActive.Enabled := False;
+      tmrPendingSetActive.Interval := lDelay;
+      EditWarnOk := True;
+      var lShown: string := '-';
+      if (Length(ActiveRecords) > 0) and Assigned(ActiveRecords[0].Element) then
+        lShown := ActiveRecords[0].Element.Name;
+      lLines.Add(Format('# modal %d'#9'%s'#9'column %d'#9'dialogs%s'#9'%s'#9'shows %s',
+        [aEntry, aName, lColumn, TestViewModalSeen, lResult, lShown]));
+    end;
+
+  begin
+    Run('edit', False, False);
+    Run('edit, switched', True, False);
+    Run('copy multiple', False, True);
+    Run('copy multiple, switched', True, True);
+  end;
+
 begin
   lLines := TStringList.Create;
   lList := TStringList.Create;
@@ -21437,6 +21514,13 @@ begin
         xeContext.Settings.TranslationMode := True;
       if xeTestViewTreeFloor then
         xeContext.Settings.DontSave := True;
+      if xeTestViewTreeModal then begin
+        xeContext.Settings.DontSave := True;
+        TestViewModalAnswer := TTimer.Create(Self);
+        TestViewModalAnswer.Enabled := False;
+        TestViewModalAnswer.Interval := 300;
+        TestViewModalAnswer.OnTimer := TestViewModalAnswerTimer;
+      end;
       lList.LoadFromFile(xeTestViewTreeList);
       var lEntry := 0;
       for var lLine in lList do begin
@@ -21473,6 +21557,8 @@ begin
         Collapsed(lEntry);
         if xeTestViewTreeHeader then
           HeaderProbe(lEntry);
+        if xeTestViewTreeModal and (Length(lRecords) > 1) then
+          ModalProbe(lEntry, lRecords[0], lRecords[1]);
         if xeTestViewTreeFocus > 0 then
           FocusProbe(lEntry, lRecords);
         if xeTestViewTreeFloor and (Length(lRecords) > 1) then
@@ -21606,6 +21692,18 @@ begin
       if TestOptionsToggleNeverShow then
         lForm.cbHideNeverShow.Checked := not lForm.cbHideNeverShow.Checked;
       lForm.ModalResult := mrOk;
+      Exit;
+    end;
+end;
+
+procedure TfrmMain.TestViewModalAnswerTimer(Sender: TObject);
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      var lReplaced := PPointer(@ViewTreeFactory)^ <> PPointer(@TestViewModalFactory)^;
+      TestViewModalSeen := TestViewModalSeen + ' ' + Screen.CustomForms[i].ClassName + IfThen(lReplaced, ':replaced', ':kept');
+      Screen.CustomForms[i].ModalResult := mrOk;
       Exit;
     end;
 end;
