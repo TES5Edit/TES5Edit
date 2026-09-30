@@ -18241,7 +18241,9 @@ begin
     end;
 
     if ActiveRecords[0].ConflictAll >= caNoConflict then
-      Sender.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85);
+      Sender.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85)
+    else
+      Sender.Background := clBtnFace;
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
     Sender.Font.Color := wbDarker(ConflictThisToColor(
       ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis));
