@@ -929,7 +929,8 @@ type
 
     procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
     function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
-    function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean;
+    function PerformDrop(TargetTree: TBaseVirtualTree; TargetNode: PVirtualNode; TargetColumn: Integer; const SourceElement: IwbElement): Boolean; overload;
+    function PerformDrop(const TargetElement: IwbElement; TargetIndex, AlignedMemoryIndex: Integer; TargetCell: TViewNodeData; const SourceElement: IwbElement): Boolean; overload;
     function GetSourceElement(Source: TObject; out SourceElement: IwbElement): Boolean;
 
     function GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
@@ -1025,6 +1026,7 @@ type
     ActiveMaster: IwbMainRecord;
     ViewTree: TwbConflictTree;
     ViewTreeFactory: TFunc<TwbConflictTree>;
+    ViewTreeGeneration: Cardinal;
     ViewRootDatas: TDynViewNodeDatas;
     ActiveContainer: IwbDataContainer;
     ViewFocusedElement : IwbElement;
@@ -7408,6 +7410,14 @@ begin
 end;
 
 procedure TfrmMain.mniViewCopyToSelectedRecordsClick(Sender: TObject);
+type
+  TDropTarget = record
+    Found              : Boolean;
+    Index              : Integer;
+    Element            : IwbElement;
+    AlignedMemoryIndex : Integer;
+    Cell               : TViewNodeData;
+  end;
 var
   Node             : PVirtualNode;
   NodeDatas        : PViewNodeDatas;
@@ -7415,6 +7425,7 @@ var
   SourceElement    : IwbElement;
   i, j             : Integer;
   TargetColumns    : array of Integer;
+  Targets          : array of TDropTarget;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
@@ -7435,6 +7446,15 @@ begin
 
   if not Assigned(SourceElement) then
     Exit;
+
+  SetLength(Targets, Length(ActiveRecords));
+  for i := Low(Targets) to High(Targets) do
+    if (i <> Pred(SourceColumn)) and Assigned(ActiveRecords[i].Element) then begin
+      var lNode := Node;
+      Targets[i].Found := GetTargetElement(vstView, lNode, Succ(i), Targets[i].Index, Targets[i].Element,
+        Targets[i].AlignedMemoryIndex);
+      Targets[i].Cell := ActiveRecords[i];
+    end;
 
   with TfrmFileSelect.Create(Self) do try
 
@@ -7467,8 +7487,11 @@ begin
   if not EditWarn then
     Exit;
 
-  for i := Low(TargetColumns) to High(TargetColumns) do
-    PerformDrop(vstView, Node, TargetColumns[i], SourceElement);
+  for i := Low(TargetColumns) to High(TargetColumns) do begin
+    var lTarget := Targets[Pred(TargetColumns[i])];
+    if lTarget.Found then
+      PerformDrop(lTarget.Element, lTarget.Index, lTarget.AlignedMemoryIndex, lTarget.Cell, SourceElement);
+  end;
 
   InvalidateElementsTreeView(NoNodes);
   ViewFocusedElement := SourceElement;
@@ -11635,17 +11658,27 @@ begin
     Exit;
 
   NodeDatas := ViewCells(vstViewFocusedNode);
-  if Assigned(NodeDatas) then
-    for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-      Element := NodeDatas[i].Element;
+  if Assigned(NodeDatas) then begin
+    var lRow: TArray<IwbElement>;
+    var lRecords: TArray<IwbElement>;
+    SetLength(lRow, Length(ActiveRecords));
+    SetLength(lRecords, Length(ActiveRecords));
+    for i := Low(lRow) to High(lRow) do begin
+      lRow[i] := NodeDatas[i].Element;
+      lRecords[i] := ActiveRecords[i].Element;
+    end;
+    for i := Low(lRow) to High(lRow) do begin
+      Element := lRow[i];
       if Assigned(Element) and Element.IsRemovable then begin
         if not EditWarn then
           Exit;
         Element.Remove;
-        (ActiveRecords[i].Element as IwbMainRecord).UpdateRefs;
+        (lRecords[i] as IwbMainRecord).UpdateRefs;
         Element := nil;
+        lRow[i] := nil;
       end;
     end;
+  end;
   PostResetActiveTree;
   InvalidateElementsTreeView(NoNodes);
 end;
@@ -14078,41 +14111,50 @@ var
   TargetIndex        : Integer;
   TargetElement      : IwbElement;
   AlignedMemoryIndex : Integer;
+begin
+  Result :=
+    GetTargetElement(TargetTree, TargetNode, TargetColumn, TargetIndex, TargetElement, AlignedMemoryIndex) and
+    PerformDrop(TargetElement, TargetIndex, AlignedMemoryIndex, ActiveRecords[Pred(TargetColumn)], SourceElement);
+end;
+
+function TfrmMain.PerformDrop(const TargetElement      : IwbElement;
+                                    TargetIndex        : Integer;
+                                    AlignedMemoryIndex : Integer;
+                                    TargetCell         : TViewNodeData;
+                              const SourceElement      : IwbElement)
+                                                       : Boolean;
+var
   NewElement         : IwbElement;
   TargetContainer    : IwbContainerElementRef;
 begin
   Result := False;
 
-  if GetTargetElement(TargetTree, TargetNode, TargetColumn, TargetIndex, TargetElement, AlignedMemoryIndex) then begin
+  if SourceElement.Equals(TargetElement) then
+    Exit;
 
-    if SourceElement.Equals(TargetElement) then
-      Exit;
+  if not EditWarn then
+    Exit;
 
-    if not EditWarn then
-      Exit;
+  if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
+    Exit;
 
-    if not AddRequiredMasters(SourceElement, TargetElement._File, False) then
-      Exit;
+  vstView.BeginUpdate;
+  try
+    if AlignedMemoryIndex >= 0 then begin
+      TargetContainer := TargetElement as IwbContainerElementRef;
+      NewElement := TargetContainer.AssignAligned(TargetIndex, AlignedMemoryIndex, SourceElement, False);
+      if Assigned(NewElement) then
+        TargetContainer.MoveElementTo(NewElement, AlignedMemoryIndex);
+    end else
+      NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
 
-    vstView.BeginUpdate;
-    try
-      if AlignedMemoryIndex >= 0 then begin
-        TargetContainer := TargetElement as IwbContainerElementRef;
-        NewElement := TargetContainer.AssignAligned(TargetIndex, AlignedMemoryIndex, SourceElement, False);
-        if Assigned(NewElement) then
-          TargetContainer.MoveElementTo(NewElement, AlignedMemoryIndex);
-      end else
-        NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
-
-      ActiveRecords[Pred(TargetColumn)].UpdateRefs;
-      ViewFocusedElement := NewElement;
-      EditFocusedViewElement := False;
-      NewElement := nil;
-      TargetElement := nil;
-      Result := True;
-    finally
-      vstView.EndUpdate;
-    end;
+    TargetCell.UpdateRefs;
+    ViewFocusedElement := NewElement;
+    EditFocusedViewElement := False;
+    NewElement := nil;
+    Result := True;
+  finally
+    vstView.EndUpdate;
   end;
 end;
 
@@ -14982,6 +15024,7 @@ end;
 
 procedure TfrmMain.SetViewTree(const aFactory: TFunc<TwbConflictTree>);
 begin
+  Inc(ViewTreeGeneration);
   FreeAndNil(ViewTree);
   ViewRootDatas := nil;
   ViewTreeFactory := aFactory;
@@ -14991,6 +15034,7 @@ end;
 
 procedure TfrmMain.ClearViewTree;
 begin
+  Inc(ViewTreeGeneration);
   FreeAndNil(ViewTree);
   ViewRootDatas := nil;
   ViewTreeFactory := nil;
@@ -17833,12 +17877,15 @@ begin
     Exit;
   end;
 
+  var lGeneration := ViewTreeGeneration;
   if Element.IsEditable then begin
-    Allowed := EditWarn;
+    Allowed := EditWarn and (ViewTreeGeneration = lGeneration);
   end else begin
     for var lChildNode in vstView.ChildNodes(Node) do begin
       var lAllowed := False;
       vstViewEditing(Sender, lChildNode, Column, lAllowed);
+      if ViewTreeGeneration <> lGeneration then
+        Exit;
       if EditFocusedViewElement then
         Exit;
       if lAllowed then begin
@@ -18177,6 +18224,7 @@ begin
     Exit;
 
   if TargetElement.CanAssign(Low(Integer), SourceElement, False) then begin
+    var lTargetCell := ActiveRecords[Pred(TargetColumn)];
 
     if not EditWarn then
       Exit;
@@ -18187,7 +18235,7 @@ begin
     vstView.BeginUpdate;
     try
       TargetElement.Assign(Low(Integer), SourceElement, False);
-      ActiveRecords[Pred(TargetColumn)].UpdateRefs;
+      lTargetCell.UpdateRefs;
       TargetElement := nil;
       SourceElement := nil;
       PostResetActiveTree;
