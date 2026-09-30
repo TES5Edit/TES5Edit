@@ -21440,6 +21440,42 @@ var
     ColumnForViewFocusedElement := NoColumn;
   end;
 
+  procedure HeldMemory(out aBytes, aBlocks: Int64);
+  var
+    lState : TMemoryManagerState;
+  begin
+    GetMemoryManagerState(lState);
+    aBytes := lState.TotalAllocatedMediumBlockSize + lState.TotalAllocatedLargeBlockSize;
+    aBlocks := lState.AllocatedMediumBlockCount + lState.AllocatedLargeBlockCount;
+    for var i := Low(lState.SmallBlockTypeStates) to High(lState.SmallBlockTypeStates) do begin
+      Inc(aBytes, Int64(lState.SmallBlockTypeStates[i].AllocatedBlockCount) * lState.SmallBlockTypeStates[i].UseableBlockSize);
+      Inc(aBlocks, lState.SmallBlockTypeStates[i].AllocatedBlockCount);
+    end;
+  end;
+
+  procedure TimeProbe(aEntry: Integer; const aRecords: TDynMainRecords);
+  var
+    lTicks   : TArray<Int64>;
+    lBytes0  : Int64;
+    lBlocks0 : Int64;
+    lBytes1  : Int64;
+    lBlocks1 : Int64;
+  begin
+    DoSetActiveRecord(IwbMainRecord(nil));
+    HeldMemory(lBytes0, lBlocks0);
+    Build(aRecords);
+    HeldMemory(lBytes1, lBlocks1);
+    for var k := 1 to xeTestViewTreeTime do begin
+      var lWatch := TStopwatch.StartNew;
+      Build(aRecords);
+      lTicks := lTicks + [lWatch.ElapsedTicks];
+    end;
+    TArray.Sort<Int64>(lTicks);
+    lLines.Add(Format('# time %d'#9'min %.3f ms'#9'median %.3f ms'#9'held %d bytes %d blocks',
+      [aEntry, lTicks[0] * 1000 / TStopwatch.Frequency, lTicks[Length(lTicks) div 2] * 1000 / TStopwatch.Frequency,
+       lBytes1 - lBytes0, lBlocks1 - lBlocks0]));
+  end;
+
   function RootLine: string;
   begin
     Result := wbNameConflictAll[ActiveRecords[0].ConflictAll] + Cells(@ActiveRecords[0]);
@@ -21501,7 +21537,8 @@ begin
     lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide + ', hide no conflict = ' +
       BoolToStr(xeTestViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestViewTreeLoading, True) + ', reset = ' +
       BoolToStr(xeTestViewTreeReset, True) + ', focus = ' + IntToStr(xeTestViewTreeFocus) + ', floor = ' +
-      BoolToStr(xeTestViewTreeFloor, True) + ', translate = ' + BoolToStr(xeTestViewTreeTranslate, True) + ', hide ignored = ' +
+      BoolToStr(xeTestViewTreeFloor, True) + ', translate = ' + BoolToStr(xeTestViewTreeTranslate, True) + ', time = ' +
+      IntToStr(xeTestViewTreeTime) + ', hide ignored = ' +
       BoolToStr(xeContext.Settings.HideIgnored, True) + ', hide never show = ' + BoolToStr(xeContext.Settings.HideNeverShow, True));
     lLines.Add('# Columns, tab separated: entry / row path / row ConflictAll / visible / per record column: element:ConflictThis:flags');
     CheckResult := 2;
@@ -21560,6 +21597,8 @@ begin
           FocusProbe(lEntry, lRecords);
         if xeTestViewTreeFloor and (Length(lRecords) > 1) then
           FloorProbe(lEntry, lRecords);
+        if xeTestViewTreeTime > 0 then
+          TimeProbe(lEntry, lRecords);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
       CheckResult := 0;
