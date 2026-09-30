@@ -849,6 +849,7 @@ type
     TestViewModalAnswer      : TTimer;
     TestViewModalFactory     : TFunc<TwbConflictTree>;
     TestViewModalSeen        : string;
+    TestViewModalMemo        : string;
 
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
@@ -21575,6 +21576,40 @@ var
         lLines.Add(Format('# modal %d'#9'%s'#9'target %s', [aEntry, aName, Digest(aTarget)]));
     end;
 
+    procedure RunMemo(const aName: string);
+    begin
+      Restore;
+      Build([aRecord]);
+      var lColumn := Pred(Length(ActiveRecords));
+      var lRow: PVirtualNode := nil;
+      for var lNode in vstView.Nodes(False) do
+        if (lNode.Parent = vstView.RootNode) and Assigned(ViewCells(lNode)[lColumn].Element) and
+           ViewCells(lNode)[lColumn].Element.Name.StartsWith('EDID') then begin
+          lRow := lNode;
+          Break;
+        end;
+      if not Assigned(lRow) then begin
+        lLines.Add(Format('# modal %d'#9'%s'#9'no EDID row', [aEntry, aName]));
+        Exit;
+      end;
+      var lEdited := ViewCells(lRow)[lColumn].Element;
+      var lBefore := lEdited.EditValue;
+      TestViewModalMemo := 'D174Probe';
+      var lDelay, lFocused: Integer;
+      BeginGesture(aName, lRow, Succ(lColumn), False, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        mniViewEditClick(nil);
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture(aName, lResult, lDelay, lFocused);
+      TestViewModalMemo := '';
+      lLines.Add(Format('# modal %d'#9'%s'#9'value before %s'#9'after %s'#9'record %s',
+        [aEntry, aName, lBefore, lEdited.EditValue, aRecord.EditorID]));
+    end;
+
   const
     mgCopyToSelected = 0;
     mgSetToDefault   = 1;
@@ -21708,6 +21743,7 @@ var
     RunCompare('header drop, switched', True, mgHeaderDropped);
     Run('edit', False, False);
     Run('edit, switched', True, False);
+    RunMemo('edit, memo changed');
     Run('copy multiple', False, True);
     Run('copy multiple, switched', True, True);
   end;
@@ -21933,6 +21969,16 @@ begin
        (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
       var lReplaced := PPointer(@ViewTreeFactory)^ <> PPointer(@TestViewModalFactory)^;
       TestViewModalSeen := TestViewModalSeen + ' ' + Screen.CustomForms[i].ClassName + IfThen(lReplaced, ':replaced', ':kept');
+      if (TestViewModalMemo <> '') and (Screen.CustomForms[i] is TfrmViewElements) then begin
+        var lPage := TfrmViewElements(Screen.CustomForms[i]).pcView.ActivePage;
+        if Assigned(lPage) then
+          for var c := 0 to Pred(lPage.ControlCount) do
+            if (lPage.Controls[c] is TMemo) and not TMemo(lPage.Controls[c]).ReadOnly then begin
+              TMemo(lPage.Controls[c]).Text := TestViewModalMemo;
+              TMemo(lPage.Controls[c]).Modified := True;
+              TestViewModalSeen := TestViewModalSeen + '(memo set on ' + lPage.Caption + ')';
+            end;
+      end;
       Screen.CustomForms[i].ModalResult := mrOk;
       Exit;
     end;
