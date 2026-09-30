@@ -7588,6 +7588,7 @@ begin
     if ShowModal <> mrOk then
       Exit;
 
+    LockProcessMessages;
     try
       for j := Low(AllRows) to High(AllRows) do begin
         Element := AllRows[j][Column];
@@ -7632,6 +7633,7 @@ begin
       InvalidateElementsTreeView(SelectedNodes);
       PostResetActiveTree;
       vstNav.Invalidate;
+      UnLockProcessMessages;
     end;
   finally
     Free;
