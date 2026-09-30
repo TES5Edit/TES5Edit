@@ -1501,7 +1501,8 @@ var
           aNode.dnContainer.Remove;
         aNode.dnElement.Remove;
         aNode.dnGone := True;
-        Inc(lCounts.Removed);
+        if lIsRec then
+          Inc(lCounts.Removed);
       end;
     end;
   end;

@@ -11475,6 +11475,7 @@ var
   i                           : Integer;
   MainRecord                  : IwbMainRecord;
   GroupRecord                 : IwbGroupRecord;
+  IsRecord                    : Boolean;
   AutoModeCheckForITM         : Boolean;
   Operation, Plugin           : String;
   PluginCRC32                 : Cardinal;
@@ -11585,6 +11586,7 @@ begin
               not (Supports(NodeData.Element, IwbMainRecord, MainRecord) and MainRecord.MasterOrSelf.IsInjected)
             then begin
               MainRecord := nil;
+              IsRecord := Supports(NodeData.Element, IwbMainRecord);
 
               if Assigned(NodeData.Element._File) then
                 with NodeData.Element._File do begin
@@ -11618,7 +11620,8 @@ begin
                 end else
                   if not HideRemoveMessage then
                     PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
-                Inc(RemovedCount);
+                if IsRecord then
+                  Inc(RemovedCount);
               end;
             end;
         end;
