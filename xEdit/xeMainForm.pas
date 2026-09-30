@@ -21340,12 +21340,14 @@ var
   function FindRecord(const aFormID: string): IwbMainRecord;
   begin
     Result := nil;
-    var lFormID := TwbFormID.FromStr(Trim(aFormID));
-    for var i := High(Files) downto Low(Files) do begin
-      Result := Files[i].RecordByFormID[lFormID, True, True];
-      if Assigned(Result) then
-        Exit;
-    end;
+    var lParts := Trim(aFormID).Split(['@']);
+    var lFormID := TwbFormID.FromStr(lParts[0]);
+    for var i := High(Files) downto Low(Files) do
+      if (Length(lParts) = 1) or SameText(Files[i].FileName, lParts[1]) then begin
+        Result := Files[i].RecordByFormID[lFormID, True, True];
+        if Assigned(Result) then
+          Exit;
+      end;
     raise Exception.Create('no record ' + aFormID);
   end;
 
@@ -21438,6 +21440,58 @@ var
     ColumnForViewFocusedElement := NoColumn;
   end;
 
+  function RootLine: string;
+  begin
+    Result := wbNameConflictAll[ActiveRecords[0].ConflictAll] + Cells(@ActiveRecords[0]);
+  end;
+
+  procedure Collapsed(aEntry: Integer);
+  begin
+    var lCount := 0;
+    var lPaths := '';
+    for var lNode in vstView.Nodes(False) do
+      if vstView.HasChildren[lNode] and not vstView.Expanded[lNode] then begin
+        Inc(lCount);
+        lPaths := lPaths + ' ' + Path(lNode);
+      end;
+    lLines.Add(Format('# collapsed %d'#9'%d'#9'%s', [aEntry, lCount, Trim(lPaths)]));
+  end;
+
+  procedure FloorProbe(aEntry: Integer; const aRecords: TDynMainRecords);
+  begin
+    var lHeaderRows := ActiveRecords[0].Container.AdditionalElementCount;
+    var lEdits := 0;
+    if xeContext.BeginInternalEdit(True) then try
+      for var lNode in vstView.Nodes(False) do begin
+        if vstView.HasChildren[lNode] then
+          Continue;
+        var lTop := lNode;
+        while lTop.Parent <> vstView.RootNode do
+          lTop := lTop.Parent;
+        if Integer(lTop.Index) < lHeaderRows then
+          Continue;
+        var lDatas: PViewNodeDatas := vstView.GetNodeData(lNode);
+        if not Assigned(lDatas[0].Element) then
+          Continue;
+        var lValue := lDatas[0].Element.EditValue;
+        for var c := Succ(Low(ActiveRecords)) to High(ActiveRecords) do
+          if Assigned(lDatas[c].Element) and (lDatas[c].Element.EditValue <> lValue) then begin
+            lDatas[c].Element.EditValue := lValue;
+            Inc(lEdits);
+          end;
+      end;
+    finally
+      wbEndInternalEdit;
+    end;
+    lLines.Add(Format('# floor %d'#9'edits'#9'%d', [aEntry, lEdits]));
+    lLines.Add(Format('# floor %d'#9'before'#9'%s', [aEntry, RootLine]));
+    ResetActiveTree;
+    lLines.Add(Format('# floor %d'#9'reset'#9'%s', [aEntry, RootLine]));
+    DoSetActiveRecord(IwbMainRecord(nil));
+    DoSetActiveRecord(aRecords);
+    lLines.Add(Format('# floor %d'#9'fresh'#9'%s', [aEntry, RootLine]));
+  end;
+
 begin
   lLines := TStringList.Create;
   lList := TStringList.Create;
@@ -21446,7 +21500,9 @@ begin
     lLines.Add('# ' + xeApplicationTitle);
     lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide + ', hide no conflict = ' +
       BoolToStr(xeTestViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestViewTreeLoading, True) + ', reset = ' +
-      BoolToStr(xeTestViewTreeReset, True) + ', focus = ' + IntToStr(xeTestViewTreeFocus));
+      BoolToStr(xeTestViewTreeReset, True) + ', focus = ' + IntToStr(xeTestViewTreeFocus) + ', floor = ' +
+      BoolToStr(xeTestViewTreeFloor, True) + ', translate = ' + BoolToStr(xeTestViewTreeTranslate, True) + ', hide ignored = ' +
+      BoolToStr(xeContext.Settings.HideIgnored, True) + ', hide never show = ' + BoolToStr(xeContext.Settings.HideNeverShow, True));
     lLines.Add('# Columns, tab separated: entry / row path / row ConflictAll / visible / per record column: element:ConflictThis:flags');
     CheckResult := 2;
     try
@@ -21462,6 +21518,10 @@ begin
       end;
       if xeTestViewTreeHideNoConflict then
         HideNoConflict := True;
+      if xeTestViewTreeTranslate then
+        xeContext.Settings.TranslationMode := True;
+      if xeTestViewTreeFloor then
+        xeContext.Settings.DontSave := True;
       lList.LoadFromFile(xeTestViewTreeList);
       var lEntry := 0;
       for var lLine in lList do begin
@@ -21495,8 +21555,11 @@ begin
                Assigned(Container) and (ContainerGen <> Container.ElementGeneration) then
               lStale := True;
         lLines.Add(Format('# stale %d'#9'%s', [lEntry, BoolToStr(lStale, True)]));
+        Collapsed(lEntry);
         if xeTestViewTreeFocus > 0 then
           FocusProbe(lEntry, lRecords);
+        if xeTestViewTreeFloor and (Length(lRecords) > 1) then
+          FloorProbe(lEntry, lRecords);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
       CheckResult := 0;
