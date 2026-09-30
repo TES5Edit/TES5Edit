@@ -21474,6 +21474,16 @@ var
         lShown := ActiveRecords[0].Element.Name;
       lLines.Add(Format('# modal %d'#9'%s'#9'column %d'#9'dialogs%s'#9'%s'#9'shows %s',
         [aEntry, aName, lColumn, TestViewModalSeen, lResult, lShown]));
+      if aCopy then begin
+        var lText := '';
+        for var i := 0 to Pred(aTarget.ElementCount) do
+          lText := lText + aTarget.Elements[i].Name + '=' + aTarget.Elements[i].EditValue + #10;
+        var lHash: Cardinal := 2166136261;
+        for var lChar in lText do
+          lHash := Cardinal((UInt64(lHash xor Ord(lChar)) * 16777619) and $FFFFFFFF);
+        lLines.Add(Format('# modal %d'#9'%s'#9'target %d elements, %d chars, hash %.8x',
+          [aEntry, aName, aTarget.ElementCount, Length(lText), lHash]));
+      end;
     end;
 
   begin
