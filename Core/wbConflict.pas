@@ -1325,8 +1325,11 @@ begin
 
     ThisConflict := ctUnknown;
     for i := Low(NodeDatas) to High(NodeDatas) do
-      if Assigned(NodeDatas[i].Element) then
+      if Assigned(NodeDatas[i].Element) then begin
+        if NodeDatas[i].ConflictThis = ctUnknown then
+          NodeDatas[i].ConflictThis := ctNotDefined;
         Put(NodeDatas[i].Element as IwbMainRecord, aConflictAll, NodeDatas[i].ConflictThis);
+      end;
 
     Fix(Master);
     for i := 0 to Pred(Master.OverrideCount) do
