@@ -7480,7 +7480,7 @@ end;
 
 procedure TfrmMain.mniViewCopyMultipleToSelectedRecordsClick(Sender: TObject);
 var
-  AllNodeDatas                : array of PViewNodeDatas;
+  AllRows                     : array of TArray<IwbElement>;
   NodeDatas                   : PViewNodeDatas;
   NodeData                    : PNavNodeData;
   Element                     : IwbElement;
@@ -7492,22 +7492,24 @@ var
   SelectedNodes               : TNodeArray;
   i, j, k                     : Integer;
   Node                        : PVirtualNode;
+  Column                      : Integer;
 begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
+  Column := Pred(vstView.FocusedColumn);
+  if (Column < 0) or (Column > High(ActiveRecords)) then
+    Exit;
+
   SourceMainRecord := nil;
-  SetLength(AllNodeDatas, 0);
+  SetLength(AllRows, 0);
   SetLength(Names, 0);
   for Node in vstView.LevelNodes(0) do begin
     NodeDatas := ViewCells(Node);
     if Assigned(NodeDatas) then begin
-      Element := nil;
-      if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then begin
-        Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-        if Assigned(Element) and not Assigned(SourceMainRecord) then
-          SourceMainRecord := Element.ContainingMainRecord;
-      end;
+      Element := NodeDatas[Column].Element;
+      if Assigned(Element) and not Assigned(SourceMainRecord) then
+        SourceMainRecord := Element.ContainingMainRecord;
       if not Assigned(Element) then
         for i := Low(ActiveRecords) to High(ActiveRecords) do begin
           Element := NodeDatas[i].Element;
@@ -7516,14 +7518,16 @@ begin
         end;
 
       if Assigned(Element) and (Element.Name <> 'Record Header') and not Element.Name.StartsWith('EDID') then begin
-        SetLength(AllNodeDatas, Succ(Length(AllNodeDatas)));
-        SetLength(Names, Length(AllNodeDatas));
-        AllNodeDatas[High(AllNodeDatas)] := NodeDatas;
-        Names[High(Names)] := Element.Name;
+        var lRow: TArray<IwbElement>;
+        SetLength(lRow, Length(ActiveRecords));
+        for i := Low(lRow) to High(lRow) do
+          lRow[i] := NodeDatas[i].Element;
+        AllRows := AllRows + [lRow];
+        Names := Names + [Element.Name];
       end;
     end;
   end;
-  if Length(AllNodeDatas) < 1 then
+  if Length(AllRows) < 1 then
     Exit;
 
   SelectedNodes := vstNav.GetSortedSelection(True);
@@ -7549,7 +7553,7 @@ begin
 
     Caption := 'What subrecords do you want to copy?';
 
-    for i := Low(AllNodeDatas) to High(AllNodeDatas) do begin
+    for i := Low(AllRows) to High(AllRows) do begin
       CheckListBox1.AddItem(Names[i], nil);
       CheckListBox1.Checked[Pred(CheckListBox1.Items.Count)] := True;
     end;
@@ -7561,15 +7565,15 @@ begin
     for i := 0 to Pred(CheckListBox1.Items.Count) do
       if CheckListBox1.Checked[i] then begin
         if j <> i then
-          AllNodeDatas[j] := AllNodeDatas[i];
+          AllRows[j] := AllRows[i];
         Inc(j);
       end;
-    SetLength(AllNodeDatas, j);
+    SetLength(AllRows, j);
     Names := nil; //not valid anymore
   finally
     Free;
   end;
-  if Length(AllNodeDatas) < 1 then
+  if Length(AllRows) < 1 then
     Exit;
 
   with TfrmFileSelect.Create(Self) do try
@@ -7585,10 +7589,8 @@ begin
       Exit;
 
     try
-      for j := Low(AllNodeDatas) to High(AllNodeDatas) do begin
-        NodeDatas := AllNodeDatas[j];
-
-        Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+      for j := Low(AllRows) to High(AllRows) do begin
+        Element := AllRows[j][Column];
         if Assigned(Element) then begin
           for i := Low(MainRecords) to High(MainRecords) do begin
             if CheckListBox1.Checked[i] then begin
@@ -7601,8 +7603,8 @@ begin
         end else begin
           for k := Low(MainRecords) to High(MainRecords) do begin
             if CheckListBox1.Checked[k] then begin
-              for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-                Element := NodeDatas[i].Element;
+              for i := Low(AllRows[j]) to High(AllRows[j]) do begin
+                Element := AllRows[j][i];
                 if Assigned(Element) then begin
                   TargetMainRecord := Element.ContainingMainRecord;
                   if Assigned(TargetMainRecord) and MainRecords[k].Equals(TargetMainRecord) then begin
@@ -7611,7 +7613,7 @@ begin
                         Exit;
                       Element.Remove;
                       Element := nil;
-                      NodeDatas[i].Element := nil;
+                      AllRows[j][i] := nil;
                     end;
                     Break;
                   end;
@@ -9431,8 +9433,16 @@ begin
     Exit;
 
   NodeDatas := ViewCells(vstViewFocusedNode);
-  if Assigned(NodeDatas) then begin
-    Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
+  var lColumn := Pred(vstView.FocusedColumn);
+  if Assigned(NodeDatas) and (lColumn >= 0) and (lColumn <= High(ActiveRecords)) then begin
+    var lColumnCell := ActiveRecords[lColumn];
+    var lRow: TArray<IwbElement>;
+    SetLength(lRow, Length(ActiveRecords));
+    for var c := Low(lRow) to High(lRow) do
+      lRow[c] := NodeDatas[c].Element;
+    var lPath := vstView.Path(vstViewFocusedNode, 0, '\');
+    var lMaster := ActiveMaster;
+    Element := lRow[lColumn];
     if Assigned(Element) then begin
       if not EditWarn then
         Exit;
@@ -9492,16 +9502,16 @@ begin
       // string editor
       else with TfrmViewElements.Create(Self) do
       begin
-        Caption := vstView.Path(vstViewFocusedNode, 0, '\');
+        Caption := lPath;
         Settings := Self.Settings;
 
-        if Assigned(ActiveMaster) then
-          Caption := ActiveMaster.Name + '\' + Caption;
+        if Assigned(lMaster) then
+          Caption := lMaster.Name + '\' + Caption;
 
-        for var lIndex := Low(ActiveRecords) to High(ActiveRecords) do begin
-          var lNodeElement := NodeDatas[lIndex].Element;
+        for var lIndex := Low(lRow) to High(lRow) do begin
+          var lNodeElement := lRow[lIndex];
           if Assigned(lNodeElement) then
-            AddElement(lNodeElement, vstView.FocusedColumn = Succ(lIndex), lNodeElement.IsEditable);
+            AddElement(lNodeElement, lColumn = lIndex, lNodeElement.IsEditable);
         end;
 
         ShowModal;
@@ -9519,7 +9529,7 @@ begin
       end;
 
       Element.EditValue := EditValue;
-      ActiveRecords[Pred(vstView.FocusedColumn)].UpdateRefs;
+      lColumnCell.UpdateRefs;
       ViewFocusedElement := Element;
       EditFocusedViewElement := False;
       Element := nil;
