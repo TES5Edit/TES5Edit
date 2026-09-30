@@ -9541,6 +9541,7 @@ begin
         end;
 
         ShowModal;
+        EditValue := Element.EditValue;
       end;
 
       if xeContext.Settings.ConvertIntFormID and Element.CanContainFormIDs then
