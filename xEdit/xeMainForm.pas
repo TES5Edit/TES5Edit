@@ -4503,7 +4503,7 @@ var
 begin
   if not xeContext.Settings.BuildRefs then
     Exit;
-  if xeTestConflicts or xeTestNavCopy then
+  if xeTestConflicts or xeTestNavCopy or (xeTestViewTreeFile <> '') then
     Exit;
   if xeContext.Settings.DontCache then
     Exit;
@@ -21423,7 +21423,16 @@ var
     end;
   end;
 
-  procedure ModalProbe(aEntry: Integer; const aRecord, aTarget: IwbMainRecord);
+  procedure ModalProbe(aEntry: Integer; const aRecord, aTarget, aSwitchTo: IwbMainRecord);
+
+    procedure Restore;
+    begin
+      for var lRecord in [aRecord, aTarget] do
+        if lRecord.IsEditable and not lRecord.IsMaster then begin
+          lRecord.Assign(Low(Integer), lRecord.Master, False);
+          lRecord.UpdateRefs;
+        end;
+    end;
 
     procedure SelectInNav;
     begin
@@ -21438,8 +21447,55 @@ var
         tmrPendingSetActiveTimer(tmrPendingSetActive);
     end;
 
+    function Digest(const aMainRecord: IwbMainRecord): string;
+    begin
+      var lText := '';
+      for var i := 0 to Pred(aMainRecord.ElementCount) do
+        lText := lText + aMainRecord.Elements[i].Name + '=' + aMainRecord.Elements[i].EditValue + #10;
+      var lHash: Cardinal := 2166136261;
+      for var lChar in lText do
+        lHash := Cardinal((UInt64(lHash xor Ord(lChar)) * 16777619) and $FFFFFFFF);
+      Result := Format('%d elements, %d chars, hash %.8x', [aMainRecord.ElementCount, Length(lText), lHash]);
+    end;
+
+    procedure BeginGesture(const aName: string; aRow: PVirtualNode; aColumn: Integer; aSwitch: Boolean; out aDelay, aFocused: Integer);
+    begin
+      TFile.AppendAllText(xeTestViewTreeFile + '.progress', Format('%d'#9'%s', [aEntry, aName]) + sLineBreak);
+      vstViewFocusedNode := aRow;
+      vstView.FocusedColumn := aColumn;
+      EditWarnOk := False;
+      TestViewModalFactory := ViewTreeFactory;
+      TestViewModalSeen := '';
+      aDelay := tmrPendingSetActive.Interval;
+      if aSwitch then begin
+        tmrPendingSetActive.Interval := 50;
+        SetActiveRecord(aSwitchTo);
+      end;
+      aFocused := vstView.FocusedColumn;
+      TestViewModalAnswer.Enabled := True;
+    end;
+
+    procedure EndGesture(const aName, aResult: string; aDelay, aFocused: Integer);
+    begin
+      TestViewModalAnswer.Enabled := False;
+      TestViewModalFactory := nil;
+      tmrPendingSetActive.Enabled := False;
+      tmrPendingSetActive.Interval := aDelay;
+      EditWarnOk := True;
+      if vstView.IsEditing then
+        vstView.CancelEditNode;
+      ViewFocusedElement := nil;
+      EditFocusedViewElement := False;
+      var lShown: string := '-';
+      if (Length(ActiveRecords) > 0) and Assigned(ActiveRecords[0].Element) then
+        lShown := ActiveRecords[0].Element.Name;
+      lLines.Add(Format('# modal %d'#9'%s'#9'column %d'#9'dialogs%s'#9'%s'#9'shows %s',
+        [aEntry, aName, aFocused, TestViewModalSeen, aResult, lShown]));
+    end;
+
     procedure Run(const aName: string; aSwitch, aCopy: Boolean);
     begin
+      Restore;
       if aCopy then
         SelectInNav;
       Build([aRecord]);
@@ -21454,18 +21510,8 @@ var
         lLines.Add(Format('# modal %d'#9'%s'#9'no EDID row', [aEntry, aName]));
         Exit;
       end;
-      vstViewFocusedNode := lRow;
-      vstView.FocusedColumn := 1;
-      EditWarnOk := False;
-      TestViewModalFactory := ViewTreeFactory;
-      TestViewModalSeen := '';
-      var lDelay := tmrPendingSetActive.Interval;
-      if aSwitch then begin
-        tmrPendingSetActive.Interval := 50;
-        SetActiveRecord(aTarget);
-      end;
-      var lColumn := vstView.FocusedColumn;
-      TestViewModalAnswer.Enabled := True;
+      var lDelay, lFocused: Integer;
+      BeginGesture(aName, lRow, Length(ActiveRecords), aSwitch, lDelay, lFocused);
       var lResult := 'returned';
       try
         if aCopy then
@@ -21476,29 +21522,142 @@ var
         on E: Exception do
           lResult := E.ClassName + ': ' + E.Message;
       end;
-      TestViewModalAnswer.Enabled := False;
-      TestViewModalFactory := nil;
-      tmrPendingSetActive.Enabled := False;
-      tmrPendingSetActive.Interval := lDelay;
-      EditWarnOk := True;
-      var lShown: string := '-';
-      if (Length(ActiveRecords) > 0) and Assigned(ActiveRecords[0].Element) then
-        lShown := ActiveRecords[0].Element.Name;
-      lLines.Add(Format('# modal %d'#9'%s'#9'column %d'#9'dialogs%s'#9'%s'#9'shows %s',
-        [aEntry, aName, lColumn, TestViewModalSeen, lResult, lShown]));
-      if aCopy then begin
-        var lText := '';
-        for var i := 0 to Pred(aTarget.ElementCount) do
-          lText := lText + aTarget.Elements[i].Name + '=' + aTarget.Elements[i].EditValue + #10;
-        var lHash: Cardinal := 2166136261;
-        for var lChar in lText do
-          lHash := Cardinal((UInt64(lHash xor Ord(lChar)) * 16777619) and $FFFFFFFF);
-        lLines.Add(Format('# modal %d'#9'%s'#9'target %d elements, %d chars, hash %.8x',
-          [aEntry, aName, aTarget.ElementCount, Length(lText), lHash]));
+      EndGesture(aName, lResult, lDelay, lFocused);
+      if aCopy then
+        lLines.Add(Format('# modal %d'#9'%s'#9'target %s', [aEntry, aName, Digest(aTarget)]));
+    end;
+
+  const
+    mgCopyToSelected = 0;
+    mgSetToDefault   = 1;
+    mgDrop           = 2;
+    mgAdd            = 3;
+    mgEditLeaf       = 4;
+    mgEditStruct     = 5;
+    mgRemove         = 6;
+    mgHeaderDropped  = 7;
+
+    function CompareRow(aGesture: Integer): PVirtualNode;
+    begin
+      Result := nil;
+      var lHeaderRows := 0;
+      if Assigned(ActiveRecords[0].Container) then
+        lHeaderRows := ActiveRecords[0].Container.AdditionalElementCount;
+      for var lNode in vstView.Nodes(False) do begin
+        if (lNode.Parent <> vstView.RootNode) or (Integer(lNode.Index) < lHeaderRows) then
+          Continue;
+        var lCells: PViewNodeDatas := ViewCells(lNode);
+        if not Assigned(lCells) then
+          Continue;
+        var lFirst := lCells[0].Element;
+        var lSecond := lCells[1].Element;
+        var lFound := False;
+        case aGesture of
+          mgCopyToSelected, mgDrop:
+            lFound := Assigned(lFirst) and Assigned(lSecond) and lSecond.IsEditable and not lFirst.Name.StartsWith('EDID') and
+              (lFirst.EditValue <> lSecond.EditValue);
+          mgSetToDefault:
+            lFound := Assigned(lSecond) and lSecond.IsEditable and not vstView.HasChildren[lNode] and lSecond.CanContainFormIDs;
+          mgAdd:
+            lFound := Assigned(lFirst) <> Assigned(lSecond);
+          mgEditLeaf:
+            lFound := Assigned(lSecond) and lSecond.IsEditable and not vstView.HasChildren[lNode] and
+              not lSecond.Name.StartsWith('EDID');
+          mgEditStruct:
+            lFound := Assigned(lSecond) and not lSecond.IsEditable and vstView.HasChildren[lNode];
+          mgRemove:
+            lFound := Assigned(lFirst) and Assigned(lSecond) and lFirst.IsRemovable and lSecond.IsRemovable;
+          mgHeaderDropped:
+            lFound := True;
+        end;
+        if lFound then
+          Exit(lNode);
       end;
     end;
 
+    procedure RunCompare(const aName: string; aSwitch: Boolean; aGesture: Integer);
+    begin
+      Restore;
+      Build([aRecord, aTarget]);
+      if Length(ActiveRecords) <> 2 then begin
+        lLines.Add(Format('# modal %d'#9'%s'#9'no compare view', [aEntry, aName]));
+        Exit;
+      end;
+      var lRow := CompareRow(aGesture);
+      if not Assigned(lRow) then begin
+        lLines.Add(Format('# modal %d'#9'%s'#9'no row', [aEntry, aName]));
+        Exit;
+      end;
+      var lColumn := 2;
+      if (aGesture in [mgCopyToSelected, mgDrop, mgRemove, mgHeaderDropped]) or
+         (aGesture = mgAdd) and not Assigned(ViewCells(lRow)[0].Element) then
+        lColumn := 1;
+      var lSource := ViewCells(lRow)[0].Element;
+      var lEdited := ViewCells(lRow)[Pred(lColumn)].Element;
+      var lRowName := '';
+      for var c := 0 to 1 do
+        if (lRowName = '') and Assigned(ViewCells(lRow)[c].Element) then
+          lRowName := ViewCells(lRow)[c].Element.Name;
+      var lDelay, lFocused: Integer;
+      BeginGesture(aName, lRow, lColumn, aSwitch, lDelay, lFocused);
+      var lResult := 'returned';
+      try
+        case aGesture of
+          mgCopyToSelected:
+            mniViewCopyToSelectedRecordsClick(nil);
+          mgSetToDefault:
+            mniViewSetToDefaultClick(nil);
+          mgDrop:
+            PerformDrop(vstView, lRow, 2, lSource);
+          mgAdd: begin
+            pmuViewPopup(Self);
+            if mniViewAdd.Visible and mniViewAdd.Enabled and (mniViewAdd.Count = 0) then
+              mniViewAdd.Click
+            else
+              lResult := 'add not offered';
+          end;
+          mgEditLeaf, mgEditStruct:
+            vstView.EditNode(lRow, 2);
+          mgRemove:
+            mniViewRemoveFromSelectedClick(nil);
+          mgHeaderDropped: begin
+            var lHandled := False;
+            vstViewHeaderDropped(vstView.Header, 1, 2, lHandled);
+          end;
+        end;
+      except
+        on E: Exception do
+          lResult := E.ClassName + ': ' + E.Message;
+      end;
+      EndGesture(aName, lResult, lDelay, lFocused);
+      var lRefs := '';
+      for var i := 0 to Pred(aTarget.ReferencesCount) do
+        lRefs := lRefs + ' ' + aTarget.References[i].Signature + ':' + IntToHex64(Cardinal(aTarget.References[i].LoadOrderFormID), 8);
+      var lValue: string := '-';
+      if Assigned(lEdited) then
+        lValue := lEdited.EditValue;
+      lLines.Add(Format('# modal %d'#9'%s'#9'row %s'#9'value %s'#9'focus after %d'#9'records %s, refs %d | %s, refs%s',
+        [aEntry, aName, lRowName, lValue, vstView.FocusedColumn, Digest(aRecord), aRecord.ReferencesCount, Digest(aTarget),
+         lRefs]));
+    end;
+
   begin
+    RunCompare('set to default', False, mgSetToDefault);
+    RunCompare('set to default, switched', True, mgSetToDefault);
+    RunCompare('drop', False, mgDrop);
+    RunCompare('drop, switched', True, mgDrop);
+    RunCompare('copy to selected', False, mgCopyToSelected);
+    RunCompare('copy to selected, switched', True, mgCopyToSelected);
+    RunCompare('add', False, mgAdd);
+    RunCompare('add, switched', True, mgAdd);
+    RunCompare('edit in place', False, mgEditLeaf);
+    RunCompare('edit in place, switched', True, mgEditLeaf);
+    RunCompare('edit in place, struct', False, mgEditStruct);
+    RunCompare('edit in place, struct, switched', True, mgEditStruct);
+    RunCompare('remove from selected', False, mgRemove);
+    RunCompare('remove from selected, switched', True, mgRemove);
+    RunCompare('header drop', False, mgHeaderDropped);
+    RunCompare('header drop, switched', True, mgHeaderDropped);
     Run('edit', False, False);
     Run('edit, switched', True, False);
     Run('copy multiple', False, True);
@@ -21542,6 +21701,7 @@ begin
         TestViewModalAnswer.Enabled := False;
         TestViewModalAnswer.Interval := 300;
         TestViewModalAnswer.OnTimer := TestViewModalAnswerTimer;
+        System.SysUtils.DeleteFile(xeTestViewTreeFile + '.progress');
       end;
       lList.LoadFromFile(xeTestViewTreeList);
       var lEntry := 0;
@@ -21580,7 +21740,7 @@ begin
         if xeTestViewTreeHeader then
           HeaderProbe(lEntry);
         if xeTestViewTreeModal and (Length(lRecords) > 1) then
-          ModalProbe(lEntry, lRecords[0], lRecords[1]);
+          ModalProbe(lEntry, lRecords[0], lRecords[1], lRecords[High(lRecords)]);
         if xeTestViewTreeFocus > 0 then
           FocusProbe(lEntry, lRecords);
         if xeTestViewTreeFloor and (Length(lRecords) > 1) then
@@ -21728,6 +21888,19 @@ begin
       Screen.CustomForms[i].ModalResult := mrOk;
       Exit;
     end;
+  var lWnd: HWND := 0;
+  repeat
+    lWnd := FindWindowEx(0, lWnd, '#32770', nil);
+    if (lWnd <> 0) and IsWindowVisible(lWnd) and IsWindowEnabled(lWnd) and
+       (GetWindowThreadProcessId(lWnd, nil) = MainThreadID) then begin
+      var lReplaced := PPointer(@ViewTreeFactory)^ <> PPointer(@TestViewModalFactory)^;
+      var lCaption: array[0..255] of Char;
+      GetWindowText(lWnd, lCaption, Length(lCaption));
+      TestViewModalSeen := TestViewModalSeen + ' "' + string(lCaption) + '"' + IfThen(lReplaced, ':replaced', ':kept');
+      SendMessage(lWnd, WM_USER + 102, IDYES, 0);
+      Exit;
+    end;
+  until lWnd = 0;
 end;
 
 procedure TfrmMain.DoTestCopyIntoGap;
