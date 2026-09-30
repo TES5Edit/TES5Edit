@@ -21374,13 +21374,77 @@ var
     end;
   end;
 
+  procedure Build(const aRecords: TDynMainRecords);
+  begin
+    var lLoaderDone := xeContext.LoaderDone;
+    if xeTestViewTreeLoading then
+      xeContext.LoaderDone := False;
+    try
+      DoSetActiveRecord(IwbMainRecord(nil));
+      if Length(aRecords) = 1 then
+        DoSetActiveRecord(aRecords[0], True)
+      else
+        DoSetActiveRecord(aRecords);
+    finally
+      xeContext.LoaderDone := lLoaderDone;
+    end;
+  end;
+
+  procedure FocusProbe(aEntry: Integer; const aRecords: TDynMainRecords);
+  var
+    lNodes    : TArray<PVirtualNode>;
+    lPaths    : TArray<string>;
+    lColumns  : TArray<Integer>;
+    lElements : TArray<IwbElement>;
+  begin
+    for var lNode in vstView.Nodes(False) do
+      lNodes := lNodes + [lNode];
+    var lStep := Max(1, Length(lNodes) div xeTestViewTreeFocus);
+    var lIndex := 0;
+    while lIndex <= High(lNodes) do begin
+      var lNode := lNodes[lIndex];
+      var lDatas: PViewNodeDatas := vstView.GetNodeData(lNode);
+      var lParent: PViewNodeDatas;
+      if lNode.Parent = vstView.RootNode then
+        lParent := @ActiveRecords[0]
+      else
+        lParent := vstView.GetNodeData(lNode.Parent);
+      for var c := Low(ActiveRecords) to High(ActiveRecords) do begin
+        var lElement := lDatas[c].Element;
+        if not Assigned(lElement) and Assigned(lParent) then
+          lElement := wbConflictCellElement(lParent[c], lNode.Index);
+        if Assigned(lElement) then begin
+          lPaths := lPaths + [Path(lNode)];
+          lColumns := lColumns + [c];
+          lElements := lElements + [lElement];
+        end;
+      end;
+      Inc(lIndex, lStep);
+    end;
+    for var k := Low(lElements) to High(lElements) do begin
+      ViewFocusedElement := lElements[k];
+      NodeForViewFocusedElement := nil;
+      ColumnForViewFocusedElement := NoColumn;
+      Build(aRecords);
+      var lFound := 'none';
+      if Assigned(NodeForViewFocusedElement) then
+        lFound := Path(NodeForViewFocusedElement);
+      lLines.Add(Format('# focus %d'#9'%s'#9'%d'#9'%s'#9'%d', [aEntry, lPaths[k], lColumns[k], lFound, ColumnForViewFocusedElement]));
+    end;
+    ViewFocusedElement := nil;
+    NodeForViewFocusedElement := nil;
+    ColumnForViewFocusedElement := NoColumn;
+  end;
+
 begin
   lLines := TStringList.Create;
   lList := TStringList.Create;
   try
     lLines.Add('# xEdit view tree probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide);
+    lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide + ', hide no conflict = ' +
+      BoolToStr(xeTestViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestViewTreeLoading, True) + ', focus = ' +
+      IntToStr(xeTestViewTreeFocus));
     lLines.Add('# Columns, tab separated: entry / row path / row ConflictAll / visible / per record column: element:ConflictThis:flags');
     CheckResult := 2;
     try
@@ -21394,6 +21458,8 @@ begin
         if not lHidden then
           raise Exception.Create('no module ' + xeTestViewTreeHide);
       end;
+      if xeTestViewTreeHideNoConflict then
+        HideNoConflict := True;
       lList.LoadFromFile(xeTestViewTreeList);
       var lEntry := 0;
       for var lLine in lList do begin
@@ -21403,11 +21469,7 @@ begin
         lRecords := nil;
         for var lFormID in lLine.Split([',']) do
           lRecords := lRecords + [FindRecord(lFormID)];
-        DoSetActiveRecord(IwbMainRecord(nil));
-        if Length(lRecords) = 1 then
-          DoSetActiveRecord(lRecords[0], True)
-        else
-          DoSetActiveRecord(lRecords);
+        Build(lRecords);
         var lColumns := '';
         for var i := Low(ActiveRecords) to High(ActiveRecords) do
           if Assigned(ActiveRecords[i].Element) then
@@ -21424,6 +21486,8 @@ begin
           lLines.Add(IntToStr(lEntry) + #9 + Path(lNode) + #9 +
             wbNameConflictAll[PViewNodeDatas(vstView.GetNodeData(lNode))[0].ConflictAll] + #9 +
             IfThen(vstView.IsVisible[lNode], 'V', 'h') + Cells(vstView.GetNodeData(lNode)));
+        if xeTestViewTreeFocus > 0 then
+          FocusProbe(lEntry, lRecords);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
       CheckResult := 0;
