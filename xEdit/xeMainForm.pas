@@ -918,13 +918,9 @@ type
 
     function GetUniqueLinksTo(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer): TDynMainRecords;
 
-    procedure InitChildren(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer; var aChildCount: Cardinal; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc);
-    procedure InitNodes(const aNodeDatas, aParentDatas: PViewNodeDatas; aNodeCount: Integer; aIndex: Cardinal; var aStates: TwbConflictNodeStates; const aOnElement: TwbConflictElementProc);
-    procedure InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; aNodeDatas: PViewNodeDatas = nil);
     procedure InheritStateFromChildren(Node: PVirtualNode; NodeData: PNavNodeData);
 
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
-    function NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
 
     procedure ShowChangeReferencedBy(const OldFormID, NewFormID: TwbFormID; const ReferencedBy: TDynMainRecords; aSilent: Boolean);
     function GetTargetElement(Target: TBaseVirtualTree; var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
@@ -1022,7 +1018,9 @@ type
     ActiveRecordLock: Integer;
     ActiveRecord: IwbMainRecord;
     ActiveMaster: IwbMainRecord;
-    ActiveRecords: TDynViewNodeDatas;
+    ViewTree: TwbConflictTree;
+    ViewTreeFactory: TFunc<TwbConflictTree>;
+    ViewRootDatas: TDynViewNodeDatas;
     ActiveContainer: IwbDataContainer;
     ViewFocusedElement : IwbElement;
     EditAddedElement: Boolean;
@@ -1038,6 +1036,14 @@ type
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
     DelayedExpandView: Boolean;
+    function ViewRow(aNode: PVirtualNode): TwbConflictTreeNode;
+    function ViewCells(aNode: PVirtualNode): PViewNodeDatas;
+    procedure SetViewTree(const aFactory: TFunc<TwbConflictTree>);
+    procedure ClearViewTree;
+    procedure BuildViewTree;
+    procedure ApplyViewVisibility(aNode: PVirtualNode);
+    procedure FindViewFocusedNode;
+    property ActiveRecords: TDynViewNodeDatas read ViewRootDatas;
 
   public
     FilterPreset: Boolean; // new: flag to skip filter window
@@ -4522,68 +4528,9 @@ begin
 end;
 
 procedure TfrmMain.ClearActiveContainer;
-var
-  aMainrecords : TDynMainRecords;
 begin
   UserWasActive := True;
-
-  if Length(aMainRecords) < 2 then begin
-    if Length(aMainRecords) = 1 then
-      if Supports(aMainRecords[0], IwbMainrecord) then
-        SetActiveRecord(aMainRecords[0] as IwbMainRecord)
-      else
-        SetActiveContainer(aMainRecords[0])
-    else
-      SetActiveContainer(IwbDataContainer(nil));
-    Exit;
-  end;
-  if Supports(aMainRecords[0], IwbMainrecord) then begin
-    SetLength(aMainRecords, 0);
-    SetActiveRecord(aMainRecords);
-    Exit;
-  end;
-
-  ComparingSiblings := True;
-  CompareRecords := aMainRecords;
-  lvReferencedBy.Items.BeginUpdate;
-  try
-    vstView.BeginUpdate;
-    try
-      ClearReferencedByListData;
-      vstView.Clear;
-      vstView.NodeDataSize := 0;
-      SetLength(ActiveRecords, 0);
-      ActiveMaster := nil;
-      ActiveRecord := nil;
-      ActiveIndex := NoColumn;
-
-      SetLength(ActiveRecords, 0);
-
-      with vstView.Header.Columns do begin
-        BeginUpdate;
-        try
-          Clear;
-          with Add do begin
-            Text := '';
-            Width := Trunc(ColumnWidth * (GetCurrentPPIScreen / PixelsPerInch));
-            Options := Options - [coDraggable, coShowDropMark];
-            Options := Options + [coFixed, coFiller];
-          end;
-        finally
-          EndUpdate;
-        end;
-      end;
-
-      vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
-      vstView.RootNodeCount := 0;
-      pgMain.ActivePage := tbsView;
-    finally
-      vstView.EndUpdate;
-    end;
-    tbsReferencedBy.TabVisible := False;
-  finally
-    lvReferencedBy.Items.EndUpdate;
-  end;
+  SetActiveContainer(IwbDataContainer(nil));
 end;
 
 procedure TfrmMain.ClearConflict(Sender: TBaseVirtualTree; Node: PVirtualNode; Data: Pointer; var Abort: Boolean);
@@ -4613,7 +4560,7 @@ begin
   j := 0;
   Node := vstView.GetLastChild(nil);
   while Assigned(Node) do begin
-    NodeDatas := vstView.GetNodeData(Node);
+    NodeDatas := ViewCells(Node);
     if Assigned(NodeDatas) then
       for i := Low(ActiveRecords) to High(ActiveRecords) do
         if Assigned(NodeDatas[i].Container) then begin
@@ -4640,6 +4587,7 @@ end;
 destructor TfrmMain.Destroy;
 begin
   inherited;
+  ClearViewTree;
   FreeAndNil(ConflictView);
   FreeAndNil(lvReferencedByAllItems);
   FreeAndNil(lvReferencedByFilteredItems);
@@ -5765,7 +5713,7 @@ begin
     vstView.FullExpand;
     Node := vstView.GetLast(nil);
     while Assigned(Node) do begin
-      NodeDatas := vstView.GetNodeData(Node);
+      NodeDatas := ViewCells(Node);
       if Assigned(NodeDatas) then
         for i := Low(ActiveRecords) to High(ActiveRecords) do
           with NodeDatas[i] do
@@ -6608,7 +6556,7 @@ begin
     if TargetNode = vstView.RootNode then
       NodeDatas := @ActiveRecords[0]
     else
-      NodeDatas := vstView.GetNodeData(TargetNode);
+      NodeDatas := ViewCells(TargetNode);
     if Assigned(NodeDatas) then begin
       TargetElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       if Assigned(TargetElement) then begin
@@ -6651,7 +6599,7 @@ begin
     if TargetNode = Target.RootNode then
       NodeDatas := @ActiveRecords[0]
     else
-      NodeDatas := Target.GetNodeData(TargetNode);
+      NodeDatas := ViewCells(TargetNode);
     if Assigned(NodeDatas) then begin
       TargetElement := NodeDatas[Pred(TargetColumn)].Element;
       if Assigned(TargetElement) then begin
@@ -6727,7 +6675,7 @@ begin
     if Pred(lSourceTree.DragColumn) > High(ActiveRecords) then
       Exit;
 
-    var lSourceViewNodeDatas: PViewNodeDatas := lSourceTree.GetNodeData(lSourceTree.DragSelection[0]);
+    var lSourceViewNodeDatas: PViewNodeDatas := ViewCells(lSourceTree.DragSelection[0]);
     if not Assigned(lSourceViewNodeDatas) then
       Exit;
 
@@ -6841,194 +6789,6 @@ begin
   end;
 end;
 
-procedure TfrmMain.InitChildren(const aNodeDatas: PViewNodeDatas; aNodeCount: Integer;
-  var aChildCount: Cardinal; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc);
-begin
-  wbConflictInitChildren(aNodeDatas, aNodeCount, aChildCount, aView, aOnMessage);
-end;
-procedure TfrmMain.InitConflictStatus(aNode: PVirtualNode; aInjected: Boolean; aNodeDatas: PViewNodeDatas = nil);
-
-  procedure InheritConflict(Parent, Child: PViewNodeData);
-  begin
-    if Child.ConflictAll > Parent.ConflictAll then
-      Parent.ConflictAll := Child.ConflictAll;
-    if Child.ConflictThis > Parent.ConflictThis then
-      Parent.ConflictThis := Child.ConflictThis;
-  end;
-
-var
-  ChildNode      : PVirtualNode;
-  ChildNodeDatas : PViewNodeDatas;
-  NodeDatas      : PViewNodeDatas;
-  i,j,k          : Integer;
-  ConflictAll    : TConflictAll;
-  ConflictThis   : TConflictThis;
-  Element        : IwbElement;
-  ElementCount   : Integer;
-  HasElement     : Boolean;
-  lDontShow      : Boolean;
-begin
-  HasElement := False;
-  lDontShow := False;
-  if not Assigned(aNodeDatas) then begin
-    aNodeDatas := vstView.GetNodeData(aNode);
-    if Assigned(ActiveMaster) then
-      aInjected := ActiveMaster.IsInjected;
-  end;
-
-  ChildNode := vstView.GetFirstChild(aNode);
-  if not Assigned(ChildNode) then
-    aNodeDatas[0].ConflictAll := ConflictLevelForNodeDatas(aNodeDatas, Length(ActiveRecords), ComparingSiblings, aInjected)
-  else
-    while Assigned(ChildNode) do begin
-      ChildNodeDatas := vstView.GetNodeData(ChildNode);
-      InitConflictStatus(ChildNode, aInjected, ChildNodeDatas);
-      for i := Low(ActiveRecords) to High(ActiveRecords) do
-        InheritConflict(@aNodeDatas[i], @ChildNodeDatas[i]);
-      ChildNode := vstView.GetNextSibling(ChildNode);
-    end;
-
-  ConflictAll := caUnknown;
-  ConflictThis := ctUnknown;
-  for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-    HasElement := HasElement or Assigned(aNodeDatas[i].Element);
-    if aNodeDatas[i].ConflictAll > ConflictAll then
-      ConflictAll := aNodeDatas[i].ConflictAll;
-    if aNodeDatas[i].ConflictThis > ConflictThis then
-      ConflictThis := aNodeDatas[i].ConflictThis;
-  end;
-
-  if not HasElement then
-    if xeContext.Settings.TranslationMode then
-      ConflictThis := ctIgnored;
-
-  if (ConflictAll in [caUnknown, caOnlyOne]) and ComparingSiblings then
-    ConflictAll := caNoConflict;
-
-  for i := Low(ActiveRecords) to High(ActiveRecords) do
-    aNodeDatas[i].ConflictAll := ConflictAll;
-
-  if aNode <> vstView.RootNode then begin
-
-    for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-      if vnfDontShow in aNodeDatas[i].ViewNodeFlags then
-        lDontShow := True;
-      if Assigned(aNodeDatas[i].Container) then begin
-        lDontShow := False;
-        Break;
-      end;
-    end;
-
-    case ConflictThis of
-      ctUnknown: vstView.IsVisible[aNode] := not lDontShow and not xeContext.Settings.TranslationMode;
-      ctIgnored: vstView.IsVisible[aNode] := not xeContext.Settings.HideIgnored;
-      ctNotDefined: begin
-          if aNode.Parent = vstView.RootNode then
-            ChildNodeDatas := @ActiveRecords[0]
-          else
-            ChildNodeDatas := vstView.GetNodeData(aNode.Parent);
-
-          Element := nil;
-          for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-            Element := ChildNodeDatas[i].Container;
-            if Assigned(Element) then
-              Break;
-          end;
-
-          if Assigned(Element) and (Element.ElementType in [etMainRecord, etSubRecordStruct]) then begin
-            ElementCount := (Element.Def as IwbRecordDef).MemberCount;
-            i := (Element as IwbContainer).AdditionalElementCount;
-            j := Integer(aNode.Index);
-            if (j >= i) and ((j-i) < ElementCount) then
-              with (Element.Def as IwbRecordDef).Members[j - i] do begin
-                if (xeContext.Settings.TranslationMode and (not (dfTranslatable in DefFlags))) or
-                  (xeContext.Settings.TranslationMode and (ConflictPriority[nil] = cpIgnore)) then begin
-                  ConflictThis := ctIgnored;
-                  for k := Low(ActiveRecords) to High(ActiveRecords) do
-                    aNodeDatas[k].ConflictThis := ConflictThis;
-                end;
-
-                if (ConflictThis <> ctIgnored) and HasDontShow then begin
-                  lDontShow := True;
-                  for k := Low(ActiveRecords) to High(ActiveRecords) do begin
-                    Element := ChildNodeDatas[k].Container;
-                    if Assigned(Element) then begin
-                      lDontShow := DontShow[Element];
-                      if not lDontShow then
-                        Break;
-                    end;
-                  end;
-                end;
-              end;
-          end;
-
-          if not Assigned(Element) then
-            if xeContext.Settings.TranslationMode then
-              ConflictThis := ctIgnored;
-
-          if ConflictThis = ctNotDefined then begin
-            NodeDatas := vstView.GetNodeData(aNode.Parent);
-            if not Assigned(NodeDatas) then
-              NodeDatas := @ActiveRecords[0];
-            for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-              Element := NodeDatas[i].Container;
-              if Assigned(Element) then
-                Break;
-            end;
-            if Assigned(Element) and (Element.ElementType in [etMainRecord, etSubRecordStruct]) then begin
-              ElementCount := (Element.Def as IwbRecordDef).MemberCount;
-              i := (Element as IwbContainer).AdditionalElementCount;
-              j := Integer(aNode.Index);
-              if (j >= i) and ((j-i) < ElementCount) then
-                with (Element.Def as IwbRecordDef).Members[Integer(aNode.Index) - i] do
-                  if ConflictPriority[nil] = cpIgnore then
-                    ConflictThis := ctIgnored;
-            end;
-          end;
-
-          vstView.IsVisible[aNode] := ((ConflictThis <> ctIgnored) or not xeContext.Settings.HideIgnored) and not lDontShow;
-        end;
-    else
-      vstView.IsVisible[aNode] := not lDontShow;
-    end;
-
-    if vstView.IsVisible[aNode] then
-      if HideNoConflict then
-        if Length(ActiveRecords) > 1 then begin
-          if ComparingSiblings then begin
-            if ConflictAll < caConflictBenign then
-              vstView.IsVisible[aNode] := False;
-          end else begin
-            if ConflictThis < ctOverride then
-              vstView.IsVisible[aNode] := False;
-          end;
-        end else
-          if not HasElement then
-            vstView.IsVisible[aNode] := False;
-  end;
-
-  for i := Low(ActiveRecords) to High(ActiveRecords) do
-    with aNodeDatas[i] do begin
-      if Assigned(Element) then
-        ElementGen := Element.ElementGeneration
-      else
-        ElementGen := 0;
-      if Assigned(Container) then
-        ContainerGen := Container.ElementGeneration
-      else
-        ContainerGen := 0;
-    end;
-end;
-
-procedure TfrmMain.InitNodes(const aNodeDatas: PViewNodeDatas;
-  const aParentDatas: PViewNodeDatas;
-  aNodeCount: Integer;
-  aIndex: Cardinal;
-  var aStates: TwbConflictNodeStates;
-  const aOnElement: TwbConflictElementProc);
-begin
-  wbConflictInitNodes(aNodeDatas, aParentDatas, aNodeCount, aIndex, aStates, aOnElement);
-end;
 procedure TfrmMain.InvalidateElementsTreeView;
 var
   Node                        : PVirtualNode;
@@ -7635,7 +7395,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Records                     : TDynMainRecords;
 begin
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if not Assigned(NodeDatas) then
     Exit;
   Records := GetUniqueLinksTo(NodeDatas, Length(ActiveRecords));
@@ -7662,7 +7422,7 @@ begin
   if (SourceColumn < 1) or (Pred(SourceColumn) > High(ActiveRecords)) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -7735,7 +7495,7 @@ begin
   SetLength(AllNodeDatas, 0);
   SetLength(Names, 0);
   for Node in vstView.LevelNodes(0) do begin
-    NodeDatas := vstView.GetNodeData(Node);
+    NodeDatas := ViewCells(Node);
     if Assigned(NodeDatas) then begin
       Element := nil;
       if (vstView.FocusedColumn > 0) and (Pred(vstView.FocusedColumn) <= High(ActiveRecords)) then begin
@@ -8613,7 +8373,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -8641,7 +8401,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -9665,7 +9425,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -9772,7 +9532,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -11767,7 +11527,7 @@ begin
 
   LockProcessMessages;
   try
-    NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+    NodeDatas := ViewCells(vstViewFocusedNode);
     NextNode := vstView.GetNextVisibleSibling(vstViewFocusedNode);
     if not Assigned(NextNode) then
       NextNode := vstView.GetPreviousVisibleSibling(vstViewFocusedNode);
@@ -11782,7 +11542,7 @@ begin
       if Assigned(Element) then begin
 
         if Assigned(NextNode) then begin
-          NodeDatas := vstView.GetNodeData(NextNode);
+          NodeDatas := ViewCells(NextNode);
           ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
           EditFocusedViewElement := False;
         end;
@@ -11814,7 +11574,7 @@ begin
 
   LockProcessMessages;
   try
-    NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+    NodeDatas := ViewCells(vstViewFocusedNode);
     NextNode := vstView.GetNextVisibleSibling(vstViewFocusedNode);
     if not Assigned(NextNode) then
       NextNode := vstView.GetPreviousVisibleSibling(vstViewFocusedNode);
@@ -11829,7 +11589,7 @@ begin
       if Assigned(Element) then begin
 
         if Assigned(NextNode) then begin
-          NodeDatas := vstView.GetNodeData(NextNode);
+          NodeDatas := ViewCells(NextNode);
           ViewFocusedElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
           EditFocusedViewElement := False;
         end;
@@ -11857,7 +11617,7 @@ begin
   if xeContext.Settings.TranslationMode then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then
     for i := Low(ActiveRecords) to High(ActiveRecords) do begin
       Element := NodeDatas[i].Element;
@@ -11914,7 +11674,7 @@ var
   Recs                        : TDynMainRecords;
   OffsetXY                    : TPoint;
 begin
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
 
   sl := TStringList.Create;
   try
@@ -12029,7 +11789,7 @@ function TfrmMain.GetFocusedViewElementSafely: IwbElement;
 begin
   Result := nil;
 
-  var NodeDatas: PViewNodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  var NodeDatas: PViewNodeDatas := ViewCells(vstViewFocusedNode);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -14236,7 +13996,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -14248,40 +14008,6 @@ begin
       PostResetActiveTree;
     end;
   end;
-end;
-
-function TfrmMain.NodeDatasForContainer(const aContainer: IwbDataContainer): TDynViewNodeDatas;
-var
-  i, l    : Integer;
-  p       : string;
-  Element : IwbElement;
-begin
-  Assert(xeContext.LoaderDone);
-
-  SetLength(Result, 0);
-  l := 0;
-  p := Copy(aContainer.Path, Succ(Length(aContainer.GetFile.Path + ' \ ')));
-  repeat
-    i := Pos(' \ ', p);
-    if i>0 then begin
-      Delete(p, i, 1);
-      Delete(p, i+1, 1);
-    end;
-  until i = 0;  // Convert GetPath to ByPath
-
-  for i := 0 to pred(Length(Files)) do
-    if Files[i].IsNotPlugin then begin
-      Element := Files[i].ElementByPath[p];
-      if Assigned(Element) then begin
-        SetLength(Result, Succ(l));
-        Result[l].Element := Element;
-        Result[l].Container := Element as IwbContainerElementRef;
-        if Result[l].Container.ElementCount < 1 then
-          Result[l].Container := nil;
-        Inc(l);
-      end;
-    end;
-  Assert(Length(Result)>0); // At least there should be ourself
 end;
 
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
@@ -15014,7 +14740,7 @@ begin
   end;
 
   if vstView.FocusedColumn > 0 then begin
-    NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+    NodeDatas := ViewCells(vstViewFocusedNode);
     if Assigned(NodeDatas) then begin
       Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
       mniViewEdit.Visible := Assigned(Element) and Element.IsEditable;
@@ -15132,7 +14858,7 @@ begin
   if not xeContext.Settings.EditAllowed then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(vstView.FocusedColumn)].Element;
     if Assigned(Element) then begin
@@ -15218,10 +14944,88 @@ begin
   SetLength(Result, j);
 end;
 
+function TfrmMain.ViewRow(aNode: PVirtualNode): TwbConflictTreeNode;
+begin
+  if not Assigned(aNode) or not Assigned(ViewTree) then
+    Exit(nil);
+  if aNode = vstView.RootNode then
+    Exit(ViewTree.Root);
+  Result := TwbConflictTreeNode(PPointer(TBaseVirtualTree(vstView).GetNodeData(aNode))^);
+end;
+
+function TfrmMain.ViewCells(aNode: PVirtualNode): PViewNodeDatas;
+begin
+  if not Assigned(aNode) or (aNode = vstView.RootNode) then
+    Exit(nil);
+  var lRow := ViewRow(aNode);
+  if not Assigned(lRow) then
+    Exit(nil);
+  Result := @lRow.Datas[0];
+end;
+
+procedure TfrmMain.SetViewTree(const aFactory: TFunc<TwbConflictTree>);
+begin
+  FreeAndNil(ViewTree);
+  ViewRootDatas := nil;
+  ViewTreeFactory := aFactory;
+  ViewTree := aFactory();
+  ViewRootDatas := ViewTree.Root.Datas;
+end;
+
+procedure TfrmMain.ClearViewTree;
+begin
+  FreeAndNil(ViewTree);
+  ViewRootDatas := nil;
+  ViewTreeFactory := nil;
+end;
+
+procedure TfrmMain.BuildViewTree;
+begin
+  vstView.RootNodeCount := ViewTree.Root.ChildCount;
+  ViewTree.Resolve(HideNoConflict);
+  ApplyViewVisibility(vstView.RootNode);
+  FindViewFocusedNode;
+end;
+
+procedure TfrmMain.ApplyViewVisibility(aNode: PVirtualNode);
+begin
+  var lNode := vstView.GetFirstChild(aNode);
+  while Assigned(lNode) do begin
+    vstView.IsVisible[lNode] := ViewRow(lNode).Visible;
+    ApplyViewVisibility(lNode);
+    lNode := vstView.GetNextSibling(lNode);
+  end;
+end;
+
+procedure TfrmMain.FindViewFocusedNode;
+var
+  lColumn : Integer;
+  lPath   : TArray<Integer>;
+begin
+  if not Assigned(ViewFocusedElement) or Assigned(NodeForViewFocusedElement) then
+    Exit;
+  var lRow := ViewTree.NodeFor(ViewFocusedElement, lColumn);
+  if not Assigned(lRow) or not Assigned(lRow.Parent) then
+    Exit;
+  while Assigned(lRow.Parent) do begin
+    lPath := [lRow.Index] + lPath;
+    lRow := lRow.Parent;
+  end;
+  var lNode := vstView.RootNode;
+  for var lIndex in lPath do begin
+    lNode := vstView.GetFirstChild(lNode);
+    while Assigned(lNode) and (Integer(lNode.Index) <> lIndex) do
+      lNode := vstView.GetNextSibling(lNode);
+    if not Assigned(lNode) then
+      Exit;
+  end;
+  NodeForViewFocusedElement := lNode;
+  ColumnForViewFocusedElement := Succ(lColumn);
+end;
+
 procedure TfrmMain.ResetActiveTree;
 var
   OffsetXY                    : TPoint;
-  RootNodeCount               : Integer;
   MainRecord                  : IwbMainRecord;
   Column                      : TColumnIndex;
   Node                        : PVirtualNode;
@@ -15250,7 +15054,7 @@ begin
         r := vstView.GetDisplayRect(Node, Column, False);
         if not Assigned(ViewFocusedElement) then
           if (Column > 0) and (Pred(Column) <= High(ActiveRecords)) then begin
-            NodeDatas := vstView.GetNodeData(Node);
+            NodeDatas := ViewCells(Node);
             ViewFocusedElement := NodeDatas[Pred(Column)].Element;
             EditFocusedViewElement := False;
           end;
@@ -15264,10 +15068,9 @@ begin
         DoSetActiveRecord(MainRecord);
       end
       else if Length(ActiveRecords) > 0 then begin
-        RootNodeCount := vstView.RootNodeCount;
         vstView.Clear;
-        vstView.RootNodeCount := RootNodeCount;
-        InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+        SetViewTree(ViewTreeFactory);
+        BuildViewTree;
         ExpandView;
       end;
       Containers := nil;
@@ -15847,8 +15650,7 @@ begin
     try
       ClearReferencedByListData;
       vstView.Clear;
-      vstView.NodeDataSize := 0;
-      SetLength(ActiveRecords, 0);
+      ClearViewTree;
       ActiveMaster := nil;
       ActiveIndex := NoColumn;
       ActiveContainer := aContainer;
@@ -15857,13 +15659,27 @@ begin
         bnPinned.Enabled := True;
         ActiveMaster := nil;
 
-        if xeContext.LoaderDone then begin
-          ActiveRecords := NodeDatasForContainer(ActiveContainer);
-        end else begin
-          SetLength(ActiveRecords, 1);
-          ActiveRecords[0].Element := ActiveContainer;
-          ActiveRecords[0].Container := ActiveContainer as IwbContainerElementRef;
-        end;
+        var lContainer := ActiveContainer;
+        if xeContext.LoaderDone then
+          SetViewTree(
+            function: TwbConflictTree
+            begin
+              Result := TwbConflictTree.CreateForContainer(ConflictView, lContainer, Files,
+                procedure(const aMessage: string)
+                begin
+                  PostAddMessage(aMessage);
+                end);
+            end)
+        else
+          SetViewTree(
+            function: TwbConflictTree
+            begin
+              Result := TwbConflictTree.CreateForElement(ConflictView, lContainer,
+                procedure(const aMessage: string)
+                begin
+                  PostAddMessage(aMessage);
+                end);
+            end);
 
         vstView.ShowHint := True;
         vstView.Header.Options := vstView.Header.Options + [hoShowHint];
@@ -15904,12 +15720,7 @@ begin
             EndUpdate;
           end;
         end;
-        vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
-        if Supports(ActiveContainer.Def, IwbStructDef) then
-          vstView.RootNodeCount := (ActiveContainer.Def as IwbStructDef).MemberCount + ActiveContainer.AdditionalElementCount
-        else
-          vstView.RootNodeCount := 1;
-        InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+        BuildViewTree;
         ExpandView;
         UpdateColumnWidths;
         if pgMain.ActivePage <> tbsReferencedBy then
@@ -15989,18 +15800,21 @@ begin
     try
       lvReferencedBy.Items.Clear;
       vstView.Clear;
-      vstView.NodeDataSize := 0;
-      SetLength(ActiveRecords, 0);
+      ClearViewTree;
       ActiveMaster := nil;
       ActiveRecord := nil;
       ActiveIndex := NoColumn;
 
-      SetLength(ActiveRecords, Length(aMainRecords));
-      for var i := Low(ActiveRecords) to High(ActiveRecords) do
-        with ActiveRecords[i] do begin
-          Element := aMainRecords[i];
-          Container := aMainRecords[i] as IwbContainerElementRef;
-        end;
+      var lRecords := aMainRecords;
+      SetViewTree(
+        function: TwbConflictTree
+        begin
+          Result := TwbConflictTree.CreateForRecords(ConflictView, lRecords,
+            procedure(const aMessage: string)
+            begin
+              PostAddMessage(aMessage);
+            end);
+        end);
 
       vstView.ShowHint := True;
       vstView.Header.Options := vstView.Header.Options + [hoShowHint];
@@ -16039,10 +15853,7 @@ begin
         end;
       end;
 
-      vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
-      if Assigned(aMainRecords[0].Def) then
-        vstView.RootNodeCount := (aMainRecords[0].Def as IwbRecordDef).MemberCount + aMainRecords[0].AdditionalElementCount;
-      InitConflictStatus(vstView.RootNode, False, @ActiveRecords[0]);
+      BuildViewTree;
       ExpandView;
       UpdateColumnWidths;
     finally
@@ -16277,8 +16088,7 @@ begin
 
       ClearReferencedByListData;
       vstView.Clear;
-      vstView.NodeDataSize := 0;
-      SetLength(ActiveRecords, 0);
+      ClearViewTree;
       ActiveMaster := nil;
       ActiveIndex := NoColumn;
       ActiveRecord := aMainRecord;
@@ -16293,13 +16103,27 @@ begin
         else
           ActiveMaster := ActiveRecord;
 
-        if xeContext.LoaderDone then begin
-          ActiveRecords := NodeDatasForMainRecord(ActiveRecord);
-        end else begin
-          SetLength(ActiveRecords, 1);
-          ActiveRecords[0].Element := ActiveRecord;
-          ActiveRecords[0].Container := ActiveRecord as IwbContainerElementRef;
-        end;
+        var lRecord := ActiveRecord;
+        if xeContext.LoaderDone then
+          SetViewTree(
+            function: TwbConflictTree
+            begin
+              Result := TwbConflictTree.CreateForMainRecord(ConflictView, lRecord, Files,
+                procedure(const aMessage: string)
+                begin
+                  PostAddMessage(aMessage);
+                end);
+            end)
+        else
+          SetViewTree(
+            function: TwbConflictTree
+            begin
+              Result := TwbConflictTree.CreateForElement(ConflictView, lRecord,
+                procedure(const aMessage: string)
+                begin
+                  PostAddMessage(aMessage);
+                end);
+            end);
 
         vstView.ShowHint := True;
         vstView.Header.Options := vstView.Header.Options + [hoShowHint];
@@ -16346,10 +16170,8 @@ begin
             EndUpdate;
           end;
         end;
-        vstView.NodeDataSize := SizeOf(TViewNodeData) * Length(ActiveRecords);
         if Assigned(ActiveMaster) and Assigned(ActiveMaster.Def) then begin
-          vstView.RootNodeCount := (ActiveMaster.Def as IwbRecordDef).MemberCount + ActiveMaster.AdditionalElementCount;
-          InitConflictStatus(vstView.RootNode, ActiveMaster.IsInjected and not ((ActiveMaster.Signature = 'GMST') or (ActiveMaster.Signature = 'DFOB')), @ActiveRecords[0]);
+          BuildViewTree;
           ExpandView;
         end;
 
@@ -17474,7 +17296,7 @@ var
   NodeDatas                   : PViewNodeDatas;
   Factor                      : Double;
 begin
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   Dec(Column);
   if Column > High(ActiveRecords) then
     Column := High(ActiveRecords);
@@ -17509,7 +17331,7 @@ procedure TfrmMain.vstViewBeforeItemErase(Sender: TBaseVirtualTree;
 var
   NodeDatas                   : PViewNodeDatas;
 begin
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if NodeDatas[0].ConflictAll >= caNoConflict then
     ItemColor := wbLighter(ConflictAllToColor(NodeDatas[0].ConflictAll), 0.85)
   else
@@ -17536,7 +17358,7 @@ begin
   if (HotColumn < Low(ActiveRecords)) or (HotColumn > High(ActiveRecords)) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(HotNode);
+  NodeDatas := ViewCells(HotNode);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -17566,7 +17388,7 @@ begin
   if (Pred(vstView.HotColumn) < Low(ActiveRecords)) or (Pred(vstView.HotColumn) > High(ActiveRecords)) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstView.HotNode);
+  NodeDatas := ViewCells(vstView.HotNode);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -17595,7 +17417,7 @@ begin
 
   Shift := GetKeyState(VK_CONTROL) < 0;
 
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
   for i := Low(ActiveRecords) to High(ActiveRecords) do
@@ -17652,7 +17474,7 @@ begin
   if (Column < Low(ActiveRecords)) or (Column > High(ActiveRecords)) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -17800,7 +17622,7 @@ begin
     Exit;
   end;
 
-  var NodeDatas : PViewNodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  var NodeDatas : PViewNodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then begin
 
     var ViewFocusedElement: IwbElement;
@@ -17859,7 +17681,7 @@ begin
   Dec(Column);
   if Column > High(ActiveRecords) then
     Exit;
-  NodeDatas := vstView.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   Allowed := Assigned(NodeDatas[Column].Element);
 end;
 
@@ -17942,7 +17764,7 @@ begin
     end;
 
     if DefaultDraw then begin
-      var NodeDatas : PViewNodeDatas := vstView.GetNodeData(Node);
+      var NodeDatas : PViewNodeDatas := ViewCells(Node);
       with NodeDatas[Column] do
         if Assigned(Element) and (dfHideText in Element.Def.DefFlags) then
           DefaultDraw := False;
@@ -17964,7 +17786,7 @@ begin
   if lColumn > High(ActiveRecords) then
     Exit;
 
-  var NodeDatas: PViewNodeDatas := vstView.GetNodeData(Node);
+  var NodeDatas: PViewNodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -18003,7 +17825,7 @@ begin
       if EditFocusedViewElement then
         Exit;
       if lAllowed then begin
-        NodeDatas := vstView.GetNodeData(lChildNode);
+        NodeDatas := ViewCells(lChildNode);
         if not Assigned(NodeDatas) then
           Exit;
 
@@ -18060,7 +17882,7 @@ begin
 
   Shift := GetKeyState(VK_CONTROL) < 0;
 
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
   for i := Low(ActiveRecords) to High(ActiveRecords) do
@@ -18103,7 +17925,7 @@ begin
   if (Column < Low(ActiveRecords)) or (Column > High(ActiveRecords)) then
     Exit;
 
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -18136,17 +17958,7 @@ end;
 
 procedure TfrmMain.vstViewFreeNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
-var
-  NodeDatas                   : PViewNodeDatas;
-  i                           : integer;
 begin
-  NodeDatas := Sender.GetNodeData(Node);
-
-  for i := Low(ActiveRecords) to High(ActiveRecords) do begin
-    NodeDatas[i].Element := nil;
-    NodeDatas[i].Container := nil;
-    NodeDatas[i].RowElements := nil;
-  end;
 end;
 
 procedure TfrmMain.vstViewGetEditText(Sender: TBaseVirtualTree;
@@ -18162,7 +17974,7 @@ begin
   if Column > High(ActiveRecords) then
     Exit;
 
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if not Assigned(NodeDatas) then
     Exit;
 
@@ -18214,7 +18026,7 @@ var
   FocusedColumn: TColumnIndex;
 begin
   CellText := '';
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
 
   if Pred(Column) > High(ActiveRecords) then
     Exit;
@@ -18267,7 +18079,7 @@ begin
     end
   end else if TextType = ttNormal then
     if Column < 1 then begin
-      NodeDatas := Sender.GetNodeData(Node.Parent);
+      NodeDatas := ViewCells(Node.Parent);
       if not Assigned(NodeDatas) then
         NodeDatas := @ActiveRecords[0];
       for i := Low(ActiveRecords) to High(ActiveRecords) do begin
@@ -18438,37 +18250,23 @@ end;
 
 procedure TfrmMain.vstViewInitChildren(Sender: TBaseVirtualTree; Node: PVirtualNode; var ChildCount: Cardinal);
 begin
-  InitChildren(Sender.GetNodeData(Node), Length(ActiveRecords), ChildCount, ConflictView,
-    procedure(const aMessage: string)
-    begin
-      PostAddMessage(aMessage);
-    end);
+  ChildCount := ViewRow(Node).ChildCount;
 end;
 
 procedure TfrmMain.vstViewInitNode(Sender: TBaseVirtualTree; ParentNode,
   Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
 var
-  NodeDatas                   : PViewNodeDatas;
-  ParentDatas                 : PViewNodeDatas;
-  States                      : TwbConflictNodeStates;
+  Row                         : TwbConflictTreeNode;
 begin
-  NodeDatas := Sender.GetNodeData(Node);
-  ParentDatas := Sender.GetNodeData(ParentNode);
-  if not Assigned(ParentDatas) then
-    ParentDatas := @ActiveRecords[0];
-  InitNodes(NodeDatas, ParentDatas, Length(ActiveRecords), Node.Index, States,
-    procedure(aColumn: Integer; const aElement: IwbElement)
-    begin
-      if Assigned(ViewFocusedElement) and not Assigned(NodeForViewFocusedElement) then
-        if ViewFocusedElement.Equals(aElement) then begin
-          NodeForViewFocusedElement := Node;
-          ColumnForViewFocusedElement := Succ(aColumn);
-        end;
-    end);
+  if Assigned(ParentNode) then
+    Row := ViewRow(ParentNode).Children[Node.Index]
+  else
+    Row := ViewTree.Root.Children[Node.Index];
+  PPointer(Sender.GetNodeData(Node))^ := Row;
   InitialStates := [];
-  if cnsDisabled in States then
+  if cnsDisabled in Row.States then
     Include(InitialStates, ivsDisabled);
-  if cnsHasChildren in States then
+  if cnsHasChildren in Row.States then
     Include(InitialStates, ivsHasChildren);
 end;
 
@@ -18487,7 +18285,7 @@ begin
   if Column < Low(ActiveRecords) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(vstViewFocusedNode);
+  NodeDatas := ViewCells(vstViewFocusedNode);
   if Assigned(NodeDatas) then
     Element := NodeDatas[Column].Element;
 
@@ -18641,7 +18439,7 @@ procedure TfrmMain.vstViewMeasureTextWidth(Sender: TBaseVirtualTree; TargetCanva
 begin
   Dec(Column);
   if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
-    var NodeDatas : PViewNodeDatas := vstView.GetNodeData(Node);
+    var NodeDatas : PViewNodeDatas := ViewCells(Node);
     with NodeDatas[Column] do
       if Assigned(Element) and (dfHideText in Element.Def.DefFlags) then
         Extent := 0;
@@ -18665,7 +18463,7 @@ begin
   if Pred(Column) > High(ActiveRecords) then
     Exit;
 
-  NodeDatas := vstView.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   if Assigned(NodeDatas) then begin
     Element := NodeDatas[Pred(Column)].Element;
     if Assigned(Element) and Element.IsEditable then begin
@@ -18707,7 +18505,7 @@ var
   SortKeyThis                 : string;
   FocusedColumn               : TColumnIndex;
 begin
-  NodeDatas := Sender.GetNodeData(Node);
+  NodeDatas := ViewCells(Node);
   Dec(Column);
   if Column > High(ActiveRecords) then
     Exit;
@@ -18794,7 +18592,7 @@ begin
   Result := s;
   Dec(Column);
   if InRange(Column, Low(ActiveRecords), High(ActiveRecords)) then begin
-    var NodeDatas : PViewNodeDatas := vstView.GetNodeData(Node);
+    var NodeDatas : PViewNodeDatas := ViewCells(Node);
     with NodeDatas[Column] do
       if Assigned(Element) and (dfHideText in Element.Def.DefFlags) then
         Done := True;
@@ -21407,12 +21205,12 @@ var
     var lIndex := 0;
     while lIndex <= High(lNodes) do begin
       var lNode := lNodes[lIndex];
-      var lDatas: PViewNodeDatas := vstView.GetNodeData(lNode);
+      var lDatas: PViewNodeDatas := ViewCells(lNode);
       var lParent: PViewNodeDatas;
       if lNode.Parent = vstView.RootNode then
         lParent := @ActiveRecords[0]
       else
-        lParent := vstView.GetNodeData(lNode.Parent);
+        lParent := ViewCells(lNode.Parent);
       for var c := Low(ActiveRecords) to High(ActiveRecords) do begin
         var lElement := lDatas[c].Element;
         if not Assigned(lElement) and Assigned(lParent) then
@@ -21506,7 +21304,7 @@ var
           lTop := lTop.Parent;
         if Integer(lTop.Index) < lHeaderRows then
           Continue;
-        var lDatas: PViewNodeDatas := vstView.GetNodeData(lNode);
+        var lDatas: PViewNodeDatas := ViewCells(lNode);
         if not Assigned(lDatas[0].Element) then
           Continue;
         var lValue := lDatas[0].Element.EditValue;
@@ -21583,8 +21381,8 @@ begin
           Cells(@ActiveRecords[0]));
         for var lNode in vstView.Nodes(False) do
           lLines.Add(IntToStr(lEntry) + #9 + Path(lNode) + #9 +
-            wbNameConflictAll[PViewNodeDatas(vstView.GetNodeData(lNode))[0].ConflictAll] + #9 +
-            IfThen(vstView.IsVisible[lNode], 'V', 'h') + Cells(vstView.GetNodeData(lNode)));
+            wbNameConflictAll[PViewNodeDatas(ViewCells(lNode))[0].ConflictAll] + #9 +
+            IfThen(vstView.IsVisible[lNode], 'V', 'h') + Cells(ViewCells(lNode)));
         var lStale := False;
         for var i := Low(ActiveRecords) to High(ActiveRecords) do
           with ActiveRecords[i] do
@@ -21819,11 +21617,11 @@ begin
       lGapSource := nil;
       lParentDatas := nil;
       for var lNode in vstView.Nodes(False) do begin
-        lNodeDatas := vstView.GetNodeData(lNode);
+        lNodeDatas := ViewCells(lNode);
         if lNode.Parent = vstView.RootNode then
           lParentDatas := @ActiveRecords[0]
         else
-          lParentDatas := vstView.GetNodeData(lNode.Parent);
+          lParentDatas := ViewCells(lNode.Parent);
         if not Assigned(lNodeDatas) or not Assigned(lParentDatas) then
           Continue;
         if not (vnfIsAligned in lParentDatas[lColumn].ViewNodeFlags) or Assigned(lNodeDatas[lColumn].Element) or
