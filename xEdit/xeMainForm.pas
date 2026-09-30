@@ -21326,6 +21326,84 @@ var
     lLines.Add(Format('# floor %d'#9'fresh'#9'%s', [aEntry, RootLine]));
   end;
 
+  function Dominant(aBitmap: Vcl.Graphics.TBitmap; aLeft, aRight: Integer): string;
+  begin
+    var lCounts := TDictionary<TColor, Integer>.Create;
+    try
+      var lTotal := 0;
+      for var y := 2 to aBitmap.Height - 3 do
+        for var x := Max(aLeft, 0) to Min(aRight, aBitmap.Width - 1) do begin
+          var lColor := aBitmap.Canvas.Pixels[x, y];
+          var lCount := 0;
+          lCounts.TryGetValue(lColor, lCount);
+          lCounts.AddOrSetValue(lColor, lCount + 1);
+          Inc(lTotal);
+        end;
+      var lBest: TColor := clNone;
+      var lBestCount := 0;
+      var lSecond: TColor := clNone;
+      var lSecondCount := 0;
+      for var lPair in lCounts do
+        if lPair.Value > lBestCount then begin
+          lSecond := lBest;
+          lSecondCount := lBestCount;
+          lBest := lPair.Key;
+          lBestCount := lPair.Value;
+        end else if lPair.Value > lSecondCount then begin
+          lSecond := lPair.Key;
+          lSecondCount := lPair.Value;
+        end;
+      if lTotal = 0 then
+        Result := 'empty'
+      else
+        Result := Format('%.6x %d%% / %.6x %d%%', [ColorToRGB(lBest), lBestCount * 100 div lTotal, ColorToRGB(lSecond),
+          lSecondCount * 100 div lTotal]);
+    finally
+      lCounts.Free;
+    end;
+  end;
+
+  function PaintHeader(const aMode: string): string;
+  begin
+    var lColumns := vstView.Header.Columns;
+    var lBitmap := Vcl.Graphics.TBitmap.Create;
+    try
+      lBitmap.PixelFormat := pf32bit;
+      lBitmap.SetSize(lColumns.TotalWidth + 40, vstView.Header.Height);
+      lBitmap.Canvas.Brush.Color := $FF00FF;
+      lBitmap.Canvas.FillRect(Rect(0, 0, lBitmap.Width, lBitmap.Height));
+      lColumns.PaintHeader(lBitmap.Canvas, Rect(0, 0, lBitmap.Width, lBitmap.Height), Point(0, 0));
+      Result := Format('%s'#9'themes %s'#9'background %.6x', [aMode, BoolToStr(tsUseThemes in vstView.TreeStates, True),
+        ColorToRGB(vstView.Header.Background)]);
+      for var c := 0 to Pred(lColumns.Count) do
+        Result := Result + #9 + Dominant(lBitmap, lColumns[c].Left + 3, lColumns[c].Left + lColumns[c].Width - 4);
+      Result := Result + #9'tail ' + Dominant(lBitmap, lColumns.TotalWidth + 3, lBitmap.Width - 4);
+    finally
+      lBitmap.Free;
+    end;
+  end;
+
+  procedure HeaderProbe(aEntry: Integer);
+  begin
+    var lExpected := 'none';
+    if ActiveRecords[0].ConflictAll >= caNoConflict then
+      lExpected := Format('%.6x', [ColorToRGB(wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85))]);
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      lExpected := lExpected + Format(' | %s text %.6x', [wbNameConflictThis[ActiveRecords[i].ConflictThis],
+        ColorToRGB(wbDarker(ConflictThisToColor(ActiveRecords[i].ConflictThis)))]);
+    lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
+      [aEntry, wbNameConflictAll[ActiveRecords[0].ConflictAll], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('as is')]));
+    var lOptions := vstView.TreeOptions.PaintOptions;
+    vstView.TreeOptions.PaintOptions := lOptions - [toThemeAware];
+    try
+      lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
+        [aEntry, wbNameConflictAll[ActiveRecords[0].ConflictAll], lExpected, TStyleManager.ActiveStyle.Name,
+         PaintHeader('unthemed')]));
+    finally
+      vstView.TreeOptions.PaintOptions := lOptions;
+    end;
+  end;
+
 begin
   lLines := TStringList.Create;
   lList := TStringList.Create;
@@ -21391,6 +21469,8 @@ begin
               lStale := True;
         lLines.Add(Format('# stale %d'#9'%s', [lEntry, BoolToStr(lStale, True)]));
         Collapsed(lEntry);
+        if xeTestViewTreeHeader then
+          HeaderProbe(lEntry);
         if xeTestViewTreeFocus > 0 then
           FocusProbe(lEntry, lRecords);
         if xeTestViewTreeFloor and (Length(lRecords) > 1) then
