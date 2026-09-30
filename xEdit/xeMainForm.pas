@@ -15040,12 +15040,18 @@ begin
   FreeAndNil(ViewTree);
   ViewRootDatas := nil;
   ViewTreeFactory := nil;
+  if not (csDestroying in ComponentState) then
+    vstView.Header.Background := clBtnFace;
 end;
 
 procedure TfrmMain.BuildViewTree;
 begin
   vstView.RootNodeCount := ViewTree.Root.ChildCount;
   ViewTree.Resolve(HideNoConflict);
+  if (Length(ActiveRecords) > 0) and (ActiveRecords[0].ConflictAll >= caNoConflict) then
+    vstView.Header.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85)
+  else
+    vstView.Header.Background := clBtnFace;
   ApplyViewVisibility(vstView.RootNode);
   FindViewFocusedNode;
 end;
@@ -18307,10 +18313,6 @@ begin
         Style := Style - [fsUnderline];
     end;
 
-    if ActiveRecords[0].ConflictAll >= caNoConflict then
-      Sender.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85)
-    else
-      Sender.Background := clBtnFace;
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
     Sender.Font.Color := wbDarker(ConflictThisToColor(
       ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis));
