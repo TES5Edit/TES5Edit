@@ -21385,6 +21385,8 @@ var
         DoSetActiveRecord(aRecords[0], True)
       else
         DoSetActiveRecord(aRecords);
+      if xeTestViewTreeReset then
+        ResetActiveTree;
     finally
       xeContext.LoaderDone := lLoaderDone;
     end;
@@ -21443,8 +21445,8 @@ begin
     lLines.Add('# xEdit view tree probe');
     lLines.Add('# ' + xeApplicationTitle);
     lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide + ', hide no conflict = ' +
-      BoolToStr(xeTestViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestViewTreeLoading, True) + ', focus = ' +
-      IntToStr(xeTestViewTreeFocus));
+      BoolToStr(xeTestViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestViewTreeLoading, True) + ', reset = ' +
+      BoolToStr(xeTestViewTreeReset, True) + ', focus = ' + IntToStr(xeTestViewTreeFocus));
     lLines.Add('# Columns, tab separated: entry / row path / row ConflictAll / visible / per record column: element:ConflictThis:flags');
     CheckResult := 2;
     try
@@ -21486,6 +21488,13 @@ begin
           lLines.Add(IntToStr(lEntry) + #9 + Path(lNode) + #9 +
             wbNameConflictAll[PViewNodeDatas(vstView.GetNodeData(lNode))[0].ConflictAll] + #9 +
             IfThen(vstView.IsVisible[lNode], 'V', 'h') + Cells(vstView.GetNodeData(lNode)));
+        var lStale := False;
+        for var i := Low(ActiveRecords) to High(ActiveRecords) do
+          with ActiveRecords[i] do
+            if Assigned(Element) and (ElementGen <> Element.ElementGeneration) or
+               Assigned(Container) and (ContainerGen <> Container.ElementGeneration) then
+              lStale := True;
+        lLines.Add(Format('# stale %d'#9'%s', [lEntry, BoolToStr(lStale, True)]));
         if xeTestViewTreeFocus > 0 then
           FocusProbe(lEntry, lRecords);
       end;

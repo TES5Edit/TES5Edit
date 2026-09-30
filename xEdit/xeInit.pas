@@ -76,6 +76,7 @@ var
   xeTestViewTreeHide       : string;
   xeTestViewTreeHideNoConflict : Boolean;
   xeTestViewTreeLoading    : Boolean;
+  xeTestViewTreeReset      : Boolean;
   xeTestViewTreeFocus      : Integer;
   xeTestOptions            : Boolean;
   xeTestOptionsFile        : string;
@@ -995,6 +996,7 @@ begin
       wbFindCmdLineParam('testviewtreehide', xeTestViewTreeHide);
       xeTestViewTreeHideNoConflict := FindCmdLineSwitch('testviewtreehidenoconflict');
       xeTestViewTreeLoading := FindCmdLineSwitch('testviewtreeloading');
+      xeTestViewTreeReset := FindCmdLineSwitch('testviewtreereset');
       var lFocus: string;
       if wbFindCmdLineParam('testviewtreefocus', lFocus) then
         xeTestViewTreeFocus := StrToIntDef(lFocus, 0);
