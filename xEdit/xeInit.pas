@@ -114,6 +114,7 @@ var
   xeTestFilterPreset       : string;
   xeTestFilterByValue      : string;
   xeTestFilterRemove       : string;
+  xeTestFilterImages       : Integer;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -1085,6 +1086,8 @@ begin
       wbFindCmdLineParam('testfilterpreset', xeTestFilterPreset);
       wbFindCmdLineParam('testfilterbyvalue', xeTestFilterByValue);
       wbFindCmdLineParam('testfilterremove', xeTestFilterRemove);
+      if wbFindCmdLineParam('testfilterimages', s) then
+        xeTestFilterImages := StrToIntDef(s, 0);
       if (xeTestFilterFile = '') or
          not ((xeTestFilterPreset = '') or SameText(xeTestFilterPreset, 'cleaning') or SameText(xeTestFilterPreset, 'onlyone') or
               SameText(xeTestFilterPreset, 'conflicts')) then begin

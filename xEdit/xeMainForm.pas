@@ -913,6 +913,7 @@ type
     procedure DoTestMerge;
     procedure DoTestHide;
     procedure DoTestFilter;
+    procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
 
     function ViewName(const aElement: IwbElement; const aName: string): string;
@@ -22867,6 +22868,8 @@ begin
         lNode := vstNav.GetNext(lNode);
       end;
       lLines.Add('# records left: ' + IntToStr(lCount));
+      if xeTestFilterImages > 0 then
+        TestFilterImages(lLines);
       if xeTestFilterRemove <> '' then begin
         xeContext.Settings.DontSave := True;
         EditWarnOk := True;
@@ -22913,6 +22916,149 @@ begin
     lLines.Free;
     if xeAutoExit then
       tmrShutdown.Enabled := True;
+  end;
+end;
+
+procedure TfrmMain.TestFilterImages(aLines: TStrings);
+var
+  lNode  : PVirtualNode;
+  lData  : PNavNodeData;
+  lRow   : TRect;
+  lBelow : TRect;
+  lAsIs  : Vcl.Graphics.TBitmap;
+
+  function Grab: Vcl.Graphics.TBitmap;
+  begin
+    Result := Vcl.Graphics.TBitmap.Create;
+    Result.PixelFormat := pf32bit;
+    Result.SetSize(vstNav.ClientWidth, vstNav.ClientHeight);
+    var lDC := GetDC(vstNav.Handle);
+    try
+      BitBlt(Result.Canvas.Handle, 0, 0, Result.Width, Result.Height, lDC, 0, 0, SRCCOPY);
+    finally
+      ReleaseDC(vstNav.Handle, lDC);
+    end;
+  end;
+
+  function Pixel(aImage: Vcl.Graphics.TBitmap; x, y: Integer): Cardinal;
+  begin
+    Result := PCardinal(PByte(aImage.ScanLine[y]) + x * 4)^ and $FFFFFF;
+  end;
+
+  procedure Step(const aTag: string);
+  begin
+    DoProcessMessages;
+    Sleep(100);
+    DoProcessMessages;
+    var lImage := Grab;
+    try
+      lImage.SaveToFile(ChangeFileExt(xeTestFilterFile, '.' + aTag + '.bmp'));
+      if not Assigned(lAsIs) then begin
+        lAsIs := lImage;
+        lImage := nil;
+        var lMarks := 0;
+        for var y := 0 to Pred(lRow.Height) do
+          for var x := 0 to Pred(lAsIs.Width) do
+            if Pixel(lAsIs, x, lRow.Top + y) <> Pixel(lAsIs, x, lBelow.Top + y) then
+              Inc(lMarks);
+        aLines.Add(Format('# image %s: the last row differs from the empty row below it on %d pixels', [aTag, lMarks]));
+      end else begin
+        var lMarks := 0;
+        var lCopied := 0;
+        var lChanged := 0;
+        for var y := 0 to Pred(lRow.Height) do
+          for var x := 0 to Pred(lAsIs.Width) do begin
+            var lMark := Pixel(lAsIs, x, lRow.Top + y);
+            var lEmpty := Pixel(lAsIs, x, lBelow.Top + y);
+            var lNow := Pixel(lImage, x, lBelow.Top + y);
+            if lNow <> lEmpty then
+              Inc(lChanged);
+            if lMark <> lEmpty then begin
+              Inc(lMarks);
+              if lNow = lMark then
+                Inc(lCopied);
+            end;
+          end;
+        aLines.Add(Format('# image %s: the row below the last node changed on %d pixels; it copies the last row on %d of its %d marks',
+          [aTag, lChanged, lCopied, lMarks]));
+      end;
+    finally
+      lImage.Free;
+    end;
+  end;
+
+begin
+  lAsIs := nil;
+  try
+    lNode := vstNav.GetLastVisible;
+    if not Assigned(lNode) then begin
+      aLines.Add('# image: no visible node');
+      Exit;
+    end;
+    vstNav.ScrollIntoView(lNode, False);
+    DoProcessMessages;
+    lRow := vstNav.GetDisplayRect(lNode, NoColumn, False);
+    lBelow := lRow;
+    OffsetRect(lBelow, 0, lRow.Height);
+    lBelow.Left := 0;
+    lBelow.Right := vstNav.ClientWidth;
+    aLines.Add(Format('# image: last row %d..%d, client %d x %d, style %s', [lRow.Top, lRow.Bottom, vstNav.ClientWidth,
+      vstNav.ClientHeight, TStyleManager.ActiveStyle.Name]));
+    if lBelow.Bottom > vstNav.ClientHeight then begin
+      aLines.Add('# image: no empty row below the last node');
+      Exit;
+    end;
+    Step('asis');
+
+    InvalidateRect(vstNav.Handle, @lBelow, False);
+    UpdateWindow(vstNav.Handle);
+    Step('invalidrow');
+
+    var lStrip := lBelow;
+    lStrip.Left := lStrip.Right - lStrip.Width div 4;
+    InvalidateRect(vstNav.Handle, @lStrip, False);
+    UpdateWindow(vstNav.Handle);
+    Step('invalidstrip');
+
+    for var i := 0 to 40 do begin
+      var lY := lBelow.Top + lBelow.Height div 2 + (i mod 3) * lRow.Height;
+      SendMessage(vstNav.Handle, WM_MOUSEMOVE, 0, MakeLParam(10 + i * (vstNav.ClientWidth - 20) div 40, lY));
+      DoProcessMessages;
+    end;
+    Step('mousebelow');
+
+    for var i := 0 to 40 do begin
+      var lY := lRow.Top + lRow.Height div 2;
+      if Odd(i) then
+        lY := lBelow.Top + lBelow.Height div 2;
+      SendMessage(vstNav.Handle, WM_MOUSEMOVE, 0, MakeLParam(20 + i * 10, lY));
+      DoProcessMessages;
+    end;
+    Step('mouseacross');
+
+    for var c := 0 to Pred(vstNav.Header.Columns.Count) do begin
+      vstNav.InvalidateColumn(c);
+      UpdateWindow(vstNav.Handle);
+      Step('column' + IntToStr(c));
+    end;
+
+    vstNav.Invalidate;
+    UpdateWindow(vstNav.Handle);
+    Step('whole');
+  finally
+    lAsIs.Free;
+  end;
+
+  while Assigned(lNode) do begin
+    lData := vstNav.GetNodeData(lNode);
+    if Assigned(lData) and Assigned(lData.Element) then
+      aLines.Add(Format('# last visible: %s (level %d, index %d, verdict %s / %s)', [lData.Element.Name,
+        vstNav.GetNodeLevel(lNode), lNode.Index, wbNameConflictAll[lData.ConflictAll], wbNameConflictThis[lData.ConflictThis]]))
+    else
+      aLines.Add(Format('# last visible: (no element) (level %d, index %d)', [vstNav.GetNodeLevel(lNode), lNode.Index]));
+    lNode := lNode.Parent;
+    if lNode = vstNav.RootNode then
+      Break;
   end;
 end;
 
