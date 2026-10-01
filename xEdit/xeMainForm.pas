@@ -21593,6 +21593,42 @@ var
     Build(aRecords);
   end;
 
+  procedure RemoveProbe(aEntry: Integer);
+  var
+    lRecord : IwbMainRecord;
+  begin
+    lRecord := ActiveRecord;
+    if not Assigned(lRecord) and (Length(ActiveRecords) > 0) then
+      Supports(ActiveRecords[High(ActiveRecords)].Element, IwbMainRecord, lRecord);
+    if not Assigned(lRecord) or not lRecord.IsRemovable then begin
+      lLines.Add(Format('# remove %d'#9'skipped: no removable record shown', [aEntry]));
+      Exit;
+    end;
+    var lName := lRecord.Name;
+    lRecord.Remove;
+    lLines.Add(Format('# remove %d'#9'%s'#9'file %s'#9'stale %s'#9'due %s', [aEntry, lName,
+      IfThen(Assigned(lRecord._File), 'kept', 'nil'), BoolToStr(Assigned(ViewTree) and ViewTree.IsStale, True),
+      BoolToStr(ViewRefreshDue, True)]));
+    try
+      ResetActiveTree;
+      var lShown: string := '-';
+      if Assigned(ActiveRecord) then
+        if ActiveRecord.Equals(lRecord) then
+          lShown := 'the removed record'
+        else
+          lShown := ActiveRecord.Name;
+      var lRemovedColumn := False;
+      for var i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lRecord) then
+          lRemovedColumn := True;
+      lLines.Add(Format('# remove %d'#9'reset'#9'shown %s'#9'%d columns'#9'removed record in a column %s',
+        [aEntry, lShown, Length(ActiveRecords), BoolToStr(lRemovedColumn, True)]));
+    except
+      on E: Exception do
+        lLines.Add(Format('# remove %d'#9'reset'#9'%s: %s', [aEntry, E.ClassName, E.Message]));
+    end;
+  end;
+
   procedure FloorProbe(aEntry: Integer; const aRecords: TDynMainRecords);
   begin
     var lHeaderRows := ActiveRecords[0].Container.AdditionalElementCount;
@@ -22023,7 +22059,7 @@ begin
         xeContext.Settings.TranslationMode := True;
       if xeTestViewTreeFloor then
         xeContext.Settings.DontSave := True;
-      if xeTestViewTreeModal or xeTestViewTreeIdle then begin
+      if xeTestViewTreeModal or xeTestViewTreeIdle or xeTestViewTreeRemove then begin
         xeContext.Settings.DontSave := True;
         TestViewModalAnswer := TTimer.Create(Self);
         TestViewModalAnswer.Enabled := False;
@@ -22080,6 +22116,8 @@ begin
           FloorProbe(lEntry, lRecords);
         if xeTestViewTreeTime > 0 then
           TimeProbe(lEntry, lRecords);
+        if xeTestViewTreeRemove then
+          RemoveProbe(lEntry);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
       if xeTestViewTreeHeader then
