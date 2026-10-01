@@ -15128,6 +15128,9 @@ var
   i                           : Integer;
   sw                          : TStopwatch;
   Containers                  : TwbContainerElementRefs;
+  ShownRecord                 : IwbMainRecord;
+  KeptRecords                 : TDynMainRecords;
+  ShownRemoved                : Boolean;
 begin
   sw := TStopwatch.StartNew;
   LockWindowUpdate(vstView.Handle);
@@ -15156,11 +15159,25 @@ begin
       NodeForViewFocusedElement := nil;
 
       Containers := CollectViewContainers;
+      KeptRecords := nil;
+      ShownRemoved := False;
+      for i := Low(ActiveRecords) to High(ActiveRecords) do
+        if Supports(ActiveRecords[i].Element, IwbMainRecord, ShownRecord) then
+          if Assigned(ShownRecord._File) then
+            KeptRecords := KeptRecords + [ShownRecord]
+          else
+            ShownRemoved := True;
+      ShownRecord := nil;
       if Assigned(ActiveRecord) then begin
         MainRecord := ActiveRecord;
         DoSetActiveRecord(nil);
-        DoSetActiveRecord(MainRecord);
+        if Assigned(MainRecord._File) then
+          DoSetActiveRecord(MainRecord)
+        else if Length(KeptRecords) > 0 then
+          DoSetActiveRecord(KeptRecords[0]);
       end
+      else if ShownRemoved then
+        DoSetActiveRecord(KeptRecords)
       else if Length(ActiveRecords) > 0 then begin
         vstView.Clear;
         SetViewTree(ViewTreeFactory);
@@ -15168,6 +15185,7 @@ begin
         ExpandView;
       end;
       Containers := nil;
+      KeptRecords := nil;
 
       vstView.UpdateScrollBars(False);
       vstView.OffsetXY := OffsetXY;
