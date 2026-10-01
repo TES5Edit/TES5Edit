@@ -13843,8 +13843,8 @@ procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
 
   function ConflictSettings: string;
   begin
-    Result := Format('%d %d %d %d %d', [Ord(wbHideUnused), Ord(xeContext.Settings.HideIgnored),
-      Ord(xeContext.Settings.HideNeverShow), Ord(wbActorTemplateHide), Ord(wbSortFLST)]);
+    Result := Format('%d %d %d %d %d %d', [Ord(wbHideUnused), Ord(xeContext.Settings.HideIgnored),
+      Ord(xeContext.Settings.HideNeverShow), Ord(wbActorTemplateHide), Ord(wbSortFLST), Ord(ConflictView.AlignArrayElements)]);
   end;
 
 var
@@ -13963,7 +13963,7 @@ begin
     xeContext.GameDefObj.DefineOptions.Collapse := CollapseOptions;
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
     if ConflictSettings <> lConflictSettings then
-      ConflictView.RulesChanged;
+      ResetAllConflict;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
