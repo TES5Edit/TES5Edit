@@ -829,6 +829,9 @@ type
     TestOptionsToggleNeverShow : Boolean;
     TestOptionsDialogNeverShow : Boolean;
     TestOptionsToggleTemplate  : Boolean;
+    TestOptionsColourSet       : Boolean;
+    TestOptionsColourAll       : TConflictAll;
+    TestOptionsColourValue     : TColor;
 
     TestCopyIntoGapTimer     : TTimer;
 
@@ -22174,10 +22177,13 @@ end;
 
 procedure TfrmMain.TestOptionsRunTimer(Sender: TObject);
 const
-  cArms    : array[0..6] of string = ('unchanged', 'toggle', 'restore', 'toggle never show', 'restore never show',
-    'toggle template hide', 'restore template hide');
+  cArms    : array[0..8] of string = ('unchanged', 'toggle', 'restore', 'toggle never show', 'restore never show',
+    'toggle template hide', 'restore template hide', 'colour', 'restore colour');
   cVerdict : array[Boolean] of string = ('FAIL', 'PASS');
 var
+  lPathNode        : PVirtualNode;
+  lPathStale       : Integer;
+  lColourSaved     : TColor;
   lLines           : TStringList;
   lFailed          : Integer;
   lEpochBefore     : Cardinal;
@@ -22260,6 +22266,64 @@ var
     lNavRecords := nil;
   end;
 
+  procedure PathCheck(const aArm: string);
+  var
+    lData : PNavNodeData;
+    lBack : TColor;
+    lFont : TColor;
+  begin
+    var lPending := False;
+    var lRgn := CreateRectRgn(0, 0, 0, 0);
+    try
+      if GetUpdateRgn(vstNav.Handle, lRgn, False) > NULLREGION then
+        lPending := RectInRegion(lRgn, vstNav.GetDisplayRect(lPathNode, NoColumn, False));
+    finally
+      DeleteObject(lRgn);
+    end;
+    vstNav.Repaint;
+    lData := vstNav.GetNodeData(lPathNode);
+    if lData.ConflictAll >= caNoConflict then
+      lBack := wbLighter(ConflictAllToColor(lData.ConflictAll), 0.85)
+    else
+      lBack := vstNav.Color;
+    lFont := wbDarker(ConflictThisToColor(lData.ConflictThis));
+    var lStale := (lblPath.Color <> lBack) or (lblPath.Font.Color <> lFont);
+    if lStale then
+      Inc(lPathStale);
+    lLines.Add(Format('# path %s'#9'nav %s / %s'#9'label %s / %s'#9'expected %s / %s'#9'%s'#9'row repaint pending %s', [aArm,
+      wbNameConflictAll[lData.ConflictAll], wbNameConflictThis[lData.ConflictThis], ColorToString(lblPath.Color),
+      ColorToString(lblPath.Font.Color), ColorToString(lBack), ColorToString(lFont), IfThen(lStale, 'STALE', 'current'),
+      BoolToStr(lPending, True)]));
+  end;
+
+  procedure PathSelect;
+  begin
+    var lAt := Pos('@', xeTestOptionsPath);
+    if lAt < 2 then
+      raise Exception.Create('-testoptionspath: not <FormID>@<module>: ' + xeTestOptionsPath);
+    var lFormID := TwbFormID.FromStr(Copy(xeTestOptionsPath, 1, Pred(lAt)));
+    var lModule := Copy(xeTestOptionsPath, Succ(lAt), MaxInt);
+    var lRecord: IwbMainRecord := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, lModule) then
+        lRecord := Files[i].RecordByFormID[lFormID, True, True];
+    if not Assigned(lRecord) then
+      raise Exception.Create('-testoptionspath: no record ' + xeTestOptionsPath);
+    lPathNode := FindNodeForElement(lRecord);
+    if not Assigned(lPathNode) then
+      raise Exception.Create('-testoptionspath: no nav node for ' + lRecord.Name);
+    vstNav.ClearSelection;
+    vstNav.FocusedNode := lPathNode;
+    vstNav.Selected[lPathNode] := True;
+    vstNav.ScrollIntoView(lPathNode, True);
+    vstNav.Repaint;
+    vstNavChange(vstNav, lPathNode);
+    TestOptionsColourAll := PNavNodeData(vstNav.GetNodeData(lPathNode)).ConflictAll;
+    lColourSaved := wbColorConflictAll[TestOptionsColourAll];
+    lLines.Add('# path record' + #9 + lRecord.Name);
+    PathCheck('selected');
+  end;
+
 begin
   TestOptionsTimer.Enabled := False;
   lLines := TStringList.Create;
@@ -22269,11 +22333,24 @@ begin
     lLines.Add('# Columns, tab separated: arm, toggled, dialog shown, dialog align, epoch before, epoch after, align before, align after, ' +
       'dialog never show, never show before, never show after, verdict');
     lFailed := 0;
+    lPathNode := nil;
+    lPathStale := 0;
     try
+      if xeTestOptionsPath <> '' then
+        PathSelect;
       for var lArm := Low(cArms) to High(cArms) do begin
+        if (lArm in [7, 8]) and not Assigned(lPathNode) then
+          Continue;
         TestOptionsToggle := lArm in [1, 2];
         TestOptionsToggleNeverShow := lArm in [3, 4];
         TestOptionsToggleTemplate := lArm in [5, 6];
+        TestOptionsColourSet := lArm in [7, 8];
+        if lArm <> 7 then
+          TestOptionsColourValue := lColourSaved
+        else if lColourSaved = TColor($004080FF) then
+          TestOptionsColourValue := TColor($0080FF40)
+        else
+          TestOptionsColourValue := TColor($004080FF);
         TestOptionsShown := False;
         var lTemplateBefore := wbActorTemplateHide;
         lEpochBefore := ConflictView.Epoch;
@@ -22286,7 +22363,10 @@ begin
           mniNavOptionsClick(nil);
         finally
           TestOptionsAnswer.Enabled := False;
+          TestOptionsColourSet := False;
         end;
+        if Assigned(lPathNode) then
+          PathCheck(cArms[lArm]);
         if xeTestOptionsNav <> '' then
           NavAfter(cArms[lArm]);
         lEpochAfter := ConflictView.Epoch;
@@ -22310,6 +22390,8 @@ begin
           lEpochAfter, BoolToStr(lAlignBefore, True), BoolToStr(lAlignAfter, True), BoolToStr(lNeverShowBefore, True),
           BoolToStr(lNeverShowAfter, True), cVerdict[lPass]]));
       end;
+      if Assigned(lPathNode) then
+        lLines.Add(Format('# path stale %d', [lPathStale]));
       if xeTestOptionsNav <> '' then
         for var lReset := 0 to 1 do begin
           NavBefore;
@@ -22367,6 +22449,8 @@ begin
         lForm.cbHideNeverShow.Checked := not lForm.cbHideNeverShow.Checked;
       if TestOptionsToggleTemplate then
         lForm.cbActorTemplateHide.Checked := not lForm.cbActorTemplateHide.Checked;
+      if TestOptionsColourSet then
+        wbColorConflictAll[TestOptionsColourAll] := TestOptionsColourValue;
       lForm.ModalResult := mrOk;
       Exit;
     end;
