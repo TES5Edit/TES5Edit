@@ -1030,6 +1030,7 @@ type
     ViewTreeFactory: TFunc<TwbConflictTree>;
     ViewTreeGeneration: Cardinal;
     ViewRootDatas: TDynViewNodeDatas;
+    ViewHeaderConflictAll: TConflictAll;
     ActiveContainer: IwbDataContainer;
     ViewFocusedElement : IwbElement;
     EditAddedElement: Boolean;
@@ -15041,6 +15042,7 @@ begin
   FreeAndNil(ViewTree);
   ViewRootDatas := nil;
   ViewTreeFactory := nil;
+  ViewHeaderConflictAll := caUnknown;
   if not (csDestroying in ComponentState) then
     vstView.Header.Background := clBtnFace;
 end;
@@ -15049,8 +15051,11 @@ procedure TfrmMain.BuildViewTree;
 begin
   vstView.RootNodeCount := ViewTree.Root.ChildCount;
   ViewTree.Resolve(HideNoConflict);
+  ViewHeaderConflictAll := caUnknown;
   if (Length(ActiveRecords) > 0) and (ActiveRecords[0].ConflictAll >= caNoConflict) then
-    vstView.Header.Background := wbLighter(ConflictAllToColor(ActiveRecords[0].ConflictAll), 0.85)
+    ViewHeaderConflictAll := ActiveRecords[0].ConflictAll;
+  if ViewHeaderConflictAll >= caNoConflict then
+    vstView.Header.Background := wbLighter(ConflictAllToColor(ViewHeaderConflictAll), 0.85)
   else
     vstView.Header.Background := clBtnFace;
   ApplyViewVisibility(vstView.RootNode);
@@ -17357,8 +17362,28 @@ begin
 end;
 
 procedure TfrmMain.vstViewAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: THeaderPaintInfo; const Elements: THeaderPaintElements);
+var
+  lCanvas : TCanvas;
 begin
-  //...
+  lCanvas := PaintInfo.TargetCanvas;
+  lCanvas.Refresh;
+  if hpeBackground in Elements then begin
+    lCanvas.Brush.Color := Sender.Background;
+    lCanvas.FillRect(PaintInfo.PaintRectangle);
+    if Assigned(PaintInfo.Column) then begin
+      lCanvas.Pen.Color := wbLighter(ConflictAllToColor(ViewHeaderConflictAll), 0.6);
+      lCanvas.MoveTo(PaintInfo.PaintRectangle.Right - 1, PaintInfo.PaintRectangle.Top);
+      lCanvas.LineTo(PaintInfo.PaintRectangle.Right - 1, PaintInfo.PaintRectangle.Bottom);
+    end;
+  end;
+  if (hpeText in Elements) and Assigned(PaintInfo.Column) and (PaintInfo.Column.Index > 0) and
+    (PaintInfo.Column.Index <= Length(ActiveRecords)) then begin
+    var lRect := PaintInfo.TextRectangle;
+    var lText := PaintInfo.Column.Text;
+    lCanvas.Font.Color := wbDarker(ConflictThisToColor(ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis));
+    lCanvas.Brush.Style := bsClear;
+    lCanvas.TextRect(lRect, lText, [tfLeft, tfTop, tfNoPrefix, tfEndEllipsis, tfSingleLine]);
+  end;
 end;
 
 procedure TfrmMain.vstViewBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; const CellRect: TRect; var ContentRect: TRect);
@@ -18288,6 +18313,14 @@ end;
 procedure TfrmMain.vstViewHeaderDrawQueryElements(Sender: TVTHeader;
   var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
 begin
+  if (ViewHeaderConflictAll >= caNoConflict) and
+    ((tsUseThemes in vstView.TreeStates) or (TStyleManager.IsCustomStyleActive and (seClient in vstView.StyleElements))) then begin
+    Include(Elements, hpeBackground);
+    if Assigned(PaintInfo.Column) and (PaintInfo.Column.Index > 0) and (PaintInfo.Column.Index <= Length(ActiveRecords)) and
+      TStyleManager.IsCustomStyleActive and (seFont in vstView.StyleElements) then
+      Include(Elements, hpeText);
+  end;
+
   if Assigned(PaintInfo.Column) and
     (PaintInfo.Column.Index > 0) and
     (PaintInfo.Column.Index <= Length(ActiveRecords)) then begin
