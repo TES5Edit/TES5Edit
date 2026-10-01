@@ -16240,7 +16240,7 @@ begin
             EndUpdate;
           end;
         end;
-        if Assigned(ActiveMaster) and Assigned(ActiveMaster.Def) then begin
+        if Assigned(ActiveMaster) and (Assigned(ActiveMaster.Def) or xeContext.LoaderDone) then begin
           BuildViewTree;
           ExpandView;
         end;

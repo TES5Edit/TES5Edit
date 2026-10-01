@@ -98,9 +98,12 @@ type
     ctOnMessage      : TwbConflictMessageProc;
     ctRoot           : TwbConflictTreeNode;
     ctHideNoConflict : Boolean;
+    ctUndefinedChain : Boolean;
+    ctFiles          : TwbFiles;
     procedure Setup(aView: TwbConflictView; const aRootDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean;
       aRootCount: Integer; const aOnMessage: TwbConflictMessageProc);
     procedure ResolveNode(aNode: TwbConflictTreeNode);
+    procedure ResolveUndefinedChain;
   public
     constructor CreateForMainRecord(aView: TwbConflictView; const aMainRecord: IwbMainRecord; const aFiles: TwbFiles;
       const aOnMessage: TwbConflictMessageProc);
@@ -1699,6 +1702,10 @@ begin
     lCount := (lMaster.Def as IwbRecordDef).MemberCount + lMaster.AdditionalElementCount;
   Setup(aView, wbConflictNodeDatasForMainRecord(aMainRecord, aFiles, aView), False,
     lMaster.IsInjected and not ((lMaster.Signature = 'GMST') or (lMaster.Signature = 'DFOB')), lCount, aOnMessage);
+  if not Assigned(lMaster.Def) then begin
+    ctUndefinedChain := True;
+    ctFiles := aFiles;
+  end;
 end;
 
 constructor TwbConflictTree.CreateForRecords(aView: TwbConflictView; const aRecords: TDynMainRecords;
@@ -1819,7 +1826,10 @@ begin
   if not Assigned(ctView) then
     raise Exception.Create('The conflict view of this conflict tree has been freed');
   ctHideNoConflict := aHideNoConflict;
-  ResolveNode(ctRoot);
+  if ctUndefinedChain then
+    ResolveUndefinedChain
+  else
+    ResolveNode(ctRoot);
   for var i := Low(ctRoot.tnDatas) to High(ctRoot.tnDatas) do
     with ctRoot.tnDatas[i] do begin
       if Assigned(Element) then
@@ -1827,6 +1837,25 @@ begin
       if Assigned(Container) then
         ContainerGen := Container.ElementGeneration;
     end;
+end;
+
+procedure TwbConflictTree.ResolveUndefinedChain;
+var
+  lRecord       : IwbMainRecord;
+  lConflictAll  : TConflictAll;
+  lConflictThis : TConflictThis;
+  lChainAll     : TConflictAll;
+begin
+  lChainAll := caUnknown;
+  for var i := Low(ctRoot.tnDatas) to High(ctRoot.tnDatas) do
+    if Supports(ctRoot.tnDatas[i].Element, IwbMainRecord, lRecord) then begin
+      wbConflictLevelForMainRecord(lRecord, ctFiles, ctView, ctOnMessage, lConflictAll, lConflictThis);
+      ctRoot.tnDatas[i].ConflictThis := lConflictThis;
+      if lConflictAll > lChainAll then
+        lChainAll := lConflictAll;
+    end;
+  for var i := Low(ctRoot.tnDatas) to High(ctRoot.tnDatas) do
+    ctRoot.tnDatas[i].ConflictAll := lChainAll;
 end;
 
 procedure TwbConflictTree.ResolveNode(aNode: TwbConflictTreeNode);
