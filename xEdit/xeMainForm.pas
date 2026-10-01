@@ -832,6 +832,8 @@ type
     TestOptionsColourSet       : Boolean;
     TestOptionsColourAll       : TConflictAll;
     TestOptionsColourValue     : TColor;
+    TestOptionsCloseTimer      : TTimer;
+    TestOptionsClosePosted     : Boolean;
 
     TestCopyIntoGapTimer     : TTimer;
 
@@ -876,6 +878,7 @@ type
 
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
+    procedure TestOptionsCloseTimerTimer(Sender: TObject);
     procedure TestCopyIntoGapRunTimer(Sender: TObject);
     procedure TestDropMasterRunTimer(Sender: TObject);
     procedure TestDropMasterAnswerTimer(Sender: TObject);
@@ -22377,12 +22380,30 @@ begin
         lNeverShowBefore := xeContext.Settings.HideNeverShow;
         if xeTestOptionsNav <> '' then
           NavBefore;
+        if xeTestOptionsClose and (lArm = 1) then begin
+          System.SysUtils.DeleteFile(xeTestOptionsFile + '.progress');
+          TestOptionsClosePosted := False;
+          TestOptionsCloseTimer := TTimer.Create(Self);
+          TestOptionsCloseTimer.Interval := 1;
+          TestOptionsCloseTimer.OnTimer := TestOptionsCloseTimerTimer;
+        end;
         TestOptionsAnswer.Enabled := True;
         try
-          mniNavOptionsClick(nil);
+          try
+            mniNavOptionsClick(nil);
+            if Assigned(TestOptionsCloseTimer) then
+              TFile.AppendAllText(xeTestOptionsFile + '.progress', 'Options handler returned' + sLineBreak);
+          except
+            on E: Exception do begin
+              if Assigned(TestOptionsCloseTimer) then
+                TFile.AppendAllText(xeTestOptionsFile + '.progress', 'Options handler raised ' + E.ClassName + ': ' + E.Message + sLineBreak);
+              raise;
+            end;
+          end;
         finally
           TestOptionsAnswer.Enabled := False;
           TestOptionsColourSet := False;
+          FreeAndNil(TestOptionsCloseTimer);
         end;
         if Assigned(lPathNode) then
           PathCheck(cArms[lArm]);
@@ -22449,6 +22470,15 @@ begin
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
+end;
+
+procedure TfrmMain.TestOptionsCloseTimerTimer(Sender: TObject);
+begin
+  if TestOptionsClosePosted or pnlClient.Enabled then
+    Exit;
+  TestOptionsClosePosted := True;
+  TFile.AppendAllText(xeTestOptionsFile + '.progress', 'close posted during the reset: ' + wbCurrentAction + sLineBreak);
+  PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
 procedure TfrmMain.TestOptionsAnswerTimer(Sender: TObject);

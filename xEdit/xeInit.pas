@@ -89,6 +89,7 @@ var
   xeTestOptions            : Boolean;
   xeTestOptionsNav         : string;
   xeTestOptionsPath        : string;
+  xeTestOptionsClose       : Boolean;
   xeTestOptionsFile        : string;
   xeTestCopyIntoGap        : Boolean;
   xeTestCopyIntoGapFile    : string;
@@ -1033,6 +1034,7 @@ begin
       xeTestOptions := True;
       wbFindCmdLineParam('testoptionsnav', xeTestOptionsNav);
       wbFindCmdLineParam('testoptionspath', xeTestOptionsPath);
+      xeTestOptionsClose := FindCmdLineSwitch('testoptionsclose');
       xeAutoLoad    := True;
     end;
 
