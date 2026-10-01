@@ -828,6 +828,7 @@ type
     TestOptionsDialogAlign   : Boolean;
     TestOptionsToggleNeverShow : Boolean;
     TestOptionsDialogNeverShow : Boolean;
+    TestOptionsToggleTemplate  : Boolean;
 
     TestCopyIntoGapTimer     : TTimer;
 
@@ -22181,7 +22182,8 @@ end;
 
 procedure TfrmMain.TestOptionsRunTimer(Sender: TObject);
 const
-  cArms    : array[0..4] of string = ('unchanged', 'toggle', 'restore', 'toggle never show', 'restore never show');
+  cArms    : array[0..6] of string = ('unchanged', 'toggle', 'restore', 'toggle never show', 'restore never show',
+    'toggle template hide', 'restore template hide');
   cVerdict : array[Boolean] of string = ('FAIL', 'PASS');
 var
   lLines           : TStringList;
@@ -22238,10 +22240,17 @@ var
     var lMoved := 0;
     var lStale := 0;
     var lExamples := 0;
+    var lCachedStale := 0;
     for var i := Low(lNavRecords) to High(lNavRecords) do begin
       var lGenKept := lNavRecords[i].ElementGeneration = lNavGens[i];
+      var lCached := NavVerdict(lNavRecords[i]);
       lNavRecords[i].ResetConflict;
       var lFresh := NavVerdict(lNavRecords[i]);
+      if lCached <> lFresh then begin
+        Inc(lCachedStale);
+        if lCachedStale <= 5 then
+          lLines.Add(Format('# nav %s'#9'cached example'#9'%s'#9'cached %s'#9'fresh %s', [aArm, lNavRecords[i].Name, lCached, lFresh]));
+      end;
       if lFresh <> lNavVerdicts[i] then begin
         Inc(lMoved);
         if lGenKept then
@@ -22255,6 +22264,7 @@ var
     end;
     lLines.Add(Format('# nav %s'#9'file %s'#9'records %d'#9'moved %d'#9'moved with generation kept %d',
       [aArm, xeTestOptionsNav, Length(lNavRecords), lMoved, lStale]));
+    lLines.Add(Format('# nav %s'#9'cached verdict differs from fresh %d', [aArm, lCachedStale]));
     lNavRecords := nil;
   end;
 
@@ -22271,7 +22281,9 @@ begin
       for var lArm := Low(cArms) to High(cArms) do begin
         TestOptionsToggle := lArm in [1, 2];
         TestOptionsToggleNeverShow := lArm in [3, 4];
+        TestOptionsToggleTemplate := lArm in [5, 6];
         TestOptionsShown := False;
+        var lTemplateBefore := wbActorTemplateHide;
         lEpochBefore := ConflictView.Epoch;
         lAlignBefore := ConflictView.AlignArrayElements;
         lNeverShowBefore := xeContext.Settings.HideNeverShow;
@@ -22289,9 +22301,13 @@ begin
         lAlignAfter := ConflictView.AlignArrayElements;
         lNeverShowAfter := xeContext.Settings.HideNeverShow;
         lPass := TestOptionsShown and (TestOptionsDialogAlign = lAlignBefore) and (TestOptionsDialogNeverShow = lNeverShowBefore) and
-          ((lAlignAfter <> lAlignBefore) = TestOptionsToggle) and ((lNeverShowAfter <> lNeverShowBefore) = TestOptionsToggleNeverShow);
-        if not TestOptionsToggleNeverShow then
+          ((lAlignAfter <> lAlignBefore) = TestOptionsToggle) and ((lNeverShowAfter <> lNeverShowBefore) = TestOptionsToggleNeverShow) and
+          ((wbActorTemplateHide <> lTemplateBefore) = TestOptionsToggleTemplate);
+        if not (TestOptionsToggleNeverShow or TestOptionsToggleTemplate) then
           lPass := lPass and ((lEpochAfter <> lEpochBefore) = TestOptionsToggle);
+        if TestOptionsToggleTemplate then
+          lLines.Add(Format('# %s'#9'actor template hide %s -> %s', [cArms[lArm], BoolToStr(lTemplateBefore, True),
+            BoolToStr(wbActorTemplateHide, True)]));
         if not lPass then
           Inc(lFailed);
         lLines.Add(string.Join(#9, [cArms[lArm], BoolToStr(TestOptionsToggle, True), BoolToStr(TestOptionsShown, True),
@@ -22307,6 +22323,7 @@ begin
           NavBefore;
           TestOptionsToggle := True;
           TestOptionsToggleNeverShow := False;
+          TestOptionsToggleTemplate := False;
           TestOptionsAnswer.Enabled := True;
           try
             mniNavOptionsClick(nil);
@@ -22356,6 +22373,8 @@ begin
         lForm.cbAlignArrayElements.Checked := not lForm.cbAlignArrayElements.Checked;
       if TestOptionsToggleNeverShow then
         lForm.cbHideNeverShow.Checked := not lForm.cbHideNeverShow.Checked;
+      if TestOptionsToggleTemplate then
+        lForm.cbActorTemplateHide.Checked := not lForm.cbActorTemplateHide.Checked;
       lForm.ModalResult := mrOk;
       Exit;
     end;
