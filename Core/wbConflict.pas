@@ -75,6 +75,7 @@ type
     function IsAlignedGap(aColumn, aRow: Integer; out aMemoryIndex: Integer): Boolean;
     function CanAssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aCheckDontShow: Boolean): Boolean;
     function AssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+    function AddTarget(aColumn: Integer; out aRow: Integer): TwbConflictTreeNode;
     property Tree: TwbConflictTree read tnTree;
     property Parent: TwbConflictTreeNode read tnParent;
     property Index: Integer read tnIndex;
@@ -147,6 +148,8 @@ procedure wbConflictInitChildren(const aNodeDatas: PwbConflictNodeDatas; aNodeCo
   var aChildCount: Cardinal; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc);
 
 function wbConflictAlignedGap(const aParentData: TwbConflictNodeData; aRow: Integer; out aMemoryIndex: Integer): Boolean;
+
+function wbConflictAssignAligned(const aContainer: IwbContainerElementRef; aIndex, aMemoryIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
 
 function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TwbFieldConflictProc = nil): TConflictAll;
 
@@ -958,6 +961,13 @@ begin
   Result := True;
 end;
 
+function wbConflictAssignAligned(const aContainer: IwbContainerElementRef; aIndex, aMemoryIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement;
+begin
+  Result := aContainer.AssignAligned(aIndex, aMemoryIndex, aSource, aOnlySK);
+  if Assigned(Result) then
+    aContainer.MoveElementTo(Result, aMemoryIndex);
+end;
+
 function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TwbFieldConflictProc): TConflictAll;
 var
   ChildCount       : Cardinal;
@@ -1685,9 +1695,20 @@ begin
   if tnTree.IsStale or not IsAlignedGap(aColumn, aRow, lMemoryIndex) then
     Exit;
   lContainer := tnDatas[aColumn].Container;
-  Result := lContainer.AssignAligned(aRow - lContainer.AdditionalElementCount, lMemoryIndex, aSource, aOnlySK);
-  if Assigned(Result) then
-    lContainer.MoveElementTo(Result, lMemoryIndex);
+  Result := wbConflictAssignAligned(lContainer, aRow - lContainer.AdditionalElementCount, lMemoryIndex, aSource, aOnlySK);
+end;
+
+function TwbConflictTreeNode.AddTarget(aColumn: Integer; out aRow: Integer): TwbConflictTreeNode;
+begin
+  aRow := -1;
+  Result := Self;
+  while Assigned(Result) do begin
+    if Assigned(Result.tnDatas[aColumn].Element) then
+      Exit;
+    aRow := Result.tnIndex;
+    Result := Result.tnParent;
+  end;
+  aRow := -1;
 end;
 
 constructor TwbConflictTree.CreateForMainRecord(aView: TwbConflictView; const aMainRecord: IwbMainRecord; const aFiles: TwbFiles;

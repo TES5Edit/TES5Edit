@@ -6561,8 +6561,10 @@ end;
 function TfrmMain.GetAddElement(out TargetNode: PVirtualNode; out TargetIndex: Integer;
   out TargetElement: IwbElement; out aAlignedMemoryIndex: Integer): Boolean;
 var
-  NodeDatas                   : PViewNodeDatas;
   Container                   : IwbContainerElementRef;
+  Row                         : TwbConflictTreeNode;
+  Found                       : TwbConflictTreeNode;
+  ChildRow                    : Integer;
 begin
   TargetIndex := High(Integer);
   aAlignedMemoryIndex := -1;
@@ -6572,28 +6574,24 @@ begin
     Exit;
 
   TargetNode := vstViewFocusedNode;
-  while Assigned(TargetNode) do begin
-    if TargetNode = vstView.RootNode then
-      NodeDatas := @ActiveRecords[0]
-    else
-      NodeDatas := ViewCells(TargetNode);
-    if Assigned(NodeDatas) then begin
-      TargetElement := NodeDatas[Pred(vstView.FocusedColumn)].Element;
-      if Assigned(TargetElement) then begin
-        if TargetIndex < High(Integer) then
-          wbConflictAlignedGap(NodeDatas[Pred(vstView.FocusedColumn)], TargetIndex, aAlignedMemoryIndex);
-        if (TargetIndex < High(Integer)) and Supports(TargetElement, IwbContainerElementRef, Container) then
-          Dec(TargetIndex, Container.AdditionalElementCount);
-        Break;
-      end;
-    end;
-    TargetIndex := TargetNode.Index;
-    if TargetNode = vstView.RootNode then
-      Break;
+  Row := ViewRow(TargetNode);
+  if not Assigned(Row) then
+    Exit;
+  Found := Row.AddTarget(Pred(vstView.FocusedColumn), ChildRow);
+  if not Assigned(Found) then
+    Exit;
+  while Row <> Found do begin
+    Row := Row.Parent;
     TargetNode := TargetNode.Parent;
   end;
-  if not Assigned(TargetElement) then
-    Exit;
+
+  TargetElement := Found.Datas[Pred(vstView.FocusedColumn)].Element;
+  if ChildRow >= 0 then
+    TargetIndex := ChildRow;
+  if TargetIndex < High(Integer) then
+    wbConflictAlignedGap(Found.Datas[Pred(vstView.FocusedColumn)], TargetIndex, aAlignedMemoryIndex);
+  if (TargetIndex < High(Integer)) and Supports(TargetElement, IwbContainerElementRef, Container) then
+    Dec(TargetIndex, Container.AdditionalElementCount);
 
   Result := True;
 end;
@@ -6602,8 +6600,10 @@ function TfrmMain.GetTargetElement(Target: TBaseVirtualTree;
   var TargetNode: PVirtualNode; TargetColumn: Integer; out TargetIndex: Integer; out TargetElement: IwbElement;
   out aAlignedMemoryIndex: Integer): Boolean;
 var
-  NodeDatas                   : PViewNodeDatas;
   Container                   : IwbContainerElementRef;
+  Row                         : TwbConflictTreeNode;
+  Found                       : TwbConflictTreeNode;
+  ChildRow                    : Integer;
 begin
   TargetIndex := Low(Integer);
   TargetElement := nil;
@@ -6615,28 +6615,24 @@ begin
   if Pred(TargetColumn) > High(ActiveRecords) then
     Exit;
 
-  while Assigned(TargetNode) do begin
-    if TargetNode = Target.RootNode then
-      NodeDatas := @ActiveRecords[0]
-    else
-      NodeDatas := ViewCells(TargetNode);
-    if Assigned(NodeDatas) then begin
-      TargetElement := NodeDatas[Pred(TargetColumn)].Element;
-      if Assigned(TargetElement) then begin
-        if TargetIndex >= 0 then
-          wbConflictAlignedGap(NodeDatas[Pred(TargetColumn)], TargetIndex, aAlignedMemoryIndex);
-        if (TargetIndex >= 0) and Supports(TargetElement, IwbContainerElementRef, Container) then
-          Dec(TargetIndex, Container.AdditionalElementCount);
-        Break;
-      end;
-    end;
-    TargetIndex := TargetNode.Index;
-    if TargetNode = Target.RootNode then
-      Break;
+  Row := ViewRow(TargetNode);
+  if not Assigned(Row) then
+    Exit;
+  Found := Row.AddTarget(Pred(TargetColumn), ChildRow);
+  if not Assigned(Found) then
+    Exit;
+  while Row <> Found do begin
+    Row := Row.Parent;
     TargetNode := TargetNode.Parent;
   end;
-  if not Assigned(TargetElement) then
-    Exit;
+
+  TargetElement := Found.Datas[Pred(TargetColumn)].Element;
+  if ChildRow >= 0 then
+    TargetIndex := ChildRow;
+  if TargetIndex >= 0 then
+    wbConflictAlignedGap(Found.Datas[Pred(TargetColumn)], TargetIndex, aAlignedMemoryIndex);
+  if (TargetIndex >= 0) and Supports(TargetElement, IwbContainerElementRef, Container) then
+    Dec(TargetIndex, Container.AdditionalElementCount);
 
   Result := True;
 end;
@@ -14151,7 +14147,6 @@ function TfrmMain.PerformDrop(const TargetElement      : IwbElement;
                                                        : Boolean;
 var
   NewElement         : IwbElement;
-  TargetContainer    : IwbContainerElementRef;
 begin
   Result := False;
 
@@ -14166,12 +14161,9 @@ begin
 
   vstView.BeginUpdate;
   try
-    if AlignedMemoryIndex >= 0 then begin
-      TargetContainer := TargetElement as IwbContainerElementRef;
-      NewElement := TargetContainer.AssignAligned(TargetIndex, AlignedMemoryIndex, SourceElement, False);
-      if Assigned(NewElement) then
-        TargetContainer.MoveElementTo(NewElement, AlignedMemoryIndex);
-    end else
+    if AlignedMemoryIndex >= 0 then
+      NewElement := wbConflictAssignAligned(TargetElement as IwbContainerElementRef, TargetIndex, AlignedMemoryIndex, SourceElement, False)
+    else
       NewElement := TargetElement.Assign(TargetIndex, SourceElement, False);
 
     TargetCell.UpdateRefs;
