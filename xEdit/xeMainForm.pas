@@ -850,6 +850,7 @@ type
     TestViewModalFactory     : TFunc<TwbConflictTree>;
     TestViewModalSeen        : string;
     TestViewModalMemo        : string;
+    TestViewOptionsFlip      : Boolean;
 
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
@@ -21409,6 +21410,126 @@ var
     lLines.Add(Format('# treestale %d'#9'%s'#9'%s', [aEntry, BoolToStr(lBuilt, True), BoolToStr(ViewTree.IsStale, True)]));
   end;
 
+  procedure IdleProbe(aEntry: Integer; const aRecords: TDynMainRecords);
+
+    function RowLines: string;
+    begin
+      Result := '';
+      for var lNode in vstView.Nodes(False) do
+        Result := Result + Path(lNode) + #9 + wbNameConflictAll[PViewNodeDatas(ViewCells(lNode))[0].ConflictAll] + #9 +
+          IfThen(vstView.IsVisible[lNode], 'V', 'h') + Cells(ViewCells(lNode)) + #10;
+    end;
+
+    procedure Pump;
+    begin
+      Application.ProcessMessages;
+      UpdateActions;
+    end;
+
+    procedure Run(const aCase: string; const aHold, aRelease, aChange, aUndo: TProc);
+    begin
+      Build(aRecords);
+      var lGeneration := ViewTreeGeneration;
+      if Assigned(aHold) then
+        aHold();
+      aChange();
+      Pump;
+      var lHeld := ViewTreeGeneration <> lGeneration;
+      var lPage := pgMain.ActivePage.Name;
+      if Assigned(aRelease) then begin
+        aRelease();
+        Pump;
+      end;
+      var lRebuilt := ViewTreeGeneration <> lGeneration;
+      var lShown := RowLines;
+      Build(aRecords);
+      var lFresh := lShown = RowLines;
+      if Assigned(aUndo) then
+        aUndo();
+      lLines.Add(Format('# idle %d'#9'%s'#9'held %s'#9'rebuilt %s'#9'fresh %s'#9'page %s',
+        [aEntry, aCase, BoolToStr(lHeld, True), BoolToStr(lRebuilt, True), BoolToStr(lFresh, True), lPage]));
+    end;
+
+  var
+    lEdited : IwbMainRecord;
+  begin
+    var lOptions: TProc :=
+      procedure
+      begin
+        TestViewOptionsFlip := True;
+        TestViewModalAnswer.Enabled := True;
+        try
+          mniNavOptionsClick(nil);
+        finally
+          TestViewModalAnswer.Enabled := False;
+          TestViewOptionsFlip := False;
+        end;
+      end;
+    var lToggle: TProc :=
+      procedure
+      begin
+        ConflictView.QuickShowConflicts := not ConflictView.QuickShowConflicts;
+      end;
+    var lSetHeaderStates: TProc<THeaderStates> :=
+      procedure(aStates: THeaderStates)
+      begin
+        var lField := TRttiContext.Create.GetType(vstView.Header.ClassType).GetField('FStates');
+        if not Assigned(lField) then
+          raise Exception.Create('no RTTI for the header''s FStates');
+        lField.SetValue(vstView.Header, TValue.From<THeaderStates>(aStates));
+      end;
+    Run('quiet', nil, nil, procedure begin end, nil);
+    Run('options', nil, nil, lOptions, lOptions);
+    Run('view input', nil, nil, lToggle, lToggle);
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      if not Assigned(lEdited) and Supports(ActiveRecords[i].Element, IwbMainRecord, lEdited) then
+        if not lEdited.IsEditable or lEdited.IsMaster then
+          lEdited := nil;
+    if Assigned(lEdited) then begin
+      var lEditorID := lEdited.EditorID;
+      Run('edit', nil, nil,
+        procedure begin lEdited.EditorID := lEditorID + 'Idle' end,
+        procedure begin lEdited.EditorID := lEditorID end);
+    end else
+      lLines.Add(Format('# idle %d'#9'edit'#9'skipped: no editable override shown', [aEntry]));
+    if aEntry = 1 then
+      Run('file', nil, nil, procedure begin AddNewFileName(Format('xeIdleProbe%d.esp', [aEntry]), False, False) end, nil);
+    var lHeld: TArray<TPair<string, TVirtualTreeStates>> := [
+      TPair<string, TVirtualTreeStates>.Create('tsEditing', [tsEditing]),
+      TPair<string, TVirtualTreeStates>.Create('tsEditPending', [tsEditPending]),
+      TPair<string, TVirtualTreeStates>.Create('tsVCLDragging', [tsVCLDragging]),
+      TPair<string, TVirtualTreeStates>.Create('tsVCLDragPending', [tsVCLDragPending]),
+      TPair<string, TVirtualTreeStates>.Create('tsOLEDragging', [tsOLEDragging]),
+      TPair<string, TVirtualTreeStates>.Create('tsOLEDragPending', [tsOLEDragPending])];
+    for var lPair in lHeld do
+      Run('held ' + lPair.Key,
+        procedure begin vstView.TreeStates := vstView.TreeStates + lPair.Value end,
+        procedure begin vstView.TreeStates := vstView.TreeStates - lPair.Value end,
+        lToggle, lToggle);
+    Run('held nav tsVCLDragging',
+      procedure begin vstNav.TreeStates := vstNav.TreeStates + [tsVCLDragging] end,
+      procedure begin vstNav.TreeStates := vstNav.TreeStates - [tsVCLDragging] end,
+      lToggle, lToggle);
+    for var lHeader in [hsDragging, hsColumnWidthTracking] do
+      Run('held header ' + GetEnumName(TypeInfo(THeaderState), Ord(lHeader)),
+        procedure begin lSetHeaderStates(vstView.Header.States + [lHeader]) end,
+        procedure begin lSetHeaderStates(vstView.Header.States - [lHeader]) end,
+        lToggle, lToggle);
+    Run('held pnlClient disabled',
+      procedure begin pnlClient.Enabled := False end,
+      procedure begin pnlClient.Enabled := True end,
+      lToggle, lToggle);
+    Run('held loading',
+      procedure begin xeContext.LoaderDone := False end,
+      procedure begin xeContext.LoaderDone := True end,
+      lToggle, lToggle);
+    Run('held other page',
+      procedure begin pgMain.ActivePage := tbsMessages end,
+      procedure begin pgMain.ActivePage := tbsView end,
+      lToggle, lToggle);
+    Build(aRecords);
+  end;
+
   procedure FloorProbe(aEntry: Integer; const aRecords: TDynMainRecords);
   begin
     var lHeaderRows := ActiveRecords[0].Container.AdditionalElementCount;
@@ -21839,7 +21960,7 @@ begin
         xeContext.Settings.TranslationMode := True;
       if xeTestViewTreeFloor then
         xeContext.Settings.DontSave := True;
-      if xeTestViewTreeModal then begin
+      if xeTestViewTreeModal or xeTestViewTreeIdle then begin
         xeContext.Settings.DontSave := True;
         TestViewModalAnswer := TTimer.Create(Self);
         TestViewModalAnswer.Enabled := False;
@@ -21882,6 +22003,8 @@ begin
         lLines.Add(Format('# stale %d'#9'%s', [lEntry, BoolToStr(lStale, True)]));
         if xeTestViewTreeWalk then
           WalkProbe(lEntry);
+        if xeTestViewTreeIdle then
+          IdleProbe(lEntry, lRecords);
         Collapsed(lEntry);
         if xeTestViewTreeHeader then
           HeaderProbe(lEntry);
@@ -22044,6 +22167,9 @@ begin
               TestViewModalSeen := TestViewModalSeen + '(memo set on ' + lPage.Caption + ')';
             end;
       end;
+      if TestViewOptionsFlip and (Screen.CustomForms[i] is TfrmOptions) then
+        with TfrmOptions(Screen.CustomForms[i]) do
+          cbHideIgnored.Checked := not cbHideIgnored.Checked;
       Screen.CustomForms[i].ModalResult := mrOk;
       Exit;
     end;
