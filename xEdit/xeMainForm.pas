@@ -1067,6 +1067,7 @@ type
     procedure ClearViewTree;
     procedure BuildViewTree;
     procedure ApplyViewHeaderColor;
+    procedure ApplyPathColor;
     procedure ApplyViewVisibility(aNode: PVirtualNode);
     procedure FindViewFocusedNode;
     property ActiveRecords: TDynViewNodeDatas read ViewRootDatas;
@@ -13923,6 +13924,7 @@ begin
     vstNav.Font := pnlFontRecords.Font;
     vstView.Font := pnlFontRecords.Font;
     lblPath.Font := pnlFontRecords.Font;
+    ApplyPathColor;
     //pnlTop.Height := Abs(lblPath.Font.Height) + Trunc(20 * (GetCurrentPPIScreen/PixelsPerInch));
     mmoMessages.Font := pnlFontMessages.Font;
     if not xeContext.Settings.TranslationMode then begin
@@ -13963,6 +13965,7 @@ begin
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
     if ConflictSettings <> lConflictSettings then
       ResetAllConflict;
+    vstNav.Invalidate;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
@@ -15076,6 +15079,22 @@ begin
   FindViewFocusedNode;
 end;
 
+procedure TfrmMain.ApplyPathColor;
+var
+  NodeData : PNavNodeData;
+begin
+  if IsPinned then
+    Exit;
+  NodeData := vstNav.GetNodeData(vstNav.FocusedNode);
+  if not Assigned(NodeData) then
+    Exit;
+  if NodeData.ConflictAll >= caNoConflict then
+    lblPath.Color := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
+  else
+    lblPath.Color := vstNav.Color;
+  lblPath.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
+end;
+
 procedure TfrmMain.ApplyViewHeaderColor;
 begin
   if ViewHeaderConflictAll >= caNoConflict then
@@ -15257,6 +15276,7 @@ begin
     pnlClient.Enabled := True;
     UpdatePnlCancelVisible;
   end;
+  vstNav.Invalidate;
 end;
 
 procedure TfrmMain.ResetAllTags;
@@ -18784,6 +18804,8 @@ begin
         else
           Exclude(NodeData.Flags, nnfReferencesInjected);
       end;
+      if Node = Sender.FocusedNode then
+        ApplyPathColor;
     end;
 
     if NodeData.ConflictAll >= caNoConflict then
@@ -18815,12 +18837,7 @@ begin
     end;
 
     if not IsPinned then begin
-      if NodeData.ConflictAll >= caNoConflict then
-        lblPath.Color := wbLighter(ConflictAllToColor(NodeData.ConflictAll), 0.85)
-      else
-        lblPath.Color := vstNav.Color;
-
-      lblPath.Font.Color := wbDarker(ConflictThisToColor(NodeData.ConflictThis));
+      ApplyPathColor;
 
       s := '';
       while Assigned(Node) do begin
