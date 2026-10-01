@@ -6614,6 +6614,8 @@ begin
   aAlignedMemoryIndex := -1;
   Result := False;
 
+  if Target <> vstView then
+    Exit;
   if TargetColumn < 1 then
     Exit;
   if Pred(TargetColumn) > High(ActiveRecords) then
