@@ -94,6 +94,9 @@ var
   xeTestCopyIntoGapRecord  : string;
   xeTestCopyIntoGapSource  : string;
   xeTestCopyIntoGapOp      : string;
+  xeTestDropMaster         : Boolean;
+  xeTestDropMasterFile     : string;
+  xeTestDropMasterSpec     : string;
   xeTestDeltaPatch         : Boolean;
   xeTestDeltaPatchFile     : string;
   xeTestDeltaPatchMaster   : string;
@@ -1044,6 +1047,16 @@ begin
       end;
       xeTestCopyIntoGap := True;
       xeAutoLoad        := True;
+    end;
+
+    if wbFindCmdLineParam('testdropmaster', xeTestDropMasterFile) then begin
+      if (xeTestDropMasterFile = '') or not wbFindCmdLineParam('testdropmasterspec', xeTestDropMasterSpec) then begin
+        ShowMessage('testdropmaster requires -testdropmaster:<filename> ' +
+          '-testdropmasterspec:<FormID>@<target module>,<FormID>@<source module>,<container>,<plain|modified|detach|mastersonly|unheld>');
+        Exit(False);
+      end;
+      xeTestDropMaster := True;
+      xeAutoLoad       := True;
     end;
 
     if wbFindCmdLineParam('testdeltapatch', xeTestDeltaPatchFile) then begin

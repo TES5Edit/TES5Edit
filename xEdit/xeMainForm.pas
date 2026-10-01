@@ -831,6 +831,11 @@ type
 
     TestCopyIntoGapTimer     : TTimer;
 
+    TestDropMasterTimer      : TTimer;
+    TestDropMasterAnswer     : TTimer;
+    TestDropMasterDetach     : IwbElement;
+    TestDropMasterSeen       : string;
+
     TestDeltaPatchLines      : TStringList;
     TestDeltaPatchTimer      : TTimer;
     TestDeltaPatchCancelled  : Boolean;
@@ -868,6 +873,8 @@ type
     procedure TestOptionsRunTimer(Sender: TObject);
     procedure TestOptionsAnswerTimer(Sender: TObject);
     procedure TestCopyIntoGapRunTimer(Sender: TObject);
+    procedure TestDropMasterRunTimer(Sender: TObject);
+    procedure TestDropMasterAnswerTimer(Sender: TObject);
 
     function TestNavCopyLastPhase: Integer;
     procedure TestNavCopyPhaseTimer(Sender: TObject);
@@ -910,6 +917,7 @@ type
     procedure DoTestViewTree;
     procedure DoTestOptions;
     procedure DoTestCopyIntoGap;
+    procedure DoTestDropMaster;
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
     procedure DoTestMerge;
@@ -4977,7 +4985,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDeltaPatch or xeTestMerge or xeTestHide or xeTestFilter or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDropMaster or xeTestDeltaPatch or xeTestMerge or xeTestHide or xeTestFilter or xeTestSaveContexts) then
       ShowDeveloperMessage;
   end;
 
@@ -22574,6 +22582,266 @@ begin
   end;
 end;
 
+procedure TfrmMain.DoTestDropMaster;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  TestDropMasterTimer := TTimer.Create(Self);
+  TestDropMasterTimer.Interval := 500;
+  TestDropMasterTimer.OnTimer := TestDropMasterRunTimer;
+  TestDropMasterTimer.Enabled := True;
+end;
+
+procedure TfrmMain.TestDropMasterAnswerTimer(Sender: TObject);
+
+  procedure Detach;
+  begin
+    if not Assigned(TestDropMasterDetach) then
+      Exit;
+    TestDropMasterDetach.Remove;
+    TestDropMasterDetach := nil;
+    TestDropMasterSeen := TestDropMasterSeen + '(detached)';
+  end;
+
+begin
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      TestDropMasterSeen := TestDropMasterSeen + ' ' + Screen.CustomForms[i].ClassName;
+      Detach;
+      Screen.CustomForms[i].ModalResult := mrYes;
+      Exit;
+    end;
+  var lWnd: HWND := 0;
+  repeat
+    lWnd := FindWindowEx(0, lWnd, '#32770', nil);
+    if (lWnd <> 0) and IsWindowVisible(lWnd) and IsWindowEnabled(lWnd) and
+       (GetWindowThreadProcessId(lWnd, nil) = MainThreadID) then begin
+      TestDropMasterSeen := TestDropMasterSeen + ' #32770';
+      Detach;
+      SendMessage(lWnd, WM_USER + 102, IDYES, 0);
+      Exit;
+    end;
+  until lWnd = 0;
+end;
+
+procedure TfrmMain.TestDropMasterRunTimer(Sender: TObject);
+
+  function ElementText(const aElement: IwbElement): string;
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      Result := '';
+      for var i := 0 to Pred(lContainer.ElementCount) do begin
+        if i > 0 then
+          Result := Result + ' | ';
+        Result := Result + ElementText(lContainer.Elements[i]);
+      end;
+    end else
+      Result := aElement.EditValue;
+  end;
+
+  function FindRecord(const aSpec: string): IwbMainRecord;
+  begin
+    Result := nil;
+    var lAt := Pos('@', aSpec);
+    if lAt < 2 then
+      raise Exception.Create('not <FormID>@<module>: ' + aSpec);
+    var lFormID := TwbFormID.FromStr(Copy(aSpec, 1, Pred(lAt)));
+    var lModule := Copy(aSpec, Succ(lAt), MaxInt);
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, lModule) then
+        Result := Files[i].RecordByFormID[lFormID, True, True];
+    if not Assigned(Result) then
+      raise Exception.Create('no record ' + aSpec);
+  end;
+
+  function MasterNames(const aFile: IwbFile): string;
+  begin
+    Result := '';
+    for var i := 0 to Pred(aFile.MasterCount[True]) do
+      Result := Result + ' ' + aFile.Masters[i, True].FileName;
+    Result := Trim(Result);
+  end;
+
+  function RecordState(const aRecord: IwbMainRecord): string;
+  begin
+    Result := aRecord.Name + #9 + 'modified=' + BoolToStr(aRecord.Modified, True) + #9 +
+      'internal=' + BoolToStr(esInternalModified in aRecord.ElementStates, True);
+  end;
+
+  function FirstElement(const aRecord: IwbMainRecord; const aName: string): IwbElement;
+  var
+    lContainer : IwbContainerElementRef;
+  begin
+    if not Supports(aRecord.ElementByName[aName], IwbContainerElementRef, lContainer) or (lContainer.ElementCount < 1) then
+      raise Exception.Create('no element in ' + aName + ' of ' + aRecord.Name);
+    Result := lContainer.Elements[0];
+  end;
+
+  procedure TagContainer(const aRecord: IwbMainRecord; const aName: string);
+  var
+    lElement : IwbElement;
+  begin
+    lElement := aRecord.ElementByName[aName];
+    if not Assigned(lElement) then
+      raise Exception.Create('no ' + aName + ' in ' + aRecord.Name);
+    lElement.SetElementState(esTagged);
+  end;
+
+  function ContainerTagged(const aRecord: IwbMainRecord; const aName: string): Boolean;
+  var
+    lElement : IwbElement;
+  begin
+    lElement := aRecord.ElementByName[aName];
+    Result := Assigned(lElement) and (esTagged in lElement.ElementStates);
+  end;
+
+  procedure AddMastersOnly(aLines: TStrings; const aTarget, aSource: IwbMainRecord; const aName: string; aHeld: Boolean);
+  var
+    lSourceElement : IwbElement;
+    lHeld          : IwbElement;
+  begin
+    if aHeld then
+      DoSetActiveRecord(aTarget)
+    else
+      DoSetActiveRecord(aSource);
+    lSourceElement := FirstElement(aSource, aName);
+    aLines.Add('source' + #9 + aSource.Name + #9 + ElementText(lSourceElement));
+    TagContainer(aTarget, aName);
+    if aHeld then
+      lHeld := aTarget.ElementByName[aName];
+    aLines.Add('masters' + #9 + 'added silently' + #9 + BoolToStr(AddRequiredMasters(lSourceElement, aTarget._File, False, True), True));
+    aLines.Add('masters' + #9 + 'after' + #9 + MasterNames(aTarget._File));
+    aLines.Add('target' + #9 + 'after' + #9 + RecordState(aTarget));
+    aLines.Add('container' + #9 + 'kept' + #9 + BoolToStr(ContainerTagged(aTarget, aName), True));
+    aLines.Add('container' + #9 + 'held' + #9 + BoolToStr(Assigned(lHeld), True));
+  end;
+
+var
+  lLines     : TStringList;
+  lSpec      : TArray<string>;
+  lTarget    : IwbMainRecord;
+  lSource    : IwbMainRecord;
+  lColumn    : Integer;
+  lNode      : PVirtualNode;
+  lContainer : IwbContainerElementRef;
+  lCaptured  : IwbElement;
+  lSourceElement : IwbElement;
+  lTmp       : string;
+begin
+  TestDropMasterTimer.Enabled := False;
+  lLines := TStringList.Create;
+  try
+    lLines.Add('# xEdit drop-adds-master probe');
+    lLines.Add('# ' + xeApplicationTitle);
+    lLines.Add('# spec = ' + xeTestDropMasterSpec);
+    lLines.Add('# Columns, tab separated: what / detail / value');
+    CheckResult := 2;
+    try
+      lSpec := xeTestDropMasterSpec.Split([',']);
+      if Length(lSpec) <> 4 then
+        raise Exception.Create('the spec needs four parts');
+      lTarget := FindRecord(lSpec[0]);
+      lSource := FindRecord(lSpec[1]);
+      var lFile := lTarget._File;
+      lLines.Add('masters' + #9 + 'before' + #9 + MasterNames(lFile));
+      if SameText(lSpec[3], 'modified') then
+        lTarget.ElementEditValues['EDID'] := lTarget.EditorID + 'X';
+      lLines.Add('target' + #9 + 'before' + #9 + RecordState(lTarget));
+
+      if SameText(lSpec[3], 'mastersonly') or SameText(lSpec[3], 'unheld') then
+        AddMastersOnly(lLines, lTarget, lSource, lSpec[2], SameText(lSpec[3], 'mastersonly'))
+      else begin
+        DoSetActiveRecord(lTarget);
+        vstView.FullExpand;
+        lColumn := -1;
+        for var i := Low(ActiveRecords) to High(ActiveRecords) do
+          if Assigned(ActiveRecords[i].Element) and ActiveRecords[i].Element.Equals(lTarget) then
+            lColumn := i;
+        if lColumn < 0 then
+          raise Exception.Create('the target is not a column of the View tab');
+
+        if not Supports(lTarget.ElementByName[lSpec[2]], IwbContainerElementRef, lContainer) then
+          raise Exception.Create('no container ' + lSpec[2] + ' in the target');
+        lSourceElement := FirstElement(lSource, lSpec[2]);
+        var lTargetNode: PVirtualNode := nil;
+        for lNode in vstView.Nodes(False) do begin
+          var lDatas := ViewCells(lNode);
+          if Assigned(lDatas) and Assigned(lDatas[lColumn].Element) and lDatas[lColumn].Element.Equals(lContainer) then begin
+            lTargetNode := lNode;
+            Break;
+          end;
+        end;
+        if not Assigned(lTargetNode) then
+          raise Exception.Create('no View tab row for ' + lContainer.Path);
+        lLines.Add('drop target' + #9 + IntToStr(lColumn) + #9 + lContainer.Path);
+        lLines.Add('source' + #9 + lSource.Name + #9 + ElementText(lSourceElement));
+        lLines.Add('before' + #9 + IntToStr(lContainer.ElementCount) + #9 + ElementText(lContainer));
+        lCaptured := lContainer;
+        lContainer := nil;
+
+        if SameText(lSpec[3], 'detach') then
+          TestDropMasterDetach := lCaptured;
+        TestDropMasterSeen := '';
+        TestDropMasterAnswer := TTimer.Create(Self);
+        try
+          TestDropMasterAnswer.Interval := 100;
+          TestDropMasterAnswer.OnTimer := TestDropMasterAnswerTimer;
+          TestDropMasterAnswer.Enabled := True;
+          try
+            lLines.Add('drop' + #9 + 'performed' + #9 + BoolToStr(PerformDrop(vstView, lTargetNode, Succ(lColumn), lSourceElement), True));
+          except
+            on E: Exception do
+              lLines.Add('drop' + #9 + 'raised' + #9 + E.ClassName + ': ' + E.Message);
+          end;
+        finally
+          FreeAndNil(TestDropMasterAnswer);
+          TestDropMasterDetach := nil;
+        end;
+        lLines.Add('dialogs' + #9 + '-' + #9 + Trim(TestDropMasterSeen));
+        lLines.Add('masters' + #9 + 'after' + #9 + MasterNames(lFile));
+        lLines.Add('target' + #9 + 'after' + #9 + RecordState(lTarget));
+
+        var lInRecord := False;
+        var lParent := lCaptured.Container;
+        while Assigned(lParent) and not lInRecord do begin
+          lInRecord := (lParent as TObject) = (lTarget as TObject);
+          lParent := lParent.Container;
+        end;
+        lLines.Add('captured' + #9 + 'in target' + #9 + BoolToStr(lInRecord, True));
+        if Supports(lTarget.ElementByName[lSpec[2]], IwbContainerElementRef, lContainer) then begin
+          lLines.Add('current' + #9 + 'is captured' + #9 + BoolToStr((lContainer as TObject) = (lCaptured as TObject), True));
+          lLines.Add('after' + #9 + IntToStr(lContainer.ElementCount) + #9 + ElementText(lContainer));
+          var lFound := False;
+          var lWanted := ElementText(lSourceElement);
+          for var i := 0 to Pred(lContainer.ElementCount) do
+            if ElementText(lContainer.Elements[i]) = lWanted then
+              lFound := True;
+          lLines.Add('copy' + #9 + 'in target' + #9 + BoolToStr(lFound, True));
+        end else
+          lLines.Add('copy' + #9 + 'in target' + #9 + 'False (no ' + lSpec[2] + ')');
+      end;
+      CheckResult := 0;
+    except
+      on E: Exception do begin
+        AddMessage('[Test Drop Master] FAILED: ' + E.ClassName + ': ' + E.Message);
+        lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+      end;
+    end;
+    lLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestDropMasterFile + '.partial';
+    lLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestDropMasterFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    lLines.Free;
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
 procedure TfrmMain.TestDeltaPatchStates(const aWhen: string);
 var
   lRecord : IwbMainRecord;
@@ -23733,6 +24001,9 @@ begin
 
         if xeTestCopyIntoGap then
           DoTestCopyIntoGap;
+
+        if xeTestDropMaster then
+          DoTestDropMaster;
 
         if xeTestDeltaPatch then
           DoTestDeltaPatchStart;
