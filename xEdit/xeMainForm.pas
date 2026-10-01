@@ -1054,6 +1054,7 @@ type
     procedure SetViewTree(const aFactory: TFunc<TwbConflictTree>);
     procedure ClearViewTree;
     procedure BuildViewTree;
+    procedure ApplyViewHeaderColor;
     procedure ApplyViewVisibility(aNode: PVirtualNode);
     procedure FindViewFocusedNode;
     property ActiveRecords: TDynViewNodeDatas read ViewRootDatas;
@@ -3193,8 +3194,10 @@ end;
 function TfrmMain.ViewRefreshDue: Boolean;
 begin
   Result := Assigned(ViewTree) and xeContext.LoaderDone and Enabled and pnlClient.Enabled and
-    (pgMain.ActivePage = tbsView) and not PendingResetActiveTree and not ViewRebuilding and not tmrPendingSetActive.Enabled and
-    ([tsEditing, tsEditPending, tsOLEDragging, tsOLEDragPending, tsVCLDragging, tsVCLDragPending] * vstView.TreeStates = []) and
+    (pgMain.ActivePage = tbsView) and not PendingResetActiveTree and not ViewRebuilding and not RebuildingViewTree and
+    not ScriptRunning and not tmrPendingSetActive.Enabled and
+    ([tsEditing, tsEditPending, tsOLEDragging, tsOLEDragPending, tsVCLDragging, tsVCLDragPending, tsLeftButtonDown,
+      tsMiddleButtonDown, tsRightButtonDown] * vstView.TreeStates = []) and
     ([tsOLEDragging, tsOLEDragPending, tsVCLDragging, tsVCLDragPending] * vstNav.TreeStates = []) and
     (vstView.Header.States * [hsDragging, hsDragPending, hsColumnWidthTracking, hsColumnWidthTrackPending, hsHeightTracking,
       hsHeightTrackPending, hsResizing] = []) and
@@ -13831,8 +13834,8 @@ procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
 
   function ConflictSettings: string;
   begin
-    Result := Format('%d %d %d %d %d %d', [Ord(wbHideUnused), Ord(xeContext.Settings.HideIgnored),
-      Ord(xeContext.Settings.HideNeverShow), Ord(wbActorTemplateHide), Ord(wbSortFLST), Ord(wbCollapseBenignArray)]);
+    Result := Format('%d %d %d %d %d', [Ord(wbHideUnused), Ord(xeContext.Settings.HideIgnored),
+      Ord(xeContext.Settings.HideNeverShow), Ord(wbActorTemplateHide), Ord(wbSortFLST)]);
   end;
 
 var
@@ -13907,6 +13910,7 @@ begin
       TStyleManager.TrySetStyle(GetSelectedTheme, False);
       ApplySpreadsheetColor;
     end;
+    ApplyViewHeaderColor;
 
     vstNav.Font := pnlFontRecords.Font;
     vstView.Font := pnlFontRecords.Font;
@@ -15063,12 +15067,17 @@ begin
   ViewHeaderConflictAll := caUnknown;
   if (Length(ActiveRecords) > 0) and (ActiveRecords[0].ConflictAll >= caNoConflict) then
     ViewHeaderConflictAll := ActiveRecords[0].ConflictAll;
+  ApplyViewHeaderColor;
+  ApplyViewVisibility(vstView.RootNode);
+  FindViewFocusedNode;
+end;
+
+procedure TfrmMain.ApplyViewHeaderColor;
+begin
   if ViewHeaderConflictAll >= caNoConflict then
     vstView.Header.Background := wbLighter(ConflictAllToColor(ViewHeaderConflictAll), 0.85)
   else
     vstView.Header.Background := clBtnFace;
-  ApplyViewVisibility(vstView.RootNode);
-  FindViewFocusedNode;
 end;
 
 procedure TfrmMain.ApplyViewVisibility(aNode: PVirtualNode);

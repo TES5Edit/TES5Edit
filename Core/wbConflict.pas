@@ -1794,7 +1794,7 @@ var
 begin
   lCount := 0;
   for var i := Low(aRootDatas) to High(aRootDatas) do
-    if Supports(aRootDatas[i].Element, IwbMainRecord, lRecord) then
+    if Supports(aRootDatas[i].Element, IwbMainRecord, lRecord) and (lRecord.ContextObj = aView.Context) then
       AddChain(lRecord);
   SetLength(lRecords, lCount);
   for lRecord in lRecords do
