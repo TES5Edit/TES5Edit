@@ -87,6 +87,7 @@ var
   xeTestViewTreeIdle       : Boolean;
   xeTestViewTreeRemove     : Boolean;
   xeTestOptions            : Boolean;
+  xeTestOptionsNav         : string;
   xeTestOptionsFile        : string;
   xeTestCopyIntoGap        : Boolean;
   xeTestCopyIntoGapFile    : string;
@@ -1026,6 +1027,7 @@ begin
         Exit(False);
       end;
       xeTestOptions := True;
+      wbFindCmdLineParam('testoptionsnav', xeTestOptionsNav);
       xeAutoLoad    := True;
     end;
 

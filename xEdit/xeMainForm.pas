@@ -22186,6 +22186,70 @@ var
   lNeverShowAfter  : Boolean;
   lPass            : Boolean;
   lTmp             : string;
+  lNavRecords      : TDynMainRecords;
+  lNavVerdicts     : TArray<string>;
+  lNavGens         : TArray<Integer>;
+
+  function NavVerdict(const aRecord: IwbMainRecord): string;
+  var
+    lCA : TConflictAll;
+    lCT : TConflictThis;
+  begin
+    ConflictLevelForMainRecord(aRecord, lCA, lCT);
+    Result := wbNameConflictAll[lCA] + ' / ' + wbNameConflictThis[lCT];
+  end;
+
+  procedure NavBefore;
+  var
+    lFile : IwbFile;
+  begin
+    lNavRecords := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, xeTestOptionsNav) then
+        lFile := Files[i];
+    if not Assigned(lFile) then
+      raise Exception.Create('-testoptionsnav: no loaded file ' + xeTestOptionsNav);
+    SetLength(lNavRecords, lFile.RecordCount);
+    SetLength(lNavVerdicts, lFile.RecordCount);
+    SetLength(lNavGens, lFile.RecordCount);
+    var lCount := 0;
+    for var i := 0 to Pred(lFile.RecordCount) do begin
+      var lRecord := lFile.Records[i];
+      if lRecord.Signature = xeContext.GameDefObj.HeaderSignature then
+        Continue;
+      lNavRecords[lCount] := lRecord;
+      lNavVerdicts[lCount] := NavVerdict(lRecord);
+      lNavGens[lCount] := lRecord.ElementGeneration;
+      Inc(lCount);
+    end;
+    SetLength(lNavRecords, lCount);
+  end;
+
+  procedure NavAfter(const aArm: string);
+  begin
+    var lMoved := 0;
+    var lStale := 0;
+    var lExamples := 0;
+    for var i := Low(lNavRecords) to High(lNavRecords) do begin
+      var lGenKept := lNavRecords[i].ElementGeneration = lNavGens[i];
+      lNavRecords[i].ResetConflict;
+      var lFresh := NavVerdict(lNavRecords[i]);
+      if lFresh <> lNavVerdicts[i] then begin
+        Inc(lMoved);
+        if lGenKept then
+          Inc(lStale);
+        if lExamples < 5 then begin
+          Inc(lExamples);
+          lLines.Add(Format('# nav %s'#9'example'#9'%s'#9'before %s'#9'after %s'#9'generation %s', [aArm, lNavRecords[i].Name,
+            lNavVerdicts[i], lFresh, IfThen(lGenKept, 'kept', 'moved')]));
+        end;
+      end;
+    end;
+    lLines.Add(Format('# nav %s'#9'file %s'#9'records %d'#9'moved %d'#9'moved with generation kept %d',
+      [aArm, xeTestOptionsNav, Length(lNavRecords), lMoved, lStale]));
+    lNavRecords := nil;
+  end;
+
 begin
   TestOptionsTimer.Enabled := False;
   lLines := TStringList.Create;
@@ -22203,12 +22267,16 @@ begin
         lEpochBefore := ConflictView.Epoch;
         lAlignBefore := ConflictView.AlignArrayElements;
         lNeverShowBefore := xeContext.Settings.HideNeverShow;
+        if xeTestOptionsNav <> '' then
+          NavBefore;
         TestOptionsAnswer.Enabled := True;
         try
           mniNavOptionsClick(nil);
         finally
           TestOptionsAnswer.Enabled := False;
         end;
+        if xeTestOptionsNav <> '' then
+          NavAfter(cArms[lArm]);
         lEpochAfter := ConflictView.Epoch;
         lAlignAfter := ConflictView.AlignArrayElements;
         lNeverShowAfter := xeContext.Settings.HideNeverShow;
@@ -22226,6 +22294,22 @@ begin
           lEpochAfter, BoolToStr(lAlignBefore, True), BoolToStr(lAlignAfter, True), BoolToStr(lNeverShowBefore, True),
           BoolToStr(lNeverShowAfter, True), cVerdict[lPass]]));
       end;
+      if xeTestOptionsNav <> '' then
+        for var lReset := 0 to 1 do begin
+          NavBefore;
+          TestOptionsToggle := True;
+          TestOptionsToggleNeverShow := False;
+          TestOptionsAnswer.Enabled := True;
+          try
+            mniNavOptionsClick(nil);
+          finally
+            TestOptionsAnswer.Enabled := False;
+          end;
+          var lWatch := TStopwatch.StartNew;
+          ResetAllConflict;
+          lLines.Add(Format('# nav reset all conflict'#9'%d ms', [lWatch.ElapsedMilliseconds]));
+          NavAfter(IfThen(lReset = 0, 'toggle then reset', 'restore then reset'));
+        end;
       if lFailed = 0 then
         CheckResult := 0
       else
