@@ -1046,6 +1046,7 @@ type
     ScriptRunning: Boolean;
     ParentedGroupRecordType: set of Byte;
     RebuildingViewTree: Boolean;
+    ViewRebuilding: Boolean;
     DelayedExpandView: Boolean;
     function ViewRow(aNode: PVirtualNode): TwbConflictTreeNode;
     function ViewCells(aNode: PVirtualNode): PViewNodeDatas;
@@ -1221,6 +1222,7 @@ type
 
     procedure PostResetActiveTree;
     procedure CheckViewForChange;
+    function ViewRefreshDue: Boolean;
 
     procedure LockOutPinned;
     procedure UnLockOutPinned;
@@ -3182,26 +3184,20 @@ begin
 end;
 
 procedure TfrmMain.CheckViewForChange;
-
-  function Changed: Boolean;
-  var
-    i       : Integer;
-  begin
-    Result := False;
-    for i := Low(ActiveRecords) to High(ActiveRecords) do
-      with ActiveRecords[i] do begin
-        if Assigned(Element) then
-          if ElementGen <> Element.ElementGeneration then
-            Exit(True);
-        if Assigned(Container) then
-          if ContainerGen <> Container.ElementGeneration then
-            Exit(True);
-      end;
-  end;
-
 begin
-  if Changed then
+  if Assigned(ViewTree) and ViewTree.IsStale then
     PostResetActiveTree;
+end;
+
+function TfrmMain.ViewRefreshDue: Boolean;
+begin
+  Result := Assigned(ViewTree) and xeContext.LoaderDone and Enabled and pnlClient.Enabled and
+    (pgMain.ActivePage = tbsView) and not PendingResetActiveTree and not ViewRebuilding and not tmrPendingSetActive.Enabled and
+    ([tsEditing, tsEditPending, tsOLEDragging, tsOLEDragPending, tsVCLDragging, tsVCLDragPending] * vstView.TreeStates = []) and
+    ([tsOLEDragging, tsOLEDragPending, tsVCLDragging, tsVCLDragPending] * vstNav.TreeStates = []) and
+    (vstView.Header.States * [hsDragging, hsDragPending, hsColumnWidthTracking, hsColumnWidthTrackPending, hsHeightTracking,
+      hsHeightTrackPending, hsResizing] = []) and
+    ViewTree.IsStale;
 end;
 
 procedure TfrmMain.mniNavCheckForCircularLeveledListsClick(Sender: TObject);
@@ -13831,11 +13827,20 @@ begin
 end;
 
 procedure TfrmMain.mniNavOptionsClick(Sender: TObject);
+
+  function ConflictSettings: string;
+  begin
+    Result := Format('%d %d %d %d %d %d', [Ord(wbHideUnused), Ord(xeContext.Settings.HideIgnored),
+      Ord(xeContext.Settings.HideNeverShow), Ord(wbActorTemplateHide), Ord(wbSortFLST), Ord(wbCollapseBenignArray)]);
+  end;
+
 var
   ct: TConflictThis;
   ca: TConflictAll;
   PatronSet: Boolean;
+  lConflictSettings: string;
 begin
+  lConflictSettings := ConflictSettings;
   with TfrmOptions.Create(Self) do try
     pnlFontRecords.Font := vstNav.Font;
     pnlFontMessages.Font := mmoMessages.Font;
@@ -13943,6 +13948,8 @@ begin
     xeContext.Settings.ConvertIntFormID := cbConvertIntFormID.Checked;
     xeContext.GameDefObj.DefineOptions.Collapse := CollapseOptions;
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
+    if ConflictSettings <> lConflictSettings then
+      ConflictView.RulesChanged;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
     wbShrinkButtons := cbShrinkButtons.Checked;
@@ -15115,6 +15122,7 @@ begin
   sw := TStopwatch.StartNew;
   LockWindowUpdate(vstView.Handle);
   vstView.BeginUpdate;
+  ViewRebuilding := True;
   try
     repeat
       PendingResetActiveTree := False;
@@ -15180,6 +15188,7 @@ begin
       end;
     until not PendingResetActiveTree;
   finally
+    ViewRebuilding := False;
     ViewFocusedElement := nil;
     EditFocusedViewElement := False;
     NodeForViewFocusedElement := nil;
@@ -23682,6 +23691,8 @@ begin
   end;
   if Enabled and pnlClient.Enabled then
     NavUpdate(False);
+  if ViewRefreshDue then
+    ResetActiveTree;
   inherited;
 
   if GetAsyncKeyState(VK_SHIFT) and $8000 <> 0 then
