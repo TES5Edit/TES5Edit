@@ -102,6 +102,7 @@ type
     ctFiles          : TwbFiles;
     procedure Setup(aView: TwbConflictView; const aRootDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean;
       aRootCount: Integer; const aOnMessage: TwbConflictMessageProc);
+    procedure SettleDenseIDs(aView: TwbConflictView; const aRootDatas: TwbDynConflictNodeDatas);
     procedure ResolveNode(aNode: TwbConflictTreeNode);
     procedure ResolveUndefinedChain;
   public
@@ -1721,6 +1722,7 @@ begin
   for var i := Low(aRecords) to High(aRecords) do begin
     lDatas[i].Element := aRecords[i];
     lDatas[i].Container := aRecords[i] as IwbContainerElementRef;
+    lDatas[i].Container.ElementCount;
   end;
   lCount := 0;
   if Assigned(aRecords[0].Def) then
@@ -1765,11 +1767,50 @@ begin
   Setup(aView, wbConflictNodeDatasForContainer(aContainer, aFiles), False, False, ContainerRootCount(aContainer), aOnMessage);
 end;
 
+procedure TwbConflictTree.SettleDenseIDs(aView: TwbConflictView; const aRootDatas: TwbDynConflictNodeDatas);
+var
+  lMasters : TDynMainRecords;
+  lRecords : TDynMainRecords;
+  lCount   : Integer;
+  lRecord  : IwbMainRecord;
+
+  procedure AddChain(const aRecord: IwbMainRecord);
+  begin
+    var lMaster := aRecord.MasterOrSelf;
+    for var lKnown in lMasters do
+      if lKnown.Equals(lMaster) then
+        Exit;
+    lMasters := lMasters + [lMaster];
+    if lCount + 1 + lMaster.OverrideCount > Length(lRecords) then
+      SetLength(lRecords, 2 * (lCount + 1 + lMaster.OverrideCount));
+    lRecords[lCount] := lMaster;
+    Inc(lCount);
+    for var i := 0 to Pred(lMaster.OverrideCount) do begin
+      lRecords[lCount] := lMaster.Overrides[i];
+      Inc(lCount);
+    end;
+  end;
+
+begin
+  lCount := 0;
+  for var i := Low(aRootDatas) to High(aRootDatas) do
+    if Supports(aRootDatas[i].Element, IwbMainRecord, lRecord) then
+      AddChain(lRecord);
+  SetLength(lRecords, lCount);
+  for lRecord in lRecords do
+    if lRecord.DenseIDIn(aView.Context) = 0 then begin
+      aView.Context.AllocateDenseIDs(lRecords);
+      Exit;
+    end;
+end;
+
 procedure TwbConflictTree.Setup(aView: TwbConflictView; const aRootDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean;
   aRootCount: Integer; const aOnMessage: TwbConflictMessageProc);
 var
   lRecord : IwbMainRecord;
 begin
+  if aView.Context.LoaderDone then
+    SettleDenseIDs(aView, aRootDatas);
   ctView := aView;
   ctContextRef := aView.cvContextRef;
   aView.cvTrees.Add(Self);
