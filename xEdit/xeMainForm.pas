@@ -22017,7 +22017,8 @@ begin
     if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
        (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
       var lReplaced := PPointer(@ViewTreeFactory)^ <> PPointer(@TestViewModalFactory)^;
-      TestViewModalSeen := TestViewModalSeen + ' ' + Screen.CustomForms[i].ClassName + IfThen(lReplaced, ':replaced', ':kept');
+      TestViewModalSeen := TestViewModalSeen + ' ' + Screen.CustomForms[i].ClassName + IfThen(lReplaced, ':replaced', ':kept') +
+        IfThen(IsWindowEnabled(Handle), ':main-enabled', ':main-disabled');
       if (TestViewModalMemo <> '') and (Screen.CustomForms[i] is TfrmViewElements) then begin
         var lPage := TfrmViewElements(Screen.CustomForms[i]).pcView.ActivePage;
         if Assigned(lPage) then
@@ -22039,7 +22040,8 @@ begin
       var lReplaced := PPointer(@ViewTreeFactory)^ <> PPointer(@TestViewModalFactory)^;
       var lCaption: array[0..255] of Char;
       GetWindowText(lWnd, lCaption, Length(lCaption));
-      TestViewModalSeen := TestViewModalSeen + ' "' + string(lCaption) + '"' + IfThen(lReplaced, ':replaced', ':kept');
+      TestViewModalSeen := TestViewModalSeen + ' "' + string(lCaption) + '"' + IfThen(lReplaced, ':replaced', ':kept') +
+        IfThen(IsWindowEnabled(Handle), ':main-enabled', ':main-disabled');
       SendMessage(lWnd, WM_USER + 102, IDYES, 0);
       Exit;
     end;
