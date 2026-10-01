@@ -21396,6 +21396,19 @@ var
     lLines.Add(Format('# collapsed %d'#9'%d'#9'%s', [aEntry, lCount, Trim(lPaths)]));
   end;
 
+  procedure WalkProbe(aEntry: Integer);
+  var
+    lRecord       : IwbMainRecord;
+    lConflictAll  : TConflictAll;
+    lConflictThis : TConflictThis;
+  begin
+    var lBuilt := ViewTree.IsStale;
+    for var i := Low(ActiveRecords) to High(ActiveRecords) do
+      if Supports(ActiveRecords[i].Element, IwbMainRecord, lRecord) then
+        ConflictLevelForMainRecord(lRecord, lConflictAll, lConflictThis);
+    lLines.Add(Format('# treestale %d'#9'%s'#9'%s', [aEntry, BoolToStr(lBuilt, True), BoolToStr(ViewTree.IsStale, True)]));
+  end;
+
   procedure FloorProbe(aEntry: Integer; const aRecords: TDynMainRecords);
   begin
     var lHeaderRows := ActiveRecords[0].Container.AdditionalElementCount;
@@ -21867,6 +21880,8 @@ begin
                Assigned(Container) and (ContainerGen <> Container.ElementGeneration) then
               lStale := True;
         lLines.Add(Format('# stale %d'#9'%s', [lEntry, BoolToStr(lStale, True)]));
+        if xeTestViewTreeWalk then
+          WalkProbe(lEntry);
         Collapsed(lEntry);
         if xeTestViewTreeHeader then
           HeaderProbe(lEntry);

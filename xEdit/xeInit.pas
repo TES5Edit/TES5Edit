@@ -83,6 +83,7 @@ var
   xeTestViewTreeTime       : Integer;
   xeTestViewTreeHeader     : Boolean;
   xeTestViewTreeModal      : Boolean;
+  xeTestViewTreeWalk       : Boolean;
   xeTestOptions            : Boolean;
   xeTestOptionsFile        : string;
   xeTestCopyIntoGap        : Boolean;
@@ -1007,6 +1008,7 @@ begin
       xeTestViewTreeTranslate := FindCmdLineSwitch('testviewtreetranslate');
       xeTestViewTreeHeader := FindCmdLineSwitch('testviewtreeheader');
       xeTestViewTreeModal := FindCmdLineSwitch('testviewtreemodal');
+      xeTestViewTreeWalk := FindCmdLineSwitch('testviewtreewalk');
       var lFocus: string;
       if wbFindCmdLineParam('testviewtreefocus', lFocus) then
         xeTestViewTreeFocus := StrToIntDef(lFocus, 0);
