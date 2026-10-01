@@ -850,7 +850,8 @@ type
     TestViewModalFactory     : TFunc<TwbConflictTree>;
     TestViewModalSeen        : string;
     TestViewModalMemo        : string;
-    TestViewOptionsFlip      : Boolean;
+    TestViewOptionsFlip      : string;
+    TestViewOptionsColor     : TColor;
 
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
@@ -21437,6 +21438,7 @@ var
 
     procedure Run(const aCase: string; const aHold, aRelease, aChange, aUndo: TProc);
     begin
+      TFile.AppendAllText(xeTestViewTreeFile + '.progress', Format('%d'#9'idle %s', [aEntry, aCase]) + sLineBreak);
       Build(aRecords);
       var lGeneration := ViewTreeGeneration;
       if Assigned(aHold) then
@@ -21462,17 +21464,29 @@ var
   var
     lEdited : IwbMainRecord;
   begin
-    var lOptions: TProc :=
-      procedure
+    var lOptionsWith: TProc<string, TColor> :=
+      procedure(aFlip: string; aColor: TColor)
       begin
-        TestViewOptionsFlip := True;
+        TestViewOptionsFlip := aFlip;
+        TestViewOptionsColor := aColor;
         TestViewModalAnswer.Enabled := True;
         try
           mniNavOptionsClick(nil);
         finally
           TestViewModalAnswer.Enabled := False;
-          TestViewOptionsFlip := False;
+          TestViewOptionsFlip := '';
+          TestViewOptionsColor := clNone;
         end;
+      end;
+    var lOptions: TProc :=
+      procedure
+      begin
+        lOptionsWith('cbHideIgnored', clNone);
+      end;
+    var lBenign: TProc :=
+      procedure
+      begin
+        lOptionsWith('cbCollapseBenignArray', clNone);
       end;
     var lToggle: TProc :=
       procedure
@@ -21536,6 +21550,37 @@ var
       procedure begin pgMain.ActivePage := tbsMessages end,
       procedure begin pgMain.ActivePage := tbsView end,
       lToggle, lToggle);
+    lHeld := [
+      TPair<string, TVirtualTreeStates>.Create('tsLeftButtonDown', [tsLeftButtonDown]),
+      TPair<string, TVirtualTreeStates>.Create('tsMiddleButtonDown', [tsMiddleButtonDown]),
+      TPair<string, TVirtualTreeStates>.Create('tsRightButtonDown', [tsRightButtonDown])];
+    for var lPair in lHeld do
+      Run('held ' + lPair.Key,
+        procedure begin vstView.TreeStates := vstView.TreeStates + lPair.Value end,
+        procedure begin vstView.TreeStates := vstView.TreeStates - lPair.Value end,
+        lToggle, lToggle);
+    Run('held script running',
+      procedure begin ScriptRunning := True end,
+      procedure begin ScriptRunning := False end,
+      lToggle, lToggle);
+    Run('held view expanding',
+      procedure begin RebuildingViewTree := True end,
+      procedure begin RebuildingViewTree := False end,
+      lToggle, lToggle);
+    Run('options collapse benign array', nil, nil, lBenign, lBenign);
+    TFile.AppendAllText(xeTestViewTreeFile + '.progress', Format('%d'#9'idle colour', [aEntry]) + sLineBreak);
+    Build(aRecords);
+    if ViewHeaderConflictAll >= caNoConflict then begin
+      var lConflictAll := ViewHeaderConflictAll;
+      var lColor := wbColorConflictAll[lConflictAll];
+      lOptionsWith('', lColor xor $00404040);
+      Pump;
+      var lExpected := wbLighter(ConflictAllToColor(lConflictAll), 0.85);
+      lLines.Add(Format('# idle %d'#9'colour %s'#9'header %s', [aEntry, wbNameConflictAll[lConflictAll],
+        BoolToStr(vstView.Header.Background = lExpected, True)]));
+      lOptionsWith('', lColor);
+    end else
+      lLines.Add(Format('# idle %d'#9'colour'#9'skipped: no header verdict colour', [aEntry]));
     Build(aRecords);
   end;
 
@@ -21975,6 +22020,7 @@ begin
         TestViewModalAnswer.Enabled := False;
         TestViewModalAnswer.Interval := 300;
         TestViewModalAnswer.OnTimer := TestViewModalAnswerTimer;
+        TestViewOptionsColor := clNone;
         System.SysUtils.DeleteFile(xeTestViewTreeFile + '.progress');
       end;
       lList.LoadFromFile(xeTestViewTreeList);
@@ -22176,9 +22222,13 @@ begin
               TestViewModalSeen := TestViewModalSeen + '(memo set on ' + lPage.Caption + ')';
             end;
       end;
-      if TestViewOptionsFlip and (Screen.CustomForms[i] is TfrmOptions) then
-        with TfrmOptions(Screen.CustomForms[i]) do
-          cbHideIgnored.Checked := not cbHideIgnored.Checked;
+      if Screen.CustomForms[i] is TfrmOptions then begin
+        if TestViewOptionsFlip <> '' then
+          with Screen.CustomForms[i].FindComponent(TestViewOptionsFlip) as TCheckBox do
+            Checked := not Checked;
+        if TestViewOptionsColor <> clNone then
+          wbColorConflictAll[ViewHeaderConflictAll] := TestViewOptionsColor;
+      end;
       Screen.CustomForms[i].ModalResult := mrOk;
       Exit;
     end;
