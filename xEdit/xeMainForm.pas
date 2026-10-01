@@ -21435,7 +21435,7 @@ var
     end;
   end;
 
-  function PaintHeader(const aMode: string): string;
+  function PaintHeader(const aMode: string; aEntry: Integer): string;
   begin
     var lColumns := vstView.Header.Columns;
     var lBitmap := Vcl.Graphics.TBitmap.Create;
@@ -21445,6 +21445,7 @@ var
       lBitmap.Canvas.Brush.Color := $FF00FF;
       lBitmap.Canvas.FillRect(Rect(0, 0, lBitmap.Width, lBitmap.Height));
       lColumns.PaintHeader(lBitmap.Canvas, Rect(0, 0, lBitmap.Width, lBitmap.Height), Point(0, 0));
+      lBitmap.SaveToFile(Format('%s.header%d-%s.bmp', [xeTestViewTreeFile, aEntry, StringReplace(aMode, ' ', '', [rfReplaceAll])]));
       Result := Format('%s'#9'themes %s'#9'background %.6x', [aMode, BoolToStr(tsUseThemes in vstView.TreeStates, True),
         ColorToRGB(vstView.Header.Background)]);
       for var c := 0 to Pred(lColumns.Count) do
@@ -21470,16 +21471,16 @@ var
     vstView.TreeOptions.PaintOptions := lOptions - [toThemeAware];
     try
       lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
-        [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('unthemed first')]));
+        [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('unthemed first', aEntry)]));
     finally
       vstView.TreeOptions.PaintOptions := lOptions;
     end;
     lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
-      [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('as is')]));
+      [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('as is', aEntry)]));
     vstView.TreeOptions.PaintOptions := lOptions - [toThemeAware];
     try
       lLines.Add(Format('# header %d'#9'%s'#9'expected %s'#9'style %s'#9'%s',
-        [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('unthemed')]));
+        [aEntry, wbNameConflictAll[lRoot], lExpected, TStyleManager.ActiveStyle.Name, PaintHeader('unthemed', aEntry)]));
     finally
       vstView.TreeOptions.PaintOptions := lOptions;
     end;
