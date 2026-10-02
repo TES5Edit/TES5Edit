@@ -124,6 +124,10 @@ var
   xeTestFilterByValue      : string;
   xeTestFilterRemove       : string;
   xeTestFilterImages       : Integer;
+  xeTestPump               : string;
+  xeTestPumpFile           : string;
+  xeTestPumpAction         : string;
+  xeTestPumpClient         : string;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -1122,6 +1126,20 @@ begin
       end;
       xeTestFilter := True;
       xeAutoLoad := True;
+    end;
+
+    if wbFindCmdLineParam('testpump', xeTestPump) then begin
+      wbFindCmdLineParam('testpumpfile', xeTestPumpFile);
+      wbFindCmdLineParam('testpumpaction', xeTestPumpAction);
+      wbFindCmdLineParam('testpumpclient', xeTestPumpClient);
+      if (xeTestPumpFile = '') or
+         not (SameText(xeTestPump, 'close') or SameText(xeTestPump, 'ctrlo') or SameText(xeTestPump, 'xback') or
+              SameText(xeTestPump, 'pendingset')) or
+         not ((xeTestPumpClient = '') or SameText(xeTestPumpClient, 'enabled') or SameText(xeTestPumpClient, 'disabled')) then begin
+        ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset> -testpumpfile:<filename> ' +
+          '[-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>]');
+        Exit(False);
+      end;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')

@@ -858,6 +858,12 @@ type
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
 
+    TestPumpTimer            : TTimer;
+    TestPumpDelivered        : Boolean;
+    TestPumpEnded            : Boolean;
+    TestPumpSeen             : string;
+    TestPumpCtrlDown         : Boolean;
+
     TestViewModalAnswer      : TTimer;
     TestViewModalFactory     : TFunc<TwbConflictTree>;
     TestViewModalSeen        : string;
@@ -867,6 +873,11 @@ type
 
     procedure TestFilterAnswerTimer(Sender: TObject);
     procedure TestViewModalAnswerTimer(Sender: TObject);
+
+    procedure TestPumpStart;
+    procedure TestPumpNote(const aText: string);
+    procedure TestPumpSetCtrl(aDown: Boolean);
+    procedure TestPumpTimerTimer(Sender: TObject);
 
     procedure TestMergeRunTimer(Sender: TObject);
     procedure TestMergeAnswerTimer(Sender: TObject);
@@ -6053,6 +6064,9 @@ var
   i: Integer;
 
 begin
+  if xeTestPump <> '' then
+    TestPumpNote('FormClose entered: inside a nested pump ' + BoolToStr(ProcessMessagesLockCount > 0, True) +
+      ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"');
   Action := caFree;
   if LoaderStarted and not xeContext.LoaderDone then begin
     wbForceTerminate := True;
@@ -23908,6 +23922,113 @@ begin
   lForm.ModalResult := mrOk;
 end;
 
+procedure TfrmMain.TestPumpNote(const aText: string);
+begin
+  TFile.AppendAllText(xeTestPumpFile, aText + sLineBreak);
+end;
+
+procedure TfrmMain.TestPumpSetCtrl(aDown: Boolean);
+var
+  lState: TKeyboardState;
+begin
+  GetKeyboardState(lState);
+  if aDown then
+    lState[VK_CONTROL] := lState[VK_CONTROL] or $80
+  else
+    lState[VK_CONTROL] := lState[VK_CONTROL] and not $80;
+  SetKeyboardState(lState);
+  TestPumpCtrlDown := aDown;
+end;
+
+procedure TfrmMain.TestPumpStart;
+begin
+  System.SysUtils.DeleteFile(xeTestPumpFile);
+  TestPumpNote('# xEdit pump probe: arrival "' + xeTestPump + '"');
+  if SameText(xeTestPump, 'xback') then begin
+    if not Assigned(BackHistory) then
+      BackHistory := TInterfaceList.Create;
+    BackHistory.Add(TMainRecordPosHistoryEntry.Create(Files[High(Files)].Header));
+    TestPumpNote('back history: ' + Files[High(Files)].Header.Name);
+  end;
+  TestPumpDelivered := False;
+  TestPumpEnded := False;
+  TestPumpSeen := '';
+  TestPumpTimer := TTimer.Create(Self);
+  TestPumpTimer.Interval := 1;
+  TestPumpTimer.OnTimer := TestPumpTimerTimer;
+end;
+
+procedure TfrmMain.TestPumpTimerTimer(Sender: TObject);
+var
+  lFocus : HWND;
+  lCtrl  : TWinControl;
+  lWhere : string;
+begin
+  if not TestPumpDelivered then begin
+    if ProcessMessagesLockCount < 1 then
+      Exit;
+    if SameText(xeTestPumpClient, 'enabled') and not pnlClient.Enabled then
+      Exit;
+    if SameText(xeTestPumpClient, 'disabled') and pnlClient.Enabled then
+      Exit;
+    if (xeTestPumpAction <> '') and not ContainsText(wbCurrentAction + '|' + Caption, xeTestPumpAction) then
+      Exit;
+    TestPumpDelivered := True;
+    lFocus := GetFocus;
+    lCtrl := FindControl(lFocus);
+    if Assigned(lCtrl) then
+      lWhere := lCtrl.Name + ' (' + lCtrl.ClassName + ', enabled ' + BoolToStr(IsWindowEnabled(lFocus), True) + ')'
+    else
+      lWhere := '$' + IntToHex(lFocus, 8);
+    TestPumpNote('delivered ' + xeTestPump + ' inside a nested pump during: "' + wbCurrentAction + '", caption "' + Caption +
+      '"; client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + '; focus ' + lWhere);
+    if SameText(xeTestPump, 'close') then
+      PostMessage(Handle, WM_CLOSE, 0, 0)
+    else if SameText(xeTestPump, 'ctrlo') then begin
+      if lFocus = 0 then
+        lFocus := Handle;
+      TestPumpSetCtrl(True);
+      PostMessage(lFocus, WM_KEYDOWN, Ord('O'), 0);
+      PostMessage(lFocus, WM_KEYUP, Ord('O'), LPARAM($C0000000));
+    end else if SameText(xeTestPump, 'xback') then
+      PostMessage(Handle, WM_XBUTTONUP, MakeWParam(0, 1), 0)
+    else if SameText(xeTestPump, 'pendingset') then begin
+      PendingContainer := nil;
+      PendingMainRecords := [Files[High(Files)].Header];
+      tmrPendingSetActive.Enabled := False;
+      tmrPendingSetActive.Enabled := True;
+    end;
+    Exit;
+  end;
+
+  if TestPumpEnded then
+    Exit;
+
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      TestPumpNote('a dialog opened ' + IfThen(ProcessMessagesLockCount > 0, 'inside the nested pump', 'outside any nested pump') +
+        ': ' + Screen.CustomForms[i].ClassName + ' "' + Screen.CustomForms[i].Caption + '", cancelled');
+      Screen.CustomForms[i].ModalResult := mrCancel;
+      if TestPumpCtrlDown then
+        TestPumpSetCtrl(False);
+      Break;
+    end;
+
+  if Assigned(ActiveRecord) and (TestPumpSeen = '') then begin
+    TestPumpSeen := ActiveRecord.Name;
+    TestPumpNote('the View tab shows ' + TestPumpSeen + ' ' +
+      IfThen(ProcessMessagesLockCount > 0, 'inside the nested pump, during "' + wbCurrentAction + '"', 'outside any nested pump'));
+  end;
+
+  if ProcessMessagesLockCount < 1 then begin
+    TestPumpEnded := True;
+    if TestPumpCtrlDown then
+      TestPumpSetCtrl(False);
+    TestPumpNote('back in the outermost message loop');
+  end;
+end;
+
 procedure TfrmMain.WMUserLoaderDone(var Message: TMessage);
 
   procedure SetupTreeView(aTreeView: TVirtualEditTree);
@@ -24042,6 +24163,9 @@ begin
         ConflictView.ModGroupsEnabled := ModGroupsExist;
         mniModGroupsEnabled.Checked := ConflictView.ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ConflictView.ModGroupsEnabled;
+
+        if xeTestPump <> '' then
+          TestPumpStart;
 
         if xeQuickShowConflicts then
           mniNavFilterConflicts.Click;
