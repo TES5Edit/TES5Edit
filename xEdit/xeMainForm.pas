@@ -872,6 +872,9 @@ type
     TestPumpLastDialog       : HWND;
     TestPumpSeen             : string;
     TestPumpCtrlDown         : Boolean;
+    TestPumpModalBase        : TCustomForm;
+    TestPumpFocus            : HWND;
+    TestPumpShortCut         : TAction;
 
     TestViewModalAnswer      : TTimer;
     TestViewModalFactory     : TFunc<TwbConflictTree>;
@@ -888,6 +891,7 @@ type
     procedure TestPumpNote(const aText: string);
     procedure TestPumpSetCtrl(aDown: Boolean);
     procedure TestPumpTimerTimer(Sender: TObject);
+    procedure TestPumpShortCutExecute(Sender: TObject);
 
     procedure TestMergeRunTimer(Sender: TObject);
     procedure TestMergeAnswerTimer(Sender: TObject);
@@ -6146,7 +6150,7 @@ begin
     var lShown := '';
     if Assigned(ActiveRecord) then
       lShown := ', the View tab shows ' + ActiveRecord.Name;
-    TestPumpNote('FormClose entered: inside a nested pump ' + BoolToStr(TestPumpInside, True) +
+    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestPumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
   Action := caFree;
@@ -24022,8 +24026,15 @@ function TfrmMain.TestPumpInside: Boolean;
 begin
   if xeTestPumpGenerator then
     Result := GeneratorStarted and not GeneratorDone
+  else if xeTestPumpModal then
+    Result := (ProcessMessagesLockCount < 1) and HandleAllocated and not IsWindowEnabled(Handle)
   else
     Result := ProcessMessagesLockCount > 0;
+end;
+
+procedure TfrmMain.TestPumpShortCutExecute(Sender: TObject);
+begin
+  TestPumpNote('the shortcut action ran ' + IfThen(TestPumpInside, 'inside the nested loop', 'outside any nested loop'));
 end;
 
 procedure TfrmMain.TestPumpNote(const aText: string);
@@ -24054,9 +24065,17 @@ begin
     BackHistory.Add(TMainRecordPosHistoryEntry.Create(Files[High(Files)].Header));
     TestPumpNote('back history: ' + Files[High(Files)].Header.Name);
   end;
+  if SameText(xeTestPump, 'cancelshortcut') then begin
+    TestPumpShortCut := TAction.Create(Self);
+    TestPumpShortCut.ActionList := ActionList1;
+    TestPumpShortCut.ShortCut := ShortCut(VK_F12, [ssCtrl]);
+    TestPumpShortCut.OnExecute := TestPumpShortCutExecute;
+  end;
   TestPumpDelivered := False;
   TestPumpEnded := False;
   TestPumpSeen := '';
+  TestPumpModalBase := nil;
+  TestPumpFocus := 0;
   TestPumpTimer := TTimer.Create(Self);
   TestPumpTimer.Interval := 1;
   TestPumpTimer.OnTimer := TestPumpTimerTimer;
@@ -24080,16 +24099,60 @@ begin
     if (xeTestPumpAction <> '') and not ContainsText(wbCurrentAction + '|' + Caption, xeTestPumpAction) then
       Exit;
     TestPumpDelivered := True;
+    if xeTestPumpModal then begin
+      for var i := 0 to Pred(Screen.CustomFormCount) do
+        if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and (fsModal in Screen.CustomForms[i].FormState) then
+          TestPumpModalBase := Screen.CustomForms[i];
+      var lBase: HWND := 0;
+      repeat
+        lBase := FindWindowEx(0, lBase, '#32770', nil);
+        if (lBase <> 0) and IsWindowVisible(lBase) and (GetWindowThreadProcessId(lBase, nil) = MainThreadID) then
+          TestPumpLastDialog := lBase;
+      until lBase = 0;
+    end;
+    if Assigned(ActiveRecord) then
+      TestPumpSeen := ActiveRecord.Name
+    else
+      TestPumpSeen := '-';
+    if SameText(xeTestPump, 'cancelctrlo') or SameText(xeTestPump, 'cancelshortcut') then
+      if btnCancel.CanFocus then
+        btnCancel.SetFocus;
     lFocus := GetFocus;
+    TestPumpFocus := lFocus;
     lCtrl := FindControl(lFocus);
     if Assigned(lCtrl) then
       lWhere := lCtrl.Name + ' (' + lCtrl.ClassName + ', enabled ' + BoolToStr(IsWindowEnabled(lFocus), True) + ')'
     else
       lWhere := '$' + IntToHex(lFocus, 8);
-    TestPumpNote('delivered ' + xeTestPump + ' inside a nested pump during: "' + wbCurrentAction + '", caption "' + Caption +
+    var lModalName: string := '-';
+    if Assigned(TestPumpModalBase) then
+      lModalName := TestPumpModalBase.ClassName;
+    TestPumpNote('delivered ' + xeTestPump + ' ' + IfThen(xeTestPumpModal, 'inside a modal loop outside any pump', 'inside a nested pump') +
+      ' during: "' + wbCurrentAction + '", caption "' + Caption +
       '"; client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + '; pump depth ' + IntToStr(NestedPumpDepth) +
-      ', lock count ' + IntToStr(ProcessMessagesLockCount) + ', form enabled ' + BoolToStr(Enabled, True) + '; focus ' + lWhere);
-    if SameText(xeTestPump, 'close') then
+      ', lock count ' + IntToStr(ProcessMessagesLockCount) + ', form enabled ' + BoolToStr(Enabled, True) +
+      ', window enabled ' + BoolToStr(IsWindowEnabled(Handle), True) + ', modal ' + lModalName + '; focus ' + lWhere +
+      '; the View tab shows ' + TestPumpSeen);
+    if SameText(xeTestPump, 'tab') then begin
+      if lFocus = 0 then
+        lFocus := Handle;
+      PostMessage(lFocus, WM_KEYDOWN, VK_TAB, 0);
+      PostMessage(lFocus, WM_KEYUP, VK_TAB, LPARAM($C0000000));
+    end else if SameText(xeTestPump, 'cancelctrlo') or SameText(xeTestPump, 'cancelshortcut') then begin
+      if lFocus = 0 then
+        lFocus := Handle;
+      TestPumpSetCtrl(True);
+      if SameText(xeTestPump, 'cancelctrlo') then begin
+        PostMessage(lFocus, WM_KEYDOWN, Ord('O'), 0);
+        PostMessage(lFocus, WM_KEYUP, Ord('O'), LPARAM($C0000000));
+      end else begin
+        PostMessage(lFocus, WM_KEYDOWN, VK_F12, 0);
+        PostMessage(lFocus, WM_KEYUP, VK_F12, LPARAM($C0000000));
+      end;
+    end else if SameText(xeTestPump, 'endsession') then
+      TestPumpNote('WM_QUERYENDSESSION answered ' + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, 0)) +
+        '; close deferred ' + BoolToStr(CloseDeferred, True))
+    else if SameText(xeTestPump, 'close') then
       PostMessage(Handle, WM_CLOSE, 0, 0)
     else if SameText(xeTestPump, 'ctrlo') then begin
       if lFocus = 0 then
@@ -24114,11 +24177,23 @@ begin
     Exit;
   end;
 
-  lWhere := IfThen(TestPumpInside, 'inside the nested pump', 'outside any nested pump');
+  if xeTestPumpModal then
+    lWhere := IfThen(TestPumpInside, 'inside the modal loop', 'outside any modal loop')
+  else
+    lWhere := IfThen(TestPumpInside, 'inside the nested pump', 'outside any nested pump');
+
+  if TestPumpFocus <> GetFocus then begin
+    TestPumpFocus := GetFocus;
+    lCtrl := FindControl(TestPumpFocus);
+    if Assigned(lCtrl) then
+      TestPumpNote('focus now ' + lCtrl.Name + ' (' + lCtrl.ClassName + ') ' + lWhere)
+    else
+      TestPumpNote('focus now $' + IntToHex(TestPumpFocus, 8) + ' ' + lWhere);
+  end;
 
   if TestPumpInside then
   for var i := 0 to Pred(Screen.CustomFormCount) do
-    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+    if (Screen.CustomForms[i] <> Self) and (Screen.CustomForms[i] <> TestPumpModalBase) and Screen.CustomForms[i].Visible and
        (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
       if SameText(xeTestPumpAnswer, 'yes') then
         Screen.CustomForms[i].ModalResult := mrYes
@@ -24164,9 +24239,15 @@ begin
     end;
   until lWnd = 0;
 
-  if Assigned(ActiveRecord) and (TestPumpSeen = '') then begin
-    TestPumpSeen := ActiveRecord.Name;
-    TestPumpNote('the View tab shows ' + TestPumpSeen + ' ' + lWhere +
+  var lShown: string := '-';
+  if Assigned(ActiveRecord) then
+    lShown := ActiveRecord.Name;
+  if lShown <> TestPumpSeen then begin
+    TestPumpSeen := lShown;
+    var lInFile := '';
+    if Assigned(ActiveRecord) then
+      lInFile := ' (in a file ' + BoolToStr(Assigned(ActiveRecord._File), True) + ')';
+    TestPumpNote('the View tab shows ' + TestPumpSeen + lInFile + ' ' + lWhere +
       IfThen(TestPumpInside, ', during "' + wbCurrentAction + '"', ''));
   end;
 
@@ -24175,7 +24256,10 @@ begin
     TestPumpEndTick := GetTickCount64 + 2000;
     if TestPumpCtrlDown then
       TestPumpSetCtrl(False);
-    TestPumpNote('back in the outermost message loop; observing for 2 s');
+    if xeTestPumpModal then
+      TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
+    else
+      TestPumpNote('back in the outermost message loop; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s');
   end;
 end;
 

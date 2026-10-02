@@ -131,6 +131,7 @@ var
   xeTestPumpAnswer         : string;
   xeTestPumpGenerator      : Boolean;
   xeTestPumpDirect         : Boolean;
+  xeTestPumpModal          : Boolean;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -949,14 +950,16 @@ begin
     wbFindCmdLineParam('testpumpanswer', xeTestPumpAnswer);
     xeTestPumpGenerator := FindCmdLineSwitch('testpumpgenerator');
     xeTestPumpDirect := FindCmdLineSwitch('testpumpdirect');
+    xeTestPumpModal := FindCmdLineSwitch('testpumpmodal');
     if (xeTestPumpFile = '') or
        not ((xeTestPumpAnswer = '') or SameText(xeTestPumpAnswer, 'yes') or SameText(xeTestPumpAnswer, 'no')) or
        not (SameText(xeTestPump, 'close') or SameText(xeTestPump, 'ctrlo') or SameText(xeTestPump, 'xback') or
-            SameText(xeTestPump, 'pendingset')) or
+            SameText(xeTestPump, 'pendingset') or SameText(xeTestPump, 'tab') or SameText(xeTestPump, 'cancelctrlo') or
+            SameText(xeTestPump, 'cancelshortcut') or SameText(xeTestPump, 'endsession')) or
        not ((xeTestPumpClient = '') or SameText(xeTestPumpClient, 'enabled') or SameText(xeTestPumpClient, 'disabled')) then begin
-      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset> -testpumpfile:<filename> ' +
-        '[-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
-        '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect]');
+      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession> ' +
+        '-testpumpfile:<filename> [-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
+        '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect] [-testpumpmodal]');
       Exit(False);
     end;
     if xeToolMode = tmLODgen then
