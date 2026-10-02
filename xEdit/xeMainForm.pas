@@ -875,6 +875,8 @@ type
     TestPumpModalBase        : TCustomForm;
     TestPumpFocus            : HWND;
     TestPumpShortCut         : TAction;
+    TestPumpBrowseNode       : PVirtualNode;
+    TestPumpBrowseCount      : Integer;
 
     TestViewModalAnswer      : TTimer;
     TestViewModalFactory     : TFunc<TwbConflictTree>;
@@ -887,6 +889,7 @@ type
     procedure TestViewModalAnswerTimer(Sender: TObject);
 
     procedure TestPumpStart;
+    procedure TestPumpBrowseStep;
     function TestPumpInside: Boolean;
     procedure TestPumpNote(const aText: string);
     procedure TestPumpSetCtrl(aDown: Boolean);
@@ -5109,7 +5112,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDropMaster or xeTestDeltaPatch or xeTestMerge or xeTestHide or xeTestFilter or xeTestSaveContexts) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDropMaster or xeTestDeltaPatch or xeTestMerge or xeTestHide or xeTestFilter or xeTestSaveContexts or (xeTestPumpDuringLoad <> '')) then
       ShowDeveloperMessage;
   end;
 
@@ -5362,6 +5365,8 @@ begin
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
       wbNoNexusModsCheck := Settings.ReadBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
 
+      if (xeTestPump <> '') and (xeTestPumpDuringLoad <> '') then
+        TestPumpStart;
       TLoaderThread.Create(sl);
     finally
       FreeAndNil(sl);
@@ -24047,7 +24052,10 @@ end;
 
 function TfrmMain.TestPumpInside: Boolean;
 begin
-  if xeTestPumpGenerator then
+  if xeTestPumpDuringLoad <> '' then
+    Result := LoaderStarted and not xeContext.LoaderDone and
+      (SameText(xeTestPumpDuringLoad, 'any') or xeContext.BuildingRefsParallel)
+  else if xeTestPumpGenerator then
     Result := GeneratorStarted and not GeneratorDone
   else if xeTestPumpModal then
     Result := (ProcessMessagesLockCount < 1) and HandleAllocated and not IsWindowEnabled(Handle)
@@ -24096,12 +24104,36 @@ begin
   end;
   TestPumpDelivered := False;
   TestPumpEnded := False;
+  TestPumpBrowseNode := nil;
+  TestPumpBrowseCount := 0;
   TestPumpSeen := '';
   TestPumpModalBase := nil;
   TestPumpFocus := 0;
   TestPumpTimer := TTimer.Create(Self);
   TestPumpTimer.Interval := 1;
   TestPumpTimer.OnTimer := TestPumpTimerTimer;
+end;
+
+procedure TfrmMain.TestPumpBrowseStep;
+begin
+  var lNode := TestPumpBrowseNode;
+  if Assigned(lNode) then
+    lNode := vstNav.GetNext(lNode)
+  else
+    lNode := vstNav.GetFirst;
+  while Assigned(lNode) do begin
+    var lData := PNavNodeData(vstNav.GetNodeData(lNode));
+    if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then
+      Break;
+    lNode := vstNav.GetNext(lNode);
+  end;
+  TestPumpBrowseNode := lNode;
+  if not Assigned(lNode) then
+    Exit;
+  vstNav.ClearSelection;
+  vstNav.FocusedNode := lNode;
+  vstNav.Selected[lNode] := True;
+  Inc(TestPumpBrowseCount);
 end;
 
 procedure TfrmMain.TestPumpTimerTimer(Sender: TObject);
@@ -24150,12 +24182,19 @@ begin
     var lModalName: string := '-';
     if Assigned(TestPumpModalBase) then
       lModalName := TestPumpModalBase.ClassName;
-    TestPumpNote('delivered ' + xeTestPump + ' ' + IfThen(xeTestPumpModal, 'inside a modal loop outside any pump', 'inside a nested pump') +
+    var lDelivery := 'inside a nested pump';
+    if xeTestPumpDuringLoad <> '' then
+      lDelivery := 'while the loader runs'
+    else if xeTestPumpModal then
+      lDelivery := 'inside a modal loop outside any pump';
+    TestPumpNote('delivered ' + xeTestPump + ' ' + lDelivery +
       ' during: "' + wbCurrentAction + '", caption "' + Caption +
       '"; client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + '; pump depth ' + IntToStr(NestedPumpDepth) +
       ', lock count ' + IntToStr(ProcessMessagesLockCount) + ', form enabled ' + BoolToStr(Enabled, True) +
       ', window enabled ' + BoolToStr(IsWindowEnabled(Handle), True) + ', modal ' + lModalName + '; focus ' + lWhere +
-      '; the View tab shows ' + TestPumpSeen);
+      '; the View tab shows ' + TestPumpSeen +
+      IfThen(xeTestPumpDuringLoad <> '', '; loader done ' + BoolToStr(xeContext.LoaderDone, True) + ', building references ' +
+        BoolToStr(xeContext.BuildingRefsParallel, True) + ', files in the nav tree ' + IntToStr(Length(Files)), ''));
     if SameText(xeTestPump, 'tab') then begin
       if lFocus = 0 then
         lFocus := Handle;
@@ -24175,7 +24214,25 @@ begin
     end else if SameText(xeTestPump, 'endsession') then
       TestPumpNote('WM_QUERYENDSESSION answered ' + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, 0)) +
         '; close deferred ' + BoolToStr(CloseDeferred, True))
-    else if SameText(xeTestPump, 'close') then
+    else if SameText(xeTestPump, 'hotkey') then begin
+      if not Assigned(ScriptHotkeys) then
+        ScriptHotkeys := TStringList.Create;
+      ScriptHotkeys.AddObject(xeTestPumpHotkey, TObject(ShortCut(VK_F12, [ssCtrl])));
+      TestPumpShortCut := TAction.Create(Self);
+      TestPumpShortCut.ActionList := ActionList1;
+      TestPumpShortCut.ShortCut := ShortCut(VK_F12, [ssCtrl]);
+      TestPumpShortCut.Tag := ScriptHotkeys.Count;
+      TestPumpShortCut.OnExecute := acScriptExecute;
+      if lFocus = 0 then
+        lFocus := Handle;
+      TestPumpSetCtrl(True);
+      PostMessage(lFocus, WM_KEYDOWN, VK_F12, 0);
+      PostMessage(lFocus, WM_KEYUP, VK_F12, LPARAM($C0000000));
+    end else if SameText(xeTestPump, 'edidsearch') then begin
+      edEditorIDSearch.Text := xeTestPumpSearch;
+      PostMessage(edEditorIDSearch.Handle, WM_KEYDOWN, VK_RETURN, 0);
+      PostMessage(edEditorIDSearch.Handle, WM_KEYUP, VK_RETURN, LPARAM($C0000000));
+    end else if SameText(xeTestPump, 'close') then
       PostMessage(Handle, WM_CLOSE, 0, 0)
     else if SameText(xeTestPump, 'ctrlo') then begin
       if lFocus = 0 then
@@ -24197,10 +24254,14 @@ begin
   if TestPumpEnded and (GetTickCount64 > TestPumpEndTick) then begin
     TestPumpTimer.Enabled := False;
     TestPumpNote('observation ended');
+    if xeTestPumpDuringLoad <> '' then
+      tmrShutdown.Enabled := True;
     Exit;
   end;
 
-  if xeTestPumpModal then
+  if xeTestPumpDuringLoad <> '' then
+    lWhere := IfThen(TestPumpInside, 'while the loader runs', 'after the loader')
+  else if xeTestPumpModal then
     lWhere := IfThen(TestPumpInside, 'inside the modal loop', 'outside any modal loop')
   else
     lWhere := IfThen(TestPumpInside, 'inside the nested pump', 'outside any nested pump');
@@ -24262,10 +24323,14 @@ begin
     end;
   until lWnd = 0;
 
+  var lBrowsing := SameText(xeTestPump, 'browse') and TestPumpInside;
+  if lBrowsing then
+    TestPumpBrowseStep;
+
   var lShown: string := '-';
   if Assigned(ActiveRecord) then
     lShown := ActiveRecord.Name;
-  if lShown <> TestPumpSeen then begin
+  if not lBrowsing and (lShown <> TestPumpSeen) then begin
     TestPumpSeen := lShown;
     var lInFile := '';
     if Assigned(ActiveRecord) then
@@ -24279,7 +24344,11 @@ begin
     TestPumpEndTick := GetTickCount64 + 2000;
     if TestPumpCtrlDown then
       TestPumpSetCtrl(False);
-    if xeTestPumpModal then
+    if xeTestPumpDuringLoad <> '' then
+      TestPumpNote('the loader phase has ended (loader done ' + BoolToStr(xeContext.LoaderDone, True) + '); records browsed ' +
+        IntToStr(TestPumpBrowseCount) + '; the View tab shows ' + lShown +
+        '; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
+    else if xeTestPumpModal then
       TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
     else
       TestPumpNote('back in the outermost message loop; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s');
@@ -24343,7 +24412,7 @@ begin
         end;
 
         if (xeToolMode in [tmLODgen, tmScript]) then begin
-          if xeTestPump <> '' then
+          if (xeTestPump <> '') and (xeTestPumpDuringLoad = '') then
             TestPumpStart;
           if not wbForceTerminate then
             tmrGenerator.Enabled := True;
@@ -24423,7 +24492,7 @@ begin
         mniModGroupsEnabled.Checked := ConflictView.ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ConflictView.ModGroupsEnabled;
 
-        if xeTestPump <> '' then
+        if (xeTestPump <> '') and (xeTestPumpDuringLoad = '') then
           TestPumpStart;
 
         if xeQuickShowConflicts then
