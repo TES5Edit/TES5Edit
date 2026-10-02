@@ -2843,8 +2843,8 @@ begin
       '_' + flContextObj.Settings.Language;
 
     CacheFileName := CacheFileName + wbRefCacheExt;
+    MemoryStream := nil;
     if not flContextObj.Settings.DontCacheLoad and FileExists(CacheFileName) then begin
-      Include(flStates, fsRefsBuild);
       MemoryStream := TMemoryStream.Create;
       try
         FileStream := TBufferedFileStream.Create(CacheFileName, fmOpenRead or fmShareDenyWrite);
@@ -2852,7 +2852,15 @@ begin
           TwbCompression.Decompress(ctLZ4F, FileStream, MemoryStream);
         finally
           FileStream.Free;
+        end;
+      except
+        FreeAndNil(MemoryStream);
+        System.SysUtils.DeleteFile(CacheFileName);
       end;
+    end;
+    if Assigned(MemoryStream) then begin
+      Include(flStates, fsRefsBuild);
+      try
         MemoryStream.Position := 0;
         MemoryStream.Read(flRecordsCount, SizeOf(flRecordsCount));
         Assert(flRecordsCount = Length(flRecords), '[TwbFile.BuildOrLoadRef] flRecordsCount <> Length(flRecords)');
@@ -2890,11 +2898,19 @@ begin
                 wbTick;
               end;
               MemoryStream.Position := 0;
-              FileStream := TBufferedFileStream.Create(CacheFileName, fmCreate);
+              var lTempFileName := CacheFileName + '.' + IntToStr(GetCurrentProcessId) + '.' + IntToStr(GetCurrentThreadId) + '.tmp';
               try
-                TwbCompression.Compress(ctLZ4F, MemoryStream, FileStream);
-              finally
-                FileStream.Free;
+                FileStream := TBufferedFileStream.Create(lTempFileName, fmCreate);
+                try
+                  TwbCompression.Compress(ctLZ4F, MemoryStream, FileStream);
+                finally
+                  FileStream.Free;
+                end;
+                if not MoveFileEx(PChar(lTempFileName), PChar(CacheFileName), MOVEFILE_REPLACE_EXISTING) then
+                  RaiseLastOSError;
+              except
+                System.SysUtils.DeleteFile(lTempFileName);
+                raise;
               end;
             finally
               MemoryStream.Free;
