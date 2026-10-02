@@ -87,6 +87,7 @@ type
     OrgConflictThis : TConflictThis;
     ElementGen      : Integer;
     ContainerGen    : Integer;
+    ViewEpoch       : Cardinal;
     MissingElements : TDynElements;
     Flags           : TNavNodeFlags;
   end;
@@ -959,6 +960,7 @@ type
     procedure InvalidateElementsTreeView(aNodes: TNodeArray); overload;
     procedure InvalidateElementsTreeView; overload;
     procedure ResetAllConflict;
+    procedure ResetConflictOfAllFiles;
     procedure ResetActiveTree;
     procedure ExpandView;
     function CollectViewContainers: TwbContainerElementRefs;
@@ -13857,8 +13859,10 @@ var
   ca: TConflictAll;
   PatronSet: Boolean;
   lConflictSettings: string;
+  lActorTemplateHide: Boolean;
 begin
   lConflictSettings := ConflictSettings;
+  lActorTemplateHide := wbActorTemplateHide;
   with TfrmOptions.Create(Self) do try
     pnlFontRecords.Font := vstNav.Font;
     pnlFontMessages.Font := mmoMessages.Font;
@@ -13968,8 +13972,11 @@ begin
     xeContext.Settings.ConvertIntFormID := cbConvertIntFormID.Checked;
     xeContext.GameDefObj.DefineOptions.Collapse := CollapseOptions;
     wbCollapseBenignArray := cbCollapseBenignArray.Checked;
-    if ConflictSettings <> lConflictSettings then
+    if ConflictSettings <> lConflictSettings then begin
       ResetAllConflict;
+      if wbActorTemplateHide <> lActorTemplateHide then
+        ResetConflictOfAllFiles;
+    end;
     vstNav.Invalidate;
     if (wbShrinkButtons <> cbShrinkButtons.Checked) then
       if cbShrinkButtons.Checked then ShrinkButtons else ExpandButtons;
@@ -15259,12 +15266,17 @@ begin
 end;
 
 procedure TfrmMain.ResetAllConflict;
+begin
+  xeContext.ConflictRulesChanged;
+  vstNav.Invalidate;
+end;
+
+procedure TfrmMain.ResetConflictOfAllFiles;
 var
   i     : Integer;
   _File : IwbFile;
 begin
   wbStartTime := Now;
-  ConflictView.RulesChanged;
 
   pnlClient.Enabled := False;
   UpdatePnlCancelVisible;
@@ -18789,13 +18801,15 @@ begin
       (NodeData.Element.ElementType = etMainRecord) then begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
-      if (NodeData.ConflictAll = caUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
+      if (NodeData.ConflictAll = caUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) or
+        (NodeData.ViewEpoch <> ConflictView.Epoch) then begin
         ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
         with NodeData^ do begin
           OrgConflictAll  := ConflictAll;
           OrgConflictThis := ConflictThis;
         end;
         NodeData.ElementGen := MainRecord.ElementGeneration;
+        NodeData.ViewEpoch := ConflictView.Epoch;
         if MainRecord.IsInjected then
           Include(NodeData.Flags, nnfInjected)
         else
@@ -19735,13 +19749,15 @@ begin
       MainRecord := NodeData.Element as IwbMainRecord;
 
       if xeContext.LoaderDone then
-        if (NodeData.ConflictThis = ctUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) then begin
+        if (NodeData.ConflictThis = ctUnknown) or (MainRecord.ElementGeneration <> NodeData.ElementGen) or
+          (NodeData.ViewEpoch <> ConflictView.Epoch) then begin
           ConflictLevelForMainRecord(MainRecord, NodeData.ConflictAll, NodeData.ConflictThis);
           with NodeData^ do begin
             OrgConflictAll  := ConflictAll;
             OrgConflictThis := ConflictThis;
           end;
           NodeData.ElementGen := MainRecord.ElementGeneration;
+          NodeData.ViewEpoch := ConflictView.Epoch;
           if MainRecord.IsInjected then
             Include(NodeData.Flags, nnfInjected)
           else
@@ -22219,6 +22235,7 @@ var
   lNavRecords      : TDynMainRecords;
   lNavVerdicts     : TArray<string>;
   lNavGens         : TArray<Integer>;
+  lNavEpoch        : Cardinal;
 
   function NavVerdict(const aRecord: IwbMainRecord): string;
   var
@@ -22253,6 +22270,7 @@ var
       Inc(lCount);
     end;
     SetLength(lNavRecords, lCount);
+    lNavEpoch := ConflictView.Epoch;
   end;
 
   procedure NavAfter(const aArm: string);
@@ -22261,6 +22279,7 @@ var
     var lStale := 0;
     var lExamples := 0;
     var lCachedStale := 0;
+    var lEpochKept := ConflictView.Epoch = lNavEpoch;
     for var i := Low(lNavRecords) to High(lNavRecords) do begin
       var lGenKept := lNavRecords[i].ElementGeneration = lNavGens[i];
       var lCached := NavVerdict(lNavRecords[i]);
@@ -22273,16 +22292,16 @@ var
       end;
       if lFresh <> lNavVerdicts[i] then begin
         Inc(lMoved);
-        if lGenKept then
+        if lGenKept and lEpochKept then
           Inc(lStale);
         if lExamples < 5 then begin
           Inc(lExamples);
-          lLines.Add(Format('# nav %s'#9'example'#9'%s'#9'before %s'#9'after %s'#9'generation %s', [aArm, lNavRecords[i].Name,
-            lNavVerdicts[i], lFresh, IfThen(lGenKept, 'kept', 'moved')]));
+          lLines.Add(Format('# nav %s'#9'example'#9'%s'#9'before %s'#9'after %s'#9'generation %s'#9'epoch %s', [aArm,
+            lNavRecords[i].Name, lNavVerdicts[i], lFresh, IfThen(lGenKept, 'kept', 'moved'), IfThen(lEpochKept, 'kept', 'moved')]));
         end;
       end;
     end;
-    lLines.Add(Format('# nav %s'#9'file %s'#9'records %d'#9'moved %d'#9'moved with generation kept %d',
+    lLines.Add(Format('# nav %s'#9'file %s'#9'records %d'#9'moved %d'#9'moved with generation and epoch kept %d',
       [aArm, xeTestOptionsNav, Length(lNavRecords), lMoved, lStale]));
     lLines.Add(Format('# nav %s'#9'cached verdict differs from fresh %d', [aArm, lCachedStale]));
     lNavRecords := nil;

@@ -28,6 +28,9 @@ type
     cvModGroupTargets    : TDictionary<PwbModuleInfo, TwbModuleInfos>;
     cvHidden             : TwbHiddenSet;
     cvEpoch              : Cardinal;
+    cvRulesGeneration    : Cardinal;
+    procedure FollowContextRules; inline;
+    function GetEpoch: Cardinal;
     procedure SetQuickShowConflicts(aValue: Boolean);
     procedure SetOnlyMasterAndLeafs(aValue: Boolean);
     procedure SetModGroupsEnabled(aValue: Boolean);
@@ -54,7 +57,7 @@ type
     property AlignArrayElements: Boolean read cvAlignArrayElements write SetAlignArrayElements;
     property AlignArrayLimit: Integer read cvAlignArrayLimit write SetAlignArrayLimit;
     property Hidden: TwbHiddenSet read cvHidden;
-    property Epoch: Cardinal read cvEpoch;
+    property Epoch: Cardinal read GetEpoch;
   end;
 
   TwbConflictTreeNode = class
@@ -183,6 +186,7 @@ begin
   cvHidden := TwbHiddenSet.Create;
   cvTrees := TList<TwbConflictTree>.Create;
   cvEpoch := 1;
+  cvRulesGeneration := aContext.ConflictRulesGeneration;
 end;
 
 destructor TwbConflictView.Destroy;
@@ -199,6 +203,20 @@ end;
 procedure TwbConflictView.RulesChanged;
 begin
   Inc(cvEpoch);
+end;
+
+procedure TwbConflictView.FollowContextRules;
+begin
+  if cvRulesGeneration <> Context.ConflictRulesGeneration then begin
+    cvRulesGeneration := Context.ConflictRulesGeneration;
+    Inc(cvEpoch);
+  end;
+end;
+
+function TwbConflictView.GetEpoch: Cardinal;
+begin
+  FollowContextRules;
+  Result := cvEpoch;
 end;
 
 function TwbConflictView.ModGroupTargets(aModule: PwbModuleInfo): TwbModuleInfos;
@@ -264,6 +282,7 @@ end;
 
 function TwbConflictView.Lookup(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis): Boolean;
 begin
+  FollowContextRules;
   var lID := aRecord.DenseIDIn(Context);
   Result := (lID > 0) and (lID < Cardinal(Length(cvEntries)));
   if Result then
@@ -282,6 +301,7 @@ end;
 
 procedure TwbConflictView.Store(const aRecord: IwbMainRecord; aConflictAll: TConflictAll; aConflictThis: TConflictThis);
 begin
+  FollowContextRules;
   var lID := aRecord.DenseIDIn(Context);
   if lID = 0 then
     Exit;
