@@ -11260,11 +11260,13 @@ begin
       if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then begin
         Assert(not (csInit in cntStates));
         Include(mrStates, mrsQuickInit);
+        Include(cntStates, csInitializing);
         Include(cntStates, csInit);
         try
           try
             Init;
           finally
+            Exclude(cntStates, csInitializing);
             DoReset(True);
           end;
         finally
@@ -11743,11 +11745,13 @@ begin
         Exit;
       end;
       Include(mrStates, mrsQuickInit);
+      Include(cntStates, csInitializing);
       Include(cntStates, csInit);
       try
         try
           Init;
         finally
+          Exclude(cntStates, csInitializing);
           DoReset(True);
         end;
       finally
@@ -11851,16 +11855,18 @@ begin
 
   if not ((mrsQuickInitDone in mrStates) or (csInitOnce in cntStates)) then
     if GetCanHaveFullName then begin
-      Include(mrStates, mrsQuickInit);
       if csInit in cntStates then begin
         Result := '<FullName not yet available: init still running>';
         Exit;
       end;
+      Include(mrStates, mrsQuickInit);
+      Include(cntStates, csInitializing);
       Include(cntStates, csInit);
       try
         try
           Init;
         finally
+          Exclude(cntStates, csInitializing);
           DoReset(True);
         end;
       finally
@@ -11998,11 +12004,13 @@ begin
       if csInit in cntStates then
         Exit(False);
       Include(mrStates, mrsQuickInit);
+      Include(cntStates, csInitializing);
       Include(cntStates, csInit);
       try
         try
           Init;
         finally
+          Exclude(cntStates, csInitializing);
           DoReset(True);
         end;
       finally
