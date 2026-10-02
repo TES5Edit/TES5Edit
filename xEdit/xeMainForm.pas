@@ -7997,6 +7997,11 @@ begin
     Exit;
   end;
 
+  if not xeContext.LoaderDone then begin
+    PostAddMessage('Script cannot be applied while the background loader is running');
+    Exit;
+  end;
+
   if Trim(aScript) = '' then
     Exit;
 
