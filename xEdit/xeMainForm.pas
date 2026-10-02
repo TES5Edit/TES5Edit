@@ -1056,6 +1056,7 @@ type
     procedure WndProc(var Message: TMessage); override;
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
+    procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
@@ -1269,6 +1270,7 @@ type
     procedure AfterConstruction; override;
     destructor Destroy; override;
     function CloseQuery: Boolean; override;
+    function IsShortCut(var Message: TWMKey): Boolean; override;
 
     procedure PostResetActiveTree;
     procedure CheckViewForChange;
@@ -2424,7 +2426,7 @@ end;
 
 function TfrmMain.InNestedLoop: Boolean;
 begin
-  Result := (NestedPumpDepth > 0) or not Enabled;
+  Result := (NestedPumpDepth > 0) or (HandleAllocated and not IsWindowEnabled(Handle));
 end;
 
 function TfrmMain.IsInputForNestedPump(const aMsg: TMsg): Boolean;
@@ -2433,7 +2435,10 @@ begin
   if NestedPumpDepth < 1 then
     Exit;
   case aMsg.message of
-    WM_KEYDOWN, WM_CHAR, WM_DEADCHAR, WM_SYSCHAR, WM_SYSDEADCHAR:
+    WM_KEYDOWN:
+      if (aMsg.wParam = VK_TAB) and not pnlClient.Enabled and (GetKeyState(VK_CONTROL) >= 0) then
+        Exit;
+    WM_CHAR, WM_DEADCHAR, WM_SYSCHAR, WM_SYSDEADCHAR:
       ;
     WM_SYSKEYDOWN:
       if aMsg.wParam = VK_F4 then
@@ -2476,6 +2481,22 @@ begin
   finally
     CloseByUser := False;
   end;
+end;
+
+procedure TfrmMain.WMQueryEndSession(var Message: TWMQueryEndSession);
+begin
+  if (NestedPumpDepth > 0) or (LongActionDepth > 0) or not pnlClient.Enabled then begin
+    Message.Result := 0;
+    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Windows session end refused: an operation is running.');
+  end else
+    Message.Result := LRESULT(inherited CloseQuery);
+end;
+
+function TfrmMain.IsShortCut(var Message: TWMKey): Boolean;
+begin
+  if NestedPumpDepth > 0 then
+    Exit(False);
+  Result := inherited IsShortCut(Message);
 end;
 
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
@@ -6470,6 +6491,8 @@ var
   r                           : TRect;
   i                           : Integer;
 begin
+  if NestedPumpDepth > 0 then
+    Exit;
   if xeContext.LoaderDone then begin
     if (Key = Ord('S')) and (Shift = [ssCtrl]) then begin
       jbhSave.CancelHint;
