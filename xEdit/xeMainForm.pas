@@ -24071,6 +24071,8 @@ begin
   if not TestPumpDelivered then begin
     if not TestPumpInside then
       Exit;
+    if xeTestPumpDirect and (ProcessMessagesLockCount > 0) then
+      Exit;
     if SameText(xeTestPumpClient, 'enabled') and not pnlClient.Enabled then
       Exit;
     if SameText(xeTestPumpClient, 'disabled') and pnlClient.Enabled then
@@ -25788,6 +25790,7 @@ end;
 initialization
   wbLockProcessMessages := LockProcessMessages;
   wbUnLockProcessMessages := UnLockProcessMessages;
+  wbProcessMessages := DoProcessMessages;
 
   {$IFDEF USE_PARALLEL_BUILD_REFS}
   _LoaderProgressLock.Initialize;

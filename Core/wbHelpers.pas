@@ -56,6 +56,7 @@ function wbCRC32App: TwbCRC32;
 function wbIsAssociatedWithExtension(const aExt: string): Boolean;
 function wbAssociateWithExtension(aExt: string; const aName, aDescr: string): Boolean;
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
+procedure wbDoProcessMessages;
 procedure SerializeArray(const aElement: IwbElement; const aJsonArray: TJsonArray);
 procedure SerializeElement(const aElement: IwbElement; const aJsonObj: TJsonObject);
 function  SerializeElementToJson(const aElement: IwbElement): TJsonObject;
@@ -890,6 +891,14 @@ begin
   SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
 end;
 
+procedure wbDoProcessMessages;
+begin
+  if Assigned(wbProcessMessages) then
+    wbProcessMessages
+  else
+    Application.ProcessMessages;
+end;
+
 function ExecuteCaptureConsoleOutput(const aCommandLine: string): Cardinal;
 type
   OemString = type AnsiString(CP_OEMCP);
@@ -926,7 +935,7 @@ begin
         try
           repeat
             dRunning := WaitForSingleObject(piProcess.hProcess, 100);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
 
             if wbForceTerminate or (GetKeyState(VK_ESCAPE) and 128 = 128) then begin
               dw := Integer(TerminateProcess(piProcess.hProcess, 1));

@@ -130,6 +130,7 @@ var
   xeTestPumpClient         : string;
   xeTestPumpAnswer         : string;
   xeTestPumpGenerator      : Boolean;
+  xeTestPumpDirect         : Boolean;
   xeTestSaveContexts       : Boolean;
   xeTestSaveContextsFile   : string;
   xeTestSaveContextsSave   : string;
@@ -941,6 +942,27 @@ begin
       xeAutoExit := True;
   end;
 
+  if wbFindCmdLineParam('testpump', xeTestPump) then begin
+    wbFindCmdLineParam('testpumpfile', xeTestPumpFile);
+    wbFindCmdLineParam('testpumpaction', xeTestPumpAction);
+    wbFindCmdLineParam('testpumpclient', xeTestPumpClient);
+    wbFindCmdLineParam('testpumpanswer', xeTestPumpAnswer);
+    xeTestPumpGenerator := FindCmdLineSwitch('testpumpgenerator');
+    xeTestPumpDirect := FindCmdLineSwitch('testpumpdirect');
+    if (xeTestPumpFile = '') or
+       not ((xeTestPumpAnswer = '') or SameText(xeTestPumpAnswer, 'yes') or SameText(xeTestPumpAnswer, 'no')) or
+       not (SameText(xeTestPump, 'close') or SameText(xeTestPump, 'ctrlo') or SameText(xeTestPump, 'xback') or
+            SameText(xeTestPump, 'pendingset')) or
+       not ((xeTestPumpClient = '') or SameText(xeTestPumpClient, 'enabled') or SameText(xeTestPumpClient, 'disabled')) then begin
+      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset> -testpumpfile:<filename> ' +
+        '[-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
+        '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect]');
+      Exit(False);
+    end;
+    if xeToolMode = tmLODgen then
+      xeAutoLoad := True;
+  end;
+
   if xeToolMode = tmEdit then begin
     if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
       or ExeName.Contains('quickshowconflicts') or ExeName.Contains('qsc') then
@@ -1128,24 +1150,6 @@ begin
       end;
       xeTestFilter := True;
       xeAutoLoad := True;
-    end;
-
-    if wbFindCmdLineParam('testpump', xeTestPump) then begin
-      wbFindCmdLineParam('testpumpfile', xeTestPumpFile);
-      wbFindCmdLineParam('testpumpaction', xeTestPumpAction);
-      wbFindCmdLineParam('testpumpclient', xeTestPumpClient);
-      wbFindCmdLineParam('testpumpanswer', xeTestPumpAnswer);
-      xeTestPumpGenerator := FindCmdLineSwitch('testpumpgenerator');
-      if (xeTestPumpFile = '') or
-         not ((xeTestPumpAnswer = '') or SameText(xeTestPumpAnswer, 'yes') or SameText(xeTestPumpAnswer, 'no')) or
-         not (SameText(xeTestPump, 'close') or SameText(xeTestPump, 'ctrlo') or SameText(xeTestPump, 'xback') or
-              SameText(xeTestPump, 'pendingset')) or
-         not ((xeTestPumpClient = '') or SameText(xeTestPumpClient, 'enabled') or SameText(xeTestPumpClient, 'disabled')) then begin
-        ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset> -testpumpfile:<filename> ' +
-          '[-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
-          '[-testpumpanswer:<yes|no>]');
-        Exit(False);
-      end;
     end;
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')

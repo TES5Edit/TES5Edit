@@ -1777,7 +1777,7 @@ begin
     end;
 
     Application.MainForm.Caption := 'Scanning LOD Blocks: ' + aWorldspace.Name + ',  please wait...';
-    Application.ProcessMessages;
+    wbDoProcessMessages;
 
     // scan BTT files to associate lod trees indexes with TREE FormIDs
     slCont := TwbFastStringList.Create;
@@ -1890,7 +1890,7 @@ begin
     Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(TotalCount) +
       ' References Found: ' + IntToStr(Count) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
+    wbDoProcessMessages;
     StartTick := GetTickCount;
   end;
 
@@ -1919,7 +1919,7 @@ var
 begin
   Application.MainForm.Caption := 'Scanning References: ' + aWorldspace.Name + ' Processed Records: 0 '+
     'References Found: 0 Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
+  wbDoProcessMessages;
   StartTick := GetTickCount;
 
   Master := aWorldspace.MasterOrSelf;
@@ -1937,14 +1937,14 @@ begin
   if Length(REFRs) > 1 then begin
     Application.MainForm.Caption := 'Sorting References: ' + aWorldspace.Name +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
+    wbDoProcessMessages;
 
     wbMergeSortPtr(@REFRs[0], Length(REFRs), CompareElementsFormIDAndLoadOrder);
 
     Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Unique References Found: ' + IntToStr(0) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
+    wbDoProcessMessages;
     StartTick := GetTickCount;
 
     j := 0;
@@ -1960,7 +1960,7 @@ begin
         Application.MainForm.Caption := 'Removing duplicates: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
           ' Unique References Found: ' + IntToStr(j) +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
+        wbDoProcessMessages;
         StartTick := GetTickCount;
       end;
     end;
@@ -2087,7 +2087,7 @@ begin
     Application.MainForm.Caption := 'Filtering VWD References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Matching Records: ' + IntToStr(0) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
+    wbDoProcessMessages;
     StartTick := GetTickCount;
 
     SetLength(RefInfos, Length(REFRs));
@@ -2157,7 +2157,7 @@ begin
           Application.MainForm.Caption := 'Filtering VWD References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
             ' Matching Records: ' + IntToStr(Succ(j)) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
+          wbDoProcessMessages;
           StartTick := GetTickCount;
         end;
 
@@ -2194,7 +2194,7 @@ begin
   i := 0;
   Application.MainForm.Caption := 'Deleting old .lod files: ' + aWorldspace.Name + ' Processed Files: ' + IntToStr(i) +
     ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
+  wbDoProcessMessages;
   StartTick := GetTickCount;
 
   if wbForceTerminate then
@@ -2208,7 +2208,7 @@ begin
       if StartTick + 500 < GetTickCount then begin
         Application.MainForm.Caption := 'Deleting old .lod files: ' + aWorldspace.Name + ' Processed Files: ' + IntToStr(i) +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
+        wbDoProcessMessages;
         StartTick := GetTickCount;
       end;
 
@@ -2225,7 +2225,7 @@ begin
     try
       Application.MainForm.Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-      Application.ProcessMessages;
+      wbDoProcessMessages;
       StartTick := GetTickCount;
 
       for i := Low(RefInfos) to High(RefInfos) do
@@ -2240,14 +2240,14 @@ begin
           if StartTick + 500 < GetTickCount then begin
             Application.MainForm.Caption := 'Assigning References to Cells: ' + aWorldspace.Name + ' Processed References: ' + IntToStr(i) +
               ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
             StartTick := GetTickCount;
           end;
         end;
 
       Application.MainForm.Caption := 'Writing .lod files: ' + aWorldspace.Name + ' Processed Cells: ' + IntToStr(0) +
         ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-      Application.ProcessMessages;
+      wbDoProcessMessages;
       StartTick := GetTickCount;
 
       for i := Low(Cells) to High(Cells) do
@@ -2326,7 +2326,7 @@ begin
           if StartTick + 500 < GetTickCount then begin
             Application.MainForm.Caption := 'Writing .lod files: ' + aWorldspace.Name + ' Processed Cells: ' + IntToStr(i * Length(Cells[i]) + j) +
               ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
             StartTick := GetTickCount;
           end;
         end;
@@ -2440,7 +2440,7 @@ var
           if StartTick + 500 < GetTickCount then begin
             Application.MainForm.Caption := 'Gathering Large References: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
               ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
             StartTick := GetTickCount;
           end;
         end;
@@ -2515,7 +2515,7 @@ begin
   if (lodTrees in LODTypes) and not bTrees3D then begin
     Application.MainForm.Caption := 'Building Trees LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
+    wbDoProcessMessages;
     StartTick := GetTickCount;
 
     TreesCount := 0;
@@ -2654,14 +2654,14 @@ begin
         if StartTick + 500 < GetTickCount then begin
           Application.MainForm.Caption := 'Building Trees LOD blocks: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
+          wbDoProcessMessages;
           StartTick := GetTickCount;
         end;
       end;
 
       slLog.Sort;
       wbProgressCallback(Trim(slLog.Text));
-      Application.ProcessMessages;
+      wbDoProcessMessages;
 
       if not Lst.BuildAtlas(StrToIntDef(Settings.ReadString('Worldspace', 'AtlasSizeMax', ''), 8192)) then begin
         // will return false without exception only if atlas is empty, skip this silenty
@@ -2677,7 +2677,7 @@ begin
 
         Application.MainForm.Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
+        wbDoProcessMessages;
         StartTick := GetTickCount;
 
         if wbForceTerminate then
@@ -2689,7 +2689,7 @@ begin
             if StartTick + 500 < GetTickCount then begin
               Application.MainForm.Caption := 'Deleting old LOD files: ' + aWorldspace.Name +
                 ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-              Application.ProcessMessages;
+              wbDoProcessMessages;
               StartTick := GetTickCount;
             end;
             if wbForceTerminate then
@@ -2701,7 +2701,7 @@ begin
 
         if Length(LOD4) > 0 then begin
           Application.MainForm.Caption := 'Saving Trees LOD files: ' + aWorldspace.Name;
-          Application.ProcessMessages;
+          wbDoProcessMessages;
 
           i := Settings.ReadInteger(Section, 'TreesBrightness', 0);
           Lst.ChangeAtlasBrightness(i);
@@ -2732,7 +2732,7 @@ begin
   if lodObjects in LODTypes then begin
     Application.MainForm.Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
       ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-    Application.ProcessMessages;
+    wbDoProcessMessages;
     StartTick := GetTickCount;
 
     slCache := TStringList.Create;
@@ -2976,7 +2976,7 @@ begin
         if StartTick + 500 < GetTickCount then begin
           Application.MainForm.Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
             ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-          Application.ProcessMessages;
+          wbDoProcessMessages;
           StartTick := GetTickCount;
         end;
       end;
@@ -3122,14 +3122,14 @@ begin
           {if wbGameMode in [ gmSSE ] then begin
             // use LODGen.exe to build texture list, output file defined by TexturesListFile= in export file
             wbProgressCallback('[' + aWorldspace.EditorID + '] Gathering list of textures for atlas');
-            Application.ProcessMessages;
+            wbDoProcessMessages;
             s := Format('"%s" "%s"', [wbScriptsPath + sLODGenName, s]);
             // this overwrites GameMode set in export file
             s := s + ' --GameMode textureslist';
 
             Application.MainForm.Caption := 'Running LODGen, press ESC to abort';
             wbProgressCallback('[' + aWorldspace.EditorID + '] Running ' + s);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
 
             // execute LODGen.exe to generate texture list
             ErrCode := ExecuteCaptureConsoleOutput(s);
@@ -3155,7 +3155,7 @@ begin
             end;
 
             wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
-            Application.ProcessMessages;
+            wbDoProcessMessages;
 
             wbBuildAtlasFromTexturesList(
               aWorldspace.ContextObj,
@@ -3194,7 +3194,7 @@ begin
 
         Application.MainForm.Caption := 'Running LODGen, press ESC to abort';
         wbProgressCallback('[' + aWorldspace.EditorID + '] Running ' + s);
-        Application.ProcessMessages;
+        wbDoProcessMessages;
 
         ErrCode := ExecuteCaptureConsoleOutput(s);
         if ErrCode <> 0 then
@@ -3504,7 +3504,7 @@ var
       if StartTick + 500 < GetTickCount then begin
         Application.MainForm.Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(i) +
           ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-        Application.ProcessMessages;
+        wbDoProcessMessages;
         StartTick := GetTickCount;
       end;
 
@@ -3536,7 +3536,7 @@ begin
   wbProgressCallback('[' + aWorldspace.EditorID + '] Generating LOD');
   Application.MainForm.Caption := 'Building Objects LOD: ' + aWorldspace.Name + ' Processed Records: ' + IntToStr(0) +
     ' Elapsed Time: ' + FormatDateTime('nn:ss', Now - wbStartTime);
-  Application.ProcessMessages;
+  wbDoProcessMessages;
   StartTick := GetTickCount;
 
   slCache := TStringList.Create;
@@ -3710,7 +3710,7 @@ begin
 
         if slLODTextures.Count > 1 then begin
           wbProgressCallback('[' + aWorldspace.EditorID + '] Building LOD textures atlas: ' + AtlasName);
-          Application.ProcessMessages;
+          wbDoProcessMessages;
           wbBuildAtlasFromTexturesList(
             aWorldspace.ContextObj,
             slLODTextures,
@@ -3738,7 +3738,7 @@ begin
 
       Application.MainForm.Caption := 'Running LODGen, press ESC to abort';
       wbProgressCallback('[' + aWorldspace.EditorID + '] Running ' + s);
-      Application.ProcessMessages;
+      wbDoProcessMessages;
 
       ErrCode := ExecuteCaptureConsoleOutput(s);
       if ErrCode <> 0 then

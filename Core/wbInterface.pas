@@ -5640,6 +5640,7 @@ function DummyIntegerFunction: Integer;
 var
   wbLockProcessMessages: TIntegerFunction = DummyIntegerFunction;
   wbUnLockProcessMessages: TIntegerFunction = DummyIntegerFunction;
+  wbProcessMessages: TProcedure = nil;
 
 function Lighter(Color: TColor; Amount: Double = 0.5): TColor;
 function Darker(Color: TColor; Amount: Double = 0.5): TColor;
