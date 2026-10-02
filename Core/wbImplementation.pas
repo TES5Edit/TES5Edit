@@ -15599,7 +15599,7 @@ end;
 
 procedure TwbMainRecord.UpdateRefs;
 begin
-  if (csRefsBuild in cntStates) then
+  if (csRefsBuild in cntStates) and not (csInitializing in cntStates) then
     BuildRef;
 end;
 
