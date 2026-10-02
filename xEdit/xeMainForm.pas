@@ -858,9 +858,18 @@ type
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
 
+    CloseDeferred            : Boolean;
+    CloseByUser              : Boolean;
+    LongActionDepth          : Integer;
+    CancelableLongActionDepth : Integer;
+    ResetActiveTreeDeferred  : Boolean;
+    PluggyChangeDeferred     : Boolean;
+
     TestPumpTimer            : TTimer;
     TestPumpDelivered        : Boolean;
     TestPumpEnded            : Boolean;
+    TestPumpEndTick          : UInt64;
+    TestPumpLastDialog       : HWND;
     TestPumpSeen             : string;
     TestPumpCtrlDown         : Boolean;
 
@@ -875,6 +884,7 @@ type
     procedure TestViewModalAnswerTimer(Sender: TObject);
 
     procedure TestPumpStart;
+    function TestPumpInside: Boolean;
     procedure TestPumpNote(const aText: string);
     procedure TestPumpSetCtrl(aDown: Boolean);
     procedure TestPumpTimerTimer(Sender: TObject);
@@ -1032,7 +1042,7 @@ type
     function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
     function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 
-    procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
+    procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc; aCancelable: Boolean = False);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
 
     procedure LoadModGroupsSelection(const aModGroups: TwbModGroupPtrs);
@@ -1041,6 +1051,7 @@ type
     function FindColors(const s: string; out aColors: TArray<TColor>): Boolean;
     procedure WndProc(var Message: TMessage); override;
   private
+    procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMUser(var Message: TMessage); message WM_USER;
     procedure WMUser1(var Message: TMessage); message WM_USER + 1;
     procedure WMUserLoaderDone(var Message: TMessage); message WM_USER + 2;
@@ -1239,6 +1250,9 @@ type
 
     procedure UpdateActions; override;
 
+    function InNestedLoop: Boolean;
+    function IsInputForNestedPump(const aMsg: TMsg): Boolean;
+
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
@@ -1250,6 +1264,7 @@ type
     ConflictView: TwbConflictView;
     procedure AfterConstruction; override;
     destructor Destroy; override;
+    function CloseQuery: Boolean; override;
 
     procedure PostResetActiveTree;
     procedure CheckViewForChange;
@@ -1537,6 +1552,7 @@ end;
 threadvar
   LastUpdate               : UInt64;
   ProcessMessagesLockCount : Integer;
+  NestedPumpDepth          : Integer;
 
 function LockProcessMessages: Integer;
 begin
@@ -1554,9 +1570,11 @@ procedure DoProcessMessages;
 begin
   if ProcessMessagesLockCount < 1 then begin
     LockProcessMessages;
+    Inc(NestedPumpDepth);
     try
       Application.ProcessMessages;
     finally
+      Dec(NestedPumpDepth);
       UnLockProcessMessages;
     end;
   end;
@@ -2400,8 +2418,68 @@ begin
   end;
 end;
 
+function TfrmMain.InNestedLoop: Boolean;
+begin
+  Result := (NestedPumpDepth > 0) or not Enabled;
+end;
+
+function TfrmMain.IsInputForNestedPump(const aMsg: TMsg): Boolean;
+begin
+  Result := False;
+  if NestedPumpDepth < 1 then
+    Exit;
+  case aMsg.message of
+    WM_KEYDOWN, WM_CHAR, WM_DEADCHAR, WM_SYSCHAR, WM_SYSDEADCHAR:
+      ;
+    WM_SYSKEYDOWN:
+      if aMsg.wParam = VK_F4 then
+        Exit;
+    WM_MOUSEFIRST..WM_MOUSELAST:
+      if (aMsg.message = WM_LBUTTONUP) or (aMsg.message = WM_MBUTTONUP) then
+        Exit;
+  else
+    Exit;
+  end;
+  if (aMsg.hwnd <> Handle) and not IsChild(Handle, aMsg.hwnd) then
+    Exit;
+  if pnlCancel.HandleAllocated and ((aMsg.hwnd = pnlCancel.Handle) or IsChild(pnlCancel.Handle, aMsg.hwnd)) then
+    Exit;
+  Result := True;
+end;
+
+function TfrmMain.CloseQuery: Boolean;
+begin
+  if not InNestedLoop then
+    Exit(inherited CloseQuery);
+  Result := False;
+  if CloseDeferred then
+    Exit;
+  if CloseByUser and (LongActionDepth > 0) and (CancelableLongActionDepth = LongActionDepth) then begin
+    if MessageDlg('Cancel the current operation and close?', mtConfirmation, mbYesNo, 0, mbNo) <> mrYes then
+      Exit;
+    wbForceTerminate := True;
+    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Close requested: canceling the current operation.');
+  end else
+    PostAddMessage('[' + wbFormatElapsedTime(Now - wbStartTime) + '] Close requested: waiting for the current operation to end.');
+  CloseDeferred := True;
+end;
+
+procedure TfrmMain.WMClose(var Message: TWMClose);
+begin
+  CloseByUser := True;
+  try
+    inherited;
+  finally
+    CloseByUser := False;
+  end;
+end;
+
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
+  if IsInputForNestedPump(Msg) then begin
+    Handled := True;
+    Exit;
+  end;
   if Msg.message = 524 {WM_XBUTTONUP} then
     {$IFDEF WIN32}
     case LongRec(Msg.wParam).Hi of
@@ -3296,7 +3374,7 @@ begin
         end;
       end;
     end;
-  end);
+  end, True);
 end;
 
 procedure TfrmMain.mniNavCleaningObsoleteClick(Sender: TObject);
@@ -6064,9 +6142,13 @@ var
   i: Integer;
 
 begin
-  if xeTestPump <> '' then
-    TestPumpNote('FormClose entered: inside a nested pump ' + BoolToStr(ProcessMessagesLockCount > 0, True) +
-      ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"');
+  if xeTestPump <> '' then begin
+    var lShown := '';
+    if Assigned(ActiveRecord) then
+      lShown := ', the View tab shows ' + ActiveRecord.Name;
+    TestPumpNote('FormClose entered: inside a nested pump ' + BoolToStr(TestPumpInside, True) +
+      ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
+  end;
   Action := caFree;
   if LoaderStarted and not xeContext.LoaderDone then begin
     wbForceTerminate := True;
@@ -9122,7 +9204,7 @@ begin
       _File.BuildReachable;
     end;
     ReachableBuild := True;
-  end);
+  end, True);
 end;
 
 procedure TfrmMain.mniNavBuildRefClick(Sender: TObject);
@@ -9165,7 +9247,7 @@ begin
         DoProcessMessages;
         _File.BuildRef;
       end;
-    end);
+    end, True);
 
   finally
     Free;
@@ -13602,7 +13684,7 @@ begin
         finally
           vstNav.EndUpdate;
         end;
-      end);
+      end, True);
     end;
   finally
     Signatures.Free;
@@ -14208,7 +14290,7 @@ begin
   end;
 end;
 
-procedure TfrmMain.PerformLongAction(const aDesc, aProgress: string; const aAction: TProc);
+procedure TfrmMain.PerformLongAction(const aDesc, aProgress: string; const aAction: TProc; aCancelable: Boolean);
 var
   HadTick      : Boolean;
   HadLastMsg   : Boolean;
@@ -14238,6 +14320,9 @@ begin
   PrevProgress := wbCurrentProgress;
   pnlClient.Enabled := False;
   UpdatePnlCancelVisible;
+  Inc(LongActionDepth);
+  if aCancelable then
+    Inc(CancelableLongActionDepth);
   try
     pgMain.ActivePage := tbsMessages;
     if aDesc <> '' then
@@ -14272,6 +14357,9 @@ begin
       wbProgress(s);
     end;
   finally
+    if aCancelable then
+      Dec(CancelableLongActionDepth);
+    Dec(LongActionDepth);
     pnlClient.Enabled := WasEnabled;
     UpdatePnlCancelVisible;
     wbCurrentAction := PrevAction;
@@ -16847,12 +16935,16 @@ end;
 
 procedure TfrmMain.tmrUpdateColumnWidthsTimer(Sender: TObject);
 begin
+  if InNestedLoop then
+    Exit;
   tmrUpdateColumnWidths.Enabled := False;
   UpdateColumnWidths;
 end;
 
 procedure TfrmMain.tmrViewFilterApplyTimer(Sender: TObject);
 begin
+  if InNestedLoop then
+    Exit;
   tmrViewFilterApply.Enabled := False;
   with vstView do begin
     BeginUpdate;
@@ -17074,7 +17166,7 @@ begin
     }
   end;
 
-  if not Enabled then
+  if InNestedLoop then
     Exit;
 
   if not pnlClient.Enabled then
@@ -17236,7 +17328,7 @@ begin
   end;
 
   if (xeToolMode in [tmOnamUpdate, tmMasterUpdate, tmMasterRestore, tmESMify, tmESPify, tmSortAndCleanMasters, tmCheckForITM,
-        tmCheckForDR, tmCheckForErrors]) and xeContext.LoaderDone and not xeMasterUpdateDone then begin
+        tmCheckForDR, tmCheckForErrors]) and xeContext.LoaderDone and not xeMasterUpdateDone and not InNestedLoop then begin
     xeMasterUpdateDone := True;
     ChangesMade := False;
     if xeContext.LoaderError then begin
@@ -17341,6 +17433,8 @@ end;
 
 procedure TfrmMain.tmrPendingSetActiveTimer(Sender: TObject);
 begin
+  if InNestedLoop then
+    Exit;
   tmrPendingSetActive.Enabled := False;
   if Assigned(PendingContainer) then
     DoSetActiveContainer(PendingContainer)
@@ -17350,6 +17444,8 @@ end;
 
 procedure TfrmMain.tmrReferencedByFilterApplyTimer(Sender: TObject);
 begin
+  if InNestedLoop then
+    Exit;
   tmrReferencedByFilterApply.Enabled := false;
   ApplyReferencedByFilter;
 end;
@@ -23922,6 +24018,14 @@ begin
   lForm.ModalResult := mrOk;
 end;
 
+function TfrmMain.TestPumpInside: Boolean;
+begin
+  if xeTestPumpGenerator then
+    Result := GeneratorStarted and not GeneratorDone
+  else
+    Result := ProcessMessagesLockCount > 0;
+end;
+
 procedure TfrmMain.TestPumpNote(const aText: string);
 begin
   TFile.AppendAllText(xeTestPumpFile, aText + sLineBreak);
@@ -23965,7 +24069,7 @@ var
   lWhere : string;
 begin
   if not TestPumpDelivered then begin
-    if ProcessMessagesLockCount < 1 then
+    if not TestPumpInside then
       Exit;
     if SameText(xeTestPumpClient, 'enabled') and not pnlClient.Enabled then
       Exit;
@@ -23981,7 +24085,8 @@ begin
     else
       lWhere := '$' + IntToHex(lFocus, 8);
     TestPumpNote('delivered ' + xeTestPump + ' inside a nested pump during: "' + wbCurrentAction + '", caption "' + Caption +
-      '"; client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + '; focus ' + lWhere);
+      '"; client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + '; pump depth ' + IntToStr(NestedPumpDepth) +
+      ', lock count ' + IntToStr(ProcessMessagesLockCount) + ', form enabled ' + BoolToStr(Enabled, True) + '; focus ' + lWhere);
     if SameText(xeTestPump, 'close') then
       PostMessage(Handle, WM_CLOSE, 0, 0)
     else if SameText(xeTestPump, 'ctrlo') then begin
@@ -24001,31 +24106,74 @@ begin
     Exit;
   end;
 
-  if TestPumpEnded then
+  if TestPumpEnded and (GetTickCount64 > TestPumpEndTick) then begin
+    TestPumpTimer.Enabled := False;
+    TestPumpNote('observation ended');
     Exit;
+  end;
 
+  lWhere := IfThen(TestPumpInside, 'inside the nested pump', 'outside any nested pump');
+
+  if TestPumpInside then
   for var i := 0 to Pred(Screen.CustomFormCount) do
     if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
        (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
-      TestPumpNote('a dialog opened ' + IfThen(ProcessMessagesLockCount > 0, 'inside the nested pump', 'outside any nested pump') +
-        ': ' + Screen.CustomForms[i].ClassName + ' "' + Screen.CustomForms[i].Caption + '", cancelled');
-      Screen.CustomForms[i].ModalResult := mrCancel;
+      if SameText(xeTestPumpAnswer, 'yes') then
+        Screen.CustomForms[i].ModalResult := mrYes
+      else if SameText(xeTestPumpAnswer, 'no') then
+        Screen.CustomForms[i].ModalResult := mrNo
+      else
+        Screen.CustomForms[i].ModalResult := mrCancel;
+      TestPumpNote('a dialog opened ' + lWhere + ': ' + Screen.CustomForms[i].ClassName + ' "' + Screen.CustomForms[i].Caption +
+        '", answered ' + IfThen(xeTestPumpAnswer = '', 'cancel', xeTestPumpAnswer));
       if TestPumpCtrlDown then
         TestPumpSetCtrl(False);
       Break;
     end;
 
+  var lWnd: HWND := 0;
+  if TestPumpInside then
+  repeat
+    lWnd := FindWindowEx(0, lWnd, '#32770', nil);
+    if (lWnd <> 0) and IsWindowVisible(lWnd) and IsWindowEnabled(lWnd) and
+       (GetWindowThreadProcessId(lWnd, nil) = MainThreadID) then begin
+      if lWnd <> TestPumpLastDialog then begin
+        TestPumpLastDialog := lWnd;
+        var lCaption: array[0..255] of Char;
+        GetWindowText(lWnd, lCaption, Length(lCaption));
+        var lText := '';
+        var lChild: HWND := 0;
+        repeat
+          lChild := FindWindowEx(lWnd, lChild, nil, nil);
+          if lChild <> 0 then begin
+            var lPart: array[0..1023] of Char;
+            if GetWindowText(lChild, lPart, Length(lPart)) > 0 then
+              lText := lText + ' [' + string(lPart) + ']';
+          end;
+        until lChild = 0;
+        TestPumpNote('a task dialog opened ' + lWhere + ': "' + string(lCaption) + '"' + lText + ', answered ' +
+          IfThen(SameText(xeTestPumpAnswer, 'yes'), 'yes', 'no'));
+        if SameText(xeTestPumpAnswer, 'yes') then
+          SendMessage(lWnd, WM_USER + 102, IDYES, 0)
+        else
+          SendMessage(lWnd, WM_USER + 102, IDNO, 0);
+      end;
+      Break;
+    end;
+  until lWnd = 0;
+
   if Assigned(ActiveRecord) and (TestPumpSeen = '') then begin
     TestPumpSeen := ActiveRecord.Name;
-    TestPumpNote('the View tab shows ' + TestPumpSeen + ' ' +
-      IfThen(ProcessMessagesLockCount > 0, 'inside the nested pump, during "' + wbCurrentAction + '"', 'outside any nested pump'));
+    TestPumpNote('the View tab shows ' + TestPumpSeen + ' ' + lWhere +
+      IfThen(TestPumpInside, ', during "' + wbCurrentAction + '"', ''));
   end;
 
-  if ProcessMessagesLockCount < 1 then begin
+  if not TestPumpInside and not TestPumpEnded then begin
     TestPumpEnded := True;
+    TestPumpEndTick := GetTickCount64 + 2000;
     if TestPumpCtrlDown then
       TestPumpSetCtrl(False);
-    TestPumpNote('back in the outermost message loop');
+    TestPumpNote('back in the outermost message loop; observing for 2 s');
   end;
 end;
 
@@ -24086,6 +24234,8 @@ begin
         end;
 
         if (xeToolMode in [tmLODgen, tmScript]) then begin
+          if xeTestPump <> '' then
+            TestPumpStart;
           if not wbForceTerminate then
             tmrGenerator.Enabled := True;
           Exit;
@@ -24413,6 +24563,10 @@ end;
 
 procedure TfrmMain.WMUser3(var Message: TMessage);
 begin
+  if InNestedLoop then begin
+    ResetActiveTreeDeferred := True;
+    Exit;
+  end;
   if tmrPendingSetActive.Enabled then
     tmrPendingSetActiveTimer(tmrPendingSetActive)
   else
@@ -24422,11 +24576,17 @@ end;
 
 procedure TfrmMain.WMUser4(var Message: TMessage);
 begin
+  if InNestedLoop then begin
+    PluggyChangeDeferred := True;
+    Exit;
+  end;
   UpdateActiveFromPluggyLink;
 end;
 
 procedure TfrmMain.WMUser5(var Message: TMessage);
 begin
+  if InNestedLoop then
+    Exit;
   if DelayedExpandView then begin
     DelayedExpandView := False;
     ExpandView;
@@ -24442,6 +24602,21 @@ procedure TfrmMain.UpdateActions;
 var
   HintMode: TVTHintMode;
 begin
+  if not InNestedLoop then begin
+    if CloseDeferred then begin
+      CloseDeferred := False;
+      Close;
+      Exit;
+    end;
+    if ResetActiveTreeDeferred then begin
+      ResetActiveTreeDeferred := False;
+      PostMessage(Handle, WM_USER + 3, 0, 0);
+    end;
+    if PluggyChangeDeferred then begin
+      PluggyChangeDeferred := False;
+      PostMessage(Handle, WM_USER + 4, 0, 0);
+    end;
+  end;
   if DelayedExpandView then begin
     DelayedExpandView := False;
     ExpandView;
