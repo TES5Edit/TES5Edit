@@ -1206,7 +1206,6 @@ type
 
   TwbMainRecordState = (
     mrsBuildingRef,
-    mrsReferencedByUnsorted,
     mrsIsInjected,
     mrsIsInjectedChecked,
     mrsReferencesInjected,
@@ -1274,6 +1273,7 @@ type
     mrTmpRefFormIDs     : TwbFormIDDictionary;
 
     mreGeneration       : Integer;
+    mrReferencedByUnsorted : Boolean;
     mrePrev             : Pointer;
     mreNext             : Pointer;
 
@@ -9490,7 +9490,7 @@ begin
         SetLength(mrReferencedBy, mrReferencedBySize);
     end;
     mrReferencedBy[i] := aMainRecord;
-    Include(mrStates, mrsReferencedByUnsorted);
+    mrReferencedByUnsorted := True;
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   finally
     if ContextObj.BuildingRefsParallel then
@@ -12724,7 +12724,7 @@ begin
     _ResizeLock.Enter;
   try
 {$ENDIF}
-  if mrsReferencedByUnsorted in mrStates then
+  if mrReferencedByUnsorted then
     SortReferencedBy;
   if (aIndex < 0) or (aIndex >= Length(mrReferencedBy)) then
     Result := nil
@@ -14570,7 +14570,7 @@ begin
     _ResizeLock.Enter;
   try
 {$ENDIF}
-  if mrsReferencedByUnsorted in mrStates then
+  if mrReferencedByUnsorted then
     SortReferencedBy;
 
   if FindReferencedBy(aMainRecord, i) then begin
@@ -15303,7 +15303,7 @@ begin
     _ResizeLock.Enter;
   try
 {$ENDIF}
-  Exclude(mrStates, mrsReferencedByUnsorted);
+  mrReferencedByUnsorted := False;
   if mrReferencedByCount > 1  then
     wbMergeSortPtr(@mrReferencedBy[0], mrReferencedByCount, CompareReferencedBy);
 {$IFDEF USE_PARALLEL_BUILD_REFS}
