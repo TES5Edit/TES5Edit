@@ -9785,13 +9785,22 @@ begin
 end;
 
 procedure TwbMainRecord.DoAfterInit;
+var
+  KAR: IwbKeepAliveRoot;
 begin
   if not (mrsBuildRefPending in mrStates) then
     Exit;
   Exclude(mrStates, mrsBuildRefPending);
+  if [mrsBuildingRef, mrsNoUpdateRefs] * mrStates <> [] then
+    Exit;
+  if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
+    Exit;
   wbLockProcessMessages;
   try
-    BuildRef;
+    if not wbSpeedOverMemory then
+      KAR := wbCreateKeepAliveRoot;
+    DoBuildRef(False);
+    KAR := nil;
   finally
     wbUnLockProcessMessages;
   end;
