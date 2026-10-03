@@ -6318,12 +6318,8 @@ begin
         Result.Nehrim      := True;
       Result.LightSupport := FileExists(aDataPath + 'OBSE\Plugins\OblivionESL.dll');
     end;
-    gmFNV: begin
+    gmFNV:
       Result.HNVSE := FileExists(aDataPath + 'NVSE\Plugins\Hnvse.dll');
-      Result.LightSupport := FileExists(aDataPath + 'NVSE\Plugins\johnnyguitar.dll');
-      Result.UpdateSupport := Result.LightSupport;
-      Result.HardcodedRange := Result.LightSupport;
-    end;
     gmSSE, gmEnderalSE:
       Result.CS := FileExists(aDataPath + 'SKSE\Plugins\CommunityShaders.dll');
     gmTES5VR: begin
