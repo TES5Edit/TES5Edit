@@ -19026,7 +19026,7 @@ begin
   if Assigned(dcEndPtr) then begin
     var lSizeOfMainRecordStruct := GameDefObj.SizeOfMainRecordStruct;
     dcDataBasePtr := PByte(dcBasePtr) + lSizeOfMainRecordStruct;
-    if grStruct.grsGroupSize < lSizeOfMainRecordStruct then
+    if grStruct.grsGroupSize < Cardinal(lSizeOfMainRecordStruct) then
       raise Exception.CreateFmt('[%s] %s size is invalid.', [GetFile.FileName, GetName]);
 
     dcDataEndPtr := PByte(dcBasePtr) + grStruct.grsGroupSize;

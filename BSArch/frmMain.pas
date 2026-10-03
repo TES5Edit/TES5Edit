@@ -26,12 +26,12 @@ uses
   Vcl.Menus,
   Vcl.StdCtrls,
 
+  VirtualTrees.Types,
+  VirtualTrees.BaseTree,
   VirtualTrees,
   {
   VirtualTrees.AncestorVCL,
   VirtualTrees.BaseAncestorVCL,
-  VirtualTrees.BaseTree,
-  VirtualTrees.Types,
   }
 
   WinApi.Messages,

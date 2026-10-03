@@ -3057,7 +3057,7 @@ function wbQuestStageToInt(const aString: string; const aElement: IwbElement): I
 begin
   var i := 1;
   var s := Trim(aString);
-  while (i <= Length(s)) and (s[i] in ['0'..'9']) do
+  while (i <= Length(s)) and CharInSet(s[i], ['0'..'9']) do
     Inc(i);
   s := Copy(s, 1, Pred(i));
 
@@ -5799,7 +5799,7 @@ begin
         if not Assigned(MainRecord) then
           Exit(0);
 
-        if MainRecord.Version >= aVersion then
+        if Integer(MainRecord.Version) >= aVersion then
           Exit(1);
 
         Exit(0);
@@ -5822,7 +5822,8 @@ begin
       if not Assigned(MainRecord) then
         Exit(0);
 
-      if not ((MainRecord.Version < aMinVersion) or (MainRecord.Version > aMaxVersion)) then
+      var lVersion := Integer(MainRecord.Version);
+      if not ((lVersion < aMinVersion) or (lVersion > aMaxVersion)) then
         Exit(1);
 
       Exit(0);
@@ -5849,7 +5850,7 @@ begin
       if not Assigned(MainRecord) then
         Exit(0);
 
-      var FormVersion := MainRecord.Version;
+      var FormVersion := Integer(MainRecord.Version);
 
       for var i := Low(Versions) to High(Versions) do
         if FormVersion < Versions[i] then

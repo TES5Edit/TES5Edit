@@ -394,7 +394,7 @@ begin
     j := 0;
     for i := Low(LogEntries) to High(LogEntries) do
       if LogEntries[i].LoadOrder = lo then begin
-        if j = Node.Index then
+        if Cardinal(j) = Node.Index then
           Data.PEntry := @LogEntries[i];
         Inc(j);
       end;
@@ -403,7 +403,7 @@ end;
 
 function IsHex(c: char): boolean;
 begin
-  Result := c in ['0'..'9', 'A'..'F'];
+  Result := CharInSet(c, ['0'..'9', 'A'..'F']);
 end;
 
 function IsHexStr(const s: string): boolean;
@@ -525,7 +525,7 @@ begin
   with TTextStream.Create(TFileStream.Create(aFilename, fmOpenRead or fmShareDenyWrite)) do try
     Limit := MaxLogSize;
     while ReadLn(sLine) do begin
-      if (Length(sLine) > 25) and (sLine[1] = '[') and (sLine[2] in ['0'..'9']) then begin
+      if (Length(sLine) > 25) and (sLine[1] = '[') and CharInSet(sLine[2], ['0'..'9']) then begin
         if Length(Entry) > 0 then
           ParsePapyrusData(Entry);
         Entry := sLine;

@@ -17,12 +17,12 @@ uses
   Vcl.Forms,
   Vcl.Menus,
 
+  VirtualTrees.Types,
+  VirtualTrees.BaseTree,
   VirtualTrees;
   {
   VirtualTrees.AncestorVCL,
   VirtualTrees.BaseAncestorVCL,
-  VirtualTrees.BaseTree,
-  VirtualTrees.Types,
   }
 
 type

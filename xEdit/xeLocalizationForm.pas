@@ -232,7 +232,7 @@ begin
   Node := vetStrings.GetFirst;
   while Assigned(Node) do begin
     Data := vetStrings.GetNodeData(Node);
-    if Data.ID = ID then
+    if Int64(Data.ID) = ID then
       if s = Copy(Data.lFile.Name , 0, length(s)) then begin
         vetStrings.FocusedNode := Node;
         vetStrings.Selected[vetStrings.FocusedNode] := True;

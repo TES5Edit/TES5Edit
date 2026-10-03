@@ -1266,14 +1266,14 @@ begin
           s := HostContext.Settings.DataPath + s;
 
       if (HostToolMode in [tmDump]) and (ParamCount >= 1) and not FileExists(s) then begin
-        if s[1] in SwitchChars then
+        if CharInSet(s[1], SwitchChars) then
           WriteLn(ErrOutput, 'No inputfile was specified. Please check the command line parameters.')
         else
           WriteLn(ErrOutput, 'Can''t find the file "',s,'". Please check the command line parameters.');
         WriteLn;
         NeedsSyntaxInfo := True;
       end else if (HostToolMode in [tmExport]) and (ParamCount >=1) and not isFormatValid(s) then begin
-        if s[1] in SwitchChars then
+        if CharInSet(s[1], SwitchChars) then
           WriteLn(ErrOutput, 'No format was specified. Please check the command line parameters.')
         else
           WriteLn(ErrOutput, 'Cannot handle the format "',s,'". Please check the command line parameters.');

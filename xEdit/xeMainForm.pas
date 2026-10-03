@@ -1652,7 +1652,7 @@ begin
           if wbLastMessageAt + MaxMessageInterval < CurrentTick then begin
 
             CurrentAction := wbCurrentAction;
-            if CurrentAction[1] in ['A'..'Z'] then
+            if CharInSet(CurrentAction[1], ['A'..'Z']) then
               CurrentAction[1] := Char(Word(CurrentAction[1]) or $0020);
 
             GeneralProgressNoAbortCheck('still ' + CurrentAction);
@@ -4705,7 +4705,7 @@ var
   NodeDatas : PViewNodeDatas;
   i, j      : Integer;
 begin
-  SetLength(Result, vstView.TotalCount * Length(ActiveRecords));
+  SetLength(Result, NativeInt(vstView.TotalCount) * Length(ActiveRecords));
 
   j := 0;
   Node := vstView.GetLastChild(nil);
@@ -5608,7 +5608,7 @@ end;
 
 procedure TfrmMain.edFilterNoBeepOnEnterKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Key in [#13, #27] then
+  if CharInSet(Key, [#13, #27]) then
     Key := #0;
 end;
 
@@ -13698,7 +13698,7 @@ begin
                 for i := Low(Files) to High(Files) do
                   if Files[i].Equals(_File) then
                     Break;
-                FileFiltered[i] := _File.RecordCount - MainRecordCount;
+                FileFiltered[i] := _File.RecordCount - Integer(MainRecordCount);
               end;
               MainRecordCount := 0;
             end;
@@ -21006,7 +21006,6 @@ var
   lGroup   : IwbContainerElementRef;
   lRecordA : IwbMainRecord;
   lRecordB : IwbMainRecord;
-  lNode    : PVirtualNode;
 begin
   for i := Low(Files) to High(Files) do
     if SameText(Files[i].FileName, xeTestNavCopyMaster) then

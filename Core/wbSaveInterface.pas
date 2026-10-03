@@ -441,7 +441,7 @@ end;
 
 function TwbSaveTables.SaveRefID(aIndex: Cardinal): Cardinal;
 begin
-  if (aIndex>0) and (aIndex<=Length(stRefIDs)) then
+  if (aIndex>0) and (aIndex<=Cardinal(Length(stRefIDs))) then
     Result := stRefIDs[aIndex-1]
   else
     Result := 0;

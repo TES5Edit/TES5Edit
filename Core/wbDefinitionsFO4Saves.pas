@@ -2237,7 +2237,7 @@ begin
           if (anID shr 22) = 0 then
             if lTables.SaveRefID(anID) = wbPlayerRefID then
                 lTables.PlayerRefIndex := anID;
-        if anID = lTables.PlayerRefIndex then
+        if Cardinal(anID) = lTables.PlayerRefIndex then
           Result := 1;
       end;
     end;

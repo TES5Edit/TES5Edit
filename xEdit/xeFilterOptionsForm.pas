@@ -437,7 +437,7 @@ end;
 procedure TfrmFilterOptions.clbKeyPress(Sender: TObject;
   var Key: Char);
 begin
-  if Key in ['+','-','*'] then begin
+  if CharInSet(Key, ['+','-','*']) then begin
     pmuSelection.PopupComponent := Sender as TComponent;
     case Key of
       '+': mniSelectionClick(mniSelectAll);

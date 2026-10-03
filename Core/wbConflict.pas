@@ -920,7 +920,7 @@ begin
                           end else
                             LeftKeys[k] := int1;
                         end;
-                      if aChildCount < Count then
+                      if aChildCount < Cardinal(Count) then
                         aChildCount := Count;
                     end;
 

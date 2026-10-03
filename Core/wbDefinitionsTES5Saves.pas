@@ -501,7 +501,7 @@ function ScreenShotDataCounter(aBasePtr: Pointer; aEndPtr: Pointer; const aEleme
 var
   Element : IwbElement;
   Container: IwbDataContainer;
-  BitSize: Integer;
+  BitSize: Cardinal;
 begin
   Result := 0;
   if 1 = SaveVersionGreaterThan11Decider(aBasePtr, aEndPtr, aElement) then
@@ -1990,7 +1990,7 @@ begin
           if (anID shr 22) = 0 then
             if lTables.SaveRefID(anID) = wbPlayerRefID then
                 lTables.PlayerRefIndex := anID;
-        if anID = lTables.PlayerRefIndex then
+        if Cardinal(anID) = lTables.PlayerRefIndex then
           Result := 1;
       end;
     end;

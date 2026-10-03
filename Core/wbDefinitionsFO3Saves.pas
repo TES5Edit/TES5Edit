@@ -322,11 +322,11 @@ begin
   if Assigned(aBasePtr) and Assigned(aEndPtr) and (Cardinal(aBasePtr)<=Cardinal(aEndPtr)) then begin
     Assert(anOffset>0); // Offset needs to be a positive number
     case aSize of
-      4 : Result := PCardinal(NativeUInt(aBasePtr)-anOffset)^;
-      3 : Result := wbReadInteger24(PCardinal(NativeUInt(aBasePtr)-anOffset));
-      2 : Result := PWord(NativeUInt(aBasePtr)-anOffset)^;
+      4 : Result := PCardinal(PByte(aBasePtr)-anOffset)^;
+      3 : Result := wbReadInteger24(PCardinal(PByte(aBasePtr)-anOffset));
+      2 : Result := PWord(PByte(aBasePtr)-anOffset)^;
     else
-      Result := PByte(NativeUInt(aBasePtr)-anOffset)^;
+      Result := PByte(PByte(aBasePtr)-anOffset)^;
     end;
   end else begin
     Element := wbFindSaveElement(aContainerName, aElement);
@@ -861,7 +861,7 @@ begin
           if (anID shr 22) = 0 then
             if lTables.SaveRefID(anID) = wbPlayerRefID then
                 lTables.PlayerRefIndex := anID;
-        if anID = lTables.PlayerRefIndex then
+        if Cardinal(anID) = lTables.PlayerRefIndex then
           Result := 1;
       end;
     end;
