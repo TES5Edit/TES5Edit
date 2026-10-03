@@ -594,6 +594,7 @@ type
     function ResetLeafFirst: Boolean; override;
     function ResetChildrenLeafFirst: Boolean; virtual;
     procedure DoInit(aNeedSorted: Boolean); virtual;
+    procedure DoAfterInit; virtual;
     procedure DoPendingFill; virtual;
 
     function HasErrors: Boolean; override;
@@ -1206,6 +1207,7 @@ type
 
   TwbMainRecordState = (
     mrsBuildingRef,
+    mrsBuildRefPending,
     mrsIsInjected,
     mrsIsInjectedChecked,
     mrsReferencesInjected,
@@ -1324,6 +1326,7 @@ type
     procedure SetParentModified; override;
     procedure SetModified(aValue: Boolean); override;
     procedure DoPendingFill; override;
+    procedure DoAfterInit; override;
 
     function DoBuildRef(aRemove: Boolean): Boolean;
     function RecordHeaderStructDef: IwbStructDef;
@@ -7404,6 +7407,10 @@ begin
   inherited;
 end;
 
+procedure TwbContainer.DoAfterInit;
+begin
+end;
+
 procedure TwbContainer.DoInit(aNeedSorted: Boolean);
 var
   i        : Integer;
@@ -7446,6 +7453,7 @@ begin
     wbUnLockProcessMessages;
     Exclude(cntStates, csInitializing);
   end;
+  DoAfterInit;
 end;
 
 procedure TwbContainer.DoReset(aForce: Boolean);
@@ -9755,6 +9763,12 @@ begin
   if (csRefsBuild in cntStates) and (cntRefsBuildAt >= eGeneration) then
     Exit;
 
+  if [csRefsBuild, csInitializing] * cntStates = [csRefsBuild, csInitializing] then begin
+    if not (mrsBuildingRef in mrStates) then
+      Include(mrStates, mrsBuildRefPending);
+    Exit;
+  end;
+
   if wbSpeedOverMemory then
     DoBuildRef(False)
   else begin
@@ -9768,6 +9782,19 @@ begin
 
   if wbHasProgressCallback then
     wbProgressCallback;
+end;
+
+procedure TwbMainRecord.DoAfterInit;
+begin
+  if not (mrsBuildRefPending in mrStates) then
+    Exit;
+  Exclude(mrStates, mrsBuildRefPending);
+  wbLockProcessMessages;
+  try
+    BuildRef;
+  finally
+    wbUnLockProcessMessages;
+  end;
 end;
 
 procedure TwbMainRecord.DoAfterSet(const aOldValue, aNewValue: Variant);
@@ -15599,7 +15626,7 @@ end;
 
 procedure TwbMainRecord.UpdateRefs;
 begin
-  if (csRefsBuild in cntStates) and not (csInitializing in cntStates) then
+  if (csRefsBuild in cntStates) then
     BuildRef;
 end;
 
