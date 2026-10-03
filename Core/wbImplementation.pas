@@ -9799,8 +9799,11 @@ begin
   try
     if not wbSpeedOverMemory then
       KAR := wbCreateKeepAliveRoot;
-    DoBuildRef(False);
-    KAR := nil;
+    try
+      DoBuildRef(False);
+    finally
+      KAR := nil;
+    end;
   finally
     wbUnLockProcessMessages;
   end;
