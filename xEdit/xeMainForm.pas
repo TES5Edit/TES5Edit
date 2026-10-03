@@ -1080,6 +1080,8 @@ type
     ViewTreeGeneration: Cardinal;
     ViewRootDatas: TDynViewNodeDatas;
     ViewHeaderConflictAll: TConflictAll;
+    ViewHeaderDark: Boolean;
+    ViewHeaderDarkKnown: Boolean;
     ActiveContainer: IwbDataContainer;
     ViewFocusedElement : IwbElement;
     EditAddedElement: Boolean;
@@ -1102,6 +1104,8 @@ type
     procedure ClearViewTree;
     procedure BuildViewTree;
     procedure ApplyViewHeaderColor;
+    function ViewHeaderIsDark: Boolean;
+    function ViewHeaderCaptionColor(aConflictThis: TConflictThis): TColor;
     procedure ApplyPathColor;
     procedure ApplyViewVisibility(aNode: PVirtualNode);
     procedure FindViewFocusedNode;
@@ -15254,6 +15258,41 @@ begin
     vstView.Header.Background := clBtnFace;
 end;
 
+function TfrmMain.ViewHeaderIsDark: Boolean;
+
+  function IsDark(aColor: TColor): Boolean;
+  begin
+    aColor := ColorToRGB(aColor);
+    var lMax := Max(GetRValue(aColor), Max(GetGValue(aColor), GetBValue(aColor)));
+    var lMin := Min(GetRValue(aColor), Min(GetGValue(aColor), GetBValue(aColor)));
+    Result := lMax + lMin <= 255;
+  end;
+
+begin
+  if not ((tsUseThemes in vstView.TreeStates) or (TStyleManager.IsCustomStyleActive and (seClient in vstView.StyleElements))) then
+    Exit(IsDark(vstView.Header.Background));
+
+  if not ViewHeaderDarkKnown then begin
+    var lBitmap := Vcl.Graphics.TBitmap.Create;
+    try
+      lBitmap.SetSize(32, 16);
+      StyleServices.DrawElement(lBitmap.Canvas.Handle, StyleServices.GetElementDetails(thHeaderItemNormal), Rect(0, 0, 32, 16));
+      ViewHeaderDark := IsDark(lBitmap.Canvas.Pixels[16, 8]);
+    finally
+      lBitmap.Free;
+    end;
+    ViewHeaderDarkKnown := True;
+  end;
+  Result := ViewHeaderDark;
+end;
+
+function TfrmMain.ViewHeaderCaptionColor(aConflictThis: TConflictThis): TColor;
+begin
+  Result := ConflictThisToColor(aConflictThis);
+  if ViewHeaderIsDark then
+    Result := Lighter(Result, 0.25);
+end;
+
 procedure TfrmMain.ApplyViewVisibility(aNode: PVirtualNode);
 begin
   var lNode := vstView.GetFirstChild(aNode);
@@ -17591,22 +17630,13 @@ procedure TfrmMain.vstViewAdvancedHeaderDraw(Sender: TVTHeader; var PaintInfo: T
 var
   lCanvas : TCanvas;
 begin
-  lCanvas := PaintInfo.TargetCanvas;
-  lCanvas.Refresh;
-  if hpeBackground in Elements then begin
-    lCanvas.Brush.Color := Sender.Background;
-    lCanvas.FillRect(PaintInfo.PaintRectangle);
-    if Assigned(PaintInfo.Column) then begin
-      lCanvas.Pen.Color := wbLighter(ConflictAllToColor(ViewHeaderConflictAll), 0.6);
-      lCanvas.MoveTo(PaintInfo.PaintRectangle.Right - 1, PaintInfo.PaintRectangle.Top);
-      lCanvas.LineTo(PaintInfo.PaintRectangle.Right - 1, PaintInfo.PaintRectangle.Bottom);
-    end;
-  end;
   if (hpeText in Elements) and Assigned(PaintInfo.Column) and (PaintInfo.Column.Index > 0) and
     (PaintInfo.Column.Index <= Length(ActiveRecords)) then begin
+    lCanvas := PaintInfo.TargetCanvas;
+    lCanvas.Refresh;
     var lRect := PaintInfo.TextRectangle;
     var lText := PaintInfo.Column.Text;
-    lCanvas.Font.Color := wbDarker(ConflictThisToColor(ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis));
+    lCanvas.Font.Color := ViewHeaderCaptionColor(ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis);
     lCanvas.Brush.Style := bsClear;
     lCanvas.TextRect(lRect, lText, [tfLeft, tfTop, tfNoPrefix, tfEndEllipsis, tfSingleLine]);
   end;
@@ -18539,17 +18569,14 @@ end;
 procedure TfrmMain.vstViewHeaderDrawQueryElements(Sender: TVTHeader;
   var PaintInfo: THeaderPaintInfo; var Elements: THeaderPaintElements);
 begin
-  if (ViewHeaderConflictAll >= caNoConflict) and
-    ((tsUseThemes in vstView.TreeStates) or (TStyleManager.IsCustomStyleActive and (seClient in vstView.StyleElements))) then begin
-    Include(Elements, hpeBackground);
-    if Assigned(PaintInfo.Column) and (PaintInfo.Column.Index > 0) and (PaintInfo.Column.Index <= Length(ActiveRecords)) and
-      TStyleManager.IsCustomStyleActive and (seFont in vstView.StyleElements) then
-      Include(Elements, hpeText);
-  end;
-
   if Assigned(PaintInfo.Column) and
     (PaintInfo.Column.Index > 0) and
     (PaintInfo.Column.Index <= Length(ActiveRecords)) then begin
+
+    var lConflictThis := ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis;
+    if (ViewHeaderConflictAll >= caNoConflict) and TStyleManager.IsCustomStyleActive and (seFont in vstView.StyleElements) and
+      (ConflictThisToColor(lConflictThis) <> clWindowText) then
+      Include(Elements, hpeText);
 
     with PaintInfo.TargetCanvas.Font do begin
       if ActiveRecords[Pred(PaintInfo.Column.Index)].Element.Modified then
@@ -18574,8 +18601,7 @@ begin
     end;
 
     PaintInfo.TargetCanvas.Brush.Color := Sender.Background;
-    Sender.Font.Color := wbDarker(ConflictThisToColor(
-      ActiveRecords[Pred(PaintInfo.Column.Index)].ConflictThis));
+    Sender.Font.Color := ViewHeaderCaptionColor(lConflictThis);
   end;
 end;
 
@@ -21919,8 +21945,8 @@ var
       lBitmap.Canvas.FillRect(Rect(0, 0, lBitmap.Width, lBitmap.Height));
       lColumns.PaintHeader(lBitmap.Canvas, Rect(0, 0, lBitmap.Width, lBitmap.Height), Point(0, 0));
       lBitmap.SaveToFile(Format('%s.header%d-%s.bmp', [xeTestViewTreeFile, aEntry, StringReplace(aMode, ' ', '', [rfReplaceAll])]));
-      Result := Format('%s'#9'themes %s'#9'background %.6x', [aMode, BoolToStr(tsUseThemes in vstView.TreeStates, True),
-        ColorToRGB(vstView.Header.Background)]);
+      Result := Format('%s'#9'themes %s'#9'background %.6x'#9'dark %s', [aMode, BoolToStr(tsUseThemes in vstView.TreeStates, True),
+        ColorToRGB(vstView.Header.Background), BoolToStr(ViewHeaderIsDark, True)]);
       for var c := 0 to Pred(lColumns.Count) do
         Result := Result + #9 + Dominant(lBitmap, lColumns[c].Left + 3, lColumns[c].Left + lColumns[c].Width - 4);
       Result := Result + #9'tail ' + Dominant(lBitmap, lColumns.TotalWidth + 3, lBitmap.Width - 4);
@@ -21939,7 +21965,7 @@ var
       lExpected := Format('%.6x', [ColorToRGB(wbLighter(ConflictAllToColor(lRoot), 0.85))]);
     for var i := Low(ActiveRecords) to High(ActiveRecords) do
       lExpected := lExpected + Format(' | %s text %.6x', [wbNameConflictThis[ActiveRecords[i].ConflictThis],
-        ColorToRGB(wbDarker(ConflictThisToColor(ActiveRecords[i].ConflictThis)))]);
+        ColorToRGB(ViewHeaderCaptionColor(ActiveRecords[i].ConflictThis))]);
     var lOptions := vstView.TreeOptions.PaintOptions;
     vstView.TreeOptions.PaintOptions := lOptions - [toThemeAware];
     try
@@ -24921,6 +24947,7 @@ var
 begin
   if Message.Msg = CM_CUSTOMSTYLECHANGED then begin
     wbDarkMode := wbIsDarkMode;
+    ViewHeaderDarkKnown := False;
     StyleName := TStyleManager.ActiveStyle.Name;
     if Assigned(Settings) then
       if Settings.ReadString('UI', 'Theme', '') <> StyleName then begin
