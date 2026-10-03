@@ -2911,7 +2911,7 @@ begin
               try
                 FileStream := TBufferedFileStream.Create(lTempFileName, fmCreate);
                 try
-                  TwbCompression.Compress(ctLZ4F, MemoryStream, FileStream);
+                  TwbCompression.Compress(ctLZ4F, MemoryStream, FileStream, False, 6);
                 finally
                   FileStream.Free;
                 end;
