@@ -8034,7 +8034,9 @@ begin
   RegisterRecordDef(TES4, 'Main File Header',
     wbFlags(wbFlagsList([
       0, 'ESM',
-      4, 'Optimized'
+      4, 'Optimized',
+      8, wb<string>.Iff(gcLightPlugins in Capabilities, 'ESL', ''),
+      9, wb<string>.Iff(gcUpdatePlugins in Capabilities, 'Update', '')
     ])), [
     wbHEDR,
     wbByteArray(OFST, 'Unknown', 0, cpIgnore),
@@ -9129,6 +9131,8 @@ begin
   gdHEDRVersion := 1.34;
   gdDefaultFormVersion := 15;
   gdDefaultLandTexture := 'LDirtWasteland01';
+  gdLightFlag := $00000100;
+  gdUpdateFlag := $00000200;
 end;
 
 initialization

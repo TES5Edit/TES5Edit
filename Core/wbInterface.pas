@@ -3636,6 +3636,7 @@ type
     gdHardcodedRangeAdmitted   : Boolean;
     gdHardcodedRangeMinVersion : Double;
     gdLightFlag                : Cardinal;
+    gdUpdateFlag               : Cardinal;
     gdEslExtensionSupported    : Boolean;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
@@ -3839,6 +3840,8 @@ type
       read gdHardcodedRangeMinVersion;
     property LightFlag: Cardinal
       read gdLightFlag;
+    property UpdateFlag: Cardinal
+      read gdUpdateFlag;
     property EslExtensionSupported: Boolean
       read gdEslExtensionSupported;
     function NewLightFileExtension: string;
@@ -6315,8 +6318,12 @@ begin
         Result.Nehrim      := True;
       Result.LightSupport := FileExists(aDataPath + 'OBSE\Plugins\OblivionESL.dll');
     end;
-    gmFNV:
+    gmFNV: begin
       Result.HNVSE := FileExists(aDataPath + 'NVSE\Plugins\Hnvse.dll');
+      Result.LightSupport := FileExists(aDataPath + 'NVSE\Plugins\johnnyguitar.dll');
+      Result.UpdateSupport := Result.LightSupport;
+      Result.HardcodedRange := Result.LightSupport;
+    end;
     gmSSE, gmEnderalSE:
       Result.CS := FileExists(aDataPath + 'SKSE\Plugins\CommunityShaders.dll');
     gmTES5VR: begin
@@ -6347,6 +6354,7 @@ begin
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
   gdLightFlag := $00000200;
+  gdUpdateFlag := $00100000;
   gdCellSizeFactor := 4096.0;
   gdHeaderSignature := 'TES4';
   gdIgnoreRecords := TStringList.Create;
@@ -22868,12 +22876,8 @@ end;
 
 function TwbMainRecordStructFlags.IsUpdate(aGameDef: TwbGameDef): Boolean;
 begin
-  Result :=
-        (gcUpdatePlugins in aGameDef.Capabilities)
-    and (
-             (aGameDef.IsStarfield and ((_Flags and $00000200) <> 0))
-          or ((not aGameDef.IsStarfield) and ((_Flags and $00100000) <> 0))
-        );
+  Result := (gcUpdatePlugins in aGameDef.Capabilities) and
+    ((_Flags and aGameDef.UpdateFlag) <> 0);
 end;
 
 function TwbMainRecordStructFlags.IsESM: Boolean;
@@ -22957,17 +22961,11 @@ procedure TwbMainRecordStructFlags.SetUpdate(aGameDef: TwbGameDef; aValue: Boole
 begin
   if gcUpdatePlugins in aGameDef.Capabilities then
     if aValue then begin
-      if aGameDef.IsStarfield then
-        _Flags := _Flags or $00000200
-      else
-        _Flags := _Flags or $00100000;
+      _Flags := _Flags or aGameDef.UpdateFlag;
       SetLight(aGameDef, False);
       SetMedium(aGameDef, False);
     end else
-      if aGameDef.IsStarfield then
-        _Flags := _Flags and not $00000200
-      else
-        _Flags := _Flags and not $00100000;
+      _Flags := _Flags and not aGameDef.UpdateFlag;
 end;
 
 procedure TwbMainRecordStructFlags.SetESM(aValue: Boolean);
