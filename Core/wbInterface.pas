@@ -3636,7 +3636,6 @@ type
     gdHardcodedRangeAdmitted   : Boolean;
     gdHardcodedRangeMinVersion : Double;
     gdLightFlag                : Cardinal;
-    gdLightFlags               : Cardinal;
     gdEslExtensionSupported    : Boolean;
 
     function GetKnownSubRecordSignature(aKind: TwbKnownSubRecord): TwbSignature;
@@ -3840,8 +3839,6 @@ type
       read gdHardcodedRangeMinVersion;
     property LightFlag: Cardinal
       read gdLightFlag;
-    property LightFlags: Cardinal
-      read gdLightFlags;
     property EslExtensionSupported: Boolean
       read gdEslExtensionSupported;
     function NewLightFileExtension: string;
@@ -6350,7 +6347,6 @@ begin
   gdHEDRVersion := 1.0;
   gdHEDRNextObjectID := $800;
   gdLightFlag := $00000200;
-  gdLightFlags := $00000200;
   gdCellSizeFactor := 4096.0;
   gdHeaderSignature := 'TES4';
   gdIgnoreRecords := TStringList.Create;
@@ -22867,7 +22863,7 @@ end;
 function TwbMainRecordStructFlags.IsLight(aGameDef: TwbGameDef): Boolean;
 begin
   Result := (gcLightPlugins in aGameDef.Capabilities) and
-    ((_Flags and aGameDef.LightFlags) <> 0);
+    ((_Flags and aGameDef.LightFlag) <> 0);
 end;
 
 function TwbMainRecordStructFlags.IsUpdate(aGameDef: TwbGameDef): Boolean;
@@ -22954,7 +22950,7 @@ begin
       SetMedium(aGameDef, False);
       SetUpdate(aGameDef, False);
     end else
-      _Flags := _Flags and not aGameDef.LightFlags;
+      _Flags := _Flags and not aGameDef.LightFlag;
 end;
 
 procedure TwbMainRecordStructFlags.SetUpdate(aGameDef: TwbGameDef; aValue: Boolean);

@@ -2253,7 +2253,6 @@ begin
   gdRaceFlagsSignature := 'DAT2';
   gdHardcodedRangeAdmitted := True;
   gdLightFlag := $00000100;
-  gdLightFlags := $00000100;
 
   var wbIdxSimpleGroup := wbNamedIndex('SimpleGroup', True);
   var wbIdxComplexGroup := wbNamedIndex('ComplexGroup', True);
