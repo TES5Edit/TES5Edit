@@ -2094,6 +2094,7 @@ type
     arcSortInvalid : Boolean;
     arcNameGen     : Integer;
     arcContextObj  : TwbGameContext;
+    arcPendingFor  : Pointer;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
@@ -2102,6 +2103,8 @@ type
 
     function GameDefObj: TwbGameDef; override;
     function ContextObj: TwbGameContext; override;
+    function GetFile: IwbFile; override;
+    function GetContainingMainRecord: IwbMainRecord; override;
 
     procedure DoProcess(const aContainer : IwbContainer;
                               aPos       : Integer);
@@ -2149,6 +2152,7 @@ type
   protected {private}
     srcDef        : IwbRecordDef;
     srcContextObj : TwbGameContext;
+    srcPendingFor : Pointer;
   protected
     constructor Create(const aOwner     : IwbContainer;
                        const aContainer : IwbContainer;
@@ -2157,6 +2161,8 @@ type
 
     function GameDefObj: TwbGameDef; override;
     function ContextObj: TwbGameContext; override;
+    function GetFile: IwbFile; override;
+    function GetContainingMainRecord: IwbMainRecord; override;
 
     procedure TryAssignMembers(const aSource: IwbElement); override;
 
@@ -21927,8 +21933,10 @@ var
   i        : Integer;
 begin
   arcDef := aDef;
-  if not Assigned(aOwner) and Assigned(aContainer) then
+  if not Assigned(aOwner) and Assigned(aContainer) then begin
     arcContextObj := aContainer.ContextObj;
+    arcPendingFor := Pointer(aContainer);
+  end;
   eContainer := Pointer(aOwner);
   try
     if aPos <> Low(Integer) then begin
@@ -21952,6 +21960,7 @@ begin
   inherited Create(aOwner);
 
   arcDef.AfterLoad(Self);
+  arcPendingFor := nil;
 
   if aPos = Low(Integer) then begin
     SetModified(True);
@@ -21972,6 +21981,22 @@ begin
   Result := arcContextObj;
   if not Assigned(Result) then
     Result := inherited ContextObj;
+end;
+
+function TwbSubRecordArray.GetFile: IwbFile;
+begin
+  if Assigned(arcPendingFor) then
+    Result := IwbContainer(arcPendingFor)._File
+  else
+    Result := inherited GetFile;
+end;
+
+function TwbSubRecordArray.GetContainingMainRecord: IwbMainRecord;
+begin
+  if Assigned(arcPendingFor) then
+    Result := IwbContainer(arcPendingFor).ContainingMainRecord
+  else
+    Result := inherited GetContainingMainRecord;
 end;
 
 procedure TwbSubRecordArray.DoAfterSet(const aOldValue, aNewValue: Variant);
@@ -22588,8 +22613,10 @@ var
   FoundMembers  : IwbElements;
 begin
   srcDef := aDef as IwbRecordDef;
-  if not Assigned(aOwner) and Assigned(aContainer) then
+  if not Assigned(aOwner) and Assigned(aContainer) then begin
     srcContextObj := aContainer.ContextObj;
+    srcPendingFor := Pointer(aContainer);
+  end;
   LastDef := nil;
   LastElement := nil;
 
@@ -22696,6 +22723,7 @@ begin
     FoundMembers := nil;
 
     srcDef.AfterLoad(Self);
+    srcPendingFor := nil;
 
     if aPos = Low(Integer) then begin
       SetModified(True);
@@ -22720,6 +22748,22 @@ begin
   Result := srcContextObj;
   if not Assigned(Result) then
     Result := inherited ContextObj;
+end;
+
+function TwbSubRecordStruct.GetFile: IwbFile;
+begin
+  if Assigned(srcPendingFor) then
+    Result := IwbContainer(srcPendingFor)._File
+  else
+    Result := inherited GetFile;
+end;
+
+function TwbSubRecordStruct.GetContainingMainRecord: IwbMainRecord;
+begin
+  if Assigned(srcPendingFor) then
+    Result := IwbContainer(srcPendingFor).ContainingMainRecord
+  else
+    Result := inherited GetContainingMainRecord;
 end;
 {
 function TwbSubRecordStruct.GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
