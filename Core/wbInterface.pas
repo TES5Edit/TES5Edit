@@ -172,6 +172,9 @@ var
 
 
 
+  wbCallbackScopeEnter               : function(out aMark: Int64): Boolean;
+  wbCallbackScopeLeave               : procedure(aMark: Int64);
+
   wbCacheRecordsThreshold            : Integer    = 500;
   wbCacheTimeThreshold               : TDateTime  = 2 * 1/24/60/60; //2 seconds
 
@@ -11991,10 +11994,17 @@ begin
 end;
 
 procedure TwbNamedDef.AfterLoad(const aElement: IwbElement);
+var
+  lMark: Int64;
 begin
   Used(nil, '');
   if Assigned(ndAfterLoad) then
-    ndAfterLoad(aElement);
+    if Assigned(wbCallbackScopeEnter) and wbCallbackScopeEnter(lMark) then try
+      ndAfterLoad(aElement);
+    finally
+      wbCallbackScopeLeave(lMark);
+    end else
+      ndAfterLoad(aElement);
 end;
 
 
