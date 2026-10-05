@@ -877,6 +877,7 @@ type
     TestPumpShortCut         : TAction;
     TestPumpBrowseNode       : PVirtualNode;
     TestPumpBrowseCount      : Integer;
+    TestPumpClosePosted      : Boolean;
     TestPumpWalkFile         : Integer;
     TestPumpWalkIndex        : Integer;
     TestPumpWalkReads        : Int64;
@@ -24148,6 +24149,7 @@ begin
   TestPumpEnded := False;
   TestPumpBrowseNode := nil;
   TestPumpBrowseCount := 0;
+  TestPumpClosePosted := False;
   TestPumpWalkFile := 0;
   TestPumpWalkIndex := 0;
   TestPumpWalkReads := 0;
@@ -24473,9 +24475,17 @@ begin
     end;
   until lWnd = 0;
 
-  var lBrowsing := SameText(xeTestPump, 'browse') and TestPumpInside;
-  if lBrowsing then
-    TestPumpBrowseStep;
+  var lBrowsing := (SameText(xeTestPump, 'browse') or SameText(xeTestPump, 'browseclose')) and TestPumpInside;
+  if lBrowsing then begin
+    if not SameText(xeTestPump, 'browseclose') or (TestPumpBrowseCount < 20) then
+      TestPumpBrowseStep
+    else if Assigned(ActiveRecord) and not TestPumpClosePosted then begin
+      TestPumpClosePosted := True;
+      TestPumpNote('closing the editor after browsing ' + IntToStr(TestPumpBrowseCount) +
+        ' records while the loader runs; the View tab shows ' + ActiveRecord.Name);
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+    end;
+  end;
   if SameText(xeTestPump, 'edidwalk') and TestPumpInside then
     TestPumpEdidWalkStep;
   if SameText(xeTestPump, 'initwalk') and TestPumpInside then
