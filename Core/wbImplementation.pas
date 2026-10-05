@@ -87,6 +87,7 @@ procedure wbRefPhaseBegin(const aFiles: TwbFiles; out aPins: TArray<IInterface>)
 procedure wbRefPhaseEnd(var aPins: TArray<IInterface>);
 function wbOperationScopeEnter(const aCarried: IwbElement; out aMark: Int64): Boolean;
 procedure wbOperationScopeLeave(aMark: Int64);
+function wbOperationScopeDepth: Integer;
 
 implementation
 
@@ -3607,6 +3608,11 @@ end;
 procedure wbOperationScopeLeave(aMark: Int64);
 begin
   RefScopeLeave(aMark);
+end;
+
+function wbOperationScopeDepth: Integer;
+begin
+  Result := _RefScopeDepth;
 end;
 
 procedure RefSkipEntry(aRec: TwbMainRecord; aStream: TStream; aLoadNames: Boolean);
@@ -12367,7 +12373,12 @@ begin
         Include(cntStates, csInit);
         try
           try
-            Init;
+            wbLockProcessMessages;
+            try
+              Init;
+            finally
+              wbUnLockProcessMessages;
+            end;
           finally
             Exclude(cntStates, csInitializing);
             DoReset(True);
@@ -12860,7 +12871,12 @@ begin
       Include(cntStates, csInit);
       try
         try
-          Init;
+          wbLockProcessMessages;
+          try
+            Init;
+          finally
+            wbUnLockProcessMessages;
+          end;
         finally
           Exclude(cntStates, csInitializing);
           DoReset(True);
@@ -12985,7 +13001,12 @@ begin
       Include(cntStates, csInit);
       try
         try
-          Init;
+          wbLockProcessMessages;
+          try
+            Init;
+          finally
+            wbUnLockProcessMessages;
+          end;
         finally
           Exclude(cntStates, csInitializing);
           DoReset(True);
@@ -13131,7 +13152,12 @@ begin
       Include(cntStates, csInit);
       try
         try
-          Init;
+          wbLockProcessMessages;
+          try
+            Init;
+          finally
+            wbUnLockProcessMessages;
+          end;
         finally
           Exclude(cntStates, csInitializing);
           DoReset(True);

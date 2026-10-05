@@ -1078,6 +1078,7 @@ type
     procedure WMUser3(var Message: TMessage); message WM_USER + 3;
     procedure WMUser4(var Message: TMessage); message WM_USER + 4;
     procedure WMUser5(var Message: TMessage); message WM_USER + 5;
+    procedure WMUserRefPhase(var Message: TMessage); message WM_USER + 6;
     procedure UpdateTreeLineColor;
   public
     Files: TwbFiles;
@@ -1094,6 +1095,11 @@ type
     ViewHeaderConflictAll: TConflictAll;
     ViewHeaderDark: Boolean;
     ViewHeaderDarkKnown: Boolean;
+    RefPhasePins: TArray<IInterface>;
+    MessageScopeMarks: TArray<Int64>;
+    MessageScopeDepths: TArray<Integer>;
+    MessageScopeRetrievals: Cardinal;
+    MessageScopeHooks: TArray<TObject>;
     ActiveContainer: IwbDataContainer;
     ViewFocusedElement : IwbElement;
     EditAddedElement: Boolean;
@@ -1278,6 +1284,11 @@ type
     function IsInputForNestedPump(const aMsg: TMsg): Boolean;
 
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure ApplicationIdle(Sender: TObject; var Done: Boolean);
+    function MessageScopeOpen: Integer;
+    procedure MessageScopeCarry(const aElement: IwbElement);
+    procedure MessageScopeClose(aDownTo: Integer);
+    procedure ScopedDispatch(const aProc: TWndMethod; var Message: TMessage);
     procedure vstCreateEditor(const aElement: IwbElement; out EditLink: IVTEditLink);
 
     procedure SaveLog(const s: string; aAllowReplace: Boolean);
@@ -1309,6 +1320,7 @@ type
     procedure PostAddMessage(const s: string);
     procedure SendAddFile(const aFile: IwbFile);
     procedure SendLoaderDone(const aStartTime: TDateTime; aLoadOrder: Integer);
+    function SendRefPhase(aBegin: Boolean): Boolean;
 
     procedure PostPluggyChange(const aFormID, aBaseFormID, aInventoryFormID, aEnchantmentFormID, aSpellFormID: TwbFormID);
   private
@@ -1537,6 +1549,15 @@ uses
   xeViewElementsForm,
   xeWorldspaceCellDetailsForm;
 
+type
+  TScopedWindowProc = class
+  private
+    swpOld: TWndMethod;
+    procedure WndProc(var Message: TMessage);
+  public
+    constructor Create(aControl: TControl);
+  end;
+
 function wbFormatElapsedTime(aElapsed: double): string;
 var
   Hours: Integer;
@@ -1595,6 +1616,9 @@ end;
 procedure DoProcessMessages;
 begin
   if ProcessMessagesLockCount < 1 then begin
+    var lRetrievals: Cardinal := 0;
+    if Assigned(frmMain) then
+      lRetrievals := frmMain.MessageScopeRetrievals;
     LockProcessMessages;
     Inc(NestedPumpDepth);
     try
@@ -1602,6 +1626,8 @@ begin
     finally
       Dec(NestedPumpDepth);
       UnLockProcessMessages;
+      if Assigned(frmMain) and (frmMain.MessageScopeRetrievals <> lRetrievals) then
+        frmMain.MessageScopeClose(0);
     end;
   end;
 end;
@@ -2519,8 +2545,77 @@ begin
   Result := inherited IsShortCut(Message);
 end;
 
+procedure TfrmMain.ApplicationIdle(Sender: TObject; var Done: Boolean);
+begin
+  MessageScopeClose(0);
+end;
+
+function TfrmMain.MessageScopeOpen: Integer;
+begin
+  Result := Length(MessageScopeMarks);
+  if wbParallelRefBuilds = 0 then
+    Exit;
+  MessageScopeCarry(nil);
+  for var lData in ViewRootDatas do
+    MessageScopeCarry(lData.Element);
+end;
+
+procedure TfrmMain.MessageScopeCarry(const aElement: IwbElement);
+var
+  lMark  : Int64;
+  lCount : Integer;
+begin
+  lCount := Length(MessageScopeMarks);
+  try
+    SetLength(MessageScopeMarks, Succ(lCount));
+    SetLength(MessageScopeDepths, Succ(lCount));
+    if wbOperationScopeEnter(aElement, lMark) then begin
+      MessageScopeMarks[lCount] := lMark;
+      MessageScopeDepths[lCount] := wbOperationScopeDepth;
+      Exit;
+    end;
+  except
+    SetLength(MessageScopeMarks, lCount);
+    SetLength(MessageScopeDepths, lCount);
+    raise;
+  end;
+  SetLength(MessageScopeMarks, lCount);
+  SetLength(MessageScopeDepths, lCount);
+end;
+
+procedure TfrmMain.ScopedDispatch(const aProc: TWndMethod; var Message: TMessage);
+begin
+  if (wbParallelRefBuilds = 0) or (Length(MessageScopeMarks) > 0) then begin
+    aProc(Message);
+    Exit;
+  end;
+  var lScopes := Length(MessageScopeMarks);
+  try
+    MessageScopeOpen;
+    aProc(Message);
+  finally
+    MessageScopeClose(lScopes);
+  end;
+end;
+
+procedure TfrmMain.MessageScopeClose(aDownTo: Integer);
+begin
+  while Length(MessageScopeMarks) > aDownTo do begin
+    var lTop := High(MessageScopeMarks);
+    if MessageScopeDepths[lTop] < wbOperationScopeDepth then
+      Break;
+    if MessageScopeDepths[lTop] = wbOperationScopeDepth then
+      wbOperationScopeLeave(MessageScopeMarks[lTop]);
+    SetLength(MessageScopeMarks, lTop);
+    SetLength(MessageScopeDepths, lTop);
+  end;
+end;
+
 procedure TfrmMain.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
+  Inc(MessageScopeRetrievals);
+  MessageScopeClose(0);
+  MessageScopeOpen;
   if IsInputForNestedPump(Msg) then begin
     Handled := True;
     Exit;
@@ -4750,6 +4845,9 @@ end;
 destructor TfrmMain.Destroy;
 begin
   inherited;
+  for var lHook in MessageScopeHooks do
+    lHook.Free;
+  MessageScopeHooks := nil;
   ClearViewTree;
   FreeAndNil(ConflictView);
   FreeAndNil(lvReferencedByAllItems);
@@ -4947,6 +5045,11 @@ begin
 
   pgMain.ActivePage := tbsMessages;
   Application.OnMessage := ApplicationMessage;
+  Application.OnIdle := ApplicationIdle;
+  MessageScopeHooks := [TScopedWindowProc.Create(vstNav), TScopedWindowProc.Create(vstView),
+    TScopedWindowProc.Create(vstSpreadSheetWeapon), TScopedWindowProc.Create(vstSpreadsheetArmor),
+    TScopedWindowProc.Create(vstSpreadSheetAmmo), TScopedWindowProc.Create(lvReferencedBy),
+    TScopedWindowProc.Create(edEditorIDSearch), TScopedWindowProc.Create(edFormIDSearch)];
   lblPath.DoubleBuffered := True;
 
   wbDisplayLoadOrderFormID := True;
@@ -6201,6 +6304,7 @@ begin
     wbForceTerminate := True;
     Caption := 'Waiting for Background Loader to terminate...';
     pnlClient.Enabled := False;
+    MessageScopeClose(0);
     try
       while not xeContext.LoaderDone do begin
         DoProcessMessages;
@@ -15973,6 +16077,34 @@ begin
   SendMessage(Handle, WM_USER + 2, NativeUInt(@aStartTime), aLoadOrder);
 end;
 
+function TfrmMain.SendRefPhase(aBegin: Boolean): Boolean;
+begin
+  Result := SendMessage(Handle, WM_USER + 6, Ord(aBegin), 0) <> 0;
+end;
+
+procedure TfrmMain.WMUserRefPhase(var Message: TMessage);
+begin
+  Message.Result := 0;
+  if Message.WParam = 0 then begin
+    wbRefPhaseEnd(RefPhasePins);
+    Message.Result := 1;
+    Exit;
+  end;
+  wbRefPhaseBegin(Files, RefPhasePins);
+  var lScopes := Length(MessageScopeMarks);
+  try
+    MessageScopeOpen;
+    for var lData in ViewRootDatas do begin
+      var lContainer: IwbContainer;
+      if Supports(lData.Element, IwbContainer, lContainer) then
+        lContainer.ElementCount;
+    end;
+  finally
+    MessageScopeClose(lScopes);
+  end;
+  Message.Result := 1;
+end;
+
 procedure TfrmMain.DoSetActiveContainer(const aContainer: IwbDataContainer);
 var
   i                           : Integer;
@@ -24946,41 +25078,47 @@ procedure TfrmMain.UpdateActions;
 var
   HintMode: TVTHintMode;
 begin
-  if not InNestedLoop then begin
-    if CloseDeferred then begin
-      CloseDeferred := False;
-      Close;
-      Exit;
+  var lScopes := Length(MessageScopeMarks);
+  try
+    MessageScopeOpen;
+    if not InNestedLoop then begin
+      if CloseDeferred then begin
+        CloseDeferred := False;
+        Close;
+        Exit;
+      end;
+      if ResetActiveTreeDeferred then begin
+        ResetActiveTreeDeferred := False;
+        PostMessage(Handle, WM_USER + 3, 0, 0);
+      end;
+      if PluggyChangeDeferred then begin
+        PluggyChangeDeferred := False;
+        PostMessage(Handle, WM_USER + 4, 0, 0);
+      end;
     end;
-    if ResetActiveTreeDeferred then begin
-      ResetActiveTreeDeferred := False;
-      PostMessage(Handle, WM_USER + 3, 0, 0);
+    if DelayedExpandView then begin
+      DelayedExpandView := False;
+      ExpandView;
     end;
-    if PluggyChangeDeferred then begin
-      PluggyChangeDeferred := False;
-      PostMessage(Handle, WM_USER + 4, 0, 0);
-    end;
-  end;
-  if DelayedExpandView then begin
-    DelayedExpandView := False;
-    ExpandView;
-  end;
-  if Enabled and pnlClient.Enabled then
-    NavUpdate(False);
-  if ViewRefreshDue then
-    ResetActiveTree;
-  inherited;
+    if Enabled and pnlClient.Enabled then
+      NavUpdate(False);
+    if ViewRefreshDue then
+      ResetActiveTree;
+    inherited;
 
-  if GetAsyncKeyState(VK_SHIFT) and $8000 <> 0 then
-    HintMode := hmTooltip
-  else
-    HintMode := hmDefault;
+    if GetAsyncKeyState(VK_SHIFT) and $8000 <> 0 then
+      HintMode := hmTooltip
+    else
+      HintMode := hmDefault;
 
-  if HintMode <> vstView.HintMode then begin
-    vstView.HintMode := HintMode;
-    vstSpreadSheetWeapon.HintMode := HintMode;
-    vstSpreadsheetArmor.HintMode := HintMode;
-    vstSpreadSheetAmmo.HintMode := HintMode;
+    if HintMode <> vstView.HintMode then begin
+      vstView.HintMode := HintMode;
+      vstSpreadSheetWeapon.HintMode := HintMode;
+      vstSpreadsheetArmor.HintMode := HintMode;
+      vstSpreadSheetAmmo.HintMode := HintMode;
+    end;
+  finally
+    MessageScopeClose(lScopes);
   end;
 end;
 
@@ -25091,7 +25229,31 @@ begin
       end;
     UpdateTreeLineColor;
   end;
-  inherited;
+  if (wbParallelRefBuilds = 0) or (Length(MessageScopeMarks) > 0) then
+    inherited
+  else begin
+    var lScopes := Length(MessageScopeMarks);
+    try
+      MessageScopeOpen;
+      inherited;
+    finally
+      MessageScopeClose(lScopes);
+    end;
+  end;
+end;
+
+{ TScopedWindowProc }
+
+constructor TScopedWindowProc.Create(aControl: TControl);
+begin
+  inherited Create;
+  swpOld := aControl.WindowProc;
+  aControl.WindowProc := WndProc;
+end;
+
+procedure TScopedWindowProc.WndProc(var Message: TMessage);
+begin
+  frmMain.ScopedDispatch(swpOld, Message);
 end;
 
 { TLoaderThread }
@@ -25370,6 +25532,8 @@ begin
           {$IFDEF USE_PARALLEL_BUILD_REFS}
           xeContext.BuildingRefsParallel := True;
           try
+            if not frmMain.SendRefPhase(True) then
+              raise Exception.Create('The parallel reference build could not begin');
             TParallel.&For(Low(ltFiles), High(ltFiles), procedure(lLoadListIdx: Integer)
             var
               OnlyLoad : Boolean;
@@ -25436,6 +25600,7 @@ begin
               end;
             end);
           finally
+            frmMain.SendRefPhase(False);
             xeContext.BuildingRefsParallel := False;
           end;
           {$ENDIF}
