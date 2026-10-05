@@ -962,17 +962,19 @@ begin
        not (SameText(xeTestPump, 'close') or SameText(xeTestPump, 'ctrlo') or SameText(xeTestPump, 'xback') or
             SameText(xeTestPump, 'pendingset') or SameText(xeTestPump, 'tab') or SameText(xeTestPump, 'cancelctrlo') or
             SameText(xeTestPump, 'cancelshortcut') or SameText(xeTestPump, 'endsession') or
-            SameText(xeTestPump, 'browse') or SameText(xeTestPump, 'hotkey') or SameText(xeTestPump, 'edidsearch')) or
+            SameText(xeTestPump, 'browse') or SameText(xeTestPump, 'edidwalk') or SameText(xeTestPump, 'initwalk') or
+            SameText(xeTestPump, 'hotkey') or SameText(xeTestPump, 'edidsearch')) or
        not ((xeTestPumpClient = '') or SameText(xeTestPumpClient, 'enabled') or SameText(xeTestPumpClient, 'disabled')) or
        not ((xeTestPumpDuringLoad = '') or SameText(xeTestPumpDuringLoad, 'any') or SameText(xeTestPumpDuringLoad, 'refs')) or
        ((xeTestPumpDuringLoad <> '') and (SameText(xeTestPump, 'xback') or SameText(xeTestPump, 'pendingset'))) or
-       (SameText(xeTestPump, 'browse') and (xeTestPumpDuringLoad = '')) or
+       ((SameText(xeTestPump, 'browse') or SameText(xeTestPump, 'edidwalk') or SameText(xeTestPump, 'initwalk')) and
+        (xeTestPumpDuringLoad = '')) or
        (SameText(xeTestPump, 'hotkey') <> (xeTestPumpHotkey <> '')) or
        (SameText(xeTestPump, 'edidsearch') <> (xeTestPumpSearch <> '')) then begin
-      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|browse|hotkey|edidsearch> ' +
+      ShowMessage('testpump requires -testpump:<close|ctrlo|xback|pendingset|tab|cancelctrlo|cancelshortcut|endsession|browse|edidwalk|initwalk|hotkey|edidsearch> ' +
         '-testpumpfile:<filename> [-testpumpaction:<text in the current action or caption>] [-testpumpclient:<enabled|disabled>] ' +
         '[-testpumpanswer:<yes|no>] [-testpumpgenerator] [-testpumpdirect] [-testpumpmodal] [-testpumpduringload:<any|refs>] ' +
-        '[-testpumphotkey:<script file>] [-testpumpsearch:<EditorID>]; browse only with -testpumpduringload, hotkey only with ' +
+        '[-testpumphotkey:<script file>] [-testpumpsearch:<EditorID>]; browse, edidwalk and initwalk only with -testpumpduringload, hotkey only with ' +
         '-testpumphotkey, edidsearch only with -testpumpsearch, ' +
         'xback and pendingset not with -testpumpduringload');
       Exit(False);

@@ -877,6 +877,14 @@ type
     TestPumpShortCut         : TAction;
     TestPumpBrowseNode       : PVirtualNode;
     TestPumpBrowseCount      : Integer;
+    TestPumpWalkFile         : Integer;
+    TestPumpWalkIndex        : Integer;
+    TestPumpWalkReads        : Int64;
+    TestPumpWalkChars        : Int64;
+    TestPumpWalkFaults       : Int64;
+    TestPumpWalkFirstFault   : string;
+    TestPumpWalkStack        : TArray<IwbContainer>;
+    TestPumpWalkPos          : TArray<Integer>;
 
     TestViewModalAnswer      : TTimer;
     TestViewModalFactory     : TFunc<TwbConflictTree>;
@@ -890,6 +898,9 @@ type
 
     procedure TestPumpStart;
     procedure TestPumpBrowseStep;
+    procedure TestPumpEdidWalkStep;
+    procedure TestPumpInitWalkStep;
+    function TestPumpRefDigest: string;
     function TestPumpInside: Boolean;
     procedure TestPumpNote(const aText: string);
     procedure TestPumpSetCtrl(aDown: Boolean);
@@ -1459,6 +1470,7 @@ implementation
 
 uses
   System.Diagnostics,
+  System.Hash,
   System.IOUtils,
   System.Math,
   System.RegularExpressionsCore,
@@ -24136,6 +24148,12 @@ begin
   TestPumpEnded := False;
   TestPumpBrowseNode := nil;
   TestPumpBrowseCount := 0;
+  TestPumpWalkFile := 0;
+  TestPumpWalkIndex := 0;
+  TestPumpWalkReads := 0;
+  TestPumpWalkChars := 0;
+  TestPumpWalkFaults := 0;
+  TestPumpWalkFirstFault := '';
   TestPumpSeen := '';
   TestPumpModalBase := nil;
   TestPumpFocus := 0;
@@ -24164,6 +24182,104 @@ begin
   vstNav.FocusedNode := lNode;
   vstNav.Selected[lNode] := True;
   Inc(TestPumpBrowseCount);
+end;
+
+procedure TfrmMain.TestPumpEdidWalkStep;
+begin
+  var lUntil := GetTickCount64 + 200;
+  while (GetTickCount64 < lUntil) and (Length(Files) > 0) do begin
+    if TestPumpWalkFile > High(Files) then
+      TestPumpWalkFile := 0;
+    var lFile := Files[TestPumpWalkFile];
+    if TestPumpWalkIndex >= lFile.RecordCount then begin
+      TestPumpWalkIndex := 0;
+      Inc(TestPumpWalkFile);
+      Continue;
+    end;
+    try
+      var lRec := lFile.Records[TestPumpWalkIndex];
+      if Assigned(lRec) then
+        Inc(TestPumpWalkChars, Length(lRec.EditorID));
+      Inc(TestPumpWalkReads);
+    except
+      on E: Exception do begin
+        Inc(TestPumpWalkFaults);
+        if TestPumpWalkFirstFault = '' then
+          TestPumpWalkFirstFault := E.ClassName + ': ' + E.Message;
+      end;
+    end;
+    Inc(TestPumpWalkIndex);
+  end;
+end;
+
+procedure TfrmMain.TestPumpInitWalkStep;
+begin
+  var lUntil := GetTickCount64 + 200;
+  while (GetTickCount64 < lUntil) and (Length(Files) > 0) do begin
+    var lTop := High(TestPumpWalkStack);
+    if lTop < 0 then begin
+      if TestPumpWalkFile > High(Files) then
+        TestPumpWalkFile := 0;
+      TestPumpWalkStack := [Files[TestPumpWalkFile] as IwbContainer];
+      TestPumpWalkPos := [0];
+      Inc(TestPumpWalkFile);
+      Continue;
+    end;
+    try
+      var lContainer := TestPumpWalkStack[lTop];
+      if TestPumpWalkPos[lTop] >= lContainer.ElementCount then begin
+        lContainer := nil;
+        SetLength(TestPumpWalkStack, lTop);
+        SetLength(TestPumpWalkPos, lTop);
+        Continue;
+      end;
+      var lElement := lContainer.Elements[TestPumpWalkPos[lTop]];
+      Inc(TestPumpWalkPos[lTop]);
+      var lRec: IwbMainRecord;
+      var lGroup: IwbGroupRecord;
+      if Supports(lElement, IwbMainRecord, lRec) then begin
+        Inc(TestPumpWalkChars, (lRec as IwbContainer).ElementCount);
+        Inc(TestPumpWalkReads);
+      end else if Supports(lElement, IwbGroupRecord, lGroup) then begin
+        TestPumpWalkStack := TestPumpWalkStack + [lGroup as IwbContainer];
+        TestPumpWalkPos := TestPumpWalkPos + [0];
+      end;
+    except
+      on E: Exception do begin
+        Inc(TestPumpWalkFaults);
+        if TestPumpWalkFirstFault = '' then
+          TestPumpWalkFirstFault := E.ClassName + ': ' + E.Message;
+        TestPumpWalkStack := nil;
+        TestPumpWalkPos := nil;
+      end;
+    end;
+  end;
+end;
+
+function TfrmMain.TestPumpRefDigest: string;
+var
+  lHash    : THashSHA2;
+  lMasters : Int64;
+  lRefs    : Int64;
+begin
+  lMasters := 0;
+  lRefs := 0;
+  lHash := THashSHA2.Create;
+  for var lFile in Files do
+    for var lIndex := 0 to Pred(lFile.RecordCount) do begin
+      var lRec := lFile.Records[lIndex];
+      if not Assigned(lRec) or not lRec.MasterOrSelf.Equals(lRec) then
+        Continue;
+      Inc(lMasters);
+      var lLine := IntToHex(lRec.LoadOrderFormID.ToCardinal, 8) + '@' + IntToStr(lFile.LoadOrder) + ':';
+      for var lRefIndex := 0 to Pred(lRec.ReferencedByCount) do begin
+        var lRef := lRec.ReferencedBy[lRefIndex];
+        lLine := lLine + ' ' + IntToHex(lRef.LoadOrderFormID.ToCardinal, 8) + '@' + IntToStr(lRef._File.LoadOrder);
+        Inc(lRefs);
+      end;
+      lHash.Update(TEncoding.UTF8.GetBytes(lLine + #10));
+    end;
+  Result := 'masters ' + IntToStr(lMasters) + ', references ' + IntToStr(lRefs) + ', referenced-by sha256 ' + lHash.HashAsString;
 end;
 
 procedure TfrmMain.TestPumpTimerTimer(Sender: TObject);
@@ -24283,6 +24399,10 @@ begin
 
   if TestPumpEnded and (GetTickCount64 > TestPumpEndTick) then begin
     TestPumpTimer.Enabled := False;
+    TestPumpWalkStack := nil;
+    TestPumpWalkPos := nil;
+    if xeTestPumpDuringLoad <> '' then
+      TestPumpNote('after loading: ' + TestPumpRefDigest);
     TestPumpNote('observation ended');
     if xeTestPumpDuringLoad <> '' then
       tmrShutdown.Enabled := True;
@@ -24356,6 +24476,10 @@ begin
   var lBrowsing := SameText(xeTestPump, 'browse') and TestPumpInside;
   if lBrowsing then
     TestPumpBrowseStep;
+  if SameText(xeTestPump, 'edidwalk') and TestPumpInside then
+    TestPumpEdidWalkStep;
+  if SameText(xeTestPump, 'initwalk') and TestPumpInside then
+    TestPumpInitWalkStep;
 
   var lShown: string := '-';
   if Assigned(ActiveRecord) then
@@ -24376,7 +24500,9 @@ begin
       TestPumpSetCtrl(False);
     if xeTestPumpDuringLoad <> '' then
       TestPumpNote('the loader phase has ended (loader done ' + BoolToStr(xeContext.LoaderDone, True) + '); records browsed ' +
-        IntToStr(TestPumpBrowseCount) + '; the View tab shows ' + lShown +
+        IntToStr(TestPumpBrowseCount) + '; records walked ' + IntToStr(TestPumpWalkReads) + ' (' + IntToStr(TestPumpWalkChars) +
+        ' EditorID characters or elements), faults ' + IntToStr(TestPumpWalkFaults) + IfThen(TestPumpWalkFirstFault <> '', ', first ' +
+        TestPumpWalkFirstFault, '') + '; the View tab shows ' + lShown +
         '; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
     else if xeTestPumpModal then
       TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
