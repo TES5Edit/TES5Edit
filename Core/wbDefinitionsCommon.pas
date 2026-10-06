@@ -5094,12 +5094,19 @@ begin
     end;
   end;
 
+  var lVisited: TArray<IwbMainRecord>;
   while Assigned(lPersistLocation) do
   begin
-    if lLocation.MasterOrSelf = lPersistLocation.MasterOrSelf then
+    var lPersistMaster := lPersistLocation.MasterOrSelf;
+    if lLocation.MasterOrSelf = lPersistMaster then
       Exit;
 
     var lParentLoc := lPersistLocation.ElementBySignature[PNAM];
+    for var lVisitedLoc in lVisited do
+      if lVisitedLoc = lPersistMaster then
+        lParentLoc := nil;
+    lVisited := lVisited + [lPersistMaster];
+
     if Assigned(lParentLoc) then
       lPersistLocation := lParentLoc.LinksTo as IwbMainRecord
     else
