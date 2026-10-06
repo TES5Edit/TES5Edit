@@ -7865,7 +7865,7 @@ type
     function Assign(const aTarget: IwbElement; aIndex: Integer; const aSource: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
     function GetAssignTemplates(const aContainer: IwbContainerElementRef; aIndex: Integer): TwbDefs; virtual;
     function GetDefID: NativeUInt;
-    function Equals(const aDef: IwbDef): Boolean; reintroduce; virtual;
+    function Equals(const aDef: IwbDef): Boolean; reintroduce;
     function GetConflictPriority(const aElement: IwbElement): TwbConflictPriority; virtual;
     function GetConflictPriorityCanChange: Boolean; virtual;
     function GetRequired: Boolean;
@@ -7890,9 +7890,9 @@ type
     function IncludeFlagNoClone(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbDef{Self};
 
     {--- IwbDefInternal ---}
-    function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef; virtual;
-    procedure ParentSet; virtual;
-    procedure InitFromParent(aParent: TwbDef); virtual;
+    function SetParent(const aParent: TwbDef; aForceDuplicate: Boolean): IwbDef;
+    procedure ParentSet;
+    procedure InitFromParent(aParent: TwbDef);
     procedure InitFromParentBeforeChildren; virtual;
     procedure InitFromParentDoChildren; virtual;
     procedure InitFromParentAfterChildren; virtual;
@@ -7956,9 +7956,9 @@ type
     procedure SetTreeBranch(aValue: Boolean);   // Make the element included in a "leaf" visible in the tree navigator;
 
     procedure ToString(var Result : string; const aElement: IwbElement; aType: TwbCallbackType); reintroduce; virtual;
-    function GetSummaryLinksTo(const aElement: IwbElement): IwbElement; virtual;
+    function GetSummaryLinksTo(const aElement: IwbElement): IwbElement;
 
-    function IsRemovable(const aElement: IwbElement): Boolean; virtual;
+    function IsRemovable(const aElement: IwbElement): Boolean;
 
     function SetSummaryName(const aName: string): IwbNamedDef;
   end;
@@ -8069,7 +8069,7 @@ type
     function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
                                const aSignature     : TwbSignature;
                                const aDataContainer : IwbDataContainer)
-                                                    : Boolean; virtual;
+                                                    : Boolean;
     function GetMemberFor(const aContainer     : IwbContainerElementRef;
                           const aSignature     : TwbSignature;
                           const aDataContainer : IwbDataContainer)
@@ -8089,7 +8089,7 @@ type
 
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
-    function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
+    function GetSkipSignature(const aSignature: TwbSignature): Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
 
     procedure AfterLoad(const aElement: IwbElement); override;
@@ -8187,7 +8187,7 @@ type
     procedure InitFromParentDoChildren; override;
 
     {---IwbRecordMemberDef---}
-    function ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string; virtual;
+    function ToSummary(aDepth: Integer; const aElement: IwbElement; var aLinksTo: IwbElement): string;
 
     function IncludeFlag(aFlag: TwbDefFlag; aOnlyWhenTrue : Boolean = True): IwbRecordMemberDef{Self};
     function SetSummaryName(const aName: string): IwbRecordMemberDef{Self};
@@ -8389,7 +8389,7 @@ type
     function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
                                const aSignature     : TwbSignature;
                                const aDataContainer : IwbDataContainer)
-                                                    : Boolean; virtual;
+                                                    : Boolean;
     function GetMemberFor(const aContainer     : IwbContainerElementRef;
                           const aSignature     : TwbSignature;
                           const aDataContainer : IwbDataContainer)
@@ -8409,7 +8409,7 @@ type
 
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
-    function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
+    function GetSkipSignature(const aSignature: TwbSignature): Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
 
     {---IwbRecordMemberDef---}
@@ -8467,7 +8467,7 @@ type
     function ContainsMemberFor(const aContainer     : IwbContainerElementRef;
                                const aSignature     : TwbSignature;
                                const aDataContainer : IwbDataContainer)
-                                                    : Boolean; virtual;
+                                                    : Boolean;
     function GetMemberFor(const aContainer     : IwbContainerElementRef;
                           const aSignature     : TwbSignature;
                           const aDataContainer : IwbDataContainer)
@@ -8488,7 +8488,7 @@ type
 
     function GetMember(aIndex: Integer): IwbRecordMemberDef;
     function GetMemberCount: Integer;
-    function GetSkipSignature(const aSignature: TwbSignature): Boolean; virtual;
+    function GetSkipSignature(const aSignature: TwbSignature): Boolean;
     function GetRecordHeaderStruct: IwbStructDef;
 
     {---IwbSubRecordUnionDef---}
@@ -8568,12 +8568,12 @@ type
     function SetToDefault(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): Boolean; virtual;
     function GetElementMap: TDynCardinalArray; virtual;
 
-    function SetDefaultEditValue(const aValue: string): IwbValueDef; virtual;
+    function SetDefaultEditValue(const aValue: string): IwbValueDef;
     function SetDefaultNativeValue(const aValue: Variant): IwbValueDef; virtual;
-    function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
-    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef; virtual;
-    function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef; virtual;
-    function SetIsRemovable(const aCallback: TwbIsRemovableCallback): IwbValueDef; virtual;
+    function SetLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
+    function SetSummaryLinksToCallback(const aCallback: TwbLinksToCallback): IwbValueDef;
+    function SetToStr(const aToStr : TwbToStrCallback): IwbValueDef;
+    function SetIsRemovable(const aCallback: TwbIsRemovableCallback): IwbValueDef;
     function SetStaticEditInfo(aEditInfo: PwbStringArray): IwbValueDef{Self};
 
     function SetSetToDefault(const aCallback: TwbSetToDefaultCallback): IwbValueDef{Self};
@@ -8593,8 +8593,8 @@ type
     function GetDefTypeName: string; override;
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
-    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
-    procedure FromStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string); virtual;
+    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
+    procedure FromStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; const aValue: string);
     {---IwbValueDef---}
     function ToString(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; override;
     function ToSummary(aDepth: Integer; aBasePtr, aEndPtr: Pointer; const aElement: IwbElement; var aLinksTo: IwbElement): string; override;
@@ -8873,7 +8873,7 @@ type
     function CanAssign(const aElement: IwbElement; aIndex: Integer; const aDef: IwbDef): Boolean; override;
 
     {---TwbLenStringDef---}
-    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    function ToStringInternal(aBasePtr, aEndPtr: Pointer; const aElement: IwbElement): string;
     function SetFormater(const aFormater: IwbStringDefFormater): IwbLenStringDef;
 
     {---IwbValueDef---}
@@ -9294,10 +9294,10 @@ type
     function GetDefType: TwbDefType; override;
     function GetDefTypeName: string; override;
   public
-    function GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal; virtual;
-    function GetChapterType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer; virtual;
-    function GetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
-    function GetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string; virtual;
+    function GetSizing(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement;var CompressedSize: Integer): Cardinal;
+    function GetChapterType(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): Integer;
+    function GetChapterTypeName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
+    function GetChapterName(aBasePtr: Pointer; aEndPtr: Pointer; const aElement: IwbElement): string;
   end;
 
   TwbStructZDef = class(TwbStructCDef, IwbStructZDef)
@@ -9441,7 +9441,7 @@ type
     function CompareExchangeFormID(var aInt: Int64; aOldFormID: TwbFormID; aNewFormID: TwbFormID; const aElement: IwbElement): Boolean; override;
 
     {---IwbFormID---}
-    function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord; virtual;
+    function GetMainRecord(aInt: Int64; const aElement: IwbElement): IwbMainRecord;
   public
     procedure AfterConstruction; override;
   end;

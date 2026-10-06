@@ -340,8 +340,8 @@ type
     function LinksToParent: Boolean; virtual;
     procedure SetMemoryOrder(aIndex: Integer);
     function GetMemoryOrder: Integer;
-    procedure SetNameSuffix(const aSuffix: string); virtual;
-    function GetNameSuffix: string; virtual;
+    procedure SetNameSuffix(const aSuffix: string);
+    function GetNameSuffix: string;
     procedure TryAssignMembers(const aSource: IwbElement); virtual;
     procedure FlagAsOptionalAndMissing;
 
@@ -365,7 +365,7 @@ type
     function GetValue: string; virtual;
     function GetSummary: string; virtual;
     function GetCheck: string; virtual;
-    function GetSortKey(aExtended: Boolean): string; virtual;
+    function GetSortKey(aExtended: Boolean): string;
     function GetSortKeyCached(aExtended: Boolean): string; virtual;
     function GetDisplaySortKey(aExtended: Boolean): string;
     function GetSortKeyInternal(aExtended: Boolean): string; virtual;
@@ -376,9 +376,9 @@ type
     function GetDisplayName(aUseSuffix: Boolean): string; virtual;
     function GetShortName: string; virtual;
     function GetPath: string; virtual;
-    function GetIndexedPath(aIndexFromFile: Boolean = True): string; virtual;
-    function GetFullPath: string; virtual;
-    function GetPathName: string; virtual;
+    function GetIndexedPath(aIndexFromFile: Boolean = True): string;
+    function GetFullPath: string;
+    function GetPathName: string;
     function GetSkipped: Boolean; virtual;
     procedure SetSkipped(aValue: Boolean); virtual;
     function GetDef: IwbNamedDef; virtual;
@@ -412,7 +412,7 @@ type
     procedure SetNativeValue(const aValue: Variant); virtual;
     procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); virtual;
     function GetConflictPriority: TwbConflictPriority; virtual;
-    function GetConflictPriorityCanChange: Boolean; virtual;
+    function GetConflictPriorityCanChange: Boolean;
     function GetCollapsed: TwbTriBool; virtual;
     function GetModified: Boolean;
     function GetElementGeneration: Integer;
@@ -424,7 +424,7 @@ type
     function GetIsReachable: Boolean; virtual;
     procedure SetModified(aValue: Boolean); virtual;
     procedure SetParentModified; virtual;
-    procedure SetInternalModified(aValue: Boolean); virtual;
+    procedure SetInternalModified(aValue: Boolean);
     function GetDataSize: Integer; virtual;
     procedure SetDataSize(aSize: Integer); virtual;
     procedure MergeStorage(var aBasePtr: Pointer; aEndPtr: Pointer);
@@ -453,7 +453,7 @@ type
 
     function CanAssign(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean;
     function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; virtual;
-    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; virtual;
+    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements;
     function Assign(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement;
     function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
@@ -463,7 +463,7 @@ type
     function GetLinksTo: IwbElement;
     function GetLinksToCached: IwbElement;
     function InternalGetLinksTo: IwbElement; virtual;
-    function GetSummaryLinksTo: IwbElement; virtual;
+    function GetSummaryLinksTo: IwbElement;
     function GetSummaryLinksToCached: IwbElement;
     procedure SetLinksTo(const aElement: IwbElement); virtual;
     function GetNoReach: Boolean;
@@ -593,7 +593,7 @@ type
     procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
 
     procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); virtual;
-    procedure SortBySortOrder; virtual;
+    procedure SortBySortOrder;
     procedure SetIsSortedBySortOrder(aForce: Boolean);
     procedure MoveElementTo(const aElement: IwbElement; aIndex: Integer);
     procedure CreatedEmpty;
@@ -607,7 +607,7 @@ type
 
     procedure DoReset(aForce: Boolean); override;
     function ResetLeafFirst: Boolean; override;
-    function ResetChildrenLeafFirst: Boolean; virtual;
+    function ResetChildrenLeafFirst: Boolean;
     procedure DoInit(aNeedSorted: Boolean); virtual;
     procedure DoAfterInit; virtual;
     procedure DoPendingFill; virtual;
@@ -617,7 +617,7 @@ type
 
     function GetSortKeyInternal(aExtended: Boolean): string; override;
     function GetDataSize: Integer; override;
-    function GetDataSizeFromElements: Integer; virtual;
+    function GetDataSizeFromElements: Integer;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
     function UpdateMemoryOrder(out aMemoryOrderElements: TArray<Pointer>): Boolean;
@@ -688,7 +688,7 @@ type
     function IsElementRemovable(const aElement: IwbElement): Boolean; virtual;
     function IsElementEditable(const aElement: IwbElement): Boolean; virtual;
 
-    function IndexOf(const aElement: IwbElement): Integer; virtual;
+    function IndexOf(const aElement: IwbElement): Integer;
 
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); virtual;
@@ -814,8 +814,8 @@ type
     flHardcodedGeneration    : Integer;
     flHardcodedPins          : Integer;
 
-    procedure flOpenFile; virtual;
-    procedure flCloseFile; virtual;
+    procedure flOpenFile;
+    procedure flCloseFile;
     procedure flProgress(const aStatus: string);
 
     function flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
@@ -1568,7 +1568,7 @@ type
     destructor Destroy; override;
 
     function GetName: string; override;
-    function GetShortNameInternal(aForName: Boolean): string; virtual;
+    function GetShortNameInternal(aForName: Boolean): string;
     function GetShortName: string; override;
     function GetDisplayName(aUseSuffix: Boolean): string; override;
   end;
