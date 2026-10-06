@@ -130,7 +130,6 @@ object frmMain: TfrmMain
             OnExpanding = vstViewExpanding
             OnFocusChanged = vstViewFocusChanged
             OnFocusChanging = vstViewFocusChanging
-            OnFreeNode = vstViewFreeNode
             OnGetText = vstViewGetText
             OnPaintText = vstViewPaintText
             OnHeaderClick = vstViewHeaderClick

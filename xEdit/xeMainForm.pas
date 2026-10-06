@@ -552,7 +552,6 @@ type
     procedure vstViewEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstViewFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure vstViewFocusChanging(Sender: TBaseVirtualTree; OldNode, NewNode: PVirtualNode; OldColumn, NewColumn: TColumnIndex; var Allowed: Boolean);
-    procedure vstViewFreeNode(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstViewGetEditText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var CellText: string);
     procedure vstViewGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
     procedure vstViewHeaderClick(Sender: TVTHeader; const HitInfo: TVTHeaderHitInfo);
@@ -18453,11 +18452,6 @@ begin
   if Assigned(OverrideViewFocusedNode) then
     Exit(OverrideViewFocusedNode);
   Result := vstView.FocusedNode;
-end;
-
-procedure TfrmMain.vstViewFreeNode(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-begin
 end;
 
 procedure TfrmMain.vstViewGetEditText(Sender: TBaseVirtualTree;
