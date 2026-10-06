@@ -5844,6 +5844,8 @@ begin
             Exit;
 
           var lValue: Extended := lVariant;
+          if Abs(lValue) > loFull * 1000 / wbRadiansToDegreesScale then
+            Exit;
 
           var lAngle := lValue * wbRadiansToDegreesScale;
           while lAngle > loFull do
@@ -5912,6 +5914,8 @@ begin
                 Exit;
 
               var lValue: Extended := lVariant;
+              if Abs(lValue) > loFull * 1000 / wbRadiansToDegreesScale then
+                Exit;
 
               var lCoord := lValue * wbRadiansToDegreesScale;
 
