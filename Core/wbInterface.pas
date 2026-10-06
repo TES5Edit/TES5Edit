@@ -18933,12 +18933,12 @@ begin
   else
     if ((fdKind = fkHalf) and (lValue = HalfMaxValue)) or
        ((fdKind = fkSingle) and (lValue = maxSingle)) or
-       ((fdKind = fkHalf) and (lValue = maxDouble))
+       ((fdKind = fkDouble) and (lValue = maxDouble))
     then
       Result := '+' + StringOfChar('9', 39)
     else if ((fdKind = fkHalf) and (lValue = HalfMinValue)) or
             ((fdKind = fkSingle) and (lValue = -maxSingle)) or
-            ((fdKind = fkHalf) and (lValue = -maxDouble))
+            ((fdKind = fkDouble) and (lValue = -maxDouble))
     then
       Result := '-' + StringOfChar('9', 39);
 
@@ -19004,7 +19004,7 @@ begin
       or
       ((fdKind = fkSingle) and (Value = maxSingle))
       or
-      ((fdKind = fkHalf) and (Value = maxDouble))
+      ((fdKind = fkDouble) and (Value = maxDouble))
     then
       Result := 'Default' // 'Max' ??
     else if
@@ -19012,7 +19012,7 @@ begin
       or
       ((fdKind = fkSingle) and (Value = -maxSingle))
       or
-      ((fdKind = fkHalf) and (Value = -maxDouble))
+      ((fdKind = fkDouble) and (Value = -maxDouble))
     then
       Result := 'Min'
     else
