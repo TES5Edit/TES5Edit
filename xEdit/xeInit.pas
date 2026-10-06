@@ -100,8 +100,10 @@ uses
   wbImplementation,
 
   xeGameSelectForm,
-  xeScriptHost,
-  xeTestHost;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  xeTestHost,
+{$ENDIF}
+  xeScriptHost;
 
 function xeCheckForValidExtension(const aFilePath : string): Boolean;
 begin
@@ -854,8 +856,10 @@ begin
       xeAutoExit := True;
   end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if not xeTestSwitches.ParsePump then
     Exit(False);
+{$ENDIF}
 
   if xeToolMode = tmEdit then begin
     if   FindCmdLineSwitch('quickshowconflicts') or FindCmdLineSwitch('qsc')
@@ -869,8 +873,10 @@ begin
       xeAutoLoad := True;
     end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
     if not xeTestSwitches.ParseEdit then
       Exit(False);
+{$ENDIF}
 
     if   FindCmdLineSwitch('autogamelink') or FindCmdLineSwitch('agl')
       or ExeName.Contains('autogamelink') or ExeName.Contains('agl') then begin
@@ -898,8 +904,10 @@ begin
     end;
   end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if not xeTestSwitches.ParseSaveContexts then
     Exit(False);
+{$ENDIF}
 
   if FindCmdLineSwitch('showlargesubrecords') then
     xeContext.GameDefObj.DefineOptions.HideLargeSubrecords := False;
@@ -1028,17 +1036,21 @@ begin
     Inc(i);
   if xeAutoGameLink then
     Inc(i);
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Conflicts then
     Inc(i);
+{$ENDIF}
   if xeQuickEdit then
     Inc(i);
   if xeQuickSEQ then
     Inc(i);
 
   if i > 1 then begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
     if xeTestSwitches.Conflicts then
       ExitCode := 255
     else
+{$ENDIF}
       ShowMessage('Can''t activate more than one out of Quick Clean, Quick Show Conflicts, Auto GameLink, Test Conflicts, Quick Edit, or Generate SEQ modes same time.');
     Exit(False);
   end;

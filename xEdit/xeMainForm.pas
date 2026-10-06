@@ -55,8 +55,10 @@ uses
   wbLoadOrder,
   wbModGroups,
 
-  xeScriptHost,
-  xeTestHost;
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  xeTestHost,
+{$ENDIF}
+  xeScriptHost;
 
 type
   TMemo = class(TSynMemo);
@@ -755,7 +757,9 @@ type
     procedure mniViewHeaderClipboardClick(Sender: TObject);
     procedure mniViewHeaderCopyNameClick(Sender: TObject);
   protected
+{$IFDEF XE_TEST_CONTROL_POINTS}
     TestHost: TxeTestHost;
+{$ENDIF}
     ActiveRecord: IwbMainRecord;
     ViewTree: TwbConflictTree;
     ViewTreeFactory: TFunc<TwbConflictTree>;
@@ -1428,7 +1432,9 @@ uses
   xeOptionsForm,
   xeRichEditForm,
   xeScriptForm,
+{$IFDEF XE_TEST_CONTROL_POINTS}
   xeTestControlPoints,
+{$ENDIF}
   xeTipForm,
   xeViewElementsForm,
   xeWorldspaceCellDetailsForm;
@@ -1665,8 +1671,10 @@ begin
 
   xeContext.ForceClosedFiles;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.SaveContexts then
     TestSaveContextsReport('AFTER-FORCECLOSEDFILES');
+{$ENDIF}
 
   if xeContext.Settings.DontSave then
     Exit;
@@ -4399,8 +4407,10 @@ var
 begin
   if not xeContext.Settings.BuildRefs then
     Exit;
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or (xeTestSwitches.ViewTreeFile <> '') then
     Exit;
+{$ENDIF}
   if xeContext.Settings.DontCache then
     Exit;
   if xeContext.Settings.DontCacheSave then
@@ -4875,7 +4885,11 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> '')) then
+    if (not wbPatron or not xeAutoLoad)
+{$IFDEF XE_TEST_CONTROL_POINTS}
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
+{$ENDIF}
+    then
       ShowDeveloperMessage;
   end;
 
@@ -4961,7 +4975,7 @@ begin
 
         sl.Clear;
         if not xeSavesMode then begin
-          if (xeToolMode in wbPluginModes) or (xeAutoLoad and (xeTestSwitches.Conflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
+          if (xeToolMode in wbPluginModes) or (xeAutoLoad and ({$IFDEF XE_TEST_CONTROL_POINTS}xeTestSwitches.Conflicts or {$ENDIF}(GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
                 ShowMessage('Exactly one module must be selected for Quick Clean mode.');
@@ -4997,9 +5011,12 @@ begin
               Free;
             end;
         end else begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.SaveContexts then
             sl.Add(xeTestSwitches.SaveContextsSave)
-          else if not (xeToolMode in wbAutoModes) then
+          else
+{$ENDIF}
+          if not (xeToolMode in wbAutoModes) then
             if ShowModal = mrOk then
               for i := 0 to Pred(CheckListBox1.Count) do
                 if CheckListBox1.Checked[i] then
@@ -5108,7 +5125,7 @@ begin
       mniMasterAndLeafsDisabled.Checked := not ConflictView.OnlyMasterAndLeafs;
 
       // hold shift to skip building references
-      if not xeTestSwitches.Conflicts and (GetKeyState(VK_SHIFT) < 0) then begin
+      if {$IFDEF XE_TEST_CONTROL_POINTS}not xeTestSwitches.Conflicts and {$ENDIF}(GetKeyState(VK_SHIFT) < 0) then begin
         xeContext.Settings.BuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
@@ -5128,8 +5145,10 @@ begin
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
       wbNoNexusModsCheck := Settings.ReadBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
       if (xeTestSwitches.Pump <> '') and (xeTestSwitches.PumpDuringLoad <> '') then
         TestPumpStart;
+{$ENDIF}
       TLoaderThread.Create(sl);
     finally
       FreeAndNil(sl);
@@ -5935,6 +5954,7 @@ var
   i: Integer;
 
 begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.Pump <> '' then begin
     var lShown := '';
     if Assigned(ActiveRecord) then
@@ -5942,6 +5962,7 @@ begin
     TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
+{$ENDIF}
   Action := caFree;
   if LoaderStarted and not xeContext.LoaderDone then begin
     wbForceTerminate := True;
@@ -6102,7 +6123,10 @@ var
   i, j, k, l: Integer;
   Rect: TRect;
 begin
-  TestHost := TxeTestHost.Create(Self);
+{$IFDEF XE_TEST_CONTROL_POINTS}
+  if xeTestSwitches.Any then
+    TestHost := TxeTestHost.Create(Self);
+{$ENDIF}
   lvReferencedByAllItems := TObjectList<TRefByListItem>.Create(True);
   lvReferencedByFilteredItems := TList<TRefByListItem>.Create;
 
@@ -6212,6 +6236,7 @@ begin
   end;
   Memo1.WordWrap := True;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
   if xeTestSwitches.NavCopy then begin
     UseLatestCommonDialogs := False;
     TestHost.TestNavCopyAnswer := TTimer.Create(Self);
@@ -6221,6 +6246,7 @@ begin
   end;
   if xeTestSwitches.Merge or (xeTestSwitches.FilterRemove <> '') then
     UseLatestCommonDialogs := False;
+{$ENDIF}
 
   try
     if not Assigned(Settings) and (xeSettingsFileName <> '')  then
@@ -20085,19 +20111,23 @@ begin
         end;
 
         if xeContext.LoaderError then begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
               tmrShutdown.Enabled := True;
           end else
+{$ENDIF}
             ShowMessage('An error occured while loading modules. Editing is disabled. Check the message log and correct the error.');
           Exit;
         end;
 
         if (xeToolMode in [tmLODgen, tmScript]) then begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
           if (xeTestSwitches.Pump <> '') and (xeTestSwitches.PumpDuringLoad = '') then
             TestPumpStart;
+{$ENDIF}
           if not wbForceTerminate then
             tmrGenerator.Enabled := True;
           Exit;
@@ -20150,7 +20180,7 @@ begin
 
         ModGroups := nil;
 
-        if not (xeQuickClean or (xeToolMode in wbAutoModes) or (xeTestSwitches.Conflicts and not xeTestSwitches.ConflictsModGroups)) then
+        if not (xeQuickClean or (xeToolMode in wbAutoModes){$IFDEF XE_TEST_CONTROL_POINTS} or (xeTestSwitches.Conflicts and not xeTestSwitches.ConflictsModGroups){$ENDIF}) then
           if xeQuickShowConflicts or xeAutoLoad then begin
             ModGroups := lModGroups.ByName(True);
             lModGroups.ByName(False).ShowValidationMessages;
@@ -20176,8 +20206,10 @@ begin
         mniModGroupsEnabled.Checked := ConflictView.ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ConflictView.ModGroupsEnabled;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
         if (xeTestSwitches.Pump <> '') and (xeTestSwitches.PumpDuringLoad = '') then
           TestPumpStart;
+{$ENDIF}
 
         if xeQuickShowConflicts then
           mniNavFilterConflicts.Click;
@@ -20271,6 +20303,7 @@ begin
             end;
         end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
         if xeTestSwitches.Conflicts then
           if xeTestSwitches.ConflictsCompareTo <> '' then
             TLoaderThread.Create(xeTestSwitches.ConflictsCompareTo, Files[High(Files)])
@@ -20318,6 +20351,7 @@ begin
 
         if xeTestSwitches.SaveContexts then
           DoTestSaveContextsCompare;
+{$ENDIF}
       finally
         Dec(wbShowStartTime);
       end;
@@ -20391,6 +20425,7 @@ begin
         end;
       end;
 
+{$IFDEF XE_TEST_CONTROL_POINTS}
       if xeTestSwitches.DeltaPatch then
         DoTestDeltaPatchReport;
 
@@ -20412,6 +20447,7 @@ begin
           TestSaveContextsReport('LOAD-DONE');
         tmrShutdown.Enabled := True;
       end;
+{$ENDIF}
     end;
   finally
     if xeContext.FirstLoadComplete then begin

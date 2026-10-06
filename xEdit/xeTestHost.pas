@@ -200,6 +200,7 @@ type
     function ParsePump: Boolean;
     function ParseEdit: Boolean;
     function ParseSaveContexts: Boolean;
+    function Any: Boolean;
   end;
 
 var
@@ -452,6 +453,12 @@ begin
     xeAutoLoad := True;
     xeAutoExit := True;
   end;
+end;
+
+function TxeTestSwitches.Any: Boolean;
+begin
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or Hide or
+    Filter or SaveContexts or (Pump <> '');
 end;
 
 initialization
