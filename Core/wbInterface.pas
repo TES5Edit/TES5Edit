@@ -18819,8 +18819,8 @@ begin
           {fkDouble:} begin
             if PInt64(aBasePtr)^ = $7FEFFFFFFFFFFFFF then
               Exit(maxDouble)
-            else if PInt64(aBasePtr)^ = $FFEFFFFFFFFFFFFF then
-              Exit(maxDouble)
+            else if PInt64(aBasePtr)^ = -$10000000000001 then
+              Exit(-maxDouble)
             else
               Value := PDouble(aBasePtr)^;
           end;
