@@ -12,7 +12,97 @@ unit xeTestHost;
 
 interface
 
+uses
+  System.Classes,
+  System.SysUtils,
+
+  Vcl.ActnList,
+  Vcl.ExtCtrls,
+  Vcl.Forms,
+  Vcl.Graphics,
+
+  VirtualTrees.Types,
+
+  Winapi.Windows,
+
+  wbConflict,
+  wbInterface;
+
 type
+  TxeTestHost = class(TComponent)
+  public
+    TestNavCopyPhase         : Integer;
+    TestNavCopyTimer         : TTimer;
+    TestNavCopyAnswer        : TTimer;
+    TestNavCopyFileA         : IwbFile;
+    TestNavCopyFileB         : IwbFile;
+    TestNavCopyFileC         : IwbFile;
+    TestNavCopyRecordsA      : TDynMainRecords;
+    TestNavCopyRecordsB      : TDynMainRecords;
+    TestNavCopyRecordsC      : TDynMainRecords;
+    TestNavCopyRows          : TStringList;
+    TestNavCopyStale         : Integer;
+    TestNavCopyWouldRefresh  : Integer;
+    TestNavCopyControlMisses : Integer;
+    TestNavCopyStartGiven    : Boolean;
+    TestOptionsTimer         : TTimer;
+    TestOptionsAnswer        : TTimer;
+    TestOptionsToggle        : Boolean;
+    TestOptionsShown         : Boolean;
+    TestOptionsDialogAlign   : Boolean;
+    TestOptionsToggleNeverShow : Boolean;
+    TestOptionsDialogNeverShow : Boolean;
+    TestOptionsToggleTemplate  : Boolean;
+    TestOptionsColourSet       : Boolean;
+    TestOptionsColourAll       : TConflictAll;
+    TestOptionsColourValue     : TColor;
+    TestOptionsCloseTimer      : TTimer;
+    TestOptionsClosePosted     : Boolean;
+    TestCopyIntoGapTimer     : TTimer;
+    TestDropMasterTimer      : TTimer;
+    TestDropMasterAnswer     : TTimer;
+    TestDropMasterDetach     : IwbElement;
+    TestDropMasterSeen       : string;
+    TestDeltaPatchLines      : TStringList;
+    TestDeltaPatchTimer      : TTimer;
+    TestDeltaPatchCancelled  : Boolean;
+    TestHideTimer            : TTimer;
+    TestMergeLines           : TStringList;
+    TestMergeTimer           : TTimer;
+    TestMergeAnswer          : TTimer;
+    TestMergeTarget          : IwbFile;
+    TestMergeNotOffered      : Boolean;
+    TestFilterAnswer         : TTimer;
+    TestFilterAnswered       : string;
+    TestPumpTimer            : TTimer;
+    TestPumpDelivered        : Boolean;
+    TestPumpEnded            : Boolean;
+    TestPumpEndTick          : UInt64;
+    TestPumpLastDialog       : HWND;
+    TestPumpSeen             : string;
+    TestPumpCtrlDown         : Boolean;
+    TestPumpModalBase        : TCustomForm;
+    TestPumpFocus            : HWND;
+    TestPumpShortCut         : TAction;
+    TestPumpBrowseNode       : PVirtualNode;
+    TestPumpBrowseCount      : Integer;
+    TestPumpClosePosted      : Boolean;
+    TestPumpWalkFile         : Integer;
+    TestPumpWalkIndex        : Integer;
+    TestPumpWalkReads        : Int64;
+    TestPumpWalkChars        : Int64;
+    TestPumpWalkFaults       : Int64;
+    TestPumpWalkFirstFault   : string;
+    TestPumpWalkStack        : TArray<IwbContainer>;
+    TestPumpWalkPos          : TArray<Integer>;
+    TestViewModalAnswer      : TTimer;
+    TestViewModalFactory     : TFunc<TwbConflictTree>;
+    TestViewModalSeen        : string;
+    TestViewModalMemo        : string;
+    TestViewOptionsFlip      : string;
+    TestViewOptionsColor     : TColor;
+  end;
+
   TxeTestSwitches = record
     Conflicts             : Boolean;
     ConflictsFile         : string;
@@ -118,12 +208,9 @@ var
 implementation
 
 uses
-  System.SysUtils,
-
   Vcl.Dialogs,
 
   wbCommandLine,
-  wbInterface,
 
   xeInit;
 
