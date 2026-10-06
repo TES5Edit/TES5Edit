@@ -11372,10 +11372,11 @@ begin
               end;
 
               if xeContext.Settings.UDRSetScale then begin
-                if not Assigned(ElementBySignature['XSCL']) then
+                Element := ElementBySignature['XSCL'];
+                if not Assigned(Element) then
                   Element := Add('XSCL', True);
-                  if Assigned(Element) then
-                    Element.NativeValue := xeContext.Settings.UDRSetScaleValue;
+                if Assigned(Element) then
+                  Element.NativeValue := xeContext.Settings.UDRSetScaleValue;
               end;
 
               if xeContext.Settings.UDRSetMSTT and xeContext.GameDefObj.IsFallout3 then begin
