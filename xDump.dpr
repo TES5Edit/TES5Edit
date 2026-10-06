@@ -877,11 +877,6 @@ begin
   end;
 end;
 
-function isMode(aMode: String): Boolean;
-begin
-  Result := FindCmdLineSwitch(aMode) or (Pos(Uppercase(aMode), UpperCase(ExtractFileName(ParamStr(0))))<>0);
-end;
-
 function isFormatValid(aFormatName: String): Boolean;
 begin
   if Uppercase(aFormatName) = 'RAW' then
