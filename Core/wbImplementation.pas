@@ -11350,6 +11350,8 @@ begin
   mrReferencedBySize := 0;
   mrGroup := nil;
   ReleaseElements;
+  cntElementsMap := nil;
+  cntStates := cntStates - [csInit, csInitDone, csFillPending];
 end;
 
 procedure TwbMainRecord.CollapseStorage(aKAR: PwbKeepAliveRoot; aForce: Boolean);
