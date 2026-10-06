@@ -18632,7 +18632,7 @@ begin
       fsInf: case fdKind of
         fkHalf  : PHalfFloat(aBasePtr)^ := HalfPosInf;
         fkSingle: PSingle(aBasePtr)^ := Single.PositiveInfinity;
-        fkDouble: PDouble(aBasePtr)^ := DoubleNaN.PositiveInfinity;
+        fkDouble: PDouble(aBasePtr)^ := Double.PositiveInfinity;
       end;
       fsNInf: case fdKind of
         fkHalf  : PHalfFloat(aBasePtr)^ := HalfNegInf;
