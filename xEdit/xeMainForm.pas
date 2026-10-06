@@ -2759,7 +2759,7 @@ end;
 
 procedure TfrmMain.ConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
 begin
-  wbConflictLevelForMainRecord(aMainRecord, Files, ConflictView,
+  ConflictView.LevelForMainRecord(aMainRecord, Files,
     procedure(const aMessage: string) begin PostAddMessage(aMessage); end,
     aConflictAll, aConflictThis);
 end;
@@ -14357,7 +14357,7 @@ end;
 function TfrmMain.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord): TDynViewNodeDatas;
 begin
   Assert(xeContext.LoaderDone);
-  Result := wbConflictNodeDatasForMainRecord(aMainRecord, Files, ConflictView);
+  Result := ConflictView.NodeDatasForMainRecord(aMainRecord, Files);
 end;
 
 procedure TfrmMain.PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);

@@ -48,6 +48,8 @@ type
     destructor Destroy; override;
     procedure RulesChanged;
     procedure Peek(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+    function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles): TwbDynConflictNodeDatas;
+    procedure LevelForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; const aOnMessage: TwbConflictMessageProc; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
     function ModGroupTargets(aModule: PwbModuleInfo): TwbModuleInfos;
     procedure SetModGroupTargets(aTargets: TDictionary<PwbModuleInfo, TwbModuleInfos>); overload;
     procedure SetModGroupTargets(aFrom: TwbConflictView); overload;
@@ -156,11 +158,7 @@ function wbConflictAssignAligned(const aContainer: IwbContainerElementRef; aInde
 
 function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDatas; aSiblingCompare, aInjected: Boolean; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; const aOnField: TwbFieldConflictProc = nil): TConflictAll;
 
-function wbConflictNodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView): TwbDynConflictNodeDatas;
-
 function wbConflictNodeDatasForContainer(const aContainer: IwbDataContainer; const aFiles: TwbFiles): TwbDynConflictNodeDatas;
-
-procedure wbConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
 
 function wbConflictMakeDeltaPatch(const aOld, aNew: IwbFile; aTemplate: TwbConflictView; const aOnMessage: TwbConflictMessageProc): TwbDeltaPatchCounts;
 
@@ -1078,7 +1076,7 @@ begin
     end;
 end;
 
-function wbConflictNodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView): TwbDynConflictNodeDatas;
+function TwbConflictView.NodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles): TwbDynConflictNodeDatas;
 var
   Master        : IwbMainRecord;
   Rec           : IwbMainRecord;
@@ -1166,7 +1164,7 @@ begin
   end else begin
     Master := aMainRecord.MasterOrSelf;
 
-    if aView.OnlyMasterAndLeafs then begin
+    if cvOnlyMasterAndLeafs then begin
       MainRecords := Master.MasterAndLeafs;
     end else begin
       SetLength(MainRecords, Succ(Master.OverrideCount));
@@ -1176,7 +1174,7 @@ begin
     end;
   end;
 
-  if aView.ModGroupsEnabled and (Length(MainRecords) > 2) then begin
+  if cvModGroupsEnabled and (Length(MainRecords) > 2) then begin
     SetLength(Modules, Length(MainRecords));
     FirstModule := nil;
     LastModule := nil;
@@ -1187,7 +1185,7 @@ begin
         if not Assigned(FirstModule) then
           FirstModule := Modules[i];
         LastModule := Modules[i];
-        Targets := aView.ModGroupTargets(Modules[i]);
+        Targets := ModGroupTargets(Modules[i]);
         if Length(Targets) > 0 then
           Hidden := Hidden + Targets;
       end;
@@ -1203,10 +1201,10 @@ begin
     SetLength(MainRecords, j);
   end;
 
-  if aView.Hidden.Count > 0 then begin
+  if cvHidden.Count > 0 then begin
     j := 0;
     for i := Low(MainRecords) to High(MainRecords) do
-      if not MainRecords[i].IsHiddenIn(aView.Hidden) then begin
+      if not MainRecords[i].IsHiddenIn(cvHidden) then begin
         if i <> j then
           MainRecords[j] := MainRecords[i];
         Inc(j);
@@ -1263,13 +1261,13 @@ begin
   Assert(Length(Result)>0); // At least there should be ourself
 end;
 
-procedure wbConflictLevelForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; aView: TwbConflictView; const aOnMessage: TwbConflictMessageProc; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
+procedure TwbConflictView.LevelForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles; const aOnMessage: TwbConflictMessageProc; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
 var
   ThisConflict                : TConflictThis;
 
   procedure Put(const aRecord: IwbMainRecord; aAll: TConflictAll; aThis: TConflictThis);
   begin
-    aView.Store(aRecord, aAll, aThis);
+    Store(aRecord, aAll, aThis);
     if aRecord.Equals(aMainRecord) then
       ThisConflict := aThis;
   end;
@@ -1279,7 +1277,7 @@ var
     lAll  : TConflictAll;
     lThis : TConflictThis;
   begin
-    aView.Lookup(aRecord, lAll, lThis);
+    Lookup(aRecord, lAll, lThis);
     if lThis = ctUnknown then
       lThis := ctHiddenByModGroup;
     Put(aRecord, aConflictAll, lThis);
@@ -1288,8 +1286,8 @@ var
   procedure Allocate(const aRecords: TDynMainRecords);
   begin
     for var lRecord in aRecords do
-      if lRecord.DenseIDIn(aView.Context) = 0 then begin
-        aView.Context.AllocateDenseIDs(aRecords);
+      if lRecord.DenseIDIn(Context) = 0 then begin
+        Context.AllocateDenseIDs(aRecords);
         Exit;
       end;
   end;
@@ -1342,29 +1340,29 @@ var
 begin
   KeepAliveRoot := wbCreateKeepAliveRoot;
 
-  aView.Lookup(aMainRecord, aConflictAll, aConflictThis);
+  Lookup(aMainRecord, aConflictAll, aConflictThis);
 
   if aConflictAll > caUnknown then begin
-    Inc(aView.Hits);
+    Inc(Hits);
     Exit;
   end;
-  Inc(aView.Misses);
+  Inc(Misses);
 
-  TranslationMode := aView.Context.Settings.TranslationMode;
+  TranslationMode := Context.Settings.TranslationMode;
   Master := aMainRecord.MasterOrSelf;
   if (Master.OverrideCount = 0) and not TranslationMode and not ((Master.Signature = 'GMST') or (Master.Signature = 'DFOB')) then begin
     aConflictAll := caOnlyOne;
     aConflictThis := ctOnlyOne;
     Allocate([aMainRecord]);
-    aView.Store(aMainRecord, aConflictAll, aConflictThis);
+    Store(aMainRecord, aConflictAll, aConflictThis);
   end else begin
-    NodeDatas := wbConflictNodeDatasForMainRecord(aMainRecord, aFiles, aView);
+    NodeDatas := NodeDatasForMainRecord(aMainRecord, aFiles);
     if (Length(NodeDatas) = 1) and not TranslationMode then begin
       aConflictAll := caOnlyOne;
       NodeDatas[0].ConflictAll := caOnlyOne;
       NodeDatas[0].ConflictThis := ctOnlyOne;
     end else if Length(NodeDatas) = 2 then begin
-      if aView.QuickShowConflicts then begin
+      if cvQuickShowConflicts then begin
         aConflictAll := caOverride;
         NodeDatas[0].ConflictAll := caOverride;
         NodeDatas[1].ConflictAll := caOverride;
@@ -1377,9 +1375,9 @@ begin
         NodeDatas[0].ConflictThis := ctMaster;
         NodeDatas[1].ConflictThis := ctIdenticalToMaster;
       end else
-        aConflictAll := wbConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ), aView, aOnMessage);
+        aConflictAll := wbConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ), Self, aOnMessage);
     end else
-      aConflictAll := wbConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ), aView, aOnMessage);
+      aConflictAll := wbConflictLevelForChildNodeDatas(NodeDatas, False, (aMainRecord.MasterOrSelf.IsInjected and not ((aMainRecord.Signature = 'GMST') or (aMainRecord.Signature = 'DFOB')) ), Self, aOnMessage);
 
     var lWritten: TDynMainRecords;
     SetLength(lWritten, Length(NodeDatas) + 1 + Master.OverrideCount);
@@ -1516,7 +1514,7 @@ var
           end;
         end;
       end;
-      wbConflictLevelForMainRecord(lRecord, lFiles, lView, aOnMessage, lAll, aNode.dnOwn);
+      lView.LevelForMainRecord(lRecord, lFiles, aOnMessage, lAll, aNode.dnOwn);
       aNode.dnThis := aNode.dnOwn;
     end;
     if aNode.LiveChildCount > 0 then begin
@@ -1742,7 +1740,7 @@ begin
   lCount := 0;
   if Assigned(lMaster.Def) then
     lCount := (lMaster.Def as IwbRecordDef).MemberCount + lMaster.AdditionalElementCount;
-  Setup(aView, wbConflictNodeDatasForMainRecord(aMainRecord, aFiles, aView), False,
+  Setup(aView, aView.NodeDatasForMainRecord(aMainRecord, aFiles), False,
     lMaster.IsInjected and not ((lMaster.Signature = 'GMST') or (lMaster.Signature = 'DFOB')), lCount, aOnMessage);
   if not Assigned(lMaster.Def) then begin
     ctUndefinedChain := True;
@@ -1931,7 +1929,7 @@ begin
   lChainAll := caUnknown;
   for var i := Low(ctRoot.tnDatas) to High(ctRoot.tnDatas) do
     if Supports(ctRoot.tnDatas[i].Element, IwbMainRecord, lRecord) then begin
-      wbConflictLevelForMainRecord(lRecord, ctFiles, ctView, ctOnMessage, lConflictAll, lConflictThis);
+      ctView.LevelForMainRecord(lRecord, ctFiles, ctOnMessage, lConflictAll, lConflictThis);
       ctRoot.tnDatas[i].ConflictThis := lConflictThis;
       if lConflictAll > lChainAll then
         lChainAll := lConflictAll;
