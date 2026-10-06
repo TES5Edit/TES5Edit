@@ -798,8 +798,6 @@ type
     vstNavLastCheckedForChanges : UInt64;
     NavFocusedElement : IwbElement;
 
-    HideRemoveMessage : Boolean;
-
     GitHubVersion  : TwbVersion;
     ShowGitHubHint : TDateTime;
 
@@ -11676,13 +11674,11 @@ begin
                     if xeContext.Settings.AllowMakePartial and
                        Supports(NodeData.Element, IwbMainRecord, MainRecord)
                     then begin
-                      if not HideRemoveMessage then
-                        PostAddMessage('Making Partial Form: ' + NodeData.Element.Name);
+                      PostAddMessage('Making Partial Form: ' + NodeData.Element.Name);
                       MainRecord.MakePartialForm;
                     end;
                   end else begin
-                    if not HideRemoveMessage then
-                      PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+                    PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
 
                     if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
                         NodeData.Container.Remove;
@@ -11692,8 +11688,7 @@ begin
                     vstNav.DeleteNode(Node);
                   end;
                 end else
-                  if not HideRemoveMessage then
-                    PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+                  PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
                 if IsRecord then
                   Inc(RemovedCount);
               end;
@@ -24950,7 +24945,6 @@ begin
             Counts    : TwbDeltaPatchCounts;
             DirtyInfo : PLOOTPluginInfo;
           begin
-            HideRemoveMessage := True;
             xeQuickClean := True;
 
             DoSetActiveRecord(nil);
@@ -24997,7 +24991,6 @@ begin
 
         finally
           xeQuickClean := False;
-          HideRemoveMessage := False;
         end;
       end;
 
