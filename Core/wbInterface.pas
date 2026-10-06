@@ -18591,7 +18591,7 @@ begin
     end;
   end else if SameText(lValueString, 'Min') then begin
     case fdKind of
-      fkHalf  : PHalfFloat(aBasePtr)^ := HalfMinValue;
+      fkHalf  : PHalfFloat(aBasePtr)^ := HalfLowestValue;
       fkSingle: PCardinal(aBasePtr)^ := $FF7FFFFF;
       fkDouble: PInt64(aBasePtr)^ := -$10000000000001 // $FFEFFFFFFFFFFFFF
     end;
@@ -18648,11 +18648,11 @@ begin
       repeat
         case fdKind of
           fkHalf  : begin
-            if (SingleSameValue(aValue, HalfMaxValue) or (aValue > HalfMaxValue)) then begin
+            if (SingleSameValue(aValue, HalfToFloat(HalfMaxValue)) or (aValue > HalfToFloat(HalfMaxValue))) then begin
               PHalfFloat(aBasePtr)^ := HalfMaxValue;
               Break;
-            end else if (SingleSameValue(aValue, HalfMinValue) or (aValue < HalfMinValue)) then begin
-              PHalfFloat(aBasePtr)^ := HalfMinValue;
+            end else if (SingleSameValue(aValue, HalfToFloat(HalfLowestValue)) or (aValue < HalfToFloat(HalfLowestValue))) then begin
+              PHalfFloat(aBasePtr)^ := HalfLowestValue;
               Break;
             end;
           end;
@@ -18798,9 +18798,9 @@ begin
         case fdKind of
           fkHalf: begin
             if PHalfFloat(aBasePtr)^ = HalfMaxValue then
-              Exit(HalfMaxValue)
-            else if PHalfFloat(aBasePtr)^ = HalfMinValue then
-              Exit(HalfMinValue)
+              Exit(HalfToFloat(HalfMaxValue))
+            else if PHalfFloat(aBasePtr)^ = HalfLowestValue then
+              Exit(HalfToFloat(HalfLowestValue))
             else begin
               Value := HalfToFloat(PHalfFloat(aBasePtr)^);
             end;
@@ -18905,8 +18905,8 @@ begin
   Value := ToValue(aBasePtr, aEndPtr, aElement);
   if IsNaN(Value) then
     VarClear(Result)
-  else if Value = HalfMaxValue then
-    Result := HalfMaxValue
+  else if Value = HalfToFloat(HalfMaxValue) then
+    Result := HalfToFloat(HalfMaxValue)
   else if Value = maxDouble then
     Result := maxDouble
   else if Value = maxSingle then
@@ -18931,12 +18931,12 @@ begin
     fsNInf:
       Result := StringOfChar('-', 40);
   else
-    if ((fdKind = fkHalf) and (lValue = HalfMaxValue)) or
+    if ((fdKind = fkHalf) and (lValue = HalfToFloat(HalfMaxValue))) or
        ((fdKind = fkSingle) and (lValue = maxSingle)) or
        ((fdKind = fkDouble) and (lValue = maxDouble))
     then
       Result := '+' + StringOfChar('9', 39)
-    else if ((fdKind = fkHalf) and (lValue = HalfMinValue)) or
+    else if ((fdKind = fkHalf) and (lValue = HalfToFloat(HalfLowestValue))) or
             ((fdKind = fkSingle) and (lValue = -maxSingle)) or
             ((fdKind = fkDouble) and (lValue = -maxDouble))
     then
@@ -18945,7 +18945,7 @@ begin
     if Result = '' then begin
       var lEpsilon := Extended.Epsilon;
       case fdKind of
-        fkHalf:   lEpsilon := HalfEpsilon;
+        fkHalf:   lEpsilon := HalfToFloat(HalfEpsilon);
         fkSingle: lEpsilon := Single.Epsilon;
         fkDouble: lEpsilon := Double.Epsilon;
       end;
@@ -19000,7 +19000,7 @@ begin
     else if Value.IsNegativeInfinity then
       Result := '-Inf'
     else if
-      ((fdKind = fkHalf) and (Value = HalfMaxValue))
+      ((fdKind = fkHalf) and (Value = HalfToFloat(HalfMaxValue)))
       or
       ((fdKind = fkSingle) and (Value = maxSingle))
       or
@@ -19008,7 +19008,7 @@ begin
     then
       Result := 'Default' // 'Max' ??
     else if
-      ((fdKind = fkHalf) and (Value = HalfMinValue))
+      ((fdKind = fkHalf) and (Value = HalfToFloat(HalfLowestValue)))
       or
       ((fdKind = fkSingle) and (Value = -maxSingle))
       or

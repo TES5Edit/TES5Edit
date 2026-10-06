@@ -43,6 +43,7 @@ const
   HalfEpsilon:  THalfFloat = $1400;
   HalfMaxValue: THalfFloat = $7BFF;
   HalfMinValue: THalfFloat = $0400;
+  HalfLowestValue: THalfFloat = $FBFF;
   HalfPosInf:   THalfFloat = $7C00;
   HalfNegInf:   THalfFloat = $FC00;
   HalfNaN:      THalfFloat = $7FFF;
