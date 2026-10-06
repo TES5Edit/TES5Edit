@@ -15206,13 +15206,15 @@ begin
   if not ((esModified in eStates) or ContextObj.Settings.TestWrite or (Assigned(GroupRecord) and GroupRecord.Modified)) then
     Exit;
 
-  if wbReserveWorldOffsetData(Self, Reason, mrOFSTCells) then begin
-    Include(mrStates, mrsOFSTReserved);
-    Exit;
-  end;
+  if (gcOffsetDataPerFile in GameDefObj.Capabilities) or GetIsMaster then begin
+    if wbReserveWorldOffsetData(Self, Reason, mrOFSTCells) then begin
+      Include(mrStates, mrsOFSTReserved);
+      Exit;
+    end;
 
-  if wbHasProgressCallback then
-    wbProgressCallback('<Note: no OFST written for ' + GetName + ': ' + Reason + '>');
+    if wbHasProgressCallback then
+      wbProgressCallback('<Note: no OFST written for ' + GetName + ': ' + Reason + '>');
+  end;
 
   if Assigned(GetRecordBySignature('OFST')) or Assigned(GetRecordBySignature('CLSZ')) then begin
     if ContextObj.BeginInternalEdit(True) then try

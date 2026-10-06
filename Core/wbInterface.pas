@@ -590,7 +590,7 @@ type
     gcPrecombinedMeshPerCell, gcWorldspaceRoads, gcConditionWrapsCTDA, gcBoolGameSettings,
     gcMasterFlagFromExtension, gcResourceKeyCRC32NoExtension, gcTextureDDXAlias, gcUpdateArchiveAlwaysLoaded,
     gcWeatherExtendedColors, gcWeatherFogPower, gcWeatherFogMax, gcModelTextureFileHashList, gcCommunityShaders, gcHNVSE,
-    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO
+    gcVWDInTemporary, gcVWDAsQuestChildren, gcComplexFileFileID, gcCanSortINFO, gcOffsetDataPerFile
   );
   TwbGameCapabilities = set of TwbGameCapability;
 
@@ -6264,6 +6264,8 @@ begin
     Include(Result, gcComplexFileFileID);
   if aGameMode in [gmTES4, gmTES4R, gmFO3, gmFNV, gmTES5, gmEnderal, gmTES5VR, gmSSE, gmEnderalSE] then
     Include(Result, gcCanSortINFO);
+  if aGameMode in [gmFO3, gmFNV, gmTES5, gmEnderal, gmFO4, gmSSE, gmTES5VR, gmEnderalSE, gmFO4VR, gmFO76, gmSF1] then
+    Include(Result, gcOffsetDataPerFile);
 end;
 
 constructor TwbGameDef.Create(aGameMode: TwbGameMode);
