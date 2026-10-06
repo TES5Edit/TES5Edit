@@ -1541,6 +1541,7 @@ uses
   xeOptionsForm,
   xeRichEditForm,
   xeScriptForm,
+  xeTestHost,
   xeTipForm,
   xeViewElementsForm,
   xeWorldspaceCellDetailsForm;
@@ -1841,7 +1842,7 @@ begin
       lLines.Add('exit reached');
       _TestSaveContextsFiles := nil;
     end;
-    TFile.AppendAllText(xeTestSaveContextsFile, lLines.Text);
+    TFile.AppendAllText(xeTestSwitches.SaveContextsFile, lLines.Text);
   finally
     lLines.Free;
   end;
@@ -1863,7 +1864,7 @@ begin
 
   xeContext.ForceClosedFiles;
 
-  if xeTestSaveContexts then
+  if xeTestSwitches.SaveContexts then
     TestSaveContextsReport('AFTER-FORCECLOSEDFILES');
 
   if xeContext.Settings.DontSave then
@@ -3489,7 +3490,7 @@ procedure TfrmMain.DoTestSaveContextsCompare;
 begin
   for var lIdx := High(Files) downto Low(Files) do
     if not wbIsModule(Files[lIdx].FileName, xeContext.GameDefObj.GameExeName) then begin
-      DoCompareTo(Files[lIdx], xeTestSaveContextsCompare);
+      DoCompareTo(Files[lIdx], xeTestSwitches.SaveContextsCompare);
       Exit;
     end;
   TestSaveContextsReport('NO-SAVE-LOADED');
@@ -4612,7 +4613,7 @@ var
 begin
   if not xeContext.Settings.BuildRefs then
     Exit;
-  if xeTestConflicts or xeTestNavCopy or (xeTestViewTreeFile <> '') then
+  if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or (xeTestSwitches.ViewTreeFile <> '') then
     Exit;
   if xeContext.Settings.DontCache then
     Exit;
@@ -5088,7 +5089,7 @@ begin
     end;
 
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
-    if (not wbPatron or not xeAutoLoad) and not (xeTestConflicts or xeTestNavCopy or xeTestViewText or xeTestViewTree or xeTestOptions or xeTestCopyIntoGap or xeTestDropMaster or xeTestDeltaPatch or xeTestMerge or xeTestHide or xeTestFilter or xeTestSaveContexts or (xeTestPumpDuringLoad <> '')) then
+    if (not wbPatron or not xeAutoLoad) and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> '')) then
       ShowDeveloperMessage;
   end;
 
@@ -5174,7 +5175,7 @@ begin
 
         sl.Clear;
         if not xeSavesMode then begin
-          if (xeToolMode in wbPluginModes) or (xeAutoLoad and (xeTestConflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
+          if (xeToolMode in wbPluginModes) or (xeAutoLoad and (xeTestSwitches.Conflicts or (GetAsyncKeyState(VK_CONTROL) >= 0))) then try
             if xeQuickClean then
               if Length(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)) <> 1 then begin
                 ShowMessage('Exactly one module must be selected for Quick Clean mode.');
@@ -5210,8 +5211,8 @@ begin
               Free;
             end;
         end else begin
-          if xeTestSaveContexts then
-            sl.Add(xeTestSaveContextsSave)
+          if xeTestSwitches.SaveContexts then
+            sl.Add(xeTestSwitches.SaveContextsSave)
           else if not (xeToolMode in wbAutoModes) then
             if ShowModal = mrOk then
               for i := 0 to Pred(CheckListBox1.Count) do
@@ -5321,7 +5322,7 @@ begin
       mniMasterAndLeafsDisabled.Checked := not ConflictView.OnlyMasterAndLeafs;
 
       // hold shift to skip building references
-      if not xeTestConflicts and (GetKeyState(VK_SHIFT) < 0) then begin
+      if not xeTestSwitches.Conflicts and (GetKeyState(VK_SHIFT) < 0) then begin
         xeContext.Settings.BuildRefs := False;
         AddMessage('The SHIFT key is pressed, skip building references for all plugins!');
       end;
@@ -5341,7 +5342,7 @@ begin
       wbNoGitHubCheck := Settings.ReadBool('Options', 'NoGitHubCheck', wbNoGitHubCheck);
       wbNoNexusModsCheck := Settings.ReadBool('Options', 'NoNexusModsCheck', wbNoNexusModsCheck);
 
-      if (xeTestPump <> '') and (xeTestPumpDuringLoad <> '') then
+      if (xeTestSwitches.Pump <> '') and (xeTestSwitches.PumpDuringLoad <> '') then
         TestPumpStart;
       TLoaderThread.Create(sl);
     finally
@@ -6148,11 +6149,11 @@ var
   i: Integer;
 
 begin
-  if xeTestPump <> '' then begin
+  if xeTestSwitches.Pump <> '' then begin
     var lShown := '';
     if Assigned(ActiveRecord) then
       lShown := ', the View tab shows ' + ActiveRecord.Name;
-    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestPumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
+    TestPumpNote('FormClose entered: inside ' + IfThen(xeTestSwitches.PumpModal, 'a modal loop ', 'a nested pump ') + BoolToStr(TestPumpInside, True) +
       ', client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + ', action "' + wbCurrentAction + '"' + lShown);
   end;
   Action := caFree;
@@ -6424,14 +6425,14 @@ begin
   end;
   Memo1.WordWrap := True;
 
-  if xeTestNavCopy then begin
+  if xeTestSwitches.NavCopy then begin
     UseLatestCommonDialogs := False;
     TestNavCopyAnswer := TTimer.Create(Self);
     TestNavCopyAnswer.Interval := 250;
     TestNavCopyAnswer.OnTimer := TestNavCopyAnswerTimer;
     TestNavCopyAnswer.Enabled := True;
   end;
-  if xeTestMerge or (xeTestFilterRemove <> '') then
+  if xeTestSwitches.Merge or (xeTestSwitches.FilterRemove <> '') then
     UseLatestCommonDialogs := False;
 
   try
@@ -20364,8 +20365,8 @@ begin
         lOnField := nil;
         lFieldRows := 0;
         try
-          if xeTestConflictsFieldsFile <> '' then begin
-            lFieldsTmp := xeTestConflictsFieldsFile + '.partial';
+          if xeTestSwitches.ConflictsFieldsFile <> '' then begin
+            lFieldsTmp := xeTestSwitches.ConflictsFieldsFile + '.partial';
             lFields := TStreamWriter.Create(lFieldsTmp, False, TEncoding.UTF8);
             lFields.WriteLine('# xEdit conflict status dump, fields');
             lFields.WriteLine('# ' + xeApplicationTitle);
@@ -20465,9 +20466,9 @@ begin
           if Assigned(lFields) then begin
             lFields.WriteLine('# rows: ' + IntToStr(lFieldRows));
             FreeAndNil(lFields);
-            if not MoveFileEx(PChar(lFieldsTmp), PChar(xeTestConflictsFieldsFile), MOVEFILE_REPLACE_EXISTING) then
+            if not MoveFileEx(PChar(lFieldsTmp), PChar(xeTestSwitches.ConflictsFieldsFile), MOVEFILE_REPLACE_EXISTING) then
               RaiseLastOSError;
-            wbProgress('Test Conflicts fields: ' + IntToStr(lFieldRows) + ' rows written to ' + xeTestConflictsFieldsFile);
+            wbProgress('Test Conflicts fields: ' + IntToStr(lFieldRows) + ' rows written to ' + xeTestSwitches.ConflictsFieldsFile);
           end;
         finally
           lFields.Free;
@@ -20477,13 +20478,13 @@ begin
         lHeader.Add('# rows: ' + IntToStr(lData.Count));
         lHeader.AddStrings(lData);
 
-        lTmpFile := xeTestConflictsFile + '.partial';
+        lTmpFile := xeTestSwitches.ConflictsFile + '.partial';
         lHeader.SaveToFile(lTmpFile, TEncoding.UTF8);
-        if not MoveFileEx(PChar(lTmpFile), PChar(xeTestConflictsFile), MOVEFILE_REPLACE_EXISTING) then
+        if not MoveFileEx(PChar(lTmpFile), PChar(xeTestSwitches.ConflictsFile), MOVEFILE_REPLACE_EXISTING) then
           RaiseLastOSError;
 
         wbProgress('Test Conflicts mode finished. ' + IntToStr(lData.Count) + ' rows written to ' +
-                   xeTestConflictsFile);
+                   xeTestSwitches.ConflictsFile);
       finally
         lData.Free;
       end;
@@ -20513,7 +20514,7 @@ end;
 function TfrmMain.TestNavCopyLastPhase: Integer;
 begin
   Result := 3;
-  if xeTestNavCopyInject then
+  if xeTestSwitches.NavCopyInject then
     Inc(Result);
 end;
 
@@ -20524,7 +20525,7 @@ begin
     Inc(TestNavCopyPhase);
     if TestNavCopyPhase = 1 then
       TestNavCopyBuild
-    else if xeTestNavCopyInject and (TestNavCopyPhase = 2) then
+    else if xeTestSwitches.NavCopyInject and (TestNavCopyPhase = 2) then
       TestNavCopyInject
     else if TestNavCopyPhase = Pred(TestNavCopyLastPhase) then
       TestNavCopyCopy
@@ -20592,7 +20593,7 @@ var
 var
   lEdit : TEdit;
 begin
-  if (TestNavCopyPhase = Pred(TestNavCopyLastPhase)) and not xeTestNavCopyNoTouch then
+  if (TestNavCopyPhase = Pred(TestNavCopyLastPhase)) and not xeTestSwitches.NavCopyNoTouch then
     TestNavCopyPaintAll;
   lForm := nil;
   for var i := 0 to Pred(Screen.CustomFormCount) do
@@ -20620,13 +20621,13 @@ begin
     if Assigned(lEdit) then begin
       lExtra := ' offered: ' + lEdit.Text;
       if not TestNavCopyStartGiven then begin
-        lEdit.Text := xeTestNavCopyStart;
+        lEdit.Text := xeTestSwitches.NavCopyStart;
         TestNavCopyStartGiven := True;
       end;
       lExtra := lExtra + ' entered: ' + lEdit.Text;
     end;
     lResult := mrOk;
-  end else if xeTestNavCopyEach and HasButton(lForm, mrYes) then
+  end else if xeTestSwitches.NavCopyEach and HasButton(lForm, mrYes) then
     lResult := mrYes
   else if HasButton(lForm, mrYesToAll) then
     lResult := mrYesToAll
@@ -20666,12 +20667,12 @@ begin
   if not Supports(lGameMaster.GroupBySignature['QUST'], IwbContainerElementRef, lGroup) then
     raise Exception.Create('no QUST group in ' + lGameMaster.FileName);
 
-  if xeTestNavCopyDisk then begin
+  if xeTestSwitches.NavCopyDisk then begin
     TestNavCopyLocateOnDisk;
     Exit;
   end;
 
-  if xeTestNavCopyEsm then begin
+  if xeTestSwitches.NavCopyEsm then begin
     TestNavCopyFileA := AddNewFileName('NavCopyA.esm', False, False);
     TestNavCopyFileA.IsESM := True;
   end else
@@ -20680,7 +20681,7 @@ begin
   TestNavCopyFileB := AddNewFileName('NavCopyB.esp', False, False);
   TestNavCopyFileB.AddMasterIfMissing(xeContext.GameDefObj.GameMasterEsm);
   TestNavCopyFileB.AddMasterIfMissing(TestNavCopyFileA.FileName);
-  if xeTestNavCopyTwo then
+  if xeTestSwitches.NavCopyTwo then
     TestNavCopyFileC := TestNavCopyFileB
   else begin
     TestNavCopyFileC := AddNewFileName('NavCopyC.esp', False, False);
@@ -20689,7 +20690,7 @@ begin
   end;
 
   for i := 0 to Pred(lGroup.ElementCount) do begin
-    if Length(TestNavCopyRecordsA) >= xeTestNavCopyCount then
+    if Length(TestNavCopyRecordsA) >= xeTestSwitches.NavCopyCount then
       Break;
     if not Supports(lGroup.Elements[i], IwbMainRecord, lSource) then
       Continue;
@@ -20704,7 +20705,7 @@ begin
     lRecordB.ElementEditValues['FULL'] := lRecordB.ElementEditValues['FULL'] + ' (B)';
     if Assigned(lRecordB.ElementByPath['DATA - General\Priority']) then
       lRecordB.ElementNativeValues['DATA - General\Priority'] := (Integer(lRecordB.ElementNativeValues['DATA - General\Priority']) + 1) and $FF;
-    if xeTestNavCopyTwo then
+    if xeTestSwitches.NavCopyTwo then
       lRecordC := lRecordB
     else begin
       lRecordC := wbCopyElementToFile(lRecordA, TestNavCopyFileC, False, True, '', '', '', '', False) as IwbMainRecord;
@@ -20742,7 +20743,7 @@ begin
   end;
   AddMessage(Format('[Test Nav Copy] %d QUST records copied as new into %s and overridden with a changed FULL and priority in %s and again in %s',
     [Length(TestNavCopyRecordsA), TestNavCopyFileA.FileName, TestNavCopyFileB.FileName, TestNavCopyFileC.FileName]));
-  if xeTestNavCopySave then begin
+  if xeTestSwitches.NavCopySave then begin
     xeContext.Settings.DontSave := False;
     AddMessage('[Test Nav Copy] the fixture will be saved on shutdown; no copy in this run');
     CheckResult := 0;
@@ -20759,20 +20760,20 @@ var
   lRecordB : IwbMainRecord;
 begin
   for i := Low(Files) to High(Files) do
-    if SameText(Files[i].FileName, xeTestNavCopyMaster) then
+    if SameText(Files[i].FileName, xeTestSwitches.NavCopyMaster) then
       TestNavCopyFileA := Files[i]
-    else if SameText(Files[i].FileName, xeTestNavCopyPlugin) then
+    else if SameText(Files[i].FileName, xeTestSwitches.NavCopyPlugin) then
       TestNavCopyFileB := Files[i];
   if not Assigned(TestNavCopyFileA) or not Assigned(TestNavCopyFileB) then
-    raise Exception.Create(xeTestNavCopyMaster + ' and ' + xeTestNavCopyPlugin + ' must both be loaded');
+    raise Exception.Create(xeTestSwitches.NavCopyMaster + ' and ' + xeTestSwitches.NavCopyPlugin + ' must both be loaded');
   TestNavCopyFileC := TestNavCopyFileB;
-  if xeTestNavCopyNew then begin
+  if xeTestSwitches.NavCopyNew then begin
     var lLayout := xeContext.SlotLayout;
     for i := 0 to Pred(TestNavCopyFileB.RecordCount) do begin
-      if Length(TestNavCopyRecordsB) >= xeTestNavCopyCount then
+      if Length(TestNavCopyRecordsB) >= xeTestSwitches.NavCopyCount then
         Break;
       lRecordB := TestNavCopyFileB.Records[i];
-      if not SameText(string(lRecordB.Signature), xeTestNavCopySignature) or
+      if not SameText(string(lRecordB.Signature), xeTestSwitches.NavCopySignature) or
          (lRecordB.LoadOrderFormID.FileID[lLayout] <> TestNavCopyFileB.LoadOrderFileID) then
         Continue;
       SetLength(TestNavCopyRecordsA, Succ(Length(TestNavCopyRecordsA)));
@@ -20784,16 +20785,16 @@ begin
       AddMessage(Format('[Test Nav Copy] new record %s', [lRecordB.Name]));
     end;
     if Length(TestNavCopyRecordsB) < 1 then
-      raise Exception.Create('no new ' + xeTestNavCopySignature + ' record in ' + TestNavCopyFileB.FileName);
+      raise Exception.Create('no new ' + xeTestSwitches.NavCopySignature + ' record in ' + TestNavCopyFileB.FileName);
     TestNavCopyShowPairs;
     AddMessage(Format('[Test Nav Copy] %d new %s records of %s loaded from disk, to be copied as override into %s',
-      [Length(TestNavCopyRecordsB), xeTestNavCopySignature, TestNavCopyFileB.FileName, TestNavCopyFileA.FileName]));
+      [Length(TestNavCopyRecordsB), xeTestSwitches.NavCopySignature, TestNavCopyFileB.FileName, TestNavCopyFileA.FileName]));
     Exit;
   end;
-  if not Supports(TestNavCopyFileA.GroupBySignature[StrToSignature(xeTestNavCopySignature)], IwbContainerElementRef, lGroup) then
-    raise Exception.Create('no ' + xeTestNavCopySignature + ' group in ' + TestNavCopyFileA.FileName);
+  if not Supports(TestNavCopyFileA.GroupBySignature[StrToSignature(xeTestSwitches.NavCopySignature)], IwbContainerElementRef, lGroup) then
+    raise Exception.Create('no ' + xeTestSwitches.NavCopySignature + ' group in ' + TestNavCopyFileA.FileName);
   for i := 0 to Pred(lGroup.ElementCount) do begin
-    if Length(TestNavCopyRecordsA) >= xeTestNavCopyCount then
+    if Length(TestNavCopyRecordsA) >= xeTestSwitches.NavCopyCount then
       Break;
     if not Supports(lGroup.Elements[i], IwbMainRecord, lRecordA) then
       Continue;
@@ -20859,7 +20860,7 @@ begin
   vstNav.FocusedNode := lNode;
   lBefore := OwnRecords(TestNavCopyFileB);
   AddMessage(Format('[Test Nav Copy] injecting the %d own records of %s into %s through Inject Forms into master, start FormID %s, ObjectIDs not preserved',
-    [lBefore, TestNavCopyFileB.FileName, TestNavCopyFileA.FileName, xeTestNavCopyStart]));
+    [lBefore, TestNavCopyFileB.FileName, TestNavCopyFileA.FileName, xeTestSwitches.NavCopyStart]));
   mniNavRenumberFormIDsFromClick(mniNavRenumberFormIDsInject);
   lAfter := OwnRecords(TestNavCopyFileB);
   AddMessage(Format('[Test Nav Copy] inject returned; %s has %d own records now, %d before', [TestNavCopyFileB.FileName, lAfter, lBefore]));
@@ -20889,7 +20890,7 @@ var
 begin
   TestNavCopyPaintAll;
   TestNavCopyCollect('pre', False);
-  if (TestNavCopyControlMisses > 0) and not xeTestNavCopyNew then begin
+  if (TestNavCopyControlMisses > 0) and not xeTestSwitches.NavCopyNew then begin
     AddMessage(Format('[Test Nav Copy] NO VERDICT: %d of %d overriding nodes did not show a conflict before the copy',
       [TestNavCopyControlMisses, Length(TestNavCopyRecordsC)]));
     CheckResult := 2;
@@ -20911,11 +20912,11 @@ begin
   SetLength(_PreviousCopyIntoSelectedModules, 1);
   _PreviousCopyIntoSelectedModules[0] := PwbModuleInfo(TestNavCopyFileA.ModuleInfo);
   var lItem := mniNavCopyAsOverrideWithOverwrite;
-  if xeTestNavCopyNew then
+  if xeTestSwitches.NavCopyNew then
     lItem := mniNavCopyAsOverride;
   AddMessage(Format('[Test Nav Copy] copying the %d selected records of %s through "%s" into %s, painting every nav node at each progress call',
     [Length(TestNavCopyRecordsC), TestNavCopyFileC.FileName, StripHotkey(lItem.Caption), TestNavCopyFileA.FileName]));
-  if not xeTestNavCopyNoTouch then
+  if not xeTestSwitches.NavCopyNoTouch then
     _wbProgressCallback := TestNavCopyProgress;
   try
     mniNavCopyIntoClick(lItem);
@@ -20924,7 +20925,7 @@ begin
   end;
 
   lModified := 0;
-  if xeTestNavCopyNew then begin
+  if xeTestSwitches.NavCopyNew then begin
     for i := Low(TestNavCopyRecordsC) to High(TestNavCopyRecordsC) do begin
       var lCopy := TestNavCopyFileA.ContainedRecordByLoadOrderFormID[TestNavCopyRecordsC[i].LoadOrderFormID, False];
       if Assigned(lCopy) then begin
@@ -20995,7 +20996,7 @@ var
   lImage : Vcl.Graphics.TBitmap;
 begin
   TestNavCopyCacheReport('before the post paint');
-  if xeTestNavCopyNoTouch then begin
+  if xeTestSwitches.NavCopyNoTouch then begin
     lNode := FindNodeForElement(TestNavCopyRecordsC[0]);
     if Assigned(lNode) then begin
       vstNav.ScrollIntoView(lNode, True);
@@ -21004,11 +21005,11 @@ begin
     DoProcessMessages;
     lImage := GetFormImage;
     try
-      lImage.SaveToFile(ChangeFileExt(xeTestNavCopyFile, '.bmp'));
+      lImage.SaveToFile(ChangeFileExt(xeTestSwitches.NavCopyFile, '.bmp'));
     finally
       lImage.Free;
     end;
-    AddMessage('[Test Nav Copy] no explicit paint after the copy; the form image is ' + ChangeFileExt(xeTestNavCopyFile, '.bmp'));
+    AddMessage('[Test Nav Copy] no explicit paint after the copy; the form image is ' + ChangeFileExt(xeTestSwitches.NavCopyFile, '.bmp'));
   end else
     TestNavCopyPaintAll;
   TestNavCopyCollect('post', True);
@@ -21178,11 +21179,11 @@ begin
     lLines.Add('# wouldRefresh = ' + IntToStr(TestNavCopyWouldRefresh));
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
     lLines.AddStrings(TestNavCopyRows);
-    lTmp := xeTestNavCopyFile + '.partial';
+    lTmp := xeTestSwitches.NavCopyFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestNavCopyFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.NavCopyFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
-    AddMessage(Format('[Test Nav Copy] %d rows written to %s', [TestNavCopyRows.Count, xeTestNavCopyFile]));
+    AddMessage(Format('[Test Nav Copy] %d rows written to %s', [TestNavCopyRows.Count, xeTestSwitches.NavCopyFile]));
   finally
     lLines.Free;
   end;
@@ -21195,7 +21196,7 @@ var
   lTmp    : string;
 begin
   lRecord := nil;
-  var lFormID := TwbFormID.FromStr(xeTestViewTextRecord);
+  var lFormID := TwbFormID.FromStr(xeTestSwitches.ViewTextRecord);
   for var i := High(Files) downto Low(Files) do begin
     lRecord := Files[i].RecordByFormID[lFormID, True, True];
     if Assigned(lRecord) then
@@ -21206,7 +21207,7 @@ begin
     lLines.Add('# xEdit view text probe');
     lLines.Add('# ' + xeApplicationTitle);
     lLines.Add('# showFlagEnumValue = ' + BoolToStr(ShowFlagEnumValue, True));
-    lLines.Add('# record = ' + xeTestViewTextRecord);
+    lLines.Add('# record = ' + xeTestSwitches.ViewTextRecord);
     lLines.Add('# Columns, tab separated: indented name / per record column: cell text, edit text');
     if not Assigned(lRecord) then
       lLines.Add('# NOT FOUND')
@@ -21224,11 +21225,11 @@ begin
         lLines.Add(lLine);
       end;
     end;
-    lTmp := xeTestViewTextFile + '.partial';
+    lTmp := xeTestSwitches.ViewTextFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestViewTextFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.ViewTextFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
-    AddMessage(Format('[Test View Text] %d rows written to %s', [lLines.Count, xeTestViewTextFile]));
+    AddMessage(Format('[Test View Text] %d rows written to %s', [lLines.Count, xeTestSwitches.ViewTextFile]));
   finally
     lLines.Free;
   end;
@@ -21285,7 +21286,7 @@ var
   procedure Build(const aRecords: TDynMainRecords);
   begin
     var lLoaderDone := xeContext.LoaderDone;
-    if xeTestViewTreeLoading then
+    if xeTestSwitches.ViewTreeLoading then
       xeContext.LoaderDone := False;
     try
       DoSetActiveRecord(IwbMainRecord(nil));
@@ -21293,7 +21294,7 @@ var
         DoSetActiveRecord(aRecords[0], True)
       else
         DoSetActiveRecord(aRecords);
-      if xeTestViewTreeReset then
+      if xeTestSwitches.ViewTreeReset then
         ResetActiveTree;
     finally
       xeContext.LoaderDone := lLoaderDone;
@@ -21309,7 +21310,7 @@ var
   begin
     for var lNode in vstView.Nodes(False) do
       lNodes := lNodes + [lNode];
-    var lStep := Max(1, Length(lNodes) div xeTestViewTreeFocus);
+    var lStep := Max(1, Length(lNodes) div xeTestSwitches.ViewTreeFocus);
     var lIndex := 0;
     while lIndex <= High(lNodes) do begin
       var lNode := lNodes[lIndex];
@@ -21371,7 +21372,7 @@ var
     HeldMemory(lBytes0, lBlocks0);
     Build(aRecords);
     HeldMemory(lBytes1, lBlocks1);
-    for var k := 1 to xeTestViewTreeTime do begin
+    for var k := 1 to xeTestSwitches.ViewTreeTime do begin
       var lWatch := TStopwatch.StartNew;
       Build(aRecords);
       lTicks := lTicks + [lWatch.ElapsedTicks];
@@ -21430,7 +21431,7 @@ var
 
     procedure Run(const aCase: string; const aHold, aRelease, aChange, aUndo: TProc);
     begin
-      TFile.AppendAllText(xeTestViewTreeFile + '.progress', Format('%d'#9'idle %s', [aEntry, aCase]) + sLineBreak);
+      TFile.AppendAllText(xeTestSwitches.ViewTreeFile + '.progress', Format('%d'#9'idle %s', [aEntry, aCase]) + sLineBreak);
       Build(aRecords);
       var lGeneration := ViewTreeGeneration;
       if Assigned(aHold) then
@@ -21560,7 +21561,7 @@ var
       procedure begin RebuildingViewTree := False end,
       lToggle, lToggle);
     Run('options collapse benign array', nil, nil, lBenign, lBenign);
-    TFile.AppendAllText(xeTestViewTreeFile + '.progress', Format('%d'#9'idle colour', [aEntry]) + sLineBreak);
+    TFile.AppendAllText(xeTestSwitches.ViewTreeFile + '.progress', Format('%d'#9'idle colour', [aEntry]) + sLineBreak);
     Build(aRecords);
     if ViewHeaderConflictAll >= caNoConflict then begin
       var lConflictAll := ViewHeaderConflictAll;
@@ -21694,7 +21695,7 @@ var
       lBitmap.Canvas.Brush.Color := $FF00FF;
       lBitmap.Canvas.FillRect(Rect(0, 0, lBitmap.Width, lBitmap.Height));
       lColumns.PaintHeader(lBitmap.Canvas, Rect(0, 0, lBitmap.Width, lBitmap.Height), Point(0, 0));
-      lBitmap.SaveToFile(Format('%s.header%d-%s.bmp', [xeTestViewTreeFile, aEntry, StringReplace(aMode, ' ', '', [rfReplaceAll])]));
+      lBitmap.SaveToFile(Format('%s.header%d-%s.bmp', [xeTestSwitches.ViewTreeFile, aEntry, StringReplace(aMode, ' ', '', [rfReplaceAll])]));
       Result := Format('%s'#9'themes %s'#9'background %.6x'#9'dark %s', [aMode, BoolToStr(tsUseThemes in vstView.TreeStates, True),
         ColorToRGB(vstView.Header.Background), BoolToStr(ViewHeaderIsDark, True)]);
       for var c := 0 to Pred(lColumns.Count) do
@@ -21772,7 +21773,7 @@ var
 
     procedure BeginGesture(const aName: string; aRow: PVirtualNode; aColumn: Integer; aSwitch: Boolean; out aDelay, aFocused: Integer);
     begin
-      TFile.AppendAllText(xeTestViewTreeFile + '.progress', Format('%d'#9'%s', [aEntry, aName]) + sLineBreak);
+      TFile.AppendAllText(xeTestSwitches.ViewTreeFile + '.progress', Format('%d'#9'%s', [aEntry, aName]) + sLineBreak);
       vstViewFocusedNode := aRow;
       vstView.FocusedColumn := aColumn;
       EditWarnOk := False;
@@ -22017,41 +22018,41 @@ begin
   try
     lLines.Add('# xEdit view tree probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# list = ' + xeTestViewTreeList + ', hide = ' + xeTestViewTreeHide + ', hide no conflict = ' +
-      BoolToStr(xeTestViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestViewTreeLoading, True) + ', reset = ' +
-      BoolToStr(xeTestViewTreeReset, True) + ', focus = ' + IntToStr(xeTestViewTreeFocus) + ', floor = ' +
-      BoolToStr(xeTestViewTreeFloor, True) + ', translate = ' + BoolToStr(xeTestViewTreeTranslate, True) + ', time = ' +
-      IntToStr(xeTestViewTreeTime) + ', hide ignored = ' +
+    lLines.Add('# list = ' + xeTestSwitches.ViewTreeList + ', hide = ' + xeTestSwitches.ViewTreeHide + ', hide no conflict = ' +
+      BoolToStr(xeTestSwitches.ViewTreeHideNoConflict, True) + ', loading = ' + BoolToStr(xeTestSwitches.ViewTreeLoading, True) + ', reset = ' +
+      BoolToStr(xeTestSwitches.ViewTreeReset, True) + ', focus = ' + IntToStr(xeTestSwitches.ViewTreeFocus) + ', floor = ' +
+      BoolToStr(xeTestSwitches.ViewTreeFloor, True) + ', translate = ' + BoolToStr(xeTestSwitches.ViewTreeTranslate, True) + ', time = ' +
+      IntToStr(xeTestSwitches.ViewTreeTime) + ', hide ignored = ' +
       BoolToStr(xeContext.Settings.HideIgnored, True) + ', hide never show = ' + BoolToStr(xeContext.Settings.HideNeverShow, True));
     lLines.Add('# Columns, tab separated: entry / row path / row ConflictAll / visible / per record column: element:ConflictThis:flags');
     CheckResult := 2;
     try
-      if xeTestViewTreeHide <> '' then begin
+      if xeTestSwitches.ViewTreeHide <> '' then begin
         var lHidden := False;
         for var i := Low(Files) to High(Files) do
-          if SameText(Files[i].FileName, xeTestViewTreeHide) then begin
+          if SameText(Files[i].FileName, xeTestSwitches.ViewTreeHide) then begin
             ConflictView.Hidden.Hide(Files[i]);
             lHidden := True;
           end;
         if not lHidden then
-          raise Exception.Create('no module ' + xeTestViewTreeHide);
+          raise Exception.Create('no module ' + xeTestSwitches.ViewTreeHide);
       end;
-      if xeTestViewTreeHideNoConflict then
+      if xeTestSwitches.ViewTreeHideNoConflict then
         HideNoConflict := True;
-      if xeTestViewTreeTranslate then
+      if xeTestSwitches.ViewTreeTranslate then
         xeContext.Settings.TranslationMode := True;
-      if xeTestViewTreeFloor then
+      if xeTestSwitches.ViewTreeFloor then
         xeContext.Settings.DontSave := True;
-      if xeTestViewTreeModal or xeTestViewTreeIdle or xeTestViewTreeRemove then begin
+      if xeTestSwitches.ViewTreeModal or xeTestSwitches.ViewTreeIdle or xeTestSwitches.ViewTreeRemove then begin
         xeContext.Settings.DontSave := True;
         TestViewModalAnswer := TTimer.Create(Self);
         TestViewModalAnswer.Enabled := False;
         TestViewModalAnswer.Interval := 300;
         TestViewModalAnswer.OnTimer := TestViewModalAnswerTimer;
         TestViewOptionsColor := clNone;
-        System.SysUtils.DeleteFile(xeTestViewTreeFile + '.progress');
+        System.SysUtils.DeleteFile(xeTestSwitches.ViewTreeFile + '.progress');
       end;
-      lList.LoadFromFile(xeTestViewTreeList);
+      lList.LoadFromFile(xeTestSwitches.ViewTreeList);
       var lEntry := 0;
       for var lLine in lList do begin
         if (Trim(lLine) = '') or lLine.StartsWith('#') then
@@ -22084,26 +22085,26 @@ begin
                Assigned(Container) and (ContainerGen <> Container.ElementGeneration) then
               lStale := True;
         lLines.Add(Format('# stale %d'#9'%s', [lEntry, BoolToStr(lStale, True)]));
-        if xeTestViewTreeWalk then
+        if xeTestSwitches.ViewTreeWalk then
           WalkProbe(lEntry);
-        if xeTestViewTreeIdle then
+        if xeTestSwitches.ViewTreeIdle then
           IdleProbe(lEntry, lRecords);
         Collapsed(lEntry);
-        if xeTestViewTreeHeader then
+        if xeTestSwitches.ViewTreeHeader then
           HeaderProbe(lEntry);
-        if xeTestViewTreeModal and (Length(lRecords) > 1) then
+        if xeTestSwitches.ViewTreeModal and (Length(lRecords) > 1) then
           ModalProbe(lEntry, lRecords[0], lRecords[1], lRecords[High(lRecords)]);
-        if xeTestViewTreeFocus > 0 then
+        if xeTestSwitches.ViewTreeFocus > 0 then
           FocusProbe(lEntry, lRecords);
-        if xeTestViewTreeFloor and (Length(lRecords) > 1) then
+        if xeTestSwitches.ViewTreeFloor and (Length(lRecords) > 1) then
           FloorProbe(lEntry, lRecords);
-        if xeTestViewTreeTime > 0 then
+        if xeTestSwitches.ViewTreeTime > 0 then
           TimeProbe(lEntry, lRecords);
-        if xeTestViewTreeRemove then
+        if xeTestSwitches.ViewTreeRemove then
           RemoveProbe(lEntry);
       end;
       DoSetActiveRecord(IwbMainRecord(nil));
-      if xeTestViewTreeHeader then
+      if xeTestSwitches.ViewTreeHeader then
         HeaderProbe(0);
       CheckResult := 0;
     except
@@ -22113,9 +22114,9 @@ begin
       end;
     end;
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestViewTreeFile + '.partial';
+    lTmp := xeTestSwitches.ViewTreeFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestViewTreeFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.ViewTreeFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lList.Free;
@@ -22175,10 +22176,10 @@ var
   begin
     lNavRecords := nil;
     for var i := Low(Files) to High(Files) do
-      if SameText(Files[i].FileName, xeTestOptionsNav) then
+      if SameText(Files[i].FileName, xeTestSwitches.OptionsNav) then
         lFile := Files[i];
     if not Assigned(lFile) then
-      raise Exception.Create('-testoptionsnav: no loaded file ' + xeTestOptionsNav);
+      raise Exception.Create('-testoptionsnav: no loaded file ' + xeTestSwitches.OptionsNav);
     SetLength(lNavRecords, lFile.RecordCount);
     SetLength(lNavVerdicts, lFile.RecordCount);
     SetLength(lNavGens, lFile.RecordCount);
@@ -22225,7 +22226,7 @@ var
       end;
     end;
     lLines.Add(Format('# nav %s'#9'file %s'#9'records %d'#9'moved %d'#9'moved with generation and epoch kept %d',
-      [aArm, xeTestOptionsNav, Length(lNavRecords), lMoved, lStale]));
+      [aArm, xeTestSwitches.OptionsNav, Length(lNavRecords), lMoved, lStale]));
     lLines.Add(Format('# nav %s'#9'cached verdict differs from fresh %d', [aArm, lCachedStale]));
     lNavRecords := nil;
   end;
@@ -22262,17 +22263,17 @@ var
 
   procedure PathSelect;
   begin
-    var lAt := Pos('@', xeTestOptionsPath);
+    var lAt := Pos('@', xeTestSwitches.OptionsPath);
     if lAt < 2 then
-      raise Exception.Create('-testoptionspath: not <FormID>@<module>: ' + xeTestOptionsPath);
-    var lFormID := TwbFormID.FromStr(Copy(xeTestOptionsPath, 1, Pred(lAt)));
-    var lModule := Copy(xeTestOptionsPath, Succ(lAt), MaxInt);
+      raise Exception.Create('-testoptionspath: not <FormID>@<module>: ' + xeTestSwitches.OptionsPath);
+    var lFormID := TwbFormID.FromStr(Copy(xeTestSwitches.OptionsPath, 1, Pred(lAt)));
+    var lModule := Copy(xeTestSwitches.OptionsPath, Succ(lAt), MaxInt);
     var lRecord: IwbMainRecord := nil;
     for var i := Low(Files) to High(Files) do
       if SameText(Files[i].FileName, lModule) then
         lRecord := Files[i].RecordByFormID[lFormID, True, True];
     if not Assigned(lRecord) then
-      raise Exception.Create('-testoptionspath: no record ' + xeTestOptionsPath);
+      raise Exception.Create('-testoptionspath: no record ' + xeTestSwitches.OptionsPath);
     lPathNode := FindNodeForElement(lRecord);
     if not Assigned(lPathNode) then
       raise Exception.Create('-testoptionspath: no nav node for ' + lRecord.Name);
@@ -22300,7 +22301,7 @@ begin
     lPathNode := nil;
     lPathStale := 0;
     try
-      if xeTestOptionsPath <> '' then
+      if xeTestSwitches.OptionsPath <> '' then
         PathSelect;
       for var lArm := Low(cArms) to High(cArms) do begin
         if (lArm in [7, 8]) and not Assigned(lPathNode) then
@@ -22320,10 +22321,10 @@ begin
         lEpochBefore := ConflictView.Epoch;
         lAlignBefore := ConflictView.AlignArrayElements;
         lNeverShowBefore := xeContext.Settings.HideNeverShow;
-        if xeTestOptionsNav <> '' then
+        if xeTestSwitches.OptionsNav <> '' then
           NavBefore;
-        if xeTestOptionsClose and (lArm = 1) then begin
-          System.SysUtils.DeleteFile(xeTestOptionsFile + '.progress');
+        if xeTestSwitches.OptionsClose and (lArm = 1) then begin
+          System.SysUtils.DeleteFile(xeTestSwitches.OptionsFile + '.progress');
           TestOptionsClosePosted := False;
           TestOptionsCloseTimer := TTimer.Create(Self);
           TestOptionsCloseTimer.Interval := 1;
@@ -22334,11 +22335,11 @@ begin
           try
             mniNavOptionsClick(nil);
             if Assigned(TestOptionsCloseTimer) then
-              TFile.AppendAllText(xeTestOptionsFile + '.progress', 'Options handler returned' + sLineBreak);
+              TFile.AppendAllText(xeTestSwitches.OptionsFile + '.progress', 'Options handler returned' + sLineBreak);
           except
             on E: Exception do begin
               if Assigned(TestOptionsCloseTimer) then
-                TFile.AppendAllText(xeTestOptionsFile + '.progress', 'Options handler raised ' + E.ClassName + ': ' + E.Message + sLineBreak);
+                TFile.AppendAllText(xeTestSwitches.OptionsFile + '.progress', 'Options handler raised ' + E.ClassName + ': ' + E.Message + sLineBreak);
               raise;
             end;
           end;
@@ -22349,7 +22350,7 @@ begin
         end;
         if Assigned(lPathNode) then
           PathCheck(cArms[lArm]);
-        if xeTestOptionsNav <> '' then
+        if xeTestSwitches.OptionsNav <> '' then
           NavAfter(cArms[lArm]);
         lEpochAfter := ConflictView.Epoch;
         lAlignAfter := ConflictView.AlignArrayElements;
@@ -22374,7 +22375,7 @@ begin
       end;
       if Assigned(lPathNode) then
         lLines.Add(Format('# path stale %d', [lPathStale]));
-      if xeTestOptionsNav <> '' then
+      if xeTestSwitches.OptionsNav <> '' then
         for var lReset := 0 to 1 do begin
           NavBefore;
           TestOptionsToggle := True;
@@ -22403,9 +22404,9 @@ begin
       end;
     end;
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestOptionsFile + '.partial';
+    lTmp := xeTestSwitches.OptionsFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestOptionsFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.OptionsFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;
@@ -22419,7 +22420,7 @@ begin
   if TestOptionsClosePosted or pnlClient.Enabled then
     Exit;
   TestOptionsClosePosted := True;
-  TFile.AppendAllText(xeTestOptionsFile + '.progress', 'close posted during the reset: ' + wbCurrentAction + sLineBreak);
+  TFile.AppendAllText(xeTestSwitches.OptionsFile + '.progress', 'close posted during the reset: ' + wbCurrentAction + sLineBreak);
   PostMessage(Handle, WM_CLOSE, 0, 0);
 end;
 
@@ -22547,17 +22548,17 @@ begin
   try
     lLines.Add('# xEdit copy-into-gap probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# record = ' + xeTestCopyIntoGapRecord + ', source = ' + xeTestCopyIntoGapSource + ', op = ' + xeTestCopyIntoGapOp);
+    lLines.Add('# record = ' + xeTestSwitches.CopyIntoGapRecord + ', source = ' + xeTestSwitches.CopyIntoGapSource + ', op = ' + xeTestSwitches.CopyIntoGapOp);
     lLines.Add('# Columns, tab separated: what / index / text; the "#" rows lines carry each element''s SortOrder');
     CheckResult := 2;
     try
       lSource := nil;
-      var lFormID := TwbFormID.FromStr(xeTestCopyIntoGapRecord);
+      var lFormID := TwbFormID.FromStr(xeTestSwitches.CopyIntoGapRecord);
       for var i := Low(Files) to High(Files) do
-        if SameText(Files[i].FileName, xeTestCopyIntoGapSource) then
+        if SameText(Files[i].FileName, xeTestSwitches.CopyIntoGapSource) then
           lSource := Files[i].RecordByFormID[lFormID, True, True];
       if not Assigned(lSource) then
-        raise Exception.Create('no record ' + xeTestCopyIntoGapRecord + ' in ' + xeTestCopyIntoGapSource);
+        raise Exception.Create('no record ' + xeTestSwitches.CopyIntoGapRecord + ' in ' + xeTestSwitches.CopyIntoGapSource);
 
       var lFile := AddNewFileName('CopyIntoGap.esp', False, False);
       if not AddRequiredMasters(lSource, lFile, False, True) then
@@ -22611,7 +22612,7 @@ begin
       lLines.Add('source' + #9 + '-' + #9 + ElementText(lGapSource));
       AddContainer(lLines, 'before', lContainer);
 
-      if SameText(xeTestCopyIntoGapOp, 'popup') then begin
+      if SameText(xeTestSwitches.CopyIntoGapOp, 'popup') then begin
         OverrideViewFocusedNode := lGapNode;
         try
           vstView.FocusedColumn := Succ(lColumn);
@@ -22620,7 +22621,7 @@ begin
         finally
           OverrideViewFocusedNode := nil;
         end;
-      end else if SameText(xeTestCopyIntoGapOp, 'dragover') then begin
+      end else if SameText(xeTestSwitches.CopyIntoGapOp, 'dragover') then begin
         var lTargetNode := lGapNode;
         var lTargetIndex: Integer;
         var lTargetElement: IwbElement;
@@ -22629,7 +22630,7 @@ begin
           (lTargetElement <> lGapSource) and lTargetElement.CanAssign(lTargetIndex, lGapSource, True);
         lLines.Add('dragover' + #9 + 'accept' + #9 + BoolToStr(lAccept, True));
         lLines.Add('# dragover aligned memory index' + #9 + IntToStr(lAlignedMemoryIndex));
-      end else if SameText(xeTestCopyIntoGapOp, 'drop') then begin
+      end else if SameText(xeTestSwitches.CopyIntoGapOp, 'drop') then begin
         lLines.Add('drop' + #9 + 'performed' + #9 + BoolToStr(PerformDrop(vstView, lGapNode, Succ(lColumn), lGapSource), True));
         AddContainer(lLines, 'after', lContainer);
       end else begin
@@ -22657,9 +22658,9 @@ begin
       end;
     end;
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestCopyIntoGapFile + '.partial';
+    lTmp := xeTestSwitches.CopyIntoGapFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestCopyIntoGapFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.CopyIntoGapFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;
@@ -22822,11 +22823,11 @@ begin
   try
     lLines.Add('# xEdit drop-adds-master probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# spec = ' + xeTestDropMasterSpec);
+    lLines.Add('# spec = ' + xeTestSwitches.DropMasterSpec);
     lLines.Add('# Columns, tab separated: what / detail / value');
     CheckResult := 2;
     try
-      lSpec := xeTestDropMasterSpec.Split([',']);
+      lSpec := xeTestSwitches.DropMasterSpec.Split([',']);
       if Length(lSpec) <> 4 then
         raise Exception.Create('the spec needs four parts');
       lTarget := FindRecord(lSpec[0]);
@@ -22917,9 +22918,9 @@ begin
       end;
     end;
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestDropMasterFile + '.partial';
+    lTmp := xeTestSwitches.DropMasterFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestDropMasterFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.DropMasterFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;
@@ -22935,12 +22936,12 @@ begin
   for var i := Low(Files) to High(Files) do
     TestDeltaPatchLines.Add('file' + #9 + aWhen + #9 + Files[i].FileName + #9 +
       'member=' + BoolToStr(ConflictView.Hidden.Contains(Files[i]), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(Files[i]), True));
-  if xeTestDeltaPatchHideRecord = '' then
+  if xeTestSwitches.DeltaPatchHideRecord = '' then
     Exit;
   lRecord := nil;
   for var i := Low(Files) to High(Files) do
-    if SameText(Files[i].FileName, xeTestDeltaPatchMaster) then
-      lRecord := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestDeltaPatchHideRecord), True, True];
+    if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchMaster) then
+      lRecord := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
   if Assigned(lRecord) then
     TestDeltaPatchLines.Add('record' + #9 + aWhen + #9 + lRecord.Name + #9 +
       'member=' + BoolToStr(ConflictView.Hidden.Contains(lRecord), True) + #9 + 'hidden=' + BoolToStr(ConflictView.Hidden.IsHidden(lRecord), True));
@@ -22952,9 +22953,9 @@ var
 begin
   try
     TestDeltaPatchLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestDeltaPatchFile + '.partial';
+    lTmp := xeTestSwitches.DeltaPatchFile + '.partial';
     TestDeltaPatchLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestDeltaPatchFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.DeltaPatchFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     FreeAndNil(TestDeltaPatchLines);
@@ -22975,33 +22976,33 @@ begin
   TestDeltaPatchLines := TStringList.Create;
   TestDeltaPatchLines.Add('# xEdit delta patch probe');
   TestDeltaPatchLines.Add('# ' + xeApplicationTitle);
-  TestDeltaPatchLines.Add('# master = ' + xeTestDeltaPatchMaster + ', newer = ' + xeTestDeltaPatchNewer +
-    ', name = ' + xeTestDeltaPatchName + ', hide = ' + xeTestDeltaPatchHide + ', hide record = ' + xeTestDeltaPatchHideRecord);
+  TestDeltaPatchLines.Add('# master = ' + xeTestSwitches.DeltaPatchMaster + ', newer = ' + xeTestSwitches.DeltaPatchNewer +
+    ', name = ' + xeTestSwitches.DeltaPatchName + ', hide = ' + xeTestSwitches.DeltaPatchHide + ', hide record = ' + xeTestSwitches.DeltaPatchHideRecord);
   TestDeltaPatchLines.Add('# Columns, tab separated: what / when / name / states');
   try
     lMaster := nil;
     for var i := Low(Files) to High(Files) do
-      if SameText(Files[i].FileName, xeTestDeltaPatchMaster) then
+      if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchMaster) then
         lMaster := Files[i];
     if not Assigned(lMaster) then
-      raise Exception.Create('no module ' + xeTestDeltaPatchMaster);
+      raise Exception.Create('no module ' + xeTestSwitches.DeltaPatchMaster);
     TestDeltaPatchStates('loaded');
-    if xeTestDeltaPatchHide <> '' then
+    if xeTestSwitches.DeltaPatchHide <> '' then
       for var i := Low(Files) to High(Files) do
-        if SameText(Files[i].FileName, xeTestDeltaPatchHide) then
+        if SameText(Files[i].FileName, xeTestSwitches.DeltaPatchHide) then
           ConflictView.Hidden.Hide(Files[i]);
-    if xeTestDeltaPatchHideRecord <> '' then begin
-      lRecord := lMaster.RecordByFormID[TwbFormID.FromStr(xeTestDeltaPatchHideRecord), True, True];
+    if xeTestSwitches.DeltaPatchHideRecord <> '' then begin
+      lRecord := lMaster.RecordByFormID[TwbFormID.FromStr(xeTestSwitches.DeltaPatchHideRecord), True, True];
       if not Assigned(lRecord) then
-        raise Exception.Create('no record ' + xeTestDeltaPatchHideRecord + ' in ' + xeTestDeltaPatchMaster);
+        raise Exception.Create('no record ' + xeTestSwitches.DeltaPatchHideRecord + ' in ' + xeTestSwitches.DeltaPatchMaster);
       ConflictView.Hidden.Hide(lRecord);
     end;
     TestDeltaPatchStates('before');
 
-    lTarget := xeContext.Settings.DataPath + xeTestDeltaPatchName + '.esu';
+    lTarget := xeContext.Settings.DataPath + xeTestSwitches.DeltaPatchName + '.esu';
     if FileExists(lTarget) then
       raise Exception.Create(lTarget + ' already exists');
-    if not CopyFile(PChar(xeTestDeltaPatchNewer), PChar(lTarget), True) then
+    if not CopyFile(PChar(xeTestSwitches.DeltaPatchNewer), PChar(lTarget), True) then
       RaiseLastOSError;
     TestDeltaPatchLines.Add('# delta patch file = ' + lTarget);
 
@@ -23015,7 +23016,7 @@ begin
     DoSetActiveRecord(nil);
     pgMain.ActivePage := tbsMessages;
     TLoaderThread.Create(lTarget, lMaster, [fsIsDeltaPatch]);
-    if xeTestDeltaPatchCancel then begin
+    if xeTestSwitches.DeltaPatchCancel then begin
       TestDeltaPatchTimer := TTimer.Create(Self);
       TestDeltaPatchTimer.Interval := 50;
       TestDeltaPatchTimer.OnTimer := TestDeltaPatchCancelTimer;
@@ -23094,9 +23095,9 @@ begin
         try
           Files[i].WriteToStream(lStream, rmNo);
           TestDeltaPatchLines.Add('patchbytes' + #9 + IntToStr(lStream.Size) + #9 + IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
-          if xeTestDeltaPatchSave <> '' then begin
-            lStream.SaveToFile(xeTestDeltaPatchSave);
-            TestDeltaPatchLines.Add('patchsaved' + #9 + xeTestDeltaPatchSave);
+          if xeTestSwitches.DeltaPatchSave <> '' then begin
+            lStream.SaveToFile(xeTestSwitches.DeltaPatchSave);
+            TestDeltaPatchLines.Add('patchsaved' + #9 + xeTestSwitches.DeltaPatchSave);
           end;
         finally
           lStream.Free;
@@ -23122,7 +23123,7 @@ begin
   TestMergeLines := TStringList.Create;
   TestMergeLines.Add('# xEdit merge into master probe');
   TestMergeLines.Add('# ' + xeApplicationTitle);
-  TestMergeLines.Add('# source = ' + xeTestMergeSource + ', target = ' + xeTestMergeTarget + ', out = ' + xeTestMergeOut);
+  TestMergeLines.Add('# source = ' + xeTestSwitches.MergeSource + ', target = ' + xeTestSwitches.MergeTarget + ', out = ' + xeTestSwitches.MergeOut);
   TestMergeLines.Add('# Columns, tab separated: what / details');
   TestMergeTimer := TTimer.Create(Self);
   TestMergeTimer.Interval := 500;
@@ -23169,12 +23170,12 @@ begin
     lSource := nil;
     lTarget := nil;
     for var i := Low(Files) to High(Files) do
-      if SameText(Files[i].FileName, xeTestMergeSource) then
+      if SameText(Files[i].FileName, xeTestSwitches.MergeSource) then
         lSource := Files[i]
-      else if SameText(Files[i].FileName, xeTestMergeTarget) then
+      else if SameText(Files[i].FileName, xeTestSwitches.MergeTarget) then
         lTarget := Files[i];
     if not Assigned(lSource) or not Assigned(lTarget) then
-      raise Exception.Create(xeTestMergeSource + ' and ' + xeTestMergeTarget + ' must both be loaded');
+      raise Exception.Create(xeTestSwitches.MergeSource + ' and ' + xeTestSwitches.MergeTarget + ' must both be loaded');
     TestMergeTarget := lTarget;
     TestMergeLines.Add('source' + #9 + lSource.FileName + #9 + 'records ' + IntToStr(lSource.RecordCount) + #9 +
       'own ' + IntToStr(OwnRecords(lSource)));
@@ -23224,8 +23225,8 @@ begin
     lStream := TMemoryStream.Create;
     try
       lTarget.WriteToStream(lStream, rmNo);
-      lStream.SaveToFile(xeTestMergeOut);
-      TestMergeLines.Add('merged' + #9 + xeTestMergeOut + #9 + IntToStr(lStream.Size) + #9 +
+      lStream.SaveToFile(xeTestSwitches.MergeOut);
+      TestMergeLines.Add('merged' + #9 + xeTestSwitches.MergeOut + #9 + IntToStr(lStream.Size) + #9 +
         IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
     finally
       lStream.Free;
@@ -23316,9 +23317,9 @@ var
 begin
   try
     TestMergeLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestMergeFile + '.partial';
+    lTmp := xeTestSwitches.MergeFile + '.partial';
     TestMergeLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestMergeFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.MergeFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     FreeAndNil(TestMergeLines);
@@ -23428,29 +23429,29 @@ begin
   try
     lLines.Add('# xEdit hide probe');
     lLines.Add('# ' + xeApplicationTitle);
-    lLines.Add('# record = ' + xeTestHideRecord + ' of ' + xeTestHideMaster + ', module = ' + xeTestHideModule);
+    lLines.Add('# record = ' + xeTestSwitches.HideRecord + ' of ' + xeTestSwitches.HideMaster + ', module = ' + xeTestSwitches.HideModule);
     lLines.Add('# Columns, tab separated: arm / when / what / state');
     CheckResult := 2;
     try
       lMaster := nil;
       lModule := nil;
       for var i := Low(Files) to High(Files) do begin
-        if SameText(Files[i].FileName, xeTestHideMaster) then
-          lMaster := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestHideRecord), True, True];
-        if SameText(Files[i].FileName, xeTestHideModule) then
+        if SameText(Files[i].FileName, xeTestSwitches.HideMaster) then
+          lMaster := Files[i].RecordByFormID[TwbFormID.FromStr(xeTestSwitches.HideRecord), True, True];
+        if SameText(Files[i].FileName, xeTestSwitches.HideModule) then
           lModule := Files[i];
       end;
       if not Assigned(lMaster) then
-        raise Exception.Create('no record ' + xeTestHideRecord + ' in ' + xeTestHideMaster);
+        raise Exception.Create('no record ' + xeTestSwitches.HideRecord + ' in ' + xeTestSwitches.HideMaster);
       if not Assigned(lModule) then
-        raise Exception.Create('no module ' + xeTestHideModule);
+        raise Exception.Create('no module ' + xeTestSwitches.HideModule);
       lMaster := lMaster.MasterOrSelf;
       lOverride := nil;
       for var i := 0 to Pred(lMaster.OverrideCount) do
         if lMaster.Overrides[i]._File.Equals(lModule) then
           lOverride := lMaster.Overrides[i];
       if not Assigned(lOverride) then
-        raise Exception.Create(lMaster.Name + ' has no override in ' + xeTestHideModule);
+        raise Exception.Create(lMaster.Name + ' has no override in ' + xeTestSwitches.HideModule);
       if lMaster.EditorID = '' then
         raise Exception.Create(lMaster.Name + ' has no EditorID to search for');
       lLines.Add('# master = ' + lMaster.Name + ' in ' + lMaster._File.FileName + ', override in ' + lModule.FileName);
@@ -23503,9 +23504,9 @@ begin
       end;
     end;
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestHideFile + '.partial';
+    lTmp := xeTestSwitches.HideFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestHideFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.HideFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;
@@ -23526,25 +23527,25 @@ begin
   try
     lLines.Add('# xEdit filter probe');
     lLines.Add('# ' + xeApplicationTitle);
-    if xeTestFilterPreset = '' then
+    if xeTestSwitches.FilterPreset = '' then
       lLines.Add('# filter = by persistent, everything else off')
     else
-      lLines.Add('# filter = the "' + xeTestFilterPreset + '" preset');
-    if xeTestFilterByValue <> '' then
-      lLines.Add('# before the filter: FilterByElementValue = True, FilterElementValue = ' + xeTestFilterByValue +
+      lLines.Add('# filter = the "' + xeTestSwitches.FilterPreset + '" preset');
+    if xeTestSwitches.FilterByValue <> '' then
+      lLines.Add('# before the filter: FilterByElementValue = True, FilterElementValue = ' + xeTestSwitches.FilterByValue +
         ' (what the filter dialog''s apply leaves after a filter by element value)');
     lLines.Add('# Columns, tab separated: record left in the tree / file');
     CheckResult := 2;
     try
-      if xeTestFilterByValue <> '' then begin
+      if xeTestSwitches.FilterByValue <> '' then begin
         FilterByElementValue := True;
-        FilterElementValue := xeTestFilterByValue;
+        FilterElementValue := xeTestSwitches.FilterByValue;
       end;
-      if SameText(xeTestFilterPreset, 'cleaning') then
+      if SameText(xeTestSwitches.FilterPreset, 'cleaning') then
         mniNavFilterForCleaningClick(nil)
-      else if SameText(xeTestFilterPreset, 'onlyone') then
+      else if SameText(xeTestSwitches.FilterPreset, 'onlyone') then
         mniNavFilterForOnlyOneClick(nil)
-      else if SameText(xeTestFilterPreset, 'conflicts') then
+      else if SameText(xeTestSwitches.FilterPreset, 'conflicts') then
         mniNavFilterConflictsClick(nil)
       else begin
         FilterConflictAll := False;
@@ -23601,23 +23602,23 @@ begin
         lData := vstNav.GetNodeData(lNode);
         if Assigned(lData) and Supports(lData.Element, IwbMainRecord) then begin
           Inc(lCount);
-          if xeTestFilterPreset = '' then
+          if xeTestSwitches.FilterPreset = '' then
             lLines.Add(lData.Element.Name + #9 + lData.Element._File.FileName);
         end;
         lNode := vstNav.GetNext(lNode);
       end;
       lLines.Add('# records left: ' + IntToStr(lCount));
-      if xeTestFilterImages > 0 then
+      if xeTestSwitches.FilterImages > 0 then
         TestFilterImages(lLines);
-      if xeTestFilterRemove <> '' then begin
+      if xeTestSwitches.FilterRemove <> '' then begin
         xeContext.Settings.DontSave := True;
         EditWarnOk := True;
         var lFile : IwbFile := nil;
         for var i := Low(Files) to High(Files) do
-          if SameText(Files[i].FileName, xeTestFilterRemove) then
+          if SameText(Files[i].FileName, xeTestSwitches.FilterRemove) then
             lFile := Files[i];
         if not Assigned(lFile) then
-          raise Exception.Create('no module ' + xeTestFilterRemove);
+          raise Exception.Create('no module ' + xeTestSwitches.FilterRemove);
         lNode := FindNodeForElement(lFile);
         if not Assigned(lNode) then
           raise Exception.Create('no nav node for ' + lFile.FileName);
@@ -23647,9 +23648,9 @@ begin
       end;
     end;
     lLines.Add('# checkResult = ' + IntToStr(CheckResult));
-    lTmp := xeTestFilterFile + '.partial';
+    lTmp := xeTestSwitches.FilterFile + '.partial';
     lLines.SaveToFile(lTmp, TEncoding.UTF8);
-    if not MoveFileEx(PChar(lTmp), PChar(xeTestFilterFile), MOVEFILE_REPLACE_EXISTING) then
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.FilterFile), MOVEFILE_REPLACE_EXISTING) then
       RaiseLastOSError;
   finally
     lLines.Free;
@@ -23691,7 +23692,7 @@ var
     DoProcessMessages;
     var lImage := Grab;
     try
-      lImage.SaveToFile(ChangeFileExt(xeTestFilterFile, '.' + aTag + '.bmp'));
+      lImage.SaveToFile(ChangeFileExt(xeTestSwitches.FilterFile, '.' + aTag + '.bmp'));
       if not Assigned(lAsIs) then begin
         lAsIs := lImage;
         lImage := nil;
@@ -23833,12 +23834,12 @@ end;
 
 function TfrmMain.TestPumpInside: Boolean;
 begin
-  if xeTestPumpDuringLoad <> '' then
+  if xeTestSwitches.PumpDuringLoad <> '' then
     Result := LoaderStarted and not xeContext.LoaderDone and
-      (SameText(xeTestPumpDuringLoad, 'any') or xeContext.BuildingRefsParallel)
-  else if xeTestPumpGenerator then
+      (SameText(xeTestSwitches.PumpDuringLoad, 'any') or xeContext.BuildingRefsParallel)
+  else if xeTestSwitches.PumpGenerator then
     Result := GeneratorStarted and not GeneratorDone
-  else if xeTestPumpModal then
+  else if xeTestSwitches.PumpModal then
     Result := (ProcessMessagesLockCount < 1) and HandleAllocated and not IsWindowEnabled(Handle)
   else
     Result := ProcessMessagesLockCount > 0;
@@ -23851,7 +23852,7 @@ end;
 
 procedure TfrmMain.TestPumpNote(const aText: string);
 begin
-  TFile.AppendAllText(xeTestPumpFile, aText + sLineBreak);
+  TFile.AppendAllText(xeTestSwitches.PumpFile, aText + sLineBreak);
 end;
 
 procedure TfrmMain.TestPumpSetCtrl(aDown: Boolean);
@@ -23869,15 +23870,15 @@ end;
 
 procedure TfrmMain.TestPumpStart;
 begin
-  System.SysUtils.DeleteFile(xeTestPumpFile);
-  TestPumpNote('# xEdit pump probe: arrival "' + xeTestPump + '"');
-  if SameText(xeTestPump, 'xback') then begin
+  System.SysUtils.DeleteFile(xeTestSwitches.PumpFile);
+  TestPumpNote('# xEdit pump probe: arrival "' + xeTestSwitches.Pump + '"');
+  if SameText(xeTestSwitches.Pump, 'xback') then begin
     if not Assigned(BackHistory) then
       BackHistory := TInterfaceList.Create;
     BackHistory.Add(TMainRecordPosHistoryEntry.Create(Files[High(Files)].Header));
     TestPumpNote('back history: ' + Files[High(Files)].Header.Name);
   end;
-  if SameText(xeTestPump, 'cancelshortcut') then begin
+  if SameText(xeTestSwitches.Pump, 'cancelshortcut') then begin
     TestPumpShortCut := TAction.Create(Self);
     TestPumpShortCut.ActionList := ActionList1;
     TestPumpShortCut.ShortCut := ShortCut(VK_F12, [ssCtrl]);
@@ -24031,16 +24032,16 @@ begin
   if not TestPumpDelivered then begin
     if not TestPumpInside then
       Exit;
-    if xeTestPumpDirect and (ProcessMessagesLockCount > 0) then
+    if xeTestSwitches.PumpDirect and (ProcessMessagesLockCount > 0) then
       Exit;
-    if SameText(xeTestPumpClient, 'enabled') and not pnlClient.Enabled then
+    if SameText(xeTestSwitches.PumpClient, 'enabled') and not pnlClient.Enabled then
       Exit;
-    if SameText(xeTestPumpClient, 'disabled') and pnlClient.Enabled then
+    if SameText(xeTestSwitches.PumpClient, 'disabled') and pnlClient.Enabled then
       Exit;
-    if (xeTestPumpAction <> '') and not ContainsText(wbCurrentAction + '|' + Caption, xeTestPumpAction) then
+    if (xeTestSwitches.PumpAction <> '') and not ContainsText(wbCurrentAction + '|' + Caption, xeTestSwitches.PumpAction) then
       Exit;
     TestPumpDelivered := True;
-    if xeTestPumpModal then begin
+    if xeTestSwitches.PumpModal then begin
       for var i := 0 to Pred(Screen.CustomFormCount) do
         if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and (fsModal in Screen.CustomForms[i].FormState) then
           TestPumpModalBase := Screen.CustomForms[i];
@@ -24055,7 +24056,7 @@ begin
       TestPumpSeen := ActiveRecord.Name
     else
       TestPumpSeen := '-';
-    if SameText(xeTestPump, 'cancelctrlo') or SameText(xeTestPump, 'cancelshortcut') then
+    if SameText(xeTestSwitches.Pump, 'cancelctrlo') or SameText(xeTestSwitches.Pump, 'cancelshortcut') then
       if btnCancel.CanFocus then
         btnCancel.SetFocus;
     lFocus := GetFocus;
@@ -24069,41 +24070,41 @@ begin
     if Assigned(TestPumpModalBase) then
       lModalName := TestPumpModalBase.ClassName;
     var lDelivery := 'inside a nested pump';
-    if xeTestPumpDuringLoad <> '' then
+    if xeTestSwitches.PumpDuringLoad <> '' then
       lDelivery := 'while the loader runs'
-    else if xeTestPumpModal then
+    else if xeTestSwitches.PumpModal then
       lDelivery := 'inside a modal loop outside any pump';
-    TestPumpNote('delivered ' + xeTestPump + ' ' + lDelivery +
+    TestPumpNote('delivered ' + xeTestSwitches.Pump + ' ' + lDelivery +
       ' during: "' + wbCurrentAction + '", caption "' + Caption +
       '"; client panel enabled ' + BoolToStr(pnlClient.Enabled, True) + '; pump depth ' + IntToStr(NestedPumpDepth) +
       ', lock count ' + IntToStr(ProcessMessagesLockCount) + ', form enabled ' + BoolToStr(Enabled, True) +
       ', window enabled ' + BoolToStr(IsWindowEnabled(Handle), True) + ', modal ' + lModalName + '; focus ' + lWhere +
       '; the View tab shows ' + TestPumpSeen +
-      IfThen(xeTestPumpDuringLoad <> '', '; loader done ' + BoolToStr(xeContext.LoaderDone, True) + ', building references ' +
+      IfThen(xeTestSwitches.PumpDuringLoad <> '', '; loader done ' + BoolToStr(xeContext.LoaderDone, True) + ', building references ' +
         BoolToStr(xeContext.BuildingRefsParallel, True) + ', files in the nav tree ' + IntToStr(Length(Files)), ''));
-    if SameText(xeTestPump, 'tab') then begin
+    if SameText(xeTestSwitches.Pump, 'tab') then begin
       if lFocus = 0 then
         lFocus := Handle;
       PostMessage(lFocus, WM_KEYDOWN, VK_TAB, 0);
       PostMessage(lFocus, WM_KEYUP, VK_TAB, LPARAM($C0000000));
-    end else if SameText(xeTestPump, 'cancelctrlo') or SameText(xeTestPump, 'cancelshortcut') then begin
+    end else if SameText(xeTestSwitches.Pump, 'cancelctrlo') or SameText(xeTestSwitches.Pump, 'cancelshortcut') then begin
       if lFocus = 0 then
         lFocus := Handle;
       TestPumpSetCtrl(True);
-      if SameText(xeTestPump, 'cancelctrlo') then begin
+      if SameText(xeTestSwitches.Pump, 'cancelctrlo') then begin
         PostMessage(lFocus, WM_KEYDOWN, Ord('O'), 0);
         PostMessage(lFocus, WM_KEYUP, Ord('O'), LPARAM($C0000000));
       end else begin
         PostMessage(lFocus, WM_KEYDOWN, VK_F12, 0);
         PostMessage(lFocus, WM_KEYUP, VK_F12, LPARAM($C0000000));
       end;
-    end else if SameText(xeTestPump, 'endsession') then
+    end else if SameText(xeTestSwitches.Pump, 'endsession') then
       TestPumpNote('WM_QUERYENDSESSION answered ' + IntToStr(SendMessage(Handle, WM_QUERYENDSESSION, 0, 0)) +
         '; close deferred ' + BoolToStr(CloseDeferred, True))
-    else if SameText(xeTestPump, 'hotkey') then begin
+    else if SameText(xeTestSwitches.Pump, 'hotkey') then begin
       if not Assigned(ScriptHotkeys) then
         ScriptHotkeys := TStringList.Create;
-      ScriptHotkeys.AddObject(xeTestPumpHotkey, TObject(ShortCut(VK_F12, [ssCtrl])));
+      ScriptHotkeys.AddObject(xeTestSwitches.PumpHotkey, TObject(ShortCut(VK_F12, [ssCtrl])));
       TestPumpShortCut := TAction.Create(Self);
       TestPumpShortCut.ActionList := ActionList1;
       TestPumpShortCut.ShortCut := ShortCut(VK_F12, [ssCtrl]);
@@ -24114,21 +24115,21 @@ begin
       TestPumpSetCtrl(True);
       PostMessage(lFocus, WM_KEYDOWN, VK_F12, 0);
       PostMessage(lFocus, WM_KEYUP, VK_F12, LPARAM($C0000000));
-    end else if SameText(xeTestPump, 'edidsearch') then begin
-      edEditorIDSearch.Text := xeTestPumpSearch;
+    end else if SameText(xeTestSwitches.Pump, 'edidsearch') then begin
+      edEditorIDSearch.Text := xeTestSwitches.PumpSearch;
       PostMessage(edEditorIDSearch.Handle, WM_KEYDOWN, VK_RETURN, 0);
       PostMessage(edEditorIDSearch.Handle, WM_KEYUP, VK_RETURN, LPARAM($C0000000));
-    end else if SameText(xeTestPump, 'close') then
+    end else if SameText(xeTestSwitches.Pump, 'close') then
       PostMessage(Handle, WM_CLOSE, 0, 0)
-    else if SameText(xeTestPump, 'ctrlo') then begin
+    else if SameText(xeTestSwitches.Pump, 'ctrlo') then begin
       if lFocus = 0 then
         lFocus := Handle;
       TestPumpSetCtrl(True);
       PostMessage(lFocus, WM_KEYDOWN, Ord('O'), 0);
       PostMessage(lFocus, WM_KEYUP, Ord('O'), LPARAM($C0000000));
-    end else if SameText(xeTestPump, 'xback') then
+    end else if SameText(xeTestSwitches.Pump, 'xback') then
       PostMessage(Handle, WM_XBUTTONUP, MakeWParam(0, 1), 0)
-    else if SameText(xeTestPump, 'pendingset') then begin
+    else if SameText(xeTestSwitches.Pump, 'pendingset') then begin
       PendingContainer := nil;
       PendingMainRecords := [Files[High(Files)].Header];
       tmrPendingSetActive.Enabled := False;
@@ -24141,17 +24142,17 @@ begin
     TestPumpTimer.Enabled := False;
     TestPumpWalkStack := nil;
     TestPumpWalkPos := nil;
-    if xeTestPumpDuringLoad <> '' then
+    if xeTestSwitches.PumpDuringLoad <> '' then
       TestPumpNote('after loading: ' + TestPumpRefDigest);
     TestPumpNote('observation ended');
-    if xeTestPumpDuringLoad <> '' then
+    if xeTestSwitches.PumpDuringLoad <> '' then
       tmrShutdown.Enabled := True;
     Exit;
   end;
 
-  if xeTestPumpDuringLoad <> '' then
+  if xeTestSwitches.PumpDuringLoad <> '' then
     lWhere := IfThen(TestPumpInside, 'while the loader runs', 'after the loader')
-  else if xeTestPumpModal then
+  else if xeTestSwitches.PumpModal then
     lWhere := IfThen(TestPumpInside, 'inside the modal loop', 'outside any modal loop')
   else
     lWhere := IfThen(TestPumpInside, 'inside the nested pump', 'outside any nested pump');
@@ -24169,14 +24170,14 @@ begin
   for var i := 0 to Pred(Screen.CustomFormCount) do
     if (Screen.CustomForms[i] <> Self) and (Screen.CustomForms[i] <> TestPumpModalBase) and Screen.CustomForms[i].Visible and
        (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
-      if SameText(xeTestPumpAnswer, 'yes') then
+      if SameText(xeTestSwitches.PumpAnswer, 'yes') then
         Screen.CustomForms[i].ModalResult := mrYes
-      else if SameText(xeTestPumpAnswer, 'no') then
+      else if SameText(xeTestSwitches.PumpAnswer, 'no') then
         Screen.CustomForms[i].ModalResult := mrNo
       else
         Screen.CustomForms[i].ModalResult := mrCancel;
       TestPumpNote('a dialog opened ' + lWhere + ': ' + Screen.CustomForms[i].ClassName + ' "' + Screen.CustomForms[i].Caption +
-        '", answered ' + IfThen(xeTestPumpAnswer = '', 'cancel', xeTestPumpAnswer));
+        '", answered ' + IfThen(xeTestSwitches.PumpAnswer = '', 'cancel', xeTestSwitches.PumpAnswer));
       if TestPumpCtrlDown then
         TestPumpSetCtrl(False);
       Break;
@@ -24203,8 +24204,8 @@ begin
           end;
         until lChild = 0;
         TestPumpNote('a task dialog opened ' + lWhere + ': "' + string(lCaption) + '"' + lText + ', answered ' +
-          IfThen(SameText(xeTestPumpAnswer, 'yes'), 'yes', 'no'));
-        if SameText(xeTestPumpAnswer, 'yes') then
+          IfThen(SameText(xeTestSwitches.PumpAnswer, 'yes'), 'yes', 'no'));
+        if SameText(xeTestSwitches.PumpAnswer, 'yes') then
           SendMessage(lWnd, WM_USER + 102, IDYES, 0)
         else
           SendMessage(lWnd, WM_USER + 102, IDNO, 0);
@@ -24213,9 +24214,9 @@ begin
     end;
   until lWnd = 0;
 
-  var lBrowsing := (SameText(xeTestPump, 'browse') or SameText(xeTestPump, 'browseclose')) and TestPumpInside;
+  var lBrowsing := (SameText(xeTestSwitches.Pump, 'browse') or SameText(xeTestSwitches.Pump, 'browseclose')) and TestPumpInside;
   if lBrowsing then begin
-    if not SameText(xeTestPump, 'browseclose') or (TestPumpBrowseCount < 20) then
+    if not SameText(xeTestSwitches.Pump, 'browseclose') or (TestPumpBrowseCount < 20) then
       TestPumpBrowseStep
     else if Assigned(ActiveRecord) and not TestPumpClosePosted then begin
       TestPumpClosePosted := True;
@@ -24224,9 +24225,9 @@ begin
       PostMessage(Handle, WM_CLOSE, 0, 0);
     end;
   end;
-  if SameText(xeTestPump, 'edidwalk') and TestPumpInside then
+  if SameText(xeTestSwitches.Pump, 'edidwalk') and TestPumpInside then
     TestPumpEdidWalkStep;
-  if SameText(xeTestPump, 'initwalk') and TestPumpInside then
+  if SameText(xeTestSwitches.Pump, 'initwalk') and TestPumpInside then
     TestPumpInitWalkStep;
 
   var lShown: string := '-';
@@ -24246,13 +24247,13 @@ begin
     TestPumpEndTick := GetTickCount64 + 2000;
     if TestPumpCtrlDown then
       TestPumpSetCtrl(False);
-    if xeTestPumpDuringLoad <> '' then
+    if xeTestSwitches.PumpDuringLoad <> '' then
       TestPumpNote('the loader phase has ended (loader done ' + BoolToStr(xeContext.LoaderDone, True) + '); records browsed ' +
         IntToStr(TestPumpBrowseCount) + '; records walked ' + IntToStr(TestPumpWalkReads) + ' (' + IntToStr(TestPumpWalkChars) +
         ' EditorID characters or elements), faults ' + IntToStr(TestPumpWalkFaults) + IfThen(TestPumpWalkFirstFault <> '', ', first ' +
         TestPumpWalkFirstFault, '') + '; the View tab shows ' + lShown +
         '; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
-    else if xeTestPumpModal then
+    else if xeTestSwitches.PumpModal then
       TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
     else
       TestPumpNote('back in the outermost message loop; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s');
@@ -24305,7 +24306,7 @@ begin
         end;
 
         if xeContext.LoaderError then begin
-          if xeTestConflicts or xeTestNavCopy or xeTestMerge then begin
+          if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -24316,7 +24317,7 @@ begin
         end;
 
         if (xeToolMode in [tmLODgen, tmScript]) then begin
-          if (xeTestPump <> '') and (xeTestPumpDuringLoad = '') then
+          if (xeTestSwitches.Pump <> '') and (xeTestSwitches.PumpDuringLoad = '') then
             TestPumpStart;
           if not wbForceTerminate then
             tmrGenerator.Enabled := True;
@@ -24370,7 +24371,7 @@ begin
 
         ModGroups := nil;
 
-        if not (xeQuickClean or (xeToolMode in wbAutoModes) or (xeTestConflicts and not xeTestConflictsModGroups)) then
+        if not (xeQuickClean or (xeToolMode in wbAutoModes) or (xeTestSwitches.Conflicts and not xeTestSwitches.ConflictsModGroups)) then
           if xeQuickShowConflicts or xeAutoLoad then begin
             ModGroups := lModGroups.ByName(True);
             lModGroups.ByName(False).ShowValidationMessages;
@@ -24396,7 +24397,7 @@ begin
         mniModGroupsEnabled.Checked := ConflictView.ModGroupsEnabled;
         mniModGroupsDisabled.Checked := not ConflictView.ModGroupsEnabled;
 
-        if (xeTestPump <> '') and (xeTestPumpDuringLoad = '') then
+        if (xeTestSwitches.Pump <> '') and (xeTestSwitches.PumpDuringLoad = '') then
           TestPumpStart;
 
         if xeQuickShowConflicts then
@@ -24491,52 +24492,52 @@ begin
             end;
         end;
 
-        if xeTestConflicts then
-          if xeTestConflictsCompareTo <> '' then
-            TLoaderThread.Create(xeTestConflictsCompareTo, Files[High(Files)])
+        if xeTestSwitches.Conflicts then
+          if xeTestSwitches.ConflictsCompareTo <> '' then
+            TLoaderThread.Create(xeTestSwitches.ConflictsCompareTo, Files[High(Files)])
           else begin
             DoTestConflictsDump;
             if xeAutoExit then
               tmrShutdown.Enabled := True;
           end;
 
-        if xeTestNavCopy then
+        if xeTestSwitches.NavCopy then
           DoTestNavCopy;
 
-        if xeTestViewText then begin
+        if xeTestSwitches.ViewText then begin
           DoTestViewText;
           if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;
 
-        if xeTestViewTree then begin
+        if xeTestSwitches.ViewTree then begin
           DoTestViewTree;
           if xeAutoExit then
             tmrShutdown.Enabled := True;
         end;
 
-        if xeTestOptions then
+        if xeTestSwitches.Options then
           DoTestOptions;
 
-        if xeTestCopyIntoGap then
+        if xeTestSwitches.CopyIntoGap then
           DoTestCopyIntoGap;
 
-        if xeTestDropMaster then
+        if xeTestSwitches.DropMaster then
           DoTestDropMaster;
 
-        if xeTestDeltaPatch then
+        if xeTestSwitches.DeltaPatch then
           DoTestDeltaPatchStart;
 
-        if xeTestMerge then
+        if xeTestSwitches.Merge then
           DoTestMerge;
 
-        if xeTestHide then
+        if xeTestSwitches.Hide then
           DoTestHide;
 
-        if xeTestFilter then
+        if xeTestSwitches.Filter then
           DoTestFilter;
 
-        if xeTestSaveContexts then
+        if xeTestSwitches.SaveContexts then
           DoTestSaveContextsCompare;
       finally
         Dec(wbShowStartTime);
@@ -24611,10 +24612,10 @@ begin
         end;
       end;
 
-      if xeTestDeltaPatch then
+      if xeTestSwitches.DeltaPatch then
         DoTestDeltaPatchReport;
 
-      if xeTestConflicts then begin
+      if xeTestSwitches.Conflicts then begin
         if xeContext.LoaderError then begin
           wbProgress('Test Conflicts mode FAILED: an error occured while loading the compare to module');
           CheckResult := 255;
@@ -24624,7 +24625,7 @@ begin
           tmrShutdown.Enabled := True;
       end;
 
-      if xeTestSaveContexts then begin
+      if xeTestSwitches.SaveContexts then begin
         if xeContext.LoaderError then begin
           TestSaveContextsReport('LOAD-ERROR');
           CheckResult := 255;
