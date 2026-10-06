@@ -121,6 +121,8 @@ procedure wbCodeBlock(const aProc: TProc);
 
 function wbVarArray(const aElements: array of Variant): Variant;
 
+function wbFormatElapsedTime(aElapsed: Double): string;
+
 implementation
 
 uses
@@ -1134,6 +1136,16 @@ begin
   for i := Low(aElements) to High(aElements) do
     Elements[i] := aElements[i];
   Result := Elements;
+end;
+
+function wbFormatElapsedTime(aElapsed: Double): string;
+var
+  Hours: Integer;
+begin
+  Result := FormatDateTime('nn:ss', aElapsed);
+  Hours := Trunc(aElapsed / (1/24));
+  if Hours > 0 then
+    Result := IntToStr(Hours) + ':' + Result;
 end;
 
 // **************** PERK Challenge JSON serialization support

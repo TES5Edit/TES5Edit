@@ -141,13 +141,6 @@ type
     procedure Execute; override; final;
   end;
 
-  TLOOTPluginInfo = record
-    Plugin: string;
-    CRC32: TwbCRC32;
-    ITM, UDR, NAV: integer;
-  end;
-  PLOOTPluginInfo = ^TLOOTPluginInfo;
-
   TwbSaveResult = (srAllDone, srNothingToDo, srAbort, srError);
 
   TRefByListItem = class
@@ -777,7 +770,7 @@ type
     GeneratorDone: Boolean;
     ScriptHotkeys: TStringList;
     CheckResult : Byte;
-    LOOTPluginInfos: array of TLOOTPluginInfo;
+    LOOTPluginInfos: TwbDirtyInfos;
     PendingContainer: IwbDataContainer;
     PendingMainRecords: TDynMainRecords;
   protected
@@ -959,8 +952,6 @@ type
     procedure ApplyScriptToSelection(const aSelection: TDynElements; aCount: Cardinal; const abShowMessages: boolean); overload;
     procedure ApplyScript(const aScriptFile: string; const aScript: string; aRefByMode: Boolean = False);
     procedure CreateActionsForScripts;
-    function LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
-    function BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
 
     procedure PerformLongAction(const aDesc, aProgress: string; const aAction: TProc; aCancelable: Boolean = False);
     procedure PerformActionOnSelectedFiles(const aDesc: string; const aAction: TProc<IwbFile>);
@@ -1447,16 +1438,6 @@ type
   public
     constructor Create(aControl: TControl);
   end;
-
-function wbFormatElapsedTime(aElapsed: double): string;
-var
-  Hours: Integer;
-begin
-  Result := FormatDateTime('nn:ss', aElapsed);
-  Hours := Trunc(aElapsed / (1/24));
-  if Hours > 0 then
-    Result := IntToStr(Hours) + ':' + Result;
-end;
 
 function GetUrlContent(const Url: string): UTF8String;
 var
@@ -10804,71 +10785,6 @@ begin
   Inc(LockOutPinnedCount);
 end;
 
-function TfrmMain.LOOTDirtyInfo(const aInfo: TLOOTPluginInfo; aFileChanged: Boolean): string;
-// LOOT dirty entry example
-{
-  - name: 'DLCRobot.esm'
-    dirty:
-      - <<: *dirtyPlugin
-        crc: 0xD69027EA
-        util: 'FO4Edit v3.2.1'
-        itm: 45
-        udr: 38
-        nav: 1
-}
-// LOOT clean entry example
-{
-  - name: 'BetterSettlers.esp'
-    clean:
-      - crc: 0x6A5FC68B
-        util: 'FO4Edit v3.2'
-}
-begin
-  Result := '';
-  if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) or (aInfo.NAV <> 0) then begin
-    if aFileChanged then begin
-      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
-      Result := Result + StringOfChar(' ', 4) + 'dirty:' + CRLF;
-    end;
-    if aInfo.NAV <> 0 then
-      Result := Result + StringOfChar(' ', 6) + '- <<: *reqManualFix'
-    else
-      Result := Result + StringOfChar(' ', 6) + '- <<: *quickClean';
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [xeContext.GameDefObj.AppName, VersionString.ToString, xeNexusModsUrl]);
-    if aInfo.ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [aInfo.ITM]);
-    if aInfo.UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [aInfo.UDR]);
-    if aInfo.NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [aInfo.NAV]);
-  end
-  else if (aInfo.ITM = 0) and (aInfo.UDR = 0) and (aInfo.NAV = 0) then begin
-    if aFileChanged then
-      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [aInfo.Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
-    Result := Result + StringOfChar(' ', 4) + 'clean:';
-    Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(aInfo.CRC32, 8)]);
-    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [xeContext.GameDefObj.AppName, VersionString.ToString]);
-  end;
-end;
-
-function TfrmMain.BOSSDirtyInfo(const aInfo: TLOOTPluginInfo): string;
-// BOSS entry example
-{
-WAC - NoMapMarker.esp
-  IF CHECKSUM("WAC - NoMapMarker.esp", 9BD8F9C2) DIRTY: 16 ITM, 0 UDR records. Needs TES4Edit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"
-}
-begin
-  Result := '';
-  if (aInfo.ITM <> 0) or (aInfo.UDR <> 0) then begin
-    Result := Result + CRLF + aInfo.Plugin;
-    Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
-      aInfo.Plugin,
-      IntToHex(aInfo.CRC32, 8),
-      aInfo.ITM,
-      aInfo.UDR,
-      xeContext.GameDefObj.AppName
-    ]);
-  end;
-end;
-
 procedure TfrmMain.btnCancelClick(Sender: TObject);
 begin
   if MessageDlg('Are you sure you want to request to force cancel the current operation?' + sLineBreak + sLineBreak +
@@ -10893,7 +10809,7 @@ var
   AutoModeCheckForDR          : Boolean;
   Operation, Plugin           : String;
   PluginCRC32                 : Cardinal;
-  DirtyInfo                   : PLOOTPluginInfo;
+  DirtyInfo                   : PwbDirtyInfo;
 begin
   AutoModeCheckForDR := xeToolMode in [tmCheckForDR];
   if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
@@ -11017,18 +10933,7 @@ begin
 
     // store dirty information
     if Plugin <> '' then begin
-      DirtyInfo := nil;
-      for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-        if (LOOTPluginInfos[i].Plugin = Plugin) and (LOOTPluginInfos[i].CRC32 = PluginCRC32) then begin
-          DirtyInfo := @LOOTPluginInfos[i];
-          Break;
-        end;
-      if not Assigned(DirtyInfo) then begin
-        SetLength(LOOTPluginInfos, Succ(Length(LOOTPluginInfos)));
-        DirtyInfo := @LOOTPluginInfos[Pred(Length(LOOTPluginInfos))];
-      end;
-      DirtyInfo.Plugin := Plugin;
-      DirtyInfo.CRC32 := PluginCRC32;
+      DirtyInfo := wbDirtyInfoFor(LOOTPluginInfos, Plugin, PluginCRC32);
       DirtyInfo.UDR := UndeletedCount;
       DirtyInfo.NAV := DeletedNAVM;
     end;
@@ -11147,7 +11052,7 @@ var
   AutoModeCheckForITM         : Boolean;
   Operation, Plugin           : String;
   PluginCRC32                 : Cardinal;
-  DirtyInfo                   : PLOOTPluginInfo;
+  DirtyInfo                   : PwbDirtyInfo;
 
 begin
   PluginCRC32 := 0;
@@ -11275,18 +11180,7 @@ begin
 
     // store dirty information
     if Plugin <> '' then begin
-      DirtyInfo := nil;
-      for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-        if (LOOTPluginInfos[i].Plugin = Plugin) and (LOOTPluginInfos[i].CRC32 = PluginCRC32) then begin
-          DirtyInfo := @LOOTPluginInfos[i];
-          Break;
-        end;
-      if not Assigned(DirtyInfo) then begin
-        SetLength(LOOTPluginInfos, Succ(Length(LOOTPluginInfos)));
-        DirtyInfo := @LOOTPluginInfos[Pred(Length(LOOTPluginInfos))];
-      end;
-      DirtyInfo.Plugin := Plugin;
-      DirtyInfo.CRC32 := PluginCRC32;
+      DirtyInfo := wbDirtyInfoFor(LOOTPluginInfos, Plugin, PluginCRC32);
       DirtyInfo.ITM := RemovedCount;
     end;
 
@@ -11299,34 +11193,13 @@ begin
 end;
 
 procedure TfrmMain.mniNavLOManagersDirtyInfoClick(Sender: TObject);
-var
-  i           : Integer;
-  BOSS        : Boolean;
-  FileChanged : Boolean;
 begin
   if Length(LOOTPluginInfos) < 1 then
     Exit;
 
-  BOSS := False;
   pgMain.ActivePage := tbsMessages;
-
-  // There will always be a LOOT message,
-  // since a plugin will always either be clean or it will be dirty
-  PostAddMessage('');
-  PostAddMessage('LOOT Masterlist Entries');
-  for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do begin
-    FileChanged := (i=0) or not SameText(LOOTPluginInfos[i].Plugin, LOOTPluginInfos[Pred(i)].Plugin);
-    PostAddMessage(LOOTDirtyInfo(LOOTPluginInfos[i], FileChanged));
-    if (LOOTPluginInfos[i].ITM <> 0) or (LOOTPluginInfos[i].UDR <> 0) then
-      BOSS := xeContext.GameDefObj.GameMode = gmTES4;
-  end;
-  PostAddMessage('');
-
-  if BOSS then begin
-    PostAddMessage('BOSS Masterlist Entries');
-    for i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-      PostAddMessage(BOSSDirtyInfo(LOOTPluginInfos[i]));
-  end;
+  wbReportDirtyInfos(LOOTPluginInfos, xeContext.GameDefObj, xeNexusModsUrl,
+    procedure(const aMessage: string) begin PostAddMessage(aMessage); end);
 end;
 
 procedure TfrmMain.mniSpreadsheetCompareSelectedClick(Sender: TObject);
@@ -20374,7 +20247,7 @@ begin
           PerformLongAction('Creating Delta Patch', '', procedure
           var
             Counts    : TwbDeltaPatchCounts;
-            DirtyInfo : PLOOTPluginInfo;
+            DirtyInfo : PwbDirtyInfo;
           begin
             xeQuickClean := True;
 
@@ -20392,18 +20265,7 @@ begin
                 ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
 
               if Counts.Candidates > 0 then begin
-                DirtyInfo := nil;
-                for var i := Low(LOOTPluginInfos) to High(LOOTPluginInfos) do
-                  if (LOOTPluginInfos[i].Plugin = NewFile.FileName) and (LOOTPluginInfos[i].CRC32 = NewFile.CRC32) then begin
-                    DirtyInfo := @LOOTPluginInfos[i];
-                    Break;
-                  end;
-                if not Assigned(DirtyInfo) then begin
-                  SetLength(LOOTPluginInfos, Succ(Length(LOOTPluginInfos)));
-                  DirtyInfo := @LOOTPluginInfos[Pred(Length(LOOTPluginInfos))];
-                end;
-                DirtyInfo.Plugin := NewFile.FileName;
-                DirtyInfo.CRC32 := NewFile.CRC32;
+                DirtyInfo := wbDirtyInfoFor(LOOTPluginInfos, NewFile.FileName, NewFile.CRC32);
                 DirtyInfo.ITM := Counts.Removed;
               end;
             end;

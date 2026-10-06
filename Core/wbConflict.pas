@@ -4,6 +4,7 @@ interface
 
 uses
   System.Generics.Collections,
+  wbHash,
   wbInterface;
 
 type
@@ -145,6 +146,58 @@ type
     qcRemove
   );
 
+  TwbDirtyInfo = record
+    Plugin : string;
+    CRC32  : TwbCRC32;
+    ITM    : Integer;
+    UDR    : Integer;
+    NAV    : Integer;
+    function LOOTEntry(aFileChanged: Boolean; const aAppName, aVersion, aNexusModsUrl: string): string;
+    function BOSSEntry(const aAppName: string): string;
+  end;
+  PwbDirtyInfo = ^TwbDirtyInfo;
+  TwbDirtyInfos = TArray<TwbDirtyInfo>;
+
+  TwbCleanCounts = record
+    FilterVisited     : Cardinal;
+    FilterRemaining   : Cardinal;
+    UndeleteProcessed : Cardinal;
+    Undeleted         : Cardinal;
+    DeletedNavMeshes  : Cardinal;
+    NotUndeletable    : Cardinal;
+    RemoveProcessed   : Cardinal;
+    Removed           : Cardinal;
+  end;
+
+  TwbQuickClean = class
+  private
+    qcFile       : IwbFile;
+    qcContext    : TwbGameContext;
+    qcView       : TwbConflictView;
+    qcOnMessage  : TwbConflictMessageProc;
+    qcOnProgress : TwbConflictMessageProc;
+    qcTree       : TObject;
+    qcCounts     : TwbCleanCounts;
+    qcDirtyInfos : TwbDirtyInfos;
+    procedure Post(const aText: string);
+    procedure Progress(const aText: string);
+  protected
+    function IsUnsaved: Boolean; virtual;
+    function Save: Boolean; virtual; abstract;
+    procedure Reset; virtual;
+    procedure ReportDirtyInfo; virtual;
+  public
+    CountOnly : Boolean;
+    constructor Create(const aFile: IwbFile; aView: TwbConflictView; const aOnMessage, aOnProgress: TwbConflictMessageProc);
+    destructor Destroy; override; final;
+    procedure Filter; virtual;
+    procedure Undelete; virtual;
+    procedure RemoveIdentical; virtual;
+    function Run: Boolean;
+    property Counts: TwbCleanCounts read qcCounts;
+    property DirtyInfos: TwbDirtyInfos read qcDirtyInfos;
+  end;
+
 function wbConflictCellElement(const aParentData: TwbConflictNodeData; aIndex: Cardinal): IwbElement;
 
 function wbConflictLevelForNodeDatas(const aNodeDatas: PwbConflictNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
@@ -172,6 +225,9 @@ function wbConflictMakeDeltaPatch(const aOld, aNew: IwbFile; aTemplate: TwbConfl
 function wbCleanDecide(const aElement: IwbElement; aThis, aOrgThis: TConflictThis; aLiveChildren: Integer; aAllowMakePartial: Boolean): TwbCleanAction;
 procedure wbCleanApply(aAction: TwbCleanAction; const aElement: IwbElement; const aContainer: IwbContainer);
 
+function wbDirtyInfoFor(var aInfos: TwbDirtyInfos; const aPlugin: string; aCRC32: TwbCRC32): PwbDirtyInfo;
+procedure wbReportDirtyInfos(const aInfos: TwbDirtyInfos; aGameDef: TwbGameDef; const aNexusModsUrl: string; const aOnMessage: TwbConflictMessageProc);
+
 implementation
 
 uses
@@ -180,6 +236,7 @@ uses
   System.Math,
   wbBetterStringList,
   wbImplementation,
+  wbHelpers,
   wbLoadOrder,
   wbDiff;
 
@@ -1425,21 +1482,31 @@ end;
 type
   TwbByteSet = set of Byte;
 
-  TwbDeltaPatchNode = class
+  TwbCleanNode = class
   private
-    dnElement   : IwbElement;
-    dnContainer : IwbContainer;
-    dnChildren  : TArray<TwbDeltaPatchNode>;
-    dnGone      : Boolean;
-    dnOwn       : TConflictThis;
-    dnThis      : TConflictThis;
+    cnElement   : IwbElement;
+    cnContainer : IwbContainer;
+    cnChildren  : TArray<TwbCleanNode>;
+    cnGone      : Boolean;
+    cnOwn       : TConflictThis;
+    cnThis      : TConflictThis;
     function LiveChildCount: Integer;
+    procedure Judge(aView: TwbConflictView; const aFiles: TwbFiles; aOnlyOne: Boolean; const aOnMessage: TwbConflictMessageProc);
+    function NodeCount: Cardinal;
+    function LiveCount(var aMainRecords: Cardinal): Cardinal;
   public
     constructor Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);
     destructor Destroy; override; final;
   end;
 
-constructor TwbDeltaPatchNode.Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);
+function wbParentedGroupTypes(aContext: TwbGameContext): TwbByteSet;
+begin
+  Result := [1, 6, 7];
+  if gcVWDAsQuestChildren in aContext.GameDefObj.Capabilities then
+    Include(Result, 10);
+end;
+
+constructor TwbCleanNode.Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);
 var
   lRecord : IwbMainRecord;
   lGroup  : IwbGroupRecord;
@@ -1447,17 +1514,17 @@ var
   i       : Integer;
 begin
   inherited Create;
-  dnElement := aElement;
-  dnContainer := aContainer;
-  if not Assigned(dnContainer) then
+  cnElement := aElement;
+  cnContainer := aContainer;
+  if not Assigned(cnContainer) then
     Exit;
   i := 0;
-  while i < dnContainer.ElementCount do begin
-    var lElement := dnContainer.Elements[i];
+  while i < cnContainer.ElementCount do begin
+    var lElement := cnContainer.Elements[i];
     lChild := nil;
     if Supports(lElement, IwbMainRecord, lRecord) then begin
-      if (Succ(i) < dnContainer.ElementCount) and
-         Supports(dnContainer.Elements[Succ(i)], IwbGroupRecord, lGroup) and
+      if (Succ(i) < cnContainer.ElementCount) and
+         Supports(cnContainer.Elements[Succ(i)], IwbGroupRecord, lGroup) and
          (lGroup.GroupType in aParented) and
          (lRecord.FormID.ToCardinal = lGroup.GroupLabel)
       then begin
@@ -1466,24 +1533,86 @@ begin
       end;
     end else if Supports(lElement, IwbGroupRecord, lGroup) then
       lChild := lGroup;
-    dnChildren := dnChildren + [TwbDeltaPatchNode.Create(lElement, lChild, aParented)];
+    cnChildren := cnChildren + [TwbCleanNode.Create(lElement, lChild, aParented)];
     Inc(i);
   end;
 end;
 
-destructor TwbDeltaPatchNode.Destroy;
+destructor TwbCleanNode.Destroy;
 begin
-  for var lChild in dnChildren do
+  for var lChild in cnChildren do
     lChild.Free;
   inherited;
 end;
 
-function TwbDeltaPatchNode.LiveChildCount: Integer;
+function TwbCleanNode.LiveChildCount: Integer;
 begin
   Result := 0;
-  for var lChild in dnChildren do
-    if not lChild.dnGone then
+  for var lChild in cnChildren do
+    if not lChild.cnGone then
       Inc(Result);
+end;
+
+procedure TwbCleanNode.Judge(aView: TwbConflictView; const aFiles: TwbFiles; aOnlyOne: Boolean; const aOnMessage: TwbConflictMessageProc);
+var
+  lRecord : IwbMainRecord;
+  lMaster : IwbMainRecord;
+  lAll    : TConflictAll;
+begin
+  for var i := High(cnChildren) downto Low(cnChildren) do
+    cnChildren[i].Judge(aView, aFiles, aOnlyOne, aOnMessage);
+  wbTick;
+  cnOwn := ctUnknown;
+  cnThis := ctUnknown;
+  if Supports(cnElement, IwbMainRecord, lRecord) then begin
+    if aOnlyOne and (LiveChildCount = 0) then begin
+      lMaster := lRecord.MasterOrSelf;
+      if lMaster.OverrideCount > 0 then begin
+        var lVisible := 0;
+        if not aView.Hidden.IsHidden(lMaster) then
+          Inc(lVisible);
+        for var i := 0 to Pred(lMaster.OverrideCount) do
+          if not aView.Hidden.IsHidden(lMaster.Overrides[i]) then begin
+            Inc(lVisible);
+            if lVisible > 1 then
+              Break;
+          end;
+        if lVisible > 1 then begin
+          cnGone := True;
+          Exit;
+        end;
+      end;
+    end;
+    aView.LevelForMainRecord(lRecord, aFiles, aOnMessage, lAll, cnOwn);
+    cnThis := cnOwn;
+  end;
+  if LiveChildCount > 0 then begin
+    for var lChild in cnChildren do
+      if not lChild.cnGone and (lChild.cnThis > cnThis) then
+        cnThis := lChild.cnThis;
+  end else if cnElement.Skipped then
+    cnGone := True;
+end;
+
+function TwbCleanNode.NodeCount: Cardinal;
+begin
+  Result := 1;
+  if Assigned(cnContainer) and Supports(cnElement, IwbMainRecord) then
+    Inc(Result);
+  for var lChild in cnChildren do
+    Inc(Result, lChild.NodeCount);
+end;
+
+function TwbCleanNode.LiveCount(var aMainRecords: Cardinal): Cardinal;
+begin
+  Result := 0;
+  if cnGone then
+    Exit;
+  Result := 1;
+  if Supports(cnElement, IwbMainRecord) then
+    Inc(aMainRecords);
+  for var lChild in cnChildren do
+    Inc(Result, lChild.LiveCount(aMainRecords));
 end;
 
 function wbCleanDecide(const aElement: IwbElement; aThis, aOrgThis: TConflictThis; aLiveChildren: Integer; aAllowMakePartial: Boolean): TwbCleanAction;
@@ -1561,85 +1690,44 @@ var
   lParented     : TwbByteSet;
   lCounts       : TwbDeltaPatchCounts;
 
-  procedure Verdicts(aNode: TwbDeltaPatchNode; aOnlyOne: Boolean);
-  var
-    lRecord : IwbMainRecord;
-    lMaster : IwbMainRecord;
-    lAll    : TConflictAll;
-  begin
-    for var i := High(aNode.dnChildren) downto Low(aNode.dnChildren) do
-      Verdicts(aNode.dnChildren[i], aOnlyOne);
-    wbTick;
-    aNode.dnOwn := ctUnknown;
-    aNode.dnThis := ctUnknown;
-    if Supports(aNode.dnElement, IwbMainRecord, lRecord) then begin
-      if aOnlyOne and (aNode.LiveChildCount = 0) then begin
-        lMaster := lRecord.MasterOrSelf;
-        if lMaster.OverrideCount > 0 then begin
-          var lVisible := 0;
-          if not lView.Hidden.IsHidden(lMaster) then
-            Inc(lVisible);
-          for var i := 0 to Pred(lMaster.OverrideCount) do
-            if not lView.Hidden.IsHidden(lMaster.Overrides[i]) then begin
-              Inc(lVisible);
-              if lVisible > 1 then
-                Break;
-            end;
-          if lVisible > 1 then begin
-            aNode.dnGone := True;
-            Exit;
-          end;
-        end;
-      end;
-      lView.LevelForMainRecord(lRecord, lFiles, aOnMessage, lAll, aNode.dnOwn);
-      aNode.dnThis := aNode.dnOwn;
-    end;
-    if aNode.LiveChildCount > 0 then begin
-      for var lChild in aNode.dnChildren do
-        if not lChild.dnGone and (lChild.dnThis > aNode.dnThis) then
-          aNode.dnThis := lChild.dnThis;
-    end else if aNode.dnElement.Skipped then
-      aNode.dnGone := True;
-  end;
-
-  procedure CopyDeleted(aNode: TwbDeltaPatchNode);
+  procedure CopyDeleted(aNode: TwbCleanNode);
   var
     lRecord : IwbMainRecord;
     lCopy   : IwbMainRecord;
   begin
     wbTick;
-    if Supports(aNode.dnElement, IwbMainRecord, lRecord) and
+    if Supports(aNode.cnElement, IwbMainRecord, lRecord) and
        (lRecord.Signature <> 'TES4') and
        not lRecord.IsDeleted and
-       (aNode.dnThis = ctOnlyOne) and
+       (aNode.cnThis = ctOnlyOne) and
        Supports(wbCopyElementToFile(lRecord, aNew, False, False, '', '', '', '', False), IwbMainRecord, lCopy)
     then begin
       lCopy.IsDeleted := True;
       Inc(lCounts.Copied);
     end;
-    for var lChild in aNode.dnChildren do
-      if not lChild.dnGone then
+    for var lChild in aNode.cnChildren do
+      if not lChild.cnGone then
         CopyDeleted(lChild);
   end;
 
-  procedure RemoveIdentical(aNode: TwbDeltaPatchNode);
+  procedure RemoveIdentical(aNode: TwbCleanNode);
   begin
-    for var i := High(aNode.dnChildren) downto Low(aNode.dnChildren) do
-      if not aNode.dnChildren[i].dnGone then
-        RemoveIdentical(aNode.dnChildren[i]);
+    for var i := High(aNode.cnChildren) downto Low(aNode.cnChildren) do
+      if not aNode.cnChildren[i].cnGone then
+        RemoveIdentical(aNode.cnChildren[i]);
     wbTick;
     Inc(lCounts.Processed);
-    var lIsRec := Supports(aNode.dnElement, IwbMainRecord);
-    var lAction := wbCleanDecide(aNode.dnElement, aNode.dnThis, aNode.dnOwn, aNode.LiveChildCount, False);
+    var lIsRec := Supports(aNode.cnElement, IwbMainRecord);
+    var lAction := wbCleanDecide(aNode.cnElement, aNode.cnThis, aNode.cnOwn, aNode.LiveChildCount, False);
     if lAction <> qcKeep then begin
       Inc(lCounts.Candidates);
       if lAction = qcCantRemove then begin
         if Assigned(aOnMessage) then
-          aOnMessage('Can''t remove: ' + aNode.dnElement.Name);
+          aOnMessage('Can''t remove: ' + aNode.cnElement.Name);
         Inc(lCounts.CantRemove);
       end else begin
-        wbCleanApply(lAction, aNode.dnElement, aNode.dnContainer);
-        aNode.dnGone := True;
+        wbCleanApply(lAction, aNode.cnElement, aNode.cnContainer);
+        aNode.cnGone := True;
         if lIsRec then
           Inc(lCounts.Removed);
       end;
@@ -1647,7 +1735,7 @@ var
   end;
 
 var
-  lTree : TwbDeltaPatchNode;
+  lTree : TwbCleanNode;
 begin
   lCounts := Default(TwbDeltaPatchCounts);
   lContext := aNew.ContextObj;
@@ -1661,9 +1749,7 @@ begin
     raise Exception.Create('Delta patch: not available in translation mode');
 
   lFiles := lContext.Files;
-  lParented := [1, 6, 7];
-  if gcVWDAsQuestChildren in lContext.GameDefObj.Capabilities then
-    Include(lParented, 10);
+  lParented := wbParentedGroupTypes(lContext);
 
   lView := TwbConflictView.Create(lContext);
   try
@@ -1675,9 +1761,9 @@ begin
       if not lFile.Equals(aOld) and not lFile.Equals(aNew) then
         lView.Hidden.Hide(lFile);
 
-    lTree := TwbDeltaPatchNode.Create(aOld, aOld, lParented);
+    lTree := TwbCleanNode.Create(aOld, aOld, lParented);
     try
-      Verdicts(lTree, True);
+      lTree.Judge(lView, lFiles, True, aOnMessage);
       CopyDeleted(lTree);
     finally
       lTree.Free;
@@ -1685,12 +1771,12 @@ begin
 
     aNew.RemoveIdenticalDeltaFast;
 
-    lTree := TwbDeltaPatchNode.Create(aNew, aNew, lParented);
+    lTree := TwbCleanNode.Create(aNew, aNew, lParented);
     try
-      Verdicts(lTree, False);
-      for var i := High(lTree.dnChildren) downto Low(lTree.dnChildren) do
-        if not lTree.dnChildren[i].dnGone then
-          RemoveIdentical(lTree.dnChildren[i]);
+      lTree.Judge(lView, lFiles, False, aOnMessage);
+      for var i := High(lTree.cnChildren) downto Low(lTree.cnChildren) do
+        if not lTree.cnChildren[i].cnGone then
+          RemoveIdentical(lTree.cnChildren[i]);
     finally
       lTree.Free;
     end;
@@ -1698,6 +1784,358 @@ begin
     lView.Free;
   end;
   Result := lCounts;
+end;
+
+function TwbDirtyInfo.LOOTEntry(aFileChanged: Boolean; const aAppName, aVersion, aNexusModsUrl: string): string;
+begin
+  Result := '';
+  if (ITM <> 0) or (UDR <> 0) or (NAV <> 0) then begin
+    if aFileChanged then begin
+      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
+      Result := Result + StringOfChar(' ', 4) + 'dirty:' + CRLF;
+    end;
+    if NAV <> 0 then
+      Result := Result + StringOfChar(' ', 6) + '- <<: *reqManualFix'
+    else
+      Result := Result + StringOfChar(' ', 6) + '- <<: *quickClean';
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'crc: 0x%s', [IntToHex(CRC32, 8)]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''[%sEdit v%s](%s)''', [aAppName, aVersion, aNexusModsUrl]);
+    if ITM <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'itm: %d', [ITM]);
+    if UDR <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'udr: %d', [UDR]);
+    if NAV <> 0 then Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'nav: %d', [NAV]);
+  end else begin
+    if aFileChanged then
+      Result := CRLF + Format(StringOfChar(' ', 2) + '- name: ''%s''', [Plugin.Replace('''', '''''', [rfReplaceAll])]) + CRLF;
+    Result := Result + StringOfChar(' ', 4) + 'clean:';
+    Result := Result + CRLF + Format(StringOfChar(' ', 6) + '- crc: 0x%s', [IntToHex(CRC32, 8)]);
+    Result := Result + CRLF + Format(StringOfChar(' ', 8) + 'util: ''%sEdit v%s''', [aAppName, aVersion]);
+  end;
+end;
+
+function TwbDirtyInfo.BOSSEntry(const aAppName: string): string;
+begin
+  Result := '';
+  if (ITM <> 0) or (UDR <> 0) then begin
+    Result := Result + CRLF + Plugin;
+    Result := Result + CRLF + Format('  IF CHECKSUM("%s", %s) DIRTY: %d ITM, %d UDR records. Needs %sEdit cleaning: "http://cs.elderscrolls.com/index.php?title=TES4Edit_Cleaning_Guide"', [
+      Plugin,
+      IntToHex(CRC32, 8),
+      ITM,
+      UDR,
+      aAppName
+    ]);
+  end;
+end;
+
+function wbDirtyInfoFor(var aInfos: TwbDirtyInfos; const aPlugin: string; aCRC32: TwbCRC32): PwbDirtyInfo;
+begin
+  for var i := Low(aInfos) to High(aInfos) do
+    if (aInfos[i].Plugin = aPlugin) and (aInfos[i].CRC32 = aCRC32) then
+      Exit(@aInfos[i]);
+  SetLength(aInfos, Succ(Length(aInfos)));
+  Result := @aInfos[High(aInfos)];
+  Result.Plugin := aPlugin;
+  Result.CRC32 := aCRC32;
+end;
+
+procedure wbReportDirtyInfos(const aInfos: TwbDirtyInfos; aGameDef: TwbGameDef; const aNexusModsUrl: string; const aOnMessage: TwbConflictMessageProc);
+var
+  lBOSS : Boolean;
+begin
+  if Length(aInfos) < 1 then
+    Exit;
+  lBOSS := False;
+  aOnMessage('');
+  aOnMessage('LOOT Masterlist Entries');
+  for var i := Low(aInfos) to High(aInfos) do begin
+    aOnMessage(aInfos[i].LOOTEntry((i = 0) or not SameText(aInfos[i].Plugin, aInfos[Pred(i)].Plugin), aGameDef.AppName, VersionString.ToString, aNexusModsUrl));
+    if (aInfos[i].ITM <> 0) or (aInfos[i].UDR <> 0) then
+      lBOSS := aGameDef.GameMode = gmTES4;
+  end;
+  aOnMessage('');
+  if lBOSS then begin
+    aOnMessage('BOSS Masterlist Entries');
+    for var lInfo in aInfos do
+      aOnMessage(lInfo.BOSSEntry(aGameDef.AppName));
+  end;
+end;
+
+constructor TwbQuickClean.Create(const aFile: IwbFile; aView: TwbConflictView; const aOnMessage, aOnProgress: TwbConflictMessageProc);
+begin
+  inherited Create;
+  qcFile := aFile;
+  qcContext := aFile.ContextObj;
+  qcView := aView;
+  qcOnMessage := aOnMessage;
+  qcOnProgress := aOnProgress;
+end;
+
+destructor TwbQuickClean.Destroy;
+begin
+  qcTree.Free;
+  inherited;
+end;
+
+procedure TwbQuickClean.Post(const aText: string);
+begin
+  if Assigned(qcOnMessage) then
+    qcOnMessage(aText);
+end;
+
+procedure TwbQuickClean.Progress(const aText: string);
+begin
+  if Assigned(qcOnProgress) then
+    qcOnProgress(aText);
+end;
+
+procedure TwbQuickClean.Filter;
+var
+  lStart    : TDateTime;
+  lTree     : TwbCleanNode;
+  lRecords  : Cardinal;
+  lFiltered : Integer;
+begin
+  FreeAndNil(qcTree);
+  lStart := Now;
+  Progress('Start: Applying Filter');
+  try
+    lTree := TwbCleanNode.Create(qcFile, qcFile, wbParentedGroupTypes(qcContext));
+    qcTree := lTree;
+    lTree.Judge(qcView, qcContext.Files, False, qcOnMessage);
+    qcCounts.FilterVisited := lTree.NodeCount;
+    lRecords := 0;
+    qcCounts.FilterRemaining := lTree.LiveCount(lRecords);
+    if lRecords > 0 then begin
+      lFiltered := qcFile.RecordCount - Integer(lRecords);
+      if (lFiltered > 0) and (lFiltered < qcFile.RecordCount) then
+        Progress(Format('[%s] Filtered %.0n of %.0n records',
+          [qcFile.FileName, Min(qcFile.RecordCount, lFiltered) + 0.0, qcFile.RecordCount + 0.0]));
+    end;
+  except
+    on E: EAbort do begin
+      Progress('Aborted: Applying Filter');
+      raise;
+    end;
+    on E: Exception do begin
+      Progress('Error during Applying Filter: ' + E.Message);
+      raise;
+    end;
+  end;
+  Progress('Done: Applying Filter, [Pass 1] Processed Records: ' + qcCounts.FilterVisited.ToString +
+    ', [Pass 2] Processed Records: ' + qcCounts.FilterRemaining.ToString +
+    ', Remaining unfiltered nodes: ' + qcCounts.FilterRemaining.ToString +
+    ', Elapsed Time: ' + wbFormatElapsedTime(Now - lStart));
+end;
+
+procedure TwbQuickClean.Undelete;
+var
+  lStart     : TDateTime;
+  lOperation : string;
+  lPlugin    : string;
+  lCRC32     : TwbCRC32;
+  lCount     : Cardinal;
+  lUndeleted : Cardinal;
+  lNotUndeletable : Cardinal;
+  lNavMeshes : Cardinal;
+
+  procedure Walk(aNode: TwbCleanNode; aIsRoot: Boolean);
+  var
+    lRecord : IwbMainRecord;
+  begin
+    for var i := High(aNode.cnChildren) downto Low(aNode.cnChildren) do
+      if not aNode.cnChildren[i].cnGone then
+        Walk(aNode.cnChildren[i], False);
+    if aIsRoot then
+      Exit;
+    wbTick;
+    if Supports(aNode.cnElement, IwbMainRecord, lRecord) then begin
+      if Assigned(lRecord._File) then begin
+        lPlugin := lRecord._File.FileName;
+        lCRC32 := lRecord._File.CRC32;
+      end;
+      case lRecord.UndeleteDecision of
+        uoSkipNavMesh: begin
+          Inc(lNavMeshes);
+          Post('Skipping: ' + lRecord.Name);
+        end;
+        uoSkipOther: begin
+          Inc(lNotUndeletable);
+          Post('Skipping: ' + lRecord.Name);
+        end;
+        uoUndelete: begin
+          Post(lOperation + 'ing: ' + lRecord.Name);
+          if not CountOnly then
+            lRecord.UndeleteAndDisable;
+          Inc(lUndeleted);
+        end;
+      end;
+    end;
+    Inc(lCount);
+  end;
+
+begin
+  if not CountOnly and not qcContext.Settings.EditAllowed then
+    Exit;
+  if qcContext.Settings.TranslationMode then
+    Exit;
+  if not Assigned(qcTree) then
+    raise Exception.Create('Quick clean: Undelete needs a filtered tree; call Filter first');
+
+  if CountOnly then
+    lOperation := 'Count'
+  else
+    lOperation := 'Undelet';
+  lStart := Now;
+  lPlugin := '';
+  lCRC32 := 0;
+  lCount := 0;
+  lUndeleted := 0;
+  lNotUndeletable := 0;
+  lNavMeshes := 0;
+
+  Walk(TwbCleanNode(qcTree), True);
+
+  Post('[' + lOperation + 'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(lCount) +
+    ', ' + lOperation + 'ed Records: ' + IntToStr(lUndeleted) +
+    ', Elapsed Time: ' + wbFormatElapsedTime(Now - lStart));
+  if lNavMeshes > 0 then
+    Post('<Warning: Plugin contains ' + IntToStr(lNavMeshes) + ' deleted NavMeshes which can not be undeleted>');
+  if lNotUndeletable > 0 then
+    Post('<Warning: Plugin contains ' + IntToStr(lNotUndeletable) + ' deleted references which can not be undeleted>');
+
+  if lPlugin <> '' then begin
+    var lInfo := wbDirtyInfoFor(qcDirtyInfos, lPlugin, lCRC32);
+    lInfo.UDR := lUndeleted;
+    lInfo.NAV := lNavMeshes;
+  end;
+
+  qcCounts.UndeleteProcessed := lCount;
+  qcCounts.Undeleted := lUndeleted;
+  qcCounts.DeletedNavMeshes := lNavMeshes;
+  qcCounts.NotUndeletable := lNotUndeletable;
+end;
+
+procedure TwbQuickClean.RemoveIdentical;
+var
+  lStart     : TDateTime;
+  lOperation : string;
+  lPlugin    : string;
+  lCRC32     : TwbCRC32;
+  lCount     : Cardinal;
+  lRemoved   : Cardinal;
+  lAllowMakePartial : Boolean;
+
+  procedure Walk(aNode: TwbCleanNode; aIsRoot: Boolean);
+  begin
+    for var i := High(aNode.cnChildren) downto Low(aNode.cnChildren) do
+      if not aNode.cnChildren[i].cnGone then
+        Walk(aNode.cnChildren[i], False);
+    if aIsRoot then
+      Exit;
+    wbTick;
+    var lAction := wbCleanDecide(aNode.cnElement, aNode.cnThis, aNode.cnOwn, aNode.LiveChildCount, lAllowMakePartial);
+    if lAction <> qcKeep then begin
+      var lIsRecord := Supports(aNode.cnElement, IwbMainRecord);
+      if Assigned(aNode.cnElement._File) then begin
+        lPlugin := aNode.cnElement._File.FileName;
+        lCRC32 := aNode.cnElement._File.CRC32;
+      end;
+      if lAction = qcCantRemove then
+        Post('Can''t remove: ' + aNode.cnElement.Name)
+      else begin
+        if CountOnly then
+          Post(lOperation + 'ing: ' + aNode.cnElement.Name)
+        else if lAction = qcMakePartial then begin
+          Post('Making Partial Form: ' + aNode.cnElement.Name);
+          wbCleanApply(lAction, aNode.cnElement, aNode.cnContainer);
+        end else begin
+          Post(lOperation + 'ing: ' + aNode.cnElement.Name);
+          wbCleanApply(lAction, aNode.cnElement, aNode.cnContainer);
+          aNode.cnGone := True;
+        end;
+        if lIsRecord then
+          Inc(lRemoved);
+      end;
+    end;
+    Inc(lCount);
+  end;
+
+begin
+  if not CountOnly and not qcContext.Settings.EditAllowed then
+    Exit;
+  if qcContext.Settings.TranslationMode then
+    Exit;
+  if not Assigned(qcTree) then
+    raise Exception.Create('Quick clean: Remove "Identical to Master" needs a filtered tree; call Filter first');
+
+  if CountOnly then
+    lOperation := 'Count'
+  else
+    lOperation := 'Remov';
+  lAllowMakePartial := qcContext.Settings.AllowMakePartial;
+  lStart := Now;
+  lPlugin := '';
+  lCRC32 := 0;
+  lCount := 0;
+  lRemoved := 0;
+
+  Walk(TwbCleanNode(qcTree), True);
+
+  Post('[' + lOperation + 'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(lCount) +
+    ', ' + lOperation + 'ed Records: ' + IntToStr(lRemoved) +
+    ', Elapsed Time: ' + wbFormatElapsedTime(Now - lStart));
+
+  if lPlugin <> '' then begin
+    var lInfo := wbDirtyInfoFor(qcDirtyInfos, lPlugin, lCRC32);
+    lInfo.ITM := lRemoved;
+  end;
+
+  qcCounts.RemoveProcessed := lCount;
+  qcCounts.Removed := lRemoved;
+end;
+
+function TwbQuickClean.IsUnsaved: Boolean;
+begin
+  Result := esUnsaved in qcFile.ElementStates;
+end;
+
+procedure TwbQuickClean.Reset;
+begin
+  qcContext.ConflictRulesChanged;
+end;
+
+procedure TwbQuickClean.ReportDirtyInfo;
+begin
+  wbReportDirtyInfos(qcDirtyInfos, qcContext.GameDefObj, qcContext.GameDefObj.NexusModsUrl, Post);
+end;
+
+function TwbQuickClean.Run: Boolean;
+var
+  lWasUnsaved : Boolean;
+begin
+  Result := False;
+  Filter;
+  Undelete;
+  RemoveIdentical;
+  lWasUnsaved := IsUnsaved;
+  if not Save then
+    Exit;
+  if lWasUnsaved then begin
+    Reset;
+    Filter;
+    Undelete;
+    RemoveIdentical;
+    lWasUnsaved := IsUnsaved;
+    if not Save then
+      Exit;
+    if lWasUnsaved then begin
+      Filter;
+      Undelete;
+      RemoveIdentical;
+    end;
+  end;
+  ReportDirtyInfo;
+  Result := True;
 end;
 
 destructor TwbConflictTreeNode.Destroy;
