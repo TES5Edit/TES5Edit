@@ -138,6 +138,13 @@ type
     CantRemove : Integer;
   end;
 
+  TwbCleanAction = (
+    qcKeep,
+    qcCantRemove,
+    qcMakePartial,
+    qcRemove
+  );
+
 function wbConflictCellElement(const aParentData: TwbConflictNodeData; aIndex: Cardinal): IwbElement;
 
 function wbConflictLevelForNodeDatas(const aNodeDatas: PwbConflictNodeDatas; aNodeCount: Integer; aSiblingCompare, aInjected: Boolean): TConflictAll;
@@ -161,6 +168,9 @@ function wbConflictLevelForChildNodeDatas(const aNodeDatas: TwbDynConflictNodeDa
 function wbConflictNodeDatasForContainer(const aContainer: IwbDataContainer; const aFiles: TwbFiles): TwbDynConflictNodeDatas;
 
 function wbConflictMakeDeltaPatch(const aOld, aNew: IwbFile; aTemplate: TwbConflictView; const aOnMessage: TwbConflictMessageProc): TwbDeltaPatchCounts;
+
+function wbCleanDecide(const aElement: IwbElement; aThis, aOrgThis: TConflictThis; aLiveChildren: Integer; aAllowMakePartial: Boolean): TwbCleanAction;
+procedure wbCleanApply(aAction: TwbCleanAction; const aElement: IwbElement; const aContainer: IwbContainer);
 
 implementation
 
@@ -1476,6 +1486,73 @@ begin
       Inc(Result);
 end;
 
+function wbCleanDecide(const aElement: IwbElement; aThis, aOrgThis: TConflictThis; aLiveChildren: Integer; aAllowMakePartial: Boolean): TwbCleanAction;
+var
+  lRecord : IwbMainRecord;
+begin
+  Result := qcKeep;
+  if not Assigned(aElement) then
+    Exit;
+
+  if not (
+    (
+      (aLiveChildren = 0) or
+      (
+        aAllowMakePartial and
+        Supports(aElement, IwbMainRecord, lRecord) and
+        not lRecord.IsPartialForm and
+        lRecord.CanBePartial
+      )
+    ) and
+    (
+      (aThis = ctIdenticalToMaster) or
+      (
+        (aThis = ctConflictBenign) and
+        Supports(aElement, IwbMainRecord, lRecord) and
+        (lRecord.Signature = 'NAVM')
+      ) or
+      (
+        (aOrgThis = ctIdenticalToMaster) and
+        aAllowMakePartial and
+        (aLiveChildren > 0)
+      ) or
+      Supports(aElement, IwbGroupRecord) or
+      (
+        (aLiveChildren = 0) and
+        aAllowMakePartial and
+        Supports(aElement, IwbMainRecord, lRecord) and
+        lRecord.IsPartialForm and
+        (not Assigned(lRecord.ChildGroup) or (lRecord.ChildGroup.ElementCount = 0))
+      )
+    ) and
+    not (Supports(aElement, IwbMainRecord, lRecord) and lRecord.MasterOrSelf.IsInjected)
+  ) then
+    Exit;
+
+  if not aElement.IsRemovable then
+    Result := qcCantRemove
+  else if aLiveChildren > 0 then
+    Result := qcMakePartial
+  else
+    Result := qcRemove;
+end;
+
+procedure wbCleanApply(aAction: TwbCleanAction; const aElement: IwbElement; const aContainer: IwbContainer);
+var
+  lRecord : IwbMainRecord;
+begin
+  case aAction of
+    qcMakePartial:
+      if Supports(aElement, IwbMainRecord, lRecord) then
+        lRecord.MakePartialForm;
+    qcRemove: begin
+      if Assigned(aContainer) and not aContainer.Equals(aElement) then
+        aContainer.Remove;
+      aElement.Remove;
+    end;
+  end;
+end;
+
 function wbConflictMakeDeltaPatch(const aOld, aNew: IwbFile; aTemplate: TwbConflictView; const aOnMessage: TwbConflictMessageProc): TwbDeltaPatchCounts;
 var
   lContext      : TwbGameContext;
@@ -1546,33 +1623,22 @@ var
   end;
 
   procedure RemoveIdentical(aNode: TwbDeltaPatchNode);
-  var
-    lRecord : IwbMainRecord;
-    lIsRec  : Boolean;
   begin
     for var i := High(aNode.dnChildren) downto Low(aNode.dnChildren) do
       if not aNode.dnChildren[i].dnGone then
         RemoveIdentical(aNode.dnChildren[i]);
     wbTick;
     Inc(lCounts.Processed);
-    lIsRec := Supports(aNode.dnElement, IwbMainRecord, lRecord);
-    if (aNode.LiveChildCount = 0) and
-       (
-         (aNode.dnThis = ctIdenticalToMaster) or
-         ((aNode.dnThis = ctConflictBenign) and lIsRec and (lRecord.Signature = 'NAVM')) or
-         Supports(aNode.dnElement, IwbGroupRecord)
-       ) and
-       not (lIsRec and lRecord.MasterOrSelf.IsInjected)
-    then begin
+    var lIsRec := Supports(aNode.dnElement, IwbMainRecord);
+    var lAction := wbCleanDecide(aNode.dnElement, aNode.dnThis, aNode.dnOwn, aNode.LiveChildCount, False);
+    if lAction <> qcKeep then begin
       Inc(lCounts.Candidates);
-      if not aNode.dnElement.IsRemovable then begin
+      if lAction = qcCantRemove then begin
         if Assigned(aOnMessage) then
           aOnMessage('Can''t remove: ' + aNode.dnElement.Name);
         Inc(lCounts.CantRemove);
       end else begin
-        if Assigned(aNode.dnContainer) and not aNode.dnContainer.Equals(aNode.dnElement) then
-          aNode.dnContainer.Remove;
-        aNode.dnElement.Remove;
+        wbCleanApply(lAction, aNode.dnElement, aNode.dnContainer);
         aNode.dnGone := True;
         if lIsRec then
           Inc(lCounts.Removed);

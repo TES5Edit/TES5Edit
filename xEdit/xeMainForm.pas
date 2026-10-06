@@ -11470,8 +11470,6 @@ var
   RemovedCount                : Cardinal;
   StartTick                   : UInt64;
   i                           : Integer;
-  MainRecord                  : IwbMainRecord;
-  GroupRecord                 : IwbGroupRecord;
   IsRecord                    : Boolean;
   AutoModeCheckForITM         : Boolean;
   Operation, Plugin           : String;
@@ -11548,76 +11546,36 @@ begin
         NodeData := vstNav.GetNodeData(Node);
 
         if Assigned(NodeData.Element) then begin
-          if (
-               (Node.ChildCount = 0) or
-               (
-                 xeContext.Settings.AllowMakePartial and
-                 Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-                 not MainRecord.IsPartialForm and
-                 MainRecord.CanBePartial
-               )
-             ) and
-            (
-              (NodeData.ConflictThis = ctIdenticalToMaster) or
-              (
-                (NodeData.ConflictThis = ctConflictBenign) and
-                Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-                (MainRecord.Signature = 'NAVM')
-              ) or
-              (
-                (NodeData.OrgConflictThis = ctIdenticalToMaster) and
-                xeContext.Settings.AllowMakePartial and
-                (Node.ChildCount > 0)
-              ) or
-              (
-                Supports(NodeData.Element, IwbGroupRecord, GroupRecord)
-              ) or
-              (
-                (Node.ChildCount = 0) and
-                xeContext.Settings.AllowMakePartial and
-                Supports(NodeData.Element, IwbMainRecord, MainRecord) and
-                MainRecord.IsPartialForm and
-                (not Assigned(MainRecord.ChildGroup) or (MainRecord.ChildGroup.ElementCount = 0))
-              )
-            ) and
-              not (Supports(NodeData.Element, IwbMainRecord, MainRecord) and MainRecord.MasterOrSelf.IsInjected)
-            then begin
-              MainRecord := nil;
-              IsRecord := Supports(NodeData.Element, IwbMainRecord);
+          var lAction := wbCleanDecide(NodeData.Element, NodeData.ConflictThis, NodeData.OrgConflictThis, Node.ChildCount,
+            xeContext.Settings.AllowMakePartial);
+          if lAction <> qcKeep then begin
+            IsRecord := Supports(NodeData.Element, IwbMainRecord);
 
-              if Assigned(NodeData.Element._File) then
-                with NodeData.Element._File do begin
-                  Plugin := FileName;
-                  PluginCRC32 := CRC32;
-                end;
-
-              if not NodeData.Element.IsRemovable then
-                PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
-              else begin
-                if not AutoModeCheckForITM then begin
-                  if Node.ChildCount > 0 then begin
-                    if xeContext.Settings.AllowMakePartial and
-                       Supports(NodeData.Element, IwbMainRecord, MainRecord)
-                    then begin
-                      PostAddMessage('Making Partial Form: ' + NodeData.Element.Name);
-                      MainRecord.MakePartialForm;
-                    end;
-                  end else begin
-                    PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
-
-                    if Assigned(NodeData.Container) and not NodeData.Container.Equals(NodeData.Element) then
-                        NodeData.Container.Remove;
-                    NodeData.Element.Remove;
-                    NodeData.Container := nil;
-                    NodeData.Element := nil;
-                    vstNav.DeleteNode(Node);
-                  end;
-                end else
-                  PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
-                if IsRecord then
-                  Inc(RemovedCount);
+            if Assigned(NodeData.Element._File) then
+              with NodeData.Element._File do begin
+                Plugin := FileName;
+                PluginCRC32 := CRC32;
               end;
+
+            if lAction = qcCantRemove then
+              PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
+            else begin
+              if AutoModeCheckForITM then
+                PostAddMessage(Operation+'ing: ' + NodeData.Element.Name)
+              else if lAction = qcMakePartial then begin
+                PostAddMessage('Making Partial Form: ' + NodeData.Element.Name);
+                wbCleanApply(lAction, NodeData.Element, NodeData.Container);
+              end else begin
+                PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+                wbCleanApply(lAction, NodeData.Element, NodeData.Container);
+                NodeData.Container := nil;
+                NodeData.Element := nil;
+                vstNav.DeleteNode(Node);
+              end;
+              if IsRecord then
+                Inc(RemovedCount);
             end;
+          end;
         end;
 
         Node := NextNode;
