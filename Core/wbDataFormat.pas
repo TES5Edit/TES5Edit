@@ -807,7 +807,7 @@ begin
   else if SameText(aValue, 'Max') then
     Result := HalfToFloat(HalfMaxValue)
   else if SameText(aValue, 'Min') then
-    Result := HalfToFloat(HalfMinValue)
+    Result := HalfToFloat(HalfLowestValue)
   else if IsNegZeroString(aValue) then
     Result := -0.0
   else if aValue = '' then
@@ -3402,8 +3402,10 @@ begin
     dtFloat32: begin
       if VarIsClear(aValue) or IsNaN(Value) then
         PSingle(aDataStart)^ := SingleNaN
-      else if IsInfinite(Value) then
+      else if IsInfinite(Value) and (Value > 0) then
         PCardinal(aDataStart)^ := $7F7FFFFF
+      else if IsInfinite(Value) then
+        PCardinal(aDataStart)^ := $FF7FFFFF
       else if SameValue(Value, MaxSingle) or (Value > MaxSingle) then
         PCardinal(aDataStart)^ := $7F7FFFFF
       else if SameValue(Value, -MaxSingle) or (Value < -MaxSingle) then
