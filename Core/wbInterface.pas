@@ -2045,6 +2045,13 @@ type
       read GetContains;
   end;
 
+  TwbUndeleteOutcome = (
+    uoNotCandidate,
+    uoSkipNavMesh,
+    uoSkipOther,
+    uoUndelete
+  );
+
   IwbMainRecordDef = interface;
   IwbMainRecord = interface(IwbRecord)
     ['{F06FD5E2-621D-4422-BA00-CB3CA72B3691}']
@@ -2135,6 +2142,9 @@ type
     procedure DeleteInto(const aFile: IwbFile);
 
     procedure MakePartialForm;
+
+    function UndeleteDecision: TwbUndeleteOutcome;
+    procedure UndeleteAndDisable;
 
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 

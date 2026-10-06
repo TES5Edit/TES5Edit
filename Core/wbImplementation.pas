@@ -1512,6 +1512,9 @@ type
 
     procedure MakePartialForm;
 
+    function UndeleteDecision: TwbUndeleteOutcome;
+    procedure UndeleteAndDisable;
+
     function MasterRecordsFromMasterFilesAndSelf: TDynMainRecords;
 
     function ActivateIndexKeys: TwbDefinedKeys;
@@ -14654,6 +14657,98 @@ begin
     CollapseStorage(nil, True);
   finally
     EndUpdate;
+  end;
+end;
+
+function TwbMainRecord.UndeleteDecision: TwbUndeleteOutcome;
+begin
+  Result := uoNotCandidate;
+
+  if not (GetIsEditable and GetIsDeleted) then
+    Exit;
+
+  var lSignature := GetSignature;
+  if not (
+    (lSignature = 'REFR') or
+    (lSignature = 'PGRE') or
+    (lSignature = 'PMIS') or
+    (lSignature = 'ACHR') or
+    (lSignature = 'ACRE') or
+    (lSignature = 'NAVM') or
+    (lSignature = 'PARW') or {>>> Skyrim <<<}
+    (lSignature = 'PBAR') or {>>> Skyrim <<<}
+    (lSignature = 'PBEA') or {>>> Skyrim <<<}
+    (lSignature = 'PCON') or {>>> Skyrim <<<}
+    (lSignature = 'PFLA') or {>>> Skyrim <<<}
+    (lSignature = 'PHZD')    {>>> Skyrim <<<}
+  ) then
+    Exit;
+
+  var lBaseRecord := GetMasterOrSelf.BaseRecord;
+  // skip navmeshes
+  if lSignature = 'NAVM' then
+    Result := uoSkipNavMesh
+  // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
+  else if GetIsInjected or (not Assigned(lBaseRecord)) then
+    Result := uoSkipOther
+  // skip refs of TREEs with LOD in FNV
+  else if GameDefObj.IsFalloutNV and (lBaseRecord.Signature = 'TREE') and lBaseRecord.Flags.HasLODtree then
+    Result := uoSkipOther
+  else
+    Result := uoUndelete;
+end;
+
+procedure TwbMainRecord.UndeleteAndDisable;
+var
+  SelfRef       : IwbContainerElementRef;
+  Position      : TwbVector;
+  Cntr          : IwbContainerElementRef;
+  Element       : IwbElement;
+  LinksToRecord : IwbMainRecord;
+begin
+  SelfRef := Self;
+  var lContext := ContextObj;
+
+  SetIsDeleted(True);
+  SetIsDeleted(False);
+
+
+  //This was reported as a bug and appears to be undesired.
+  //Was added 10+ years ago, but nobody can remember why.
+  //If looking at this please ask Robert what's going on here.
+  {if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
+    IsPersistent := True
+  else if wbIsOblivion then
+    IsPersistent := False;}
+
+
+  if not GetIsPersistent then
+    if lContext.Settings.UDRSetZ and GetPosition(Position) then begin
+      Position.z := lContext.Settings.UDRSetZValue;
+      SetPosition(Position);
+    end;
+  RemoveElement('Enable Parent');
+  RemoveElement('XTEL');
+  SetIsInitiallyDisabled(True);
+  if lContext.Settings.UDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
+    Cntr.ElementNativeValues['Reference'] := $14;
+    Cntr.Elements[1].NativeValue := 1;
+  end;
+
+  if lContext.Settings.UDRSetScale then begin
+    Element := GetElementBySignature('XSCL');
+    if not Assigned(Element) then
+      Element := Add('XSCL', True);
+    if Assigned(Element) then
+      Element.NativeValue := lContext.Settings.UDRSetScaleValue;
+  end;
+
+  if lContext.Settings.UDRSetMSTT and GameDefObj.IsFallout3 then begin
+    Element := GetElementBySignature('NAME');
+    if Assigned(Element) then
+      if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
+        if LinksToRecord.Signature = 'MSTT' then
+          Element.NativeValue := lContext.Settings.UDRSetMSTTValue;
   end;
 end;
 

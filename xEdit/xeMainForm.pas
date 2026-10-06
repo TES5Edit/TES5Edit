@@ -11216,38 +11216,11 @@ var
   DeletedNAVM                 : Cardinal;
   StartTick                   : UInt64;
   i {, n}                     : Integer;
-  MainRecord, LinksToRecord   : IwbMainRecord;
-  Element                     : IwbElement;
-  Position                    : TwbVector;
-  Cntr {, Cntr2}              : IwbContainerElementRef;
+  MainRecord                  : IwbMainRecord;
   AutoModeCheckForDR          : Boolean;
   Operation, Plugin           : String;
   PluginCRC32                 : Cardinal;
   DirtyInfo                   : PLOOTPluginInfo;
-
-  function canUndelete: Boolean;
-  begin
-    Result := True;
-    LinksToRecord := MainRecord.MasterOrSelf.BaseRecord;
-    // skip navmeshes
-    if MainRecord.Signature = 'NAVM' then begin
-      Result := False;
-      Inc(DeletedNAVM);
-    end
-    // skip injected or bad refs (crashes after cleaning TES4 Battlehorn DLC)
-    else if MainRecord.IsInjected or (not Assigned(LinksToRecord)) then begin
-      Result := False;
-      Inc(notDeletedCount);
-    end
-    // skip refs of TREEs with LOD in FNV
-    else if (xeContext.GameDefObj.GameMode in [gmFNV]) and (LinksToRecord.Signature = 'TREE') and LinksToRecord.Flags.HasLODtree then begin
-      Result := False;
-      Inc(notDeletedCount);
-    end;
-    if not Result then
-      PostAddMessage('Skipping: ' + MainRecord.Name);
-  end;
-
 begin
   AutoModeCheckForDR := xeToolMode in [tmCheckForDR];
   if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
@@ -11319,76 +11292,27 @@ begin
         NextNode := vstNav.GetPrevious(Node);
         NodeData := vstNav.GetNodeData(Node);
 
-        if Supports(NodeData.Element, IwbMainRecord, MainRecord) then with MainRecord do begin
+        if Supports(NodeData.Element, IwbMainRecord, MainRecord) then begin
           if Assigned(MainRecord._File) then
             with MainRecord._File do begin
               Plugin := FileName;
               PluginCRC32 := CRC32;
             end;
-          if IsEditable and
-             (IsDeleted {or (GetPosition(Position) and (Position.z = -30000.0)) and (MainRecord.ElementNativeValues['XESP\Reference'] <> $14)} ) and
-             (
-               (Signature = 'REFR') or
-               (Signature = 'PGRE') or
-               (Signature = 'PMIS') or
-               (Signature = 'ACHR') or
-               (Signature = 'ACRE') or
-               (Signature = 'NAVM') or
-               (Signature = 'PARW') or {>>> Skyrim <<<}
-               (Signature = 'PBAR') or {>>> Skyrim <<<}
-               (Signature = 'PBEA') or {>>> Skyrim <<<}
-               (Signature = 'PCON') or {>>> Skyrim <<<}
-               (Signature = 'PFLA') or {>>> Skyrim <<<}
-               (Signature = 'PHZD')    {>>> Skyrim <<<}
-             ) then
-          //begin
-          if canUndelete then begin
-            PostAddMessage(Operation+'ing: ' + MainRecord.Name);
-            if not AutoModeCheckForDR then begin
-              IsDeleted := True;
-              IsDeleted := False;
-
-
-              //This was reported as a bug and appears to be undesired.
-              //Was added 10+ years ago, but nobody can remember why.
-              //If looking at this please ask Robert what's going on here.
-              {if (wbIsSkyrim or wbIsFallout3 or wbIsFallout4 or wbIsFallout76 or wbIsStarfield) and ((Signature = 'ACHR') or (Signature = 'ACRE')) then
-                IsPersistent := True
-              else if wbIsOblivion then
-                IsPersistent := False;}
-
-
-              if not IsPersistent then
-                if xeContext.Settings.UDRSetZ and GetPosition(Position) then begin
-                  Position.z := xeContext.Settings.UDRSetZValue;
-                  SetPosition(Position);
-                end;
-              RemoveElement('Enable Parent');
-              RemoveElement('XTEL');
-              IsInitiallyDisabled := True;
-              if xeContext.Settings.UDRSetXESP and Supports(Add('XESP', True), IwbContainerElementRef, Cntr) then begin
-                Cntr.ElementNativeValues['Reference'] := $14;
-                Cntr.Elements[1].NativeValue := 1;
-              end;
-
-              if xeContext.Settings.UDRSetScale then begin
-                Element := ElementBySignature['XSCL'];
-                if not Assigned(Element) then
-                  Element := Add('XSCL', True);
-                if Assigned(Element) then
-                  Element.NativeValue := xeContext.Settings.UDRSetScaleValue;
-              end;
-
-              if xeContext.Settings.UDRSetMSTT and xeContext.GameDefObj.IsFallout3 then begin
-                Element := ElementBySignature['NAME'];
-                if Assigned(Element) then
-                  if Supports(Element.LinksTo, IwbMainRecord, LinksToRecord) then
-                    if LinksToRecord.Signature = 'MSTT' then
-                      Element.NativeValue := xeContext.Settings.UDRSetMSTTValue;
-              end;
-
+          case MainRecord.UndeleteDecision of
+            uoSkipNavMesh: begin
+              Inc(DeletedNAVM);
+              PostAddMessage('Skipping: ' + MainRecord.Name);
             end;
-            Inc(UndeletedCount);
+            uoSkipOther: begin
+              Inc(NotDeletedCount);
+              PostAddMessage('Skipping: ' + MainRecord.Name);
+            end;
+            uoUndelete: begin
+              PostAddMessage(Operation+'ing: ' + MainRecord.Name);
+              if not AutoModeCheckForDR then
+                MainRecord.UndeleteAndDisable;
+              Inc(UndeletedCount);
+            end;
           end;
         end;
 
