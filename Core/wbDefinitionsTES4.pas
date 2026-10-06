@@ -53,7 +53,7 @@ type
     wbXESP: IwbRecordMemberDef;
     wbXSCL: IwbRecordMemberDef;
   protected
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
 implementation

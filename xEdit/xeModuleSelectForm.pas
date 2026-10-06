@@ -117,7 +117,7 @@ type
     MinSelect       : Integer;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal: Integer; override; final;
   end;
 
   PModuleNodeData = ^TModuleNodeData;

@@ -41,12 +41,12 @@ type
 
   TwbSaveDefFNV = class(TwbSaveDefFNVBase)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbCoSaveDefFNV = class(TwbSaveDefFNVBase)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbSaveContextFNV = class(TwbLoadingSaveContext)

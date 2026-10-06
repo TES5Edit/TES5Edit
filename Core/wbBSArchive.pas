@@ -86,7 +86,7 @@ type
 
   TwbBSFileEntry = class(TwbBSFileChunk)
   private
-    function GetCompressed: Boolean; override;
+    function GetCompressed: Boolean; override; final;
   public
     Archive: TwbBSArchive;
     Name: string;
@@ -107,7 +107,7 @@ type
       TexChunks  : array of TwbBSFileChunkTex;
     end;
     constructor Create(aArchive: TwbBSArchive);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     function DXGIFormatName: string;
     function IsCubeMap: Boolean;
     function Unpack: TBytes;
@@ -283,14 +283,14 @@ type
     procedure DecompressBuf(aSrc: Pointer; aSrcSize: Integer; aDst: Pointer; aDstSize: Integer);
 
   public
-    constructor Create; override;
-    destructor Destroy; override;
+    constructor Create; override; final;
+    destructor Destroy; override; final;
     function GetEnumerator: TwbBSArchiveEnumerator; inline;
     procedure LoadFromFile(const aFileName: string);
     procedure CreateArchive(const aFileName: string; aType: TwbBSArchiveType;
-      aFilesList: TStringList = nil; const aFilesCompression: TArray<Boolean> = nil); override;
-    procedure Save; override;
-    procedure Close; override;
+      aFilesList: TStringList = nil; const aFilesCompression: TArray<Boolean> = nil); override; final;
+    procedure Save; override; final;
+    procedure Close; override; final;
     function Info: string;
     function Warnings: TArray<string>;
     procedure Pack(aFile: TwbBSFileEntry; aData: Pointer; aSize: Integer); overload;
@@ -371,11 +371,11 @@ type
   public
     procedure CreateArchive(const aFileName: string; aType: TwbBSArchiveType;
       aFilesList: TStringList = nil; const aFilesCompression: TArray<Boolean> = nil); override;
-    procedure Save; override;
+    procedure Save; override; final;
     procedure Close; override;
     procedure GetChunk(const aFileName: string; aFileObject: Pointer;
       out aBuffer: Pointer; out aSize, aUncompressedSize: Integer;
-      aChunkIndex: Integer = 0); override;
+      aChunkIndex: Integer = 0); override; final;
     procedure Process;
     property ProcessCount: Integer read fProcessCount;
     property SplitSize: Int64 read fSplitSize write fSplitSize;
@@ -404,12 +404,12 @@ type
       aCheck: Boolean = True): Boolean;
 
   protected
-    function GetSourceFileData(const aFileName: string; aFileObject: Pointer): TBytes; override;
+    function GetSourceFileData(const aFileName: string; aFileObject: Pointer): TBytes; override; final;
 
   public
-    procedure Close; override;
+    procedure Close; override; final;
     procedure CreateArchive(const aFileName: string; aType: TwbBSArchiveType;
-      aFilesList: TStringList = nil; const aFilesCompression: TArray<Boolean> = nil); override;
+      aFilesList: TStringList = nil; const aFilesCompression: TArray<Boolean> = nil); override; final;
     function AddSourceFile(const aFileName: string): Integer;
     function AddSourceFolder(const aFolder: string): Integer;
     function AddSourceArchive(const aArchive: string): Integer;

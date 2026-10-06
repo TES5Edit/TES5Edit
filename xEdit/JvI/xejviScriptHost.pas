@@ -47,15 +47,15 @@ type
     function FunctionIsEmpty(const aName: string): Boolean;
     function GetLastErrorLocation: string;
   public
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
   TxejviScriptHost = class(TxeScriptHost)
   protected
-    class function GetName: string; override;
-    function CreateScriptInternal(const aScriptFile, aScript: string): IxeScript; override;
+    class function GetName: string; override; final;
+    function CreateScriptInternal(const aScriptFile, aScript: string): IxeScript; override; final;
   public
-    constructor Create; override;
+    constructor Create; override; final;
   end;
 
 procedure TxejviScript.JvInterpreterProgramSetValue(Sender: TObject;

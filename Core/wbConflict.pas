@@ -45,7 +45,7 @@ type
     Hits    : Int64;
     Misses  : Int64;
     constructor Create(aContext: TwbGameContext);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     procedure RulesChanged;
     procedure Peek(const aRecord: IwbMainRecord; out aConflictAll: TConflictAll; out aConflictThis: TConflictThis);
     function NodeDatasForMainRecord(const aMainRecord: IwbMainRecord; const aFiles: TwbFiles): TwbDynConflictNodeDatas;
@@ -75,7 +75,7 @@ type
     function GetChildCount: Integer;
     function GetChild(aIndex: Integer): TwbConflictTreeNode;
   public
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     function RowElement(aColumn, aRow: Integer): IwbElement;
     function IsAlignedGap(aColumn, aRow: Integer; out aMemoryIndex: Integer): Boolean;
     function CanAssignAligned(aColumn, aRow: Integer; const aSource: IwbElement; aCheckDontShow: Boolean): Boolean;
@@ -120,7 +120,7 @@ type
       const aOnMessage: TwbConflictMessageProc);
     constructor CreateForContainer(aView: TwbConflictView; const aContainer: IwbDataContainer; const aFiles: TwbFiles;
       const aOnMessage: TwbConflictMessageProc);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     function IsStale: Boolean;
     procedure Resolve(aHideNoConflict: Boolean = False);
     function NodeFor(const aElement: IwbElement; out aColumn: Integer): TwbConflictTreeNode;
@@ -1436,7 +1436,7 @@ type
     function LiveChildCount: Integer;
   public
     constructor Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
 constructor TwbDeltaPatchNode.Create(const aElement: IwbElement; const aContainer: IwbContainer; const aParented: TwbByteSet);

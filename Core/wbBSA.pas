@@ -103,7 +103,7 @@ type
     function GetData(aFileEntry: TwbBSFileEntry): TBytes;
   public
     constructor Create(const aFileName: string);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
   TwbBA2File = class(TwbBSAFile, IwbBA2File)
@@ -144,7 +144,7 @@ type
     function GetPathName: string;
   public
     constructor Create(const aPath: string);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
   TwbFolderResource = class(TInterfacedObject, IwbResource)
@@ -157,7 +157,7 @@ type
     function GetData: TBytes;
   public
     constructor Create(aFolder: IwbFolderInternal; const aFileName: string);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
 

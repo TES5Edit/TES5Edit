@@ -42,7 +42,7 @@ type
   TwbIncludedAuxBuss = class(TwbWwiseObject) end;
 
   TwbGroupMember = class(TwbWwiseObject)
-    function DisplayName: string; override;
+    function DisplayName: string; override; final;
   end;
 
   TwbSwitch = class(TwbGroupMember) end;
@@ -111,27 +111,27 @@ type
     function TryLookupDisplay(const aNodeType   : TwbWwiseNodeType;
                               const aDisplayStr : string;
                                 var aGUID       : TGUID)
-                                                : Boolean; override;
+                                                : Boolean; override; final;
 
     function TryLookupGUID(const aNodeType : TwbWwiseNodeType;
                            const aGUID     : TGUID;
                              var aName     : string;
                              var aFilename : string)
-                                           : Boolean; override;
+                                           : Boolean; override; final;
 
     procedure GetChildStrings(const aParentGUID: TGUID;
                               const aChildType: TwbWwiseNodeType;
-                                var aList: TStringList); override;
+                                var aList: TStringList); override; final;
 
     procedure GetStrings(const aNodeType : TwbWwiseNodeType;
                          const aMasters  : TStringList;
-                           var aList     : TStringList); override;
+                           var aList     : TStringList); override; final;
 
     {---TwbWwiseSoundBankCache---}
     constructor Create; overload;
     constructor Create(const aContainerHandler: IwbContainerHandler; const aLoadOrder: TStringList); overload;
 
-    destructor Destroy; override;
+    destructor Destroy; override; final;
 
     procedure BuildIndex(const aLoadOrder: TStringList);
 

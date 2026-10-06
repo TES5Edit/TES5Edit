@@ -62,7 +62,7 @@ type
       var Allowed: Boolean);
     procedure splTOCMoved(Sender: TObject);
   protected
-    procedure UpdateActions; override;
+    procedure UpdateActions; override; final;
   private
     NeedRebuildTOC : Boolean;
     NeedToggleTOC : Boolean;

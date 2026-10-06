@@ -43,12 +43,12 @@ type
 
   TwbSaveDefFO3 = class(TwbSaveDefFO3Base)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbCoSaveDefFO3 = class(TwbSaveDefFO3Base)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbSaveContextFO3 = class(TwbLoadingSaveContext)

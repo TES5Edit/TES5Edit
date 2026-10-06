@@ -38,12 +38,12 @@ type
 
   TwbSaveDefTES4 = class(TwbSaveDefTES4Base)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbCoSaveDefTES4 = class(TwbSaveDefTES4Base)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
 procedure TwbSaveDefTES4Base.DefineTES4SavesA;

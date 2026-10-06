@@ -113,7 +113,7 @@ type
     MaxSelect       : Integer;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal: Integer; override; final;
   end;
 
   PModGroupNodeData = ^TModGroupNodeData;

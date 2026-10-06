@@ -166,7 +166,7 @@ type
     function wbTintTemplateGroups(const aName: string): IwbSubRecordArrayDef;
     procedure ReferenceRecord(const aSignature: TwbSignature; const aName: string);
 
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
 implementation

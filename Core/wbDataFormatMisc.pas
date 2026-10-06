@@ -37,7 +37,7 @@ type
   // Tree LOD references file (*.BTT in Skyrim and SSE, *.DTL in Fallout3 and New Vegas)
   TwbFUZFile = class(TdfStruct)
     constructor Create; reintroduce; overload;
-    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override;
+    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override; final;
   end;
 
   // DDS file

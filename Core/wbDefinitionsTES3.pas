@@ -26,7 +26,7 @@ type
     function wbPackages: IwbRecordMemberDef;
     function wbTravelServices: IwbRecordMemberDef;
 
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
 implementation

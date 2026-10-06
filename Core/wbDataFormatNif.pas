@@ -42,9 +42,9 @@ type
     FTemplate: string;
     FPtr: Boolean;
   public
-    function CreateElement(const aParent: TdfElement): TdfElement; override;
-    function Clone: TdfDef; override;
-    procedure Assign(const aDef: TdfDef); override;
+    function CreateElement(const aParent: TdfElement): TdfElement; override; final;
+    function Clone: TdfDef; override; final;
+    procedure Assign(const aDef: TdfDef); override; final;
     property Template: string read FTemplate write FTemplate;
     // False - NiRef (points to previous blocks)
     // True - NiPtr (points to following blocks)
@@ -65,7 +65,7 @@ type
   TwbNifFile = class;
 
   TwbNifBlockDef = class(TdfStructDef)
-    function CreateElement(const aParent: TdfElement): TdfElement; override;
+    function CreateElement(const aParent: TdfElement): TdfElement; override; final;
   end;
 
   TwbNifBlock = class(TdfStruct)
@@ -75,7 +75,7 @@ type
     // indexed string elements in this block
     FStrings: TList;
   protected
-    function GetName: string; override;
+    function GetName: string; override; final;
     function GetBlockType: string;
     function GetNifFile: TwbNifFile;
     function GetRef(Index: Integer): TwbNiRef;
@@ -87,9 +87,9 @@ type
     function GetIsDynamicRigidBody: Boolean;
     function GetIsEditorMarker: Boolean;
   public
-    constructor Create(const aDef: TdfDef; const aParent: TdfElement); override;
-    destructor Destroy; override;
-    function Index: Integer; override;
+    constructor Create(const aDef: TdfDef; const aParent: TdfElement); override; final;
+    destructor Destroy; override; final;
+    function Index: Integer; override; final;
     procedure AddRef(const aElement: TdfElement);
     procedure RemoveRef(const aElement: TdfElement);
     procedure AddString(const aElement: TdfElement);
@@ -162,14 +162,14 @@ type
   public
     Version, UserVersion, UserVersion2: Cardinal;
     constructor Create; reintroduce; overload;
-    function DataSize: Integer; override;
-    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override;
-    function Serialize(const aDataStart, aDataEnd: Pointer): Integer; override;
-    procedure SerializeToJSON(const aJSON: TJSONBaseObject); override;
-    procedure UnSerializeFromJSON(const aJSON: TJSONBaseObject); override;
-    procedure LoadFromFile(const aFileName: string); override;
-    procedure Delete(Index: Integer); override;
-    procedure Move(CurIndex, NewIndex: Integer); override;
+    function DataSize: Integer; override; final;
+    function UnSerialize(const aDataStart, aDataEnd: Pointer; const aDataSize: Integer): Integer; override; final;
+    function Serialize(const aDataStart, aDataEnd: Pointer): Integer; override; final;
+    procedure SerializeToJSON(const aJSON: TJSONBaseObject); override; final;
+    procedure UnSerializeFromJSON(const aJSON: TJSONBaseObject); override; final;
+    procedure LoadFromFile(const aFileName: string); override; final;
+    procedure Delete(Index: Integer); override; final;
+    procedure Move(CurIndex, NewIndex: Integer); override; final;
     procedure UpdateNifVersion;
     procedure UpdateHeader;
     function AddBlock(const aBlockType: string): TwbNifBlock;

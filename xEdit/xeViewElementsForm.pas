@@ -69,8 +69,8 @@ type
     Settings: TMemIniFile;
     CompareCmdLine: string;
     procedure AddElement(const aElement: IwbElement; aFocused, aEditable: Boolean);
-    function ShowModal: Integer; override;
-    destructor Destroy; override;
+    function ShowModal: Integer; override; final;
+    destructor Destroy; override; final;
   end;
 
   TwbTabSheet = class(TTabSheet)

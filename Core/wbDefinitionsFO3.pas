@@ -83,7 +83,7 @@ type
 
     function wbGenericModel(aRequired: Boolean = False; aDontShow: TwbDontShowCallback = nil): IwbRecordMemberDef;
 
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
 implementation

@@ -28,7 +28,7 @@ type
     function wbSoundReference(const aName: string = 'Sound'): IwbValueDef; overload;
     function wbSoundReference(const aSignature: TwbSignature; const aName: string = 'Sound'): IwbRecordMemberDef; overload;
 
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
 implementation

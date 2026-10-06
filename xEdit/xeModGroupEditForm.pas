@@ -57,7 +57,7 @@ type
     ModGroup : PwbModGroup;
 
     procedure AllowCancel;
-    function ShowModal: Integer; override;
+    function ShowModal: Integer; override; final;
   end;
 
   PModGroupItemNodeData = ^TModGroupNodeData;

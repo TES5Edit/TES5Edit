@@ -110,7 +110,7 @@ type
     property Host: TStream read FHost;
   public
     constructor Create(AHost: TStream);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     function ReadLn: string; overload;
     function ReadLn(out Line: string): Boolean; overload;
     property EOF: Boolean read FEOF;

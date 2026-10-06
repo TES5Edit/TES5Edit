@@ -22,7 +22,7 @@ uses
 type
   TwbLoadingModuleList = class(TwbModuleList)
   public
-    procedure LoadModules; override;
+    procedure LoadModules; override; final;
   end;
 
 implementation

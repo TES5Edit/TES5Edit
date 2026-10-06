@@ -131,11 +131,11 @@ type
   TwbThread = class(TThread);
 
   TwbCheckGitHubReleaseThread = class(TwbThread)
-    procedure Execute; override;
+    procedure Execute; override; final;
   end;
 
   TwbCheckNexusModsReleaseThread = class(TwbThread)
-    procedure Execute; override;
+    procedure Execute; override; final;
   end;
 
   TLOOTPluginInfo = record
@@ -1065,7 +1065,7 @@ type
     procedure SaveModGroupsSelection(const aModGroups: TwbModGroupPtrs);
 
     function FindColors(const s: string; out aColors: TArray<TColor>): Boolean;
-    procedure WndProc(var Message: TMessage); override;
+    procedure WndProc(var Message: TMessage); override; final;
   private
     procedure WMClose(var Message: TWMClose); message WM_CLOSE;
     procedure WMQueryEndSession(var Message: TWMQueryEndSession); message WM_QUERYENDSESSION;
@@ -1275,7 +1275,7 @@ type
                                           : Boolean;
     function GenerateSEQFileForFile(aFile: IwbFile): Boolean;
 
-    procedure UpdateActions; override;
+    procedure UpdateActions; override; final;
 
     function InNestedLoop: Boolean;
     function IsInputForNestedPump(const aMsg: TMsg): Boolean;
@@ -1294,10 +1294,10 @@ type
   public
     Settings: TMemIniFile;
     ConflictView: TwbConflictView;
-    procedure AfterConstruction; override;
-    destructor Destroy; override;
-    function CloseQuery: Boolean; override;
-    function IsShortCut(var Message: TWMKey): Boolean; override;
+    procedure AfterConstruction; override; final;
+    destructor Destroy; override; final;
+    function CloseQuery: Boolean; override; final;
+    function IsShortCut(var Message: TWMKey): Boolean; override; final;
 
     procedure PostResetActiveTree;
     procedure CheckViewForChange;
@@ -1340,11 +1340,11 @@ type
     ltFiles: array of IwbFile;
     ltStates: TwbFileStates;
 
-    procedure Execute; override;
+    procedure Execute; override; final;
   public
     constructor Create(var aList: TStringList; aFileStates: TwbFileStates = []); overload;
     constructor Create(const aFileName: string; const aMaster: IwbFile; aFileStates: TwbFileStates = []); overload;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
   end;
 
   TPluggyLinkThread = class(TwbThread)
@@ -1356,7 +1356,7 @@ type
     plLastEnchantmentFormID : TwbFormID;
     plLastSpellFormID       : TwbFormID;
   protected
-    procedure Execute; override;
+    procedure Execute; override; final;
     procedure ChangeDetected;
   end;
 
@@ -1366,7 +1366,7 @@ type
     glLastFormID     : TwbFormID;
     glLastBaseFormID : TwbFormID;
   protected
-    procedure Execute; override;
+    procedure Execute; override; final;
     procedure ChangeDetected;
   end;
 
@@ -1388,7 +1388,7 @@ type
     tiTabSheet: TTabSheet;
   protected
     {--- IHistoryEntry ---}
-    procedure Show; override;
+    procedure Show; override; final;
   public
     constructor Create(aTabSheet: TTabSheet);
   end;
@@ -1399,7 +1399,7 @@ type
     crRecordsChanged: Boolean;
   protected
     {--- IHistoryEntry ---}
-    function Remove(const aMainRecord: IwbMainRecord): Boolean; override;
+    function Remove(const aMainRecord: IwbMainRecord): Boolean; override; final;
     procedure Show; override;
   public
     constructor Create(const aCompareRecords: TDynMainRecords);
@@ -1414,7 +1414,7 @@ type
     crpColumnWidths: array of Integer;
   protected
     {--- IHistoryEntry ---}
-    procedure Show; override;
+    procedure Show; override; final;
   public
     constructor Create(const aCompareRecords: TDynMainRecords);
   end;
@@ -1426,7 +1426,7 @@ type
     function GetTabSheet: TTabSheet; virtual;
 
     {--- IHistoryEntry ---}
-    function Remove(const aMainRecord: IwbMainRecord): Boolean; override;
+    function Remove(const aMainRecord: IwbMainRecord): Boolean; override; final;
     procedure Show; override;
   public
     constructor Create(const aMainRecord: IwbMainRecord);
@@ -1437,7 +1437,7 @@ type
     mreElement: IwbElement;
   protected
     {--- IHistoryEntry ---}
-    procedure Show; override;
+    procedure Show; override; final;
   public
     constructor Create(const aMainRecord: IwbMainRecord; const aElement: IwbElement);
   end;
@@ -1445,7 +1445,7 @@ type
 
   TMainRecordRefByHistoryEntry = class(TMainRecordHistoryEntry)
   protected
-    function GetTabSheet: TTabSheet; override;
+    function GetTabSheet: TTabSheet; override; final;
   end;
 
   TMainRecordPosHistoryEntry = class(TMainRecordHistoryEntry)
@@ -1457,7 +1457,7 @@ type
     mrpColumnWidths: array of Integer;
   protected
     {--- IHistoryEntry ---}
-    procedure Show; override;
+    procedure Show; override; final;
   public
     constructor Create(const aMainRecord: IwbMainRecord);
   end;
@@ -17820,12 +17820,12 @@ Type
     FIndexMap: TDictionary<string, Integer>;
     procedure ComboEnter(Sender: TObject);
   protected
-    procedure PrepareEditControl; override;
-    procedure SetEditText(const Value: WideString); override;
+    procedure PrepareEditControl; override; final;
+    procedure SetEditText(const Value: WideString); override; final;
   public
-    constructor Create(AOwner: TPersistent); override;
-    destructor Destroy; override;
-    procedure SetBounds(R: TRect); override;
+    constructor Create(AOwner: TPersistent); override; final;
+    destructor Destroy; override; final;
+    procedure SetBounds(R: TRect); override; final;
   end;
 
   TwbCheckComboEditLink = class(TcheckComboEditLink)

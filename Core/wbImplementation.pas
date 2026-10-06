@@ -44,25 +44,25 @@ type
     function TakeDenseID(aRecord: Pointer): Cardinal;
     procedure ReturnDenseID(aID: Cardinal);
   public
-    destructor Destroy; override;
-    procedure AllocateDenseIDs(const aRecords: TDynMainRecords); override;
-    procedure DetachFilesFromModules; override;
-    function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; override;
-    function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; override;
+    destructor Destroy; override; final;
+    procedure AllocateDenseIDs(const aRecords: TDynMainRecords); override; final;
+    procedure DetachFilesFromModules; override; final;
+    function LoadFile(const aFileName: string; aLoadOrder: Integer = -1; const aCompareTo: string = ''; aStates: TwbFileStates = []; const aData: TBytes = nil): IwbFile; override; final;
+    function NewFile(const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean): IwbFile; overload; override; final;
     function NewFile(const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo): IwbFile; overload;
-    function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override;
-    function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override;
-    procedure ForceClosedFiles; override;
-    function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override;
-    function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override;
-    function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; override;
-    procedure ApplyGameIniLanguage; override;
+    function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override; final;
+    function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override; final;
+    procedure ForceClosedFiles; override; final;
+    function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override; final;
+    function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override; final;
+    function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; override; final;
+    procedure ApplyGameIniLanguage; override; final;
   end;
 
   TwbLoadingSaveContext = class(TwbSaveContext)
   public
-    destructor Destroy; override;
-    function LoadSave(const aFileName: string; aLoadOrder: Integer; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; override;
+    destructor Destroy; override; final;
+    function LoadSave(const aFileName: string; aLoadOrder: Integer; aStates: TwbFileStates = []; const aCompareToFile: IwbFile = nil): IwbFile; override; final;
   end;
 
 function StartsWith(const s, t: string): Boolean;
@@ -133,7 +133,7 @@ type
     procedure Teardown;
 
     constructor Create;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
 
     {---IwbKeepAliveRoot---}
     procedure Done;
@@ -520,10 +520,10 @@ type
     teDef: IwbNamedDef;
   protected
     {---TwbElement---}
-    function GetName: string; override;
-    function GetDef: IwbNamedDef; override;
-    function GetValueDef: IwbValueDef; override;
-    function GetElementType: TwbElementType; override;
+    function GetName: string; override; final;
+    function GetDef: IwbNamedDef; override; final;
+    function GetValueDef: IwbValueDef; override; final;
+    function GetElementType: TwbElementType; override; final;
   public
     constructor Create(aDef: IwbNamedDef);
   end;
@@ -575,12 +575,12 @@ type
     cntRefsBuildAt   : Integer;
     cntCollapesGen   : Integer;
 
-    function _AddRef: Integer; override; stdcall;
-    function _Release: Integer; override; stdcall;
+    function _AddRef: Integer; override; stdcall; final;
+    function _Release: Integer; override; stdcall; final;
     function RefReleaseTouched: Integer;
 
-    function ContainsReflection: Boolean; override;
-    function ContainsUnmappedFormID: Boolean; override;
+    function ContainsReflection: Boolean; override; final;
+    function ContainsUnmappedFormID: Boolean; override; final;
 
     {---IwbContainerElementRef---}
     function ElementAddRef: Integer; stdcall;
@@ -605,14 +605,14 @@ type
     procedure ResetConflict; override;
     procedure ResetReachable; override;
 
-    procedure DoReset(aForce: Boolean); override;
+    procedure DoReset(aForce: Boolean); override; final;
     function ResetLeafFirst: Boolean; override;
     function ResetChildrenLeafFirst: Boolean;
     procedure DoInit(aNeedSorted: Boolean); virtual;
     procedure DoAfterInit; virtual;
     procedure DoPendingFill; virtual;
 
-    function HasErrors: Boolean; override;
+    function HasErrors: Boolean; override; final;
     function ContentIsAllZero: Boolean; override;
 
     function GetSortKeyInternal(aExtended: Boolean): string; override;
@@ -631,10 +631,10 @@ type
     function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; virtual;
 
     procedure SetToDefaultInternal; override;
-    procedure SetToDefaultIfAsCreatedEmpty; override;
+    procedure SetToDefaultIfAsCreatedEmpty; override; final;
 
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
-    procedure ResetModified(aResetModified: TwbResetModified); override;
+    procedure ResetModified(aResetModified: TwbResetModified); override; final;
 
     function GetElement(aIndex: Integer): IwbElement;
     function GetAnyElement: IwbElement;
@@ -647,7 +647,7 @@ type
     function GetAdditionalElementCount: Integer; virtual;
     procedure ReverseElements;
     function GetContainerStates: TwbContainerStates;
-    function GetCollapsed: TwbTriBool; override;
+    function GetCollapsed: TwbTriBool; override; final;
     function GetCollapsedCached: TwbTriBool;
     procedure SetCollapsed(const aValue: TwbTriBool);
     procedure SetCollapsedInner(const aValue: TwbTriBool);
@@ -692,7 +692,7 @@ type
 
     function ReleaseElements: TDynElementInternals;
     procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); virtual;
-    procedure NotifyChanged(aContainer: Pointer); override;
+    procedure NotifyChanged(aContainer: Pointer); override; final;
     procedure NotifyChangedInternal(aContainer: Pointer); override;
 
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
@@ -717,12 +717,12 @@ type
     function FindBySortOrder(const aSortOrder: Integer; out aIndex: Integer): Boolean;
 
     procedure AfterConstruction; override;
-    procedure BeforeDestruction; override;
+    procedure BeforeDestruction; override; final;
     class function NewInstance: TObject; override;
     destructor Destroy; override;
-    procedure FreeInstance; override;
+    procedure FreeInstance; override; final;
 
-    procedure ResetTags; override;
+    procedure ResetTags; override; final;
   end;
 
   IwbFileInternal = interface(IwbFile)
@@ -821,43 +821,43 @@ type
     function flSetContainsFixedFormID(const aFormID: TwbFormID): Boolean;
     function flComplexFileFileID: Boolean; inline;
 
-    function Reached: Boolean; override;
+    function Reached: Boolean; override; final;
 
-    function GetElementType: TwbElementType; override;
-    function GetFile: IwbFile; override;
-    function GameDefObj: TwbGameDef; override;
-    function ContextObj: TwbGameContext; override;
-    function SaveContextObj: TwbSaveContext; override;
+    function GetElementType: TwbElementType; override; final;
+    function GetFile: IwbFile; override; final;
+    function GameDefObj: TwbGameDef; override; final;
+    function ContextObj: TwbGameContext; override; final;
+    function SaveContextObj: TwbSaveContext; override; final;
     procedure SetSaveContextObj(aSaveContext: TwbSaveContext);
     procedure DetachModule;
     function GetSaveTables: IwbSaveTables;
     procedure SetSaveTables(const aValue: IwbSaveTables);
-    function GetReferenceFile: IwbFile; override;
-    function GetName: string; override;
-    function GetBaseName: string; override;
-    procedure PrepareSave; override;
-    procedure SetModified(aValue: Boolean); override;
-    procedure SetParentModified; override;
+    function GetReferenceFile: IwbFile; override; final;
+    function GetName: string; override; final;
+    function GetBaseName: string; override; final;
+    procedure PrepareSave; override; final;
+    procedure SetModified(aValue: Boolean); override; final;
+    procedure SetParentModified; override; final;
 
-    procedure BuildRef; override;
+    procedure BuildRef; override; final;
     function BuildOrLoadRef(aOnlyLoad: Boolean): TwbBuildOrLoadRefResult;
 
     function FindFormID(aFormID: TwbFormID; var Index: Integer; aNewMasters: Boolean): Boolean;
     function FindInjectedID(const aFormID: TwbFormID; var Index: Integer): Boolean;
     function GetMasterRecordByFormID(aFormID: TwbFormID; aAllowInjected, aNewMasters: Boolean): IwbMainRecord;
 
-    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override;
+    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
 
     function GetAddList: TDynStrings; override;
     function Add(const aName: string; aSilent: Boolean): IwbElement; override;
 
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    function IsElementEditable(const aElement: IwbElement): Boolean; override;
-    function GetIsEditable: Boolean; override;
-    function GetIsRemovable: Boolean; override;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    function IsElementEditable(const aElement: IwbElement): Boolean; override; final;
+    function GetIsEditable: Boolean; override; final;
+    function GetIsRemovable: Boolean; override; final;
 
-    procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
+    procedure WriteToStream(aStream: TStream; aResetModified: TwbResetModified); override; final;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
 
     function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
 
@@ -865,8 +865,8 @@ type
 
     function GetHighestGenerationSelfAndMasters: Integer;
 
-    function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord; override;
-    function GetElementBySignature(const aSignature: TwbSignature): IwbElement; override;
+    function GetRecordBySignature(const aSignature: TwbSignature): IwbRecord; override; final;
+    function GetElementBySignature(const aSignature: TwbSignature): IwbElement; override; final;
 
     procedure flAddKeysToIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
     procedure flRemoveKeysFromIndices(const aMainRecord: IwbMainRecord; const aKeys: TwbDefinedKeys);
@@ -1020,8 +1020,8 @@ type
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean); overload;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
   public
-    class function NewInstance: TObject; override;
-    destructor Destroy; override;
+    class function NewInstance: TObject; override; final;
+    destructor Destroy; override; final;
   end;
 
   TwbFileSource = class(TwbFile)
@@ -1029,12 +1029,12 @@ type
     function flSaveDef: TwbSaveDef;
     function SelectTemporaryCopy(const aFileName, aCompareFile: string): string;
   protected
-    procedure Scan; override;
-    function GetAddList: TDynStrings; override;
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    procedure Scan; override; final;
+    function GetAddList: TDynStrings; override; final;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer);
-    procedure GetMasters(aMasters: TStrings); override;
+    procedure GetMasters(aMasters: TStrings); override; final;
     procedure GetPluginNames(const aHeader: IwbFileHeader; aNames, aLightNames: TStrings);
   public
     constructor CreateSave(const aSaveContext: TwbSaveContext; const aFileName: string; aLoadOrder: Integer; const aCompareToFile: IwbFile; aStates: TwbFileStates);
@@ -1074,13 +1074,13 @@ type
 
     function GetResolvedValueDef: IwbValueDef; override;
 
-    function ContentIsAllZero: Boolean; override;
+    function ContentIsAllZero: Boolean; override; final;
 
-    procedure InvalidateStorage; override;
+    procedure InvalidateStorage; override; final;
     procedure SetContainer(const aContainer: IwbContainer); override;
 
     procedure SetModified(aValue: Boolean); override;
-    procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); override;
+    procedure RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal); override; final;
 
     procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
     procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
@@ -1089,13 +1089,13 @@ type
     procedure SetToDefaultInternal; override;
     function IsFlags: Boolean; virtual;
 
-    function GetEditType: TwbEditType; override;
-    function GetEditInfo: TArray<string>; override;
+    function GetEditType: TwbEditType; override; final;
+    function GetEditInfo: TArray<string>; override; final;
 
-    function GetConflictPriority: TwbConflictPriority; override;
+    function GetConflictPriority: TwbConflictPriority; override; final;
 
     {---IwbElement---}
-    function GetRawDataAsString: string; override;
+    function GetRawDataAsString: string; override; final;
 
     {---IwbContainerElementRef---}
     procedure PrepareSave; override;
@@ -1104,7 +1104,7 @@ type
     function GetDataBasePtr: Pointer;
     function GetDataEndPtr: Pointer;
     function GetDataSize: Integer; override;
-    procedure SetDataSize(aSize: Integer); override;
+    procedure SetDataSize(aSize: Integer); override; final;
     function GetDontCompare: Boolean;
     function GetDontSave: Boolean;
     function IsValidOffset(aBasePtr, aEndPtr: Pointer; anOffset: Integer): Boolean;
@@ -1138,8 +1138,8 @@ type
                                                     : IwbRecord;
 
     function GetName: string; override;
-    function GetSkipped: Boolean; override;
-    procedure SetSkipped(aValue: Boolean); override;
+    function GetSkipped: Boolean; override; final;
+    procedure SetSkipped(aValue: Boolean); override; final;
   end;
 
   PwbMainRecordStruct = ^TwbMainRecordStruct;
@@ -1315,99 +1315,99 @@ type
 
     procedure mrInvalidateNameCache;
 
-    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
-    function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; override;
-    function ResolveElementName(aName: string; out aRemainingName: string; aCanCreate: Boolean = False): IwbElement; override;
+    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
+    function RemoveElement(aPos: Integer; aMarkModified: Boolean = False): IwbElement; overload; override; final;
+    function ResolveElementName(aName: string; out aRemainingName: string; aCanCreate: Boolean = False): IwbElement; override; final;
 
-    function GetIsInjected: Boolean; override;
-    function GetReferencesInjected: Boolean; override;
-    function GetInjectionSourceFiles: TwbFiles; override;
-    function RemoveInjected(aCanRemove: Boolean): Boolean; override;
-    function GetIsNotReachable: Boolean; override;
-    function GetIsReachable: Boolean; override;
-    function GetCountedRecordCount: Cardinal; override;
-    procedure InitDataPtr; override;
+    function GetIsInjected: Boolean; override; final;
+    function GetReferencesInjected: Boolean; override; final;
+    function GetInjectionSourceFiles: TwbFiles; override; final;
+    function RemoveInjected(aCanRemove: Boolean): Boolean; override; final;
+    function GetIsNotReachable: Boolean; override; final;
+    function GetIsReachable: Boolean; override; final;
+    function GetCountedRecordCount: Cardinal; override; final;
+    procedure InitDataPtr; override; final;
     procedure DecompressIfNeeded;
-    procedure ScanData; override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
-    procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    function CanContainFormIDs: Boolean; override;
-    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    function CanElementReset: Boolean; override;
-    procedure Remove; override;
-    procedure PrepareSave; override;
-    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override;
-    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
-    function GetReferenceFile: IwbFile; override;
-    procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); override;
-    function LinksToParent: Boolean; override;
-    function Reached: Boolean; override;
-    function GetContainingMainRecord: IwbMainRecord; override;
-    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
-    procedure SetParentModified; override;
-    procedure SetModified(aValue: Boolean); override;
-    procedure DoPendingFill; override;
-    procedure DoAfterInit; override;
+    procedure ScanData; override; final;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
+    procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    function CanContainFormIDs: Boolean; override; final;
+    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
+    function CanElementReset: Boolean; override; final;
+    procedure Remove; override; final;
+    procedure PrepareSave; override; final;
+    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
+    function GetReferenceFile: IwbFile; override; final;
+    procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); override; final;
+    function LinksToParent: Boolean; override; final;
+    function Reached: Boolean; override; final;
+    function GetContainingMainRecord: IwbMainRecord; override; final;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override; final;
+    procedure SetParentModified; override; final;
+    procedure SetModified(aValue: Boolean); override; final;
+    procedure DoPendingFill; override; final;
+    procedure DoAfterInit; override; final;
 
     function DoBuildRef(aRemove: Boolean): Boolean;
     function RecordHeaderStructDef: IwbStructDef;
     function NeedsOrderFill: Boolean;
     procedure FillOrderBySort;
-    procedure BuildRef; override;
-    procedure AddReferencedFromID(const aFormID: TwbFormID); override;
-    procedure ResetConflict; override;
-    procedure ResetReachable; override;
+    procedure BuildRef; override; final;
+    procedure AddReferencedFromID(const aFormID: TwbFormID); override; final;
+    procedure ResetConflict; override; final;
+    procedure ResetReachable; override; final;
 
-    procedure NotifyChangedInternal(aContainer: Pointer); override;
+    procedure NotifyChangedInternal(aContainer: Pointer); override; final;
 
-    procedure Init; override;
-    procedure Reset; override;
+    procedure Init; override; final;
+    procedure Reset; override; final;
 
-    function GetPath: string; override;
-    function GetValue: string; override;
-    function GetSummary: string; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
-    function GetSortPriority: Integer; override;
-    function GetAdditionalElementCount: Integer; override;
-    function GetIsEditable: Boolean; override;
-    function GetEditValue: string; override;
-    procedure SetEditValue(const aValue: string); override;
-    function GetNativeValue: Variant; override;
-    procedure SetNativeValue(const aValue: Variant); override;
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    procedure SetContainer(const aContainer: IwbContainer); override;
+    function GetPath: string; override; final;
+    function GetValue: string; override; final;
+    function GetSummary: string; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
+    function GetSortPriority: Integer; override; final;
+    function GetAdditionalElementCount: Integer; override; final;
+    function GetIsEditable: Boolean; override; final;
+    function GetEditValue: string; override; final;
+    procedure SetEditValue(const aValue: string); override; final;
+    function GetNativeValue: Variant; override; final;
+    procedure SetNativeValue(const aValue: Variant); override; final;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    procedure SetContainer(const aContainer: IwbContainer); override; final;
 
     function FindReferencedBy(const aMainRecord: IwbMainRecord; var Index: Integer): Boolean;
 
-    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
 
     procedure CollapseStorage(aKAR: PwbKeepAliveRoot; aForce: Boolean);
 
-    function GetAddList: TDynStrings; override;
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function GetAddList: TDynStrings; override; final;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
     function CheckChildOfCell: Boolean;
     procedure UpdateCellChildGroup;
     procedure UpdateInteriorCellGroup;
 
-    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override;
+    procedure MarkModifiedRecursive(const aElementTypes: TwbElementTypes); override; final;
 
-    procedure UpdateStorageFromElements; override;
+    procedure UpdateStorageFromElements; override; final;
 
     procedure PrepareOffsetData;
 
     function BuildIndexKeys(out aKeys: TwbIndexKeys): Boolean;
 
     {---IwbMainRecord---}
-    function GetDef: IwbNamedDef; override;
+    function GetDef: IwbNamedDef; override; final;
     function GetMainRecordDef: IwbMainRecordDef;
-    function GetElementType: TwbElementType; override;
-    function GameDefObj: TwbGameDef; override;
-    function RefMainObj: TObject; override;
-    function ContextObj: TwbGameContext; override;
+    function GetElementType: TwbElementType; override; final;
+    function GameDefObj: TwbGameDef; override; final;
+    function RefMainObj: TObject; override; final;
+    function ContextObj: TwbGameContext; override; final;
     function GetFormID: TwbFormID; inline;
     function GetFixedFormID: TwbFormID; inline;
     function DoGetFixedFormID: TwbFormID;
@@ -1434,7 +1434,7 @@ type
     function GetReference(aIndex: Integer): IwbMainRecord;
     function GetReferencesCount: Integer;
     function GetExternalReferencesCount: Integer;
-    function GetCheck: string; override;
+    function GetCheck: string; override; final;
     function GetIsWinningOverride: Boolean;
     function GetWinningOverride: IwbMainRecord;
     function GetHighestOverrideOrSelf(aMaxLoadOrder: Integer): IwbMainRecord;
@@ -1561,16 +1561,16 @@ type
     constructor Create(const aContainer      : IwbContainer;
                          var aBasePtr        : Pointer;
                          var aEndPtr         : Pointer;
-                       const aPrevMainRecord : IwbMainRecord); override;
+                       const aPrevMainRecord : IwbMainRecord); override; final;
     constructor Create(const aContainer : IwbContainer;
                        const aSignature : TwbSignature;
                        const aFormID    : TwbFormID); overload;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
 
-    function GetName: string; override;
+    function GetName: string; override; final;
     function GetShortNameInternal(aForName: Boolean): string;
-    function GetShortName: string; override;
-    function GetDisplayName(aUseSuffix: Boolean): string; override;
+    function GetShortName: string; override; final;
+    function GetDisplayName(aUseSuffix: Boolean): string; override; final;
   end;
 
   PwbSubRecordHeaderStruct = ^TwbSubRecordHeaderStruct;
@@ -1618,90 +1618,90 @@ type
   protected
     constructor Create(const aContainer : IwbContainer;
                        const aSubRecordDef: IwbSubRecordDef); overload;
-    destructor Destroy; override;
+    destructor Destroy; override; final;
 
     procedure SetDef(const aDef: IwbSubRecordDef);
     function srStruct: PwbSubRecordHeaderStruct; inline;
 
-    procedure InitDataPtr; override;
-    procedure ScanData; override;
+    procedure InitDataPtr; override; final;
+    procedure ScanData; override; final;
 
-    procedure DoInit(aNeedSorted: Boolean); override;
-    procedure Init; override;
-    procedure Reset; override;
+    procedure DoInit(aNeedSorted: Boolean); override; final;
+    procedure Init; override; final;
+    procedure Reset; override; final;
 
-    function GetDataPrefixSize: Integer; override;
+    function GetDataPrefixSize: Integer; override; final;
     procedure CheckCount;
 
-    function GetName: string; override;
-    function GetDisplayName(aUseSuffix: Boolean): string; override;
+    function GetName: string; override; final;
+    function GetDisplayName(aUseSuffix: Boolean): string; override; final;
 
-    function GetDisplaySignature: string; override;
+    function GetDisplaySignature: string; override; final;
 
-    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override;
+    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override; final;
 
-    function IsFlags: Boolean; override;
+    function IsFlags: Boolean; override; final;
 
-    procedure BeforeActualRemove; override;
-    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure BeforeActualRemove; override; final;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override; final;
     procedure UpdateCountViaPath;
 
-    function GetValue: string; override;
-    function GetSummary: string; override;
-    function GetCheck: string; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
-    function GetIsEditable: Boolean; override;
-    function GetValueDef: IwbValueDef; override;
-    function GetEditValue: string; override;
-    procedure SetEditValue(const aValue: string); override;
-    function GetNativeValue: Variant; override;
-    procedure SetNativeValue(const aValue: Variant); override;
-    procedure BuildRef; override;
-    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override;
-    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
-    procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    procedure SetModified(aValue: Boolean); override;
-    function CanContainFormIDs: Boolean; override;
-    function CanElementReset: Boolean; override;
-    function InternalGetLinksTo: IwbElement; override;
-    procedure SetLinksTo(const aValue: IwbElement); override;
-    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
-    procedure PrepareSave; override;
-    function RemoveInjected(aCanRemove: Boolean): Boolean; override;
-    function ResetLeafFirst: Boolean; override;
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function GetValue: string; override; final;
+    function GetSummary: string; override; final;
+    function GetCheck: string; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
+    function GetIsEditable: Boolean; override; final;
+    function GetValueDef: IwbValueDef; override; final;
+    function GetEditValue: string; override; final;
+    procedure SetEditValue(const aValue: string); override; final;
+    function GetNativeValue: Variant; override; final;
+    procedure SetNativeValue(const aValue: Variant); override; final;
+    procedure BuildRef; override; final;
+    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
+    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
+    procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    procedure SetModified(aValue: Boolean); override; final;
+    function CanContainFormIDs: Boolean; override; final;
+    function CanElementReset: Boolean; override; final;
+    function InternalGetLinksTo: IwbElement; override; final;
+    procedure SetLinksTo(const aValue: IwbElement); override; final;
+    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
+    procedure PrepareSave; override; final;
+    function RemoveInjected(aCanRemove: Boolean): Boolean; override; final;
+    function ResetLeafFirst: Boolean; override; final;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
-    procedure SetToDefaultInternal; override;
+    procedure SetToDefaultInternal; override; final;
 
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
 
-    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
-    function GetIsInSK(aIndex: Integer): Boolean; override;
-    function CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean; override;
-    function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function DoCheckSizeAfterWrite: Boolean; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
+    function GetIsInSK(aIndex: Integer): Boolean; override; final;
+    function CanAssignAligned(aIndex: Integer; aCheckDontShow: Boolean): Boolean; override; final;
+    function AssignAligned(aIndex, aMemoryIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function DoCheckSizeAfterWrite: Boolean; override; final;
 
-    function GetDef: IwbNamedDef; override;
-    function GetElementType: TwbElementType; override;
+    function GetDef: IwbNamedDef; override; final;
+    function GetElementType: TwbElementType; override; final;
 
-    function GetDataSize: Integer; override;
+    function GetDataSize: Integer; override; final;
 
-    function CanMoveElement: Boolean; override;
+    function CanMoveElement: Boolean; override; final;
 
     procedure CheckTerminator;
 
-    procedure NotifyChangedInternal(aContainer: Pointer); override;
+    procedure NotifyChangedInternal(aContainer: Pointer); override; final;
 
-    function MergeMultiple(const aElement: IwbElement): Boolean; override;
+    function MergeMultiple(const aElement: IwbElement): Boolean; override; final;
 
     {--- IwbSubRecord ---}
     function GetSubRecordHeaderSize: Integer;
-    function GetContainingSubRecord: IwbSubRecord; Override;
+    function GetContainingSubRecord: IwbSubRecord; Override; final;
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
@@ -1714,47 +1714,47 @@ type
 
     constructor CreateDetached(aContextObj: TwbGameContext; var aBasePtr, aEndPtr: Pointer);
 
-    function GameDefObj: TwbGameDef; override;
-    function ContextObj: TwbGameContext; override;
+    function GameDefObj: TwbGameDef; override; final;
+    function ContextObj: TwbGameContext; override; final;
   end;
 
   TwbValueBase = class(TwbDataContainer, IwbValueBase)
   protected
     vbValueDef   : IwbValueDef;
   protected
-    procedure InitDataPtr; override;
+    procedure InitDataPtr; override; final;
 
-    function GetDef: IwbNamedDef; override;
-    function GetValueDef: IwbValueDef; override;
+    function GetDef: IwbNamedDef; override; final;
+    function GetValueDef: IwbValueDef; override; final;
 
-    function GetName: string; override;
-    function GetBaseName: string; override;
-    function GetDisplayName(aUseSuffix: Boolean): string; override;
+    function GetName: string; override; final;
+    function GetBaseName: string; override; final;
+    function GetDisplayName(aUseSuffix: Boolean): string; override; final;
 
-    function GetCheck: string; override;
+    function GetCheck: string; override; final;
     function GetValue: string; override;
-    function GetSummary: string; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
+    function GetSummary: string; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
 
     function GetIsEditable: Boolean; override;
-    function CanElementReset: Boolean; override;
+    function CanElementReset: Boolean; override; final;
 
-    function GetEditValue: string; override;
+    function GetEditValue: string; override; final;
     procedure SetEditValue(const aValue: string); override;
 
-    function GetNativeValue: Variant; override;
+    function GetNativeValue: Variant; override; final;
     procedure SetNativeValue(const aValue: Variant); override;
 
     procedure BuildRef; override;
     function CanContainFormIDs: Boolean; override;
-    function InternalGetLinksTo: IwbElement; override;
-    procedure SetLinksTo(const aValue: IwbElement); override;
-    function GetDataSize: Integer; override;
-    function DoCheckSizeAfterWrite: Boolean; override;
+    function InternalGetLinksTo: IwbElement; override; final;
+    procedure SetLinksTo(const aValue: IwbElement); override; final;
+    function GetDataSize: Integer; override; final;
+    function DoCheckSizeAfterWrite: Boolean; override; final;
 
     procedure SetToDefaultInternal; override;
 
-    function GetIsInSK(aIndex: Integer): Boolean; override;
+    function GetIsInSK(aIndex: Integer): Boolean; override; final;
   public
     constructor Create(const aContainer  : IwbContainer;
                          var aBasePtr    : Pointer;
@@ -1781,40 +1781,40 @@ type
     arrSizePrefix    : Integer;
     procedure UpdateSortedAfterCopy;
   protected
-    procedure DoInit(aNeedSorted: Boolean); override;
-    procedure Init; override;
-    procedure Reset; override;
+    procedure DoInit(aNeedSorted: Boolean); override; final;
+    procedure Init; override; final;
+    procedure Reset; override; final;
 
-    procedure SetToDefaultInternal; override;
+    procedure SetToDefaultInternal; override; final;
 
-    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override;
+    procedure ResetMemoryOrder(aFrom: Integer = 0; aTo: Integer = High(Integer)); override; final;
 
-    procedure BeforeActualRemove; override;
-    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure BeforeActualRemove; override; final;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override; final;
     procedure UpdateCountViaPath;
 
-    function GetElementType: TwbElementType; override;
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    procedure SetModified(aValue: Boolean); override;
-    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
+    function GetElementType: TwbElementType; override; final;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    procedure SetModified(aValue: Boolean); override; final;
+    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
 
-    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
 
-    procedure PrepareSave; override;
+    procedure PrepareSave; override; final;
     procedure CheckTerminator;
 
-    function GetDataPrefixSize: Integer; override;
+    function GetDataPrefixSize: Integer; override; final;
     procedure CheckCount;
-    procedure NotifyChangedInternal(aContainer: Pointer); override;
+    procedure NotifyChangedInternal(aContainer: Pointer); override; final;
 
-    function CanMoveElement: Boolean; override;
+    function CanMoveElement: Boolean; override; final;
 
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
-    function GetIsClearable: Boolean; override;
-    procedure Clear; override;
+    function GetIsClearable: Boolean; override; final;
+    procedure Clear; override; final;
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
@@ -1827,8 +1827,8 @@ type
     szUncompressedSize : Cardinal;
     szCompressedType   : TwbStructCompression;
   protected
-    procedure Init; override;
-    procedure Reset; override;
+    procedure Init; override; final;
+    procedure Reset; override; final;
 
     function GetElementType: TwbElementType; override;
     procedure DecompressIfNeeded;
@@ -1845,8 +1845,8 @@ type
   protected
     cChapterSkipped : Boolean;
   protected
-    function GetSkipped: Boolean; override;
-    function GetElementType: TwbElementType; override;
+    function GetSkipped: Boolean; override; final;
+    function GetElementType: TwbElementType; override; final;
     function GetChapterType: Integer;
     function GetChapterTypeName: String;
     function GetChapterName: String;
@@ -1862,14 +1862,14 @@ type
   protected
     unResolvedDef: IwbValueDef;
   protected
-    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    procedure Init; override;
-    procedure Reset; override;
-    function GetResolvedValueDef: IwbValueDef; override;
+    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
+    procedure Init; override; final;
+    procedure Reset; override; final;
+    function GetResolvedValueDef: IwbValueDef; override; final;
 
-    function GetElementType: TwbElementType; override;
-    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override;
-    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
+    function GetElementType: TwbElementType; override; final;
+    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
 
     {---IwbUnion---}
     procedure RecheckDecider;
@@ -1877,14 +1877,14 @@ type
 
   TwbRecordHeaderStruct = class(TwbStruct, IwbRecordHeaderStruct)
   protected
-    function CanContainFormIDs: Boolean; override;
-    procedure BuildRef; override;
-    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    function IsElementEditable(const aElement: IwbElement): Boolean; override;
-    function GetIsEditable: Boolean; override;
-    function GetIsRemovable: Boolean; override;
-    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    function CanContainFormIDs: Boolean; override; final;
+    procedure BuildRef; override; final;
+    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
+    function IsElementEditable(const aElement: IwbElement): Boolean; override; final;
+    function GetIsEditable: Boolean; override; final;
+    function GetIsRemovable: Boolean; override; final;
+    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
   end;
 
   TwbValue = class(TwbValueBase, IwbSortableContainer)
@@ -1892,21 +1892,21 @@ type
     vIsFlags     : Boolean;
     vResolvedDef : IwbValueDef;
   protected
-    function GetValue: string; override;
+    function GetValue: string; override; final;
     function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override;
-    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
 
-    function IsFlags: Boolean; override;
+    function IsFlags: Boolean; override; final;
 
-    procedure Init; override;
-    procedure Reset; override;
-    function GetResolvedValueDef: IwbValueDef; override;
+    procedure Init; override; final;
+    procedure Reset; override; final;
+    function GetResolvedValueDef: IwbValueDef; override; final;
 
-    function GetElementType: TwbElementType; override;
-    procedure SetEditValue(const aValue: string); override;
-    procedure SetNativeValue(const aValue: Variant); override;
+    function GetElementType: TwbElementType; override; final;
+    procedure SetEditValue(const aValue: string); override; final;
+    procedure SetNativeValue(const aValue: Variant); override; final;
 
     {--- IwbSortableContainer ---}
     function GetSorted: Boolean;
@@ -1917,14 +1917,14 @@ type
   protected {private}
     cieLockCount: Integer;
   protected
-    procedure InvalidateParentStorage; override;
-    function CanContainFormIDs: Boolean; override;
-    procedure BuildRef; override;
-    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override;
-    function IsElementEditable(const aElement: IwbElement): Boolean; override;
-    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
-    procedure SetModified(aValue: Boolean); override;
-    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure InvalidateParentStorage; override; final;
+    function CanContainFormIDs: Boolean; override; final;
+    procedure BuildRef; override; final;
+    function CompareExchangeFormID(aOldFormID: TwbFormID; aNewFormID: TwbFormID): Boolean; override; final;
+    function IsElementEditable(const aElement: IwbElement): Boolean; override; final;
+    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
+    procedure SetModified(aValue: Boolean); override; final;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override; final;
 
     {--- IwbContainedIn ---}
     procedure ContainerChanged;
@@ -1933,19 +1933,19 @@ type
   end;
 
   TwbStringListTerminator = class(TwbElement, IwbStringListTerminator)
-    function GetName: string; override;
-    function GetElementType: TwbElementType; override;
-    function GetConflictPriority: TwbConflictPriority; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
-    procedure SetEditValue(const aValue: string); override;
-    procedure SetNativeValue(const aValue: Variant); override;
-    function GetDataSize: Integer; override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
-    procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
-    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function GetDontShow: Boolean; override;
+    function GetName: string; override; final;
+    function GetElementType: TwbElementType; override; final;
+    function GetConflictPriority: TwbConflictPriority; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
+    procedure SetEditValue(const aValue: string); override; final;
+    procedure SetNativeValue(const aValue: Variant); override; final;
+    function GetDataSize: Integer; override; final;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
+    procedure MergeStorageInternal(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function GetDontShow: Boolean; override; final;
   end;
 
   IwbFlag = interface(IwbElement)
@@ -1975,32 +1975,32 @@ type
                        const aFlagsDef   : IwbFlagsDef;
                              aIndex      : Integer);
 
-    function GetName: string; override;
-    function GetDef: IwbNamedDef; override;
-    function GetValueDef: IwbValueDef; override;
+    function GetName: string; override; final;
+    function GetDef: IwbNamedDef; override; final;
+    function GetValueDef: IwbValueDef; override; final;
 
-    function GetValue: string; override;
-    function GetSummary: string; override;
-    function GetSortKeyCached(aExtended: Boolean): string; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
-    function GetConflictPriority: TwbConflictPriority; override;
-    function GetDontShow: Boolean; override;
-    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override;
-    function GetDataSize: Integer; override;
-    procedure InvalidateParentStorage; override;
+    function GetValue: string; override; final;
+    function GetSummary: string; override; final;
+    function GetSortKeyCached(aExtended: Boolean): string; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
+    function GetConflictPriority: TwbConflictPriority; override; final;
+    function GetDontShow: Boolean; override; final;
+    procedure InformStorage(var aBasePtr: Pointer; aEndPtr: Pointer); override; final;
+    function GetDataSize: Integer; override; final;
+    procedure InvalidateParentStorage; override; final;
 
-    function GetIsEditable: Boolean; override;
-    function GetIsRemovable: Boolean; override;
+    function GetIsEditable: Boolean; override; final;
+    function GetIsRemovable: Boolean; override; final;
 
-    procedure Remove; override;
+    procedure Remove; override; final;
 
-    function GetEditValue: string; override;
-    procedure SetEditValue(const aValue: string); override;
+    function GetEditValue: string; override; final;
+    procedure SetEditValue(const aValue: string); override; final;
 
-    function GetNativeValue: Variant; override;
-    procedure SetNativeValue(const aValue: Variant); override;
+    function GetNativeValue: Variant; override; final;
+    procedure SetNativeValue(const aValue: Variant); override; final;
 
-    function GetElementType: TwbElementType; override;
+    function GetElementType: TwbElementType; override; final;
 
     {--- IwbFlag ---}
     function GetFlagsDef: IwbFlagsDef;
@@ -2046,46 +2046,46 @@ type
     constructor Create(const aContainer  : IwbContainer;
                              aType       : Integer;
                              aLabel      : Cardinal); overload;
-    destructor Destroy; override;
-    procedure AfterConstruction; override;
+    destructor Destroy; override; final;
+    procedure AfterConstruction; override; final;
 
     function grStruct: PwbGroupRecordStruct; inline;
 
-    function GetCountedRecordCount: Cardinal; override;
-    procedure InitDataPtr; override;
-    procedure ScanData; override;
-    procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); override;
+    function GetCountedRecordCount: Cardinal; override; final;
+    procedure InitDataPtr; override; final;
+    procedure ScanData; override; final;
+    procedure InformPrevMainRecord(const aPrevMainRecord : IwbMainRecord); override; final;
 
-    function GetName: string; override;
-    function GetShortName: string; override;
-    function GetElementType: TwbElementType; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    procedure Remove; override;
-    procedure NotifyChangedInternal(aContainer: Pointer); override;
+    function GetName: string; override; final;
+    function GetShortName: string; override; final;
+    function GetElementType: TwbElementType; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    procedure Remove; override; final;
+    procedure NotifyChangedInternal(aContainer: Pointer); override; final;
 
-    function CanCopy: Boolean; override;
+    function CanCopy: Boolean; override; final;
 
-    function GetAddList: TDynStrings; override;
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function GetAddList: TDynStrings; override; final;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
     procedure Sort(aForce: Boolean = False);
 
-    procedure UpdateEnded; override;
+    procedure UpdateEnded; override; final;
 
-    procedure SetModified(aValue: Boolean); override;
+    procedure SetModified(aValue: Boolean); override; final;
 
-    procedure PrepareSave; override;
-    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override;
-    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override;
-    procedure FindUsedMasters(aMasters: PwbUsedMasters); override;
+    procedure PrepareSave; override; final;
+    procedure WriteToStreamInternal(aStream: TStream; aResetModified: TwbResetModified); override; final;
+    function MastersUpdated(const aOld, aNew: TwbFileIDs; aOldCount, aNewCount: TwbSlotCounts): Boolean; override; final;
+    procedure FindUsedMasters(aMasters: PwbUsedMasters); override; final;
 
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
 
     procedure MakeHeaderWriteable;
 
-    procedure BuildRef; override;
-    function LinksToParent: Boolean; override;
-    function Reached: Boolean; override;
+    procedure BuildRef; override; final;
+    function LinksToParent: Boolean; override; final;
+    function Reached: Boolean; override; final;
 
     function FindChildGroup(aType: Integer; const aMainRecord: IwbMainRecord): IwbGroupRecord; overload;
     function FindChildGroup(aType: Integer; const aLabel: Cardinal): IwbGroupRecord; overload;
@@ -2099,7 +2099,7 @@ type
     procedure SetGroupLabel(aLabel: Cardinal);
     function GetChildrenOf: IwbMainRecord;
 
-    procedure AddElement(const aElement: IwbElement); override;
+    procedure AddElement(const aElement: IwbElement); override; final;
 
     procedure ContainerChanged;
 
@@ -2127,45 +2127,45 @@ type
                              aPos       : Integer;
                        const aDef       : IwbSubRecordArrayDef);
 
-    function GameDefObj: TwbGameDef; override;
-    function ContextObj: TwbGameContext; override;
-    function GetFile: IwbFile; override;
-    function GetContainingMainRecord: IwbMainRecord; override;
-    function RefMainObj: TObject; override;
+    function GameDefObj: TwbGameDef; override; final;
+    function ContextObj: TwbGameContext; override; final;
+    function GetFile: IwbFile; override; final;
+    function GetContainingMainRecord: IwbMainRecord; override; final;
+    function RefMainObj: TObject; override; final;
 
     procedure DoProcess(const aContainer : IwbContainer;
                               aPos       : Integer);
 
-    procedure DoInit(aNeedSorted: Boolean); override;
+    procedure DoInit(aNeedSorted: Boolean); override; final;
 
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
-    procedure BeforeActualRemove; override;
-    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override;
+    procedure BeforeActualRemove; override; final;
+    procedure DoAfterSet(const aOldValue, aNewValue: Variant); override; final;
     procedure UpdateCountViaPath;
 
-    function GetValue: string; override;
-    function GetCheck: string; override;
-    function GetSummary: string; override;
-    function GetName: string; override;
-    function GetDef: IwbNamedDef; override;
-    function GetElementType: TwbElementType; override;
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    procedure SetModified(aValue: Boolean); override;
-    function CanContainFormIDs: Boolean; override;
-    function CanElementReset: Boolean; override;
-    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override;
+    function GetValue: string; override; final;
+    function GetCheck: string; override; final;
+    function GetSummary: string; override; final;
+    function GetName: string; override; final;
+    function GetDef: IwbNamedDef; override; final;
+    function GetElementType: TwbElementType; override; final;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    procedure SetModified(aValue: Boolean); override; final;
+    function CanContainFormIDs: Boolean; override; final;
+    function CanElementReset: Boolean; override; final;
+    procedure ElementChanged(const aElement: IwbElement; aContainer: Pointer); override; final;
 
-    procedure SetToDefaultInternal; override;
+    procedure SetToDefaultInternal; override; final;
 
-    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
 //    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
-    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
 
-    function CanMoveElement: Boolean; override;
+    function CanMoveElement: Boolean; override; final;
 
-    procedure UpdateNameSuffixes; override;
+    procedure UpdateNameSuffixes; override; final;
 
     {---IwbSortableContainer---}
     function GetSorted: Boolean;
@@ -2186,34 +2186,34 @@ type
                              aPos       : Integer;
                        const aDef       : IwbSubRecordStructDef);
 
-    function GameDefObj: TwbGameDef; override;
-    function ContextObj: TwbGameContext; override;
-    function GetFile: IwbFile; override;
-    function GetContainingMainRecord: IwbMainRecord; override;
-    function RefMainObj: TObject; override;
+    function GameDefObj: TwbGameDef; override; final;
+    function ContextObj: TwbGameContext; override; final;
+    function GetFile: IwbFile; override; final;
+    function GetContainingMainRecord: IwbMainRecord; override; final;
+    function RefMainObj: TObject; override; final;
 
-    procedure TryAssignMembers(const aSource: IwbElement); override;
+    procedure TryAssignMembers(const aSource: IwbElement); override; final;
 
     procedure AddRequiredElements;
-    function Add(const aName: string; aSilent: Boolean): IwbElement; override;
+    function Add(const aName: string; aSilent: Boolean): IwbElement; override; final;
 
-    function GetValue: string; override;
-    function GetSummary: string; override;
-    function GetSortKeyInternal(aExtended: Boolean): string; override;
-    function GetCheck: string; override;
-    function GetName: string; override;
-    function GetDef: IwbNamedDef; override;
-    function GetElementType: TwbElementType; override;
-    function IsElementRemovable(const aElement: IwbElement): Boolean; override;
-    function CanContainFormIDs: Boolean; override;
-    function CanElementReset: Boolean; override;
-    function RemoveInjected(aCanRemove: Boolean): Boolean; override;
+    function GetValue: string; override; final;
+    function GetSummary: string; override; final;
+    function GetSortKeyInternal(aExtended: Boolean): string; override; final;
+    function GetCheck: string; override; final;
+    function GetName: string; override; final;
+    function GetDef: IwbNamedDef; override; final;
+    function GetElementType: TwbElementType; override; final;
+    function IsElementRemovable(const aElement: IwbElement): Boolean; override; final;
+    function CanContainFormIDs: Boolean; override; final;
+    function CanElementReset: Boolean; override; final;
+    function RemoveInjected(aCanRemove: Boolean): Boolean; override; final;
 
-    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override;
+    function CanAssignInternal(aIndex: Integer; const aElement: IwbElement; aCheckDontShow: Boolean): Boolean; override; final;
 //    function GetAssignTemplates(aIndex: Integer): TwbTemplateElements; override;
-    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override;
-    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override;
-    function GetIsInSK(aIndex: Integer): Boolean; override;
+    function AssignInternal(aIndex: Integer; const aElement: IwbElement; aOnlySK: Boolean): IwbElement; override; final;
+    function AddIfMissingInternal(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement; override; final;
+    function GetIsInSK(aIndex: Integer): Boolean; override; final;
 
     {--- IwbHasSignature ---}
     function GetSignature: TwbSignature;

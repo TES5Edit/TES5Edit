@@ -48,12 +48,12 @@ type
   protected
     procedure SavePluginNames(const aHeader: IwbContainer; aNames, aLightNames: TStrings);
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbCoSaveDefTES5 = class(TwbSaveDefTES5Base)
   public
-    procedure Define; override;
+    procedure Define; override; final;
   end;
 
   TwbSaveContextTES5 = class(TwbLoadingSaveContext)

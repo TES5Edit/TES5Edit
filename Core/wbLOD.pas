@@ -167,7 +167,7 @@ type
     function GetTreeByFormID(const aFormID: TwbFormID): PwbLodTES5Tree;
   public
     constructor Create(const aGameDef: TwbGameDef; aSlotLayout: TwbSlotLayout; const WorldspaceID: string);
-    destructor Destroy; override;
+    destructor Destroy; override; final;
     procedure LoadFromData(const aData: TBytes);
     procedure SaveToFile(const aFileName: string);
     procedure LoadAtlas(const aData: TBytes);
