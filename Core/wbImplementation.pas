@@ -43,6 +43,9 @@ type
     class destructor DestroyIDLock;
     function TakeDenseID(aRecord: Pointer): Cardinal;
     procedure ReturnDenseID(aID: Cardinal);
+    procedure SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
+    function RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
+    function BackupSaved(const aFrom: string; const aAlert: TwbSaveMessageProc): Boolean;
   public
     destructor Destroy; override; final;
     procedure AllocateDenseIDs(const aRecords: TDynMainRecords); override; final;
@@ -53,6 +56,10 @@ type
     function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override; final;
     function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; override; final;
     procedure ForceClosedFiles; override; final;
+    function WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite; overload; override; final;
+    function WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite; overload; override; final;
+    function CommitSave(const aWrite: TwbSaveWrite; const aAlert: TwbSaveMessageProc): Boolean; override; final;
+    function RenamePendingSaves(const aAlert: TwbSaveMessageProc): Boolean; override; final;
     function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override; final;
     function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; override; final;
     function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; override; final;
@@ -94,6 +101,7 @@ implementation
 uses
   System.Generics.Collections,
   System.IniFiles,
+  System.IOUtils,
   System.Math,
 {$IFDEF USE_PARALLEL_BUILD_REFS}
   System.SyncObjs,
@@ -25935,6 +25943,257 @@ begin
     wbProgressCallback;
   end;
   ForceClosed;
+end;
+
+function TwbLoadingGameContext.WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
+const
+  ResetModifiedFromBool : array[Boolean] of TwbResetModified = (rmNo, rmSetInternal);
+var
+  lCRC    : TwbCRC32;
+  lStream : TBufferedFileStream;
+begin
+  Result := Default(TwbSaveWrite);
+  Result.TargetName := aFile.FileNameOnDisk;
+  Result.SaveName := Result.TargetName;
+  Result.NeedsRename := FileExists(Settings.DataPath + Result.TargetName);
+  if Result.NeedsRename then begin
+    Result.SaveName := Result.TargetName + aSuffix;
+    var lIdx := 0;
+    while FileExists(Settings.DataPath + Result.SaveName) do begin
+      Inc(lIdx);
+      Result.SaveName := Result.TargetName + aSuffix + '_' + lIdx.ToString;
+    end;
+  end;
+
+  lCRC := aFile.CRC32;
+  lStream := TBufferedFileStream.Create(Settings.DataPath + Result.SaveName, fmCreate, 1024 * 1024);
+  try
+    try
+      aReport('Saving: ' + Result.SaveName);
+      aFile.WriteToStream(lStream, ResetModifiedFromBool[Settings.ResetModifiedOnSave]);
+      Result.Commit := True;
+      if not (fsMemoryMapped in aFile.FileStates) then
+        Result.TryDirectRename := True;
+    finally
+      lStream.Free;
+    end;
+
+    if Result.NeedsRename then
+      if lCRC = aFile.CRC32 then begin
+        System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
+        Result.NeedsRename := False;
+        Result.TryDirectRename := False;
+        Result.Commit := False;
+        aReport('File has not changed, removing: ' + Result.SaveName);
+      end;
+
+    if Result.Commit then
+      Result.Saved := True;
+  except
+    on E: Exception do begin
+      System.SysUtils.DeleteFile(Settings.DataPath + Result.SaveName);
+      Result.Failed := True;
+      Result.NeedsRename := False;
+      aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
+    end;
+  end;
+end;
+
+function TwbLoadingGameContext.WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite;
+var
+  lStream : TBufferedFileStream;
+begin
+  Result := Default(TwbSaveWrite);
+  Result.SaveName := aFile.FileName;
+  Result.NeedsRename := FileExists(Result.SaveName);
+  Result.SaveName := Copy(Result.SaveName, Length(Settings.DataPath) + 1, Length(Result.SaveName));
+  Result.TargetName := Result.SaveName;
+  if Result.NeedsRename then
+    Result.SaveName := Result.SaveName + aSuffix;
+
+  try
+    ForceDirectories(ExtractFilePath(Settings.DataPath + Result.SaveName));
+    if Result.NeedsRename then begin
+      var lIdx := 0;
+      while FileExists(Settings.DataPath + Result.SaveName) do begin
+        Inc(lIdx);
+        Result.SaveName := Result.TargetName + aSuffix + '_' + lIdx.ToString;
+      end;
+    end;
+    lStream := TBufferedFileStream.Create(Settings.DataPath + Result.SaveName, fmCreate, 1024 * 1024);
+    try
+      aReport('Saving: ' + Result.SaveName);
+      aFile.WriteToStream(lStream);
+      Result.Saved := True;
+      Result.Commit := True;
+      Result.TryDirectRename := True;
+      aFile.Modified := False;
+    finally
+      lStream.Free;
+    end;
+  except
+    on E: Exception do begin
+      Result.Failed := True;
+      Result.NeedsRename := False;
+      Result.Commit := False;
+      aReport('Error saving ' + Result.SaveName + ': ' + E.Message);
+    end;
+  end;
+end;
+
+function TwbLoadingGameContext.CommitSave(const aWrite: TwbSaveWrite; const aAlert: TwbSaveMessageProc): Boolean;
+begin
+  Result := True;
+  var lNeedsRename := aWrite.NeedsRename;
+  if lNeedsRename and aWrite.TryDirectRename then try
+    if not RenameSaved(aWrite.SaveName, aWrite.TargetName, nil) then begin
+      Result := False;
+      wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
+    end else
+      lNeedsRename := False;
+  except end;
+
+  if lNeedsRename then begin
+    if not Assigned(gcRenameQueue) then
+      gcRenameQueue := TStringList.Create;
+    gcRenameQueue.AddPair(aWrite.TargetName, aWrite.SaveName);
+    wbProgress('Queued renaming of save "' + Settings.DataPath + aWrite.SaveName + '" to "' + Settings.DataPath + aWrite.TargetName + '" on shutdown.');
+  end else if Assigned(gcRenameQueue) then
+    for var lIdx := Pred(gcRenameQueue.Count) downto 0 do
+      if SameText(aWrite.TargetName, gcRenameQueue.KeyNames[lIdx]) then begin
+        var lQueued := gcRenameQueue.ValueFromIndex[lIdx];
+        if Settings.DontBackup then begin
+          wbProgress('******** WARNING ********');
+          wbProgress('* Backups are disabled! *');
+          wbProgress('******** WARNING ********');
+          wbProgress('Removing previously queued save "' + Settings.DataPath + lQueued + '" as a direct save to "' + Settings.DataPath + aWrite.TargetName + '" has succeeded.');
+          System.SysUtils.DeleteFile(Settings.DataPath + lQueued);
+        end else begin
+          wbProgress('Backing up previously queued save "' + Settings.DataPath + lQueued + '" as a direct save to "' + Settings.DataPath + aWrite.TargetName + '" has succeeded.');
+          BackupSaved(lQueued, aAlert);
+        end;
+        gcRenameQueue.Delete(lIdx);
+      end;
+end;
+
+function TwbLoadingGameContext.RenamePendingSaves(const aAlert: TwbSaveMessageProc): Boolean;
+begin
+  Result := True;
+  if Assigned(gcRenameQueue) then
+    for var lIdx := 0 to Pred(gcRenameQueue.Count) do
+      if not RenameSaved(gcRenameQueue.ValueFromIndex[lIdx], gcRenameQueue.Names[lIdx], aAlert) then
+        Result := False;
+end;
+
+procedure TwbLoadingGameContext.SaveFailed(const aText: string; const aAlert: TwbSaveMessageProc);
+begin
+  wbProgress(aText);
+  if Assigned(aAlert) then
+    aAlert(aText);
+end;
+
+function TwbLoadingGameContext.RenameSaved(const aFrom, aTo: string; const aAlert: TwbSaveMessageProc): Boolean;
+var
+  lFrom        : string;
+  lTo          : string;
+  lBackup      : string;
+  lBackupBase  : string;
+  lOldDateTime : TDateTime;
+begin
+  Result := False;
+
+  if Settings.DontSave then
+    Exit;
+
+  EnsureBackupPath;
+
+  lFrom := Settings.DataPath + aFrom;
+  if not FileExists(lFrom) then begin
+    SaveFailed('Could not rename "' + lFrom + '". File not found.', aAlert);
+    Exit;
+  end;
+
+  lTo := Settings.DataPath + aTo;
+  lOldDateTime := 0;
+  if FileExists(lTo) then begin
+    try
+      lOldDateTime := wbGetLastWriteTime(lTo);
+    except
+      SaveFailed('Could not get last modified time of "' + lTo + '".', aAlert);
+    end;
+    lBackup := Settings.BackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+    lBackupBase := lBackup;
+    var lIdx := 1;
+    while FileExists(lBackup) and (lIdx < 1000) do begin
+      lBackup := lBackupBase + '_' + lIdx.ToString;
+      Inc(lIdx);
+    end;
+    if not Settings.DontBackup then begin
+      wbProgress('Renaming "' + lTo + '" to "' + lBackup + '".');
+      if not RenameFile(lTo, lBackup) then begin
+        SaveFailed('Could not rename "' + lTo + '" to "' + lBackup + '".', aAlert);
+        Exit;
+      end;
+    end else begin
+      wbProgress('Deleting "' + lTo + '".');
+      if not System.SysUtils.DeleteFile(lTo) then begin
+        SaveFailed('Could not delete "' + lTo + '".', aAlert);
+        Exit;
+      end;
+    end;
+  end;
+
+  wbProgress('Renaming "' + lFrom + '" to "' + lTo + '".');
+  if not RenameFile(lFrom, lTo) then begin
+    SaveFailed('Could not rename "' + lFrom + '" to "' + lTo + '".', aAlert);
+    Exit;
+  end;
+
+  if not (gcOrderFromPluginsTxt in GameDefObj.Capabilities) then
+    if lOldDateTime <> 0 then
+      if wbIsModule(lTo, GameDefObj.GameExeName) then try
+        TFile.SetLastWriteTime(lTo, lOldDateTime);
+      except
+        SaveFailed('Could not set last modified time of "' + lTo + '".', aAlert);
+      end;
+
+  Result := True;
+end;
+
+function TwbLoadingGameContext.BackupSaved(const aFrom: string; const aAlert: TwbSaveMessageProc): Boolean;
+var
+  lFrom       : string;
+  lBackup     : string;
+  lBackupBase : string;
+begin
+  Result := False;
+
+  Assert(not Settings.DontSave);
+  Assert(not Settings.DontBackup);
+
+  EnsureBackupPath;
+
+  lFrom := Settings.DataPath + aFrom;
+  if not FileExists(lFrom) then begin
+    SaveFailed('Could not rename "' + lFrom + '". File not found.', aAlert);
+    Exit;
+  end;
+
+  lBackup := Settings.BackupPath + aFrom.Replace('.save.', '.backup.');
+  lBackupBase := lBackup;
+  var lIdx := 1;
+  while FileExists(lBackup) and (lIdx < 1000) do begin
+    lBackup := lBackupBase + '_' + lIdx.ToString;
+    Inc(lIdx);
+  end;
+
+  wbProgress('Renaming "' + lFrom + '" to "' + lBackup + '".');
+  if not RenameFile(lFrom, lBackup) then begin
+    SaveFailed('Could not rename "' + lFrom + '" to "' + lBackup + '".', aAlert);
+    Exit;
+  end;
+
+  Result := True;
 end;
 
 function TwbLoadingGameContext.HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer;

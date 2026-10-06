@@ -1464,7 +1464,6 @@ type
 
 var
   frmMain                     : TfrmMain;
-  FilesToRename               : TStringList;
 
 procedure DoRename;
 
@@ -1754,144 +1753,6 @@ begin
   end;
 end;
 
-function DoRenameModule(const aFrom, aTo: string; aSilent: Boolean): Boolean;
-var
-  lFrom       : string;
-  lTo         : string;
-  lBackup     : string;
-  s           : string;
-  OldDateTime : TDateTime;
-  i           : Integer;
-begin
-  Result := False;
-
-  if xeContext.Settings.DontSave then
-    Exit;
-
-  if not xeDontBackup and not DirectoryExists(xeContext.Settings.BackupPath) then
-    if not ForceDirectories(xeContext.Settings.BackupPath) then
-      xeContext.Settings.BackupPath := xeContext.Settings.DataPath;
-
-  lFrom := xeContext.Settings.DataPath + aFrom;
-  if not FileExists(lFrom) then begin
-    s := 'Could not rename "'+lFrom+'". File not found.';
-    wbProgress(s);
-    if not aSilent then
-      MessageBox(0, PChar(s), 'Error', 0);
-    Exit;
-  end;
-
-  // create backup file
-  lTo := xeContext.Settings.DataPath + aTo;
-  OldDateTime := 0;
-  if FileExists(lTo) then begin
-    try
-      OldDateTime := wbGetLastWriteTime(lTo);
-    except
-      s := 'Could not get last modified time of "' + lTo + '".';
-      wbProgress(s);
-      if not aSilent then
-        MessageBox(0, PChar(s), 'Error', 0);
-    end;
-    lBackup := xeContext.Settings.BackupPath + ExtractFileName(aTo) + '.backup.' + FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
-    s := lBackup;
-    i := 1;
-    while FileExists(lBackup) and (i < 1000) do begin
-      lBackup := s + '_' + i.ToString;
-      Inc(i);
-    end;
-    if not xeDontBackup then begin
-      // backup original file
-      wbProgress('Renaming "' + lTo + '" to "' + lBackup + '".');
-      if not RenameFile(lTo, lBackup) then begin
-        s := 'Could not rename "' + lTo + '" to "' + lBackup + '".';
-        wbProgress(s);
-        if not aSilent then
-          MessageBox(0, PChar(s), 'Error', 0);
-        Exit;
-      end;
-    end else begin
-      // remove original file
-      wbProgress('Deleting "' + lTo + '".');
-      if not System.SysUtils.DeleteFile(lTo) then begin
-        s := 'Could not delete "' + lTo + '".';
-        wbProgress(s);
-        if not aSilent then
-          MessageBox(0, PChar(s), 'Error', 0);
-        Exit;
-      end;
-    end;
-  end;
-
-  // rename temp save file to original
-  wbProgress('Renaming "' + lFrom + '" to "' + lTo + '".');
-  if not RenameFile(lFrom, lTo) then begin
-    s := 'Could not rename "' + lFrom + '" to "' + lTo + '".';
-    wbProgress(s);
-    if not aSilent then
-      MessageBox(0, PChar('Could not rename "' + lFrom + '" to "' + lTo + '".'), 'Error', 0);
-    Exit;
-  end;
-
-  if not (gcOrderFromPluginsTxt in xeContext.GameDefObj.Capabilities) then
-    if OldDateTime <> 0 then
-      if wbIsModule(lTo, xeContext.GameDefObj.GameExeName) then try
-      TFile.SetLastWriteTime(lTo, OldDateTime);
-    except
-      s := 'Could not set last modified time of "' + lTo + '".';
-      wbProgress(s);
-      if not aSilent then
-        MessageBox(0, PChar(s), 'Error', 0);
-    end;
-
-  Result := True;
-end;
-
-function DoBackupModule(const aFrom, aOriginal: string; aSilent: Boolean): Boolean;
-var
-  lFrom       : string;
-  lBackup     : string;
-  s           : string;
-  i           : Integer;
-begin
-  Result := False;
-
-  Assert(not xeContext.Settings.DontSave);
-  Assert(not xeDontBackup);
-
-  if not xeDontBackup and not DirectoryExists(xeContext.Settings.BackupPath) then
-    if not ForceDirectories(xeContext.Settings.BackupPath) then
-      xeContext.Settings.BackupPath := xeContext.Settings.DataPath;
-
-  lFrom := xeContext.Settings.DataPath + aFrom;
-  if not FileExists(lFrom) then begin
-    s := 'Could not rename "'+lFrom+'". File not found.';
-    wbProgress(s);
-    if not aSilent then
-      MessageBox(0, PChar(s), 'Error', 0);
-    Exit;
-  end;
-
-  lBackup := xeContext.Settings.BackupPath + aFrom.Replace('.save.', '.backup.');
-  s := lBackup;
-  i := 1;
-  while FileExists(lBackup) and (i < 1000) do begin
-    lBackup := s + '_' + i.ToString;
-    Inc(i);
-  end;
-
-  wbProgress('Renaming "' + lFrom + '" to "' + lBackup + '".');
-  if not RenameFile(lFrom, lBackup) then begin
-    s := 'Could not rename "' + lFrom + '" to "' + lBackup + '".';
-    wbProgress(s);
-    if not aSilent then
-      MessageBox(0, PChar(s), 'Error', 0);
-    Exit;
-  end;
-
-  Result := True;
-end;
-
 var
   _SaveProgress: Boolean;
 
@@ -1988,7 +1849,6 @@ end;
 
 procedure DoRename;
 var
-  i        : Integer;
   AnyError : Boolean;
 begin
   wbForceTerminate := False;
@@ -2009,21 +1869,20 @@ begin
   if xeContext.Settings.DontSave then
     Exit;
 
-  if not Assigned(FilesToRename) then
+  if not xeContext.HasRenameQueue then
     Exit;
 
-  if not xeDontBackup and not DirectoryExists(xeContext.Settings.BackupPath) then
-    if not ForceDirectories(xeContext.Settings.BackupPath) then
-      xeContext.Settings.BackupPath := xeContext.Settings.DataPath;
+  xeContext.EnsureBackupPath;
 
   wbCurrentAction := 'Renaming previously saved files';
   wbProgress(wbCurrentAction);
 
   _SaveProgress := False;
-  AnyError := False;
-  for i := 0 to Pred(FilesToRename.Count) do
-    if not DoRenameModule(FilesToRename.ValueFromIndex[i], FilesToRename.Names[i], False) then
-      AnyError := True;
+  AnyError := not xeContext.RenamePendingSaves(
+    procedure(const aText: string)
+    begin
+      MessageBox(0, PChar(aText), 'Error', 0);
+    end);
 
   if AnyError then begin
     MessageBox(0, PChar('One or more errors occured during renaming of saved modules.'+#13#13+
@@ -5101,7 +4960,7 @@ begin
 
   AddMessage('Using '+xeContext.GameDefObj.Identity.GameName2+' Data Path: ' + xeContext.Settings.DataPath);
 
-  if not (xeContext.Settings.DontSave or xeDontBackup) then
+  if not (xeContext.Settings.DontSave or xeContext.Settings.DontBackup) then
     AddMessage('Using Backup Path: ' + xeContext.Settings.BackupPath);
 
   AddMessage('Using Scripts Path: ' + xeContext.Settings.ScriptsPath);
@@ -15527,26 +15386,15 @@ end;
 
 function TfrmMain.SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
 var
-  i, j                        : Integer;
-  FileStream                  : TBufferedFileStream;
+  i                           : Integer;
   FileType                    : array of Byte;
-  _File                       : IwbFile;
-  _LFile                      : TwbLocalizationFile;
-  NeedsRename                 : Boolean;
-  u                           : string;
-  s                           : string;
   t                           : string;
   SavedAny                    : Boolean;
-  SavedThisOne                : Boolean;
   AnyErrors                   : Boolean;
-  TryDirectRename             : Boolean;
   FoundSomething              : Boolean;
-  CRC                         : TwbCRC32;
-  BackupWarningGiven          : Boolean;
-
-const
-  ResetModifiedFromBool : array[Boolean] of TwbResetModified =
-    (rmNo, rmSetInternal);
+  SaveWrite                   : TwbSaveWrite;
+  Report                      : TwbSaveMessageProc;
+  Alert                       : TwbSaveMessageProc;
 begin
   Result := srNothingToDo;
 
@@ -15554,8 +15402,16 @@ begin
     Exit;
 
   FoundSomething := False;
-  BackupWarningGiven := False;
   SavedAny := False;
+  Report := procedure(const aText: string)
+    begin
+      PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + aText);
+    end;
+  if not aSilent then
+    Alert := procedure(const aText: string)
+      begin
+        MessageBox(0, PChar(aText), 'Error', 0);
+      end;
 
   pgMain.ActivePage := tbsMessages;
 
@@ -15595,9 +15451,9 @@ begin
           if not aSilent then
             if ShowModal <> mrOk then
               Exit(srAbort);
-          xeDontBackup := not cbBackup.Checked;
+          xeContext.Settings.DontBackup := not cbBackup.Checked;
           if Assigned(Settings) then begin
-            Settings.WriteBool(frmMain.Name, 'DontBackup', xeDontBackup);
+            Settings.WriteBool(frmMain.Name, 'DontBackup', xeContext.Settings.DontBackup);
             Settings.UpdateFile;
           end;
           wbStartTime := Now;
@@ -15613,141 +15469,19 @@ begin
         for i := 0 to Pred(CheckListBox1.Items.Count) do
           if CheckListBox1.Checked[i] then begin
             FoundSomething := True;
-            TryDirectRename := False;
-            SavedThisOne := False;
 
-            // localization file
-            if FileType[i] = 1 then begin
-              _LFile := TwbLocalizationFile(CheckListBox1.Items.Objects[i]);
-              s := _LFile.FileName;
-              NeedsRename := FileExists(s);
-              s := Copy(s, length(xeContext.Settings.DataPath) + 1, length(s)); // relative path to string file from Data folder
-              u := s;
-              if NeedsRename then
-                s := s + t;
+            if FileType[i] = 1 then
+              SaveWrite := xeContext.WriteSave(TwbLocalizationFile(CheckListBox1.Items.Objects[i]), t, Report)
+            else
+              SaveWrite := xeContext.WriteSave(IwbFile(Pointer(CheckListBox1.Items.Objects[i])), t, Report);
 
-              try
-                ForceDirectories(ExtractFilePath(xeContext.Settings.DataPath + s));
-                if NeedsRename then begin
-                  j := 0;
-                  while FileExists(xeContext.Settings.DataPath + s) do begin
-                    Inc(j);
-                    s := u + t + '_' + j.ToString;
-                  end;
-                end;
-                FileStream := TBufferedFileStream.Create(xeContext.Settings.DataPath + s, fmCreate, 1024*1024);
-                try
-                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
-                  _LFile.WriteToStream(FileStream);
-                  SavedAny := True;
-                  SavedThisOne := True;
-                  TryDirectRename := True; //TODO: make sure this is ok?
-                  _LFile.Modified := False;
-                finally
-                  FileStream.Free;
-                end;
-
-              except
-                on E: Exception do begin
-                  AnyErrors := True;
-                  NeedsRename := False;
-                  SavedThisOne := False;
-                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
-                end;
-              end;
-
-            end else
-
-            // plugin file
-            begin
-
-              _File := IwbFile(Pointer(CheckListBox1.Items.Objects[i]));
-
-              s := CheckListBox1.Items[i];
-              u := s;
-              NeedsRename := FileExists(xeContext.Settings.DataPath + CheckListBox1.Items[i]);
-              if NeedsRename then begin
-                s := s + t;
-                j := 0;
-                while FileExists(xeContext.Settings.DataPath + s) do begin
-                  Inc(j);
-                  s := u + t + '_' + j.ToString;
-                end;
-              end;
-
-              CRC := _File.CRC32;
-              FileStream := TBufferedFileStream.Create(xeContext.Settings.DataPath + s, fmCreate, 1024 * 1024);
-              try
-                try
-                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Saving: ' + s);
-                  _File.WriteToStream(FileStream, ResetModifiedFromBool[xeContext.Settings.ResetModifiedOnSave]);
-                  SavedThisOne := True;
-                  if not (fsMemoryMapped in _File.FileStates) then
-                    TryDirectRename := True;
-                finally
-                  FileStream.Free;
-                end;
-
-                if NeedsRename then
-                  if CRC = _File.CRC32 then begin
-                    System.SysUtils.DeleteFile(xeContext.Settings.DataPath + s);
-                    NeedsRename := False;
-                    TryDirectRename := False;
-                    SavedThisOne := False;
-                    PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] File has not changed, removing: ' + s);
-                  end;
-
-                if SavedThisOne then
-                  SavedAny := True;
-              except
-                on E: Exception do begin
-                  System.SysUtils.DeleteFile(xeContext.Settings.DataPath + s);
-                  AnyErrors := True;
-                  NeedsRename := False;
-                  PostAddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Error saving ' + s + ': ' + E.Message);
-                end;
-              end;
-
-            end;
-
-            if SavedThisOne then begin
-              if NeedsRename and TryDirectRename then try
-                if not DoRenameModule(s, u, True) then begin
-                  AnyErrors := True;
-                  wbProgress('Direct save failed. Will queue save for renaming on shutdown.');
-                end else
-                  NeedsRename := False;
-              except end;
-
-              if NeedsRename then begin
-                if not Assigned(FilesToRename) then
-                  FilesToRename := TStringList.Create;
-                // s - rename from, relative to DataPath
-                // u - rename to, relative to DataPath
-                FilesToRename.AddPair(u, s);
-                wbProgress('Queued renaming of save "' + xeContext.Settings.DataPath + s + '" to "' + xeContext.Settings.DataPath + u + '" on shutdown.');
-              end else begin
-                if Assigned(FilesToRename) then
-                  for j := Pred(FilesToRename.Count) downto 0 do begin
-                    if SameText(u, FilesToRename.KeyNames[j]) then begin
-                      s := FilesToRename.ValueFromIndex[j];
-                      if xeDontBackup then begin
-                        if not BackupWarningGiven then begin
-                          wbProgress('******** WARNING ********');
-                          wbProgress('* Backups are disabled! *');
-                          wbProgress('******** WARNING ********');
-                        end;
-                        wbProgress('Removing previously queued save "' + xeContext.Settings.DataPath + s + '" as a direct save to "' + xeContext.Settings.DataPath + u + '" has succeeded.');
-                        System.SysUtils.DeleteFile(xeContext.Settings.DataPath + s);
-                      end else begin
-                        wbProgress('Backing up previously queued save "' + xeContext.Settings.DataPath + s + '" as a direct save to "' + xeContext.Settings.DataPath + u + '" has succeeded.');
-                        DoBackupModule(s, u, aSilent);
-                      end;
-                      FilesToRename.Delete(j);
-                    end;
-                  end;
-              end;
-            end;
+            if SaveWrite.Saved then
+              SavedAny := True;
+            if SaveWrite.Failed then
+              AnyErrors := True;
+            if SaveWrite.Commit then
+              if not xeContext.CommitSave(SaveWrite, Alert) then
+                AnyErrors := True;
 
             DoProcessMessages;
             tmrMessagesTimer(nil);

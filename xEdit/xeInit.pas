@@ -35,7 +35,6 @@ var
   xeIconResource           : string;
 
   xeMasterUpdateDone       : Boolean;
-  xeDontBackup             : Boolean = False;
   xeRemoveTempPath         : Boolean = True;
   xeQuickShowConflicts     : Boolean;
   xeVeryQuickShowConflicts : Boolean;

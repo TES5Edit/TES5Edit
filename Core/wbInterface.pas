@@ -921,6 +921,7 @@ type
   TwbSaveContext = class;
   TwbSaveContextClass = class of TwbSaveContext;
   TwbLocalizationHandler = class;
+  TwbLocalizationFile = class;
   TwbHiddenSet = class;
   IwbFile = interface;
   IwbSaveTables = interface;
@@ -3918,6 +3919,7 @@ type
     AllowMakePartial      : Boolean;
     TrackAllEditorID      : Boolean;
     DontSave              : Boolean;
+    DontBackup            : Boolean;
     AllowDirectSave       : Boolean;
     StripMasters          : Boolean;
     StripEmptyMasters     : Boolean;
@@ -4096,8 +4098,21 @@ type
 
   TwbModuleListClass = class of TwbModuleList;
 
+  TwbSaveMessageProc = reference to procedure(const aText: string);
+
+  TwbSaveWrite = record
+    SaveName        : string;
+    TargetName      : string;
+    NeedsRename     : Boolean;
+    TryDirectRename : Boolean;
+    Commit          : Boolean;
+    Saved           : Boolean;
+    Failed          : Boolean;
+  end;
+
   TwbGameContext = class(TInterfacedObject, IwbGameContext)
   protected
+    gcRenameQueue    : TStringList;
     gcGameDef        : IwbGameDef;
     gcGameDefObj     : TwbGameDef;
     gcFiles          : TwbFiles;
@@ -4172,6 +4187,12 @@ type
     function MastersForFile(const aFileName: string; aMasters: TStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; virtual; abstract;
     function MastersForFile(const aFileName: string; out aMasters: TDynStrings; aIsESM: PBoolean = nil; aIsLight: PBoolean = nil; aIsLocalized: PBoolean = nil; aIsUpdate: PBoolean = nil; aIsMedium: PBoolean = nil; aIsBluePrint: PBoolean = nil): Boolean; overload; virtual; abstract;
     procedure ForceClosedFiles; virtual; abstract;
+    function WriteSave(const aFile: IwbFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite; overload; virtual; abstract;
+    function WriteSave(aFile: TwbLocalizationFile; const aSuffix: string; const aReport: TwbSaveMessageProc): TwbSaveWrite; overload; virtual; abstract;
+    function CommitSave(const aWrite: TwbSaveWrite; const aAlert: TwbSaveMessageProc): Boolean; virtual; abstract;
+    function RenamePendingSaves(const aAlert: TwbSaveMessageProc): Boolean; virtual; abstract;
+    function HasRenameQueue: Boolean;
+    procedure EnsureBackupPath;
     function FindBSAs(const IniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
     function FindBSAs(const IniName, CustomIniName, DataPath: String; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; overload; virtual; abstract;
     function HasBSAs(ModName: string; const DataPath: String; Exact, modini: Boolean; var bsaNames: TStringList; var bsaMissing: TStringList): Integer; virtual; abstract;
@@ -7298,11 +7319,24 @@ begin
   FreeAndNil(gcLEncoding[True]);
   FreeAndNil(gcLEncoding[False]);
   FreeAndNil(gcSaveContextsLock);
+  FreeAndNil(gcRenameQueue);
   inherited;
 end;
 
 procedure TwbGameContext.DetachFilesFromModules;
 begin
+end;
+
+function TwbGameContext.HasRenameQueue: Boolean;
+begin
+  Result := Assigned(gcRenameQueue);
+end;
+
+procedure TwbGameContext.EnsureBackupPath;
+begin
+  if not Settings.DontBackup and not DirectoryExists(Settings.BackupPath) then
+    if not ForceDirectories(Settings.BackupPath) then
+      Settings.BackupPath := Settings.DataPath;
 end;
 
 function TwbGameContext.SaveContextFileByName(const aFileName: string): IwbFile;
