@@ -199,6 +199,7 @@ type
     SaveContextsCompare   : string;
 
     function ParsePump: Boolean;
+    function ParseStateManifest: Boolean;
     function ParseEdit: Boolean;
     function ParseSaveContexts: Boolean;
     function Any: Boolean;
@@ -254,6 +255,15 @@ begin
     end;
     if xeToolMode = tmLODgen then
       xeAutoLoad := True;
+  end;
+end;
+
+function TxeTestSwitches.ParseStateManifest: Boolean;
+begin
+  Result := True;
+  if wbFindCmdLineParam('teststatemanifest', StateManifest) and (StateManifest = '') then begin
+    ShowMessage('teststatemanifest requires an output file, as -teststatemanifest:<filename>');
+    Exit(False);
   end;
 end;
 
@@ -314,11 +324,6 @@ begin
     var lValue: string;
     if wbFindCmdLineParam('testviewrecord', lValue) and (lValue <> '') then
       ViewTextRecord := lValue;
-  end;
-
-  if wbFindCmdLineParam('teststatemanifest', StateManifest) and (StateManifest = '') then begin
-    ShowMessage('teststatemanifest requires an output file, as -teststatemanifest:<filename>');
-    Exit(False);
   end;
 
   if wbFindCmdLineParam('testviewtree', ViewTreeFile) then begin

@@ -115,7 +115,7 @@ type
     procedure DoTestFilter;
     procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
-    procedure TestWriteStateManifest;
+    procedure TestWriteStateManifest(const aTarget: IwbFile);
     procedure TestWriteStateManifestEnd;
   end;
 
@@ -4297,7 +4297,7 @@ begin
   end;
 end;
 
-procedure TxeTestFormHelper.TestWriteStateManifest;
+procedure TxeTestFormHelper.TestWriteStateManifest(const aTarget: IwbFile);
 var
   lLines : TStringList;
 begin
@@ -4305,7 +4305,7 @@ begin
   try
     WriteStateManifest(lLines, xeContext, ConflictView);
     AddRuntime(lLines, xeContext);
-    lLines.Add('runtime.target=' + xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File.FileName);
+    lLines.Add('runtime.target=' + aTarget.FileName);
     lLines.Add('runtime.version=' + VersionString.ToString);
     lLines.Add('runtime.nexusurl=' + xeNexusModsUrl);
     lLines.Add('runtime.qac.quickclean=' + BoolToStr(xeQuickClean, True));

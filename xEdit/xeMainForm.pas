@@ -16874,6 +16874,10 @@ begin
       end else if (xeToolMode in [tmMasterRestore, tmESPify]) then
         ChangesMade := RestorePluginsFromMaster
       else if (xeToolMode in [tmCheckForErrors, tmCheckForITM, tmCheckForDR]) then begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+        if (xeToolMode in [tmCheckForITM, tmCheckForDR]) and (xeTestSwitches.StateManifest <> '') then
+          TestWriteStateManifest(Files[High(Files)]);
+{$ENDIF}
         if (xeToolMode in [tmCheckForITM, tmCheckForDR]) then
           mniNavFilterForCleaning.Click;
         JumpTo(Files[High(Files)].Header, False);
@@ -16904,6 +16908,10 @@ begin
           end else
             CheckResult := 255;
         finally
+{$IFDEF XE_TEST_CONTROL_POINTS}
+          if (xeToolMode in [tmCheckForITM, tmCheckForDR]) and (xeTestSwitches.StateManifest <> '') then
+            TestWriteStateManifestEnd;
+{$ENDIF}
           xeContext.Settings.DontSave := True;
         end;
       end else if xeToolMode = tmMasterUpdate then
@@ -20090,7 +20098,7 @@ begin
         if xeQuickClean then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if xeTestSwitches.StateManifest <> '' then
-            TestWriteStateManifest;
+            TestWriteStateManifest(lModules.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File);
 {$ENDIF}
           pnlNavContent.Visible := False;
           try

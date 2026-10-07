@@ -859,6 +859,8 @@ begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
   if not xeTestSwitches.ParsePump then
     Exit(False);
+  if not xeTestSwitches.ParseStateManifest then
+    Exit(False);
 {$ENDIF}
 
   if xeToolMode = tmEdit then begin
