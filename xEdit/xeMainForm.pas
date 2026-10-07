@@ -895,6 +895,7 @@ type
     procedure InvalidateElementsTreeView(aNodes: TNodeArray); overload;
     procedure InvalidateElementsTreeView; overload;
     procedure ResetAllConflict;
+    procedure DisableConflictViewModes;
     procedure ResetConflictOfAllFiles;
     procedure ResetActiveTree;
     procedure ExpandView;
@@ -13416,19 +13417,7 @@ begin
   AssignPersWrldChild := False;
   InheritConflictByParent := True;
 
-  if ConflictView.ModGroupsEnabled or ConflictView.OnlyMasterAndLeafs or xeQuickShowConflicts then begin
-    if ConflictView.ModGroupsEnabled then
-      wbProgress('Disabling ModGroups');
-    if ConflictView.OnlyMasterAndLeafs then
-      wbProgress('Disabling "Only Show Master and Leafs"');
-    if xeQuickShowConflicts then
-      wbProgress('Disabling "Quick Show Conflict" mode');
-    ConflictView.ModGroupsEnabled := False;
-    ConflictView.OnlyMasterAndLeafs := False;
-    ConflictView.QuickShowConflicts := False;
-    xeQuickShowConflicts := False;
-    ResetAllConflict;
-  end;
+  DisableConflictViewModes;
 
   FilterPreset := True;
   try
@@ -13501,19 +13490,7 @@ begin
   AssignPersWrldChild := False;
   InheritConflictByParent := True;
 
-  if ConflictView.ModGroupsEnabled or ConflictView.OnlyMasterAndLeafs or xeQuickShowConflicts then begin
-    if ConflictView.ModGroupsEnabled then
-      wbProgress('Disabling ModGroups');
-    if ConflictView.OnlyMasterAndLeafs then
-      wbProgress('Disabling "Only Show Master and Leafs"');
-    if xeQuickShowConflicts then
-      wbProgress('Disabling "Quick Show Conflict" mode');
-    ConflictView.ModGroupsEnabled := False;
-    ConflictView.OnlyMasterAndLeafs := False;
-    ConflictView.QuickShowConflicts := False;
-    xeQuickShowConflicts := False;
-    ResetAllConflict;
-  end;
+  DisableConflictViewModes;
 
   FilterPreset := True;
   FilterOnlyOne := True;
@@ -14989,6 +14966,23 @@ procedure TfrmMain.ResetAllConflict;
 begin
   xeContext.ConflictRulesChanged;
   vstNav.Invalidate;
+end;
+
+procedure TfrmMain.DisableConflictViewModes;
+begin
+  if ConflictView.ModGroupsEnabled or ConflictView.OnlyMasterAndLeafs or xeQuickShowConflicts then begin
+    if ConflictView.ModGroupsEnabled then
+      wbProgress('Disabling ModGroups');
+    if ConflictView.OnlyMasterAndLeafs then
+      wbProgress('Disabling "Only Show Master and Leafs"');
+    if xeQuickShowConflicts then
+      wbProgress('Disabling "Quick Show Conflict" mode');
+    ConflictView.ModGroupsEnabled := False;
+    ConflictView.OnlyMasterAndLeafs := False;
+    ConflictView.QuickShowConflicts := False;
+    xeQuickShowConflicts := False;
+    ResetAllConflict;
+  end;
 end;
 
 procedure TfrmMain.ResetConflictOfAllFiles;
@@ -16889,12 +16883,12 @@ begin
         if (xeToolMode in [tmCheckForITM, tmCheckForDR]) and (xeTestSwitches.StateManifest <> '') then
           TestWriteStateManifest(Files[High(Files)]);
 {$ENDIF}
-        if (xeToolMode in [tmCheckForITM, tmCheckForDR]) then
-          mniNavFilterForCleaning.Click;
-        JumpTo(Files[High(Files)].Header, False);
-        vstNav.ClearSelection;
-        vstNav.FocusedNode := vstNav.FocusedNode.Parent;
-        vstNav.Selected[vstNav.FocusedNode] := True;
+        if xeToolMode = tmCheckForErrors then begin
+          JumpTo(Files[High(Files)].Header, False);
+          vstNav.ClearSelection;
+          vstNav.FocusedNode := vstNav.FocusedNode.Parent;
+          vstNav.Selected[vstNav.FocusedNode] := True;
+        end;
         DoSetActiveRecord(nil);
         pgMain.ActivePage := tbsMessages;
         try
@@ -16904,20 +16898,33 @@ begin
               CheckResult := 127
             else
               CheckResult := ErrorsCount;
-          end else if xeToolMode = tmCheckForITM then begin
-            mniNavRemoveIdenticalToMasterClick(Nil);
-            if ITMcount>126 then
-              CheckResult := 127
-            else
-              CheckResult := ITMcount;
-          end else if xeToolMode = tmCheckForDR then begin
-            mniNavUndeleteAndDisableReferencesClick(Nil);
-            if DRcount>126 then
-              CheckResult := 127
-            else
-              CheckResult := DRcount;
-          end else
-            CheckResult := 255;
+          end else begin
+            UserWasActive := True;
+            DisableConflictViewModes;
+            var lClean := TwbQuickClean.Create(Files[High(Files)], ConflictView,
+              procedure(const aText: string) begin PostAddMessage(aText); end,
+              procedure(const aText: string) begin wbProgress(aText); end);
+            try
+              lClean.CountOnly := True;
+              PerformLongAction('', '', procedure
+              begin
+                lClean.Filter;
+                if xeToolMode = tmCheckForITM then
+                  lClean.RemoveIdentical
+                else
+                  lClean.Undelete;
+              end, True);
+              var lCount := lClean.Counts.Undeleted;
+              if xeToolMode = tmCheckForITM then
+                lCount := lClean.Counts.Removed;
+              if lCount>126 then
+                CheckResult := 127
+              else
+                CheckResult := lCount;
+            finally
+              lClean.Free;
+            end;
+          end;
         finally
 {$IFDEF XE_TEST_CONTROL_POINTS}
           if (xeToolMode in [tmCheckForITM, tmCheckForDR]) and (xeTestSwitches.StateManifest <> '') then

@@ -169,6 +169,8 @@ type
     Removed           : Cardinal;
   end;
 
+  TwbQuickCleanSaveCallback = reference to function: Boolean;
+
   TwbQuickClean = class
   private
     qcFile       : IwbFile;
@@ -183,7 +185,6 @@ type
     procedure Progress(const aText: string);
   protected
     function IsUnsaved: Boolean; virtual;
-    function Save: Boolean; virtual; abstract;
     procedure Reset; virtual;
     procedure ReportDirtyInfo; virtual;
   public
@@ -193,7 +194,7 @@ type
     procedure Filter; virtual;
     procedure Undelete; virtual;
     procedure RemoveIdentical; virtual;
-    function Run: Boolean;
+    function Run(const aSave: TwbQuickCleanSaveCallback): Boolean;
     property Counts: TwbCleanCounts read qcCounts;
     property DirtyInfos: TwbDirtyInfos read qcDirtyInfos;
   end;
@@ -2109,7 +2110,7 @@ begin
   wbReportDirtyInfos(qcDirtyInfos, qcContext.GameDefObj, qcContext.GameDefObj.NexusModsUrl, Post);
 end;
 
-function TwbQuickClean.Run: Boolean;
+function TwbQuickClean.Run(const aSave: TwbQuickCleanSaveCallback): Boolean;
 var
   lWasUnsaved : Boolean;
 begin
@@ -2118,7 +2119,7 @@ begin
   Undelete;
   RemoveIdentical;
   lWasUnsaved := IsUnsaved;
-  if not Save then
+  if not aSave() then
     Exit;
   if lWasUnsaved then begin
     Reset;
@@ -2126,7 +2127,7 @@ begin
     Undelete;
     RemoveIdentical;
     lWasUnsaved := IsUnsaved;
-    if not Save then
+    if not aSave() then
       Exit;
     if lWasUnsaved then begin
       Filter;
