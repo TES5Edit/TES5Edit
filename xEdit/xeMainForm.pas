@@ -768,6 +768,7 @@ type
     RebuildingViewTree: Boolean;
     GeneratorStarted: Boolean;
     GeneratorDone: Boolean;
+    QuickCleanSaveFailed: Boolean;
     ScriptHotkeys: TStringList;
     CheckResult : Byte;
     LOOTPluginInfos: TwbDirtyInfos;
@@ -919,6 +920,7 @@ type
     function AddNewFile(out aFile: IwbFile; aTemplate: PwbModuleInfo): Boolean; overload;
 
     function SaveChanged(aSilent: Boolean = False; aShowMessageIfNothing: Boolean = False): TwbSaveResult;
+    procedure EndQuickCleanAfterFailedSave;
     procedure JumpTo(aInterface: IInterface; aBackward: Boolean);
     function FindNodeForElement(const aElement: IwbElement): PVirtualNode;
     function FindNodeOrAncestorForElement(const aElement: IwbElement): PVirtualNode;
@@ -5979,7 +5981,7 @@ begin
       TerminateThread(CheckNexusModsReleaseThread.Handle, 0);
   end;
 
-  if SaveChanged >= srAbort then begin
+  if not QuickCleanSaveFailed and (SaveChanged >= srAbort) then begin
     Action := caNone;
     Exit;
   end;
@@ -16442,6 +16444,15 @@ begin
   Close;
 end;
 
+procedure TfrmMain.EndQuickCleanAfterFailedSave;
+begin
+  if not xeAutoExit then
+    Exit;
+  QuickCleanSaveFailed := True;
+  CheckResult := 1;
+  tmrShutdown.Enabled := True;
+end;
+
 procedure TfrmMain.tmrStartupTimer(Sender: TObject);
 begin
   tmrStartup.Enabled := False;
@@ -20118,8 +20129,10 @@ begin
                 WasUnsaved := True;
 
             if xeQuickCleanAutoSave then begin
-              if SaveChanged(True) >= srAbort then
+              if SaveChanged(True) >= srAbort then begin
+                EndQuickCleanAfterFailedSave;
                 Exit;
+              end;
 
               if WasUnsaved then begin
                 ResetAllConflict;
@@ -20140,8 +20153,10 @@ begin
                     WasUnsaved := True;
 
                 if xeQuickCleanAutoSave then begin
-                  if SaveChanged(True) >= srAbort then
+                  if SaveChanged(True) >= srAbort then begin
+                    EndQuickCleanAfterFailedSave;
                     Exit;
+                  end;
 
                   if WasUnsaved then begin
                     mniNavFilterForCleaning.Click;
