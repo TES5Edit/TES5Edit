@@ -1107,8 +1107,6 @@ type
 
     CheckedCount: Cardinal;
     ErrorsCount : Cardinal;
-    ITMcount    : Cardinal;
-    DRcount     : Cardinal;
     AutoDone    : Boolean;
     ColumnWidth : Integer;
     RowHeight   : Integer;
@@ -4665,8 +4663,6 @@ begin
 
   AutoDone := False;
   ErrorsCount := 0;
-  ITMcount := 0;
-  DRcount := 0;
 
   SetDoubleBuffered(Self);
   SaveInterval := DefaultInterval;
@@ -10809,15 +10805,11 @@ var
   StartTick                   : UInt64;
   i {, n}                     : Integer;
   MainRecord                  : IwbMainRecord;
-  AutoModeCheckForDR          : Boolean;
-  Operation, Plugin           : String;
+  Plugin                      : String;
   PluginCRC32                 : Cardinal;
   DirtyInfo                   : PwbDirtyInfo;
 begin
-  AutoModeCheckForDR := xeToolMode in [tmCheckForDR];
-  if AutoModeCheckForDR then Operation := 'Count' else Operation := 'Undelet';
-
-  if not AutoModeCheckForDR and not xeContext.Settings.EditAllowed then
+  if not xeContext.Settings.EditAllowed then
     Exit;
   if xeContext.Settings.TranslationMode then
     Exit;
@@ -10857,7 +10849,7 @@ begin
     Exit;
   end;
 
-  if not AutoModeCheckForDR and not EditWarn then
+  if not EditWarn then
     Exit;
 
   vstNav.BeginUpdate;
@@ -10900,9 +10892,8 @@ begin
               PostAddMessage('Skipping: ' + MainRecord.Name);
             end;
             uoUndelete: begin
-              PostAddMessage(Operation+'ing: ' + MainRecord.Name);
-              if not AutoModeCheckForDR then
-                MainRecord.UndeleteAndDisable;
+              PostAddMessage('Undeleting: ' + MainRecord.Name);
+              MainRecord.UndeleteAndDisable;
               Inc(UndeletedCount);
             end;
           end;
@@ -10912,7 +10903,7 @@ begin
         Inc(Count);
         if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
+            ' Undeleted Records: ' + IntToStr(UndeletedCount) +
             ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime);
           DoProcessMessages;
           StartTick := GetTickCount64;
@@ -10926,8 +10917,8 @@ begin
       UpdatePnlCancelVisible;
     end;
 
-    PostAddMessage('['+Operation+'ing and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', '+Operation+'ed Records: ' + IntToStr(UndeletedCount) +
+    PostAddMessage('[Undeleting and Disabling References done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', Undeleted Records: ' + IntToStr(UndeletedCount) +
       ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime));
     if DeletedNAVM > 0 then
       PostAddMessage('<Warning: Plugin contains ' + IntToStr(DeletedNAVM) + ' deleted NavMeshes which can not be undeleted>');
@@ -10940,8 +10931,6 @@ begin
       DirtyInfo.UDR := UndeletedCount;
       DirtyInfo.NAV := DeletedNAVM;
     end;
-
-    if AutomodeCheckForDR then DRcount := UndeletedCount;
   finally
     vstNav.EndUpdate;
     Caption := Application.Title;
@@ -11052,18 +11041,14 @@ var
   StartTick                   : UInt64;
   i                           : Integer;
   IsRecord                    : Boolean;
-  AutoModeCheckForITM         : Boolean;
-  Operation, Plugin           : String;
+  Plugin                      : String;
   PluginCRC32                 : Cardinal;
   DirtyInfo                   : PwbDirtyInfo;
 
 begin
   PluginCRC32 := 0;
 
-  AutoModeCheckForITM := xeToolMode in [tmCheckForITM];
-  if AutoModeCheckForITM then Operation := 'Count' else Operation := 'Remov';
-
-  if not xeContext.Settings.EditAllowed and not AutoModeCheckForITM then
+  if not xeContext.Settings.EditAllowed then
     Exit;
   if xeContext.Settings.TranslationMode then
     Exit;
@@ -11103,7 +11088,7 @@ begin
     Exit;
   end;
 
-  if not AutoModeCheckForITM and not EditWarn then
+  if not EditWarn then
     Exit;
 
   vstNav.BeginUpdate;
@@ -11141,13 +11126,11 @@ begin
             if lAction = qcCantRemove then
               PostAddMessage('Can''t remove: ' + NodeData.Element.Name)
             else begin
-              if AutoModeCheckForITM then
-                PostAddMessage(Operation+'ing: ' + NodeData.Element.Name)
-              else if lAction = qcMakePartial then begin
+              if lAction = qcMakePartial then begin
                 PostAddMessage('Making Partial Form: ' + NodeData.Element.Name);
                 wbCleanApply(lAction, NodeData.Element, NodeData.Container);
               end else begin
-                PostAddMessage(Operation+'ing: ' + NodeData.Element.Name);
+                PostAddMessage('Removing: ' + NodeData.Element.Name);
                 wbCleanApply(lAction, NodeData.Element, NodeData.Container);
                 NodeData.Container := nil;
                 NodeData.Element := nil;
@@ -11163,7 +11146,7 @@ begin
         Inc(Count);
         if StartTick + 500 < GetTickCount64 then begin
           Caption := sJustWait + ' Processed Records: ' + IntToStr(Count) +
-            ' '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
+            ' Removed Records: ' + IntToStr(RemovedCount) +
             ' Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime);
           DoProcessMessages;
           StartTick := GetTickCount64;
@@ -11177,8 +11160,8 @@ begin
       UpdatePnlCancelVisible;
     end;
 
-    PostAddMessage('['+Operation+'ing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
-      ', '+Operation+'ed Records: ' + IntToStr(RemovedCount) +
+    PostAddMessage('[Removing "Identical to Master" records done] ' + ' Processed Records: ' + IntToStr(Count) +
+      ', Removed Records: ' + IntToStr(RemovedCount) +
       ', Elapsed Time: ' + wbFormatElapsedTime( Now - wbStartTime)); // Does not show up if handling "a lot" of records !
 
     // store dirty information
@@ -11186,8 +11169,6 @@ begin
       DirtyInfo := wbDirtyInfoFor(LOOTPluginInfos, Plugin, PluginCRC32);
       DirtyInfo.ITM := RemovedCount;
     end;
-
-    if AutoModeCheckForITM then ITMcount := RemovedCount;
 
   finally
     vstNav.EndUpdate;
