@@ -20088,6 +20088,10 @@ begin
           mniNavFilterConflicts.Click;
 
         if xeQuickClean then begin
+{$IFDEF XE_TEST_CONTROL_POINTS}
+          if xeTestSwitches.StateManifest <> '' then
+            TestWriteStateManifest;
+{$ENDIF}
           pnlNavContent.Visible := False;
           try
             mniNavFilterForCleaning.Click;
@@ -20147,6 +20151,10 @@ begin
               mniNavLOManagersDirtyInfoClick(mniNavLOManagersDirtyInfo);
             end;
           finally
+{$IFDEF XE_TEST_CONTROL_POINTS}
+            if xeTestSwitches.StateManifest <> '' then
+              TestWriteStateManifestEnd;
+{$ENDIF}
             pnlNavContent.Visible := True;
             vstNav.Invalidate;
             xeQuickClean := False;

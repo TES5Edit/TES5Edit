@@ -115,6 +115,8 @@ type
     procedure DoTestFilter;
     procedure TestFilterImages(aLines: TStrings);
     procedure DoTestSaveContextsCompare;
+    procedure TestWriteStateManifest;
+    procedure TestWriteStateManifestEnd;
   end;
 
 procedure TestSaveContextsReport(const aStage: string);
@@ -122,6 +124,8 @@ procedure TestSaveContextsReport(const aStage: string);
 implementation
 
 uses
+  StateManifest,
+  StateManifestValues,
   System.Diagnostics,
   System.Hash,
   System.IOUtils,
@@ -4290,6 +4294,42 @@ begin
       TestPumpNote('the modal loop has ended; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s')
     else
       TestPumpNote('back in the outermost message loop; close deferred ' + BoolToStr(CloseDeferred, True) + '; observing for 2 s');
+  end;
+end;
+
+procedure TxeTestFormHelper.TestWriteStateManifest;
+var
+  lLines : TStringList;
+begin
+  lLines := TStringList.Create;
+  try
+    WriteStateManifest(lLines, xeContext, ConflictView);
+    AddRuntime(lLines, xeContext);
+    lLines.Add('runtime.target=' + xeContext.ModuleList.ModulesByLoadOrder(False).FilteredByFlag(mfTaggedForPluginMode)[0]._File.FileName);
+    lLines.Add('runtime.version=' + VersionString.ToString);
+    lLines.Add('runtime.nexusurl=' + xeNexusModsUrl);
+    lLines.Add('runtime.qac.quickclean=' + BoolToStr(xeQuickClean, True));
+    lLines.Add('runtime.qac.autosave=' + BoolToStr(xeQuickCleanAutoSave, True));
+    lLines.Add('runtime.navsort.infosort=' + BoolToStr(xeContext.Settings.SortINFO and mniNavHeaderINFObyPreviousINFO.Checked, True));
+    lLines.SaveToFile(xeTestSwitches.StateManifest, TEncoding.UTF8);
+  finally
+    lLines.Free;
+  end;
+end;
+
+procedure TxeTestFormHelper.TestWriteStateManifestEnd;
+var
+  lLines : TStringList;
+begin
+  if not FileExists(xeTestSwitches.StateManifest) then
+    Exit;
+  lLines := TStringList.Create;
+  try
+    lLines.LoadFromFile(xeTestSwitches.StateManifest, TEncoding.UTF8);
+    AddRuntimeEnd(lLines, xeContext);
+    lLines.SaveToFile(xeTestSwitches.StateManifest, TEncoding.UTF8);
+  finally
+    lLines.Free;
   end;
 end;
 

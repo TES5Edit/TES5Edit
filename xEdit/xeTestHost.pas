@@ -127,6 +127,7 @@ type
     ViewText              : Boolean;
     ViewTextFile          : string;
     ViewTextRecord        : string;
+    StateManifest         : string;
     ViewTree              : Boolean;
     ViewTreeFile          : string;
     ViewTreeList          : string;
@@ -315,6 +316,11 @@ begin
       ViewTextRecord := lValue;
   end;
 
+  if wbFindCmdLineParam('teststatemanifest', StateManifest) and (StateManifest = '') then begin
+    ShowMessage('teststatemanifest requires an output file, as -teststatemanifest:<filename>');
+    Exit(False);
+  end;
+
   if wbFindCmdLineParam('testviewtree', ViewTreeFile) then begin
     if (ViewTreeFile = '') or not wbFindCmdLineParam('testviewrecords', ViewTreeList) or (ViewTreeList = '') then begin
       ShowMessage('testviewtree requires an output file and a record list, as -testviewtree:<filename> -testviewrecords:<filename>');
@@ -458,7 +464,7 @@ end;
 function TxeTestSwitches.Any: Boolean;
 begin
   Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or Hide or
-    Filter or SaveContexts or (Pump <> '');
+    Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization
