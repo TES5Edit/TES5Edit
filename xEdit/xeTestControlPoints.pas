@@ -3516,6 +3516,10 @@ begin
         lLines.Add('unusedanswers' + #9 + IntToStr(Length(lListed) - TestHost.TestCopyIntoAnswerIndex) + #9 +
           string.Join(',', lListed, TestHost.TestCopyIntoAnswerIndex, Length(lListed) - TestHost.TestCopyIntoAnswerIndex));
     end;
+    lLines.Add('after' + #9 + 'hook ' + BoolToStr(Assigned(_wbCanOverwriteCallback), True) + #9 + 'progress "' + wbCurrentProgress + '"');
+    for var i := Low(lElements) to High(lElements) do
+      if Supports(lElements[i], IwbMainRecord, lRecord) then
+        lLines.Add('sourceafter' + #9 + IntToStr(i) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
 
     for var i := Low(lResult) to High(lResult) do
       if Assigned(lResult[i]) then begin
@@ -3541,7 +3545,8 @@ begin
       var lMasters := '';
       for var j := 0 to Pred(lFile.MasterCount[True]) do
         lMasters := lMasters + ' ' + lFile.Masters[j, True].FileName;
-      lLines.Add('file' + #9 + lFile.FileName + #9 + 'records ' + IntToStr(lFile.RecordCount) + #9 + 'masters' + lMasters);
+      lLines.Add('file' + #9 + lFile.FileName + #9 + 'records ' + IntToStr(lFile.RecordCount) + #9 + 'masters' + lMasters + #9 +
+        'modified ' + BoolToStr(lFile.Modified, True));
       AddTree(lFile, 0);
       lStream := TMemoryStream.Create;
       try
@@ -3734,6 +3739,11 @@ begin
     lResult := mrOk;
   if lResult = mrNone then
     Exit;
+  Inc(TestHost.TestCopyIntoAnswerCount);
+  if TestHost.TestCopyIntoAnswerCount > 40 then begin
+    lResult := mrCancel;
+    lExtra := (lExtra + ' too many dialogs, cancelled').Trim;
+  end;
   lText := lText.Replace(#13, ' ').Replace(#10, ' ');
   if Length(lText) > 300 then
     lText := Copy(lText, 1, 300) + '...';

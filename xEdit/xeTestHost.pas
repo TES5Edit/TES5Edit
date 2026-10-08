@@ -79,6 +79,7 @@ type
     TestCopyIntoAnswerIndex  : Integer;
     TestCopyIntoNotOffered   : string;
     TestCopyIntoNameGiven    : Boolean;
+    TestCopyIntoAnswerCount  : Integer;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
