@@ -80,6 +80,15 @@ type
     TestCopyIntoNotOffered   : string;
     TestCopyIntoNameGiven    : Boolean;
     TestCopyIntoAnswerCount  : Integer;
+    TestRenumberLines        : TStringList;
+    TestRenumberTimer        : TTimer;
+    TestRenumberAnswer       : TTimer;
+    TestRenumberTarget       : IwbFile;
+    TestRenumberAnswerIndex  : Integer;
+    TestRenumberStartIndex   : Integer;
+    TestRenumberAnswerCount  : Integer;
+    TestRenumberNotOffered   : Boolean;
+    TestRenumberFallback     : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
@@ -190,6 +199,16 @@ type
     CopyIntoAffixes       : string;
     CopyIntoAnswers       : string;
     CopyIntoOut           : string;
+    Renumber              : Boolean;
+    RenumberFile          : string;
+    RenumberOp            : string;
+    RenumberSource        : string;
+    RenumberTarget        : string;
+    RenumberStarts        : string;
+    RenumberAnswers       : string;
+    RenumberOut           : string;
+    RenumberCompareTo     : string;
+    RenumberFilter        : Boolean;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -465,6 +484,28 @@ begin
     xeAutoLoad := True;
   end;
 
+  if wbFindCmdLineParam('testrenumber', RenumberFile) then begin
+    wbFindCmdLineParam('testrenumbertarget', RenumberTarget);
+    wbFindCmdLineParam('testrenumberstarts', RenumberStarts);
+    wbFindCmdLineParam('testrenumberanswers', RenumberAnswers);
+    wbFindCmdLineParam('testrenumbercompareto', RenumberCompareTo);
+    RenumberFilter := FindCmdLineSwitch('testrenumberfilter');
+    if (RenumberFile = '') or
+       not wbFindCmdLineParam('testrenumberop', RenumberOp) or
+       not (SameText(RenumberOp, 'renumber') or SameText(RenumberOp, 'inject') or SameText(RenumberOp, 'compact')) or
+       not wbFindCmdLineParam('testrenumbersource', RenumberSource) or
+       not wbFindCmdLineParam('testrenumberout', RenumberOut) or (RenumberOut = '') or
+       (SameText(RenumberOp, 'inject') <> (RenumberTarget <> '')) then begin
+      ShowMessage('testrenumber requires -testrenumber:<filename> -testrenumberop:<renumber|inject|compact> ' +
+        '-testrenumbersource:<module> -testrenumberout:<folder>, -testrenumbertarget:<module> with inject only ' +
+        '[-testrenumberstarts:<hex|cancel>[,...]] [-testrenumberanswers:<yes|no|cancel>[,...]] ' +
+        '[-testrenumbercompareto:<file loaded to compare with the last module>] [-testrenumberfilter]');
+      Exit(False);
+    end;
+    Renumber := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testhide', HideFile) then begin
     if (HideFile = '') or
        not wbFindCmdLineParam('testhiderecord', HideRecord) or
@@ -515,7 +556,7 @@ end;
 function TxeTestSwitches.Any: Boolean;
 begin
   Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or CopyInto or
-    Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
+    Renumber or Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization

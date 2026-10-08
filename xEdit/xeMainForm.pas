@@ -4790,7 +4790,7 @@ begin
     wbPatron := Settings.ReadBool('Options', 'Patron', wbPatron);
     if (not wbPatron or not xeAutoLoad)
 {$IFDEF XE_TEST_CONTROL_POINTS}
-      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
+      and not (xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.ViewText or xeTestSwitches.ViewTree or xeTestSwitches.Options or xeTestSwitches.CopyIntoGap or xeTestSwitches.DropMaster or xeTestSwitches.DeltaPatch or xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or xeTestSwitches.Hide or xeTestSwitches.Filter or xeTestSwitches.SaveContexts or (xeTestSwitches.PumpDuringLoad <> ''))
 {$ENDIF}
     then
       ShowDeveloperMessage;
@@ -6147,7 +6147,7 @@ begin
     TestHost.TestNavCopyAnswer.OnTimer := TestNavCopyAnswerTimer;
     TestHost.TestNavCopyAnswer.Enabled := True;
   end;
-  if xeTestSwitches.Merge or xeTestSwitches.CopyInto or (xeTestSwitches.FilterRemove <> '') then
+  if xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Renumber or (xeTestSwitches.FilterRemove <> '') then
     UseLatestCommonDialogs := False;
 {$ENDIF}
 
@@ -19915,7 +19915,7 @@ begin
 
         if xeContext.LoaderError then begin
 {$IFDEF XE_TEST_CONTROL_POINTS}
-          if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.CopyInto then begin
+          if xeTestSwitches.Conflicts or xeTestSwitches.NavCopy or xeTestSwitches.Merge or xeTestSwitches.CopyInto or xeTestSwitches.Renumber then begin
             wbProgress('Test mode FAILED: an error occured while loading modules');
             CheckResult := 255;
             if xeAutoExit then
@@ -20161,6 +20161,12 @@ begin
         if xeTestSwitches.CopyInto then
           DoTestCopyInto;
 
+        if xeTestSwitches.Renumber then
+          if xeTestSwitches.RenumberCompareTo <> '' then
+            TLoaderThread.Create(xeTestSwitches.RenumberCompareTo, Files[High(Files)])
+          else
+            DoTestRenumber;
+
         if xeTestSwitches.Hide then
           DoTestHide;
 
@@ -20245,6 +20251,15 @@ begin
         if xeAutoExit then
           tmrShutdown.Enabled := True;
       end;
+
+      if xeTestSwitches.Renumber then
+        if xeContext.LoaderError then begin
+          wbProgress('Test Renumber mode FAILED: an error occured while loading the compare to module');
+          CheckResult := 255;
+          if xeAutoExit then
+            tmrShutdown.Enabled := True;
+        end else
+          DoTestRenumber;
 
       if xeTestSwitches.SaveContexts then begin
         if xeContext.LoaderError then begin

@@ -80,6 +80,9 @@ type
     procedure TestCopyIntoRunTimer(Sender: TObject);
     procedure TestCopyIntoAnswerTimer(Sender: TObject);
     procedure TestCopyIntoWrite;
+    procedure TestRenumberRunTimer(Sender: TObject);
+    procedure TestRenumberAnswerTimer(Sender: TObject);
+    procedure TestRenumberWrite;
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
@@ -115,6 +118,7 @@ type
     procedure DoTestDeltaPatchReport;
     procedure DoTestMerge;
     procedure DoTestCopyInto;
+    procedure DoTestRenumber;
     procedure DoTestHide;
     procedure DoTestFilter;
     procedure TestFilterImages(aLines: TStrings);
@@ -3763,6 +3767,416 @@ begin
       RaiseLastOSError;
   finally
     FreeAndNil(TestHost.TestCopyIntoLines);
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+var
+  _TestRenumberSink         : TStringList;
+  _TestRenumberPrevProgress : TwbProgressCallback;
+
+procedure TestRenumberProgress(const aStatus: string);
+begin
+  if Assigned(_TestRenumberSink) then
+    _TestRenumberSink.Add('progress' + #9 + aStatus);
+  if Assigned(_TestRenumberPrevProgress) then
+    _TestRenumberPrevProgress(aStatus);
+end;
+
+procedure TxeTestFormHelper.DoTestRenumber;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  CheckResult := 2;
+  TestHost.TestRenumberLines := TStringList.Create;
+  TestHost.TestRenumberLines.Add('# xEdit renumber / inject / compact probe');
+  TestHost.TestRenumberLines.Add('# ' + xeApplicationTitle);
+  TestHost.TestRenumberLines.Add('# op = ' + xeTestSwitches.RenumberOp + ', source = ' + xeTestSwitches.RenumberSource +
+    ', target = ' + xeTestSwitches.RenumberTarget + ', starts = ' + xeTestSwitches.RenumberStarts +
+    ', answers = ' + xeTestSwitches.RenumberAnswers + ', compareto = ' + xeTestSwitches.RenumberCompareTo +
+    ', filter = ' + BoolToStr(xeTestSwitches.RenumberFilter, True));
+  TestHost.TestRenumberLines.Add('# Columns, tab separated: what / details');
+  TestHost.TestRenumberTimer := TTimer.Create(Self);
+  TestHost.TestRenumberTimer.Interval := 500;
+  TestHost.TestRenumberTimer.OnTimer := TestRenumberRunTimer;
+  TestHost.TestRenumberTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestRenumberRunTimer(Sender: TObject);
+const
+  cListLimit = 100;
+var
+  lLines  : TStringList;
+  lLayout : TwbSlotLayout;
+
+  function FindFile(const aName: string): IwbFile;
+  begin
+    Result := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, aName) then
+        Exit(Files[i]);
+  end;
+
+  function FormIDText(const aFormID: TwbFormID): string;
+  begin
+    Result := IntToHex(aFormID.ToCardinal, 8);
+  end;
+
+  procedure AddFields(const aPrefix, aPath: string; const aElement: IwbElement);
+  var
+    lContainer : IwbContainerElementRef;
+    lValue     : string;
+  begin
+    if Supports(aElement, IwbContainerElementRef, lContainer) and (lContainer.ElementCount > 0) then begin
+      for var i := 0 to Pred(lContainer.ElementCount) do
+        AddFields(aPrefix, aPath + '\' + IntToStr(i) + ' ' + lContainer.Elements[i].Name, lContainer.Elements[i]);
+      Exit;
+    end;
+    try
+      lValue := aElement.EditValue;
+    except
+      on E: Exception do
+        lValue := '<raised ' + E.ClassName + ': ' + E.Message + '>';
+    end;
+    lLines.Add(aPrefix + aPath + #9 + lValue);
+  end;
+
+  procedure AddFiles(const aWhen: string);
+  var
+    lFile   : IwbFile;
+    lRecord : IwbMainRecord;
+  begin
+    for var i := Low(Files) to High(Files) do begin
+      lFile := Files[i];
+      lLines.Add('file' + #9 + aWhen + #9 + lFile.FileName + #9 + 'records ' + IntToStr(lFile.RecordCount) + #9 +
+        'next ' + IntToHex(lFile.NextObjectID, 6) + #9 + 'modified ' + BoolToStr(lFile.Modified, True) + #9 +
+        'editable ' + BoolToStr(lFile.IsEditable, True) + #9 + 'compareload ' + BoolToStr(fsIsCompareLoad in lFile.FileStates, True));
+      if [fsIsGameMaster, fsIsHardcoded] * lFile.FileStates <> [] then
+        Continue;
+      if lFile.RecordCount > cListLimit then begin
+        lLines.Add('records' + #9 + aWhen + #9 + lFile.FileName + #9 + 'not listed, more than ' + IntToStr(cListLimit));
+        Continue;
+      end;
+      for var j := 0 to Pred(lFile.RecordCount) do begin
+        lRecord := lFile.Records[j];
+        lLines.Add('record' + #9 + aWhen + #9 + lFile.FileName + #9 + IntToStr(j) + #9 + FormIDText(lRecord.LoadOrderFormID) + #9 +
+          string(lRecord.Signature) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
+        AddFields('field' + #9 + aWhen + #9 + lFile.FileName + #9 + IntToStr(j) + #9, '', lRecord);
+      end;
+    end;
+  end;
+
+  procedure AddOwn(const aWhen: string; const aOwn: TDynMainRecords; const aBefore: TArray<TwbFormID>);
+  var
+    lMaster : IwbMainRecord;
+  begin
+    if Length(aOwn) > cListLimit then begin
+      lLines.Add('own' + #9 + aWhen + #9 + 'not listed, more than ' + IntToStr(cListLimit));
+      Exit;
+    end;
+    for var i := Low(aOwn) to High(aOwn) do begin
+      lMaster := aOwn[i].MasterOrSelf;
+      lLines.Add('own' + #9 + aWhen + #9 + IntToStr(i) + #9 + FormIDText(aBefore[i]) + #9 + FormIDText(aOwn[i].LoadOrderFormID) + #9 +
+        string(aOwn[i].Signature) + #9 + aOwn[i].EditorID + #9 + 'refby ' + IntToStr(lMaster.ReferencedByCount) + #9 +
+        'overrides ' + IntToStr(aOwn[i].OverrideCount));
+      for var j := 0 to Pred(lMaster.ReferencedByCount) do
+        with lMaster.ReferencedBy[j] do
+          lLines.Add('refby' + #9 + aWhen + #9 + IntToStr(i) + #9 + FormIDText(LoadOrderFormID) + #9 + string(Signature) + #9 +
+            _File.FileName + #9 + 'editable ' + BoolToStr(IsEditable, True));
+      for var j := 0 to Pred(aOwn[i].OverrideCount) do
+        with aOwn[i].Overrides[j] do
+          lLines.Add('override' + #9 + aWhen + #9 + IntToStr(i) + #9 + FormIDText(LoadOrderFormID) + #9 + _File.FileName);
+    end;
+  end;
+
+  procedure AddUnused(const aWhat, aList: string; aUsed: Integer);
+  var
+    lListed : TArray<string>;
+  begin
+    if aList = '' then
+      Exit;
+    lListed := aList.Split([',']);
+    if aUsed < Length(lListed) then
+      lLines.Add('unusedanswers' + #9 + aWhat + #9 + IntToStr(Length(lListed) - aUsed) + #9 +
+        string.Join(',', lListed, aUsed, Length(lListed) - aUsed));
+  end;
+
+var
+  lSource : IwbFile;
+  lItem   : TMenuItem;
+  lNode   : PVirtualNode;
+  lRecord : IwbMainRecord;
+  lOwn    : TDynMainRecords;
+  lBefore : TArray<TwbFormID>;
+  lStream : TMemoryStream;
+begin
+  TestHost.TestRenumberTimer.Enabled := False;
+  lLines := TestHost.TestRenumberLines;
+  try
+    lLayout := xeContext.SlotLayout;
+    lSource := FindFile(xeTestSwitches.RenumberSource);
+    if not Assigned(lSource) then
+      raise Exception.Create(xeTestSwitches.RenumberSource + ' is not loaded');
+    TestHost.TestRenumberTarget := nil;
+    if xeTestSwitches.RenumberTarget <> '' then begin
+      TestHost.TestRenumberTarget := FindFile(xeTestSwitches.RenumberTarget);
+      if not Assigned(TestHost.TestRenumberTarget) then
+        raise Exception.Create(xeTestSwitches.RenumberTarget + ' is not loaded');
+    end;
+    if SameText(xeTestSwitches.RenumberOp, 'inject') then
+      lItem := mniNavRenumberFormIDsInject
+    else if SameText(xeTestSwitches.RenumberOp, 'compact') then
+      lItem := mniNavCompactFormIDs
+    else
+      lItem := mniNavRenumberFormIDsFrom;
+
+    for var i := 0 to Pred(lSource.RecordCount) do begin
+      lRecord := lSource.Records[i];
+      if lRecord.LoadOrderFormID.FileID[lLayout] = lSource.LoadOrderFileID then begin
+        lOwn := lOwn + [lRecord];
+        lBefore := lBefore + [lRecord.LoadOrderFormID];
+      end;
+    end;
+    lLines.Add('source' + #9 + lSource.FileName + #9 + 'records ' + IntToStr(lSource.RecordCount) + #9 + 'own ' + IntToStr(Length(lOwn)));
+    AddOwn('before', lOwn, lBefore);
+    AddFiles('before');
+
+    if xeTestSwitches.RenumberFilter then begin
+      mniNavFilterForCleaningClick(nil);
+      lLines.Add('filter' + #9 + 'cleaning applied');
+    end;
+
+    lNode := FindNodeForElement(lSource);
+    if not Assigned(lNode) then
+      raise Exception.Create('no nav node for ' + lSource.FileName);
+    vstNav.ClearSelection;
+    vstNav.Selected[lNode] := True;
+    vstNav.FocusedNode := lNode;
+    vstNav.Expanded[lNode] := True;
+    pmuNavPopup(nil);
+    lLines.Add('menu' + #9 + 'renumber ' + BoolToStr(mniNavRenumberFormIDsFrom.Visible, True) + #9 +
+      'compact ' + BoolToStr(mniNavCompactFormIDs.Visible, True) + #9 + 'inject ' + BoolToStr(mniNavRenumberFormIDsInject.Visible, True));
+    lLines.Add('call' + #9 + lItem.Name + #9 + 'expanded ' + BoolToStr(vstNav.Expanded[lNode], True) + #9 +
+      'filterhint ' + BoolToStr(lblFilterHint.Visible, True));
+
+    TestHost.TestRenumberAnswer := TTimer.Create(Self);
+    TestHost.TestRenumberAnswer.Interval := 100;
+    TestHost.TestRenumberAnswer.OnTimer := TestRenumberAnswerTimer;
+    TestHost.TestRenumberAnswer.Enabled := True;
+
+    _TestRenumberSink := lLines;
+    _TestRenumberPrevProgress := _wbProgressCallback;
+    _wbProgressCallback := TestRenumberProgress;
+    try
+      try
+        mniNavRenumberFormIDsFromClick(lItem);
+        lLines.Add('returned');
+      except
+        on E: Exception do
+          lLines.Add('raised' + #9 + E.ClassName + #9 + E.Message);
+      end;
+    finally
+      _wbProgressCallback := _TestRenumberPrevProgress;
+      _TestRenumberSink := nil;
+      _TestRenumberPrevProgress := nil;
+      TestHost.TestRenumberAnswer.Enabled := False;
+    end;
+
+    if TestHost.TestRenumberNotOffered then
+      lLines.Add('notoffered' + #9 + xeTestSwitches.RenumberTarget);
+    AddUnused('starts', xeTestSwitches.RenumberStarts, TestHost.TestRenumberStartIndex);
+    AddUnused('answers', xeTestSwitches.RenumberAnswers, TestHost.TestRenumberAnswerIndex);
+    if TestHost.TestRenumberFallback then
+      lLines.Add('fallback' + #9 + 'a dialog was answered with no listed answer');
+    lLines.Add('after' + #9 + 'expanded ' + BoolToStr(vstNav.Expanded[lNode], True) + #9 +
+      'progress "' + wbCurrentProgress + '"' + #9 + 'page ' + pgMain.ActivePage.Name);
+    AddOwn('after', lOwn, lBefore);
+    AddFiles('after');
+
+    ForceDirectories(xeTestSwitches.RenumberOut);
+    for var i := Low(Files) to High(Files) do
+      if [fsIsGameMaster, fsIsHardcoded] * Files[i].FileStates = [] then begin
+        lStream := TMemoryStream.Create;
+        try
+          try
+            Files[i].WriteToStream(lStream, rmNo);
+            lStream.SaveToFile(TPath.Combine(xeTestSwitches.RenumberOut, Files[i].FileName));
+            lLines.Add('written' + #9 + Files[i].FileName + #9 + IntToStr(lStream.Size) + #9 +
+              IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+          except
+            on E: Exception do
+              lLines.Add('notwritten' + #9 + Files[i].FileName + #9 + E.ClassName + #9 + E.Message);
+          end;
+        finally
+          lStream.Free;
+        end;
+      end;
+    CheckResult := 0;
+  except
+    on E: Exception do begin
+      AddMessage('[Test Renumber] FAILED: ' + E.ClassName + ': ' + E.Message);
+      lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+    end;
+  end;
+  if Assigned(TestHost.TestRenumberAnswer) then
+    TestHost.TestRenumberAnswer.Enabled := False;
+  TestRenumberWrite;
+end;
+
+procedure TxeTestFormHelper.TestRenumberAnswerTimer(Sender: TObject);
+var
+  lForm   : TCustomForm;
+  lResult : TModalResult;
+  lText   : string;
+  lExtra  : string;
+  lEdit   : TEdit;
+  lToken  : string;
+
+  function HasButton(aOwner: TComponent; aResult: TModalResult): Boolean;
+  begin
+    Result := False;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if (aOwner.Components[i] is TButton) and (TButton(aOwner.Components[i]).ModalResult = aResult) then
+        Exit(True);
+      if HasButton(aOwner.Components[i], aResult) then
+        Exit(True);
+    end;
+  end;
+
+  procedure CollectText(aOwner: TComponent);
+  begin
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TLabel then
+        lText := lText + ' ' + TLabel(aOwner.Components[i]).Caption;
+      CollectText(aOwner.Components[i]);
+    end;
+  end;
+
+  function FindEdit(aOwner: TComponent): TEdit;
+  begin
+    Result := nil;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TEdit then
+        Exit(TEdit(aOwner.Components[i]));
+      Result := FindEdit(aOwner.Components[i]);
+      if Assigned(Result) then
+        Exit;
+    end;
+  end;
+
+  function NextToken(const aList: string; var aIndex: Integer): string;
+  var
+    lTokens : TArray<string>;
+  begin
+    Result := '';
+    lTokens := aList.Split([',']);
+    if aIndex > High(lTokens) then
+      Exit;
+    Result := LowerCase(Trim(lTokens[aIndex]));
+    Inc(aIndex);
+  end;
+
+begin
+  if not Assigned(TestHost.TestRenumberLines) then
+    Exit;
+  lForm := nil;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := Screen.CustomForms[i];
+      Break;
+    end;
+  if not Assigned(lForm) then
+    Exit;
+  lText := '';
+  lExtra := '';
+  CollectText(lForm);
+  lResult := mrNone;
+  if lForm is TfrmModuleSelect then begin
+    lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
+    var lOffered := False;
+    if Assigned(TestHost.TestRenumberTarget) then
+      for var lInfo in TfrmModuleSelect(lForm).AllModules do
+        if lInfo = PwbModuleInfo(TestHost.TestRenumberTarget.ModuleInfo) then
+          lOffered := True;
+    if lOffered then begin
+      Include(PwbModuleInfo(TestHost.TestRenumberTarget.ModuleInfo).miFlags, mfTagged);
+      lResult := mrOk;
+    end else begin
+      TestHost.TestRenumberNotOffered := True;
+      lResult := mrCancel;
+    end;
+  end else if string(lForm.Caption).StartsWith('Start from') then begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then
+      lExtra := 'offered: ' + lEdit.Text;
+    lToken := NextToken(xeTestSwitches.RenumberStarts, TestHost.TestRenumberStartIndex);
+    if lToken = '' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' fallback').Trim;
+      TestHost.TestRenumberFallback := True;
+    end else if lToken = 'cancel' then begin
+      lResult := mrCancel;
+      lExtra := (lExtra + ' listed answer cancel').Trim;
+    end else begin
+      if Assigned(lEdit) then begin
+        lEdit.Text := lToken;
+        lExtra := lExtra + ' entered: ' + lEdit.Text;
+      end;
+      lResult := mrOk;
+    end;
+  end else if HasButton(lForm, mrYes) or HasButton(lForm, mrNo) then begin
+    lToken := NextToken(xeTestSwitches.RenumberAnswers, TestHost.TestRenumberAnswerIndex);
+    if lToken = 'yes' then
+      lResult := mrYes
+    else if lToken = 'no' then
+      lResult := mrNo
+    else if lToken = 'cancel' then
+      lResult := mrCancel;
+    if lToken <> '' then
+      lExtra := 'listed answer ' + lToken;
+    if (lResult <> mrNone) and not HasButton(lForm, lResult) then begin
+      lExtra := lExtra + ', no such button';
+      lResult := mrNone;
+    end;
+    if lResult = mrNone then begin
+      if HasButton(lForm, mrCancel) then
+        lResult := mrCancel
+      else
+        lResult := mrNo;
+      lExtra := (lExtra + ' fallback').Trim;
+      TestHost.TestRenumberFallback := True;
+    end;
+  end else if HasButton(lForm, mrOk) then
+    lResult := mrOk;
+  if lResult = mrNone then
+    Exit;
+  Inc(TestHost.TestRenumberAnswerCount);
+  if TestHost.TestRenumberAnswerCount > 40 then begin
+    lResult := mrCancel;
+    lExtra := (lExtra + ' too many dialogs, cancelled').Trim;
+    TestHost.TestRenumberFallback := True;
+  end;
+  lText := lText.Replace(#13, ' ').Replace(#10, ' ');
+  if Length(lText) > 600 then
+    lText := Copy(lText, 1, 600) + '...';
+  TestHost.TestRenumberLines.Add('answer' + #9 + lForm.Caption + #9 + IntToStr(lResult) + #9 + lText.Trim + #9 + lExtra);
+  lForm.ModalResult := lResult;
+end;
+
+procedure TxeTestFormHelper.TestRenumberWrite;
+var
+  lTmp : string;
+begin
+  try
+    TestHost.TestRenumberLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.RenumberFile + '.partial';
+    TestHost.TestRenumberLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.RenumberFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(TestHost.TestRenumberLines);
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
