@@ -2933,29 +2933,33 @@ var
   procedure ExchangeInReferencing(const aOld, aNew: TwbFormID; const aReferencedBy: TArray<IwbMainRecord>);
   var
     lLabels   : TArray<string>;
-    lEditable : Boolean;
+    lEditable : TArray<Boolean>;
+    lAny      : Boolean;
     lCount    : Integer;
     m         : Integer;
   begin
     SetLength(lLabels, Length(aReferencedBy));
-    lEditable := False;
+    SetLength(lEditable, Length(aReferencedBy));
+    lAny := False;
     for m := Low(aReferencedBy) to High(aReferencedBy) do begin
       lLabels[m] := aReferencedBy[m].Name + ' - ' + aReferencedBy[m]._File.Name;
-      if aReferencedBy[m].IsEditable then
-        lEditable := True;
+      lEditable[m] := aReferencedBy[m].IsEditable;
+      if lEditable[m] then
+        lAny := True;
     end;
-    if not lEditable then
+    if not lAny then
       Exit;
 
     lCount := 0;
-    for m := Low(aReferencedBy) to High(aReferencedBy) do try
-      if aReferencedBy[m].CompareExchangeFormID(aOld, aNew) then
-        Inc(lCount);
-      wbTick;
-    except
-      on E: Exception do
-        wbProgress('Error updating FormID for ' + lLabels[m] + ': ' + E.Message);
-    end;
+    for m := Low(aReferencedBy) to High(aReferencedBy) do
+      if lEditable[m] then try
+        if aReferencedBy[m].CompareExchangeFormID(aOld, aNew) then
+          Inc(lCount);
+        wbTick;
+      except
+        on E: Exception do
+          wbProgress('Error updating FormID for ' + lLabels[m] + ': ' + E.Message);
+      end;
 
     wbProgress(IntToStr(lCount) + ' records out of ' + IntToStr(Length(aReferencedBy)) + ' total records which reference FormID [' +
       aOld.ToDisplayString(lLayout) + '] have been updated to [' + aNew.ToDisplayString(lLayout) + ']');
