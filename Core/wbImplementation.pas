@@ -13792,7 +13792,8 @@ begin
       Result := Result + ' (' + s + ')';
   end;
 
-  if fsIsOfficial in GetFile.FileStates then
+  var lFile := GetFile;
+  if Assigned(lFile) and (fsIsOfficial in lFile.FileStates) then
     mrName := Result;
 end;
 
