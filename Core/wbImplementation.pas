@@ -2750,6 +2750,7 @@ var
   lHolder     : IwbMainRecord;
   lAnyDelayed : Boolean;
   lSignatures : TStringList;
+  lPlanned    : TDictionary<Cardinal, Boolean>;
   i, j, k     : Integer;
 begin
   lLayout := flContextObj.SlotLayout;
@@ -2879,25 +2880,35 @@ begin
     SetLength(aPlan.Records, i);
     SetLength(aPlan.NewFormIDs, i);
 
-    if lAnyDelayed then
-      for k := Low(aPlan.Records) to High(aPlan.Records) do begin
-        if not aPlan.NewFormIDs[k].IsNull then
-          Continue;
+    if lAnyDelayed then begin
+      lPlanned := TDictionary<Cardinal, Boolean>.Create(Length(aPlan.NewFormIDs));
+      try
+        for k := Low(aPlan.NewFormIDs) to High(aPlan.NewFormIDs) do
+          if not aPlan.NewFormIDs[k].IsNull then
+            lPlanned.AddOrSetValue(aPlan.NewFormIDs[k].ToCardinal, True);
 
-        repeat
-          lNew := lStart.Offset(lLayout, j);
-          Inc(j);
-        until not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
+        for k := Low(aPlan.Records) to High(aPlan.Records) do begin
+          if not aPlan.NewFormIDs[k].IsNull then
+            Continue;
 
-        if lNew > lEnd then begin
-          aPlan.Refusal := fcrTooMany;
-          Exit;
+          repeat
+            lNew := lStart.Offset(lLayout, j);
+            Inc(j);
+          until not lPlanned.ContainsKey(lNew.ToCardinal) and not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
+
+          if lNew > lEnd then begin
+            aPlan.Refusal := fcrTooMany;
+            Exit;
+          end;
+
+          if lNew > aPlan.HighFormID then
+            aPlan.HighFormID := lNew;
+          aPlan.NewFormIDs[k] := lNew;
         end;
-
-        if lNew > aPlan.HighFormID then
-          aPlan.HighFormID := lNew;
-        aPlan.NewFormIDs[k] := lNew;
+      finally
+        lPlanned.Free;
       end;
+    end;
 
     if i > 0 then
       aPlan.Signatures := lSignatures.DelimitedText
