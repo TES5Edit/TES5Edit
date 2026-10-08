@@ -118,8 +118,6 @@ type
 
   TDynSpreadSheetNodeDatas = array of TSpreadSheetNodeData;
 
-  TAfterCopyCallback = procedure(const aElement: IwbElement);
-
   TwbPluggyLinkState = (
     plsNone,
     plsReference,
@@ -854,7 +852,7 @@ type
     procedure DoGenerateLOD;
     procedure DoRunScript;
 
-    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback = nil): TDynElements;
+    function CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TwbAfterCopyCallback = nil): TDynElements;
     procedure AddNewFileWithDialog;
 
     procedure BuildAllRef;
@@ -2447,11 +2445,10 @@ begin
   end;
 end;
 
-function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TAfterCopyCallback): TDynElements;
+function TfrmMain.CopyInto(AsNew, AsWrapper, AsSpawnRate, DeepCopy, AllowOverwrite: Boolean; const aElements: TDynElements; aAfterCopyCallback: TwbAfterCopyCallback): TDynElements;
 var
   Elements             : TDynElements;
   MainRecord           : IwbMainRecord;
-  MainRecord2          : IwbMainRecord;
   Master               : IwbMainRecord;
   GroupRecord          : IwbGroupRecord;
   TargetFile           : IwbFile;
@@ -2463,14 +2460,12 @@ var
   EditorIDPrefix       : string;
   EditorIDSuffix       : string;
   Multiple             : Boolean;
-  LeveledListEntries   : IwbContainerElementRef;
-  LeveledListEntry     : IwbContainerElementRef;
-  CopiedElement        : IwbElement;
   Container            : IwbContainer;
   PrevOverwriteResult  : TModalResult;
   PrevDeleteResult     : TModalResult;
   lResult              : TDynElements;
   Operation            : string;
+  lOptions             : TwbCopyOptions;
 begin
   Result := nil;
   lResult := nil;
@@ -2552,8 +2547,9 @@ begin
     PrevOverwriteResult := mrNone;
     PrevDeleteResult := mrNone;
 
+    lOptions := Default(TwbCopyOptions);
     if AllowOverwrite then
-      _wbCanOverwriteCallback := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+      lOptions.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
       var
         MainRecord: IwbMainRecord;
         s: string;
@@ -2644,7 +2640,7 @@ begin
             end;
           end);
 
-        Multiple := (Length(Elements) > 1) or (Elements[0].ElementType <> etMainRecord);
+        Multiple := TwbCopyOptions.IsMultiple(Elements);
         EditorID := '';
         EditorIDPrefixRemove := '';
         EditorIDSuffixRemove := '';
@@ -2775,6 +2771,20 @@ begin
 
         SetLength(lResult, Length(Elements));
 
+        if AsWrapper then
+          lOptions.Mode := cmWrapper
+        else if AsNew then
+          lOptions.Mode := cmNew;
+        lOptions.DeepCopy := DeepCopy;
+        lOptions.AllowOverwrite := AllowOverwrite;
+        lOptions.EditorID := EditorID;
+        lOptions.PrefixRemove := EditorIDPrefixRemove;
+        lOptions.SuffixRemove := EditorIDSuffixRemove;
+        lOptions.Prefix := EditorIDPrefix;
+        lOptions.Suffix := EditorIDSuffix;
+        lOptions.Operation := Operation;
+        lOptions.AfterCopy := aAfterCopyCallback;
+
         PerformLongAction(Operation, '', procedure
         var
           i, j: Integer;
@@ -2823,95 +2833,8 @@ begin
               end;
 
               if Assigned(TargetFile) and AddRequiredMasters(sl, TargetFile,
-                mfTemplate in SelectedModules[i].miFlags) then begin
-
-                if AsWrapper then begin
-
-                  for j := Low(Elements) to High(Elements) do begin
-                    MainRecord := Elements[j] as IwbMainRecord;
-                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.FullPath, TargetFile.FullPath]);
-                    wbProgress(Operation + ' ' + wbCurrentProgress);
-
-                    MainRecord2 := wbCopyElementToFile(MainRecord, TargetFile, True, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, False) as IwbMainRecord;
-                    wbProgress('');
-
-                    Assert(Assigned(MainRecord2));
-                    if not Multiple then
-                      MainRecord2.EditorID := EditorID;
-
-                    EditorID := MainRecord.EditorID;
-                    MainRecord := wbCopyElementToFile(MainRecord, TargetFile, False, False, '', '', '', '', AllowOverwrite) as IwbMainRecord;
-                    wbProgress('');
-                    Assert(Assigned(MainRecord));
-                    MainRecord.Assign(Low(Integer), nil, False);
-                    if not Assigned(MainRecord.ElementByName['Leveled List Entries']) then
-                      MainRecord.Add('Leveled List Entries', True);
-                    LeveledListEntries := MainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
-                    Assert(Assigned(LeveledListEntries));
-                    Assert(LeveledListEntries.ElementCount = 1);
-                    LeveledListEntry := LeveledListEntries.Elements[0] as IwbContainerElementRef;
-                    if not xeContext.GameDefObj.IsOblivion then
-                      LeveledListEntry := LeveledListEntry.Elements[0] as IwbContainerElementRef;
-                    Assert(Assigned(LeveledListEntry));
-                    LeveledListEntry.Elements[2].EditValue := MainRecord2.EditValue;
-                    LeveledListEntry.ElementByName['Count'].EditValue := '1';
-                    LeveledListEntry.ElementByName['Level'].EditValue := '1';
-                    MainRecord.EditorID := EditorID;
-                    lResult[j] := MainRecord;
-                    wbProgress('');
-                  end;
-
-                end
-                else if Multiple then begin
-                  for j := Low(Elements) to High(Elements) do
-                    try
-                      if DeepCopy and Supports(Elements[j], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                        wbProgress(Operation + ' ' + wbCurrentProgress);
-                        lResult[j] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
-                        wbProgress('');
-                      end else begin
-                        wbCurrentProgress := Format('[%s] into [%s]', [Elements[j].FullPath, TargetFile.FullPath]);
-                        wbProgress(Operation + ' ' + wbCurrentProgress);
-                        CopiedElement := wbCopyElementToFile(Elements[j], TargetFile, AsNew, True, EditorIDPrefixRemove, EditorIDSuffixRemove, EditorIDPrefix, EditorIDSuffix, AllowOverwrite);
-                        wbProgress('');
-                        if Assigned(CopiedElement) then begin
-                          if Assigned(aAfterCopyCallback) then
-                            aAfterCopyCallback(CopiedElement);
-                        end;
-                        lResult[j] := CopiedElement;
-                        wbProgress('');
-                      end;
-                    except
-                      on E: EAbort do
-                        raise;
-                      on E: Exception do
-                        wbProgress('Error while copying [%s]: [%s] %s', [Elements[j].FullPath, E.ClassName, E.Message]);
-                    end;
-                end else begin
-                  MainRecord := nil;
-                  if DeepCopy and Supports(Elements[0], IwbMainRecord, MainRecord) and Assigned(MainRecord.ChildGroup) then begin
-                    wbCurrentProgress := Format('[%s] into [%s]', [MainRecord.ChildGroup.FullPath, TargetFile.FullPath]);
-                    wbProgress(Operation + ' ' + wbCurrentProgress);
-                    lResult[0] := wbCopyElementToFile(MainRecord.ChildGroup, TargetFile, AsNew, True, '', '', '', '', AllowOverwrite);
-                    wbProgress('');
-                  end else begin
-                    wbCurrentProgress := Format('[%s] into [%s]', [Elements[0].FullPath, TargetFile.FullPath]);
-                    wbProgress(Operation + ' ' + wbCurrentProgress);
-                    CopiedElement := wbCopyElementToFile(Elements[0], TargetFile, AsNew, True, '', '', '', '', AllowOverwrite);
-                    wbProgress('');
-                    if Assigned(CopiedElement) then begin
-                      if Assigned(aAfterCopyCallback) then
-                        aAfterCopyCallback(CopiedElement);
-                    end;
-                    wbProgress('');
-                    lResult[0] := CopiedElement;
-                    if not Supports(CopiedElement, IwbMainRecord, MainRecord) then
-                      MainRecord := nil;
-                  end;
-                  if AsNew and Assigned(MainRecord) then
-                    MainRecord.EditorID := EditorID;
-                end;
-              end;
+                mfTemplate in SelectedModules[i].miFlags) then
+                TargetFile.AddCopies(Elements, lResult, lOptions);
             end;
           wbCurrentProgress := '';
         end);
@@ -2920,7 +2843,7 @@ begin
         Free;
       end;
     finally
-      _wbCanOverwriteCallback := nil;
+      lOptions.CanOverwrite := nil;
     end;
   finally
     sl.Free;

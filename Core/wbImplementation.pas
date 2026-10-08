@@ -999,6 +999,8 @@ type
     function GetCompareToFile: IwbFile;
     procedure RemoveIdenticalDeltaFast;
 
+    procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
+
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
 
@@ -2711,6 +2713,116 @@ begin
       SortMasters;
   finally
     Masters.Free;
+  end;
+end;
+
+procedure TwbFile.AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
+var
+  lFile                 : IwbFile;
+  lMultiple             : Boolean;
+  lIsOblivion           : Boolean;
+  lMainRecord           : IwbMainRecord;
+  lMainRecord2          : IwbMainRecord;
+  lLeveledListEntries   : IwbContainerElementRef;
+  lLeveledListEntry     : IwbContainerElementRef;
+  lCopiedElement        : IwbElement;
+  lPreviousCanOverwrite : TwbCanOverwriteCallback;
+  j                     : Integer;
+begin
+  lFile := Self;
+  lMultiple := TwbCopyOptions.IsMultiple(aElements);
+  lPreviousCanOverwrite := _wbCanOverwriteCallback;
+  _wbCanOverwriteCallback := aOptions.CanOverwrite;
+  try
+    if aOptions.Mode = cmWrapper then begin
+
+      lIsOblivion := flContextObj.GameDefObj.IsOblivion;
+      for j := Low(aElements) to High(aElements) do begin
+        lMainRecord := aElements[j] as IwbMainRecord;
+        wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.FullPath, lFile.FullPath]);
+        wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
+
+        lMainRecord2 := wbCopyElementToFile(lMainRecord, lFile, True, True, aOptions.PrefixRemove, aOptions.SuffixRemove, aOptions.Prefix, aOptions.Suffix, False) as IwbMainRecord;
+        wbProgress('');
+
+        Assert(Assigned(lMainRecord2));
+        if not lMultiple then
+          lMainRecord2.EditorID := aOptions.EditorID;
+
+        aOptions.EditorID := lMainRecord.EditorID;
+        lMainRecord := wbCopyElementToFile(lMainRecord, lFile, False, False, '', '', '', '', aOptions.AllowOverwrite) as IwbMainRecord;
+        wbProgress('');
+        Assert(Assigned(lMainRecord));
+        lMainRecord.Assign(Low(Integer), nil, False);
+        if not Assigned(lMainRecord.ElementByName['Leveled List Entries']) then
+          lMainRecord.Add('Leveled List Entries', True);
+        lLeveledListEntries := lMainRecord.ElementByName['Leveled List Entries'] as IwbContainerElementRef;
+        Assert(Assigned(lLeveledListEntries));
+        Assert(lLeveledListEntries.ElementCount = 1);
+        lLeveledListEntry := lLeveledListEntries.Elements[0] as IwbContainerElementRef;
+        if not lIsOblivion then
+          lLeveledListEntry := lLeveledListEntry.Elements[0] as IwbContainerElementRef;
+        Assert(Assigned(lLeveledListEntry));
+        lLeveledListEntry.Elements[2].EditValue := lMainRecord2.EditValue;
+        lLeveledListEntry.ElementByName['Count'].EditValue := '1';
+        lLeveledListEntry.ElementByName['Level'].EditValue := '1';
+        lMainRecord.EditorID := aOptions.EditorID;
+        aResult[j] := lMainRecord;
+        wbProgress('');
+      end;
+
+    end
+    else if lMultiple then begin
+      for j := Low(aElements) to High(aElements) do
+        try
+          if aOptions.DeepCopy and Supports(aElements[j], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
+            wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
+            aResult[j] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, aOptions.Mode = cmNew, True, aOptions.PrefixRemove, aOptions.SuffixRemove, aOptions.Prefix, aOptions.Suffix, aOptions.AllowOverwrite);
+            wbProgress('');
+          end else begin
+            wbCurrentProgress := Format('[%s] into [%s]', [aElements[j].FullPath, lFile.FullPath]);
+            wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
+            lCopiedElement := wbCopyElementToFile(aElements[j], lFile, aOptions.Mode = cmNew, True, aOptions.PrefixRemove, aOptions.SuffixRemove, aOptions.Prefix, aOptions.Suffix, aOptions.AllowOverwrite);
+            wbProgress('');
+            if Assigned(lCopiedElement) then begin
+              if Assigned(aOptions.AfterCopy) then
+                aOptions.AfterCopy(lCopiedElement);
+            end;
+            aResult[j] := lCopiedElement;
+            wbProgress('');
+          end;
+        except
+          on E: EAbort do
+            raise;
+          on E: Exception do
+            wbProgress('Error while copying [%s]: [%s] %s', [aElements[j].FullPath, E.ClassName, E.Message]);
+        end;
+    end else begin
+      lMainRecord := nil;
+      if aOptions.DeepCopy and Supports(aElements[0], IwbMainRecord, lMainRecord) and Assigned(lMainRecord.ChildGroup) then begin
+        wbCurrentProgress := Format('[%s] into [%s]', [lMainRecord.ChildGroup.FullPath, lFile.FullPath]);
+        wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
+        aResult[0] := wbCopyElementToFile(lMainRecord.ChildGroup, lFile, aOptions.Mode = cmNew, True, '', '', '', '', aOptions.AllowOverwrite);
+        wbProgress('');
+      end else begin
+        wbCurrentProgress := Format('[%s] into [%s]', [aElements[0].FullPath, lFile.FullPath]);
+        wbProgress(aOptions.Operation + ' ' + wbCurrentProgress);
+        lCopiedElement := wbCopyElementToFile(aElements[0], lFile, aOptions.Mode = cmNew, True, '', '', '', '', aOptions.AllowOverwrite);
+        wbProgress('');
+        if Assigned(lCopiedElement) then begin
+          if Assigned(aOptions.AfterCopy) then
+            aOptions.AfterCopy(lCopiedElement);
+        end;
+        wbProgress('');
+        aResult[0] := lCopiedElement;
+        if not Supports(lCopiedElement, IwbMainRecord, lMainRecord) then
+          lMainRecord := nil;
+      end;
+      if (aOptions.Mode = cmNew) and Assigned(lMainRecord) then
+        lMainRecord.EditorID := aOptions.EditorID;
+    end;
+  finally
+    _wbCanOverwriteCallback := lPreviousCanOverwrite;
   end;
 end;
 
