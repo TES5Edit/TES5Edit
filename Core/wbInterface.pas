@@ -1668,6 +1668,27 @@ type
     class function IsMultiple(const aElements: TDynElements): Boolean; static;
   end;
 
+  TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
+
+  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrTooMany, fcrNothingToChange);
+
+  TwbFormIDChangePlan = record
+    Kind           : TwbFormIDChangeKind;
+    Target         : IwbFile;
+    Preserve       : Boolean;
+    AllOrNothing   : Boolean;
+    Start          : TwbFormID;
+    Records        : TArray<IwbMainRecord>;
+    NewFormIDs     : TArray<TwbFormID>;
+    HighFormID     : TwbFormID;
+    PreservedCount : Integer;
+    Signatures     : string;
+    Refusal        : TwbFormIDChangeRefusal;
+    InUseFormID    : TwbFormID;
+    InUseRecord    : IwbMainRecord;
+    InUseHolder    : IwbMainRecord;
+  end;
+
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
@@ -1780,6 +1801,12 @@ type
 
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
 
+    function GetObjectIDFloor: Cardinal;
+    function GetTakesLightObjectIDs: Boolean;
+    procedure PlanFormIDChange(var aPlan: TwbFormIDChangePlan);
+    function ApplyFormIDChange(const aPlan: TwbFormIDChangePlan): Boolean;
+    procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
+
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
 
@@ -1890,6 +1917,10 @@ type
     property NextObjectID: Cardinal
       read GetNextObjectID
       write SetNextObjectID;
+    property ObjectIDFloor: Cardinal
+      read GetObjectIDFloor;
+    property TakesLightObjectIDs: Boolean
+      read GetTakesLightObjectIDs;
 
     property IsNotPlugin: Boolean   // Save or other file to display.
       read GetIsNotPlugin;

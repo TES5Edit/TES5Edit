@@ -11804,44 +11804,20 @@ end;
 procedure TfrmMain.mniNavRenumberFormIDsFromClick(Sender: TObject);
 
 var
-  SourceFile    : IwbFile;
-  TargetFile    : IwbFile;
-  MainRecords   : TDynMainRecords;
-  TargetFormIDs : TArray<TwbFormID>;
-  HighFormID    : TwbFormID;
-  lLayout       : TwbSlotLayout;
+  SourceFile : IwbFile;
+  lPlan      : TwbFormIDChangePlan;
+  lLayout    : TwbSlotLayout;
 
   function Prepare: Boolean;
   var
-    s            : string;
-    Nodes        : TNodeArray;
-    NodeData     : PNavNodeData;
-
-    StartFormID  : TwbFormID;
-    EndFormID    : TwbFormID;
-    TakenFormIDs : array of Boolean;
-    i, j, k      : Integer;
-    c            : Cardinal;
-
-    lMainRecords     : TDynMainRecords;
-    MainRecord       : IwbMainRecord;
-    TargetMainRecord : IwbMainRecord;
-
-    NewFormID    : TwbFormID;
-    OldFormID    : TwbFormID;
-
-    PreserveObjectID : Boolean;
-    AllOrNothing     : Boolean;
-    AnyDelayed       : Boolean;
-    TargetIsLight      : Boolean;
-    PreservedCount   : Integer;
-
-    Signatures       : TStringList;
-
-    LowestFormID     : Cardinal;
+    s             : string;
+    Nodes         : TNodeArray;
+    NodeData      : PNavNodeData;
+    i             : Integer;
+    c             : Cardinal;
+    TargetIsLight : Boolean;
+    LowestFormID  : Cardinal;
   begin
-    LowestFormID := $800;
-
     Result := False;
 
     if not xeContext.Settings.EditAllowed then
@@ -11871,8 +11847,13 @@ var
     if not EditWarn then
       Exit;
 
-    PreserveObjectID := False;
-    AllOrNothing := False;
+    lPlan := Default(TwbFormIDChangePlan);
+    if Sender = mniNavRenumberFormIDsInject then
+      lPlan.Kind := fckInject
+    else if Sender = mniNavCompactFormIDs then
+      lPlan.Kind := fckCompact
+    else
+      lPlan.Kind := fckRenumber;
 
     if Sender = mniNavRenumberFormIDsInject then begin
       with TfrmModuleSelect.Create(Self) do try
@@ -11891,39 +11872,38 @@ var
         Caption := 'Please select the master you want to inject new records into...';
         if ShowModal <> mrOk then
           Exit;
-        TargetFile := SelectedModules[0]._File;
+        lPlan.Target := SelectedModules[0]._File;
 
         if MessageDlg('Do you want to try and preserve ObjectIDs?', mtConfirmation, mbYesNo, 0, mbNo) = mrYes then
-          PreserveObjectID := True;
-        if PreserveObjectID then
+          lPlan.Preserve := True;
+        if lPlan.Preserve then
           if MessageDlg('Do you want to abort if not all ObjectIDs can be preserved?', mtConfirmation, mbYesNo, 0, mbYes) = mrYes then
-            AllOrNothing := True;
+            lPlan.AllOrNothing := True;
       finally
         Free;
       end;
 
 
     end else
-      TargetFile := SourceFile;
+      lPlan.Target := SourceFile;
 
-    if TargetFile.IsUpdate then begin
-      ShowMessage('"'+TargetFile.Name+'" is an update module and can''t own any records.');
+    if lPlan.Target.IsUpdate then begin
+      ShowMessage('"'+lPlan.Target.Name+'" is an update module and can''t own any records.');
       Exit;
     end;
 
-    if TargetFile.AllowHardcodedRangeUse then
-      LowestFormID := 1;
+    LowestFormID := lPlan.Target.ObjectIDFloor;
 
-    if AllOrNothing or (Sender = mniNavCompactFormIDs) then
-      StartFormID := TwbFormID.FromCardinal(LowestFormID)
+    if lPlan.AllOrNothing or (lPlan.Kind = fckCompact) then
+      lPlan.Start := TwbFormID.FromCardinal(LowestFormID)
     else begin
       s := '';
-      TargetIsLight := TargetFile.IsLight or TargetFile.LoadOrderFileID.IsLightSlot;
+      TargetIsLight := lPlan.Target.TakesLightObjectIDs;
       repeat
         if s <> '' then
           ShowMessage('"'+s+'" is not a valid start FormID.')
         else begin
-          c := TargetFile.NextObjectID and $FFFFFF;
+          c := lPlan.Target.NextObjectID and $FFFFFF;
           if TargetIsLight then
             c := c and $FFF;
           if c < LowestFormID then
@@ -11942,185 +11922,49 @@ var
             Exit;
         end;
 
-        StartFormID := TwbFormID.FromStrDef(s, 0);
-      until (StartFormID.FileID[lLayout].FullSlot = 0) and not (StartFormID.ToCardinal < LowestFormID) and (not TargetIsLight or (StartFormID.ObjectID[lLayout] <= $FFF));
+        lPlan.Start := TwbFormID.FromStrDef(s, 0);
+      until (lPlan.Start.FileID[lLayout].FullSlot = 0) and not (lPlan.Start.ToCardinal < LowestFormID) and (not TargetIsLight or (lPlan.Start.ObjectID[lLayout] <= $FFF));
     end;
 
-    SetLength(MainRecords, SourceFile.RecordCount);
-    j := 0;
-    for i := Pred(SourceFile.RecordCount) downto 0 do begin
-      MainRecords[j] := SourceFile.Records[i];
-      if MainRecords[j].LoadOrderFormID.FileID[lLayout] = SourceFile.LoadOrderFileID then
-        Inc(j);
+    SourceFile.PlanFormIDChange(lPlan);
+    case lPlan.Refusal of
+      fcrNoOwnRecords, fcrNothingToChange: begin
+        ShowMessage('Nothing to do.');
+        Exit;
+      end;
+      fcrInUse: begin
+        ShowMessage(Format('The FormID [%s] which should be assigned to: ' + CRLF + CRLF +
+          '%s' + CRLF + CRLF +
+          'is already in use by:' + CRLF + CRLF +
+          '%s' + CRLF + CRLF +
+          'Operation aborted.', [lPlan.InUseFormID.ToString, lPlan.InUseRecord.Name, lPlan.InUseHolder.Name]));
+        Exit;
+      end;
+      fcrTooMany: begin
+        ShowMessage('The file contains too many new records for this operation.');
+        Exit;
+      end;
     end;
-    if j < 1 then begin
-      ShowMessage('Nothing to do.');
-      Exit;
-    end;
 
-    SetLength(MainRecords, j);
-
-    TakenFormIDs := nil;
-    SetLength(TakenFormIDs, j);
-
-    StartFormID.FileID[lLayout] := TargetFile.LoadOrderFileID;
-    HighFormID := StartFormID;
-    if Sender = mniNavCompactFormIDs then
-      EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, TargetFile.LoadOrderFileID)
-    else if not TargetFile.Equals(SourceFile) then begin
-      if TargetFile.IsLight then
-        EndFormID := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, TargetFile.LoadOrderFileID)
+    s := '';
+    if lPlan.Preserve and not lPlan.AllOrNothing then begin
+      case lPlan.PreservedCount of
+        0 : s := ' No ObjectIDs could be preserved.';
+        1 : s := ' 1 ObjectID could be preserved.';
       else
-        EndFormID := TwbFormID.FromCardinal($FFFFFF).ChangeFileID(lLayout, TargetFile.LoadOrderFileID);
-    end else begin
-      EndFormID := StartFormID.Offset(lLayout, j);
-      HighFormID := EndFormID;
-    end;
-
-    if TargetFile.Equals(SourceFile) then
-      for i := Low(MainRecords) to High(MainRecords) do begin
-        OldFormID := MainRecords[i].LoadOrderFormID;
-        if (OldFormID >= StartFormID) and (OldFormID <= EndFormID) then begin
-          j := OldFormID - StartFormID;
-          if j > High(TakenFormIDs) then
-            SetLength(TakenFormIDs, Succ(j));
-          TakenFormIDs[j] := True;
-        end;
+        if lPlan.PreservedCount = Length(lPlan.Records) then
+          s := ' All ObjectIDs could be preserved.'
+        else
+          s := ' ' + lPlan.PreservedCount.ToString + ' ObjectIDs could be preserved.';
       end;
-
-    Signatures := TStringList.Create;
-    try
-      Signatures.Sorted := True;
-      Signatures.Duplicates := dupIgnore;
-      Signatures.Delimiter := ' ';
-
-      AnyDelayed := False;
-      PreservedCount := 0;
-      SetLength(lMainRecords, Length(MainRecords));
-      SetLength(TargetFormIDs, Length(MainRecords));
-      j := 0;
-      i := 0;
-      for k := High(MainRecords) downto Low(MainRecords) do begin
-        MainRecord := MainRecords[k];
-        OldFormID := MainRecord.LoadOrderFormID;
-
-        if TargetFile.Equals(SourceFile) then begin
-          if (OldFormID >= StartFormID) and (OldFormID <= EndFormID) then
-            Continue;
-
-          while (j <= High(TakenFormIDs)) and TakenFormIDs[j] do
-            Inc(j);
-          NewFormID := StartFormID.Offset(lLayout, j);
-          Inc(j);
-        end else begin
-          NewFormID := TwbFormID.Null;
-          TargetMainRecord := nil;
-          repeat
-            if PreserveObjectID then begin
-              if NewFormID.IsNull then
-                NewFormID := OldFormID.ChangeFileID(lLayout, TargetFile.LoadOrderFileID)
-              else
-                if AllOrNothing then begin
-                  ShowMessage(Format('The FormID [%s] which should be assigned to: ' + CRLF + CRLF +
-                    '%s' + CRLF + CRLF +
-                    'is already in use by:' + CRLF + CRLF +
-                    '%s' + CRLF + CRLF +
-                    'Operation aborted.', [NewFormID.ToString, MainRecord.Name, TargetMainRecord.Name]));
-                  Exit;
-                end else begin
-                  NewFormID := TwbFormID.Null;
-                  AnyDelayed := True;
-                  Break;
-                end;
-            end else begin
-              NewFormID := StartFormID.Offset(lLayout, j);
-              Inc(j);
-            end;
-            TargetMainRecord := TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True];
-          until not Assigned(TargetMainRecord);
-          TargetMainRecord := nil;
-        end;
-
-        if NewFormID > EndFormID then begin
-          ShowMessage('The file contains too many new records for this operation.');
-          Exit;
-        end;
-
-        if NewFormID > HighFormID then
-          HighFormID := NewFormID;
-
-        if NewFormID = OldFormID then
-          Continue;
-
-        if PreserveObjectID and not NewFormID.IsNull then
-          Inc(PreservedCount);
-
-        lMainRecords[i] := MainRecord;
-        TargetFormIDs[i] := NewFormID;
-        if Assigned(MainRecord) then
-          Signatures.Add(MainRecord.Signature);
-        Inc(i);
-      end;
-
-      SetLength(lMainRecords, i);
-      SetLength(TargetFormIDs, i);
-      MainRecords := lMainRecords;
-
-      if AnyDelayed then
-        for k := Low(MainRecords) to High(MainRecords) do begin
-          if not TargetFormIDs[k].IsNull then
-            Continue;
-
-          repeat
-            NewFormID := StartFormID.Offset(lLayout, j);
-            Inc(j);
-          until not Assigned(TargetFile.ContainedRecordByLoadOrderFormID[NewFormID, True]);
-
-          if NewFormID > EndFormID then begin
-            ShowMessage('The file contains too many new records for this operation.');
-            Exit;
-          end;
-
-          if NewFormID > HighFormID then
-            HighFormID := NewFormID;
-          TargetFormIDs[k] := NewFormID;
-        end;
-
-      Result := i > 0;
-      if not Result then
-        ShowMessage('Nothing to do.')
-      else begin
-        s := '';
-        if PreserveObjectID and not AllOrNothing then begin
-          case PreservedCount of
-            0 : s := ' No ObjectIDs could be preserved.';
-            1 : s := ' 1 ObjectID could be preserved.';
-          else
-            if PreservedCount = Length(MainRecords) then
-              s := ' All ObjectIDs could be preserved.'
-            else
-              s := ' ' + PreservedCount.ToString + ' ObjectIDs could be preserved.';
-          end;
-        end;
-        Result := MessageDlg('This operation will modify the FormID of '+i.ToString+' record(s).' + s + CRLF +
-          'Record(s) with the following signature(s) are affected: ' + Signatures.DelimitedText + CRLF + CRLF +
-          'WARNING: This will break existing save games that contain these FormID(s) and any module which uses "'+ SourceFile.FileName +'" as master and references them.' + CRLF + CRLF +
-          'Are you sure you wish to continue?', mtWarning, mbYesNo, 0, mbNo) = mrYes;
-      end;
-
-      if Result then
-        vstNav.Expanded[Nodes[0]] := False;
-    finally
-      Signatures.Free;
     end;
-  end;
+    Result := MessageDlg('This operation will modify the FormID of '+Length(lPlan.Records).ToString+' record(s).' + s + CRLF +
+      'Record(s) with the following signature(s) are affected: ' + lPlan.Signatures + CRLF + CRLF +
+      'WARNING: This will break existing save games that contain these FormID(s) and any module which uses "'+ SourceFile.FileName +'" as master and references them.' + CRLF + CRLF +
+      'Are you sure you wish to continue?', mtWarning, mbYesNo, 0, mbNo) = mrYes;
 
-  procedure UpdateNextObjectID;
-  begin
-    if TargetFile.IsEditable then begin
-      HighFormID := HighFormID.Next(lLayout);
-      TargetFile.NextObjectID := HighFormID.ObjectID[lLayout];
-    end;
+    if Result then
+      vstNav.Expanded[Nodes[0]] := False;
   end;
 
 begin
@@ -12128,64 +11972,13 @@ begin
   if Prepare then begin
     SourceFile.BuildOrLoadRef(False);
     PerformLongAction('Changing FormIDs', 'Processed Records: 0', procedure
-    var
-      AnyErrors                   : Boolean;
-      i,  k, l                    : Integer;
-      MainRecord                  : IwbMainRecord;
-      ReferencedBy                : TDynMainRecords;
-      Master                      : IwbMainRecord;
-      Overrides                   : TDynMainRecords;
-      NewFormID                   : TwbFormID;
-      OldFormID                   : TwbFormID;
     begin
-      AnyErrors := False;
-      for k := Low(MainRecords) to High(MainRecords) do begin
-        MainRecord := MainRecords[k];
-        OldFormID := MainRecord.LoadOrderFormID;
-        NewFormID := TargetFormIDs[k];
-
-        wbProgress('Changing FormID ['+OldFormID.ToDisplayString(lLayout)+'] in file "'+MainRecord._File.FileName+'" to ['+NewFormID.ToDisplayString(lLayout)+']');
-
-        Master := MainRecord.MasterOrSelf;
-        SetLength(ReferencedBy, Master.ReferencedByCount);
-        for i := 0 to Pred(Master.ReferencedByCount) do
-          ReferencedBy[i] := Master.ReferencedBy[i];
-
-        try
-          SetLength(Overrides, MainRecord.OverrideCount);
-          for l := 0 to Pred(MainRecord.OverrideCount) do
-            Overrides[l] := MainRecord.Overrides[l];
-
-          MainRecord.LoadOrderFormID := NewFormID;
-          if Length(Overrides) > 0 then begin
-            wbProgress('Record has '+Length(Overrides).ToString+' override(s)');
-            for l := Low(Overrides) to High(Overrides) do
-              Overrides[l].LoadOrderFormID := NewFormID;
-          end;
-
-          Overrides := nil;
-
-          wbTick;
-
-          if Length(ReferencedBy) > 0 then begin
-            wbProgress('Record is referenced by '+Length(ReferencedBy).ToString+' other record(s)');
-            ShowChangeReferencedBy(OldFormID, NewFormID, ReferencedBy, True );
-          end;
-        except
-          on E: Exception do begin
-            wbProgress('Error: ' + E.Message);
-            AnyErrors := True;
-          end;
-        end;
-
-        wbCurrentProgress := 'Processed Records: ' + Integer(k + 1).ToString;
-      end;
-      if AnyErrors then begin
+      if SourceFile.ApplyFormIDChange(lPlan) then begin
         pgMain.ActivePage := tbsMessages;
         wbProgress('!!! Errors have occured. It is highly recommended to exit without saving as partial changes might have occured !!!');
       end;
     end);
-    UpdateNextObjectID;
+    SourceFile.FinishFormIDChange(lPlan);
     vstNav.Invalidate;
   end;
 end;
