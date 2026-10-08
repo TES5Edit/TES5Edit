@@ -72,6 +72,13 @@ type
     TestMergeAnswer          : TTimer;
     TestMergeTarget          : IwbFile;
     TestMergeNotOffered      : Boolean;
+    TestCopyIntoLines        : TStringList;
+    TestCopyIntoTimer        : TTimer;
+    TestCopyIntoAnswer       : TTimer;
+    TestCopyIntoTargets      : TArray<IwbFile>;
+    TestCopyIntoAnswerIndex  : Integer;
+    TestCopyIntoNotOffered   : string;
+    TestCopyIntoNameGiven    : Boolean;
     TestFilterAnswer         : TTimer;
     TestFilterAnswered       : string;
     TestPumpTimer            : TTimer;
@@ -171,6 +178,17 @@ type
     MergeSource           : string;
     MergeTarget           : string;
     MergeOut              : string;
+    CopyInto              : Boolean;
+    CopyIntoFile          : string;
+    CopyIntoMode          : string;
+    CopyIntoSource        : string;
+    CopyIntoRecords       : string;
+    CopyIntoTargets       : string;
+    CopyIntoTemplate      : string;
+    CopyIntoEditorID      : string;
+    CopyIntoAffixes       : string;
+    CopyIntoAnswers       : string;
+    CopyIntoOut           : string;
     Hide                  : Boolean;
     HideFile              : string;
     HideRecord            : string;
@@ -419,6 +437,33 @@ begin
     xeAutoLoad  := True;
   end;
 
+  if wbFindCmdLineParam('testcopyinto', CopyIntoFile) then begin
+    wbFindCmdLineParam('testcopyintotargets', CopyIntoTargets);
+    wbFindCmdLineParam('testcopyintotemplate', CopyIntoTemplate);
+    wbFindCmdLineParam('testcopyintoeditorid', CopyIntoEditorID);
+    wbFindCmdLineParam('testcopyintoaffixes', CopyIntoAffixes);
+    wbFindCmdLineParam('testcopyintoanswers', CopyIntoAnswers);
+    if (CopyIntoFile = '') or
+       not wbFindCmdLineParam('testcopyintomode', CopyIntoMode) or
+       not (SameText(CopyIntoMode, 'override') or SameText(CopyIntoMode, 'overwrite') or SameText(CopyIntoMode, 'deep') or
+            SameText(CopyIntoMode, 'deepoverwrite') or SameText(CopyIntoMode, 'new') or SameText(CopyIntoMode, 'wrapper') or
+            SameText(CopyIntoMode, 'spawn')) or
+       not wbFindCmdLineParam('testcopyintosource', CopyIntoSource) or
+       not wbFindCmdLineParam('testcopyintorecords', CopyIntoRecords) or
+       not wbFindCmdLineParam('testcopyintoout', CopyIntoOut) or (CopyIntoOut = '') or
+       ((CopyIntoTargets = '') and (CopyIntoTemplate = '')) then begin
+      ShowMessage('testcopyinto requires -testcopyinto:<filename> ' +
+        '-testcopyintomode:<override|overwrite|deep|deepoverwrite|new|wrapper|spawn> -testcopyintosource:<module> ' +
+        '-testcopyintorecords:<signature>[:<skip>[:<count>]] -testcopyintoout:<folder> and -testcopyintotargets:<module>[,<module>] ' +
+        'or -testcopyintotemplate:<new file name> or both [-testcopyintoeditorid:<EditorID>] ' +
+        '[-testcopyintoaffixes:<prefix to remove>|<suffix to remove>|<prefix to add>|<suffix to add>] ' +
+        '[-testcopyintoanswers:<yes|no|yesall|noall|cancel>[,...]]');
+      Exit(False);
+    end;
+    CopyInto := True;
+    xeAutoLoad := True;
+  end;
+
   if wbFindCmdLineParam('testhide', HideFile) then begin
     if (HideFile = '') or
        not wbFindCmdLineParam('testhiderecord', HideRecord) or
@@ -468,8 +513,8 @@ end;
 
 function TxeTestSwitches.Any: Boolean;
 begin
-  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or Hide or
-    Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
+  Result := Conflicts or NavCopy or ViewText or ViewTree or Options or CopyIntoGap or DropMaster or DeltaPatch or Merge or CopyInto or
+    Hide or Filter or SaveContexts or (Pump <> '') or (StateManifest <> '');
 end;
 
 initialization

@@ -77,6 +77,9 @@ type
     procedure TestMergeRunTimer(Sender: TObject);
     procedure TestMergeAnswerTimer(Sender: TObject);
     procedure TestMergeWrite;
+    procedure TestCopyIntoRunTimer(Sender: TObject);
+    procedure TestCopyIntoAnswerTimer(Sender: TObject);
+    procedure TestCopyIntoWrite;
     procedure TestDeltaPatchStates(const aWhen: string);
     procedure TestDeltaPatchWrite;
     procedure TestDeltaPatchCancelTimer(Sender: TObject);
@@ -111,6 +114,7 @@ type
     procedure DoTestDeltaPatchStart;
     procedure DoTestDeltaPatchReport;
     procedure DoTestMerge;
+    procedure DoTestCopyInto;
     procedure DoTestHide;
     procedure DoTestFilter;
     procedure TestFilterImages(aLines: TStrings);
@@ -3360,6 +3364,395 @@ begin
       RaiseLastOSError;
   finally
     FreeAndNil(TestHost.TestMergeLines);
+    if xeAutoExit then
+      tmrShutdown.Enabled := True;
+  end;
+end;
+
+var
+  _TestCopyIntoSink         : TStringList;
+  _TestCopyIntoPrevProgress : TwbProgressCallback;
+
+procedure TestCopyIntoProgress(const aStatus: string);
+begin
+  if Assigned(_TestCopyIntoSink) then
+    _TestCopyIntoSink.Add('progress' + #9 + aStatus);
+  if Assigned(_TestCopyIntoPrevProgress) then
+    _TestCopyIntoPrevProgress(aStatus);
+end;
+
+procedure TxeTestFormHelper.DoTestCopyInto;
+begin
+  xeContext.Settings.DontSave := True;
+  EditWarnOk := True;
+  CheckResult := 2;
+  TestHost.TestCopyIntoLines := TStringList.Create;
+  TestHost.TestCopyIntoLines.Add('# xEdit copy into probe');
+  TestHost.TestCopyIntoLines.Add('# ' + xeApplicationTitle);
+  TestHost.TestCopyIntoLines.Add('# mode = ' + xeTestSwitches.CopyIntoMode + ', source = ' + xeTestSwitches.CopyIntoSource +
+    ', records = ' + xeTestSwitches.CopyIntoRecords + ', targets = ' + xeTestSwitches.CopyIntoTargets +
+    ', template = ' + xeTestSwitches.CopyIntoTemplate + ', editorid = ' + xeTestSwitches.CopyIntoEditorID +
+    ', affixes = ' + xeTestSwitches.CopyIntoAffixes + ', answers = ' + xeTestSwitches.CopyIntoAnswers);
+  TestHost.TestCopyIntoLines.Add('# Columns, tab separated: what / details');
+  TestHost.TestCopyIntoTimer := TTimer.Create(Self);
+  TestHost.TestCopyIntoTimer.Interval := 500;
+  TestHost.TestCopyIntoTimer.OnTimer := TestCopyIntoRunTimer;
+  TestHost.TestCopyIntoTimer.Enabled := True;
+end;
+
+procedure TxeTestFormHelper.TestCopyIntoRunTimer(Sender: TObject);
+var
+  lLines : TStringList;
+
+  function FindFile(const aName: string): IwbFile;
+  begin
+    Result := nil;
+    for var i := Low(Files) to High(Files) do
+      if SameText(Files[i].FileName, aName) then
+        Exit(Files[i]);
+  end;
+
+  procedure AddTree(const aContainer: IwbContainer; aDepth: Integer);
+  var
+    lGroup  : IwbGroupRecord;
+    lRecord : IwbMainRecord;
+  begin
+    for var i := 0 to Pred(aContainer.ElementCount) do
+      if Supports(aContainer.Elements[i], IwbGroupRecord, lGroup) then begin
+        lLines.Add('tree' + #9 + IntToStr(aDepth) + #9 + 'GRUP' + #9 + IntToStr(lGroup.GroupType) + #9 + IntToHex(lGroup.GroupLabel, 8));
+        AddTree(lGroup, Succ(aDepth));
+      end else if Supports(aContainer.Elements[i], IwbMainRecord, lRecord) then
+        lLines.Add('tree' + #9 + IntToStr(aDepth) + #9 + string(lRecord.Signature) + #9 +
+          IntToHex(lRecord.LoadOrderFormID.ToCardinal, 8) + #9 + 'flags=' + IntToHex(lRecord.Flags._Flags, 8) + #9 + lRecord.EditorID);
+  end;
+
+var
+  lMode     : string;
+  lSource   : IwbFile;
+  lSpec     : TArray<string>;
+  lGroup    : IwbContainerElementRef;
+  lRecord   : IwbMainRecord;
+  lSkip     : Integer;
+  lCount    : Integer;
+  lSeen     : Integer;
+  lElements : TDynElements;
+  lResult   : TDynElements;
+  lBefore   : TArray<IwbFile>;
+  lWrite    : TArray<IwbFile>;
+  lStream   : TMemoryStream;
+begin
+  TestHost.TestCopyIntoTimer.Enabled := False;
+  lLines := TestHost.TestCopyIntoLines;
+  try
+    lMode := LowerCase(xeTestSwitches.CopyIntoMode);
+    lSource := FindFile(xeTestSwitches.CopyIntoSource);
+    if not Assigned(lSource) then
+      raise Exception.Create(xeTestSwitches.CopyIntoSource + ' is not loaded');
+    TestHost.TestCopyIntoTargets := nil;
+    for var lName in xeTestSwitches.CopyIntoTargets.Split([',']) do
+      if lName <> '' then begin
+        var lTarget := FindFile(lName);
+        if not Assigned(lTarget) then
+          raise Exception.Create(lName + ' is not loaded');
+        TestHost.TestCopyIntoTargets := TestHost.TestCopyIntoTargets + [lTarget];
+      end;
+
+    lSpec := xeTestSwitches.CopyIntoRecords.Split([':']);
+    if (Length(lSpec) < 1) or (Length(lSpec[0]) <> 4) then
+      raise Exception.Create('-testcopyintorecords needs a signature first: ' + xeTestSwitches.CopyIntoRecords);
+    lSkip := 0;
+    lCount := 1;
+    if Length(lSpec) > 1 then
+      lSkip := StrToInt(lSpec[1]);
+    if Length(lSpec) > 2 then
+      lCount := StrToInt(lSpec[2]);
+    if not Supports(lSource.GroupBySignature[StrToSignature(lSpec[0])], IwbContainerElementRef, lGroup) then
+      raise Exception.Create('no ' + lSpec[0] + ' group in ' + lSource.FileName);
+    lSeen := 0;
+    for var i := 0 to Pred(lGroup.ElementCount) do
+      if Supports(lGroup.Elements[i], IwbMainRecord, lRecord) then begin
+        Inc(lSeen);
+        if lSeen <= lSkip then
+          Continue;
+        if Length(lElements) >= lCount then
+          Break;
+        lElements := lElements + [lRecord as IwbElement];
+        lLines.Add('selected' + #9 + IntToStr(High(lElements)) + #9 + lRecord.Name);
+      end;
+    if Length(lElements) < lCount then
+      raise Exception.Create(Format('%s has %d %s records after skipping %d, %d asked for',
+        [lSource.FileName, Length(lElements), lSpec[0], lSkip, lCount]));
+
+    lBefore := Copy(Files);
+
+    TestHost.TestCopyIntoAnswer := TTimer.Create(Self);
+    TestHost.TestCopyIntoAnswer.Interval := 100;
+    TestHost.TestCopyIntoAnswer.OnTimer := TestCopyIntoAnswerTimer;
+    TestHost.TestCopyIntoAnswer.Enabled := True;
+
+    _TestCopyIntoSink := lLines;
+    _TestCopyIntoPrevProgress := _wbProgressCallback;
+    _wbProgressCallback := TestCopyIntoProgress;
+    try
+      try
+        lResult := CopyInto(lMode = 'new', lMode = 'wrapper', lMode = 'spawn', (lMode = 'deep') or (lMode = 'deepoverwrite'),
+          (lMode = 'overwrite') or (lMode = 'deepoverwrite'), lElements);
+        lLines.Add('returned' + #9 + IntToStr(Length(lResult)) + ' slots');
+      except
+        on E: Exception do
+          lLines.Add('raised' + #9 + E.ClassName + #9 + E.Message);
+      end;
+    finally
+      _wbProgressCallback := _TestCopyIntoPrevProgress;
+      _TestCopyIntoSink := nil;
+      _TestCopyIntoPrevProgress := nil;
+      TestHost.TestCopyIntoAnswer.Enabled := False;
+    end;
+    if TestHost.TestCopyIntoNotOffered <> '' then
+      lLines.Add('notoffered' + #9 + TestHost.TestCopyIntoNotOffered.Trim);
+    if xeTestSwitches.CopyIntoAnswers <> '' then begin
+      var lListed := xeTestSwitches.CopyIntoAnswers.Split([',']);
+      if TestHost.TestCopyIntoAnswerIndex < Length(lListed) then
+        lLines.Add('unusedanswers' + #9 + IntToStr(Length(lListed) - TestHost.TestCopyIntoAnswerIndex) + #9 +
+          string.Join(',', lListed, TestHost.TestCopyIntoAnswerIndex, Length(lListed) - TestHost.TestCopyIntoAnswerIndex));
+    end;
+
+    for var i := Low(lResult) to High(lResult) do
+      if Assigned(lResult[i]) then begin
+        var lSlotFile := lResult[i]._File;
+        if Assigned(lSlotFile) then
+          lLines.Add('result' + #9 + IntToStr(i) + #9 + lSlotFile.FileName + #9 + lResult[i].Name)
+        else
+          lLines.Add('result' + #9 + IntToStr(i) + #9 + '<no file>');
+      end else
+        lLines.Add('result' + #9 + IntToStr(i) + #9 + 'nil');
+
+    lWrite := TestHost.TestCopyIntoTargets;
+    for var i := Low(Files) to High(Files) do begin
+      var lNew := True;
+      for var j := Low(lBefore) to High(lBefore) do
+        if lBefore[j].Equals(Files[i]) then
+          lNew := False;
+      if lNew then
+        lWrite := lWrite + [Files[i]];
+    end;
+    ForceDirectories(xeTestSwitches.CopyIntoOut);
+    for var lFile in lWrite do begin
+      var lMasters := '';
+      for var j := 0 to Pred(lFile.MasterCount[True]) do
+        lMasters := lMasters + ' ' + lFile.Masters[j, True].FileName;
+      lLines.Add('file' + #9 + lFile.FileName + #9 + 'records ' + IntToStr(lFile.RecordCount) + #9 + 'masters' + lMasters);
+      AddTree(lFile, 0);
+      lStream := TMemoryStream.Create;
+      try
+        lFile.WriteToStream(lStream, rmNo);
+        lStream.SaveToFile(TPath.Combine(xeTestSwitches.CopyIntoOut, lFile.FileName));
+        lLines.Add('written' + #9 + lFile.FileName + #9 + IntToStr(lStream.Size) + #9 +
+          IntToHex(TwbHash.XXH64(lStream.Memory, lStream.Size), 16));
+      finally
+        lStream.Free;
+      end;
+    end;
+    CheckResult := 0;
+  except
+    on E: Exception do begin
+      AddMessage('[Test Copy Into] FAILED: ' + E.ClassName + ': ' + E.Message);
+      lLines.Add('# FAILED: ' + E.ClassName + ': ' + E.Message);
+    end;
+  end;
+  if Assigned(TestHost.TestCopyIntoAnswer) then
+    TestHost.TestCopyIntoAnswer.Enabled := False;
+  TestCopyIntoWrite;
+end;
+
+procedure TxeTestFormHelper.TestCopyIntoAnswerTimer(Sender: TObject);
+var
+  lForm   : TCustomForm;
+  lResult : TModalResult;
+  lText   : string;
+  lExtra  : string;
+  lEdit   : TEdit;
+
+  function HasButton(aOwner: TComponent; aResult: TModalResult): Boolean;
+  begin
+    Result := False;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if (aOwner.Components[i] is TButton) and (TButton(aOwner.Components[i]).ModalResult = aResult) then
+        Exit(True);
+      if HasButton(aOwner.Components[i], aResult) then
+        Exit(True);
+    end;
+  end;
+
+  procedure CollectText(aOwner: TComponent);
+  begin
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TLabel then
+        lText := lText + ' ' + TLabel(aOwner.Components[i]).Caption;
+      CollectText(aOwner.Components[i]);
+    end;
+  end;
+
+  function FindEdit(aOwner: TComponent): TEdit;
+  begin
+    Result := nil;
+    for var i := 0 to Pred(aOwner.ComponentCount) do begin
+      if aOwner.Components[i] is TEdit then
+        Exit(TEdit(aOwner.Components[i]));
+      Result := FindEdit(aOwner.Components[i]);
+      if Assigned(Result) then
+        Exit;
+    end;
+  end;
+
+  function NextAnswer: TModalResult;
+  var
+    lAnswers : TArray<string>;
+    lToken   : string;
+  begin
+    Result := mrNone;
+    lAnswers := xeTestSwitches.CopyIntoAnswers.Split([',']);
+    if TestHost.TestCopyIntoAnswerIndex > High(lAnswers) then
+      Exit;
+    lToken := LowerCase(Trim(lAnswers[TestHost.TestCopyIntoAnswerIndex]));
+    Inc(TestHost.TestCopyIntoAnswerIndex);
+    if lToken = 'yes' then
+      Result := mrYes
+    else if lToken = 'no' then
+      Result := mrNo
+    else if lToken = 'yesall' then
+      Result := mrYesToAll
+    else if lToken = 'noall' then
+      Result := mrNoToAll
+    else if lToken = 'cancel' then
+      Result := mrCancel;
+    lExtra := 'listed answer ' + lToken;
+  end;
+
+  procedure SetEdit(const aValue: string);
+  begin
+    lEdit := FindEdit(lForm);
+    if Assigned(lEdit) then begin
+      lExtra := 'offered: ' + lEdit.Text;
+      lEdit.Text := aValue;
+      lExtra := lExtra + ' entered: ' + lEdit.Text;
+    end;
+  end;
+
+begin
+  if not Assigned(TestHost.TestCopyIntoLines) then
+    Exit;
+  lForm := nil;
+  for var i := 0 to Pred(Screen.CustomFormCount) do
+    if (Screen.CustomForms[i] <> Self) and Screen.CustomForms[i].Visible and
+       (fsModal in Screen.CustomForms[i].FormState) and (Screen.CustomForms[i].ModalResult = mrNone) then begin
+      lForm := Screen.CustomForms[i];
+      Break;
+    end;
+  if not Assigned(lForm) then
+    Exit;
+  lText := '';
+  lExtra := '';
+  CollectText(lForm);
+  lResult := mrNone;
+  if lForm is TfrmModuleSelect then begin
+    lExtra := 'offered: ' + string.Join(' | ', TfrmModuleSelect(lForm).AllModules.ToStrings(False));
+    for var lTarget in TestHost.TestCopyIntoTargets do begin
+      var lOffered := False;
+      for var lInfo in TfrmModuleSelect(lForm).AllModules do
+        if lInfo = PwbModuleInfo(lTarget.ModuleInfo) then
+          lOffered := True;
+      if lOffered then
+        Include(PwbModuleInfo(lTarget.ModuleInfo).miFlags, mfTagged)
+      else
+        TestHost.TestCopyIntoNotOffered := TestHost.TestCopyIntoNotOffered + ' ' + lTarget.FileName;
+    end;
+    if xeTestSwitches.CopyIntoTemplate <> '' then begin
+      var lFound := False;
+      for var lInfo in TfrmModuleSelect(lForm).AllModules do
+        if mfTemplate in lInfo.miFlags then begin
+          Include(lInfo.miFlags, mfTagged);
+          lFound := True;
+          Break;
+        end;
+      if not lFound then
+        TestHost.TestCopyIntoNotOffered := TestHost.TestCopyIntoNotOffered + ' <template>';
+    end;
+    if TestHost.TestCopyIntoNotOffered <> '' then
+      lResult := mrCancel
+    else
+      lResult := mrOk;
+  end else if SameText(lForm.Caption, 'New Module File') then begin
+    if TestHost.TestCopyIntoNameGiven then
+      lResult := mrCancel
+    else begin
+      SetEdit(xeTestSwitches.CopyIntoTemplate);
+      TestHost.TestCopyIntoNameGiven := True;
+      lResult := mrOk;
+    end;
+  end else if SameText(lForm.Caption, 'EditorID') then begin
+    if xeTestSwitches.CopyIntoEditorID <> '' then
+      SetEdit(xeTestSwitches.CopyIntoEditorID)
+    else begin
+      lEdit := FindEdit(lForm);
+      if Assigned(lEdit) then
+        SetEdit(lEdit.Text);
+    end;
+    lResult := mrOk;
+  end else if SameText(lForm.Caption, 'EditorID Prefix') or SameText(lForm.Caption, 'EditorID Suffix') then begin
+    var lParts := xeTestSwitches.CopyIntoAffixes.Split(['|']);
+    var lIdx := -1;
+    if lText.Contains('prefix that should be removed') then
+      lIdx := 0
+    else if lText.Contains('suffix that should be removed') then
+      lIdx := 1
+    else if lText.Contains('prefix that should be added') then
+      lIdx := 2
+    else if lText.Contains('suffix that should be added') then
+      lIdx := 3;
+    if (lIdx >= 0) and (lIdx <= High(lParts)) then
+      SetEdit(lParts[lIdx])
+    else
+      SetEdit('');
+    lResult := mrOk;
+  end else if lText.Contains('need to be added') and HasButton(lForm, mrYes) then
+    lResult := mrYes
+  else if HasButton(lForm, mrYes) or HasButton(lForm, mrNo) then begin
+    lResult := NextAnswer;
+    if (lResult <> mrNone) and not HasButton(lForm, lResult) then begin
+      lExtra := lExtra + ', no such button';
+      lResult := mrNone;
+    end;
+    if lResult = mrNone then begin
+      if HasButton(lForm, mrYesToAll) then
+        lResult := mrYesToAll
+      else if HasButton(lForm, mrYes) then
+        lResult := mrYes;
+      lExtra := (lExtra + ' fallback').Trim;
+    end;
+  end else if HasButton(lForm, mrOk) then
+    lResult := mrOk;
+  if lResult = mrNone then
+    Exit;
+  lText := lText.Replace(#13, ' ').Replace(#10, ' ');
+  if Length(lText) > 300 then
+    lText := Copy(lText, 1, 300) + '...';
+  TestHost.TestCopyIntoLines.Add('answer' + #9 + lForm.Caption + #9 + IntToStr(lResult) + #9 + lText.Trim + #9 + lExtra);
+  lForm.ModalResult := lResult;
+end;
+
+procedure TxeTestFormHelper.TestCopyIntoWrite;
+var
+  lTmp : string;
+begin
+  try
+    TestHost.TestCopyIntoLines.Add('# checkResult = ' + IntToStr(CheckResult));
+    lTmp := xeTestSwitches.CopyIntoFile + '.partial';
+    TestHost.TestCopyIntoLines.SaveToFile(lTmp, TEncoding.UTF8);
+    if not MoveFileEx(PChar(lTmp), PChar(xeTestSwitches.CopyIntoFile), MOVEFILE_REPLACE_EXISTING) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(TestHost.TestCopyIntoLines);
     if xeAutoExit then
       tmrShutdown.Enabled := True;
   end;
