@@ -492,11 +492,12 @@ begin
     RenumberFilter := FindCmdLineSwitch('testrenumberfilter');
     if (RenumberFile = '') or
        not wbFindCmdLineParam('testrenumberop', RenumberOp) or
-       not (SameText(RenumberOp, 'renumber') or SameText(RenumberOp, 'inject') or SameText(RenumberOp, 'compact')) or
+       not (SameText(RenumberOp, 'renumber') or SameText(RenumberOp, 'inject') or SameText(RenumberOp, 'compact') or
+         SameText(RenumberOp, 'compactmedium')) or
        not wbFindCmdLineParam('testrenumbersource', RenumberSource) or
        not wbFindCmdLineParam('testrenumberout', RenumberOut) or (RenumberOut = '') or
        (SameText(RenumberOp, 'inject') <> (RenumberTarget <> '')) then begin
-      ShowMessage('testrenumber requires -testrenumber:<filename> -testrenumberop:<renumber|inject|compact> ' +
+      ShowMessage('testrenumber requires -testrenumber:<filename> -testrenumberop:<renumber|inject|compact|compactmedium> ' +
         '-testrenumbersource:<module> -testrenumberout:<folder>, -testrenumbertarget:<module> with inject only ' +
         '[-testrenumberstarts:<hex|cancel>[,...]] [-testrenumberanswers:<yes|no|cancel>[,...]] ' +
         '[-testrenumbercompareto:<file loaded to compare with the last module>] [-testrenumberfilter]');

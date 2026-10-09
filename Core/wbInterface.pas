@@ -1000,6 +1000,10 @@ type
     mtLight
   );
 
+  TwbModuleTypeHelper = record helper for TwbModuleType
+    function MaxObjectID: Cardinal;
+  end;
+
   TwbSlotKind = (skLight, skMedium);
   TwbSlotLayout = set of TwbSlotKind;
 
@@ -1674,6 +1678,7 @@ type
 
   TwbFormIDChangePlan = record
     Kind           : TwbFormIDChangeKind;
+    Goal           : TwbModuleType;
     Target         : IwbFile;
     Preserve       : Boolean;
     AllOrNothing   : Boolean;
@@ -24843,6 +24848,18 @@ begin
       Insert(' ', Result, 7)
     else if lFileID.IsMediumSlot then
       Insert(' ', Result, 6);
+  end;
+end;
+
+{ TwbModuleTypeHelper }
+
+function TwbModuleTypeHelper.MaxObjectID: Cardinal;
+begin
+  case Self of
+    mtLight: Result := $FFF;
+    mtMedium: Result := $FFFF;
+  else
+    Result := $FFFFFF;
   end;
 end;
 

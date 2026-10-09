@@ -3928,6 +3928,8 @@ begin
       lItem := mniNavRenumberFormIDsInject
     else if SameText(xeTestSwitches.RenumberOp, 'compact') then
       lItem := mniNavCompactFormIDs
+    else if SameText(xeTestSwitches.RenumberOp, 'compactmedium') then
+      lItem := mniNavCompactFormIDsMedium
     else
       lItem := mniNavRenumberFormIDsFrom;
 
@@ -3957,6 +3959,9 @@ begin
     pmuNavPopup(nil);
     lLines.Add('menu' + #9 + 'renumber ' + BoolToStr(mniNavRenumberFormIDsFrom.Visible, True) + #9 +
       'compact ' + BoolToStr(mniNavCompactFormIDs.Visible, True) + #9 + 'inject ' + BoolToStr(mniNavRenumberFormIDsInject.Visible, True));
+    if xeContext.GameDefObj.IsLightSupported then
+      lLines.Add('compactitems' + #9 + StripHotkey(mniNavCompactFormIDs.Caption) + ' ' + BoolToStr(mniNavCompactFormIDs.Visible, True) + #9 +
+        StripHotkey(mniNavCompactFormIDsMedium.Caption) + ' ' + BoolToStr(mniNavCompactFormIDsMedium.Visible, True));
     lLines.Add('call' + #9 + lItem.Name + #9 + 'expanded ' + BoolToStr(vstNav.Expanded[lNode], True) + #9 +
       'filterhint ' + BoolToStr(lblFilterHint.Visible, True));
 

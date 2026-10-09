@@ -2794,7 +2794,7 @@ begin
   lStart.FileID[lLayout] := lTarget.LoadOrderFileID;
   aPlan.HighFormID := lStart;
   if aPlan.Kind = fckCompact then
-    lEnd := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
+    lEnd := TwbFormID.FromCardinal(aPlan.Goal.MaxObjectID).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
   else if not lTarget.Equals(lSelf) then begin
     if lTarget.IsLight then
       lEnd := TwbFormID.FromCardinal($FFF).ChangeFileID(lLayout, lTarget.LoadOrderFileID)
@@ -6789,12 +6789,7 @@ begin
   if GetIsUpdate then
     raise ERangeError.Create('File ' + GetFileName + ' is Update flagged and can''t contain new records');
 
-  case lModuleType of
-    mtLight: Mask := $FFF;
-    mtMedium: Mask := $FFFF;
-  else
-    {mtFull: }Mask := $FFFFFF;
-  end;
+  Mask := lModuleType.MaxObjectID;
   
   NextObjectID := GetNextObjectID and Mask;
 

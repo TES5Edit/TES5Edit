@@ -2417,7 +2417,11 @@ object frmMain: TfrmMain
       OnClick = mniNavRenumberFormIDsFromClick
     end
     object mniNavCompactFormIDs: TMenuItem
-      Caption = 'Compact FormIDs for ESL'
+      Caption = 'Compact FormIDs for Light'
+      OnClick = mniNavRenumberFormIDsFromClick
+    end
+    object mniNavCompactFormIDsMedium: TMenuItem
+      Caption = 'Compact FormIDs for Medium'
       OnClick = mniNavRenumberFormIDsFromClick
     end
     object mniNavRenumberFormIDsInject: TMenuItem

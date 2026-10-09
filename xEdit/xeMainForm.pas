@@ -312,6 +312,7 @@ type
     mniNavCopyIdle: TMenuItem;
     mniNavRenumberFormIDsFrom: TMenuItem;
     mniNavCompactFormIDs: TMenuItem;
+    mniNavCompactFormIDsMedium: TMenuItem;
     mniNavRenumberFormIDsInject: TMenuItem;
     tmrGenerator: TTimer;
     mniNavLocalizationSwitch: TMenuItem;
@@ -11850,9 +11851,13 @@ var
     lPlan := Default(TwbFormIDChangePlan);
     if Sender = mniNavRenumberFormIDsInject then
       lPlan.Kind := fckInject
-    else if Sender = mniNavCompactFormIDs then
-      lPlan.Kind := fckCompact
-    else
+    else if Sender = mniNavCompactFormIDs then begin
+      lPlan.Kind := fckCompact;
+      lPlan.Goal := mtLight;
+    end else if Sender = mniNavCompactFormIDsMedium then begin
+      lPlan.Kind := fckCompact;
+      lPlan.Goal := mtMedium;
+    end else
       lPlan.Kind := fckRenumber;
 
     if Sender = mniNavRenumberFormIDsInject then begin
@@ -13771,11 +13776,19 @@ begin
     (Element.ElementType = etFile) and
     Element.IsEditable;
 
+  mniNavCompactFormIDs.Caption := 'Compact FormIDs for ' + lGameDef.Identity.LightName;
   mniNavCompactFormIDs.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
     lGameDef.IsLightSupported and
     Supports(Element, IwbFile, _File) and
     not (_File.IsLight or _File.IsUpdate);
+
+  mniNavCompactFormIDsMedium.Visible :=
+    mniNavRenumberFormIDsFrom.Visible and
+    lGameDef.IsMediumSupported and
+    Supports(Element, IwbFile, _File) and
+    _File.LoadOrderFileID.IsFullSlot and
+    not (_File.IsLight or _File.IsMedium or _File.IsUpdate);
 
   mniNavRenumberFormIDsInject.Visible :=
     mniNavRenumberFormIDsFrom.Visible and
