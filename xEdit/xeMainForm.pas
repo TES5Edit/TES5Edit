@@ -2411,6 +2411,8 @@ var
   lResult              : TDynElements;
   Operation            : string;
   lOptions             : TwbCopyOptions;
+  lConfirmOverwrite    : TwbCopyDecision;
+  lConfirmRemove       : TwbCopyDecision;
 begin
   Result := nil;
   lResult := nil;
@@ -2478,66 +2480,56 @@ begin
     PrevDeleteResult := mrNone;
 
     lOptions := Default(TwbCopyOptions);
-    if AllowOverwrite then
-      lOptions.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+    if AllowOverwrite then begin
+      lConfirmOverwrite := function(const aTarget, aSource: IwbElement): Boolean
+      begin
+        case PrevOverwriteResult of
+          mrYesToAll: Result := True;
+          mrNoToAll: Result := False;
+        else
+          PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
+            aTarget.FullPath + CRLF + CRLF +
+            'with' + CRLF + CRLF +
+            aSource.FullPath + '?',
+            mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+          Result := PrevOverwriteResult in [mrYes, mrYesToAll];
+          if PrevOverwriteResult = mrCancel then begin
+            wbProgress('Aborting...');
+            Abort;
+          end;
+        end;
+      end;
+      lConfirmRemove := function(const aTarget, aSource: IwbElement): Boolean
       var
-        MainRecord: IwbMainRecord;
         s: string;
       begin
-        if Assigned(aTarget) then begin
-          case PrevOverwriteResult of
-            mrYesToAll: Result := coCopy;
-            mrNoToAll: Result := coSkip;
-          else
-            PrevOverwriteResult := MessageDlg('Do you want to overwrite:' + CRLF + CRLF +
+        case PrevDeleteResult of
+          mrYesToAll: Result := True;
+          mrNoToAll: Result := False;
+        else
+          if Assigned(aTarget) then
+            s := 'The source' + CRLF + CRLF +
+              aSource.FullPath + CRLF + CRLF +
+             'is flagged as deleted. Do you want to remove the target ' + CRLF + CRLF +
               aTarget.FullPath + CRLF + CRLF +
-              'with' + CRLF + CRLF +
-              aSource.FullPath + '?',
-              mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
-            if PrevOverwriteResult in [mrYes, mrYesToAll] then
-              Result := coCopy
-            else
-              Result := coSkip;
-            if PrevOverwriteResult = mrCancel then begin
-              wbProgress('Aborting...');
-              Abort;
-            end;
+              'instead of copying the deleted record?'
+          else
+            s := 'The source' + CRLF + CRLF +
+              aSource.FullPath + CRLF + CRLF +
+             'is flagged as deleted, and the target doesn''t exist.' + CRLF + CRLF +
+             'Do you want to skip copying this record?';
+          PrevDeleteResult := MessageDlg(s,
+            mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
+          Result := PrevDeleteResult in [mrYes, mrYesToAll];
+          if PrevDeleteResult = mrCancel then begin
+            wbProgress('Aborting...');
+            Abort;
           end;
-        end else
-          Result := coCopy;
-
-        if Result = coCopy then begin
-          if Supports(aSource, IwbMainRecord, MainRecord) then
-            if MainRecord.IsDeleted then begin
-              case PrevDeleteResult of
-                mrYesToAll: Result := coDelete;
-                mrNoToAll: Result := coCopy;
-              else
-                if Assigned(aTarget) then
-                  s := 'The source' + CRLF + CRLF +
-                    aSource.FullPath + CRLF + CRLF +
-                   'is flagged as deleted. Do you want to remove the target ' + CRLF + CRLF +
-                    aTarget.FullPath + CRLF + CRLF +
-                    'instead of copying the deleted record?'
-                else
-                  s := 'The source' + CRLF + CRLF +
-                    aSource.FullPath + CRLF + CRLF +
-                   'is flagged as deleted, and the target doesn''t exist.' + CRLF + CRLF +
-                   'Do you want to skip copying this record?';
-                PrevDeleteResult := MessageDlg(s,
-                  mtConfirmation, mbYesNo + mbYesAllNoAllCancel, 0, mbNo);
-                if PrevDeleteResult in [mrYes, mrYesToAll] then
-                  Result := coDelete;
-                if PrevDeleteResult = mrCancel then begin
-                  wbProgress('Aborting...');
-                  Abort;
-                end;
-              end;
-            end;
         end;
-
-        if (Result = coDelete) and not Assigned(aTarget) then
-          Result := coSkip;
+      end;
+      lOptions.CanOverwrite := function (const aTarget, aSource: IwbElement): TwbCanOverwriteAction
+      begin
+        Result := TwbCopyOptions.OverwriteAction(aTarget, aSource, lConfirmOverwrite, lConfirmRemove);
 
         case Result of
           coCopy:
@@ -2551,17 +2543,15 @@ begin
         end;
 
       end;
+    end;
     try
       with TfrmModuleSelect.Create(Self) do try
 
         AllModules := xeContext.ModuleList.ModulesByLoadOrder(True).FilteredByFlag(mfValid).FilteredBy(function(a: PwbModuleInfo): Boolean
           begin
             Result := mfTemplate in a.miFlags;
-            if not Result then begin
-              Result := Assigned(a.miFile) and a._File.IsEditable;
-              if Result then
-                Result := a._File.LoadOrder >= j;
-            end;
+            if not Result then
+              Result := Assigned(a.miFile) and a._File.AcceptsCopiesOf(Elements, AsNew, AsWrapper, j);
             if Result and AsNew then begin
               if mfHasUpdateFlag in a.miFlags then
                 Exit(False);
@@ -2576,18 +2566,6 @@ begin
         EditorIDSuffixRemove := '';
         EditorIDPrefix := '';
         EditorIDSuffix := '';
-
-        if not (AsNew or AsWrapper) then
-          AllModules := AllModules.FilteredBy(function(a: PwbModuleInfo): Boolean
-            begin
-              Result := mfTemplate in a.miFlags;
-              if not Result then
-                for var lElementIdx := Low(Elements) to High(Elements) do begin
-                  Result := not a._File.Equals(Elements[lElementIdx]._File);
-                  if not Result then
-                    Exit;
-                end;
-            end);
 
         if not Multiple then begin
           MainRecord := (Elements[0] as IwbMainRecord);
@@ -2756,6 +2734,8 @@ begin
       end;
     finally
       lOptions.CanOverwrite := nil;
+      lConfirmOverwrite := nil;
+      lConfirmRemove := nil;
     end;
   finally
     sl.Free;

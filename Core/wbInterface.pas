@@ -1653,6 +1653,7 @@ type
 
   TwbCanOverwriteAction = (coCopy, coDelete, coSkip);
   TwbCanOverwriteCallback = reference to function(const aTarget, aSource: IwbElement) : TwbCanOverwriteAction;
+  TwbCopyDecision = reference to function(const aTarget, aSource: IwbElement): Boolean;
 
   TwbAfterCopyCallback = procedure(const aElement: IwbElement);
 
@@ -1671,6 +1672,7 @@ type
     AfterCopy      : TwbAfterCopyCallback;
     CanOverwrite   : TwbCanOverwriteCallback;
     class function IsMultiple(const aElements: TDynElements): Boolean; static;
+    class function OverwriteAction(const aTarget, aSource: IwbElement; const aConfirmOverwrite, aConfirmRemove: TwbCopyDecision): TwbCanOverwriteAction; static;
   end;
 
   TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
@@ -1807,6 +1809,7 @@ type
     procedure RemoveIdenticalDeltaFast;
 
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
+    function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;
@@ -25236,6 +25239,26 @@ end;
 class function TwbCopyOptions.IsMultiple(const aElements: TDynElements): Boolean;
 begin
   Result := (Length(aElements) > 1) or (aElements[0].ElementType <> etMainRecord);
+end;
+
+class function TwbCopyOptions.OverwriteAction(const aTarget, aSource: IwbElement; const aConfirmOverwrite, aConfirmRemove: TwbCopyDecision): TwbCanOverwriteAction;
+var
+  lMainRecord: IwbMainRecord;
+begin
+  if Assigned(aTarget) then begin
+    if aConfirmOverwrite(aTarget, aSource) then
+      Result := coCopy
+    else
+      Result := coSkip;
+  end else
+    Result := coCopy;
+
+  if (Result = coCopy) and Supports(aSource, IwbMainRecord, lMainRecord) and lMainRecord.IsDeleted then
+    if aConfirmRemove(aTarget, aSource) then
+      Result := coDelete;
+
+  if (Result = coDelete) and not Assigned(aTarget) then
+    Result := coSkip;
 end;
 
 

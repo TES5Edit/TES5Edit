@@ -1002,6 +1002,7 @@ type
     procedure RemoveIdenticalDeltaFast;
 
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
+    function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;
@@ -3198,6 +3199,19 @@ begin
   finally
     _wbCanOverwriteCallback := lPreviousCanOverwrite;
   end;
+end;
+
+function TwbFile.AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
+var
+  i : Integer;
+begin
+  Result := GetIsEditable and (flLoadOrder >= aRequiredLoadOrder);
+  if Result and aAsNew and GetIsUpdate then
+    Exit(False);
+  if Result and not (aAsNew or aAsWrapper) then
+    for i := Low(aElements) to High(aElements) do
+      if Equals(aElements[i]._File) then
+        Exit(False);
 end;
 
 procedure TwbFile.AddMasters(const aMasters: array of string; aSilent: Boolean);
