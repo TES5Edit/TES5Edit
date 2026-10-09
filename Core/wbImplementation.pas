@@ -1006,6 +1006,7 @@ type
     procedure PlanFormIDChange(var aPlan: TwbFormIDChangePlan);
     function ApplyFormIDChange(const aPlan: TwbFormIDChangePlan): Boolean;
     procedure FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
+    procedure BuildOrLoadRefOfDependents;
 
     function IsNewRecord(const aFileID: TwbFileID; aNew: Boolean): Boolean; overload;
     function IsNewRecord(const aFormID: TwbFormID; aNew: Boolean): Boolean; overload;
@@ -3015,6 +3016,17 @@ procedure TwbFile.FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
 begin
   if aPlan.Target.IsEditable then
     aPlan.Target.NextObjectID := aPlan.HighFormID.Next(flContextObj.SlotLayout).ObjectID[flContextObj.SlotLayout];
+end;
+
+procedure TwbFile.BuildOrLoadRefOfDependents;
+var
+  lFileName : string;
+  lFile     : IwbFile;
+begin
+  lFileName := GetFileName;
+  for lFile in flContextObj.Files do
+    if Assigned(lFile) and not (fsRefsBuild in lFile.FileStates) and lFile.HasMaster(lFileName) then
+      lFile.BuildOrLoadRef(False);
 end;
 
 procedure TwbFile.AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);

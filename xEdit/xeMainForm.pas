@@ -11971,6 +11971,7 @@ begin
   lLayout := xeContext.SlotLayout;
   if Prepare then begin
     SourceFile.BuildOrLoadRef(False);
+    SourceFile.BuildOrLoadRefOfDependents;
     PerformLongAction('Changing FormIDs', 'Processed Records: 0', procedure
     begin
       if SourceFile.ApplyFormIDChange(lPlan) then begin
