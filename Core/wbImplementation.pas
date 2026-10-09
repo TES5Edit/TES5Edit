@@ -360,6 +360,7 @@ type
     procedure NotifyChangedInternal(aContainer: Pointer); virtual;
 
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; Recursive: Boolean = True; Initial: Boolean = false); virtual;
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
 
     function GetElementID: Pointer;
     function GetElementStates: TwbElementStates;
@@ -942,6 +943,7 @@ type
     procedure AddMasters(const aMasters: array of string; aSilent: Boolean = False); overload;
     procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True; aSilent: Boolean = False);
     procedure AddMastersIfMissing(const aMasters: TStrings; aSortMasters: Boolean = True; aSilent: Boolean = False);
+    function RequiredMastersFor(const aMasters: TwbFilesSet): TwbFiles;
 
     procedure SortMasters;
     procedure CleanMasters;
@@ -1036,6 +1038,8 @@ type
     constructor Create(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; const aCompareTo: string; aStates: TwbFileStates; const aData: TBytes);
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aIsLight, aIsMedium: Boolean); overload;
     constructor CreateNew(const aContext: TwbGameContext; const aFileName: string; aLoadOrder: Integer; aTemplate: PwbModuleInfo); overload;
+  private
+    procedure CollectMastersToAdd(const aFiles: TwbFiles; aList: TStringList);
   public
     class function NewInstance: TObject; override; final;
     destructor Destroy; override; final;
@@ -2720,6 +2724,50 @@ begin
       SortMasters;
   finally
     Masters.Free;
+  end;
+end;
+
+procedure TwbFile.CollectMastersToAdd(const aFiles: TwbFiles; aList: TStringList);
+var
+  i, j : Integer;
+begin
+  for var lFile in aFiles do begin
+    aList.AddObject(lFile.FileName, Pointer(lFile));
+    if flContextObj.Settings.EnforceAllMasters then
+      for var lMaster in lFile.AllMasters do
+        aList.AddObject(lMaster.FileName, Pointer(lMaster));
+  end;
+
+  for i := 0 to Pred(GetMasterCount(True)) do
+    if aList.Find(GetMaster(i, True).FileName, j) then
+      aList.Delete(j);
+  if aList.Find(GetFileName, j) then
+    aList.Delete(j);
+end;
+
+function TwbFile.RequiredMastersFor(const aMasters: TwbFilesSet): TwbFiles;
+var
+  i : Integer;
+begin
+  Result := nil;
+  var lList := TStringList.Create;
+  try
+    lList.Sorted := True;
+    lList.Duplicates := dupIgnore;
+    CollectMastersToAdd(aMasters.ToArray, lList);
+
+    for i := 0 to Pred(lList.Count) do
+      if IwbFile(Pointer(lList.Objects[i])).LoadOrder >= GetLoadOrder then
+        raise Exception.Create('The required master "' + lList[i] + '" can not be added to "' + GetFileName + '" as it has a higher load order');
+
+    lList.Sorted := False;
+    lList.CustomSort(CompareLoadOrder);
+
+    SetLength(Result, lList.Count);
+    for i := 0 to Pred(lList.Count) do
+      Result[i] := IwbFile(Pointer(lList.Objects[i]));
+  finally
+    lList.Free;
   end;
 end;
 
@@ -23067,6 +23115,31 @@ begin
   eReportMastersGen := aMasters.Generation;
   if Recursive then
     eReportMastersGen := eReportMastersGen or $80000000;
+end;
+
+procedure TwbElement.ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
+var
+  lMainRecord  : IwbMainRecord;
+  lGroupRecord : IwbGroupRecord;
+  lContainer   : IwbContainer;
+begin
+  ReportRequiredMasters(aMasters, aAsNew);
+  if aDeepCopy then
+    if Supports(Self, IwbMainRecord, lMainRecord) and Supports(lMainRecord.ChildGroup, IwbGroupRecord, lGroupRecord) then
+      lGroupRecord.ReportRequiredMasters(aMasters, aAsNew);
+  lContainer := GetContainer;
+  while Assigned(lContainer) do begin
+    lContainer.ReportRequiredMasters(aMasters, aAsNew, False, True);
+    if lContainer.ElementType = etGroupRecord then begin
+      lMainRecord := (lContainer as IwbGroupRecord).ChildrenOf;
+      if Assigned(lMainRecord) then begin
+        if Assigned(aTarget) then
+          lMainRecord := lMainRecord.HighestOverrideVisibleForFile[aTarget];
+        lMainRecord.ReportRequiredMasters(aMasters, aAsNew);
+      end;
+    end;
+    lContainer := lContainer.Container;
+  end;
 end;
 
 procedure TwbElement.RequestStorageChange(var aBasePtr, aEndPtr: Pointer; aNewSize: Cardinal);

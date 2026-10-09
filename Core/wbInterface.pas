@@ -1230,6 +1230,7 @@ type
     function GetSummaryLinksTo: IwbElement;
     function GetNoReach: Boolean;
     procedure ReportRequiredMasters(aMasters: TwbFilesSet; aAsNew: Boolean; recursive: Boolean = True; initial: Boolean = False);
+    procedure ReportRequiredMastersForCopy(aMasters: TwbFilesSet; aAsNew, aDeepCopy: Boolean; const aTarget: IwbFile = nil);
     function AddIfMissing(const aElement: IwbElement; aAsNew, aDeepCopy : Boolean; const aPrefixRemove, aSuffixRemove, aPrefix, aSuffix: string; aAllowOverwrite: Boolean): IwbElement;
     procedure ResetConflict;
     procedure ResetReachable;
@@ -1746,6 +1747,7 @@ type
     procedure AddMasters(aMasters: TStrings; aSilent: Boolean = False);
     procedure AddMasterIfMissing(const aMaster: string; aSortMasters: Boolean = True; aSilent: Boolean = False);
     procedure AddMastersIfMissing(const aMasters: TStrings; aSortMasters: Boolean = True; aSilent: Boolean = False);
+    function RequiredMastersFor(const aMasters: TwbFilesSet): TwbFiles;
     procedure SortMasters;
     procedure CleanMasters;
 

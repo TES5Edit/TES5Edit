@@ -1945,18 +1945,6 @@ begin
 end;
 
 
-function CompareLoadOrder(List: TStringList; Index1, Index2: Integer): Integer;
-begin
-  if Index1 = Index2 then begin
-    Result := 0;
-    Exit;
-  end;
-
-  Result := CmpI32(
-    IwbFile(Pointer(List.Objects[Index1])).LoadOrder,
-    IwbFile(Pointer(List.Objects[Index2])).LoadOrder);
-end;
-
 function TfrmMain.AddRequiredMaster(const aMasterFile: IwbFile; const aTargetFile: IwbFile): Boolean;
 var
   sl: TStringList;
@@ -1976,78 +1964,67 @@ end;
 function TfrmMain.AddRequiredMasters(aMasters: TStrings; const aTargetFile: IwbFile; aSilent: Boolean = False): Boolean;
 var
   sl                          : TStringList;
-  i, j                        : Integer;
+  i                           : Integer;
   WasEnabled                  : Boolean;
   PrevAction                  : string;
+  lMasters                    : TwbFilesSet;
+  lPlanned                    : TwbFiles;
 begin
+  lMasters := TwbFilesSet.Create;
+  try
+    for i := 0 to Pred(aMasters.Count) do begin
+      if not Assigned(aMasters.Objects[i]) then
+        raise Exception.Create('The required master "' + aMasters[i] + '" is not a loaded file');
+      lMasters.Add(IwbFile(Pointer(aMasters.Objects[i])));
+    end;
+    lPlanned := aTargetFile.RequiredMastersFor(lMasters);
+  finally
+    lMasters.Free;
+  end;
+
+  if Length(lPlanned) = 0 then
+    Exit(True);
+
   sl := TStringList.Create;
   sl.Sorted := True;
   sl.Duplicates := dupIgnore;
   try
-    sl.AddStrings(aMasters);
+    for var lFile in lPlanned do
+      sl.AddObject(lFile.FileName, Pointer(lFile));
 
-    // add masters of masters
-    // only for games that need it
-    if xeContext.Settings.EnforceAllMasters then
-      for i := 0 to Pred(aMasters.Count) do
-      begin
-        var lFile := Files.Find(aMasters[i]);
-        var lFileMasters := lFile.AllMasters;
-        lFileMasters.SortByReverseLoadOrder;
-        for j := low(lFileMasters) to High(lFileMasters) do
-          sl.AddObject(lFileMasters[j].FileName, Pointer(lFileMasters[j]));
-      end;
+    Result := aSilent;
+    if not Result then
+      Result := MessageDlg('To continue the following files need to be added to "' +
+        aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
+        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 
-    for i := 0 to Pred(aTargetFile.MasterCount[True]) do
-      if sl.Find(aTargetFile.Masters[i, True].FileName, j) then
-        sl.Delete(j);
-    if sl.Find(aTargetFile.FileName, j) then
-      sl.Delete(j);
-
-    if sl.Count > 0 then begin
-
-      for i := 0 to Pred(sl.Count) do
-        if IwbFile(Pointer(sl.Objects[i])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('The required master "' + sl[i] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
-
-      Result := aSilent;
-      if not Result then
-        Result := MessageDlg('To continue the following files need to be added to "' +
-          aTargetFile.FileName + '" as masters:'#13#13 + sl.Text +
-          #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
-
-      sl.Sorted := False;
-      sl.CustomSort(CompareLoadOrder);
-
-      if Result then begin
-        WasEnabled := pnlClient.Enabled;
-        pnlClient.Enabled := False;
+    if Result then begin
+      WasEnabled := pnlClient.Enabled;
+      pnlClient.Enabled := False;
+      UpdatePnlCancelVisible;
+      try
+        if WasEnabled then
+          wbStartTime := Now;
+        PrevAction := wbCurrentAction;
+        if sl.Count = 1 then
+          wbCurrentAction := 'Adding '+lPlanned[0].Name+' as new master to ' + aTargetFile.Name
+        else
+          wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
+        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + wbCurrentAction);
+        DoProcessMessages;
+        aTargetFile.AddMastersIfMissing(sl);
+        wbCurrentAction := 'Sorting masters for ' + aTargetFile.Name;
+        DoProcessMessages;
+        aTargetFile.SortMasters;
+        AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Done adding and sorting masters.');
+      finally
+        wbCurrentAction := PrevAction;
+        if WasEnabled then
+          Caption := Application.Title;
+        pnlClient.Enabled := WasEnabled;
         UpdatePnlCancelVisible;
-        try
-          if WasEnabled then
-            wbStartTime := Now;
-          PrevAction := wbCurrentAction;
-          if sl.Count = 1 then
-            wbCurrentAction := 'Adding '+IwbFile(Pointer(sl.Objects[0])).Name+' as new master to ' + aTargetFile.Name
-          else
-            wbCurrentAction := 'Adding '+sl.Count.ToString+' new masters to ' + aTargetFile.Name;
-          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] ' + wbCurrentAction);
-          DoProcessMessages;
-          aTargetFile.AddMastersIfMissing(sl);
-          wbCurrentAction := 'Sorting masters for ' + aTargetFile.Name;
-          DoProcessMessages;
-          aTargetFile.SortMasters;
-          AddMessage('[' + wbFormatElapsedTime( Now - wbStartTime) + '] Done adding and sorting masters.');
-        finally
-          wbCurrentAction := PrevAction;
-          if WasEnabled then
-            Caption := Application.Title;
-          pnlClient.Enabled := WasEnabled;
-          UpdatePnlCancelVisible;
-        end;
       end;
-    end else
-      Result := True;
+    end;
   finally
     sl.Free;
   end;
@@ -2055,63 +2032,32 @@ end;
 
 function TfrmMain.AddRequiredMasters(const aSourceElement: IwbElement; const aTargetFile: IwbFile; aAsNew: Boolean; aSilent: Boolean = False): Boolean;
 var
-  i, j : Integer;
+  lPlanned : TwbFiles;
 begin
+  var lMasters := TwbFilesSet.Create;
+  try
+    aSourceElement.ReportRequiredMasters(lMasters, aAsNew);
+    lPlanned := aTargetFile.RequiredMastersFor(lMasters);
+  finally
+    lMasters.Free;
+  end;
+
+  if Length(lPlanned) = 0 then
+    Exit(True);
+
   var lRequiredMasters := TStringList.Create;
   try
     lRequiredMasters.Sorted := True;
     lRequiredMasters.Duplicates := dupIgnore;
+    for var lFile in lPlanned do
+      lRequiredMasters.AddObject(lFile.FileName, Pointer(lFile));
 
-    var lMasters := TwbFilesSet.Create;
-    try
-      aSourceElement.ReportRequiredMasters(lMasters, aAsNew);
-      for var lFile in lMasters do
-      begin
-        // add masters of masters
-        // only for games that need it
-        if xeContext.Settings.EnforceAllMasters then
-        begin
-          var lFileMasters := lFile.AllMasters;
-          for j := low(lFileMasters) to High(lFileMasters) do
-            lRequiredMasters.AddObject(lFileMasters[j].FileName, Pointer(lFileMasters[j]));
-        end;
+    Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
+      aTargetFile.FileName + '" as masters:'#13#13 + lRequiredMasters.Text +
+      #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
 
-        lRequiredMasters.AddObject(lFile.FileName, Pointer(lFile));
-      end;
-
-      for i := 0 to Pred(aTargetFile.MasterCount[True]) do
-        if lRequiredMasters.Find(aTargetFile.Masters[i, True].FileName, j) then
-          lRequiredMasters.Delete(j);
-      if lRequiredMasters.Find(aTargetFile.FileName, j) then
-        lRequiredMasters.Delete(j);
-    finally
-      lMasters.Free;
-    end;
-
-    var lFindIdx: Integer;
-    for var lTargetMasterIdx := 0 to Pred(aTargetFile.MasterCount[True]) do
-      if lRequiredMasters.Find(aTargetFile.Masters[lTargetMasterIdx, True].FileName, lFindIdx) then
-        lRequiredMasters.Delete(lFindIdx);
-    if lRequiredMasters.Find(aTargetFile.FileName, lFindIdx) then
-      lRequiredMasters.Delete(lFindIdx);
-
-    if lRequiredMasters.Count > 0 then begin
-
-      for var lRequiredMasterIdx := 0 to Pred(lRequiredMasters.Count) do
-        if IwbFile(Pointer(lRequiredMasters.Objects[lRequiredMasterIdx])).LoadOrder >= aTargetFile.LoadOrder then
-          raise Exception.Create('The required master "' + lRequiredMasters[lRequiredMasterIdx] + '" can not be added to "' + aTargetFile.FileName + '" as it has a higher load order');
-
-      Result := aSilent or (MessageDlg('To continue the following files need to be added to "' +
-        aTargetFile.FileName + '" as masters:'#13#13 + lRequiredMasters.Text +
-        #13'Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes);
-
-      lRequiredMasters.Sorted := False;
-      lRequiredMasters.CustomSort(CompareLoadOrder);
-
-      if Result then
-        aTargetFile.AddMastersIfMissing(lRequiredMasters);
-    end else
-      Result := True;
+    if Result then
+      aTargetFile.AddMastersIfMissing(lRequiredMasters);
   finally
     lRequiredMasters.Free;
   end;
@@ -2451,7 +2397,6 @@ var
   Elements             : TDynElements;
   MainRecord           : IwbMainRecord;
   Master               : IwbMainRecord;
-  GroupRecord          : IwbGroupRecord;
   TargetFile           : IwbFile;
   sl                   : TStringList;
   i, j                 : Integer;
@@ -2461,7 +2406,6 @@ var
   EditorIDPrefix       : string;
   EditorIDSuffix       : string;
   Multiple             : Boolean;
-  Container            : IwbContainer;
   PrevOverwriteResult  : TModalResult;
   PrevDeleteResult     : TModalResult;
   lResult              : TDynElements;
@@ -2502,22 +2446,7 @@ begin
               j := i;
             end;
           end else begin
-            Elements[i].ReportRequiredMasters(lMasters, AsNew);
-            if DeepCopy then
-              if Supports(Elements[i], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
-                GroupRecord.ReportRequiredMasters(lMasters, AsNew);
-            Container := Elements[i].Container;
-            while Assigned(Container) do begin
-              Container.ReportRequiredMasters(lMasters, AsNew, False, True);
-              if Container.ElementType = etGroupRecord then
-                with Container as IwbGroupRecord do begin
-                  MainRecord := ChildrenOf;
-                  if Assigned(MainRecord) then
-                    MainRecord.ReportRequiredMasters(lMasters, AsNew);
-                end;
-
-              Container := Container.Container;
-            end;
+            Elements[i].ReportRequiredMastersForCopy(lMasters, AsNew, DeepCopy);
             if j >= 0 then begin
               Elements[j] := Elements[i];
               Inc(j);
@@ -2806,26 +2735,8 @@ begin
                 sl.Clear;
                 var lMasters2 := TwbFilesSet.Create;
                 try
-                  for j := Low(Elements) to High(Elements) do begin
-                    Elements[j].ReportRequiredMasters(lMasters2, AsNew);
-                    if DeepCopy then
-                      if Supports(Elements[j], IwbMainRecord, MainRecord) and Supports(MainRecord.ChildGroup, IwbGroupRecord, GroupRecord) then
-                        GroupRecord.ReportRequiredMasters(lMasters2, AsNew);
-                    Container := Elements[j].Container;
-                    while Assigned(Container) do begin
-                      Container.ReportRequiredMasters(lMasters2, AsNew, False, True);
-                      if Container.ElementType = etGroupRecord then
-                        with Container as IwbGroupRecord do begin
-                          MainRecord := ChildrenOf;
-                          if Assigned(MainRecord) then begin
-                            MainRecord := MainRecord.HighestOverrideVisibleForFile[TargetFile];
-                            MainRecord.ReportRequiredMasters(lMasters2, AsNew);
-                          end;
-                        end;
-
-                      Container := Container.Container;
-                    end;
-                  end;
+                  for j := Low(Elements) to High(Elements) do
+                    Elements[j].ReportRequiredMastersForCopy(lMasters2, AsNew, DeepCopy, TargetFile);
                   for var lFile in lMasters2 do
                     sl.AddObject(lFile.FileName, Pointer(lFile));
                 finally
