@@ -2753,6 +2753,15 @@ var
   lSignatures : TStringList;
   lPlanned    : TDictionary<Cardinal, Boolean>;
   i, j, k     : Integer;
+
+  procedure Refuse(aRefusal: TwbFormIDChangeRefusal);
+  begin
+    aPlan.Refusal := aRefusal;
+    aPlan.Records := nil;
+    aPlan.NewFormIDs := nil;
+    aPlan.PreservedCount := 0;
+  end;
+
 begin
   lLayout := flContextObj.SlotLayout;
   lSelf := Self;
@@ -2774,7 +2783,7 @@ begin
       Inc(j);
   end;
   if j < 1 then begin
-    aPlan.Refusal := fcrNoOwnRecords;
+    Refuse(fcrNoOwnRecords);
     Exit;
   end;
   SetLength(lOwn, j);
@@ -2838,7 +2847,7 @@ begin
               lNew := lOld.ChangeFileID(lLayout, lTarget.LoadOrderFileID)
             else
               if aPlan.AllOrNothing then begin
-                aPlan.Refusal := fcrInUse;
+                Refuse(fcrInUse);
                 aPlan.InUseFormID := lNew;
                 aPlan.InUseRecord := lRecord;
                 aPlan.InUseHolder := lHolder;
@@ -2858,7 +2867,7 @@ begin
       end;
 
       if lNew > lEnd then begin
-        aPlan.Refusal := fcrTooMany;
+        Refuse(fcrTooMany);
         Exit;
       end;
 
@@ -2898,7 +2907,7 @@ begin
           until not lPlanned.ContainsKey(lNew.ToCardinal) and not Assigned(lTarget.ContainedRecordByLoadOrderFormID[lNew, True]);
 
           if lNew > lEnd then begin
-            aPlan.Refusal := fcrTooMany;
+            Refuse(fcrTooMany);
             Exit;
           end;
 
@@ -2914,7 +2923,7 @@ begin
     if i > 0 then
       aPlan.Signatures := lSignatures.DelimitedText
     else
-      aPlan.Refusal := fcrNothingToChange;
+      Refuse(fcrNothingToChange);
   finally
     lSignatures.Free;
   end;
