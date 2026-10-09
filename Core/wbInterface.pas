@@ -1697,6 +1697,15 @@ type
     InUseHolder    : IwbMainRecord;
   end;
 
+  TwbMergeIntoMasterResult = record
+    Plan                : TwbFormIDChangePlan;
+    InjectSkippedUpdate : Boolean;
+    ApplyErrors         : Boolean;
+    Masters             : TwbFiles;
+    Groups              : TDynElements;
+    Copied              : TDynElements;
+  end;
+
   IwbFile = interface(IwbContainer)
     ['{38AA15A6-F652-45C7-B875-9CB502E5DA92}']
     function GetFileName: string;
@@ -1810,6 +1819,7 @@ type
 
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
     function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
+    function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;

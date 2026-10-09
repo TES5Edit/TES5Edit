@@ -1003,6 +1003,7 @@ type
 
     procedure AddCopies(const aElements: TDynElements; var aResult: TDynElements; var aOptions: TwbCopyOptions);
     function AcceptsCopiesOf(const aElements: TDynElements; aAsNew, aAsWrapper: Boolean; aRequiredLoadOrder: Integer): Boolean;
+    function MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
 
     function GetObjectIDFloor: Cardinal;
     function GetTakesLightObjectIDs: Boolean;
@@ -3212,6 +3213,127 @@ begin
     for i := Low(aElements) to High(aElements) do
       if Equals(aElements[i]._File) then
         Exit(False);
+end;
+
+function TwbFile.MergeIntoMaster(const aTarget: IwbFile): TwbMergeIntoMasterResult;
+var
+  lIsMaster : Boolean;
+  lFirst    : TwbFilesSet;
+  lSet      : TwbFilesSet;
+  lRequired : Integer;
+  lNames    : TStringList;
+  lOptions  : TwbCopyOptions;
+  lYes      : TwbCopyDecision;
+  lElement  : IwbElement;
+  i         : Integer;
+
+  procedure ResetGroups;
+  begin
+    for var k := 0 to Pred(GetElementCount) do
+      if Supports(GetElement(k), IwbGroupRecord) then
+        GetElement(k).ResetConflict;
+  end;
+
+begin
+  Result := Default(TwbMergeIntoMasterResult);
+  if not Assigned(aTarget) then
+    raise Exception.Create('Merge into master: no target');
+  if not flContextObj.Settings.EditAllowed then
+    raise Exception.Create('Merge into master: editing is not allowed');
+  if flContextObj.Settings.TranslationMode then
+    raise Exception.Create('Merge into master: not available in translation mode');
+  if not flContextObj.LoaderDone then
+    raise Exception.Create('Merge into master: the context is still loading');
+  lIsMaster := False;
+  for i := 0 to Pred(GetMasterCount(True)) do
+    if GetMaster(i, True).Equals(aTarget) then begin
+      lIsMaster := True;
+      Break;
+    end;
+  if not lIsMaster then
+    raise Exception.CreateFmt('Merge into master: "%s" is not a master of "%s"', [aTarget.FileName, GetFileName]);
+
+  if aTarget.IsUpdate then
+    Result.InjectSkippedUpdate := True
+  else begin
+    Result.Plan.Kind := fckInject;
+    Result.Plan.Target := aTarget;
+    Result.Plan.Preserve := True;
+    Result.Plan.AllOrNothing := True;
+    Result.Plan.Start := TwbFormID.FromCardinal(aTarget.ObjectIDFloor);
+    PlanFormIDChange(Result.Plan);
+    if Result.Plan.Refusal = fcrNone then begin
+      BuildOrLoadRef(False);
+      BuildOrLoadRefOfDependents;
+      Result.ApplyErrors := ApplyFormIDChange(Result.Plan);
+      FinishFormIDChange(Result.Plan);
+    end;
+  end;
+
+  lFirst := TwbFilesSet.Create;
+  try
+    for i := 0 to Pred(GetElementCount) do begin
+      lElement := GetElement(i);
+      if Supports(lElement, IwbGroupRecord) and lElement.CanCopy then begin
+        lElement.ReportRequiredMastersForCopy(lFirst, False, True);
+        Result.Groups.Add(lElement);
+      end;
+    end;
+    lElement := nil;
+    lRequired := 0;
+    for var lFile in lFirst do
+      if lFile.LoadOrder > lRequired then
+        lRequired := lFile.LoadOrder;
+  finally
+    lFirst.Free;
+  end;
+  if Length(Result.Groups) = 0 then
+    Exit;
+
+  if not aTarget.AcceptsCopiesOf(Result.Groups, False, False, lRequired) then begin
+    ResetGroups;
+    raise Exception.CreateFmt('Merge into master: "%s" can not take copies of the groups of "%s"', [aTarget.FileName, GetFileName]);
+  end;
+
+  lSet := TwbFilesSet.Create;
+  try
+    for i := Low(Result.Groups) to High(Result.Groups) do
+      Result.Groups[i].ReportRequiredMastersForCopy(lSet, False, True, aTarget);
+    Result.Masters := aTarget.RequiredMastersFor(lSet);
+  finally
+    lSet.Free;
+  end;
+  if Length(Result.Masters) > 0 then begin
+    lNames := TStringList.Create;
+    try
+      for var lFile in Result.Masters do
+        lNames.Add(lFile.FileName);
+      aTarget.AddMastersIfMissing(lNames);
+    finally
+      lNames.Free;
+    end;
+  end;
+
+  SetLength(Result.Copied, Length(Result.Groups));
+  lYes := function(const aTargetElement, aSourceElement: IwbElement): Boolean
+    begin
+      Result := True;
+    end;
+  lOptions := Default(TwbCopyOptions);
+  lOptions.DeepCopy := True;
+  lOptions.AllowOverwrite := True;
+  lOptions.Operation := 'Copying as override (with overwrite)';
+  lOptions.CanOverwrite := function(const aTargetElement, aSourceElement: IwbElement): TwbCanOverwriteAction
+    begin
+      Result := TwbCopyOptions.OverwriteAction(aTargetElement, aSourceElement, lYes, lYes);
+    end;
+  try
+    aTarget.AddCopies(Result.Groups, Result.Copied, lOptions);
+  finally
+    lOptions.CanOverwrite := nil;
+    lYes := nil;
+  end;
+  ResetGroups;
 end;
 
 procedure TwbFile.AddMasters(const aMasters: array of string; aSilent: Boolean);
