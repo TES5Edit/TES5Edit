@@ -14806,7 +14806,8 @@ begin
   with TfrmFileSelect.Create(nil) do try
     try
       for i := Low(Files) to High(Files) do
-        if (Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or xeContext.Settings.TestWrite then begin
+        if ((Files[i].IsEditable) and (esUnsaved in Files[i].ElementStates) or xeContext.Settings.TestWrite) and
+          not ((fsIsCompareLoad in Files[i].FileStates) and not (fsIsDeltaPatch in Files[i].FileStates)) then begin
           CheckListBox1.AddItem(Files[i].FileNameOnDisk, Pointer(Files[i]));
           CheckListBox1.Checked[Pred(CheckListBox1.Count)] := esUnsaved in Files[i].ElementStates;
           SetLength(FileType, Succ(Length(FileType))); FileType[High(FileType)] := 0;

@@ -26406,6 +26406,11 @@ begin
   Result := Default(TwbSaveWrite);
   Result.TargetName := aFile.FileNameOnDisk;
   Result.SaveName := Result.TargetName;
+  if (fsIsCompareLoad in aFile.FileStates) and not (fsIsDeltaPatch in aFile.FileStates) then begin
+    Result.Failed := True;
+    aReport('Error saving ' + Result.SaveName + ': a file loaded through Compare To can not be saved');
+    Exit;
+  end;
   Result.NeedsRename := FileExists(Settings.DataPath + Result.TargetName);
   if Result.NeedsRename then begin
     Result.SaveName := Result.TargetName + aSuffix;
