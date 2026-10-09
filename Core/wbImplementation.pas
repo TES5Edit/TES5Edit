@@ -3023,6 +3023,8 @@ end;
 
 procedure TwbFile.FinishFormIDChange(const aPlan: TwbFormIDChangePlan);
 begin
+  if aPlan.Refusal <> fcrNone then
+    Exit;
   if aPlan.Target.IsEditable then
     aPlan.Target.NextObjectID := aPlan.HighFormID.Next(flContextObj.SlotLayout).ObjectID[flContextObj.SlotLayout];
 end;
