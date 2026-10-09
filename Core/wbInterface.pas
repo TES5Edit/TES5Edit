@@ -1670,7 +1670,7 @@ type
 
   TwbFormIDChangeKind = (fckRenumber, fckInject, fckCompact);
 
-  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrTooMany, fcrNothingToChange);
+  TwbFormIDChangeRefusal = (fcrNone, fcrNoOwnRecords, fcrInUse, fcrNotPreservable, fcrTooMany, fcrNothingToChange);
 
   TwbFormIDChangePlan = record
     Kind           : TwbFormIDChangeKind;
@@ -1684,8 +1684,8 @@ type
     PreservedCount : Integer;
     Signatures     : string;
     Refusal        : TwbFormIDChangeRefusal;
+    RefusedRecord  : IwbMainRecord;
     InUseFormID    : TwbFormID;
-    InUseRecord    : IwbMainRecord;
     InUseHolder    : IwbMainRecord;
   end;
 

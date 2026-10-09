@@ -2745,6 +2745,7 @@ var
   lTaken      : array of Boolean;
   lStart      : TwbFormID;
   lEnd        : TwbFormID;
+  lFloor      : Cardinal;
   lOld        : TwbFormID;
   lNew        : TwbFormID;
   lRecord     : IwbMainRecord;
@@ -2771,8 +2772,8 @@ begin
   aPlan.PreservedCount := 0;
   aPlan.Signatures := '';
   aPlan.Refusal := fcrNone;
+  aPlan.RefusedRecord := nil;
   aPlan.InUseFormID := TwbFormID.Null;
-  aPlan.InUseRecord := nil;
   aPlan.InUseHolder := nil;
 
   SetLength(lOwn, GetRecordCount);
@@ -2803,6 +2804,7 @@ begin
     lEnd := lStart.Offset(lLayout, j);
     aPlan.HighFormID := lEnd;
   end;
+  lFloor := lTarget.ObjectIDFloor;
 
   if lTarget.Equals(lSelf) then
     for i := Low(lOwn) to High(lOwn) do begin
@@ -2843,13 +2845,23 @@ begin
         lHolder := nil;
         repeat
           if aPlan.Preserve then begin
-            if lNew.IsNull then
-              lNew := lOld.ChangeFileID(lLayout, lTarget.LoadOrderFileID)
-            else
+            if lNew.IsNull then begin
+              lNew := lOld.ChangeFileID(lLayout, lTarget.LoadOrderFileID);
+              if (lNew.ObjectID[lLayout] <> lOld.ObjectID[lLayout]) or (lNew > lEnd) or (lOld.ObjectID[lLayout] < lFloor) then
+                if aPlan.AllOrNothing then begin
+                  Refuse(fcrNotPreservable);
+                  aPlan.RefusedRecord := lRecord;
+                  Exit;
+                end else begin
+                  lNew := TwbFormID.Null;
+                  lAnyDelayed := True;
+                  Break;
+                end;
+            end else
               if aPlan.AllOrNothing then begin
                 Refuse(fcrInUse);
+                aPlan.RefusedRecord := lRecord;
                 aPlan.InUseFormID := lNew;
-                aPlan.InUseRecord := lRecord;
                 aPlan.InUseHolder := lHolder;
                 Exit;
               end else begin

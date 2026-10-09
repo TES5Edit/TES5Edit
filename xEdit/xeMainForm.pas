@@ -11937,7 +11937,14 @@ var
           '%s' + CRLF + CRLF +
           'is already in use by:' + CRLF + CRLF +
           '%s' + CRLF + CRLF +
-          'Operation aborted.', [lPlan.InUseFormID.ToString, lPlan.InUseRecord.Name, lPlan.InUseHolder.Name]));
+          'Operation aborted.', [lPlan.InUseFormID.ToString, lPlan.RefusedRecord.Name, lPlan.InUseHolder.Name]));
+        Exit;
+      end;
+      fcrNotPreservable: begin
+        ShowMessage(Format('The ObjectID of:' + CRLF + CRLF +
+          '%s' + CRLF + CRLF +
+          'does not fit into "%s" and can not be preserved.' + CRLF + CRLF +
+          'Operation aborted.', [lPlan.RefusedRecord.Name, lPlan.Target.Name]));
         Exit;
       end;
       fcrTooMany: begin
