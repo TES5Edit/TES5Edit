@@ -2669,7 +2669,7 @@ procedure TwbFile.AddMasterIfMissing(const aMaster: string; aSortMasters: Boolea
 var
   Masters : TStringList;
 begin
-  if HasMaster(aMaster) then
+  if HasMaster(aMaster) and not flContextObj.Settings.EnforceAllMasters then
     Exit;
   Masters := TStringList.Create;
   try
@@ -2682,37 +2682,27 @@ end;
 
 procedure TwbFile.AddMastersIfMissing(const aMasters: TStrings; aSortMasters: Boolean = True; aSilent: Boolean = False);
 var
-  i, j    : Integer;
+  i       : Integer;
+  lFiles  : TwbFiles;
   Masters : TStringList;
 begin
+  var lEnforceAllMasters := flContextObj.Settings.EnforceAllMasters;
+  for i := 0 to Pred(aMasters.Count) do begin
+    var lHeld := HasMaster(aMasters[i]);
+    if lHeld and not lEnforceAllMasters then
+      Continue;
+    var lFile := flContextObj.FileByModuleName(aMasters[i]);
+    if Assigned(lFile) then
+      lFiles.Add(lFile)
+    else if not lHeld then
+      raise Exception.CreateFmt('[AddMAddMastersIfMissingasters] Requested file to add is not loaded: "%s"', [aMasters[i]]);
+  end;
+
   Masters := TStringList.Create;
   Masters.Sorted := True;
   Masters.Duplicates := dupIgnore;
   try
-    for i := 0  to Pred(aMasters.Count) do
-      if not HasMaster(aMasters[i]) then
-      begin
-        var lFile := flContextObj.FileByModuleName(aMasters[i]);
-        if not Assigned(lFile) then
-          raise Exception.CreateFmt('[AddMAddMastersIfMissingasters] Requested file to add is not loaded: "%s"', [aMasters[i]]);
-
-        // add masters of masters
-        // only for games that need it
-        if flContextObj.Settings.EnforceAllMasters then
-        begin
-          var lFileMasters := lFile.AllMasters;
-          for j := low(lFileMasters) to High(lFileMasters) do
-            Masters.AddObject(lFileMasters[j].FileName, Pointer(lFileMasters[j]));
-        end;
-
-        Masters.AddObject(lFile.FileName, Pointer(lFile));
-      end;
-
-    for i := 0 to Pred(GetMasterCount(True)) do
-      if Masters.Find(GetMaster(i, True).FileName, j) then
-        Masters.Delete(j);
-    if Masters.Find(GetFileName, j) then
-      Masters.Delete(j);
+    CollectMastersToAdd(lFiles, Masters);
 
     if Masters.Count = 0 then Exit;
 
